@@ -7,9 +7,10 @@
  * Korunan davranışlar:
  *  - Sunucu ve tarayıcı önizlemesi aynı modülü (public/lcwai-output-layout.js)
  *    kullanır; değerler sınır içinde tutulur.
- *  - PowerPoint: başlık bandı/yazı boyutu dosyaya yansır; galeri Yerleşim
- *    ızgarası kadar model alır, fazlası devam slaytına geçer.
- *  - PDF: model galerisi sütun × satır sayfalarına bölünür; HTML'de bölünmez.
+ *  - Katalog: model kartları grup / alt gruba göre sayfalanır; sayfa 12
+ *    sütunlu blok ızgarasıdır (başlık, grup, alt başlık, model alanı, metin).
+ *  - Önizleme, dosyayı oluşturan kodun çıktısıdır (PowerPoint sahnesi,
+ *    PDF/HTML katalog sayfaları); dosya kaydedilmeden üretilir.
  *  - Excel: yazı boyutu, başlık satırı yüksekliği, hücre görseli boyutu.
  *  - Yerleşim şablona kaydedilir; LCW AI'ın JSON'da yazdığı yerleşim yok sayılır.
  */
@@ -24,7 +25,7 @@ const ROOT = path.join(__dirname, '..');
 const OUT = path.join(ROOT, 'server', 'lib', 'lcwai-output');
 const layout = require(path.join(ROOT, 'public', 'lcwai-output-layout'));
 const contracts = require(path.join(OUT, 'output-contracts'));
-const { renderPresentation, expandSlides } = require(path.join(OUT, 'output-pptx'));
+const { renderPresentation, previewPresentation, expandSlides } = require(path.join(OUT, 'output-pptx'));
 const { renderWorkbook } = require(path.join(OUT, 'output-xlsx'));
 const { createOutputService } = require(path.join(OUT, 'output-service'));
 const userTemplates = require(path.join(OUT, 'output-user-templates'));
@@ -61,71 +62,104 @@ test('ortak modül: sınırlar, hazır yerleşimler, galeri hücreleri slayta s�
   }
 });
 
-test('ortak modül: galeri HTML sayfalara bölünür ve geri birleşir (tekrarlanabilir)', () => {
-  const card = i => `<div class="bl-card"><img class="bl-model-img" data-bl-image="KOL-${i}" alt="m"><h3>M${i}</h3><div><small>alt</small></div><p>not</p></div>`;
-  const html = `<h1>R</h1><section><h2>Modeller</h2><div class="bl-gallery">${Array.from({ length: 9 }, (_, i) => card(i)).join('')}</div></section>`;
-  const paged = layout.paginateGallery(html, { columns: 2, rows: 2 });
-  assert.equal((paged.match(/bl-gallery-page/g) || []).length, 3, '9 model / 4 → 3 sayfa');
-  assert.equal((paged.match(/bl-gallery-first/g) || []).length, 1);
-  assert.equal(layout.paginateGallery(paged, { columns: 3, rows: 3 }).match(/bl-gallery-page/g).length, 1, 'yeniden bölme önce birleştirir');
-  assert.equal(layout.paginateGallery(paged, null, { pages: false }), html, 'birleştirme özgün HTML’i verir');
-  const mixed = '<div class="bl-gallery"><p>serbest metin</p><div class="bl-card">x</div></div>';
-  assert.equal(layout.paginateGallery(mixed, { columns: 1, rows: 1 }), mixed, 'beklenmeyen içerik bozulmaz');
+test('ortak modül: katalog sayfası blokları 12 sütunlu ızgarada; gruplama veriden ve elle', () => {
+  const page = layout.defaultPage('pptx');
+  assert.deepEqual(page.blocks.map(block => block.kind), ['title', 'group', 'subgroup', 'models']);
+  // Taşma ve çakışma düzeltilir; model alanı silinemez.
+  const l = layout.normalizeLayout('pptx', { page: { blocks: [{ id: 't', kind: 'title', x: 10, y: 0, w: 9, h: 1 }, { id: 'x', kind: 'text', x: 0, y: 99, w: 3, h: 1, text: 'Not' }, { id: 'z', kind: 'bogus', x: 0, y: 0, w: 1, h: 1 }] } });
+  const title = l.page.blocks.find(block => block.kind === 'title');
+  assert.ok(title.x + title.w <= 12, 'sağa taşmaz');
+  assert.ok(l.page.blocks.some(block => block.kind === 'models'), 'model alanı her zaman var');
+  assert.ok(!l.page.blocks.some(block => block.kind === 'bogus'));
+  for (const block of l.page.blocks) assert.ok(block.y + block.h <= l.page.rows, 'sayfa içinde');
+  const area = { x: 0, y: 0, w: 1200, h: 800 };
+  const r = layout.blockRect(area, { rows: 8 }, { x: 0, y: 2, w: 6, h: 6 }, 0);
+  assert.deepEqual([r.x, r.y, r.w, r.h], [0, 200, 600, 600]);
+
+  // Gruplama: BL Image anahtarı → bağlam satırındaki sütun.
+  const list = [{ title: 'A', image: 'KOL-1' }, { title: 'B', image: 'KOL-2' }, { title: 'C', image: 'KOL-3' }, { title: 'D', subtitle: 'Süprem' }];
+  const attributes = { 'KOL-1': { Kategori: 'Örme', Kumaş: 'Süprem' }, 'KOL-2': { Kategori: 'Dokuma', Kumaş: 'Poplin' }, 'KOL-3': { Kategori: 'Örme', Kumaş: 'Ribana' } };
+  const fields = layout.groupingFields(list, attributes);
+  assert.ok(fields.some(field => field.key === 'a:Kategori' && field.distinct === 2));
+  const grouped = layout.assignGroups(list, attributes, 'a:Kategori', 'a:Kumaş');
+  assert.deepEqual(grouped.map(item => [item.group, item.subgroup]), [['Örme', 'Süprem'], ['Dokuma', 'Poplin'], ['Örme', 'Ribana'], ['', '']]);
+  // Elle sıra: catalog.order gruplar arası sırayı belirler.
+  const groups = layout.groupItems(grouped, { order: ['Dokuma', 'Örme'] });
+  assert.deepEqual(groups.map(group => group.group).slice(0, 2), ['Dokuma', 'Örme']);
+  // Katalog sayfaları: bir alt grup = bir sayfa; ızgarayı aşan devam sayfasına.
+  const many = Array.from({ length: 7 }, (_, i) => ({ title: `M${i}`, group: i < 5 ? 'Örme' : 'Dokuma' }));
+  const pages = layout.catalogPages(many, { order: [] }, layout.normalizeLayout('pptx', { columns: 2, rows: 2 }));
+  assert.deepEqual(pages.map(item => [item.group, item.entries.length, item.part, item.parts]), [['Örme', 4, 1, 2], ['Örme', 1, 2, 2], ['Dokuma', 2, 1, 1]]);
   const css = layout.layoutCss({ columns: 4, rows: 3, headerHeight: 90, titleSize: 34, showNote: false }, { orientation: 'landscape' });
+  assert.match(css, /\.bl-catalog-page\{/);
   assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
   assert.match(css, /grid-template-rows:repeat\(3,minmax\(0,1fr\)\)/);
   assert.match(css, /\.bl-header\{min-height:90px/);
   assert.match(css, /h1\{font-size:34px/);
-  assert.match(css, /\.bl-gallery>\.bl-card p\{display:none/);
   assert.doesNotMatch(css, /url\(|@import/i);
 });
 
-test('PowerPoint: başlık bandı ve yazı boyutu dosyaya yansır; galeri ızgara kadar model alır, kalanı devam slaytına', () => {
+test('PowerPoint: galeri gruplara göre katalog slaytlarına bölünür; bloklar ve gerçek önizleme dosyayla aynı', () => {
+  const list = items(13).map((item, i) => ({ ...item, group: i < 9 ? 'Örme' : 'Dokuma' }));
+  const blocks = layout.defaultPage('pptx').blocks.map(block => (block.kind === 'title' ? { ...block, size: 30 } : block));
+  blocks.push({ id: 'n1', kind: 'text', x: 0, y: 7, w: 12, h: 1, text: 'Demo notu' });
   const deck = contracts.normalizePresentation({
-    title: 'Koleksiyon', layout: { headerHeight: 70, titleSize: 22, columns: 4, rows: 2 },
-    slides: [{ layout: 'gallery', title: 'Modeller', items: items(13) }, { layout: 'bullets', title: 'Notlar', bullets: ['a'] }],
+    title: 'Koleksiyon', layout: { headerHeight: 70, titleSize: 22, columns: 4, rows: 2, page: { rows: 8, blocks } },
+    slides: [{ layout: 'gallery', title: 'Modeller', items: list }, { layout: 'bullets', title: 'Notlar', bullets: ['a'] }],
   }, { lang: 'tr' }).data;
   assert.equal(deck.slides[1].items.length, 13, 'galeri 6 ile sınırlı değil');
-  assert.equal(deck.layout.columns, 4);
-  const expanded = expandSlides(deck.slides, deck.layout).filter(slide => slide.layout === 'gallery');
-  assert.deepEqual(expanded.map(slide => slide.items.length), [8, 5]);
-  assert.deepEqual(expanded.map(slide => slide.title), ['Modeller (1/2)', 'Modeller (2/2)']);
+  const expanded = expandSlides(deck.slides, deck.layout).filter(slide => slide.layout === 'catalogPage');
+  assert.deepEqual(expanded.map(slide => [slide.labels.group, slide.items.length]), [['Örme (1/2)', 8], ['Örme (2/2)', 1], ['Dokuma', 4]]);
   const files = unzip(renderPresentation(deck, { lang: 'tr', date: new Date('2026-10-07T00:00:00Z') }));
   const slide2 = files['ppt/slides/slide2.xml'];
-  assert.match(slide2, new RegExp(`name="HeadBand \\d+"/>[\\s\\S]*?<a:ext cx="12192000" cy="${70 * 12700}"/>`), 'bant yüksekliği 70 pt');
-  assert.match(slide2, /sz="2200" b="1"[^>]*>[\s\S]*?<a:t>Modeller \(1\/2\)<\/a:t>/, 'başlık 22 pt');
   assert.equal((slide2.match(/name="Card \d+"/g) || []).length, 8, '4 × 2 = 8 kart');
-  assert.equal((files['ppt/slides/slide3.xml'].match(/name="Card \d+"/g) || []).length, 5);
-  // Varsayılan yerleşim (layout yok): eski 3 × 2 düzeni.
-  const plain = contracts.normalizePresentation({ slides: [{ layout: 'gallery', title: 'G', items: items(7) }] }).data;
-  assert.equal(plain.layout, null);
-  assert.deepEqual(expandSlides(plain.slides, null).filter(slide => slide.layout === 'gallery').map(slide => slide.items.length), [6, 1]);
+  assert.match(slide2, /sz="3000" b="1"[^>]*>[\s\S]*?<a:t>Modeller<\/a:t>/, 'başlık bloğu boyutu dosyada');
+  assert.match(slide2, /<a:t>Örme \(1\/2\)<\/a:t>/, 'grup başlığı');
+  assert.match(slide2, /<a:t>Demo notu<\/a:t>/, 'metin kutusu');
+  assert.equal((files['ppt/slides/slide4.xml'].match(/name="Card \d+"/g) || []).length, 4);
+  // Önizleme: aynı çizim kodunun sahnesi (dosya oluşturulmadan).
+  const preview = previewPresentation(deck, { lang: 'tr' });
+  assert.equal(preview.slides.length, 5);
+  const scene = preview.slides[1];
+  assert.equal(scene.layout, 'catalogPage');
+  assert.deepEqual([scene.catalog.group, scene.catalog.part], ['Örme', 1]);
+  assert.ok(scene.scene.items.some(item => item.paragraphs && item.paragraphs.some(par => par.text === 'Demo notu')));
+  assert.ok(scene.scene.items.some(item => item.paragraphs && item.paragraphs.some(par => par.text === 'Modeller' && par.size === 30)), 'sahne dosyadaki boyutu taşır');
 });
 
-test('PDF: model galerisi sütun × satır sayfalarına bölünür; HTML dosyasında bölünmez; yerleşim CSS’i belgededir', async () => {
-  const cards = Array.from({ length: 5 }, (_, i) => `<div class="bl-card"><img class="bl-model-img" data-bl-image="KOL-${i + 1}" alt="m"><h3>DEMO-${i}</h3><p>Süprem kumaş</p></div>`).join('');
+test('PDF: kartlar katalog verisine ayrılır, gruplara göre sayfalanır; önizleme dosyayla aynı HTML; HTML dosyası da katalogludur', async () => {
+  const cards = Array.from({ length: 5 }, (_, i) => `<div class="bl-card"><img class="bl-model-img" data-bl-image="KOL-${i + 1}" alt="m"><h3>DEMO-${i}</h3><small>Süprem</small><p>Kumaş detayı uzun açıklama ${i}</p></div>`).join('');
   const answer = '```html\n<h1>Koleksiyon</h1><section class="bl-section"><h2>Modeller</h2><div class="bl-gallery">' + cards + '</div><p>' + 'Açıklama metni. '.repeat(6) + '</p></section>\n```';
   const dir = tempDir();
   const service = createOutputService({ engine: fakeEngine(answer), storeOptions: { root: path.join(dir, 'out') } });
   const first = await service.create('u1', { message: 'rapor', output: { format: 'pdf' } });
   const draft = service.getDraft('u1', first.output.draftId);
-  assert.equal(draft.data.layout, null, 'şablonsuz: varsayılan yerleşim');
-  const pending = service.renderDraft('u1', draft.id, { data: { body: draft.data.body, styles: draft.data.styles, layout: { columns: 2, rows: 2, titleSize: 36 } } });
+  assert.equal(draft.data.galleries.length, 1, 'galeri katalog verisine çevrilir');
+  assert.equal(draft.data.galleries[0].title, 'Modeller');
+  assert.equal(draft.data.galleries[0].items[2].note, 'Kumaş detayı uzun açıklama 2', 'not kısaltılmaz');
+  assert.match(draft.data.body, /<div class="bl-catalog" data-bl-catalog="0"><\/div>/);
+  assert.doesNotMatch(draft.data.body, /bl-card/);
+  // Tarayıcı düzenleyicisinin eklediği öznitelikler yer tutucuyu kaybettirmez.
+  assert.equal(contracts.normalizeHtmlDraft({ body: draft.data.body.replace('data-bl-catalog="0">', 'data-bl-catalog="0" style="" contenteditable="false"><br>'), galleries: draft.data.galleries }).data.galleries.length, 1);
+  const galleries = [{ ...draft.data.galleries[0], items: draft.data.galleries[0].items.map((item, i) => ({ ...item, group: i < 3 ? 'Örme' : 'Dokuma' })) }];
+  const data = { body: draft.data.body, styles: draft.data.styles, galleries, layout: { columns: 2, rows: 1, titleSize: 36 } };
+  const preview = service.previewDraft('u1', draft.id, { data });
+  assert.equal(preview.format, 'pdf');
+  assert.deepEqual(preview.catalogs[0].pages.map(page => [page.group, page.part, page.parts]), [['Örme', 1, 2], ['Örme', 2, 2], ['Dokuma', 1, 1]]);
+  assert.match(preview.shell, /<!--BL-PAGE-->/);
+  const pending = service.renderDraft('u1', draft.id, { data });
   const html = pending.output.html || '';
-  assert.equal((html.match(/class="bl-gallery bl-gallery-page[^"]*"/g) || []).length, 2, '5 model / 4 → 2 sayfa');
-  assert.equal((html.match(/bl-gallery-first/g) || []).length, 2, 'ilk parça işaretli (CSS + HTML)');
-  assert.match(html, /\.bl-gallery-page\.bl-gallery-first\{aspect-ratio:/, 'ilk sayfa başlık için kısalır');
-  assert.match(html, /grid-template-rows:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.equal((html.match(/<section class="bl-catalog-page"/g) || []).length, 3, 'dosyada aynı 3 sayfa');
+  for (const page of preview.catalogs[0].pages) assert.ok(preview.document.includes(page.html), 'önizleme sayfası = belge sayfası');
   assert.match(html, /h1\{font-size:36px/);
-  assert.equal(service.getDraft('u1', draft.id).data.layout.columns, 2, 'yerleşim taslakta saklanır');
-  assert.doesNotMatch(service.getDraft('u1', draft.id).data.body, /bl-gallery-page/, 'taslak bölünmemiş saklanır');
+  assert.equal(service.getDraft('u1', draft.id).data.galleries[0].items[4].group, 'Dokuma', 'gruplama taslakta saklanır');
 
   const htmlService = createOutputService({ engine: fakeEngine(answer), storeOptions: { root: path.join(dir, 'out2') } });
   const created = await htmlService.create('u1', { message: 'rapor', output: { format: 'html' } });
   const htmlDraft = htmlService.getDraft('u1', created.output.draftId);
-  const saved = htmlService.renderDraft('u1', htmlDraft.id, { data: { body: htmlDraft.data.body, layout: { columns: 5, rows: 1 } } });
+  const saved = htmlService.renderDraft('u1', htmlDraft.id, { data: { body: htmlDraft.data.body, galleries: htmlDraft.data.galleries, layout: { columns: 5, rows: 1 } } });
   const file = fs.readFileSync(saved.output.path, 'utf8');
-  assert.doesNotMatch(file, /class="bl-gallery bl-gallery-page/, 'HTML’de sayfa yok');
+  assert.match(file, /class="bl-catalog-page"/);
   assert.match(file, /grid-template-columns:repeat\(5,minmax\(0,1fr\)\)/);
 });
 
@@ -164,12 +198,41 @@ test('arayüz: İçerik/Yerleşim geçişi, kaydırıcılar, ızgara seçici, ha
   assert.match(editor, /data-lay="\$\{key\}"/);
   assert.match(editor, /data-gp="\$\{c\},\$\{r\}"/);
   assert.match(editor, /data-lay-preset="\$\{key\}"/);
-  assert.match(editor, /LAY\(\)\.galleryCells\(l,/, 'önizleme sunucuyla aynı hücre hesabı');
-  assert.match(editor, /LAY\(\)\.paginateGallery\(ed\.data\.body/);
-  assert.match(editor, /layout: ed\.data\.layout \|\| null/, 'rapor yerleşimi oluşturmaya gider');
-  for (const text of ["L('Yerleşim', 'Layout')", "L('Başlık bandı yüksekliği', 'Title band height')", "L('Model ızgarası', 'Model grid')", "L('Yerleşimi de kaydet', 'Save the layout too')"]) assert.ok(editor.includes(text), text);
+  assert.match(editor, /layout: ed\.data\.layout \|\| null, galleries: ed\.data\.galleries \|\| \[\]/, 'rapor yerleşimi ve kataloğu oluşturmaya gider');
+  for (const text of ["L('Yerleşim', 'Layout')", "L('Rapor başlığı yüksekliği', 'Report header height')", "L('Yerleşimi de kaydet', 'Save the layout too')"]) assert.ok(editor.includes(text), text);
   const shared = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-layout.js'), 'utf8');
   assert.doesNotMatch(shared, /require\(|document\.|window\.[a-z]/, 'saf modül (sunucu + tarayıcı)');
+});
+
+test('arayüz: gerçek önizleme sunucudan, gruplama ağacı, blok tasarımcısı (taşı/boyutlandır/düzenle); TR/EN', () => {
+  const editor = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-editor.js'), 'utf8');
+  // Önizleme dosyayı oluşturan sunucu kodundan gelir; ayar değişince gecikmeli yenilenir, eskisi iptal edilir.
+  assert.match(editor, /api\.previewDraft\(draftId, \{ data: collectData\(\)/);
+  assert.match(editor, /if \(previewAbort\) previewAbort\.abort\(\)/);
+  assert.match(editor, /function updateLayoutPreview\(\)[\s\S]*?schedulePreview\(\);/);
+  assert.doesNotMatch(editor, /paginateGallery|galleryCells\(l,/, 'tarayıcıda ayrı yaklaşık çizim yok');
+  // AI/rapor HTML'i ana DOM'a girmez: betiksiz iframe.
+  assert.match(editor, /<iframe data-lay-frame sandbox="allow-same-origin"/);
+  assert.doesNotMatch(editor, /sandbox="[^"]*allow-scripts/);
+  // Gruplama: veriden otomatik + sürükle-bırak / yeniden adlandır / sırala.
+  assert.match(editor, /LAY\(\)\.assignGroups\(obj\.items, ed\.draft\.attributes/);
+  assert.match(editor, /data-grp-by/);
+  assert.match(editor, /data-grp-drop=/);
+  assert.match(editor, /draggable="true" data-grp-item=/);
+  assert.match(editor, /data-grp-rename=/);
+  assert.match(editor, /data-grp-move=/);
+  // Blok tasarımcısı: ızgaraya oturan taşıma/boyutlandırma, araç çubuğu, metin kutusu.
+  assert.match(editor, /Math\.round\(\(event\.clientX - drag\.startX\) \/ drag\.cellW\)/);
+  assert.match(editor, /data-blk-resize=/);
+  for (const attr of ['data-blk-size', 'data-blk-align', 'data-blk-fill', 'data-blk-edit', 'data-blk-del', 'data-blk-add', 'data-blk-reset']) assert.ok(editor.includes(attr), attr);
+  for (const text of ["L('Gruplar', 'Groups')", "L('Görünüm', 'Look')", "L('✓ Dosyayla aynı', '✓ Same as the file')", "L('Metin kutusu', 'Text box')", "L('Grup başlığı', 'Group heading')", "L('Alt başlık', 'Subheading')"]) assert.ok(editor.includes(text), text);
+  // İçerik adımında katalog yer tutucusu görünür ve düzenlenemez.
+  assert.match(editor, /catalogStandInCss\(\)/);
+  assert.match(editor, /\.bl-catalog'\)\.forEach\(el => el\.setAttribute\('contenteditable', 'false'\)\)/);
+  const assistant = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-assistant.js'), 'utf8');
+  assert.match(assistant, /previewDraft/);
+  const routes = fs.readFileSync(path.join(ROOT, 'server', 'routes', 'lcwai-routes.js'), 'utf8');
+  assert.match(routes, /output-drafts\/:id\/preview/);
 });
 
 test('sadelik: 3 adımlı üst çubuk, temel ayarlar önde / ince ayar katlı, galeri yoksa ızgara gizli, sohbette şablon seçici yalnız dosya kipinde', () => {
@@ -179,7 +242,7 @@ test('sadelik: 3 adımlı üst çubuk, temel ayarlar önde / ince ayar katlı, g
   assert.doesNotMatch(editor, /<select data-ed-orientation/, 'sayfa yönü üst çubukta değil, Yerleşim adımında');
   assert.match(editor, /data-ed-orient="\$\{key\}"/);
   assert.match(editor, /<details class="lcwaiLayMore"/, 'ince ayar varsayılan kapalı');
-  assert.match(editor, /const grid = isSheet \? '' : gallery/, 'galeri yoksa ızgara yerine yönlendirme');
+  assert.match(editor, /const grid = gallery \?/, 'galeri yoksa ızgara yerine yönlendirme');
   assert.match(editor, /<details class="lcwaiEdAdvanced"/, 'şablon penceresinde yapı/ayrıntılar katlı');
   assert.match(editor, /Bu düzeni yine kullanacak mısınız\?/, 'oluşturma sonrası şablon önerisi');
   const chat = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-chat.js'), 'utf8');

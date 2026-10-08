@@ -15,6 +15,7 @@
 const { extractHtml, sanitizeHtml, sanitizeStyleSheet, visibleText } = require('./output-html');
 const { extractJsonObject } = require('../lcwai/lcwai-prompt');
 const BLOutputLayout = require('../../../public/lcwai-output-layout');
+const catalog = require('./output-catalog');
 // Yerleşim (Yerleşim aracı): verilmişse sınır içine alınır, yoksa null → varsayılan.
 const layoutOf = (format, raw) => (raw && typeof raw === 'object' && !Array.isArray(raw) ? BLOutputLayout.normalizeLayout(format, raw) : null);
 
@@ -30,7 +31,7 @@ const LIMITS = Object.freeze({
 const COLUMN_TYPES = ['text', 'integer', 'number', 'percent', 'currency', 'date', 'image'];
 const LAYOUTS = ['title', 'section', 'bullets', 'kpis', 'table', 'chart', 'comparison', 'summary', 'gallery'];
 // Galeri slaytı Yerleşim ızgarasına göre devam slaytlarına bölünür (output-pptx).
-const GALLERY_ITEMS = 60;
+const GALLERY_ITEMS = 200;
 // Model görseli anahtarı (bağlam CSV'sindeki "BL Image" sütunu): KOL-3, CP-12…
 const IMAGE_TOKEN = /^[A-Z]{2,4}-\d{1,6}$/;
 const imageToken = value => { const token = String(value == null ? '' : value).trim().toUpperCase(); return IMAGE_TOKEN.test(token) ? token : ''; };
@@ -306,7 +307,10 @@ function normalizeSlide(slide, index, english, warnings) {
     base.bullets = [];
     base.items = asArray(slide.items || slide.cards || slide.models).filter(isObject).slice(0, GALLERY_ITEMS).map(item => ({
       title: clean(item.title || item.name || item.model, 60), subtitle: clean(item.subtitle, 80), note: clean(item.note || item.text, 140), image: imageToken(item.image), tone: tone(item.tone),
+      // Katalog gruplaması (Yerleşim › Gruplar): kartın grubu ve alt grubu.
+      group: clean(item.group, 120), subgroup: clean(item.subgroup, 120),
     })).filter(item => item.title || item.image);
+    base.catalog = BLOutputLayout.normalizeCatalog(slide.catalog);
     if (!base.items.length) return { error: english ? `Slide ${index + 1} (gallery) has no items.` : `${index + 1}. slayt (gallery) öğe içermiyor.` };
     return { slide: base };
   }
@@ -349,9 +353,12 @@ function normalizeHtmlOutput(text, { lang = 'tr' } = {}) {
   if (textContent.length < 60) errors.push(english ? 'The HTML has almost no visible content.' : 'HTML neredeyse hiç görünür içerik içermiyor.');
   const heading = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(clean_.body);
   const title = clean_.title || (heading ? visibleText(heading[1]).slice(0, LIMITS.titleChars) : '');
+  // Model galerileri katalog verisine çevrilir (Buyer Log çizer, kullanıcı gruplar).
+  const found = catalog.extractGalleries(clean_.body);
+  const extractedGalleries = catalog.reconcile(found.body, found.galleries);
   return {
     ok: errors.length === 0,
-    data: { body: clean_.body, styles: clean_.styles, title, removed: clean_.removed, mode: extracted.mode },
+    data: { body: extractedGalleries.body, galleries: extractedGalleries.galleries, styles: clean_.styles, title, removed: clean_.removed, mode: extracted.mode },
     explanation: extracted.explanation.replace(/```[\s\S]*?```/g, '').trim().slice(0, 2000),
     errors,
     warnings: clean_.removed ? [`sanitized:${clean_.removed}`] : [],
@@ -360,17 +367,20 @@ function normalizeHtmlOutput(text, { lang = 'tr' } = {}) {
 
 /* AI Çıktı Düzenleyici: kullanıcının düzenlediği rapor gövdesi aynı
    temizleyiciden geçer (AI HTML'i ile aynı güven düzeyi). */
-function normalizeHtmlDraft({ body, styles = [], layout = null } = {}, { lang = 'tr' } = {}) {
+function normalizeHtmlDraft({ body, styles = [], layout = null, galleries = [] } = {}, { lang = 'tr' } = {}) {
   const english = lang === 'en';
-  // Önizlemedeki galeri sayfa parçaları tek galeride saklanır (oluştururken yeniden bölünür).
-  const clean_ = sanitizeHtml(BLOutputLayout.paginateGallery(String(body == null ? '' : body), null, { pages: false }));
+  const clean_ = sanitizeHtml(String(body == null ? '' : body));
+  // Kaynakta yeni yazılmış galeri varsa o da kataloğa çevrilir; yer tutucular doğrulanır.
+  const extracted = catalog.extractGalleries(clean_.body, (Array.isArray(galleries) ? galleries : []).map(catalog.normalizeGallery));
+  const reconciled = catalog.reconcile(extracted.body, extracted.galleries);
+  clean_.body = reconciled.body;
   const textContent = visibleText(clean_.body);
-  const errors = textContent.length ? [] : [english ? 'The report has no visible content.' : 'Raporda görünür içerik yok.'];
+  const errors = textContent.length || reconciled.galleries.length ? [] : [english ? 'The report has no visible content.' : 'Raporda görünür içerik yok.'];
   const heading = /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(clean_.body);
   const kept = asArray(styles).map(css => sanitizeStyleSheet(String(css || '')));
   return {
     ok: errors.length === 0,
-    data: { body: clean_.body, styles: [...kept, ...clean_.styles].filter(Boolean).slice(0, 8), title: heading ? visibleText(heading[1]).slice(0, LIMITS.titleChars) : '', removed: clean_.removed, mode: 'edited', layout: layoutOf('pdf', layout) },
+    data: { body: clean_.body, styles: [...kept, ...clean_.styles].filter(Boolean).slice(0, 8), title: heading ? visibleText(heading[1]).slice(0, LIMITS.titleChars) : '', removed: clean_.removed, mode: 'edited', layout: layoutOf('pdf', layout), galleries: reconciled.galleries },
     errors,
     warnings: clean_.removed ? [`sanitized:${clean_.removed}`] : [],
   };

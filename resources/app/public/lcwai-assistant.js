@@ -599,7 +599,9 @@
         const pending = finalResult.output;
         let images = {};
         try { images = typeof options.resolveImages === 'function' ? (await options.resolveImages(pending.tokens || [])) || {} : {}; } catch (_) { images = {}; }
-        const data = await api(`/api/lcwai/outputs/${encodeURIComponent(String(pending.pendingId || ''))}/images`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images }) });
+        let attributes = {};
+        try { attributes = typeof options.resolveAttributes === 'function' ? options.resolveAttributes(pending.tokens || []) || {} : {}; } catch (_) { attributes = {}; }
+        const data = await api(`/api/lcwai/outputs/${encodeURIComponent(String(pending.pendingId || ''))}/images`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images, attributes }) });
         finalResult = { ...finalResult, output: data.output };
       }
       return finalResult.output && finalResult.output.pending === 'pdf' ? await finalizePdf(finalResult, onProgress) : finalResult;
@@ -660,6 +662,7 @@
     const result = { output: data.output, warnings: data.warnings || [] };
     return result.output && result.output.pending === 'pdf' ? finalizePdf(result, onProgress) : result;
   }
+  const previewDraft = async (id, payload = {}, signal) => (await api(`/api/lcwai/output-drafts/${encodeURIComponent(String(id || ''))}/preview`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload), signal })).preview;
   const draftSkeleton = async (id, data) => (await jsonPost(`/api/lcwai/output-drafts/${encodeURIComponent(String(id || ''))}/skeleton`, { data })).definition;
   const templatePath = (id, shared, suffix = '') => `/api/lcwai/output-templates/${encodeURIComponent(String(id || ''))}${suffix}${shared ? '?shared=1' : ''}`;
   const outputTemplates = {
@@ -724,7 +727,7 @@
   root.BuyerLogAI = {
     ask: askAuthed, askWithFiles: options => withDesktopAuth(() => askWithFiles(options)), uploadFile: uploadAuthed, cancel, getStatus, onStatus, connect, disconnect,
     chat: chatAuthed, createConversation, continueConversation, openChat,
-    openOutput, revealOutput, listOutputs, getDraft, renderDraft, draftSkeleton, outputTemplates,
+    openOutput, revealOutput, listOutputs, getDraft, renderDraft, previewDraft, draftSkeleton, outputTemplates,
     registerContextProvider, getAvailableContext, buildContext,
     mountAssistant, openPanel, openConnectionDialog, statusBadge, pickField,
     errorText, notifyError, needsLogin, loadConfig,

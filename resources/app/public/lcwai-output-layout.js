@@ -40,6 +40,7 @@
     const out = {};
     for (const [name, spec] of Object.entries(SPEC[key])) out[name] = spec[2];
     for (const flag of FLAGS[key]) out[flag] = true;
+    if (key !== 'xlsx') out.page = defaultPage(format);
     return out;
   }
 
@@ -56,6 +57,7 @@
       out[name] = Math.min(max, Math.max(min, Number(stepped.toFixed(2))));
     }
     for (const flag of FLAGS[key]) if (typeof source[flag] === 'boolean') out[flag] = source[flag];
+    if (key !== 'xlsx') out.page = normalizePage(format, source.page);
     return out;
   }
   const isDefault = (format, layout) => JSON.stringify(normalizeLayout(format, layout)) === JSON.stringify(defaults(format));
@@ -84,7 +86,9 @@
     const key = specKey(format);
     const preset = PRESETS[name] && PRESETS[name][key];
     if (!preset) return normalizeLayout(format, current);
-    return name === 'standard' ? defaults(format) : normalizeLayout(format, { ...(current || {}), ...preset });
+    // Hazır yerleşim boyutları değiştirir; kullanıcının sayfa tasarımı (bloklar) korunur.
+    const page = current && current.page;
+    return name === 'standard' ? normalizeLayout(format, { ...defaults(format), page }) : normalizeLayout(format, { ...(current || {}), ...preset });
   }
 
   /* ---------------- PowerPoint geometrisi (pt) ---------------- */
@@ -107,15 +111,167 @@
     }));
   }
 
+  /* ---------------- Katalog sayfası: bloklar (widget) ----------------
+     Model galerisi "katalog sayfaları" olarak çizilir. Sayfa 12 sütunlu bir
+     ızgaradır; başlık, grup başlığı, alt başlık, model alanı ve serbest metin
+     blokları bu ızgaraya oturur (x, y, w, h ızgara birimidir). Kullanıcı
+     blokları Yerleşim adımında taşır/boyutlandırır; PowerPoint ve PDF aynı
+     düzeni kullanır. */
+  const GRID_COLS = 12;
+  const PAGE_ROWS = Object.freeze({ pptx: 8, pdf: 14 });
+  const BLOCK_KINDS = Object.freeze(['title', 'group', 'subgroup', 'models', 'text']);
+  const SINGLE_KINDS = new Set(['title', 'group', 'subgroup', 'models']);
+  const MAX_TEXT_BLOCKS = 6;
+  const SIZE_RANGE = [7, 72];
+  const DEFAULT_PAGES = Object.freeze({
+    pptx: [
+      { id: 'title', kind: 'title', x: 0, y: 0, w: 12, h: 1, fill: true },
+      { id: 'group', kind: 'group', x: 0, y: 1, w: 8, h: 1 },
+      { id: 'subgroup', kind: 'subgroup', x: 8, y: 1, w: 4, h: 1, align: 'right' },
+      { id: 'models', kind: 'models', x: 0, y: 2, w: 12, h: 6 },
+    ],
+    pdf: [
+      { id: 'title', kind: 'title', x: 0, y: 0, w: 12, h: 1, fill: true },
+      { id: 'group', kind: 'group', x: 0, y: 1, w: 8, h: 1 },
+      { id: 'subgroup', kind: 'subgroup', x: 8, y: 1, w: 4, h: 1, align: 'right' },
+      { id: 'models', kind: 'models', x: 0, y: 2, w: 12, h: 12 },
+    ],
+  });
+  const pageKey = format => (specKey(format) === 'pptx' ? 'pptx' : specKey(format) === 'pdf' ? 'pdf' : null);
+  const int = (value, min, max, fallback) => { const n = Math.round(Number(value)); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : fallback; };
+  const clip = (value, max) => String(value == null ? '' : value).replace(/\r\n?/g, '\n').slice(0, max);
+
+  function defaultPage(format) {
+    const key = pageKey(format);
+    return key ? { rows: PAGE_ROWS[key], blocks: DEFAULT_PAGES[key].map(block => ({ ...block })) } : null;
+  }
+  /* Blok listesi sınır içine alınır: ızgaradan taşan blok kısaltılır, tekil
+     bloklar (başlık, grup, alt başlık, model alanı) bir kez bulunur, model
+     alanı her zaman vardır. */
+  function normalizePage(format, raw) {
+    const key = pageKey(format);
+    if (!key) return null;
+    const rows = PAGE_ROWS[key];
+    const source = raw && typeof raw === 'object' && Array.isArray(raw.blocks) ? raw.blocks : null;
+    if (!source) return defaultPage(format);
+    const seen = new Set(), ids = new Set();
+    const blocks = [];
+    let texts = 0;
+    for (const item of source) {
+      if (!item || typeof item !== 'object' || !BLOCK_KINDS.includes(item.kind)) continue;
+      if (SINGLE_KINDS.has(item.kind) && seen.has(item.kind)) continue;
+      if (item.kind === 'text' && ++texts > MAX_TEXT_BLOCKS) continue;
+      seen.add(item.kind);
+      const x = int(item.x, 0, GRID_COLS - 1, 0), y = int(item.y, 0, rows - 1, 0);
+      const block = { id: '', kind: item.kind, x, y, w: int(item.w, 1, GRID_COLS - x, GRID_COLS - x), h: int(item.h, 1, rows - y, 1) };
+      let id = String(item.id || item.kind).replace(/[^A-Za-z0-9_-]/g, '').slice(0, 24) || item.kind;
+      for (let n = 2; ids.has(id); n++) id = `${item.kind}${n}`;
+      ids.add(id);
+      block.id = id;
+      const size = Number(item.size);
+      if (Number.isFinite(size) && size > 0) block.size = Math.min(SIZE_RANGE[1], Math.max(SIZE_RANGE[0], Math.round(size * 2) / 2));
+      if (['center', 'right'].includes(item.align)) block.align = item.align;
+      if (item.fill === true) block.fill = true;
+      if (item.kind === 'text') block.text = clip(item.text, 400);
+      blocks.push(block);
+    }
+    if (!seen.has('models')) blocks.push({ ...DEFAULT_PAGES[key].find(block => block.kind === 'models') });
+    return { rows, blocks };
+  }
+  /* Bloğun alanı (aynı formül CSS ızgarasıyla: sütun genişliği = (W − 11·gap)/12). */
+  function blockRect(area, page, block, gap = 0) {
+    const cw = (area.w - gap * (GRID_COLS - 1)) / GRID_COLS;
+    const rh = (area.h - gap * (page.rows - 1)) / page.rows;
+    return { x: area.x + block.x * (cw + gap), y: area.y + block.y * (rh + gap), w: block.w * cw + (block.w - 1) * gap, h: block.h * rh + (block.h - 1) * gap };
+  }
+  /* PowerPoint katalog sayfasının ızgara alanı (pt). */
+  function pptxPageArea(raw) {
+    const l = normalizeLayout('pptx', raw);
+    return { x: l.margin, y: 18, w: SLIDE.width - l.margin * 2, h: SLIDE.height - 18 - SLIDE.footer };
+  }
+  /* Bir dikdörtgendeki model kartları (sütun × satır). */
+  function cardCells(rect, raw, count) {
+    const l = raw && raw.columns ? raw : normalizeLayout('pptx', raw);
+    const { columns, rows, gap, imageShare } = l;
+    const cardW = (rect.w - gap * (columns - 1)) / columns;
+    const cardH = (rect.h - gap * (rows - 1)) / rows;
+    const imgH = Math.max(12, (cardH - 14) * imageShare / 100);
+    return Array.from({ length: Math.min(count, columns * rows) }, (_, i) => ({ x: rect.x + (i % columns) * (cardW + gap), y: rect.y + Math.floor(i / columns) * (cardH + gap), w: cardW, h: cardH, imgH }));
+  }
+
+  /* ---------------- Gruplama (kategori / alt kategori) ----------------
+     Her model kartı kendi grubunu (group) ve alt grubunu (subgroup) taşır;
+     otomatik gruplama bunları seçilen sütundan doldurur, kullanıcı sonra
+     sürükleyerek değiştirir. catalog yalnız seçimi ve grup sırasını saklar. */
+  function normalizeCatalog(raw) {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const text = (value, max) => String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max);
+    const list = value => (Array.isArray(value) ? [...new Set(value.map(item => text(item, 120)))].slice(0, 200) : []);
+    const subOrder = {};
+    if (source.subOrder && typeof source.subOrder === 'object') for (const [group, items] of Object.entries(source.subOrder).slice(0, 200)) subOrder[text(group, 120)] = list(items);
+    return { by: text(source.by, 80), then: text(source.then, 80), order: list(source.order), subOrder };
+  }
+  const ITEM_FIELDS = ['subtitle', 'note', 'title'];
+  /* Gruplama alanı değeri: "a:Sütun" bağlam verisi (görsel anahtarıyla),
+     "f:subtitle|note|title" kartın kendi alanı. */
+  function fieldValue(item, field, attributes) {
+    const key = String(field || '');
+    if (key.startsWith('a:')) { const row = attributes && item && item.image ? attributes[String(item.image).toUpperCase()] : null; return row ? String(row[key.slice(2)] == null ? '' : row[key.slice(2)]).trim() : ''; }
+    if (key.startsWith('f:') && ITEM_FIELDS.includes(key.slice(2))) return String(item && item[key.slice(2)] || '').trim();
+    return '';
+  }
+  /* Seçilebilir gruplama alanları: en az 2, en çok kart sayısından az farklı değeri olanlar. */
+  function groupingFields(items, attributes) {
+    const list = Array.isArray(items) ? items : [];
+    const columns = new Set();
+    for (const item of list) { const row = attributes && item && item.image ? attributes[String(item.image).toUpperCase()] : null; if (row) Object.keys(row).forEach(name => columns.add(name)); }
+    const candidates = [...[...columns].map(name => `a:${name}`), ...ITEM_FIELDS.map(name => `f:${name}`)];
+    return candidates.map(key => {
+      const values = new Set(list.map(item => fieldValue(item, key, attributes)).filter(Boolean));
+      return { key, label: key.slice(2), source: key.startsWith('a:') ? 'data' : 'card', distinct: values.size };
+    }).filter(entry => entry.distinct >= 2 && (entry.distinct < list.length || list.length <= 3));
+  }
+  function assignGroups(items, attributes, by, then) {
+    return (Array.isArray(items) ? items : []).map(item => ({ ...item, group: by ? fieldValue(item, by, attributes).slice(0, 120) : '', subgroup: by && then ? fieldValue(item, then, attributes).slice(0, 120) : '' }));
+  }
+  /* Kartlar → sıralı gruplar → alt gruplar (catalog.order / subOrder, sonra ilk görülme sırası). */
+  function groupItems(items, raw) {
+    const catalog = normalizeCatalog(raw);
+    const groups = new Map();
+    (Array.isArray(items) ? items : []).forEach((item, index) => {
+      const g = String(item && item.group || ''), sg = String(item && item.subgroup || '');
+      if (!groups.has(g)) groups.set(g, new Map());
+      const subs = groups.get(g);
+      if (!subs.has(sg)) subs.set(sg, []);
+      subs.get(sg).push({ item, index });
+    });
+    const ordered = (keys, order) => [...order.filter(key => keys.includes(key)), ...keys.filter(key => !order.includes(key))];
+    return ordered([...groups.keys()], catalog.order).map(group => {
+      const subs = groups.get(group);
+      return { group, subgroups: ordered([...subs.keys()], catalog.subOrder[group] || []).map(subgroup => ({ subgroup, entries: subs.get(subgroup) })) };
+    });
+  }
+  /* Katalog sayfaları: her alt grup kendi sayfasında başlar; model alanına
+     sığmayan kartlar aynı başlıklarla devam sayfasına geçer. */
+  function catalogPages(items, catalog, raw) {
+    const size = perPage(raw);
+    const pages = [];
+    for (const group of groupItems(items, catalog)) {
+      for (const sub of group.subgroups) {
+        const parts = Math.max(1, Math.ceil(sub.entries.length / size));
+        for (let part = 0; part < parts; part++) pages.push({ group: group.group, subgroup: sub.subgroup, entries: sub.entries.slice(part * size, (part + 1) * size), part: part + 1, parts });
+      }
+    }
+    return pages;
+  }
+
   /* ---------------- PDF/HTML: tema üstüne yerleşim CSS'i ---------------- */
-  const PAGE = Object.freeze({ portrait: [210, 297], landscape: [297, 210], top: 14, bottom: 16, reserve: 22 });
+  const PAGE = Object.freeze({ portrait: [210, 297], landscape: [297, 210], top: 14, bottom: 16 });
+  // Katalog sayfasının içerik kutusu (mm): sayfa − kenar boşlukları.
   function pageBox(raw, orientation) {
     const layout = normalizeLayout('pdf', raw);
     const [w, h] = PAGE[orientation === 'landscape' ? 'landscape' : 'portrait'];
-    // İlk galeri parçası rapor başlığı + bölüm başlığının altına sığsın diye kısalır
-    // (px → mm: × 0.2646). Sayfa başına model sayısı değişmez; kartlar kısalır.
-    const head = layout.headerHeight * 0.2646 + layout.titleSize * 0.2646 * 2.6 + 30;
-    return { width: w - layout.margin * 2, height: h - PAGE.top - PAGE.bottom - PAGE.reserve, firstHeight: Math.max(60, h - PAGE.top - PAGE.bottom - PAGE.reserve - head) };
+    return { width: w - layout.margin * 2, height: h - PAGE.top - PAGE.bottom - 2 };
   }
   function layoutCss(raw, { orientation = 'portrait' } = {}) {
     const l = normalizeLayout('pdf', raw);
@@ -127,28 +283,35 @@
       `h1{font-size:${l.titleSize}px;}`,
       `h2{font-size:${Math.round(l.titleSize * 0.66)}px;}`,
       l.tableSize ? `table{font-size:${l.tableSize}px;}` : '',
-      `.bl-gallery{grid-template-columns:repeat(${l.columns},minmax(0,1fr));gap:${l.gap}px;}`,
-      `.bl-gallery>.bl-card{min-width:0;overflow:hidden;font-size:${l.cardTextSize}px;}`,
-      `.bl-gallery>.bl-card h3{font-size:${Number((l.cardTextSize * 1.15).toFixed(1))}px;margin-bottom:2px;}`,
-      // Sayfa (PDF) başına sütun × satır: her parça bir A4 içerik kutusu oranındadır.
-      `.bl-gallery-page{grid-template-rows:repeat(${l.rows},minmax(0,1fr));aspect-ratio:${box.width.toFixed(1)} / ${box.height.toFixed(1)};break-inside:avoid;}`,
-      `.bl-gallery-page.bl-gallery-first{aspect-ratio:${box.width.toFixed(1)} / ${box.firstHeight.toFixed(1)};}`,
-      '.bl-gallery-page+.bl-gallery-page{break-before:page;}',
-      '.bl-gallery-page>.bl-card{display:flex;flex-direction:column;min-height:0;}',
-      `.bl-gallery-page .bl-model-img,.bl-gallery-page .bl-noimg{flex:0 0 ${l.imageShare}%;height:${l.imageShare}%;min-height:0;aspect-ratio:auto;}`,
-      `@media screen{.bl-gallery-page+.bl-gallery-page{margin-top:${l.gap * 2}px;padding-top:${l.gap * 2}px;border-top:2px dashed var(--line);}}`,
-      l.showTitle ? '' : '.bl-gallery>.bl-card h3{display:none;}',
-      l.showSubtitle ? '' : '.bl-gallery>.bl-card small{display:none;}',
-      l.showNote ? '' : '.bl-gallery>.bl-card p{display:none;}',
+      // Katalog sayfası: 12 sütunlu blok ızgarası; her sayfa bir A4 içerik kutusu.
+      `.bl-catalog-page{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:repeat(${l.page.rows},minmax(0,1fr));gap:${l.gap}px;width:${box.width}mm;max-width:100%;aspect-ratio:${box.width} / ${box.height};margin:0;break-before:page;break-inside:avoid;overflow:hidden;box-sizing:border-box;}`,
+      '.bl-cb{min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;line-height:1.15;}',
+      // Blok başlıkları h2/h3/h4 (tema yazı tipi); rapor başlığı süslemeleri kapalı.
+      '.bl-cb>h2,.bl-cb>h3,.bl-cb>h4{margin:0;padding:0;font-size:inherit;color:inherit;line-height:1.15;}',
+      '.bl-cb>h2::before,.bl-cb>h2::after{display:none;}',
+      `.bl-cb-title{font-weight:600;color:var(--logo);font-size:${l.titleSize}px;}`,
+      '.bl-cb-title.is-fill{background:var(--thead-bg);border-bottom:3px solid var(--logo);padding:0 12px;justify-content:center;}',
+      `.bl-cb-group{font-weight:600;color:var(--logo);font-size:${Math.round(l.titleSize * 0.72)}px;border-left:4px solid var(--logo);padding-left:10px;}`,
+      `.bl-cb-group.is-fill,.bl-cb-subgroup.is-fill{background:var(--thead-bg);padding:0 10px;justify-content:center;}`,
+      `.bl-cb-subgroup{color:var(--head-ink);font-size:${Math.round(l.titleSize * 0.55)}px;}`,
+      `.bl-cb-text{justify-content:flex-start;white-space:pre-wrap;color:var(--ink2);font-size:${l.bodySize}px;}`,
+      '.bl-cb-models{justify-content:stretch;}',
+      `.bl-cb-models .bl-gallery{height:100%;margin:0;display:grid;grid-template-columns:repeat(${l.columns},minmax(0,1fr));grid-template-rows:repeat(${l.rows},minmax(0,1fr));gap:${l.gap}px;}`,
+      `.bl-cb-models .bl-card{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;margin:0;padding:6px;font-size:${l.cardTextSize}px;}`,
+      `.bl-cb-models .bl-card h3{font-size:${Number((l.cardTextSize * 1.15).toFixed(1))}px;margin:2px 0;}`,
+      '.bl-cb-models .bl-card small,.bl-cb-models .bl-card p{margin:0;}',
+      `.bl-cb-models .bl-model-img,.bl-cb-models .bl-noimg{flex:0 0 ${l.imageShare}%;height:${l.imageShare}%;min-height:0;aspect-ratio:auto;margin:0 0 4px;}`,
+      `@media screen{.bl-catalog-page{margin:${l.gap * 2}px auto;outline:1px dashed var(--line);outline-offset:6px;}}`,
+      l.showTitle ? '' : '.bl-cb-models .bl-card h3{display:none;}',
+      l.showSubtitle ? '' : '.bl-cb-models .bl-card small{display:none;}',
+      l.showNote ? '' : '.bl-cb-models .bl-card p{display:none;}',
     ];
     return css.filter(Boolean).join('\n');
   }
 
-  /* ---------------- Galeriyi sayfalara bölme (HTML dizesi) ----------------
-     Temizlenmiş (dengeli) HTML'de .bl-gallery bloklarının doğrudan çocuk
-     <div>'lerini bulur. Art arda gelen sayfa parçaları (.bl-gallery-page)
-     önce birleştirilir; böylece işlem tekrarlanabilir. layout=null → yalnız
-     birleştirir (taslak bu hâlde saklanır). */
+  /* ---------------- Galeri bloklarını bulma (HTML dizesi) ----------------
+     Temizlenmiş (dengeli) HTML'de .bl-gallery bloklarını ve doğrudan çocuk
+     <div>'lerini (model kartları) bulur; sunucu bunları katalog verisine çevirir. */
   const OPEN_GALLERY = /<div\b[^>]*\bclass="([^"]*\bbl-gallery\b[^"]*)"[^>]*>/g;
   function scanGallery(html, start, openEnd) {
     const tag = /<(\/?)div\b[^>]*>/g;
@@ -174,36 +337,18 @@
     }
     return null;
   }
-  function paginateGallery(html, raw, { pages = true } = {}) {
+  function findGalleries(html) {
     const source = String(html || '');
     const found = [];
-    OPEN_GALLERY.lastIndex = 0;
+    const re = new RegExp(OPEN_GALLERY.source, 'g');
     let match;
-    while ((match = OPEN_GALLERY.exec(source))) {
-      const scanned = scanGallery(source, match.index, OPEN_GALLERY.lastIndex);
+    while ((match = re.exec(source))) {
+      const scanned = scanGallery(source, match.index, re.lastIndex);
       if (!scanned) continue;
-      const classes = match[1].split(/\s+/).filter(name => name && name !== 'bl-gallery-page' && name !== 'bl-gallery-first');
-      found.push({ ...scanned, classes, page: /\bbl-gallery-page\b/.test(match[1]), first: /\bbl-gallery-first\b/.test(match[1]) });
-      OPEN_GALLERY.lastIndex = scanned.end;
+      found.push(scanned);
+      re.lastIndex = scanned.end;
     }
-    if (!found.length) return source;
-    // Art arda gelen sayfa parçaları tek galeriye.
-    const groups = [];
-    for (const item of found) {
-      const prev = groups[groups.length - 1];
-      if (prev && item.page && prev.page && !item.first && !source.slice(prev.end, item.start).trim()) { prev.children.push(...item.children); prev.end = item.end; }
-      else groups.push({ ...item, children: [...item.children] });
-    }
-    const size = pages && raw ? perPage(normalizeLayout('pdf', raw)) : Infinity;
-    let out = '', cursor = 0;
-    for (const group of groups) {
-      out += source.slice(cursor, group.start);
-      const classes = group.classes.join(' ');
-      if (size === Infinity || !group.children.length) out += `<div class="${classes}">${group.children.join('')}</div>`;
-      else for (let i = 0; i < group.children.length; i += size) out += `<div class="${classes} bl-gallery-page${i ? '' : ' bl-gallery-first'}">${group.children.slice(i, i + size).join('')}</div>`;
-      cursor = group.end;
-    }
-    return out + source.slice(cursor);
+    return found;
   }
 
   /* ---------------- Excel ---------------- */
@@ -212,5 +357,10 @@
     return { ...l, imageRow: l.imageSize + 6, imageBoxPx: Math.round(l.imageSize * 4 / 3), imageColChars: Math.max(8, Math.round(l.imageSize * 4 / 3 / 7) + 1) };
   }
 
-  return { SPEC, FLAGS, PRESETS, SLIDE, PAGE, specKey, defaults, normalizeLayout, isDefault, perPage, applyPreset, pptxGeometry, galleryCells, pageBox, layoutCss, paginateGallery, xlsxMetrics };
+  return {
+    SPEC, FLAGS, PRESETS, SLIDE, PAGE, GRID_COLS, PAGE_ROWS, BLOCK_KINDS, specKey, defaults, normalizeLayout, isDefault, perPage, applyPreset,
+    pptxGeometry, galleryCells, pageBox, layoutCss, findGalleries, xlsxMetrics,
+    defaultPage, normalizePage, blockRect, pptxPageArea, cardCells,
+    normalizeCatalog, fieldValue, groupingFields, assignGroups, groupItems, catalogPages,
+  };
 });

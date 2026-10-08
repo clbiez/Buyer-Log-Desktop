@@ -117,6 +117,11 @@ function sanitizeAttributes(tag, raw) {
       if (tag === 'img' && /^[A-Za-z]{2,4}-\d{1,6}$/.test(value)) out.push(` data-bl-image="${value.toUpperCase()}"`);
       continue;
     }
+    // Katalog yer tutucusu (Buyer Log'un çizdiği model kataloğu): yalnız <div>, yalnız sayı.
+    if (name === 'data-bl-catalog') {
+      if (tag === 'div' && /^\d{1,3}$/.test(value)) out.push(` data-bl-catalog="${value}"`);
+      continue;
+    }
     if (/^on/.test(name) || !ALLOWED_ATTRS.has(name)) continue;
     const decoded = value.replace(/&#x([0-9a-f]+);?/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16))).replace(/&#(\d+);?/g, (_, dec) => String.fromCharCode(Number(dec))).replace(/&colon;/gi, ':').replace(/&tab;|&newline;/gi, '');
     let safe = decoded;
@@ -219,13 +224,14 @@ function visibleText(html) {
 const CSP = "default-src 'none'; style-src 'unsafe-inline'; img-src data:; font-src data:; base-uri 'none'; form-action 'none'; frame-src 'none'; object-src 'none'; script-src 'none'";
 
 /* Temiz gövdeyi Buyer Log raporu belgesine sarar. */
-function buildDocument({ body, styles = [], title = '', lang = 'tr', orientation = 'portrait', print = false, meta = {}, layout = null } = {}) {
+function buildDocument({ body, styles = [], title = '', lang = 'tr', orientation = 'portrait', print = false, meta = {}, layout = null, bare = false } = {}) {
   const english = lang === 'en';
   const date = meta.date || new Date().toISOString().slice(0, 10);
   const brand = english ? 'Buyer Log · LCW AI Report' : 'Buyer Log · LCW AI Raporu';
-  const hasHeader = /class="[^"]*\bbl-header\b/.test(body);
+  // bare: yalnız gövde (Yerleşim önizlemesinde tek katalog sayfası için).
+  const hasHeader = bare || /class="[^"]*\bbl-header\b/.test(body);
   const header = hasHeader ? '' : `<div class="bl-header"><div class="bl-brand">${esc(brand)}${title ? `<small>${esc(title)}</small>` : ''}</div><div class="bl-meta">${esc(date)}${meta.template ? `<br>${esc(meta.template)}` : ''}</div></div>`;
-  const footer = print ? '' : `<div class="bl-footer"><span>${esc(english ? 'Generated with LCW AI in Buyer Log. Verify figures against Buyer Log data.' : 'Buyer Log içinde LCW AI ile oluşturuldu. Rakamları Buyer Log verisiyle doğrulayın.')}</span><span>${esc(date)}</span></div>`;
+  const footer = print || bare ? '' : `<div class="bl-footer"><span>${esc(english ? 'Generated with LCW AI in Buyer Log. Verify figures against Buyer Log data.' : 'Buyer Log içinde LCW AI ile oluşturuldu. Rakamları Buyer Log verisiyle doğrulayın.')}</span><span>${esc(date)}</span></div>`;
   return `<!DOCTYPE html>
 <html lang="${english ? 'en' : 'tr'}">
 <head>

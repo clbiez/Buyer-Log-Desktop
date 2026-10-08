@@ -246,6 +246,17 @@ app.post('/api/lcwai/output-drafts/:id/render', express.json({ limit: '8mb' }), 
     }
   });
 
+  // Gerçek önizleme: dosyayı oluşturan kodla çizilir, kaydedilmez.
+app.post('/api/lcwai/output-drafts/:id/preview', express.json({ limit: '8mb' }), (req, res) => {
+    try {
+      const body = req.body || {};
+      res.set('Cache-Control', 'no-store').json({ ok: true, preview: outputsOf().previewDraft(ownerOf(req), req.params.id, { data: body.data, title: body.title, orientation: body.orientation }) });
+    } catch (error) {
+      if (error && error.type === 'entity.too.large') return fail(res, lcwAiError('OUTPUT_RENDER_FAILED', { detail: 'draft-too-large' }));
+      fail(res, error);
+    }
+  });
+
 app.post('/api/lcwai/output-drafts/:id/skeleton', express.json({ limit: '8mb' }), (req, res) => {
     try {
       res.set('Cache-Control', 'no-store').json({ ok: true, definition: outputsOf().skeleton(ownerOf(req), req.params.id, req.body && req.body.data) });
@@ -336,7 +347,7 @@ app.get('/api/lcwai/outputs', (req, res) => {
   // ({ anahtar: dataURL }); sunucu doğrular ve dosyayı görsellerle oluşturur.
 app.post('/api/lcwai/outputs/:pendingId/images', express.json({ limit: '48mb' }), (req, res) => {
     try {
-      const output = outputsOf().completeImages(ownerOf(req), req.params.pendingId, req.body && req.body.images);
+      const output = outputsOf().completeImages(ownerOf(req), req.params.pendingId, req.body && req.body.images, req.body && req.body.attributes);
       audit(req, 'LCWAI_OUTPUT_IMAGES', { requested: output.imagesRequested, used: output.imagesUsed });
       res.set('Cache-Control', 'no-store').json({ ok: true, output });
     } catch (error) {

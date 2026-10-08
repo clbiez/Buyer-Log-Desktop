@@ -134,12 +134,13 @@
   }
   function undo() {
     if (!ed) return;
-    if (ed.format === 'pdf' || ed.format === 'html') { const doc = frameDoc(); if (doc) doc.execCommand('undo'); return; }
+    if ((ed.format === 'pdf' || ed.format === 'html') && ed.mode !== 'layout') { const doc = frameDoc(); if (doc) doc.execCommand('undo'); return; }
     const last = ed.history.pop();
     if (!last) { toast(L('Geri alınacak değişiklik yok.', 'Nothing to undo.')); return; }
     ed.data = JSON.parse(last);
     clampSelection();
     renderRail(); renderMain(); markDirty();
+    if (ed.mode === 'layout') schedulePreview(0);
   }
   function clampSelection() {
     if (ed.format === 'pptx') ed.selected = Math.max(0, Math.min(ed.selected, ed.data.slides.length - 1));
@@ -171,6 +172,10 @@
     if (!force && ed && ed.dirty && !window.confirm(L('Oluşturulmamış değişiklikler kaybolacak. Kapatılsın mı?', 'Changes that were not turned into a file will be lost. Close?'))) return false;
     root().remove();
     document.removeEventListener('keydown', onKeydown, true);
+    window.removeEventListener('pointermove', onBlockPointerMove);
+    window.removeEventListener('pointerup', onBlockPointerUp);
+    clearTimeout(previewTimer);
+    if (previewAbort) previewAbort.abort();
     ed = null;
     return true;
   }
@@ -213,6 +218,22 @@
     overlay.addEventListener('dragover', onDragOver);
     overlay.addEventListener('dragleave', event => { const item = event.target.closest && event.target.closest('[data-rail]'); if (item) item.classList.remove('is-drop'); });
     overlay.addEventListener('drop', onDrop);
+    overlay.addEventListener('dragend', () => { if (ed) ed.grpDrag = null; root()?.querySelectorAll('.is-drop').forEach(el => el.classList.remove('is-drop')); });
+    // Yerleşim: grup adı çift tıkla → değiştir; blok çift tıkla → yazısını düzenle.
+    overlay.addEventListener('dblclick', event => {
+      if (!ed || ed.mode !== 'layout') return;
+      const name = event.target.closest('[data-grp-rename]');
+      if (name) { renameGroup(name.dataset.grpRename, '', false); return; }
+      const sub = event.target.closest('[data-grp-rename-sub]');
+      if (sub) { const [group, subgroup] = splitKey(sub.dataset.grpRenameSub); renameGroup(group, subgroup, true); return; }
+      const blk = event.target.closest('[data-blk]');
+      const block = blk && pageModel().blocks.find(item => item.id === blk.dataset.blk);
+      if (block && block.kind !== 'models') editBlockText(block);
+    });
+    overlay.addEventListener('pointerdown', onBlockPointerDown);
+    window.addEventListener('pointermove', onBlockPointerMove);
+    window.addEventListener('pointerup', onBlockPointerUp);
+    overlay.addEventListener('keydown', onBlockKey);
     // Izgara seçici: fareyle üzerine gelince seçilecek ızgara önizlenir.
     overlay.addEventListener('mouseover', event => {
       const cell = event.target.closest && event.target.closest('[data-gp]');
@@ -406,9 +427,15 @@
   function reportSrcdoc(body, extraCss = '') {
     const styles = (ed.data.styles || []).map(css => `<style>${String(css).replace(/<\/style/gi, '')}</style>`).join('');
     const layoutCss = LAY() ? LAY().layoutCss(ed.data.layout, { orientation: ed.orientation }) : '';
-    return `<!DOCTYPE html><html lang="${isEn() ? 'en' : 'tr'}"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${FRAME_CSP}"><style>${String(ed.draft.previewCss || '').replace(/<\/style/gi, '')}</style><style data-bl-layout>${layoutCss}</style>${styles}<style>${EDIT_CSS}${extraCss}</style></head><body><div class="bl-page"><div class="bl-report" data-bl-edit-root>${body}</div></div></body></html>`;
+    return `<!DOCTYPE html><html lang="${isEn() ? 'en' : 'tr'}"><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${FRAME_CSP}"><style>${String(ed.draft.previewCss || '').replace(/<\/style/gi, '')}</style><style data-bl-layout>${layoutCss}</style>${styles}<style>${EDIT_CSS}${catalogStandInCss()}${extraCss}</style></head><body><div class="bl-page"><div class="bl-report" data-bl-edit-root>${body}</div></div></body></html>`;
   }
 
+  /* İçerik adımında model kataloğu yer tutucusu görünür bir kutu olarak
+     durur; kartlar ve gruplar Yerleşim adımında düzenlenir. */
+  function catalogStandInCss() {
+    const text = L('Model kataloğu — gruplar ve sayfa düzeni Yerleşim adımında', 'Model catalogue — groups and page layout are in the Layout step').replace(/["\\]/g, '');
+    return `.bl-catalog{display:block;min-height:64px;margin:14px 0;border:1.5px dashed var(--acc);border-radius:10px;background:color-mix(in srgb,var(--acc) 6%,transparent);user-select:none}.bl-catalog::before{content:"▦  ${text}";display:block;padding:20px;color:var(--acc);font-weight:600;text-align:center}`;
+  }
   function renderReportEditor(main) {
     const tools = [
       ['bold', 'B', L('Kalın', 'Bold')], ['italic', 'I', L('İtalik', 'Italic')], ['underline', 'U', L('Altı çizili', 'Underline')],
@@ -431,6 +458,7 @@
       if (!doc) return;
       const images = ed.draft.images || {};
       doc.querySelectorAll('img[data-bl-image]').forEach(img => { const src = images[String(img.getAttribute('data-bl-image') || '').toUpperCase()]; if (src) img.setAttribute('src', src); });
+      doc.querySelectorAll('.bl-catalog').forEach(el => el.setAttribute('contenteditable', 'false'));
       doc.designMode = 'on';
       doc.addEventListener('input', () => { markDirty(); scheduleSectionRail(); });
       doc.addEventListener('keydown', event => { if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) { event.preventDefault(); renderFile(); } else if (event.key === 'Escape') { event.preventDefault(); close(false); } });
@@ -449,6 +477,7 @@
     const copy = rootEl.cloneNode(true);
     copy.querySelectorAll('img[data-bl-image]').forEach(img => img.removeAttribute('src'));
     copy.querySelectorAll('.bl-active').forEach(el => el.classList.remove('bl-active'));
+    copy.querySelectorAll('.bl-catalog').forEach(el => { el.removeAttribute('contenteditable'); el.removeAttribute('style'); el.innerHTML = ''; });
     copy.querySelectorAll('[class=""]').forEach(el => el.removeAttribute('class'));
     return copy.innerHTML;
   }
@@ -460,7 +489,10 @@
     return list.map(el => {
       const heading = el.tagName === 'H1' ? el : el.querySelector('h2, h3');
       const kind = el.tagName === 'H1' ? L('Rapor başlığı', 'Report title') : el.tagName === 'SECTION' ? L('Bölüm', 'Section') : L('Blok', 'Block');
-      return { el, title: (heading ? heading.textContent : el.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 80), kind };
+      const catalogEl = !heading && el.querySelector('.bl-catalog');
+      const gallery = catalogEl && (ed.data.galleries || [])[Number(catalogEl.getAttribute('data-bl-catalog'))];
+      const text = heading ? heading.textContent : catalogEl ? (gallery && gallery.title) || L('Model kataloğu', 'Model catalogue') : el.textContent || '';
+      return { el, title: text.replace(/\s+/g, ' ').trim().slice(0, 80), kind };
     });
   }
   let railTimer = 0;
@@ -539,6 +571,8 @@
     }
     if (ed.sourceMode && mode === 'layout') { const source = $('[data-source]'); if (source) ed.data.body = source.value; ed.sourceMode = false; }
     ed.mode = mode;
+    // Yerleşimde gruplar ve önizleme için tüm genişlik kullanılır (sol liste gizlenir).
+    root().querySelector('.lcwaiEd')?.classList.toggle('is-wide', mode === 'layout' && ed.format !== 'xlsx');
     renderFoot();
     root().querySelectorAll('[data-ed-mode]').forEach(button => { const active = button.dataset.edMode === mode; button.classList.toggle('is-active', active); button.setAttribute('aria-selected', active ? 'true' : 'false'); });
     renderRail(); renderMain();
@@ -611,44 +645,509 @@
     const cells = Array.from({ length: Math.min(24, sample.columns * sample.rows) }, () => '<i></i>').join('');
     return `<span class="lcwaiLayThumb" style="grid-template-columns:repeat(${sample.columns},1fr)">${cells}</span>`;
   }
-  const hasGallery = () => (ed.format === 'pptx' ? (ed.data.slides || []).some(slide => slide.layout === 'gallery') : ed.format === 'xlsx' ? false : /class="[^"]*\bbl-gallery\b/.test(ed.data.body || ''));
 
-  function renderLayoutPanel(main) {
-    if (!main || !LAY()) return;
-    const isSheet = ed.format === 'xlsx';
-    const isReport = ed.format === 'pdf' || ed.format === 'html';
-    const gallery = hasGallery();
-    // Ana ayarlar: herkesin ihtiyaç duyduğu üç-dört kontrol. Diğerleri "İnce ayar"da.
-    const basics = isSheet
-      ? slider('titleSize', L('Başlık yazı boyutu', 'Title text size')) + slider('bodySize', L('Hücre yazı boyutu', 'Cell text size')) + slider('imageSize', L('Model görseli boyutu', 'Model image size'))
-      : slider('titleSize', L('Başlık yazı boyutu', 'Title text size')) + slider('bodySize', L('Metin boyutu', 'Text size'));
-    const grid = isSheet ? '' : gallery
-      ? `<section class="lcwaiLayGroup"><h4>${esc(ed.format === 'pptx' ? L('Slayt başına model', 'Models per slide') : L('Sayfa başına model', 'Models per page'))}</h4>${gridPicker()}</section>`
-      : `<section class="lcwaiLayGroup"><h4>${esc(L('Model ızgarası', 'Model grid'))}</h4><p class="lcwaiNote">${esc(ed.format === 'pptx' ? L('Bu sunumda model galerisi yok. İçerik adımında “Model galerisi” slaytı ekleyince burada kaça kaç model yerleşeceğini seçebilirsiniz.', 'This deck has no model gallery. Add a “Model gallery” slide in the Content step to choose how many models fit here.') : L('Bu raporda model galerisi yok; ızgara galeri olan raporlarda görünür.', 'This report has no model gallery; the grid appears for reports with a gallery.'))}</p></section>`;
-    const orientation = isReport ? `<section class="lcwaiLayGroup"><h4>${esc(L('Sayfa yönü', 'Page orientation'))}</h4><div class="lcwaiSeg" role="radiogroup">${[['portrait', L('Dikey', 'Portrait')], ['landscape', L('Yatay', 'Landscape')]].map(([key, label]) => `<button type="button" role="radio" data-ed-orient="${key}" class="${ed.orientation === key ? 'is-active' : ''}" aria-checked="${ed.orientation === key}">${esc(label)}</button>`).join('')}</div></section>` : '';
-    const fine = isSheet
-      ? slider('headerHeight', L('Sütun başlığı satır yüksekliği', 'Column header row height'))
-      : slider('headerHeight', ed.format === 'pptx' ? L('Başlık bandı yüksekliği', 'Title band height') : L('Rapor başlığı yüksekliği', 'Report header height'))
-        + slider('tableSize', L('Tablo yazı boyutu', 'Table text size'))
-        + slider('margin', L('Kenar boşluğu', 'Margin'))
-        + (gallery ? slider('gap', L('Kartlar arası boşluk', 'Gap between cards')) + slider('imageShare', L('Kartta görselin payı', 'Image share of the card')) + slider('cardTextSize', L('Kart yazı boyutu', 'Card text size'))
-          + `<div class="lcwaiLayFlags"><span>${esc(L('Kartta göster:', 'Show on card:'))}</span>${flag('showTitle', L('Model adı', 'Model name'))}${flag('showSubtitle', L('Alt bilgi', 'Subtitle'))}${flag('showNote', L('Not', 'Note'))}</div>` : '');
-    main.innerHTML = `<div class="lcwaiLay">
-      <aside class="lcwaiLayControls">
-        <section class="lcwaiLayGroup is-first"><h4>${esc(L('Hazır yerleşimler', 'Ready-made layouts'))}</h4>
-          <div class="lcwaiLayPresets" role="group">${PRESET_INFO().map(([key, label, hint]) => `<button type="button" class="lcwaiLayPreset${presetActive(key) ? ' is-active' : ''}" data-lay-preset="${key}">${presetThumb(key)}<b>${esc(label)}</b><small>${esc(hint)}</small></button>`).join('')}</div></section>
-        ${grid}
-        <section class="lcwaiLayGroup"><h4>${esc(L('Yazı boyutu', 'Text size'))}</h4>${basics}</section>
-        ${orientation}
-        <details class="lcwaiLayMore" data-lay-more${ed.layMoreOpen ? ' open' : ''}><summary>${esc(L('İnce ayar', 'Fine-tune'))}</summary><div class="lcwaiLayGroup">${fine}<button type="button" class="lcwaiBtn is-link" data-lay-reset>${esc(L('Varsayılana dön', 'Reset to default'))}</button></div></details>
-      </aside>
-      <div class="lcwaiLayStage" data-lay-stage></div>
-    </div>`;
-    const more = main.querySelector('[data-lay-more]');
-    if (more) more.addEventListener('toggle', () => { ed.layMoreOpen = more.open; });
-    updateLayoutPreview();
+  /* ---------------- Galeriler (katalog) ----------------
+     PowerPoint: "gallery" slaytları; PDF/HTML: ed.data.galleries. Her
+     galerinin kartları (items) grup/alt grup taşır; catalog sırayı tutar. */
+  function galleryList() {
+    if (ed.format === 'pptx') return (ed.data.slides || []).map((slide, index) => ({ slide, index })).filter(entry => entry.slide.layout === 'gallery')
+      .map(entry => ({ key: entry.index, label: L(`${entry.index + 1}. slayt · ${entry.slide.title}`, `Slide ${entry.index + 1} · ${entry.slide.title}`), obj: entry.slide }));
+    if (ed.format === 'pdf' || ed.format === 'html') return (ed.data.galleries || []).map((gallery, index) => ({ key: index, label: gallery.title || L(`Katalog ${index + 1}`, `Catalogue ${index + 1}`), obj: gallery }));
+    return [];
+  }
+  const hasGallery = () => galleryList().length > 0;
+  function currentGallery() {
+    const list = galleryList();
+    if (!list.length) return null;
+    const found = list.find(entry => entry.key === ed.galleryKey) || list[0];
+    ed.galleryKey = found.key;
+    const obj = found.obj;
+    obj.items = obj.items || [];
+    obj.catalog = obj.catalog || { by: '', then: '', order: [], subOrder: {} };
+    obj.catalog.order = obj.catalog.order || [];
+    obj.catalog.subOrder = obj.catalog.subOrder || {};
+    return found;
   }
 
+  /* ================= Yerleşim adımı ================= */
+  function renderLayoutPanel(main) {
+    if (!main || !LAY()) return;
+    if (ed.format === 'xlsx') { renderSheetLayout(main); return; }
+    const gallery = hasGallery();
+    if (!ed.layTab) ed.layTab = gallery ? 'groups' : 'look';
+    if (!gallery) ed.layTab = 'look';
+    main.innerHTML = `<div class="lcwaiLay">
+      <aside class="lcwaiLayControls">
+        ${gallery ? `<div class="lcwaiLayTabs" role="tablist"><button type="button" role="tab" data-lay-tab="groups" class="${ed.layTab === 'groups' ? 'is-active' : ''}">${esc(L('Gruplar', 'Groups'))}</button><button type="button" role="tab" data-lay-tab="look" class="${ed.layTab === 'look' ? 'is-active' : ''}">${esc(L('Görünüm', 'Look'))}</button></div>` : ''}
+        <div data-lay-panel>${ed.layTab === 'groups' ? groupsPanel() : lookPanel()}</div>
+      </aside>
+      <div class="lcwaiLayStage" data-lay-stage>
+        <div class="lcwaiLayBar">
+          <button type="button" class="lcwaiEdIconBtn is-tool" data-pg-step="-1" aria-label="${esc(L('Önceki sayfa', 'Previous page'))}" title="${esc(L('Önceki sayfa', 'Previous page'))}">‹</button>
+          <select data-pg-select aria-label="${esc(L('Önizlenen sayfa', 'Previewed page'))}"></select>
+          <button type="button" class="lcwaiEdIconBtn is-tool" data-pg-step="1" aria-label="${esc(L('Sonraki sayfa', 'Next page'))}" title="${esc(L('Sonraki sayfa', 'Next page'))}">›</button>
+          <span class="lcwaiLayBadge" data-pg-status></span>
+          <span style="flex:1"></span>
+          ${gallery ? `<button type="button" class="lcwaiBtn" data-blk-add>＋ ${esc(L('Metin kutusu', 'Text box'))}</button><button type="button" class="lcwaiBtn is-link" data-blk-reset>${esc(L('Sayfa düzenini sıfırla', 'Reset page arrangement'))}</button>` : ''}
+        </div>
+        <div class="lcwaiLayCanvas" data-pg-canvas></div>
+        <p class="lcwaiNote" data-pg-hint></p>
+      </div>
+    </div>`;
+    bindLookPanel(main);
+    schedulePreview(0);
+  }
+  function renderLayPanel() {
+    const panel = $('[data-lay-panel]');
+    if (!panel) return;
+    panel.innerHTML = ed.layTab === 'groups' ? groupsPanel() : lookPanel();
+    root().querySelectorAll('[data-lay-tab]').forEach(tab => tab.classList.toggle('is-active', tab.dataset.layTab === ed.layTab));
+    bindLookPanel(panel);
+  }
+  function bindLookPanel(scope) {
+    const more = scope.querySelector('[data-lay-more]');
+    if (more) more.addEventListener('toggle', () => { ed.layMoreOpen = more.open; });
+  }
+
+  /* --- Görünüm sekmesi: hazır yerleşimler, ızgara, yazı boyutları, ince ayar --- */
+  function lookPanel() {
+    const isReport = ed.format === 'pdf' || ed.format === 'html';
+    const gallery = hasGallery();
+    const grid = gallery ? `<section class="lcwaiLayGroup"><h4>${esc(ed.format === 'pptx' ? L('Slayt başına model', 'Models per slide') : L('Sayfa başına model', 'Models per page'))}</h4>${gridPicker()}</section>`
+      : `<section class="lcwaiLayGroup"><h4>${esc(L('Model kataloğu', 'Model catalogue'))}</h4><p class="lcwaiNote">${esc(ed.format === 'pptx' ? L('Bu sunumda model galerisi yok. İçerik adımında “Model galerisi” slaytı ekleyince gruplama ve sayfa tasarımı burada açılır.', 'This deck has no model gallery. Add a “Model gallery” slide in the Content step to unlock grouping and page design here.') : L('Bu raporda model kataloğu yok; gruplama ve sayfa tasarımı katalog olan raporlarda açılır.', 'This report has no model catalogue; grouping and page design appear for reports with one.'))}</p></section>`;
+    const orientation = isReport ? `<section class="lcwaiLayGroup"><h4>${esc(L('Sayfa yönü', 'Page orientation'))}</h4><div class="lcwaiSeg" role="radiogroup">${[['portrait', L('Dikey', 'Portrait')], ['landscape', L('Yatay', 'Landscape')]].map(([key, label]) => `<button type="button" role="radio" data-ed-orient="${key}" class="${ed.orientation === key ? 'is-active' : ''}" aria-checked="${ed.orientation === key}">${esc(label)}</button>`).join('')}</div></section>` : '';
+    const fine = slider('headerHeight', ed.format === 'pptx' ? L('Başlık bandı yüksekliği (diğer slaytlar)', 'Title band height (other slides)') : L('Rapor başlığı yüksekliği', 'Report header height'))
+      + slider('tableSize', L('Tablo yazı boyutu', 'Table text size'))
+      + slider('margin', L('Kenar boşluğu', 'Margin'))
+      + (gallery ? slider('gap', L('Bloklar ve kartlar arası boşluk', 'Gap between blocks and cards')) + slider('imageShare', L('Kartta görselin payı', 'Image share of the card')) + slider('cardTextSize', L('Kart yazı boyutu', 'Card text size'))
+        + `<div class="lcwaiLayFlags"><span>${esc(L('Kartta göster:', 'Show on card:'))}</span>${flag('showTitle', L('Model adı', 'Model name'))}${flag('showSubtitle', L('Alt bilgi', 'Subtitle'))}${flag('showNote', L('Not', 'Note'))}</div>` : '');
+    return `<section class="lcwaiLayGroup is-first"><h4>${esc(L('Hazır yerleşimler', 'Ready-made layouts'))}</h4>
+        <div class="lcwaiLayPresets" role="group">${PRESET_INFO().map(([key, label, hint]) => `<button type="button" class="lcwaiLayPreset${presetActive(key) ? ' is-active' : ''}" data-lay-preset="${key}">${presetThumb(key)}<b>${esc(label)}</b><small>${esc(hint)}</small></button>`).join('')}</div></section>
+      ${grid}
+      <section class="lcwaiLayGroup"><h4>${esc(L('Yazı boyutu', 'Text size'))}</h4>${slider('titleSize', L('Başlık yazı boyutu', 'Title text size'))}${slider('bodySize', L('Metin boyutu', 'Text size'))}</section>
+      ${orientation}
+      <details class="lcwaiLayMore" data-lay-more${ed.layMoreOpen ? ' open' : ''}><summary>${esc(L('İnce ayar', 'Fine-tune'))}</summary><div class="lcwaiLayGroup">${fine}<button type="button" class="lcwaiBtn is-link" data-lay-reset>${esc(L('Varsayılana dön', 'Reset to default'))}</button></div></details>`;
+  }
+
+  /* --- Gruplar sekmesi: sütun seç → otomatik grupla; sürükle-bırak ile düzelt --- */
+  const NO_GROUP = () => L('(Grupsuz)', '(Ungrouped)');
+  function groupsPanel() {
+    const gallery = currentGallery();
+    if (!gallery) return '';
+    const obj = gallery.obj;
+    const fields = LAY().groupingFields(obj.items, ed.draft.attributes || {});
+    const fieldOptions = current => `<option value="">${esc(L('— Yok —', '— None —'))}</option>${fields.map(field => `<option value="${esc(field.key)}"${field.key === current ? ' selected' : ''}>${esc(field.label)} · ${esc(field.source === 'data' ? L(`veri, ${field.distinct} değer`, `data, ${field.distinct} values`) : L(`kart, ${field.distinct} değer`, `card, ${field.distinct} values`))}</option>`).join('')}`;
+    const list = galleryList();
+    const groups = LAY().groupItems(obj.items, obj.catalog);
+    const known = new Set(groups.map(group => group.group));
+    // Boş (yeni) gruplar da bırakma hedefi olarak görünür.
+    for (const name of obj.catalog.order) if (!known.has(name)) groups.push({ group: name, subgroups: [] });
+    const chip = entry => {
+      const src = imageOf(entry.item.image);
+      return `<span class="lcwaiGrpChip" draggable="true" data-grp-item="${entry.index}" title="${esc([entry.item.title, entry.item.subtitle].filter(Boolean).join(' · '))}">${src ? `<img src="${esc(src)}" alt="">` : ''}${esc(entry.item.title || entry.item.image || '—')}</span>`;
+    };
+    const tree = groups.map((group, gi) => `<div class="lcwaiGrp" data-grp-drop="${esc(group.group)}|">
+        <div class="lcwaiGrpHead" data-grp-name="${esc(group.group)}"><b data-grp-rename="${esc(group.group)}" title="${esc(L('Adı değiştirmek için çift tıklayın', 'Double-click to rename'))}">${esc(group.group || NO_GROUP())}</b><small>${group.subgroups.reduce((sum, sub) => sum + sub.entries.length, 0)}</small>
+          <span class="lcwaiEdRailOps is-visible"><button type="button" data-grp-move="${esc(group.group)}" data-dir="-1"${gi ? '' : ' disabled'} aria-label="${esc(L('Yukarı taşı', 'Move up'))}">↑</button><button type="button" data-grp-move="${esc(group.group)}" data-dir="1"${gi < groups.length - 1 ? '' : ' disabled'} aria-label="${esc(L('Aşağı taşı', 'Move down'))}">↓</button></span></div>
+        ${group.subgroups.map(sub => `<div class="lcwaiGrpSub" data-grp-drop="${esc(group.group)}|${esc(sub.subgroup)}">
+          ${sub.subgroup || group.subgroups.length > 1 ? `<div class="lcwaiGrpSubHead" data-grp-go="${esc(group.group)}|${esc(sub.subgroup)}"><span data-grp-rename-sub="${esc(group.group)}|${esc(sub.subgroup)}" title="${esc(L('Adı değiştirmek için çift tıklayın', 'Double-click to rename'))}">${esc(sub.subgroup || L('(alt grupsuz)', '(no subgroup)'))}</span><small>${sub.entries.length}</small></div>` : ''}
+          <div class="lcwaiGrpChips">${sub.entries.map(chip).join('')}</div></div>`).join('') || `<div class="lcwaiGrpSub is-empty" data-grp-drop="${esc(group.group)}|"><p class="lcwaiNote">${esc(L('Modelleri buraya sürükleyin', 'Drag models here'))}</p></div>`}
+      </div>`).join('');
+    return `${list.length > 1 ? `<label class="lcwaiEdField"><span>${esc(L('Katalog', 'Catalogue'))}</span><select data-grp-gallery>${list.map(entry => `<option value="${esc(entry.key)}"${entry.key === gallery.key ? ' selected' : ''}>${esc(entry.label)}</option>`).join('')}</select></label>` : ''}
+      <div class="lcwaiEdRow lcwaiGrpPick">
+        <label class="lcwaiEdField"><span>${esc(L('Grupla', 'Group by'))}</span><select data-grp-by>${fieldOptions(obj.catalog.by)}</select></label>
+        <label class="lcwaiEdField"><span>${esc(L('Alt grup', 'Subgroup by'))}</span><select data-grp-then${obj.catalog.by ? '' : ' disabled'}>${fieldOptions(obj.catalog.then)}</select></label>
+      </div>
+      ${fields.length ? '' : `<p class="lcwaiNote">${esc(L('Gruplanacak sütun bulunamadı. LCW AI’a Buyer Log ekranı bağlam olarak verildiğinde (ör. Koleksiyon) o ekranın sütunları burada listelenir.', 'No column to group by. When a Buyer Log screen is given to LCW AI as context (e.g. Collection), its columns are listed here.'))}</p>`}
+      <p class="lcwaiNote">${esc(L('Modelleri sürükleyip başka gruba bırakın. Grup adına çift tıklayıp değiştirin. Bir alt gruba tıklayınca sayfası açılır.', 'Drag models onto another group. Double-click a group name to rename it. Click a subgroup to open its page.'))}</p>
+      <div class="lcwaiGrpTree" data-grp-tree>${tree}</div>
+      <button type="button" class="lcwaiBtn" data-grp-new>＋ ${esc(L('Yeni grup', 'New group'))}</button>`;
+  }
+  function applyGrouping(by, then) {
+    const gallery = currentGallery();
+    if (!gallery) return;
+    const obj = gallery.obj;
+    if (ed.manualGroups && !window.confirm(L('Elle yaptığınız grup değişiklikleri seçilen sütuna göre yeniden hesaplanacak. Devam edilsin mi?', 'Your manual group changes will be recalculated from the chosen column. Continue?'))) { renderLayPanel(); return; }
+    pushHistory();
+    obj.items = LAY().assignGroups(obj.items, ed.draft.attributes || {}, by, by ? then : '');
+    obj.catalog = { by, then: by ? then : '', order: [], subOrder: {} };
+    ed.manualGroups = false;
+    ed.pageIndex = null;
+    markDirty(); renderLayPanel(); schedulePreview();
+  }
+  /* Elle düzeltmeden önce mevcut sıra sabitlenir; böylece model taşınınca
+     ya da ad değişince gruplar listede yer değiştirmez. */
+  function freezeOrder(obj) {
+    const groups = LAY().groupItems(obj.items, obj.catalog);
+    const order = groups.map(group => group.group);
+    for (const extra of obj.catalog.order) if (!order.includes(extra)) order.push(extra);
+    obj.catalog.order = order;
+    for (const group of groups) obj.catalog.subOrder[group.group] = group.subgroups.map(sub => sub.subgroup);
+  }
+  function moveItem(index, group, subgroup) {
+    const obj = currentGallery().obj;
+    const item = obj.items[index];
+    if (!item || (item.group === group && item.subgroup === subgroup)) return;
+    pushHistory();
+    freezeOrder(obj);
+    if (!obj.catalog.order.includes(group)) obj.catalog.order.push(group);
+    const subs = obj.catalog.subOrder[group] || (obj.catalog.subOrder[group] = []);
+    if (!subs.includes(subgroup)) subs.push(subgroup);
+    obj.items[index] = { ...item, group, subgroup };
+    ed.manualGroups = true;
+    markDirty(); renderLayPanel(); schedulePreview();
+  }
+  function renameGroup(oldName, oldSub, isSub) {
+    const obj = currentGallery().obj;
+    const current = isSub ? oldSub : oldName;
+    const next = window.prompt(isSub ? L('Alt grubun yeni adı', 'New subgroup name') : L('Grubun yeni adı', 'New group name'), current);
+    if (next == null) return;
+    const name = String(next).replace(/\s+/g, ' ').trim().slice(0, 120);
+    if (name === current) return;
+    pushHistory();
+    freezeOrder(obj);
+    obj.items = obj.items.map(item => (isSub ? (item.group === oldName && item.subgroup === oldSub ? { ...item, subgroup: name } : item) : (item.group === oldName ? { ...item, group: name } : item)));
+    if (!isSub) {
+      obj.catalog.order = obj.catalog.order.map(entry => (entry === oldName ? name : entry));
+      if (obj.catalog.subOrder[oldName]) { obj.catalog.subOrder[name] = obj.catalog.subOrder[oldName]; delete obj.catalog.subOrder[oldName]; }
+    } else if (obj.catalog.subOrder[oldName]) obj.catalog.subOrder[oldName] = obj.catalog.subOrder[oldName].map(entry => (entry === oldSub ? name : entry));
+    ed.manualGroups = true;
+    markDirty(); renderLayPanel(); schedulePreview();
+  }
+  function moveGroup(name, dir) {
+    const obj = currentGallery().obj;
+    const order = LAY().groupItems(obj.items, obj.catalog).map(group => group.group);
+    for (const extra of obj.catalog.order) if (!order.includes(extra)) order.push(extra);
+    const i = order.indexOf(name);
+    if (i < 0 || !move(order, i, i + dir)) return;
+    pushHistory();
+    obj.catalog.order = order;
+    markDirty(); renderLayPanel(); schedulePreview();
+  }
+
+  /* ---------------- Gerçek önizleme ----------------
+     Sunucu, dosyayı oluşturan kodla çizer (kaydetmeden). Ayar değişince
+     kısa bir gecikmeyle yenilenir; eski istek iptal edilir. */
+  let previewTimer = 0;
+  let previewAbort = null;
+  function schedulePreview(delay = 220) {
+    if (!ed || ed.mode !== 'layout' || ed.format === 'xlsx') return;
+    clearTimeout(previewTimer);
+    previewTimer = setTimeout(fetchPreview, delay);
+    setPreviewStatus('busy');
+  }
+  function setPreviewStatus(state, text = '') {
+    const badge = $('[data-pg-status]');
+    if (!badge) return;
+    badge.className = `lcwaiLayBadge is-${state}`;
+    badge.textContent = state === 'busy' ? L('Önizleme güncelleniyor…', 'Updating preview…') : state === 'error' ? text : L('✓ Dosyayla aynı', '✓ Same as the file');
+  }
+  async function fetchPreview() {
+    const api = AI();
+    if (!api || !ed || ed.mode !== 'layout') return;
+    if (previewAbort) previewAbort.abort();
+    const controller = new AbortController();
+    previewAbort = controller;
+    const draftId = ed.draft.id;
+    try {
+      const preview = await api.previewDraft(draftId, { data: collectData(), title: ed.title, orientation: ed.orientation }, controller.signal);
+      if (!ed || ed.draft.id !== draftId || controller.signal.aborted) return;
+      const before = ed.pvPages && ed.pageIndex != null ? ed.pvPages[ed.pageIndex] : null;
+      ed.preview = preview;
+      ed.pvPages = previewPages(preview);
+      // Aynı grup sayfasında kalınır (gruplar değişince sayfa sırası kayabilir).
+      const same = before && before.catalog ? ed.pvPages.findIndex(page => page.catalog && page.catalog.source === before.catalog.source && page.catalog.group === before.catalog.group && page.catalog.subgroup === before.catalog.subgroup && page.catalog.part === before.catalog.part) : -1;
+      ed.pageIndex = same >= 0 ? same : ed.pageIndex == null || (before && before.catalog) ? firstCatalogPage() : ed.pageIndex;
+      ed.pageIndex = Math.max(0, Math.min(ed.pageIndex, ed.pvPages.length - 1));
+      setPreviewStatus('ok');
+      drawStage();
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      setPreviewStatus('error', (error && error.issues && error.issues[0]) || api.errorText(error));
+    }
+  }
+  function previewPages(preview) {
+    if (preview.format === 'pptx') {
+      return preview.slides.map((slide, index) => ({
+        kind: slide.layout === 'catalogPage' ? 'catalog' : 'slide', scene: slide.scene, catalog: slide.catalog, source: slide.source,
+        label: `${index + 1}. ${slide.catalog ? [slide.title, slide.catalog.group, slide.catalog.subgroup].filter(Boolean).join(' › ') : slide.title}`,
+      }));
+    }
+    const pages = [{ kind: 'document', label: L('Tüm rapor (baskı görünümü)', 'Whole report (print view)') }];
+    for (const entry of preview.catalogs || []) {
+      entry.pages.forEach((page, index) => pages.push({
+        kind: 'catalog', html: page.html, catalog: { source: entry.gallery, group: page.group, subgroup: page.subgroup, part: page.part, parts: page.parts },
+        label: `${L('Katalog', 'Catalogue')} ${index + 1}/${entry.pages.length} · ${[entry.title, page.group, page.subgroup].filter(Boolean).join(' › ') || L('Modeller', 'Models')}${page.parts > 1 ? ` (${page.part}/${page.parts})` : ''}`,
+      }));
+    }
+    return pages;
+  }
+  const firstCatalogPage = () => Math.max(0, (ed.pvPages || []).findIndex(page => page.kind === 'catalog'));
+  function goToGroup(group, subgroup) {
+    const index = (ed.pvPages || []).findIndex(page => page.catalog && page.catalog.source === ed.galleryKey && page.catalog.group === group && page.catalog.subgroup === subgroup);
+    if (index >= 0) { ed.pageIndex = index; drawStage(); }
+  }
+
+  function drawStage() {
+    const canvas = $('[data-pg-canvas]');
+    if (!canvas || !ed.pvPages) return;
+    const select = $('[data-pg-select]');
+    if (select) select.innerHTML = ed.pvPages.map((page, index) => `<option value="${index}"${index === ed.pageIndex ? ' selected' : ''}>${esc(page.label)}</option>`).join('');
+    const page = ed.pvPages[ed.pageIndex];
+    const hint = $('[data-pg-hint]');
+    if (hint) hint.textContent = page && page.kind === 'catalog'
+      ? L('Kutuları sürükleyip taşıyın, sağ alt köşeden boyutlandırın, yazıya çift tıklayıp değiştirin. Seçili kutu ok tuşlarıyla da taşınır.', 'Drag boxes to move them, resize from the bottom-right corner, double-click text to change it. Arrow keys also move the selected box.')
+      : L('Bu sayfa dosyadaki hâliyle gösterilir. Katalog sayfalarında kutuları düzenleyebilirsiniz.', 'This page is shown exactly as in the file. You can arrange boxes on catalogue pages.');
+    if (!page) { canvas.innerHTML = ''; return; }
+    if (ed.preview.format === 'pptx') drawSlide(canvas, page);
+    else drawReportPage(canvas, page);
+  }
+
+  /* --- PowerPoint: sahne (şekiller, pt) → ölçekli HTML --- */
+  const hex = value => `#${String(value || 'FFFFFF').replace(/[^0-9a-fA-F]/g, '').slice(0, 6)}`;
+  function fillCss(fill) {
+    if (!fill) return 'transparent';
+    if (typeof fill === 'object') { const c = hex(fill.color); const a = Math.max(0, Math.min(100, fill.alpha == null ? 100 : fill.alpha)) / 100; return `color-mix(in srgb, ${c} ${Math.round(a * 100)}%, transparent)`; }
+    return hex(fill);
+  }
+  function drawSlide(canvas, page) {
+    const preview = ed.preview;
+    const s = Math.max(0.3, Math.min(1.4, (canvas.clientWidth - 8) / preview.width, ((canvas.clientHeight || 560) - 8) / preview.height));
+    const px = value => `${(value * s).toFixed(2)}px`;
+    const bg = Array.isArray(page.scene.background) ? `linear-gradient(135deg, ${hex(page.scene.background[0])}, ${hex(page.scene.background[1])})` : hex(page.scene.background);
+    const align = { l: 'left', ctr: 'center', r: 'right' };
+    const anchor = { t: 'flex-start', ctr: 'center', b: 'flex-end' };
+    const items = page.scene.items.map(item => {
+      if (item.t === 'img') { const src = imageOf(item.token); return src ? `<img class="lcwaiScnImg" src="${esc(src)}" alt="" style="left:${px(item.x)};top:${px(item.y)};width:${px(item.w)};height:${px(item.h)}">` : ''; }
+      if (item.t === 'table') {
+        const head = item.columns.map((column, i) => `<th style="width:${px(item.colW)};text-align:left">${esc(column)}</th>`).join('');
+        const rows = item.rows.map((row, r) => `<tr style="height:${px(item.heights[r + 1])};background:${hex(r % 2 ? item.colors.band : item.colors.paper)}">${row.map((cell, i) => `<td style="text-align:${item.numeric[i] ? 'right' : 'left'}">${esc(cell)}</td>`).join('')}</tr>`).join('');
+        return `<table class="lcwaiScnTable" style="left:${px(item.x)};top:${px(item.y)};font-size:${px(item.fontSize)};--line:${hex(item.colors.line)};color:${hex(item.colors.ink)}"><thead><tr style="height:${px(item.heights[0])};background:${hex(item.colors.head)};color:${hex(item.colors.headInk)}">${head}</tr></thead><tbody>${rows}</tbody></table>`;
+      }
+      const paragraphs = item.paragraphs.map(par => `<div class="lcwaiScnP" style="font-size:${px(par.size)};font-weight:${par.bold ? 700 : 400};${par.italic ? 'font-style:italic;' : ''}color:${hex(par.color)};text-align:${align[par.align] || 'left'};margin-bottom:${px(par.spaceAfter || 0)}">${par.bullet ? '<span class="lcwaiScnBullet">■</span>' : ''}${esc(par.text)}</div>`).join('');
+      return `<div class="lcwaiScnBox" style="left:${px(item.x)};top:${px(item.y)};width:${px(item.w)};height:${px(item.h)};background:${fillCss(item.fill)};${item.line ? `border:${Math.max(0.5, item.lineW * s).toFixed(2)}px solid ${hex(item.line)};` : ''}${item.geometry === 'ellipse' ? 'border-radius:50%;' : ''}padding:${px(item.inset)};justify-content:${anchor[item.anchor] || 'flex-start'}">${paragraphs}</div>`;
+    }).join('');
+    canvas.innerHTML = `<div class="lcwaiScene" style="width:${px(preview.width)};height:${px(preview.height)};background:${bg};font-family:'${esc(preview.font)}',var(--head),sans-serif">${items}${page.kind === 'catalog' ? `<div class="lcwaiBlkLayer" data-blk-layer style="left:${px(preview.area.x)};top:${px(preview.area.y)};width:${px(preview.area.w)};height:${px(preview.area.h)}"></div>` : ''}</div>`;
+    if (page.kind === 'catalog') drawBlocks(canvas.querySelector('[data-blk-layer]'), preview.area.w * s, preview.area.h * s, preview.gap * s, page);
+  }
+
+  /* --- PDF/HTML: basılacak belgenin aynısı (betiksiz iframe) --- */
+  const MM = 96 / 25.4;
+  function drawReportPage(canvas, page) {
+    const preview = ed.preview;
+    const images = ed.draft.images || {};
+    const fill = doc => doc.querySelectorAll('img[data-bl-image]').forEach(img => { const src = images[String(img.getAttribute('data-bl-image') || '').toUpperCase()]; if (src) img.setAttribute('src', src); });
+    if (page.kind === 'document') {
+      const zoom = Math.max(0.3, Math.min(1, (canvas.clientWidth - 24) / ((ed.orientation === 'landscape' ? 297 : 210) * MM)));
+      canvas.innerHTML = `<iframe class="lcwaiLayDoc" data-lay-frame sandbox="allow-same-origin" title="${esc(L('Rapor önizlemesi', 'Report preview'))}"></iframe>`;
+      const frame = canvas.querySelector('iframe');
+      frame.addEventListener('load', () => { if (frame.contentDocument) fill(frame.contentDocument); }, { once: true });
+      frame.srcdoc = preview.document.replace('</head>', `<style>html{zoom:${zoom.toFixed(3)}}</style></head>`);
+      return;
+    }
+    const box = LAY().pageBox(preview.layout, ed.orientation);
+    const pageW = box.width * MM, pageH = box.height * MM;
+    const zoom = Math.max(0.2, Math.min(1.2, (canvas.clientWidth - 16) / pageW, ((canvas.clientHeight || 600) - 16) / pageH));
+    canvas.innerHTML = `<div class="lcwaiPaper" style="width:${(pageW * zoom).toFixed(1)}px;height:${(pageH * zoom).toFixed(1)}px"><iframe data-lay-frame sandbox="allow-same-origin" title="${esc(L('Katalog sayfası', 'Catalogue page'))}" style="width:100%;height:100%"></iframe><div class="lcwaiBlkLayer" data-blk-layer style="left:0;top:0;width:100%;height:100%"></div></div>`;
+    const frame = canvas.querySelector('iframe');
+    frame.addEventListener('load', () => { if (frame.contentDocument) fill(frame.contentDocument); }, { once: true });
+    frame.srcdoc = preview.shell
+      .replace('</head>', `<style>html,body{margin:0;background:#fff;overflow:hidden}html{zoom:${zoom.toFixed(4)}}.bl-page,.bl-report{padding:0!important;margin:0!important}.bl-catalog-page{margin:0!important;outline:0!important}</style></head>`)
+      .replace('<!--BL-PAGE-->', page.html);
+    drawBlocks(canvas.querySelector('[data-blk-layer]'), pageW * zoom, pageH * zoom, preview.layout.gap * zoom, page);
+  }
+
+  /* ---------------- Blok tasarımcısı (widget) ----------------
+     Önizlemenin üstünde, aynı ızgarada: sürükle → taşı, köşe → boyutlandır,
+     çift tıkla → yazıyı değiştir. Bırakınca ızgaraya oturur ve önizleme
+     dosyayla aynı çizimle yenilenir. */
+  const BLOCK_LABEL = () => ({ title: L('Başlık', 'Title'), group: L('Grup başlığı', 'Group heading'), subgroup: L('Alt başlık', 'Subheading'), models: L('Model alanı', 'Model area'), text: L('Metin', 'Text') });
+  function pageModel() { return ed.data.layout.page; }
+  function drawBlocks(layer, width, height, gap, page) {
+    if (!layer) return;
+    const model = pageModel();
+    const area = { x: 0, y: 0, w: width, h: height };
+    const labels = BLOCK_LABEL();
+    layer.innerHTML = model.blocks.map(block => {
+      const r = LAY().blockRect(area, model, block, gap);
+      const empty = (block.kind === 'group' && !(page.catalog && page.catalog.group)) || (block.kind === 'subgroup' && !(page.catalog && page.catalog.subgroup));
+      const selected = ed.blockSel === block.id;
+      return `<div class="lcwaiBlk${selected ? ' is-selected' : ''}${empty ? ' is-empty' : ''}" data-blk="${esc(block.id)}" tabindex="0" style="left:${r.x.toFixed(1)}px;top:${r.y.toFixed(1)}px;width:${r.w.toFixed(1)}px;height:${r.h.toFixed(1)}px" aria-label="${esc(labels[block.kind])}">
+        <span class="lcwaiBlkTag">${esc(labels[block.kind])}${empty ? ` · ${esc(L('gruplama yok', 'no grouping'))}` : ''}</span>
+        <span class="lcwaiBlkSize" data-blk-resize="${esc(block.id)}" title="${esc(L('Boyutlandır', 'Resize'))}"></span>
+        ${selected ? blockToolbar(block) : ''}
+      </div>`;
+    }).join('');
+    layer.dataset.w = width; layer.dataset.h = height; layer.dataset.gap = gap;
+  }
+  function blockToolbar(block) {
+    const sizeable = block.kind !== 'models';
+    const tools = [];
+    if (sizeable) tools.push(`<button type="button" data-blk-size="-1" title="${esc(L('Yazıyı küçült', 'Smaller text'))}">A−</button><button type="button" data-blk-size="1" title="${esc(L('Yazıyı büyüt', 'Larger text'))}">A+</button>`);
+    if (sizeable) tools.push(['left', 'center', 'right'].map(value => `<button type="button" data-blk-align="${value}" class="${(block.align || 'left') === value ? 'is-active' : ''}" title="${esc({ left: L('Sola yasla', 'Align left'), center: L('Ortala', 'Center'), right: L('Sağa yasla', 'Align right') }[value])}">${{ left: '⟸', center: '≡', right: '⟹' }[value]}</button>`).join(''));
+    if (['title', 'group', 'subgroup'].includes(block.kind)) tools.push(`<button type="button" data-blk-fill class="${block.fill ? 'is-active' : ''}" title="${esc(L('Zemin rengi', 'Background'))}">▣</button>`);
+    if (block.kind !== 'models') tools.push(`<button type="button" data-blk-edit title="${esc(L('Yazıyı düzenle', 'Edit text'))}">✎</button>`);
+    if (block.kind === 'models') tools.push(`<button type="button" data-lay-tab="look" title="${esc(L('Sayfa başına model', 'Models per page'))}">${ed.data.layout.columns} × ${ed.data.layout.rows}</button>`);
+    if (block.kind === 'text') tools.push(`<button type="button" data-blk-del title="${esc(L('Kutuyu sil', 'Delete box'))}">🗑</button>`);
+    return `<span class="lcwaiBlkTools" data-blk-tools>${tools.join('<i></i>')}</span>`;
+  }
+  /* Yalnız blok katmanını yeniden çizer (önizleme iframe'i yeniden yüklenmez). */
+  function refreshBlocks() {
+    const layer = $('[data-blk-layer]');
+    const page = ed.pvPages && ed.pvPages[ed.pageIndex];
+    if (layer && page) drawBlocks(layer, Number(layer.dataset.w), Number(layer.dataset.h), Number(layer.dataset.gap), page);
+  }
+  function updateBlock(id, patch, { history = true } = {}) {
+    const model = pageModel();
+    const blocks = model.blocks.map(block => (block.id === id ? { ...block, ...patch } : block));
+    if (history) pushHistory();
+    ed.data.layout = LAY().normalizeLayout(ed.format, { ...ed.data.layout, page: { ...model, blocks } });
+    markDirty();
+    refreshBlocks();
+    schedulePreview();
+  }
+  function selectedBlock() { return pageModel().blocks.find(block => block.id === ed.blockSel) || null; }
+  function blockText(block, page) {
+    const catalog = page && page.catalog;
+    const gallery = currentGallery();
+    if (block.kind === 'title') return gallery ? gallery.obj.title || '' : '';
+    if (block.kind === 'group') return catalog ? catalog.group : '';
+    if (block.kind === 'subgroup') return catalog ? catalog.subgroup : '';
+    return block.text || '';
+  }
+  function editBlockText(block) {
+    const page = ed.pvPages && ed.pvPages[ed.pageIndex];
+    if (page && page.catalog && page.catalog.source !== ed.galleryKey) { ed.galleryKey = page.catalog.source; }
+    if ((block.kind === 'group' || block.kind === 'subgroup') && !(page && page.catalog && page.catalog[block.kind])) { toast(L('Bu sayfada grup yok. Önce Gruplar sekmesinden gruplama seçin.', 'This page has no group. Choose a grouping in the Groups tab first.'), 'warn'); return; }
+    const current = blockText(block, page);
+    const next = block.kind === 'text' ? window.prompt(L('Metin kutusunun yazısı (her katalog sayfasında görünür)', 'Text box content (shown on every catalogue page)'), current) : window.prompt({ title: L('Katalog başlığı', 'Catalogue title'), group: L('Grubun adı (bu grubun tüm sayfalarında değişir)', 'Group name (changes on all pages of this group)'), subgroup: L('Alt grubun adı', 'Subgroup name') }[block.kind], current);
+    if (next == null || next === current) return;
+    if (block.kind === 'text') { updateBlock(block.id, { text: String(next).slice(0, 400) }); return; }
+    const gallery = currentGallery();
+    if (!gallery) return;
+    if (block.kind === 'title') { pushHistory(); gallery.obj.title = String(next).replace(/\s+/g, ' ').trim().slice(0, 140); markDirty(); renderRail(); schedulePreview(); return; }
+    // Grup / alt grup adı: aynı işlev Gruplar sekmesindeki yeniden adlandırmayla.
+    const name = String(next).replace(/\s+/g, ' ').trim().slice(0, 120);
+    pushHistory();
+    const g = page.catalog.group, sg = page.catalog.subgroup;
+    freezeOrder(gallery.obj);
+    if (block.kind === 'subgroup' && gallery.obj.catalog.subOrder[g]) gallery.obj.catalog.subOrder[g] = gallery.obj.catalog.subOrder[g].map(entry => (entry === sg ? name : entry));
+    if (block.kind === 'group' && gallery.obj.catalog.subOrder[g]) { gallery.obj.catalog.subOrder[name] = gallery.obj.catalog.subOrder[g]; delete gallery.obj.catalog.subOrder[g]; }
+    gallery.obj.items = gallery.obj.items.map(item => (block.kind === 'group' ? (item.group === g ? { ...item, group: name } : item) : (item.group === g && item.subgroup === sg ? { ...item, subgroup: name } : item)));
+    if (block.kind === 'group') gallery.obj.catalog.order = gallery.obj.catalog.order.map(entry => (entry === g ? name : entry));
+    ed.manualGroups = true;
+    markDirty(); if (ed.layTab === 'groups') renderLayPanel(); schedulePreview();
+  }
+  function addTextBlock() {
+    const model = pageModel();
+    if (model.blocks.filter(block => block.kind === 'text').length >= 6) { toast(L('En fazla 6 metin kutusu eklenebilir.', 'Up to 6 text boxes can be added.'), 'warn'); return; }
+    const text = window.prompt(L('Metin kutusunun yazısı (her katalog sayfasında görünür)', 'Text box content (shown on every catalogue page)'), L('Not: ', 'Note: '));
+    if (!text) return;
+    // Son satıra yerleşir; model alanı o satırı kullanıyorsa bir satır kısalır.
+    const blocks = model.blocks.map(block => (block.kind === 'models' && block.y + block.h === model.rows && block.h > 1 ? { ...block, h: block.h - 1 } : block));
+    blocks.push({ id: `text${Date.now().toString(36)}`, kind: 'text', x: 0, y: model.rows - 1, w: 12, h: 1, text: text.slice(0, 400) });
+    pushHistory();
+    ed.data.layout = LAY().normalizeLayout(ed.format, { ...ed.data.layout, page: { ...model, blocks } });
+    ed.blockSel = blocks[blocks.length - 1].id;
+    markDirty(); refreshBlocks(); schedulePreview();
+  }
+
+  /* Sürükle / boyutlandır: işaretçi olaylarıyla, bırakınca ızgaraya oturur. */
+  let blockDrag = null;
+  function onBlockPointerDown(event) {
+    const el = event.target.closest && event.target.closest('[data-blk]');
+    if (!el || !ed || event.button !== 0 || event.target.closest('[data-blk-tools]')) return;
+    const layer = el.parentElement;
+    const block = pageModel().blocks.find(item => item.id === el.dataset.blk);
+    if (!block) return;
+    if (ed.blockSel !== block.id) { ed.blockSel = block.id; refreshBlocks(); }
+    const fresh = root().querySelector(`[data-blk="${CSS.escape(block.id)}"]`);
+    const model = pageModel();
+    const width = Number(layer.dataset.w), height = Number(layer.dataset.h), gap = Number(layer.dataset.gap);
+    blockDrag = { id: block.id, mode: event.target.closest('[data-blk-resize]') ? 'resize' : 'move', startX: event.clientX, startY: event.clientY, block, el: fresh,
+      pointerId: event.pointerId, cellW: (width - gap * 11) / 12 + gap, cellH: (height - gap * (model.rows - 1)) / model.rows + gap, rect: fresh ? { left: parseFloat(fresh.style.left), top: parseFloat(fresh.style.top), width: parseFloat(fresh.style.width), height: parseFloat(fresh.style.height) } : null };
+    if (fresh) { try { fresh.setPointerCapture(event.pointerId); } catch (_) {} fresh.focus({ preventScroll: true }); }
+    event.preventDefault();
+  }
+  function onBlockPointerMove(event) {
+    if (!blockDrag || !blockDrag.el || !blockDrag.rect) return;
+    const dx = event.clientX - blockDrag.startX, dy = event.clientY - blockDrag.startY;
+    const r = blockDrag.rect;
+    blockDrag.el.classList.add('is-dragging');
+    if (blockDrag.mode === 'move') { blockDrag.el.style.left = `${r.left + dx}px`; blockDrag.el.style.top = `${r.top + dy}px`; }
+    else { blockDrag.el.style.width = `${Math.max(20, r.width + dx)}px`; blockDrag.el.style.height = `${Math.max(16, r.height + dy)}px`; }
+  }
+  function onBlockPointerUp(event) {
+    if (!blockDrag) return;
+    const drag = blockDrag;
+    blockDrag = null;
+    const dCol = Math.round((event.clientX - drag.startX) / drag.cellW), dRow = Math.round((event.clientY - drag.startY) / drag.cellH);
+    if (!dCol && !dRow) { if (drag.el) drag.el.classList.remove('is-dragging'); return; }
+    const b = drag.block;
+    updateBlock(b.id, drag.mode === 'move' ? { x: b.x + dCol, y: b.y + dRow } : { w: b.w + dCol, h: b.h + dRow });
+  }
+  function onBlockKey(event) {
+    const block = ed && ed.mode === 'layout' && selectedBlock();
+    if (!block || !event.target.closest || !event.target.closest('[data-blk]')) return;
+    const step = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
+    if (step) {
+      event.preventDefault();
+      updateBlock(block.id, event.shiftKey ? { w: block.w + step[0], h: block.h + step[1] } : { x: block.x + step[0], y: block.y + step[1] });
+      root().querySelector(`[data-blk="${CSS.escape(block.id)}"]`)?.focus();
+    } else if (event.key === 'Enter') { event.preventDefault(); if (block.kind !== 'models') editBlockText(block); }
+    else if ((event.key === 'Delete' || event.key === 'Backspace') && block.kind === 'text') { event.preventDefault(); deleteBlock(block.id); }
+  }
+  function deleteBlock(id) {
+    const model = pageModel();
+    pushHistory();
+    ed.data.layout = LAY().normalizeLayout(ed.format, { ...ed.data.layout, page: { ...model, blocks: model.blocks.filter(block => block.id !== id) } });
+    ed.blockSel = null;
+    markDirty(); refreshBlocks(); schedulePreview();
+  }
+  function onLayoutClick(target) {
+    if (target.matches('[data-lay-tab]')) { ed.layTab = target.dataset.layTab; renderLayPanel(); return true; }
+    if (target.matches('[data-pg-step]')) { if (ed.pvPages) { ed.pageIndex = Math.max(0, Math.min(ed.pvPages.length - 1, ed.pageIndex + Number(target.dataset.pgStep))); drawStage(); } return true; }
+    if (target.matches('[data-blk-add]')) { addTextBlock(); return true; }
+    if (target.matches('[data-blk-reset]')) { if (window.confirm(L('Katalog sayfa düzeni varsayılana dönsün mü?', 'Reset the catalogue page arrangement to default?'))) { pushHistory(); ed.data.layout = LAY().normalizeLayout(ed.format, { ...ed.data.layout, page: LAY().defaultPage(ed.format) }); ed.blockSel = null; markDirty(); refreshBlocks(); schedulePreview(); } return true; }
+    const block = selectedBlock();
+    if (block && target.matches('[data-blk-size]')) { const base = block.size || defaultBlockSize(block); updateBlock(block.id, { size: Math.max(7, base + Number(target.dataset.blkSize) * (base >= 20 ? 2 : 1)) }); return true; }
+    if (block && target.matches('[data-blk-align]')) { updateBlock(block.id, { align: target.dataset.blkAlign === 'left' ? undefined : target.dataset.blkAlign }); return true; }
+    if (block && target.matches('[data-blk-fill]')) { updateBlock(block.id, { fill: !block.fill }); return true; }
+    if (block && target.matches('[data-blk-edit]')) { editBlockText(block); return true; }
+    if (block && target.matches('[data-blk-del]')) { deleteBlock(block.id); return true; }
+    if (target.matches('[data-grp-move]')) { moveGroup(target.dataset.grpMove, Number(target.dataset.dir)); return true; }
+    if (target.matches('[data-grp-new]')) {
+      const name = window.prompt(L('Yeni grubun adı', 'New group name'), '');
+      const clean = String(name || '').replace(/\s+/g, ' ').trim().slice(0, 120);
+      if (clean) { const obj = currentGallery().obj; if (!obj.catalog.order.includes(clean)) { obj.catalog.order = [...LAY().groupItems(obj.items, obj.catalog).map(group => group.group).filter(group => !obj.catalog.order.includes(group)), ...obj.catalog.order, clean]; } renderLayPanel(); }
+      return true;
+    }
+    return false;
+  }
+  function defaultBlockSize(block) {
+    const l = ed.data.layout;
+    return { title: l.titleSize, group: Math.round(l.titleSize * 0.72), subgroup: Math.round(l.titleSize * 0.55), text: ed.format === 'pptx' ? Math.max(9, l.bodySize - 6) : l.bodySize }[block.kind] || 12;
+  }
+
+  /* --- Excel: ölçekli tablo görünümü (blok yok) --- */
+  function renderSheetLayout(main) {
+    main.innerHTML = `<div class="lcwaiLay"><aside class="lcwaiLayControls">
+        <section class="lcwaiLayGroup is-first"><h4>${esc(L('Hazır yerleşimler', 'Ready-made layouts'))}</h4><div class="lcwaiLayPresets" role="group">${PRESET_INFO().map(([key, label, hint]) => `<button type="button" class="lcwaiLayPreset${presetActive(key) ? ' is-active' : ''}" data-lay-preset="${key}">${presetThumb(key)}<b>${esc(label)}</b><small>${esc(hint)}</small></button>`).join('')}</div></section>
+        <section class="lcwaiLayGroup"><h4>${esc(L('Yazı boyutu', 'Text size'))}</h4>${slider('titleSize', L('Başlık yazı boyutu', 'Title text size'))}${slider('bodySize', L('Hücre yazı boyutu', 'Cell text size'))}${slider('imageSize', L('Model görseli boyutu', 'Model image size'))}</section>
+        <details class="lcwaiLayMore" data-lay-more${ed.layMoreOpen ? ' open' : ''}><summary>${esc(L('İnce ayar', 'Fine-tune'))}</summary><div class="lcwaiLayGroup">${slider('headerHeight', L('Sütun başlığı satır yüksekliği', 'Column header row height'))}<button type="button" class="lcwaiBtn is-link" data-lay-reset>${esc(L('Varsayılana dön', 'Reset to default'))}</button></div></details>
+      </aside><div class="lcwaiLayStage" data-lay-stage><div data-sheet-preview>${xlsxPreview()}</div></div></div>`;
+    bindLookPanel(main);
+  }
+  function updateLayoutPreview() {
+    if (!ed || ed.mode !== 'layout') return;
+    if (ed.data.layout.columns) {
+      updateLayoutPreviewGridText();
+      root().querySelectorAll('[data-gp]').forEach(cell => { const [c, r] = cell.dataset.gp.split(',').map(Number); cell.classList.toggle('is-on', c <= ed.data.layout.columns && r <= ed.data.layout.rows); });
+    }
+    root().querySelectorAll('[data-lay-preset]').forEach(card => card.classList.toggle('is-active', presetActive(card.dataset.layPreset)));
+    if (ed.format === 'xlsx') { const box = $('[data-sheet-preview]'); if (box) box.innerHTML = xlsxPreview(); return; }
+    schedulePreview();
+  }
   function updateLayoutPreviewGridText() {
     const grid = $('[data-lay-grid-text]');
     if (!grid || !ed) return;
@@ -659,84 +1158,11 @@
     grid.classList.toggle('is-hover', Boolean(hover));
     grid.innerHTML = `<b>${c} × ${r}</b> · ${esc(L(`${unit} başına ${c * r} model`, `${c * r} models per ${unit}`))}${hover ? ` · <span>${esc(L('seçmek için tıklayın', 'click to choose'))}</span>` : ''}`;
   }
-  let previewTimer = 0;
-  function updateLayoutPreview() {
-    const stage = $('[data-lay-stage]');
-    if (!stage || !ed || ed.mode !== 'layout') return;
-    if (ed.data.layout.columns) {
-      updateLayoutPreviewGridText();
-      root().querySelectorAll('[data-gp]').forEach(cell => { const [c, r] = cell.dataset.gp.split(',').map(Number); cell.classList.toggle('is-on', c <= ed.data.layout.columns && r <= ed.data.layout.rows); });
-    }
-    root().querySelectorAll('[data-lay-preset]').forEach(card => card.classList.toggle('is-active', presetActive(card.dataset.layPreset)));
-    if (ed.format === 'pdf' || ed.format === 'html') { clearTimeout(previewTimer); previewTimer = setTimeout(renderReportPreview, 120); return; }
-    stage.innerHTML = ed.format === 'pptx' ? pptxPreview(stage) : xlsxPreview();
-  }
 
-  /* --- PowerPoint önizlemesi: 960 × 540 pt slayt, ölçekli --- */
+  // "grup|alt grup" anahtarı; grup adında | olabilir, son | ayırır.
+  const splitKey = key => { const i = String(key).lastIndexOf('|'); return [key.slice(0, i), key.slice(i + 1)]; };
   const imageOf = token => (token && ed.draft.images && ed.draft.images[String(token).toUpperCase()]) || '';
-  function pptxPreview(stage) {
-    const slides = ed.data.slides || [];
-    const index = Math.max(0, Math.min(Number(ed.selected) || 0, slides.length - 1));
-    const slide = slides[index];
-    const g = LAY().pptxGeometry(ed.data.layout);
-    const l = g.layout;
-    const s = Math.max(0.3, Math.min(1.1, (stage.clientWidth - 40) / LAY().SLIDE.width));
-    const px = value => `${(value * s).toFixed(1)}px`;
-    const box = (x, y, w, h, extra = '', html = '') => `<div class="lcwaiLayBox ${extra}" style="left:${px(x)};top:${px(y)};width:${px(w)};height:${px(h)}">${html}</div>`;
-    const text = (size, html, extra = '') => `<div class="lcwaiLayText ${extra}" style="font-size:${px(size)}">${html}</div>`;
-    let body = '';
-    const galleries = slides.map((item, i) => ({ item, i })).filter(entry => entry.item.layout === 'gallery');
-    if (!slide) body = '';
-    else if (slide.layout === 'title' || slide.layout === 'section') {
-      body = box(80, 160, 800, 200, 'is-plain', text(slide.layout === 'title' ? 46 : 40, `<b>${esc(slide.title)}</b>`) + (slide.subtitle ? text(20, esc(slide.subtitle), 'is-muted') : ''));
-    } else {
-      const titleSize = slide.title.length > 60 ? Math.round(l.titleSize * 0.8) : l.titleSize;
-      body += box(0, 0, 960, g.band, 'is-band');
-      body += box(g.margin, g.band * 0.12, g.width, g.band - g.band * 0.12 - 16, 'is-title', text(titleSize, `<b>${esc(slide.title)}</b>`));
-      body += box(g.margin, g.band - 12, 64, 3, 'is-rule');
-      body += box(g.margin, 540 - 30, 480, 18, 'is-plain', text(9, esc(`Buyer Log · LCW AI · ${ed.title}`), 'is-muted'));
-      const top = g.contentTop + 8;
-      if (slide.layout === 'gallery') {
-        const per = LAY().perPage(l);
-        const cells = LAY().galleryCells(l, Math.min(slide.items.length, per));
-        cells.forEach((cell, i) => {
-          const item = slide.items[i];
-          const src = imageOf(item.image);
-          const img = `<div class="lcwaiLayImg" style="height:${px(cell.imgH)}">${src ? `<img src="${esc(src)}" alt="">` : `<span>${esc(L('Görsel', 'Image'))}</span>`}</div>`;
-          const meta = [l.showSubtitle ? item.subtitle : '', l.showNote ? item.note : ''].filter(Boolean).join(' · ');
-          body += box(cell.x, cell.y, cell.w, cell.h, 'is-card', `${img}${l.showTitle && item.title ? text(l.cardTextSize, `<b>${esc(item.title)}</b>`) : ''}${meta ? text(Math.max(7, l.cardTextSize - 2.5), esc(meta), 'is-muted') : ''}`);
-        });
-      } else if (slide.layout === 'table') {
-        const size = l.tableSize || (slide.table.columns.length > 6 || slide.table.rows.length > 9 ? 10 : 12);
-        const table = `<table style="font-size:${px(size)}"><thead><tr>${slide.table.columns.map(column => `<th>${esc(column)}</th>`).join('')}</tr></thead><tbody>${slide.table.rows.slice(0, 40).map(row => `<tr>${slide.table.columns.map((_, c) => `<td>${esc(row[c])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
-        body += box(g.margin, top - 2, g.width, g.contentH - 6, 'is-plain is-clip', table);
-      } else if (slide.layout === 'kpis') {
-        const per = slide.kpis.length <= 4 ? slide.kpis.length : 3;
-        const w = (g.width - 14 * (per - 1)) / per;
-        slide.kpis.forEach((kpi, i) => { body += box(g.margin + (i % per) * (w + 14), top + Math.floor(i / per) * 164, w, 150, 'is-card', text(11, esc(kpi.label), 'is-muted') + text(32, `<b>${esc(kpi.value)}</b>`) + (kpi.note ? text(11, esc(kpi.note)) : '')); });
-      } else if (slide.layout === 'chart') {
-        const values = slide.chart.series[0] ? slide.chart.series[0].values : [];
-        const max = Math.max(1, ...values.map(Math.abs));
-        const rowH = Math.min(40, (g.contentH - 16) / Math.max(1, slide.chart.categories.length));
-        slide.chart.categories.forEach((category, i) => { body += box(g.margin, top + i * rowH, 190, rowH, 'is-plain', text(rowH < 24 ? 10 : 12, esc(category), 'is-right')); body += box(g.margin + 200, top + i * rowH + rowH * 0.15, Math.max(2, (Math.abs(values[i] || 0) / max) * (g.width * 0.55)), rowH * 0.7, 'is-bar'); });
-      } else if (slide.layout === 'comparison') {
-        const w = (g.width - 20) / 2;
-        [slide.left, slide.right].forEach((column, i) => { body += box(g.margin + i * (w + 20), top, w, Math.min(g.contentH - 16, 260), 'is-card', text(20, `<b>${esc(column.title)}</b>`) + `<ul style="font-size:${px(Math.max(10, l.bodySize - 4))}">${column.bullets.map(item => `<li>${esc(item)}</li>`).join('')}</ul>`); });
-      } else {
-        const list = slide.layout === 'summary' ? 'ol' : 'ul';
-        body += box(g.margin, top, g.width, g.contentH - 8, 'is-plain is-clip', `<${list} style="font-size:${px(l.bodySize)}">${(slide.bullets || []).map(item => `<li>${esc(item)}</li>`).join('')}</${list}>`);
-      }
-    }
-    const per = LAY().perPage(l);
-    const summary = galleries.length
-      ? galleries.map(({ item, i }) => L(`${i + 1}. slayt “${item.title}”: ${item.items.length} model → ${Math.max(1, Math.ceil(item.items.length / per))} slayt`, `Slide ${i + 1} “${item.title}”: ${item.items.length} models → ${Math.max(1, Math.ceil(item.items.length / per))} slides`)).join(' · ')
-      : L('Sunumda model galerisi yok; ızgara ayarı galeri slaytı eklendiğinde uygulanır.', 'The deck has no model gallery; the grid applies once a gallery slide is added.');
-    return `<div class="lcwaiLayStageHead"><label>${esc(L('Önizlenen slayt', 'Previewed slide'))} <select data-lay-slide>${slides.map((item, i) => `<option value="${i}"${i === index ? ' selected' : ''}>${i + 1}. ${esc(item.title)}</option>`).join('')}</select></label><small>${esc(summary)}</small></div>
-      <div class="lcwaiLaySlide" style="width:${px(960)};height:${px(540)}">${body}</div>
-      ${slide && slide.layout === 'gallery' && slide.items.length > per ? `<p class="lcwaiNote">${esc(L(`İlk ${per} model gösteriliyor; kalan ${slide.items.length - per} model devam slaytlarına yerleşir.`, `Showing the first ${per} models; the remaining ${slide.items.length - per} continue on extra slides.`))}</p>` : ''}`;
-  }
 
-  /* --- Excel önizlemesi: ilk sayfanın ilk satırları --- */
   function xlsxPreview() {
     const sheet = (ed.data.sheets || [])[ed.selected === 'summary' ? 0 : Number(ed.selected) || 0];
     const m = LAY().xlsxMetrics(ed.data.layout);
@@ -751,34 +1177,6 @@
       <table><thead><tr style="height:${(m.headerHeight * ptPx).toFixed(0)}px">${sheet.columns.map(column => `<th style="${column.type === 'image' ? `width:${m.imageColChars * 7 + 5}px` : ''}">${esc(column.header)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 
-  /* --- PDF/HTML önizlemesi: gerçek rapor + yerleşim CSS'i, galeri sayfalara bölünmüş --- */
-  function renderReportPreview() {
-    const stage = $('[data-lay-stage]');
-    if (!stage || !ed || ed.mode !== 'layout') return;
-    let iframe = stage.querySelector('[data-lay-frame]');
-    const scroll = iframe && iframe.contentWindow ? iframe.contentWindow.scrollY : 0;
-    if (!iframe) {
-      stage.innerHTML = `<div class="lcwaiLayStageHead"><b>${esc(L('Baskı önizlemesi', 'Print preview'))}</b><small data-lay-pages></small></div><iframe class="lcwaiEdFrame${ed.orientation === 'landscape' ? ' is-landscape' : ''}" data-lay-frame sandbox="allow-same-origin" title="${esc(L('Yerleşim önizlemesi', 'Layout preview'))}"></iframe>`;
-      iframe = stage.querySelector('[data-lay-frame]');
-    }
-    const body = LAY().paginateGallery(ed.data.body || '', ed.data.layout, { pages: ed.format === 'pdf' });
-    const pages = (body.match(/bl-gallery-page/g) || []).length;
-    const label = stage.querySelector('[data-lay-pages]');
-    if (label) label.textContent = ed.format !== 'pdf' ? L('HTML dosyasında model ızgarası sütun sayısını izler (sayfa yoktur).', 'In the HTML file the model grid follows the column count (there are no pages).') : pages ? L(`Model galerisi ${pages} sayfaya yerleşiyor (kesik çizgi = yeni sayfa).`, `The model gallery fills ${pages} page(s) (dashed line = new page).`) : L('Raporda model galerisi yok; ızgara galeri eklendiğinde uygulanır.', 'The report has no model gallery; the grid applies once a gallery is added.');
-    iframe.addEventListener('load', () => {
-      const doc = iframe.contentDocument;
-      if (!doc) return;
-      const images = ed.draft.images || {};
-      doc.querySelectorAll('img[data-bl-image]').forEach(img => { const src = images[String(img.getAttribute('data-bl-image') || '').toUpperCase()]; if (src) img.setAttribute('src', src); });
-      try { iframe.contentWindow.scrollTo(0, scroll); } catch (_) {}
-    }, { once: true });
-    // Bir galeri sayfası (A4 içerik kutusu) önizleme yüksekliğine sığacak kadar küçültülür.
-    const portrait = ed.orientation !== 'landscape';
-    const contentW = portrait ? 850 : 1150;
-    const box = LAY().pageBox(ed.data.layout, ed.orientation);
-    const zoom = Math.max(0.3, Math.min(1, (iframe.clientHeight - 40) / (contentW * box.height / box.width + 60), iframe.clientWidth / (contentW + 140)));
-    iframe.srcdoc = reportSrcdoc(body, `html{zoom:${zoom.toFixed(3)}}`);
-  }
 
   /* ================= Alt bilgi ================= */
   function renderFoot() {
@@ -804,7 +1202,7 @@
     if (ed.format === 'pdf' || ed.format === 'html') {
       const body = reportBody();
       ed.data.body = body;
-      return { body, styles: ed.data.styles || [], layout: ed.data.layout || null };
+      return { body, styles: ed.data.styles || [], layout: ed.data.layout || null, galleries: ed.data.galleries || [] };
     }
     return clone(ed.data);
   }
@@ -893,7 +1291,13 @@
   function onClick(event) {
     if (!ed) return;
     const target = event.target.closest('button');
-    if (!target) return;
+    if (!target) {
+      const go = event.target.closest && event.target.closest('[data-grp-go]');
+      if (go && ed.mode === 'layout') { const [group, subgroup] = splitKey(go.dataset.grpGo); goToGroup(group, subgroup); }
+      const blk = event.target.closest && event.target.closest('[data-blk]');
+      if (!blk && ed.mode === 'layout' && ed.blockSel && event.target.closest('[data-pg-canvas]')) { ed.blockSel = null; refreshBlocks(); }
+      return;
+    }
     if (target.matches('[data-ed-close]')) { close(false); return; }
     if (target.matches('[data-ed-render]')) { renderFile(); return; }
     if (target.matches('[data-ed-undo]')) { undo(); return; }
@@ -902,6 +1306,7 @@
     if (target.matches('[data-lay-preset]')) { setLayout(LAY().applyPreset(ed.format, target.dataset.layPreset, ed.data.layout), { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
     if (target.matches('[data-lay-reset]')) { setLayout(LAY().defaults(ed.format), { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
     if (target.matches('[data-gp]')) { const [columns, rows] = target.dataset.gp.split(',').map(Number); setLayout({ ...ed.data.layout, columns, rows }, { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
+    if (ed.mode === 'layout' && onLayoutClick(target)) return;
     if (target.matches('[data-ed-save-template]')) { openSaveTemplate(); return; }
     if (target.matches('[data-ed-open], [data-ed-reveal]')) {
       const api = AI();
@@ -1005,7 +1410,10 @@
     if (!ed) return;
     const el = event.target;
     if (el.matches('[data-lay-flag]')) { setLayout({ ...ed.data.layout, [el.dataset.layFlag]: el.checked }, { history: true }); return; }
-    if (el.matches('[data-lay-slide]')) { ed.selected = Number(el.value) || 0; renderRail(); updateLayoutPreview(); return; }
+    if (el.matches('[data-pg-select]')) { ed.pageIndex = Number(el.value) || 0; drawStage(); return; }
+    if (el.matches('[data-grp-by]')) { applyGrouping(el.value, ''); return; }
+    if (el.matches('[data-grp-then]')) { const obj = currentGallery().obj; applyGrouping(obj.catalog.by, el.value); return; }
+    if (el.matches('[data-grp-gallery]')) { ed.galleryKey = Number(el.value); renderLayPanel(); return; }
     if (el.matches('[data-ed-orientation]')) {
       if (ed.format === 'pdf' || ed.format === 'html') ed.data.body = reportBody();
       ed.orientation = el.value === 'landscape' ? 'landscape' : 'portrait';
@@ -1071,6 +1479,8 @@
 
   /* Sol listede sürükle-bırak sıralama. */
   function onDragStart(event) {
+    const chip = event.target.closest && event.target.closest('[data-grp-item]');
+    if (chip && ed) { ed.grpDrag = Number(chip.dataset.grpItem); event.dataTransfer.effectAllowed = 'move'; try { event.dataTransfer.setData('text/plain', chip.dataset.grpItem); } catch (_) {} return; }
     const item = event.target.closest && event.target.closest('[data-rail]');
     if (!item || !ed || item.dataset.rail === 'summary') return;
     ed.drag = Number(item.dataset.rail);
@@ -1078,12 +1488,28 @@
     try { event.dataTransfer.setData('text/plain', String(ed.drag)); } catch (_) {}
   }
   function onDragOver(event) {
+    const zone = ed && ed.grpDrag != null && event.target.closest && event.target.closest('[data-grp-drop]');
+    if (zone) {
+      event.preventDefault();
+      root().querySelectorAll('.lcwaiGrp .is-drop, .lcwaiGrp.is-drop').forEach(el => el.classList.remove('is-drop'));
+      zone.classList.add('is-drop');
+      return;
+    }
     const item = event.target.closest && event.target.closest('[data-rail]');
     if (!item || !ed || ed.drag == null || item.dataset.rail === 'summary') return;
     event.preventDefault();
     item.classList.add('is-drop');
   }
   function onDrop(event) {
+    const zone = ed && ed.grpDrag != null && event.target.closest && event.target.closest('[data-grp-drop]');
+    if (zone) {
+      event.preventDefault();
+      const index = ed.grpDrag;
+      ed.grpDrag = null;
+      const [group, subgroup] = splitKey(zone.dataset.grpDrop);
+      moveItem(index, group, subgroup);
+      return;
+    }
     const item = event.target.closest && event.target.closest('[data-rail]');
     if (!item || !ed || ed.drag == null) return;
     event.preventDefault();

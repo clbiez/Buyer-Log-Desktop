@@ -1,14 +1,114 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-08",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI çıktılarında gerçek önizleme ve katalog tasarımı",
+    "en": "Real preview and catalogue design for LCW AI outputs"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Yerleşim adımı artık oluşacak dosyanın aynısını gösteriyor; modeller verideki sütunlara göre gruplanıyor, sayfadaki başlıklar ve kutular taşınıp boyutlandırılabiliyor.",
+    "en": "The Layout step now shows exactly the file that will be created; models are grouped by data columns, and headings and boxes on the page can be moved and resized."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "lcwai-output-real-preview",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Yerleşim önizlemesi oluşacak dosyanın aynısı",
+        "en": "Layout preview matches the file that will be created"
+      },
+      "path": {
+        "tr": "LCW AI › Çıktı Düzenleyici › Yerleşim",
+        "en": "LCW AI › Output Editor › Layout"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-real-preview.png",
+        "alt": {
+          "tr": "PDF katalog sayfasının gerçek önizlemesi ve Görünüm sekmesinde sayfa başına 4 × 2 model seçimi — demo veriyle Buyer Log ekranı",
+          "en": "Real preview of a PDF catalogue page and the 4 × 2 models-per-page choice in the Look tab — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Sayfa başına model sayısı değişince önizleme dosyadaki sayfayı gösteriyor",
+          "en": "When models per page change, the preview shows the page as it will be in the file"
+        }
+      },
+      "body": {
+        "tr": "Yerleşim adımındaki önizleme yaklaşık bir çizimdi; oluşan dosyaya benzemiyor ve bazı ayarlarda güncellenmiyordu. Önizleme artık dosyayı oluşturan kodla çiziliyor (kaydedilmeden): PowerPoint slaytları ve PDF sayfaları dosyadaki hâliyle görünüyor, her ayar değişikliğinde kendiliğinden yenileniyor. “✓ Dosyayla aynı” işareti önizlemenin güncel olduğunu gösterir.",
+        "en": "The preview in the Layout step was an approximate drawing; it did not look like the created file and did not update for some settings. The preview is now drawn by the same code that creates the file (without saving): PowerPoint slides and PDF pages look exactly as in the file and refresh automatically after every change. The “✓ Same as the file” mark shows the preview is current."
+      }
+    },
+    {
+      "id": "lcwai-output-catalog-groups",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Modelleri veriye göre gruplama ve elle düzeltme",
+        "en": "Group models by data and adjust by hand"
+      },
+      "path": {
+        "tr": "LCW AI › Çıktı Düzenleyici › Yerleşim",
+        "en": "LCW AI › Output Editor › Layout"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-catalog-groups.png",
+        "alt": {
+          "tr": "Ürün grubu ve kumaşa göre gruplanmış model ağacı ile ilgili katalog slaytı — demo veriyle Buyer Log ekranı",
+          "en": "Model tree grouped by product group and fabric next to the matching catalogue slide — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Alt gruba tıklayınca o grubun katalog sayfası açılır",
+          "en": "Clicking a subgroup opens that group’s catalogue page"
+        }
+      },
+      "body": {
+        "tr": "Gruplar sekmesinde bir sütun (ör. Ürün grubu) ve isterseniz alt grup (ör. Kumaş) seçin; modeller otomatik gruplanır ve her alt grup kendi katalog sayfasına yerleşir. Modelleri sürükleyip başka gruba bırakabilir, grupları yeniden adlandırabilir, sıralayabilir ve yeni grup açabilirsiniz. Gruplama PowerPoint ve PDF çıktısında aynıdır.",
+        "en": "In the Groups tab, pick a column (e.g. Product group) and optionally a subgroup (e.g. Fabric); models are grouped automatically and each subgroup gets its own catalogue page. You can drag models onto another group, rename and reorder groups and add new ones. Grouping works the same in PowerPoint and PDF outputs."
+      }
+    },
+    {
+      "id": "lcwai-output-page-blocks",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Katalog sayfasında başlıkları taşı, boyutlandır, düzenle",
+        "en": "Move, resize and edit headings on catalogue pages"
+      },
+      "path": {
+        "tr": "LCW AI › Çıktı Düzenleyici › Yerleşim",
+        "en": "LCW AI › Output Editor › Layout"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-page-blocks.png",
+        "alt": {
+          "tr": "Seçili grup başlığı kutusu, araç çubuğu ve eklenen metin kutusu olan katalog slaytı — demo veriyle Buyer Log ekranı",
+          "en": "Catalogue slide with the selected group heading box, its toolbar and an added text box — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Grup başlığı büyütüldü, zemin verildi; alta metin kutusu eklendi",
+          "en": "Group heading enlarged with a background; a text box added at the bottom"
+        }
+      },
+      "body": {
+        "tr": "Katalog sayfasındaki başlık, grup başlığı, alt başlık ve model alanı birer kutu olarak düzenlenebilir: sürükleyip taşıyın, köşeden boyutlandırın (12 sütunlu ızgaraya oturur), çift tıklayıp yazıyı değiştirin. Seçili kutunun yazı boyutu, hizası ve zemini araç çubuğundan ayarlanır; her sayfada görünen metin kutusu eklenebilir.",
+        "en": "The title, group heading, subheading and model area on catalogue pages are editable boxes: drag to move, resize from the corner (they snap to a 12-column grid), double-click to change the text. The toolbar sets the selected box’s text size, alignment and background; a text box shown on every page can be added."
+      }
+    }
+  ]
 }

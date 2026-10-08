@@ -94,10 +94,20 @@
     const name = contextFileName(context);
     const file = new File([contextCsv(context)], name, { type: 'text/csv' });
     const { rows, columns, images, ...rest } = context;
+    // Gruplama verisi (Yerleşim › Gruplar): görsel anahtarı → satırın sütunları.
+    // Yalnız yerel taslağa gider; LCW AI'a giden CSV zaten aynı satırları taşır.
+    const attributes = {};
+    if (images && columns[0] === IMAGE_COLUMN) {
+      for (const row of rows) {
+        if (!Array.isArray(row) || !row[0] || attributes[row[0]]) continue;
+        attributes[row[0]] = Object.fromEntries(columns.slice(1, 61).map((name, index) => [name, String(row[index + 1] == null ? '' : row[index + 1]).slice(0, 120)]));
+      }
+    }
     return {
       file,
       context: { ...rest, text: L(`Tablonun tamamı ekli “${name}” dosyasında: ${rows.length} satır, ${columns.length} sütun (${columns.join(', ')}).`, `The full table is in the attached “${name}” file: ${rows.length} rows, ${columns.length} columns (${columns.join(', ')}).`) + (images ? L(` “${IMAGE_COLUMN}” sütunu kaydın Buyer Log’daki gerçek model görselinin anahtarıdır.`, ` The “${IMAGE_COLUMN}” column is the key of the record’s real model image in Buyer Log.`) : '') },
       images: images || null,
+      attributes: images ? attributes : null,
     };
   }
 
@@ -726,6 +736,7 @@
           renderMessages();
           const prepared = contextAsFile(await api.buildContext(id));
           if (prepared.images) conv.imageMap = { ...(conv.imageMap || {}), ...prepared.images };
+          if (prepared.attributes) conv.attrMap = { ...(conv.attrMap || {}), ...prepared.attributes };
           else if (prepared.context && prepared.context.images) { conv.imageMap = { ...(conv.imageMap || {}), ...prepared.context.images }; delete prepared.context.images; }
           if (prepared.file) {
             const limit = state.config && state.config.limits ? state.config.limits.maxFileBytes : 20 * 1048576;
@@ -749,6 +760,7 @@
         attachments: userMessage.attachments,
         output,
         resolveImages: tokens => resolveImages(conv, tokens, answer),
+        resolveAttributes: tokens => Object.fromEntries((tokens || []).filter(token => conv.attrMap && conv.attrMap[token]).map(token => [token, conv.attrMap[token]])),
         onProgress: event => {
           // Dosya modunda ham HTML/JSON akışı gösterilmez; yalnız aşama ve
           // üretilen karakter sayısı görünür.

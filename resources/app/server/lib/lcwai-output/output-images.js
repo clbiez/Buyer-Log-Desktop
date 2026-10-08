@@ -24,6 +24,8 @@ function collectTokens(format, data) {
     const re = /data-bl-image="([^"]+)"/g;
     let match;
     while ((match = re.exec(String(data && data.body || '')))) add(match[1]);
+    // Model kataloğu kartları (galeriler gövdede yer tutucudur).
+    for (const gallery of (data && data.galleries) || []) for (const item of (gallery && gallery.items) || []) add(item.image);
   } else if (format === 'pptx') {
     for (const slide of (data && data.slides) || []) {
       add(slide.image);

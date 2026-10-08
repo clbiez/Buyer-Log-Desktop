@@ -64,7 +64,10 @@ function paragraph(text, style, p, lang, { align = 'l', bullet = false, spaceAft
   const ppr = bullet
     ? `<a:pPr marL="${pt(16)}" indent="-${pt(16)}" algn="${align}"><a:spcAft><a:spcPts val="${spaceAfter * 100}"/></a:spcAft><a:buClr><a:srgbClr val="${p.acc}"/></a:buClr><a:buFont typeface="Arial"/><a:buChar char="■"/></a:pPr>`
     : `<a:pPr algn="${align}"><a:spcAft><a:spcPts val="${spaceAfter * 100}"/></a:spcAft><a:buNone/></a:pPr>`;
-  return `<a:p>${ppr}${text === '' ? '' : run(text, style, p, lang)}<a:endParaRPr lang="${lang}" sz="${Math.round((style.size || 18) * 100)}" dirty="0"/></a:p>`;
+  // XML + önizleme için yapı (String nesnesi: birleştirmede XML olarak davranır).
+  const out = new String(`<a:p>${ppr}${text === '' ? '' : run(text, style, p, lang)}<a:endParaRPr lang="${lang}" sz="${Math.round((style.size || 18) * 100)}" dirty="0"/></a:p>`);
+  out.meta = { text: String(text == null ? '' : text), size: style.size || 18, bold: Boolean(style.bold), italic: Boolean(style.italic), color: style.color || p.ink, align, bullet, spaceAfter };
+  return out;
 }
 
 /* media: { token → { name, width, height } } (deste genelinde paylaşılır).
@@ -73,6 +76,10 @@ function createSlideBuilder(p, lang, media = {}) {
   let id = 1;
   const shapes = [];
   const rels = [];
+  /* Önizleme sahnesi: dosyaya yazılan her şeklin aynısı (pt). Tarayıcıdaki
+     Yerleşim önizlemesi bunu çizer; böylece önizleme = gerçek dosya. */
+  const scene = { background: null, items: [] };
+  const P = value => Math.round((value / EMU) * 100) / 100;
   const next = () => ++id;
   /* Gerçek model görseli (en-boy korunarak kutuya sığdırılır); yoksa
      "görsel yok" kutusu. */
@@ -89,6 +96,7 @@ function createSlideBuilder(p, lang, media = {}) {
     if (ph > h) { ph = h; pw = h * ratio; }
     const shapeId = next();
     box({ x, y, w, h, fill: 'FFFFFF', line: { color: p.line }, name: 'ImageFrame' });
+    scene.items.push({ t: 'img', token, x: P(x + (w - pw) / 2), y: P(y + (h - ph) / 2), w: P(pw), h: P(ph) });
     shapes.push(`<p:pic><p:nvPicPr><p:cNvPr id="${shapeId}" name="Picture ${shapeId}" descr="${xmlText(label || token)}"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="${rel.id}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="${Math.round(x + (w - pw) / 2)}" y="${Math.round(y + (h - ph) / 2)}"/><a:ext cx="${Math.round(pw)}" cy="${Math.round(ph)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`);
   }
   function box({ x, y, w, h, fill, line, paragraphs = [], anchor = 't', inset = 6, name = 'Shape', geometry = 'rect' }) {
@@ -99,6 +107,7 @@ function createSlideBuilder(p, lang, media = {}) {
       : `<a:solidFill><a:srgbClr val="${fill}"/></a:solidFill>`;
     const lineXml = line ? `<a:ln w="${pt(line.width || 1)}"><a:solidFill><a:srgbClr val="${line.color}"/></a:solidFill></a:ln>` : '<a:ln><a:noFill/></a:ln>';
     const body = paragraphs.length ? paragraphs.join('') : `<a:p><a:endParaRPr lang="${lang}" dirty="0"/></a:p>`;
+    scene.items.push({ t: 'box', name, x: P(x), y: P(y), w: P(w), h: P(h), fill: fill || null, line: line ? line.color : null, lineW: line ? line.width || 1 : 0, geometry, anchor, inset, paragraphs: paragraphs.map(item => item && item.meta).filter(Boolean) });
     shapes.push(`<p:sp><p:nvSpPr><p:cNvPr id="${shapeId}" name="${xmlText(name)} ${shapeId}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${Math.round(x)}" y="${Math.round(y)}"/><a:ext cx="${Math.max(1, Math.round(w))}" cy="${Math.max(1, Math.round(h))}"/></a:xfrm><a:prstGeom prst="${geometry}"><a:avLst/></a:prstGeom>${fillXml}${lineXml}</p:spPr><p:txBody><a:bodyPr wrap="square" lIns="${pt(inset)}" tIns="${pt(inset)}" rIns="${pt(inset)}" bIns="${pt(inset)}" anchor="${anchor}" rtlCol="0"><a:noAutofit/></a:bodyPr><a:lstStyle/>${body}</p:txBody></p:sp>`);
   }
   function text(x, y, w, h, value, style, opts = {}) {
@@ -119,11 +128,13 @@ function createSlideBuilder(p, lang, media = {}) {
     const xmlRows = [`<a:tr h="${hOf(0)}">${columns.map((column, index) => cell(column, true, 0, numericCols[index])).join('')}</a:tr>`]
       .concat(rows.map((row, rowIndex) => `<a:tr h="${hOf(rowIndex + 1)}">${columns.map((_, index) => cell(row[index], false, rowIndex, numericCols[index])).join('')}</a:tr>`));
     const totalH = [columns, ...rows].reduce((sum, _, index) => sum + hOf(index), 0);
+    scene.items.push({ t: 'table', x: P(x), y: P(y), colW: P(colW), columns: columns.map(String), rows: rows.map(row => columns.map((_, i) => (row[i] == null ? '' : String(row[i])))), heights: [columns, ...rows].map((_, index) => P(hOf(index))), fontSize, numeric: numericCols, colors: { head: p.headBg, headInk: p.logo, band: p.card, paper: p.paper, ink: p.ink, line: p.line } });
     shapes.push(`<p:graphicFrame><p:nvGraphicFramePr><p:cNvPr id="${shapeId}" name="Table ${shapeId}"/><p:cNvGraphicFramePr><a:graphicFrameLocks noGrp="1"/></p:cNvGraphicFramePr><p:nvPr/></p:nvGraphicFramePr><p:xfrm><a:off x="${x}" y="${y}"/><a:ext cx="${colW * columns.length}" cy="${totalH}"/></p:xfrm><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/table"><a:tbl><a:tblPr firstRow="1" bandRow="1"/><a:tblGrid>${columns.map(() => `<a:gridCol w="${colW}"/>`).join('')}</a:tblGrid>${xmlRows.join('')}</a:tbl></a:graphicData></a:graphic></p:graphicFrame>`);
   }
   /* background: 'RRGGBB' ya da [başlangıç, bitiş] renk geçişi.
      transition: slayt geçişi (fade | push) — sunum hareketli akar. */
   function xml(background, transition = 'fade') {
+    scene.background = background || p.paper;
     const bg = Array.isArray(background)
       ? `<a:gradFill rotWithShape="1"><a:gsLst><a:gs pos="0"><a:srgbClr val="${background[0]}"/></a:gs><a:gs pos="100000"><a:srgbClr val="${background[1]}"/></a:gs></a:gsLst><a:lin ang="2400000" scaled="0"/></a:gradFill>`
       : `<a:solidFill><a:srgbClr val="${background || p.paper}"/></a:solidFill>`;
@@ -131,7 +142,7 @@ function createSlideBuilder(p, lang, media = {}) {
     return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <p:sld xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:p="http://schemas.openxmlformats.org/presentationml/2006/main"><p:cSld><p:bg><p:bgPr>${bg}<a:effectLst/></p:bgPr></p:bg><p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpPr/><p:nvPr/></p:nvGrpSpPr><p:grpSpPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="0" cy="0"/><a:chOff x="0" y="0"/><a:chExt cx="0" cy="0"/></a:xfrm></p:grpSpPr>${shapes.join('')}</p:spTree></p:cSld><p:clrMapOvr><a:masterClrMapping/></p:clrMapOvr>${motion}</p:sld>`;
   }
-  return { box, text, table, picture, xml, rels };
+  return { box, text, table, picture, xml, rels, scene };
 }
 
 /* Metin uzunluğuna göre yazı boyutu (PowerPoint otomatik sığdırmayı ancak
@@ -197,21 +208,83 @@ function paginateTableSlide(slide) {
 }
 /* Galeri: Yerleşim'deki sütun × satır kadar model bir slayta; fazlası
    aynı başlıklı devam slaytlarına. */
-function paginateGallerySlide(slide) {
-  const size = BLOutputLayout.perPage(LAYOUT);
-  if (!slide.items || slide.items.length <= size) return [slide];
-  const pages = Math.ceil(slide.items.length / size);
-  return Array.from({ length: pages }, (_, index) => ({ ...slide, title: `${slide.title} (${index + 1}/${pages})`, items: slide.items.slice(index * size, (index + 1) * size) }));
+/* Galeri → katalog slaytları: kartlar gruba / alt gruba göre ayrılır, her
+   alt grup kendi slaytında başlar, model alanına sığmayan kartlar devam
+   slaytına geçer. Slayt bloklarla (başlık, grup, alt başlık, model alanı,
+   metin) çizilir; düzen kullanıcının sayfa tasarımıdır (LAYOUT.page). */
+function catalogSlides(slide, sourceIndex) {
+  const pages = BLOutputLayout.catalogPages(slide.items || [], slide.catalog, LAYOUT);
+  return pages.map((page, pageIndex) => {
+    const suffix = page.parts > 1 ? ` (${page.part}/${page.parts})` : '';
+    const labels = page.subgroup ? { title: slide.title, group: page.group, subgroup: page.subgroup + suffix }
+      : page.group ? { title: slide.title, group: page.group + suffix, subgroup: '' } : { title: slide.title + suffix, group: '', subgroup: '' };
+    return { ...slide, layout: 'catalogPage', title: labels.title, labels, items: page.entries.map(entry => entry.item), catalogPage: { source: sourceIndex, page: pageIndex, group: page.group, subgroup: page.subgroup, part: page.part, parts: page.parts } };
+  });
 }
 function expandSlides(slides, layout) {
   if (layout !== undefined) applyGeometry(layout);
-  return slides.flatMap(slide => (slide.layout === 'table' ? paginateTableSlide(slide) : slide.layout === 'gallery' ? paginateGallerySlide(slide) : [slide]));
+  return slides.flatMap((slide, index) => (slide.layout === 'table' ? paginateTableSlide(slide).map(item => ({ ...item, sourceIndex: index }))
+    : slide.layout === 'gallery' ? catalogSlides(slide, index) : [{ ...slide, sourceIndex: index }]));
+}
+
+/* Model kartı (katalog slaytı). */
+function drawCard(s, p, item, cell) {
+  const textSize = LAYOUT.cardTextSize;
+  const x = pt(cell.x), y = pt(cell.y), cardW = pt(cell.w), cardH = pt(cell.h), imgH = pt(cell.imgH);
+  const inset = Math.min(pt(8), cardW * 0.06);
+  s.box({ x, y, w: cardW, h: cardH, fill: p.card, line: { color: p.line }, name: 'Card' });
+  s.box({ x, y, w: cardW, h: pt(4), fill: toneColor(item.tone, p), name: 'Tone' });
+  s.picture({ x: x + inset, y: y + pt(8), w: cardW - inset * 2, h: imgH, token: item.image, label: item.title });
+  let ty = y + pt(8) + imgH + pt(3);
+  const bottom = y + cardH - pt(3);
+  if (LAYOUT.showTitle && item.title && ty < bottom) {
+    const h = Math.min(pt(textSize * 1.45), bottom - ty);
+    s.text(x + inset, ty, cardW - inset * 2, h, item.title, { size: textSize, bold: true, color: p.logo });
+    ty += h;
+  }
+  const meta = [LAYOUT.showSubtitle ? item.subtitle : '', LAYOUT.showNote ? item.note : ''].filter(Boolean).join(' · ');
+  if (meta && ty < bottom - pt(6)) s.text(x + inset, ty, cardW - inset * 2, bottom - ty, meta, { size: Math.max(7, textSize - 2.5), color: p.ink2 });
+}
+/* Katalog slaytı: kullanıcının sayfa tasarımındaki bloklar 12 sütunlu ızgaraya. */
+function renderCatalogSlide(s, slide, index, total, deck, p, lang) {
+  const page = LAYOUT.page;
+  const area = BLOutputLayout.pptxPageArea(LAYOUT);
+  const align = block => ({ center: 'ctr', right: 'r' }[block.align] || 'l');
+  for (const block of page.blocks) {
+    const r = BLOutputLayout.blockRect(area, page, block, LAYOUT.gap);
+    const x = pt(r.x), y = pt(r.y), w = pt(r.w), h = pt(r.h);
+    if (block.kind === 'models') {
+      BLOutputLayout.cardCells(r, LAYOUT, slide.items.length).forEach((cell, i) => drawCard(s, p, slide.items[i], cell));
+      continue;
+    }
+    const text = block.kind === 'text' ? block.text : slide.labels[block.kind];
+    if (!text) continue;
+    if (block.kind === 'title') {
+      const size = block.size || (text.length > 60 ? Math.round(LAYOUT.titleSize * 0.8) : LAYOUT.titleSize);
+      if (block.fill) { s.box({ x, y, w, h, fill: p.headBg, name: 'HeadBand' }); s.box({ x, y: y + h - pt(3), w, h: pt(3), fill: p.logo, name: 'Rule' }); }
+      s.text(x + (block.fill ? pt(10) : 0), y, w - (block.fill ? pt(20) : 0), h - (block.fill ? pt(3) : 0), text, { size, bold: true, color: p.logo }, { anchor: block.fill ? 'ctr' : 'b', align: align(block) });
+    } else if (block.kind === 'group') {
+      const size = block.size || Math.round(LAYOUT.titleSize * 0.72);
+      if (block.fill) s.box({ x, y, w, h, fill: p.headBg, name: 'GroupBand' });
+      s.box({ x, y: y + pt(2), w: pt(4), h: h - pt(4), fill: p.logo, name: 'GroupBar' });
+      s.text(x + pt(12), y, w - pt(12), h, text, { size, bold: true, color: p.logo }, { anchor: 'ctr', align: align(block) });
+    } else if (block.kind === 'subgroup') {
+      const size = block.size || Math.round(LAYOUT.titleSize * 0.55);
+      if (block.fill) s.box({ x, y, w, h, fill: p.headBg, name: 'SubgroupBand' });
+      s.text(x + (block.fill ? pt(8) : 0), y, w - (block.fill ? pt(16) : 0), h, text, { size, color: p.headInk }, { anchor: 'ctr', align: align(block) });
+    } else {
+      s.box({ x, y, w, h, paragraphs: String(text).split('\n').map(line => paragraph(line, { size: block.size || Math.max(9, LAYOUT.bodySize - 6), color: p.ink2 }, p, lang, { align: align(block), spaceAfter: 2 })), name: 'Text', inset: 2 });
+    }
+  }
+  s.text(MARGIN, H - pt(30), W / 2, pt(18), `Buyer Log · LCW AI${deck.title ? ` · ${deck.title}` : ''}`.slice(0, 110), { size: 9, color: p.muted });
+  s.text(W - MARGIN - pt(120), H - pt(30), pt(120), pt(18), `${index + 1} / ${total}`, { size: 9, color: p.muted }, { align: 'r' });
+  return s.xml();
 }
 
 function renderSlide(slide, index, total, deck, p, lang, media) {
   const s = createSlideBuilder(p, lang, media);
   const xml = renderSlideBody(s, slide, index, total, deck, p, lang);
-  return { xml, rels: s.rels };
+  return { xml, rels: s.rels, scene: s.scene };
 }
 
 function renderSlideBody(s, slide, index, total, deck, p, lang) {
@@ -236,6 +309,7 @@ function renderSlideBody(s, slide, index, total, deck, p, lang) {
     if (slide.subtitle) s.text(MARGIN * 2, H / 2 + pt(40), W - MARGIN * 4, pt(60), slide.subtitle, { size: 18, color: p.headInk });
     return s.xml([p.headBg2, p.headBg], 'push');
   }
+  if (slide.layout === 'catalogPage') return renderCatalogSlide(s, slide, index, total, deck, p, lang);
   chrome(s, slide, index, total, deck, p, lang);
   const width = W - MARGIN * 2;
   if (slide.layout === 'kpis') {
@@ -316,30 +390,6 @@ function renderSlideBody(s, slide, index, total, deck, p, lang) {
       s.text(x + pt(14), CONTENT_TOP + pt(22), colW - pt(28), pt(30), column.title, { size: 20, bold: true, color: p.logo });
       const size = fitSize(column.bullets, Math.max(10, LAYOUT.bodySize - 4), Math.min(11, LAYOUT.bodySize - 4), 9);
       s.box({ x: x + pt(14), y: CONTENT_TOP + pt(60), w: colW - pt(28), h: cardH - pt(64), paragraphs: column.bullets.map(item => paragraph(item, { size, color: p.ink }, p, lang, { bullet: true })), name: 'Bullets' });
-    });
-    return s.xml();
-  }
-  if (slide.layout === 'gallery') {
-    // Model kartları Yerleşim ızgarasına (sütun × satır) yerleşir; boyutlar
-    // tarayıcıdaki önizlemeyle aynı hesaptan gelir (galleryCells).
-    const cells = BLOutputLayout.galleryCells(LAYOUT, slide.items.length);
-    const textSize = LAYOUT.cardTextSize;
-    slide.items.slice(0, cells.length).forEach((item, i) => {
-      const cell = cells[i];
-      const x = pt(cell.x), y = pt(cell.y), cardW = pt(cell.w), cardH = pt(cell.h), imgH = pt(cell.imgH);
-      const inset = Math.min(pt(8), cardW * 0.06);
-      s.box({ x, y, w: cardW, h: cardH, fill: p.card, line: { color: p.line }, name: 'Card' });
-      s.box({ x, y, w: cardW, h: pt(4), fill: toneColor(item.tone, p), name: 'Tone' });
-      s.picture({ x: x + inset, y: y + pt(8), w: cardW - inset * 2, h: imgH, token: item.image, label: item.title });
-      let ty = y + pt(8) + imgH + pt(3);
-      const bottom = y + cardH - pt(3);
-      if (LAYOUT.showTitle && item.title && ty < bottom) {
-        const h = Math.min(pt(textSize * 1.45), bottom - ty);
-        s.text(x + inset, ty, cardW - inset * 2, h, item.title, { size: textSize, bold: true, color: p.logo });
-        ty += h;
-      }
-      const meta = [LAYOUT.showSubtitle ? item.subtitle : '', LAYOUT.showNote ? item.note : ''].filter(Boolean).join(' · ');
-      if (meta && ty < bottom - pt(6)) s.text(x + inset, ty, cardW - inset * 2, bottom - ty, meta, { size: Math.max(7, textSize - 2.5), color: p.ink2 });
     });
     return s.xml();
   }
@@ -442,4 +492,22 @@ function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {} 
   return createZip(entries, { date });
 }
 
-module.exports = { renderPresentation, formatNumber, fitSize, expandSlides, SLIDE_SIZE: { width: W, height: H } };
+/* Önizleme: dosyadaki slaytların sahneleri (pt) + katalog sayfası bilgisi.
+   Aynı oluşturucu kullanılır; yalnız ZIP yazılmaz. */
+function previewPresentation(deck, { lang = 'tr', images = {} } = {}) {
+  const p = palette();
+  const langTag = lang === 'en' ? 'en-US' : 'tr-TR';
+  const media = {};
+  for (const [token, image] of Object.entries(images || {})) if (['png', 'jpg', 'gif'].includes(image.ext)) media[token] = { name: token, width: image.width, height: image.height };
+  const expanded = expandSlides(deck.slides, deck.layout || null);
+  return {
+    width: W / EMU, height: H / EMU, font: theme().fonts.office,
+    area: BLOutputLayout.pptxPageArea(LAYOUT), page: LAYOUT.page, gap: LAYOUT.gap,
+    slides: expanded.map((slide, index) => ({
+      title: slide.title, layout: slide.layout, source: slide.sourceIndex != null ? slide.sourceIndex : slide.catalogPage ? slide.catalogPage.source : index,
+      catalog: slide.catalogPage || null, scene: renderSlide(slide, index, expanded.length, deck, p, langTag, media).scene,
+    })),
+  };
+}
+
+module.exports = { renderPresentation, previewPresentation, formatNumber, fitSize, expandSlides, SLIDE_SIZE: { width: W, height: H } };

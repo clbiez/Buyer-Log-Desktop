@@ -24,16 +24,37 @@ const { chooseTemplate, templateLabel } = require('./output-templates');
 const { buildDocument } = require('./output-html');
 const { reportCss } = require('./output-theme');
 const { renderWorkbook } = require('./output-xlsx');
-const { renderPresentation } = require('./output-pptx');
+const { renderPresentation, previewPresentation } = require('./output-pptx');
 const { createOutputStore } = require('./output-store');
 const { collectTokens, normalizeImages, fillHtmlImages } = require('./output-images');
 const { createDraftStore } = require('./output-drafts');
 const userTemplates = require('./output-user-templates');
+const catalog = require('./output-catalog');
 const BLOutputLayout = require('../../../public/lcwai-output-layout');
 
 const MAX_REPAIRS = 2;
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
 const DETAILS = ['summary', 'standard', 'detailed'];
+
+/* Gruplama verisi: { anahtar: { sütun: değer } } — yalnız çıktıdaki anahtarlar,
+   sınırlı sütun/uzunluk. Yerel taslakta kalır; LCW AI'a gitmez. */
+function normalizeAttributes(raw, tokens) {
+  const allowed = new Set(tokens || []);
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  for (const [key, row] of Object.entries(raw)) {
+    const token = String(key).toUpperCase();
+    if (!allowed.has(token) || !row || typeof row !== 'object') continue;
+    const clean = {};
+    for (const [name, value] of Object.entries(row).slice(0, 60)) {
+      const column = String(name).replace(/\s+/g, ' ').trim().slice(0, 60);
+      if (!column || column === 'BL Image' || value == null || typeof value === 'object') continue;
+      clean[column] = String(value).replace(/\s+/g, ' ').trim().slice(0, 120);
+    }
+    out[token] = clean;
+  }
+  return out;
+}
 
 function normalizeRequest(output = {}) {
   const format = contracts.normalizeFormat(output && output.format);
@@ -127,14 +148,15 @@ function createOutputService(options = {}) {
     try {
       if (format === 'pdf' || format === 'html') {
         // Yerleşim varsa model galerisi PDF'te sütun × satır sayfalarına bölünür.
-        const filled = fillHtmlImages(data.body, images, lang);
-        const body = data.layout ? BLOutputLayout.paginateGallery(filled, data.layout, { pages: format === 'pdf' }) : filled;
+        // Model kataloğu Buyer Log tarafından çizilir (gruplar + sayfa tasarımı).
+        const layout = BLOutputLayout.normalizeLayout('pdf', data.layout);
+        const body = fillHtmlImages(catalog.fillCatalogs(data.body, data.galleries, layout, { lang }), images, lang);
         if (format === 'pdf') {
-          const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout: data.layout });
+          const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout });
           const pendingId = store.putPending(ownerId, { stage: 'pdf', html, ...saveMeta, lang, orientation });
           return { pending: 'pdf', pendingId, html, title, landscape: orientation === 'landscape', format: 'pdf', templateLabel: job.templateLabel, attempts: job.attempts, draftId: job.draftId };
         }
-        const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel }, layout: data.layout }), 'utf8');
+        const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel }, layout }), 'utf8');
         return store.save(ownerId, { buffer, ...saveMeta });
       }
       const buffer = format === 'xlsx' ? renderWorkbook(data, { lang, date, images }) : renderPresentation(data, { lang, date, images });
@@ -147,13 +169,14 @@ function createOutputService(options = {}) {
 
   /* Renderer'ın çözdüğü görseller ({ anahtar: dataURL }) → dosya. Eksik
      görsel dosyayı durdurmaz; yerine "görsel yok" kutusu konur. */
-  function completeImages(ownerId, pendingId, rawImages) {
+  function completeImages(ownerId, pendingId, rawImages, rawAttributes) {
     const entry = store.takePending(ownerId, pendingId);
     if (!entry || entry.stage !== 'images') throw lcwAiError('OUTPUT_NOT_FOUND');
     const images = normalizeImages(rawImages, entry.tokens);
     // Yeniden oluşturmada görseller tekrar istenmesin: taslağın yanında kalır.
+    // Öznitelikler: kartın bağlam satırı (Kategori, Alt kategori…) → gruplama.
     if (entry.job.draftId) {
-      try { drafts.update(ownerId, entry.job.draftId, { images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])) }); } catch (_) {}
+      try { drafts.update(ownerId, entry.job.draftId, { images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])), attributes: normalizeAttributes(rawAttributes, entry.tokens) }); } catch (_) {}
     }
     const output = render(ownerId, entry.job, images);
     return { ...output, imagesUsed: Object.keys(images).length, imagesRequested: entry.tokens.length };
@@ -191,7 +214,7 @@ function createOutputService(options = {}) {
       id: draft.id, format: draft.format, title: draft.title, lang: draft.lang, orientation: draft.orientation, detail: draft.detail,
       template: draft.template, templateLabel: draft.templateLabel, revision: draft.revision, updatedAt: draft.updatedAt,
       // Görseller önizlemede (rapor, Yerleşim aracındaki model kartları) kullanılır.
-      data: draft.data, imageKeys: Object.keys(draft.images || {}), images: draft.images || {},
+      data: draft.data, imageKeys: Object.keys(draft.images || {}), images: draft.images || {}, attributes: draft.attributes || {},
     };
     if (draft.format === 'pdf' || draft.format === 'html') out.previewCss = reportCss({ orientation: draft.orientation, print: false });
     return out;
@@ -199,8 +222,8 @@ function createOutputService(options = {}) {
 
   /* Düzenlenen yapı → doğrulama → taslak güncellenir → yeni dosya. Eski
      dosya korunur (her oluşturma yeni bir dosyadır). */
-  function renderDraft(ownerId, draftId, input = {}) {
-    const draft = draftOf(ownerId, draftId);
+  /* Düzenleyiciden gelen yapı aynı doğrulayıcıdan geçer (oluşturma + önizleme). */
+  function normalizeEdit(draft, input) {
     const lang = draft.lang === 'en' ? 'en' : 'tr';
     const options = { lang, date: draft.day };
     const raw = input.data && typeof input.data === 'object' ? input.data : null;
@@ -209,6 +232,39 @@ function createOutputService(options = {}) {
       : draft.format === 'pptx' ? contracts.normalizePresentation(raw, options)
         : contracts.normalizeHtmlDraft(raw, options);
     if (!parsed.ok) throw lcwAiError('OUTPUT_EDIT_INVALID', { issues: parsed.errors });
+    return { parsed, lang };
+  }
+
+  /* Gerçek önizleme: dosyayı oluşturan kodla aynı çizim, kaydetmeden.
+     PowerPoint → slayt sahneleri (şekiller, pt); PDF/HTML → basılacak
+     belgenin aynısı (+ her katalog sayfası ayrı). Görseller istemcide
+     taslaktan doldurulur (yanıt küçük kalır). */
+  function previewDraft(ownerId, draftId, input = {}) {
+    const draft = draftOf(ownerId, draftId);
+    const { parsed, lang } = normalizeEdit(draft, input);
+    const data = parsed.data;
+    const orientation = input.orientation === 'landscape' || input.orientation === 'portrait' ? input.orientation : draft.orientation;
+    if (draft.format === 'pptx') {
+      if (input.title) data.title = String(input.title).slice(0, contracts.LIMITS.titleChars);
+      const images = normalizeImages(draft.images || {}, collectTokens('pptx', data));
+      return { format: 'pptx', ...previewPresentation(data, { lang, images }), data };
+    }
+    if (draft.format === 'xlsx') return { format: 'xlsx', data };
+    const layout = BLOutputLayout.normalizeLayout('pdf', data.layout);
+    const print = draft.format === 'pdf';
+    const doc = body => buildDocument({ body, styles: data.styles, title: input.title || draft.title, lang, orientation, print, meta: { date: draft.day, template: draft.templateLabel }, layout });
+    const catalogs = (data.galleries || []).map((gallery, index) => ({ gallery: index, title: gallery.title, pages: catalog.catalogPagesHtml(gallery, layout, { lang }) }));
+    return {
+      format: draft.format, orientation, layout, data,
+      document: doc(catalog.fillCatalogs(data.body, data.galleries, layout, { lang })),
+      shell: buildDocument({ body: '<!--BL-PAGE-->', styles: data.styles, title: '', lang, orientation, print: true, layout, bare: true }),
+      catalogs: catalogs.map(entry => ({ gallery: entry.gallery, title: entry.title, pages: entry.pages })),
+    };
+  }
+
+  function renderDraft(ownerId, draftId, input = {}) {
+    const draft = draftOf(ownerId, draftId);
+    const { parsed, lang } = normalizeEdit(draft, input);
     const title = String(input.title == null ? '' : input.title).replace(/\s+/g, ' ').trim().slice(0, contracts.LIMITS.titleChars) || (parsed.data && parsed.data.title) || draft.title;
     if (draft.format !== 'pdf' && draft.format !== 'html') parsed.data.title = title;
     const orientation = input.orientation === 'landscape' || input.orientation === 'portrait' ? input.orientation : draft.orientation;
@@ -232,11 +288,11 @@ function createOutputService(options = {}) {
   }
 
   return {
-    create, completeImages, completePdf, fallbackHtml, getDraft, renderDraft, skeleton,
+    create, completeImages, completePdf, fallbackHtml, getDraft, renderDraft, previewDraft, skeleton,
     get: (ownerId, id) => store.get(ownerId, id),
     list: (ownerId, limit) => store.list(ownerId, limit),
     store,
   };
 }
 
-module.exports = { createOutputService, normalizeRequest, MAX_REPAIRS };
+module.exports = { createOutputService, normalizeRequest, normalizeAttributes, MAX_REPAIRS };
