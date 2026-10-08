@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.261",
-  "commit_sha": "10b8cf6367331082c079504ef60e0eb79d23a5a3",
-  "release_notes": "Buyer Log 7.0.261 TEST: Lab Dip / ROS Renk Sonuç Bildirimi ve Color Evaluation Notification .msg/.eml mailleri çoklu renk, bağımsız onay/ret/yorum ve revizyonları ile içe aktarılır. Eksik PO durumunda CP model/renk adayları manuel doğrulanır. Tek Checklist hücresinde renk bazlı durum/yorum görüntülenir; LCW AI inceleme bağlamı zenginleştirildi. PR #437 regresyon testleri başarılı; gerçek anonim demo ekran görüntüsü sürüm notlarında."
+  "version": "7.0.262",
+  "commit_sha": "b83afa61123ee8ab0b8b5d421e882d9773b30db2",
+  "release_notes": "Buyer Log 7.0.262 TEST: OAB masaüstünde oturum, girişin yapıldığı gizli PASS sayfası içinde doğrulanıyor ve OAB verisi o sayfa üzerinden çekiliyor; giriş tamamlandığında zaman aşımı yaşanmıyor. Kurumsal Bağlantılar'da OAB bağlantı durumu gösteriliyor. PR #438."
 }
