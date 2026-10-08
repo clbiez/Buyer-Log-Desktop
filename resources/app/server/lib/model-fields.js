@@ -59,12 +59,14 @@ const FIELD_CATALOGUE = {
     { header: 'Model Bütçe Tarih Yıl Ay Gün', aliases: ['IN STORE', 'MODEL BUDGET DATE'] },
     { header: 'Sipariş Yerleştirme MerchTarih', aliases: [] },
     { header: 'Buying Son Onay Tarihi', aliases: ['BUYING APPROVAL DATE', 'SON ONAY TARIHI'] },
+    // CP/Orders Original Ex-F.: ASAS Dates tablosundaki tam gün/ay/yıl
+    // tarih sütunu, revize edilen Ex-factory tarihinden bağımsızdır.
+    { header: 'Initial Inspection Geçme Tarih Gün Ay Yıl', aliases: [] },
     // v7.0.229 — Üretici kartı termin performansı: PO açılırken verilen ilk
     // ex-factory sözü. İsteğe bağlıdır; eşlenmezse ASAS'ın ilk ex-factory
     // değeri temel alınır.
-    // ASAS modelindeki gerçek ad "Initial Inspection Geçme Tarih"tir (CP'de
-    // "Original Ex-F."). Ay/Hafta türevleri aynı öneki taşır; birebir ad önce
-    // eşlendiği için tarih sütunu seçilir.
+    // Üretici kartının ayrı ilk söz alanı. CP'deki Original Ex-F. sütunu,
+    // yukarıdaki Gün Ay Yıl başlığından okunur.
     { header: 'Initial Inspection Geçme Tarih', aliases: ['INITIAL INSPECTION GECME TARIH', 'INITIAL INSPECTION DATE', 'INITIAL INSPECTION TARIHI'] },
     { header: 'Buyer', aliases: ['SATIN ALMACI'] },
     { header: 'Line', aliases: ['URUN GRUBU', 'PRODUCT LINE'] },
@@ -237,7 +239,10 @@ function autoMapSchema(role, schema) {
           ...measures.filter(entry => preferredAntrepoTable && sameTable(entry, preferredAntrepoTable)),
           ...measures.filter(entry => !(preferredAntrepoTable && sameTable(entry, preferredAntrepoTable))),
         ]
-      : measures.concat(columns);
+      : field.header === 'Initial Inspection Geçme Tarih Gün Ay Yıl'
+        ? [...columns.filter(entry => fieldKey(entry.table) === 'DATES'),
+           ...columns.filter(entry => fieldKey(entry.table) !== 'DATES'), ...measures]
+        : measures.concat(columns);
     let hit = null;
     // 1) birebir ad eşleşmesi. IAS satır alanlarında sütunlar ölçülerden önce gelir.
     for (const candidate of candidates) {
