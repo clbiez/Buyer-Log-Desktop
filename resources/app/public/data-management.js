@@ -712,6 +712,10 @@
         en: 'Shared rules: changing one changes the numbers everyone sees.',
       },
       tools: [
+        { id: 'merch', icon: 'i-calculator', inline: true,
+          label: { tr: 'Merch Calendar', en: 'Merch Calendar' },
+          hint: { tr: 'LCW hafta, ay ve ay-hafta takvimini yükle ve yönet (53. hafta desteklenir).',
+            en: 'Upload and manage LCW week, month and month-week calendar (supports week 53).' } },
         { id: 'transit', requires: 'manageBusinessRules', icon: 'i-ship',
           label: { tr: 'Yol Süreleri', en: 'Transfer Lead Times' },
           hint: { tr: 'Üretim ülkesi ve sevkiyat tipine göre transit gün sayısı; tahmini varış bundan hesaplanır. İthalat Yol Süresi Raporu Excel\'inden ülke/taşıt analizi ve kural önerisi.',
@@ -854,7 +858,7 @@
                   ? `<span class="dmToolValue" title="${esc(tool.value())}">${esc(tool.value())}</span>` : ''}
               </span>
             </button>
-            ${tool.inline ? `<div class="dmToolSlot" data-tool-slot="${esc(tool.id)}"></div>` : ''}
+            ${tool.inline ? `<div class="dmToolSlot" data-tool-slot="${esc(tool.id)}">${openTool === 'merch' && tool.id === 'merch' ? merchCalendarPanel() : ''}</div>` : ''}
           </li>`).join('')}
         </ul>
       </div>`).join('')}
@@ -882,6 +886,7 @@
       const slot = root.querySelector(`[data-tool-slot="${CSS.escape(tool.id)}"]`);
       if (!slot) { openTool = ''; return; }
       slot.__onDataMaintClosed = () => { openTool = ''; render(); };
+      if (tool.id === 'merch') return;
       if (tool.id === 'maintenance' && typeof openDataMaintenanceModal === 'function') {
         void openDataMaintenanceModal(slot);
       }
@@ -1248,7 +1253,7 @@
         ))}</div>` : ''}
         <div class="dmMerchRules">
           <span>${esc(T('LCW haftaları dosyadan okunur; Buyer Log kendi LCW haftasını tahmin etmez.','LCW weeks are read from the file; Buyer Log does not guess LCW weeks.'))}</span>
-          <span>${esc(T('LCW hafta numarası 1–52 olmalıdır; 53. hafta içeren dosya etkinleştirilmez.','LCW week numbers must be 1–52; a file containing week 53 is not activated.'))}</span>
+          <span>${esc(T('LCW hafta numaraları dosyadaki tanıma göre 1–53 olabilir.','LCW week numbers may be 1–53 according to the uploaded calendar.'))}</span>
         </div>
         ${merchMessage ? `<div class="dmMerchMessage">${esc(merchMessage)}</div>` : ''}
         <div class="dmMerchActions">
@@ -1362,9 +1367,6 @@
       <div class="dmWizardSlot" data-wizard-slot></div>
 
       ${labPanel()}
-
-      <div class="dmSectionLabel">${esc(T('İş takvimi', 'Business calendar'))}</div>
-      ${merchCalendarPanel()}
 
       ${unsupported ? `<div class="dmNotice">${esc(T('Veri modeli sorguları yalnız Windows üzerinde çalışır; bu makinede bağlantı sınanamaz.', 'Data-model queries run on Windows only; connections cannot be tested on this machine.'))}</div>` : ''}
       ${(model.warnings || []).map(text => `<div class="dmNotice dmNotice--warn">${esc(text)}</div>`).join('')}
