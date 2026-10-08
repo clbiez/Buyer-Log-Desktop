@@ -11427,6 +11427,12 @@ app.patch('/api/data-management/source/:id', userAccess.requireArea('source'), u
       plan = dataManagementSourceWriter.planMappingEntry(store.items, {
         sourceId, header: body.mappingEntry.header, entry: body.mappingEntry.entry,
       });
+    } else if (Array.isArray(body.mappingChanges)) {
+      // Editörde hazırlanan değişiklikleri tek revizyon kontrolüyle atomik kaydet.
+      // Tam eşleme gönderilmez; dokunulmayan alanlar silinmez.
+      plan = dataManagementSourceWriter.planMappingChanges(store.items, {
+        sourceId, changes: body.mappingChanges,
+      });
     } else if (body.mapping && typeof body.mapping === 'object') {
       plan = dataManagementSourceWriter.planMappingWrite(store.items, { sourceId, mapping: body.mapping });
     } else if (typeof body.queryMode === 'string') {
@@ -11466,6 +11472,7 @@ app.patch('/api/data-management/source/:id', userAccess.requireArea('source'), u
     userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_SOURCE_UPDATE', sourceId, {
       enabled: typeof body.enabled === 'boolean' ? body.enabled : undefined,
       mapping: body.mapping ? Object.keys(body.mapping).length : undefined,
+      mappingChanges: Array.isArray(body.mappingChanges) ? body.mappingChanges.length : undefined,
     });
     publishSharedMasterChange('modelConnections', req);
     res.json({ ok: true, changed: true, revision: saved.revision, warnings: plan.warnings });
