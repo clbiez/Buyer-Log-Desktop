@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.260",
+      "publishedAt": "2026-10-08",
+      "title": {
+        "tr": "53. hafta desteği ve Merch Calendar araç modülü",
+        "en": "Week 53 support and the Merch Calendar tool"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.260/release.json"
+    },
+    {
       "version": "7.0.259",
       "publishedAt": "2026-10-08",
       "title": {

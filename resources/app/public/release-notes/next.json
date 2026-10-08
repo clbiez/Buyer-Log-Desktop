@@ -1,47 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-08",
-  "bootstrapVisual": true,
+  "publishedAt": "",
+  "bootstrapVisual": false,
   "title": {
-    "tr": "53. hafta desteği ve Merch Calendar araç modülü",
-    "en": "Week 53 support and the Merch Calendar tool"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "Merch Calendar 53. LCW haftasını kabul ediyor; takvim yönetimi Tools > Calculation Rules altında açılıp kapanan köşeli bir modüle taşındı.",
-    "en": "Merch Calendar now accepts LCW week 53; calendar management has moved to a square-cornered, collapsible module under Tools > Calculation Rules."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "merch-calendar-week-53-tools",
-      "type": "improvement",
-      "module": {
-        "tr": "Araçlar / Hesaplama kuralları",
-        "en": "Tools / Calculation Rules"
-      },
-      "title": {
-        "tr": "Merch Calendar açılır paneli ve 53. hafta",
-        "en": "Collapsible Merch Calendar with week 53"
-      },
-      "body": {
-        "tr": "Merkezi takvim yükleme, değiştirme ve kaldırma işlemleri Calculation Rules'a taşındı. LCW haftaları dosyadan 1–53 olarak kabul edilir; gün ve tarih çakışması doğrulaması sürer.",
-        "en": "Central calendar upload, replace and remove controls now live under Calculation Rules. LCW weeks 1–53 are supported from the uploaded source; day and overlap validation remains in place."
-      },
-      "path": {
-        "tr": "Veri Yönetimi > Araçlar > Hesaplama Kuralları > Merch Calendar",
-        "en": "Data Management > Tools > Calculation Rules > Merch Calendar"
-      },
-      "visual": {
-        "kind": "component-preview",
-        "src": "merch-calendar-panel.svg",
-        "alt": {
-          "tr": "Merch Calendar modülünün şematik yerleşim önizlemesi",
-          "en": "Schematic layout preview of the Merch Calendar module"
-        },
-        "caption": {
-          "tr": "Bileşen önizlemesi; uygulama ekran görüntüsü değildir.",
-          "en": "Component preview; not an application screenshot."
-        }
-      }
-    }
-  ]
+  "changes": []
 }
