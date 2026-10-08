@@ -238,9 +238,11 @@
       if (!response.ok || !payload.ok) throw new Error(payload.error ||
         T('Değişiklikler kaydedilemedi.', 'Could not save changes.'));
       const reopen = typeof onSaved === 'function' ? onSaved : null;
+      const repairedHeader = context.repair && edits.some(x => x.header === context.repair.header)
+        ? context.repair.header : '';
       close({ notify: false });
       if (reopen) await reopen(payload.warnings || [], {
-        header: context && context.repair && edits.some(x => x.header === context.repair.header) ? context.repair.header : '',
+        header: repairedHeader,
         changes: edits.length,
       });
     } catch (error) {
