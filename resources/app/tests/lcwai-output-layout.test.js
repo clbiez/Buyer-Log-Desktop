@@ -167,7 +167,22 @@ test('arayüz: İçerik/Yerleşim geçişi, kaydırıcılar, ızgara seçici, ha
   assert.match(editor, /LAY\(\)\.galleryCells\(l,/, 'önizleme sunucuyla aynı hücre hesabı');
   assert.match(editor, /LAY\(\)\.paginateGallery\(ed\.data\.body/);
   assert.match(editor, /layout: ed\.data\.layout \|\| null/, 'rapor yerleşimi oluşturmaya gider');
-  for (const text of ["L('Yerleşim', 'Layout')", "L('Başlık bandı yüksekliği', 'Title band height')", "L('Model ızgarası', 'Model grid')", "L('Yerleşimi şablona kaydet', 'Save the layout in the template')"]) assert.ok(editor.includes(text), text);
+  for (const text of ["L('Yerleşim', 'Layout')", "L('Başlık bandı yüksekliği', 'Title band height')", "L('Model ızgarası', 'Model grid')", "L('Yerleşimi de kaydet', 'Save the layout too')"]) assert.ok(editor.includes(text), text);
   const shared = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-layout.js'), 'utf8');
   assert.doesNotMatch(shared, /require\(|document\.|window\.[a-z]/, 'saf modül (sunucu + tarayıcı)');
+});
+
+test('sadelik: 3 adımlı üst çubuk, temel ayarlar önde / ince ayar katlı, galeri yoksa ızgara gizli, sohbette şablon seçici yalnız dosya kipinde', () => {
+  const editor = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-editor.js'), 'utf8');
+  assert.match(editor, /class="lcwaiEdSteps"/);
+  assert.match(editor, /data-ed-mode="content"[\s\S]*data-ed-mode="layout"[\s\S]*data-ed-render/, 'İçerik → Yerleşim → Dosyayı Oluştur sırası');
+  assert.doesNotMatch(editor, /<select data-ed-orientation/, 'sayfa yönü üst çubukta değil, Yerleşim adımında');
+  assert.match(editor, /data-ed-orient="\$\{key\}"/);
+  assert.match(editor, /<details class="lcwaiLayMore"/, 'ince ayar varsayılan kapalı');
+  assert.match(editor, /const grid = isSheet \? '' : gallery/, 'galeri yoksa ızgara yerine yönlendirme');
+  assert.match(editor, /<details class="lcwaiEdAdvanced"/, 'şablon penceresinde yapı/ayrıntılar katlı');
+  assert.match(editor, /Bu düzeni yine kullanacak mısınız\?/, 'oluşturma sonrası şablon önerisi');
+  const chat = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-chat.js'), 'utf8');
+  const options = chat.slice(chat.indexOf('data-output-options hidden'), chat.indexOf('</span>', chat.indexOf('data-output-options hidden')));
+  assert.match(options, /data-output-template/, 'şablon seçici dosya seçenekleri içinde (sohbet kipinde gizli)');
 });
