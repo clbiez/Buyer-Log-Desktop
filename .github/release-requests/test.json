@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.260",
-  "commit_sha": "b5d3c44cfa694d8dcba35b338e8c632d26b52294",
-  "release_notes": "Buyer Log 7.0.260 TEST: Merch Calendar dosyalarında LCW 53. hafta kabul edilir, 54. hafta reddedilir. Calendar yönetimi Data Management > Tools > Calculation Rules altında açılır/kapanır modül olarak bulunur. LCW/GLB hafta ve yıl geçişi eşlemesi korunur. PR #434 ve release PR #436 regresyon testleri geçti."
+  "version": "7.0.261",
+  "commit_sha": "10b8cf6367331082c079504ef60e0eb79d23a5a3",
+  "release_notes": "Buyer Log 7.0.261 TEST: Lab Dip / ROS Renk Sonuç Bildirimi ve Color Evaluation Notification .msg/.eml mailleri çoklu renk, bağımsız onay/ret/yorum ve revizyonları ile içe aktarılır. Eksik PO durumunda CP model/renk adayları manuel doğrulanır. Tek Checklist hücresinde renk bazlı durum/yorum görüntülenir; LCW AI inceleme bağlamı zenginleştirildi. PR #437 regresyon testleri başarılı; gerçek anonim demo ekran görüntüsü sürüm notlarında."
 }
