@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-08",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "OAB masaüstünde veri çekiyor",
+    "en": "OAB fetches data on desktop"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Tamamlanan OAB girişi artık reddedilmiyor; rapor verisi tabloya geliyor.",
+    "en": "A completed OAB sign-in is no longer rejected; report data reaches the table."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "oab-desktop-report-data",
+      "type": "fix",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "OAB girişi kabul ediliyor ve rapor verisi geliyor",
+        "en": "OAB sign-in is accepted and report data arrives"
+      },
+      "path": {
+        "tr": "Genel Bakış › OAB › Get OAB",
+        "en": "Overview › OAB › Get OAB"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-desktop-report-data.png",
+        "alt": {
+          "tr": "Get OAB sonrası Klasman Grup ve Klasman kırılımlı OAB pivot tablosu — anonim demo verili Buyer Log ekranı",
+          "en": "OAB pivot table by assortment group and class after Get OAB — Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Giriş doğrulandıktan sonra OAB verisi masaüstü oturumundan tabloya geliyor",
+          "en": "After sign-in is verified, OAB data reaches the table through the desktop session"
+        }
+      },
+      "body": {
+        "tr": "Masaüstünde OAB girişi tamamlandığı hâlde Buyer Log oturumu kabul etmiyordu. Oturumu doğrulamak için kullanılan PASS servisi her istekte \"izin verilmeyen yöntem\" (HTTP 405) hatası döndürüyordu. Doğrulama artık OAB raporunu getiren servisle yapılıyor; giriş penceresi giriş algılanınca kapanıyor ve veri tabloya geliyor.",
+        "en": "On desktop, Buyer Log did not accept the OAB session even after sign-in completed. The PASS service used to verify the session returned \"method not allowed\" (HTTP 405) on every request. Verification now uses the service that returns the OAB report; the sign-in window closes once sign-in is detected and data reaches the table."
+      }
+    }
+  ]
 }

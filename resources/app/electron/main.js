@@ -173,7 +173,49 @@ const OAB_STORAGE_PROBE = `(() => { ${OAB_STORED_TOKENS_READER} return readStore
  * was never accepted. */
 const OAB_PASS_API_ROOT = 'https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0';
 const OAB_RELAY_ENDPOINTS = new Set(['Report/GetReportData', 'Report/GetReportVariablesWithData', 'Report/GetVariableWithData']);
-const OAB_VALIDATE_BODY = Object.freeze({ reportRef:'OrderBudget_List_Report', languageRef:2, variableRef:534, reportVariableRef:454 });
+/* Field log (7.0.262): PASS answers Report/GetReportVariablesWithData with
+ * HTTP 405 for every captured token, so that endpoint cannot prove a session.
+ * Validation uses Report/GetReportData — the one call the proven Edge/CDP path
+ * makes — first with empty filters (cheap; ASP.NET authorizes before model
+ * validation, so 2xx/400/422 means the Bearer was accepted), then, only if the
+ * server cannot answer that, with the user's selected Season/MAG/Buyer Group. */
+function oabReportDataBody(selection = {}) {
+  return {
+    reportRef:'OrderBudget_List_Report',
+    languageRef:2,
+    parameters:{
+      SeasonRef:selection.seasonRef || '',
+      MerchSubGroupRef:selection.merchSubGroupRef || '',
+      BuyerGroupRefs:selection.buyerGroupRef || '',
+      CategoryGroupRefs:'',
+      CategoryRef:'',
+    },
+  };
+}
+function oabSessionAccepted(result, { allowClientError = false } = {}) {
+  const status = Number(result && result.status) || 0;
+  if (status >= 200 && status < 300) return true;
+  return allowClientError && (status === 400 || status === 422);
+}
+function oabSelectionFromViewerUrl(value) {
+  try {
+    const url = new URL(String(value || ''));
+    return {
+      seasonRef:url.searchParams.get('SeasonRef') || '',
+      merchSubGroupRef:url.searchParams.get('MerchSubGroupRef') || '',
+      buyerGroupRef:url.searchParams.get('BuyerGroupRefs') || '',
+    };
+  } catch (_) { return {}; }
+}
+async function validateOabSessionInPage(page, authorization, selection) {
+  const first = await runOabPageRequest(page, 'Report/GetReportData', oabReportDataBody(), authorization);
+  if (oabSessionAccepted(first, { allowClientError:true })) return { ok:true, status:first.status };
+  const status = Number(first && first.status) || 0;
+  const hasSelection = Boolean(selection && selection.seasonRef && selection.merchSubGroupRef && selection.buyerGroupRef);
+  if (status === 401 || status === 403 || !hasSelection) return first;
+  const second = await runOabPageRequest(page, 'Report/GetReportData', oabReportDataBody(selection), authorization);
+  return oabSessionAccepted(second) ? { ok:true, status:second.status } : second;
+}
 const OAB_PAGE_REQUEST_TIMEOUT_MS = 120000;
 function oabPassRequestExpression(url, body, fallbackAuthorization) {
   const config = JSON.stringify({ url, body: body == null ? {} : body, fallback: String(fallbackAuthorization || '') });
@@ -1304,7 +1346,7 @@ async function acquireOabAuthorization(options = {}) {
       if (settled || !authorization) return false;
       const page = oabWindowOnPass(target) ? target : authWindow;
       // Validate in the signed-in PASS page itself (browser network stack).
-      const result = await runOabPageRequest(page, 'Report/GetReportVariablesWithData', OAB_VALIDATE_BODY, authorization);
+      const result = await validateOabSessionInPage(page, authorization, oabSelectionFromViewerUrl(targetViewerUrl()));
       if (!result || !result.ok) {
         log('OAB oturum adayı doğrulanamadı: ' + (result && (result.code || ('HTTP ' + result.status)) || 'OAB_AUTH_FAILED'));
         return false;
