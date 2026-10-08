@@ -54,8 +54,8 @@
       if (/^(TICARI ONAY|COMMERCIAL APPROVAL|COMMERCIAL ACCEPT(ANCE)?)$/.test(raw)) return 'commercialApproval';
       if (/^(TEKRAR TEST|RETEST|RE-TEST|RE TEST)$/.test(raw)) return 'retest';
       if (/^(LACK OF SAMPLE|NUMUNE YETERSIZ|EKSIK NUMUNE|YETERSIZ NUMUNE)$/.test(raw)) return 'lackOfSample';
-      if (/^(GECER|PASS|PASSED)$/.test(raw)) return 'pass';
-      if (/^(KALIR|FAIL|FAILED)$/.test(raw)) return 'fail';
+      if (/^(GECER|PASS|PASSED|APPROVED|DIGITAL APPROVED)$/.test(raw)) return 'pass';
+      if (/^(KALIR|FAIL|FAILED|REJECTED|REJECT)$/.test(raw)) return 'fail';
     }
     return '';
   }
@@ -212,7 +212,7 @@
     return {
       talepNo: '', talepTipi: '', lab: '', retestOf: '', siparisKodu: '', modelAdi: '', modelKodu: '', renk: '',
       genelSonuc: '', raporTarihi: '', raporTarihiIso: '',
-      bilesenler: [], testler: [], kararlar: [], dosyalar: [],
+      bilesenler: [], testler: [], kararlar: [], labDipColors: [], dosyalar: [],
       kaynak: '', kaynaklar: [], uyarilar: [],
     };
   }
@@ -249,6 +249,7 @@
     const subject = fold(mail && mail.subject);
     const from = fold(mail && mail.from);
     const body = fold(mail && mail.body);
+    if (/\bROS\b/.test(subject) && /(RENK|COLOR|COLOUR)/.test(subject) && /(BILDIRIMI|NOTIFICATION|TALEBI|REQUEST)/.test(subject)) return 'R';
     if (/TICARI KARARLAR/.test(subject) || (/TEST TALEP NO/.test(body) && /KARAR TARIHI/.test(body))) return 'C';
     // A ve B gövdesi aynı "Test Talep Bilgileri" başlığını taşır; konu/gönderen önce gelir.
     if (/NUMARALI TALEP SONUC RAPORU/.test(subject) || /SUPPLIERLABUSER/.test(from)) return 'A';
@@ -337,10 +338,85 @@
     return report;
   }
 
+
+  /* ROS renk değerlendirmeleri: bir mailde birden çok renk ve birbirinden
+     bağımsız Approved/Rejected kararı olabilir. Tabloyu renk bazında tutarız.
+     Talep ID, URL'deki requestId'den gelir; sipariş numarası değildir. */
+  function parseRosMail(mail) {
+    const report = emptyReport();
+    const subject = String(mail && mail.subject || '');
+    const body = String(mail && mail.body || '');
+    const lines = bodyLines(body).map(line => line.trim()).filter(Boolean);
+    const requestId = (subject + '\n' + body).match(/(?:TALEP\s*ID|REQUEST\s*ID)\s*[:#]\s*(\d{5,8})/i)
+      || (subject + '\n' + body).match(/requestId(?:=|%3D)(\d{5,8})/i);
+    report.talepNo = requestId ? requestId[1] : '';
+    report.talepTipi = 'Labdip';
+    report.lab = 'ROS';
+    report.kaynak = 'parser:R';
+    report.ekBilgi = {};
+    const revised = /^(?:REVIZE|REVISED)/.test(fold(subject));
+    const seen = new Set();
+    const resultHead = /(?:RENK SONUCLANMA TARIHI|COLOR RESULTING DATE)/;
+    for (let i = 0; i < lines.length; i += 1) {
+      const heading = fold(lines[i]);
+      if (!/(?:RENK KODU.?ADI|COLOR CODE.?NAME)/.test(heading)) continue;
+      let colour = '', model = '';
+      let rowIndex = -1;
+      for (let j = i + 1; j < Math.min(lines.length, i + 5); j += 1) {
+        if (resultHead.test(fold(lines[j]))) break;
+        const parts = lines[j].split('\t').map(text).filter(Boolean);
+        if (parts.length >= 2 && !/(?:MODEL ADI|MODEL NAME)/.test(fold(parts[1]))) {
+          colour = parts[0]; model = parts[1]; rowIndex = j; break;
+        }
+      }
+      if (!colour || !model) continue;
+      let resultIndex = -1;
+      for (let j = rowIndex + 1; j < Math.min(lines.length, rowIndex + 6); j += 1) {
+        if (resultHead.test(fold(lines[j]))) { resultIndex = j; break; }
+        if (/(?:RENK KODU.?ADI|COLOR CODE.?NAME)/.test(fold(lines[j]))) break;
+      }
+      let found = false;
+      if (resultIndex >= 0) {
+        for (let j = resultIndex + 1; j < Math.min(lines.length, resultIndex + 7); j += 1) {
+          if (/(?:RENK KODU.?ADI|COLOR CODE.?NAME)/.test(fold(lines[j]))) break;
+          const cells = lines[j].split('\t').map(text);
+          if (!/^\d{1,2}[.\/-]\d{1,2}[.\/-]\d{4}$/.test(cells[0] || '')) continue;
+          const status = cells[4] || '';
+          const decision = normalizeResult(status);
+          const entry = {
+            colour: text(colour).slice(0, 180), model: text(model).slice(0, 160),
+            date: text(cells[0]).slice(0, 40), dateIso: parseDate(cells[0]).iso,
+            round: text(cells[1]).slice(0, 20), analyst: text(cells[2]).slice(0, 120),
+            comment: text(cells[3]).slice(0, 600), result: text(status).slice(0, 80),
+            status: decision || 'pending', submitNo: text(cells[5]).slice(0, 120),
+            revised,
+          };
+          const key = [fold(colour),fold(model),entry.date,entry.round,fold(entry.submitNo),fold(entry.result),fold(entry.comment)].join('|');
+          if (!seen.has(key)) { report.labDipColors.push(entry); seen.add(key); }
+          found = true;
+        }
+      }
+      if (!found) report.labDipColors.push({ colour: text(colour), model: text(model), date: '', dateIso: '', round: '', analyst: '', comment: '', result: '', status: 'pending', submitNo: '', revised });
+    }
+    if (report.labDipColors.length) {
+      report.modelAdi = report.labDipColors[0].model;
+      report.renk = report.labDipColors[0].colour;
+      const models = new Set(report.labDipColors.map(c => modelKey(c.model)));
+      if (models.size > 1) report.uyarilar.push({code:'rosMultipleModels'});
+      const dated = report.labDipColors.filter(c => c.dateIso).sort((a,b) => a.dateIso.localeCompare(b.dateIso));
+      if (dated.length) { report.raporTarihi = dated[dated.length - 1].date; report.raporTarihiIso = dated[dated.length - 1].dateIso; }
+      report.uyarilar.push(...report.labDipColors.filter(c => !normalizeResult(c.result) && c.result).map(c => ({code:'rosUnknownResult',value:c.result})));
+    } else {
+      report.uyarilar.push({code:'rosRequestOnly'});
+    }
+    return report;
+  }
+
   function parseMail(mail) {
     const format = classifyMail(mail);
     let report = null;
-    if (format === 'A') report = parseSupplierLabMail(mail);
+    if (format === 'R') report = parseRosMail(mail);
+    else if (format === 'A') report = parseSupplierLabMail(mail);
     else if (format === 'B') report = parseLabrightResultMail(mail);
     else if (format === 'C') report = parseDecisionMail(mail);
     if (!report) return { format: '', report: null };
@@ -587,7 +663,7 @@
       if (!a) { out[field] = b; continue; }
       // Mailin genel "Labright" etiketi yerine PDF başlığındaki laboratuvar adı.
       if (field === 'lab' && /^(LABRIGHT( TR| BD)?|SUPPLIER-LAB)$/.test(fold(a)) && fold(b) !== fold(a)) { out.lab = b; continue; }
-      if (CONFLICT_FIELDS.includes(field) && !sameValue(field, a, b)) {
+      if (CONFLICT_FIELDS.includes(field) && !(field === 'renk' && (out.labDipColors || []).length && (add.labDipColors || []).length) && !sameValue(field, a, b)) {
         const known = out.uyarilar.some(w => w.code === 'conflict' && w.field === field && w.values.some(v => fold(v.value) === fold(b)));
         if (!known) {
           const existing = out.uyarilar.find(w => w.code === 'conflict' && w.field === field);
@@ -599,6 +675,12 @@
       // Mail konusundaki kısaltılmış model adı yerine daha uzun yazım tercih edilir.
       if (field === 'modelAdi' && modelMatch(a, b) === 'partial' && modelKey(b).length > modelKey(a).length) out[field] = b;
     }
+    const colors = new Map();
+    for (const c of (out.labDipColors || []).concat(add.labDipColors || [])) {
+      const key = [fold(c.colour), modelKey(c.model), c.dateIso || c.date, c.round, fold(c.submitNo), fold(c.result), fold(c.comment)].join('|');
+      if (!colors.has(key)) colors.set(key, c);
+    }
+    out.labDipColors = [...colors.values()];
     if (!out.testler.length && add.testler.length) out.testler = add.testler;
     if (!out.bilesenler.length && add.bilesenler.length) out.bilesenler = add.bilesenler;
     const decisions = new Map(out.kararlar.map(d => [decisionKey(d, out.talepNo), d]));
@@ -626,6 +708,33 @@
     return [...map.values()].concat(loose);
   }
 
+
+  /* ROS değerlendirmesinde her renk kendi geçmişini taşır. En yeni tarih/tur
+     etkindir. Aynı tarihte çelişkili karar varsa güvenli tarafta ret tutulur.
+     Hiçbir renk diğerini otomatik onaylayamaz. */
+  function resolveLabDipColors(reports) {
+    const byColor = new Map();
+    for (const report of reports || []) {
+      for (const c of report.labDipColors || []) {
+        const key = modelKey(c.model || report.modelAdi) + '|' + fold(c.colour);
+        if (!key || key === '|') continue;
+        const rank = [c.dateIso || '', String(Number(c.round) || 0).padStart(5, '0')].join('|');
+        const current = byColor.get(key);
+        const status = normalizeResult(c.result) || 'pending';
+        const candidate = {...c, status, talepNo: report.talepNo, rank};
+        if (!current || rank > current.rank || (rank === current.rank && status === 'fail' && current.status !== 'fail')) byColor.set(key, candidate);
+      }
+    }
+    return [...byColor.values()].sort((a,b) => fold(a.colour).localeCompare(fold(b.colour)));
+  }
+  function labDipSummary(reports, lang) {
+    const colors = resolveLabDipColors(reports);
+    const en = lang === 'en';
+    return colors.map(c => {
+      const status = c.status === 'pass' ? (en ? 'Approved' : 'Onaylandı') : c.status === 'fail' ? (en ? 'Rejected' : 'Reddedildi') : (en ? 'Pending' : 'Bekliyor');
+      return [c.colour, status, c.submitNo ? ('Submit ' + c.submitNo) : '', c.comment].filter(Boolean).join(' · ');
+    }).join('\n').slice(0, 2000);
+  }
   /* --------------------------------------------------- durum türetme */
   /* Karar ↔ test eşleşmesi: tam ad ya da parantez içindeki standart kodu
      ("ISO 105 C06"). Dil farkında ad tutmazsa eşleşmemiş kararlar, kalan
@@ -652,6 +761,11 @@
      Ticari onay geçer sayılır (kullanıcı kararı). Tekrar test, Buying dönüşü
      ve numune yetersizliği bekleyen sayılır. */
   function reportOutcome(report) {
+    if ((report.labDipColors || []).length) {
+      const colours = resolveLabDipColors([report]);
+      const code = colours.some(c => c.status === 'fail') ? 'fail' : colours.every(c => c.status === 'pass') ? 'pass' : 'pending';
+      return { talepNo: report.talepNo, code, commercial: false, failing: colours.filter(c => c.status === 'fail').map(c => c.colour), tasks: [] };
+    }
     const base = normalizeResult(report.genelSonuc);
     const tests = Array.isArray(report.testler) ? report.testler : [];
     const decisions = latestDecisions(report);
@@ -702,7 +816,13 @@
     const list = (reports || []).filter(Boolean);
     const superseded = supersededSet(list);
     const active = list.filter(r => !superseded.has(r.talepNo));
-    const outcomes = active.map(reportOutcome);
+    const labDipReports = active.filter(r => (r.labDipColors || []).length);
+    const outcomes = active.filter(r => !(r.labDipColors || []).length).map(reportOutcome);
+    if (labDipReports.length) {
+      const colours = resolveLabDipColors(labDipReports);
+      const code = colours.some(c => c.status === 'fail') ? 'fail' : colours.every(c => c.status === 'pass') ? 'pass' : 'pending';
+      outcomes.push({ talepNo: labDipReports[0].talepNo, code, commercial: false, failing: colours.filter(c => c.status === 'fail').map(c => c.colour), tasks: [] });
+    }
     const tasks = outcomes.reduce((all, o) => all.concat(o.tasks), []);
     let state = '';
     if (outcomes.length) {
@@ -719,7 +839,7 @@
     return [normalizeOrderCode(row[fields.orderCode]), fold(row[fields.model]), fold(row[fields.colourCode])].join('|');
   }
   function reportColours(report) {
-    const out = [report.renk];
+    const out = (report.labDipColors || []).map(c => c.colour).concat([report.renk]);
     for (const w of report.uyarilar || []) if (w.code === 'conflict' && w.field === 'renk') w.values.forEach(v => out.push(v.value));
     return [...new Set(out.filter(Boolean))];
   }
@@ -733,6 +853,20 @@
     const fields = { ...DEFAULT_FIELDS, ...(opts.fields || {}) };
     const keyOf = typeof opts.keyOf === 'function' ? opts.keyOf : row => defaultKey(row, fields);
     const order = normalizeOrderCode(report.siparisKodu);
+    if (!order && (report.labDipColors || []).length) {
+      // ROS genellikle PO numarası içermez: yalnız aynı modelin CP
+      // satırlarını aday göster. Birden çok PO varsa seçim zorunludur.
+      const matching = (rows || []).filter(row => row && modelMatch(report.modelAdi, row[fields.model]));
+      const scored = matching.map(row => ({
+        row, key: keyOf(row), model: modelMatch(report.modelAdi, row[fields.model]),
+        colour: reportColours(report).some(c => colourMatch(c, row[fields.colour], row[fields.colourCode])) ? 'code' : '',
+      }));
+      const distinct = [...new Map(scored.filter(c => c.key).map(c => [c.key, c])).values()];
+      if (!distinct.length) return {level:'none',reason:'model',candidates:[]};
+      const byColour = distinct.filter(c => c.colour);
+      const candidates = byColour.length ? byColour : distinct;
+      return {level:candidates.length === 1 ? 'partial' : 'ambiguous',reason:byColour.length ? 'rosNoOrder' : 'rosNoOrderColour',candidates};
+    }
     if (!order) return { level: 'none', reason: 'order', candidates: [] };
     const byOrder = (rows || []).filter(row => row && normalizeOrderCode(row[fields.orderCode]) === order);
     if (!byOrder.length) return { level: 'none', reason: 'order', candidates: [] };
@@ -784,6 +918,9 @@
     if (w.code === 'aiExtracted') return en ? 'Read by LCW AI (' + (w.confidence || '?') + '). Check the fields before confirming.' : 'LCW AI tarafından okundu (' + (w.confidence || '?') + '). Onaylamadan önce alanları kontrol edin.';
     if (w.code === 'aiUnknownResult') return en ? 'LCW AI result value not in the dictionary: ' + w.value : 'LCW AI sonuç değeri sözlükte yok: ' + w.value;
     if (w.code === 'aiNote') return (en ? 'LCW AI note: ' : 'LCW AI notu: ') + text(w.message);
+    if (w.code === 'rosMultipleModels') return en ? 'Multiple models in ROS mail: review model/order match manually.' : 'ROS mailinde birden fazla model var: model/sipariş eşleşmesini elle doğrulayın.';
+    if (w.code === 'rosRequestOnly') return en ? 'ROS request notification has no colour result; no approval is implied.' : 'ROS çalıştırma talebi renk sonucu içermez; onay anlamına gelmez.';
+    if (w.code === 'rosUnknownResult') return (en ? 'Unrecognised ROS status: ' : 'Tanınmayan ROS sonucu: ') + text(w.value);
     if (w.code === 'decisionAlreadyApplied') return en ? 'This decision was already imported; it will not be applied twice.' : 'Bu karar daha önce aktarıldı; iki kez işlenmez.';
     return text(w.message || w.code);
   }
@@ -913,7 +1050,7 @@
     parseDate, inferOffsetMinutes, regionOffset,
     classifyMail, parseMail, parsePdfItems, linesFromItems,
     emptyReport, mergeReports, groupReports, decisionKey, fileKey,
-    reportOutcome, supersededSet, deriveStepStatus, testsMatch,
+    reportOutcome, supersededSet, deriveStepStatus, testsMatch, resolveLabDipColors, labDipSummary,
     matchReport, warningText,
   };
 });
