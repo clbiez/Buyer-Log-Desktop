@@ -447,7 +447,9 @@ function appVersion() {
  * zaman aşımının içinde kalacak şekilde sınırlı sayıda yeniden denenir. */
 const HEALTH_CONFIRM_RETRY_MS = 2000;
 const HEALTH_CONFIRM_MAX_ATTEMPTS = 20;
+let launcherHealthConfirmed = false;
 function confirmLauncherHealth(attempt = 0) {
+  if (launcherHealthConfirmed) return;
   if (!process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN || typeof global.__buyerLogLauncherHealthReady !== 'function') return;
   let ok = false;
   try {
@@ -459,7 +461,7 @@ function confirmLauncherHealth(attempt = 0) {
       rendererReady: true,
     }) === true;
   } catch (error) { log('Updater health ready bildirimi başarısız: ' + error.message); }
-  if (ok) { log('Updater health onaylandı: ' + appVersion()); return; }
+  if (ok) { launcherHealthConfirmed = true; log('Updater health onaylandı: ' + appVersion()); return; }
   if (attempt < HEALTH_CONFIRM_MAX_ATTEMPTS) {
     const timer = setTimeout(() => confirmLauncherHealth(attempt + 1), HEALTH_CONFIRM_RETRY_MS);
     if (timer && timer.unref) timer.unref();
@@ -2098,6 +2100,13 @@ async function startBuyerLog() {
   }
 
   log('Sunucu hazır (HTTP ' + ready.status + '). Pencere açılıyor.');
+  /* The bootstrap launcher rolls a trial version back after a fixed 60 s.
+   * On the first launch of a freshly extracted version the backend alone can
+   * take ~45 s (field log 7.0.259: ready at +56 s, first tab at +61 s → rolled
+   * back). The new core is already proven here — main.js loaded and its own
+   * backend answers HTTP — so health is confirmed now instead of after the
+   * first tab finishes loading. The renderer hook below stays as a fallback. */
+  confirmLauncherHealth();
   closeErrorWindow();
   createMainWindow(bound.origin);
   return true;

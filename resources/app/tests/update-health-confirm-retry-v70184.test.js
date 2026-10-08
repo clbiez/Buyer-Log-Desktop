@@ -31,3 +31,16 @@ test('health confirmation retries only during an update trial and is bounded', (
   // Launcher 60 sn'de geri alır; yeniden denemeler bu pencerenin içinde kalmalı.
   assert.ok(max > 1 && delay > 0 && max * delay < 60000);
 });
+
+/* 7.0.264 — Saha logu: yeni sürümün ilk açılışında backend ~45 sn sürdü; ilk
+ * sekme +61 sn'de yüklendi ve launcher 60 sn'de geri aldı (7.0.259, 7.0.263).
+ * Onay, backend HTTP yanıtı verdiği anda verilir; sekme kancası yedektir. */
+test('launcher health is confirmed as soon as the backend answers, before the window loads', () => {
+  const readyAt = MAIN.indexOf("log('Sunucu hazır (HTTP ' + ready.status + '). Pencere açılıyor.');");
+  assert.ok(readyAt > 0);
+  const after = MAIN.slice(readyAt, readyAt + 900);
+  assert.match(after, /\n  confirmLauncherHealth\(\);/);
+  const body = MAIN.slice(MAIN.indexOf('function confirmLauncherHealth('), MAIN.indexOf('function updaterBaseConfig'));
+  assert.match(body, /if \(launcherHealthConfirmed\) return;/);
+  assert.match(body, /launcherHealthConfirmed = true;/);
+});
