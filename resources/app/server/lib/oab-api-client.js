@@ -85,12 +85,13 @@ async function fetchReportData({ seasonRef, merchSubGroupRef, buyerGroupRef, buy
   });
   return Array.isArray(payload && payload.Data && payload.Data[0]) ? payload.Data[0] : [];
 }
+// PASS answers Report/GetReportVariablesWithData with HTTP 405 (field log
+// 7.0.262); validate with the report call the Edge path uses instead.
 async function validateAuthorization() {
-  const payload = await request('Report/GetReportVariablesWithData', {
+  const payload = await request('Report/GetReportData', {
     reportRef: REPORT_REF,
     languageRef: 2,
-    variableRef: 534,
-    reportVariableRef: 454,
+    parameters: { SeasonRef: '', MerchSubGroupRef: '', BuyerGroupRefs: '', CategoryGroupRefs: '', CategoryRef: '' },
   });
   return Boolean(payload);
 }

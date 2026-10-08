@@ -100,7 +100,11 @@ test('desktop OAB candidates are validated inside the signed-in PASS page, never
   const MAIN = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
   const flow = between(MAIN, 'async function acquireOabAuthorization', 'async function clearOabAuthSession');
   const finish = between(flow, 'const finishAuthorizationNow = async', 'let authorizationChain');
-  assert.match(finish, /runOabPageRequest\(page, 'Report\/GetReportVariablesWithData', OAB_VALIDATE_BODY, authorization\)/);
+  assert.match(finish, /validateOabSessionInPage\(page, authorization, oabSelectionFromViewerUrl\(targetViewerUrl\(\)\)\)/);
+  // PASS returns 405 for GetReportVariablesWithData; validation must use GetReportData.
+  const validate = between(MAIN, 'async function validateOabSessionInPage', '/* The signed-in PASS page');
+  assert.match(validate, /'Report\/GetReportData'/);
+  assert.doesNotMatch(validate, /GetReportVariablesWithData/);
   assert.match(finish, /adoptOabSessionWindow\(page, authorization, parent\)/);
   assert.doesNotMatch(MAIN, /pushOabAuthorizationToBackend/);
   // The page request mirrors the proven Edge/CDP model: credentials omit + Authorization.
@@ -146,3 +150,18 @@ test('closing the desktop OAB sign-in window keeps checking for a completed logi
   assert.match(flow, /if \(!flowState\.interactive \|\| settled \|\| closeRequested/);
 });
 
+
+test('desktop OAB validation accepts a Bearer PASS authorized and rejects 401/403/405', () => {
+  const MAIN = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
+  const src = between(MAIN, 'function oabReportDataBody', 'async function validateOabSessionInPage');
+  const api = new Function(`${src}; return { oabReportDataBody, oabSessionAccepted, oabSelectionFromViewerUrl };`)();
+  assert.equal(api.oabSessionAccepted({ status: 200 }), true);
+  assert.equal(api.oabSessionAccepted({ status: 400 }, { allowClientError: true }), true);
+  assert.equal(api.oabSessionAccepted({ status: 400 }), false);
+  for (const status of [401, 403, 405, 500, 0]) assert.equal(api.oabSessionAccepted({ status }, { allowClientError: true }), false, String(status));
+  assert.deepEqual(api.oabSelectionFromViewerUrl('https://pass.lcwaikiki.com/v3/report/viewer?key=OrderBudget_List_Report&SeasonRef=S7&MerchSubGroupRef=CU4E&BuyerGroupRefs=12'),
+    { seasonRef: 'S7', merchSubGroupRef: 'CU4E', buyerGroupRef: '12' });
+  const body = api.oabReportDataBody({ seasonRef: 'S7', merchSubGroupRef: 'CU4E', buyerGroupRef: '12' });
+  assert.equal(body.reportRef, 'OrderBudget_List_Report');
+  assert.equal(body.parameters.BuyerGroupRefs, '12');
+});
