@@ -85,5 +85,20 @@ function runSmokeTests(){
   if(!candidates.length)return;
   childProcess.execFileSync(process.execPath,['--test',...candidates],{cwd:APP_ROOT,stdio:'inherit',env:{...process.env,BUYER_LOG_RELEASE_SMOKE:'1'}});
 }
+/* Model görseli dönüş kabulü (gerçek sunucu + Chromium). Playwright bir
+   bağımlılık değildir: kurulu değilse yerelde uyarıyla atlanır; TEST yayın
+   iş akışı BUYER_LOG_REQUIRE_IMAGE_ACCEPTANCE=1 ile zorunlu çalıştırır. */
+function playwrightAvailable(){try{require.resolve(process.env.PLAYWRIGHT_MODULE||'playwright',{paths:[APP_ROOT]});return true;}catch(_){return false;}}
+function runImageReturnAcceptance(){
+  const required=process.env.BUYER_LOG_REQUIRE_IMAGE_ACCEPTANCE==='1';
+  if(!playwrightAvailable()){
+    if(required)fail('Model görseli dönüş kabulü için Playwright bulunamadı (PLAYWRIGHT_MODULE veya npm install --no-save playwright).','RELEASE_IMAGE_ACCEPTANCE_UNAVAILABLE');
+    console.warn('[release] Playwright yok: model görseli dönüş kabulü atlandı. / Playwright missing: model image return acceptance skipped.');
+    return false;
+  }
+  try{childProcess.execFileSync(process.execPath,[path.join(APP_ROOT,'scripts','model-image-return-acceptance.js')],{cwd:APP_ROOT,stdio:'inherit',env:process.env});}
+  catch(_){fail('Model görseli dönüş kabulü başarısız; yayın durduruldu.','RELEASE_IMAGE_ACCEPTANCE_FAILED');}
+  return true;
+}
 function nextVersion(kind){const current=readPackage().version;return bumpSemver(current,kind);}
-module.exports={APP_ROOT,PORTABLE_ROOT,DIST_ROOT,PENDING_FILE,UPDATER_VERSION,fail,readPackage,writePackageVersion,assertGitClean,releaseSource,buildArtifact,publishManifest,runSmokeTests,nextVersion,readJson,atomicWriteJson,ensureDir,sha256File,compareSemver,parseSemver,copyImmutable};
+module.exports={APP_ROOT,PORTABLE_ROOT,DIST_ROOT,PENDING_FILE,UPDATER_VERSION,fail,readPackage,writePackageVersion,assertGitClean,releaseSource,buildArtifact,publishManifest,runSmokeTests,runImageReturnAcceptance,nextVersion,readJson,atomicWriteJson,ensureDir,sha256File,compareSemver,parseSemver,copyImmutable};

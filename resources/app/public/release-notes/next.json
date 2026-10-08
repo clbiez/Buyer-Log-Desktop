@@ -78,6 +78,39 @@
       }
     },
     {
+      "id": "cp-model-images-reopen",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker / Siparişler / Koleksiyon",
+        "en": "CP Tracker / Orders / Collection"
+      },
+      "title": {
+        "tr": "Uygulama yeniden açıldığında görseller doğrudan cihaz önbelleğinden gelir",
+        "en": "Images come straight from the device cache when the app is reopened"
+      },
+      "path": {
+        "tr": "CP Tracker / Siparişler / Koleksiyon › Görsel sütunu",
+        "en": "CP Tracker / Orders / Collection › Picture column"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-model-images-reopen.png",
+        "alt": {
+          "tr": "Buyer Log yeniden açıldıktan sonra ilk CP Tracker girişinde model görselleri yerinde — demo verili Buyer Log ekranı",
+          "en": "Model images in place on the first CP Tracker visit after reopening Buyer Log — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Bu cihazda açılmış görseller açılışta beklemeden gösterilir; yer tutucu yalnız bir kare görünür",
+          "en": "Images already opened on this device are shown without waiting at startup; the placeholder appears for a single frame"
+        }
+      },
+      "body": {
+        "tr": "Bu cihazda daha önce açılmış model görsellerinin adresleri sınırlı bir listede tutulur. Uygulama yeniden açıldığında bu görseller görünür olmayı beklemeden cihazdaki önbellekten okunur; ağa istek gitmez. Görsel silinmiş ya da erişilemiyorsa hücre yer tutucuya döner. “Tüm Görselleri Sil” bu listeyi de temizler. Bellekte tutulan görseller artık hem adetle hem toplam boyutla sınırlıdır.",
+        "en": "The addresses of model images already opened on this device are kept in a limited list. When the app is reopened these images are read from the device cache without waiting to become visible; no network request is made. If an image was deleted or is not accessible, the cell falls back to the placeholder. “Delete All Images” clears this list as well. Images kept in memory are now limited by both count and total size."
+      }
+    },
+    {
       "id": "cp-all-rows-scroll-kept-on-return",
       "type": "fix",
       "module": {

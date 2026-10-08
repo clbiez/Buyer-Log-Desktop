@@ -36,17 +36,21 @@ function extractFunction(source, name) {
 const cache = createModelImageCache({});
 
 // ---- BLImageRuntime: kaynak metinden çıkarılıp sahte Image ile çalıştırılır ----
-function runtimeHarness({ autoLoad = true } = {}) {
+function memoryStorage(initial = {}) {
+  const data = new Map(Object.entries(initial));
+  return { data, getItem: k => (data.has(k) ? data.get(k) : null), setItem: (k, v) => data.set(k, String(v)), removeItem: k => data.delete(k) };
+}
+function runtimeHarness({ autoLoad = true, size = null, localStorage = null } = {}) {
   const start = APP.indexOf('const BLImageRuntime=(()=>{');
   const end = APP.indexOf('window.BLImageRuntime=BLImageRuntime;', start);
   const created = [];
   class FakeImage {
-    constructor() { this.isConnected = false; this.decoding = ''; created.push(this); }
+    constructor() { this.isConnected = false; this.decoding = ''; created.push(this); if (size) { this.naturalWidth = size.w; this.naturalHeight = size.h; } }
     set src(value) { this._src = value; if (autoLoad && value) queueMicrotask(() => this.onload && this.onload()); }
     get src() { return this._src; }
   }
   const idle = cb => cb({ timeRemaining: () => 50, didTimeout: false });
-  const window = { requestIdleCallback: idle };
+  const window = { requestIdleCallback: idle, localStorage };
   const runtime = new Function('window', 'Image', 'IntersectionObserver', 'modelImageUrl', 'kolShowImgPopup',
     `${APP.slice(start, end)};return BLImageRuntime;`)(window, FakeImage, undefined, cache.imageUrl, () => {});
   return { runtime, created };
@@ -54,9 +58,9 @@ function runtimeHarness({ autoLoad = true } = {}) {
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
 test('sıcak LRU sabit sınırla tutulur; sınır aşılınca en eski referans bırakılır', async () => {
-  assert.match(APP, /const WARM_IMAGE_LIMIT=1000/);
+  assert.match(APP, /const WARM_IMAGE_LIMIT=500,WARM_IMAGE_BYTE_BUDGET=96\*1024\*1024/);
   const { runtime } = runtimeHarness();
-  assert.equal(runtime.WARM_IMAGE_LIMIT, 1000);
+  assert.equal(runtime.WARM_IMAGE_LIMIT, 500);
   const srcs = Array.from({ length: runtime.WARM_IMAGE_LIMIT + 3 }, (_, i) => `/api/collection-images/ci_${i}`);
   for (const src of srcs) await runtime.load(src);
   assert.equal(runtime.stats().warm, runtime.WARM_IMAGE_LIMIT);
@@ -76,7 +80,7 @@ test('invalidate eski ve tek URL biçimlerini birlikte düşürür; clearAll LRU
   assert.equal(runtime.isWarm(a), false);
   assert.equal(runtime.isWarm(b), true);
   await runtime.clearAll();
-  assert.deepEqual(runtime.stats(), { loaded: 0, warm: 0, queued: 0, active: 0 });
+  assert.deepEqual(runtime.stats(), { loaded: 0, warm: 0, warmBytes: 0, known: 0, queued: 0, active: 0 });
   assert.equal(runtime.isLoaded(b), false);
 });
 
@@ -111,10 +115,10 @@ test('ısıtma iptali kuyruğu negatif önbelleğe yazmadan çözer; bekleyenler
 });
 
 // ---- Tablo hücresi: bilinen görsel doğrudan, bilinmeyen lazy ----
-function cellHarness(knownSources) {
+function cellHarness(knownSources, priorSources = new Set()) {
   const names = ['tableRowImageSource', 'cpImageCellHtml', 'ordersImageCellHtml'];
   const body = names.map(name => extractFunction(APP, name)).join('\n');
-  const BLImageRuntime = { isLoaded: src => knownSources.has(src) };
+  const BLImageRuntime = { loadState: src => (knownSources.has(src) ? 'loaded' : priorSources.has(src) ? 'prior' : '') };
   return new Function('BLImageRuntime', 'modelImageUrl', 'canonicalModelImageSource', 'canonicalModelImageKnown',
     'cpImageDims', 'ordersImageDims', 'cpImagePlaceholder', 'escapeHtml', 'modelImageCacheKey', 'appLang',
     `${body};return {cpImageCellHtml,ordersImageCellHtml};`)(
@@ -133,6 +137,12 @@ test('bilinen kaynakla CP/Orders hücresi gerçek src + eager üretir; bilinmeye
     assert.match(html, /fetchpriority="auto"/);
     assert.match(html, /data-bl-image-loaded="1"/);
     assert.doesNotMatch(html, /loading="lazy"|fetchpriority="low"|placeholder/);
+  }
+  const prior = cellHarness(new Set(), new Set(['/api/collection-images/ci_1']));
+  for (const html of [prior.cpImageCellHtml(ROW), prior.ordersImageCellHtml(ROW)]) {
+    assert.match(html, /<img src="\/api\/collection-images\/ci_1"/);
+    assert.match(html, /loading="eager" fetchpriority="auto" data-bl-image-prior="1"/);
+    assert.doesNotMatch(html, /data-bl-image-loaded/);
   }
   const unknown = cellHarness(new Set());
   for (const html of [unknown.cpImageCellHtml(ROW), unknown.ordersImageCellHtml(ROW)]) {
@@ -166,7 +176,7 @@ test('tek URL yardımcısı CP ve Koleksiyon için aynı adresi verir; görsel d
 test('CP, Orders, Koleksiyon ve Quotations/detay görselleri aynı yardımcıdan geçer', () => {
   assert.match(extractFunction(APP, 'tableRowImageSource'), /modelImageUrl\(/);
   for (const name of ['cpImageCellHtml', 'ordersImageCellHtml']) assert.match(extractFunction(APP, name), /tableRowImageSource\(row\)/);
-  assert.match(APP, /const collectionImageUrl=modelImageUrl\(collectionImageSource\),collectionImageKnown=hasCollectionImage&&BLImageRuntime\.isLoaded\(collectionImageUrl\);/);
+  assert.match(APP, /const collectionImageUrl=modelImageUrl\(collectionImageSource\),collectionImageKnown=hasCollectionImage\?BLImageRuntime\.loadState\(collectionImageUrl\):'';/);
   assert.match(APP, /data-src="\$\{escapeHtml\(collectionImageUrl\)\}"/);
   assert.match(extractFunction(APP, 'detailImageThumbHtml'), /const source=modelImageUrl\(norm\(url\)\);/);
   const sync = APP.slice(APP.indexOf('function applySyncedPlmImages'), APP.indexOf('function notifyPlmOperationStarted'));
@@ -239,4 +249,63 @@ test('gizli sayfada yapılan sanal tablo çizimi son görünür kaydırma konumu
   assert.match(paint, /start = Math\.min\(start, Math\.max\(0, total-visibleCount\)\);/);
   const sw = extractFunction(APP, 'switchTab');
   assert.ok(sw.indexOf('flushDeferredRenderForTab(tab);') < sw.indexOf("document.getElementById('view-'+tab).classList.add('active');"), 'ertelenmiş çizim gizliyken (ucuz) çalışmaya devam eder');
+});
+
+test('sıcak tutma sıkıştırılmış bayt bütçesini aşmaz (büyük PLM görselleri)', async () => {
+  // 4000x5000 piksel ≈ 10 MB JPEG tahmini: 96 MB bütçede en fazla 9 görsel tutulur.
+  const { runtime } = runtimeHarness({ size: { w: 4000, h: 5000 } });
+  const srcs = Array.from({ length: 20 }, (_, i) => `/api/collection-images/big_${i}`);
+  for (const src of srcs) await runtime.load(src);
+  const stats = runtime.stats();
+  assert.ok(stats.warmBytes <= runtime.WARM_IMAGE_BYTE_BUDGET, `${stats.warmBytes} > bütçe`);
+  assert.equal(stats.warm, Math.floor(runtime.WARM_IMAGE_BYTE_BUDGET / (4000 * 5000 * 0.5)));
+  assert.equal(runtime.isWarm(srcs[0]), false, 'en eski düşer');
+  assert.equal(runtime.isWarm(srcs.at(-1)), true);
+  assert.equal(runtime.stats().loaded, 20, 'yüklendi bilgisi bütçeden bağımsız korunur');
+});
+
+test('önceki oturumda yüklenen görseller yeniden açılışta "prior" olarak bilinir; silme/geçersiz kılma unutturur', async () => {
+  const storage = memoryStorage();
+  const first = runtimeHarness({ localStorage: storage }).runtime;
+  await first.load('/api/collection-images/ci_a');
+  await first.load('/api/collection-images/ci_b');
+  await new Promise(resolve => setTimeout(resolve, 1100)); // kayıt toplu ve gecikmeli yazılır
+  assert.deepEqual(JSON.parse(storage.getItem('bl.modelImages.known.v1')), ['/api/collection-images/ci_a', '/api/collection-images/ci_b']);
+
+  // Uygulama yeniden açıldı: bellek boş, cihazdaki liste duruyor.
+  const second = runtimeHarness({ localStorage: storage }).runtime;
+  assert.equal(second.loadState('/api/collection-images/ci_a'), 'prior');
+  assert.equal(second.loadState('/api/collection-images/ci_zzz'), '');
+  await second.load('/api/collection-images/ci_a');
+  assert.equal(second.loadState('/api/collection-images/ci_a'), 'loaded');
+  second.invalidate(['/api/cp-images/ci_b']);
+  assert.equal(second.loadState('/api/collection-images/ci_b'), '', 'değişen/silinen görsel doğrudan basılmaz');
+  await second.clearAll();
+  assert.equal(storage.getItem('bl.modelImages.known.v1'), null, 'Tüm Görselleri Sil listeyi de siler');
+  assert.equal(second.loadState('/api/collection-images/ci_a'), '');
+  // Bozuk/yabancı kayıtlar okunmaz: yalnız uygulamanın kendi görsel uçları.
+  const third = runtimeHarness({ localStorage: memoryStorage({ 'bl.modelImages.known.v1': JSON.stringify(['https://plm.example/x.jpg', '/api/collection-images/ci_ok']) }) }).runtime;
+  assert.equal(third.loadState('https://plm.example/x.jpg'), '');
+  assert.equal(third.loadState('/api/collection-images/ci_ok'), 'prior');
+});
+
+test('"prior" hücre gerçek kaynakla eager basılır, yüklenemezse yer tutucuya döner', () => {
+  for (const name of ['cpImageCellHtml', 'ordersImageCellHtml']) {
+    const body = extractFunction(APP, name);
+    assert.match(body, /known==='prior'\?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"'/);
+  }
+  assert.match(APP, /collectionImageKnown==='prior'\?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"'/);
+  assert.match(APP, /if\(img\.dataset\.blImagePrior==='1'&&img\.dataset\.blImageLoaded!=='1'\)\{watchPriorImage\(img\);return;\}/);
+  const runtime = APP.slice(APP.indexOf('const watchPriorImage='), APP.indexOf('const tableImageSource='));
+  assert.match(runtime, /forgetKnown\(src\);failed\.set\(src,Date\.now\(\)\+NEGATIVE_CACHE_TTL\)/);
+  assert.match(runtime, /img\.src=kolImagePlaceholderSvg\(\)/);
+});
+
+test('optimize ucu görseli aynı ref altında yerinde değiştirmez (immutable önbellek eski kopyayı tutardı)', () => {
+  const SERVER = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const start = SERVER.indexOf("app.put('/api/model-images/:id/optimize'");
+  const route = SERVER.slice(start, SERVER.indexOf('});', start) + 3);
+  assert.match(route, /res\.status\(410\)/);
+  assert.match(route, /MODEL_IMAGE_IN_PLACE_REPLACE_RETIRED/);
+  assert.doesNotMatch(SERVER, /replaceCollectionImage\(/, 'sunucu hiçbir yolda yerinde değiştirme çağırmaz');
 });

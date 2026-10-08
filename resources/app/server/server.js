@@ -24,7 +24,7 @@ const { runExcelTask, getExcelWorkerStats } = require('./excel-worker-client');
 const {
   CONFIG_PATH, MODEL_FILES_ROOT, LOGS_ROOT, TEMP_ROOT, EMAIL_DRAFT_ROOT, LOCAL_DATA_ROOT, LOCAL_DB_FILE, SERVER_DATA_ROOT, APP_DATA_ROOT,
   getUserDataInventory, exportBackupToFile,
-  saveCollectionImage, replaceCollectionImage, collectionImageOptimizationStatus, completeCollectionImageOptimization,
+  saveCollectionImage, collectionImageOptimizationStatus, completeCollectionImageOptimization,
   getModelImageSettings, saveModelImageSettings,
   getCollectionImage, deleteCollectionImage, deleteAllCollectionImages, purgeExpiredModelFiles, resolveStoredFile, atomicWriteJson, atomicWriteBuffer,
 } = require('./user-data');
@@ -11810,13 +11810,18 @@ app.put('/api/model-images/settings', userAccess.requireArea('source'), express.
     res.json({ok:true,...settings,...collectionImageOptimizationStatus(50)});
   } catch (err) { apiError(res, err, 'Görsel boyut limiti kaydedilemedi.'); }
 });
-app.put('/api/model-images/:id/optimize', userAccess.requireAnyArea('source','koleksiyon','cp','orders'), express.json({ limit: '2mb' }), (req, res) => {
-  try {
-    assertModelImageMutable();
-    const body=req.body||{};
-    const image=replaceCollectionImage(req.params.id,{filename:body.filename,mimeType:body.mimeType,base64:body.base64});
-    res.json({ok:true,image});
-  } catch (err) { apiError(res, err, 'Model görseli optimize edilemedi.'); }
+/* YERİNDE DEĞİŞTİRME EMEKLİ. Görsel yanıtları "immutable" önbelleklenir ve
+   tek görsel = tek URL (/api/collection-images/<ref>) kuralıyla adres ref'ten
+   türetilir. Aynı ref altında baytları değiştirmek, görseli daha önce açmış
+   her tarayıcıda eski kopyanın süresiz görünmesine yol açardı. İstemci
+   tarafı optimizasyon zaten kaldırıldı; bu uç artık içerik yazmaz. Yeni
+   içerik her zaman yeni ref'le (POST /api/collection-images, /api/cp-images
+   veya PLM alımı) kaydedilir. */
+app.put('/api/model-images/:id/optimize', userAccess.requireAnyArea('source','koleksiyon','cp','orders'), (_req, res) => {
+  res.status(410).json({
+    error: 'Model görseli yerinde değiştirilemez; yeni görsel yeni kayıt olarak yüklenmelidir.',
+    code: 'MODEL_IMAGE_IN_PLACE_REPLACE_RETIRED',
+  });
 });
 app.post('/api/model-images/optimization/complete', userAccess.requireAnyArea('source','koleksiyon','cp','orders'), (_req, res) => {
   try { res.json({ok:true,...completeCollectionImageOptimization()}); }

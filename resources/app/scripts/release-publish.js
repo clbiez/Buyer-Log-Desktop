@@ -14,6 +14,7 @@ async function main(){
     else {version=C.nextVersion(opt.bump);C.writePackageVersion(version);C.atomicWriteJson(C.PENDING_FILE,{schemaVersion:1,version,bump:opt.bump,createdAt:new Date().toISOString()});}
   } else if(pending&&pending.version!==pkg.version){C.fail('Bekleyen release state package version ile eşleşmiyor.','RELEASE_PENDING_MISMATCH');}
   C.runSmokeTests();
+  C.runImageReturnAcceptance();
   const built=await C.buildArtifact(version,opt.notes);
   console.log(`Build OK: ${built.artifactName} · ${built.sha256}`);
   if(opt.buildOnly){console.log('Build-only: publish yapılmadı.');return;}
