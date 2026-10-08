@@ -100,10 +100,11 @@ test('existing ASAS connections pick up Initial Inspection Geçme Tarih once, wi
   const item = { role: 'asas', name: 'ASAS', server: 'db', catalog: 'c', mapping: { ...base(), 'Ürün Tanım': { table: 'ASAS', name: 'Ürün Tanım', kind: 'column' } }, mappingEnhancementScanVersion: 2, horizon: { table: 'ASAS' } };
   const result = await ensureConnectionMapping(item, { discoverSchema: async () => ({ columns, measures: [] }) });
   assert.equal(result.mapping['Initial Inspection Geçme Tarih'].name, 'Initial Inspection Geçme Tarih');
-  assert.equal(item.mappingEnhancementScanVersion, 3);
+  assert.equal(result.mapping['Initial Inspection Geçme Tarih Gün Ay Yıl'].name, 'Initial Inspection Geçme Tarih Gün Ay Yıl');
+  assert.equal(item.mappingEnhancementScanVersion, 4);
   // Şema okunamazsa yenileme durmaz ve tarama tekrar denenmez.
   const offline = { role: 'asas', name: 'ASAS', server: 'db', catalog: 'c', mapping: { ...base(), 'Ürün Tanım': { table: 'ASAS', name: 'Ürün Ana Tanım', kind: 'column' } }, mappingEnhancementScanVersion: 2, horizon: { table: 'ASAS' } };
   const soft = await ensureConnectionMapping(offline, { discoverSchema: async () => { throw new Error('offline'); } });
   assert.equal(soft.repaired, false);
-  assert.equal(offline.mappingEnhancementScanVersion, 3);
+  assert.equal(offline.mappingEnhancementScanVersion, 4);
 });
