@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-08",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "OAB daha hızlı",
+    "en": "Faster OAB"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Masaüstü OAB girişi rapor verisini tek istekte çekiyor.",
+    "en": "Desktop OAB sign-in fetches report data in a single request."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "oab-desktop-single-report",
+      "type": "improvement",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "OAB verisi masaüstünde tek rapor isteğiyle geliyor",
+        "en": "OAB data arrives with a single report request on desktop"
+      },
+      "path": {
+        "tr": "Genel Bakış › OAB › Get OAB",
+        "en": "Overview › OAB › Get OAB"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-desktop-single-report.png",
+        "alt": {
+          "tr": "Get OAB sonrası OAB pivot tablosu — anonim demo verili Buyer Log ekranı",
+          "en": "OAB pivot table after Get OAB — Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Oturum doğrulaması ve veri tek PASS rapor isteğinde",
+          "en": "Session validation and data in one PASS report request"
+        }
+      },
+      "body": {
+        "tr": "Masaüstünde Get OAB yaklaşık 3 dakika sürüyordu: oturum doğrulaması önce filtresiz (tüm rapor) bir istek atıyor, ardından rapor iki kez daha isteniyordu. Doğrulama artık seçtiğiniz Sezon/MAG/Buyer Group ile yapılıyor ve dönen veri doğrudan tabloya veriliyor; filtresiz kontrol yalnız birkaç saniye sürüyor.",
+        "en": "On desktop, Get OAB took about 3 minutes: session validation first sent an unfiltered (whole report) request, then the report was requested twice more. Validation now uses your selected Season/MAG/Buyer Group and the returned data goes straight to the table; the unfiltered check lasts only a few seconds."
+      }
+    }
+  ]
 }
