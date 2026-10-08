@@ -641,6 +641,7 @@ const oabStaticMetadata = require('./lib/oab-static-metadata');
 const oabBatch = require('./lib/oab-batch');
 const oabAuthState = require('./lib/oab-auth-state');
 const oabApiClient = require('./lib/oab-api-client');
+const oabDesktopRelay = require('./lib/oab-desktop-relay');
 const intakeReport = require('./lib/intake-report');
 const intakeStore = require('./lib/intake-store');
 const intakeConnectionSelector = require('./lib/intake-connection');
@@ -5069,7 +5070,7 @@ function oabDesktopAuthRequired() {
 }
 async function ensurePassConnected(userId, params, transport) {
   if (transport === OAB_DESKTOP_TRANSPORT) {
-    if (oabAuthState.status().authenticated) return { connected:true, authenticated:true, transport:'desktop-session' };
+    if (await oabDesktopSessionReady()) return { connected:true, authenticated:true, transport:'desktop-session' };
     throw oabDesktopAuthRequired();
   }
   const status = agentBrowserConnector.passAuthStatus(userId);
@@ -5083,7 +5084,10 @@ async function ensurePassConnected(userId, params, transport) {
 // retry once. Desktop mode: oabApiClient clears the RAM token and returns
 // OAB_AUTH_EXPIRED; the renderer renews it through the hidden session and retries.
 async function fetchOabReportWithLoginRecovery(userId, params, transport) {
-  if (transport === OAB_DESKTOP_TRANSPORT) return oabApiClient.fetchReportData(params || {});
+  if (transport === OAB_DESKTOP_TRANSPORT) {
+    // The desktop relay runs the call inside the hidden signed-in PASS page.
+    return oabDesktopRelay.configured() ? oabDesktopRelay.fetchReportData(params || {}) : oabApiClient.fetchReportData(params || {});
+  }
   try {
     return await agentBrowserConnector.fetchPassReportData(userId, params);
   } catch (err) {
@@ -5092,9 +5096,13 @@ async function fetchOabReportWithLoginRecovery(userId, params, transport) {
     return agentBrowserConnector.fetchPassReportData(userId, params);
   }
 }
-function oabBrowserAuthStatus(userId, transport) {
+async function oabDesktopSessionReady() {
+  if (oabDesktopRelay.configured()) return oabDesktopRelay.status();
+  return Boolean(oabAuthState.status().authenticated);
+}
+async function oabBrowserAuthStatus(userId, transport) {
   if (transport === OAB_DESKTOP_TRANSPORT) {
-    const authenticated = Boolean(oabAuthState.status().authenticated);
+    const authenticated = Boolean(await oabDesktopSessionReady());
     return { connected:authenticated, authenticated, transport:'desktop-session' };
   }
   const current = agentBrowserConnector.passAuthStatus(userId);
@@ -5104,8 +5112,8 @@ function oabBrowserAuthStatus(userId, transport) {
     transport: 'existing-browser-cdp',
   };
 }
-app.get('/api/oab/auth/status', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try { res.set('Cache-Control','no-store').json({ ok:true, status:oabBrowserAuthStatus(req.currentUser.id, oabRequestTransport(req)) }); }
+app.get('/api/oab/auth/status', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), async (req, res) => {
+  try { res.set('Cache-Control','no-store').json({ ok:true, status:await oabBrowserAuthStatus(req.currentUser.id, oabRequestTransport(req)) }); }
   catch (err) { automationError(res, err, 'PASS bağlantı durumu okunamadı.'); }
 });
 // Manual sign-in / reconnect uses the exact same path as Get OAB. Desktop

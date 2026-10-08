@@ -44,6 +44,7 @@ const { app, BrowserWindow, WebContentsView, Menu, dialog, shell, ipcMain, scree
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const http = require('http');
 const { redactSecrets } = require('../shared/secret-redaction');
 
 const { resolvePortableRoot, desktopPaths, resolveAppUrl, readJsonFile } = require('./portable-paths');
@@ -129,9 +130,8 @@ const OAB_STORED_TOKEN_RETRY_MS = 10000;
  * storage. This is the same reader the proven Edge/CDP path uses
  * (agent-browser-connector PASS_STORED_TOKEN_READER), plus oidc-client style
  * "oidc.user:*" entries. Detecting sign-in from storage does not depend on PASS
- * issuing a report request in the hidden window, which used to leave a
- * completed login unnoticed. The value goes only to the loopback backend. */
-const OAB_STORAGE_PROBE = `(() => {
+ * issuing a report request in the hidden window. */
+const OAB_STORED_TOKENS_READER = `const readStoredOabTokens = () => {
   const extract = value => {
     let text = String(value == null ? '' : value).trim();
     if (!text) return '';
@@ -163,7 +163,160 @@ const OAB_STORAGE_PROBE = `(() => {
     } catch (_) {}
   }
   return found.slice(0, 6);
-})()`;
+};`;
+const OAB_STORAGE_PROBE = `(() => { ${OAB_STORED_TOKENS_READER} return readStoredOabTokens(); })()`;
+/* PASS API calls run INSIDE the signed-in PASS page, exactly like the proven
+ * Edge/CDP model (agent-browser-connector passRequestExpression): same origin,
+ * Chromium network stack (corporate proxy + Windows certificate store),
+ * credentials:'omit' + Authorization. Validating or fetching from the Node
+ * backend instead used to reject every captured token, so a completed sign-in
+ * was never accepted. */
+const OAB_PASS_API_ROOT = 'https://pass.prod.lcwaikiki.com/pass/common/report/api/v2.0';
+const OAB_RELAY_ENDPOINTS = new Set(['Report/GetReportData', 'Report/GetReportVariablesWithData', 'Report/GetVariableWithData']);
+const OAB_VALIDATE_BODY = Object.freeze({ reportRef:'OrderBudget_List_Report', languageRef:2, variableRef:534, reportVariableRef:454 });
+const OAB_PAGE_REQUEST_TIMEOUT_MS = 120000;
+function oabPassRequestExpression(url, body, fallbackAuthorization) {
+  const config = JSON.stringify({ url, body: body == null ? {} : body, fallback: String(fallbackAuthorization || '') });
+  return `(async () => {
+    const cfg = ${config};
+    ${OAB_STORED_TOKENS_READER}
+    const candidates = [...readStoredOabTokens()];
+    if (cfg.fallback && !candidates.includes(cfg.fallback)) candidates.push(cfg.fallback);
+    if (!candidates.length) return { ok:false, status:0, code:'OAB_AUTH_REQUIRED' };
+    let last = null;
+    for (const authorization of candidates) {
+      const response = await fetch(cfg.url, {
+        method:'POST', credentials:'omit', cache:'no-store',
+        headers:{ Accept:'application/json', 'Content-Type':'application/json', Authorization:authorization },
+        body:JSON.stringify(cfg.body),
+      });
+      const text = await response.text();
+      let json = null; try { json = text ? JSON.parse(text) : null; } catch (_) {}
+      last = { ok:response.ok, status:response.status, json };
+      if (response.status !== 401 && response.status !== 403) return last;
+    }
+    return last;
+  })()`;
+}
+function oabWindowOnPass(win) {
+  if (!win || win.isDestroyed()) return false;
+  try { return new URL(win.webContents.getURL()).hostname.toLowerCase() === OAB_UI_HOST; } catch (_) { return false; }
+}
+async function runOabPageRequest(win, endpoint, body, fallbackAuthorization) {
+  if (!OAB_RELAY_ENDPOINTS.has(endpoint)) return { ok:false, status:0, code:'OAB_ENDPOINT_BLOCKED' };
+  if (!oabWindowOnPass(win)) return { ok:false, status:0, code:'OAB_AUTH_REQUIRED' };
+  let timer = null;
+  const timeout = new Promise(resolve => {
+    timer = setTimeout(() => resolve({ ok:false, status:0, code:'OAB_TIMEOUT' }), OAB_PAGE_REQUEST_TIMEOUT_MS);
+  });
+  try {
+    const result = await Promise.race([
+      win.webContents.executeJavaScript(oabPassRequestExpression(`${OAB_PASS_API_ROOT}/${endpoint}`, body, fallbackAuthorization), true),
+      timeout,
+    ]);
+    return result && typeof result === 'object' ? result : { ok:false, status:0, code:'OAB_NO_RESPONSE' };
+  } catch (_) {
+    return { ok:false, status:0, code:'OAB_PAGE_REQUEST_FAILED' };
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+/* The signed-in PASS page is kept alive, hidden, after sign-in and serves the
+ * backend's OAB requests through the loopback relay below. */
+let oabSessionWindow = null;
+let oabSessionAuthorization = '';
+let oabSessionOrphanWatch = false;
+function oabSessionReady() { return oabWindowOnPass(oabSessionWindow); }
+function closeOrphanOabSessionWindow() {
+  setImmediate(() => {
+    if (!oabSessionWindow || oabSessionWindow.isDestroyed()) return;
+    const visible = BrowserWindow.getAllWindows().filter(win => win !== oabSessionWindow && !win.isDestroyed() && win.isVisible());
+    // A hidden session window must never keep Buyer Log running after its last
+    // visible window closed (window-all-closed would never fire).
+    if (!visible.length) { try { oabSessionWindow.destroy(); } catch (_) {} }
+  });
+}
+function adoptOabSessionWindow(win, authorization, parent) {
+  const previous = oabSessionWindow;
+  oabSessionWindow = win;
+  oabSessionAuthorization = String(authorization || '');
+  try { win.hide(); } catch (_) {}
+  try { win.setParentWindow(parent && !parent.isDestroyed() ? parent : null); } catch (_) {}
+  win.once('closed', () => {
+    if (oabSessionWindow === win) { oabSessionWindow = null; oabSessionAuthorization = ''; }
+  });
+  if (!oabSessionOrphanWatch) {
+    oabSessionOrphanWatch = true;
+    for (const existing of BrowserWindow.getAllWindows()) existing.on('closed', closeOrphanOabSessionWindow);
+    app.on('browser-window-created', (_event, created) => created.on('closed', closeOrphanOabSessionWindow));
+  }
+  if (previous && previous !== win && !previous.isDestroyed()) { try { previous.destroy(); } catch (_) {} }
+}
+function destroyOabSessionWindow() {
+  const win = oabSessionWindow;
+  oabSessionWindow = null;
+  oabSessionAuthorization = '';
+  if (win && !win.isDestroyed()) { try { win.destroy(); } catch (_) {} }
+}
+/* Loopback relay: the backend asks Electron main to run a whitelisted PASS
+ * report call in the hidden session page. Same per-process bridge secret as
+ * the other desktop bridges; only 127.0.0.1, small JSON bodies. */
+let oabRelayServer = null;
+let oabRelayUrl = '';
+function oabRelaySecretValid(supplied) {
+  const value = String(supplied || '');
+  if (!value) return false;
+  const a = crypto.createHash('sha256').update(value).digest();
+  const b = crypto.createHash('sha256').update(desktopBridgeSecret).digest();
+  return crypto.timingSafeEqual(a, b);
+}
+async function handleOabRelayRequest(req, res) {
+  const send = (status, payload) => {
+    if (res.headersSent) return;
+    res.writeHead(status, { 'Content-Type':'application/json', 'Cache-Control':'no-store' });
+    res.end(JSON.stringify(payload));
+  };
+  try {
+    if (req.method !== 'POST') return send(405, { ok:false, code:'METHOD_NOT_ALLOWED' });
+    if (!oabRelaySecretValid(req.headers['x-buyerlog-desktop-bridge'])) return send(403, { ok:false, code:'DESKTOP_BRIDGE_FORBIDDEN' });
+    const chunks = [];
+    let size = 0;
+    for await (const chunk of req) {
+      size += chunk.length;
+      if (size > 65536) return send(413, { ok:false, code:'PAYLOAD_TOO_LARGE' });
+      chunks.push(chunk);
+    }
+    let body = {};
+    try { body = JSON.parse(Buffer.concat(chunks).toString('utf8') || '{}'); } catch (_) { return send(400, { ok:false, code:'INVALID_JSON' }); }
+    const route = String(req.url || '').split('?')[0];
+    if (route === '/oab/status') return send(200, { ok:true, ready:oabSessionReady() });
+    if (route === '/oab/pass-request') {
+      const endpoint = String(body && body.endpoint || '');
+      if (!OAB_RELAY_ENDPOINTS.has(endpoint)) return send(400, { ok:false, code:'OAB_ENDPOINT_BLOCKED' });
+      const result = await runOabPageRequest(oabSessionWindow, endpoint, body && body.body || {}, oabSessionAuthorization);
+      if (result && (result.status === 401 || result.status === 403)) log('OAB oturum sayfası isteği reddetti (HTTP ' + result.status + ').');
+      return send(200, { ok:true, result });
+    }
+    return send(404, { ok:false, code:'NOT_FOUND' });
+  } catch (_) {
+    send(500, { ok:false, code:'OAB_RELAY_FAILED' });
+  }
+}
+function startOabRelay() {
+  if (oabRelayServer) return Promise.resolve(oabRelayUrl);
+  return new Promise(resolve => {
+    const server = http.createServer((req, res) => { void handleOabRelayRequest(req, res); });
+    server.on('error', error => {
+      log('OAB masaüstü köprüsü başlatılamadı: ' + String(error && error.code || 'unknown'));
+      resolve('');
+    });
+    server.listen(0, '127.0.0.1', () => {
+      oabRelayServer = server;
+      oabRelayUrl = 'http://127.0.0.1:' + server.address().port;
+      resolve(oabRelayUrl);
+    });
+  });
+}
 let oabAuthWindow = null;
 let oabAuthInFlight = null;
 let oabAuthFlowState = null;
@@ -1051,25 +1204,6 @@ function isBenignOabNavigationAbort(error) {
   return code === -3 || /ERR_ABORTED/i.test(text);
 }
 
-async function pushOabAuthorizationToBackend(authorization) {
-  if (!backend || !backend.running || !backend.origin) throw Object.assign(new Error('Buyer Log backend hazır değil.'), { code:'OAB_BACKEND_NOT_READY' });
-  const response = await fetch(backend.origin + '/api/internal/desktop/oab-authorization', {
-    method: 'POST', cache: 'no-store', redirect: 'error',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-BuyerLog-Desktop-Bridge': desktopBridgeSecret,
-    },
-    body: JSON.stringify({ authorization }),
-  });
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || !data.ok) {
-    const error = new Error(data.error || 'OAB yetkilendirmesi doğrulanamadı.');
-    error.code = data.code || 'OAB_AUTH_FAILED';
-    throw error;
-  }
-  return data;
-}
-
 async function clearOabBackendAuthorization() {
   if (!backend || !backend.running || !backend.origin) return;
   try {
@@ -1137,6 +1271,7 @@ async function acquireOabAuthorization(options = {}) {
     let networkReady = null;
     let closeRequested = false;
     let closeGraceTimer = null;
+    let keptWindow = null;
     const popupWindows = new Set();
 
     const targetViewerUrl = () => flowState.viewerUrl || OAB_VIEWER_URL;
@@ -1159,38 +1294,39 @@ async function acquireOabAuthorization(options = {}) {
       clearSilentProbe();
       cleanupCapture();
       for (const popup of popupWindows) {
-        if (popup && !popup.isDestroyed()) { try { popup.close(); } catch (_) {} }
+        if (popup && popup !== keptWindow && !popup.isDestroyed()) { try { popup.close(); } catch (_) {} }
       }
       popupWindows.clear();
-      if (authWindow && !authWindow.isDestroyed()) { try { authWindow.close(); } catch (_) {} }
+      if (authWindow && authWindow !== keptWindow && !authWindow.isDestroyed()) { try { authWindow.close(); } catch (_) {} }
       if (oabAuthWindow === authWindow) oabAuthWindow = null;
     };
-    const finishAuthorizationNow = async (authorization, source) => {
+    const finishAuthorizationNow = async (authorization, source, target) => {
       if (settled || !authorization) return false;
-      try {
-        const pushed = await pushOabAuthorizationToBackend(authorization);
-        if (!pushed || !pushed.ok) return false;
-        if (settled) return true;
-        settled = true;
-        log('OAB otomatik oturumu hazır (' + source + ', report API Authorization doğrulandı).');
-        cleanup();
-        if (resolvePromise) resolvePromise({ ok:true, authenticated:true, source:'desktop-oab-sso' });
-        return true;
-      } catch (error) {
-        // A rejected report token must not leave an older backend RAM token
-        // looking authenticated while the persistent browser recovers.
-        if (!settled) await clearOabBackendAuthorization();
-        log('OAB oturum adayı doğrulanamadı: ' + (error && error.code || 'OAB_AUTH_FAILED'));
+      const page = oabWindowOnPass(target) ? target : authWindow;
+      // Validate in the signed-in PASS page itself (browser network stack).
+      const result = await runOabPageRequest(page, 'Report/GetReportVariablesWithData', OAB_VALIDATE_BODY, authorization);
+      if (!result || !result.ok) {
+        log('OAB oturum adayı doğrulanamadı: ' + (result && (result.code || ('HTTP ' + result.status)) || 'OAB_AUTH_FAILED'));
         return false;
       }
+      if (settled) return true;
+      settled = true;
+      log('OAB otomatik oturumu hazır (' + source + ', PASS sayfası içinde doğrulandı).');
+      let parent = null;
+      try { parent = authWindow.getParentWindow(); } catch (_) {}
+      keptWindow = page;
+      adoptOabSessionWindow(page, authorization, parent);
+      cleanup();
+      if (resolvePromise) resolvePromise({ ok:true, authenticated:true, source:'desktop-oab-sso' });
+      return true;
     };
     /* Network capture and the storage probe can find candidates at the same
      * time. The backend holds a single RAM token, so candidates are validated
      * strictly one after another; a later rejected candidate can therefore
      * never wipe an already accepted one. */
     let authorizationChain = Promise.resolve(false);
-    const finishAuthorization = (authorization, source = 'network') => {
-      const run = authorizationChain.then(() => finishAuthorizationNow(authorization, source));
+    const finishAuthorization = (authorization, source = 'network', target = null) => {
+      const run = authorizationChain.then(() => finishAuthorizationNow(authorization, source, target));
       authorizationChain = run.catch(() => false);
       return run;
     };
@@ -1221,7 +1357,7 @@ async function acquireOabAuthorization(options = {}) {
             const lastTriedAt = storedTokenAttempts.get(authorization) || 0;
             if (lastTriedAt && Date.now() - lastTriedAt < OAB_STORED_TOKEN_RETRY_MS) continue;
             storedTokenAttempts.set(authorization, Date.now());
-            if (await finishAuthorization(authorization, 'PASS storage')) return true;
+            if (await finishAuthorization(authorization, 'PASS storage', target)) return true;
           }
         }
         return false;
@@ -1420,7 +1556,7 @@ async function acquireOabAuthorization(options = {}) {
           log('OAB viewer report isteği yeniden tetikleniyor (' + reason + ', ' + attempt + '/2).');
           return loadLoginTarget(targetViewerUrl(), false);
         },
-        onAuthorization: finishAuthorization,
+        onAuthorization: authorization => finishAuthorization(authorization, 'network', authWindow),
         onPhase: phase => {
           if (phase !== 'waiting-report-request') log('OAB auth aşaması: ' + phase);
           if (phase === 'login-required') {
@@ -1661,6 +1797,7 @@ async function acquireOabAuthorization(options = {}) {
 async function clearOabAuthSession() {
   const pending = oabAuthInFlight;
   try { oabAuthFlowState?.abort?.(); } catch (_) {}
+  destroyOabSessionWindow();
   if (oabAuthWindow && !oabAuthWindow.isDestroyed()) {
     try { oabAuthWindow.close(); } catch (_) {}
   }
@@ -1871,10 +2008,12 @@ async function startBuyerLog() {
     return false;
   }
 
+  const desktopOabRelayUrl = await startOabRelay();
   backend = new BackendProcess({
     paths,
     appCoreRoot: APP_CORE_ROOT,
     desktopBridgeSecret,
+    desktopOabRelayUrl,
     downloadsRoot: app.getPath('downloads'),
     log,
     onUnexpectedExit: info => {
