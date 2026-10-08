@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.258",
-  "commit_sha": "a39bb2d5ff34df4440c0579efa8b1baa42e9e015",
-  "release_notes": "Buyer Log 7.0.258 TEST: Koleksiyon'da MB WEEK, MB Month, STATUS ve diğer seçimli hücrelerde sağ tık Kopyala/Yapıştır güncel seçili değeri kullanıyor; sağ tık Kopyala hücre/aralık odaklı, Ctrl+C/global Copy checkbox ile seçili modellerin önceliğini koruyor. 7.0.257'deki Endeksmatik yapı raporu ve i18n sistem verisi düzeltmeleri de dahildir. PR #430 Buyer Log regresyon paketi başarıyla geçti."
+  "version": "7.0.259",
+  "commit_sha": "cc8348996b29d8eb5f6aa49704a6a6b51d5710d4",
+  "release_notes": "Buyer Log 7.0.259 TEST: CP ve Siparişler model görselleri başka sayfadan dönüldüğünde ve uygulama yeniden açıldığında beklemeden yerinde görünür; aynı görsel her ekranda tek adresle önbellekten gelir, CP'de ilk 300 satırın görselleri hazırlanır. Tümü görünümünde kaydırılmışken dönüşte tablo boş kalmaz. LCW AI çıktı düzenleyicisi sadeleşti ve Koleksiyon'a Orders/CP görünür satır aralığı eklendi. PR #433 Buyer Log regresyon paketi başarıyla geçti."
 }
