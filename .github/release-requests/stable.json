@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.260",
-  "commit_sha": "b5d3c44cfa694d8dcba35b338e8c632d26b52294",
-  "release_notes": "Buyer Log 7.0.260 STABLE: Merch Calendar 53. LCW haftasını kabul eder; 54. hafta geçersizdir. Tools > Calculation Rules altında açılır/kapanır Merch Calendar modülünden takvim yüklenebilir, değiştirilebilir veya kaldırılabilir. LCW/GLB haftaları ayrı korunur; köşeli Buyer Log tasarımı kullanılır.",
-  "request_id": "7.0.260-stable-r1"
+  "version": "7.0.261",
+  "commit_sha": "10b8cf6367331082c079504ef60e0eb79d23a5a3",
+  "release_notes": "Buyer Log 7.0.261 STABLE: ROS Lab Dip Renk Sonuç Bildirimi ve Color Evaluation Notification mailleri sürükle-bırak ile aktarılır. Çoklu renk, Approved/Digital Approved/Rejected, revizyon, tur, submit ve yorumlar tek Checklist hücresinde görüntülenir. PO bulunmayan ROS raporları ancak kullanıcı eşleştirme onayıyla yazılır. LCW AI yorum incelemesi ve Buyer Log kare köşeli tasarımına entegredir. PR #437 ve TEST build+sign+remote verification başarılı.",
+  "request_id": "7.0.261-stable-r1"
 }
