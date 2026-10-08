@@ -668,9 +668,10 @@
 
 
 /* --- Merch Calendar -------------------------------------------------
-   İş takvimi Veri Yönetimi'nin yerleşik panelidir. Buyer Log isteği gereği
+   İş takvimi Tools > Calculation Rules içinde açılır/kapanır paneldir. Buyer Log isteği gereği
    yeni yüzeylerde oval köşe yoktur; renkler yalnız mevcut tema tokenlarından. */
 .dmMerchPanel{border:1px solid var(--line);background:var(--card);border-radius:0!important}
+.dmToolSlot .dmMerchPanel{width:100%;box-sizing:border-box}
 .dmMerchHead{align-items:flex-start}
 .dmMerchIntro{margin-top:3px;max-width:760px;font-size:11px;line-height:1.4;color:var(--muted)}
 .dmMerchState{flex:0 0 auto;border:1px solid var(--line2);padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.35px;color:var(--muted);background:var(--card);border-radius:0!important}

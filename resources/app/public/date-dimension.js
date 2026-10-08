@@ -83,7 +83,7 @@
     const monthWeek=Number(raw && (raw.lcwMonthWeek ?? raw.monthWeek));
     const start=toISO(raw&&(raw.start||raw.weekStart));
     const end=toISO(raw&&(raw.end||raw.weekEnd))||toISO(addDays(start,6));
-    if(!Number.isInteger(year)||year<1900||year>2200||!Number.isInteger(week)||week<1||week>52||
+    if(!Number.isInteger(year)||year<1900||year>2200||!Number.isInteger(week)||week<1||week>53||
        !Number.isInteger(month)||month<1||month>12||!Number.isInteger(monthWeek)||monthWeek<1||monthWeek>6||
        !start||!end)return null;
     return {year,week,month,monthWeek,start,end};

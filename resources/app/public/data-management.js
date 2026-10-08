@@ -712,6 +712,10 @@
         en: 'Shared rules: changing one changes the numbers everyone sees.',
       },
       tools: [
+        { id: 'merch', requires: 'manageModelConnections', icon: 'i-calendar', inline: true,
+          label: { tr: 'Merch Calendar', en: 'Merch Calendar' },
+          hint: { tr: 'LCW iş haftası/ayı ve 1–53 hafta eşlemesini dosyadan yönetir; LCW/GLB tarih seçicilerini besler.',
+            en: 'Manage LCW business weeks/months and weeks 1–53 from a file; powers LCW/GLB date pickers.' } },
         { id: 'transit', requires: 'manageBusinessRules', icon: 'i-ship',
           label: { tr: 'Yol Süreleri', en: 'Transfer Lead Times' },
           hint: { tr: 'Üretim ülkesi ve sevkiyat tipine göre transit gün sayısı; tahmini varış bundan hesaplanır. İthalat Yol Süresi Raporu Excel\'inden ülke/taşıt analizi ve kural önerisi.',
@@ -845,7 +849,7 @@
         </div>
         <ul class="dmToolList">
           ${group.tools.map(tool => `<li class="dmToolRow${openTool === tool.id ? ' isOpen' : ''}">
-            <button type="button" class="dmTool" data-tool="${esc(tool.id)}">
+            <button type="button" class="dmTool" data-tool="${esc(tool.id)}"${tool.inline ? ` aria-expanded="${openTool === tool.id}" aria-controls="dm-tool-${esc(tool.id)}"` : ''}>
               <svg class="ic" aria-hidden="true"><use href="#${esc(tool.icon)}"/></svg>
               <span class="dmToolText">
                 <span class="dmToolName">${esc(tool.label[en() ? 'en' : 'tr'])}</span>
@@ -854,7 +858,7 @@
                   ? `<span class="dmToolValue" title="${esc(tool.value())}">${esc(tool.value())}</span>` : ''}
               </span>
             </button>
-            ${tool.inline ? `<div class="dmToolSlot" data-tool-slot="${esc(tool.id)}"></div>` : ''}
+            ${tool.inline ? `<div class="dmToolSlot" id="dm-tool-${esc(tool.id)}" data-tool-slot="${esc(tool.id)}">${tool.id === 'merch' && openTool === 'merch' ? merchCalendarPanel() : ''}</div>` : ''}
           </li>`).join('')}
         </ul>
       </div>`).join('')}
@@ -882,6 +886,7 @@
       const slot = root.querySelector(`[data-tool-slot="${CSS.escape(tool.id)}"]`);
       if (!slot) { openTool = ''; return; }
       slot.__onDataMaintClosed = () => { openTool = ''; render(); };
+      if (tool.id === 'merch') return; // Calendar panel is rendered inside the inline slot and persists through re-renders.
       if (tool.id === 'maintenance' && typeof openDataMaintenanceModal === 'function') {
         void openDataMaintenanceModal(slot);
       }
@@ -1248,7 +1253,7 @@
         ))}</div>` : ''}
         <div class="dmMerchRules">
           <span>${esc(T('LCW haftaları dosyadan okunur; Buyer Log kendi LCW haftasını tahmin etmez.','LCW weeks are read from the file; Buyer Log does not guess LCW weeks.'))}</span>
-          <span>${esc(T('LCW hafta numarası 1–52 olmalıdır; 53. hafta içeren dosya etkinleştirilmez.','LCW week numbers must be 1–52; a file containing week 53 is not activated.'))}</span>
+          <span>${esc(T('LCW hafta numarası dosyada 1–53 olabilir; gün ve tarih çakışmaları ayrıca doğrulanır.','LCW weeks 1–53 are supported when provided by the file; days and overlapping dates are validated.'))}</span>
         </div>
         ${merchMessage ? `<div class="dmMerchMessage">${esc(merchMessage)}</div>` : ''}
         <div class="dmMerchActions">
@@ -1256,7 +1261,7 @@
             <input type="file" data-merch-file accept=".xls,.xlsx,.html,.htm" ${merchBusy ? 'disabled' : ''}>
             ${esc(merchBusy ? T('İşleniyor…','Processing…') : (configured ? T('Takvimi Değiştir','Replace Calendar') : T('Merch Calendar Yükle','Upload Merch Calendar')))}
           </label>
-          ${configured ? `<button type="button" class="tbtn danger" data-merch-delete ${merchBusy ? 'disabled' : ''}>${esc(T('Takvimi Kaldır','Remove Calendar'))}</button>` : ''}` : `<span class="dmReadOnly">${esc(T('Takvimi değiştirmek için Veri Yönetimi yetkisi gerekir.','Data Management permission is required to change the calendar.'))}</span>`}
+          ${configured ? `<button type="button" class="tbtn danger" data-merch-delete ${merchBusy ? 'disabled' : ''}>${esc(T('Takvimi Kaldır','Remove Calendar'))}</button>` : ''}` : `<span class="dmReadOnly">${esc(T('Takvimi değiştirmek için hesaplama kuralı yönetim yetkisi gerekir.','Calculation-rule management permission is required to change the calendar.'))}</span>`}
         </div>
       </div>
     </div>`;
@@ -1362,9 +1367,6 @@
       <div class="dmWizardSlot" data-wizard-slot></div>
 
       ${labPanel()}
-
-      <div class="dmSectionLabel">${esc(T('İş takvimi', 'Business calendar'))}</div>
-      ${merchCalendarPanel()}
 
       ${unsupported ? `<div class="dmNotice">${esc(T('Veri modeli sorguları yalnız Windows üzerinde çalışır; bu makinede bağlantı sınanamaz.', 'Data-model queries run on Windows only; connections cannot be tested on this machine.'))}</div>` : ''}
       ${(model.warnings || []).map(text => `<div class="dmNotice dmNotice--warn">${esc(text)}</div>`).join('')}

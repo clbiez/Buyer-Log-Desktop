@@ -45,11 +45,24 @@ test('HTML olarak export edilmiş .xls Merch Calendar hafta satırlarına dönü
   assert.equal(parsed.sourceName,'MerchCalendar.xls');
 });
 
-test('LCW 53. hafta içeren Merch Calendar etkinleştirilmez',()=>{
+test('LCW 53. hafta geçerlidir ve yıl sınırında iş haftası olarak korunur',()=>{
   const source=html([row(53,[28,29,30,31,1,2,3],'December')]);
-  assert.throws(()=>store.parseBuffer(Buffer.from(source),'bad.xls'),error=>{
+  const parsed=store.parseBuffer(Buffer.from(source),'w53.xls');
+  assert.deepEqual(parsed.weeks[0],{
+    year:2026,week:53,month:12,monthWeek:1,start:'2026-12-28',end:'2027-01-03',
+  });
+  dateDimension.setMerchCalendar(parsed);
+  assert.equal(dateDimension.describe('2026-12-31').lcwWeek,53);
+  assert.equal(dateDimension.describe('2027-01-02').lcwYear,2026);
+  assert.equal(dateDimension.mondayFromBusinessWeek(2026,53)?.getFullYear(),2026);
+  dateDimension.clearMerchCalendar();
+});
+
+test('54. hafta reddedilir',()=>{
+  const bad=html([row(54,[4,5,6,7,8,9,10],'December')]);
+  assert.throws(()=>store.parseBuffer(Buffer.from(bad),'bad.xls'),error=>{
     assert.equal(error.code,'MERCH_WEEK_OUT_OF_RANGE');
-    assert.match(error.message,/1–52/);
+    assert.match(error.message,/1–53/);
     return true;
   });
 });
@@ -69,13 +82,17 @@ test('yükleme kaydı kalıcı olur ve merkezi tarih motorunu aynı anda güncel
   assert.equal(store.publicProjection().configured,false);
 });
 
-test('Veri Yönetimi Merch Calendar upload/değiştir/kaldır akışını taşır ve köşeler kare kalır',()=>{
+test('Calculation Rules Merch Calendar modülünü açıp kapatır; yükleme ve köşeli tasarım korunur',()=>{
   const ui=read('public/data-management.js');
   const css=read('public/data-management.css');
   const picker=read('public/dual-week-datepicker.js');
   const pickerCss=read('public/dual-week-datepicker.css');
   const server=read('server/server.js');
   assert.match(ui,/Merch Calendar Yükle/);
+  assert.match(ui,/id: 'merch', requires: 'manageModelConnections'.*inline: true/);
+  assert.match(ui,/tool\.id === 'merch' && openTool === 'merch' \? merchCalendarPanel\(\)/);
+  assert.doesNotMatch(ui,/<div class="dmSectionLabel">\$\{esc\(T\('İş takvimi'/);
+  assert.match(ui,/LCW hafta numarası dosyada 1–53 olabilir/);
   assert.match(ui,/data-merch-file/);
   assert.match(ui,/data-merch-delete/);
   assert.match(ui,/LCW \/ GLB/);
