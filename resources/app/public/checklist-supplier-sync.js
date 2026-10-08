@@ -2073,6 +2073,19 @@
         + '<button type="button" class="delTypeOption clStatusOption" data-cl-evidence>'
         + '<span aria-hidden="true">📎</span><span>' + T('Checklist Detayları / Ekler', 'Checklist Details / Attachments') + '</span></button>';
     }
+    // ROS/Lab Dip is a single CP checklist cell: on click, show all
+    // colour decisions beneath the existing status actions, not new columns.
+    if (evidenceItem && /LAB\s*DIP|LABDIP/i.test([evidenceItem.tr, evidenceItem.en].join(' '))) {
+      const row = cpRowById(trigger.dataset.id);
+      const decision = row ? analysesForRows([row]) : null;
+      const analysis = decision && decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+      const answer = analysis ? answerFor(evidenceItem, analysis) : null;
+      if (answer && answer.note && answer.source === 'test_report') {
+        const lines = String(answer.note).split(/\n/).filter(Boolean).slice(0, 30);
+        menu.innerHTML += '<section class="clRosStatusDetails"><b>' + html(T('Lab Dip renk sonuçları', 'Lab Dip colour results')) + '</b>'
+          + lines.map(function (line) { return '<p>' + html(line) + '</p>'; }).join('') + '</section>';
+      }
+    }
     root.document.body.appendChild(menu);
     const rect = trigger.getBoundingClientRect();
     const width = Math.max(rect.width, 160);
