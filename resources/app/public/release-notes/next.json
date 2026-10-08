@@ -1,48 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-08",
+  "publishedAt": "",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Lab Dip / ROS renk onaylarının Checklist entegrasyonu",
-    "en": "Lab Dip / ROS colour approval integration"
+    "tr": "",
+    "en": ""
   },
   "summary": {
-    "tr": "ROS renk değerlendirme mailleri Test Raporu Aktarımı ile okunuyor; renk bazlı onay, ret, revizyon ve yorumlar tek Checklist kaydında takip ediliyor.",
-    "en": "ROS colour evaluation emails are imported with Test Reports; per-colour approvals, rejections, revisions and comments are kept in one Checklist entry."
+    "tr": "",
+    "en": ""
   },
-  "changes": [
-    {
-      "id": "labdip-ros-multicolour-20261008",
-      "type": "feature",
-      "module": {
-        "tr": "CP › Checklist / Test raporu aktarımı",
-        "en": "CP › Checklist / Test Report Import"
-      },
-      "title": {
-        "tr": "Tek hücrede çoklu Lab Dip renk sonucu",
-        "en": "Multi-colour Lab Dip results in one checklist cell"
-      },
-      "body": {
-        "tr": "Türkçe ve İngilizce ROS (.msg / .eml) bildirimlerinde her renk ayrı değerlendirilir. Son revizyon, tarih/tur/submit ve yorum bilgisi korunur. Eksik PO için model/renk adayları kullanıcı onayına sunulur; ROS talep ID sipariş kodu olarak kullanılmaz. LCW AI inceleme bağlamına renk yorumları aktarılır.",
-        "en": "Turkish and English ROS (.msg / .eml) notifications evaluate each colour independently. Latest revisions, dates, rounds, submissions and comments are preserved. When PO is missing, model/colour candidates require user confirmation; ROS request IDs are not order codes. Colour comments are included in LCW AI review context."
-      },
-      "path": {
-        "tr": "CP > Checklist > Test Raporu Aktar > Lab Dip",
-        "en": "CP > Checklist > Import Test Reports > Lab Dip"
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "ros-labdip-review-20261008.png",
-        "alt": {
-          "tr": "Buyer Log'un gerçek demo Lab Dip önizlemesinde iki rengin bağımsız onay ve ret bilgileri",
-          "en": "Actual Buyer Log demo Lab Dip preview showing independent approval and rejection of two colours"
-        },
-        "caption": {
-          "tr": "Anonim demo verisiyle alınan gerçek Buyer Log Lab Dip renk değerlendirme ekranı",
-          "en": "Actual Buyer Log Lab Dip colour review screenshot using anonymous demo data"
-        }
-      }
-    }
-  ]
+  "changes": []
 }

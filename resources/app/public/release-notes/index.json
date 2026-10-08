@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.261",
+      "publishedAt": "2026-10-08",
+      "title": {
+        "tr": "Lab Dip / ROS renk onaylarının Checklist entegrasyonu",
+        "en": "Lab Dip / ROS colour approval integration"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 0,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.261/release.json"
+    },
+    {
       "version": "7.0.260",
       "publishedAt": "2026-10-08",
       "title": {
