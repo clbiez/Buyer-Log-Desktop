@@ -75,9 +75,29 @@
     }
     return registryMap;
   };
-  const resolveRegistrySource=(modelId,colourCode,base='/api/collection-images',colourName='')=>{
+  /* TEK GÖRSEL = TEK URL. /api/cp-images/:id ve /api/collection-images/:id
+     aynı dosyayı sunar; Koleksiyon satırları ayrıca ?v=<updatedAt> taşıyordu.
+     Aynı görsel CP, Orders, Koleksiyon ve Quotations'ta farklı URL'lerle
+     istendiği için tarayıcı önbelleğinde ayrı girdiler oluşuyor; kayıt
+     yayımlanınca CP hücreleri URL değiştirip görselleri ağdan yeniden
+     indiriyordu. Görsel içeriği değişen her yazım yeni bir ref (ci_…) üretir,
+     aynı bayt aynı ref'i korur: ref'in kendisi sürümdür, ek etiket gerekmez. */
+  const MODEL_IMAGE_API='/api/collection-images';
+  const MODEL_IMAGE_URL_RE=/^(?:https?:\/\/[^/]+)?\/api\/(?:cp|collection)-images\/([^/?#]+)(?:[?#].*)?$/i;
+  const imageUrlForRef=ref=>{const value=clean(ref);return value?`${MODEL_IMAGE_API}/${encodeURIComponent(value)}`:'';};
+  // Bilinen görsel API adresini (/api/cp-images, /api/collection-images, ?v=)
+  // tek biçime indirir; başka her değer (data:, paylaşılan depo, dış adres)
+  // olduğu gibi döner.
+  const imageUrl=value=>{
+    const text=clean(value);if(!text)return '';
+    const match=text.match(MODEL_IMAGE_URL_RE);if(!match)return text;
+    let ref=match[1];try{ref=decodeURIComponent(ref);}catch(_){}
+    return imageUrlForRef(ref);
+  };
+  const resolveRegistrySource=(modelId,colourCode,base=MODEL_IMAGE_API,colourName='')=>{
     const ref=resolveImageRef(registryMap,modelId,colourCode,colourName,registryNamed);
-    return ref?`${base}/${encodeURIComponent(ref)}`:'';
+    if(!ref)return '';
+    return /^\/api\/(?:cp|collection)-images$/i.test(clean(base))?imageUrlForRef(ref):`${base}/${encodeURIComponent(ref)}`;
   };
   const hasRegistryKey=(modelId,colourCode,colourName='')=>hasImageKey(registryMap,modelId,colourCode,colourName,registryNamed);
   const sourceHash=value=>{
@@ -241,5 +261,5 @@
     return true;
   }
   const stats=()=>({thumbnailMemoryEntries:thumbnailMemory.size,originalMemoryEntries:originalMemory.size,thumbnailInFlight:thumbnailInFlight.size,originalInFlight:originalInFlight.size});
-  return {identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,hasRegistryKey,resolveRegistrySource,getThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
+  return {identity,normalizeModelId,normalizeColourCode,canonicalImageKey,hasImageKey,resolveImageRef,setRegistryMap,hasRegistryKey,resolveRegistrySource,imageUrl,imageUrlForRef,getThumbnail,preloadOriginal,getClipboardDataUrl,bind,fromImage,invalidate,clearAll,stats,CACHE_NAME};
 });

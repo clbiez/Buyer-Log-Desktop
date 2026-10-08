@@ -1,7 +1,7 @@
 {
   "name": "buyer-log-desktop",
   "productName": "Buyer Log",
-  "version": "7.0.258",
+  "version": "7.0.259",
   "description": "Buyer Log masaüstü barındırıcısı (mevcut backend + gömülü Chromium).",
   "main": "electron/launcher.js",
   "private": true,
@@ -15,6 +15,7 @@
     "test": "node tests/run-tests.js",
     "test:buyerlog": "node tests/run-tests.js",
     "test:collection": "node tests/run-tests.js collection",
+    "test:image-return": "node scripts/model-image-return-acceptance.js",
     "i18n:check": "node scripts/i18n-coverage.js",
     "i18n:baseline": "node scripts/i18n-coverage.js --shrink-baseline",
     "github:sync": "node scripts/github-source-sync.js",

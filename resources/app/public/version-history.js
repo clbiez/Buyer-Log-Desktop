@@ -10,7 +10,15 @@
      items:[ {tr:'...', en:'...'}, ... ] }
    =================================================================== */
 window.BL_VERSION_HISTORY = [
-  { v: '__CURRENT__', date: '2026-09-26', title: { tr: 'Daha hızlı sayfa geçişleri', en: 'Faster page switching' }, items: [
+  { v: '__CURRENT__', date: '2026-10-08', title: { tr: 'CP görselleri sayfa dönüşünde anında', en: 'CP images appear instantly when you return' }, items: [
+    { tr: 'CP ve Siparişler model görselleri başka bir sayfadan dönüldüğünde yer tutucudan başlayıp yeniden yüklenmiyor; görünür görseller ilk karede yerinde ve ağa yeni istek çıkmıyor.', en: 'CP and Orders model images no longer restart from a placeholder when you return from another page; visible images are in place in the first frame and no new network request is made.' },
+    { tr: 'Aynı görsel CP, Siparişler, Koleksiyon ve Quotations’ta tek adresle istenir; değiştirilen görsel yeni adres alır ve ilk dönüşte görünür.', en: 'The same image uses a single address in CP, Orders, Collection and Quotations; a replaced image gets a new address and appears on the first return.' },
+    { tr: 'CP’de geçerli filtre ve sıralamadaki ilk 300 satırın görselleri ekran boştayken hazırlanır; filtre ya da sayfa değişince bu iş durur ve PLM’e otomatik istek gönderilmez.', en: 'CP prepares the images of the first 300 rows in the current filter and sort order while the screen is idle; the work stops when the filter or page changes and no automatic request is sent to PLM.' },
+    { tr: 'Uygulama yeniden açıldığında bu cihazda daha önce açılmış görseller beklemeden cihaz önbelleğinden gösterilir; silinmiş görsel yer tutucuya döner.', en: 'When the app is reopened, images already opened on this device are shown from the device cache without waiting; a deleted image falls back to the placeholder.' },
+    { tr: '“Tümü” satır aralığında tablo kaydırılmışken başka sayfadan dönüldüğünde görünen alan artık boş kalmıyor; kaydırma konumu korunuyor.', en: 'In the “All” row range, returning from another page while the table is scrolled no longer leaves the visible area blank; the scroll position is kept.' },
+  ] },
+
+  { v: '7.138', date: '2026-09-26', title: { tr: 'Daha hızlı sayfa geçişleri', en: 'Faster page switching' }, items: [
     { tr: 'Hazır ekran önbelleği artık gerçekten kullanılıyor: CP ilk açılışı ~8 sn yerine ~1 sn, Siparişler ilk açılışı ~24 sn yerine ~3,5 sn (30 bin satırlık veride).', en: 'The prepared-screen cache is now actually used: CP opens in ~1 s instead of ~8 s and Orders in ~3.5 s instead of ~24 s (30k-row data).' },
     { tr: 'Açılmış bir sayfaya geri dönmek anlıktır (CP, Siparişler, Genel Bakış ~0,1 sn; LFL ~0,8 sn yerine ~0,25 sn); veri değişmediyse sayfa yeniden hesaplanmaz.', en: 'Returning to an already opened page is instant (CP, Orders, Overview ~0.1 s; LFL ~0.25 s instead of ~0.8 s); pages are not recomputed when data has not changed.' },
     { tr: 'Siparişler ekranı kullanmadığı sipariş özetini artık indirmez (~%35 daha az veri); LFL ziyareti CP/Siparişler/Genel Bakış önbelleğini geçersiz kılmaz.', en: 'The Orders screen no longer downloads the order summary it does not use (~35% less data); visiting LFL no longer invalidates the CP/Orders/Overview cache.' },

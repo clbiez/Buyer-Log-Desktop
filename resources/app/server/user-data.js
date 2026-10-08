@@ -712,6 +712,9 @@ function saveCollectionImage({ rowId, filename, mimeType, base64 }) {
   }
   return publicCollectionImage(item);
 }
+// Rota bağlı DEĞİL (bkz. server.js PUT /api/model-images/:id/optimize → 410):
+// aynı ref altında bayt değiştirmek immutable görsel önbelleğinde eski kopyayı
+// bırakır. Yalnız yerel bakım/kurtarma araçları için tutulur.
 function replaceCollectionImage(id, { filename, mimeType, base64 }) {
   const clean = String(id || '').replace(/[^A-Za-z0-9_-]/g, '');
   const type = String(mimeType || '').toLowerCase();

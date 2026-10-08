@@ -50,10 +50,13 @@ test('v1102 CP tablosu ayni yeniden baglama sozlesmesini korur', () => {
 });
 
 test('v1102 gorsel kaynagi kanonik registry uzerinden cozulur', () => {
-  const cell = block(APP, 'function ordersImageCellHtml', 'function ordersCellHtml');
+  /* Kaynak çözümü CP ve Orders için ortak tableRowImageSource'a taşındı
+     (tek görsel = tek URL); hücre bu çözümleyiciyi kullanmak zorundadır. */
+  assert.match(block(APP, 'function ordersImageCellHtml', 'function ordersCellHtml'), /tableRowImageSource\(row\)/);
+  const cell = block(APP, 'function tableRowImageSource', 'function cpImageCellHtml');
   assert.match(cell, /canonicalModelImageSource\(modelId,colourCode,[^)]+\)/);
   assert.match(cell, /canonicalModelImageKnown\(modelId,colourCode,[^)]+\)/);
   // Kayitli gorseli olmayan satir yanlis bir kaynaga dusurulmez.
-  assert.match(cell, /source=canonicalKnown\?canonical:\(has\?row\._imageUrl:''\)/);
-  assert.match(cell, /data-has-image="\$\{has\?'1':'0'\}"/);
+  assert.match(cell, /source:has\?modelImageUrl\(canonicalKnown\?canonical:row\._imageUrl\):''/);
+  assert.match(block(APP, 'function ordersImageCellHtml', 'function ordersCellHtml'), /data-has-image="\$\{has\?'1':'0'\}"/);
 });
