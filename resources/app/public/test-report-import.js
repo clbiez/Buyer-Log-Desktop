@@ -121,7 +121,10 @@
       if (link && candidates.some(function (c) { return c.key === link.orderKey; })) chosen = link.orderKey;
       else if (candidates.length === 1 && (match.level === 'exact' || match.level === 'partial')) chosen = candidates[0].key;
       const typeKey = E().talepTipiKey(report.talepTipi);
-      const mapped = (link && link.itemId) || (store.typeMap[typeKey] && store.typeMap[typeKey].itemId) || ui.newTypeMap[typeKey] || '';
+      const labDipItem = typeKey === 'LABDIP' ? catalog().find(function (item) {
+        return /LAB\s*DIP|LABDIP/i.test([item.tr, item.en].join(' '));
+      }) : null;
+      const mapped = (link && link.itemId) || (store.typeMap[typeKey] && store.typeMap[typeKey].itemId) || ui.newTypeMap[typeKey] || (labDipItem && labDipItem.id) || '';
       const fromAi = report.kaynak === 'ai';
       const ignored = Boolean(E().normalizeOrderCode(report.siparisKodu)) && match.level === 'none' && match.reason === 'order';
       return {
@@ -202,12 +205,36 @@
       multiple: T('Birden çok satır uyuyor.', 'Several rows fit.'),
       modelPartial: T('Model adı kısmi eşleşti.', 'Model name matched partially.'),
       colourCode: T('Renk, renk koduyla eşleşti.', 'Colour matched by colour code.'),
+      rosNoOrder: T('ROS mesajında PO kodu yok; aday siparişin doğruluğunu onaylayın.', 'ROS message has no PO code; verify the suggested order.'),
+      rosNoOrderColour: T('ROS mesajında PO kodu yok ve bileşen rengi CP varyant rengiyle eşleşmedi; siparişi elle doğrulayın.', 'ROS has no PO code and component colour differs from CP variant; verify the order manually.'),
       talep: T('Talep no yok.', 'No request number.'),
     };
     const reason = reasons[entry.match.reason] || '';
     return '<span class="trBadge tone-' + level.tone + '" title="' + html(reason) + '">' + html(isEn() ? level.en : level.tr) + '</span>' + (reason ? '<small>' + html(reason) + '</small>' : '');
   }
+  function labDipResultCell(report) {
+    const colours = E().resolveLabDipColors([report]);
+    const passed = colours.filter(function (c) { return c.status === 'pass'; }).length;
+    const failed = colours.filter(function (c) { return c.status === 'fail'; }).length;
+    const pending = colours.length - passed - failed;
+    const badges = [
+      passed ? '<span class="trBadge tone-green">' + html(T('Onaylı ', 'Approved ') + passed) + '</span>' : '',
+      failed ? '<span class="trBadge tone-red">' + html(T('Reddedilen ', 'Rejected ') + failed) + '</span>' : '',
+      pending ? '<span class="trBadge tone-orange">' + html(T('Bekleyen ', 'Pending ') + pending) + '</span>' : '',
+    ].join(' ');
+    const details = colours.map(function (c) {
+      const status = c.status === 'pass' ? T('Onaylandı', 'Approved') : c.status === 'fail' ? T('Reddedildi', 'Rejected') : T('Bekliyor', 'Pending');
+      const tone = c.status === 'pass' ? 'green' : c.status === 'fail' ? 'red' : 'orange';
+      return '<li class="trLabDipRow"><b>' + html(c.colour) + '</b> <span class="trBadge tone-' + tone + '">' + html(status) + '</span>'
+        + (c.round ? '<small>' + html(T('Tur ', 'Round ') + c.round) + '</small>' : '')
+        + (c.submitNo ? '<small>' + html('Submit ' + c.submitNo) + '</small>' : '')
+        + (c.comment ? '<p>' + html(c.comment) + '</p>' : '')
+        + (c.date ? '<small>' + html(c.date) + '</small>' : '') + '</li>';
+    }).join('');
+    return badges + '<details class="trLabDipDetails"><summary>' + html(T('Renk ayrıntıları', 'Colour details') + ' (' + colours.length + ')') + '</summary><ul>' + details + '</ul></details>';
+  }
   function resultBadge(report) {
+    if ((report.labDipColors || []).length) return labDipResultCell(report);
     const outcome = E().reportOutcome(report);
     const tone = outcome.code === 'pass' ? 'green' : outcome.code === 'fail' ? 'red' : 'orange';
     const raw = report.genelSonuc ? E().resultLabel(report.genelSonuc, lang()) : '';
@@ -294,12 +321,14 @@
       + [...pending.entries()].map(function (pair) {
         const key = pair[0], label = pair[1] || key;
         const parts = String(label).split(' / ');
+        const newTr = key === 'LABDIP' ? 'Lab Dip onayı' : parts[0];
+        const newEn = key === 'LABDIP' ? 'Lab Dip approval' : (parts[1] || parts[0]);
         const suggested = aiStepForType(key);
         return '<div class="trTypeRow" data-tr-type="' + html(key) + '"><span>' + html(T('"' + parts[0] + '" hangi checklist adımına girilsin?', 'Which checklist step should "' + (parts[1] || parts[0]) + '" go to?')) + '</span>'
           + '<select data-tr-type-select="' + html(key) + '">' + itemOptions('') + '</select>'
           + (suggested ? '<button type="button" class="cpaBtn sm" data-tr-ai-type="' + html(key) + '">' + html(T('LCW AI önerisi: ', 'LCW AI suggests: ') + itemLabel(suggested) + T(' · Uygula', ' · Apply')) + '</button>' : '')
-          + '<span class="trNewItem" hidden><input type="text" data-tr-new-tr maxlength="160" value="' + html(parts[0]) + '" placeholder="' + html(T('Adım adı (Türkçe)', 'Step name (Turkish)')) + '">'
-          + '<input type="text" data-tr-new-en maxlength="160" value="' + html(parts[1] || parts[0]) + '" placeholder="' + html(T('Adım adı (İngilizce)', 'Step name (English)')) + '">'
+          + '<span class="trNewItem" hidden><input type="text" data-tr-new-tr maxlength="160" value="' + html(newTr) + '" placeholder="' + html(T('Adım adı (Türkçe)', 'Step name (Turkish)')) + '">'
+          + '<input type="text" data-tr-new-en maxlength="160" value="' + html(newEn) + '" placeholder="' + html(T('Adım adı (İngilizce)', 'Step name (English)')) + '">'
           + '<button type="button" class="cpaBtn sm" data-tr-create="' + html(key) + '">' + html(T('Oluştur', 'Create')) + '</button></span></div>';
       }).join('') + '</section>';
   }
@@ -346,7 +375,7 @@
       return;
     }
     const drop = '<label class="trDrop" data-tr-drop><input type="file" data-tr-input multiple accept=".msg,.eml,.pdf,.png,.jpg,.jpeg,.webp" hidden>'
-      + '<b>' + html(T('Test sonuç maillerini ve rapor PDF\'lerini buraya bırakın', 'Drop test result e-mails and report PDFs here')) + '</b>'
+      + '<b>' + html(T('Test raporları ve Lab Dip / ROS maillerini buraya bırakın', 'Drop test reports and Lab Dip / ROS e-mails here')) + '</b>'
       + '<small>' + html(T('.msg, .eml, .pdf ve rapor fotoğrafı · Outlook\'tan sürükleme dosya üretmezse maili .msg olarak kaydedip bırakın · ya da dosya seçmek için tıklayın', '.msg, .eml, .pdf and report photos · If dragging from Outlook gives no file, save the mail as .msg and drop it · or click to choose files')) + '</small></label>';
     if (ui.busy) {
       body.innerHTML = drop + '<p class="trMuted" role="status">' + html(T('Dosyalar okunuyor…', 'Reading files…')) + '</p>';
@@ -583,7 +612,12 @@
         const numbers = new Set(String(previous.reportNumber || '').split(/[,;\s]+/).filter(Boolean));
         reports.forEach(function (r) { if (step.superseded.indexOf(r.talepNo) < 0) numbers.add(r.talepNo); });
         const meta = { attachments: [...attachments.values()], reportNumber: [...numbers].join(', ').slice(0, 300) };
+        if (previous.note) meta.note = previous.note;
         const userOwned = group.plan.userOwned && !entry.override;
+        // Lab Dip: bileşen/renk detaylarını ayrı kolonlar açmadan bu adımın
+        // tek not hücresinde tut. Elle yazılmış kullanıcı notunu ezme.
+        const labDipText = E().labDipSummary(reports, lang());
+        if (labDipText && !userOwned) meta.note = labDipText;
         if (userOwned) { assistant().setChecklistAnswer(analysis, entry.itemId, group.plan.current, meta); kept += 1; }
         else { assistant().setChecklistAnswer(analysis, entry.itemId, step.state || group.plan.current || 'open', Object.assign(meta, { source: 'test_report' })); written += 1; }
       });
