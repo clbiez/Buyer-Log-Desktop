@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
   "version": "7.0.264",
-  "commit_sha": "5090e41624c8a84f0a14a3184db955b0c7c452ea",
+  "commit_sha": "93ca29f91ea6b9f563a530edcc2cef405cb225cb",
   "release_notes": "Buyer Log 7.0.264 TEST: Yeni sürüm ilk açılışta yavaş başlasa da health-timeout ile geri alınmıyor; sağlık onayı sunucu yanıt verdiğinde veriliyor. 7.0.263 OAB giriş düzeltmesini (GetReportData doğrulaması) içerir. PR #441, #445."
 }
