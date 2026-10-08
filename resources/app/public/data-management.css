@@ -408,11 +408,24 @@
   .dmModuleName { flex: none; }
 }
 
+/* Alan eşlemesi başlığının tamamı çalışır; yeni bir kart/tema yaratılmaz. */
+.dmMappingLink { display: inline-flex; align-items: center; padding: 0; font: inherit; font-size: 11px; font-weight: 600; color: var(--ink2); background: transparent; border: 0; border-bottom: 1px dashed var(--ink2); cursor: pointer; }
+.dmMappingLink:hover { color: var(--acc); border-color: var(--acc); }
+.dmMappingLink:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
 /* --- Alan eşleme düzenleyicisi --- */
 .dmMappingEditor { border: 1px solid var(--acc); background: var(--card); display: flex; flex-direction: column; gap: 9px; padding: 11px; }
 .dmmList { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); display: flex; flex-direction: column; }
 .dmmRow { display: grid; grid-template-columns: 18px minmax(130px, 1fr) minmax(150px, 1fr) minmax(200px, 1.6fr) 28px; gap: 8px; align-items: baseline; padding: 6px 9px; border-bottom: 1px solid var(--line); font-size: 12px; }
 .dmmRow:last-child { border-bottom: none; }
+.dmmRow[hidden] { display: none; }
+.dmmRow.isChanged { border-left: 3px solid var(--acc); padding-left: 6px; }
+.dmmToolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.dmmToolbar input[type="search"] { min-width: 180px; flex: 1 1 220px; height: var(--ctl-h); border: 1px solid var(--line2); background: var(--card); color: var(--ink); padding: 0 9px; border-radius: 0; }
+.dmmToolbar input[type="search"]:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+.dmmSummary { font-size: 11px; color: var(--muted); }
+.dmmList { max-height: 430px; overflow-y: auto; }
+
 .dmmRow.isBlocking { background: color-mix(in srgb, var(--red) 7%, transparent); }
 .dmmMark { font-size: 11px; }
 .dmmField { font-weight: 600; color: var(--ink); }
