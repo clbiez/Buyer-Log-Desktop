@@ -43,8 +43,12 @@ function imageInstruction(format, english) {
     ? 'MODEL IMAGES: if the Buyer Log context (CSV) has a "BL Image" column, each value (e.g. KOL-3) is the key of that record\'s real product image held by Buyer Log. You cannot see the images; never write "image not available" for a record that has a key. '
     : 'MODEL GÖRSELLERİ: Buyer Log bağlamında (CSV) "BL Image" sütunu varsa her değer (ör. KOL-3) o kaydın Buyer Log’daki gerçek ürün görselinin anahtarıdır. Görselleri göremezsin; anahtarı olan kayıt için asla "görsel yok" yazma. ';
   const how = {
-    html: english ? 'Place it with <img class="bl-model-img" data-bl-image="KOL-3" alt="model name"> (no src); Buyer Log inserts the real picture. Model cards: <div class="bl-gallery"><div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>…</h3>…</div></div>.' : 'Görseli <img class="bl-model-img" data-bl-image="KOL-3" alt="model adı"> ile koy (src yazma); gerçek resmi Buyer Log ekler. Model kartları: <div class="bl-gallery"><div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>…</h3>…</div></div>.',
-    pptx: english ? 'For model visuals use the "gallery" layout: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (put all models of a group in ONE gallery slide, up to 60 items; Buyer Log places them on the user’s layout grid and continues on extra slides). A "bullets" slide may also take "image":"KOL-3".' : 'Model görselleri için "gallery" düzenini kullan: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (bir grubun tüm modellerini TEK gallery slaytına koy, en fazla 60 öğe; Buyer Log onları kullanıcının yerleşim ızgarasına dizer ve devam slaytlarına böler). "bullets" slaytı da "image":"KOL-3" alabilir.',
+    html: english
+      ? 'Place it with <img class="bl-model-img" data-bl-image="KOL-3" alt="model name"> (no src); Buyer Log inserts the real picture. MODEL CATALOGUE: put model cards one after another in <div class="bl-gallery" data-bl-group="group value" data-bl-subgroup="subgroup value"> blocks (one block per group/subgroup, consecutive, no text between them). Card: <div class="bl-card ok|warn|risk"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>model</h3><p>one value per line, complete</p>…<span class="bl-badge ok|warn|risk|info">status</span></div>. Write every value in full (never shorten fabric or other details). Buyer Log lays the cards out on pages, writes the group headings and continues on extra pages; do not write group headings, page numbers or notes about the layout yourself.'
+      : 'Görseli <img class="bl-model-img" data-bl-image="KOL-3" alt="model adı"> ile koy (src yazma); gerçek resmi Buyer Log ekler. MODEL KATALOĞU: model kartlarını <div class="bl-gallery" data-bl-group="grup değeri" data-bl-subgroup="alt grup değeri"> bloklarına art arda koy (grup/alt grup başına bir blok, ardışık, aralarında metin yok). Kart: <div class="bl-card ok|warn|risk"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>model</h3><p>her satırda bir değer, tam</p>…<span class="bl-badge ok|warn|risk|info">durum</span></div>. Her değeri tam yaz (kumaş ve diğer ayrıntıları asla kısaltma). Kartları sayfalara Buyer Log yerleştirir, grup başlıklarını yazar ve devam sayfalarını açar; grup başlığı, sayfa numarası ya da yerleşimle ilgili not yazma.',
+    pptx: english
+      ? 'For model visuals use ONE "gallery" slide with all models: {"layout":"gallery","title":"…","items":[{"title":"model","lines":["one value per line, complete"],"badge":"status","tone":"ok|warn|risk|info","image":"KOL-3","group":"group value","subgroup":"subgroup value"}]} (up to 200 items). Write every value in full (never shorten fabric or other details). Buyer Log lays the cards out by group on the user’s page design and continues on extra slides. A "bullets" slide may also take "image":"KOL-3".'
+      : 'Model görselleri için tüm modelleri içeren TEK "gallery" slaytı kullan: {"layout":"gallery","title":"…","items":[{"title":"model","lines":["her satırda bir değer, tam"],"badge":"durum","tone":"ok|warn|risk|info","image":"KOL-3","group":"grup değeri","subgroup":"alt grup değeri"}]} (en fazla 200 öğe). Her değeri tam yaz (kumaş ve diğer ayrıntıları asla kısaltma). Kartları gruplarına göre kullanıcının sayfa tasarımına Buyer Log yerleştirir ve devam slaytlarını açar. "bullets" slaytı da "image":"KOL-3" alabilir.',
     xlsx: english ? 'To show pictures add a column {"header":"Image","type":"image"} whose cells hold the key (e.g. "KOL-3"); Buyer Log embeds the picture in the cell.' : 'Resim göstermek için {"header":"Görsel","type":"image"} sütunu ekle; hücrelerine anahtarı (ör. "KOL-3") yaz, Buyer Log resmi hücreye gömer.',
   };
   return head + (format === 'pptx' ? how.pptx : format === 'xlsx' ? how.xlsx : how.html);
@@ -305,11 +309,8 @@ function normalizeSlide(slide, index, english, warnings) {
   }
   if (layout === 'gallery') {
     base.bullets = [];
-    base.items = asArray(slide.items || slide.cards || slide.models).filter(isObject).slice(0, GALLERY_ITEMS).map(item => ({
-      title: clean(item.title || item.name || item.model, 60), subtitle: clean(item.subtitle, 80), note: clean(item.note || item.text, 140), image: imageToken(item.image), tone: tone(item.tone),
-      // Katalog gruplaması (Yerleşim › Gruplar): kartın grubu ve alt grubu.
-      group: clean(item.group, 120), subgroup: clean(item.subgroup, 120),
-    })).filter(item => item.title || item.image);
+    // Kart: model adı, bilgi satırları (kısaltılmaz), durum etiketi, grup / alt grup.
+    base.items = asArray(slide.items || slide.cards || slide.models).filter(isObject).slice(0, GALLERY_ITEMS).map(item => BLOutputLayout.normalizeItem(item)).filter(item => item.title || item.image);
     base.catalog = BLOutputLayout.normalizeCatalog(slide.catalog);
     if (!base.items.length) return { error: english ? `Slide ${index + 1} (gallery) has no items.` : `${index + 1}. slayt (gallery) öğe içermiyor.` };
     return { slide: base };
@@ -322,7 +323,25 @@ function normalizeSlide(slide, index, english, warnings) {
   return { slide: base };
 }
 
-function normalizePresentation(raw, { lang = 'tr', date } = {}) {
+/* LCW AI modelleri grup başına ayrı gallery slaytına yazdıysa ardışık
+   (grupsuz) gallery slaytları tek katalogda birleşir; slayt başlığı grup olur. */
+function mergeGallerySlides(slides, title) {
+  const out = [];
+  for (const slide of slides) {
+    const prev = out[out.length - 1];
+    const plain = s => s && s.layout === 'gallery' && !s.items.some(item => item.group);
+    if (plain(slide) && (plain(prev) || (prev && prev.mergedGallery))) {
+      if (!prev.mergedGallery) out[out.length - 1] = { ...prev, title, mergedGallery: true, items: prev.items.map(item => ({ ...item, group: prev.title })) };
+      const merged = out[out.length - 1];
+      merged.items = [...merged.items, ...slide.items.map(item => ({ ...item, group: slide.title }))].slice(0, GALLERY_ITEMS);
+      continue;
+    }
+    out.push(slide);
+  }
+  return out.map(slide => { if (!slide.mergedGallery) return slide; const { mergedGallery, ...rest } = slide; return rest; });
+}
+
+function normalizePresentation(raw, { lang = 'tr', date, mergeGalleries = false } = {}) {
   const english = lang === 'en';
   const errors = [];
   const warnings = [];
@@ -336,6 +355,7 @@ function normalizePresentation(raw, { lang = 'tr', date } = {}) {
     if (result.error) errors.push(result.error); else slides.push(result.slide);
   });
   const title = clean(raw.title, LIMITS.titleChars) || (slides[0] && slides[0].title) || (english ? 'LCW AI Presentation' : 'LCW AI Sunumu');
+  if (mergeGalleries) slides.splice(0, slides.length, ...mergeGallerySlides(slides, english ? 'Models' : 'Modeller'));
   if (slides.length && slides[0].layout !== 'title') slides.unshift({ layout: 'title', title, subtitle: clean(raw.subtitle, 240), bullets: [], callout: null });
   // Tek tük bozuk slayt sunumu düşürmez; yarıdan fazlası bozuksa onarım istenir.
   const fatal = !slides.length || errors.length > Math.max(1, Math.floor(list.length / 2));
@@ -392,7 +412,7 @@ function parseOutput(format, text, options = {}) {
   const parsed = parseJson(text);
   const english = options.lang === 'en';
   if (!parsed.value) return { ok: false, errors: [english ? 'The answer is not valid JSON.' : 'Cevap geçerli bir JSON değil.'], warnings: [], explanation: parsed.explanation };
-  const result = format === 'xlsx' ? normalizeWorkbook(parsed.value, options) : normalizePresentation(parsed.value, options);
+  const result = format === 'xlsx' ? normalizeWorkbook(parsed.value, options) : normalizePresentation(parsed.value, { ...options, mergeGalleries: true });
   return { ...result, explanation: parsed.explanation };
 }
 

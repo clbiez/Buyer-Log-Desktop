@@ -12,6 +12,39 @@
   },
   "changes": [
     {
+      "id": "lcwai-output-full-cards",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Model kartlarında bilgiler eksiksiz, sayfalar düzenli",
+        "en": "Model cards keep every detail, pages stay tidy"
+      },
+      "path": {
+        "tr": "LCW AI › Çıktı Düzenleyici › Yerleşim",
+        "en": "LCW AI › Output Editor › Layout"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-output-full-cards.png",
+        "alt": {
+          "tr": "Model adı, renk ve kod satırları, PLM ve adet satırı ile durum etiketi tam görünen katalog kartları — demo veriyle Buyer Log ekranı",
+          "en": "Catalogue cards showing the model name, colour and code lines, PLM and quantity line and the status label in full — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Kartın tüm satırları ve durum etiketi korunur",
+          "en": "Every line of the card and the status label are kept"
+        }
+      },
+      "body": {
+        "tr": "PDF/PowerPoint çıktılarında model kartlarının bazı satırları (PLM, adet, durum) kayboluyor, kumaş gibi uzun bilgiler kısalıyordu; kartlar sayfa sonunda kesiliyor, yazılar sıkışıyor ve az modelli bölümler neredeyse boş sayfalar oluşturuyordu. Artık kartın tüm satırları ve durum etiketi tam taşınır, yazı karta sığacak şekilde ayarlanır (gerekirse önce görsel küçülür), kartlar sayfa arasında bölünmez ve boş sayfa oluşmaz.",
+        "en": "In PDF/PowerPoint outputs some lines of model cards (PLM, quantity, status) were lost and long details such as fabric were shortened; cards were cut at page breaks, text was squeezed and sections with few models produced almost empty pages. Now every line of the card and its status label are carried in full, text is sized to fit the card (the image shrinks first if needed), cards are never split across pages and no empty pages are produced."
+      }
+    },
+    {
       "id": "lcwai-output-real-preview",
       "type": "fix",
       "module": {
@@ -31,12 +64,12 @@
         "capture": "post-change",
         "src": "lcwai-output-real-preview.png",
         "alt": {
-          "tr": "PDF katalog sayfasının gerçek önizlemesi ve Görünüm sekmesinde sayfa başına 4 × 2 model seçimi — demo veriyle Buyer Log ekranı",
-          "en": "Real preview of a PDF catalogue page and the 4 × 2 models-per-page choice in the Look tab — Buyer Log screen with demo data"
+          "tr": "Yerleşim adımında PDF katalog sayfasının gerçek önizlemesi ve “Dosyayla aynı” işareti — demo veriyle Buyer Log ekranı",
+          "en": "Real preview of a PDF catalogue page in the Layout step with the “Same as the file” mark — Buyer Log screen with demo data"
         },
         "caption": {
-          "tr": "Sayfa başına model sayısı değişince önizleme dosyadaki sayfayı gösteriyor",
-          "en": "When models per page change, the preview shows the page as it will be in the file"
+          "tr": "Önizleme, dosyayı oluşturan çizimin aynısıdır",
+          "en": "The preview is the same drawing that creates the file"
         }
       },
       "body": {
@@ -64,17 +97,17 @@
         "capture": "post-change",
         "src": "lcwai-output-catalog-groups.png",
         "alt": {
-          "tr": "Ürün grubu ve kumaşa göre gruplanmış model ağacı ile ilgili katalog slaytı — demo veriyle Buyer Log ekranı",
-          "en": "Model tree grouped by product group and fabric next to the matching catalogue slide — Buyer Log screen with demo data"
+          "tr": "Kumaş ve ürün tanımına göre gruplanmış model ağacı ve iki kumaş grubunu ara başlıklarla aynı sayfada gösteren PDF katalog sayfası — demo veriyle Buyer Log ekranı",
+          "en": "Model tree grouped by fabric and product definition next to a PDF catalogue page showing two fabric groups on one page under section strips — Buyer Log screen with demo data"
         },
         "caption": {
-          "tr": "Alt gruba tıklayınca o grubun katalog sayfası açılır",
-          "en": "Clicking a subgroup opens that group’s catalogue page"
+          "tr": "Küçük gruplar aynı sayfada; kumaş tanımı kısaltılmadan grup başlığında",
+          "en": "Small groups share a page; the fabric description appears in full as the group heading"
         }
       },
       "body": {
-        "tr": "Gruplar sekmesinde bir sütun (ör. Ürün grubu) ve isterseniz alt grup (ör. Kumaş) seçin; modeller otomatik gruplanır ve her alt grup kendi katalog sayfasına yerleşir. Modelleri sürükleyip başka gruba bırakabilir, grupları yeniden adlandırabilir, sıralayabilir ve yeni grup açabilirsiniz. Gruplama PowerPoint ve PDF çıktısında aynıdır.",
-        "en": "In the Groups tab, pick a column (e.g. Product group) and optionally a subgroup (e.g. Fabric); models are grouped automatically and each subgroup gets its own catalogue page. You can drag models onto another group, rename and reorder groups and add new ones. Grouping works the same in PowerPoint and PDF outputs."
+        "tr": "Gruplar sekmesinde bir sütun (ör. Kumaş) ve isterseniz alt grup (ör. Ürün tanımı) seçin; modeller otomatik gruplanır. LCW AI modelleri başlıklarla kendisi grupladıysa bu gruplama tanınır ve verideki sütunla eşleşiyorsa tam, temiz grup adları kullanılır. “Yeni sayfa” seçeneğiyle küçük gruplar aynı sayfada ara başlıklarla devam eder, boş sayfa oluşmaz. Modelleri sürükleyip başka gruba bırakabilir, grupları yeniden adlandırabilir ve sıralayabilirsiniz.",
+        "en": "In the Groups tab, pick a column (e.g. Fabric) and optionally a subgroup (e.g. Product definition); models are grouped automatically. If LCW AI already grouped the models under headings, that grouping is recognised and, when it matches a data column, full and clean group names are used. With the “New page” option small groups continue on the same page under section strips, so no empty pages are produced. You can drag models onto another group and rename or reorder groups."
       }
     },
     {
@@ -97,12 +130,12 @@
         "capture": "post-change",
         "src": "lcwai-output-page-blocks.png",
         "alt": {
-          "tr": "Seçili grup başlığı kutusu, araç çubuğu ve eklenen metin kutusu olan katalog slaytı — demo veriyle Buyer Log ekranı",
-          "en": "Catalogue slide with the selected group heading box, its toolbar and an added text box — Buyer Log screen with demo data"
+          "tr": "Seçili grup başlığı kutusu, araç çubuğu ve alta eklenmiş metin kutusu olan PDF katalog sayfası — demo veriyle Buyer Log ekranı",
+          "en": "PDF catalogue page with the selected group heading box, its toolbar and a text box added at the bottom — Buyer Log screen with demo data"
         },
         "caption": {
-          "tr": "Grup başlığı büyütüldü, zemin verildi; alta metin kutusu eklendi",
-          "en": "Group heading enlarged with a background; a text box added at the bottom"
+          "tr": "Grup başlığı seçili; alta her sayfada görünen metin kutusu eklendi",
+          "en": "Group heading selected; a text box shown on every page added at the bottom"
         }
       },
       "body": {

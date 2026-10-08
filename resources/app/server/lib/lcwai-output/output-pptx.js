@@ -206,19 +206,30 @@ function paginateTableSlide(slide) {
     return { ...slide, title: `${slide.title} (${index + 1}/${pages.length})`, bullets: last ? slide.bullets : [], callout: last ? slide.callout : null, table: { ...table, rows, fontSize, omitted: last ? table.omitted : 0 } };
   });
 }
-/* Galeri: Yerleşim'deki sütun × satır kadar model bir slayta; fazlası
-   aynı başlıklı devam slaytlarına. */
-/* Galeri → katalog slaytları: kartlar gruba / alt gruba göre ayrılır, her
-   alt grup kendi slaytında başlar, model alanına sığmayan kartlar devam
-   slaytına geçer. Slayt bloklarla (başlık, grup, alt başlık, model alanı,
-   metin) çizilir; düzen kullanıcının sayfa tasarımıdır (LAYOUT.page). */
+/* Galeri → katalog slaytları: kartlar gruba / alt gruba göre sayfalanır
+   (catalog.pageBreak), sayfada birden çok bölüm varsa ara başlık şeritleri
+   çizilir, model alanına sığmayan kartlar devam slaytına geçer. Slayt
+   bloklarla (başlık, grup, alt başlık, model alanı, metin) çizilir; düzen
+   kullanıcının sayfa tasarımıdır (LAYOUT.page). PDF ile aynı hesap. */
+const OFFICE_EM = BLOutputLayout.CHAR_EM_OFFICE;
+function catalogGeometry() {
+  const area = BLOutputLayout.pptxPageArea(LAYOUT);
+  const models = LAYOUT.page.blocks.find(block => block.kind === 'models');
+  const rect = BLOutputLayout.blockRect(area, LAYOUT.page, models, LAYOUT.gap);
+  return { area, rect, strip: BLOutputLayout.stripMetrics(rect, LAYOUT, { charEm: OFFICE_EM }) };
+}
 function catalogSlides(slide, sourceIndex) {
-  const pages = BLOutputLayout.catalogPages(slide.items || [], slide.catalog, LAYOUT);
+  const geometry = catalogGeometry();
+  const pages = BLOutputLayout.catalogPages(slide.items || [], slide.catalog, LAYOUT, { stripUnits: geometry.strip.units });
   return pages.map((page, pageIndex) => {
     const suffix = page.parts > 1 ? ` (${page.part}/${page.parts})` : '';
     const labels = page.subgroup ? { title: slide.title, group: page.group, subgroup: page.subgroup + suffix }
       : page.group ? { title: slide.title, group: page.group + suffix, subgroup: '' } : { title: slide.title + suffix, group: '', subgroup: '' };
-    return { ...slide, layout: 'catalogPage', title: labels.title, labels, items: page.entries.map(entry => entry.item), catalogPage: { source: sourceIndex, page: pageIndex, group: page.group, subgroup: page.subgroup, part: page.part, parts: page.parts } };
+    const items = page.entries.map(entry => entry.item);
+    const slots = BLOutputLayout.catalogSlots(page, geometry.rect, LAYOUT, geometry.strip.height);
+    const fits = BLOutputLayout.cardFit(slots.cell, LAYOUT, items, { charEm: OFFICE_EM }).fits;
+    const sections = page.sections.map(sec => ({ group: sec.group, subgroup: sec.subgroup, count: sec.entries.length }));
+    return { ...slide, layout: 'catalogPage', title: labels.title, labels, items, page, catalogPage: { source: sourceIndex, page: pageIndex, group: page.group, subgroup: page.subgroup, part: page.part, parts: page.parts, sections, fits } };
   });
 }
 function expandSlides(slides, layout) {
@@ -227,53 +238,78 @@ function expandSlides(slides, layout) {
     : slide.layout === 'gallery' ? catalogSlides(slide, index) : [{ ...slide, sourceIndex: index }]));
 }
 
-/* Model kartı (katalog slaytı). */
-function drawCard(s, p, item, cell) {
-  const textSize = LAYOUT.cardTextSize;
-  const x = pt(cell.x), y = pt(cell.y), cardW = pt(cell.w), cardH = pt(cell.h), imgH = pt(cell.imgH);
-  const inset = Math.min(pt(8), cardW * 0.06);
+/* Model kartı (katalog slaytı): görsel üstte kalan alanı doldurur; model
+   adı, bilgi satırları (tam) ve durum etiketi altta. Ölçü cardFit'ten. */
+function drawCard(s, p, item, cell, fit, lang) {
+  const c = BLOutputLayout.cardContent(item, LAYOUT);
+  const size = fit.size;
+  const x = pt(cell.x), y = pt(cell.y), cardW = pt(cell.w), cardH = pt(cell.h);
+  const pad = pt(fit.pad);
   s.box({ x, y, w: cardW, h: cardH, fill: p.card, line: { color: p.line }, name: 'Card' });
-  s.box({ x, y, w: cardW, h: pt(4), fill: toneColor(item.tone, p), name: 'Tone' });
-  s.picture({ x: x + inset, y: y + pt(8), w: cardW - inset * 2, h: imgH, token: item.image, label: item.title });
-  let ty = y + pt(8) + imgH + pt(3);
-  const bottom = y + cardH - pt(3);
-  if (LAYOUT.showTitle && item.title && ty < bottom) {
-    const h = Math.min(pt(textSize * 1.45), bottom - ty);
-    s.text(x + inset, ty, cardW - inset * 2, h, item.title, { size: textSize, bold: true, color: p.logo });
-    ty += h;
+  s.box({ x, y, w: pt(3), h: cardH, fill: toneColor(item.tone, p), name: 'Tone' });
+  const imgH = pt(Math.max(8, fit.imageH));
+  s.picture({ x: x + pad, y: y + pad, w: cardW - pad * 2, h: imgH, token: item.image, label: item.title });
+  let ty = y + pad + imgH + pt(3);
+  const paragraphs = [];
+  if (c.title) paragraphs.push(paragraph(c.title, { size: Math.round(size * 1.15 * 2) / 2, bold: true, color: p.logo }, p, lang, { spaceAfter: 1 }));
+  for (const line of c.lines) paragraphs.push(paragraph(line, { size, color: p.ink2 }, p, lang, { spaceAfter: 0 }));
+  const badgeH = c.badge ? pt(size * 1.18 + size * 0.6) : 0;
+  const textH = Math.max(pt(4), pt(fit.textH) - (c.badge ? badgeH + pt(3) : 0));
+  if (paragraphs.length) { s.box({ x: x + pad, y: ty, w: cardW - pad * 2, h: textH, paragraphs, name: 'CardText', inset: 0 }); ty += textH; }
+  if (c.badge) {
+    const tone = BLOutputLayout.TONES.includes(c.badge.tone) ? c.badge.tone : 'info';
+    const color = tone === 'info' ? p.ink2 : p[tone];
+    const bg = tone === 'info' ? p.headBg : p[`${tone}Bg`];
+    const bw = Math.min(cardW - pad * 2, pt(c.badge.text.length * size * 0.58 + 10));
+    s.box({ x: x + pad, y: ty + pt(2), w: bw, h: badgeH, fill: bg, line: { color }, anchor: 'ctr', inset: 3, name: 'Badge', paragraphs: [paragraph(c.badge.text, { size: Math.max(6, size - 0.5), bold: true, color }, p, lang, { spaceAfter: 0 })] });
   }
-  const meta = [LAYOUT.showSubtitle ? item.subtitle : '', LAYOUT.showNote ? item.note : ''].filter(Boolean).join(' · ');
-  if (meta && ty < bottom - pt(6)) s.text(x + inset, ty, cardW - inset * 2, bottom - ty, meta, { size: Math.max(7, textSize - 2.5), color: p.ink2 });
+}
+/* Ara başlık şeridi (sayfada birden çok bölüm varken). */
+function drawStrip(s, p, strip, size, lang, english) {
+  const x = pt(strip.x), y = pt(strip.y), w = pt(strip.w), h = pt(strip.h);
+  const group = strip.kind === 'group';
+  const suffix = !group && strip.parts > 1 ? ` (${strip.part}/${strip.parts})` : '';
+  s.box({ x, y, w, h, fill: group ? p.logo : p.headBg, name: group ? 'GroupStrip' : 'SubgroupStrip' });
+  if (!group) s.box({ x, y, w: pt(3), h, fill: p.logo, name: 'StripBar' });
+  s.box({ x: x + pt(8), y, w: w - pt(12), h, anchor: 'ctr', inset: 0, name: 'StripText', paragraphs: [paragraph((strip.text || (english ? 'Other' : 'Diğer')) + suffix, { size: group ? size * 1.1 : size, bold: true, color: group ? 'FFFFFF' : p.logo }, p, lang, { spaceAfter: 0 })] });
 }
 /* Katalog slaytı: kullanıcının sayfa tasarımındaki bloklar 12 sütunlu ızgaraya. */
 function renderCatalogSlide(s, slide, index, total, deck, p, lang) {
   const page = LAYOUT.page;
-  const area = BLOutputLayout.pptxPageArea(LAYOUT);
+  const geometry = catalogGeometry();
+  const area = geometry.area;
+  const english = String(lang).startsWith('en');
   const align = block => ({ center: 'ctr', right: 'r' }[block.align] || 'l');
-  for (const block of page.blocks) {
+  // Başlık yazıları kutuya sığacak boyuta iner (PDF ile aynı tahmin).
+  const fitSize = (block, text, r, want, inset) => BLOutputLayout.fitText(text, Math.max(10, r.w - inset), Math.max(8, r.h - 4), block.size || want, { min: 7, lineHeight: 1.2, charEm: block.kind === 'text' ? OFFICE_EM.body : OFFICE_EM.head }).size;
+  for (const block of BLOutputLayout.pageBlocks(page, slide.labels)) {
     const r = BLOutputLayout.blockRect(area, page, block, LAYOUT.gap);
     const x = pt(r.x), y = pt(r.y), w = pt(r.w), h = pt(r.h);
     if (block.kind === 'models') {
-      BLOutputLayout.cardCells(r, LAYOUT, slide.items.length).forEach((cell, i) => drawCard(s, p, slide.items[i], cell));
+      const slots = BLOutputLayout.catalogSlots(slide.page, { x: r.x, y: r.y, w: r.w, h: geometry.rect.h }, LAYOUT, geometry.strip.height);
+      const fit = BLOutputLayout.cardFit(slots.cell, LAYOUT, slide.items, { charEm: OFFICE_EM });
+      for (const strip of slots.strips) drawStrip(s, p, strip, geometry.strip.size, lang, english);
+      for (const card of slots.cards) drawCard(s, p, card.item, card, fit, lang);
       continue;
     }
     const text = block.kind === 'text' ? block.text : slide.labels[block.kind];
     if (!text) continue;
     if (block.kind === 'title') {
-      const size = block.size || (text.length > 60 ? Math.round(LAYOUT.titleSize * 0.8) : LAYOUT.titleSize);
+      const size = fitSize(block, text, r, LAYOUT.titleSize, block.fill ? 20 : 0);
       if (block.fill) { s.box({ x, y, w, h, fill: p.headBg, name: 'HeadBand' }); s.box({ x, y: y + h - pt(3), w, h: pt(3), fill: p.logo, name: 'Rule' }); }
-      s.text(x + (block.fill ? pt(10) : 0), y, w - (block.fill ? pt(20) : 0), h - (block.fill ? pt(3) : 0), text, { size, bold: true, color: p.logo }, { anchor: block.fill ? 'ctr' : 'b', align: align(block) });
+      s.text(x + (block.fill ? pt(10) : 0), y, w - (block.fill ? pt(20) : 0), h - (block.fill ? pt(3) : 0), text, { size, bold: true, color: p.logo }, { anchor: block.fill ? 'ctr' : 'b', align: align(block), inset: 0 });
     } else if (block.kind === 'group') {
-      const size = block.size || Math.round(LAYOUT.titleSize * 0.72);
+      const size = fitSize(block, text, r, Math.round(LAYOUT.titleSize * 0.72), 16);
       if (block.fill) s.box({ x, y, w, h, fill: p.headBg, name: 'GroupBand' });
       s.box({ x, y: y + pt(2), w: pt(4), h: h - pt(4), fill: p.logo, name: 'GroupBar' });
-      s.text(x + pt(12), y, w - pt(12), h, text, { size, bold: true, color: p.logo }, { anchor: 'ctr', align: align(block) });
+      s.text(x + pt(12), y, w - pt(12), h, text, { size, bold: true, color: p.logo }, { anchor: 'ctr', align: align(block), inset: 0 });
     } else if (block.kind === 'subgroup') {
-      const size = block.size || Math.round(LAYOUT.titleSize * 0.55);
+      const size = fitSize(block, text, r, Math.round(LAYOUT.titleSize * 0.55), block.fill ? 16 : 0);
       if (block.fill) s.box({ x, y, w, h, fill: p.headBg, name: 'SubgroupBand' });
-      s.text(x + (block.fill ? pt(8) : 0), y, w - (block.fill ? pt(16) : 0), h, text, { size, color: p.headInk }, { anchor: 'ctr', align: align(block) });
+      s.text(x + (block.fill ? pt(8) : 0), y, w - (block.fill ? pt(16) : 0), h, text, { size, bold: true, color: p.headInk }, { anchor: 'ctr', align: align(block), inset: 0 });
     } else {
-      s.box({ x, y, w, h, paragraphs: String(text).split('\n').map(line => paragraph(line, { size: block.size || Math.max(9, LAYOUT.bodySize - 6), color: p.ink2 }, p, lang, { align: align(block), spaceAfter: 2 })), name: 'Text', inset: 2 });
+      const size = fitSize(block, text, r, Math.max(9, LAYOUT.bodySize - 6), 4);
+      s.box({ x, y, w, h, paragraphs: String(text).split('\n').map(line => paragraph(line, { size, color: p.ink2 }, p, lang, { align: align(block), spaceAfter: 2 })), name: 'Text', inset: 2 });
     }
   }
   s.text(MARGIN, H - pt(30), W / 2, pt(18), `Buyer Log · LCW AI${deck.title ? ` · ${deck.title}` : ''}`.slice(0, 110), { size: 9, color: p.muted });

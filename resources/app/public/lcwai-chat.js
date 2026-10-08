@@ -100,7 +100,7 @@
     if (images && columns[0] === IMAGE_COLUMN) {
       for (const row of rows) {
         if (!Array.isArray(row) || !row[0] || attributes[row[0]]) continue;
-        attributes[row[0]] = Object.fromEntries(columns.slice(1, 61).map((name, index) => [name, String(row[index + 1] == null ? '' : row[index + 1]).slice(0, 120)]));
+        attributes[row[0]] = Object.fromEntries(columns.slice(1, 61).map((name, index) => [name, String(row[index + 1] == null ? '' : row[index + 1]).slice(0, 400)]));
       }
     }
     return {

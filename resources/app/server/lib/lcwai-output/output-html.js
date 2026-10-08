@@ -122,6 +122,12 @@ function sanitizeAttributes(tag, raw) {
       if (tag === 'div' && /^\d{1,3}$/.test(value)) out.push(` data-bl-catalog="${value}"`);
       continue;
     }
+    // Model kataloğu grubu (LCW AI'ın galeriye yazdığı grup / alt grup): yalnız <div>, düz metin.
+    if (name === 'data-bl-group' || name === 'data-bl-subgroup') {
+      const text = String(value).replace(/&quot;/gi, '"').replace(/&#39;|&apos;/gi, "'").replace(/&lt;/gi, '<').replace(/&gt;/gi, '>').replace(/&amp;/gi, '&');
+      if (tag === 'div') out.push(` ${name}="${esc(text.replace(/[\u0000-\u001f]/g, ' ').slice(0, 160))}"`);
+      continue;
+    }
     if (/^on/.test(name) || !ALLOWED_ATTRS.has(name)) continue;
     const decoded = value.replace(/&#x([0-9a-f]+);?/gi, (_, hex) => String.fromCharCode(parseInt(hex, 16))).replace(/&#(\d+);?/g, (_, dec) => String.fromCharCode(Number(dec))).replace(/&colon;/gi, ':').replace(/&tab;|&newline;/gi, '');
     let safe = decoded;

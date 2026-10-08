@@ -31,7 +31,7 @@
   const FORMAT_NAME = { pdf: 'PDF', pptx: 'PowerPoint', xlsx: 'Excel', html: 'HTML' };
   const FORMAT_ICON = { pdf: 'PDF', pptx: 'PPT', xlsx: 'XLSX', html: 'HTML' };
   // Sunucu sınırlarıyla aynı (output-contracts LIMITS); aşan kısım istemcide engellenir.
-  const LIMITS = { slides: 40, bullets: 8, kpis: 6, tableCols: 8, tableRows: 60, chartCategories: 12, chartSeries: 3, gallery: 6, sheets: 10, sheetCols: 40, sheetRows: 5000, sheetKpis: 20 };
+  const LIMITS = { slides: 40, bullets: 8, kpis: 6, tableCols: 8, tableRows: 60, chartCategories: 12, chartSeries: 3, gallery: 200, sheets: 10, sheetCols: 40, sheetRows: 5000, sheetKpis: 20 };
   const PAGE_ROWS = 100;
 
   const LAYOUTS = () => [
@@ -370,8 +370,8 @@
     const rows = items.map((item, index) => `<div class="lcwaiEdKpi is-gallery">
         ${input(`${base}.items.${index}.image`, item.image, { placeholder: L('Görsel (ör. KOL-3)', 'Image (e.g. KOL-3)') })}
         ${input(`${base}.items.${index}.title`, item.title, { placeholder: L('Model / başlık', 'Model / title') })}
-        ${input(`${base}.items.${index}.subtitle`, item.subtitle, { placeholder: L('Alt başlık', 'Subtitle') })}
-        ${input(`${base}.items.${index}.note`, item.note, { placeholder: L('Not', 'Note') })}
+        ${area(`${base}.items.${index}.lines`, (item.lines || [item.subtitle, item.note].filter(Boolean)).join('\n'), { kind: 'lines', placeholder: L('Bilgi satırları (her satır ayrı)', 'Detail lines (one per line)') })}
+        ${input(`${base}.items.${index}.badge`, item.badge && typeof item.badge === 'object' ? item.badge.text : item.badge || '', { placeholder: L('Durum etiketi', 'Status label') })}
         ${select(`${base}.items.${index}.tone`, TONES(), item.tone || 'info')}
         <button type="button" class="lcwaiEdIconBtn" data-list-del="${esc(base)}.items" data-index="${index}" aria-label="${esc(L('Sil', 'Delete'))}" title="${esc(L('Sil', 'Delete'))}">×</button></div>`).join('');
     return `<div class="lcwaiEdBlock"><div class="lcwaiEdBlockHead"><b>${esc(L('Galeri kartları', 'Gallery cards'))}</b><small>${esc(`${items.length}/${LIMITS.gallery}`)}</small></div>${rows}
@@ -727,7 +727,7 @@
       + slider('tableSize', L('Tablo yazı boyutu', 'Table text size'))
       + slider('margin', L('Kenar boşluğu', 'Margin'))
       + (gallery ? slider('gap', L('Bloklar ve kartlar arası boşluk', 'Gap between blocks and cards')) + slider('imageShare', L('Kartta görselin payı', 'Image share of the card')) + slider('cardTextSize', L('Kart yazı boyutu', 'Card text size'))
-        + `<div class="lcwaiLayFlags"><span>${esc(L('Kartta göster:', 'Show on card:'))}</span>${flag('showTitle', L('Model adı', 'Model name'))}${flag('showSubtitle', L('Alt bilgi', 'Subtitle'))}${flag('showNote', L('Not', 'Note'))}</div>` : '');
+        + `<div class="lcwaiLayFlags"><span>${esc(L('Kartta göster:', 'Show on card:'))}</span>${flag('showTitle', L('Model adı', 'Model name'))}${flag('showLines', L('Bilgi satırları', 'Detail lines'))}${flag('showBadge', L('Durum etiketi', 'Status label'))}</div>` : '');
     return `<section class="lcwaiLayGroup is-first"><h4>${esc(L('Hazır yerleşimler', 'Ready-made layouts'))}</h4>
         <div class="lcwaiLayPresets" role="group">${PRESET_INFO().map(([key, label, hint]) => `<button type="button" class="lcwaiLayPreset${presetActive(key) ? ' is-active' : ''}" data-lay-preset="${key}">${presetThumb(key)}<b>${esc(label)}</b><small>${esc(hint)}</small></button>`).join('')}</div></section>
       ${grid}
@@ -743,7 +743,11 @@
     if (!gallery) return '';
     const obj = gallery.obj;
     const fields = LAY().groupingFields(obj.items, ed.draft.attributes || {});
-    const fieldOptions = current => `<option value="">${esc(L('— Yok —', '— None —'))}</option>${fields.map(field => `<option value="${esc(field.key)}"${field.key === current ? ' selected' : ''}>${esc(field.label)} · ${esc(field.source === 'data' ? L(`veri, ${field.distinct} değer`, `data, ${field.distinct} values`) : L(`kart, ${field.distinct} değer`, `card, ${field.distinct} values`))}</option>`).join('')}`;
+    // Seçili sütun bu katalogda tek değerli olsa da listede görünür.
+    for (const key of [obj.catalog.by, obj.catalog.then]) if (key && !fields.some(field => field.key === key)) fields.push({ key, label: key.slice(2), labels: null, source: key.startsWith('a:') ? 'data' : 'card', distinct: new Set(obj.items.map(item => LAY().fieldValue(item, key, ed.draft.attributes || {})).filter(Boolean)).size });
+    // LCW AI kartları kendisi grupladıysa (başlıklardan) bu gruplama ilk seçenek olarak görünür.
+    const aiGrouped = !obj.catalog.by && obj.items.some(item => item.group);
+    const fieldOptions = (current, top) => `${top && aiGrouped ? `<option value=""${current ? '' : ' selected'}>${esc(L('LCW AI’ın grupları', 'LCW AI’s groups'))}</option><option value="__none__">${esc(L('— Grupsuz —', '— No grouping —'))}</option>` : `<option value="">${esc(L('— Yok —', '— None —'))}</option>`}${fields.map(field => `<option value="${esc(field.key)}"${field.key === current ? ' selected' : ''}>${esc(field.labels ? L(field.labels[0], field.labels[1]) : field.label)} · ${esc(field.source === 'data' ? L(`veri, ${field.distinct} değer`, `data, ${field.distinct} values`) : L(`kart, ${field.distinct} değer`, `card, ${field.distinct} values`))}</option>`).join('')}`;
     const list = galleryList();
     const groups = LAY().groupItems(obj.items, obj.catalog);
     const known = new Set(groups.map(group => group.group));
@@ -751,10 +755,10 @@
     for (const name of obj.catalog.order) if (!known.has(name)) groups.push({ group: name, subgroups: [] });
     const chip = entry => {
       const src = imageOf(entry.item.image);
-      return `<span class="lcwaiGrpChip" draggable="true" data-grp-item="${entry.index}" title="${esc([entry.item.title, entry.item.subtitle].filter(Boolean).join(' · '))}">${src ? `<img src="${esc(src)}" alt="">` : ''}${esc(entry.item.title || entry.item.image || '—')}</span>`;
+      return `<span class="lcwaiGrpChip" draggable="true" data-grp-item="${entry.index}" title="${esc([entry.item.title, ...(entry.item.lines || [])].filter(Boolean).join(' · '))}">${src ? `<img src="${esc(src)}" alt="">` : ''}${esc(entry.item.title || entry.item.image || '—')}</span>`;
     };
     const tree = groups.map((group, gi) => `<div class="lcwaiGrp" data-grp-drop="${grpKey(group.group, '')}">
-        <div class="lcwaiGrpHead" data-grp-name="${esc(group.group)}"><b data-grp-rename="${esc(group.group)}" title="${esc(L('Adı değiştirmek için çift tıklayın', 'Double-click to rename'))}">${esc(group.group || NO_GROUP())}</b><small>${group.subgroups.reduce((sum, sub) => sum + sub.entries.length, 0)}</small>
+        <div class="lcwaiGrpHead" data-grp-name="${esc(group.group)}"><b data-grp-rename="${esc(group.group)}" title="${esc(`${group.group} — ${L('Adı değiştirmek için çift tıklayın', 'Double-click to rename')}`)}">${esc(group.group || NO_GROUP())}</b><small>${group.subgroups.reduce((sum, sub) => sum + sub.entries.length, 0)}</small>
           <span class="lcwaiEdRailOps is-visible"><button type="button" data-grp-move="${esc(group.group)}" data-dir="-1"${gi ? '' : ' disabled'} aria-label="${esc(L('Yukarı taşı', 'Move up'))}">↑</button><button type="button" data-grp-move="${esc(group.group)}" data-dir="1"${gi < groups.length - 1 ? '' : ' disabled'} aria-label="${esc(L('Aşağı taşı', 'Move down'))}">↓</button></span></div>
         ${group.subgroups.map(sub => `<div class="lcwaiGrpSub" data-grp-drop="${grpKey(group.group, sub.subgroup)}">
           ${sub.subgroup || group.subgroups.length > 1 ? `<div class="lcwaiGrpSubHead" data-grp-go="${grpKey(group.group, sub.subgroup)}"><span data-grp-rename-sub="${grpKey(group.group, sub.subgroup)}" title="${esc(L('Adı değiştirmek için çift tıklayın', 'Double-click to rename'))}">${esc(sub.subgroup || L('(alt grupsuz)', '(no subgroup)'))}</span><small>${sub.entries.length}</small></div>` : ''}
@@ -762,9 +766,14 @@
       </div>`).join('');
     return `${list.length > 1 ? `<label class="lcwaiEdField"><span>${esc(L('Katalog', 'Catalogue'))}</span><select data-grp-gallery>${list.map(entry => `<option value="${esc(entry.key)}"${entry.key === gallery.key ? ' selected' : ''}>${esc(entry.label)}</option>`).join('')}</select></label>` : ''}
       <div class="lcwaiEdRow lcwaiGrpPick">
-        <label class="lcwaiEdField"><span>${esc(L('Grupla', 'Group by'))}</span><select data-grp-by>${fieldOptions(obj.catalog.by)}</select></label>
+        <label class="lcwaiEdField"><span>${esc(L('Grupla', 'Group by'))}</span><select data-grp-by>${fieldOptions(obj.catalog.by, true)}</select></label>
         <label class="lcwaiEdField"><span>${esc(L('Alt grup', 'Subgroup by'))}</span><select data-grp-then${obj.catalog.by ? '' : ' disabled'}>${fieldOptions(obj.catalog.then)}</select></label>
       </div>
+      <label class="lcwaiEdField"><span>${esc(L('Yeni sayfa', 'New page'))}</span><select data-grp-break>${[
+        ['auto', L('Gerektiğinde — küçük gruplar aynı sayfada (önerilen)', 'When needed — small groups share a page (recommended)')],
+        ['group', L('Her grupta', 'At every group')],
+        ['subgroup', L('Her alt grupta', 'At every subgroup')],
+      ].map(([key, label]) => `<option value="${key}"${(obj.catalog.pageBreak || 'auto') === key ? ' selected' : ''}>${esc(label)}</option>`).join('')}</select></label>
       ${fields.length ? '' : `<p class="lcwaiNote">${esc(L('Gruplanacak sütun bulunamadı. LCW AI’a Buyer Log ekranı bağlam olarak verildiğinde (ör. Koleksiyon) o ekranın sütunları burada listelenir.', 'No column to group by. When a Buyer Log screen is given to LCW AI as context (e.g. Collection), its columns are listed here.'))}</p>`}
       <p class="lcwaiNote">${esc(L('Modelleri sürükleyip başka gruba bırakın. Grup adına çift tıklayıp değiştirin. Bir alt gruba tıklayınca sayfası açılır.', 'Drag models onto another group. Double-click a group name to rename it. Click a subgroup to open its page.'))}</p>
       <div class="lcwaiGrpTree" data-grp-tree>${tree}</div>
@@ -777,7 +786,7 @@
     if (ed.manualGroups && !window.confirm(L('Elle yaptığınız grup değişiklikleri seçilen sütuna göre yeniden hesaplanacak. Devam edilsin mi?', 'Your manual group changes will be recalculated from the chosen column. Continue?'))) { renderLayPanel(); return; }
     pushHistory();
     obj.items = LAY().assignGroups(obj.items, ed.draft.attributes || {}, by, by ? then : '');
-    obj.catalog = { by, then: by ? then : '', order: [], subOrder: Object.create(null) };
+    obj.catalog = { by, then: by ? then : '', order: [], subOrder: Object.create(null), pageBreak: obj.catalog.pageBreak || 'auto' };
     ed.manualGroups = false;
     ed.pageIndex = null;
     markDirty(); renderLayPanel(); schedulePreview();
@@ -849,7 +858,7 @@
     const badge = $('[data-pg-status]');
     if (!badge) return;
     badge.className = `lcwaiLayBadge is-${state}`;
-    badge.textContent = state === 'busy' ? L('Önizleme güncelleniyor…', 'Updating preview…') : state === 'error' ? text : L('✓ Dosyayla aynı', '✓ Same as the file');
+    badge.textContent = state === 'busy' ? L('Önizleme güncelleniyor…', 'Updating preview…') : state === 'error' || state === 'warn' ? text : L('✓ Dosyayla aynı', '✓ Same as the file');
   }
   async function fetchPreview() {
     const api = AI();
@@ -875,32 +884,37 @@
       const same = before && before.catalog ? ed.pvPages.findIndex(page => page.catalog && page.catalog.source === before.catalog.source && page.catalog.group === before.catalog.group && page.catalog.subgroup === before.catalog.subgroup && page.catalog.part === before.catalog.part) : -1;
       ed.pageIndex = same >= 0 ? same : ed.pageIndex == null || (before && before.catalog) ? firstCatalogPage() : ed.pageIndex;
       ed.pageIndex = Math.max(0, Math.min(ed.pageIndex, ed.pvPages.length - 1));
-      setPreviewStatus('ok');
+      // Kart yazısı sığmayan sayfa varsa kullanıcı yönlendirilir.
+      const tight = ed.pvPages.filter(page => page.catalog && page.catalog.fits === false).length;
+      if (tight) setPreviewStatus('warn', L(`✓ Dosyayla aynı · ${tight} sayfada kart yazısı sığmıyor: sayfa başına satırı azaltın ya da kartta daha az bilgi gösterin`, `✓ Same as the file · card text does not fit on ${tight} page(s): use fewer rows per page or show less on cards`));
+      else setPreviewStatus('ok');
       drawStage();
     } catch (error) {
       if (controller.signal.aborted) return;
       setPreviewStatus('error', (error && error.issues && error.issues[0]) || api.errorText(error));
     }
   }
+  // Sayfanın başlık yolu; birden çok grup / alt grup varsa adları sıralanır.
+  const pageWhere = catalog => (catalog.group || catalog.subgroup ? [catalog.group, catalog.subgroup].filter(Boolean).join(' › ') : (catalog.sections || []).map(sec => sec.subgroup || sec.group).filter(Boolean).join(', '));
   function previewPages(preview) {
     if (preview.format === 'pptx') {
       return preview.slides.map((slide, index) => ({
         kind: slide.layout === 'catalogPage' ? 'catalog' : 'slide', scene: slide.scene, catalog: slide.catalog, source: slide.source,
-        label: `${index + 1}. ${slide.catalog ? [slide.title, slide.catalog.group, slide.catalog.subgroup].filter(Boolean).join(' › ') : slide.title}`,
+        label: `${index + 1}. ${slide.catalog ? [slide.title, pageWhere(slide.catalog)].filter(Boolean).join(' › ') : slide.title}`,
       }));
     }
     const pages = [{ kind: 'document', label: L('Tüm rapor (baskı görünümü)', 'Whole report (print view)') }];
     for (const entry of preview.catalogs || []) {
       entry.pages.forEach((page, index) => pages.push({
-        kind: 'catalog', html: page.html, catalog: { source: entry.gallery, group: page.group, subgroup: page.subgroup, part: page.part, parts: page.parts },
-        label: `${L('Katalog', 'Catalogue')} ${index + 1}/${entry.pages.length} · ${[entry.title, page.group, page.subgroup].filter(Boolean).join(' › ') || L('Modeller', 'Models')}${page.parts > 1 ? ` (${page.part}/${page.parts})` : ''}`,
+        kind: 'catalog', html: page.html, catalog: { source: entry.gallery, group: page.group, subgroup: page.subgroup, part: page.part, parts: page.parts, sections: page.sections || [], fits: page.fits },
+        label: `${L('Katalog', 'Catalogue')} ${index + 1}/${entry.pages.length} · ${[entry.title, pageWhere(page)].filter(Boolean).join(' › ') || L('Modeller', 'Models')}${page.parts > 1 ? ` (${page.part}/${page.parts})` : ''}`,
       }));
     }
     return pages;
   }
   const firstCatalogPage = () => Math.max(0, (ed.pvPages || []).findIndex(page => page.kind === 'catalog'));
   function goToGroup(group, subgroup) {
-    const index = (ed.pvPages || []).findIndex(page => page.catalog && page.catalog.source === ed.galleryKey && page.catalog.group === group && page.catalog.subgroup === subgroup);
+    const index = (ed.pvPages || []).findIndex(page => page.catalog && page.catalog.source === ed.galleryKey && (page.catalog.sections || [{ group: page.catalog.group, subgroup: page.catalog.subgroup }]).some(sec => sec.group === group && sec.subgroup === subgroup));
     if (index >= 0) { ed.pageIndex = index; drawStage(); }
   }
 
@@ -984,12 +998,13 @@
     const model = pageModel();
     const area = { x: 0, y: 0, w: width, h: height };
     const labels = BLOCK_LABEL();
-    layer.innerHTML = model.blocks.map(block => {
+    // Dosyadaki gibi: bu sayfada boş kalan grup / alt başlık bloğu çizilmez, model alanı uzar.
+    const shown = LAY().pageBlocks(model, { title: 'x', group: page.catalog ? page.catalog.group : '', subgroup: page.catalog ? page.catalog.subgroup : '' });
+    layer.innerHTML = shown.map(block => {
       const r = LAY().blockRect(area, model, block, gap);
-      const empty = (block.kind === 'group' && !(page.catalog && page.catalog.group)) || (block.kind === 'subgroup' && !(page.catalog && page.catalog.subgroup));
       const selected = ed.blockSel === block.id;
-      return `<div class="lcwaiBlk${selected ? ' is-selected' : ''}${empty ? ' is-empty' : ''}" data-blk="${esc(block.id)}" tabindex="0" style="left:${r.x.toFixed(1)}px;top:${r.y.toFixed(1)}px;width:${r.w.toFixed(1)}px;height:${r.h.toFixed(1)}px" aria-label="${esc(labels[block.kind])}">
-        <span class="lcwaiBlkTag">${esc(labels[block.kind])}${empty ? ` · ${esc(L('gruplama yok', 'no grouping'))}` : ''}</span>
+      return `<div class="lcwaiBlk${selected ? ' is-selected' : ''}" data-blk="${esc(block.id)}" tabindex="0" style="left:${r.x.toFixed(1)}px;top:${r.y.toFixed(1)}px;width:${r.w.toFixed(1)}px;height:${r.h.toFixed(1)}px" aria-label="${esc(labels[block.kind])}">
+        <span class="lcwaiBlkTag">${esc(labels[block.kind])}</span>
         <span class="lcwaiBlkSize" data-blk-resize="${esc(block.id)}" title="${esc(L('Boyutlandır', 'Resize'))}"></span>
         ${selected ? blockToolbar(block) : ''}
       </div>`;
@@ -1268,7 +1283,7 @@
   }
   const NEW_ITEM = {
     kpi: () => ({ label: '', value: '', note: '', tone: 'info' }),
-    gallery: () => ({ title: '', subtitle: '', note: '', image: '', tone: 'info' }),
+    gallery: () => ({ title: '', lines: [], badge: null, image: '', tone: 'info' }),
   };
 
   function listFor(kind) {
@@ -1433,7 +1448,8 @@
     const el = event.target;
     if (el.matches('[data-lay-flag]')) { setLayout({ ...ed.data.layout, [el.dataset.layFlag]: el.checked }, { history: true }); return; }
     if (el.matches('[data-pg-select]')) { ed.pageIndex = Number(el.value) || 0; drawStage(); return; }
-    if (el.matches('[data-grp-by]')) { applyGrouping(el.value, ''); return; }
+    if (el.matches('[data-grp-by]')) { if (el.value) applyGrouping(el.value === '__none__' ? '' : el.value, ''); return; }
+    if (el.matches('[data-grp-break]')) { const obj = currentGallery().obj; pushHistory(); obj.catalog.pageBreak = el.value; markDirty(); schedulePreview(); return; }
     if (el.matches('[data-grp-then]')) { const obj = currentGallery().obj; applyGrouping(obj.catalog.by, el.value); return; }
     if (el.matches('[data-grp-gallery]')) { ed.galleryKey = Number(el.value); renderLayPanel(); return; }
     if (el.matches('[data-ed-orientation]')) {

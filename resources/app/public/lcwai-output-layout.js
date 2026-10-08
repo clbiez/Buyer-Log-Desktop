@@ -31,7 +31,8 @@
       headerHeight: [15, 60, 22, 1], titleSize: [10, 28, 16, 1], bodySize: [8, 16, 11, 0.5], imageSize: [30, 160, 60, 2],
     },
   });
-  const FLAGS = Object.freeze({ pptx: ['showTitle', 'showSubtitle', 'showNote'], pdf: ['showTitle', 'showSubtitle', 'showNote'], xlsx: [] });
+  // Kartta görünenler: model adı, bilgi satırları, durum etiketi.
+  const FLAGS = Object.freeze({ pptx: ['showTitle', 'showLines', 'showBadge'], pdf: ['showTitle', 'showLines', 'showBadge'], xlsx: [] });
   const specKey = format => (format === 'html' ? 'pdf' : SPEC[format] ? format : null);
 
   function defaults(format) {
@@ -57,6 +58,8 @@
       out[name] = Math.min(max, Math.max(min, Number(stepped.toFixed(2))));
     }
     for (const flag of FLAGS[key]) if (typeof source[flag] === 'boolean') out[flag] = source[flag];
+    // Eski şablonlar: alt bilgi ve not ikisi de kapalıysa bilgi satırları kapalı.
+    if (key !== 'xlsx' && typeof source.showLines !== 'boolean' && source.showSubtitle === false && source.showNote === false) out.showLines = false;
     if (key !== 'xlsx') out.page = normalizePage(format, source.page);
     return out;
   }
@@ -77,8 +80,8 @@
       xlsx: { imageSize: 120, bodySize: 12 },
     },
     catalog: {
-      pptx: { headerHeight: 56, titleSize: 20, margin: 24, gap: 6, columns: 6, rows: 3, cardTextSize: 8.5, imageShare: 72, showNote: false },
-      pdf: { headerHeight: 44, titleSize: 20, margin: 8, gap: 6, columns: 5, rows: 5, cardTextSize: 9.5, imageShare: 72, showNote: false },
+      pptx: { headerHeight: 56, titleSize: 20, margin: 24, gap: 6, columns: 6, rows: 3, cardTextSize: 8.5, imageShare: 70 },
+      pdf: { headerHeight: 44, titleSize: 20, margin: 8, gap: 6, columns: 5, rows: 4, cardTextSize: 9.5, imageShare: 66 },
       xlsx: { headerHeight: 18, bodySize: 9, imageSize: 80 },
     },
   });
@@ -203,6 +206,7 @@
      Her model kartı kendi grubunu (group) ve alt grubunu (subgroup) taşır;
      otomatik gruplama bunları seçilen sütundan doldurur, kullanıcı sonra
      sürükleyerek değiştirir. catalog yalnız seçimi ve grup sırasını saklar. */
+  const PAGE_BREAKS = Object.freeze(['auto', 'group', 'subgroup']);
   function normalizeCatalog(raw) {
     const source = raw && typeof raw === 'object' ? raw : {};
     const text = (value, max) => String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max);
@@ -210,17 +214,117 @@
     // Grup adı veri kaynaklıdır ("constructor", "__proto__" olabilir): prototipsiz sözlük.
     const subOrder = Object.create(null);
     if (source.subOrder && typeof source.subOrder === 'object') for (const [group, items] of Object.entries(source.subOrder).slice(0, 200)) subOrder[text(group, 120)] = list(items);
-    return { by: text(source.by, 80), then: text(source.then, 80), order: list(source.order), subOrder };
+    // pageBreak: yeni sayfa ne zaman başlar — auto (varsayılan): grup kalan alana
+    // tümüyle sığıyorsa aynı sayfada devam eder; group: her grupta; subgroup: her alt grupta.
+    const pageBreak = PAGE_BREAKS.includes(source.pageBreak) ? source.pageBreak : 'auto';
+    return { by: text(source.by, 80), then: text(source.then, 80), order: list(source.order), subOrder, pageBreak };
   }
-  const ITEM_FIELDS = ['subtitle', 'note', 'title'];
+  /* ---------------- Model kartı ----------------
+     Kart: model adı, bilgi satırları (kaynaktaki gibi TAM; kısaltılmaz) ve
+     isteğe bağlı durum etiketi. Eski biçim (subtitle / note) satırlara çevrilir. */
+  const TONES = ['ok', 'warn', 'risk', 'info'];
+  const ITEM_LIMITS = Object.freeze({ title: 160, line: 400, lines: 8, badge: 80, group: 160 });
+  const oneLine = (value, max) => String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max);
+  function normalizeItem(raw) {
+    const item = raw && typeof raw === 'object' ? raw : {};
+    const image = oneLine(item.image, 12).toUpperCase();
+    const source = Array.isArray(item.lines) ? item.lines : [item.subtitle, item.note || item.text];
+    const lines = source.map(line => oneLine(line, ITEM_LIMITS.line)).filter(Boolean).slice(0, ITEM_LIMITS.lines);
+    const rawBadge = item.badge && typeof item.badge === 'object' ? item.badge : { text: item.badge, tone: item.badgeTone };
+    const tone = TONES.includes(item.tone) ? item.tone : 'info';
+    const badgeText = oneLine(rawBadge.text, ITEM_LIMITS.badge);
+    return {
+      title: oneLine(item.title || item.name || item.model, ITEM_LIMITS.title), lines,
+      badge: badgeText ? { text: badgeText, tone: TONES.includes(rawBadge.tone) ? rawBadge.tone : tone } : null,
+      image: /^[A-Z]{2,4}-\d{1,6}$/.test(image) ? image : '', tone,
+      group: oneLine(item.group, ITEM_LIMITS.group), subgroup: oneLine(item.subgroup, ITEM_LIMITS.group),
+    };
+  }
+  const ITEM_FIELDS = ['title', 'line1', 'line2', 'line3', 'badge'];
+  const ITEM_LABELS = { title: ['Model adı', 'Model name'], line1: ['1. satır', 'Line 1'], line2: ['2. satır', 'Line 2'], line3: ['3. satır', 'Line 3'], badge: ['Durum', 'Status'] };
+  const LEGACY_FIELDS = { subtitle: 'line1', note: 'line2' };
   /* Gruplama alanı değeri: "a:Sütun" bağlam verisi (görsel anahtarıyla),
-     "f:subtitle|note|title" kartın kendi alanı. */
+     "f:title|line1..3|badge" kartın kendi alanı. */
   function fieldValue(item, field, attributes) {
     const key = String(field || '');
     if (key.startsWith('a:')) { const row = attributes && item && item.image ? attributes[String(item.image).toUpperCase()] : null; return row && Object.prototype.hasOwnProperty.call(row, key.slice(2)) ? String(row[key.slice(2)] == null ? '' : row[key.slice(2)]).replace(/\s+/g, ' ').trim() : ''; }
-    if (key.startsWith('f:') && ITEM_FIELDS.includes(key.slice(2))) return String(item && item[key.slice(2)] || '').replace(/\s+/g, ' ').trim();
-    return '';
+    if (!key.startsWith('f:') || !item) return '';
+    const name = LEGACY_FIELDS[key.slice(2)] || key.slice(2);
+    if (name === 'title') return oneLine(item.title, ITEM_LIMITS.title);
+    if (name === 'badge') return item.badge ? oneLine(item.badge.text, ITEM_LIMITS.badge) : '';
+    const line = /^line([1-3])$/.exec(name);
+    return line && Array.isArray(item.lines) ? oneLine(item.lines[Number(line[1]) - 1], ITEM_LIMITS.line) : '';
   }
+
+  /* ---------------- Metni kutuya sığdırma (tahmini) ----------------
+     PDF basımında JavaScript yoktur, PowerPoint'te de ölçüm yapılamaz; bu
+     yüzden satır sayısı karakter genişliği tahminiyle hesaplanır (Barlow
+     ailesi için ortalama ~0,5 em; temkinli değer). Aynı hesap iki biçimde
+     kullanılır: yazı gerekirse küçülür, sığmazsa son çare kırpılır. */
+  const CHAR_EM = Object.freeze({ body: 0.52, head: 0.46 });
+  // PowerPoint Segoe UI kullanır (Barlow'dan geniş).
+  const CHAR_EM_OFFICE = Object.freeze({ body: 0.56, head: 0.6 });
+  function wrapCount(text, width, size, charEm = CHAR_EM.body) {
+    const perLine = Math.max(1, Math.floor(width / Math.max(1, size * charEm)));
+    let total = 0;
+    for (const para of String(text == null ? '' : text).split('\n')) {
+      let count = 1, current = 0;
+      for (const word of para.split(/\s+/).filter(Boolean)) {
+        const add = current ? current + 1 + word.length : word.length;
+        if (add <= perLine) { current = add; continue; }
+        if (current) count++;
+        current = word.length;
+        while (current > perLine) { count++; current -= perLine; }
+      }
+      total += count;
+    }
+    return total;
+  }
+  function fitText(text, width, height, size, { min = 7, lineHeight = 1.18, charEm = CHAR_EM.body } = {}) {
+    for (let s = size; s >= min; s -= 0.5) {
+      const lines = wrapCount(text, width, s, charEm);
+      if (lines * s * lineHeight <= height + 0.01) return { size: s, lines, fits: true };
+    }
+    return { size: min, lines: Math.max(1, Math.floor(height / (min * lineHeight))), fits: false };
+  }
+  /* Kartta görünen metin (yerleşim bayraklarına göre). */
+  function cardContent(item, raw) {
+    const l = raw || {};
+    return {
+      title: l.showTitle === false ? '' : String(item && item.title || ''),
+      lines: l.showLines === false ? [] : (item && Array.isArray(item.lines) ? item.lines : []),
+      badge: l.showBadge === false || !(item && item.badge && item.badge.text) ? null : item.badge,
+    };
+  }
+  /* Bir sayfadaki kartların ortak ölçüsü: yazı boyutu ve görsel yüksekliği.
+     Görsel önce istenen paya göre; metin sığmazsa yazı küçülür (en az 6,5),
+     yine sığmazsa görsel %30'a kadar daralır; o da yetmezse fits=false. */
+  function cardFit(cell, raw, items, { charEm = CHAR_EM } = {}) {
+    const l = raw || {};
+    const pad = Math.max(3, Math.min(8, cell.w * 0.05));
+    const innerW = Math.max(10, cell.w - pad * 2);
+    const innerH = Math.max(10, cell.h - pad * 2 - 4);
+    const contents = (items || []).map(item => cardContent(item, l));
+    const need = size => Math.max(0, ...contents.map(c => {
+      let h = 0;
+      if (c.title) h += Math.min(2, wrapCount(c.title, innerW, size * 1.15, charEm.head)) * size * 1.15 * 1.15 + 2;
+      for (const line of c.lines) h += wrapCount(line, innerW, size, charEm.body) * size * 1.18 + 1;
+      if (c.badge) h += size * 1.18 + size * 0.7 + 3;
+      return h;
+    }));
+    const base = Number(l.cardTextSize) || 12;
+    const readable = Math.max(7, base * 0.8);
+    const share = Math.min(85, Math.max(30, Number(l.imageShare) || 65)) / 100;
+    const done = (s, textH) => ({ size: s, textH, imageH: innerH - textH, pad, fits: true });
+    // 1) İstenen görsel payıyla, yazı okunur aralıkta küçülerek.
+    for (let s = base; s >= readable; s -= 0.5) { const t = need(s); if (t <= innerH * (1 - share)) return done(s, t); }
+    // 2) Yazı okunur kalsın diye görsel %40'a kadar daralır.
+    for (let s = base; s >= readable; s -= 0.5) { const t = need(s); if (t <= innerH * 0.6) return done(s, t); }
+    // 3) Son çare: yazı 6,5'e kadar iner, görsel en az %30.
+    for (let s = Math.min(base, readable); s >= 6.5; s -= 0.5) { const t = need(s); if (t <= innerH * 0.7) return done(s, t); }
+    return { size: 6.5, textH: innerH * 0.7, imageH: innerH * 0.3, pad, fits: false };
+  }
+
   /* Seçilebilir gruplama alanları: en az 2, en çok kart sayısından az farklı değeri olanlar. */
   function groupingFields(items, attributes) {
     const list = Array.isArray(items) ? items : [];
@@ -229,7 +333,8 @@
     const candidates = [...[...columns].map(name => `a:${name}`), ...ITEM_FIELDS.map(name => `f:${name}`)];
     return candidates.map(key => {
       const values = new Set(list.map(item => fieldValue(item, key, attributes)).filter(Boolean));
-      return { key, label: key.slice(2), source: key.startsWith('a:') ? 'data' : 'card', distinct: values.size };
+      const name = key.slice(2);
+      return { key, label: name, labels: key.startsWith('f:') ? ITEM_LABELS[name] : null, source: key.startsWith('a:') ? 'data' : 'card', distinct: values.size };
     }).filter(entry => entry.distinct >= 2 && (entry.distinct < list.length || list.length <= 3));
   }
   function assignGroups(items, attributes, by, then) {
@@ -252,18 +357,151 @@
       return { group, subgroups: ordered([...subs.keys()], Array.isArray(catalog.subOrder[group]) ? catalog.subOrder[group] : []).map(subgroup => ({ subgroup, entries: subs.get(subgroup) })) };
     });
   }
-  /* Katalog sayfaları: her alt grup kendi sayfasında başlar; model alanına
-     sığmayan kartlar aynı başlıklarla devam sayfasına geçer. */
-  function catalogPages(items, catalog, raw) {
-    const size = perPage(raw);
+  /* Katalog sayfaları. Bölümler (grup › alt grup) sırayla yerleşir; yeni
+     sayfa catalog.pageBreak'e göre başlar: 'subgroup' her alt grupta,
+     'group' her grupta, 'auto' grup kalan alana tümüyle sığmıyorsa. Sayfada birden çok bölüm
+     varsa bölümlerin önüne ara başlık şeritleri gelir (sayfada birden çok grup
+     varsa grup şeridi de). Kart boyu sabittir (sütun × satır); şeridin yeri
+     kart satırı biriminde `stripUnits(text, kind)` ile ölçülür.
+     Sayfa: { group, subgroup, sections: [{ group, subgroup, entries, part,
+     parts }], entries, part, parts } — group/subgroup yalnız sayfada tekse dolu. */
+  function pageStrips(sections) {
+    const groups = new Set(sections.map(sec => sec.group));
+    const multiGroup = groups.size > 1;
+    const out = [];
+    sections.forEach((sec, i) => {
+      const firstOfGroup = i === 0 || sections[i - 1].group !== sec.group;
+      const list = [];
+      if (multiGroup && firstOfGroup) list.push({ kind: 'group', text: sec.group });
+      if (sec.subgroup && (sections.length > 1)) list.push({ kind: 'subgroup', text: sec.subgroup });
+      out.push(list);
+    });
+    return out;
+  }
+  function catalogPages(items, catalog, raw, { stripUnits = () => 0.3, strip } = {}) {
+    const l = raw && raw.columns ? raw : normalizeLayout('pdf', raw);
+    const cols = Math.max(1, Number(l.columns) || 1), rows = Math.max(1, Number(l.rows) || 1);
+    const unit = typeof strip === 'number' ? () => strip : stripUnits;
+    const cat = normalizeCatalog(catalog);
     const pages = [];
-    for (const group of groupItems(items, catalog)) {
+    let page = null;
+    const cost = sections => {
+      let total = 0;
+      pageStrips(sections).forEach((list, i) => {
+        for (const s of list) total += unit(s.text, s.kind);
+        total += Math.ceil(sections[i].entries.length / cols);
+      });
+      return total;
+    };
+    const newPage = () => { page = { sections: [] }; pages.push(page); };
+    let lastGroup = null;
+    const sectionsOf = group => group.subgroups.map(sub => ({ group: group.group, subgroup: sub.subgroup, entries: sub.entries }));
+    for (const group of groupItems(items, cat)) {
+      // auto: küçük grup bir önceki grubun sayfasında kalan yere sığıyorsa orada devam eder.
+      const fitsHere = page && page.sections.length && cost([...page.sections, ...sectionsOf(group)]) <= rows + 1e-6;
       for (const sub of group.subgroups) {
-        const parts = Math.max(1, Math.ceil(sub.entries.length / size));
-        for (let part = 0; part < parts; part++) pages.push({ group: group.group, subgroup: sub.subgroup, entries: sub.entries.slice(part * size, (part + 1) * size), part: part + 1, parts });
+        const newGroup = lastGroup !== group.group;
+        const breakHere = !page || cat.pageBreak === 'subgroup' || (newGroup && (cat.pageBreak === 'group' || !fitsHere));
+        if (breakHere) newPage();
+        lastGroup = group.group;
+        let section = null;
+        for (let i = 0; i < sub.entries.length; i += cols) {
+          const chunk = sub.entries.slice(i, i + cols);
+          const trial = section
+            ? page.sections.map(sec => (sec === section ? { ...sec, entries: [...sec.entries, ...chunk] } : sec))
+            : [...page.sections, { group: group.group, subgroup: sub.subgroup, entries: chunk }];
+          if (page.sections.length && cost(trial) > rows + 1e-6) {
+            newPage();
+            section = { group: group.group, subgroup: sub.subgroup, entries: [...chunk] };
+            page.sections.push(section);
+            continue;
+          }
+          if (section) section.entries.push(...chunk);
+          else { section = { group: group.group, subgroup: sub.subgroup, entries: [...chunk] }; page.sections.push(section); }
+        }
       }
     }
-    return pages;
+    // Parça numaraları: alt grup (bölüm) ve grup bazında "(2/3)".
+    const secCount = new Map(), groupCount = new Map();
+    const key = sec => `${sec.group}\u0000${sec.subgroup}`;
+    for (const p of pages) {
+      for (const sec of p.sections) secCount.set(key(sec), (secCount.get(key(sec)) || 0) + 1);
+      for (const g of new Set(p.sections.map(sec => sec.group))) groupCount.set(g, (groupCount.get(g) || 0) + 1);
+    }
+    const secSeen = new Map(), groupSeen = new Map();
+    return pages.filter(p => p.sections.length).map(p => {
+      const sections = p.sections.map(sec => { secSeen.set(key(sec), (secSeen.get(key(sec)) || 0) + 1); return { ...sec, part: secSeen.get(key(sec)), parts: secCount.get(key(sec)) }; });
+      const groups = [...new Set(sections.map(sec => sec.group))];
+      for (const g of groups) groupSeen.set(g, (groupSeen.get(g) || 0) + 1);
+      const single = sections.length === 1 ? sections[0] : null;
+      const oneGroup = groups.length === 1 ? groups[0] : null;
+      return {
+        group: oneGroup == null ? '' : oneGroup, subgroup: single ? single.subgroup : '', sections,
+        entries: sections.flatMap(sec => sec.entries),
+        part: single ? single.part : oneGroup != null ? groupSeen.get(oneGroup) : 1,
+        parts: single ? single.parts : oneGroup != null ? groupCount.get(oneGroup) : 1,
+      };
+    });
+  }
+  /* Model alanındaki yerleşim (birim: alanın birimi). Döner: { cards: [{ x, y,
+     w, h, item }], strips: [{ x, y, w, h, text, kind, part, parts }],
+     cell: { w, h } }. stripHeight(text, kind) şeridin yüksekliği. */
+  function catalogSlots(page, rect, raw, stripHeight) {
+    const l = raw && raw.columns ? raw : normalizeLayout('pdf', raw);
+    const cols = Math.max(1, l.columns), rows = Math.max(1, l.rows), gap = Number(l.gap) || 0;
+    const cardW = (rect.w - gap * (cols - 1)) / cols;
+    const rowH = (rect.h - gap * (rows - 1)) / rows;
+    const height = typeof stripHeight === 'function' ? stripHeight : () => Number(stripHeight) || 16;
+    // flow: sıralı satırlar — { strip } ya da { cards: [...] } (PDF ızgarası bunu izler).
+    const out = { cards: [], strips: [], flow: [], cell: { w: cardW, h: rowH } };
+    let y = rect.y;
+    const lists = pageStrips(page.sections);
+    page.sections.forEach((section, si) => {
+      for (const s of lists[si]) {
+        const h = height(s.text, s.kind);
+        const strip = { x: rect.x, y, w: rect.w, h, text: s.text, kind: s.kind, part: section.part, parts: section.parts };
+        out.strips.push(strip);
+        out.flow.push({ strip });
+        y += h + gap;
+      }
+      for (let i = 0; i < section.entries.length; i += cols) {
+        const row = section.entries.slice(i, i + cols).map((entry, col) => ({ x: rect.x + col * (cardW + gap), y, w: cardW, h: rowH, item: entry.item }));
+        out.cards.push(...row);
+        out.flow.push({ cards: row, h: rowH });
+        y += rowH + gap;
+      }
+    });
+    return out;
+  }
+  /* Bir sayfada çizilecek bloklar: grup ve alt başlık boşsa (sayfada birden
+     çok grup var; adlar şeritlerde) o bloklar düşer ve hemen altındaki model
+     alanı yukarı uzar — sayfanın üstünde boş satır kalmaz. */
+  function pageBlocks(pageModel, labels) {
+    const empty = block => (block.kind === 'group' || block.kind === 'subgroup') && !labels[block.kind];
+    const blocks = pageModel.blocks.filter(block => !empty(block));
+    const models = blocks.find(block => block.kind === 'models');
+    const dropped = pageModel.blocks.filter(empty);
+    if (!models || !dropped.length) return blocks;
+    const top = Math.min(...dropped.map(block => block.y));
+    if (top >= models.y) return blocks;
+    const overlaps = blocks.some(block => block !== models && block.y < models.y && block.y + block.h > top && block.x < models.x + models.w && block.x + block.w > models.x);
+    if (overlaps) return blocks;
+    return blocks.map(block => (block === models ? { ...block, y: top, h: block.h + (block.y - top) } : block));
+  }
+  /* Ara başlık şeritleri: yazı boyutu kart yazısından biraz büyük; uzun grup
+     adı (ör. tam kumaş tanımı) kısaltılmaz, en çok 3 satıra sarılır.
+     Döner: { height(text, kind), units(text, kind), size }. */
+  function stripMetrics(rect, raw, { charEm = CHAR_EM } = {}) {
+    const l = raw && raw.columns ? raw : normalizeLayout('pdf', raw);
+    const gap = Number(l.gap) || 0;
+    const rowH = (rect.h - gap * (Math.max(1, l.rows) - 1)) / Math.max(1, l.rows);
+    const size = Math.max(7, Math.min(16, (Number(l.cardTextSize) || 12) * 1.05));
+    const height = (text, kind) => {
+      const s = kind === 'group' ? size * 1.1 : size;
+      const lines = Math.min(3, wrapCount(text || '', Math.max(20, rect.w - 20), s, charEm.head));
+      return Math.min(rowH, lines * s * 1.2 + 8);
+    };
+    return { size, height, units: (text, kind) => (height(text, kind) + gap) / (rowH + gap) };
   }
 
   /* ---------------- PDF/HTML: tema üstüne yerleşim CSS'i ---------------- */
@@ -284,28 +522,36 @@
       `h1{font-size:${l.titleSize}px;}`,
       `h2{font-size:${Math.round(l.titleSize * 0.66)}px;}`,
       l.tableSize ? `table{font-size:${l.tableSize}px;}` : '',
-      // Katalog sayfası: 12 sütunlu blok ızgarası; her sayfa bir A4 içerik kutusu.
-      `.bl-catalog-page{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:repeat(${l.page.rows},minmax(0,1fr));gap:${l.gap}px;width:${box.width}mm;max-width:100%;aspect-ratio:${box.width} / ${box.height};margin:0;break-before:page;break-inside:avoid;overflow:hidden;box-sizing:border-box;}`,
-      '.bl-cb{min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;line-height:1.15;}',
-      // Blok başlıkları h2/h3/h4 (tema yazı tipi); rapor başlığı süslemeleri kapalı.
-      '.bl-cb>h2,.bl-cb>h3,.bl-cb>h4{margin:0;padding:0;font-size:inherit;color:inherit;line-height:1.15;}',
-      '.bl-cb>h2::before,.bl-cb>h2::after{display:none;}',
-      `.bl-cb-title{font-weight:600;color:var(--logo);font-size:${l.titleSize}px;}`,
+      // Katalog sayfası: 12 sütunlu blok ızgarası; her sayfa tam bir A4 içerik kutusu
+      // (yükseklik 2 mm pay bırakır: taşma olursa boş sayfa oluşmaz).
+      `.bl-catalog-page{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:repeat(${l.page.rows},minmax(0,1fr));gap:${l.gap}px;width:${box.width}mm;height:${box.height}mm;margin:0;break-before:page;break-inside:avoid;overflow:hidden;box-sizing:border-box;}`,
+      '.bl-catalog{display:block;}',
+      // Başlık blokları: yazı boyutu sunucuda kutuya sığacak şekilde hesaplanır (satır içi).
+      '.bl-cb{min-width:0;min-height:0;overflow:hidden;display:flex;flex-direction:column;justify-content:center;line-height:1.15;}',
+      '.bl-cb>h2,.bl-cb>h3,.bl-cb>h4,.bl-cb>div{margin:0;padding:0;border:0;background:none;font-size:inherit;font-weight:inherit;color:inherit;line-height:1.15;letter-spacing:0;text-transform:none;overflow-wrap:anywhere;}',
+      '.bl-cb>*::before,.bl-cb>*::after{display:none !important;}',
+      '.bl-cb.is-center{align-items:center;}.bl-cb.is-right{align-items:flex-end;padding-right:4px;}',
+      '.bl-cb-title{font-weight:600;color:var(--logo);justify-content:flex-end;}',
       '.bl-cb-title.is-fill{background:var(--thead-bg);border-bottom:3px solid var(--logo);padding:0 12px;justify-content:center;}',
-      `.bl-cb-group{font-weight:600;color:var(--logo);font-size:${Math.round(l.titleSize * 0.72)}px;border-left:4px solid var(--logo);padding-left:10px;}`,
-      `.bl-cb-group.is-fill,.bl-cb-subgroup.is-fill{background:var(--thead-bg);padding:0 10px;justify-content:center;}`,
-      `.bl-cb-subgroup{color:var(--head-ink);font-size:${Math.round(l.titleSize * 0.55)}px;}`,
-      `.bl-cb-text{justify-content:flex-start;white-space:pre-wrap;color:var(--ink2);font-size:${l.bodySize}px;}`,
-      '.bl-cb-models{justify-content:stretch;}',
-      `.bl-cb-models .bl-gallery{height:100%;margin:0;display:grid;grid-template-columns:repeat(${l.columns},minmax(0,1fr));grid-template-rows:repeat(${l.rows},minmax(0,1fr));gap:${l.gap}px;}`,
-      `.bl-cb-models .bl-card{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;margin:0;padding:6px;font-size:${l.cardTextSize}px;}`,
-      `.bl-cb-models .bl-card h3{font-size:${Number((l.cardTextSize * 1.15).toFixed(1))}px;margin:2px 0;}`,
-      '.bl-cb-models .bl-card small,.bl-cb-models .bl-card p{margin:0;}',
-      `.bl-cb-models .bl-model-img,.bl-cb-models .bl-noimg{flex:0 0 ${l.imageShare}%;height:${l.imageShare}%;min-height:0;aspect-ratio:auto;margin:0 0 4px;}`,
+      '.bl-cb-group{font-weight:600;color:var(--logo);border-left:4px solid var(--logo);padding-left:10px;}',
+      '.bl-cb-group.is-fill{background:var(--thead-bg);padding:0 10px;}',
+      '.bl-cb-subgroup{color:var(--head-ink);font-weight:600;}',
+      '.bl-cb-subgroup.is-fill{background:var(--thead-bg);padding:0 10px;}',
+      '.bl-cb-text{justify-content:flex-start;white-space:pre-wrap;color:var(--ink2);}',
+      // Model kartları: görsel kalan alanı doldurur, metin doğal yüksekliğinde (kırpılmaz).
+      '.bl-cb-models{display:block;}',
+      `.bl-cb-models .bl-gallery{height:100%;margin:0;display:grid;grid-template-columns:repeat(${l.columns},minmax(0,1fr));align-content:start;gap:${l.gap}px;}`,
+      '.bl-cb-models .bl-strip{display:flex;align-items:center;min-width:0;overflow:hidden;padding:0 8px;background:var(--thead-bg);border-left:3px solid var(--logo);color:var(--logo);font-weight:600;line-height:1.2;overflow-wrap:anywhere;}',
+      '.bl-cb-models .bl-strip.is-group{background:var(--logo);color:#fff;border-left-color:var(--logo);}',
+      '.bl-cb-models .bl-card{display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;margin:0;padding:var(--bl-card-pad,6px);font-size:var(--bl-card-fs,12px);line-height:1.18;gap:0;box-sizing:border-box;}',
+      '.bl-cb-models .bl-card-img{flex:1 1 0;min-height:0;display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--line);margin:0 0 4px;overflow:hidden;}',
+      '.bl-cb-models .bl-card-img .bl-model-img,.bl-cb-models .bl-card-img .bl-noimg{width:100%;height:100%;aspect-ratio:auto;object-fit:contain;margin:0;border:0;}',
+      '.bl-cb-models .bl-card-body{flex:0 0 auto;display:flex;flex-direction:column;gap:1px;min-width:0;}',
+      '.bl-cb-models .bl-card-body h3{font-size:1.15em;line-height:1.15;margin:0 0 2px;color:var(--logo);overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}',
+      '.bl-cb-models .bl-card-body p{margin:0;color:var(--ink2);overflow-wrap:anywhere;}',
+      '.bl-cb-models .bl-card-body .bl-badge{align-self:flex-start;margin-top:3px;padding:1px 6px;font-size:.92em;line-height:1.3;white-space:normal;animation:none;}',
+      '.bl-cb-models .bl-gallery.is-tight .bl-card-body p{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}',
       `@media screen{.bl-catalog-page{margin:${l.gap * 2}px auto;outline:1px dashed var(--line);outline-offset:6px;}}`,
-      l.showTitle ? '' : '.bl-cb-models .bl-card h3{display:none;}',
-      l.showSubtitle ? '' : '.bl-cb-models .bl-card small{display:none;}',
-      l.showNote ? '' : '.bl-cb-models .bl-card p{display:none;}',
     ];
     return css.filter(Boolean).join('\n');
   }
@@ -363,5 +609,6 @@
     pptxGeometry, galleryCells, pageBox, layoutCss, findGalleries, xlsxMetrics,
     defaultPage, normalizePage, blockRect, pptxPageArea, cardCells,
     normalizeCatalog, fieldValue, groupingFields, assignGroups, groupItems, catalogPages,
+    normalizeItem, cardContent, cardFit, fitText, wrapCount, CHAR_EM, CHAR_EM_OFFICE, ITEM_LIMITS, TONES, catalogSlots, stripMetrics, pageBlocks,
   };
 });

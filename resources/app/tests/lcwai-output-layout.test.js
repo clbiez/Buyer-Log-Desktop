@@ -41,12 +41,13 @@ const fakeEngine = text => ({ calls: [], async chat(owner, input) { this.calls.p
 const items = n => Array.from({ length: n }, (_, i) => ({ title: `DEMO-${100 + i}`, subtitle: 'Süprem', note: 'Not', image: '', tone: 'info' }));
 
 test('ortak modül: sınırlar, hazır yerleşimler, galeri hücreleri slayta sığar', () => {
-  const l = layout.normalizeLayout('pptx', { columns: 12, rows: '3', titleSize: 31.4, headerHeight: 10, unknown: 1, showNote: false });
+  const l = layout.normalizeLayout('pptx', { columns: 12, rows: '3', titleSize: 31.4, headerHeight: 10, unknown: 1, showLines: false });
   assert.equal(l.columns, 8, 'üst sınır');
   assert.equal(l.rows, 3);
   assert.equal(l.titleSize, 31);
   assert.equal(l.headerHeight, 48, 'alt sınır');
-  assert.equal(l.showNote, false);
+  assert.equal(l.showLines, false);
+  assert.equal(layout.normalizeLayout('pdf', { showSubtitle: false, showNote: false }).showLines, false, 'eski şablon bayrakları');
   assert.equal('unknown' in l, false);
   assert.equal(layout.normalizeLayout('docx', {}), null);
   assert.equal(layout.normalizeLayout('html', {}).columns, layout.defaults('pdf').columns, 'HTML = PDF ayarları');
@@ -95,7 +96,7 @@ test('ortak modül: katalog sayfası blokları 12 sütunlu ızgarada; gruplama v
   const css = layout.layoutCss({ columns: 4, rows: 3, headerHeight: 90, titleSize: 34, showNote: false }, { orientation: 'landscape' });
   assert.match(css, /\.bl-catalog-page\{/);
   assert.match(css, /grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/);
-  assert.match(css, /grid-template-rows:repeat\(3,minmax\(0,1fr\)\)/);
+  assert.match(css, /\.bl-catalog-page\{[^}]*height:\d+(\.\d+)?mm/, 'katalog sayfası tam bir sayfa kutusu');
   assert.match(css, /\.bl-header\{min-height:90px/);
   assert.match(css, /h1\{font-size:34px/);
   assert.doesNotMatch(css, /url\(|@import/i);
@@ -138,7 +139,7 @@ test('PDF: kartlar katalog verisine ayrılır, gruplara göre sayfalanır; öniz
   const draft = service.getDraft('u1', first.output.draftId);
   assert.equal(draft.data.galleries.length, 1, 'galeri katalog verisine çevrilir');
   assert.equal(draft.data.galleries[0].title, 'Modeller');
-  assert.equal(draft.data.galleries[0].items[2].note, 'Kumaş detayı uzun açıklama 2', 'not kısaltılmaz');
+  assert.deepEqual(draft.data.galleries[0].items[2].lines, ['Süprem', 'Kumaş detayı uzun açıklama 2'], 'satırlar kısaltılmaz');
   assert.match(draft.data.body, /<div class="bl-catalog" data-bl-catalog="0"><\/div>/);
   assert.doesNotMatch(draft.data.body, /bl-card/);
   // Galeri başlığı yalnız hemen önceki <h2>; önceki bölümler korunur.

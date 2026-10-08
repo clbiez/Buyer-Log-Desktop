@@ -49,11 +49,25 @@ function normalizeAttributes(raw, tokens) {
     for (const [name, value] of Object.entries(row).slice(0, 60)) {
       const column = String(name).replace(/\s+/g, ' ').trim().slice(0, 60);
       if (!column || column === 'BL Image' || value == null || typeof value === 'object') continue;
-      clean[column] = String(value).replace(/\s+/g, ' ').trim().slice(0, 120);
+      // Kumaş tanımı gibi uzun değerler kısaltılmaz (grup adı olur).
+      clean[column] = String(value).replace(/\s+/g, ' ').trim().slice(0, 400);
     }
     out[token] = clean;
   }
   return out;
+}
+
+function refineJobGrouping(format, data, attributes) {
+  if (!data || !attributes || !Object.keys(attributes).length) return data;
+  if (format === 'pdf' || format === 'html') return { ...data, galleries: (data.galleries || []).map(gallery => catalog.refineGrouping(gallery, attributes)) };
+  if (format === 'pptx') {
+    return { ...data, slides: (data.slides || []).map(slide => {
+      if (slide.layout !== 'gallery') return slide;
+      const refined = catalog.refineGrouping({ title: slide.title, items: slide.items, catalog: slide.catalog }, attributes);
+      return { ...slide, items: refined.items, catalog: refined.catalog };
+    }) };
+  }
+  return data;
 }
 
 function normalizeRequest(output = {}) {
@@ -150,7 +164,7 @@ function createOutputService(options = {}) {
         // Yerleşim varsa model galerisi PDF'te sütun × satır sayfalarına bölünür.
         // Model kataloğu Buyer Log tarafından çizilir (gruplar + sayfa tasarımı).
         const layout = BLOutputLayout.normalizeLayout('pdf', data.layout);
-        const body = fillHtmlImages(catalog.fillCatalogs(data.body, data.galleries, layout, { lang }), images, lang);
+        const body = fillHtmlImages(catalog.fillCatalogs(data.body, data.galleries, layout, { lang, orientation, fallbackTitle: title }), images, lang);
         if (format === 'pdf') {
           const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout });
           const pendingId = store.putPending(ownerId, { stage: 'pdf', html, ...saveMeta, lang, orientation });
@@ -173,12 +187,16 @@ function createOutputService(options = {}) {
     const entry = store.takePending(ownerId, pendingId);
     if (!entry || entry.stage !== 'images') throw lcwAiError('OUTPUT_NOT_FOUND');
     const images = normalizeImages(rawImages, entry.tokens);
+    const attributes = normalizeAttributes(rawAttributes, entry.tokens);
+    // LCW AI'ın başlıklarla yaptığı gruplama bağlam verisinin bir sütununa
+    // denk geliyorsa katalog o sütuna bağlanır (temiz, tam grup adları).
+    const job = { ...entry.job, data: refineJobGrouping(entry.job.format, entry.job.data, attributes) };
     // Yeniden oluşturmada görseller tekrar istenmesin: taslağın yanında kalır.
     // Öznitelikler: kartın bağlam satırı (Kategori, Alt kategori…) → gruplama.
-    if (entry.job.draftId) {
-      try { drafts.update(ownerId, entry.job.draftId, { images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])), attributes: normalizeAttributes(rawAttributes, entry.tokens) }); } catch (_) {}
+    if (job.draftId) {
+      try { drafts.update(ownerId, job.draftId, { data: job.data, images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])), attributes }); } catch (_) {}
     }
-    const output = render(ownerId, entry.job, images);
+    const output = render(ownerId, job, images);
     return { ...output, imagesUsed: Object.keys(images).length, imagesRequested: entry.tokens.length };
   }
 
@@ -253,10 +271,10 @@ function createOutputService(options = {}) {
     const layout = BLOutputLayout.normalizeLayout('pdf', data.layout);
     const print = draft.format === 'pdf';
     const doc = body => buildDocument({ body, styles: data.styles, title: String(input.title == null ? '' : input.title).replace(/\s+/g, ' ').trim().slice(0, contracts.LIMITS.titleChars) || draft.title, lang, orientation, print, meta: { date: draft.day, template: draft.templateLabel }, layout });
-    const catalogs = (data.galleries || []).map((gallery, index) => ({ gallery: index, title: gallery.title, pages: catalog.catalogPagesHtml(gallery, layout, { lang }) }));
+    const catalogs = (data.galleries || []).map((gallery, index) => ({ gallery: index, title: gallery.title, pages: catalog.catalogPagesHtml(gallery, layout, { lang, orientation }) }));
     return {
       format: draft.format, orientation, layout, data,
-      document: doc(catalog.fillCatalogs(data.body, data.galleries, layout, { lang })),
+      document: doc(catalog.fillCatalogs(data.body, data.galleries, layout, { lang, orientation })),
       shell: buildDocument({ body: '<!--BL-PAGE-->', styles: data.styles, title: '', lang, orientation, print: true, layout, bare: true }),
       catalogs: catalogs.map(entry => ({ gallery: entry.gallery, title: entry.title, pages: entry.pages })),
     };

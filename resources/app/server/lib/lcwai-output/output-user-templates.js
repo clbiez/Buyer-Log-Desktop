@@ -168,8 +168,8 @@ function templateInstruction(definition, { name = '', lang = 'tr' } = {}) {
   if (def.layout && def.format !== 'xlsx') {
     const grid = `${def.layout.columns} × ${def.layout.rows}`;
     lines.push(english
-      ? `Layout: model cards are placed ${grid} (${BLOutputLayout.perPage(def.layout)} per ${def.format === 'pptx' ? 'slide' : 'page'}) by Buyer Log. Put model visuals in ${def.format === 'pptx' ? 'ONE "gallery" slide per group (all items; Buyer Log continues on extra slides)' : 'one <div class="bl-gallery"> per group'}; do not split them yourself.`
-      : `Yerleşim: model kartlarını Buyer Log ${grid} ızgarasına (${def.format === 'pptx' ? 'slayt' : 'sayfa'} başına ${BLOutputLayout.perPage(def.layout)}) dizer. Model görsellerini ${def.format === 'pptx' ? 'grup başına TEK "gallery" slaytına (tüm öğeler; devam slaytlarını Buyer Log açar)' : 'grup başına tek <div class="bl-gallery"> içine'} koy; kendin bölme.`);
+      ? `Layout: model cards are placed ${grid} (${BLOutputLayout.perPage(def.layout)} per ${def.format === 'pptx' ? 'slide' : 'page'}) by Buyer Log. Put all model cards in ${def.format === 'pptx' ? 'ONE "gallery" slide (items carry "group"/"subgroup")' : 'consecutive <div class="bl-gallery" data-bl-group="…" data-bl-subgroup="…"> blocks'}; do not split them into pages yourself.`
+      : `Yerleşim: model kartlarını Buyer Log ${grid} ızgarasına (${def.format === 'pptx' ? 'slayt' : 'sayfa'} başına ${BLOutputLayout.perPage(def.layout)}) dizer. Tüm model kartlarını ${def.format === 'pptx' ? 'TEK "gallery" slaytına (öğelerde "group"/"subgroup")' : 'ardışık <div class="bl-gallery" data-bl-group="…" data-bl-subgroup="…"> bloklarına'} koy; sayfalara kendin bölme.`);
   }
   if (def.instructions) lines.push(`${english ? 'Additional instructions from the user' : 'Kullanıcının ek talimatı'}:\n${def.instructions}`);
   return lines.join('\n');
