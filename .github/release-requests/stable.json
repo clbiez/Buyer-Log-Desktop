@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.261",
-  "commit_sha": "10b8cf6367331082c079504ef60e0eb79d23a5a3",
-  "release_notes": "Buyer Log 7.0.261 STABLE: ROS Lab Dip Renk Sonuç Bildirimi ve Color Evaluation Notification mailleri sürükle-bırak ile aktarılır. Çoklu renk, Approved/Digital Approved/Rejected, revizyon, tur, submit ve yorumlar tek Checklist hücresinde görüntülenir. PO bulunmayan ROS raporları ancak kullanıcı eşleştirme onayıyla yazılır. LCW AI yorum incelemesi ve Buyer Log kare köşeli tasarımına entegredir. PR #437 ve TEST build+sign+remote verification başarılı.",
-  "request_id": "7.0.261-stable-r1"
+  "version": "7.0.262",
+  "commit_sha": "b83afa61123ee8ab0b8b5d421e882d9773b30db2",
+  "release_notes": "Buyer Log 7.0.262 STABLE: OAB masaüstünde oturum, girişin yapıldığı gizli PASS sayfası içinde doğrulanıyor ve OAB verisi o sayfa üzerinden çekiliyor; giriş tamamlandığında zaman aşımı yaşanmıyor. Kurumsal Bağlantılar'da OAB bağlantı durumu gösteriliyor. PR #438 ve TEST build+sign+remote verification başarılı.",
+  "request_id": "7.0.262-stable-r1"
 }
