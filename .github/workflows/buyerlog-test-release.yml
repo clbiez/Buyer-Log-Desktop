@@ -97,6 +97,9 @@ jobs:
           node scripts/release-signing.js sign dist-updates/latest.test.json
           node scripts/release-signing.js verify dist-updates/latest.test.json
       - name: Save exact bridge bundle for legacy folder distribution
+        # Convenience copy only; no workflow consumes it. An exhausted Actions
+        # artifact quota must not block publishing the signed TEST release.
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: buyerlog-bridge-bundle
@@ -104,6 +107,7 @@ jobs:
             resources/app/dist-updates/BuyerLog-*.zip
             resources/app/dist-updates/latest.test.json
           if-no-files-found: error
+          retention-days: 7
       - name: Checkout public release-only repository
         uses: actions/checkout@v4
         with:
