@@ -85,16 +85,52 @@ test('desktop OAB sign-in is detected from PASS storage, not only from a report 
   const MAIN = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
   assert.match(MAIN, /const OAB_STORAGE_PROBE = `/);
   assert.match(MAIN, /\['access_token', 'accessToken'\]/);
-  assert.match(MAIN, /oidc\\\\\.user:/);
+  assert.match(MAIN, /oidc\\\.user:/);
   const flow = between(MAIN, 'async function acquireOabAuthorization', 'async function clearOabAuthSession');
   assert.match(flow, /executeJavaScript\(OAB_STORAGE_PROBE, true\)/);
-  assert.match(flow, /finishAuthorization\(authorization, 'PASS storage'\)/);
+  assert.match(flow, /finishAuthorization\(authorization, 'PASS storage', target\)/);
   // Storage wins before any sign-in heuristic can send a signed-in user back to login.
   const pulse = between(flow, 'const pulseLifecycle = async () => {', 'const recoverStaleSilentProbe');
   assert.ok(pulse.indexOf('probeStoredAuthorization()') < pulse.indexOf('oabWindowLooksLikeSignIn'));
-  // Candidates are validated one after another so a rejected one cannot wipe an accepted one.
-  assert.match(flow, /authorizationChain\.then\(\(\) => finishAuthorizationNow\(authorization, source\)\)/);
-  assert.match(flow, /if \(!settled\) await clearOabBackendAuthorization\(\);/);
+  // Candidates are validated one after another.
+  assert.match(flow, /authorizationChain\.then\(\(\) => finishAuthorizationNow\(authorization, source, target\)\)/);
+});
+
+test('desktop OAB candidates are validated inside the signed-in PASS page, never by the Node backend', () => {
+  const MAIN = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
+  const flow = between(MAIN, 'async function acquireOabAuthorization', 'async function clearOabAuthSession');
+  const finish = between(flow, 'const finishAuthorizationNow = async', 'let authorizationChain');
+  assert.match(finish, /runOabPageRequest\(page, 'Report\/GetReportVariablesWithData', OAB_VALIDATE_BODY, authorization\)/);
+  assert.match(finish, /adoptOabSessionWindow\(page, authorization, parent\)/);
+  assert.doesNotMatch(MAIN, /pushOabAuthorizationToBackend/);
+  // The page request mirrors the proven Edge/CDP model: credentials omit + Authorization.
+  const expression = between(MAIN, 'function oabPassRequestExpression', 'function oabWindowOnPass');
+  assert.match(expression, /credentials:'omit'/);
+  assert.match(expression, /Authorization:authorization/);
+  assert.match(expression, /readStoredOabTokens\(\)/);
+  // Adopted window is kept, not closed by cleanup; it never keeps the app alive alone.
+  assert.match(flow, /authWindow !== keptWindow/);
+  assert.match(MAIN, /function closeOrphanOabSessionWindow\(\)/);
+});
+
+test('desktop OAB relay is loopback-only, secret-guarded and endpoint-whitelisted', () => {
+  const MAIN = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
+  const relay = between(MAIN, 'async function handleOabRelayRequest', 'function startOabRelay');
+  assert.match(relay, /oabRelaySecretValid\(req\.headers\['x-buyerlog-desktop-bridge'\]\)/);
+  assert.match(relay, /OAB_RELAY_ENDPOINTS\.has\(endpoint\)/);
+  assert.match(relay, /size > 65536/);
+  assert.match(MAIN, /server\.listen\(0, '127\.0\.0\.1'/);
+  assert.match(MAIN, /desktopOabRelayUrl,/);
+  const BACKEND = fs.readFileSync(path.join(ROOT, 'electron', 'backend.js'), 'utf8');
+  assert.match(BACKEND, /env\.BUYER_LOG_DESKTOP_OAB_RELAY_URL = this\.desktopOabRelayUrl/);
+  assert.match(SERVER, /oabDesktopRelay\.configured\(\) \? oabDesktopRelay\.fetchReportData\(params \|\| \{\}\)/);
+});
+
+test('corporate connections menu shows the OAB connection state', () => {
+  assert.match(USER_ACCESS, /data-oab-badge/);
+  const paint = between(USER_ACCESS, 'async function paintCorporateConnections', 'function openMenu(anchor)');
+  assert.match(paint, /fetch\('\/api\/oab\/auth\/status'/);
+  assert.match(paint, /'X-BuyerLog-OAB-Transport': 'desktop'/);
 });
 
 test('closing the desktop OAB sign-in window keeps checking for a completed login before cancelling', () => {

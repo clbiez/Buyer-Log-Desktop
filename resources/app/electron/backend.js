@@ -152,6 +152,7 @@ class BackendProcess {
     this.log = typeof options.log === 'function' ? options.log : () => {};
     this.onUnexpectedExit = typeof options.onUnexpectedExit === 'function' ? options.onUnexpectedExit : () => {};
     this.desktopBridgeSecret = String(options.desktopBridgeSecret || '');
+    this.desktopOabRelayUrl = String(options.desktopOabRelayUrl || '');
     // Oturum çerezlerinin imza anahtarı bu masaüstü oturumu boyunca sabittir:
     // sunucu/gözetmen yeniden başlasa da kullanıcı giriş ekranına düşmez.
     // Yalnız bellekte ve alt süreç ortamında yaşar; diske yazılmaz.
@@ -200,6 +201,8 @@ class BackendProcess {
     this.openLogStream();
     const env = backendEnv(this.paths, process.env);
     if (this.desktopBridgeSecret) env.BUYER_LOG_DESKTOP_BRIDGE_SECRET = this.desktopBridgeSecret;
+    // OAB requests are relayed to the hidden signed-in PASS page in Electron main.
+    if (this.desktopOabRelayUrl) env.BUYER_LOG_DESKTOP_OAB_RELAY_URL = this.desktopOabRelayUrl;
     env.BUYER_LOG_USER_SESSION_SECRET = this.sessionSecret;
     // LCW AI tarafından üretilen PDF/PPTX/XLSX/HTML dosyaları, diğer
     // Buyer Log dışa aktarımlarıyla aynı gerçek İndirilenler klasörüne gider.
