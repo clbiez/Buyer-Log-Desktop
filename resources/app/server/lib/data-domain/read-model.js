@@ -203,6 +203,9 @@ function build(items, options = {}) {
       })),
       capabilities: profile.capabilities ? profile.capabilities.slice() : [],
       mappedFieldCount: mappingSet ? Object.keys(mappingSet.entries || {}).length : 0,
+      // Editör için gerçek, saklanmış eşleme; yalnız sağlık özetini tahmin ederek yeniden kurma.
+      mappingRole: source.legacyRole,
+      mappingEntries: health ? clone((mappingSet && mappingSet.entries) || {}) : null,
       /* CP SÜTUNLARI (§7 — eski ekrandan taşınan yetenek).
          Alan eşlemesinden farklı: eşleme uygulamanın beklediği bir başlığı
          bir sütuna bağlar, bu ise uygulamanın hiç bilmediği bir sütunu CP
