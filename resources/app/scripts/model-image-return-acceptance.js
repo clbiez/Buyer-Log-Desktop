@@ -29,7 +29,9 @@ const APP_ROOT = path.resolve(__dirname, '..');
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const KEEP = process.argv.includes('--keep');
 const JSON_OUT = (() => { const i = process.argv.indexOf('--json'); return i > 0 ? process.argv[i + 1] : ''; })();
-const PORT = 6390 + Math.floor(Math.random() * 200);
+// 6400-6499 contains no WHATWG "bad port" (6390-6589 included 6566, which
+// fetch() refuses with "bad port" and failed the 7.0.264 TEST build).
+const PORT = 6400 + Math.floor(Math.random() * 100);
 const BASE = `http://127.0.0.1:${PORT}`;
 const PASSWORD = 'acceptance-pass-123';
 const IMG_RE = /\/api\/(collection|cp)-images\//;
