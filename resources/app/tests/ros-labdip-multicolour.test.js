@@ -11,11 +11,11 @@ function rosMail(subject, resultA, resultB, date='07.10.2026', round='1') {
     body: [
       'Talep Tipi\tLabdip',
       'Renk Kodu-Adı\tModel Adı',
-      'R9J - EKRU\tMINECRAFT-13-YD',
+      'R9J - EKRU\tEXAMPLE-13-YD',
       'Renk Sonuçlanma Tarihi\tTur\tRenk Analisti\tRenk Yorum\tSonuç\tSubmit No\tTicari Onay Tarihi\tTalep Tipi\tUrl',
       date + '\t' + round + '\tAnalyst\tNO DARKER / NO YELLOWER\t' + resultA + '\tA\t\tLabdip\trequestId=73822',
       'Renk Kodu-Adı\tModel Adı',
-      'ZZX 19-4209 TCX - BLACK\tMINECRAFT-13-YD',
+      'ZZX 19-4209 TCX - BLACK\tEXAMPLE-13-YD',
       'Renk Sonuçlanma Tarihi\tTur\tRenk Analisti\tRenk Yorum\tSonuç\tSubmit No\tTicari Onay Tarihi\tTalep Tipi\tUrl',
       date + '\t' + round + '\tAnalyst\tS/B LIGHTER\t' + resultB + '\tC\t\tLabdip\trequestId=73822',
     ].join('\n'),
@@ -28,7 +28,7 @@ test('ROS .msg Turkish and English decisions are parsed independently', () => {
   const r = parsed.report;
   assert.equal(r.talepNo, '73822');
   assert.equal(r.talepTipi, 'Labdip');
-  assert.equal(r.modelAdi, 'MINECRAFT-13-YD');
+  assert.equal(r.modelAdi, 'EXAMPLE-13-YD');
   assert.deepEqual(r.labDipColors.map(c => c.status), ['pass', 'fail']);
   assert.match(r.labDipColors[1].comment, /LIGHTER/);
   assert.equal(E.reportOutcome(r).code, 'fail');
@@ -70,8 +70,8 @@ test('ROS request is not an approval and cannot infer an order from request ID',
 test('without PO identifier ROS never reaches exact match; multiple candidate POs require manual choice', () => {
   const report = E.parseMail(rosMail('LCW- ROS - Renk Sonuç Bildirimi', 'Approved', 'Rejected')).report;
   const rows = [
-    {'Order Code':'1400011','Model Name':'KK.BDY,MINECRAFT-13-YD','Colour':'EKRU','C.Code':'R9J'},
-    {'Order Code':'1400012','Model Name':'MINECRAFT-13-YD','Colour':'EKRU','C.Code':'R9J'},
+    {'Order Code':'1400011','Model Name':'KK.BDY,EXAMPLE-13-YD','Colour':'EKRU','C.Code':'R9J'},
+    {'Order Code':'1400012','Model Name':'EXAMPLE-13-YD','Colour':'EKRU','C.Code':'R9J'},
     {'Order Code':'1400013','Model Name':'OTHER-1-YD','Colour':'EKRU','C.Code':'R9J'},
   ];
   assert.equal(E.matchReport(report,rows).level,'ambiguous');
