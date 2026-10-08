@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.263",
-  "commit_sha": "7830b9581a0a91634ee377728f63e5ab44e27d89",
-  "release_notes": "Buyer Log 7.0.263 TEST: Masaüstü OAB girişi artık kabul ediliyor; oturum doğrulaması PASS'in HTTP 405 döndürdüğü uç nokta yerine OAB rapor servisiyle (GetReportData) yapılıyor ve rapor verisi tabloya geliyor. PR #441."
+  "version": "7.0.264",
+  "commit_sha": "5090e41624c8a84f0a14a3184db955b0c7c452ea",
+  "release_notes": "Buyer Log 7.0.264 TEST: Yeni sürüm ilk açılışta yavaş başlasa da health-timeout ile geri alınmıyor; sağlık onayı sunucu yanıt verdiğinde veriliyor. 7.0.263 OAB giriş düzeltmesini (GetReportData doğrulaması) içerir. PR #441, #445."
 }
