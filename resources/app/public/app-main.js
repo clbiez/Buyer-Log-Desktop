@@ -28521,7 +28521,7 @@ function kolPlmApplyAsasTranslations(parsedRows,translationInfo=null){
         }
       }
       if(target){row[spec.target]=target;row._plmTranslations[field]={source,target,mode};}
-      else {unresolved++;row._plmTranslations[field]={source,target:'',mode:(exact.length>1||modelExact.length>1)?'conflict':'unresolved'};}
+      else {unresolved++;row[spec.target]='';row._plmTranslations[field]={source,target:'',mode:(exact.length>1||modelExact.length>1)?'conflict':'unresolved'};}
     });
   });
   return {...info,exactApplied,modelApplied,approvedRuleApplied,learnedApplied,unresolved};
