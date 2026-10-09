@@ -74,6 +74,9 @@ const localDb = createLocalDb(LOCAL_DB_FILE);
 function sharedHubDeltaFilter(direction) {
   return deltas => sharedSyncPolicy.filterDeltas(filterCollectionWorkspaceDeltas(deltas), direction);
 }
+// Ortak klasöre hiç gitmeyecek yerel yazım "bekleyen değişiklik" sayılmaz;
+// yazıldığı anda yerel olarak kapanır (bkz. shared-sync-policy izin listesi).
+localDb.setTransportFilter(item => sharedHubDeltaFilter('outgoing')([item]).length === 1);
 const syncSettings = createSyncSettings({
   localDataRoot: LOCAL_DATA_ROOT,
   localDb,
@@ -565,6 +568,7 @@ const collectionSaveWorker = require('./lib/collection-save-worker-client');
 const collectionRecycleBin = require('./lib/collection-recycle-bin');
 const userPreferences = require('./lib/user-preferences');
 const { loadPlmTranslations, publicRules: publicPlmTranslations, upsertPlmTranslations } = require('./lib/plm-translations');
+const fabricCards = require('./lib/fabric-cards');
 const plmStyleLinks = require('./lib/plm-style-links');
 const { loadPlmStyleLinks, publicLinks: publicPlmStyleLinks, upsertPlmStyleLinks } = plmStyleLinks;
 /* Ortak iş verisini tutan her store delta motoruna bağlanır. Bağlama tek
@@ -658,8 +662,28 @@ function publishSharedMasterChange(entity, req, detail = null) {
   void sharedRevisionStore.update(entity, { actorId: String(actor.id || ''), deviceId: clientId })
     .catch(error => logRuntimeFailure('sharedRevision', error));
   liveEvents.notifyChange(entity, clientId, detail);
-  scheduleMasterCheckpointPublish(String(actor.id || ''));
+  // Çalışma kurallarını ortak klasöre yalnız Moderatör yayımlar. Diğer
+  // kullanıcının düzenlemesi bu bilgisayarda kalır; Moderatörün bir sonraki
+  // yayımı onu ortak kuralla değiştirir.
+  if (isModeratorProfile(actor)) {
+    noteModeratorSession(actor);
+    scheduleMasterCheckpointPublish(String(actor.id || ''));
+  }
 }
+/* MODERATÖR OTORİTESİ (v20261009).
+   Eskiden her cihaz 5 dakikada bir kendi ayar görüntüsünü Master checkpoint
+   olarak yayımlamaya çalışıyordu: 200 cihazda "son yazan kazanır" yarışı ve
+   rastgele bir kullanıcının ayarlarının herkese dağılması demekti. Artık
+   yalnız bu bilgisayarda yakın zamanda oturumu görülen Moderatör yayımlar. */
+const MODERATOR_SESSION_WINDOW_MS = 15 * 60000;
+let moderatorSessionSeenAt = 0, moderatorSessionActor = '';
+function isModeratorProfile(profile) { return Boolean(profile && profile.systemRole === 'moderator'); }
+function noteModeratorSession(profile) {
+  if (!isModeratorProfile(profile)) return;
+  moderatorSessionSeenAt = Date.now();
+  moderatorSessionActor = String(profile.id || '').slice(0, 160);
+}
+function moderatorActiveOnThisDevice() { return Date.now() - moderatorSessionSeenAt < MODERATOR_SESSION_WINDOW_MS; }
 const endeksmatik = require('./lib/endeksmatik');
 endeksmatik.attachDeltaStore(deltaStore);
 const userAccess = buildUserAccess({
@@ -694,6 +718,7 @@ const collectionPermissionsReady = (async () => {
 const SHARED_COLLECTION_OWNER = collectionWorkspaces.SHARED_COLLECTION_OWNER;
 let sharedHubBootstrapInFlight = null;
 let sharedHubStartupSettled = false;
+let lastFullBootstrapReadyAt = 0;
 const userBootstrapReady = new Set();
 let sharedHubBootstrapProgress = {
   configured:false, validated:false, loginAllowed:userAccess.canLoginLocally(), moderatorLoginAllowed:userAccess.canLoginLocally(), bootstrapRequired:!userAccess.hasLocalLoginSnapshot(),
@@ -782,10 +807,16 @@ async function guardCheckpointPublish(area, root, state, localRecords) {
   const read = area === 'master' ? sharedHub.readMaster : sharedHub.readBusiness;
   const remote = await read(root, null);
   if (!remote || remote.unchanged) return { safe:true, missing:[], stale:[], remoteRecords:0 };
-  const remoteRecords = checkpointRecords(remote);
+  const remoteRecords = sharedSyncPolicy.scopeCheckpointRecords(area, checkpointRecords(remote));
   const missing = checkpointUnaccountedIds(remoteRecords, localRecords, state && state.tombstones);
   const stale = checkpointRemoteAheadIds(remoteRecords, localRecords, state && state.tombstones);
-  return { safe:missing.length === 0 && stale.length === 0, missing, stale, remoteRecords:Object.keys(remoteRecords).length, head:remote.head };
+  return { safe:missing.length === 0 && stale.length === 0, missing, stale, remoteRecords:Object.keys(remoteRecords).length, head:remote.head, moderatorAuthority:masterCheckpointHasModeratorAuthority(remote) };
+}
+/* Moderatörün yayımladığı Master checkpoint bunu açıkça taşır. Eski sürümlerin
+   ya da açılış onarımının yazdığı checkpoint otorite sayılmaz. */
+function masterCheckpointHasModeratorAuthority(snapshot) {
+  const payload = snapshot && snapshot.envelope && snapshot.envelope.payload;
+  return Boolean(payload && payload.authority === 'moderator');
 }
 function changedMasterEntities(remoteRecords, localRecords, ids) {
   const remote = remoteRecords && typeof remoteRecords === 'object' ? remoteRecords : {};
@@ -822,7 +853,7 @@ function announceRecoveredMasterEntities(entities) {
 
 async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
   if (!remote || remote.unchanged) return { applied:0, missing:0, stale:0, head:remote && remote.head || null, remoteRecords:0 };
-  const remoteRecords = checkpointRecords(remote);
+  const remoteRecords = sharedSyncPolicy.scopeCheckpointRecords(area, checkpointRecords(remote));
   const localRecords = area === 'master'
     ? sharedSyncPolicy.masterRecordsFromState(state)
     : sharedSyncPolicy.businessRecordsFromState(state);
@@ -839,8 +870,9 @@ async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
     next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
     for (const id of recoverIds) {
       // Ortak ayar kopyası yalnız ortak alanları taşır: yerel kayda birleşir
-      // (cihaz/iş alanları korunur). İş kaydı checkpoint'in tam kopyasıdır.
-      next.records[id] = area === 'master'
+      // (cihaz/iş alanları korunur). CP satırı da yalnız paylaşılan alanlarını
+      // taşır; yerel notlar korunur. Diğer iş kaydı checkpoint'in tam kopyasıdır.
+      next.records[id] = area === 'master' || /^cp-order:/.test(id)
         ? sharedSyncPolicy.mergeCheckpointRecord(next.records[id], remoteRecords[id])
         : JSON.parse(JSON.stringify(remoteRecords[id]));
       next.revision = Math.max(Number(next.revision) || 0, sharedSyncPolicy.checkpointRecordRevision(remoteRecords[id]));
@@ -979,7 +1011,7 @@ function masterCoverageMissing(expected, actual) {
 }
 async function verifySharedMasterBootstrap(root) {
   const remote = await sharedHub.readMaster(root, null);
-  const remoteRecords = checkpointRecords(remote);
+  const remoteRecords = sharedSyncPolicy.scopeCheckpointRecords('master', checkpointRecords(remote));
   const state = await localDb.read();
   const localRecords = sharedSyncPolicy.masterRecordsFromState(state);
   const missing = checkpointRecoverableIds(remoteRecords, localRecords, state.tombstones);
@@ -1322,6 +1354,7 @@ async function recoverSharedMasterFromLocalDataBackup(root) {
 }
 
 async function publishMasterCheckpoint(actorId = '') {
+  if (!moderatorActiveOnThisDevice()) return { published:false, reason:'moderator-only' };
   const settings = await syncSettings.read();
   if (!settings.sharedSyncRoot) return { published:false, reason:'not-configured' };
   const checked = await sharedHub.validate(settings.sharedSyncRoot, { requireWrite:true });
@@ -1329,6 +1362,9 @@ async function publishMasterCheckpoint(actorId = '') {
   const records = sharedSyncPolicy.masterRecordsFromState(state);
   const head = await sharedHub.readMasterHead(checked.root);
   const guard = head ? await guardCheckpointPublish('master', checked.root, state, records) : { safe:true, missing:[] };
+  // Otoritesiz (eski sürüm/onarım) checkpoint'in sayaçları Moderatörü
+  // durduramaz; eksik kayıt koruması ise her durumda geçerli kalır.
+  if (!guard.safe && !guard.missing.length && !guard.moderatorAuthority) guard.safe = true;
   if (!guard.safe) {
     markStartup('SHARED_CHECKPOINT_PUBLISH_PROTECTED', { area:'master', missing:guard.missing.length, stale:guard.stale.length, localRecords:Object.keys(records).length, remoteRecords:guard.remoteRecords });
     return { published:false, protected:true, reason:'local-master-incomplete', head, hub:checked.manifest, records:Object.keys(records).length, missingRecords:guard.missing.slice(0,50), staleRecords:guard.stale.slice(0,50) };
@@ -1336,12 +1372,120 @@ async function publishMasterCheckpoint(actorId = '') {
   const saved = await sharedHub.publishMaster(checked.root, {
     records,
     inventory:prewipeMasterRecovery.masterCoverage(records),
+    authority:'moderator',
   }, { actorId, previousRevision: head && head.revision || 0 });
+  // Kendi yayımımız bu cihazda yeniden "uzaktan gelen kural" diye uygulanmaz.
+  if (saved && saved.revision) await rememberModeratorMasterRevision(checked.manifest.hubId, saved.revision).catch(()=>{});
   return { published:true, unchanged:saved && saved.unchanged === true, head:saved, hub:checked.manifest, records:Object.keys(records).length };
+}
+/* MODERATÖR KURALLARININ ALINMASI (v20261009).
+   Çalışma kuralları (bağlantılar, kur, endeksmatik, yol süreleri, DTR/Non-DTR,
+   fiyat kuralları) eşler arası delta kanalından geçmez. Moderatör yayımlar →
+   ortak klasöre Master checkpoint olarak gider → her Buyer Log yeni yayımı
+   yerel kopyasına birleştirir ve yerelden çalışmaya devam eder. Moderatör
+   kuralı yereldeki değeri koşulsuz değiştirir: "hangisini tutayım" sorusu
+   (çakışma) üretilmez. Cihaza özel alanlar (kaynak klasörleri, son çalıştırma,
+   gizli alanlar) mergeCheckpointRecord ile korunur. Hangi yayımın uygulandığı
+   bootstrap işaretinden AYRI tutulur: bootstrap işareti uygulamadan da ilerler. */
+const MODERATOR_MASTER_STATE_FILE = path.join(LOCAL_DATA_ROOT, 'moderator-master-state.json');
+function readModeratorMasterState() {
+  try { const value = JSON.parse(fs.readFileSync(MODERATOR_MASTER_STATE_FILE, 'utf8')); return value && typeof value === 'object' ? value : {}; }
+  catch (_) { return {}; }
+}
+async function rememberModeratorMasterRevision(hubId, revision) {
+  const current = readModeratorMasterState();
+  const next = String(current.hubId || '') === String(hubId || '')
+    ? Math.max(Number(current.revision) || 0, Number(revision) || 0)
+    : Number(revision) || 0;
+  atomicWriteJson(MODERATOR_MASTER_STATE_FILE, { hubId:String(hubId || ''), revision:next, updatedAt:new Date().toISOString() });
+  return next;
+}
+async function pullModeratorMasterIfNewer() {
+  // Bu cihazda yayımlanmayı bekleyen Moderatör düzenlemesi varken uzak kural
+  // uygulanmaz; aksi hâlde yayımdan hemen önce yerel düzenleme ezilirdi.
+  if (masterCheckpointPending || masterCheckpointTimer || masterCheckpointInFlight) return { applied:0, reason:'local-publish-pending' };
+  const settings = await syncSettings.read();
+  if (!settings.sharedSyncRoot) return { applied:0, reason:'not-configured' };
+  const localState = sharedHub.readLocalState();
+  if (!localState || localState.completed !== true || !localState.hubId) return { applied:0, reason:'hub-not-bootstrapped' };
+  const head = await sharedHub.readMasterHead(settings.sharedSyncRoot);
+  const marker = readModeratorMasterState();
+  const appliedRevision = String(marker.hubId || '') === String(localState.hubId) ? Number(marker.revision) || 0 : 0;
+  if (!head || Number(head.revision) <= appliedRevision) return { applied:0, unchanged:true };
+  const remote = await sharedHub.readMaster(settings.sharedSyncRoot, null);
+  if (!remote || remote.unchanged || !remote.head) return { applied:0, unchanged:true };
+  // Otoritesiz checkpoint (eski sürüm ya da açılış onarımı) kural dağıtmaz.
+  // İşlenmiş sayılır: aynı revizyon her sync'te yeniden indirilmez.
+  if (!masterCheckpointHasModeratorAuthority(remote)) {
+    await rememberModeratorMasterRevision(localState.hubId, remote.head.revision);
+    return { applied:0, reason:'not-moderator-checkpoint', revision:remote.head.revision };
+  }
+  const remoteRecords = sharedSyncPolicy.scopeCheckpointRecords('master', checkpointRecords(remote));
+  // E-posta rehberi kullanıcılar arası paylaşılır ve kimlikle birleşir; bütün
+  // olarak Moderatör kopyasıyla değiştirilmez.
+  const ids = Object.keys(remoteRecords).filter(id => !sharedSyncPolicy.peerChannelAllows(id));
+  const before = await localDb.read();
+  const changedEntities = changedMasterEntities(remoteRecords, sharedSyncPolicy.masterRecordsFromState(before), ids);
+  const at = new Date().toISOString();
+  const result = await localDb.transaction(async next => {
+    next.records = next.records && typeof next.records === 'object' ? next.records : {};
+    next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
+    const touched = new Set(ids);
+    for (const id of ids) {
+      next.records[id] = { ...sharedSyncPolicy.mergeCheckpointRecord(next.records[id], remoteRecords[id]), _deleted:false };
+      next.revision = Math.max(Number(next.revision) || 0, sharedSyncPolicy.checkpointRecordRevision(remoteRecords[id]));
+      delete next.tombstones[id];
+    }
+    next.causalKnowledge = sharedSyncPolicy.mergeKnowledge(next.causalKnowledge, sharedSyncPolicy.checkpointWriterKnowledge(Object.fromEntries(ids.map(id => [id, remoteRecords[id]]))));
+    let closed = 0;
+    for (const conflict of Array.isArray(next.conflicts) ? next.conflicts : []) {
+      if (!conflict || conflict.resolved || !touched.has(String(conflict.id || ''))) continue;
+      conflict.resolved = true; conflict.resolvedAt = at; conflict.resolution = 'moderator-master';
+      delete conflict.current; delete conflict.incoming; conflict.valuesPruned = true;
+      closed += 1;
+    }
+    return { applied:ids.length, closedConflicts:closed };
+  });
+  await deltaStore.hydrate();
+  await rememberModeratorMasterRevision(localState.hubId, remote.head.revision);
+  if (changedEntities.length) announceRecoveredMasterEntities(changedEntities);
+  markStartup('MODERATOR_MASTER_APPLIED', { revision:remote.head.revision, records:result.applied, closedConflicts:result.closedConflicts, entities:changedEntities });
+  return { ...result, revision:remote.head.revision, entities:changedEntities };
+}
+/* Kapsam dışına alınan kayıt/alan için açık kalmış eski çakışmalar kapatılır.
+   Yerel değer olduğu gibi kalır (Moderatör kuralları ayrıca yukarıdaki yayım
+   yoluyla gelir); kullanıcıya artık anlamı olmayan bir seçim sorulmaz. */
+async function retireOutOfScopeSyncConflicts() {
+  const state = await localDb.read();
+  const stale = (Array.isArray(state.conflicts) ? state.conflicts : []).filter(item => item && !item.resolved && !sharedSyncPolicy.conflictInPeerScope(item));
+  if (!stale.length) return 0;
+  const at = new Date().toISOString();
+  const closed = await localDb.transaction(async next => {
+    let count = 0;
+    for (const conflict of Array.isArray(next.conflicts) ? next.conflicts : []) {
+      if (!conflict || conflict.resolved || sharedSyncPolicy.conflictInPeerScope(conflict)) continue;
+      conflict.resolved = true; conflict.resolvedAt = at; conflict.resolution = 'scope-retired';
+      delete conflict.current; delete conflict.incoming; conflict.valuesPruned = true;
+      count += 1;
+    }
+    return count;
+  });
+  if (closed) markStartup('SYNC_CONFLICTS_SCOPE_RETIRED', { closed });
+  return closed;
+}
+let afterSharedSyncInFlight = null;
+function afterSharedSyncCompleted() {
+  if (afterSharedSyncInFlight) return afterSharedSyncInFlight;
+  afterSharedSyncInFlight = (async () => {
+    await retireOutOfScopeSyncConflicts().catch(error => logRuntimeFailure('retireSyncConflicts', error));
+    return pullModeratorMasterIfNewer();
+  })().finally(() => { afterSharedSyncInFlight = null; });
+  return afterSharedSyncInFlight;
 }
 let masterCheckpointTimer = null;
 let masterCheckpointPending = false;
 let masterCheckpointActor = '';
+let masterCheckpointInFlight = false;
 function scheduleMasterCheckpointPublish(actorId = '', delayMs = 1500) {
   masterCheckpointPending = true;
   if (actorId) masterCheckpointActor = String(actorId).slice(0,160);
@@ -1351,6 +1495,7 @@ function scheduleMasterCheckpointPublish(actorId = '', delayMs = 1500) {
     if (!masterCheckpointPending) return;
     masterCheckpointPending = false;
     const actor = masterCheckpointActor; masterCheckpointActor = '';
+    masterCheckpointInFlight = true;
     try {
       if (typeof deltaStore.flush === 'function') await deltaStore.flush();
       await syncSettings.syncOnce().catch(()=>null);
@@ -1372,7 +1517,7 @@ function scheduleMasterCheckpointPublish(actorId = '', delayMs = 1500) {
         masterCheckpointTimer = setTimeout(() => { masterCheckpointTimer = null; scheduleMasterCheckpointPublish('', 250); }, 30000);
         masterCheckpointTimer.unref?.();
       }
-    }
+    } finally { masterCheckpointInFlight = false; }
   }, Math.max(250, Number(delayMs)||1500));
   masterCheckpointTimer.unref?.();
 }
@@ -1403,9 +1548,16 @@ async function publishBusinessCheckpoint(actorId='') {
   const saved=await sharedHub.publishBusiness(checked.root,{records,syncHeads},{actorId,previousRevision:head&&head.revision||0});
   return {published:true,unchanged:saved&&saved.unchanged===true,head:saved,hub:checked.manifest,records:Object.keys(records).length,syncHeads:Object.keys(syncHeads).length};
 }
-let businessCheckpointTimer=null;
+/* İş checkpoint'i yeni kurulumlar için bir hızlandırıcıdır. Her cihaz her
+   sync'ten sonra yayımlarsa 200 yazar aynı current.json için yarışır. Moderatör
+   oturumu olan cihaz her sync sonrası, diğerleri açılıştan en erken 12 saat
+   sonra ve en fazla 12 saatte bir dener (sabah açılışlarında toplu yazım olmaz). */
+let businessCheckpointTimer=null,businessCheckpointLastAttemptAt=Date.now();
+const BUSINESS_CHECKPOINT_PEER_INTERVAL_MS=12*60*60000;
 function scheduleBusinessCheckpointPublish(actorId='',delayMs=5000){
   if(businessCheckpointTimer)return;
+  if(!moderatorActiveOnThisDevice()&&Date.now()-businessCheckpointLastAttemptAt<BUSINESS_CHECKPOINT_PEER_INTERVAL_MS)return;
+  businessCheckpointLastAttemptAt=Date.now();
   businessCheckpointTimer=setTimeout(async()=>{
     businessCheckpointTimer=null;
     try{await publishBusinessCheckpoint(actorId);}catch(error){logRuntimeFailure('businessCheckpointBackground',error);}
@@ -1698,6 +1850,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
         offline:false,
       };
       sharedHubStartupSettled = true;
+      lastFullBootstrapReadyAt = Date.now();
       setBootstrapProgress(result);
       return bootstrapStatusSnapshot();
     } catch (error) {
@@ -1734,16 +1887,31 @@ async function bootstrapSharedHub({ force = false } = {}) {
 // the ordinary authorization path. A configured Hub is reconciled in the
 // background; a first-run device is gated by the pre-login bootstrap endpoint.
 setImmediate(() => { void bootstrapSharedHub().then(result => markStartup('SHARED_HUB_BOOTSTRAP', { status:result.status, loginAllowed:result.loginAllowed })).catch(error => logRuntimeFailure('sharedHubBootstrap', error)); });
-const iamPollTimer = setInterval(() => { void bootstrapSharedHub().catch(()=>{}); }, 45000);
+/* Periyodik Shared Hub bakımı (v20261009). Tam bootstrap (tam sync, Master
+   ve iş checkpoint'lerinin tamamını okuma, kurtarma taramaları) eskiden her
+   45 sn'de ve her sync sonrasında her cihazda çalışıyordu; kullanıcının
+   "15 dk" sync ayarı fiilen 45 sn oluyordu. Hazır bir cihazda 45 sn'lik tur
+   yalnız kullanıcı/yetki dizinini tazeler; tam doğrulama 30 dakikada bir. */
+const FULL_BOOTSTRAP_INTERVAL_MS = 30 * 60000;
+async function periodicSharedHubMaintenance() {
+  const local = sharedHub.readLocalState();
+  const settled = sharedHubStartupSettled && local && local.completed === true && lastFullBootstrapReadyAt > 0;
+  if (!settled || Date.now() - lastFullBootstrapReadyAt >= FULL_BOOTSTRAP_INTERVAL_MS) return bootstrapSharedHub();
+  return userAccess.refreshIam({ timeoutMs:30000 });
+}
+const iamPollTimer = setInterval(() => { void periodicSharedHubMaintenance().catch(()=>{}); }, 45000);
 iamPollTimer.unref();
 // Generic Master Data stores are written through several existing routes. This
 // low-frequency safety net keeps the bootstrap checkpoint fresh without turning
 // normal sync into network polling; unchanged payloads are content-deduplicated.
-const masterCheckpointReconcileTimer = setInterval(() => scheduleMasterCheckpointPublish('', 750), 300000);
+// Yalnız Moderatör oturumu görülen cihazda çalışır (bkz. MODERATÖR OTORİTESİ).
+const masterCheckpointReconcileTimer = setInterval(() => {
+  if (moderatorActiveOnThisDevice()) scheduleMasterCheckpointPublish(moderatorSessionActor, 750);
+}, 300000);
 masterCheckpointReconcileTimer.unref();
 syncSettings.onStateChange(state => {
   if (state && state.lastSync && !state.progress) {
-    void bootstrapSharedHub().catch(()=>{});
+    void afterSharedSyncCompleted().catch(error => logRuntimeFailure('afterSharedSync', error));
     scheduleBusinessCheckpointPublish('',5000);
   }
 });
@@ -1868,6 +2036,8 @@ app.post('/api/user-login', express.json({ limit: '64kb' }), (req, res, next) =>
 app.post('/api/user-logout', userAccess.logoutHandler);
 app.get('/api/current-user', userAccess.currentHandler);
 app.use(userAccess.requireSelection);
+// Master yayım yetkisi: bu bilgisayarda Moderatör oturumu görüldü mü?
+app.use((req, res, next) => { noteModeratorSession(req.currentUser); next(); });
 // Sipariş bazlı düzenlemeler yalnız kullanıcının veri kapsamındaki siparişler
 // için döner (bkz. override-scope.js). Güvenlik ağı: override belgesi taşıyan
 // HER yanıt burada kırpılır; yeni bir uç eklendiğinde atlanması mümkün olmaz.
@@ -3737,6 +3907,14 @@ require('./routes/plm-translation-routes')(app, {
   upsertPlmTranslations,
   userAccess,
 
+});
+// ---- Koleksiyon kumaş kartları (kumaş kodu → özet) → server/routes/fabric-card-routes.js ----
+require('./routes/fabric-card-routes')(app, {
+  apiError,
+  express,
+  fabricCards,
+  requestRevision,
+  userAccess,
 });
 // ---- CoreNectum PLM Code -> styleId deep-link dictionary ------------------
 // CoreNectum oturum bilgileri Buyer Log'a alınmaz. Eşleşmeler CSV/Excel ile

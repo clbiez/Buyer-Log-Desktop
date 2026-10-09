@@ -1,16 +1,181 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-08",
+  "publishedAt": "2026-10-09",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Güncellemeler kaybolmuyor; OAB daha hızlı",
-    "en": "Edits are no longer lost; faster OAB"
+    "tr": "Daha güvenli ve hızlı SYNC",
+    "en": "Safer and faster SYNC"
   },
   "summary": {
-    "tr": "Takılı kalan paylaşılan veri kilidi kendiliğinden temizleniyor; OAB verisi tek rapor isteğinde geliyor.",
-    "en": "A stuck shared-data lock clears itself; OAB data arrives in a single report request."
+    "tr": "Çalışma kuralları artık yalnız Moderatörden gelir; kullanıcılar arasında yalnız gereken iş verisi paylaşılır ve sync gereksiz ağ trafiğinden arındırıldı.",
+    "en": "Working rules now come only from the Moderator; only the business data users need is shared between users, and sync no longer generates unnecessary network traffic."
   },
   "changes": [
+    {
+      "id": "sync-moderator-authority-conflicts",
+      "type": "fix",
+      "module": {
+        "tr": "Sync",
+        "en": "Sync"
+      },
+      "title": {
+        "tr": "Ayar çakışmaları (modelConnections) artık oluşmuyor",
+        "en": "Settings conflicts (modelConnections) no longer occur"
+      },
+      "path": {
+        "tr": "Üst çubuk › Sync durumu › Çakışmaları görüntüle",
+        "en": "Top bar › Sync status › View Conflicts"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-scope-moderator-authority.png",
+        "alt": {
+          "tr": "Sync Durumu penceresi: ayar çakışmaları kapanmış, yalnız iki kullanıcının aynı anda değiştirdiği bir Supp. FOB alanı çakışma olarak kalmış — demo verili Buyer Log ekranı",
+          "en": "Sync Status window: settings conflicts are closed, only a Supp. FOB field changed by two users at the same time remains as a conflict — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Yalnız gerçek iş verisi çakışması kullanıcıya sorulur",
+          "en": "Only real business-data conflicts are shown to the user"
+        }
+      },
+      "body": {
+        "tr": "Her veri yenilemesi bağlantı listesine son çalıştırma bilgisini yazıyor ve liste tüm kullanıcılara yayıldığı için yüzlerce \"store:settings.json · modelConnections\" çakışması oluşuyordu. Bağlantı ayarları, kur, Endeksmatik, yol süreleri, DTR/Non-DTR üreticileri ve fiyat kuralları artık kullanıcılar arasında yayılmaz: yalnız Moderatörün yayımladığı kurallar ortak klasörden alınır ve yerel kopyaya soru sorulmadan uygulanır. Kapsam dışına alınan alanlardaki açık çakışmalar ilk sync'te kendiliğinden kapanır.",
+        "en": "Every data refresh wrote its last-run details into the connection list, and because the list was spread to all users hundreds of \"store:settings.json · modelConnections\" conflicts appeared. Connection settings, FX, Endeksmatik, transit times, DTR/Non-DTR manufacturers and pricing rules are no longer spread between users: only the rules the Moderator publishes are taken from the shared folder and applied to the local copy without prompting. Open conflicts on fields that are no longer shared close automatically on the first sync."
+      }
+    },
+    {
+      "id": "sync-shared-scope-performance",
+      "type": "improvement",
+      "module": {
+        "tr": "Sync",
+        "en": "Sync"
+      },
+      "title": {
+        "tr": "Paylaşılan alanlar daraltıldı, sync hızlandı",
+        "en": "Shared fields narrowed, sync is faster"
+      },
+      "path": {
+        "tr": "Üst çubuk › Sync durumu",
+        "en": "Top bar › Sync status"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-faster-local-first.png",
+        "alt": {
+          "tr": "Sync Durumu penceresi: Synced, yüklenecek ve indirilecek değişiklik yok, sonraki otomatik sync 15 dakika sonra — demo verili Buyer Log ekranı",
+          "en": "Sync Status window: Synced, nothing to upload or download, next automatic sync in 15 minutes — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Yerel kalan değişiklik bekleyen sayılmaz; seçilen sync aralığına uyulur",
+          "en": "Local-only changes are not counted as waiting; the selected sync interval is honoured"
+        }
+      },
+      "body": {
+        "tr": "Kullanıcılar arasında artık yalnız CP Ex-Factory revizeleri, CP Sub-Manufacturer ve Supp. FOB bilgileri ile Manufacturers e-posta rehberi paylaşılır; koleksiyonlar kendi sahip bazlı aktarımıyla gelmeye devam eder. CP notları, teslim tipi, shortage ve kişisel dosyalar (sevkiyat karşılaştırması, açık maliyet, şablonlar, fiyat talepleri) bilgisayarda kalır. Yerel kalan değişiklikler \"bekleyen\" sayılmaz, zaten uygulanmış paketler yeniden indirilmez ve tam doğrulama 45 saniye yerine 30 dakikada bir çalışır; seçilen sync aralığına uyulur.",
+        "en": "Only CP Ex-Factory revisions, CP Sub-Manufacturer and Supp. FOB details and the Manufacturers e-mail directory are now shared between users; collections continue to arrive through their own owner-based transfer. CP notes, delivery type, shortage and personal files (shipping comparison, open costing, templates, price requests) stay on the computer. Local-only changes are not counted as waiting, packages that were already applied are not downloaded again, and the full check runs every 30 minutes instead of every 45 seconds; the selected sync interval is honoured."
+      }
+    },
+    {
+      "id": "collection-text-fit-row-height",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Uzun metinler hücrede yarım satır kesilmiyor",
+        "en": "Long text is no longer cut off mid-line in cells"
+      },
+      "path": {
+        "tr": "Sol menü › Koleksiyon",
+        "en": "Left menu › Collection"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-text-fit-row-height.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: Kumaş hücrelerinde iki satıra sarılan metin tam görünüyor, tek satırlı metin dikeyde ortalı — demo verili Buyer Log ekranı",
+          "en": "Collection table: text wrapping to two lines in Fabric cells is fully visible, single-line text is vertically centered — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Metin, satırın gerçek yüksekliğini tam satırlar halinde kullanır",
+          "en": "Text uses the row's real height in whole lines"
+        }
+      },
+      "body": {
+        "tr": "Kumaş, Artwork Detayı gibi metin hücreleri satır yüksekliğinden bağımsız olarak tek satırlık sabit bir alanda çiziliyordu; ikinci satır yarıdan kesik görünüyordu. Metin artık satırın gerçekten kullanılabilen yüksekliğine göre tam satırlar halinde gösterilir, tek satırlı metin dikeyde ortalı kalır. Satıra sığmayan metin, hücre düzenlenirken kaydırılarak okunabilir.",
+        "en": "Text cells such as Fabric and Artwork Detail were drawn in a fixed one-line box regardless of row height, so the second line looked cut in half. Text now uses the row's actually available height in whole lines, and single-line text stays vertically centered. Text that does not fit the row can be scrolled while editing the cell."
+      }
+    },
+    {
+      "id": "collection-artwork-detail-plm-sync-refresh",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "PLM SYNC › Model Detayları artık Artwork Detayını da güncelliyor",
+        "en": "PLM SYNC › Model Details now also refreshes Artwork Detail"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM SYNC › Tümünü Güncelle › Model Detayları",
+        "en": "Collection › PLM SYNC › Update All › Model Details"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-detail-plm-sync.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: PLM SYNC sonrası Artwork Detayı sütunu yeni BOM baskı özetlerini gösteriyor, bildirimde 3 artwork detayı güncellendi yazıyor — demo verili Buyer Log ekranı",
+          "en": "Collection table: after PLM SYNC the Artwork Detail column shows the new BOM print summaries and the notification says 3 artwork details were updated — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Yalnız baskı bilgisi değişen modeller de senkron sonunda güncellenir",
+          "en": "Models whose only change is their print data are also updated when the sync finishes"
+        }
+      },
+      "body": {
+        "tr": "PLM'de yalnız BOM/baskı bilgisi değişen modellerde Model Detayları senkronu \"hepsi güncel\" deyip Artwork Detayı sütununu eski değerde bırakıyordu. Senkron artık kaydettiği BOM özetlerini tabloya hemen yansıtıyor ve kaç artwork detayının güncellendiğini bildiriyor. LCW AI'a ulaşılamadığı ya da analizin ertelendiği modeller de bir sonraki senkronda yeniden çözümleniyor. Elle düzenlediğiniz Artwork Detayı hücreleri korunur; hücreyi temizlerseniz PLM değeri geri gelir.",
+        "en": "For models whose only PLM change was their BOM/print data, the Model Details sync reported \"all up to date\" and left the Artwork Detail column on the old value. The sync now applies the BOM summaries it saved to the table right away and reports how many artwork details were updated. Models whose LCW AI analysis was unavailable or deferred are also re-analysed on the next sync. Artwork Detail cells you edited by hand are kept; clear the cell to bring back the PLM value."
+      }
+    },
+    {
+      "id": "collection-fabric-cards",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kumaş kartları: uzun PLM kumaş bilgisi yerine kısa özet",
+        "en": "Fabric cards: a short summary instead of long PLM fabric information"
+      },
+      "path": {
+        "tr": "Koleksiyon › Kumaş sütunu › çift tık",
+        "en": "Collection › Fabric column › double-click"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-cards.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: Kumaş sütununda her satır kumaş kodu etiketi ve kısa kart özetiyle görünüyor — demo verili Buyer Log ekranı",
+          "en": "Collection table: each row of the Fabric column shows a fabric code tag and a short card summary — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Aynı kumaş kodlu her model aynı kartı kullanır",
+          "en": "Every model with the same fabric code uses the same card"
+        }
+      },
+      "body": {
+        "tr": "PLM'den gelen kumaş bilgisi değiştirilmeden saklanır; Buyer Log kumaş koduna (ör. 3859) bir kumaş kartı bağlar ve tabloda yalnız kartın kısa özetini gösterir. Özet Türkçe ve İngilizce tutulur; tablo aktif dildeki özeti gösterir. PLM'den model aktarıldığında kartı olmayan kodlar LCW AI ile analiz edilir; öneri PLM metniyle doğrulanır, önizlenir ve onayınızla kaydedilir. Kartı olan kod için LCW AI'a tekrar sorulmaz. Hücreye çift tıklayınca özet, ayrıntılar ve tam PLM metni açılır; özeti ve ayrıntıları düzenleyebilir ya da kartı silebilirsiniz.",
+        "en": "Fabric information from PLM is kept unchanged; Buyer Log links a fabric card to the fabric code (e.g. 3859) and shows only the card's short summary in the table. The summary is kept in Turkish and English; the table shows the summary in the active language. When models are imported from PLM, codes without a card are analysed with LCW AI; the suggestion is checked against the PLM text, previewed and saved with your approval. LCW AI is not asked again for a code that already has a card. Double-click the cell to see the summary, the details and the full PLM text; you can edit the summary and details or delete the card."
+      }
+    },
     {
       "id": "shared-lock-stale-owner-recovered",
       "type": "fix",
