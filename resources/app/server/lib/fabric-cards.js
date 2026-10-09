@@ -25,7 +25,7 @@ function clean(value, max = 500) {
 }
 function normalizeCode(value) {
   const text = clean(value, 20);
-  return /^\d{3,8}$/.test(text) ? text : '';
+  return /^\d{3,12}$/.test(text) ? text : '';
 }
 function actorName(actor) { return clean(actor && (actor.displayName || actor.username || actor.id), 160); }
 function emptyStore() {
