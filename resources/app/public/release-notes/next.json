@@ -109,6 +109,39 @@
         "tr": "Kumaş, Artwork Detayı gibi metin hücreleri satır yüksekliğinden bağımsız olarak tek satırlık sabit bir alanda çiziliyordu; ikinci satır yarıdan kesik görünüyordu. Metin artık satırın gerçekten kullanılabilen yüksekliğine göre tam satırlar halinde gösterilir, tek satırlı metin dikeyde ortalı kalır. Satıra sığmayan metin, hücre düzenlenirken kaydırılarak okunabilir.",
         "en": "Text cells such as Fabric and Artwork Detail were drawn in a fixed one-line box regardless of row height, so the second line looked cut in half. Text now uses the row's actually available height in whole lines, and single-line text stays vertically centered. Text that does not fit the row can be scrolled while editing the cell."
       }
+    },
+    {
+      "id": "collection-artwork-detail-plm-sync-refresh",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "PLM SYNC › Model Detayları artık Artwork Detayını da güncelliyor",
+        "en": "PLM SYNC › Model Details now also refreshes Artwork Detail"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM SYNC › Tümünü Güncelle › Model Detayları",
+        "en": "Collection › PLM SYNC › Update All › Model Details"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-detail-plm-sync.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: PLM SYNC sonrası Artwork Detayı sütunu yeni BOM baskı özetlerini gösteriyor, bildirimde 3 artwork detayı güncellendi yazıyor — demo verili Buyer Log ekranı",
+          "en": "Collection table: after PLM SYNC the Artwork Detail column shows the new BOM print summaries and the notification says 3 artwork details were updated — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Yalnız baskı bilgisi değişen modeller de senkron sonunda güncellenir",
+          "en": "Models whose only change is their print data are also updated when the sync finishes"
+        }
+      },
+      "body": {
+        "tr": "PLM'de yalnız BOM/baskı bilgisi değişen modellerde Model Detayları senkronu \"hepsi güncel\" deyip Artwork Detayı sütununu eski değerde bırakıyordu. Senkron artık kaydettiği BOM özetlerini tabloya hemen yansıtıyor ve kaç artwork detayının güncellendiğini bildiriyor. LCW AI'a ulaşılamadığı ya da analizin ertelendiği modeller de bir sonraki senkronda yeniden çözümleniyor. Elle düzenlediğiniz Artwork Detayı hücreleri korunur; hücreyi temizlerseniz PLM değeri geri gelir.",
+        "en": "For models whose only PLM change was their BOM/print data, the Model Details sync reported \"all up to date\" and left the Artwork Detail column on the old value. The sync now applies the BOM summaries it saved to the table right away and reports how many artwork details were updated. Models whose LCW AI analysis was unavailable or deferred are also re-analysed on the next sync. Artwork Detail cells you edited by hand are kept; clear the cell to bring back the PLM value."
+      }
     }
   ]
 }
