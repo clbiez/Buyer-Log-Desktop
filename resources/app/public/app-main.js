@@ -28148,14 +28148,15 @@ const KOL_PLM_TRANSLATION_RULES=Object.freeze({
     '2638 - KEY JERSEY BODY LONG SLEEVED-LICENSE':'KEY ORME BODY U.KOL-LİSANS',
   }),
   line:Object.freeze({}),
+  productMainDefinition:Object.freeze({}),
 });
-let kolPlmApprovedTranslationRules={category:new Map(),line:new Map(),license:new Map()};
+let kolPlmApprovedTranslationRules={category:new Map(),line:new Map(),license:new Map(),productMainDefinition:new Map()};
 let kolPlmApprovedTranslationRevision=0;
 // "Olduğu gibi taşı" seçimleri çeviri kuralı değildir (otomatik uygulanmaz);
 // yalnız eşleme ekranında son seçim olarak işaretli gelmek için hatırlanır.
-let kolPlmRememberedKeepAsIs={category:new Set(),line:new Set(),license:new Set()};
+let kolPlmRememberedKeepAsIs={category:new Set(),line:new Set(),license:new Set(),productMainDefinition:new Set()};
 function kolPlmSetApprovedTranslationRules(payload){
-  const next={category:new Map(),line:new Map(),license:new Map()},keep={category:new Set(),line:new Set(),license:new Set()};
+  const next={category:new Map(),line:new Map(),license:new Map(),productMainDefinition:new Map()},keep={category:new Set(),line:new Set(),license:new Set(),productMainDefinition:new Set()};
   const rules=payload&&payload.rules&&typeof payload.rules==='object'?payload.rules:{};
   Object.keys(next).forEach(field=>(Array.isArray(rules[field])?rules[field]:[]).forEach(item=>{
     const source=norm(item&&item.source),target=norm(item&&item.target);if(!source||!target)return;
@@ -28167,7 +28168,7 @@ async function kolPlmLoadApprovedTranslations(){
   try{
     const res=await fetch('/api/plm-translations',{cache:'no-store'}),data=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(data.error||res.statusText);kolPlmSetApprovedTranslationRules(data);return data;
-  }catch(err){console.warn('PLM translation dictionary could not be loaded:',err);return {rules:{category:[],line:[],license:[]},revision:kolPlmApprovedTranslationRevision};}
+  }catch(err){console.warn('PLM translation dictionary could not be loaded:',err);return {rules:{category:[],line:[],license:[],productMainDefinition:[]},revision:kolPlmApprovedTranslationRevision};}
 }
 async function kolPlmSaveApprovedTranslations(items){
   const clean=(Array.isArray(items)?items:[]).filter(item=>item&&item.field&&norm(item.source)&&norm(item.target));
@@ -28276,6 +28277,7 @@ function kolPlmInferTranslationSuggestions(parsedRows){
     // line: PLM doğru kabul edilir — öneri/öğrenme üretilmez (bkz. KOL_PLM_DIRECT_FIELDS).
     unique('category').forEach(value=>add('category',row._plmSource?.categoryRaw,value,plmId));
     unique('license').forEach(value=>add('license',row._plmSource?.brandToken,value,plmId));
+    unique('productDescription').forEach(value=>add('productMainDefinition',row._plmSource?.productMainDefinition,value,plmId));
   });
   const suggestions=[...buckets.values()].map(bucket=>{
     const targets=[...bucket.targets.entries()].sort((a,b)=>b[1]-a[1]||String(a[0]).localeCompare(String(b[0]),'tr-TR'));
@@ -28289,6 +28291,7 @@ const KOL_PLM_TRANSLATION_FIELD_META=Object.freeze({
   category:{label:'Category',catalog:'category',source:'categoryRaw',target:'urunTipi'},
   line:{label:'Line',catalog:'line',source:'lineRaw',target:'line'},
   license:{label:'License',catalog:'license',source:'brandToken',target:'lisans'},
+  productMainDefinition:{label:'Product Main Definition',catalog:'productMainDefinition',source:'productMainDefinition',target:'productMainDefinition'},
 });
 /* LINE kodları için PLM DOĞRU KABUL EDİLİR (kullanıcı kararı). Line, PLM'de
    zaten Buyer Log ile aynı kodlama ile tutuluyor; ASAS'a "çevirmeye" çalışmak
@@ -28444,7 +28447,7 @@ function showKolPlmTranslationReview(questions){
   });
 }
 function kolPlmApplyReviewedMappings(rows,mappings,translationInfo){
-  const specs={line:{source:'lineRaw',target:'line'},category:{source:'categoryRaw',target:'urunTipi'},license:{source:'brandToken',target:'lisans'}};
+  const specs={line:{source:'lineRaw',target:'line'},category:{source:'categoryRaw',target:'urunTipi'},license:{source:'brandToken',target:'lisans'},productMainDefinition:{source:'productMainDefinition',target:'productMainDefinition'}};
   const list=Array.isArray(mappings)?mappings:[];
   (rows||[]).forEach(row=>list.forEach(mapping=>{
     if(kolPlmIsDirectField(mapping.field))return; // line asla çeviri onayıyla ezilmez.
@@ -28479,8 +28482,9 @@ function kolPlmApplyAsasTranslations(parsedRows,translationInfo=null){
     line:{source:'lineRaw',target:'line',asas:'line'},
     category:{source:'categoryRaw',target:'urunTipi',asas:'category'},
     license:{source:'brandToken',target:'lisans',asas:'license'},
+    productMainDefinition:{source:'productMainDefinition',target:'productMainDefinition',asas:'productDescription'},
   };
-  const learned={line:new Map(),category:new Map(),license:new Map()};
+  const learned={line:new Map(),category:new Map(),license:new Map(),productMainDefinition:new Map()};
   (info.suggestions||[]).forEach(item=>{
     if(!item||item.conflict||!item.target||!learned[item.field])return;
     learned[item.field].set(turknorm(item.source),item.target);
@@ -28602,7 +28606,7 @@ function kolPlmParseWorkbook(wb,matrix,imagesByRow){
     })||[{colourCode:norm(raw.colourCode),colour:norm(raw.colour)}];
     colourVariants.forEach(variant=>{
       const row=migrateKolRow({
-        id:0,plmId,modelKod,productMainDefinition:source.productMainDefinition,specialCode:norm(raw.specialCode),season:kolPlmSeason(raw.seasonRaw),
+        id:0,plmId,modelKod,productMainDefinition:kolPlmTranslate('productMainDefinition',source.productMainDefinition),specialCode:norm(raw.specialCode),season:kolPlmSeason(raw.seasonRaw),
         mag:kolPlmCodePrefix(raw.magRaw),mmyg:kolPlmCodePrefix(raw.mmygRaw),buyingGroup:norm(raw.buyingGroup),
         colourCode:variant.colourCode,colour:variant.colour,fabric:norm(raw.fabric),fit:norm(raw.fit),
         line:kolPlmTranslate('line',source.lineRaw),urunTipi:kolPlmTranslate('category',source.categoryRaw),
@@ -28645,7 +28649,7 @@ function kolPlmNormalizeDirectRecord(record){
     productType:norm(r.productType),ageGroup:norm(r.ageGroup),statusRaw:norm(r.statusRaw),orderStatusRaw:norm(r.orderStatusRaw),
   };
   const row=migrateKolRow({
-    id:0,plmId:norm(r.plmId),modelKod,productMainDefinition:source.productMainDefinition,specialCode:norm(r.specialCode),season:kolPlmSeason(r.season),
+    id:0,plmId:norm(r.plmId),modelKod,productMainDefinition:kolPlmTranslate('productMainDefinition',source.productMainDefinition),specialCode:norm(r.specialCode),season:kolPlmSeason(r.season),
     mag:kolPlmCodePrefix(r.magRaw),mmyg:kolPlmCodePrefix(r.mmygRaw),buyingGroup:norm(r.buyingGroup),
     colourCode:norm(r.colourCode),colour:norm(r.colour),fabric:norm(r.fabric),fit:norm(r.fit),
     line:kolPlmTranslate('line',source.lineRaw),urunTipi:kolPlmTranslate('category',source.categoryRaw),
@@ -29712,7 +29716,7 @@ function kolPlmSyncStampStatus(targetRows,summary,{applied}){
   });
 }
 // Koleksiyon alan anahtarından ASAS çeviri alanına — yalnız çevrilen üçü.
-const KOL_PLM_SYNC_TRANSLATION_FIELD_BY_KEY={line:'line',urunTipi:'category',lisans:'license'};
+const KOL_PLM_SYNC_TRANSLATION_FIELD_BY_KEY={line:'line',urunTipi:'category',lisans:'license',productMainDefinition:'productMainDefinition'};
 /* "X modeline Y modelinin license bilgisi geliyordu" hatasının kökü: eski
    onaylı bir kural (approved-rule), kısa/belirsiz bir marka önekine (ör.
    "FB") sahip FARKLI bir model için sessizce yeniden kullanılıyordu.
