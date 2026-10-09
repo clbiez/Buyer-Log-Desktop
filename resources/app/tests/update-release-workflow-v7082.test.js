@@ -28,7 +28,9 @@ test('release workflows can be triggered from repository request files without r
   assert.match(testWorkflow,/--notes "\$RELEASE_NOTES"/);
   assert.match(stableWorkflow,/release-requests\/stable\.json/);
   assert.match(stableWorkflow,/promote-stable "\$PROMOTE_VERSION"/);
-  assert.match(versionWorkflow,/paths-ignore:[\s\S]*release-requests\/\*\*/);
+  assert.match(versionWorkflow,/paths:[\s\S]*resources\/app\/package\.json/);
+  assert.match(versionWorkflow,/workflow_dispatch:/);
+  assert.match(versionWorkflow,/already immutably records/);
 });
 
 
@@ -51,4 +53,16 @@ test('STABLE promotion reads the verified TEST manifest from the release repo an
   assert.match(body,/provider\.copyArtifact\('test',test\.artifact,artifact,version\)/);
   assert.match(body,/TEST public artifact SHA\/boyut doğrulaması başarısız/);
   assert.doesNotMatch(body,/gh\(\['release','download',tag\('test',version\),'--pattern',name/);
+});
+
+
+test('installer / TEST release publish directly without Actions artifact quota',()=>{
+  const root=path.resolve(__dirname,'..','..','..');
+  const installer=fs.readFileSync(path.join(root,'.github','workflows','buyerlog-installer.yml'),'utf8');
+  const testRelease=fs.readFileSync(path.join(root,'.github','workflows','buyerlog-test-release.yml'),'utf8');
+  assert.doesNotMatch(installer,/actions\/upload-artifact/);
+  assert.doesNotMatch(testRelease,/actions\/upload-artifact/);
+  assert.match(installer,/gh release upload "stable-v\$VERSION"/);
+  assert.match(testRelease,/needs: full-regression/);
+  assert.match(testRelease,/npm test/);
 });

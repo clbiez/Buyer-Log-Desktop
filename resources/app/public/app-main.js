@@ -7242,9 +7242,11 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
     let size=50;try{size=(window.BLStorage||localStorage).getItem(`bl.tableRange.${tableKey}.v1`);}catch(_){}
     const bar=document.createElement('div');bar.className='tableRangeBar';
     bar.innerHTML='<select data-range-size><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="all"></option></select><output data-range-info role="status" aria-live="polite"></output><span class="tableRangePager"><button type="button" data-range-prev>‹</button><input data-range-page type="number" min="1" step="1"><span data-range-pages></span><button type="button" data-range-next>›</button></span>';
-    /* CP ve Siparişler'de ayrı satır açmaz: araç satırının en sağına kompakt
-       yerleşir (sabitlenmiş; taşma menüsüne düşmez). Diğer tablolar eski yerinde. */
-    const toolbar=(tableKey==='cp'||tableKey==='orders')?document.getElementById(`${tableKey}TableToolbar`):null;
+    /* CP, Siparişler ve Koleksiyon'da ayrı satır açmadan araç satırının en
+       sağına yerleşir; sayfalama taşma menüsüne düşmez. */
+    const toolbarId=tableKey==='koleksiyon'?'kolTableToolbar':
+      (tableKey==='cp'||tableKey==='orders')?`${tableKey}TableToolbar`:null;
+    const toolbar=toolbarId?document.getElementById(toolbarId):null;
     if(toolbar){bar.classList.add('tableRangeBar--inline');bar.dataset.tbPriority='pinned';bar.dataset.tbOverflow='never';toolbar.appendChild(bar);}
     else{const wrap=table.closest('.tablewrap')||table;wrap.before(bar);}
     view={controller:BLTableRange.create(size),bar,rerender};_tableRangeViews.set(table,view);
@@ -24016,6 +24018,7 @@ function kolFilterValue(row,key){
   const effective=kolEffectiveValue(row,key);
   if(col?.checklist)return kolChecklistStatusLabel(kolChecklistStatus(effective));
   if(col?.custom&&schema){ const value=schema.filterValue(effective); return value==null?'':String(value); }
+  if(key==='fabric')return kolFabricDisplay(effective);
   return norm(effective);
 }
 function kolFilterMeta(key){
@@ -26727,6 +26730,9 @@ function renderKol(){
         // hücresindeki sağ tık menüsü aynı kanonik PLM resolver'ını kullanır;
         // böylece spreadsheet left-click/edit/range davranışı sade kalır.
         html+=`<td class="editTd plmEditTd plmModelLinkCell"${rc} data-copy-text="${escapeHtml(cur)}"><div class="plmEditCell"><textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(cur)}</textarea></div></td>`;
+      }else if(c.k==='fabric'&&kolFabricParts(val).length){
+        kolFabricCardsEnsureLoaded();
+        html+=kolFabricCellHtml(r,val,rc);
       }else if(c.inStorePeriod){
         const isWeek=c.inStorePeriod==='week',display=isWeek?kolWeekDisplay(val,r.inStore):kolMonthDisplay(val);
         const title=isWeek?(appLang==='en'?'Double-click to choose Model Budget Week':'Model Bütçe Hafta seçmek için çift tıkla'):(appLang==='en'?'Double-click to choose Model Budget Month':'Model Bütçe Ayı seçmek için çift tıkla');
@@ -26789,6 +26795,10 @@ function renderKol(){
     row.buyingSampleApproved=!row.buyingSampleApproved;
     saveKolRows();refreshSubmfrList();renderKol();
     showToast(row.buyingSampleApproved?(appLang==='en'?`${manufacturer} approved for Buying Sample.`:`${manufacturer} Buying Numunesi için onaylandı.`):(appLang==='en'?'Buying Sample approval removed.':'Buying Numunesi onayı kaldırıldı.'));
+  }));
+  tbody.querySelectorAll('.kolFabricTd[data-fabric-id]').forEach(cell=>cell.addEventListener('dblclick',event=>{
+    event.preventDefault();event.stopPropagation();
+    openKolFabricCardDialog(cell.dataset.fabricId,{trigger:cell});
   }));
   tbody.querySelectorAll('.kolPeriodTd[data-period-id][data-period-mode]').forEach(cell=>cell.addEventListener('dblclick',event=>{
     event.preventDefault();event.stopPropagation();
@@ -28152,14 +28162,15 @@ const KOL_PLM_TRANSLATION_RULES=Object.freeze({
     '2638 - KEY JERSEY BODY LONG SLEEVED-LICENSE':'KEY ORME BODY U.KOL-LİSANS',
   }),
   line:Object.freeze({}),
+  productMainDefinition:Object.freeze({}),
 });
-let kolPlmApprovedTranslationRules={category:new Map(),line:new Map(),license:new Map()};
+let kolPlmApprovedTranslationRules={category:new Map(),line:new Map(),license:new Map(),productMainDefinition:new Map()};
 let kolPlmApprovedTranslationRevision=0;
 // "Olduğu gibi taşı" seçimleri çeviri kuralı değildir (otomatik uygulanmaz);
 // yalnız eşleme ekranında son seçim olarak işaretli gelmek için hatırlanır.
-let kolPlmRememberedKeepAsIs={category:new Set(),line:new Set(),license:new Set()};
+let kolPlmRememberedKeepAsIs={category:new Set(),line:new Set(),license:new Set(),productMainDefinition:new Set()};
 function kolPlmSetApprovedTranslationRules(payload){
-  const next={category:new Map(),line:new Map(),license:new Map()},keep={category:new Set(),line:new Set(),license:new Set()};
+  const next={category:new Map(),line:new Map(),license:new Map(),productMainDefinition:new Map()},keep={category:new Set(),line:new Set(),license:new Set(),productMainDefinition:new Set()};
   const rules=payload&&payload.rules&&typeof payload.rules==='object'?payload.rules:{};
   Object.keys(next).forEach(field=>(Array.isArray(rules[field])?rules[field]:[]).forEach(item=>{
     const source=norm(item&&item.source),target=norm(item&&item.target);if(!source||!target)return;
@@ -28171,7 +28182,7 @@ async function kolPlmLoadApprovedTranslations(){
   try{
     const res=await fetch('/api/plm-translations',{cache:'no-store'}),data=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(data.error||res.statusText);kolPlmSetApprovedTranslationRules(data);return data;
-  }catch(err){console.warn('PLM translation dictionary could not be loaded:',err);return {rules:{category:[],line:[],license:[]},revision:kolPlmApprovedTranslationRevision};}
+  }catch(err){console.warn('PLM translation dictionary could not be loaded:',err);return {rules:{category:[],line:[],license:[],productMainDefinition:[]},revision:kolPlmApprovedTranslationRevision};}
 }
 async function kolPlmSaveApprovedTranslations(items){
   const clean=(Array.isArray(items)?items:[]).filter(item=>item&&item.field&&norm(item.source)&&norm(item.target));
@@ -28280,6 +28291,7 @@ function kolPlmInferTranslationSuggestions(parsedRows){
     // line: PLM doğru kabul edilir — öneri/öğrenme üretilmez (bkz. KOL_PLM_DIRECT_FIELDS).
     unique('category').forEach(value=>add('category',row._plmSource?.categoryRaw,value,plmId));
     unique('license').forEach(value=>add('license',row._plmSource?.brandToken,value,plmId));
+    unique('productDescription').forEach(value=>add('productMainDefinition',row._plmSource?.productMainDefinition,value,plmId));
   });
   const suggestions=[...buckets.values()].map(bucket=>{
     const targets=[...bucket.targets.entries()].sort((a,b)=>b[1]-a[1]||String(a[0]).localeCompare(String(b[0]),'tr-TR'));
@@ -28293,6 +28305,7 @@ const KOL_PLM_TRANSLATION_FIELD_META=Object.freeze({
   category:{label:'Category',catalog:'category',source:'categoryRaw',target:'urunTipi'},
   line:{label:'Line',catalog:'line',source:'lineRaw',target:'line'},
   license:{label:'License',catalog:'license',source:'brandToken',target:'lisans'},
+  productMainDefinition:{label:'Product Main Definition',catalog:'productMainDefinition',source:'productMainDefinition',target:'productMainDefinition'},
 });
 /* LINE kodları için PLM DOĞRU KABUL EDİLİR (kullanıcı kararı). Line, PLM'de
    zaten Buyer Log ile aynı kodlama ile tutuluyor; ASAS'a "çevirmeye" çalışmak
@@ -28377,7 +28390,7 @@ function kolPlmConfidenceLabel(score){
 }
 function showKolPlmTranslationReview(questions){
   const list=Array.isArray(questions)?questions:[];if(!list.length)return Promise.resolve({cancelled:false,mappings:[]});
-  const en=appLang==='en';
+  const en=appLang==='en',fieldsInReview=[...new Set(list.map(item=>item.field))];
   return new Promise(resolve=>{
     document.getElementById('_kolPlmTranslationReview')?.remove();
     const modal=document.createElement('div');modal.id='_kolPlmTranslationReview';modal.className='warnOverlay';
@@ -28389,7 +28402,7 @@ function showKolPlmTranslationReview(questions){
       const bestText=best?`${best.score}% · ${kolPlmConfidenceLabel(best.score)}`:(en?'No score':'Skor yok');
       return `<tr data-plm-question="${index}"><td><strong>${escapeHtml(item.label)}</strong>${item.conflict?`<div class="plmConflictTag">${escapeHtml(en?'ASAS conflict':'ASAS çelişkisi')}</div>`:''}${item.remembered?`<div class="plmRememberedTag">${escapeHtml(en?'Your last choice':'Son seçiminiz')}</div>`:''}</td><td>${escapeHtml(item.source)}</td><td><div class="plmCandidateList">${candidateHtml}<button type="button" class="plmCandidateBtn isKeepAsIs" data-plm-keep-index="${index}"><span>${escapeHtml(en?'Keep as is':'Olduğu gibi taşı')}</span><b>${escapeHtml(en?'PLM':'PLM')}</b></button></div><div class="muted" style="margin-top:5px">${escapeHtml((en?'Best similarity: ':'En iyi benzerlik: ')+bestText)}</div></td><td><input class="plmAsasChoice" data-plm-choice="${index}" list="_plmAsas_${item.field}" placeholder="${escapeHtml(en?'Choose an ASAS value, use Keep as is, or leave blank':'Bir ASAS değeri seçin, Olduğu gibi taşı kullanın veya boş bırakın')}"><div class="plmChoiceMeta"><span class="muted">${escapeHtml(en?'Only an exact value from the current ASAS catalog can be learned.':'Yalnız güncel ASAS kataloğundaki birebir bir değer öğrenilebilir.')}</span><span class="muted plmKeepHint">${escapeHtml(en?'“Keep as is” uses the PLM text and does not teach a translation rule; it is only preselected next time.':'“Olduğu gibi taşı” PLM metnini kullanır ve çeviri kuralı öğretmez; yalnız bir sonraki aktarımda işaretli gelir.')}</span></div></td></tr>`;
     }).join('');
-    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmTranslationCard"><div class="verHistHead"><div><strong>${escapeHtml(en?'Teach PLM → ASAS translations':'PLM → ASAS çevirilerini öğret')}</strong><div class="muted">${escapeHtml(en?'Buyer Log found PLM values it has never safely mapped before. The current ASAS database was scanned and the nearest candidates are ranked below. Nothing is applied automatically: choose the correct ASAS value once and Buyer Log will remember it for future imports. Your previous choices come preselected; you can still change them.':'Buyer Log daha önce güvenle eşleştirmediği PLM değerleri buldu. Güncel ASAS database tarandı ve en yakın adaylar aşağıda sıralandı. Hiçbir tahmin otomatik uygulanmaz: doğru ASAS değerini bir kez seçin; Buyer Log sonraki aktarımlarda bunu hatırlar. Önceki seçimleriniz işaretli gelir; isterseniz değiştirebilirsiniz.')}</div></div></div><div class="plmImportBody"><div class="plmLearningNotice">${escapeHtml(en?'High similarity is only a suggestion, not an automatic decision. Leaving a row blank keeps that PLM field unresolved for this import and it will not overwrite an existing Collection value.':'Yüksek benzerlik yalnız öneridir, otomatik karar değildir. Bir satırı boş bırakırsanız o PLM alanı bu aktarımda çözümsüz kalır ve Koleksiyon’daki mevcut değerin üzerine yazılmaz.')}</div><div class="plmTranslationActions"><button type="button" class="tbtn" data-plmreview="keepall">${escapeHtml(en?'Move all as in PLM':'PLM’de olduğu gibi taşı')}</button><button type="button" class="tbtn" data-plmreview="autofill">${escapeHtml(en?'Auto-match all suggestions':'Önerilerin tamamını otomatik eşleştir')}</button></div><div class="plmImportTableWrap"><table class="plmImportTable plmTranslationTable"><thead><tr><th>${escapeHtml(en?'Field':'Alan')}</th><th>${escapeHtml(en?'New PLM value':'Yeni PLM değeri')}</th><th>${escapeHtml(en?'Nearest ASAS candidates':'En yakın ASAS adayları')}</th><th>${escapeHtml(en?'Your approved mapping':'Onayladığınız eşleme')}</th></tr></thead><tbody>${rows}</tbody></table></div>${dataLists}</div><div class="verHistFoot"><button type="button" class="tbtn" data-plmreview="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn primary" data-plmreview="apply">${escapeHtml(en?'Continue with my choices':'Seçimlerimle devam et')}</button></div></div>`;
+    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmTranslationCard"><div class="verHistHead"><div><strong>${escapeHtml(en?'Teach PLM → ASAS translations':'PLM → ASAS çevirilerini öğret')}</strong><div class="muted">${escapeHtml(en?'Buyer Log found PLM values it has never safely mapped before. The current ASAS database was scanned and the nearest candidates are ranked below. Nothing is applied automatically: choose the correct ASAS value once and Buyer Log will remember it for future imports. Your previous choices come preselected; you can still change them.':'Buyer Log daha önce güvenle eşleştirmediği PLM değerleri buldu. Güncel ASAS database tarandı ve en yakın adaylar aşağıda sıralandı. Hiçbir tahmin otomatik uygulanmaz: doğru ASAS değerini bir kez seçin; Buyer Log sonraki aktarımlarda bunu hatırlar. Önceki seçimleriniz işaretli gelir; isterseniz değiştirebilirsiniz.')}</div></div></div><div class="plmImportBody"><div class="plmLearningNotice">${escapeHtml(en?'High similarity is only a suggestion, not an automatic decision. Leaving a row blank keeps that PLM field unresolved for this import and it will not overwrite an existing Collection value.':'Yüksek benzerlik yalnız öneridir, otomatik karar değildir. Bir satırı boş bırakırsanız o PLM alanı bu aktarımda çözümsüz kalır ve Koleksiyon’daki mevcut değerin üzerine yazılmaz.')}</div><div class="plmTranslationActions"><button type="button" class="tbtn" data-plmreview="keepall">${escapeHtml(en?'Move all as in PLM':'PLM’de olduğu gibi taşı')}</button><button type="button" class="tbtn" data-plmreview="autofill">${escapeHtml(en?'Auto-match all suggestions':'Önerilerin tamamını otomatik eşleştir')}</button></div><div class="plmImportTableWrap"><table class="plmImportTable plmTranslationTable"><thead><tr><th>${escapeHtml(en?'Field':'Alan')}</th><th>${escapeHtml(en?'New PLM value':'Yeni PLM değeri')}</th><th>${escapeHtml(en?'Nearest ASAS candidates':'En yakın ASAS adayları')}</th><th>${escapeHtml(en?'Your approved mapping':'Onayladığınız eşleme')}</th></tr></thead><tbody>${rows}</tbody></table></div>${dataLists}</div><div class="verHistFoot"><button type="button" class="tbtn" data-plmreview="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn" data-plmreview="skip" title="${escapeHtml(en?'Continue without changing or learning mappings for the fields shown here':'Bu pencerede görünen alanları değiştirmeden ve eşleme öğretmeden devam et')}">${escapeHtml(fieldsInReview.length>1?(en?'Skip these fields':'Bu alanları atla'):(en?'Skip this field':'Bu alanı atla'))}</button><button type="button" class="tbtn primary" data-plmreview="apply">${escapeHtml(en?'Continue with my choices':'Seçimlerimle devam et')}</button></div></div>`;
     document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
@@ -28420,6 +28433,7 @@ function showKolPlmTranslationReview(questions){
     modal.addEventListener('click',event=>{
       const action=event.target.closest('[data-plmreview]');if(!action)return;
       if(action.dataset.plmreview==='cancel'){finish({cancelled:true,mappings:[]});return;}
+      if(action.dataset.plmreview==='skip'){finish({cancelled:false,mappings:[],skippedFields:fieldsInReview});return;}
       if(action.dataset.plmreview==='keepall'){
         list.forEach((item,index)=>setChoiceMode(index,'keep'));
         showToast(en?'All unresolved PLM values will be moved as-is for this import.':'Tüm çözümsüz PLM değerleri bu aktarımda PLM’de olduğu gibi taşınacak.');
@@ -28448,7 +28462,7 @@ function showKolPlmTranslationReview(questions){
   });
 }
 function kolPlmApplyReviewedMappings(rows,mappings,translationInfo){
-  const specs={line:{source:'lineRaw',target:'line'},category:{source:'categoryRaw',target:'urunTipi'},license:{source:'brandToken',target:'lisans'}};
+  const specs={line:{source:'lineRaw',target:'line'},category:{source:'categoryRaw',target:'urunTipi'},license:{source:'brandToken',target:'lisans'},productMainDefinition:{source:'productMainDefinition',target:'productMainDefinition'}};
   const list=Array.isArray(mappings)?mappings:[];
   (rows||[]).forEach(row=>list.forEach(mapping=>{
     if(kolPlmIsDirectField(mapping.field))return; // line asla çeviri onayıyla ezilmez.
@@ -28469,6 +28483,31 @@ function kolPlmApplyReviewedMappings(rows,mappings,translationInfo){
   return list.length;
 }
 
+
+/* "Bu alanı atla" eşleştirmeyi öğretmeden devam eder. Modalda listelenen
+   alanların TÜM satırlardaki (önceden tanınanlar dahil) PLM değerlerini bu
+   aktarım için yok say; diğer alanlar aynı plan/yazma yolunda devam etsin. */
+function kolPlmSkipTranslationFields(rows,fields,translationInfo){
+  const specs={category:{source:'categoryRaw',target:'urunTipi'},license:{source:'brandToken',target:'lisans'},productMainDefinition:{source:'productMainDefinition',target:'productMainDefinition'}};
+  const skipped=[...new Set(Array.isArray(fields)?fields:[])].filter(field=>Object.prototype.hasOwnProperty.call(specs,field));
+  if(!skipped.length)return 0;
+  let skippedValues=0;
+  (rows||[]).forEach(row=>{
+    if(!row)return;
+    skipped.forEach(field=>{
+      const spec=specs[field],source=norm(row._plmSource&&row._plmSource[spec.source]);
+      if(!source)return;
+      row[spec.target]=''; // Empty import values never overwrite existing Collection fields.
+      row._plmTranslations={...(row._plmTranslations||{}),[field]:{source,target:'',mode:'skipped'}};
+      // Do not overwrite saved PLM source metadata for the skipped field either.
+      delete row._plmSource[spec.source];
+      skippedValues++;
+    });
+  });
+  if(translationInfo){translationInfo.skippedFields=skipped;translationInfo.reviewedMappings=[];}
+  return skippedValues;
+}
+
 function kolPlmUniqueAsasValues(orders,prop){
   const byIdentity=new Map();
   (orders||[]).forEach(order=>{
@@ -28483,8 +28522,9 @@ function kolPlmApplyAsasTranslations(parsedRows,translationInfo=null){
     line:{source:'lineRaw',target:'line',asas:'line'},
     category:{source:'categoryRaw',target:'urunTipi',asas:'category'},
     license:{source:'brandToken',target:'lisans',asas:'license'},
+    productMainDefinition:{source:'productMainDefinition',target:'productMainDefinition',asas:'productDescription'},
   };
-  const learned={line:new Map(),category:new Map(),license:new Map()};
+  const learned={line:new Map(),category:new Map(),license:new Map(),productMainDefinition:new Map()};
   (info.suggestions||[]).forEach(item=>{
     if(!item||item.conflict||!item.target||!learned[item.field])return;
     learned[item.field].set(turknorm(item.source),item.target);
@@ -28521,7 +28561,7 @@ function kolPlmApplyAsasTranslations(parsedRows,translationInfo=null){
         }
       }
       if(target){row[spec.target]=target;row._plmTranslations[field]={source,target,mode};}
-      else {unresolved++;row._plmTranslations[field]={source,target:'',mode:(exact.length>1||modelExact.length>1)?'conflict':'unresolved'};}
+      else {unresolved++;row[spec.target]='';row._plmTranslations[field]={source,target:'',mode:(exact.length>1||modelExact.length>1)?'conflict':'unresolved'};}
     });
   });
   return {...info,exactApplied,modelApplied,approvedRuleApplied,learnedApplied,unresolved};
@@ -28606,7 +28646,7 @@ function kolPlmParseWorkbook(wb,matrix,imagesByRow){
     })||[{colourCode:norm(raw.colourCode),colour:norm(raw.colour)}];
     colourVariants.forEach(variant=>{
       const row=migrateKolRow({
-        id:0,plmId,modelKod,productMainDefinition:source.productMainDefinition,specialCode:norm(raw.specialCode),season:kolPlmSeason(raw.seasonRaw),
+        id:0,plmId,modelKod,productMainDefinition:kolPlmTranslate('productMainDefinition',source.productMainDefinition),specialCode:norm(raw.specialCode),season:kolPlmSeason(raw.seasonRaw),
         mag:kolPlmCodePrefix(raw.magRaw),mmyg:kolPlmCodePrefix(raw.mmygRaw),buyingGroup:norm(raw.buyingGroup),
         colourCode:variant.colourCode,colour:variant.colour,fabric:norm(raw.fabric),fit:norm(raw.fit),
         line:kolPlmTranslate('line',source.lineRaw),urunTipi:kolPlmTranslate('category',source.categoryRaw),
@@ -28649,7 +28689,7 @@ function kolPlmNormalizeDirectRecord(record){
     productType:norm(r.productType),ageGroup:norm(r.ageGroup),statusRaw:norm(r.statusRaw),orderStatusRaw:norm(r.orderStatusRaw),
   };
   const row=migrateKolRow({
-    id:0,plmId:norm(r.plmId),modelKod,productMainDefinition:source.productMainDefinition,specialCode:norm(r.specialCode),season:kolPlmSeason(r.season),
+    id:0,plmId:norm(r.plmId),modelKod,productMainDefinition:kolPlmTranslate('productMainDefinition',source.productMainDefinition),specialCode:norm(r.specialCode),season:kolPlmSeason(r.season),
     mag:kolPlmCodePrefix(r.magRaw),mmyg:kolPlmCodePrefix(r.mmygRaw),buyingGroup:norm(r.buyingGroup),
     colourCode:norm(r.colourCode),colour:norm(r.colour),fabric:norm(r.fabric),fit:norm(r.fit),
     line:kolPlmTranslate('line',source.lineRaw),urunTipi:kolPlmTranslate('category',source.categoryRaw),
@@ -28690,7 +28730,8 @@ async function kolPlmNormalizeAndTranslate(records,{reviewRemembered=true}={}){
   if(questions.length){
     const review=await showKolPlmTranslationReview(questions);
     if(review.cancelled)return {rows:null,cancelled:true};
-    kolPlmApplyReviewedMappings(rows,review.mappings,translationInfo);
+    if(review.skippedFields?.length)kolPlmSkipTranslationFields(rows,review.skippedFields,translationInfo);
+    else kolPlmApplyReviewedMappings(rows,review.mappings,translationInfo);
   }
   return {rows,cancelled:false,translationInfo};
 }
@@ -28943,6 +28984,7 @@ async function importSelectedKolPlmModels(button,{downloadFile=false,language=''
     if(created.length)kolRows=[...created,...kolRows];
     kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
     saveKolRows();renderKol();renderCP();renderOrders();
+    kolFabricCardsAfterImport([...created,...decisions.approved.map(item=>item.target)]);
     const teachable=translated.translationInfo?.reviewedMappings||[];
     if(teachable.length){try{await kolPlmSaveApprovedTranslations(teachable);}catch(err){console.warn('PLM selected translation save failed:',err);}}
     const fileRows=[...created,...decisions.approved.map(item=>item.target)];
@@ -29092,6 +29134,305 @@ async function kolPlmListAiExtract(text){
   const data=result&&(result.data||(result.structured&&result.structured.partial))||{};
   const checked=kolPlmListApi().validateAiIds(Array.isArray(data.plmIds)?data.plmIds:[],prepared.sent);
   return {...checked,truncated:prepared.truncated,explanation:norm(data.explanation),model:result&&result.model&&result.model.label||''};
+}
+// ================= KOLEKSİYON KUMAŞ KARTLARI =================
+// PLM "Main Fabric Information" metni satırda (row.fabric) DEĞİŞMEDEN kalır.
+// Kumaş koduna (metnin başındaki "3859-") bağlı ortak bir kart sözlüğü tabloda
+// kısa özeti gösterir; çift tık ayrıntıyı açar. Kod için kart varsa LCW AI'a
+// tekrar sorulmaz. AI önerisi BLFabricCards.validateAiCards'tan geçer ve
+// yalnız kullanıcı önizleyip onayladıktan sonra kaydedilir.
+let kolFabricCards=new Map(),kolFabricCardsState='idle',kolFabricBatchRunning=false;
+// Otomatik akışta "Şimdi değil" denen kodlar bu oturumda tekrar sorulmaz.
+const kolFabricDismissed=new Set();
+const KOL_FABRIC_AUTO_LIMIT=200;
+function kolFabricApi(){return window.BLFabricCards||null;}
+function kolFabricCodeOf(raw){const api=kolFabricApi();return api?api.codeOf(raw):'';}
+/* Hücredeki kumaşlar: tek kumaş ya da takım modelde "A - 3859-…", "B - 361819-…". */
+function kolFabricParts(raw){const api=kolFabricApi();return api?api.parts(raw):[];}
+function kolFabricCardsSet(data){
+  const next=new Map();
+  (Array.isArray(data&&data.cards)?data.cards:[]).forEach(card=>{if(card&&card.code&&card.summary)next.set(String(card.code),card);});
+  kolFabricCards=next;
+}
+function kolFabricCardsEnsureLoaded(){
+  if(kolFabricCardsState!=='idle'||!kolFabricApi())return;
+  kolFabricCardsState='loading';
+  fetch('/api/fabric-cards',{cache:'no-store'}).then(async res=>{
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok)throw new Error(data.error||res.statusText);
+    kolFabricCardsSet(data);kolFabricCardsState='ready';
+    if(kolFabricCards.size)renderKol();
+  }).catch(err=>{kolFabricCardsState='error';console.warn('Fabric cards could not be loaded:',err);});
+}
+async function kolFabricCardsRequest(url,options){
+  const res=await fetch(url,options),data=await res.json().catch(()=>({}));
+  if(!res.ok)throw new Error(data.error||res.statusText);
+  kolFabricCardsSet(data);kolFabricCardsState='ready';
+  return data;
+}
+function kolFabricCardsSave(items,{onlyMissing=false}={}){
+  return kolFabricCardsRequest('/api/fabric-cards',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items,onlyMissing})});
+}
+function kolFabricCardDelete(code){
+  return kolFabricCardsRequest(`/api/fabric-cards/${encodeURIComponent(code)}`,{method:'DELETE'});
+}
+/* Kartın aktif dildeki özeti: TR "Süprem · …", EN "Single Jersey · …". */
+function kolFabricSummary(card){return kolFabricApi()?.summaryFor(card,appLang==='en'?'en':'tr')||'';}
+/* Filtre ve düz metin görünümü: "3859 · Süprem · 30/1 Ne · 150 gsm · %100 Pamuk";
+   takımda "A · 3859 · … / B · 361819 · …". */
+function kolFabricDisplay(raw){
+  const api=kolFabricApi();
+  return api?api.displayText(raw,kolFabricCards,appLang==='en'?'en':'tr'):norm(raw);
+}
+function kolFabricCellHtml(row,val,rc){
+  const en=appLang==='en',raw=String(val||''),list=kolFabricParts(raw);
+  const allCards=list.every(part=>kolFabricCards.has(part.code));
+  const lines=list.map(part=>{
+    const card=kolFabricCards.get(part.code),summary=kolFabricSummary(card);
+    return {part,card,summary,html:`<div class="kolFabricLine${card?' hasCard':''}">${part.label?`<span class="kolFabricLabel">${escapeHtml(part.label)}</span>`:''}<span class="kolFabricCode">${escapeHtml(part.code)}</span><span class="kolFabricText">${escapeHtml(card?summary:part.raw)}</span></div>`};
+  });
+  const tip=lines.map(({part,card,summary})=>{
+    const name=`${part.label?part.label+' · ':''}${part.code}`;
+    return card?`${name}: ${summary}`:(en?`${name}: no fabric card yet`:`${name}: henüz kumaş kartı yok`);
+  }).join('\n');
+  const hint=allCards
+    ?(en?'Double-click to see the PLM fabric information and edit the card.':'PLM kumaş bilgisini görmek ve kartı düzenlemek için çift tıklayın.')
+    :(en?'Double-click to create the missing fabric card.':'Eksik kumaş kartını oluşturmak için çift tıklayın.');
+  return `<td class="editTd kolFabricTd${allCards?' hasCard':''}${list.length>1?' isMulti':''}"${rc} data-fabric-id="${row.id}" title="${escapeHtml(`${tip}\n${hint}`)}"><div class="kolFabricCell" aria-hidden="true">${lines.map(line=>line.html).join('')}</div></td>`;
+}
+function kolFabricSourceLabel(source){
+  const en=appLang==='en';
+  if(source==='ai')return 'LCW AI';
+  if(source==='rule')return en?'Rule-based':'Kural tabanlı';
+  return en?'Edited by user':'Kullanıcı düzenledi';
+}
+/* Kartı olmayan kodları LCW AI'a toplu sorar; erişilemezse ya da öneri
+   doğrulanamazsa kural kartına düşer. Hiçbir şey kaydetmez. */
+async function kolFabricAiAnalyze(items,{onProgress}={}){
+  const api=kolFabricApi(),cards={},failures=[];let aiCount=0,errorText='';
+  if(!api||!items.length)return {cards,aiCount,errorText,failures};
+  try{
+    if(!window.BuyerLogAI)await window.BLPerf?._loadScript?.('lcwai-assistant.js?rev=1');
+  }catch(_){}
+  const ai=window.BuyerLogAI;
+  const batches=api.chunk(items,api.AI_BATCH_SIZE);
+  for(let index=0;index<batches.length;index++){
+    const batch=batches[index];
+    if(typeof onProgress==='function')onProgress(index,batches.length);
+    let lines=[];
+    if(ai&&typeof ai.ask==='function'&&!errorText){
+      try{
+        const result=await ai.ask({
+          source:'fabric-card',
+          lang:appLang==='en'?'en':'tr',
+          context:api.aiContext(batch),
+          task:appLang==='en'?'Write a short fabric card summary and details for every fabric code in the context.':'Bağlamdaki her kumaş kodu için kısa kumaş kartı özeti ve ayrıntılarını yaz.',
+        });
+        const data=result&&(result.data||(result.structured&&result.structured.partial))||{};
+        lines=Array.isArray(data.cards)?data.cards:[];
+      }catch(err){errorText=window.BuyerLogAI?.errorText?.(err)||(err&&err.message)||String(err);}
+    }else if(!errorText)errorText=appLang==='en'?'LCW AI is not available.':'LCW AI kullanılamıyor.';
+    const checked=api.validateAiCards(lines,batch);
+    failures.push(...checked.rejected);
+    Object.values(checked.cards).forEach(card=>{cards[card.code]=card;if(card.summarySource==='ai')aiCount++;});
+  }
+  return {cards,aiCount,errorText,failures};
+}
+function kolFabricUiBusy(){
+  return Boolean(document.querySelector('.warnOverlay,[aria-modal="true"],dialog[open]'));
+}
+async function kolFabricWaitForIdleUi(maxMs=10*60*1000){
+  const started=Date.now();
+  while(kolFabricUiBusy()&&Date.now()-started<maxMs)await new Promise(resolve=>setTimeout(resolve,700));
+  return !kolFabricUiBusy();
+}
+/* Toplu önizleme: kullanıcı özetleri düzenler, istemediği kodu çıkarır,
+   onaylarsa kartlar oluşturulur. */
+function showKolFabricBatchPreview(items,analysis){
+  const en=appLang==='en';
+  return new Promise(resolve=>{
+    document.getElementById('_kolFabricBatchModal')?.remove();
+    const modal=document.createElement('div');modal.id='_kolFabricBatchModal';modal.className='warnOverlay';
+    const rows=items.map((item,index)=>{
+      const card=analysis.cards[item.code]||kolFabricApi().ruleCard(item.raw);
+      return `<tr><td><input type="checkbox" data-fabric-pick="${index}" checked aria-label="${escapeHtml(en?`Create card ${item.code}`:`${item.code} kartını oluştur`)}"></td><td class="kolFabricBatchCode">${escapeHtml(item.code)}</td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary="${index}" lang="tr" aria-label="${escapeHtml(en?`Turkish summary ${item.code}`:`${item.code} Türkçe özet`)}" value="${escapeHtml(card.summary)}"></td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary-en="${index}" lang="en" aria-label="${escapeHtml(en?`English summary ${item.code}`:`${item.code} İngilizce özet`)}" value="${escapeHtml(card.summaryEn||'')}"></td><td><span class="kolFabricSource is-${escapeHtml(card.summarySource)}" data-fabric-source="${index}">${escapeHtml(kolFabricSourceLabel(card.summarySource))}</span></td><td class="kolFabricBatchRaw" title="${escapeHtml(item.raw)}">${escapeHtml(item.raw)}</td></tr>`;
+    }).join('');
+    const ruleCount=items.length-analysis.aiCount;
+    const notice=analysis.errorText
+      ?`<div class="plmExistingWarning">${escapeHtml(en?`LCW AI could not be used (${analysis.errorText}). Rule-based summaries are suggested; you can edit them.`:`LCW AI kullanılamadı (${analysis.errorText}). Kural tabanlı özetler önerildi; düzenleyebilirsiniz.`)}</div>`
+      :`<div class="plmExistingNotice">${escapeHtml(en?`LCW AI analysed ${analysis.aiCount} fabric code(s)${ruleCount?`; ${ruleCount} use a rule-based summary because the AI suggestion could not be verified against the PLM text`:''}.`:`LCW AI ${analysis.aiCount} kumaş kodunu analiz etti${ruleCount?`; ${ruleCount} kodun AI önerisi PLM metniyle doğrulanamadığı için kural tabanlı özet kullanıldı`:''}.`)}</div>`;
+    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard kolFabricCardModal kolFabricBatchModal" role="dialog" aria-modal="true" aria-labelledby="_kolFabricBatchTitle">
+      <div class="verHistHead"><div><strong id="_kolFabricBatchTitle">${escapeHtml(en?'Create fabric cards':'Kumaş kartları oluştur')}</strong>
+        <div class="muted">${escapeHtml(en?'PLM fabric information is kept unchanged. The Collection table shows the card’s short summary in the active language (Turkish or English); every model with the same fabric code uses the same card.':'PLM kumaş bilgisi değiştirilmeden saklanır. Koleksiyon tablosu kartın kısa özetini aktif dilde (Türkçe ya da İngilizce) gösterir; aynı kumaş kodlu her model aynı kartı kullanır.')}</div></div></div>
+      <div class="plmImportBody">${notice}
+        <div class="kolFabricBatchWrap"><table class="kolFabricBatchTable"><thead><tr><th></th><th>${escapeHtml(en?'Code':'Kod')}</th><th>${escapeHtml(en?'Summary · Turkish':'Özet · Türkçe')}</th><th>${escapeHtml(en?'Summary · English':'Özet · İngilizce')}</th><th>${escapeHtml(en?'Source':'Kaynak')}</th><th>${escapeHtml(en?'PLM fabric information':'PLM kumaş bilgisi')}</th></tr></thead><tbody>${rows}</tbody></table></div>
+      </div>
+      <div class="verHistFoot"><button type="button" class="tbtn" data-fabric-batch="cancel">${escapeHtml(en?'Not now':'Şimdi değil')}</button><button type="button" class="tbtn primary" data-fabric-batch="save"></button></div>
+    </div>`;
+    const saveBtn=modal.querySelector('[data-fabric-batch="save"]');
+    const picked=()=>items.map((item,index)=>({item,index})).filter(entry=>modal.querySelector(`[data-fabric-pick="${entry.index}"]`)?.checked);
+    const refresh=()=>{const count=picked().length;saveBtn.disabled=!count;saveBtn.textContent=en?`Create cards (${count})`:`Kartları oluştur (${count})`;};
+    let settled=false;
+    const finish=value=>{if(settled)return;settled=true;window.BLLayerSystem?.closeDialog?.(modal);modal.remove();resolve(value);};
+    modal.addEventListener('change',event=>{if(event.target.matches('[data-fabric-pick]'))refresh();});
+    modal.addEventListener('input',event=>{
+      const index=event.target.dataset.fabricSummary??event.target.dataset.fabricSummaryEn;if(index==null)return;
+      const badge=modal.querySelector(`[data-fabric-source="${index}"]`);
+      if(badge){badge.textContent=kolFabricSourceLabel('manual');badge.className='kolFabricSource is-manual';badge.dataset.edited='1';}
+    });
+    modal.addEventListener('click',event=>{
+      const action=event.target.closest('[data-fabric-batch]');
+      if(!action){if(event.target===modal)finish(null);return;}
+      if(action.dataset.fabricBatch==='cancel'){finish(null);return;}
+      const api=kolFabricApi();
+      const cards=picked().map(({item,index})=>{
+        const base=analysis.cards[item.code]||api.ruleCard(item.raw);
+        const edited=modal.querySelector(`[data-fabric-source="${index}"]`)?.dataset.edited==='1';
+        return api.normalizeCard({...base,code:item.code,raw:item.raw,summary:modal.querySelector(`[data-fabric-summary="${index}"]`)?.value,summaryEn:modal.querySelector(`[data-fabric-summary-en="${index}"]`)?.value,summarySource:edited?'manual':base.summarySource});
+      }).filter(Boolean);
+      finish(cards);
+    });
+    refresh();
+    document.body.appendChild(modal);
+    window.BLLayerSystem?.openDialog?.(modal,{onClose:()=>finish(null),initialFocus:'[data-fabric-batch="save"]'});
+  });
+}
+/* Kartı olmayan kumaş kodları için toplu kart oluşturma.
+   auto=true: PLM içe aktarımından sonra arka planda çalışır; açık bir pencere
+   varsa kapanmasını bekler, sonra önizlemeyi gösterir. */
+async function kolFabricCardsCreateForRows(rows,{auto=false}={}){
+  const api=kolFabricApi(),en=appLang==='en';
+  if(!api||!kolWorkspaceCanEdit||kolFabricBatchRunning)return {ok:false,created:0};
+  if(kolFabricCardsState!=='ready'){
+    try{await kolFabricCardsRequest('/api/fabric-cards',{cache:'no-store'});}catch(err){console.warn('Fabric cards could not be loaded:',err);if(auto)return {ok:false,created:0};}
+  }
+  const missing=api.missingCodes(rows,kolFabricCards).filter(item=>!auto||!kolFabricDismissed.has(item.code)).slice(0,KOL_FABRIC_AUTO_LIMIT);
+  if(!missing.length){if(!auto)showToast(en?'Every fabric code in the Collection already has a card.':'Koleksiyondaki her kumaş kodunun zaten bir kartı var.');return {ok:true,created:0};}
+  kolFabricBatchRunning=true;
+  try{
+    showToast(en?`LCW AI is analysing ${missing.length} new fabric code(s)…`:`LCW AI ${missing.length} yeni kumaş kodunu analiz ediyor…`,{icon:false});
+    const analysis=await kolFabricAiAnalyze(missing);
+    if(auto&&!await kolFabricWaitForIdleUi())return {ok:false,created:0};
+    const still=missing.filter(item=>!kolFabricCards.has(item.code));
+    if(!still.length)return {ok:true,created:0};
+    const cards=await showKolFabricBatchPreview(still,analysis);
+    if(!cards||!cards.length){if(auto)still.forEach(item=>kolFabricDismissed.add(item.code));return {ok:true,created:0,cancelled:true};}
+    const saved=await kolFabricCardsSave(cards,{onlyMissing:true});
+    renderKol();
+    showToast(en?`${Number(saved.updated)||0} fabric card(s) created. PLM fabric information is kept unchanged.`:`${Number(saved.updated)||0} kumaş kartı oluşturuldu. PLM kumaş bilgisi değiştirilmeden saklanır.`);
+    return {ok:true,created:Number(saved.updated)||0};
+  }catch(err){
+    showToast((en?'Fabric cards could not be created: ':'Kumaş kartları oluşturulamadı: ')+(err&&err.message||String(err)));
+    return {ok:false,created:0};
+  }finally{kolFabricBatchRunning=false;}
+}
+function kolFabricCardsAfterImport(rows){
+  const list=(Array.isArray(rows)?rows:[]).filter(Boolean);
+  if(!list.length)return;
+  void kolFabricCardsCreateForRows(list,{auto:true}).catch(err=>console.warn('Fabric card auto-create failed:',err));
+}
+/* Ayrıntı penceresi (tablo hücresine çift tık). */
+function openKolFabricCardDialog(rowId,{trigger=null,code:wantedCode=''}={}){
+  const api=kolFabricApi(),en=appLang==='en';
+  const row=kolRows.find(item=>String(item.id)===String(rowId));
+  if(!api||!row)return;
+  // Takım modelde açılacak kumaş: istenen kod, yoksa kartı eksik ilk kumaş, yoksa A.
+  const parts=api.parts(String(kolEffectiveValue(row,'fabric')??''));
+  const part=parts.find(item=>item.code===wantedCode)||parts.find(item=>!kolFabricCards.has(item.code))||parts[0];
+  if(!part)return;
+  const raw=part.raw,code=part.code;
+  const existing=kolFabricCards.get(code)||null;
+  const draft=existing?{...existing,details:{...existing.details}}:{...api.ruleCard(raw),raw};
+  const canEdit=Boolean(kolWorkspaceCanEdit);
+  let source=draft.summarySource,deleteArmed=false;
+  document.getElementById('_kolFabricCardModal')?.remove();
+  const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';
+  const dis=canEdit?'':' disabled';
+  const detailInputs=api.DETAIL_FIELDS.map(key=>`<label><span>${escapeHtml(en?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)}</span><input type="text" maxlength="${api.DETAIL_MAX}" data-fabric-detail="${key}" value="${escapeHtml(draft.details&&draft.details[key]||'')}"${dis}></label>`).join('');
+  const missingCount=api.missingCodes(kolRows,kolFabricCards).filter(item=>item.code!==code).length;
+  const meta=existing
+    ?(en?`This card is used by every model with fabric code ${code}. Source: ${kolFabricSourceLabel(existing.summarySource)}${existing.updatedBy?` · last edited by ${existing.updatedBy}`:''}${existing.updatedAt?` · ${fmtDate(existing.updatedAt)}`:''}.`:`Bu kart ${code} kumaş kodlu tüm modellerde kullanılır. Kaynak: ${kolFabricSourceLabel(existing.summarySource)}${existing.updatedBy?` · son düzenleyen ${existing.updatedBy}`:''}${existing.updatedAt?` · ${fmtDate(existing.updatedAt)}`:''}.`)
+    :(en?`Fabric code ${code} has no card yet. A rule-based summary is suggested; edit it or analyse with LCW AI, then save.`:`${code} kumaş kodunun henüz kartı yok. Kural tabanlı bir özet önerildi; düzenleyin ya da LCW AI ile analiz edin, sonra kaydedin.`);
+  const rawDiffers=existing&&existing.raw&&norm(existing.raw)!==raw;
+  modal.innerHTML=`<div class="modalCard verHistCard plmImportCard kolFabricCardModal" role="dialog" aria-modal="true" aria-labelledby="_kolFabricCardTitle">
+    <div class="verHistHead"><div><strong id="_kolFabricCardTitle">${escapeHtml(en?`Fabric Card · ${part.label?part.label+' · ':''}${code}`:`Kumaş Kartı · ${part.label?part.label+' · ':''}${code}`)}</strong>
+      <div class="muted">${escapeHtml(meta)}</div></div></div>
+    ${parts.length>1?`<div class="plmListTabs kolFabricParts" role="tablist" aria-label="${escapeHtml(en?'Fabrics of this model':'Bu modelin kumaşları')}">${parts.map(item=>`<button type="button" class="tbtn${item.code===code?' isSelected':''}" role="tab" aria-selected="${item.code===code?'true':'false'}" data-fabric-part="${escapeHtml(item.code)}">${escapeHtml(`${item.label?item.label+' · ':''}${item.code}`)}${kolFabricCards.has(item.code)?'':` <span class="muted">${escapeHtml(en?'(no card)':'(kart yok)')}</span>`}</button>`).join('')}</div>`:''}
+    <div class="plmImportBody">
+      <div class="kolFabricSummaryHead"><span class="plmListLabel">${escapeHtml(en?'Summary shown in the Collection table':'Koleksiyon tablosunda görünen özet')}</span><span class="kolFabricSource is-${escapeHtml(source)}" data-fabric-source>${escapeHtml(kolFabricSourceLabel(source))}</span></div>
+      <div class="plmListOptions kolFabricSummaries">
+        <label><span>${escapeHtml(en?'Turkish':'Türkçe')}</span><input type="text" id="_kolFabricSummary" lang="tr" maxlength="${api.SUMMARY_MAX}" value="${escapeHtml(draft.summary||'')}"${dis}></label>
+        <label><span>${escapeHtml(en?'English':'İngilizce')}</span><input type="text" id="_kolFabricSummaryEn" lang="en" maxlength="${api.SUMMARY_MAX}" value="${escapeHtml(draft.summaryEn||api.summaryFor({summary:draft.summary},'en'))}"${dis}></label>
+      </div>
+      <h4>${escapeHtml(en?'Details':'Ayrıntılar')}</h4>
+      <div class="plmListOptions kolFabricDetails">${detailInputs}</div>
+      <h4>${escapeHtml(en?'PLM fabric information (kept unchanged)':'PLM kumaş bilgisi (değiştirilmeden saklanır)')}</h4>
+      <textarea class="plmListText kolFabricRaw" rows="4" readonly>${escapeHtml(raw)}</textarea>
+      ${rawDiffers?`<div class="plmExistingNotice">${escapeHtml(en?'The card was created from a different PLM text for the same code:':'Kart aynı kod için farklı bir PLM metninden oluşturuldu:')} <span class="muted">${escapeHtml(existing.raw)}</span></div>`:''}
+      <div class="muted" data-fabric-status></div>
+    </div>
+    <div class="verHistFoot kolFabricFoot">
+      ${canEdit&&existing?`<button type="button" class="tbtn danger" data-fabric="delete">${escapeHtml(en?'Delete card':'Kartı sil')}</button>`:''}
+      ${canEdit?`<button type="button" class="tbtn" data-fabric="ai"><svg class="ic"><use href="#i-bl-sync"/></svg><span>${escapeHtml(en?'Analyse with LCW AI':'LCW AI ile analiz et')}</span></button>`:''}
+      ${canEdit&&missingCount?`<button type="button" class="tbtn" data-fabric="missing">${escapeHtml(en?`Cards for other fabrics (${missingCount})`:`Diğer kumaşlar için kart (${missingCount})`)}</button>`:''}
+      <span class="kolFabricFootSpacer"></span>
+      <button type="button" class="tbtn" data-fabric="cancel">${escapeHtml(canEdit?(en?'Cancel':'Vazgeç'):(en?'Close':'Kapat'))}</button>
+      ${canEdit?`<button type="button" class="tbtn primary" data-fabric="save">${escapeHtml(en?'Save card':'Kartı kaydet')}</button>`:''}
+    </div>
+  </div>`;
+  const status=modal.querySelector('[data-fabric-status]'),summaryInput=modal.querySelector('#_kolFabricSummary'),summaryEnInput=modal.querySelector('#_kolFabricSummaryEn');
+  const setSource=next=>{source=next;const badge=modal.querySelector('[data-fabric-source]');if(badge){badge.textContent=kolFabricSourceLabel(next);badge.className=`kolFabricSource is-${next}`;}};
+  const fill=card=>{
+    summaryInput.value=card.summary||'';summaryEnInput.value=card.summaryEn||'';
+    api.DETAIL_FIELDS.forEach(key=>{const input=modal.querySelector(`[data-fabric-detail="${key}"]`);if(input)input.value=card.details&&card.details[key]||'';});
+    setSource(card.summarySource);
+  };
+  const close=()=>{window.BLLayerSystem?.closeDialog?.(modal,{trigger});modal.remove();};
+  modal.addEventListener('input',event=>{if(event.target===summaryInput||event.target===summaryEnInput||event.target.dataset.fabricDetail)setSource('manual');});
+  modal.addEventListener('click',async event=>{
+    const partBtn=event.target.closest('[data-fabric-part]');
+    if(partBtn){if(partBtn.dataset.fabricPart!==code){close();openKolFabricCardDialog(rowId,{trigger,code:partBtn.dataset.fabricPart});}return;}
+    const action=event.target.closest('[data-fabric]');
+    if(!action){if(event.target===modal)close();return;}
+    const kind=action.dataset.fabric;
+    if(kind==='cancel'){close();return;}
+    if(kind==='missing'){close();void kolFabricCardsCreateForRows(kolRows);return;}
+    if(kind==='ai'){
+      action.disabled=true;status.textContent=en?'LCW AI is analysing the PLM fabric information…':'LCW AI PLM kumaş bilgisini analiz ediyor…';
+      try{
+        const result=await kolFabricAiAnalyze([{code,raw}]);
+        const card=result.cards[code];
+        if(card)fill(card);
+        status.textContent=result.errorText
+          ?(en?`LCW AI could not be used (${result.errorText}). The rule-based summary is shown.`:`LCW AI kullanılamadı (${result.errorText}). Kural tabanlı özet gösteriliyor.`)
+          :card&&card.summarySource==='ai'
+            ?(en?'LCW AI suggestion is filled in. Check it and save the card.':'LCW AI önerisi dolduruldu. Kontrol edip kartı kaydedin.')
+            :(en?'The LCW AI suggestion could not be verified against the PLM text; the rule-based summary is shown.':'LCW AI önerisi PLM metniyle doğrulanamadı; kural tabanlı özet gösteriliyor.');
+      }finally{action.disabled=false;}
+      return;
+    }
+    if(kind==='delete'){
+      if(!deleteArmed){deleteArmed=true;action.textContent=en?'Click again to delete':'Silmek için tekrar tıklayın';return;}
+      action.disabled=true;
+      try{
+        await kolFabricCardDelete(code);close();renderKol();
+        showToast(en?`Fabric card ${code} deleted. The table shows the PLM fabric information for this code.`:`${code} kumaş kartı silindi. Tablo bu kod için PLM kumaş bilgisini gösterir.`);
+      }catch(err){action.disabled=false;status.textContent=(en?'The card could not be deleted: ':'Kart silinemedi: ')+(err&&err.message||String(err));}
+      return;
+    }
+    if(kind==='save'){
+      const details={};api.DETAIL_FIELDS.forEach(key=>{details[key]=modal.querySelector(`[data-fabric-detail="${key}"]`)?.value||'';});
+      const card=api.normalizeCard({code,summary:summaryInput.value,summaryEn:summaryEnInput.value,details,summarySource:source,raw:existing&&existing.raw||raw});
+      if(!card){status.textContent=en?'Enter a Turkish summary first.':'Önce Türkçe özeti girin.';summaryInput.focus();return;}
+      action.disabled=true;
+      try{
+        await kolFabricCardsSave([card]);close();renderKol();
+        showToast(en?`Fabric card ${code} saved. Every model with this code shows the new summary.`:`${code} kumaş kartı kaydedildi. Bu kodlu tüm modeller yeni özeti gösterir.`);
+      }catch(err){action.disabled=false;status.textContent=(en?'The card could not be saved: ':'Kart kaydedilemedi: ')+(err&&err.message||String(err));}
+    }
+  });
+  document.body.appendChild(modal);
+  window.BLLayerSystem?.openDialog?.(modal,{trigger,onClose:close,initialFocus:canEdit?'#_kolFabricSummary':'[data-fabric="cancel"]'});
 }
 function kolPlmListStatusOptions(selected){
   const en=appLang==='en';
@@ -29357,6 +29698,7 @@ async function kolPlmListImportRun(button,config,{quietWhenEmpty=false}={}){
   if(created.length)kolRows=[...created,...kolRows];
   kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
   saveKolRows();renderKol();renderCP();renderOrders();
+  kolFabricCardsAfterImport([...created,...decisions.approved.map(item=>item.target)]);
   const teachable=translated.translationInfo?.reviewedMappings||[];
   if(teachable.length){try{await kolPlmSaveApprovedTranslations(teachable);}catch(err){console.warn('PLM list translation save failed:',err);}}
   const fileRows=[...created,...decisions.approved.map(item=>item.target)];
@@ -29433,7 +29775,7 @@ function kolPlmSyncStampStatus(targetRows,summary,{applied}){
   });
 }
 // Koleksiyon alan anahtarından ASAS çeviri alanına — yalnız çevrilen üçü.
-const KOL_PLM_SYNC_TRANSLATION_FIELD_BY_KEY={line:'line',urunTipi:'category',lisans:'license'};
+const KOL_PLM_SYNC_TRANSLATION_FIELD_BY_KEY={line:'line',urunTipi:'category',lisans:'license',productMainDefinition:'productMainDefinition'};
 /* "X modeline Y modelinin license bilgisi geliyordu" hatasının kökü: eski
    onaylı bir kural (approved-rule), kısa/belirsiz bir marka önekine (ör.
    "FB") sahip FARKLI bir model için sessizce yeniden kullanılıyordu.
@@ -29626,6 +29968,9 @@ async function kolPlmSyncRun(mode,button,options={}){
     return {ok:false,reason:'fetch-failed',error:err};
   }
   if(!fetchResult)return {ok:false,reason:'api-not-configured'}; // kullanıcıya bağlantı penceresi zaten gösterildi.
+  // Artwork Detayı alan planında değil; fetch BOM'u plm-bom.json'a yazdı.
+  // Alan değişikliği olmasa da (render yokken) projeksiyon burada tazelenir.
+  const artworkChanged=await kolPlmSyncRefreshArtwork();
   const translated=await kolPlmNormalizeAndTranslate(fetchResult.records,{reviewRemembered:false});
   // Excel'deki "Aktarımı iptal et" ile AYNI davranış: çeviri ekranında
   // vazgeçilirse Koleksiyon'a HİÇBİR ŞEY yazılmaz, kısmi bir güncelleme
@@ -29653,7 +29998,7 @@ async function kolPlmSyncRun(mode,button,options={}){
     const message=appLang==='en'
       ?`${summary.checked} checked · all up to date${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
       :`${summary.checked} kontrol edildi · hepsi güncel${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-    showToast(message+kolPlmSyncImageSuffix(images),{icon:false,duration:9000});
+    showToast(message+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncImageSuffix(images),{icon:false,duration:9000});
     return {ok:true,applied:0,summary,images};
   }
   const approved=await showPlmSyncPreview(mode,summary);
@@ -29665,6 +30010,7 @@ async function kolPlmSyncRun(mode,button,options={}){
   // farkı oluşmasın diye burada FAZLADAN bir adım (ör. fiyat kuralı
   // yeniden hesaplama) eklenmez.
   saveKolRows();renderKol();renderCP();renderOrders();
+  kolFabricCardsAfterImport(summary.changed.map(item=>item.target));
   // Görseller alan yazımından SONRA çekilir: yazma hızlı ve geri alınabilir
   // (kolPushUndo) iken görsel indirme uzun sürebilir; kullanıcı tabloyu
   // güncellenmiş halde görürken indirme devam eder.
@@ -29672,8 +30018,15 @@ async function kolPlmSyncRun(mode,button,options={}){
   const message=appLang==='en'
     ?`${summary.checked} checked · ${summary.changed.length} updated · ${summary.unchanged.length} unchanged${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
     :`${summary.checked} kontrol edildi · ${summary.changed.length} güncellendi · ${summary.unchanged.length} değişmedi${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-  showToast(message+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
+  showToast(message+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
   return {ok:true,applied:summary.changed.length,summary,images};
+}
+async function kolPlmSyncRefreshArtwork(){
+  try{const api=window.BLCollectionArtworkDetail;return api&&typeof api.refresh==='function'?(Number(await api.refresh())||0):0;}catch(_){return 0;}
+}
+function kolPlmSyncArtworkSuffix(count){
+  if(!count)return '';
+  return appLang==='en'?` · ${count} artwork detail(s) updated`:` · ${count} artwork detayı güncellendi`;
 }
 async function kolPlmSyncButtonRun(mode,button){
   if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
@@ -29747,7 +30100,8 @@ async function importKolPlmExcelFile(file){
     const translationInfo=kolPlmApplyAsasTranslations(parsed.rows,inferredTranslations);
     const translationQuestions=kolPlmTranslationQuestions(parsed.rows);
     const translationReview=await showKolPlmTranslationReview(translationQuestions);if(translationReview.cancelled)return;
-    kolPlmApplyReviewedMappings(parsed.rows,translationReview.mappings,translationInfo);
+    if(translationReview.skippedFields?.length)kolPlmSkipTranslationFields(parsed.rows,translationReview.skippedFields,translationInfo);
+    else kolPlmApplyReviewedMappings(parsed.rows,translationReview.mappings,translationInfo);
     const plan=kolBuildPlmImportPlan(parsed.rows);
     const approved=await showKolPlmImportPreview(plan,parsed,translationInfo,images.size);if(!approved)return;
     // Mevcut PLM ID'ler için hiçbir veri yazmadan önce kararları tek tek topla.
@@ -29774,6 +30128,7 @@ async function importKolPlmExcelFile(file){
     }
     kolSelected=new Set([...created.map(row=>row.id),...decisions.approved.map(item=>item.target.id)]);
     saveKolRows();renderKol();renderCP();renderOrders();
+    kolFabricCardsAfterImport([...created,...decisions.approved.map(item=>item.target)]);
     // Legacy test anchor: await kolPlmSaveApprovedTranslations(translationReview.mappings)
     let learnedSaved=0,learnWarning='';
     const teachableMappings=(translationReview.mappings||[]).filter(item=>!item.clear);

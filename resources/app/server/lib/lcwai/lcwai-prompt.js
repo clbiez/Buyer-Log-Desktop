@@ -141,6 +141,18 @@ const CONTRACTS = Object.freeze({
     }),
     example: { plmIds: ['1234567', '7654321'], explanation: '…' },
   }),
+  /* Koleksiyon › Kumaş Kartı: PLM "Main Fabric Information" metninden kumaş
+     kodu başına kısa özet + ayrıntı. AI yalnız ÖNERİR; public/fabric-cards-engine.js
+     validateAiCards istenmeyen kodu reddeder, kaynak metinde geçmeyen sayıları
+     atar; kart yalnız kullanıcı önizleyip onayladıktan sonra kaydedilir. */
+  'fabric-card': Object.freeze({
+    label: { tr: 'Kumaş Kartı', en: 'Fabric Card' },
+    fields: Object.freeze({
+      cards: { type: 'string[]', required: true, max: 1200, items: 40, hint: { tr: 'CONTEXT.fabrics içindeki her kumaş için bir satır: "code=<kod>|summary=<Türkçe kısa özet, en çok 80 karakter>|summaryEn=<aynı özetin İngilizcesi, en çok 80 karakter>|category=…|type=…|yarn=…|weight=…|composition=…|finish=…|sustainability=…"', en: 'one line per fabric in CONTEXT.fabrics: "code=<code>|summary=<Turkish short summary, max 80 characters>|summaryEn=<the same summary in English, max 80 characters>|category=…|type=…|yarn=…|weight=…|composition=…|finish=…|sustainability=…"' } },
+      explanation: { type: 'string', max: 1000 },
+    }),
+    example: { cards: ['code=3859|summary=Süprem · 30/1 Ne Penye · 150 gsm · %100 Pamuk|summaryEn=Single Jersey · 30/1 Ne Combed · 150 gsm · 100% Cotton|category=Örme|type=Süprem|yarn=30/1 Ne Compact Penye|weight=150 gsm|composition=%100 Pamuk|finish=Reaktif, Silikon + Dikiş Kolaylığı Apresi, Enzim|sustainability=Sürdürülebilir İçerik Yok'], explanation: '…' },
+  }),
 });
 
 function clean(value) { return String(value == null ? '' : value).trim(); }
@@ -234,7 +246,7 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Copy every value exactly as printed in the attached report or e-mail (original language and spelling); only "explanation" should be English.'
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. Her değeri ekli rapor ya da mailde basıldığı gibi (özgün dil ve yazım) kopyala; yalnız "explanation" Türkçe olsun.');
-    } else if (key === 'plm-id-extract') {
+    } else if (key === 'plm-id-extract' || key === 'fabric-card') {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write "explanation" in English.'
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. "explanation" Türkçe olsun.');
@@ -260,6 +272,10 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'List in "plmIds" only the LC Waikiki PLM Codes (PLM ID; a positive whole number, usually 6–8 digits, sometimes written with a leading underscore or dot separators) that are written in CONTEXT.text. Copy each one exactly as written; never invent, complete, reorder or compute a number. Ignore order numbers, prices, quantities, dates, phone numbers, barcodes and colour codes unless the text clearly labels the value as a PLM Code/PLM ID or it sits in a plain list of such codes. Buyer Log checks every value against the text; anything not found there is discarded. Note any uncertainty in "explanation".'
         : '"plmIds" içine yalnız CONTEXT.text içinde yazılı LC Waikiki PLM Code değerlerini (PLM ID; pozitif tam sayı, genelde 6–8 hane, bazen başta alt çizgi ya da nokta ayırıcıyla yazılır) koy. Her birini yazıldığı gibi kopyala; sayı uydurma, tamamlama, sıralama ya da hesaplama. Metin bir değeri açıkça PLM Code/PLM ID olarak işaretlemedikçe ya da değer böyle kodların düz bir listesinde durmadıkça sipariş numarası, fiyat, adet, tarih, telefon, barkod ve renk kodlarını alma. Buyer Log her değeri metinle karşılaştırır; metinde olmayan atılır. Belirsizliği "explanation" içinde belirt.');
+    } else if (key === 'fabric-card') {
+      lines.push(english
+        ? 'Each CONTEXT.fabrics item is "<code> :: <PLM fabric text>". Write one "cards" line for every code, using exactly that code. "summary" is what a buyer sees in the Collection table: at most 80 characters, the fabric type, yarn count, weight and composition in that order. Write it twice: "summary" in Turkish (e.g. "Süprem · 30/1 Ne Penye · 150 gsm · %100 Pamuk") and "summaryEn" in English with standard textile terms (e.g. "Single Jersey · 30/1 Ne Combed · 150 gsm · 100% Cotton"); both carry exactly the same numbers. Fill the other fields only from the text; leave a field empty rather than guessing. Never invent, round or compute a number: Buyer Log discards every value whose numbers are not written in the PLM text. Do not use the "|" character inside a value.'
+        : 'CONTEXT.fabrics içindeki her öğe "<kod> :: <PLM kumaş metni>" biçimindedir. Her kod için tam o kodu kullanarak bir "cards" satırı yaz. "summary" buyer\'ın Koleksiyon tablosunda gördüğü metindir: en çok 80 karakter; sırasıyla kumaş tipi, iplik numarası, gramaj ve karışım. İki kez yaz: "summary" Türkçe (ör. "Süprem · 30/1 Ne Penye · 150 gsm · %100 Pamuk"), "summaryEn" standart tekstil terimleriyle İngilizce (ör. "Single Jersey · 30/1 Ne Combed · 150 gsm · 100% Cotton"); ikisi de birebir aynı sayıları taşır. Diğer alanları yalnız metinden doldur; tahmin etmek yerine boş bırak. Sayı uydurma, yuvarlama ya da hesaplama: Buyer Log sayıları PLM metninde yazılı olmayan her değeri atar. Bir değerin içinde "|" karakterini kullanma.');
     } else if (key === 'layout-control') {
       lines.push(english
         ? 'Fill the schema only from values visibly supported by the attached layout PDF. "warnings" means warnings printed on the product label, not your own cautions. "countries" means manufacturing/country-of-origin only: never treat importer, distributor, company-address or legal-contact countries (for example MAROC in an importer block) as production country. For PRICE_TAG, transcribe the whole visible upper identity/code band verbatim into "identityText" and extract modelCodes, orderNumbers, specialCodes, colourCodes, seasonCodes, magCodes, mmygCodes, lineCodes, productMainDefinitions and countries when their meaning is visually supportable. If an unlabeled slash-separated code cannot be assigned safely, keep it only in identityText rather than guessing its business meaning. Put uncertainty only in "explanation" and lower "confidence". Do not invent CP/reference values.'
