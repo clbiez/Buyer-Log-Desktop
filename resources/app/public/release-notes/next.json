@@ -3,14 +3,113 @@
   "publishedAt": "2026-10-09",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kumaş kartları: takım modeller ve uzun kodlar",
-    "en": "Fabric cards: set models and long codes"
+    "tr": "Koleksiyon: kumaş kartları, PLM çevirileri ve sayfalama",
+    "en": "Collection: fabric cards, PLM translations and pagination"
   },
   "summary": {
-    "tr": "Takım modellerin A/B kumaşları ayrı kartla aynı hücrede görünür; uzun kumaş kodları da kart alır.",
-    "en": "A/B fabrics of set models show their own cards in the same cell; long fabric codes get cards too."
+    "tr": "Takım modellerin A/B kumaşları ayrı kartla görünür; Ürün Ana Tanım eşlemesi hatırlanır, çeviri alanları atlanabilir ve sayfalama araç çubuğuna taşındı.",
+    "en": "A/B fabrics of set models show their own cards; Product Main Definition mappings are remembered, translation fields can be skipped and pagination moved to the toolbar."
   },
   "changes": [
+    {
+      "id": "plm-pmd-translation-learning",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Ürün Ana Tanım için PLM → ASAS eşlemesi hatırlanır",
+        "en": "PLM → ASAS mapping is remembered for Product Main Definition"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM’den aktar › PLM → ASAS çevirilerini öğret",
+        "en": "Collection › Import from PLM › Teach PLM → ASAS translations"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-pmd-translation-learning.png",
+        "alt": {
+          "tr": "PLM → ASAS çevirilerini öğret penceresi: Product Main Definition satırında yeni PLM değeri ve en yakın ASAS adayları — demo verili Buyer Log ekranı",
+          "en": "Teach PLM → ASAS translations window: the Product Main Definition row with a new PLM value and the nearest ASAS candidates — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Ürün Ana Tanım artık çeviri incelemesinde",
+          "en": "Product Main Definition is now part of the translation review"
+        }
+      },
+      "body": {
+        "tr": "PLM’den model aktarırken Ürün Ana Tanım (Product Main Definition) de Kategori ve Lisans gibi PLM → ASAS çeviri incelemesine girer. Seçtiğiniz ASAS değeri kaydedilir ve sonraki aktarımlarda hatırlanır. ASAS verisi seçimle çelişirse eski seçim otomatik uygulanmaz ve Koleksiyon’daki değerin üzerine yazılmaz.",
+        "en": "When importing models from PLM, Product Main Definition now goes through the PLM → ASAS translation review like Category and License. The ASAS value you choose is saved and remembered for later imports. If ASAS data conflicts with a choice, the old choice is not applied automatically and the Collection value is not overwritten."
+      }
+    },
+    {
+      "id": "plm-skip-translation-fields",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Çeviri incelemesinde “Bu alanları atla”",
+        "en": "“Skip these fields” in the translation review"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM’den aktar › PLM → ASAS çevirilerini öğret › Bu alanları atla",
+        "en": "Collection › Import from PLM › Teach PLM → ASAS translations › Skip these fields"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-skip-translation-fields.png",
+        "alt": {
+          "tr": "PLM → ASAS çevirilerini öğret penceresinin altında Aktarımı iptal et, Bu alanları atla ve Seçimlerimle devam et düğmeleri — demo verili Buyer Log ekranı",
+          "en": "Bottom of the Teach PLM → ASAS translations window with Cancel import, Skip these fields and Continue with my choices — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Eşleme öğretmeden aktarıma devam edin",
+          "en": "Continue the import without teaching a mapping"
+        }
+      },
+      "body": {
+        "tr": "Çeviri penceresindeki yeni “Bu alanı atla / Bu alanları atla” düğmesi, listelenen alanları bu aktarımda yok sayar ve hiçbir eşleme öğretmez. Bu alanlarda Koleksiyon’daki mevcut değerler korunur; diğer PLM alanları normal şekilde aktarılır. PLM senkronu ve Excel aktarımında aynı şekilde çalışır.",
+        "en": "The new “Skip this field / Skip these fields” button in the translation window ignores the listed fields for this import and teaches no mapping. Existing Collection values in those fields are kept; the other PLM fields are imported as usual. It works the same in PLM sync and Excel import."
+      }
+    },
+    {
+      "id": "collection-pagination-toolbar",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Satır aralığı sayfalaması üst araç çubuğunda",
+        "en": "Row-range pagination in the top toolbar"
+      },
+      "path": {
+        "tr": "Koleksiyon › araç çubuğu (sağ)",
+        "en": "Collection › toolbar (right)"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pagination-toolbar.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: 50 satır seçimi, 1–6 / 6 bilgisi ve sayfa düğmeleri araç çubuğunun sağında; tablonun üstünde ayrı satır yok — demo verili Buyer Log ekranı",
+          "en": "Collection table: the 50-row selector, 1–6 / 6 info and page buttons sit on the right of the toolbar; there is no separate row above the table — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Tablo için daha fazla dikey alan",
+          "en": "More vertical space for the table"
+        }
+      },
+      "body": {
+        "tr": "Koleksiyon’da satır sayısı seçimi ve sayfa düğmeleri tablonun üstünde ayrı bir satır açmak yerine, CP ve Siparişler’de olduğu gibi araç çubuğunun sağına sabitlendi; taşma menüsüne düşmez.",
+        "en": "In Collection, the row-count selector and page buttons are now pinned to the right of the toolbar, as in CP and Orders, instead of taking a separate row above the table; they never move into the overflow menu."
+      }
+    },
     {
       "id": "collection-fabric-cards-sets-long-codes",
       "type": "fix",
