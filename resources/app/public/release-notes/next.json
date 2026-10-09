@@ -76,6 +76,105 @@
           "en": "Owner checks on shared fields; existing access to local notes"
         }
       }
+    },
+    {
+      "id": "sync-versioned-rule-releases",
+      "type": "feature",
+      "module": {
+        "tr": "Sync",
+        "en": "Sync"
+      },
+      "title": {
+        "tr": "Kural yayımlarına not ekleyin ve önceki sürüme dönün",
+        "en": "Annotate rule releases and restore earlier versions"
+      },
+      "path": {
+        "tr": "Üst çubuk › Sync durumu",
+        "en": "Top bar › Sync status"
+      },
+      "body": {
+        "tr": "Moderatör, kural sürümlerini tarih, not ve değişen alanlarla karşılaştırabilir. Onaylı geri dönüş seçilen kuralları yeni sürüm olarak yayımlar; son 30 sürüm korunur. Paylaşılan sipariş alanları, e-posta rehberi ve yerel bilgiler korunur.",
+        "en": "The Moderator can compare rule releases by date, note and changed entities. Confirmed restoration publishes the selected rules as a new release; the latest 30 releases are retained. Shared order fields, the email directory and local information are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-master-releases.png",
+        "alt": {
+          "tr": "Moderatör kural geçmişi: notla yayım ve eski kuralların yeni revizyon olarak geri yüklenmesi — demo verili gerçek Buyer Log ekranı",
+          "en": "Moderator rule history: publication with a note and restoration as a new revision — real Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Kural yayımlarına not ekleyin ve önceki sürüme dönün",
+          "en": "Annotate rule releases and restore earlier versions"
+        }
+      }
+    },
+    {
+      "id": "sync-applied-rule-version",
+      "type": "feature",
+      "module": {
+        "tr": "Sync",
+        "en": "Sync"
+      },
+      "title": {
+        "tr": "Uygulanan kural sürümünü görün",
+        "en": "See the applied rules version"
+      },
+      "path": {
+        "tr": "Üst çubuk › Sync durumu",
+        "en": "Top bar › Sync status"
+      },
+      "body": {
+        "tr": "Sync durumu, cihazın uyguladığı kural sürümünü, yayımlayanı ve zamanı gösterir. Yeni sürüm uygulandığında kullanıcıya bir kez bilgi bildirimi gösterilir.",
+        "en": "Sync Status shows the rules version applied on the device, its publisher and time. Applying a new version displays one information notice to the user."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-master-applied.png",
+        "alt": {
+          "tr": "Normal kullanıcı için Sync durumunda uygulanan kural sürümü, yayımlayan ve zaman — demo verili gerçek Buyer Log ekranı",
+          "en": "Applied rule version, publisher and time in Sync Status for a normal user — real Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Uygulanan kural sürümünü görün",
+          "en": "See the applied rules version"
+        }
+      }
+    },
+    {
+      "id": "corporate-connections-accessible-language",
+      "type": "fix",
+      "module": {
+        "tr": "Üst çubuk",
+        "en": "Top bar"
+      },
+      "title": {
+        "tr": "Kurumsal bağlantı etiketi seçilen dili izler",
+        "en": "Corporate connection label follows the selected language"
+      },
+      "path": {
+        "tr": "Üst çubuk › LCW AI / PLM / OAB",
+        "en": "Top bar › LCW AI / PLM / OAB"
+      },
+      "body": {
+        "tr": "Kurumsal bağlantılar grubunun ekran okuyucu etiketi Türkçe ve İngilizce arasında dil tercihiyle birlikte değişir.",
+        "en": "The corporate connections group’s screen reader label switches between Turkish and English with the language preference."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "corporate-connections-accessibility.png",
+        "alt": {
+          "tr": "İngilizce kipte kurumsal bağlantıları gösteren demo verili gerçek Buyer Log ekranı",
+          "en": "Real Buyer Log screen with demo data showing corporate connections in English mode"
+        },
+        "caption": {
+          "tr": "Kurumsal bağlantılar için Türkçe ve İngilizce erişilebilirlik desteği",
+          "en": "Turkish and English accessibility for corporate connections"
+        }
+      }
     }
   ]
 }
