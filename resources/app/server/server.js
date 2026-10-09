@@ -331,6 +331,7 @@ const plmMainColour = require('./lib/plm-main-colour');
 const sharedImageStoreLib = require('./lib/shared-image-store');
 const modelImageDistributionLib = require('./lib/model-image-distribution');
 const collectionImageSyncPolicy = require('./lib/collection-image-sync-policy');
+const modelImageRefreshLeases = require('./lib/model-image-refresh-leases');
 const refreshHistoryDiff = require('./lib/refresh-history-diff');
 const backlogPlanActual = require('./lib/backlog-plan-actual');
 const modelImageRegistry = require('./lib/model-image-registry');
@@ -4482,7 +4483,8 @@ async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
 
   const normalizedItems = items.map(item => ({ item, normalized:{ key:collectionImageSyncPolicy.sharedImageKey(item, plmImageIngestLib.normalizeRequest(item).key) } })).filter(entry => entry.normalized.key);
   const sharedKeys = normalizedItems.map(entry => 'collection:' + owner + ':' + entry.normalized.key);
-  const records = await sharedModelImageStore.lookupMany(sharedKeys, { source:sharedImageStoreLib.SOURCE_PLM });
+  // Owner-scoped Collection assets may originate from PLM, ASAS or manual uploads.
+  const records = await sharedModelImageStore.lookupMany(sharedKeys);
   const cache = readCollectionSharedImageCache();
   const replacements = new Map();
   let installed = 0, reused = 0, missing = 0, available = 0;
@@ -4597,14 +4599,27 @@ async function syncAuthorizedCollectionImages(userId) {
 /* Kanonik yazma sonuçlarını yayım kuyruğuna çevirir. Yayım ASENKRONDUR:
    kullanıcı görseli çoktan görür, ağ sonra yetişir; ağ yoksa kuyrukta bekler
    ve yerel başarı ASLA geri alınmaz. */
+function collectionShareableImageKeys(userId, scope) {
+  const owner = String(userId || '').trim();
+  if (!owner || !collectionImageSyncPolicy.scopeUsesSharedImages(scope)) return new Set();
+  if (!collectionImageSyncPolicy.shouldPublishOwnerImages(collectionPermissions.outgoing(owner), owner)) return new Set();
+  try {
+    return collectionImageSyncPolicy.workspaceModelImageKeys(loadWorkspace(owner),
+      item => plmImageIngestLib.normalizeRequest(item).key);
+  } catch (error) {
+    logRuntimeFailure('collectionSharedImageEligibility', error);
+    return new Set();
+  }
+}
 function queueModelImagePublish(outcomes, source, {
   ownership = sharedImageStoreLib.OWNERSHIP_AUTOMATIC,
   collectionOwnerId = '',
 } = {}) {
   const owner = String(collectionOwnerId || '').trim();
-  if (!owner) return { queued:0, pending:0 };
+  const eligible = collectionShareableImageKeys(owner, 'koleksiyon');
+  if (!eligible.size) return { queued:0, pending:0 };
   const entries = (Array.isArray(outcomes) ? outcomes : [])
-    .filter(item => item && item.imageRef && item.key
+    .filter(item => item && item.imageRef && item.key && eligible.has(item.key)
       && item.status !== plmImageIngestLib.COMMIT_FAILED && item.status !== plmImageIngestLib.COMMIT_MANUAL)
     .map(item => ({
       canonicalKey: 'collection:' + owner + ':' + item.key, source,
@@ -4705,30 +4720,14 @@ async function resolveModelImagesLocalFirst(requests, options = {}) {
 /* Üst kaynağa çıkacak kimlikler için dağıtık kira. Kirası başka bir Buyer Log
    örneğinde olan kimlik bu turda ATLANIR: o örnek bitirince sonucu paylaşılan
    depodan gelir. Kira süreli olduğu için çöken bir örnek modeli kilitlemez. */
-async function leaseUpstreamImageIdentities(items, source, { concurrency = 8 } = {}) {
-  const list = Array.isArray(items) ? items : [];
-  const held = [];
-  const busy = [];
-  if (!list.length || !(await sharedModelImageStore.available())) return { held: list, busy, release: async () => {} };
-  let cursor = 0;
-  const workers = Array.from({ length: Math.max(1, Math.min(concurrency, list.length)) }, async () => {
-    for (;;) {
-      const index = cursor; cursor += 1;
-      if (index >= list.length) return;
-      const item = list[index];
-      try {
-        const lease = await sharedModelImageStore.acquireRefreshLease(item.key, source, { timeoutMs: 250 });
-        if (lease.acquired) held.push({ item, lease });
-        else busy.push(item);
-      } catch (_) { held.push({ item, lease: { acquired: true, release: async () => {} } }); }
-    }
+async function leaseUpstreamImageIdentities(items, source, { concurrency = 8, eligibleKeys = new Set(), ownerId = '' } = {}) {
+  // CP, Orders and unshared Collection require ZERO shared-folder calls.
+  // A shared Collection lease is scoped by the owner, never a global PLM key.
+  return modelImageRefreshLeases.acquireCollectionRefreshLeases(items, {
+    eligibleKeys, ownerId, concurrency,
+    available: () => sharedModelImageStore.available(),
+    acquire: canonicalKey => sharedModelImageStore.acquireRefreshLease(canonicalKey, source, { timeoutMs: 250 }),
   });
-  await Promise.all(workers);
-  return {
-    held: held.map(entry => entry.item),
-    busy,
-    release: async () => { for (const entry of held) { try { await entry.lease.release(); } catch (_) {} } },
-  };
 }
 
 /* Tek bir dağıtım turu: önce bekleyen yayımlar, sonra delta çekme.
@@ -4737,6 +4736,8 @@ async function leaseUpstreamImageIdentities(items, source, { concurrency = 8 } =
 let sharedModelImageSyncInFlight = null;
 async function syncSharedModelImagesOnce({ limit = 500 } = {}) {
   if (sharedModelImageSyncInFlight) return sharedModelImageSyncInFlight;
+  // Nothing queued: do not even touch the SMB/OneDrive directory.
+  if (!modelImageDistribution.status().pendingPublish) return { available:true, published:0, pendingPublish:0, lazy:true, collectionOnly:true };
   sharedModelImageSyncInFlight = (async () => {
     if (!(await sharedModelImageStore.available())) return { available:false, published:0, installed:0, collectionOnly:true };
     const published = await modelImageDistribution.flushPublish({
@@ -4760,19 +4761,21 @@ async function syncSharedModelImagesOnce({ limit = 500 } = {}) {
    AÇIK bir kayıtta durur ve MANUAL sahiplikle paylaşılan depoya yayımlanır.
    Böylece başka bir kullanıcının "PLM'den Tümünü Yenile" işlemi bu görseli
    ezemez. Referans boşsa yayımlanan şey bir MEZAR TAŞIDIR. */
-function recordManualImageOwnership(items, collectionOwnerId = '') {
+function recordManualImageOwnership(items, collectionOwnerId = '', scope = '') {
   const owner = String(collectionOwnerId || '').trim();
+  const eligible = collectionShareableImageKeys(owner, scope);
   const manual = [];
   const publishEntries = [];
   const tombstoneKeys = [];
   for (const item of Array.isArray(items) ? items : []) {
     const key = plmImageIngestLib.canonicalKeyFor(item);
     if (!key) continue;
+    const canShare = eligible.has(key);
     const imageRef = String((item && item.imageRef) || '').trim();
     const identity = { plmId: item.plmId, colourCode: item.colourCode || '', colour: item.colour || item.color || '' };
     if (!imageRef) {
       tombstoneKeys.push(key);
-      if (owner) publishEntries.push({
+      if (canShare) publishEntries.push({
         canonicalKey:'collection:' + owner + ':' + key, ...identity, source:sharedImageStoreLib.SOURCE_MANUAL,
         ownership:sharedImageStoreLib.OWNERSHIP_MANUAL, status:sharedImageStoreLib.STATUS_DELETED,
         sourceIdentity:'collection:' + owner + ':' + key,
@@ -4786,7 +4789,7 @@ function recordManualImageOwnership(items, collectionOwnerId = '') {
     const contentHash = plmImageHash(buffer);
     const mimeType = (found.item && found.item.mimeType) || '';
     manual.push({ key, imageRef, hash: contentHash, mimeType, bytes: buffer.length, deviceId: localDb.getDeviceId() });
-    if (owner) publishEntries.push({
+    if (canShare) publishEntries.push({
       canonicalKey: 'collection:' + owner + ':' + key, ...identity, source: sharedImageStoreLib.SOURCE_MANUAL,
       ownership: sharedImageStoreLib.OWNERSHIP_MANUAL, status: sharedImageStoreLib.STATUS_AVAILABLE,
       imageRef, contentHash, mimeType,
@@ -4937,8 +4940,11 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       });
       phaseLog('local-first-plan',{upstream:first.plan.upstream.length});
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
-      const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_PLM);
-      phaseLog('shared-lease',{held:upstreamLease.held.length,busy:upstreamLease.busy.length});
+      const eligibleSharedKeys = collectionShareableImageKeys(req.currentUser.id, plmJobScope(req));
+      const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_PLM, {
+        ownerId: req.currentUser.id, eligibleKeys: eligibleSharedKeys,
+      });
+      phaseLog('shared-lease',{held:upstreamLease.held.length,busy:upstreamLease.busy.length,protected:upstreamLease.protectedCount});
       /* Üst kaynağa giden istek HER ZAMAN yukarıda kurulan asıl istektir.
          Plan kalemi yeniden istek gövdesine ÇEVRİLMEZ: Style ID yalnız
          kalıcı PLM link deposundan gelmelidir ve plan kaleminden yeniden
@@ -4989,7 +4995,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       /* YAYIM. Yerel yazma bitti, kullanıcı görseli görebiliyor; paylaşılan
          depoya taşıma buradan sonra ve asenkron olur. Ağ yoksa kuyrukta
          bekler, yerel başarı geri ALINMAZ. */
-      if (sharedForCollection) queueModelImagePublish(run.outcomes, sharedImageStoreLib.SOURCE_PLM, { collectionOwnerId:req.currentUser.id });
+      if (sharedForCollection && eligibleSharedKeys.size) queueModelImagePublish(run.outcomes, sharedImageStoreLib.SOURCE_PLM, { collectionOwnerId:req.currentUser.id });
       /* Kaynak duyarlı "bulunamadı" belleği: PLM'in yok demesi ASAS için
          hiçbir şey söylemez. Açık bir yenileme yine deneyebilir. */
       modelImageDistribution.rememberNotFound((run.skipped || [])
@@ -5024,7 +5030,11 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
         metadataCalls: run.metadataCalls||0,
         uniqueDownloads: run.uniqueDownloads||0,
       };
-      } finally { await upstreamLease.release(); }
+      } finally {
+        const releaseStarted = Date.now();
+        const released = await upstreamLease.release();
+        plmImageRefreshLog('PLM_IMAGE_LEASE_RELEASE', { ms:Date.now()-releaseStarted, protected:upstreamLease.protectedCount, ...released });
+      }
     });
 
     phaseLog('done');
@@ -5073,7 +5083,10 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
         allowShared: false,
       });
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
-      const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_ASAS);
+      const eligibleSharedKeys = collectionShareableImageKeys(req.currentUser.id, plmJobScope(req));
+      const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_ASAS, {
+        ownerId: req.currentUser.id, eligibleKeys: eligibleSharedKeys,
+      });
       const keys=new Set(upstreamLease.held.map(item=>parseLib.plmImageKey(item.plmId)).filter(Boolean));
       const distributionCounts = {
         ...first.plan.counts,
@@ -5096,7 +5109,7 @@ app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'order
            dağıtımda bir ASAS isteğini karşılayıp karşılayamayacakları
            bilinemezdi. Artık OTOMATİK/ASAS olarak kaydedilir ve yayımlanır. */
         const asasOutcomes = recordAsasImageProvenance(run.images || []);
-        if (sharedForCollection) queueModelImagePublish(asasOutcomes, sharedImageStoreLib.SOURCE_ASAS, { collectionOwnerId:req.currentUser.id });
+        if (sharedForCollection && eligibleSharedKeys.size) queueModelImagePublish(asasOutcomes, sharedImageStoreLib.SOURCE_ASAS, { collectionOwnerId:req.currentUser.id });
         modelImageDistribution.rememberNotFound((run.failedItems || [])
           .map(item => ({ canonicalKey: parseLib.plmImageKey(item && item.plmId), source: sharedImageStoreLib.SOURCE_ASAS, code: (item && item.code) || 'ASAS_TECHNICAL_IMAGE_MISSING' }))
           .filter(item => item.canonicalKey));
@@ -9789,7 +9802,7 @@ app.post('/api/plm-image-links', userAccess.requireArea('koleksiyon'), async (re
          otomatik senkronu bu görseli ezebilirdi. Karar açık bir kayda yazılır
          ve MANUAL sahiplikle paylaşılan depoya yayımlanır. Boş referans bir
          MEZAR TAŞIDIR: eski bir istemcinin yerel kopyası onu diriltemesin. */
-      recordManualImageOwnership(items, req.currentUser.id);
+      recordManualImageOwnership(items, req.currentUser.id, plmJobScope(req));
     } catch (ownershipError) { logRuntimeFailure('plmImageOwnershipForget', ownershipError); }
     let pageCachePatched=false;
     try{pageCachePatched=await rewriteProjectionCacheForImageItems(req.currentUser,beforeContext,items);}
@@ -12147,9 +12160,18 @@ app.get('/api/collection-images/:id', userAccess.requireAnyArea('source','koleks
   try {
     const found = getCollectionImage(req.params.id);
     if (!found) return res.status(404).json({ error: 'Koleksiyon görseli bulunamadı.' });
+    // A recipient's locally cached Collection image must not be accessible to
+    // other accounts just because they can read generic CP/Orders images.
+    const rowId = String(found.item && found.item.rowId || '');
+    const sharedPrefix = 'collection-shared:';
+    const sharedOwner = rowId.startsWith(sharedPrefix)
+      ? rowId.slice(sharedPrefix.length).split(':')[0] : '';
+    if (rowId.startsWith(sharedPrefix) && (!sharedOwner || !userAccess.collectionAccessLevel(req.currentUser, sharedOwner))) {
+      return res.status(403).json({ error:'Bu paylaşılan Koleksiyon görseline erişim izniniz yok.', code:'COLLECTION_ACCESS_DENIED' });
+    }
     res.setHeader('Content-Type', found.item.mimeType || 'application/octet-stream');
     res.setHeader('Content-Length', String(fs.statSync(found.full).size));
-    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    res.setHeader('Cache-Control', sharedOwner ? 'private, no-store' : 'private, max-age=31536000, immutable');
     /* /api katmanı her yanıta Pragma: no-cache + Expires: 0 ekler. Chromium
        yanıttaki Pragma: no-cache'i Cache-Control: no-cache gibi yorumlar:
        immutable YOK SAYILIR ve her görsel her render'da sunucuya yeniden
