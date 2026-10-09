@@ -10,6 +10,7 @@ const centralIam = require('./central-iam');
 const orderAuthorityShare = require('./order-authority-share');
 const cpFieldOwnership = require('./cp-field-ownership');
 const iam = require('./iam-core');
+const iamExcel = require('./iam-excel');
 const userPreferences = require('./user-preferences');
 const { createPersonalLoginCache } = require('./personal-login-cache');
 
@@ -782,18 +783,58 @@ function roleWorkspaceEntries(profileOrId, store = readStore()) {
     : profileById(store, clean(profileOrId));
   const roleId = clean(profile && profile.systemRole) || (Object.prototype.hasOwnProperty.call(iam.SYSTEM_ROLES, clean(profileOrId)) ? clean(profileOrId) : 'buyer');
   const template = workspaceTemplateForRole(store, roleId);
-  return userPreferences.normalizeWorkspaceEntryMap(template && template.entries, userPreferences.WORKSPACE_CATEGORIES);
+  const roleEntries = userPreferences.normalizeWorkspaceEntryMap(template && template.entries, userPreferences.WORKSPACE_CATEGORIES);
+  // Kişiye atanmış varsayılan ufuk rol şablonunun üstündedir; kişinin kendi
+  // ayarı ise ikisinin de üstünde kalır (user-preferences çözümleme sırası).
+  const assigned = profile ? userWorkspaceDefault(store, profile.id) : null;
+  return assigned ? { ...roleEntries, ...userPreferences.normalizeWorkspaceEntryMap(assigned.entries, ['horizon']) } : roleEntries;
+}
+/* Kişiye atanmış varsayılan ufuk (merkezi dizinde, bkz. iam-core). */
+const HORIZON_DEFAULT_MODULES = Object.freeze(['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
+// Liste ekranı her profil için sorar; aynı dizin nesnesi için dizin bir kez kurulur.
+// Yazan işleyiciler store.iam'ı yeni nesneyle değiştirir, önbellek kendiliğinden düşer.
+const userWorkspaceDefaultIndex = new WeakMap();
+function userWorkspaceDefault(store, userId) {
+  const id = clean(userId);
+  const raw = store && store.iam && store.iam.workspaceTemplates;
+  if (!id || !raw || typeof raw !== 'object' || !Array.isArray(raw.userDefaults)) return null;
+  let index = userWorkspaceDefaultIndex.get(raw);
+  if (!index) {
+    index = new Map(iam.normalizeUserWorkspaceDefaults(raw.userDefaults).map(item => [item.userId, item]));
+    userWorkspaceDefaultIndex.set(raw, index);
+  }
+  return index.get(id) || null;
+}
+function horizonDefaultModules(entry) {
+  return Object.keys(entry && entry.entries || {}).map(key => (/^buyerlog\.workspace\.horizon\.([a-z0-9_-]+)\.v1$/.exec(key) || [])[1]).filter(Boolean);
+}
+// Atama bu cihazda bir kez uygulanır; aynı atama için kişisel dosya yeniden okunmaz.
+const appliedHorizonDefaults = new Map();
+function applyAssignedHorizonDefault(profile, store) {
+  const assigned = profile && profile.id ? userWorkspaceDefault(store, profile.id) : null;
+  if (!assigned || !assigned.assignedAt || appliedHorizonDefaults.get(profile.id) === assigned.assignedAt) return;
+  try { userPreferences.supersedePersonalHorizons(profile.id, Object.keys(assigned.entries), assigned.assignedAt); appliedHorizonDefaults.set(profile.id, assigned.assignedAt); }
+  catch (_) {}
+}
+function roleBundleSummaries(store) {
+  const bundles = iam.normalizeRoleBundles(store && store.iam && store.iam.workspaceTemplates && store.iam.workspaceTemplates.roleBundles);
+  const members = new Map(bundles.map(bundle => [bundle.id, new Set()]));
+  for (const profile of allProfiles(store)) for (const grant of profile.directPermissions || []) {
+    const id = iam.bundleIdOfGrant(grant); if (members.has(id)) members.get(id).add(profile.id);
+  }
+  return bundles.map(bundle => ({ ...bundle, memberIds: [...members.get(bundle.id)] }));
 }
 function workspaceTemplateSummaries(store) {
   const templates = iam.normalizeWorkspaceTemplates(store && store.iam && store.iam.workspaceTemplates);
-  return Object.fromEntries(Object.entries(templates).map(([roleId, template]) => {
+  return Object.fromEntries(Object.keys(iam.SYSTEM_ROLES).map(roleId => [roleId, templates[roleId]]).map(([roleId, template]) => {
     const entries = userPreferences.normalizeWorkspaceEntryMap(template.entries, userPreferences.WORKSPACE_CATEGORIES);
     const categoryCounts = {};
     for (const key of Object.keys(entries)) {
       const category = userPreferences.categoryForKey(key);
       if (category) categoryCounts[category] = (categoryCounts[category] || 0) + 1;
     }
-    return [roleId, { roleId, sourceUserId: template.sourceUserId, sourceName: template.sourceName, updatedBy: template.updatedBy, updatedAt: template.updatedAt, categories: template.categories, categoryCounts, entryCount: Object.keys(entries).length }];
+    const horizonModules = Object.keys(entries).map(key => (/^buyerlog\.workspace\.horizon\.([a-z0-9_-]+)\.v1$/.exec(key) || [])[1]).filter(Boolean);
+    return [roleId, { roleId, sourceUserId: template.sourceUserId, sourceName: template.sourceName, updatedBy: template.updatedBy, updatedAt: template.updatedAt, categories: template.categories, categoryCounts, horizonModules, entryCount: Object.keys(entries).length }];
   }));
 }
 function authoritativeOrderAccessFromOrders(orders) {
@@ -1193,8 +1234,15 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     if (!payload) return null;
     const profile = findProfile(readStore(), payload.uid);
     if (!profile || profile.enabled === false || profile.status !== 'ACTIVE') return null;
-    if ((payload.credentialRevision || 1) !== (profile.credentialRevision || 1) ||
-      (payload.accessRevision || 1) !== (profile.accessRevision || 1)) return null;
+    /* v20261009 — YETKİ DEĞİŞİMİ OTURUMU DÜŞÜRMEZ (kullanıcı talebi: rol ve yetki
+       değişiklikleri "doğrudan kullanıcıları etkilesin").
+       Parola değişimi (credentialRevision) ve pasife alma oturumu kapatmaya devam
+       eder. Erişim değişiminde (accessRevision) ise kullanıcı artık giriş ekranına
+       atılmaz: yetki, kapsam ve alanlar zaten HER İSTEKTE güncel dizinden okunur
+       (bu profil, filterRowsByScope, sayfa önbelleği bağlam özeti), yani kısıtlama
+       aynı anda sunucuda geçerli olur. İstemci "iam" canlı olayı ve 5 sn'lik
+       oturum denetimiyle menülerini yeni yetkilere göre yeniden çizer. */
+    if ((payload.credentialRevision || 1) !== (profile.credentialRevision || 1)) return null;
     // Keep request-local mutation isolation without cloning the entire IAM store.
     // Downstream handlers historically received a private profile object from
     // loadStore(); preserving that contract avoids accidental cache mutation.
@@ -1421,6 +1469,11 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       directPermissions: profile.directPermissions || [], temporaryPermissions: profile.temporaryPermissions || [],
       assignedPermissions: assigned, effectivePermissions: effective,
       canEdit: canManageTarget(actor, profile, store),
+      roleBundleIds: unique((profile.directPermissions || []).map(iam.bundleIdOfGrant).filter(Boolean)),
+      horizonDefault: (() => {
+        const assigned = userWorkspaceDefault(store, profile.id);
+        return assigned ? { modules: horizonDefaultModules(assigned), assignedAt: assigned.assignedAt, assignedBy: assigned.assignedBy, sourceName: assigned.sourceName } : null;
+      })(),
       updatedAt: profile.updatedAt || null,
     };
   }
@@ -1543,6 +1596,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       resources: iam.RESOURCES, actions: iam.ACTIONS,
       roleDefinitions: iam.normalizeRoles(store.iam && store.iam.roles),
       workspaceTemplates: workspaceTemplateSummaries(store),
+      roleBundles: roleBundleSummaries(store),
       identityCandidates: directory.map(({ mags, mmygs, buyingGroups, existingUserId, ...rest }) => rest),
       directory, magMmyg: magMmygCatalog(store), buyingGroupCatalog: buyingGroupCatalog(store),
       // Buyer Log yerel kullanıcı adı/parola doğrulaması kullanıyor; kurumsal SSO
@@ -1610,7 +1664,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     }
     if (body.external === true && actor.systemRole !== 'moderator') throw Object.assign(new Error('Harici kullanıcıyı yalnız Moderatör oluşturabilir.'), { statusCode: 403, code: 'EXTERNAL_USER_ADMIN_REQUIRED' });
     if (Array.isArray(body.permissionCodes)) {
-      const previous = new Set((target.directPermissions || []).map(item => item.permission)), next = new Set(body.permissionCodes.map(norm));
+      const previous = new Set((target.directPermissions || []).filter(item => !iam.isBundleGrant(item)).map(item => item.permission)), next = new Set(body.permissionCodes.map(norm));
       const changed = new Set([...previous, ...next].filter(code => previous.has(code) !== next.has(code)));
       for (const permission of changed) if (!iam.canGrant(actor, permission, store)) throw Object.assign(new Error(`Sahip olmadığınız ${permission} yetkisini veremez veya geri alamazsınız.`), { statusCode: 403, code: 'PERMISSION_ESCALATION_DENIED', permission });
       if ([...next].some(code => iam.isSecurityPermission(code) || /\.(MANAGE|GRANT)$/.test(code)) && !clean(body.reason)) throw hierarchyError('Yüksek yetkiler için gerekçe zorunludur.', 'GRANT_REASON_REQUIRED');
@@ -1682,7 +1736,8 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       target.stableIds = stableIds;
     }
     if (body.external != null) target.external = Boolean(body.external);
-    if (Array.isArray(body.permissionCodes) && target.id !== 'moderator') target.directPermissions = unique(body.permissionCodes).map(permission => iam.normalizeGrant({ permission, source: 'DIRECT', reason: clean(body.reason), grantedBy: actor.id })).filter(Boolean);
+    // Ek rol kayıtları kişisel yetki formundan bağımsızdır; form onları silmez.
+    if (Array.isArray(body.permissionCodes) && target.id !== 'moderator') target.directPermissions = [...(target.directPermissions || []).filter(iam.isBundleGrant), ...unique(body.permissionCodes).map(permission => iam.normalizeGrant({ permission, source: 'DIRECT', reason: clean(body.reason), grantedBy: actor.id })).filter(Boolean)];
     if (Object.prototype.hasOwnProperty.call(body, 'password') || Object.prototype.hasOwnProperty.call(body, 'pin')) {
       const password = clean(body.password != null ? body.password : body.pin);
       if (password && password.length < PASSWORD_MIN_LENGTH) throw hierarchyError(`Şifre en az ${PASSWORD_MIN_LENGTH} karakter olmalı.`, 'PASSWORD_TOO_SHORT');
@@ -1834,7 +1889,8 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       if (templateRole && Object.values(organization).some(Boolean)) throw hierarchyError('Standart workspace şablonu organizasyon bilgisi içermez.', 'TEMPLATE_ORGANIZATION_UNAVAILABLE');
       if (!copyPermissions && !workspaceCategories.length && !Object.values(organization).some(Boolean)) throw hierarchyError('Kopyalanacak en az bir alan seçin.', 'COPY_FIELD_REQUIRED');
       const mode = norm(body.mode) === 'REPLACE' ? 'REPLACE' : 'MERGE';
-      const sourceCodes = source ? unique((source.directPermissions || []).map(item => item.permission)).map(norm) : [];
+      // Ek rol üyeliği kişisel yetki değildir; profil kopyası onu taşımaz.
+      const sourceCodes = source ? unique((source.directPermissions || []).filter(item => !iam.isBundleGrant(item)).map(item => item.permission)).map(norm) : [];
       const sourceName = source ? (source.displayName || source.username) : `Standard ${iam.SYSTEM_ROLES[templateRole]}`;
       const sourceId = source ? source.id : `template:${templateRole}`;
       const sourceWorkspaceEntries = source ? null : userPreferences.normalizeWorkspaceEntryMap(template.entries, workspaceCategories);
@@ -1847,11 +1903,12 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
           if (target.id === actor.id || (source && target.id === source.id) || target.id === 'moderator') throw Object.assign(new Error('Kaynak, kendi hesabınız veya korunan Moderatör hedef olarak seçilemez.'), { statusCode: 403, code: 'COPY_TARGET_DENIED' });
           if (!canManageTarget(actor, target, store)) throw Object.assign(new Error(`${targetName} yönetim alanınızda değil.`), { statusCode: 403, code: 'USER_NOT_MANAGEABLE' });
           if (copyPermissions) {
-            const existingGrants = mode === 'REPLACE' ? [] : (target.directPermissions || []), keptCodes = new Set(existingGrants.map(item => norm(item.permission)));
+            const bundleGrants = (target.directPermissions || []).filter(iam.isBundleGrant);
+            const existingGrants = mode === 'REPLACE' ? [] : (target.directPermissions || []).filter(item => !iam.isBundleGrant(item)), keptCodes = new Set(existingGrants.map(item => norm(item.permission)));
             const nextCodes = unique([...keptCodes, ...sourceCodes]).map(norm);
             assertSensitiveChange(actor, target, { permissionCodes: nextCodes, reason: body.reason }, store);
             const added = nextCodes.filter(permission => !keptCodes.has(permission)).map(permission => iam.normalizeGrant({ permission, source: 'DIRECT', reason: `Copied from ${sourceName}: ${clean(body.reason)}`, grantedBy: actor.id })).filter(Boolean);
-            target.directPermissions = [...existingGrants, ...added];
+            target.directPermissions = [...bundleGrants, ...existingGrants, ...added];
           }
           if (organization.role) { assertSensitiveChange(actor, target, { systemRole: source.systemRole, reason: body.reason, confirmCritical: body.confirmCritical }, store); target.systemRole = source.systemRole; target.role = legacyRoleFromIam(source.systemRole, source.orgLevel); target.orgLevel = source.orgLevel; }
           /* v7.23: Buying Group artık AYRI bir kategoridir. Eskiden MAG ile
@@ -1884,13 +1941,271 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
           ? userPreferences.copyWorkspaceSnapshot(source.id, id, workspaceCategories, mode)
           : userPreferences.copyWorkspaceEntrySnapshot(sourceWorkspaceEntries, id, workspaceCategories, mode));
       }
+      /* Horizon kopyası kişisel tercih olarak yalnız bu cihaza yazılıyordu; hedef
+         kullanıcı başka cihazda açınca hiçbir şey görmüyordu. Kaynağın ufku artık
+         hedeflerin ATANMIŞ VARSAYILANI olarak merkezi dizine de yazılır. */
+      let horizonAssigned = false;
+      if (changed.length && workspaceCategories.includes('horizon')) {
+        const horizonEntries = source
+          ? userPreferences.effectiveWorkspaceEntries(source.id, roleWorkspaceEntries(source, store), ['horizon']).entries
+          : userPreferences.normalizeWorkspaceEntryMap(sourceWorkspaceEntries, ['horizon']);
+        const assignable = Object.fromEntries(Object.entries(horizonEntries).filter(([key, item]) => HORIZON_DEFAULT_MODULES.some(module => key === userPreferences.horizonKey(module)) && clean(item && item.value)));
+        if (Object.keys(assignable).length) {
+          const now = new Date().toISOString(), templates = iam.normalizeWorkspaceTemplates(store.iam && store.iam.workspaceTemplates);
+          const defaults = (templates.userDefaults || []).filter(item => !changed.includes(item.userId));
+          for (const id of changed) {
+            const previous = userWorkspaceDefault(store, id);
+            const kept = mode === 'REPLACE' ? {} : (previous && previous.entries || {});
+            const next = {};
+            for (const [key, item] of Object.entries({ ...kept, ...assignable })) next[key] = { value: item.value, updatedAt: now };
+            defaults.push({ userId: id, entries: next, assignedAt: now, assignedBy: actor.id, sourceName });
+          }
+          templates.userDefaults = defaults;
+          store.iam = { ...(store.iam || {}), version: 5, workspaceTemplates: templates };
+          horizonAssigned = true;
+        }
+      }
       let saved = store;
-      try { if (changed.length && (centralConfigured || copyPermissions || Object.values(organization).some(Boolean))) saved = saveStore(store, body.expectedRevision); }
+      try { if (changed.length && (centralConfigured || horizonAssigned || copyPermissions || Object.values(organization).some(Boolean))) saved = saveStore(store, body.expectedRevision); }
       catch (error) { for (const [targetId, entries] of workspaceBackups) userPreferences.replaceWorkspaceEntries(targetId, entries, userPreferences.WORKSPACE_CATEGORIES, 'REPLACE'); throw error; }
       const success = results.filter(item => item.status === 'SUCCESS').length, failed = results.filter(item => item.status === 'FAILED').length;
       appendAudit(actor, 'USER_PROFILE_COPIED', sourceId, { sourceUserId: source && source.id || null, sourceTemplateRole: templateRole || null, sourceName, targetUserIds: changed, mode, categories: { userPermissions: copyPermissions, workspace: workspaceCategories, organization }, results, success, failed, permissions: copyPermissions ? sourceCodes : [], reason: clean(body.reason) }, req);
       res.json({ ok: failed === 0, revision: saved._revision, copiedTo: changed, mode, success, failed, skipped: 0, results });
     } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'PROFILE_COPY_FAILED', currentRevision: err.currentRevision }); }
+  }
+  /* VARSAYILAN UFUK ATAMA (Moderatör / Yönetici).
+
+     Kaynak, işlemi yapanın ya da seçilen kullanıcının BU CİHAZDA geçerli ufkudur
+     (kişisel → atanmış → rol şablonu). Sonuç merkezi dizine yazılır; böylece
+     hedef kullanıcı hangi cihazdan açarsa açsın aynı varsayılanı görür ve
+     ufkunu sonradan kendisi değiştirebilir. clear=true atamayı kaldırır;
+     kullanıcı rol şablonuna/ortak filtreye döner. */
+  function horizonDefaultsHandler(req, res) {
+    try {
+      const store = loadStore(), actor = req.currentUser || sessionProfile(req), body = req.body || {};
+      const targetIds = unique(body.targetUserIds);
+      if (!targetIds.length) throw hierarchyError('En az bir hedef kullanıcı seçin.', 'TARGET_USER_REQUIRED');
+      const modules = unique(body.modules).map(item => clean(item).toLowerCase()).filter(item => HORIZON_DEFAULT_MODULES.includes(item));
+      if (!modules.length) throw hierarchyError('En az bir ekran seçin.', 'HORIZON_MODULE_REQUIRED');
+      const clearing = body.clear === true, now = new Date().toISOString();
+      let entries = {}, source = null;
+      if (!clearing) {
+        source = profileById(store, clean(body.sourceUserId) || actor.id);
+        if (!source) return res.status(404).json({ error: 'Kaynak kullanıcı bulunamadı.', code: 'SOURCE_USER_NOT_FOUND' });
+        if (source.id !== actor.id && !canManageTarget(actor, source, store)) throw Object.assign(new Error('Kaynak kullanıcı yönetim alanınızda değil.'), { statusCode: 403, code: 'USER_NOT_MANAGEABLE' });
+        const effective = userPreferences.effectiveWorkspaceEntries(source.id, roleWorkspaceEntries(source, store), ['horizon']).entries;
+        for (const module of modules) {
+          const key = userPreferences.horizonKey(module);
+          if (effective[key] && clean(effective[key].value)) entries[key] = { value: effective[key].value, updatedAt: now };
+        }
+        if (!Object.keys(entries).length) throw hierarchyError('Kaynak kullanıcının seçilen ekranlar için bir ufku yok.', 'SOURCE_HORIZON_EMPTY');
+      }
+      const templates = iam.normalizeWorkspaceTemplates(store.iam && store.iam.workspaceTemplates);
+      const defaults = (templates.userDefaults || []).filter(item => !targetIds.includes(item.userId));
+      const changed = [];
+      for (const targetId of targetIds) {
+        const target = profileById(store, targetId);
+        if (!target) throw hierarchyError(`Hedef kullanıcı bulunamadı: ${targetId}`, 'TARGET_USER_NOT_FOUND');
+        if (!canManageTarget(actor, target, store)) throw Object.assign(new Error(`${target.displayName || target.username} yönetim alanınızda değil.`), { statusCode: 403, code: 'USER_NOT_MANAGEABLE' });
+        const previous = userWorkspaceDefault(store, target.id);
+        const kept = Object.fromEntries(Object.entries(previous && previous.entries || {}).filter(([key]) => !modules.some(module => key === userPreferences.horizonKey(module))));
+        const next = clearing ? kept : { ...kept, ...entries };
+        if (Object.keys(next).length) defaults.push({ userId: target.id, entries: next, assignedAt: clearing ? (previous && previous.assignedAt) || now : now, assignedBy: actor.id, sourceName: clearing ? (previous && previous.sourceName) || '' : (source.displayName || source.username) });
+        changed.push(target.id);
+      }
+      templates.userDefaults = defaults;
+      store.iam = { ...(store.iam || {}), version: 5, workspaceTemplates: templates };
+      const saved = saveStore(store, body.expectedRevision);
+      for (const id of changed) appendAudit(actor, clearing ? 'USER_HORIZON_DEFAULT_CLEAR' : 'USER_HORIZON_DEFAULT_SET', id, {
+        targetName: (profileById(saved, id) || {}).displayName, modules, sourceUserId: source && source.id || null, sourceName: source ? (source.displayName || source.username) : '', reason: clean(body.reason),
+      }, req);
+      res.json({ ok: true, revision: saved._revision, targetUserIds: changed, modules: clearing ? modules : modules.filter(module => entries[userPreferences.horizonKey(module)]), cleared: clearing });
+    } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'HORIZON_DEFAULT_FAILED', currentRevision: err.currentRevision }); }
+  }
+  /* ROL VARSAYILAN UFKU — doğrudan ayarlanır.
+
+     Rol şablonu yalnız bir kullanıcının TÜM çalışma alanı snapshot'ından
+     oluşturulabiliyordu; bir rolün yalnız ufkunu değiştirmek için filtre,
+     kolon ve görünüm ayarlarını da yeniden yazmak gerekiyordu. Bu uç şablonun
+     yalnız Horizon anahtarlarını yazar/kaldırır, diğer kategoriler korunur.
+     Kişiye atanmış varsayılan ve kişinin kendi ayarı bunun üstündedir. */
+  function roleHorizonDefaultsHandler(req, res) {
+    try {
+      const store = loadStore(), actor = req.currentUser || sessionProfile(req), body = req.body || {};
+      const roleId = clean(body.roleId);
+      if (!Object.prototype.hasOwnProperty.call(iam.SYSTEM_ROLES, roleId)) throw hierarchyError('Geçersiz şablon rolü.', 'INVALID_TEMPLATE_ROLE');
+      if (!clean(body.reason) || body.confirmCritical !== true) throw hierarchyError('Rol varsayılan ufku için onay ve gerekçe zorunludur.', 'CRITICAL_CONFIRMATION_REQUIRED');
+      const modules = unique(body.modules).map(item => clean(item).toLowerCase()).filter(item => HORIZON_DEFAULT_MODULES.includes(item));
+      if (!modules.length) throw hierarchyError('En az bir ekran seçin.', 'HORIZON_MODULE_REQUIRED');
+      const keys = modules.map(module => userPreferences.horizonKey(module)), clearing = body.clear === true, now = new Date().toISOString();
+      const templates = iam.normalizeWorkspaceTemplates(store.iam && store.iam.workspaceTemplates);
+      const current = templates[roleId], entries = Object.fromEntries(Object.entries(current.entries || {}).filter(([key]) => !keys.includes(key)));
+      let source = null;
+      if (!clearing) {
+        source = profileById(store, clean(body.sourceUserId) || actor.id);
+        if (!source) return res.status(404).json({ error: 'Kaynak kullanıcı bulunamadı.', code: 'SOURCE_USER_NOT_FOUND' });
+        if (source.id !== actor.id && !canManageTarget(actor, source, store)) throw Object.assign(new Error('Kaynak kullanıcı yönetim alanınızda değil.'), { statusCode: 403, code: 'USER_NOT_MANAGEABLE' });
+        // Kaynağın kendi/atanmış ufku; rol şablonunun eski ufku kaynak sayılmaz.
+        const personal = userPreferences.workspaceEntries(source.id, ['horizon']);
+        const assigned = userWorkspaceDefault(store, source.id);
+        const effective = { ...(assigned && assigned.entries || {}), ...personal };
+        let copied = 0;
+        for (const key of keys) if (effective[key] && clean(effective[key].value)) { entries[key] = { value: effective[key].value, updatedAt: now }; copied += 1; }
+        if (!copied) throw hierarchyError('Kaynak kullanıcının seçilen ekranlar için bir ufku yok.', 'SOURCE_HORIZON_EMPTY');
+      }
+      const categories = unique([...(current.categories || []).filter(item => item !== 'horizon'), ...(Object.keys(entries).some(key => userPreferences.categoryForKey(key) === 'horizon') ? ['horizon'] : [])]);
+      templates[roleId] = { ...current, entries, categories, updatedBy: actor.id, updatedAt: now,
+        sourceUserId: current.sourceUserId || (source && source.id) || null, sourceName: current.sourceName || (source ? (source.displayName || source.username) : '') };
+      store.iam = { ...(store.iam || {}), version: 5, workspaceTemplates: templates };
+      const saved = saveStore(store, body.expectedRevision);
+      appendAudit(actor, clearing ? 'ROLE_HORIZON_DEFAULT_CLEAR' : 'ROLE_HORIZON_DEFAULT_SET', roleId, { roleId, modules, sourceUserId: source && source.id || null, reason: clean(body.reason) }, req);
+      res.json({ ok: true, revision: saved._revision, roleId, modules, cleared: clearing, template: workspaceTemplateSummaries(saved)[roleId] });
+    } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'ROLE_HORIZON_DEFAULT_FAILED', currentRevision: err.currentRevision }); }
+  }
+  /* EK ROL KAYDET / SİL (bkz. iam-core "EK ROLLER").
+     Tanım merkezi politikaya, üyelik kişinin "bundle:" yetki kayıtlarına yazılır.
+     Her yetki için canGrant aranır (Moderatör + USER.GRANT + yetkinin kendisi);
+     kişi kendi üyeliğini değiştiremez; yalnız yönetim alanındaki kişiler üye olur. */
+  function roleBundleHandler(req, res) {
+    try {
+      const store = loadStore(), actor = req.currentUser || sessionProfile(req), body = req.body || {};
+      if (!clean(body.reason) || body.confirmCritical !== true) throw hierarchyError('Ek rol değişikliği için onay ve gerekçe zorunludur.', 'CRITICAL_CONFIRMATION_REQUIRED');
+      const templates = iam.normalizeWorkspaceTemplates(store.iam && store.iam.workspaceTemplates);
+      const bundles = templates.roleBundles || [];
+      const incoming = body.bundle && typeof body.bundle === 'object' ? body.bundle : {};
+      const removing = body.remove === true;
+      let id = clean(incoming.id).toLowerCase();
+      const previous = bundles.find(item => item.id === id) || null;
+      if (removing && !previous) return res.status(404).json({ error: 'Ek rol bulunamadı.', code: 'ROLE_BUNDLE_NOT_FOUND' });
+      if (!previous) id = `r${crypto.randomBytes(5).toString('hex')}`;
+      const permissions = removing ? [] : unique(incoming.permissions).map(norm);
+      if (permissions.some(code => !iam.PERMISSION_CODES.has(code))) throw hierarchyError('Geçersiz izin kodu.', 'INVALID_PERMISSION');
+      if (permissions.some(code => iam.isSecurityPermission(code))) throw hierarchyError('Güvenlik yetkileri ek role konamaz; kişiye gerekçeyle verilir.', 'BUNDLE_SECURITY_PERMISSION');
+      if (!removing && !permissions.length) throw hierarchyError('Ek role en az bir yetki seçin.', 'BUNDLE_PERMISSION_REQUIRED');
+      const nameTr = clean(incoming.nameTr), nameEn = clean(incoming.nameEn) || nameTr;
+      if (!removing && !nameTr) throw hierarchyError('Ek rol adı zorunludur.', 'BUNDLE_NAME_REQUIRED');
+      if (!removing && bundles.some(item => item.id !== id && norm(item.nameTr) === norm(nameTr))) throw hierarchyError('Bu adla bir ek rol zaten var.', 'BUNDLE_NAME_EXISTS');
+      const memberIds = removing ? [] : unique(body.memberIds);
+      const previousCodes = new Set(previous ? previous.permissions : []), nextCodes = new Set(permissions);
+      const touched = new Set([...previousCodes, ...nextCodes].filter(code => previousCodes.has(code) !== nextCodes.has(code)));
+      const changedUsers = [];
+      for (const profile of allProfiles(store)) {
+        const had = (profile.directPermissions || []).some(grant => iam.bundleIdOfGrant(grant) === id);
+        const will = memberIds.includes(profile.id);
+        if (!had && !will) continue;
+        const membershipChanges = had !== will;
+        if (!membershipChanges && !touched.size) continue;
+        if (profile.id === actor.id) throw Object.assign(new Error('Kendi ek rol üyeliğinizi veya yetkilerini değiştiremezsiniz.'), { statusCode: 403, code: 'SELF_ESCALATION_DENIED' });
+        if (profile.id === 'moderator') throw Object.assign(new Error('Korunan Moderatör hesabı ek role eklenemez.'), { statusCode: 403, code: 'COPY_TARGET_DENIED' });
+        if (!canManageTarget(actor, profile, store)) throw Object.assign(new Error(`${profile.displayName || profile.username} yönetim alanınızda değil.`), { statusCode: 403, code: 'USER_NOT_MANAGEABLE' });
+        const affected = membershipChanges ? new Set([...previousCodes, ...nextCodes]) : touched;
+        for (const permission of affected) if (!iam.canGrant(actor, permission, store)) throw Object.assign(new Error(`Sahip olmadığınız ${permission} yetkisini veremez veya geri alamazsınız.`), { statusCode: 403, code: 'PERMISSION_ESCALATION_DENIED', permission });
+        const kept = (profile.directPermissions || []).filter(grant => iam.bundleIdOfGrant(grant) !== id);
+        const added = will ? permissions.map(permission => iam.normalizeGrant({ id: iam.bundleGrantId(id, permission), permission, source: 'DIRECT', reason: `Ek rol: ${nameTr}`, grantedBy: actor.id })).filter(Boolean) : [];
+        profile.directPermissions = [...kept, ...added];
+        changedUsers.push(profile.id);
+      }
+      const now = new Date().toISOString();
+      templates.roleBundles = removing ? bundles.filter(item => item.id !== id)
+        : [...bundles.filter(item => item.id !== id), { id, nameTr, nameEn, description: clean(incoming.description), permissions, updatedBy: actor.id, updatedAt: now }];
+      store.iam = { ...(store.iam || {}), version: 5, workspaceTemplates: templates };
+      const saved = saveStore(store, body.expectedRevision);
+      appendAudit(actor, removing ? 'ROLE_BUNDLE_DELETE' : previous ? 'ROLE_BUNDLE_UPDATE' : 'ROLE_BUNDLE_CREATE', 'roles', { bundleId: id, name: nameTr || (previous && previous.nameTr), permissions, memberIds, changedUsers, reason: clean(body.reason) }, req);
+      for (const userId of changedUsers) appendAudit(actor, 'ROLE_BUNDLE_MEMBERSHIP', userId, { bundleId: id, reason: clean(body.reason) }, req);
+      res.json({ ok: true, revision: saved._revision, bundle: roleBundleSummaries(saved).find(item => item.id === id) || null, changedUsers });
+    } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'ROLE_BUNDLE_FAILED', currentRevision: err.currentRevision }); }
+  }
+  /* EXCEL DIŞA / İÇE AKTARMA (bkz. iam-excel.js).
+     Dışa aktarma yalnız işlemi yapanın görebildiği kullanıcıları yazar.
+     İçe aktarma planı sunucuda dosyadan YENİDEN üretilir (istemcinin planına
+     güvenilmez); tek bir hatalı satır varsa hiçbir değişiklik yazılmaz. */
+  function permissionLabel(code, lang) {
+    const item = iam.PERMISSION_REGISTRY.find(entry => entry.code === code);
+    return item ? (lang === 'en' ? item.labelEn : item.labelTr) : code;
+  }
+  function iamExportHandler(req, res) {
+    try {
+      const store = readStore(), actor = req.currentUser || sessionProfile(req), lang = clean(req.query && req.query.lang) === 'en' ? 'en' : 'tr';
+      const users = visibleAdminProfiles(actor, store).map(profile => adminUser(profile, store, actor));
+      const buffer = iamExcel.buildWorkbook({ users, roles: iam.normalizeRoles(store.iam && store.iam.roles), bundles: roleBundleSummaries(store), permissionText: code => permissionLabel(code, lang), lang });
+      appendAudit(actor, 'IAM_EXPORT', null, { users: users.length }, req);
+      const stamp = new Date().toISOString().slice(0, 10);
+      res.set('Cache-Control', 'no-store');
+      res.set('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.set('Content-Disposition', `attachment; filename="buyerlog-users-${stamp}.xlsx"`);
+      res.send(buffer);
+    } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'IAM_EXPORT_FAILED' }); }
+  }
+  const IMPORT_ORG_LEVEL = { buyer: 'job_title', manager: 'mmyg', senior_manager: 'mag', moderator: 'manager' };
+  function importPlan(store, body) {
+    const data = clean(body.fileBase64);
+    if (!data) throw hierarchyError('İçe aktarılacak Excel dosyasını seçin.', 'IAM_IMPORT_FILE_REQUIRED');
+    const rows = iamExcel.readUserRows(Buffer.from(data, 'base64'));
+    const byName = new Map(allProfiles(store).filter(profile => clean(profile.username)).map(profile => [usernameKey(profile.username), profile]));
+    const plan = iamExcel.planImport(rows, { usernameKey, findByUsername: name => byName.get(usernameKey(name)) || null });
+    for (const item of plan) if (item.action === 'create') item.patch.status = 'INACTIVE';
+    return plan;
+  }
+  function importSummary(plan) {
+    const count = action => plan.filter(item => item.action === action).length;
+    return { create: count('create'), update: count('update'), unchanged: count('unchanged'), skipped: count('skipped'), error: count('error') };
+  }
+  function iamImportPreviewHandler(req, res) {
+    try {
+      const store = readStore(), actor = req.currentUser || sessionProfile(req);
+      const plan = importPlan(store, req.body || {});
+      for (const item of plan) if (item.userId && !canManageTarget(actor, profileById(store, item.userId), store)) Object.assign(item, { action: 'error', errors: ['USER_NOT_MANAGEABLE'] });
+      res.json({ ok: true, plan, summary: importSummary(plan) });
+    } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'IAM_IMPORT_PREVIEW_FAILED' }); }
+  }
+  function iamImportHandler(req, res) {
+    try {
+      const store = loadStore(), actor = req.currentUser || sessionProfile(req), body = req.body || {};
+      if (!clean(body.reason) || body.confirmCritical !== true) throw hierarchyError('İçe aktarma için onay ve gerekçe zorunludur.', 'CRITICAL_CONFIRMATION_REQUIRED');
+      const plan = importPlan(store, body), summary = importSummary(plan);
+      if (summary.error) return res.status(400).json({ error: 'Dosyada hatalı satırlar var; hiçbir değişiklik yapılmadı.', code: 'IAM_IMPORT_INVALID', plan, summary });
+      const changed = [];
+      for (const item of plan) {
+        if (item.action !== 'create' && item.action !== 'update') continue;
+        try {
+          if (item.action === 'update') {
+            const target = profileById(store, item.userId);
+            if (!canManageTarget(actor, target, store)) throw Object.assign(new Error('Kullanıcı yönetim alanınızda değil.'), { statusCode: 403, code: 'USER_NOT_MANAGEABLE' });
+            const patch = { ...item.patch };
+            if (patch.dataScope) patch.dataScope = { ...(target.dataScope || {}), mode: patch.dataScope.mode };
+            if (patch.systemRole) {
+              const derived = IMPORT_ORG_LEVEL[patch.systemRole] || 'job_title';
+              patch.orgLevel = (iam.ORG_LEVEL_RANK[target.orgLevel] || 0) > (iam.ORG_LEVEL_RANK[derived] || 0) ? target.orgLevel : derived;
+            }
+            applyBodyToTarget(store, target, { ...patch, reason: clean(body.reason), confirmCritical: true }, actor);
+            changed.push(target.id);
+          } else {
+            const patch = item.patch, systemRole = patch.systemRole || 'buyer', newId = crypto.randomUUID();
+            ensureUniqueUsername(store, item.username);
+            // Parolasız oluşturulur ve PASİF kalır; Moderatör parola belirleyip aktifleştirir.
+            const target = normalizeStoredProfile({
+              id: newId, username: clean(item.username), iamVersion: 1, displayName: patch.displayName || clean(item.username), title: patch.title, email: patch.email || '',
+              role: legacyRoleFromIam(systemRole), systemRole, orgLevel: IMPORT_ORG_LEVEL[systemRole] || 'job_title', status: 'INACTIVE', enabled: false,
+              passwordHash: '', pinHash: '', managerId: patch.managerId, supervisorId: patch.managerId,
+              stableIds: iam.normalizeProfileIam({ id: newId, email: patch.email, stableIds: { sourceId: `manual:${newId}` } }).stableIds,
+              external: false, directPermissions: [], temporaryPermissions: [], mags: patch.mags || [], mmygs: patch.mmygs || [], buyingGroups: patch.buyingGroups || [],
+              permissions: normalizePermissions({}), accessAreas: normalizeAccessAreas(null, false), collectionAccess: [], scopeMode: 'profile',
+              dataScope: { mode: (patch.dataScope && patch.dataScope.mode) || iam.ROLE_DEFAULT_SCOPE[systemRole] || 'SELF', buyers: [], mags: [], mmygs: [], buyingGroups: [] },
+            });
+            assertSensitiveChange(actor, target, { __creating: true, systemRole, permissionCodes: [], reason: clean(body.reason) }, store);
+            store.users.push(target); validateHierarchyChange(store, target); validateActorAssignment(actor, target, store);
+            changed.push(target.id);
+          }
+        } catch (error) {
+          throw Object.assign(new Error(`Satır ${item.line} (${item.username}): ${error.message}`), { statusCode: error.statusCode || 400, code: error.code || 'IAM_IMPORT_ROW_FAILED' });
+        }
+      }
+      if (!changed.length) return res.json({ ok: true, revision: store._revision, summary, changed: [] });
+      const saved = saveStore(store, body.expectedRevision);
+      appendAudit(actor, 'IAM_IMPORT', null, { reason: clean(body.reason), summary, targetUserIds: changed }, req);
+      for (const id of changed) appendAudit(actor, 'USER_IMPORT_UPDATE', id, { reason: clean(body.reason) }, req);
+      res.json({ ok: true, revision: saved._revision, summary, changed });
+    } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'IAM_IMPORT_FAILED', currentRevision: err.currentRevision }); }
   }
   function profileCopyPreviewHandler(req, res) { req.profileCopyPreview = true; return profileCopyHandler(req, res); }
   function permissionCopyHandler(req, res) { return profileCopyHandler(req, res); }
@@ -1977,6 +2292,25 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       const store = readStore();
       return res.json({ ...getCentralIam().dryRun(store), revision: store._revision });
     } catch (err) { return res.status(err.statusCode || 503).json({ error: 'IAM geçiş doğrulaması başarısız.', code: err.code }); }
+  }
+  /* Moderatör onayıyla bu cihazı merkezi dizine hizalar (bkz. central-iam adopt).
+     Yerel dosya önce yedeklenir; merkezdeki dizine yazılmaz. */
+  async function iamAdoptHandler(req, res) {
+    try {
+      const body = req.body || {};
+      if (!centralConfigured) return res.status(409).json({ code: 'IAM_FEATURE_DISABLED', error: 'Central IAM yapılandırmada etkin değil.' });
+      if (body.confirmCritical !== true || !clean(body.reason)) return res.status(400).json({ error: 'Merkezi dizini esas almak için açık onay ve gerekçe gerekir.', code: 'CRITICAL_CONFIRMATION_REQUIRED' });
+      const actor = req.currentUser || sessionProfile(req);
+      const before = getCentralIam().health();
+      const result = await getCentralIam().adopt({ actorId: actor && actor.id });
+      storeCache = null;
+      appendAudit(actor, 'IAM_ADOPT_CENTRAL', 'iam', { reason: clean(body.reason), previousError: before.lastError || null, previousRevision: before.localRevision || 0, adoptedRevision: result.revision, backups: result.backups });
+      // Benimsenen dizindeki güncel revizyonlarla oturum sürer (kimlik bilgisi değiştiyse yeniden giriş gerekir).
+      if (typeof res.append === 'function' && findProfile(readStore(), actor.id)) setCookie(req, res, actor.id);
+      return res.json({ ok: true, revision: result.revision, backups: result.backups, centralIam: getCentralIam().health() });
+    } catch (err) {
+      return res.status(err.statusCode || 503).json({ error: err.code === 'IAM_ADOPT_ADMIN_REQUIRED' ? 'Merkezi dizinde aktif kullanıcı yönetimi yetkiniz yok; bu dizini esas alamazsınız.' : 'Merkezi dizin bu cihaza uygulanamadı.', code: err.code || 'IAM_ADOPT_FAILED', detail: err.detail || null });
+    }
   }
   async function iamInitializeHandler(req, res) {
     try {
@@ -2066,8 +2400,12 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     roleMatrixUpdateHandler: centralMutation(roleMatrixUpdateHandler, 'ROLE.MANAGE'), workspaceTemplateUpdateHandler: centralMutation(workspaceTemplateUpdateHandler, 'ROLE.MANAGE'),
     workspaceTemplateResetHandler: centralMutation(workspaceTemplateResetHandler, 'ROLE.MANAGE'), permissionCopyHandler: centralMutation(permissionCopyHandler, 'USER.GRANT'),
     profileCopyHandler: centralMutation(profileCopyHandler, 'USER.PROFILE_COPY'), profileCopyPreviewHandler,
+    horizonDefaultsHandler: centralMutation(horizonDefaultsHandler, 'USER.ADMIN'),
+    roleHorizonDefaultsHandler: centralMutation(roleHorizonDefaultsHandler, 'ROLE.MANAGE'),
+    roleBundleHandler: centralMutation(roleBundleHandler, 'ROLE.MANAGE'),
+    iamExportHandler, iamImportPreviewHandler, iamImportHandler: centralMutation(iamImportHandler, 'USER.ADMIN'),
     temporaryGrantHandler: centralMutation(temporaryGrantHandler, 'USER.GRANT'), temporaryGrantRevokeHandler: centralMutation(temporaryGrantRevokeHandler, 'USER.GRANT'), auditListHandler,
-    iamHealthHandler, iamRefreshHandler, iamDryRunHandler, iamInitializeHandler,
+    iamHealthHandler, iamRefreshHandler, iamDryRunHandler, iamInitializeHandler, iamAdoptHandler,
     refreshIam: options => restoreActive ? Promise.resolve(null) : centralConfigured
       ? getCentralIam().preflight(Math.max(250, Number(options && options.timeoutMs) || 1500), options).then(async result => { await refreshOrderAuthority(); return result; })
       : Promise.resolve(null),
@@ -2101,7 +2439,12 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     setCollectionAccessResolver: resolver => { collectionAccessResolver = typeof resolver === 'function' ? resolver : null; },
     collectionAccessLevel: (profile, ownerId) => collectionAccessLevel(profile, ownerId, readStore()),
     effectiveCollectionAccess: profile => effectiveCollectionAccess(profile, readStore()),
-    roleWorkspaceEntries: profileOrId => roleWorkspaceEntries(profileOrId, readStore()),
+    roleWorkspaceEntries: profileOrId => {
+      const store = readStore();
+      const profile = typeof profileOrId === 'object' && profileOrId ? profileOrId : profileById(store, clean(profileOrId));
+      if (profile) applyAssignedHorizonDefault(profile, store);
+      return roleWorkspaceEntries(profileOrId, store);
+    },
     // v7.23 — Horizon ön ayarları kullanıcının MAG/MMYG/Buying Group bilgisine
     // göre eşleştirildiği için profil, id'den de çözülebilmelidir.
     profileById: id => profileById(readStore(), clean(id)),

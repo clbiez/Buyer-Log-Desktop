@@ -43,7 +43,9 @@ async function setup(t) {
   return { device };
 }
 
-test('Başka kullanıcının unvanı değişince oturum sürer; kendi erişimi değişince düşer', async t => {
+// v20261009: kendi erişimi değişince de oturum SÜRER (yeni yetki hemen geçerli);
+// yalnız parola değişimi ve pasife alma oturumu kapatır.
+test('Başka kullanıcının unvanı değişince oturum sürer; kendi erişimi değişince yeni yetkiyle sürer, parolası değişince düşer', async t => {
   const { device } = await setup(t), a = await device('a', seed()), b = await device('b');
   await a.request('/api/user-login', 'POST', { username: 'admin', password: 'Test-admin-123' });
   let r = await a.request('/api/iam/initialize', 'POST', { expectedRevision: 1, confirmCritical: true }); assert.equal(r.status, 200);
@@ -60,5 +62,11 @@ test('Başka kullanıcının unvanı değişince oturum sürer; kendi erişimi d
 
   r = await a.request(`/api/users/${mehmet.body.user.id}`, 'PUT', { expectedRevision: 5, systemRole: 'manager', role: 'manager', reason: 'Terfi' }); assert.equal(r.status, 200, JSON.stringify(r.body));
   await b.refresh();
-  assert.equal((await b.request('/api/current-user', 'GET', undefined, 'mehmet')).body.selected, false, 'kendi erişimi değişen kullanıcının oturumu düşer');
+  r = await b.request('/api/current-user', 'GET', undefined, 'mehmet');
+  assert.equal(r.body.selected, true, 'kendi erişimi değişen kullanıcı oturumda kalır');
+  assert.equal(r.body.user.systemRole, 'manager', 'yeni rol aynı oturumda geçerlidir');
+
+  r = await a.request(`/api/users/${mehmet.body.user.id}`, 'PUT', { expectedRevision: 6, password: 'Mehmet-67890', confirmCritical: true }); assert.equal(r.status, 200, JSON.stringify(r.body));
+  await b.refresh();
+  assert.equal((await b.request('/api/current-user', 'GET', undefined, 'mehmet')).body.selected, false, 'parolası değişen kullanıcının oturumu düşer');
 });

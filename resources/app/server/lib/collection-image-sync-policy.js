@@ -56,6 +56,15 @@ function rowSharedImageIdentity(row) {
   if (identity) return identity;
   const imageRef = firstValue(row, ['imgRef', 'imageRef', '_imageRef']);
   const recordId = firstValue(row, ['recordId', '_sharedRecordId', 'id']);
+  const plmId = firstValue(row, ['plmId', 'plm', 'PLM ID', 'PLM Kod', 'PLM Code']);
+  // A PLM image may live in the local imagemap without an explicit row imgRef.
+  // The recipient still needs a row identity to request its owner-scoped image.
+  if (plmId && recordId) return {
+    imageRef, plmId,
+    colourCode: firstValue(row, ['ccode', 'colourCode', 'colorCode', 'Renk Kodu', 'Colour Code', 'Color Code']),
+    colour: firstValue(row, ['colour', 'color', 'Renk', 'Colour', 'Color']),
+    recordId,
+  };
   if (!imageRef || !recordId) return null;
   return { imageRef, plmId: '', colourCode: '', colour: '', recordId, rowKey: 'row:' + recordId };
 }
@@ -81,6 +90,26 @@ function sharedImageKey(item, plmKey) {
   return clean(plmKey) || clean(item && item.rowKey);
 }
 
+/* Model yenilemesi yalnızca sahibin gerçekten var olan Koleksiyon
+ * satırlarını paylaşabilir. PLM/ASAS kaynak kimlikleri aynı yerel depoda
+ * kalsa bile Koleksiyon dışındaki CP/Orders kayıtları aktarılmaz. */
+function workspaceModelImageKeys(workspace, toCanonicalKey) {
+  const keys = new Set();
+  if (typeof toCanonicalKey !== 'function') return keys;
+  for (const row of Array.isArray(workspace && workspace.rows) ? workspace.rows : []) {
+    const plmId = firstValue(row, ['plmId', 'plm', 'PLM ID', 'PLM Kod', 'PLM Code']);
+    if (!plmId) continue;
+    const item = {
+      plmId,
+      colourCode: firstValue(row, ['ccode', 'colourCode', 'colorCode', 'Renk Kodu', 'Colour Code', 'Color Code']),
+      colour: firstValue(row, ['colour', 'color', 'Renk', 'Colour', 'Color']),
+    };
+    const key = clean(toCanonicalKey(item));
+    if (key) keys.add(key);
+  }
+  return keys;
+}
+
 function shouldPublishOwnerImages(outgoingGrants, ownerId) {
   const owner = clean(ownerId);
   return Boolean(owner && (Array.isArray(outgoingGrants) ? outgoingGrants : []).some(grant =>
@@ -96,6 +125,7 @@ module.exports = {
   workspaceImageItems,
   rowSharedImageIdentity,
   workspaceSharedImageItems,
+  workspaceModelImageKeys,
   sharedImageKey,
   shouldPublishOwnerImages,
 };

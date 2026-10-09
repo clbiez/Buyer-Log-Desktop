@@ -77,8 +77,16 @@
       // turda erişim olayı Genel Bakış/rehber/checklist çizimini tetikliyordu.
       const signature = JSON.stringify(result.user || null);
       if (signature === lastSessionSignature) return;
+      /* v20261009 — yetki değişimi oturumu kapatmaz; menüler yeni yetkilere göre
+         yeniden çizilir ve kullanıcıya kısaca söylenir (ilk denetimde değil). */
+      const before = window.BL_USER_CONTEXT || null;
+      const accessOf = user => JSON.stringify(user ? [user.systemRole, user.accessAreas, user.permissions, user.capabilities, user.scopes] : null);
+      const accessChanged = Boolean(lastSessionSignature && before && accessOf(before) !== accessOf(result.user));
       lastSessionSignature = signature;
       window.BL_USER_CONTEXT = result.user;
+      if (accessChanged && typeof showToast === 'function') {
+        try { showToast(tr('Yetkileriniz güncellendi; ekran yeni yetkilere göre yenilendi.', 'Your permissions were updated; the screen now reflects them.')); } catch (_) {}
+      }
       if (typeof state !== 'undefined') state.currentUser = result.user;
       applyUserAccessUI();
     } catch (_) {} finally { iamSessionCheck = false; }

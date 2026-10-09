@@ -94,9 +94,12 @@
   const SECTIONS = [
     { id: 'users', tr: 'Kullanıcılar', en: 'Users', icon: 'users-group' },
     { id: 'roles', tr: 'Roller & Yetkiler', en: 'Roles & Permissions', icon: 'rosette-discount-check' },
+    { id: 'bundles', tr: 'Ek Roller', en: 'Extra Roles', icon: 'tag' },
     { id: 'templates', tr: 'Workspace Şablonları', en: 'Workspace Templates', icon: 'layout-dashboard' },
     { id: 'organization', tr: 'Organizasyon', en: 'Organization', icon: 'hierarchy' },
     { id: 'copy', tr: 'Profil Kopyalama', en: 'Copy User Profile', icon: 'copy' },
+    { id: 'compare', tr: 'Yetki Karşılaştırma', en: 'Compare Permissions', icon: 'columns-3' },
+    { id: 'transfer', tr: 'İçe / Dışa Aktar', en: 'Import / Export', icon: 'file-export' },
     { id: 'history', tr: 'Değişiklik Geçmişi', en: 'Change History', icon: 'bl-history' },
   ];
 
@@ -136,7 +139,12 @@
     template: { roleId: 'buyer', sourceId: '', search: '', categories: { horizon: true, filters: true, columns: true, views: true, dashboard: true, favorites: true } },
     copy: { sourceType: 'user', sourceId: '', templateRole: 'buyer', targetIds: new Set(), mode: 'MERGE', categories: { userPermissions: true, workspace: { horizon: true, filters: true, columns: true, views: true, dashboard: true, favorites: true }, organization: { role: false, mag: false, mmyg: false, buyingGroup: false, manager: false, dataScope: false } } },
     copySearch: '', copySourceSearch: '', canCopyProfiles: false,
+    iamBusy: false,
+    showSourceRecords: false,
     historyQuery: '',
+    compare: { leftId: '', rightId: '', diffOnly: true },
+    roleBundles: [], bundleEditId: '',
+    importPreview: null,
 
     modelConnections: { items: [], loaded: false },
     horizonModule: 'cp',
@@ -180,8 +188,8 @@
     method, headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(Object.assign({ expectedRevision: store.revision }, body || {})),
     }).catch(error => {
-      if (error.code === 'IAM_REVISION_CONFLICT') { store.centralIam.status = 'conflict'; error.message = T('Daha yeni kullanıcı dizini bulundu. Kaydetmeden önce dizini yeniden yükleyin.', 'A newer user directory was detected. Reload before saving.'); }
-      if (error.code === 'IAM_OFFLINE') store.centralIam.status = 'offline';
+      if (error.code === 'IAM_REVISION_CONFLICT') { store.centralIam.status = 'conflict'; store.centralIam.lastError = error.code; error.message = T('Daha yeni kullanıcı dizini bulundu. Kaydetmeden önce dizini yeniden yükleyin.', 'A newer user directory was detected. Reload before saving.'); }
+      if (error.code === 'IAM_OFFLINE') { store.centralIam.status = 'offline'; store.centralIam.lastError = error.code; }
       throw error;
     });
   };
@@ -195,6 +203,8 @@
     store.resources = model.resources || {};
     store.roleDefinitions = model.roleDefinitions || {};
     store.workspaceTemplates = model.workspaceTemplates || {};
+    store.roleBundles = model.roleBundles || [];
+    if (store.bundleEditId && store.bundleEditId !== 'new' && !store.roleBundles.some(item => item.id === store.bundleEditId)) store.bundleEditId = '';
     store.directory = model.directory || [];
     store.magMmyg = model.magMmyg || {};
     store.buyingGroupCatalog = model.buyingGroupCatalog || { byMagMmyg: {}, all: [] };
@@ -290,7 +300,12 @@
     shell.addEventListener('keydown', onKeyDown);
     overlay.addEventListener('mousedown', event => { if (event.target === overlay) close(); });
     render();
-    reload();
+    // Açılışta dizin eşit değilse bir kez sessizce yeniden denenir; Moderatör
+    // eski bir sağlık durumuna bakıp "düzenleyemiyorum" sonucuna varmasın.
+    reload().then(() => {
+      if (overlay && store.status === 'ready' && store.centralIam.enabled && store.centralIam.status !== 'synced') return refreshDirectory({ silent: true });
+      return null;
+    });
   }
 
   function close() {
@@ -312,24 +327,124 @@
     if (store.status !== 'ready') { main.innerHTML = loadingState(); return; }
     main.innerHTML = centralStatusHtml() + `<fieldset class="umIamFields" ${store.centralIam.enabled && store.centralIam.status !== 'synced' ? 'disabled' : ''}>` + ({
       users: usersSection, roles: rolesSection, templates: templatesSection, organization: organizationSection,
-      copy: copySection, history: historySection,
+      copy: copySection, history: historySection, compare: compareSection, bundles: bundlesSection, transfer: transferSection,
     })[store.section]() + '</fieldset>';
     restoreFocus();
+  }
+  /* v20261009 — "SALT OKUNUR / ÇEVRİMDIŞI" ARTIK NEDENİNİ SÖYLER.
+
+     Merkezi dizin eşit değilken düzenleme bilerek kapalıdır: bir cihazın eski
+     ya da farklı dizin üzerine yazması diğer kullanıcıların değişikliklerini
+     ezerdi. Ancak ekran yalnız "Salt okunur / çevrimdışı" diyordu; Moderatör
+     neden düzenleyemediğini ve ne yapması gerektiğini bilemiyordu. Sunucu
+     sağlık kaydındaki hata kodu (lastError) burada insan diline çevrilir ve
+     her durum için yapılacak iş yazılır. */
+  function iamIssue(h) {
+    const code = clean(h.lastError);
+    if (h.status === 'synced') return null;
+    if (h.status === 'stale') return { title: T('Daha yeni bir dizin revizyonu henüz okunamıyor', 'A newer directory revision cannot be read yet'),
+      text: T('Bu cihaz son geçerli revizyonu kullanıyor. OneDrive/SharePoint eşitlemesi sürüyor olabilir ya da yeni revizyon daha yeni bir Buyer Log sürümüyle yazılmış olabilir. Eşitleme bitince veya Buyer Log güncellenince Yeniden Dene.',
+        'This device uses the last valid revision. OneDrive/SharePoint may still be syncing, or the new revision may have been written by a newer Buyer Log version. Try again once syncing finishes or after updating Buyer Log.') };
+    if (h.status === 'uninitialized' || code === 'IAM_NOT_INITIALIZED') return { title: T('Merkezi kullanıcı dizini henüz başlatılmadı', 'The central user directory has not been initialized'),
+      text: T('Shared Hub’da kullanıcı dizini yok. Moderatör “Merkezi Geçişi Doğrula” ile bu cihazdaki kullanıcı listesini revizyon 1 olarak yayımlayabilir.',
+        'There is no user directory in Shared Hub yet. A Moderator can publish this device’s user list as revision 1 with “Validate Central Migration”.') };
+    if (code === 'IAM_MIGRATION_CONFLICT') return { title: T('Bu cihazdaki kullanıcı listesi merkezi dizinle uyuşmuyor', 'This device’s user list does not match the central directory'),
+      text: T('Kullanıcı kaybını önlemek için merkezi dizin bu cihaza otomatik uygulanmadı: bu cihazdaki eski yerel liste merkezi dizinden farklı. Merkezi dizin doğruysa Moderatör “Merkezi Dizini Esas Al” ile bu cihazı ona hizalar; yerel liste önce yedeklenir.',
+        'To prevent losing users, the central directory was not applied to this device automatically: the old local list here differs from it. If the central directory is correct, a Moderator can align this device with “Use Central Directory”; the local list is backed up first.') };
+    if (code === 'IAM_REVISION_CONFLICT' || (h.status === 'conflict' && !code)) return { title: T('Dizin başka bir yerde değişti', 'The directory changed elsewhere'),
+      text: T('Başka bir yönetici kullanıcı dizinini güncelledi. Yeniden Dene ile güncel dizini alın; açık taslaklarınız yeniden yüklenir.',
+        'Another administrator updated the user directory. Use Try Again to load the current directory; open drafts are reloaded.') };
+    if (code === 'IAM_REMOTE_REVISION_REGRESSION') return { title: T('Merkezi dizin bu cihazın gördüğünden daha eski', 'The central directory is older than this device has seen'),
+      text: T('Shared Hub klasörü değişmiş ya da yedekten geri yüklenmiş olabilir. Güvenlik için eski dizin bu cihaza uygulanmadı. Veri Yönetimi › Senkron ayarındaki klasör doğruysa Moderatör “Merkezi Dizini Esas Al” ile bu cihazı ona hizalayabilir.',
+        'The Shared Hub folder may have changed or been restored from a backup. For safety, the older directory was not applied to this device. If the folder in Data Management › Sync is correct, a Moderator can align this device with “Use Central Directory”.') };
+    if (code === 'IAM_REVISION_HASH_CONFLICT') return { title: T('Aynı revizyon farklı içerikle görüldü', 'The same revision was seen with different content'),
+      text: T('Bu cihazın gördüğü revizyon merkezdekiyle aynı numarada ama farklı içerikte; güvenlik için uygulanmadı. Merkezi dizin doğruysa Moderatör “Merkezi Dizini Esas Al” ile bu cihazı ona hizalayabilir.',
+        'This device saw a revision with the same number but different content than the central one; it was not applied for safety. If the central directory is correct, a Moderator can align this device with “Use Central Directory”.') };
+    if (code === 'IAM_RESTORE_IN_PROGRESS') return { title: T('Geri yükleme sürüyor', 'A restore is in progress'),
+      text: T('Tam sistem geri yüklemesi bitene kadar kullanıcı dizini değiştirilemez.', 'The user directory cannot be changed until the full system restore finishes.') };
+    if (['EPERM', 'EACCES', 'EBUSY'].includes(code)) return { title: T('Yerel kullanıcı önbelleği yazılamadı', 'The local user cache could not be written'),
+      text: T('Dosya başka bir işlem (antivirüs, OneDrive) tarafından kilitli. Birkaç saniye sonra Yeniden Dene; sürerse Buyer Log’u yeniden başlatın.',
+        'The file is locked by another process (antivirus, OneDrive). Try again in a few seconds; if it persists, restart Buyer Log.') };
+    if (code === 'IAM_REMOTE_INVALID' || h.status === 'invalid') return { title: T('Merkezi kullanıcı dizini doğrulanamadı', 'The central user directory could not be verified'),
+      text: T('Son revizyonlar bu cihazda okunamadı veya doğrulamadan geçmedi. OneDrive eşitlemesinin bitmesini bekleyin ya da Buyer Log’u güncelleyin, sonra Yeniden Dene.',
+        'The latest revisions could not be read or verified on this device. Wait for OneDrive to finish syncing or update Buyer Log, then try again.') };
+    return { title: T('Shared Hub’a ulaşılamıyor', 'Shared Hub is unreachable'),
+      text: T('Kullanıcı dizini Shared Hub klasöründe tutulur ve şu an bu cihazdan okunamıyor. Ağ/VPN bağlantısını ve OneDrive eşitlemesini kontrol edin; Veri Yönetimi › Senkron ayarındaki klasörün bu cihazda açıldığından emin olun, sonra Yeniden Dene.',
+        'The user directory lives in the Shared Hub folder and cannot be read from this device right now. Check the network/VPN connection and OneDrive sync, make sure the folder in Data Management › Sync opens on this device, then try again.') };
+  }
+  // Moderatörün "merkezi dizini esas al" kararıyla çözülebilen durumlar.
+  const ADOPTABLE_IAM_ERRORS = ['IAM_MIGRATION_CONFLICT', 'IAM_REMOTE_REVISION_REGRESSION', 'IAM_REVISION_HASH_CONFLICT'];
+  /* MERKEZİ DİZİNİ ESAS AL. Otomatik eşitleme kullanıcı kaybetmemek için durur;
+     Moderatör merkezdeki dizinin doğru olduğuna karar verirse bu cihaz ona
+     hizalanır. Sunucu: merkezin en yeni geçerli revizyonu okunabilmeli, işlemi
+     yapan o dizinde aktif yönetici olmalı; bu cihazın dosyaları önce yedeklenir
+     ve merkezdeki dizine YAZILMAZ. */
+  function openAdoptDialog() {
+    const h = store.centralIam;
+    openDialog(T('Merkezi Dizini Esas Al', 'Use Central Directory'), `
+      <p class="umConfirmText">${esc(T('Bu cihazın kullanıcı listesi, Shared Hub’daki merkezi dizinin en yeni geçerli revizyonuyla değiştirilecek.', 'This device’s user list will be replaced with the newest valid revision of the central directory in Shared Hub.'))}</p>
+      <ul class="umPreviewList">
+        <li>${esc(T('Bu cihazdaki mevcut kullanıcı dosyası önce zaman damgalı bir yedeğe kopyalanır; hiçbir şey silinmez.', 'The current user file on this device is first copied to a timestamped backup; nothing is deleted.'))}</li>
+        <li>${esc(T('Merkezdeki dizin değişmez; diğer cihazlar etkilenmez.', 'The central directory does not change; other devices are not affected.'))}</li>
+        <li>${esc(T('Merkezi dizinde aktif kullanıcı yönetimi yetkiniz yoksa işlem reddedilir.', 'The action is refused if you are not an active user administrator in the central directory.'))}</li>
+        <li>${esc(T('Bu cihazda yalnız yerelde yapılmış ve merkeze hiç gitmemiş kullanıcı değişiklikleri yedekte kalır.', 'User changes made only locally on this device and never published centrally stay in the backup.'))}</li>
+      </ul>
+      <p class="umNote">${esc(T('Kod', 'Code'))}: ${esc(h.lastError || '—')}${h.lastErrorDetail ? ` (${esc(h.lastErrorDetail)})` : ''}</p>
+      <label class="umCheck"><input type="checkbox" name="confirm" required><span>${esc(T('Merkezi dizinin doğru olduğunu doğruluyorum.', 'I confirm the central directory is correct.'))}</span></label>
+      <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(T('Cihaz merkezi dizine hizalandı.', 'Device aligned with the central directory.'))}"></label>`, {
+      confirmLabel: T('Merkezi Dizini Esas Al', 'Use Central Directory'), danger: true,
+      onSubmit: async data => {
+        if (!data.get('confirm')) throw new Error(T('Devam etmek için onay kutusunu işaretleyin.', 'Tick the confirmation box to continue.'));
+        const result = await api('/api/iam/adopt-central', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ confirmCritical: true, reason: clean(data.get('reason')) }) });
+        closeDialog();
+        toast(T(`Bu cihaz merkezi dizine hizalandı (revizyon ${result.revision}). Yedek: ${list(result.backups).join(', ') || '—'}`, `This device is now aligned with the central directory (revision ${result.revision}). Backup: ${list(result.backups).join(', ') || '—'}`));
+        // Benimsenen dizinde parola farklıysa oturum yeniden giriş ister.
+        const current = await fetch('/api/current-user', { credentials: 'same-origin', cache: 'no-store' }).then(r => r.json()).catch(() => ({}));
+        if (!current.selected) { location.assign('/select-user.html'); return; }
+        await reload();
+      },
+    });
   }
   function centralStatusHtml() {
     const h = store.centralIam;
     if (!h.enabled) return '';
-    const label = h.status === 'synced' ? T('Senkronize', 'Synced') : h.status === 'conflict'
-      ? T('Dizin değişti; yeniden yükleyin', 'Directory changed; reload') : h.status === 'uninitialized'
-      ? T('Merkezi dizin başlatılmadı', 'Central directory not initialized') : T('Salt okunur / çevrimdışı', 'Read-only / offline');
-    return `<div class="umToolbar" data-um-iam-status role="status"><span class="umNote">${esc(T('Merkezi Kullanıcı Yönetimi', 'Central User Management'))} · ${esc(T('Revizyon', 'Revision'))} ${Number(h.localRevision) || 0} · ${esc(label)} · ${esc(formatDateTime(h.lastSyncAt))}</span>
-      <button class="umBtn umBtnSmall" data-act="iamRefresh">${esc(T('Kullanıcı Dizinini Yenile', 'Refresh User Directory'))}</button>
-      ${h.status === 'uninitialized' && store.actor && store.actor.systemRole === 'moderator' ? `<button class="umBtn umBtnPrimary" data-act="iamInitialize">${esc(T('Merkezi Geçişi Doğrula', 'Validate Central Migration'))}</button>` : ''}</div>`;
+    const meta = `${T('Revizyon', 'Revision')} ${Number(h.localRevision) || 0} · ${T('Son eşitleme', 'Last sync')} ${formatDateTime(h.lastSyncAt)}`;
+    const issue = iamIssue(h);
+    if (!issue) return `<div class="umIamBanner isSynced" data-um-iam-status role="status"><span class="umIamDot" aria-hidden="true"></span><span class="umNote"><b>${esc(T('Merkezi kullanıcı dizini eşit', 'Central user directory in sync'))}</b> · ${esc(meta)}</span>
+      <button type="button" class="umBtn umBtnSmall umBtnGhost" data-act="iamRefresh" ${store.iamBusy ? 'disabled' : ''}>${esc(T('Yenile', 'Refresh'))}</button></div>`;
+    const canInitialize = (h.status === 'uninitialized' || h.lastError === 'IAM_NOT_INITIALIZED') && store.actor && store.actor.systemRole === 'moderator';
+    const canAdopt = ADOPTABLE_IAM_ERRORS.includes(h.lastError) && store.actor && store.actor.systemRole === 'moderator';
+    return `<div class="umIamBanner isBlocked" data-um-iam-status role="alert">
+      <div class="umIamText">
+        <b>${esc(issue.title)}</b>
+        <p>${esc(issue.text)}</p>
+        <p class="umNote">${esc(T('Düzenleme geçici olarak kapalı: değişiklikler tüm cihazlarda tutarlı kalsın diye yalnız merkezi dizin eşitken kaydedilir.', 'Editing is temporarily disabled: changes are saved only while the central directory is in sync, so every device stays consistent.'))}</p>
+        <p class="umNote">${esc(meta)}${h.lastError ? ` · ${esc(T('Kod', 'Code'))}: ${esc(h.lastError)}${h.lastErrorDetail ? ` (${esc(h.lastErrorDetail)})` : ''}` : ''}</p>
+      </div>
+      <div class="umIamActions">
+        <button type="button" class="umBtn umBtnPrimary" data-act="iamRefresh" ${store.iamBusy ? 'disabled' : ''}>${esc(store.iamBusy ? T('Deneniyor…', 'Trying…') : T('Yeniden Dene', 'Try Again'))}</button>
+        ${canInitialize ? `<button type="button" class="umBtn" data-act="iamInitialize">${esc(T('Merkezi Geçişi Doğrula', 'Validate Central Migration'))}</button>` : ''}
+        ${canAdopt ? `<button type="button" class="umBtn" data-act="iamAdopt">${esc(T('Merkezi Dizini Esas Al', 'Use Central Directory'))}</button>` : ''}
+      </div></div>`;
   }
-  async function refreshDirectory() {
-    if (!confirm(T('Dizin yeniden yüklenecek. Açık form ve rol taslaklarındaki kaydedilmemiş değişiklikler bırakılsın mı?', 'Reload the directory and discard unsaved form and role drafts?'))) return;
-    try { await api('/api/iam/refresh', { method: 'POST' }); closeDialog(); store.roleDirty = false; await reload(); }
-    catch (error) { toast(error.message); }
+  /* Dizini sunucudan yeniden çeker. Onay yalnız kaybolacak bir rol taslağı
+     varsa sorulur; "Yeniden Dene" tek tıkla çalışmalı. silent=true açılıştaki
+     otomatik denemedir: hata mesajı yerine kart güncellenir. */
+  async function refreshDirectory({ silent = false } = {}) {
+    if (!silent && store.roleDirty && !confirm(T('Rol taslağındaki kaydedilmemiş değişiklikler bırakılsın mı?', 'Discard the unsaved changes in the role draft?'))) return;
+    if (store.iamBusy) return;
+    store.iamBusy = true;
+    const status = shell && shell.querySelector('[data-um-iam-status]');
+    if (status) status.outerHTML = centralStatusHtml();
+    // Başarısız yenilemenin nedeni sağlık kaydına yazılır; aşağıdaki reload onu okur.
+    try { await api('/api/iam/refresh', { method: 'POST' }); } catch (_) {}
+    store.iamBusy = false;
+    if (!silent) { closeDialog(); store.roleDirty = false; }
+    await reload({ silent: true });
+    if (!silent) {
+      const issue = iamIssue(store.centralIam);
+      toast(issue ? issue.title : T('Kullanıcı dizini güncel.', 'The user directory is up to date.'));
+    }
   }
   async function initializeDirectory() {
     try {
@@ -372,15 +487,29 @@
 
   /* ===================== 6 · Kullanıcılar ===================== */
 
+  /* ASAS KAYNAK KAYITLARI VARSAYILAN GİZLİ.
+
+     ASAS siparişlerinden türeyen ve hiç kullanıcı adı tanımlanmamış pasif
+     kayıtlar (yüzlerce "tanımsız" satır) gerçek kullanıcıları listenin
+     altına itiyordu. Bunlar giriş yapamaz; kişi rehberi ve sipariş sahipliği
+     için dururlar. Liste varsayılan olarak yalnız giriş yapabilen/yönetilen
+     hesapları gösterir; tek tıkla kaynak kayıtlar da açılır. Arama yapılırken
+     eşleşen kaynak kayıt da gösterilir (bulunamayan kişi olmasın). */
+  // Ölçüt "giriş yapamayan ASAS kaynak kaydı": aktif değil ve parolası yok.
+  const isSourceRecord = user => Boolean(user && user.legacySourceAccount && user.status !== 'ACTIVE' && !user.hasPassword);
+  function baseUsers() {
+    return store.showSourceRecords || clean(store.search) ? store.users : store.users.filter(user => !isSourceRecord(user));
+  }
   function statusCounts() {
-    const all = store.users.length;
-    const active = store.users.filter(item => item.status === 'ACTIVE').length;
-    return { all, active, inactive: all - active };
+    const base = baseUsers();
+    const all = base.length;
+    const active = base.filter(item => item.status === 'ACTIVE').length;
+    return { all, active, inactive: all - active, sourceRecords: store.users.filter(isSourceRecord).length };
   }
 
   function visibleUsers() {
     const query = norm(store.search);
-    return store.users.filter(user => {
+    return baseUsers().filter(user => {
       if (store.statusFilter === 'active' && user.status !== 'ACTIVE') return false;
       if (store.statusFilter === 'inactive' && user.status === 'ACTIVE') return false;
       if (store.filters.role && user.systemRole !== store.filters.role) return false;
@@ -421,6 +550,8 @@
         ${statusTab('all', T('Tümü', 'All'), counts.all)}
         ${statusTab('active', T('Aktif', 'Active'), counts.active)}
         ${statusTab('inactive', T('İnaktif', 'Inactive'), counts.inactive)}
+        ${counts.sourceRecords ? `<button type="button" aria-pressed="${Boolean(store.showSourceRecords)}" class="umStatusTab umSourceToggle${store.showSourceRecords ? ' isActive' : ''}" data-act="toggleSourceRecords" title="${esc(T('ASAS siparişlerinden gelen, kullanıcı adı olmayan ve giriş yapamayan pasif kayıtlar.', 'Inactive records from ASAS orders that have no user name and cannot sign in.'))}">
+          <span>${esc(store.showSourceRecords ? T('ASAS kaynak kayıtlarını gizle', 'Hide ASAS source records') : T('ASAS kaynak kayıtlarını göster', 'Show ASAS source records'))}</span><b>${counts.sourceRecords}</b></button>` : ''}
       </div>
       ${store.filtersOpen ? filtersPanel() : ''}
       ${store.selectedIds.size ? bulkBar() : ''}
@@ -650,6 +781,7 @@
       ${anyActive ? `<button type="button" class="umBtn umBtnSmall" data-act="bulkDeactivate">${esc(T('Pasife Al', 'Deactivate'))}</button>` : ''}
       <button type="button" class="umBtn umBtnSmall" data-act="bulkManager">${esc(T('Yönetici Ata', 'Assign Manager'))}</button>
       <button type="button" class="umBtn umBtnSmall" data-act="bulkScope">${esc(T('MAG/MMYG Değiştir', 'Change MAG/MMYG'))}</button>
+      <button type="button" class="umBtn umBtnSmall" data-act="horizonAssign">${esc(T('Varsayılan Ufuk Ata', 'Assign Default Horizon'))}</button>
       ${store.canCopyProfiles ? `<button type="button" class="umBtn umBtnSmall" data-act="bulkCopy">${esc(T('Profil Kopyala', 'Copy Profile'))}</button>` : ''}
       <button type="button" class="umBtn umBtnGhost umBtnSmall" data-act="clearSelection">${esc(T('Seçimi Bırak', 'Clear Selection'))}</button>
     </div>`;
@@ -690,7 +822,7 @@
     const active = user.status === 'ACTIVE';
     return `<tr class="umRow${store.detailId === user.id ? ' isOpen' : ''}${active ? '' : ' isInactive'}" data-act="openDetail" data-id="${esc(user.id)}">
       <td class="umColCheck"><input type="checkbox" data-act="selectRow" data-id="${esc(user.id)}" ${store.selectedIds.has(user.id) ? 'checked' : ''} aria-label="${esc(userName(user))}"></td>
-      <td class="umCellUser"><span class="umAvatar" style="--um-hue:${avatarHue(user.id || userName(user))}">${esc(initials(userName(user)))}</span><span class="umCellUserText"><b>${esc(userName(user))}</b><small>${esc(dash(user.email || user.title))}</small></span></td>
+      <td class="umCellUser"><span class="umAvatar" data-no-i18n style="--um-hue:${avatarHue(user.id || userName(user))}">${esc(initials(userName(user)))}</span><span class="umCellUserText"><b>${esc(userName(user))}</b><small>${esc(dash(user.email || user.title))}</small></span></td>
       ${/* v7.39 — kullanıcı adı listede görünür; tanımsız olanı bulmanın tek
             yolu tek tek kartları açmaktı. */ ''}
       <td class="umCellWrap">${clean(user.username) ? esc(user.username)
@@ -720,7 +852,7 @@
     return `<aside class="umDrawer" data-um-drawer>
       <header class="umDrawerHead">
         <div class="umDrawerTitle">
-          <span class="umAvatar umAvatarLarge">${esc(initials(userName(user)))}</span>
+          <span class="umAvatar umAvatarLarge" data-no-i18n>${esc(initials(userName(user)))}</span>
           <div>
             <h3>${esc(userName(user))}</h3>
             <span class="umPill ${active ? 'isActive' : 'isInactive'}">${esc(statusLabel(user.status))}</span>
@@ -753,6 +885,7 @@
         <div><dt>${esc(T('Buying Group', 'Buying Group'))}</dt><dd>${esc(dash(joinText(user.buyingGroups)))}</dd></div>
         <div><dt>${esc(T('Yönetici', 'Manager'))}</dt><dd>${esc(dash(nameOf(user.managerId)))}</dd></div>
         <div><dt>${esc(T('Veri Kapsamı', 'Data Scope'))}</dt><dd>${esc(scopeLabel(user.dataScope && user.dataScope.mode))}</dd></div>
+        <div><dt>${esc(T('Ek Roller', 'Extra Roles'))}</dt><dd>${esc(dash(list(user.roleBundleIds).map(id => bundleName(store.roleBundles.find(item => item.id === id)) || id).join(', ')))}</dd></div>
         <div><dt>${esc(T('Alt Kullanıcılar', 'Reports'))}</dt><dd>${reports.length ? esc(reports.map(userName).join(', ')) : '—'}</dd></div>
       </dl>
       ${editable ? `<div class="umDrawerActions">
@@ -762,6 +895,7 @@
           : `<span class="umNote">${esc(T('Kurumsal Hesap ile Giriş', 'Signs in with corporate account'))}</span>`}
         <button type="button" class="umBtn" data-act="detailTab" data-id="permissions">${esc(T('Yetkiler', 'Permissions'))}</button>
         ${store.canCopyProfiles ? `<button type="button" class="umBtn" data-act="copyFrom" data-id="${esc(user.id)}">${esc(T('Profili Kopyala', 'Copy Profile'))}</button>` : ''}
+        <button type="button" class="umBtn" data-act="compareWith" data-id="${esc(user.id)}">${esc(T('Karşılaştır', 'Compare'))}</button>
         ${statusLocked(user) ? '' : (active
           ? `<button type="button" class="umBtn umBtnDanger" data-act="deactivate" data-id="${esc(user.id)}">${esc(T('Pasife Al', 'Deactivate'))}</button>`
           : `<button type="button" class="umBtn umBtnPrimary" data-act="activate" data-id="${esc(user.id)}">${esc(T('Aktifleştir', 'Activate'))}</button>`)}
@@ -773,9 +907,21 @@
     `;
   }
 
-  function sourceBadge(source) {
-    const label = { ROLE: T('Rol', 'Role'), DIRECT: T('Özel', 'Direct'), HIERARCHY: T('Hiyerarşi', 'Hierarchy'), TEMPORARY: T('Süreli', 'Temporary') }[source] || source;
-    return `<span class="umSource is${esc(String(source || '').toLowerCase())}">${esc(label)}</span>`;
+  function sourceBadge(source, item) {
+    const label = { ROLE: T('Rol', 'Role'), DIRECT: T('Özel', 'Direct'), HIERARCHY: T('Hiyerarşi', 'Hierarchy'), TEMPORARY: T('Süreli', 'Temporary'), BUNDLE: T('Ek Rol', 'Extra Role') }[source] || source;
+    return `<span class="umSource is${esc(String(source || '').toLowerCase())}"${item ? ` title="${esc(explainSource(item))}"` : ''}>${esc(label)}</span>`;
+  }
+  /* "Bu yetki nereden geliyor?" — kaynağı cümleyle söyler. */
+  function explainSource(item) {
+    const label = clean(item && item.sourceLabel);
+    switch (item && item.source) {
+      case 'ROLE': return T(`Rolünden geliyor: ${label || '—'}`, `From the role: ${label || '—'}`);
+      case 'DIRECT': return T(`Kişiye özel verildi${item.reason ? ` · ${item.reason}` : ''}`, `Granted to this person${item.reason ? ` · ${item.reason}` : ''}`);
+      case 'HIERARCHY': return T(`Ekibindeki ${label || '—'} kullanıcısından devralındı (yönetici ekibinin iş yetkilerini görür)`, `Inherited from ${label || '—'} in their team (managers see their team’s business permissions)`);
+      case 'TEMPORARY': return T(`Süreli · bitiş ${formatDateTime(item.validUntil)}${item.reason ? ` · ${item.reason}` : ''}`, `Temporary · until ${formatDateTime(item.validUntil)}${item.reason ? ` · ${item.reason}` : ''}`);
+      case 'BUNDLE': return T(`Ek rolden geliyor: ${label || '—'}`, `From the extra role: ${clean(item.sourceLabelEn) || label || '—'}`);
+      default: return clean(item && item.source);
+    }
   }
   const RESOURCE_ORDER = CATEGORIES.flatMap(category => category.resources);
   function permissionText(code) {
@@ -798,13 +944,13 @@
     const seen = new Map();
     for (const item of user.effectivePermissions || []) {
       const previous = seen.get(item.permission);
-      const rank = { ROLE: 1, DIRECT: 2, HIERARCHY: 3, TEMPORARY: 4 };
+      const rank = { ROLE: 1, BUNDLE: 2, DIRECT: 3, HIERARCHY: 4, TEMPORARY: 5 };
       if (!previous || (rank[item.source] || 9) < (rank[previous.source] || 9)) seen.set(item.permission, item);
     }
     const items = [...seen.values()].sort((a, b) => permissionRank(a.permission) - permissionRank(b.permission));
     if (!items.length) return `<p class="umNote">${esc(T('Bu kullanıcının henüz hiçbir yetkisi yok.', 'This user has no permissions yet.'))}</p>`;
     const shown = limit && items.length > limit ? items.slice(0, limit) : items;
-    return `<ul class="umEffective">${shown.map(item => `<li><span title="${esc(item.permission)}">${esc(permissionText(item.permission))}</span>${sourceBadge(item.source)}</li>`).join('')}
+    return `<ul class="umEffective">${shown.map(item => `<li><span title="${esc(`${item.permission} — ${explainSource(item)}`)}">${esc(permissionText(item.permission))}</span>${sourceBadge(item.source, item)}</li>`).join('')}
       ${limit && items.length > limit ? `<li class="umEffectiveMore"><button type="button" class="umLink" data-act="detailTab" data-id="permissions">${esc(T('Tümünü göster', 'Show all'))} (${items.length})</button></li>` : ''}</ul>`;
   }
 
@@ -872,12 +1018,13 @@
        2) Kullanıcıya ÖZEL yazılmış ufuk (ön tanımı ezer).
      Sıfırlamak, kullanıcıyı (1)'e geri döndürür — veriyi silmez, yalnız
      kişisel tercihi kaldırır. */
+  // Etiketler çizim anında aktif dilden okunur (dil değişince yeniden çizilir).
   const HORIZON_MODULES = [
-    ['cp', 'CP'],
-    ['orders', T('Siparişler', 'Orders')],
-    ['backlog', 'Backlog'],
-    ['lfl', 'LFL'],
-    ['priceanalysis', T('Fiyat & Üretici Analizi', 'Price & Supplier Analysis')],
+    ['cp', 'CP', 'CP'],
+    ['orders', 'Siparişler', 'Orders'],
+    ['backlog', 'Backlog', 'Backlog'],
+    ['lfl', 'LFL', 'LFL'],
+    ['priceanalysis', 'Fiyat & Üretici Analizi', 'Price & Supplier Analysis'],
   ];
   /* v7.81 — HORIZON ÖN AYARLARI KALDIRILDI (kullanıcı kararı).
 
@@ -888,25 +1035,99 @@
      Bu panelde geriye yönetici için ANLAMLI olan tek eylem kaldı: bir
      kullanıcının kişisel ufkunu SIFIRLAMAK. Sıfırlanınca o kullanıcı Veri
      Yönetimi'ndeki ortak filtreyi görür — yani herkesin gördüğünü. */
+  /* v20261009 — VARSAYILAN UFUK MERKEZİ OLDU (kullanıcı talebi).
+
+     "Kullanıcılar horizonlarını kendileri ayarlayabilsin ancak onların
+     varsayılanını açılışta moderatör ve yönetici belirleyebilsin."
+
+     Kişisel ufuk cihazda yaşar; buradan bir kullanıcı için yazılan kişisel
+     ayar o kullanıcının kendi cihazına ulaşmıyordu. Atanmış varsayılan artık
+     merkezi kullanıcı dizininde tutulur: kullanıcı hangi cihazdan açarsa açsın
+     onu görür, sonra isterse kendi ekranından değiştirir (onun ayarı kazanır).
+     Varsayılanı yeniden atamak, atamadan eski kişisel ayarın önüne geçer. */
+  const horizonModuleLabel = id => { const item = HORIZON_MODULES.find(([key]) => key === id); return item ? T(item[1], item[2]) : id; };
+  function horizonDefaultText(user) {
+    const assigned = user && user.horizonDefault;
+    if (!assigned || !list(assigned.modules).length) return T('yok — rol şablonu veya ortak filtre geçerli', 'none — the role template or shared filter applies');
+    return `${list(assigned.modules).map(horizonModuleLabel).join(', ')} · ${T('kaynak', 'source')}: ${dash(assigned.sourceName)} · ${formatDateTime(assigned.assignedAt)}`;
+  }
+  function canAssignHorizon(user) {
+    return Boolean(user && user.canEdit !== false && store.actor && (store.actor.canManageUsers || store.actor.systemRole === 'moderator'));
+  }
   function detailHorizon(user) {
     const module = store.horizonModule;
-    const editable = user.canEdit !== false && (store.actor && (store.actor.canManageUsers || store.actor.systemRole === 'moderator'));
+    const editable = canAssignHorizon(user);
+    const template = store.workspaceTemplates[user.systemRole] || {};
+    const templateHorizon = Number(template.categoryCounts && template.categoryCounts.horizon) || 0;
     return `<div class="umHorizonPane">
       <p class="umNote">${esc(T(
-        'Kişisel ufuk, Veri Yönetimi’ndeki ortak filtreyi ezer. Buradan sıfırlarsanız kullanıcı ortak filtreye döner ve ekranı herkesinkiyle aynı olur. Ufkun kendisi kullanıcının kendi ekranından ayarlanır.',
-        'A personal horizon overrides the shared filter in Data Management. Resetting it here returns the user to the shared filter, so their screen matches everyone else’s. The horizon itself is set from the user’s own screen.',
+        'Kullanıcı ufkunu kendi ekranından değiştirebilir. Burada atadığınız varsayılan, kullanıcının bütün cihazlarında açılışta geçerli olur; kullanıcı sonradan kendi ayarını yaparsa onunki kazanır.',
+        'Users can change their horizon on their own screen. The default you assign here applies on every device the user opens; if the user later sets their own, theirs wins.',
       ))}</p>
-      <div class="umHorizonRow">
-        <label>${esc(T('Ekran', 'Screen'))}${selectHtml('data-um-horizonmodule', HORIZON_MODULES.map(([id, label]) => ({ value: id, label })), module)}</label>
-      </div>
       <dl class="umFacts">
-        <div><dt>${esc(T('MAG / MMYG / Buying Group', 'MAG / MMYG / Buying Group'))}</dt><dd>${esc([dash(joinText(user.mags)), dash(joinText(user.mmygs)), dash(joinText(user.buyingGroups))].join(' · '))}</dd></div>
-        <div><dt>${esc(T('Kişisel ufku', 'Personal horizon'))}</dt><dd>${user.hasHorizon ? esc(T('var — ortak filtreyi eziyor', 'set — overrides the shared filter')) : esc(T('yok — ortak filtreyi görüyor', 'none — sees the shared filter'))}</dd></div>
+        <div><dt>${esc(T('Atanmış varsayılan ufuk', 'Assigned default horizon'))}</dt><dd>${esc(horizonDefaultText(user))}</dd></div>
+        <div><dt>${esc(T('Rol şablonu', 'Role template'))}</dt><dd>${esc(templateHorizon
+          ? T(`Standard ${roleLabel(user.systemRole)} · ${templateHorizon} ekran`, `Standard ${roleLabel(user.systemRole)} · ${templateHorizon} screens`)
+          : T('yok — ortak filtre geçerli', 'none — the shared filter applies'))}</dd></div>
       </dl>
       ${editable ? `<div class="umDrawerActions">
-        <button type="button" class="umBtn umBtnDanger" data-act="horizonReset" data-id="${esc(user.id)}">${esc(T('Kişisel Ufku Sıfırla', 'Reset Personal Horizon'))}</button>
-      </div>` : `<p class="umNote">${esc(T('Bu kullanıcının ufkunu değiştirme yetkiniz yok.', 'You are not allowed to change this user’s horizon.'))}</p>`}
+        <button type="button" class="umBtn umBtnPrimary" data-act="horizonAssign" data-id="${esc(user.id)}">${esc(T('Varsayılan Ufuk Ata', 'Assign Default Horizon'))}</button>
+        ${user.horizonDefault ? `<button type="button" class="umBtn" data-act="horizonClear" data-id="${esc(user.id)}">${esc(T('Varsayılanı Kaldır', 'Remove Default'))}</button>` : ''}
+      </div>
+      <details class="umHorizonAdvanced">
+        <summary>${esc(T('Bu cihazdaki kişisel ufku sıfırla', 'Reset the personal horizon on this device'))}</summary>
+        <p class="umNote">${esc(T('Yalnız bu bilgisayarda kayıtlı kişisel ufku siler; kullanıcı burada ortak filtreye/varsayılana döner.', 'Removes only the personal horizon stored on this computer; here the user returns to the shared filter/default.'))}</p>
+        <div class="umHorizonRow">
+          <label>${esc(T('Ekran', 'Screen'))}${selectHtml('data-um-horizonmodule', HORIZON_MODULES.map(([id, tr, en]) => ({ value: id, label: T(tr, en) })), module)}</label>
+        </div>
+        <div class="umDrawerActions"><button type="button" class="umBtn umBtnDanger" data-act="horizonReset" data-id="${esc(user.id)}">${esc(T('Kişisel Ufku Sıfırla', 'Reset Personal Horizon'))}</button></div>
+      </details>` : `<p class="umNote">${esc(T('Bu kullanıcının ufkunu değiştirme yetkiniz yok.', 'You are not allowed to change this user’s horizon.'))}</p>`}
     </div>`;
+  }
+  function openHorizonDefaultDialog(ids) {
+    const targets = list(ids).map(userById).filter(user => canAssignHorizon(user));
+    if (!targets.length) { toast(T('Varsayılan ufuk atanabilecek kullanıcı seçilmedi.', 'No user you can assign a default horizon to is selected.')); return; }
+    const targetIds = new Set(targets.map(user => user.id));
+    const self = store.actor ? store.actor.id : '';
+    const sources = [
+      ...(self ? [{ value: self, label: T('Benim ufkum (bu cihazdaki ayarım)', 'My horizon (my setting on this device)') }] : []),
+      ...store.users.filter(user => user.id !== self && user.status === 'ACTIVE' && !targetIds.has(user.id))
+        .map(user => ({ value: user.id, label: `${userName(user)} — ${roleLabel(user.systemRole)}` })),
+    ];
+    openDialog(T('Varsayılan Ufuk Ata', 'Assign Default Horizon'), `
+      <p class="umConfirmText">${esc(targets.length === 1 ? userName(targets[0]) : T(`${targets.length} kullanıcı`, `${targets.length} users`))}</p>
+      <label>${esc(T('Ufku nereden alalım?', 'Where should the horizon come from?'))}${selectHtml('name="sourceUserId" required', sources, self)}</label>
+      <fieldset class="umHorizonModules"><legend>${esc(T('Ekranlar', 'Screens'))}</legend>
+        ${HORIZON_MODULES.map(([id, tr, en]) => `<label class="umCheck"><input type="checkbox" name="module" value="${esc(id)}" checked><span>${esc(T(tr, en))}</span></label>`).join('')}
+      </fieldset>
+      <p class="umNote">${esc(T('Kaynağın bu cihazda geçerli ufku kopyalanır ve merkezi dizine yazılır. Kullanıcı bir sonraki açılışta bunu görür; daha önce kendi kaydettiği ufuk bu ekranlarda varsayılana döner.', 'The source’s horizon as it applies on this device is copied and saved in the central directory. The user sees it the next time they open Buyer Log; a horizon they saved earlier returns to this default on these screens.'))}</p>
+      <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(T('Varsayılan ufuk atandı.', 'Default horizon assigned.'))}"></label>`, {
+      confirmLabel: T('Ata', 'Assign'),
+      onSubmit: async data => {
+        const modules = data.getAll('module').map(clean).filter(Boolean);
+        if (!modules.length) throw new Error(T('En az bir ekran seçin.', 'Select at least one screen.'));
+        const result = await send('/api/iam/horizon-defaults', 'POST', { sourceUserId: clean(data.get('sourceUserId')), targetUserIds: [...targetIds], modules, reason: clean(data.get('reason')) });
+        closeDialog();
+        await reload({ silent: true });
+        toast(T(`${targets.length} kullanıcıya varsayılan ufuk atandı: ${list(result.modules).map(horizonModuleLabel).join(', ')}`, `Default horizon assigned to ${targets.length} users: ${list(result.modules).map(horizonModuleLabel).join(', ')}`));
+      },
+    });
+  }
+  function openHorizonClearDialog(id) {
+    const user = userById(id);
+    if (!user || !user.horizonDefault) return;
+    openDialog(T('Varsayılan Ufku Kaldır', 'Remove Default Horizon'), `
+      <p class="umConfirmText">${esc(userName(user))} · ${esc(horizonDefaultText(user))}</p>
+      <p class="umNote">${esc(T('Kullanıcı rol şablonuna veya Veri Yönetimi’ndeki ortak filtreye döner. Kullanıcının kendi kaydettiği ufuk korunur.', 'The user returns to the role template or the shared filter from Data Management. A horizon the user saved themselves is kept.'))}</p>
+      <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(T('Varsayılan ufuk kaldırıldı.', 'Default horizon removed.'))}"></label>`, {
+      confirmLabel: T('Kaldır', 'Remove'), danger: true,
+      onSubmit: async data => {
+        await send('/api/iam/horizon-defaults', 'POST', { targetUserIds: [user.id], modules: list(user.horizonDefault.modules), clear: true, reason: clean(data.get('reason')) });
+        closeDialog();
+        await reload({ silent: true });
+        toast(T('Varsayılan ufuk kaldırıldı.', 'The default horizon was removed.'));
+      },
+    });
   }
 
   async function loadHorizonConnections() {
@@ -919,7 +1140,7 @@
   }
 
   function detailPermissions(user) {
-    const direct = new Set((user.directPermissions || []).map(item => item.permission));
+    const direct = new Set((user.directPermissions || []).filter(item => !String(item.id || '').startsWith('bundle:')).map(item => item.permission));
     const roleCodes = new Set((user.assignedPermissions || []).filter(item => item.source === 'ROLE').map(item => item.permission));
     const editable = user.canEdit !== false && store.actor && store.actor.id !== user.id;
     return `<div class="umPermPane">
@@ -935,7 +1156,40 @@
           </label>`).join('')}</div>
         <div class="umFormActions"><button type="submit" class="umBtn umBtnPrimary">${esc(T('Kişisel Yetkileri Kaydet', 'Save Personal Permissions'))}</button></div>
       </form>` : `<p class="umNote">${esc(T('Kendi yetkilerinizi değiştiremezsiniz.', 'You cannot change your own permissions.'))}</p>`}
+      ${temporaryGrantsHtml(user)}
     </div>`;
+  }
+
+  /* SÜRELİ YETKİ (v20261009). Sunucu uçları vardı, arayüz yoktu: "iki haftalığına
+     Ön Maliyet düzenleme ver" gibi bir ihtiyaç için ya kalıcı yetki verilip
+     unutuluyordu ya da hiç verilemiyordu. Süresi dolan yetki kendiliğinden
+     düşer (sunucu her istekte tarihe bakar); listede "süresi doldu" görünür. */
+  function grantState(grant) {
+    const now = Date.now(), from = Date.parse(grant.validFrom || '') || 0, until = Date.parse(grant.validUntil || '');
+    if (Number.isFinite(until) && until <= now) return 'expired';
+    if (from && from > now) return 'scheduled';
+    return 'active';
+  }
+  function temporaryGrantsHtml(user) {
+    const grants = list(user.temporaryPermissions).slice().sort((a, b) => String(a.validUntil).localeCompare(String(b.validUntil)));
+    const canGrant = Boolean(store.actor && store.actor.systemRole === 'moderator' && store.actor.id !== user.id && user.canEdit !== false);
+    if (!grants.length && !canGrant) return '';
+    const stateLabel = state => ({ active: T('Etkin', 'Active'), scheduled: T('Başlamadı', 'Scheduled'), expired: T('Süresi doldu', 'Expired') })[state];
+    const tomorrow = new Date(Date.now() + 7 * 864e5).toISOString().slice(0, 10);
+    return `<h4 class="umSubHead">${esc(T('Süreli Yetkiler', 'Temporary Permissions'))}</h4>
+      <p class="umNote">${esc(T('Belirlenen tarihte kendiliğinden düşer; kalıcı yetki vermeden geçici ihtiyacı karşılar.', 'Ends automatically on the chosen date; covers a temporary need without a permanent grant.'))}</p>
+      ${grants.length ? `<ul class="umEffective umTempGrants">${grants.map(grant => {
+        const state = grantState(grant);
+        return `<li class="is-${state}"><span title="${esc(grant.permission)}">${esc(permissionText(grant.permission))}<small>${esc(T('Bitiş', 'Until'))}: ${esc(formatDateTime(grant.validUntil))}${grant.reason ? ` · ${esc(grant.reason)}` : ''}</small></span>
+          <span class="umTempState">${esc(stateLabel(state))}</span>
+          ${canGrant ? `<button type="button" class="umBtn umBtnSmall umBtnGhost" data-act="tempRevoke" data-id="${esc(user.id)}" data-grant="${esc(grant.id)}">${esc(T('Geri Al', 'Revoke'))}</button>` : ''}</li>`;
+      }).join('')}</ul>` : `<p class="umNote">${esc(T('Süreli yetki yok.', 'No temporary permissions.'))}</p>`}
+      ${canGrant ? `<form class="umForm umTempForm" data-um-form="tempGrant" data-id="${esc(user.id)}">
+        <label>${esc(T('Yetki', 'Permission'))}${selectHtml('name="permission" required', store.permissionRegistry.slice().sort((a, b) => permissionRank(a.code) - permissionRank(b.code)).map(item => ({ value: item.code, label: permissionText(item.code) })), '', T('Yetki seçin', 'Select a permission'))}</label>
+        <label>${esc(T('Bitiş tarihi', 'End date'))}<input name="validUntil" type="date" required min="${new Date().toISOString().slice(0, 10)}" value="${tomorrow}"></label>
+        <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required placeholder="${esc(T('Ör. sezon kapanışı için', 'E.g. for season close'))}"></label>
+        <div class="umFormActions"><button type="submit" class="umBtn umBtnPrimary">${esc(T('Süreli Yetki Ver', 'Grant Temporarily'))}</button></div>
+      </form>` : ''}`;
   }
 
   /* ===================== 8 · Roller & Yetkiler ===================== */
@@ -1013,10 +1267,49 @@
     const sourceOptions = store.users.filter(item => !store.template.search || norm(userName(item)).includes(norm(store.template.search))).map(item => ({ value: item.id, label: `${userName(item)} — ${roleLabel(item.systemRole)}` }));
     const categoryRows = [['horizon','Horizon','Horizon'],['filters','Filtreler','Filters'],['columns','Kolon düzenleri','Column layouts'],['views','Kayıtlı görünümler','Saved views'],['dashboard','Dashboard','Dashboard'],['favorites','Favoriler','Favorites'],['rules','CP kuralları ve checklist','CP rules and checklist']];
     const counts = current.categoryCounts || {};
-    return `<section class="umSection umTemplates"><div class="umToolbar"><div class="umRoleTabs" data-bl-tabs="segment" role="tablist" aria-label="${esc(T('Şablon rolü', 'Template role'))}">${ROLE_ORDER.map(id => `<button type="button" id="umTemplateRoleTab-${id}" role="tab" aria-controls="umTemplateRolePanel" aria-selected="${roleId === id}" tabindex="${roleId === id ? '0' : '-1'}" class="umRoleTab${roleId === id ? ' isActive' : ''}" data-act="templateRole" data-id="${id}">${esc(`Standard ${roleLabel(id)}`)}</button>`).join('')}</div></div><div class="umTemplateGrid" id="umTemplateRolePanel" role="tabpanel" aria-labelledby="umTemplateRoleTab-${roleId}" tabindex="0"><div class="umCopyBlock"><h3>${esc(T('Aktif Rol Varsayılanı', 'Active Role Default'))}</h3><p class="umNote">${esc(T('Fallback: Kullanıcı Modülü → Kullanıcı Varsayılanı → Rol Modülü → Rol Varsayılanı → Uygulama Varsayılanı.', 'Fallback: User Module → User Default → Role Module → Role Default → Application Default.'))}</p>${current.entryCount ? `<dl class="umFacts"><div><dt>${esc(T('Kaynak', 'Source'))}</dt><dd>${esc(current.sourceName || '—')}</dd></div><div><dt>${esc(T('Ayar sayısı', 'Preference count'))}</dt><dd>${current.entryCount}</dd></div><div><dt>${esc(T('Son güncelleme', 'Last update'))}</dt><dd>${esc(current.updatedAt ? new Date(current.updatedAt).toLocaleString() : '—')}</dd></div></dl><ul class="umPreviewList">${categoryRows.filter(([key])=>counts[key]).map(([key,tr,en])=>`<li>${esc(T(tr,en))}: ${counts[key]}</li>`).join('')}</ul>` : `<p class="umWarn">${esc(T('Bu rol için henüz standart workspace şablonu oluşturulmadı.', 'No standard workspace template has been created for this role yet.'))}</p>`}</div><div class="umCopyBlock"><h3>${esc(T('Kullanıcıdan Şablon Oluştur', 'Create Template from User'))}</h3><input type="search" class="umSearch" data-um-templatesearch placeholder="${esc(T('Kaynak kullanıcı ara…', 'Search source users…'))}" value="${esc(store.template.search)}">${selectHtml('data-um-templatesource', sourceOptions, store.template.sourceId, T('Kullanıcı seçin', 'Select a user'))}<div class="umCopyCategories"><fieldset><legend>${esc(T('Workspace Kategorileri', 'Workspace Categories'))}</legend>${categoryRows.map(([key,tr,en])=>`<label class="umCheck"><input type="checkbox" data-um-templatecat="${key}" ${store.template.categories[key]?'checked':''}><span>${esc(T(tr,en))}</span></label>`).join('')}</fieldset></div><p class="umNote">${esc(T('Şablon bir snapshot olarak kaydedilir. Kullanıcının sonraki değişiklikleri şablonu otomatik değiştirmez.', 'The template is saved as a snapshot. Later user changes do not modify it automatically.'))}</p><div class="umFormActions"><button type="button" class="umBtn umBtnGhost" data-act="resetTemplate" ${current.entryCount?'':'disabled'}>${esc(T('Şablonu Sıfırla', 'Reset Template'))}</button><button type="button" class="umBtn umBtnPrimary" data-act="saveTemplate" ${store.template.sourceId?'':'disabled'}>${esc(T('Standard Şablonu Kaydet', 'Save Standard Template'))}</button></div></div></div></section>`;
+    return `<section class="umSection umTemplates"><div class="umToolbar"><div class="umRoleTabs" data-bl-tabs="segment" role="tablist" aria-label="${esc(T('Şablon rolü', 'Template role'))}">${ROLE_ORDER.map(id => `<button type="button" id="umTemplateRoleTab-${id}" role="tab" aria-controls="umTemplateRolePanel" aria-selected="${roleId === id}" tabindex="${roleId === id ? '0' : '-1'}" class="umRoleTab${roleId === id ? ' isActive' : ''}" data-act="templateRole" data-id="${id}">${esc(`Standard ${roleLabel(id)}`)}</button>`).join('')}</div></div><div class="umTemplateGrid" id="umTemplateRolePanel" role="tabpanel" aria-labelledby="umTemplateRoleTab-${roleId}" tabindex="0"><div class="umCopyBlock"><h3>${esc(T('Aktif Rol Varsayılanı', 'Active Role Default'))}</h3><p class="umNote">${esc(T('Fallback: Kullanıcı Modülü → Kullanıcı Varsayılanı → Rol Modülü → Rol Varsayılanı → Uygulama Varsayılanı.', 'Fallback: User Module → User Default → Role Module → Role Default → Application Default.'))}</p>${current.entryCount ? `<dl class="umFacts"><div><dt>${esc(T('Kaynak', 'Source'))}</dt><dd>${esc(current.sourceName || '—')}</dd></div><div><dt>${esc(T('Ayar sayısı', 'Preference count'))}</dt><dd>${current.entryCount}</dd></div><div><dt>${esc(T('Son güncelleme', 'Last update'))}</dt><dd>${esc(current.updatedAt ? new Date(current.updatedAt).toLocaleString() : '—')}</dd></div></dl><ul class="umPreviewList">${categoryRows.filter(([key])=>counts[key]).map(([key,tr,en])=>`<li>${esc(T(tr,en))}: ${counts[key]}</li>`).join('')}</ul>` : `<p class="umWarn">${esc(T('Bu rol için henüz standart workspace şablonu oluşturulmadı.', 'No standard workspace template has been created for this role yet.'))}</p>`}</div><div class="umCopyBlock"><h3>${esc(T('Kullanıcıdan Şablon Oluştur', 'Create Template from User'))}</h3><input type="search" class="umSearch" data-um-templatesearch placeholder="${esc(T('Kaynak kullanıcı ara…', 'Search source users…'))}" value="${esc(store.template.search)}">${selectHtml('data-um-templatesource', sourceOptions, store.template.sourceId, T('Kullanıcı seçin', 'Select a user'))}<div class="umCopyCategories"><fieldset><legend>${esc(T('Workspace Kategorileri', 'Workspace Categories'))}</legend>${categoryRows.map(([key,tr,en])=>`<label class="umCheck"><input type="checkbox" data-um-templatecat="${key}" ${store.template.categories[key]?'checked':''}><span>${esc(T(tr,en))}</span></label>`).join('')}</fieldset></div><p class="umNote">${esc(T('Şablon bir snapshot olarak kaydedilir. Kullanıcının sonraki değişiklikleri şablonu otomatik değiştirmez.', 'The template is saved as a snapshot. Later user changes do not modify it automatically.'))}</p><div class="umFormActions"><button type="button" class="umBtn umBtnGhost" data-act="resetTemplate" ${current.entryCount?'':'disabled'}>${esc(T('Şablonu Sıfırla', 'Reset Template'))}</button><button type="button" class="umBtn umBtnPrimary" data-act="saveTemplate" ${store.template.sourceId?'':'disabled'}>${esc(T('Standard Şablonu Kaydet', 'Save Standard Template'))}</button></div></div>${roleHorizonBlock(roleId, current)}</div></section>`;
   }
 
   /* ===================== 10 · Organizasyon ===================== */
+
+  /* Rolün varsayılan ufku — tüm snapshot'ı yeniden kaydetmeden doğrudan. */
+  function roleHorizonBlock(roleId, current) {
+    const modules = list(current && current.horizonModules);
+    const canManage = Boolean(store.actor && store.actor.systemRole === 'moderator');
+    return `<div class="umCopyBlock"><h3>${esc(T('Rol Varsayılan Ufku', 'Role Default Horizon'))}</h3>
+      <p class="umNote">${esc(T(`Standard ${roleLabel(roleId)} rolündeki herkes, kendisine özel varsayılan atanmamışsa ve kendi ufkunu kurmamışsa bu ufukla açar.`, `Everyone in the Standard ${roleLabel(roleId)} role opens with this horizon unless a personal default is assigned or they set their own.`))}</p>
+      <dl class="umFacts"><div><dt>${esc(T('Ekranlar', 'Screens'))}</dt><dd>${esc(modules.length ? modules.map(horizonModuleLabel).join(', ') : T('yok — ortak filtre geçerli', 'none — the shared filter applies'))}</dd></div></dl>
+      ${canManage ? `<div class="umFormActions">
+        ${modules.length ? `<button type="button" class="umBtn umBtnGhost" data-act="roleHorizonClear" data-id="${esc(roleId)}">${esc(T('Ufku Kaldır', 'Remove Horizon'))}</button>` : ''}
+        <button type="button" class="umBtn umBtnPrimary" data-act="roleHorizonSet" data-id="${esc(roleId)}">${esc(T('Rol Ufkunu Ayarla', 'Set Role Horizon'))}</button>
+      </div>` : ''}</div>`;
+  }
+  function openRoleHorizonDialog(roleId, clearing) {
+    const current = store.workspaceTemplates[roleId] || {};
+    const self = store.actor ? store.actor.id : '';
+    const sources = [
+      ...(self ? [{ value: self, label: T('Benim ufkum (bu cihazdaki ayarım)', 'My horizon (my setting on this device)') }] : []),
+      ...store.users.filter(user => user.id !== self && user.status === 'ACTIVE').map(user => ({ value: user.id, label: `${userName(user)} — ${roleLabel(user.systemRole)}` })),
+    ];
+    const moduleIds = clearing ? list(current.horizonModules) : HORIZON_MODULES.map(([id]) => id);
+    openDialog(clearing ? T('Rol Ufkunu Kaldır', 'Remove Role Horizon') : T('Rol Ufkunu Ayarla', 'Set Role Horizon'), `
+      <p class="umConfirmText">Standard ${esc(roleLabel(roleId))}</p>
+      ${clearing ? '' : `<label>${esc(T('Ufku nereden alalım?', 'Where should the horizon come from?'))}${selectHtml('name="sourceUserId" required', sources, self)}</label>`}
+      <fieldset class="umHorizonModules"><legend>${esc(T('Ekranlar', 'Screens'))}</legend>
+        ${moduleIds.map(id => `<label class="umCheck"><input type="checkbox" name="module" value="${esc(id)}" checked><span>${esc(horizonModuleLabel(id))}</span></label>`).join('')}
+      </fieldset>
+      <p class="umNote">${esc(T('Yalnız Horizon değişir; şablondaki filtre, kolon ve görünüm ayarları korunur.', 'Only the horizon changes; the template’s filter, column and view settings are kept.'))}</p>
+      <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(clearing ? T('Rol ufku kaldırıldı.', 'Role horizon removed.') : T('Rol ufku ayarlandı.', 'Role horizon set.'))}"></label>`, {
+      confirmLabel: clearing ? T('Kaldır', 'Remove') : T('Kaydet', 'Save'), danger: clearing,
+      onSubmit: async data => {
+        const modules = data.getAll('module').map(clean).filter(Boolean);
+        if (!modules.length) throw new Error(T('En az bir ekran seçin.', 'Select at least one screen.'));
+        await send('/api/iam/role-horizon-defaults', 'POST', { roleId, modules, clear: clearing, sourceUserId: clean(data.get('sourceUserId')), reason: clean(data.get('reason')), confirmCritical: true });
+        closeDialog(); await reload({ silent: true });
+        toast(clearing ? T('Rol ufku kaldırıldı.', 'The role horizon was removed.') : T('Rol ufku kaydedildi.', 'The role horizon was saved.'));
+      },
+    });
+  }
 
   function organizationSection() {
     // Organization is an operational hierarchy view: inactive accounts remain
@@ -1048,7 +1341,7 @@
     return `<div class="umTreeNode">
       <button type="button" class="umNode${store.orgSelectedId === user.id ? ' isActive' : ''}${active ? '' : ' isInactive'}"
         draggable="true" data-act="orgSelect" data-id="${esc(user.id)}" data-um-node="${esc(user.id)}">
-        <span class="umAvatar">${esc(initials(userName(user)))}</span>
+        <span class="umAvatar" data-no-i18n>${esc(initials(userName(user)))}</span>
         <span class="umNodeText">
           <b>${esc(userName(user))}</b>
           <small>${esc(roleLabel(user.systemRole))}</small>
@@ -1071,7 +1364,7 @@
     const reports = childrenOf(user.id);
     return `<aside class="umOrgPanel">
       <header class="umOrgPanelHead">
-        <span class="umAvatar umAvatarLarge">${esc(initials(userName(user)))}</span>
+        <span class="umAvatar umAvatarLarge" data-no-i18n>${esc(initials(userName(user)))}</span>
         <div><h3>${esc(userName(user))}</h3><p>${esc(roleLabel(user.systemRole))}</p></div>
       </header>
       <dl class="umFacts">
@@ -1099,7 +1392,7 @@
     const source = templateMode ? null : userById(store.copy.sourceId);
     const sourceTemplate = templateMode ? store.workspaceTemplates[store.copy.templateRole] : null;
     const sourceReady = templateMode ? Boolean(sourceTemplate && sourceTemplate.entryCount) : Boolean(source);
-    const codes = source ? (source.directPermissions || []).map(item => item.permission) : [];
+    const codes = source ? (source.directPermissions || []).filter(item => !String(item.id || '').startsWith('bundle:')).map(item => item.permission) : [];
     const categories = store.copy.categories;
     const targets = store.users.filter(item => item.id !== 'moderator' && item.id !== (source && source.id) && item.id !== (store.actor && store.actor.id) && item.canEdit !== false);
     return `<section class="umSection umCopy">
@@ -1136,6 +1429,191 @@
           </div>
         </div>
       </div>
+    </section>`;
+  }
+
+  /* ===================== 10a · Ek Roller =====================
+
+     Dört sistem rolü herkes için ortak bir taban verir; "Fiyat Onaycısı",
+     "Koleksiyon Editörü" gibi ihtiyaçlar için kişiye tek tek yetki işaretlemek
+     gerekiyordu. Ek rol, adlandırılmış bir iş yetkisi paketidir: bir kez
+     tanımlanır, kişilere atanır, değişince bütün üyelerine birlikte uygulanır.
+     Güvenlik yetkileri (kullanıcı/rol/sistem/denetim) pakete konamaz. */
+  const bundleName = bundle => bundle ? T(bundle.nameTr, bundle.nameEn || bundle.nameTr) : '';
+  function bundlesSection() {
+    const canManage = Boolean(store.actor && store.actor.systemRole === 'moderator');
+    const bundles = store.roleBundles.slice().sort((a, b) => sortTr(bundleName(a), bundleName(b)));
+    const editing = store.bundleEditId === 'new' ? { id: '', nameTr: '', nameEn: '', description: '', permissions: [], memberIds: [] } : bundles.find(item => item.id === store.bundleEditId);
+    const listHtml = bundles.length ? `<ul class="umBundleList">${bundles.map(bundle => `<li><button type="button" class="umBundleItem${store.bundleEditId === bundle.id ? ' isActive' : ''}" data-act="bundleEdit" data-id="${esc(bundle.id)}">
+        <b>${esc(bundleName(bundle))}</b><small>${esc(T(`${bundle.permissions.length} yetki · ${bundle.memberIds.length} kişi`, `${bundle.permissions.length} permissions · ${bundle.memberIds.length} people`))}</small></button></li>`).join('')}</ul>`
+      : emptyState(T('Henüz ek rol yok.', 'There are no extra roles yet.'), T('Örn. “Fiyat Onaycısı”: Quotations · Onayla + Ön Maliyet · Düzenle. Bir kez tanımlayın, kişilere atayın.', 'E.g. “Price Approver”: Quotations · Approve + Open Costing · Edit. Define it once and assign it to people.'));
+    return `<section class="umSection umBundles"><div class="umBundleGrid">
+      <div class="umCopyBlock">
+        <h3>${esc(T('Ek Roller', 'Extra Roles'))}</h3>
+        <p class="umNote">${esc(T('Sistem rolüne ek olarak verilen, adlandırılmış iş yetkisi paketleri.', 'Named business permission bundles given in addition to the system role.'))}</p>
+        ${listHtml}
+        ${canManage ? `<div class="umFormActions"><button type="button" class="umBtn umBtnPrimary" data-act="bundleEdit" data-id="new">＋ ${esc(T('Yeni Ek Rol', 'New Extra Role'))}</button></div>` : ''}
+      </div>
+      <div class="umCopyBlock">${editing ? bundleEditor(editing, canManage) : `<p class="umNote">${esc(T('Düzenlemek için soldan bir ek rol seçin.', 'Select an extra role on the left to edit it.'))}</p>`}</div>
+    </div></section>`;
+  }
+  function bundleEditor(bundle, canManage) {
+    const chosen = new Set(bundle.permissions || []), members = new Set(bundle.memberIds || []);
+    const disabled = canManage ? '' : ' disabled';
+    const groups = CATEGORIES.map(category => {
+      const codes = category.resources.flatMap(resource => store.permissionRegistry.filter(item => item.resource === resource && !item.security).map(item => item.code));
+      return codes.length ? `<fieldset class="umBundlePerms"><legend>${esc(T(category.tr, category.en))}</legend>${codes.map(code => `<label class="umCheck" title="${esc(code)}"><input type="checkbox" name="permission" value="${esc(code)}" ${chosen.has(code) ? 'checked' : ''}${disabled}><span>${esc(permissionText(code))}</span></label>`).join('')}</fieldset>` : '';
+    }).join('');
+    const people = store.users.filter(user => user.id !== 'moderator' && !isSourceRecord(user) && (members.has(user.id) || (user.canEdit !== false && user.id !== (store.actor && store.actor.id))));
+    return `<form class="umForm" data-um-form="bundle" data-id="${esc(bundle.id)}">
+      <h3>${esc(bundle.id ? bundleName(bundle) : T('Yeni Ek Rol', 'New Extra Role'))}</h3>
+      <div class="umBundleNames">
+        <label>${esc(T('Ad (Türkçe)', 'Name (Turkish)'))}<input name="nameTr" required maxlength="80" value="${esc(bundle.nameTr)}"${disabled}></label>
+        <label>${esc(T('Ad (İngilizce)', 'Name (English)'))}<input name="nameEn" maxlength="80" value="${esc(bundle.nameEn)}"${disabled}></label>
+      </div>
+      <label>${esc(T('Açıklama', 'Description'))}<input name="description" maxlength="300" value="${esc(bundle.description)}"${disabled}></label>
+      <h4 class="umSubHead">${esc(T('Yetkiler', 'Permissions'))}</h4>
+      <p class="umNote">${esc(T('Yalnız iş yetkileri; kullanıcı, rol, sistem ve denetim yetkileri kişiye gerekçeyle verilir.', 'Business permissions only; user, role, system and audit permissions are granted to a person with a reason.'))}</p>
+      <div class="umBundlePermGrid">${groups}</div>
+      <h4 class="umSubHead">${esc(T('Üyeler', 'Members'))} <small>${members.size}</small></h4>
+      <input type="search" class="umSearch" data-um-bundlemembersearch placeholder="${esc(T('Kişi ara…', 'Search people…'))}">
+      <div class="umCopyTargets" data-um-bundlemembers>${people.map(user => `<label class="umCopyTarget" data-um-bundlemember="${esc(norm(userName(user)))}"><input type="checkbox" name="member" value="${esc(user.id)}" ${members.has(user.id) ? 'checked' : ''}${disabled}><span><b>${esc(userName(user))}</b><small>${esc(roleLabel(user.systemRole))} · ${esc(dash(joinText(user.mags)))}</small></span></label>`).join('') || emptyState(T('Atanabilecek kişi yok.', 'There is no one to assign.'))}</div>
+      ${canManage ? `<label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(bundle.id ? T('Ek rol güncellendi.', 'Extra role updated.') : T('Ek rol oluşturuldu.', 'Extra role created.'))}"></label>
+      <div class="umFormActions">
+        ${bundle.id ? `<button type="button" class="umBtn umBtnDanger" data-act="bundleDelete" data-id="${esc(bundle.id)}">${esc(T('Ek Rolü Sil', 'Delete Extra Role'))}</button>` : ''}
+        <button type="button" class="umBtn umBtnGhost" data-act="bundleEdit" data-id="">${esc(T('Vazgeç', 'Cancel'))}</button>
+        <button type="submit" class="umBtn umBtnPrimary">${esc(T('Kaydet ve Üyelere Uygula', 'Save and Apply to Members'))}</button>
+      </div>` : ''}
+    </form>`;
+  }
+
+
+  /* ===================== 10c · İçe / Dışa Aktar =====================
+
+     Toplu düzenleme Excel'de yapılır: dışa aktar → dosyada düzelt → geri yükle.
+     Yükleme önce sunucuda ÖNİZLENİR (oluşturulacak, güncellenecek, değişmeyen,
+     hatalı satırlar); tek bir hatalı satır varsa hiçbir şey yazılmaz. Aynı
+     dosyada "Yetki Gözden Geçirme" sayfası periyodik denetim raporudur. */
+  const IMPORT_ERRORS = {
+    USERNAME_REQUIRED: ['Kullanıcı adı boş', 'User name is empty'],
+    USERNAME_DUPLICATE: ['Kullanıcı adı dosyada tekrar ediyor', 'User name repeats in the file'],
+    ROLE_UNKNOWN: ['Rol tanınmadı', 'Unknown role'],
+    ROLE_MODERATOR_NOT_IMPORTABLE: ['Moderatör rolü içe aktarımla verilemez/kaldırılamaz', 'The Moderator role cannot be granted or removed by import'],
+    STATUS_UNKNOWN: ['Durum tanınmadı', 'Unknown status'],
+    MANAGER_UNKNOWN: ['Yönetici kullanıcı adı bulunamadı', 'Manager user name not found'],
+    DATA_SCOPE_UNKNOWN: ['Veri kapsamı tanınmadı', 'Unknown data scope'],
+    TITLE_REQUIRED: ['Yeni kullanıcı için Title zorunlu', 'Title is required for a new user'],
+    MANAGER_REQUIRED: ['Yeni kullanıcı için yönetici zorunlu', 'A manager is required for a new user'],
+    USER_NOT_MANAGEABLE: ['Bu kullanıcı yönetim alanınızda değil', 'This user is outside your management scope'],
+  };
+  const importErrorText = code => (IMPORT_ERRORS[code] ? T(IMPORT_ERRORS[code][0], IMPORT_ERRORS[code][1]) : code);
+  const importFieldLabel = key => ({ displayName: T('Görünen ad', 'Display name'), title: 'Title', email: T('E-posta', 'E-mail'), systemRole: T('Rol', 'Role'), status: T('Durum', 'Status'),
+    mags: 'MAG', mmygs: 'MMYG', buyingGroups: 'Buying Group', managerId: T('Yönetici', 'Manager'), dataScope: T('Veri kapsamı', 'Data scope') })[key] || key;
+  function transferSection() {
+    const preview = store.importPreview;
+    const actionLabel2 = action => ({ create: T('Oluşturulacak', 'Will be created'), update: T('Güncellenecek', 'Will be updated'), unchanged: T('Değişmiyor', 'Unchanged'), error: T('Hatalı', 'Error') })[action] || action;
+    const rows = preview ? preview.plan.filter(item => item.action !== 'unchanged' && item.action !== 'skipped') : [];
+    return `<section class="umSection umTransfer"><div class="umCopyGrid">
+      <div class="umCopyBlock">
+        <h3>${esc(T('Excel’e Aktar', 'Export to Excel'))}</h3>
+        <p class="umNote">${esc(T('Dört sayfa: Kullanıcılar (geri yüklenebilir), Yetki Gözden Geçirme (onay sütunlu denetim raporu), Etkin Yetkiler (her yetki ve kaynağı), Roller. Parola ve oturum bilgisi yazılmaz.', 'Four sheets: Users (can be re-imported), Access Review (audit report with an approval column), Effective Permissions (each permission and its source), Roles. Passwords and session data are never written.'))}</p>
+        <div class="umFormActions"><button type="button" class="umBtn umBtnPrimary" data-act="iamExport">${esc(T('Excel Dosyasını İndir', 'Download Excel File'))}</button></div>
+        <h3>${esc(T('Excel’den Yükle', 'Import from Excel'))}</h3>
+        <p class="umNote">${esc(T('İndirilen dosyanın Kullanıcılar sayfasını düzenleyip yükleyin. Boş hücre “değiştirme” demektir. Yeni kullanıcılar parolasız ve pasif oluşturulur; parola belirleyip aktifleştirin. Moderatör rolü içe aktarımla değiştirilemez.', 'Edit the Users sheet of the downloaded file and upload it. An empty cell means “leave unchanged”. New users are created inactive without a password; set one and activate them. The Moderator role cannot be changed by import.'))}</p>
+        <div class="umFormActions"><label class="umBtn umFileBtn">${esc(T('Excel Dosyası Seç (.xlsx)', 'Choose Excel File (.xlsx)'))}<input type="file" accept=".xlsx" data-um-importfile></label></div>
+      </div>
+      <div class="umCopyBlock">
+        <h3>${esc(T('Önizleme', 'Preview'))}</h3>
+        ${preview ? `<p class="umNote">${esc(T(`${preview.fileName}: ${preview.summary.create} oluşturulacak · ${preview.summary.update} güncellenecek · ${preview.summary.unchanged} değişmiyor · ${preview.summary.skipped || 0} kullanıcı adı yok (atlandı) · ${preview.summary.error} hatalı`, `${preview.fileName}: ${preview.summary.create} to create · ${preview.summary.update} to update · ${preview.summary.unchanged} unchanged · ${preview.summary.skipped || 0} without user name (skipped) · ${preview.summary.error} errors`))}</p>
+          ${rows.length ? `<div class="umTableWrap"><table class="umTable umImportTable"><thead><tr><th>${esc(T('Satır', 'Row'))}</th><th>${esc(T('Kullanıcı adı', 'User name'))}</th><th>${esc(T('İşlem', 'Action'))}</th><th>${esc(T('Ayrıntı', 'Details'))}</th></tr></thead><tbody>
+            ${rows.map(item => `<tr class="is-${esc(item.action)}"><td>${item.line}</td><td>${esc(item.username)}</td><td>${esc(actionLabel2(item.action))}</td><td>${esc(item.action === 'error' ? list(item.errors).map(importErrorText).join(' · ') : Object.keys(item.patch || {}).map(importFieldLabel).join(', '))}</td></tr>`).join('')}
+          </tbody></table></div>` : emptyState(T('Dosyada değişiklik yok.', 'There are no changes in the file.'))}
+          <div class="umFormActions">
+            <button type="button" class="umBtn umBtnGhost" data-act="importClear">${esc(T('Vazgeç', 'Cancel'))}</button>
+            <button type="button" class="umBtn umBtnPrimary" data-act="importApply" ${preview.summary.error || !(preview.summary.create + preview.summary.update) ? 'disabled' : ''}>${esc(T('Değişiklikleri Uygula', 'Apply Changes'))}</button>
+          </div>
+          ${preview.summary.error ? `<p class="umWarn">${esc(T('Hatalı satırlar düzeltilmeden hiçbir değişiklik uygulanmaz.', 'No change is applied until the rows with errors are fixed.'))}</p>` : ''}`
+        : `<p class="umNote">${esc(T('Bir Excel dosyası seçtiğinizde yapılacak değişiklikler burada listelenir.', 'When you choose an Excel file, the changes it would make are listed here.'))}</p>`}
+      </div>
+    </div></section>`;
+  }
+  async function downloadExport() {
+    try {
+      const response = await fetch(`/api/iam/export.xlsx?lang=${T('tr', 'en')}`, { credentials: 'same-origin' });
+      if (!response.ok) { let data = {}; try { data = await response.json(); } catch (_) {} throw new Error(data.error || response.statusText); }
+      const blob = await response.blob(), url = URL.createObjectURL(blob), link = document.createElement('a');
+      link.href = url; link.download = `buyerlog-users-${new Date().toISOString().slice(0, 10)}.xlsx`;
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    } catch (error) { toast(T(`Excel indirilemedi: ${error.message}`, `The Excel file could not be downloaded: ${error.message}`)); }
+  }
+  function readFileBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || '').split(',').pop());
+      reader.onerror = () => reject(reader.error || new Error(T('Dosya okunamadı.', 'The file could not be read.')));
+      reader.readAsDataURL(file);
+    });
+  }
+  async function previewImport(file) {
+    if (!file) return;
+    try {
+      const fileBase64 = await readFileBase64(file);
+      const result = await api('/api/iam/import/preview', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fileBase64 }) });
+      store.importPreview = { fileName: file.name, fileBase64, plan: result.plan || [], summary: result.summary || {} };
+    } catch (error) { store.importPreview = null; toast(error.message); }
+    render();
+  }
+  function openImportApplyDialog() {
+    const preview = store.importPreview;
+    if (!preview) return;
+    openDialog(T('Excel Değişikliklerini Uygula', 'Apply Excel Changes'), `
+      <p class="umConfirmText">${esc(T(`${preview.summary.create} kullanıcı oluşturulacak, ${preview.summary.update} kullanıcı güncellenecek.`, `${preview.summary.create} users will be created and ${preview.summary.update} users updated.`))}</p>
+      <p class="umNote">${esc(T('Tümü tek değişiklik olarak kaydedilir; bir satır reddedilirse hiçbiri yazılmaz. Pasife alınan kullanıcıların oturumu kapanır.', 'Everything is saved as one change; if a row is rejected nothing is written. Users who are deactivated are signed out.'))}</p>
+      <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(T('Excel ile toplu güncelleme.', 'Bulk update from Excel.'))}"></label>`, {
+      confirmLabel: T('Uygula', 'Apply'),
+      onSubmit: async data => {
+        const result = await send('/api/iam/import', 'POST', { fileBase64: preview.fileBase64, reason: clean(data.get('reason')), confirmCritical: true });
+        store.importPreview = null; closeDialog(); await reload({ silent: true });
+        toast(T(`${list(result.changed).length} kullanıcı güncellendi.`, `${list(result.changed).length} users were updated.`));
+      },
+    });
+  }
+
+  /* ===================== 10b · Yetki Karşılaştırma =====================
+
+     ERP'lerdeki "iki kullanıcının yetkileri neden farklı?" sorusu. İki kişi
+     seçilir; her yetki için iki tarafın sahip olup olmadığı ve KAYNAĞI (rol,
+     ek rol, özel, süreli, hiyerarşi) aynı satırda görünür. Varsayılan olarak
+     yalnız farklar listelenir. */
+  function effectiveMap(user) {
+    const rank = { ROLE: 1, BUNDLE: 2, DIRECT: 3, HIERARCHY: 4, TEMPORARY: 5 }, out = new Map();
+    for (const item of list(user && user.effectivePermissions)) {
+      const previous = out.get(item.permission);
+      if (!previous || (rank[item.source] || 9) < (rank[previous.source] || 9)) out.set(item.permission, item);
+    }
+    return out;
+  }
+  function compareSection() {
+    const left = userById(store.compare.leftId), right = userById(store.compare.rightId);
+    const options = store.users.filter(user => !isSourceRecord(user)).map(user => ({ value: user.id, label: `${userName(user)} — ${roleLabel(user.systemRole)}` }));
+    const pickers = `<div class="umCompareHead">
+        <label>${esc(T('Birinci kullanıcı', 'First user'))}${selectHtml('data-um-compare="leftId"', options, store.compare.leftId, T('Kullanıcı seçin', 'Select a user'))}</label>
+        <label>${esc(T('İkinci kullanıcı', 'Second user'))}${selectHtml('data-um-compare="rightId"', options, store.compare.rightId, T('Kullanıcı seçin', 'Select a user'))}</label>
+        <label class="umCheck"><input type="checkbox" data-um-comparediff ${store.compare.diffOnly ? 'checked' : ''}><span>${esc(T('Yalnız farkları göster', 'Show differences only'))}</span></label>
+      </div>`;
+    if (!left || !right) return `<section class="umSection umCompare">${pickers}${emptyState(T('Karşılaştırmak için iki kullanıcı seçin.', 'Select two users to compare.'), T('Her yetkinin iki kullanıcıda olup olmadığı ve nereden geldiği yan yana görünür.', 'Whether each permission applies to both users, and where it comes from, is shown side by side.'))}</section>`;
+    const a = effectiveMap(left), b = effectiveMap(right);
+    const codes = [...new Set([...a.keys(), ...b.keys()])].sort((x, y) => permissionRank(x) - permissionRank(y));
+    const rows = codes.filter(code => !store.compare.diffOnly || Boolean(a.get(code)) !== Boolean(b.get(code)));
+    const cell = item => item ? `<span class="umCompareYes">✓</span> ${sourceBadge(item.source, item)}` : '<span class="umCompareNo">—</span>';
+    const onlyLeft = codes.filter(code => a.has(code) && !b.has(code)).length, onlyRight = codes.filter(code => b.has(code) && !a.has(code)).length;
+    return `<section class="umSection umCompare">${pickers}
+      <p class="umNote">${esc(T(`${userName(left)}: ${a.size} yetki · ${userName(right)}: ${b.size} yetki · yalnız birincide ${onlyLeft}, yalnız ikincide ${onlyRight}.`, `${userName(left)}: ${a.size} permissions · ${userName(right)}: ${b.size} permissions · only first ${onlyLeft}, only second ${onlyRight}.`))}
+        ${store.canCopyProfiles ? `<button type="button" class="umLink" data-act="copyFrom" data-id="${esc(left.id)}">${esc(T(`${userName(left)} profilini kopyala`, `Copy ${userName(left)}’s profile`))}</button>` : ''}</p>
+      <div class="umTableWrap">${rows.length ? `<table class="umTable umCompareTable"><thead><tr><th>${esc(T('Yetki', 'Permission'))}</th><th>${esc(userName(left))}</th><th>${esc(userName(right))}</th></tr></thead>
+        <tbody>${rows.map(code => `<tr${Boolean(a.get(code)) !== Boolean(b.get(code)) ? ' class="isDiff"' : ''}><td title="${esc(code)}">${esc(permissionText(code))}</td><td>${cell(a.get(code))}</td><td>${cell(b.get(code))}</td></tr>`).join('')}</tbody></table>`
+        : emptyState(T('İki kullanıcının yetkileri aynı.', 'Both users have the same permissions.'))}</div>
     </section>`;
   }
 
@@ -1627,7 +2105,7 @@
     const targets = [...store.copy.targetIds].map(userById).filter(Boolean);
     if ((!source && !(sourceTemplate && sourceTemplate.entryCount)) || !targets.length) return;
     const sourceName = templateMode ? `Standard ${roleLabel(store.copy.templateRole)}` : userName(source);
-    const codes = source ? (source.directPermissions || []).map(item => item.permission) : [];
+    const codes = source ? (source.directPermissions || []).filter(item => !String(item.id || '').startsWith('bundle:')).map(item => item.permission) : [];
     const replace = store.copy.mode === 'REPLACE';
     const categories = JSON.parse(JSON.stringify(store.copy.categories));
     if (templateMode) { categories.userPermissions = false; categories.organization = {}; }
@@ -1725,13 +2203,17 @@
       case 'close': close(); return;
       case 'retry': reload(); return;
       case 'iamRefresh': void refreshDirectory(); return;
+      case 'horizonAssign': openHorizonDefaultDialog(id ? [id] : [...store.selectedIds]); return;
+      case 'horizonClear': openHorizonClearDialog(id); return;
       case 'iamInitialize': void initializeDirectory(); return;
+      case 'iamAdopt': openAdoptDialog(); return;
       case 'section':
         if (store.roleDirty && store.section === 'roles' && id !== 'roles' && !confirm(T('Rol yetkilerinde kaydedilmemiş değişiklikler var. Bırakılsın mı?', 'Role permissions have unsaved changes. Discard them?'))) return;
         if (id !== 'roles') { store.roleDirty = false; store.roleDraft = JSON.parse(JSON.stringify(store.roleDefinitions)); }
         store.section = id; render(); return;
       case 'statusFilter': store.statusFilter = id; store.selectedIds.clear(); render(); return;
       case 'toggleFilters': store.filtersOpen = !store.filtersOpen; render(); return;
+      case 'toggleSourceRecords': store.showSourceRecords = !store.showSourceRecords; store.selectedIds.clear(); render(); return;
       case 'clearFilters': store.filters = { role: '', mag: '', mmyg: '', managerId: '' }; store.search = ''; render(); return;
       case 'clearSelection': store.selectedIds.clear(); render(); return;
       case 'newUser': openCreateDialog(''); return;
@@ -1776,11 +2258,42 @@
           body: JSON.stringify({ module: store.horizonModule }),
         }), { successMessage: T('Kişisel ufuk sıfırlandı.', 'The personal horizon was reset.') });
         return;
+      case 'tempRevoke': {
+        const grantId = trigger.dataset.grant;
+        const grant = list((userById(id) || {}).temporaryPermissions).find(item => item.id === grantId);
+        openDialog(T('Süreli Yetkiyi Geri Al', 'Revoke Temporary Permission'),
+          `<p class="umConfirmText">${esc(nameOf(id))} · ${esc(grant ? permissionText(grant.permission) : '')}</p>
+           <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(T('Artık gerekli değil.', 'No longer needed.'))}"></label>`,
+          { confirmLabel: T('Geri Al', 'Revoke'), danger: true, onSubmit: async data => {
+            const ok = await mutate(() => send(`/api/iam/users/${encodeURIComponent(id)}/temporary-grants/${encodeURIComponent(grantId)}`, 'DELETE', { reason: clean(data.get('reason')) }),
+              { successMessage: T('Süreli yetki geri alındı.', 'Temporary permission revoked.') });
+            if (ok) closeDialog();
+          } });
+        return;
+      }
       case 'activate': setStatus(id, 'ACTIVE'); return;
       case 'deactivate': setStatus(id, 'INACTIVE'); return;
       case 'password': openPasswordDialog(id); return;
       case 'copyFrom': store.section = 'copy'; store.copy.sourceType = 'user'; store.copy.sourceId = id; store.copy.targetIds.clear(); render(); return;
       case 'openExisting': closeDialog(); showUser(id); return;
+      case 'iamExport': void downloadExport(); return;
+      case 'importClear': store.importPreview = null; render(); return;
+      case 'importApply': openImportApplyDialog(); return;
+      case 'bundleEdit': store.bundleEditId = id || ''; render(); return;
+      case 'bundleDelete': {
+        const bundle = store.roleBundles.find(item => item.id === id);
+        if (!bundle) return;
+        openDialog(T('Ek Rolü Sil', 'Delete Extra Role'), `<p class="umConfirmText">${esc(bundleName(bundle))}</p>
+          <p class="umWarn">${esc(T(`${bundle.memberIds.length} kişiden bu ek rolün yetkileri kaldırılacak. Kişiye ayrıca verilmiş yetkiler etkilenmez.`, `This extra role’s permissions will be removed from ${bundle.memberIds.length} people. Permissions granted to them separately are not affected.`))}</p>
+          <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(T('Ek rol kaldırıldı.', 'Extra role removed.'))}"></label>`,
+          { confirmLabel: T('Sil', 'Delete'), danger: true, onSubmit: async data => {
+            await send('/api/iam/role-bundles', 'POST', { bundle: { id }, remove: true, reason: clean(data.get('reason')), confirmCritical: true });
+            store.bundleEditId = ''; closeDialog(); await reload({ silent: true });
+            toast(T('Ek rol silindi.', 'The extra role was deleted.'));
+          } });
+        return;
+      }
+      case 'compareWith': store.section = 'compare'; store.compare.leftId = id; if (store.compare.rightId === id) store.compare.rightId = ''; render(); return;
       case 'bulkActivate': bulkStatus('ACTIVE'); return;
       case 'bulkDeactivate': bulkStatus('INACTIVE'); return;
       case 'bulkManager': openBulkManagerDialog(); return;
@@ -1790,6 +2303,8 @@
       case 'roleTab': store.roleTab = id; render(); return;
       case 'templateRole': store.template.roleId = id; render(); return;
       case 'saveTemplate': openTemplateSaveDialog(); return;
+      case 'roleHorizonSet': openRoleHorizonDialog(id, false); return;
+      case 'roleHorizonClear': openRoleHorizonDialog(id, true); return;
       case 'resetTemplate': openTemplateResetDialog(); return;
       case 'copySourceType': store.copy.sourceType = id === 'template' ? 'template' : 'user'; if (store.copy.sourceType === 'template') { store.copy.categories.userPermissions = false; Object.keys(store.copy.categories.organization).forEach(key => { store.copy.categories.organization[key] = false; }); if (!(store.workspaceTemplates[store.copy.templateRole] || {}).entryCount) store.copy.templateRole = ROLE_ORDER.find(role => (store.workspaceTemplates[role] || {}).entryCount) || 'buyer'; } render(); return;
       case 'toggleCategory':
@@ -1846,6 +2361,13 @@
     if (copySearch) { store.copySearch = copySearch.value; focusTarget = { selector: '[data-um-copysearch]' }; render(); return; }
     const copySourceSearch = event.target.closest('[data-um-copysourcesearch]');
     if (copySourceSearch) { store.copySourceSearch = copySourceSearch.value; focusTarget = { selector: '[data-um-copysourcesearch]' }; render(); return; }
+    // Üye araması yeniden çizmez: işaretlenmiş ama kaydedilmemiş seçimler korunur.
+    const memberSearch = event.target.closest('[data-um-bundlemembersearch]');
+    if (memberSearch) {
+      const query = norm(memberSearch.value);
+      shell.querySelectorAll('[data-um-bundlemember]').forEach(row => { row.hidden = Boolean(query) && !row.dataset.umBundlemember.includes(query); });
+      return;
+    }
     const templateSearch = event.target.closest('[data-um-templatesearch]');
     if (templateSearch) { store.template.search = templateSearch.value; focusTarget = { selector: '[data-um-templatesearch]' }; render(); return; }
   }
@@ -1893,6 +2415,12 @@
     if (horizonModule) { store.horizonModule = horizonModule.value; store.horizonConnectionId = ''; render(); return; }
     const horizonConnection = event.target.closest('[data-um-horizonconnection]');
     if (horizonConnection) { store.horizonConnectionId = horizonConnection.value; return; }
+    const importFile = event.target.closest('[data-um-importfile]');
+    if (importFile) { void previewImport(importFile.files && importFile.files[0]); return; }
+    const comparePick = event.target.closest('[data-um-compare]');
+    if (comparePick) { store.compare[comparePick.dataset.umCompare] = comparePick.value; render(); return; }
+    const compareDiff = event.target.closest('[data-um-comparediff]');
+    if (compareDiff) { store.compare.diffOnly = compareDiff.checked; render(); return; }
     const copySource = event.target.closest('[data-um-copysource]');
     if (copySource) { store.copy.sourceId = copySource.value; store.copy.targetIds.delete(copySource.value); render(); return; }
     const copyTemplate = event.target.closest('[data-um-copytemplate]');
@@ -1964,6 +2492,24 @@
       }
       mutate(() => saveUser(id, patch), { successMessage: T('Kullanıcı kaydedildi.', 'The user was saved.') })
         .then(ok => { if (ok) { store.detailTab = 'summary'; render(); } });
+      return;
+    }
+    if (kind === 'bundle') {
+      const payload = {
+        bundle: { id, nameTr: clean(data.get('nameTr')), nameEn: clean(data.get('nameEn')), description: clean(data.get('description')), permissions: data.getAll('permission') },
+        memberIds: data.getAll('member'), reason: clean(data.get('reason')), confirmCritical: true,
+      };
+      if (!payload.bundle.permissions.length) { toast(T('Ek role en az bir yetki seçin.', 'Select at least one permission for the extra role.')); return; }
+      mutate(async () => { const result = await send('/api/iam/role-bundles', 'POST', payload); store.bundleEditId = result.bundle ? result.bundle.id : ''; },
+        { successMessage: T('Ek rol kaydedildi ve üyelerine uygulandı.', 'The extra role was saved and applied to its members.') });
+      return;
+    }
+    if (kind === 'tempGrant') {
+      const day = clean(data.get('validUntil'));
+      // Seçilen günün sonuna kadar geçerli (yerel saat).
+      const until = day ? new Date(`${day}T23:59:59`).toISOString() : '';
+      mutate(() => send(`/api/iam/users/${encodeURIComponent(id)}/temporary-grants`, 'POST', { permission: clean(data.get('permission')), validUntil: until, reason: clean(data.get('reason')) }),
+        { successMessage: T('Süreli yetki verildi.', 'Temporary permission granted.') });
       return;
     }
     if (kind === 'grants') {
