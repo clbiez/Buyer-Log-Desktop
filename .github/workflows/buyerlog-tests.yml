@@ -34,6 +34,7 @@ jobs:
           node scripts/ci-test-plan.js "$RUNNER_TEMP/buyerlog-changes.txt" >> "$GITHUB_OUTPUT"
       - name: Validate release request metadata
         if: steps.plan.outputs.mode == 'metadata'
+        working-directory: .
         shell: bash
         run: |
           node -e "for(const p of ['.github/release-requests/test.json','.github/release-requests/stable.json']) { const r=require('./'+p); if(!/^\\d+\\.\\d+\\.\\d+$/.test(String(r.version))) process.exit(1); }"
