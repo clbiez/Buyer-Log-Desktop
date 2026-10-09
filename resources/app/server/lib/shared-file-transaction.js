@@ -112,10 +112,18 @@ async function withFileLeaseAsync(file,operation,options={}){
       }catch(error){
         if(error.code!=='EEXIST')throw error;
         waited=true;
-        let stat=null,owner=null;
+        /* ownerRaw: owner.json exactly as read (null = file missing). An empty or
+           truncated owner.json (writer killed mid-write, OneDrive partial sync)
+           used to make the "unchanged" re-check below impossible, so a stale lock
+           blocked every write forever (field log: 41-47 h, 1188 rejected
+           checkpoints, user edits lost on restart). The re-check now compares the
+           raw content, which also works when it is not valid JSON. */
+        let stat=null,owner=null,ownerRaw=null;
         try{
           stat=await fsp.stat(lockDir);
-          try{owner=JSON.parse(await fsp.readFile(path.join(lockDir,'owner.json'),'utf8'));}catch(readOwnerError){if(readOwnerError.code!=='ENOENT'&&readOwnerError.name!=='SyntaxError')throw readOwnerError;}
+          try{ownerRaw=await fsp.readFile(path.join(lockDir,'owner.json'),'utf8');}catch(readOwnerError){if(readOwnerError.code!=='ENOENT')throw readOwnerError;}
+          if(ownerRaw!=null){try{owner=JSON.parse(ownerRaw);}catch(_){owner=null;}}
+          if(owner&&typeof owner!=='object')owner=null;
         }catch(readError){if(readError.code==='ENOENT')continue;throw readError;}
         const createdMs=Date.parse(owner&&(owner.createdAt||owner.startedAt)||'')||stat.mtimeMs;
         const ageMs=Math.max(0,Date.now()-createdMs);
@@ -128,9 +136,12 @@ async function withFileLeaseAsync(file,operation,options={}){
         if(ownerDead||orphanedSameOwner||expired||ownerMissingTooLong){
           let unchanged=false;
           try{
-            const current=JSON.parse(await fsp.readFile(path.join(lockDir,'owner.json'),'utf8'));
-            unchanged=Boolean(owner&&current.token===owner.token);
-          }catch(readOwnerError){unchanged=!owner&&readOwnerError.code==='ENOENT';}
+            const currentRaw=await fsp.readFile(path.join(lockDir,'owner.json'),'utf8');
+            if(owner){
+              let current=null;try{current=JSON.parse(currentRaw);}catch(_){current=null;}
+              unchanged=Boolean(current&&current.token===owner.token);
+            }else unchanged=currentRaw===ownerRaw;
+          }catch(readOwnerError){unchanged=!owner&&ownerRaw==null&&readOwnerError.code==='ENOENT';}
           if(unchanged){
             try{
               await fsp.rm(lockDir,{recursive:true,force:true});
