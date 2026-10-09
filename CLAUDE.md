@@ -73,12 +73,51 @@ yerel-öncelikli sipariş/koleksiyon yönetimi. Arayüz ve yorumlar Türkçe.
 8. Gerçek UI değişikliğini mümkünse gerçek tarayıcıda doğrula. `server/*.js`
    değiştiyse restart gereksinimini bildir; istemci dosyalarında yenileme yeter.
 
-Test runner: `npm test` → `node --test tests/*.test.js`.
+Test runner: `npm test` → `tests/run-tests.js` (batch'lenmiş Node testleri).
+Dosya-adı filtresi: `npm test -- collection` gibi; filtreler OR mantığındadır.
 
 - Saf `server/lib/*.js` kodunda canlı unit test tercih et.
 - DOM'a sıkı bağlı büyük `public/app-main.js` için mevcut
   kaynak-sözleşme test desenini kullan.
 - Bir testi silmeden/gevşetmeden önce koruduğu regression gerekçesini oku.
+
+## 3.1 · Kota dostu GitHub / release iş akışı (zorunlu)
+
+- İşi önce riskine göre ayır: **P0** veri kaybı/güvenlik/bozuk hesaplama,
+  **P1** güvenilirlik/perf/CI, **P2** özellik, **P3** görsel kozmetik.
+  Aktif P0'ı çözmeden ilgisiz P2/P3 işi yayınlama.
+- Aynı modüldeki birbiriyle ilişkili istekleri aynı görev/PR'da topla;
+  bağımsız yüksek riskli değişiklikleri tek PR'a yığma. Aynı modülde
+  çakışan paralel agent/PR çalışması başlatma.
+- Normal teslim: hedefli test → PR → CI başarılı → inceleme → merge.
+  **Merge, TEST üretimi ve STABLE terfisi ayrı kararlardır.** Kullanıcı
+  özellikle yayın istemedikçe PR/merge sonrasında otomatik TEST/STABLE
+  tetikleme; varsayılan olarak değişiklikleri sonraki TEST'te biriktir.
+- PR'larda yalnız doküman/yayın talebi değiştiğinde metadata kontrolü,
+  yalnız CSS ve metadata değiştiğinde odaklı UI testi yeterlidir. İş kuralı,
+  SYNC, ASAS/PLM, refresh, canonical field, yetki, kod, test veya
+  workflow değişikliği tam CI regresyonundan geçer. CI kapsamını daraltmak
+  için işlevsel değişikliği yanlışlıkla "docs/CSS-only" diye sınıflandırma.
+- Her TEST yayını öncesinde **tam regresyon** ve release kabul kontrolleri
+  zorunludur. STABLE yalnız doğrulanmış TEST'in **aynı imzalı baytlarını**
+  yeniden derlemeden terfi ettirir. Fail, skip veya hiç koşmamış zorunlu
+  kontrolü başarılı sayma; PR'ı zorla merge etme.
+- TEST/STABLE için yalnız yayın isteği açılacaksa ayrı PR açma:
+  mevcut `workflow_dispatch` kullan. Release isteği için yeni versiyon
+  geliştirme PR'ından bağımsız commit gerekmiyor.
+- Kurulum ZIP'i ve TEST ZIP'i GitHub Actions artifact deposuna yüklenmez;
+  doğrulanmış dosyalar doğrudan release deposuna gider. Kota sorunu varsa
+  aynı başarısız upload'ı tekrarlama. Var olan workflow artifact'lerini
+  silmeden önce gerçekten gereken arşivleri koru; silme için kullanıcı
+  yetkisi/erişimi gereklidir.
+- `updates/vVERSION` immutable sürüm dalı yalnız versiyon değişiminde
+  kaydedilir. Aynı sürüm zaten kaydedilmişse üzerine yazılmaz; farklı
+  kaynak için yeni SemVer gerekir. Normal kod commit'i sürüm dalı yaratmaz.
+- `main` branch protection / required CI kullanıcı veya repo yöneticisi
+  tarafından etkinleştirilmeden "zorunlu koruma kuruldu" deme.
+- Finalde PR bağlantısını, CI sonucunu, merge durumunu ve TEST/STABLE
+  yayın durumu (yayınlanmadıysa açıkça) ayrı ayrı bildir; başarısız veya
+  atlanan aşamaya başarı deme.
 
 ## 4 · Değişmez mimari kurallar
 
