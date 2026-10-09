@@ -52,7 +52,7 @@
     headingEditor: null,
     refreshTimer: null, heartbeatTimer: null,
   };
-  let snapshotSignature='',refreshPending=null;
+  let snapshotSignature='',refreshPending=null,classificationSignature='';
 
   async function api(url, options = {}) {
     const response = await fetch(url, {
@@ -75,6 +75,9 @@
     if(signature===snapshotSignature){directoryLoadedAt=Date.now();return false;}
     snapshotSignature=signature;
     rebuildDirectory();
+    const classification=JSON.stringify(S.data.records.filter(record=>record.dtrStatus==='NON-DTR').map(record=>[record.manufacturer,...(record.aliases||[])]).sort());
+    if(classificationSignature && classificationSignature!==classification)window.dispatchEvent(new CustomEvent('bl:manufacturer-classification-changed'));
+    classificationSignature=classification;
     /* v7.0.229 — Üreticiler sayfası kartları bu rehberden eşler; rehber her
        değiştiğinde (kayıt, alternatif ad, kilit) sayfa yeniden eşleme yapar. */
     try { window.dispatchEvent(new CustomEvent('bl:manufacturer-directory-changed', { detail: { ...S.data } })); } catch (_) { /* eski tarayıcı */ }
@@ -232,6 +235,7 @@
         <label class="egField">${esc(T('Telefon', 'Phone'))}<input type="text" data-eg-input="phone" value="${esc(draft.phone)}" maxlength="80"></label>
         <label class="egField">${esc(T('Ülke', 'Country'))}<select data-eg-input="countryId"><option value="">${esc(T('— seçilmedi —', '— none —'))}</option>${optionsHtml(S.data.countries, draft.countryId)}</select></label>
         <label class="egField">${esc(T('Üretim alanı', 'Production area'))}<select data-eg-input="typeId"><option value="">${esc(T('— seçilmedi —', '— none —'))}</option>${optionsHtml(S.data.types, draft.typeId)}</select></label>
+        <label class="egField">${esc(T('DTR / Non-DTR', 'DTR / Non-DTR'))}<select data-eg-input="dtrStatus"><option value="DTR"${draft.dtrStatus !== 'NON-DTR' ? ' selected' : ''}>DTR</option><option value="NON-DTR"${draft.dtrStatus === 'NON-DTR' ? ' selected' : ''}>Non-DTR</option></select><small>${esc(T('Varsayılan DTR. Bu ayar LFL sınıflandırmasını belirler; CP ve Orders lisansör alanlarını değiştirmez.', 'DTR by default. This setting determines LFL classification; it does not change CP or Orders licensor fields.'))}</small></label>
         <label class="egField egFieldWide">${esc(T('Not', 'Note'))}<textarea data-eg-input="note" rows="2" maxlength="2000">${esc(draft.note)}</textarea></label>
       </div>
       <footer class="egCardFoot egEditFoot">
@@ -278,7 +282,7 @@
       <header class="egDetailHead"><div><span>${esc(T('Üretici kaydı','Manufacturer record'))}</span><h3>${esc(record.manufacturer||T('(adsız üretici)','(unnamed manufacturer)'))}</h3></div>
         ${other?`<span class="egLockBadge"><svg class="ic"><use href="#i-user"/></svg>${esc(other.userName||other.userId)} ${esc(T('düzenliyor','is editing'))}</span>`:`<button type="button" class="egBtn egPrimary" data-eg-edit="${esc(record.id)}"><svg class="ic"><use href="#i-pencil"/></svg>${esc(T('Düzenle','Edit'))}</button>`}
       </header>
-      <div class="egDetailGrid"><div><label>${esc(T('Ülke','Country'))}</label><strong>${esc(country||'—')}</strong></div><div><label>${esc(T('Üretim alanı','Production area'))}</label><strong>${esc(type||'—')}</strong></div><div><label>${esc(T('İlgili kişi','Contact'))}</label><strong>${esc(record.contact||'—')}</strong></div><div><label>${esc(T('Telefon','Phone'))}</label><strong>${esc(record.phone||'—')}</strong></div></div>
+      <div class="egDetailGrid"><div><label>DTR / Non-DTR</label><strong>${esc(record.dtrStatus || 'DTR')}</strong></div><div><label>${esc(T('Ülke','Country'))}</label><strong>${esc(country||'—')}</strong></div><div><label>${esc(T('Üretim alanı','Production area'))}</label><strong>${esc(type||'—')}</strong></div><div><label>${esc(T('İlgili kişi','Contact'))}</label><strong>${esc(record.contact||'—')}</strong></div><div><label>${esc(T('Telefon','Phone'))}</label><strong>${esc(record.phone||'—')}</strong></div></div>
       <section class="egRecipientsPanel"><div class="egPanelTitle"><div><strong>${esc(T('E-posta alıcıları','E-mail recipients'))}</strong><span>${parseRecipients(record.email).filter(r=>!r.invalid).length}</span></div><p>${esc(T('Prepare E-Mail ve Send to Pricing bu alıcı listesini doğrudan kullanır.','Prepare E-Mail and Send to Pricing use this recipient list directly.'))}</p></div><div class="egRecipientChips isReadOnly">${recipientChipsHtml(record.email,false)}</div></section>
       ${(record.aliases||[]).length?`<section class="egNotePanel"><label>${esc(T('Alternatif adlar','Alternative names'))}</label><p>${esc(record.aliases.join(' · '))}</p></section>`:''}
       <section class="egNotePanel"><label>${esc(T('Not','Note'))}</label><p>${esc(record.note||'—')}</p></section>

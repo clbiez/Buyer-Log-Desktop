@@ -324,7 +324,7 @@ function backfillLegacyNoteAuthors(notesmap) {
   return map;
 }
 
-function loadOverrides() {
+function loadOverrides({ projectManufacturers = true } = {}) {
   ensureDataDir();
   // readJsonWithBackup delta yetkili fazda kaydı motordan, aksi hâlde eski
   // dosyadan getirir; aşağıdaki normalizasyon iki kaynağa da aynı uygulanır.
@@ -376,6 +376,11 @@ function loadOverrides() {
   // Shared Hub modunda CP iş verisinin kanonik sahibi satır bazlı cp-order
   // kayıtlarıdır. Eski map şekli renderer/business logic için yalnız projection.
   cpSharedStore.overlay(merged);
+  if (projectManufacturers) {
+    const directory = require('./lib/email-groups-store');
+    const cards = directory.migrateNonDtrManufacturers(merged.nonDtrManufacturers);
+    merged.nonDtrManufacturers = directory.nonDtrManufacturers(merged.nonDtrManufacturers, cards);
+  }
   return merged;
 }
 function protectCriticalOverrideSections(current, incoming) {
@@ -400,7 +405,13 @@ function protectCriticalOverrideSections(current, incoming) {
 }
 function saveOverrides(overrides, expectedRevision = null) {
   ensureDataDir();
-  const protectedOverrides = protectCriticalOverrideSections(loadOverrides(), overrides);
+  const current = loadOverrides({ projectManufacturers: false });
+  const protectedOverrides = protectCriticalOverrideSections(current, overrides);
+  // Kart sınıflandırması projection'dır; ilgisiz kayıtlar eski taşıma
+  // kaynağını değiştirmemeli. Yalnız açık legacy bölüm yazımı revizyon artırır.
+  if (Number(protectedOverrides._revisions.nonDtrManufacturers || 0) <= Number(current._revisions.nonDtrManufacturers || 0)) {
+    protectedOverrides.nonDtrManufacturers = current.nonDtrManufacturers;
+  }
   return saveRevisioned(OVERRIDES_FILE, protectedOverrides, defaultOverrides, expectedRevision, 'Sipariş geçersiz kılma verileri');
 }
 function replacePricingRules(rules, expectedRevision = null) {

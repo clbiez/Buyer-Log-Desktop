@@ -51,19 +51,12 @@ test('Buying Sample approval requires a manufacturer and stays inside the active
   assert.match(html, /target\.closest\('\.kolBuyingSampleApprove'\).*visible\.closest.*target\.closest\('td'\)/s);
 });
 
-test('Non-DTR manufacturer input uses the shared CP Sub-Mfr suggestion popup', () => {
-  const start = html.indexOf('function openNonDtrManufacturersModal(){');
-  /* v7.81: eski menü dinleyicisi silindi; sınır fonksiyonun kendi sonundan
-     alınır. indexOf(-1) boş bir dilime bakıp testi SESSİZCE geçirirdi. */
-  const end = html.indexOf('\nfunction ', start + 10);
-  assert.ok(start >= 0 && end > start);
-  const block = html.slice(start, end);
-  assert.match(block, /id="_nonDtrMfrInput" class="kolSuggestCell" data-kind="submfr"/);
-  assert.doesNotMatch(block, /_nonDtrMfrOptions|<datalist/);
-  assert.match(block, /input\.addEventListener\('input',openManufacturerSuggestions\)/);
-  assert.match(block, /input\.addEventListener\('focus',openManufacturerSuggestions\)/);
-  assert.match(block, /showSubmfrDrop\(input\)/);
-  assert.match(block, /closeSubmfrDrop\(\)/);
+test('legacy Non-DTR entry point opens Manufacturers and the card editor suggests exact ASAS names', () => {
+  assert.match(html, /function openNonDtrManufacturersModal\(\)\{ window\.switchTab\('manufacturers'\); \}/);
+  assert.doesNotMatch(html, /id="_nonDtrMfrInput"/);
+  const editor = fs.readFileSync(path.join(root, 'public', 'email-groups.js'), 'utf8');
+  assert.match(editor, /data-eg-input="manufacturer"[^>]*list="egAsasNames"/);
+  assert.match(editor, /data-eg-input="dtrStatus"/);
 });
 
 test('shared manufacturer suggestions include CP, Non-DTR, quotation and Buying Sample values', () => {

@@ -1,0 +1,60 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-dtr-cards-'));
+process.env.BUYER_LOG_SERVER_DATA_ROOT=root;
+const store=require('../server/lib/email-groups-store');
+const actor={id:'u1',name:'Demo'};
+test.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+test('legacy exceptions preserve details and aliases; defaults are DTR; migration never reverts edits',()=>{
+ const a=store.createRecord({manufacturer:'Factory One',aliases:['Örnek Üretici'],email:'demo@example.com',note:'keep'},actor).record;
+ const b=store.createRecord({manufacturer:'Factory Two'},actor).record;
+ assert.equal(b.dtrStatus,'DTR');
+ const legacy=[' ÖRNEK   ÜRETİCİ ','Legacy Factory'];
+ const migrated=store.migrateNonDtrManufacturers(legacy),one=migrated.records.find(r=>r.id===a.id);
+ assert.equal(one.dtrStatus,'NON-DTR');assert.equal(one.email,'demo@example.com');assert.equal(one.note,'keep');assert.deepEqual(one.aliases,['Örnek Üretici']);
+ assert.equal(migrated.records.find(r=>r.id===b.id).dtrStatus,'DTR');
+ assert.equal(migrated.records.find(r=>r.manufacturer==='Legacy Factory').dtrStatus,'NON-DTR');
+ assert.equal(store.migrateNonDtrManufacturers(legacy)._revision,migrated._revision);
+ const lock=store.acquireLock(a.id,actor);store.updateRecord(a.id,{dtrStatus:'DTR'},actor,lock.revision);
+ assert.equal(store.migrateNonDtrManufacturers(legacy).records.find(r=>r.id===a.id).dtrStatus,'DTR');
+ assert.deepEqual(store.nonDtrManufacturers(legacy),['Legacy Factory']);
+});
+test('locked exceptions remain effective and retry after release',()=>{
+ const record=store.createRecord({manufacturer:'Locked Factory'},actor).record;store.acquireLock(record.id,actor);
+ const legacy=['Locked Factory'];assert.equal(store.migrateNonDtrManufacturers(legacy).records.find(r=>r.id===record.id).dtrStatus,'DTR');
+ assert.ok(store.nonDtrManufacturers(legacy).includes('Locked Factory'));store.releaseLock(record.id,actor);
+ assert.equal(store.migrateNonDtrManufacturers(legacy).records.find(r=>r.id===record.id).dtrStatus,'NON-DTR');
+});
+test('explicit choices, conflicts, locks, renames and deletions survive migration',()=>{
+ const explicit=store.createRecord({manufacturer:'Explicit Factory',dtrStatus:'DTR'},actor).record;
+ store.migrateNonDtrManufacturers(['Explicit Factory']);assert.equal(store.loadStore().records.find(r=>r.id===explicit.id).dtrStatus,'DTR');
+ const legacy=['Rename Factory'],migrated=store.migrateNonDtrManufacturers(legacy),record=migrated.records.find(r=>r.manufacturer===legacy[0]);
+ assert.throws(()=>store.updateRecord(record.id,{dtrStatus:'DTR'},actor,migrated._revision),/kilidi/);
+ const lock=store.acquireLock(record.id,actor);assert.throws(()=>store.updateRecord(record.id,{dtrStatus:'DTR'},actor,lock.revision-1),/değiştirildi/);
+ store.releaseLock(record.id,actor);store.linkRecord(record.id,'Renamed Factory',actor);
+ assert.ok(store.nonDtrManufacturers(legacy).includes('Rename Factory'));assert.ok(store.nonDtrManufacturers(legacy).includes('Renamed Factory'));
+ const last=store.acquireLock(record.id,actor);store.deleteRecord(record.id,actor,last.revision);
+ assert.ok(!store.migrateNonDtrManufacturers(legacy).records.some(r=>r.id===record.id||r.manufacturer===legacy[0]));
+ assert.ok(!store.nonDtrManufacturers(legacy).includes('Rename Factory'));
+});
+
+test('independent migrations use the same record ID, and raw legacy data survives unrelated writes',()=>{
+ const before=store.loadStore();
+ store.saveStore({...store.defaultStore(),records:[],migratedNonDtrNames:[]},before._revision);
+ const a=store.migrateNonDtrManufacturers(['Independent Factory']);
+ store.saveStore({...store.defaultStore(),records:[],migratedNonDtrNames:[]},a._revision);
+ const b=store.migrateNonDtrManufacturers(['INDEPENDENT   FACTORY']);
+ assert.equal(a.records[0].id,b.records[0].id);
+ store.saveStore(before,b._revision);
+ const db=require('../server/db');
+ const file=path.join(root,'overrides.json');
+ fs.writeFileSync(file,JSON.stringify({nonDtrManufacturers:['Raw Legacy Factory'],_revisions:{nonDtrManufacturers:1}}));
+ const projected=db.loadOverrides();assert.ok(projected.nonDtrManufacturers.includes('Raw Legacy Factory'));
+ const card=store.loadStore().records.find(r=>r.manufacturer==='Raw Legacy Factory');
+ const locked=store.acquireLock(card.id,actor);store.updateRecord(card.id,{dtrStatus:'DTR'},actor,locked.revision);
+ const edited=db.loadOverrides();assert.ok(!edited.nonDtrManufacturers.includes('Raw Legacy Factory'));
+ db.saveOverrides({...edited,asassource:'keep'});
+ assert.deepEqual(JSON.parse(fs.readFileSync(file)).nonDtrManufacturers,['Raw Legacy Factory']);
+ assert.ok(!db.loadOverrides().nonDtrManufacturers.includes('Raw Legacy Factory'));
+ assert.throws(()=>store.createRecord({manufacturer:'Invalid',dtrStatus:'wrong'},actor),/Invalid DTR/);
+});

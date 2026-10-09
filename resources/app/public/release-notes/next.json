@@ -406,6 +406,39 @@
         "tr": "Bangladeş, Çin, Hindistan Kuzey ve Myanmar dosyaları \"model değişti\" ya da \"yeniden hesaplanamadı\" diye reddediliyordu. Sebep: pivotlarda etiketler yinelendiği için ara toplam satırları yanlış seviyeye okunuyordu; ENDEKSMATİK ekranında \"Genel Toplam\" seçimi desteklenmiyordu; paylar E15–E18'de, hedefler C22–C25'te dururken Buyer Log hedefleri E sütununda arıyordu. Artık bu yerleşim tanınıyor, Excel'in endeks, pay ve hedef sonuçları Buyer Log'un yeniden hesabıyla karşılaştırılıyor; tutmayan dosya yine reddediliyor.",
         "en": "Bangladesh, China, India North and Myanmar workbooks were rejected as \"model changed\" or \"could not be recalculated\". Causes: pivots repeat item labels, so subtotal rows were read at the wrong level; a \"Grand Total\" selection on the ENDEKSMATİK screen was not supported; and shares sit in E15–E18 and targets in C22–C25 while Buyer Log looked for targets in column E. This layout is now recognised, and Excel's index, share and target results are compared with Buyer Log's own recalculation; a workbook that does not match is still rejected."
       }
+    },
+    {
+      "id": "manufacturer-dtr-card-status",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler / Veri Yönetimi",
+        "en": "Manufacturers / Data Management"
+      },
+      "title": {
+        "tr": "DTR / Non-DTR durumunu üretici kartından yönetin",
+        "en": "Manage DTR / Non-DTR on the manufacturer card"
+      },
+      "path": {
+        "tr": "Üreticiler › Kartı düzenle › DTR / Non-DTR",
+        "en": "Manufacturers › Edit card › DTR / Non-DTR"
+      },
+      "body": {
+        "tr": "Üreticiler varsayılan olarak DTR gelir. Eski Non-DTR istisnaları, alternatif adlar ve iletişim bilgileri korunarak üretici kartlarına aktarılır; kartı olmayan istisnalar için kayıt açılır. Veri Yönetimi’ndeki ayrı liste kaldırıldı. Karttaki değişiklik LFL sınıflandırmasını günceller; CP ve Orders lisansör alanları korunur.",
+        "en": "Manufacturers default to DTR. Legacy Non-DTR exceptions move to manufacturer cards while preserving aliases and contact details; exceptions without a card get a record. The separate Data Management list is removed. Card edits update LFL classification while preserving CP and Orders licensor fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturer-dtr-status.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üretici kartında demo Non-DTR kaydı ve DTR / Non-DTR seçimi",
+          "en": "Demo Non-DTR record and DTR / Non-DTR selection on a real Buyer Log manufacturer card"
+        },
+        "caption": {
+          "tr": "Varsayılan DTR; mevcut Non-DTR istisnaları üretici kartlarında korunur",
+          "en": "DTR by default; existing Non-DTR exceptions are preserved on manufacturer cards"
+        }
+      }
     }
   ]
 }

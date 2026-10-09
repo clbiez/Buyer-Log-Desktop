@@ -735,11 +735,7 @@
           hint: { tr: 'OPD tarih aralığı, sezon, üretim ülkesi, Licensor ve License bazlı royalty ve hologram hesapları.',
             en: 'Royalty and hologram calculations by OPD date range, season, production country, Licensor and License.' },
           run: () => openSuppFobRulesModal() },
-        { id: 'nondtr', requires: 'manageBusinessRules', icon: 'i-users-group',
-          label: { tr: 'Non-DTR Üreticiler', en: 'Non-DTR Manufacturers' },
-          hint: { tr: 'DTR dışı sayılan üreticiler; maliyet ve royalty hesabı bu listeye bakar.',
-            en: 'Manufacturers treated as non-DTR; cost and royalty calculations read this list.' },
-          run: () => openNonDtrManufacturersModal() },
+
       ],
     },
     {
