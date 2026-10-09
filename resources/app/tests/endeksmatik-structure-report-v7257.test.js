@@ -45,7 +45,7 @@ test('rapor başlıkları, ENDEKSMATİK formüllerini ve ayları açık yazar', 
   const report = structureReport(fixture.buildEndeksmatikWorkbook(), 'x.xlsx');
   assert.match(report, /boyut sütunları: MERCH MARKA YAS GRUP → B "Merch Marka Yaş Grup"/);
   assert.match(report, /ay sütunları: 6 \(202411 → 202702\)/);
-  assert.match(report, /C15 +sayı +=GETPIVOTDATA/);
+  assert.match(report, /C15 +sayı +=IFERROR\(VLOOKUP\(/);
   assert.match(report, /C11 +202607/);
   assert.match(report, /✔ kabul edilir: 4 klasman/);
 });

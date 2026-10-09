@@ -36,7 +36,8 @@ test('USD modeli başlıktan okunur, imza ve uzlaştırma geçer', () => {
   assert.deepEqual(snap.months, fixture.MONTHS);
   assert.ok(snap.validation.signature.ok);
   assert.ok(snap.validation.reconciliation.ok);
-  assert.equal(snap.validation.reconciliation.checks.length, 9);
+  // 4 Δ + 4 pay + TOPLAM + 4 hedef (v7.0.270 gerçek yerleşim)
+  assert.equal(snap.validation.reconciliation.checks.length, 13);
   // Klasman + her üst seviye (aşağı doldurma ve "Toplam X") + Genel Toplam
   const levels = new Set(snap.records.map(r => r[0]));
   assert.deepEqual([...levels].sort(), [0, 1, 2, 3, 4, 5]);
@@ -95,12 +96,12 @@ test('model değişti: antrepo ayı / yanlış pivot reddedilir', () => {
   }
 });
 
-test('v7.0.173 hedef hücreleri (E15..E18) farklı kurulmuşsa yükleme reddedilmez, uyarı kalır', () => {
+test('v7.0.173 hedef hücreleri (C22..C25) farklı kurulmuşsa yükleme reddedilmez, uyarı kalır', () => {
   // Gerçek dosyada görülen durum: E hücreleri B21'e ve C'ye bağlı değil.
   const other = model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook({ breakFormula: 'targetsElsewhere' }), 'x.xlsx');
   assert.ok(other.validation.signature.ok);
   assert.equal(other.validation.reconciliation.targets.verified, false);
-  assert.equal(other.validation.reconciliation.checks.length, 5, 'yalnız 4 Δ + TOPLAM uzlaşır');
+  assert.equal(other.validation.reconciliation.checks.length, 9, 'yalnız 4 Δ + 4 pay + TOPLAM uzlaşır');
   close(other.targetAdjustmentPct, 3, 1e-9);
   assert.ok(other.validation.warnings.some(w => /hedef hücreleri/.test(w)));
   // Hedef = Δ (düzeltmesiz): türetilen düzeltme %0 olarak raporlanır, varsayılan B21 kalır.
@@ -127,6 +128,33 @@ test('v7.0.184 anahtarlar eşleşmezse hata hangi sütunların okunduğunu ve ö
     assert.match(e.message, /eşleşen: 0\/0\/0\/0/);
     return true;
   });
+});
+
+test('v7.0.270 "öğe etiketlerini yinele" pivotunda ara toplamlar doğru seviyeye okunur', () => {
+  // Gerçek ülke dosyaları: ara toplam satırında üst etiketler de dolu
+  // ("CUW4 | Toplam CU4E | ∅ …"). Önceden bu satırlar "Toplam CU4E" adlı
+  // sahte bir MAG kaydı oluyordu ve MAG seviyesi uzlaşamıyordu.
+  const snap = model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook({ repeatLabels: true, selection: ['CUW4', 'CU4E', '', '', ''] }), 'x.xlsx');
+  assert.equal(snap.validation.reconciliation.level, 2);
+  assert.ok(snap.validation.reconciliation.ok);
+  assert.equal(snap.records.some(r => r.slice(1, 6).some(v => /toplam/i.test(v))), false, 'Toplam etiketi boyut değeri olmamalı');
+  const levels = new Set(snap.records.map(r => r[0]));
+  assert.deepEqual([...levels].sort(), [0, 1, 2, 3, 4, 5]);
+});
+
+test('v7.0.270 ENDEKSMATİK seçimi "Genel Toplam" ise en üst seviyeyle uzlaşır', () => {
+  const snap = model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook({ repeatLabels: true, grandTotal: true }), 'x.xlsx');
+  assert.equal(snap.validation.reconciliation.level, 0);
+  assert.ok(snap.validation.reconciliation.ok);
+  const r = model.calculate(snap, { level: 0, previousOrderMonth: '202507', newOrderMonth: '202607' });
+  assert.equal(r.levelLabel, 'Genel Toplam');
+});
+
+test('v7.0.270 Excel payları (E15..E18) Buyer Log paylarıyla karşılaştırılır', () => {
+  const snap = model.parseWorkbookBuffer(fixture.buildEndeksmatikWorkbook(), 'x.xlsx');
+  const pays = snap.validation.reconciliation.checks.filter(c => /pay$/.test(c.label));
+  assert.deepEqual(pays.map(c => c.cell), ['E15', 'E16', 'E17', 'E18']);
+  assert.ok(pays.every(c => c.ok));
 });
 
 test('uzlaştırma: Excel önbelleği yeniden hesapla tutmazsa reddedilir', () => {

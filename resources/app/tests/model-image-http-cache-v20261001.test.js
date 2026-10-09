@@ -35,7 +35,9 @@ for (const [name, source, signature] of [
 ]) {
   test(`${name} görsel yanıtı tarayıcı önbelleğinde gerçekten kalır (Pragma/Expires kaldırılır)`, () => {
     const body = routeBody(source, signature);
-    assert.match(body, /Cache-Control', 'private, max-age=31536000, immutable'/);
+    /* #482: paylaşılan Koleksiyon görseli başka hesaba önbellekten sızmasın diye
+       'private, no-store' alır; kişisel/CP görseli uzun ömürlü önbellekte kalır. */
+    assert.match(body, /Cache-Control', (?:sharedOwner \? 'private, no-store' : )?'private, max-age=31536000, immutable'/);
     assert.match(body, /res\.removeHeader\('Pragma'\)/);
     assert.match(body, /res\.removeHeader\('Expires'\)/);
     assert.ok(body.indexOf("removeHeader('Pragma')") < body.indexOf('res.sendFile('), 'başlıklar gönderimden önce temizlenmeli');
