@@ -44,17 +44,32 @@
   function clean(value) { return String(value == null ? '' : value).replace(/[\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim(); }
   function limit(value, max) { var text = clean(value); return text.length > max ? text.slice(0, max - 1).trim() + '…' : text; }
 
-  /* server/lib/plm-fabric-info.js "Kumaş kodu" kalıbı: yalnız metnin
-     başındaki "1234-" (3–8 hane). */
-  function codeOf(raw) {
-    var match = /^\s*(\d{3,8})\s*-\s*\S/.exec(String(raw == null ? '' : raw));
-    return match ? match[1] : '';
+  /* Kumaş kodu: kumaş metninin başındaki "1234-" ya da "100000627-"
+     (3–12 hane). Çok kumaşlı hücrede her kumaş "A - 3859-…", "B - 361819-…"
+     biçiminde harfle başlar; her biri ayrı karttır. */
+  var PART_RX = /(^|[\s;,|/])([A-Z])\s*[-–:]\s*(?=\d{3,12}\s*-\s*\S)/g;
+  var LEAD_RX = /^\s*(\d{3,12})\s*-\s*\S/;
+  function parts(raw) {
+    var text = String(raw == null ? '' : raw).replace(/\r/g, '');
+    var marks = [], match;
+    PART_RX.lastIndex = 0;
+    while ((match = PART_RX.exec(text))) marks.push({ label: match[2], start: match.index + match[1].length, body: match.index + match[0].length });
+    var segments = marks.length
+      ? marks.map(function (mark, index) { return { label: mark.label, text: text.slice(mark.body, index + 1 < marks.length ? marks[index + 1].start : text.length) }; })
+      : [{ label: '', text: text }];
+    var out = [];
+    segments.forEach(function (segment) {
+      var lead = LEAD_RX.exec(segment.text);
+      if (lead) out.push({ label: segment.label, code: lead[1], raw: clean(segment.text) });
+    });
+    return out;
   }
+  function codeOf(raw) { var list = parts(raw); return list.length ? list[0].code : ''; }
   function normalizeCode(value) {
     var text = clean(value);
-    return /^\d{3,8}$/.test(text) ? text : '';
+    return /^\d{3,12}$/.test(text) ? text : '';
   }
-  function bodyOf(raw) { return clean(raw).replace(/^\s*\d{3,8}\s*-\s*/, ''); }
+  function bodyOf(raw) { return clean(raw).replace(/^\s*\d{3,12}\s*-\s*/, ''); }
 
   /* Kaynak metindeki sayılar ("30/1", "150", "%100" → 30, 1, 150, 100). */
   function numberSet(text) {
@@ -85,9 +100,9 @@
      [Türkçe, İngilizce]; uzun terim önce eşleşir. */
   var TERMS = [
     ['Geri Dönüşümlü Pamuk', 'Recycled Cotton'], ['Geri Dönüşümlü Polyester', 'Recycled Polyester'], ['Organik Pamuk', 'Organic Cotton'], // i18n-ignore
-    ['İki İplik', 'Two Thread'], ['Üç İplik', 'Three Thread'], ['Süprem', 'Single Jersey'], ['Ribana', 'Rib'], ['Kaşkorse', 'Rib'], // i18n-ignore
-    ['Interlok', 'Interlock'], ['Pike', 'Pique'], ['Polar', 'Fleece'], ['Havlu', 'Terry'], ['Petek', 'Waffle'], ['Dalgıç', 'Scuba'], // i18n-ignore
-    ['Kadife', 'Velvet'], ['Triko', 'Knitwear'], ['Örme', 'Knit'], ['Dokuma', 'Woven'], ['Pamuk', 'Cotton'], ['Poliester', 'Polyester'], // i18n-ignore
+    ['İki İplik', 'Two Thread', 'type'], ['Üç İplik', 'Three Thread', 'type'], ['Süprem', 'Single Jersey', 'type'], ['Ribana', 'Rib', 'type'], ['Kaşkorse', 'Rib', 'type'], // i18n-ignore
+    ['Interlok', 'Interlock', 'type'], ['Pike', 'Pique', 'type'], ['Polar', 'Fleece', 'type'], ['Havlu', 'Terry', 'type'], ['Petek', 'Waffle', 'type'], ['Dalgıç', 'Scuba', 'type'], // i18n-ignore
+    ['Kadife', 'Velvet', 'type'], ['Triko', 'Knitwear', 'type'], ['Örme', 'Knit'], ['Dokuma', 'Woven'], ['Pamuk', 'Cotton'], ['Poliester', 'Polyester'], // i18n-ignore
     ['Elastan', 'Elastane'], ['Viskon', 'Viscose'], ['Viskoz', 'Viscose'], ['Keten', 'Linen'], ['Yün', 'Wool'], ['Akrilik', 'Acrylic'], // i18n-ignore
     ['Poliamid', 'Polyamide'], ['Organik', 'Organic'], ['Penye', 'Combed'], ['Karde', 'Carded'], ['Denye', 'Denier'], // i18n-ignore
   ];
@@ -99,6 +114,8 @@
     var marks = [];
     pairs.forEach(function (pair) {
       if (pair[0] === pair[1]) return;
+      // Türkçe özette kumaş tipi adı PLM'de yazıldığı gibi kalır (Scuba ≠ Dalgıç).
+      if (lang !== 'en' && pair[2] === 'type') return;
       var rx = new RegExp('(^|[^A-Za-zÇĞİÖŞÜçğıöşü])(' + escapeRx(pair[from]) + ')(?![A-Za-zÇĞİÖŞÜçğıöşü])', 'gi'); // i18n-ignore
       out = out.replace(rx, function (all, lead) { marks.push(pair[to]); return lead + '\u0001' + (marks.length - 1) + '\u0002'; });
     });
@@ -138,7 +155,8 @@
     DETAIL_FIELDS.forEach(function (key) { details[key] = limit(details[key], DETAIL_MAX); });
     var summary = [details.type || details.category, details.yarn, details.weight, details.composition].filter(Boolean).join(' · ');
     if (!summary) summary = tokens.slice(0, 3).join(', ');
-    return { code: codeOf(raw), summary: languageSummary(summary, 'tr'), summaryEn: languageSummary(summary, 'en'), details: details, summarySource: 'rule' };
+    var lead = LEAD_RX.exec(clean(raw));
+    return { code: lead ? lead[1] : '', summary: languageSummary(summary, 'tr'), summaryEn: languageSummary(summary, 'en'), details: details, summarySource: 'rule' };
   }
 
   /* LCW AI bağlamı: her kod için kaynak PLM metni (boyut sınırlı). */
@@ -232,21 +250,28 @@
     return lang === 'en' ? clean(card.summaryEn) || (card.summary ? languageSummary(card.summary, 'en') : '') : clean(card.summary) || clean(card.summaryEn);
   }
   /* Tabloda görünen metin: kart varsa aktif dildeki özet, yoksa PLM metni. */
+  function cardOf(cards, code) {
+    return code && cards ? (typeof cards.get === 'function' ? cards.get(code) : cards[code]) || null : null;
+  }
   function displayText(raw, cards, lang) {
-    var code = codeOf(raw);
-    var card = code && cards && typeof cards.get === 'function' ? cards.get(code) : (code && cards ? cards[code] : null);
-    return summaryFor(card, lang) || clean(raw);
+    var list = parts(raw);
+    if (!list.length) return clean(raw);
+    if (list.length === 1 && !list[0].label) return summaryFor(cardOf(cards, list[0].code), lang) || clean(raw);
+    return list.map(function (part) {
+      var summary = summaryFor(cardOf(cards, part.code), lang);
+      return (part.label ? part.label + ' · ' : '') + (summary ? part.code + ' · ' + summary : part.raw);
+    }).join(' / ');
   }
 
   /* Satırlardan kartı olmayan kodları toplar (kod başına ilk PLM metni). */
   function missingCodes(rows, cards) {
     var out = [], seen = new Set();
     (Array.isArray(rows) ? rows : []).forEach(function (row) {
-      var raw = row && row.fabric, code = codeOf(raw);
-      if (!code || seen.has(code)) return;
-      seen.add(code);
-      var has = cards && typeof cards.has === 'function' ? cards.has(code) : Boolean(cards && cards[code]);
-      if (!has) out.push({ code: code, raw: clean(raw) });
+      parts(row && row.fabric).forEach(function (part) {
+        if (seen.has(part.code)) return;
+        seen.add(part.code);
+        if (!cardOf(cards, part.code)) out.push({ code: part.code, raw: part.raw });
+      });
     });
     return out;
   }
@@ -257,6 +282,7 @@
     AI_BATCH_SIZE: AI_BATCH_SIZE,
     DETAIL_FIELDS: DETAIL_FIELDS,
     DETAIL_LABELS: DETAIL_LABELS,
+    parts: parts,
     codeOf: codeOf,
     normalizeCode: normalizeCode,
     ruleCard: ruleCard,

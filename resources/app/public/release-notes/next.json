@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-09",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Kumaş kartları: takım modeller ve uzun kodlar",
+    "en": "Fabric cards: set models and long codes"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Takım modellerin A/B kumaşları ayrı kartla aynı hücrede görünür; uzun kumaş kodları da kart alır.",
+    "en": "A/B fabrics of set models show their own cards in the same cell; long fabric codes get cards too."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "collection-fabric-cards-sets-long-codes",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Takım modellerde A/B kumaş kartları ve uzun kumaş kodları",
+        "en": "A/B fabric cards for set models and long fabric codes"
+      },
+      "path": {
+        "tr": "Koleksiyon › Kumaş sütunu › çift tık",
+        "en": "Collection › Fabric column › double-click"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-cards-sets.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: takım modelin Kumaş hücresinde A ve B kumaşları ayrı kod etiketi ve özetle alt alta; 100000627 gibi 9 haneli kod da kartla görünüyor — demo verili Buyer Log ekranı",
+          "en": "Collection table: the Fabric cell of a set model shows fabrics A and B one below the other with their own code tag and summary; a 9-digit code such as 100000627 also shows its card — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Takımın her kumaşı kendi kartını kullanır",
+          "en": "Each fabric of a set uses its own card"
+        }
+      },
+      "body": {
+        "tr": "Takım modellerde \"A - 3859-…\" / \"B - 361819-…\" biçimindeki her kumaş artık ayrı bir kumaş kartı kullanır ve aynı hücrede A / B olarak alt alta görünür; çift tıklayınca açılan pencerede A ve B arasında geçiş yapabilirsiniz. 100000627 gibi uzun kumaş kodları da (12 haneye kadar) kart alır. Türkçe özette kumaş tipi PLM'de yazıldığı gibi kalır.",
+        "en": "In set models every fabric written as \"A - 3859-…\" / \"B - 361819-…\" now uses its own fabric card and is shown as A / B one below the other in the same cell; in the double-click window you can switch between A and B. Long fabric codes such as 100000627 (up to 12 digits) now get a card too. In the Turkish summary the fabric type is kept as written in PLM."
+      }
+    }
+  ]
 }

@@ -31,6 +31,21 @@ test('kumaş kodu yalnız metnin başındaki "1234-" kalıbından okunur', () =>
   assert.equal(engine.codeOf('Pamuk 3859-150'), ''); // i18n-ignore
 });
 
+test('9 haneli kod ve takım modelin A/B kumaşları ayrı kart kodu olarak okunur', () => {
+  const SCUBA = '100000627-Örme,Soft Touch Scuba,230 gsm,40/1,%47 Poliester, %48 Viskoz, %5 Elastan'; // i18n-ignore
+  assert.equal(engine.codeOf(SCUBA), '100000627');
+  assert.equal(engine.ruleCard(SCUBA).code, '100000627');
+  assert.equal(engine.ruleCard(SCUBA).summary, 'Soft Touch Scuba · 230 gsm · %47 Poliester %48 Viskoz %5 Elastan'); // i18n-ignore
+  const SET = `A - ${SUPREM}\nB - ${TWO_THREAD}`;
+  assert.deepEqual(engine.parts(SET).map(part => [part.label, part.code]), [['A', '3859'], ['B', '361819']]);
+  assert.equal(engine.parts(SET)[1].raw, TWO_THREAD, 'her kumaş kendi PLM metniyle analiz edilir');
+  assert.deepEqual(engine.parts('A - 3859-Örme,Süprem B - 32181-Örme,İki İplik').map(part => part.code), ['3859', '32181']); // i18n-ignore
+  const cards = new Map([['3859', { code: '3859', summary: 'Süprem 150' }], ['361819', { code: '361819', summary: 'İki İplik 220' }]]); // i18n-ignore
+  assert.equal(engine.displayText(SET, cards, 'tr'), 'A · 3859 · Süprem 150 / B · 361819 · İki İplik 220'); // i18n-ignore
+  assert.deepEqual(engine.missingCodes([{ fabric: SET }, { fabric: SCUBA }], new Map([['3859', {}]])).map(item => item.code), ['361819', '100000627']);
+  assert.equal(store.normalizeCode('100000627'), '100000627');
+});
+
 test('kural kartı PLM metninden kısa özet çıkarır ve değer uydurmaz', () => {
   const card = engine.ruleCard(SUPREM);
   assert.equal(card.code, '3859');
@@ -46,7 +61,7 @@ test('özet iki dillidir: TR ve EN, aynı sayılarla', () => {
   const card = engine.ruleCard(SUPREM);
   assert.equal(card.summaryEn, 'Single Jersey · 30/1 Ne · 150 gsm · 100% Cotton');
   assert.equal(engine.ruleCard(TWO_THREAD).summaryEn, 'Two Thread · 220 gsm · 80% Cotton 20% Polyester');
-  assert.equal(engine.ruleCard('370380-Interlock,70,Denye Continue Flament 140 gsm,100%Polyester').summary, 'Interlok · 70 Denye · 140 gsm · %100 Poliester'); // i18n-ignore
+  assert.equal(engine.ruleCard('370380-Interlock,70,Denye Continue Flament 140 gsm,100%Polyester').summary, 'Interlock · 70 Denye · 140 gsm · %100 Poliester', 'TR özette kumaş tipi PLM yazımıyla kalır'); // i18n-ignore
   const cards = new Map([['3859', card]]);
   assert.equal(engine.displayText(SUPREM, cards, 'tr'), card.summary);
   assert.equal(engine.displayText(SUPREM, cards, 'en'), card.summaryEn);
@@ -114,7 +129,7 @@ test('LCW AI sözleşmesi tek kayıtta tanımlı ve cevap biçimi şekil olarak 
 
 test('Koleksiyon tablosu PLM metnini korur, kart özetini gösterir ve içe aktarımda eksik kartları önerir', () => {
   assert.ok(HTML.indexOf('fabric-cards-engine.js') > 0 && HTML.indexOf('fabric-cards-engine.js') < HTML.indexOf('app-main.js'), 'motor app-main.js öncesinde yüklenir');
-  assert.match(APP, /\}else if\(c\.k==='fabric'&&kolFabricCodeOf\(val\)\)\{\n\s*kolFabricCardsEnsureLoaded\(\);\n\s*html\+=kolFabricCellHtml\(r,val,rc\);/);
+  assert.match(APP, /\}else if\(c\.k==='fabric'&&kolFabricParts\(val\)\.length\)\{\n\s*kolFabricCardsEnsureLoaded\(\);\n\s*html\+=kolFabricCellHtml\(r,val,rc\);/);
   assert.match(APP, /\.kolFabricTd\[data-fabric-id\]'\)\.forEach\(cell=>cell\.addEventListener\('dblclick'/);
   assert.match(APP, /if\(key==='fabric'\)return kolFabricDisplay\(effective\);/);
   assert.equal((APP.match(/kolFabricCardsAfterImport\(/g) || []).length, 5, 'tanım + dört PLM içe aktarma akışı');

@@ -26718,7 +26718,7 @@ function renderKol(){
         // hücresindeki sağ tık menüsü aynı kanonik PLM resolver'ını kullanır;
         // böylece spreadsheet left-click/edit/range davranışı sade kalır.
         html+=`<td class="editTd plmEditTd plmModelLinkCell"${rc} data-copy-text="${escapeHtml(cur)}"><div class="plmEditCell"><textarea class="editCell kolTextCell" data-id="${r.id}" data-k="${c.k}">${escapeHtml(cur)}</textarea></div></td>`;
-      }else if(c.k==='fabric'&&kolFabricCodeOf(val)){
+      }else if(c.k==='fabric'&&kolFabricParts(val).length){
         kolFabricCardsEnsureLoaded();
         html+=kolFabricCellHtml(r,val,rc);
       }else if(c.inStorePeriod){
@@ -29135,6 +29135,8 @@ const kolFabricDismissed=new Set();
 const KOL_FABRIC_AUTO_LIMIT=200;
 function kolFabricApi(){return window.BLFabricCards||null;}
 function kolFabricCodeOf(raw){const api=kolFabricApi();return api?api.codeOf(raw):'';}
+/* Hücredeki kumaşlar: tek kumaş ya da takım modelde "A - 3859-…", "B - 361819-…". */
+function kolFabricParts(raw){const api=kolFabricApi();return api?api.parts(raw):[];}
 function kolFabricCardsSet(data){
   const next=new Map();
   (Array.isArray(data&&data.cards)?data.cards:[]).forEach(card=>{if(card&&card.code&&card.summary)next.set(String(card.code),card);});
@@ -29164,17 +29166,27 @@ function kolFabricCardDelete(code){
 }
 /* Kartın aktif dildeki özeti: TR "Süprem · …", EN "Single Jersey · …". */
 function kolFabricSummary(card){return kolFabricApi()?.summaryFor(card,appLang==='en'?'en':'tr')||'';}
-/* Filtre ve düz metin görünümü: "3859 · Süprem · 30/1 Ne · 150 gsm · %100 Pamuk". */
+/* Filtre ve düz metin görünümü: "3859 · Süprem · 30/1 Ne · 150 gsm · %100 Pamuk";
+   takımda "A · 3859 · … / B · 361819 · …". */
 function kolFabricDisplay(raw){
-  const code=kolFabricCodeOf(raw),card=code?kolFabricCards.get(code):null;
-  return card?`${code} · ${kolFabricSummary(card)}`:norm(raw);
+  const api=kolFabricApi();
+  return api?api.displayText(raw,kolFabricCards,appLang==='en'?'en':'tr'):norm(raw);
 }
 function kolFabricCellHtml(row,val,rc){
-  const en=appLang==='en',raw=String(val||''),code=kolFabricCodeOf(raw),card=kolFabricCards.get(code),summary=kolFabricSummary(card);
-  const title=card
-    ?(en?`Fabric card ${code}: ${summary}\nDouble-click to see the PLM fabric information and edit the card.`:`Kumaş kartı ${code}: ${summary}\nPLM kumaş bilgisini görmek ve kartı düzenlemek için çift tıklayın.`)
-    :(en?`No fabric card for ${code} yet.\nDouble-click to create one.`:`${code} için henüz kumaş kartı yok.\nOluşturmak için çift tıklayın.`);
-  return `<td class="editTd kolFabricTd${card?' hasCard':''}"${rc} data-fabric-id="${row.id}" title="${escapeHtml(title)}"><div class="kolFabricCell" aria-hidden="true"><span class="kolFabricCode">${escapeHtml(code)}</span><span class="kolFabricText">${escapeHtml(card?summary:raw)}</span></div></td>`;
+  const en=appLang==='en',raw=String(val||''),list=kolFabricParts(raw);
+  const allCards=list.every(part=>kolFabricCards.has(part.code));
+  const lines=list.map(part=>{
+    const card=kolFabricCards.get(part.code),summary=kolFabricSummary(card);
+    return {part,card,summary,html:`<div class="kolFabricLine${card?' hasCard':''}">${part.label?`<span class="kolFabricLabel">${escapeHtml(part.label)}</span>`:''}<span class="kolFabricCode">${escapeHtml(part.code)}</span><span class="kolFabricText">${escapeHtml(card?summary:part.raw)}</span></div>`};
+  });
+  const tip=lines.map(({part,card,summary})=>{
+    const name=`${part.label?part.label+' · ':''}${part.code}`;
+    return card?`${name}: ${summary}`:(en?`${name}: no fabric card yet`:`${name}: henüz kumaş kartı yok`);
+  }).join('\n');
+  const hint=allCards
+    ?(en?'Double-click to see the PLM fabric information and edit the card.':'PLM kumaş bilgisini görmek ve kartı düzenlemek için çift tıklayın.')
+    :(en?'Double-click to create the missing fabric card.':'Eksik kumaş kartını oluşturmak için çift tıklayın.');
+  return `<td class="editTd kolFabricTd${allCards?' hasCard':''}${list.length>1?' isMulti':''}"${rc} data-fabric-id="${row.id}" title="${escapeHtml(`${tip}\n${hint}`)}"><div class="kolFabricCell" aria-hidden="true">${lines.map(line=>line.html).join('')}</div></td>`;
 }
 function kolFabricSourceLabel(source){
   const en=appLang==='en';
@@ -29308,12 +29320,15 @@ function kolFabricCardsAfterImport(rows){
   void kolFabricCardsCreateForRows(list,{auto:true}).catch(err=>console.warn('Fabric card auto-create failed:',err));
 }
 /* Ayrıntı penceresi (tablo hücresine çift tık). */
-function openKolFabricCardDialog(rowId,{trigger=null}={}){
+function openKolFabricCardDialog(rowId,{trigger=null,code:wantedCode=''}={}){
   const api=kolFabricApi(),en=appLang==='en';
   const row=kolRows.find(item=>String(item.id)===String(rowId));
   if(!api||!row)return;
-  const raw=norm(kolEffectiveValue(row,'fabric')),code=api.codeOf(raw);
-  if(!code)return;
+  // Takım modelde açılacak kumaş: istenen kod, yoksa kartı eksik ilk kumaş, yoksa A.
+  const parts=api.parts(String(kolEffectiveValue(row,'fabric')??''));
+  const part=parts.find(item=>item.code===wantedCode)||parts.find(item=>!kolFabricCards.has(item.code))||parts[0];
+  if(!part)return;
+  const raw=part.raw,code=part.code;
   const existing=kolFabricCards.get(code)||null;
   const draft=existing?{...existing,details:{...existing.details}}:{...api.ruleCard(raw),raw};
   const canEdit=Boolean(kolWorkspaceCanEdit);
@@ -29328,8 +29343,9 @@ function openKolFabricCardDialog(rowId,{trigger=null}={}){
     :(en?`Fabric code ${code} has no card yet. A rule-based summary is suggested; edit it or analyse with LCW AI, then save.`:`${code} kumaş kodunun henüz kartı yok. Kural tabanlı bir özet önerildi; düzenleyin ya da LCW AI ile analiz edin, sonra kaydedin.`);
   const rawDiffers=existing&&existing.raw&&norm(existing.raw)!==raw;
   modal.innerHTML=`<div class="modalCard verHistCard plmImportCard kolFabricCardModal" role="dialog" aria-modal="true" aria-labelledby="_kolFabricCardTitle">
-    <div class="verHistHead"><div><strong id="_kolFabricCardTitle">${escapeHtml(en?`Fabric Card · ${code}`:`Kumaş Kartı · ${code}`)}</strong>
+    <div class="verHistHead"><div><strong id="_kolFabricCardTitle">${escapeHtml(en?`Fabric Card · ${part.label?part.label+' · ':''}${code}`:`Kumaş Kartı · ${part.label?part.label+' · ':''}${code}`)}</strong>
       <div class="muted">${escapeHtml(meta)}</div></div></div>
+    ${parts.length>1?`<div class="plmListTabs kolFabricParts" role="tablist" aria-label="${escapeHtml(en?'Fabrics of this model':'Bu modelin kumaşları')}">${parts.map(item=>`<button type="button" class="tbtn${item.code===code?' isSelected':''}" role="tab" aria-selected="${item.code===code?'true':'false'}" data-fabric-part="${escapeHtml(item.code)}">${escapeHtml(`${item.label?item.label+' · ':''}${item.code}`)}${kolFabricCards.has(item.code)?'':` <span class="muted">${escapeHtml(en?'(no card)':'(kart yok)')}</span>`}</button>`).join('')}</div>`:''}
     <div class="plmImportBody">
       <div class="kolFabricSummaryHead"><span class="plmListLabel">${escapeHtml(en?'Summary shown in the Collection table':'Koleksiyon tablosunda görünen özet')}</span><span class="kolFabricSource is-${escapeHtml(source)}" data-fabric-source>${escapeHtml(kolFabricSourceLabel(source))}</span></div>
       <div class="plmListOptions kolFabricSummaries">
@@ -29362,6 +29378,8 @@ function openKolFabricCardDialog(rowId,{trigger=null}={}){
   const close=()=>{window.BLLayerSystem?.closeDialog?.(modal,{trigger});modal.remove();};
   modal.addEventListener('input',event=>{if(event.target===summaryInput||event.target===summaryEnInput||event.target.dataset.fabricDetail)setSource('manual');});
   modal.addEventListener('click',async event=>{
+    const partBtn=event.target.closest('[data-fabric-part]');
+    if(partBtn){if(partBtn.dataset.fabricPart!==code){close();openKolFabricCardDialog(rowId,{trigger,code:partBtn.dataset.fabricPart});}return;}
     const action=event.target.closest('[data-fabric]');
     if(!action){if(event.target===modal)close();return;}
     const kind=action.dataset.fabric;
