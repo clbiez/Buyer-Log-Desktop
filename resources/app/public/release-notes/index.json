@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.265",
+      "publishedAt": "2026-10-09",
+      "title": {
+        "tr": "Original Ex-F. doğru ASAS tarihini gösteriyor",
+        "en": "Original Ex-F. shows the correct ASAS date"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.265/release.json"
+    },
+    {
       "version": "7.0.264",
       "publishedAt": "2026-10-08",
       "title": {
