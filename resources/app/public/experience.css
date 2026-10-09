@@ -661,3 +661,29 @@ html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um
   font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
 }
 .vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic)>svg.ic{width:16px;height:16px;}
+
+
+/* Üst bar kurumsal oturum göstergeleri — Buyer Log köşeli, kompakt denetimler. */
+.appTop .corporateConnections{display:flex;align-items:center;gap:4px;flex:0 0 auto;white-space:nowrap;}
+.appTop .corporateConnection{
+  display:inline-flex;align-items:center;justify-content:center;
+  height:27px;min-width:42px;padding:0 9px;
+  font:650 10.5px/1 var(--sans);letter-spacing:.02em;
+  border:1px solid var(--hair);border-radius:0;box-shadow:none;
+  background:var(--card2);color:var(--muted);cursor:pointer;
+  transition:color var(--bl-motion-fast),border-color var(--bl-motion-fast),background-color var(--bl-motion-fast);
+}
+.appTop .corporateConnection:hover{border-color:var(--bl-stroke-strong);background:var(--bl-surface-soft);color:var(--ink);}
+.appTop .corporateConnection:focus-visible{outline:2px solid var(--acc);outline-offset:2px;}
+.appTop .corporateConnection[data-state="connected"]{
+  border-color:color-mix(in srgb,var(--green) 38%,var(--hair));
+  background:var(--green-bg);color:var(--green);
+}
+.appTop .corporateConnection[data-state="connected"]:hover{
+  border-color:var(--green);background:color-mix(in srgb,var(--green) 16%,var(--paper));color:var(--green);
+}
+.appTop .corporateConnection[data-state="connecting"]{color:var(--muted);cursor:progress;opacity:.8;}
+@media(max-width:850px){
+  .appTop .corporateConnections{gap:3px;}
+  .appTop .corporateConnection{height:25px;min-width:38px;padding-inline:6px;font-size:10px;}
+}
