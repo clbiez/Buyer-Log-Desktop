@@ -1,6 +1,9 @@
 'use strict';
 
 const crypto = require('crypto');
+const hybridClock = require('./hlc');
+const { mergeListClocks } = require('./hlc-email-list');
+function greatestHlc(a, b) { return !a ? b : !b ? a : hybridClock.compare(a, b) >= 0 ? a : b; }
 
 /* v2 shared-folder transport. Keep these limits centralized: the bottleneck on
    SMB shares is directory/file metadata traffic, not payload bytes. */
@@ -54,6 +57,8 @@ function coalescePendingEvents(items = []) {
     if (isPatch(previous) && isPatch(current)) {
       const merged = {
         ...current,
+        ...(greatestHlc(previous.hlc,current.hlc) ? {hlc:greatestHlc(previous.hlc,current.hlc)} : {}),
+        ...(previous.listClocks || current.listClocks ? {listClocks:mergeListClocks(previous.listClocks,current.listClocks)} : {}),
         operation: prevCreate ? 'create' : (current.operation || 'update'),
         baseRevision: Number(previous.baseRevision) || 0,
         // Birleşik olayın bilgisi en eski olayınki kadardır (sürüm vektörü
@@ -72,6 +77,8 @@ function coalescePendingEvents(items = []) {
     if (!prevDelete && curDelete && previous.operation !== 'create') {
       const merged = {
         ...current,
+        ...(greatestHlc(previous.hlc,current.hlc) ? {hlc:greatestHlc(previous.hlc,current.hlc)} : {}),
+        ...(previous.listClocks || current.listClocks ? {listClocks:mergeListClocks(previous.listClocks,current.listClocks)} : {}),
         baseRevision: Number(previous.baseRevision) || 0,
         sourceEventIds: [...sourceIds(previous), ...sourceIds(current)],
         sourceFirstSeq: Math.min(sourceFirstSeq(previous), sourceFirstSeq(current)),

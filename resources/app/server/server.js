@@ -71,7 +71,7 @@ markStartup('APP_BOOT_START');
 
 // Local-first bootstrap. The retired whole-folder legacy import is deliberately
 // not part of startup; business data remains in the local DB + delta registry.
-const localDb = createLocalDb(LOCAL_DB_FILE);
+const localDb = createLocalDb(LOCAL_DB_FILE, { trace:markStartup });
 let rejectedOwnerDeltas = 0;
 function sharedHubDeltaFilter(direction) {
   return deltas => sharedSyncPolicy.filterDeltas(filterCollectionWorkspaceDeltas(deltas), direction).filter(delta => {
@@ -876,6 +876,7 @@ async function applyMissingCheckpointRecords(area, root, hub, state, remote) {
   // checkpoint record directly so it does not create an outgoing journal item
   // that would simply echo the same recovery data back to Shared Hub.
   await localDb.transaction(async next => {
+    localDb.mergeCheckpointClockState(next, Object.fromEntries(recoverIds.map(id => [id, remoteRecords[id]])));
     next.records = next.records && typeof next.records === 'object' ? next.records : {};
     next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
     for (const id of recoverIds) {
@@ -1497,6 +1498,7 @@ async function pullModeratorMasterIfNewer() {
   const changedEntities = changedMasterEntities(remoteRecords, sharedSyncPolicy.masterRecordsFromState(before), ids);
   const at = new Date().toISOString();
   const result = await localDb.transaction(async next => {
+    localDb.mergeCheckpointClockState(next, Object.fromEntries(ids.map(id => [id, remoteRecords[id]])));
     next.records = next.records && typeof next.records === 'object' ? next.records : {};
     next.tombstones = next.tombstones && typeof next.tombstones === 'object' ? next.tombstones : {};
     const touched = new Set(ids);

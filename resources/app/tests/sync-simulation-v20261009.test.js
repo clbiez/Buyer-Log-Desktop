@@ -187,3 +187,11 @@ test('restored pending legacy retry never covers an earlier genuinely published 
   assert.equal(received.records['cp-order:DELAYED-REAL'].suppFob, 2);
   assert.equal(received.syncCheckpoints[a.id], 4);
 });
+
+// Ten independent physical clocks vary from -10 to +10 minutes; transport
+// still reorders and duplicates files and checks privacy/contiguous receipts.
+test('HLC simulation converges with ten clocks skewed by up to ten minutes', { timeout:15000 }, async t => {
+ const base=Date.UTC(2026,9,9);
+ const result=await runScenario({seed:4411,devices:10,operations:300,clock:index=>base+Math.round(index*1200000/9)-600000});
+ assert.equal(result.operations,300);t.diagnostic(JSON.stringify(result));
+});

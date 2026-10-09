@@ -3,13 +3,17 @@ const test=require('node:test'),assert=require('node:assert/strict'),fsp=require
 const {createLocalDb}=require('../server/lib/local-db');
 const {createOwnershipResolver}=require('../server/lib/cp-field-ownership');
 const {createSimulation}=require('./helpers/sync-sim');
+const {eventChecksum}=require('../server/lib/sync-package');
 const resolve=createOwnershipResolver({1001:[{buyer:'Demo Owner'}]},[{id:'owner',username:'Demo Owner'},{id:'other',username:'Demo Other'}]);
 const ownerOf=(id,userId)=>resolve({recordId:id,userId});
 async function dbs(t){const root=await fsp.mkdtemp(path.join(os.tmpdir(),'bl-owner-'));t.after(()=>fsp.rm(root,{recursive:true,force:true}));return [0,1].map(i=>{const db=createLocalDb(path.join(root,String(i),'db'));db.setSharedOwnerResolver(ownerOf);return db;});}
-test('same owner concurrent two-device writes converge; ties use device and causal writes ignore clock rollback',async t=>{
+test('legacy same-owner events retain at/device ties and causal writes ignore clock rollback',async t=>{
  const [a,b]=await dbs(t);await Promise.all([a.ensure(),b.ensure()]);
  for(const [db,value] of [[a,10],[b,20]])await db.queuePatch({id:'cp-order:1001',patch:{suppFob:value},userId:'owner',at:'2026-10-09T10:00:00Z'});
- const [ea]=await a.pending(10),[eb]=await b.pending(10);await a.applyDelta(eb);await b.applyDelta(ea);
+ const [ea]=await a.pending(10),[eb]=await b.pending(10);
+ // Old senders have no HLC: retain the pre-HLC deterministic tie regression.
+ for(const event of [ea,eb]){delete event.hlc;event.sha256=eventChecksum(event);}
+ await a.applyDelta(eb);await b.applyDelta(ea);
  const expected=a.getDeviceId()>b.getDeviceId()?10:20;
  for(const db of [a,b]){const state=await db.read();assert.equal(state.records['cp-order:1001'].suppFob,expected);assert.equal(state.conflicts.filter(c=>!c.resolved).length,0);}
  await a.queuePatch({id:'cp-order:1001',patch:{suppFob:30},userId:'owner',at:'2026-10-09T09:00:00Z'});
@@ -38,7 +42,7 @@ test('owner rule retires old shared conflicts and keeps the verified owner value
  assert.equal(await db.retireOwnerConflicts(),1);const state=await db.read();assert.equal(state.records['cp-order:1001'].suppFob,12);assert.equal(state.conflicts[0].resolution,'owner-rule');
 });
 test('ten real replicas converge for concurrent edits from two devices of one owner',async t=>{
- const sim=await createSimulation({seed:4410,devices:10});t.after(()=>sim.close());for(const device of sim.devices)device.db.setSharedOwnerResolver(ownerOf);
+ const sim=await createSimulation({seed:4410,devices:10,clock:index=>1000+index});t.after(()=>sim.close());for(const device of sim.devices)device.db.setSharedOwnerResolver(ownerOf);
  await sim.syncRound();await sim.replicator.flush();
  await sim.devices[0].db.queuePatch({id:'cp-order:1001',patch:{suppFob:11},userId:'owner',at:'2026-10-09T10:00:00Z'});
  await sim.devices[1].db.queuePatch({id:'cp-order:1001',patch:{suppFob:22},userId:'owner',at:'2026-10-09T11:00:00Z'});

@@ -107,14 +107,14 @@ class MirrorReplicator {
   }
 }
 
-async function createSimulation({ seed = 1, devices: count = 10 } = {}) {
+async function createSimulation({ seed = 1, devices: count = 10, clock = null } = {}) {
   const root = await fsp.mkdtemp(path.join(os.tmpdir(), 'buyerlog-sync-sim-'));
   const random = seededRandom(seed), devices = [];
   try {
     for (let index = 0; index < count; index++) {
       const local = path.join(root, `device-${index}`), mirror = path.join(local, 'shared-mirror');
       await fsp.mkdir(mirror, { recursive: true });
-      const db = createLocalDb(path.join(local, 'BuyerLogLocal.db'));
+      const db = createLocalDb(path.join(local, 'BuyerLogLocal.db'), clock ? {clock:()=>clock(index)} : {});
       db.setTransportFilter(item => serverFilter('outgoing')([item]).length === 1);
       const sync = createSyncSettings({ localDataRoot: path.join(local, 'settings'), localDb: db,
         filterIncomingDeltas: serverFilter('incoming'), filterOutgoingDeltas: serverFilter('outgoing'),
@@ -220,8 +220,8 @@ async function createSimulation({ seed = 1, devices: count = 10 } = {}) {
   } catch (error) { await fsp.rm(root, { recursive: true, force: true }); throw error; }
 }
 
-async function runScenario({ seed = 1, devices = 10, operations = 300 } = {}) {
-  const simulation = await createSimulation({ seed, devices }), started = performance.now();
+async function runScenario({ seed = 1, devices = 10, operations = 300, clock = null } = {}) {
+  const simulation = await createSimulation({ seed, devices, clock }), started = performance.now();
   try {
     await simulation.syncRound(); await simulation.replicator.flush(); // v2 ilanları önce bütün aynalarda.
     const batches = simulation.generateOperations(operations);

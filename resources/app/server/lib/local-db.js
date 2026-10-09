@@ -17,10 +17,14 @@ const { resolveLocalDbFolder } = require('./local-path-policy');
 const { createDurableFileRecovery } = require('./durable-file-recovery');
 const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, DIRECT_PARSE_MAX_BYTES } = require('./large-json');
 
+const hybridClock = require('./hlc');
+const emailClockLists = require('./hlc-email-list');
+
 const SCHEMA_VERSION = 3;
 const DEFAULT_DB_NAME = 'BuyerLogLocal.db';
 const SHARED_CP_FIELDS = new Set(['dates', 'subManufacturer', 'suppFob', 'suppFobMeta']);
 function compareEventOrder(a, b) {
+  if (a && a.hlc && b && b.hlc) return hybridClock.compare(a.hlc, b.hlc);
   const time = String(a && a.at || '').localeCompare(String(b && b.at || ''));
   return time || (String(a && a.deviceId || '') < String(b && b.deviceId || '') ? -1 : String(a && a.deviceId || '') > String(b && b.deviceId || '') ? 1 : 0);
 }
@@ -42,7 +46,7 @@ function receiptFirstSequence(delta) {
 function emptyState(deviceId = crypto.randomUUID()) {
   return {
     schemaVersion: SCHEMA_VERSION, revision: 0, deviceId: String(deviceId), localSequence: 0,
-    records: {}, tombstones: {}, events: {}, appliedEvents: {}, appliedPackages: {}, conflicts: [], journal: [],
+    hlc: null, records: {}, tombstones: {}, events: {}, appliedEvents: {}, appliedPackages: {}, conflicts: [], journal: [],
     syncCheckpoints: {}, syncLedger: { version: 1, eventIds: {}, acknowledgedEventIds: {}, compactedEvents: 0, compactedThrough: 0, acknowledgedThrough: 0, ranges: [], receivedBeyondByDevice: {} }, assets: {}, migrations: {},
   };
 }
@@ -72,6 +76,7 @@ function normalizeState(raw, deviceId) {
   state.schemaVersion = SCHEMA_VERSION;
   state.deviceId = String(state.deviceId || deviceId || crypto.randomUUID());
   state.localSequence = Number(state.localSequence) || 0;
+  state.hlc = state.hlc == null ? null : hybridClock.parse(hybridClock.serialize(state.hlc));
   state.appliedEvents = state.appliedEvents && typeof state.appliedEvents === 'object' ? state.appliedEvents : {};
   state.appliedPackages = state.appliedPackages && typeof state.appliedPackages === 'object' ? state.appliedPackages : {};
   state.conflicts = Array.isArray(state.conflicts) ? state.conflicts : [];
@@ -230,13 +235,17 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
   const writers = { ...(base._fieldWriters || {}) };
   const orders = { ...(base._fieldOrders || {}) };
   const order = causal && causal.order;
+  const emailDocument = recordKey === 'store:email-groups.json' || causal && causal.documentId === 'store:email-groups.json';
+  const emailMerge = emailDocument && recordKey ? emailClockLists.mergeEmailLists(base, { ...incoming, _listOrders: causal && causal.listClocks || {} }) : null;
+  if (emailDocument) next._listOrders = emailMerge ? emailMerge._listOrders : causal && causal.listClocks || base._listOrders || {};
+  if (emailMerge && !Object.hasOwn(incoming, 'records') && Object.hasOwn(emailMerge, 'records')) next.records = emailMerge.records;
   const owner = causal && causal.owner;
   const rememberOrder = key => { if (order && owner && owner.known && owner.allowed && SHARED_CP_FIELDS.has(key)) orders[key] = { ...order }; else delete orders[key]; };
   const writer = causal && causal.writer && causal.writer.d ? { d: String(causal.writer.d), s: Number(causal.writer.s) || 0 } : null;
   const seen = writer && causal.seen && typeof causal.seen === 'object' ? causal.seen : null;
   const conflicts = [];
   for (const [key, value] of Object.entries(incoming && typeof incoming === 'object' ? incoming : {})) {
-    if (key === '_fieldRevisions' || key === '_revision' || key === '_fieldWriters' || key === '_fieldOrders') continue;
+    if (key === '_fieldRevisions' || key === '_revision' || key === '_fieldWriters' || key === '_fieldOrders' || key === '_listOrders') continue;
     const previousRevision = Number(fields[key]) || 0;
     if (key === DOCUMENT_REVISION_META_FIELD && next[key] && typeof next[key] === 'object') {
       next[key] = newerRevisionMeta(next[key], value);
@@ -250,6 +259,10 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
        değişmeli ve tekrarlanabilir olduğundan her durumda güvenlidir; silme,
        silme iziyle taşınır. (Yerel yazımda recordKey yoktur: liste aynen yazılır.) */
     const listRule = recordKey ? listMergeRule(recordKey, key) : null;
+    if (emailMerge && (key === 'records' || key === 'deletedRecords')) {
+      next[key] = emailMerge[key]; fields[key] = Math.max(previousRevision, revision);
+      if (writer) writers[key] = writer; continue;
+    }
     if (listRule && next[key] !== undefined) {
       if (listRule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
       else next[key] = mergeListById(next[key], value, listRule.tombstones ? mergeTombstoneMaps(next[listRule.tombstones], incoming[listRule.tombstones]) : {});
@@ -407,7 +420,7 @@ function readDeviceIdSync(file) {
   } finally { fs.closeSync(handle); }
 }
 
-function createLocalDb(file) {
+function createLocalDb(file, { clock = Date.now, trace = null } = {}) {
   let dbFile = path.resolve(file);
   let deviceId = null;
   /* Taşıma kapsamı (v20261009). Ortak klasöre hiç gitmeyecek bir yerel yazım
@@ -558,8 +571,68 @@ function createLocalDb(file) {
     catch (error) { if (error && error.code !== 'ENOENT') throw error; }
   }
 
+  function validateTransportClocks(delta) {
+    if (delta.hlc != null) hybridClock.parse(hybridClock.serialize(delta.hlc));
+    emailClockLists.validateListClocks(delta.listClocks);
+  }
+  function restoreHlc(state, value) {
+    if (!value) return;
+    const stamp = hybridClock.parse(hybridClock.serialize(value));
+    if (!state.hlc || hybridClock.compare(stamp, state.hlc) > 0) state.hlc = stamp;
+  }
+  // Called only inside the existing checkpoint snapshot transaction. Observe
+  // imported field/item clocks once, without scanning records on each edit.
+  function mergeCheckpointClockState(state, records) {
+    let greatest = null;
+    const observe = value => {
+      if (!value) return;
+      const stamp = hybridClock.parse(hybridClock.serialize(value));
+      if (!greatest || hybridClock.compare(stamp, greatest) > 0) greatest = stamp;
+    };
+    for (const record of Object.values(records || {})) {
+      if (!record || typeof record !== 'object') continue;
+      for (const order of Object.values(record._fieldOrders || {})) observe(order && order.hlc);
+      for (const map of Object.values(record._listOrders || {})) for (const order of Object.values(map || {})) observe(order && order.hlc);
+    }
+    if (!greatest) return;
+    const hlc = hybridClock.createHlc({ node:state.deviceId, state:state.hlc, now:clock, onSkew:event => {
+      if (typeof trace === 'function') { try { trace(event.code,event); } catch (_) {} }
+    } });
+    state.hlc = hlc.receive(greatest);
+  }
+  function stampOperation(state, operation) {
+    const payload = operation.payload;
+    const known = eid => state.events[eid] || state.appliedEvents[eid] || state.syncLedger?.eventIds?.[eid];
+    const hlc = hybridClock.createHlc({ node: state.deviceId, state: state.hlc, now: clock, onSkew: event => {
+      if (typeof trace === 'function') { try { trace(event.code, event); } catch (_) {} }
+    } });
+    if (operation.op === 'patch' || operation.op === 'tombstone') {
+      if (known(payload.eventId)) return;
+      payload.hlc = hlc.tick();
+      if (operation.op === 'patch' && payload.id === 'store:email-groups.json') {
+        const prepared = emailClockLists.prepareEmailPatch(state.records[payload.id], payload.patch, { hlc:payload.hlc, at:payload.at, deviceId:state.deviceId });
+        payload.listClocks = prepared._listOrders;
+      }
+    } else if (operation.op === 'delta') {
+      if (!known(payload.eventId) && payload.delta.hlc) payload.clockState = hlc.receive(payload.delta.hlc);
+    } else if (operation.op === 'package' && !state.appliedPackages[payload.packageId]) {
+      const seen = new Set();
+      payload.clockStates = (payload.events || []).map(delta => {
+        const eid = eventId(delta.eventId) || crypto.createHash('sha256').update(JSON.stringify(delta)).digest('hex');
+        if (known(eid) || seen.has(eid)) return null;
+        seen.add(eid);
+        return delta.hlc ? hlc.receive(delta.hlc) : null;
+      });
+    }
+  }
+
   /* Sıcak yol. Durumun tamamını değil yalnız işlemleri yazar. */
   async function appendOperations(operations) {
+    // Validate the whole batch before the first operation mutates cached state.
+    for (const operation of operations) {
+      if (operation.op === 'delta') validateTransportClocks(operation.payload.delta);
+      else if (operation.op === 'package') for (const delta of operation.payload.events || []) validateTransportClocks(delta);
+    }
     return withFileLeaseAsync(dbFile, async () => {
       recoverPendingWrites();
       await fsp.mkdir(path.dirname(dbFile), { recursive: true });
@@ -568,21 +641,28 @@ function createLocalDb(file) {
          bir taban bulamaz. Yalnız ilk yazmada bir kez ödenir. */
       if (!fs.existsSync(dbFile) && !fs.existsSync(`${dbFile}.bak`)) await writeState(dbFile, emptyState(loadDeviceId()));
       const state = await loadState();
-      const results = operations.map(item => item.apply(state));
+      try {
+        const results = operations.map(item => { stampOperation(state, item); return item.apply(state); });
 
-      const lines = operations.map(item => walLine(item.op, item.payload)).join('');
-      const handle = await fsp.open(walFile(), 'a');
-      // fsync ÖNCE, dönüş SONRA: çağırana "kaydedildi" dendiğinde satır diskte.
-      try { await handle.writeFile(lines, 'utf8'); await handle.sync(); } finally { await handle.close(); }
+        const lines = operations.map(item => walLine(item.op, item.payload)).join('');
+        const handle = await fsp.open(walFile(), 'a');
+        // fsync ÖNCE, dönüş SONRA: çağırana "kaydedildi" dendiğinde satır diskte.
+        try { await handle.writeFile(lines, 'utf8'); await handle.sync(); } finally { await handle.close(); }
 
-      let size = 0;
-      try { size = (await fsp.stat(walFile())).size; } catch (_) {}
-      const { entries } = size ? await readWalEntries(walFile()) : { entries: [] };
-      if (size > WAL_MAX_BYTES || entries.length > WAL_MAX_ENTRIES) await writeSnapshot(state);
-      // Durum yerinde değişti ve dosyalar yeniden yazıldı: imzayı tazele ki
-      // sıradaki okuma diski boşuna baştan okumasın.
-      cachedState = state; cachedTags = await currentTags();
-      return results;
+        let size = 0;
+        try { size = (await fsp.stat(walFile())).size; } catch (_) {}
+        const { entries } = size ? await readWalEntries(walFile()) : { entries: [] };
+        if (size > WAL_MAX_BYTES || entries.length > WAL_MAX_ENTRIES) await writeSnapshot(state);
+        // Durum yerinde değişti ve dosyalar yeniden yazıldı: imzayı tazele ki
+        // sıradaki okuma diski boşuna baştan okumasın.
+        cachedState = state; cachedTags = await currentTags();
+        return results;
+      } catch (error) {
+        // A later clock/merge/WAL failure must not expose uncommitted cached
+        // mutations. Reload the durable snapshot + WAL on the next read.
+        invalidateCache();
+        throw error;
+      }
     });
   }
 
@@ -641,9 +721,10 @@ function createLocalDb(file) {
   /* Tek bir patch'i AÇIK bir transaction state'i üzerine uygular. queuePatch ile
      queuePatches aynı gövdeyi paylaşır; böylece toplu yol tek kayıtlık yoldan
      ayrışıp farklı journal/merge davranışına kayamaz. */
-  function applyLocalPatch(state, { id, patch, eventId: eid, at, origin = 'local', baseRevision = null, entityType = 'record', userId = null, owner = { allowed:true, known:false } }) {
+  function applyLocalPatch(state, { id, patch, eventId: eid, at, origin = 'local', baseRevision = null, entityType = 'record', userId = null, owner = { allowed:true, known:false }, hlc = null, listClocks = null }) {
     const key = recordId(id);
     if (state.events[eid] || state.syncLedger?.eventIds?.[eid]) return { duplicate: true, record: clone(state.records[key]), revision: state.revision, eventId: eid };
+    restoreHlc(state, hlc);
     // A normal local edit is based on the record revision actually visible on
     // this client. Persist that revision in the outgoing journal so a remote
     // client can distinguish a real same-field race from a sequential edit.
@@ -654,7 +735,7 @@ function createLocalDb(file) {
     const revision = Math.max(Number(state.revision) || 0, effectiveBaseRevision) + 1;
     // Local writes are authoritative for this device; baseRevision is carried
     // in the journal for remote conflict detection, not used to reject the edit.
-    const merged = fieldMerge(state.records[key], patch, revision, null, '', { writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 }, owner, order:{ userId:String(userId || ''), at, deviceId:state.deviceId } });
+    const merged = fieldMerge(state.records[key], patch, revision, null, '', { writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 }, owner, documentId:key, listClocks, order:{ userId:String(userId || ''), at, deviceId:state.deviceId, ...(hlc ? {hlc} : {}) } });
     const operation = state.records[key] ? 'update' : 'create';
     state.revision = revision;
     state.localSequence = Number(state.localSequence) + 1;
@@ -665,7 +746,7 @@ function createLocalDb(file) {
     for (const source of [state.syncCheckpoints || {}, state.causalKnowledge || {}]) {
       for (const [device, seq] of Object.entries(source)) if (Number(seq) > (seenVector[device] || 0)) seenVector[device] = Number(seq);
     }
-    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, seen: seenVector, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
+    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, seen: seenVector, localSequence: state.localSequence, at, origin, ...(hlc ? {hlc} : {}), ...(listClocks ? {listClocks} : {}), uploaded: false, acknowledged: false, synced: false };
     closeIfLocalOnly(journalItem);
     journalItem.sha256 = sha256(Buffer.from(JSON.stringify({ ...journalItem, sha256: undefined }), 'utf8'));
     state.events[eid] = { eventId: eid, revision, at, origin, deviceId: state.deviceId, localSequence: state.localSequence };
@@ -673,9 +754,10 @@ function createLocalDb(file) {
     return { duplicate: false, record: clone(state.records[key]), revision, conflicts: merged.conflicts, eventId: eid, localSequence: state.localSequence };
   }
 
-  function applyLocalTombstone(state, { id, eventId: eid, at, origin = 'local', baseRevision = null, entityType = 'record', userId = null }) {
+  function applyLocalTombstone(state, { id, eventId: eid, at, origin = 'local', baseRevision = null, entityType = 'record', userId = null, hlc = null }) {
     const key = recordId(id);
     if (state.events[eid] || state.syncLedger?.eventIds?.[eid]) return { duplicate: true, revision: state.revision };
+    restoreHlc(state, hlc);
     const effectiveBaseRevision = baseRevision == null
       ? Number(state.records[key] && state.records[key]._revision || state.tombstones[key] && state.tombstones[key].revision) || 0
       : Number(baseRevision) || 0;
@@ -684,7 +766,7 @@ function createLocalDb(file) {
     state.revision = revision;
     state.tombstones[key] = { id: key, revision, baseRevision: effectiveBaseRevision, at, deviceId: state.deviceId };
     delete state.records[key];
-    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation: 'delete', delete: true, revision, baseRevision: effectiveBaseRevision, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
+    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation: 'delete', delete: true, revision, baseRevision: effectiveBaseRevision, localSequence: state.localSequence, at, origin, ...(hlc ? {hlc} : {}), uploaded: false, acknowledged: false, synced: false };
     closeIfLocalOnly(journalItem);
     journalItem.sha256 = sha256(Buffer.from(JSON.stringify({ ...journalItem, sha256: undefined }), 'utf8'));
     state.events[eid] = { eventId: eid, revision, at, origin, deviceId: state.deviceId, localSequence: state.localSequence };
@@ -720,7 +802,8 @@ function createLocalDb(file) {
     return checkpoint;
   }
 
-  function applyRemoteDelta(state, { delta, eventId: eid, at, conflictIds = [], owner = { allowed:true, known:false }, receiptOnly = false }) {
+  function applyRemoteDelta(state, { delta, eventId: eid, at, conflictIds = [], owner = { allowed:true, known:false }, receiptOnly = false, clockState = null }) {
+    restoreHlc(state, clockState);
     const firstReceipt = receiptFirstSequence(delta);
     if (state.events[eid] || state.appliedEvents[eid] || state.syncLedger?.eventIds?.[eid]) {
       if (delta.deviceId) recordSyncReceipt(state, delta.deviceId, firstReceipt, Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0);
@@ -751,7 +834,7 @@ function createLocalDb(file) {
       // kopyalanmış bir kardeş kurulumdan gelir: "aynı cihazın eski olayı"
       // kuralıyla sessizce atlanmamalı, ayrı yazar olarak değerlendirilmeli.
       const writerDevice = delta.deviceId && isRetiredDeviceId(state, delta.deviceId) ? `${delta.deviceId}${CLONE_WRITER_SUFFIX}` : String(delta.deviceId || '');
-      const causal = delta.deviceId ? { writer: { d: writerDevice, s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen, owner, order:{ userId:String(delta.userId || ''), at:delta.at || '', deviceId:delta.deviceId } } : null;
+      const causal = delta.deviceId ? { writer: { d: writerDevice, s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen, owner, listClocks:delta.listClocks, order:{ userId:String(delta.userId || ''), at:delta.at || '', deviceId:delta.deviceId, ...(delta.hlc ? {hlc:delta.hlc} : {}) } } : null;
       const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision, key, causal);
       state.records[key] = { ...merged.value, _deleted: false };
       delete state.tombstones[key];
@@ -897,7 +980,7 @@ function createLocalDb(file) {
         if (expected !== String(delta.sha256)) throw new Error('Delta checksum doğrulanamadı.');
       }
       const itemPayload = {
-        delta, owner:payload.owners && payload.owners[index],
+        delta, owner:payload.owners && payload.owners[index], clockState:payload.clockStates && payload.clockStates[index],
         eventId: eventId(delta.eventId) || crypto.createHash('sha256').update(JSON.stringify(delta)).digest('hex'),
         at: payload.at || now(),
         conflictIds: Array.from({ length: Object.keys(delta.patch || delta.value || {}).length + 1 }, (_, index) => `${pid}:${index}:${eventId(delta.eventId) || key}`),
@@ -1320,7 +1403,7 @@ function createLocalDb(file) {
       return { status, deviceId: current.deviceId };
     });
   }
-  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, setSharedOwnerResolver, retireOwnerConflicts, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
+  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, setSharedOwnerResolver, retireOwnerConflicts, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, mergeCheckpointClockState, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
 }
 
 /* ===================================================================
