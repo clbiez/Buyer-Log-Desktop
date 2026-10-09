@@ -26,5 +26,8 @@
   `tests/i18n-coverage-guard.test.js` tek dilli metni reddeder, baseline boş
   kalır.
 - Kullanıcıya görünen her yeni özellik/fix/iyileştirme için `CLAUDE.md` §4.2 uyarınca `public/release-notes/next.json` + değişiklik sonrası çekilmiş, doğrulanabilir gerçek Buyer Log PNG ekran görüntüsü aynı değişiklik setinde güncellenir; aşırı crop/bozuk/before/mockup görseller kabul edilmez ve Codex kaynaklı işler bu kuraldan muaf değildir.
+- PR/test/merge/TEST/STABLE işlerinde `CLAUDE.md` §3.1'e uy:
+  PR'da otomatik Actions testi yok (yerel test + PR açıklaması), zorunlu tam TEST regresyonu,
+  ayrı yayın kararı ve sıfır Actions ZIP artifact yüklemesi.
 - `CLAUDE.md` ile bu dosya çelişir görünürse `CLAUDE.md` önceliklidir; bu dosya
   yalnız Codex'e özgü giriş/fast-path bilgisidir.

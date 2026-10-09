@@ -3,9 +3,10 @@ name: Buyer Log immutable version branch
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - '.github/release-requests/**'
-      - 'resources/app/public/release-notes/**'
+    # Only version bumps need a pinned update branch. Ordinary PRs do not.
+    paths:
+      - 'resources/app/package.json'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -37,11 +38,13 @@ jobs:
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
           BRANCH="updates/v${VERSION}"
           REMOTE_SHA="$(git ls-remote --heads origin "refs/heads/${BRANCH}" | awk '{print $1}')"
-          if [[ -n "$REMOTE_SHA" && "$REMOTE_SHA" != "$SOURCE_SHA" ]]; then
-            echo "::error::${BRANCH} already records ${REMOTE_SHA}; bump package version for a new update."
-            exit 1
+          if [[ -n "$REMOTE_SHA" ]]; then
+            if [[ "$REMOTE_SHA" != "$SOURCE_SHA" ]]; then
+              echo "::notice::${BRANCH} already immutably records ${REMOTE_SHA}; leaving it unchanged. Bump the version before a new release."
+            else
+              echo "Already recorded ${BRANCH}."
+            fi
+            exit 0
           fi
-          if [[ -z "$REMOTE_SHA" ]]; then
-            git push origin "${SOURCE_SHA}:refs/heads/${BRANCH}"
-          fi
+          git push origin "${SOURCE_SHA}:refs/heads/${BRANCH}"
           echo "Recorded ${SOURCE_SHA} as ${BRANCH}."

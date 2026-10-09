@@ -123,7 +123,9 @@ test('v7.12 LFL breakdown order supports drag and arrow reordering without reloa
 
 test('v7.12 Product Main Definition is a first-class Collection column and PLM import field', () => {
   assert.match(APP, /\{k:'productMainDefinition', label:'Product Main Definition'/);
-  assert.match(APP, /productMainDefinition:source\.productMainDefinition/);
+  // Product Main Definition now follows the confirmed PLM→ASAS translation path.
+  assert.match(APP, /productMainDefinition:kolPlmTranslate\('productMainDefinition',source\.productMainDefinition\)/);
+  assert.match(APP, /productMainDefinition:\{source:'productMainDefinition',target:'productMainDefinition',asas:'productDescription'\}/);
   assert.match(APP, /'productMainDefinition'/);
   assert.match(APP, /'Product Main Definition':'Ürün Ana Tanım'/);
 });

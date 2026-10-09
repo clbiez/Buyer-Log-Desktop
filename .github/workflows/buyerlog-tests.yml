@@ -1,11 +1,18 @@
 name: Buyer Log Tests
 
+# GitHub Actions kotasını korumak için PR'lar otomatik test koşmaz.
+# Tek zorunlu tam regresyon TEST yayınındadır (buyerlog-test-release.yml).
+# Riskli bir PR'ı yayından önce doğrulamak için elle çalıştırılabilir.
 on:
-  pull_request:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Test edilecek dal veya commit (boş = seçilen dal)
+        required: false
+        type: string
 
 concurrency:
-  group: buyerlog-tests-${{ github.event.pull_request.number }}
+  group: buyerlog-tests-${{ inputs.ref || github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -22,6 +29,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+          persist-credentials: false
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -30,5 +40,5 @@ jobs:
           cache-dependency-path: resources/app/package-lock.json
       - name: Install dependencies
         run: npm ci --ignore-scripts
-      - name: Run Buyer Log tests
+      - name: Run full Buyer Log regression
         run: npm test

@@ -86,13 +86,8 @@ jobs:
           --version "$VERSION"
           --created-at "$PUBLISHED_AT"
           --out "$RUNNER_TEMP/out"
-      - uses: actions/upload-artifact@v4
-        with:
-          name: BuyerLog-Kurulum-${{ env.VERSION }}
-          path: |
-            ${{ runner.temp }}/out/BuyerLog-Kurulum-*.zip
-            ${{ runner.temp }}/out/BuyerLog-Kurulum-*.zip.sha256
-          if-no-files-found: error
+      # Avoid Actions artifact storage entirely: publish the verified ZIP
+      # directly to the immutable STABLE release below.
       - name: Attach installer to the public STABLE release (never overwrite)
         shell: bash
         env:
