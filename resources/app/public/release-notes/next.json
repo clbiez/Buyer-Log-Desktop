@@ -142,6 +142,39 @@
         "tr": "PLM'de yalnız BOM/baskı bilgisi değişen modellerde Model Detayları senkronu \"hepsi güncel\" deyip Artwork Detayı sütununu eski değerde bırakıyordu. Senkron artık kaydettiği BOM özetlerini tabloya hemen yansıtıyor ve kaç artwork detayının güncellendiğini bildiriyor. LCW AI'a ulaşılamadığı ya da analizin ertelendiği modeller de bir sonraki senkronda yeniden çözümleniyor. Elle düzenlediğiniz Artwork Detayı hücreleri korunur; hücreyi temizlerseniz PLM değeri geri gelir.",
         "en": "For models whose only PLM change was their BOM/print data, the Model Details sync reported \"all up to date\" and left the Artwork Detail column on the old value. The sync now applies the BOM summaries it saved to the table right away and reports how many artwork details were updated. Models whose LCW AI analysis was unavailable or deferred are also re-analysed on the next sync. Artwork Detail cells you edited by hand are kept; clear the cell to bring back the PLM value."
       }
+    },
+    {
+      "id": "collection-fabric-cards",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kumaş kartları: uzun PLM kumaş bilgisi yerine kısa özet",
+        "en": "Fabric cards: a short summary instead of long PLM fabric information"
+      },
+      "path": {
+        "tr": "Koleksiyon › Kumaş sütunu › çift tık",
+        "en": "Collection › Fabric column › double-click"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-cards.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: Kumaş sütununda her satır kumaş kodu etiketi ve kısa kart özetiyle görünüyor — demo verili Buyer Log ekranı",
+          "en": "Collection table: each row of the Fabric column shows a fabric code tag and a short card summary — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Aynı kumaş kodlu her model aynı kartı kullanır",
+          "en": "Every model with the same fabric code uses the same card"
+        }
+      },
+      "body": {
+        "tr": "PLM'den gelen kumaş bilgisi değiştirilmeden saklanır; Buyer Log kumaş koduna (ör. 3859) bir kumaş kartı bağlar ve tabloda yalnız kartın kısa özetini gösterir. Özet Türkçe ve İngilizce tutulur; tablo aktif dildeki özeti gösterir. PLM'den model aktarıldığında kartı olmayan kodlar LCW AI ile analiz edilir; öneri PLM metniyle doğrulanır, önizlenir ve onayınızla kaydedilir. Kartı olan kod için LCW AI'a tekrar sorulmaz. Hücreye çift tıklayınca özet, ayrıntılar ve tam PLM metni açılır; özeti ve ayrıntıları düzenleyebilir ya da kartı silebilirsiniz.",
+        "en": "Fabric information from PLM is kept unchanged; Buyer Log links a fabric card to the fabric code (e.g. 3859) and shows only the card's short summary in the table. The summary is kept in Turkish and English; the table shows the summary in the active language. When models are imported from PLM, codes without a card are analysed with LCW AI; the suggestion is checked against the PLM text, previewed and saved with your approval. LCW AI is not asked again for a code that already has a card. Double-click the cell to see the summary, the details and the full PLM text; you can edit the summary and details or delete the card."
+      }
     }
   ]
 }
