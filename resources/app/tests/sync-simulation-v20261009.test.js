@@ -64,22 +64,17 @@ test('OneDrive conflict copies and corrupt final packages do not hide a valid pa
   assert.equal(simulation.replicator.metrics.conflictCopies, 1);
 });
 
-test('known protocol gap: a partial foreign head must not take a device offline', {
-  todo: 'P3 evidence, seed=4403: sync-settings.js detectLegacyPeers/detectGzipUnsupportedPeers/runSyncOnce foreign _head.json parse escapes the corrupt-package guard; fix in a separate package',
-}, async t => {
+test('protocol regression: a partial foreign head must not take a device offline', async t => {
   const simulation = await createSimulation({ seed: 4403, devices: 2 });
   t.after(() => simulation.close());
   await simulation.syncRound(); await simulation.replicator.flush();
   const [a, b] = simulation.devices;
   await fsp.writeFile(path.join(b.mirror, 'BUYER_LOG_SYNC', 'changes', encodeURIComponent(a.id), '_head.json'), '{"latestSequence":');
   const result = await b.sync.syncOnce();
-  // Intentionally RED/TODO. No production fix or relaxed invariant in P3.
   assert.equal(result.online, true, `seed=4403: ${result.lastError}`);
 });
 
-test('known protocol gap: delayed capability head must not invalidate scoped legacy checksums', {
-  todo: 'P3 evidence, seed=4404: outgoing scope changes patch/syncClass but preserves journal sha256; the legacy receiver rejects every scoped event',
-}, async t => {
+test('protocol regression: delayed capability head must not invalidate scoped legacy checksums', async t => {
   const simulation = await createSimulation({ seed: 4404, devices: 2 });
   t.after(() => simulation.close());
   const [a, b] = simulation.devices;
@@ -98,9 +93,7 @@ test('known protocol gap: delayed capability head must not invalidate scoped leg
   assert.equal(Number(received.syncCheckpoints[a.id] || 0), head.latestSequence);
 });
 
-test('known protocol gap: valid legacy event after a local-only event cannot close the contiguous checkpoint', {
-  todo: 'P3 evidence, seed=4405: legacy .ready lacks local-only cover ranges; checkpoint remains zero although value arrives and every file was delivered',
-}, async t => {
+test('protocol regression: valid legacy event after a local-only event cannot close the contiguous checkpoint', async t => {
   const simulation = await createSimulation({ seed: 4405, devices: 2 });
   t.after(() => simulation.close());
   const [a, b] = simulation.devices;
@@ -121,4 +114,50 @@ test('known protocol gap: valid legacy event after a local-only event cannot clo
   assert.equal(state.records['cp-order:LEGACY-GAP']?.suppFob, 13);
   assert.equal((await b.sync.read()).corruptPackages, 0);
   assert.equal(Number(state.syncCheckpoints[a.id] || 0), 2, 'seed=4405: exactly two settled rounds leave the checkpoint at zero');
+});
+
+test('legacy retry replaces a corrupt own file before closing the journal', async t => {
+  const simulation = await createSimulation({ seed: 4406, devices: 2 });
+  t.after(() => simulation.close());
+  const [a, b] = simulation.devices;
+  await fsp.mkdir(path.join(a.mirror, 'BUYER_LOG_SYNC', 'changes', encodeURIComponent(b.id)), { recursive: true });
+  await a.db.queuePatch({ id: 'cp-order:RETRY', patch: { suppFob: 19 } });
+  const [event] = await a.db.pending(10);
+  const target = path.join(a.mirror, 'BUYER_LOG_SYNC', 'changes', encodeURIComponent(a.id), `${String(event.localSequence).padStart(12, '0')}-${encodeURIComponent(event.eventId)}.ready`);
+  await fsp.mkdir(path.dirname(target), { recursive: true });
+  await fsp.writeFile(target, JSON.stringify({ ...event, sha256: 'invalid-old-checksum' }));
+  await a.sync.syncOnce(); await simulation.settle();
+  assert.equal((await b.db.read()).records['cp-order:RETRY'].suppFob, 19);
+  assert.equal((await a.db.pending(10)).length, 0);
+});
+
+test('invalid cover range never mutates cached state or poisons a valid retry', async t => {
+  const simulation = await createSimulation({ seed: 4407, devices: 2 });
+  t.after(() => simulation.close());
+  const db = simulation.devices[1].db;
+  const invalid = { eventId: 'invalid-cover', id: 'cp-order:INVALID', deviceId: 'foreign', localSequence: 5, coverFromSeq: 5, patch: { suppFob: 99 } };
+  const valid = { ...invalid, eventId: 'valid-first', id: 'cp-order:VALID', coverFromSeq: 1 };
+  await assert.rejects(db.applyDelta(invalid), /cover range/);
+  await assert.rejects(db.applyDeltas([valid, invalid]), /cover range/);
+  await assert.rejects(db.applyPackage({ packageId: 'invalid-package', sourceDeviceId: 'foreign', firstSeq: 1, lastSeq: 5, events: [valid, invalid] }), /cover range/);
+  const state = await db.read();
+  assert.equal(state.records['cp-order:INVALID'], undefined);
+  assert.equal(state.records['cp-order:VALID'], undefined);
+  assert.equal(state.appliedEvents['invalid-cover'], undefined);
+  const applied = await db.applyDelta({ ...invalid, coverFromSeq: 1 });
+  assert.equal(applied.applied, true);
+  assert.equal((await db.read()).syncCheckpoints.foreign, 5);
+});
+
+test('duplicate legacy event accepts newly supplied gap coverage without reapplying data', async t => {
+  const simulation = await createSimulation({ seed: 4408, devices: 2 });
+  t.after(() => simulation.close());
+  const db = simulation.devices[1].db;
+  const event = { eventId: 'duplicate-cover', id: 'cp-order:COVER', deviceId: 'foreign', localSequence: 2, patch: { suppFob: 14 } };
+  await db.applyDelta(event);
+  assert.equal((await db.read()).syncCheckpoints.foreign, 0);
+  const result = await db.applyDelta({ ...event, coverFromSeq: 1 });
+  assert.equal(result.duplicate, true);
+  assert.equal((await db.read()).syncCheckpoints.foreign, 2);
+  assert.equal((await db.read()).records['cp-order:COVER'].suppFob, 14);
 });

@@ -16,3 +16,9 @@ The main test covers 10 devices / 300 operations for three seeds, with a 15-seco
 P3 records three executed RED/TODO counterexamples for a separate production fix: a partial foreign capability head takes sync offline (4403); scoped legacy payload retains its old journal checksum (4404); legacy transport lacks coverage for preceding local-only sequence gaps (4405). These TODOs are not proof of convergence under those conditions. Concurrent same-field writes currently intentionally produce conflicts; separate fields and causally ordered writes must not.
 
 Validation on Node 22: targeted file 4 pass / 1 skip / 3 TODO, ~6.1 seconds; soak 5 pass / 3 TODO, ~26.7 seconds; full suite 6,271 pass / 66 skip / 3 TODO, zero ordinary failures. The reviewer-requested no-scan assertions also pass.
+
+## Separate transport fix after P3
+
+The three counterexamples are now ordinary passing regressions. Foreign malformed heads fall back to actual package scanning without taking the device offline. Legacy events get a checksum of the filtered transport and additive gap coverage; first/last event sequence meanings remain unchanged. A retry validates/replaces an invalid or outdated own legacy file before closing its journal entry. Coverage is validated before any cached DB mutation, including batches/packages, and a duplicate event can durably supply new receipt coverage without reapplying its fields.
+
+The fix does not rewrite historically uploaded events automatically. Final validation: 6,277 passed / 66 skipped / zero failures or TODOs; targeted simulation 10 passed / 1 soak skip. Existing WAL, checkpoint and idempotency tests pass.
