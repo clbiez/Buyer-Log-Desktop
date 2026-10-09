@@ -3,14 +3,47 @@
   "publishedAt": "2026-10-08",
   "bootstrapVisual": false,
   "title": {
-    "tr": "OAB daha hızlı",
-    "en": "Faster OAB"
+    "tr": "Güncellemeler kaybolmuyor; OAB daha hızlı",
+    "en": "Edits are no longer lost; faster OAB"
   },
   "summary": {
-    "tr": "Masaüstü OAB girişi rapor verisini tek istekte çekiyor.",
-    "en": "Desktop OAB sign-in fetches report data in a single request."
+    "tr": "Takılı kalan paylaşılan veri kilidi kendiliğinden temizleniyor; OAB verisi tek rapor isteğinde geliyor.",
+    "en": "A stuck shared-data lock clears itself; OAB data arrives in a single report request."
   },
   "changes": [
+    {
+      "id": "shared-lock-stale-owner-recovered",
+      "type": "fix",
+      "module": {
+        "tr": "Senkronizasyon",
+        "en": "Synchronization"
+      },
+      "title": {
+        "tr": "Takılı kalan paylaşılan veri kilidi kendiliğinden temizleniyor",
+        "en": "A stuck shared-data lock now clears itself"
+      },
+      "path": {
+        "tr": "Veri Yönetimi › Senkron ve Yerel Veri",
+        "en": "Data Management › Sync and Local Data"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shared-lock-stale-owner-recovered.png",
+        "alt": {
+          "tr": "Senkron ve Yerel Veri penceresinde başarılı son sync ve sıfır hata — demo verili Buyer Log ekranı",
+          "en": "Sync and Local Data dialog showing a successful last sync and no errors — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Bozuk sahip dosyalı eski kilide rağmen senkron tamamlanıyor",
+          "en": "Sync completes despite an old lock with a broken owner file"
+        }
+      },
+      "body": {
+        "tr": "Bir paylaşılan veri dosyasının kilidi yarım kalmış (sahip bilgisi boş ya da bozuk) olduğunda Buyer Log onu hiç temizleyemiyordu; o dosyaya günlerce yazılamıyor, yaptığınız güncellemeler paylaşılan depoya işlenmediği için uygulamayı kapatıp açınca eski hâline dönüyordu. Bu tür eski kilitler artık güvenle algılanıp kaldırılıyor ve senkron normal devam ediyor. PLM görsel işlerinin her adımının süresi de artık kayda geçiyor.",
+        "en": "When a shared-data file's lock was left half-written (empty or broken owner information), Buyer Log could never clear it; that file could not be written for days and your edits, never reaching the shared store, reverted after restarting the app. Such old locks are now detected and removed safely and sync continues normally. The duration of each step of PLM image jobs is now logged too."
+      }
+    },
     {
       "id": "oab-desktop-single-report",
       "type": "improvement",
