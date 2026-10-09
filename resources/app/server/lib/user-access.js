@@ -95,7 +95,6 @@ function readAccessStoreFile(file) {
     return parsed && typeof parsed === 'object' && (parsed.moderator || Array.isArray(parsed.users)) ? parsed : null;
   } catch (_) { return null; }
 }
-function validAccessStoreFile(file) { return Boolean(readAccessStoreFile(file)); }
 function accessStoreQuality(file) {
   const parsed = readAccessStoreFile(file); if (!parsed) return null;
   const profiles = [parsed.moderator, ...(Array.isArray(parsed.users) ? parsed.users : [])].filter(Boolean);

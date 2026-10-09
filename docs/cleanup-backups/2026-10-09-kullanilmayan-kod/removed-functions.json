@@ -1,0 +1,617 @@
+{
+  "baseCommit": "f6b96edae75e2aecc85f4c66c5d0f47e1e249993",
+  "baseVersion": "7.0.264",
+  "createdAt": "2026-10-09",
+  "entries": [
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "transitDaysForPriority",
+      "reportIndex": 2,
+      "originalLine": 872,
+      "anchorBefore": "enhanceAllDateInputs(node); }));\n});\nqueueMicrotask(()=>{\n  enhanceAllDateInputs(document);\n  dateInputObserver.observe(document.body,{childList:true,subtree:true});\n});\n\n// ---------- CP derived fields + Unified Action Priority ----------\n",
+      "anchorAfter": "function actionPriorityCode(value){\n  const text=norm(value);\n  if(!text)return '';\n  const OD=window.BLOrderDecisionEngine;\n  if(OD&&OD.ACTION_PRIORITY&&OD.ACTION_PRIORITY[text])return text;\n  if(text==='ACT_TODAY')return 'ACTION_TODAY';\n ",
+      "removedText": "function transitDaysForPriority(delType){ return defaultTransitDays(delType); }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "cpImagePayload",
+      "reportIndex": 4,
+      "originalLine": 3231,
+      "anchorBefore": "mageFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(reader.error||new Error('Görsel okunamadı.'));reader.readAsDataURL(file);});}\n",
+      "anchorAfter": "\nlet _imageDeleteConfirmPopover=null,_imageDeleteConfirmCleanup=null;\nfunction closeImageDeleteConfirm(){\n  if(_imageDeleteConfirmCleanup){try{_imageDeleteConfirmCleanup();}catch(_){} _imageDeleteConfirmCleanup=null;}\n  if(_imageDeleteConfi",
+      "removedText": "function cpImagePayload(dataUrl){const match=String(dataUrl||'').match(/^data:(image\\/[A-Za-z0-9.+-]+);base64,(.+)$/s);return match?{mimeType:match[1],base64:match[2]}:null;}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "cpLogisticArrivalCellHtml",
+      "reportIndex": 5,
+      "originalLine": 5455,
+      "anchorBefore": "ics details':'Show logistics details'):(expanded?'Lojistik detaylarını kapat':'Lojistik detaylarını göster'))}\"><span aria-hidden=\"true\">${expanded?'▾':'▸'}</span></button><div class=\"cpLogisticSummaryStack\">${summary}</div></div></td>`;\n}\n",
+      "anchorAfter": "function cpLogisticDelTypeCellHtml(row,canEdit){\n  const segments=cpLogisticSegments(row);\n  if(!segments.length) return null;\n  const production=segments.find(s=>s.kind==='production'||s.kind==='shortage');\n  const unique=[...new Set(segme",
+      "removedText": "function cpLogisticArrivalCellHtml(row){\n  const segments=cpLogisticSegments(row);\n  if(!segments.length) return `<td>${fmtDate(row['Ant. Arrival'])}</td>`;\n  const primary=segments[0], date=coerceDateLoose(primary.arrival);\n  const unique=[...new Set(segments.map(s=>toISODate(s.arrival)).filter(Boolean))];\n  const detail=(primary.kind==='production'||primary.kind==='shortage')?(appLang==='en'?'Ex-Factory based':'Ex-Factory bazlı'):(appLang==='en'?'IAS date':'IAS tarihi');\n  const more=unique.length>1?`<span class=\"cpLogisticMore\">+${unique.length-1} ${appLang==='en'?'dates':'tarih'}</span>`:'';\n  return `<td class=\"cpLogisticArrivalTd\"><span class=\"cpLogisticPrimaryDate\">${fmtDate(date)||'—'}</span><span class=\"cpLogisticDateSource\">${escapeHtml(detail)}</span>${more}</td>`;\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "singleHeaderFilterValue",
+      "reportIndex": 6,
+      "originalLine": 6006,
+      "anchorBefore": "h-6))+'px';\n    panel.style.top=(rect.bottom+5)+'px';\n  }\n  panel.querySelector('.cfpSearch')?.focus();\n  return panel;\n}\n\nfunction colFilterActive(tableKey, key){ return !!(state.colFilters[tableKey] && state.colFilters[tableKey][key]); }\n",
+      "anchorAfter": "function mirroredQuickValueActive(tableKey, key, quickValue, candidate){\n  const wanted=comparableColumnFilterValue(key,candidate); if(!wanted) return false;\n  const entry=state.colFilters?.[tableKey]?.[key];\n  const headerActive=!!(entry&&",
+      "removedText": "// Sütun başlığı filtresi tek bir kategorik değere indirilmişse, aynı alanı temsil eden\n// hızlı filtre çipinin de seçili görünmesini sağlar. Tarih/sayı kuralları tek bir kategori\n// çipiyle birebir eşleşmediği için burada bilinçli olarak kapsam dışıdır.\nfunction singleHeaderFilterValue(tableKey, key){\n  const entry = state.colFilters?.[tableKey]?.[key];\n  if(!entry || entry.granularity || entry.numericRule || !entry.values || entry.values.size!==1) return '';\n  return norm([...entry.values][0]);\n}\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "withExcludedColumnFilters",
+      "reportIndex": 7,
+      "originalLine": 6075,
+      "anchorBefore": "y=state.colFilters.cp['Ex-factory'];\n    const values=new Set(entry&&entry.quickExf&&entry.values?[...entry.values].map(String):[]);values.add(legacy);\n    state.colFilters.cp['Ex-factory']={values,quickExf:true};state.cpQuickExf='';\n  }\n}\n",
+      "anchorAfter": "// Hızlı filtreler (KPI çipleri ve üst boyut seçimleri) de ilgili veri sütununu\n// gerçekten filtreler. Bu filtreler state.colFilters içinde tutulmadığı için başlık\n// vurgusuna ayrıca dahil edilir.\nfunction quickFilterColumnActive(tableKey",
+      "removedText": "// Sayaçları hesaplarken hızlı filtre grubunun kendi sütun başlığı filtresini geçici olarak\n// dışarıda bırakır. Böylece çip sayıları, filtre ister üst çipten ister başlıktan verilmiş olsun,\n// aynı çapraz filtre mantığıyla hesaplanır.\nfunction withExcludedColumnFilters(tableKey, keys, fn){\n  const bucket = state.colFilters?.[tableKey];\n  if(!bucket || !keys || !keys.length) return fn();\n  const saved = new Map();\n  keys.forEach(key=>{ if(Object.prototype.hasOwnProperty.call(bucket,key)){ saved.set(key,bucket[key]); delete bucket[key]; } });\n  try{ return fn(); }\n  finally{ saved.forEach((value,key)=>{ bucket[key]=value; }); }\n}\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "cpOrdersRecordImageCopyCell",
+      "reportIndex": 8,
+      "originalLine": 8215,
+      "anchorBefore": "height=\"${height}\" style=\"width:${width}px;height:${height}px;border:0;\">`,\n    style:`border:${_COPY_BORDER};padding:2px;vertical-align:middle;text-align:center;width:${cellWidth}px;height:${cellHeight}px;line-height:${height}px;`,\n  };\n}\n",
+      "anchorAfter": "/* Görsel çözümü SINIRLI EŞZAMANLILIKLA yapılır. getClipboardDataUrl her çağrıda\n   ağdan çeker + görseli canvas'ta Office uyumlu PNG'ye yeniden kodlar; yüzlerce\n   satır seçildiğinde hepsini aynı anda başlatmak tarayıcının ağ kuyruğunu ve\n",
+      "removedText": "async function cpOrdersRecordImageCopyCell(row,dims){\n  const dataUrl=await cpOrdersRowImageDataUrl(row);\n  if(!dataUrl) return null;\n  const natural=await _copyImageNaturalSize(dataUrl,null,dims.w,dims.h,null);\n  return cpOrdersImageCopyCell(dataUrl,dims,natural);\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "passesCpDimFilters",
+      "reportIndex": 9,
+      "originalLine": 8423,
+      "anchorBefore": "em(CP_DIM_FILTERS_KEY); if(!raw) return;\n    const obj = JSON.parse(raw);\n    Object.entries(obj).forEach(([d,vals])=>{ if(CP_DIM_META[d] && Array.isArray(vals) && vals.length) cpDimFilters[d]=new Set(vals.map(String)); });\n  }catch(e){}\n}\n",
+      "anchorAfter": "function setDimFilterButtonLabel(btn, text){\n  if(!btn) return;\n  const label = btn.querySelector('.dimBtnText');\n  if(label) label.textContent = text; else btn.textContent = text;\n}\nfunction updateCpDimBtnLabels(){\n  Object.entries(CP_DIM_",
+      "removedText": "function passesCpDimFilters(r){\n  return Object.entries(cpDimFilters).every(([dim,set])=>{\n    if(!set || !set.size) return true;\n    const col = CP_DIM_META[dim].col;\n    return set.has(norm(r[col]));\n  });\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "seasonSortParts",
+      "reportIndex": 10,
+      "originalLine": 8890,
+      "anchorBefore": "iled++; failedId=CP_MIRROR_IDS[g]; if(failed>1) break; }\n    }\n    if(failed===0){ out.all.push(r); for(let g=0;g<CP_MIRROR_IDS.length;g++) out[CP_MIRROR_IDS[g]].push(r); }\n    else if(failed===1) out[failedId].push(r);\n  }\n  return out;\n}\n",
+      "anchorAfter": "function compareSeasonValues(a,b){ return BLBusinessRules.compareSeasonNumberThenLetter(a,b); }\n// ---- Hızlı filtre (KPI çipi) yardımcıları ----\n// Sayısı 0 olan seçenek hiç gösterilmez: seçilse bile tabloyu boşaltacağı için\n// kullanıcıya",
+      "removedText": "function seasonSortParts(value){ return BLBusinessRules.seasonNumberLetterParts(value); }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "cpRowsScoped",
+      "reportIndex": 11,
+      "originalLine": 8945,
+      "anchorBefore": "l && schema&&schema.sortType==='number') return (sx-sy)*dir;\n    if(sx!=null && sy!=null && schema&&schema.sortType==='date') return (sx-sy)*dir;\n    return norm(x).localeCompare(norm(y),'tr',{numeric:true,sensitivity:'base'})*dir;\n  });\n}\n",
+      "anchorAfter": "/* Boş tablo yönlendirmesi: kaynakta hiç satır yoksa Veri Yönetimi'ne, filtreler\n   her şeyi eliyorsa filtre temizlemeye yönlendirir. Tablo başlığı ve araç\n   çubuğu görünür kalır; ipucu tablo kabının içinde yatayda sabit durur. */\nfunction",
+      "removedText": "// Hızlı filtre sayaçları için: belirtilen grup HARİÇ tüm aktif filtreler uygulanır.\n// Böylece ör. bir sezon seçiliyken Priority/Status/Ex-Factory/Del.Type sayıları o sezonun kapsamına daralır.\nfunction cpRowsScoped(exclude){\n  if(!state.cp) return [];\n  const ex = Array.isArray(exclude) ? exclude : [exclude];\n  const ctx = cpBuildFilterContext();\n  const ids = CP_MIRROR_IDS.filter(id=>!ex.includes(id));\n  return state.cp.rows.filter(r=>cpRowPasses(r,ctx,ids));\n}\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "saveWorkbookBufferWithValidations",
+      "reportIndex": 12,
+      "originalLine": 10024,
+      "anchorBefore": "ument.spreadsheetml.sheet'});\n  const url=URL.createObjectURL(blob);\n  const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();\n  setTimeout(()=>URL.revokeObjectURL(url),1500);\n}\n",
+      "anchorAfter": "\nfunction exportCsv(rows, cols, filename){\n  const head = cols.map(c=>c.label).join(',');\n  const body = rows.map(r=>cols.map(c=>{\n    let v=r[c.k];\n    if(v instanceof Date) v=fmtDate(v);\n    v = norm(v).replace(/\"/g,'\"\"');\n    return /[\",",
+      "removedText": "async function saveWorkbookBufferWithValidations(raw,filename,validations,conditionalFormats,protections,workbookOptions){\n  if(window.BLPerf)await window.BLPerf.ensureLibrary('jszip');\n  const specs=Array.isArray(validations)?validations:[],formats=Array.isArray(conditionalFormats)?conditionalFormats:[],locks=Array.isArray(protections)?protections:[],options=workbookOptions&&typeof workbookOptions==='object'?workbookOptions:{};\n  const pivotStyle=options.pivotStyle||(/^Backlog_Report_/i.test(String(filename||''))?{name:'BuyerLogPivot',fillColor:'F2F4F7',fontColor:'475467',bodyFillColor:'FFFFFF',bodyFontColor:'101828',bold:true}:null);\n  const freezePanes=Array.isArray(options.freezePanes)?options.freezePanes:[{sheetPath:'xl/worksheets/sheet1.xml',rows:1,topLeftCell:'A2'}];\n  let blob;\n  if((specs.length||formats.length||locks.length||pivotStyle||freezePanes.length)&&window.BLExcelWorkbookGuards&&typeof JSZip!=='undefined')blob=await BLExcelWorkbookGuards.applyWorkbookGuards(raw,{validations:specs,conditionalFormats:formats,protections:locks,pivotStyle,freezePanes},JSZip,'blob');\n  else blob=new Blob([raw],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});\n  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "exportCsv",
+      "reportIndex": 13,
+      "originalLine": 10035,
+      "anchorBefore": "s-officedocument.spreadsheetml.sheet'});\n  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);\n}\n\n",
+      "anchorAfter": "// ---------- OVERVIEW ----------\n// Bir <select>'e, seçeneklerde olmayan bir değer atanacaksa geçici option ekleyerek atar.\nfunction setSelectValue(id, val){\n  const sel = document.getElementById(id); if(!sel) return;\n  if(val && ![...sel.",
+      "removedText": "function exportCsv(rows, cols, filename){\n  const head = cols.map(c=>c.label).join(',');\n  const body = rows.map(r=>cols.map(c=>{\n    let v=r[c.k];\n    if(v instanceof Date) v=fmtDate(v);\n    v = norm(v).replace(/\"/g,'\"\"');\n    return /[\",\\n]/.test(v) ? `\"${v}\"` : v;\n  }).join(',')).join('\\n');\n  const blob = new Blob([head+'\\n'+body], {type:'text/csv;charset=utf-8;'});\n  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();\n}\n\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "overviewCollectionSummaryPivotColumns",
+      "reportIndex": 14,
+      "originalLine": 10275,
+      "anchorBefore": "&&Array.isArray(kolRows)?kolRows:[];}catch(_){return [];}\n}\nfunction overviewCollectionSummaryColumns(){\n  try{return typeof kolColDefs==='function'?kolColDefs().filter(column=>column&&column.k&&!column.noFilter):[];}catch(_){return [];}\n}\n",
+      "anchorAfter": "function overviewCollectionSummaryColumnValue(row,key){\n  try{return typeof kolFilterValue==='function'?kolFilterValue(row,key):String((row&&row[key])??'');}catch(_){return String((row&&row[key])??'');}\n}\n/* Revolver satırı adet ve görseli:",
+      "removedText": "function overviewCollectionSummaryPivotColumns(){\n  try{return typeof kolColDefs==='function'?kolColDefs().filter(column=>column&&column.k):[];}catch(_){return [];}\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "matchFieldLabel",
+      "reportIndex": 15,
+      "originalLine": 11652,
+      "anchorBefore": "value.conditions)?value.conditions:[];\n  return {version:1,conditions:conditions.map((condition,index)=>({\n    id:String(condition.id||`condition-${index+1}`),\n    asas:{...(condition.asas||{})},\n    ias:{...(condition.ias||{})},\n  }))};\n}\n",
+      "anchorAfter": "/* v7.81 — ESKİ EŞLEŞTİRME KURALI MODALI KALDIRILDI.\n\n   Kural artık Veri Yönetimi ekranında (data-management-matchrule.js): iki\n   kaynak ARASINDAKİ bir ilişki olduğu için kaynak şeridinin altında, kendi\n   başlığıyla duruyor. Denetim (mat",
+      "removedText": "function matchFieldLabel(side,emptyText){\n  if(!side||(!side.name&&!side.canonicalHeader&&!side.header))return emptyText;\n  const canonical=String(side.canonicalHeader||side.header||'').trim();\n  const source=[side.table,side.name].filter(Boolean).join(' · ');\n  return canonical&&source?`${canonical} — ${source}`:(source||canonical);\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "modelAllowedTargets",
+      "reportIndex": 16,
+      "originalLine": 11713,
+      "anchorBefore": ",'orders','backlog'],intake:['intake']};\nMODEL_ROLE_TARGETS.asas.push('priceanalysis');\nconst MODEL_TARGET_LABELS={cp:'CP',orders:'Orders / Siparişler',backlog:'Backlog',lfl:'LFL',priceanalysis:'Price & Supplier Analysis',intake:'INTAKE'};\n",
+      "anchorAfter": "function modelScopeLabel(scope){\n  const name=String(scope&&scope.name||'').trim();\n  if(name) return name;\n  return (scope&&scope.targets||[]).map(t=>MODEL_TARGET_LABELS[t]||t).join(' + ')||'—';\n}\nconst MODEL_QUERY_PLACEHOLDER='// Once \"Ta",
+      "removedText": "function modelAllowedTargets(role){ return (MODEL_ROLE_TARGETS[role]||[]).slice(); }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "modelScopeLabel",
+      "reportIndex": 17,
+      "originalLine": 11714,
+      "anchorBefore": ");\nconst MODEL_TARGET_LABELS={cp:'CP',orders:'Orders / Siparişler',backlog:'Backlog',lfl:'LFL',priceanalysis:'Price & Supplier Analysis',intake:'INTAKE'};\nfunction modelAllowedTargets(role){ return (MODEL_ROLE_TARGETS[role]||[]).slice(); }\n",
+      "anchorAfter": "const MODEL_QUERY_PLACEHOLDER='// Once \"Tablolari Listele\" ile tablo adini bul, listeden tikla.\\n// Sorgu buraya kendisi yazilir.';\nlet modelConnState={items:[],revision:0,selectedId:null,supported:true,exportFolder:'',loaded:false};\nlet mo",
+      "removedText": "function modelScopeLabel(scope){\n  const name=String(scope&&scope.name||'').trim();\n  if(name) return name;\n  return (scope&&scope.targets||[]).map(t=>MODEL_TARGET_LABELS[t]||t).join(' + ')||'—';\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "modelConnSchemaEntries",
+      "reportIndex": 18,
+      "originalLine": 11778,
+      "anchorBefore": "ng.title=issues.map(entry=>`${entry.connectionName}: ${entry.missing.map(field=>field.header).join(', ')}`).join('\\n');\n  return issues;\n}\nlet modelConnSchema=null;    // { columns:[{table,name,kind}], measures:[{table,folder,name,kind}] }\n",
+      "anchorAfter": "function modelConnEntryId(entry){ return `${entry.kind}|${entry.table}|${entry.name}`; }\n// Sütun tekil değerleri: catalog|tablo|sütun → değer listesi. Bir kez çekilir,\n// aynı pencerede tekrar açıldığında anında gelir.\nlet modelConnValueCa",
+      "removedText": "function modelConnSchemaEntries(){\n  if(!modelConnSchema) return [];\n  return (modelConnSchema.measures||[]).concat(modelConnSchema.columns||[]);\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "modelConnEntryId",
+      "reportIndex": 19,
+      "originalLine": 11782,
+      "anchorBefore": "ConnSchema=null;    // { columns:[{table,name,kind}], measures:[{table,folder,name,kind}] }\nfunction modelConnSchemaEntries(){\n  if(!modelConnSchema) return [];\n  return (modelConnSchema.measures||[]).concat(modelConnSchema.columns||[]);\n}\n",
+      "anchorAfter": "// Sütun tekil değerleri: catalog|tablo|sütun → değer listesi. Bir kez çekilir,\n// aynı pencerede tekrar açıldığında anında gelir.\nlet modelConnValueCache={};\nasync function modelConnDistinct(item,table,field){\n  const key=`${item.catalog}|",
+      "removedText": "function modelConnEntryId(entry){ return `${entry.kind}|${entry.table}|${entry.name}`; }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "modelConnDistinct",
+      "reportIndex": 20,
+      "originalLine": 11786,
+      "anchorBefore": " modelConnEntryId(entry){ return `${entry.kind}|${entry.table}|${entry.name}`; }\n// Sütun tekil değerleri: catalog|tablo|sütun → değer listesi. Bir kez çekilir,\n// aynı pencerede tekrar açıldığında anında gelir.\nlet modelConnValueCache={};\n",
+      "anchorAfter": "function modelConnKnownSeasons(){\n  try{ return [...new Set((state.asasOrders||[]).map(o=>String(o.season||'').trim()).filter(Boolean))]; }\n  catch(_){ return []; }\n}\n\n\n\n// SERVER_BACKED ana iş verisinin en az bir kez başarıyla yüklenip yük",
+      "removedText": "async function modelConnDistinct(item,table,field){\n  const key=`${item.catalog}|${table}|${field}`;\n  if(modelConnValueCache[key]) return modelConnValueCache[key];\n  const res=await fetch('/api/model-connections/distinct',{method:'POST',headers:{'Content-Type':'application/json'},\n    body:JSON.stringify({server:item.server,catalog:item.catalog,table,field})});\n  const data=await res.json().catch(()=>({}));\n  if(!res.ok) throw new Error(data.error||res.statusText);\n  modelConnValueCache[key]={values:Array.isArray(data.values)?data.values:[],truncated:Boolean(data.truncated)};\n  return modelConnValueCache[key];\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "modelConnKnownSeasons",
+      "reportIndex": 21,
+      "originalLine": 11796,
+      "anchorBefore": "it res.json().catch(()=>({}));\n  if(!res.ok) throw new Error(data.error||res.statusText);\n  modelConnValueCache[key]={values:Array.isArray(data.values)?data.values:[],truncated:Boolean(data.truncated)};\n  return modelConnValueCache[key];\n}\n",
+      "anchorAfter": "\n\n\n// SERVER_BACKED ana iş verisinin en az bir kez başarıyla yüklenip yüklenmediğini\n// anlatır; yerel Buyer Log API'sinin erişilebilirliğini anlatmaz. Kurumsal\n// kaynak/VPN kapalıyken ana yükleme başarısız olabilir fakat bağlantı ayarları",
+      "removedText": "function modelConnKnownSeasons(){\n  try{ return [...new Set((state.asasOrders||[]).map(o=>String(o.season||'').trim()).filter(Boolean))]; }\n  catch(_){ return []; }\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "transitRuleListLabel",
+      "reportIndex": 24,
+      "originalLine": 11871,
+      "anchorBefore": " yönlendiriyordu.\n// Bağlantı listesini açılışta yükle.\nvoid modelConnLoad().catch(()=>{});\n\nfunction transitRuleDateLabel(rule){return `${rule&&rule.exfStart?fmtDate(rule.exfStart):'−∞'} – ${rule&&rule.exfEnd?fmtDate(rule.exfEnd):'+∞'}`;}\n",
+      "anchorAfter": "function transitRuleMatchCount(rule){\n  return ((state.cp&&state.cp.rows)||[]).filter(row=>isProductionStatus(row.STATUS)&&findTransitRule(row['Ex-factory'],row.Season,row.Country,row['Del. Type'],[rule])).length;\n}\nasync function persistTr",
+      "removedText": "function transitRuleListLabel(values,emptyLabel){const list=Array.isArray(values)?values:[];return list.length?list.join(', '):emptyLabel;}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "isReadOnlyMode",
+      "reportIndex": 27,
+      "originalLine": 13674,
+      "anchorBefore": "gets : ['all'];\n  const out = new Set();\n  for(const target of list){\n    for(const area of (REFRESH_REDRAW_AREAS[target] || REFRESH_REDRAW_AREAS.all)) out.add(area);\n  }\n  return [...out];\n}\nlet _readOnlyMode = false, _readOnlyAreas = [];\n",
+      "anchorAfter": "// Bir alan şu anda yenileme yüzünden donmuş mu?\nfunction isAreaFrozen(area){ return _readOnlyMode && _readOnlyAreas.includes(String(area || '')); }\nfunction areaLabel(area){\n  const labels = { cp: 'CP', orders: appLang==='en'?'Orders':'Sip",
+      "removedText": "function isReadOnlyMode(){ return _readOnlyMode; }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "clearActiveProfileSelection",
+      "reportIndex": 30,
+      "originalLine": 16079,
+      "anchorBefore": "landırıldı.':'Filtre yeniden adlandırıldı.');\n  }catch(err){alert((appLang==='en'?'Could not rename: ':'Ad değiştirilemedi: ')+err.message);}\n}\ndocument.getElementById('viewRenameBtn')?.addEventListener('click',()=>renameProfile('view'));\n\n",
+      "anchorAfter": "function resetViewToSystemDefault(){\n  const page=activeProfilePage();\n  if(!isProfilePage(page))return;\n  if(!state.freeze)state.freeze={};\n  delete state.freeze[page];\n  if(page==='koleksiyon'){\n    kolColOrder=null;kolColWidths={};kolHid",
+      "removedText": "function clearActiveProfileSelection(kind){\n  const select=document.getElementById(kind==='view'?'viewSelect':'filterSelect');\n  if(select){select.value='';window.syncProfilePicker?.(select);}\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "backlogSelectionFor",
+      "reportIndex": 31,
+      "originalLine": 16512,
+      "anchorBefore": "function backlogValuesFor(dim){ return Array.isArray(backlogDimValues[dim]) ? backlogDimValues[dim] : []; }\nfunction backlogActiveSetFor(dim){ return new Set(Array.isArray(backlogDimValuesActive[dim]) ? backlogDimValuesActive[dim] : []); }\n",
+      "anchorAfter": "function backlogSelectionSize(dim){\n  if(dim==='buyerGrup') return backlogBuyerGrupSelected.size;\n  return backlogDimFilters[dim] ? backlogDimFilters[dim].size : 0;\n}\nfunction backlogClearSelection(dim){\n  if(dim==='buyerGrup'){ backlogBuye",
+      "removedText": "// Buying Group seçimi ayrı bir kümede tutuluyor; boyut panelleri de aynı kümeyi\n// düzenlesin diye tek erişim noktası.\nfunction backlogSelectionFor(dim){\n  if(dim==='buyerGrup') return backlogBuyerGrupSelected;\n  if(!backlogDimFilters[dim]) backlogDimFilters[dim]=new Set();\n  return backlogDimFilters[dim];\n}\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "backlogPruneSelection",
+      "reportIndex": 32,
+      "originalLine": 16527,
+      "anchorBefore": "acklogBuyerGrupSelected.size;\n  return backlogDimFilters[dim] ? backlogDimFilters[dim].size : 0;\n}\nfunction backlogClearSelection(dim){\n  if(dim==='buyerGrup'){ backlogBuyerGrupSelected.clear(); return; }\n  delete backlogDimFilters[dim];\n}\n",
+      "anchorAfter": "let backlogDateLevels = ['year','month','week','day']; // Antrepo Giriş Tarihi görünüm kademeleri\nconst BACKLOG_DATE_LEVEL_LABELS = { year:'Yıl', month:'Ay', week:'Hafta', day:'Gün' };\nconst BACKLOG_DIM_TO_SUMMARY_COL = {\n  ageGroup:'Merch ",
+      "removedText": "function backlogPruneSelection(dim){\n  if(dim==='buyerGrup') return;\n  if(backlogDimFilters[dim] && backlogDimFilters[dim].size===0) delete backlogDimFilters[dim];\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "buildBacklogPivotSheet",
+      "reportIndex": 33,
+      "originalLine": 17915,
+      "anchorBefore": "OpenDepth) maxOpenDepth = r.depth; });\n  if(maxOpenDepth < 0) return; // zaten tamamen kapalı\n  lastBacklogFlat.filter(r=> r.depth===maxOpenDepth).forEach(r=> backlogExpanded.delete(r.path));\n  renderBacklogFlatRows(lastBacklogFlat);\n});\n\n\n",
+      "anchorAfter": "// Pivot alanlarını Excel'de SERBESTÇE değiştirebilmek için ham pivot verisi:\n// her satır = boyut değerleri + Adet + Sipariş. Bu sayfayı seçip\n// Ekle → PivotTable dendiğinde tüm alanlar sürükle-bırak kullanılabilir.\nfunction buildBacklogP",
+      "removedText": "// Ekrandaki pivotu Excel'de İŞLEVSEL olarak üretir:\n// - Her satıra Excel \"outline\" seviyesi yazılır → soldaki +/− ve 1-2-3 düğmeleriyle\n//   gruplar uygulamadaki gibi daraltılıp genişletilebilir.\n// - Başlıkta otomatik filtre açıktır.\n// - Tüm satırlar (ekranda kapalı olanlar dahil) aktarılır; daraltmayı Excel yapar.\nfunction buildBacklogPivotSheet(){\n  const flat = (lastBacklogFlat||[]);\n  if(!flat.length) return null;\n  const bd = _XLS_BORDERS;\n  const ws = {}; const put=(r,c,cell)=>{ ws[XLSX.utils.encode_cell({r,c})]=cell; };\n  const rowsLabel = (backlogGroupBy && backlogGroupBy.length) ? backlogGroupBy.map(d=>BACKLOG_DIM_LABELS_FE[d]).join(' → ') : 'Grup';\n  const headers = [rowsLabel, ...backlogPivotCols.map(k=>k+' Adet'), backlogPivotCols.length?'Toplam Adet':'Adet', backlogPivotCols.length?'Sipariş':'Sipariş Sayısı'];\n  headers.forEach((h,ci)=> put(0,ci,{v:h,t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF475467'}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F4F7'},bgColor:{rgb:'FFF2F4F7'}},alignment:{horizontal:ci===0?'left':'right',vertical:'center',wrapText:true}}}));\n  const rowProps=[{hpx:24}];\n  flat.forEach((r,ri)=>{\n    const isTop = r.depth===0;\n    const rowFill = isTop ? {fgColor:{rgb:'FFF2F4F7'}} : undefined;\n    put(ri+1,0,{v:String(r.label),t:'s',s:{border:bd,font:{sz:10,bold:isTop},fill:rowFill,alignment:{vertical:'center',indent:Math.min(15,r.depth)}}});\n    let c=1;\n    backlogPivotCols.forEach(k=>{\n      const cc = r.colTotals && r.colTotals[k];\n      put(ri+1,c++, cc\n        ? {v:cc.qty,t:'n',s:{border:bd,font:{sz:10,bold:isTop},fill:rowFill,numFmt:'#,##0',alignment:{horizontal:'right',vertical:'center'}}}\n        : {v:'',t:'s',s:{border:bd,fill:rowFill}});\n    });\n    put(ri+1,c++,{v:r.qty||0,t:'n',s:{border:bd,font:{sz:10,bold:isTop},fill:rowFill,numFmt:'#,##0',alignment:{horizontal:'right',vertical:'center'}}});\n    put(ri+1,c++,{v:r.orders||0,t:'n',s:{border:bd,font:{sz:10,bold:isTop},fill:rowFill,numFmt:'#,##0',alignment:{horizontal:'right',vertical:'center'}}});\n    // Outline: alt seviyeler gruplanır; ekranda kapalıysa Excel'de de kapalı başlar.\n    const prop = {level: Math.min(7, r.depth)};\n    if(r.visible===false) prop.hidden = true;\n    rowProps.push(prop);\n  });\n  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:flat.length,c:headers.length-1}});\n  ws['!autofilter']={ref:ws['!ref']};\n  ws['!cols']=headers.map((h,i)=>({wch: i===0?34:14}));\n  ws['!rows']=rowProps;\n  ws['!outline']={above:true}; // +/− düğmeleri üst (özet) satıra bağlanır — ağaç yapımızla uyumlu\n  return ws;\n}\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "buildBacklogPivotDataSheet",
+      "reportIndex": 34,
+      "originalLine": 17954,
+      "anchorBefore": "h-1}});\n  ws['!autofilter']={ref:ws['!ref']};\n  ws['!cols']=headers.map((h,i)=>({wch: i===0?34:14}));\n  ws['!rows']=rowProps;\n  ws['!outline']={above:true}; // +/− düğmeleri üst (özet) satıra bağlanır — ağaç yapımızla uyumlu\n  return ws;\n}\n",
+      "anchorAfter": "// Ekrandaki tüm seçenek ve filtre seçimlerini \"Ayarlar\" sayfasına döker.\n// Ayarlar sayfası: üstte rapor filtreleri, altında NAKLİYE YOL SÜRELERİ tablosu.\n// Yol süresi hücreleri BACKLOG sayfasındaki formüllerin kaynağıdır; buradaki bir\n//",
+      "removedText": "// Pivot alanlarını Excel'de SERBESTÇE değiştirebilmek için ham pivot verisi:\n// her satır = boyut değerleri + Adet + Sipariş. Bu sayfayı seçip\n// Ekle → PivotTable dendiğinde tüm alanlar sürükle-bırak kullanılabilir.\nfunction buildBacklogPivotDataSheet(){\n  if(!lastBacklogData || !lastBacklogData.tree) return null;\n  const dims = backlogGroupBy.concat(backlogColBy);\n  if(!dims.length) return null;\n  const bd = _XLS_BORDERS;\n  const headers = [...dims.map(d=>BACKLOG_DIM_LABELS_FE[d]||d), 'Adet', 'Sipariş'];\n  const rows = [];\n  (function walk(nodes, path){\n    (nodes||[]).forEach(node=>{\n      const np = path.concat([String(node.label)]);\n      if(node.children && node.children.length && np.length < dims.length){\n        walk(node.children, np);\n      } else {\n        const cells = dims.map((_,i)=> np[i]!==undefined ? np[i] : '');\n        rows.push([...cells, node.qty||0, node.orders||0]);\n      }\n    });\n  })(lastBacklogData.tree, []);\n  if(!rows.length) return null;\n  const ws = {}; const put=(r,c,cell)=>{ ws[XLSX.utils.encode_cell({r,c})]=cell; };\n  headers.forEach((h,ci)=> put(0,ci,{v:h,t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF475467'}},fill:{fgColor:{rgb:'FFF2F4F7'}},alignment:{horizontal:'center',vertical:'center'}}}));\n  rows.forEach((row,ri)=> row.forEach((v,ci)=>{\n    const isNum = ci >= dims.length;\n    put(ri+1,ci, isNum\n      ? {v:Number(v)||0,t:'n',s:{border:bd,font:{sz:10},numFmt:'#,##0',alignment:{horizontal:'right',vertical:'center'}}}\n      : {v:String(v),t:'s',s:{border:bd,font:{sz:10},alignment:{vertical:'center'}}});\n  }));\n  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:headers.length-1}});\n  ws['!autofilter']={ref:ws['!ref']};\n  ws['!cols']=headers.map(()=>({wch:18}));\n  return ws;\n}\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "kolScopeDimRows",
+      "reportIndex": 37,
+      "originalLine": 21865,
+      "anchorBefore": "    buyingGroupTooltip:{tr:'Buying group kapsamını gösterir',en:'Shows buying group scope'},\n    buyerTooltip:{tr:'Buyer kapsamını gösterir',en:'Shows buyer scope'},\n  };\n  return (dict[key] && (en ? dict[key].en : dict[key].tr)) || key;\n}\n",
+      "anchorAfter": "function updateKolScopePresetButtons(){\n  const mineBtn=document.getElementById('kolScopeMine'),allBtn=document.getElementById('kolScopeAll');\n  if(!mineBtn||!allBtn)return;\n  const mine=String(window.BL_USER_CONTEXT&&window.BL_USER_CONTEXT",
+      "removedText": "function kolScopeDimRows(excludeKey){\n  return kolRows.filter(row=>Object.entries(kolColFilters).every(([key,set])=>key===excludeKey||!set||!set.size||set.has(kolFilterValue(row,key))));\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "updateKolScopePresetButtons",
+      "reportIndex": 38,
+      "originalLine": 21868,
+      "anchorBefore": "] && (en ? dict[key].en : dict[key].tr)) || key;\n}\nfunction kolScopeDimRows(excludeKey){\n  return kolRows.filter(row=>Object.entries(kolColFilters).every(([key,set])=>key===excludeKey||!set||!set.size||set.has(kolFilterValue(row,key))));\n}\n",
+      "anchorAfter": "async function kolLoadPermissions(){\n  const data=await kolFetchJson('/api/collection-permissions');kolPermissionState=data;return data;\n}\nasync function kolChangePermission(granteeId,level){\n  const res=await fetch(`/api/collection-permiss",
+      "removedText": "function updateKolScopePresetButtons(){\n  const mineBtn=document.getElementById('kolScopeMine'),allBtn=document.getElementById('kolScopeAll');\n  if(!mineBtn||!allBtn)return;\n  const mine=String(window.BL_USER_CONTEXT&&window.BL_USER_CONTEXT.id||'');\n  const mineId=kolWorkspaceList.some(item=>item.ownerId===mine)?mine:(kolWorkspaceList[0]&&kolWorkspaceList[0].ownerId)||'';\n  const selected=[...kolWorkspaceSelectedOwnerIds];\n  const isMine=selected.length===1&&selected[0]===mineId;\n  const isAll=kolWorkspaceList.length>0&&selected.length===kolWorkspaceList.length;\n  [[mineBtn,isMine],[allBtn,isAll]].forEach(([btn,on])=>{btn.classList.toggle('isActive',!!on);btn.setAttribute('aria-pressed',on?'true':'false');});\n  mineBtn.title=kolScopeText('myRecordsTooltip');mineBtn.setAttribute('aria-label',kolScopeText('myRecordsTooltip'));\n  allBtn.title=kolScopeText('allRecordsTooltip');allBtn.setAttribute('aria-label',kolScopeText('allRecordsTooltip'));\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "kolIsoWeekYear",
+      "reportIndex": 39,
+      "originalLine": 22363,
+      "anchorBefore": "\n}\n\n// ===================== Collection In-Store period picker =====================\n// LCW Merch Calendar is the authority for business week/month assignment.\n// Dates remain Gregorian; GLB/ISO week is only shown as a secondary reference.\n",
+      "anchorAfter": "function kolWeekCodeForDate(value){\n  const period=window.BLDateDimension?.describe?.(value);\n  if(!period||!period.valid||!period.businessValid)return '';\n  return `${period.lcwYear}-${String(period.lcwWeek).padStart(2,'0')}`;\n}\nfunction k",
+      "removedText": "function kolIsoWeekYear(date){\n  const period=window.BLDateDimension?.describe?.(date);\n  return period&&period.businessValid?period.lcwYear:0;\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "genericCaptureRowTarget",
+      "reportIndex": 42,
+      "originalLine": 25020,
+      "anchorBefore": "= dir>0 ? targetTd.nextElementSibling : targetTd.previousElementSibling;\n  const target = targetTd && targetTd.querySelector('input,select');\n  if(target){ target.focus(); if(target.select) target.select(); return true; }\n  return false;\n}\n",
+      "anchorAfter": "function genericFocusCapturedTarget(snap){\n  if(!snap) return false;\n  const table = document.getElementById(snap.tableId); if(!table) return false;\n  const allRows = [...(table.tBodies[0]?.rows || [])];\n  let tr = snap.rowId ? allRows.find",
+      "removedText": "function genericCaptureRowTarget(el, dir){\n  const tr = el.closest('tr'), table = el.closest('table');\n  if(!tr || !table) return null;\n  const pair = genericCellNavKey(el); if(!pair) return null;\n  const [attr, val] = pair;\n  let sib = dir>0 ? tr.nextElementSibling : tr.previousElementSibling;\n  while(sib && !sib.querySelector(`[${attr}]`)) sib = dir>0 ? sib.nextElementSibling : sib.previousElementSibling;\n  if(!sib) return null;\n  const target = [...sib.querySelectorAll(`[${attr}]`)].find(x=>x.getAttribute(attr)===val);\n  if(!target) return null;\n  const allRows = [...(table.tBodies[0]?.rows || [])];\n  return {\n    tableId: table.id,\n    rowId: sib.dataset.id || '',\n    rowIndex: allRows.indexOf(sib),\n    attr, val\n  };\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "kolEditorAtHorizontalBoundary",
+      "reportIndex": 43,
+      "originalLine": 25236,
+      "anchorBefore": "tionStart,end=el.selectionEnd,value=String(el.value||'');\n  el.value=value.slice(0,start)+text+value.slice(end);\n  el.selectionStart=el.selectionEnd=start+text.length;\n  el.dispatchEvent(new Event('input',{bubbles:true}));\n  return true;\n}\n",
+      "anchorAfter": "function kolHandleSpreadsheetKey(e,el,snap){\n  if(!el?.closest?.('#kolTable'))return false;\n  if(e.key==='Escape'){\n    if(Object.prototype.hasOwnProperty.call(el.dataset,'kolOriginalValue')){\n      el.value=el.dataset.kolOriginalValue;\n   ",
+      "removedText": "function kolEditorAtHorizontalBoundary(el,dir){\n  if(el.tagName==='SELECT')return false;\n  if(typeof el.selectionStart!=='number')return true;\n  return dir>0\n    ? el.selectionStart===String(el.value||'').length&&el.selectionEnd===String(el.value||'').length\n    : el.selectionStart===0&&el.selectionEnd===0;\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "kolMoneyDisplay",
+      "reportIndex": 44,
+      "originalLine": 25411,
+      "anchorBefore": "ActiveImageRowId);if(!row)return;\n        void cpSaveRowImage(row,file).catch(err=>showToast((appLang==='en'?'Image could not be saved: ':'Görsel kaydedilemedi: ')+(err.message||err)));\n      }\n      e.preventDefault();break;\n    }\n  }\n});\n",
+      "anchorAfter": "// Bir satırdaki üretici fiyatlarından \"0\" ve boş olanları hariç tutarak en düşüğü bulur.\n// Excel hücre dolgusu ARGB hex ister; HSL'den (Excel'de kullanılabilir) hex'e çevirir.\nfunction hslToArgb(h,s,l){\n  s/=100; l/=100;\n  const c=(1-Math",
+      "removedText": "function kolMoneyDisplay(v){ return (v===''||v==null) ? '' : v; }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "plmSyncPageLabel",
+      "reportIndex": 50,
+      "originalLine": 31114,
+      "anchorBefore": "\n}\nfunction plmSyncReopenRootMenu(page){\n  const menu=document.getElementById(`${page}PlmSyncMenu`),button=plmSyncRootButton(page);\n  if(!menu||!button)return;\n  menu.removeAttribute('hidden');button.setAttribute('aria-expanded','true');\n}\n",
+      "anchorAfter": "function plmSyncPageProvider(page){return page==='kol'?'koleksiyon':page;}\nfunction plmSyncPageScope(page){\n  const api=modelAssetScopeApi();if(!api)return null;\n  /* Ana sayfadaki PLM SYNC, yüksek öncelikli bir detail/current-view\n     sağ",
+      "removedText": "function plmSyncPageLabel(page){\n  if(page==='kol')return appLang==='en'?'Collection':'Koleksiyon';\n  if(page==='cp')return 'CP';\n  return appLang==='en'?'Orders':'Orders';\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "kolExportRows",
+      "reportIndex": 52,
+      "originalLine": 31944,
+      "anchorBefore": "elected.has(String(row.id)));\n  const selected=hasLogicalSelection?projected.filter(record=>kolCollectionProjectionSelected(record,kolSelected)):[];\n  return {rows:hasLogicalSelection?selected:projected,selectedOnly:hasLogicalSelection};\n}\n",
+      "anchorAfter": "function kolColHeaders(){\n  const mfrCols = kolManufacturers.map(m=>m.name);\n  const base=kolOrderedCols();\n  return { base, mfr: mfrCols, all: [...base.map(c=>c.label), ...mfrCols.map(m=>m+' ($)')] };\n}\nfunction kolExportSingleLineText(val",
+      "removedText": "function kolExportRows(){ return kolExportSelection().rows; }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "kolColHeaders",
+      "reportIndex": 53,
+      "originalLine": 31945,
+      "anchorBefore": "tion?projected.filter(record=>kolCollectionProjectionSelected(record,kolSelected)):[];\n  return {rows:hasLogicalSelection?selected:projected,selectedOnly:hasLogicalSelection};\n}\nfunction kolExportRows(){ return kolExportSelection().rows; }\n",
+      "anchorAfter": "function kolExportSingleLineText(value){\n  if(window.BLTableExport?.normalizeCell)return window.BLTableExport.normalizeCell(value);\n  return String(value==null?'':value).replace(/[\\r\\n\\u000B\\u000C\\u0085\\u2028\\u2029\\t]+/g,' ').replace(/ {2,}",
+      "removedText": "function kolColHeaders(){\n  const mfrCols = kolManufacturers.map(m=>m.name);\n  const base=kolOrderedCols();\n  return { base, mfr: mfrCols, all: [...base.map(c=>c.label), ...mfrCols.map(m=>m+' ($)')] };\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "kolPlainTextTable",
+      "reportIndex": 55,
+      "originalLine": 32065,
+      "anchorBefore": "olWidth(c)/7))})), ...mfrCols.map(()=>({wch:14})), ...(mfrCols.length?[{wch:22},{wch:14}]:[])];\n  ws['!rows']=[{hpx:26}];\n  return ws;\n}\n\n\n// ---- Görsel gömülü dışa aktarım: ExcelJS (ayrı kütüphane; xlsx-js-style resim desteklemiyor) ----\n",
+      "anchorAfter": "// Fiyatlama talebi Excel'i: Export with Pictures ile aynı ExcelJS görsel/biçim motorunu kullanır.\n// Görsel sütunu sabittir; diğer sütunlar kalıcı Pricing Excel Columns seçimine göre eklenir.\n// v1.84: çalışma kitabı artık yalnız indirilme",
+      "removedText": "// Mailto gövdesi yalnızca düz metin kabul eder (HTML tablo desteklenmez) — bu yüzden\n// sabit genişlikli, hizalı bir düz-metin tablosu üretilir. Sütunlar e-posta talebiyle\n// birebir aynı sırada: Category / Style Name / License / Colour / Fit / Fabric /\n// Quantity / Ex-Factory / Target FOB / Notes.\nfunction kolPlainTextTable(rows){\n  const cols = [\n    ['CATEGORY','urunTipi',14], ['STYLE NAME','modelKod',16], ['LICENSE','lisans',12],\n    ['COLOUR','colour',12], ['FIT','fit',10], ['FABRIC','fabric',12],\n    ['QUANTITY','quantity',9], ['EX-FACTORY','exFactory',11], ['TARGET FOB','targetPrice',11], ['NOTES','not',18],\n  ];\n  const pad = (s,w) => { s=String(s==null?'':s); return s.length>=w ? s.slice(0,w-1)+'…' : s+' '.repeat(w-s.length); };\n  const header = cols.map(([label,,w])=>pad(label,w)).join(' | ');\n  const sep = cols.map(([,,w])=>'-'.repeat(w)).join('-+-');\n  const lines = rows.map(r => cols.map(([,key,w])=>{\n    let v = kolEffectiveValue(r,key);\n    if(key==='targetPrice' && v!=='' && v!=null) v = '$'+v;\n    return pad(v,w);\n  }).join(' | '));\n  return [header, sep, ...lines].join('\\r\\n');\n}\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "pricingCompressToTarget",
+      "reportIndex": 56,
+      "originalLine": 32767,
+      "anchorBefore": "best.size>maxBytes) return null;\n    const name=String(file.name||'model').replace(/\\.[^.]+$/,'')+'.pdf';\n    return {blob:best,name,mimeType:'application/pdf'};\n  }catch(err){ return null; }\n  finally{ try{pdf?.destroy?.();}catch(e){} }\n}\n",
+      "anchorAfter": "// Ortak sıkıştırma kademeleri: EN İYİ'den EN DÜŞÜK'e. Her kademe tüm model\n// dosyalarına AYNI oranda uygulanır (görsel ve PDF için eşdeğer görsel kalite).\n// Görsellerde ölçek = özgün piksele göre; PDF'lerde ölçek = pdf.js render DPI çarp",
+      "removedText": "// Bir sıkıştırılabilir dosyayı (görsel veya PDF) verilen bütçeye sığdırır.\nasync function pricingCompressToTarget(item,target){\n  if(item.isPdf){\n    const out=await pricingCompressPdfFile(item.file,target);\n    return out ? {source:out.blob,name:out.name,mimeType:out.mimeType,compressed:true} : null;\n  }\n  if(item.isImage){\n    const out=await pricingCompressImageFile(item.file,target);\n    return out ? {source:out.blob,name:out.name,mimeType:out.mimeType,compressed:true} : null;\n  }\n  return null;\n}\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "pricingMakeBlobFile",
+      "reportIndex": 57,
+      "originalLine": 32873,
+      "anchorBefore": "eAsync({type:'blob',compression:'DEFLATE',compressionOptions:{level:9},platform:'DOS',streamFiles:true});\n    if(!blob||!blob.size) return null;\n    return {blob,name:archiveName,mimeType:'application/zip'};\n  }catch(err){ return null; }\n}\n",
+      "anchorAfter": "function pricingChunkBlob(blob,maxBytes,baseName,mimeType='application/octet-stream'){\n  const out=[]; const total=Math.max(1,Math.ceil((blob?.size||0)/Math.max(1,maxBytes)));\n  for(let i=0;i<total;i++){\n    const start=i*maxBytes,end=Math.",
+      "removedText": "function pricingMakeBlobFile(blob,name,type='application/octet-stream'){\n  try{return new File([blob],name,{type,lastModified:Date.now()});}\n  catch(_){ blob.name=name; return blob; }\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "pricingChunkBlob",
+      "reportIndex": 58,
+      "originalLine": 32877,
+      "anchorBefore": "e:'application/zip'};\n  }catch(err){ return null; }\n}\nfunction pricingMakeBlobFile(blob,name,type='application/octet-stream'){\n  try{return new File([blob],name,{type,lastModified:Date.now()});}\n  catch(_){ blob.name=name; return blob; }\n}\n",
+      "anchorAfter": "function pricingMultipartInstructions(chunkedNames){\n  const names=[...new Set(chunkedNames||[])];\n  const tr=`Buyer Log ekleri 9,5 MB e-posta sınırını aşmamak için numaralı parçalara bölündü.\\r\\n\\r\\nParçaları geri birleştirmek için aynı ad",
+      "removedText": "function pricingChunkBlob(blob,maxBytes,baseName,mimeType='application/octet-stream'){\n  const out=[]; const total=Math.max(1,Math.ceil((blob?.size||0)/Math.max(1,maxBytes)));\n  for(let i=0;i<total;i++){\n    const start=i*maxBytes,end=Math.min(blob.size,start+maxBytes);\n    const part=blob.slice(start,end,'application/octet-stream');\n    out.push({source:part,name:`${baseName}.${String(i+1).padStart(3,'0')}`,mimeType:'application/octet-stream',chunkIndex:i+1,chunkCount:total});\n  }\n  return out;\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "pricingAttachmentWeight",
+      "reportIndex": 59,
+      "originalLine": 32892,
+      "anchorBefore": "01, .002 and .003 parts with the same base name in one folder, then open the .001 file with 7-Zip.\\r\\n\\r\\nSplit files:\\r\\n${names.map(x=>'• '+x).join('\\r\\n')}`;\n  return new Blob([appLang==='en'?en:tr],{type:'text/plain;charset=utf-8'});\n}\n",
+      "anchorAfter": "async function pricingPrepareAttachmentPlan(workbook,fileEntries,rows){\n  const excelBytes=workbook?.buffer?.byteLength||0;\n  if(workbook && !excelBytes) throw new Error(appLang==='en'?'The pricing Excel file could not be prepared.':'Fiyatl",
+      "removedText": "function pricingAttachmentWeight(file){\n  return Math.max(1,Math.sqrt(Math.max(1,Number(file?.size)||1)));\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "prepareEmailTopicTableHtml",
+      "reportIndex": 60,
+      "originalLine": 33442,
+      "anchorBefore": "`;\n  const full=`${prefix} - ${date}`;\n  if(full.length<=240)return full;\n  const room=Math.max(20,240-date.length-3),trimmed=prefix.length<=room?prefix:`${prefix.slice(0,Math.max(1,room-1)).trimEnd()}…`;\n  return `${trimmed} - ${date}`;\n}\n",
+      "anchorAfter": "function prepareEmailTopicTablePlain(rows,columns){\n  const labels=columns.map(c=>c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label));\n  const lines=(rows||[]).map(row=>columns.map(c=>prepareEmailTopicCell(row,c).display.replace(/[\\t\\r",
+      "removedText": "function prepareEmailTopicTableHtml(rows,columns){\n  const head=columns.map(c=>`<th style=\"background-color:#F2F4F7;color:#475467;border:thin solid #D0D5DD;padding:5px 8px;text-align:left;font-weight:bold;white-space:nowrap;\">${escapeHtml(c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label))}</th>`).join('');\n  const body=(rows||[]).map(row=>`<tr>${columns.map(c=>{const cell=prepareEmailTopicCell(row,c);return `<td style=\"border:thin solid #D0D5DD;padding:4px 8px;text-align:${cell.numeric?'right':'left'};\">${escapeHtml(cell.display)}</td>`;}).join('')}</tr>`).join('');\n  return `<table cellspacing=\"0\" cellpadding=\"0\" style=\"border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:12px;margin-top:12px;\"><tr>${head}</tr>${body}</table>`;\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/public/app-main.js",
+      "name": "prepareEmailGenericPlain",
+      "reportIndex": 61,
+      "originalLine": 33497,
+      "anchorBefore": "in:0;padding:0;background:#ffffff;color:#101828;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;\"><div style=\"max-width:1100px;margin:0;padding:8px 4px;\">${mailTplToHtml(body)}${tableHtml||''}</div></body></html>`;\n}\n",
+      "anchorAfter": "async function kolCreatePreparedEmailDraft({email,subject,text,html,attachmentPlan,kind,inlineImages}){\n  const plan=attachmentPlan||await pricingPrepareAttachmentPlan(null,[],[]);\n  const resp=await fetch('/api/email-drafts/pricing',{metho",
+      "removedText": "function prepareEmailGenericPlain(body,rows,columns){\n  return mailTplToPlain(body)+'\\r\\n\\r\\n'+prepareEmailTopicTablePlain(rows,columns);\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/db.js",
+      "name": "deltaReadsStore",
+      "reportIndex": 62,
+      "originalLine": 98,
+      "anchorBefore": "ve = path.relative(root, resolved);\n    if (relative && !relative.startsWith('..') && !path.isAbsolute(relative)) {\n      return prefix + relative.split(path.sep).join('/');\n    }\n  }\n  return `abs/${resolved.split(path.sep).join('/')}`;\n}\n",
+      "anchorAfter": "function deltaWritesLegacy(file) { return deltaMirrorExcluded(file) || documents().writesLegacy; }\n/* Delta aynasına GİRMEYEN store lar. Yenileme geçmişi cihazın kendi denetim\n   günlüğüdür: hangi satırların değiştiğini anlatır, değişikliği",
+      "removedText": "/* saveRevisioned ailesinin TAMAMI hem yazma hem okuma yolunu delta üzerinden\n   geçiriyor, yani hepsi taşınmış sayılır. Ayrı yazma yolu olan store'lar\n   (koleksiyon çalışma alanları, e-posta grupları, quotation'lar) kendi\n   modüllerinde ayrıca taşınır; buradan geçmedikleri için etkilenmezler. */\nfunction deltaReadsStore() { return documents().isAuthoritative; }\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/server/db.js",
+      "name": "scopedFxFile",
+      "reportIndex": 63,
+      "originalLine": 176,
+      "anchorBefore": "-]/g, '_').slice(0, 100) || 'moderator';\n}\nfunction scopedSourceFile(baseFile, userId) {\n  if (!userId || userId === 'moderator') return baseFile;\n  return path.join(USER_SOURCE_DATA_DIR, safeUserDataId(userId), path.basename(baseFile));\n}\n",
+      "anchorAfter": "\nfunction cloneFallback(value) { return typeof value === 'function' ? value() : JSON.parse(JSON.stringify(value)); }\nfunction revisionOf(value) { const n = Number(value && value._revision); return Number.isInteger(n) && n >= 0 ? n : 0; }\nfu",
+      "removedText": "function scopedFxFile(userId) {\n  if (!userId || userId === 'moderator') return FX_FILE;\n  return path.join(USER_FX_DATA_DIR, safeUserDataId(userId), path.basename(FX_FILE));\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/agent-browser-connector.js",
+      "name": "waitForCdp",
+      "reportIndex": 64,
+      "originalLine": 315,
+      "anchorBefore": "'error', reject);\n    server.listen(0, '127.0.0.1', () => { const address = server.address(); const port = address && typeof address === 'object' ? address.port : 0; server.close(error => error ? reject(error) : resolve(port)); });\n  });\n}\n",
+      "anchorAfter": "/* ===================================================================\n   TEK ONAY (v7.30)\n\n   Kullanıcı talebi: \"1 kere Allow işlemi yapılsın.\"\n\n   Edge 144+ remote debugging'e yaklaşan HER dış istek için ayrı bir onay\n   diyaloğu açıyor v",
+      "removedText": "async function waitForCdp(port, timeoutMs = 15000) {\n  const deadline = Date.now() + timeoutMs;\n  while (Date.now() < deadline) { if (await cdpReady(port, 700)) return `http://127.0.0.1:${port}`; await sleep(180); }\n  throw connectorError('Microsoft Edge yerel Browser Automation bağlantısı kurulamadı.', 'BROWSER_CDP_TIMEOUT', 503);\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/agent-browser-connector.js",
+      "name": "connectManagedEdge",
+      "reportIndex": 65,
+      "originalLine": 593,
+      "anchorBefore": "azıp Enter’a basın.',\n    'Sayfada hâlâ yoksa Edge sürümünüz bu seçeneği desteklemiyordur: Ayarlar > Microsoft Edge hakkında ile güncelleyip Edge’i yeniden başlatın.',\n    'Buyer Log’a dönüp Bağlantıyı kontrol et düğmesine basın.'\n  ] };\n}\n",
+      "anchorAfter": "\nfunction normalizeTarget(target) {\n  const strategy = clean(target && target.strategy).toLowerCase();\n  const selector = clean(target && target.selector).slice(0, 1200);\n  if (!selector || !['css','text','label','placeholder','role'].inclu",
+      "removedText": "async function connectManagedEdge(initialUrl) { return connectPreferredEdge(initialUrl); }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/agent-browser-connector.js",
+      "name": "publicStep",
+      "reportIndex": 66,
+      "originalLine": 624,
+      "anchorBefore": "throw connectorError(`Browser adımı için hedef öğe eksik: ${out.id}`, 'BROWSER_TARGET_REQUIRED');\n  if (action === 'script' && !out.value.trim()) throw connectorError('Terminal kodu boş olamaz.', 'BROWSER_SCRIPT_REQUIRED');\n  return out;\n}\n",
+      "anchorAfter": "function secretField(payload) {\n  const source = [payload && payload.fieldType, payload && payload.name, payload && payload.selector, payload && payload.description].map(clean).join(' ').toLowerCase();\n  return /password|passwd|parola|şifre",
+      "removedText": "function publicStep(step) { const normalized = normalizeStep(step); return normalized; }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/modelHorizon.js",
+      "name": "daxNumber",
+      "reportIndex": 69,
+      "originalLine": 112,
+      "anchorBefore": "tra || '').trim();\n  if (!addition) return expression || null;\n  if (!expression) return addition;\n  return `( ${expression} )\\n        && ( ${addition} )`;\n}\n\n// --- Tek bir koşulun DAX karşılığı ------------------------------------------\n",
+      "anchorAfter": "\n/* v7.83 — TİP ŞEMADAN ÇÖZÜLÜR, ARAYÜZ GÖSTERİMİNDEN DEĞİL.\n\n   Koşul kaydında `valueType` var; ama bu, koşul KURULDUĞU ANDAKİ arayüz\n   tahminidir. Model sütunu sayıysa ve kayıtta 'text' yazıyorsa\n   `IN { \"123\" }` üretiliyor ve sorgu tip",
+      "removedText": "function daxNumber(value) {\n  const text = String(value == null ? '' : value).trim().replace(',', '.');\n  if (!text || !/^-?\\d+(\\.\\d+)?$/.test(text)) return null;\n  return text;\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/parse.js",
+      "name": "antrepoLooseColourKey",
+      "reportIndex": 70,
+      "originalLine": 267,
+      "anchorBefore": "nır.\nfunction overrideGet(map, order) {\n  if (!map || !order) return undefined;\n  const lineKey = overrideKeyOf(order);\n  if (lineKey && Object.prototype.hasOwnProperty.call(map, lineKey)) return map[lineKey];\n  return map[order.ocode];\n}\n\n",
+      "anchorAfter": "// ASAS - Fabric eski gevşek alan çözümlemesinde çelişki koruması (v4.32).\n// Bu yardımcı IAS/Backlog üretim eşleştirmesinde kullanılmaz; IAS tarafı v4.37'de\n// yalnız antrepoMatchKey üzerinden tam üçlü eşleşmeye geçirilmiştir.\nfunction ant",
+      "removedText": "// Aşağıdaki gevşek renk yardımcıları yalnız ASAS - Fabric kaynağındaki eski\n// alan çözümleme akışında kullanılır. IAS/Backlog eşleştirmesine dahil değildir.\nfunction antrepoLooseColourKey(value) {\n  return turknorm(value).replace(/[^A-Z0-9]+/g, '');\n}\n\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/server/lib/parse.js",
+      "name": "uniqueDateFromEntries",
+      "reportIndex": 71,
+      "originalLine": 334,
+      "anchorBefore": "amicAntrepoMatchKey(value, 'ias', config);\n    if (!key) continue;\n    if (!byLine.has(key)) byLine.set(key, []);\n    byLine.get(key).push(value);\n  }\n  const lookup = { byLine, config };\n  cache.set(signature, lookup);\n  return lookup;\n}\n\n",
+      "anchorAfter": "function uniqueTextFromEntries(entries, field) {\n  const values = new Map();\n  for (const entry of entries) {\n    const value = norm(entry && entry[field]);\n    const key = turknorm(value);\n    if (key && !values.has(key)) values.set(key, v",
+      "removedText": "function uniqueDateFromEntries(entries, field) {\n  const values = new Map();\n  for (const entry of entries) {\n    const value = entry && entry[field];\n    const ord = dateOrdinal(value);\n    if (ord != null && !values.has(ord)) values.set(ord, value);\n  }\n  return values.size === 1 ? [...values.values()][0] : null;\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/parse.js",
+      "name": "uniqueTextFromEntries",
+      "reportIndex": 72,
+      "originalLine": 343,
+      "anchorBefore": "for (const entry of entries) {\n    const value = entry && entry[field];\n    const ord = dateOrdinal(value);\n    if (ord != null && !values.has(ord)) values.set(ord, value);\n  }\n  return values.size === 1 ? [...values.values()][0] : null;\n}\n",
+      "anchorAfter": "\n// VERİ EŞLEŞTİRME KURALLARI (v7.82 — kaynak güdümlü, N veritabanı).\n//\n// Kural artık \"ASAS ile IAS\" diye iki sabit tarafa yazılmaz. Bir koşul, her biri\n// BİR KAYNAĞA bağlı 2+ OPERANDDAN oluşur; bütün koşullar AND ile bağlıdır ve\n// değe",
+      "removedText": "function uniqueTextFromEntries(entries, field) {\n  const values = new Map();\n  for (const entry of entries) {\n    const value = norm(entry && entry[field]);\n    const key = turknorm(value);\n    if (key && !values.has(key)) values.set(key, value);\n  }\n  return values.size === 1 ? [...values.values()][0] : '';\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/parse.js",
+      "name": "normalizeMatchSide",
+      "reportIndex": 73,
+      "originalLine": 400,
+      "anchorBefore": "-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '');\n  return raw || `condition-${index + 1}`;\n}\nfunction emptyMatchSide() {\n  return { sourceId: '', role: '', header: '', canonicalHeader: '', table: '', name: '', kind: 'column', unresolved: '' };\n}\n",
+      "anchorAfter": "function normalizeMatchOperand(value, fallback = {}) {\n  const raw = value && typeof value === 'object' ? value : {};\n  const header = norm(raw.header || raw.canonicalHeader || fallback.header || '');\n  const role = matchRoleKey(raw.role ||",
+      "removedText": "function normalizeMatchSide(value, fallbackHeader = '') {\n  return normalizeMatchOperand(value, { header: fallbackHeader });\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/parse.js",
+      "name": "enrichOrder",
+      "reportIndex": 74,
+      "originalLine": 2493,
+      "anchorBefore": "idir.\n    inapplicable: config.conditions.length - conditions.length,\n    unresolved: unresolvedMatchOperands(config),\n    totals: { asasRows: asasRows.length, iasRows: iasRows.length, matched, unmatched },\n    fields,\n    samples,\n  };\n}\n\n",
+      "anchorAfter": "function backlogOrderIdentity(order) {\n  const source = sourceOrderRef(order) || order || {};\n  return antrepoMatchKey(source._matchOcode != null ? source._matchOcode : source.ocode, source.model, source.ccode);\n}\n\nfunction backlogProductio",
+      "removedText": "function enrichOrder(o, antrepoMap, overrides){\n  const hit = findAntrepoHit(antrepoMap, o, { rule: matchRuleOf(overrides) });\n  // Antrepo raporunda bulunamayan (hit yok) VEYA bulunup da durumu boş olan siparişler için:\n  // sipariş aktifse (kalan>0) \"Üretimde\" say, değilse \"Depoda\" (kapanmış) say.\n  let status = (hit && hit.statu) ? hit.statu : null;\n  if(!status) status = o.kalan > 0 ? 'Üretimde' : 'Depoda';\n  // ASAS database'deki merkez sevke hazır depo bakiyesi siparişin %5'ini aşıyorsa,\n  // Depoda statüsünü Retaile Aktarım Bekleniyor olarak türet.\n  status = deriveOperationalStatus(status, o);\n  let arr = hit ? hit.arr : null;\n  if(!arr && turknorm(status) === 'URETIMDE'){\n    const delType = (overrides && overrides.delmap && overrideGet(overrides.delmap, o))\n      || (hit && hit.vasita)\n      || 'Gemi';\n    arr = estimateAntrepoDate(o.ex, delType, DEFAULT_TRANSIT_DAYS['Gemi'], { season: o.season, country: o.countryRaw, status, rules: overrides && overrides.transitRules });\n  }\n  return attachSourceOrderRef({ ...o, _status: status, _arr: arr }, o);\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/parse.js",
+      "name": "monthSortKey",
+      "reportIndex": 75,
+      "originalLine": 2824,
+      "anchorBefore": "ay ataması aynı merkezi tarih boyutundan gelir.\nfunction isoWeekYear(d){ return BLDateDimension.isoWeekYear(d) || 0; }\nconst MONTH_NAMES = [...BLDateDimension.MONTHS_TR];\nfunction monthLabel(d){ return BLDateDimension.monthLabel(d,'tr'); }\n",
+      "anchorAfter": "function weekLabel(d){ return BLDateDimension.weekLabel(d,'tr'); }\nfunction weekSortKey(d){ return BLDateDimension.bucketKey(d,'week'); }\n\n// Backlog'da gruplanabilecek boyutlar. Her biri yeni operasyon satırından bir\n// etiket üretir. 'ant",
+      "removedText": "function monthSortKey(d){ return BLDateDimension.bucketKey(d,'month'); }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/parse.js",
+      "name": "weekSortKey",
+      "reportIndex": 76,
+      "originalLine": 2826,
+      "anchorBefore": "...BLDateDimension.MONTHS_TR];\nfunction monthLabel(d){ return BLDateDimension.monthLabel(d,'tr'); }\nfunction monthSortKey(d){ return BLDateDimension.bucketKey(d,'month'); }\nfunction weekLabel(d){ return BLDateDimension.weekLabel(d,'tr'); }\n",
+      "anchorAfter": "\n// Backlog'da gruplanabilecek boyutlar. Her biri yeni operasyon satırından bir\n// etiket üretir. 'antrepoDate' özel bir boyuttur: tek seviye değil, seçilirse\n// Ay → Hafta → Net Tarih olarak 3 kademeli aç/kapa (drill-down) üretir.\n// \"Günc",
+      "removedText": "function weekSortKey(d){ return BLDateDimension.bucketKey(d,'week'); }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/parse.js",
+      "name": "backlogCustomDimensionInfo",
+      "reportIndex": 77,
+      "originalLine": 2858,
+      "anchorBefore": "repo Giriş Tarihi',\n};\n\nconst BACKLOG_CUSTOM_DIM_PREFIX = 'custom:';\nfunction backlogCustomDimensionId(source, header) {\n  return `${BACKLOG_CUSTOM_DIM_PREFIX}${source}:${Buffer.from(String(header || ''), 'utf8').toString('base64url')}`;\n}\n",
+      "anchorAfter": "function backlogRawFieldLabel(value) {\n  if (value == null || value === '') return '(boş)';\n  if (value instanceof Date && !isNaN(value)) return toISODateLocal(value);\n  const text = norm(value);\n  return text || '(boş)';\n}\nfunction backlog",
+      "removedText": "function backlogCustomDimensionInfo(id) {\n  const match = String(id || '').match(/^custom:(asas|antrepo):([A-Za-z0-9_-]+)$/);\n  if (!match) return null;\n  try {\n    const header = Buffer.from(match[2], 'base64url').toString('utf8').trim();\n    return header && header.length <= 300 ? { source: match[1], header } : null;\n  } catch (_) { return null; }\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/lib/shared-image-store.js",
+      "name": "atomicBuffer",
+      "reportIndex": 78,
+      "originalLine": 167,
+      "anchorBefore": "iteFile(JSON.stringify(value), 'utf8'); try { await handle.sync(); } catch (_) {} }\n    finally { await handle.close(); }\n    await replaceFileWithRetry(temporary, file);\n  } finally { try { await fsp.unlink(temporary); } catch (_) {} }\n}\n\n",
+      "anchorAfter": "function objectRelativePath(contentHash, mimeType) {\n  const hash = clean(contentHash, 80).toLowerCase();\n  const extension = extensionFor(mimeType);\n  if (!/^[0-9a-f]{64}$/.test(hash) || !extension) return '';\n  return `${OBJECTS}/${hash.s",
+      "removedText": "/* Baytlar da atomik iner: yarım kalmış bir nesne ASLA nihai adına taşınmaz,\n   yoksa başka bir kullanıcı bozuk görseli \"hazır\" sanar. */\nasync function atomicBuffer(file, buffer) {\n  await fsp.mkdir(path.dirname(file), { recursive: true });\n  const temporary = `${file}.${process.pid}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}.tmp`;\n  try {\n    const handle = await fsp.open(temporary, 'wx');\n    try { await handle.writeFile(buffer); try { await handle.sync(); } catch (_) {} }\n    finally { await handle.close(); }\n    await replaceFileWithRetry(temporary, file);\n  } finally { try { await fsp.unlink(temporary); } catch (_) {} }\n}\n\n",
+      "hadLeadingComment": true
+    },
+    {
+      "file": "resources/app/server/lib/user-access.js",
+      "name": "validAccessStoreFile",
+      "reportIndex": 79,
+      "originalLine": 98,
+      "anchorBefore": "le).isFile()) return null;\n    const parsed = JSON.parse(fs.readFileSync(file, 'utf8'));\n    return parsed && typeof parsed === 'object' && (parsed.moderator || Array.isArray(parsed.users)) ? parsed : null;\n  } catch (_) { return null; }\n}\n",
+      "anchorAfter": "function accessStoreQuality(file) {\n  const parsed = readAccessStoreFile(file); if (!parsed) return null;\n  const profiles = [parsed.moderator, ...(Array.isArray(parsed.users) ? parsed.users : [])].filter(Boolean);\n  const credentialCount =",
+      "removedText": "function validAccessStoreFile(file) { return Boolean(readAccessStoreFile(file)); }\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/server.js",
+      "name": "plmImageRefreshCounts",
+      "reportIndex": 83,
+      "originalLine": 3941,
+      "anchorBefore": "n plmImageRefreshLog(event,payload={}){\n  try{ console.info(`[${event}]`,JSON.stringify(payload)); }catch(_){ console.info(`[${event}]`); }\n}\nfunction plmImageHash(buffer){ return crypto.createHash('sha256').update(buffer).digest('hex'); }\n",
+      "anchorAfter": "/* v10.90 — SIFIRLAMA İLE GÖRSEL YAZMASININ YARIŞMASI.\n   Tam sıfırlama birden fazla sahiplik katmanını sırayla temizler. Bu sırada\n   bir PLM senkronu ya da manuel yükleme araya girerse, yeni görsel dosyası\n   silinmiş depoya yazılır ama a",
+      "removedText": "function plmImageRefreshCounts(images,failedItems){\n  const list=Array.isArray(images)?images:[],failures=Array.isArray(failedItems)?failedItems:[];\n  const missing=failures.filter(item=>/IMAGE_URL_MISSING|IMAGE_RESPONSE_MISSING|REMOTE_MISSING/i.test(String(item&&item.code||''))).length;\n  return {\n    imagesDownloaded:list.filter(item=>!item.existing&&!item.unchanged).length,\n    imagesReplaced:list.filter(item=>!item.existing&&!item.unchanged&&item.oldRef).length,\n    imagesUnchanged:list.filter(item=>item.unchanged).length,\n    imagesMissing:missing,\n    imagesFailed:Math.max(0,failures.length-missing),\n  };\n}\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/server.js",
+      "name": "alignSnapshotWithExcelAntrepo",
+      "reportIndex": 86,
+      "originalLine": 6423,
+      "anchorBefore": "|| null,\n    refreshWarnings: runtime.refreshWarnings || [],\n    refreshWarningDetails: runtime.refreshWarningDetails || [],\n    modelRefresh: runtime.modelRefresh || null,\n    lastRefreshResult: runtime.lastRefreshResult || null,\n  });\n}\n\n",
+      "anchorAfter": "async function loadInitialDataAndLfl(value){\n  const id = sourceUserId(value);\n  // Model snapshot'ı kişiselleştirilmiş sorgu sonucudur: Horizon ve veri kapsamı\n  // içerebilir. Bu nedenle başka kullanıcının (eski fallback'te Moderatörün)\n ",
+      "removedText": "async function alignSnapshotWithExcelAntrepo(id, runtime) {\n  const ov = loadOverrides();\n  if (!runtime || ['database', 'dashboard'].includes(ov.antrepoSourceMode)) return runtime;\n\n  const currentFile = currentAntrepoExcelFile(id);\n  const expectedSource = currentFile ? `Excel: ${currentFile.name}` : null;\n  const hasTargetMaps = runtime.antrepoMapByTarget\n    && runtime.antrepoMapByTarget.cp\n    && runtime.antrepoMapByTarget.backlog;\n  if (currentFile && runtime.sources && runtime.sources.antrepo === expectedSource\n      && runtime.antrepoHeaderInfo && hasTargetMaps) {\n    return runtime;\n  }\n\n  try {\n    const excel = await loadAntrepoFromExcel(id, ov.antrepoMatchConfig);\n    runtime.antrepoMap = excel.map;\n    runtime.antrepoMapByTarget = { ...(runtime.antrepoMapByTarget || {}), cp: excel.map, orders: excel.map, backlog: excel.map };\n    runtime.antrepoHeaderInfo = excel.meta;\n    runtime.sources = { ...(runtime.sources || {}), antrepo: `Excel: ${excel.file}` };\n    const quantityInfo = antrepoQuantityWarningInfo(excel.file, excel.meta || {});\n    runtime.refreshWarnings = [\n      ...(runtime.refreshWarnings || []).filter(message => !/IAS satırında (?:Yükleme Toplam Adet|Net Alım Sipariş Miktarı) boş veya geçersiz/i.test(String(message || ''))),\n      ...(excel.integrityWarnings || []),\n      ...quantityInfo.warnings,\n    ];\n    runtime.refreshWarningDetails = [\n      ...(runtime.refreshWarningDetails || []).filter(detail => !String(detail && detail.id || '').startsWith('antrepo-')),\n      ...quantityInfo.details,\n    ];\n    await saveRuntimeModelSnapshot(id, runtime);\n  } catch (err) {\n    // Excel modu seçiliyken eski Database snapshot'ını kullanmak yanlış ve yanıltıcıdır.\n    // Dosya yoksa/okunamıyorsa IAS verisini bilinçli olarak boşaltıp kullanıcıya açık\n    // uyarı veririz; böylece eski, farklı bir kaynaktan gelen kayıtlar siparişlere bağlanmaz.\n    runtime.antrepoMap = {};\n    runtime.antrepoMapByTarget = { ...(runtime.antrepoMapByTarget || {}), cp: {}, orders: {}, backlog: {} };\n    runtime.antrepoHeaderInfo = null;\n    runtime.sources = { ...(runtime.sources || {}), antrepo: expectedSource };\n    const message = `Antrepo Excel: ${err.publicMessage || err.message || 'dosya okunamadı.'}`;\n    runtime.refreshWarnings = [\n      ...(runtime.refreshWarnings || []).filter(item => !/^Antrepo Excel:/i.test(String(item || ''))),\n      message,\n    ];\n    runtime.refreshWarningDetails = (runtime.refreshWarningDetails || []).filter(detail => !String(detail && detail.id || '').startsWith('antrepo-'));\n  }\n  return runtime;\n}\n\n",
+      "hadLeadingComment": false
+    },
+    {
+      "file": "resources/app/server/server.js",
+      "name": "loadLflFromDisk",
+      "reportIndex": 87,
+      "originalLine": 6531,
+      "anchorBefore": "e, updated: true, file: parsed.file, stats: parsed.stats, data: saved };\n  } catch (err) {\n    logRuntimeFailure('fxWorkbookRead', err);\n    return { found: false, updated: false, error: 'KUR Excel dosyası arka planda okunamadı.' };\n  }\n}\n\n",
+      "anchorAfter": "// Date nesneleri JSON.stringify sırasında UTC'ye çevrildiğinde Türkiye gibi UTC+ saat\n// dilimlerinde 19.10.2026 yerel gece yarısı 18.10.2026T21:00:00Z olarak gider. Arayüz\n// bu değerin başındaki günü okuyunca tarih bir gün geri görünür. ",
+      "removedText": "async function loadLflFromDisk(value, withExcelRefresh = false) {\n  const id = sourceUserId(value), runtime = cacheForUser(id), sourceFolder = sourceFolderForUser(id);\n  if (!sourceFolder) throw new Error('Henüz bir kaynak klasör seçilmedi.');\n  const found = findLatestSourceFiles(sourceFolder);\n  if (!found.lfl) {\n    runtime.lflRows = [];\n    runtime.lflMeta = { rowCount: 0, warnings: ['Kaynak klasörde adı LFL ile başlayan bir .xlsx dosyası bulunamadı.'], dimensions: {} };\n    runtime.lflLoadedAt = new Date().toISOString();\n    runtime.sources = { ...(runtime.sources || {}), lfl: null };\n    return { rows: runtime.lflRows, meta: runtime.lflMeta, source: null, loadedAt: runtime.lflLoadedAt };\n  }\n  let refreshWarning = '';\n  if (withExcelRefresh && config.refreshWithExcel && platform.canRefreshExcel()) {\n    try { await refreshExcelFile(found.lfl.full, config.excelRefreshTimeoutMs); }\n    catch (err) { refreshWarning = `LFL Excel yenilemesi tamamlanamadı; dosyanın mevcut hali okundu: ${err.message}`; }\n  }\n  const parsed = await runExcelTask('parseLflFile', { fullPath: found.lfl.full }, { timeoutMs: Math.max(240000, Number(config.excelRefreshTimeoutMs) || 0) });\n  if (refreshWarning) parsed.meta.warnings = [refreshWarning, ...(parsed.meta.warnings || [])];\n  runtime.lflRows = Array.isArray(parsed.rows) ? parsed.rows : [];\n  runtime.lflMeta = withFabricDimensions(parsed.meta, runtime.lflRows);\n  runtime.lflLoadedAt = new Date().toISOString();\n  runtime.sources = { ...(runtime.sources || {}), lfl: found.lfl.name };\n  return { rows: runtime.lflRows, meta: runtime.lflMeta, source: found.lfl.name, loadedAt: runtime.lflLoadedAt };\n}\n\n",
+      "hadLeadingComment": false
+    }
+  ]
+}

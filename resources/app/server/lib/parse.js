@@ -264,12 +264,6 @@ function overrideGet(map, order) {
   return map[order.ocode];
 }
 
-// Aşağıdaki gevşek renk yardımcıları yalnız ASAS - Fabric kaynağındaki eski
-// alan çözümleme akışında kullanılır. IAS/Backlog eşleştirmesine dahil değildir.
-function antrepoLooseColourKey(value) {
-  return turknorm(value).replace(/[^A-Z0-9]+/g, '');
-}
-
 // ASAS - Fabric eski gevşek alan çözümlemesinde çelişki koruması (v4.32).
 // Bu yardımcı IAS/Backlog üretim eşleştirmesinde kullanılmaz; IAS tarafı v4.37'de
 // yalnız antrepoMatchKey üzerinden tam üçlü eşleşmeye geçirilmiştir.
@@ -331,24 +325,6 @@ function buildAntrepoLookup(antrepoMap, ruleValue) {
   return lookup;
 }
 
-function uniqueDateFromEntries(entries, field) {
-  const values = new Map();
-  for (const entry of entries) {
-    const value = entry && entry[field];
-    const ord = dateOrdinal(value);
-    if (ord != null && !values.has(ord)) values.set(ord, value);
-  }
-  return values.size === 1 ? [...values.values()][0] : null;
-}
-function uniqueTextFromEntries(entries, field) {
-  const values = new Map();
-  for (const entry of entries) {
-    const value = norm(entry && entry[field]);
-    const key = turknorm(value);
-    if (key && !values.has(key)) values.set(key, value);
-  }
-  return values.size === 1 ? [...values.values()][0] : '';
-}
 
 // VERİ EŞLEŞTİRME KURALLARI (v7.82 — kaynak güdümlü, N veritabanı).
 //
@@ -396,9 +372,6 @@ function matchConditionId(value, index) {
 }
 function emptyMatchSide() {
   return { sourceId: '', role: '', header: '', canonicalHeader: '', table: '', name: '', kind: 'column', unresolved: '' };
-}
-function normalizeMatchSide(value, fallbackHeader = '') {
-  return normalizeMatchOperand(value, { header: fallbackHeader });
 }
 function normalizeMatchOperand(value, fallback = {}) {
   const raw = value && typeof value === 'object' ? value : {};
@@ -725,7 +698,7 @@ function dynamicAntrepoMatchKey(record, role, value) {
 // kimliğiyle birbirine bağlar. Referans enumerable değildir; API/Excel çıktısına
 // sızmaz. Bu sayede aynı Sipariş Kod + Model + Renk Kod üçlüsüne sahip fakat
 // kullanıcı tanımlı ek koşullarla ayrılan satırlar birbirinin operasyon bilgisini
-// alamaz. enrichOrder() kopya ürettiğinde de ilk kaynak satır referansı korunur.
+// alamaz. Satır kopyalandığında attachSourceOrderRef() ilk kaynak satır referansını korur.
 function sourceOrderRef(value) {
   return value && value.__sourceOrder ? value.__sourceOrder : value;
 }
@@ -2490,24 +2463,6 @@ function auditAntrepoMatching(orders, antrepoMap, rule) {
   };
 }
 
-function enrichOrder(o, antrepoMap, overrides){
-  const hit = findAntrepoHit(antrepoMap, o, { rule: matchRuleOf(overrides) });
-  // Antrepo raporunda bulunamayan (hit yok) VEYA bulunup da durumu boş olan siparişler için:
-  // sipariş aktifse (kalan>0) "Üretimde" say, değilse "Depoda" (kapanmış) say.
-  let status = (hit && hit.statu) ? hit.statu : null;
-  if(!status) status = o.kalan > 0 ? 'Üretimde' : 'Depoda';
-  // ASAS database'deki merkez sevke hazır depo bakiyesi siparişin %5'ini aşıyorsa,
-  // Depoda statüsünü Retaile Aktarım Bekleniyor olarak türet.
-  status = deriveOperationalStatus(status, o);
-  let arr = hit ? hit.arr : null;
-  if(!arr && turknorm(status) === 'URETIMDE'){
-    const delType = (overrides && overrides.delmap && overrideGet(overrides.delmap, o))
-      || (hit && hit.vasita)
-      || 'Gemi';
-    arr = estimateAntrepoDate(o.ex, delType, DEFAULT_TRANSIT_DAYS['Gemi'], { season: o.season, country: o.countryRaw, status, rules: overrides && overrides.transitRules });
-  }
-  return attachSourceOrderRef({ ...o, _status: status, _arr: arr }, o);
-}
 function backlogOrderIdentity(order) {
   const source = sourceOrderRef(order) || order || {};
   return antrepoMatchKey(source._matchOcode != null ? source._matchOcode : source.ocode, source.model, source.ccode);
@@ -2821,9 +2776,7 @@ function isoWeekNum(d){ return BLDateDimension.isoWeekNumber(d) || 0; }
 function isoWeekYear(d){ return BLDateDimension.isoWeekYear(d) || 0; }
 const MONTH_NAMES = [...BLDateDimension.MONTHS_TR];
 function monthLabel(d){ return BLDateDimension.monthLabel(d,'tr'); }
-function monthSortKey(d){ return BLDateDimension.bucketKey(d,'month'); }
 function weekLabel(d){ return BLDateDimension.weekLabel(d,'tr'); }
-function weekSortKey(d){ return BLDateDimension.bucketKey(d,'week'); }
 
 // Backlog'da gruplanabilecek boyutlar. Her biri yeni operasyon satırından bir
 // etiket üretir. 'antrepoDate' özel bir boyuttur: tek seviye değil, seçilirse
@@ -2854,14 +2807,6 @@ const BACKLOG_DIM_LABELS = {
 const BACKLOG_CUSTOM_DIM_PREFIX = 'custom:';
 function backlogCustomDimensionId(source, header) {
   return `${BACKLOG_CUSTOM_DIM_PREFIX}${source}:${Buffer.from(String(header || ''), 'utf8').toString('base64url')}`;
-}
-function backlogCustomDimensionInfo(id) {
-  const match = String(id || '').match(/^custom:(asas|antrepo):([A-Za-z0-9_-]+)$/);
-  if (!match) return null;
-  try {
-    const header = Buffer.from(match[2], 'base64url').toString('utf8').trim();
-    return header && header.length <= 300 ? { source: match[1], header } : null;
-  } catch (_) { return null; }
 }
 function backlogRawFieldLabel(value) {
   if (value == null || value === '') return '(boş)';

@@ -109,11 +109,6 @@ function withExtra(expression, extra) {
 }
 
 // --- Tek bir koşulun DAX karşılığı ------------------------------------------
-function daxNumber(value) {
-  const text = String(value == null ? '' : value).trim().replace(',', '.');
-  if (!text || !/^-?\d+(\.\d+)?$/.test(text)) return null;
-  return text;
-}
 
 /* v7.83 — TİP ŞEMADAN ÇÖZÜLÜR, ARAYÜZ GÖSTERİMİNDEN DEĞİL.
 

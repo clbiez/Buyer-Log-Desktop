@@ -164,19 +164,6 @@ async function atomicJson(file, value) {
   } finally { try { await fsp.unlink(temporary); } catch (_) {} }
 }
 
-/* Baytlar da atomik iner: yarım kalmış bir nesne ASLA nihai adına taşınmaz,
-   yoksa başka bir kullanıcı bozuk görseli "hazır" sanar. */
-async function atomicBuffer(file, buffer) {
-  await fsp.mkdir(path.dirname(file), { recursive: true });
-  const temporary = `${file}.${process.pid}.${Date.now()}.${crypto.randomBytes(4).toString('hex')}.tmp`;
-  try {
-    const handle = await fsp.open(temporary, 'wx');
-    try { await handle.writeFile(buffer); try { await handle.sync(); } catch (_) {} }
-    finally { await handle.close(); }
-    await replaceFileWithRetry(temporary, file);
-  } finally { try { await fsp.unlink(temporary); } catch (_) {} }
-}
-
 function objectRelativePath(contentHash, mimeType) {
   const hash = clean(contentHash, 80).toLowerCase();
   const extension = extensionFor(mimeType);
