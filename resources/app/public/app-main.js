@@ -7242,9 +7242,11 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
     let size=50;try{size=(window.BLStorage||localStorage).getItem(`bl.tableRange.${tableKey}.v1`);}catch(_){}
     const bar=document.createElement('div');bar.className='tableRangeBar';
     bar.innerHTML='<select data-range-size><option value="50">50</option><option value="100">100</option><option value="200">200</option><option value="all"></option></select><output data-range-info role="status" aria-live="polite"></output><span class="tableRangePager"><button type="button" data-range-prev>‹</button><input data-range-page type="number" min="1" step="1"><span data-range-pages></span><button type="button" data-range-next>›</button></span>';
-    /* CP ve Siparişler'de ayrı satır açmaz: araç satırının en sağına kompakt
-       yerleşir (sabitlenmiş; taşma menüsüne düşmez). Diğer tablolar eski yerinde. */
-    const toolbar=(tableKey==='cp'||tableKey==='orders')?document.getElementById(`${tableKey}TableToolbar`):null;
+    /* CP, Siparişler ve Koleksiyon'da ayrı satır açmadan araç satırının en
+       sağına yerleşir; sayfalama taşma menüsüne düşmez. */
+    const toolbarId=tableKey==='koleksiyon'?'kolTableToolbar':
+      (tableKey==='cp'||tableKey==='orders')?`${tableKey}TableToolbar`:null;
+    const toolbar=toolbarId?document.getElementById(toolbarId):null;
     if(toolbar){bar.classList.add('tableRangeBar--inline');bar.dataset.tbPriority='pinned';bar.dataset.tbOverflow='never';toolbar.appendChild(bar);}
     else{const wrap=table.closest('.tablewrap')||table;wrap.before(bar);}
     view={controller:BLTableRange.create(size),bar,rerender};_tableRangeViews.set(table,view);
