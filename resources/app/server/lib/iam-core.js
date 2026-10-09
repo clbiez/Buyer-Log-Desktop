@@ -253,6 +253,80 @@ function normalizeWorkspaceTemplates(value) {
       updatedAt: clean(raw.updatedAt) || null,
     };
   }
+  // Boşken hiç yazılmaz: mevcut merkezi dizinlerin içeriği (ve özeti) değişmez.
+  const userDefaults = normalizeUserWorkspaceDefaults(src.userDefaults);
+  if (userDefaults.length) out.userDefaults = userDefaults;
+  const roleBundles = normalizeRoleBundles(src.roleBundles);
+  if (roleBundles.length) out.roleBundles = roleBundles;
+  return out;
+}
+/* EK ROLLER (özel rol / yetki paketi).
+
+   Dört sistem rolü (Buyer, Manager, Senior Manager, Moderatör) dizin şemasının
+   parçasıdır; yeni bir sistem rolü eklemek eski sürümlü cihazların merkezi
+   dizini reddetmesine yol açardı. Ek rol bu yüzden iki parçadan oluşur:
+     · TANIM (ad, iş yetkileri) merkezi politikada (workspacePolicies) durur;
+     · ÜYELİK kullanıcının mevcut doğrudan yetki kayıtlarında "bundle:<id>:"
+       kimlikli kayıtlar olarak yazılır.
+   Böylece her sürüm yetkiyi doğru uygular; yeni sürüm ayrıca kaynağı "Ek Rol"
+   olarak adlandırır. Güvenlik yetkileri (kullanıcı/rol/yetki/sistem/güvenlik/
+   denetim) ek role konamaz; onlar kişiye gerekçeyle verilir. */
+const BUNDLE_GRANT_PREFIX = 'bundle:';
+function isBundleGrant(grant) { return Boolean(grant && String(grant.id || '').startsWith(BUNDLE_GRANT_PREFIX)); }
+function bundleIdOfGrant(grant) { return isBundleGrant(grant) ? String(grant.id).slice(BUNDLE_GRANT_PREFIX.length).split(':')[0] : ''; }
+function bundleGrantId(bundleId, permission) { return `${BUNDLE_GRANT_PREFIX}${bundleId}:${permission}`; }
+// Etkin yetki her istekte ve hiyerarşide her alt kullanıcı için hesaplanır;
+// paket dizini aynı ham dizi için bir kez kurulur.
+const roleBundleIndexCache = new WeakMap();
+function roleBundleIndex(store) {
+  const raw = store && store.iam && store.iam.workspaceTemplates && store.iam.workspaceTemplates.roleBundles;
+  if (!Array.isArray(raw)) return new Map();
+  let index = roleBundleIndexCache.get(raw);
+  if (!index) { index = new Map(normalizeRoleBundles(raw).map(item => [item.id, item])); roleBundleIndexCache.set(raw, index); }
+  return index;
+}
+function normalizeRoleBundles(value) {
+  const out = [], seen = new Set();
+  for (const raw of Array.isArray(value) ? value : []) {
+    const id = clean(raw && raw.id).toLowerCase();
+    if (!/^[a-z0-9_-]{1,40}$/.test(id) || seen.has(id)) continue;
+    const nameTr = clean(raw.nameTr).slice(0, 80);
+    if (!nameTr) continue;
+    seen.add(id);
+    out.push({
+      id, nameTr, nameEn: clean(raw.nameEn).slice(0, 80) || nameTr, description: clean(raw.description).slice(0, 300),
+      permissions: uniq(raw.permissions).map(normalized).filter(code => PERMISSION_CODES.has(code) && !SECURITY_PERMISSIONS.has(code)),
+      updatedBy: clean(raw.updatedBy) || null, updatedAt: clean(raw.updatedAt) || null,
+    });
+  }
+  return out;
+}
+/* KİŞİYE ATANMIŞ VARSAYILAN UFUK (Horizon).
+
+   Kişisel çalışma alanı tercihleri cihazda yaşar; Moderatörün kendi cihazında
+   başka bir kullanıcı için yazdığı ufuk o kullanıcının cihazına hiç ulaşmıyordu.
+   Atanmış varsayılan bu yüzden merkezi IAM dizininde (workspacePolicies) taşınır
+   ve her cihazda rol şablonunun üstünde, kişinin kendi ayarının altında çözülür.
+   Yalnız Horizon anahtarları kabul edilir; dizine başka tercih sızmaz. */
+const USER_DEFAULT_HORIZON_KEY = /^buyerlog\.workspace\.horizon\.[a-z0-9_-]{1,40}\.v1$/;
+const USER_DEFAULT_VALUE_LIMIT = 256 * 1024;
+function normalizeUserWorkspaceDefaults(value) {
+  const out = [], seen = new Set();
+  for (const raw of Array.isArray(value) ? value : []) {
+    const userId = clean(raw && raw.userId);
+    if (!userId || seen.has(userId)) continue;
+    const entries = {};
+    const source = raw.entries && typeof raw.entries === 'object' && !Array.isArray(raw.entries) ? raw.entries : {};
+    for (const [key, item] of Object.entries(source)) {
+      if (!USER_DEFAULT_HORIZON_KEY.test(key)) continue;
+      const text = String(item && typeof item === 'object' ? (item.value == null ? '' : item.value) : (item == null ? '' : item));
+      if (!text || text.length > USER_DEFAULT_VALUE_LIMIT) continue;
+      entries[key] = { value: text, updatedAt: clean(item && item.updatedAt) || clean(raw.assignedAt) || null };
+    }
+    if (!Object.keys(entries).length) continue;
+    seen.add(userId);
+    out.push({ userId, entries, assignedAt: clean(raw.assignedAt) || null, assignedBy: clean(raw.assignedBy) || null, sourceName: clean(raw.sourceName).slice(0, 120) });
+  }
   return out;
 }
 function migrateStore(store) {
@@ -300,7 +374,15 @@ function assignedPermissionDetails(profile, store, now = Date.now()) {
   const out = [];
   const role = normalizeRoles(store && store.iam && store.iam.roles)[profile.systemRole] || defaultRoles().buyer;
   for (const permission of role.permissions) out.push({ permission, source: 'ROLE', sourceId: role.id, sourceLabel: role.nameTr });
-  for (const grant of profile.directPermissions || []) if (activeGrant(grant, now)) out.push({ permission: grant.permission, source: 'DIRECT', sourceId: grant.id, reason: grant.reason });
+  let bundles = null;
+  for (const grant of profile.directPermissions || []) {
+    if (!activeGrant(grant, now)) continue;
+    if (isBundleGrant(grant)) {
+      bundles = bundles || roleBundleIndex(store);
+      const bundle = bundles.get(bundleIdOfGrant(grant));
+      out.push({ permission: grant.permission, source: 'BUNDLE', sourceId: bundleIdOfGrant(grant), sourceLabel: bundle ? bundle.nameTr : bundleIdOfGrant(grant), sourceLabelEn: bundle ? bundle.nameEn : bundleIdOfGrant(grant) });
+    } else out.push({ permission: grant.permission, source: 'DIRECT', sourceId: grant.id, reason: grant.reason });
+  }
   for (const grant of profile.temporaryPermissions || []) if (activeGrant(grant, now)) out.push({ permission: grant.permission, source: 'TEMPORARY', sourceId: grant.id, reason: grant.reason, validFrom: grant.validFrom, validUntil: grant.validUntil });
   return out.filter(item => PERMISSION_CODES.has(item.permission));
 }
@@ -375,7 +457,8 @@ function filterRows(profile, rows, store) { const scope = effectiveDataScope(pro
 module.exports = {
   ORG_LEVELS, ORG_LEVEL_RANK, SYSTEM_ROLES, ROLE_DEFAULT_SCOPE, USER_STATUSES, DATA_SCOPE_MODES, ACTIONS, RESOURCES,
   PERMISSION_REGISTRY, PERMISSION_CODES, SECURITY_PERMISSIONS, SAFE_VIEW_PERMISSIONS, BUYER_DEFAULT_PERMISSIONS, SHARED_SETTINGS_PERMISSION, ROLE_DEFAULTS_REVISION, LEGACY_AREA_RESOURCE,
-  normalizeProfileIam, normalizeRoles, normalizeWorkspaceTemplates, migrateStore, identityKeys, findDuplicate, descendants, validateHierarchy,
+  normalizeProfileIam, normalizeRoles, normalizeWorkspaceTemplates, normalizeUserWorkspaceDefaults, normalizeRoleBundles,
+  BUNDLE_GRANT_PREFIX, isBundleGrant, bundleIdOfGrant, bundleGrantId, migrateStore, identityKeys, findDuplicate, descendants, validateHierarchy,
   assignedPermissionDetails, effectivePermissionDetails, effectivePermissionSet, hasPermission, isSecurityPermission,
   isPrivilegedRole, canAdminUsers, canGrant, effectiveDataScope, rowInScope, filterRows, normalizeGrant, clean, uniq,
 };

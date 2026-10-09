@@ -434,6 +434,34 @@ function resetWorkspace(userId, moduleName, categories = WORKSPACE_CATEGORIES) {
   return { ...removeKeys(userId, keys), removedKeys: keys };
 }
 
+/* ATANMIŞ VARSAYILAN UFUK — "SON KARAR KAZANIR".
+
+   Moderatör/Yönetici bir kullanıcıya varsayılan ufuk atadığında (merkezi IAM,
+   bkz. iam-core normalizeUserWorkspaceDefaults) kullanıcının o ekran için
+   ATAMADAN ÖNCE kaydedilmiş kişisel ufku, atamanın görünmesini engellerdi.
+   Bu yüzden atamadan eski kişisel kayıt (ekranın kendi ufku, uygulanan ufku ve
+   kişinin tüm ekranlar için varsayılanı) bir kez kaldırılır; mezar taşı
+   tarayıcıdaki bayat kopyanın onu geri getirmesini engeller. Atamadan SONRA
+   kullanıcının kendi yaptığı değişiklik daha yenidir ve korunur: kullanıcı
+   ufkunu her zaman kendisi değiştirebilir. */
+function supersedePersonalHorizons(userId, assignedKeys, assignedAt) {
+  const stamp = String(assignedAt || '');
+  if (!stamp) return [];
+  const candidates = new Set();
+  for (const key of Array.isArray(assignedKeys) ? assignedKeys : []) {
+    const match = /^buyerlog\.workspace\.horizon\.([a-z0-9_-]+)\.v1$/.exec(String(key || ''));
+    if (!match) continue;
+    candidates.add(horizonKey(match[1]));
+    candidates.add(appliedHorizonKey(match[1]));
+  }
+  if (!candidates.size) return [];
+  candidates.add(horizonKey('default'));
+  const entries = load(userId).entries;
+  const stale = [...candidates].filter(key => entries[key] && String(entries[key].updatedAt || '') < stamp);
+  if (stale.length) removeKeys(userId, stale);
+  return stale;
+}
+
 /* v7.81 — KATMAN GÖRÜNÜR OLDU.
 
    Bir modülün ufku beş ayrı yerden gelebiliyor ve ekran bugüne kadar hangisinin
@@ -621,6 +649,7 @@ module.exports = {
   categoryForKey, normalizeCategories, workspaceEntries, replaceWorkspaceEntries,
   normalizeWorkspaceEntryMap, effectiveWorkspaceEntries, copyWorkspaceSnapshot, copyWorkspaceEntrySnapshot,
   horizonKey, appliedHorizonKey, getHorizon, saveHorizon, getAppliedHorizon, saveAppliedHorizon, resetWorkspace, resolveHorizon,
+  supersedePersonalHorizons,
   applyHorizonOverrides,
   // v7.81 — Veri Yönetimi ekranı hangi katmanın kazandığını gösterebilsin diye.
   HORIZON_LAYERS, resolveHorizonProvenance, selectHorizonPreference,

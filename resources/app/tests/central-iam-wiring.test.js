@@ -29,7 +29,12 @@ test('sessions carry IAM invalidation revisions and management UI surfaces sync 
 
   assert.match(access, /credentialRevision/);
   assert.match(access, /accessRevision/);
-  assert.match(management, /Read-only \/ offline/);
+  // v20261009: genel "Read-only / offline" yerine durum kartı nedeni (lastError)
+  // ve düzenlemenin neden kapalı olduğunu söyler.
+  assert.match(management, /data-um-iam-status/);
+  assert.match(management, /function iamIssue\(h\)/);
+  assert.match(management, /h\.lastError/);
+  assert.match(management, /Editing is temporarily disabled/);
   assert.match(management, /expectedRevision/);
   assert.match(clientAccess, /bl:iam-revision-available/);
 });

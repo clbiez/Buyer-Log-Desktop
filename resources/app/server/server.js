@@ -2302,6 +2302,7 @@ app.get('/api/users/admin', userAccess.requireUserAdmin, userAccess.adminListHan
 app.get('/api/iam/health', userAccess.iamHealthHandler);
 app.post('/api/iam/refresh', userAccess.requireUserAdmin, userAccess.iamRefreshHandler);
 app.get('/api/iam/migration/dry-run', userAccess.requireModerator, userAccess.iamDryRunHandler);
+app.post('/api/iam/adopt-central', userAccess.requireModerator, express.json({ limit: '16kb' }), userAccess.iamAdoptHandler);
 app.post('/api/iam/initialize', userAccess.requireModerator, express.json({ limit: '16kb' }), userAccess.iamInitializeHandler);
 app.post('/api/iam/users/bulk', userAccess.requireUserAdmin, express.json({ limit: '2mb' }), userAccess.adminBulkHandler);
 app.post('/api/users', userAccess.requireUserAdmin, express.json({ limit: '2mb' }), userAccess.adminCreateHandler);
@@ -2312,6 +2313,12 @@ app.delete('/api/iam/workspace-templates/:roleId', userAccess.requireCapability(
 app.post('/api/iam/permissions/copy', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '2mb' }), userAccess.permissionCopyHandler);
 app.post('/api/iam/profile-copy/preview', userAccess.requireCapability('USER.PROFILE_COPY'), express.json({ limit: '2mb' }), userAccess.profileCopyPreviewHandler);
 app.post('/api/iam/profile-copy', userAccess.requireCapability('USER.PROFILE_COPY'), express.json({ limit: '2mb' }), userAccess.profileCopyHandler);
+app.post('/api/iam/horizon-defaults', userAccess.requireUserAdmin, express.json({ limit: '2mb' }), userAccess.horizonDefaultsHandler);
+app.post('/api/iam/role-horizon-defaults', userAccess.requireCapability('ROLE.MANAGE'), express.json({ limit: '2mb' }), userAccess.roleHorizonDefaultsHandler);
+app.post('/api/iam/role-bundles', userAccess.requireCapability('ROLE.MANAGE'), express.json({ limit: '2mb' }), userAccess.roleBundleHandler);
+app.get('/api/iam/export.xlsx', userAccess.requireUserAdmin, userAccess.iamExportHandler);
+app.post('/api/iam/import/preview', userAccess.requireUserAdmin, express.json({ limit: '8mb' }), userAccess.iamImportPreviewHandler);
+app.post('/api/iam/import', userAccess.requireUserAdmin, express.json({ limit: '8mb' }), userAccess.iamImportHandler);
 app.post('/api/iam/users/:id/temporary-grants', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '256kb' }), userAccess.temporaryGrantHandler);
 app.delete('/api/iam/users/:id/temporary-grants/:grantId', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '64kb' }), userAccess.temporaryGrantRevokeHandler);
 app.get('/api/iam/audit', userAccess.requireCapability('AUDIT.VIEW'), userAccess.auditListHandler);
