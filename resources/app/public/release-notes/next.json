@@ -142,6 +142,35 @@
           "en": "See the applied rules version"
         }
       }
+    },
+    {
+      "id": "corporate-connections-accessible-language",
+      "type": "fix",
+      "module": {
+        "tr": "Üst çubuk",
+        "en": "Top bar"
+      },
+      "title": {
+        "tr": "Kurumsal bağlantı etiketi seçilen dili izler",
+        "en": "Corporate connection label follows the selected language"
+      },
+      "path": {
+        "tr": "Üst çubuk › LCW AI / PLM / OAB",
+        "en": "Top bar › LCW AI / PLM / OAB"
+      },
+      "body": {
+        "tr": "Kurumsal bağlantılar grubunun ekran okuyucu etiketi Türkçe ve İngilizce arasında dil tercihiyle birlikte değişir.",
+        "en": "The corporate connections group’s screen reader label switches between Turkish and English with the language preference."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "corporate-connections-accessibility.png",
+        "alt": {
+          "tr": "İngilizce kipte kurumsal bağlantıları gösteren demo verili gerçek Buyer Log ekranı",
+          "en": "Real Buyer Log screen with demo data showing corporate connections in English mode"
+        }
+      }
     }
   ]
 }
