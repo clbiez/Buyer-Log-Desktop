@@ -183,15 +183,17 @@ test('Central IAM acceptance: create, second PC login, CP revoke/403, reset, off
   assert.equal((await b.request('/api/cp-probe', 'GET', undefined, 'buyer')).status, 200);
   r = await a.request(`/api/users/${id}`, 'PUT', { expectedRevision: 2, systemRole: 'manager', role: 'manager', reason: 'Acceptance promotion' }); assert.equal(r.status, 200, JSON.stringify(r));
   await b.refresh();
-  assert.equal((await b.request('/api/current-user', 'GET', undefined, 'buyer')).body.selected, false);
-  r = await b.request('/api/user-login', 'POST', { username: 'buyer', password: 'Old-password-123' }, 'buyer'); assert.equal(r.status, 200);
+  // v20261009: yetki değişimi oturumu düşürmez; yeni rol aynı oturumda hemen geçerlidir.
+  r = await b.request('/api/current-user', 'GET', undefined, 'buyer');
+  assert.equal(r.body.selected, true);
   assert.equal(r.body.user.systemRole, 'manager');
   const directory = await a.request('/api/users/admin');
   const roles = directory.body.roleDefinitions; roles.manager.permissions = roles.manager.permissions.filter(p => p !== 'CP.VIEW');
   r = await a.request('/api/iam/roles', 'PUT', { expectedRevision: 3, roles, confirmCritical: true, reason: 'Restrict CP' }); assert.equal(r.status, 200, JSON.stringify(r));
   await b.refresh();
-  assert.equal((await b.request('/api/current-user', 'GET', undefined, 'buyer')).body.selected, false);
-  r = await b.request('/api/user-login', 'POST', { username: 'buyer', password: 'Old-password-123' }, 'buyer'); assert.equal(r.status, 200);
+  // Kısıtlama aynı oturumda, yeniden giriş gerekmeden sunucuda uygulanır.
+  r = await b.request('/api/current-user', 'GET', undefined, 'buyer');
+  assert.equal(r.body.selected, true);
   assert.equal(r.body.user.accessAreas.cp, false);
   assert.equal((await b.request('/api/cp-probe', 'GET', undefined, 'buyer')).status, 403);
   r = await a.request(`/api/users/${id}`, 'PUT', { expectedRevision: 4, password: 'New-password-123', confirmCritical: true }); assert.equal(r.status, 200, JSON.stringify(r));

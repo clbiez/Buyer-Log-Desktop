@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-09",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kullanıcı yönetimi: net durum, merkezi varsayılan ufuk",
-    "en": "User management: clear status, central default horizon"
+    "tr": "Kullanıcı yönetimi: ek roller, Excel ve merkezi ufuk",
+    "en": "User management: extra roles, Excel and central horizon"
   },
   "summary": {
-    "tr": "Kullanıcı yönetimi düzenlemenin neden kapalı olduğunu ve ne yapılacağını söyler; Moderatör ve yöneticiler kullanıcılara tüm cihazlarda geçerli varsayılan ufuk atayabilir.",
-    "en": "User management explains why editing is disabled and what to do; Moderators and managers can assign users a default horizon that applies on every device."
+    "tr": "Kullanıcı yönetimi ERP düzeyine çıktı: ek roller, süreli yetki, yetki karşılaştırma, Excel ile toplu düzenleme, merkezi varsayılan ufuk ve oturumu düşürmeyen yetki değişikliği.",
+    "en": "User management reaches ERP level: extra roles, temporary permissions, permission comparison, bulk editing in Excel, central default horizon and permission changes that keep users signed in."
   },
   "changes": [
     {
@@ -75,6 +75,237 @@
       "body": {
         "tr": "Moderatör ve kullanıcı yönetimi yetkisi olan yöneticiler, bir kullanıcıya (veya toplu seçimle birden çok kullanıcıya) CP, Siparişler, Backlog, LFL ve Fiyat & Üretici Analizi için varsayılan ufuk atayabilir. Kaynak kendi ufkunuz ya da başka bir kullanıcının ufkudur. Varsayılan merkezi kullanıcı dizininde tutulur; kullanıcı hangi cihazdan açarsa açsın onu görür ve sonradan kendi ufkunu değiştirebilir, onun ayarı kazanır. Profil Kopyalama'da Horizon seçildiğinde de ufuk hedeflerin varsayılanı olur; eskiden bu kopya yalnız işlemi yapan bilgisayarda kalıyordu. Varsayılan Kaldır kullanıcıyı rol şablonuna veya ortak filtreye döndürür.",
         "en": "Moderators and managers with user management rights can assign a user (or several users via bulk selection) a default horizon for CP, Orders, Backlog, LFL and Price & Supplier Analysis. The source is your own horizon or another user's. The default is kept in the central user directory, so the user sees it on whichever device they open and can still change their own horizon afterwards; their setting wins. Selecting Horizon in Copy User Profile also makes the horizon the targets' default; previously that copy stayed on the computer that performed it. Remove Default returns the user to the role template or the shared filter."
+      }
+    },
+    {
+      "id": "user-management-extra-roles",
+      "type": "feature",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "Ek roller: adlandırılmış yetki paketleri",
+        "en": "Extra roles: named permission bundles"
+      },
+      "path": {
+        "tr": "Kullanıcı & Yetki Yönetimi › Ek Roller",
+        "en": "User & Authorization Management › Extra Roles"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-extra-roles.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında Fiyat Onaycısı ek rolünün yetki ve üye düzenleyicisi",
+          "en": "Permission and member editor of the Price Approver extra role in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Bir kez tanımlayın, kişilere atayın; değişiklik bütün üyelere birlikte uygulanır",
+          "en": "Define it once and assign it to people; changes apply to every member together"
+        }
+      },
+      "body": {
+        "tr": "Dört sistem rolüne ek olarak \"Fiyat Onaycısı\", \"Koleksiyon Editörü\" gibi ek roller tanımlanabilir. Ek rol Türkçe/İngilizce ad, iş yetkileri ve üyelerden oluşur; kaydedilince bütün üyelere uygulanır, silinince yetkileri üyelerden kaldırılır. Kullanıcı, rol, sistem ve denetim yetkileri ek role konamaz; bunlar kişiye gerekçeyle verilir. Yetki listesinde bu yetkiler \"Ek Rol\" kaynağıyla görünür.",
+        "en": "In addition to the four system roles you can define extra roles such as \"Price Approver\" or \"Collection Editor\". An extra role has a Turkish/English name, business permissions and members; saving applies it to every member and deleting removes its permissions from them. User, role, system and audit permissions cannot be put in an extra role; those are granted to a person with a reason. These permissions appear in permission lists with the \"Extra Role\" source."
+      }
+    },
+    {
+      "id": "user-management-compare",
+      "type": "feature",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "İki kullanıcının yetkilerini yan yana karşılaştırın",
+        "en": "Compare two users' permissions side by side"
+      },
+      "path": {
+        "tr": "Kullanıcı & Yetki Yönetimi › Yetki Karşılaştırma",
+        "en": "User & Authorization Management › Compare Permissions"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-compare.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında iki kullanıcının yalnız farklı yetkilerini gösteren karşılaştırma tablosu",
+          "en": "Comparison table showing only the differing permissions of two users in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Her yetkinin iki tarafta olup olmadığı ve nereden geldiği aynı satırda",
+          "en": "Whether each permission applies to both users, and where it comes from, on one row"
+        }
+      },
+      "body": {
+        "tr": "\"İki kullanıcının yetkileri neden farklı?\" sorusu tek ekranda cevaplanır. Varsayılan olarak yalnız farklar listelenir; her yetkinin kaynağı (rol, ek rol, kişiye özel, süreli, hiyerarşi) rozetle gösterilir ve rozetin üzerine gelince cümleyle açıklanır. Kullanıcı kartındaki Karşılaştır düğmesi bu ekranı o kişiyle açar.",
+        "en": "\"Why do these two users have different permissions?\" is answered on one screen. Only the differences are listed by default; each permission's source (role, extra role, direct, temporary, hierarchy) is shown as a badge and explained in a sentence on hover. The Compare button on the user card opens this screen with that person."
+      }
+    },
+    {
+      "id": "user-management-temporary-permissions",
+      "type": "feature",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "Süreli yetki: tarihi gelince kendiliğinden düşer",
+        "en": "Temporary permissions that end automatically"
+      },
+      "path": {
+        "tr": "Kullanıcı & Yetki Yönetimi › Kullanıcı › Yetkiler › Süreli Yetkiler",
+        "en": "User & Authorization Management › User › Permissions › Temporary Permissions"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-temporary-permissions.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında kullanıcının süreli yetki listesi ve süreli yetki verme formu",
+          "en": "A user's temporary permission list and grant form in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Yetki, bitiş tarihi ve gerekçe seçin; listede etkin/başlamadı/süresi doldu görünür",
+          "en": "Choose the permission, end date and reason; the list shows active/scheduled/expired"
+        }
+      },
+      "body": {
+        "tr": "Moderatör bir kişiye kalıcı yetki vermeden, seçilen tarihe kadar geçerli yetki verebilir (ör. sezon kapanışında iki hafta Ön Maliyet düzenleme). Süre dolunca yetki kendiliğinden düşer; istenirse önceden gerekçeyle geri alınır.",
+        "en": "A Moderator can grant a person a permission until a chosen date without making it permanent (e.g. two weeks of Open Costing editing at season close). It ends automatically when the date passes and can be revoked earlier with a reason."
+      }
+    },
+    {
+      "id": "user-management-role-horizon",
+      "type": "feature",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "Rolün varsayılan ufkunu doğrudan ayarlayın",
+        "en": "Set a role's default horizon directly"
+      },
+      "path": {
+        "tr": "Kullanıcı & Yetki Yönetimi › Workspace Şablonları › Rol Varsayılan Ufku",
+        "en": "User & Authorization Management › Workspace Templates › Role Default Horizon"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-role-horizon.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında Standard Buyer rolünün varsayılan ufku kartı",
+          "en": "Default horizon card of the Standard Buyer role in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Yalnız ufuk değişir; şablonun filtre, kolon ve görünüm ayarları korunur",
+          "en": "Only the horizon changes; the template's filter, column and view settings are kept"
+        }
+      },
+      "body": {
+        "tr": "Bir rolün ufku, bütün çalışma alanı şablonunu yeniden kaydetmeden seçilen ekranlar için ayarlanabilir veya kaldırılabilir. Kaynak sizin ufkunuz ya da başka bir kullanıcınınkidir. Kişiye atanmış varsayılan ve kişinin kendi ayarı rol ufkunun üstündedir.",
+        "en": "A role's horizon can be set or removed for selected screens without re-saving the whole workspace template. The source is your own horizon or another user's. A personally assigned default and the person's own setting take precedence over the role horizon."
+      }
+    },
+    {
+      "id": "user-management-excel",
+      "type": "feature",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "Excel ile toplu düzenleme ve yetki gözden geçirme raporu",
+        "en": "Bulk editing in Excel and an access review report"
+      },
+      "path": {
+        "tr": "Kullanıcı & Yetki Yönetimi › İçe / Dışa Aktar",
+        "en": "User & Authorization Management › Import / Export"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-excel.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında Excel içe aktarma önizlemesi",
+          "en": "Excel import preview in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Yükleme önce önizlenir; hatalı satır varsa hiçbir şey yazılmaz",
+          "en": "Uploads are previewed first; nothing is written if any row has an error"
+        }
+      },
+      "body": {
+        "tr": "Kullanıcı listesi dört sayfalık Excel dosyasına aktarılır: Kullanıcılar, onay sütunlu Yetki Gözden Geçirme raporu, her yetki ve kaynağıyla Etkin Yetkiler, Roller. Parola ve oturum bilgisi yazılmaz. Kullanıcılar sayfası düzenlenip geri yüklenebilir: önce oluşturulacak, güncellenecek ve hatalı satırlar gösterilir, sonra tümü tek değişiklik olarak uygulanır. Yeni kullanıcılar parolasız ve pasif oluşur; Moderatör rolü içe aktarımla değiştirilemez; kullanıcı adı olmayan ASAS kaynak satırları atlanır.",
+        "en": "The user list is exported to a four-sheet Excel file: Users, an Access Review report with an approval column, Effective Permissions with each permission and its source, and Roles. Passwords and session data are never written. The Users sheet can be edited and uploaded back: rows to create, update or fix are shown first, then everything is applied as one change. New users are created inactive without a password; the Moderator role cannot be changed by import; ASAS source rows without a user name are skipped."
+      }
+    },
+    {
+      "id": "user-management-source-records",
+      "type": "improvement",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "Giriş yapamayan ASAS kaynak kayıtları varsayılan olarak gizli",
+        "en": "ASAS source records that cannot sign in are hidden by default"
+      },
+      "path": {
+        "tr": "Kullanıcı & Yetki Yönetimi › Kullanıcılar",
+        "en": "User & Authorization Management › Users"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-source-records.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında yalnız gerçek kullanıcıları gösteren liste ve ASAS kaynak kayıtlarını göster düğmesi",
+          "en": "List showing only real users and the Show ASAS source records button in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Yüzlerce \"tanımsız\" satır yerine yalnız yönetilen hesaplar; tek tıkla hepsi",
+          "en": "Only managed accounts instead of hundreds of \"not set\" rows; everything with one click"
+        }
+      },
+      "body": {
+        "tr": "ASAS siparişlerinden gelen, kullanıcı adı ve parolası olmayan pasif kayıtlar gerçek kullanıcıları listenin altına itiyordu. Liste artık varsayılan olarak yalnız giriş yapabilen/yönetilen hesapları gösterir; sağdaki düğme kaynak kayıtları sayısıyla birlikte açar. Arama yapılırken eşleşen kaynak kayıtlar da gösterilir.",
+        "en": "Inactive records from ASAS orders with no user name or password pushed real users down the list. The list now shows only accounts that can sign in or are managed by default; the button on the right reveals the source records with their count. Matching source records are still shown while searching."
+      }
+    },
+    {
+      "id": "user-management-live-permissions",
+      "type": "improvement",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "Yetki değişince kullanıcının oturumu kapanmaz",
+        "en": "Permission changes no longer sign the user out"
+      },
+      "path": {
+        "tr": "Tüm ekranlar",
+        "en": "All screens"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-live-permissions.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında Yetkileriniz güncellendi bildirimi",
+          "en": "Your permissions were updated notice in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Rol, ek rol veya yetki değişikliği aynı oturumda hemen geçerli olur",
+          "en": "Role, extra role or permission changes take effect in the same session immediately"
+        }
+      },
+      "body": {
+        "tr": "Moderatör bir kullanıcının rolünü, ek rolünü veya yetkilerini değiştirdiğinde o kullanıcı artık giriş ekranına atılmaz. Yetki, veri kapsamı ve erişim alanları her istekte güncel dizinden okunduğu için kısıtlama sunucuda anında geçerlidir; kullanıcının menüleri birkaç saniye içinde yeni yetkilere göre yenilenir ve kısa bir bildirim gösterilir. Parola değişimi ve pasife alma oturumu kapatmaya devam eder.",
+        "en": "When a Moderator changes a user's role, extra role or permissions, that user is no longer sent to the sign-in screen. Permissions, data scope and access areas are read from the current directory on every request, so restrictions apply on the server immediately; the user's menus refresh to the new permissions within seconds and a short notice is shown. Password changes and deactivation still end the session."
       }
     }
   ]
