@@ -570,6 +570,7 @@ const collectionSaveWorker = require('./lib/collection-save-worker-client');
 const collectionRecycleBin = require('./lib/collection-recycle-bin');
 const userPreferences = require('./lib/user-preferences');
 const { loadPlmTranslations, publicRules: publicPlmTranslations, upsertPlmTranslations } = require('./lib/plm-translations');
+const fabricCards = require('./lib/fabric-cards');
 const plmStyleLinks = require('./lib/plm-style-links');
 const { loadPlmStyleLinks, publicLinks: publicPlmStyleLinks, upsertPlmStyleLinks } = plmStyleLinks;
 /* Ortak iş verisini tutan her store delta motoruna bağlanır. Bağlama tek
@@ -3971,6 +3972,14 @@ require('./routes/plm-translation-routes')(app, {
   upsertPlmTranslations,
   userAccess,
 
+});
+// ---- Koleksiyon kumaş kartları (kumaş kodu → özet) → server/routes/fabric-card-routes.js ----
+require('./routes/fabric-card-routes')(app, {
+  apiError,
+  express,
+  fabricCards,
+  requestRevision,
+  userAccess,
 });
 // ---- CoreNectum PLM Code -> styleId deep-link dictionary ------------------
 // CoreNectum oturum bilgileri Buyer Log'a alınmaz. Eşleşmeler CSV/Excel ile

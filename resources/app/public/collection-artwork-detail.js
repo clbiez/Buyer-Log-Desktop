@@ -148,7 +148,9 @@
   /* BOM özetlerini yerel depodan tazeler (uzak PLM/AI çağrısı yapmaz).
      Değer değiştiyse Koleksiyon yeniden çizilir. */
   function ensureFresh(options = {}) {
-    if (state.inflight) return state.inflight;
+    /* Zorla tazeleme (PLM SYNC sonrası) devam eden eski okumayı yeniden
+       kullanmaz; o istek sunucu BOM'u yazmadan önce başlamış olabilir. */
+    if (state.inflight) return options.force ? state.inflight.then(() => ensureFresh(options)) : state.inflight;
     const stale = Date.now() - state.fetchedAt > FRESH_MS || options.force;
     const ids = stale ? new Set(allRows().map(plmIdOfRow).filter(Boolean)) : missingIds();
     if (!ids.size) return Promise.resolve(project());
