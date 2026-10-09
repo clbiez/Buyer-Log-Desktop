@@ -373,6 +373,39 @@
           "en": "58 CP columns including the new formula and custom columns; 41 Collection columns including a hidden custom field, plus selected records"
         }
       }
+    },
+    {
+      "id": "manufacturer-dtr-card-status",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler / Veri Yönetimi",
+        "en": "Manufacturers / Data Management"
+      },
+      "title": {
+        "tr": "DTR / Non-DTR durumunu üretici kartından yönetin",
+        "en": "Manage DTR / Non-DTR on the manufacturer card"
+      },
+      "path": {
+        "tr": "Üreticiler › Kartı düzenle › DTR / Non-DTR",
+        "en": "Manufacturers › Edit card › DTR / Non-DTR"
+      },
+      "body": {
+        "tr": "Üreticiler varsayılan olarak DTR gelir. Eski Non-DTR istisnaları, alternatif adlar ve iletişim bilgileri korunarak üretici kartlarına aktarılır; kartı olmayan istisnalar için kayıt açılır. Veri Yönetimi’ndeki ayrı liste kaldırıldı. Karttaki değişiklik LFL sınıflandırmasını günceller; CP ve Orders lisansör alanları korunur.",
+        "en": "Manufacturers default to DTR. Legacy Non-DTR exceptions move to manufacturer cards while preserving aliases and contact details; exceptions without a card get a record. The separate Data Management list is removed. Card edits update LFL classification while preserving CP and Orders licensor fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturer-dtr-status.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üretici kartında demo Non-DTR kaydı ve DTR / Non-DTR seçimi",
+          "en": "Demo Non-DTR record and DTR / Non-DTR selection on a real Buyer Log manufacturer card"
+        },
+        "caption": {
+          "tr": "Varsayılan DTR; mevcut Non-DTR istisnaları üretici kartlarında korunur",
+          "en": "DTR by default; existing Non-DTR exceptions are preserved on manufacturer cards"
+        }
+      }
     }
   ]
 }

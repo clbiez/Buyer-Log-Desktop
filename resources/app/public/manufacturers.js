@@ -305,7 +305,7 @@
     };
     return `<article class="mfpCard">
       <header class="mfpCardHead"><div><span class="mfpEyebrow">${esc(T('Üretici kartı', 'Manufacturer card'))}</span><h3>${esc(card.name)}</h3>
-        <div class="mfpCardBadges">${statusBadge(card)}${record && record.origin === 'manual' ? `<span class="mfpBadge">${esc(T('Elle eklendi', 'Added manually'))}</span>` : ''}</div></div>
+        <div class="mfpCardBadges">${statusBadge(card)}<span class="mfpBadge">${esc(record?.dtrStatus || 'DTR')}</span>${record && record.origin === 'manual' ? `<span class="mfpBadge">${esc(T('Elle eklendi', 'Added manually'))}</span>` : ''}</div></div>
         <div class="mfpCardActions">${actions}</div></header>
       ${warnings.join('')}
       ${card.inAsas ? `<div class="mfpTiles">

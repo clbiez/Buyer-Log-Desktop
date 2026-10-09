@@ -11465,59 +11465,11 @@ document.querySelectorAll('[data-license-royalty]').forEach(button=>button.addEv
 }));
 
 
-function nonDtrMfrText(){
-  const en=appLang==='en';
-  return {
-    title:en?'Non-DTR Manufacturers':'Non-DTR Üreticiler',
-    sub:en?'This list is used only for LFL classification. Listed manufacturers are NON-DTR; every manufacturer outside the list is DTR. CP Licensor values are not changed.':'Bu liste yalnız LFL sınıflandırmasında kullanılır. Listedeki üreticiler NON-DTR, liste dışındaki tüm üreticiler DTR kabul edilir. CP Licensor değerleri değiştirilmez.',
-    label:en?'Manufacturer':'Üretici', placeholder:en?'Type or select a manufacturer…':'Üretici yaz veya seç…', add:en?'Add':'Ekle', save:en?'Save Manufacturers':'Üreticileri Kaydet', cancel:en?'Cancel':'Vazgeç', empty:en?'No Non-DTR manufacturer has been added yet.':'Henüz Non-DTR üretici eklenmedi.', remove:en?'Remove':'Sil', status:en?'The LFL analysis is recalculated after saving.':'Kaydettikten sonra LFL analizi yeniden hesaplanır.', saving:en?'Saving…':'Kaydediliyor…', saved:n=>en?`${n} Non-DTR manufacturers saved.`:`${n} Non-DTR üretici kaydedildi.`, duplicate:en?'This manufacturer is already in the list.':'Bu üretici zaten listede.', required:en?'Enter a manufacturer name.':'Üretici adı girin.'
-  };
-}
-async function persistNonDtrManufacturers(values){
-  const clean=normalizeNonDtrManufacturers(values);
-  state.overrides.nonDtrManufacturers=clean; saveLocalNonDtrManufacturers(clean); window.BL_NON_DTR_MANUFACTURERS=[...clean];
-  if(window.SERVER_BACKED){
-    const res=await fetch('/api/non-dtr-manufacturers',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(state.storeRevisions.nonDtrManufacturers||0)},body:JSON.stringify({manufacturers:clean})});
-    const data=await res.json().catch(()=>({}));if(!res.ok)throw new Error(data.error||res.statusText);
-    state.storeRevisions.nonDtrManufacturers=Number(data.revision)||state.storeRevisions.nonDtrManufacturers||0;
-    state.overrides.nonDtrManufacturers=normalizeNonDtrManufacturers(data.manufacturers||clean);saveLocalNonDtrManufacturers(state.overrides.nonDtrManufacturers);window.BL_NON_DTR_MANUFACTURERS=[...state.overrides.nonDtrManufacturers];
-    await loadFromServer(false);
-  }else{
-    const rebuild=Array.isArray(state.asasOrders)&&state.asasOrders.length;
-    if(rebuild){state.cp={fname:state.cp?.fname||'ASAS',rows:buildCPRowsFromASAS()};state.cpLogisticExpanded.clear();invalidateUnifiedPriorityDecisions('cp-rebuild');state.orderSummary={fname:state.orderSummary?.fname||'ASAS',rows:buildOrderSummaryRowsFromASAS()};buildCPFilters();renderCP();renderOverview();}
-  }
-  try{if(typeof window.reloadLflFromCache==='function')await window.reloadLflFromCache();}catch(_){}
-  if(typeof fetchCurrentBacklog==='function')fetchCurrentBacklog();
-  return state.overrides.nonDtrManufacturers;
-}
-function openNonDtrManufacturersModal(){
-  document.getElementById('_nonDtrMfrModal')?.remove();
-  const t=nonDtrMfrText();let working=normalizeNonDtrManufacturers(state.overrides.nonDtrManufacturers);
-  refreshSubmfrList();
-  const modal=document.createElement('div');modal.id='_nonDtrMfrModal';modal.className='warnOverlay';
-  modal.innerHTML=`<div class="modalCard nonDtrMfrCard" role="dialog" aria-modal="true" aria-labelledby="_nonDtrMfrTitle"><div class="nonDtrMfrHead"><div><div class="modalTitle" id="_nonDtrMfrTitle">${escapeHtml(t.title)}</div><p>${escapeHtml(t.sub)}</p></div><button type="button" class="pricingRuleIconBtn _nonDtrClose" title="${escapeHtml(appLang==='en'?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="nonDtrMfrBody"><div class="nonDtrMfrEntry"><label for="_nonDtrMfrInput">${escapeHtml(t.label)}</label><div><input id="_nonDtrMfrInput" class="kolSuggestCell" data-kind="submfr" autocomplete="off" placeholder="${escapeHtml(t.placeholder)}"><button type="button" class="navActionBtn" id="_nonDtrMfrAdd"><svg class="ic"><use href="#i-copy-plus"/></svg>${escapeHtml(t.add)}</button></div></div><div class="nonDtrMfrList" id="_nonDtrMfrList"></div><div class="nonDtrMfrHint">${escapeHtml(t.status)}</div></div><div class="nonDtrMfrFoot"><span id="_nonDtrMfrStatus"></span><span></span><button type="button" class="tbtn _nonDtrClose">${escapeHtml(t.cancel)}</button><button type="button" class="navActionBtn" id="_nonDtrMfrSave"><svg class="ic"><use href="#i-device-floppy"/></svg>${escapeHtml(t.save)}</button></div></div>`;
-  document.body.appendChild(modal);
-  modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
-  modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const input=modal.querySelector('#_nonDtrMfrInput'),list=modal.querySelector('#_nonDtrMfrList'),status=modal.querySelector('#_nonDtrMfrStatus');
-  const render=()=>{list.innerHTML=working.length?working.map((name,index)=>`<div class="nonDtrMfrItem"><span>${escapeHtml(name)}</span><button type="button" data-remove="${index}" title="${escapeHtml(t.remove)}"><svg class="ic"><use href="#i-trash"/></svg></button></div>`).join(''):`<div class="nonDtrMfrEmpty">${escapeHtml(t.empty)}</div>`;list.querySelectorAll('[data-remove]').forEach(btn=>btn.addEventListener('click',()=>{working.splice(Number(btn.dataset.remove),1);render();}));};
-  const add=()=>{const value=norm(input.value);if(!value){status.textContent=t.required;return;}if(working.some(x=>BLBusinessRules.manufacturerKey(x)===BLBusinessRules.manufacturerKey(value))){status.textContent=t.duplicate;return;}working=normalizeNonDtrManufacturers([...working,value]);input.value='';status.textContent='';render();input.focus();};
-  const openManufacturerSuggestions=()=>{ refreshSubmfrList(); showSubmfrDrop(input); };
-  modal.querySelector('#_nonDtrMfrAdd').addEventListener('click',add);
-  input.addEventListener('input',openManufacturerSuggestions);
-  input.addEventListener('focus',openManufacturerSuggestions);
-  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();closeSubmfrDrop();add();}});
-  /* v7.81 — HORIZON ÖN AYARI BLOĞU TAMAMEN KALDIRILDI (kullanıcı kararı).
-     Ön ayar, kullanıcının profiline göre ona görünmeyen bir ufuk atıyordu ve
-     Veri Yönetimi'nde ayarlanan ortak filtreyi eziyordu. Artık ufuk ya
-     kullanıcının kendi ayarıdır ya da kaynağın ortak filtresi — ikisi de
-     Veri Yönetimi ekranında görünür ve oradan değiştirilebilir. */
-
-  const closeModal=()=>{ closeSubmfrDrop(); modal.remove(); };
-  modal.querySelectorAll('._nonDtrClose').forEach(btn=>btn.addEventListener('click',closeModal));modal.addEventListener('click',e=>{if(e.target===modal)closeModal();});modal.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
-  modal.querySelector('#_nonDtrMfrSave').addEventListener('click',async e=>{const btn=e.currentTarget;btn.disabled=true;status.textContent=t.saving;try{const saved=await persistNonDtrManufacturers(working);modal.remove();showToast(t.saved(saved.length));}catch(err){btn.disabled=false;status.textContent=err.message;}});
-  render();setTimeout(()=>input.focus(),0);
-}
+// Eski giriş noktası üretici kartlarına yönlendirilir; ayrı liste editörü yok.
+function openNonDtrManufacturersModal(){ window.switchTab('manufacturers'); }
+window.addEventListener('bl:manufacturer-classification-changed',()=>{
+  if(window.SERVER_BACKED && typeof loadFromServer==='function')void loadFromServer(false).then(()=>window.reloadLflFromCache?.()).catch(()=>{});
+});
 
 function landedMultiplierInputValue(value){
   const n=Number(value);if(!Number.isFinite(n)||n<=0)return '';
@@ -35636,7 +35588,8 @@ function refreshSharedMasterClient(area){
     window.BLTransitAnalysisUI?.invalidate?.();
     return Promise.resolve();
   }
-  if(['transitRules','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','systemSettings'].includes(area)){
+  if(area==='nonDtrManufacturers')return loadFromServer(false).then(()=>window.reloadLflFromCache?.());
+  if(['transitRules','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','systemSettings'].includes(area)){
     // Program davranışını belirleyen Master kuralları SYNC'ten yerel cache'e
     // uygulandığında çalışan ekran da aynı kanonik state'i yeniden okumalıdır.
     return typeof loadFromServer==='function' ? loadFromServer(false) : Promise.resolve();
@@ -35648,7 +35601,7 @@ function refreshSharedMasterClient(area){
   if(area==='emailGroups'){
     return Promise.resolve(window.BLEmailDirectory?.ensureDirectory?.(true)).then(()=>{
       prepareEmailFillFromShared();
-      return window.BLEmailGroups?.refresh?.();
+      return Promise.resolve(window.BLEmailGroups?.refresh?.()).then(()=>typeof loadFromServer==='function'?loadFromServer(false):null).then(()=>window.reloadLflFromCache?.());
     });
   }
   return Promise.resolve();

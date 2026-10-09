@@ -193,7 +193,7 @@ function newerRevisionMeta(current, incoming) {
    olduğu için cihazlar yeniden yayına gerek kalmadan aynı sonuca yakınsar. */
 const DOCUMENT_LIST_MERGE = Object.freeze({
   'store:quotations.json': { requests: { tombstones: 'deletedRequests' }, deletedRequests: { tombstoneMap: true } },
-  'store:email-groups.json': { records: { tombstones: 'deletedRecords' }, deletedRecords: { tombstoneMap: true } },
+  'store:email-groups.json': { records: { tombstones: 'deletedRecords' }, deletedRecords: { tombstoneMap: true }, migratedNonDtrNames: { stringSet: true } },
 });
 function mergeTombstoneMaps(a, b) {
   const out = { ...(a && typeof a === 'object' ? a : {}) };
@@ -264,7 +264,8 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
       if (writer) writers[key] = writer; continue;
     }
     if (listRule && next[key] !== undefined) {
-      if (listRule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
+      if (listRule.stringSet) next[key] = [...new Set([...(Array.isArray(next[key]) ? next[key] : []), ...(Array.isArray(value) ? value : [])])].sort();
+      else if (listRule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
       else next[key] = mergeListById(next[key], value, listRule.tombstones ? mergeTombstoneMaps(next[listRule.tombstones], incoming[listRule.tombstones]) : {});
       fields[key] = Math.max(previousRevision, revision);
       if (writer) writers[key] = writer;

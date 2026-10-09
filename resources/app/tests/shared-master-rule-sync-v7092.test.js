@@ -45,7 +45,7 @@ test('program-wide business rules are classified as Shared Hub Master data', () 
 
 test('every central rule editor immediately schedules Shared Master publication', () => {
   for (const entity of [
-    'pricingRules','transitRules','nonDtrManufacturers','landedMultipliers','freightRates',
+    'pricingRules','transitRules','emailGroups','landedMultipliers','freightRates',
     'fx','endeksmatik','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode',
     'noteColumnDefs','modelConnections',
   ]) {

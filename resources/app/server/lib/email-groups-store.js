@@ -40,11 +40,13 @@
    =================================================================== */
 
 const fs = require('fs');
+const crypto = require('crypto');
 const path = require('path');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const { withFileLeaseSync } = require('./shared-file-transaction');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
 const manufacturerCards = require('../../public/manufacturer-cards-engine.js');
+const businessRules = require('../../public/business-rules.js');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'email-groups.json');
 /* Delta motoruna taşınmış belge. Kimlik veri köküne göreli yol; db.js'teki
@@ -86,6 +88,7 @@ function defaultStore() {
     // DOCUMENT_LIST_MERGE) başka cihazdaki eski kopyanın kaydı diriltmesini
     // bununla engeller.
     deletedRecords: {},
+    migratedNonDtrNames: [],
     _revision: 0,
     _updatedAt: null,
   };
@@ -158,6 +161,8 @@ function normalizeRecord(value) {
   return {
     id: cleanId(src.id) || newId('em'),
     manufacturer,
+    dtrStatus: src.dtrStatus === 'NON-DTR' ? 'NON-DTR' : 'DTR',
+    dtrStatusAssigned: src.dtrStatusAssigned === true || (src.dtrStatusAssigned == null && Object.hasOwn(src, 'dtrStatus')),
     aliases: normalizeAliases(src.aliases, manufacturer),
     origin: ['asas', 'manual'].includes(clean(src.origin, 20)) ? clean(src.origin, 20) : '',
     email: clean(src.email, 2000),
@@ -182,6 +187,7 @@ function normalizeStore(raw) {
     ...base,
     ...cleanObject(raw),
     schemaVersion: 1,
+    migratedNonDtrNames: businessRules.normalizeManufacturerList(raw && raw.migratedNonDtrNames),
     countries: normalizeHeadings(raw && raw.countries),
     types: normalizeHeadings(raw && raw.types),
     deletedRecords: normalizeDeletedRecords(raw && raw.deletedRecords),
@@ -224,6 +230,7 @@ function saveStore(next, expectedRevision) {
     const resolved = typeof next === 'function' ? next(current) : next;
     const saved = {
       schemaVersion: 1,
+      migratedNonDtrNames: businessRules.normalizeManufacturerList(resolved.migratedNonDtrNames || current.migratedNonDtrNames),
       countries: normalizeHeadings(resolved.countries),
       types: normalizeHeadings(resolved.types),
       records: (Array.isArray(resolved.records) ? resolved.records : []).slice(0, MAX_RECORDS).map(normalizeRecord),
@@ -302,11 +309,19 @@ function assertHoldsLock(record, actor) {
 
 /* ---------------- kayıtlar ---------------- */
 
+function validateDtrStatus(input) {
+  if (Object.hasOwn(cleanObject(input), 'dtrStatus') && !['DTR', 'NON-DTR'].includes(input.dtrStatus)) {
+    throw storeError('Geçersiz DTR durumu / Invalid DTR status.', 'VALIDATION_ERROR', 400);
+  }
+}
+
 function createRecord(input, actor, expectedRevision) {
+  validateDtrStatus(input);
   const stamp = now();
   const record = normalizeRecord({
     ...cleanObject(input),
     id: '',
+    dtrStatusAssigned: Object.hasOwn(cleanObject(input), 'dtrStatus'),
     createdAt: stamp, createdBy: actor && actor.id, createdByName: actor && actor.name,
     updatedAt: stamp, updatedBy: actor && actor.id, updatedByName: actor && actor.name,
     lock: null,
@@ -325,6 +340,7 @@ function createRecord(input, actor, expectedRevision) {
 }
 
 function updateRecord(id, patch, actor, expectedRevision) {
+  validateDtrStatus(patch);
   const store = loadStore();
   const index = recordIndex(store, id);
   const record = store.records[index];
@@ -333,9 +349,10 @@ function updateRecord(id, patch, actor, expectedRevision) {
   const next = normalizeRecord({
     ...record,
     // Yalnız gönderilen alanlar değişir; kimlik ve oluşturma bilgisi korunur.
-    ...Object.fromEntries(['manufacturer', 'aliases', 'origin', 'email', 'contact', 'phone', 'note', 'countryId', 'typeId']
+    ...Object.fromEntries(['manufacturer', 'aliases', 'origin', 'dtrStatus', 'email', 'contact', 'phone', 'note', 'countryId', 'typeId']
       .filter(field => Object.prototype.hasOwnProperty.call(src, field))
       .map(field => [field, src[field]])),
+    dtrStatusAssigned: Object.hasOwn(src, 'dtrStatus') ? true : record.dtrStatusAssigned,
     id: record.id,
     createdAt: record.createdAt, createdBy: record.createdBy, createdByName: record.createdByName,
     updatedAt: now(), updatedBy: actor && actor.id, updatedByName: actor && actor.name,
@@ -556,7 +573,52 @@ function linkRecord(id, asasName, actor) {
   return { record: saved.records.find(item => item.id === cleanId(id)), revision: saved._revision };
 }
 
+/* Eski istisnalar tek belge işleminde taşınır. Ad günlüğü eski cihazdan
+   gelen listenin daha sonra yapılan DTR seçimini geri almasını engeller.
+   Kaynak liste silinmez; kilitli kayıtlar sonraki okumada tekrar denenir. */
+function migrateNonDtrManufacturers(legacyNames) {
+  const names = businessRules.normalizeManufacturerList(legacyNames);
+  const store = loadStore();
+  const migrated = new Set(store.migratedNonDtrNames.map(businessRules.manufacturerKey));
+  if (!names.some(name => !migrated.has(businessRules.manufacturerKey(name)))) return store;
+  const records = store.records.slice(), completed = store.migratedNonDtrNames.slice();
+  const index = new Map();
+  for (const record of records) for (const name of [record.manufacturer, ...record.aliases]) {
+    const key = businessRules.manufacturerKey(name);
+    if (!index.has(key)) index.set(key, record);
+  }
+  for (const name of names) {
+    const key = businessRules.manufacturerKey(name);
+    if (migrated.has(key)) continue;
+    const existing = index.get(key);
+    if (existing && !existing.dtrStatusAssigned && activeLock(existing.lock)) continue;
+    if (existing) {
+      if (!existing.dtrStatusAssigned) {
+        const next = { ...existing, dtrStatus: 'NON-DTR', dtrStatusAssigned: true, updatedAt: now() };
+        records[records.indexOf(existing)] = next;
+        for (const [alias, record] of index) if (record.id === existing.id) index.set(alias, next);
+      }
+    } else {
+      if (records.length >= MAX_RECORDS) throw storeError('Üretici kartı sınırına ulaşıldı / Manufacturer card limit reached.', 'EMAIL_RECORD_LIMIT', 409);
+      const record = normalizeRecord({ id: `em-nondtr-${crypto.createHash('sha256').update(key).digest('hex')}`, manufacturer: name, dtrStatus: 'NON-DTR', origin: 'manual' });
+      records.push(record); index.set(key, record);
+    }
+    completed.push(name); migrated.add(key);
+  }
+  if (completed.length === store.migratedNonDtrNames.length) return store;
+  return saveStore({ ...store, records, migratedNonDtrNames: completed }, store._revision);
+}
+
+function nonDtrManufacturers(legacyNames, store = migrateNonDtrManufacturers(legacyNames)) {
+  const migrated = new Set(store.migratedNonDtrNames.map(businessRules.manufacturerKey));
+  return businessRules.normalizeManufacturerList([
+    ...businessRules.normalizeManufacturerList(legacyNames).filter(name => !migrated.has(businessRules.manufacturerKey(name))),
+    ...store.records.filter(record => record.dtrStatus === 'NON-DTR').flatMap(record => [record.manufacturer, ...record.aliases]),
+  ]);
+}
+
 module.exports = {
+  migrateNonDtrManufacturers, nonDtrManufacturers,
   attachDeltaStore, createFromAsas, linkRecord, normalizeAliases,
   FILE, LOCK_TTL_MS, DEFAULT_TYPES,
   loadStore, saveStore, publicStore, defaultStore,

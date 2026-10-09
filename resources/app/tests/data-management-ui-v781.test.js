@@ -497,7 +497,9 @@ test('v7.81 her araç NE YAPTIĞINI yazar — iki dilde', () => {
   // v7.0.172: + Endeksmatik Setleri (çoklu set yöneticisi).
   // + Data Temizliği (kurulum/sync klasörü temizliği).
   // Merch Calendar da Calculation Rules altında satır içi açılır.
-  assert.equal(tools.length, 16, `16 araç beklenir, bulunan: ${tools.length}`);
+  // DTR / Non-DTR artık üretici kartında düzenlenir.
+  assert.equal(tools.length, 15, `15 araç beklenir, bulunan: ${tools.length}`);
+  assert.ok(!tools.some(tool => tool.id === 'nondtr'));
   assert.equal(groups.find(group => group.id === 'rules').tools.find(tool => tool.id === 'merch').inline, true);
 
   for (const item of groups.concat(tools)) {
@@ -541,7 +543,7 @@ test('v7.81 Araçlar YETKİSİ OLMAYANA çizilmez', () => {
   const run = UI.match(/async function runTool\(id\) \{[\s\S]*?\n  \}/);
   assert.ok(run);
   assert.match(run[0], /!toolAllowed\(tool\)/, 'sunucuya gitmeden önce yetki de kontrol edilmeli');
-  for (const id of ['transit', 'landed', 'royalty', 'nondtr', 'fx']) {
+  for (const id of ['transit', 'landed', 'royalty', 'fx']) {
     assert.match(UI, new RegExp(`\\{ id: '${id}', requires: 'manageBusinessRules'`), `${id} ortak ayar izni istemeli`);
   }
   assert.match(UI, /\{ id: 'endeksmatik', requires: 'manageModelConnections'/);

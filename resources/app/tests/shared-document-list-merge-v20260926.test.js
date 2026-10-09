@@ -90,3 +90,14 @@ test('Saklama süresi dolan fiyat talebi silme izi bırakır; eski uzak kopya on
   assert.match(fs.readFileSync(require.resolve('../server/lib/quotations-store'), 'utf8'), /deletedRequests\[request\.id\] = stamp|deletedRequests\[id\] = stamp/);
   assert.equal(typeof store.cleanupExpired, 'function');
 });
+
+test('manufacturer migration journals merge across devices without losing completed exceptions', async t => {
+ const devs=await devices(t,['a','b']),id='store:email-groups.json';
+ await devs.a.queuePatch({id,patch:{migratedNonDtrNames:['Factory A']}});
+ await devs.b.queuePatch({id,patch:{migratedNonDtrNames:['Factory B']}});
+ await sync(devs);
+ for(const db of Object.values(devs)){
+  assert.deepEqual(await field(db,id,'migratedNonDtrNames'),['Factory A','Factory B']);
+  assert.deepEqual((await db.listConflicts()).filter(item=>!item.resolved),[]);
+ }
+});

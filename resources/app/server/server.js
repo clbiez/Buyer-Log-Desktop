@@ -3440,10 +3440,11 @@ function emailGroupsActor(req) {
   return { id: String(profile.id || ''), name: String(profile.displayName || profile.username || '') };
 }
 function emailGroupsRespond(res, payload) {
+  loadOverrides(); // legacy exceptions reach cards before the response
   res.set('Cache-Control', 'no-store').json({ ok: true, ...payload, ...emailGroupsStore.publicStore() });
 }
 app.get('/api/email-groups', (req, res) => {
-  try { res.set('Cache-Control', 'no-store').json({ ok: true, currentUserId: emailGroupsActor(req).id, ...emailGroupsStore.publicStore() }); }
+  try { loadOverrides(); res.set('Cache-Control', 'no-store').json({ ok: true, currentUserId: emailGroupsActor(req).id, ...emailGroupsStore.publicStore() }); }
   catch (err) { apiError(res, err, 'E-posta grupları okunamadı.'); }
 });
 app.put('/api/email-groups/headings/:kind', userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '1mb' }), (req, res) => {
@@ -7922,7 +7923,7 @@ function pageProjectionContext(currentUser = null) {
       suppFob:Number(shared._revisions && shared._revisions.suppFob) || 0,
       pricingRules:Number(shared._revisions && shared._revisions.pricingRules) || 0,
       transitRules:Number(shared._revisions && shared._revisions.transitRules) || 0,
-      nonDtrManufacturers:Number(shared._revisions && shared._revisions.nonDtrManufacturers) || 0,
+      nonDtrManufacturers:stableHashValue(shared.nonDtrManufacturers || []),
       landedMultipliers:Number(shared._revisions && shared._revisions.landedMultipliers) || 0,
       freightRates:Number(shared._revisions && shared._revisions.freightRates) || 0,
       antrepoMatchRule:Number(shared._revisions && shared._revisions.antrepoMatchRule) || 0,
@@ -10945,17 +10946,7 @@ app.get('/api/non-dtr-manufacturers', (_req, res) => {
   res.json({ manufacturers: BLBusinessRules.normalizeManufacturerList(ov.nonDtrManufacturers), revision });
 });
 app.put('/api/non-dtr-manufacturers', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), (req, res) => {
-  try {
-    const incoming = (req.body || {}).manufacturers;
-    if (!Array.isArray(incoming)) return res.status(400).json({ error: 'manufacturers (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
-    const manufacturers = BLBusinessRules.normalizeManufacturerList(incoming)
-      .filter(value => value.length <= 160)
-      .slice(0, 1000);
-    const saved = replaceNonDtrManufacturers(manufacturers, requestRevision(req));
-    publishSharedMasterChange('nonDtrManufacturers', req);
-    res.set('ETag', `"${saved.revision}"`);
-    res.json({ ok: true, manufacturers: saved.manufacturers, revision: saved.revision });
-  } catch (err) { apiError(res, err, 'Non-DTR üreticiler kaydedilemedi.'); }
+  res.status(410).json({ code: 'MANUFACTURER_CARD_REQUIRED', error: 'DTR / Non-DTR ayarını üretici kartından değiştirin / Edit DTR / Non-DTR on the manufacturer card.' });
 });
 
 /* --- Veri modeli bağlantıları ---------------------------------------------
