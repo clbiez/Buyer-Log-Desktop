@@ -1605,6 +1605,7 @@ async function readSharedSyncHeads(root) {
   return out;
 }
 async function publishBusinessCheckpoint(actorId='') {
+  if (!moderatorActiveOnThisDevice()) return { published:false, reason:'moderator-only' };
   const settings=await syncSettings.read();
   if(!settings.sharedSyncRoot)return {published:false,reason:'not-configured'};
   const checked=await sharedHub.validate(settings.sharedSyncRoot,{requireWrite:true});
@@ -1620,14 +1621,11 @@ async function publishBusinessCheckpoint(actorId='') {
 }
 /* İş checkpoint'i yeni kurulumlar için bir hızlandırıcıdır. Her cihaz her
    sync'ten sonra yayımlarsa 200 yazar aynı current.json için yarışır. Moderatör
-   oturumu olan cihaz her sync sonrası, diğerleri açılıştan en erken 12 saat
-   sonra ve en fazla 12 saatte bir dener (sabah açılışlarında toplu yazım olmaz). */
-let businessCheckpointTimer=null,businessCheckpointLastAttemptAt=Date.now();
-const BUSINESS_CHECKPOINT_PEER_INTERVAL_MS=12*60*60000;
+   oturumu olan cihaz yayımlar. Moderatör yoksa checkpoint eskir;
+   deltalar yapılandırılmış saklama süresi boyunca korunur. */
+let businessCheckpointTimer=null;
 function scheduleBusinessCheckpointPublish(actorId='',delayMs=5000){
-  if(businessCheckpointTimer)return;
-  if(!moderatorActiveOnThisDevice()&&Date.now()-businessCheckpointLastAttemptAt<BUSINESS_CHECKPOINT_PEER_INTERVAL_MS)return;
-  businessCheckpointLastAttemptAt=Date.now();
+  if(!moderatorActiveOnThisDevice() || businessCheckpointTimer)return;
   businessCheckpointTimer=setTimeout(async()=>{
     businessCheckpointTimer=null;
     try{await publishBusinessCheckpoint(actorId);}catch(error){logRuntimeFailure('businessCheckpointBackground',error);}
