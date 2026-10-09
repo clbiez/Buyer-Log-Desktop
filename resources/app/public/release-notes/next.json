@@ -175,6 +175,72 @@
         "tr": "PLM'den gelen kumaş bilgisi değiştirilmeden saklanır; Buyer Log kumaş koduna (ör. 3859) bir kumaş kartı bağlar ve tabloda yalnız kartın kısa özetini gösterir. Özet Türkçe ve İngilizce tutulur; tablo aktif dildeki özeti gösterir. PLM'den model aktarıldığında kartı olmayan kodlar LCW AI ile analiz edilir; öneri PLM metniyle doğrulanır, önizlenir ve onayınızla kaydedilir. Kartı olan kod için LCW AI'a tekrar sorulmaz. Hücreye çift tıklayınca özet, ayrıntılar ve tam PLM metni açılır; özeti ve ayrıntıları düzenleyebilir ya da kartı silebilirsiniz.",
         "en": "Fabric information from PLM is kept unchanged; Buyer Log links a fabric card to the fabric code (e.g. 3859) and shows only the card's short summary in the table. The summary is kept in Turkish and English; the table shows the summary in the active language. When models are imported from PLM, codes without a card are analysed with LCW AI; the suggestion is checked against the PLM text, previewed and saved with your approval. LCW AI is not asked again for a code that already has a card. Double-click the cell to see the summary, the details and the full PLM text; you can edit the summary and details or delete the card."
       }
+    },
+    {
+      "id": "shared-lock-stale-owner-recovered",
+      "type": "fix",
+      "module": {
+        "tr": "Senkronizasyon",
+        "en": "Synchronization"
+      },
+      "title": {
+        "tr": "Takılı kalan paylaşılan veri kilidi kendiliğinden temizleniyor",
+        "en": "A stuck shared-data lock now clears itself"
+      },
+      "path": {
+        "tr": "Veri Yönetimi › Senkron ve Yerel Veri",
+        "en": "Data Management › Sync and Local Data"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "shared-lock-stale-owner-recovered.png",
+        "alt": {
+          "tr": "Senkron ve Yerel Veri penceresinde başarılı son sync ve sıfır hata — demo verili Buyer Log ekranı",
+          "en": "Sync and Local Data dialog showing a successful last sync and no errors — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Bozuk sahip dosyalı eski kilide rağmen senkron tamamlanıyor",
+          "en": "Sync completes despite an old lock with a broken owner file"
+        }
+      },
+      "body": {
+        "tr": "Bir paylaşılan veri dosyasının kilidi yarım kalmış (sahip bilgisi boş ya da bozuk) olduğunda Buyer Log onu hiç temizleyemiyordu; o dosyaya günlerce yazılamıyor, yaptığınız güncellemeler paylaşılan depoya işlenmediği için uygulamayı kapatıp açınca eski hâline dönüyordu. Bu tür eski kilitler artık güvenle algılanıp kaldırılıyor ve senkron normal devam ediyor. PLM görsel işlerinin her adımının süresi de artık kayda geçiyor.",
+        "en": "When a shared-data file's lock was left half-written (empty or broken owner information), Buyer Log could never clear it; that file could not be written for days and your edits, never reaching the shared store, reverted after restarting the app. Such old locks are now detected and removed safely and sync continues normally. The duration of each step of PLM image jobs is now logged too."
+      }
+    },
+    {
+      "id": "oab-desktop-single-report",
+      "type": "improvement",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "OAB verisi masaüstünde tek rapor isteğiyle geliyor",
+        "en": "OAB data arrives with a single report request on desktop"
+      },
+      "path": {
+        "tr": "Genel Bakış › OAB › Get OAB",
+        "en": "Overview › OAB › Get OAB"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-desktop-single-report.png",
+        "alt": {
+          "tr": "Get OAB sonrası OAB pivot tablosu — anonim demo verili Buyer Log ekranı",
+          "en": "OAB pivot table after Get OAB — Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Oturum doğrulaması ve veri tek PASS rapor isteğinde",
+          "en": "Session validation and data in one PASS report request"
+        }
+      },
+      "body": {
+        "tr": "Masaüstünde Get OAB yaklaşık 3 dakika sürüyordu: oturum doğrulaması önce filtresiz (tüm rapor) bir istek atıyor, ardından rapor iki kez daha isteniyordu. Doğrulama artık seçtiğiniz Sezon/MAG/Buyer Group ile yapılıyor ve dönen veri doğrudan tabloya veriliyor; filtresiz kontrol yalnız birkaç saniye sürüyor.",
+        "en": "On desktop, Get OAB took about 3 minutes: session validation first sent an unfiltered (whole report) request, then the report was requested twice more. Validation now uses your selected Season/MAG/Buyer Group and the returned data goes straight to the table; the unfiltered check lasts only a few seconds."
+      }
     }
   ]
 }
