@@ -29905,6 +29905,9 @@ async function kolPlmSyncRun(mode,button,options={}){
     return {ok:false,reason:'fetch-failed',error:err};
   }
   if(!fetchResult)return {ok:false,reason:'api-not-configured'}; // kullanıcıya bağlantı penceresi zaten gösterildi.
+  // Artwork Detayı alan planında değil; fetch BOM'u plm-bom.json'a yazdı.
+  // Alan değişikliği olmasa da (render yokken) projeksiyon burada tazelenir.
+  const artworkChanged=await kolPlmSyncRefreshArtwork();
   const translated=await kolPlmNormalizeAndTranslate(fetchResult.records,{reviewRemembered:false});
   // Excel'deki "Aktarımı iptal et" ile AYNI davranış: çeviri ekranında
   // vazgeçilirse Koleksiyon'a HİÇBİR ŞEY yazılmaz, kısmi bir güncelleme
@@ -29932,7 +29935,7 @@ async function kolPlmSyncRun(mode,button,options={}){
     const message=appLang==='en'
       ?`${summary.checked} checked · all up to date${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
       :`${summary.checked} kontrol edildi · hepsi güncel${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-    showToast(message+kolPlmSyncImageSuffix(images),{icon:false,duration:9000});
+    showToast(message+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncImageSuffix(images),{icon:false,duration:9000});
     return {ok:true,applied:0,summary,images};
   }
   const approved=await showPlmSyncPreview(mode,summary);
@@ -29952,8 +29955,15 @@ async function kolPlmSyncRun(mode,button,options={}){
   const message=appLang==='en'
     ?`${summary.checked} checked · ${summary.changed.length} updated · ${summary.unchanged.length} unchanged${summary.notFound.length?` · ${summary.notFound.length} not found`:''}${summary.errors.length?` · ${summary.errors.length} error(s)`:''}.`
     :`${summary.checked} kontrol edildi · ${summary.changed.length} güncellendi · ${summary.unchanged.length} değişmedi${summary.notFound.length?` · ${summary.notFound.length} bulunamadı`:''}${summary.errors.length?` · ${summary.errors.length} hata`:''}.`;
-  showToast(message+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
+  showToast(message+kolPlmSyncArtworkSuffix(artworkChanged)+kolPlmSyncImageSuffix(images),{icon:false,duration:12000});
   return {ok:true,applied:summary.changed.length,summary,images};
+}
+async function kolPlmSyncRefreshArtwork(){
+  try{const api=window.BLCollectionArtworkDetail;return api&&typeof api.refresh==='function'?(Number(await api.refresh())||0):0;}catch(_){return 0;}
+}
+function kolPlmSyncArtworkSuffix(count){
+  if(!count)return '';
+  return appLang==='en'?` · ${count} artwork detail(s) updated`:` · ${count} artwork detayı güncellendi`;
 }
 async function kolPlmSyncButtonRun(mode,button){
   if(button){button.disabled=true;button.setAttribute('aria-busy','true');}

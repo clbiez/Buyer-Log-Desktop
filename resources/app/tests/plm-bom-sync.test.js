@@ -172,6 +172,34 @@ test('BOM fingerprint değişmediyse ikinci PLM Sync LCW AI çağrısını tekra
   fs.rmSync(tmp, { recursive: true, force: true });
 });
 
+test('ertelenen/başarısız LCW AI analizi fingerprint aynı olsa da sonraki PLM Sync\'te yeniden denenir', async () => {
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-bom-'));
+  const store = createStore(path.join(tmp, 'plm-bom.json'));
+  let aiCalls = 0;
+  const postJson = async () => payload([component({ componentCode: 'B-UNKNOWN', description: 'SPECIAL ART POSITION' })]);
+  const aiEngine = {
+    async ask() {
+      aiCalls += 1;
+      return {
+        text: JSON.stringify({ placements: [{ componentCode: 'B-UNKNOWN', placement: 'chest', confidence: 'high', reason: 'x' }], confidence: 'high', notes: [] }),
+        model: { key: 'gpt-6-sol' },
+      };
+    },
+  };
+  const records = [{ plmId: '2133719', styleId: '2538477', styleName: 'MINECRAFT' }];
+  const offline = { async ask() { throw Object.assign(new Error('offline'), { code: 'LCWAI_UNAVAILABLE' }); } };
+  await bomSync.syncPlmBoms(records, { ownerId: 'u1', store, postJson, aiEngine: offline, maxAiPerSync: 5 });
+  assert.equal(store.entry('2133719').ai.status, 'failed');
+
+  const second = await bomSync.syncPlmBoms(records, { ownerId: 'u1', store, postJson, aiEngine, maxAiPerSync: 5 });
+  assert.equal(second.unchanged, 0);
+  assert.equal(second.changed, 1);
+  assert.equal(aiCalls, 1);
+  assert.equal(store.entry('2133719').ai.status, 'resolved');
+  assert.equal(store.entry('2133719').placements[0].placement, 'chest');
+  fs.rmSync(tmp, { recursive: true, force: true });
+});
+
 test('BOM fetch hatası daha önce saklanan başarılı kaydı silmez', async () => {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'buyerlog-bom-old-'));
   const store = createStore(path.join(tmp, 'plm-bom.json'));
