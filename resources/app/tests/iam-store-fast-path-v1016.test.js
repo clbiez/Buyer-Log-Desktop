@@ -144,7 +144,7 @@ test('v10.16 salt-okuma fonksiyonları readStore, yazan yollar loadStore kullan�
     'function effectivePermissions(profile, store = readStore())',
     'function hasPermission(profile, key, store = readStore())',
     'function effectiveScopes(profile, store = readStore())',
-    'function canEditOrder(profile, order, store = readStore())',
+    "function canEditOrder(profile, order, store = readStore(), { sharedOnly = false, recordId = '', orderAccess = store.orderAccess } = {})",
     'function publicProfile(profile, store = readStore())',
     'function collectionAccessLevel(profile, ownerId, store = readStore())',
   ]) assert.ok(SOURCE.includes(signature), 'okuma yolu değişmiş: ' + signature);

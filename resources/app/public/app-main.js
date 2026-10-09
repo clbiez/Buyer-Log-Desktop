@@ -5595,7 +5595,8 @@ function cellHtml(c,r,cf,tableKey='cp'){
   const v = r[c.k];
   const oc = r['Order Code'];
   const id = r._id;
-  const canEdit = r._canEdit !== false;
+  const sharedField = ['exfactory','retailEdit','instoreEdit','submfr'].includes(c.type) || (c.type==='moneyEdit' && c.k==='Supp. FOB');
+  const canEdit = r._canEdit !== false && (!sharedField || r._canEditShared !== false);
   const schema = columnSchemaFor(c);
   // Model bağlantılarından gelen sütunlar başlangıçta type:'ro' olur. Bu
   // dal onları kaynağın metadata'sı veya güvenli örnek çözümlemesiyle
@@ -5613,7 +5614,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
   // kullanılır; normal view-only değerler önceki gibi escape edilir.
   const viewOnly = (value, renderedHtml) => {
     const text = value == null || value === '' ? '—' : String(value);
-    const tip = text === '—' ? L('Bu sipariş için yalnız görüntüleme yetkiniz var.') : text;
+    const tip = sharedField && r._canEditShared === false ? (appLang==='en'?'Only the order owner can edit shared fields.':'Paylaşılan alanları yalnız sipariş sahibi değiştirebilir.') : text === '—' ? L('Bu sipariş için yalnız görüntüleme yetkiniz var.') : text;
     const body = renderedHtml == null ? escapeHtml(text) : String(renderedHtml);
     return `<td class="viewOnlyCell" title="${escapeHtml(tip)}"><span class="viewOnlyValue"><span class="viewOnlyLock">🔒</span><span>${body}</span></span></td>`;
   };
@@ -15802,7 +15803,7 @@ async function fetchJSON(url, opts={}){
   const data = await res.json().catch(()=>({}));
   if(!res.ok){
     if(data.code==='USER_SELECTION_REQUIRED'){ location.href='/select-user.html'; const redirected=new Error(data.error||'Kullanıcı seçimi gerekli.'); redirected.code=data.code; throw redirected; }
-    const err=new Error(data.error || res.statusText); err.code=data.code||''; err.currentRevision=data.currentRevision; err.expectedRevision=data.expectedRevision; err.revisionKey=data.revisionKey||''; err.deniedOrderCodes=data.deniedOrderCodes||[]; throw err;
+    const err=new Error(data.code==='ORDER_SHARED_OWNER_ONLY' ? (appLang==='en'?'Only the order owner can edit shared fields.':'Paylaşılan alanları yalnız sipariş sahibi değiştirebilir.') : data.error || res.statusText); err.code=data.code||''; err.currentRevision=data.currentRevision; err.expectedRevision=data.expectedRevision; err.revisionKey=data.revisionKey||''; err.deniedOrderCodes=data.deniedOrderCodes||[]; throw err;
   }
   return data;
 }

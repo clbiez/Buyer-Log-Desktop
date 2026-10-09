@@ -99,7 +99,7 @@ function buildHealthReport({ state, status = {}, deviceId, userId, displayName, 
     userId: text(userId), displayName: text(displayName, 240), appVersion: text(appVersion, 80),
     updatedAt: time(now).toISOString(), lastSyncAt,
     latestPublishedSeq: status.latestPublishedSeq == null ? published : integer(status.latestPublishedSeq),
-    pendingUpload, openConflicts, masterRevisionApplied: integer(masterRevisionApplied),
+    pendingUpload, openConflicts, rejectedOwnerDeltas:integer(status.rejectedOwnerDeltas), masterRevisionApplied: integer(masterRevisionApplied),
     ...digest,
     settled: status.online === true && !status.lastError && !status.progress && Number.isFinite(Date.parse(lastSyncAt || '')) && pendingUpload === 0 && openConflicts === 0,
   };
