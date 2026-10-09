@@ -13,7 +13,7 @@ const { isNetworkPath } = require('./local-path-policy');
 const { installationFingerprint: defaultInstallationFingerprint } = require('./installation-fingerprint');
 const {
   SYNC_PACKAGE_VERSION, SYNC_PACKAGE_MAX_EVENTS, SYNC_PACKAGE_MAX_BYTES, SYNC_PACKAGE_DIR,
-  buildSyncPackages, validateSyncPackage, bundleFileName, gzipBundleFileName, sequenceFromBundleFile, isBundleFile, SYNC_GZIP_SUFFIX,
+  buildSyncPackages, validateSyncPackage, bundleFileName, gzipBundleFileName, sequenceFromBundleFile, packageIdFromBundleFile, receiptFirstSeq, isBundleFile, SYNC_GZIP_SUFFIX,
 } = require('./sync-package');
 
 function encode(value) { return encodeURIComponent(String(value || '')); }
@@ -489,7 +489,27 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
       const gzipUnsupportedPeerDevices = legacyCompatibilityMode ? [] : await detectGzipUnsupportedPeers(changesRoot, deviceId, current.packageRetentionDays);
       const gzipBundleMode = !legacyCompatibilityMode && gzipUnsupportedPeerDevices.length === 0;
       const packageBuildStartedAt = Date.now();
-      const packageBuild = legacyCompatibilityMode ? null : buildSyncPackages(pending, { deviceId });
+      /* Bu cihazın şimdiye kadar yayımladığı en yüksek sıra: ortak klasördeki
+         kendi head'i ile yerel journal bilgisinin BÜYÜĞÜ. Ondan sonraki ilk
+         pakete kadarki sıralar yalnız yerel kalan olaylardır (bekleyen her
+         taşınabilir olay pending içinde). Yerel bilgi, head henüz görünmese
+         (geri yükleme + OneDrive gecikmesi) bile gerçek bir paketin kapsama
+         alınıp alıcıda atlanmasını önler. Head okunamazsa kapsama bildirilmez. */
+      let coverFromSeq = 0;
+      if (!legacyCompatibilityMode && pending.length) {
+        let headSeq = null;
+        try { headSeq = Number((await net(() => readJson(path.join(deviceRoot, NETWORK_HEAD_FILE)), 'Kendi head okuma')).latestSequence) || 0; }
+        catch (error) { headSeq = error && error.code === 'ENOENT' ? 0 : null; }
+        if (headSeq != null) {
+          const localState = await localDb.read();
+          let published = Number(localState.syncLedger && localState.syncLedger.compactedThrough) || 0;
+          for (const item of Array.isArray(localState.journal) ? localState.journal : []) {
+            if (item && item.uploaded && !item.localOnly) published = Math.max(published, Number(item.localSequence) || 0);
+          }
+          coverFromSeq = Math.max(headSeq, published) + 1;
+        }
+      }
+      const packageBuild = legacyCompatibilityMode ? null : buildSyncPackages(pending, { deviceId, coverFromSeq });
       const packageTotal = legacyCompatibilityMode ? pending.length : packageBuild.packages.length;
       emit('SYNC_PACKAGE_PREPARED', { pendingEvents: pending.length, totalPending: pendingTotal, transportEvents: legacyCompatibilityMode ? pending.length : packageBuild.transportEvents, packages: packageTotal, legacyCompatibilityMode, gzipBundleMode, durationMs: Date.now() - packageBuildStartedAt });
 
@@ -556,7 +576,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
       }
 
       const state = await localDb.read(), checkpoints = state.syncCheckpoints || {}, sources = [];
-      let corruptPackages = 0, sourceDevices = [], scannedPackages = 0, skippedDeviceFolders = 0;
+      let corruptPackages = 0, sourceDevices = [], scannedPackages = 0, skippedDeviceFolders = 0, skippedAppliedPackages = 0;
       try { sourceDevices = await net(() => fsp.readdir(changesRoot, { withFileTypes: true }), 'Cihaz listesi okuma'); }
       catch (error) { if (error.code !== 'ENOENT') throw error; }
       for (const source of sourceDevices) {
@@ -579,11 +599,17 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
         }
         for (const name of v2Names) {
           const sequence = sequenceFromBundleFile(name);
-          if (sequence > checkpoint || !sequence) sources.push({ type: 'v2', sourceId, name, sequence, file: path.join(sourceRoot, SYNC_PACKAGE_DIR, name) });
+          if (!(sequence > checkpoint || !sequence)) continue;
+          /* Zaten uygulanmış paket yeniden indirilmez. Checkpoint bir boşlukta
+             takılı kaldığında eski davranış aynı paketleri her sync'te indirip
+             ACK'lerini yeniden yazıyordu (200 cihazda karesel trafik). */
+          const knownPackageId = packageIdFromBundleFile(name);
+          if (knownPackageId && state.appliedPackages && state.appliedPackages[knownPackageId]) { skippedAppliedPackages++; continue; }
+          sources.push({ type: 'v2', sourceId, name, sequence, file: path.join(sourceRoot, SYNC_PACKAGE_DIR, name) });
         }
       }
       sources.sort((a, b) => a.sourceId.localeCompare(b.sourceId) || Number(a.sequence) - Number(b.sequence) || a.type.localeCompare(b.type));
-      emit('SYNC_CHECKPOINT_EVALUATED', { deviceFolders: sourceDevices.filter(item => item.isDirectory()).length, skippedDeviceFolders, scannedPackages, newPackages: sources.length });
+      emit('SYNC_CHECKPOINT_EVALUATED', { deviceFolders: sourceDevices.filter(item => item.isDirectory()).length, skippedDeviceFolders, scannedPackages, skippedAppliedPackages, newPackages: sources.length });
 
       const legacyRoot = path.join(root, 'delta'); let legacyNames = [];
       if (!current.legacyScanComplete) {
@@ -612,7 +638,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
             // ÖNCE çalışır; böylece yetkisiz veri diskte/bellekte oluşmaz.
             const incomingEvents = typeof filterIncomingDeltas === 'function' ? filterIncomingDeltas(pkg.events) : pkg.events;
             const result = typeof localDb.applyPackage === 'function'
-              ? await localDb.applyPackage({ packageId: pkg.packageId, sourceDeviceId: pkg.deviceId, firstSeq: pkg.firstSeq, lastSeq: pkg.lastSeq, events: incomingEvents })
+              ? await localDb.applyPackage({ packageId: pkg.packageId, sourceDeviceId: pkg.deviceId, firstSeq: receiptFirstSeq(pkg), lastSeq: pkg.lastSeq, events: incomingEvents })
               : await localDb.applyDeltas(incomingEvents);
             applied += Number(result.applied) || 0;
             conflicts += Array.isArray(result.conflicts) ? result.conflicts.length : 0;

@@ -1,14 +1,81 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-09",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Daha güvenli ve hızlı SYNC",
+    "en": "Safer and faster SYNC"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Çalışma kuralları artık yalnız Moderatörden gelir; kullanıcılar arasında yalnız gereken iş verisi paylaşılır ve sync gereksiz ağ trafiğinden arındırıldı.",
+    "en": "Working rules now come only from the Moderator; only the business data users need is shared between users, and sync no longer generates unnecessary network traffic."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "sync-moderator-authority-conflicts",
+      "type": "fix",
+      "module": {
+        "tr": "Sync",
+        "en": "Sync"
+      },
+      "title": {
+        "tr": "Ayar çakışmaları (modelConnections) artık oluşmuyor",
+        "en": "Settings conflicts (modelConnections) no longer occur"
+      },
+      "path": {
+        "tr": "Üst çubuk › Sync durumu › Çakışmaları görüntüle",
+        "en": "Top bar › Sync status › View Conflicts"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-scope-moderator-authority.png",
+        "alt": {
+          "tr": "Sync Durumu penceresi: ayar çakışmaları kapanmış, yalnız iki kullanıcının aynı anda değiştirdiği bir Supp. FOB alanı çakışma olarak kalmış — demo verili Buyer Log ekranı",
+          "en": "Sync Status window: settings conflicts are closed, only a Supp. FOB field changed by two users at the same time remains as a conflict — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Yalnız gerçek iş verisi çakışması kullanıcıya sorulur",
+          "en": "Only real business-data conflicts are shown to the user"
+        }
+      },
+      "body": {
+        "tr": "Her veri yenilemesi bağlantı listesine son çalıştırma bilgisini yazıyor ve liste tüm kullanıcılara yayıldığı için yüzlerce \"store:settings.json · modelConnections\" çakışması oluşuyordu. Bağlantı ayarları, kur, Endeksmatik, yol süreleri, DTR/Non-DTR üreticileri ve fiyat kuralları artık kullanıcılar arasında yayılmaz: yalnız Moderatörün yayımladığı kurallar ortak klasörden alınır ve yerel kopyaya soru sorulmadan uygulanır. Kapsam dışına alınan alanlardaki açık çakışmalar ilk sync'te kendiliğinden kapanır.",
+        "en": "Every data refresh wrote its last-run details into the connection list, and because the list was spread to all users hundreds of \"store:settings.json · modelConnections\" conflicts appeared. Connection settings, FX, Endeksmatik, transit times, DTR/Non-DTR manufacturers and pricing rules are no longer spread between users: only the rules the Moderator publishes are taken from the shared folder and applied to the local copy without prompting. Open conflicts on fields that are no longer shared close automatically on the first sync."
+      }
+    },
+    {
+      "id": "sync-shared-scope-performance",
+      "type": "improvement",
+      "module": {
+        "tr": "Sync",
+        "en": "Sync"
+      },
+      "title": {
+        "tr": "Paylaşılan alanlar daraltıldı, sync hızlandı",
+        "en": "Shared fields narrowed, sync is faster"
+      },
+      "path": {
+        "tr": "Üst çubuk › Sync durumu",
+        "en": "Top bar › Sync status"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-faster-local-first.png",
+        "alt": {
+          "tr": "Sync Durumu penceresi: Synced, yüklenecek ve indirilecek değişiklik yok, sonraki otomatik sync 15 dakika sonra — demo verili Buyer Log ekranı",
+          "en": "Sync Status window: Synced, nothing to upload or download, next automatic sync in 15 minutes — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Yerel kalan değişiklik bekleyen sayılmaz; seçilen sync aralığına uyulur",
+          "en": "Local-only changes are not counted as waiting; the selected sync interval is honoured"
+        }
+      },
+      "body": {
+        "tr": "Kullanıcılar arasında artık yalnız CP Ex-Factory revizeleri, CP Sub-Manufacturer ve Supp. FOB bilgileri ile Manufacturers e-posta rehberi paylaşılır; koleksiyonlar kendi sahip bazlı aktarımıyla gelmeye devam eder. CP notları, teslim tipi, shortage ve kişisel dosyalar (sevkiyat karşılaştırması, açık maliyet, şablonlar, fiyat talepleri) bilgisayarda kalır. Yerel kalan değişiklikler \"bekleyen\" sayılmaz, zaten uygulanmış paketler yeniden indirilmez ve tam doğrulama 45 saniye yerine 30 dakikada bir çalışır; seçilen sync aralığına uyulur.",
+        "en": "Only CP Ex-Factory revisions, CP Sub-Manufacturer and Supp. FOB details and the Manufacturers e-mail directory are now shared between users; collections continue to arrive through their own owner-based transfer. CP notes, delivery type, shortage and personal files (shipping comparison, open costing, templates, price requests) stay on the computer. Local-only changes are not counted as waiting, packages that were already applied are not downloaded again, and the full check runs every 30 minutes instead of every 45 seconds; the selected sync interval is honoured."
+      }
+    }
+  ]
 }
