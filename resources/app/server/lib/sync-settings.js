@@ -135,7 +135,7 @@ async function readSyncJson(file) {
   return { payload: JSON.parse(raw), bytes: Buffer.byteLength(raw, 'utf8'), compressed: false };
 }
 
-function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChange = null, networkTimeoutMs = 15000, filterIncomingDeltas = null, filterOutgoingDeltas = null, installationFingerprint = defaultInstallationFingerprint }) {
+function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChange = null, onSyncCompleted = null, networkTimeoutMs = 15000, filterIncomingDeltas = null, filterOutgoingDeltas = null, installationFingerprint = defaultInstallationFingerprint }) {
   const file = path.join(localDataRoot, 'sync-settings.json');
   const resolveInstallation = () => { try { return String((typeof installationFingerprint === 'function' ? installationFingerprint() : installationFingerprint) || '').trim(); } catch (_) { return ''; } };
   let syncInFlight = null;
@@ -146,6 +146,25 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
   const stateListeners = new Set(typeof onStateChange === 'function' ? [onStateChange] : []);
   const emit = (name, detail = null) => { try { if (typeof trace === 'function') trace(name, detail); } catch (_) {} };
   const net = (operation, label) => withTimeout(operation, Math.max(500, Number(networkTimeoutMs) || 4000), label);
+  let healthPublication = null, pendingHealthResult = null;
+  function enqueueHealthPublication(result) {
+    pendingHealthResult = result;
+    if (!healthPublication) {
+      healthPublication = (async () => {
+        while (pendingHealthResult) {
+          const next = pendingHealthResult; pendingHealthResult = null;
+          try { await onSyncCompleted(next); }
+          catch (error) { emit('SYNC_HEALTH_FAILED', { error:error.message || String(error) }); }
+        }
+      })().finally(() => {
+        healthPublication = null;
+        if (pendingHealthResult) enqueueHealthPublication(pendingHealthResult);
+      });
+    }
+    // At most one active and one newest pending report. A timeout releases
+    // sync callers, but cannot allow a late old rename to race a newer one.
+    return healthPublication;
+  }
   /* Varsayılanlar çağrı anında üretilir. Sabit bir nesne olarak tutulduğunda
      localDb.getDeviceId() createSyncSettings çağrısında — yani sunucu modülü
      yüklenirken — çalışıyor ve cihaz kimliğini okumak için diske iniyordu.
@@ -688,6 +707,12 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
       const result = await write({ ...current, online: true, lastSync: warning ? current.lastSync : new Date().toISOString(), nextSync: current.syncPeriodMinutes === 'manual' ? null : new Date(Date.now() + Number(current.syncPeriodMinutes || 5) * 60000).toISOString(), pendingUpload: (await localDb.pendingCount()), pendingAck, pendingDownload: 0, conflict: Math.max(finalConflicts, conflicts), corruptPackages, uploadFailures, checkpoint: finalState.syncCheckpoints || checkpoints, retries: 0, progress: null, lastError: warning, downloadedEvents, uploadedEvents, downloadedPackages, uploadedPackages, lastDurationMs: Date.now() - startedAt, networkBytesRead, networkBytesWritten, localSnapshotDate, scannedPackages, skippedDeviceFolders, legacyScanComplete: true, prunedPackages, lastPruneAt: prunedPackages ? new Date().toISOString() : current.lastPruneAt, legacyCompatibilityMode, legacyPeerDevices, gzipBundleMode, gzipUnsupportedPeerDevices, protocolVersion: 2, checkpointAckSupport: true });
       notifyState(result, true); clearRuntimeState();
       emit('SYNC_COMPLETE', { online: true, durationMs: result.lastDurationMs, downloadedEvents, uploadedEvents, downloadedPackages, uploadedPackages, legacyCompatibilityMode, gzipBundleMode });
+      // Diagnostics are optional: a missing/slow health mirror must never turn
+      // an already committed sync into a failure or change its receipt.
+      if (typeof onSyncCompleted === 'function') {
+        try { await net(() => enqueueHealthPublication(result), 'Sync health'); }
+        catch (error) { emit('SYNC_HEALTH_FAILED', { error: error.message || String(error) }); }
+      }
       return result;
     } catch (error) {
       let pendingUpload = 0, pendingAck = 0;
@@ -714,4 +739,4 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
   return { read, save, savePeriod, saveRetentionDays, restoreMetadata, pause, resume, isPaused, waitForIdle, testConnection, syncOnce, onStateChange: subscribeStateChange, file, PACKAGE_RETENTION_CHOICES };
 }
 
-module.exports = { createSyncSettings, PACKAGE_RETENTION_CHOICES, DEFAULT_PACKAGE_RETENTION_DAYS, normalizeRetentionDays, SYNC_PACKAGE_VERSION, SYNC_PACKAGE_MAX_EVENTS, SYNC_PACKAGE_MAX_BYTES };
+module.exports = { createSyncSettings, writeValidatedJson, withTimeout, PACKAGE_RETENTION_CHOICES, DEFAULT_PACKAGE_RETENTION_DAYS, normalizeRetentionDays, SYNC_PACKAGE_VERSION, SYNC_PACKAGE_MAX_EVENTS, SYNC_PACKAGE_MAX_BYTES };

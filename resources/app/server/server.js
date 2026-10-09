@@ -32,7 +32,8 @@ const holidayService = require('./lib/holiday-service').createHolidayService({
   cacheFile: path.join(LOCAL_DATA_ROOT, 'holidays', 'world-clock.json'),
 });
 const { createLocalDb, offloadLegacyAssets, sweepWriteDebris, summarizeConflict } = require('./lib/local-db');
-const { createSyncSettings } = require('./lib/sync-settings');
+const { createSyncSettings, writeValidatedJson, withTimeout: syncNetworkTimeout } = require('./lib/sync-settings');
+const syncHealth = require('./lib/sync-health');
 const { createSharedHub } = require('./lib/shared-hub');
 const { createRefreshPerformance } = require('./lib/refresh-performance');
 const sharedSyncPolicy = require('./lib/shared-sync-policy');
@@ -83,6 +84,7 @@ const syncSettings = createSyncSettings({
   trace: markStartup,
   filterIncomingDeltas: sharedHubDeltaFilter('incoming'),
   filterOutgoingDeltas: sharedHubDeltaFilter('outgoing'),
+  onSyncCompleted: publishSyncHealth,
 });
 const sharedHub = createSharedHub({ localDataRoot: LOCAL_DATA_ROOT, appVersion: APP_VERSION, networkTimeoutMs: 15000 });
 const refreshPerformance = createRefreshPerformance({
@@ -1391,6 +1393,65 @@ function readModeratorMasterState() {
   try { const value = JSON.parse(fs.readFileSync(MODERATOR_MASTER_STATE_FILE, 'utf8')); return value && typeof value === 'object' ? value : {}; }
   catch (_) { return {}; }
 }
+let syncHealthActor = null;
+async function currentSyncHealth(status) {
+  const state = await localDb.read();
+  return syncHealth.buildHealthReport({ state, status: { ...status,
+    pendingUpload:(state.journal || []).filter(item => !item.uploaded && !item.localOnly && sharedHubDeltaFilter('outgoing')([item]).length).length,
+    openConflicts: (state.conflicts || []).filter(item => !item.resolved).length },
+    deviceId: localDb.getDeviceId(), userId: syncHealthActor && syncHealthActor.id || '',
+    displayName: syncHealthActor && syncHealthActor.displayName || '', appVersion: APP_VERSION,
+    masterRevisionApplied: Number(readModeratorMasterState().revision) || 0 });
+}
+async function publishSyncHealth(status) {
+  if (!status.sharedSyncRoot) return;
+  // The existing completion listener starts this same single-flight task.
+  // Hash after master application and conflict retirement have completed.
+  await afterSharedSyncCompleted();
+  const headFile = path.join(status.sharedSyncRoot, 'BUYER_LOG_SYNC', 'changes', encodeURIComponent(localDb.getDeviceId()), '_head.json');
+  const head = await fs.promises.readFile(headFile, 'utf8').then(JSON.parse).catch(() => null);
+  if (head) status = { ...status, latestPublishedSeq:Number(head.latestSequence) || 0 };
+  const report = await currentSyncHealth(status);
+  const file = path.join(status.sharedSyncRoot, 'BUYER_LOG_SYNC', 'health', `${encodeURIComponent(report.deviceId)}.json`);
+  await writeValidatedJson(file, report);
+}
+async function readSyncHealthReports() {
+  const settings = await syncSettings.read(), reports = [];
+  if (!settings.sharedSyncRoot) return reports;
+  const root = path.join(settings.sharedSyncRoot, 'BUYER_LOG_SYNC');
+  const readBounded = async file => {
+    const st = await fs.promises.lstat(file);
+    if (!st.isFile() || st.size > 1024 * 1024) throw new Error('SYNC_HEALTH_FILE_INVALID');
+    const raw = await fs.promises.readFile(file, 'utf8');
+    if (Buffer.byteLength(raw) > 1024 * 1024) throw new Error('SYNC_HEALTH_FILE_TOO_LARGE');
+    return JSON.parse(raw);
+  };
+  const healthRoot = path.join(root, 'health');
+  const files = await fs.promises.readdir(healthRoot, { withFileTypes:true }).catch(error => {
+    if (error.code === 'ENOENT') return []; throw error;
+  });
+  for (const entry of files) {
+    if (!entry.isFile() || !entry.name.endsWith('.json')) continue;
+    try {
+      const report = await readBounded(path.join(healthRoot, entry.name));
+      if (report.schemaVersion === 1 && typeof report.deviceId === 'string' &&
+          entry.name === `${encodeURIComponent(report.deviceId)}.json`) reports.push(report);
+    } catch (error) { logRuntimeFailure('syncHealth:read', error); }
+  }
+  const seen = new Set(reports.map(report => report.deviceId));
+  const changes = path.join(root, 'changes');
+  const devices = await fs.promises.readdir(changes, { withFileTypes:true }).catch(error => {
+    if (error.code === 'ENOENT') return []; throw error;
+  });
+  for (const entry of devices) {
+    if (!entry.isDirectory()) continue;
+    let deviceId; try { deviceId = decodeURIComponent(entry.name); } catch (_) { continue; }
+    if (seen.has(deviceId)) continue;
+    const head = await readBounded(path.join(changes, entry.name, '_head.json')).catch(() => ({}));
+    reports.push({ deviceId, installation:head.installation || '', updatedAt:head.updatedAt || null, oldVersion:true });
+  }
+  return reports;
+}
 async function rememberModeratorMasterRevision(hubId, revision) {
   const current = readModeratorMasterState();
   const next = String(current.hubId || '') === String(hubId || '')
@@ -2036,7 +2097,11 @@ app.post('/api/user-logout', userAccess.logoutHandler);
 app.get('/api/current-user', userAccess.currentHandler);
 app.use(userAccess.requireSelection);
 // Master yayım yetkisi: bu bilgisayarda Moderatör oturumu görüldü mü?
-app.use((req, res, next) => { noteModeratorSession(req.currentUser); next(); });
+app.use((req, res, next) => {
+  noteModeratorSession(req.currentUser);
+  if (req.currentUser) syncHealthActor = { id:req.currentUser.id, displayName:req.currentUser.displayName };
+  next();
+});
 // Sipariş bazlı düzenlemeler yalnız kullanıcının veri kapsamındaki siparişler
 // için döner (bkz. override-scope.js). Güvenlik ağı: override belgesi taşıyan
 // HER yanıt burada kırpılır; yeni bir uç eklendiğinde atlanması mümkün olmaz.
@@ -9092,6 +9157,22 @@ app.post('/api/data-maintenance/compact-local-db', userAccess.requireArea('sourc
 app.get('/api/sync-settings', userAccess.requireArea('source'), async (_req, res) => {
   try { res.set('Cache-Control', 'no-store').json({ ok: true, settings: await currentSyncStatus(), localDbPath: localDb.getFile() }); }
   catch (err) { apiError(res, err, 'Yerel senkron ayarları okunamadı.'); }
+});
+app.get('/api/sync-health', userAccess.requireModerator, async (_req, res) => {
+  try {
+    const reports = await syncNetworkTimeout(readSyncHealthReports, 15000, 'Sync health');
+    const classified = syncHealth.classifyReports(reports);
+    res.json({ ...classified, devices:classified.devices.map(({ recordHashes, ...summary }) => summary) });
+  } catch (error) { apiError(res, error, 'SYNC_HEALTH_UNAVAILABLE'); }
+});
+app.get('/api/sync-health/diff', userAccess.requireModerator, async (req, res) => {
+  try {
+    const reports = await syncNetworkTimeout(readSyncHealthReports, 15000, 'Sync health');
+    const remote = reports.find(report => report.deviceId === String(req.query.deviceId || ''));
+    if (!remote) return res.status(404).json({ error:'SYNC_HEALTH_DEVICE_NOT_FOUND' });
+    const local = await currentSyncHealth(await syncSettings.read());
+    res.json(syncHealth.compareReports(local, remote, { limit:200 }));
+  } catch (error) { apiError(res, error, 'SYNC_HEALTH_UNAVAILABLE'); }
 });
 app.get('/api/sync-status', userAccess.requireArea('source'), async (_req, res) => {
   try { res.set('Cache-Control', 'no-store').json({ ok: true, status: { ...(await currentSyncStatus()), startupPerformanceLog: startupPerformanceLog.slice() } }); }
