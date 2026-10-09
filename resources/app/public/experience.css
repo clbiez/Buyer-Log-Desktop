@@ -558,8 +558,12 @@ button:disabled .ic{--ic-tint-o:.08;}
 @keyframes blActionDonePulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 42%,transparent)}100%{box-shadow:0 0 0 7px transparent}}
 :is(.tbtn,.navActionBtn).isActionWorking{position:relative;}
 :is(.tbtn,.navActionBtn).isActionWorking::after{
-  content:"";position:absolute;inset:3px;border:1.5px solid color-mix(in srgb,var(--acc) 24%,transparent);
-  border-top-color:var(--acc);border-radius:999px;pointer-events:none;animation:blActionSpin .72s linear infinite;
+  /* Keep the busy ring independent of the button's width: Tools menu items are full-width. */
+  content:"";position:absolute;inset:auto;top:50%;right:7px;
+  width:14px;height:14px;box-sizing:border-box;margin-top:-7px;
+  border:1.5px solid color-mix(in srgb,var(--acc) 24%,transparent);
+  border-top-color:var(--acc);border-radius:50%;pointer-events:none;
+  animation:blActionSpin .72s linear infinite;
 }
 :is(.tbtn,.navActionBtn).isActionWorking>.ic{opacity:.62;}
 :is(.tbtn,.navActionBtn).isActionDone{animation:blActionDonePulse .7s var(--bl-ease);}
