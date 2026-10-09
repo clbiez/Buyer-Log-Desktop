@@ -570,6 +570,7 @@ const collectionSaveWorker = require('./lib/collection-save-worker-client');
 const collectionRecycleBin = require('./lib/collection-recycle-bin');
 const userPreferences = require('./lib/user-preferences');
 const { loadPlmTranslations, publicRules: publicPlmTranslations, upsertPlmTranslations } = require('./lib/plm-translations');
+const fabricCards = require('./lib/fabric-cards');
 const plmStyleLinks = require('./lib/plm-style-links');
 const { loadPlmStyleLinks, publicLinks: publicPlmStyleLinks, upsertPlmStyleLinks } = plmStyleLinks;
 /* Ortak iş verisini tutan her store delta motoruna bağlanır. Bağlama tek
@@ -3972,6 +3973,14 @@ require('./routes/plm-translation-routes')(app, {
   userAccess,
 
 });
+// ---- Koleksiyon kumaş kartları (kumaş kodu → özet) → server/routes/fabric-card-routes.js ----
+require('./routes/fabric-card-routes')(app, {
+  apiError,
+  express,
+  fabricCards,
+  requestRevision,
+  userAccess,
+});
 // ---- CoreNectum PLM Code -> styleId deep-link dictionary ------------------
 // CoreNectum oturum bilgileri Buyer Log'a alınmaz. Eşleşmeler CSV/Excel ile
 // içe aktarılabilir veya kullanıcının giriş yaptığı mevcut Edge profilinde
@@ -4801,7 +4810,13 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       phase: 'PLM cozumleniyor',
     }).id;
 
+    /* Phase timing (field report: 129-model job ~9 min with 124 cache hits).
+       Names and durations only — no PLM data — so backend.log shows which
+       step waits (local plan, shared OneDrive store, lease, PLM API). */
+    const phaseStartedAt=Date.now();let phaseMark=phaseStartedAt;
+    const phaseLog=(phase,extra={})=>{const now=Date.now();plmImageRefreshLog('PLM_IMAGE_PHASE',{phase,ms:now-phaseMark,totalMs:now-phaseStartedAt,...extra});phaseMark=now;};
     const result=await withModelImageImportLock(req.currentUser.id,async()=>{
+      phaseLog('lock');
       const before=loadOverrides(),imagemap=before.imagemap||{},styleLinks=loadPlmStyleLinks().links||{};
       // İstekler TEKİLLEŞTİRİLİR: aynı PLM+Renk iki kez API'ye gitmez.
       /* PLM ID taşımayan alt detay kalemleri önce model adı üzerinden çözülür;
@@ -4820,6 +4835,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
         const styleLink=styleLinks[plmStyleLinks.normalizeNumericId(plmId)];
         requests.push({plmId,colourCode,colour,imageRole:coreNectumStyleApi.normalizeImageRole(item&&item.imageRole),groupRole:item&&item.groupRole,styleName:String(item&&item.styleName||'').trim(),styleId:String(styleLink&&styleLink.styleId||'')});
       }
+      phaseLog('identity',{requests:requests.length,unresolved:identity.unresolved.length});
       const mainColourRoles=plmMainColourRoles(req.currentUser.id,requests);
       if(!requests.length)return {overrides:before,requested:0,images:[],imagesSaved:0,failedItems:identity.unresolved,imageFailedItems:identity.unresolved,mode,counts:plmImageJobCounts({}),status:plmImageJobStore.STATUS_COMPLETED};
 
@@ -4832,8 +4848,10 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
         force: Boolean(req.body && req.body.force), overrides: before,
         allowShared: false,
       });
+      phaseLog('local-first-plan',{upstream:first.plan.upstream.length});
       const sharedImages = sharedInstallPayload(first.installed.outcomes);
       const upstreamLease = await leaseUpstreamImageIdentities(first.plan.upstream, sharedImageStoreLib.SOURCE_PLM);
+      phaseLog('shared-lease',{held:upstreamLease.held.length,busy:upstreamLease.busy.length});
       /* Üst kaynağa giden istek HER ZAMAN yukarıda kurulan asıl istektir.
          Plan kalemi yeniden istek gövdesine ÇEVRİLMEZ: Style ID yalnız
          kalıcı PLM link deposundan gelmelidir ve plan kaleminden yeniden
@@ -4880,6 +4898,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
         isCancelled: () => plmJobs.isCancelled(req.currentUser.id, imageJobRef.id),
         onProgress: progress => reportImageProgress(req, imageJobRef, progress),
       });
+      phaseLog('plm-sync',{resolved:run.counts&&run.counts.resolved||0,downloads:run.counts&&run.counts.downloadsCompleted||0});
       /* YAYIM. Yerel yazma bitti, kullanıcı görseli görebiliyor; paylaşılan
          depoya taşıma buradan sonra ve asenkron olur. Ağ yoksa kuyrukta
          bekler, yerel başarı geri ALINMAZ. */
@@ -4921,6 +4940,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       } finally { await upstreamLease.release(); }
     });
 
+    phaseLog('done');
     for(const item of result.imageFailedItems||[])plmJobs.addFailure(req.currentUser.id,imageJobRef.id,{plmId:item&&item.plmId,model:item&&item.styleName,error:(item&&item.error)||'PLM gorseli alinamadi.',code:(item&&item.code)||'PLM_IMAGE_MISSING'});
     plmJobs.update(req.currentUser.id,imageJobRef.id,{processed:result.requested,total:result.requested,succeeded:Math.max(0,result.requested-(result.imagesFailed||0))});
     plmImageRefreshLog('PLM_IMAGE_CACHE_INVALIDATED',{mode:result.mode,changed:result.imagesReplaced||0});

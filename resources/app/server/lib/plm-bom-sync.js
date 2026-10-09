@@ -278,7 +278,10 @@ async function syncPlmBoms(records, options = {}) {
     const { target } = item;
     const old = snapshot.models && snapshot.models[target.plmId];
 
-    if (old && old.styleId === target.styleId && old.fingerprint && old.fingerprint === item.fingerprint) {
+    /* LCW AI'ın ertelendiği/ulaşılamadığı kayıt fingerprint aynı olsa da
+       yeniden çözümlenir; aksi hâlde "Kontrol gerekli" özet kalıcı olur. */
+    const aiPending = Boolean(old && old.ai && ['failed', 'deferred'].includes(old.ai.status));
+    if (old && !aiPending && old.styleId === target.styleId && old.fingerprint && old.fingerprint === item.fingerprint) {
       unchanged += 1;
       if (old.hasPrint) withPrint += 1;
       entries.set(target.plmId, old);
