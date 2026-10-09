@@ -323,13 +323,20 @@ test('v6.34 sentetik sütunlar Target Price ile birlikte kapanmıyor', () => {
   // Eski kod üçünü tek koşulun içine almıştı.
   assert.doesNotMatch(block, /if\(!kolHiddenCols\.has\('targetPrice'\)\)\{/);
   assert.match(block, /KOL_SYNTHETIC_COL_KEYS\.forEach\(key=>\{/);
-  assert.match(block, /if\(kolHiddenCols\.has\(key\)\) return;/);
+  assert.match(block, /if\(!opts\.all&&kolHiddenCols\.has\(key\)\) return;/);
 
   const meta = new Function(`${APP.slice(APP.indexOf('const KOL_SYNTHETIC_COL_KEYS'), APP.indexOf('function kolIsSyntheticColKey'))}; return {KOL_SYNTHETIC_COL_KEYS, KOL_SYNTHETIC_COL_META};`)();
   assert.deepEqual([...meta.KOL_SYNTHETIC_COL_KEYS], ['__bestPrice__', '__confirmedName__', '__confirmedPrice__']);
   // Etiketler tek kaynaktan gelmeli; çizim ve sütun seçici ayrışamaz.
   assert.equal(meta.KOL_SYNTHETIC_COL_META.__bestPrice__.label, 'Best Price');
   assert.equal(meta.KOL_SYNTHETIC_COL_META.__confirmedName__.kind, 'confirmedName');
+  const catalog = new Function('opts', 'kolHiddenCols', 'KOL_SYNTHETIC_COL_KEYS', 'KOL_SYNTHETIC_COL_META', 'kolAllOrderedCols', 'kolColumnLabel', 'L', block);
+  const hidden = new Set(['targetPrice', '__confirmedPrice__']);
+  const read = opts => catalog(opts, hidden, meta.KOL_SYNTHETIC_COL_KEYS, meta.KOL_SYNTHETIC_COL_META, () => [], c => c.label, s => s);
+  // Hiding Target Price still leaves the other synthetic columns visible.
+  assert.deepEqual([...read({}).keys()], ['__bestPrice__', '__confirmedName__']);
+  // AI all-record context explicitly includes individually hidden columns.
+  assert.deepEqual([...read({ all: true }).keys()], [...meta.KOL_SYNTHETIC_COL_KEYS]);
 });
 
 test('v6.34 sentetik sütunlar sütun seçicide listeleniyor ve kayıt ediliyor', () => {

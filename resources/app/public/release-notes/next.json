@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-09",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "LCW AI güncel tablo sütunlarını görür",
+    "en": "LCW AI sees current table columns"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Yeni özel, veri tabanı ve hesaplanan sütunlar doğru değerleriyle LCW AI bağlamına alınır.",
+    "en": "New custom, database and calculated columns are included in LCW AI context with correct values."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "lcwai-dynamic-column-context",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI / CP / Koleksiyon",
+        "en": "LCW AI / CP / Collection"
+      },
+      "title": {
+        "tr": "Sonradan eklenen sütunları LCW AI bağlamına dahil edin",
+        "en": "Include newly added columns in LCW AI context"
+      },
+      "path": {
+        "tr": "LCW AI › Bağlam Ekle › CP Tracker / Koleksiyon",
+        "en": "LCW AI › Add Context › CP Tracker / Collection"
+      },
+      "body": {
+        "tr": "CP’nin hesaplanan ve veri tabanı sütunları güncel adları ve gösterilen değerleriyle CSV bağlamına alınır. Koleksiyon’da özel sütunlar, miras alınan veya renk bazında değiştirilmiş değerler ve fiyat özetleri doğru okunur; seçili kayıtlar da aktarılır. Tüm kayıtlar seçeneği gizli sütunları kapsar ve paylaşılacak sütun sayısını gösterir. Grup değerleri her bağlam için bir kez indekslenerek tekrar taramalar azaltılır.",
+        "en": "CP calculated and database columns are included in CSV context with current names and displayed values. Collection custom columns, inherited or colour-overridden values and pricing summaries are read correctly; selected records are also included. All records includes hidden columns and displays the column count being shared. Group values are indexed once per context to reduce repeated scans."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-dynamic-columns.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log LCW AI bağlam menüsünde CP ve Koleksiyon sütun sayıları ve seçili kayıtlar",
+          "en": "CP and Collection column counts and selected records in the real Buyer Log LCW AI context menu with demo data"
+        },
+        "caption": {
+          "tr": "CP’nin yeni formül ve özel sütunları dahil 58 sütun; Koleksiyon’da gizli özel alan dahil 41 sütun ve seçili kayıt seçeneği",
+          "en": "58 CP columns including the new formula and custom columns; 41 Collection columns including a hidden custom field, plus selected records"
+        }
+      }
+    }
+  ]
 }
