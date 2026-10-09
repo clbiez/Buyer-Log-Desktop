@@ -7,8 +7,8 @@
     "en": "User management: extra roles, Excel and central horizon"
   },
   "summary": {
-    "tr": "Kullanıcı yönetimi ERP düzeyine çıktı: ek roller, süreli yetki, yetki karşılaştırma, Excel ile toplu düzenleme, merkezi varsayılan ufuk ve oturumu düşürmeyen yetki değişikliği.",
-    "en": "User management reaches ERP level: extra roles, temporary permissions, permission comparison, bulk editing in Excel, central default horizon and permission changes that keep users signed in."
+    "tr": "Kullanıcı yönetimi ERP düzeyine çıktı: ek roller, süreli yetki, yetki karşılaştırma, Excel ile toplu düzenleme, merkezi varsayılan ufuk ve oturumu düşürmeyen yetki değişikliği. LCW AI artık sonradan eklenen CP ve Koleksiyon sütunlarını doğru değerleriyle bağlama alır.",
+    "en": "User management reaches ERP level: extra roles, temporary permissions, permission comparison, bulk editing in Excel, central default horizon and permission changes that keep users signed in. LCW AI now includes newly added CP and Collection columns with correct values in its context."
   },
   "changes": [
     {
@@ -339,6 +339,39 @@
       "body": {
         "tr": "Moderatör bir kullanıcının rolünü, ek rolünü veya yetkilerini değiştirdiğinde o kullanıcı artık giriş ekranına atılmaz. Yetki, veri kapsamı ve erişim alanları her istekte güncel dizinden okunduğu için kısıtlama sunucuda anında geçerlidir; kullanıcının menüleri birkaç saniye içinde yeni yetkilere göre yenilenir ve kısa bir bildirim gösterilir. Parola değişimi ve pasife alma oturumu kapatmaya devam eder.",
         "en": "When a Moderator changes a user's role, extra role or permissions, that user is no longer sent to the sign-in screen. Permissions, data scope and access areas are read from the current directory on every request, so restrictions apply on the server immediately; the user's menus refresh to the new permissions within seconds and a short notice is shown. Password changes and deactivation still end the session."
+      }
+    },
+    {
+      "id": "lcwai-dynamic-column-context",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI / CP / Koleksiyon",
+        "en": "LCW AI / CP / Collection"
+      },
+      "title": {
+        "tr": "Sonradan eklenen sütunları LCW AI bağlamına dahil edin",
+        "en": "Include newly added columns in LCW AI context"
+      },
+      "path": {
+        "tr": "LCW AI › Bağlam Ekle › CP Tracker / Koleksiyon",
+        "en": "LCW AI › Add Context › CP Tracker / Collection"
+      },
+      "body": {
+        "tr": "CP’nin hesaplanan ve veri tabanı sütunları güncel adları ve gösterilen değerleriyle CSV bağlamına alınır. Koleksiyon’da özel sütunlar, miras alınan veya renk bazında değiştirilmiş değerler ve fiyat özetleri doğru okunur; seçili kayıtlar da aktarılır. Tüm kayıtlar seçeneği gizli sütunları kapsar ve paylaşılacak sütun sayısını gösterir. Grup değerleri her bağlam için bir kez indekslenerek tekrar taramalar azaltılır.",
+        "en": "CP calculated and database columns are included in CSV context with current names and displayed values. Collection custom columns, inherited or colour-overridden values and pricing summaries are read correctly; selected records are also included. All records includes hidden columns and displays the column count being shared. Group values are indexed once per context to reduce repeated scans."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-dynamic-columns.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log LCW AI bağlam menüsünde CP ve Koleksiyon sütun sayıları ve seçili kayıtlar",
+          "en": "CP and Collection column counts and selected records in the real Buyer Log LCW AI context menu with demo data"
+        },
+        "caption": {
+          "tr": "CP’nin yeni formül ve özel sütunları dahil 58 sütun; Koleksiyon’da gizli özel alan dahil 41 sütun ve seçili kayıt seçeneği",
+          "en": "58 CP columns including the new formula and custom columns; 41 Collection columns including a hidden custom field, plus selected records"
+        }
       }
     }
   ]

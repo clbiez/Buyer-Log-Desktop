@@ -12543,16 +12543,39 @@ window.BLAIScreenData = {
       koleksiyon: () => kolRows,
     }[tab];
     let rows = [];
-    try { rows = (all && allRows ? allRows() : info.rowsFn()) || []; } catch (_) { return null; }
-    if (!Array.isArray(rows) || !rows.length) return null;
+    try { rows = opts.columnsOnly ? [] : ((all && allRows ? allRows() : info.rowsFn()) || []); } catch (_) { return null; }
+    if (!Array.isArray(rows) || (!rows.length && !opts.columnsOnly)) return null;
     let cols = [];
     try {
       if (info.tableKey === 'cp' || info.tableKey === 'orders') {
         cols = visibleCols(info.tableKey);
         // Tüm veri: gizli sütunlar da dahil (görünür + tanımlı tüm sütunlar).
         if (all) { const seen = new Set(cols.map(col => col && col.k)); cols = cols.concat((info.cols() || []).filter(col => col && !seen.has(col.k))); }
-      } else cols = info.cols() || [];
+      } else if (info.tableKey === 'koleksiyon') cols = kolDisplayDescriptors({ all });
+      else cols = info.cols() || [];
     } catch (_) { cols = []; }
+    // Resolve Collection inheritance once per build. The projected rows are
+    // private read-only copies; existing formatters can read their effective
+    // fields without rescanning the entire collection for each cell.
+    const collectionRows = new WeakMap();
+    const collectionValue = info.tableKey === 'koleksiyon' ?
+      (window.BLCollectionModelGroups?.createValueReader?.(kolRows) || kolEffectiveValue) : null;
+    const collectionKeys = collectionValue ? new Set([
+      ...kolColDefs().map(col => col.k), ...KOL_LANDED_EFFECTIVE_KEYS,
+      'endeksmatikData', 'pricing', 'confirmedManufacturer',
+    ]) : null;
+    const collectionRow = row => {
+      if (!collectionRows.has(row)) {
+        const copy = { ...row, variantOverrides: { ...row.variantOverrides } };
+        for (const key of collectionKeys) {
+          const value = collectionValue(row, key);
+          copy[key] = value;
+          copy.variantOverrides[key] = value;
+        }
+        collectionRows.set(row, copy);
+      }
+      return collectionRows.get(row);
+    };
     const selected = (() => { try { return info.selSet ? info.selSet() : null; } catch (_) { return null; } })();
     const filters = {};
     for (const id of info.filterIds || []) {
@@ -12562,11 +12585,32 @@ window.BLAIScreenData = {
     }
     return {
       tableKey: info.tableKey, rows, all, selectedIds: selected ? [...selected] : [], filters: all ? {} : filters,
-      columns: cols.filter(col => col && col.k && !String(col.k).startsWith('_')).map(col => ({ key: col.k, label: String(col.label || col.l || col.k) })),
+      rowId: row => row && (info.tableKey === 'koleksiyon' ? row.id : row._id),
+      columns: cols.filter(col => col && col.k && col.type !== 'cpImage' && col.k !== '__picture__' &&
+        (!String(col.k).startsWith('_') || col.formulaCustom || col.modelCustom || col.noteCustom || col.checklistSupplierColumn ||
+          (info.tableKey === 'koleksiyon' && KOL_SYNTHETIC_COL_KEYS.includes(col.k))))
+        .map(col => ({
+          key: col.k,
+          label: String(info.tableKey === 'koleksiyon' ? col.label : tableColumnLabel(info.tableKey, col)),
+          readValue: row => {
+            if (info.tableKey === 'koleksiyon') {
+              const effective = collectionRow(row);
+              if (col.col && col.col.checklist) return kolChecklistStatusLabel(kolChecklistStatus(kolEffectiveValue(effective, col.k)));
+              const displayRow = col.col?.endeksmatik ? kolEffectiveEndeksmatikRow(effective) :
+                (col.col?.trLanded || col.col?.ydLanded) ? kolGroupSummaryEffectiveLandedRow(effective) : effective;
+              return kolCollectionRawCellText(col, displayRow);
+            }
+            if (info.tableKey !== 'cp' && info.tableKey !== 'orders') return row[col.k];
+            // Reuse display/export formatting; calculate transit flags only for
+            // the two derived day columns, rather than for every AI cell.
+            const flags = col.type === 'num' && (col.k === 'LT' || col.k === 'Ex→Retail') && info.computeFn ? info.computeFn(row) : null;
+            return cellPlainText(col, row, flags);
+          },
+        })),
     };
   },
   overviewCpRows: (opts = {}) => { try { return opts && opts.all ? (state.cp ? state.cp.rows : []) : ovFilteredCpRows(); } catch (_) { return []; } },
-  cpColumns: () => { try { return visibleCols('cp').map(col => ({ key: col.k, label: String(col.label || col.k) })); } catch (_) { return []; } },
+  cpColumns(opts = {}) { return this.table('cp', { ...opts, columnsOnly: true })?.columns || []; },
   backlogQuery: (opts = {}) => {
     try {
       if (typeof backlogExportQueryParams !== 'function') return null;
@@ -24399,9 +24443,10 @@ function kolGroupSummaryDistinct(values){
   });
   return out;
 }
+const KOL_LANDED_EFFECTIVE_KEYS = Object.freeze(['trPrice','trLandedMult','trFx','ydLandedMult','targetPrice','royalty','hologramCost','licensor','lisans','country','season','exFactory','pricing','confirmedManufacturer']);
 function kolGroupSummaryEffectiveLandedRow(row){
   const copy={...(row||{})};
-  ['trPrice','trLandedMult','trFx','ydLandedMult','targetPrice','royalty','hologramCost','licensor','lisans','country','season','exFactory','pricing','confirmedManufacturer'].forEach(key=>{
+  KOL_LANDED_EFFECTIVE_KEYS.forEach(key=>{
     const value=kolEffectiveValue(row,key);
     if(value!==undefined)copy[key]=value;
   });
@@ -25647,24 +25692,24 @@ function kolSyncRulePricing(options={}){
 // Koleksiyon tablo/Excel/kopyalama sırası: Target Price'ın hemen sağında en düşük
 // teklif, ardından onaylı üretici ve onaylı fiyat gösterilir. Üretici bazlı ayrı fiyat
 // sütunları artık ana tabloda yer almaz; tüm teklif girişi Fiyat Çalışmaları'nda yapılır.
-function kolDescriptorCatalog(){
+function kolDescriptorCatalog(opts={}){
   const map=new Map();
   kolAllOrderedCols().forEach(c=>{
-    if(!kolHiddenCols.has(c.k))map.set(c.k,{kind:'base',k:c.k,label:kolColumnLabel(c),col:c});
+    if(opts.all||!kolHiddenCols.has(c.k))map.set(c.k,{kind:'base',k:c.k,label:kolColumnLabel(c),col:c});
   });
   /* v6.34 — Best Price, Conf. Manufacturer ve Conf. FOB eskiden TEK bir koşulun
      içindeydi: !kolHiddenCols.has('targetPrice'). Yani sütun seçicide Target
      Price'ı kapatmak dördünü birden kapatıyor, üçünü ayrı ayrı açıp kapatmak
      mümkün olmuyordu. Artık her biri kendi anahtarıyla gizlenir. */
   KOL_SYNTHETIC_COL_KEYS.forEach(key=>{
-    if(kolHiddenCols.has(key)) return;
+    if(!opts.all&&kolHiddenCols.has(key)) return;
     const meta = KOL_SYNTHETIC_COL_META[key];
     if(meta) map.set(key,{kind:meta.kind,k:key,label:L(meta.label)});
   });
   return map;
 }
-function kolDisplayDescriptors(){
-  const catalog=kolDescriptorCatalog();
+function kolDisplayDescriptors(opts={}){
+  const catalog=kolDescriptorCatalog(opts);
   const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
   return order.map(key=>catalog.get(key)).filter(Boolean);
 }

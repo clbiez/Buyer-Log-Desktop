@@ -139,7 +139,7 @@
     return Boolean(row && row.variantOverrides && Object.prototype.hasOwnProperty.call(row.variantOverrides, key));
   }
 
-  function effectiveValue(row, key, rows) {
+  function effectiveValue(row, key, rows, parents) {
     if (!row) return '';
     // Override existence and override value are intentionally separate. Empty
     // string, 0, false and null are all valid explicit colour-level values and
@@ -147,13 +147,23 @@
     if (hasVariantOverride(row, key)) return row.variantOverrides[key];
     if (row.modelGroupRole !== 'variant' && row.modelSharedValues && Object.prototype.hasOwnProperty.call(row.modelSharedValues, key)) return row.modelSharedValues[key];
     if (fieldMetadata(key).inheritance === 'model') {
-      const parent = groupFor(rows, row.modelGroupId).find(item => item.modelGroupRole === 'parent');
+      const parent = parents ? parents.get(String(row.modelGroupId)) : groupFor(rows, row.modelGroupId).find(item => item.modelGroupRole === 'parent');
       if (parent && parent !== row) {
         if (parent.modelSharedValues && Object.prototype.hasOwnProperty.call(parent.modelSharedValues, key)) return parent.modelSharedValues[key];
         if (parent[key] !== undefined && parent[key] !== null && text(parent[key]) !== '') return parent[key];
       }
     }
     return row[key];
+  }
+
+  // A fresh reader for one read-only operation: index parents once instead of
+  // scanning all rows for every model-level cell. Rebuild after row changes.
+  function createValueReader(rows) {
+    const parents = new Map();
+    (rows || []).forEach(row => {
+      if (row && row.modelGroupRole === 'parent' && !parents.has(String(row.modelGroupId))) parents.set(String(row.modelGroupId), row);
+    });
+    return (row, key) => effectiveValue(row, key, null, parents);
   }
 
   function setSharedValue(rows, groupId, key, value) {
@@ -347,5 +357,5 @@
     return { id: groupId, count: members.length, parent: members.find(row => row.modelGroupRole === 'parent') || members[0] || null, mixed };
   }
 
-  return { identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, groupFor, hasVariantOverride, effectiveValue, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
+  return { identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, groupFor, hasVariantOverride, effectiveValue, createValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });

@@ -31,6 +31,7 @@
 
   /* ---------------- Varsayılan bağlam sağlayıcıları ---------------- */
   const cellValue = value => (value == null ? '' : (typeof value === 'object' ? (value instanceof Date ? value.toISOString().slice(0, 10) : JSON.stringify(value)) : String(value)));
+  const contextCellValue = (row, col) => cellValue(typeof col.readValue === 'function' ? col.readValue(row) : row && row[col.key]);
   /* Model görseli anahtarları: görselin kendisi LCW AI'a GİTMEZ; CSV'ye
      yalnız kısa anahtar (ör. KOL-3) yazılır. Çıktı bu anahtarı kullanırsa
      Buyer Log görseli yerel depodan alıp dosyaya gömer. */
@@ -63,9 +64,12 @@
     if (!data) return null;
     const columns = data.columns;
     const selected = new Set((data.selectedIds || []).map(String));
-    const source = mode === 'selected' ? data.rows.filter(row => selected.has(String(row && row._id))) : data.rows;
+    const source = mode === 'selected' ? data.rows.filter(row => {
+      const id = typeof data.rowId === 'function' ? data.rowId(row) : row && row._id;
+      return id != null && selected.has(String(id));
+    }) : data.rows;
     const title = window.BLAIScreenData.pageTitle(tab);
-    const keyed = mode === 'filters' ? null : withImageKeys(tab, source, columns.map(col => col.label), source.map(row => columns.map(col => cellValue(row && row[col.key]))));
+    const keyed = mode === 'filters' ? null : withImageKeys(tab, source, columns.map(col => col.label), source.map(row => columns.map(col => contextCellValue(row, col))));
     return {
       images: keyed && keyed.images,
       label: mode === 'all' ? L(`${title} — tüm kayıtlar`, `${title} — all records`) : mode === 'selected' ? L(`${title} — seçili kayıtlar`, `${title} — selected records`) : mode === 'filters' ? L(`${title} — filtreler ve özet`, `${title} — filters and summary`) : L(`${title} — görünen kayıtlar`, `${title} — visible records`),
@@ -113,7 +117,7 @@
           const full = window.BLAIScreenData && window.BLAIScreenData.table(tab, { all: true });
           if (!full) return [];
           const data = window.BLAIScreenData.table(tab);
-          const options = [{ id: 'all', label: { tr: `Tüm kayıtlar (${full.rows.length})`, en: `All records (${full.rows.length})` }, detail: { tr: 'Sayfa filtreleri olmadan, tüm sütunlar · CSV dosyası olarak', en: 'Without page filters, all columns · as a CSV file' } }];
+          const options = [{ id: 'all', label: { tr: `Tüm kayıtlar (${full.rows.length})`, en: `All records (${full.rows.length})` }, detail: { tr: `Sayfa filtreleri olmadan, ${full.columns.length} sütun · CSV dosyası olarak`, en: `Without page filters, ${full.columns.length} columns · as a CSV file` } }];
           if (data && data.rows.length !== full.rows.length) options.push({ id: 'visible', label: { tr: `Yalnız filtrelenmiş kayıtlar (${data.rows.length})`, en: `Filtered records only (${data.rows.length})` }, detail: { tr: 'Sayfadaki filtreler uygulanmış', en: 'Page filters applied' } });
           if (data && data.selectedIds && data.selectedIds.length) options.push({ id: 'selected', label: { tr: `Seçili kayıtlar (${data.selectedIds.length})`, en: `Selected records (${data.selectedIds.length})` } });
           if (data) options.push({ id: 'filters', label: { tr: 'Aktif filtreler ve özet', en: 'Active filters and summary' } });
@@ -141,8 +145,8 @@
       },
       build(mode) {
         const rows = window.BLAIScreenData.overviewCpRows({ all: mode !== 'cp' });
-        const columns = window.BLAIScreenData.cpColumns();
-        const keyed = withImageKeys('overview', rows, columns.map(col => col.label), rows.map(row => columns.map(col => cellValue(row[col.key]))));
+        const columns = window.BLAIScreenData.cpColumns({ all: mode !== 'cp' });
+        const keyed = withImageKeys('overview', rows, columns.map(col => col.label), rows.map(row => columns.map(col => contextCellValue(row, col))));
         return { label: mode === 'cp' ? L('Overview — CP kümesi', 'Overview — CP set') : L('Overview — tüm CP kayıtları', 'Overview — all CP records'), screen: 'overview', summary: mode === 'cp' ? L(`${rows.length} CP satırı (Overview filtreleri uygulanmış).`, `${rows.length} CP rows (Overview filters applied).`) : L(`${rows.length} CP satırı (filtre uygulanmadan).`, `${rows.length} CP rows (no filters applied).`), columns: keyed.columns, rows: keyed.values, images: keyed.images, totalRows: rows.length };
       },
     });
