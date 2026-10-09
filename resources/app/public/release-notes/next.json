@@ -76,6 +76,39 @@
         "tr": "Kullanıcılar arasında artık yalnız CP Ex-Factory revizeleri, CP Sub-Manufacturer ve Supp. FOB bilgileri ile Manufacturers e-posta rehberi paylaşılır; koleksiyonlar kendi sahip bazlı aktarımıyla gelmeye devam eder. CP notları, teslim tipi, shortage ve kişisel dosyalar (sevkiyat karşılaştırması, açık maliyet, şablonlar, fiyat talepleri) bilgisayarda kalır. Yerel kalan değişiklikler \"bekleyen\" sayılmaz, zaten uygulanmış paketler yeniden indirilmez ve tam doğrulama 45 saniye yerine 30 dakikada bir çalışır; seçilen sync aralığına uyulur.",
         "en": "Only CP Ex-Factory revisions, CP Sub-Manufacturer and Supp. FOB details and the Manufacturers e-mail directory are now shared between users; collections continue to arrive through their own owner-based transfer. CP notes, delivery type, shortage and personal files (shipping comparison, open costing, templates, price requests) stay on the computer. Local-only changes are not counted as waiting, packages that were already applied are not downloaded again, and the full check runs every 30 minutes instead of every 45 seconds; the selected sync interval is honoured."
       }
+    },
+    {
+      "id": "collection-fabric-cards",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kumaş kartları: uzun PLM kumaş bilgisi yerine kısa özet",
+        "en": "Fabric cards: a short summary instead of long PLM fabric information"
+      },
+      "path": {
+        "tr": "Koleksiyon › Kumaş sütunu › çift tık",
+        "en": "Collection › Fabric column › double-click"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-cards.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: Kumaş sütununda her satır kumaş kodu etiketi ve kısa kart özetiyle görünüyor — demo verili Buyer Log ekranı",
+          "en": "Collection table: each row of the Fabric column shows a fabric code tag and a short card summary — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Aynı kumaş kodlu her model aynı kartı kullanır",
+          "en": "Every model with the same fabric code uses the same card"
+        }
+      },
+      "body": {
+        "tr": "PLM'den gelen kumaş bilgisi değiştirilmeden saklanır; Buyer Log kumaş koduna (ör. 3859) bir kumaş kartı bağlar ve tabloda yalnız kartın kısa özetini gösterir. PLM'den model aktarıldığında kartı olmayan kodlar LCW AI ile analiz edilir; öneri PLM metniyle doğrulanır, önizlenir ve onayınızla kaydedilir. Kartı olan kod için LCW AI'a tekrar sorulmaz. Hücreye çift tıklayınca özet, ayrıntılar ve tam PLM metni açılır; özeti ve ayrıntıları düzenleyebilir ya da kartı silebilirsiniz.",
+        "en": "Fabric information from PLM is kept unchanged; Buyer Log links a fabric card to the fabric code (e.g. 3859) and shows only the card's short summary in the table. When models are imported from PLM, codes without a card are analysed with LCW AI; the suggestion is checked against the PLM text, previewed and saved with your approval. LCW AI is not asked again for a code that already has a card. Double-click the cell to see the summary, the details and the full PLM text; you can edit the summary and details or delete the card."
+      }
     }
   ]
 }

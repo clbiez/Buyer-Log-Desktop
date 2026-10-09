@@ -234,3 +234,33 @@
 .kolAllVariantsToggle .ic{width:14px;height:14px;}
 .kolAllVariantsToggle[aria-pressed="true"]{border-color:color-mix(in srgb,var(--acc) 55%,var(--line));background:color-mix(in srgb,var(--acc) 11%,var(--card));color:var(--acc);}
 .kolAllVariantsToggle:disabled{opacity:.42;cursor:not-allowed;}
+
+/* Collection fabric cards — the PLM fabric text stays in the row; the cell
+   shows the short card summary. The inner view is not a pointer target so
+   click/drag/Shift selection stays with the spreadsheet; the detail dialog
+   opens only from the td dblclick handler. */
+#kolTable tbody td.kolFabricTd{padding:0!important}
+#kolTable tbody .kolFabricCell{display:flex;align-items:center;gap:6px;width:100%;height:100%;min-height:27px;padding:3px 8px;pointer-events:none;user-select:none;overflow:hidden}
+#kolTable tbody .kolFabricCode{flex:none;font-size:10.5px;font-weight:600;line-height:16px;padding:0 5px;border-radius:4px;background:var(--acc-bg);color:var(--acc-ink)}
+#kolTable tbody .kolFabricText{min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;line-height:15px;overflow-wrap:anywhere}
+#kolTable tbody td.kolFabricTd:not(.hasCard) .kolFabricCode{background:var(--card2-strong,var(--line));color:var(--muted)}
+#kolTable tbody td.kolFabricTd:not(.hasCard) .kolFabricText{color:var(--ink2)}
+#kolTable tbody td.kolFabricTd:hover .kolFabricCell{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+.kolFabricCardModal{width:min(760px,calc(100vw - 32px))}
+.kolFabricBatchModal{width:min(1080px,calc(100vw - 32px))}
+.kolFabricSummaryRow{display:flex;align-items:center;gap:8px}
+.kolFabricSummaryRow input{flex:1;min-width:0}
+.kolFabricSource{flex:none;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
+.kolFabricSource.is-ai{border-color:var(--acc-lite);color:var(--acc-ink);background:var(--acc-bg)}
+.kolFabricSource.is-manual{border-color:var(--line2);color:var(--ink)}
+.kolFabricRaw{width:100%;resize:vertical}
+.kolFabricFoot{flex-wrap:wrap;gap:8px}
+.kolFabricFootSpacer{flex:1}
+.kolFabricBatchWrap{max-height:min(56vh,520px);overflow:auto;border:1px solid var(--line);border-radius:8px}
+.kolFabricBatchTable{width:100%;border-collapse:collapse;font-size:12px}
+.kolFabricBatchTable th,.kolFabricBatchTable td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
+.kolFabricBatchTable thead th{position:sticky;top:0;background:var(--card2,var(--bg));z-index:1;font-weight:600}
+.kolFabricBatchCode{font-weight:600;white-space:nowrap}
+.kolFabricBatchSummary{width:100%;min-width:220px}
+.kolFabricBatchRaw{max-width:360px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+@media (max-width:720px){.kolFabricBatchRaw{display:none}}
