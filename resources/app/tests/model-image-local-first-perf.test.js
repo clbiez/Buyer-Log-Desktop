@@ -38,7 +38,7 @@ test('Koleksiyon kapsamı sadece erişim verilmiş sahibin gerçek PLM satırlar
   assert.equal(policy.shouldPublishOwnerImages([{ownerId:'a',granteeId:'b',level:'view'}],'a'), true);
   assert.equal(policy.shouldPublishOwnerImages([{ownerId:'a',granteeId:'b',level:'none'}],'a'), false);
   const implicit = policy.workspaceSharedImageItems(workspace);
-  assert.equal(implicit.length, 2, 'imgRef olmadan da kayıtlı PLM modeli paylaşılan güncellemeyi alabilir');
+  assert.equal(implicit.length, 3, 'imgRef olmadan PLM modelleri ve manuel konsept görseli korunur');
   assert.equal(implicit[0].imageRef, '');
   assert.match(source, /collectionShareableImageKeys\(owner, 'koleksiyon'\)/);
   assert.match(source, /COLLECTION_ACCESS_DENIED/);
