@@ -28,7 +28,7 @@ test('Collection editors share left-aligned text geometry', () => {
 test('Collection textarea-backed cells center single-line text instead of sitting high', () => {
   assert.match(
     css,
-    /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody textarea\.editCell\{[\s\S]*?height:28px!important;[\s\S]*?line-height:18px!important;[\s\S]*?padding-top:5px!important;[\s\S]*?padding-bottom:5px!important;[\s\S]*?margin:0!important;[\s\S]*?\}/
+    /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody textarea\.editCell\{[\s\S]*?min-height:calc\(var\(--kol-text-lh\) \+ 4px\)!important;[\s\S]*?line-height:var\(--kol-text-lh\)!important;[\s\S]*?padding-top:2px!important;[\s\S]*?padding-bottom:2px!important;[\s\S]*?margin:0!important;[\s\S]*?\}/
   );
   assert.match(
     css,
@@ -39,4 +39,16 @@ test('Collection textarea-backed cells center single-line text instead of sittin
 test('Collection composite cell wrappers keep content vertically centered and left aligned', () => {
   assert.match(css, /\.plmEditCell,[\s\S]*?\.kolPeriodPickerBtn[\s\S]*?align-items:center!important;[\s\S]*?text-align:left!important;/);
   assert.match(css, /#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody \.endeksmatikCellBtn\{[\s\S]*?text-align:left!important;[\s\S]*?align-items:center!important;[\s\S]*?justify-items:start;/);
+});
+
+test('Collection textarea cells fit wrapped text to the row height in whole lines', () => {
+  const rule = css.match(/#view-koleksiyon\.kolSpreadsheetWorkspace #kolTable tbody textarea\.editCell\{([^}]*)\}/);
+  assert.ok(rule, 'base textarea rule exists');
+  // Regression: a fixed 28px one-line box clipped wrapped text in taller rows.
+  assert.doesNotMatch(rule[1], /(^|[;\s])height:28px!important/);
+  assert.match(rule[1], /max-height:var\(--kol-text-fit-h\)!important;/);
+  assert.match(css, /round\(down,var\(--kol-text-h,28px\) - 6px,var\(--kol-text-lh\)\) \+ 4px/);
+  // Single-line text is centered by the cell because the editor is sized to its content.
+  assert.match(css, /@supports \(field-sizing:content\)\{[\s\S]*?textarea\.editCell\{[\s\S]*?field-sizing:content;[\s\S]*?height:auto!important;/);
+  assert.match(css, /textarea\.editCell:focus\{[\s\S]*?overflow-y:auto!important;/);
 });
