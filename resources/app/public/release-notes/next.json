@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-09",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Daha güvenli ve hızlı SYNC",
+    "en": "Safer and faster SYNC"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Çalışma kuralları artık yalnız Moderatörden gelir; kullanıcılar arasında yalnız gereken iş verisi paylaşılır ve sync gereksiz ağ trafiğinden arındırıldı.",
+    "en": "Working rules now come only from the Moderator; only the business data users need is shared between users, and sync no longer generates unnecessary network traffic."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "sync-health-device-convergence",
+      "type": "feature",
+      "module": {
+        "tr": "Sync",
+        "en": "Sync"
+      },
+      "title": {
+        "tr": "Cihazların eşitlenme durumunu tek panelde görün",
+        "en": "See device convergence in one panel"
+      },
+      "path": {
+        "tr": "Üst çubuk › Sync durumu › Cihazlar",
+        "en": "Top bar › Sync status › Devices"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-health-devices.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında Moderatörün cihaz sağlık paneli",
+          "en": "Moderator device health panel in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Aynı, farklı, eşitlenmekte olan ve eski cihazları karşılaştırın",
+          "en": "Compare matching, diverged, syncing and stale devices"
+        }
+      },
+      "body": {
+        "tr": "Her başarılı sync, yalnız paylaşılan iş alanlarının özetini cihazına ait sağlık dosyasına yazar. Moderatör Cihazlar bölümünde sürüm, son sync, bekleyen olaylar, açık çakışmalar ve uygulanan kural sürümünü görür; farklı cihazın kayıt kimliklerini karşılaştırabilir. Yerel notlar ve çalışma zamanı bilgileri bu karşılaştırmaya katılmaz. Panel ölçer ve gösterir; veriyi otomatik değiştirmez.",
+        "en": "Each successful sync writes a digest of shared business fields to the device’s own health file. The Moderator sees version, last sync, pending events, open conflicts and applied rules version in Devices, and can compare record identities on a diverged device. Local notes and runtime details are excluded. The panel measures and displays; it never changes data automatically."
+      }
+    }
+  ]
 }

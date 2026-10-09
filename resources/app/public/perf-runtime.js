@@ -138,6 +138,7 @@
     globalFlowEarth:['overview-global-flow-earth.js?rev=1'],
     // Kullanıcı menüsü → Ön Ayar Paylaşımı; yalnız ilk açılışta yüklenir.
     presetShare:['preset-share.js?rev=1'],
+    syncHealth:['sync-health-ui.js'],
     /* PLM numune talepleri (CoreNectum Requests) kontrol listesine kanıt verir;
        iki dosya görünümden ÖNCE yüklenir. deferredUi'de de listelidir (sağ tık
        penceresi); loadScript aynı dosyayı tek kez yükler. */
