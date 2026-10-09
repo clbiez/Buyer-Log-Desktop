@@ -1159,7 +1159,7 @@ function refreshLicensorList(){
 // listeye girmemişti: canlı değer Date, temel metin kalıyordu. Karışık tip, hem
 // karşılaştırmayı hem de hücre boşaltılınca geri konan değeri kırılgan yapıyor.
 const CP_BASELINE_DATE_KEYS = ['_asasExFactory','_asasRetailDate','_asasInStore'];
-const CP_DATE_KEYS = ['OPD','Ex-factory','HANDOVER Tarihi','Retail Date','Buying Son Onay Tarihi','In-Store (Model Budget)','Ant. Arrival', ...CP_BASELINE_DATE_KEYS];
+const CP_DATE_KEYS = ['OPD','Original Ex-factory','Ex-factory','HANDOVER Tarihi','Retail Date','Buying Son Onay Tarihi','In-Store (Model Budget)','Ant. Arrival', ...CP_BASELINE_DATE_KEYS];
 function makeDateOnly(y,m,d){
   y=Number(y); m=Number(m); d=Number(d);
   if(!Number.isInteger(y)||!Number.isInteger(m)||!Number.isInteger(d)) return null;
@@ -3464,8 +3464,8 @@ const CP_COLS = [
   {k:'%', label:'%', type:'pct', weight:5, group:'Sipariş Detayları'},
   {k:'Licensor', label:'Licensor', type:'licensor', weight:8, group:'Lisans Detayları'}, // i18n-ignore — başlık kimliği; görünen ad TABLE_COLUMN_GROUP_LABELS
   {k:'License', label:'License', type:'ro', weight:11, group:'Lisans Detayları'}, // i18n-ignore — başlık kimliği; görünen ad TABLE_COLUMN_GROUP_LABELS
-  /* ASAS'tan gelen ilk Ex-factory; Yükleme Termin (Ex-factory) elle revize
-     edilse bile bu sütun değişmez. Salt okunur. */
+  /* ASAS Dates > Initial Inspection Geçme Tarih Gün Ay Yıl;
+     revize edilebilir Ex-factory tarihinden bağımsız, salt okunur. */
   {k:'Original Ex-factory', label:'Original Ex-F.', type:'date', weight:9, group:'Tarihler'},
   {k:'OPD', label:'OPD', type:'date', weight:8, group:'Tarihler'},
   {k:'Ex-factory', label:'Ex-factory', type:'exfactory', weight:9, group:'Tarihler'},
@@ -12016,6 +12016,7 @@ function parseASASWorkbook(wb){
       license: norm(g(row,'Lisans')), model: norm(g(row,'Model Adı')),
       productDescription:productDescriptionHeader?norm(g(row,productDescriptionHeader)):'',
       ex: yyyymmdd(g(row,'Orijinal Exfactory Merch Tarih')),
+      originalExFactoryDate: yyyymmdd(g(row,'Initial Inspection Geçme Tarih Gün Ay Yıl')), // i18n-ignore — ASAS kaynak başlığı
       retail: yyyymmdd(g(row,'Retail Depo Tarih Yıl Ay Gün')),
       mb: yyyymmdd(g(row,'Model Bütçe Tarih Yıl Ay Gün')),
       opd: yyyymmdd(g(row,'Sipariş Yerleştirme MerchTarih')),
@@ -12166,7 +12167,7 @@ function buildCPRowsFromASAS(){
       'Order Code':o.ocode,
       'FOB ($)': fobRounded, 'Supp. FOB': suppfob!=null?suppfob:null,
       _suppFobManual:hasSuppfobOverride&&!isRuleOverride, _suppFobRule:isRuleOverride?(suppFobMeta.ruleId||true):((!hasSuppfobOverride&&priced.rule)?(priced.rule.id||true):null), _suppFobMeta:isRuleOverride?suppFobMeta:((!hasSuppfobOverride&&priced.rule)?automaticSuppFobRuleMeta(priced.rule,false):suppFobMeta), _suppFobOverride:hasSuppfobOverride, _licensorManual:hasLicensorOverride, _nonDtrManufacturerRule:false,
-      OPD:o.opd, 'Original Ex-factory':o.ex, 'Ex-factory':o.ex, _asasExFactory:o.ex, 'HANDOVER Tarihi':handover, 'Retail Date':o.retail, 'Ex→Retail':'',
+      OPD:o.opd, 'Original Ex-factory':o.originalExFactoryDate||null, 'Ex-factory':o.ex, _asasExFactory:o.ex, 'HANDOVER Tarihi':handover, 'Retail Date':o.retail, 'Ex→Retail':'',
       'Buying Son Onay Tarihi':o.shipConf, 'In-Store (Model Budget)':o.mb,
       'Order Quantity':o.qty, 'Shipment Quantity':Math.max(0,toNum(hit&&((hit.loadedQty!=null)?hit.loadedQty:hit._loadedQty))||0), 'Remaining Units':o.kalan, '%': o.qty? (o.qty-o.kalan)/o.qty : '',
       STATUS:status, 'Ant. Arrival':ant, 'Del. Type':delType,
@@ -12218,7 +12219,7 @@ function buildOrderSummaryRowsFromASAS(){
       'PLM ID': (o.plm!=null && !isNaN(Number(o.plm))) ? Math.trunc(Number(o.plm)) : '', 'Special Code':o.ozel,
       'Order Code':o.ocode, 'FOB ($)': fobRounded, 'Supp. FOB': suppfob!=null?suppfob:null,
       _suppFobManual:hasSuppfobOverride&&!isRuleOverride, _suppFobRule:isRuleOverride?(suppFobMeta.ruleId||true):((!hasSuppfobOverride&&priced.rule)?(priced.rule.id||true):null), _suppFobMeta:isRuleOverride?suppFobMeta:((!hasSuppfobOverride&&priced.rule)?automaticSuppFobRuleMeta(priced.rule,false):suppFobMeta), _suppFobOverride:hasSuppfobOverride, _licensorManual:hasLicensorOverride, _nonDtrManufacturerRule:false,
-      OPD:o.opd, 'Original Ex-factory':o.ex, 'Ex-factory':o.ex, 'Retail Date':o.retail, 'Ex→Retail':exRetail, 'In-Store (Model Budget)':o.mb, 'Days to go':daysToGo,
+      OPD:o.opd, 'Original Ex-factory':o.originalExFactoryDate||null, 'Ex-factory':o.ex, 'Retail Date':o.retail, 'Ex→Retail':exRetail, 'In-Store (Model Budget)':o.mb, 'Days to go':daysToGo,
       'Order Quantity':o.qty, Received:o.antrepo, Remaining:o.kalan, '%': o.qty? (o.qty-o.kalan)/o.qty : '', 'Deliv.%':delivPct,
       Risk:risk, STATUS:status, 'Ant. Arrival':ant, 'Del. Type':delType, _sevSort:isActive?0:1
     };

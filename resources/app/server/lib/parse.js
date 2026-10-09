@@ -1063,6 +1063,7 @@ function parseASASMatrix(rows, ruleValue) {
       opd: yyyymmdd(g(row, 'Sipariş Yerleştirme MerchTarih')),
       shipConf: shipConfHeader ? yyyymmdd(g(row, shipConfHeader)) : null,
       initialInspection: initialInspectionHeader ? yyyymmdd(gFuzzy(row, initialInspectionHeader)) : null,
+      originalExFactoryDate: yyyymmdd(g(row, 'Initial Inspection Geçme Tarih Gün Ay Yıl')),
       buyer: norm(g(row, 'Buyer')),
       line: norm(g(row, 'Line')),
       // ASAS aynı sipariş satırını kumaş bileşeni kadar çoğaltabilir. Yalnız
@@ -2147,7 +2148,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       _suppFobRule: isRuleOverride ? (suppFobMeta.ruleId || true) : ((!hasSuppfobOverride && priced.rule) ? priced.rule.id || true : null),
       _suppFobMeta: isRuleOverride ? suppFobMeta : ((!hasSuppfobOverride && priced.rule) ? automaticRuleMeta(priced.rule, false) : suppFobMeta),
       _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _nonDtrManufacturerRule: false,
-      OPD: o.opd, 'Ex-factory': o.ex,
+      OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex,
       // Revizyon oku ve Ex-Factory renklendirmesi için ASAS orijinalleri.
       _asasExFactory: asasBaseline(o, 'ex', '_asasEx'),
       _asasRetailDate: asasBaseline(o, 'retail', '_asasRetail'),
@@ -2317,7 +2318,7 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
       _suppFobRule: isRuleOverride ? (suppFobMeta.ruleId || true) : ((!hasSuppfobOverride && priced.rule) ? priced.rule.id || true : null),
       _suppFobMeta: isRuleOverride ? suppFobMeta : ((!hasSuppfobOverride && priced.rule) ? automaticRuleMeta(priced.rule, false) : suppFobMeta),
       _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _nonDtrManufacturerRule: false,
-      OPD: o.opd, 'Ex-factory': o.ex, 'Retail Date': o.retail, 'Ex→Retail': exRetail, 'In-Store (Model Budget)': o.mb, 'Days to go': daysToGo,
+      OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex, 'Retail Date': o.retail, 'Ex→Retail': exRetail, 'In-Store (Model Budget)': o.mb, 'Days to go': daysToGo,
       'Merch Marka Yaş Grup Kod': o.ageGroup, 'Buyer': o.buyer, 'Line': o.line,
       'Kumaş Kategorisi': o.fabricCategory, 'Kumaşçı Ülkesi': o.fabricSupplierCountry, 'Kumaşçı': o.fabricSupplier,
       'Kumaş Tipi': o.kumasTipi, 'İplik No': o.iplikNo, 'Gramaj': o.fabricWeight, 'Karışım': o.karisim,

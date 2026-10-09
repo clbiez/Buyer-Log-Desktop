@@ -159,7 +159,7 @@
     'Order Code':asas('Sipariş Kod'),
     'FOB ($)':asas('FOB Fiyatı'),
     'Supp. FOB':buyerlog({tr:'Fiyat kuralı (OPD + ülke grubu + Licensor + License) veya elle giriş',en:'Pricing rule (OPD + country group + Licensor + License) or manual entry'}),
-    'Original Ex-factory':asas('Orijinal Exfactory Merch Tarih',{tr:'Buyer Log revizyonundan etkilenmez',en:'Not affected by a Buyer Log revision'}),
+    'Original Ex-factory':asas('Initial Inspection Geçme Tarih Gün Ay Yıl',{tr:'ASAS Dates sütunundan okunur; Buyer Log revizyonundan etkilenmez',en:'Read from the ASAS Dates column; not affected by a Buyer Log revision'}), // i18n-ignore — ASAS kaynak başlığı; açıklama TR/EN
     'OPD':asas('Sipariş Yerleştirme MerchTarih'),
     'Ex-factory':asas('Orijinal Exfactory Merch Tarih',{tr:'Buyer Log revizyonu varsa o gösterilir',en:'A Buyer Log revision is shown when present'}),
     'LT':computed({tr:'OPD ile Ex-factory arasındaki gün farkı',en:'Days between OPD and Ex-factory'}),

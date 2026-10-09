@@ -74,7 +74,8 @@ function build({ rows = 220, seed = 7, today = new Date() } = {}) {
     'Merch Alt Grup Kod', 'Merch Marka Yaş Grup Kod', 'Buyer Grup (TR)', 'Siparişin Üretildiği Ülke', 'Lisans',
     'Model Adı', 'Ürün Ana Tanım', 'Orijinal Exfactory Merch Tarih', 'Retail Depo Tarih Yıl Ay Gün',
     'Model Bütçe Tarih Yıl Ay Gün', 'Sipariş Yerleştirme MerchTarih', 'Buying Son Onay Tarihi', 'Buyer', 'Line',
-    'Ana Kumaş Mı', 'Kumaş Kategorisi', 'Kumaşçı Ülkesi', 'Kumaşçı', 'Kumaş Tipi', 'İplik No', 'Gramaj', 'Karışım'];
+    'Ana Kumaş Mı', 'Kumaş Kategorisi', 'Kumaşçı Ülkesi', 'Kumaşçı', 'Kumaş Tipi', 'İplik No', 'Gramaj', 'Karışım',
+    'Initial Inspection Geçme Tarih Gün Ay Yıl'];
   const antrepoHeader = ['Sipariş Kod', 'Model Adı', 'Renk Kod', 'Renk Tanım', 'Supplier Portal Statü',
     'Tahmini Antrepo Giriş Tarihi', 'Vasita Tanim', 'HANDOVER Tarihi', 'Yükleme Toplam Adet', 'Net Alım Sipariş Miktarı'];
   const lflHeader = ['Sipariş Kod', 'Model Adı', 'MAG', 'MMYG', 'Klasman', 'Sezon', 'IN-STORE (MODEL BUDGET)',
@@ -119,6 +120,9 @@ function build({ rows = 220, seed = 7, today = new Date() } = {}) {
       iso(shift(exDays + int(35, 60))), iso(shift(exDays - int(90, 150))), iso(shift(exDays - int(20, 45))),
       buyer, pick(group.lines), 1, 'Örme', country === 'TURKIYE' ? 'Türkiye' : 'Türkiye', 'DEMO KUMAŞ A.Ş.',
       fabric[3], fabric[1], fabric[2], fabric[0],
+      // CP Original Ex-F.: ilk söz verilen tarih, revize Ex-factory'den birkaç gün önce.
+      // PRNG çağrılmaz; mevcut tohumların ürettiği diğer değerler değişmez.
+      iso(shift(exDays - 2 - (code % 9))),
     ]);
     if (received > 0 || exDays < 25) {
       const status = received >= qty ? 'Depoda' : weighted(CATALOG.antrepoStatus);

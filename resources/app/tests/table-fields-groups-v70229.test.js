@@ -63,8 +63,8 @@ test('CP ana başlıkları ve varsayılan sıra kullanıcı düzeniyle birebir',
     ['Del. Type', 'Lojistik'], ['STATUS', 'Lojistik'], ['Buying Son Onay Tarihi', 'Lojistik'], ['HANDOVER Tarihi', 'Lojistik'], ['Ant. Arrival', 'Lojistik'],
     ['Notes', 'Notlar'], ['Ek Not', 'Notlar'],
   ]);
-  // Original Ex-F. revizyondan etkilenmeyen ASAS değeridir; iki satır üreticisi de yazar.
-  assert.equal((APP.match(/'Original Ex-factory':o\.ex, 'Ex-factory':o\.ex/g) || []).length, 2);
+  // Original Ex-F. ayrı ASAS Dates alanıdır; iki satır üreticisi de kullanır.
+  assert.equal((APP.match(/'Original Ex-factory':o\.originalExFactoryDate\|\|null, 'Ex-factory':o\.ex/g) || []).length, 2);
 });
 
 test('Orders Sipariş Durumu Sipariş Detayları başlığının başında durur', () => {
