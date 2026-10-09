@@ -1,14 +1,48 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-09",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Original Ex-F. doğru ASAS tarihini gösteriyor",
+    "en": "Original Ex-F. shows the correct ASAS date"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP ve Orders'taki Original Ex-F. sütunu artık ASAS Dates tablosundaki ilk tarihten geliyor ve Ex-factory revizyonundan bağımsız. Bu sürümde ayrıca kullanılmayan kodlar temizlendi.",
+    "en": "The Original Ex-F. column in CP and Orders now comes from the initial date in the ASAS Dates table and is independent of Ex-factory revisions. This version also removes unused code."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "cp-original-exf-asas-dates",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker / Orders",
+        "en": "CP Tracker / Orders"
+      },
+      "title": {
+        "tr": "Original Ex-F. ASAS Dates'teki tam tarihten okunuyor",
+        "en": "Original Ex-F. is read from the full date in ASAS Dates"
+      },
+      "path": {
+        "tr": "CP Tracker › Tarihler › Original Ex-F.",
+        "en": "CP Tracker › Dates › Original Ex-F."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-original-exf-asas-dates.png",
+        "alt": {
+          "tr": "CP Tracker Tarihler grubunda Original Ex-F. sütunu, Yükleme Termin (Ex-factory) sütunundan farklı tarihlerle — demo verili Buyer Log ekranı",
+          "en": "CP Tracker Dates group with the Original Ex-F. column showing dates different from the Ex-factory column — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Original Ex-F. artık Ex-factory'den bağımsız",
+          "en": "Original Ex-F. is now independent of Ex-factory"
+        }
+      },
+      "body": {
+        "tr": "Original Ex-F. sütunu, Ex-factory ile aynı ASAS alanını gösterdiği için revize edilmiş tarihle aynı görünüyordu. Artık ASAS Dates tablosundaki \"Initial Inspection Geçme Tarih Gün Ay Yıl\" alanından okunuyor. Mevcut ASAS bağlantıları bu alanı bir sonraki yenilemede kendiliğinden eşliyor; alan bulunamazsa sütun yanlış bir tarih yerine boş kalır ve Veri Yönetimi'ndeki alan eşlemesinden elle eşlenebilir.",
+        "en": "The Original Ex-F. column read the same ASAS field as Ex-factory, so it showed the revised date. It is now read from the \"Initial Inspection Geçme Tarih Gün Ay Yıl\" field in the ASAS Dates table. Existing ASAS connections map this field automatically on the next refresh; if the field cannot be found, the column stays empty instead of showing a wrong date and can be mapped manually in the Field Mapping of Data Management."
+      }
+    }
+  ]
 }

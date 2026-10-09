@@ -12016,7 +12016,7 @@ function parseASASWorkbook(wb){
       license: norm(g(row,'Lisans')), model: norm(g(row,'Model Adı')),
       productDescription:productDescriptionHeader?norm(g(row,productDescriptionHeader)):'',
       ex: yyyymmdd(g(row,'Orijinal Exfactory Merch Tarih')),
-      originalExFactoryDate: yyyymmdd(g(row,'Initial Inspection Geçme Tarih Gün Ay Yıl')),
+      originalExFactoryDate: yyyymmdd(g(row,'Initial Inspection Geçme Tarih Gün Ay Yıl')), // i18n-ignore — ASAS kaynak başlığı
       retail: yyyymmdd(g(row,'Retail Depo Tarih Yıl Ay Gün')),
       mb: yyyymmdd(g(row,'Model Bütçe Tarih Yıl Ay Gün')),
       opd: yyyymmdd(g(row,'Sipariş Yerleştirme MerchTarih')),
