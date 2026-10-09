@@ -21,4 +21,6 @@ Validation on Node 22: targeted file 4 pass / 1 skip / 3 TODO, ~6.1 seconds; soa
 
 The three counterexamples are now ordinary passing regressions. Foreign malformed heads fall back to actual package scanning without taking the device offline. Legacy events get a checksum of the filtered transport and additive gap coverage; first/last event sequence meanings remain unchanged. A retry validates/replaces an invalid or outdated own legacy file before closing its journal entry. Coverage is validated before any cached DB mutation, including batches/packages, and a duplicate event can durably supply new receipt coverage without reapplying its fields.
 
-The fix does not rewrite historically uploaded events automatically. Final validation: 6,277 passed / 66 skipped / zero failures or TODOs; targeted simulation 10 passed / 1 soak skip. Existing WAL, checkpoint and idempotency tests pass.
+The fix does not rewrite historically uploaded events automatically. Final validation: 6,278 passed / 66 skipped / zero failures or TODOs; targeted simulation 11 passed / 1 soak skip. Existing WAL, checkpoint and idempotency tests pass.
+
+A restored old pending retry cannot reduce the existing publication frontier; a delayed genuine published event still blocks the checkpoint until delivered (seed 4409).

@@ -161,3 +161,29 @@ test('duplicate legacy event accepts newly supplied gap coverage without reapply
   assert.equal((await db.read()).syncCheckpoints.foreign, 2);
   assert.equal((await db.read()).records['cp-order:COVER'].suppFob, 14);
 });
+
+test('restored pending legacy retry never covers an earlier genuinely published event', async t => {
+  const simulation = await createSimulation({ seed: 4409, devices: 2 });
+  t.after(() => simulation.close());
+  const [a, b] = simulation.devices;
+  await fsp.mkdir(path.join(a.mirror, 'BUYER_LOG_SYNC', 'changes', encodeURIComponent(b.id)), { recursive: true });
+  await a.db.queuePatch({ id: 'cp-order:OLD-RETRY', patch: { suppFob: 1 } });
+  await a.db.queuePatch({ id: 'cp-order:DELAYED-REAL', patch: { suppFob: 2 } });
+  const event2 = (await a.db.pending(10))[1];
+  await a.db.markSynced([event2.eventId]);
+  const folder = path.join(a.mirror, 'BUYER_LOG_SYNC', 'changes', encodeURIComponent(a.id));
+  await fsp.mkdir(folder, { recursive: true });
+  await fsp.writeFile(path.join(folder, '_head.json'), JSON.stringify({ deviceId: a.id, latestSequence: 2 }));
+  await a.db.queuePatch({ id: 'cp-order:LOCAL-GAP', patch: { notes: { Notes: 'private seq3' } } });
+  await a.db.queuePatch({ id: 'cp-order:NEW', patch: { suppFob: 4 } });
+  await a.sync.syncOnce(); await simulation.replicator.flush(); await b.sync.syncOnce();
+  let received = await b.db.read();
+  assert.equal(received.syncCheckpoints[a.id], 1, 'delayed shared seq2 must block contiguous receipt');
+  assert.equal(received.records['cp-order:DELAYED-REAL'], undefined);
+  const file2 = path.join(folder, `${String(2).padStart(12, '0')}-${encodeURIComponent(event2.eventId)}.ready`);
+  await fsp.writeFile(file2, JSON.stringify(event2));
+  await simulation.replicator.flush(); await b.sync.syncOnce();
+  received = await b.db.read();
+  assert.equal(received.records['cp-order:DELAYED-REAL'].suppFob, 2);
+  assert.equal(received.syncCheckpoints[a.id], 4);
+});

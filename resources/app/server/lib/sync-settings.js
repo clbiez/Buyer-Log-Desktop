@@ -571,7 +571,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
             networkBytesWritten += await writeHead(deviceRoot, deviceId, Number(item.localSequence) || 0, 1);
             await localDb.markSynced([item.eventId]);
             uploadedEvents++; uploadedPackages++; done++;
-            coverFromSeq = (Number(item.localSequence) || 0) + 1;
+            coverFromSeq = Math.max(coverFromSeq, (Number(item.localSequence) || 0) + 1);
           } catch (error) {
             uploadFailures++; uploadHalted = true;
             emit('SYNC_PACKAGE_UPLOAD_FAILED', { format: 1, eventId: item.eventId, sequence: item.localSequence, error: error && error.message || String(error) });
