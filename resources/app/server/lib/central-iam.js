@@ -212,11 +212,12 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     }
     return null;
   }
-  function apply(snapshot, local, audit) {
+  function apply(snapshot, local, audit, { adopted = false } = {}) {
     const sourceSha256 = digest(snapshot), syncedAt = new Date().toISOString();
     // A download can finish after a concurrent local commit. Recheck at the
     // synchronous apply boundary, not only before the asynchronous download.
-    revisionSafety({ revision: snapshot.revision, sha256: sourceSha256 }, readLocal());
+    // Yalnız Moderatörün açık "merkezi dizini esas al" kararı (adopt) bu tabanı aşar.
+    if (!adopted) revisionSafety({ revision: snapshot.revision, sha256: sourceSha256 }, readLocal());
     const cache = { ...storeFromSnapshot(snapshot, local), _centralIam: { iamRevision: snapshot.revision, sourceSha256, syncedAt, snapshot } };
     validateCache(cache);
     // The backup is a validated last-known-good, never a copy of a corrupt file.
@@ -370,6 +371,52 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     })().catch(e => { throw failed(e); }).finally(() => { pending = null; });
     return pending;
   }
+  /* MODERATÖR ONAYLI KURTARMA: "MERKEZİ DİZİNİ ESAS AL".
+
+     Otomatik yenileme bilerek durur: bu cihazın eski yerel listesi merkezle
+     uyuşmuyorsa (IAM_MIGRATION_CONFLICT), yerel taban merkezden yeniyse
+     (IAM_REMOTE_REVISION_REGRESSION — ör. Shared Hub değişti/geri yüklendi)
+     ya da aynı revizyon farklı içerik taşıyorsa (IAM_REVISION_HASH_CONFLICT).
+     Çıkış yolu yoktu; cihaz kalıcı olarak salt okunur kalıyordu.
+
+     adopt yalnız şu koşullarda çalışır:
+       · merkezin en yeni GEÇERLİ revizyonu okunup doğrulanabiliyor,
+       · işlemi yapan kişi o dizinde aktif ve kullanıcı yönetimi yetkili
+         (kimse yetkisi olmadığı bir dizini benimseyip kendini kilitleyemez),
+       · bu cihazın mevcut kullanıcı dosyası ve revizyon tabanı önce zaman
+         damgalı yedeğe kopyalanır (hiçbir şey silinmez).
+     Merkezdeki dizine YAZMAZ; yalnız bu cihazın önbelleğini merkezle hizalar. */
+  async function adopt({ actorId } = {}) {
+    if (pending) { try { await pending; } catch (_) {} }
+    if (!canApply()) throw error('IAM_RESTORE_IN_PROGRESS', 409);
+    const base = await root(), revisions = await listRevisions(base);
+    let candidate = null, snapshot = null, audit = null, firstError = null;
+    for (const name of revisions.slice(-MAX_REVISION_FALLBACK).reverse()) {
+      try {
+        const meta = await readMeta(base, name);
+        snapshot = await readSnapshot(meta); audit = await readRevisionAudit(meta); candidate = meta; break;
+      } catch (e) {
+        if (e.code !== 'IAM_REMOTE_INVALID') throw failed(e);
+        firstError = firstError || e; snapshot = null;
+      }
+    }
+    if (!candidate || !snapshot) throw failed(firstError || error('IAM_REMOTE_INVALID'));
+    const restored = storeFromSnapshot(snapshot);
+    const actor = profiles(restored).find(u => u.id === String(actorId || ''));
+    if (!actor || !actor.enabled || !iam.canAdminUsers(actor, restored)) throw error('IAM_ADOPT_ADMIN_REQUIRED', 403);
+    const stamp = new Date().toISOString().replace(/[-:.]/g, '');
+    const metaFile = cacheFile.replace(/\.json$/, '.meta.json');
+    const backups = [];
+    for (const file of [cacheFile, metaFile]) {
+      if (!fs.existsSync(file)) continue;
+      const target = file.replace(/\.json$/, `.pre-adopt-${stamp}.json`);
+      fs.copyFileSync(file, target, fs.constants.COPYFILE_EXCL); backups.push(path.basename(target));
+    }
+    let sidecar = {};
+    try { const parsed = JSON.parse(fs.readFileSync(cacheFile, 'utf8')); sidecar = { orderAccess: parsed.orderAccess || {}, scopeCatalog: parsed.scopeCatalog || {} }; } catch (_) {}
+    const applied = apply(snapshot, sidecar, audit, { adopted: true });
+    return { store: applied, revision: snapshot.revision, backups };
+  }
   async function preflight(timeoutMs = 1500, options = {}) {
     let timer;
     try { return await Promise.race([refresh(options), new Promise(resolve => { timer = setTimeout(() => { health.status = 'offline'; resolve(null); }, timeoutMs); })]); }
@@ -456,7 +503,7 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     const entries = (await fsp.readdir(path.join(base, 'revisions'))).filter(n => /^\d{16}$/.test(n)).sort().reverse().slice(0, Math.min(2000, limit));
     return Promise.all(entries.map(n => fsp.readFile(path.join(base, 'revisions', n, 'audit.json'), 'utf8').then(text => safeAudit(JSON.parse(text)))));
   }
-  return { cacheFile, metrics, readLocal, refresh, preflight, dryRun, readAudit, localAudit,
+  return { cacheFile, metrics, readLocal, refresh, preflight, adopt, dryRun, readAudit, localAudit,
     health: () => ({ ...health }),
     initialize: (store, actor) => publish(store, 0, actor, { action: 'IAM_INIT' }, true),
     commit: (store, revision, actor, event) => publish(store, revision, actor, event, false) };

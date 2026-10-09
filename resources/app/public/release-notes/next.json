@@ -45,6 +45,39 @@
       }
     },
     {
+      "id": "user-management-use-central-directory",
+      "type": "fix",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "Kalıcı salt okunur dizinden Moderatör onayıyla çıkış",
+        "en": "A Moderator-approved way out of a permanently read-only directory"
+      },
+      "path": {
+        "tr": "Kullanıcı & Yetki Yönetimi › Durum kartı › Merkezi Dizini Esas Al",
+        "en": "User & Authorization Management › Status card › Use Central Directory"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-use-central-directory.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında Merkezi Dizini Esas Al onay penceresi",
+          "en": "Use Central Directory confirmation dialog in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Yerel liste önce yedeklenir; merkezdeki dizine yazılmaz",
+          "en": "The local list is backed up first; the central directory is not written"
+        }
+      },
+      "body": {
+        "tr": "Bu cihazın yerel kullanıcı listesi merkezi dizinle uyuşmadığında, Shared Hub geri yüklenip revizyon gerilediğinde ya da aynı revizyon farklı içerikle görüldüğünde otomatik eşitleme kullanıcı kaybetmemek için duruyor ve cihaz kalıcı olarak salt okunur kalıyordu. Moderatör artık durum kartındaki Merkezi Dizini Esas Al ile bu cihazı merkezin en yeni geçerli revizyonuna hizalayabilir. İşlem açık onay ve gerekçe ister; yalnız merkezi dizinde aktif yönetici olan kişi yapabilir; bu cihazın kullanıcı dosyası önce zaman damgalı yedeğe kopyalanır; merkezdeki dizine yazılmaz ve diğer cihazlar etkilenmez.",
+        "en": "When this device's local user list differed from the central directory, when Shared Hub was restored and the revision went back, or when the same revision was seen with different content, automatic sync stopped to avoid losing users and the device stayed read-only permanently. A Moderator can now use Use Central Directory on the status card to align this device with the newest valid central revision. It requires an explicit confirmation and a reason; only someone who is an active administrator in the central directory can do it; this device's user file is first copied to a timestamped backup; the central directory is not written and other devices are not affected."
+      }
+    },
+    {
       "id": "user-management-default-horizon",
       "type": "feature",
       "module": {

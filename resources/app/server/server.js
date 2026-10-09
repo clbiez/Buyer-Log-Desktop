@@ -2301,6 +2301,7 @@ app.get('/api/users/admin', userAccess.requireUserAdmin, userAccess.adminListHan
 app.get('/api/iam/health', userAccess.iamHealthHandler);
 app.post('/api/iam/refresh', userAccess.requireUserAdmin, userAccess.iamRefreshHandler);
 app.get('/api/iam/migration/dry-run', userAccess.requireModerator, userAccess.iamDryRunHandler);
+app.post('/api/iam/adopt-central', userAccess.requireModerator, express.json({ limit: '16kb' }), userAccess.iamAdoptHandler);
 app.post('/api/iam/initialize', userAccess.requireModerator, express.json({ limit: '16kb' }), userAccess.iamInitializeHandler);
 app.post('/api/iam/users/bulk', userAccess.requireUserAdmin, express.json({ limit: '2mb' }), userAccess.adminBulkHandler);
 app.post('/api/users', userAccess.requireUserAdmin, express.json({ limit: '2mb' }), userAccess.adminCreateHandler);

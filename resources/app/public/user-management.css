@@ -428,3 +428,5 @@
 .umBundlePerms{ align-content:start; }
 .umFileBtn{ display:inline-flex; align-items:center; position:relative; overflow:hidden; }
 .umFileBtn input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.umDialog .umCheck{ display:flex; flex-direction:row; align-items:center; gap:8px; font-size:12px; font-weight:600; color:var(--ink); cursor:pointer; }
+.umDialog .umCheck input{ width:auto; height:auto; margin:0; flex:none; }

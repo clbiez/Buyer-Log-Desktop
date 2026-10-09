@@ -16,6 +16,7 @@ app.post('/api/iam/users/bulk', instance.requireUserAdmin, instance.adminBulkHan
 app.post('/api/iam/permissions/copy', instance.requireCapability('USER.GRANT'), instance.permissionCopyHandler);
 app.post('/api/iam/initialize', instance.requireModerator, instance.iamInitializeHandler);
 app.post('/api/iam/refresh', instance.requireUserAdmin, instance.iamRefreshHandler);
+app.post('/api/iam/adopt-central', instance.requireModerator, instance.iamAdoptHandler);
 app.post('/api/iam/horizon-defaults', instance.requireUserAdmin, instance.horizonDefaultsHandler);
 app.post('/api/iam/role-horizon-defaults', instance.requireCapability('ROLE.MANAGE'), instance.roleHorizonDefaultsHandler);
 app.post('/api/iam/role-bundles', instance.requireCapability('ROLE.MANAGE'), instance.roleBundleHandler);

@@ -2293,6 +2293,25 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       return res.json({ ...getCentralIam().dryRun(store), revision: store._revision });
     } catch (err) { return res.status(err.statusCode || 503).json({ error: 'IAM geçiş doğrulaması başarısız.', code: err.code }); }
   }
+  /* Moderatör onayıyla bu cihazı merkezi dizine hizalar (bkz. central-iam adopt).
+     Yerel dosya önce yedeklenir; merkezdeki dizine yazılmaz. */
+  async function iamAdoptHandler(req, res) {
+    try {
+      const body = req.body || {};
+      if (!centralConfigured) return res.status(409).json({ code: 'IAM_FEATURE_DISABLED', error: 'Central IAM yapılandırmada etkin değil.' });
+      if (body.confirmCritical !== true || !clean(body.reason)) return res.status(400).json({ error: 'Merkezi dizini esas almak için açık onay ve gerekçe gerekir.', code: 'CRITICAL_CONFIRMATION_REQUIRED' });
+      const actor = req.currentUser || sessionProfile(req);
+      const before = getCentralIam().health();
+      const result = await getCentralIam().adopt({ actorId: actor && actor.id });
+      storeCache = null;
+      appendAudit(actor, 'IAM_ADOPT_CENTRAL', 'iam', { reason: clean(body.reason), previousError: before.lastError || null, previousRevision: before.localRevision || 0, adoptedRevision: result.revision, backups: result.backups });
+      // Benimsenen dizindeki güncel revizyonlarla oturum sürer (kimlik bilgisi değiştiyse yeniden giriş gerekir).
+      if (typeof res.append === 'function' && findProfile(readStore(), actor.id)) setCookie(req, res, actor.id);
+      return res.json({ ok: true, revision: result.revision, backups: result.backups, centralIam: getCentralIam().health() });
+    } catch (err) {
+      return res.status(err.statusCode || 503).json({ error: err.code === 'IAM_ADOPT_ADMIN_REQUIRED' ? 'Merkezi dizinde aktif kullanıcı yönetimi yetkiniz yok; bu dizini esas alamazsınız.' : 'Merkezi dizin bu cihaza uygulanamadı.', code: err.code || 'IAM_ADOPT_FAILED', detail: err.detail || null });
+    }
+  }
   async function iamInitializeHandler(req, res) {
     try {
       if (!centralConfigured || req.body.confirmCritical !== true) return res.status(400).json({ error: 'Merkezi geçiş için açık onay gerekir.', code: 'CRITICAL_CONFIRMATION_REQUIRED' });
@@ -2386,7 +2405,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     roleBundleHandler: centralMutation(roleBundleHandler, 'ROLE.MANAGE'),
     iamExportHandler, iamImportPreviewHandler, iamImportHandler: centralMutation(iamImportHandler, 'USER.ADMIN'),
     temporaryGrantHandler: centralMutation(temporaryGrantHandler, 'USER.GRANT'), temporaryGrantRevokeHandler: centralMutation(temporaryGrantRevokeHandler, 'USER.GRANT'), auditListHandler,
-    iamHealthHandler, iamRefreshHandler, iamDryRunHandler, iamInitializeHandler,
+    iamHealthHandler, iamRefreshHandler, iamDryRunHandler, iamInitializeHandler, iamAdoptHandler,
     refreshIam: options => restoreActive ? Promise.resolve(null) : centralConfigured
       ? getCentralIam().preflight(Math.max(250, Number(options && options.timeoutMs) || 1500), options).then(async result => { await refreshOrderAuthority(); return result; })
       : Promise.resolve(null),

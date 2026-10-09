@@ -349,17 +349,17 @@
       text: T('Shared Hub’da kullanıcı dizini yok. Moderatör “Merkezi Geçişi Doğrula” ile bu cihazdaki kullanıcı listesini revizyon 1 olarak yayımlayabilir.',
         'There is no user directory in Shared Hub yet. A Moderator can publish this device’s user list as revision 1 with “Validate Central Migration”.') };
     if (code === 'IAM_MIGRATION_CONFLICT') return { title: T('Bu cihazdaki kullanıcı listesi merkezi dizinle uyuşmuyor', 'This device’s user list does not match the central directory'),
-      text: T('Kullanıcı kaybını önlemek için merkezi dizin bu cihaza otomatik uygulanmadı. Bu cihazdaki eski yerel liste merkezi dizinden farklı. Sistem yöneticinizle hangi listenin esas alınacağını netleştirin; karar verilmeden kaydetme açılmaz.',
-        'To prevent losing users, the central directory was not applied to this device automatically: the old local list here differs from it. Agree with your system administrator which list is authoritative; saving stays disabled until then.') };
+      text: T('Kullanıcı kaybını önlemek için merkezi dizin bu cihaza otomatik uygulanmadı: bu cihazdaki eski yerel liste merkezi dizinden farklı. Merkezi dizin doğruysa Moderatör “Merkezi Dizini Esas Al” ile bu cihazı ona hizalar; yerel liste önce yedeklenir.',
+        'To prevent losing users, the central directory was not applied to this device automatically: the old local list here differs from it. If the central directory is correct, a Moderator can align this device with “Use Central Directory”; the local list is backed up first.') };
     if (code === 'IAM_REVISION_CONFLICT' || (h.status === 'conflict' && !code)) return { title: T('Dizin başka bir yerde değişti', 'The directory changed elsewhere'),
       text: T('Başka bir yönetici kullanıcı dizinini güncelledi. Yeniden Dene ile güncel dizini alın; açık taslaklarınız yeniden yüklenir.',
         'Another administrator updated the user directory. Use Try Again to load the current directory; open drafts are reloaded.') };
     if (code === 'IAM_REMOTE_REVISION_REGRESSION') return { title: T('Merkezi dizin bu cihazın gördüğünden daha eski', 'The central directory is older than this device has seen'),
-      text: T('Shared Hub klasörü değişmiş ya da yedekten geri yüklenmiş olabilir. Güvenlik için eski dizin bu cihaza uygulanmadı. Veri Yönetimi › Senkron ayarındaki Shared Hub klasörünün doğru olduğunu kontrol edin.',
-        'The Shared Hub folder may have changed or been restored from a backup. For safety, the older directory was not applied to this device. Check that the Shared Hub folder in Data Management › Sync is correct.') };
+      text: T('Shared Hub klasörü değişmiş ya da yedekten geri yüklenmiş olabilir. Güvenlik için eski dizin bu cihaza uygulanmadı. Veri Yönetimi › Senkron ayarındaki klasör doğruysa Moderatör “Merkezi Dizini Esas Al” ile bu cihazı ona hizalayabilir.',
+        'The Shared Hub folder may have changed or been restored from a backup. For safety, the older directory was not applied to this device. If the folder in Data Management › Sync is correct, a Moderator can align this device with “Use Central Directory”.') };
     if (code === 'IAM_REVISION_HASH_CONFLICT') return { title: T('Aynı revizyon farklı içerikle görüldü', 'The same revision was seen with different content'),
-      text: T('Merkezi dizinde tutarsız bir revizyon var; güvenlik için uygulanmadı. Sistem yöneticinize bildirin.',
-        'The central directory contains an inconsistent revision; it was not applied for safety. Inform your system administrator.') };
+      text: T('Bu cihazın gördüğü revizyon merkezdekiyle aynı numarada ama farklı içerikte; güvenlik için uygulanmadı. Merkezi dizin doğruysa Moderatör “Merkezi Dizini Esas Al” ile bu cihazı ona hizalayabilir.',
+        'This device saw a revision with the same number but different content than the central one; it was not applied for safety. If the central directory is correct, a Moderator can align this device with “Use Central Directory”.') };
     if (code === 'IAM_RESTORE_IN_PROGRESS') return { title: T('Geri yükleme sürüyor', 'A restore is in progress'),
       text: T('Tam sistem geri yüklemesi bitene kadar kullanıcı dizini değiştirilemez.', 'The user directory cannot be changed until the full system restore finishes.') };
     if (['EPERM', 'EACCES', 'EBUSY'].includes(code)) return { title: T('Yerel kullanıcı önbelleği yazılamadı', 'The local user cache could not be written'),
@@ -372,6 +372,39 @@
       text: T('Kullanıcı dizini Shared Hub klasöründe tutulur ve şu an bu cihazdan okunamıyor. Ağ/VPN bağlantısını ve OneDrive eşitlemesini kontrol edin; Veri Yönetimi › Senkron ayarındaki klasörün bu cihazda açıldığından emin olun, sonra Yeniden Dene.',
         'The user directory lives in the Shared Hub folder and cannot be read from this device right now. Check the network/VPN connection and OneDrive sync, make sure the folder in Data Management › Sync opens on this device, then try again.') };
   }
+  // Moderatörün "merkezi dizini esas al" kararıyla çözülebilen durumlar.
+  const ADOPTABLE_IAM_ERRORS = ['IAM_MIGRATION_CONFLICT', 'IAM_REMOTE_REVISION_REGRESSION', 'IAM_REVISION_HASH_CONFLICT'];
+  /* MERKEZİ DİZİNİ ESAS AL. Otomatik eşitleme kullanıcı kaybetmemek için durur;
+     Moderatör merkezdeki dizinin doğru olduğuna karar verirse bu cihaz ona
+     hizalanır. Sunucu: merkezin en yeni geçerli revizyonu okunabilmeli, işlemi
+     yapan o dizinde aktif yönetici olmalı; bu cihazın dosyaları önce yedeklenir
+     ve merkezdeki dizine YAZILMAZ. */
+  function openAdoptDialog() {
+    const h = store.centralIam;
+    openDialog(T('Merkezi Dizini Esas Al', 'Use Central Directory'), `
+      <p class="umConfirmText">${esc(T('Bu cihazın kullanıcı listesi, Shared Hub’daki merkezi dizinin en yeni geçerli revizyonuyla değiştirilecek.', 'This device’s user list will be replaced with the newest valid revision of the central directory in Shared Hub.'))}</p>
+      <ul class="umPreviewList">
+        <li>${esc(T('Bu cihazdaki mevcut kullanıcı dosyası önce zaman damgalı bir yedeğe kopyalanır; hiçbir şey silinmez.', 'The current user file on this device is first copied to a timestamped backup; nothing is deleted.'))}</li>
+        <li>${esc(T('Merkezdeki dizin değişmez; diğer cihazlar etkilenmez.', 'The central directory does not change; other devices are not affected.'))}</li>
+        <li>${esc(T('Merkezi dizinde aktif kullanıcı yönetimi yetkiniz yoksa işlem reddedilir.', 'The action is refused if you are not an active user administrator in the central directory.'))}</li>
+        <li>${esc(T('Bu cihazda yalnız yerelde yapılmış ve merkeze hiç gitmemiş kullanıcı değişiklikleri yedekte kalır.', 'User changes made only locally on this device and never published centrally stay in the backup.'))}</li>
+      </ul>
+      <p class="umNote">${esc(T('Kod', 'Code'))}: ${esc(h.lastError || '—')}${h.lastErrorDetail ? ` (${esc(h.lastErrorDetail)})` : ''}</p>
+      <label class="umCheck"><input type="checkbox" name="confirm" required><span>${esc(T('Merkezi dizinin doğru olduğunu doğruluyorum.', 'I confirm the central directory is correct.'))}</span></label>
+      <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(T('Cihaz merkezi dizine hizalandı.', 'Device aligned with the central directory.'))}"></label>`, {
+      confirmLabel: T('Merkezi Dizini Esas Al', 'Use Central Directory'), danger: true,
+      onSubmit: async data => {
+        if (!data.get('confirm')) throw new Error(T('Devam etmek için onay kutusunu işaretleyin.', 'Tick the confirmation box to continue.'));
+        const result = await api('/api/iam/adopt-central', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ confirmCritical: true, reason: clean(data.get('reason')) }) });
+        closeDialog();
+        toast(T(`Bu cihaz merkezi dizine hizalandı (revizyon ${result.revision}). Yedek: ${list(result.backups).join(', ') || '—'}`, `This device is now aligned with the central directory (revision ${result.revision}). Backup: ${list(result.backups).join(', ') || '—'}`));
+        // Benimsenen dizinde parola farklıysa oturum yeniden giriş ister.
+        const current = await fetch('/api/current-user', { credentials: 'same-origin', cache: 'no-store' }).then(r => r.json()).catch(() => ({}));
+        if (!current.selected) { location.assign('/select-user.html'); return; }
+        await reload();
+      },
+    });
+  }
   function centralStatusHtml() {
     const h = store.centralIam;
     if (!h.enabled) return '';
@@ -380,6 +413,7 @@
     if (!issue) return `<div class="umIamBanner isSynced" data-um-iam-status role="status"><span class="umIamDot" aria-hidden="true"></span><span class="umNote"><b>${esc(T('Merkezi kullanıcı dizini eşit', 'Central user directory in sync'))}</b> · ${esc(meta)}</span>
       <button type="button" class="umBtn umBtnSmall umBtnGhost" data-act="iamRefresh" ${store.iamBusy ? 'disabled' : ''}>${esc(T('Yenile', 'Refresh'))}</button></div>`;
     const canInitialize = (h.status === 'uninitialized' || h.lastError === 'IAM_NOT_INITIALIZED') && store.actor && store.actor.systemRole === 'moderator';
+    const canAdopt = ADOPTABLE_IAM_ERRORS.includes(h.lastError) && store.actor && store.actor.systemRole === 'moderator';
     return `<div class="umIamBanner isBlocked" data-um-iam-status role="alert">
       <div class="umIamText">
         <b>${esc(issue.title)}</b>
@@ -390,6 +424,7 @@
       <div class="umIamActions">
         <button type="button" class="umBtn umBtnPrimary" data-act="iamRefresh" ${store.iamBusy ? 'disabled' : ''}>${esc(store.iamBusy ? T('Deneniyor…', 'Trying…') : T('Yeniden Dene', 'Try Again'))}</button>
         ${canInitialize ? `<button type="button" class="umBtn" data-act="iamInitialize">${esc(T('Merkezi Geçişi Doğrula', 'Validate Central Migration'))}</button>` : ''}
+        ${canAdopt ? `<button type="button" class="umBtn" data-act="iamAdopt">${esc(T('Merkezi Dizini Esas Al', 'Use Central Directory'))}</button>` : ''}
       </div></div>`;
   }
   /* Dizini sunucudan yeniden çeker. Onay yalnız kaybolacak bir rol taslağı
@@ -2171,6 +2206,7 @@
       case 'horizonAssign': openHorizonDefaultDialog(id ? [id] : [...store.selectedIds]); return;
       case 'horizonClear': openHorizonClearDialog(id); return;
       case 'iamInitialize': void initializeDirectory(); return;
+      case 'iamAdopt': openAdoptDialog(); return;
       case 'section':
         if (store.roleDirty && store.section === 'roles' && id !== 'roles' && !confirm(T('Rol yetkilerinde kaydedilmemiş değişiklikler var. Bırakılsın mı?', 'Role permissions have unsaved changes. Discard them?'))) return;
         if (id !== 'roles') { store.roleDirty = false; store.roleDraft = JSON.parse(JSON.stringify(store.roleDefinitions)); }
