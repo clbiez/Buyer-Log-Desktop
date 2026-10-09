@@ -4482,7 +4482,10 @@ async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
   }
 
   const normalizedItems = items.map(item => ({ item, normalized:{ key:collectionImageSyncPolicy.sharedImageKey(item, plmImageIngestLib.normalizeRequest(item).key) } })).filter(entry => entry.normalized.key);
-  const sharedKeys = normalizedItems.map(entry => 'collection:' + owner + ':' + entry.normalized.key);
+  const sharedKeys = [...new Set(normalizedItems.flatMap(entry => [
+    'collection:' + owner + ':' + entry.normalized.key,
+    ...(entry.item.plmId ? ['collection:' + owner + ':' + parseLib.plmImageKey(entry.item.plmId)] : []),
+  ]))];
   // Owner-scoped Collection assets may originate from PLM, ASAS or manual uploads.
   const records = await sharedModelImageStore.lookupMany(sharedKeys);
   const cache = readCollectionSharedImageCache();
@@ -4491,8 +4494,15 @@ async function syncCollectionWorkspaceImagesForUser(userId, ownerId) {
 
   for (const entry of normalizedItems) {
     const item = entry.item;
-    const record = records.get('collection:' + owner + ':' + entry.normalized.key) || null;
-    if (!record || record.status !== sharedImageStoreLib.STATUS_AVAILABLE) { missing += 1; continue; }
+    const record = records.get('collection:' + owner + ':' + entry.normalized.key)
+      || (item.plmId ? records.get('collection:' + owner + ':' + parseLib.plmImageKey(item.plmId)) : null)
+      || null;
+    if (!record || record.status !== sharedImageStoreLib.STATUS_AVAILABLE) {
+      // An implicit PLM candidate with no local imgRef is not a missing
+      // published asset. Do not show false missing-image warnings.
+      if (item.imageRef) missing += 1;
+      continue;
+    }
     available += 1;
     const cacheKey = collectionImageCacheKey(owner, item);
     const cached = cache.entries[cacheKey];
@@ -4604,8 +4614,12 @@ function collectionShareableImageKeys(userId, scope) {
   if (!owner || !collectionImageSyncPolicy.scopeUsesSharedImages(scope)) return new Set();
   if (!collectionImageSyncPolicy.shouldPublishOwnerImages(collectionPermissions.outgoing(owner), owner)) return new Set();
   try {
-    return collectionImageSyncPolicy.workspaceModelImageKeys(loadWorkspace(owner),
+    const keys = collectionImageSyncPolicy.workspaceModelImageKeys(loadWorkspace(owner),
       item => plmImageIngestLib.normalizeRequest(item).key);
+    // ASAS technical images use PLM-only keys; recipient may use that image
+    // as a fallback for any colour of the same authorized Collection model.
+    for (const key of [...keys]) keys.add(key.split('|')[0]);
+    return keys;
   } catch (error) {
     logRuntimeFailure('collectionSharedImageEligibility', error);
     return new Set();
