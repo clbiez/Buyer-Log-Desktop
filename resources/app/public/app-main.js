@@ -28376,7 +28376,7 @@ function kolPlmConfidenceLabel(score){
 }
 function showKolPlmTranslationReview(questions){
   const list=Array.isArray(questions)?questions:[];if(!list.length)return Promise.resolve({cancelled:false,mappings:[]});
-  const en=appLang==='en';
+  const en=appLang==='en',fieldsInReview=[...new Set(list.map(item=>item.field))];
   return new Promise(resolve=>{
     document.getElementById('_kolPlmTranslationReview')?.remove();
     const modal=document.createElement('div');modal.id='_kolPlmTranslationReview';modal.className='warnOverlay';
@@ -28388,7 +28388,7 @@ function showKolPlmTranslationReview(questions){
       const bestText=best?`${best.score}% · ${kolPlmConfidenceLabel(best.score)}`:(en?'No score':'Skor yok');
       return `<tr data-plm-question="${index}"><td><strong>${escapeHtml(item.label)}</strong>${item.conflict?`<div class="plmConflictTag">${escapeHtml(en?'ASAS conflict':'ASAS çelişkisi')}</div>`:''}${item.remembered?`<div class="plmRememberedTag">${escapeHtml(en?'Your last choice':'Son seçiminiz')}</div>`:''}</td><td>${escapeHtml(item.source)}</td><td><div class="plmCandidateList">${candidateHtml}<button type="button" class="plmCandidateBtn isKeepAsIs" data-plm-keep-index="${index}"><span>${escapeHtml(en?'Keep as is':'Olduğu gibi taşı')}</span><b>${escapeHtml(en?'PLM':'PLM')}</b></button></div><div class="muted" style="margin-top:5px">${escapeHtml((en?'Best similarity: ':'En iyi benzerlik: ')+bestText)}</div></td><td><input class="plmAsasChoice" data-plm-choice="${index}" list="_plmAsas_${item.field}" placeholder="${escapeHtml(en?'Choose an ASAS value, use Keep as is, or leave blank':'Bir ASAS değeri seçin, Olduğu gibi taşı kullanın veya boş bırakın')}"><div class="plmChoiceMeta"><span class="muted">${escapeHtml(en?'Only an exact value from the current ASAS catalog can be learned.':'Yalnız güncel ASAS kataloğundaki birebir bir değer öğrenilebilir.')}</span><span class="muted plmKeepHint">${escapeHtml(en?'“Keep as is” uses the PLM text and does not teach a translation rule; it is only preselected next time.':'“Olduğu gibi taşı” PLM metnini kullanır ve çeviri kuralı öğretmez; yalnız bir sonraki aktarımda işaretli gelir.')}</span></div></td></tr>`;
     }).join('');
-    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmTranslationCard"><div class="verHistHead"><div><strong>${escapeHtml(en?'Teach PLM → ASAS translations':'PLM → ASAS çevirilerini öğret')}</strong><div class="muted">${escapeHtml(en?'Buyer Log found PLM values it has never safely mapped before. The current ASAS database was scanned and the nearest candidates are ranked below. Nothing is applied automatically: choose the correct ASAS value once and Buyer Log will remember it for future imports. Your previous choices come preselected; you can still change them.':'Buyer Log daha önce güvenle eşleştirmediği PLM değerleri buldu. Güncel ASAS database tarandı ve en yakın adaylar aşağıda sıralandı. Hiçbir tahmin otomatik uygulanmaz: doğru ASAS değerini bir kez seçin; Buyer Log sonraki aktarımlarda bunu hatırlar. Önceki seçimleriniz işaretli gelir; isterseniz değiştirebilirsiniz.')}</div></div></div><div class="plmImportBody"><div class="plmLearningNotice">${escapeHtml(en?'High similarity is only a suggestion, not an automatic decision. Leaving a row blank keeps that PLM field unresolved for this import and it will not overwrite an existing Collection value.':'Yüksek benzerlik yalnız öneridir, otomatik karar değildir. Bir satırı boş bırakırsanız o PLM alanı bu aktarımda çözümsüz kalır ve Koleksiyon’daki mevcut değerin üzerine yazılmaz.')}</div><div class="plmTranslationActions"><button type="button" class="tbtn" data-plmreview="keepall">${escapeHtml(en?'Move all as in PLM':'PLM’de olduğu gibi taşı')}</button><button type="button" class="tbtn" data-plmreview="autofill">${escapeHtml(en?'Auto-match all suggestions':'Önerilerin tamamını otomatik eşleştir')}</button></div><div class="plmImportTableWrap"><table class="plmImportTable plmTranslationTable"><thead><tr><th>${escapeHtml(en?'Field':'Alan')}</th><th>${escapeHtml(en?'New PLM value':'Yeni PLM değeri')}</th><th>${escapeHtml(en?'Nearest ASAS candidates':'En yakın ASAS adayları')}</th><th>${escapeHtml(en?'Your approved mapping':'Onayladığınız eşleme')}</th></tr></thead><tbody>${rows}</tbody></table></div>${dataLists}</div><div class="verHistFoot"><button type="button" class="tbtn" data-plmreview="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn primary" data-plmreview="apply">${escapeHtml(en?'Continue with my choices':'Seçimlerimle devam et')}</button></div></div>`;
+    modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmTranslationCard"><div class="verHistHead"><div><strong>${escapeHtml(en?'Teach PLM → ASAS translations':'PLM → ASAS çevirilerini öğret')}</strong><div class="muted">${escapeHtml(en?'Buyer Log found PLM values it has never safely mapped before. The current ASAS database was scanned and the nearest candidates are ranked below. Nothing is applied automatically: choose the correct ASAS value once and Buyer Log will remember it for future imports. Your previous choices come preselected; you can still change them.':'Buyer Log daha önce güvenle eşleştirmediği PLM değerleri buldu. Güncel ASAS database tarandı ve en yakın adaylar aşağıda sıralandı. Hiçbir tahmin otomatik uygulanmaz: doğru ASAS değerini bir kez seçin; Buyer Log sonraki aktarımlarda bunu hatırlar. Önceki seçimleriniz işaretli gelir; isterseniz değiştirebilirsiniz.')}</div></div></div><div class="plmImportBody"><div class="plmLearningNotice">${escapeHtml(en?'High similarity is only a suggestion, not an automatic decision. Leaving a row blank keeps that PLM field unresolved for this import and it will not overwrite an existing Collection value.':'Yüksek benzerlik yalnız öneridir, otomatik karar değildir. Bir satırı boş bırakırsanız o PLM alanı bu aktarımda çözümsüz kalır ve Koleksiyon’daki mevcut değerin üzerine yazılmaz.')}</div><div class="plmTranslationActions"><button type="button" class="tbtn" data-plmreview="keepall">${escapeHtml(en?'Move all as in PLM':'PLM’de olduğu gibi taşı')}</button><button type="button" class="tbtn" data-plmreview="autofill">${escapeHtml(en?'Auto-match all suggestions':'Önerilerin tamamını otomatik eşleştir')}</button></div><div class="plmImportTableWrap"><table class="plmImportTable plmTranslationTable"><thead><tr><th>${escapeHtml(en?'Field':'Alan')}</th><th>${escapeHtml(en?'New PLM value':'Yeni PLM değeri')}</th><th>${escapeHtml(en?'Nearest ASAS candidates':'En yakın ASAS adayları')}</th><th>${escapeHtml(en?'Your approved mapping':'Onayladığınız eşleme')}</th></tr></thead><tbody>${rows}</tbody></table></div>${dataLists}</div><div class="verHistFoot"><button type="button" class="tbtn" data-plmreview="cancel">${escapeHtml(en?'Cancel import':'Aktarımı iptal et')}</button><button type="button" class="tbtn" data-plmreview="skip" title="${escapeHtml(en?'Continue without changing or learning mappings for the fields shown here':'Bu pencerede görünen alanları değiştirmeden ve eşleme öğretmeden devam et')}">${escapeHtml(fieldsInReview.length>1?(en?'Skip these fields':'Bu alanları atla'):(en?'Skip this field':'Bu alanı atla'))}</button><button type="button" class="tbtn primary" data-plmreview="apply">${escapeHtml(en?'Continue with my choices':'Seçimlerimle devam et')}</button></div></div>`;
     document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
@@ -28419,6 +28419,7 @@ function showKolPlmTranslationReview(questions){
     modal.addEventListener('click',event=>{
       const action=event.target.closest('[data-plmreview]');if(!action)return;
       if(action.dataset.plmreview==='cancel'){finish({cancelled:true,mappings:[]});return;}
+      if(action.dataset.plmreview==='skip'){finish({cancelled:false,mappings:[],skippedFields:fieldsInReview});return;}
       if(action.dataset.plmreview==='keepall'){
         list.forEach((item,index)=>setChoiceMode(index,'keep'));
         showToast(en?'All unresolved PLM values will be moved as-is for this import.':'Tüm çözümsüz PLM değerleri bu aktarımda PLM’de olduğu gibi taşınacak.');
@@ -28466,6 +28467,31 @@ function kolPlmApplyReviewedMappings(rows,mappings,translationInfo){
   }));
   if(translationInfo)translationInfo.reviewedMappings=list.filter(item=>!item.clear).map(item=>({...item,conflict:false,userApproved:!item.keepAsIs,keptAsIs:!!item.keepAsIs,evidence:1,support:1,total:1,alternatives:[]}));
   return list.length;
+}
+
+
+/* "Bu alanı atla" eşleştirmeyi öğretmeden devam eder. Modalda listelenen
+   alanların TÜM satırlardaki (önceden tanınanlar dahil) PLM değerlerini bu
+   aktarım için yok say; diğer alanlar aynı plan/yazma yolunda devam etsin. */
+function kolPlmSkipTranslationFields(rows,fields,translationInfo){
+  const specs={category:{source:'categoryRaw',target:'urunTipi'},license:{source:'brandToken',target:'lisans'},productMainDefinition:{source:'productMainDefinition',target:'productMainDefinition'}};
+  const skipped=[...new Set(Array.isArray(fields)?fields:[])].filter(field=>Object.prototype.hasOwnProperty.call(specs,field));
+  if(!skipped.length)return 0;
+  let skippedValues=0;
+  (rows||[]).forEach(row=>{
+    if(!row)return;
+    skipped.forEach(field=>{
+      const spec=specs[field],source=norm(row._plmSource&&row._plmSource[spec.source]);
+      if(!source)return;
+      row[spec.target]=''; // Empty import values never overwrite existing Collection fields.
+      row._plmTranslations={...(row._plmTranslations||{}),[field]:{source,target:'',mode:'skipped'}};
+      // Do not overwrite saved PLM source metadata for the skipped field either.
+      delete row._plmSource[spec.source];
+      skippedValues++;
+    });
+  });
+  if(translationInfo){translationInfo.skippedFields=skipped;translationInfo.reviewedMappings=[];}
+  return skippedValues;
 }
 
 function kolPlmUniqueAsasValues(orders,prop){
@@ -28690,7 +28716,8 @@ async function kolPlmNormalizeAndTranslate(records,{reviewRemembered=true}={}){
   if(questions.length){
     const review=await showKolPlmTranslationReview(questions);
     if(review.cancelled)return {rows:null,cancelled:true};
-    kolPlmApplyReviewedMappings(rows,review.mappings,translationInfo);
+    if(review.skippedFields?.length)kolPlmSkipTranslationFields(rows,review.skippedFields,translationInfo);
+    else kolPlmApplyReviewedMappings(rows,review.mappings,translationInfo);
   }
   return {rows,cancelled:false,translationInfo};
 }
@@ -30041,7 +30068,8 @@ async function importKolPlmExcelFile(file){
     const translationInfo=kolPlmApplyAsasTranslations(parsed.rows,inferredTranslations);
     const translationQuestions=kolPlmTranslationQuestions(parsed.rows);
     const translationReview=await showKolPlmTranslationReview(translationQuestions);if(translationReview.cancelled)return;
-    kolPlmApplyReviewedMappings(parsed.rows,translationReview.mappings,translationInfo);
+    if(translationReview.skippedFields?.length)kolPlmSkipTranslationFields(parsed.rows,translationReview.skippedFields,translationInfo);
+    else kolPlmApplyReviewedMappings(parsed.rows,translationReview.mappings,translationInfo);
     const plan=kolBuildPlmImportPlan(parsed.rows);
     const approved=await showKolPlmImportPreview(plan,parsed,translationInfo,images.size);if(!approved)return;
     // Mevcut PLM ID'ler için hiçbir veri yazmadan önce kararları tek tek topla.
