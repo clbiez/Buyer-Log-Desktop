@@ -61,7 +61,8 @@ test('real ASAS productDescription takes precedence over previously approved PMD
     'kolPlmInferTranslationSuggestions', 'kolPlmIsDirectField', 'kolPlmUniqueAsasValues',
     'kolPlmTranslate', 'kolPlmNormalizeId', 'turknorm', 'norm',
     source + '\nreturn kolPlmApplyAsasTranslations;')(
-    () => new Map([['200', [{ productDescription: 'Tank Top' }]]]),
+    () => new Map([['200', [{ productDescription: 'Tank Top' }]],
+      ['202', [{ productDescription: 'Tank Top' }, { productDescription: 'Sweatshirt' }]]]),
     () => new Map(),
     () => ({ suggestions: [] }),
     field => field === 'line',
@@ -70,12 +71,16 @@ test('real ASAS productDescription takes precedence over previously approved PMD
     norm, turknorm, norm);
   const row = plmId => ({ plmId, modelKod: 'MODEL-1', productMainDefinition: '',
     _plmSource: { productMainDefinition: 'TANK TOP' } });
-  const exact = row('200'), approved = row('201');
-  translate([exact, approved], { suggestions: [] });
+  const exact = row('200'), approved = row('201'), conflicting = row('202');
+  // A prior mapping may have prefilled a value before exact ASAS evidence is read.
+  conflicting.productMainDefinition = 'Sweatshirt';
+  translate([exact, approved, conflicting], { suggestions: [] });
   assert.equal(exact.productMainDefinition, 'Tank Top');
   assert.equal(exact._plmTranslations.productMainDefinition.mode, 'exact-plm');
   assert.equal(approved.productMainDefinition, 'Sweatshirt');
   assert.equal(approved._plmTranslations.productMainDefinition.mode, 'approved-rule');
+  assert.equal(conflicting.productMainDefinition, '', 'ASAS conflicts must not leak prefilled rules');
+  assert.equal(conflicting._plmTranslations.productMainDefinition.mode, 'conflict');
   assert.match(APP, /productMainDefinition:'productMainDefinition'/);
 });
 
