@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.264",
-  "commit_sha": "93ca29f91ea6b9f563a530edcc2cef405cb225cb",
-  "release_notes": "Buyer Log 7.0.264 STABLE: Yeni sürüm ilk açılışta yavaş başlasa da health-timeout ile geri alınmıyor; sağlık onayı sunucu yanıt verdiğinde veriliyor. Masaüstü OAB girişi GetReportData ile doğrulanıyor ve veri tabloya geliyor. PR #441, #445, #447 ve TEST build+sign+remote verification başarılı.",
-  "request_id": "7.0.264-stable-r1"
+  "version": "7.0.265",
+  "commit_sha": "fed7554576550add8461d75dfe157b6d0623e248",
+  "release_notes": "Buyer Log 7.0.265 STABLE: CP/Orders Original Ex-F. sütunu ASAS Dates tablosundaki ilk tarihten okunuyor ve Ex-factory revizyonundan bağımsız. Kullanılmayan kod temizliği (61 fonksiyon, geri dönüş yedeğiyle). PR #453, #454, #455 ve TEST build+sign+remote verification başarılı.",
+  "request_id": "7.0.265-stable-r1"
 }
