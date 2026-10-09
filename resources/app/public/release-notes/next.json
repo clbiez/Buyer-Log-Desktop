@@ -76,6 +76,39 @@
         "tr": "Kullanıcılar arasında artık yalnız CP Ex-Factory revizeleri, CP Sub-Manufacturer ve Supp. FOB bilgileri ile Manufacturers e-posta rehberi paylaşılır; koleksiyonlar kendi sahip bazlı aktarımıyla gelmeye devam eder. CP notları, teslim tipi, shortage ve kişisel dosyalar (sevkiyat karşılaştırması, açık maliyet, şablonlar, fiyat talepleri) bilgisayarda kalır. Yerel kalan değişiklikler \"bekleyen\" sayılmaz, zaten uygulanmış paketler yeniden indirilmez ve tam doğrulama 45 saniye yerine 30 dakikada bir çalışır; seçilen sync aralığına uyulur.",
         "en": "Only CP Ex-Factory revisions, CP Sub-Manufacturer and Supp. FOB details and the Manufacturers e-mail directory are now shared between users; collections continue to arrive through their own owner-based transfer. CP notes, delivery type, shortage and personal files (shipping comparison, open costing, templates, price requests) stay on the computer. Local-only changes are not counted as waiting, packages that were already applied are not downloaded again, and the full check runs every 30 minutes instead of every 45 seconds; the selected sync interval is honoured."
       }
+    },
+    {
+      "id": "collection-text-fit-row-height",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Uzun metinler hücrede yarım satır kesilmiyor",
+        "en": "Long text is no longer cut off mid-line in cells"
+      },
+      "path": {
+        "tr": "Sol menü › Koleksiyon",
+        "en": "Left menu › Collection"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-text-fit-row-height.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: Kumaş hücrelerinde iki satıra sarılan metin tam görünüyor, tek satırlı metin dikeyde ortalı — demo verili Buyer Log ekranı",
+          "en": "Collection table: text wrapping to two lines in Fabric cells is fully visible, single-line text is vertically centered — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Metin, satırın gerçek yüksekliğini tam satırlar halinde kullanır",
+          "en": "Text uses the row's real height in whole lines"
+        }
+      },
+      "body": {
+        "tr": "Kumaş, Artwork Detayı gibi metin hücreleri satır yüksekliğinden bağımsız olarak tek satırlık sabit bir alanda çiziliyordu; ikinci satır yarıdan kesik görünüyordu. Metin artık satırın gerçekten kullanılabilen yüksekliğine göre tam satırlar halinde gösterilir, tek satırlı metin dikeyde ortalı kalır. Satıra sığmayan metin, hücre düzenlenirken kaydırılarak okunabilir.",
+        "en": "Text cells such as Fabric and Artwork Detail were drawn in a fixed one-line box regardless of row height, so the second line looked cut in half. Text now uses the row's actually available height in whole lines, and single-line text stays vertically centered. Text that does not fit the row can be scrolled while editing the cell."
+      }
     }
   ]
 }

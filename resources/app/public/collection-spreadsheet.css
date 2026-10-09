@@ -184,13 +184,39 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody :is(input.editCell,select.editCell){
   line-height:18px!important;
 }
+/* v20261009 — Collection text fit contract
+   Textarea editors are sized to their own text (field-sizing) and centered by the
+   cell, so a single line stays vertically centered while wrapped text uses the
+   row's real drawing height (--kol-text-h) instead of a fixed one-line box. The
+   cap is snapped to whole lines, so a line is never shown half-clipped; text
+   beyond the cap stays scrollable while editing. */
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody textarea.editCell{
-  height:28px!important;
-  min-height:28px!important;
-  line-height:18px!important;
-  padding-top:5px!important;
-  padding-bottom:5px!important;
+  --kol-text-lh:max(16px,calc(var(--kol-cell-fs,12px) + 4px));
+  --kol-text-fit-h:max(calc(var(--kol-text-lh) + 4px),calc(var(--kol-text-h,28px) - 6px));
+  height:var(--kol-text-fit-h)!important;
+  min-height:calc(var(--kol-text-lh) + 4px)!important;
+  max-height:var(--kol-text-fit-h)!important;
+  line-height:var(--kol-text-lh)!important;
+  padding-top:2px!important;
+  padding-bottom:2px!important;
   margin:0!important;
+  overflow:hidden!important;
+  scrollbar-width:none;
+}
+@supports (width:round(down,10px,1px)){
+  #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody textarea.editCell{
+    --kol-text-fit-h:max(calc(var(--kol-text-lh) + 4px),calc(round(down,var(--kol-text-h,28px) - 6px,var(--kol-text-lh)) + 4px));
+  }
+}
+@supports (field-sizing:content){
+  #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody textarea.editCell{
+    field-sizing:content;
+    height:auto!important;
+  }
+}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody textarea.editCell:focus{
+  overflow-y:auto!important;
+  scrollbar-width:thin;
 }
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant textarea.editCell{
   height:calc(var(--kol-variant-row-h,27px) - 2px)!important;
