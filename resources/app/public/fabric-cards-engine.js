@@ -81,6 +81,35 @@
   var FINISH_RX = /(reaktif|reactive|dispers|pigment|bask[ıi]|print|boya|dyed|enzim|enzyme|silikon|silicone|apre|finish|y[ıi]kama|wash|sardon|brushed|melanj|melange)/i; // i18n-ignore
   var SUSTAIN_RX = /(s[üu]rd[üu]r[üu]lebilir|sustainab|organi[ck]|recycled|geri d[öo]n[üu][şs][üu]ml[üu]|bci)/i; // i18n-ignore
 
+  /* Kural kartının iki dilli özeti için kumaş terimleri sözlüğü.
+     [Türkçe, İngilizce]; uzun terim önce eşleşir. */
+  var TERMS = [
+    ['Geri Dönüşümlü Pamuk', 'Recycled Cotton'], ['Geri Dönüşümlü Polyester', 'Recycled Polyester'], ['Organik Pamuk', 'Organic Cotton'], // i18n-ignore
+    ['İki İplik', 'Two Thread'], ['Üç İplik', 'Three Thread'], ['Süprem', 'Single Jersey'], ['Ribana', 'Rib'], ['Kaşkorse', 'Rib'], // i18n-ignore
+    ['Interlok', 'Interlock'], ['Pike', 'Pique'], ['Polar', 'Fleece'], ['Havlu', 'Terry'], ['Petek', 'Waffle'], ['Dalgıç', 'Scuba'], // i18n-ignore
+    ['Kadife', 'Velvet'], ['Triko', 'Knitwear'], ['Örme', 'Knit'], ['Dokuma', 'Woven'], ['Pamuk', 'Cotton'], ['Poliester', 'Polyester'], // i18n-ignore
+    ['Elastan', 'Elastane'], ['Viskon', 'Viscose'], ['Viskoz', 'Viscose'], ['Keten', 'Linen'], ['Yün', 'Wool'], ['Akrilik', 'Acrylic'], // i18n-ignore
+    ['Poliamid', 'Polyamide'], ['Organik', 'Organic'], ['Penye', 'Combed'], ['Karde', 'Carded'], ['Denye', 'Denier'], // i18n-ignore
+  ];
+  function escapeRx(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  function translateTerms(text, lang) {
+    var from = lang === 'en' ? 0 : 1, to = lang === 'en' ? 1 : 0;
+    var pairs = TERMS.slice().sort(function (a, b) { return b[from].length - a[from].length; });
+    var out = String(text == null ? '' : text);
+    var marks = [];
+    pairs.forEach(function (pair) {
+      if (pair[0] === pair[1]) return;
+      var rx = new RegExp('(^|[^A-Za-zÇĞİÖŞÜçğıöşü])(' + escapeRx(pair[from]) + ')(?![A-Za-zÇĞİÖŞÜçğıöşü])', 'gi'); // i18n-ignore
+      out = out.replace(rx, function (all, lead) { marks.push(pair[to]); return lead + '\u0001' + (marks.length - 1) + '\u0002'; });
+    });
+    out = out.replace(/\u0001(\d+)\u0002/g, function (_, index) { return marks[Number(index)]; });
+    // Yüzde yazımı: TR "%100 Pamuk", EN "100% Cotton".
+    return lang === 'en'
+      ? out.replace(/%\s*(\d{1,3}(?:[.,]\d+)?)\s*/g, '$1% ').replace(/(\d)%(?=[A-Za-z])/g, '$1% ')
+      : out.replace(/(\d{1,3}(?:[.,]\d+)?)\s*%\s*/g, '%$1 ');
+  }
+  function languageSummary(summary, lang) { return limit(translateTerms(summary, lang).replace(/\s+·/g, ' ·'), SUMMARY_MAX); }
+
   /* Deterministik kural kartı: LCW AI erişilemezse ya da önerisi
      doğrulanamazsa kullanılır. Değer uydurmaz; bulamadığını boş bırakır. */
   function ruleCard(raw) {
@@ -109,7 +138,7 @@
     DETAIL_FIELDS.forEach(function (key) { details[key] = limit(details[key], DETAIL_MAX); });
     var summary = [details.type || details.category, details.yarn, details.weight, details.composition].filter(Boolean).join(' · ');
     if (!summary) summary = tokens.slice(0, 3).join(', ');
-    return { code: codeOf(raw), summary: limit(summary, SUMMARY_MAX), details: details, summarySource: 'rule' };
+    return { code: codeOf(raw), summary: languageSummary(summary, 'tr'), summaryEn: languageSummary(summary, 'en'), details: details, summarySource: 'rule' };
   }
 
   /* LCW AI bağlamı: her kod için kaynak PLM metni (boyut sınırlı). */
@@ -157,14 +186,17 @@
       if (cards[code]) return;
       var raw = wanted.get(code), present = numberSet(raw);
       var summary = clean(parsed.summary);
+      var summaryEn = clean(parsed.summaryen || parsed.summary_en);
       if (!summary) { rejected.push({ code: code, reason: 'empty-summary' }); return; }
       if (!numbersSupported(summary, present)) { rejected.push({ code: code, reason: 'unsupported-number' }); return; }
+      // İngilizce özet doğrulanamazsa Türkçe özetin sözlük çevirisi kullanılır.
+      if (!summaryEn || !numbersSupported(summaryEn, present)) summaryEn = translateTerms(summary, 'en');
       var details = {};
       DETAIL_FIELDS.forEach(function (key) {
         var value = clean(parsed[key]);
         details[key] = value && numbersSupported(value, present) ? limit(value, DETAIL_MAX) : '';
       });
-      cards[code] = { code: code, summary: limit(summary, SUMMARY_MAX), details: details, summarySource: 'ai', raw: raw };
+      cards[code] = { code: code, summary: limit(summary, SUMMARY_MAX), summaryEn: limit(summaryEn, SUMMARY_MAX), details: details, summarySource: 'ai', raw: raw };
     });
     wanted.forEach(function (raw, code) {
       if (!cards[code]) cards[code] = Object.assign(ruleCard(raw), { code: code, raw: raw });
@@ -181,21 +213,29 @@
     DETAIL_FIELDS.forEach(function (key) { details[key] = limit(source.details && source.details[key], DETAIL_MAX); });
     var summary = limit(source.summary, SUMMARY_MAX);
     if (!summary) return null;
+    var summaryEn = limit(source.summaryEn, SUMMARY_MAX) || languageSummary(summary, 'en');
     var origin = clean(source.summarySource);
     return {
       code: code,
       summary: summary,
+      summaryEn: summaryEn,
       details: details,
       summarySource: origin === 'ai' || origin === 'rule' || origin === 'manual' ? origin : 'manual',
       raw: clean(source.raw).slice(0, 4000),
     };
   }
 
-  /* Tabloda görünen metin: kart varsa özet, yoksa PLM metninin kendisi. */
-  function displayText(raw, cards) {
+  /* Kartın aktif dildeki özeti (EN yoksa TR). */
+  function summaryFor(card, lang) {
+    if (!card) return '';
+    // Eski (yalnız TR özetli) kartta EN görünüm sözlük çevirisine düşer.
+    return lang === 'en' ? clean(card.summaryEn) || (card.summary ? languageSummary(card.summary, 'en') : '') : clean(card.summary) || clean(card.summaryEn);
+  }
+  /* Tabloda görünen metin: kart varsa aktif dildeki özet, yoksa PLM metni. */
+  function displayText(raw, cards, lang) {
     var code = codeOf(raw);
     var card = code && cards && typeof cards.get === 'function' ? cards.get(code) : (code && cards ? cards[code] : null);
-    return card && card.summary ? card.summary : clean(raw);
+    return summaryFor(card, lang) || clean(raw);
   }
 
   /* Satırlardan kartı olmayan kodları toplar (kod başına ilk PLM metni). */
@@ -225,6 +265,8 @@
     parseLine: parseLine,
     validateAiCards: validateAiCards,
     normalizeCard: normalizeCard,
+    translateTerms: translateTerms,
+    summaryFor: summaryFor,
     displayText: displayText,
     missingCodes: missingCodes,
   });

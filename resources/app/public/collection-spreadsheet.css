@@ -247,9 +247,10 @@
 #kolTable tbody td.kolFabricTd:not(.hasCard) .kolFabricText{color:var(--ink2)}
 #kolTable tbody td.kolFabricTd:hover .kolFabricCell{background:color-mix(in srgb,var(--acc) 8%,transparent)}
 .kolFabricCardModal{width:min(760px,calc(100vw - 32px))}
-.kolFabricBatchModal{width:min(1080px,calc(100vw - 32px))}
-.kolFabricSummaryRow{display:flex;align-items:center;gap:8px}
-.kolFabricSummaryRow input{flex:1;min-width:0}
+.kolFabricBatchModal{width:min(1240px,calc(100vw - 32px))}
+.kolFabricSummaryHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.kolFabricSummaries{grid-template-columns:repeat(2,minmax(0,1fr))}
+@media (max-width:640px){.kolFabricSummaries{grid-template-columns:1fr}}
 .kolFabricSource{flex:none;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
 .kolFabricSource.is-ai{border-color:var(--acc-lite);color:var(--acc-ink);background:var(--acc-bg)}
 .kolFabricSource.is-manual{border-color:var(--line2);color:var(--ink)}
@@ -261,6 +262,6 @@
 .kolFabricBatchTable th,.kolFabricBatchTable td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
 .kolFabricBatchTable thead th{position:sticky;top:0;background:var(--card2,var(--bg));z-index:1;font-weight:600}
 .kolFabricBatchCode{font-weight:600;white-space:nowrap}
-.kolFabricBatchSummary{width:100%;min-width:220px}
-.kolFabricBatchRaw{max-width:360px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kolFabricBatchSummary{width:100%;min-width:250px}
+.kolFabricBatchRaw{max-width:240px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:720px){.kolFabricBatchRaw{display:none}}

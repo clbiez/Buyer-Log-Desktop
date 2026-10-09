@@ -29129,17 +29129,19 @@ function kolFabricCardsSave(items,{onlyMissing=false}={}){
 function kolFabricCardDelete(code){
   return kolFabricCardsRequest(`/api/fabric-cards/${encodeURIComponent(code)}`,{method:'DELETE'});
 }
+/* Kartın aktif dildeki özeti: TR "Süprem · …", EN "Single Jersey · …". */
+function kolFabricSummary(card){return kolFabricApi()?.summaryFor(card,appLang==='en'?'en':'tr')||'';}
 /* Filtre ve düz metin görünümü: "3859 · Süprem · 30/1 Ne · 150 gsm · %100 Pamuk". */
 function kolFabricDisplay(raw){
   const code=kolFabricCodeOf(raw),card=code?kolFabricCards.get(code):null;
-  return card?`${code} · ${card.summary}`:norm(raw);
+  return card?`${code} · ${kolFabricSummary(card)}`:norm(raw);
 }
 function kolFabricCellHtml(row,val,rc){
-  const en=appLang==='en',raw=String(val||''),code=kolFabricCodeOf(raw),card=kolFabricCards.get(code);
+  const en=appLang==='en',raw=String(val||''),code=kolFabricCodeOf(raw),card=kolFabricCards.get(code),summary=kolFabricSummary(card);
   const title=card
-    ?(en?`Fabric card ${code}: ${card.summary}\nDouble-click to see the PLM fabric information and edit the card.`:`Kumaş kartı ${code}: ${card.summary}\nPLM kumaş bilgisini görmek ve kartı düzenlemek için çift tıklayın.`)
+    ?(en?`Fabric card ${code}: ${summary}\nDouble-click to see the PLM fabric information and edit the card.`:`Kumaş kartı ${code}: ${summary}\nPLM kumaş bilgisini görmek ve kartı düzenlemek için çift tıklayın.`)
     :(en?`No fabric card for ${code} yet.\nDouble-click to create one.`:`${code} için henüz kumaş kartı yok.\nOluşturmak için çift tıklayın.`);
-  return `<td class="editTd kolFabricTd${card?' hasCard':''}"${rc} data-fabric-id="${row.id}" title="${escapeHtml(title)}"><div class="kolFabricCell" aria-hidden="true"><span class="kolFabricCode">${escapeHtml(code)}</span><span class="kolFabricText">${escapeHtml(card?card.summary:raw)}</span></div></td>`;
+  return `<td class="editTd kolFabricTd${card?' hasCard':''}"${rc} data-fabric-id="${row.id}" title="${escapeHtml(title)}"><div class="kolFabricCell" aria-hidden="true"><span class="kolFabricCode">${escapeHtml(code)}</span><span class="kolFabricText">${escapeHtml(card?summary:raw)}</span></div></td>`;
 }
 function kolFabricSourceLabel(source){
   const en=appLang==='en';
@@ -29196,7 +29198,7 @@ function showKolFabricBatchPreview(items,analysis){
     const modal=document.createElement('div');modal.id='_kolFabricBatchModal';modal.className='warnOverlay';
     const rows=items.map((item,index)=>{
       const card=analysis.cards[item.code]||kolFabricApi().ruleCard(item.raw);
-      return `<tr><td><input type="checkbox" data-fabric-pick="${index}" checked aria-label="${escapeHtml(en?`Create card ${item.code}`:`${item.code} kartını oluştur`)}"></td><td class="kolFabricBatchCode">${escapeHtml(item.code)}</td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary="${index}" value="${escapeHtml(card.summary)}"></td><td><span class="kolFabricSource is-${escapeHtml(card.summarySource)}" data-fabric-source="${index}">${escapeHtml(kolFabricSourceLabel(card.summarySource))}</span></td><td class="kolFabricBatchRaw" title="${escapeHtml(item.raw)}">${escapeHtml(item.raw)}</td></tr>`;
+      return `<tr><td><input type="checkbox" data-fabric-pick="${index}" checked aria-label="${escapeHtml(en?`Create card ${item.code}`:`${item.code} kartını oluştur`)}"></td><td class="kolFabricBatchCode">${escapeHtml(item.code)}</td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary="${index}" lang="tr" aria-label="${escapeHtml(en?`Turkish summary ${item.code}`:`${item.code} Türkçe özet`)}" value="${escapeHtml(card.summary)}"></td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary-en="${index}" lang="en" aria-label="${escapeHtml(en?`English summary ${item.code}`:`${item.code} İngilizce özet`)}" value="${escapeHtml(card.summaryEn||'')}"></td><td><span class="kolFabricSource is-${escapeHtml(card.summarySource)}" data-fabric-source="${index}">${escapeHtml(kolFabricSourceLabel(card.summarySource))}</span></td><td class="kolFabricBatchRaw" title="${escapeHtml(item.raw)}">${escapeHtml(item.raw)}</td></tr>`;
     }).join('');
     const ruleCount=items.length-analysis.aiCount;
     const notice=analysis.errorText
@@ -29204,9 +29206,9 @@ function showKolFabricBatchPreview(items,analysis){
       :`<div class="plmExistingNotice">${escapeHtml(en?`LCW AI analysed ${analysis.aiCount} fabric code(s)${ruleCount?`; ${ruleCount} use a rule-based summary because the AI suggestion could not be verified against the PLM text`:''}.`:`LCW AI ${analysis.aiCount} kumaş kodunu analiz etti${ruleCount?`; ${ruleCount} kodun AI önerisi PLM metniyle doğrulanamadığı için kural tabanlı özet kullanıldı`:''}.`)}</div>`;
     modal.innerHTML=`<div class="modalCard verHistCard plmImportCard kolFabricCardModal kolFabricBatchModal" role="dialog" aria-modal="true" aria-labelledby="_kolFabricBatchTitle">
       <div class="verHistHead"><div><strong id="_kolFabricBatchTitle">${escapeHtml(en?'Create fabric cards':'Kumaş kartları oluştur')}</strong>
-        <div class="muted">${escapeHtml(en?'PLM fabric information is kept unchanged. The Collection table shows the short summary of the card; every model with the same fabric code uses the same card.':'PLM kumaş bilgisi değiştirilmeden saklanır. Koleksiyon tablosu kartın kısa özetini gösterir; aynı kumaş kodlu her model aynı kartı kullanır.')}</div></div></div>
+        <div class="muted">${escapeHtml(en?'PLM fabric information is kept unchanged. The Collection table shows the card’s short summary in the active language (Turkish or English); every model with the same fabric code uses the same card.':'PLM kumaş bilgisi değiştirilmeden saklanır. Koleksiyon tablosu kartın kısa özetini aktif dilde (Türkçe ya da İngilizce) gösterir; aynı kumaş kodlu her model aynı kartı kullanır.')}</div></div></div>
       <div class="plmImportBody">${notice}
-        <div class="kolFabricBatchWrap"><table class="kolFabricBatchTable"><thead><tr><th></th><th>${escapeHtml(en?'Code':'Kod')}</th><th>${escapeHtml(en?'Summary shown in the table':'Tabloda görünecek özet')}</th><th>${escapeHtml(en?'Source':'Kaynak')}</th><th>${escapeHtml(en?'PLM fabric information':'PLM kumaş bilgisi')}</th></tr></thead><tbody>${rows}</tbody></table></div>
+        <div class="kolFabricBatchWrap"><table class="kolFabricBatchTable"><thead><tr><th></th><th>${escapeHtml(en?'Code':'Kod')}</th><th>${escapeHtml(en?'Summary · Turkish':'Özet · Türkçe')}</th><th>${escapeHtml(en?'Summary · English':'Özet · İngilizce')}</th><th>${escapeHtml(en?'Source':'Kaynak')}</th><th>${escapeHtml(en?'PLM fabric information':'PLM kumaş bilgisi')}</th></tr></thead><tbody>${rows}</tbody></table></div>
       </div>
       <div class="verHistFoot"><button type="button" class="tbtn" data-fabric-batch="cancel">${escapeHtml(en?'Not now':'Şimdi değil')}</button><button type="button" class="tbtn primary" data-fabric-batch="save"></button></div>
     </div>`;
@@ -29217,7 +29219,7 @@ function showKolFabricBatchPreview(items,analysis){
     const finish=value=>{if(settled)return;settled=true;window.BLLayerSystem?.closeDialog?.(modal);modal.remove();resolve(value);};
     modal.addEventListener('change',event=>{if(event.target.matches('[data-fabric-pick]'))refresh();});
     modal.addEventListener('input',event=>{
-      const index=event.target.dataset.fabricSummary;if(index==null)return;
+      const index=event.target.dataset.fabricSummary??event.target.dataset.fabricSummaryEn;if(index==null)return;
       const badge=modal.querySelector(`[data-fabric-source="${index}"]`);
       if(badge){badge.textContent=kolFabricSourceLabel('manual');badge.className='kolFabricSource is-manual';badge.dataset.edited='1';}
     });
@@ -29229,7 +29231,7 @@ function showKolFabricBatchPreview(items,analysis){
       const cards=picked().map(({item,index})=>{
         const base=analysis.cards[item.code]||api.ruleCard(item.raw);
         const edited=modal.querySelector(`[data-fabric-source="${index}"]`)?.dataset.edited==='1';
-        return api.normalizeCard({...base,code:item.code,raw:item.raw,summary:modal.querySelector(`[data-fabric-summary="${index}"]`)?.value,summarySource:edited?'manual':base.summarySource});
+        return api.normalizeCard({...base,code:item.code,raw:item.raw,summary:modal.querySelector(`[data-fabric-summary="${index}"]`)?.value,summaryEn:modal.querySelector(`[data-fabric-summary-en="${index}"]`)?.value,summarySource:edited?'manual':base.summarySource});
       }).filter(Boolean);
       finish(cards);
     });
@@ -29296,8 +29298,11 @@ function openKolFabricCardDialog(rowId,{trigger=null}={}){
     <div class="verHistHead"><div><strong id="_kolFabricCardTitle">${escapeHtml(en?`Fabric Card · ${code}`:`Kumaş Kartı · ${code}`)}</strong>
       <div class="muted">${escapeHtml(meta)}</div></div></div>
     <div class="plmImportBody">
-      <label class="plmListLabel" for="_kolFabricSummary">${escapeHtml(en?'Summary shown in the Collection table':'Koleksiyon tablosunda görünen özet')}</label>
-      <div class="kolFabricSummaryRow"><input type="text" id="_kolFabricSummary" maxlength="${api.SUMMARY_MAX}" value="${escapeHtml(draft.summary||'')}"${dis}><span class="kolFabricSource is-${escapeHtml(source)}" data-fabric-source>${escapeHtml(kolFabricSourceLabel(source))}</span></div>
+      <div class="kolFabricSummaryHead"><span class="plmListLabel">${escapeHtml(en?'Summary shown in the Collection table':'Koleksiyon tablosunda görünen özet')}</span><span class="kolFabricSource is-${escapeHtml(source)}" data-fabric-source>${escapeHtml(kolFabricSourceLabel(source))}</span></div>
+      <div class="plmListOptions kolFabricSummaries">
+        <label><span>${escapeHtml(en?'Turkish':'Türkçe')}</span><input type="text" id="_kolFabricSummary" lang="tr" maxlength="${api.SUMMARY_MAX}" value="${escapeHtml(draft.summary||'')}"${dis}></label>
+        <label><span>${escapeHtml(en?'English':'İngilizce')}</span><input type="text" id="_kolFabricSummaryEn" lang="en" maxlength="${api.SUMMARY_MAX}" value="${escapeHtml(draft.summaryEn||api.summaryFor({summary:draft.summary},'en'))}"${dis}></label>
+      </div>
       <h4>${escapeHtml(en?'Details':'Ayrıntılar')}</h4>
       <div class="plmListOptions kolFabricDetails">${detailInputs}</div>
       <h4>${escapeHtml(en?'PLM fabric information (kept unchanged)':'PLM kumaş bilgisi (değiştirilmeden saklanır)')}</h4>
@@ -29314,15 +29319,15 @@ function openKolFabricCardDialog(rowId,{trigger=null}={}){
       ${canEdit?`<button type="button" class="tbtn primary" data-fabric="save">${escapeHtml(en?'Save card':'Kartı kaydet')}</button>`:''}
     </div>
   </div>`;
-  const status=modal.querySelector('[data-fabric-status]'),summaryInput=modal.querySelector('#_kolFabricSummary');
+  const status=modal.querySelector('[data-fabric-status]'),summaryInput=modal.querySelector('#_kolFabricSummary'),summaryEnInput=modal.querySelector('#_kolFabricSummaryEn');
   const setSource=next=>{source=next;const badge=modal.querySelector('[data-fabric-source]');if(badge){badge.textContent=kolFabricSourceLabel(next);badge.className=`kolFabricSource is-${next}`;}};
   const fill=card=>{
-    summaryInput.value=card.summary||'';
+    summaryInput.value=card.summary||'';summaryEnInput.value=card.summaryEn||'';
     api.DETAIL_FIELDS.forEach(key=>{const input=modal.querySelector(`[data-fabric-detail="${key}"]`);if(input)input.value=card.details&&card.details[key]||'';});
     setSource(card.summarySource);
   };
   const close=()=>{window.BLLayerSystem?.closeDialog?.(modal,{trigger});modal.remove();};
-  modal.addEventListener('input',event=>{if(event.target===summaryInput||event.target.dataset.fabricDetail)setSource('manual');});
+  modal.addEventListener('input',event=>{if(event.target===summaryInput||event.target===summaryEnInput||event.target.dataset.fabricDetail)setSource('manual');});
   modal.addEventListener('click',async event=>{
     const action=event.target.closest('[data-fabric]');
     if(!action){if(event.target===modal)close();return;}
@@ -29354,8 +29359,8 @@ function openKolFabricCardDialog(rowId,{trigger=null}={}){
     }
     if(kind==='save'){
       const details={};api.DETAIL_FIELDS.forEach(key=>{details[key]=modal.querySelector(`[data-fabric-detail="${key}"]`)?.value||'';});
-      const card=api.normalizeCard({code,summary:summaryInput.value,details,summarySource:source,raw:existing&&existing.raw||raw});
-      if(!card){status.textContent=en?'Enter a summary first.':'Önce bir özet girin.';summaryInput.focus();return;}
+      const card=api.normalizeCard({code,summary:summaryInput.value,summaryEn:summaryEnInput.value,details,summarySource:source,raw:existing&&existing.raw||raw});
+      if(!card){status.textContent=en?'Enter a Turkish summary first.':'Önce Türkçe özeti girin.';summaryInput.focus();return;}
       action.disabled=true;
       try{
         await kolFabricCardsSave([card]);close();renderKol();

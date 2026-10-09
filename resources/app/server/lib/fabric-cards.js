@@ -1,6 +1,6 @@
 'use strict';
 
-/* Koleksiyon kumaş kartları: kumaş kodu → kısa özet + ayrıntı.
+/* Koleksiyon kumaş kartları: kumaş kodu → kısa özet (TR + EN) + ayrıntı.
  *
  * PLM "Main Fabric Information" metni satırda olduğu gibi kalır (veri kaybı
  * yok); bu sözlük yalnız GÖRÜNÜMÜ kısaltır. Kart bir kez oluşturulduktan
@@ -42,6 +42,7 @@ function normalizeCard(raw, fallbackCode = '') {
   return {
     code,
     summary,
+    summaryEn: clean(raw.summaryEn, SUMMARY_MAX),
     details,
     summarySource: SOURCES.has(source) ? source : 'manual',
     raw: clean(raw.raw, RAW_MAX),
@@ -96,7 +97,7 @@ function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing 
     const current = store.cards[card.code];
     if (current && onlyMissing) { skipped += 1; continue; }
     if (!current && Object.keys(store.cards).length >= MAX_CARDS) { skipped += 1; continue; }
-    if (current && current.summary === card.summary && current.summarySource === card.summarySource
+    if (current && current.summary === card.summary && current.summaryEn === card.summaryEn && current.summarySource === card.summarySource
       && DETAIL_FIELDS.every(key => current.details[key] === card.details[key]) && (current.raw === card.raw || !card.raw)) { skipped += 1; continue; }
     store.cards[card.code] = {
       ...card,

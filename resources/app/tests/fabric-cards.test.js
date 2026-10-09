@@ -42,6 +42,25 @@ test('kural kartı PLM metninden kısa özet çıkarır ve değer uydurmaz', () 
   assert.equal(engine.ruleCard('9999-Örme').details.weight, ''); // i18n-ignore
 });
 
+test('özet iki dillidir: TR ve EN, aynı sayılarla', () => {
+  const card = engine.ruleCard(SUPREM);
+  assert.equal(card.summaryEn, 'Single Jersey · 30/1 Ne · 150 gsm · 100% Cotton');
+  assert.equal(engine.ruleCard(TWO_THREAD).summaryEn, 'Two Thread · 220 gsm · 80% Cotton 20% Polyester');
+  assert.equal(engine.ruleCard('370380-Interlock,70,Denye Continue Flament 140 gsm,100%Polyester').summary, 'Interlok · 70 Denye · 140 gsm · %100 Poliester'); // i18n-ignore
+  const cards = new Map([['3859', card]]);
+  assert.equal(engine.displayText(SUPREM, cards, 'tr'), card.summary);
+  assert.equal(engine.displayText(SUPREM, cards, 'en'), card.summaryEn);
+  // Yalnız TR özetli eski kart EN'de sözlük çevirisiyle görünür.
+  assert.equal(engine.summaryFor({ summary: 'Süprem · %100 Pamuk' }, 'en'), 'Single Jersey · 100% Cotton'); // i18n-ignore
+  const ai = engine.validateAiCards([
+    'code=3859|summary=Süprem · 150 gsm · %100 Pamuk|summaryEn=Single Jersey · 150 gsm · 100% Cotton', // i18n-ignore
+    'code=4207|summary=Süprem · 180 gsm|summaryEn=Single Jersey · 999 gsm', // i18n-ignore — uydurma EN sayı
+  ], [{ code: '3859', raw: SUPREM }, { code: '4207', raw: '4207-Örme,Süprem,180 gsm' }]); // i18n-ignore
+  assert.equal(ai.cards['3859'].summaryEn, 'Single Jersey · 150 gsm · 100% Cotton');
+  assert.equal(ai.cards['4207'].summarySource, 'ai');
+  assert.equal(ai.cards['4207'].summaryEn, 'Single Jersey · 180 gsm', 'doğrulanamayan EN özet TR çevirisine düşer');
+});
+
 test('LCW AI önerisi deterministik doğrulayıcıdan geçer', () => {
   const requested = [{ code: '3859', raw: SUPREM }, { code: '361819', raw: TWO_THREAD }];
   const result = engine.validateAiCards([
@@ -70,8 +89,9 @@ test('sunucu sözlüğü kartı saklar, onlyMissing düzenlemeyi ezmez, silme ç
   const actor = { id: 'u1', displayName: 'Buyer' };
   const first = store.upsertFabricCards([{ code: '3859', summary: 'Süprem 150 gsm', summarySource: 'ai', raw: SUPREM }], actor); // i18n-ignore
   assert.equal(first.updated, 1);
-  const manual = store.upsertFabricCards([{ code: '3859', summary: 'Benim özetim', summarySource: 'manual' }], actor); // i18n-ignore
+  const manual = store.upsertFabricCards([{ code: '3859', summary: 'Benim özetim', summaryEn: 'My summary', summarySource: 'manual' }], actor); // i18n-ignore
   assert.equal(manual.updated, 1);
+  assert.equal(manual.cards[0].summaryEn, 'My summary');
   assert.equal(manual.cards[0].raw, SUPREM, 'PLM metni korunur');
   const auto = store.upsertFabricCards([{ code: '3859', summary: 'Yeni AI', summarySource: 'ai' }], actor, null, { onlyMissing: true }); // i18n-ignore
   assert.equal(auto.updated, 0);
