@@ -169,6 +169,10 @@
         "alt": {
           "tr": "İngilizce kipte kurumsal bağlantıları gösteren demo verili gerçek Buyer Log ekranı",
           "en": "Real Buyer Log screen with demo data showing corporate connections in English mode"
+        },
+        "caption": {
+          "tr": "Kurumsal bağlantılar için Türkçe ve İngilizce erişilebilirlik desteği",
+          "en": "Turkish and English accessibility for corporate connections"
         }
       }
     }
