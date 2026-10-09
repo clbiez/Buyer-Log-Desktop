@@ -375,6 +375,39 @@
       }
     },
     {
+      "id": "endeksmatik-country-workbooks",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · Endeksmatik",
+        "en": "Collection · Endeksmatik"
+      },
+      "title": {
+        "tr": "Ülke Endeksmatik dosyaları yükleniyor",
+        "en": "Country Endeksmatik workbooks now load"
+      },
+      "path": {
+        "tr": "Koleksiyon › Araçlar › Endeksmatik Setleri",
+        "en": "Collection › Tools › Endeksmatik Sets"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "endeksmatik-country-workbooks.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında Excel ile doğrulanmış iki Endeksmatik seti",
+          "en": "Two Endeksmatik sets verified against Excel, in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Her set ENDEKSMATİK ekranındaki endeks, pay ve hedef sonuçlarıyla karşılaştırılır (13 kontrol)",
+          "en": "Each set is checked against the index, share and target results on the ENDEKSMATİK screen (13 checks)"
+        }
+      },
+      "body": {
+        "tr": "Bangladeş, Çin, Hindistan Kuzey ve Myanmar dosyaları \"model değişti\" ya da \"yeniden hesaplanamadı\" diye reddediliyordu. Sebep: pivotlarda etiketler yinelendiği için ara toplam satırları yanlış seviyeye okunuyordu; ENDEKSMATİK ekranında \"Genel Toplam\" seçimi desteklenmiyordu; paylar E15–E18'de, hedefler C22–C25'te dururken Buyer Log hedefleri E sütununda arıyordu. Artık bu yerleşim tanınıyor, Excel'in endeks, pay ve hedef sonuçları Buyer Log'un yeniden hesabıyla karşılaştırılıyor; tutmayan dosya yine reddediliyor.",
+        "en": "Bangladesh, China, India North and Myanmar workbooks were rejected as \"model changed\" or \"could not be recalculated\". Causes: pivots repeat item labels, so subtotal rows were read at the wrong level; a \"Grand Total\" selection on the ENDEKSMATİK screen was not supported; and shares sit in E15–E18 and targets in C22–C25 while Buyer Log looked for targets in column E. This layout is now recognised, and Excel's index, share and target results are compared with Buyer Log's own recalculation; a workbook that does not match is still rejected."
+      }
+    },
+    {
       "id": "manufacturer-dtr-card-status",
       "type": "improvement",
       "module": {

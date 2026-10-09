@@ -48,8 +48,11 @@ const SCREEN_LAYOUT = Object.freeze({
   previousOrderMonth: 'C9', previousDepotMonth: 'C10', orderMonth: 'C11', depotMonth: 'C12',
   adjustment: 'B21',
   componentIndex: ['C15', 'C16', 'C17', 'C18'],
+  // Gerçek ülke dosyaları (v7.0.270): E15..E18 maliyet PAYLARI (ÖZET'ten
+  // VLOOKUP), C19 = Σ C·E, hedefler C22..C25 = (1+C)(1−B21)−1.
+  componentWeight: ['E15', 'E16', 'E17', 'E18'],
   totalIndex: 'C19',
-  componentTarget: ['E15', 'E16', 'E17', 'E18'],
+  componentTarget: ['C22', 'C23', 'C24', 'C25'],
 });
 const CURRENCY_HEADERS = Object.freeze([
   { label: 'DOLAR', currency: 'TRY' },
@@ -133,12 +136,16 @@ function walkHierarchy(rows, header, visit) {
   for (let r = header.row + 1; r < rows.length; r++) {
     const row = rows[r] || [], cells = header.cols.map(c => text(row[c]));
     const first = cells.findIndex(Boolean); if (first < 0) continue;
-    const lowerBlank = cells.slice(first + 1).every(v => !v), label = cells[first];
-    if (/^genel toplam$/i.test(label)) { visit({ level: 0, dims: ['', '', '', '', ''], row, kind: 'grand' }); continue; }
-    const total = lowerBlank ? (/^toplam\s+(.+)$/i.exec(label) || /^(.+?)\s+toplam$/i.exec(label)) : null;
+    if (/^genel toplam$/i.test(cells[first])) { visit({ level: 0, dims: ['', '', '', '', ''], row, kind: 'grand' }); continue; }
+    /* Ara toplam etiketi son DOLU hücrededir. "Öğe etiketlerini yinele" açık
+       pivotlarda üst seviyeler de yazılıdır ("CUW4 | Toplam CU4E | ∅ …");
+       kapalıysa üstler boştur ve aşağı doldurulmuş değerlerden alınır. Klasman
+       (5. seviye) ara toplam olamaz. */
+    let last = 4; while (last > 0 && !cells[last]) last--;
+    const total = last < 4 ? (/^toplam\s+(.+)$/i.exec(cells[last]) || /^(.+?)\s+toplam$/i.exec(cells[last])) : null;
     if (total) {
-      const dims = [...carry.slice(0, first), total[1].trim(), '', '', '', ''].slice(0, 5);
-      visit({ level: first + 1, dims, row, kind: 'subtotal' }); continue;
+      const dims = [...cells.slice(0, last).map((v, j) => v || carry[j]), total[1].trim(), '', '', '', ''].slice(0, 5);
+      visit({ level: last + 1, dims, row, kind: 'subtotal' }); continue;
     }
     for (let j = first; j < 5; j++) carry[j] = cells[j];
     const level = carry.findIndex(v => !v);
@@ -308,7 +315,8 @@ function recordParts(record) {
 function resolveRecord(runtime, input) {
   const all = [input.mmyg, input.mag, input.supplyGroup, input.buyingGroup, input.category].map(text);
   const requested = Number(input.level);
-  const level = Number.isInteger(requested) && requested >= 1 && requested <= 5 ? requested : 5;
+  // 0 = Genel Toplam (ENDEKSMATİK'te C4 = "Genel Toplam" seçimi).
+  const level = Number.isInteger(requested) && requested >= 0 && requested <= 5 ? requested : 5;
   const dims = all.slice(0, level);
   const missing = dims.map((v, i) => (!v && i !== 2 ? LEVEL_LABELS[i + 1] : '')).filter(Boolean);
   if (missing.length) throw modelError(`${LEVEL_LABELS[level]} seviyesi için eksik alan: ${missing.join(', ')}.`, 'CLASS_FIELDS_MISSING', { missing, level });
@@ -471,8 +479,9 @@ function calculate(snapshot, input = {}, runtime = buildIndex(snapshot)) {
 /* -------------------------------------------------------------- uzlaştırma */
 function reconcile(snapshot, screenValues) {
   const runtime = buildIndex(snapshot), L = SCREEN_LAYOUT, checks = [];
-  const sel = screenValues.selection, level = (() => { const i = sel.findIndex(v => !v); return i < 0 ? 5 : i; })();
-  if (!level) throw modelError(`ENDEKSMATİK seçim hücreleri (${L.selection.join(', ')}) boş; uzlaştırma yapılamıyor.`, 'MODEL_RECONCILE_SELECTION');
+  const sel = screenValues.grandTotal ? ['', '', '', '', ''] : screenValues.selection;
+  const level = screenValues.grandTotal ? 0 : (() => { const i = sel.findIndex(v => !v); return i < 0 ? 5 : i; })();
+  if (!level && !screenValues.grandTotal) throw modelError(`ENDEKSMATİK seçim hücreleri (${L.selection.join(', ')}) boş; uzlaştırma yapılamıyor.`, 'MODEL_RECONCILE_SELECTION');
   if (!screenValues.previousOrderMonth || !screenValues.orderMonth) throw modelError(`ENDEKSMATİK sipariş ayları (${L.previousOrderMonth}/${L.orderMonth}) okunamadı.`, 'MODEL_RECONCILE_MONTHS');
   let result;
   try {
@@ -485,8 +494,9 @@ function reconcile(snapshot, screenValues) {
     checks.push({ label, cell, excel: Number.isFinite(expected) ? expected : null, buyerLog: actual, ok });
   };
   result.components.forEach((item, i) => compare(`${item.label} Δ`, L.componentIndex[i], screenValues.componentIndex[i], item.index));
+  result.components.forEach((item, i) => compare(`${item.label} pay`, L.componentWeight[i], (screenValues.componentWeight || [])[i], item.weight));
   compare('TOPLAM', L.totalIndex, screenValues.totalIndex, result.indexes.usd);
-  /* Hedefler: E15..E18, B21 düzeltmesiyle (1+Δ)(1−düzeltme)−1 ise ayrıca
+  /* Hedefler: C22..C25, B21 düzeltmesiyle (1+Δ)(1−düzeltme)−1 ise ayrıca
      doğrulanır. Değilse yükleme REDDEDİLMEZ (fiyat Δ + düzeltmeden hesaplanır ve
      düzeltme hesapta değiştirilebilir); durum uyarı olarak kaydedilir. */
   const tolerant = (a, b) => Number.isFinite(a) && Number.isFinite(b) && Math.abs(a - b) <= RECONCILE_TOLERANCE * Math.max(1, Math.abs(a));
@@ -510,10 +520,12 @@ function readScreen(ws) {
     season: text(v(L.season)), updatedAt: excelDateText(v(L.updatedAt)),
     // "(Tümü)" gibi pivot filtre değerleri üst seviye seçimi demektir.
     selection: L.selection.map(a => { const t = text(v(a)); return /^\(?\s*(TUMU|HEPSI|ALL)\s*\)?$/.test(norm(t)) ? '' : t; }),
+    grandTotal: norm(v(L.selection[0])) === 'GENEL TOPLAM',
     previousOrderMonth: monthCodeOf(v(L.previousOrderMonth)), orderMonth: monthCodeOf(v(L.orderMonth)),
     adjustmentRaw,
     componentIndex: L.componentIndex.map(a => numberValue(v(a))),
     totalIndex: numberValue(v(L.totalIndex)),
+    componentWeight: L.componentWeight.map(a => numberValue(v(a))),
     componentTarget: L.componentTarget.map(a => numberValue(v(a))),
   };
 }
