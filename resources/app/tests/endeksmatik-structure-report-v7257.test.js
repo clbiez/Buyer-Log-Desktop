@@ -34,7 +34,10 @@ test('rapor iş değerlerini (klasman, marka, pay, endeks) içermez', () => {
     // Formüllerdeki alan adları dışında hiçbir boyut değeri görünmemeli.
     assert.equal(report.includes(value), false, `sızan değer: ${value}`);
   }
-  assert.equal(/0\.\d{3,}/.test(report), false, 'sayısal pay/endeks değeri sızmamalı');
+  // Başlıktaki üretim zamanı (ör. 04:35:50.123Z) iş verisi değildir; saniyesi 0
+  // ile bittiğinde "0.123" gibi okunup testi rastgele düşürüyordu.
+  const withoutTimestamp = report.replace(/üretildi: \S+/, 'üretildi: <zaman>');
+  assert.equal(/0\.\d{3,}/.test(withoutTimestamp), false, 'sayısal pay/endeks değeri sızmamalı');
   assert.ok(Buffer.byteLength(report) < 40 * 1024, 'rapor küçük kalmalı');
 });
 
