@@ -659,6 +659,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
       current.progress = { ...current.progress, phase: 'download', stage: 'Değişiklikler okunuyor', downloadDone: 0, downloadTotal: sources.length, packageDone: 0, packageTotal: sources.length, eventDone: 0, bytesDone: 0, bytesTotal: 0, speedBytesPerSecond: 0, etaSeconds: null };
       notifyState({ ...current, networkBytesRead, networkBytesWritten }, true);
       let applied = 0, conflicts = 0;
+      const checkpointAckSources = new Set();
       for (const source of sources) {
         try {
           const sourceRead = await net(() => readSyncJson(source.file), 'Paket indirme');
@@ -678,15 +679,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
             applied += Number(result.applied) || 0;
             conflicts += Array.isArray(result.conflicts) ? result.conflicts.length : 0;
             checkpoints[source.sourceId] = Math.max(Number(checkpoints[source.sourceId]) || 0, Number(result.checkpoint) || 0);
-            const ackFile = path.join(ackRoot, encode(pkg.deviceId), 'packages', encode(pkg.packageId), `${encode(deviceId)}.json`);
-            const ackStartedAt = Date.now(), ackMetrics = {};
-            networkBytesWritten += await net(() => writeValidatedJson(ackFile, { version: 2, sourceDevice: pkg.deviceId, packageId: pkg.packageId, lastSeq: Number(pkg.lastSeq) || 0, deviceId, acknowledgedAt: new Date().toISOString() }, metrics => Object.assign(ackMetrics, metrics)), 'Package ACK yazma');
-            emit('SYNC_PACKAGE_ACK_WRITTEN', { packageId: pkg.packageId, sourceDevice: pkg.deviceId, lastSeq: Number(pkg.lastSeq) || 0, ackMs: Date.now() - ackStartedAt, verificationMs: Number(ackMetrics.verificationMs) || 0, bytes: Number(ackMetrics.bytes) || 0 });
-            // Compact checkpoint ACK coexists with package ACK during rollout.
-            // It records only the highest contiguous sequence, never a max over
-            // gaps, so a missing package cannot be acknowledged accidentally.
-            const checkpointAck = path.join(ackRoot, encode(pkg.deviceId), `${encode(deviceId)}.json`);
-            networkBytesWritten += await net(() => writeValidatedJson(checkpointAck, { version: 2, sourceDevice: pkg.deviceId, readerDevice: deviceId, lastContiguousSequence: Number(checkpoints[source.sourceId]) || 0, updatedAt: new Date().toISOString() }), 'Checkpoint ACK yazma');
+            checkpointAckSources.add(pkg.deviceId);
             downloadedEvents += Number(pkg.sourceEventCount) || pkg.events.length; downloadedPackages++;
           } else {
             const delta = payload;
@@ -697,10 +690,11 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
             const result = filtered ? await localDb.applyDelta({ ...filtered, sha256:checksum(filtered) }) : await localDb.applyDelta(delta, { receiptOnly:true }); if (result.applied) applied++;
             conflicts += Array.isArray(result.conflicts) ? result.conflicts.length : 0;
             if (source.sourceId !== 'legacy' && source.sequence) { const afterDelta = await localDb.read(); checkpoints[source.sourceId] = Number(afterDelta.syncCheckpoints && afterDelta.syncCheckpoints[source.sourceId]) || Number(checkpoints[source.sourceId]) || 0; }
-            if (delta.deviceId && delta.deviceId !== deviceId) {
+            if (legacyCompatibilityMode && delta.deviceId && delta.deviceId !== deviceId) {
               const ackFile = path.join(ackRoot, encode(delta.deviceId), encode(delta.eventId), `${encode(deviceId)}.json`);
               networkBytesWritten += await net(() => writeValidatedJson(ackFile, { eventId: delta.eventId, sourceDeviceId: delta.deviceId, deviceId, acknowledgedAt: new Date().toISOString() }), 'ACK yazma');
             }
+            if (source.sourceId !== 'legacy') checkpointAckSources.add(source.sourceId);
             downloadedEvents++; downloadedPackages++;
           }
         } catch (error) {
@@ -709,6 +703,12 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
         }
         current.progress = { ...current.progress, stage: 'Değişiklik uygulanıyor', downloadDone: downloadedPackages, packageDone: downloadedPackages, eventDone: downloadedEvents, bytesDone: networkBytesRead, speedBytesPerSecond: Math.round(networkBytesRead / Math.max(1, (Date.now() - startedAt) / 1000)), etaSeconds: downloadedPackages && downloadedPackages < sources.length ? Math.ceil((sources.length - downloadedPackages) / (downloadedPackages / Math.max(1, (Date.now() - startedAt) / 1000))) : null };
         notifyState({ ...current, networkBytesRead, networkBytesWritten }, downloadedPackages === sources.length);
+      }
+
+      for (const sourceId of checkpointAckSources) {
+        const checkpointAck = path.join(ackRoot, encode(sourceId), `${encode(deviceId)}.json`);
+        networkBytesWritten += await net(() => writeValidatedJson(checkpointAck, { version:2, sourceDevice:sourceId, readerDevice:deviceId, lastContiguousSequence:Number(checkpoints[sourceId]) || 0, updatedAt:new Date().toISOString() }), 'Checkpoint ACK yazma');
+        emit('SYNC_CHECKPOINT_ACK_WRITTEN', { sourceDevice:sourceId, readerDevice:deviceId, lastContiguousSequence:Number(checkpoints[sourceId]) || 0 });
       }
 
       await acknowledgeLocalUploads(ackRoot, deviceId);

@@ -46,7 +46,7 @@ test('v7.61 · Delta sync cihaz klasörü, atomic paket, ACK ve checkpoint kulla
   const ownerDir = encodeURIComponent(db1.getDeviceId());
   const ownerAcks=await fsp.readdir(path.join(shared, 'BUYER_LOG_SYNC', 'acks', ownerDir),{withFileTypes:true});
   assert.ok(ownerAcks.some(entry=>entry.isFile()&&entry.name.endsWith('.json')),'v2 compact checkpoint ACK bulunmalı');
-  assert.ok(ownerAcks.some(entry=>entry.isDirectory()&&entry.name==='packages'),'rollout sırasında package ACK compatibility klasörü korunmalı');
+  assert.equal(ownerAcks.some(entry=>entry.isDirectory()&&entry.name==='packages'),false,'P4: yeni alıcı paket ACK klasörü yazmaz; eski ACK okuma/budama ayrı canlı testle korunur');
   assert.equal(Number((await db2.read()).syncCheckpoints[db1.getDeviceId()]), 1);
 });
 

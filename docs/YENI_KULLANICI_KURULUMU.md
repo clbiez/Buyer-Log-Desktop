@@ -16,6 +16,37 @@ Yeni bir kullanıcıya Buyer Log kurmanın **tek** desteklenen yolu kurulum pake
 
 Sonraki sürümler STABLE kanalından otomatik gelir; yeniden kurulum gerekmez.
 
+## OneDrive / SharePoint senkron klasörü
+
+Buyer Log ve yerel veritabanını kullanıcının bilgisayarındaki yerel, yazılabilir
+klasörde tutun. OneDrive / SharePoint yalnız ortak SYNC dosyalarını taşır.
+
+Windows Dosya Gezgini'nde seçtiğiniz ortak SYNC klasörüne sağ tıklayıp
+**Her zaman bu cihazda tut / Always keep on this device** seçin. İlk indirme
+bittikten sonra klasörün çevrimdışı kullanılabildiğini ve OneDrive'ın
+eşitlemesinin tamamlandığını kontrol edin. Böylece yalnız bulutta bulunan
+dosyaların SYNC sırasında tek tek indirilmesi azalır.
+
+Mümkünse şirketin yönettiği **SMB ağ paylaşımını** ortak SYNC kökü olarak
+tercih edin. SMB, cihazlara aynı dosya sistemini gösterir; ayrı OneDrive
+kopyalarındaki dosya kilitleri bütün cihazlar için ortak bir kilit değildir.
+Buyer Log uygulaması ve yerel DB yine kendi bilgisayarınızda kalmalıdır.
+
+### English
+
+Keep Buyer Log and its local database in a writable local folder on the user's
+computer. OneDrive / SharePoint transports shared SYNC files only.
+
+In Windows File Explorer, right-click the selected shared SYNC folder and choose
+**Always keep on this device / Her zaman bu cihazda tut**. Wait for the initial
+download and OneDrive synchronization to finish, then verify that the folder
+is available offline. This reduces on-demand downloads during SYNC.
+
+Prefer a company-managed **SMB network share** for the shared SYNC root when
+available. SMB exposes one shared filesystem; locks in separate OneDrive
+replicas are not a common lock across devices. Keep the application and local
+database on each user's own computer.
+
 ## Yapmayın
 
 | Yöntem | Neden çalışmaz |
