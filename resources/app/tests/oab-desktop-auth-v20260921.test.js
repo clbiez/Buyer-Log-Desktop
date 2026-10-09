@@ -165,3 +165,39 @@ test('desktop OAB validation accepts a Bearer PASS authorized and rejects 401/40
   assert.equal(body.reportRef, 'OrderBudget_List_Report');
   assert.equal(body.parameters.BuyerGroupRefs, '12');
 });
+
+test('desktop OAB sign-in fetches the selected report once and never runs an unbounded empty-filter report', async () => {
+  const MAIN = fs.readFileSync(path.join(ROOT, 'electron', 'main.js'), 'utf8');
+  const helpers = between(MAIN, 'function oabReportDataBody', 'const OAB_PAGE_REQUEST_TIMEOUT_MS');
+  const reader = between(MAIN, 'const OAB_STORED_TOKENS_READER = `', 'const OAB_STORAGE_PROBE');
+  const expressionSrc = between(MAIN, 'function oabPassRequestExpression', 'function oabWindowOnPass');
+  const calls = [];
+  let pageRequest = null;
+  const api = new Function('runOabPageRequestImpl', `
+    ${reader}
+    ${expressionSrc}
+    const runOabPageRequest = (...args) => runOabPageRequestImpl(...args);
+    ${helpers}
+    return { validateOabSessionInPage, takeOabValidatedReport, oabReportDataBody, oabPassRequestExpression };
+  `)((...args) => { calls.push(args); return pageRequest(...args); });
+
+  // With a selection: exactly one report call, and its rows serve the backend's identical request.
+  pageRequest = async () => ({ ok: true, status: 200, json: { Data: [[{ Sezon: 'S7' }]] } });
+  const ok = await api.validateOabSessionInPage({}, 'Bearer x', { seasonRef: 'S7', merchSubGroupRef: 'CU4E', buyerGroupRef: '12' });
+  assert.equal(ok.ok, true);
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][2].parameters.SeasonRef, 'S7');
+  // Relay body built by server/lib/oab-desktop-relay.js for the same selection.
+  const relayBody = { reportRef: 'OrderBudget_List_Report', languageRef: 2, parameters: { SeasonRef: 'S7', MerchSubGroupRef: 'CU4E', BuyerGroupRefs: '12', CategoryGroupRefs: '', CategoryRef: '' } };
+  assert.deepEqual(api.takeOabValidatedReport('Report/GetReportData', relayBody).json, { Data: [[{ Sezon: 'S7' }]] });
+  assert.equal(api.takeOabValidatedReport('Report/GetReportData', relayBody), null, 'cached rows are used once');
+
+  // Without a selection: the empty-filter probe is bounded and a still-running request counts as authorized.
+  calls.length = 0;
+  pageRequest = async () => ({ ok: false, status: 0, code: 'OAB_PENDING' });
+  const pending = await api.validateOabSessionInPage({}, 'Bearer x', {});
+  assert.equal(pending.ok, true);
+  assert.ok(calls[0][4] && calls[0][4].pendingAfterMs > 0 && calls[0][4].pendingAfterMs <= 10000);
+  pageRequest = async () => ({ ok: false, status: 401 });
+  assert.equal((await api.validateOabSessionInPage({}, 'Bearer x', {})).ok, false);
+});

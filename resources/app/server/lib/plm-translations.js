@@ -7,7 +7,8 @@ const { RevisionConflictError, expectedNumber } = require('../db');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'plm-translations.json');
-const FIELDS = new Set(['category', 'line', 'license']);
+const FIELDS = new Set(['category', 'line', 'license', 'productMainDefinition']);
+const FIELD_BY_KEY = new Map([...FIELDS].map(field => [field.toLowerCase(), field]));
 const MAX_RULES_PER_FIELD = 5000;
 
 function clean(value, max = 500) {
@@ -20,7 +21,7 @@ function keyOf(value) {
     .replace(/\s+/g, ' ').trim();
 }
 function emptyStore() {
-  return { schemaVersion: 1, fields: { category: {}, line: {}, license: {} }, _revision: 0, _updatedAt: null };
+  return { schemaVersion: 1, fields: { category: {}, line: {}, license: {}, productMainDefinition: {} }, _revision: 0, _updatedAt: null };
 }
 function normalizeStore(raw) {
   const out = emptyStore();
@@ -57,7 +58,7 @@ function loadPlmTranslations() {
   });
 }
 function publicRules(store = loadPlmTranslations()) {
-  const rules = { category: [], line: [], license: [] };
+  const rules = { category: [], line: [], license: [], productMainDefinition: [] };
   for (const field of FIELDS) rules[field] = Object.values(store.fields[field]).map(item => ({ ...item }));
   return { rules, revision: store._revision, updatedAt: store._updatedAt };
 }
@@ -69,8 +70,8 @@ function upsertPlmTranslations(items, actor, expectedRevision = null) {
   }
   let updated = 0;
   for (const raw of Array.isArray(items) ? items : []) {
-    const field = clean(raw && raw.field, 30).toLowerCase();
-    if (!FIELDS.has(field)) continue;
+    const field = FIELD_BY_KEY.get(clean(raw && raw.field, 30).toLowerCase());
+    if (!field) continue;
     const source = clean(raw && raw.source), keepAsIs = !!(raw && raw.keepAsIs);
     const target = keepAsIs ? source : clean(raw && raw.target), key = keyOf(source);
     if (!source || !target || !key) continue;

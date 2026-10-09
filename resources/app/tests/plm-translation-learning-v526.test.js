@@ -88,3 +88,34 @@ test('v5.26 shared PLM translation store normalizes source keys and preserves ap
   fs.rmSync(tmp,{recursive:true,force:true});
   if(old==null)delete process.env.BUYER_LOG_SERVER_DATA_ROOT;else process.env.BUYER_LOG_SERVER_DATA_ROOT=old;
 });
+
+test('PLM → ASAS dialog can skip the displayed fields in every import flow without changing other fields or saving rules',()=>{
+  const review=between(APP,'function showKolPlmTranslationReview','function kolPlmApplyReviewedMappings');
+  assert.match(review,/data-plmreview="skip"/);
+  assert.match(review,/skippedFields:fieldsInReview/);
+  const direct=between(APP,'async function kolPlmNormalizeAndTranslate','function kolBuildPlmImportPlan');
+  const excel=between(APP,'async function importKolPlmExcelFile','function kolImportStyleRowId');
+  assert.match(direct,/kolPlmSkipTranslationFields\(rows,review\.skippedFields,translationInfo\)/);
+  assert.match(excel,/kolPlmSkipTranslationFields\(parsed\.rows,translationReview\.skippedFields,translationInfo\)/);
+  const skipBlock=between(APP,'function kolPlmSkipTranslationFields','function kolPlmUniqueAsasValues');
+  const skip=new Function('norm',skipBlock+'\nreturn kolPlmSkipTranslationFields;')(norm);
+  const rows=[
+    {lisans:'Old ASAS license',urunTipi:'Correct category',productMainDefinition:'Previous description',
+      _plmSource:{brandToken:'NEW-LICENSE',categoryRaw:'Category',productMainDefinition:'NEW DESC'},
+      _plmTranslations:{license:{mode:'exact-plm'},category:{mode:'exact-plm'},productMainDefinition:{mode:'approved-rule'}}},
+    {lisans:'Second license',urunTipi:'Second category',_plmSource:{brandToken:'OTHER-LICENSE',categoryRaw:'Other category'},_plmTranslations:{license:{mode:'unresolved'}}},
+  ];
+  const info={reviewedMappings:[{field:'license',source:'NEW-LICENSE',target:'ASAS license'}]};
+  assert.equal(skip(rows,['license','productMainDefinition'],info),3);
+  assert.equal(rows[0].lisans,'');
+  assert.equal(rows[1].lisans,'');
+  assert.equal(rows[0].productMainDefinition,'');
+  assert.equal(rows[0].urunTipi,'Correct category');
+  assert.equal(rows[1].urunTipi,'Second category');
+  assert.equal(rows[0]._plmTranslations.license.mode,'skipped');
+  assert.equal(rows[0]._plmTranslations.productMainDefinition.mode,'skipped');
+  assert.equal(rows[0]._plmSource.brandToken,undefined);
+  assert.equal(rows[0]._plmSource.productMainDefinition,undefined);
+  assert.deepEqual(info.reviewedMappings,[]);
+  assert.deepEqual(info.skippedFields,['license','productMainDefinition']);
+});

@@ -145,7 +145,7 @@
       if(reduce)el.remove();else setTimeout(function(){el.remove();},340);
     }
     window.dispatchEvent(new CustomEvent('bl:startup-complete'));
-    if(refocus)document.getElementById('buyerLogGuideBtn')?.focus({preventScroll:true});
+    if(refocus)document.getElementById('corporateLcwAiBtn')?.focus({preventScroll:true});
   }
   async function recover(reason){
     if(finished||recovering)return;recovering=true;lastFailure=reason||lastFailure||'startup-timeout';
@@ -489,8 +489,11 @@
   <button class="iconbtn" id="saveAllBtn" title="Tüm değişiklikleri şimdi kaydet" data-i18n-title-tr="Tüm değişiklikleri şimdi kaydet" data-i18n-title-en="Save all changes now"><svg class="ic"><use href="#i-device-floppy"/></svg></button>
   <button class="iconbtn" id="topRefreshBtn" title="Veri Modelinden Güncelle" data-i18n-title-tr="Veri Modelinden Güncelle" data-i18n-title-en="Refresh from data model"><svg class="ic"><use href="#i-reload"/></svg></button>
   <button class="iconbtn syncStatusBtn" id="syncStatusBtn" title="Offline" aria-label="Offline"><span class="syncStatusBadge is-offline" id="syncStatusBadge"><svg class="ic" aria-hidden="true"><use href="#i-cloud-off"/></svg></span></button>
-  <button type="button" class="navActionBtn lcwaiTopBtn" id="lcwaiTopBtn" title="LCW AI — her yerden sorun" aria-label="LCW AI" data-i18n-title-tr="LCW AI — her yerden sorun" data-i18n-title-en="LCW AI — ask from anywhere"><svg class="ic" aria-hidden="true"><use href="#i-robot"/></svg><span>LCW AI</span></button>
-  <button type="button" class="navActionBtn" id="buyerLogGuideBtn" title="Kullanım Rehberi (F1)" aria-label="Kullanım Rehberi (F1)" data-i18n-title-tr="Kullanım Rehberi (F1)" data-i18n-title-en="User Guide (F1)" data-i18n-aria-label-tr="Kullanım Rehberi (F1)" data-i18n-aria-label-en="User Guide (F1)"><svg class="ic" aria-hidden="true"><use href="#i-checklist"/></svg></button>
+  <div class="corporateConnections" id="corporateConnections" role="group" aria-label="Kurumsal bağlantılar">
+    <button type="button" class="corporateConnection" id="corporateLcwAiBtn" data-corporate-connection="lcwai" data-state="disconnected">LCW AI</button>
+    <button type="button" class="corporateConnection" data-corporate-connection="plm" data-state="disconnected">PLM</button>
+    <button type="button" class="corporateConnection" data-corporate-connection="oab" data-state="disconnected">OAB</button>
+  </div>
   <span class="accessModeBadge" id="accessModeBadge"></span><button type="button" class="userAvatar userAvatarBtn" id="currentUserBtn" title="Kullanıcı menüsü" data-i18n-title-tr="Kullanıcı menüsü" data-i18n-title-en="User menu"><span id="currentUserInitials" class="blSteelInitials">?</span></button>
 </header>
 
@@ -1443,6 +1446,7 @@
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_MAIN_START');</script>
 <script src="plm-colour-utils.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="kol-plm-list-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="fabric-cards-engine.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="plm-licence-utils.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-model-groups.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="ui-primitives.js?v=__BL_ASSET_VERSION__&rev=1"></script>
@@ -1451,6 +1455,7 @@
 <script src="toolbar-responsive.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="tab-system.js?v=__BL_ASSET_VERSION__"></script>
 <script src="plm-auth-recovery.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="corporate-connections-toolbar.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <!-- Sütun EN/TR görünen adları + veri kaynağı kataloğu (CP / Orders / Koleksiyon). -->
 <script src="column-display-names.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>

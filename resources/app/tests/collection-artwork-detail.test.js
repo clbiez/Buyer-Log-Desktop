@@ -116,6 +116,27 @@ test('ensureFresh projects BOM summaries into ALL Collection rows (not only visi
   assert.equal(rows[3].artworkDetail ?? '', '');
 });
 
+test('refresh() during an in-flight read re-reads the BOM store instead of returning the stale request', async () => {
+  const rows = [{ id: 1, plmId: '2112292' }];
+  const entries = { 2112292: { hasPrint: false } };
+  const { api, requests } = loadModule({ rows, entries });
+  const first = api.ensureFresh();
+  entries[2112292] = { hasPrint: true, totalPrintCount: 1, placements: [{ placementTr: 'Ön', placementEn: 'Front', count: 1, printType: 'Pigment' }] };
+  await api.refresh();
+  await first;
+  assert.equal(requests.length, 2, 'forced refresh must issue its own read after PLM SYNC wrote the store');
+  assert.equal(rows[0].artworkDetail, 'Ön: 1 | Pigment | Toplam: 1');
+});
+
+test('Collection PLM SYNC (Model Details) force-refreshes Artwork Detail even when no PLM field changed', () => {
+  const start = APP.indexOf('async function kolPlmSyncRun(');
+  const body = APP.slice(start, APP.indexOf('async function kolPlmSyncButtonRun(', start));
+  const refresh = body.indexOf('kolPlmSyncRefreshArtwork()');
+  assert.ok(refresh > body.indexOf('kolPlmSyncFetchRecords('), 'artwork refresh runs after the fetch wrote plm-bom.json');
+  assert.ok(refresh < body.indexOf('if(!summary.changed.length){'), 'refresh must not depend on Model Details field changes');
+  assert.match(APP, /function kolPlmSyncRefreshArtwork\(\)\{[^]*?BLCollectionArtworkDetail[^]*?\.refresh\(\)/);
+});
+
 test('LCW AI Collection context refreshes artwork projection before reading rows', () => {
   assert.match(CHAT, /tab === 'koleksiyon' && window\.BLCollectionArtworkDetail && window\.BLCollectionArtworkDetail\.ensureFresh/);
   assert.match(APP, /koleksiyon: \(\) => kolRows/);
