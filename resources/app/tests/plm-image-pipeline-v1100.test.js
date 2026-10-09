@@ -141,6 +141,26 @@ test('aynı kaynak kimliği zaten kayıtlıysa görsel TEKRAR İNDİRİLMEZ', as
   assert.equal(run2.counts.cacheHits, 1);
 });
 
+test('129 model ölçeğinde eksikleri tamamla hiçbir API indirmesi yapmaz; tümünü yenile değişmeyeni tekrar indirmez', async () => {
+  const requests = Array.from({length:129}, (_, i) => ({ plmId:String(2124000+i), colourCode:'CVL', colour:'NEW BLACK' }));
+  const {fake,calls,input} = harness({requests});
+  const first = await service.runPlmImageSync(input);
+  assert.equal(first.counts.downloadsCompleted, 129);
+  const listCalls = calls.styleList.length;
+  const downloadCalls = calls.downloads.length;
+
+  const missing = await service.runPlmImageSync({ ...input, mode:'missing', imagemap:fake.imagemap, store:fake.store() });
+  assert.equal(missing.counts.downloadsCompleted, 0);
+  assert.equal(missing.counts.cacheHits, 129);
+  assert.equal(calls.styleList.length, listCalls, 'eksikler yerel kontrol ile dönmeli');
+  assert.equal(calls.downloads.length, downloadCalls);
+
+  const refresh = await service.runPlmImageSync({ ...input, mode:'all', imagemap:fake.imagemap, store:fake.store() });
+  assert.equal(refresh.counts.downloadsCompleted, 0);
+  assert.equal(refresh.counts.cacheHits, 129, 'aynı kaynak kimliği için yeni dosya yazılmaz');
+  assert.equal(calls.downloads.length, downloadCalls);
+});
+
 test('Eksikleri Tamamla ana renkte eski otomatik OPTION kaydını cache saymaz ve ön+arka görsele geçirir', async () => {
   const fake = createFakeStore();
   const request = { plmId: '2121571', colourCode: 'CVL', colour: 'NEW BLACK', imageRole: 'main' };
