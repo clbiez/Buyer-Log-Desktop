@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.269",
+      "publishedAt": "2026-10-09",
+      "title": {
+        "tr": "Daha güvenli ve hızlı SYNC",
+        "en": "Safer and faster SYNC"
+      },
+      "stats": {
+        "features": 3,
+        "improvements": 1,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.269/release.json"
+    },
+    {
       "version": "7.0.267",
       "publishedAt": "2026-10-09",
       "title": {
