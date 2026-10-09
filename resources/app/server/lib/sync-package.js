@@ -87,11 +87,18 @@ function coalescePendingEvents(items = []) {
   return out;
 }
 
-function buildSyncPackages(items = [], { deviceId = '', maxEvents = SYNC_PACKAGE_MAX_EVENTS, maxBytes = SYNC_PACKAGE_MAX_BYTES } = {}) {
+/* coverFromSeq (v20261009): cihaz sıra numarası yerel kalan (ortak klasöre
+   hiç gitmeyen) olaylarca da tüketilir. Paket yalnız taşınan olayların
+   aralığını bildirseydi alıcının kesintisiz checkpoint'i ilk boşlukta takılır,
+   o cihazın klasörü her sync'te yeniden taranırdı. coverFromSeq, bu paketten
+   önceki boşluğun da bu cihazdan hiç gelmeyecek olaylardan oluştuğunu bildirir.
+   firstSeq/lastSeq anlamı DEĞİŞMEDİ: eski alıcılar alanı yok sayar. */
+function buildSyncPackages(items = [], { deviceId = '', maxEvents = SYNC_PACKAGE_MAX_EVENTS, maxBytes = SYNC_PACKAGE_MAX_BYTES, coverFromSeq = 0 } = {}) {
   const source = (Array.isArray(items) ? items : []).filter(Boolean).slice().sort((a, b) => Number(a.localSequence || 0) - Number(b.localSequence || 0));
   const coalesced = coalescePendingEvents(source);
   const packages = [];
   let currentEvents = [], currentSourceCount = 0, currentBytes = 0;
+  let nextCoverFrom = Math.max(0, Math.trunc(Number(coverFromSeq) || 0));
 
   function closePackage() {
     if (!currentEvents.length) return;
@@ -112,6 +119,8 @@ function buildSyncPackages(items = [], { deviceId = '', maxEvents = SYNC_PACKAGE
       sourceEventIds,
       events: currentEvents.map(item => ({ ...item })),
     };
+    if (nextCoverFrom >= 1 && nextCoverFrom < firstSeq) manifest.coverFromSeq = nextCoverFrom;
+    nextCoverFrom = lastSeq + 1;
     manifest.checksum = packageChecksum(manifest);
     packages.push({ manifest, sourceEventIds, firstSeq, lastSeq, sourceEventCount: sourceEventIds.length });
     currentEvents = []; currentSourceCount = 0; currentBytes = 0;
@@ -140,6 +149,10 @@ function validateSyncPackage(value) {
   if (eventSourceIds.length !== manifestSourceIds.length || eventSourceIds.some((id, index) => id !== manifestSourceIds[index])) throw new Error('Sync package source event manifest is inconsistent.');
   const firstSeq = Number(value.firstSeq) || 0, lastSeq = Number(value.lastSeq) || 0;
   if (firstSeq < 0 || lastSeq < firstSeq) throw new Error('Sync package sequence range is invalid.');
+  if (value.coverFromSeq != null) {
+    const cover = Number(value.coverFromSeq);
+    if (!Number.isSafeInteger(cover) || cover < 1 || cover >= firstSeq) throw new Error('Sync package cover range is invalid.');
+  }
   if (value.events.length) {
     const actualFirst = Math.min(...value.events.map(sourceFirstSeq));
     const actualLast = Math.max(...value.events.map(sourceLastSeq));
@@ -160,10 +173,22 @@ function bundleFileName(bundle, options = {}) {
 }
 function gzipBundleFileName(bundle) { return bundleFileName(bundle, { gzip: true }); }
 function sequenceFromBundleFile(name) { return Number(String(name || '').split('-', 1)[0]) || 0; }
+/* Dosya adındaki paket kimliği: indirmeden "bu paket zaten uygulandı mı"
+   sorusunu cevaplamak için. Biçim: <last>-<first>-<packageId><sonek>. */
+function packageIdFromBundleFile(name) {
+  const base = String(name || '').replace(SYNC_GZIP_SUFFIX, '').replace(/\.ready$/, '');
+  const parts = base.split('-');
+  return parts.length >= 3 ? parts.slice(2).join('-') : '';
+}
+/* Alıcının kesintisiz sıra hesabında kullanacağı ilk sıra. */
+function receiptFirstSeq(value) {
+  const first = Number(value && value.firstSeq) || 0, cover = Number(value && value.coverFromSeq) || 0;
+  return cover >= 1 && cover < first ? cover : first;
+}
 function isBundleFile(name) { return String(name || '').endsWith('.ready') || String(name || '').endsWith(SYNC_GZIP_SUFFIX); }
 
 module.exports = {
   SYNC_PACKAGE_VERSION, SYNC_PACKAGE_MAX_EVENTS, SYNC_PACKAGE_MAX_BYTES, SYNC_PACKAGE_DIR, SYNC_GZIP_SUFFIX,
   eventChecksum, packageChecksum, coalescePendingEvents, buildSyncPackages, validateSyncPackage,
-  bundleFileName, gzipBundleFileName, sequenceFromBundleFile, isBundleFile,
+  bundleFileName, gzipBundleFileName, sequenceFromBundleFile, packageIdFromBundleFile, receiptFirstSeq, isBundleFile,
 };

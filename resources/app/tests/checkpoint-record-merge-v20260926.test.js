@@ -73,6 +73,7 @@ test('Sunucu checkpoint onarımı kaydı ezmez, birleştirir ve saati ilerletir'
   const source = require('./helpers/server-source')();
   const start = source.indexOf('async function applyMissingCheckpointRecords');
   const body = source.slice(start, source.indexOf('\n}', start));
-  assert.match(body, /next\.records\[id\] = area === 'master'\s*\? sharedSyncPolicy\.mergeCheckpointRecord\(next\.records\[id\], remoteRecords\[id\]\)/);
+  // CP satırı da birleşir: checkpoint yalnız paylaşılan CP alanlarını taşır, yerel notlar korunur.
+  assert.match(body, /next\.records\[id\] = area === 'master' \|\| \/\^cp-order:\/\.test\(id\)\s*\? sharedSyncPolicy\.mergeCheckpointRecord\(next\.records\[id\], remoteRecords\[id\]\)/);
   assert.match(body, /next\.revision = Math\.max\(Number\(next\.revision\) \|\| 0, sharedSyncPolicy\.checkpointRecordRevision\(remoteRecords\[id\]\)\)/);
 });
