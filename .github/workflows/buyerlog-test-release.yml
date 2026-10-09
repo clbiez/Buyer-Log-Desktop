@@ -53,9 +53,24 @@ jobs:
           cache: npm
           cache-dependency-path: resources/app/package-lock.json
       - name: Install and run full regression
+        shell: pwsh
         run: |
           npm ci --ignore-scripts
-          npm test
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $logFile = Join-Path $env:RUNNER_TEMP 'buyerlog-regression.log'
+          npm test 2>&1 | Tee-Object -FilePath $logFile
+          $testExitCode = $LASTEXITCODE
+          if ($testExitCode -ne 0) {
+            # Surface the actual failure through the GitHub API even when the
+            # cloud environment cannot download Azure-hosted Actions logs.
+            $failures = @(Select-String -Path $logFile -Pattern '^\s*not ok\b' -Context 0,35 | Select-Object -First 10)
+            $details = if ($failures.Count) {
+              ($failures | ForEach-Object { $_.Line; $_.Context.PostContext }) -join "`n"
+            } else { (Get-Content -Path $logFile -Tail 60) -join "`n" }
+            $escaped = $details.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Buyer Log regression failure::$escaped"
+            exit $testExitCode
+          }
   publish:
     needs: full-regression
     runs-on: ubuntu-latest
