@@ -1,14 +1,81 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-09",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Kullanıcı yönetimi: net durum, merkezi varsayılan ufuk",
+    "en": "User management: clear status, central default horizon"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Kullanıcı yönetimi düzenlemenin neden kapalı olduğunu ve ne yapılacağını söyler; Moderatör ve yöneticiler kullanıcılara tüm cihazlarda geçerli varsayılan ufuk atayabilir.",
+    "en": "User management explains why editing is disabled and what to do; Moderators and managers can assign users a default horizon that applies on every device."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "user-management-directory-status",
+      "type": "fix",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "Düzenleme kapalıysa nedeni ve çözümü görünür",
+        "en": "When editing is disabled, the reason and the fix are shown"
+      },
+      "path": {
+        "tr": "Kullanıcı menüsü › Kullanıcı & Yetki Yönetimi",
+        "en": "User menu › User & Authorization Management"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-directory-status.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında Shared Hub'a ulaşılamadığını açıklayan kullanıcı dizini durum kartı",
+          "en": "User directory status card explaining that Shared Hub is unreachable, in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Kart nedeni, yapılacak işi ve hata kodunu gösterir; Yeniden Dene tek tıkla çalışır",
+          "en": "The card shows the cause, what to do and the error code; Try Again works with one click"
+        }
+      },
+      "body": {
+        "tr": "Merkezi kullanıcı dizini eşit değilken ekran yalnız \"Salt okunur / çevrimdışı\" diyordu ve Moderatör neden düzenleyemediğini bilemiyordu. Artık durum kartı nedeni (Shared Hub'a ulaşılamıyor, yerel liste merkezle uyuşmuyor, dizin başka yerde değişti, dosya kilitli vb.), yapılacak işi ve hata kodunu yazar. Ekran açılışta dizini bir kez kendiliğinden yeniden dener; Yeniden Dene onay sormadan çalışır. Kart artık tablonun yanında dar bir sütun değil, üstte tam genişliktedir. Windows'ta yerel kullanıcı önbelleği antivirüs/OneDrive kilidine takıldığında kısa süre yeniden denenir.",
+        "en": "While the central user directory was out of sync, the screen only said \"Read-only / offline\" and the Moderator could not tell why editing was blocked. The status card now states the cause (Shared Hub unreachable, local list differs from the central one, directory changed elsewhere, file locked, etc.), what to do and the error code. The screen retries the directory once when it opens, and Try Again works without a confirmation. The card now spans the full width above the table instead of a narrow column beside it. On Windows, the local user cache is retried briefly when antivirus or OneDrive locks it."
+      }
+    },
+    {
+      "id": "user-management-default-horizon",
+      "type": "feature",
+      "module": {
+        "tr": "Kullanıcı & Yetki Yönetimi",
+        "en": "User & Authorization Management"
+      },
+      "title": {
+        "tr": "Kullanıcılara tüm cihazlarda geçerli varsayılan ufuk atayın",
+        "en": "Assign users a default horizon that applies on every device"
+      },
+      "path": {
+        "tr": "Kullanıcı & Yetki Yönetimi › Kullanıcı › Horizon › Varsayılan Ufuk Ata",
+        "en": "User & Authorization Management › User › Horizon › Assign Default Horizon"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "user-management-default-horizon.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında kaynak ve ekran seçilen Varsayılan Ufuk Ata penceresi",
+          "en": "Assign Default Horizon dialog with source and screen choices in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Kendi ufkunuzu ya da başka bir kullanıcınınkini seçili ekranlar için varsayılan yapın",
+          "en": "Make your own horizon or another user's the default for the selected screens"
+        }
+      },
+      "body": {
+        "tr": "Moderatör ve kullanıcı yönetimi yetkisi olan yöneticiler, bir kullanıcıya (veya toplu seçimle birden çok kullanıcıya) CP, Siparişler, Backlog, LFL ve Fiyat & Üretici Analizi için varsayılan ufuk atayabilir. Kaynak kendi ufkunuz ya da başka bir kullanıcının ufkudur. Varsayılan merkezi kullanıcı dizininde tutulur; kullanıcı hangi cihazdan açarsa açsın onu görür ve sonradan kendi ufkunu değiştirebilir, onun ayarı kazanır. Profil Kopyalama'da Horizon seçildiğinde de ufuk hedeflerin varsayılanı olur; eskiden bu kopya yalnız işlemi yapan bilgisayarda kalıyordu. Varsayılan Kaldır kullanıcıyı rol şablonuna veya ortak filtreye döndürür.",
+        "en": "Moderators and managers with user management rights can assign a user (or several users via bulk selection) a default horizon for CP, Orders, Backlog, LFL and Price & Supplier Analysis. The source is your own horizon or another user's. The default is kept in the central user directory, so the user sees it on whichever device they open and can still change their own horizon afterwards; their setting wins. Selecting Horizon in Copy User Profile also makes the horizon the targets' default; previously that copy stayed on the computer that performed it. Remove Default returns the user to the role template or the shared filter."
+      }
+    }
+  ]
 }

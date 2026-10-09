@@ -136,6 +136,7 @@
     template: { roleId: 'buyer', sourceId: '', search: '', categories: { horizon: true, filters: true, columns: true, views: true, dashboard: true, favorites: true } },
     copy: { sourceType: 'user', sourceId: '', templateRole: 'buyer', targetIds: new Set(), mode: 'MERGE', categories: { userPermissions: true, workspace: { horizon: true, filters: true, columns: true, views: true, dashboard: true, favorites: true }, organization: { role: false, mag: false, mmyg: false, buyingGroup: false, manager: false, dataScope: false } } },
     copySearch: '', copySourceSearch: '', canCopyProfiles: false,
+    iamBusy: false,
     historyQuery: '',
 
     modelConnections: { items: [], loaded: false },
@@ -180,8 +181,8 @@
     method, headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(Object.assign({ expectedRevision: store.revision }, body || {})),
     }).catch(error => {
-      if (error.code === 'IAM_REVISION_CONFLICT') { store.centralIam.status = 'conflict'; error.message = T('Daha yeni kullanıcı dizini bulundu. Kaydetmeden önce dizini yeniden yükleyin.', 'A newer user directory was detected. Reload before saving.'); }
-      if (error.code === 'IAM_OFFLINE') store.centralIam.status = 'offline';
+      if (error.code === 'IAM_REVISION_CONFLICT') { store.centralIam.status = 'conflict'; store.centralIam.lastError = error.code; error.message = T('Daha yeni kullanıcı dizini bulundu. Kaydetmeden önce dizini yeniden yükleyin.', 'A newer user directory was detected. Reload before saving.'); }
+      if (error.code === 'IAM_OFFLINE') { store.centralIam.status = 'offline'; store.centralIam.lastError = error.code; }
       throw error;
     });
   };
@@ -290,7 +291,12 @@
     shell.addEventListener('keydown', onKeyDown);
     overlay.addEventListener('mousedown', event => { if (event.target === overlay) close(); });
     render();
-    reload();
+    // Açılışta dizin eşit değilse bir kez sessizce yeniden denenir; Moderatör
+    // eski bir sağlık durumuna bakıp "düzenleyemiyorum" sonucuna varmasın.
+    reload().then(() => {
+      if (overlay && store.status === 'ready' && store.centralIam.enabled && store.centralIam.status !== 'synced') return refreshDirectory({ silent: true });
+      return null;
+    });
   }
 
   function close() {
@@ -316,20 +322,85 @@
     })[store.section]() + '</fieldset>';
     restoreFocus();
   }
+  /* v20261009 — "SALT OKUNUR / ÇEVRİMDIŞI" ARTIK NEDENİNİ SÖYLER.
+
+     Merkezi dizin eşit değilken düzenleme bilerek kapalıdır: bir cihazın eski
+     ya da farklı dizin üzerine yazması diğer kullanıcıların değişikliklerini
+     ezerdi. Ancak ekran yalnız "Salt okunur / çevrimdışı" diyordu; Moderatör
+     neden düzenleyemediğini ve ne yapması gerektiğini bilemiyordu. Sunucu
+     sağlık kaydındaki hata kodu (lastError) burada insan diline çevrilir ve
+     her durum için yapılacak iş yazılır. */
+  function iamIssue(h) {
+    const code = clean(h.lastError);
+    if (h.status === 'synced') return null;
+    if (h.status === 'stale') return { title: T('Daha yeni bir dizin revizyonu henüz okunamıyor', 'A newer directory revision cannot be read yet'),
+      text: T('Bu cihaz son geçerli revizyonu kullanıyor. OneDrive/SharePoint eşitlemesi sürüyor olabilir ya da yeni revizyon daha yeni bir Buyer Log sürümüyle yazılmış olabilir. Eşitleme bitince veya Buyer Log güncellenince Yeniden Dene.',
+        'This device uses the last valid revision. OneDrive/SharePoint may still be syncing, or the new revision may have been written by a newer Buyer Log version. Try again once syncing finishes or after updating Buyer Log.') };
+    if (h.status === 'uninitialized' || code === 'IAM_NOT_INITIALIZED') return { title: T('Merkezi kullanıcı dizini henüz başlatılmadı', 'The central user directory has not been initialized'),
+      text: T('Shared Hub’da kullanıcı dizini yok. Moderatör “Merkezi Geçişi Doğrula” ile bu cihazdaki kullanıcı listesini revizyon 1 olarak yayımlayabilir.',
+        'There is no user directory in Shared Hub yet. A Moderator can publish this device’s user list as revision 1 with “Validate Central Migration”.') };
+    if (code === 'IAM_MIGRATION_CONFLICT') return { title: T('Bu cihazdaki kullanıcı listesi merkezi dizinle uyuşmuyor', 'This device’s user list does not match the central directory'),
+      text: T('Kullanıcı kaybını önlemek için merkezi dizin bu cihaza otomatik uygulanmadı. Bu cihazdaki eski yerel liste merkezi dizinden farklı. Sistem yöneticinizle hangi listenin esas alınacağını netleştirin; karar verilmeden kaydetme açılmaz.',
+        'To prevent losing users, the central directory was not applied to this device automatically: the old local list here differs from it. Agree with your system administrator which list is authoritative; saving stays disabled until then.') };
+    if (code === 'IAM_REVISION_CONFLICT' || (h.status === 'conflict' && !code)) return { title: T('Dizin başka bir yerde değişti', 'The directory changed elsewhere'),
+      text: T('Başka bir yönetici kullanıcı dizinini güncelledi. Yeniden Dene ile güncel dizini alın; açık taslaklarınız yeniden yüklenir.',
+        'Another administrator updated the user directory. Use Try Again to load the current directory; open drafts are reloaded.') };
+    if (code === 'IAM_REMOTE_REVISION_REGRESSION') return { title: T('Merkezi dizin bu cihazın gördüğünden daha eski', 'The central directory is older than this device has seen'),
+      text: T('Shared Hub klasörü değişmiş ya da yedekten geri yüklenmiş olabilir. Güvenlik için eski dizin bu cihaza uygulanmadı. Veri Yönetimi › Senkron ayarındaki Shared Hub klasörünün doğru olduğunu kontrol edin.',
+        'The Shared Hub folder may have changed or been restored from a backup. For safety, the older directory was not applied to this device. Check that the Shared Hub folder in Data Management › Sync is correct.') };
+    if (code === 'IAM_REVISION_HASH_CONFLICT') return { title: T('Aynı revizyon farklı içerikle görüldü', 'The same revision was seen with different content'),
+      text: T('Merkezi dizinde tutarsız bir revizyon var; güvenlik için uygulanmadı. Sistem yöneticinize bildirin.',
+        'The central directory contains an inconsistent revision; it was not applied for safety. Inform your system administrator.') };
+    if (code === 'IAM_RESTORE_IN_PROGRESS') return { title: T('Geri yükleme sürüyor', 'A restore is in progress'),
+      text: T('Tam sistem geri yüklemesi bitene kadar kullanıcı dizini değiştirilemez.', 'The user directory cannot be changed until the full system restore finishes.') };
+    if (['EPERM', 'EACCES', 'EBUSY'].includes(code)) return { title: T('Yerel kullanıcı önbelleği yazılamadı', 'The local user cache could not be written'),
+      text: T('Dosya başka bir işlem (antivirüs, OneDrive) tarafından kilitli. Birkaç saniye sonra Yeniden Dene; sürerse Buyer Log’u yeniden başlatın.',
+        'The file is locked by another process (antivirus, OneDrive). Try again in a few seconds; if it persists, restart Buyer Log.') };
+    if (code === 'IAM_REMOTE_INVALID' || h.status === 'invalid') return { title: T('Merkezi kullanıcı dizini doğrulanamadı', 'The central user directory could not be verified'),
+      text: T('Son revizyonlar bu cihazda okunamadı veya doğrulamadan geçmedi. OneDrive eşitlemesinin bitmesini bekleyin ya da Buyer Log’u güncelleyin, sonra Yeniden Dene.',
+        'The latest revisions could not be read or verified on this device. Wait for OneDrive to finish syncing or update Buyer Log, then try again.') };
+    return { title: T('Shared Hub’a ulaşılamıyor', 'Shared Hub is unreachable'),
+      text: T('Kullanıcı dizini Shared Hub klasöründe tutulur ve şu an bu cihazdan okunamıyor. Ağ/VPN bağlantısını ve OneDrive eşitlemesini kontrol edin; Veri Yönetimi › Senkron ayarındaki klasörün bu cihazda açıldığından emin olun, sonra Yeniden Dene.',
+        'The user directory lives in the Shared Hub folder and cannot be read from this device right now. Check the network/VPN connection and OneDrive sync, make sure the folder in Data Management › Sync opens on this device, then try again.') };
+  }
   function centralStatusHtml() {
     const h = store.centralIam;
     if (!h.enabled) return '';
-    const label = h.status === 'synced' ? T('Senkronize', 'Synced') : h.status === 'conflict'
-      ? T('Dizin değişti; yeniden yükleyin', 'Directory changed; reload') : h.status === 'uninitialized'
-      ? T('Merkezi dizin başlatılmadı', 'Central directory not initialized') : T('Salt okunur / çevrimdışı', 'Read-only / offline');
-    return `<div class="umToolbar" data-um-iam-status role="status"><span class="umNote">${esc(T('Merkezi Kullanıcı Yönetimi', 'Central User Management'))} · ${esc(T('Revizyon', 'Revision'))} ${Number(h.localRevision) || 0} · ${esc(label)} · ${esc(formatDateTime(h.lastSyncAt))}</span>
-      <button class="umBtn umBtnSmall" data-act="iamRefresh">${esc(T('Kullanıcı Dizinini Yenile', 'Refresh User Directory'))}</button>
-      ${h.status === 'uninitialized' && store.actor && store.actor.systemRole === 'moderator' ? `<button class="umBtn umBtnPrimary" data-act="iamInitialize">${esc(T('Merkezi Geçişi Doğrula', 'Validate Central Migration'))}</button>` : ''}</div>`;
+    const meta = `${T('Revizyon', 'Revision')} ${Number(h.localRevision) || 0} · ${T('Son eşitleme', 'Last sync')} ${formatDateTime(h.lastSyncAt)}`;
+    const issue = iamIssue(h);
+    if (!issue) return `<div class="umIamBanner isSynced" data-um-iam-status role="status"><span class="umIamDot" aria-hidden="true"></span><span class="umNote"><b>${esc(T('Merkezi kullanıcı dizini eşit', 'Central user directory in sync'))}</b> · ${esc(meta)}</span>
+      <button type="button" class="umBtn umBtnSmall umBtnGhost" data-act="iamRefresh" ${store.iamBusy ? 'disabled' : ''}>${esc(T('Yenile', 'Refresh'))}</button></div>`;
+    const canInitialize = (h.status === 'uninitialized' || h.lastError === 'IAM_NOT_INITIALIZED') && store.actor && store.actor.systemRole === 'moderator';
+    return `<div class="umIamBanner isBlocked" data-um-iam-status role="alert">
+      <div class="umIamText">
+        <b>${esc(issue.title)}</b>
+        <p>${esc(issue.text)}</p>
+        <p class="umNote">${esc(T('Düzenleme geçici olarak kapalı: değişiklikler tüm cihazlarda tutarlı kalsın diye yalnız merkezi dizin eşitken kaydedilir.', 'Editing is temporarily disabled: changes are saved only while the central directory is in sync, so every device stays consistent.'))}</p>
+        <p class="umNote">${esc(meta)}${h.lastError ? ` · ${esc(T('Kod', 'Code'))}: ${esc(h.lastError)}${h.lastErrorDetail ? ` (${esc(h.lastErrorDetail)})` : ''}` : ''}</p>
+      </div>
+      <div class="umIamActions">
+        <button type="button" class="umBtn umBtnPrimary" data-act="iamRefresh" ${store.iamBusy ? 'disabled' : ''}>${esc(store.iamBusy ? T('Deneniyor…', 'Trying…') : T('Yeniden Dene', 'Try Again'))}</button>
+        ${canInitialize ? `<button type="button" class="umBtn" data-act="iamInitialize">${esc(T('Merkezi Geçişi Doğrula', 'Validate Central Migration'))}</button>` : ''}
+      </div></div>`;
   }
-  async function refreshDirectory() {
-    if (!confirm(T('Dizin yeniden yüklenecek. Açık form ve rol taslaklarındaki kaydedilmemiş değişiklikler bırakılsın mı?', 'Reload the directory and discard unsaved form and role drafts?'))) return;
-    try { await api('/api/iam/refresh', { method: 'POST' }); closeDialog(); store.roleDirty = false; await reload(); }
-    catch (error) { toast(error.message); }
+  /* Dizini sunucudan yeniden çeker. Onay yalnız kaybolacak bir rol taslağı
+     varsa sorulur; "Yeniden Dene" tek tıkla çalışmalı. silent=true açılıştaki
+     otomatik denemedir: hata mesajı yerine kart güncellenir. */
+  async function refreshDirectory({ silent = false } = {}) {
+    if (!silent && store.roleDirty && !confirm(T('Rol taslağındaki kaydedilmemiş değişiklikler bırakılsın mı?', 'Discard the unsaved changes in the role draft?'))) return;
+    if (store.iamBusy) return;
+    store.iamBusy = true;
+    const status = shell && shell.querySelector('[data-um-iam-status]');
+    if (status) status.outerHTML = centralStatusHtml();
+    // Başarısız yenilemenin nedeni sağlık kaydına yazılır; aşağıdaki reload onu okur.
+    try { await api('/api/iam/refresh', { method: 'POST' }); } catch (_) {}
+    store.iamBusy = false;
+    if (!silent) { closeDialog(); store.roleDirty = false; }
+    await reload({ silent: true });
+    if (!silent) {
+      const issue = iamIssue(store.centralIam);
+      toast(issue ? issue.title : T('Kullanıcı dizini güncel.', 'The user directory is up to date.'));
+    }
   }
   async function initializeDirectory() {
     try {
@@ -650,6 +721,7 @@
       ${anyActive ? `<button type="button" class="umBtn umBtnSmall" data-act="bulkDeactivate">${esc(T('Pasife Al', 'Deactivate'))}</button>` : ''}
       <button type="button" class="umBtn umBtnSmall" data-act="bulkManager">${esc(T('Yönetici Ata', 'Assign Manager'))}</button>
       <button type="button" class="umBtn umBtnSmall" data-act="bulkScope">${esc(T('MAG/MMYG Değiştir', 'Change MAG/MMYG'))}</button>
+      <button type="button" class="umBtn umBtnSmall" data-act="horizonAssign">${esc(T('Varsayılan Ufuk Ata', 'Assign Default Horizon'))}</button>
       ${store.canCopyProfiles ? `<button type="button" class="umBtn umBtnSmall" data-act="bulkCopy">${esc(T('Profil Kopyala', 'Copy Profile'))}</button>` : ''}
       <button type="button" class="umBtn umBtnGhost umBtnSmall" data-act="clearSelection">${esc(T('Seçimi Bırak', 'Clear Selection'))}</button>
     </div>`;
@@ -872,12 +944,13 @@
        2) Kullanıcıya ÖZEL yazılmış ufuk (ön tanımı ezer).
      Sıfırlamak, kullanıcıyı (1)'e geri döndürür — veriyi silmez, yalnız
      kişisel tercihi kaldırır. */
+  // Etiketler çizim anında aktif dilden okunur (dil değişince yeniden çizilir).
   const HORIZON_MODULES = [
-    ['cp', 'CP'],
-    ['orders', T('Siparişler', 'Orders')],
-    ['backlog', 'Backlog'],
-    ['lfl', 'LFL'],
-    ['priceanalysis', T('Fiyat & Üretici Analizi', 'Price & Supplier Analysis')],
+    ['cp', 'CP', 'CP'],
+    ['orders', 'Siparişler', 'Orders'],
+    ['backlog', 'Backlog', 'Backlog'],
+    ['lfl', 'LFL', 'LFL'],
+    ['priceanalysis', 'Fiyat & Üretici Analizi', 'Price & Supplier Analysis'],
   ];
   /* v7.81 — HORIZON ÖN AYARLARI KALDIRILDI (kullanıcı kararı).
 
@@ -888,25 +961,99 @@
      Bu panelde geriye yönetici için ANLAMLI olan tek eylem kaldı: bir
      kullanıcının kişisel ufkunu SIFIRLAMAK. Sıfırlanınca o kullanıcı Veri
      Yönetimi'ndeki ortak filtreyi görür — yani herkesin gördüğünü. */
+  /* v20261009 — VARSAYILAN UFUK MERKEZİ OLDU (kullanıcı talebi).
+
+     "Kullanıcılar horizonlarını kendileri ayarlayabilsin ancak onların
+     varsayılanını açılışta moderatör ve yönetici belirleyebilsin."
+
+     Kişisel ufuk cihazda yaşar; buradan bir kullanıcı için yazılan kişisel
+     ayar o kullanıcının kendi cihazına ulaşmıyordu. Atanmış varsayılan artık
+     merkezi kullanıcı dizininde tutulur: kullanıcı hangi cihazdan açarsa açsın
+     onu görür, sonra isterse kendi ekranından değiştirir (onun ayarı kazanır).
+     Varsayılanı yeniden atamak, atamadan eski kişisel ayarın önüne geçer. */
+  const horizonModuleLabel = id => { const item = HORIZON_MODULES.find(([key]) => key === id); return item ? T(item[1], item[2]) : id; };
+  function horizonDefaultText(user) {
+    const assigned = user && user.horizonDefault;
+    if (!assigned || !list(assigned.modules).length) return T('yok — rol şablonu veya ortak filtre geçerli', 'none — the role template or shared filter applies');
+    return `${list(assigned.modules).map(horizonModuleLabel).join(', ')} · ${T('kaynak', 'source')}: ${dash(assigned.sourceName)} · ${formatDateTime(assigned.assignedAt)}`;
+  }
+  function canAssignHorizon(user) {
+    return Boolean(user && user.canEdit !== false && store.actor && (store.actor.canManageUsers || store.actor.systemRole === 'moderator'));
+  }
   function detailHorizon(user) {
     const module = store.horizonModule;
-    const editable = user.canEdit !== false && (store.actor && (store.actor.canManageUsers || store.actor.systemRole === 'moderator'));
+    const editable = canAssignHorizon(user);
+    const template = store.workspaceTemplates[user.systemRole] || {};
+    const templateHorizon = Number(template.categoryCounts && template.categoryCounts.horizon) || 0;
     return `<div class="umHorizonPane">
       <p class="umNote">${esc(T(
-        'Kişisel ufuk, Veri Yönetimi’ndeki ortak filtreyi ezer. Buradan sıfırlarsanız kullanıcı ortak filtreye döner ve ekranı herkesinkiyle aynı olur. Ufkun kendisi kullanıcının kendi ekranından ayarlanır.',
-        'A personal horizon overrides the shared filter in Data Management. Resetting it here returns the user to the shared filter, so their screen matches everyone else’s. The horizon itself is set from the user’s own screen.',
+        'Kullanıcı ufkunu kendi ekranından değiştirebilir. Burada atadığınız varsayılan, kullanıcının bütün cihazlarında açılışta geçerli olur; kullanıcı sonradan kendi ayarını yaparsa onunki kazanır.',
+        'Users can change their horizon on their own screen. The default you assign here applies on every device the user opens; if the user later sets their own, theirs wins.',
       ))}</p>
-      <div class="umHorizonRow">
-        <label>${esc(T('Ekran', 'Screen'))}${selectHtml('data-um-horizonmodule', HORIZON_MODULES.map(([id, label]) => ({ value: id, label })), module)}</label>
-      </div>
       <dl class="umFacts">
-        <div><dt>${esc(T('MAG / MMYG / Buying Group', 'MAG / MMYG / Buying Group'))}</dt><dd>${esc([dash(joinText(user.mags)), dash(joinText(user.mmygs)), dash(joinText(user.buyingGroups))].join(' · '))}</dd></div>
-        <div><dt>${esc(T('Kişisel ufku', 'Personal horizon'))}</dt><dd>${user.hasHorizon ? esc(T('var — ortak filtreyi eziyor', 'set — overrides the shared filter')) : esc(T('yok — ortak filtreyi görüyor', 'none — sees the shared filter'))}</dd></div>
+        <div><dt>${esc(T('Atanmış varsayılan ufuk', 'Assigned default horizon'))}</dt><dd>${esc(horizonDefaultText(user))}</dd></div>
+        <div><dt>${esc(T('Rol şablonu', 'Role template'))}</dt><dd>${esc(templateHorizon
+          ? T(`Standard ${roleLabel(user.systemRole)} · ${templateHorizon} ekran`, `Standard ${roleLabel(user.systemRole)} · ${templateHorizon} screens`)
+          : T('yok — ortak filtre geçerli', 'none — the shared filter applies'))}</dd></div>
       </dl>
       ${editable ? `<div class="umDrawerActions">
-        <button type="button" class="umBtn umBtnDanger" data-act="horizonReset" data-id="${esc(user.id)}">${esc(T('Kişisel Ufku Sıfırla', 'Reset Personal Horizon'))}</button>
-      </div>` : `<p class="umNote">${esc(T('Bu kullanıcının ufkunu değiştirme yetkiniz yok.', 'You are not allowed to change this user’s horizon.'))}</p>`}
+        <button type="button" class="umBtn umBtnPrimary" data-act="horizonAssign" data-id="${esc(user.id)}">${esc(T('Varsayılan Ufuk Ata', 'Assign Default Horizon'))}</button>
+        ${user.horizonDefault ? `<button type="button" class="umBtn" data-act="horizonClear" data-id="${esc(user.id)}">${esc(T('Varsayılanı Kaldır', 'Remove Default'))}</button>` : ''}
+      </div>
+      <details class="umHorizonAdvanced">
+        <summary>${esc(T('Bu cihazdaki kişisel ufku sıfırla', 'Reset the personal horizon on this device'))}</summary>
+        <p class="umNote">${esc(T('Yalnız bu bilgisayarda kayıtlı kişisel ufku siler; kullanıcı burada ortak filtreye/varsayılana döner.', 'Removes only the personal horizon stored on this computer; here the user returns to the shared filter/default.'))}</p>
+        <div class="umHorizonRow">
+          <label>${esc(T('Ekran', 'Screen'))}${selectHtml('data-um-horizonmodule', HORIZON_MODULES.map(([id, tr, en]) => ({ value: id, label: T(tr, en) })), module)}</label>
+        </div>
+        <div class="umDrawerActions"><button type="button" class="umBtn umBtnDanger" data-act="horizonReset" data-id="${esc(user.id)}">${esc(T('Kişisel Ufku Sıfırla', 'Reset Personal Horizon'))}</button></div>
+      </details>` : `<p class="umNote">${esc(T('Bu kullanıcının ufkunu değiştirme yetkiniz yok.', 'You are not allowed to change this user’s horizon.'))}</p>`}
     </div>`;
+  }
+  function openHorizonDefaultDialog(ids) {
+    const targets = list(ids).map(userById).filter(user => canAssignHorizon(user));
+    if (!targets.length) { toast(T('Varsayılan ufuk atanabilecek kullanıcı seçilmedi.', 'No user you can assign a default horizon to is selected.')); return; }
+    const targetIds = new Set(targets.map(user => user.id));
+    const self = store.actor ? store.actor.id : '';
+    const sources = [
+      ...(self ? [{ value: self, label: T('Benim ufkum (bu cihazdaki ayarım)', 'My horizon (my setting on this device)') }] : []),
+      ...store.users.filter(user => user.id !== self && user.status === 'ACTIVE' && !targetIds.has(user.id))
+        .map(user => ({ value: user.id, label: `${userName(user)} — ${roleLabel(user.systemRole)}` })),
+    ];
+    openDialog(T('Varsayılan Ufuk Ata', 'Assign Default Horizon'), `
+      <p class="umConfirmText">${esc(targets.length === 1 ? userName(targets[0]) : T(`${targets.length} kullanıcı`, `${targets.length} users`))}</p>
+      <label>${esc(T('Ufku nereden alalım?', 'Where should the horizon come from?'))}${selectHtml('name="sourceUserId" required', sources, self)}</label>
+      <fieldset class="umHorizonModules"><legend>${esc(T('Ekranlar', 'Screens'))}</legend>
+        ${HORIZON_MODULES.map(([id, tr, en]) => `<label class="umCheck"><input type="checkbox" name="module" value="${esc(id)}" checked><span>${esc(T(tr, en))}</span></label>`).join('')}
+      </fieldset>
+      <p class="umNote">${esc(T('Kaynağın bu cihazda geçerli ufku kopyalanır ve merkezi dizine yazılır. Kullanıcı bir sonraki açılışta bunu görür; daha önce kendi kaydettiği ufuk bu ekranlarda varsayılana döner.', 'The source’s horizon as it applies on this device is copied and saved in the central directory. The user sees it the next time they open Buyer Log; a horizon they saved earlier returns to this default on these screens.'))}</p>
+      <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(T('Varsayılan ufuk atandı.', 'Default horizon assigned.'))}"></label>`, {
+      confirmLabel: T('Ata', 'Assign'),
+      onSubmit: async data => {
+        const modules = data.getAll('module').map(clean).filter(Boolean);
+        if (!modules.length) throw new Error(T('En az bir ekran seçin.', 'Select at least one screen.'));
+        const result = await send('/api/iam/horizon-defaults', 'POST', { sourceUserId: clean(data.get('sourceUserId')), targetUserIds: [...targetIds], modules, reason: clean(data.get('reason')) });
+        closeDialog();
+        await reload({ silent: true });
+        toast(T(`${targets.length} kullanıcıya varsayılan ufuk atandı: ${list(result.modules).map(horizonModuleLabel).join(', ')}`, `Default horizon assigned to ${targets.length} users: ${list(result.modules).map(horizonModuleLabel).join(', ')}`));
+      },
+    });
+  }
+  function openHorizonClearDialog(id) {
+    const user = userById(id);
+    if (!user || !user.horizonDefault) return;
+    openDialog(T('Varsayılan Ufku Kaldır', 'Remove Default Horizon'), `
+      <p class="umConfirmText">${esc(userName(user))} · ${esc(horizonDefaultText(user))}</p>
+      <p class="umNote">${esc(T('Kullanıcı rol şablonuna veya Veri Yönetimi’ndeki ortak filtreye döner. Kullanıcının kendi kaydettiği ufuk korunur.', 'The user returns to the role template or the shared filter from Data Management. A horizon the user saved themselves is kept.'))}</p>
+      <label>${esc(T('Gerekçe', 'Reason'))}<input name="reason" required value="${esc(T('Varsayılan ufuk kaldırıldı.', 'Default horizon removed.'))}"></label>`, {
+      confirmLabel: T('Kaldır', 'Remove'), danger: true,
+      onSubmit: async data => {
+        await send('/api/iam/horizon-defaults', 'POST', { targetUserIds: [user.id], modules: list(user.horizonDefault.modules), clear: true, reason: clean(data.get('reason')) });
+        closeDialog();
+        await reload({ silent: true });
+        toast(T('Varsayılan ufuk kaldırıldı.', 'The default horizon was removed.'));
+      },
+    });
   }
 
   async function loadHorizonConnections() {
@@ -1725,6 +1872,8 @@
       case 'close': close(); return;
       case 'retry': reload(); return;
       case 'iamRefresh': void refreshDirectory(); return;
+      case 'horizonAssign': openHorizonDefaultDialog(id ? [id] : [...store.selectedIds]); return;
+      case 'horizonClear': openHorizonClearDialog(id); return;
       case 'iamInitialize': void initializeDirectory(); return;
       case 'section':
         if (store.roleDirty && store.section === 'roles' && id !== 'roles' && !confirm(T('Rol yetkilerinde kaydedilmemiş değişiklikler var. Bırakılsın mı?', 'Role permissions have unsaved changes. Discard them?'))) return;

@@ -16,6 +16,16 @@ app.post('/api/iam/users/bulk', instance.requireUserAdmin, instance.adminBulkHan
 app.post('/api/iam/permissions/copy', instance.requireCapability('USER.GRANT'), instance.permissionCopyHandler);
 app.post('/api/iam/initialize', instance.requireModerator, instance.iamInitializeHandler);
 app.post('/api/iam/refresh', instance.requireUserAdmin, instance.iamRefreshHandler);
+app.post('/api/iam/horizon-defaults', instance.requireUserAdmin, instance.horizonDefaultsHandler);
+app.post('/api/iam/profile-copy', instance.requireCapability('USER.PROFILE_COPY'), instance.profileCopyHandler);
+// Kişisel ufuk bu cihazın tercih dosyasına yazılır; çözümleme sunucudaki gerçek zincirle yapılır.
+const userPreferences = require('../../server/lib/user-preferences');
+app.put('/api/user-workspace/:module/horizon', (req, res) => { userPreferences.saveHorizon(req.currentUser.id, req.params.module, req.body.horizon); res.json({ ok: true }); });
+app.get('/api/user-workspace/:module', (req, res) => {
+  const roleEntries = instance.roleWorkspaceEntries(req.currentUser);
+  res.json({ horizon: userPreferences.resolveHorizon(req.currentUser.id, req.params.module, null, {}, roleEntries),
+    layer: userPreferences.resolveHorizonProvenance(req.currentUser.id, req.params.module, null, {}, roleEntries).layer });
+});
 app.get('/api/cp-probe', instance.requireArea('cp'), (_req, res) => res.json({ ok: true }));
 app.get('/api/metrics', (_req, res) => res.json(access.getCentralIam().metrics));
 const server = app.listen(0, '127.0.0.1', () => process.send({ port: server.address().port }));

@@ -253,6 +253,37 @@ function normalizeWorkspaceTemplates(value) {
       updatedAt: clean(raw.updatedAt) || null,
     };
   }
+  // Boşken hiç yazılmaz: mevcut merkezi dizinlerin içeriği (ve özeti) değişmez.
+  const userDefaults = normalizeUserWorkspaceDefaults(src.userDefaults);
+  if (userDefaults.length) out.userDefaults = userDefaults;
+  return out;
+}
+/* KİŞİYE ATANMIŞ VARSAYILAN UFUK (Horizon).
+
+   Kişisel çalışma alanı tercihleri cihazda yaşar; Moderatörün kendi cihazında
+   başka bir kullanıcı için yazdığı ufuk o kullanıcının cihazına hiç ulaşmıyordu.
+   Atanmış varsayılan bu yüzden merkezi IAM dizininde (workspacePolicies) taşınır
+   ve her cihazda rol şablonunun üstünde, kişinin kendi ayarının altında çözülür.
+   Yalnız Horizon anahtarları kabul edilir; dizine başka tercih sızmaz. */
+const USER_DEFAULT_HORIZON_KEY = /^buyerlog\.workspace\.horizon\.[a-z0-9_-]{1,40}\.v1$/;
+const USER_DEFAULT_VALUE_LIMIT = 256 * 1024;
+function normalizeUserWorkspaceDefaults(value) {
+  const out = [], seen = new Set();
+  for (const raw of Array.isArray(value) ? value : []) {
+    const userId = clean(raw && raw.userId);
+    if (!userId || seen.has(userId)) continue;
+    const entries = {};
+    const source = raw.entries && typeof raw.entries === 'object' && !Array.isArray(raw.entries) ? raw.entries : {};
+    for (const [key, item] of Object.entries(source)) {
+      if (!USER_DEFAULT_HORIZON_KEY.test(key)) continue;
+      const text = String(item && typeof item === 'object' ? (item.value == null ? '' : item.value) : (item == null ? '' : item));
+      if (!text || text.length > USER_DEFAULT_VALUE_LIMIT) continue;
+      entries[key] = { value: text, updatedAt: clean(item && item.updatedAt) || clean(raw.assignedAt) || null };
+    }
+    if (!Object.keys(entries).length) continue;
+    seen.add(userId);
+    out.push({ userId, entries, assignedAt: clean(raw.assignedAt) || null, assignedBy: clean(raw.assignedBy) || null, sourceName: clean(raw.sourceName).slice(0, 120) });
+  }
   return out;
 }
 function migrateStore(store) {
@@ -375,7 +406,7 @@ function filterRows(profile, rows, store) { const scope = effectiveDataScope(pro
 module.exports = {
   ORG_LEVELS, ORG_LEVEL_RANK, SYSTEM_ROLES, ROLE_DEFAULT_SCOPE, USER_STATUSES, DATA_SCOPE_MODES, ACTIONS, RESOURCES,
   PERMISSION_REGISTRY, PERMISSION_CODES, SECURITY_PERMISSIONS, SAFE_VIEW_PERMISSIONS, BUYER_DEFAULT_PERMISSIONS, SHARED_SETTINGS_PERMISSION, ROLE_DEFAULTS_REVISION, LEGACY_AREA_RESOURCE,
-  normalizeProfileIam, normalizeRoles, normalizeWorkspaceTemplates, migrateStore, identityKeys, findDuplicate, descendants, validateHierarchy,
+  normalizeProfileIam, normalizeRoles, normalizeWorkspaceTemplates, normalizeUserWorkspaceDefaults, migrateStore, identityKeys, findDuplicate, descendants, validateHierarchy,
   assignedPermissionDetails, effectivePermissionDetails, effectivePermissionSet, hasPermission, isSecurityPermission,
   isPrivilegedRole, canAdminUsers, canGrant, effectiveDataScope, rowInScope, filterRows, normalizeGrant, clean, uniq,
 };

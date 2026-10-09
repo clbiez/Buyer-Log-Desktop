@@ -2311,6 +2311,7 @@ app.delete('/api/iam/workspace-templates/:roleId', userAccess.requireCapability(
 app.post('/api/iam/permissions/copy', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '2mb' }), userAccess.permissionCopyHandler);
 app.post('/api/iam/profile-copy/preview', userAccess.requireCapability('USER.PROFILE_COPY'), express.json({ limit: '2mb' }), userAccess.profileCopyPreviewHandler);
 app.post('/api/iam/profile-copy', userAccess.requireCapability('USER.PROFILE_COPY'), express.json({ limit: '2mb' }), userAccess.profileCopyHandler);
+app.post('/api/iam/horizon-defaults', userAccess.requireUserAdmin, express.json({ limit: '2mb' }), userAccess.horizonDefaultsHandler);
 app.post('/api/iam/users/:id/temporary-grants', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '256kb' }), userAccess.temporaryGrantHandler);
 app.delete('/api/iam/users/:id/temporary-grants/:grantId', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '64kb' }), userAccess.temporaryGrantRevokeHandler);
 app.get('/api/iam/audit', userAccess.requireCapability('AUDIT.VIEW'), userAccess.auditListHandler);

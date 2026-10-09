@@ -157,8 +157,23 @@ function writeLocalAtomic(file, value, validate = () => {}) {
     try { fs.writeFileSync(fd, serialized); fs.fsyncSync(fd); } finally { fs.closeSync(fd); }
     const checked = JSON.parse(fs.readFileSync(tmp, 'utf8')); validate(checked);
     if (digest(checked) !== digest(value)) throw error('IAM_LOCAL_INVALID');
-    fs.renameSync(tmp, file);
+    renameWithRetry(tmp, file);
   } finally { try { fs.unlinkSync(tmp); } catch (e) { if (e.code !== 'ENOENT') throw e; } }
+}
+/* Windows'ta antivirüs, OneDrive veya aynı anda okuyan bir istek hedef dosyayı
+   kısa süre kilitler; rename EPERM/EACCES/EBUSY ile düşer. Tek denemede
+   vazgeçmek merkezi dizinin bu cihaza hiç uygulanamamasına (Revizyon 0 ·
+   salt okunur) yol açabiliyordu. Kısa ve sınırlı bekleme ile yeniden denenir;
+   kalıcı hata eskisi gibi yukarı iletilir. */
+const TRANSIENT_RENAME_CODES = new Set(['EPERM', 'EACCES', 'EBUSY']);
+function renameWithRetry(from, to, delays = [25, 50, 100, 200, 400], rename = fs.renameSync) {
+  for (let attempt = 0; ; attempt += 1) {
+    try { return rename(from, to); }
+    catch (e) {
+      if (!TRANSIENT_RENAME_CODES.has(e && e.code) || attempt >= delays.length) throw e;
+      Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, delays[attempt]);
+    }
+  }
 }
 async function writeStaged(file, value) {
   const handle = await fsp.open(file, 'wx', 0o600);
@@ -463,4 +478,4 @@ function safeAudit(audit) {
   return audit;
 }
 
-module.exports = { createCentralIam, snapshotFromStore, storeFromSnapshot, validateSnapshot, validateCache, writeLocalAtomic, baseline, digest, stableUuid, normalizeUsername };
+module.exports = { createCentralIam, snapshotFromStore, storeFromSnapshot, validateSnapshot, validateCache, writeLocalAtomic, renameWithRetry, baseline, digest, stableUuid, normalizeUsername };

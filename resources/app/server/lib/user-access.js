@@ -782,11 +782,42 @@ function roleWorkspaceEntries(profileOrId, store = readStore()) {
     : profileById(store, clean(profileOrId));
   const roleId = clean(profile && profile.systemRole) || (Object.prototype.hasOwnProperty.call(iam.SYSTEM_ROLES, clean(profileOrId)) ? clean(profileOrId) : 'buyer');
   const template = workspaceTemplateForRole(store, roleId);
-  return userPreferences.normalizeWorkspaceEntryMap(template && template.entries, userPreferences.WORKSPACE_CATEGORIES);
+  const roleEntries = userPreferences.normalizeWorkspaceEntryMap(template && template.entries, userPreferences.WORKSPACE_CATEGORIES);
+  // Kişiye atanmış varsayılan ufuk rol şablonunun üstündedir; kişinin kendi
+  // ayarı ise ikisinin de üstünde kalır (user-preferences çözümleme sırası).
+  const assigned = profile ? userWorkspaceDefault(store, profile.id) : null;
+  return assigned ? { ...roleEntries, ...userPreferences.normalizeWorkspaceEntryMap(assigned.entries, ['horizon']) } : roleEntries;
+}
+/* Kişiye atanmış varsayılan ufuk (merkezi dizinde, bkz. iam-core). */
+const HORIZON_DEFAULT_MODULES = Object.freeze(['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
+// Liste ekranı her profil için sorar; aynı dizin nesnesi için dizin bir kez kurulur.
+// Yazan işleyiciler store.iam'ı yeni nesneyle değiştirir, önbellek kendiliğinden düşer.
+const userWorkspaceDefaultIndex = new WeakMap();
+function userWorkspaceDefault(store, userId) {
+  const id = clean(userId);
+  const raw = store && store.iam && store.iam.workspaceTemplates;
+  if (!id || !raw || typeof raw !== 'object' || !Array.isArray(raw.userDefaults)) return null;
+  let index = userWorkspaceDefaultIndex.get(raw);
+  if (!index) {
+    index = new Map(iam.normalizeUserWorkspaceDefaults(raw.userDefaults).map(item => [item.userId, item]));
+    userWorkspaceDefaultIndex.set(raw, index);
+  }
+  return index.get(id) || null;
+}
+function horizonDefaultModules(entry) {
+  return Object.keys(entry && entry.entries || {}).map(key => (/^buyerlog\.workspace\.horizon\.([a-z0-9_-]+)\.v1$/.exec(key) || [])[1]).filter(Boolean);
+}
+// Atama bu cihazda bir kez uygulanır; aynı atama için kişisel dosya yeniden okunmaz.
+const appliedHorizonDefaults = new Map();
+function applyAssignedHorizonDefault(profile, store) {
+  const assigned = profile && profile.id ? userWorkspaceDefault(store, profile.id) : null;
+  if (!assigned || !assigned.assignedAt || appliedHorizonDefaults.get(profile.id) === assigned.assignedAt) return;
+  try { userPreferences.supersedePersonalHorizons(profile.id, Object.keys(assigned.entries), assigned.assignedAt); appliedHorizonDefaults.set(profile.id, assigned.assignedAt); }
+  catch (_) {}
 }
 function workspaceTemplateSummaries(store) {
   const templates = iam.normalizeWorkspaceTemplates(store && store.iam && store.iam.workspaceTemplates);
-  return Object.fromEntries(Object.entries(templates).map(([roleId, template]) => {
+  return Object.fromEntries(Object.keys(iam.SYSTEM_ROLES).map(roleId => [roleId, templates[roleId]]).map(([roleId, template]) => {
     const entries = userPreferences.normalizeWorkspaceEntryMap(template.entries, userPreferences.WORKSPACE_CATEGORIES);
     const categoryCounts = {};
     for (const key of Object.keys(entries)) {
@@ -1421,6 +1452,10 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       directPermissions: profile.directPermissions || [], temporaryPermissions: profile.temporaryPermissions || [],
       assignedPermissions: assigned, effectivePermissions: effective,
       canEdit: canManageTarget(actor, profile, store),
+      horizonDefault: (() => {
+        const assigned = userWorkspaceDefault(store, profile.id);
+        return assigned ? { modules: horizonDefaultModules(assigned), assignedAt: assigned.assignedAt, assignedBy: assigned.assignedBy, sourceName: assigned.sourceName } : null;
+      })(),
       updatedAt: profile.updatedAt || null,
     };
   }
@@ -1884,13 +1919,86 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
           ? userPreferences.copyWorkspaceSnapshot(source.id, id, workspaceCategories, mode)
           : userPreferences.copyWorkspaceEntrySnapshot(sourceWorkspaceEntries, id, workspaceCategories, mode));
       }
+      /* Horizon kopyası kişisel tercih olarak yalnız bu cihaza yazılıyordu; hedef
+         kullanıcı başka cihazda açınca hiçbir şey görmüyordu. Kaynağın ufku artık
+         hedeflerin ATANMIŞ VARSAYILANI olarak merkezi dizine de yazılır. */
+      let horizonAssigned = false;
+      if (changed.length && workspaceCategories.includes('horizon')) {
+        const horizonEntries = source
+          ? userPreferences.effectiveWorkspaceEntries(source.id, roleWorkspaceEntries(source, store), ['horizon']).entries
+          : userPreferences.normalizeWorkspaceEntryMap(sourceWorkspaceEntries, ['horizon']);
+        const assignable = Object.fromEntries(Object.entries(horizonEntries).filter(([key, item]) => HORIZON_DEFAULT_MODULES.some(module => key === userPreferences.horizonKey(module)) && clean(item && item.value)));
+        if (Object.keys(assignable).length) {
+          const now = new Date().toISOString(), templates = iam.normalizeWorkspaceTemplates(store.iam && store.iam.workspaceTemplates);
+          const defaults = (templates.userDefaults || []).filter(item => !changed.includes(item.userId));
+          for (const id of changed) {
+            const previous = userWorkspaceDefault(store, id);
+            const kept = mode === 'REPLACE' ? {} : (previous && previous.entries || {});
+            const next = {};
+            for (const [key, item] of Object.entries({ ...kept, ...assignable })) next[key] = { value: item.value, updatedAt: now };
+            defaults.push({ userId: id, entries: next, assignedAt: now, assignedBy: actor.id, sourceName });
+          }
+          templates.userDefaults = defaults;
+          store.iam = { ...(store.iam || {}), version: 5, workspaceTemplates: templates };
+          horizonAssigned = true;
+        }
+      }
       let saved = store;
-      try { if (changed.length && (centralConfigured || copyPermissions || Object.values(organization).some(Boolean))) saved = saveStore(store, body.expectedRevision); }
+      try { if (changed.length && (centralConfigured || horizonAssigned || copyPermissions || Object.values(organization).some(Boolean))) saved = saveStore(store, body.expectedRevision); }
       catch (error) { for (const [targetId, entries] of workspaceBackups) userPreferences.replaceWorkspaceEntries(targetId, entries, userPreferences.WORKSPACE_CATEGORIES, 'REPLACE'); throw error; }
       const success = results.filter(item => item.status === 'SUCCESS').length, failed = results.filter(item => item.status === 'FAILED').length;
       appendAudit(actor, 'USER_PROFILE_COPIED', sourceId, { sourceUserId: source && source.id || null, sourceTemplateRole: templateRole || null, sourceName, targetUserIds: changed, mode, categories: { userPermissions: copyPermissions, workspace: workspaceCategories, organization }, results, success, failed, permissions: copyPermissions ? sourceCodes : [], reason: clean(body.reason) }, req);
       res.json({ ok: failed === 0, revision: saved._revision, copiedTo: changed, mode, success, failed, skipped: 0, results });
     } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'PROFILE_COPY_FAILED', currentRevision: err.currentRevision }); }
+  }
+  /* VARSAYILAN UFUK ATAMA (Moderatör / Yönetici).
+
+     Kaynak, işlemi yapanın ya da seçilen kullanıcının BU CİHAZDA geçerli ufkudur
+     (kişisel → atanmış → rol şablonu). Sonuç merkezi dizine yazılır; böylece
+     hedef kullanıcı hangi cihazdan açarsa açsın aynı varsayılanı görür ve
+     ufkunu sonradan kendisi değiştirebilir. clear=true atamayı kaldırır;
+     kullanıcı rol şablonuna/ortak filtreye döner. */
+  function horizonDefaultsHandler(req, res) {
+    try {
+      const store = loadStore(), actor = req.currentUser || sessionProfile(req), body = req.body || {};
+      const targetIds = unique(body.targetUserIds);
+      if (!targetIds.length) throw hierarchyError('En az bir hedef kullanıcı seçin.', 'TARGET_USER_REQUIRED');
+      const modules = unique(body.modules).map(item => clean(item).toLowerCase()).filter(item => HORIZON_DEFAULT_MODULES.includes(item));
+      if (!modules.length) throw hierarchyError('En az bir ekran seçin.', 'HORIZON_MODULE_REQUIRED');
+      const clearing = body.clear === true, now = new Date().toISOString();
+      let entries = {}, source = null;
+      if (!clearing) {
+        source = profileById(store, clean(body.sourceUserId) || actor.id);
+        if (!source) return res.status(404).json({ error: 'Kaynak kullanıcı bulunamadı.', code: 'SOURCE_USER_NOT_FOUND' });
+        if (source.id !== actor.id && !canManageTarget(actor, source, store)) throw Object.assign(new Error('Kaynak kullanıcı yönetim alanınızda değil.'), { statusCode: 403, code: 'USER_NOT_MANAGEABLE' });
+        const effective = userPreferences.effectiveWorkspaceEntries(source.id, roleWorkspaceEntries(source, store), ['horizon']).entries;
+        for (const module of modules) {
+          const key = userPreferences.horizonKey(module);
+          if (effective[key] && clean(effective[key].value)) entries[key] = { value: effective[key].value, updatedAt: now };
+        }
+        if (!Object.keys(entries).length) throw hierarchyError('Kaynak kullanıcının seçilen ekranlar için bir ufku yok.', 'SOURCE_HORIZON_EMPTY');
+      }
+      const templates = iam.normalizeWorkspaceTemplates(store.iam && store.iam.workspaceTemplates);
+      const defaults = (templates.userDefaults || []).filter(item => !targetIds.includes(item.userId));
+      const changed = [];
+      for (const targetId of targetIds) {
+        const target = profileById(store, targetId);
+        if (!target) throw hierarchyError(`Hedef kullanıcı bulunamadı: ${targetId}`, 'TARGET_USER_NOT_FOUND');
+        if (!canManageTarget(actor, target, store)) throw Object.assign(new Error(`${target.displayName || target.username} yönetim alanınızda değil.`), { statusCode: 403, code: 'USER_NOT_MANAGEABLE' });
+        const previous = userWorkspaceDefault(store, target.id);
+        const kept = Object.fromEntries(Object.entries(previous && previous.entries || {}).filter(([key]) => !modules.some(module => key === userPreferences.horizonKey(module))));
+        const next = clearing ? kept : { ...kept, ...entries };
+        if (Object.keys(next).length) defaults.push({ userId: target.id, entries: next, assignedAt: clearing ? (previous && previous.assignedAt) || now : now, assignedBy: actor.id, sourceName: clearing ? (previous && previous.sourceName) || '' : (source.displayName || source.username) });
+        changed.push(target.id);
+      }
+      templates.userDefaults = defaults;
+      store.iam = { ...(store.iam || {}), version: 5, workspaceTemplates: templates };
+      const saved = saveStore(store, body.expectedRevision);
+      for (const id of changed) appendAudit(actor, clearing ? 'USER_HORIZON_DEFAULT_CLEAR' : 'USER_HORIZON_DEFAULT_SET', id, {
+        targetName: (profileById(saved, id) || {}).displayName, modules, sourceUserId: source && source.id || null, sourceName: source ? (source.displayName || source.username) : '', reason: clean(body.reason),
+      }, req);
+      res.json({ ok: true, revision: saved._revision, targetUserIds: changed, modules: clearing ? modules : modules.filter(module => entries[userPreferences.horizonKey(module)]), cleared: clearing });
+    } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'HORIZON_DEFAULT_FAILED', currentRevision: err.currentRevision }); }
   }
   function profileCopyPreviewHandler(req, res) { req.profileCopyPreview = true; return profileCopyHandler(req, res); }
   function permissionCopyHandler(req, res) { return profileCopyHandler(req, res); }
@@ -2066,6 +2174,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     roleMatrixUpdateHandler: centralMutation(roleMatrixUpdateHandler, 'ROLE.MANAGE'), workspaceTemplateUpdateHandler: centralMutation(workspaceTemplateUpdateHandler, 'ROLE.MANAGE'),
     workspaceTemplateResetHandler: centralMutation(workspaceTemplateResetHandler, 'ROLE.MANAGE'), permissionCopyHandler: centralMutation(permissionCopyHandler, 'USER.GRANT'),
     profileCopyHandler: centralMutation(profileCopyHandler, 'USER.PROFILE_COPY'), profileCopyPreviewHandler,
+    horizonDefaultsHandler: centralMutation(horizonDefaultsHandler, 'USER.ADMIN'),
     temporaryGrantHandler: centralMutation(temporaryGrantHandler, 'USER.GRANT'), temporaryGrantRevokeHandler: centralMutation(temporaryGrantRevokeHandler, 'USER.GRANT'), auditListHandler,
     iamHealthHandler, iamRefreshHandler, iamDryRunHandler, iamInitializeHandler,
     refreshIam: options => restoreActive ? Promise.resolve(null) : centralConfigured
@@ -2101,7 +2210,12 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     setCollectionAccessResolver: resolver => { collectionAccessResolver = typeof resolver === 'function' ? resolver : null; },
     collectionAccessLevel: (profile, ownerId) => collectionAccessLevel(profile, ownerId, readStore()),
     effectiveCollectionAccess: profile => effectiveCollectionAccess(profile, readStore()),
-    roleWorkspaceEntries: profileOrId => roleWorkspaceEntries(profileOrId, readStore()),
+    roleWorkspaceEntries: profileOrId => {
+      const store = readStore();
+      const profile = typeof profileOrId === 'object' && profileOrId ? profileOrId : profileById(store, clean(profileOrId));
+      if (profile) applyAssignedHorizonDefault(profile, store);
+      return roleWorkspaceEntries(profileOrId, store);
+    },
     // v7.23 — Horizon ön ayarları kullanıcının MAG/MMYG/Buying Group bilgisine
     // göre eşleştirildiği için profil, id'den de çözülebilmelidir.
     profileById: id => profileById(readStore(), clean(id)),

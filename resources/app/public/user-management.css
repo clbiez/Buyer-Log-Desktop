@@ -48,7 +48,9 @@
 .umNavIcon{ font-size:13px; }
 .umNavLabel{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .umNavCount{ font-size:10px; font-weight:700; color:var(--muted); }
-.umMain{ min-width:0; min-height:0; overflow:hidden; display:flex; }
+/* Dizin durum kartı bölümün ÜSTÜNDE tam genişlik durur; satır yönlü flex onu
+   tablonun soluna dar bir sütun olarak sıkıştırıyordu. */
+.umMain{ min-width:0; min-height:0; overflow:hidden; display:flex; flex-direction:column; }
 .umSection{ flex:1; min-width:0; min-height:0; display:flex; flex-direction:column; padding:12px 14px; gap:10px; }
 
 /* ---------- Ortak denetimler ---------- */
@@ -358,4 +360,24 @@
   .umTable{ min-width:640px; }
   .umColActions{ text-align:left; }
 }
-.umIamFields{border:0;padding:0;margin:0;min-width:0}
+.umIamFields{border:0;padding:0;margin:0;min-width:0;min-height:0}
+
+/* ---------- Merkezi dizin durum kartı ---------- */
+.umIamBanner{ flex:0 0 auto; display:flex; align-items:center; gap:10px; margin:12px 14px 0; padding:8px 12px; border:1px solid var(--line2); background:var(--card); }
+.umIamBanner.isSynced{ padding:5px 10px; }
+.umIamBanner.isSynced .umNote{ flex:1; }
+.umIamBanner.isBlocked{ align-items:flex-start; border-color:var(--orange); background:var(--orange-bg); }
+.umIamDot{ width:8px; height:8px; border-radius:50%; background:var(--green); flex:0 0 auto; }
+.umIamText{ flex:1; min-width:0; display:grid; gap:4px; font-size:11px; line-height:1.45; color:var(--ink); }
+.umIamText b{ font-family:var(--head); font-size:13px; color:var(--orange); }
+.umIamText p{ margin:0; }
+.umIamActions{ display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-end; }
+@media (max-width:640px){ .umIamBanner{ flex-direction:column; align-items:stretch; } .umIamActions{ justify-content:flex-start; } }
+
+/* ---------- Varsayılan ufuk ---------- */
+.umHorizonModules{ border:1px solid var(--line2); padding:6px 10px; margin:0; display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:4px 12px; }
+.umHorizonModules legend{ font-size:10px; font-weight:600; color:var(--muted); padding:0 4px; }
+.umHorizonModules .umCheck{ display:flex; align-items:center; gap:6px; font-size:11px; font-weight:400; color:var(--ink); cursor:pointer; }
+.umHorizonModules .umCheck input{ width:auto; height:auto; margin:0; }
+.umHorizonAdvanced{ border-top:1px solid var(--line2); padding-top:8px; display:grid; gap:8px; }
+.umHorizonAdvanced summary{ cursor:pointer; font-size:11px; font-weight:600; color:var(--ink2); }
