@@ -321,6 +321,15 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
     return marked;
   }
 
+  async function readPeerHead(sourceRoot, label) {
+    try { return await net(() => readJson(path.join(sourceRoot, NETWORK_HEAD_FILE)), label); }
+    catch (error) {
+      if (error.code === 'ENOENT') return null;
+      if (error instanceof SyntaxError) { emit('SYNC_PEER_HEAD_CORRUPT', { sourceDevice: decode(path.basename(sourceRoot)), error: error.message }); return null; }
+      throw error;
+    }
+  }
+
   async function detectLegacyPeers(changesRoot, deviceId, retentionDays) {
     let entries = [];
     try { entries = await net(() => fsp.readdir(changesRoot, { withFileTypes: true }), 'Sync peer listesi okuma'); }
@@ -330,8 +339,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
     for (const entry of entries) {
       if (!entry.isDirectory() || entry.name === encode(deviceId)) continue;
       const sourceRoot = path.join(changesRoot, entry.name), sourceId = decode(entry.name);
-      let head = null;
-      try { head = await net(() => readJson(path.join(sourceRoot, NETWORK_HEAD_FILE)), 'Peer capability okuma'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+      const head = await readPeerHead(sourceRoot, 'Peer capability okuma');
       if (head && (head.supportsBundleV2 === true || Number(head.packageFormatVersion) >= 2)) continue;
       if (cutoff) {
         try {
@@ -353,8 +361,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
     for (const entry of entries) {
       if (!entry.isDirectory() || entry.name === encode(deviceId)) continue;
       const sourceRoot = path.join(changesRoot, entry.name), sourceId = decode(entry.name);
-      let head = null;
-      try { head = await net(() => readJson(path.join(sourceRoot, NETWORK_HEAD_FILE)), 'Peer gzip capability okuma'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+      const head = await readPeerHead(sourceRoot, 'Peer gzip capability okuma');
       if (!head || !(head.supportsBundleV2 === true || Number(head.packageFormatVersion) >= 2)) continue;
       if (cutoff) {
         try { const stat = await net(() => fsp.stat(path.join(sourceRoot, NETWORK_HEAD_FILE)), 'Peer gzip yaş kontrolü'); if (stat.mtimeMs < cutoff) continue; } catch (_) {}
@@ -515,7 +522,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
          (geri yükleme + OneDrive gecikmesi) bile gerçek bir paketin kapsama
          alınıp alıcıda atlanmasını önler. Head okunamazsa kapsama bildirilmez. */
       let coverFromSeq = 0;
-      if (!legacyCompatibilityMode && pending.length) {
+      if (pending.length) {
         let headSeq = null;
         try { headSeq = Number((await net(() => readJson(path.join(deviceRoot, NETWORK_HEAD_FILE)), 'Kendi head okuma')).latestSequence) || 0; }
         catch (error) { headSeq = error && error.code === 'ENOENT' ? 0 : null; }
@@ -550,12 +557,21 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
           const sequence = String(Number(item.localSequence) || 0).padStart(12, '0');
           const target = path.join(deviceRoot, `${sequence}-${encode(item.eventId)}${READY_PACKAGE_SUFFIX}`);
           try {
+            // The scoped transport is a different payload from the journal.
+            const transport = { ...item };
+            const firstSeq = Number(item.sourceFirstSeq) || Number(item.localSequence) || 0;
+            if (coverFromSeq >= 1 && coverFromSeq < firstSeq) transport.coverFromSeq = coverFromSeq;
+            transport.sha256 = checksum(transport);
             let exists = false;
-            try { await net(() => fsp.access(target), 'Legacy paket varlık kontrolü'); exists = true; } catch (error) { if (error.code !== 'ENOENT') throw error; }
-            if (!exists) networkBytesWritten += await net(() => writeValidatedJson(target, item), 'Legacy paket yükleme');
+            try {
+              const existing = await net(() => readJson(target), 'Legacy paket varlık kontrolü');
+              exists = existing && existing.sha256 === checksum(existing) && JSON.stringify(existing) === JSON.stringify(transport);
+            } catch (error) { if (error.code !== 'ENOENT' && !(error instanceof SyntaxError)) throw error; }
+            if (!exists) networkBytesWritten += await net(() => writeValidatedJson(target, transport), 'Legacy paket yükleme');
             networkBytesWritten += await writeHead(deviceRoot, deviceId, Number(item.localSequence) || 0, 1);
             await localDb.markSynced([item.eventId]);
             uploadedEvents++; uploadedPackages++; done++;
+            coverFromSeq = Math.max(coverFromSeq, (Number(item.localSequence) || 0) + 1);
           } catch (error) {
             uploadFailures++; uploadHalted = true;
             emit('SYNC_PACKAGE_UPLOAD_FAILED', { format: 1, eventId: item.eventId, sequence: item.localSequence, error: error && error.message || String(error) });
@@ -602,8 +618,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
         if (!source.isDirectory() || source.name === encode(deviceId)) continue;
         const sourceId = decode(source.name), sourceRoot = path.join(changesRoot, source.name); let head = null;
         const checkpoint = Number(checkpoints[sourceId]) || 0;
-        try { head = await net(() => readJson(path.join(sourceRoot, NETWORK_HEAD_FILE)), 'Checkpoint head okuma'); }
-        catch (error) { if (error.code !== 'ENOENT') throw error; }
+        head = await readPeerHead(sourceRoot, 'Checkpoint head okuma');
         if (head && Number(head.latestSequence) <= checkpoint) { skippedDeviceFolders++; continue; }
 
         let v1Names = [], v2Names = [];

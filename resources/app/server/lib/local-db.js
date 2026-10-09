@@ -26,6 +26,14 @@ function eventId(value) { return String(value || '').trim().slice(0, 160); }
 function recordId(value) { return String(value || '').trim().slice(0, 240); }
 function sha256(buffer) { return crypto.createHash('sha256').update(buffer).digest('hex'); }
 
+function receiptFirstSequence(delta) {
+  const first = Number(delta.sourceFirstSeq) || Number(delta.localSequence) || 0;
+  if (delta.coverFromSeq == null) return first;
+  const cover = Number(delta.coverFromSeq);
+  if (!Number.isSafeInteger(cover) || cover < 1 || cover >= first) throw new Error('Delta cover range is invalid.');
+  return cover;
+}
+
 function emptyState(deviceId = crypto.randomUUID()) {
   return {
     schemaVersion: SCHEMA_VERSION, revision: 0, deviceId: String(deviceId), localSequence: 0,
@@ -687,7 +695,11 @@ function createLocalDb(file) {
   }
 
   function applyRemoteDelta(state, { delta, eventId: eid, at, conflictIds = [] }) {
-    if (state.events[eid] || state.appliedEvents[eid] || state.syncLedger?.eventIds?.[eid]) return { duplicate: true, applied: false, revision: state.revision };
+    const firstReceipt = receiptFirstSequence(delta);
+    if (state.events[eid] || state.appliedEvents[eid] || state.syncLedger?.eventIds?.[eid]) {
+      if (delta.deviceId) recordSyncReceipt(state, delta.deviceId, firstReceipt, Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0);
+      return { duplicate: true, applied: false, revision: state.revision };
+    }
     const key = recordId(delta.id);
     const revision = Math.max(Number(delta.revision) || 0, Number(state.revision) || 0);
     const tomb = state.tombstones[key];
@@ -727,7 +739,7 @@ function createLocalDb(file) {
     state.revision = Math.max(Number(state.revision) || 0, revision);
     state.events[eid] = { eventId: eid, revision, at, origin: 'remote', deviceId: delta.deviceId || null, localSequence: Number(delta.localSequence) || 0 };
     state.appliedEvents[eid] = { eventId: eid, revision, at, origin: delta.origin || 'remote', deviceId: delta.deviceId || null };
-    if (delta.deviceId) recordSyncReceipt(state, delta.deviceId, Number(delta.sourceFirstSeq) || Number(delta.localSequence) || 0, Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0);
+    if (delta.deviceId) recordSyncReceipt(state, delta.deviceId, firstReceipt, Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0);
     return { duplicate: false, applied: true, revision, id: key, conflicts: state.conflicts.filter(item => item.eventId === eid) };
   }
 
@@ -762,6 +774,7 @@ function createLocalDb(file) {
   }
 
   async function applyDelta(delta = {}) {
+    receiptFirstSequence(delta);
     const key = recordId(delta.id);
     if (!key) throw new Error('Delta record id is required.');
     if (delta.sha256) {
@@ -786,6 +799,7 @@ function createLocalDb(file) {
     const list = (Array.isArray(deltas) ? deltas : []).filter(Boolean);
     if (!list.length) return { count: 0, applied: 0, duplicates: 0, conflicts: [], results: [] };
     const operations = list.map(delta => {
+      receiptFirstSequence(delta);
       const key = recordId(delta.id);
       if (!key) throw new Error('Delta record id is required.');
       if (delta.sha256) {
@@ -817,6 +831,7 @@ function createLocalDb(file) {
     if (!pid) throw new Error('Sync package id is required.');
     next.appliedPackages = next.appliedPackages && typeof next.appliedPackages === 'object' ? next.appliedPackages : {};
     if (next.appliedPackages[pid]) return { duplicate: true, applied: 0, duplicates: list.length, conflicts: [], packageId: pid };
+    for (const delta of list) receiptFirstSequence(delta);
     let applied = 0, duplicates = 0;
     const conflicts = [];
     for (const delta of list) {
