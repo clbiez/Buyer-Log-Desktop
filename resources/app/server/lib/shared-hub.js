@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const zlib = require('zlib');
 const { promisify } = require('util');
 const { replaceFileWithRetry, withFileLeaseAsync } = require('./shared-file-transaction');
+const masterReleases = require('./master-releases');
 
 const gzipAsync = promisify(zlib.gzip);
 const gunzipAsync = promisify(zlib.gunzip);
@@ -168,18 +169,41 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
       try { await fsp.unlink(safePath(root, area, rel)); } catch (_) {}
     }
   }
-  async function publishCheckpoint(root, area, schemaVersion, payload, { actorId = '', previousRevision = null } = {}) {
+  async function publishCheckpoint(root, area, schemaVersion, payload, { actorId = '', previousRevision = null, note = '', forceRevision = false, changedEntities = [] } = {}) {
     const checked = await validate(root, { requireWrite: true });
     const currentFile = safePath(checked.root, area, 'current.json');
     await fsp.mkdir(path.dirname(currentFile), { recursive:true });
     return withFileLeaseAsync(currentFile, async () => {
       const current = await readCheckpointHead(checked.root, area, schemaVersion);
       const actualRevision = current ? current.revision : 0;
+      let currentEnvelope = null;
+      if (area === 'master' && current) {
+        // A head may have committed before its archive failed. Repair that exact
+        // revision before equality checks or advancing; never lose rule history.
+        currentEnvelope = (await readCheckpointFile(checked.root, current, schemaVersion, area)).envelope;
+        if (currentEnvelope.payload && currentEnvelope.payload.authority === 'moderator') {
+          await masterReleases.archiveRelease(checked.root, { head:current, envelope:currentEnvelope });
+        }
+      }
       if (previousRevision != null && Number(previousRevision) !== actualRevision) throw error('Checkpoint başka bir istemci tarafından güncellendi.', 'CHECKPOINT_REVISION_CONFLICT', 409, { currentRevision: actualRevision, area });
-      const normalizedPayload = payload && typeof payload === 'object' ? payload : {};
-      const payloadSha256 = sha256(Buffer.from(stableJson(normalizedPayload), 'utf8'));
-      if (current && current.payloadSha256 === payloadSha256) return { ...current, unchanged:true };
+      const sourcePayload = payload && typeof payload === 'object' ? payload : {};
+      const versionedRules = area === 'master' && sourcePayload.authority === 'moderator';
+      const ruleContent = value => { const copy = { ...value }; delete copy.release; return copy; };
+      const rulesSha256 = versionedRules ? sha256(Buffer.from(stableJson(ruleContent(sourcePayload)), 'utf8')) : null;
+      const currentRulesSha256 = current && (current.rulesSha256 || (currentEnvelope && currentEnvelope.payload && currentEnvelope.payload.authority === 'moderator'
+        ? sha256(Buffer.from(stableJson(ruleContent(currentEnvelope.payload)), 'utf8')) : null));
+      const releaseNote = clean(note, 2000);
+      const explicitRevision = versionedRules && (forceRevision === true || Boolean(releaseNote));
+      const originalPayloadSha256 = sha256(Buffer.from(stableJson(sourcePayload), 'utf8'));
+      if (current && !explicitRevision && (versionedRules ? currentRulesSha256 === rulesSha256 : current.payloadSha256 === originalPayloadSha256)) {
+        const release = currentEnvelope && currentEnvelope.payload && currentEnvelope.payload.release;
+        return { ...current, ...(release ? { release } : {}), unchanged:true };
+      }
       const revision = actualRevision + 1, at = new Date().toISOString();
+      const release = versionedRules ? { version:revision, note:releaseNote, publishedBy:clean(actorId,160), publishedAt:at,
+        changedEntities:[...new Set((Array.isArray(changedEntities) ? changedEntities : []).filter(item => typeof item === 'string').map(item => clean(item,100)).filter(Boolean))].slice(0,100) } : null;
+      const normalizedPayload = versionedRules ? { ...ruleContent(sourcePayload), release } : sourcePayload;
+      const payloadSha256 = sha256(Buffer.from(stableJson(normalizedPayload), 'utf8'));
       const envelope = { schemaVersion, revision, parentRevision: actualRevision, createdAt: at, actorId: clean(actorId, 160), payload: normalizedPayload };
       const raw = Buffer.from(JSON.stringify(envelope), 'utf8'), compressed = await gzipAsync(raw, { level: zlib.constants.Z_BEST_SPEED }), digest = sha256(compressed);
       const fileName = `${String(revision).padStart(16, '0')}-${digest.slice(0, 16)}.json.gz`;
@@ -188,8 +212,10 @@ function createSharedHub({ localDataRoot, appVersion = '', networkTimeoutMs = 15
       const verify = await fsp.readFile(checkpointFile);
       if (sha256(verify) !== digest) throw error('Checkpoint doğrulanamadı.', 'CHECKPOINT_INVALID', 503, { area });
       const previous = current ? { revision: current.revision, file: current.file, sha256: current.sha256, updatedAt: current.updatedAt || null } : null;
-      const head = { schemaVersion, revision, file: path.posix.join('checkpoints', fileName), sha256: digest, payloadSha256, updatedAt: at, ...(previous ? { previous } : {}) };
+      const head = { schemaVersion, revision, file: path.posix.join('checkpoints', fileName), sha256: digest, payloadSha256, updatedAt: at,
+        ...(versionedRules ? { rulesSha256, release } : {}), ...(previous ? { previous } : {}) };
       await atomicWriteJson(currentFile, head);
+      if (versionedRules) await masterReleases.archiveRelease(checked.root, { head, envelope });
       void cleanupCheckpointFiles(checked.root, area, [head.file, previous && previous.file]).catch(()=>{});
       return head;
     }, { timeoutMs:15000, staleMs:120000 });

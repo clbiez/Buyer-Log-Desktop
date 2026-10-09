@@ -8,7 +8,7 @@
     'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
     'lcw.orders.dimFilters.','lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
     'lcw.koleksiyon.rows.','lcw.koleksiyon.manufacturers.','lcw.koleksiyon.pricingExcelColumns.','lcw.koleksiyon.colState.','lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.prodstatus.mails.','lcw.mailTemplates.',
-    'lcw.todo.','lcw.notifications.','lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.','lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.',
+    'lcw.todo.','lcw.notifications.','lcw.masterReleaseNotice.','lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.','lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.',
     'lcw_view_favorite_','lcw_filter_favorite_','buyerlog.fx.persist.v1','buyerlog.workspace.','buyerlog.dashboard.','buyerlog.favorites.','buyerlog.presetCache.v2.',
     'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.modelImages.','bl.tableRange.','bl.refreshHistory.','bl.autoRefresh.','bl.lcwai.history.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.'
   ];

@@ -35,6 +35,7 @@ const { createLocalDb, offloadLegacyAssets, sweepWriteDebris, summarizeConflict 
 const { createSyncSettings, writeValidatedJson, withTimeout: syncNetworkTimeout } = require('./lib/sync-settings');
 const syncHealth = require('./lib/sync-health');
 const { createSharedHub } = require('./lib/shared-hub');
+const masterReleases = require('./lib/master-releases');
 const { createRefreshPerformance } = require('./lib/refresh-performance');
 const sharedSyncPolicy = require('./lib/shared-sync-policy');
 const { filterCollectionWorkspaceDeltas, quarantineLegacyCollectionDeltas, createCollectionReplication } = require('./lib/collection-replication');
@@ -834,6 +835,7 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
   const different = (a, b) => JSON.stringify(a == null ? null : a) !== JSON.stringify(b == null ? null : b);
   for (const id of Array.isArray(ids) ? ids : []) {
     const before = local[id], after = remote[id];
+    if (!different(before, after)) continue;
     if (id === 'store:overrides.json') {
       for (const field of ['pricingRules','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
@@ -1363,30 +1365,64 @@ async function recoverSharedMasterFromLocalDataBackup(root) {
   };
 }
 
-async function publishMasterCheckpoint(actorId = '') {
-  if (!moderatorActiveOnThisDevice()) return { published:false, reason:'moderator-only' };
-  const settings = await syncSettings.read();
-  if (!settings.sharedSyncRoot) return { published:false, reason:'not-configured' };
-  const checked = await sharedHub.validate(settings.sharedSyncRoot, { requireWrite:true });
-  const state = await localDb.read();
-  const records = sharedSyncPolicy.masterRecordsFromState(state);
-  const head = await sharedHub.readMasterHead(checked.root);
-  const guard = head ? await guardCheckpointPublish('master', checked.root, state, records) : { safe:true, missing:[] };
-  // Otoritesiz (eski sürüm/onarım) checkpoint'in sayaçları Moderatörü
-  // durduramaz; eksik kayıt koruması ise her durumda geçerli kalır.
-  if (!guard.safe && !guard.missing.length && !guard.moderatorAuthority) guard.safe = true;
-  if (!guard.safe) {
-    markStartup('SHARED_CHECKPOINT_PUBLISH_PROTECTED', { area:'master', missing:guard.missing.length, stale:guard.stale.length, localRecords:Object.keys(records).length, remoteRecords:guard.remoteRecords });
-    return { published:false, protected:true, reason:'local-master-incomplete', head, hub:checked.manifest, records:Object.keys(records).length, missingRecords:guard.missing.slice(0,50), staleRecords:guard.stale.slice(0,50) };
-  }
-  const saved = await sharedHub.publishMaster(checked.root, {
-    records,
-    inventory:prewipeMasterRecovery.masterCoverage(records),
-    authority:'moderator',
-  }, { actorId, previousRevision: head && head.revision || 0 });
-  // Kendi yayımımız bu cihazda yeniden "uzaktan gelen kural" diye uygulanmaz.
-  if (saved && saved.revision) await rememberModeratorMasterRevision(checked.manifest.hubId, saved.revision).catch(()=>{});
-  return { published:true, unchanged:saved && saved.unchanged === true, head:saved, hub:checked.manifest, records:Object.keys(records).length };
+function masterReleaseNote(value) {
+  if (value != null && (typeof value !== 'string' || value.length > 2000)) throw Object.assign(new Error('Yayım notu en fazla 2000 karakter olmalıdır.'), {
+    code:'MASTER_RELEASE_NOTE_INVALID', statusCode:400, errorEn:'The release note must be a string of at most 2000 characters.',
+  });
+  return String(value || '').trim();
+}
+let masterRulePublicationTail = Promise.resolve();
+async function publishMasterCheckpoint(actorId = '', { note = '', restoredSnapshot = null } = {}) {
+  const publish = async () => {
+    if (!moderatorActiveOnThisDevice()) return { published:false, reason:'moderator-only' };
+    const actor = userAccess.profileById(actorId || moderatorSessionActor);
+    if (!isModeratorProfile(actor) || actor.enabled === false) return { published:false, reason:'moderator-only' };
+    const releaseNote = masterReleaseNote(note);
+    if (restoredSnapshot && restoredSnapshot.authority !== 'moderator') throw Object.assign(new Error('Yalnız Moderatör kural sürümü geri alınabilir.'), {
+      code:'MASTER_RELEASE_AUTHORITY_INVALID', statusCode:403, errorEn:'Only a Moderator rule release can be restored.',
+    });
+    const settings = await syncSettings.read();
+    if (!settings.sharedSyncRoot) return { published:false, reason:'not-configured' };
+    const checked = await sharedHub.validate(settings.sharedSyncRoot, { requireWrite:true });
+    if (typeof deltaStore.flush === 'function') await deltaStore.flush();
+    const state = await localDb.read();
+    const scopedRestore = restoredSnapshot && sharedSyncPolicy.scopeCheckpointRecords('master', restoredSnapshot.records || {});
+    // Keep current peer documents and monotonic metadata. Merge only rule
+    // values from the selected release, using the ordinary local apply policy.
+    // Canonical sanitization prevents private connection state entering a release.
+    const restoredRecords = scopedRestore && { ...state.records };
+    if (scopedRestore) for (const [id, record] of Object.entries(scopedRestore)) {
+      if (!sharedSyncPolicy.peerChannelAllows(id)) restoredRecords[id] = sharedSyncPolicy.mergeCheckpointRecord(state.records[id], record);
+    }
+    const records = sharedSyncPolicy.masterRecordsFromState(scopedRestore ? { records:restoredRecords } : state);
+    const head = await sharedHub.readMasterHead(checked.root);
+    const guard = restoredSnapshot ? { safe:true, missing:[] } : head ? await guardCheckpointPublish('master', checked.root, state, records) : { safe:true, missing:[] };
+    if (!guard.safe && !guard.missing.length && !guard.moderatorAuthority) guard.safe = true;
+    if (!guard.safe) {
+      markStartup('SHARED_CHECKPOINT_PUBLISH_PROTECTED', { area:'master', missing:guard.missing.length, stale:guard.stale.length, localRecords:Object.keys(records).length, remoteRecords:guard.remoteRecords });
+      return { published:false, protected:true, reason:'local-master-incomplete', head, hub:checked.manifest, records:Object.keys(records).length, missingRecords:guard.missing.slice(0,50), staleRecords:guard.stale.slice(0,50) };
+    }
+    const previous = head ? await sharedHub.readMaster(checked.root, null) : null;
+    const beforeRecords = previous ? sharedSyncPolicy.scopeCheckpointRecords('master', checkpointRecords(previous)) : {};
+    const changedEntities = changedMasterEntities(records, beforeRecords, [...new Set([...Object.keys(records), ...Object.keys(beforeRecords)])]);
+    const saved = await sharedHub.publishMaster(checked.root, {
+      ...(restoredSnapshot || {}), records, inventory:prewipeMasterRecovery.masterCoverage(records), authority:'moderator',
+    }, { actorId:actor.id, previousRevision:head && head.revision || 0, note:releaseNote, forceRevision:Boolean(restoredSnapshot) || Boolean(releaseNote), changedEntities });
+    let applied = null;
+    if (restoredSnapshot) {
+      // Publish first. Then apply the exact newly archived checkpoint through the
+      // ordinary merge/hydrate pipeline, even if another head appears meanwhile.
+      const archived = await masterReleases.readRelease(checked.root, saved.revision);
+      applied = await applyModeratorMasterCheckpoint({ head:saved, envelope:archived.checkpoint }, checked.manifest.hubId, { notify:false });
+    } else if (saved && saved.revision) {
+      await rememberModeratorMasterRevision(checked.manifest.hubId, saved.revision, saved.release).catch(()=>{});
+    }
+    return { published:true, unchanged:saved && saved.unchanged === true, head:saved, release:saved.release || null,
+      hub:checked.manifest, records:Object.keys(records).length, ...(applied ? { applied } : {}) };
+  };
+  const next = masterRulePublicationTail.then(publish, publish);
+  masterRulePublicationTail = next.catch(()=>{});
+  return next;
 }
 /* MODERATÖR KURALLARININ ALINMASI (v20261009).
    Çalışma kuralları (bağlantılar, kur, endeksmatik, yol süreleri, DTR/Non-DTR,
@@ -1461,34 +1497,49 @@ async function readSyncHealthReports() {
   }
   return reports;
 }
-async function rememberModeratorMasterRevision(hubId, revision) {
-  const current = readModeratorMasterState();
-  const next = String(current.hubId || '') === String(hubId || '')
-    ? Math.max(Number(current.revision) || 0, Number(revision) || 0)
-    : Number(revision) || 0;
-  atomicWriteJson(MODERATOR_MASTER_STATE_FILE, { hubId:String(hubId || ''), revision:next, updatedAt:new Date().toISOString() });
+async function rememberModeratorMasterRevision(hubId, revision, release = null) {
+  const current = readModeratorMasterState(), sameHub = String(current.hubId || '') === String(hubId || '');
+  const incoming = Math.max(0, Number(revision) || 0);
+  const next = sameHub ? Math.max(Number(current.revision) || 0, incoming) : incoming;
+  const previous = Number(current.revision) || 0;
+  const nextRelease = incoming === next && release && Number(release.version) === next ? release
+    : sameHub && previous === next ? current.release || null : null;
+  atomicWriteJson(MODERATOR_MASTER_STATE_FILE, { hubId:String(hubId || ''), revision:next, release:nextRelease, updatedAt:new Date().toISOString() });
   return next;
 }
 async function pullModeratorMasterIfNewer() {
-  // Bu cihazda yayımlanmayı bekleyen Moderatör düzenlemesi varken uzak kural
-  // uygulanmaz; aksi hâlde yayımdan hemen önce yerel düzenleme ezilirdi.
-  if (masterCheckpointPending || masterCheckpointTimer || masterCheckpointInFlight) return { applied:0, reason:'local-publish-pending' };
-  const settings = await syncSettings.read();
-  if (!settings.sharedSyncRoot) return { applied:0, reason:'not-configured' };
-  const localState = sharedHub.readLocalState();
-  if (!localState || localState.completed !== true || !localState.hubId) return { applied:0, reason:'hub-not-bootstrapped' };
-  const head = await sharedHub.readMasterHead(settings.sharedSyncRoot);
+  // Hold the same queue through read, apply and marker persistence. A delayed
+  // ordinary pull cannot overwrite a later explicit restore/publication.
+  const pull = async () => {
+    // Bu cihazda yayımlanmayı bekleyen Moderatör düzenlemesi varken uzak kural
+    // uygulanmaz; aksi hâlde yayımdan hemen önce yerel düzenleme ezilirdi.
+    if (masterCheckpointPending || masterCheckpointTimer || masterCheckpointInFlight) return { applied:0, reason:'local-publish-pending' };
+    const settings = await syncSettings.read();
+    if (!settings.sharedSyncRoot) return { applied:0, reason:'not-configured' };
+    const localState = sharedHub.readLocalState();
+    if (!localState || localState.completed !== true || !localState.hubId) return { applied:0, reason:'hub-not-bootstrapped' };
+    const head = await sharedHub.readMasterHead(settings.sharedSyncRoot);
+    const marker = readModeratorMasterState();
+    const appliedRevision = String(marker.hubId || '') === String(localState.hubId) ? Number(marker.revision) || 0 : 0;
+    if (!head || Number(head.revision) <= appliedRevision) return { applied:0, unchanged:true };
+    const remote = await sharedHub.readMaster(settings.sharedSyncRoot, null);
+    if (!remote || remote.unchanged || !remote.head) return { applied:0, unchanged:true };
+    // Otoritesiz checkpoint (eski sürüm ya da açılış onarımı) kural dağıtmaz.
+    // İşlenmiş sayılır: aynı revizyon her sync'te yeniden indirilmez.
+    if (!masterCheckpointHasModeratorAuthority(remote)) {
+      await rememberModeratorMasterRevision(localState.hubId, remote.head.revision);
+      return { applied:0, reason:'not-moderator-checkpoint', revision:remote.head.revision };
+    }
+    return applyModeratorMasterCheckpoint(remote, localState.hubId);
+  };
+  const next = masterRulePublicationTail.then(pull, pull);
+  masterRulePublicationTail = next.catch(()=>{});
+  return next;
+}
+async function applyModeratorMasterCheckpoint(remote, hubId, { notify = true } = {}) {
   const marker = readModeratorMasterState();
-  const appliedRevision = String(marker.hubId || '') === String(localState.hubId) ? Number(marker.revision) || 0 : 0;
-  if (!head || Number(head.revision) <= appliedRevision) return { applied:0, unchanged:true };
-  const remote = await sharedHub.readMaster(settings.sharedSyncRoot, null);
-  if (!remote || remote.unchanged || !remote.head) return { applied:0, unchanged:true };
-  // Otoritesiz checkpoint (eski sürüm ya da açılış onarımı) kural dağıtmaz.
-  // İşlenmiş sayılır: aynı revizyon her sync'te yeniden indirilmez.
-  if (!masterCheckpointHasModeratorAuthority(remote)) {
-    await rememberModeratorMasterRevision(localState.hubId, remote.head.revision);
-    return { applied:0, reason:'not-moderator-checkpoint', revision:remote.head.revision };
-  }
+  if (String(marker.hubId || '') === String(hubId || '') && Number(remote && remote.head && remote.head.revision) <= Number(marker.revision || 0)) return { applied:0, unchanged:true };
+  if (!masterCheckpointHasModeratorAuthority(remote)) throw Object.assign(new Error('Moderatör kural otoritesi doğrulanamadı.'), { code:'MASTER_RELEASE_AUTHORITY_INVALID', statusCode:403 });
   const remoteRecords = sharedSyncPolicy.scopeCheckpointRecords('master', checkpointRecords(remote));
   // E-posta rehberi kullanıcılar arası paylaşılır ve kimlikle birleşir; bütün
   // olarak Moderatör kopyasıyla değiştirilmez.
@@ -1517,8 +1568,9 @@ async function pullModeratorMasterIfNewer() {
     return { applied:ids.length, closedConflicts:closed };
   });
   await deltaStore.hydrate();
-  await rememberModeratorMasterRevision(localState.hubId, remote.head.revision);
+  await rememberModeratorMasterRevision(hubId, remote.head.revision, remote.envelope && remote.envelope.payload && remote.envelope.payload.release);
   if (changedEntities.length) announceRecoveredMasterEntities(changedEntities);
+  if (notify) liveEvents.notifyChange('master-rules', null, { revision:remote.head.revision, hubId });
   markStartup('MODERATOR_MASTER_APPLIED', { revision:remote.head.revision, records:result.applied, closedConflicts:result.closedConflicts, entities:changedEntities });
   return { ...result, revision:remote.head.revision, entities:changedEntities };
 }
@@ -2204,14 +2256,40 @@ app.post('/api/shared-hub/initialize', userAccess.requireModerator, express.json
 });
 app.post('/api/shared-hub/publish-master', userAccess.requireModerator, express.json({ limit:'8kb' }), async (req, res) => {
   try {
-    const result = await publishMasterCheckpoint(req.currentUser.id);
+    const result = await publishMasterCheckpoint(req.currentUser.id, { note:masterReleaseNote(req.body && req.body.note) });
     if (result.published) {
       const settings = await syncSettings.read();
       const current = sharedHub.readLocalState();
       await sharedHub.markBootstrap({ root:settings.sharedSyncRoot, hubId:result.hub.hubId, masterRevision:result.head.revision, iamRevision:userAccess.centralIamHealth().localRevision || userAccess.localIamRevision(), completed:true });
     }
     res.json({ ok:true, ...result });
-  } catch (err) { res.status(err.statusCode || 503).json({ error:err.message, code:err.code || 'MASTER_PUBLISH_FAILED' }); }
+  } catch (err) { res.status(err.statusCode || 503).json({ error:err.message, errorEn:err.errorEn || 'The rule release could not be published.', code:err.code || 'MASTER_PUBLISH_FAILED' }); }
+});
+app.get('/api/shared-hub/master-releases', userAccess.requireModerator, async (_req, res) => {
+  try {
+    const settings = await syncSettings.read();
+    if (!settings.sharedSyncRoot) return res.json({ ok:true, releases:[] });
+    const checked = await sharedHub.validate(settings.sharedSyncRoot);
+    const releases = await syncNetworkTimeout(() => masterReleases.listReleases(checked.root), 15000, 'Kural sürüm geçmişi');
+    res.set('Cache-Control','no-store').json({ ok:true, releases, hubId:checked.manifest.hubId });
+  } catch (err) { res.status(err.statusCode || 503).json({ error:err.message, errorEn:'The rule release history could not be read.', code:err.code || 'MASTER_RELEASE_LIST_FAILED' }); }
+});
+app.post('/api/shared-hub/master-releases/restore', userAccess.requireModerator, express.json({ limit:'8kb' }), async (req, res) => {
+  try {
+    const note = masterReleaseNote(req.body && req.body.note), settings = await syncSettings.read();
+    if (!settings.sharedSyncRoot) throw Object.assign(new Error('Ortak senkron klasörü ayarlanmadı.'), { code:'SHARED_HUB_REQUIRED', statusCode:409 });
+    const checked = await sharedHub.validate(settings.sharedSyncRoot, { requireWrite:true });
+    const selected = await syncNetworkTimeout(() => masterReleases.readRelease(checked.root, req.body && req.body.version), 15000, 'Kural sürümü okuma');
+    // Explicit restore supersedes queued old-rule publications. An already
+    // running publish finishes before this queued operation; later jobs observe
+    // the restored local records because application is inside the same queue.
+    if (masterCheckpointTimer) clearTimeout(masterCheckpointTimer);
+    masterCheckpointTimer = null; masterCheckpointPending = false; masterCheckpointActor = '';
+    const result = await publishMasterCheckpoint(req.currentUser.id, { note, restoredSnapshot:selected.checkpoint.payload });
+    if (result.published) await sharedHub.markBootstrap({ root:checked.root, hubId:checked.manifest.hubId,
+      masterRevision:result.head.revision, iamRevision:userAccess.localIamRevision(), completed:true });
+    res.json({ ok:true, restoredFrom:selected.version, ...result });
+  } catch (err) { res.status(err.statusCode || 503).json({ error:err.message, errorEn:err.errorEn || 'The selected rule release could not be restored.', code:err.code || 'MASTER_RELEASE_RESTORE_FAILED' }); }
 });
 app.get('/user-context.js', (req, res) => {
   const profile = userAccess.publicProfile(req.currentUser);
@@ -9144,7 +9222,8 @@ async function currentSyncStatus() {
   const status = await syncSettings.read();
   try { status.localSnapshotDate = (await fs.promises.stat(localDb.getFile())).mtime.toISOString(); }
   catch (_) { status.localSnapshotDate = null; }
-  return { ...status, localDbPath: localDb.getFile(), sharedSyncRoot: status.sharedSyncRoot || '' };
+  const master = readModeratorMasterState();
+  return { ...status, localDbPath:localDb.getFile(), sharedSyncRoot:status.sharedSyncRoot || '', masterRelease:master.release || null, masterHubId:master.hubId || '' };
 }
 /* Data Maintenance is deliberately lazy/read-only until invoked. No storage
    scan or legacy hashing is allowed on the startup critical path. */
