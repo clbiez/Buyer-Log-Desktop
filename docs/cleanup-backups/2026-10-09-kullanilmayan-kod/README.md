@@ -1,7 +1,6 @@
 # Kullanılmayan kod temizliği — yedek ve geri dönüş
 
 **Tarih:** 2026-10-09 · **Temel:** `main` `f6b96edae75e2aecc85f4c66c5d0f47e1e249993` (v7.0.264)
-· **Git etiketi:** `backup/pre-dead-code-cleanup-2026-10-09` (etiket push edilebildiyse)
 
 Bu klasör, 8 Ekim 2026 mimari/performans raporundaki kullanılmayan kod
 listesinin **1. adımında** silinen her şeyin birebir yedeğidir. Silinenler:
@@ -60,7 +59,7 @@ satırının güncellenmiş halidir.
 ### 3. Temel durum
 
 Temizlik öncesi kodun tamamı `main` geçmişinde `f6b96ed` commit'inde durur
-(etiket: `backup/pre-dead-code-cleanup-2026-10-09`).
+(`git show f6b96ed:<dosya-yolu>` ile herhangi bir dosyanın eski hali okunabilir).
 
 ## Doğrulama özeti
 
