@@ -22,13 +22,35 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Select safe test scope
+        id: plan
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git fetch --no-tags --depth=1 origin "$BASE_SHA"
+          git diff --name-only "$BASE_SHA" HEAD > "$RUNNER_TEMP/buyerlog-changes.txt"
+          node scripts/ci-test-plan.js "$RUNNER_TEMP/buyerlog-changes.txt" >> "$GITHUB_OUTPUT"
+      - name: Validate release request metadata
+        if: steps.plan.outputs.mode == 'metadata'
+        working-directory: .
+        shell: bash
+        run: |
+          node -e "for(const p of ['.github/release-requests/test.json','.github/release-requests/stable.json']) { const r=require('./'+p); if(!/^\\d+\\.\\d+\\.\\d+$/.test(String(r.version))) process.exit(1); }"
       - name: Setup Node
+        if: steps.plan.outputs.mode != 'metadata'
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
           cache-dependency-path: resources/app/package-lock.json
       - name: Install dependencies
+        if: steps.plan.outputs.mode != 'metadata'
         run: npm ci --ignore-scripts
-      - name: Run Buyer Log tests
+      - name: Run focused style / UI tests
+        if: steps.plan.outputs.mode == 'ui'
+        run: npm test -- i18n ui-design-system ui-refinement current-ui-regressions theme visual-release-notes
+      - name: Run full Buyer Log regression
+        if: steps.plan.outputs.mode == 'full'
         run: npm test

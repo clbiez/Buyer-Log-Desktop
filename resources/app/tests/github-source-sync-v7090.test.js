@@ -29,7 +29,7 @@ test('main pushes are recorded by the GitHub workflow with contents write permis
   assert.match(workflow, /branches:\s*\[main\]/);
   assert.match(workflow, /contents:\s*write/);
   assert.match(workflow, /updates\/v\$\{VERSION\}/);
-  assert.match(workflow, /already records/);
+  assert.match(workflow, /already (immutably )?records/);
   assert.doesNotMatch(workflow, /--force|-f\s+origin/);
 });
 
