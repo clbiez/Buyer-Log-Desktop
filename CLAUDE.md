@@ -89,15 +89,17 @@ Dosya-adı filtresi: `npm test -- collection` gibi; filtreler OR mantığındad�
 - Aynı modüldeki birbiriyle ilişkili istekleri aynı görev/PR'da topla;
   bağımsız yüksek riskli değişiklikleri tek PR'a yığma. Aynı modülde
   çakışan paralel agent/PR çalışması başlatma.
-- Normal teslim: hedefli test → PR → CI başarılı → inceleme → merge.
+- Normal teslim: yerelde hedefli test (gerekirse tam `npm test`) → PR →
+  merge. **PR'larda GitHub Actions testi otomatik koşmaz** (kota); PR'ın
+  doğrulaması agent'ın yerel test çıktısıdır ve PR açıklamasına yazılır.
+  `Buyer Log Tests` workflow'u yalnız elle (`workflow_dispatch`) ve yalnız
+  gerçekten riskli bir değişiklikte çalıştırılır.
   **Merge, TEST üretimi ve STABLE terfisi ayrı kararlardır.** Kullanıcı
   özellikle yayın istemedikçe PR/merge sonrasında otomatik TEST/STABLE
   tetikleme; varsayılan olarak değişiklikleri sonraki TEST'te biriktir.
-- PR'larda yalnız doküman/yayın talebi değiştiğinde metadata kontrolü,
-  yalnız CSS ve metadata değiştiğinde odaklı UI testi yeterlidir. İş kuralı,
-  SYNC, ASAS/PLM, refresh, canonical field, yetki, kod, test veya
-  workflow değişikliği tam CI regresyonundan geçer. CI kapsamını daraltmak
-  için işlevsel değişikliği yanlışlıkla "docs/CSS-only" diye sınıflandırma.
+- GitHub'ı boşa kullanma: CI'ı tetiklemek için boş commit/yeniden push,
+  aynı başarısız işi tekrar çalıştırma veya gereksiz ara PR açma yok.
+  Birden çok küçük işi mümkünse tek PR'da topla.
 - Her TEST yayını öncesinde **tam regresyon** ve release kabul kontrolleri
   zorunludur. STABLE yalnız doğrulanmış TEST'in **aynı imzalı baytlarını**
   yeniden derlemeden terfi ettirir. Fail, skip veya hiç koşmamış zorunlu
