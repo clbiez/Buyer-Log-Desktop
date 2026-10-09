@@ -207,18 +207,46 @@ function oabSelectionFromViewerUrl(value) {
     };
   } catch (_) { return {}; }
 }
+/* Speed (field report: 180 s vs 30-40 s on Edge). An empty-filter
+ * GetReportData makes PASS compute the whole report, so it ran into the
+ * 120 s page timeout before the real request even started. Now:
+ *  - with a Season/MAG/Buyer Group selection, the validation request IS the
+ *    user's report request and its rows are handed to the backend's first
+ *    identical request (one PASS report call, like the Edge path);
+ *  - without a selection (user-menu sign-in) the empty-filter probe is cut
+ *    after a few seconds: PASS rejects a bad Bearer immediately with 401/403,
+ *    so a request still running at that point was authorized. */
+const OAB_PROBE_PENDING_MS = 8000;
+const OAB_VALIDATED_REPORT_TTL_MS = 120000;
+let oabValidatedReport = null;
+function oabReportCacheKey(body) {
+  const params = body && body.parameters || {};
+  return [params.SeasonRef, params.MerchSubGroupRef, params.BuyerGroupRefs].map(value => String(value == null ? '' : value)).join('\u0000');
+}
+function takeOabValidatedReport(endpoint, body) {
+  const cached = oabValidatedReport;
+  if (!cached || endpoint !== 'Report/GetReportData') return null;
+  if (Date.now() - cached.at > OAB_VALIDATED_REPORT_TTL_MS) { oabValidatedReport = null; return null; }
+  if (cached.key !== oabReportCacheKey(body)) return null;
+  oabValidatedReport = null;
+  return cached.result;
+}
 async function validateOabSessionInPage(page, authorization, selection) {
-  const first = await runOabPageRequest(page, 'Report/GetReportData', oabReportDataBody(), authorization);
-  if (oabSessionAccepted(first, { allowClientError:true })) return { ok:true, status:first.status };
-  const status = Number(first && first.status) || 0;
   const hasSelection = Boolean(selection && selection.seasonRef && selection.merchSubGroupRef && selection.buyerGroupRef);
-  if (status === 401 || status === 403 || !hasSelection) return first;
-  const second = await runOabPageRequest(page, 'Report/GetReportData', oabReportDataBody(selection), authorization);
-  return oabSessionAccepted(second) ? { ok:true, status:second.status } : second;
+  if (hasSelection) {
+    const body = oabReportDataBody(selection);
+    const result = await runOabPageRequest(page, 'Report/GetReportData', body, authorization);
+    if (!oabSessionAccepted(result)) return result;
+    oabValidatedReport = { key:oabReportCacheKey(body), result, at:Date.now() };
+    return { ok:true, status:result.status };
+  }
+  const probe = await runOabPageRequest(page, 'Report/GetReportData', oabReportDataBody(), authorization, { pendingAfterMs:OAB_PROBE_PENDING_MS });
+  if (probe && probe.code === 'OAB_PENDING') return { ok:true, status:0, pending:true };
+  return oabSessionAccepted(probe, { allowClientError:true }) ? { ok:true, status:probe.status } : probe;
 }
 const OAB_PAGE_REQUEST_TIMEOUT_MS = 120000;
-function oabPassRequestExpression(url, body, fallbackAuthorization) {
-  const config = JSON.stringify({ url, body: body == null ? {} : body, fallback: String(fallbackAuthorization || '') });
+function oabPassRequestExpression(url, body, fallbackAuthorization, options = {}) {
+  const config = JSON.stringify({ url, body: body == null ? {} : body, fallback: String(fallbackAuthorization || ''), pendingAfterMs: Math.max(0, Number(options.pendingAfterMs) || 0) });
   return `(async () => {
     const cfg = ${config};
     ${OAB_STORED_TOKENS_READER}
@@ -227,11 +255,21 @@ function oabPassRequestExpression(url, body, fallbackAuthorization) {
     if (!candidates.length) return { ok:false, status:0, code:'OAB_AUTH_REQUIRED' };
     let last = null;
     for (const authorization of candidates) {
-      const response = await fetch(cfg.url, {
-        method:'POST', credentials:'omit', cache:'no-store',
-        headers:{ Accept:'application/json', 'Content-Type':'application/json', Authorization:authorization },
-        body:JSON.stringify(cfg.body),
-      });
+      const controller = cfg.pendingAfterMs ? new AbortController() : null;
+      const timer = controller ? setTimeout(() => controller.abort(), cfg.pendingAfterMs) : null;
+      let response;
+      try {
+        response = await fetch(cfg.url, {
+          method:'POST', credentials:'omit', cache:'no-store', signal:controller ? controller.signal : undefined,
+          headers:{ Accept:'application/json', 'Content-Type':'application/json', Authorization:authorization },
+          body:JSON.stringify(cfg.body),
+        });
+      } catch (error) {
+        if (controller && controller.signal.aborted) return { ok:false, status:0, code:'OAB_PENDING' };
+        throw error;
+      } finally {
+        if (timer) clearTimeout(timer);
+      }
       const text = await response.text();
       let json = null; try { json = text ? JSON.parse(text) : null; } catch (_) {}
       last = { ok:response.ok, status:response.status, json };
@@ -244,7 +282,7 @@ function oabWindowOnPass(win) {
   if (!win || win.isDestroyed()) return false;
   try { return new URL(win.webContents.getURL()).hostname.toLowerCase() === OAB_UI_HOST; } catch (_) { return false; }
 }
-async function runOabPageRequest(win, endpoint, body, fallbackAuthorization) {
+async function runOabPageRequest(win, endpoint, body, fallbackAuthorization, options = {}) {
   if (!OAB_RELAY_ENDPOINTS.has(endpoint)) return { ok:false, status:0, code:'OAB_ENDPOINT_BLOCKED' };
   if (!oabWindowOnPass(win)) return { ok:false, status:0, code:'OAB_AUTH_REQUIRED' };
   let timer = null;
@@ -253,7 +291,7 @@ async function runOabPageRequest(win, endpoint, body, fallbackAuthorization) {
   });
   try {
     const result = await Promise.race([
-      win.webContents.executeJavaScript(oabPassRequestExpression(`${OAB_PASS_API_ROOT}/${endpoint}`, body, fallbackAuthorization), true),
+      win.webContents.executeJavaScript(oabPassRequestExpression(`${OAB_PASS_API_ROOT}/${endpoint}`, body, fallbackAuthorization, options), true),
       timeout,
     ]);
     return result && typeof result === 'object' ? result : { ok:false, status:0, code:'OAB_NO_RESPONSE' };
@@ -296,6 +334,7 @@ function adoptOabSessionWindow(win, authorization, parent) {
 }
 function destroyOabSessionWindow() {
   const win = oabSessionWindow;
+  oabValidatedReport = null;
   oabSessionWindow = null;
   oabSessionAuthorization = '';
   if (win && !win.isDestroyed()) { try { win.destroy(); } catch (_) {} }
@@ -335,7 +374,9 @@ async function handleOabRelayRequest(req, res) {
     if (route === '/oab/pass-request') {
       const endpoint = String(body && body.endpoint || '');
       if (!OAB_RELAY_ENDPOINTS.has(endpoint)) return send(400, { ok:false, code:'OAB_ENDPOINT_BLOCKED' });
-      const result = await runOabPageRequest(oabSessionWindow, endpoint, body && body.body || {}, oabSessionAuthorization);
+      const requestBody = body && body.body || {};
+      // The sign-in validation already fetched exactly this report: reuse it.
+      const result = takeOabValidatedReport(endpoint, requestBody) || await runOabPageRequest(oabSessionWindow, endpoint, requestBody, oabSessionAuthorization);
       if (result && (result.status === 401 || result.status === 403)) log('OAB oturum sayfası isteği reddetti (HTTP ' + result.status + ').');
       return send(200, { ok:true, result });
     }

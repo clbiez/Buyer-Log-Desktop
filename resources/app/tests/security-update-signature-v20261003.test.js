@@ -164,7 +164,7 @@ test('repository ships public verification keys only; workflow signs from a CI s
   const workflow = fs.readFileSync(path.join(appRoot, '..', '..', '.github', 'workflows', 'buyerlog-test-release.yml'), 'utf8');
   assert.match(workflow, /BUYER_LOG_RELEASE_SIGNING_KEY: \$\{\{ secrets\.BUYER_LOG_RELEASE_SIGNING_KEY \}\}/);
   assert.ok(workflow.indexOf('release-signing.js sign') > workflow.indexOf('release:build'), 'sign after build');
-  assert.ok(workflow.indexOf('release-signing.js sign') < workflow.indexOf('buyerlog-bridge-bundle'), 'sign before any distribution');
+  assert.ok(workflow.indexOf('release-signing.js sign') < workflow.indexOf('Checkout public release-only repository'), 'sign before any distribution');
   const githubRelease = fs.readFileSync(path.join(appRoot, 'scripts', 'github-release.js'), 'utf8');
   assert.equal((githubRelease.match(/^\s+assertSignedForClients\((manifest|stable)\);/gm) || []).length, 2, 'publish-test and promote-stable verify signatures');
 });
