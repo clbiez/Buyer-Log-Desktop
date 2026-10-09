@@ -381,6 +381,22 @@ function readDeviceIdSync(file) {
 function createLocalDb(file) {
   let dbFile = path.resolve(file);
   let deviceId = null;
+  /* Taşıma kapsamı (v20261009). Ortak klasöre hiç gitmeyecek bir yerel yazım
+     journal'da "yüklenmeyi bekliyor" olarak durursa sync durumu sahte
+     "N changes waiting" gösterir ve ilk Shared Hub eşitlemesi bekleyen
+     değişiklik var diye kilitlenir. Sunucu sync politikasını buraya bağlar;
+     kapsam dışı olay yazıldığı anda yerel olarak kapanır. Bağlanmamışsa
+     (testler, eski çağıranlar) her olay eskisi gibi taşınabilir sayılır. */
+  let transportFilter = null;
+  function setTransportFilter(filter) { transportFilter = typeof filter === 'function' ? filter : null; }
+  function closeIfLocalOnly(journalItem) {
+    if (!transportFilter) return;
+    let transportable = true;
+    try { transportable = transportFilter(journalItem) !== false; } catch (_) { transportable = true; }
+    if (transportable) return;
+    journalItem.localOnly = true;
+    journalItem.uploaded = true; journalItem.synced = true; journalItem.acknowledged = true;
+  }
   let recoveredFolder = '';
   function recoverPendingWrites() {
     const folder = path.dirname(dbFile);
@@ -616,6 +632,7 @@ function createLocalDb(file) {
       for (const [device, seq] of Object.entries(source)) if (Number(seq) > (seenVector[device] || 0)) seenVector[device] = Number(seq);
     }
     const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, seen: seenVector, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
+    closeIfLocalOnly(journalItem);
     journalItem.sha256 = sha256(Buffer.from(JSON.stringify({ ...journalItem, sha256: undefined }), 'utf8'));
     state.events[eid] = { eventId: eid, revision, at, origin, deviceId: state.deviceId, localSequence: state.localSequence };
     state.journal.push(journalItem);
@@ -634,6 +651,7 @@ function createLocalDb(file) {
     state.tombstones[key] = { id: key, revision, baseRevision: effectiveBaseRevision, at, deviceId: state.deviceId };
     delete state.records[key];
     const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation: 'delete', delete: true, revision, baseRevision: effectiveBaseRevision, localSequence: state.localSequence, at, origin, uploaded: false, acknowledged: false, synced: false };
+    closeIfLocalOnly(journalItem);
     journalItem.sha256 = sha256(Buffer.from(JSON.stringify({ ...journalItem, sha256: undefined }), 'utf8'));
     state.events[eid] = { eventId: eid, revision, at, origin, deviceId: state.deviceId, localSequence: state.localSequence };
     state.journal.push(journalItem);
@@ -1183,8 +1201,11 @@ function createLocalDb(file) {
         inJournal.add(item.eventId);
         item.deviceId = next;
         item.localSequence = sequence;
-        item.uploaded = false; item.synced = false; item.acknowledged = false;
-        delete item.uploadedAt; delete item.acknowledgedAt;
+        // Yerel kalan olay hiç yayımlanmaz; yeni kimlikte de kapalı kalır.
+        if (!item.localOnly) {
+          item.uploaded = false; item.synced = false; item.acknowledged = false;
+          delete item.uploadedAt; delete item.acknowledgedAt;
+        }
         item.reissuedFrom = previous;
         item.sha256 = sha256(Buffer.from(JSON.stringify({ ...item, sha256: undefined }), 'utf8'));
         if (state.events[item.eventId]) state.events[item.eventId] = { ...state.events[item.eventId], deviceId: next, localSequence: sequence };
@@ -1229,7 +1250,7 @@ function createLocalDb(file) {
       return { status, deviceId: current.deviceId };
     });
   }
-  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
+  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
 }
 
 /* ===================================================================

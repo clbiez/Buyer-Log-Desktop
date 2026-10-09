@@ -25,8 +25,8 @@ test('completed revision metadata cannot hide missing or stale master/business c
   assert.match(server, /async function reconcileSharedCheckpointCoverage\(/);
   const bootstrap = server.slice(server.indexOf('async function bootstrapSharedHub'), server.indexOf('// Local auth starts first.'));
   assert.match(bootstrap, /const checkpointRepair = await reconcileSharedCheckpointCoverage\(checked\.root, checked\.manifest\)/);
-  // Ortak ayar kaydı yerel kayda birleşir (saat ve cihaz alanları korunur); iş kaydı tam kopyadır.
-  assert.match(server, /next\.records\[id\] = area === 'master'\s*\? sharedSyncPolicy\.mergeCheckpointRecord\(next\.records\[id\], remoteRecords\[id\]\)\s*: JSON\.parse\(JSON\.stringify\(remoteRecords\[id\]\)\)/);
+  // Ortak ayar ve CP satırı yerel kayda birleşir (saat, cihaz alanları ve yerel CP notları korunur); diğer iş kaydı tam kopyadır.
+  assert.match(server, /next\.records\[id\] = area === 'master' \|\| \/\^cp-order:\/\.test\(id\)\s*\? sharedSyncPolicy\.mergeCheckpointRecord\(next\.records\[id\], remoteRecords\[id\]\)\s*: JSON\.parse\(JSON\.stringify\(remoteRecords\[id\]\)\)/);
   assert.match(server, /SHARED_HUB_DATA_INCOMPLETE/);
 });
 
