@@ -869,7 +869,6 @@ queueMicrotask(()=>{
 });
 
 // ---------- CP derived fields + Unified Action Priority ----------
-function transitDaysForPriority(delType){ return defaultTransitDays(delType); }
 function actionPriorityCode(value){
   const text=norm(value);
   if(!text)return '';
@@ -3228,7 +3227,6 @@ function cpImageCellHtml(row){
 }
 function cpImageRowById(id){return state.cp&&Array.isArray(state.cp.rows)?state.cp.rows.find(row=>Number(row._id)===Number(id)):null;}
 function cpReadImageFile(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(reader.error||new Error('Görsel okunamadı.'));reader.readAsDataURL(file);});}
-function cpImagePayload(dataUrl){const match=String(dataUrl||'').match(/^data:(image\/[A-Za-z0-9.+-]+);base64,(.+)$/s);return match?{mimeType:match[1],base64:match[2]}:null;}
 
 let _imageDeleteConfirmPopover=null,_imageDeleteConfirmCleanup=null;
 function closeImageDeleteConfirm(){
@@ -5452,15 +5450,6 @@ function cpLogisticStatusCellHtml(row,tableKey='cp'){
   const title=groups.map(group=>`${statusDisplay(group.status)}: ${fmtInt(group.quantity)}`).join(' · ');
   return `<td class="cpLogisticStatusTd" title="${escapeHtml(title)}"><div class="cpLogisticMainCell"><button type="button" class="cpLogisticToggle" data-id="${row._id}" aria-expanded="${expanded?'true':'false'}" title="${escapeHtml(appLang==='en'?(expanded?'Hide logistics details':'Show logistics details'):(expanded?'Lojistik detaylarını kapat':'Lojistik detaylarını göster'))}"><span aria-hidden="true">${expanded?'▾':'▸'}</span></button><div class="cpLogisticSummaryStack">${summary}</div></div></td>`;
 }
-function cpLogisticArrivalCellHtml(row){
-  const segments=cpLogisticSegments(row);
-  if(!segments.length) return `<td>${fmtDate(row['Ant. Arrival'])}</td>`;
-  const primary=segments[0], date=coerceDateLoose(primary.arrival);
-  const unique=[...new Set(segments.map(s=>toISODate(s.arrival)).filter(Boolean))];
-  const detail=(primary.kind==='production'||primary.kind==='shortage')?(appLang==='en'?'Ex-Factory based':'Ex-Factory bazlı'):(appLang==='en'?'IAS date':'IAS tarihi');
-  const more=unique.length>1?`<span class="cpLogisticMore">+${unique.length-1} ${appLang==='en'?'dates':'tarih'}</span>`:'';
-  return `<td class="cpLogisticArrivalTd"><span class="cpLogisticPrimaryDate">${fmtDate(date)||'—'}</span><span class="cpLogisticDateSource">${escapeHtml(detail)}</span>${more}</td>`;
-}
 function cpLogisticDelTypeCellHtml(row,canEdit){
   const segments=cpLogisticSegments(row);
   if(!segments.length) return null;
@@ -6003,14 +5992,6 @@ function openValueFilterPanel(opts){
 }
 
 function colFilterActive(tableKey, key){ return !!(state.colFilters[tableKey] && state.colFilters[tableKey][key]); }
-// Sütun başlığı filtresi tek bir kategorik değere indirilmişse, aynı alanı temsil eden
-// hızlı filtre çipinin de seçili görünmesini sağlar. Tarih/sayı kuralları tek bir kategori
-// çipiyle birebir eşleşmediği için burada bilinçli olarak kapsam dışıdır.
-function singleHeaderFilterValue(tableKey, key){
-  const entry = state.colFilters?.[tableKey]?.[key];
-  if(!entry || entry.granularity || entry.numericRule || !entry.values || entry.values.size!==1) return '';
-  return norm([...entry.values][0]);
-}
 function mirroredQuickValueActive(tableKey, key, quickValue, candidate){
   const wanted=comparableColumnFilterValue(key,candidate); if(!wanted) return false;
   const entry=state.colFilters?.[tableKey]?.[key];
@@ -6071,17 +6052,6 @@ function migrateLegacyCpQuickFilters(){
     const values=new Set(entry&&entry.quickExf&&entry.values?[...entry.values].map(String):[]);values.add(legacy);
     state.colFilters.cp['Ex-factory']={values,quickExf:true};state.cpQuickExf='';
   }
-}
-// Sayaçları hesaplarken hızlı filtre grubunun kendi sütun başlığı filtresini geçici olarak
-// dışarıda bırakır. Böylece çip sayıları, filtre ister üst çipten ister başlıktan verilmiş olsun,
-// aynı çapraz filtre mantığıyla hesaplanır.
-function withExcludedColumnFilters(tableKey, keys, fn){
-  const bucket = state.colFilters?.[tableKey];
-  if(!bucket || !keys || !keys.length) return fn();
-  const saved = new Map();
-  keys.forEach(key=>{ if(Object.prototype.hasOwnProperty.call(bucket,key)){ saved.set(key,bucket[key]); delete bucket[key]; } });
-  try{ return fn(); }
-  finally{ saved.forEach((value,key)=>{ bucket[key]=value; }); }
 }
 // Hızlı filtreler (KPI çipleri ve üst boyut seçimleri) de ilgili veri sütununu
 // gerçekten filtreler. Bu filtreler state.colFilters içinde tutulmadığı için başlık
@@ -8212,12 +8182,6 @@ function cpOrdersImageCopyCell(dataUrl,dims,natural){
     style:`border:${_COPY_BORDER};padding:2px;vertical-align:middle;text-align:center;width:${cellWidth}px;height:${cellHeight}px;line-height:${height}px;`,
   };
 }
-async function cpOrdersRecordImageCopyCell(row,dims){
-  const dataUrl=await cpOrdersRowImageDataUrl(row);
-  if(!dataUrl) return null;
-  const natural=await _copyImageNaturalSize(dataUrl,null,dims.w,dims.h,null);
-  return cpOrdersImageCopyCell(dataUrl,dims,natural);
-}
 /* Görsel çözümü SINIRLI EŞZAMANLILIKLA yapılır. getClipboardDataUrl her çağrıda
    ağdan çeker + görseli canvas'ta Office uyumlu PNG'ye yeniden kodlar; yüzlerce
    satır seçildiğinde hepsini aynı anda başlatmak tarayıcının ağ kuyruğunu ve
@@ -8419,13 +8383,6 @@ function loadCpDimFilters(){
     const obj = JSON.parse(raw);
     Object.entries(obj).forEach(([d,vals])=>{ if(CP_DIM_META[d] && Array.isArray(vals) && vals.length) cpDimFilters[d]=new Set(vals.map(String)); });
   }catch(e){}
-}
-function passesCpDimFilters(r){
-  return Object.entries(cpDimFilters).every(([dim,set])=>{
-    if(!set || !set.size) return true;
-    const col = CP_DIM_META[dim].col;
-    return set.has(norm(r[col]));
-  });
 }
 function setDimFilterButtonLabel(btn, text){
   if(!btn) return;
@@ -8867,8 +8824,8 @@ function filteredCP(){
   return rows;
 }
 // Tam tabloyu BIR kez gezip hem sonuc kumesini hem de bes capraz kapsami birden uretir.
-// Sonuclar cpRowsScoped ile birebir ayni: bir satir, yalnizca kendi grubu disinda hicbir
-// grupta elenmiyorsa o grubun kapsamina girer.
+// Capraz kapsam kurali: bir satir, yalnizca kendi grubu disinda hicbir grupta elenmiyorsa
+// o grubun kapsamina girer (yani kapsam = o grup HARIC tum aktif filtreler).
 function cpEvaluateAll(){
   const ctx=cpBuildFilterContext();
   const out={all:[],none:[],pri:[],status:[],del:[],season:[],exf:[]};
@@ -8887,7 +8844,6 @@ function cpEvaluateAll(){
   }
   return out;
 }
-function seasonSortParts(value){ return BLBusinessRules.seasonNumberLetterParts(value); }
 function compareSeasonValues(a,b){ return BLBusinessRules.compareSeasonNumberThenLetter(a,b); }
 // ---- Hızlı filtre (KPI çipi) yardımcıları ----
 // Sayısı 0 olan seçenek hiç gösterilmez: seçilse bile tabloyu boşaltacağı için
@@ -8941,15 +8897,6 @@ function sortRows(rows,key,dir){
     if(sx!=null && sy!=null && schema&&schema.sortType==='date') return (sx-sy)*dir;
     return norm(x).localeCompare(norm(y),'tr',{numeric:true,sensitivity:'base'})*dir;
   });
-}
-// Hızlı filtre sayaçları için: belirtilen grup HARİÇ tüm aktif filtreler uygulanır.
-// Böylece ör. bir sezon seçiliyken Priority/Status/Ex-Factory/Del.Type sayıları o sezonun kapsamına daralır.
-function cpRowsScoped(exclude){
-  if(!state.cp) return [];
-  const ex = Array.isArray(exclude) ? exclude : [exclude];
-  const ctx = cpBuildFilterContext();
-  const ids = CP_MIRROR_IDS.filter(id=>!ex.includes(id));
-  return state.cp.rows.filter(r=>cpRowPasses(r,ctx,ids));
 }
 /* Boş tablo yönlendirmesi: kaynakta hiç satır yoksa Veri Yönetimi'ne, filtreler
    her şeyi eliyorsa filtre temizlemeye yönlendirir. Tablo başlığı ve araç
@@ -10021,28 +9968,6 @@ async function saveWorkbookWithValidations(wb, filename, validations, conditiona
   const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(url),1500);
 }
-async function saveWorkbookBufferWithValidations(raw,filename,validations,conditionalFormats,protections,workbookOptions){
-  if(window.BLPerf)await window.BLPerf.ensureLibrary('jszip');
-  const specs=Array.isArray(validations)?validations:[],formats=Array.isArray(conditionalFormats)?conditionalFormats:[],locks=Array.isArray(protections)?protections:[],options=workbookOptions&&typeof workbookOptions==='object'?workbookOptions:{};
-  const pivotStyle=options.pivotStyle||(/^Backlog_Report_/i.test(String(filename||''))?{name:'BuyerLogPivot',fillColor:'F2F4F7',fontColor:'475467',bodyFillColor:'FFFFFF',bodyFontColor:'101828',bold:true}:null);
-  const freezePanes=Array.isArray(options.freezePanes)?options.freezePanes:[{sheetPath:'xl/worksheets/sheet1.xml',rows:1,topLeftCell:'A2'}];
-  let blob;
-  if((specs.length||formats.length||locks.length||pivotStyle||freezePanes.length)&&window.BLExcelWorkbookGuards&&typeof JSZip!=='undefined')blob=await BLExcelWorkbookGuards.applyWorkbookGuards(raw,{validations:specs,conditionalFormats:formats,protections:locks,pivotStyle,freezePanes},JSZip,'blob');
-  else blob=new Blob([raw],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500);
-}
-
-function exportCsv(rows, cols, filename){
-  const head = cols.map(c=>c.label).join(',');
-  const body = rows.map(r=>cols.map(c=>{
-    let v=r[c.k];
-    if(v instanceof Date) v=fmtDate(v);
-    v = norm(v).replace(/"/g,'""');
-    return /[",\n]/.test(v) ? `"${v}"` : v;
-  }).join(',')).join('\n');
-  const blob = new Blob([head+'\n'+body], {type:'text/csv;charset=utf-8;'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click();
-}
 
 // ---------- OVERVIEW ----------
 // Bir <select>'e, seçeneklerde olmayan bir değer atanacaksa geçici option ekleyerek atar.
@@ -10271,9 +10196,6 @@ function overviewCollectionSummaryRows(){
 }
 function overviewCollectionSummaryColumns(){
   try{return typeof kolColDefs==='function'?kolColDefs().filter(column=>column&&column.k&&!column.noFilter):[];}catch(_){return [];}
-}
-function overviewCollectionSummaryPivotColumns(){
-  try{return typeof kolColDefs==='function'?kolColDefs().filter(column=>column&&column.k):[];}catch(_){return [];}
 }
 function overviewCollectionSummaryColumnValue(row,key){
   try{return typeof kolFilterValue==='function'?kolFilterValue(row,key):String((row&&row[key])??'');}catch(_){return String((row&&row[key])??'');}
@@ -11649,12 +11571,6 @@ function cloneMatchConfig(value){
     ias:{...(condition.ias||{})},
   }))};
 }
-function matchFieldLabel(side,emptyText){
-  if(!side||(!side.name&&!side.canonicalHeader&&!side.header))return emptyText;
-  const canonical=String(side.canonicalHeader||side.header||'').trim();
-  const source=[side.table,side.name].filter(Boolean).join(' · ');
-  return canonical&&source?`${canonical} — ${source}`:(source||canonical);
-}
 /* v7.81 — ESKİ EŞLEŞTİRME KURALI MODALI KALDIRILDI.
 
    Kural artık Veri Yönetimi ekranında (data-management-matchrule.js): iki
@@ -11710,12 +11626,6 @@ const MODEL_CONNECTION_DEFAULT_SEASONS=Object.freeze(['W6','W7','S6','S7']);
 const MODEL_ROLE_TARGETS={asas:['cp','orders','backlog','lfl'],antrepo:['cp','orders','backlog'],intake:['intake']};
 MODEL_ROLE_TARGETS.asas.push('priceanalysis');
 const MODEL_TARGET_LABELS={cp:'CP',orders:'Orders / Siparişler',backlog:'Backlog',lfl:'LFL',priceanalysis:'Price & Supplier Analysis',intake:'INTAKE'};
-function modelAllowedTargets(role){ return (MODEL_ROLE_TARGETS[role]||[]).slice(); }
-function modelScopeLabel(scope){
-  const name=String(scope&&scope.name||'').trim();
-  if(name) return name;
-  return (scope&&scope.targets||[]).map(t=>MODEL_TARGET_LABELS[t]||t).join(' + ')||'—';
-}
 const MODEL_QUERY_PLACEHOLDER='// Once "Tablolari Listele" ile tablo adini bul, listeden tikla.\n// Sorgu buraya kendisi yazilir.';
 let modelConnState={items:[],revision:0,selectedId:null,supported:true,exportFolder:'',loaded:false};
 let modelConnFields={};      // rol → alan kataloğu (sunucudan bir kez alınır)
@@ -11775,28 +11685,9 @@ async function refreshFieldMappingReadinessUI(items=modelConnState.items){
   return issues;
 }
 let modelConnSchema=null;    // { columns:[{table,name,kind}], measures:[{table,folder,name,kind}] }
-function modelConnSchemaEntries(){
-  if(!modelConnSchema) return [];
-  return (modelConnSchema.measures||[]).concat(modelConnSchema.columns||[]);
-}
-function modelConnEntryId(entry){ return `${entry.kind}|${entry.table}|${entry.name}`; }
 // Sütun tekil değerleri: catalog|tablo|sütun → değer listesi. Bir kez çekilir,
 // aynı pencerede tekrar açıldığında anında gelir.
 let modelConnValueCache={};
-async function modelConnDistinct(item,table,field){
-  const key=`${item.catalog}|${table}|${field}`;
-  if(modelConnValueCache[key]) return modelConnValueCache[key];
-  const res=await fetch('/api/model-connections/distinct',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({server:item.server,catalog:item.catalog,table,field})});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok) throw new Error(data.error||res.statusText);
-  modelConnValueCache[key]={values:Array.isArray(data.values)?data.values:[],truncated:Boolean(data.truncated)};
-  return modelConnValueCache[key];
-}
-function modelConnKnownSeasons(){
-  try{ return [...new Set((state.asasOrders||[]).map(o=>String(o.season||'').trim()).filter(Boolean))]; }
-  catch(_){ return []; }
-}
 
 
 
@@ -11868,7 +11759,6 @@ function modelConnDurationLabel(ms){ return fmtDurationSn(ms); }
 void modelConnLoad().catch(()=>{});
 
 function transitRuleDateLabel(rule){return `${rule&&rule.exfStart?fmtDate(rule.exfStart):'−∞'} – ${rule&&rule.exfEnd?fmtDate(rule.exfEnd):'+∞'}`;}
-function transitRuleListLabel(values,emptyLabel){const list=Array.isArray(values)?values:[];return list.length?list.join(', '):emptyLabel;}
 function transitRuleMatchCount(rule){
   return ((state.cp&&state.cp.rows)||[]).filter(row=>isProductionStatus(row.STATUS)&&findTransitRule(row['Ex-factory'],row.Season,row.Country,row['Del. Type'],[rule])).length;
 }
@@ -13671,7 +13561,6 @@ function refreshFrozenAreas(targets){
   return [...out];
 }
 let _readOnlyMode = false, _readOnlyAreas = [];
-function isReadOnlyMode(){ return _readOnlyMode; }
 // Bir alan şu anda yenileme yüzünden donmuş mu?
 function isAreaFrozen(area){ return _readOnlyMode && _readOnlyAreas.includes(String(area || '')); }
 function areaLabel(area){
@@ -16076,10 +15965,6 @@ async function renameProfile(kind){
 }
 document.getElementById('viewRenameBtn')?.addEventListener('click',()=>renameProfile('view'));
 
-function clearActiveProfileSelection(kind){
-  const select=document.getElementById(kind==='view'?'viewSelect':'filterSelect');
-  if(select){select.value='';window.syncProfilePicker?.(select);}
-}
 function resetViewToSystemDefault(){
   const page=activeProfilePage();
   if(!isProfilePage(page))return;
@@ -16509,13 +16394,6 @@ let backlogDimValuesActive = {};  // {dim: [halen veri getiren değerler]}
 let backlogCustomDimensions = []; // ASAS / Antrepo ham tablo başlıkları
 function backlogValuesFor(dim){ return Array.isArray(backlogDimValues[dim]) ? backlogDimValues[dim] : []; }
 function backlogActiveSetFor(dim){ return new Set(Array.isArray(backlogDimValuesActive[dim]) ? backlogDimValuesActive[dim] : []); }
-// Buying Group seçimi ayrı bir kümede tutuluyor; boyut panelleri de aynı kümeyi
-// düzenlesin diye tek erişim noktası.
-function backlogSelectionFor(dim){
-  if(dim==='buyerGrup') return backlogBuyerGrupSelected;
-  if(!backlogDimFilters[dim]) backlogDimFilters[dim]=new Set();
-  return backlogDimFilters[dim];
-}
 function backlogSelectionSize(dim){
   if(dim==='buyerGrup') return backlogBuyerGrupSelected.size;
   return backlogDimFilters[dim] ? backlogDimFilters[dim].size : 0;
@@ -16523,10 +16401,6 @@ function backlogSelectionSize(dim){
 function backlogClearSelection(dim){
   if(dim==='buyerGrup'){ backlogBuyerGrupSelected.clear(); return; }
   delete backlogDimFilters[dim];
-}
-function backlogPruneSelection(dim){
-  if(dim==='buyerGrup') return;
-  if(backlogDimFilters[dim] && backlogDimFilters[dim].size===0) delete backlogDimFilters[dim];
 }
 let backlogDateLevels = ['year','month','week','day']; // Antrepo Giriş Tarihi görünüm kademeleri
 const BACKLOG_DATE_LEVEL_LABELS = { year:'Yıl', month:'Ay', week:'Hafta', day:'Gün' };
@@ -17912,80 +17786,6 @@ document.getElementById('backlogCollapseLevelBtn').addEventListener('click', ()=
 });
 
 
-// Ekrandaki pivotu Excel'de İŞLEVSEL olarak üretir:
-// - Her satıra Excel "outline" seviyesi yazılır → soldaki +/− ve 1-2-3 düğmeleriyle
-//   gruplar uygulamadaki gibi daraltılıp genişletilebilir.
-// - Başlıkta otomatik filtre açıktır.
-// - Tüm satırlar (ekranda kapalı olanlar dahil) aktarılır; daraltmayı Excel yapar.
-function buildBacklogPivotSheet(){
-  const flat = (lastBacklogFlat||[]);
-  if(!flat.length) return null;
-  const bd = _XLS_BORDERS;
-  const ws = {}; const put=(r,c,cell)=>{ ws[XLSX.utils.encode_cell({r,c})]=cell; };
-  const rowsLabel = (backlogGroupBy && backlogGroupBy.length) ? backlogGroupBy.map(d=>BACKLOG_DIM_LABELS_FE[d]).join(' → ') : 'Grup';
-  const headers = [rowsLabel, ...backlogPivotCols.map(k=>k+' Adet'), backlogPivotCols.length?'Toplam Adet':'Adet', backlogPivotCols.length?'Sipariş':'Sipariş Sayısı'];
-  headers.forEach((h,ci)=> put(0,ci,{v:h,t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF475467'}},fill:{patternType:'solid',fgColor:{rgb:'FFF2F4F7'},bgColor:{rgb:'FFF2F4F7'}},alignment:{horizontal:ci===0?'left':'right',vertical:'center',wrapText:true}}}));
-  const rowProps=[{hpx:24}];
-  flat.forEach((r,ri)=>{
-    const isTop = r.depth===0;
-    const rowFill = isTop ? {fgColor:{rgb:'FFF2F4F7'}} : undefined;
-    put(ri+1,0,{v:String(r.label),t:'s',s:{border:bd,font:{sz:10,bold:isTop},fill:rowFill,alignment:{vertical:'center',indent:Math.min(15,r.depth)}}});
-    let c=1;
-    backlogPivotCols.forEach(k=>{
-      const cc = r.colTotals && r.colTotals[k];
-      put(ri+1,c++, cc
-        ? {v:cc.qty,t:'n',s:{border:bd,font:{sz:10,bold:isTop},fill:rowFill,numFmt:'#,##0',alignment:{horizontal:'right',vertical:'center'}}}
-        : {v:'',t:'s',s:{border:bd,fill:rowFill}});
-    });
-    put(ri+1,c++,{v:r.qty||0,t:'n',s:{border:bd,font:{sz:10,bold:isTop},fill:rowFill,numFmt:'#,##0',alignment:{horizontal:'right',vertical:'center'}}});
-    put(ri+1,c++,{v:r.orders||0,t:'n',s:{border:bd,font:{sz:10,bold:isTop},fill:rowFill,numFmt:'#,##0',alignment:{horizontal:'right',vertical:'center'}}});
-    // Outline: alt seviyeler gruplanır; ekranda kapalıysa Excel'de de kapalı başlar.
-    const prop = {level: Math.min(7, r.depth)};
-    if(r.visible===false) prop.hidden = true;
-    rowProps.push(prop);
-  });
-  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:flat.length,c:headers.length-1}});
-  ws['!autofilter']={ref:ws['!ref']};
-  ws['!cols']=headers.map((h,i)=>({wch: i===0?34:14}));
-  ws['!rows']=rowProps;
-  ws['!outline']={above:true}; // +/− düğmeleri üst (özet) satıra bağlanır — ağaç yapımızla uyumlu
-  return ws;
-}
-// Pivot alanlarını Excel'de SERBESTÇE değiştirebilmek için ham pivot verisi:
-// her satır = boyut değerleri + Adet + Sipariş. Bu sayfayı seçip
-// Ekle → PivotTable dendiğinde tüm alanlar sürükle-bırak kullanılabilir.
-function buildBacklogPivotDataSheet(){
-  if(!lastBacklogData || !lastBacklogData.tree) return null;
-  const dims = backlogGroupBy.concat(backlogColBy);
-  if(!dims.length) return null;
-  const bd = _XLS_BORDERS;
-  const headers = [...dims.map(d=>BACKLOG_DIM_LABELS_FE[d]||d), 'Adet', 'Sipariş'];
-  const rows = [];
-  (function walk(nodes, path){
-    (nodes||[]).forEach(node=>{
-      const np = path.concat([String(node.label)]);
-      if(node.children && node.children.length && np.length < dims.length){
-        walk(node.children, np);
-      } else {
-        const cells = dims.map((_,i)=> np[i]!==undefined ? np[i] : '');
-        rows.push([...cells, node.qty||0, node.orders||0]);
-      }
-    });
-  })(lastBacklogData.tree, []);
-  if(!rows.length) return null;
-  const ws = {}; const put=(r,c,cell)=>{ ws[XLSX.utils.encode_cell({r,c})]=cell; };
-  headers.forEach((h,ci)=> put(0,ci,{v:h,t:'s',s:{border:bd,font:{sz:10,bold:true,color:{rgb:'FF475467'}},fill:{fgColor:{rgb:'FFF2F4F7'}},alignment:{horizontal:'center',vertical:'center'}}}));
-  rows.forEach((row,ri)=> row.forEach((v,ci)=>{
-    const isNum = ci >= dims.length;
-    put(ri+1,ci, isNum
-      ? {v:Number(v)||0,t:'n',s:{border:bd,font:{sz:10},numFmt:'#,##0',alignment:{horizontal:'right',vertical:'center'}}}
-      : {v:String(v),t:'s',s:{border:bd,font:{sz:10},alignment:{vertical:'center'}}});
-  }));
-  ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:rows.length,c:headers.length-1}});
-  ws['!autofilter']={ref:ws['!ref']};
-  ws['!cols']=headers.map(()=>({wch:18}));
-  return ws;
-}
 // Ekrandaki tüm seçenek ve filtre seçimlerini "Ayarlar" sayfasına döker.
 // Ayarlar sayfası: üstte rapor filtreleri, altında NAKLİYE YOL SÜRELERİ tablosu.
 // Yol süresi hücreleri BACKLOG sayfasındaki formüllerin kaynağıdır; buradaki bir
@@ -21862,21 +21662,6 @@ function kolScopeText(key){
   };
   return (dict[key] && (en ? dict[key].en : dict[key].tr)) || key;
 }
-function kolScopeDimRows(excludeKey){
-  return kolRows.filter(row=>Object.entries(kolColFilters).every(([key,set])=>key===excludeKey||!set||!set.size||set.has(kolFilterValue(row,key))));
-}
-function updateKolScopePresetButtons(){
-  const mineBtn=document.getElementById('kolScopeMine'),allBtn=document.getElementById('kolScopeAll');
-  if(!mineBtn||!allBtn)return;
-  const mine=String(window.BL_USER_CONTEXT&&window.BL_USER_CONTEXT.id||'');
-  const mineId=kolWorkspaceList.some(item=>item.ownerId===mine)?mine:(kolWorkspaceList[0]&&kolWorkspaceList[0].ownerId)||'';
-  const selected=[...kolWorkspaceSelectedOwnerIds];
-  const isMine=selected.length===1&&selected[0]===mineId;
-  const isAll=kolWorkspaceList.length>0&&selected.length===kolWorkspaceList.length;
-  [[mineBtn,isMine],[allBtn,isAll]].forEach(([btn,on])=>{btn.classList.toggle('isActive',!!on);btn.setAttribute('aria-pressed',on?'true':'false');});
-  mineBtn.title=kolScopeText('myRecordsTooltip');mineBtn.setAttribute('aria-label',kolScopeText('myRecordsTooltip'));
-  allBtn.title=kolScopeText('allRecordsTooltip');allBtn.setAttribute('aria-label',kolScopeText('allRecordsTooltip'));
-}
 async function kolLoadPermissions(){
   const data=await kolFetchJson('/api/collection-permissions');kolPermissionState=data;return data;
 }
@@ -22360,10 +22145,6 @@ function kolMonthDisplay(value){
 // ===================== Collection In-Store period picker =====================
 // LCW Merch Calendar is the authority for business week/month assignment.
 // Dates remain Gregorian; GLB/ISO week is only shown as a secondary reference.
-function kolIsoWeekYear(date){
-  const period=window.BLDateDimension?.describe?.(date);
-  return period&&period.businessValid?period.lcwYear:0;
-}
 function kolWeekCodeForDate(value){
   const period=window.BLDateDimension?.describe?.(value);
   if(!period||!period.valid||!period.businessValid)return '';
@@ -25017,24 +24798,6 @@ function genericMoveCol(el, dir){
   if(target){ target.focus(); if(target.select) target.select(); return true; }
   return false;
 }
-function genericCaptureRowTarget(el, dir){
-  const tr = el.closest('tr'), table = el.closest('table');
-  if(!tr || !table) return null;
-  const pair = genericCellNavKey(el); if(!pair) return null;
-  const [attr, val] = pair;
-  let sib = dir>0 ? tr.nextElementSibling : tr.previousElementSibling;
-  while(sib && !sib.querySelector(`[${attr}]`)) sib = dir>0 ? sib.nextElementSibling : sib.previousElementSibling;
-  if(!sib) return null;
-  const target = [...sib.querySelectorAll(`[${attr}]`)].find(x=>x.getAttribute(attr)===val);
-  if(!target) return null;
-  const allRows = [...(table.tBodies[0]?.rows || [])];
-  return {
-    tableId: table.id,
-    rowId: sib.dataset.id || '',
-    rowIndex: allRows.indexOf(sib),
-    attr, val
-  };
-}
 function genericFocusCapturedTarget(snap){
   if(!snap) return false;
   const table = document.getElementById(snap.tableId); if(!table) return false;
@@ -25233,13 +24996,6 @@ function kolInsertTextAtCaret(el,text){
   el.dispatchEvent(new Event('input',{bubbles:true}));
   return true;
 }
-function kolEditorAtHorizontalBoundary(el,dir){
-  if(el.tagName==='SELECT')return false;
-  if(typeof el.selectionStart!=='number')return true;
-  return dir>0
-    ? el.selectionStart===String(el.value||'').length&&el.selectionEnd===String(el.value||'').length
-    : el.selectionStart===0&&el.selectionEnd===0;
-}
 function kolHandleSpreadsheetKey(e,el,snap){
   if(!el?.closest?.('#kolTable'))return false;
   if(e.key==='Escape'){
@@ -25408,7 +25164,6 @@ document.addEventListener('paste', e=>{
     }
   }
 });
-function kolMoneyDisplay(v){ return (v===''||v==null) ? '' : v; }
 // Bir satırdaki üretici fiyatlarından "0" ve boş olanları hariç tutarak en düşüğü bulur.
 // Excel hücre dolgusu ARGB hex ister; HSL'den (Excel'de kullanılabilir) hex'e çevirir.
 function hslToArgb(h,s,l){
@@ -26183,7 +25938,7 @@ document.getElementById('kolClearColFiltersBtn')?.addEventListener('click', ()=>
 });
 // ---- Koleksiyon hızlı filtre çipleri: Model Budget Month / Durum / Kategori — CP'deki hızlı
 // filtre şeridiyle aynı dil. Bir grubun sayıları DİĞER aktif filtrelere göre daralır
-// (kendi grubu hariç), CP'deki cpRowsScoped ile aynı çapraz filtre mantığı.
+// (kendi grubu hariç), CP'deki cpEvaluateAll ile aynı çapraz filtre mantığı.
 const KOL_QUICK_DIMS = KOL_COLS.filter(col=>!col.noFilter).map(col=>({key:col.k,label:col.label}));
 const KOL_QUICK_DEFAULT_KEYS = new Set(['inStoreMonth','durum','urunTipi']);
 const KOL_QUICK_DIMS_KEY = 'lcw.collection.quickDims.v1';
@@ -31111,11 +30866,6 @@ function plmSyncReopenRootMenu(page){
   if(!menu||!button)return;
   menu.removeAttribute('hidden');button.setAttribute('aria-expanded','true');
 }
-function plmSyncPageLabel(page){
-  if(page==='kol')return appLang==='en'?'Collection':'Koleksiyon';
-  if(page==='cp')return 'CP';
-  return appLang==='en'?'Orders':'Orders';
-}
 function plmSyncPageProvider(page){return page==='kol'?'koleksiyon':page;}
 function plmSyncPageScope(page){
   const api=modelAssetScopeApi();if(!api)return null;
@@ -31941,12 +31691,6 @@ function kolExportSelection(){
   const selected=hasLogicalSelection?projected.filter(record=>kolCollectionProjectionSelected(record,kolSelected)):[];
   return {rows:hasLogicalSelection?selected:projected,selectedOnly:hasLogicalSelection};
 }
-function kolExportRows(){ return kolExportSelection().rows; }
-function kolColHeaders(){
-  const mfrCols = kolManufacturers.map(m=>m.name);
-  const base=kolOrderedCols();
-  return { base, mfr: mfrCols, all: [...base.map(c=>c.label), ...mfrCols.map(m=>m+' ($)')] };
-}
 function kolExportSingleLineText(value){
   if(window.BLTableExport?.normalizeCell)return window.BLTableExport.normalizeCell(value);
   return String(value==null?'':value).replace(/[\r\n\u000B\u000C\u0085\u2028\u2029\t]+/g,' ').replace(/ {2,}/g,' ').trim();
@@ -32062,26 +31806,6 @@ function buildKolStyledSheet(rows){
 
 
 // ---- Görsel gömülü dışa aktarım: ExcelJS (ayrı kütüphane; xlsx-js-style resim desteklemiyor) ----
-// Mailto gövdesi yalnızca düz metin kabul eder (HTML tablo desteklenmez) — bu yüzden
-// sabit genişlikli, hizalı bir düz-metin tablosu üretilir. Sütunlar e-posta talebiyle
-// birebir aynı sırada: Category / Style Name / License / Colour / Fit / Fabric /
-// Quantity / Ex-Factory / Target FOB / Notes.
-function kolPlainTextTable(rows){
-  const cols = [
-    ['CATEGORY','urunTipi',14], ['STYLE NAME','modelKod',16], ['LICENSE','lisans',12],
-    ['COLOUR','colour',12], ['FIT','fit',10], ['FABRIC','fabric',12],
-    ['QUANTITY','quantity',9], ['EX-FACTORY','exFactory',11], ['TARGET FOB','targetPrice',11], ['NOTES','not',18],
-  ];
-  const pad = (s,w) => { s=String(s==null?'':s); return s.length>=w ? s.slice(0,w-1)+'…' : s+' '.repeat(w-s.length); };
-  const header = cols.map(([label,,w])=>pad(label,w)).join(' | ');
-  const sep = cols.map(([,,w])=>'-'.repeat(w)).join('-+-');
-  const lines = rows.map(r => cols.map(([,key,w])=>{
-    let v = kolEffectiveValue(r,key);
-    if(key==='targetPrice' && v!=='' && v!=null) v = '$'+v;
-    return pad(v,w);
-  }).join(' | '));
-  return [header, sep, ...lines].join('\r\n');
-}
 // Fiyatlama talebi Excel'i: Export with Pictures ile aynı ExcelJS görsel/biçim motorunu kullanır.
 // Görsel sütunu sabittir; diğer sütunlar kalıcı Pricing Excel Columns seçimine göre eklenir.
 // v1.84: çalışma kitabı artık yalnız indirilmez; düzenlenebilir .eml taslağına gerçek ek olarak
@@ -32764,18 +32488,6 @@ async function pricingCompressPdfFile(file,maxBytes){
   }catch(err){ return null; }
   finally{ try{pdf?.destroy?.();}catch(e){} }
 }
-// Bir sıkıştırılabilir dosyayı (görsel veya PDF) verilen bütçeye sığdırır.
-async function pricingCompressToTarget(item,target){
-  if(item.isPdf){
-    const out=await pricingCompressPdfFile(item.file,target);
-    return out ? {source:out.blob,name:out.name,mimeType:out.mimeType,compressed:true} : null;
-  }
-  if(item.isImage){
-    const out=await pricingCompressImageFile(item.file,target);
-    return out ? {source:out.blob,name:out.name,mimeType:out.mimeType,compressed:true} : null;
-  }
-  return null;
-}
 // Ortak sıkıştırma kademeleri: EN İYİ'den EN DÜŞÜK'e. Her kademe tüm model
 // dosyalarına AYNI oranda uygulanır (görsel ve PDF için eşdeğer görsel kalite).
 // Görsellerde ölçek = özgün piksele göre; PDF'lerde ölçek = pdf.js render DPI çarpanı.
@@ -32870,27 +32582,11 @@ async function pricingZipFiles(items,archiveName='Model_Files.zip'){
     return {blob,name:archiveName,mimeType:'application/zip'};
   }catch(err){ return null; }
 }
-function pricingMakeBlobFile(blob,name,type='application/octet-stream'){
-  try{return new File([blob],name,{type,lastModified:Date.now()});}
-  catch(_){ blob.name=name; return blob; }
-}
-function pricingChunkBlob(blob,maxBytes,baseName,mimeType='application/octet-stream'){
-  const out=[]; const total=Math.max(1,Math.ceil((blob?.size||0)/Math.max(1,maxBytes)));
-  for(let i=0;i<total;i++){
-    const start=i*maxBytes,end=Math.min(blob.size,start+maxBytes);
-    const part=blob.slice(start,end,'application/octet-stream');
-    out.push({source:part,name:`${baseName}.${String(i+1).padStart(3,'0')}`,mimeType:'application/octet-stream',chunkIndex:i+1,chunkCount:total});
-  }
-  return out;
-}
 function pricingMultipartInstructions(chunkedNames){
   const names=[...new Set(chunkedNames||[])];
   const tr=`Buyer Log ekleri 9,5 MB e-posta sınırını aşmamak için numaralı parçalara bölündü.\r\n\r\nParçaları geri birleştirmek için aynı ada ait .001, .002, .003 dosyalarını aynı klasöre kaydedin ve 7-Zip ile .001 dosyasını açın.\r\n\r\nBölünen dosyalar:\r\n${names.map(x=>'• '+x).join('\r\n')}`;
   const en=`Buyer Log attachments were split into numbered parts to stay below the 9.5 MB email limit.\r\n\r\nSave all .001, .002 and .003 parts with the same base name in one folder, then open the .001 file with 7-Zip.\r\n\r\nSplit files:\r\n${names.map(x=>'• '+x).join('\r\n')}`;
   return new Blob([appLang==='en'?en:tr],{type:'text/plain;charset=utf-8'});
-}
-function pricingAttachmentWeight(file){
-  return Math.max(1,Math.sqrt(Math.max(1,Number(file?.size)||1)));
 }
 async function pricingPrepareAttachmentPlan(workbook,fileEntries,rows){
   const excelBytes=workbook?.buffer?.byteLength||0;
@@ -33439,11 +33135,6 @@ function prepareEmailBuildSubject(topic,rows,manufacturerName,sourceKind,dateTex
   const room=Math.max(20,240-date.length-3),trimmed=prefix.length<=room?prefix:`${prefix.slice(0,Math.max(1,room-1)).trimEnd()}…`;
   return `${trimmed} - ${date}`;
 }
-function prepareEmailTopicTableHtml(rows,columns){
-  const head=columns.map(c=>`<th style="background-color:#F2F4F7;color:#475467;border:thin solid #D0D5DD;padding:5px 8px;text-align:left;font-weight:bold;white-space:nowrap;">${escapeHtml(c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label))}</th>`).join('');
-  const body=(rows||[]).map(row=>`<tr>${columns.map(c=>{const cell=prepareEmailTopicCell(row,c);return `<td style="border:thin solid #D0D5DD;padding:4px 8px;text-align:${cell.numeric?'right':'left'};">${escapeHtml(cell.display)}</td>`;}).join('')}</tr>`).join('');
-  return `<table cellspacing="0" cellpadding="0" style="border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;font-size:12px;margin-top:12px;"><tr>${head}</tr>${body}</table>`;
-}
 function prepareEmailTopicTablePlain(rows,columns){
   const labels=columns.map(c=>c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label));
   const lines=(rows||[]).map(row=>columns.map(c=>prepareEmailTopicCell(row,c).display.replace(/[\t\r\n]+/g,' ')).join('\t'));
@@ -33493,9 +33184,6 @@ function prepareEmailWorkbookFileEntry(workbook){
 }
 function prepareEmailGenericHtml(body,tableHtml=''){
   return `<!doctype html><html><body style="margin:0;padding:0;background:#ffffff;color:#101828;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;"><div style="max-width:1100px;margin:0;padding:8px 4px;">${mailTplToHtml(body)}${tableHtml||''}</div></body></html>`;
-}
-function prepareEmailGenericPlain(body,rows,columns){
-  return mailTplToPlain(body)+'\r\n\r\n'+prepareEmailTopicTablePlain(rows,columns);
 }
 async function kolCreatePreparedEmailDraft({email,subject,text,html,attachmentPlan,kind,inlineImages}){
   const plan=attachmentPlan||await pricingPrepareAttachmentPlan(null,[],[]);

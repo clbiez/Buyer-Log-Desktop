@@ -95,11 +95,6 @@ function deltaStoreId(file) {
   }
   return `abs/${resolved.split(path.sep).join('/')}`;
 }
-/* saveRevisioned ailesinin TAMAMI hem yazma hem okuma yolunu delta üzerinden
-   geçiriyor, yani hepsi taşınmış sayılır. Ayrı yazma yolu olan store'lar
-   (koleksiyon çalışma alanları, e-posta grupları, quotation'lar) kendi
-   modüllerinde ayrıca taşınır; buradan geçmedikleri için etkilenmezler. */
-function deltaReadsStore() { return documents().isAuthoritative; }
 function deltaWritesLegacy(file) { return deltaMirrorExcluded(file) || documents().writesLegacy; }
 /* Delta aynasına GİRMEYEN store lar. Yenileme geçmişi cihazın kendi denetim
    günlüğüdür: hangi satırların değiştiğini anlatır, değişikliğin KENDİSİNİ
@@ -172,10 +167,6 @@ function safeUserDataId(userId) {
 function scopedSourceFile(baseFile, userId) {
   if (!userId || userId === 'moderator') return baseFile;
   return path.join(USER_SOURCE_DATA_DIR, safeUserDataId(userId), path.basename(baseFile));
-}
-function scopedFxFile(userId) {
-  if (!userId || userId === 'moderator') return FX_FILE;
-  return path.join(USER_FX_DATA_DIR, safeUserDataId(userId), path.basename(FX_FILE));
 }
 
 function cloneFallback(value) { return typeof value === 'function' ? value() : JSON.parse(JSON.stringify(value)); }

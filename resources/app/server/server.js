@@ -3938,17 +3938,6 @@ function plmImageRefreshLog(event,payload={}){
   try{ console.info(`[${event}]`,JSON.stringify(payload)); }catch(_){ console.info(`[${event}]`); }
 }
 function plmImageHash(buffer){ return crypto.createHash('sha256').update(buffer).digest('hex'); }
-function plmImageRefreshCounts(images,failedItems){
-  const list=Array.isArray(images)?images:[],failures=Array.isArray(failedItems)?failedItems:[];
-  const missing=failures.filter(item=>/IMAGE_URL_MISSING|IMAGE_RESPONSE_MISSING|REMOTE_MISSING/i.test(String(item&&item.code||''))).length;
-  return {
-    imagesDownloaded:list.filter(item=>!item.existing&&!item.unchanged).length,
-    imagesReplaced:list.filter(item=>!item.existing&&!item.unchanged&&item.oldRef).length,
-    imagesUnchanged:list.filter(item=>item.unchanged).length,
-    imagesMissing:missing,
-    imagesFailed:Math.max(0,failures.length-missing),
-  };
-}
 /* v10.90 — SIFIRLAMA İLE GÖRSEL YAZMASININ YARIŞMASI.
    Tam sıfırlama birden fazla sahiplik katmanını sırayla temizler. Bu sırada
    bir PLM senkronu ya da manuel yükleme araya girerse, yeni görsel dosyası
@@ -6420,55 +6409,6 @@ async function saveRuntimeModelSnapshot(id, runtime) {
   });
 }
 
-async function alignSnapshotWithExcelAntrepo(id, runtime) {
-  const ov = loadOverrides();
-  if (!runtime || ['database', 'dashboard'].includes(ov.antrepoSourceMode)) return runtime;
-
-  const currentFile = currentAntrepoExcelFile(id);
-  const expectedSource = currentFile ? `Excel: ${currentFile.name}` : null;
-  const hasTargetMaps = runtime.antrepoMapByTarget
-    && runtime.antrepoMapByTarget.cp
-    && runtime.antrepoMapByTarget.backlog;
-  if (currentFile && runtime.sources && runtime.sources.antrepo === expectedSource
-      && runtime.antrepoHeaderInfo && hasTargetMaps) {
-    return runtime;
-  }
-
-  try {
-    const excel = await loadAntrepoFromExcel(id, ov.antrepoMatchConfig);
-    runtime.antrepoMap = excel.map;
-    runtime.antrepoMapByTarget = { ...(runtime.antrepoMapByTarget || {}), cp: excel.map, orders: excel.map, backlog: excel.map };
-    runtime.antrepoHeaderInfo = excel.meta;
-    runtime.sources = { ...(runtime.sources || {}), antrepo: `Excel: ${excel.file}` };
-    const quantityInfo = antrepoQuantityWarningInfo(excel.file, excel.meta || {});
-    runtime.refreshWarnings = [
-      ...(runtime.refreshWarnings || []).filter(message => !/IAS satırında (?:Yükleme Toplam Adet|Net Alım Sipariş Miktarı) boş veya geçersiz/i.test(String(message || ''))),
-      ...(excel.integrityWarnings || []),
-      ...quantityInfo.warnings,
-    ];
-    runtime.refreshWarningDetails = [
-      ...(runtime.refreshWarningDetails || []).filter(detail => !String(detail && detail.id || '').startsWith('antrepo-')),
-      ...quantityInfo.details,
-    ];
-    await saveRuntimeModelSnapshot(id, runtime);
-  } catch (err) {
-    // Excel modu seçiliyken eski Database snapshot'ını kullanmak yanlış ve yanıltıcıdır.
-    // Dosya yoksa/okunamıyorsa IAS verisini bilinçli olarak boşaltıp kullanıcıya açık
-    // uyarı veririz; böylece eski, farklı bir kaynaktan gelen kayıtlar siparişlere bağlanmaz.
-    runtime.antrepoMap = {};
-    runtime.antrepoMapByTarget = { ...(runtime.antrepoMapByTarget || {}), cp: {}, orders: {}, backlog: {} };
-    runtime.antrepoHeaderInfo = null;
-    runtime.sources = { ...(runtime.sources || {}), antrepo: expectedSource };
-    const message = `Antrepo Excel: ${err.publicMessage || err.message || 'dosya okunamadı.'}`;
-    runtime.refreshWarnings = [
-      ...(runtime.refreshWarnings || []).filter(item => !/^Antrepo Excel:/i.test(String(item || ''))),
-      message,
-    ];
-    runtime.refreshWarningDetails = (runtime.refreshWarningDetails || []).filter(detail => !String(detail && detail.id || '').startsWith('antrepo-'));
-  }
-  return runtime;
-}
-
 async function loadInitialDataAndLfl(value){
   const id = sourceUserId(value);
   // Model snapshot'ı kişiselleştirilmiş sorgu sonucudur: Horizon ve veri kapsamı
@@ -6526,31 +6466,6 @@ async function syncFxFromKurWorkbook(value, force = false) {
     logRuntimeFailure('fxWorkbookRead', err);
     return { found: false, updated: false, error: 'KUR Excel dosyası arka planda okunamadı.' };
   }
-}
-
-async function loadLflFromDisk(value, withExcelRefresh = false) {
-  const id = sourceUserId(value), runtime = cacheForUser(id), sourceFolder = sourceFolderForUser(id);
-  if (!sourceFolder) throw new Error('Henüz bir kaynak klasör seçilmedi.');
-  const found = findLatestSourceFiles(sourceFolder);
-  if (!found.lfl) {
-    runtime.lflRows = [];
-    runtime.lflMeta = { rowCount: 0, warnings: ['Kaynak klasörde adı LFL ile başlayan bir .xlsx dosyası bulunamadı.'], dimensions: {} };
-    runtime.lflLoadedAt = new Date().toISOString();
-    runtime.sources = { ...(runtime.sources || {}), lfl: null };
-    return { rows: runtime.lflRows, meta: runtime.lflMeta, source: null, loadedAt: runtime.lflLoadedAt };
-  }
-  let refreshWarning = '';
-  if (withExcelRefresh && config.refreshWithExcel && platform.canRefreshExcel()) {
-    try { await refreshExcelFile(found.lfl.full, config.excelRefreshTimeoutMs); }
-    catch (err) { refreshWarning = `LFL Excel yenilemesi tamamlanamadı; dosyanın mevcut hali okundu: ${err.message}`; }
-  }
-  const parsed = await runExcelTask('parseLflFile', { fullPath: found.lfl.full }, { timeoutMs: Math.max(240000, Number(config.excelRefreshTimeoutMs) || 0) });
-  if (refreshWarning) parsed.meta.warnings = [refreshWarning, ...(parsed.meta.warnings || [])];
-  runtime.lflRows = Array.isArray(parsed.rows) ? parsed.rows : [];
-  runtime.lflMeta = withFabricDimensions(parsed.meta, runtime.lflRows);
-  runtime.lflLoadedAt = new Date().toISOString();
-  runtime.sources = { ...(runtime.sources || {}), lfl: found.lfl.name };
-  return { rows: runtime.lflRows, meta: runtime.lflMeta, source: found.lfl.name, loadedAt: runtime.lflLoadedAt };
 }
 
 // Date nesneleri JSON.stringify sırasında UTC'ye çevrildiğinde Türkiye gibi UTC+ saat

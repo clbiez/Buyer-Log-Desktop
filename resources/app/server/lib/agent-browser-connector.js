@@ -312,11 +312,6 @@ async function freeLoopbackPort() {
     server.listen(0, '127.0.0.1', () => { const address = server.address(); const port = address && typeof address === 'object' ? address.port : 0; server.close(error => error ? reject(error) : resolve(port)); });
   });
 }
-async function waitForCdp(port, timeoutMs = 15000) {
-  const deadline = Date.now() + timeoutMs;
-  while (Date.now() < deadline) { if (await cdpReady(port, 700)) return `http://127.0.0.1:${port}`; await sleep(180); }
-  throw connectorError('Microsoft Edge yerel Browser Automation bağlantısı kurulamadı.', 'BROWSER_CDP_TIMEOUT', 503);
-}
 /* ===================================================================
    TEK ONAY (v7.30)
 
@@ -590,7 +585,6 @@ function openExistingEdgeDebugSetup() {
     'Buyer Log’a dönüp Bağlantıyı kontrol et düğmesine basın.'
   ] };
 }
-async function connectManagedEdge(initialUrl) { return connectPreferredEdge(initialUrl); }
 
 function normalizeTarget(target) {
   const strategy = clean(target && target.strategy).toLowerCase();
@@ -621,7 +615,6 @@ function normalizeStep(step, index = 0) {
   if (action === 'script' && !out.value.trim()) throw connectorError('Terminal kodu boş olamaz.', 'BROWSER_SCRIPT_REQUIRED');
   return out;
 }
-function publicStep(step) { const normalized = normalizeStep(step); return normalized; }
 function secretField(payload) {
   const source = [payload && payload.fieldType, payload && payload.name, payload && payload.selector, payload && payload.description].map(clean).join(' ').toLowerCase();
   return /password|passwd|parola|şifre|sifre|secret|token|one.?time|otp|cvv|cvc|pin\b/.test(source);
