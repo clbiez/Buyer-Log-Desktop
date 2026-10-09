@@ -670,7 +670,8 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
             // Collection business belgeleri eski genel delta akışından
             // bilinçli olarak ayrılır. Filtre, paketi yerel DB'ye uygulamadan
             // ÖNCE çalışır; böylece yetkisiz veri diskte/bellekte oluşmaz.
-            const incomingEvents = typeof filterIncomingDeltas === 'function' ? filterIncomingDeltas(pkg.events) : pkg.events;
+            const selectedEvents = typeof filterIncomingDeltas === 'function' ? filterIncomingDeltas(pkg.events) : pkg.events;
+            const incomingEvents = selectedEvents.map(event => ({ ...event, sha256:checksum(event) }));
             const result = typeof localDb.applyPackage === 'function'
               ? await localDb.applyPackage({ packageId: pkg.packageId, sourceDeviceId: pkg.deviceId, firstSeq: receiptFirstSeq(pkg), lastSeq: pkg.lastSeq, events: incomingEvents })
               : await localDb.applyDeltas(incomingEvents);
@@ -690,8 +691,10 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
           } else {
             const delta = payload;
             if (!delta || !delta.eventId || (delta.sha256 && checksum(delta) !== String(delta.sha256))) throw new Error('Delta checksum doğrulanamadı.');
-            const allowed = typeof filterIncomingDeltas !== 'function' || filterIncomingDeltas([delta]).length === 1;
-            const result = allowed ? await localDb.applyDelta(delta) : { applied: false, conflicts: [] }; if (result.applied) applied++;
+            if (source.sourceId !== 'legacy' && delta.deviceId !== source.sourceId) throw new Error('Legacy sync source device does not match folder.');
+            const selected = typeof filterIncomingDeltas !== 'function' ? [delta] : filterIncomingDeltas([delta]);
+            const filtered = selected[0];
+            const result = filtered ? await localDb.applyDelta({ ...filtered, sha256:checksum(filtered) }) : await localDb.applyDelta(delta, { receiptOnly:true }); if (result.applied) applied++;
             conflicts += Array.isArray(result.conflicts) ? result.conflicts.length : 0;
             if (source.sourceId !== 'legacy' && source.sequence) { const afterDelta = await localDb.read(); checkpoints[source.sourceId] = Number(afterDelta.syncCheckpoints && afterDelta.syncCheckpoints[source.sourceId]) || Number(checkpoints[source.sourceId]) || 0; }
             if (delta.deviceId && delta.deviceId !== deviceId) {

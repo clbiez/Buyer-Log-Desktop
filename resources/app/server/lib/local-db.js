@@ -19,6 +19,11 @@ const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, DIRECT_PARSE_MAX
 
 const SCHEMA_VERSION = 3;
 const DEFAULT_DB_NAME = 'BuyerLogLocal.db';
+const SHARED_CP_FIELDS = new Set(['dates', 'subManufacturer', 'suppFob', 'suppFobMeta']);
+function compareEventOrder(a, b) {
+  const time = String(a && a.at || '').localeCompare(String(b && b.at || ''));
+  return time || (String(a && a.deviceId || '') < String(b && b.deviceId || '') ? -1 : String(a && a.deviceId || '') > String(b && b.deviceId || '') ? 1 : 0);
+}
 
 function now() { return new Date().toISOString(); }
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
@@ -223,11 +228,15 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
   const next = { ...base };
   const fields = { ...(base._fieldRevisions || {}) };
   const writers = { ...(base._fieldWriters || {}) };
+  const orders = { ...(base._fieldOrders || {}) };
+  const order = causal && causal.order;
+  const owner = causal && causal.owner;
+  const rememberOrder = key => { if (order && owner && owner.known && owner.allowed && SHARED_CP_FIELDS.has(key)) orders[key] = { ...order }; else delete orders[key]; };
   const writer = causal && causal.writer && causal.writer.d ? { d: String(causal.writer.d), s: Number(causal.writer.s) || 0 } : null;
   const seen = writer && causal.seen && typeof causal.seen === 'object' ? causal.seen : null;
   const conflicts = [];
   for (const [key, value] of Object.entries(incoming && typeof incoming === 'object' ? incoming : {})) {
-    if (key === '_fieldRevisions' || key === '_revision' || key === '_fieldWriters') continue;
+    if (key === '_fieldRevisions' || key === '_revision' || key === '_fieldWriters' || key === '_fieldOrders') continue;
     const previousRevision = Number(fields[key]) || 0;
     if (key === DOCUMENT_REVISION_META_FIELD && next[key] && typeof next[key] === 'object') {
       next[key] = newerRevisionMeta(next[key], value);
@@ -249,6 +258,15 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
       continue;
     }
     const lastWriter = seen && writers[key] && writers[key].d ? writers[key] : null;
+    const concurrent = lastWriter
+      ? lastWriter.d !== writer.d && !(Number(seen[lastWriter.d]) >= (Number(lastWriter.s) || 0))
+      : baseRevision != null && previousRevision > Number(baseRevision || 0);
+    if (concurrent && owner && owner.known && owner.allowed && SHARED_CP_FIELDS.has(key) && order && orders[key] && orders[key].userId === order.userId) {
+      if (compareEventOrder(order, orders[key]) < 0) continue;
+      next[key] = value; fields[key] = Math.max(previousRevision, revision);
+      if (writer) writers[key] = writer; rememberOrder(key);
+      continue;
+    }
     if (lastWriter) {
       if (lastWriter.d === writer.d) {
         // Aynı cihazın daha eski olayı daha yeni değeri geri almaz.
@@ -258,6 +276,7 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
         continue;
       }
       next[key] = value;
+      rememberOrder(key);
       fields[key] = Math.max(previousRevision, revision);
       writers[key] = writer;
       continue;
@@ -278,10 +297,12 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
       continue;
     }
     next[key] = value;
+    rememberOrder(key);
     fields[key] = revision;
     if (writer) writers[key] = writer;
   }
   next._fieldRevisions = fields;
+  if (Object.keys(orders).length) next._fieldOrders = orders; else delete next._fieldOrders;
   if (Object.keys(writers).length) next._fieldWriters = writers;
   next._revision = Math.max(Number(base._revision) || 0, revision);
   return { value: next, conflicts };
@@ -395,7 +416,12 @@ function createLocalDb(file) {
      değişiklik var diye kilitlenir. Sunucu sync politikasını buraya bağlar;
      kapsam dışı olay yazıldığı anda yerel olarak kapanır. Bağlanmamışsa
      (testler, eski çağıranlar) her olay eskisi gibi taşınabilir sayılır. */
-  let transportFilter = null;
+  let transportFilter = null, sharedOwnerResolver = null;
+  function setSharedOwnerResolver(resolve) { sharedOwnerResolver = typeof resolve === 'function' ? resolve : null; }
+  function sharedOwnerOf(id, userId) {
+    if (!String(id).startsWith('cp-order:') || !sharedOwnerResolver) return { allowed: true, known: false };
+    return sharedOwnerResolver(id, userId);
+  }
   function setTransportFilter(filter) { transportFilter = typeof filter === 'function' ? filter : null; }
   function closeIfLocalOnly(journalItem) {
     if (!transportFilter) return;
@@ -615,7 +641,7 @@ function createLocalDb(file) {
   /* Tek bir patch'i AÇIK bir transaction state'i üzerine uygular. queuePatch ile
      queuePatches aynı gövdeyi paylaşır; böylece toplu yol tek kayıtlık yoldan
      ayrışıp farklı journal/merge davranışına kayamaz. */
-  function applyLocalPatch(state, { id, patch, eventId: eid, at, origin = 'local', baseRevision = null, entityType = 'record', userId = null }) {
+  function applyLocalPatch(state, { id, patch, eventId: eid, at, origin = 'local', baseRevision = null, entityType = 'record', userId = null, owner = { allowed:true, known:false } }) {
     const key = recordId(id);
     if (state.events[eid] || state.syncLedger?.eventIds?.[eid]) return { duplicate: true, record: clone(state.records[key]), revision: state.revision, eventId: eid };
     // A normal local edit is based on the record revision actually visible on
@@ -628,7 +654,7 @@ function createLocalDb(file) {
     const revision = Math.max(Number(state.revision) || 0, effectiveBaseRevision) + 1;
     // Local writes are authoritative for this device; baseRevision is carried
     // in the journal for remote conflict detection, not used to reject the edit.
-    const merged = fieldMerge(state.records[key], patch, revision, null, '', { writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 } });
+    const merged = fieldMerge(state.records[key], patch, revision, null, '', { writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 }, owner, order:{ userId:String(userId || ''), at, deviceId:state.deviceId } });
     const operation = state.records[key] ? 'update' : 'create';
     state.revision = revision;
     state.localSequence = Number(state.localSequence) + 1;
@@ -694,13 +720,18 @@ function createLocalDb(file) {
     return checkpoint;
   }
 
-  function applyRemoteDelta(state, { delta, eventId: eid, at, conflictIds = [] }) {
+  function applyRemoteDelta(state, { delta, eventId: eid, at, conflictIds = [], owner = { allowed:true, known:false }, receiptOnly = false }) {
     const firstReceipt = receiptFirstSequence(delta);
     if (state.events[eid] || state.appliedEvents[eid] || state.syncLedger?.eventIds?.[eid]) {
       if (delta.deviceId) recordSyncReceipt(state, delta.deviceId, firstReceipt, Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0);
       return { duplicate: true, applied: false, revision: state.revision };
     }
     const key = recordId(delta.id);
+    if (receiptOnly || (owner.known && !owner.allowed && Object.keys(delta.patch || delta.value || {}).some(field => SHARED_CP_FIELDS.has(field)))) {
+      state.appliedEvents[eid] = { eventId:eid, deviceId:delta.deviceId || null, userId:delta.userId || null, at, origin:'receipt-only' };
+      if (delta.deviceId) recordSyncReceipt(state, delta.deviceId, firstReceipt, Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0);
+      return { applied:false, duplicate:false, conflicts:[] };
+    }
     const revision = Math.max(Number(delta.revision) || 0, Number(state.revision) || 0);
     const tomb = state.tombstones[key];
     // Çakışma kimlikleri de çağrı anında üretilip WAL'a yazılır; oynatmada
@@ -720,7 +751,7 @@ function createLocalDb(file) {
       // kopyalanmış bir kardeş kurulumdan gelir: "aynı cihazın eski olayı"
       // kuralıyla sessizce atlanmamalı, ayrı yazar olarak değerlendirilmeli.
       const writerDevice = delta.deviceId && isRetiredDeviceId(state, delta.deviceId) ? `${delta.deviceId}${CLONE_WRITER_SUFFIX}` : String(delta.deviceId || '');
-      const causal = delta.deviceId ? { writer: { d: writerDevice, s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen } : null;
+      const causal = delta.deviceId ? { writer: { d: writerDevice, s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen, owner, order:{ userId:String(delta.userId || ''), at:delta.at || '', deviceId:delta.deviceId } } : null;
       const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision, key, causal);
       state.records[key] = { ...merged.value, _deleted: false };
       delete state.tombstones[key];
@@ -738,7 +769,7 @@ function createLocalDb(file) {
     }
     state.revision = Math.max(Number(state.revision) || 0, revision);
     state.events[eid] = { eventId: eid, revision, at, origin: 'remote', deviceId: delta.deviceId || null, localSequence: Number(delta.localSequence) || 0 };
-    state.appliedEvents[eid] = { eventId: eid, revision, at, origin: delta.origin || 'remote', deviceId: delta.deviceId || null };
+    state.appliedEvents[eid] = { eventId: eid, revision, at, origin: delta.origin || 'remote', deviceId: delta.deviceId || null, userId:delta.userId || null };
     if (delta.deviceId) recordSyncReceipt(state, delta.deviceId, firstReceipt, Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0);
     return { duplicate: false, applied: true, revision, id: key, conflicts: state.conflicts.filter(item => item.eventId === eid) };
   }
@@ -748,7 +779,31 @@ function createLocalDb(file) {
   function resolvePatch(item = {}) {
     const key = recordId(item.id);
     if (!key) throw new Error('Local record id is required.');
-    return { ...item, id: key, eventId: eventId(item.eventId) || crypto.randomUUID(), at: item.at || now() };
+    const owner = sharedOwnerOf(key, item.userId);
+    if (owner.known && !owner.allowed && Object.keys(item.patch || {}).some(field => SHARED_CP_FIELDS.has(field))) throw Object.assign(new Error('Only the order owner can edit shared fields.'), { code:'ORDER_SHARED_OWNER_ONLY', statusCode:403 });
+    return { ...item, id: key, eventId: eventId(item.eventId) || crypto.randomUUID(), at: item.at || now(), owner };
+  }
+
+  async function retireOwnerConflicts() {
+    const before = await read();
+    if (!before.conflicts.some(item => !item.resolved && String(item.id).startsWith('cp-order:') && SHARED_CP_FIELDS.has(item.field))) return 0;
+    return transaction(state => {
+      let closed = 0;
+      for (const conflict of state.conflicts) {
+        if (conflict.resolved || !String(conflict.id).startsWith('cp-order:') || !SHARED_CP_FIELDS.has(conflict.field)) continue;
+        const record = state.records[conflict.id], currentOrder = record && record._fieldOrders && record._fieldOrders[conflict.field];
+        const writer = record && record._fieldWriters && record._fieldWriters[conflict.field];
+        const localEvent = writer && state.journal.find(item => item.deviceId === writer.d && Number(item.localSequence) === Number(writer.s));
+        const currentOwner = sharedOwnerOf(conflict.id, currentOrder && currentOrder.userId || localEvent && localEvent.userId);
+        const authority = sharedOwnerOf(conflict.id, null);
+        const event = state.appliedEvents[conflict.eventId];
+        const incomingOwner = sharedOwnerOf(conflict.id, event && event.userId);
+        if (!authority.authorityKnown && !(currentOwner.known && currentOwner.allowed) && !(incomingOwner.known && incomingOwner.allowed)) continue;
+        if (!(currentOwner.known && currentOwner.allowed) && record && incomingOwner.known && incomingOwner.allowed) record[conflict.field] = clone(conflict.incoming);
+        conflict.resolved = true; conflict.resolvedAt = now(); conflict.resolution = 'owner-rule'; pruneResolvedConflict(conflict); closed++;
+      }
+      return closed;
+    });
   }
 
   async function queuePatch(item = {}) {
@@ -773,7 +828,7 @@ function createLocalDb(file) {
     return result;
   }
 
-  async function applyDelta(delta = {}) {
+  async function applyDelta(delta = {}, { receiptOnly = false } = {}) {
     receiptFirstSequence(delta);
     const key = recordId(delta.id);
     if (!key) throw new Error('Delta record id is required.');
@@ -782,7 +837,7 @@ function createLocalDb(file) {
       if (expected !== String(delta.sha256)) throw new Error('Delta checksum doğrulanamadı.');
     }
     const payload = {
-      delta,
+      delta, receiptOnly, owner:sharedOwnerOf(key, delta.userId),
       eventId: eventId(delta.eventId) || crypto.createHash('sha256').update(JSON.stringify(delta)).digest('hex'),
       at: now(),
       // Çakışma başına bir kimlik ayır; alan sayısı üst sınırdır.
@@ -807,7 +862,7 @@ function createLocalDb(file) {
         if (expected !== String(delta.sha256)) throw new Error('Delta checksum doğrulanamadı.');
       }
       const payload = {
-        delta,
+        delta, owner:sharedOwnerOf(key, delta.userId),
         eventId: eventId(delta.eventId) || crypto.createHash('sha256').update(JSON.stringify(delta)).digest('hex'),
         at: now(),
         conflictIds: Array.from({ length: Object.keys(delta.patch || delta.value || {}).length + 1 }, () => crypto.randomUUID()),
@@ -834,7 +889,7 @@ function createLocalDb(file) {
     for (const delta of list) receiptFirstSequence(delta);
     let applied = 0, duplicates = 0;
     const conflicts = [];
-    for (const delta of list) {
+    for (const [index, delta] of list.entries()) {
       const key = recordId(delta && delta.id);
       if (!key) throw new Error('Delta record id is required.');
       if (delta.sha256) {
@@ -842,7 +897,7 @@ function createLocalDb(file) {
         if (expected !== String(delta.sha256)) throw new Error('Delta checksum doğrulanamadı.');
       }
       const itemPayload = {
-        delta,
+        delta, owner:payload.owners && payload.owners[index],
         eventId: eventId(delta.eventId) || crypto.createHash('sha256').update(JSON.stringify(delta)).digest('hex'),
         at: payload.at || now(),
         conflictIds: Array.from({ length: Object.keys(delta.patch || delta.value || {}).length + 1 }, (_, index) => `${pid}:${index}:${eventId(delta.eventId) || key}`),
@@ -864,7 +919,7 @@ function createLocalDb(file) {
     if (!pid) throw new Error('Sync package id is required.');
     const state = await read();
     if (state.appliedPackages && state.appliedPackages[pid]) return { duplicate: true, applied: 0, duplicates: (events || []).length, conflicts: [], packageId: pid };
-    const payload = { packageId: pid, sourceDeviceId: String(sourceDeviceId || ''), firstSeq: Number(firstSeq)||0, lastSeq: Number(lastSeq)||0, events: (Array.isArray(events)?events:[]), at: now() };
+    const payload = { owners:(Array.isArray(events) ? events : []).filter(Boolean).map(delta => sharedOwnerOf(delta.id, delta.userId)), packageId: pid, sourceDeviceId: String(sourceDeviceId || ''), firstSeq: Number(firstSeq)||0, lastSeq: Number(lastSeq)||0, events: (Array.isArray(events)?events:[]), at: now() };
     const [result] = await appendOperations([{ op: 'package', payload, apply: next => applyPackageToState(next, payload) }]);
     return result;
   }
@@ -1265,7 +1320,7 @@ function createLocalDb(file) {
       return { status, deviceId: current.deviceId };
     });
   }
-  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
+  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, setSharedOwnerResolver, retireOwnerConflicts, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
 }
 
 /* ===================================================================

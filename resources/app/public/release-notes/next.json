@@ -43,6 +43,39 @@
         "tr": "Her başarılı sync, yalnız paylaşılan iş alanlarının özetini cihazına ait sağlık dosyasına yazar. Moderatör Cihazlar bölümünde sürüm, son sync, bekleyen olaylar, açık çakışmalar ve uygulanan kural sürümünü görür; farklı cihazın kayıt kimliklerini karşılaştırabilir. Yerel notlar ve çalışma zamanı bilgileri bu karşılaştırmaya katılmaz. Panel ölçer ve gösterir; veriyi otomatik değiştirmez.",
         "en": "Each successful sync writes a digest of shared business fields to the device’s own health file. The Moderator sees version, last sync, pending events, open conflicts and applied rules version in Devices, and can compare record identities on a diverged device. Local notes and runtime details are excluded. The panel measures and displays; it never changes data automatically."
       }
+    },
+    {
+      "id": "sync-order-owner-fields",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker / Sync",
+        "en": "CP Tracker / Sync"
+      },
+      "title": {
+        "tr": "Paylaşılan sipariş alanlarında sahiplik güvencesi",
+        "en": "Owner checks for shared order fields"
+      },
+      "path": {
+        "tr": "CP Tracker › Tarihler, Sub-Manufacturer ve Supp. FOB",
+        "en": "CP Tracker › Dates, Sub-Manufacturer and Supp. FOB"
+      },
+      "body": {
+        "tr": "Doğrulanmış sipariş sahibinin paylaşılan alanları başka kullanıcıların değişikliklerinden korunur. Aynı sahibin iki cihazındaki eşzamanlı değişiklikler otomatik sıralanır; yerel notların mevcut yetkileri korunur. Sahipliği doğrulanamayan eski kayıtların mevcut davranışı sürer.",
+        "en": "Verified order owners’ shared fields are protected from other users’ changes. Concurrent edits from two devices of the same owner are ordered automatically; existing local-note permissions are preserved. Older records with unknown ownership keep their existing behavior."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sync-owner-fields.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP tablosunda demo ekip satırının paylaşılan alanları kilitli, sahibin alanları düzenlenebilir",
+          "en": "Real Buyer Log CP table with shared fields locked on a demo teammate row and editable on the owner row"
+        },
+        "caption": {
+          "tr": "Ortak alanlarda sahip kontrolü; yerel notlara mevcut erişim",
+          "en": "Owner checks on shared fields; existing access to local notes"
+        }
+      }
     }
   ]
 }

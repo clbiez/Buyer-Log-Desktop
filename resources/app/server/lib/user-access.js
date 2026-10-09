@@ -8,6 +8,7 @@ const { PROJECT_ROOT, SERVER_DATA_ROOT, APP_DATA_ROOT, LOCAL_DATA_ROOT, CONFIG_P
 const { AsyncLocalStorage } = require('node:async_hooks');
 const centralIam = require('./central-iam');
 const orderAuthorityShare = require('./order-authority-share');
+const cpFieldOwnership = require('./cp-field-ownership');
 const iam = require('./iam-core');
 const userPreferences = require('./user-preferences');
 const { createPersonalLoginCache } = require('./personal-login-cache');
@@ -1003,8 +1004,20 @@ function publicProfile(profile, store = readStore()) {
   };
 }
 function findProfile(store, id) { return allProfiles(store).find(u => u.id === id && u.enabled !== false) || null; }
-function canEditOrder(profile, order, store = readStore()) {
+const sharedOwnerResolverCache = new WeakMap();
+function sharedOwnerResolverFor(store, orderAccess = store.orderAccess) {
+  const cached = sharedOwnerResolverCache.get(store);
+  if (cached && cached.orderAccess === orderAccess) return cached.resolve;
+  const resolve = cpFieldOwnership.createOwnershipResolver(orderAccess, allProfiles(store));
+  sharedOwnerResolverCache.set(store, { orderAccess, resolve });
+  return resolve;
+}
+function canEditOrder(profile, order, store = readStore(), { sharedOnly = false, recordId = '', orderAccess = store.orderAccess } = {}) {
   if (!profile || !order) return false;
+  if (sharedOnly) {
+    const id = recordId || `cp-order:${order.ocode ?? order['Order Code'] ?? ''}`;
+    if (!sharedOwnerResolverFor(store, orderAccess)({ recordId:id, userId:profile.id, systemRole:profile.systemRole }).allowed) return false;
+  }
   if (hasPermission(profile, 'manageAllOrders', store)) return true;
   const scopes = effectiveScopes(profile, store);
   if (scopes.all) return true;
@@ -2041,7 +2054,13 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     };
   }
   return {
-    syncProfiles: syncProfilesForAccess, mergeCatalogValues, authoritativeOrderRows, sessionProfile, publicProfile, canEditOrder, effectiveScopes, appendAudit,
+    syncProfiles: syncProfilesForAccess, mergeCatalogValues, authoritativeOrderRows, sessionProfile, publicProfile,
+    canEditOrder: (profile, order, options = {}) => canEditOrder(profile, order, readStore(), { ...options, orderAccess:authoritySnapshot }),
+    sharedOwnerOf: (recordId, userId) => {
+      const store = readStore(), profile = findProfile(store, clean(userId));
+      return sharedOwnerResolverFor(store, authoritySnapshot)({ recordId, userId, systemRole:profile && profile.systemRole });
+    },
+    effectiveScopes, appendAudit,
     listHandler, suggestHandler, loginHandler, logoutHandler, currentHandler, requireSelection, requireModerator, requireUserAdmin, requirePermission, requireArea, requireAnyArea, requireCapability,
     adminListHandler, adminCreateHandler: centralMutation(adminCreateHandler, 'USER.ADMIN'), adminUpdateHandler: centralMutation(adminUpdateHandler, 'USER.ADMIN'), adminBulkHandler: centralMutation(adminBulkHandler, 'USER.ADMIN'),
     roleMatrixUpdateHandler: centralMutation(roleMatrixUpdateHandler, 'ROLE.MANAGE'), workspaceTemplateUpdateHandler: centralMutation(workspaceTemplateUpdateHandler, 'ROLE.MANAGE'),

@@ -72,8 +72,15 @@ markStartup('APP_BOOT_START');
 // Local-first bootstrap. The retired whole-folder legacy import is deliberately
 // not part of startup; business data remains in the local DB + delta registry.
 const localDb = createLocalDb(LOCAL_DB_FILE);
+let rejectedOwnerDeltas = 0;
 function sharedHubDeltaFilter(direction) {
-  return deltas => sharedSyncPolicy.filterDeltas(filterCollectionWorkspaceDeltas(deltas), direction);
+  return deltas => sharedSyncPolicy.filterDeltas(filterCollectionWorkspaceDeltas(deltas), direction).filter(delta => {
+    if (!String(delta.id || '').startsWith('cp-order:')) return true;
+    const decision = userAccess.sharedOwnerOf(delta.id, delta.userId);
+    if (!decision.known || decision.allowed) return true;
+    if (direction === 'incoming') { rejectedOwnerDeltas++; markStartup('SYNC_OWNER_PATCH_REJECTED', { deviceId:delta.deviceId, userId:delta.userId, orderCode:decision.orderCode }); }
+    return false;
+  });
 }
 // Ortak klasöre hiç gitmeyecek yerel yazım "bekleyen değişiklik" sayılmaz;
 // yazıldığı anda yerel olarak kapanır (bkz. shared-sync-policy izin listesi).
@@ -693,6 +700,7 @@ const userAccess = buildUserAccess({
   ensureDataLoaded: userId => ensureDataLoaded(userId || 'moderator'),
   getOrders: userId => { const runtime = cacheForUser(userId || 'moderator'); return Array.isArray(runtime.asasOrders) ? runtime.asasOrders : []; },
 });
+localDb.setSharedOwnerResolver((id, userId) => userAccess.sharedOwnerOf(id, userId));
 const collectionPermissions = createCollectionPermissionsStore({
   file: path.join(LOCAL_DATA_ROOT, 'collection-permissions.json'),
   getProfiles: () => userAccess.collectionAccessMigrationProfiles(),
@@ -1397,7 +1405,7 @@ function readModeratorMasterState() {
 let syncHealthActor = null;
 async function currentSyncHealth(status) {
   const state = await localDb.read();
-  return syncHealth.buildHealthReport({ state, status: { ...status,
+  return syncHealth.buildHealthReport({ state, status: { ...status, rejectedOwnerDeltas,
     pendingUpload:(state.journal || []).filter(item => !item.uploaded && !item.localOnly && sharedHubDeltaFilter('outgoing')([item]).length).length,
     openConflicts: (state.conflicts || []).filter(item => !item.resolved).length },
     deviceId: localDb.getDeviceId(), userId: syncHealthActor && syncHealthActor.id || '',
@@ -1538,6 +1546,7 @@ let afterSharedSyncInFlight = null;
 function afterSharedSyncCompleted() {
   if (afterSharedSyncInFlight) return afterSharedSyncInFlight;
   afterSharedSyncInFlight = (async () => {
+    await localDb.retireOwnerConflicts().catch(error => logRuntimeFailure('retireOwnerConflicts', error));
     await retireOutOfScopeSyncConflicts().catch(error => logRuntimeFailure('retireSyncConflicts', error));
     return pullModeratorMasterIfNewer();
   })().finally(() => { afterSharedSyncInFlight = null; });
@@ -5833,6 +5842,31 @@ function rejectUnauthorizedOrders(req, res, orderCodes) {
   res.status(403).json({ error: 'Kapsamınız dışındaki siparişlerde değişiklik yapamazsınız.', code: 'ORDER_VIEW_ONLY', deniedOrderCodes: denied.slice(0,50) });
   return true;
 }
+function rejectSharedOwnerWrites(req, res, items) {
+  const fields = ['dates', 'subManufacturer', 'suppFob', 'suppFobMeta'];
+  const denied = (items || []).filter(item => {
+    const patch = item.patch || item;
+    if (!fields.some(field => Object.hasOwn(patch, field))) return false;
+    const code = item.orderCode;
+    const recordId = `cp-order:${patch.model || patch.ccode ? parseLib.orderLineKey(code, patch.model, patch.ccode) : code}`;
+    const decision = userAccess.sharedOwnerOf(recordId, req.currentUser && req.currentUser.id);
+    if (!decision.known || decision.allowed) return false;
+    const rows = userAccess.authoritativeOrderRows(Number(code));
+    return !rows.length || !rows.every(row => userAccess.canEditOrder(req.currentUser, row, { sharedOnly:true, recordId }));
+  }).map(item => Number(item.orderCode));
+  if (!denied.length) return false;
+  userAccess.appendAudit(req.currentUser, 'SHARED_OWNER_WRITE_DENIED', 'orders', { orderCodes:denied.slice(0,50) });
+  res.status(403).json({ code:'ORDER_SHARED_OWNER_ONLY', error:'Paylaşılan alanları yalnız sipariş sahibi değiştirebilir.', errorEn:'Only the order owner can edit shared fields.', deniedOrderCodes:denied.slice(0,50) });
+  return true;
+}
+function sharedAccessRows(rows, profile) {
+  const byCode = new Map();
+  return (rows || []).map(row => {
+    const code = row['Order Code'];
+    if (!byCode.has(code)) byCode.set(code, userAccess.sharedOwnerOf(`cp-order:${parseLib.rowLineKey(row)}`, profile && profile.id).allowed);
+    return { ...row, _canEditShared:byCode.get(code) };
+  });
+}
 function recordOrderCode(record) {
   const raw = record && (record.orderCode ?? record['Order Code'] ?? record.ocode ?? record.siparisKod ?? record._sourceOrderCode);
   const code = Number(String(raw == null ? '' : raw).replace(/\./g, '').trim());
@@ -8190,7 +8224,7 @@ async function buildResponse(currentUser = null, options = {}) {
     storeRevisions: { overrides: Number(overrides._revision)||0, orders: Number(overrides._revisions&&overrides._revisions.orders)||0, suppFob: Number(overrides._revisions&&overrides._revisions.suppFob)||0, pricingRules: Number(overrides._revisions&&overrides._revisions.pricingRules)||0, transitRules: Number(overrides._revisions&&overrides._revisions.transitRules)||0, nonDtrManufacturers: Number(overrides._revisions&&overrides._revisions.nonDtrManufacturers)||0, landedMultipliers: Number(overrides._revisions&&overrides._revisions.landedMultipliers)||0, freightRates: Number(overrides._revisions&&overrides._revisions.freightRates)||0, antrepoMatchRule: Number(overrides._revisions&&overrides._revisions.antrepoMatchRule)||0, antrepoSourceMode: Number(overrides._revisions&&overrides._revisions.antrepoSourceMode)||0, asasSourceMode: Number(overrides._revisions&&overrides._revisions.asasSourceMode)||0, lflSourceMode: Number(overrides._revisions&&overrides._revisions.lflSourceMode)||0, noteColumnDefs: Number(overrides._revisions&&overrides._revisions.noteColumnDefs)||0, refreshHistory: Number(loadRefreshHistory(id)._revision)||0 },
     lflMeta: active.lflMeta || null,
     currentUser: currentUser ? userAccess.publicProfile(currentUser) : null,
-    cp: startup ? null : (cpDataAllowed ? cp : []),
+    cp: startup ? null : (cpDataAllowed ? sharedAccessRows(cp, currentUser) : []),
     orders: startup ? null : (cpDataAllowed ? (orders || []) : []),
     orderSummary: startup ? null : (orderSummaryDataAllowed ? (orderSummary || []) : []),
     overviewSummary: startup ? (orderSummaryDataAllowed ? (overviewSummary || []) : []) : null,
@@ -8303,7 +8337,7 @@ app.get('/api/data/cp', userAccess.requireArea('cp'), async (req, res) => {
       const cpModelColumns = loadModelConnections().items.flatMap(item => (item.cpColumns || []).map(col => ({...col, role:item.role, connectionId:item.id, connectionName:item.name || item.catalog || item.server})));
       return storeOnDemandProjection(req.currentUser, ctx, 'cp', { rows, cpModelColumns }, active);
     });
-    sendDateSafeJson(res, value);
+    sendDateSafeJson(res, { ...value, rows:sharedAccessRows(value.rows, req.currentUser) });
   } catch (err) { apiError(res, err, 'CP verisi yüklenemedi.'); }
 });
 
@@ -9591,6 +9625,7 @@ app.post('/api/overrides/batch', async (req, res) => {
     const items = modelImageRegistry.normalizeItems((req.body || {}).items);
     if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
     if (rejectUnauthorizedOrders(req, res, items.map(item => item && item.orderCode))) return;
+    if (rejectSharedOwnerWrites(req, res, items)) return;
     const beforeContext=pageProjectionContext(req.currentUser);
     const saved = patchOrderOverrides(items, requestRevision(req), requestSuppFobRevision(req), { actor: noteActorOf(req.currentUser) });
     void sharedRevisionStore.update('cpOverrides',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
@@ -9611,6 +9646,7 @@ app.patch('/api/overrides/:orderCode', async (req, res) => {
     const orderCode = Number(req.params.orderCode);
     if (!Number.isFinite(orderCode)) return res.status(400).json({ error: 'Geçerli sipariş kodu zorunlu.', code: 'VALIDATION_ERROR' });
     if (rejectUnauthorizedOrders(req, res, [orderCode])) return;
+    if (rejectSharedOwnerWrites(req, res, [{ orderCode, patch:req.body || {} }])) return;
     const beforeContext=pageProjectionContext(req.currentUser);
     /* İstemci kaynaklı "origin" alanı veri değildir; yama gövdesinden ayıklanır —
        yoksa sipariş kaydına anlamsız bir alan sızar ve canlı yayınla bütün
@@ -9822,6 +9858,7 @@ app.post('/api/overrides/batch-suppfob', async (req, res) => {
     const items = (req.body || {}).items;
     if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.' });
     if (rejectUnauthorizedOrders(req, res, items.map(item => item && item.orderCode))) return;
+    if (rejectSharedOwnerWrites(req, res, items)) return;
     const beforeContext=pageProjectionContext(req.currentUser);
     const clean = items.map(item => ({
       orderCode: Number(item && item.orderCode),
