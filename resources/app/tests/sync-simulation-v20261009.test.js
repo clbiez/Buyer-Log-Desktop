@@ -6,7 +6,11 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { runScenario, createSimulation } = require('./helpers/sync-sim');
 
-test('OneDrive simulation: 10 devices, 300 operations, three reproducible seeds', { timeout: 15000 }, async t => {
+// This bound covers three complete scenarios with real mirrored file I/O.
+// Windows hosted runners need more time for file creation/rename; all seeds,
+// operation counts and convergence/privacy/checkpoint assertions stay intact.
+const THREE_SEED_TIMEOUT_MS = process.platform === 'win32' ? 90000 : 15000;
+test('OneDrive simulation: 10 devices, 300 operations, three reproducible seeds', { timeout: THREE_SEED_TIMEOUT_MS }, async t => {
   for (const seed of [1701, 90210, 0xC0FFEE]) {
     const result = await runScenario({ seed, devices: 10, operations: 300 });
     assert.equal(result.operations, 300);

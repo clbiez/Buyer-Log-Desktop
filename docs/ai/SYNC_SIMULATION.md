@@ -11,7 +11,7 @@ node --test tests/sync-simulation-v20261009.test.js
 BUYERLOG_SYNC_SOAK=1 node --test tests/sync-simulation-v20261009.test.js
 ```
 
-The main test covers 10 devices / 300 operations for three seeds, with a 15-second timeout. The optional soak executes 20,000 operations. A failed random scenario writes the seed and synthetic operation log for replay.
+The main test covers 10 devices / 300 operations for three seeds, with a 15-second timeout on non-Windows platforms and a 90-second timeout on Windows. The Windows hosted runner exceeded the aggregate 15-second limit while doing real mirrored file I/O; this is a bounded completion guard, not an application latency benchmark. Every seed, operation count and convergence/privacy/checkpoint assertion remains required. The optional soak executes 20,000 operations. A failed random scenario writes the seed and synthetic operation log for replay.
 
 P3 records three executed RED/TODO counterexamples for a separate production fix: a partial foreign capability head takes sync offline (4403); scoped legacy payload retains its old journal checksum (4404); legacy transport lacks coverage for preceding local-only sequence gaps (4405). These TODOs are not proof of convergence under those conditions. Concurrent same-field writes currently intentionally produce conflicts; separate fields and causally ordered writes must not.
 
