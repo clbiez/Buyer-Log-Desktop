@@ -76,6 +76,39 @@
         "tr": "Kullanıcılar arasında artık yalnız CP Ex-Factory revizeleri, CP Sub-Manufacturer ve Supp. FOB bilgileri ile Manufacturers e-posta rehberi paylaşılır; koleksiyonlar kendi sahip bazlı aktarımıyla gelmeye devam eder. CP notları, teslim tipi, shortage ve kişisel dosyalar (sevkiyat karşılaştırması, açık maliyet, şablonlar, fiyat talepleri) bilgisayarda kalır. Yerel kalan değişiklikler \"bekleyen\" sayılmaz, zaten uygulanmış paketler yeniden indirilmez ve tam doğrulama 45 saniye yerine 30 dakikada bir çalışır; seçilen sync aralığına uyulur.",
         "en": "Only CP Ex-Factory revisions, CP Sub-Manufacturer and Supp. FOB details and the Manufacturers e-mail directory are now shared between users; collections continue to arrive through their own owner-based transfer. CP notes, delivery type, shortage and personal files (shipping comparison, open costing, templates, price requests) stay on the computer. Local-only changes are not counted as waiting, packages that were already applied are not downloaded again, and the full check runs every 30 minutes instead of every 45 seconds; the selected sync interval is honoured."
       }
+    },
+    {
+      "id": "collection-artwork-detail-plm-sync-refresh",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "PLM SYNC › Model Detayları artık Artwork Detayını da güncelliyor",
+        "en": "PLM SYNC › Model Details now also refreshes Artwork Detail"
+      },
+      "path": {
+        "tr": "Koleksiyon › PLM SYNC › Tümünü Güncelle › Model Detayları",
+        "en": "Collection › PLM SYNC › Update All › Model Details"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-artwork-detail-plm-sync.png",
+        "alt": {
+          "tr": "Koleksiyon tablosu: PLM SYNC sonrası Artwork Detayı sütunu yeni BOM baskı özetlerini gösteriyor, bildirimde 3 artwork detayı güncellendi yazıyor — demo verili Buyer Log ekranı",
+          "en": "Collection table: after PLM SYNC the Artwork Detail column shows the new BOM print summaries and the notification says 3 artwork details were updated — Buyer Log screen with demo data"
+        },
+        "caption": {
+          "tr": "Yalnız baskı bilgisi değişen modeller de senkron sonunda güncellenir",
+          "en": "Models whose only change is their print data are also updated when the sync finishes"
+        }
+      },
+      "body": {
+        "tr": "PLM'de yalnız BOM/baskı bilgisi değişen modellerde Model Detayları senkronu \"hepsi güncel\" deyip Artwork Detayı sütununu eski değerde bırakıyordu. Senkron artık kaydettiği BOM özetlerini tabloya hemen yansıtıyor ve kaç artwork detayının güncellendiğini bildiriyor. LCW AI'a ulaşılamadığı ya da analizin ertelendiği modeller de bir sonraki senkronda yeniden çözümleniyor. Elle düzenlediğiniz Artwork Detayı hücreleri korunur; hücreyi temizlerseniz PLM değeri geri gelir.",
+        "en": "For models whose only PLM change was their BOM/print data, the Model Details sync reported \"all up to date\" and left the Artwork Detail column on the old value. The sync now applies the BOM summaries it saved to the table right away and reports how many artwork details were updated. Models whose LCW AI analysis was unavailable or deferred are also re-analysed on the next sync. Artwork Detail cells you edited by hand are kept; clear the cell to bring back the PLM value."
+      }
     }
   ]
 }
