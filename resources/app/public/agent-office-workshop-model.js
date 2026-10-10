@@ -1,0 +1,28 @@
+(function(root){
+  'use strict';
+  const WIDTH={desk:4,table:5,sofa:4,shelf:2,coffee:3,rack:2,plant:1,lamp:1,chair:1,mannequin:1,monstera:1,board:3,decor:1,rug:5};
+  const passive=item=>['rug','board','decor','lamp'].includes(item.kind);
+  const box=item=>({left:item.x-WIDTH[item.kind]/2,right:item.x+WIDTH[item.kind]/2,top:item.y-.5,bottom:item.y+.5});
+  function validPlacement(item,items){
+    if(!WIDTH[item.kind]||![0,1].includes(item.floor)||item.y<0||item.y>3)return false;
+    const a=box(item);if(a.left<0||a.right>24)return false;
+    if(!passive(item)&&item.y===3&&(item.floor===1?a.left<4:a.left<8&&a.right>4))return false;
+    return passive(item)||!items.some(other=>{if(other.id===item.id||other.floor!==item.floor||passive(other))return false;const b=box(other);return a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;});
+  }
+  const key=p=>`${p.floor}:${p.x}:${p.y}`;
+  function blocked(p,items){return p.x<0||p.x>23||p.y<0||p.y>3||![0,1].includes(p.floor)||items.some(item=>{if(passive(item)||item.floor!==p.floor)return false;const b=box(item);return p.x+.5>b.left&&p.x+.5<b.right&&p.y===item.y;});}
+  function neighbors(p){const list=[{...p,x:p.x-1},{...p,x:p.x+1},{...p,y:p.y-1},{...p,y:p.y+1}];if(p.floor===1&&p.x===2&&p.y===3)list.push({x:6,y:3,floor:0});if(p.floor===0&&p.x===6&&p.y===3)list.push({x:2,y:3,floor:1});return list;}
+  function path(start,end,items){
+    if(blocked(start,items)||blocked(end,items))return [];
+    const queue=[start],seen=new Map([[key(start),null]]),points=new Map([[key(start),start]]);
+    for(let index=0;index<queue.length&&index<192;index++){const current=queue[index];if(key(current)===key(end)){const result=[];let k=key(current);while(seen.get(k)!==null){result.unshift(points.get(k));k=seen.get(k);}return result;}
+      for(const next of neighbors(current)){const k=key(next);if(!seen.has(k)&&!blocked(next,items)){seen.set(k,key(current));points.set(k,next);queue.push(next);}}}
+    return [];
+  }
+  function nearest(point,items){const candidates=[];for(let floor=0;floor<2;floor++)for(let y=0;y<4;y++)for(let x=0;x<24;x++){const p={floor,x,y};if(!blocked(p,items))candidates.push(p);}return candidates.sort((a,b)=>Math.abs(a.x-point.x)+Math.abs(a.y-point.y)+Math.abs(a.floor-point.floor)*30-(Math.abs(b.x-point.x)+Math.abs(b.y-point.y)+Math.abs(b.floor-point.floor)*30))[0]||null;}
+  function stations(profiles,items){const desks=items.filter(p=>p.kind==='desk'),used=new Set(),assigned=new Map();for(const profile of profiles){const desk=desks.find(p=>p.id===profile.deskId&&!used.has(p.id))||desks.find(p=>!used.has(p.id));if(desk){used.add(desk.id);assigned.set(profile.id,{desk,point:nearest({x:desk.x,y:Math.min(3,desk.y+1),floor:desk.floor},items)});}else assigned.set(profile.id,{desk:null,point:nearest({x:4+assigned.size%19,y:3,floor:0},items)});}return assigned;}
+  const periodForHour=hour=>hour>=6&&hour<11?'morning':hour>=11&&hour<17?'noon':hour>=17&&hour<21?'evening':'night';
+  function status(profileId,data){const active=(data.activeJobs||[]).find(j=>j.profileIds?.includes(profileId));if(active)return active.phase==='review'?'reviewing':active.phase==='responding'?'responding':'working';const last=(data.jobs||[]).find(j=>j.profileIds?.includes(profileId));if(last?.status==='failed')return 'error';if((data.memory||[]).some(m=>m.profileId===profileId&&m.type==='task'&&m.active))return 'waiting';return data.connected===false?'offline':'available';}
+  const model={WIDTH,passive,box,validPlacement,blocked,path,nearest,stations,periodForHour,status};
+  if(typeof module!=='undefined'&&module.exports)module.exports=model;else root.BLWorkshopModel=model;
+})(typeof window==='undefined'?globalThis:window);

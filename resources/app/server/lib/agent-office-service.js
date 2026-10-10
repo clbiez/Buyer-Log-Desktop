@@ -75,9 +75,9 @@ function createAgentOfficeService(deps) {
         const state = await store.state(profile.id);
         const seeded = (await store.records(profile.id)).some(doc => doc.kind === 'metadata' && doc.id === 'initialized');
         if (!state.profiles.length && !seeded) {
-          const seeds = [{ name: 'Ada', role: 'CP', areas: ['cp','orders'], avatar: { hair:'bun', clothes:'cream', skin:1 } },
-            { name: 'Atlas', role:'Collection', areas: ['collection'], avatar: { hair:'short', clothes:'blue', skin:2 } },
-            { name: 'Ece', role:'Quality', areas:['cp','orders'], avatar:{ hair:'long', clothes:'green', skin:1 } }];
+          const seeds = [{ name: 'Ada', role: 'CP', areas: ['cp','orders'], deskId:'desk-a',avatar: { hair:'bun', clothes:'cream', skin:1 } },
+            { name: 'Atlas', role:'Collection', areas: ['collection'],deskId:'desk-b', avatar: { hair:'short', clothes:'blue', skin:1,accessory:'glasses' } },
+            { name: 'Ece', role:'Quality', areas:['cp','orders'],deskId:'desk-c', avatar:{ hair:'long', clothes:'green', skin:1 } }];
           for (const seed of seeds) await store.createProfile(profile.id, seed, allowedAreas(profile));
         }
         if (!seeded) await store.save(profile.id, 'metadata', {id:'initialized'});

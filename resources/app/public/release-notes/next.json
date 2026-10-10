@@ -613,28 +613,28 @@
         "en": "Agent Office"
       },
       "title": {
-        "tr": "Pixel Loft: yaşayan agent ofisi",
-        "en": "Pixel Loft: a living agent office"
+        "tr": "Pixel Atölye: iki katlı, etkileşimli agent ofisi",
+        "en": "Pixel Workshop: a two-floor interactive agent office"
       },
       "path": {
         "tr": "Sol menü › Agent Ofisi",
         "en": "Navigation › Agent Office"
       },
       "body": {
-        "tr": "İsim verilen CP, Koleksiyon ve Kalite agentlarıyla konuşun; karakterleri ve sürüklenebilir/döndürülebilir mobilyaları özelleştirin. TR/EN arayüz, görünürken çalışan pixel canvas ve azaltılmış hareket desteği mevcut Buyer Log tasarımını izler.",
-        "en": "Talk to named CP, Collection and Quality agents; customize characters and drag or rotate furniture. The TR/EN UI, visibility-controlled pixel canvas and reduced-motion support follow the existing Buyer Log design."
+        "tr": "Sabit yandan görünümde çalışma masaları, kahve köşesi, toplantı masası ve dinlenme alanını katmanlı 2D sahnede kullanın. Karakter seçimi gerçek agent sohbetine geçer; iş durumları gerçek kayıtlardan gelir. Boşta hareket, kahve ve göz kırpma dekoratiftir ve AI çağrısı tüketmez. Kamera dönmez; yakınlaştırma ve kaydırma desteklenir.",
+        "en": "Use workstations, a coffee corner, meeting table and lounge in a layered fixed-side-view 2D scene. Selecting a character opens its real agent conversation; job states come from actual records. Idle movement, coffee and blinking are decorative and consume no AI calls. The camera does not rotate; zoom and pan are supported."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "agent-office-pixel-loft.png",
+        "src": "agent-office-workshop.png",
         "alt": {
-          "tr": "Pixel Loft: yaşayan agent ofisi · anonim demo verili gerçek Buyer Log ekranı",
-          "en": "Pixel Loft: a living agent office · real Buyer Log screen with anonymous demo data"
+          "tr": "Pixel Atölye: iki katlı, etkileşimli agent ofisi · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Pixel Workshop: a two-floor interactive agent office · real Buyer Log screen with anonymous demo data"
         },
         "caption": {
-          "tr": "Pixel Loft: yaşayan agent ofisi",
-          "en": "Pixel Loft: a living agent office"
+          "tr": "Pixel Atölye: iki katlı, etkileşimli agent ofisi",
+          "en": "Pixel Workshop: a two-floor interactive agent office"
         }
       }
     },
@@ -646,28 +646,28 @@
         "en": "Agent Office"
       },
       "title": {
-        "tr": "Yerel saate göre ofis ışığı",
-        "en": "Office lighting follows local time"
+        "tr": "Dört atmosfer ve kalıcı aydınlatma tercihleri",
+        "en": "Four atmospheres and persistent lighting preferences"
       },
       "path": {
         "tr": "Sol menü › Agent Ofisi",
         "en": "Navigation › Agent Office"
       },
       "body": {
-        "tr": "Sabah, öğle ve akşam ışığı cihazın yerel saatine göre değişir; elle seçim mümkündür. Minimal LCW ışıklı süsü ve “İyi giyinmek herkesin hakkı.” posteri ofiste birer kez yer alır.",
-        "en": "Morning, noon and evening lighting follow the device clock, with a manual override. One minimal illuminated LCW ornament and one Turkish vision poster decorate the office."
+        "tr": "Sabah, öğle, akşam ve gece atmosferleri yerel saate göre değişir. Pencereler, şehir ışıkları, ortam yüzeyleri ve lambalar ayrı katmanlardır. Manuel saat, ışık seviyesi ve lamba açma/kapama tercihi kalıcı saklanır.",
+        "en": "Morning, noon, evening and night follow local time. Windows, city lights, ambient surfaces and lamps use separate layers. Manual time, light level and lamp power persist."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "agent-office-evening.png",
         "alt": {
-          "tr": "Yerel saate göre ofis ışığı · anonim demo verili gerçek Buyer Log ekranı",
-          "en": "Office lighting follows local time · real Buyer Log screen with anonymous demo data"
+          "tr": "Dört atmosfer ve kalıcı aydınlatma tercihleri · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Four atmospheres and persistent lighting preferences · real Buyer Log screen with anonymous demo data"
         },
         "caption": {
-          "tr": "Yerel saate göre ofis ışığı",
-          "en": "Office lighting follows local time"
+          "tr": "Dört atmosfer ve kalıcı aydınlatma tercihleri",
+          "en": "Four atmospheres and persistent lighting preferences"
         }
       }
     },
@@ -998,6 +998,105 @@
         "caption": {
           "tr": "Test raporları gerçek sipariş yetkisiyle sınırlandı",
           "en": "Test reports are scoped to actual order authorization"
+        }
+      }
+    },
+    {
+      "id": "agent-office-workshop-appearance",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Canlı karakter görünümü ve kalıcı kişiselleştirme",
+        "en": "Live character appearance and persistent customization"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Saç modeli/rengi, ten, üst türü/rengi, alt giyim, ayakkabı, gözlük ve aksesuarı canlı ön izleyin. Görünüm seçili agenta özel kaydedilir ve yeniden açılışta geri gelir.",
+        "en": "Preview hair style/color, skin, top style/color, bottoms, shoes, glasses and accessories live. Appearance saves per agent and survives reopening."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-appearance.png",
+        "alt": {
+          "tr": "Canlı karakter görünümü ve kalıcı kişiselleştirme · anonim demo",
+          "en": "Live character appearance and persistent customization · anonymous demo"
+        },
+        "caption": {
+          "tr": "Canlı karakter görünümü ve kalıcı kişiselleştirme",
+          "en": "Live character appearance and persistent customization"
+        }
+      }
+    },
+    {
+      "id": "agent-office-workshop-editor",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Taslak ofis editörü: geri al, yinele ve düzen şablonları",
+        "en": "Draft office editor: undo, redo and layout templates"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Nesneleri katlara yerleştirin, sürükleyin, uygun nesnelerin yönünü değiştirin veya kaldırın. Çarpışma ve merdiven sınırları istemci ve sunucuda doğrulanır. Taslak yalnız Kaydet ile kalıcılaşır; Vazgeç, geri al/yinele ve altı düzen şablonu desteklenir. Eski ofis otomatik değiştirilmez ve açık geçişte yedek korunur.",
+        "en": "Place objects on floors, drag them, mirror suitable objects or remove them. Client and server validate collisions and stairs. Drafts persist only with Save; discard, undo/redo and six layout templates are supported. Old offices are not replaced automatically and explicit conversion retains a backup."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-editor.png",
+        "alt": {
+          "tr": "Taslak ofis editörü: geri al, yinele ve düzen şablonları · anonim demo",
+          "en": "Draft office editor: undo, redo and layout templates · anonymous demo"
+        },
+        "caption": {
+          "tr": "Taslak ofis editörü: geri al, yinele ve düzen şablonları",
+          "en": "Draft office editor: undo, redo and layout templates"
+        }
+      }
+    },
+    {
+      "id": "agent-office-workshop-theme",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Buyer Log temasına bağlı kontroller ve uyarlanabilir sahne",
+        "en": "Buyer Log themed controls and adaptive scene"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Ofis çizimi kendi renklerini korurken navigasyon, sohbet, karakter editörü, butonlar ve modallar Buyer Log temasını kullanır. Sahne oranı korunur; kısa ekranlarda karakter alanı açılır/kapanır. Gizli sekmede animasyon durur ve azaltılmış hareket desteklenir.",
+        "en": "The office artwork keeps its colors while navigation, chat, character editor, buttons and dialogs inherit the Buyer Log theme. Scene proportions are preserved; the character area collapses on short screens. Animation pauses while hidden and respects reduced motion."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-theme.png",
+        "alt": {
+          "tr": "Buyer Log temasına bağlı kontroller ve uyarlanabilir sahne · anonim demo",
+          "en": "Buyer Log themed controls and adaptive scene · anonymous demo"
+        },
+        "caption": {
+          "tr": "Buyer Log temasına bağlı kontroller ve uyarlanabilir sahne",
+          "en": "Buyer Log themed controls and adaptive scene"
         }
       }
     }

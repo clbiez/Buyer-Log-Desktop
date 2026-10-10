@@ -207,3 +207,20 @@ test('large archives allow separately approved ranges without uploading omitted 
   await assert.rejects(f.service.trainingPreview(profiles.a,{profileIds,startPart:2,partCount:1}),err=>err.code==='OFFICE_ARCHIVE_BATCH_LIMIT');
   await assert.rejects(f.service.trainingPreview(profiles.a,{profileIds,partCount:16}),err=>err.code==='OFFICE_ARCHIVE_BATCH_LIMIT');
 });
+
+test('two-floor workshop routes only through the staircase and avoids every blocked cell',()=>{
+ const model=require('../public/agent-office-workshop-model'),{defaultOffice}=require('../server/lib/agent-office-store'),items=defaultOffice().furniture;
+ const start={x:4,y:3,floor:1},end={x:12,y:3,floor:0},route=model.path(start,end,items);assert.ok(route.length);assert.deepEqual(route.at(-1),end);
+ let prior=start;for(const point of route){assert.equal(model.blocked(point,items),false);if(prior.floor!==point.floor){assert.deepEqual(prior,{x:2,y:3,floor:1});assert.deepEqual(point,{x:6,y:3,floor:0});}prior=point;}
+ assert.equal(model.validPlacement({id:'bad',kind:'desk',x:2,y:3,floor:1},items),false);
+ assert.equal(model.validPlacement({id:'bad',kind:'desk',x:6,y:3,floor:0},items),false);
+ assert.equal(model.validPlacement({id:'bad',kind:'desk',x:12,y:2,floor:1},items),false);
+});
+test('workstation assignment gives copied agents separate real desks or commons without inventing desks',()=>{
+ const model=require('../public/agent-office-workshop-model'),{defaultOffice}=require('../server/lib/agent-office-store'),profiles=[{id:'ada',deskId:'desk-a'},{id:'atlas',deskId:'desk-b'},{id:'ece',deskId:'desk-c'},...Array.from({length:9},(_,i)=>({id:'copy-'+i,deskId:'desk-a'}))],items=defaultOffice().furniture,assigned=model.stations(profiles,items);
+ assert.equal(assigned.size,profiles.length);assert.equal(assigned.get('ada').desk.id,'desk-a');assert.equal([...assigned.values()].filter(s=>s.desk).length,3);for(const station of assigned.values())assert.equal(model.blocked(station.point,items),false);
+});
+test('four local-time periods and agent states derive from actual jobs and tasks',()=>{
+ const {periodForHour,status}=require('../public/agent-office-workshop-model');assert.deepEqual([0,7,13,18,23].map(periodForHour),['night','morning','noon','evening','night']);
+ assert.equal(status('a',{activeJobs:[{profileIds:['b']}],connected:true}),'available');assert.equal(status('a',{activeJobs:[{profileIds:['a'],phase:'responding'}]}),'responding');assert.equal(status('a',{jobs:[{profileIds:['a'],status:'failed'}]}),'error');assert.equal(status('a',{memory:[{profileId:'a',type:'task',active:true}]}),'waiting');assert.equal(status('a',{connected:false}),'offline');
+});

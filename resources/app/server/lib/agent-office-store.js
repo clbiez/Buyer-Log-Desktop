@@ -7,6 +7,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { createLocalDb } = require('./local-db');
 const { redactSecrets } = require('../../shared/secret-redaction');
+const workshopModel = require('../../public/agent-office-workshop-model');
 
 const AREAS = ['cp', 'orders', 'collection', 'backlog', 'lfl'];
 const KINDS = new Set(['profile', 'memory', 'memory-version', 'conversation', 'message', 'job', 'snapshot', 'watch', 'alert', 'office', 'summary', 'metadata']);
@@ -21,28 +22,64 @@ function text(value, max) {
   return result;
 }
 function avatar(raw = {}) {
-  return { hair: ['short', 'long', 'bun'].includes(raw.hair) ? raw.hair : 'short',
-    skin: Math.max(0, Math.min(4, Number(raw.skin) || 0)),
-    clothes: ['blue', 'cream', 'green', 'ink', 'rust'].includes(raw.clothes) ? raw.clothes : 'blue',
-    accessory: ['none', 'glasses', 'headphones'].includes(raw.accessory) ? raw.accessory : 'none' };
+  const choose = (value, values, fallback) => values.includes(value) ? value : fallback;
+  const accessory = choose(raw.accessory, ['none', 'glasses', 'headphones'], 'none');
+  return { hair: choose(raw.hair, ['short', 'long', 'bun'], 'short'),
+    skin: Math.max(0, Math.min(4, Math.round(Number(raw.skin) || 0))),
+    clothes: choose(raw.clothes, ['blue', 'cream', 'green', 'ink', 'rust'], 'blue'), accessory,
+    hairColor: choose(raw.hairColor, ['brown', 'black', 'auburn', 'blonde', 'silver'], 'brown'),
+    top: choose(raw.top, ['shirt', 'cardigan', 'jacket', 'knit'], 'shirt'),
+    bottoms: choose(raw.bottoms, ['navy', 'black', 'denim', 'cream'], 'navy'),
+    shoes: choose(raw.shoes, ['brown', 'black', 'white'], 'brown'),
+    glasses: typeof raw.glasses === 'boolean' ? raw.glasses : accessory === 'glasses',
+    ornament: choose(raw.ornament, ['none', 'headphones', 'scarf'], accessory === 'headphones' ? 'headphones' : 'none') };
 }
+const FURNITURE_KINDS = ['desk', 'sofa', 'plant', 'shelf', 'table', 'rug', 'lamp', 'rack', 'coffee', 'chair', 'mannequin', 'monstera', 'board', 'decor'];
 function normalizeOffice(raw = {}) {
-  const furniture = (Array.isArray(raw.furniture) ? raw.furniture : []).slice(0, 48).map(item => ({
-    id: /^[a-zA-Z0-9_-]{1,80}$/.test(item.id || '') ? item.id : id(),
-    kind: ['desk', 'sofa', 'plant', 'shelf', 'table', 'rug', 'lamp', 'rack'].includes(item.kind) ? item.kind : 'desk',
-    x: Math.max(0, Math.min(11, Math.round(Number(item.x) || 0))),
-    y: Math.max(0, Math.min(7, Math.round(Number(item.y) || 0))),
-    rotation: item.rotation === 1 ? 1 : 0,
+  const workshop = raw.scene === 'workshop-v1';
+  const furniture = (items, isWorkshop = workshop) => (Array.isArray(items) ? items : []).slice(0, 48).map(item => ({
+    id: /^[a-zA-Z0-9_-]{1,80}$/.test(item?.id || '') ? item.id : id(),
+    kind: FURNITURE_KINDS.includes(item?.kind) ? item.kind : 'desk',
+    x: Math.max(0, Math.min(isWorkshop ? 23 : 11, Math.round(Number(item?.x) || 0))),
+    y: Math.max(0, Math.min(isWorkshop ? 3 : 7, Math.round(Number(item?.y) || 0))),
+    ...(isWorkshop ? { floor: Number(item?.floor) === 1 ? 1 : 0 } : {}),
+    rotation: (isWorkshop ? [0,1] : [0,1,2,3]).includes(Number(item?.rotation)) ? Number(item.rotation) : 0,
   }));
-  return { period: ['auto', 'morning', 'noon', 'evening'].includes(raw.period) ? raw.period : 'auto', furniture };
+  const result = { ...(workshop ? {scene:'workshop-v1'} : {}),
+    period: ['auto', 'morning', 'noon', 'evening', 'night'].includes(raw.period) ? raw.period : 'auto',
+    quality:['low','balanced','high'].includes(raw.quality)?raw.quality:'balanced',
+    lighting: Number.isFinite(Number(raw.lighting)) ? Math.max(0, Math.min(100, Math.round(Number(raw.lighting)))) : 80,
+    lightsOn: typeof raw.lightsOn === 'boolean' ? raw.lightsOn : true,
+    furniture: furniture(raw.furniture),
+    templates: (Array.isArray(raw.templates) ? raw.templates : []).slice(0,6).map(template => ({
+      name: text(template?.name || '',60), furniture: furniture(template?.furniture) })).filter(template => template.name) };
+  if (workshop && raw.previousLayout && typeof raw.previousLayout === 'object') {
+    result.previousLayout = { scene:'legacy',
+      period: ['auto','morning','noon','evening','night'].includes(raw.previousLayout.period) ? raw.previousLayout.period : 'auto',
+      quality: ['low','balanced','high'].includes(raw.previousLayout.quality) ? raw.previousLayout.quality : 'balanced',
+      furniture: furniture(raw.previousLayout.furniture, false) };
+  }
+  if (workshop) {
+    for (const items of [result.furniture, ...result.templates.map(template => template.furniture)]) {
+      if (new Set(items.map(item => item.id)).size !== items.length || items.some(item => !workshopModel.validPlacement(item, items))) throw error('OFFICE_LAYOUT_INVALID');
+    }
+  }
+  return result;
 }
 const DEFAULT_FURNITURE = [
-  { id: 'shelf', kind: 'shelf', x: 1, y: 0 }, { id: 'sofa', kind: 'sofa', x: 0, y: 4 },
-  { id: 'desk-a', kind: 'desk', x: 4, y: 3 }, { id: 'desk-b', kind: 'desk', x: 7, y: 3 },
-  { id: 'desk-c', kind: 'desk', x: 10, y: 4 }, { id: 'meeting', kind: 'table', x: 5, y: 6 },
-  { id: 'plant-a', kind: 'plant', x: 3, y: 0 }, { id: 'plant-b', kind: 'plant', x: 11, y: 0 },
-  { id: 'lamp', kind: 'lamp', x: 0, y: 6 }, { id: 'rack', kind: 'rack', x: 8, y: 0 },
-];
+  {id:'desk-a',kind:'desk',x:4,y:2,floor:1}, {id:'desk-b',kind:'desk',x:12,y:2,floor:1}, {id:'desk-c',kind:'desk',x:20,y:2,floor:1},
+  {id:'coffee-bar',kind:'coffee',x:2,y:2,floor:0}, {id:'meeting',kind:'table',x:12,y:2,floor:0}, {id:'sofa',kind:'sofa',x:20,y:2,floor:0},
+  {id:'shelf',kind:'shelf',x:8,y:0,floor:0}, {id:'shelf-upper',kind:'shelf',x:10,y:0,floor:1},
+  {id:'rack',kind:'rack',x:16,y:0,floor:1}, {id:'tailor',kind:'mannequin',x:8,y:0,floor:1},
+  {id:'plant-a',kind:'monstera',x:1,y:0,floor:0}, {id:'plant-b',kind:'plant',x:23,y:0,floor:1},
+  {id:'board-a',kind:'board',x:3,y:0,floor:1}, {id:'board-b',kind:'board',x:12,y:0,floor:0},
+  {id:'rug-meeting',kind:'rug',x:12,y:2,floor:0}, {id:'rug-lounge',kind:'rug',x:20,y:2,floor:0},
+  {id:'board-upper',kind:'board',x:14,y:0,floor:1}, {id:'board-quality',kind:'board',x:21,y:0,floor:1},
+  {id:'plant-upper',kind:'plant',x:6,y:0,floor:1}, {id:'plant-meeting',kind:'plant',x:10,y:0,floor:0},
+  {id:'shelf-lounge',kind:'shelf',x:17,y:0,floor:0}, {id:'plant-lounge',kind:'monstera',x:23,y:0,floor:0},
+  {id:'decor-lower',kind:'decor',x:6,y:0,floor:0}, {id:'lamp-a',kind:'lamp',x:5,y:0,floor:0}, {id:'lamp-b',kind:'lamp',x:21,y:0,floor:0},
+].map(item => ({...item,rotation:0}));
+function defaultOffice() { return { scene:'workshop-v1', period:'auto',quality:'balanced',lighting:80,lightsOn:true,templates:[],furniture:copy(DEFAULT_FURNITURE) }; }
 
 function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
   if (!root) throw new TypeError('Agent Office root required');
@@ -160,7 +197,8 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
       jobs: docs.filter(doc => doc.kind === 'job').sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 100),
       watches: docs.filter(doc => doc.kind === 'watch'), alerts: docs.filter(doc => doc.kind === 'alert' && !doc.dismissed).slice(-100),
       summaries: docs.filter(doc => doc.kind === 'summary'),
-      office: docs.find(doc => doc.kind === 'office') || { id: 'layout', period: 'auto', furniture: copy(DEFAULT_FURNITURE) },
+      office: docs.find(doc => doc.kind === 'office') || { id: 'layout', ...defaultOffice() },
+      defaultOffice:defaultOffice(),
       archive: { messages: docs.filter(doc => doc.kind === 'message').length, bytes: docs.filter(doc => doc.kind === 'message').reduce((sum,doc) => sum + Buffer.byteLength(doc.text), 0) },
       conflicts };
   }
@@ -212,7 +250,7 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
     });
   }
   return { db, records, get, save, state, createProfile, updateProfile, learn, editMemory, conversation, appendMessage, messages, selectContext, exportTraining, importRecords,
-    normalizeOffice, AREAS, DEFAULT_FURNITURE };
+    normalizeOffice, defaultOffice, AREAS, DEFAULT_FURNITURE };
 }
 
-module.exports = { createAgentOfficeStore, normalizeOffice, avatar, AREAS, DEFAULT_FURNITURE, hash, id, text, error };
+module.exports = { createAgentOfficeStore, normalizeOffice, defaultOffice, avatar, AREAS, DEFAULT_FURNITURE, hash, id, text, error };
