@@ -71,18 +71,10 @@ test('UI exposes Non-DTR management, non-blocking Refresh Stages and non-blockin
   const html = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
   const appMain = fs.readFileSync(path.join(__dirname, '../public/app-main.js'), 'utf8');
   const lfl = fs.readFileSync(path.join(__dirname, '../public/lfl.js'), 'utf8');
-  /* v7.81: ikisi de Veri Yönetimi → Araçlar → "Hesaplama kuralları" grubunda.
-     Korunan karar aynı: Non-DTR, Yol Süreleri ile AYNI grupta ve onun ardında
-     duruyor — ikisi de aynı soruyu cevaplıyor ("uygulama bu sayıyı nasıl
-     hesaplıyor?") ve kullanıcı birini ararken diğerini de görüyor. */
   const dmUi = fs.readFileSync(path.join(__dirname, '../public/data-management.js'), 'utf8');
-  const rules = dmUi.slice(dmUi.indexOf("id: 'rules'"), dmUi.indexOf("id: 'reference'"));
-  assert.notEqual(rules.length, 0, 'Hesaplama kuralları grubu bulunmalı');
-  const transitIndex = rules.indexOf("id: 'transit'");
-  const nonDtrIndex = rules.indexOf("id: 'nondtr'");
-  assert.ok(transitIndex >= 0 && nonDtrIndex > transitIndex, 'Non-DTR, Yol Süreleri ile aynı grupta ve ardında olmalı');
-  assert.match(rules, /Non-DTR Üreticiler/);
-  assert.match(rules, /Non-DTR Manufacturers/);
+  assert.doesNotMatch(dmUi, /id: 'nondtr'/);
+  const editor = fs.readFileSync(path.join(__dirname, '../public/email-groups.js'), 'utf8');
+  assert.match(editor, /data-eg-input="dtrStatus"/);
   // Yenileme başladıktan sonra tek kullanıcı paneli açılır; eski uyarı penceresi
   // artık DOM'a eklenmez.
   assert.match(appMain, /openRefreshStagesModal\(\)/);
@@ -92,8 +84,7 @@ test('UI exposes Non-DTR management, non-blocking Refresh Stages and non-blockin
   // çağrılmayan fonksiyonu kullanıyor (app-main.js'teki window.classifyDtrByManufacturer
   // sarmalayıcısı üzerinden); lfl.js kendi içinde aynı üç satırı tekrar yazmıyor.
   assert.match(lfl, /window\.classifyDtrByManufacturer/);
-  assert.match(appMain, /Bu liste yalnız LFL sınıflandırmasında kullanılır/);
-  assert.match(appMain, /CP Licensor değerleri değiştirilmez/);
+  assert.match(editor, /CP ve Orders lisansör alanlarını değiştirmez/);
   assert.doesNotMatch(html, /row\.Licensor='NON-DTR'/);
   // v20260928 — LFL düğmesi bağlı ortak yenilemeyi çalıştırır (ayrı LFL yenilemesi yok).
   assert.match(lfl, /refreshButton\.title=linkedRefreshTitle\(\)/);

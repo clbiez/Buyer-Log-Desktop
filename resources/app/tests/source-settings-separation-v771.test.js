@@ -55,12 +55,15 @@ test('v7.81 taşınan hiçbir YETENEK kaybolmadı', () => {
      düzenleyici hâlâ tanımlı olmalı — aksi hâlde satır tıklanınca hiçbir şey
      olmaz ve kullanıcı özelliği kaybettiğini sanır. */
   for (const fn of ['openTransitRulesModal', 'openLandedMultipliersModal', 'openSuppFobRulesModal',
-    'openNonDtrManufacturersModal', 'triggerEndeksmatikUpload', 'chooseSourceFolder',
+    'triggerEndeksmatikUpload', 'chooseSourceFolder',
     'openSyncLocalDataModal', 'openModelImageLimitModal', 'openBrowserDebugSettingsModal',
     'openDataMaintenanceModal']) {
     assert.match(APP, new RegExp(`function ${fn}\\(`), `${fn} tanımlı kalmalı`);
     assert.match(DM, new RegExp(fn), `${fn} araç kaydından çağrılmalı`);
   }
+  // DTR / Non-DTR yeteneği üretici kartına taşındı.
+  assert.doesNotMatch(DM, /openNonDtrManufacturersModal/);
+  assert.match(read('public/email-groups.js'), /data-eg-input="dtrStatus"/);
   // Tembel yüklenen ikisi ortak global üzerinden çağrılır.
   assert.match(DM, /BLEmailGroups\?\.open\?\.\(\)/);
   assert.match(DM, /buyerLogBackupModal\?\.\(\)/);

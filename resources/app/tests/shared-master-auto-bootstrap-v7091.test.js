@@ -302,7 +302,8 @@ test('ordinary partial overrides save cannot silently zero critical Master secti
   assert.match(dbSource, /function protectCriticalOverrideSections\(current, incoming\)/);
   assert.match(dbSource, /\['pricingRules','transitRules','nonDtrManufacturers'\]/);
   assert.match(dbSource, /before\.length > 0 && after\.length === 0 && afterRev <= beforeRev/);
-  assert.match(dbSource, /protectCriticalOverrideSections\(loadOverrides\(\), overrides\)/);
+  assert.match(dbSource, /const current = loadOverrides\(\{ projectManufacturers: false \}\)/);
+  assert.match(dbSource, /protectCriticalOverrideSections\(current, overrides\)/);
 });
 
 

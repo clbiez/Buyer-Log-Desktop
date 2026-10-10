@@ -43,7 +43,8 @@ test('v7.81 genel Ayarlar açılır menüsü kalkar; işleri Veri Yönetimi’nd
 
   const dmUi = read('public/data-management.js');
   assert.match(dmUi, /const TOOL_GROUPS = \[/);
-  for (const id of ['transit', 'landed', 'royalty', 'nondtr', 'emailgroups', 'fx',
+  assert.doesNotMatch(dmUi, /id: 'nondtr'/);
+  for (const id of ['transit', 'landed', 'royalty', 'emailgroups', 'fx',
     'endeksmatik', 'folder', 'maintenance', 'sync', 'backup', 'imagelimit', 'browser']) {
     assert.match(dmUi, new RegExp(`id: '${id}'`), `${id} aracı Veri Yönetimi'nde olmalı`);
   }

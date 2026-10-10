@@ -163,8 +163,10 @@ test('shared master writes carry the existing client identity for audit and self
 });
 
 test('all central master rule writes publish immediately to Shared Hub', () => {
+  // DTR edits publish the canonical manufacturer card document.
+  assert.match(server, /MANUFACTURER_CARD_REQUIRED/);
   for (const entity of [
-    'fx', 'endeksmatik', 'pricingRules', 'transitRules', 'nonDtrManufacturers',
+    'fx', 'endeksmatik', 'pricingRules', 'transitRules',
     'landedMultipliers', 'freightRates', 'emailGroups', 'antrepoSourceMode',
     'asasSourceMode', 'lflSourceMode', 'antrepoMatchRule', 'modelConnections',
     'noteColumnDefs',
