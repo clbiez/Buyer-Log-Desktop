@@ -1726,6 +1726,138 @@
           "en": "Correct meeting seats and layering"
         }
       }
+    },
+    {
+      "id": "agent-office-reference-stations-art",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Referansa yakın ayrı çalışma istasyonları",
+        "en": "Distinct reference-aligned workstations"
+      },
+      "body": {
+        "tr": "Planlama, koleksiyon ve kalite masaları ayrı sprite parçaları kullanır. Dikey planlama panosu, geniş ilham panosu ve yan görünüşlü koyu sandalyeler eklendi. Vizyon panosu örtülmeyen dinlenme duvarına taşındı.",
+        "en": "Planning, collection and quality desks use distinct sprite regions. A portrait planning board, wide inspiration board and dark side-view chairs are added. The vision sign moves to the unobstructed lounge wall."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-reference-stations-dark.png",
+        "alt": {
+          "tr": "Anonim özelleştirilmiş gerçek Buyer Log Agent Ofisi",
+          "en": "Actual Buyer Log Agent Office with anonymous customization"
+        },
+        "caption": {
+          "tr": "Referansa yakın ayrı çalışma istasyonları",
+          "en": "Distinct reference-aligned workstations"
+        }
+      }
+    },
+    {
+      "id": "agent-office-assigned-station-preview",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kendi masasında canlı karakter ön izlemesi",
+        "en": "Live character preview at the assigned desk"
+      },
+      "body": {
+        "tr": "Karakter düzenleyici, seçili ajanın gerçek atanmış masasını ve görünüm taslağını birlikte gösterir. Görünüm, masa stili, ölçek ve aynalama aynı sahne parçalarından çizilir; AI işi başlatılmaz.",
+        "en": "The character editor previews the selected agent at their actual assigned desk using the appearance draft. Appearance, desk style, scale and mirroring use the same scene assets; no AI job starts."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-reference-stations-day.png",
+        "alt": {
+          "tr": "Anonim özelleştirilmiş gerçek Buyer Log Agent Ofisi",
+          "en": "Actual Buyer Log Agent Office with anonymous customization"
+        },
+        "caption": {
+          "tr": "Kendi masasında canlı karakter ön izlemesi",
+          "en": "Live character preview at the assigned desk"
+        }
+      }
+    },
+    {
+      "id": "agent-office-library-footprint",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Gerçek alanıyla doğrulanan bitkili kitaplık",
+        "en": "Planted bookcase with validated footprint"
+      },
+      "body": {
+        "tr": "Nesne görünümü seçiminden bitkili kitaplık eklenebilir. Genişliğinin tamamı istemci ve sunucuda doğrulanır; sığmayan seçim reddedilir ve menü gerçek taslak değerine döner. Özel kayıt, şablon ve yeniden açılış desteklenir.",
+        "en": "Object appearance offers a planted bookcase. Its full width is validated by client and server; invalid choices are rejected and the selector returns to the actual draft value. Private save, templates and reopen are supported."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-reference-stations-editor.png",
+        "alt": {
+          "tr": "Anonim özelleştirilmiş gerçek Buyer Log Agent Ofisi",
+          "en": "Actual Buyer Log Agent Office with anonymous customization"
+        },
+        "caption": {
+          "tr": "Gerçek alanıyla doğrulanan bitkili kitaplık",
+          "en": "Planted bookcase with validated footprint"
+        }
+      }
+    },
+    {
+      "id": "agent-office-scaled-workstation-pose",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Ölçek ve aynalamada doğru çalışma pozu",
+        "en": "Correct workstation pose after scaling and mirroring"
+      },
+      "body": {
+        "tr": "Karakter oranları referansa yaklaştırıldı. Eller büyütülmüş veya aynalanmış masanın çalışma noktasını izler; sandalyeler doğru yönde ve zemin seviyesinde çizilir. Ön izleme aynı oturma ankrajını kullanır.",
+        "en": "Character proportions move closer to the reference. Hands follow the work surface of enlarged or mirrored desks; chairs face correctly and sit at floor level. The preview uses the same seating anchor."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-reference-stations-dark.png",
+        "alt": {
+          "tr": "Anonim özelleştirilmiş gerçek Buyer Log Agent Ofisi",
+          "en": "Actual Buyer Log Agent Office with anonymous customization"
+        },
+        "caption": {
+          "tr": "Ölçek ve aynalamada doğru çalışma pozu",
+          "en": "Correct workstation pose after scaling and mirroring"
+        }
+      }
     }
   ]
 }

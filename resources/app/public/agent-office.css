@@ -59,3 +59,13 @@ button[data-tab="agentoffice"][data-agent-alerts]:not([data-agent-alerts="0"])::
 @media(max-width:1050px){.aoCharacterBench{grid-template-columns:145px minmax(0,1fr)}.aoAppearanceActions{grid-column:1/-1;flex-direction:row}}
 @media(max-width:950px){.aoWorkspace{grid-template-columns:1fr}.aoWorkspace>.aoChat{contain:none}.aoDockActions{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:800px){.aoCharacterBench{grid-template-columns:1fr}.aoAppearanceTabs .aoButton{padding:4px 8px}.aoSceneViewport{max-width:100%}}
+
+/* The bench previews the selected character at the same assigned scene desk. */
+.aoAppearanceFields{display:grid;grid-template-columns:minmax(0,1fr) 112px;grid-template-rows:auto auto auto;align-items:start}
+.aoAppearanceTabs,.aoAppearanceGallery,.aoAppearanceControls{grid-column:1;min-width:0}
+.aoStationPreview{grid-column:2;grid-row:1/span 3;margin:0;border:1px solid var(--line);background:var(--paper);padding:4px;align-self:stretch;display:flex;flex-direction:column;justify-content:center;gap:4px}
+.aoStationPreview[hidden]{display:none}.aoStationPreview figcaption{font-size:10px;color:var(--ink2)}
+.aoStationPreview canvas{width:100%;height:auto;aspect-ratio:8/7;image-rendering:pixelated}
+@media(max-width:1450px){.aoAppearanceFields{grid-template-columns:minmax(0,1fr) 90px}}
+@media(max-height:850px){.aoCharacterBench:not(.is-open) .aoAppearanceFields{display:none}}
+@media(max-width:800px){.aoAppearanceFields{grid-template-columns:minmax(0,1fr) 90px}}

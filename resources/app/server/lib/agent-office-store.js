@@ -78,7 +78,7 @@ const DEFAULT_FURNITURE = [
   {id:'rug-meeting',kind:'rug',x:12,y:2,floor:0}, {id:'rug-lounge',kind:'rug',x:20,y:2,floor:0},
   {id:'board-upper',kind:'board',x:14,y:0,floor:1}, {id:'board-quality',kind:'board',x:21,y:0,floor:1},
   {id:'plant-upper',kind:'plant',x:6,y:0,floor:1}, {id:'plant-meeting',kind:'plant',x:10,y:0,floor:0},
-  {id:'shelf-lounge',kind:'shelf',x:17,y:0,floor:0}, {id:'plant-lounge',kind:'monstera',x:23,y:0,floor:0},
+  {id:'shelf-lounge',kind:'shelf',x:17,y:0,floor:0,style:'library'}, {id:'plant-lounge',kind:'monstera',x:23,y:0,floor:0},
   {id:'decor-lower',kind:'decor',x:6,y:0,floor:0}, {id:'lamp-a',kind:'lamp',x:5,y:0,floor:0}, {id:'lamp-b',kind:'lamp',x:21,y:0,floor:0},
 ].map(item => ({...item,rotation:0,...(['coffee','table','sofa','rug'].includes(item.kind)?{scale:1.3}:{})}));
 function defaultOffice() { return { scene:'workshop-v1', period:'auto',quality:'balanced',lighting:80,lightsOn:true,templates:[],furniture:copy(DEFAULT_FURNITURE) }; }

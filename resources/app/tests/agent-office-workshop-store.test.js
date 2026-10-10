@@ -133,3 +133,18 @@ test('four participants approach actual front/back meeting chairs on distinct tr
   assert.deepEqual(points.map(p=>p.y),[3,3,1,1]);
   for(const end of points){assert.equal(model.blocked(end,items),false);assert.ok(model.path(model.STAIRS.lower,end,items).length);}
 });
+
+
+test('reference workstation and library styles survive private reopen; larger shelving validates its true footprint',async t=>{
+  const model=require('../public/agent-office-workshop-model'),root=await fs.mkdtemp(path.join(os.tmpdir(),'bl-workshop-stations-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const furniture=[{id:'desk-a',kind:'desk',x:4,y:2,floor:1,style:'planning'},{id:'desk-b',kind:'desk',x:12,y:2,floor:1,style:'collection'},{id:'desk-c',kind:'desk',x:20,y:2,floor:1,style:'quality'},{id:'shelf',kind:'shelf',x:18,y:0,floor:0,style:'library'},{id:'board',kind:'board',x:10,y:0,floor:0,style:'moodboard'}];
+  const raw=normalizeOffice({scene:'workshop-v1',furniture,templates:[{name:'Stations',furniture}]}),store=createAgentOfficeStore({root});
+  await store.save('owner-a','office',{id:'layout',...raw},{expectedRevision:0});const saved=(await createAgentOfficeStore({root}).state('owner-a')).office;
+  assert.deepEqual(saved.furniture.map(i=>i.style),['planning','collection','quality','library','moodboard']);assert.deepEqual(saved.templates[0].furniture,saved.furniture);
+  await assert.rejects(store.get('owner-b','office','layout'),e=>e.code==='OFFICE_NOT_FOUND');
+  const shelf=furniture[3],old={...shelf,style:'classic'},point={x:16,y:0,floor:0};assert.equal(model.blocked(point,[old]),false);assert.equal(model.blocked(point,[shelf]),true);
+  assert.equal(model.validPlacement({...shelf,x:23,style:'classic'},[]),true);assert.equal(model.validPlacement({...shelf,x:23},[]),false);
+  assert.throws(()=>normalizeOffice({scene:'workshop-v1',furniture:[{...shelf,x:23}]}),e=>e.code==='OFFICE_LAYOUT_INVALID');
+  assert.equal(normalizeOffice({scene:'workshop-v1',furniture:[{...furniture[0],style:'library'}]}).furniture[0].style,undefined,'Style cannot impersonate another furniture kind');
+  assert.doesNotThrow(()=>normalizeOffice(defaultOffice()));
+});
