@@ -2,6 +2,31 @@
   'use strict';
   const WIDTH={desk:4,table:5,sofa:4,shelf:2,coffee:3,rack:2,plant:1,lamp:1,chair:1,mannequin:1,monstera:1,board:3,decor:1,rug:5};
   const STAIRS={upper:{x:0,y:3,floor:1},lower:{x:6,y:3,floor:0}};
+  // Feet and floor decals share the actual architecture's ground planes.
+  const FLOORS={0:{top:475,bottom:545,back:483,step:17},1:{top:236,bottom:270,back:237,step:9}};
+  const project=(p,centered=true)=>({x:32+(p.x+(centered?.5:0))*40,y:FLOORS[p.floor].back+p.y*FLOORS[p.floor].step+(centered?2:0)});
+  function furnitureAnchor(item){
+    return ['board','decor'].includes(item.kind)?{x:32+item.x*40,y:(item.floor===1?237:513)+item.y*11}:project(item,false);
+  }
+  function unprojectFurniture(point,kind){
+    const floor=point.y<292?1:0,wall=['board','decor'].includes(kind),surface=FLOORS[floor];
+    return{x:Math.round((point.x-32)/40),y:Math.max(0,Math.min(3,Math.round((point.y-(wall?(floor===1?237:513):surface.back))/(wall?11:surface.step)))),floor};
+  }
+  function groundRect(item,width){
+    const surface=FLOORS[item.floor],p=project(item,false),height=width*(item.floor===1?.10:.19);
+    const h=Math.min(height,surface.bottom-surface.top),y=Math.max(surface.top,Math.min(surface.bottom-h,p.y+surface.step-h));
+    return{x:p.x-width/2,y,w:width,h};
+  }
+  const walkFrame=distance=>Math.floor(Math.max(0,distance)/10)%6;
+  function material(r,g,b,y,hip){
+    // Classify the original atlas, never a user's recoloured output.
+    if(Math.max(r,g,b)<30)return 'outline';
+    if(g>b*.60&&(g>r*1.18&&y<hip||g>r*1.8&&y<hip+14))return 'top';
+    if(b>r*1.16&&b>g*1.05&&y>=hip-3)return 'bottoms';
+    if(y<84&&r>105&&g>r*.62&&r>g*1.09&&g>b*1.16)return 'skin';
+    if(r>g*1.15&&g>b*1.07&&r<190)return y>84?'shoes':'hair';
+    return 'detail';
+  }
   const styles=kind=>kind==='desk'?['classic','planning','collection','quality']:kind==='board'?['classic','planning','collection','quality','portrait','moodboard']:kind==='shelf'?['classic','library']:kind==='decor'?['classic','sketch','textile']:['classic'];
   const passive=item=>['rug','board','decor','lamp'].includes(item.kind);
   const scalable=kind=>['desk','table','sofa','coffee','rug'].includes(kind);
@@ -29,6 +54,6 @@
   function stations(profiles,items){const desks=items.filter(p=>p.kind==='desk'),used=new Set(),assigned=new Map(),occupied=[];for(const profile of profiles){const desk=desks.find(p=>p.id===profile.deskId&&!used.has(p.id))||desks.find(p=>!used.has(p.id));if(desk)used.add(desk.id);const point=nearest(desk?{x:desk.x,y:Math.min(3,desk.y+1),floor:desk.floor}:{x:4+assigned.size%19,y:3,floor:0},items.concat(occupied));assigned.set(profile.id,{desk:desk||null,point});if(point)occupied.push({id:'station:'+profile.id,kind:'plant',x:point.x+.5,y:point.y,floor:point.floor});}return assigned;}
   const periodForHour=hour=>hour>=6&&hour<11?'morning':hour>=11&&hour<17?'noon':hour>=17&&hour<21?'evening':'night';
   function status(profileId,data){const active=(data.activeJobs||[]).find(j=>j.profileIds?.includes(profileId));if(active)return active.phase==='review'?'reviewing':active.phase==='responding'?'responding':'working';const last=(data.jobs||[]).find(j=>j.profileIds?.includes(profileId));if(last?.status==='failed')return 'error';if((data.memory||[]).some(m=>m.profileId===profileId&&m.type==='task'&&m.active))return 'waiting';return data.connected===false?'offline':'available';}
-  const model={STAIRS,styles,meetingPoint,WIDTH,scale,scalable,passive,box,validPlacement,blocked,path,nearest,stations,periodForHour,status};
+  const model={STAIRS,FLOORS,project,furnitureAnchor,unprojectFurniture,groundRect,walkFrame,material,styles,meetingPoint,WIDTH,scale,scalable,passive,box,validPlacement,blocked,path,nearest,stations,periodForHour,status};
   if(typeof module!=='undefined'&&module.exports)module.exports=model;else root.BLWorkshopModel=model;
 })(typeof window==='undefined'?globalThis:window);
