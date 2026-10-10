@@ -1486,6 +1486,7 @@ const APP_PAGE_META=Object.freeze({
   pricinghistory:{tr:'Fiyat Geçmişi',en:'Pricing History',group:'commercial'},
   priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis',group:'commercial'},
   manufacturers:{tr:'Üreticiler',en:'Manufacturers',group:'commercial'},
+  licensecards:{tr:'Lisans kartları',en:'License cards',group:'commercial'},
   lfl:{tr:'LFL analizi',en:'LFL Analysis',group:'commercial'},
   opencosting:{tr:'Ön Maliyet',en:'Open Costing',group:'commercial'},
   lcwai:{tr:'LCW AI',en:'LCW AI',group:'home'},
@@ -1948,6 +1949,7 @@ async function ensureCpLoaded(options={}){
       const data=result.payload||{},rows=Array.isArray(data.rows)?data.rows:[];
       reviveServerDates(rows);
       state.cp={fname:'Hazır ekran önbelleği',rows};state.cpLogisticExpanded.clear();
+      applyPricingRulesToLoadedRows({render:false});
       overviewCpLoadState='ready';overviewCpLoadError='';
       invalidateUnifiedPriorityDecisions('cp-projection-loaded',['cp']);
       syncCpModelColumns(Array.isArray(data.cpModelColumns)?data.cpModelColumns:[]);
@@ -2067,7 +2069,8 @@ function switchTab(tab){
   // Üreticiler sayfası Siparişler verisini okur; yetkisi Siparişler alanıdır.
   const accessArea=tab==='manufacturers'?'orders':((tab==='quotations'||tab==='pricinghistory')?'koleksiyon':tab);
   // LCW AI her oturum açmış kullanıcıya açıktır; kapısı LCW AI kurumsal girişidir.
-  if(tab!=='lcwai'&&typeof window.BLCanAccessArea==='function'&&!window.BLCanAccessArea(accessArea)){
+  const licenseAccess=tab==='licensecards'&&['orders','cp','source'].some(area=>window.BLCanAccessArea?.(area));
+  if(tab!=='lcwai'&&typeof window.BLCanAccessArea==='function'&&!licenseAccess&&!window.BLCanAccessArea(accessArea)){
     if(typeof showToast==='function')showToast(appLang==='en'?'You do not have access to this area.':'Bu yetki alanına erişiminiz bulunmuyor.');
     return false;
   }
@@ -2129,6 +2132,11 @@ function switchTab(tab){
   if(tab==='manufacturers'){
     void window.BLPerf.ensureFeature('manufacturers').then(()=>{
       if(currentActiveTab()==='manufacturers')return window.initManufacturersPage?.();
+    }).catch(err=>showToast(err&&err.message||String(err)));
+  }
+  if(tab==='licensecards'){
+    void window.BLPerf.ensureFeature('licensecards').then(()=>{
+      if(currentActiveTab()==='licensecards')return window.initLicenseCardsPage?.();
     }).catch(err=>showToast(err&&err.message||String(err)));
   }
   /* Genel LCW AI çalışma alanı: lazy; ilk geçişte yüklenir. */
@@ -10879,7 +10887,8 @@ function automaticSuppFobRuleMeta(rule,applied){
 function suppFobMetaForRow(row){
   if(!row) return null;
   const oc=row['Order Code'];
-  return normalizeSuppFobMeta(row._suppFobMeta || (state.overrides.suppfobmetamap||{})[oc]);
+  const lineKey=lineKeyOfRow(row)||oc;
+  return normalizeSuppFobMeta(row._suppFobMeta || (state.overrides.suppfobmetamap||{})[lineKey] || (state.overrides.suppfobmetamap||{})[oc]);
 }
 function isSuppFobAutoCalculated(row){
   if(!row || turknorm(row.Licensor)==='DTR') return false;
@@ -10926,9 +10935,13 @@ function calculateSuppFobFromRule(fob,opd,country,season,licensor,license){
 }
 function hasManualSuppFob(row){
   if(!row) return false;
+  const meta=suppFobMetaForRow(row);
+  if(meta&&meta.source==='rule')return false;
+  if(meta&&meta.source==='manual')return true;
   if(row._suppFobOverride===true || row._suppFobManual===true) return true;
   const oc=row['Order Code'];
-  return oc!=null && Object.prototype.hasOwnProperty.call(state.overrides.suppfobmap||{},oc);
+  const lineKey=lineKeyOfRow(row)||oc;
+  return oc!=null && (Object.prototype.hasOwnProperty.call(state.overrides.suppfobmap||{},lineKey)||Object.prototype.hasOwnProperty.call(state.overrides.suppfobmap||{},oc));
 }
 function sameOrderCode(a,b){
   const na=Number(a), nb=Number(b);
@@ -10975,6 +10988,11 @@ function applyLicensorRulesToLoadedRows(){
         return;
       }
       if(row._licensorManual===true)return;
+      if(row._licensorSource){
+        const next=norm(row._licensorSource);
+        if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;changed++;}
+        return;
+      }
       // Otomatik değer yalnız tek geçerli Licensor varken yazılır; belirsizlik ve
       // NON-DTR üretici çelişkisi hücreyi boş bırakıp açık seçim bekler.
       const api=window.BLBusinessRules;
@@ -11057,6 +11075,7 @@ function applyIncomingPricingRules(rules,revision,{knownRevision=null}={}){
     state.storeRevisions.pricingRules=current;
     return false;
   }
+  if(incomingRevision===current&&JSON.stringify(next)===JSON.stringify(state.overrides.pricingRules||[]))return false;
   state.overrides.pricingRules=next;
   saveLocalPricingRules(next);
   if(Number.isFinite(incomingRevision))state.storeRevisions.pricingRules=Math.max(current,incomingRevision);
@@ -11064,11 +11083,16 @@ function applyIncomingPricingRules(rules,revision,{knownRevision=null}={}){
 }
 async function refreshPricingRulesFromServer(){
   if(!window.SERVER_BACKED)return null;
-  const res=await fetch(`/api/pricing-rules?_=${Date.now()}`,{cache:'no-store'});
-  const data=await res.json().catch(()=>({}));
-  if(!res.ok)throw new Error(data.error||res.statusText);
-  applyIncomingPricingRules(data.rules||[],data.revision);
-  return syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
+  if(refreshPricingRulesFromServer.pending)return refreshPricingRulesFromServer.pending;
+  refreshPricingRulesFromServer.pending=(async()=>{
+    const res=await fetch(`/api/pricing-rules?_=${Date.now()}`,{cache:'no-store'});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok)throw new Error(data.error||res.statusText);
+    const changed=applyIncomingPricingRules(data.rules||[],data.revision);
+    if(!changed)return null;
+    return syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
+  })().finally(()=>{refreshPricingRulesFromServer.pending=null;});
+  return refreshPricingRulesFromServer.pending;
 }
 function pricingRuleMatchCount(rule){ return (state.cp&&state.cp.rows||[]).filter(r=>pricingRuleMatchesRow(rule,r)).length; }
 async function applySuppFobRuleToMatchingOrders(rule){
@@ -27818,6 +27842,16 @@ window.BLManufacturerDataBridge={
     ]});
   },
 };
+// Lisans istatistikleri yalnız yüklü projection'ı okur; sorgu/yükleme başlatmaz.
+window.BLLicenseDataBridge={
+  loadedRows(){
+    const module=state.orders?'orders':'cp',rows=(state[module]&&state[module].rows)||[];
+    return {rows,module,version:module==='orders'?window.BLManufacturerDataBridge.version():`cp:${_unifiedPriorityTableRevision.cp}`};
+  },
+  async rulesChanged(data){
+    if(Number(data&&data.pricingRevision)!==Number(state.storeRevisions.pricingRules||0))await refreshPricingRulesFromServer();
+  },
+};
 window.BLPriceSupplierAnalysisBridge={
   async get(source,scope='all',priceType='finalFob'){
     const selected=String(source||'collection').toLowerCase();
@@ -35537,8 +35571,10 @@ function applyRemoteRowPatch(row,patch){
   }
   if(Object.prototype.hasOwnProperty.call(patch,'suppFob')){
     row['Supp. FOB']=patch.suppFob==null?null:Number(patch.suppFob);
-    row._suppFobManual=true;row._suppFobOverride=true;row._suppFobRule=null;
     row._suppFobMeta=patch.suppFobMeta&&typeof patch.suppFobMeta==='object'?patch.suppFobMeta:{source:'manual'};
+    row._suppFobManual=row._suppFobMeta.source!=='rule';row._suppFobOverride=true;
+    row._suppFobRule=row._suppFobManual?null:(row._suppFobMeta.ruleId||true);
+    if(!row._suppFobManual)recalcSuppFobForRow(row);
   }
   if(patch.delType!=null)row['Del. Type']=String(patch.delType);
   if(patch.dates&&typeof patch.dates==='object'){
@@ -35625,6 +35661,7 @@ document.addEventListener('focusout',()=>{
 
 let liveSyncConnected=false;
 function refreshSharedMasterClient(area){
+  if(area==='licenseCards'){window.BLLicenseCardsPage?.invalidate?.();return Promise.resolve();}
   if(area==='fx'){
     return Promise.resolve(window.BLFX?.load?.(true)).then(()=>{ try{renderSourceFxFreshness(BLFX.store);}catch(_){} });
   }
@@ -35681,7 +35718,10 @@ function initLiveSync(){
     if(payload.originClientId&&payload.originClientId===window.BL_CLIENT_ID)return;
     if(['fx','endeksmatik','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings'].includes(payload.area)){
       void refreshSharedMasterClient(payload.area).catch(()=>{});
+    }else if(payload.area==='licenseCards'){
+      window.BLLicenseCardsPage?.invalidate?.();
     }else if(payload.area==='pricingRules'){
+      window.BLLicenseCardsPage?.invalidate?.();
       void refreshPricingRulesFromServer().catch(()=>{});
     }else if(payload.area==='orders'){
       if(payload.mode==='patch'&&Array.isArray(payload.rowPatches)){applyRemoteRowPatches(payload.rowPatches);return;}
@@ -35749,6 +35789,8 @@ function liveSyncResyncAfterGap(){
   if(state.cp||state.orders)void loadFromServer(false).catch(()=>{});
   if(kolWorkspaceOwnerId)void kolHandleRemoteChange(kolWorkspaceOwnerId,{mode:'reload'});
   void window.BL_QUOTATIONS?.refresh?.();
+  window.BLLicenseCardsPage?.invalidate?.();
+  void refreshPricingRulesFromServer().catch(()=>{});
 }
 initLiveSync();
 window.addEventListener('bl-shared-revision',event=>{
@@ -35764,6 +35806,8 @@ window.addEventListener('bl-shared-revision',event=>{
   // yükleme demekti. Yalnız canlı akış kopmuşsa yedek olarak çalışır.
   if(changed.has('collection')&&kolWorkspaceOwnerId&&!liveSyncConnected)void kolHandleRemoteChange(kolWorkspaceOwnerId);
   if(changed.has('quotation'))void window.BL_QUOTATIONS?.refresh?.();
+  if(changed.has('licenseCards')&&!liveSyncConnected)window.BLLicenseCardsPage?.invalidate?.();
+  if(changed.has('pricingRules'))window.BLLicenseCardsPage?.invalidate?.();
   if(changed.has('pricingRules')&&!liveSyncConnected)void refreshPricingRulesFromServer().catch(()=>{});
   if(changed.has('cpOverrides')){
     // v7.19: canlı akış açıkken bu yol AYNI düzenleme için ikinci bir yeniden
@@ -36872,6 +36916,7 @@ function applyLanguage(lang){
     else if(tab==='lfl' && typeof renderLFLLanguage==='function') renderLFLLanguage();
     else if(tab==='priceanalysis' && typeof window.renderPriceSupplierAnalysisLanguage==='function') window.renderPriceSupplierAnalysisLanguage();
     else if(tab==='manufacturers' && typeof window.renderManufacturersLanguage==='function') window.renderManufacturersLanguage();
+    else if(tab==='licensecards') window.BLLicenseCardsPage?.renderLanguage?.();
     if(typeof renderKolScopeFilters==='function' && document.getElementById('kolScopeFilters')) renderKolScopeFilters();
   }catch(e){}
   // Ufuk rozeti sunucu verisinden değil, o anki dilden metin üretir; dil

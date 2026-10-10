@@ -9,6 +9,7 @@ let _xlsx = null;
 // Kanca idempotenttir; hangi modül önce çağırırsa orada bir kez takılır.
 function getXLSX() { if (!_xlsx) { _xlsx = require('xlsx'); try { require('../../public/excel-date-utils').installSheetJsHooks(_xlsx); } catch (_) {} } return _xlsx; }
 const BLBusinessRules = require('../../public/business-rules');
+const BLCanonicalFields = require('./canonical-fields');
 const BLCpReadinessEngine = require('../../public/cp-readiness-engine');
 
 const LICMAP = {};
@@ -824,7 +825,7 @@ function findSuppFobRule(rules, opd, country, season, manufacturer, license) {
     const start = dateOrdinal(r && r.opdStart), end = dateOrdinal(r && r.opdEnd);
     const dateMatches = (start == null && end == null) || (day != null && (start == null || day >= start) && (end == null || day <= end));
     return dateMatches && pricingRuleSeasonMatches(r, season) &&
-      pricingCountryGroup(r && r.countryGroup) === countryGroup &&
+      BLBusinessRules.pricingRuleCommissionForCountry(r, countryGroup) != null &&
       pricingKeyPart(r && (r.manufacturer != null ? r.manufacturer : r.licensor)) === mk &&
       pricingKeyPart(r && r.license) === ck;
   }) || null;
@@ -835,7 +836,7 @@ const calculateSuppFobWithRule = BLBusinessRules.calculateSuppFobWithRule;
 function calculateSuppFobByRule(fob, opd, country, season, manufacturer, license, rules) {
   const rule = findSuppFobRule(rules, opd, country, season, manufacturer, license);
   if (!rule) return { value: null, rule: null };
-  return { value: calculateSuppFobWithRule(fob, rule), rule };
+  return { value: calculateSuppFobWithRule(fob, rule, country), rule };
 }
 function normalizeSuppFobMeta(meta) {
   if (!meta || typeof meta !== 'object') return null;
@@ -990,6 +991,7 @@ function parseASASMatrix(rows, ruleValue) {
   const header = rows[hIdx].map(h => norm(h));
   const idx = {}; header.forEach((h, i) => { if (h) idx[h] = i; });
   const g = (row, name) => idx[name] != null ? row[idx[name]] : null;
+  const licensorColumn = header.findIndex(name => BLCanonicalFields.canonicalId('cp', name) === 'licensor');
   const canonHeader = (v) => turknorm(v).replace(/[^A-Z0-9]+/g, ' ').replace(/\s+/g, ' ').trim();
   const headerKeys = Object.keys(idx);
   const findHeaderFuzzy = patterns => {
@@ -1055,7 +1057,7 @@ function parseASASMatrix(rows, ruleValue) {
       category: norm(g(row, 'Ürün Klasman')), merch: norm(g(row, 'Merch Alt Grup Kod')).toUpperCase(),
       ageGroup: norm(g(row, 'Merch Marka Yaş Grup Kod')).toUpperCase(),
       buyerGrup: norm(g(row, 'Buyer Grup (TR)')), countryRaw: norm(g(row, 'Siparişin Üretildiği Ülke')),
-      license: norm(g(row, 'Lisans')), model: norm(g(row, 'Model Adı')),
+      license: norm(g(row, 'Lisans')), licensor: licensorColumn < 0 ? '' : norm(row[licensorColumn]), model: norm(g(row, 'Model Adı')),
       productDescription: norm(gFuzzy(row, productDescriptionHeader)),
       ex: yyyymmdd(g(row, 'Orijinal Exfactory Merch Tarih')),
       retail: yyyymmdd(g(row, 'Retail Depo Tarih Yıl Ay Gün')),
@@ -1089,7 +1091,7 @@ function parseASASMatrix(rows, ruleValue) {
   // boyut imzası: bilinen ASAS boyut alanları + kumaş alanları. Miktarlar ve
   // CP'ye eklenen Database/Horizon sütunları (__CPX_) imzaya girmez.
   const dimensionSignatureFields = ['season', 'model', 'ccode', 'colour', 'manufacturer', 'category', 'merch', 'ageGroup',
-    'buyerGrup', 'countryRaw', 'license', 'productDescription', 'buyer', 'line', 'ozel', 'plm',
+    'buyerGrup', 'countryRaw', 'license', 'licensor', 'productDescription', 'buyer', 'line', 'ozel', 'plm',
     'ex', 'retail', 'mb', 'opd', 'shipConf', ...fabricValueFields, '_isMainFabric'];
   const dimensionSignature = order => JSON.stringify(dimensionSignatureFields.map(field => {
     const value = order[field];
@@ -2096,7 +2098,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     logisticByOrder.get(source).push(segment);
   });
   return filtered.map((o, i) => {
-    const derivedLicensor = pricingLicensorForLicense(o.license, ov.pricingRules);
+    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules);
     const hasLicensorOverride = overrideHas(ov.licensormap || {}, o);
     // Non-DTR manufacturer maintenance is an LFL classification rule. It must not
     // overwrite or lock the CP/Genel Bakış Licensor field.
@@ -2131,7 +2133,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const isRuleOverride = !!(hasSuppfobOverride && suppFobMeta && suppFobMeta.source === 'rule');
     const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules);
     // Öncelik: siparişe uygulanmış değer > OPD aralığı+ülke grubu+Licensor+License kuralı > DTR için FOB > boş.
-    const suppfob = hasSuppfobOverride ? suppfobOverride : (priced.value != null ? priced.value : (licensor === 'DTR' ? fobRounded : null));
+    const suppfob = hasSuppfobOverride && !isRuleOverride ? suppfobOverride : (priced.value != null ? priced.value : (licensor === 'DTR' ? fobRounded : null));
     const notesRec = overrideGet(ov.notesmap, o) || {};
     const imageKey = plmColourImageKey(o.plm, o.ccode);
     const imageRef = imageKey ? (imageByIdentity.get(imageKey) || '') : '';
@@ -2145,9 +2147,9 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       'Model Name': o.model, 'Ürün Tanım': o.productDescription || '', 'C.Code': o.ccode, Colour: o.colour, 'Order Code': o.ocode,
       'FOB ($)': fobRounded, 'Supp. FOB': suppfob != null ? suppfob : null,
       _suppFobManual: hasSuppfobOverride && !isRuleOverride,
-      _suppFobRule: isRuleOverride ? (suppFobMeta.ruleId || true) : ((!hasSuppfobOverride && priced.rule) ? priced.rule.id || true : null),
-      _suppFobMeta: isRuleOverride ? suppFobMeta : ((!hasSuppfobOverride && priced.rule) ? automaticRuleMeta(priced.rule, false) : suppFobMeta),
-      _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _nonDtrManufacturerRule: false,
+      _suppFobRule: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? priced.rule.id || true : null,
+      _suppFobMeta: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? automaticRuleMeta(priced.rule, isRuleOverride) : (isRuleOverride ? null : suppFobMeta),
+      _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _licensorSource:norm(o.licensor), _nonDtrManufacturerRule: false,
       OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex,
       // Revizyon oku ve Ex-Factory renklendirmesi için ASAS orijinalleri.
       _asasExFactory: asasBaseline(o, 'ex', '_asasEx'),
@@ -2241,7 +2243,7 @@ function buildSharedOrderProjectionRowsFromASAS(asasOrders, antrepoMap, override
 function buildOverviewSummaryRowsFromASAS(asasOrders, overrides) {
   const ov = overrides || {};
   return (Array.isArray(asasOrders) ? asasOrders : []).map((o, i) => {
-    const derivedLicensor = pricingLicensorForLicense(o.license, ov.pricingRules);
+    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules);
     const licensor = o.license && overrideHas(ov.licensormap || {}, o)
       ? norm(overrideGet(ov.licensormap, o))
       : derivedLicensor;
@@ -2278,7 +2280,7 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
   const matchRule = matchRuleOf(ov);
   const T = toDateOnly(new Date());
   const built = asasOrders.map(o => {
-    const derivedLicensor = pricingLicensorForLicense(o.license, ov.pricingRules);
+    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules);
     const hasLicensorOverride = overrideHas(ov.licensormap || {}, o);
     const licensor = o.license && hasLicensorOverride ? norm(overrideGet(ov.licensormap, o)) : derivedLicensor;
     const hit = findAntrepoHit(antrepoMap, o, { rule: matchRule });
@@ -2297,7 +2299,7 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
     const suppFobMeta = normalizeSuppFobMeta(overrideGet(ov.suppfobmetamap || {}, o));
     const isRuleOverride = !!(hasSuppfobOverride && suppFobMeta && suppFobMeta.source === 'rule');
     const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules);
-    const suppfob = hasSuppfobOverride ? overrideGet(ov.suppfobmap, o) : (priced.value != null ? priced.value : (licensor === 'DTR' ? fobRounded : null));
+    const suppfob = hasSuppfobOverride && !isRuleOverride ? overrideGet(ov.suppfobmap, o) : (priced.value != null ? priced.value : (licensor === 'DTR' ? fobRounded : null));
     let risk;
     if (!isActive) risk = '5-Closed';
     else if (o.mb && o.mb < T) risk = '1-Missed in-store';
@@ -2315,9 +2317,9 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
       'PLM ID': (o.plm != null && !isNaN(Number(o.plm))) ? Math.trunc(Number(o.plm)) : '', 'Special Code': o.ozel,
       'Order Code': o.ocode, 'FOB ($)': fobRounded, 'Supp. FOB': suppfob != null ? suppfob : null,
       _suppFobManual: hasSuppfobOverride && !isRuleOverride,
-      _suppFobRule: isRuleOverride ? (suppFobMeta.ruleId || true) : ((!hasSuppfobOverride && priced.rule) ? priced.rule.id || true : null),
-      _suppFobMeta: isRuleOverride ? suppFobMeta : ((!hasSuppfobOverride && priced.rule) ? automaticRuleMeta(priced.rule, false) : suppFobMeta),
-      _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _nonDtrManufacturerRule: false,
+      _suppFobRule: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? priced.rule.id || true : null,
+      _suppFobMeta: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? automaticRuleMeta(priced.rule, isRuleOverride) : (isRuleOverride ? null : suppFobMeta),
+      _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _licensorSource:norm(o.licensor), _nonDtrManufacturerRule: false,
       OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex, 'Retail Date': o.retail, 'Ex→Retail': exRetail, 'In-Store (Model Budget)': o.mb, 'Days to go': daysToGo,
       'Merch Marka Yaş Grup Kod': o.ageGroup, 'Buyer': o.buyer, 'Line': o.line,
       'Kumaş Kategorisi': o.fabricCategory, 'Kumaşçı Ülkesi': o.fabricSupplierCountry, 'Kumaşçı': o.fabricSupplier,
@@ -3473,6 +3475,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
 }
 
 module.exports = {
+  pricingLicensorForLicense,
   countryEN,
   parseASASWorkbook, parseASASRows, parseFabricWorkbook, applyFabricEntries, applyFabricEntriesToLflRows, parseAntrepoWorkbook, parseAntrepoRows, parseCPUpdateWorkbook,
   buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogOperationalRows, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, backlogCustomDimensionContext, computeFlags, applyFormulas, deriveOperationalStatus, shouldWaitForRetail, isShortageStatus, isWarehouseShortageStatus, backlogRemainderStatus, findAntrepoHit, findAntrepoHits, backlogOrderQuantityFromAntrepo, backlogProductionRemainder, PRODUCTION_REMAINDER_TOLERANCE_RATE, SHORTAGE_REMAINDER_RATE, SHORTAGE_STATUS, WAREHOUSE_STATUS, WAREHOUSE_SHORTAGE_STATUS, BACKLOG_DIM_LABELS,

@@ -297,6 +297,7 @@
 <link rel="stylesheet" href="collection-analytics.css?v=__BL_ASSET_VERSION__&rev=7144">
 <link rel="stylesheet" href="price-supplier-analysis.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="manufacturers.css?v=__BL_ASSET_VERSION__&rev=1">
+<link rel="stylesheet" href="license-cards.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="pricing-workspace.css?v=__BL_ASSET_VERSION__&rev=4">
 <link rel="stylesheet" href="data-maintenance.css?v=__BL_ASSET_VERSION__&rev=3">
 <link rel="stylesheet" href="data-management.css?v=__BL_ASSET_VERSION__&rev=2">
@@ -450,6 +451,7 @@
     <button data-tab="pricinghistory" title="Fiyat Geçmişi" data-i18n-title-tr="Fiyat Geçmişi" data-i18n-title-en="Pricing History"><svg class="ic"><use href="#i-bl-n15"/></svg><span data-i18n-tr="Fiyat Geçmişi" data-i18n-en="Pricing History">Fiyat Geçmişi</span></button>
     <button data-tab="priceanalysis" title="Fiyat &amp; Üretici Analizi" data-i18n-title-tr="Fiyat &amp; Üretici Analizi" data-i18n-title-en="Price &amp; Supplier Analysis"><svg class="ic"><use href="#i-bl-n17"/></svg><span data-i18n-tr="Fiyat &amp; Üretici Analizi" data-i18n-en="Price &amp; Supplier Analysis">Fiyat &amp; Üretici Analizi</span></button>
     <button data-tab="manufacturers" title="Üreticiler" data-i18n-title-tr="Üreticiler" data-i18n-title-en="Manufacturers"><svg class="ic"><use href="#i-bl-n18"/></svg><span data-i18n-tr="Üreticiler" data-i18n-en="Manufacturers">Üreticiler</span></button>
+    <button data-tab="licensecards" title="Lisans kartları" data-i18n-title-tr="Lisans kartları" data-i18n-title-en="License cards"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="Lisans kartları" data-i18n-en="License cards">Lisans kartları</span></button>
     <button data-tab="lfl" title="Like For Like"><svg class="ic"><use href="#i-bl-n19"/></svg><span data-i18n-tr="LFL Analizi" data-i18n-en="LFL Analysis">LFL Analizi</span></button>
     <button data-tab="opencosting" title="Ön Maliyet" data-i18n-title-tr="Ön Maliyet" data-i18n-title-en="Open Costing"><svg class="ic"><use href="#i-bl-n21"/></svg><span data-i18n-tr="Ön Maliyet" data-i18n-en="Open Costing">Ön Maliyet</span></button>
 
@@ -1067,6 +1069,9 @@
   <section id="view-manufacturers">
     <div class="manufacturersPage" id="manufacturersPage" aria-live="polite"></div>
   </section>
+  <section id="view-licensecards">
+    <div class="licenseCardsPage" id="licenseCardsPage" aria-live="polite"></div>
+  </section>
 
   <section id="view-lfl">
     <div id="lflLoadingState" class="lflLoadingState" hidden></div>
@@ -1513,7 +1518,7 @@
 
 /* ============ Kabuk davranışları (ray + üst bar) ============ */
 (function shell(){
-  const TITLES={overview:{tr:'Genel Bakış',en:'Overview'},cp:{tr:'CP Tracker',en:'CP Tracker'},orders:{tr:'Siparişler',en:'Orders'},koleksiyon:{tr:'Koleksiyon',en:'Collection'},quotations:{tr:'Quotations',en:'Quotations'},pricinghistory:{tr:'Fiyat Geçmişi',en:'Pricing History'},priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis'},manufacturers:{tr:'Üreticiler',en:'Manufacturers'},lcwai:{tr:'LCW AI',en:'LCW AI'},lfl:{tr:'LFL analizi',en:'LFL Analysis'},opencosting:{tr:'Ön Maliyet',en:'Open Costing'},backlog:{tr:'Backlog',en:'Backlog'},shipping:{tr:'Nakliye kıyaslama',en:'Shipping Comparison'},automations:{tr:'Otomasyonlar',en:'Automations'},source:{tr:'Veri Yönetimi',en:'Data Management'}};
+  const TITLES={overview:{tr:'Genel Bakış',en:'Overview'},cp:{tr:'CP Tracker',en:'CP Tracker'},orders:{tr:'Siparişler',en:'Orders'},koleksiyon:{tr:'Koleksiyon',en:'Collection'},quotations:{tr:'Quotations',en:'Quotations'},pricinghistory:{tr:'Fiyat Geçmişi',en:'Pricing History'},priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis'},manufacturers:{tr:'Üreticiler',en:'Manufacturers'},licensecards:{tr:'Lisans kartları',en:'License cards'},lcwai:{tr:'LCW AI',en:'LCW AI'},lfl:{tr:'LFL analizi',en:'LFL Analysis'},opencosting:{tr:'Ön Maliyet',en:'Open Costing'},backlog:{tr:'Backlog',en:'Backlog'},shipping:{tr:'Nakliye kıyaslama',en:'Shipping Comparison'},automations:{tr:'Otomasyonlar',en:'Automations'},source:{tr:'Veri Yönetimi',en:'Data Management'}};
   const titleEl=document.getElementById('pageTitle');
   function syncTitle(){
     if(typeof syncActivePageTitle==='function'){syncActivePageTitle();return;}

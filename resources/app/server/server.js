@@ -76,6 +76,14 @@ const localDb = createLocalDb(LOCAL_DB_FILE, { trace:markStartup });
 let rejectedOwnerDeltas = 0;
 function sharedHubDeltaFilter(direction) {
   return deltas => sharedSyncPolicy.filterDeltas(filterCollectionWorkspaceDeltas(deltas), direction).filter(delta => {
+    if(String(delta.id||'').startsWith('license-card:')){
+      const profile=userAccess.profileById(delta.userId);
+      if(profile&&userAccess.hasPermission(profile,'manageBusinessRules'))return true;
+      // The first automatic import contains only names and empty profile fields.
+      const patch=delta.patch||{},card=patch.profile;
+      const derived=delta.id==='license-card:state'||(card&&!patch.contracts&&Object.keys(require('./lib/license-cards').PROFILE_LIMITS).every(key=>!card[key])&&!card.symbolDataUrl);
+      return Boolean(profile&&derived);
+    }
     if (!String(delta.id || '').startsWith('cp-order:')) return true;
     const decision = userAccess.sharedOwnerOf(delta.id, delta.userId);
     if (!decision.known || decision.allowed) return true;
@@ -158,6 +166,7 @@ async function runLocalDbMaintenance() {
     if (quarantine.inspected) markStartup('COLLECTION_LEGACY_DELTA_TRANSITION', quarantine);
     // Çalışan kümeyi belleğe al: delta yetkili fazlarda okumalar buradan gelir.
     const loaded = await deltaStore.hydrate();
+    await licenseCardSync.flushOutbox();
     if (loaded.ok) markStartup('DELTA_STORE_HYDRATED', { collections: loaded.collections, records: loaded.records });
   } catch (error) { logRuntimeFailure('deltaStoreSeed', error); }
   for (const folder of new Set([dbFolder, LOCAL_DATA_ROOT, path.join(dbFolder, '.buyerlog-db-recovery')])) {
@@ -839,7 +848,7 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
     const before = local[id], after = remote[id];
     if (!different(before, after)) continue;
     if (id === 'store:overrides.json') {
-      for (const field of ['pricingRules','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs']) {
+      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
       }
       if (
@@ -1603,7 +1612,12 @@ function afterSharedSyncCompleted() {
   afterSharedSyncInFlight = (async () => {
     await localDb.retireOwnerConflicts().catch(error => logRuntimeFailure('retireOwnerConflicts', error));
     await retireOutOfScopeSyncConflicts().catch(error => logRuntimeFailure('retireSyncConflicts', error));
-    return pullModeratorMasterIfNewer();
+    const master=await pullModeratorMasterIfNewer();
+    await deltaStore.hydrate();
+    await licenseCardSync.flushOutbox();
+    const licenseChanges=await licenseCardSync.reconcile();
+    if(licenseChanges.profilesChanged||licenseChanges.rulesChanged)announceRecoveredMasterEntities(['licenseCards',...(licenseChanges.rulesChanged?['pricingRules']:[])]);
+    return master;
   })().finally(() => { afterSharedSyncInFlight = null; });
   return afterSharedSyncInFlight;
 }
@@ -10264,13 +10278,40 @@ app.put('/api/freight-rates', userAccess.requireArea('shipping'), userAccess.req
   } catch (err) { apiError(res, err, 'Navlun ücretleri kaydedilemedi.'); }
 });
 
+const licenseCardSync=require('./lib/license-card-sync').createLicenseCardSync({
+  deltaStore,loadOverrides,saveOverrides,normalizePricingRuleDate,normalizePricingRuleSeasons,pricingRuleSeasonSetsOverlap,pricingRuleDateRangesOverlap,
+  onRecovered:()=>publishSharedMasterChange('licenseCards',null),
+});
+async function getLicenseDiscoveryRows(req){
+  const id=req.currentUser.id;
+  await ensureDataLoaded(id);
+  const runtime=cacheForUser(id),overrides=loadOverrides(),canonical=require('./lib/canonical-fields');
+  const sources=runtime.asasOrdersByTarget?Object.values(runtime.asasOrdersByTarget).filter(Array.isArray):[];
+  if(Array.isArray(runtime.asasOrders))sources.push(runtime.asasOrders);
+  if(!runtime.loadedAt&&!sources.some(rows=>rows.length))throw Object.assign(new Error('ASAS verilerini önce yenileyin. / Refresh ASAS data first.'),{code:'LICENSE_SOURCE_UNAVAILABLE',statusCode:503});
+  const pairs=new Map();
+  const add=(license,licensor)=>{if(license)pairs.set(require('./lib/license-cards').pairKey(license,licensor),{License:license,Licensor:licensor});};
+  for(const rows of sources)for(const row of rows){
+    const license=canonical.canonicalValue(row,'cp','license'),sourceLicensor=canonical.canonicalValue(row,'cp','licensor');
+    if(sourceLicensor)add(license,sourceLicensor);
+    else add(license,parseLib.pricingLicensorForLicense(license,overrides.pricingRules));
+  }
+  for(const rule of overrides.pricingRules||[])add(rule.license,rule.licensor);
+  return {module:'cp',rows:[...pairs.values()]};
+}
+require('./routes/license-card-routes')(app, {
+  loadOverrides,saveOverrides,userAccess,getLicenseDiscoveryRows,publishSharedMasterChange,
+  publishLicenseCardChange:licenseCardSync.publish,apiError,
+  normalizePricingRuleDate,normalizePricingRuleSeasons,pricingRuleSeasonSetsOverlap,pricingRuleDateRangesOverlap,
+});
+
 app.get('/api/pricing-rules', (req, res) => {
   const ov = loadOverrides();
   const revision = Number(ov._revisions && ov._revisions.pricingRules) || 0;
   res.set('ETag', `"${revision}"`);
   res.json({ rules: Array.isArray(ov.pricingRules) ? ov.pricingRules : [], revision });
 });
-app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), (req, res) => {
+app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), async (req, res) => {
   try {
     const incoming = (req.body || {}).rules;
     if (!Array.isArray(incoming)) return res.status(400).json({ error: 'rules (dizi) zorunlu.' });
@@ -10344,6 +10385,11 @@ app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requi
     });
     const changedLicenses = [...changedLicenseMap.values()];
     const saved = replacePricingRules(rules, requestRevision(req));
+    // Keep edits from the existing calculator and the cards on the same peer path.
+    const cardEngine=require('./lib/license-cards');
+    for(const card of cardEngine.stateOf(loadOverrides()).items){
+      if(changedLicenses.some(license=>cardEngine.pairKey(license,'')===cardEngine.pairKey(card.license,'')))await licenseCardSync.publish(req,{card,contracts:saved.rules.filter(rule=>cardEngine.pairKey(rule.license,rule.licensor)===cardEngine.pairKey(card.license,card.licensor))});
+    }
     userAccess.appendAudit(req.currentUser, 'PRICING_RULES_UPDATE', 'settings', {
       revision: saved.revision, count: saved.rules.length, changedLicenses,
       createdRuleIds, updatedRuleIds, deletedRuleIds,
