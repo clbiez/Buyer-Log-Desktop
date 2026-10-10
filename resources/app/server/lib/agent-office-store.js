@@ -71,8 +71,8 @@ function normalizeOffice(raw = {}) {
 const DEFAULT_FURNITURE = [
   {id:'desk-a',kind:'desk',x:4,y:2,floor:1}, {id:'desk-b',kind:'desk',x:12,y:2,floor:1}, {id:'desk-c',kind:'desk',x:20,y:2,floor:1},
   {id:'coffee-bar',kind:'coffee',x:2,y:2,floor:0}, {id:'meeting',kind:'table',x:12,y:2,floor:0}, {id:'sofa',kind:'sofa',x:20,y:2,floor:0},
-  {id:'shelf',kind:'shelf',x:8,y:0,floor:0}, {id:'shelf-entrance',kind:'shelf',x:1,y:0,floor:1}, {id:'rack-quality',kind:'rack',x:23,y:0,floor:1}, {id:'shelf-upper',kind:'shelf',x:10,y:0,floor:1},
-  {id:'rack',kind:'rack',x:16,y:0,floor:1}, {id:'tailor',kind:'mannequin',x:8,y:0,floor:1},
+  {id:'shelf',kind:'shelf',x:8,y:0,floor:0}, {id:'shelf-entrance',kind:'shelf',x:1,y:0,floor:1}, {id:'rack-quality',kind:'rack',x:23,y:0,floor:1}, {id:'shelf-upper',kind:'rack',x:10,y:0,floor:1},
+  {id:'rack',kind:'plant',x:16,y:0,floor:1}, {id:'tailor',kind:'mannequin',x:8,y:0,floor:1},
   {id:'plant-a',kind:'monstera',x:1,y:0,floor:0}, {id:'plant-b',kind:'plant',x:23,y:1,floor:1},
   {id:'board-a',kind:'board',x:3,y:0,floor:1}, {id:'board-b',kind:'board',x:12,y:0,floor:0},
   {id:'rug-meeting',kind:'rug',x:12,y:2,floor:0}, {id:'rug-lounge',kind:'rug',x:20,y:2,floor:0},

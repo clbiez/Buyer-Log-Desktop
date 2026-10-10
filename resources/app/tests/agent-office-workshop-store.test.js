@@ -148,3 +148,16 @@ test('reference workstation and library styles survive private reopen; larger sh
   assert.equal(normalizeOffice({scene:'workshop-v1',furniture:[{...furniture[0],style:'library'}]}).furniture[0].style,undefined,'Style cannot impersonate another furniture kind');
   assert.doesNotThrow(()=>normalizeOffice(defaultOffice()));
 });
+
+test('reference collection rack stays left of its desk while a saved personal room is never migrated',async t=>{
+  const defaults=defaultOffice(),desk=defaults.furniture.find(i=>i.id==='desk-b'),rack=defaults.furniture.find(i=>i.id==='shelf-upper');
+  assert.equal(rack.kind,'rack');assert.ok(rack.x<desk.x);
+  assert.equal(defaults.furniture.find(i=>i.id==='rack').kind,'plant');
+  assert.doesNotThrow(()=>normalizeOffice(defaults));
+  const root=await fs.mkdtemp(path.join(os.tmpdir(),'bl-workshop-reference-default-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const store=createAgentOfficeStore({root}),personal=normalizeOffice({...defaults,furniture:[{id:'shelf-upper',kind:'shelf',x:10,y:0,floor:1,rotation:0}]});
+  await store.save('owner-a','office',{id:'layout',...personal},{expectedRevision:0});
+  const state=await createAgentOfficeStore({root}).state('owner-a');
+  assert.deepEqual(state.office.furniture,personal.furniture);
+  assert.equal(state.defaultOffice.furniture.find(i=>i.id==='shelf-upper').kind,'rack');
+});
