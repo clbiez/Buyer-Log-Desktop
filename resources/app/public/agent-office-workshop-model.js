@@ -2,7 +2,9 @@
   'use strict';
   const WIDTH={desk:4,table:5,sofa:4,shelf:2,coffee:3,rack:2,plant:1,lamp:1,chair:1,mannequin:1,monstera:1,board:3,decor:1,rug:5};
   const passive=item=>['rug','board','decor','lamp'].includes(item.kind);
-  const box=item=>({left:item.x-WIDTH[item.kind]/2,right:item.x+WIDTH[item.kind]/2,top:item.y-.5,bottom:item.y+.5});
+  const scalable=kind=>['desk','table','sofa','coffee','rug'].includes(kind);
+  const scale=item=>scalable(item.kind)&&Number(item.scale)===1.3?1.3:1;
+  const box=item=>({left:item.x-WIDTH[item.kind]*scale(item)/2,right:item.x+WIDTH[item.kind]*scale(item)/2,top:item.y-.5,bottom:item.y+.5});
   function validPlacement(item,items){
     if(!WIDTH[item.kind]||![0,1].includes(item.floor)||item.y<0||item.y>3)return false;
     const a=box(item);if(a.left<0||a.right>24)return false;
@@ -23,6 +25,6 @@
   function stations(profiles,items){const desks=items.filter(p=>p.kind==='desk'),used=new Set(),assigned=new Map(),occupied=[];for(const profile of profiles){const desk=desks.find(p=>p.id===profile.deskId&&!used.has(p.id))||desks.find(p=>!used.has(p.id));if(desk)used.add(desk.id);const point=nearest(desk?{x:desk.x,y:Math.min(3,desk.y+1),floor:desk.floor}:{x:4+assigned.size%19,y:3,floor:0},items.concat(occupied));assigned.set(profile.id,{desk:desk||null,point});if(point)occupied.push({id:'station:'+profile.id,kind:'plant',x:point.x+.5,y:point.y,floor:point.floor});}return assigned;}
   const periodForHour=hour=>hour>=6&&hour<11?'morning':hour>=11&&hour<17?'noon':hour>=17&&hour<21?'evening':'night';
   function status(profileId,data){const active=(data.activeJobs||[]).find(j=>j.profileIds?.includes(profileId));if(active)return active.phase==='review'?'reviewing':active.phase==='responding'?'responding':'working';const last=(data.jobs||[]).find(j=>j.profileIds?.includes(profileId));if(last?.status==='failed')return 'error';if((data.memory||[]).some(m=>m.profileId===profileId&&m.type==='task'&&m.active))return 'waiting';return data.connected===false?'offline':'available';}
-  const model={WIDTH,passive,box,validPlacement,blocked,path,nearest,stations,periodForHour,status};
+  const model={WIDTH,scale,scalable,passive,box,validPlacement,blocked,path,nearest,stations,periodForHour,status};
   if(typeof module!=='undefined'&&module.exports)module.exports=model;else root.BLWorkshopModel=model;
 })(typeof window==='undefined'?globalThis:window);

@@ -85,3 +85,22 @@ test('explicit workshop conversion retains sanitized legacy backup through later
   assert.equal(new Set(points.map(p=>JSON.stringify(p))).size,24);
   assert.equal(stations.get('agent-0').desk.id,'desk-a');
  });
+
+test('reference furniture scale preserves legacy layouts and survives save, templates and reopen with matching collision bounds',async t=>{
+  const model=require('../public/agent-office-workshop-model');
+  const legacyItem={id:'old-sofa',kind:'sofa',x:2,y:2,floor:0,rotation:0};
+  assert.deepEqual(normalizeOffice({scene:'workshop-v1',furniture:[legacyItem]}).furniture,[legacyItem]);
+  assert.equal(model.validPlacement(legacyItem,[legacyItem]),true);
+  assert.equal(model.validPlacement({...legacyItem,scale:1.3},[]),false,'Enlarging must not move the object through a wall');
+  assert.equal(model.scale({kind:'shelf',scale:1.3}),1);
+  assert.equal(normalizeOffice({scene:'workshop-v1',furniture:[{id:'s',kind:'shelf',x:5,y:0,floor:1,scale:1.3}]}).furniture[0].scale,undefined);
+  const table={id:'table',kind:'table',x:10,y:2,floor:0,rotation:0,scale:1.3};
+  assert.equal(model.blocked({x:7,y:2,floor:0},[table]),true,'Expanded footprint must block the actual newly occupied tile');
+  assert.equal(model.blocked({x:7,y:2,floor:0},[{...table,scale:1}]),false);
+  const root=await fs.mkdtemp(path.join(os.tmpdir(),'bl-workshop-scale-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const store=createAgentOfficeStore({root});
+  await store.save('owner-a','office',{id:'layout',...normalizeOffice({scene:'workshop-v1',furniture:[table],templates:[{name:'Reference',furniture:[table]}]})},{expectedRevision:0});
+  const saved=(await createAgentOfficeStore({root}).state('owner-a')).office;
+  assert.equal(saved.furniture[0].scale,1.3);assert.equal(saved.templates[0].furniture[0].scale,1.3);
+  assert.notDeepEqual((await store.state('owner-b')).office.furniture,saved.furniture);
+});

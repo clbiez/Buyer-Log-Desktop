@@ -43,6 +43,7 @@ function normalizeOffice(raw = {}) {
     x: Math.max(0, Math.min(isWorkshop ? 23 : 11, Math.round(Number(item?.x) || 0))),
     y: Math.max(0, Math.min(isWorkshop ? 3 : 7, Math.round(Number(item?.y) || 0))),
     ...(isWorkshop ? { floor: Number(item?.floor) === 1 ? 1 : 0 } : {}),
+    ...(isWorkshop && item && workshopModel.scale(item) === 1.3 ? {scale:1.3} : {}),
     rotation: (isWorkshop ? [0,1] : [0,1,2,3]).includes(Number(item?.rotation)) ? Number(item.rotation) : 0,
   }));
   const result = { ...(workshop ? {scene:'workshop-v1'} : {}),
@@ -69,16 +70,16 @@ function normalizeOffice(raw = {}) {
 const DEFAULT_FURNITURE = [
   {id:'desk-a',kind:'desk',x:4,y:2,floor:1}, {id:'desk-b',kind:'desk',x:12,y:2,floor:1}, {id:'desk-c',kind:'desk',x:20,y:2,floor:1},
   {id:'coffee-bar',kind:'coffee',x:2,y:2,floor:0}, {id:'meeting',kind:'table',x:12,y:2,floor:0}, {id:'sofa',kind:'sofa',x:20,y:2,floor:0},
-  {id:'shelf',kind:'shelf',x:8,y:0,floor:0}, {id:'shelf-upper',kind:'shelf',x:10,y:0,floor:1},
+  {id:'shelf',kind:'shelf',x:8,y:0,floor:0}, {id:'shelf-entrance',kind:'shelf',x:1,y:0,floor:1}, {id:'rack-quality',kind:'rack',x:23,y:0,floor:1}, {id:'shelf-upper',kind:'shelf',x:10,y:0,floor:1},
   {id:'rack',kind:'rack',x:16,y:0,floor:1}, {id:'tailor',kind:'mannequin',x:8,y:0,floor:1},
-  {id:'plant-a',kind:'monstera',x:1,y:0,floor:0}, {id:'plant-b',kind:'plant',x:23,y:0,floor:1},
+  {id:'plant-a',kind:'monstera',x:1,y:0,floor:0}, {id:'plant-b',kind:'plant',x:23,y:1,floor:1},
   {id:'board-a',kind:'board',x:3,y:0,floor:1}, {id:'board-b',kind:'board',x:12,y:0,floor:0},
   {id:'rug-meeting',kind:'rug',x:12,y:2,floor:0}, {id:'rug-lounge',kind:'rug',x:20,y:2,floor:0},
   {id:'board-upper',kind:'board',x:14,y:0,floor:1}, {id:'board-quality',kind:'board',x:21,y:0,floor:1},
   {id:'plant-upper',kind:'plant',x:6,y:0,floor:1}, {id:'plant-meeting',kind:'plant',x:10,y:0,floor:0},
   {id:'shelf-lounge',kind:'shelf',x:17,y:0,floor:0}, {id:'plant-lounge',kind:'monstera',x:23,y:0,floor:0},
   {id:'decor-lower',kind:'decor',x:6,y:0,floor:0}, {id:'lamp-a',kind:'lamp',x:5,y:0,floor:0}, {id:'lamp-b',kind:'lamp',x:21,y:0,floor:0},
-].map(item => ({...item,rotation:0}));
+].map(item => ({...item,rotation:0,...(['coffee','table','sofa','rug'].includes(item.kind)?{scale:1.3}:{})}));
 function defaultOffice() { return { scene:'workshop-v1', period:'auto',quality:'balanced',lighting:80,lightsOn:true,templates:[],furniture:copy(DEFAULT_FURNITURE) }; }
 
 function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
