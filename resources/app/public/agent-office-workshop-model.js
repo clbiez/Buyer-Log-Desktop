@@ -2,11 +2,12 @@
   'use strict';
   const WIDTH={desk:4,table:5,sofa:4,shelf:2,coffee:3,rack:2,plant:1,lamp:1,chair:1,mannequin:1,monstera:1,board:3,decor:1,rug:5};
   const STAIRS={upper:{x:0,y:3,floor:1},lower:{x:6,y:3,floor:0}};
-  const styles=kind=>kind==='board'?['classic','planning','collection','quality']:kind==='decor'?['classic','sketch','textile']:['classic'];
+  const styles=kind=>kind==='desk'?['classic','planning','collection','quality']:kind==='board'?['classic','planning','collection','quality','portrait','moodboard']:kind==='shelf'?['classic','library']:kind==='decor'?['classic','sketch','textile']:['classic'];
   const passive=item=>['rug','board','decor','lamp'].includes(item.kind);
   const scalable=kind=>['desk','table','sofa','coffee','rug'].includes(kind);
   const scale=item=>scalable(item.kind)&&Number(item.scale)===1.3?1.3:1;
-  const box=item=>({left:item.x-WIDTH[item.kind]*scale(item)/2,right:item.x+WIDTH[item.kind]*scale(item)/2,top:item.y-.5,bottom:item.y+.5});
+  const footprint=item=>item.kind==='shelf'&&item.style==='library'?3.5:WIDTH[item.kind];
+  const box=item=>({left:item.x-footprint(item)*scale(item)/2,right:item.x+footprint(item)*scale(item)/2,top:item.y-.5,bottom:item.y+.5});
   function validPlacement(item,items){
     if(!WIDTH[item.kind]||![0,1].includes(item.floor)||item.y<0||item.y>3)return false;
     const a=box(item);if(a.left<0||a.right>24)return false;
