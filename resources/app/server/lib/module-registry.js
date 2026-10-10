@@ -104,6 +104,14 @@ const MODULES = Object.freeze([
     summary: { tr: 'AI asistanı.', en: 'General AI assistant.' },
   },
   {
+    // Like LCW AI, the private office has no new business permission area.
+    // Dataset access remains subject to the current owner's source permissions.
+    id: 'agentoffice', agentFilter: false, tableKey: null, label: { tr: 'Agent Ofisi', en: 'Agent Office' },
+    area: 'overview', route: 'agentoffice', datasets: [],
+    capabilities: ['analyze', 'compare', 'export'],
+    summary: { tr: 'Kalıcı agent hafızası, koordinasyon ve yetkili operasyon analizi.', en: 'Persistent agent memory, coordination and authorized operational analysis.' },
+  },
+  {
     // v7.0.229 — eski E-Mail Grupları. Siparişler verisini okuduğu için
     // ayrı bir yetki alanı açmaz; Siparişler alanını paylaşır.
     id: 'manufacturers', agentFilter: false, tableKey: null, label: { tr: 'Üreticiler', en: 'Manufacturers' },

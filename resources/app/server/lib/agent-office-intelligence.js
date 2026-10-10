@@ -6,6 +6,7 @@ const Rules = require('../../public/cp-rules-engine');
 const Checklist = require('../../public/cp-checklist-engine');
 const Reports = require('../../public/test-report-engine');
 const Samples = require('../../public/plm-sample-requests-engine');
+const DecisionSupport=require('./agent-office-decision-support');
 const { hash } = require('./agent-office-store');
 const IDENTITY = ['orderCode', 'plmId', 'colourCode'];
 const SNAPSHOT_FIELDS = ['orderCode', 'plmId', 'colourCode', 'modelName', 'orderQuantity', 'shipmentQuantity', 'remainingUnits', 'manufacturer', 'exFactory', 'retailDate', 'orderStatus'];
@@ -113,8 +114,8 @@ function analyzeOperationalData(input = {}) {
     if (collection.length > 1) local.push(finding('COLLECTION_AMBIGUOUS', key, 'WATCH', bilingual('Birden fazla koleksiyon eşleşmesi var', 'Multiple collection matches exist'),
       bilingual('Varyant/bileşen kapsamını seçmeden kayıtları birleştirme.', 'Do not merge records before selecting the variant/component scope.'), [source, provenance('Collection', collectionKey, input.collectionUpdatedAt)], { matches: collection.length }));
     const bom = input.bom?.models?.[String(ident.plmId || '')];
-    const record = { identity: ident, orderKey: key, analysis: base, evidence, collection: collection.map(item => fields.project(item, 'collection')), bom: bom ? { fetchedAt: bom.fetchedAt, components: bom.components || [], coverage: 'decoration-only' } : null,
-      findings: local, sources: [source], unavailable: ['full-fabric-bom', ...(sample ? [] : ['plm-requests']), ...(bom ? [] : ['decoration-bom'])] };
+    const record = { identity: ident,dimensions:fields.project(row,'cp',['manufacturer','season','orderQuantity']),snapshotValues:fields.project(row,'cp',SNAPSHOT_FIELDS), orderKey: key, analysis: base, evidence, collection: collection.map(item => fields.project(item, 'collection')), bom: bom ? { fetchedAt: bom.fetchedAt, components: bom.fullComponents?.length?bom.fullComponents:bom.components||[],coverage:bom.fullCoverage==='all-normalized'?(bom.fullComponents.length<bom.fullComponentCount?'truncated-normalized-bom':'all-normalized-bom'):'decoration-only',componentCount:bom.fullComponentCount||bom.components?.length||0,fullFingerprint:bom.fullFingerprint||null } : null,
+      findings: local, sources: [source], unavailable: [...(bom?.fullCoverage==='all-normalized'?[]:['full-fabric-bom']), ...(sample ? [] : ['plm-requests']), ...(bom ? [] : ['decoration-bom'])] };
     orders.push(record); findings.push(...local);
     const supplier = String(fields.value(row, 'cp', 'manufacturer') || 'UNKNOWN');
     if (!suppliers.has(supplier)) suppliers.set(supplier, { name: supplier, orderKeys: new Set(), quantity: 0, atRisk: 0, late: 0, qualityRejected: 0, unknown: 0, sources: [] });
@@ -131,13 +132,15 @@ function analyzeOperationalData(input = {}) {
     bilingual('Aynı sipariş/model/renkte birden fazla satır var', 'Multiple rows share the same order/model/color'),
     bilingual('Parçalı yükleme veya tekrar kaydını doğrula; otomatik silme.', 'Verify partial shipments or duplicate records; do not delete automatically.'), [provenance('CP / ASAS', key, asAt)], { count: duplicates.length }));
   findings.sort((a,b) => (PRIORITY[b.severity] || 0) - (PRIORITY[a.severity] || 0) || Number(b.code === 'CP_PRIORITY') - Number(a.code === 'CP_PRIORITY') || a.orderKey.localeCompare(b.orderKey));
-  return { computedAt: new Date().toISOString(), sourceUpdatedAt: asAt, origin: 'deterministic', scope, rowCount: processed,
+  const pipeline=DecisionSupport.collectionPipeline(input.collectionRows||[],orders);
+  return {decisionSupport:{supplierHistory:DecisionSupport.supplierHistory(orders,rows),historicalPrices:DecisionSupport.historicalPrices(input.lflRows,input.sourceUpdatedAt),collectionPipeline:pipeline.groups}, computedAt: new Date().toISOString(), sourceUpdatedAt: asAt, origin: 'deterministic', scope, rowCount: processed,
     findings, orders, suppliers: [...suppliers.values()].map(item => ({ ...item, orderCount: item.orderKeys.size, orderKeys: [...item.orderKeys] })),
-    coverage: { cp: Boolean(input.cpAvailable), collection: Boolean(input.collectionAvailable), samples: Boolean(input.samples), reports: Boolean(input.reports), checklist: Boolean(input.checklist), personalRules: Boolean(input.personalRules), priority:'cp-engine-with-rule-evaluator', source:input.operationalSource || 'cp', lfl:input.lflSummary || null, sourceErrors:input.sourceErrors || [], bom: 'decoration-only',
+    coverage: { cp: Boolean(input.cpAvailable), collection: Boolean(input.collectionAvailable), samples: Boolean(input.samples), reports: Boolean(input.reports), checklist: Boolean(input.checklist), personalRules: Boolean(input.personalRules), priority:'cp-engine-with-rule-evaluator', source:input.operationalSource || 'cp', lfl:input.lflSummary || null, sourceErrors:input.sourceErrors || [], bom: orders.some(o=>o.bom?.coverage==='all-normalized-bom')?'normalized-components-available':'decoration-only-or-unavailable',
       prices: input.priceInsights || null },
+    bomEvidence:Object.entries(input.bom?.models||{}).slice(0,30).map(([plmId,bom])=>({id:'bom:'+plmId,plmId,fetchedAt:bom.fetchedAt,coverage:bom.fullCoverage||'decoration-only',components:(bom.fullComponents?.length?bom.fullComponents:bom.components||[]).slice(0,20),omittedComponents:Math.max(0,(bom.fullComponentCount||bom.components?.length||0)-20),sources:[provenance('PLM BOM',plmId,bom.fetchedAt)]})),
     collection: { options:(input.collectionRows || []).slice(0,12).map((row,index)=>({id:'collection:'+String(row.id || row._id || index),values:fields.project(row,'collection'),sources:[provenance('Collection',String(row.id || index),input.collectionUpdatedAt)]})), rows: (input.collectionRows || []).length, models: new Set((input.collectionRows || []).map(row => fields.value(row, 'collection', 'plmId')).filter(Boolean)).size },
-    snapshots: orders.map(order => ({ key: order.orderKey, values: fields.project(order.analysis.sourceRow || rows.find(row => CP.analyzeOrder(row).orderKey === order.orderKey), 'cp', SNAPSHOT_FIELDS),
-      priority: order.analysis.priority, evidence: order.evidence.map(item => ({ itemId: item.itemId, state: item.state, testState: item.testState, plmState: item.plmState })) })) };
+    snapshots: pipeline.snapshots.concat(orders.map(order => ({ key: order.orderKey, values: order.snapshotValues,
+      priority: order.analysis.priority, evidence: order.evidence.map(item => ({ itemId: item.itemId, state: item.state, testState: item.testState, plmState: item.plmState })) }))) };
 }
 function compareSnapshots(previous, current) {
   const old = new Map((previous || []).map(item => [item.key, item])), changes = [];

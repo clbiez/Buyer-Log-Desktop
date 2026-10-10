@@ -27,7 +27,8 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
     catch(err){send({type:'error',error:isLcwAiError(err)?publicError(err):{code:/^OFFICE_|^AI_AUTOMATION_/.test(err.code || '')?err.code:'OFFICE_AI_FAILED'}});}
     finally{if(!res.destroyed)res.end();}
   });
-  app.get(base+'/notifications',wrap(async(req,res)=>res.json({ok:true,...await service.notifications(req.currentUser)})));
+  app.put(base+'/assistant',json,wrap(async(req,res)=>res.json({ok:true,assistant:await service.configureAssistant(req.currentUser,req.body||{})})));
+  app.get(base+'/notifications',wrap(async(req,res)=>res.json({ok:true,...await service.notifications(req.currentUser,{timeZone:req.query.timeZone})})));
   app.get(base+'/state',wrap(async(req,res)=>res.json({ok:true,state:await service.state(req.currentUser)})));
   app.post(base+'/profiles',json,wrap(async(req,res)=>res.status(201).json({ok:true,profile:await service.createProfile(req.currentUser,req.body || {})})));
   app.put(base+'/profiles/:id',json,wrap(async(req,res)=>res.json({ok:true,profile:await service.updateProfile(req.currentUser,req.params.id,req.body || {})})));
@@ -38,6 +39,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
     for(const watcher of state.watches.filter(item=>item.profileId===previous.id))await service.store.save(req.currentUser.id,'watch',{...watcher,enabled:false});
     audit(req,'AGENT_PROFILE_ARCHIVE',previous.id,{transcriptsPreserved:true});res.json({ok:true});
   }));
+  app.post(base+'/profiles/:id/history/search',json,wrap(async(req,res)=>res.json({ok:true,...await service.store.searchHistory(req.currentUser.id,req.params.id,req.body||{})})));
   app.post(base+'/profiles/:id/memory',json,wrap(async(req,res)=>res.status(201).json({ok:true,memory:await service.learn(req.currentUser,req.params.id,req.body || {})})));
   app.put(base+'/memory/:id',json,wrap(async(req,res)=>{
     const memory=await service.store.editMemory(req.currentUser.id,req.params.id,req.body || {});
@@ -45,6 +47,10 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   }));
   app.get(base+'/conversations/:id/messages',wrap(async(req,res)=>res.json({ok:true,...await service.store.messages(req.currentUser.id,req.params.id,{
     before:text(req.query.before,120),query:text(req.query.query,160),limit:req.query.limit})})));
+  app.post(base+'/evidence/preview',json,wrap(async(req,res)=>res.json({ok:true,preview:await service.evidencePreview(req.currentUser,req.body||{})})));
+  app.post(base+'/evidence/run',json,stream((req,signal,onProgress)=>service.runEvidence(req.currentUser,{...req.body,signal},onProgress)));
+  app.post(base+'/workflow/preview',json,wrap(async(req,res)=>res.json({ok:true,preview:await service.workflowPreview(req.currentUser,req.body||{})})));
+  app.post(base+'/workflow/run',json,stream((req,signal,onProgress)=>service.runWorkflow(req.currentUser,{...req.body,signal},onProgress)));
   app.post(base+'/run',json,stream((req,signal,onProgress)=>service.run(req.currentUser,{...req.body,signal},onProgress)));
   app.post(base+'/cancel',json,wrap(async(req,res)=>res.json({ok:true,cancelled:service.engineOf().cancel(req.currentUser.id,text(req.body?.requestId,120))})));
   app.post(base+'/report',json,wrap(async(req,res)=>{const result=await service.scan(req.currentUser,req.body?.scope);const {snapshots,...report}=result;res.attachment('Buyer-Log-Operational-Review.json').json(report);}));

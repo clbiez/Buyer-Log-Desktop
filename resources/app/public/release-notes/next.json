@@ -1099,6 +1099,270 @@
           "en": "Buyer Log themed controls and adaptive scene"
         }
       }
+    },
+    {
+      "id": "agent-office-completion-coordination",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Gerçek agent koordinasyonu",
+        "en": "Real agent coordination"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "2–4 agent ayrı analiz, karşılıklı inceleme ve ortak sonuçla çalışır. Gerçek yanıtlar aktarılır; 3–9 çağrı önizlenir ve onay ister. Güncel yetki her adımda kontrol edilir.",
+        "en": "2–4 agents run separate analyses, mutual review and synthesis. Actual replies are exchanged; 3–9 calls are previewed and approved. Current permissions are checked at each step."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-completion-coordination.png",
+        "alt": {
+          "tr": "Gerçek agent koordinasyonu · anonim gerçek Buyer Log ekranı",
+          "en": "Real agent coordination · anonymous actual Buyer Log screen"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada değişiklik sonrası alınan ekran",
+          "en": "Actual application screenshot captured after the change"
+        }
+      }
+    },
+    {
+      "id": "agent-office-completion-assistant",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Ofisten bağımsız proaktif asistan",
+        "en": "Proactive assistant without opening the office"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "Yetkili riskler ve günlük özet AI çağırmadan izlenir. Yerel saat, önem eşiği ve aralık saklanır; masaüstünde tercihle sistem tepsisinde takip sürer. Bildirimler özel iş içeriği taşımaz.",
+        "en": "Authorized risks and daily briefs use no AI calls. Local time, severity and interval persist; optional desktop tray mode continues monitoring. Notifications contain no private business content."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-completion-assistant.png",
+        "alt": {
+          "tr": "Ofisten bağımsız proaktif asistan · anonim gerçek Buyer Log ekranı",
+          "en": "Proactive assistant without opening the office · anonymous actual Buyer Log screen"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada değişiklik sonrası alınan ekran",
+          "en": "Actual application screenshot captured after the change"
+        }
+      }
+    },
+    {
+      "id": "agent-office-completion-evidence",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Yetkili kalite belgelerini incele",
+        "en": "Review authorized quality documents"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "Mevcut sipariş/PLM test ve checklist eklerinden en fazla beş belge seçilir. Gerçek boyut, yükleme ve analiz çağrıları önce gösterilir. Onay gerçek dosya baytlarına ve yetkiye bağlıdır; ortak LCW dosya motoru kullanılır.",
+        "en": "Select up to five existing order/PLM test and checklist attachments. Actual sizes, uploads and analysis calls are shown first. Approval binds exact file bytes and authorization; the common LCW file engine is used."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-completion-evidence.png",
+        "alt": {
+          "tr": "Yetkili kalite belgelerini incele · anonim gerçek Buyer Log ekranı",
+          "en": "Review authorized quality documents · anonymous actual Buyer Log screen"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada değişiklik sonrası alınan ekran",
+          "en": "Actual application screenshot captured after the change"
+        }
+      }
+    },
+    {
+      "id": "agent-office-completion-bom",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Sipariş kanıtlarında BOM bileşenleri",
+        "en": "BOM components in order evidence"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "Normal PLM Sync zaten getirilen yanıttaki tüm normalleştirilmiş bileşenleri saklar; ek AI çağrısı yoktur. Sipariş kartı kapsam ve güncelliği gösterir. Eski dekorasyon kaydı tam BOM sayılmaz.",
+        "en": "Normal PLM Sync retains all normalized components from its existing response, with no extra AI calls. Order cards show coverage and freshness. Legacy decoration records are not considered full BOM."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-completion-bom.png",
+        "alt": {
+          "tr": "Sipariş kanıtlarında BOM bileşenleri · anonim gerçek Buyer Log ekranı",
+          "en": "BOM components in order evidence · anonymous actual Buyer Log screen"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada değişiklik sonrası alınan ekran",
+          "en": "Actual application screenshot captured after the change"
+        }
+      }
+    },
+    {
+      "id": "agent-office-completion-decision-support",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Üretici ve koleksiyon karar desteği",
+        "en": "Supplier and collection decision support"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "Mevcut LFL motoruyla aynı para birimi/klasmanda fiyat kıyası, testli sipariş paydalı kalite oranı ve koleksiyon risk bağları gösterilir. Gereksiz ham satırlar AI bağlamına girmez; gerçek varış tarihi yoksa teslim performansı uydurulmaz.",
+        "en": "The existing LFL engine compares prices within one currency/category, quality rates use tested-order denominators and collection risks link to orders. Unused raw rows stay out of AI context; actual delivery performance is never invented."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-completion-decision-support.png",
+        "alt": {
+          "tr": "Üretici ve koleksiyon karar desteği · anonim gerçek Buyer Log ekranı",
+          "en": "Supplier and collection decision support · anonymous actual Buyer Log screen"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada değişiklik sonrası alınan ekran",
+          "en": "Actual application screenshot captured after the change"
+        }
+      }
+    },
+    {
+      "id": "agent-office-completion-history",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kalıcı geçmişte kaynak araması",
+        "en": "Source search in durable history"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "Konuşmalar AI çağırmadan aranır; sonuç tam kaynak konuşmasını açar. Uzun yanıtlardan ilgili alıntılar sonraki bağlama taşınır, tam arşiv korunur. Kullanıcı değişiminde eski sonuç penceresi açılmaz.",
+        "en": "Search conversations without AI calls and open their complete source exchange. Relevant excerpts from long replies enter future context while full archives remain intact. User switches prevent old result dialogs from opening."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-completion-history.png",
+        "alt": {
+          "tr": "Kalıcı geçmişte kaynak araması · anonim gerçek Buyer Log ekranı",
+          "en": "Source search in durable history · anonymous actual Buyer Log screen"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada değişiklik sonrası alınan ekran",
+          "en": "Actual application screenshot captured after the change"
+        }
+      }
+    },
+    {
+      "id": "agent-office-completion-refresh",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Onay kontrollü kaynak yenileme",
+        "en": "Approval-controlled source refresh"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "Doğal dil otomasyonu mevcut OPEN_PAGE ve SHOW_REPORT yanında REFRESH_SOURCE taslağını destekler. Parser, kaynak yetkisi ve önizleme korunur; onaylanan taslak kapalı oluşturulur, etkinleştirme mevcut Otomasyonlar ekranındadır.",
+        "en": "Natural-language automation supports REFRESH_SOURCE drafts alongside OPEN_PAGE and SHOW_REPORT. Parser, source permissions and preview remain enforced. Approved drafts are created disabled and activated in the existing Automations screen."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-completion-refresh.png",
+        "alt": {
+          "tr": "Onay kontrollü kaynak yenileme · anonim gerçek Buyer Log ekranı",
+          "en": "Approval-controlled source refresh · anonymous actual Buyer Log screen"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada değişiklik sonrası alınan ekran",
+          "en": "Actual application screenshot captured after the change"
+        }
+      }
+    },
+    {
+      "id": "agent-office-completion-workshop",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Karakterler gerçek işe ve ayrı konumlara bağlı",
+        "en": "Characters follow actual jobs and separate positions"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "İnceleme rol alanına, ortak iş toplantıya yönelir. Hareket hücreleri ve koltuk yerleri rezerve edilir. Aksesuarlar pozlara hizalanır; görevler sağ panelde görünür. Bu cihazdaki yarım işler yeniden açılışta toparlanır. Etiketler en az 10px olur; Agent Ofisi mevcut AI modül kayıt defterinden keşfedilebilir. Navigasyonda ofise özgü ayrı simge kullanılır.",
+        "en": "Reviews use role stations and shared work gathers at meetings. Movement cells and rest seats are reserved. Accessories align to poses and tasks appear in the side panel. Interrupted jobs on this device are recovered on restart. Labels are at least 10px; Agent Office is discoverable in the existing AI module registry. Navigation uses a distinct office icon."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-completion-workshop.png",
+        "alt": {
+          "tr": "Karakterler gerçek işe ve ayrı konumlara bağlı · anonim gerçek Buyer Log ekranı",
+          "en": "Characters follow actual jobs and separate positions · anonymous actual Buyer Log screen"
+        },
+        "caption": {
+          "tr": "Gerçek uygulamada değişiklik sonrası alınan ekran",
+          "en": "Actual application screenshot captured after the change"
+        }
+      }
     }
   ]
 }

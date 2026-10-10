@@ -212,6 +212,7 @@
 <script src="release-notes.js?v=__BL_ASSET_VERSION__&rev=4"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_LOCAL_CONTEXT_START');</script>
 <script src="/user-context.js"></script>
+<script src="agent-office-notifications.js?v=__BL_ASSET_VERSION__"></script>
 <script src="user-storage.js?v=__BL_ASSET_VERSION__"></script>
 <script src="i18n-dictionary.js?v=__BL_ASSET_VERSION__"></script>
 <script src="i18n-runtime.js?v=__BL_ASSET_VERSION__"></script>
@@ -425,6 +426,7 @@
   <symbol id="i-snowflake" viewBox="0 0 24 24"><path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9"/><path d="M12 6.6l2.2-2.2M12 6.6L9.8 4.4M12 17.4l2.2 2.2M12 17.4l-2.2 2.2"/><path d="M6.9 9.1l-3-.8M6.9 9.1l-.8-3M17.1 14.9l3 .8M17.1 14.9l.8 3"/><path d="M17.1 9.1l3-.8M17.1 9.1l.8-3M6.9 14.9l-3 .8M6.9 14.9l-.8 3"/></symbol>
   <symbol id="i-coins" viewBox="0 0 24 24"><ellipse cx="9" cy="6" rx="6" ry="2.6"/><path d="M3 6v5c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6V6"/><path d="M3 11v4c0 1.4 2.7 2.6 6 2.6.7 0 1.4-.05 2-.15"/><ellipse cx="16.5" cy="15" rx="5" ry="2.3"/><path d="M11.5 15v3.5c0 1.2 2.2 2.2 5 2.2s5-1 5-2.2V15"/></symbol>
   <symbol id="i-dots" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.8" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.8" fill="currentColor" stroke="none"/></symbol>
+  <symbol id="i-agent-office" viewBox="0 0 24 24"><path d="M3 21V7l9-4 9 4v14H3ZM3 13h18M8 8h3v3H8ZM15 8h3v3h-3ZM6 17h5M7 17v4M10 17v4M15 17h3v4h-3"/></symbol>
   <symbol id="i-robot" viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="3"/><path d="M12 3v4M9 3h6M8 12h.01M16 12h.01M8 16h8M2 11v5M22 11v5"/></symbol>
 </svg>
 
@@ -438,7 +440,7 @@
     <span class="railGroupLabel" data-i18n-tr="Ana Sayfa" data-i18n-en="Home">Ana Sayfa</span>
     <button data-tab="overview" class="active" title="Overview" aria-current="page"><svg class="ic"><use href="#i-bl-n01"/></svg><span data-i18n-tr="Overview" data-i18n-en="Overview">Overview</span></button>
     <button data-tab="lcwai" title="LCW AI — genel asistan" data-i18n-title-tr="LCW AI — genel asistan" data-i18n-title-en="LCW AI — general assistant"><svg class="ic"><use href="#i-robot"/></svg><span data-i18n-tr="LCW AI" data-i18n-en="LCW AI">LCW AI</span></button>
-    <button data-tab="agentoffice" title="Agent Ofisi" data-i18n-title-tr="Agent Ofisi" data-i18n-title-en="Agent Office"><svg class="ic"><use href="#i-robot"/></svg><span data-i18n-tr="Agent Ofisi" data-i18n-en="Agent Office">Agent Ofisi</span></button>
+    <button data-tab="agentoffice" title="Agent Ofisi" data-i18n-title-tr="Agent Ofisi" data-i18n-title-en="Agent Office"><svg class="ic"><use href="#i-agent-office"/></svg><span data-i18n-tr="Agent Ofisi" data-i18n-en="Agent Office">Agent Ofisi</span></button>
 
     <span class="railGroupLabel" data-i18n-tr="Planla &amp; Yürüt" data-i18n-en="Plan &amp; Execute">Planla &amp; Yürüt</span>
     <button data-tab="cp" title="CP Tracker"><svg class="ic"><use href="#i-bl-n03"/></svg><span data-i18n-tr="CP Tracker" data-i18n-en="CP Tracker">CP Tracker</span></button>

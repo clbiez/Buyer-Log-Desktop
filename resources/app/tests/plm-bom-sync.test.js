@@ -244,3 +244,12 @@ test('BOM görüntüleyici lazy yüklenir ve model sağ tık menüsünde açıl�
   assert.match(view, /\/api\/plm-sync\/bom\//);
   assert.match(view, /BOM net · LCW AI gerekmedi/);
 });
+
+test('normal BOM sync preserves full normalized fabric and label evidence without another AI consultation',async t=>{
+ const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-bom-full-'));t.after(()=>fs.rmSync(tmp,{recursive:true,force:true}));const store=createStore(path.join(tmp,'bom.json'));
+ let fabricName='Demo cotton',aiCalls=0,postCalls=0;
+ const postJson=async()=>{postCalls++;return payload([component(),component({styleBomComponentId:2,componentCode:'DEMO-FABRIC',componentName:fabricName,componentTypeId:1,componentType:'Fabric',mainCategoryId:3,mainCategoryName:'Fabric',categoryId:33,categoryName:'Fabric',categoryGroupId:44,categoryGroupName:'Jersey',description:''})]);};
+ const options={ownerId:'demo',store,postJson,aiEngine:{ask:async()=>{aiCalls++;throw new Error('Unexpected AI');}}},records=[{plmId:'2133719',styleId:'2538477'}];
+ await bomSync.syncPlmBoms(records,options);const original=store.entry('2133719');assert.equal(original.components.length,1);assert.equal(original.fullComponents.length,2);assert.equal(original.fullCoverage,'all-normalized');
+ fabricName='Demo revised cotton';await bomSync.syncPlmBoms(records,options);const revised=store.entry('2133719');assert.equal(revised.fullComponents.find(c=>c.componentCode==='DEMO-FABRIC').componentName,fabricName);assert.notEqual(revised.fullFingerprint,original.fullFingerprint);assert.equal(revised.fingerprint,original.fingerprint);assert.equal(aiCalls,0);assert.equal(postCalls,2);
+});

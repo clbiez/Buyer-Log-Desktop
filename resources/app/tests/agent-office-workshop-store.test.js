@@ -74,3 +74,14 @@ test('explicit workshop conversion retains sanitized legacy backup through later
   assert.deepEqual(sanitized,{scene:'legacy',period:'auto',quality:'balanced',furniture:[{id:'old',kind:'plant',x:11,y:7,rotation:3}]});
   assert.equal((await store.state('owner-b')).office.previousLayout,undefined);
 });
+
+ test('all 24 agent stations have unique traversable positions and preserve assigned desks',()=>{
+  const model=require('../public/agent-office-workshop-model.js');
+  const profiles=Array.from({length:24},(_,i)=>({id:'agent-'+i,deskId:['desk-a','desk-b','desk-c'][i]}));
+  const items=defaultOffice().furniture,stations=model.stations(profiles,items);
+  assert.equal(stations.size,24);
+  const points=[...stations.values()].map(s=>s.point);
+  assert.ok(points.every(p=>p&&!model.blocked(p,items)));
+  assert.equal(new Set(points.map(p=>JSON.stringify(p))).size,24);
+  assert.equal(stations.get('agent-0').desk.id,'desk-a');
+ });

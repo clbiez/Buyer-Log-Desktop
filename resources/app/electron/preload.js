@@ -20,6 +20,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('buyerLogDesktop', {
   isDesktop: true,
+  agentBackground: {set: (enabled,lang)=>ipcRenderer.invoke('buyerlog:agent-background',{enabled:enabled===true,lang:lang==='en'?'en':'tr'}),notify:lang=>ipcRenderer.invoke('buyerlog:agent-notification',lang==='en'?'en':'tr')},
   versions: {
     electron: process.versions.electron,
     chromium: process.versions.chrome,
