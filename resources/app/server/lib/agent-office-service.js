@@ -53,8 +53,10 @@ function trainingChunks(records) {
 }
 function createAgentOfficeService(deps) {
   const { store, sync, userAccess, engine, getOperationalData } = deps;
+  const runtimeInstanceId=id();
   const initialized = new Map(), active = new Map(), scans = new Map(), actors = new Map();
   let timer = null, backgroundRunning = false;
+  const assistantChecks=new Map();
   const freshProfile = profile => {
     const current = userAccess.profileById ? userAccess.profileById(profile.id) : profile;
     if (!current || current.enabled === false) throw error('OFFICE_USER_DISABLED', 403);
@@ -81,18 +83,29 @@ function createAgentOfficeService(deps) {
           for (const seed of seeds) await store.createProfile(profile.id, seed, allowedAreas(profile));
         }
         if (!seeded) await store.save(profile.id, 'metadata', {id:'initialized'});
-        for (const job of state.jobs.filter(item => item.status === 'running' && Date.now() - Date.parse(item.updatedAt) > 360000 && !active.has(item.id))) await store.save(profile.id, 'job', {...job, status:'interrupted', errorCode:'OFFICE_PROCESS_INTERRUPTED'});
+        for (const job of state.jobs.filter(item => item.status === 'running' && !active.has(item.id) && (item.runtimeDeviceId===store.db(profile.id).getDeviceId()&&item.runtimeInstanceId!==runtimeInstanceId || !item.runtimeInstanceId&&Date.now()-Date.parse(item.updatedAt)>360000))) await store.save(profile.id, 'job', {...job, status:'interrupted', errorCode:'OFFICE_PROCESS_INTERRUPTED'});
       })();
       initialized.set(profile.id, work); work.catch(() => initialized.delete(profile.id));
     }
     await initialized.get(profile.id); return profile;
   }
+  async function assistantSettings(profile){const docs=await store.records(profile.id);const saved=docs.find(d=>d.kind==='metadata'&&d.id==='assistant-settings');return saved||{id:'assistant-settings',enabled:true,desktopBackground:false,timeZone:'UTC',intervalMinutes:5,dailyHour:9,severity:'HIGH',revision:0};}
+  async function configureAssistant(profile,raw){profile=await ensure(profile);const previous=await assistantSettings(profile);let timeZone=raw.timeZone||previous.timeZone;try{new Intl.DateTimeFormat('en',{timeZone}).format();}catch(_){throw error('OFFICE_TIMEZONE_INVALID');}
+    const settings={...previous,enabled:raw.enabled===undefined?previous.enabled:raw.enabled===true,desktopBackground:raw.desktopBackground===undefined?previous.desktopBackground:raw.desktopBackground===true,timeZone,intervalMinutes:Math.max(2,Math.min(30,Math.round(Number(raw.intervalMinutes)||previous.intervalMinutes))),dailyHour:Math.max(0,Math.min(23,Math.round(Number(raw.dailyHour??previous.dailyHour)))),severity:['HIGH','MEDIUM','WATCH'].includes(raw.severity)?raw.severity:previous.severity};
+    const result=await store.save(profile.id,'metadata',settings,{expectedRevision:raw.revision??previous.revision});assistantChecks.delete(profile.id);audit(profile,'AGENT_ASSISTANT_CONFIGURE',profile.id,{enabled:result.enabled,intervalMinutes:result.intervalMinutes});return result;}
+  async function checkAssistant(profile){profile=freshProfile(profile);const settings=await assistantSettings(profile);if(!settings.enabled)return;const previous=assistantChecks.get(profile.id),now=Date.now();if(previous&&(previous.running||now-previous.at<settings.intervalMinutes*60000))return;assistantChecks.set(profile.id,{at:now,running:true});
+    try{const result=await scan(profile,{},{});const actionable=result.findings.filter(f=>({CRITICAL:4,HIGH:3,MEDIUM:2,WATCH:1}[f.severity]||0)>=({HIGH:3,MEDIUM:2,WATCH:1}[settings.severity]||3));
+      const fingerprint=hash(JSON.stringify({findings:actionable.map(f=>[f.id,f.severity,f.reasons,f.action]),snapshots:result.snapshots})),docs=await store.records(profile.id),record=docs.find(d=>d.kind==='metadata'&&d.id==='assistant-observation');
+      const local=new Intl.DateTimeFormat('en-CA',{timeZone:settings.timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'numeric',hourCycle:'h23'}).formatToParts(new Date());const datePart=type=>local.find(p=>p.type===type)?.value;const day=[datePart('year'),datePart('month'),datePart('day')].join('-'),daily=Number(datePart('hour'))>=settings.dailyHour&&record?.lastDay!==day,changed=record?.fingerprint!==fingerprint;
+      if((actionable.length||result.changes.length)&&(changed||daily))await store.save(profile.id,'alert',{id:id(),kind:daily?'daily-brief':'assistant-risk',title:bilingual(daily?'Günlük asistan özeti hazır':'Asistanın operasyonel risk tespit etti',daily?'Your daily assistant brief is ready':'Your assistant detected operational risk'),findings:actionable.slice(0,30),changes:result.changes.slice(0,20),totalFindings:actionable.length,sourceUpdatedAt:result.sourceUpdatedAt,coverage:Object.fromEntries(['cp','orders','collection','backlog','lfl','bom','checklists','tests','samples'].filter(key=>result.coverage[key]!==undefined).map(key=>[key,typeof result.coverage[key]==='object'?'available':result.coverage[key]])),aiCalls:0,dismissed:false});
+      await store.save(profile.id,'metadata',{id:'assistant-observation',fingerprint,lastDay:daily?day:record?.lastDay||'',checkedAt:new Date().toISOString()});
+    }finally{assistantChecks.set(profile.id,{at:Date.now(),running:false});}}
   async function state(profile) {
     profile = await ensure(profile);
     const value = await store.state(profile.id);
-    return { ...value, capabilities: { areas: allowedAreas(profile), canModerate: profile.systemRole === 'moderator', canAutomate: canAutomate(profile),
+    return { ...value, assistant:await assistantSettings(profile), capabilities: { areas: allowedAreas(profile), canModerate: profile.systemRole === 'moderator', canAutomate: canAutomate(profile),
       learning: 'persistent-context', runtime: 'buyer-log-open', outlook: false, voice: false, plmChanges: false },
-      activeJobs: [...active.values()].filter(job => job.ownerId === profile.id).map(job => ({ id:job.id, profileIds:job.profileIds })), sync: sync?.status(profile.id) || { state:'local' } };
+      activeJobs: [...active.values()].filter(job => job.ownerId === profile.id).map(job => ({ id:job.id, profileIds:job.profileIds,phase:job.phase||'review' })), sync: sync?.status(profile.id) || { state:'local' } };
   }
   async function scan(profile, raw = {}, { force = false, areas = null } = {}) {
     profile = freshProfile(profile);
@@ -128,7 +141,7 @@ function createAgentOfficeService(deps) {
     if(result.conflictingIds.length)await store.save(profile.id,'alert',{id:id(),profileId,kind:'memory-conflict',title:bilingual('Aynı konuda farklı hafıza kayıtları var · birlikte doğrula','Different memories share a topic · review them together'),findings:[{title:bilingual(result.key,result.key)}],sourceIds:[result.id,...result.conflictingIds],aiCalls:0,dismissed:false});
     audit(profile, 'AGENT_MEMORY_ADD', result.id, { profileId, type:result.type, conflicts:result.conflictingIds.length }); return result;
   }
-  async function run(profile, raw, onProgress = () => {}) {
+  async function run(profile, raw, onProgress = () => {}, internal = {}) {
     profile = await ensure(profile);
     const ids = [...new Set(Array.isArray(raw.profileIds) ? raw.profileIds : [])], task = text(raw.task, 4000);
     if (!task || !ids.length || ids.length > 4) throw error('OFFICE_TASK_INVALID');
@@ -142,26 +155,34 @@ function createAgentOfficeService(deps) {
     } else conv = await store.conversation(profile.id, ids, task.slice(0, 80));
     const requestId = id(), resolvedScope = inferScope(task,raw.scope);
     const userMessage = await store.appendMessage(profile.id, conv.id, { role:'user', text:task, requestId });
-    const job = await store.save(profile.id, 'job', { id:requestId, profileIds:ids, conversationId:conv.id, userMessageId:userMessage.id, type:raw.mode === 'automation' ? 'automation' : 'analysis',
-      status:'running', task, scope:resolvedScope, calls:1, perspectiveMode:ids.length > 1 ? 'one-call-shared-perspectives' : 'single-agent' });
-    active.set(job.id, job);
+    let job = await store.save(profile.id, 'job', { id:requestId, profileIds:ids, conversationId:conv.id, userMessageId:userMessage.id, type:raw.mode === 'automation' ? 'automation' : 'analysis',
+      runtimeInstanceId,runtimeDeviceId:store.db(profile.id).getDeviceId(),status:'running', task, scope:resolvedScope, calls:0, perspectiveMode:ids.length > 1 ? 'one-call-shared-perspectives' : 'single-agent' });
+    active.set(job.id, {...job,ownerId:profile.id,phase:'review'});
+    onProgress({phase:'review',jobId:job.id,profileIds:ids});
     let partial = '', archivedReply = false;
-    const progress = event => { if (event.delta) partial += String(event.delta); onProgress(event); };
+    const progress = event => { if (event.delta) {partial += String(event.delta);const running=active.get(job.id);if(running)running.phase='responding';} onProgress(event); };
     try {
       const areas = [...new Set(participants.flatMap(agent => agent.areas))].filter(area => allowedAreas(profile).includes(area));
       const operations = areas.length ? await scan(profile, resolvedScope, { areas }) : { findings:[], changes:[], orders:[], coverage:{}, rowCount:0 };
       const memory = await store.selectContext(profile.id, ids, conv.id, task, 9000);
       const context = packContext({ participants:participants.map(agent => ({ id:agent.id, name:agent.name, role:agent.role, instructions:agent.instructions, areas:agent.areas, copied:!!agent.lineage })),
         coverage:{ ...operations.coverage, scope:resolvedScope, rowsAnalyzed:operations.rowCount, historyOmitted:memory.omittedCount, completeArchive:false, asAt:operations.sourceUpdatedAt, comparison:operations.comparison },
+        handoffs:internal.handoffs||[],orchestration:internal.orchestration?[internal.orchestration]:[],evidenceAttachments:internal.evidenceAttachments||[],
         memory:memory.selected, findings:operations.findings.slice(0,20), changes:operations.changes.slice(0,15),
-        orderEvidence:operations.orders.slice(0,6).map(order => ({ id:order.orderKey, identity:order.identity, evidence:order.evidence, unavailable:order.unavailable, sources:order.sources })),
+        orderEvidence:operations.orders.slice(0,6).map(order => ({ id:order.orderKey, identity:order.identity, evidence:order.evidence,bom:order.bom?{...order.bom,components:order.bom.components.slice(0,20),omittedComponents:Math.max(0,order.bom.components.length-20)}:null,collection:order.collection, unavailable:order.unavailable, sources:order.sources })),
+        decisionSupport:operations.decisionSupport?[{supplierHistory:operations.decisionSupport.supplierHistory.slice(0,8),collectionPipeline:operations.decisionSupport.collectionPipeline.slice(0,8),historicalPrices:operations.decisionSupport.historicalPrices.slice(0,3).map(p=>({...p,suppliers:p.suppliers.slice(0,8)})),omittedSuppliers:Math.max(0,operations.decisionSupport.supplierHistory.length-8)}]:[],
+        bomEvidence:(operations.bomEvidence||[]).slice(0,6),
         supplierInsights:(operations.suppliers || []).slice(0,8), collectionEvidence:(operations.collection?.options || []).slice(0,8) });
+      if(context.handoffs.length!==(internal.handoffs||[]).length||context.evidenceAttachments.length!==(internal.evidenceAttachments||[]).length||context.orchestration.length!==(internal.orchestration?1:0))throw error('OFFICE_CONTEXT_TOO_LARGE',413);
       let source = 'agent-office', guide = '';
       if (raw.mode === 'automation') {
         if (!canAutomate(profile)) throw error('OFFICE_AUTOMATION_FORBIDDEN', 403);
         source = 'automations'; guide = await deps.automationGuide(profile);
       }
-      const result = await engineOf().ask(profile.id, { requestId, source, task, context, guide, lang:raw.lang === 'en' ? 'en' : 'tr', onProgress:progress,
+      const ai=engineOf(),ask=internal.files?.length?ai.askWithFiles.bind(ai):ai.ask.bind(ai);
+      job=await store.save(profile.id,'job',{...job,calls:1});
+      onProgress({phase:'ai-call',jobId:job.id,profileIds:ids});
+      const result = await ask(profile.id, { files:internal.files||[],requestId, source, task, context, guide, lang:raw.lang === 'en' ? 'en' : 'tr', onProgress:progress,
         signal:raw.signal });
       if (!result.structured?.ok || !result.data) {
         if (result.text) { await store.appendMessage(profile.id, conv.id, {role:'assistant',text:result.text,requestId,status:'failed',provenance:{origin:'unverified-ai-response',confidence:'LOW',contractValid:false}}); archivedReply = true; }
@@ -249,7 +270,7 @@ function createAgentOfficeService(deps) {
     if (raw.confirmed !== true || raw.fingerprint !== preview.fingerprint || Number(raw.maxCalls) < preview.estimatedCalls) throw error('OFFICE_COST_APPROVAL_REQUIRED',409);
     if (!preview.parts.length || preview.estimatedCalls > 16) throw error('OFFICE_ARCHIVE_BATCH_LIMIT',409);
     const records = await store.exportTraining(preview.ownerId, raw.profileIds), chunks = trainingChunks(records).slice(preview.range.start,preview.range.start+preview.range.count), jobId = id();
-    let job = await store.save(profile.id, 'job', { id:jobId, profileIds:raw.profileIds || [], type:'archive-review', status:'running', calls:0, plannedCalls:preview.estimatedCalls, sourceOwnerId:preview.ownerId,range:preview.range,totalParts:preview.totalParts });
+    let job = await store.save(profile.id, 'job', { runtimeInstanceId,runtimeDeviceId:store.db(profile.id).getDeviceId(),id:jobId, profileIds:raw.profileIds || [], type:'archive-review', status:'running', calls:0, plannedCalls:preview.estimatedCalls, sourceOwnerId:preview.ownerId,range:preview.range,totalParts:preview.totalParts });
     active.set(jobId, job);
     const summaries = [];let partial='',part=-1;const progress=event=>{if(event.delta)partial+=String(event.delta);onProgress(event);};
     try {
@@ -340,10 +361,12 @@ function createAgentOfficeService(deps) {
       if(changed||daily)await store.save(profile.id,'watch',{...watcher,lastFingerprint:fingerprint,lastDay:day,lastCheckedAt:new Date().toISOString()});
     }
   }
-  async function notifications(profile) {
-    profile = freshProfile(profile); activate(profile);
+  async function notifications(profile,hints={}) {
+    profile = await ensure(profile);
+    const settings=await assistantSettings(profile);if(!settings.revision&&hints.timeZone){try{new Intl.DateTimeFormat('en',{timeZone:hints.timeZone}).format();await store.save(profile.id,'metadata',{...settings,timeZone:hints.timeZone},{expectedRevision:0});}catch(err){if(err.code!=='OFFICE_REVISION_CONFLICT'&&!(err instanceof RangeError))throw err;}}
+    await checkAssistant(profile);
     const docs = await store.records(profile.id);
-    return {alerts:docs.filter(doc => doc.kind === 'alert' && !doc.dismissed).slice(-100), watching:docs.filter(doc => doc.kind === 'watch' && doc.enabled).length};
+    return {ownerId:profile.id,assistant:await assistantSettings(profile),alerts:docs.filter(doc => doc.kind === 'alert' && !doc.dismissed).slice(-100).map(({id,title,createdAt,totalFindings,sourceUpdatedAt})=>({id,title,createdAt,totalFindings,sourceUpdatedAt})), watching:docs.filter(doc => doc.kind === 'watch' && doc.enabled).length};
   }
   async function background() {
     if (backgroundRunning) return; backgroundRunning = true;
@@ -351,12 +374,15 @@ function createAgentOfficeService(deps) {
       if(Date.now()-entry.lastSeen>30*60000){actors.delete(owner);continue;}
       const profile=userAccess.profileById(owner);
       if(!profile||profile.enabled===false){actors.delete(owner);continue;}
-      try{await checkWatches(profile);if(sync)await sync.sync(profile);}catch(err){ deps.onBackgroundError?.(err.code || 'OFFICE_BACKGROUND_FAILED'); }
+      try{await checkAssistant(profile);await checkWatches(profile);if(sync)await sync.sync(profile);}catch(err){ deps.onBackgroundError?.(err.code || 'OFFICE_BACKGROUND_FAILED'); }
     }
     } finally { backgroundRunning = false; }
   }
-  return { notifications, state, scan, createProfile, updateProfile, learn, run, syncNow, publish, copyAgent, trainingPreview, archivePart, reviewArchive,
+  const service = { configureAssistant, checkAssistant, assistantSettings, notifications, state, scan, createProfile, updateProfile, learn, run, syncNow, publish, copyAgent, trainingPreview, archivePart, reviewArchive,
     moderation, mergePreview, merge, watch, checkWatches, allowedAreas, activate,
-    canAutomate, stop:()=>{if(timer)clearInterval(timer);timer=null;}, engineOf, store, sync, packContext };
+    canAutomate,runtimeContext:owner=>({runtimeInstanceId,runtimeDeviceId:store.db(owner).getDeviceId()}), stop:()=>{if(timer)clearInterval(timer);timer=null;}, engineOf, store, sync, packContext };
+  Object.assign(service,require('./agent-office-workflow').attachWorkflow(service,deps));
+  if(deps.getEvidenceAttachments&&deps.readEvidenceAttachment)Object.assign(service,require('./agent-office-evidence').attachEvidence(service,deps));
+  return service;
 }
 module.exports = { createAgentOfficeService, packContext, trainingChunks, scopeOf, inferScope };

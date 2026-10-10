@@ -280,11 +280,16 @@ async function syncPlmBoms(records, options = {}) {
 
     /* LCW AI'ın ertelendiği/ulaşılamadığı kayıt fingerprint aynı olsa da
        yeniden çözümlenir; aksi hâlde "Kontrol gerekli" özet kalıcı olur. */
+    const fullComponents=item.kind==='set'?item.children.flatMap(child=>(child.analysis.fullComponents||[]).map(component=>({...component,setPart:child.label,childPlmId:child.childPlmId,childStyleId:child.childStyleId}))):(item.analysis.fullComponents||[]);
+    const fullFingerprint=require('crypto').createHash('sha256').update(JSON.stringify(fullComponents)).digest('hex');
+    const fullEvidence={fullComponents,fullFingerprint,fullComponentCount:fullComponents.length,fullCoverage:'all-normalized'};
     const aiPending = Boolean(old && old.ai && ['failed', 'deferred'].includes(old.ai.status));
     if (old && !aiPending && old.styleId === target.styleId && old.fingerprint && old.fingerprint === item.fingerprint) {
       unchanged += 1;
       if (old.hasPrint) withPrint += 1;
-      entries.set(target.plmId, old);
+      const upgraded=old.fullFingerprint===fullFingerprint?old:{...old,...fullEvidence,fetchedAt:new Date().toISOString()};
+      if(upgraded!==old)toSave.push(upgraded);
+      entries.set(target.plmId, upgraded);
       if (item.kind === 'set') {
         const fabrics = item.children.map(child => child.fabric).filter(Boolean);
         const fabricSummary = fabrics.length ? setStyleApi.componentLines(item.children, 'fabric', 'Kumaş bilgisi yok') : clean(old.fabricSummary, 5000);
@@ -404,6 +409,7 @@ async function syncPlmBoms(records, options = {}) {
       };
     }
 
+    Object.assign(entry,fullEvidence);
     if (entry.hasPrint) withPrint += 1;
     entries.set(target.plmId, entry);
     toSave.push(entry);

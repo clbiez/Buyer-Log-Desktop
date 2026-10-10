@@ -216,12 +216,16 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
     for (const doc of candidates) {
       const value = { id: doc.id, kind: doc.kind, profileId: doc.profileId, role: doc.role, type: doc.type, text: doc.text,
         approved: doc.approved, origin: doc.origin, confidence: doc.confidence, createdAt: doc.createdAt, sourceId: doc.sourceId, conflictingIds: doc.conflictingIds };
+      if(['message','summary'].includes(doc.kind)&&value.text.length>1800){const haystack=value.text.toLocaleLowerCase('tr-TR'),hit=words.map(word=>haystack.indexOf(word)).find(index=>index>=0),start=Math.max(0,(hit??Math.max(0,value.text.length-1600))-180);value.text=value.text.slice(start,start+1600);value.excerpt=true;value.fullCharacters=doc.text.length;value.excerptStart=start;value.contentHash=hash(doc.text);}
       const chars = JSON.stringify(value).length;
       if (size + chars <= budget && selected.length < 30) { selected.push(value); size += chars; }
       else omitted.push(doc.id);
     }
     return { selected, omittedCount: omitted.length, chars: size, strategy: 'approved-memory-and-relevant-history', completeArchive: false };
   }
+  async function searchHistory(owner,profileId,raw={}){await get(owner,'profile',profileId);const query=text(raw.query,160),terms=[...new Set(query.toLocaleLowerCase('tr-TR').match(/[\p{L}\p{N}]{2,}/gu)||[])];if(!terms.length)return{messages:[],total:0,hasMore:false};const offset=Math.max(0,Math.floor(Number(raw.offset)||0)),limit=Math.max(1,Math.min(50,Math.floor(Number(raw.limit)||20)));
+    const matches=(await records(owner)).filter(doc=>doc.kind==='message'&&doc.profileIds.includes(profileId)).map(doc=>{const lower=doc.text.toLocaleLowerCase('tr-TR');return{doc,score:terms.reduce((n,t)=>n+Number(lower.includes(t)),0),first:Math.min(...terms.map(t=>lower.indexOf(t)).filter(i=>i>=0))};}).filter(item=>item.score>0).sort((a,b)=>b.score-a.score||b.doc.createdAt.localeCompare(a.doc.createdAt));
+    return{messages:matches.slice(offset,offset+limit).map(({doc,first})=>({id:doc.id,conversationId:doc.conversationId,role:doc.role,createdAt:doc.createdAt,text:doc.text.slice(Math.max(0,first-100),Math.max(0,first-100)+1000),excerpt:doc.text.length>1000,sourceIds:doc.sourceIds,provenance:doc.provenance})),total:matches.length,hasMore:offset+limit<matches.length,offset};}
   async function exportTraining(owner, profileIds) {
     const docs = await records(owner);
     return docs.filter(doc => ['profile','memory','memory-version','conversation','message','summary'].includes(doc.kind) &&
@@ -249,7 +253,7 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
       return {records:changed, conflicts, result:{applied}};
     });
   }
-  return { db, records, get, save, state, createProfile, updateProfile, learn, editMemory, conversation, appendMessage, messages, selectContext, exportTraining, importRecords,
+  return { db, records, get, save, state, createProfile, updateProfile, learn, editMemory, conversation, appendMessage, messages, selectContext, searchHistory, exportTraining, importRecords,
     normalizeOffice, defaultOffice, AREAS, DEFAULT_FURNITURE };
 }
 

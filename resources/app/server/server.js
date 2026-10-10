@@ -5674,7 +5674,7 @@ async function agentOfficeOperationalData(profile, scope, areas) {
   result.checklistEnabled=prefs.checklistSettings?.enabled !== false;result.settings=prefs.settings || {};
   result.personalAnswers=readPreference('lcw.cp.checklist.v1') || {};
 
-  if(areas.includes('lfl') && userAccess.hasArea(profile,'lfl')) {try {const rows=await agentPlatformDataset(profile.id,profile,'lfl');result.lflSummary={rows:rows.length,fields:rows.length?Object.keys(canonicalFields.project(rows[0],'lfl')):[],sourceUpdatedAt:active.loadedAt};}catch(error){result.sourceErrors.push({source:'lfl',code:'SOURCE_UNAVAILABLE'});}}
+  if(areas.includes('lfl') && userAccess.hasArea(profile,'lfl')) {try {const rows=await agentPlatformDataset(profile.id,profile,'lfl');result.lflRows=rows.filter(row=>matches(row,'lfl'));result.lflSummary={rows:result.lflRows.length,fields:rows.length?Object.keys(canonicalFields.project(rows[0],'lfl')):[],sourceUpdatedAt:active.loadedAt};}catch(error){result.sourceErrors.push({source:'lfl',code:'SOURCE_UNAVAILABLE'});}}
   if(result.cpAvailable) {
     const CP=require('../public/cp-readiness-engine'), analyses=result.cpRows.map(row=>CP.analyzeOrder(row)), keys=new Set(analyses.map(order=>order.orderKey));
     const Checklist=require('../public/cp-checklist-engine'), optionKeys=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
@@ -5684,9 +5684,7 @@ async function agentOfficeOperationalData(profile, scope, areas) {
     result.reports={...reports,links,reports:Object.fromEntries(Object.keys(links).map(key=>[key,reports.reports[key]]))};
     const checklist=require('./lib/checklist-supplier-store').publicPayload();
     result.checklist={...checklist,answers:Object.fromEntries(Object.entries({...checklist.answers,...result.personalAnswers}).filter(([key])=>keys.has(key.slice(0,key.lastIndexOf('::'))) || optionKeys.has(key.slice(0,key.lastIndexOf('::')))))};
-    const samples=sampleRequestStore.load(),bom=require('./lib/plm-bom-store').load();
-    result.samples={models:Object.fromEntries(Object.entries(samples.models).filter(([key])=>models.has(key))),updatedAt:samples._updatedAt};
-    result.bom={models:Object.fromEntries(Object.entries(bom.models).filter(([key])=>models.has(key))),updatedAt:bom._updatedAt};
+
     result.attachmentExists=id=>Boolean(require('./lib/checklist-supplier-store').getAttachmentPath(id));
     const analytics=require('../public/collection-analytics-engine');
     const observations=result.cpRows.map(row=>({row,price:Number(canonicalFields.value(row,'cp','supplierFob') || canonicalFields.value(row,'cp','fob')) || null,
@@ -5697,26 +5695,37 @@ async function agentOfficeOperationalData(profile, scope, areas) {
     result.priceInsights=analytics.aggregateDimensions(observations,['manufacturer','country','classification'],['median','min','max','priceCount','modelCount'])
       .map(item=>({dimensions:item.dimensions,values:item.values,currency:'UNVERIFIED_SOURCE_UNIT',source:'CP FOB',sourceUpdatedAt:result.sourceUpdatedAt}));
   }
+  if(result.cpAvailable||result.collectionAvailable){const models=new Set([...result.cpRows.map(r=>String(canonicalFields.value(r,'cp','plmId')||'')),...result.collectionRows.map(r=>String(canonicalFields.value(r,'collection','plmId')||''))]);const samples=sampleRequestStore.load(),bom=require('./lib/plm-bom-store').load();result.samples={models:Object.fromEntries(Object.entries(samples.models).filter(([key])=>models.has(key))),updatedAt:samples._updatedAt};result.bom={models:Object.fromEntries(Object.entries(bom.models).filter(([key])=>models.has(key))),updatedAt:bom._updatedAt};}
   if(!result.personalRules.length && result.checklist?.definitions?.length)result.personalRules=result.checklist.definitions;
   return result;
 }
+async function agentOfficeEvidenceAttachments(profile,scope,areas){const data=await agentOfficeOperationalData(profile,scope,areas),found=new Map(),attachmentStore=require('./lib/checklist-supplier-store');
+ const add=(id,name,size,source)=>{if(!id)return;const filePath=attachmentStore.getAttachmentPath(id);if(!filePath)return;const previous=found.get(id);if(previous){previous.sources.push(source);return;}const stats=fs.statSync(filePath);found.set(id,{id,name:String(name||path.basename(filePath)),size:stats.size,filePath,sources:[source]});};
+ for(const [request,report]of Object.entries(data.reports?.reports||{}))for(const file of report.dosyalar||[])add(file.attachmentId,file.ad,file.boyut,{source:'Test report',id:request,updatedAt:data.reports.updatedAt});
+ for(const [key,answer]of Object.entries(data.checklist?.answers||{}))for(const file of answer.attachments||[])add(file.id,file.originalName||file.filename,file.size,{source:'Checklist',id:key,updatedAt:answer.at||data.checklist.updatedAt});return[...found.values()];}
 async function agentOfficeAutomationPreview(profile,code) {
   if(!userAccess.hasArea(profile,'automations') || !userAccess.hasCapability(profile,'AUTOMATIONS.CREATE'))throw Object.assign(new Error('OFFICE_AUTOMATION_FORBIDDEN'),{code:'OFFICE_AUTOMATION_FORBIDDEN',statusCode:403});
   const {parsed,validation}=automationAiRequest(code);
-  if(parsed.actions.some(action=>!['OPEN_PAGE','SHOW_REPORT'].includes(action.type)))throw Object.assign(new Error('OFFICE_AUTOMATION_SCOPE'),{code:'OFFICE_AUTOMATION_SCOPE',statusCode:422});
+  if(parsed.actions.some(action=>!['OPEN_PAGE','SHOW_REPORT','REFRESH_SOURCE'].includes(action.type)))throw Object.assign(new Error('OFFICE_AUTOMATION_SCOPE'),{code:'OFFICE_AUTOMATION_SCOPE',statusCode:422});
   const rows=await automationAiPreviewSourceRows(profile.id,profile,parsed.source);
   return {...automationAiPreviewRows(rows,parsed,validation),name:parsed.name,trigger:parsed.trigger,conditions:parsed.conditions,actionDefinitions:parsed.actions};
 }
 const agentOfficeService=createAgentOfficeService({store:agentOfficeStore,sync:agentOfficeSync,userAccess,engine:()=>require('./lib/lcwai').getDefaultEngine(),
   getOperationalData:agentOfficeOperationalData,
-  automationGuide:async()=>{const model=aiCapabilityRegistry.getCapabilityModel();return aiGuideGenerator.generateGuide({...model,actions:model.actions.filter(action=>['OPEN_PAGE','SHOW_REPORT'].includes(action.id))});},
+  getEvidenceAttachments:agentOfficeEvidenceAttachments,
+  readEvidenceAttachment:async item=>({buffer:await fs.promises.readFile(item.filePath),fileName:item.name}),
+  automationGuide:async()=>{const model=aiCapabilityRegistry.getCapabilityModel();return aiGuideGenerator.generateGuide({...model,actions:model.actions.filter(action=>['OPEN_PAGE','SHOW_REPORT','REFRESH_SOURCE'].includes(action.id))});},
   validateAutomation:agentOfficeAutomationPreview,
   onBackgroundError:code=>logRuntimeFailure('agentOfficeBackground',Object.assign(new Error(code),{code})) });
-require('./routes/agent-office-routes')(app,{express,userAccess,service:agentOfficeService,
+require('./routes/agent-office-routes')(app, {
+  express,
+  userAccess,
+  service:agentOfficeService,
   listOwners:async()=>{const store=require('./lib/user-access').readStore();return [store.moderator,...(store.users || [])].filter(Boolean).map(profile=>({id:profile.id,name:profile.displayName || profile.username || profile.id,enabled:profile.enabled!==false}));},
   validateAutomation:agentOfficeAutomationPreview,
   applyAutomation:async(profile,code)=>{await agentOfficeAutomationPreview(profile,code);const {parsed,validation}=automationAiRequest(code);const compiled=aiAutomationCompiler.compile(parsed,validation,{sourceCode:code});
-    const normalized=automationNormalizePayload({...compiled,enabled:false},profile.id);return automationRecipeStore.createRecipe(profile.id,normalized).result;} });
+    const normalized=automationNormalizePayload({...compiled,enabled:false},profile.id);return automationRecipeStore.createRecipe(profile.id,normalized).result;}
+});
 require('./routes/oab-batch-routes')(app, {
   afterSharedCollectionSave,
   automationError,

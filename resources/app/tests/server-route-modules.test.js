@@ -58,8 +58,8 @@ for (const name of modules) {
     } finally {
       global.setInterval = realSetInterval;
     }
-    const declared = (source.match(/^app\.(?:get|post|put|delete|patch)\(/gm) || []).length;
-    assert.equal(routes.length, declared, `${routes.length} kayıt, kaynakta ${declared} route`);
+    const declared = (source.match(/^\s*app\.(?:get|post|put|delete|patch|use)\(/gm) || []).length;
+    assert.equal(routes.length, declared, `${routes.length} kayıt, kaynakta ${declared} route/middleware`);
     assert.equal(new Set(routes).size, routes.length, 'aynı route iki kez kaydedilmemeli');
   });
 

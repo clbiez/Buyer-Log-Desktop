@@ -724,7 +724,7 @@
   // Persistent agent jobs still use this common transport/auth/cancellation
   // client. The business route archives the exchange around the SAME engine.
   async function runAgentOffice(options = {}) {
-    const path = options.archive ? '/api/agent-office/training/review' : '/api/agent-office/run';
+    const path = options.archive ? '/api/agent-office/training/review' : options.evidence ? '/api/agent-office/evidence/run' : options.workflow ? '/api/agent-office/workflow/run' : '/api/agent-office/run';
     const controller = new AbortController();
     const abort = () => controller.abort();
     if(options.signal){if(options.signal.aborted)abort();else options.signal.addEventListener('abort',abort,{once:true});}
