@@ -6,7 +6,7 @@
    POST /api/test-reports/commit   → kullanıcının onayladığı kalemleri yazar,
                                      ekleri checklist ek deposuna koyar
    Yetki: ek yükleme ile aynı alanlar (cp, orders); satır düzenleme yetkisi
-   istemcide row._canEdit ile ayrıca uygulanır. */
+   hem sunucuda gerçek sipariş kimliğiyle hem istemcide uygulanır. */
 
 const checklistSupplierStore = require('../lib/checklist-supplier-store');
 const extract = require('../lib/test-reports/extract');
@@ -32,14 +32,23 @@ module.exports = function registerTestReportRoutes(app, deps) {
   } = deps;
   const userId = req => String(req.currentUser && req.currentUser.id || '');
   const text = (value, max) => String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max || 300);
+  const authorizedOrders = async (req,write=false) => {
+    if (typeof deps.authorizedOrders !== 'function') throw Object.assign(new Error('Order authorization is unavailable.'), { code:'TEST_REPORT_AUTH_UNAVAILABLE', statusCode:503 });
+    return deps.authorizedOrders(req.currentUser,{write});
+  };
 
-app.get('/api/test-reports', userAccess.requireAnyArea('cp', 'orders', 'overview'), (req, res) => {
-    try { res.set('Cache-Control', 'no-store').json(store.publicPayload()); }
+app.get('/api/test-reports', userAccess.requireAnyArea('cp', 'orders', 'overview'), async (req, res) => {
+    try {
+      const allowed=await authorizedOrders(req),payload=store.publicPayload();
+      payload.links=Object.fromEntries(Object.entries(payload.links).filter(([,link])=>allowed.has(link?.orderKey)));
+      payload.reports=Object.fromEntries(Object.keys(payload.links).map(key=>[key,payload.reports[key]]));
+      res.set('Cache-Control', 'no-store').json(payload);
+    }
     catch (err) { automationError(res, err, 'Test raporları okunamadı.'); }
   });
 
-app.get('/api/test-reports/tasks', userAccess.requireAnyArea('cp', 'orders', 'overview'), (req, res) => {
-    try { res.set('Cache-Control', 'no-store').json({ tasks: store.tasks() }); }
+app.get('/api/test-reports/tasks', userAccess.requireAnyArea('cp', 'orders', 'overview'), async (req, res) => {
+    try { const allowed=await authorizedOrders(req);res.set('Cache-Control', 'no-store').json({ tasks: store.tasks().filter(task=>allowed.has(task.orderKey)) }); }
     catch (err) { automationError(res, err, 'Test raporu görevleri okunamadı.'); }
   });
 
@@ -101,18 +110,21 @@ app.post('/api/test-reports/ai-report', userAccess.requireAnyArea('cp', 'orders'
     }
   });
 
-app.post('/api/test-reports/commit', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '2mb' }), (req, res) => {
+app.post('/api/test-reports/commit', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '2mb' }), async (req, res) => {
     try {
       const body = req.body && typeof req.body === 'object' ? req.body : {};
       const session = staging.getSession(body.sessionId, userId(req));
       if (!session) return res.status(410).json({ error: 'Önizleme süresi doldu; dosyaları yeniden bırakın.', code: 'TEST_REPORT_SESSION_EXPIRED' });
       const requested = Array.isArray(body.items) ? body.items : [];
+      const allowed = await authorizedOrders(req,true);
       const byTalep = new Map(session.reports.filter(r => r.talepNo).map(r => [r.talepNo, r]));
       const items = [];
       for (const raw of requested) {
         const report = byTalep.get(text(raw && raw.talepNo, 20));
         if (!report) return res.status(400).json({ error: 'Önizlemede olmayan talep no.', code: 'TEST_REPORT_UNKNOWN', talepNo: text(raw && raw.talepNo, 20) });
-        items.push({ report, orderKey: text(raw.orderKey, 300), itemId: text(raw.itemId, 160), context: raw.context && typeof raw.context === 'object' ? raw.context : {} });
+        const orderKey=text(raw.orderKey,300), authoritative=allowed.get(orderKey);
+        if (!authoritative) return res.status(403).json({ error:'Order access denied.', code:'TEST_REPORT_ORDER_FORBIDDEN' });
+        items.push({ report, orderKey, itemId: text(raw.itemId, 160), context: { ...(raw.context && typeof raw.context === 'object' ? raw.context : {}), ...authoritative } });
       }
       const attach = (file, report, item) => {
         const staged = file.stagingId ? session.files.get(file.stagingId) : null;

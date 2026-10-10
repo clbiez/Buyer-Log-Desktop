@@ -23,6 +23,12 @@ function app() {
     express,
     automationError: (res, err) => res.status(err.statusCode || 500).json({ error: err.message, code: err.code }),
     userAccess: { requireAnyArea: () => (_req, _res, next) => next(), appendAudit: (...args) => audits.push(args) },
+    authorizedOrders: async () => new Map([
+      ['1374537|KK.TSH,FT-UKRAYNA|Q6K',{orderCode:'1374537'}],
+      ['1360191|KK.BDY,BARCHA-4-YD|XYZ',{orderCode:'1360191'}],
+      ['1380959|PNT,TASTE-YD|NNV',{orderCode:'1380959'}],
+      ['1000009|KK.BDY,DEMO-9-YD|K5L',{orderCode:'1000009'}],
+    ]),
   });
   return a;
 }
@@ -49,14 +55,19 @@ test('parse önizleme yazmaz; commit rapor, ek ve iz yazar; karar iki kez işlen
     assert.ok(parsed.body.files.every(f => f.status === 'parsed'));
 
     const items = [
-      { talepNo: '364790', orderKey: '1374537|KK.TSH,FT-UKRAYNA|Q6K', itemId: 'tests', context: { orderCode: '1374537', checklistName: 'Tests' } },
+      { talepNo: '364790', orderKey: '1374537|KK.TSH,FT-UKRAYNA|Q6K', itemId: 'tests', context: { orderCode: 'FORGED-ORDER', checklistName: 'Tests' } },
       { talepNo: '3467719', orderKey: '1360191|KK.BDY,BARCHA-4-YD|XYZ', itemId: 'tests' },
     ];
+    const denied = await post(base, '/api/test-reports/commit', { sessionId: parsed.body.sessionId, items: [{ ...items[0], orderKey: 'someone-elses-order' }] });
+    assert.equal(denied.status, 403, 'client-selected unauthorized order cannot receive reports');
+    assert.equal(fs.existsSync(store.FILE), false, 'denied commit writes nothing');
     const committed = await post(base, '/api/test-reports/commit', { sessionId: parsed.body.sessionId, items, typeMap: { 'ON URETIM BILESEN': 'tests' } });
     assert.equal(committed.status, 200);
     const b = committed.body.results.find(r => r.talepNo === '364790');
     assert.equal(b.attachments.length, 2, 'Lang1 + Lang2 eklendi');
     assert.ok(checklistSupplierStore.getAttachmentPath(b.attachments[0].id));
+    assert.ok(b.attachments[0].filename.includes('1374537'), 'attachment uses the authorized identity');
+    assert.ok(!b.attachments[0].filename.includes('FORGED-ORDER'));
     assert.equal(committed.body.typeMap['ON URETIM BILESEN'].itemId, 'tests');
     const saved = store.read();
     assert.equal(saved.links['364790'].orderKey, items[0].orderKey);
