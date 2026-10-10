@@ -1363,6 +1363,105 @@
           "en": "Actual application screenshot captured after the change"
         }
       }
+    },
+    {
+      "id": "agent-office-final-proportions",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Mobilya oranları ve atölye yerleşimi düzeltildi",
+        "en": "Furniture proportions and workshop layout corrected"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "Raf, askı, lamba ve diğer nesneler kaynak atlasın en-boy oranıyla çizilir. Yeni dikey raf ve askı atlası kullanılır. Varsayılan atölye referansın alan yoğunluğuna yaklaştırıldı; kayıtlı kişisel düzenler korunur.",
+        "en": "Shelves, racks, lamps and other objects preserve their source atlas aspect ratio. A new upright shelf/rack atlas brings the default workshop closer to the reference density; saved personal layouts are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-final-proportions.png",
+        "alt": {
+          "tr": "Mobilya oranları ve atölye yerleşimi düzeltildi · gerçek anonim uygulama ekranı",
+          "en": "Furniture proportions and workshop layout corrected · actual anonymous application screen"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log uygulamasında değişiklik sonrası",
+          "en": "Captured in the actual Buyer Log application after the change"
+        }
+      }
+    },
+    {
+      "id": "agent-office-final-directions",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Karakterler derinliğe doğru yön değiştirebilir",
+        "en": "Characters turn when walking into scene depth"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "Arkadan görünüş için ayrı sprite atlası, ön/arka ve sağ/sol hareket yönleri eklendi. Gezinti farklı derinliklerde gerçekleşir. Gerçek hedefe ulaşmadan masa oturma pozu uygulanmaz; aynalı masanın oturma yönü eşleşir. Dekoratif hareket AI çağırmaz.",
+        "en": "A separate rear-view atlas adds depth-aware front/back and left/right movement. Wandering uses different depth lanes. Desk seating requires arrival at the actual station and follows mirrored desk orientation. Decorative motion makes no AI calls."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-final-directions.png",
+        "alt": {
+          "tr": "Karakterler derinliğe doğru yön değiştirebilir · gerçek anonim uygulama ekranı",
+          "en": "Characters turn when walking into scene depth · actual anonymous application screen"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log uygulamasında değişiklik sonrası",
+          "en": "Captured in the actual Buyer Log application after the change"
+        }
+      }
+    },
+    {
+      "id": "agent-office-final-scale",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Ofis nesneleri çarpışma kontrolüyle ölçeklenebilir",
+        "en": "Office objects resize with collision checks"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Sidebar › Agent Office"
+      },
+      "body": {
+        "tr": "Masa, toplantı masası, koltuk, kahve ünitesi ve halı için 1× / 1.3× ölçek seçimi eklendi. Boyut ve çarpışma alanı birlikte değişir; duvar sınırı korunur. Taslak, geri al/yinele, şablon ve kişisel kayıt desteklenir.",
+        "en": "Desks, meeting tables, sofas, coffee units and rugs support 1× / 1.3× sizes. Visual size and collision footprint change together with wall bounds enforced. Drafts, undo/redo, templates and private persistence are supported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-final-scale.png",
+        "alt": {
+          "tr": "Ofis nesneleri çarpışma kontrolüyle ölçeklenebilir · gerçek anonim uygulama ekranı",
+          "en": "Office objects resize with collision checks · actual anonymous application screen"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log uygulamasında değişiklik sonrası",
+          "en": "Captured in the actual Buyer Log application after the change"
+        }
+      }
     }
   ]
 }
