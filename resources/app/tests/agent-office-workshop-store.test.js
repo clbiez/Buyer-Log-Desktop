@@ -104,3 +104,32 @@ test('reference furniture scale preserves legacy layouts and survives save, temp
   assert.equal(saved.furniture[0].scale,1.3);assert.equal(saved.templates[0].furniture[0].scale,1.3);
   assert.notDeepEqual((await store.state('owner-b')).office.furniture,saved.furniture);
 });
+
+test('wall artwork variants persist privately with templates and CAS while invalid visual fields are discarded',async t=>{
+  const root=await fs.mkdtemp(path.join(os.tmpdir(),'bl-workshop-art-'));t.after(()=>fs.rm(root,{recursive:true,force:true}));
+  const store=createAgentOfficeStore({root}),board={id:'board-a',kind:'board',x:4,y:0,floor:1,rotation:0,style:'quality'},decor={id:'frame',kind:'decor',x:10,y:0,floor:0,rotation:0,style:'textile'};
+  const raw=normalizeOffice({scene:'workshop-v1',furniture:[board,decor],templates:[{name:'Art',furniture:[{...board,style:'classic'},decor]}]});
+  const first=await store.save('owner-a','office',{id:'layout',...raw},{expectedRevision:0}),reopened=createAgentOfficeStore({root});
+  const saved=(await reopened.state('owner-a')).office;assert.equal(saved.furniture[0].style,'quality');assert.equal(saved.furniture[1].style,'textile');assert.equal(saved.templates[0].furniture[0].style,'classic');
+  assert.equal((await reopened.state('owner-b')).office.furniture.some(i=>i.style==='textile'),false);
+  await assert.rejects(store.save('owner-a','office',{id:'layout',...raw},{expectedRevision:0}),e=>e.code==='OFFICE_REVISION_CONFLICT');assert.equal(first.revision,1);
+  const bad=normalizeOffice({scene:'workshop-v1',furniture:[{...board,style:'../../private.png'},{...decor,kind:'plant',style:'textile'}]});
+  assert.equal(bad.furniture[0].style,undefined);assert.equal(bad.furniture[1].style,undefined);
+  assert.throws(()=>normalizeOffice({scene:'workshop-v1',furniture:[null]}),e=>e.code==='OFFICE_LAYOUT_INVALID','Malformed furniture reaches the normal placement validator');
+  const model=require('../public/agent-office-workshop-model');assert.deepEqual(model.box(board),model.box({...board,style:'collection'}),'Decor choice cannot change collision bounds');
+});
+
+test('reference staircase uses one reciprocal connection with protected endpoints and traversable default room',()=>{
+  const model=require('../public/agent-office-workshop-model'),items=defaultOffice().furniture;
+  assert.deepEqual(model.path(model.STAIRS.upper,model.STAIRS.lower,items),[model.STAIRS.lower]);assert.deepEqual(model.path(model.STAIRS.lower,model.STAIRS.upper,items),[model.STAIRS.upper]);
+  for(const point of Object.values(model.STAIRS))assert.equal(model.validPlacement({id:'block',kind:'chair',floor:point.floor,x:point.x+.5,y:point.y},items),false);
+  const station=model.stations([{id:'a',deskId:'desk-a'},{id:'b',deskId:'desk-b'},{id:'c',deskId:'desk-c'}],items);
+  for(const s of station.values()){const route=model.path(s.point,{x:10,y:3,floor:0},items);assert.ok(route.length);assert.equal(route.filter((p,i)=>p.floor!==(i?route[i-1]:s.point).floor).length,1);assert.ok(route.every(p=>!model.blocked(p,items)));}
+});
+
+test('four participants approach actual front/back meeting chairs on distinct traversable cells',()=>{
+  const model=require('../public/agent-office-workshop-model'),items=defaultOffice().furniture,table=items.find(i=>i.kind==='table'),points=Array.from({length:4},(_,i)=>model.meetingPoint(table,i));
+  assert.equal(new Set(points.map(p=>JSON.stringify(p))).size,4);
+  assert.deepEqual(points.map(p=>p.y),[3,3,1,1]);
+  for(const end of points){assert.equal(model.blocked(end,items),false);assert.ok(model.path(model.STAIRS.lower,end,items).length);}
+});

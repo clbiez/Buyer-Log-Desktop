@@ -211,7 +211,8 @@ test('large archives allow separately approved ranges without uploading omitted 
 test('two-floor workshop routes only through the staircase and avoids every blocked cell',()=>{
  const model=require('../public/agent-office-workshop-model'),{defaultOffice}=require('../server/lib/agent-office-store'),items=defaultOffice().furniture;
  const start={x:4,y:3,floor:1},end={x:12,y:3,floor:0},route=model.path(start,end,items);assert.ok(route.length);assert.deepEqual(route.at(-1),end);
- let prior=start;for(const point of route){assert.equal(model.blocked(point,items),false);if(prior.floor!==point.floor){assert.deepEqual(prior,{x:2,y:3,floor:1});assert.deepEqual(point,{x:6,y:3,floor:0});}prior=point;}
+ // The upper landing is at the reference's left edge; the lower landing stays protected.
+ let prior=start;for(const point of route){assert.equal(model.blocked(point,items),false);if(prior.floor!==point.floor){assert.deepEqual(prior,{x:0,y:3,floor:1});assert.deepEqual(point,{x:6,y:3,floor:0});}prior=point;}
  assert.equal(model.validPlacement({id:'bad',kind:'desk',x:2,y:3,floor:1},items),false);
  assert.equal(model.validPlacement({id:'bad',kind:'desk',x:6,y:3,floor:0},items),false);
  assert.equal(model.validPlacement({id:'bad',kind:'desk',x:12,y:2,floor:1},items),false);
