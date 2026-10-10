@@ -29,3 +29,33 @@ button[data-tab="agentoffice"][data-agent-alerts]:not([data-agent-alerts="0"])::
 @media(max-height:850px){.aoCharacterBench:not(.is-open){grid-template-columns:1fr;padding:5px}.aoCharacterBench:not(.is-open) .aoCharacterPreview{border:0}.aoCharacterBench:not(.is-open) .aoCharacterPreview canvas{width:35px;height:37px}.aoCharacterBench:not(.is-open) .aoCharacterPreview>div{display:flex;gap:10px;align-items:center}.aoCharacterBench:not(.is-open) .aoCharacterPreview small{margin:0}.aoCharacterBench:not(.is-open) .aoAppearanceFields,.aoCharacterBench:not(.is-open) .aoAppearanceActions{display:none}.aoSceneViewport{max-width:calc((100vh - 390px)*1.77778)}}
 
 .aoAgentTasks{padding:7px 12px;border-bottom:1px solid var(--line);background:var(--card);color:var(--ink);font-size:11px}.aoAgentTasks summary{cursor:pointer;color:var(--muted)}.aoAgentTasks[open]{max-height:160px;overflow:auto}.aoAgentTasks p{margin:6px 0;overflow-wrap:anywhere}
+
+/* Reference-style visual appearance bench. Sprite previews use the same atlas as the scene. */
+.aoAppearanceFields{display:flex;flex-direction:column;gap:6px}
+.aoAppearanceTabs{display:flex;gap:4px;overflow-x:auto;flex-shrink:0}
+.aoAppearanceTabs .aoButton{white-space:nowrap;font-size:11px;min-height:27px;padding:4px 10px}
+.aoAppearanceTabs .is-selected{background:var(--acc);color:var(--on-acc);border-color:var(--acc)}
+.aoAppearanceGallery{display:flex;gap:6px;overflow-x:auto;min-width:0;padding:1px 1px 3px}
+.aoAppearanceTile{flex:0 0 68px;display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--paper);color:var(--ink);border:1px solid var(--line);border-radius:0;padding:3px;cursor:pointer;font:inherit;font-size:10px}
+.aoAppearanceTile canvas{width:58px;height:60px;image-rendering:pixelated}
+.aoAppearanceTile.is-selected{border-color:var(--acc);background:var(--acc-bg);box-shadow:inset 0 -2px var(--acc)}
+.aoAppearanceTile:hover{border-color:var(--acc)}
+.aoAppearanceTile:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.aoAppearanceControls{display:flex;gap:8px;align-items:center;min-height:25px;flex-wrap:wrap}
+.aoAppearanceControls label{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--ink2)}
+.aoAppearanceControls .aoInput{width:auto;margin:0;min-width:76px}
+.aoCharacterPreview{align-items:center}.aoCharacterPreview strong{display:block}.aoCharacterPreview .aoCaption{font-size:10px;letter-spacing:.6px}
+.aoCharacterBench{grid-template-columns:190px minmax(0,1fr) 136px;gap:10px;padding:8px}
+
+.aoOfficeDock{grid-template-columns:1fr}.aoDockActions{grid-template-columns:repeat(6,minmax(0,1fr))}.aoOfficeDock .aoDockHint{display:none}
+.aoOfficeDock .aoDockActions .aoButton{font-size:11px;min-height:30px;padding:4px 6px}
+.aoContent>.aoOfficeDock{border:1px solid var(--line);margin-top:7px}
+.aoSceneViewport{max-width:calc((100vh - 510px)*1.77778)}
+.aoButton.is-primary{color:var(--on-acc)}.aoButton:disabled{cursor:not-allowed}
+.aoSceneControls .aoButton{min-width:26px}.aoWorkspace>.aoChat{height:auto;min-height:0;contain:size}
+.aoComposer .aoProgress:empty{display:none}
+@media(max-width:1450px){.aoCharacterBench{grid-template-columns:155px minmax(0,1fr) 120px}.aoAppearanceTabs .aoButton{padding:4px 7px}.aoAppearanceTile{flex-basis:59px}.aoAppearanceTile canvas{width:50px;height:52px}}
+@media(max-height:850px){.aoSceneViewport{max-width:calc((100vh - 390px)*1.77778)}.aoCharacterBench:not(.is-open) .aoCharacterPreview .aoCaption{display:none}.aoCharacterBench.is-open .aoAppearanceTile canvas{width:44px;height:46px}.aoChat .aoMessages{min-height:60px;padding:10px}.aoComposer{gap:5px}.aoComposerEntry{margin-bottom:0}.aoSceneControls{gap:4px}.aoSimulationNote{display:none}.aoOfficeDock{padding:5px}.aoAgentButton{min-height:28px;padding:2px 6px;gap:5px}.aoAgentButton .aoMiniPortrait{width:20px!important;height:24px!important;background-size:cover!important}.aoAgentButton small{display:none}.aoAgentStrip{margin-top:5px}.aoCharacterBench{margin-top:5px}}
+@media(max-width:1050px){.aoCharacterBench{grid-template-columns:145px minmax(0,1fr)}.aoAppearanceActions{grid-column:1/-1;flex-direction:row}}
+@media(max-width:950px){.aoWorkspace{grid-template-columns:1fr}.aoWorkspace>.aoChat{contain:none}.aoDockActions{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:800px){.aoCharacterBench{grid-template-columns:1fr}.aoAppearanceTabs .aoButton{padding:4px 8px}.aoSceneViewport{max-width:100%}}

@@ -1462,6 +1462,138 @@
           "en": "Captured in the actual Buyer Log application after the change"
         }
       }
+    },
+    {
+      "id": "agent-office-visual-appearance-gallery",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Görsel karakter galerisi ve canlı görünüm",
+        "en": "Visual character gallery and live appearance"
+      },
+      "body": {
+        "tr": "Saç, giyim, aksesuar ve ten seçenekleri gerçek sahne sprite’larıyla ön izlenir. Sekmeler klavyeyle kullanılabilir; seçenek etiketleri dil değişiminde TR/EN olarak yenilenir. Kullanıcıya özel görünüm mevcut kaydetme ve sürüm kontrolüyle korunur.",
+        "en": "Hair, clothing, accessory and skin options preview actual scene sprites. Tabs support keyboard navigation, and option labels update on TR/EN language changes. Private appearance uses existing persistence and revision checks."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-polish-gallery.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log Pixel Atölye ekranı",
+          "en": "Actual Buyer Log Pixel Workshop UI with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Görsel karakter galerisi ve canlı görünüm",
+          "en": "Visual character gallery and live appearance"
+        }
+      }
+    },
+    {
+      "id": "agent-office-layered-light-transitions",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Özgün şehir manzarası ve bağımsız ışık geçişleri",
+        "en": "Original skyline and independent light transitions"
+      },
+      "body": {
+        "tr": "Pencere dokusu korunur; gece şehir ışıkları ayrı çizilir. Mobilyalar ve karakterler kendi saydam katmanlarında aydınlatılır. Dekoratif hareketler duraklatıldığında da sabah/öğle/akşam/gece ve lamba geçişleri tamamlanır; geçiş bitince gereksiz çizim durur. AI veya ek ağ çağrısı yapılmaz.",
+        "en": "Window textures are preserved; nighttime city lights render separately. Furniture and characters are lit within their own transparent layers. Morning/noon/evening/night and lamp transitions finish even while decorative motion is paused; idle drawing stops once the transition finishes. No AI or additional network calls are made."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-polish-night.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log Pixel Atölye ekranı",
+          "en": "Actual Buyer Log Pixel Workshop UI with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Özgün şehir manzarası ve bağımsız ışık geçişleri",
+          "en": "Original skyline and independent light transitions"
+        }
+      }
+    },
+    {
+      "id": "agent-office-desktop-reference-layout",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Atölye, görünüm paneli ve alt aksiyon satırı birlikte sığar",
+        "en": "Workshop, appearance bench and action dock fit together"
+      },
+      "body": {
+        "tr": "1920×1080, 1440×900 ve 1366×768 ekranlarında sahne oranı korunur. Sohbet panelinin fazladan yükseklik üretmesi önlenir; alt aksiyonlar referanstaki gibi karakter panelinin altına alınır. Kısa ekranda görünüm paneli açılıp daraltılabilir. Kontroller mevcut açık/koyu tema anahtarlarını kullanır.",
+        "en": "The scene keeps its aspect ratio at 1920×1080, 1440×900 and 1366×768. The chat panel no longer adds extra height, and actions sit below the character bench as in the reference. The appearance bench can expand or collapse on shorter screens. Controls use the existing light/dark theme tokens."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-polish-compact.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log Pixel Atölye ekranı",
+          "en": "Actual Buyer Log Pixel Workshop UI with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Atölye, görünüm paneli ve alt aksiyon satırı birlikte sığar",
+          "en": "Workshop, appearance bench and action dock fit together"
+        }
+      }
+    },
+    {
+      "id": "agent-office-session-stale-alert",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Eski oturum yanıtları yeni ekranda hata bırakmaz",
+        "en": "Old-session responses do not leave errors in the new view"
+      },
+      "body": {
+        "tr": "Kullanıcı erişimi yenilenirken bekleyen eski yanıtlar mevcut oturum kontrolüyle reddedilmeye devam eder. Artık iptal edilen eski isteğin uyarısı yeni ofise taşınmaz. Gerçek bağlantı ve yetki hataları görünmeye devam eder.",
+        "en": "Pending old responses remain rejected by the existing ownership check when user access refreshes. Alerts from the cancelled old request no longer carry into the new office. Actual connection and permission failures remain visible."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-polish-gallery.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log Pixel Atölye ekranı",
+          "en": "Actual Buyer Log Pixel Workshop UI with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Eski oturum yanıtları yeni ekranda hata bırakmaz",
+          "en": "Old-session responses do not leave errors in the new view"
+        }
+      }
     }
   ]
 }
