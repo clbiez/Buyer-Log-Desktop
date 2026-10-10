@@ -1858,6 +1858,105 @@
           "en": "Correct workstation pose after scaling and mirroring"
         }
       }
+    },
+    {
+      "id": "agent-office-side-seated-poses",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Masada gerçek yan görünüm",
+        "en": "True side-view seating"
+      },
+      "body": {
+        "tr": "Üç saç tipi için yazma ve dinlenme pozları referanstaki gibi bilgisayara yönelir. Yürüyüş, ayakta durma ve kahve kareleri korunur; yeni atlas yüklenmez.",
+        "en": "Typing and resting poses face the computer for all three hair types. Walking, standing and coffee frames are retained without adding another atlas."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-profile-finish-dark.png",
+        "alt": {
+          "tr": "Çalışan Buyer Log atölyesinde yan oturma pozları ve yerleşim",
+          "en": "Side-view seating and layout in the running Buyer Log workshop"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; anonim örnek veriler.",
+          "en": "Actual Buyer Log after the change, using anonymous demonstration data."
+        }
+      }
+    },
+    {
+      "id": "agent-office-seated-accessory-anchors",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Otururken aksesuar hizası",
+        "en": "Seated accessory alignment"
+      },
+      "body": {
+        "tr": "Gözlük, kulaklık, atkı ve göz kırpma saç tipi ve oturma karesinin kendi ankrajına bağlandı. Masa aynalama ve ölçek değişiminde hizaları korunur.",
+        "en": "Glasses, headphones, scarves and blinks follow each hair type and seated frame. Alignment is retained when desks are mirrored or scaled."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-profile-finish-day.png",
+        "alt": {
+          "tr": "Çalışan Buyer Log atölyesinde yan oturma pozları ve yerleşim",
+          "en": "Side-view seating and layout in the running Buyer Log workshop"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; anonim örnek veriler.",
+          "en": "Actual Buyer Log after the change, using anonymous demonstration data."
+        }
+      }
+    },
+    {
+      "id": "agent-office-reference-collection-layout",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Koleksiyon masasının referans yerleşimi",
+        "en": "Reference collection workstation layout"
+      },
+      "body": {
+        "tr": "Varsayılan atölyede askılık koleksiyon masasının soluna taşındı. Kayıtlı kişisel odalar değişmez; yeni yerleşim Varsayılan işlemiyle seçilebilir.",
+        "en": "The default workshop places the rack left of the collection desk. Saved personal rooms are retained; the new layout can be selected with Default."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-profile-finish-editor.png",
+        "alt": {
+          "tr": "Çalışan Buyer Log atölyesinde yan oturma pozları ve yerleşim",
+          "en": "Side-view seating and layout in the running Buyer Log workshop"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; anonim örnek veriler.",
+          "en": "Actual Buyer Log after the change, using anonymous demonstration data."
+        }
+      }
     }
   ]
 }
