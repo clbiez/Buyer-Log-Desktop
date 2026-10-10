@@ -1957,6 +1957,237 @@
           "en": "Actual Buyer Log after the change, using anonymous demonstration data."
         }
       }
+    },
+    {
+      "id": "agent-office-graphics-floor-perspective",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Alt katın zemin ve mobilya perspektifi düzeltildi",
+        "en": "Lower-floor ground and furniture perspective corrected"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Ofis",
+        "en": "Agent Office › Office"
+      },
+      "body": {
+        "tr": "Halılar zeminin sınırları içinde kalır; dolap ve askılıkların ayakları arka duvar çizgisine oturur. Bütün ölçeklerde mobilya oranları korunur.",
+        "en": "Rugs stay within their floor surface; cabinets and racks are grounded at the rear wall. Furniture proportions are preserved at every supported scale."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-graphics-dark.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Agent Ofisi: Alt katın zemin ve mobilya perspektifi düzeltildi",
+          "en": "Actual Buyer Log Agent Office with anonymous data: Lower-floor ground and furniture perspective corrected"
+        },
+        "caption": {
+          "tr": "Alt katın zemin ve mobilya perspektifi düzeltildi",
+          "en": "Lower-floor ground and furniture perspective corrected"
+        }
+      }
+    },
+    {
+      "id": "agent-office-graphics-physical-depth",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Oturma ve yürümede doğru ön/arka sırası",
+        "en": "Correct front/back order while sitting and walking"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Ofis",
+        "en": "Agent Office › Office"
+      },
+      "body": {
+        "tr": "Karakterler gerçek çizim konumlarına göre sıralanır. Koltuk oturma alanı ile ön kenarı ayrı çizilir; toplantı masasının arka koltukları ve merdiven geçişleri doğru katmanda kalır.",
+        "en": "Characters are sorted by their actual rendered position. Sofa seating and its front edge are drawn separately; rear meeting seats and stairs retain the correct depth."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-graphics-meeting.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Agent Ofisi: Oturma ve yürümede doğru ön/arka sırası",
+          "en": "Actual Buyer Log Agent Office with anonymous data: Correct front/back order while sitting and walking"
+        },
+        "caption": {
+          "tr": "Oturma ve yürümede doğru ön/arka sırası",
+          "en": "Correct front/back order while sitting and walking"
+        }
+      }
+    },
+    {
+      "id": "agent-office-graphics-outfit-masks",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kıyafetler ve aksesuarlar karaktere bağlı kalır",
+        "en": "Outfits and accessories remain attached to the character"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Ofis",
+        "en": "Agent Office › Office"
+      },
+      "body": {
+        "tr": "Saç, ten, üst giyim, pantolon ve ayakkabı kaynak sprite üzerinde ayrı malzeme maskeleri kullanır. Ceket, gömlek ve atkı detayları kıyafet sınırlarını aşmaz; kulaklık konumu oturma ve yürüme pozunu izler.",
+        "en": "Hair, skin, tops, trousers and shoes use separate material masks on the source sprite. Jacket, shirt and scarf details stay inside garment boundaries; headphone positions follow seated and walking poses."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-graphics-dark.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Agent Ofisi: Kıyafetler ve aksesuarlar karaktere bağlı kalır",
+          "en": "Actual Buyer Log Agent Office with anonymous data: Outfits and accessories remain attached to the character"
+        },
+        "caption": {
+          "tr": "Kıyafetler ve aksesuarlar karaktere bağlı kalır",
+          "en": "Outfits and accessories remain attached to the character"
+        }
+      }
+    },
+    {
+      "id": "agent-office-graphics-walk-atlas",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Yeni yürüyüş atlası ve mesafeye bağlı adımlar",
+        "en": "New walking atlas with distance-based steps"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Ofis",
+        "en": "Agent Office › Office"
+      },
+      "body": {
+        "tr": "Üç karakter için yeni profil yürüyüş atlası kullanılır. Kareler kat edilen mesafeyle ilerler; engelde bekleyen karakter yürümeye devam etmez. Kıyafet değiştirmek bacakları kesmez veya bozmaz.",
+        "en": "Three character styles use a new profile walking atlas. Frames advance with travelled distance; blocked characters stop stepping. Outfit changes do not cut or distort legs."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-graphics-walking.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Agent Ofisi: Yeni yürüyüş atlası ve mesafeye bağlı adımlar",
+          "en": "Actual Buyer Log Agent Office with anonymous data: New walking atlas with distance-based steps"
+        },
+        "caption": {
+          "tr": "Yeni yürüyüş atlası ve mesafeye bağlı adımlar",
+          "en": "New walking atlas with distance-based steps"
+        }
+      }
+    },
+    {
+      "id": "agent-office-graphics-soft-light",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kare kenarı oluşturmayan yumuşak aydınlatma",
+        "en": "Soft lighting without rectangular boundaries"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Ofis",
+        "en": "Agent Office › Office"
+      },
+      "body": {
+        "tr": "Tavan ışıkları tam saydamlığa ulaşan ışık alanlarıyla çizilir ve kendi katlarında kalır. Sabah, öğle, akşam ve gece tercihi ile lamba açma/kapatma mevcut kişisel ayarları kullanır.",
+        "en": "Ceiling lights fade completely to transparency and remain on their own floor. Morning, noon, evening, night and lamp toggles continue to use existing personal preferences."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-graphics-night.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Agent Ofisi: Kare kenarı oluşturmayan yumuşak aydınlatma",
+          "en": "Actual Buyer Log Agent Office with anonymous data: Soft lighting without rectangular boundaries"
+        },
+        "caption": {
+          "tr": "Kare kenarı oluşturmayan yumuşak aydınlatma",
+          "en": "Soft lighting without rectangular boundaries"
+        }
+      }
+    },
+    {
+      "id": "agent-office-graphics-contact-shadows",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Mobilya ve karakterlere zemin gölgeleri",
+        "en": "Ground shadows for furniture and characters"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Ofis",
+        "en": "Agent Office › Office"
+      },
+      "body": {
+        "tr": "Mobilyaların altında ve ayakta duran karakterlerin ayaklarında yumuşak temas gölgeleri bulunur. Gölgeler halıların üzerinde, nesnelerin altında ve yalnız ilgili katın zemininde çizilir.",
+        "en": "Soft contact shadows ground furniture and standing characters. Shadows are drawn above rugs, beneath silhouettes and only on the corresponding floor surface."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-graphics-walking.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Agent Ofisi: Mobilya ve karakterlere zemin gölgeleri",
+          "en": "Actual Buyer Log Agent Office with anonymous data: Ground shadows for furniture and characters"
+        },
+        "caption": {
+          "tr": "Mobilya ve karakterlere zemin gölgeleri",
+          "en": "Ground shadows for furniture and characters"
+        }
+      }
+    },
+    {
+      "id": "agent-office-graphics-wall-drag",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Duvar dekorları sürüklenirken sıra atlamaz",
+        "en": "Wall decor no longer jumps rows when dragged"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Ofis",
+        "en": "Agent Office › Office"
+      },
+      "body": {
+        "tr": "Panolar ve duvar dekorları kendi duvar koordinatlarıyla taşınır. Yatay sürükleme nesneyi başka bir derinlik sırasına sıçratmaz; zemin eşyaları kendi projeksiyonunu kullanır.",
+        "en": "Boards and wall decor move in their own wall coordinates. Horizontal dragging does not jump to a different depth row; floor furniture uses its own projection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-graphics-editor.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Agent Ofisi: Duvar dekorları sürüklenirken sıra atlamaz",
+          "en": "Actual Buyer Log Agent Office with anonymous data: Wall decor no longer jumps rows when dragged"
+        },
+        "caption": {
+          "tr": "Duvar dekorları sürüklenirken sıra atlamaz",
+          "en": "Wall decor no longer jumps rows when dragged"
+        }
+      }
     }
   ]
 }
