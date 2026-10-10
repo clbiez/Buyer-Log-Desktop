@@ -44,6 +44,7 @@ function normalizeOffice(raw = {}) {
     y: Math.max(0, Math.min(isWorkshop ? 3 : 7, Math.round(Number(item?.y) || 0))),
     ...(isWorkshop ? { floor: Number(item?.floor) === 1 ? 1 : 0 } : {}),
     ...(isWorkshop && item && workshopModel.scale(item) === 1.3 ? {scale:1.3} : {}),
+    ...(isWorkshop && workshopModel.styles(item?.kind).length>1 && workshopModel.styles(item?.kind).includes(item.style)?{style:item.style}:{}),
     rotation: (isWorkshop ? [0,1] : [0,1,2,3]).includes(Number(item?.rotation)) ? Number(item.rotation) : 0,
   }));
   const result = { ...(workshop ? {scene:'workshop-v1'} : {}),

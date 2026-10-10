@@ -1594,6 +1594,138 @@
           "en": "Old-session responses do not leave errors in the new view"
         }
       }
+    },
+    {
+      "id": "agent-office-workshop-art-layers",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Atölye grafiklerinde referansa yakın ayrıntılar",
+        "en": "Reference-aligned workshop artwork"
+      },
+      "body": {
+        "tr": "Sol merdiven, rol panoları ve endüstriyel lambalar bağımsız saydam sprite katmanlarına dönüştürüldü. Mobilya oranları ve hareket rotaları korunur; grafikler yalnız ofis açıldığında yüklenir.",
+        "en": "The left staircase, role boards and industrial lamps use separate transparent sprite layers. Furniture proportions and movement routes are preserved; art loads only when the office opens."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-finish-day.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Pixel Atölye ekranı",
+          "en": "Actual Buyer Log Pixel Workshop UI with anonymous data"
+        },
+        "caption": {
+          "tr": "Atölye grafiklerinde referansa yakın ayrıntılar",
+          "en": "Reference-aligned workshop artwork"
+        }
+      }
+    },
+    {
+      "id": "agent-office-workshop-wall-editor",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kaydedilebilir pano ve duvar dekorları",
+        "en": "Persistent board and wall artwork"
+      },
+      "body": {
+        "tr": "Ofisi Düzenle içinde planlama, koleksiyon ve kalite panoları ile teknik çizim ve tekstil dekorları seçilebilir. Canlı ön izleme, geri al/yinele, kişisel kayıt ve şablonlar çalışır.",
+        "en": "Office editing offers planning, collection and quality boards plus technical-sketch and textile artwork. Live preview, undo/redo, private save and templates are supported."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-finish-art-editor.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Pixel Atölye ekranı",
+          "en": "Actual Buyer Log Pixel Workshop UI with anonymous data"
+        },
+        "caption": {
+          "tr": "Kaydedilebilir pano ve duvar dekorları",
+          "en": "Persistent board and wall artwork"
+        }
+      }
+    },
+    {
+      "id": "agent-office-paused-local-clock",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Duraklatılmış ofiste otomatik saat",
+        "en": "Automatic time in a paused office"
+      },
+      "body": {
+        "tr": "Yerel saate bağlı atmosfer, hareket duraklatıldığında veya azaltıldığında da geçiş yapar. Görünür ofiste dakikalık kontrol kullanılır; manuel saat seçimi korunur ve gizli ofiste zamanlayıcı kapanır.",
+        "en": "Local-time atmosphere updates even when movement is paused or reduced. A minute check runs only in the visible office; manual time remains unchanged and the timer stops while hidden."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-finish-night.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Pixel Atölye ekranı",
+          "en": "Actual Buyer Log Pixel Workshop UI with anonymous data"
+        },
+        "caption": {
+          "tr": "Duraklatılmış ofiste otomatik saat",
+          "en": "Automatic time in a paused office"
+        }
+      }
+    },
+    {
+      "id": "agent-office-meeting-seat-alignment",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Toplantı masasında doğru oturma ve katmanlama",
+        "en": "Correct meeting seats and layering"
+      },
+      "body": {
+        "tr": "Ortak işteki karakterler dört ayrı sandalye yaklaşım noktasına yürür ve hedefe ulaşınca masanın önünde veya arkasında doğru oturur. Boştaki ziyaretçiler yerde oturmaz; işlem göstergeleri gerçek ajan durumundan gelir.",
+        "en": "Characters in shared work walk to four distinct chair approach points and sit correctly in front of or behind the table after arrival. Idle visitors no longer sit on the floor; job indicators use actual agent state."
+      },
+      "path": {
+        "tr": "Agent Ofisi › Pixel Atölye",
+        "en": "Agent Office › Pixel Workshop"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-finish-meeting.png",
+        "alt": {
+          "tr": "Anonim verili gerçek Buyer Log Pixel Atölye ekranı",
+          "en": "Actual Buyer Log Pixel Workshop UI with anonymous data"
+        },
+        "caption": {
+          "tr": "Toplantı masasında doğru oturma ve katmanlama",
+          "en": "Correct meeting seats and layering"
+        }
+      }
     }
   ]
 }
