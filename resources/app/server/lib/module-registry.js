@@ -113,6 +113,13 @@ const MODULES = Object.freeze([
     summary: { tr: 'Üretici kartları.', en: 'Manufacturer cards.' },
   },
   {
+    id: 'licensecards', agentFilter: false, tableKey: null, label: { tr: 'Lisans kartları', en: 'License cards' },
+    area: 'orders', anyAreas: ['orders', 'cp', 'source'], route: 'licensecards',
+    datasets: ['asas', 'cp', 'orders'],
+    capabilities: ['read', 'refresh', 'analyze'],
+    summary: { tr: 'Lisansör, portal ve royalty sözleşme geçmişi.', en: 'Licensors, portals and royalty contract history.' },
+  },
+  {
     id: 'lfl', agentFilter: false, tableKey: 'lfl', label: { tr: 'LFL Analizi', en: 'LFL Analysis' },
     area: 'lfl', route: 'lfl',
     datasets: ['lfl'],
@@ -188,7 +195,7 @@ function label(id, language = 'tr') {
    modülü keşfetmemeli: aksi hâlde "yapabilirim" deyip 403 alır. */
 function forProfile(profile, userAccess) {
   if (!userAccess || typeof userAccess.hasArea !== 'function') return list();
-  return list().filter(module => userAccess.hasArea(profile, module.area));
+  return list().filter(module => (module.anyAreas || [module.area]).some(area => userAccess.hasArea(profile, area)));
 }
 function withCapability(capability) {
   const wanted = clean(capability);
@@ -220,7 +227,11 @@ function describe(id, language = 'tr') {
 }
 function catalog(language = 'tr', profile = null, userAccess = null) {
   const visible = profile && userAccess ? forProfile(profile, userAccess) : list();
-  return visible.map(module => describe(module.id, language));
+  // The catalog is a table of contents; detailed summaries stay in describe().
+  return visible.map(module => {
+    const { summary, ...entry } = describe(module.id, language);
+    return entry;
+  });
 }
 
 /* Kayıt defteri gerçekle ayrışırsa sessizce yanlış cevap üretir. Bu yüzden

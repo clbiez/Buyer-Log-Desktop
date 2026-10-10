@@ -30,6 +30,7 @@
     orderQuantity:['qty'],inStore:['mb'],orderPlacementDate:['opd'],exFactory:['ex']
   };
   ['cp','orders','backlog','overview','lfl'].forEach(function(moduleId){
+    extendBinding(moduleId,'licensor',['Lisansör','Lisans Veren','License Owner']);
     extendBinding(moduleId,'manufacturer',['Supplier','Sub-Manufacturer','Sub Manufacturer']);
     Object.keys(ASAS_RUNTIME_KEYS).forEach(function(fieldId){extendBinding(moduleId,fieldId,ASAS_RUNTIME_KEYS[fieldId]);});
   });

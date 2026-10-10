@@ -52,6 +52,7 @@ const FIELD_CATALOGUE = {
     { header: 'Buyer Grup (TR)', aliases: ['BUYING GROUP', 'BUYER GROUP', 'BUYER GRUP TANIM', 'BUYER GRUP TANIMI'] },
     { header: 'Siparişin Üretildiği Ülke', aliases: ['URETIM ULKESI', 'COUNTRY OF ORIGIN'] },
     { header: 'Lisans', aliases: ['LICENSE'] },
+    { header: 'Lisansör', aliases: ['LICENSOR', 'LICENSE OWNER', 'LISANS VEREN'] },
     { header: 'Model Adı', required: true, aliases: ['MODEL NAME', 'STYLE NAME', 'ÜRÜN ADI', 'URUN ADI', 'PRODUCT NAME'] },
     { header: 'Ürün Tanım', aliases: ['Ürün Ana Tanım', 'ÜRÜN ANA TANIM', 'ÜRÜN TANIMI', 'URUN TANIM', 'URUN TANIMI', 'PRODUCT DESCRIPTION', 'PRODUCT DESC', 'PRODUCT DEFINITION'] },
     { header: 'Orijinal Exfactory Merch Tarih', required: true, aliases: [] },

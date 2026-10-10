@@ -114,10 +114,13 @@ test('v9.21 yetkisi olmayan modül keşfedilemiyor', () => {
   const gorunen = registry.forProfile(buyer, userAccess).map(m => m.id).sort();
   // v7.0.229: Üreticiler sayfası Siparişler verisini okur ve Siparişler
   // yetki alanını paylaşır; Siparişler yetkisi olan onu da görür.
-  assert.deepEqual(gorunen, ['cp', 'manufacturers', 'orders']);
+  assert.deepEqual(gorunen, ['cp', 'licensecards', 'manufacturers', 'orders']);
   // Katalog da aynı süzgeçten geçmeli.
   const katalog = registry.catalog('tr', buyer, userAccess).map(m => m.id).sort();
-  assert.deepEqual(katalog, ['cp', 'manufacturers', 'orders']);
+  assert.deepEqual(katalog, ['cp', 'licensecards', 'manufacturers', 'orders']);
+  assert.ok(registry.forProfile({areas:['cp']},userAccess).some(module=>module.id==='licensecards'));
+  assert.ok(registry.forProfile({areas:['source']},userAccess).some(module=>module.id==='licensecards'));
+  assert.ok(!registry.forProfile({areas:['lfl']},userAccess).some(module=>module.id==='licensecards'));
   // Profil verilmezse tam liste döner (sunucu içi kullanım).
   assert.equal(registry.catalog('tr').length, registry.list().length);
 });

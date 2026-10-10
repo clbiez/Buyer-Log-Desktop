@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-09",
+  "publishedAt": "2026-10-10",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kullanıcı yönetimi: ek roller, Excel ve merkezi ufuk",
-    "en": "User management: extra roles, Excel and central horizon"
+    "tr": "Lisans kartları ve Buyer Log iyileştirmeleri",
+    "en": "License cards and Buyer Log improvements"
   },
   "summary": {
-    "tr": "Kullanıcı yönetimi ERP düzeyine çıktı: ek roller, süreli yetki, yetki karşılaştırma, Excel ile toplu düzenleme, merkezi varsayılan ufuk ve oturumu düşürmeyen yetki değişikliği. LCW AI artık sonradan eklenen CP ve Koleksiyon sütunlarını doğru değerleriyle bağlama alır.",
-    "en": "User management reaches ERP level: extra roles, temporary permissions, permission comparison, bulk editing in Excel, central default horizon and permission changes that keep users signed in. LCW AI now includes newly added CP and Collection columns with correct values in its context."
+    "tr": "Kullanıcı yönetimi ERP düzeyine çıktı: ek roller, süreli yetki, yetki karşılaştırma, Excel ile toplu düzenleme, merkezi varsayılan ufuk ve oturumu düşürmeyen yetki değişikliği. LCW AI artık sonradan eklenen CP ve Koleksiyon sütunlarını doğru değerleriyle bağlama alır. Lisans kartları, oran geçmişi, ASAS aktarımı ve hafif sipariş özeti eklendi; CP/Orders royalty hesapları güncellendi.",
+    "en": "User management reaches ERP level: extra roles, temporary permissions, permission comparison, bulk editing in Excel, central default horizon and permission changes that keep users signed in. LCW AI now includes newly added CP and Collection columns with correct values in its context. Added license cards, rate history, ASAS import and a lightweight order summary; updated CP/Orders royalty calculations."
   },
   "changes": [
     {
@@ -437,6 +437,171 @@
         "caption": {
           "tr": "Varsayılan DTR; mevcut Non-DTR istisnaları üretici kartlarında korunur",
           "en": "DTR by default; existing Non-DTR exceptions are preserved on manufacturer cards"
+        }
+      }
+    },
+    {
+      "id": "license-cards-industry",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisanslar için Buyer Log temalı kartlar",
+        "en": "Buyer Log themed cards for licenses"
+      },
+      "body": {
+        "tr": "Manufacturers’ın altındaki yeni ekranda lisansörün çalışma şekli, iletişim ve portal bilgileri tek kartta tutulur. PNG/JPEG/WebP lisans sembolü yüklenebilir. İsteğe bağlı Artwork briefi son seçim için saklanır.",
+        "en": "The new screen below Manufacturers keeps the licensor’s process, contacts and portal details in one card. Upload a PNG/JPEG/WebP license symbol and save an optional Artwork brief for a later final choice."
+      },
+      "path": {
+        "tr": "Üreticiler › Lisans kartları",
+        "en": "Manufacturers › License cards"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards.png",
+        "alt": {
+          "tr": "Demo verili gerçek Buyer Log ekranında lisans kartları ve Manufacturers altındaki menü",
+          "en": "License cards and navigation below Manufacturers in the real Buyer Log UI with demo data"
+        },
+        "caption": {
+          "tr": "Demo verili gerçek Buyer Log ekranında lisans kartları ve Manufacturers altındaki menü",
+          "en": "License cards and navigation below Manufacturers in the real Buyer Log UI with demo data"
+        }
+      }
+    },
+    {
+      "id": "license-cards-temporal-contracts",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Güncel komisyon ve bütün oran geçmişi tek kartta",
+        "en": "Current commission and complete rate history in one card"
+      },
+      "body": {
+        "tr": "Ana kart bugün geçerli sözleşmenin royalty, TR/YD komisyon ve hologram maliyetini gösterir. Detayda geçmiş, güncel ve planlanan dönemler birlikte korunur; siparişe uygulanacak oran OPD tarihi, sezon ve üretim ülkesine göre seçilir. Çakışan dönemler kaydedilmez.",
+        "en": "The card face shows today’s royalty, TR/international commission and hologram cost. Details retain past, current and planned periods together; orders select the rate by OPD date, season and production country. Overlapping periods are rejected."
+      },
+      "path": {
+        "tr": "Üreticiler › Lisans kartları",
+        "en": "Manufacturers › License cards"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-history.png",
+        "alt": {
+          "tr": "Aynı lisansın geçmiş, güncel ve planlanan komisyon dönemleri",
+          "en": "Past, current and upcoming commission periods of the same license"
+        },
+        "caption": {
+          "tr": "Aynı lisansın geçmiş, güncel ve planlanan komisyon dönemleri",
+          "en": "Past, current and upcoming commission periods of the same license"
+        }
+      }
+    },
+    {
+      "id": "license-cards-asas-sharing",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "ASAS’tan bir kez aktarım, yetkili düzenleme ve ortak güncelleme",
+        "en": "One-time ASAS import, authorized editing and shared updates"
+      },
+      "body": {
+        "tr": "Kartlar yüklü ASAS kaynaklarındaki lisans/lisansörlerden ilk açılışta oluşturulur. ASAS’tan yenile yeni kayıtları ekler ve kullanıcı notlarını korur. Moderatör ve iş kurallarını yönetme yetkisi olan kişiler düzenler; revizyon kontrolü eşzamanlı kayıtta üzerine yazmayı önler. Paylaşım kesilirse kayıt bekleyen aktarım kuyruğunda korunur ve tekrar denenir.",
+        "en": "Cards are created on first opening from licenses/licensors in loaded ASAS sources. Refresh from ASAS adds new records while preserving entered notes. Moderators and users with business-rule management permission can edit; revision checks prevent overwriting concurrent saves. Interrupted sharing is retained in a durable pending queue and retried."
+      },
+      "path": {
+        "tr": "Üreticiler › Lisans kartları",
+        "en": "Manufacturers › License cards"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards.png",
+        "alt": {
+          "tr": "ASAS aktarım tarihi ve isteğe bağlı yenileme düğmesi",
+          "en": "ASAS import date and optional refresh button"
+        },
+        "caption": {
+          "tr": "ASAS aktarım tarihi ve isteğe bağlı yenileme düğmesi",
+          "en": "ASAS import date and optional refresh button"
+        }
+      }
+    },
+    {
+      "id": "license-royalty-hydration",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları / CP / Orders",
+        "en": "License cards / CP / Orders"
+      },
+      "title": {
+        "tr": "Yeni CP ve Orders siparişlerine güncel royalty kurallarını uygulayın",
+        "en": "Apply current royalty rules to new CP and Orders rows"
+      },
+      "body": {
+        "tr": "Sonradan yüklenen CP ve Orders satırları tarih ve ülke komisyonuyla yeniden hesaplanır. Kuraldan kaydedilmiş eski FOB yeni sözleşmeye göre yenilenir; elle girilen FOB korunur. Kart kuralları değişince yüklü ekranlar yeni revizyonu bir kez uygular; aynı revizyon tekrar hesaplama başlatmaz.",
+        "en": "Deferred CP and Orders rows are recalculated using temporal and country commissions. Previously saved rule-derived FOB updates to the current contract while manually entered FOB is retained. Loaded screens apply a changed card rule revision once; repeated identical revisions do not trigger another recalculation."
+      },
+      "path": {
+        "tr": "Üreticiler › Lisans kartları",
+        "en": "Manufacturers › License cards"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-royalty-orders.png",
+        "alt": {
+          "tr": "Demo siparişlerde royalty kuralıyla hesaplanan üretici FOB değerleri",
+          "en": "Supplier FOB values calculated by royalty rules in demo orders"
+        },
+        "caption": {
+          "tr": "Demo siparişlerde royalty kuralıyla hesaplanan üretici FOB değerleri",
+          "en": "Supplier FOB values calculated by royalty rules in demo orders"
+        }
+      }
+    },
+    {
+      "id": "license-cards-local-stats",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Ek sorgu olmadan küçük sipariş özeti",
+        "en": "A small order summary without extra queries"
+      },
+      "body": {
+        "tr": "Sipariş özeti açıldığında, zaten yüklenmiş Orders veya CP verisinden sipariş, adet ve model/renk satırı sayısı hesaplanır ve önbelleğe alınır. Gizliyken hesaplama, yeni kaynak sorgusu veya bütün veri tabanını tarama yapılmaz. Özetin yalnız yüklü veriyi kapsadığı açıkça belirtilir.",
+        "en": "Expanding Order summary calculates and caches order, unit and model/colour line counts from Orders or CP data already loaded. Hidden summaries do not calculate, query a source or scan the entire database. The screen explicitly states that the summary covers loaded data only."
+      },
+      "path": {
+        "tr": "Üreticiler › Lisans kartları",
+        "en": "Manufacturers › License cards"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-stats.png",
+        "alt": {
+          "tr": "Yüklü demo siparişlerden hesaplanan minimal lisans özeti",
+          "en": "Minimal license summary calculated from loaded demo orders"
+        },
+        "caption": {
+          "tr": "Yüklü demo siparişlerden hesaplanan minimal lisans özeti",
+          "en": "Minimal license summary calculated from loaded demo orders"
         }
       }
     }

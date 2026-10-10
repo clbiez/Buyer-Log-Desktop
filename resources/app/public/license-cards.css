@@ -1,0 +1,69 @@
+/* License cards inherit the Buyer Log Industry palette and primitives. */
+.lcPage{padding:var(--sp-5);color:var(--ink);font-family:var(--sans)}
+.lcPageHead,.lcDetailHead,.lcCardHead,.lcCardFoot,.lcToolbar,.lcContractHead,.lcSaveBar,.lcActions{display:flex;align-items:center;gap:var(--sp-3)}
+.lcPageHead,.lcToolbar,.lcCardFoot,.lcDetailHead{justify-content:space-between}
+.lcPageHead{margin-bottom:var(--sp-5)}
+.lcPageHead h1{font:600 28px var(--head);margin:var(--sp-1) 0}
+.lcPageHead p,.lcDetailHead p{margin:var(--sp-1) 0;color:var(--ink2)}
+.lcEyebrow{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.lcMuted{color:var(--muted);font-size:12px;line-height:1.5}
+.lcToolbar{padding:var(--sp-3) 0;border-top:1px solid var(--line);margin-bottom:var(--sp-5);flex-wrap:wrap}
+.lcSearch{flex:1;max-width:420px}
+.lcSearch input{width:100%;min-height:34px;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:var(--sp-2) var(--sp-3);font:inherit}
+.lcLayout{display:grid;gap:var(--sp-5);align-items:start}
+.lcLayout.hasDetail{grid-template-columns:minmax(280px,1fr) minmax(430px,1fr)}
+.lcGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(275px,1fr));gap:var(--sp-4)}
+.lcCard{display:flex;flex-direction:column;min-width:0;width:100%;padding:0;text-align:left;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.lcCardHead,.lcCardCurrent,.lcCardFoot{width:100%;box-sizing:border-box}
+.lcCard:hover{border-color:var(--acc)}
+.lcCard.isSelected{border-color:var(--acc);background:var(--acc-bg)}
+.lcCardHead{padding:var(--sp-4);border-bottom:1px solid var(--line)}
+.lcCardHead h3{margin:0;font:600 23px var(--head);overflow-wrap:anywhere}
+.lcCardHead span{font-size:12px;color:var(--ink2)}
+.lcSymbol{width:46px;height:46px;flex:0 0 46px;display:grid;place-items:center;border:1px solid var(--line);background:var(--card2);color:var(--acc);font:600 22px var(--head)}
+.lcSymbol img{width:100%;height:100%;object-fit:contain;padding:var(--sp-1)}
+.lcOpenMark{margin-left:auto;color:var(--acc)!important}
+.lcCardCurrent{padding:var(--sp-4);flex:1}
+.lcActiveScope{margin-top:var(--sp-3)}
+.lcActiveScope+.lcActiveScope{padding-top:var(--sp-3);border-top:1px solid var(--line)}
+.lcScope{font-size:11px;color:var(--acc-ink);margin-bottom:var(--sp-2)}
+.lcRates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-3)}
+.lcRates div{display:flex;flex-direction:column;gap:var(--sp-1)}
+.lcRates span{font-size:10px;color:var(--ink2)}
+.lcRates b{font:600 22px var(--head);font-variant-numeric:tabular-nums}
+.lcCardFoot{padding:var(--sp-3) var(--sp-4);border-top:1px solid var(--line);color:var(--ink2);font-size:11px}
+.lcCardFoot span:last-child{color:var(--muted)}
+.lcDetail{background:var(--card);padding:var(--sp-5);min-width:0}
+.lcDetailHead{padding-bottom:var(--sp-4);border-bottom:1px solid var(--line);align-items:flex-start}
+.lcDetailHead h2{margin:var(--sp-1) 0;font:600 29px var(--head)}
+.lcActions{flex-wrap:wrap}
+.lcDetail details{border-bottom:1px solid var(--line);padding:var(--sp-4) 0}
+.lcDetail summary{cursor:pointer;font:600 18px var(--head);color:var(--ink);padding:var(--sp-1) 0}
+.lcDetail details[open]>summary{margin-bottom:var(--sp-3)}
+.lcFormGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-3)}
+.lcField{display:flex;flex-direction:column;gap:var(--sp-2);min-width:0;font-size:12px;color:var(--ink2)}
+.lcFull{grid-column:1/-1}
+.lcField input,.lcField textarea{width:100%;box-sizing:border-box;background:var(--card2);border:1px solid var(--line);color:var(--ink);padding:var(--sp-2);font:inherit;min-height:32px}
+.lcField textarea{resize:vertical;line-height:1.5}
+.lcField input:disabled,.lcField textarea:disabled{opacity:1;border-color:var(--hair);background:var(--card);color:var(--ink2);cursor:default}
+.lcField input:focus-visible,.lcField textarea:focus-visible,.lcCard:focus-visible,.lcPage button:focus-visible,.lcDetail summary:focus-visible,.lcSearch input:focus-visible{outline:0;box-shadow:var(--focus-ring)}
+.lcContract{border:1px solid var(--line);padding:var(--sp-3);margin-bottom:var(--sp-3);background:var(--card2)}
+.lcContractHead{margin-bottom:var(--sp-3);flex-wrap:wrap}
+.lcBadge{font-size:10px;letter-spacing:.03em;border:1px solid var(--line);padding:var(--sp-1) var(--sp-2);color:var(--ink2);background:var(--card)}
+.lcBadge.isCurrent{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink)}
+.lcSymbolPreview{display:flex;align-items:center;justify-content:center;border:1px solid var(--line);background:var(--card2);min-height:96px;max-width:180px;margin:var(--sp-3) 0;color:var(--muted);padding:var(--sp-3);font-size:12px}
+.lcSymbolPreview img{max-width:120px;max-height:96px;object-fit:contain}
+.lcSaveBar{padding-top:var(--sp-4);flex-wrap:wrap;position:sticky;bottom:0;background:var(--card)}
+.lcSaveBar span{flex:1}
+.lcNotice{border:1px solid var(--acc);background:var(--acc-bg);color:var(--acc-ink);padding:var(--sp-3);margin:var(--sp-3) 0;font-size:12px;line-height:1.5}
+.lcNotice button{margin:var(--sp-2)}
+.lcStats{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-3)}
+.lcStats div{border-left:2px solid var(--acc);padding-left:var(--sp-3);display:flex;flex-direction:column}
+.lcStats b{font:600 24px var(--head);font-variant-numeric:tabular-nums}
+.lcStats span{font-size:11px;color:var(--muted)}
+.lcMore{margin-top:var(--sp-4)}
+.lcEmpty{padding:var(--sp-6);font-size:13px;color:var(--muted)}
+.lcSrOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+@media(min-width:1600px){.lcLayout.hasDetail{grid-template-columns:minmax(400px,1.4fr) minmax(430px,1fr)}}
+@media(max-width:1000px){.lcLayout.hasDetail{grid-template-columns:1fr}.lcDetail{grid-row:1}.lcPageHead{align-items:flex-start}.lcPageHead .lcActions{justify-content:flex-end}}
+@media(max-width:550px){.lcPage{padding:var(--sp-3)}.lcPageHead{flex-direction:column}.lcPageHead .lcActions{justify-content:flex-start}.lcGrid{grid-template-columns:1fr}.lcFormGrid{grid-template-columns:1fr}.lcDetail{padding:var(--sp-4)}.lcDetailHead{flex-wrap:wrap}.lcToolbar{align-items:stretch;flex-direction:column}.lcSearch{max-width:none}}
