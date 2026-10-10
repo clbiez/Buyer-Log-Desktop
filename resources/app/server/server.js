@@ -5414,6 +5414,16 @@ require('./routes/test-report-routes')(app, {
   automationError,
   express,
   userAccess,
+  authorizedOrders:async (profile,{write=false}={})=>{
+    const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
+    await ensureDataLoaded(profile.id);
+    const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
+    const businessRows=userAccess.filterRowsByScope(profile, filterRowsByEffectiveHorizon(profile,source,ordersForTarget(active,source,overrides)));
+    const rows=buildOrdersRowsFromASAS(businessRows,antrepoForTarget(active,source),overrides).filter(row=>!write || canUserEditOrderCode(profile,canonicalFields.value(row,'cp','orderCode')));
+    const CP=require('../public/cp-readiness-engine');
+    return new Map(rows.map(row=>[CP.analyzeOrder(row).orderKey,{orderCode:String(canonicalFields.value(row,source,'orderCode') || ''),
+      plmId:String(canonicalFields.value(row,source,'plmId') || ''),modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || '')}]));
+  },
 });
 /* ===================================================================
    OAB (Order-Assortment-Budget) — Overview modülü.
@@ -5619,6 +5629,94 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
    browser-debug-service) okunur, yalnız bellekte tutulur; AI istekleri
    doğrudan LCW AI HTTP API'sine gider. */
 require('./routes/lcwai-routes')(app, { express, userAccess, outputTemplates: { load: loadAiOutputTemplates, add: addAiOutputTemplate, update: updateAiOutputTemplate, remove: deleteAiOutputTemplate } });
+/* Agent Ofisi: aynı AI / canonical / deterministik motorlar. Özel arşiv,
+   generic peer sync'e eklenmez; sahip + Moderatör için şifreli kanal kullanır. */
+const { createAgentOfficeStore } = require('./lib/agent-office-store');
+const { createAgentOfficeSync } = require('./lib/agent-office-sync');
+const { createAgentOfficeService } = require('./lib/agent-office-service');
+const agentOfficeRoot = path.join(LOCAL_DATA_ROOT, 'agent-office');
+const agentOfficeStore = createAgentOfficeStore({ root:path.join(agentOfficeRoot, 'owners') });
+const agentOfficeSync = createAgentOfficeSync({ store:agentOfficeStore, localRoot:path.join(agentOfficeRoot, 'sync'),
+  getSharedRoot:async()=>{const settings=await syncSettings.read();return settings.sharedSyncRoot || null;},
+  profileById:id=>userAccess.profileById(id), deviceId:localDb.getDeviceId(),
+  audit:(profile,action,target,detail)=>userAccess.appendAudit(profile,action,target,detail) });
+async function agentOfficeOperationalData(profile, scope, areas) {
+  const matches=(row,module)=>['orderCode','plmId','colourCode'].every(key=>{
+    if(!scope[key])return true;
+    const binding=canonicalFields.bindingFor(module,key);
+    if(!binding)return module==='collection'&&key==='orderCode';
+    return canonicalFields.normalizedValue(row,module,key)===canonicalFields.normalizedValue({[binding.keys[0]]:scope[key]},module,key);
+  });
+  const result={cpRows:[],collectionRows:[],cpAvailable:false,collectionAvailable:false,sourceErrors:[]};
+  const orderSource = areas.includes('cp') ? 'cp' : areas.includes('orders') ? 'orders' : areas.includes('backlog') ? 'backlog' : null;
+  result.operationalSource = orderSource;
+  for(const source of [...(orderSource?[orderSource]:[]),'collection']) {
+    if(!areas.includes(source) || !userAccess.hasArea(profile,source==='collection'?'koleksiyon':source))continue;
+    try {
+      const rows=await agentPlatformDataset(profile.id,profile,source);
+      const filtered=rows.filter(row=>matches(row,source));
+      result[source!=='collection'?'cpRows':'collectionRows']=source==='collection' || source==='cp' ? filtered : filtered.map(row=>{const projected={};for(const [field,value] of Object.entries(canonicalFields.project(row,source))) {const binding=canonicalFields.bindingFor('cp',field);if(binding && value != null)projected[binding.keys[0]]=value;}return projected;});
+      result[source!=='collection'?'cpAvailable':'collectionAvailable']=true;
+    } catch(error) { result.sourceErrors.push({source,code:String(error.code || 'SOURCE_UNAVAILABLE')}); }
+  }
+  if(scope.orderCode && result.collectionAvailable) {
+    if(result.cpAvailable){const identities=new Set(result.cpRows.map(row=>canonicalFields.normalizedValue(row,'cp','plmId')+'|'+canonicalFields.normalizedValue(row,'cp','colourCode')));result.collectionRows=result.collectionRows.filter(row=>identities.has(canonicalFields.normalizedValue(row,'collection','plmId')+'|'+canonicalFields.normalizedValue(row,'collection','colourCode')));}
+    else{result.collectionRows=[];result.sourceErrors.push({source:'collection',code:'ORDER_SCOPE_NOT_RESOLVED'});}
+  }
+  const active=cacheForUser(profile.id);
+  result.sourceUpdatedAt=active.loadedAt || null;
+  result.collectionUpdatedAt=areas.includes('collection')?loadWorkspace(profile.id).updatedAt || null:null;
+  result.transitRules=effectiveOverridesForUser(profile.id).transitRules || [];
+  const entries=userPreferences.load(profile.id).entries || {}, readPreference=key=>{try {const value=entries[key]?.value;return value?JSON.parse(value):null;}catch(_){return null;}};
+  const prefs=readPreference('lcw.cp.assistant.v1') || {}, priority=readPreference('lcw.cp.rules.priority.v1'), checklistRules=readPreference('lcw.cp.rules.checklist.v1');
+  result.personalRules=[...(priority?.rules || []),...(checklistRules?.rules || []),...(prefs.rules || []).filter(rule=>![...(priority?.rules || []),...(checklistRules?.rules || [])].some(item=>item.id===rule.id))];
+  result.deletedRuleIds=[...new Set([...(priority?.deletedRuleIds || []),...(checklistRules?.deletedRuleIds || []),...(prefs.deletedRuleIds || [])])];
+  result.checklistEnabled=prefs.checklistSettings?.enabled !== false;result.settings=prefs.settings || {};
+  result.personalAnswers=readPreference('lcw.cp.checklist.v1') || {};
+
+  if(areas.includes('lfl') && userAccess.hasArea(profile,'lfl')) {try {const rows=await agentPlatformDataset(profile.id,profile,'lfl');result.lflSummary={rows:rows.length,fields:rows.length?Object.keys(canonicalFields.project(rows[0],'lfl')):[],sourceUpdatedAt:active.loadedAt};}catch(error){result.sourceErrors.push({source:'lfl',code:'SOURCE_UNAVAILABLE'});}}
+  if(result.cpAvailable) {
+    const CP=require('../public/cp-readiness-engine'), analyses=result.cpRows.map(row=>CP.analyzeOrder(row)), keys=new Set(analyses.map(order=>order.orderKey));
+    const Checklist=require('../public/cp-checklist-engine'), optionKeys=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
+    const models=new Set(result.cpRows.map(row=>String(canonicalFields.value(row,'cp','plmId') || '')));
+    const reports=require('./lib/test-reports/store').publicPayload();
+    const links=Object.fromEntries(Object.entries(reports.links).filter(([,link])=>keys.has(link?.orderKey)));
+    result.reports={...reports,links,reports:Object.fromEntries(Object.keys(links).map(key=>[key,reports.reports[key]]))};
+    const checklist=require('./lib/checklist-supplier-store').publicPayload();
+    result.checklist={...checklist,answers:Object.fromEntries(Object.entries({...checklist.answers,...result.personalAnswers}).filter(([key])=>keys.has(key.slice(0,key.lastIndexOf('::'))) || optionKeys.has(key.slice(0,key.lastIndexOf('::')))))};
+    const samples=sampleRequestStore.load(),bom=require('./lib/plm-bom-store').load();
+    result.samples={models:Object.fromEntries(Object.entries(samples.models).filter(([key])=>models.has(key))),updatedAt:samples._updatedAt};
+    result.bom={models:Object.fromEntries(Object.entries(bom.models).filter(([key])=>models.has(key))),updatedAt:bom._updatedAt};
+    result.attachmentExists=id=>Boolean(require('./lib/checklist-supplier-store').getAttachmentPath(id));
+    const analytics=require('../public/collection-analytics-engine');
+    const observations=result.cpRows.map(row=>({row,price:Number(canonicalFields.value(row,'cp','supplierFob') || canonicalFields.value(row,'cp','fob')) || null,
+      manufacturer:canonicalFields.value(row,'cp','manufacturer'),country:canonicalFields.value(row,'cp','country'),classification:canonicalFields.value(row,'cp','category'),
+      quantity:canonicalFields.value(row,'cp','orderQuantity'),modelKey:canonicalFields.value(row,'cp','plmId'),rowId:CP.analyzeOrder(row).orderKey}));
+    // Native FOB values remain in separate country groups; no invented exchange
+    // rate or cross-currency comparison. Existing price screen handles that.
+    result.priceInsights=analytics.aggregateDimensions(observations,['manufacturer','country','classification'],['median','min','max','priceCount','modelCount'])
+      .map(item=>({dimensions:item.dimensions,values:item.values,currency:'UNVERIFIED_SOURCE_UNIT',source:'CP FOB',sourceUpdatedAt:result.sourceUpdatedAt}));
+  }
+  if(!result.personalRules.length && result.checklist?.definitions?.length)result.personalRules=result.checklist.definitions;
+  return result;
+}
+async function agentOfficeAutomationPreview(profile,code) {
+  if(!userAccess.hasArea(profile,'automations') || !userAccess.hasCapability(profile,'AUTOMATIONS.CREATE'))throw Object.assign(new Error('OFFICE_AUTOMATION_FORBIDDEN'),{code:'OFFICE_AUTOMATION_FORBIDDEN',statusCode:403});
+  const {parsed,validation}=automationAiRequest(code);
+  if(parsed.actions.some(action=>!['OPEN_PAGE','SHOW_REPORT'].includes(action.type)))throw Object.assign(new Error('OFFICE_AUTOMATION_SCOPE'),{code:'OFFICE_AUTOMATION_SCOPE',statusCode:422});
+  const rows=await automationAiPreviewSourceRows(profile.id,profile,parsed.source);
+  return {...automationAiPreviewRows(rows,parsed,validation),name:parsed.name,trigger:parsed.trigger,conditions:parsed.conditions,actionDefinitions:parsed.actions};
+}
+const agentOfficeService=createAgentOfficeService({store:agentOfficeStore,sync:agentOfficeSync,userAccess,engine:()=>require('./lib/lcwai').getDefaultEngine(),
+  getOperationalData:agentOfficeOperationalData,
+  automationGuide:async()=>{const model=aiCapabilityRegistry.getCapabilityModel();return aiGuideGenerator.generateGuide({...model,actions:model.actions.filter(action=>['OPEN_PAGE','SHOW_REPORT'].includes(action.id))});},
+  validateAutomation:agentOfficeAutomationPreview,
+  onBackgroundError:code=>logRuntimeFailure('agentOfficeBackground',Object.assign(new Error(code),{code})) });
+require('./routes/agent-office-routes')(app,{express,userAccess,service:agentOfficeService,
+  listOwners:async()=>{const store=require('./lib/user-access').readStore();return [store.moderator,...(store.users || [])].filter(Boolean).map(profile=>({id:profile.id,name:profile.displayName || profile.username || profile.id,enabled:profile.enabled!==false}));},
+  validateAutomation:agentOfficeAutomationPreview,
+  applyAutomation:async(profile,code)=>{await agentOfficeAutomationPreview(profile,code);const {parsed,validation}=automationAiRequest(code);const compiled=aiAutomationCompiler.compile(parsed,validation,{sourceCode:code});
+    const normalized=automationNormalizePayload({...compiled,enabled:false},profile.id);return automationRecipeStore.createRecipe(profile.id,normalized).result;} });
 require('./routes/oab-batch-routes')(app, {
   afterSharedCollectionSave,
   automationError,

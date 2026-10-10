@@ -1490,6 +1490,7 @@ const APP_PAGE_META=Object.freeze({
   lfl:{tr:'LFL analizi',en:'LFL Analysis',group:'commercial'},
   opencosting:{tr:'Ön Maliyet',en:'Open Costing',group:'commercial'},
   lcwai:{tr:'LCW AI',en:'LCW AI',group:'home'},
+  agentoffice:{tr:'Agent Ofisi',en:'Agent Office',group:'home'},
   automations:{tr:'Otomasyonlar',en:'Automations',group:'operations'},
   source:{tr:'Veri Yönetimi',en:'Data Management',group:'system'},
   agents:{tr:'Agent Workflow Studio',en:'Agent Workflow Studio',group:'operations'},
@@ -2070,7 +2071,7 @@ function switchTab(tab){
   const accessArea=tab==='manufacturers'?'orders':((tab==='quotations'||tab==='pricinghistory')?'koleksiyon':tab);
   // LCW AI her oturum açmış kullanıcıya açıktır; kapısı LCW AI kurumsal girişidir.
   const licenseAccess=tab==='licensecards'&&['orders','cp','source'].some(area=>window.BLCanAccessArea?.(area));
-  if(tab!=='lcwai'&&typeof window.BLCanAccessArea==='function'&&!licenseAccess&&!window.BLCanAccessArea(accessArea)){
+  if(tab!=='lcwai'&&tab!=='agentoffice'&&typeof window.BLCanAccessArea==='function'&&!licenseAccess&&!window.BLCanAccessArea(accessArea)){
     if(typeof showToast==='function')showToast(appLang==='en'?'You do not have access to this area.':'Bu yetki alanına erişiminiz bulunmuyor.');
     return false;
   }
@@ -2146,6 +2147,11 @@ function switchTab(tab){
     }).catch(err=>showToast(err&&err.message||String(err)));
   }
   if(tab==='overview')void ensureOverviewOabModule();
+  if(tab==='agentoffice'){
+    void window.BLPerf.ensureFeature('agentOffice').then(()=>{
+      if(currentActiveTab()==='agentoffice')return window.initAgentOffice?.();
+    }).catch(err=>showToast(err&&err.message||String(err)));
+  }
   /* v7.81 — Veri Yönetimi. Lazy: ilk geçişte yüklenir, açılışta değil.
      Sekmeden çıkılıp geri dönülürse modül zaten yüklüdür ve yalnız tazelenir. */
   if(tab==='source'){

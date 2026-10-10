@@ -721,9 +721,28 @@
   const askAuthed = options => withDesktopAuth(() => ask(options));
   const chatAuthed = options => withDesktopAuth(() => chat(options));
   const uploadAuthed = (file, options) => withDesktopAuth(() => uploadFile(file, options));
+  // Persistent agent jobs still use this common transport/auth/cancellation
+  // client. The business route archives the exchange around the SAME engine.
+  async function runAgentOffice(options = {}) {
+    const path = options.archive ? '/api/agent-office/training/review' : '/api/agent-office/run';
+    const controller = new AbortController();
+    const abort = () => controller.abort();
+    if(options.signal){if(options.signal.aborted)abort();else options.signal.addEventListener('abort',abort,{once:true});}
+    try {
+      const response=await fetch(path,{method:'POST',credentials:'same-origin',signal:controller.signal,headers:{'Content-Type':'application/json',Accept:'application/x-ndjson'},body:JSON.stringify(options.payload || {})});
+      if(!response.ok){const data=await response.json().catch(()=>({}));throw Object.assign(new Error(data.code || 'OFFICE_AI_FAILED'),{code:data.code || 'OFFICE_AI_FAILED'});}
+      let result=null,failure=null;
+      await readEvents(response,event=>{if(event.type==='progress')options.onProgress?.(event);else if(event.type==='result')result=event.result;else if(event.type==='error')failure=event.error;});
+      if(failure)throw Object.assign(new Error(failure.code || 'OFFICE_AI_FAILED'),failure);
+      if(!result)throw Object.assign(new Error('LCWAI_STREAM_INTERRUPTED'),{code:'LCWAI_STREAM_INTERRUPTED'});
+      return result;
+    }catch(err){if(controller.signal.aborted)throw lcwError({code:'LCWAI_CANCELLED'});throw err;}
+    finally{options.signal?.removeEventListener('abort',abort);}
+  }
   root.BuyerLogAI = {
     ask: askAuthed, askWithFiles: options => withDesktopAuth(() => askWithFiles(options)), uploadFile: uploadAuthed, cancel, getStatus, onStatus, connect, disconnect,
     chat: chatAuthed, createConversation, continueConversation, openChat,
+    runAgentOffice: options => withDesktopAuth(() => runAgentOffice(options)),
     openOutput, revealOutput, listOutputs, getDraft, renderDraft, draftSkeleton, outputTemplates,
     registerContextProvider, getAvailableContext, buildContext,
     mountAssistant, openPanel, openConnectionDialog, statusBadge, pickField,

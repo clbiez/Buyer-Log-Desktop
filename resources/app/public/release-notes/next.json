@@ -604,6 +604,501 @@
           "en": "Minimal license summary calculated from loaded demo orders"
         }
       }
+    },
+    {
+      "id": "agent-office-pixel-loft",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Pixel Atölye: iki katlı, etkileşimli agent ofisi",
+        "en": "Pixel Workshop: a two-floor interactive agent office"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Sabit yandan görünümde çalışma masaları, kahve köşesi, toplantı masası ve dinlenme alanını katmanlı 2D sahnede kullanın. Karakter seçimi gerçek agent sohbetine geçer; iş durumları gerçek kayıtlardan gelir. Boşta hareket, kahve ve göz kırpma dekoratiftir ve AI çağrısı tüketmez. Kamera dönmez; yakınlaştırma ve kaydırma desteklenir.",
+        "en": "Use workstations, a coffee corner, meeting table and lounge in a layered fixed-side-view 2D scene. Selecting a character opens its real agent conversation; job states come from actual records. Idle movement, coffee and blinking are decorative and consume no AI calls. The camera does not rotate; zoom and pan are supported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-workshop.png",
+        "alt": {
+          "tr": "Pixel Atölye: iki katlı, etkileşimli agent ofisi · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Pixel Workshop: a two-floor interactive agent office · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Pixel Atölye: iki katlı, etkileşimli agent ofisi",
+          "en": "Pixel Workshop: a two-floor interactive agent office"
+        }
+      }
+    },
+    {
+      "id": "agent-office-local-light",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Dört atmosfer ve kalıcı aydınlatma tercihleri",
+        "en": "Four atmospheres and persistent lighting preferences"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Sabah, öğle, akşam ve gece atmosferleri yerel saate göre değişir. Pencereler, şehir ışıkları, ortam yüzeyleri ve lambalar ayrı katmanlardır. Manuel saat, ışık seviyesi ve lamba açma/kapama tercihi kalıcı saklanır.",
+        "en": "Morning, noon, evening and night follow local time. Windows, city lights, ambient surfaces and lamps use separate layers. Manual time, light level and lamp power persist."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-evening.png",
+        "alt": {
+          "tr": "Dört atmosfer ve kalıcı aydınlatma tercihleri · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Four atmospheres and persistent lighting preferences · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Dört atmosfer ve kalıcı aydınlatma tercihleri",
+          "en": "Four atmospheres and persistent lighting preferences"
+        }
+      }
+    },
+    {
+      "id": "agent-office-durable-memory",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kalıcı sohbet, sürümlü hafıza ve çelişki uyarısı",
+        "en": "Persistent chat, versioned memory and contradiction warnings"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Kullanıcı ve agent yanıtları, yarım/geçersiz yanıtlar dahil kaybolmadan arşivlenir. Talimat, tercih, karar ve bilgi sürümlenir; aynı konu anahtarındaki farklı bilgiler işaretlenir. AI tahmini onaylı bilgiye dönüşmez; kopya hafızası yeni sahibinin onayını bekler.",
+        "en": "User and agent replies, including partial or invalid replies, are archived. Instructions, preferences, decisions and facts are versioned; differences under the same topic key are flagged. AI inference does not become approved fact; copied memory needs its new owner’s approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-memory.png",
+        "alt": {
+          "tr": "Kalıcı sohbet, sürümlü hafıza ve çelişki uyarısı · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Persistent chat, versioned memory and contradiction warnings · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Kalıcı sohbet, sürümlü hafıza ve çelişki uyarısı",
+          "en": "Persistent chat, versioned memory and contradiction warnings"
+        }
+      }
+    },
+    {
+      "id": "agent-office-shared-jobs",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "CP ve Koleksiyon agentlarına ortak görev",
+        "en": "Shared tasks for CP and Collection agents"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "En fazla dört agentın ilgili hafızası ve yetkili iş verisi tek LCW AI çağrısında değerlendirilir. Katılımcı bakışları ayrı gösterilir; bu sonuç bağımsız denetim olarak sunulmaz.",
+        "en": "Relevant memory and authorized business evidence from up to four agents are reviewed in one LCW AI call. Participant perspectives are shown separately and are not presented as independent reviews."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-shared-job.png",
+        "alt": {
+          "tr": "CP ve Koleksiyon agentlarına ortak görev · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Shared tasks for CP and Collection agents · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "CP ve Koleksiyon agentlarına ortak görev",
+          "en": "Shared tasks for CP and Collection agents"
+        }
+      }
+    },
+    {
+      "id": "agent-office-operational-intelligence",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Sipariş, kalite, veri kalitesi ve üretici karar desteği",
+        "en": "Order, quality, data quality and supplier decision support"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Canonical eşleşmeler, mevcut CP öncelik/kişisel kural motoru, ASAS tarihleri, checklist, test raporu, PLM talepleri ve mevcut dekorasyon BOM kanıtları birlikte değerlendirilir. Önceki/yeni değer, kaynak, gerekçe, güncellik ve güven gösterilir. Eksik kapsam bilinmiyor olarak kalır; kaynak veri otomatik değişmez.",
+        "en": "Canonical joins, existing CP priority and personal rule engines, ASAS dates, checklist, test reports, PLM requests and existing decoration BOM evidence are reviewed together. Previous/current values, sources, reasons, freshness and confidence are shown. Unavailable coverage remains unknown; source data is not changed automatically."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-actions.png",
+        "alt": {
+          "tr": "Sipariş, kalite, veri kalitesi ve üretici karar desteği · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Order, quality, data quality and supplier decision support · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Sipariş, kalite, veri kalitesi ve üretici karar desteği",
+          "en": "Order, quality, data quality and supplier decision support"
+        }
+      }
+    },
+    {
+      "id": "agent-office-deterministic-watches",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "AI çağrısı olmadan konu takibi ve günlük uyarılar",
+        "en": "Topic watches and daily alerts without AI calls"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Konu değişiklikleri ve yerel güne göre günlük özetler Buyer Log açıkken kontrol edilir. Aynı bulgu tekrar bildirilmez; menü uyarı sayısını taşır. Arka plan kontrolleri AI çağırmaz.",
+        "en": "Topic changes and summaries by local day are checked while Buyer Log is open. The same finding is not repeatedly reported; the navigation shows an alert count. Background checks do not call AI."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-actions.png",
+        "alt": {
+          "tr": "AI çağrısı olmadan konu takibi ve günlük uyarılar · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Topic watches and daily alerts without AI calls · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "AI çağrısı olmadan konu takibi ve günlük uyarılar",
+          "en": "Topic watches and daily alerts without AI calls"
+        }
+      }
+    },
+    {
+      "id": "agent-office-safe-automation",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Doğal dilden onaylı rapor otomasyonu taslağı",
+        "en": "Approved report automation drafts from natural language"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "LCW AI mevcut Automation Code dilini üretir; Buyer Log gerçek parser/validator ve yetkili verilerle önizler. Onay sonrası yalnız pasif taslak oluşturulur. Ofis rehberi ve doğrulayıcısı mevcut SHOW_REPORT ve OPEN_PAGE aksiyonlarıyla sınırlıdır; aktivasyon Otomasyonlar ekranındadır.",
+        "en": "LCW AI produces existing Automation Code; Buyer Log previews it with the real parser/validator and authorized data. Approval creates a disabled draft only. The office guide and validator allow existing SHOW_REPORT and OPEN_PAGE actions; activation stays in Automations."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-automation.png",
+        "alt": {
+          "tr": "Doğal dilden onaylı rapor otomasyonu taslağı · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Approved report automation drafts from natural language · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Doğal dilden onaylı rapor otomasyonu taslağı",
+          "en": "Approved report automation drafts from natural language"
+        }
+      }
+    },
+    {
+      "id": "agent-office-archive-parts",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "20 MB sınırına uygun arşiv parçaları ve maliyet önizlemesi",
+        "en": "Archive parts within the 20 MB limit and cost preview"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Tam sohbet MD arşivi gerçek UTF-8 boyutuyla 19 MiB altındaki bütün mesaj parçalarına ayrılır. Normal sorular ilgili bağlamı seçer. Tam arşiv AI incelemesi parça/çağrı bütçesi önizlemesi ve açık onay gerektirir; tek iş en fazla 16 çağrıdır. Başlangıç parçası ve en fazla 15 parça seçilerek büyük geçmiş ayrı onaylı gruplarla incelenebilir.",
+        "en": "Full MD chat archives are split into whole-message parts below 19 MiB using actual UTF-8 size. Normal questions select relevant context. Full AI archive review needs a part/call budget preview and explicit approval, with at most 16 calls per job. Choose a first part and at most 15 parts to review large histories in separately approved batches."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-archive.png",
+        "alt": {
+          "tr": "20 MB sınırına uygun arşiv parçaları ve maliyet önizlemesi · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Archive parts within the 20 MB limit and cost preview · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "20 MB sınırına uygun arşiv parçaları ve maliyet önizlemesi",
+          "en": "Archive parts within the 20 MB limit and cost preview"
+        }
+      }
+    },
+    {
+      "id": "agent-office-catalog-rental",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kullanıcılar arasında agent kopyalama ve sembolik ödünç alma",
+        "en": "Agent copying and symbolic rental between users"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Onaylı paylaşım önizlemesi talimatları ve paylaşılabilir hafızayı kataloğa açar. Kopya ve sembolik ödünç alma bağımsız agent oluşturur; özel sohbetler ve kaynak kullanıcının yetkileri aktarılmaz. Katalog kaydı kaldırılabilir.",
+        "en": "An approved sharing preview publishes instructions and shareable memory to the catalog. Copying and symbolic rental create independent agents; private conversations and the original owner’s permissions do not transfer. Listings can be withdrawn."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-catalog.png",
+        "alt": {
+          "tr": "Kullanıcılar arasında agent kopyalama ve sembolik ödünç alma · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Agent copying and symbolic rental between users · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Kullanıcılar arasında agent kopyalama ve sembolik ödünç alma",
+          "en": "Agent copying and symbolic rental between users"
+        }
+      }
+    },
+    {
+      "id": "agent-office-moderator-curation",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Moderatör eğitim arşivi ve kontrollü birleştirme",
+        "en": "Moderator training archive and controlled combination"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Moderatör Sync ile teslim edilmiş kullanıcı eğitimlerini ve sohbetlerini audit iziyle inceler. Tekrarlar ve çelişkili konu anahtarları ayrılır; seçilen onaylı talimat ve hafızadan yeni agent oluşturulur. Bu işlem model fine-tuning değildir.",
+        "en": "Moderators inspect training and conversations delivered through Sync with an audit trail. Duplicates and conflicting topic keys are identified; selected approved instructions and memories create a new agent. This does not fine-tune model weights."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-moderation.png",
+        "alt": {
+          "tr": "Moderatör eğitim arşivi ve kontrollü birleştirme · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Moderator training archive and controlled combination · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Moderatör eğitim arşivi ve kontrollü birleştirme",
+          "en": "Moderator training archive and controlled combination"
+        }
+      }
+    },
+    {
+      "id": "agent-office-verified-sync",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Doğrulanmış cihazlarla şifreli özel agent Sync",
+        "en": "Encrypted private agent Sync with verified devices"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Özel eğitim kanalı AES-256-GCM, RSA anahtar sarma ve gönderen imzası kullanır. İlk aktarım öncesi karşılıklı cihaz parmak izi doğrulaması gerekir; ortak klasörde yazılı bir kimlik güven sayılmaz. Normal kullanıcı yalnız kendi arşivine erişir, moderatör rolü güncel IAM üzerinden kontrol edilir.",
+        "en": "Private training uses AES-256-GCM, RSA key wrapping and sender signatures. Devices must mutually verify fingerprints before the first transfer; a claimed identity in the shared folder is not trusted. Ordinary users access their own archives; Moderator access uses current IAM."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-sync-devices.png",
+        "alt": {
+          "tr": "Doğrulanmış cihazlarla şifreli özel agent Sync · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Encrypted private agent Sync with verified devices · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Doğrulanmış cihazlarla şifreli özel agent Sync",
+          "en": "Encrypted private agent Sync with verified devices"
+        }
+      }
+    },
+    {
+      "id": "agent-office-report-authorization",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Test raporları gerçek sipariş yetkisiyle sınırlandı",
+        "en": "Test reports are scoped to actual order authorization"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Rapor/görev okumaları güncel sipariş kapsamından geçer. Onaylanan raporlar yalnız düzenleme yetkisi bulunan siparişe yazılır; istemcinin değiştirdiği sipariş kimliği sunucunun doğruladığı kimlikle değiştirilir. Önizleme kaynağa yazmaz.",
+        "en": "Report/task reads respect the current order scope. Approved reports can only be written to editable orders; client-supplied identity fields are replaced by server-authorized identity. Preview does not write to source data."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-report-access.png",
+        "alt": {
+          "tr": "Test raporları gerçek sipariş yetkisiyle sınırlandı · anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Test reports are scoped to actual order authorization · real Buyer Log screen with anonymous demo data"
+        },
+        "caption": {
+          "tr": "Test raporları gerçek sipariş yetkisiyle sınırlandı",
+          "en": "Test reports are scoped to actual order authorization"
+        }
+      }
+    },
+    {
+      "id": "agent-office-workshop-appearance",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Canlı karakter görünümü ve kalıcı kişiselleştirme",
+        "en": "Live character appearance and persistent customization"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Saç modeli/rengi, ten, üst türü/rengi, alt giyim, ayakkabı, gözlük ve aksesuarı canlı ön izleyin. Görünüm seçili agenta özel kaydedilir ve yeniden açılışta geri gelir.",
+        "en": "Preview hair style/color, skin, top style/color, bottoms, shoes, glasses and accessories live. Appearance saves per agent and survives reopening."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-appearance.png",
+        "alt": {
+          "tr": "Canlı karakter görünümü ve kalıcı kişiselleştirme · anonim demo",
+          "en": "Live character appearance and persistent customization · anonymous demo"
+        },
+        "caption": {
+          "tr": "Canlı karakter görünümü ve kalıcı kişiselleştirme",
+          "en": "Live character appearance and persistent customization"
+        }
+      }
+    },
+    {
+      "id": "agent-office-workshop-editor",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Taslak ofis editörü: geri al, yinele ve düzen şablonları",
+        "en": "Draft office editor: undo, redo and layout templates"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Nesneleri katlara yerleştirin, sürükleyin, uygun nesnelerin yönünü değiştirin veya kaldırın. Çarpışma ve merdiven sınırları istemci ve sunucuda doğrulanır. Taslak yalnız Kaydet ile kalıcılaşır; Vazgeç, geri al/yinele ve altı düzen şablonu desteklenir. Eski ofis otomatik değiştirilmez ve açık geçişte yedek korunur.",
+        "en": "Place objects on floors, drag them, mirror suitable objects or remove them. Client and server validate collisions and stairs. Drafts persist only with Save; discard, undo/redo and six layout templates are supported. Old offices are not replaced automatically and explicit conversion retains a backup."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-editor.png",
+        "alt": {
+          "tr": "Taslak ofis editörü: geri al, yinele ve düzen şablonları · anonim demo",
+          "en": "Draft office editor: undo, redo and layout templates · anonymous demo"
+        },
+        "caption": {
+          "tr": "Taslak ofis editörü: geri al, yinele ve düzen şablonları",
+          "en": "Draft office editor: undo, redo and layout templates"
+        }
+      }
+    },
+    {
+      "id": "agent-office-workshop-theme",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Buyer Log temasına bağlı kontroller ve uyarlanabilir sahne",
+        "en": "Buyer Log themed controls and adaptive scene"
+      },
+      "path": {
+        "tr": "Sol menü › Agent Ofisi",
+        "en": "Navigation › Agent Office"
+      },
+      "body": {
+        "tr": "Ofis çizimi kendi renklerini korurken navigasyon, sohbet, karakter editörü, butonlar ve modallar Buyer Log temasını kullanır. Sahne oranı korunur; kısa ekranlarda karakter alanı açılır/kapanır. Gizli sekmede animasyon durur ve azaltılmış hareket desteklenir.",
+        "en": "The office artwork keeps its colors while navigation, chat, character editor, buttons and dialogs inherit the Buyer Log theme. Scene proportions are preserved; the character area collapses on short screens. Animation pauses while hidden and respects reduced motion."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-theme.png",
+        "alt": {
+          "tr": "Buyer Log temasına bağlı kontroller ve uyarlanabilir sahne · anonim demo",
+          "en": "Buyer Log themed controls and adaptive scene · anonymous demo"
+        },
+        "caption": {
+          "tr": "Buyer Log temasına bağlı kontroller ve uyarlanabilir sahne",
+          "en": "Buyer Log themed controls and adaptive scene"
+        }
+      }
     }
   ]
 }

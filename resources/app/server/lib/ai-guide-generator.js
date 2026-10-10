@@ -80,11 +80,12 @@ WHEN
   [orderStatus] != "In Production"
 END
 ACTIONS
-  SEND_EMAIL
+${(model.actions || []).some(action => action.id === 'SEND_EMAIL') ? `  SEND_EMAIL
     RECIPIENT_GROUP ASK_USER
     SUBJECT "Production risk"
     INCLUDE_MATCHING_ROWS TRUE
-    ATTACHMENT EXCEL
+    ATTACHMENT EXCEL` : `  SHOW_REPORT
+    TITLE "Production risk"`}
   END
 END
 \`\`\`

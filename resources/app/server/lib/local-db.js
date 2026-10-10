@@ -421,7 +421,7 @@ function readDeviceIdSync(file) {
   } finally { fs.closeSync(handle); }
 }
 
-function createLocalDb(file, { clock = Date.now, trace = null } = {}) {
+function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL_MAX_BYTES } = {}) {
   let dbFile = path.resolve(file);
   let deviceId = null;
   /* Taşıma kapsamı (v20261009). Ortak klasöre hiç gitmeyecek bir yerel yazım
@@ -495,6 +495,7 @@ function createLocalDb(file, { clock = Date.now, trace = null } = {}) {
       else if (entry.op === 'mark-ack') applyMarkAcknowledged(state, entry.payload);
       else if (entry.op === 'mark-ack-through') applyMarkAcknowledgedThrough(state, entry.payload);
       else if (entry.op === 'package') applyPackageToState(state, entry.payload);
+      else if (entry.op === 'private-records') applyPrivateRecords(state, entry.payload);
     }
     return state;
   }
@@ -630,7 +631,7 @@ function createLocalDb(file, { clock = Date.now, trace = null } = {}) {
   /* Sıcak yol. Durumun tamamını değil yalnız işlemleri yazar. */
   async function appendOperations(operations) {
     // Validate the whole batch before the first operation mutates cached state.
-    for (const operation of operations) {
+    for (const operation of typeof operations === 'function' ? [] : operations) {
       if (operation.op === 'delta') validateTransportClocks(operation.payload.delta);
       else if (operation.op === 'package') for (const delta of operation.payload.events || []) validateTransportClocks(delta);
     }
@@ -642,6 +643,7 @@ function createLocalDb(file, { clock = Date.now, trace = null } = {}) {
          bir taban bulamaz. Yalnız ilk yazmada bir kez ödenir. */
       if (!fs.existsSync(dbFile) && !fs.existsSync(`${dbFile}.bak`)) await writeState(dbFile, emptyState(loadDeviceId()));
       const state = await loadState();
+      if (typeof operations === 'function') operations = await operations(state);
       try {
         const results = operations.map(item => { stampOperation(state, item); return item.apply(state); });
 
@@ -653,7 +655,7 @@ function createLocalDb(file, { clock = Date.now, trace = null } = {}) {
         let size = 0;
         try { size = (await fsp.stat(walFile())).size; } catch (_) {}
         const { entries } = size ? await readWalEntries(walFile()) : { entries: [] };
-        if (size > WAL_MAX_BYTES || entries.length > WAL_MAX_ENTRIES) await writeSnapshot(state);
+        if (size > walMaxBytes || entries.length > WAL_MAX_ENTRIES) await writeSnapshot(state);
         // Durum yerinde değişti ve dosyalar yeniden yazıldı: imzayı tazele ki
         // sıradaki okuma diski boşuna baştan okumasın.
         cachedState = state; cachedTags = await currentTags();
@@ -665,6 +667,26 @@ function createLocalDb(file, { clock = Date.now, trace = null } = {}) {
         throw error;
       }
     });
+  }
+
+  // Private application documents share the durable WAL, but never create
+  // transport events. The prepared writes and CAS run under the same lease.
+  function applyPrivateRecords(state, payload) {
+    for (const [key,record] of Object.entries(payload.records || {})) state.records[key] = record;
+    state.conflicts.push(...(payload.conflicts || []));
+    state.revision = Math.max(Number(state.revision) || 0, Number(payload.revision) || 0);
+  }
+  async function privateRecordTransaction(prepare) {
+    let result;
+    await appendOperations(async state => {
+      const prepared = await prepare(state); result = prepared.result;
+      const payload = {records:prepared.records || {}, conflicts:prepared.conflicts || [], revision:Number(state.revision || 0) + 1};
+      for (const [key,record] of Object.entries(payload.records)) {
+        if (!record?.doc || !String(key).startsWith(record.doc.kind + ':')) throw new Error('Invalid private document');
+      }
+      return [{op:'private-records',payload,apply:current => applyPrivateRecords(current,payload)}];
+    });
+    return result;
   }
 
   async function transaction(mutator) {
@@ -1404,7 +1426,7 @@ function createLocalDb(file, { clock = Date.now, trace = null } = {}) {
       return { status, deviceId: current.deviceId };
     });
   }
-  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, setSharedOwnerResolver, retireOwnerConflicts, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, mergeCheckpointClockState, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
+  return { get file() { return dbFile; }, getFile: () => dbFile, getDeviceId: () => loadDeviceId(), setTransportFilter, setSharedOwnerResolver, retireOwnerConflicts, rotateDeviceId, ensureDeviceBinding, setFolder, moveTo, ensure, read, transaction, privateRecordTransaction, mergeCheckpointClockState, queuePatch, queuePatches, tombstone, applyDelta, applyDeltas, applyPackage, pending, pendingForSync, pendingCount, unacknowledged, unacknowledgedCount, markSynced, markAcknowledged, markAcknowledgedThrough, stats, businessHash, compact, listConflicts, listConflictSummaries, resolveConflict, putAsset, putAssets };
 }
 
 /* ===================================================================
