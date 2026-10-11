@@ -121,7 +121,10 @@ test('rota: kişisel kayıt ortak kayda yazmaz, Sync yayını yapmaz; ortak kay�
   assert.doesNotMatch(routeLine, /requirePermission\('manageModelConnections'\)/, 'kişisel kaydetme herkese açık olmalı');
   const personal = route.slice(route.indexOf("if (body.mode === 'personal')"), route.indexOf("if (!userAccess.hasPermission(req.currentUser, 'manageModelConnections'))"));
   assert.ok(personal.length > 50, 'kişisel dal yetki kontrolünden önce olmalı');
-  assert.match(personal, /userPreferences\.saveHorizon\(userId, target/);
+  assert.match(personal, /await personalHorizonService\.update\(\{ sourceId, moduleId, definition: body\.definition \}/);
+  const nativePreferences=fs.readFileSync(path.join(APP,'server','lib','user-preferences.js'),'utf8');
+  assert.match(nativePreferences,/function saveHorizons\(userId,modules,horizon/);
+  assert.match(nativePreferences,/saved=applyEntryChanges\(userId,set,\[\],options\)/);
   assert.match(personal, /sourceUserId\(req\)/);
   assert.doesNotMatch(personal, /replaceModelConnections|publishSharedMasterChange/);
   const shared = route.slice(route.indexOf("if (!userAccess.hasPermission(req.currentUser, 'manageModelConnections'))"));

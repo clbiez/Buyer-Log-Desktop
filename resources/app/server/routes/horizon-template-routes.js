@@ -23,6 +23,7 @@ module.exports = function registerHorizonTemplateRoutes(app, deps) {
     requestRevision,
     sourceUserId,
     sourceWorkflowService,
+    personalHorizonService,
     userAccess,
     userPreferences,
   } = deps;
@@ -30,6 +31,11 @@ module.exports = function registerHorizonTemplateRoutes(app, deps) {
   const sourceGuard=req=>({assertAuthority:()=>{
     const current=userAccess.profileById(req.currentUser.id);
     if(!current||current.enabled===false||!userAccess.hasArea(current,'source')||!userAccess.hasPermission(current,'manageModelConnections'))throw Object.assign(new Error('PERMISSION_REQUIRED'),{code:'PERMISSION_REQUIRED',statusCode:403});
+    return current;
+  }});
+  const personalGuard=req=>({ownerId:sourceUserId(req),profile:req.currentUser,assertAuthority:()=>{
+    const current=userAccess.profileById(req.currentUser.id);
+    if(!current||current.enabled===false||!userAccess.hasArea(current,'source'))throw Object.assign(new Error('PERMISSION_REQUIRED'),{code:'PERMISSION_REQUIRED',statusCode:403});
     return current;
   }});
 
@@ -143,22 +149,11 @@ app.post('/api/data-management/filter', userAccess.requireArea('source'), expres
       return res.status(400).json({ error: 'sourceId ve moduleId zorunlu.', code: 'VALIDATION_ERROR' });
     }
 
-    const store = loadModelConnections();
-
     if (body.mode === 'personal') {
-      const personal = dataManagementFilterWriter.planPersonalFilter(store.items, {
-        sourceId, moduleId, definition: body.definition,
-      });
-      if (!personal.ok) {
-        const status = personal.code === 'SOURCE_NOT_FOUND' ? 404 : (personal.code === 'FILTER_INVALID' ? 400 : 409);
-        return res.status(status).json({ error: personal.message, code: personal.code, warnings: personal.warnings });
-      }
       const userId = sourceUserId(req);
-      for (const target of personal.modules) {
-        userPreferences.saveHorizon(userId, target, personal.horizon, { connectionId: personal.connectionId, role: personal.role });
-      }
-      userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_PERSONAL_FILTER_UPDATE', userId, { sourceId, moduleId, modules: personal.modules });
-      return res.json({ ok: true, personal: true, modules: personal.modules, warnings: personal.warnings });
+      const saved = await personalHorizonService.update({ sourceId, moduleId, definition: body.definition }, { sourceRevision: String(body.expectedSourceRevision || '').trim() }, personalGuard(req));
+      userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_PERSONAL_FILTER_UPDATE', userId, { sourceId, moduleId, modules: saved.modules });
+      return res.json({ ok: true, personal: true, modules: saved.modules, warnings: saved.warnings || [] });
     }
 
     if (!userAccess.hasPermission(req.currentUser, 'manageModelConnections')) {
@@ -207,7 +202,7 @@ app.post('/api/data-management/layer', userAccess.requireArea('source'), express
     }
 
     const userId = sourceUserId(req);
-    userPreferences.removeKeys(userId, [key]);
+    personalHorizonService.clearLayer({moduleId,layerKey},null,personalGuard(req));
     userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_LAYER_CLEAR', userId, { moduleId, layerKey });
     res.json({ ok: true, moduleId, layerKey });
   } catch (err) { apiError(res, err, 'Kişisel katman kaldırılamadı.'); }

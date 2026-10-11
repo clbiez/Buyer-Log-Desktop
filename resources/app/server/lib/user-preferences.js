@@ -172,10 +172,18 @@ function load(userId) {
         const entry = clean[key];
         if (entry && entry.updatedAt && entry.updatedAt > stamp) delete deletions[key];
       }
-      return { userId: String(userId || ''), entries: clean, deletions, _updatedAt: String(raw && raw._updatedAt || '') };
+      const _horizonRevisions=Object.fromEntries(Object.entries(raw?._horizonRevisions||{}).filter(([key,value])=>key.startsWith(WORKSPACE_HORIZON_PREFIX)&&Number.isSafeInteger(value)&&value>=0));
+      return { userId: String(userId || ''), entries: clean, deletions, _updatedAt: String(raw && raw._updatedAt || ''), _horizonRevisions };
     },
     restore: value => atomicWriteJson(file, value),
   });
+}
+// Horizon generations are server-owned and survive removal and workspace restore.
+// Every native preference writer includes them in its existing single atomic save.
+function persistPreferences(userId,saved,current){
+  const versions={...(current._horizonRevisions||{})},keys=new Set([...Object.keys(current.entries),...Object.keys(current.deletions),...Object.keys(saved.entries),...Object.keys(saved.deletions)]);
+  for(const key of keys)if(key.startsWith(WORKSPACE_HORIZON_PREFIX)&&JSON.stringify([current.entries[key]||null,current.deletions[key]||null])!==JSON.stringify([saved.entries[key]||null,saved.deletions[key]||null]))versions[key]=(versions[key]||0)+1;
+  saved._horizonRevisions=versions;atomicWriteJson(prefsFile(userId),saved);
 }
 
 function totalBytes(entries) {
@@ -215,7 +223,7 @@ function merge(userId, incoming) {
   }
   fs.mkdirSync(ROOT, { recursive: true });
   const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
-  atomicWriteJson(prefsFile(userId), saved);
+  persistPreferences(userId,saved,current);
   return { ...saved, rejected };
 }
 
@@ -235,7 +243,7 @@ function removeKeys(userId, keys, options = {}) {
   });
   fs.mkdirSync(ROOT, { recursive: true });
   const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
-  atomicWriteJson(prefsFile(userId), saved);
+  persistPreferences(userId,saved,current);
   return saved;
 }
 
@@ -246,6 +254,7 @@ function removeKeys(userId, keys, options = {}) {
    Restore anı yeni zaman damgası olur; açık kalmış eski bir tarayıcı sekmesi
    backup'tan daha eski değerleri sonradan geri itemez. */
 function restoreSnapshot(userId, snapshot) {
+  const current=load(userId);
   const raw = snapshot && typeof snapshot === 'object' ? snapshot : {};
   const now = new Date().toISOString(), entries = {}, rejected = [];
   for (const [key, itemRaw] of Object.entries(raw.entries && typeof raw.entries === 'object' ? raw.entries : {})) {
@@ -265,7 +274,7 @@ function restoreSnapshot(userId, snapshot) {
   }
   fs.mkdirSync(ROOT, { recursive: true });
   const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
-  atomicWriteJson(prefsFile(userId), saved);
+  persistPreferences(userId,saved,current);
   return { ...saved, rejected };
 }
 
@@ -274,12 +283,15 @@ function restoreSnapshot(userId, snapshot) {
    replaceWorkspaceEntries), `remove` anahtarları mezar taşıyla kaldırılır.
    Ön Ayar Paylaşımı ve onun geri alma yolu bu fonksiyonu kullanır. */
 function applyEntryChanges(userId, set = {}, remove = [], options = {}) {
+  options.assertAuthority?.();
   const current = load(userId), entries = { ...current.entries };
   for (const [key, expected] of Object.entries(options.expectedEntries || {})) {
     if (JSON.stringify(current.entries[key] || null) !== JSON.stringify(expected)) {
       throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'), { code:'OFFICE_PREVIEW_CHANGED', statusCode:409 });
     }
   }
+  for(const [key,expected]of Object.entries(options.expectedHorizonRevisions||{}))if((current._horizonRevisions?.[key]||0)!==expected)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+  for(const [key,expected]of Object.entries(options.expectedDeletions||{}))if((current.deletions[key]||null)!==expected)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
   const deletions = { ...current.deletions };
   const now = new Date().toISOString(), rejected = [];
   for (const key of Array.isArray(remove) ? remove : []) {
@@ -301,7 +313,7 @@ function applyEntryChanges(userId, set = {}, remove = [], options = {}) {
   }
   fs.mkdirSync(ROOT, { recursive: true });
   const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
-  atomicWriteJson(prefsFile(userId), saved);
+  options.assertAuthority?.();persistPreferences(userId,saved,current);
   return { ...saved, rejected };
 }
 
@@ -362,7 +374,7 @@ function replaceWorkspaceEntries(userId, incoming, categories, mode = 'MERGE') {
   }
   fs.mkdirSync(ROOT, { recursive: true });
   const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
-  atomicWriteJson(prefsFile(userId), saved);
+  persistPreferences(userId,saved,current);
   return { ...saved, rejected };
 }
 
@@ -393,21 +405,34 @@ function getHorizon(userId, moduleName) {
 
 function saveHorizonState(userId, key, moduleName, horizon, context = {}) {
   const now = new Date().toISOString();
+  const value=buildHorizonValue(getStoredHorizon(userId,key),horizon,context);
+  return merge(userId, { [key]: { value: JSON.stringify(value), updatedAt: now } });
+}
+function buildHorizonValue(current,horizon,context={}){
   let value = horizon && typeof horizon === 'object' ? clone(horizon) : {};
   /* v7.81 — linkedGroupId ARTIK YAZILMAZ. Horizon grupları kaldırıldı; alanı
      yazmaya devam etmek, hiçbir şeyin okumadığı bir işaret bırakmak olurdu.
      Eski kayıtlardaki alan olduğu gibi durur ve zararsızdır (okunmaz). */
   const connectionId = String(context.connectionId || '').trim();
   if (connectionId) {
-    const current = getStoredHorizon(userId, key), bundle = current && current.byConnection ? clone(current) : { version: 1, byConnection: {} };
-    bundle.byConnection[connectionId] = value;
+    const bundle = current && current.byConnection ? clone(current) : { version: 1, byConnection: {} };
+    Object.defineProperty(bundle.byConnection,connectionId,{value,enumerable:true,writable:true,configurable:true});
     if (context.role) {
       bundle.connectionRoles = bundle.connectionRoles || {};
-      bundle.connectionRoles[connectionId] = String(context.role);
+      Object.defineProperty(bundle.connectionRoles,connectionId,{value:String(context.role),enumerable:true,writable:true,configurable:true});
     }
     value = bundle;
   }
-  return merge(userId, { [key]: { value: JSON.stringify(value), updatedAt: now } });
+  return value;
+}
+function horizonEntrySnapshot(store,keys){return {entries:Object.fromEntries(keys.map(key=>[key,store.entries[key]||null])),deletions:Object.fromEntries(keys.map(key=>[key,store.deletions[key]||null])),revisions:Object.fromEntries(keys.map(key=>[key,store._horizonRevisions?.[key]||0]))};}
+function planHorizonEntries(store,modules,horizon,context={}){
+  const entries={};for(const moduleName of [...new Set(modules)]){const key=horizonKey(moduleName),value=JSON.stringify(buildHorizonValue(parseStoredJson(store.entries[key]),horizon,context));if(Buffer.byteLength(value)>MAX_VALUE_BYTES)throw Object.assign(new Error('USER_PREFS_TOO_LARGE'),{code:'USER_PREFS_TOO_LARGE',statusCode:413});entries[key]=value;}return entries;
+}
+function saveHorizons(userId,modules,horizon,context={},options={}){
+  const current=load(userId),set=planHorizonEntries(current,modules,horizon,context),saved=applyEntryChanges(userId,set,[],options);
+  if(saved.rejected.length||Object.entries(set).some(([key,value])=>saved.entries[key]?.value!==value))throw Object.assign(new Error('OFFICE_RESOURCE_VERIFY_FAILED'),{code:'OFFICE_RESOURCE_VERIFY_FAILED',statusCode:409});
+  return saved;
 }
 
 function getStoredHorizon(userId, key) {
@@ -657,7 +682,7 @@ module.exports = {
   WORKSPACE_HORIZON_PREFIX, APPLIED_HORIZON_PREFIX, WORKSPACE_CATEGORY_PREFIXES, WORKSPACE_CATEGORIES,
   categoryForKey, normalizeCategories, workspaceEntries, replaceWorkspaceEntries,
   normalizeWorkspaceEntryMap, effectiveWorkspaceEntries, copyWorkspaceSnapshot, copyWorkspaceEntrySnapshot,
-  horizonKey, appliedHorizonKey, getHorizon, saveHorizon, getAppliedHorizon, saveAppliedHorizon, resetWorkspace, resolveHorizon,
+  horizonKey, appliedHorizonKey, getHorizon, saveHorizon, saveHorizons, planHorizonEntries, horizonEntrySnapshot, getAppliedHorizon, saveAppliedHorizon, resetWorkspace, resolveHorizon,
   supersedePersonalHorizons,
   applyHorizonOverrides,
   // v7.81 — Veri Yönetimi ekranı hangi katmanın kazandığını gösterebilsin diye.
@@ -666,7 +691,7 @@ module.exports = {
 
 // All exported preference writers share the same lease as the CP agent CAS.
 // Internal synchronous calls stay within the outer writer's lease.
-for (const name of ['merge','removeKeys','restoreSnapshot','applyEntryChanges','replaceWorkspaceEntries','copyWorkspaceSnapshot','copyWorkspaceEntrySnapshot','saveHorizon','saveAppliedHorizon','resetWorkspace','supersedePersonalHorizons']) {
+for (const name of ['merge','removeKeys','restoreSnapshot','applyEntryChanges','replaceWorkspaceEntries','copyWorkspaceSnapshot','copyWorkspaceEntrySnapshot','saveHorizon','saveHorizons','saveAppliedHorizon','resetWorkspace','supersedePersonalHorizons']) {
   const writer=module.exports[name];
   module.exports[name]=(...args)=>require('./shared-file-transaction').withFileLeaseSync(prefsFile(name.startsWith('copyWorkspace')?args[1]:args[0]),()=>writer(...args));
 }
