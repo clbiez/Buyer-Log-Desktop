@@ -2287,6 +2287,105 @@
           "en": "Actual Buyer Log with anonymous demo data: durable CP rule result and rollback"
         }
       }
+    },
+    {
+      "id": "agent-capability-real-task-plans",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agentlar gerçek Buyer Log işlemlerini yürütüyor",
+        "en": "Agents execute actual Buyer Log operations"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Doğal dil veya AI gerektirmeyen işlem seçimiyle kalıcı görev oluştur. Her adım mevcut servisin gerçek sonucuyla doğrulanır; veri yazmaları kapsamlı önizleme ve kullanıcı onayı bekler.",
+        "en": "Create a durable task with natural language or direct operation selection without AI. Every step verifies the existing service’s actual result; data changes await a scoped preview and user approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-capability-task-form.png",
+        "alt": {
+          "tr": "Agentlar gerçek Buyer Log işlemlerini yürütüyor",
+          "en": "Agents execute actual Buyer Log operations"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-capability-durable-handoffs",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Görev devri ve tek kullanımlık onay",
+        "en": "Task handoffs and single-use approval"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Agentlar yalnız tamamlanmış adımın doğrulanmış çıktısını devreder. İki oturum veya süreç aynı onayı tekrar işlemez. Yarıda kalan belirsiz yazmalar durur; geri alma bağımlı bekleyen adımları iptal eder. Kullanıcı düzeltmeleri kaynaklı hafızaya kaydedilir.",
+        "en": "Agents hand off only verified outputs from completed steps. Two sessions or processes cannot reuse one approval. Uncertain interrupted writes stop; rollback cancels pending dependent steps. User corrections retain memory provenance."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-capability-task-result.png",
+        "alt": {
+          "tr": "Görev devri ve tek kullanımlık onay",
+          "en": "Task handoffs and single-use approval"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-capability-scheduled-read-grants",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Sınırlı okuma görevlerini zamanla",
+        "en": "Schedule limited read tasks"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Seçilen okuma işlemine sınırlı çalışma yetkisi ver; ilk saati, aralığı ve kaçırılan çalışma politikasını belirle. Görevler Buyer Log sunucusu açıkken çalışır; IAM veya agent kapsamı değişirse onay geçerliliğini kaybeder.",
+        "en": "Grant limited execution to a selected read operation; choose its first run, interval and missed-run policy. Tasks run while the Buyer Log server is open; changed IAM or agent scope invalidates the grant."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-capability-schedule.png",
+        "alt": {
+          "tr": "Sınırlı okuma görevlerini zamanla",
+          "en": "Schedule limited read tasks"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
     }
   ]
 }
