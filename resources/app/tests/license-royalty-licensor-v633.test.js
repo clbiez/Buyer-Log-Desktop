@@ -16,8 +16,10 @@ test('v6.33 License Royalty Calculations stores rules by Licensor again', () => 
   assert.match(DB, /merged\.pricingRules = BLBusinessRules\.migrateLicenseRoyaltyRules\(/);
   assert.match(BUSINESS, /source\.licensor = norm\(source\.licensor != null \? source\.licensor : source\.manufacturer\);/);
   assert.match(BUSINESS, /delete source\.manufacturer;/);
-  assert.match(SERVER, /licensor: String\(r\.licensor != null \? r\.licensor : \(r\.manufacturer \|\| ''\)\)\.trim\(\)/);
-  assert.doesNotMatch(SERVER, /manufacturer: String\(r\.manufacturer != null \? r\.manufacturer : \(r\.licensor \|\| ''\)\)\.trim\(\)/);
+  assert.match(SERVER, /resource-rule-service[^\n]*normalizePricingRules\(incoming\)/);
+  const shared=fs.readFileSync(path.join(ROOT,'server/lib/resource-rule-service.js'),'utf8');
+  assert.match(shared, /licensor: String\(r\.licensor != null \? r\.licensor : \(r\.manufacturer \|\| ''\)\)\.trim\(\)/);
+  assert.doesNotMatch(shared, /manufacturer: String\(r\.manufacturer != null \? r\.manufacturer : \(r\.licensor \|\| ''\)\)\.trim\(\)/);
 });
 
 test('v6.33 rule matching uses CP and Collection Licensor, not Manufacturer', () => {

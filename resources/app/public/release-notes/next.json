@@ -2716,6 +2716,138 @@
           "en": "Actual Buyer Log screen with anonymous demo data"
         }
       }
+    },
+    {
+      "id": "agent-master-rule-impact",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Paylaşılan kural değişikliğini önizle",
+        "en": "Preview shared rule changes"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "Transit ve royalty değişiklikleri mevcut doğrulayıcı, yetkili veri üzerinde etki analizi, güncel yetki ve revizyon kontrolüyle çalışır. Her değişiklik ayrı onay ve revizyona bağlı geri alma gerektirir.",
+        "en": "Transit and royalty changes use the existing validator, impact analysis of authorized data, current permissions and revision checks. Each change requires separate approval and revision-bound undo."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-resource-rules.png",
+        "alt": {
+          "tr": "Paylaşılan kural değişikliğini önizle",
+          "en": "Preview shared rule changes"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-monthly-fx",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Aylık kur değerlerini kontrollü güncelle",
+        "en": "Update monthly FX rates with controls"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "Agent seçilen ay ve para birimlerini mevcut kur servisiyle günceller. Diğer oranlar korunur; önizleme, onay ve gerçek kayıt doğrulaması zorunludur.",
+        "en": "The agent updates selected months and currencies through the existing FX service. Other rates are preserved; preview, approval and actual persistence verification are required."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-resource-fx.png",
+        "alt": {
+          "tr": "Aylık kur değerlerini kontrollü güncelle",
+          "en": "Update monthly FX rates with controls"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-manufacturer-dtr",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Üretici kartı, DTR ve mail adreslerini yönet",
+        "en": "Manage manufacturer cards, DTR and mail addresses"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "Oluşturma, düzenleme ve silme gerçek üretici kartı deposunu kullanır. Başka kullanıcının kilidi korunur; DTR ve taslak yönlendirme değişiklikleri onay bekler.",
+        "en": "Create, edit and delete use the actual manufacturer-card store. Other users’ locks are preserved; DTR and draft-routing changes await approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-manufacturer-record.png",
+        "alt": {
+          "tr": "Üretici kartı, DTR ve mail adreslerini yönet",
+          "en": "Manage manufacturer cards, DTR and mail addresses"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-endeksmatik-workbook",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Endeksmatik kitap ve set işlemlerini çalıştır",
+        "en": "Execute Endeksmatik workbook and set operations"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "Gerçek Excel dosyası kullanıcıya özel 48 saatlik alanda tutulur; mevcut parser ve hesap motoru kullanılır. Set seçimi, adlandırma, silme ve içe aktarım önizleme/onay ister; geri alma doğrulanmış dosya ve kaynak sürümüne bağlıdır.",
+        "en": "Actual Excel files are stored in an owner-isolated area for 48 hours; existing parsers and calculation engines are used. Set selection, rename, delete and import require preview and approval; undo binds verified evidence and source versions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-endeksmatik-import.png",
+        "alt": {
+          "tr": "Endeksmatik kitap ve set işlemlerini çalıştır",
+          "en": "Execute Endeksmatik workbook and set operations"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
     }
   ]
 }

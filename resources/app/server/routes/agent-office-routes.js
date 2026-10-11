@@ -30,6 +30,11 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.put(base+'/assistant',json,wrap(async(req,res)=>res.json({ok:true,assistant:await service.configureAssistant(req.currentUser,req.body||{})})));
   app.get(base+'/notifications',wrap(async(req,res)=>res.json({ok:true,...await service.notifications(req.currentUser,{timeZone:req.query.timeZone})})));
   app.get(base+'/state',wrap(async(req,res)=>res.json({ok:true,state:await service.state(req.currentUser)})));
+  app.post(base+'/artifacts/workbook',express.raw({type:()=>true,limit:'80mb'}),wrap(async(req,res)=>{
+    const profile=userAccess.profileById(req.currentUser.id);if(!profile||profile.enabled===false||!userAccess.hasPermission(profile,'manageModelConnections'))throw error('OFFICE_TOOL_FORBIDDEN',403);
+    const name=decodeURIComponent(String(req.get('X-BuyerLog-Filename')||'workbook.xlsx'));if(!/\.xlsx?$/i.test(name))throw error('OFFICE_TOOL_SCHEMA',422);
+    const artifact=await require('../lib/agent-artifact-store').put(profile,req.body,name,'workbook');audit(req,'AGENT_WORKBOOK_UPLOAD',artifact.id,{bytes:artifact.bytes,sha256:artifact.sha256});res.json({ok:true,artifact});
+  }));
   app.get(base+'/tasks/catalog',wrap(async(req,res)=>res.json({ok:true,tools:await service.taskCatalog(req.currentUser,req.query.agentId)})));
   app.post(base+'/quality/intake',express.json({limit:'160mb'}),wrap(async(req,res)=>{
     const owner=userAccess.profileById(req.currentUser.id),stamp=JSON.stringify(userAccess.publicProfile(owner));

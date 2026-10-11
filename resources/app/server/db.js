@@ -111,12 +111,12 @@ function deltaMirrorExcluded(file) {
   }
   return false;
 }
-function mirrorToDelta(file, value) {
+function mirrorToDelta(file, value, options) {
   if (!deltaStore || deltaMirrorExcluded(file)) return;
   // Ayna beklenmez ve sonucuna bakılmaz; delta-store hatasını kendi içinde
   // yutup raporlar, eski dosya yazması her hâlükârda tamamlanmıştır.
   // Ateşle-unut bir çağrı hiçbir koşulda yakalanmamış reddedilme üretmemeli.
-  documents().mirror(deltaStoreId(file), value);
+  return documents().mirror(deltaStoreId(file), value, options);
 }
 /* Taşınmış store'ların mevcut içeriğini tohumlama biçiminde döndürür. Dosya
    yollarını db.js'in kendisi bildiği için çağıranın yol kurgusu yapmasına
@@ -213,15 +213,24 @@ function readJsonWithBackup(file, fallback) {
   } catch (_) {}
   return parsed;
 }
-function saveRevisioned(file, value, fallback, expectedRevision, storeName) {
-  return withFileLeaseSync(file,()=>{
+function saveRevisioned(file, value, fallback, expectedRevision, storeName, options={}) {
+  const write=()=>{
   const current = storeExists(file) ? readJsonWithBackup(file, fallback) : cloneFallback(fallback);
+  options.assertAuthority?.();
   assertRevision(storeName || path.basename(file), current, expectedRevision);
   const saved = revisioned(value, revisionOf(current) + 1);
-  if (deltaWritesLegacy(file)) atomicWriteJson(file, saved);
-  mirrorToDelta(file, saved);
+  options.assertAuthority?.();if (deltaWritesLegacy(file)) {
+    if(options.legacyWrites)options.legacyWrites.push(()=>atomicWriteJson(file,saved));else atomicWriteJson(file,saved);
+  }
+  const mirrored=mirrorToDelta(file, saved,{guardSource:!!options.mirrorResults});if(mirrored)options.mirrorResults?.push(mirrored);
   return saved;
-  });
+  };
+  return options[require('./lib/guarded-document-mutation').HELD_DOCUMENT_LEASE]?write():withFileLeaseSync(file,write);
+}
+
+function mutateSharedResource(section,work) {
+  const file=section==='fx'?LEGACY_FX_FILE:OVERRIDES_FILE;
+  return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(),file,work);
 }
 
 function normalizeLandedMultipliers(value) {
@@ -403,7 +412,7 @@ function protectCriticalOverrideSections(current, incoming) {
   }
   return next;
 }
-function saveOverrides(overrides, expectedRevision = null) {
+function saveOverrides(overrides, expectedRevision = null, options={}) {
   ensureDataDir();
   const current = loadOverrides({ projectManufacturers: false });
   const protectedOverrides = protectCriticalOverrideSections(current, overrides);
@@ -412,16 +421,16 @@ function saveOverrides(overrides, expectedRevision = null) {
   if (Number(protectedOverrides._revisions.nonDtrManufacturers || 0) <= Number(current._revisions.nonDtrManufacturers || 0)) {
     protectedOverrides.nonDtrManufacturers = current.nonDtrManufacturers;
   }
-  return saveRevisioned(OVERRIDES_FILE, protectedOverrides, defaultOverrides, expectedRevision, 'Sipariş geçersiz kılma verileri');
+  return saveRevisioned(OVERRIDES_FILE, protectedOverrides, defaultOverrides, expectedRevision, 'Sipariş geçersiz kılma verileri',options);
 }
-function replacePricingRules(rules, expectedRevision = null) {
+function replacePricingRules(rules, expectedRevision = null, options={}) {
   const ov = loadOverrides();
   const current = Number(ov._revisions.pricingRules) || 0;
   const wanted = expectedNumber(expectedRevision);
   if (wanted != null && wanted !== current) throw new RevisionConflictError('License Royalty Calculations', wanted, current);
   ov.pricingRules = Array.isArray(rules) ? rules : [];
   ov._revisions.pricingRules = current + 1;
-  const saved = saveOverrides(ov);
+  const saved = saveOverrides(ov,ov._revision,options);
   return { rules: saved.pricingRules, revision: saved._revisions.pricingRules };
 }
 function transitRuleComparable(rule) {
@@ -458,7 +467,7 @@ function mergeTransitRules(baseRules, incomingRules, currentRules, wanted, curre
   const orderedIds = [...incoming.keys(), ...remote.keys()];
   return [...new Set(orderedIds)].map(id => merged.get(id)).filter(Boolean);
 }
-function replaceTransitRules(rules, expectedRevision = null, baseRules = null) {
+function replaceTransitRules(rules, expectedRevision = null, baseRules = null, options={}) {
   const wanted = expectedNumber(expectedRevision);
   // saveOverrides kendi atomik/lease yolunu kullanır. Araya başka bir overrides
   // yazısı girerse güncel snapshot ile en fazla iki kez yeniden birleştirir.
@@ -473,7 +482,7 @@ function replaceTransitRules(rules, expectedRevision = null, baseRules = null) {
     ov.transitRules = nextRules;
     ov._revisions.transitRules = current + 1;
     try {
-      const saved = saveOverrides(ov, ov._revision);
+      const saved = saveOverrides(ov, ov._revision,options);
       return { rules: saved.transitRules, revision: saved._revisions.transitRules };
     } catch (error) {
       if (!(error instanceof RevisionConflictError) || attempt === 2) throw error;
@@ -1591,10 +1600,10 @@ function loadFx(_userId = null) {
   const parsed = storeExists(LEGACY_FX_FILE) ? readJsonWithBackup(LEGACY_FX_FILE, defaultFx) : defaultFx();
   return { base: typeof parsed.base === 'string' && parsed.base ? parsed.base : 'USD', currencies: Array.isArray(parsed.currencies) ? parsed.currencies : [], months: parsed.months && typeof parsed.months === 'object' ? parsed.months : {}, updatedAt: parsed.updatedAt || null, sourceFile: parsed.sourceFile || null, sourceType: parsed.sourceType || null, sourceModifiedAt: parsed.sourceModifiedAt || null, _revision: revisionOf(parsed), _updatedAt: parsed._updatedAt || null };
 }
-function saveFx(data, expectedRevision = null, _userId = null) {
+function saveFx(data, expectedRevision = null, _userId = null, options={}) {
   ensureDataDir(); ensureFxDir();
   const clean = { base: typeof data.base === 'string' && data.base ? data.base : 'USD', currencies: Array.isArray(data.currencies) ? [...new Set(data.currencies.filter(Boolean))] : [], months: data.months && typeof data.months === 'object' ? data.months : {}, updatedAt: data.updatedAt || new Date().toISOString(), sourceFile: data.sourceFile || null, sourceType: data.sourceType || null, sourceModifiedAt: data.sourceModifiedAt || null };
-  return saveRevisioned(LEGACY_FX_FILE, clean, defaultFx, expectedRevision, 'Döviz kurları');
+  return saveRevisioned(LEGACY_FX_FILE, clean, defaultFx, expectedRevision, 'Döviz kurları',options);
 }
 function fxMonthResolved(store, monthKey) { const months = store.months || {}; if (months[monthKey]) return { month: monthKey, rates: months[monthKey], exact: true }; const keys = Object.keys(months).filter(k => months[k] && Object.keys(months[k]).length).sort(); if (!keys.length) return { month: null, rates: {}, exact: false }; const prev = keys.filter(k => k <= monthKey).pop(); const chosen = prev || keys[0]; return { month: chosen, rates: months[chosen] || {}, exact: false }; }
 
@@ -1749,7 +1758,7 @@ async function restoreCpExFactoryRevisions(snapshot, { actor = null } = {}) {
 
 module.exports = {
   snapshotOrderOverride,verifyOrderOverridePatch,restoreOrderOverrideReceipt,
-  attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
+  mutateSharedResource,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
