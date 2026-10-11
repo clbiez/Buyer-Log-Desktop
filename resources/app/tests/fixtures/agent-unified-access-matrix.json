@@ -1060,7 +1060,207 @@
       "read",
       "automate"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "automation.language",
+        "operation": "READ",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "automation.recipes.read",
+        "operation": "READ",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "automation.code.preview",
+        "operation": "READ",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "automation.recipe.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW",
+          "AUTOMATIONS.CREATE"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "automation.recipe.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW",
+          "AUTOMATIONS.EDIT"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "automation.recipe.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW",
+          "AUTOMATIONS.DELETE"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "automation.recipe.activate",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW",
+          "AUTOMATIONS.EDIT",
+          "AUTOMATIONS.APPROVE"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "automation.recipe.schedule",
+        "operation": "SCHEDULE",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW",
+          "AUTOMATIONS.EDIT",
+          "AUTOMATIONS.APPROVE",
+          "AUTOMATIONS.MANAGE"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "automation.recipe.preview",
+        "operation": "READ",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "automation.recipe.execute",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "automations"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "AUTOMATIONS.VIEW",
+          "AUTOMATIONS.APPROVE"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "source",

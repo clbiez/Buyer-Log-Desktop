@@ -2848,6 +2848,93 @@
           "en": "Actual Buyer Log screen with anonymous demo data"
         }
       }
+    },
+    {
+      "id": "agent-automation-definition",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Otomasyonlar",
+        "en": "Agent Office / Automations"
+      },
+      "title": {
+        "tr": "Agent ile gerçek otomasyon oluşturma ve revizyon",
+        "en": "Create and revise real automations with agents"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevi / Otomasyonlar › Çalışma geçmişi",
+        "en": "Agent Office › Operation task / Automations › Run history"
+      },
+      "body": {
+        "tr": "Doğal dil talebi ortak LCW AI ile mevcut otomasyon diline çevrilir. Gerçek doğrulayıcı ve derleyici kullanılır; tarif oluşturma, revizyon, etkinleştirme ve silme ayrı IAM yetkileri, önizleme ve onayla uygulanır.",
+        "en": "Natural-language requests use shared LCW AI and the existing automation language. The actual validator and compiler execute creation, revision, activation and deletion with distinct IAM permissions, preview and approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-automation-definition.png",
+        "alt": {
+          "tr": "Agent ile gerçek otomasyon oluşturma ve revizyon",
+          "en": "Create and revise real automations with agents"
+        }
+      }
+    },
+    {
+      "id": "agent-automation-execution",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Otomasyonlar",
+        "en": "Agent Office / Automations"
+      },
+      "title": {
+        "tr": "Gerçek analiz ve sahibine özel mail taslakları",
+        "en": "Actual analysis and owner-only email drafts"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevi / Otomasyonlar › Çalışma geçmişi",
+        "en": "Agent Office › Operation task / Automations › Run history"
+      },
+      "body": {
+        "tr": "Agent mevcut otomasyon motorunu çalıştırır. Yenileme sonrası güncel yetkili veri yeniden okunur. EML taslakları gerçek dosya ve çalışma kaydıyla doğrulanır; yarım kalan adımlar kısmi sonuçlarını korur, sonraki adım durur. Gerçek mail gönderimi açılmaz.",
+        "en": "Agents run the existing automation engine. Authorized data is read again after refresh. Actual EML files and run receipts are verified; interrupted steps preserve partial effects and stop the next step. Email sending remains unavailable."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-automation-execution.png",
+        "alt": {
+          "tr": "Gerçek analiz ve sahibine özel mail taslakları",
+          "en": "Actual analysis and owner-only email drafts"
+        }
+      }
+    },
+    {
+      "id": "agent-automation-schedule",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Otomasyonlar",
+        "en": "Agent Office / Automations"
+      },
+      "title": {
+        "tr": "Sınırlı zamanlama yetkisi ve güvenli devam",
+        "en": "Scoped schedule grants and safe recovery"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevi / Otomasyonlar › Çalışma geçmişi",
+        "en": "Agent Office › Operation task / Automations › Run history"
+      },
+      "body": {
+        "tr": "Zamanlama tarif, güncel kullanıcı/agent yetkileri ve alıcılara bağlıdır. Tetik ve çalışma kaydı aynı kilitli işlemde saklanır; eski aralık tetikleri ve geri alma aynı işi tekrarlayamaz. Buyer Log kapalıyken işler çalışmaz; kaçırılan günlük/haftalık tetikler çalıştır/atla kararı bekler. Kesilen çalışmalar kontrol gerekli olarak görünür.",
+        "en": "Schedules bind the recipe, live user/agent permissions and recipients. An occurrence and its run record are persisted in one locked transaction; stale interval triggers and undo cannot replay the effect. Work requires Buyer Log to be open; missed daily/weekly triggers await a run/skip decision. Interrupted runs remain visible for review."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-automation-schedule.png",
+        "alt": {
+          "tr": "Sınırlı zamanlama yetkisi ve güvenli devam",
+          "en": "Scoped schedule grants and safe recovery"
+        }
+      }
     }
   ]
 }

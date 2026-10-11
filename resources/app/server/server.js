@@ -2454,9 +2454,9 @@ async function agentPlatformHttpRequest(args) {
 }
 
 const cpAgentPreferences=require('./lib/cp-agent-preferences').createCpRulePreferences(userPreferences,userAccess);
-function cpAgentRevision(profile){
+function cpAgentRevision(profile,{ignoreRefresh=false}={}){
   const stamp=file=>{try{const stat=fs.statSync(file);return [stat.mtimeMs,stat.size,stat.ino];}catch(err){if(err.code==='ENOENT')return null;throw err;}};
-  return crypto.createHash('sha256').update(JSON.stringify({loadedAt:cacheForUser(profile.id).loadedAt,overrides:effectiveOverridesForUser(profile.id),preferences:userPreferences.load(profile.id),roleEntries:userAccess.roleWorkspaceEntries(profile),calendar:require('./lib/merch-calendar-store').publicProjection(),actor:userAccess.profileById(profile.id),plmSamples:stamp(require('./lib/plm-sample-requests-store').DEFAULT_FILE),checklist:stamp(require('./lib/checklist-supplier-store').FILE)})).digest('hex');
+  return crypto.createHash('sha256').update(JSON.stringify({loadedAt:ignoreRefresh?null:cacheForUser(profile.id).loadedAt,overrides:effectiveOverridesForUser(profile.id),preferences:userPreferences.load(profile.id),roleEntries:userAccess.roleWorkspaceEntries(profile),calendar:require('./lib/merch-calendar-store').publicProjection(),actor:userAccess.profileById(profile.id),plmSamples:stamp(require('./lib/plm-sample-requests-store').DEFAULT_FILE),checklist:stamp(require('./lib/checklist-supplier-store').FILE)})).digest('hex');
 }
 async function cpAgentData(profile) {
   const sourceRevision=cpAgentRevision(profile);
@@ -2724,43 +2724,8 @@ function automationError(res, err, fallback) {
   res.status(Number(err && err.statusCode) || 500).json({ error: message, code: err && err.code || 'AUTOMATION_ERROR', details });
 }
 
-function automationNormalizeBinding(raw){
-  const item=raw&&typeof raw==='object'?raw:{},mode=String(item.mode||'').trim().toLowerCase();
-  return {mode:mode==='field'?'field':'fixed',field:mode==='field'?String(item.field||'').trim().slice(0,240):''};
-}
-function automationNormalizePayload(value, ownerId='') {
-  const source=value&&typeof value==='object'?value:{};
-  const recipe = automationRecipeStore.normalizeRecipe(source, ownerId);
-  recipe.steps = (recipe.steps || []).map((step,index) => {
-    const normalized=agentBrowserConnector.normalizeStep(step,index);
-    normalized.binding=automationNormalizeBinding(step&&step.binding);
-    return normalized;
-  });
-  if (recipe.steps.length > 250) throw Object.assign(new Error('Bir otomasyonda en fazla 250 browser adımı olabilir.'), { code:'AUTOMATION_STEP_LIMIT', statusCode:413 });
-  /* v6.36 — ALICI DOĞRULAMASI KAYIT ANINDA.
-     Alıcısı çözülemeyen bir otomasyon kaydedilirse hata ancak Pazartesi 09:00'da,
-     e-posta gelmeyince fark edilir. Bu yüzden eksiklik kaydetme anında kesilir:
-     alan kipinde alan adı zorunlu, grup kipinde grup zorunlu. */
-  if (['email','mixed'].includes(recipe.purpose)) {
-    const email = recipe.email || {};
-    if (email.recipientMode === 'field') {
-      if (!String(email.recipientField || '').trim()) throw Object.assign(new Error('Alıcıyı belirleyen alanı seçin.'), { code:'AUTOMATION_RECIPIENT_FIELD_REQUIRED', statusCode:400 });
-    } else if (!String(email.groupId || '').trim()) {
-      throw Object.assign(new Error('E-posta grubu seçin.'), { code:'AUTOMATION_EMAIL_GROUP_REQUIRED', statusCode:400 });
-    }
-  }
-  if (recipe.ai && recipe.ai.origin === 'ai_import') {
-    let parsed;
-    try { parsed = automationLanguage.parse(recipe.ai.sourceCode); }
-    catch (error) { error.statusCode = 400; error.code = error.code || 'AI_AUTOMATION_SOURCE_INVALID'; throw error; }
-    const validation = automationLanguage.validate(parsed, aiCapabilityRegistry.getCapabilityModel());
-    if (!validation.ok) throw Object.assign(new Error('AI otomasyon taslağı güncel capability kaydıyla doğrulanamadı.'), { code:'AI_AUTOMATION_VALIDATION_FAILED', statusCode:422, details:{validation} });
-    const compatibility = aiAutomationCompatibility.check(recipe);
-    if (!compatibility.compatible) throw Object.assign(new Error('AI otomasyon taslağı güncel değil; gözden geçirilmesi gerekiyor.'), { code:'AI_AUTOMATION_NEEDS_REVIEW', statusCode:409, details:compatibility });
-    recipe.ai = { ...recipe.ai, status: recipe.enabled ? 'active' : 'draft', capabilityHash: validation.capabilityHash };
-  }
-  return recipe;
-}
+const automationDefinition=require('./lib/automation-definition-service').createAutomationDefinition({automationRecipeStore,agentBrowserConnector,automationLanguage,aiCapabilityRegistry,aiAutomationCompatibility});
+function automationNormalizePayload(value,ownerId=''){return automationDefinition.normalize(value,ownerId);}
 function automationPublicFieldName(name){
   const text=String(name==null?'':name).trim();
   return text&&!text.startsWith('_')&&!text.startsWith('__')?text:'';
@@ -3138,82 +3103,23 @@ function automationSplitRecipients(rows,recipe,ownerId){
   resolved.sort((a,b)=>a.value.localeCompare(b.value,'tr-TR',{sensitivity:'base'}));
   return {field,resolved,unresolved};
 }
-function automationAnalyze(rows,config={}){
-  const list=Array.isArray(rows)?rows:[],groupBy=String(config.groupBy||'').trim(),valueField=String(config.valueField||'').trim(),op=String(config.operation||'count').trim().toLowerCase(),topN=Math.max(1,Math.min(50,Number(config.topN)||15));
-  if(!groupBy)return {operation:'count',total:list.length,groups:[]};
-  const groups=new Map();
-  for(const row of list){const key=String(row&&row[groupBy]==null?'(boş)':row[groupBy]);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(row);}
-  const calc=items=>{if(op==='count'||!valueField)return items.length;const nums=items.map(row=>Number(row&&row[valueField])).filter(Number.isFinite);if(!nums.length)return 0;if(op==='sum')return nums.reduce((a,b)=>a+b,0);if(op==='avg')return nums.reduce((a,b)=>a+b,0)/nums.length;if(op==='min')return Math.min(...nums);if(op==='max')return Math.max(...nums);return items.length;};
-  const result=[...groups.entries()].map(([key,items])=>({key,count:items.length,value:calc(items)})).sort((a,b)=>Number(b.value)-Number(a.value)||b.count-a.count).slice(0,topN);
-  return {operation:op,groupBy,valueField,total:list.length,groups:result};
-}
-async function automationRunAppActions(ownerId,profile,recipe,dryRun){
+function automationAnalyze(rows,config={}){return require('./lib/automation-execution-service').automationAnalyze(rows,config);}
+async function automationRunAppActions(ownerId,profile,recipe,dryRun,assertAuthority=()=>{},onSourceRefresh=()=>{}){
   const uiActions=[],results=[];
   for(const action of recipe.appActions||[]){
+    profile=await assertAuthority()||profile;
     if(action.action==='open_page'){uiActions.push({action:'open_page',page:action.page});results.push({action:'open_page',page:action.page,dryRun});continue;}
     if(action.action==='refresh_source'){
       if(dryRun){results.push({action:'refresh_source',source:action.source,dryRun:true});continue;}
       const target=action.source||recipe.source;if(!['cp','orders','backlog','lfl','priceanalysis'].includes(target))throw Object.assign(new Error('Yenileme için CP / Orders / Backlog / LFL / Price & Supplier Analysis seçin.'),{code:'AUTOMATION_REFRESH_SOURCE_INVALID',statusCode:400});
-      await performRefresh(ownerId,profile,[target]);results.push({action:'refresh_source',source:target,ok:true});continue;
+      await performRefresh(ownerId,profile,[target]);await onSourceRefresh(target);results.push({action:'refresh_source',source:target,ok:true});continue;
     }
     results.push({action:'show_report',ok:true});
   }
   return {results,uiActions};
 }
-async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='manual',dataset=null}={}){
-  const data=dataset||await automationDataset(ownerId,profile,recipe),items=data.items||[],rows=data.items||[];
-  const purpose=recipe.purpose||'browser',result={purpose,total:data.total,matched:data.matched,willProcess:data.items?data.items.length:1,sample:data.sample,processed:0,failed:0};if(data.join)result.join=data.join;
-  if(data.change&&data.change.configured){result.change=data.change;if(!data.matched){result.processed=0;result.skipped=data.change.baselineReady?'no_change':'baseline_created';return result;}}
-  if(['analysis','app','email','mixed'].includes(purpose)) result.analysis=automationAnalyze(rows,recipe.analysis||{});
-  if(['app','mixed'].includes(purpose)) Object.assign(result,await automationRunAppActions(ownerId,profile,recipe,dryRun));
-  if(['browser','mixed'].includes(purpose)){
-    const steps=automationSteps(recipe);if(!steps.length)throw Object.assign(new Error('Önce web adımlarını kaydedin veya Terminal Kodu yazın.'),{code:'AUTOMATION_STEPS_EMPTY',statusCode:400});
-    const browser=await agentBrowserConnector.run(ownerId,{url:recipe.url,steps,items:data.items||undefined,timeoutMs:recipe.timeoutMs,continueOnError:recipe.continueOnError},{dryRun});
-    result.browser=browser;result.processed=Number(browser.processed)||0;result.failed=Number(browser.failed)||0;result.steps=browser.actions||[];
-  } else result.processed=data.items?data.items.length:1;
-  if(['email','mixed'].includes(purpose)){
-    const email=recipe.email||{},fields=(email.reportFields||[]).filter(Boolean);
-    const baseSubject=email.subject||recipe.name;
-    // E-posta otomasyonları güvenli taslak üretim yolunu kullanır.
-    /* v9.47 — Bir grubun yazışma dili. 'auto' kipinde karar satırların kendi
-       verisinden gelir; grup içinde karışıklık varsa çoğunluk kazanır (bir
-       üreticinin tek bir maili olacak, iki dilde yazılamaz). İngilizce metin
-       tanımlı değilse Türkçesi kullanılır. */
-    const groupLanguage=mailRows=>{
-      if(email.languageMode==='tr'||email.languageMode==='en')return email.languageMode;
-      if(email.languageMode!=='auto')return 'tr';
-      let en=0,tr=0;
-      for(const row of (mailRows||[]))(backlogAutomation.resolveCommunicationLanguage(row)==='en'?en++:tr++);
-      return en>tr?'en':'tr';
-    };
-    const deliver=async(group,subjectBase,mailRows,langRows)=>{
-      const lang=groupLanguage(langRows||mailRows);
-      const useEn=lang==='en'&&(email.subjectEn||email.bodyEn);
-      const subject=useEn&&email.subjectEn?String(subjectBase).replace(baseSubject,email.subjectEn):subjectBase;
-      const body=useEn&&email.bodyEn?email.bodyEn:email.body;
-      const entry={groupId:group.id,groupName:group.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,rows:mailRows.length,deliveryMode:email.deliveryMode,language:lang};
-      if(dryRun)return entry;
-      const open=trigger==='manual'&&email.openDraftOnManual!==false;
-      const draft=automationEmail.createDraft({name:recipe.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,body,rows:mailRows,fields,open});
-      return {...entry,filename:draft.filename,opened:draft.opened,draftUrl:`/api/automations/mail-drafts/${encodeURIComponent(draft.filename)}`};
-    };
-    if(email.recipientMode==='field'){
-      const split=automationSplitRecipients(rows,recipe,ownerId);
-      if(!split.resolved.length)throw Object.assign(new Error(split.responsible?'Hiçbir siparişin sorumlu üreticisi için e-posta adresli bir Üretici kartı bulunamadı; e-posta gönderilmedi. Üreticiler sayfasından kartları ASAS adlarıyla eşleyin.':`"${split.field}" alanındaki hiçbir değer adres defterinde bulunamadı; e-posta gönderilmedi.`),{code:'AUTOMATION_RECIPIENTS_UNRESOLVED',statusCode:400,details:{unresolved:split.unresolved.slice(0,50)}});
-      const messages=[];
-      for(const part of split.resolved)messages.push(await deliver(part.group,`${baseSubject} · ${part.value}`,email.includeReport===false?[]:part.rows,part.rows));
-      result.emails=messages;
-      result.email={...messages[0],split:true,messageCount:messages.length,recipientField:split.field,responsibleManufacturer:Boolean(split.responsible)};
-      // Çözülemeyen değerler sonuçta AÇIKÇA raporlanır; kullanıcı hangi
-      // üretici/ülke için e-posta gitmediğini görmeden devam etmemeli.
-      if(split.unresolved.length)result.unresolvedRecipients=split.unresolved;
-    }else{
-      const group=automationEmailGroup(recipe,ownerId);
-      result.email=await deliver(group,baseSubject,email.includeReport===false?[]:rows,rows);
-    }
-  }
-  return result;
-}
+const automationExecutor=require('./lib/automation-execution-service').createAutomationExecutor({automationDataset,automationAnalyze,automationRunAppActions,automationSteps,agentBrowserConnector,automationSplitRecipients,automationEmailGroup,automationEmail,backlogAutomation});
+async function automationExecute(ownerId,profile,recipe,options={}) { return automationExecutor(ownerId,profile,recipe,options); }
 function automationAiRequest(code) {
   const raw = String(code == null ? '' : code);
   if (raw.length > 120000) throw Object.assign(new Error('Automation Code 120000 karakter sınırını aşamaz.'), { code: 'AI_AUTOMATION_CODE_TOO_LARGE', statusCode: 413 });
@@ -3304,6 +3210,9 @@ app.post('/api/automations/recipes', userAccess.requireArea('automations'), expr
 app.put('/api/automations/recipes/:id', userAccess.requireArea('automations'), express.json({limit:'2mb'}), (req,res) => {try{const value=automationNormalizePayload(req.body||{},req.currentUser.id),saved=automationRecipeStore.updateRecipe(req.currentUser.id,req.params.id,value);userAccess.appendAudit(req.currentUser,'AUTOMATION_UPDATE',saved.result.id,{name:saved.result.name,purpose:saved.result.purpose,source:saved.result.source,steps:saved.result.steps.length});res.json({ok:true,recipe:saved.result,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon güncellenemedi.');}});
 app.delete('/api/automations/recipes/:id', userAccess.requireArea('automations'), (req,res) => {try{const saved=automationRecipeStore.deleteRecipe(req.currentUser.id,req.params.id);userAccess.appendAudit(req.currentUser,'AUTOMATION_DELETE',saved.result.id,{name:saved.result.name});res.json({ok:true,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon silinemedi.');}});
 app.post('/api/automations/email-groups', userAccess.requireArea('automations'), userAccess.requireModerator, express.json({limit:'512kb'}), (req,res) => {try{const saved=automationRecipeStore.replaceEmailGroups(req.body&&req.body.groups,req.currentUser);userAccess.appendAudit(req.currentUser,'AUTOMATION_EMAIL_GROUPS_UPDATE','email-groups',{groups:saved.result.length});res.json({ok:true,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'E-posta grupları kaydedilemedi.');}});
+app.get('/api/automations/runs/:id/drafts/:filename', userAccess.requireArea('automations'), async(req,res)=>{
+  try{const file=await require('./lib/agent-automation-schedule').ownedDraft(req.currentUser,req.params.id,req.params.filename,{store:automationRecipeStore,authorizeRecipe:agentAutomationDeps.authorizeRecipe,draftPath:automationEmail.draftPath,publicProfile:p=>userAccess.publicProfile(userAccess.profileById(p.id))});res.download(file,path.basename(file));}catch(err){automationError(res,err,'Otomasyon taslağı açılamadı.');}
+});
 app.get('/api/automations/mail-drafts/:filename', userAccess.requireArea('automations'), (req,res) => {const full=automationEmail.draftPath(req.params.filename);if(!full)return res.status(404).json({error:'E-posta taslağı bulunamadı.',code:'AUTOMATION_DRAFT_NOT_FOUND'});res.download(full,path.basename(full));});
 app.get('/api/automations/browser/status', userAccess.requireArea('automations'), async (req,res) => {try{res.set('Cache-Control','no-store').json({ok:true,status:await agentBrowserConnector.status(req.currentUser.id)});}catch(err){automationError(res,err,'Edge bağlantı durumu okunamadı.');}});
 app.post('/api/automations/browser/prepare-existing-edge', userAccess.requireArea('automations'), async (req,res) => {try{const result=agentBrowserConnector.openExistingEdgeDebugSetup();userAccess.appendAudit(req.currentUser,'AUTOMATION_BROWSER_EXISTING_EDGE_SETUP','edge',{userDataDir:result.userDataDir});res.json({ok:true,result,status:await agentBrowserConnector.status(req.currentUser.id)});}catch(err){automationError(res,err,'Mevcut Edge profili bağlantı ekranı açılamadı.');}});
@@ -3316,7 +3225,7 @@ app.post('/api/automations/recipes/:id/preview', userAccess.requireArea('automat
   try{const recipe=automationRecipeStore.recipeForOwner(req.currentUser.id,req.params.id);if(!recipe)return res.status(404).json({error:'Otomasyon bulunamadı.',code:'AUTOMATION_NOT_FOUND'});const data=await automationDataset(req.currentUser.id,req.currentUser,recipe);if(recipe.source!=='manual'&&!data.matched&&!(data.change&&data.change.configured))throw Object.assign(new Error('Filtrelere uyan kayıt bulunamadı.'),{code:'AUTOMATION_NO_MATCH',statusCode:409});const run=automationRecipeStore.createRun(req.currentUser.id,recipe,{dryRun:true,source:recipe.source,matched:data.matched}).result;const result=await automationExecute(req.currentUser.id,req.currentUser,recipe,{dryRun:true,trigger:'manual',dataset:data});if(data.fieldCheck)result.fieldCheck=data.fieldCheck;automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:'dry_run',processed:result.willProcess||0,failed:0,result,message:'Dry Run başarılı.',finishedAt:new Date().toISOString()});userAccess.appendAudit(req.currentUser,'AUTOMATION_DRY_RUN',recipe.id,{name:recipe.name,purpose:recipe.purpose,source:recipe.source,matched:data.matched});const previewToken=automationPreviewCachePut(req.currentUser.id,recipe,data);res.json({ok:true,preview:result,previewToken,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon ön izlemesi oluşturulamadı.');}
 });
 app.post('/api/automations/recipes/:id/run', userAccess.requireArea('automations'), express.json({limit:'16kb'}), async (req,res) => {
-  let run=null,recipe=null;try{recipe=automationRecipeStore.recipeForOwner(req.currentUser.id,req.params.id);if(!recipe)return res.status(404).json({error:'Otomasyon bulunamadı.',code:'AUTOMATION_NOT_FOUND'});if(recipe.enabled===false)throw Object.assign(new Error('Otomasyon devre dışı.'),{code:'AUTOMATION_DISABLED',statusCode:409});const cached=automationPreviewCacheTake(req.body&&req.body.previewToken,req.currentUser.id,recipe),data=cached||await automationDataset(req.currentUser.id,req.currentUser,recipe);if(recipe.source!=='manual'&&!data.matched&&!(data.change&&data.change.configured))throw Object.assign(new Error('Filtrelere uyan kayıt bulunamadı.'),{code:'AUTOMATION_NO_MATCH',statusCode:409});run=automationRecipeStore.createRun(req.currentUser.id,recipe,{dryRun:false,source:recipe.source,matched:data.matched,trigger:'manual'}).result;userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_START',recipe.id,{name:recipe.name,purpose:recipe.purpose,source:recipe.source,matched:data.matched});const result=await automationExecute(req.currentUser.id,req.currentUser,recipe,{dryRun:false,trigger:'manual',dataset:data});if(data.changeBaseline&&!result.failed)automationRecipeStore.setChangeBaseline(req.currentUser.id,recipe.id,data.changeBaseline);const finished=automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:result.failed?'failed':'completed',processed:Number(result.processed)||0,failed:Number(result.failed)||0,result,message:result.failed?`${result.failed} kayıt başarısız.`:'Otomasyon tamamlandı.',finishedAt:new Date().toISOString()}).result;userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_FINISH',recipe.id,{runId:run.id,processed:finished.processed,failed:finished.failed,status:finished.status});res.json({ok:!result.failed,result,run:finished,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){if(run){try{automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:'failed',message:err.message,failed:1,finishedAt:new Date().toISOString(),result:err.details||null});}catch(err2){logRuntimeFailure('automationUpdateRunFailed',err2);}userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_FAIL',recipe&&recipe.id||'',{runId:run.id,error:err.message,code:err.code||'AUTOMATION_FAILED'});}automationError(res,err,'Otomasyon çalıştırılamadı.');}
+  let run=null,recipe=null;try{recipe=automationRecipeStore.recipeForOwner(req.currentUser.id,req.params.id);if(!recipe)return res.status(404).json({error:'Otomasyon bulunamadı.',code:'AUTOMATION_NOT_FOUND'});if(recipe.enabled===false)throw Object.assign(new Error('Otomasyon devre dışı.'),{code:'AUTOMATION_DISABLED',statusCode:409});const cached=automationPreviewCacheTake(req.body&&req.body.previewToken,req.currentUser.id,recipe),data=cached||await automationDataset(req.currentUser.id,req.currentUser,recipe);if(recipe.source!=='manual'&&!data.matched&&!(data.change&&data.change.configured))throw Object.assign(new Error('Filtrelere uyan kayıt bulunamadı.'),{code:'AUTOMATION_NO_MATCH',statusCode:409});run=automationRecipeStore.createRun(req.currentUser.id,recipe,{dryRun:false,source:recipe.source,matched:data.matched,trigger:'manual'}).result;userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_START',recipe.id,{name:recipe.name,purpose:recipe.purpose,source:recipe.source,matched:data.matched});const result=await automationExecute(req.currentUser.id,req.currentUser,recipe,{dryRun:false,trigger:'manual',dataset:data});if(result.changeBaseline&&!result.failed&&result.outcome!=='partial')automationRecipeStore.setChangeBaseline(req.currentUser.id,recipe.id,result.changeBaseline);const finished=automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:result.outcome==='partial'?'partial':result.failed?'failed':'completed',processed:Number(result.processed)||0,failed:Number(result.failed)||0,result,message:result.failed?`${result.failed} kayıt başarısız.`:'Otomasyon tamamlandı.',finishedAt:new Date().toISOString()}).result;userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_FINISH',recipe.id,{runId:run.id,processed:finished.processed,failed:finished.failed,status:finished.status});res.json({ok:!result.failed,result,run:finished,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){if(run){try{automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:'failed',message:err.message,failed:1,finishedAt:new Date().toISOString(),result:err.details||null});}catch(err2){logRuntimeFailure('automationUpdateRunFailed',err2);}userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_FAIL',recipe&&recipe.id||'',{runId:run.id,error:err.message,code:err.code||'AUTOMATION_FAILED'});}automationError(res,err,'Otomasyon çalıştırılamadı.');}
 });
 
 /* v6.36 — Kaçırılan tetik uçları. Açılışta istemci pending-triggers'ı sorar;
@@ -3375,8 +3284,8 @@ app.post('/api/automations/pending-triggers/skip', userAccess.requireArea('autom
     for(const item of automationMissedTriggers(req.currentUser.id)){
       if(wanted.size&&!wanted.has(item.recipeId))continue;
       // Atlamak = o tetiği çalışmış saymak; böylece bir daha sorulmaz.
-      automationRecipeStore.markSchedule(req.currentUser.id,item.recipeId,item.key);
-      skipped.push(item.recipeId);
+      const recipe=automationRecipeStore.recipeForOwner(req.currentUser.id,item.recipeId);
+      if(recipe&&automationRecipeStore.markSchedule(req.currentUser.id,item.recipeId,item.key,{expectedRecipeRevision:recipe.revision,strict:true,allowMissed:true,skip:true}).result)skipped.push(item.recipeId);
     }
     userAccess.appendAudit(req.currentUser,'AUTOMATION_MISSED_SKIP','pending',{recipes:skipped});
     res.json({ok:true,skipped,pending:automationMissedTriggers(req.currentUser.id)});
@@ -3390,36 +3299,16 @@ app.post('/api/automations/pending-triggers/run', userAccess.requireArea('automa
       if(wanted.size&&!wanted.has(item.recipeId))continue;
       const recipe=automationRecipeStore.recipeForOwner(req.currentUser.id,item.recipeId);
       if(!recipe)continue;
-      // Tetik ÖNCE işaretlenir: çalışma hata verse bile aynı tetik döngüye
-      // girip tekrar tekrar denenmemeli.
-      automationRecipeStore.markSchedule(req.currentUser.id,recipe.id,item.key);
-      let run=null;
-      try{
-        const data=await automationDataset(req.currentUser.id,req.currentUser,recipe);
-        if(recipe.source!=='manual'&&!data.matched&&!(data.change&&data.change.configured)){results.push({recipeId:recipe.id,name:recipe.name,status:'skipped',message:'Filtrelere uyan kayıt yok.'});continue;}
-        run=automationRecipeStore.createRun(req.currentUser.id,recipe,{dryRun:false,source:recipe.source,matched:data.matched,trigger:'missed',scheduleKey:item.key}).result;
-        const result=await automationExecute(req.currentUser.id,req.currentUser,recipe,{dryRun:false,trigger:'schedule',dataset:data});
-        if(data.changeBaseline&&!result.failed)automationRecipeStore.setChangeBaseline(req.currentUser.id,recipe.id,data.changeBaseline);
-        automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:result.failed?'failed':'completed',processed:Number(result.processed)||0,failed:Number(result.failed)||0,result,message:'Kaçırılan tetik kullanıcı onayıyla çalıştırıldı.',finishedAt:new Date().toISOString()});
-        results.push({recipeId:recipe.id,name:recipe.name,status:result.failed?'failed':'completed',processed:Number(result.processed)||0});
-      }catch(err){
-        if(run)try{automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:'failed',failed:1,message:err.message,finishedAt:new Date().toISOString()});}catch(err2){logRuntimeFailure('automationUpdateRunFailed',err2);}
-        results.push({recipeId:recipe.id,name:recipe.name,status:'failed',message:err.message});
-      }
+      try{const result=await automationScheduledRunner(req.currentUser,recipe,item.key,{allowMissed:true});results.push({recipeId:recipe.id,name:recipe.name,...result});}
+      catch(err){results.push({recipeId:recipe.id,name:recipe.name,status:err.details?.automationReceipt?'partial':'failed',code:err.code||'AUTOMATION_FAILED'});}
     }
     userAccess.appendAudit(req.currentUser,'AUTOMATION_MISSED_RUN','pending',{results:results.map(r=>({id:r.recipeId,status:r.status}))});
     res.json({ok:true,results,pending:automationMissedTriggers(req.currentUser.id),state:automationState(req.currentUser.id,req.currentUser)});
   }catch(err){ automationError(res,err,'Kaçırılan tetikler çalıştırılamadı.'); }
 });
 
-function automationScheduleKey(recipe,now=new Date()){
-  const schedule=recipe&&recipe.schedule||{};if(!recipe||recipe.enabled===false||schedule.enabled!==true||recipe.purpose!=='email')return'';
-  const hhmm=String(schedule.time||'09:00'),[hh,mm]=hhmm.split(':').map(Number);const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
-  if(schedule.mode==='daily'){if(now.getHours()*60+now.getMinutes()<hh*60+mm)return'';return`daily:${today}:${hhmm}`;}
-  if(schedule.mode==='weekly'){if(!(schedule.weekdays||[]).includes(now.getDay())||now.getHours()*60+now.getMinutes()<hh*60+mm)return'';return`weekly:${today}:${hhmm}`;}
-  if(schedule.mode==='interval'){const last=schedule.lastRunAt?new Date(schedule.lastRunAt):null;if(last&&!Number.isNaN(last.getTime())&&now-last<Math.max(1,Number(schedule.intervalHours)||24)*3600000)return'';return`interval:${Math.floor(now.getTime()/60000)}`;}
-  return'';
-}
+const automationScheduleService=require('./lib/automation-schedule-service');
+function automationScheduleKey(recipe,now=new Date(),grant=automationRecipeStore.loadStore().agentScheduleGrants[recipe?.id]){return automationScheduleService.automationScheduleKey(recipe,now,grant);}
 /* ===================================================================
    v6.36 — KAÇIRILAN TETİKLER (zamanlama kararı "B+C")
    Sunucu son pencere kapanınca kendini kapattığı için (AUTO_EXIT), planlı bir
@@ -3437,32 +3326,15 @@ const AUTOMATION_MISSED_LOOKBACK_DAYS = 14;
 // Bir tarifin ŞU ANA KADAR gerçekleşmiş olması gereken EN SON tetiğini bulur.
 // Geriye doğru gün gün bakar; interval kipi kendi son çalışmasına göre işlediği
 // için burada kapsam dışıdır (kaçırma kavramı orada anlamsız).
-function automationDueOccurrence(recipe, now = new Date()) {
-  const schedule = (recipe && recipe.schedule) || {};
-  if (!recipe || recipe.enabled === false || schedule.enabled !== true || recipe.purpose !== 'email') return null;
-  if (!['daily', 'weekly'].includes(schedule.mode)) return null;
-  const hhmm = String(schedule.time || '09:00');
-  const [hh, mm] = hhmm.split(':').map(Number);
-  if (!Number.isFinite(hh) || !Number.isFinite(mm)) return null;
-  const weekdays = Array.isArray(schedule.weekdays) ? schedule.weekdays : [];
-  for (let back = 0; back <= AUTOMATION_MISSED_LOOKBACK_DAYS; back++) {
-    const day = new Date(now.getFullYear(), now.getMonth(), now.getDate() - back, hh, mm, 0, 0);
-    if (day > now) continue;
-    if (schedule.mode === 'weekly' && !weekdays.includes(day.getDay())) continue;
-    const stamp = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
-    return { key: `${schedule.mode}:${stamp}:${hhmm}`, dueAt: day, lateMinutes: Math.floor((now - day) / 60000) };
-  }
-  return null;
-}
-function automationIsWithinGrace(occurrence) {
-  return Boolean(occurrence) && occurrence.lateMinutes <= AUTOMATION_GRACE_MINUTES;
-}
+function automationDueOccurrence(recipe,now=new Date(),grant=automationRecipeStore.loadStore().agentScheduleGrants[recipe?.id]){return automationScheduleService.automationDueOccurrence(recipe,now,grant);}
+function automationIsWithinGrace(occurrence){return automationScheduleService.automationIsWithinGrace(occurrence);}
 // Sahibi için bekleyen (kaçırılmış) tetikleri listeler.
 function automationMissedTriggers(ownerId, now = new Date()) {
   const out = [];
-  for (const recipe of automationRecipeStore.allRecipes()) {
+  const state=automationRecipeStore.loadStore();
+  for (const recipe of state.recipes) {
     if (String(recipe.ownerId || '') !== String(ownerId || '')) continue;
-    const occurrence = automationDueOccurrence(recipe, now);
+    const occurrence = automationDueOccurrence(recipe, now,state.agentScheduleGrants[recipe.id]);
     if (!occurrence) continue;
     if (recipe.schedule && recipe.schedule.lastKey === occurrence.key) continue;
     if (automationIsWithinGrace(occurrence)) continue; // birazdan normal akışta çalışacak
@@ -3478,12 +3350,15 @@ function automationMissedTriggers(ownerId, now = new Date()) {
 }
 let automationSchedulerBusy=false;
 async function runScheduledAutomations(){
-  if(automationSchedulerBusy)return;automationSchedulerBusy=true;try{const now=new Date(),profiles=userAccess.allPublicProfiles();for(const recipe of automationRecipeStore.allRecipes()){const key=automationScheduleKey(recipe,now);if(!key||recipe.schedule&&recipe.schedule.lastKey===key)continue;
-    // v6.36 — tolerans penceresi geçmiş tetik burada ÇALIŞTIRILMAZ; kullanıcıya
-    // açılışta sorulmak üzere bekletilir. Geç bir e-postayı habersiz göndermek,
-    // sormaktan daha kötüdür.
-    const occurrence=automationDueOccurrence(recipe,now);
-    if(occurrence&&occurrence.key===key&&!automationIsWithinGrace(occurrence))continue;const profile=profiles.find(p=>p.id===recipe.ownerId&&p.enabled!==false);if(!profile)continue;automationRecipeStore.markSchedule(recipe.ownerId,recipe.id,key);let run=null;try{const data=await automationDataset(recipe.ownerId,profile,recipe);if(recipe.source!=='manual'&&!data.matched&&!(data.change&&data.change.configured))continue;run=automationRecipeStore.createRun(recipe.ownerId,recipe,{dryRun:false,source:recipe.source,matched:data.matched,trigger:'schedule',scheduleKey:key}).result;const result=await automationExecute(recipe.ownerId,profile,recipe,{dryRun:false,trigger:'schedule',dataset:data});if(data.changeBaseline&&!result.failed)automationRecipeStore.setChangeBaseline(recipe.ownerId,recipe.id,data.changeBaseline);automationRecipeStore.updateRun(recipe.ownerId,run.id,{status:result.failed?'failed':'completed',processed:Number(result.processed)||0,failed:Number(result.failed)||0,result,message:'Planlı otomasyon tamamlandı.',finishedAt:new Date().toISOString()});userAccess.appendAudit(profile,'AUTOMATION_SCHEDULE_RUN',recipe.id,{runId:run.id,key,status:result.failed?'failed':'completed'});}catch(err){if(run)try{automationRecipeStore.updateRun(recipe.ownerId,run.id,{status:'failed',failed:1,message:err.message,finishedAt:new Date().toISOString()});}catch(err2){logRuntimeFailure('automationUpdateRunFailed',err2);}userAccess.appendAudit(profile,'AUTOMATION_SCHEDULE_FAIL',recipe.id,{key,error:err.message});}}}finally{automationSchedulerBusy=false;}
+ if(automationSchedulerBusy)return;automationSchedulerBusy=true;
+ try{automationRecipeStore.reconcileScheduleReservations();const now=new Date(),profiles=userAccess.allPublicProfiles(),state=automationRecipeStore.loadStore();
+  for(const recipe of state.recipes){const grant=state.agentScheduleGrants[recipe.id],key=automationScheduleKey(recipe,now,grant);if(!key||recipe.schedule.lastKey===key)continue;
+   const occurrence=automationDueOccurrence(recipe,now,grant);if(occurrence?.key===key&&!automationIsWithinGrace(occurrence))continue;
+   const profile=profiles.find(p=>p.id===recipe.ownerId&&p.enabled!==false);if(!profile)continue;
+   try{const result=await automationScheduledRunner(profile,recipe,key,{now});userAccess.appendAudit(profile,'AUTOMATION_SCHEDULE_RUN',recipe.id,{key,...result});}
+   catch(err){userAccess.appendAudit(profile,'AUTOMATION_SCHEDULE_FAIL',recipe.id,{key,code:err.code||'AUTOMATION_FAILED'});}
+  }
+ }finally{automationSchedulerBusy=false;}
 }
 
 // ---- Shared quotation records ----
@@ -5703,6 +5578,21 @@ const { createAgentOfficeSync } = require('./lib/agent-office-sync');
 const { createAgentOfficeService } = require('./lib/agent-office-service');
 const agentOfficeRoot = path.join(LOCAL_DATA_ROOT, 'agent-office');
 const agentOfficeStore = createAgentOfficeStore({ root:path.join(agentOfficeRoot, 'owners') });
+const agentAutomationTools=require('./lib/agent-automation-tools');
+function agentAutomationStamp(profile,recipe,ignoreRefresh=false){return require('./lib/agent-office-store').hash(JSON.stringify({cp:cpAgentRevision(profile,{ignoreRefresh}),lfl:ignoreRefresh?null:cacheForUser(profile.id).lflLoadedAt,collection:recipe.source==='collection'||recipe.join?.source==='collection'?loadWorkspace(profile.id)._revision:null,intake:recipe.source==='intake'||recipe.join?.source==='intake'?intakeStore.loadSnapshot(profile.id)?.savedAt:null}));}
+const agentAutomationDeps={
+ normalize:automationNormalizePayload,dataset:automationDataset,execute:automationExecute,emailGroups:profile=>automationEmailGroupsForOwner(profile.id),
+ publicProfile:profile=>userAccess.publicProfile(profile),timeZone:()=>Intl.DateTimeFormat().resolvedOptions().timeZone,
+ runDraft:(ctx,recipe,check,work)=>agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,agent=>{require('./lib/agent-automation-authority').assertRecipeAuthorityNow(ctx,recipe,{userAccess,actualAgent:agent,sourceArea:source=>source==='intake'?'overview':agentDatasetArea(source)});return automationRecipeStore.withEffectGuard(check,work);}),
+ draftExists:(owner,name)=>Boolean(automationEmail.draftPath(name,owner)),
+ agent:ctx=>agentOfficeStore.get(ctx.ownerId,'profile',ctx.input?.officeAgentId),
+ sourceStamp:(profile,recipe)=>agentAutomationStamp(profile,recipe),stableStamp:(profile,recipe)=>agentAutomationStamp(profile,recipe,true),
+ authorizeRecipe:(ctx,recipe)=>require('./lib/agent-automation-authority').assertRecipeAuthority(ctx,recipe,{userAccess,agent:current=>agentOfficeStore.get(current.ownerId,'profile',current.input.officeAgentId),sourceArea:source=>source==='intake'?'overview':agentDatasetArea(source)}),changed:(profile,action,recipe)=>userAccess.appendAudit(profile,'AGENT_AUTOMATION_'+action.toUpperCase(),recipe?.id||'',{source:recipe?.source})
+};
+agentAutomationTools.registerAutomationTools(agentToolRegistry,agentAutomationDeps);
+const automationAgentScheduleOptions=require('./lib/agent-automation-schedule').createScheduleOptions({store:automationRecipeStore,office:agentOfficeStore,userAccess,sourceStamp:agentAutomationDeps.sourceStamp,authorizeRecipe:agentAutomationDeps.authorizeRecipe,emailGroups:profile=>agentAutomationDeps.emailGroups(profile).map(g=>({id:g.id,name:g.name,to:g.to,cc:g.cc,bcc:g.bcc}))});
+const automationScheduledRunner=require('./lib/automation-scheduled-runner').createScheduledRunner({store:automationRecipeStore,scheduleOptions:automationAgentScheduleOptions,dataset:automationDataset,execute:automationExecute,executor:{pid:process.pid,host:os.hostname(),instanceId:crypto.randomUUID()}});
+
 const agentOfficeSync = createAgentOfficeSync({ store:agentOfficeStore, localRoot:path.join(agentOfficeRoot, 'sync'),
   getSharedRoot:async()=>{const settings=await syncSettings.read();return settings.sharedSyncRoot || null;},
   profileById:id=>userAccess.profileById(id), deviceId:localDb.getDeviceId(),
@@ -5787,6 +5677,7 @@ const agentOfficeService=createAgentOfficeService({
   validateAutomation:agentOfficeAutomationPreview,
   onBackgroundError:code=>logRuntimeFailure('agentOfficeBackground',Object.assign(new Error(code),{code})) });
 require('./routes/agent-office-routes')(app, {
+  automationDraftAccess:async(profile,job,step)=>{const check=()=>{if(step.result.data.agentScope?.actorFingerprint!==require('./lib/agent-office-store').hash(JSON.stringify(userAccess.publicProfile(userAccess.profileById(profile.id)))))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});};check();await agentAutomationDeps.authorizeRecipe({ownerId:profile.id,profile,input:{officeAgentId:step.agentId}},step.preview.preview.recipe);check();},
   qualityService:agentQualityService,qualityTools:agentQualityTools,qualityDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),
   express,
   userAccess,
