@@ -10337,9 +10337,16 @@ async function getLicenseDiscoveryRows(req){
     else add(license,parseLib.pricingLicensorForLicense(license,overrides.pricingRules));
   }
   for(const rule of overrides.pricingRules||[])add(rule.license,rule.licensor);
-  return {module:'cp',rows:[...pairs.values()]};
+  return {module:'cp',rows:[...pairs.values()],sourceStamp:String(runtime.loadedAt||'')};
 }
+const licenseCardService=require('./lib/license-card-service').createLicenseCardService({
+  loadOverrides,saveOverrides,mutate:require('./db').mutateSharedResource,pricing:require('./lib/resource-rule-service'),
+  getDiscoveryRows:profile=>getLicenseDiscoveryRows({currentUser:profile}),discoveryStamp:profile=>String(cacheForUser(profile.id).loadedAt||''),
+  publish:(profile,change)=>licenseCardSync.publish({currentUser:profile},change),
+  changed:(profile,section,detail)=>publishSharedMasterChange(section,{currentUser:profile},detail),
+});
 require('./routes/license-card-routes')(app, {
+  service:licenseCardService,
   loadOverrides,saveOverrides,userAccess,getLicenseDiscoveryRows,publishSharedMasterChange,
   publishLicenseCardChange:licenseCardSync.publish,apiError,
   normalizePricingRuleDate,normalizePricingRuleSeasons,pricingRuleSeasonSetsOverlap,pricingRuleDateRangesOverlap,
@@ -10804,6 +10811,12 @@ const agentResourceDeps={flush:async()=>{await deltaStore.flush();},changed:asyn
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-manufacturer-tools').registerManufacturerTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegistry,agentResourceDeps);
+require('./lib/agent-supporting-resource-tools').registerSupportingResourceTools(agentToolRegistry,{
+  ...agentResourceDeps,license:licenseCardService,userAccess,
+  authorizeFabric:async ctx=>{await refreshCollectionPermissionScope();ctx.assertAuthority();},
+  canEditFabric:profile=>userAccess.effectiveCollectionAccess(profile).some(item=>item.level==='edit'),
+  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
+});
 
 app.get('/api/transit-analysis', (req, res) => {
   const ov = loadOverrides();

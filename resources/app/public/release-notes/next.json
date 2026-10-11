@@ -3001,6 +3001,105 @@
           "en": "Source-linked memory checks the current record and permissions"
         }
       }
+    },
+    {
+      "id": "agent-fabric-cards",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kumaş kartlarını görevden oluştur, revize et ve geri al",
+        "en": "Create, revise and undo fabric cards from tasks"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevi",
+        "en": "Agent Office › Operation task"
+      },
+      "body": {
+        "tr": "Koleksiyon düzenleme yetkisiyle gerçek kumaş sözlüğü güncellenir. Agent ve normal ekran aynı dosya kilidini ve revizyonu kullanır; yeni kullanıcı değişikliği eski geri almayla ezilmez.",
+        "en": "The actual fabric dictionary uses current Collection editor grants. Agents and the normal screen share file locks and revisions; an earlier undo cannot overwrite newer user changes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-fabric-cards.png",
+        "alt": {
+          "tr": "Kumaş kartlarını görevden oluştur, revize et ve geri al",
+          "en": "Create, revise and undo fabric cards from tasks"
+        },
+        "caption": {
+          "tr": "Kumaş kartlarını görevden oluştur, revize et ve geri al",
+          "en": "Create, revise and undo fabric cards from tasks"
+        }
+      }
+    },
+    {
+      "id": "agent-merch-calendar",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Merch Calendar dosyasını onayla işle ve gerçek kaynak revizyonunu koru",
+        "en": "Approve Merch Calendar imports and protect the actual source revision"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevi",
+        "en": "Agent Office › Operation task"
+      },
+      "body": {
+        "tr": "XLS/XLSX/HTML dosyası kullanıcıya ait değişmez belgeden işlenir. Tarih motoru güncellenir; önizleme, silme ve geri alma kendi kaynak makbuzuna bağlıdır. İki kullanıcıdan biri eski takvimi görmüşse güncel kayıt ezilmez.",
+        "en": "XLS/XLSX/HTML imports use immutable owner files and update the date engine. Preview, deletion and undo bind to the actual source receipt. A user who viewed an earlier calendar cannot overwrite the current record."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-merch-calendar.png",
+        "alt": {
+          "tr": "Merch Calendar dosyasını onayla işle ve gerçek kaynak revizyonunu koru",
+          "en": "Approve Merch Calendar imports and protect the actual source revision"
+        },
+        "caption": {
+          "tr": "Merch Calendar dosyasını onayla işle ve gerçek kaynak revizyonunu koru",
+          "en": "Approve Merch Calendar imports and protect the actual source revision"
+        }
+      }
+    },
+    {
+      "id": "agent-license-cards",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Lisans keşfi ve royalty sözleşmesini mevcut servisle yürüt",
+        "en": "Run license discovery and royalty contracts through the existing service"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevi",
+        "en": "Agent Office › Operation task"
+      },
+      "body": {
+        "tr": "ASAS keşfi açık onay bekler; salt okuma kart oluşturmaz. Profil ve fiyat sözleşmesi birlikte kaydedilir, tarihçe korunur ve kanal kapalıysa senkronizasyon beklenir. Portal erişim bilgileri AI bağlamına girmez.",
+        "en": "ASAS discovery awaits explicit approval; reading creates no cards. Profiles and contracts save together, retain history and report pending synchronization when the channel is unavailable. Portal access material stays outside AI context."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-license-cards.png",
+        "alt": {
+          "tr": "Lisans keşfi ve royalty sözleşmesini mevcut servisle yürüt",
+          "en": "Run license discovery and royalty contracts through the existing service"
+        },
+        "caption": {
+          "tr": "Lisans keşfi ve royalty sözleşmesini mevcut servisle yürüt",
+          "en": "Run license discovery and royalty contracts through the existing service"
+        }
+      }
     }
   ]
 }

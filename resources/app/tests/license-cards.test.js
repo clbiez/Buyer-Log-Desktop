@@ -12,7 +12,7 @@ const registerRoutes = require('../server/routes/license-card-routes');
 // the application or loading ASAS credentials into the test process.
 const serverSource = fs.readFileSync(path.join(__dirname, '../server/server.js'), 'utf8');
 const helperSource = serverSource.slice(serverSource.indexOf('function normalizePricingRuleDate('), serverSource.indexOf("app.get('/api/landed-multipliers'"));
-const validators = vm.runInNewContext(helperSource + '\n({normalizePricingRuleDate,normalizePricingRuleSeasons,pricingRuleSeasonSetsOverlap,pricingRuleDateRangesOverlap})');
+const validators = vm.runInNewContext(helperSource + '\n({normalizePricingRuleDate,normalizePricingRuleSeasons,pricingRuleSeasonSetsOverlap,pricingRuleDateRangesOverlap})',{require:require('node:module').createRequire(path.join(__dirname,'../server/server.js'))});
 const copied = value => JSON.parse(JSON.stringify(value));
 const rule = (id, opdStart, opdEnd, extra = {}) => ({ id, license: 'Marvel', licensor: 'DTR', royalty: 10, trCommission: 2, ydCommission: 3, hologramCost: 0.15, opdStart, opdEnd, seasons: [], ...extra });
 function fixture(rules = []) {

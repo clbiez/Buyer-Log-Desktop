@@ -6,6 +6,10 @@ module.exports = function registerMerchCalendarRoutes(app, deps) {
   deps = deps || {};
   const { express, userAccess } = deps;
   if (!app || !express || !userAccess) throw new Error('Merch Calendar route dependencies are incomplete.');
+  const assertWrite=req=>{
+    const current=userAccess.profileById?userAccess.profileById(req.currentUser.id):req.currentUser;
+    if(!current||current.enabled===false||!userAccess.hasPermission(current,'manageModelConnections')||userAccess.hasArea&&!userAccess.hasArea(current,'source'))throw Object.assign(new Error('Güncel Veri Yönetimi yetkisi gerekli. / Current Data Management permission is required.'),{code:'OFFICE_TOOL_FORBIDDEN',status:403});
+  };
 
   const read = (_req, res) => {
     try {
@@ -35,7 +39,7 @@ app.post(
         try { buffer = Buffer.from(encoded, 'base64'); }
         catch (_) { return res.status(400).json({ ok:false, error:'Merch Calendar dosyası okunamadı.', code:'MERCH_BASE64_INVALID' }); }
         if (!buffer.length) return res.status(400).json({ ok:false, error:'Merch Calendar dosyası boş.', code:'MERCH_EMPTY' });
-        const saved = merchCalendarStore.save(buffer, sourceName);
+        const saved = merchCalendarStore.save(buffer, sourceName,{expectedFingerprint:body.expectedFingerprint,assertAuthority:()=>assertWrite(req)});
         if (typeof userAccess.appendAudit === 'function') {
           userAccess.appendAudit(req.currentUser, 'MERCH_CALENDAR_UPLOAD', sourceName, {
             yearFrom:saved.meta && saved.meta.yearFrom,
@@ -61,11 +65,11 @@ app.delete(
     userAccess.requirePermission('manageModelConnections'),
     (req, res) => {
       try {
-        merchCalendarStore.remove();
+        merchCalendarStore.remove({expectedFingerprint:req.get?.('If-Match')?.replace(/^"|"$/g,''),assertAuthority:()=>assertWrite(req)});
         if (typeof userAccess.appendAudit === 'function') userAccess.appendAudit(req.currentUser, 'MERCH_CALENDAR_DELETE', 'Merch Calendar');
-        return res.json({ ok:true, configured:false, calendar:null, summary:null });
+        return res.json({ ok:true, ...merchCalendarStore.publicProjection() });
       } catch (error) {
-        return res.status(500).json({ ok:false, error:'Merch Calendar kaldırılamadı.', code:error.code || 'MERCH_DELETE_FAILED' });
+        return res.status(Number(error.status)||500).json({ ok:false, error:'Merch Calendar kaldırılamadı. / Merch Calendar could not be removed.', code:error.code || 'MERCH_DELETE_FAILED' });
       }
     },
   );

@@ -6,8 +6,12 @@ const crypto = require('crypto');
 const XLSX = require('xlsx');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const BLDateDimension = require('../../public/date-dimension');
+const { withFileLeaseSync } = require('./shared-file-transaction');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'merch-calendar.json');
+// Retain a native revision receipt across physical deletion. A later native
+// import/delete cannot turn absence into a match for an earlier undo token.
+const DELETION_FILE=FILE+'.deleted.json';
 const MAX_BYTES = 12 * 1024 * 1024;
 const MONTHS = Object.freeze([
   'January','February','March','April','May','June',
@@ -253,28 +257,71 @@ function parseBuffer(buffer, sourceName) {
   };
 }
 
-function load() {
+function validateStoredCalendar(value) {
+  if(!value||value.schemaVersion!==1||!Array.isArray(value.weeks)||!value.weeks.length||value.weeks.length>10653)throw new Error('Invalid calendar store');
+  for(const year of new Set(value.weeks.map(item=>item.year))){
+    const entries=value.weeks.filter(item=>item.year===year),expected=normalizeYearRows(year,entries);
+    if(entries.some((item,index)=>['year','week','month','monthWeek','start','end'].some(key=>item[key]!==expected[index][key])))throw new Error('Invalid calendar store');
+  }
+  validateCoverage(value.weeks);
+  if(value._revision!=null&&(!Number.isSafeInteger(value._revision)||value._revision<0))throw new Error('Invalid calendar revision');
+}
+function load({strict=false}={}) {
   if (!fs.existsSync(FILE)) return null;
   try {
     const value = JSON.parse(fs.readFileSync(FILE, 'utf8'));
-    if (!value || !Array.isArray(value.weeks) || !value.weeks.length) return null;
+    if (!value || !Array.isArray(value.weeks) || !value.weeks.length) throw new Error('Invalid calendar store');
+    if(strict) validateStoredCalendar(value);
     return value;
-  } catch (_) { return null; }
+  } catch (error) {
+    if(strict) throw merchError('Merch Calendar kaydı bozuk. / Merch Calendar record is invalid.','MERCH_STORE_INVALID',409);
+    return null;
+  }
 }
-function save(buffer, sourceName) {
-  const value = parseBuffer(buffer, sourceName);
-  atomicWriteJson(FILE, value);
-  BLDateDimension.setMerchCalendar(value);
-  return value;
+function fingerprint() {
+  load({strict:true});
+  return crypto.createHash('sha256').update(fs.existsSync(FILE)?fs.readFileSync(FILE):Buffer.from('absent:'+JSON.stringify(deletionReceipt()))).digest('hex');
 }
-function remove() {
-  try { fs.unlinkSync(FILE); } catch (error) { if (error.code !== 'ENOENT') throw error; }
-  BLDateDimension.clearMerchCalendar();
+function deletionReceipt(){
+  if(!fs.existsSync(DELETION_FILE))return null;
+  try{const receipt=JSON.parse(fs.readFileSync(DELETION_FILE,'utf8'));if(!Number.isSafeInteger(receipt.revision)||receipt.revision<1||!/^[-a-f0-9]{36}$/.test(receipt.id)||!Number.isFinite(Date.parse(receipt.deletedAt)))throw new Error('Invalid receipt');return receipt;}
+  catch(_){throw merchError('Merch Calendar revizyon kaydı bozuk. / Merch Calendar revision receipt is invalid.','MERCH_STORE_INVALID',409);}
+}
+function readSnapshot() { return withFileLeaseSync(FILE,()=>({value:load({strict:true}),fingerprint:fingerprint()})); }
+function guardMutation({expectedFingerprint,assertAuthority}={}) {
+  assertAuthority?.();
+  const current=fingerprint();
+  if(expectedFingerprint!=null && expectedFingerprint!==current) throw merchError('Merch Calendar değişti. / Merch Calendar changed.','OFFICE_PREVIEW_CHANGED',409);
+}
+function restoreSnapshotWithReceipt(value,options={}) {
+  return withFileLeaseSync(FILE,()=>{
+    guardMutation(options);
+    const revision=Math.max(Number(load({strict:true})?._revision)||0,deletionReceipt()?.revision||0)+1;
+    if(!Number.isSafeInteger(revision))throw merchError('Merch Calendar revizyonu geçersiz. / Invalid Merch Calendar revision.','MERCH_STORE_INVALID',409);
+    if(value===null){atomicWriteJson(DELETION_FILE,{revision,id:crypto.randomUUID(),deletedAt:new Date().toISOString()});try{fs.unlinkSync(FILE);}catch(error){if(error.code!=='ENOENT')throw error;}BLDateDimension.clearMerchCalendar();}
+    else {
+      try{validateStoredCalendar(value);}catch(_){throw merchError('Geçersiz takvim kaydı. / Invalid calendar record.','MERCH_STORE_INVALID',409);}
+      value={...value,_revision:revision};
+      options.assertAuthority?.();atomicWriteJson(FILE,value);BLDateDimension.setMerchCalendar(value);
+    }
+    return {value,fingerprint:fingerprint()};
+  });
+}
+function save(buffer, sourceName, options={}) {
+  return saveWithReceipt(buffer,sourceName,options).value;
+}
+function saveWithReceipt(buffer,sourceName,options={}) { return restoreSnapshotWithReceipt(parseBuffer(buffer,sourceName),options); }
+function restoreSnapshot(value,options={}) { return restoreSnapshotWithReceipt(value,options).value; }
+function removeWithReceipt(options={}) { return restoreSnapshotWithReceipt(null,options); }
+function remove(options={}) {
+  restoreSnapshot(null,options);
   return true;
 }
-function publicProjection(value = load()) {
-  if (!value) return { configured:false, calendar:null, summary:null };
+function publicProjection() {
+  const {value,fingerprint:sourceFingerprint}=readSnapshot();
+  if (!value) return { configured:false, calendar:null, summary:null, fingerprint:sourceFingerprint };
   return {
+    fingerprint:sourceFingerprint,
     configured:true,
     calendar:{
       schemaVersion:value.schemaVersion || 1,
@@ -305,5 +352,5 @@ activateLoaded();
 
 module.exports = {
   FILE, MAX_BYTES, parseBuffer, parseHtmlCalendar, parseWorkbookCalendar,
-  load, save, remove, publicProjection, activateLoaded,
+  load, save, remove, publicProjection, activateLoaded, fingerprint, readSnapshot, restoreSnapshot, saveWithReceipt, removeWithReceipt, restoreSnapshotWithReceipt,
 };
