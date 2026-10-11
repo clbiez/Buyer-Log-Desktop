@@ -222,7 +222,7 @@ function saveRevisioned(file, value, fallback, expectedRevision, storeName, opti
   options.assertAuthority?.();if (deltaWritesLegacy(file)) {
     if(options.legacyWrites)options.legacyWrites.push(()=>atomicWriteJson(file,saved));else atomicWriteJson(file,saved);
   }
-  const mirrored=mirrorToDelta(file, saved,{guardSource:!!options.mirrorResults});if(mirrored)options.mirrorResults?.push(mirrored);
+  const mirrored=mirrorToDelta(file, saved,{guardSource:!!options.mirrorResults,assertAuthority:options.assertAuthority});if(mirrored)options.mirrorResults?.push(mirrored);
   return saved;
   };
   return options[require('./lib/guarded-document-mutation').HELD_DOCUMENT_LEASE]?write():withFileLeaseSync(file,write);
