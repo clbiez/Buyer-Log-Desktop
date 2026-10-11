@@ -24,6 +24,7 @@ module.exports = function registerHorizonTemplateRoutes(app, deps) {
     sourceUserId,
     sourceWorkflowService,
     personalHorizonService,
+    horizonTemplateService,
     userAccess,
     userPreferences,
   } = deps;
@@ -51,84 +52,37 @@ module.exports = function registerHorizonTemplateRoutes(app, deps) {
    normal ortak filtre yazma yolundan (/api/data-management/filter) geçer;
    ikinci bir yazma yolu YOKTUR, yoksa iki ayrı doğruluk kaynağı olurdu.
    =================================================================== */
-app.get('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), (req, res) => {
+const templateContext=req=>({...sourceGuard(req),ownerId:req.currentUser.id,profile:req.currentUser});
+app.get('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), async (req, res) => {
   try {
-    const personal = loadHorizonTemplates(req.currentUser.id);
-    const shared = loadHorizonTemplates();
-    const mapItem = (item, isShared) => ({
-      id: item.id, name: item.name, definition: item.data || null,
-      shared: isShared, ownerId: item.userId || null,
-      updatedAt: item.updatedAt || item.createdAt || null,
-    });
-    res.set('Cache-Control', 'no-store').json({
-      ok: true,
-      personal: (personal.items || []).map(item => mapItem(item, false)),
-      shared: (shared.items || []).map(item => mapItem(item, true)),
-      personalRevision: personal._revision || 0,
-      sharedRevision: shared._revision || 0,
-    });
-  } catch (err) { apiError(res, err, 'Horizon şablonları okunamadı.'); }
+    const ctx=templateContext(req),personal=await horizonTemplateService.capture('create',{shared:false},ctx),shared=await horizonTemplateService.capture('create',{shared:true},ctx);
+    const mapItem=(item,isShared)=>({id:item.id,name:item.name,definition:item.data||null,shared:isShared,ownerId:item.userId||null,updatedAt:item.updatedAt||item.createdAt||null});
+    res.set('Cache-Control','no-store').json({ok:true,personal:personal.store.items.map(item=>mapItem(item,false)),shared:shared.store.items.map(item=>mapItem(item,true)),personalRevision:personal.store._revision,sharedRevision:shared.store._revision});
+  } catch (err) { apiError(res,err,'Horizon şablonları okunamadı.'); }
 });
-
-app.post('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '256kb' }), (req, res) => {
+app.post('/api/horizon-templates', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '256kb' }), async (req,res)=>{
   try {
-    const body = req.body || {};
-    const name = String(body.name || '').trim();
-    if (!name) return res.status(400).json({ error: 'Şablon adı zorunlu.', code: 'VALIDATION_ERROR' });
-    const definition = body.definition;
-    if (!definition || typeof definition !== 'object') {
-      return res.status(400).json({ error: 'Şablon tanımı zorunlu.', code: 'VALIDATION_ERROR' });
-    }
-    /* Kaydedilen şey, sorguyu üretecek olanın birebir aynısı olmalı:
-       tanım burada normalleştirilir, uygulanırken ikinci kez yorumlanmaz. */
-    let normalized;
-    try {
-      normalized = { table: String(definition.table || ''), groups: modelHorizon.conditions.normalizeGroups(definition.groups, String(definition.table || '')) };
-    } catch (error) {
-      return res.status(400).json({ error: String(error && error.message || error), code: 'HORIZON_TEMPLATE_INVALID' });
-    }
-    const shared = body.shared === true;
-    const saved = shared
-      ? addHorizonTemplate(name, normalized, null)
-      : addHorizonTemplate(req.currentUser.id, name, normalized, null);
-    userAccess.appendAudit(req.currentUser, 'HORIZON_TEMPLATE_CREATE', name, { shared });
-    res.json({ ok: true, shared, revision: saved && saved._revision || 0 });
-  } catch (err) { apiError(res, err, 'Horizon şablonu kaydedilemedi.'); }
+    const body=req.body||{},args={name:String(body.name||'').trim(),definition:body.definition,shared:body.shared===true};
+    if(!args.name)return res.status(400).json({error:'Şablon adı zorunlu.',code:'VALIDATION_ERROR'});
+    if(!args.definition||typeof args.definition!=='object')return res.status(400).json({error:'Şablon tanımı zorunlu.',code:'VALIDATION_ERROR'});
+    const saved=await horizonTemplateService.execute('create',args,null,templateContext(req));
+    userAccess.appendAudit(req.currentUser,'HORIZON_TEMPLATE_CREATE',args.name,{shared:args.shared});res.json({ok:true,shared:saved.shared,revision:saved.revision,id:saved.id});
+  } catch (err) { apiError(res,err,'Horizon şablonu kaydedilemedi.'); }
 });
-
-app.delete('/api/horizon-templates/:id', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), (req, res) => {
+app.delete('/api/horizon-templates/:id', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), async(req,res)=>{
   try {
-    const shared = String(req.query && req.query.shared || '') === '1';
-    /* Paylaşılan şablonu yalnız sahibi veya yönetim yetkisi olan siler;
-       ortak depoda duran bir kaydı herkesin silebilmesi veri kaybı olurdu. */
-    if (shared) {
-      const store = loadHorizonTemplates();
-      const item = (store.items || []).find(entry => entry && entry.id === req.params.id);
-      if (!item) return res.status(404).json({ error: 'Şablon bulunamadı.', code: 'NOT_FOUND' });
-      const owns = item.userId && String(item.userId) === String(req.currentUser.id);
-      if (!owns && !userAccess.hasPermission(req.currentUser, 'manageAllOrders')) {
-        return res.status(403).json({ error: 'Bu paylaşılan şablonu yalnız sahibi veya bir moderatör silebilir.', code: 'NOT_OWNER' });
-      }
-      deleteHorizonTemplate(req.params.id, null);
-    } else {
-      deleteHorizonTemplate(req.currentUser.id, req.params.id, null);
-    }
-    userAccess.appendAudit(req.currentUser, 'HORIZON_TEMPLATE_DELETE', req.params.id, { shared });
-    res.json({ ok: true });
-  } catch (err) { apiError(res, err, 'Horizon şablonu silinemedi.'); }
+    const args={id:req.params.id,shared:String(req.query&&req.query.shared||'')==='1'};
+    // NOT_OWNER: the native service rechecks ownership/manageAllOrders under its real lease.
+    await horizonTemplateService.execute('delete',args,null,templateContext(req));
+    userAccess.appendAudit(req.currentUser,'HORIZON_TEMPLATE_DELETE',args.id,{shared:args.shared});res.json({ok:true});
+  } catch(err){apiError(res,err,'Horizon şablonu silinemedi.');}
 });
-
-app.post('/api/horizon-templates/:id/share', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), (req, res) => {
+app.post('/api/horizon-templates/:id/share', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), async(req,res)=>{
   try {
-    const personal = loadHorizonTemplates(req.currentUser.id);
-    const item = (personal.items || []).find(entry => entry && entry.id === req.params.id);
-    if (!item) return res.status(404).json({ error: 'Şablon bulunamadı.', code: 'NOT_FOUND' });
-    /* KOPYALAR, TAŞIMAZ: kişisel kayıt sahibinde kalır. Paylaşılanı biri
-       silince kimsenin kendi şablonu kaybolmasın. */
-    addHorizonTemplate(item.name, item.data, null);
-    userAccess.appendAudit(req.currentUser, 'HORIZON_TEMPLATE_SHARE', item.name, {});
-    res.json({ ok: true });
-  } catch (err) { apiError(res, err, 'Horizon şablonu paylaşılamadı.'); }
+    // The native service copies the personal item while holding its lease; it never moves it.
+    const saved=await horizonTemplateService.execute('share',{id:req.params.id},null,templateContext(req));
+    userAccess.appendAudit(req.currentUser,'HORIZON_TEMPLATE_SHARE',req.params.id,{});res.json({ok:true,id:saved.id,revision:saved.revision});
+  } catch(err){apiError(res,err,'Horizon şablonu paylaşılamadı.');}
 });
 /* v7.0.183 — HORIZON KULLANICI BAZLI (kullanıcı kararı).
 

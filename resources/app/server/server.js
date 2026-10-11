@@ -10814,6 +10814,12 @@ require('./lib/agent-manufacturer-tools').registerManufacturerTools(agentToolReg
 require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegistry,agentResourceDeps);
 const sourceWorkflowService=require('./lib/source-workflow-service').createSourceWorkflowService({db:require('./db')});
 const personalHorizonService=require('./lib/personal-horizon-service').createPersonalHorizonService({db:require('./db'),preferences:userPreferences});
+const horizonTemplateService=require('./lib/horizon-template-service').createHorizonTemplateService({db:require('./db'),userAccess});
+require('./lib/agent-horizon-template-tools').registerHorizonTemplateTools(agentToolRegistry,{
+  source:sourceWorkflowService,service:horizonTemplateService,
+  changed:profile=>userAccess.appendAudit(profile,'AGENT_HORIZON_TEMPLATE_UPDATE',profile.id),
+  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
+});
 require('./lib/agent-personal-horizon-tools').registerPersonalHorizonTools(agentToolRegistry,{
   source:sourceWorkflowService,personal:personalHorizonService,
   changed:profile=>userAccess.appendAudit(profile,'AGENT_PERSONAL_HORIZON_UPDATE',profile.id),
@@ -11905,6 +11911,7 @@ app.delete('/api/data-management/source/:id', userAccess.requireArea('source'), 
 require('./routes/horizon-template-routes')(app, {
   sourceWorkflowService,
   personalHorizonService,
+  horizonTemplateService,
   addHorizonTemplate,
   apiError,
   dataManagementAdapter,
