@@ -158,8 +158,11 @@ test('sunucu: yenileme CP kapsamını denetler, sonucu yeniler ve bağlı grup u
   assert.match(SERVER, /cpCoverageResult = asasItem \? cpCoverage\.assessRefresh\(mergedOrders\.asasOrdersByTarget, linkedTargetsOf\(asasItem\)\) : null;/);
   assert.match(SERVER, /cpCoverage: staged\.cpCoverage && staged\.cpCoverage\.outsideCount \?/);
   assert.match(ROUTES, /app\.post\('\/api\/data-management\/link', userAccess\.requireArea\('source'\), userAccess\.requirePermission\('manageModelConnections'\)/);
-  assert.match(ROUTES, /dataManagementLinkWriter\.planLinkChange\(store\.items, \{ sourceId, moduleId, linked: body\.linked \}\)/);
-  assert.match(ROUTES, /code: 'SOURCE_CHANGED'/);
+  assert.match(ROUTES, /await sourceWorkflowService\.update\('link', \{ sourceId, moduleId, linked: body\.linked \}, String\(body\.expectedSourceRevision/);
+  const nativeService=read('server/lib/source-workflow-service.js');
+  assert.match(nativeService, /link:link\.planLinkChange/);
+  assert.match(nativeService, /throw fail\('SOURCE_CHANGED'\)/);
+  assert.match(nativeService, /db\.mutateModelConnections\(async lease/);
   assert.deepEqual(scopes.REFRESH_TARGETS, ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis']);
 });
 

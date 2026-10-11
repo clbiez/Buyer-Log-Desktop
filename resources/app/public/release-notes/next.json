@@ -3133,6 +3133,72 @@
           "en": "Compare FOB and landed scenarios with the existing calculation"
         }
       }
+    },
+    {
+      "id": "agent-source-workflows",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi · Kaynak Veri",
+        "en": "Agent Office · Source Data"
+      },
+      "title": {
+        "tr": "Kaynak bağlantıları ve ortak filtreler gerçek görev olarak uygulanır",
+        "en": "Source bindings and shared filters run as real tasks"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Kaynak Veri",
+        "en": "Agent Office › Tasks › Source Data"
+      },
+      "body": {
+        "tr": "Agent, mevcut model alanlarını keşfeder; modül bağlantısını açıp kapatır, bağlı gruba katılır veya ayrılır ve ortak filtreyi revize eder veya ayırır. Etkilenen modüller önizlenir; güncel Kaynak Veri yönetim yetkisi ve kullanıcı onayıyla mevcut servis çalışır. Geri alma yalnız aynı kaynak sürümünü değiştirir; kişisel kaynak bağlantıları, sorgu ve kimlik bilgileri AI bağlamına taşınmaz. Büyük filtrelerde gösterilmeyen koşul ve değerler açıkça belirtilir.",
+        "en": "Agents discover saved model fields, enable or disable module bindings, join or leave linked groups, and revise or split shared filters. Affected modules are previewed; the existing service runs with current Source Data management permission and user approval. Undo changes only the matching source version; private connections, queries and credentials stay outside AI context. Omitted conditions and values in large filters are explicitly reported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-workflows.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo kaynak için etkilenen modülleri gösteren agent görev önizlemesi",
+          "en": "Agent task preview showing affected modules for a demo source in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Bağlantı, ortak filtre ve grup işlemleri onaylı görevlerdir",
+          "en": "Binding, shared-filter and group operations are approved tasks"
+        }
+      }
+    },
+    {
+      "id": "source-shared-cas",
+      "type": "fix",
+      "module": {
+        "tr": "Kaynak Veri",
+        "en": "Source Data"
+      },
+      "title": {
+        "tr": "Ortak kaynak değişikliklerinde eşzamanlı düzenleme korunur",
+        "en": "Concurrent edits are preserved in shared source changes"
+      },
+      "path": {
+        "tr": "Kaynak Veri › Bağlantı ve Filtre Düzenleyicisi",
+        "en": "Source Data › Binding and Filter Editor"
+      },
+      "body": {
+        "tr": "Filtre, bağlantı ve bağlı grup düzenlemesi artık güncel depoyu okuyup kaynak sürümünü aynı gerçek yazma kilidi içinde kontrol eder. Başka kaynaktaki değişiklik korunur; aynı kaynağa ait bayat düzenleme reddedilir. Bir ayarı değiştirip eski değerine döndürmek veya kaynağı silip yeniden oluşturmak eski onayı geçerli yapmaz. Yenileme sonuçları yapılandırma değişikliği sayılmaz.",
+        "en": "Filter, binding and linked-group edits now read the current store and check the source version inside the same real write lease. Changes to another source are preserved; stale edits to the same source are rejected. Changing a setting and restoring its old value, or deleting and recreating a source, does not make an old approval valid. Refresh results are not configuration changes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "source-shared-cas.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo kaynak için bayat düzenlemenin reddedildiği durum",
+          "en": "A stale edit rejected for a demo source in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Kaynak değiştiyse düzenleyici güncel kayıtla yeniden açılmalıdır",
+          "en": "If the source changed, reopen the editor with the current record"
+        }
+      }
     }
   ]
 }

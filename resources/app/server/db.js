@@ -232,6 +232,10 @@ function mutateSharedResource(section,work) {
   const file=section==='fx'?LEGACY_FX_FILE:OVERRIDES_FILE;
   return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(),file,work);
 }
+// Source planners and their per-record CAS run under the native SETTINGS lease.
+function mutateModelConnections(work) {
+  return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(),SETTINGS_FILE,work);
+}
 
 function normalizeLandedMultipliers(value) {
   const raw = value && typeof value === 'object' ? value : {};
@@ -1065,7 +1069,7 @@ function loadSettings() {
   ensureDataDir(); const parsed = storeExists(SETTINGS_FILE) ? readJsonWithBackup(SETTINGS_FILE, { _revision: 0 }) : { _revision: 0 };
   return { ...(parsed && typeof parsed === 'object' ? parsed : {}), _revision: revisionOf(parsed) };
 }
-function saveSettings(settings, expectedRevision = null) { ensureDataDir(); return saveRevisioned(SETTINGS_FILE, settings, { _revision: 0 }, expectedRevision, 'Ayarlar'); }
+function saveSettings(settings, expectedRevision = null, options={}) { ensureDataDir(); return saveRevisioned(SETTINGS_FILE, settings, { _revision: 0 }, expectedRevision, 'Ayarlar', options); }
 
 function getUserSourceFolder(userId, fallback = null) {
   const settings = loadSettings();
@@ -1183,6 +1187,7 @@ function normalizeModelConnection(raw) {
   }
   return {
     id,
+    _configVersion: Math.max(0,Math.floor(Number(item._configVersion)||0)),
     name: text(item.name, 80),
     server: text(item.server, 128),
     catalog: text(item.catalog, 128),
@@ -1279,17 +1284,30 @@ function loadModelConnections() {
   const raw = Array.isArray(settings.modelConnections)
     ? settings.modelConnections
     : [MODEL_CONNECTION_DEFAULT_INTAKE];
-  return { items: normalizeModelConnections(raw), revision };
+  const versions=settings._revisions?.modelConnectionRecords||{};
+  return { items: normalizeModelConnections(raw).map(item=>({...item,_configVersion:Math.max(item._configVersion,Number(versions[item.id])||0)})), revision };
 }
-function replaceModelConnections(items, expectedRevision = null) {
+function replaceModelConnections(items, expectedRevision = null, options={}) {
   const settings = loadSettings();
   settings._revisions = settings._revisions && typeof settings._revisions === 'object' ? { ...settings._revisions } : {};
   const current = Number(settings._revisions.modelConnections) || 0;
   const wanted = expectedRevision == null ? null : Number(expectedRevision);
   if (wanted != null && wanted !== current) throw new RevisionConflictError('Veri modeli bağlantıları', wanted, current, 'modelConnections');
-  settings.modelConnections = normalizeModelConnections(items);
+  // Monotonic per-source versions include deletion receipts. A -> B -> A and
+  // delete/recreate must invalidate an old approval without coupling peers.
+  const versions=Object.assign(Object.create(null),settings._revisions.modelConnectionRecords||{});
+  const prior=normalizeModelConnections(settings.modelConnections),byId=new Map(prior.map(item=>[item.id,item]));
+  const config=item=>{const {_configVersion,...value}=item;return require('./lib/data-domain/legacy-adapter').configRevision(value);};
+  settings.modelConnections = normalizeModelConnections(items).map(item=>{
+    const before=byId.get(item.id),previous=Math.max(Number(versions[item.id])||0,before?before._configVersion:0);
+    versions[item.id]=before&&config(before)===config(item)?previous:previous+1;
+    return {...item,_configVersion:versions[item.id]};
+  });
+  const present=new Set(settings.modelConnections.map(item=>item.id));
+  for(const before of prior)if(!present.has(before.id))versions[before.id]=Math.max(Number(versions[before.id])||0,before._configVersion)+1;
+  settings._revisions.modelConnectionRecords=versions;
   settings._revisions.modelConnections = current + 1;
-  const saved = saveSettings(settings, settings._revision);
+  const saved = saveSettings(settings, settings._revision, options);
   return { items: saved.modelConnections, revision: saved._revisions.modelConnections };
 }
 /* YENİLEME GRUPLARI (v7.81).
@@ -1758,7 +1776,7 @@ async function restoreCpExFactoryRevisions(snapshot, { actor = null } = {}) {
 
 module.exports = {
   snapshotOrderOverride,verifyOrderOverridePatch,restoreOrderOverrideReceipt,
-  mutateSharedResource,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
+  mutateSharedResource,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
