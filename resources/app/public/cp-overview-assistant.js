@@ -3108,12 +3108,13 @@
   }
   const decisionRuntime = window.BLCpDecisionRuntime.create({
     contextKey:decisionCacheKey, analyzeRow:Engine.analyzeOrder, summarize:Engine.summarizeAnalyses,
+    workerFactory:typeof window.Worker==='function' ? ()=>new window.Worker('/cp-decision-worker.js?rev=worker272') : null,
   });
   const personalEvaluations = new WeakMap();
   async function analyzeRowsWithPersonalRulesAsync(rows, options = {}) {
     const key = decisionCacheKey();
     const transitRules = window.state?.overrides?.transitRules || [];
-    const model = await decisionRuntime.computeAsync(rows, { settings:{targetType:state.settings.targetType},transitRules });
+    const model = await decisionRuntime.computeAsync(rows, { today:Engine.defaultOrdinal(new Date()),settings:{targetType:state.settings.targetType},transitRules });
     if (!model || decisionCacheKey() !== key || options.isCurrent?.() === false) return null;
     const steps = personalModelSteps(model, options);
     let start = performance.now(),step;
@@ -3310,6 +3311,7 @@
     onOverviewRendered, render, computeDecisionsForRows, computeDecisionsForRowsAsync, peekDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions, createChecklistItem,
     persistChecklistAnswers: saveAnswers,
     openRules, openSettings,
+    decisionRuntimeStats: () => decisionRuntime.getStats(),
     decisionContextRevision: () => decisionContextRevision, _state: state,
   };
 })();

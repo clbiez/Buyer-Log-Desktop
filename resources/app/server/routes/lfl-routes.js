@@ -70,7 +70,7 @@ app.post('/api/lfl/upload', userAccess.requireArea('lfl'), async (req, res) => {
     if (!dataBase64) return res.status(400).json({ error: 'dataBase64 alanı zorunlu.', code: 'VALIDATION_ERROR' });
     const buf = Buffer.from(dataBase64, 'base64');
     const exact = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
-    const parsed = await runExcelTask('parseLflBuffer', { data: exact }, { timeoutMs: 300000 });
+    const parsed = await runExcelTask('parseLflBuffer', { data: exact }, { timeoutMs: 300000, serializationKey: `source:${id}` });
     runtime.lflRows = Array.isArray(parsed.rows) ? parsed.rows : [];
     runtime.lflMeta = withFabricDimensions(parsed.meta, runtime.lflRows);
     runtime.lflLoadedAt = new Date().toISOString();

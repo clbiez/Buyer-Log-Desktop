@@ -1,6 +1,7 @@
 'use strict';
 
 const { parentPort } = require('worker_threads');
+const { performance } = require('perf_hooks');
 
 const BLBacklogExcel = require('../../public/backlog-excel-formulas');
 const BLExcelWorkbookGuards = require('../../public/excel-workbook-guards');
@@ -226,10 +227,12 @@ async function execute(task, payload = {}) {
 
 parentPort.on('message', async message => {
   const id = message && message.id;
+  const startedAt = performance.now();
+  const metrics = () => ({ executionMs: performance.now() - startedAt, heapUsedBytes: process.memoryUsage().heapUsed });
   try {
     const result = await execute(message.task, message.payload);
-    parentPort.postMessage({ id, ok: true, result });
+    parentPort.postMessage({ id, ok: true, result, metrics: metrics() });
   } catch (error) {
-    parentPort.postMessage({ id, ok: false, error: { message: error && error.message || String(error), stack: error && error.stack || '' } });
+    parentPort.postMessage({ id, ok: false, error: { message: error && error.message || String(error), stack: error && error.stack || '' }, metrics: metrics() });
   }
 });

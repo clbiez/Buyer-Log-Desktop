@@ -13349,6 +13349,10 @@ function renderRefreshStagesBody(){
     <b>${escapeHtml(diagnosisTitle||(en?'Refresh failed':'Yenileme başarısız'))} <small>${escapeHtml(diagnosisSource||'')}</small></b>
     <span>${escapeHtml(diagnosisSummary||String(job.error||''))}${diagnosisAction?` · ${escapeHtml(en?'Action':'Aksiyon')}: ${escapeHtml(diagnosisAction)}`:''}${diagnosisOwner?` · ${escapeHtml(en?'Responsibility':'Sorumlu alan')}: ${escapeHtml(diagnosisOwner)}`:''}</span>
   </div>`:'';
+  const workerDetails=Object.entries(job&&job.excelWorkers||{}).filter(([source])=>['asas','antrepo'].includes(source)).map(([source,t])=>{
+    const detail=`${en?'queue':'kuyruk'} ${refreshSeconds(t.queueWaitMs)} · ${en?'calculation':'hesaplama'} ${refreshSeconds(t.executionMs)} · ${en?'overhead':'ek'} ${refreshSeconds(t.overheadMs)} · ${en?'heap':'bellek'} ${(Math.max(0,Number(t.heapUsedBytes)||0)/1048576).toFixed(1)} MiB`;
+    return `<div class="refreshCompactDiagRow"><b>${escapeHtml(en?'Excel worker':'Excel işçisi')} · ${escapeHtml(source.toUpperCase())}</b><span title="${escapeHtml(detail)}">${escapeHtml(detail)}</span></div>`;
+  }).join('');
   const metricDetails=metrics?`<div class="refreshCompactDiagMetrics">
     <span>${escapeHtml(en?'Longest query':'En uzun sorgu')} <b>${escapeHtml(refreshSeconds(metrics.dbQueryMs))}</b></span>
     <span>${escapeHtml(en?'Snapshot write':'Snapshot yazımı')} <b>${escapeHtml(refreshSeconds(metrics.localSnapshotWriteMs))}</b></span>
@@ -13369,6 +13373,7 @@ function renderRefreshStagesBody(){
       <div class="refreshCompactDiag">
         ${diagnosisDetails}
         ${metricDetails}
+        ${workerDetails}
         ${diagnosticRows||`<div class="refreshCompactDiagEmpty">${escapeHtml(running?(en?'The per-connection breakdown appears once the queries finish. No stage information yet.':'Bağlantı bazlı döküm sorgular bittiğinde görünür. Henüz aşama bilgisi yok.'):(en?'No connection timing recorded for the last refresh.':'Son yenileme için bağlantı süresi kaydı yok.'))}</div>`}
       </div>
     </details>

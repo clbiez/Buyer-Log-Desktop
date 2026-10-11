@@ -6972,7 +6972,7 @@ async function syncFxFromKurWorkbook(value, force = false) {
     const parsed = await runExcelTask('loadFxWorkbookFromDirectories', {
       directories: [sourceFolder, ...(id === 'moderator' ? [appRoot] : [])].filter(Boolean),
       current, force,
-    }, { timeoutMs: 5000 });
+    }, { timeoutMs: 5000, serializationKey: 'shared-fx' });
     if (!parsed.found || !parsed.updated) return parsed;
     const saved = saveFx({
       ...parsed.data,
@@ -7090,7 +7090,7 @@ async function loadFromDisk(value, withExcelRefresh) {
       antrepoPath: found.antrepo ? found.antrepo.full : null,
       cpupdatePath: found.cpupdate ? found.cpupdate.full : null,
       matchRule: effectiveOverridesForUser(id).antrepoMatchConfig,
-    }, { timeoutMs: computeParseTimeoutMs(found, config.excelRefreshTimeoutMs) });
+    }, { timeoutMs: computeParseTimeoutMs(found, config.excelRefreshTimeoutMs), serializationKey: `source:${id}` });
   } catch (err) {
     err.code = err.code || 'SOURCE_PARSE_FAILED';
     err.publicMessage = 'ASAS veya Antrepo Excel dosyası okunamadı. Dosyanın bozuk olmadığını, başka bir program tarafından kilitlenmediğini ve beklenen sütunları içerdiğini kontrol edin.';
@@ -7239,7 +7239,8 @@ async function loadAntrepoFromExcel(value, matchRule = null, options = {}) {
     parsed = await runRefreshTelemetry(options.telemetry, 'ANTREPO Excel', 'file-parse', 'wait', () => runExcelTask('parseAntrepoFile', {
       fullPath: found.antrepo.full,
       matchRule: matchRule || loadOverrides().antrepoMatchConfig,
-    }, { timeoutMs: excelParseTimeoutMs(stat.size) }));
+    }, { timeoutMs: excelParseTimeoutMs(stat.size), serializationKey: `source:${id}`, signal: options.signal,
+      onMetrics: metrics => recordRefreshExcelMetrics(id, 'antrepo', metrics) }));
   } catch (err) {
     err.code = err.code || 'ANTREPO_EXCEL_PARSE_FAILED';
     err.publicMessage = `Antrepo Excel dosyası okunamadı: ${found.antrepo.name}. Dosyanın açık/kilitli olmadığını ve Sipariş Kod, Ürün Ad, Renk Kod sütunlarını içerdiğini kontrol edin.`;
@@ -7466,7 +7467,8 @@ async function loadAsasFromExcel(value, matchRule = null, options = {}) {
     parsed = await runRefreshTelemetry(options.telemetry, 'ASAS Excel', 'file-parse', 'wait', () => runExcelTask('parseAsasFile', {
       fullPath: found.asas.full,
       matchRule: matchRule || loadOverrides().antrepoMatchConfig,
-    }, { timeoutMs: excelParseTimeoutMs(stat.size) }));
+    }, { timeoutMs: excelParseTimeoutMs(stat.size), serializationKey: `source:${id}`, signal: options.signal,
+      onMetrics: metrics => recordRefreshExcelMetrics(id, 'asas', metrics) }));
   } catch (err) {
     err.code = err.code || 'ASAS_EXCEL_PARSE_FAILED';
     err.publicMessage = `ASAS Excel dosyası okunamadı: ${found.asas.name}. Dosyanın açık/kilitli olmadığını ve Sipariş Kod sütununu içerdiğini kontrol edin.`;
@@ -7540,6 +7542,7 @@ async function loadFromModels(value, targets = null, options = {}) {
   const asasExcel = needsAsasExcel ? await loadAsasFromExcel(id, matchRule, {
     refreshBeforeRead: true,
     telemetry: options.telemetry,
+    signal: options.signal,
     onRefreshStart: () => markSourcePhase('asas-excel-refresh'),
     onParseStart: () => markSourcePhase('asas-excel-parse'),
   }) : null;
@@ -7652,6 +7655,7 @@ async function loadFromModels(value, targets = null, options = {}) {
     const excel = await loadAntrepoFromExcel(id, matchRule, {
       refreshBeforeRead: true,
       telemetry: options.telemetry,
+      signal: options.signal,
       onRefreshStart: () => markSourcePhase('antrepo-excel-refresh'),
       onParseStart: () => markSourcePhase('antrepo-excel-parse'),
     });
@@ -9111,6 +9115,12 @@ function recordRefreshTelemetry(id, event = {}) {
   if (job.operations.length > 400) job.operations.splice(0, job.operations.length - 400);
 }
 
+function recordRefreshExcelMetrics(id, source, metrics) {
+  const job = refreshJobs.get(id);
+  if (!job || !job.running) return;
+  job.excelWorkers = { ...(job.excelWorkers || {}), [source]: { ...metrics } };
+}
+
 function createRefreshTelemetry(id) {
   return event => {
     if (!event || event.type !== 'measure') return recordRefreshTelemetry(id, event);
@@ -9157,6 +9167,7 @@ function refreshJobState(id) {
     sourceRequest:job.sourceRequest||null,
     connections: job.connections || null,
     operations: Array.isArray(job.operations) ? job.operations.slice(-400) : [],
+    excelWorkers: job.excelWorkers || null,
     // Aşama dökümü: sayaç panelinde adım adım gösterilir.
     phases: Array.isArray(job.phases) ? job.phases.map(item => ({
       phase: item.phase,
@@ -10230,7 +10241,7 @@ app.post('/api/antrepo-source/upload', userAccess.requireArea('source'), userAcc
     const parsedResult = await runExcelTask('parseAntrepoFile', {
       fullPath: temp,
       matchRule: loadOverrides().antrepoMatchConfig,
-    }, { timeoutMs: excelParseTimeoutMs(stat.size) });
+    }, { timeoutMs: excelParseTimeoutMs(stat.size), serializationKey: `source:${id}` });
     const parsedMap = parsedResult && parsedResult.map && typeof parsedResult.map === 'object' ? parsedResult.map : {};
     const parsedMeta = parsedResult && parsedResult.meta ? parsedResult.meta : parseLib.antrepoParseMeta(parsedMap);
     if (parsedMeta && parsedMap && typeof parsedMap === 'object') {
