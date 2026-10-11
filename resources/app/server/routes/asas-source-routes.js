@@ -125,7 +125,7 @@ app.post('/api/asas-source/upload', userAccess.requireArea('source'), userAccess
     const parsedResult = await runExcelTask('parseAsasFile', {
       fullPath: temp,
       matchRule: loadOverrides().antrepoMatchConfig,
-    }, { timeoutMs: excelParseTimeoutMs(stat.size) });
+    }, { timeoutMs: excelParseTimeoutMs(stat.size), serializationKey: `source:${id}` });
     const parsedAsas = parsedResult && parsedResult.parsedAsas;
     if (!parsedAsas || !Array.isArray(parsedAsas.orders)) {
       const error = new Error(`ASAS Excel dosyasında "Sipariş Kod" sütunu bulunamadı: ${filename}.`);

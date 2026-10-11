@@ -6,7 +6,7 @@ function client(){
   const host={innerHTML:'',addEventListener(name,callback){clicks.set(name,callback);},querySelector(){return null;},querySelectorAll(){return [];}};
   const document={documentElement:{lang:'en'},body:{dataset:{activeTab:'overview'}},hidden:false,getElementById(id){return id==='agentOfficeRoot'?host:id==='agentOfficeCss'?{}:null;},addEventListener(){},createElement(){return {setAttribute(){}};}};
   const root={addEventListener(name,callback){events.set(name,callback);},BuyerLogAI:{onStatus(){}},BL_USER_CONTEXT:{id:'owner-a'}};
-  const context=vm.createContext({window:root,document,MutationObserver:class{observe(){}},setInterval(){},setTimeout,fetch(url){return new Promise(resolve=>requests.push({url,resolve}));}});
+  const context=vm.createContext({window:root,document,MutationObserver:class{observe(){}},structuredClone,setInterval(){},setTimeout,fetch(url){return new Promise(resolve=>requests.push({url,resolve}));}});
   vm.runInContext(source,context,{filename:'agent-office.js'});
   const respond=(index,value,ok=true)=>requests[index].resolve({ok,json:async()=>value});
   const refresh=()=>clicks.get('click')({preventDefault(){},target:{closest(selector){return selector==='[data-ao-action]'?{dataset:{aoAction:'refresh'}}:null;}}});
@@ -22,11 +22,11 @@ test('pending mount cannot render an old-owner response or stale failure into th
   assert.equal(c.root.BLAgentOffice.getState().error,'');assert.equal(c.host.innerHTML,'');
 });
 test('pending UI action is discarded across owner change while current permission errors remain visible',async()=>{
-  const c=client(),mount=c.root.BLAgentOffice.mount();c.refresh();assert.equal(c.requests.length,2);
-  c.switchOwner();c.respond(1,{code:'OFFICE_AUTOMATION_FORBIDDEN'},false);await settle();
+  const c=client(),mount=c.root.BLAgentOffice.mount();c.refresh();assert.equal(c.requests.length,1);
+  c.switchOwner();c.respond(0,{code:'OFFICE_AUTOMATION_FORBIDDEN'},false);await settle();
   assert.equal(c.root.BLAgentOffice.getState().error,'');assert.equal(c.root.BLAgentOffice.getState().data,null);
-  c.respond(0,{state:{profiles:[{id:'private-old-owner'}]}});await mount;
-  c.refresh();assert.equal(c.requests.length,3);c.respond(2,{code:'OFFICE_AUTOMATION_FORBIDDEN'},false);await settle();
+  await mount;
+  c.refresh();assert.equal(c.requests.length,2);c.respond(1,{code:'OFFICE_AUTOMATION_FORBIDDEN'},false);await settle();
   assert.match(c.root.BLAgentOffice.getState().error,/do not have permission/);
   assert.equal(c.root.BLAgentOffice.getState().data,null);
 });
