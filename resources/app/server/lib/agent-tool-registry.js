@@ -236,6 +236,10 @@ function createToolRegistry(adapter) {
   function register(meta, execute, rollback = null) {
     tools.set(meta.id, { ...meta, execute, rollback });
   }
+  function executableFor(moduleId,ctx){
+    const profile=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx?.ownerId):ctx?.profile;
+    return [...tools.values()].filter(tool=>tool.module===moduleId&&tool.contractVersion&&profile?.enabled!==false&&(tool.areas||[tool.area]).every(area=>adapter.userAccess?.hasArea(profile,area))).map(({execute,rollback,...meta})=>clone(meta));
+  }
 
   register({
     id: 'module.catalog', label: 'Buyer Log Module Catalog', category: 'query', kind: 'query', risk: 'read', area: '', rollbackable: false,
@@ -244,7 +248,7 @@ function createToolRegistry(adapter) {
   }, async (_args, ctx) => {
     // Yetkisi olmayan modül hiç görünmemeli: ajan "yapabilirim" deyip 403 almasın.
     const modules = moduleRegistry.catalog(clean(ctx && ctx.language) === 'en' ? 'en' : 'tr', ctx && ctx.profile, adapter.userAccess || null);
-    return { modules, capabilities: moduleRegistry.CAPABILITIES };
+    return { modules:modules.map(module=>({...module,agentTools:executableFor(module.id,ctx)})), capabilities: moduleRegistry.CAPABILITIES };
   });
 
   register({
@@ -265,7 +269,7 @@ function createToolRegistry(adapter) {
         throw Object.assign(new Error(`${described.label} modülüne erişim yetkiniz yok.`), { code: 'AREA_FORBIDDEN' });
       }
     }
-    return described;
+    return {...described,agentTools:executableFor(id,ctx)};
   });
 
   register({
@@ -545,12 +549,42 @@ function createToolRegistry(adapter) {
     return adapter.browserRun(args || {}, ctx);
   });
 
+  if (adapter.cp) require('./cp-agent-tools').registerCpTools(register, adapter.cp);
+
   function catalog() {
     return [...tools.values()].map(({ execute, rollback, ...meta }) => clone(meta));
   }
   function get(id) { return tools.get(clean(id)) || null; }
-  async function execute(id, args, ctx) { const tool = get(id); if (!tool) throw Object.assign(new Error(`Tool bulunamadı: ${id}`), { code: 'TOOL_NOT_FOUND' }); return tool.execute(args || {}, ctx || {}); }
-  async function rollback(id, token, ctx) { const tool = get(id); if (!tool || typeof tool.rollback !== 'function') throw Object.assign(new Error('Bu tool rollback desteklemiyor.'), { code: 'ROLLBACK_UNSUPPORTED' }); return tool.rollback(token, ctx || {}); }
+  async function execute(id, args, ctx) {
+    const tool = get(id); if (!tool) throw Object.assign(new Error(`Tool bulunamadı: ${id}`), { code: 'TOOL_NOT_FOUND' });
+    args=args||{};ctx=ctx||{};
+    if(tool.contractVersion){
+      require('./agent-tool-schema').validate(tool.inputSchema,args);
+      const assertAuthority=()=>{
+        const current=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):ctx.profile;
+        if(!current||current.id!==ctx.ownerId||current.enabled===false||!(tool.areas||[tool.area]).every(area=>adapter.userAccess?.hasArea(current,area)))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+        return current;
+      };
+      const profile=assertAuthority();
+      if(tool.approval&&!ctx.dryRun&&!ctx.approvalGranted)throw Object.assign(new Error('OFFICE_APPROVAL_REQUIRED'),{code:'OFFICE_APPROVAL_REQUIRED',statusCode:403});
+      ctx={...ctx,profile,assertAuthority,toolId:id};
+    }
+    const result=await tool.execute(args,ctx);
+    if(tool.contractVersion){require('./agent-tool-schema').validate(ctx.dryRun?tool.dryRunOutputSchema||tool.outputSchema:tool.outputSchema,result);adapter.userAccess.appendAudit(ctx.profile,'AGENT_CP_TOOL',id,{runId:ctx.runId,nodeId:ctx.nodeId,dryRun:!!ctx.dryRun,verified:result.verified});}
+    return result;
+  }
+  async function rollback(id, token, ctx) {
+    const tool = get(id); if (!tool || typeof tool.rollback !== 'function') throw Object.assign(new Error('Bu tool rollback desteklemiyor.'), { code: 'ROLLBACK_UNSUPPORTED' });
+    ctx=ctx||{};
+    if(tool.contractVersion){
+      const profile=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):ctx.profile;
+      if(!profile||profile.id!==ctx.ownerId||profile.enabled===false||!ctx.approvalGranted||!(tool.areas||[tool.area]).every(area=>adapter.userAccess?.hasArea(profile,area)))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+      ctx={...ctx,profile};
+    }
+    const result=await tool.rollback(token,ctx);
+    if(tool.contractVersion)adapter.userAccess.appendAudit(ctx.profile,'AGENT_CP_TOOL_ROLLBACK',id,{runId:ctx.runId,verified:result?.verified===true});
+    return result;
+  }
   return { catalog, get, execute, rollback };
 }
 

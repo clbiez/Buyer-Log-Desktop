@@ -2453,7 +2453,49 @@ async function agentPlatformHttpRequest(args) {
   } finally { clearTimeout(timer); }
 }
 
+const cpAgentPreferences=require('./lib/cp-agent-preferences').createCpRulePreferences(userPreferences,userAccess);
+function cpAgentRevision(profile){
+  const stamp=file=>{try{const stat=fs.statSync(file);return [stat.mtimeMs,stat.size,stat.ino];}catch(err){if(err.code==='ENOENT')return null;throw err;}};
+  return crypto.createHash('sha256').update(JSON.stringify({loadedAt:cacheForUser(profile.id).loadedAt,overrides:effectiveOverridesForUser(profile.id),preferences:userPreferences.load(profile.id),roleEntries:userAccess.roleWorkspaceEntries(profile),calendar:require('./lib/merch-calendar-store').publicProjection(),actor:userAccess.profileById(profile.id),plmSamples:stamp(require('./lib/plm-sample-requests-store').DEFAULT_FILE),checklist:stamp(require('./lib/checklist-supplier-store').FILE)})).digest('hex');
+}
+async function cpAgentData(profile) {
+  const sourceRevision=cpAgentRevision(profile);
+  const data=await agentOfficeOperationalData(profile,{},['cp']);
+  if(!data.cpAvailable)throw Object.assign(new Error('OFFICE_CP_UNAVAILABLE'),{code:'OFFICE_CP_UNAVAILABLE',statusCode:409});
+  const priority=cpAgentPreferences.ruleSnapshot(profile,'priority'),checklist=cpAgentPreferences.ruleSnapshot(profile,'checklist');
+  if(sourceRevision!==cpAgentRevision(profile))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+  const {settings,checklistEnabled,answers}=cpAgentPreferences.context(profile),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
+  const analyses=data.cpRows.map(row=>CP.analyzeOrder(row)),keys=new Set(analyses.map(order=>order.orderKey)),options=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
+  const visibleAnswers=Object.fromEntries(Object.entries({...data.checklist.answers,...answers}).filter(([key])=>{const identity=key.slice(0,key.lastIndexOf('::'));return keys.has(identity)||options.has(identity);}));
+  return {...data,sourceRevision,settings,checklistEnabled,checklist:{...data.checklist,answers:visibleAnswers},personalRules:[...priority.rules,...checklist.rules],deletedRuleIds:[...(priority.payload.deletedRuleIds||[]),...(checklist.payload.deletedRuleIds||[])]};
+}
+function cpAgentMail(profile,args,rows,dryRun,expected=null) {
+  const recipe={email:{groupId:args.groupId,recipientField:'Manufacturer'}};
+  const split=args.recipientMode==='manufacturer'?automationSplitRecipients(rows,recipe,profile.id):{resolved:[{group:automationEmailGroup(recipe,profile.id),rows,value:''}],unresolved:[]};
+  const messages=split.resolved.map(part=>({groupId:part.group.id,groupName:part.group.name,to:part.group.to,cc:part.group.cc||[],bcc:part.group.bcc||[],subject:args.subject+(part.value?' · '+part.value:''),body:args.body,language:args.language,rows:part.rows.length}));
+  const preview={messages,unresolved:split.unresolved,sendAvailable:false};
+  if(!messages.length)throw Object.assign(new Error('OFFICE_RECIPIENTS_UNRESOLVED'),{code:'OFFICE_RECIPIENTS_UNRESOLVED',statusCode:409});
+  if(dryRun)return preview;
+  if(JSON.stringify(preview)!==JSON.stringify(expected))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+  const canonicalIds=['orderCode','plmId','modelName','colourCode','manufacturer','subManufacturer','orderQuantity','exFactory'];
+  const fields=canonicalIds.map(id=>canonicalFields.label(id,args.language));
+  const emails=messages.map((message,i)=>{
+    const reportRows=split.resolved[i].rows.map(row=>Object.fromEntries(canonicalIds.map((id,index)=>[fields[index],canonicalFields.value(row,'cp',id)])));
+    const draft=automationEmail.createDraft({name:args.subject,...message,rows:reportRows,fields,language:args.language,ownerId:profile.id,open:false});
+    return {...message,filename:draft.filename};
+  });
+  return {emails,unresolved:split.unresolved,sendAvailable:false};
+}
 const agentToolRegistry = createToolRegistry({
+  cp:{...cpAgentPreferences,data:cpAgentData,calendar:()=>require('./lib/merch-calendar-store').publicProjection(),mail:cpAgentMail,
+    assertRevision:(profile,revision)=>{if(cpAgentRevision(profile)!==revision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});},
+    verifyMail:(result,profile)=>result.emails.length>0&&result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id))),
+    authorize:async(ctx,args)=>{
+      if(!ctx.input?.officeJobId)throw Object.assign(new Error('OFFICE_APPROVAL_REQUIRED'),{code:'OFFICE_APPROVAL_REQUIRED',statusCode:403});
+      const job=await agentOfficeStore.get(ctx.ownerId,'job',ctx.input.officeJobId),agent=await agentOfficeStore.get(ctx.ownerId,'profile',job.profileIds[0]);
+      if(job.status!=='running'||job.runtimeRunId!==ctx.runId||job.toolId!==ctx.toolId||JSON.stringify(job.args)!==JSON.stringify(args)||agent.revision!==job.agentRevision||!agent.areas.includes('cp'))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+    }
+  },
   // Modul kesif araclari yetki suzmesini burada yapar: ajan erisemeyecegi bir
   // modulu hic gormemeli, yoksa "yapabilirim" deyip 403 alir.
   userAccess,
@@ -5711,6 +5753,7 @@ async function agentOfficeAutomationPreview(profile,code) {
   return {...automationAiPreviewRows(rows,parsed,validation),name:parsed.name,trigger:parsed.trigger,conditions:parsed.conditions,actionDefinitions:parsed.actions};
 }
 const agentOfficeService=createAgentOfficeService({store:agentOfficeStore,sync:agentOfficeSync,userAccess,engine:()=>require('./lib/lcwai').getDefaultEngine(),
+  toolRegistry:agentToolRegistry,runtime:agentRuntime,cpData:cpAgentData,cpDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),cpGroups:profile=>automationEmailGroupsForOwner(profile.id).map(({id,name})=>({id,name})),
   getOperationalData:agentOfficeOperationalData,
   getEvidenceAttachments:agentOfficeEvidenceAttachments,
   readEvidenceAttachment:async item=>({buffer:await fs.promises.readFile(item.filePath),fileName:item.name}),

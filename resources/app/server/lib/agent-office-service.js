@@ -104,7 +104,7 @@ function createAgentOfficeService(deps) {
     profile = await ensure(profile);
     const value = await store.state(profile.id);
     return { ...value, assistant:await assistantSettings(profile), capabilities: { areas: allowedAreas(profile), canModerate: profile.systemRole === 'moderator', canAutomate: canAutomate(profile),
-      learning: 'persistent-context', runtime: 'buyer-log-open', outlook: false, voice: false, plmChanges: false },
+      learning: 'persistent-context', runtime: 'buyer-log-open', outlook: false, voice: false, plmChanges: false, cpTools:Boolean(deps.toolRegistry && deps.runtime)&&userAccess.hasArea(profile,'cp'), cpDrafts:userAccess.hasArea(profile,'automations') },
       activeJobs: [...active.values()].filter(job => job.ownerId === profile.id).map(job => ({ id:job.id, profileIds:job.profileIds,phase:job.phase||'review' })), sync: sync?.status(profile.id) || { state:'local' } };
   }
   async function scan(profile, raw = {}, { force = false, areas = null } = {}) {
@@ -382,6 +382,7 @@ function createAgentOfficeService(deps) {
     moderation, mergePreview, merge, watch, checkWatches, allowedAreas, activate,
     canAutomate,runtimeContext:owner=>({runtimeInstanceId,runtimeDeviceId:store.db(owner).getDeviceId()}), stop:()=>{if(timer)clearInterval(timer);timer=null;}, engineOf, store, sync, packContext };
   Object.assign(service,require('./agent-office-workflow').attachWorkflow(service,deps));
+  if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-cp').attachCp(service,deps));
   if(deps.getEvidenceAttachments&&deps.readEvidenceAttachment)Object.assign(service,require('./agent-office-evidence').attachEvidence(service,deps));
   return service;
 }
