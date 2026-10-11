@@ -5476,6 +5476,7 @@ async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
 }
 require('./routes/test-report-routes')(app,{automationError,express,userAccess,service:agentQualityService,authorizedOrders:(...args)=>agentQualityAuthorizedOrders(...args)});
 const agentQualityTools=require('./lib/agent-quality-tools').registerQualityTools(agentToolRegistry,{service:agentQualityService,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,dataset:profile=>agentPlatformDataset(profile.id,profile,'cp'),mail:cpAgentMail,verifyMail:(result,profile)=>result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id)))});
+require('./lib/agent-analytics-tools').registerAnalyticsTools(agentToolRegistry,{dataset:agentPlatformDataset,outputService:()=>require('./lib/lcwai').getDefaultOutputService()});
 /* ===================================================================
    OAB (Order-Assortment-Budget) — Overview modülü.
    PASS'e (LC Waikiki intranet raporlama sistemi) bağlanıp
@@ -5761,7 +5762,8 @@ async function agentOfficeAutomationPreview(profile,code) {
   const rows=await automationAiPreviewSourceRows(profile.id,profile,parsed.source);
   return {...automationAiPreviewRows(rows,parsed,validation),name:parsed.name,trigger:parsed.trigger,conditions:parsed.conditions,actionDefinitions:parsed.actions};
 }
-const agentOfficeService=createAgentOfficeService({store:agentOfficeStore,sync:agentOfficeSync,userAccess,engine:()=>require('./lib/lcwai').getDefaultEngine(),
+const agentOfficeService=createAgentOfficeService({
+  outputService:()=>require('./lib/lcwai').getDefaultOutputService(),store:agentOfficeStore,sync:agentOfficeSync,userAccess,engine:()=>require('./lib/lcwai').getDefaultEngine(),
   toolRegistry:agentToolRegistry,runtime:agentRuntime,runtimeStore:agentWorkflowStore,taskOwners:()=>userAccess.allPublicProfiles().map(profile=>profile.id),cpData:cpAgentData,cpDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),cpGroups:profile=>automationEmailGroupsForOwner(profile.id).map(({id,name})=>({id,name})),
   getOperationalData:agentOfficeOperationalData,
   getEvidenceAttachments:agentOfficeEvidenceAttachments,

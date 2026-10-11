@@ -131,7 +131,7 @@ function createOutputService(options = {}) {
         const body = data.layout ? BLOutputLayout.paginateGallery(filled, data.layout, { pages: format === 'pdf' }) : filled;
         if (format === 'pdf') {
           const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout: data.layout });
-          const pendingId = store.putPending(ownerId, { stage: 'pdf', html, ...saveMeta, lang, orientation });
+          const pendingId = store.putPending(ownerId, { stage: 'pdf', html, ...saveMeta, lang, orientation, officeCapability:job.durablePending===true }, {durable:job.durablePending===true});
           return { pending: 'pdf', pendingId, html, title, landscape: orientation === 'landscape', format: 'pdf', templateLabel: job.templateLabel, attempts: job.attempts, draftId: job.draftId };
         }
         const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel }, layout: data.layout }), 'utf8');
@@ -160,20 +160,29 @@ function createOutputService(options = {}) {
   }
 
   /* Masaüstü kabuğunun bastığı PDF baytları → AI Outputs. */
-  function completePdf(ownerId, pendingId, buffer) {
+  function completePdf(ownerId, pendingId, buffer, {officeAuthorized=false}={}) {
+    return store.withPending ? store.withPending(pendingId,()=>perform()) : perform();
+    function perform(){
     const entry = store.takePending(ownerId, pendingId, { keep: true });
     if (!entry || entry.stage !== 'pdf') throw lcwAiError('OUTPUT_NOT_FOUND');
+    if(entry.officeCapability&&!officeAuthorized)throw lcwAiError('OUTPUT_NOT_FOUND');
     if (!Buffer.isBuffer(buffer) || buffer.length < 64 || buffer.length > MAX_PDF_BYTES || buffer.slice(0, 5).toString('latin1') !== '%PDF-') throw lcwAiError('OUTPUT_RENDER_FAILED', { detail: 'pdf-bytes' });
-    store.takePending(ownerId, pendingId);
-    return store.save(ownerId, { buffer, title: entry.title, format: 'pdf', template: entry.template, templateLabel: entry.templateLabel, attempts: entry.attempts, requestId: entry.requestId, draftId: entry.draftId, edited: entry.edited });
+    const saved=(entry.officeCapability&&store.byRequest(ownerId,entry.requestId))||store.save(ownerId, { buffer, title: entry.title, format: 'pdf', template: entry.template, templateLabel: entry.templateLabel, attempts: entry.attempts, requestId: entry.requestId, draftId: entry.draftId, edited: entry.edited });
+    store.takePending(ownerId, pendingId);return saved;
+    }
   }
 
   /* Kabuk yoksa (tarayıcı kipi) ya da baskı başarısızsa: aynı belge HTML
      olarak kaydedilir; kullanıcı tarayıcıda Yazdır → PDF yapabilir. */
-  function fallbackHtml(ownerId, pendingId) {
-    const entry = store.takePending(ownerId, pendingId);
+  function fallbackHtml(ownerId, pendingId, {officeAuthorized=false}={}) {
+    return store.withPending ? store.withPending(pendingId,()=>perform()) : perform();
+    function perform(){
+    const entry = store.takePending(ownerId, pendingId,{keep:true});
     if (!entry || entry.stage !== 'pdf') throw lcwAiError('OUTPUT_NOT_FOUND');
-    return store.save(ownerId, { buffer: Buffer.from(entry.html, 'utf8'), title: entry.title, format: 'html', template: entry.template, templateLabel: entry.templateLabel, attempts: entry.attempts, requestId: entry.requestId, draftId: entry.draftId, edited: entry.edited });
+    if(entry.officeCapability&&!officeAuthorized)throw lcwAiError('OUTPUT_NOT_FOUND');
+    const saved=(entry.officeCapability&&store.byRequest(ownerId,entry.requestId))||store.save(ownerId, { buffer: Buffer.from(entry.html, 'utf8'), title: entry.title, format: 'html', template: entry.template, templateLabel: entry.templateLabel, attempts: entry.attempts, requestId: entry.requestId, draftId: entry.draftId, edited: entry.edited });
+    store.takePending(ownerId,pendingId);return saved;
+    }
   }
 
   /* ---------------- AI Çıktı Düzenleyici ---------------- */
@@ -233,6 +242,13 @@ function createOutputService(options = {}) {
 
   return {
     create, completeImages, completePdf, fallbackHtml, getDraft, renderDraft, skeleton,
+    renderStructured(ownerId,input){
+      const format=contracts.normalizeFormat(input.format),lang=input.lang==='en'?'en':'tr',date=now();
+      if(!['html','xlsx','pdf'].includes(format))throw lcwAiError('BAD_REQUEST');
+      const parsed=format==='xlsx'?contracts.normalizeWorkbook(input.data,{lang}):contracts.normalizeHtmlDraft(input.data,{lang});
+      if(!parsed.ok||parsed.warnings?.length)throw lcwAiError('OUTPUT_INVALID',{detail:'structured-report'});
+      return render(ownerId,{format,data:parsed.data,title:String(input.title||'Report').slice(0,140),lang,orientation:'landscape',day:date.toISOString().slice(0,10),date:date.toISOString(),requestId:input.requestId,attempts:0,template:'deterministic-report',templateLabel:lang==='en'?'Buyer Log report':'Buyer Log raporu',durablePending:true},{});
+    },
     get: (ownerId, id) => store.get(ownerId, id),
     list: (ownerId, limit) => store.list(ownerId, limit),
     store,

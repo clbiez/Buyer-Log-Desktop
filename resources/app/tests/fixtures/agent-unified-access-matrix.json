@@ -147,6 +147,45 @@
         "approval": true,
         "rollbackable": false,
         "contractVersion": 2
+      },
+      {
+        "id": "cp.fields",
+        "operation": "READ",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.analyze",
+        "operation": "READ",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.analysis.export",
+        "operation": "EXPORT",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
       }
     ]
   },
@@ -193,6 +232,45 @@
         "approval": false,
         "rollbackable": false,
         "contractVersion": 2
+      },
+      {
+        "id": "orders.fields",
+        "operation": "READ",
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.analyze",
+        "operation": "READ",
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.analysis.export",
+        "operation": "EXPORT",
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
       }
     ]
   },
@@ -223,6 +301,45 @@
         "capabilities": [],
         "risk": "read",
         "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.fields",
+        "operation": "READ",
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.analyze",
+        "operation": "READ",
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.analysis.export",
+        "operation": "EXPORT",
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
         "rollbackable": false,
         "contractVersion": 2
       }
@@ -327,6 +444,45 @@
         "approval": false,
         "rollbackable": false,
         "contractVersion": 2
+      },
+      {
+        "id": "lfl.fields",
+        "operation": "READ",
+        "areas": [
+          "lfl"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "lfl.analyze",
+        "operation": "READ",
+        "areas": [
+          "lfl"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "lfl.analysis.export",
+        "operation": "EXPORT",
+        "areas": [
+          "lfl"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
       }
     ]
   },
@@ -363,6 +519,71 @@
         "capabilities": [],
         "risk": "read",
         "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "backlog.fields",
+        "operation": "READ",
+        "areas": [
+          "backlog"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "backlog.analyze",
+        "operation": "READ",
+        "areas": [
+          "backlog"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "backlog.analysis.export",
+        "operation": "EXPORT",
+        "areas": [
+          "backlog"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "backlog.delivery",
+        "operation": "READ",
+        "areas": [
+          "backlog"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "backlog.delivery.export",
+        "operation": "EXPORT",
+        "areas": [
+          "backlog"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
         "rollbackable": false,
         "contractVersion": 2
       }

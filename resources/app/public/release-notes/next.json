@@ -2485,6 +2485,105 @@
           "en": "Actual Buyer Log screen with anonymous demo data"
         }
       }
+    },
+    {
+      "id": "agent-backlog-deterministic-report",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Backlog filtre, grup ve gecikme analizi",
+        "en": "Backlog filters, groups and delay analysis"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "Doğal dil planı veya doğrudan araç seçimi mevcut veri ve gecikme motorlarını kullanır. Raporun kapsamı ve güncel yetki doğrulanır.",
+        "en": "Natural-language plans or direct tool selection use existing data and delay engines. Report scope and current permissions are verified."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-backlog-preview.png",
+        "alt": {
+          "tr": "Backlog filtre, grup ve gecikme analizi",
+          "en": "Backlog filters, groups and delay analysis"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-deterministic-output-download",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Gerçek HTML ve Excel raporlarını indir",
+        "en": "Download actual HTML and Excel reports"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "CP, Orders, Collection, LFL ve Backlog analizleri ortak Buyer Log çıktı motoruyla AI çağrısı olmadan dosyaya dönüşür. Kırpılacak raporlar açıkça durdurulur.",
+        "en": "CP, Orders, Collection, LFL and Backlog analyses become files through the common Buyer Log output engine without AI calls. Reports that would be truncated are explicitly blocked."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-backlog-result.png",
+        "alt": {
+          "tr": "Gerçek HTML ve Excel raporlarını indir",
+          "en": "Download actual HTML and Excel reports"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-report-pdf-checkpoint",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "PDF oluşmadan görevi tamamlanmış sayma",
+        "en": "Complete tasks only after PDF creation"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "PDF bekleyen belge 24 saat kalıcı tutulur. Gerçek masaüstü çıktısı doğrulanır; kabuk yoksa HTML ile tamamlama ayrı onay ister.",
+        "en": "Pending PDF documents persist for 24 hours. Actual desktop output is verified; completing with HTML without the shell requires separate approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-report-pdf-pending.png",
+        "alt": {
+          "tr": "PDF oluşmadan görevi tamamlanmış sayma",
+          "en": "Complete tasks only after PDF creation"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
     }
   ]
 }
