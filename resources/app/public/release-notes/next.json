@@ -2386,6 +2386,105 @@
           "en": "Actual Buyer Log screen with anonymous demo data"
         }
       }
+    },
+    {
+      "id": "agent-quality-document-intake",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Quality belgelerini Agent Ofisi’nden işle",
+        "en": "Process Quality documents from Agent Office"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Quality",
+        "en": "Agent Office › Quality"
+      },
+      "body": {
+        "tr": "PDF, MSG/EML ve desteklenen görseller mevcut test motoruyla okunur. Deterministik okunamayan belgeler açık seçiminle ortak LCW AI yoluna gider; yerel geçici belgeler süre sınırına tabidir.",
+        "en": "PDF, MSG/EML and supported images use the existing test engine. Only your explicit selection sends unparsed documents through the common LCW AI path; local staged documents have an expiry."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-intake.png",
+        "alt": {
+          "tr": "Quality belgelerini Agent Ofisi’nden işle",
+          "en": "Process Quality documents from Agent Office"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-quality-match-approval",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Belirsiz sipariş/model/renk eşleşmesini doğrula",
+        "en": "Confirm ambiguous order/model/color matches"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Quality",
+        "en": "Agent Office › Quality"
+      },
+      "body": {
+        "tr": "Gerçek sipariş yetkisi ve mevcut eşleştirme motoru kullanılır. Belirsiz adayları seçip doğrulayabilirsin; değişen belge içeriği, kaynak veya revizyon eski onayı geçersiz kılar.",
+        "en": "Uses live order permissions and the existing matching engine. Select and confirm ambiguous candidates; changed evidence, source or revision invalidates the old approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-match.png",
+        "alt": {
+          "tr": "Belirsiz sipariş/model/renk eşleşmesini doğrula",
+          "en": "Confirm ambiguous order/model/color matches"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-quality-checklist-fail-drafts",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Test sonucunu kalıcı işle ve Fail taslağını indir",
+        "en": "Persist test outcomes and download Fail drafts"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Quality",
+        "en": "Agent Office › Quality"
+      },
+      "body": {
+        "tr": "Rapor aktarımı, bütün raporlardan türetilen checklist cevabı ve üretici mail taslağı ayrı onay adımlarıdır. Her işlem gerçek depodan doğrulanır; geri alma yeni revizyonları ve bağımlı checklist kanıtını korur. Mail gönderilmez.",
+        "en": "Report import, combined checklist outcome and manufacturer draft are separately approved steps. Each effect is verified against storage; undo protects newer revisions and dependent checklist evidence. Mail is not sent."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-result.png",
+        "alt": {
+          "tr": "Test sonucunu kalıcı işle ve Fail taslağını indir",
+          "en": "Persist test outcomes and download Fail drafts"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
     }
   ]
 }

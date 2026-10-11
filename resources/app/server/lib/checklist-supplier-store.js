@@ -243,6 +243,7 @@ function applyEntries(entries, actor, options = {}) {
   const source = text(options.source || 'buyer_log', 80) || 'buyer_log';
   return withFileLeaseSync(FILE, () => {
     const store = read();
+    if (options.expectedRevision != null && store.revision !== options.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     let updated = 0, cleared = 0, skipped = 0, conflicts = 0;
     const changedKeys = [], rejectedAt = {};
     for (const raw of input) {
@@ -302,9 +303,21 @@ function applyEntries(entries, actor, options = {}) {
   });
 }
 
+function restoreEntries(receipt, actor) {
+  return withFileLeaseSync(FILE, () => {
+    const store = read();
+    if (store.revision !== receipt.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
+    for(const [key, previous] of Object.entries(receipt.entries)) {
+      if(previous.answer == null) delete store.answers[key]; else store.answers[key] = previous.answer;
+      if(previous.tombstone == null) delete store.tombstones[key]; else store.tombstones[key] = previous.tombstone;
+    }
+    store.events.push({type:'agent-answer-undo',at:new Date().toISOString(),by:actorInfo(actor),keys:Object.keys(receipt.entries)});
+    write(store);return {verified:true,revision:store.revision};
+  });
+}
 module.exports = {
   FILE, ATTACHMENT_ROOT, SCHEMA_VERSION, MAX_ATTACHMENT_BYTES,
-  normalizeState, answerKey, normalizeDefinition, publicPayload, replaceDefinitions, applyEntries,
+  normalizeState, answerKey, normalizeDefinition, publicPayload, replaceDefinitions, applyEntries, restoreEntries,
   addAttachment, addAttachmentBuffer, getAttachmentPath, deleteAttachment, cleanAttachmentMeta, attachmentDisplayName,
   _read: read,
 };
