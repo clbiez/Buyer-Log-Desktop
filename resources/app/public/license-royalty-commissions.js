@@ -154,11 +154,7 @@
     return pricingRuleSeasonMatches(rule,ctx.season)&&turknorm(ctx.licensor)===turknorm(rule&&rule.licensor)&&turknorm(ctx.license)===turknorm(rule&&rule.license);
   };
   kolFindPricingRuleForCountryGroup=function(row,countryGroup){
-    const ctx=kolPricingRuleContext(row),group=api.pricingRuleCountryGroup(countryGroup);
-    if(!group||!ctx.licensor||!ctx.license)return null;
-    const candidates=(state.overrides.pricingRules||[]).filter(rule=>kolPricingRuleDimensionMatches(rule,ctx)&&hasSide(rule,group));
-    if(!candidates.length)return null;
-    return [...candidates].sort((a,b)=>{const af=kolPricingRuleFreshness(a),bf=kolPricingRuleFreshness(b);return bf.start-af.start||bf.end-af.end||String(b.id||'').localeCompare(String(a.id||''),'tr');})[0]||null;
+    return window.BLCollectionPricingEngine.findRule(kolPricingRuleContext(row),countryGroup,{api,rules:state.overrides.pricingRules||[],matches:kolPricingRuleDimensionMatches,freshness:kolPricingRuleFreshness});
   };
   kolFindPricingRule=function(row){
     const ctx=kolPricingRuleContext(row);if(!ctx.country||!ctx.licensor||!ctx.license)return null;
@@ -174,6 +170,9 @@
     const rule=kolFindPricingRule(row);if(!rule)return L('Eşleşen CP fiyat kuralı bulunamadı');
     const ctx=kolPricingRuleContext(row),group=api.pricingRuleCountryGroup(ctx.country),countryCommission=commission(rule,group),total=effectiveRoyalty(rule,group);
     return `${L('License Royalty hesabından')} (${L('Koleksiyon için OPD dikkate alınmaz')}): ${pricingRuleDateRangeLabel(rule)} · ${pricingRuleSeasonLabel(rule)} · ${rule.licensor} · ${rule.license} · Royalty %${rule.royalty} + ${group==='TR'?'TR':'YD'} Kom. %${countryCommission??'—'} = %${total??'—'}`;
+  };
+  kolComputeFobFromConfirmed=function(confFob,royaltyPct,hologram){
+    return window.BLCollectionPricingEngine.computeFobFromConfirmed(confFob,royaltyPct,hologram,{kolParseMoneyNum,kolFormatMoneyDisplay});
   };
   kolApplyRulePricing=function(row){
     if(!row)return false;
@@ -192,18 +191,11 @@
     const base=Number(basePrice);if(!Number.isFinite(base)||base<=0)return null;if(!kolLandedIsNonDtr(row))return base;if(!rule)return null;
     return api.calculateFinalFobWithRule(base,rule,countryGroup);
   };
+  kolLandedPriceWithCosts=function(basePrice,row){
+    return window.BLCollectionPricingEngine.priceWithCosts(basePrice,row,{kolLicenseRuleMissing,kolLandedIsNonDtr,kolParseMoneyNum});
+  };
   kolLandedCalc=function(row){
-    const trPrice=kolParseMoneyNum(row&&row.trPrice),defaults=typeof kolDefaultLandedMultipliers==='function'?kolDefaultLandedMultipliers():{tr:KOL_TR_LANDED_MULT,overseas:KOL_YD_LANDED_MULT};
-    const trMultRaw=kolParseMoneyNum(row&&row.trLandedMult),trMultIsManual=Number.isFinite(trMultRaw)&&trMultRaw>0,trMult=trMultIsManual?trMultRaw:defaults.tr;
-    const fxManual=kolParseMoneyNum(row&&row.trFx),fxAuto=kolAutoFx(row),fx=Number.isFinite(fxManual)&&fxManual>0?fxManual:fxAuto,trBaseUsd=(Number.isFinite(trPrice)&&trPrice>0&&Number.isFinite(fx)&&fx>0)?trPrice/fx:null;
-    const trRule=kolFindPricingRuleForCountryGroup(row,'TR'),trRuleMissing=kolTrLicenseRuleMissing(row),trCostedUsd=(trBaseUsd==null||trRuleMissing)?null:kolLandedPriceWithRule(trBaseUsd,row,trRule,'TR'),trLanded=trCostedUsd==null?null:trCostedUsd*trMult;
-    const supp=kolSuppFob(row),ydBaseFob=supp?supp.price:null,ydCostedFob=ydBaseFob==null?null:kolLandedPriceWithCosts(ydBaseFob,row);
-    const ydMultRaw=kolParseMoneyNum(row&&row.ydLandedMult),ydMultIsManual=Number.isFinite(ydMultRaw)&&ydMultRaw>0,ydMult=ydMultIsManual?ydMultRaw:defaults.overseas,ydLanded=ydCostedFob==null?null:ydCostedFob*ydMult;
-    const nonDtr=kolLandedIsNonDtr(row),ruleMissing=kolLicenseRuleMissing(row),royaltyRaw=kolParseMoneyNum(row&&row.royalty),hologramRaw=kolParseMoneyNum(row&&row.hologramCost);
-    const royaltyPct=Number.isFinite(royaltyRaw)&&royaltyRaw>0?royaltyRaw:0,hologramCost=Number.isFinite(hologramRaw)&&hologramRaw>0?hologramRaw:0;
-    const trRoyaltyRaw=effectiveRoyalty(trRule,'TR'),trHologramRaw=hologramFor(trRule,'TR'),trRoyaltyPct=Number.isFinite(trRoyaltyRaw)&&trRoyaltyRaw>0?trRoyaltyRaw:0,trHologramCost=Number.isFinite(trHologramRaw)&&trHologramRaw>0?trHologramRaw:0;
-    const profitPct=(trLanded!=null&&ydLanded!=null&&trLanded>0)?((trLanded-ydLanded)/trLanded)*100:null;
-    return {trPrice,trMult,trMultIsManual,defaultTrMult:defaults.tr,fx,fxAuto,fxIsManual:Number.isFinite(fxManual)&&fxManual>0,trBaseUsd,trRule,trRuleMissing,trCostedUsd,trLanded,trRoyaltyPct,trHologramCost,supp,ydBaseFob,ydCostedFob,ydMult,ydMultIsManual,defaultYdMult:defaults.overseas,ydLanded,nonDtr,royaltyPct,hologramCost,profitPct,ruleMissing};
+    return window.BLCollectionPricingEngine.calculateLanded(row,{kolParseMoneyNum,kolDefaultLandedMultipliers,kolAutoFx,kolFindPricingRuleForCountryGroup,kolTrLicenseRuleMissing,kolLandedPriceWithRule,kolSuppFob,kolLandedPriceWithCosts,kolLandedIsNonDtr,kolLicenseRuleMissing,effectiveRoyalty,hologramFor});
   };
   endeksmatikRoyaltyRule=function(mode,row){
     try{

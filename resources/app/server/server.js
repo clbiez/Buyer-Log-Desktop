@@ -5361,6 +5361,7 @@ const agentCollectionSave=async(profile,ownerId,changes,expectedRevision,assertA
 require('./lib/agent-quotation-tools').registerQuotationTools(agentToolRegistry,{flush:async()=>{await deltaStore.flush();},saveCollection:agentCollectionSave,visible:profile=>quotationsVisibleTo(profile).requests,authorizeCollection:async(profile,owner,write=false)=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);require('./lib/agent-collection-authority').assertCollectionAccess(userAccess,current,owner,write);},changed:profile=>{void sharedRevisionStore.update('quotation',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));}});
 require('./lib/agent-collection-tools').registerCollectionTools(agentToolRegistry,{
   dataset:agentPlatformDataset,
+  pricingSource:ctx=>require('./lib/collection-pricing-service').createPricingSource({deltaStore,office:agentOfficeStore,userAccess,dataset:agentPlatformDataset,loadOverrides,loadFx})(ctx),
   plmFetch:(profile,args,assertAuthority)=>agentPlmSyncService.fetch(profile,args,{assertAuthority,allowAi:false}),
   authorize:async(profile,ownerId,write)=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);require('./lib/agent-collection-authority').assertCollectionAccess(userAccess,current,ownerId,write);},
   save:agentCollectionSave,
