@@ -51,6 +51,7 @@ function trainingChunks(records) {
   if(block.length)blocks.push(block);
   return blocks.map((block,index)=>({name:`agent-training-${index+1}.md`,buffer:Buffer.from(`# Buyer Log Agent Training — ${index+1}/${blocks.length}\n\n${block.map(item=>item.rendered).join('')}`),sourceIds:block.map(item=>item.doc.id)}));
 }
+function shareableGuidance(doc){return doc.active&&!doc.deleted&&!doc.supersededBy&&!doc.conflictingIds?.length&&doc.approved===true&&['instruction','preference','decision'].includes(doc.type)&&!doc.sourceId&&!doc.sourceRecord&&!doc.verifiedSource&&!doc.sourceRevision&&!doc.authorizationFingerprint&&!doc.toolIds?.length&&(!doc.expiresAt||Date.parse(doc.expiresAt)>Date.now());}
 function createAgentOfficeService(deps) {
   const { store, sync, userAccess, engine, getOperationalData } = deps;
   const runtimeInstanceId=id();
@@ -66,6 +67,8 @@ function createAgentOfficeService(deps) {
   const allowedAreas = profile => AREAS.filter(area => userAccess.hasArea(profile, moduleArea(area)));
   const audit = (profile, action, target, detail) => userAccess.appendAudit(profile, action, target, detail);
   const engineOf = () => typeof engine === 'function' ? engine() : engine;
+  const memoryPolicy=require('./agent-memory-policy').createMemoryPolicy({store,userAccess,registry:deps.toolRegistry,dataset:deps.memoryDataset});
+  const memoryContext=(profile,ids,conversationId,query,budget,options)=>memoryPolicy.context(profile,ids,conversationId,query,budget,options);
   function activate(profile) {
     actors.set(profile.id, { lastSeen: Date.now() });
     if (!timer) { timer = setInterval(() => { void background(); }, 120000); timer.unref?.(); }
@@ -137,7 +140,14 @@ function createAgentOfficeService(deps) {
   }
   async function learn(profile, profileId, raw) {
     profile = freshProfile(profile);
-    const result = await store.learn(profile.id, profileId, raw);
+    const agent=await store.get(profile.id,'profile',profileId),source=raw.sourceRef?await memoryPolicy.source(profile,[agent],raw.sourceRef):null;
+    if(source&&raw.type!=='fact')throw error('OFFICE_MEMORY_SOURCE_INVALID',422);
+    const expected=memoryPolicy.fingerprint(profile);
+    const parent=raw.sourceId?(await store.records(profile.id)).find(doc=>doc.id===raw.sourceId&&['memory','message','job','summary'].includes(doc.kind)):null;
+    if(raw.sourceId&&(!parent||!(parent.profileId===profileId||parent.profileIds?.includes(profileId))))throw error('OFFICE_MEMORY_SOURCE_INVALID',422);
+    const inherited=parent?{sourceRecord:{kind:parent.kind,id:parent.id,revision:parent.revision},authorizationFingerprint:parent.authorizationFingerprint||hash('legacy-source:'+parent.id),...Object.fromEntries(['verifiedSource','sourceRevision','toolIds','taskId'].filter(key=>parent[key]!=null).map(key=>[key,parent[key]]))}:{};
+    if(parent?.steps)inherited.toolIds=parent.steps.filter(step=>step.agentId===profileId).map(step=>step.toolId);
+    const result = await store.learn(profile.id, profileId, raw,{expectedAgentRevision:agent.revision,assertAuthority:(_agent,state)=>{if(expected!==memoryPolicy.fingerprint(freshProfile(profile))||parent&&state.records[parent.kind+':'+parent.id]?.doc?.revision!==parent.revision)throw error('OFFICE_PREVIEW_CHANGED',409);},metadata:{...inherited,...(source?{verifiedSource:source,sourceRevision:source.revision,authorizationFingerprint:expected}:{})}});
     if(result.conflictingIds.length)await store.save(profile.id,'alert',{id:id(),profileId,kind:'memory-conflict',title:bilingual('Aynı konuda farklı hafıza kayıtları var · birlikte doğrula','Different memories share a topic · review them together'),findings:[{title:bilingual(result.key,result.key)}],sourceIds:[result.id,...result.conflictingIds],aiCalls:0,dismissed:false});
     audit(profile, 'AGENT_MEMORY_ADD', result.id, { profileId, type:result.type, conflicts:result.conflictingIds.length }); return result;
   }
@@ -154,17 +164,19 @@ function createAgentOfficeService(deps) {
       if (JSON.stringify([...conv.profileIds].sort()) !== JSON.stringify([...ids].sort())) throw error('OFFICE_CONVERSATION_SCOPE', 409);
     } else conv = await store.conversation(profile.id, ids, task.slice(0, 80));
     const requestId = id(), resolvedScope = inferScope(task,raw.scope);
-    const userMessage = await store.appendMessage(profile.id, conv.id, { role:'user', text:task, requestId });
+    const runAuthority=memoryPolicy.fingerprint(profile);
+    async function assertRunScope(){const latest=await Promise.all(ids.map(key=>store.get(profile.id,'profile',key)));if(latest.some((agent,i)=>agent.revision!==participants[i].revision)||runAuthority!==memoryPolicy.fingerprint(freshProfile(profile)))throw error('OFFICE_PREVIEW_CHANGED',409);}
+    const userMessage = await store.appendMessage(profile.id, conv.id, { role:'user', text:task, requestId,authorizationFingerprint:runAuthority });
     let job = await store.save(profile.id, 'job', { id:requestId, profileIds:ids, conversationId:conv.id, userMessageId:userMessage.id, type:raw.mode === 'automation' ? 'automation' : 'analysis',
-      runtimeInstanceId,runtimeDeviceId:store.db(profile.id).getDeviceId(),status:'running', task, scope:resolvedScope, calls:0, perspectiveMode:ids.length > 1 ? 'one-call-shared-perspectives' : 'single-agent' });
+      runtimeInstanceId,runtimeDeviceId:store.db(profile.id).getDeviceId(),authorizationFingerprint:runAuthority,status:'running', task, scope:resolvedScope, calls:0, perspectiveMode:ids.length > 1 ? 'one-call-shared-perspectives' : 'single-agent' });
     active.set(job.id, {...job,ownerId:profile.id,phase:'review'});
     onProgress({phase:'review',jobId:job.id,profileIds:ids});
-    let partial = '', archivedReply = false;
+    let partial = '', archivedReply = false, aiAttempted=false;
     const progress = event => { if (event.delta) {partial += String(event.delta);const running=active.get(job.id);if(running)running.phase='responding';} onProgress(event); };
     try {
       const areas = [...new Set(participants.flatMap(agent => agent.areas))].filter(area => allowedAreas(profile).includes(area));
       const operations = areas.length ? await scan(profile, resolvedScope, { areas }) : { findings:[], changes:[], orders:[], coverage:{}, rowCount:0 };
-      const memory = await store.selectContext(profile.id, ids, conv.id, task, 9000);
+      const memory = await memoryContext(profile, ids, conv.id, task, 9000);
       const context = packContext({ participants:participants.map(agent => ({ id:agent.id, name:agent.name, role:agent.role, instructions:agent.instructions, areas:agent.areas, copied:!!agent.lineage })),
         coverage:{ ...operations.coverage, scope:resolvedScope, rowsAnalyzed:operations.rowCount, historyOmitted:memory.omittedCount, completeArchive:false, asAt:operations.sourceUpdatedAt, comparison:operations.comparison },
         handoffs:internal.handoffs||[],orchestration:internal.orchestration?[internal.orchestration]:[],evidenceAttachments:internal.evidenceAttachments||[],
@@ -180,19 +192,24 @@ function createAgentOfficeService(deps) {
         source = 'automations'; guide = await deps.automationGuide(profile);
       }
       const ai=engineOf(),ask=internal.files?.length?ai.askWithFiles.bind(ai):ai.ask.bind(ai);
+      await assertRunScope();
       job=await store.save(profile.id,'job',{...job,calls:1});
       onProgress({phase:'ai-call',jobId:job.id,profileIds:ids});
+      await assertRunScope();aiAttempted=true;
       const result = await ask(profile.id, { files:internal.files||[],requestId, source, task, context, guide, lang:raw.lang === 'en' ? 'en' : 'tr', onProgress:progress,
         signal:raw.signal });
+      try{await assertRunScope();}catch(scopeError){
+        const reply=result.data?.answer||result.text;if(reply){await store.appendMessage(profile.id,conv.id,{role:'assistant',text:reply,requestId,status:'failed',authorizationFingerprint:runAuthority,provenance:{origin:'scope-changed-ai-response',confidence:'LOW',contractValid:false}});archivedReply=true;}throw scopeError;
+      }
       if (!result.structured?.ok || !result.data) {
-        if (result.text) { await store.appendMessage(profile.id, conv.id, {role:'assistant',text:result.text,requestId,status:'failed',provenance:{origin:'unverified-ai-response',confidence:'LOW',contractValid:false}}); archivedReply = true; }
+        if (result.text) { await store.appendMessage(profile.id, conv.id, {role:'assistant',text:result.text,requestId,authorizationFingerprint:runAuthority,status:'failed',provenance:{origin:'unverified-ai-response',confidence:'LOW',contractValid:false}}); archivedReply = true; }
         throw error('OFFICE_AI_CONTRACT_INVALID', 422);
       }
       const response = result.data;
       const references = (response.references || []).filter(reference => context.referenceIds.includes(reference));
       const unsupportedReferences = (response.references || []).filter(reference => !context.referenceIds.includes(reference));
       const body = raw.mode === 'automation' ? result.text : response.answer;
-      const reply = await store.appendMessage(profile.id, conv.id, { role:'assistant', text:body, requestId, model:result.model?.label,
+      const reply = await store.appendMessage(profile.id, conv.id, { role:'assistant', text:body, requestId, model:result.model?.label,authorizationFingerprint:runAuthority,
         sourceIds:references, provenance:{ origin:'ai-proposal', confidence:!unsupportedReferences.length && !result.truncated && ['LOW','MEDIUM','HIGH'].includes(response.confidence) ? response.confidence : 'LOW',
           sourceUpdatedAt:operations.sourceUpdatedAt || null, contextOmitted:context.omitted + memory.omittedCount, unsupportedReferences,
           perspectives:(response.perspectives || []).filter(value => ids.includes(String(value).split('|')[0])),
@@ -208,9 +225,9 @@ function createAgentOfficeService(deps) {
     } catch (err) {
       const code = /^LCWAI_|^OFFICE_|^AI_AUTOMATION_/.test(err.code || '') ? err.code : 'OFFICE_AI_FAILED';
       const status = raw.signal?.aborted || /CANCELLED/.test(code) ? 'cancelled' : 'failed';
-      if (partial && !archivedReply) await store.appendMessage(profile.id, conv.id, {role:'assistant',text:partial,requestId,status:status === 'cancelled' ? 'cancelled' : 'interrupted',provenance:{origin:'partial-ai-response',confidence:'LOW',contractValid:false}});
+      if (partial && !archivedReply) await store.appendMessage(profile.id, conv.id, {role:'assistant',text:partial,requestId,authorizationFingerprint:runAuthority,status:status === 'cancelled' ? 'cancelled' : 'interrupted',provenance:{origin:'partial-ai-response',confidence:'LOW',contractValid:false}});
       await store.appendMessage(profile.id, conv.id, { role:'system', text:code, status, requestId });
-      await store.save(profile.id, 'job', { ...job, status, errorCode:code, finishedAt:new Date().toISOString() });
+      await store.save(profile.id, 'job', { ...job, calls:aiAttempted?1:0,status, errorCode:code, finishedAt:new Date().toISOString() });
       throw err;
     } finally { active.delete(job.id); }
   }
@@ -221,7 +238,7 @@ function createAgentOfficeService(deps) {
   }
   async function publish(profile, profileId, confirmed) {
     profile = freshProfile(profile); if (confirmed !== true) throw error('OFFICE_APPROVAL_REQUIRED', 409);
-    const agent = await store.get(profile.id, 'profile', profileId), memory = (await store.records(profile.id)).filter(doc => doc.kind === 'memory' && doc.profileId === profileId && doc.active && doc.approved && doc.shareable && (!doc.expiresAt || Date.parse(doc.expiresAt) > Date.now()) && doc.type !== 'inference');
+    const agent = await store.get(profile.id, 'profile', profileId), memory = (await store.records(profile.id)).filter(doc => doc.kind === 'memory' && doc.profileId === profileId && doc.shareable && shareableGuidance(doc));
     const entry = { version:1, ownerId:profile.id, ownerName:text(profile.displayName || profile.username || profile.id,80),
       profile:{ id:agent.id, name:agent.name, role:agent.role, instructions:agent.instructions, areas:agent.areas, avatar:agent.avatar, revision:agent.revision },
       memory:memory.map(doc => ({ id:doc.id, key:doc.key, text:doc.text, type:doc.type, confidence:doc.confidence, createdAt:doc.createdAt })),
@@ -264,7 +281,7 @@ function createAgentOfficeService(deps) {
     return part;
   }
   async function reviewArchive(profile, raw, onProgress = () => {}) {
-    profile = freshProfile(profile);
+    profile = freshProfile(profile);const archiveAuthority=memoryPolicy.fingerprint(profile);
     if ([...active.values()].filter(job => job.ownerId === profile.id).length >= 2) throw error('OFFICE_BUSY',429);
     const preview = await trainingPreview(profile, raw);
     if (raw.confirmed !== true || raw.fingerprint !== preview.fingerprint || Number(raw.maxCalls) < preview.estimatedCalls) throw error('OFFICE_COST_APPROVAL_REQUIRED',409);
@@ -272,35 +289,43 @@ function createAgentOfficeService(deps) {
     const records = await store.exportTraining(preview.ownerId, raw.profileIds), chunks = trainingChunks(records).slice(preview.range.start,preview.range.start+preview.range.count), jobId = id();
     let job = await store.save(profile.id, 'job', { runtimeInstanceId,runtimeDeviceId:store.db(profile.id).getDeviceId(),id:jobId, profileIds:raw.profileIds || [], type:'archive-review', status:'running', calls:0, plannedCalls:preview.estimatedCalls, sourceOwnerId:preview.ownerId,range:preview.range,totalParts:preview.totalParts });
     active.set(jobId, job);
+    const archiveAgents=(await store.records(profile.id)).filter(doc=>doc.kind==='profile'&&(!raw.profileIds?.length||raw.profileIds.includes(doc.id)));
+    async function checkArchiveAuthority(reply){const latestAgents=await Promise.all(archiveAgents.map(agent=>store.get(profile.id,'profile',agent.id)));if(latestAgents.some((agent,i)=>agent.revision!==archiveAgents[i].revision)||archiveAuthority!==memoryPolicy.fingerprint(freshProfile(profile))){if(reply)await store.save(profile.id,'summary',{id:id(),profileIds:preview.ownerId===profile.id?raw.profileIds||[]:[],text:reply,authorizationFingerprint:archiveAuthority,origin:'scope-changed-ai-response',confidence:'LOW',contractValid:false,requiresVerification:true});throw error('OFFICE_PREVIEW_CHANGED',409);}}
     const summaries = [];let partial='',part=-1;const progress=event=>{if(event.delta)partial+=String(event.delta);onProgress(event);};
     try {
       for (let index=0; index<chunks.length; index++) {
+        await checkArchiveAuthority();
         if (raw.signal?.aborted) throw error('LCWAI_CANCELLED',499);
         onProgress({ phase:'archive-part', index, total:chunks.length, jobId });
         const chunk = chunks[index];part=preview.range.start+index;partial='';
+        job.calls++;
         const result = await engineOf().askWithFiles(profile.id, { requestId:`${jobId}-${index}`, source:'agent-office', task:text(raw.task || 'Summarize decisions, contradictions and open actions. Preserve source IDs and dates; do not treat old facts as current.',4000),
           context:{ part:preview.range.start+index+1, totalParts:preview.totalParts,selectedParts:chunks.length, sourceOwner:preview.ownerId, completeArchive:false },
           files:[{ fileName:chunk.name, buffer:chunk.buffer, contentType:'text/markdown' }], lang:raw.lang || 'tr', signal:raw.signal, onProgress:progress });
+        await checkArchiveAuthority(result.data?.answer||result.text);
         if (!result.data || !result.structured?.ok) {await store.save(profile.id,'summary',{id:id(),profileIds:preview.ownerId === profile.id ? raw.profileIds || [] : [],text:result.text || '',sourceIds:chunk.sourceIds,sourceOwnerId:preview.ownerId,part,origin:'unverified-ai-response',confidence:'LOW',contractValid:false,requiresVerification:true});throw error('OFFICE_AI_CONTRACT_INVALID',422);}
         partial='';
         const summary = await store.save(profile.id, 'summary', { id:id(), profileIds:preview.ownerId === profile.id ? raw.profileIds || [] : [], text:result.data.answer,
-          sourceIds:chunk.sourceIds, sourceOwnerId:preview.ownerId, sourceFingerprint:preview.fingerprint, rawResponse:result.text, part:preview.range.start+index, origin:'ai-inference', confidence:'LOW', requiresVerification:true });
-        summaries.push(summary); job.calls++;
+          sourceIds:chunk.sourceIds, sourceOwnerId:preview.ownerId, sourceFingerprint:preview.fingerprint, rawResponse:result.text, part:preview.range.start+index, origin:'ai-inference', authorizationFingerprint:archiveAuthority,confidence:'LOW', requiresVerification:true });
+        summaries.push(summary);
         job = await store.save(profile.id,'job',{...job, completedParts:index+1});
       }
       let combined = summaries[0]?.text || '';
       if (summaries.length > 1) {
         partial='';part=-1;
         const context = packContext({ summaries:summaries.map(doc => ({id:doc.id,text:doc.text})), coverage:{ parts:summaries.length, fullSourceReadUnverified:true } });
+        await checkArchiveAuthority();
+        job.calls++;
         const result = await engineOf().ask(profile.id,{ requestId:`${jobId}-merge`, source:'agent-office', task:text(raw.task || 'Combine these part summaries. Identify contradictions using dates and sources, and retain original evidence references.',4000), context, lang:raw.lang || 'tr', signal:raw.signal, onProgress:progress });
+        await checkArchiveAuthority(result.data?.answer||result.text);
         if (!result.data || !result.structured?.ok) {await store.save(profile.id,'summary',{id:id(),profileIds:preview.ownerId === profile.id ? raw.profileIds || [] : [],text:result.text || '',sourceOwnerId:preview.ownerId,origin:'unverified-ai-response',confidence:'LOW',contractValid:false,requiresVerification:true});partial='';throw error('OFFICE_AI_CONTRACT_INVALID',422);}
         partial='';
-        combined = result.data.answer; job.calls++;
-        await store.save(profile.id,'summary',{id:id(),profileIds:preview.ownerId === profile.id ? raw.profileIds || [] : [],text:combined,rawResponse:result.text,sourceIds:summaries.map(item=>item.id),sourceOwnerId:preview.ownerId,sourceFingerprint:preview.fingerprint,origin:'ai-inference',confidence:'LOW',requiresVerification:true});
+        combined = result.data.answer;
+        await store.save(profile.id,'summary',{id:id(),profileIds:preview.ownerId === profile.id ? raw.profileIds || [] : [],text:combined,rawResponse:result.text,sourceIds:summaries.map(item=>item.id),sourceOwnerId:preview.ownerId,sourceFingerprint:preview.fingerprint,origin:'ai-inference',authorizationFingerprint:archiveAuthority,confidence:'LOW',requiresVerification:true});
       }
       job = await store.save(profile.id,'job',{...job,status:'completed',finishedAt:new Date().toISOString(),text:combined,summaryIds:summaries.map(doc=>doc.id), completeness:'uploaded-parts-not-proof-of-full-reading'});
       audit(profile,'AGENT_ARCHIVE_REVIEW',jobId,{calls:job.calls,ownerId:preview.ownerId}); return { job };
-    } catch(err) { if(partial)await store.save(profile.id,'summary',{id:id(),profileIds:preview.ownerId === profile.id ? raw.profileIds || [] : [],text:partial,sourceOwnerId:preview.ownerId,part,origin:'partial-ai-response',confidence:'LOW',contractValid:false,requiresVerification:true});await store.save(profile.id,'job',{...job,status:raw.signal?.aborted?'cancelled':'failed',finishedAt:new Date().toISOString(),errorCode:err.code || 'OFFICE_AI_FAILED'}); throw err; }
+    } catch(err) { if(partial)await store.save(profile.id,'summary',{id:id(),profileIds:preview.ownerId === profile.id ? raw.profileIds || [] : [],text:partial,sourceOwnerId:preview.ownerId,part,authorizationFingerprint:archiveAuthority,origin:'partial-ai-response',confidence:'LOW',contractValid:false,requiresVerification:true});await store.save(profile.id,'job',{...job,status:raw.signal?.aborted?'cancelled':'failed',finishedAt:new Date().toISOString(),errorCode:err.code || 'OFFICE_AI_FAILED'}); throw err; }
     finally { active.delete(jobId); }
   }
   async function moderation(profile, ownerId) {
@@ -318,7 +343,7 @@ function createAgentOfficeService(deps) {
     for (const selection of selections) {
       const agent = await store.get(selection.ownerId,'profile',selection.profileId); profiles.push({ownerId:selection.ownerId,profileId:agent.id,revision:agent.revision});
       if(agent.instructions)candidates.push({id:'profile-instruction:'+selection.ownerId+':'+agent.id,kind:'memory',profileId:agent.id,type:'instruction',text:agent.instructions,key:'',approved:true,active:true,sourceOwnerId:selection.ownerId,sourceId:agent.id,origin:'profile-instructions',updatedAt:agent.updatedAt});
-      candidates.push(...(await store.records(selection.ownerId)).filter(doc => doc.kind==='memory' && doc.profileId===agent.id && doc.active && doc.approved && (!doc.expiresAt || Date.parse(doc.expiresAt) > Date.now()) && doc.type!=='inference').map(doc=>({...doc,sourceOwnerId:selection.ownerId})));
+      candidates.push(...(await store.records(selection.ownerId)).filter(doc => doc.kind==='memory' && doc.profileId===agent.id && shareableGuidance(doc)).map(doc=>({...doc,sourceOwnerId:selection.ownerId})));
     }
     const unique = [], seen = new Set(), byKey = new Map();
     for (const candidate of candidates) {
@@ -380,7 +405,7 @@ function createAgentOfficeService(deps) {
   }
   const service = { configureAssistant, checkAssistant, assistantSettings, notifications, state, scan, createProfile, updateProfile, learn, run, syncNow, publish, copyAgent, trainingPreview, archivePart, reviewArchive,
     moderation, mergePreview, merge, watch, checkWatches, allowedAreas, activate,
-    canAutomate,runtimeContext:owner=>({runtimeInstanceId,runtimeDeviceId:store.db(owner).getDeviceId()}), stop:()=>{if(timer)clearInterval(timer);timer=null;}, engineOf, store, sync, packContext };
+    canAutomate,memoryContext,memoryFingerprint:memoryPolicy.fingerprint,runtimeContext:owner=>({runtimeInstanceId,runtimeDeviceId:store.db(owner).getDeviceId()}), stop:()=>{if(timer)clearInterval(timer);timer=null;}, engineOf, store, sync, packContext };
   Object.assign(service,require('./agent-office-workflow').attachWorkflow(service,deps));
   if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-cp').attachCp(service,deps));
   if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-tasks').attachTasks(service,deps));

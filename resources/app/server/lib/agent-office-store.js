@@ -153,30 +153,68 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
       areas: [...new Set((raw.areas || previous.areas).filter(area => AREAS.includes(area) && allowed.includes(area)))],
       deskId: text(raw.deskId ?? previous.deskId, 80) }, { expectedRevision: raw.revision ?? previous.revision });
   }
-  async function learn(owner, profileId, raw) {
-    await get(owner, 'profile', profileId);
+  async function learn(owner, profileId, raw, {metadata={},assertAuthority=()=>{},expectedAgentRevision}={}) {
     const content = text(raw.text, 6000);
     if (!content) throw error('OFFICE_MEMORY_REQUIRED');
     const type = ['instruction', 'preference', 'fact', 'decision', 'task', 'inference'].includes(raw.type) ? raw.type : 'instruction';
-    const key = text(raw.key || '', 120), memories = (await records(owner)).filter(doc => doc.kind === 'memory' && doc.profileId === profileId && doc.active);
-    const conflicts = key ? memories.filter(doc => doc.key === key && doc.text !== content).map(doc => doc.id) : [];
-    const category=({fact:'source-fact',preference:'user-preference',instruction:'business-procedure',decision:'business-procedure',task:'task-history',inference:'unverified-inference'})[type];
-    const memory = await save(owner, 'memory', { id: id(), profileId, text: content, type, category, key, active: true,
+    const memory = { id: id(), profileId, text: content, type, category:memoryCategory(type), key:text(raw.key || '',120), active: true,
       approved: raw.approved === true && type !== 'inference', origin: 'user', confidence: type === 'inference' ? 'LOW' : 'USER_REPORTED',
       sourceId: text(raw.sourceId, 120), expiresAt: raw.expiresAt && Number.isFinite(Date.parse(raw.expiresAt)) ? new Date(raw.expiresAt).toISOString() : '',
-      shareable: raw.shareable === true, conflictingIds: conflicts,sourceRevision:text(raw.sourceRevision||'',160),correctsMemoryId:text(raw.correctsMemoryId||'',120) });
-    return memory;
+      shareable: raw.shareable === true, conflictingIds: [],sourceRevision:text(raw.sourceRevision||'',160),correctsMemoryId:text(raw.correctsMemoryId||'',120),...copy(metadata) };
+    const result=await db(owner).privateRecordTransaction(state=>{
+      const agent=state.records['profile:'+profileId]?.doc;
+      if(!agent||agent.ownerId!==owner||agent.deleted)throw error('OFFICE_NOT_FOUND',404);
+      if(expectedAgentRevision!=null&&agent.revision!==expectedAgentRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
+      assertAuthority(copy(agent),state);
+      const changed={},docs=memoryDocuments(state,owner,profileId);
+      if(memory.correctsMemoryId){
+        const prior=docs.find(doc=>doc.id===memory.correctsMemoryId);
+        if(!prior||prior.deleted||!prior.active)throw error('OFFICE_MEMORY_CORRECTION_SCOPE',409);
+        if(raw.correctsRevision==null||Number(raw.correctsRevision)!==prior.revision)throw error('OFFICE_REVISION_CONFLICT',409);
+        if(raw.key!=null&&memory.key!==prior.key)throw error('OFFICE_MEMORY_CORRECTION_SCOPE',409);
+        memory.key=prior.key;
+        // Changing a claim never declassifies the source that produced it.
+        for(const field of ['authorizationFingerprint','verifiedSource','sourceRevision','toolIds','taskId','sourceRecord'])if(prior[field]!=null&&metadata[field]==null)memory[field]=copy(prior[field]);
+        if(memory.approved){archiveMemory(changed,prior);prior.active=false;prior.supersededBy=memory.id;prior.supersededAt=now();memory.feedbackKind='correction';}
+      }
+      docs.push(memory);reconcileMemoryConflicts(docs);
+      for(const doc of docs)if(doc.id===memory.id||JSON.stringify(doc)!==JSON.stringify(state.records['memory:'+doc.id]?.doc))putMemory(changed,state,owner,doc);
+      return {records:changed,result:copy(changed['memory:'+memory.id].doc)};
+    });onChange(owner);return result;
+  }
+  const memoryCategory=type=>({fact:'source-fact',preference:'user-preference',instruction:'business-procedure',decision:'business-procedure',task:'task-history',inference:'unverified-inference'})[type];
+  const memoryDocuments=(state,owner,profileId)=>Object.values(state.records).map(record=>record.doc).filter(doc=>doc?.kind==='memory'&&doc.ownerId===owner&&doc.profileId===profileId).map(copy);
+  function putMemory(changed,state,owner,doc){const prior=state.records['memory:'+doc.id]?.doc;changed['memory:'+doc.id]={doc:{...copy(doc),kind:'memory',ownerId:owner,revision:Number(prior?.revision||0)+1,createdAt:prior?.createdAt||now(),updatedAt:now()}};}
+  function archiveMemory(changed,doc){const key=id();changed['memory-version:'+key]={doc:{...copy(doc),id:key,kind:'memory-version',memoryId:doc.id,createdAt:now(),updatedAt:now(),revision:1}};}
+  function reconcileMemoryConflicts(docs){
+    const active=docs.filter(doc=>doc.active&&!doc.deleted&&!doc.supersededBy&&(!doc.expiresAt||Date.parse(doc.expiresAt)>Date.now()));
+    for(const doc of docs)doc.conflictingIds=doc.key&&active.includes(doc)?active.filter(peer=>peer.id!==doc.id&&peer.key===doc.key&&peer.text!==doc.text).map(peer=>peer.id).sort():[];
   }
   async function editMemory(owner, key, raw) {
-    const previous = await get(owner, 'memory', key);
-    await save(owner, 'memory-version', { ...previous, id: id(), memoryId: previous.id }, { immutable: true });
-    const next = { ...previous, type: ['instruction','preference','fact','decision','task','inference'].includes(raw.type) ? raw.type : previous.type, key: text(raw.key ?? previous.key, 120), text: text(raw.text ?? previous.text, 6000), active: raw.active ?? previous.active,
-      approved: raw.approved ?? previous.approved, shareable: raw.shareable ?? previous.shareable,
-      deleted: raw.deleted === true, conflictingIds: raw.resolve === true ? [] : previous.conflictingIds };
-    if (!next.text) throw error('OFFICE_MEMORY_REQUIRED');
-    if (next.type === 'inference') next.approved = false;
-    next.category=({fact:'source-fact',preference:'user-preference',instruction:'business-procedure',decision:'business-procedure',task:'task-history',inference:'unverified-inference'})[next.type];
-    return save(owner, 'memory', next, { expectedRevision: raw.revision ?? previous.revision });
+    const observed=await get(owner,'memory',key),expected=raw.revision??observed.revision;
+    const result=await db(owner).privateRecordTransaction(state=>{
+      const previous=state.records['memory:'+key]?.doc;
+      if(!previous||previous.ownerId!==owner||previous.deleted)throw error('OFFICE_NOT_FOUND',404);
+      if(previous.revision!==Number(expected))throw error('OFFICE_REVISION_CONFLICT',409);
+      const changed={},docs=memoryDocuments(state,owner,previous.profileId),next=docs.find(doc=>doc.id===key);
+      archiveMemory(changed,previous);
+      Object.assign(next,{type:['instruction','preference','fact','decision','task','inference'].includes(raw.type)?raw.type:previous.type,key:text(raw.key??previous.key,120),text:text(raw.text??previous.text,6000),active:raw.active==null?previous.active:raw.active===true,approved:raw.approved==null?previous.approved:raw.approved===true,shareable:raw.shareable==null?previous.shareable:raw.shareable===true,deleted:raw.deleted===true});
+      if(!next.text)throw error('OFFICE_MEMORY_REQUIRED');
+      if(next.type==='inference')next.approved=false;
+      next.category=memoryCategory(next.type);
+      if(next.text!==previous.text||next.type!==previous.type){next.origin='user';next.confidence=next.type==='inference'?'LOW':'USER_REPORTED';}
+      if(next.active&&next.supersededBy)throw error('OFFICE_MEMORY_SUPERSEDED',409);
+      reconcileMemoryConflicts(docs);
+      if(raw.resolve===true&&next.conflictingIds.length){
+        if(!next.approved||!next.active||next.deleted)throw error('OFFICE_MEMORY_RESOLUTION_REQUIRED',409);
+        const rivals=docs.filter(doc=>next.conflictingIds.includes(doc.id));
+        if(rivals.some(doc=>Number(raw.resolveRevisions?.[doc.id])!==doc.revision))throw error('OFFICE_REVISION_CONFLICT',409);
+        for(const doc of rivals){archiveMemory(changed,doc);doc.active=false;doc.supersededBy=next.id;doc.supersededAt=now();}
+        next.resolvedAt=now();reconcileMemoryConflicts(docs);
+      }
+      for(const doc of docs)if(doc.id===key||JSON.stringify(doc)!==JSON.stringify(state.records['memory:'+doc.id]?.doc))putMemory(changed,state,owner,doc);
+      return {records:changed,result:copy(changed['memory:'+key].doc)};
+    });onChange(owner);return result;
   }
   async function conversation(owner, profileIds, title) {
     const ids = [...new Set(profileIds || [])];
@@ -189,7 +227,7 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
     if (!['user', 'assistant', 'system'].includes(raw.role)) throw error('OFFICE_MESSAGE_INVALID');
     return save(owner, 'message', { id: raw.id || id(), conversationId: conv.id, role: raw.role,
       text: text(raw.text, 2000000), profileIds: conv.profileIds, sourceIds: Array.isArray(raw.sourceIds) ? raw.sourceIds.slice(0, 100) : [],
-      status: ['complete', 'failed', 'cancelled', 'interrupted'].includes(raw.status) ? raw.status : 'complete',
+      authorizationFingerprint:raw.authorizationFingerprint||'',status: ['complete', 'failed', 'cancelled', 'interrupted'].includes(raw.status) ? raw.status : 'complete',
       requestId: text(raw.requestId, 120), model: text(raw.model, 80), provenance: raw.provenance ? copy(raw.provenance) : null }, { immutable: true });
   }
   async function messages(owner, conversationId, { before = '', limit = 60, query = '' } = {}) {
@@ -215,11 +253,14 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
       archive: { messages: docs.filter(doc => doc.kind === 'message').length, bytes: docs.filter(doc => doc.kind === 'message').reduce((sum,doc) => sum + Buffer.byteLength(doc.text), 0) },
       conflicts };
   }
-  async function selectContext(owner, profileIds, conversationId, query, budget = 16000) {
+  async function selectContext(owner, profileIds, conversationId, query, budget = 16000, options = {}) {
     const docs = await records(owner), words = [...new Set(String(query).toLocaleLowerCase('tr-TR').match(/[\p{L}\p{N}]{3,}/gu) || [])].slice(0,24), scores = new Map();
+    budget=Number.isFinite(Number(budget))?Math.max(0,Math.min(16000,Math.floor(Number(budget)))):16000;
+    const excluded={conflict:0,stale:0,scope:0,unrelated:0};
     const score = doc => {if(scores.has(doc.id))return scores.get(doc.id);const haystack=String(doc.text || '').toLocaleLowerCase('tr-TR'), value=words.reduce((n,word)=>n+Number(haystack.includes(word)),0);scores.set(doc.id,value);return value;};
-    const memory = docs.filter(doc => doc.kind === 'memory' && profileIds.includes(doc.profileId) && doc.active && !doc.deleted && !(doc.origin === 'copied' && !doc.approved) &&
+    let memory = docs.filter(doc => doc.kind === 'memory' && profileIds.includes(doc.profileId) && doc.active && !doc.deleted && !doc.supersededBy && !(doc.origin === 'copied' && !doc.approved) &&
       (!doc.expiresAt || Date.parse(doc.expiresAt) > Date.now()));
+    memory=memory.filter(doc=>{if(doc.key&&memory.some(peer=>peer.profileId===doc.profileId&&peer.key===doc.key&&peer.id!==doc.id&&peer.text!==doc.text)){excluded.conflict++;return false;}if(doc.feedbackKind&&options.toolIds&&doc.toolIds?.length&&!doc.toolIds.some(tool=>options.toolIds.includes(tool))){excluded.unrelated++;return false;}return true;});
     const history = docs.filter(doc => doc.kind === 'message' && doc.role !== 'system' && doc.profileIds.some(key => profileIds.includes(key)));
     history.sort((a,b) => ((b.conversationId === conversationId ? 5 : 0) + score(b)) - ((a.conversationId === conversationId ? 5 : 0) + score(a)) || b.createdAt.localeCompare(a.createdAt));
     const candidates = memory.sort((a,b) => (Number(!!b.feedbackKind)-Number(!!a.feedbackKind)) || (Number(b.approved) - Number(a.approved)) || score(b) - score(a) || b.updatedAt.localeCompare(a.updatedAt))
@@ -227,15 +268,18 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
     const selected = [], omitted = [];
     let size = 0;
     for (const doc of candidates) {
+      let validity;
+      if(options.validateRecord){validity=await options.validateRecord(copy(doc));if(validity?.allowed!==true){const reason=validity?.reason==='stale'?'stale':'scope';excluded[reason]++;continue;}}
       const value = { id: doc.id, kind: doc.kind, profileId: doc.profileId, role: doc.role, type: doc.type, text: doc.text,
         category:doc.category,feedbackKind:doc.feedbackKind,toolIds:doc.toolIds,taskId:doc.taskId,sourceRevision:doc.sourceRevision,correctsMemoryId:doc.correctsMemoryId,
-        approved: doc.approved, origin: doc.origin, confidence: doc.confidence, createdAt: doc.createdAt, sourceId: doc.sourceId, conflictingIds: doc.conflictingIds };
-      if(['message','summary'].includes(doc.kind)&&value.text.length>1800){const haystack=value.text.toLocaleLowerCase('tr-TR'),hit=words.map(word=>haystack.indexOf(word)).find(index=>index>=0),start=Math.max(0,(hit??Math.max(0,value.text.length-1600))-180);value.text=value.text.slice(start,start+1600);value.excerpt=true;value.fullCharacters=doc.text.length;value.excerptStart=start;value.contentHash=hash(doc.text);}
+        approved: doc.type==='inference'?false:doc.approved, origin: doc.origin, confidence: doc.confidence, createdAt: doc.createdAt, sourceId: doc.sourceId, conflictingIds: doc.conflictingIds,source:validity?.source?copy(validity.source):undefined,
+        usage:doc.kind==='memory'&&doc.approved===true&&['instruction','preference','decision'].includes(doc.type)?'user-guidance':doc.origin==='verified-service'?'verified-task-history':'unverified-evidence' };
+      if(value.text.length>1600){const haystack=value.text.toLocaleLowerCase('tr-TR'),hit=words.map(word=>haystack.indexOf(word)).find(index=>index>=0),start=Math.max(0,(hit??Math.max(0,value.text.length-1600))-180);value.text=value.text.slice(start,start+1600);value.excerpt=true;value.fullCharacters=doc.text.length;value.excerptStart=start;value.contentHash=hash(doc.text);}
       const chars = JSON.stringify(value).length;
       if (size + chars <= budget && selected.length < 30) { selected.push(value); size += chars; }
       else omitted.push(doc.id);
     }
-    return { selected, omittedCount: omitted.length, chars: size, strategy: 'approved-memory-and-relevant-history', completeArchive: false };
+    return { selected, omittedCount: omitted.length+Object.values(excluded).reduce((sum,n)=>sum+n,0), excluded,chars: size, strategy: 'approved-memory-and-relevant-history', completeArchive: false };
   }
   async function searchHistory(owner,profileId,raw={}){await get(owner,'profile',profileId);const query=text(raw.query,160),terms=[...new Set(query.toLocaleLowerCase('tr-TR').match(/[\p{L}\p{N}]{2,}/gu)||[])];if(!terms.length)return{messages:[],total:0,hasMore:false};const offset=Math.max(0,Math.floor(Number(raw.offset)||0)),limit=Math.max(1,Math.min(50,Math.floor(Number(raw.limit)||20)));
     const matches=(await records(owner)).filter(doc=>doc.kind==='message'&&doc.profileIds.includes(profileId)).map(doc=>{const lower=doc.text.toLocaleLowerCase('tr-TR');return{doc,score:terms.reduce((n,t)=>n+Number(lower.includes(t)),0),first:Math.min(...terms.map(t=>lower.indexOf(t)).filter(i=>i>=0))};}).filter(item=>item.score>0).sort((a,b)=>b.score-a.score||b.doc.createdAt.localeCompare(a.doc.createdAt));

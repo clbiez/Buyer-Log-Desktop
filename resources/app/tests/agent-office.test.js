@@ -33,7 +33,7 @@ test('full archive survives reopen and pagination; owner isolation, memory versi
   await assert.rejects(reopened.get('b','profile',agent.id),err=>err.statusCode===404);
   const a=await reopened.learn('a',agent.id,{text:'Priority is CP',key:'priority',approved:true});
   const b=await reopened.learn('a',agent.id,{text:'Priority is collection',key:'priority',approved:true});assert.deepEqual(b.conflictingIds,[a.id]);
-  await reopened.editMemory('a',a.id,{active:false,revision:a.revision});
+  await reopened.editMemory('a',a.id,{active:false,revision:(await reopened.get('a','memory',a.id)).revision});
   await reopened.learn('a',agent.id,{text:'Expired fact',expiresAt:'2020-01-01',approved:true});
   const inference=await reopened.learn('a',agent.id,{text:'AI guess',type:'inference',approved:true});assert.equal(inference.approved,false);
   const context=await reopened.selectContext('a',[agent.id],conv.id,'priority',3000);assert.ok(context.selected.some(item=>item.id===b.id));assert.ok(!context.selected.some(item=>item.id===a.id));assert.ok(!context.selected.some(item=>item.text==='Expired fact'));assert.ok(context.chars<=3000);assert.equal(context.completeArchive,false);
