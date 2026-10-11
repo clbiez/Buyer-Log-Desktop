@@ -7,6 +7,7 @@ const path=require('node:path');
 const ROOT=path.join(__dirname,'..');
 const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
+const shared=require('../public/collection-model-groups');
 const DB=fs.readFileSync(path.join(ROOT,'server','db.js'),'utf8');
 const SERVER=fs.readFileSync(path.join(ROOT,'server','server.js'),'utf8');
 
@@ -48,7 +49,7 @@ test('PLM embedded pictures are read from xlsx drawing anchors with JSZip',()=>{
 });
 
 test('PLM import treats an existing PLM ID as an existing model and never creates a second copy',()=>{
-  const block=between(APP,'function kolBuildPlmImportPlan','function kolPlmMappingRows');
+  const block=shared.kolBuildPlmImportPlan.toString();
   assert.match(block,/byPlm=new Map/);
   assert.match(block,/const existing=\[\],creates=\[\],ambiguous=\[\],inputDuplicates=\[\]/);
   assert.match(block,/if\(plmTargets\.length===1\)/);

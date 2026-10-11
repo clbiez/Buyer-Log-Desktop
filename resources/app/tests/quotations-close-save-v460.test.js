@@ -93,7 +93,7 @@ test('v4.60 sunucuda status değişimi fiyat, onay ve satır içeriğini aynen k
     });
     const closed=store.setStatus(profile,created.id,'closed');
     const loaded=store.loadStore().requests.find(r=>r.id===created.id);
-    process.stdout.write(JSON.stringify({closed,loaded}));
+    require('fs').writeSync(1,JSON.stringify({closed,loaded}));
   `;
   const result = spawnSync(process.execPath, ['-e', script], {
     cwd: ROOT,

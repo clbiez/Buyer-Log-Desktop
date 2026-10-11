@@ -5407,7 +5407,7 @@ app.post('/api/plm-style-links/sync', userAccess.requireAnyArea('cp', 'orders', 
 });
 
 // ---- Koleksiyon doğrudan PLM senkronu ve QTX route'ları → server/routes/plm-sync-routes.js ----
-require('./routes/plm-sync-routes')(app, {
+const agentPlmSyncService=require('./routes/plm-sync-routes')(app, {
 
   MODEL_FILES_ROOT,
   agentBrowserConnector,
@@ -5477,6 +5477,21 @@ async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
 require('./routes/test-report-routes')(app,{automationError,express,userAccess,service:agentQualityService,authorizedOrders:(...args)=>agentQualityAuthorizedOrders(...args)});
 const agentQualityTools=require('./lib/agent-quality-tools').registerQualityTools(agentToolRegistry,{service:agentQualityService,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,dataset:profile=>agentPlatformDataset(profile.id,profile,'cp'),mail:cpAgentMail,verifyMail:(result,profile)=>result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id)))});
 require('./lib/agent-analytics-tools').registerAnalyticsTools(agentToolRegistry,{dataset:agentPlatformDataset,outputService:()=>require('./lib/lcwai').getDefaultOutputService()});
+const agentCollectionSave=async(profile,ownerId,changes,expectedRevision,assertAuthority,guards={})=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);assertAuthority();if(!collectionWorkspaceEditAllowed(current,ownerId))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+    const result=await collectionSaveWorker.runCollectionSave({ownerId,mode:'rows',body:Buffer.from(JSON.stringify(changes)),expectedRevision,authorization:{actorId:profile.id,stamp:JSON.stringify(userAccess.publicProfile(current)),centralIamEnabled:userAccess.publicProfile(current).centralIamEnabled,deltaStoreMode:deltaStore.mode,...guards},env:{BUYER_LOG_SERVER_DATA_ROOT:process.env.BUYER_LOG_SERVER_DATA_ROOT,BUYER_LOG_DATA_ROOT:process.env.BUYER_LOG_DATA_ROOT,BUYER_LOG_LOCAL_DATA_ROOT:process.env.BUYER_LOG_LOCAL_DATA_ROOT,BUYER_LOG_AUTH_DATA_ROOT:process.env.BUYER_LOG_AUTH_DATA_ROOT,BUYER_LOG_LOCAL_DB:process.env.BUYER_LOG_LOCAL_DB,BUYER_LOG_CONFIG_PATH:process.env.BUYER_LOG_CONFIG_PATH,BUYER_LOG_TEMP_ROOT:process.env.BUYER_LOG_TEMP_ROOT,BL_DATA_DIR:process.env.BL_DATA_DIR}});
+    if(deltaStore.isAuthoritative){const refreshed=await deltaStore.hydrate();if(!refreshed.ok)throw Object.assign(new Error('Collection source unavailable.'),{code:'DATA_INTEGRITY_ERROR'});}assertAuthority();if(result.conflicts?.length)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+    const replication=!(await afterSharedCollectionSave(ownerId))?await publishCollectionReplica(ownerId):{ok:true,published:false,reason:'shared-save'};
+    void sharedRevisionStore.update('collection',{actorId:profile.id,ownerId}).catch(error=>logRuntimeFailure('sharedRevision',error));
+    userAccess.appendAudit(profile,'COLLECTION_SAVE',ownerId,{rows:result.rowCount,revision:result.revision,origin:'agent'});liveEvents.notifyChange('collection','',{ownerId,rowPatches:result.rowPatches,revision:result.revision});return {...result,replication};};
+require('./lib/agent-quotation-tools').registerQuotationTools(agentToolRegistry,{flush:async()=>{await deltaStore.flush();},saveCollection:agentCollectionSave,visible:profile=>quotationsVisibleTo(profile).requests,authorizeCollection:async(profile,owner,write=false)=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);require('./lib/agent-collection-authority').assertCollectionAccess(userAccess,current,owner,write);},changed:profile=>{void sharedRevisionStore.update('quotation',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));}});
+require('./lib/agent-collection-tools').registerCollectionTools(agentToolRegistry,{
+  dataset:agentPlatformDataset,
+  plmFetch:(profile,args,assertAuthority)=>agentPlmSyncService.fetch(profile,args,{assertAuthority,allowAi:false}),
+  authorize:async(profile,ownerId,write)=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);require('./lib/agent-collection-authority').assertCollectionAccess(userAccess,current,ownerId,write);},
+  save:agentCollectionSave,
+  registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService()),
+});
+
 /* ===================================================================
    OAB (Order-Assortment-Budget) — Overview modülü.
    PASS'e (LC Waikiki intranet raporlama sistemi) bağlanıp

@@ -852,13 +852,15 @@ function applyRowChanges(current, change) {
   return { saved, applied, conflicts, rowPatches, changed };
 }
 
-async function applyRowChangesAsync(ownerId, change) {
+async function applyRowChangesAsync(ownerId, change, options={}) {
   return withFileLeaseAsync(workspaceFile(ownerId), async () => {
-    const current = loadWorkspace(ownerId);
+    const current = options.readCurrent?await options.readCurrent():loadWorkspace(ownerId);
+    await options.assertAuthority?.();
+    if(options.expectedRevision!=null&&Number(options.expectedRevision)!==current._revision)throw Object.assign(new Error('Collection revision changed.'),{code:'REVISION_CONFLICT',statusCode:409,currentRevision:current._revision});
     const result = applyRowChanges(current, change);
     // Hiçbir şey uygulanmadıysa (hepsi çakıştı) dosyaya dokunma: gereksiz
     // yazma, gereksiz revizyon artışı ve gereksiz canlı olay üretmez.
-    if (result.changed) await atomicWriteJsonAsync(workspaceFile(ownerId), result.saved);
+    await options.assertAuthority?.();if (result.changed) {await atomicWriteJsonAsync(workspaceFile(ownerId), result.saved);await options.afterWrite?.(result.saved);}
     return result;
   });
 }
@@ -947,7 +949,7 @@ module.exports = {
   listOwnerIds, countRowImages, clearAllRowImages,
   loadWorkspace, saveWorkspace, saveWorkspaceAsync, diffWorkspaceRows,
   applyRowChanges, applyRowChangesAsync, rowRev, rowId,
-  defaultWorkspace, normalizeStatusCatalog, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,
+  normalizeWorkspace,documentId,defaultWorkspace, normalizeStatusCatalog, safeId, workspaceFile, replaceWorkspaceReplica, MAX_PATCH_ROWS,
   SHARED_COLLECTION_OWNER, ensureSharedWorkspace, mergePersonalBackupIntoShared, recoverSharedWorkspaceIntoOwner, mirrorWorkspace,
   recoveryRowIdentity, recoveryRowsCompatible, recoveryRowFingerprint,
 };

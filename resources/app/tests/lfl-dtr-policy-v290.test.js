@@ -34,6 +34,7 @@ function loadLflTestApi(nonDtrManufacturers) {
     setTimeout,
     clearTimeout,
   };
+  context.window.BLLflCalculationEngine=require('../public/lfl-calculation-engine');
   vm.runInNewContext(code, context, { filename: 'public/lfl.js' });
   return context.window.__lflTest;
 }

@@ -14,6 +14,17 @@ function reportData(report,title){
   const summary=Object.entries({...report,rows:undefined,topRiskOrders:undefined}).filter(([,v])=>v!==undefined).map(([k,v])=>[k,typeof v==='object'?JSON.stringify(v):v]);
   return {workbook:{title,sheets:[{name:'Summary',columns:['Metric','Value'],rows:summary},...(keys.length?[{name:'Report',columns:keys.map(key=>({header:key,type:tableRows.some(row=>typeof row[keys.indexOf(key)]==='number')?'number':'text'})),rows:tableRows}]:[])]},html:{body:`<h1>${escape(title)}</h1><p>${escape(JSON.stringify({...report,rows:undefined,topRiskOrders:undefined}))}</p><table><thead><tr>${keys.map(k=>`<th>${escape(k)}</th>`).join('')}</tr></thead><tbody>${tableRows.map(row=>`<tr>${row.map(v=>`<td>${escape(v)}</td>`).join('')}</tr>`).join('')}</tbody></table>`}};
 }
+function registerReportCapability(registry,spec,outputService){
+  const querySchema=spec.inputSchema,inputSchema={...object({query:querySchema,format:{enum:['html','xlsx','pdf']},title:string(140),language:{enum:['tr','en']}}),required:['query','format','title','language']};
+  registry.registerCapability({...spec,operation:'EXPORT',risk:'write',inputSchema,
+    read:async(args,ctx)=>{const data=await spec.read(args.query,ctx);reportData(data.report,args.title);return data;},
+    apply:async(args,ctx,preview)=>{const current=await spec.read(args.query,ctx);ctx.assertAuthority();if(JSON.stringify(current)!==JSON.stringify(preview))throw error('OFFICE_PREVIEW_CHANGED',409);
+      const requestId=hash(ctx.input.officeJobId+':'+ctx.input.officeStepId),data=reportData(preview.report,args.title),output=outputService().renderStructured(ctx.ownerId,{format:args.format,data:args.format==='xlsx'?data.workbook:data.html,title:args.title,lang:args.language,requestId});
+      if(output.pending)return {verified:true,completionPending:'pdf',output:{pendingId:output.pendingId,format:'pdf',requestId}};
+      if(!outputService().get(ctx.ownerId,output.id))throw error('OFFICE_OUTPUT_INVALID',409);
+      return {verified:true,output:{id:output.id,fileName:output.fileName,format:output.format,bytes:output.bytes,requestId}};
+    }});
+}
 function registerAnalyticsTools(registry,deps){
   const {dataset,outputService}=deps;
   async function read(source,mode,args,ctx){
@@ -35,18 +46,8 @@ function registerAnalyticsTools(registry,deps){
     for(const mode of source==='backlog'?['analysis','delivery']:['analysis']){
       if(mode==='delivery')registry.registerCapability({...base,id:'backlog.delivery',operation:'READ',risk:'read',label:{tr:'Backlog gecikme ve risk raporu',en:'Backlog delay and risk report'},inputSchema:delivery,read:async(args,ctx)=>(await read(source,mode,args,ctx)).report});
       if(!outputService)continue;
-      const inputSchema={...object({query:mode==='delivery'?delivery:analysis,format:{enum:['html','xlsx','pdf']},title:string(140),language:{enum:['tr','en']}}),required:['query','format','title','language']};
-      registry.registerCapability({...base,id:source+'.'+mode+'.export',operation:'EXPORT',risk:'write',label:{tr:source+' '+mode+' raporunu dışa aktar',en:'Export '+source+' '+mode+' report'},inputSchema,
-        read:async(args,ctx)=>{const data=await read(source,mode,args.query,ctx);reportData(data.report,args.title);return data;},
-        apply:async(args,ctx,preview)=>{
-          const current=await read(source,mode,args.query,ctx);ctx.assertAuthority();if(JSON.stringify(current)!==JSON.stringify(preview))throw error('OFFICE_PREVIEW_CHANGED',409);
-          const requestId=hash(ctx.input.officeJobId+':'+ctx.input.officeStepId),data=reportData(preview.report,args.title);
-          const output=outputService().renderStructured(ctx.ownerId,{format:args.format,data:args.format==='xlsx'?data.workbook:data.html,title:args.title,lang:args.language,requestId});
-          if(output.pending)return {verified:true,completionPending:'pdf',output:{pendingId:output.pendingId,format:'pdf',requestId}};
-          if(!outputService().get(ctx.ownerId,output.id))throw error('OFFICE_OUTPUT_INVALID',409);
-          return {verified:true,output:{id:output.id,fileName:output.fileName,format:output.format,bytes:output.bytes,requestId}};
-        }});
+      registerReportCapability(registry,{...base,id:source+'.'+mode+'.export',label:{tr:source+' '+mode+' raporunu dışa aktar',en:'Export '+source+' '+mode+' report'},inputSchema:mode==='delivery'?delivery:analysis,read:(args,ctx)=>read(source,mode,args,ctx)},outputService);
     }
   }
 }
-module.exports={registerAnalyticsTools,analysis,delivery,reportData};
+module.exports={registerAnalyticsTools,registerReportCapability,analysis,delivery,reportData};

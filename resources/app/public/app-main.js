@@ -24227,23 +24227,12 @@ function kolPresentationRows(logicalRows){
 // Koleksiyon'daki fiyat alanları TR ondalık virgülüyle çalışır: "5" yazıp çıkınca "5,00"
 // gösterilir, "2,32" veya "1.20" da doğru ayrıştırılır. Sayısal olmayan bir metin (ör.
 // "Fiyatlamada") olduğu gibi bırakılır — biçimlendirilmeye çalışılmaz.
-function kolParseQuantityNum(v){
-  if(v==null || String(v).trim()==='') return NaN;
-  const s=String(v).trim();
-  const neg=s.startsWith('-');
-  const digits=s.replace(/\D/g,'');
-  if(!digits) return NaN;
-  const n=Number(digits);
-  return neg?-n:n;
-}
+function kolParseQuantityNum(value){return window.BLCollectionModelGroups.kolParseQuantityNum(value);}
 function kolFormatQuantityDisplay(v){
   const n=kolParseQuantityNum(v);
   return Number.isFinite(n)?Math.trunc(n).toLocaleString('tr-TR'):String(v??'');
 }
-function kolParseMoneyNum(v){
-  if(v==null || v==='') return NaN;
-  return Number(String(v).trim().replace('%','').replace(',', '.'));
-}
+function kolParseMoneyNum(value){return window.BLCollectionModelGroups.kolParseMoneyNum(value);}
 function kolFormatPercentDisplay(v){
   if(v==null || v==='') return '';
   const n = kolParseMoneyNum(v);
@@ -25390,17 +25379,7 @@ async function openKolManualPriceModal(row,{confirm=false}={}){
   });
 }
 
-function kolBestPricing(row){
-  const pricing=kolEffectivePricing(row);
-  if(!pricing) return null;
-  let best = null;
-  Object.entries(pricing).forEach(([name,v])=>{
-    const n = kolParseMoneyNum(v);
-    if(v==='' || v==null || !Number.isFinite(n) || n<=0) return;
-    if(!best || n < best.price) best = {name, price:n};
-  });
-  return best;
-}
+function kolBestPricing(row){return window.BLCollectionModelGroups.bestPricing(kolEffectivePricing(row),kolParseMoneyNum);}
 function kolPriceTargetDelta(row,priceValue){
   const target=kolParseMoneyNum(kolEffectiveValue(row,'targetPrice')),price=kolParseMoneyNum(priceValue);
   if(!Number.isFinite(target)||target<=0||!Number.isFinite(price)||price<=0) return null;
@@ -25415,15 +25394,7 @@ function kolBestPriceTargetDelta(row,best=kolBestPricing(row)){
 }
 // Onaylı üretici/fiyat, fiyat hücresindeki tik seçimine göre belirlenir. Satırda yalnızca
 // bir üretici onaylanabilir. Seçili üreticinin fiyatı geçerli değilse sonuç boş döner.
-function kolConfirmedPricing(row){
-  const name = norm(row && row.confirmedManufacturer);
-  const pricing=kolEffectivePricing(row);
-  if(!name || !row || !pricing) return null;
-  const raw = pricing[name];
-  const price = kolParseMoneyNum(raw);
-  if(raw==='' || raw==null || !Number.isFinite(price) || price<=0) return null;
-  return {name, price};
-}
+function kolConfirmedPricing(row){return window.BLCollectionModelGroups.confirmedPricing(row,kolEffectivePricing(row),kolParseMoneyNum,norm);}
 // Koleksiyon görünümünde onay henüz verilmediyse Best Price / üreticisi yalnız
 // referans olarak gösterilir. Bu değer onay sayılmaz; ancak FOB sütunu kendi
 // Confirmed → Best → Target önceliğiyle hesaplanmaya devam eder.
@@ -27711,23 +27682,7 @@ window.BLCollectionAnalyticsBridge={
     ];
     return candidates.filter(type=>(rows||[]).some(type.has));
   },
-  buildObservations(rows,type){
-    const observations=[];
-    const add=(row,manufacturer,price,currency)=>{const n=Number(price),qty=kolParseQuantityNum(row&&row.quantity);if(!Number.isFinite(n)||n<=0)return;observations.push({row,rowId:row.id,modelKey:`${norm(row.plmId)}\u0000${norm(row.modelKod)}`,manufacturer:norm(manufacturer)||'—',classification:norm(row.urunTipi)||'—',mag:norm(row.mag)||'—',mmyg:norm(row.mmyg)||'—',buyingGroup:norm(row.buyingGroup)||'—',buyer:norm(row.buyer)||norm(row._collectionOwnerName)||'—',country:norm(row.country)||'—',season:norm(row.season)||'—',price:n,currency,quantity:Number.isFinite(qty)&&qty>0?qty:null});};
-    (rows||[]).forEach(sourceRow=>{
-      const row=kolEffectiveProjection(sourceRow),confirmed=kolConfirmedPricing(row),best=kolBestPricing(row),manufacturer=confirmed?.name||norm(row.confirmedManufacturer)||norm(row.buyingSampleManufacturer)||best?.name||'—';
-      if(type==='quotation'){Object.entries(row.pricing||{}).forEach(([name,value])=>add(row,name,kolParseMoneyNum(value),'USD'));return;}
-      if(type==='confirmed'){if(confirmed)add(row,confirmed.name,confirmed.price,'USD');return;}
-      if(type==='best'){if(best)add(row,best.name,best.price,'USD');return;}
-      if(type==='target'){add(row,manufacturer,kolParseMoneyNum(row.targetPrice),'USD');return;}
-      if(type==='fob'){add(row,manufacturer,kolParseMoneyNum(row.fob),'USD');return;}
-      if(type==='ydLanded'){add(row,manufacturer,kolLandedCalc(row).ydLanded,'USD');return;}
-      if(type==='trLanded'){add(row,manufacturer,kolLandedCalc(row).trLanded,'USD');return;}
-      if(type==='trPrice'){add(row,manufacturer,kolParseMoneyNum(row.trPrice),'TRY');return;}
-      if(type==='previousFob')add(row,manufacturer,kolParseMoneyNum(row.previousFob),'USD');
-    });
-    return observations;
-  },
+  buildObservations(rows,type){return window.BLCollectionAnalyticsEngine.buildObservations(rows,type,{norm,kolParseMoneyNum,kolParseQuantityNum,kolEffectiveProjection,kolConfirmedPricing,kolBestPricing,kolLandedCalc});},
   openDrilldown(rows,title){
     if(window.BLDetailDrawer?.open){
       const sharedRows=[...new Map((rows||[]).map((row,index)=>[row&&row.id!=null?row.id:index,row])).values()].filter(Boolean);
@@ -28082,23 +28037,14 @@ function kolImportSelectValue(col,value){
 // kayit olarak ekleniyordu. Artik satirlar PLM ID + Model Adi ciftiyle mevcut kayitlara
 // eslenir; eslesenler guncellenir (kullanici onayindan sonra), eslesmeyenler yeni model
 // olarak eklenir. Gorsellere hicbir kosulda dokunulmaz — gorseller Excel ile tasinmaz.
-function kolImportMatchKey(plmId, modelKod){
-  const plm=turknorm(norm(plmId)), model=turknorm(norm(modelKod));
-  if(!plm && !model) return '';
-  return plm+'\u0000'+model;
-}
+function kolImportMatchKey(plmId,modelKod){return window.BLCollectionModelGroups.kolImportMatchKey(plmId,modelKod,{norm,turknorm});}
 function kolImportFieldLabel(key, knownByKey){
   if(key.startsWith('pricing:')) return key.slice(8)+' ($)';
   if(key==='confirmedManufacturer') return L('Confirmed Manufacturer');
   const col=knownByKey[key];
   return col?L(col.label):key;
 }
-function kolImportReadField(row, key){
-  if(!row) return '';
-  if(key.startsWith('pricing:')) return norm((row.pricing||{})[key.slice(8)]);
-  if(key==='buyingSampleApproved') return row[key]?'true':'false';
-  return norm(row[key]);
-}
+function kolImportReadField(row,key){return window.BLCollectionModelGroups.kolImportReadField(row,key,{norm,turknorm});}
 // Excel ile ASLA tasinmayacak alanlar. Gorsel alanlarinin Koleksiyon sutun tanimlarinda
 // karsiligi olmadigi icin bugun zaten eslesemiyorlar; bu liste bunu tesadufe birakmaz.
 // Ileride "Gorsel" adinda bir sutun eklense bile ice aktarim gorseli yazamaz.
@@ -28291,17 +28237,9 @@ function kolPlmHeaderAliases(){
   add('orderStatusRaw','Order Status');
   return aliases;
 }
-function kolPlmCodePrefix(value){
-  const raw=norm(value);if(!raw)return '';
-  return norm(raw.split(/\s+-\s+/,1)[0]);
-}
-function kolPlmSeason(value){
-  const raw=norm(value);if(!raw)return '';
-  const m=/^([WS]\d+)/i.exec(raw);return m?m[1].toUpperCase():raw;
-}
-function kolPlmBrandToken(styleName){
-  const raw=turknorm(norm(styleName));return raw?raw.split('-')[0].trim():'';
-}
+function kolPlmCodePrefix(value){return window.BLCollectionModelGroups.kolPlmCodePrefix(value,{norm,turknorm});}
+function kolPlmSeason(value){return window.BLCollectionModelGroups.kolPlmSeason(value,{norm,turknorm});}
+function kolPlmBrandToken(styleName){return window.BLCollectionModelGroups.kolPlmBrandToken(styleName,{norm,turknorm});}
 function kolPlmIsLicensedDesignSource(value){
   const helper=window.BLPlmLicenceUtils?.isLicenceDesignSource;
   return typeof helper==='function'?helper(value):turknorm(norm(value))==='LICENCE';
@@ -28730,12 +28668,8 @@ function kolPlmParseWorkbook(wb,matrix,imagesByRow){
   }
   return {rows,headerRow:best.ri,headers:best.headers,mapped:best.mapped};
 }
-function kolPlmImportTouchedKeys(){
-  return ['plmId','modelKod','productMainDefinition','specialCode','season','mag','mmyg','buyingGroup','colourCode','colour','fabric','fit','line','urunTipi','lisans','licensor'];
-}
-function kolPlmImportColourKey(row){
-  return turknorm(norm(row&&row.colourCode||row&&row.colour));
-}
+function kolPlmImportTouchedKeys(){return window.BLCollectionModelGroups.kolPlmImportTouchedKeys();}
+function kolPlmImportColourKey(row){return window.BLCollectionModelGroups.kolPlmImportColourKey(row,{norm,turknorm});}
 // PLM SYNC — PLM'nin SAHİPLENDİĞİ tek merkezi alan listesi. Excel importer'ın
 // gerçekten YAZDIĞI alanlarla (kolPlmImportTouchedKeys) BİREBİR AYNI —
 // Direct PLM Sync buradan farklı/fazla bir alan yazamaz. "PLM_MANAGED_FIELDS"
@@ -28752,28 +28686,7 @@ const PLM_MANAGED_FIELDS=kolPlmImportTouchedKeys;
    için TEK VE AYNI koddur; burada YENİ bir eşleme/yazma kuralı YOKTUR.
    Bu fonksiyon, Excel ile Direct PLM'in neden ayrışamayacağının garantisidir:
    ikisi de kolBuildPlmImportPlan'a AYNI şekli verir. */
-function kolPlmNormalizeDirectRecord(record){
-  const r=record||{};
-  const modelKod=norm(r.styleName);
-  const source={
-    lineRaw:norm(r.lineRaw),categoryRaw:norm(r.categoryRaw),designSourceRaw:norm(r.designSourceRaw),brandToken:kolPlmIsLicensedDesignSource(r.designSourceRaw)?kolPlmBrandToken(modelKod):'',
-    productMainDefinition:norm(r.productMainDefinition),buyerRaw:norm(r.buyerRaw),fmhSpecialist:norm(r.fmhSpecialist),
-    productType:norm(r.productType),ageGroup:norm(r.ageGroup),statusRaw:norm(r.statusRaw),orderStatusRaw:norm(r.orderStatusRaw),
-  };
-  const row=migrateKolRow({
-    id:0,plmId:norm(r.plmId),modelKod,productMainDefinition:kolPlmTranslate('productMainDefinition',source.productMainDefinition),specialCode:norm(r.specialCode),season:kolPlmSeason(r.season),
-    mag:kolPlmCodePrefix(r.magRaw),mmyg:kolPlmCodePrefix(r.mmygRaw),buyingGroup:norm(r.buyingGroup),
-    colourCode:norm(r.colourCode),colour:norm(r.colour),fabric:norm(r.fabric),fit:norm(r.fit),
-    line:kolPlmTranslate('line',source.lineRaw),urunTipi:kolPlmTranslate('category',source.categoryRaw),
-    lisans:kolPlmTranslate('license',source.brandToken),licensor:norm(r.licensor),pricing:{},pricingSent:{},img:null,_plmSource:source,
-  });
-  // Excel yolunda karşılığı olmayan, yalnız Direct PLM'e özgü bilgi:
-  // Style ID (PLM link sözlüğü zaten sunucu tarafında ayrıca güncellendi,
-  // ama tekil model detayında/§12 URL kurucusunda hızlı erişim için taşınır)
-  // ve görselin kaynağı (henüz İNDİRİLMEDİ — §13, görsel ayrı akışın işi).
-  row._plmStyleId=norm(r.styleId);row._plmImageUrl=norm(r.imageUrl);
-  return row;
-}
+function kolPlmNormalizeDirectRecord(record){return window.BLCollectionModelGroups.kolPlmNormalizeDirectRecord(record,{norm,migrateKolRow,kolPlmIsLicensedDesignSource,kolPlmBrandToken,kolPlmTranslate,kolPlmSeason,kolPlmCodePrefix});}
 /* PLM Excel importer'ın kullandığı ASAS çeviri + öğrenme adımının AYNISI.
    Excel ile Direct PLM arasında "line/category/license ASAS'a nasıl çevrilir"
    sorusuna FARKLI cevap vermek, iki adapter'ın aynı normalize edilmiş model
@@ -28807,50 +28720,7 @@ async function kolPlmNormalizeAndTranslate(records,{reviewRemembered=true}={}){
   }
   return {rows,cancelled:false,translationInfo};
 }
-function kolBuildPlmImportPlan(parsedRows){
-  const byKey=new Map(),byPlm=new Map();
-  kolRows.forEach(row=>{
-    const key=kolImportMatchKey(row.plmId,row.modelKod);if(key&&!byKey.has(key))byKey.set(key,row);
-    const plm=kolPlmNormalizeId(row.plmId);
-    if(plm){if(!byPlm.has(plm))byPlm.set(plm,[]);byPlm.get(plm).push(row);}
-  });
-  const knownByKey={...Object.fromEntries(kolColDefs().filter(c=>!c.endeksmatik).map(c=>[c.k,c])),...kolStyleFieldMap()},touched=kolPlmImportTouchedKeys();
-  const existing=[],creates=[],ambiguous=[],inputDuplicates=[],seenInputPlm=new Set();
-  (parsedRows||[]).forEach(parsed=>{
-    const plm=kolPlmNormalizeId(parsed.plmId),key=kolImportMatchKey(parsed.plmId,parsed.modelKod);
-    // Aynı PLM ID PLM Excel içinde birden fazla kez geçerse Koleksiyon'da ikinci bir
-    // model oluşturma. İlk kayıt işlenir, diğerleri raporlanıp atlanır.
-    const parsedColour=kolPlmImportColourKey(parsed),inputIdentity=plm?`${plm}\u0000${parsedColour}`:key;
-    if(plm&&seenInputPlm.has(inputIdentity)){inputDuplicates.push(parsed);return;}
-    if(plm)seenInputPlm.add(inputIdentity);
-    const plmTargets=plm?(byPlm.get(plm)||[]):[];
-    let target=null;
-    if(plmTargets.length===1){
-      const only=plmTargets[0];
-      if(!parsedColour||!kolPlmImportColourKey(only)||kolPlmImportColourKey(only)===parsedColour)target=only;
-    }else if(plmTargets.length>1){
-      const colourMatches=parsedColour?plmTargets.filter(row=>kolPlmImportColourKey(row)===parsedColour):[];
-      if(colourMatches.length===1)target=colourMatches[0];
-      else {
-      const modelKey=turknorm(norm(parsed.modelKod));
-      const exact=plmTargets.filter(row=>turknorm(norm(row.modelKod))===modelKey);
-      if(!parsedColour&&exact.length===1)target=exact[0];
-      else {ambiguous.push({parsed,targets:plmTargets});return;} // PLM mevcutsa ASLA yeni kopya üretme.
-      }
-    }else target=key?byKey.get(key):null;
-    if(!target){creates.push(parsed);return;}
-    const changes=[];
-    touched.forEach(fieldKey=>{
-      const to=kolImportReadField(parsed,fieldKey);if(!to)return; // PLM'de olmayan/çevirisi onaylanmamış alan mevcut değeri silmez.
-      const from=kolImportReadField(target,fieldKey);if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey),from,to});
-    });
-    // PLM ID Koleksiyon'da mevcutsa değişiklik olmasa bile kullanıcıya model model sorulur.
-    // Güncelleme yalnız changes içindeki PLM-kaynaklı alanları yazar; pricing/notlar ve
-    // diğer Buyer Log kullanıcı alanları hedef satırda aynen kalır.
-    existing.push({target,parsed,changes,hasImage:Boolean(parsed._plmImage),matchedByPlm:Boolean(plm&&plmTargets.length)});
-  });
-  return {existing,creates,ambiguous,inputDuplicates,knownByKey};
-}
+function kolBuildPlmImportPlan(parsedRows){return window.BLCollectionModelGroups.kolBuildPlmImportPlan(kolRows,parsedRows,{norm,turknorm,kolImportMatchKey,kolPlmNormalizeId,kolPlmImportColourKey,kolImportReadField,kolImportFieldLabel,knownByKey:{...Object.fromEntries(kolColDefs().filter(c=>!c.endeksmatik).map(c=>[c.k,c])),...kolStyleFieldMap()},touched:kolPlmImportTouchedKeys()});}
 function kolPlmMappingRows(parsedInfo){
   const has=key=>parsedInfo.mapped.includes(key);
   return [
@@ -28961,13 +28831,7 @@ async function kolResolvePlmExistingDecisions(existing){
   }
   return {cancelled:false,approved,skipped,added};
 }
-function kolApplyApprovedPlmUpdate(item){
-  // Yalnız PLM'nin açıkça yönettiği alanlar yazılır. pricing, pricingSent, not,
-  // confirmedManufacturer, targetPrice, Buying Sample ve diğer kullanıcı alanlarına
-  // hiçbir assignment yapılmaz; bu nedenle mevcut kullanıcı verisi kaybolmaz.
-  item.changes.forEach(change=>kolImportWriteField(item.target,change.key,change.to));
-  item.target._plmSource={...(item.target._plmSource||{}),...(item.parsed._plmSource||{})};
-}
+function kolApplyApprovedPlmUpdate(item){return window.BLCollectionModelGroups.kolApplyApprovedPlmUpdate(item,kolImportWriteField);}
 
 /* ===================================================================
    COLLECTION DIRECT PLM SYNC — ORKESTRASYON

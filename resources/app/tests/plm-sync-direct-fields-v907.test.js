@@ -30,6 +30,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const ROOT = path.join(__dirname, '..');
+const FETCH_SERVICE=fs.readFileSync(path.join(ROOT,'server','routes','plm-sync-routes.js'),'utf8').split('function createPlmFetchService(deps){')[1];
 const CONNECTOR_SOURCE = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'agent-browser-connector.js'), 'utf8');
 const SERVER = require('./helpers/server-source')();
 const connector = require('../server/lib/agent-browser-connector');
@@ -182,9 +183,10 @@ test('/api/plm-sync/fetch İKİNCİ bir GetStyleList/pagination uygulaması YAZM
   const routeStart = SERVER.indexOf("app.post('/api/plm-sync/fetch'");
   assert.ok(routeStart >= 0, 'rota bulunamadı');
   const route = SERVER.slice(routeStart, SERVER.indexOf('\n});', routeStart) + 4);
-  assert.match(route, /agentBrowserConnector\.collectCoreNectumStyleLinks/);
-  assert.doesNotMatch(route, /GetStyleList/i, 'rota GetStyleList URL’ini KENDİ BAŞINA bilmemeli — tek kaynak connector’dadır');
-  assert.doesNotMatch(route, /StyleList\/GetStyleList/i);
+  assert.match(route,/fetchService\.fetch/);
+  assert.match(FETCH_SERVICE, /agentBrowserConnector\.collectCoreNectumStyleLinks/);
+  assert.doesNotMatch(FETCH_SERVICE, /GetStyleList/i, 'rota GetStyleList URL’ini KENDİ BAŞINA bilmemeli — tek kaynak connector’dadır');
+  assert.doesNotMatch(FETCH_SERVICE, /StyleList\/GetStyleList/i);
 });
 
 test('/api/plm-sync/fetch koleksiyon yetkisi ister ve girdi doğrulaması yapar', () => {
@@ -192,27 +194,27 @@ test('/api/plm-sync/fetch koleksiyon yetkisi ister ve girdi doğrulaması yapar'
   const header = SERVER.slice(routeStart, routeStart + 200);
   assert.match(header, /userAccess\.requireArea\('koleksiyon'\)/);
   const route = SERVER.slice(routeStart, SERVER.indexOf('\n});', routeStart) + 4);
-  assert.match(route, /VALIDATION_ERROR/);
-  assert.match(route, /PLM_ID_REQUIRED/);
+  assert.match(FETCH_SERVICE, /VALIDATION_ERROR/);
+  assert.match(FETCH_SERVICE, /PLM_ID_REQUIRED/);
 });
 
 test('/api/plm-sync/fetch görsel istemez (needImage:false) — görsel altyapısı ayrı akışın işi (§13)', () => {
   const routeStart = SERVER.indexOf("app.post('/api/plm-sync/fetch'");
   const route = SERVER.slice(routeStart, SERVER.indexOf('\n});', routeStart) + 4);
-  assert.match(route, /needImage:\s*false/);
+  assert.match(FETCH_SERVICE, /needImage:\s*false/);
 });
 
 test('/api/plm-sync/fetch PLM link sözlüğünü de tazeler (upsertPlmStyleLinks) — bedava bir yan fayda', () => {
   const routeStart = SERVER.indexOf("app.post('/api/plm-sync/fetch'");
   const route = SERVER.slice(routeStart, SERVER.indexOf('\n});', routeStart) + 4);
-  assert.match(route, /upsertPlmStyleLinks/);
+  assert.match(FETCH_SERVICE, /upsertPlmStyleLinks/);
 });
 
 test('/api/plm-sync/fetch ilerleme durumunu paylaşılan model-operation-status ile raporlar', () => {
   const routeStart = SERVER.indexOf("app.post('/api/plm-sync/fetch'");
   const route = SERVER.slice(routeStart, SERVER.indexOf('\n});', routeStart) + 4);
-  assert.match(route, /setModelOperationProgress/);
-  assert.match(route, /clearModelOperationProgress/);
+  assert.match(FETCH_SERVICE, /setModelOperationProgress/);
+  assert.match(FETCH_SERVICE, /clearModelOperationProgress/);
 });
 
 /* ---------------------------------------- MEVCUT ALAN LİSTESİ TEK YERDE */
