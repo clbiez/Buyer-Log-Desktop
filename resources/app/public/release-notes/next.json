@@ -4255,6 +4255,39 @@
           "en": "Actual Buyer Log warning with anonymous data"
         }
       }
+    },
+    {
+      "id": "oab-native-durable-job-receipts",
+      "type": "improvement",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Kalıcı iş makbuzu ve güvenli kesinti bildirimi",
+        "en": "Durable job receipts and safe interruption reporting"
+      },
+      "path": {
+        "tr": "Overview › OAB › Toplu yükleme",
+        "en": "Overview › OAB › Batch fetch"
+      },
+      "body": {
+        "tr": "Mevcut native yükleme motoru gerçek ilerleme, iptal ve bitiş makbuzlarını kullanıcıya özel kaydeder. Başka uygulama sürecinden iptal aynı işte uygulanır; güvenilir dahili komut kimliği aynı işi tekrar başlatmaz. İşlemi çalıştıran süreç kapanırsa iş belirsiz/kesilmiş olarak işaretlenir ve otomatik tekrar edilmez. Yeni süreçte yalnız makbuz bulunması, rapor satırlarının hazır olduğu anlamına gelmez; arayüz bunu açıkça bildirir. Token, fonksiyon ve satır gövdeleri iş metadata’sına yazılmaz.",
+        "en": "The existing native fetch worker records actual progress, cancellation and completion receipts for its user. Cancellation from another application process applies to the same work; a trusted internal command identity does not launch it twice. Executor loss marks uncertain interrupted work without automatic replay. A receipt found in a new process does not imply report rows are available; the interface explains this explicitly. Tokens, functions and row payloads are excluded from job metadata."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-durable-job-receipts.png",
+        "alt": {
+          "tr": "Gerçek iş makbuzu korundu ve belirsiz iş tekrar edilmedi",
+          "en": "The actual job receipt was retained and uncertain work was not replayed"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log iş durumu",
+          "en": "Actual Buyer Log job status with anonymous data"
+        }
+      }
     }
   ]
 }

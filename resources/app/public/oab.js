@@ -652,6 +652,18 @@
 
   function oabAuthErrorMessage(err) {
     const code = err && err.code;
+    if (code === 'OAB_BATCH_INTERRUPTED') return oabT(
+      'OAB işini çalıştıran uygulama kapandı veya işlem kesildi. Gerçek iş makbuzu korundu; belirsiz iş otomatik tekrar edilmedi. Mevcut raporu kontrol edip yeni bir planla devam edin.',
+      'The application executing the OAB job closed or the work was interrupted. The actual job receipt was retained; uncertain work was not replayed automatically. Check the current report and continue with a new plan.');
+    if (code === 'OAB_JOB_RESULT_UNAVAILABLE') return oabT(
+      'OAB iş makbuzu korundu; bu işin satır sonucu mevcut süreçte bulunmuyor. Son kalıcı raporu açıp kapsamını kontrol edin.',
+      'The OAB job receipt was retained; its row result is unavailable in this process. Open the latest persistent report and check its scope.');
+    if (['OAB_JOB_STORE_INVALID','OAB_JOB_STORE_FAILED','OAB_JOB_STORE_BUSY'].includes(code)) return oabT(
+      'Kalıcı OAB iş makbuzu doğrulanamadı veya kaydedilemedi. İş otomatik tekrar edilmeyecek; mevcut raporu kontrol edin.',
+      'The persistent OAB job receipt could not be verified or saved. The work will not replay automatically; check the current report.');
+    if (code === 'OAB_JOB_COMMAND_CHANGED') return oabT(
+      'Bu OAB iş kimliği farklı bir seçime bağlı. Mevcut iş makbuzunu kontrol edip yeni bir plan oluşturun.',
+      'This OAB command identity is bound to a different selection. Check its existing receipt and create a new plan.');
     if (code === 'OAB_SNAPSHOT_REVISION_INVALID') return oabT(
       'Kalıcı OAB raporunun kaynak kimliği doğrulanamadı. Mevcut veri değiştirilmedi; kaynak kaydını kontrol edin.',
       'The persistent OAB report’s source identity could not be verified. Existing data was not changed; check the source record.');
@@ -1397,6 +1409,13 @@
           S.batchJob = status.job;
           oabRenderProgress(status.job);
           if (status.job.running) { S.batchTimer = setTimeout(tick, 1000); return; }
+          if (['OAB_JOB_STORE_FAILED','OAB_JOB_STORE_INVALID','OAB_JOB_STORE_BUSY','OAB_BATCH_INTERRUPTED'].includes(status.job.errorCode)) {
+            const code=status.job.errorCode,error=new Error(oabAuthErrorMessage({code}));error.code=code;reject(error);return;
+          }
+          if (status.resultAvailable === false) {
+            const code = status.job.interrupted ? 'OAB_BATCH_INTERRUPTED' : 'OAB_JOB_RESULT_UNAVAILABLE';
+            const error = new Error(oabAuthErrorMessage({code}));error.code=code;reject(error);return;
+          }
           if (oabIsAuthErrorCode(status.job.errorCode) || status.job.errorCode === 'OAB_ACCESS_REVOKED') {
             const error = new Error(status.job.error || oabT('OAB oturumu gerekli.', 'OAB sign-in is required.'));
             error.code = status.job.errorCode;

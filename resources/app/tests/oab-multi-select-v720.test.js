@@ -221,7 +221,8 @@ test('v7.20 kısmi başarı korunur: bir kombinasyonun hatası işi çöpe atmaz
   const cancel = SERVER.slice(SERVER.indexOf("app.post('/api/oab/batch/cancel'"), SERVER.indexOf("app.post('/api/oab/batch/reset-capability'"));
   assert.match(cancel, /oabBatchService\.cancel\(req\.currentUser\)/);
   const nativeCancel=WORKER.slice(WORKER.indexOf('function cancel(profile)'),WORKER.indexOf('function resetCapability'));
-  assert.match(nativeCancel,/job\.cancelled = true/);
+  assert.match(nativeCancel,/jobStore\.cancel\(current\.id,/);
+  assert.match(nativeCancel,/live\.cancelled=!!saved\.job\.cancelled/);
   assert.doesNotMatch(nativeCancel,/job\.results\s*=\s*\[\]/);
   assert.doesNotMatch(cancel, /job\.results\s*=\s*\[\]/, 'iptal, çekilmiş veriyi silmemeli');
 });
