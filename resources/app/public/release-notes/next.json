@@ -3727,6 +3727,39 @@
           "en": "Validated fields, full source counts and bounded context"
         }
       }
+    },
+    {
+      "id": "agent-report-output-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Raporlar",
+        "en": "Agent Office · Reports"
+      },
+      "title": {
+        "tr": "Rapor dosyası ile PDF bekleme sonucu açıkça doğrulanır",
+        "en": "Report files and pending PDF results are explicitly verified"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Rapor dışa aktarma",
+        "en": "Agent Office › Tasks › Report export"
+      },
+      "body": {
+        "tr": "On iki rapor aracı aynı tipli dosya makbuzunu kullanır. HTML ve XLSX sonuçları sahibine ait gerçek dosyadan doğrulanır; PDF belge oluşana kadar beklemede kalır. Kullanıcının açıkça kabul ettiği HTML alternatifi PDF olarak gösterilmez. Araç sonuçlarına yerel dosya yolu veya özel metadata aktarılmaz.",
+        "en": "Twelve report tools share one typed file receipt. HTML and XLSX results are verified against the owner’s actual file; PDFs remain pending until a document exists. Explicitly accepted HTML fallback is never presented as a PDF. Local paths and private metadata do not enter tool results."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-report-output-contract.png",
+        "alt": {
+          "tr": "Agent rapor görevinde doğrulanmış dosya ve PDF bekleme durumu",
+          "en": "Verified file and pending PDF state in an agent report task"
+        },
+        "caption": {
+          "tr": "Gerçek dosya makbuzu, kalıcı bekleme ve açık alternatif kabulü",
+          "en": "Actual file receipts, persistent pending state and explicit fallback acceptance"
+        }
+      }
     }
   ]
 }

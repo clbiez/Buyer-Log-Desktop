@@ -84,7 +84,7 @@ function attachTasks(service,deps) {
     if(step.status!=='waiting_output')throw error('OFFICE_TASK_RECONCILE',409);
     const record=state.output.get(state.profile.id,raw.outputId);if(!record||record.requestId!==step.result.output.requestId||!(record.format==='pdf'||record.format==='html'&&raw.acceptFallback===true))throw error('OFFICE_OUTPUT_INVALID',409);
     const bytes=require('fs').readFileSync(record.path);if(bytes.length!==record.bytes||record.format==='pdf'&&bytes.subarray(0,5).toString()!=='%PDF-')throw error('OFFICE_OUTPUT_INVALID',409);
-    step.result={verified:true,output:{id:record.id,fileName:record.fileName,format:record.format,bytes:record.bytes,requestId:record.requestId},...(record.format==='html'?{fallback:'html',requestedFormat:'pdf'}:{})};step.status='completed';step.finishedAt=new Date().toISOString();
+    step.result=require('./agent-report-output-contract').fileResult(record,{fallback:record.format==='html'});step.status='completed';step.finishedAt=new Date().toISOString();
     job=await store.save(state.profile.id,'job',{...job,status:'queued'},{expectedRevision:job.revision});access.appendAudit(state.profile,'AGENT_OUTPUT_COMPLETE',job.id,{stepId:step.id,format:record.format});return prepare(state.profile,job.id);}
   async function printOutput(profile,key,stepId,bytes){const state=await outputAccess(profile,key,stepId);if(state.step.status!=='waiting_output')throw error('OFFICE_TASK_RECONCILE',409);
     const saved=state.output.store.byRequest(state.profile.id,state.step.result.output.requestId);if(saved)return saved;
