@@ -652,6 +652,9 @@
 
   function oabAuthErrorMessage(err) {
     const code = err && err.code;
+    if (code === 'OAB_ACCESS_REVOKED') return oabT(
+      'OAB erişim yetkiniz değişti. İşlem durduruldu; erişiminizi kontrol edip yeni bir planla tekrar deneyin.',
+      'Your OAB access changed. The job stopped; check your access and retry with a new plan.');
     if (oabUsesDesktopSession()) {
       if (code === 'OAB_AUTH_CANCELLED') return oabT(
         'OAB girişi tamamlanmadan giriş penceresi kapatıldı. Tekrar deneyin.',
@@ -1385,7 +1388,7 @@
           S.batchJob = status.job;
           oabRenderProgress(status.job);
           if (status.job.running) { S.batchTimer = setTimeout(tick, 1000); return; }
-          if (oabIsAuthErrorCode(status.job.errorCode)) {
+          if (oabIsAuthErrorCode(status.job.errorCode) || status.job.errorCode === 'OAB_ACCESS_REVOKED') {
             const error = new Error(status.job.error || oabT('OAB oturumu gerekli.', 'OAB sign-in is required.'));
             error.code = status.job.errorCode;
             reject(error);

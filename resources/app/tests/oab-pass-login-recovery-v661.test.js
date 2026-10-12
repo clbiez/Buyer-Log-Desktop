@@ -7,7 +7,7 @@ const path = require('node:path');
 
 const ROOT = path.resolve(__dirname, '..');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
-const BATCH = fs.readFileSync(path.join(ROOT, 'server', 'routes', 'oab-batch-routes.js'), 'utf8');
+const BATCH = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'oab-batch-service.js'), 'utf8');
 const OAB = fs.readFileSync(path.join(ROOT, 'public', 'oab.js'), 'utf8');
 const CONNECTOR = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'agent-browser-connector.js'), 'utf8');
 
@@ -57,8 +57,8 @@ test('single Get OAB uses PASS connector and recaptures after session expiry', (
 
 test('batch OAB uses the same PASS browser connection', () => {
   const fetchOne = between(BATCH, 'async function oabFetchOneCombination', '/* Toplu BuyerGroupRefs');
-  assert.match(fetchOne, /ensurePassConnected\(userId, params, transport\)/);
-  assert.match(fetchOne, /fetchOabReportWithLoginRecovery\(userId, params, transport\)/);
+  assert.match(fetchOne, /ensurePassConnected\(userId, params, transport, assertAuthority\)/);
+  assert.match(fetchOne, /fetchOabReportWithLoginRecovery\(userId, params, transport, assertAuthority\)/);
   assert.doesNotMatch(fetchOne, /fetchOabReportFromInternalSession|requireOabInternalAuth/);
 });
 

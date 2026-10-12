@@ -40,6 +40,7 @@ const staticMetadata = require('../server/lib/oab-static-metadata');
 
 const ROOT = path.join(__dirname, '..');
 const SERVER = require('./helpers/server-source')();
+const WORKER = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'oab-batch-service.js'), 'utf8');
 const OAB_JS = fs.readFileSync(path.join(ROOT, 'public', 'oab.js'), 'utf8');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
 const CONNECTOR = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'agent-browser-connector.js'), 'utf8');
@@ -212,18 +213,21 @@ test('v7.20 toplu çekme uçları var ve iş kimlikli arka planda yürüyor', ()
 });
 
 test('v7.20 kısmi başarı korunur: bir kombinasyonun hatası işi çöpe atmaz', () => {
-  const block = SERVER.slice(SERVER.indexOf('async function runOabBatchJob'), SERVER.indexOf('function oabBuildPlan'));
+  const block = WORKER.slice(WORKER.indexOf('async function runOabBatchJob'), WORKER.indexOf('function oabBuildPlan'));
   assert.match(block, /job\.failures\.push/);
   assert.match(block, /oabBatch\.mergeReportResults\(job\.results\)/);
   // İptal kuyruğu durdurur ama eldeki sonuçlar yine birleştirilir.
   assert.match(block, /if \(job\.cancelled\) break;/);
   const cancel = SERVER.slice(SERVER.indexOf("app.post('/api/oab/batch/cancel'"), SERVER.indexOf("app.post('/api/oab/batch/reset-capability'"));
-  assert.match(cancel, /job\.cancelled = true/);
+  assert.match(cancel, /oabBatchService\.cancel\(req\.currentUser\)/);
+  const nativeCancel=WORKER.slice(WORKER.indexOf('function cancel(profile)'),WORKER.indexOf('function resetCapability'));
+  assert.match(nativeCancel,/job\.cancelled = true/);
+  assert.doesNotMatch(nativeCancel,/job\.results\s*=\s*\[\]/);
   assert.doesNotMatch(cancel, /job\.results\s*=\s*\[\]/, 'iptal, çekilmiş veriyi silmemeli');
 });
 
 test('v7.20 toplu yanıt doğrulanmazsa kuyruk kombinasyon başına yeniden kurulur', () => {
-  const block = SERVER.slice(SERVER.indexOf('if (job.probe) {'), SERVER.indexOf('await runOabBatchJob(job'));
+  const block = WORKER.slice(WORKER.indexOf('if (job.probe) {'), WORKER.indexOf('await runOabBatchJob(job'));
   assert.match(block, /verdict\.verified \? 'supported' : 'unsupported'/);
   // Doğrulanmayan turun satırları ATILIR: yarım veriyi rapora katmak sessizce
   // eksik rapor vermek olurdu.
@@ -234,15 +238,17 @@ test('v7.20 toplu yanıt doğrulanmazsa kuyruk kombinasyon başına yeniden kuru
 test('v7.20 toplu yanıt tek cache anahtarına yazılmaz', () => {
   // Cache anahtarı Season|MAG|BuyerGroup üçlüsüdür. Çok gruplu bir yanıtı tek
   // anahtara yazmak, sonraki tekil isteklere yanlış veri döndürürdü.
-  const block = SERVER.slice(SERVER.indexOf('async function oabFetchOneCombination'), SERVER.indexOf('async function oabProbeBatchedBuyerGroups'));
+  const block = WORKER.slice(WORKER.indexOf('async function oabFetchOneCombination'), WORKER.indexOf('async function oabProbeBatchedBuyerGroups'));
   assert.match(block, /const single = !Array\.isArray\(item\.buyerGroupRefs\) \|\| item\.buyerGroupRefs\.length <= 1;/);
   assert.match(block, /if \(single\) \{[\s\S]*?oabStore\.set\(key/, 'cache yazımı yalnız tekil istekte olmalı');
 });
 
 test('v7.20 kaçak "hepsini seç" işleri üst sınırla durdurulur', () => {
-  assert.match(SERVER, /const OAB_BATCH_MAX_COMBINATIONS = \d+;/);
+  assert.match(WORKER, /const OAB_BATCH_MAX_COMBINATIONS = \d+;/);
   const block = SERVER.slice(SERVER.indexOf("app.post('/api/oab/batch'"), SERVER.indexOf("app.get('/api/oab/batch-status'"));
-  assert.match(block, /OAB_BATCH_TOO_LARGE/);
+  assert.match(block, /oabBatchService\.start/);
+  assert.match(WORKER, /built\.combinationCount > OAB_BATCH_MAX_COMBINATIONS/);
+  assert.match(WORKER, /OAB_BATCH_TOO_LARGE/);
 });
 
 /* ---------------- 5 · Arayüz ---------------- */
@@ -285,7 +291,7 @@ test('v7.20 onay eşiği İYİMSER değil EN KÖTÜ duruma bakar', () => {
   assert.equal(heavy(null), 0);
 
   // Plan ucu en kötü durumu da yayınlamalı, yoksa istemci hesaplayamaz.
-  const block = SERVER.slice(SERVER.indexOf('function oabBuildPlan'), SERVER.indexOf("app.post('/api/oab/plan'"));
+  const block = WORKER.slice(WORKER.indexOf('function oabBuildPlan'), WORKER.indexOf('function plan(body'));
   assert.match(block, /worstCaseRequestCount: worstCaseRequests/);
   assert.match(block, /batchUnproven: capability\.state === 'unknown'/);
   // Yetenek 'supported' ise en kötü durum = gerçek durum; boşuna uyarı çıkmaz.

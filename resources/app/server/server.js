@@ -5400,32 +5400,53 @@ function oabDesktopAuthRequired() {
   error.code = 'OAB_AUTH_REQUIRED'; error.statusCode = 401;
   return error;
 }
-async function ensurePassConnected(userId, params, transport) {
+function assertOabCurrentAccess(userId) {
+  const current = userAccess.profileById(userId);
+  if (!current || current.enabled === false || !userAccess.hasArea(current,'overview') || !userAccess.hasCapability(current,'OAB.VIEW')) {
+    throw Object.assign(new Error('OAB_ACCESS_REVOKED'),{code:'OAB_ACCESS_REVOKED',statusCode:403});
+  }
+}
+async function ensurePassConnected(userId, params, transport, assertAuthority = () => assertOabCurrentAccess(userId)) {
+  assertOabCurrentAccess(userId); assertAuthority();
   if (transport === OAB_DESKTOP_TRANSPORT) {
-    if (await oabDesktopSessionReady()) return { connected:true, authenticated:true, transport:'desktop-session' };
+    const ready = await oabDesktopSessionReady();
+    assertOabCurrentAccess(userId); assertAuthority();
+    if (ready) return { connected:true, authenticated:true, transport:'desktop-session' };
     throw oabDesktopAuthRequired();
   }
   const status = agentBrowserConnector.passAuthStatus(userId);
   if (status.connected) return status;
   const storage = await agentBrowserConnector.passStorageAuthStatus(userId).catch(() => null);
+  assertOabCurrentAccess(userId); assertAuthority();
   if (storage && storage.connected) return storage;
-  return agentBrowserConnector.capturePassAuthorization(userId, params || {});
+  const connected = await agentBrowserConnector.capturePassAuthorization(userId, params || {});
+  assertOabCurrentAccess(userId); assertAuthority();
+  return connected;
 }
 // Corporate SSO may expire while the in-memory request template still exists.
 // Browser mode: on the first 401/403, recapture in the SAME browser context and
 // retry once. Desktop mode: oabApiClient clears the RAM token and returns
 // OAB_AUTH_EXPIRED; the renderer renews it through the hidden session and retries.
-async function fetchOabReportWithLoginRecovery(userId, params, transport) {
+async function fetchOabReportWithLoginRecovery(userId, params, transport, assertAuthority = () => assertOabCurrentAccess(userId)) {
+  assertOabCurrentAccess(userId); assertAuthority();
   if (transport === OAB_DESKTOP_TRANSPORT) {
     // The desktop relay runs the call inside the hidden signed-in PASS page.
-    return oabDesktopRelay.configured() ? oabDesktopRelay.fetchReportData(params || {}) : oabApiClient.fetchReportData(params || {});
+    const rows = await (oabDesktopRelay.configured() ? oabDesktopRelay.fetchReportData(params || {}) : oabApiClient.fetchReportData(params || {}));
+    assertOabCurrentAccess(userId); assertAuthority();
+    return rows;
   }
   try {
-    return await agentBrowserConnector.fetchPassReportData(userId, params);
+    const rows = await agentBrowserConnector.fetchPassReportData(userId, params);
+    assertOabCurrentAccess(userId); assertAuthority();
+    return rows;
   } catch (err) {
     if (!err || err.code !== 'PASS_SESSION_EXPIRED') throw err;
+    assertOabCurrentAccess(userId); assertAuthority();
     await agentBrowserConnector.capturePassAuthorization(userId, params || {});
-    return agentBrowserConnector.fetchPassReportData(userId, params);
+    assertOabCurrentAccess(userId); assertAuthority();
+    const rows = await agentBrowserConnector.fetchPassReportData(userId, params);
+    assertOabCurrentAccess(userId); assertAuthority();
+    return rows;
   }
 }
 async function oabDesktopSessionReady() {
@@ -5688,7 +5709,9 @@ require('./routes/agent-office-routes')(app, {
   applyAutomation:async(profile,code)=>{await agentOfficeAutomationPreview(profile,code);const {parsed,validation}=automationAiRequest(code);const compiled=aiAutomationCompiler.compile(parsed,validation,{sourceCode:code});
     const normalized=automationNormalizePayload({...compiled,enabled:false},profile.id);return automationRecipeStore.createRecipe(profile.id,normalized).result;}
 });
+const nativeOabBatchService = require('./lib/oab-batch-service').createOabBatchService({ensurePassConnected,fetchOabReportWithLoginRecovery,logRuntimeFailure,oabBatch,oabSessionStore,oabStaticMetadata,oabStore,redactSecrets,userAccess});
 require('./routes/oab-batch-routes')(app, {
+  oabBatchService: nativeOabBatchService,
   afterSharedCollectionSave,
   automationError,
   canonicalCollectionOwner,
@@ -10783,6 +10806,7 @@ app.put('/api/transit-rules', userAccess.requireArea('source'), userAccess.requi
 const agentResourceDeps={withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),flush:async()=>{await deltaStore.flush();},changed:async(profile,section,detail)=>{publishSharedMasterChange(section,{currentUser:profile},detail);userAccess.appendAudit(profile,'AGENT_RESOURCE_UPDATE',section,detail);liveEvents.notifyChange(section,null);},impact:require('./lib/agent-resource-impact').createResourceImpact({office:agentOfficeStore,userAccess,dataset:agentPlatformDataset})};
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
+require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});
 const manufacturerAsasSource=require('./lib/agent-manufacturer-asas-source').createManufacturerAsasSource({office:agentOfficeStore,userAccess,dataset:agentPlatformDataset,stamp:ctx=>{const profile=userAccess.profileById(ctx.ownerId),cache=cacheForUser(ctx.ownerId);return {loadedAt:cache.loadedAt,cpupdateOverrides:cache.cpupdateOverrides,overrides:loadOverrides({projectManufacturers:false}),preferences:userPreferences.load(ctx.ownerId),roleEntries:userAccess.roleWorkspaceEntries(profile),actor:profile};}});
 require('./lib/agent-manufacturer-tools').registerManufacturerTools(agentToolRegistry,{...agentResourceDeps,asasSource:manufacturerAsasSource});
 require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegistry,{...agentResourceDeps,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});

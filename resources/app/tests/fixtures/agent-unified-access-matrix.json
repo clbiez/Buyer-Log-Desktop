@@ -84,6 +84,25 @@
         "approval": false,
         "rollbackable": false,
         "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.plan",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
       }
     ]
   },

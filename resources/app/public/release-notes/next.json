@@ -4156,6 +4156,72 @@
           "en": "Actual Buyer Log task result with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-oab-native-batch-plan",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi · OAB",
+        "en": "Agent Office · OAB"
+      },
+      "title": {
+        "tr": "Native yükleme planı ve gerçek süre tahmini",
+        "en": "Native fetch plan and actual time estimate"
+      },
+      "path": {
+        "tr": "Overview › OAB · Agent Ofisi",
+        "en": "Overview › OAB · Agent Office"
+      },
+      "body": {
+        "tr": "Agent, Buyer Log’un ortak native planlayıcısıyla geçerli kombinasyonları, karşılıksız seçimleri, önbellek ve toplu istek durumunu, en kötü süreyi ve 400 kombinasyon sınırını hesaplar. Tam sayılar, sınırlı sayfalar ve değişen kaynağı reddeden parmak izi kullanılır. Plan hesabı canlı rapor çekmez, yeni oturum açmaz veya AI bağlantısı gerektirmez.",
+        "en": "The agent uses Buyer Log’s shared native planner to calculate valid combinations, unmatched selections, cache and batched-request state, worst-case time and the 400-combination limit. Full counts, bounded pages and a fingerprint reject changed source state. Planning does not fetch a live report, open a session or require an AI connection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-oab-native-batch-plan.png",
+        "alt": {
+          "tr": "Native yükleme planı ve gerçek süre tahmini",
+          "en": "Native fetch plan and actual time estimate"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "oab-native-batch-live-authority",
+      "type": "fix",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Uzun yüklemelerde güncel erişim kontrolü",
+        "en": "Current access checks during long fetches"
+      },
+      "path": {
+        "tr": "Overview › OAB · Agent Ofisi",
+        "en": "Overview › OAB · Agent Office"
+      },
+      "body": {
+        "tr": "OAB toplu yükleme ve HTTP uçları aynı native servis üzerinden çalışır. Kullanıcı erişimi ve varsa agent yetkisi her ağ bekleyişinden sonra yeniden kontrol edilir; yetki değişince sonraki istek, önbellek, yetenek ve snapshot yazımı durur. Mevcut kısmi başarı, iptal, doğrulanmış toplu yanıt ve yeniden denemede rapor birleştirme davranışı korunur. TR/EN hata mesajı işin durduğunu açıklar.",
+        "en": "OAB batch fetching and HTTP routes use the same native service. Current user access and any trusted agent authority are rechecked after every network wait; changed authority stops the next request, cache, capability and snapshot writes. Existing partial success, cancellation, verified batched response and retry snapshot merging remain intact. A TR/EN message explains that the job stopped."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-batch-live-authority.png",
+        "alt": {
+          "tr": "Uzun yüklemelerde güncel erişim kontrolü",
+          "en": "Current access checks during long fetches"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous data"
+        }
+      }
     }
   ]
 }
