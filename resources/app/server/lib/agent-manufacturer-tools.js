@@ -15,6 +15,7 @@ function registerManufacturerTools(registry,deps){
    }finally{if(locked){try{lease.legacyWrites?.splice(0);store.releaseLock(args.recordId,me,lease);await lease.commit();await deps.flush?.();}catch(_){}}}})),
   restore:async(token,ctx)=>mutation(ctx,()=>store.mutateSharedResource(async lease=>{ctx.assertAuthority?.();const saved=store.restoreRecord(token,actor(ctx.profile),{...lease,assertAuthority:()=>ctx.assertAuthority?.()});await lease.commit();await changed(ctx,saved._revision);const actual=store.loadStore().records.find(r=>r.id===token.id);if(token.before?!actual||Object.keys(token.before).filter(k=>k!=='lock').some(k=>JSON.stringify(token.before[k])!==JSON.stringify(actual[k])):!!actual)throw error('OFFICE_RESOURCE_VERIFY_FAILED',409);return {verified:true,revision:saved._revision};}))});
  require('./agent-manufacturer-heading-tools').registerManufacturerHeadingTools(registry,deps,base);
+ require('./agent-manufacturer-asas-tools').registerManufacturerAsasTools(registry,deps);
  require('./agent-manufacturer-import-tools').registerManufacturerImportTools(registry,deps,base);
 }
 module.exports={registerManufacturerTools};

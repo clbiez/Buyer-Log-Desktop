@@ -1523,6 +1523,61 @@
         "contractVersion": 2
       },
       {
+        "id": "manufacturer.asas.read",
+        "operation": "READ",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "manufacturer.cards.link",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "manufacturer.cards.create.asas",
+        "operation": "CREATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
         "id": "manufacturer.cards.import",
         "operation": "IMPORT",
         "agentAreas": [],

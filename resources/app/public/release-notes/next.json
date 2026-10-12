@@ -3991,6 +3991,72 @@
           "en": "Durable deletion identities, native HLC and correct inverse result"
         }
       }
+    },
+    {
+      "id": "agent-manufacturer-asas-link",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi · Üreticiler",
+        "en": "Agent Office · Manufacturers"
+      },
+      "title": {
+        "tr": "Agent gerçek ASAS adını keşfeder ve kartı bağlar",
+        "en": "Agent discovers actual ASAS names and links the card"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / Üreticiler",
+        "en": "Agent Office › Tasks / Manufacturers"
+      },
+      "body": {
+        "tr": "Agent yalnız kullanıcının ve kendi Orders erişiminin kesişimindeki gerçek ASAS adlarını kullanır. Mevcut üretici motoru Non-DTR alt üretici ve miktar ağırlıklı ülkeyi seçer. Birebir ad seçimi önizlenir ve onaylanır; eski ad alternatif ad olarak korunur. Yetki, kaynak, revizyon ve kilitler yazım anında yeniden doğrulanır.",
+        "en": "The agent uses actual ASAS names within both current user and agent Orders access. The existing manufacturer engine chooses Non-DTR sub-manufacturers and quantity-weighted countries. Exact name selection is previewed and approved; the previous name remains an alias. Authority, source, revision and locks are rechecked at the write boundary."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-manufacturer-asas-link.png",
+        "alt": {
+          "tr": "Agent gerçek ASAS adını keşfeder ve kartı bağlar",
+          "en": "Agent discovers actual ASAS names and links the card"
+        },
+        "caption": {
+          "tr": "Anonim ASAS üretici verisiyle gerçek Buyer Log sonucu",
+          "en": "Actual Buyer Log result with anonymous ASAS manufacturer data"
+        }
+      }
+    },
+    {
+      "id": "agent-manufacturer-asas-create",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi · Üreticiler",
+        "en": "Agent Office · Manufacturers"
+      },
+      "title": {
+        "tr": "Eksik ASAS üretici kartları ve ülkeler güvenli oluşturulur",
+        "en": "Missing ASAS manufacturer cards and countries are safely created"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / Üreticiler",
+        "en": "Agent Office › Tasks / Manufacturers"
+      },
+      "body": {
+        "tr": "Onaylanan gerçek ASAS adları mevcut servisten kart oluşturur; bağlı alternatif adlar atlanır ve native kapasite sınırları kısmi sonuç olarak bildirilir. Özel işlem makbuzu kartları ve yeni ülkeleri tek native işlemde geri alır; silme izleri gecikmiş SYNC sonrasında korunur. AI bağlantısı olmadan da deterministik araç yolu çalışır.",
+        "en": "Approved actual ASAS names create cards through the existing service; linked aliases are skipped and native capacity limits are reported as partial results. A private effect receipt undoes cards and new countries in one native operation; deletion identities survive delayed SYNC. The deterministic tool path works without an AI connection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-manufacturer-asas-create.png",
+        "alt": {
+          "tr": "Eksik ASAS üretici kartları ve ülkeler güvenli oluşturulur",
+          "en": "Missing ASAS manufacturer cards and countries are safely created"
+        },
+        "caption": {
+          "tr": "Anonim ASAS üretici verisiyle gerçek Buyer Log sonucu",
+          "en": "Actual Buyer Log result with anonymous ASAS manufacturer data"
+        }
+      }
     }
   ]
 }

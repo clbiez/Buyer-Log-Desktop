@@ -242,7 +242,7 @@ function saveStore(next, expectedRevision, options={}) {
     options.assertAuthority?.();if (documents.writesLegacy) {
       if(options.legacyWrites)options.legacyWrites.push(()=>atomicWriteJson(FILE,saved));else atomicWriteJson(FILE,saved);
     }
-    const mirrored=documents.mirror(DOCUMENT_ID,saved,{guardSource:!!options.mirrorResults,assertAuthority:options.assertAuthority});options.mirrorResults?.push(mirrored);
+    const mirrored=documents.mirror(DOCUMENT_ID,saved,{guardSource:!!options.mirrorResults,assertAuthority:options.assertAuthority,guardCollection:options.guardCollection===true,guardDocumentIds:options.guardDocumentIds||[],guardCollections:options.guardCollections||[]});options.mirrorResults?.push(mirrored);
     return saved;
   };
   return options[require('./guarded-document-mutation').HELD_DOCUMENT_LEASE]?write():withFileLeaseSync(FILE,write);
@@ -528,7 +528,13 @@ function restoreImportRecords(receipt, actor, options = {}) {
     if([...entries.values()].some(entry=>entry.before&&!restoredIds.has(entry.id)))throw storeError('Import inverse record is missing.','OFFICE_ROLLBACK_INVALID',409);
     const deletedRecords={...(current.deletedRecords||{})},stamp=now();
     for(const entry of entries.values())if(!entry.before)deletedRecords[entry.id]=stamp;
-    return {...current,records,deletedRecords};
+    // An inverse may remove only headings introduced by its own effect. Legacy
+    // orphan references already present before that effect must survive intact;
+    // validate every reference to an actual current heading through the same
+    // native removal guard, without turning unrelated legacy data into a change.
+    const currentHeadingIds = new Set(current.countries.map(heading=>heading.id));
+    const countries = receipt.countries ? planHeadings('country', receipt.countries, {...current,records:records.filter(record=>currentHeadingIds.has(record.countryId))}).next : current.countries;
+    return {...current,records,deletedRecords,countries};
   },receipt.expectedRevision,options);
 }
 
@@ -543,70 +549,70 @@ function restoreImportRecords(receipt, actor, options = {}) {
    Ülke başlığı ASAS ülkesinden bulunur; yoksa açılır.
    linkRecord: ASAS'ta karşılığı olmayan kartı seçilen ASAS adına bağlar; eski
    ad alternatif ad olarak korunur (veri kaybı yok, §142). */
-function createFromAsas(list, actor) {
-  const stamp = now();
-  const summary = { added: [], unchanged: [] };
-  const saved = saveStore(current => {
-    const records = current.records.slice();
-    const countries = current.countries.slice();
-    const taken = manufacturerCards.buildDirectoryIndex(records);
-    const countryByKey = new Map(countries.map(item => [manufacturerCards.nameKey(item.name), item]));
-    for (const value of Array.isArray(list) ? list.slice(0, MAX_RECORDS) : []) {
-      const src = cleanObject(value);
-      const manufacturer = clean(src.manufacturer, 240);
-      const key = manufacturerCards.nameKey(manufacturer);
-      if (!key) continue;
-      if (taken.has(key)) { summary.unchanged.push(manufacturer); continue; }
-      if (records.length >= MAX_RECORDS) break;
-      let countryId = '';
-      const countryName = clean(src.countryName, 120), countryKey = manufacturerCards.nameKey(countryName);
-      if (countryKey) {
-        let heading = countryByKey.get(countryKey);
-        if (!heading && countries.length < MAX_HEADINGS) {
-          heading = { id: newId('h'), name: countryName, order: countries.length };
-          countries.push(heading);
-          countryByKey.set(countryKey, heading);
-        }
-        countryId = heading ? heading.id : '';
+// Shared native planners: preview and confirmed effects use the same matching,
+// headings, capacity and lock decisions as the existing manufacturer UI.
+function planCreateFromAsas(list, actor, current = loadStore(), options = {}) {
+  const stamp = options.stamp || now(), summary = { added: [], unchanged: [] };
+  const records = current.records.slice(), countries = current.countries.slice(), affectedIds = [];
+  const taken = manufacturerCards.buildDirectoryIndex(records);
+  const countryByKey = new Map(countries.map(item => [manufacturerCards.nameKey(item.name), item]));
+  const candidates = Array.isArray(list) ? list.slice(0, MAX_RECORDS) : [];
+  const stats = { inputCount: Array.isArray(list) ? list.length : 0, ignored: 0, unprocessed: Math.max(0, (list?.length || 0) - MAX_RECORDS), countriesCreated: 0, missingCountry: 0 };
+  for (let position = 0; position < candidates.length; position++) {
+    const src = cleanObject(candidates[position]), manufacturer = clean(src.manufacturer, 240), key = manufacturerCards.nameKey(manufacturer);
+    if (!key) { stats.ignored++; continue; }
+    if (taken.has(key)) { summary.unchanged.push(manufacturer); continue; }
+    if (records.length >= MAX_RECORDS) { stats.unprocessed += candidates.length-position; break; }
+    let countryId = '';
+    const countryName = clean(src.countryName, 120), countryKey = manufacturerCards.nameKey(countryName);
+    if (countryKey) {
+      let heading = countryByKey.get(countryKey);
+      if (!heading && countries.length < MAX_HEADINGS) {
+        heading = { id: options.newHeadingId ? options.newHeadingId(position) : newId('h'), name: countryName, order: countries.length };
+        countries.push(heading); countryByKey.set(countryKey, heading); stats.countriesCreated++;
       }
-      const record = normalizeRecord({
-        manufacturer, origin: 'asas', email: '', countryId, typeId: cleanId(src.typeId),
-        id: '', createdAt: stamp, createdBy: actor && actor.id, createdByName: actor && actor.name,
-        updatedAt: stamp, updatedBy: actor && actor.id, updatedByName: actor && actor.name, lock: null,
-      });
-      records.push(record);
-      taken.set(key, record);
-      summary.added.push(manufacturer);
+      countryId = heading ? heading.id : '';
+      if (!countryId) stats.missingCountry++;
     }
-    return { ...current, countries, records };
-  }, null);
-  return { summary, revision: saved._revision };
+    const record = normalizeRecord({ manufacturer, origin: 'asas', email: '', countryId, typeId: cleanId(src.typeId),
+      id: options.newRecordId ? options.newRecordId(position) : '', createdAt: stamp, createdBy: actor && actor.id, createdByName: actor && actor.name,
+      updatedAt: stamp, updatedBy: actor && actor.id, updatedByName: actor && actor.name, lock: null });
+    records.push(record); taken.set(key, record); summary.added.push(manufacturer); affectedIds.push(record.id);
+  }
+  return { store: current, records, countries, summary, stats, affectedIds };
 }
-
-function linkRecord(id, asasName, actor) {
+function commitCreateFromAsas(plan, expectedRevision, options = {}) {
+  options.assertAuthority?.();
+  if (options.skipNoop && !plan.affectedIds.length) return { summary: plan.summary, revision: plan.store._revision };
+  const saved = saveStore({ ...plan.store, countries: plan.countries, records: plan.records }, expectedRevision, options);
+  return { summary: plan.summary, revision: saved._revision };
+}
+function createFromAsas(list, actor, expectedRevision = null, options = {}) {
+  let plan;
+  const saved = saveStore(current => { plan = planCreateFromAsas(list, actor, current); return { ...current, records: plan.records, countries: plan.countries }; }, expectedRevision, options);
+  return { summary: plan.summary, revision: saved._revision };
+}
+function planLinkRecord(id, asasName, actor, current = loadStore(), options = {}) {
   const name = clean(asasName, 240);
   if (!manufacturerCards.nameKey(name)) throw storeError('ASAS üretici adı zorunludur.', 'VALIDATION_ERROR', 400);
-  const saved = saveStore(current => {
-    const index = recordIndex(current, id);
-    const record = current.records[index];
-    const held = activeLock(record.lock);
-    if (held && held.userId !== cleanId(actor && actor.id)) {
-      throw storeError(`Bu kaydı şu anda ${held.userName || held.userId} düzenliyor.`, 'EMAIL_RECORD_LOCKED', 409, { lock: held });
-    }
-    const other = current.records.find((item, position) => position !== index
-      && [item.manufacturer].concat(item.aliases || []).some(value => manufacturerCards.nameKey(value) === manufacturerCards.nameKey(name)));
-    if (other) throw storeError(`"${name}" zaten "${other.manufacturer}" kartına bağlı.`, 'MANUFACTURER_ALREADY_LINKED', 409);
-    const records = current.records.slice();
-    records[index] = normalizeRecord({
-      ...record,
-      manufacturer: name,
-      aliases: [record.manufacturer].concat(record.aliases || []),
-      origin: 'asas',
-      updatedAt: now(), updatedBy: actor && actor.id, updatedByName: actor && actor.name,
-    });
-    return { ...current, records };
-  }, null);
-  return { record: saved.records.find(item => item.id === cleanId(id)), revision: saved._revision };
+  const index = recordIndex(current, id), record = current.records[index], held = activeLock(record.lock);
+  if (held && held.userId !== cleanId(actor && actor.id)) throw storeError(`Bu kaydı şu anda ${held.userName || held.userId} düzenliyor.`, 'EMAIL_RECORD_LOCKED', 409, { lock: held });
+  const other = current.records.find((item, position) => position !== index
+    && [item.manufacturer].concat(item.aliases || []).some(value => manufacturerCards.nameKey(value) === manufacturerCards.nameKey(name)));
+  if (other) throw storeError(`"${name}" zaten "${other.manufacturer}" kartına bağlı.`, 'MANUFACTURER_ALREADY_LINKED', 409);
+  const records = current.records.slice();
+  records[index] = normalizeRecord({ ...record, manufacturer: name, aliases: [record.manufacturer].concat(record.aliases || []), origin: 'asas',
+    updatedAt: options.stamp || now(), updatedBy: actor && actor.id, updatedByName: actor && actor.name });
+  return { store: current, records, index, record: records[index], before: record };
+}
+function commitLinkRecord(plan, expectedRevision, options = {}) {
+  const saved = saveStore({ ...plan.store, records: plan.records }, expectedRevision, options);
+  return { record: saved.records.find(item => item.id === plan.record.id), revision: saved._revision };
+}
+function linkRecord(id, asasName, actor, expectedRevision = null, options = {}) {
+  let plan;
+  const saved = saveStore(current => { plan = planLinkRecord(id, asasName, actor, current); return { ...current, records: plan.records }; }, expectedRevision, options);
+  return { record: saved.records.find(item => item.id === plan.record.id), revision: saved._revision };
 }
 
 /* Eski istisnalar tek belge işleminde taşınır. Ad günlüğü eski cihazdan
@@ -658,7 +664,7 @@ function restoreRecord(receipt,actor,options={}) {
 }
 module.exports = {
   mutateSharedResource,restoreRecord,migrateNonDtrManufacturers, nonDtrManufacturers,
-  attachDeltaStore, createFromAsas, linkRecord, normalizeAliases,
+  attachDeltaStore, createFromAsas, linkRecord, planCreateFromAsas, commitCreateFromAsas, planLinkRecord, commitLinkRecord, normalizeAliases,
   FILE, LOCK_TTL_MS, DEFAULT_TYPES,
   loadStore, saveStore, publicStore, defaultStore,
   normalizeHeadings, normalizeRecord, activeLock,

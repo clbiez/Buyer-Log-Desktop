@@ -131,7 +131,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
 
   /* Aynayı günceller. Hiçbir koşulda fırlatmaz: çağıran kod eski JSON yazmasını
      bunun sonucuna bakmadan tamamlamalıdır. */
-  async function mirror(collection, entries, { userId = null, guardSource = false, guardCollection = false, assertAuthority, guardDocumentIds = [] } = {}) {
+  async function mirror(collection, entries, { userId = null, guardSource = false, guardCollection = false, assertAuthority, guardDocumentIds = [], guardCollections = [] } = {}) {
     /* v2 no-op suppression. A caller may hand us a full source map; that must
        not turn into one journal event per record. Compare only fields supplied
        by the caller against the hydrated working set and persist meaningful
@@ -141,7 +141,11 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
     let unchanged = 0;
     const bucket = hydrated ? memory.get(collection) : null;
     const expected = guardSource && isAuthoritativeNow() ? Object.fromEntries((guardCollection ? [...(bucket?.entries()||[])] : [...new Set([...Object.keys(entries||{}),...guardDocumentIds])].map(id=>[id,bucket?.get(id)||null])).map(([id,value])=>[id,value?{...value}:null])) : null;
-    const assertCurrent=expected||assertAuthority?state=>{
+    // Trusted native adapters can bind read dependencies in another native
+    // collection to the SAME actual journal transaction (for example Orders'
+    // CP overlay). The caller/model never chooses this through tool arguments.
+    const dependentExpected = guardSource && isAuthoritativeNow() ? Object.fromEntries([...new Set(guardCollections)].filter(name=>name!==collection).map(name=>[name,Object.fromEntries([...(memory.get(name)?.entries()||[])].map(([id,value])=>[id,{...value}]))])) : {};
+    const assertCurrent=expected||assertAuthority||Object.keys(dependentExpected).length?state=>{
       // Trusted native callback runs under the real journal transaction lease,
       // after queue waits/retries and before any operation is appended.
       assertAuthority?.();if(!expected)return;
@@ -149,6 +153,10 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
       if(guardCollection)for(const [key,value]of Object.entries(state.records||{})){if(key.startsWith(collection+':')&&!value._deleted)actual[key.slice(collection.length+1)]=flatten(value);}
       else for(const id of Object.keys(expected)){const value=state.records?.[recordKey(collection,id)];actual[id]=value&&!value._deleted?flatten(value):null;}
       if(!equalMeaningful(expected,actual))throw Object.assign(new Error('Shared source changed before journal commit.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+      for(const [dependency,prior]of Object.entries(dependentExpected)){
+        const next={};for(const [key,value]of Object.entries(state.records||{}))if(key.startsWith(dependency+':')&&!value._deleted)next[key.slice(dependency.length+1)]=flatten(value);
+        if(!equalMeaningful(prior,next))throw Object.assign(new Error('Shared source dependency changed before journal commit.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+      }
     }:undefined;
     for (const [rawId, rawValue] of Object.entries(entries || {})) {
       const id = String(rawId || '').trim();
