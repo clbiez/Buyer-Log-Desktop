@@ -14,13 +14,13 @@ async function fixture(t){
   const profile={id:'quality-'+(++seq),areas:['cp','automations'],enabled:true},access={profileById:id=>id===profile.id?profile:null,hasArea:(p,a)=>p.areas.includes(a),hasCapability:()=>true,appendAudit:()=>{}};
   let allowed=new Map([['1374537|KK.TSH,FT-UKRAYNA 2447160|Q6K',{orderCode:'1374537',modelName:'KK.TSH,FT-UKRAYNA 2447160',colourCode:'Q6K',colour:'BUXE WHITE'}],['1359393|ATL,MINECRAFT-1-EQ|ECR',{orderCode:'1359393',modelName:'ATL,MINECRAFT-1-EQ',colourCode:'ECR',colour:'ECRU'}]]);
   const authorizedOrders=async()=>allowed,source=createService({authorizedOrders});let office;
-  let beforeAuthorize=()=>{};
+  let beforeAuthorize=()=>{},beforeNative=async()=>{};
   const registry=createToolRegistry({userAccess:access,authorizeCapability:async(ctx,args)=>{await beforeAuthorize(ctx,args);return office.taskAuthorize(ctx,args);}}),store=createAgentOfficeStore({root:path.join(root,profile.id)});
-  const tools=registerQualityTools(registry,{service:source,authorizedOrders,dataset:async()=>[...allowed.values()].map(c=>({'Order Code':c.orderCode,'Model Name':c.modelName,'C.Code':c.colourCode,Colour:c.colour,Manufacturer:'Demo'})),mail:(_p,args,rows,dryRun,expected)=>{const preview={messages:[{to:['demo@example.invalid'],subject:args.subject,rows:rows.length}],sendAvailable:false};if(dryRun)return preview;assert.deepEqual(preview,expected);const result=mail.createDraft({ownerId:profile.id,to:['demo@example.invalid'],subject:args.subject,body:args.body,rows,fields:['Order Code'],open:false});return {emails:[{filename:result.filename}],sendAvailable:false};},verifyMail:result=>result.emails.every(f=>!!mail.draftPath(f.filename,profile.id))});
+  const tools=registerQualityTools(registry,{service:source,authorizedOrders,sourceRevision:()=>require('../server/lib/agent-office-store').hash(JSON.stringify([...allowed])),guard:async(ctx,work)=>{await beforeNative(ctx);return office.taskNativeGuard(ctx,work);},restoreGuard:async(ctx,work)=>{await beforeNative(ctx);return store.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();});},dataset:async()=>[...allowed.values()].map(c=>({'Order Code':c.orderCode,'Model Name':c.modelName,'C.Code':c.colourCode,Colour:c.colour,Manufacturer:'Demo'})),mail:(_p,args,rows,dryRun,expected)=>{const preview={messages:[{to:['demo@example.invalid'],subject:args.subject,rows:rows.length}],sendAvailable:false};if(dryRun)return preview;assert.deepEqual(preview,expected);const result=mail.createDraft({ownerId:profile.id,to:['demo@example.invalid'],subject:args.subject,body:args.body,rows,fields:['Order Code'],open:false});return {emails:[{filename:result.filename}],sendAvailable:false};},verifyMail:result=>result.emails.every(f=>!!mail.draftPath(f.filename,profile.id))});
   office=createAgentOfficeService({store,userAccess:access,toolRegistry:registry,runtime:createAgentRuntime({store:runtimeStore,toolRegistry:registry,policyEngine:createPolicyEngine({userAccess:access})}),runtimeStore,engine:{},getOperationalData:async()=>({}),taskOwners:()=>[]});t.after(()=>office.stop());
   const agent=await store.createProfile(profile.id,{name:'Quality',areas:['cp']});
   const create=steps=>office.taskCreate(profile,{agentId:agent.id,task:'Process test reports',steps}),execute=job=>office.taskExecute(profile,job.id,{confirmed:true,fingerprint:job.steps.find(s=>s.status!=='completed')?.preview.fingerprint});
-  return {profile,access,source,registry,office,agent,tools,create,execute,setAllowed:value=>{allowed=value;},beforeAuthorize:fn=>{beforeAuthorize=fn;}};
+  return {profile,access,source,registry,office,agent,tools,create,execute,setAllowed:value=>{allowed=value;},beforeAuthorize:fn=>{beforeAuthorize=fn;},beforeNative:fn=>{beforeNative=fn;},store};
 }
 test('real PDF/MSG → exact match → approved report/checklist → actual Fail EML receipt',async t=>{
   const f=await fixture(t),parsed=await f.source.parse(f.profile,[file('B-labright-result-364790.msg'),file('A-TestRequestResultReport_4459415.pdf')],{durable:true}),preview=await f.tools.inspect(f.profile,parsed.sessionId);
@@ -121,4 +121,42 @@ test('a real writer holding the checklist lease cannot race between inverse depe
   const receive=type=>new Promise((resolve,reject)=>{const listener=message=>{if(message.type==='error'){child.off('message',listener);reject(new Error(message.code));}else if(message.type===type){child.off('message',listener);resolve(message);}};child.on('message',listener);});
   await receive('ready');const held=receive('held'),done=receive('done');child.send({owner:f.profile.id,entry:{orderKey:items[0].orderKey,itemId:'tests',state:'approved',reportNumber:'4459415'}});await held;
   await assert.rejects(f.office.taskRollback(f.profile,job.id,{stepId:job.steps[0].id,confirmed:true}),{code:'OFFICE_TASK_DEPENDENCY'});await done;assert.ok(reports.read().reports['4459415']);
+});
+
+test('actual Quality native commit rejects a paused agent after preparation and before each business effect',async t=>{
+ for(const effect of ['quality.commit','quality.checklist.apply','quality.fail.drafts']){
+  const f=await fixture(t),parsed=await f.source.parse(f.profile,[file('B-labright-result-364790.msg')]),items=(await f.tools.inspect(f.profile,parsed.sessionId)).suggestedItems;
+  if(effect!=='quality.commit'){let imported=await f.create([{toolId:'quality.commit',args:{sessionId:parsed.sessionId,items}}]);imported=await f.execute(imported);assert.equal(imported.status,'completed');}
+  const args=effect==='quality.commit'?{sessionId:parsed.sessionId,items}:effect==='quality.checklist.apply'?{items}:{talepNos:['364790'],subject:'Fail',body:'Retest needed',language:'en'},job=await f.create([{toolId:effect,args}]),beforeReport=reports.read().revision,beforeChecklist=checklist._read().revision;
+  f.beforeNative(async()=>{await f.store.updateProfile(f.profile.id,f.agent.id,{enabled:false});});
+  const done=await f.execute(job);assert.equal(done.status,'failed');assert.equal(done.steps[0].errorCode,'OFFICE_AGENT_DISABLED');assert.equal(reports.read().revision,beforeReport);assert.equal(checklist._read().revision,beforeChecklist);assert.equal(done.steps[0].result?.emails,undefined);
+ }
+});
+test('Quality native report and checklist inverse reject a paused agent after asynchronous scope preparation',async t=>{
+ for(const effect of ['quality.commit','quality.checklist.apply']){
+  const f=await fixture(t),parsed=await f.source.parse(f.profile,[file('A-TestRequestResultReport_4459415.pdf')]),items=(await f.tools.inspect(f.profile,parsed.sessionId)).suggestedItems;
+  let report=await f.create([{toolId:'quality.commit',args:{sessionId:parsed.sessionId,items}}]);report=await f.execute(report);let target=report;
+  if(effect==='quality.checklist.apply'){target=await f.create([{toolId:effect,args:{items}}]);target=await f.execute(target);}
+  assert.equal(target.status,'completed');const beforeReport=reports.read().revision,beforeChecklist=checklist._read().revision;
+  f.beforeNative(async()=>{await f.store.updateProfile(f.profile.id,f.agent.id,{enabled:false});});
+  await assert.rejects(f.office.taskRollback(f.profile,target.id,{stepId:target.steps[0].id,confirmed:true}),error=>['OFFICE_AGENT_DISABLED','OFFICE_PREVIEW_CHANGED'].includes(error.code));assert.equal(reports.read().revision,beforeReport);assert.equal(checklist._read().revision,beforeChecklist);
+ }
+});
+test('actual native report and checklist file leases call the trusted live authority before committing effects and inverses',()=>{
+ const profile={id:'native-lease-authority'},deny=()=>{throw Object.assign(Error('revoked'),{code:'OFFICE_TOOL_FORBIDDEN'});};
+ const reportRevision=reports.read().revision,checklistRevision=checklist._read().revision;
+ assert.throws(()=>reports.commit([],{},profile,null,{assertAuthority:deny}),{code:'OFFICE_TOOL_FORBIDDEN'});assert.equal(reports.read().revision,reportRevision);
+ assert.throws(()=>reports.restore({records:{},expectedRevision:reportRevision},profile,{assertAuthority:deny}),{code:'OFFICE_TOOL_FORBIDDEN'});assert.equal(reports.read().revision,reportRevision);
+ assert.throws(()=>checklist.applyEntries([],profile,{assertAuthority:deny}),{code:'OFFICE_TOOL_FORBIDDEN'});assert.equal(checklist._read().revision,checklistRevision);
+ assert.throws(()=>checklist.restoreEntries({entries:{},expectedRevision:checklistRevision},profile,{assertAuthority:deny}),{code:'OFFICE_TOOL_FORBIDDEN'});assert.equal(checklist._read().revision,checklistRevision);
+});
+
+test('Quality inverse refuses native order ownership changes during the actual asynchronous inverse guard wait',async t=>{
+ for(const effect of ['quality.commit','quality.checklist.apply']){
+  const f=await fixture(t),parsed=await f.source.parse(f.profile,[file('A-TestRequestResultReport_4459415.pdf')]),items=(await f.tools.inspect(f.profile,parsed.sessionId)).suggestedItems;
+  let report=await f.create([{toolId:'quality.commit',args:{sessionId:parsed.sessionId,items}}]);report=await f.execute(report);let target=report;
+  if(effect==='quality.checklist.apply'){target=await f.create([{toolId:effect,args:{items}}]);target=await f.execute(target);}
+  assert.equal(target.status,'completed');const beforeReport=reports.read().revision,beforeChecklist=checklist._read().revision;
+  f.beforeNative(()=>f.setAllowed(new Map()));await assert.rejects(f.office.taskRollback(f.profile,target.id,{stepId:target.steps[0].id,confirmed:true}),{code:'OFFICE_PREVIEW_CHANGED'});assert.equal(reports.read().revision,beforeReport);assert.equal(checklist._read().revision,beforeChecklist);
+ }
 });

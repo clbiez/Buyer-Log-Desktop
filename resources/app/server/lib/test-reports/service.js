@@ -47,11 +47,14 @@ function createService({authorizedOrders,audit=()=>{}}) {
       return checklist.addAttachmentBuffer(staged.buffer,{filename:staged.name,mimeType:MIME[staged.kind]||'application/octet-stream',context:{orderCode:text(c.orderCode,60),plmId:text(c.plmId,60),modelName:text(c.modelName,120),colourCode:text(c.colourCode,60),checklistName:text(c.checklistName,120)||'Test',checklistStatus:text(c.checklistStatus,60)||report.talepNo}},profile);
     };
     options.assertAuthority?.();
-    const result=staging.withSessionLease(body.sessionId,profile.id,()=>{
+    const apply=()=>staging.withSessionLease(body.sessionId,profile.id,()=>{
       const latest=sessionFor(profile,body.sessionId);
       if(sessionFingerprint(latest)!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
       options.assertAuthority?.();return store.commit(items,body.typeMap||{},profile,attach,options);
     });
+    // Native preparation can await order scope. Hold the Office guard only for
+    // the synchronous native lease/write, never while loading that scope.
+    const result=options.withCommitGuard?await options.withCommitGuard(apply):apply();
     for(const item of result.results)audit(profile,'TEST_REPORT_IMPORT',item.talepNo,{orderKey:item.orderKey,itemId:item.itemId,attachments:item.attachments.length,newDecisions:item.newDecisions,sources:(item.report.kaynaklar||[]).slice(0,6)});
     staging.dropSession(body.sessionId);return result;
   }

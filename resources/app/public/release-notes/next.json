@@ -4585,6 +4585,39 @@
           "en": "Actual Buyer Log CP task chain with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-quality-native-commit-guard",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi / CP",
+        "en": "Agent Office / CP"
+      },
+      "title": {
+        "tr": "Quality kayıtları son anda da güncel yetkiyle korunur",
+        "en": "Quality writes remain protected by current authority at commit"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Checklist / haftalık mail",
+        "en": "Agent Office › Tasks › Checklist / weekly email"
+      },
+      "body": {
+        "tr": "Test raporu hazırlığı tamamlandıktan sonra rapor, checklist ve Fail mail taslağı gerçek görev ve agent revizyonuyla yeniden doğrulanır. Başka kullanıcı ya da süreç native dosya kilidini tutarken yetki veya kaynak değişirse eski onayla kayıt yapılmaz. Rapor ve checklist geri alma işlemleri de güncel agent yetkisi ve mevcut revizyonu kontrol eder. Mevcut PDF/MSG/EML aktarımı ve mail taslağı servisleri kullanılır; gerçek mail gönderimi açılmaz.",
+        "en": "After test-report preparation, report, checklist and Fail email draft writes are checked again against the actual task and agent revision. Authority or source changes while another user or process holds the native file lock prevent an outdated approval from committing. Report and checklist undo also check current agent authority and revision. Existing PDF/MSG/EML import and email draft services are reused; sending remains unavailable."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-native-commit-guard.png",
+        "alt": {
+          "tr": "Demo belgelerle gerçek Agent Ofisinde güncel yetki kontrolüyle tamamlanan veya durdurulan Quality görevi",
+          "en": "Actual Agent Office Quality task completed or stopped by current authority checks with demo documents"
+        },
+        "caption": {
+          "tr": "Rapor ve checklist kayıtları native servisler ve güncel görev kontrolü üzerinden yürütülür",
+          "en": "Report and checklist writes use native services and current task checks"
+        }
+      }
     }
   ]
 }

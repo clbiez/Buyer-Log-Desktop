@@ -12,6 +12,8 @@ const picks=array(itemSchema,100);
 function registerQualityTools(registry,deps) {
   const {service,authorizedOrders,dataset,mail}=deps;
   const base={module:'cp',areas:['cp'],agentAreas:['cp']};
+  const guard=(ctx,work,restore=false)=>{ctx.assertAuthority();const run=restore?deps.restoreGuard:deps.guard;if(typeof run!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);return run(ctx,work);};
+  const sourceAuthority=(ctx,preview)=>{ctx.assertAuthority();if(deps.sourceRevision&&preview.sourceRevision!==deps.sourceRevision(ctx.profile))throw error('OFFICE_PREVIEW_CHANGED',409);};
   const itemKnown=id=>!!Checklist.ITEM_BY_ID[id]||checklist.publicPayload().definitions.some(item=>item.id===id);
   async function inspect(profile,sessionId,itemId='tests') {
     const sourceRevision=deps.sourceRevision?.(profile);
@@ -38,20 +40,22 @@ function registerQualityTools(registry,deps) {
     await service.prepareCommit(ctx.profile,args);
     return {...preview,selected:args.items,records:Object.fromEntries(args.items.map(item=>[item.talepNo,{report:before.reports[item.talepNo]||null,link:before.links[item.talepNo]||null}]))};
   },apply:async(args,ctx,preview)=>{
-    const result=await service.commit(ctx.profile,args,{expectedRevision:preview.reportRevision,expectedSessionFingerprint:preview.sessionFingerprint,assertAuthority:()=>{ctx.assertAuthority();if(deps.sourceRevision&&preview.sourceRevision!==deps.sourceRevision(ctx.profile))throw error('OFFICE_PREVIEW_CHANGED',409);}}),saved=reports.read();
+    const result=await service.commit(ctx.profile,args,{expectedRevision:preview.reportRevision,expectedSessionFingerprint:preview.sessionFingerprint,assertAuthority:()=>sourceAuthority(ctx,preview),withCommitGuard:work=>guard(ctx,work)}),saved=reports.read();
     if(result.results.length!==args.items.length||!args.items.every(i=>saved.links[i.talepNo]?.orderKey===i.orderKey&&saved.links[i.talepNo]?.itemId===i.itemId))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);
     return {...result,verified:true,rollbackToken:{records:preview.records,expectedRevision:result.revision}};
   },restore:async(token,ctx)=>{
+    const inverseSource={sourceRevision:deps.sourceRevision?.(ctx.profile)};
     const allowed=await authorizedOrders(ctx.profile,{write:true}),current=reports.read();
     if(Object.entries(token.records).some(([id,previous])=>!allowed.has(current.links[id]?.orderKey)||(previous.link&&!allowed.has(previous.link.orderKey))))throw error('OFFICE_TOOL_FORBIDDEN',403);
-    ctx.assertAuthority?.();return reports.restore(token,ctx.profile,{withDependencies:applyInverse=>require('./shared-file-transaction').withFileLeaseSync(checklist.FILE,()=>{
+    sourceAuthority(ctx,inverseSource);return guard(ctx,()=>reports.restore(token,ctx.profile,{assertAuthority:()=>sourceAuthority(ctx,inverseSource),withDependencies:applyInverse=>require('./shared-file-transaction').withFileLeaseSync(checklist.FILE,()=>{
+      sourceAuthority(ctx,inverseSource);
       const source=reports.read(),answers=checklist._read();
       for(const id of Object.keys(token.records)) {
         const link=source.links[id],key=checklist.answerKey(link.orderKey,link.itemId),entry=answers.answers[key]||answers.tombstones[key],fileIds=new Set((source.reports[id]?.dosyalar||[]).map(file=>file.attachmentId).filter(Boolean));
         if(entry?.reportNumber?.split(/,\s*/).includes(id)||entry?.attachments?.some(file=>fileIds.has(file.id)))throw error('OFFICE_TASK_DEPENDENCY',409);
       }
       return applyInverse();
-    })});
+    })}),true);
   }});
   registry.registerCapability({...base,id:'quality.checklist.apply',label:{tr:'Test sonucunu checkliste işle',en:'Apply test outcomes to checklist'},operation:'UPDATE',risk:'write',inputSchema:{...object({items:picks}),required:['items']},read:async(args,ctx)=>{
     if(!args.items.length)throw error('OFFICE_TASK_INVALID',422);
@@ -72,17 +76,19 @@ function registerQualityTools(registry,deps) {
     const allowed=await authorizedOrders(ctx.profile,{write:true});
     if(args.items.some(item=>!allowed.has(item.orderKey)))throw error('OFFICE_TOOL_FORBIDDEN',403);
     ctx.assertAuthority();if(deps.sourceRevision&&preview.sourceRevision!==deps.sourceRevision(ctx.profile))throw error('OFFICE_PREVIEW_CHANGED',409);
-    const result=require('./shared-file-transaction').withFileLeaseSync(reports.FILE,()=>{
+    const result=await guard(ctx,()=>require('./shared-file-transaction').withFileLeaseSync(reports.FILE,()=>{
+      sourceAuthority(ctx,preview);
       if(reports.read().revision!==preview.reportRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
-      return checklist.applyEntries(preview.entries,ctx.profile,{source:'test_report',expectedRevision:preview.checklistRevision});
-    }),saved=checklist._read();
+      return checklist.applyEntries(preview.entries,ctx.profile,{source:'test_report',expectedRevision:preview.checklistRevision,assertAuthority:()=>sourceAuthority(ctx,preview)});
+    })),saved=checklist._read();
     if(result.skipped||result.conflicts||preview.entries.some(e=>(saved.answers[checklist.answerKey(e.orderKey,e.itemId)]||saved.tombstones[checklist.answerKey(e.orderKey,e.itemId)])?.state!==e.state))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);
     return {...result,verified:true,rollbackToken:{entries:preview.before,expectedRevision:result.revision}};
   },restore:async(token,ctx)=>{
+    const inverseSource={sourceRevision:deps.sourceRevision?.(ctx.profile)};
     const allowed=await authorizedOrders(ctx.profile,{write:true});if(Object.values(token.entries).some(previous=>{const entry=previous.answer||previous.tombstone;return entry&&!allowed.has(entry.orderKey);}))throw error('OFFICE_TOOL_FORBIDDEN',403);
     // The receipt also contains keys for previously absent answers.
     if(Object.keys(token.entries).some(key=>!allowed.has(key.slice(0,key.lastIndexOf('::')))))throw error('OFFICE_TOOL_FORBIDDEN',403);
-    ctx.assertAuthority?.();return checklist.restoreEntries(token,ctx.profile);
+    sourceAuthority(ctx,inverseSource);return guard(ctx,()=>checklist.restoreEntries(token,ctx.profile,{assertAuthority:()=>sourceAuthority(ctx,inverseSource)}),true);
   }});
   if(mail)registry.registerCapability({...base,areas:['cp','automations'],id:'quality.fail.drafts',label:{tr:'Fail için üretici mail taslakları',en:'Manufacturer mail drafts for Fail'},operation:'EXPORT',risk:'write',inputSchema:{...object({talepNos:array(string(20),100),subject:string(200),body:string(4000),language:{enum:['tr','en']}}),required:['talepNos','subject','body','language']},read:async(args,ctx)=>{
     const sourceRevision=deps.sourceRevision?.(ctx.profile);
@@ -97,10 +103,11 @@ function registerQualityTools(registry,deps) {
     const rows=(await dataset(ctx.profile)).filter(row=>preview.rows.some(selected=>selected.orderCode==canonical.value(row,'cp','orderCode')&&selected.modelName==canonical.value(row,'cp','modelName')&&selected.colourCode==canonical.value(row,'cp','colourCode')));
     ctx.assertAuthority();
     if(JSON.stringify(rows.map(row=>canonical.project(row,'cp',canonical.moduleFields('cp'))))!==JSON.stringify(preview.rows)||deps.sourceRevision&&preview.sourceRevision!==deps.sourceRevision(ctx.profile))throw error('OFFICE_PREVIEW_CHANGED',409);
-    const result=require('./shared-file-transaction').withFileLeaseSync(reports.FILE,()=>{
+    const result=await guard(ctx,()=>require('./shared-file-transaction').withFileLeaseSync(reports.FILE,()=>{
+      sourceAuthority(ctx,preview);
       if(reports.read().revision!==preview.reportRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
       return mail(ctx.profile,{...args,recipientMode:'manufacturer'},rows,false,preview.messages);
-    });
+    }));
     if(!result.emails.length||!deps.verifyMail(result,ctx.profile))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);
     return {verified:true,...result};
   }});
