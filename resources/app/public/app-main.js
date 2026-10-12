@@ -19788,16 +19788,7 @@ function freightMoneyText(value, digits){
 // Satırdan gelen ön dolgu: Adet ve FOB zaten CP'den geliyor, kullanıcı tekrar
 // yazmasın. Daha önce kaydedilmiş girdiler varsa onlar öne geçer.
 function freightInputsForRow(row, settings){
-  const saved = (row && row._freightInput && typeof row._freightInput==='object') ? row._freightInput : {};
-  const out = {};
-  FREIGHT_INPUT_KEYS.forEach(key => { out[key] = saved[key]==null ? '' : String(saved[key]); });
-  if(out.qtyTotal==='' && row && row.quantity!=null && row.quantity!=='') out.qtyTotal=String(row.quantity);
-  if(out.stylePrice==='' && row && row.fob!=null && row.fob!=='') out.stylePrice=String(row.fob);
-  // Koli ölçüsü her hesapta elle yazılmasın: kayıtlı değer yoksa varsayılan
-  // ölçü (58 × 38 × 30) ön dolu gelir, üzerine yazılabilir.
-  const carton = (settings && settings.carton) || BLFreight.DEFAULT_CARTON;
-  ['cartonL','cartonH','cartonW'].forEach(key=>{ if(out[key]==='') out[key]=String(carton[key]); });
-  return out;
+  return BLFreight.inputsForRow(row,settings);
 }
 async function persistFreightSettings(value){
   const clean = BLFreight.normalizeSettings(value);

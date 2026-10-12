@@ -250,8 +250,20 @@
     return INPUT_FIELDS.filter(field => item[field.key] == null || (field.key !== 'stylePrice' && item[field.key] === 0)).map(field => field.key);
   }
 
+  // The native modal's saved inputs take precedence over row/default values.
+  function inputsForRow(row, settings) {
+    const saved = row && row._freightInput && typeof row._freightInput === 'object' ? row._freightInput : {};
+    const out = {};
+    INPUT_FIELDS.forEach(field => { out[field.key] = saved[field.key] == null ? '' : String(saved[field.key]); });
+    if (out.qtyTotal === '' && row && row.quantity != null && row.quantity !== '') out.qtyTotal = String(row.quantity);
+    if (out.stylePrice === '' && row && row.fob != null && row.fob !== '') out.stylePrice = String(row.fob);
+    const carton = settings && settings.carton || DEFAULT_CARTON;
+    ['cartonL', 'cartonH', 'cartonW'].forEach(key => { if (out[key] === '') out[key] = String(carton[key]); });
+    return out;
+  }
+
   return Object.freeze({
     DEFAULT_RATES, DEFAULT_VOLUMETRIC_FACTOR, DEFAULT_LANDED_MULTIPLIER, DEFAULT_CARTON, MODES, INPUT_FIELDS,
-    num, normalizeRate, normalizeSettings, defaultSettings, calculate, calculateMany, missingFields,
+    num, normalizeRate, normalizeSettings, defaultSettings, calculate, calculateMany, missingFields, inputsForRow,
   });
 });

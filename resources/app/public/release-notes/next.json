@@ -3463,6 +3463,72 @@
         "tr": "Arayüz ve agent aynı kişisel kayıt hizmetini kullanır. Eşzamanlı değişiklikler ezilmez; boş sipariş kodlu Koleksiyon satırları kişisel erişim kuralına uyar. Geri alma yeni revizyonu değiştirmez.",
         "en": "The UI and agent use the same personal record service. Concurrent edits cannot overwrite each other; Collection rows with blank order codes follow the owner policy. Undo preserves newer revisions."
       }
+    },
+    {
+      "id": "agent-freight-settings",
+      "type": "feature",
+      "module": {
+        "tr": "Nakliye Kıyaslama",
+        "en": "Shipping Comparison"
+      },
+      "title": {
+        "tr": "Ortak navlun ayarları agent görevlerine bağlandı",
+        "en": "Shared freight settings are available to agent tasks"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / Nakliye › Navlun",
+        "en": "Agent Office › Tasks / Shipping › Freight"
+      },
+      "body": {
+        "tr": "Yetkili agent navlun ücretlerini, hacimsel katsayıyı ve varsayılan koli ölçülerini mevcut hizmetle değiştirir. Kişisel kayıtlar üzerinde etki önizlemesi, kullanıcı onayı ve revizyon kontrollü geri alma uygulanır.",
+        "en": "Authorized agents update freight rates, the volumetric factor and default carton dimensions through the existing service. Changes include impact preview on personal records, user approval and revision-safe undo."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-freight-settings.png",
+        "alt": {
+          "tr": "Ortak navlun ayarları agent görevlerine bağlandı",
+          "en": "Shared freight settings are available to agent tasks"
+        },
+        "caption": {
+          "tr": "Ortak navlun ayarları agent görevlerine bağlandı",
+          "en": "Shared freight settings are available to agent tasks"
+        }
+      }
+    },
+    {
+      "id": "freight-saved-inputs-native",
+      "type": "fix",
+      "module": {
+        "tr": "Nakliye Kıyaslama",
+        "en": "Shipping Comparison"
+      },
+      "title": {
+        "tr": "Navlun raporu kayıtlı girdileri kullanır",
+        "en": "Freight reports use saved inputs"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / Nakliye › Navlun",
+        "en": "Agent Office › Tasks / Shipping › Freight"
+      },
+      "body": {
+        "tr": "Agent raporu, normal Navlun penceresi gibi kayıtlı adet, fiyat ve koli girdilerine öncelik verir. Okuma senaryolarında farklı adet/fiyatlar hesaplanabilir; mevcut satırlar değiştirilmez. Eski pasif ücretler geri almada korunur.",
+        "en": "Agent reports prioritize saved quantity, price and carton inputs like the native Freight modal. Read-only scenarios can vary quantities/prices without changing existing rows. Undo preserves legacy disabled rates."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "freight-saved-inputs-native.png",
+        "alt": {
+          "tr": "Navlun raporu kayıtlı girdileri kullanır",
+          "en": "Freight reports use saved inputs"
+        },
+        "caption": {
+          "tr": "Navlun raporu kayıtlı girdileri kullanır",
+          "en": "Freight reports use saved inputs"
+        }
+      }
     }
   ]
 }

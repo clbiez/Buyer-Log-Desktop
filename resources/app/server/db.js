@@ -549,14 +549,14 @@ function replaceNonDtrManufacturers(manufacturers, expectedRevision = null) {
   const saved = saveOverrides(ov, ov._revision);
   return { manufacturers: saved.nonDtrManufacturers, revision: saved._revisions.nonDtrManufacturers };
 }
-function replaceFreightRates(value, expectedRevision = null) {
+function replaceFreightRates(value, expectedRevision = null, options = {}) {
   const ov = loadOverrides();
   const current = Number(ov._revisions.freightRates) || 0;
   const wanted = expectedNumber(expectedRevision);
   if (wanted != null && wanted !== current) throw new RevisionConflictError('Navlun ücretleri', wanted, current, 'freightRates');
   ov.freightRates = BLFreight.normalizeSettings(value);
   ov._revisions.freightRates = current + 1;
-  const saved = saveOverrides(ov, ov._revision);
+  const saved = saveOverrides(ov, ov._revision, options);
   return { freight: BLFreight.normalizeSettings(saved.freightRates), revision: saved._revisions.freightRates };
 }
 function replaceTransitAnalysis(value, expectedRevision = null) {
@@ -1493,6 +1493,7 @@ function saveShipping(data, expectedRevision = null, userId = null, options = {}
   return saveRevisioned(file, { rows, legacyAdopted: userId ? true : Boolean(data.legacyAdopted) }, defaultShipping, expectedRevision, 'Nakliye kıyaslama', options);
 }
 function mutateShipping(userId,work) { return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(),shippingFileFor(userId),work); }
+function shippingDocumentId(userId) { return deltaStoreId(shippingFileFor(userId)); }
 function shippingColourOptions(record) {
   const row = record && typeof record === 'object' ? record : {};
   const clean = value => String(value == null ? '' : value).trim();
@@ -1824,7 +1825,7 @@ module.exports = {
   deleteFilterProfile: function () { return deleteScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
   setFavoriteFilterProfile: function () { return favoriteScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
   markUsedFilterProfile: function () { return usedScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
-  loadShipping, saveShipping, mutateShipping, shippingModelKey, addShippingRows, patchShippingRow, deleteShippingRows,
+  loadShipping, saveShipping, mutateShipping, shippingDocumentId, shippingModelKey, addShippingRows, patchShippingRow, deleteShippingRows,
   loadOpenCostings, createOpenCosting, updateOpenCosting, deleteOpenCosting, saveOpenCostings, mutateOpenCostings,
   loadFx, saveFx, fxMonthResolved, loadRefreshHistory, addRefreshHistory, deleteRefreshHistory, clearRefreshHistory, REFRESH_HISTORY_LIMIT, REFRESH_HISTORY_DETAIL_LIMIT, getUserSourceFolder, setUserSourceFolder,
 };

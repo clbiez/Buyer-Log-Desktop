@@ -1475,6 +1475,41 @@
         "approval": true,
         "rollbackable": true,
         "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.settings.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "shipping",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.settings.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
       }
     ]
   },
