@@ -4288,6 +4288,39 @@
           "en": "Actual Buyer Log job status with anonymous data"
         }
       }
+    },
+    {
+      "id": "oab-native-verified-durable-results",
+      "type": "improvement",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Gerçek iş satırları yeniden başlatmada korunur",
+        "en": "Actual job rows survive restart"
+      },
+      "path": {
+        "tr": "Overview › OAB › Toplu yükleme",
+        "en": "Overview › OAB › Batch fetch"
+      },
+      "body": {
+        "tr": "Native toplu yüklemenin gerçek sonuçları kullanıcı, iş ve parça kimliğine bağlı sıkıştırılmış kayıtlarda korunur. Yeniden açılan servis satırları, alanları ve kaynak zamanlarını gerçek dosya boyutu ve SHA-256 doğrulamasıyla okur; yeni kurumsal istek göndermez. Yeniden deneme sonucu, kullanıcının tüm birleşmiş raporuyla değiştirilmez. Bozuk veya eksik parçalar açık hata olur; kesilmiş iş ve makbuz hatası başarı sayılmaz. Otomatik iş tekrarı yapılmaz.",
+        "en": "Actual native batch results are retained in compressed records bound to user, job and chunk identity. A reconstructed service reads rows, fields and source times after actual file-size and SHA-256 verification, without a new corporate request. A retry result is not replaced by the user’s entire merged report. Corrupt or missing chunks cause an explicit error; interrupted work and receipt failure are not success. No work is replayed automatically."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-verified-durable-results.png",
+        "alt": {
+          "tr": "Native iş sonucu gerçek doğrulanmış satırlarla geri okunur",
+          "en": "Native job result is recovered with actual verified rows"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log rapor sonucu",
+          "en": "Actual Buyer Log report result with anonymous data"
+        }
+      }
     }
   ]
 }

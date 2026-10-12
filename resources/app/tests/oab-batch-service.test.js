@@ -58,7 +58,7 @@ test('OAB client reports native authority stop in TR/EN without private error ec
  assert.match(tr({code:'OAB_ACCESS_REVOKED',message:'PRIVATE_CANARY'}),/İşlem durduruldu/);assert.match(en({code:'OAB_ACCESS_REVOKED',message:'PRIVATE_CANARY'}),/job stopped/);assert.doesNotMatch(en({code:'OAB_ACCESS_REVOKED',message:'PRIVATE_CANARY'}),/PRIVATE_CANARY/);
  const poll=source.slice(source.indexOf('function oabPollBatch()'),source.indexOf('function oabReportBatchOutcome'));
  assert.match(poll,/status\.job\.errorCode === 'OAB_ACCESS_REVOKED'/);assert.match(poll,/reject\(error\)/);
- assert.match(fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8'),/loader\('oab\.js\?rev=5'\)/);
+ assert.match(fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8'),/loader\('oab\.js\?rev=6'\)/);
 });
 function productionHelpers(f,connector,desktopReady=async()=>true){
  const source=fs.readFileSync(path.join(__dirname,'../server/server.js'),'utf8'),start=source.indexOf('function assertOabCurrentAccess('),end=source.indexOf('async function oabDesktopSessionReady()',start);

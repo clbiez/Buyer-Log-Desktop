@@ -406,10 +406,12 @@ function oabBuildPlan(body) {
     assertAccess(current);
     const payload={ok:true,job:oabBatchPublicJob(job)};
     if (job && !job.running) {
-      payload.resultAvailable=!!job.merged;
-      if (job.merged) {payload.rows=job.merged.rows;payload.fields=job.merged.fields;payload.sources=job.merged.sources;payload.fetchedAt=job.finishedAt;}
+      let merged=job.merged;
+      if(!merged){try{const recovered=jobStore.results(current.id,job.jobId);if(recovered!==null)merged=oabBatch.mergeReportResults(recovered);}catch(error){payload.resultErrorCode=error.code==='OAB_JOB_RESULT_INVALID'?'OAB_JOB_RESULT_INVALID':'OAB_JOB_RESULT_UNAVAILABLE';}}
+      payload.resultAvailable=!!merged;
+      if (merged) {payload.rows=merged.rows;payload.fields=merged.fields;payload.sources=merged.sources;payload.fetchedAt=job.interrupted?merged.sources.at(-1)?.fetchedAt||null:job.finishedAt;}
     }
-    return payload;
+    assertAccess(current);return payload;
   }
   function cancel(profile) {
     const current=assertAccess(profile),saved=jobStore.cancel(current.id,{assertAuthority:()=>assertAccess(current),beforeCancel:job=>userAccess.appendAudit(assertAccess(current),'OAB_BATCH_CANCEL',job.jobId,{completed:job.completed,total:job.total})}),live=oabBatchJobs.get(current.id);
