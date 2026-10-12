@@ -2561,8 +2561,19 @@
           onRequestChange: text => { draft.request = text; },
           buildRequest: text => ({
             task: text,
-            guide: aiGuideFor(rule.kind, rule, text),
-            context: lcwaiRuleContext(rule),
+            guide: aiGuideFor(rule.kind, rule, text,
+              rule.kind === 'checklist' && draft.purpose === 'auto'
+                ? (draft.autoStatus || 'approved') : ''),
+            context: {
+              ...lcwaiRuleContext(rule),
+              ...(rule.kind === 'checklist' ? {
+                taskPurpose: draft.purpose === 'auto' ? 'auto_status_assignment' : 'checklist_question',
+                targetChecklistStatus: draft.purpose === 'auto' ? (draft.autoStatus || 'approved') : '',
+                howRulesWork: draft.purpose === 'auto'
+                  ? L('Formül TRUE olunca seçilen checklist durumu otomatik kaydedilir. Soru kapsamı değişmez. Manuel cevaplar korunur.', 'When the formula is TRUE, the chosen checklist state is automatically recorded. The question scope is unchanged and manual choices always win.')
+                  : L('Formül, hangi siparişlere checklist sorusunun sorulacağını belirler. Durumu otomatik atamak için üstteki hedefi değiştirin.', 'The formula decides which orders are asked. Change the target selector above to auto-assign a status.'),
+              } : {}),
+            },
           }),
           interpret: result => {
             const picked = AI.pickField(result, 'formula', Rules.extractFormula);
@@ -2579,15 +2590,18 @@
               if (preview) matchLine = `<div class="lcwaiResultLine is-ok"><span>${esc(L('Önizleme', 'Preview'))}</span>✓ ${esc(L(`Formül geçerli · şu an ${int(preview.count)} sipariş eşleşiyor`, `Formula is valid · ${int(preview.count)} orders match right now`))}</div>`;
             }
             const priorityLine = suggestedPriority ? `<div class="lcwaiResultLine"><span>${esc(L('Öncelik', 'Priority'))}</span><b>${esc(priorityLabel(suggestedPriority))}</b></div>` : '';
+            const autoLine = rule.kind === 'checklist' && draft.purpose === 'auto'
+              ? `<div class="lcwaiResultLine"><span>${esc(L('Otomatik yazılacak', 'Automatically set'))}</span><b>${esc(Checklist.statusLabel(draft.autoStatus || 'approved', lang()))}</b></div>`
+              : '';
             return {
               ok: Boolean(validation.valid),
               value: { formula, priority: suggestedPriority },
               issues: validation.valid ? [] : (validation.errors || []),
-              html: `<div class="lcwaiResultLine"><span>${esc(L('Koşul', 'Condition'))}</span></div><code>${esc(shown)}</code>${priorityLine}${matchLine}`,
+              html: `<div class="lcwaiResultLine"><span>${esc(L('Koşul', 'Condition'))}</span></div><code>${esc(shown)}</code>${priorityLine}${autoLine}${matchLine}`,
             };
           },
           onApply: ({ formula, priority }) => {
-            applyFormula(rule, formula);
+            applyAiFormula(rule, formula, draft);
             if (priority && rule.kind === 'priority') rule.target = priority;
             draft.answer = '';
             commit(); draw(); scrollToRule(rule.id);
@@ -2653,6 +2667,16 @@
       modal.querySelectorAll('[data-cpa-add-priority]').forEach(el => el.onclick = addPriority);
       modal.querySelectorAll('[data-cpa-add-checklist]').forEach(el => el.onclick = addChecklist);
       modal.querySelectorAll('[data-cpa-manage-statuses]').forEach(el => el.onclick = openStatusManager);
+      modal.querySelectorAll('[data-cpa-ai-purpose]').forEach(el => el.onchange = () => {
+        const rule = findRule(ruleIdOf(el));
+        view.aiDraftOf(rule).purpose = el.value === 'auto' ? 'auto' : 'question';
+        draw(); scrollToRule(rule.id);
+      });
+      modal.querySelectorAll('[data-cpa-ai-auto-status]').forEach(el => el.onchange = () => {
+        const rule = findRule(ruleIdOf(el));
+        view.aiDraftOf(rule).autoStatus = Checklist.normalizeStatus(el.value) || 'approved';
+        draw(); scrollToRule(rule.id);
+      });
       modal.querySelectorAll('[data-cpa-new-rule]').forEach(el => el.onclick = () => { showTemplates = !showTemplates; draw(); });
       modal.querySelectorAll('[data-cpa-template]').forEach(el => el.onclick = () => {
         const template = ruleTemplates(activeTab).find(item => item.id === el.dataset.cpaTemplate);
