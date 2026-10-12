@@ -1,0 +1,68 @@
+{
+  "record": {
+    "meta": {
+      "currency": "USD",
+      "quantity": 101,
+      "targetFob": 12
+    },
+    "snap": {
+      "base": "USD",
+      "dir": "per_base",
+      "rates": {
+        "TRY": 50,
+        "EUR": 0.9
+      }
+    },
+    "sections": {
+      "fabric": [
+        {
+          "qty": 2,
+          "unitPrice": 40,
+          "currency": "TRY",
+          "wastePct": 10
+        }
+      ],
+      "labor": [
+        {
+          "qty": 1,
+          "unitPrice": 1,
+          "currency": "USD"
+        }
+      ]
+    },
+    "rates": {
+      "productionWastePct": 5,
+      "overheadPct": 10,
+      "financePct": 2,
+      "profitPct": 8
+    }
+  },
+  "result": {
+    "sectionTotals": {
+      "fabric": 1.76,
+      "labor": 1,
+      "accessories": 0,
+      "printEmbroidery": 0,
+      "specialProcess": 0,
+      "washing": 0,
+      "packaging": 0,
+      "testing": 0,
+      "other": 0
+    },
+    "direct": 2.76,
+    "productionWaste": 0.13799999999999998,
+    "afterWaste": 2.8979999999999997,
+    "overhead": 0.28979999999999995,
+    "afterOverhead": 3.1877999999999997,
+    "finance": 0.063756,
+    "afterFinance": 3.251556,
+    "profit": 0.26012448,
+    "finalFobRaw": 3.51168048,
+    "finalFob": 3.51,
+    "target": 12,
+    "gap": -8.49,
+    "quantity": 101,
+    "orderTotal": 354.51,
+    "missingCurrencies": []
+  }
+}

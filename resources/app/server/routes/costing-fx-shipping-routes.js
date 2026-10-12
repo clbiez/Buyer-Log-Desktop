@@ -16,6 +16,7 @@ module.exports = function registerCostingFxShippingRoutes(app, deps) {
     fxMonthResolved,
     loadFx,
     loadOpenCostings,
+    openCostingService,
     loadShipping,
     patchShippingRow,
     publishSharedMasterChange,
@@ -31,10 +32,12 @@ module.exports = function registerCostingFxShippingRoutes(app, deps) {
 
 
 // ---- Open Costing ----
-app.get('/api/open-costing', userAccess.requireArea('opencosting'), (_req, res) => res.json(loadOpenCostings()));
-app.post('/api/open-costing', userAccess.requireArea('opencosting'), (req, res) => { try { res.json(createOpenCosting(req.body || {}, requestRevision(req))); } catch (err) { apiError(res, err, 'Ön maliyet kaydedilemedi.'); } });
-app.put('/api/open-costing/:id', userAccess.requireArea('opencosting'), (req, res) => { try { res.json(updateOpenCosting(req.params.id, req.body || {}, requestRevision(req))); } catch (err) { apiError(res, err, 'Ön maliyet güncellenemedi.'); } });
-app.delete('/api/open-costing/:id', userAccess.requireArea('opencosting'), (req, res) => { try { res.json(deleteOpenCosting(req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Ön maliyet silinemedi.'); } });
+const costingGuard=req=>({assertAuthority:()=>{const current=userAccess.profileById(req.currentUser.id);if(!current||current.enabled===false||!userAccess.hasArea(current,'opencosting'))throw Object.assign(new Error('PERMISSION_REQUIRED'),{code:'PERMISSION_REQUIRED',statusCode:403});return current;}});
+const costingExpected=req=>{const revision=requestRevision(req);return revision==null?null:{revision};};
+app.get('/api/open-costing', userAccess.requireArea('opencosting'), async(req,res)=>{try{res.json((await openCostingService.snapshot(costingGuard(req))).store);}catch(err){apiError(res,err,'Ön maliyet okunamadı.');}});
+app.post('/api/open-costing', userAccess.requireArea('opencosting'), async(req,res)=>{try{const saved=await openCostingService.execute('create',{record:req.body||{}},costingExpected(req),costingGuard(req),{native:true});res.json({items:saved.store.items,item:saved.item,_revision:saved.revision});}catch(err){apiError(res,err,'Ön maliyet kaydedilemedi.');}});
+app.put('/api/open-costing/:id', userAccess.requireArea('opencosting'), async(req,res)=>{try{const saved=await openCostingService.execute('update',{id:req.params.id,record:req.body||{}},costingExpected(req),costingGuard(req),{native:true});res.json({items:saved.store.items,item:saved.item,_revision:saved.revision});}catch(err){apiError(res,err,'Ön maliyet güncellenemedi.');}});
+app.delete('/api/open-costing/:id', userAccess.requireArea('opencosting'), async(req,res)=>{try{const saved=await openCostingService.execute('delete',{id:req.params.id},costingExpected(req),costingGuard(req),{native:true});res.json({items:saved.store.items,_revision:saved.revision});}catch(err){apiError(res,err,'Ön maliyet silinemedi.');}});
 
 // ---- Aylık Döviz Kurları (FX) ----
 app.get('/api/fx',userAccess.requireAnyArea('source','opencosting','koleksiyon'),(_req,res)=>{res.set('Cache-Control','no-store, no-cache, must-revalidate');res.json(loadFx());});

@@ -10815,6 +10815,13 @@ require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegis
 const sourceWorkflowService=require('./lib/source-workflow-service').createSourceWorkflowService({db:require('./db')});
 const personalHorizonService=require('./lib/personal-horizon-service').createPersonalHorizonService({db:require('./db'),preferences:userPreferences});
 const horizonTemplateService=require('./lib/horizon-template-service').createHorizonTemplateService({db:require('./db'),userAccess});
+const openCostingService=require('./lib/open-costing-service').createOpenCostingService({db:require('./db')});
+require('./lib/agent-open-costing-tools').registerOpenCostingTools(agentToolRegistry,{
+  service:openCostingService,
+  registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService()),
+  changed:profile=>{userAccess.appendAudit(profile,'AGENT_OPEN_COSTING_UPDATE','open-costing');liveEvents.notifyChange('openCosting',null);},
+  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
+});
 require('./lib/agent-horizon-template-tools').registerHorizonTemplateTools(agentToolRegistry,{
   source:sourceWorkflowService,service:horizonTemplateService,
   changed:profile=>userAccess.appendAudit(profile,'AGENT_HORIZON_TEMPLATE_UPDATE',profile.id),
@@ -12558,6 +12565,7 @@ require('./routes/holiday-routes')(app, {
 
 // ---- Ön Maliyet, Aylık Döviz Kurları ve Nakliye Kıyaslaması route'ları → server/routes/costing-fx-shipping-routes.js ----
 require('./routes/costing-fx-shipping-routes')(app, {
+  openCostingService,
   addShippingRows,
   apiError,
   createOpenCosting,

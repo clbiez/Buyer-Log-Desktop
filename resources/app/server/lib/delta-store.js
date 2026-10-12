@@ -131,7 +131,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
 
   /* Aynayı günceller. Hiçbir koşulda fırlatmaz: çağıran kod eski JSON yazmasını
      bunun sonucuna bakmadan tamamlamalıdır. */
-  async function mirror(collection, entries, { userId = null, guardSource = false, guardCollection = false, assertAuthority } = {}) {
+  async function mirror(collection, entries, { userId = null, guardSource = false, guardCollection = false, assertAuthority, guardDocumentIds = [] } = {}) {
     /* v2 no-op suppression. A caller may hand us a full source map; that must
        not turn into one journal event per record. Compare only fields supplied
        by the caller against the hydrated working set and persist meaningful
@@ -140,7 +140,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
     const effectiveEntries = {};
     let unchanged = 0;
     const bucket = hydrated ? memory.get(collection) : null;
-    const expected = guardSource && isAuthoritativeNow() ? Object.fromEntries((guardCollection ? [...(bucket?.entries()||[])] : Object.keys(entries||{}).map(id=>[id,bucket?.get(id)||null])).map(([id,value])=>[id,value?{...value}:null])) : null;
+    const expected = guardSource && isAuthoritativeNow() ? Object.fromEntries((guardCollection ? [...(bucket?.entries()||[])] : [...new Set([...Object.keys(entries||{}),...guardDocumentIds])].map(id=>[id,bucket?.get(id)||null])).map(([id,value])=>[id,value?{...value}:null])) : null;
     const assertCurrent=expected||assertAuthority?state=>{
       // Trusted native callback runs under the real journal transaction lease,
       // after queue waits/retries and before any operation is appended.

@@ -3331,6 +3331,72 @@
           "en": "Reading a template no longer changes its version repeatedly"
         }
       }
+    },
+    {
+      "id": "agent-open-costing",
+      "type": "feature",
+      "module": {
+        "tr": "Ön Maliyet",
+        "en": "Open Costing"
+      },
+      "title": {
+        "tr": "Agent Ön Maliyet kayıtlarını ve senaryoları işler",
+        "en": "Agents process Open Costing records and scenarios"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Ön Maliyet",
+        "en": "Agent Office › Tasks › Open Costing"
+      },
+      "body": {
+        "tr": "Agent mevcut Ön Maliyet kayıtlarını okur, oluşturur, revize eder ve siler. Kayıt değişiklikleri önizleme ve onay gerektirir; güncel sürümle geri alınabilir. Salt okunur oran, miktar, hedef ve kur senaryoları aynı hesap motorunu kullanır; HTML, Excel ve masaüstü PDF çıktısı hazırlanır. Eksik kurlar açıkça belirtilir.",
+        "en": "Agents read, create, revise and delete existing Open Costing records. Record changes require preview and approval and support revision-safe undo. Read-only rate, quantity, target and currency scenarios use the same calculation engine; HTML, Excel and desktop PDF outputs are prepared. Missing FX rates are explicitly reported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-open-costing.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo Ön Maliyet görev sonucu",
+          "en": "Demo Open Costing task result in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Agent Ön Maliyet kayıtlarını ve senaryoları işler",
+          "en": "Agents process Open Costing records and scenarios"
+        }
+      }
+    },
+    {
+      "id": "open-costing-native-guards",
+      "type": "improvement",
+      "module": {
+        "tr": "Ön Maliyet",
+        "en": "Open Costing"
+      },
+      "title": {
+        "tr": "Ön Maliyet aynı motorla ve güncel kaynak kontrolüyle çalışır",
+        "en": "Open Costing uses the same engine and current source checks"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Ön Maliyet",
+        "en": "Agent Office › Tasks › Open Costing"
+      },
+      "body": {
+        "tr": "Normal Ön Maliyet ekranı ve agent aynı deterministik hesap motorunu kullanır. Gerçek kayıt kilidi ve journal yetki kontrolü eşzamanlı değişiklikleri korur. Onaydan sonra veya journal bekleme sırasında değişen kur kaydı agent yazmasını durdurur. Model görselleri AI bağlamına taşınmaz; mevcut görseller düzenlemede korunur.",
+        "en": "The native Open Costing screen and agents share one deterministic calculation engine. The real record lease and journal authority check preserve concurrent changes. FX changes after approval or during a journal wait stop the agent write. Model image bytes stay outside AI context; existing images are preserved on edit."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "open-costing-native-guards.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo Ön Maliyet görev sonucu",
+          "en": "Demo Open Costing task result in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Ön Maliyet aynı motorla ve güncel kaynak kontrolüyle çalışır",
+          "en": "Open Costing uses the same engine and current source checks"
+        }
+      }
     }
   ]
 }
