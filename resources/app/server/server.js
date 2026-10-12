@@ -344,6 +344,7 @@ const modelImageRefreshLeases = require('./lib/model-image-refresh-leases');
 const refreshHistoryDiff = require('./lib/refresh-history-diff');
 const backlogPlanActual = require('./lib/backlog-plan-actual');
 const modelImageRegistry = require('./lib/model-image-registry');
+const { scopedCpImageRegistry } = require('./lib/cp-image-startup-registry');
 const {
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
   loadViews, addView, updateView, deleteView, setFavoriteView, markUsedView,
@@ -8577,6 +8578,22 @@ app.get('/api/data/cp', userAccess.requireArea('cp'), async (req, res) => {
     });
     sendDateSafeJson(res, { ...value, rows:sharedAccessRows(value.rows, req.currentUser) });
   } catch (err) { apiError(res, err, 'CP verisi yüklenemedi.'); }
+});
+
+/* CP'nin hazır gzip projection'ı görsel linklerini eski bir snapshot'tan
+   taşıyabilir. Burada yalnız o kullanıcının CP projection'ındaki PLM+renk
+   anahtarları döner; tüm imagemap veya görsel dosyaları sızdırılmaz.
+   PLM/ASAS erişimi yoktur. */
+app.get('/api/model-images/registry/cp', userAccess.requireArea('cp'), async (req, res) => {
+  try {
+    const ctx = pageProjectionContext(req.currentUser);
+    const cached = await pageProjectionCache.readProjection(ctx.id, 'cp', ctx.contextHash);
+    if (!cached || !pageProjectionMatchesRuntime(cached.manifest, cacheForUser(ctx.id))) {
+      return res.status(409).set('Cache-Control','no-store').json({ error:'CP image scope is not ready.', code:'CP_IMAGE_SCOPE_UNAVAILABLE' });
+    }
+    const scoped = scopedCpImageRegistry(cached.data.rows, loadOverrides().imagemap);
+    res.set('Cache-Control','no-store').json({ ok:true, ...scoped });
+  } catch (err) { apiError(res, err, 'CP model image registry could not be loaded.'); }
 });
 
 app.get('/api/data/collection-catalog', userAccess.requireArea('koleksiyon'), async (req, res) => {
