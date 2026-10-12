@@ -19,7 +19,7 @@ function functionBlock(source, name, nextName) {
 
 test('Collection shipping transfer uses stable model identity and existing ingestion', () => {
   const keyBlock = functionBlock(APP, 'collectionShippingModelKey', 'mapCollectionRowToShip');
-  const key = new Function(`${keyBlock}; return collectionShippingModelKey;`)();
+  const key = new Function('BLShippingEngine',`${keyBlock}; return collectionShippingModelKey;`)(require('../public/shipping-engine'));
   assert.equal(key({ plmId: 'İD-13', modelKod: 'A', season: '26' }), 'PLM:ID-13');
   assert.equal(key({ modelKod: 'A-100', season: '26' }), 'MODEL:A-100\u001f26');
   assert.equal(key({ modelKod: 'A-100', season: '27' }), 'MODEL:A-100\u001f27');
@@ -45,7 +45,7 @@ test('server shipping ingestion deduplicates by canonical model and preserves ex
   assert.match(addBlock, /existingKeys/);
   assert.match(addBlock, /skippedCount/);
   assert.match(DB, /shippingModelKey, addShippingRows/);
-  assert.match(SERVER, /row\._sourceModule !== 'collection'/);
+  assert.match(SERVER, /row\._sourceModule\s*!==\s*'collection'/);
 });
 
 test('calculated Collection cells are flat, hide Overseas FOB, and make symbols non-interactive', () => {

@@ -6069,6 +6069,7 @@ function sharedAccessRows(rows, profile) {
 }
 function recordOrderCode(record) {
   const raw = record && (record.orderCode ?? record['Order Code'] ?? record.ocode ?? record.siparisKod ?? record._sourceOrderCode);
+  if (raw == null || String(raw).trim() === '') return null;
   const code = Number(String(raw == null ? '' : raw).replace(/\./g, '').trim());
   return Number.isFinite(code) ? code : null;
 }
@@ -10816,6 +10817,21 @@ const sourceWorkflowService=require('./lib/source-workflow-service').createSourc
 const personalHorizonService=require('./lib/personal-horizon-service').createPersonalHorizonService({db:require('./db'),preferences:userPreferences});
 const horizonTemplateService=require('./lib/horizon-template-service').createHorizonTemplateService({db:require('./db'),userAccess});
 const openCostingService=require('./lib/open-costing-service').createOpenCostingService({db:require('./db')});
+const shippingWorkflowService=require('./lib/shipping-workflow-service').createShippingWorkflowService({
+  db:require('./db'),orderCode:recordOrderCode,
+  canReadFx:async ctx=>{const current=userAccess.profileById(ctx.profile.id);if(!current||!['source','opencosting','koleksiyon'].some(area=>userAccess.hasArea(current,area)))return false;if(!ctx.input?.officeAgentId)return false;const agent=await agentOfficeStore.get(ctx.ownerId,'profile',ctx.input.officeAgentId);ctx.assertAuthority?.();if(agent.deleted||agent.enabled===false||agent.revision!==ctx.input.officeAgentRevision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return ['source','opencosting','collection'].some(area=>agent.areas.includes(area));},
+  canEditRow:(ctx,row)=>{const current=userAccess.profileById(ctx.profile.id);return !!current&&(recordOrderCode(row)==null?(row._sourceModule==='collection'||userAccess.hasPermission(current,'manageAllOrders')):canUserEditOrderCode(current,recordOrderCode(row)));},
+  authorizeRows:(ctx,rows)=>{const current=userAccess.profileById(ctx.profile.id);if(!current||current.enabled===false||!userAccess.hasArea(current,'shipping'))throw Object.assign(new Error('AREA_FORBIDDEN'),{code:'AREA_FORBIDDEN',statusCode:403});for(const row of rows){const code=recordOrderCode(row);if(code==null?row._sourceModule!=='collection'&&!userAccess.hasPermission(current,'manageAllOrders'):!canUserEditOrderCode(current,code))throw Object.assign(new Error('ORDER_VIEW_ONLY'),{code:'ORDER_VIEW_ONLY',statusCode:403});}},
+  dataset:(ctx,source)=>agentPlatformDataset(ctx.ownerId,userAccess.profileById(ctx.profile.id),source),
+  sourceStamp:(ctx,source)=>source==='collection'?require('./lib/agent-office-store').hash(JSON.stringify(loadWorkspace(ctx.ownerId))):cpAgentRevision(userAccess.profileById(ctx.profile.id)),
+  sourceDocuments:(ctx,source)=>source==='collection'?[collectionWorkspaces.documentId(ctx.ownerId)]:[],
+});
+require('./lib/agent-shipping-tools').registerShippingTools(agentToolRegistry,{
+  service:shippingWorkflowService,
+  registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService()),
+  changed:profile=>{userAccess.appendAudit(profile,'AGENT_SHIPPING_UPDATE',profile.id);liveEvents.notifyChange('shipping',null,{ownerId:profile.id});},
+  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
+});
 require('./lib/agent-open-costing-tools').registerOpenCostingTools(agentToolRegistry,{
   service:openCostingService,
   registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService()),
@@ -12566,6 +12582,7 @@ require('./routes/holiday-routes')(app, {
 // ---- Ön Maliyet, Aylık Döviz Kurları ve Nakliye Kıyaslaması route'ları → server/routes/costing-fx-shipping-routes.js ----
 require('./routes/costing-fx-shipping-routes')(app, {
   openCostingService,
+  shippingWorkflowService,
   addShippingRows,
   apiError,
   createOpenCosting,

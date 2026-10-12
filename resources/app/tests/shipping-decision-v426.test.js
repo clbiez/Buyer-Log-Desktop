@@ -20,6 +20,8 @@ const fs = require('fs');
 const path = require('path');
 
 const HTML = (fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf-8') + '\n' + fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf-8'));
+const ENGINE = fs.readFileSync(path.join(__dirname, '..', 'public', 'shipping-engine.js'), 'utf-8');
+const BLShippingEngine = require('../public/shipping-engine');
 const CSS = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.css'), 'utf-8');
 
 // computeShipFormulas'ı bağımlılıklarıyla birlikte izole çalıştır.
@@ -43,7 +45,7 @@ function loadCompute(transitDays, multipliers) {
     const p = x => String(x).padStart(2, '0');
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
   };
-  return new Function('coerceDateLoose', 'toNum', 'toISODate', 'shipTransitDays', 'shipLandedMultipliers', `return (${match[0]})`)(coerceDateLoose, toNum, toISODate, shipTransitDays, shipLandedMultipliers);
+  return new Function('BLShippingEngine', 'coerceDateLoose', 'toNum', 'toISODate', 'shipTransitDays', 'shipLandedMultipliers', `return (${match[0]})`)(BLShippingEngine, coerceDateLoose, toNum, toISODate, shipTransitDays, shipLandedMultipliers);
 }
 
 function shipRow(extra) {
@@ -112,7 +114,8 @@ test('toplam alanları tabloya ve Excel şablonuna sızmaz', () => {
 });
 
 test('nakliye süreleri Transfer Lead Times kurallarından çözülür', () => {
-  const resolver = HTML.match(/function shipTransitDays\(row\)\{[\s\S]*?\n\}/);
+  assert.match(HTML, /return BLShippingEngine\.transitDays\(row,resolveTransitDaysForValues\)/);
+  const resolver = ENGINE.match(/function transitDays\(row,resolveTransitDaysForValues\)\{[\s\S]*?\n\}/);
   assert.ok(resolver, 'shipTransitDays bulunamadı');
   assert.ok(resolver[0].includes('resolveTransitDaysForValues'), 'merkezi kural tablosuna sorulmalı');
   assert.ok(resolver[0].includes('forceRules'), 'karşılaştırma sayfasında durum kural aramasını engellememeli');

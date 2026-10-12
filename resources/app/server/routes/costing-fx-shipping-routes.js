@@ -17,6 +17,7 @@ module.exports = function registerCostingFxShippingRoutes(app, deps) {
     loadFx,
     loadOpenCostings,
     openCostingService,
+    shippingWorkflowService,
     loadShipping,
     patchShippingRow,
     publishSharedMasterChange,
@@ -45,46 +46,20 @@ app.put('/api/fx', userAccess.requireAnyArea('source','opencosting','koleksiyon'
 app.get('/api/fx/resolve/:month', userAccess.requireAnyArea('source','opencosting','koleksiyon'), (req, res) => { const store = loadFx(); const r = fxMonthResolved(store, req.params.month); res.json({ base: store.base, month: r.month, requestedMonth: req.params.month, exact: r.exact, rates: r.rates, _revision: store._revision }); });
 
 // ---- Nakliye Tipine Göre Maliyet Kıyaslaması ----
-app.get('/api/shipping-comparison', userAccess.requireArea('shipping'), (req, res) => {
-  // v7.23 — kullanıcıya özgü: her kullanıcı YALNIZ kendi nakliye kıyaslamasını görür.
-  const store = loadShipping(sourceUserId(req));
-  res.json({ ...store, rows: store.rows.map(row => withOrderAccess(req, row)) });
+const shippingGuard=req=>({ownerId:sourceUserId(req),profile:req.currentUser,assertAuthority:()=>{const current=userAccess.profileById(req.currentUser.id);if(!current||current.enabled===false||!userAccess.hasArea(current,'shipping'))throw Object.assign(new Error('AREA_FORBIDDEN'),{code:'AREA_FORBIDDEN',statusCode:403});req.currentUser=current;return current;}});
+const shippingExpected=req=>({revision:requestRevision(req)});
+const shippingResponse=(req,res,saved)=>res.json({...saved.store,...saved.ingestion,rows:saved.store.rows.map(row=>withOrderAccess(req,row))});
+app.get('/api/shipping-comparison',userAccess.requireArea('shipping'),async(req,res)=>{try{const state=await shippingWorkflowService.snapshot(shippingGuard(req));res.json({...state.store,rows:state.store.rows.map(row=>withOrderAccess(req,row))});}catch(err){apiError(res,err,'Nakliye satırları okunamadı.');}});
+app.post('/api/shipping-comparison',userAccess.requireArea('shipping'),async(req,res)=>{
+ const rows=req.body?.rows;if(!Array.isArray(rows)||!rows.length)return res.status(400).json({error:'rows (dizi) zorunlu.'});
+ try{const saved=await shippingWorkflowService.execute('add',{rows:rows.map(({_canEdit,_inherited,...row})=>row)},shippingExpected(req),shippingGuard(req),{native:true});userAccess.appendAudit(req.currentUser,'SHIPPING_ADD','orders',{count:rows.length,orderCodes:saved.affectedOrderCodes});shippingResponse(req,res,saved);}catch(err){apiError(res,err,'Nakliye satırları eklenemedi.');}
 });
-app.post('/api/shipping-comparison', userAccess.requireArea('shipping'), (req, res) => {
-  const rows = (req.body || {}).rows; if (!Array.isArray(rows) || !rows.length) return res.status(400).json({ error: 'rows (dizi) zorunlu.' });
-  const codes = rows.map(recordOrderCode).filter(Number.isFinite);
-  const codeLessRows = rows.filter(row => recordOrderCode(row) == null);
-  if (codeLessRows.some(row => row && row._sourceModule !== 'collection') && !currentUserIsModerator(req)) return res.status(403).json({ error: 'Sipariş kodu olmayan nakliye satırlarını yalnız Moderatör ekleyebilir.', code: 'MODERATOR_REQUIRED' });
-  if (rejectUnauthorizedOrders(req, res, codes)) return;
-  try {
-    const saved = addShippingRows(rows.map(({ _canEdit, _inherited, ...row }) => row), requestRevision(req), sourceUserId(req));
-    userAccess.appendAudit(req.currentUser, 'SHIPPING_ADD', 'orders', { orderCodes: [...new Set(codes)], count: rows.length });
-    res.json({ ...saved, rows: saved.rows.map(row => withOrderAccess(req, row)) });
-  } catch (err) { apiError(res, err, 'Nakliye satırları eklenemedi.'); }
+app.patch('/api/shipping-comparison/:shipId',userAccess.requireArea('shipping'),async(req,res)=>{
+ try{const saved=await shippingWorkflowService.execute('update',{id:req.params.shipId,patch:(({_canEdit,_inherited,...patch})=>patch)(req.body||{})},shippingExpected(req),shippingGuard(req),{native:true});userAccess.appendAudit(req.currentUser,'SHIPPING_UPDATE','order',{shipId:req.params.shipId,orderCode:saved.affectedOrderCodes[0]??null});shippingResponse(req,res,saved);}catch(err){apiError(res,err,'Nakliye satırı güncellenemedi.');}
 });
-app.patch('/api/shipping-comparison/:shipId', userAccess.requireArea('shipping'), (req, res) => {
-  try {
-    const store = loadShipping(sourceUserId(req)), row = store.rows.find(item => item._shipId === req.params.shipId);
-    if (!row) return res.status(404).json({ error: 'Nakliye satırı bulunamadı.' });
-    const code = recordOrderCode(row);
-    if (code == null && row._sourceModule !== 'collection' && !currentUserIsModerator(req)) return res.status(403).json({ error: 'Bu satırı yalnız Moderatör değiştirebilir.', code: 'MODERATOR_REQUIRED' });
-    if (code != null && rejectUnauthorizedOrders(req, res, [code])) return;
-    const saved = patchShippingRow(req.params.shipId, (({ _canEdit, _inherited, ...patch }) => patch)(req.body || {}), requestRevision(req), sourceUserId(req));
-    userAccess.appendAudit(req.currentUser, 'SHIPPING_UPDATE', 'order', { orderCode: code, shipId: req.params.shipId });
-    res.json({ ...saved, rows: saved.rows.map(item => withOrderAccess(req, item)) });
-  } catch (err) { apiError(res, err, 'Nakliye satırı güncellenemedi.'); }
-});
-app.post('/api/shipping-comparison/delete', userAccess.requireArea('shipping'), (req, res) => {
-  const ids = (req.body || {}).ids; if (!Array.isArray(ids) || !ids.length) return res.status(400).json({ error: 'ids (dizi) zorunlu.' });
-  try {
-    const store = loadShipping(sourceUserId(req)), selected = store.rows.filter(row => ids.includes(row._shipId));
-    const codes = selected.map(recordOrderCode).filter(Number.isFinite);
-    if (selected.some(row => recordOrderCode(row) == null && row._sourceModule !== 'collection') && !currentUserIsModerator(req)) return res.status(403).json({ error: 'Sipariş kodu olmayan satırları yalnız Moderatör silebilir.', code: 'MODERATOR_REQUIRED' });
-    if (rejectUnauthorizedOrders(req, res, codes)) return;
-    const saved = deleteShippingRows(ids, requestRevision(req), sourceUserId(req));
-    userAccess.appendAudit(req.currentUser, 'SHIPPING_DELETE', 'orders', { orderCodes: [...new Set(codes)], count: selected.length });
-    res.json({ ...saved, rows: saved.rows.map(row => withOrderAccess(req, row)) });
-  } catch (err) { apiError(res, err, 'Nakliye satırları silinemedi.'); }
+app.post('/api/shipping-comparison/delete',userAccess.requireArea('shipping'),async(req,res)=>{
+ const ids=req.body?.ids;if(!Array.isArray(ids)||!ids.length)return res.status(400).json({error:'ids (dizi) zorunlu.'});
+ try{const saved=await shippingWorkflowService.execute('delete',{ids},shippingExpected(req),shippingGuard(req),{native:true});userAccess.appendAudit(req.currentUser,'SHIPPING_DELETE','orders',{count:saved.count,orderCodes:saved.affectedOrderCodes});shippingResponse(req,res,saved);}catch(err){apiError(res,err,'Nakliye satırları silinemedi.');}
 });
 
 };
