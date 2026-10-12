@@ -30,3 +30,4 @@ test('pending UI action is discarded across owner change while current permissio
   assert.match(c.root.BLAgentOffice.getState().error,/do not have permission/);
   assert.equal(c.root.BLAgentOffice.getState().data,null);
 });
+test('profile task-execution checkbox roundtrips the persistent boolean and paused errors are localized',()=>{const block=source.slice(source.indexOf('function profileDialog('),source.indexOf('function memoryDialog('));assert.match(block,/name="enabled" \$\{agent\.enabled!==false\?'checked':''\}/);assert.match(block,/enabled:checked\(modal,'enabled'\)/);assert.match(block,/Run approved and scheduled tasks/);assert.match(source,/OFFICE_AGENT_DISABLED:L\('Agentın görev yürütmesi duraklatıldı\.[^']*','Task execution is paused for this agent\.[^']*'\)/);});
