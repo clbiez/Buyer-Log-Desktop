@@ -4123,6 +4123,39 @@
           "en": "Actual Buyer Log task result with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-oab-intake-native-snapshot-discovery",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi · OAB / INTAKE",
+        "en": "Agent Office · OAB / INTAKE"
+      },
+      "title": {
+        "tr": "Kaydedilmiş native raporları güvenli keşfetme",
+        "en": "Safely discover saved native reports"
+      },
+      "path": {
+        "tr": "Agent Ofisi › OAB / INTAKE araçları",
+        "en": "Agent Office › OAB / INTAKE tools"
+      },
+      "body": {
+        "tr": "Agent kendi kullanıcısının kaydedilmiş OAB/INTAKE raporlarını güncel Overview ve OAB.VIEW yetkileriyle okur. Gerçek alanlar, INTAKE görünen adları ve native ağırlık bilgileri; kaynak parmak izi, tam sayılar, sayfalama ve açık eksiklik bildirimleriyle sınırlı bağlama girer. Native OAB metadata ve mevcut masaüstü oturum durumu keşfedilir. Canlı yükleme yapılmaz; özel sorgu, bağlantı ve kimlik bilgileri çıktıya girmez.",
+        "en": "The agent reads its user’s saved OAB/INTAKE reports under current Overview and OAB.VIEW permissions. Actual fields, INTAKE labels and native weight information enter bounded context with source fingerprint, full counts, paging and explicit omissions. Native OAB metadata and existing desktop session status are discoverable. No live fetch occurs; private query, connection and credentials never enter the output."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-oab-intake-native-snapshot-discovery.png",
+        "alt": {
+          "tr": "Agent kendi native raporunu sınırlı ve doğrulanmış sonuçla okur",
+          "en": "Agent reads its own native report with a bounded verified result"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log görev sonucu",
+          "en": "Actual Buyer Log task result with anonymous data"
+        }
+      }
     }
   ]
 }
