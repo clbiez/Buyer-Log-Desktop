@@ -40,4 +40,4 @@ Output-contract audit: 78 strict top-level output objects and 81 generic/open ou
 
 ## Delivery status
 
-Expanded full regression has not yet run. Actual HTTP/browser/PDF and corporate acceptance are unfinished or environment-blocked. Thirty-six real post-change release-note captures are pending, including the new task pause UI. GitHub write operations require approval unavailable under this environment policy. No new PR beyond the earlier drafts #498–#500, merge, TEST or STABLE release is claimed. The user cancelled partial TEST delivery; final STABLE must promote the same signed bytes of a fully verified package.
+Expanded full regression has not yet run. Actual HTTP/browser/PDF and corporate acceptance are unfinished or environment-blocked. Thirty-seven real post-change release-note captures are pending, including the new task pause UI. GitHub write operations require approval unavailable under this environment policy. No new PR beyond the earlier drafts #498–#500, merge, TEST or STABLE release is claimed. The user cancelled partial TEST delivery; final STABLE must promote the same signed bytes of a fully verified package.

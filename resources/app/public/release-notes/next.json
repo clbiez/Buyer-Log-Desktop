@@ -3661,6 +3661,39 @@
           "en": "Persistent task pause and current approval checks"
         }
       }
+    },
+    {
+      "id": "agent-endeksmatik-atomic-authority",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi · Endeksmatik",
+        "en": "Data Management · Endeksmatik"
+      },
+      "title": {
+        "tr": "Endeksmatik seti ve seçimi tek güvenli işlemde yazılır",
+        "en": "Endeksmatik set and selection commit in one guarded operation"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / Endeksmatik",
+        "en": "Agent Office › Tasks / Endeksmatik"
+      },
+      "body": {
+        "tr": "Set ve etkin seçim, mevcut journal motorunda tek işlemle kaydedilir ve geri alınır. Güncel kullanıcı yetkisi gerçek yazım sınırında, agent revizyonu kişisel WAL altında denetlenir. Yeni peer seçimi ezilmez; özgün yükleyen korunur. Eski TL yüklemesi etkin seti değiştirmiş gibi gösterilmez.",
+        "en": "Sets and active selection are saved and undone in one transaction through the existing journal engine. Current user authority is checked at the actual write boundary and agent revision under the personal WAL. New peer selections cannot be overwritten; original upload provenance is preserved. Legacy TRY imports do not claim to change the active set."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-endeksmatik-atomic-authority.png",
+        "alt": {
+          "tr": "Endeksmatik ortak set ve seçim önizlemesi",
+          "en": "Endeksmatik shared set and selection preview"
+        },
+        "caption": {
+          "tr": "Tek işlemli kayıt, güncel yetki ve revizyon güvenli geri alma",
+          "en": "Atomic commit, current authority and revision-safe undo"
+        }
+      }
     }
   ]
 }

@@ -29,6 +29,15 @@ let cachedTag = '';
 let _xlsx = null;
 let documents = createDocumentApi(null, COLLECTION);
 function attachDeltaStore(store) { documents = createDocumentApi(store, COLLECTION); }
+async function mirrorNativeDocuments(values,options={}){
+  const result=await documents.mirrorMany(values,{guardSource:true,guardCollection:true,assertAuthority:options.assertAuthority});
+  if(result.error&&['OFFICE_TOOL_FORBIDDEN','OFFICE_PREVIEW_CHANGED','OFFICE_AGENT_DISABLED'].includes(result.error.code))throw result.error;
+  if(!documents.attached)options.assertAuthority?.();
+  return result;
+}
+function activeSelectionValue(id,actor=''){return {activeSetId:id,updatedAt:new Date().toISOString(),updatedBy:String(actor||'')};}
+function writeActiveLegacy(value){if(documents.writesLegacy){fs.mkdirSync(SETS_DIR,{recursive:true});atomicWriteBuffer(ACTIVE_FILE,Buffer.from(JSON.stringify(value),'utf8'));}}
+
 // Delta motoru alan bazlı merge eder. Snapshot'ın kısmi alanlarının farklı
 // cihazlardan karışmaması için bütün içerik tek belge alanında taşınır.
 function toSharedDocument(snapshot){ return {snapshot}; }
@@ -307,13 +316,15 @@ function parseWorkbookBuffer(buffer,sourceFile='ENDEKSMATİK.xlsx'){
   if(!Object.keys(fx).length)throw Object.assign(new Error('Endeksmatik USD/TL kur tablosu bulunamadı.'),{code:'FX_TABLE_MISSING',statusCode:422});
   return {schemaVersion:SCHEMA_VERSION,sourceFile:path.basename(sourceFile||'ENDEKSMATİK.xlsx'),season,sourceUpdatedAt,targetAdjustmentPct,generatedAt:new Date().toISOString(),months,fx,records};
 }
-async function saveSnapshot(snapshot){
+async function saveSnapshot(snapshot,options={}){
   // Validation/build first: an invalid upload can never replace the last working snapshot.
   buildRuntime(snapshot);
   const payload=zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9});
-  const mirrored=await documents.mirror(DOCUMENT_ID,toSharedDocument(snapshot),{guardSource:true,guardCollection:true});
+  const active=options.activeSelectionId?activeSelectionValue(options.activeSelectionId,options.actor):null;
+  const mirrored=await mirrorNativeDocuments({[DOCUMENT_ID]:toSharedDocument(snapshot),...(active?{[ACTIVE_DOCUMENT_ID]:active}:{})},options);
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik verisi ortak senkron günlüğüne yazılamadı.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
   if(documents.writesLegacy)atomicWriteBuffer(PERSISTED_FILE,payload);
+  if(active)writeActiveLegacy(active);
   cached=buildRuntime(snapshot);cachedFile=`delta:${snapshot.generatedAt||snapshot.sourceUpdatedAt||''}`; return publicStatusForSnapshot(snapshot,false);
 }
 async function seedMissing(deltaStore){
@@ -328,7 +339,7 @@ async function seedMissing(deltaStore){
   if(!Object.keys(records).length)return {seeded:0,ids:[]};
   return deltaStore.seedMissing(COLLECTION,records);
 }
-async function importLegacyWorkbookBuffer(buffer,sourceFile){ return saveSnapshot(parseWorkbookBuffer(buffer,sourceFile)); }
+async function importLegacyWorkbookBuffer(buffer,sourceFile,options={}){return saveSnapshot(parseWorkbookBuffer(buffer,sourceFile),options);}
 
 /* ------------------------------------------------------------ çoklu set deposu */
 function setDocumentId(id){ return `${SET_PREFIX}${id}`; }
@@ -410,48 +421,51 @@ function lookup(input){
   if(!entry)return {ok:true,setId:LEGACY_SET_ID,levels:[],supplyGroups:[]};
   return model.lookup(entry.snapshot,input||{},entry.runtime);
 }
-async function writeActiveSelection(id,actor=''){
-  const value={activeSetId:id,updatedAt:new Date().toISOString(),updatedBy:String(actor||'')};
-  const mirrored=await documents.mirror(ACTIVE_DOCUMENT_ID,value,{guardSource:true,guardCollection:true});
+async function writeActiveSelection(id,actor='',options={}){
+  const value=activeSelectionValue(id,actor),mirrored=await mirrorNativeDocuments({[ACTIVE_DOCUMENT_ID]:value},options);
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik set seçimi ortak senkron günlüğüne yazılamadı.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
-  if(documents.writesLegacy){fs.mkdirSync(SETS_DIR,{recursive:true});atomicWriteBuffer(ACTIVE_FILE,Buffer.from(JSON.stringify(value),'utf8'));}
+  writeActiveLegacy(value);
 }
-async function setActiveSet(id,actor=''){
+async function setActiveSet(id,actor='',options={}){
   const target=id===LEGACY_SET_ID?LEGACY_SET_ID:safeSetId(id);
   const sets=listSets();
   if(!target||!sets.some(s=>s.id===target))throw Object.assign(new Error('Endeksmatik seti bulunamadı.'),{code:'SET_NOT_FOUND',statusCode:404});
-  await writeActiveSelection(target,actor);
+  await writeActiveSelection(target,actor,options);
   return publicStatus();
 }
-async function saveSet(snapshot,{activate=true,actor=''}={}){
+async function saveSet(snapshot,options={}){
+  const {activate=true,actor=''}=options;
   model.buildIndex(snapshot); // doğrulanmadan yazılmaz
   const id=safeSetId(snapshot.id);if(!id)throw Object.assign(new Error('Endeksmatik set kimliği geçersiz.'),{code:'SET_INVALID',statusCode:500});
   if(actor)snapshot.uploadedBy=String(actor);
-  const mirrored=await documents.mirror(setDocumentId(id),{set:snapshot,label:snapshot.label||'',deleted:false,deletedAt:null},{guardSource:true,guardCollection:true});
+  const active=options.activeSelectionId||activate?activeSelectionValue(options.activeSelectionId||id,options.selectionActor||actor):null;
+  const mirrored=await mirrorNativeDocuments({[setDocumentId(id)]:{set:snapshot,label:snapshot.label||'',deleted:false,deletedAt:null},...(active?{[ACTIVE_DOCUMENT_ID]:active}:{})},options);
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik seti ortak senkron günlüğüne yazılamadı.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
   if(documents.writesLegacy){fs.mkdirSync(SETS_DIR,{recursive:true});atomicWriteBuffer(setFile(id),zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9}));}
   setCache.delete(id);
-  if(activate)await writeActiveSelection(id,actor);
+  if(active)writeActiveLegacy(active);
   return model.publicMeta(snapshot);
 }
-async function renameSet(id,label){
+async function renameSet(id,label,options={}){
   const safe=safeSetId(id),entry=safe&&loadSet(safe);
   if(!entry)throw Object.assign(new Error('Endeksmatik seti bulunamadı.'),{code:'SET_NOT_FOUND',statusCode:404});
   const clean=normalizeLabel(label);
   const snapshot={...entry.snapshot,label:clean};
   // Yalnız etiket alanı değişir; büyük set içeriği yeniden yayınlanmaz.
-  const mirrored=await documents.mirror(setDocumentId(safe),{label:clean},{guardSource:true,guardCollection:true});
+  const mirrored=await mirrorNativeDocuments({[setDocumentId(safe)]:{label:clean}},options);
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik set adı ortak senkron günlüğüne yazılamadı.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
   if(documents.writesLegacy)atomicWriteBuffer(setFile(safe),zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9}));
   setCache.delete(safe);
   return model.publicMeta(snapshot);
 }
-async function deleteSet(id){
+async function deleteSet(id,options={}){
   const safe=safeSetId(id);
   if(!safe||!loadSet(safe))throw Object.assign(new Error('Endeksmatik seti bulunamadı.'),{code:'SET_NOT_FOUND',statusCode:404});
-  const mirrored=await documents.mirror(setDocumentId(safe),{set:null,deleted:true,deletedAt:new Date().toISOString()},{guardSource:true,guardCollection:true});
+  const active=options.activeSelectionId?activeSelectionValue(options.activeSelectionId,options.actor):null;
+  const mirrored=await mirrorNativeDocuments({[setDocumentId(safe)]:{set:null,deleted:true,deletedAt:new Date().toISOString()},...(active?{[ACTIVE_DOCUMENT_ID]:active}:{})},options);
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik seti ortak senkron günlüğünden silinemedi.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
   if(documents.writesLegacy){try{fs.unlinkSync(setFile(safe));}catch(_){}}
+  if(active)writeActiveLegacy(active);
   setCache.delete(safe);
   return publicStatus();
 }
@@ -472,16 +486,23 @@ function parseImportWorkbook(buffer,sourceFile){
   }
   return {snapshot,model:snapshot.model,setId:snapshot.id};
 }
-async function importWorkbookBuffer(buffer,sourceFile,{label='',actor=''}={}){
+async function importWorkbookBuffer(buffer,sourceFile,options={}){
+  const {label='',actor=''}=options;
   const parsed=parseImportWorkbook(buffer,sourceFile);
-  if(parsed.model==='legacy-tl')return {...await saveSnapshot(parsed.snapshot),model:'legacy-tl',setId:LEGACY_SET_ID};
+  if(parsed.model==='legacy-tl')return {...await saveSnapshot(parsed.snapshot,options),model:'legacy-tl',setId:LEGACY_SET_ID};
   const snapshot=parsed.snapshot;if(label)snapshot.label=normalizeLabel(label);
-  const meta=await saveSet(snapshot,{activate:true,actor});return {...publicStatus(),uploaded:meta};
+  const meta=await saveSet(snapshot,{...options,activate:true,actor});return {...publicStatus(),uploaded:meta};
 }
 
 function sourceFingerprint(){try{loadSnapshot();}catch(_){}return require('./agent-office-store').hash(JSON.stringify({active:readActiveSelection(),sets:listSets()}));}
 function normalizeLabel(label){return String(label||'').replace(/[\x00-\x1F]/g,'').trim().slice(0,80);}
 async function mutate(options,work){return require('./shared-file-transaction').withFileLeaseAsync(ACTIVE_FILE,async()=>{await documents.refresh();cached=null;setCache.clear();options.assertAuthority?.();if(options.expectedFingerprint&&sourceFingerprint()!==options.expectedFingerprint)throw Object.assign(new Error('Endeksmatik changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});await options.beforeMutation?.();await documents.refresh();cached=null;setCache.clear();options.assertAuthority?.();if(options.expectedFingerprint&&sourceFingerprint()!==options.expectedFingerprint)throw Object.assign(new Error('Endeksmatik changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return work();});}
-async function restoreSet(snapshot,active,options={}){return mutate(options,async()=>{await saveSet(snapshot,{activate:false});if(active)await writeActiveSelection(active,options.actor||'');return publicStatus();});}
-async function restoreLegacyReceipt(snapshot,active,wasDefault,options={}) {return mutate(options,async()=>{if(wasDefault){const result=await documents.mirror(DOCUMENT_ID,{snapshot:null},{guardSource:true,guardCollection:true});if(documents.attached&&!result.ok)throw Object.assign(new Error('Legacy journal failed.'),{code:'SHARED_SYNC_WRITE_FAILED'});if(documents.writesLegacy)fs.rmSync(PERSISTED_FILE,{force:true});cached=null;cachedFile='';}else await saveSnapshot(snapshot);if(active)await writeActiveSelection(active,options.actor||'');return publicStatus();});}
-module.exports={normalizeLabel,restoreLegacyReceipt,removeImportedSet:(id,active,options={})=>mutate(options,async()=>{await deleteSet(id);if(active)await writeActiveSelection(active,options.actor||'');return publicStatus();}),sourceFingerprint,parseImportWorkbook,restoreSet,readSetSnapshot:id=>{const entry=loadSet(id);return entry?entry.snapshot:null;},SCHEMA_VERSION,DEFAULT_FILE,PERSISTED_FILE,COLLECTION,DOCUMENT_ID,COMPONENTS,LEGACY_SET_ID,ACTIVE_DOCUMENT_ID,SETS_DIR,attachDeltaStore,seedMissing,text,norm,keyOf,numberValue,monthCode,loadSnapshot,publicStatus,legacyStatus,resolveRecord,calculate,calculateLegacy,lookup,listSets,activeSetId,setActiveSet:(id,actor,options={})=>mutate(options,()=>setActiveSet(id,actor)),saveSet:(snapshot,options={})=>mutate(options,()=>saveSet(snapshot,options)),renameSet:(id,label,options={})=>mutate(options,()=>renameSet(id,label)),deleteSet:(id,options={})=>mutate(options,()=>deleteSet(id)),parseWorkbookBuffer,saveSnapshot:(snapshot,options={})=>mutate(options,()=>saveSnapshot(snapshot)),importWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importWorkbookBuffer(buffer,name,options)),importLegacyWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importLegacyWorkbookBuffer(buffer,name))};
+async function restoreSet(snapshot,active,options={}){return mutate(options,async()=>{await saveSet(snapshot,{...options,actor:'',selectionActor:options.actor,activate:false,activeSelectionId:active});return publicStatus();});}
+async function restoreLegacyReceipt(snapshot,active,wasDefault,options={}){return mutate(options,async()=>{
+ if(wasDefault){
+  const selection=active?activeSelectionValue(active,options.actor):null,result=await mirrorNativeDocuments({[DOCUMENT_ID]:{snapshot:null},...(selection?{[ACTIVE_DOCUMENT_ID]:selection}:{})},options);
+  if(documents.attached&&!result.ok)throw Object.assign(new Error('Legacy journal failed.'),{code:'SHARED_SYNC_WRITE_FAILED'});
+  if(documents.writesLegacy)fs.rmSync(PERSISTED_FILE,{force:true});if(selection)writeActiveLegacy(selection);cached=null;cachedFile='';
+ }else await saveSnapshot(snapshot,{...options,activeSelectionId:active});return publicStatus();
+});}
+module.exports={normalizeLabel,restoreLegacyReceipt,removeImportedSet:(id,active,options={})=>mutate(options,async()=>{return deleteSet(id,{...options,activeSelectionId:active});}),sourceFingerprint,parseImportWorkbook,restoreSet,readSetSnapshot:id=>{const entry=loadSet(id);return entry?entry.snapshot:null;},SCHEMA_VERSION,DEFAULT_FILE,PERSISTED_FILE,COLLECTION,DOCUMENT_ID,COMPONENTS,LEGACY_SET_ID,ACTIVE_DOCUMENT_ID,SETS_DIR,attachDeltaStore,seedMissing,text,norm,keyOf,numberValue,monthCode,loadSnapshot,publicStatus,legacyStatus,resolveRecord,calculate,calculateLegacy,lookup,listSets,activeSetId,setActiveSet:(id,actor,options={})=>mutate(options,()=>setActiveSet(id,actor,options)),saveSet:(snapshot,options={})=>mutate(options,()=>saveSet(snapshot,options)),renameSet:(id,label,options={})=>mutate(options,()=>renameSet(id,label,options)),deleteSet:(id,options={})=>mutate(options,()=>deleteSet(id,options)),parseWorkbookBuffer,saveSnapshot:(snapshot,options={})=>mutate(options,()=>saveSnapshot(snapshot,options)),importWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importWorkbookBuffer(buffer,name,options)),importLegacyWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importLegacyWorkbookBuffer(buffer,name,options))};
