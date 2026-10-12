@@ -4453,6 +4453,39 @@
           "en": "Actual Buyer Log Agent Office with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-full-field-discovery-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Geç gelen sütunları da keşfet",
+        "en": "Discover columns appearing later in the source"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Alan keşfi",
+        "en": "Agent Office › Tasks › Field discovery"
+      },
+      "body": {
+        "tr": "CP, Orders, Backlog, LFL ve Collection alan keşfi tüm yetkili kaynak satırlarındaki sütunları tarar. İlk örnekte görünmeyen alanlar mevcut filtre ve hesaplama motorunda kullanılabilir. Sonraki alan sayfaları kaynak revizyonuna bağlanır; yanıt boyutu ve gösterilmeyen metaveri açıkça bildirilir. Örneklenen satır sayısı, tüm kaynaktaki dolulukla karıştırılmaz.",
+        "en": "CP, Orders, Backlog, LFL and Collection field discovery scans columns across all authorized source rows. Fields absent from the initial sample remain usable in the existing filter and calculation engine. Subsequent field pages bind to the source revision; response limits and omitted metadata are explicit. Sampled row counts do not imply population across the entire source."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-full-field-discovery-contract.png",
+        "alt": {
+          "tr": "Kaynağa bağlı alan sayfası ve eksik metaveri bilgisi",
+          "en": "Source-bound field page and omitted metadata details"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log alan keşfi",
+          "en": "Actual Buyer Log field discovery with anonymous data"
+        }
+      }
     }
   ]
 }
