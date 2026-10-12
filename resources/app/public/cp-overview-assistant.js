@@ -326,7 +326,7 @@
       saved = false;
       if (typeof window.showToast === 'function') window.showToast(L('Checklist yerel kaydı başarısız; sunucu kaydı bekleniyor: ', 'Checklist local save failed; waiting for server save: ') + error.message);
     }
-    notifyDecisionContextChanged('checklist-answer');
+    if (!options || options.silent !== true) notifyDecisionContextChanged('checklist-answer');
     return saved;
   }
 
@@ -3215,6 +3215,17 @@
     return step.value;
   }
 
+  let pendingAutomaticStatusSync = false;
+  function flushAutomaticStatusSync() {
+    if (!pendingAutomaticStatusSync) return;
+    const sync = window.BLChecklistSupplierSync;
+    if (!sync || typeof sync.syncAnswerChanges !== 'function') return;
+    pendingAutomaticStatusSync = false;
+    void sync.syncAnswerChanges().catch(error => {
+      pendingAutomaticStatusSync = true;
+      if (typeof showToast === 'function') showToast(L('Otomatik Checklist cevapları senkronize edilemedi: ', 'Could not sync automatic Checklist statuses: ') + String(error.message || error));
+    });
+  }
   function* personalModelSteps(initialModel, opts) {
     let model = initialModel;
     // v1'den kalan PO-bazlı onayları, yeni model/renk kapsamı seçiliyse
@@ -3273,7 +3284,9 @@
         });
       }
       state.lastAnswerAt = at;
-      saveAnswers();
+      // Do not invalidate the active async decision batch midway through a pass.
+      // Its computed checklistState already contains these answers.
+      if (saveAnswers({ silent: true })) pendingAutomaticStatusSync = true;
     }
     for (const analysis of model.orders) {
       const applied = evaluations.get(analysis.orderKey);
@@ -3322,6 +3335,7 @@
   function recompute() {
     if (!lastRows) return;
     analyzeRowsWithPersonalRules(lastRows, { commit: true });
+    flushAutomaticStatusSync();
   }
 
   /* CP / Orders Priority hücreleri de Overview ile AYNI kişisel decision
@@ -3393,6 +3407,7 @@
       overviewDecisionPending=false;
       if (!model) { state.rowsSignature='';onOverviewRendered(lastRows,context);return; }
       render();
+      flushAutomaticStatusSync();
     }).catch(error=>{if(generation!==overviewDecisionGeneration)return;overviewDecisionPending=false;state.rowsSignature='';if(typeof showToast==='function')showToast(error.message);});
   }
 
