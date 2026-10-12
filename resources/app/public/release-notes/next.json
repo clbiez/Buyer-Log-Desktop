@@ -3595,6 +3595,39 @@
           "en": "Page and owner scoped profile preview and approval"
         }
       }
+    },
+    {
+      "id": "manufacturer-agent-journal-authority",
+      "type": "fix",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Üretici kaydı güncel yetkiyle journal’a yazılır",
+        "en": "Manufacturer journal writes require current authority"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / Üreticiler",
+        "en": "Agent Office › Tasks / Manufacturers"
+      },
+      "body": {
+        "tr": "Üretici kartı ekleme, güncelleme, silme ve geri alma işlemi, journal kuyruğu bekledikten sonra güncel kullanıcı yetkisini tekrar denetler. Değişmiş veya kapalı agent profilinin onayı kayıt değiştiremez. Normal kayıt kilidi ve kilit bırakma davranışı korunur.",
+        "en": "Manufacturer card creation, update, deletion and undo recheck current user authority after journal queue waits. An approval for a revised or disabled agent cannot change records. Native record locking and release behavior are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturer-agent-journal-authority.png",
+        "alt": {
+          "tr": "Yetki değişiminde durdurulan üretici agent görevi",
+          "en": "Manufacturer agent task stopped after authority changed"
+        },
+        "caption": {
+          "tr": "Güncel yetki ve agent profili denetimi",
+          "en": "Current authority and agent profile checks"
+        }
+      }
     }
   ]
 }
