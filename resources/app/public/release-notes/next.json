@@ -4321,6 +4321,39 @@
           "en": "Actual Buyer Log report result with anonymous data"
         }
       }
+    },
+    {
+      "id": "oab-native-approved-interrupted-continuation",
+      "type": "feature",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Yarım kalan OAB işi onayla devam eder",
+        "en": "Interrupted OAB work continues with approval"
+      },
+      "path": {
+        "tr": "Overview › OAB › Devam planını incele",
+        "en": "Overview › OAB › Review continuation plan"
+      },
+      "body": {
+        "tr": "Kesilen işin doğrulanmış gerçek sonuçları korunur; devam planı yalnız eksik üçlüleri içerir. Kullanıcı kalan kapsamı ve tahmini süreyi onaylar. İş veya rapor revizyonu, metadata ya da yetki değişirse eski onay uygulanmaz. İptal edilmiş veya hâlâ çalışan işler devam ettirilmez. Aynı onay ikinci bir iş başlatmaz. İlk işteki yenileme ve rapora birleştirme tercihi korunur; yeniden açılmada otomatik kurumsal istek gönderilmez.",
+        "en": "Verified actual results from interrupted work are retained; the continuation plan contains only missing triples. The user approves the remaining scope and estimated time. Changed job or report revisions, metadata or access invalidate the old approval. Cancelled or still running jobs are not continued. The same approval does not start another job. Original refresh and snapshot merge preferences are preserved; reopening does not send an automatic corporate request."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-approved-interrupted-continuation.png",
+        "alt": {
+          "tr": "Yarım kalan iş için doğrulanan kapsam ve kullanıcı onayı",
+          "en": "Verified scope and user approval for interrupted work"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log devam planı",
+          "en": "Actual Buyer Log continuation plan with anonymous data"
+        }
+      }
     }
   ]
 }

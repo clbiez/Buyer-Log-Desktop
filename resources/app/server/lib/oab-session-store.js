@@ -141,6 +141,15 @@ function load(userId) {
   return null;
 }
 
+function readCurrent(userId,options={}) {
+  return withFileLeaseSync(filePathFor(userId),()=>{
+    options.assertAuthority?.();
+    const state=load(userId),current=sourceFingerprint({clearRevision:clearRevision(userId),snapshot:state});
+    if(options.expectedFingerprint!==undefined&&options.expectedFingerprint!==current)throw Object.assign(new Error('OAB_SNAPSHOT_CHANGED'),{code:'OAB_SNAPSHOT_CHANGED',statusCode:409});
+    options.assertAuthority?.();return state;
+  });
+}
+
 function clear(userId) {
  return withFileLeaseSync(filePathFor(userId), () => {
   const file = filePathFor(userId);
@@ -155,4 +164,4 @@ function clear(userId) {
  });
 }
 
-module.exports = { ROOT, SCHEMA_VERSION, filePathFor, save, load, clear, fingerprint, update };
+module.exports = { ROOT, SCHEMA_VERSION, filePathFor, save, load, clear, fingerprint, update, readCurrent };

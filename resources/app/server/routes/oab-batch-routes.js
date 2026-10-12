@@ -48,12 +48,24 @@ app.post('/api/oab/batch', userAccess.requireAnyArea('overview'), userAccess.req
   } catch(error) {batchError(res,error,'OAB toplu çekme başlatılamadı.');}
 });
 app.get('/api/oab/batch-status', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
-  try {res.set('Cache-Control','no-store').json(oabBatchService.status(req.currentUser));}
+  try {res.set('Cache-Control','no-store').json(oabBatchService.status(req.currentUser,req.query?.jobId));}
   catch(error) {batchError(res,error,'OAB toplu çekme durumu okunamadı.');}
 });
 app.post('/api/oab/batch/cancel', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
   try {res.json(oabBatchService.cancel(req.currentUser));}
   catch(error) {batchError(res,error,'OAB toplu çekme iptal edilemedi.');}
+});
+app.post('/api/oab/batch/continuation-plan', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({limit:'4kb'}), (req,res)=>{
+  try {res.set('Cache-Control','no-store').json(oabBatchService.continuationPlan(req.currentUser,req.body?.jobId,{transport:oabRequestTransport(req)}));}
+  catch(error){batchError(res,error,'OAB_CONTINUATION_UNAVAILABLE');}
+});
+app.post('/api/oab/batch/completed-state', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({limit:'4kb'}), (req,res)=>{
+  try {res.set('Cache-Control','no-store').json(oabBatchService.completedSnapshot(req.currentUser,req.body?.jobId));}
+  catch(error){batchError(res,error,'OAB_JOB_RESULT_UNAVAILABLE');}
+});
+app.post('/api/oab/batch/continue', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), express.json({limit:'4kb'}), (req,res)=>{
+  try {res.status(202).json(oabBatchService.continueJob(req.currentUser,{jobId:req.body?.jobId,sourceFingerprint:req.body?.sourceFingerprint},{transport:oabRequestTransport(req),confirmed:req.body?.confirmed===true}));}
+  catch(error){batchError(res,error,'OAB_CONTINUATION_UNAVAILABLE');}
 });
 app.post('/api/oab/batch/reset-capability', userAccess.requireAnyArea('overview'), userAccess.requireCapability('OAB.VIEW'), (req, res) => {
   try {res.json(oabBatchService.resetCapability(req.currentUser));}

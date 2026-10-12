@@ -28,7 +28,7 @@ function createOabBatchService(deps) {
       if(!durable||durable.interrupted)throw serviceError('OAB_BATCH_INTERRUPTED',409);
       current=assertAccess({id:job.userId});
       job.cancelled=!!(job.cancelled||durable.cancelled); if (job.authorityGuard) job.authorityGuard(current);return current;}
-    catch(error) {job.authorityLost=true;job.authorityErrorCode=/^(OFFICE_[A-Z_]+|OAB_BATCH_INTERRUPTED|OAB_JOB_STORE_INVALID|OAB_ACCESS_REVOKED)$/.test(String(error?.code))?error.code:error?.code==='SHARED_WRITE_BUSY'?'OAB_JOB_STORE_BUSY':'OAB_JOB_STORE_FAILED';throw serviceError(job.authorityErrorCode);}
+    catch(error) {job.authorityLost=true;job.authorityErrorCode=/^(OFFICE_[A-Z_]+|OAB_BATCH_INTERRUPTED|OAB_JOB_STORE_INVALID|OAB_ACCESS_REVOKED|OAB_CONTINUATION_CHANGED)$/.test(String(error?.code))?error.code:error?.code==='SHARED_WRITE_BUSY'?'OAB_JOB_STORE_BUSY':'OAB_JOB_STORE_FAILED';throw serviceError(job.authorityErrorCode);}
   }
 /* ===================================================================
    v7.20 — OAB ÇOKLU SEÇİM: ARKA PLAN TOPLU ÇEKME
@@ -192,7 +192,7 @@ async function runOabBatchJob(job, currentUser) {
            BİRLEŞTİRİLİR; seçim de birleşiktir ki açılışta aynı kapsam geri
            yüklensin. */
         assertJobAuthority(job);
-        oabSessionStore.update(userId, current => {
+        const persisted=oabSessionStore.update(userId, current => {
         const previous = job.mergeWithSnapshot ? current : null;
         const prevSnapshot = previous && previous.snapshot ? previous.snapshot : null;
         const prevSelection = previous && previous.selection ? previous.selection : {};
@@ -215,6 +215,7 @@ async function runOabBatchJob(job, currentUser) {
           fromCache: !prevSnapshot && job.fromCacheCount === job.results.length && job.results.length > 0,
         };
         }, {expectedFingerprint:job.snapshotFingerprint,assertAuthority:()=>assertJobAuthority(job)});
+        job.savedSnapshotFingerprint=persisted?.sourceFingerprint || null;
         job.snapshotSaved = true;
       } catch (error) {
         job.snapshotSaved = false;
@@ -300,7 +301,57 @@ function oabBuildPlan(body) {
     const built=oabBuildPlan(body);
     return {ok:!built.error,error:built.error||undefined,combinationCount:built.combinationCount,requestCount:built.requestCount,cachedCount:built.cachedCount,pendingCount:built.pendingCount,estimateSeconds:built.estimateSeconds,worstCaseRequestCount:built.worstCaseRequestCount,worstCaseSeconds:built.worstCaseSeconds,batchUnproven:built.batchUnproven,useBatched:built.useBatched,capability:built.capability,skipped:built.skipped.slice(0,200),skippedCount:built.skipped.length,maxCombinations:OAB_BATCH_MAX_COMBINATIONS};
   }
-  function start(profile,body={},options={}) {
+  function continuationState(profile,jobId,options={}) {
+    let current=assertAccess(profile);options.assertAuthority?.(current);
+    if(!/^[A-Za-z0-9_-]{1,100}$/.test(current.id))throw serviceError('OAB_CONTINUATION_UNAVAILABLE',403);
+    if(!['desktop','browser'].includes(options.transport))throw serviceError('OAB_TRANSPORT_REQUIRED',422);
+    const parent=jobStore.get(current.id,jobId),latest=jobStore.latest(current.id,{includePlan:false});
+    if(!parent||parent.jobId!==latest?.jobId||parent.running||!parent.interrupted||parent.cancelled||!parent.planHash||parent.transport!==options.transport||!Array.isArray(parent.plannedCombinations)||!parent.plannedCombinations.length||parent.plannedCombinations.length>400)throw serviceError('OAB_CONTINUATION_UNAVAILABLE',409);
+    if(oabSessionStore.fingerprint(current.id)!==parent.snapshotFingerprint)throw serviceError('OAB_CONTINUATION_CHANGED',409);
+    const validated=oabBatch.planFromCombinations(oabStaticMetadata.planningMetadata(),parent.plannedCombinations);
+    const key=item=>JSON.stringify([item.seasonRef,item.merchSubGroupRef,item.buyerGroupRef]);
+    if(validated.error||validated.skipped.length||validated.combinations.length!==parent.plannedCombinations.length||JSON.stringify(validated.combinations.map(key))!==JSON.stringify(parent.plannedCombinations.map(key)))throw serviceError('OAB_CONTINUATION_CHANGED',409);
+    const approved=new Set(validated.combinations.map(key)),covered=new Set(),results=jobStore.results(current.id,jobId);
+    if(!Array.isArray(results))throw serviceError('OAB_CONTINUATION_UNAVAILABLE',409);
+    // Only actual captured sources prove completion, including empty results.
+    // Failure counters, speculative probe state and a newer snapshot do not.
+    for(const result of results){
+      const refs=result.buyerGroupRefs;
+      if(!Array.isArray(refs)||!refs.length||refs.length>400)throw serviceError('OAB_JOB_RESULT_INVALID',409);
+      for(const buyerGroupRef of refs){const identity=key({seasonRef:result.seasonRef,merchSubGroupRef:result.merchSubGroupRef,buyerGroupRef});if(!approved.has(identity)||covered.has(identity))throw serviceError('OAB_JOB_RESULT_INVALID',409);covered.add(identity);}
+    }
+    const pending=validated.combinations.filter(item=>!covered.has(key(item))),built=pending.length?oabBuildPlan({combinations:pending}):{selection:parent.selection,plan:{combinations:[],skipped:[],error:''},groups:[],capability:oabStore.loadBatchCapability(),skipped:[],error:'',combinationCount:0};
+    let cachedCount=0;
+    if(!parent.forceRefresh)for(const item of pending){const cacheKey=oabStore.cacheKeyOf(item.seasonRef,item.merchSubGroupRef,item.buyerGroupRef);if(cacheKey&&oabStore.get(cacheKey)?.fresh)cachedCount++;}
+    const publicPlan={ok:true,jobId,retainedCombinationCount:covered.size,retainedResultCount:results.length,combinationCount:pending.length,combinations:pending,requestCount:pending.length,cachedCount,pendingCount:pending.length-cachedCount,estimateSeconds:oabBatch.estimateSeconds(pending.length-cachedCount),worstCaseRequestCount:pending.length,worstCaseSeconds:oabBatch.estimateSeconds(pending.length-cachedCount),batchUnproven:false,forceRefresh:!!parent.forceRefresh,maxCombinations:400};
+    current=assertAccess(profile);options.assertAuthority?.(current);
+    const final=jobStore.latest(current.id,{includePlan:false});
+    if(final?.jobId!==parent.jobId||final.revision!==parent.revision||oabSessionStore.fingerprint(current.id)!==parent.snapshotFingerprint)throw serviceError('OAB_CONTINUATION_CHANGED',409);
+    current=assertAccess(profile);options.assertAuthority?.(current);
+    const sourceFingerprint=commandHash(JSON.stringify({parentId:jobId,revision:parent.revision,planHash:parent.planHash,resultRefs:parent.resultRefs,snapshotFingerprint:parent.snapshotFingerprint,transport:options.transport,authority:userAccess.publicProfile?.(current)||current,publicPlan}));
+    return {parent,results,built,sourceFingerprint,publicPlan,authorityFingerprint:commandHash(JSON.stringify(userAccess.publicProfile?.(current)||current))};
+  }
+  function continuationPlan(profile,jobId,options={}) {
+    const state=continuationState(profile,jobId,options);return {...state.publicPlan,sourceFingerprint:state.sourceFingerprint};
+  }
+  function continueJob(profile,body={},options={}) {
+    const current=assertAccess(profile);options.assertAuthority?.(current);
+    if(!/^[A-Za-z0-9_-]{1,100}$/.test(current.id))throw serviceError('OAB_CONTINUATION_UNAVAILABLE',403);
+    if(options.confirmed!==true)throw serviceError('OAB_APPROVAL_REQUIRED',409);
+    if(!/^[a-f0-9]{64}$/.test(body.sourceFingerprint||''))throw serviceError('OAB_CONTINUATION_CHANGED',409);
+    if(!['desktop','browser'].includes(options.transport))throw serviceError('OAB_TRANSPORT_REQUIRED',422);
+    const commandKey='native-continuation:'+body.jobId+':'+body.sourceFingerprint,commandId='oab_'+commandHash(current.id+'|'+commandKey).slice(0,40);
+    const previous=jobStore.get(current.id,commandId);
+    const actor=assertAccess(current);options.assertAuthority?.(actor);
+    if(previous){if(previous.resumedFrom!==body.jobId||previous.continuationFingerprint!==body.sourceFingerprint||previous.transport!==options.transport)throw serviceError('OAB_CONTINUATION_CHANGED',409);return {started:true,reused:true,job:oabBatchPublicJob(previous)};}
+    const state=continuationState(current,body.jobId,options);
+    if(body.sourceFingerprint!==state.sourceFingerprint)throw serviceError('OAB_CONTINUATION_CHANGED',409);
+    return start(current,{combinations:state.built.plan.combinations,forceRefresh:!!state.parent.forceRefresh},{...options,commandKey,assertAuthority:actor=>{
+      if(commandHash(JSON.stringify(userAccess.publicProfile?.(actor)||actor))!==state.authorityFingerprint)throw serviceError('OAB_CONTINUATION_CHANGED',409);
+      options.assertAuthority?.(actor);
+    }},state);
+  }
+  function start(profile,body={},options={},continuation=null) {
     const currentUser=assertAccess(profile);
     if (!['desktop','browser'].includes(options.transport)) throw serviceError('OAB_TRANSPORT_REQUIRED',422);
     if (options.assertAuthority) options.assertAuthority(currentUser);
@@ -313,9 +364,9 @@ function oabBuildPlan(body) {
     if(durable?.running)throw serviceError('OAB_BATCH_IN_PROGRESS',409,{job:oabBatchPublicJob(durable)});
     const existing = oabBatchJobs.get(currentUser.id);
     if (existing && existing.running) throw serviceError('OAB_BATCH_IN_PROGRESS',409,{job:oabBatchPublicJob(existing)});
-    const built = oabBuildPlan(body || {});
+    const built = continuation?.built || oabBuildPlan(body || {});
     if (built.error) throw serviceError('OAB_PARAMS_REQUIRED',400,{details:{field:built.error}});
-    if (!built.combinationCount) {
+    if (!built.combinationCount && !continuation) {
       throw serviceError('OAB_NO_VALID_COMBINATION',400,{skipped:built.skipped.slice(0,50)});
     }
     if (built.combinationCount > OAB_BATCH_MAX_COMBINATIONS) {
@@ -334,11 +385,11 @@ function oabBuildPlan(body) {
       // Background combinations keep the transport of the request that started them.
       transport: options.transport,
       authorityGuard: options.assertAuthority, authorityLost: false,
-      selection: built.selection,
-      plannedCombinations: built.plan.combinations,
+      selection: continuation?.parent.selection || built.selection,
+      plannedCombinations: continuation?.parent.plannedCombinations || built.plan.combinations,
       // Açık kombinasyon listesi = "yeniden dene": sonuç eldeki snapshot'ın
       // üzerine EKLENİR, yerine geçmez.
-      mergeWithSnapshot: Array.isArray(body && body.combinations) && body.combinations.length > 0,
+      mergeWithSnapshot: continuation ? !!continuation.parent.mergeWithSnapshot : Array.isArray(body && body.combinations) && body.combinations.length > 0,
       queue: [], total: 0, completed: 0, fromCacheCount: 0, rowCount: 0,
       currentLabel: '', results: [], failures: [], merged: null,
       skipped: built.skipped.slice(0, 200),
@@ -346,10 +397,20 @@ function oabBuildPlan(body) {
       error: '', errorCode: '',
       snapshotFingerprint: oabSessionStore.fingerprint(currentUser.id),
       snapshotSaved: null, snapshotErrorCode: '',
+      ...(continuation?{resumedFrom:continuation.parent.jobId,continuationFingerprint:continuation.sourceFingerprint}:{}),
     };
     // Toplu mod denenecekse önce YETENEK DOĞRULANIR; kuyruk sonuca göre kurulur.
     const multiGroups = built.groups.filter(group => group.buyerGroupRefs.length > 1);
-    if (built.useBatched && built.capability.state === 'unknown' && multiGroups.length) {
+    if (continuation) {
+      // Resume exact unverified triples through the original worker. Do not
+      // repeat its capability probe or reset already captured result chunks.
+      job.results=continuation.results;
+      job.rowCount=job.results.reduce((n,result)=>n+result.rows.length,0);
+      job.fromCacheCount=job.results.filter(result=>result.fromCache).length;
+      job.completed=job.results.length;
+      job.queue=built.plan.combinations.map(item=>({...item,buyerGroupRefs:[item.buyerGroupRef]}));
+      job.total=job.completed+job.queue.length;
+    } else if (built.useBatched && built.capability.state === 'unknown' && multiGroups.length) {
       job.queue = built.groups.map(group => ({ ...group }));
       job.total = job.queue.length;
       job.probe = multiGroups[0];
@@ -361,7 +422,10 @@ function oabBuildPlan(body) {
       job.total = job.queue.length;
     }
     let reserved;
-    try {reserved=jobStore.reserve(currentUser.id,job,{requestFingerprint,beforeReserve:()=>userAccess.appendAudit(currentUser,'OAB_BATCH_START',job.jobId,{combinations:built.combinationCount,requests:job.total,batched:job.batchedBuyerGroups}),assertAuthority:()=>{assertAccess(currentUser);options.assertAuthority?.(currentUser);}});}
+    try {reserved=jobStore.reserve(currentUser.id,job,{requestFingerprint,expectedLatest:continuation?{jobId:continuation.parent.jobId,revision:continuation.parent.revision}:undefined,beforeReserve:()=>{
+      if(continuation&&oabSessionStore.fingerprint(currentUser.id)!==continuation.parent.snapshotFingerprint)throw serviceError('OAB_CONTINUATION_CHANGED',409);
+      userAccess.appendAudit(assertAccess(currentUser),continuation?'OAB_BATCH_CONTINUE':'OAB_BATCH_START',job.jobId,{combinations:built.combinationCount,requests:job.total,batched:job.batchedBuyerGroups,...(continuation?{resumedFrom:continuation.parent.jobId,retained:continuation.results.length}:{})});
+    },assertAuthority:()=>{const current=assertAccess(currentUser);options.assertAuthority?.(current);if(continuation&&oabSessionStore.fingerprint(currentUser.id)!==continuation.parent.snapshotFingerprint)throw serviceError('OAB_CONTINUATION_CHANGED',409);}});}
     catch(error){if(error.code==='OAB_BATCH_IN_PROGRESS')throw serviceError(error.code,409,{job:oabBatchPublicJob(error.job)});throw error;}
     if(reserved.reused)return {started:true,reused:true,job:oabBatchPublicJob(reserved.job)};
     oabBatchJobs.set(currentUser.id, job);
@@ -401,8 +465,8 @@ function oabBuildPlan(body) {
 
     return {started:true,job:oabBatchPublicJob(job)};
   }
-  function status(profile) {
-    const current=assertAccess(profile),live=oabBatchJobs.get(current.id),saved=jobStore.latest(current.id,{includePlan:false}),job=live&&live.jobId===saved?.jobId?live:saved;
+  function status(profile,jobId) {
+    const current=assertAccess(profile),live=oabBatchJobs.get(current.id),saved=jobId?jobStore.get(current.id,jobId,{includePlan:false}):jobStore.latest(current.id,{includePlan:false}),job=live&&live.jobId===saved?.jobId?live:saved;
     assertAccess(current);
     const payload={ok:true,job:oabBatchPublicJob(job)};
     if (job && !job.running) {
@@ -412,6 +476,15 @@ function oabBuildPlan(body) {
       if (merged) {payload.rows=merged.rows;payload.fields=merged.fields;payload.sources=merged.sources;payload.fetchedAt=job.interrupted?merged.sources.at(-1)?.fetchedAt||null:job.finishedAt;}
     }
     assertAccess(current);return payload;
+  }
+  function completedSnapshot(profile,jobId) {
+    const current=assertAccess(profile);
+    if(!/^[A-Za-z0-9_-]{1,100}$/.test(current.id))throw serviceError('OAB_CONTINUATION_UNAVAILABLE',403);
+    const job=jobStore.get(current.id,jobId,{includePlan:false});
+    assertAccess(current);
+    if(!job||job.running||job.interrupted||job.snapshotSaved!==true||!/^[a-f0-9]{64}$/.test(job.savedSnapshotFingerprint||''))throw serviceError('OAB_JOB_RESULT_UNAVAILABLE',409);
+    const state=oabSessionStore.readCurrent(current.id,{expectedFingerprint:job.savedSnapshotFingerprint,assertAuthority:()=>assertAccess(current)});
+    assertAccess(current);return {ok:true,state};
   }
   function cancel(profile) {
     const current=assertAccess(profile),saved=jobStore.cancel(current.id,{assertAuthority:()=>assertAccess(current),beforeCancel:job=>userAccess.appendAudit(assertAccess(current),'OAB_BATCH_CANCEL',job.jobId,{completed:job.completed,total:job.total})}),live=oabBatchJobs.get(current.id);
@@ -424,6 +497,6 @@ function oabBuildPlan(body) {
     userAccess.appendAudit(current,'OAB_BATCH_CAPABILITY_RESET','oab',capability);
     return {ok:true,capability};
   }
-  return Object.freeze({buildPlan:oabBuildPlan,plan,start,status,cancel,resetCapability});
+  return Object.freeze({buildPlan:oabBuildPlan,plan,start,status,cancel,resetCapability,continuationPlan,continueJob,completedSnapshot});
 }
 module.exports={createOabBatchService};

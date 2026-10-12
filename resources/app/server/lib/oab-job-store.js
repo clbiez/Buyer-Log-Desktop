@@ -12,7 +12,7 @@ const hash=value=>crypto.createHash('sha256').update(String(value)).digest('hex'
 const fail=(code,statusCode=409)=>Object.assign(new Error(code),{code,statusCode});
 const copy=value=>JSON.parse(JSON.stringify(value));
 const planFields=['plannedCombinations','queue','probe','forceRefresh','transport','mergeWithSnapshot'];
-const fields=['jobId','running','cancelled','startedAt','finishedAt','total','completed','fromCacheCount','rowCount','currentLabel','failures','skipped','batchedBuyerGroups','error','errorCode','snapshotSaved','snapshotErrorCode','selection','snapshotFingerprint','interrupted'];
+const fields=['jobId','running','cancelled','startedAt','finishedAt','total','completed','fromCacheCount','rowCount','currentLabel','failures','skipped','batchedBuyerGroups','error','errorCode','snapshotSaved','snapshotErrorCode','selection','snapshotFingerprint','interrupted','resumedFrom','continuationFingerprint','savedSnapshotFingerprint'];
 function createOabJobStore({root=path.join(LOCAL_DATA_ROOT,'oab-job-receipts')}={}){
  root=path.resolve(root);
  const knownResults=new WeakMap();
@@ -100,12 +100,15 @@ function createOabJobStore({root=path.join(LOCAL_DATA_ROOT,'oab-job-receipts')}=
    const previous=doc(owner,job.jobId);
    if(previous){if(previous.requestFingerprint!==(options.requestFingerprint||null))throw fail('OAB_JOB_COMMAND_CHANGED');return {reused:true,job:reconcile(owner,previous)};}
    const current=reconcile(owner,latestDoc(owner));if(current?.running)throw Object.assign(fail('OAB_BATCH_IN_PROGRESS'),{job:copy(current)});
+   if(options.expectedLatest&&(current?.jobId!==options.expectedLatest.jobId||current?.revision!==options.expectedLatest.revision))throw fail('OAB_CONTINUATION_CHANGED');
    const value={schemaVersion:1,ownerId:owner,revision:1,requestFingerprint:options.requestFingerprint||null,executor:{pid:process.pid,host:os.hostname(),instanceId:getBuyerLogInstanceId()},...Object.fromEntries(fields.filter(name=>job[name]!==undefined).map(name=>[name,copy(job[name])]))};
    const plan={schemaVersion:1,ownerId:owner,jobId:job.jobId,plan:Object.fromEntries(planFields.filter(name=>job[name]!==undefined).map(name=>[name,copy(job[name])]))};
    value.planHash=hash(JSON.stringify(plan));value.resultRefs=Array.isArray(job.results)?[]:null;
    const priorPlan=read(planFile(owner,job.jobId));if(priorPlan&&hash(JSON.stringify(priorPlan))!==value.planHash)throw fail('OAB_JOB_COMMAND_CHANGED');
    options.beforeReserve?.();options.assertAuthority?.();
+   value.resultRefs=saveResults(owner,job,value);
    if(!priorPlan)atomicWriteJson(planFile(owner,job.jobId),plan);
+   options.assertAuthority?.();
    write(owner,value);atomicWriteJson(pointer(owner),{schemaVersion:1,ownerId:owner,jobId:job.jobId});active.add(key(owner,job.jobId));
    return {reused:false,job:copy(value)};
   });

@@ -15540,7 +15540,7 @@ function ensureOverviewOabModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oab',mode:'after-ui'});
-  overviewOabLoadPromise=loader('oab.js?rev=6')
+  overviewOabLoadPromise=loader('oab.js?rev=7')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui'});return window.BLOAB||null;})
     .catch(error=>{overviewOabLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui',failed:true});console.warn('OAB modülü yüklenemedi:',error);return null;});
   return overviewOabLoadPromise;
