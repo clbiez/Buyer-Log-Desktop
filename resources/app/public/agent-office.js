@@ -19,6 +19,7 @@
   function errorText(err){
     const map={
       OFFICE_ROLLBACK_INVALID:L('Bu adım için geçerli geri alma makbuzu yok. Gerçek kaydı ve görev adımını kontrol edin.','There is no valid undo receipt for this step. Check the actual record and task step.'),
+      OFFICE_RESOURCE_REVISION_INVALID:L('Kaynağın revizyon bilgisi güvenli işlem için geçersiz. Veri değiştirilmedi; kaynak metadata’sı incelenmelidir.','The source revision metadata is invalid for a safe operation. Data was not changed; the source metadata needs review.'),
       OFFICE_MANUFACTURER_ASAS_MATCH:L('Seçilen ad güncel ve yetkili ASAS üretici listesinde birebir bulunamadı. Listeyi yeniden keşfedin ve gerçek adı seçin.','The selected name is not an exact match in the current authorized ASAS manufacturer list. Discover the list again and select the actual name.'),
       OFFICE_SOURCE_UNAVAILABLE:L('Yetkili kaynak verisi kullanılamıyor. Kaynak bağlantısını ve güncel kullanıcı erişimini kontrol edin.','Authorized source data is unavailable. Check the source connection and current user access.'),
       MANUFACTURER_ALREADY_LINKED:L('Bu ASAS adı başka bir üretici kartına bağlı. Güncel kartları kontrol edin.','This ASAS name is linked to another manufacturer card. Check the current cards.'),

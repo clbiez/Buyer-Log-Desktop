@@ -4057,6 +4057,72 @@
           "en": "Actual Buyer Log result with anonymous ASAS manufacturer data"
         }
       }
+    },
+    {
+      "id": "agent-manufacturer-output-paging",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Üreticiler",
+        "en": "Agent Office · Manufacturers"
+      },
+      "title": {
+        "tr": "Üretici kayıtları tam ve sınırlı sayfalarla keşfedilir",
+        "en": "Manufacturer records are discovered in complete bounded pages"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Üretici araçları",
+        "en": "Agent Office › Manufacturer tools"
+      },
+      "body": {
+        "tr": "Agent üretici kartlarını alanlarını kesmeden 128 KiB sınırında okur; sonraki sayfa konumu, gerçek toplam ve kesilen başlık sayıları görünür. Ülke ve grupların tümü native sayfalama ile keşfedilebilir. Sayfalar revizyon ve kaynak parmak izine bağlanabilir; kök revizyon aynı kalsa bile değişen peer verisi eski sayfaya karıştırılmaz. Kart oluşturma, düzenleme, silme ve geri alma makbuzları gerçek native alan sözleşmeleriyle doğrulanır.",
+        "en": "The agent reads full manufacturer cards within a 128 KiB limit, with the next position, actual total and omitted heading counts. All countries and groups are discoverable through native paging. Pages can bind revision and source fingerprint; changed peer data cannot mix into an old page even if the root revision is equal. Create, edit, delete and inverse receipts validate the actual native field contracts."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-manufacturer-output-paging.png",
+        "alt": {
+          "tr": "Üretici kayıtları tam ve sınırlı sayfalarla keşfedilir",
+          "en": "Manufacturer records are discovered in complete bounded pages"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log görev sonucu",
+          "en": "Actual Buyer Log task result with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "agent-manufacturer-output-revision-preflight",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi · Üreticiler",
+        "en": "Agent Office · Manufacturers"
+      },
+      "title": {
+        "tr": "Geçersiz revizyon yazımdan önce engellenir",
+        "en": "Invalid revision metadata is blocked before writes"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Üretici araçları",
+        "en": "Agent Office › Manufacturer tools"
+      },
+      "body": {
+        "tr": "Eski kesirli veya güvenli sayı sınırına yaklaşmış revizyon metadata’sı tüm üretici işlemlerinde önizleme aşamasında durdurulur. Native yazım ve geri almanın revizyon artışına yeterli pay ayrılır. Böylece başarılı veri değişikliği sonradan başarısız görev olarak raporlanıp gerçek makbuzu kaybetmez. Native iş mantığı ve metadata kendiliğinden yeniden yazılmaz.",
+        "en": "Legacy fractional revisions or metadata near the safe-number limit block every manufacturer effect during preview. The preflight leaves enough room for native write and inverse revision increments. A successful data change cannot then become a failed task with its actual receipt lost. Native business logic and metadata are not automatically rewritten."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-manufacturer-output-revision-preflight.png",
+        "alt": {
+          "tr": "Geçersiz revizyon yazımdan önce engellenir",
+          "en": "Invalid revision metadata is blocked before writes"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log görev sonucu",
+          "en": "Actual Buyer Log task result with anonymous data"
+        }
+      }
     }
   ]
 }

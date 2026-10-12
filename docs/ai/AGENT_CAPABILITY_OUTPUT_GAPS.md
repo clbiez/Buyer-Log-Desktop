@@ -1,6 +1,6 @@
 # Explicit output-schema migration gaps
 
-Current executable catalog audit: 165 contract-v2 tools; 106 declare a strict top-level output object; 59 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
+Current executable catalog audit: 165 contract-v2 tools; 110 declare a strict top-level output object; 55 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
 
 | Module | Open output contracts | Registered tool IDs |
 |---|---|---|
@@ -11,7 +11,6 @@ Current executable catalog audit: 165 contract-v2 tools; 106 declare a strict to
 | koleksiyon | 10 | `collection.fields`, `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.supplier.analyze`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
 | quotations | 6 | `quotation.list`, `quotation.apply.collection`, `quotation.create`, `quotation.update`, `quotation.status`, `quotation.approve` |
 | source | 16 | `resource.transit.read`, `resource.transit.replace`, `resource.royalty.read`, `resource.royalty.replace`, `resource.fx.read`, `resource.fx.update`, `resource.endeksmatik.read`, `resource.endeksmatik.lookup`, `resource.endeksmatik.calculate`, `resource.endeksmatik.activate`, `resource.endeksmatik.rename`, `resource.endeksmatik.delete`, `resource.endeksmatik.import`, `resource.merch.read`, `resource.merch.import`, `resource.merch.delete` |
-| manufacturers | 4 | `manufacturer.cards.read`, `manufacturer.cards.create`, `manufacturer.cards.update`, `manufacturer.cards.delete` |
 | automations | 10 | `automation.language`, `automation.recipes.read`, `automation.code.preview`, `automation.recipe.create`, `automation.recipe.update`, `automation.recipe.delete`, `automation.recipe.activate`, `automation.recipe.schedule`, `automation.recipe.preview`, `automation.recipe.execute` |
 | licensecards | 3 | `license.cards.read`, `license.cards.discover`, `license.cards.update` |
 
