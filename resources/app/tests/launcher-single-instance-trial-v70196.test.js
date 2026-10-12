@@ -31,7 +31,7 @@ test('launcher kilidi main.js ile aynı userData (electron-profile) yoluyla alı
 test('Check for Updates penceresi engellenen sürüm için moderatöre Tekrar Dene sunar',()=>{
   assert.ok(UPDATE_UI.includes('data-update-retry'));
   assert.ok(UPDATE_UI.includes("code === 'UPDATE_FAILED_VERSION_BLOCKED'"));
-  assert.ok(UPDATE_UI.includes('api.retry({userId:userId(),version})'));
+  assert.ok(UPDATE_UI.includes('api.retry({userId:userId(),version,channel})'));
   assert.match(UPDATE_UI,/function canRetry\(status\) \{\s*if \(!isModerator\(\)/);
 });
 

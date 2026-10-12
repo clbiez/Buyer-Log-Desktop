@@ -52,6 +52,10 @@ Hazır update yeniden başlatmada persistent launcher tarafından `.buyerlog-ver
 
 Yeni sürüm trial olarak başlar. Başarılı sayılması için Electron/main başlangıcı yanında local backend, local DB ve renderer-ready sinyalleri gerekir. Trial başarısız olursa launcher current pointer'ı last-known-good sürüme döndürür ve update öncesi local DB checkpointini restore eder. Başarısız `version + SHA` kaydı tutulur; aynı broken artifact explicit retry olmadan yeniden kurulmaz.
 
+Başarısız açılıştan sonra moderatör **Güncellemeleri Kontrol Et → ilgili kanal → Tekrar Dene** yolunu kullanır. Yeniden deneme seçilen sürüm, SHA-256 ve kanala bağlıdır; başarısız kayıt indirme başlamadan silinmez. Aynı kapsam eşzamanlı isteği paylaşır; farklı kanal veya explicit retry devam eden kontrolü bekleyip kendi kontrolünü yapar. TEST ve retry güncel moderatör yetkisini kuyruk/indirme sonrasında ve pending yazımı öncesinde tekrar denetler. Başarılı health onayı yalnız eşleşen başarısız kaydı temizler; yeniden başarısız trial önceki sürüme ve DB checkpointine döner.
+
+After a failed launch, a moderator uses **Check for Updates → the relevant channel → Retry**. Retry is bound to the selected version, SHA-256 and channel; starting a download does not erase the failure record. Identical requests share execution; another channel or explicit retry waits for the running check and performs its own check. TEST and retry repeat current moderator authority after queue/download waits and before committing pending activation. Successful health confirmation clears only the matching failure record; another failed trial restores the previous version and DB checkpoint.
+
 Updater network/release-source hatası Buyer Log startup'ını bloke etmez. Development (`npm start`) modunda auto-apply kapalıdır.
 
 ## Release klasörü

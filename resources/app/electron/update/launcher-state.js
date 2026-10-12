@@ -85,7 +85,8 @@ function createLauncherState(options={}){
     const state=readState(),trial=state.activation;if(!trial||trial.status!=='trial'||trial.token!==expectedToken)return false;
     if(String(info.version||'')!==trial.version)return false;
     if(info.backendReady!==true||info.rendererReady!==true||info.localDbReady!==true)return false;
-    writeState({state:'SUCCESS',activation:null,pending:null,currentVersion:trial.version,lastKnownGoodVersion:trial.version,lastError:null,lastHealthAt:now()});removeDbSnapshot(trial.dbSnapshot);return true;
+    const failed={...(state.failedVersions||{})};if(failed[trial.version]?.sha256===trial.sha256)delete failed[trial.version];
+    writeState({state:'SUCCESS',activation:null,pending:null,currentVersion:trial.version,lastKnownGoodVersion:trial.version,failedVersions:failed,lastError:null,lastHealthAt:now()});removeDbSnapshot(trial.dbSnapshot);return true;
   }
   return {bootstrapCore,portableRoot,localDataRoot,localUpdaterRoot,versionsRoot,currentFile,stateFile,packageVersion,validManagedCore,bootstrapPointer,currentPointer,writePointer,readState,writeState,rollbackExistingTrial,activatePending,rollbackNow:rollbackTo,confirmHealth};
 }
