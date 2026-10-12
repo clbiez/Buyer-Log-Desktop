@@ -3876,8 +3876,8 @@
         "en": "Agent Office › Tasks › Undo"
       },
       "body": {
-        "tr": "Mevcut servis gerçek geri alma makbuzu sağlıyorsa kısmi işlem açık onayla geri alınabilir. Sonraki tamamlanmış veya sonucu belirsiz yazımlar önce çözülür; revizyon, güncel yetki ve profil kilidi korunur. Doğrulanamayan geri alma tamamlandı sayılmaz ve hata gösterilir. Başarısız geri alma yeniden onaylanabilir; doğrulanmış zincir makbuzları korunur.",
-        "en": "A partial operation can be explicitly undone when its existing service supplies an actual inverse receipt. Later completed or uncertain writes must be resolved first; revisions, current authority and profile leases remain enforced. An unverified inverse is not marked complete and displays an error. Failed undo can be confirmed again; verified receipts remain intact across inverse chains."
+        "tr": "Mevcut servis gerçek geri alma makbuzu sağlıyorsa kısmi işlem açık onayla geri alınabilir. Sonraki tamamlanmış veya sonucu belirsiz yazımlar önce çözülür; revizyon, güncel yetki ve profil kilidi korunur. Doğrulanamayan geri alma tamamlandı sayılmaz ve hata gösterilir. Başarısız geri alma yeniden onaylanabilir; doğrulanmış zincir makbuzları korunur. Geri alma rezervasyonu varken başka bir sekme sonraki adımı çalıştıramaz veya görevi reddedemez.",
+        "en": "A partial operation can be explicitly undone when its existing service supplies an actual inverse receipt. Later completed or uncertain writes must be resolved first; revisions, current authority and profile leases remain enforced. An unverified inverse is not marked complete and displays an error. Failed undo can be confirmed again; verified receipts remain intact across inverse chains. While undo is reserved, another tab cannot execute a later step or reject the task."
       },
       "visual": {
         "kind": "screenshot",
