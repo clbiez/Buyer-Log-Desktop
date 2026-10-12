@@ -1086,6 +1086,10 @@
       // Explicit edits and imported evidence always win over automation,
       // including a deliberate Pending selection.
       if (directState && direct.source !== 'auto_rule') return directState;
+      const existing = typeof Checklist.statusOf === 'function'
+        ? Checklist.statusOf(analysis, id, statusContext) : 'open';
+      // Respect PLM evidence and manual approvals reused from another PO.
+      if (!directState && existing !== 'open') return existing;
       if (rule && rule.kind === 'checklist' && rule.enabled && rule.autoStatus && rule.autoFormula
         && checklistApplies(id)) {
         if (matchesRule(automaticProbe(rule), facts)) {
