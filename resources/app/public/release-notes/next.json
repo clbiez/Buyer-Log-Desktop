@@ -3826,6 +3826,39 @@
           "en": "Native heading management, usage impact and guarded undo"
         }
       }
+    },
+    {
+      "id": "agent-analysis-output-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Analiz",
+        "en": "Agent Office · Analysis"
+      },
+      "title": {
+        "tr": "Analiz sonuçları tam sayım ve sınırlı bağlamla doğrulanır",
+        "en": "Analysis results use full counts and bounded context"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Analiz",
+        "en": "Agent Office › Tasks › Analysis"
+      },
+      "body": {
+        "tr": "CP, sipariş, koleksiyon, Backlog ve LFL analizleri mevcut deterministik motorla hesaplanır. Agent sonuçları tipli ve sınırlıdır; toplam eşleşme ve grup sayıları tam kaynağı kapsar. Aktarılamayan sayılar, uzun değerler ve kısaltılan metadata açıkça bildirilir. Filtreler literal değerlerle sınırlanır; güvenli olmayan alan ve ölçü adları çalıştırılmaz.",
+        "en": "CP, order, collection, Backlog and LFL analyses use the existing deterministic engine. Agent results are typed and bounded; matched and group counts cover the full source. Unrepresentable numbers, oversized values and shortened metadata are explicitly reported. Filters accept literal values; unsafe field and measure names cannot execute."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-analysis-output-contract.png",
+        "alt": {
+          "tr": "Agent analiz sonucunda tam sayım ve kısaltma bilgisi",
+          "en": "Full counts and truncation information in an agent analysis result"
+        },
+        "caption": {
+          "tr": "Native hesaplar, doğrulanmış sonuçlar ve sınırlı AI bağlamı",
+          "en": "Native calculations, validated results and bounded AI context"
+        }
+      }
     }
   ]
 }
