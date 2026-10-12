@@ -70,8 +70,11 @@ test('reopening CP hydrates canonical refs; name-specific overrides, deletion an
   const apply = make(
     state,()=>cache.setRegistryMap(state.overrides.imagemap),
     (plm,colour)=>cache.canonicalImageKey(plm,colour),
-    plm=>cache.canonicalImageKey(plm,'').replace(/\|colour:$/, ''),
-    (map,plm,code,_order,_model,_ccode,colour)=>named(map,plm,code,colour)||map[cache.canonicalImageKey(plm,'')]||'',
+    plm=>'plm:'+cache.normalizeModelId(plm),
+    (overrides,plm,code,_order,_model,_ccode,colour)=>{
+      const map=overrides.imagemap||{};
+      return named(map,plm,code,colour)||map['plm:'+cache.normalizeModelId(plm)]||'';
+    },
     cacheScope,{invalidate:urls=>invalidated.push(...urls)},'/api/cp-images'
   );
   const ok=apply({ ok:true, scopeKeys:['plm:215013|colour:C01','plm:215013','plm:400|colour:B02','plm:400'],
