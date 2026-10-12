@@ -4387,6 +4387,39 @@
           "en": "Actual Buyer Log Agent Office with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-office-durable-operation-waiting",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Başlatılan iş tamamlandı sayılmaz",
+        "en": "Starting work no longer counts as completion"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › İş durumunu kontrol et",
+        "en": "Agent Office › Tasks › Check operation status"
+      },
+      "body": {
+        "tr": "Uzun işlemin doğrulanmış başlatma kaydı mevcut kalıcı görev kuyruğunda sonuç bekleme durumuna geçer. Sonraki adımlar yalnız gerçek ve doğrulanmış sonuçla ilerler. Yeniden açılışta mevcut iş kontrol edilir; belirsiz işlem otomatik başlatılmaz. Kullanıcı ve agent yetkisi, iş kimliği ve revizyonu beklemeden sonra ve sonuç kaydı sırasında yeniden kontrol edilir. Güvenli durum okumalarının tekrar denemesi sınırlıdır.",
+        "en": "A verified start receipt for a long operation enters an awaiting-result state in the existing durable task queue. Downstream steps advance only with actual verified results. Reopening checks existing work without automatically starting uncertain operations. User and agent authority, operation identity and revision are rechecked after waits and during result persistence. Retries of safe status reads are bounded."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-durable-operation-waiting.png",
+        "alt": {
+          "tr": "Gerçek sonucu bekleyen görev ve durum kontrolü",
+          "en": "Task awaiting an actual result and its status check"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log görev kuyruğu",
+          "en": "Actual Buyer Log task queue with anonymous data"
+        }
+      }
     }
   ]
 }

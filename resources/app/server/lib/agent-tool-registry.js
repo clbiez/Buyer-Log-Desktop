@@ -233,6 +233,7 @@ function summarize(value) {
 
 function createToolRegistry(adapter) {
   const tools = new Map();
+  const pendingPollers = new Map(); // Trusted native receipt readers, never model input.
   function register(meta, execute, rollback = null) {
     tools.set(meta.id, { ...meta, rollbackContract:typeof meta.rollback==='string'?meta.rollback:meta.rollbackContract, execute, rollback });
   }
@@ -572,23 +573,38 @@ function createToolRegistry(adapter) {
     return [...tools.values()].map(({ execute, rollback, ...meta }) => clone(meta));
   }
   function get(id) { return tools.get(clean(id)) || null; }
+  function capabilityContext(tool,id,ctx) {
+    const assertAuthority=()=>{
+      const current=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):ctx.profile;
+      if(!current||current.id!==ctx.ownerId||!require('./agent-capability-contract').allowed(tool,current,adapter.userAccess))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+      return current;
+    };
+    const profile=assertAuthority(),authorizationFingerprint=JSON.stringify(adapter.userAccess?.publicProfile?.(profile)||profile);
+    return {...ctx,profile,toolId:id,assertAuthority:()=>{const current=assertAuthority();if(JSON.stringify(adapter.userAccess?.publicProfile?.(current)||current)!==authorizationFingerprint)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return current;}};
+  }
   async function execute(id, args, ctx) {
     const tool = get(id); if (!tool) throw Object.assign(new Error(`Tool bulunamadı: ${id}`), { code: 'TOOL_NOT_FOUND' });
     args=args||{};ctx=ctx||{};
     if(tool.contractVersion){
       require('./agent-tool-schema').validate(tool.inputSchema,args);
-      const assertAuthority=()=>{
-        const current=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):ctx.profile;
-        if(!current||current.id!==ctx.ownerId||!require('./agent-capability-contract').allowed(tool,current,adapter.userAccess))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
-        return current;
-      };
-      const profile=assertAuthority(),authorizationFingerprint=JSON.stringify(adapter.userAccess?.publicProfile?.(profile)||profile);
-      const assertUnchanged=()=>{const current=assertAuthority();if(JSON.stringify(adapter.userAccess?.publicProfile?.(current)||current)!==authorizationFingerprint)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return current;};
+      ctx=capabilityContext(tool,id,ctx);
       if(tool.approval&&!ctx.dryRun&&!ctx.approvalGranted)throw Object.assign(new Error('OFFICE_APPROVAL_REQUIRED'),{code:'OFFICE_APPROVAL_REQUIRED',statusCode:403});
-      ctx={...ctx,profile,assertAuthority:assertUnchanged,toolId:id};
     }
     const result=await tool.execute(args,ctx);
     if(tool.contractVersion){require('./agent-tool-schema').validate(ctx.dryRun?tool.dryRunOutputSchema||tool.outputSchema:tool.outputSchema,result);adapter.userAccess.appendAudit(ctx.profile,tool.audit||'AGENT_CAPABILITY_TOOL',id,{runId:ctx.runId,nodeId:ctx.nodeId,dryRun:!!ctx.dryRun,verified:result.verified});}
+    return result;
+  }
+  async function pollPending(id,receipt,ctx={}) {
+    const tool=get(id),poll=pendingPollers.get(id),fail=()=>Object.assign(new Error('OFFICE_NATIVE_RECEIPT_INVALID'),{code:'OFFICE_NATIVE_RECEIPT_INVALID',statusCode:409});
+    if(!tool||!poll||receipt?.completionPending!=='native-operation'||typeof receipt.operation?.id!=='string'||!receipt.operation.id||typeof adapter.authorizePendingCapability!=='function')throw fail();
+    require('./agent-tool-schema').validate(tool.outputSchema,receipt);
+    ctx=capabilityContext(tool,id,ctx);
+    await adapter.authorizePendingCapability(ctx,receipt);ctx.assertAuthority();
+    const result=await poll(clone(receipt),ctx);
+    require('./agent-tool-schema').validate(tool.outputSchema,result);
+    if(result.verified!==true||result.operation?.id!==receipt.operation.id||result.completionPending!==undefined&&result.completionPending!=='native-operation')throw fail();
+    ctx.assertAuthority();await adapter.authorizePendingCapability(ctx,receipt);ctx.assertAuthority();
+    adapter.userAccess.appendAudit(ctx.profile,'AGENT_NATIVE_OPERATION_POLL',id,{runId:ctx.runId,pending:result.completionPending==='native-operation'});
     return result;
   }
   async function rollback(id, token, ctx) {
@@ -609,7 +625,11 @@ function createToolRegistry(adapter) {
     if(tool.contractVersion)adapter.userAccess.appendAudit(ctx.profile,'AGENT_CP_TOOL_ROLLBACK',id,{runId:ctx.runId,verified:result?.verified===true});
     return result;
   }
-  return { catalog, get, execute, rollback, registerCapability(spec){require('./agent-capability-contract').register(register,spec,adapter.authorizeCapability);} };
+  return { catalog, get, execute, rollback, pollPending,hasPendingPoller:id=>pendingPollers.has(id),registerCapability(spec){
+    if(spec.poll!==undefined&&(typeof spec.poll!=='function'||spec.risk==='read'||spec.outputSchema?.additionalProperties!==false||!spec.outputSchema.properties?.completionPending?.enum?.includes('native-operation')||spec.outputSchema.properties?.operation?.properties?.id?.type!=='string'))throw new TypeError('Native polling requires a strict approved effect contract');
+    require('./agent-capability-contract').register(register,spec,adapter.authorizeCapability);
+    if(spec.poll)pendingPollers.set(spec.id,spec.poll);else pendingPollers.delete(spec.id);
+  } };
 }
 
 module.exports = {

@@ -2488,6 +2488,7 @@ function cpAgentMail(profile,args,rows,dryRun,expected=null) {
 }
 const agentToolRegistry = createToolRegistry({
   authorizeCapability:(ctx,args)=>agentOfficeService.taskAuthorize(ctx,args),
+  authorizePendingCapability:(ctx,receipt)=>agentOfficeService.taskAuthorizePending(ctx,receipt),
   cp:{...cpAgentPreferences,data:cpAgentData,calendar:()=>require('./lib/merch-calendar-store').publicProjection(),mail:cpAgentMail,
     assertRevision:(profile,revision)=>{if(cpAgentRevision(profile)!==revision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});},
     verifyMail:(result,profile)=>result.emails.length>0&&result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id))),
