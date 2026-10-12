@@ -85,6 +85,13 @@ function normalizePayload(payload) {
 function sourceFingerprint(value) {
   return crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 }
+function mutationOf(options){
+ const value=options.mutation;
+ if(value===undefined)return null;
+ if(!value||!/^[a-f0-9]{64}$/.test(value.id||'')||!/^[a-f0-9]{64}$/.test(value.expectedFingerprint||'')||value.expectedFingerprint!==options.expectedFingerprint)throw Object.assign(new Error('OAB_SNAPSHOT_MUTATION_INVALID'),{code:'OAB_SNAPSHOT_MUTATION_INVALID',statusCode:409});
+ return {id:value.id,expectedFingerprint:value.expectedFingerprint};
+}
+const sameMutation=(a,b)=>a&&b&&a.id===b.id&&a.expectedFingerprint===b.expectedFingerprint;
 function clearRevision(userId) {
   const file = filePathFor(userId) + '.revision.json';
   if (!fs.existsSync(file)) {
@@ -105,13 +112,16 @@ function update(userId, transform, options = {}) {
   if (typeof transform !== 'function') throw new TypeError('Native snapshot transformer required');
   return withFileLeaseSync(filePathFor(userId), () => {
     if (options.assertAuthority) options.assertAuthority();
+    const mutation=mutationOf(options);
     const previous = load(userId), current = sourceFingerprint({clearRevision:clearRevision(userId),snapshot:previous});
+    if(sameMutation(previous?._nativeMutation,mutation)){options.assertAuthority?.();return{savedAt:previous.savedAt,fetchedAt:previous.snapshot.fetchedAt,rows:previous.snapshot.rows.length,sourceFingerprint:current,reused:true};}
     if (options.expectedFingerprint !== undefined && options.expectedFingerprint !== current) {
       throw Object.assign(new Error('OAB_SNAPSHOT_CHANGED'),{code:'OAB_SNAPSHOT_CHANGED',statusCode:409});
     }
     const payload = transform(previous);
     if (payload && typeof payload.then === 'function') throw new TypeError('Native snapshot transformer must be synchronous');
     const value = normalizePayload(payload);
+    if(mutation)value._nativeMutation=mutation;
     if (options.assertAuthority) options.assertAuthority();
     const buffer = zlib.gzipSync(Buffer.from(JSON.stringify(value), 'utf8'), { level: 6 });
     if (options.assertAuthority) options.assertAuthority();
@@ -146,21 +156,32 @@ function readCurrent(userId,options={}) {
     options.assertAuthority?.();
     const state=load(userId),current=sourceFingerprint({clearRevision:clearRevision(userId),snapshot:state});
     if(options.expectedFingerprint!==undefined&&options.expectedFingerprint!==current)throw Object.assign(new Error('OAB_SNAPSHOT_CHANGED'),{code:'OAB_SNAPSHOT_CHANGED',statusCode:409});
-    options.assertAuthority?.();return state;
+    options.assertAuthority?.();return options.withFingerprint?{state,sourceFingerprint:current}:state;
   });
 }
 
-function clear(userId) {
+function clear(userId,options={}) {
  return withFileLeaseSync(filePathFor(userId), () => {
+  options.assertAuthority?.();
   const file = filePathFor(userId);
+  const mutation=mutationOf(options);clearRevision(userId);
+  const copyHash=candidate=>fs.existsSync(candidate)?crypto.createHash('sha256').update(fs.readFileSync(candidate)).digest('hex'):null;
+  const copies={main:copyHash(file),backup:copyHash(file+'.bak')};
+  let priorRevision=null;try{priorRevision=JSON.parse(fs.readFileSync(file+'.revision.json','utf8'));}catch(error){if(error.code!=='ENOENT')throw error;}
+  const reused=sameMutation(priorRevision?.mutation,mutation);
+  if(reused){
+   // An interrupted clear may retain either exact original physical copy.
+   // Missing copies are allowed; new/different bytes never belong to it.
+   if(!priorRevision.previousCopies||Object.entries(copies).some(([key,value])=>value!==null&&value!==priorRevision.previousCopies[key]))throw Object.assign(new Error('OAB_SNAPSHOT_CHANGED'),{code:'OAB_SNAPSHOT_CHANGED',statusCode:409});
+  }else if(options.expectedFingerprint!==undefined&&options.expectedFingerprint!==fingerprint(userId))throw Object.assign(new Error('OAB_SNAPSHOT_CHANGED'),{code:'OAB_SNAPSHOT_CHANGED',statusCode:409});
   // Persist the native empty-state identity before deleting both report copies.
   // A no-report -> save -> clear transition must not return to the old CAS stamp.
-  atomicWriteJson(file + '.revision.json',{schemaVersion:1,revisionId:crypto.randomUUID(),clearedAt:new Date().toISOString()});
+  options.assertAuthority?.();if(!reused)atomicWriteJson(file + '.revision.json',{schemaVersion:1,revisionId:crypto.randomUUID(),clearedAt:new Date().toISOString(),...(mutation?{mutation,previousCopies:copies}:{})});
   let removed = false;
   for (const candidate of [file, file + '.bak']) {
     try { fs.unlinkSync(candidate); removed = true; } catch (err) { if (err && err.code !== 'ENOENT') throw err; }
   }
-  return removed;
+  return options.returnReceipt?{removed,sourceFingerprint:fingerprint(userId),rowCount:0,reused:!!reused}:removed;
  });
 }
 

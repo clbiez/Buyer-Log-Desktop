@@ -4420,6 +4420,39 @@
           "en": "Actual Buyer Log task queue with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-oab-native-execution",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "OAB yüklemesini çalıştır, sonucunu doğrula",
+        "en": "Execute OAB fetching and verify its result"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › OAB",
+        "en": "Agent Office › Tasks › OAB"
+      },
+      "body": {
+        "tr": "Agent, onaylanan OAB kapsamını mevcut yükleme servisiyle başlatır; gerçek satırlar kalıcı rapora kaydedilene kadar bekler. Eksik iş yalnız doğrulanmamış kombinasyonlarla onaylı sürdürülür. İptal, işin durduğunu doğrular. Yetki her ağ beklemesinden sonra ve kayıt kilidi altında tekrar kontrol edilir. Rapor geri alma işlemi, yeni kullanıcı değişikliğini ezmeden önceki raporu geri yükler.",
+        "en": "The agent starts approved OAB scope through the existing fetching service and waits until actual rows persist in the native report. Approved continuation covers only unverified combinations. Cancellation verifies that work stopped. Authority is rechecked after network waits and under the write lock. Report undo restores the prior report without overwriting newer user changes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-oab-native-execution.png",
+        "alt": {
+          "tr": "Gerçek OAB sonucu ve onaylanan iş adımları",
+          "en": "Actual OAB result and approved task steps"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log Agent Ofisi",
+          "en": "Actual Buyer Log Agent Office with anonymous data"
+        }
+      }
     }
   ]
 }

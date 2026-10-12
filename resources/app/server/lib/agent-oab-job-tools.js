@@ -29,4 +29,4 @@ function registerOabJobTools(registry,deps={}){
   validate(previewOutput,{verified:true,data});await agent(ctx);return data;
  }});
 }
-module.exports={registerOabJobTools,receiptOutput,reportOutput,previewOutput};
+module.exports={registerOabJobTools,receiptOutput,reportOutput,previewOutput,publicJob,jobSchema:job};

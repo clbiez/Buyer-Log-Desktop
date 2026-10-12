@@ -133,6 +133,18 @@ function attachTasks(service,deps) {
     const {profile,agent}=await stepAuthority({id:ctx.ownerId},step);
     if(step.authorizationFingerprint!==actorHash(profile)||agent.revision!==step.agentRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
   }
+  async function nativeGuard(ctx,work){
+    if(work!==undefined&&typeof work!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);
+    return store.db(ctx.ownerId).privateRecordTransaction(state=>{
+      const job=state.records['job:'+ctx.input?.officeJobId]?.doc,step=job?.steps?.find(s=>s.id===ctx.input?.officeStepId);
+      if(!job||job.ownerId!==ctx.ownerId||job.deleted||job.type!=='capability-task'||!['running','waiting_operation'].includes(job.status)||!step||!['running','waiting_operation'].includes(step.status)||step.toolId!==ctx.toolId||step.runtimeRunId!==ctx.runId||step.agentId!==ctx.input.officeAgentId||step.agentRevision!==ctx.input.officeAgentRevision)throw error('OFFICE_APPROVAL_REQUIRED',403);
+      assertTaskAvailable(job);receiptGuard({id:ctx.ownerId},job,step)(state);ctx.assertAuthority();
+      for(const binding of step.bindings||[]){const previous=job.steps.find(s=>s.id===binding.stepId);if(previous?.status!=='completed')throw error('OFFICE_TASK_DEPENDENCY',409);receiptGuard({id:ctx.ownerId},job,previous)(state);}
+      const result=work?work():true;
+      if(result&&typeof result.then==='function')throw error('OFFICE_TASK_RECONCILE',409);
+      return {result};
+    });
+  }
   async function pollOnce(profile,key){
     profile=authority(profile);let job=await store.get(profile.id,'job',key);assertTaskAvailable(job);
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
@@ -205,6 +217,6 @@ function attachTasks(service,deps) {
   async function scheduleUpdate(profile,key,raw){profile=authority(profile);const previous=await store.get(profile.id,'metadata',key);if(previous.type!=='capability-schedule')throw error('OFFICE_NOT_FOUND',404);if(!Number.isSafeInteger(raw.revision))throw error('OFFICE_REVISION_CONFLICT',409);if(raw.enabled===true){const tools=await catalog(profile,previous.agentId);if(!tools.some(t=>t.id===previous.toolId&&t.risk==='read')||previous.authorizationFingerprint!==actorHash(profile))throw error('OFFICE_PREVIEW_CHANGED',409);}return store.save(profile.id,'metadata',{...previous,enabled:raw.enabled===true},{expectedRevision:raw.revision});}
   function start(){if(!timer){timer=setInterval(()=>{for(const owner of deps.taskOwners?.()||[]){const profile=access.profileById(owner);if(profile?.enabled!==false&&profile)void tick(profile).catch(err=>deps.onBackgroundError?.(err.code));}},30000);timer.unref?.();}}
   const previousStop=service.stop;service.stop=()=>{if(timer)clearInterval(timer);timer=null;previousStop();};start();
-  return {taskCatalog:catalog,taskCreate:create,taskPlan:plan,taskPrepare:prepare,taskExecute:execute,taskAuthorize:authorize,taskAuthorizePending:authorizePending,taskPollOperation:poll,taskReject:reject,taskFeedback:feedback,taskRollback:rollback,taskSchedule:schedule,taskScheduleUpdate:scheduleUpdate,taskTick:tick,taskPendingOutput:pendingOutput,taskCompleteOutput:completeOutput,taskOutputFile:outputFile,taskPrintOutput:printOutput};
+  return {taskCatalog:catalog,taskCreate:create,taskPlan:plan,taskPrepare:prepare,taskExecute:execute,taskAuthorize:authorize,taskAuthorizePending:authorizePending,taskNativeGuard:nativeGuard,taskPollOperation:poll,taskReject:reject,taskFeedback:feedback,taskRollback:rollback,taskSchedule:schedule,taskScheduleUpdate:scheduleUpdate,taskTick:tick,taskPendingOutput:pendingOutput,taskCompleteOutput:completeOutput,taskOutputFile:outputFile,taskPrintOutput:printOutput};
 }
 module.exports={attachTasks};
