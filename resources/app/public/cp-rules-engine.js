@@ -1279,8 +1279,11 @@
     const by = source => fields.filter(item => item.source === source);
     const derived = fields.filter(item => text(item.id).indexOf('@') === 0 && !item.source);
     const purpose = kind === 'checklist'
-      ? (en ? 'The formula decides WHICH ORDERS are asked this checklist question. TRUE = the question is asked for that order.'
-        : 'Formül, bu checklist sorusunun HANGİ SİPARİŞLERE sorulacağını belirler. TRUE = soru o siparişe sorulur.')
+      ? (opts.autoStatus
+        ? (en ? 'The formula decides WHEN the checklist automatically saves status "' + opts.autoStatus + '" on a matching order. TRUE = assign that status; manual decisions always win. It is independent of the rule condition that chooses which orders are asked.'
+          : 'Formül, uygun sipariş için "' + opts.autoStatus + '" durumunun NE ZAMAN otomatik yazılacağını belirler. TRUE = bu durum kaydedilir; manuel kararlar korunur. Bu formül, sorunun hangi siparişlere sorulacağını belirleyen koşuldan BAĞIMSIZDIR.')
+        : (en ? 'The formula decides WHICH ORDERS are asked this checklist question. TRUE = the question is asked for that order.'
+          : 'Formül, bu checklist sorusunun HANGİ SİPARİŞLERE sorulacağını belirler. TRUE = soru o siparişe sorulur.'))
       : (en ? 'The formula decides which orders are ESCALATED to the rule\'s priority. TRUE = the order is escalated. Rules can only raise priority, never lower it.'
         : 'Formül, hangi siparişlerin kuralın önceliğine YÜKSELTİLECEĞİNİ belirler. TRUE = sipariş yükseltilir. Kurallar önceliği yalnız yükseltir, düşürmez.');
     const request = text(opts.request);
