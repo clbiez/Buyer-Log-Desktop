@@ -652,6 +652,15 @@
 
   function oabAuthErrorMessage(err) {
     const code = err && err.code;
+    if (code === 'OAB_SNAPSHOT_REVISION_INVALID') return oabT(
+      'Kalıcı OAB raporunun kaynak kimliği doğrulanamadı. Mevcut veri değiştirilmedi; kaynak kaydını kontrol edin.',
+      'The persistent OAB report’s source identity could not be verified. Existing data was not changed; check the source record.');
+    if (code === 'OAB_SNAPSHOT_CHANGED') return oabT(
+      'Başka bir sekmede OAB raporu güncellendi. Güncel rapor korundu; seçiminizi kontrol edip tekrar deneyin.',
+      'The OAB report changed in another tab. The current report was preserved; check your selection and retry.');
+    if (code === 'OAB_SNAPSHOT_SAVE_FAILED') return oabT(
+      'Çekilen OAB sonucu kalıcı olarak kaydedilemedi. Mevcut raporu kontrol edip tekrar deneyin.',
+      'The fetched OAB result could not be saved persistently. Check the existing report and retry.');
     if (code === 'OAB_ACCESS_REVOKED') return oabT(
       'OAB erişim yetkiniz değişti. İşlem durduruldu; erişiminizi kontrol edip yeni bir planla tekrar deneyin.',
       'Your OAB access changed. The job stopped; check your access and retry with a new plan.');
@@ -1422,11 +1431,14 @@
       ? oabT(`${sources.length} kombinasyon rapora eklendi`, `${sources.length} combinations added to the report`)
       : oabT(`${sources.length} kombinasyon birleştirildi`, `${sources.length} combinations merged`));
     if (job.cancelled) notes.push(oabT('iş iptal edildi', 'job cancelled'));
+    if (job.snapshotSaved === false) notes.push(job.snapshotErrorCode === 'OAB_SNAPSHOT_CHANGED'
+      ? oabT('sonuç kalıcılaştırılmadı; diğer sekmenin güncel raporu korundu', 'result was not persisted; the other tab’s current report was preserved')
+      : oabT('sonuç kalıcılaştırılamadı; mevcut raporu kontrol edin', 'result could not be persisted; check the existing report'));
     if (failures.length) notes.push(oabT(`${failures.length} kombinasyon alınamadı`, `${failures.length} combinations failed`));
     if (job.batchedBuyerGroups === 'supported') notes.push(oabT('toplu Buyer Group isteği kullanıldı', 'batched Buyer Group request used'));
     if (failures.length) notes.push(oabT('— detay için tıklayın', '— click for details'));
     // Sıra önemli: oabSetStatus listeyi temizler, sonra dolduruyoruz.
-    oabSetStatus(notes.join(' · '), failures.length || job.cancelled ? 'warning' : '');
+    oabSetStatus(notes.join(' · '), failures.length || job.cancelled || job.snapshotSaved === false ? 'warning' : '');
     S.batchFailures = failures;
     oabBindFailureDetails();
   }

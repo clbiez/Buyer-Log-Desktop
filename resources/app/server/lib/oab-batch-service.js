@@ -63,6 +63,8 @@ function oabBatchPublicJob(job) {
     batchedBuyerGroups: job.batchedBuyerGroups,
     error: job.error,
     errorCode: job.errorCode,
+    snapshotSaved: job.snapshotSaved,
+    snapshotErrorCode: job.snapshotErrorCode,
   };
 }
 // Tek bir (Sezon, MAG, BuyerGroup listesi) isteğini çeker. Cache yalnız TEK
@@ -175,7 +177,8 @@ async function runOabBatchJob(job, currentUser) {
            BİRLEŞTİRİLİR; seçim de birleşiktir ki açılışta aynı kapsam geri
            yüklensin. */
         assertJobAuthority(job);
-        const previous = job.mergeWithSnapshot ? oabSessionStore.load(userId) : null;
+        oabSessionStore.update(userId, current => {
+        const previous = job.mergeWithSnapshot ? current : null;
         const prevSnapshot = previous && previous.snapshot ? previous.snapshot : null;
         const prevSelection = previous && previous.selection ? previous.selection : {};
         const combined = prevSnapshot
@@ -184,7 +187,7 @@ async function runOabBatchJob(job, currentUser) {
         const fields = prevSnapshot
           ? [...new Set([...(prevSnapshot.fields || []), ...merged.fields])]
           : merged.fields;
-        oabSessionStore.save(userId, {
+        return {
           selection: prevSnapshot ? {
             seasonRefs: oabBatch.mergeRefLists(prevSelection.seasonRefs, job.selection.seasonRefs),
             merchSubGroupRefs: oabBatch.mergeRefLists(prevSelection.merchSubGroupRefs, job.selection.merchSubGroupRefs),
@@ -195,8 +198,15 @@ async function runOabBatchJob(job, currentUser) {
           fields,
           fetchedAt: job.finishedAt,
           fromCache: !prevSnapshot && job.fromCacheCount === job.results.length && job.results.length > 0,
-        });
-      } catch (error) { logRuntimeFailure('oabBatchSnapshot', error); }
+        };
+        }, {expectedFingerprint:job.snapshotFingerprint,assertAuthority:()=>assertJobAuthority(job)});
+        job.snapshotSaved = true;
+      } catch (error) {
+        job.snapshotSaved = false;
+        job.snapshotErrorCode = error?.code === 'OAB_SNAPSHOT_CHANGED' ? 'OAB_SNAPSHOT_CHANGED' : job.authorityLost ? job.authorityErrorCode || 'OAB_ACCESS_REVOKED' : 'OAB_SNAPSHOT_SAVE_FAILED';
+        if (!job.errorCode) {job.errorCode=job.snapshotErrorCode;job.error=job.snapshotErrorCode;}
+        logRuntimeFailure('oabBatchSnapshot', error);
+      }
     }
   }
 }
@@ -308,6 +318,8 @@ function oabBuildPlan(body) {
       skipped: built.skipped.slice(0, 200),
       batchedBuyerGroups: built.capability.state,
       error: '', errorCode: '',
+      snapshotFingerprint: oabSessionStore.fingerprint(currentUser.id),
+      snapshotSaved: null, snapshotErrorCode: '',
     };
     // Toplu mod denenecekse önce YETENEK DOĞRULANIR; kuyruk sonuca göre kurulur.
     const multiGroups = built.groups.filter(group => group.buyerGroupRefs.length > 1);

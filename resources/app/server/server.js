@@ -5553,6 +5553,9 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
         details:{ field:metadataSelection.field },
       });
     }
+    assertOabCurrentAccess(req.currentUser.id);
+    const snapshotFingerprint = oabSessionStore.fingerprint(req.currentUser.id);
+    const snapshotOptions = {expectedFingerprint:snapshotFingerprint,assertAuthority:()=>assertOabCurrentAccess(req.currentUser.id)};
     const key = oabStore.cacheKeyOf(seasonRef, merchSubGroupRef, buyerGroupRef);
     if (!body.forceRefresh) {
       const cached = oabStore.get(key);
@@ -5563,7 +5566,7 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
           fields:cached.fields,
           fetchedAt:cached.fetchedAt,
           fromCache:true,
-        });
+        }, snapshotOptions);
         return res.json({ ok:true, rows:cached.rows, fields:cached.fields, fromCache:true, fetchedAt:cached.fetchedAt, ttlMinutes:cached.ttlMinutes });
       }
     }
@@ -5581,7 +5584,7 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
       fields:saved.fields,
       fetchedAt:saved.fetchedAt,
       fromCache:false,
-    });
+    }, snapshotOptions);
     userAccess.appendAudit(req.currentUser, 'OAB_REPORT_FETCH', key, { rows: rows.length, fields: fields.length, forceRefresh: Boolean(body.forceRefresh) });
     res.json({ ok:true, rows:saved.rows, fields:saved.fields, fromCache:false, fetchedAt:saved.fetchedAt, ttlMinutes:oabStore.loadCacheSettings().ttlMinutes });
   } catch (err) { automationError(res, err, 'OAB raporu alınamadı.'); }

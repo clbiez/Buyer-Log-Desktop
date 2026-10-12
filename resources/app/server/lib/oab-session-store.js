@@ -16,7 +16,9 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
-const { LOCAL_DATA_ROOT, atomicWriteBuffer } = require('../user-data');
+const crypto = require('crypto');
+const { withFileLeaseSync } = require('./shared-file-transaction');
+const { LOCAL_DATA_ROOT, atomicWriteBuffer, atomicWriteJson } = require('../user-data');
 
 const ROOT = path.join(LOCAL_DATA_ROOT, 'oab-snapshots');
 const SCHEMA_VERSION = 1;
@@ -60,6 +62,7 @@ function normalizePayload(payload) {
   const buyerGroupRefs = cleanRefList(selection.buyerGroupRefs, selection.buyerGroupRef);
   return {
     schemaVersion: SCHEMA_VERSION,
+    revisionId: crypto.randomUUID(),
     savedAt: new Date().toISOString(),
     selection: {
       seasonRef: seasonRefs[0] || '',
@@ -79,12 +82,48 @@ function normalizePayload(payload) {
   };
 }
 
-function save(userId, payload) {
-  const value = normalizePayload(payload);
-  const buffer = zlib.gzipSync(Buffer.from(JSON.stringify(value), 'utf8'), { level: 6 });
-  const file = filePathFor(userId);
-  atomicWriteBuffer(file, buffer);
-  return { savedAt: value.savedAt, fetchedAt: value.snapshot.fetchedAt, rows: value.snapshot.rows.length };
+function sourceFingerprint(value) {
+  return crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
+}
+function clearRevision(userId) {
+  const file = filePathFor(userId) + '.revision.json';
+  if (!fs.existsSync(file)) {
+    if (fs.existsSync(file + '.bak')) throw Object.assign(new Error('OAB_SNAPSHOT_REVISION_INVALID'),{code:'OAB_SNAPSHOT_REVISION_INVALID',statusCode:409});
+    return null; // Existing legacy owners need no migration.
+  }
+  try {
+    const value = JSON.parse(fs.readFileSync(file,'utf8'));
+    if (value?.schemaVersion === 1 && /^[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}$/.test(value.revisionId)) return value.revisionId;
+  } catch (_) {}
+  throw Object.assign(new Error('OAB_SNAPSHOT_REVISION_INVALID'),{code:'OAB_SNAPSHOT_REVISION_INVALID',statusCode:409});
+}
+function fingerprint(userId) {return sourceFingerprint({clearRevision:clearRevision(userId),snapshot:load(userId)});}
+
+// Same native atomic writer, under the existing inter-process file lease.
+// The trusted transformer receives the actual current report inside the lease.
+function update(userId, transform, options = {}) {
+  if (typeof transform !== 'function') throw new TypeError('Native snapshot transformer required');
+  return withFileLeaseSync(filePathFor(userId), () => {
+    if (options.assertAuthority) options.assertAuthority();
+    const previous = load(userId), current = sourceFingerprint({clearRevision:clearRevision(userId),snapshot:previous});
+    if (options.expectedFingerprint !== undefined && options.expectedFingerprint !== current) {
+      throw Object.assign(new Error('OAB_SNAPSHOT_CHANGED'),{code:'OAB_SNAPSHOT_CHANGED',statusCode:409});
+    }
+    const payload = transform(previous);
+    if (payload && typeof payload.then === 'function') throw new TypeError('Native snapshot transformer must be synchronous');
+    const value = normalizePayload(payload);
+    if (options.assertAuthority) options.assertAuthority();
+    const buffer = zlib.gzipSync(Buffer.from(JSON.stringify(value), 'utf8'), { level: 6 });
+    if (options.assertAuthority) options.assertAuthority();
+    atomicWriteBuffer(filePathFor(userId), buffer);
+    const persisted = load(userId);
+    if (sourceFingerprint(persisted) !== sourceFingerprint(value)) throw Object.assign(new Error('OAB_SNAPSHOT_SAVE_FAILED'),{code:'OAB_SNAPSHOT_SAVE_FAILED',statusCode:500});
+    return {savedAt:value.savedAt,fetchedAt:value.snapshot.fetchedAt,rows:value.snapshot.rows.length,sourceFingerprint:fingerprint(userId)};
+  });
+}
+function save(userId, payload, options = {}) {
+  const {savedAt,fetchedAt,rows} = update(userId, () => payload, options);
+  return {savedAt,fetchedAt,rows};
 }
 
 function load(userId) {
@@ -103,12 +142,17 @@ function load(userId) {
 }
 
 function clear(userId) {
+ return withFileLeaseSync(filePathFor(userId), () => {
   const file = filePathFor(userId);
+  // Persist the native empty-state identity before deleting both report copies.
+  // A no-report -> save -> clear transition must not return to the old CAS stamp.
+  atomicWriteJson(file + '.revision.json',{schemaVersion:1,revisionId:crypto.randomUUID(),clearedAt:new Date().toISOString()});
   let removed = false;
   for (const candidate of [file, file + '.bak']) {
     try { fs.unlinkSync(candidate); removed = true; } catch (err) { if (err && err.code !== 'ENOENT') throw err; }
   }
   return removed;
+ });
 }
 
-module.exports = { ROOT, SCHEMA_VERSION, filePathFor, save, load, clear };
+module.exports = { ROOT, SCHEMA_VERSION, filePathFor, save, load, clear, fingerprint, update };

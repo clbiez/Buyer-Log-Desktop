@@ -4222,6 +4222,39 @@
           "en": "Actual Buyer Log screen with anonymous data"
         }
       }
+    },
+    {
+      "id": "oab-native-snapshot-concurrency",
+      "type": "fix",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Eski yükleme daha güncel raporu ezmez",
+        "en": "An older fetch cannot overwrite a newer report"
+      },
+      "path": {
+        "tr": "Overview › OAB",
+        "en": "Overview › OAB"
+      },
+      "body": {
+        "tr": "Native OAB snapshot kaydı aynı dosya kirasında gerçek kaynak parmak iziyle karşılaştırılır. Uzun tekli/toplu yükleme veya yeniden deneme sırasında başka sekme raporu değiştirirse yeni rapor korunur. Çekilen toplu satırlar okunabilir; kalıcı kaydın yapılmadığı TR/EN uyarıyla gösterilir. Başarılı kayıt diskteki gerçek snapshot ile doğrulanır. Eski snapshot dosyaları çalışmaya devam eder; native sıkıştırılmış atomik kayıt yolu korunur.",
+        "en": "Native OAB snapshot writes compare the actual source fingerprint under the same file lease. If another tab changes the report during a long single/batch fetch or retry, the newer report is preserved. Fetched batch rows remain available, with a TR/EN warning that persistence did not complete. A successful write verifies the actual snapshot on disk. Legacy snapshots still work and the native compressed atomic writer remains in use."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-snapshot-concurrency.png",
+        "alt": {
+          "tr": "Güncel rapor korundu ve eski toplu sonuç kalıcılaştırılmadı",
+          "en": "The current report was preserved and the older batch result was not persisted"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log uyarısı",
+          "en": "Actual Buyer Log warning with anonymous data"
+        }
+      }
     }
   ]
 }
