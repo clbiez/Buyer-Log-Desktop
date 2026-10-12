@@ -1711,7 +1711,9 @@
     const kind = fieldKind(fieldId, rule);
     if (kind === 'checklist') {
       const labels = Rules.CHECKLIST_STATE_LABELS[lang()];
-      return Rules.CHECKLIST_STATES.map(value => ({ value, label: labels[value] || value }));
+      return [...Checklist.statusIds(), 'notApplicable'].map(value => ({
+        value, label: labels[value] || Checklist.statusLabel(value, lang()) || value,
+      }));
     }
     if (kind === 'rule') {
       const labels = Rules.RULE_STATE_LABELS[lang()];
@@ -2523,7 +2525,7 @@
         howRulesWork: L('Formül TRUE ise kural siparişe uygulanır. Öncelik kuralı eşleşen siparişi seçili önceliğe YÜKSELTİR (CRITICAL = Kritik/kırmızı). Renk/öncelik formülde değil "priority" alanında verilir.', 'When the formula is TRUE the rule applies to the order. A priority rule ESCALATES a matching order to the chosen priority (CRITICAL = Critical/red). Colour/priority is given in the "priority" field, not in the formula.'),
         currentFormula: Rules.formulaToDisplay(rule.formula || '', catalogFor(rule), lang()),
         availableFields: fields,
-        checklistValues: ['open', 'approved', 'rejected', 'notRequired', 'notApplicable'],
+        checklistValues: [...Checklist.statusIds(), 'notApplicable'],
       };
     }
 
