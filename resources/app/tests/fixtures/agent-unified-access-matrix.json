@@ -1521,6 +1521,25 @@
         "approval": true,
         "rollbackable": true,
         "contractVersion": 2
+      },
+      {
+        "id": "manufacturer.cards.import",
+        "operation": "IMPORT",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
       }
     ]
   },

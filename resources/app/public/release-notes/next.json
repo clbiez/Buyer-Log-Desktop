@@ -3925,6 +3925,72 @@
           "en": "Version- and channel-bound retry, current authority and verified package"
         }
       }
+    },
+    {
+      "id": "agent-manufacturer-native-import",
+      "type": "feature",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Agent üretici ve e-posta listelerini native servisle birleştirir",
+        "en": "Agents merge manufacturer and email lists through the native service"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Üretici aktarımı",
+        "en": "Agent Office › Tasks › Manufacturer import"
+      },
+      "body": {
+        "tr": "Onaylı toplu aktarım yeni kart ekler ve mevcut boş e-postaları doldurur; dolu adresleri değiştirmez. Kilitler, çatışmalar, tekrarlar ve kapasite nedeniyle işlenmeyen kayıtlar tam sayımla bildirilir. Önizleme ve sonuç bağlamı sınırlıdır; işlem mevcut 20.000 kayıt ve 4 MiB giriş sınırları içinde çalışır. Gerçek yazımlar güncel yetki, profil WAL ve native journal altında yapılır; uygun revizyonda yalnız uygulanmış kayıtlar geri alınır.",
+        "en": "Approved bulk import adds cards and fills existing blank emails without replacing populated addresses. Locks, conflicts, duplicates and records unprocessed at capacity are reported with full counts. Preview and result context are bounded; execution uses the native 20,000-record and 4 MiB input limits. Actual effects use current authority, profile WAL and the native journal; only applied entries can be reversed at the matching revision."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-manufacturer-native-import.png",
+        "alt": {
+          "tr": "Agent üretici aktarımında önizleme, tam sayımlar ve kısmi sonuç",
+          "en": "Preview, full counts and partial result in an agent manufacturer import"
+        },
+        "caption": {
+          "tr": "Mevcut birleştirme kuralları ve doğrulanmış native sonuç",
+          "en": "Existing merge rules and verified native results"
+        }
+      }
+    },
+    {
+      "id": "manufacturer-inverse-deletion-sync",
+      "type": "fix",
+      "module": {
+        "tr": "Üreticiler · SYNC",
+        "en": "Manufacturers · SYNC"
+      },
+      "title": {
+        "tr": "Geri alınan yeni kartlar gecikmiş SYNC ile geri gelmez",
+        "en": "Undone new cards stay deleted through delayed SYNC"
+      },
+      "path": {
+        "tr": "Üreticiler / Agent Ofisi › Geri alma",
+        "en": "Manufacturers / Agent Office › Undo"
+      },
+      "body": {
+        "tr": "Toplu aktarım ve tek kart oluşturma geri alması mevcut native silme izi ve HLC yolunu kullanır. Gecikmiş peer başlık olayı geri alınmış kartı diriltmez; 2.000 kayıt üstündeki silme kimlikleri de korunur. Silme bilgisi bütün peerlerin gördüğü kanıtlanmadan sayıya göre kırpılmaz. Doldurulmuş kartlarda önceki alanlar korunur; yeni revizyon ve kilitler güvenli geri almayı durdurur. İlgisiz kilidin süre dolması başarılı yazımın doğrulamasını bozmaz.",
+        "en": "Bulk import and single-card creation inverses use the existing native deletion identity and HLC path. A delayed peer heading event cannot resurrect an undone card; deletion identities beyond 2,000 entries also survive. Deletion facts are not count-pruned without proof that every peer has seen them. Filled cards retain prior fields; newer revisions and locks block unsafe undo. An unrelated lock expiring cannot invalidate verification of a successful write."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturer-inverse-deletion-sync.png",
+        "alt": {
+          "tr": "Geri alma ve gecikmiş SYNC sonrasında silinmiş kalan demo kartlar",
+          "en": "Demo cards remaining deleted after undo and delayed SYNC"
+        },
+        "caption": {
+          "tr": "Kalıcı silme kimlikleri, native HLC ve doğru geri alma sonucu",
+          "en": "Durable deletion identities, native HLC and correct inverse result"
+        }
+      }
     }
   ]
 }

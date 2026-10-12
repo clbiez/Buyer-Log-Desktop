@@ -1,6 +1,6 @@
 # Explicit output-schema migration gaps
 
-Current executable catalog audit: 161 contract-v2 tools; 102 declare a strict top-level output object; 59 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
+Current executable catalog audit: 162 contract-v2 tools; 103 declare a strict top-level output object; 59 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
 
 | Module | Open output contracts | Registered tool IDs |
 |---|---|---|
