@@ -1939,6 +1939,42 @@ async function ensureOverviewLoaded(){
   })();
   return overviewLoadPromise;
 }
+/* CP projection gzip önbelleği eski _imageRef tutabilir. Görsel deposu
+   kayıtları açılışta yerelden tazelenir; PLM çağrısı yapılmaz. */
+function applyCpStartupImageRegistry(payload,rows=state.cp?.rows||[]){
+  if(!payload||payload.ok!==true||!payload.imagemap||!Array.isArray(payload.scopeKeys))return false;
+  state.overrides=state.overrides||{};
+  const nextMap={...(state.overrides.imagemap||{})},scope=new Set(payload.scopeKeys);
+  for(const key of Object.keys(nextMap)){
+    const at=key.indexOf('|name:'),base=at>=0?key.slice(0,at):key;
+    if(scope.has(base))delete nextMap[key];
+  }
+  Object.assign(nextMap,payload.imagemap);
+  state.overrides.imagemap=nextMap;
+  syncModelImageRegistry();
+  const invalidated=new Set();
+  for(const row of rows){
+    if(!row)continue;
+    const plm=row['PLM ID'],code=row['C.Code'],base=cpImageOverrideKey(plm,code),legacy=cpLegacyPlmImageOverrideKey(plm);
+    if(!scope.has(base)&&!scope.has(legacy))continue;
+    const colour=row.Colour||row['Colour']||row.Color||row['Color']||'';
+    const ref=cpImageRefFromOverride(state.overrides,plm,code,row['Order Code'],row['Model Name'],code,colour);
+    // Tanımsız eski satır görselini koru; açık mezar taşını ise kesin uygula.
+    const authoritative=Boolean(ref||canonicalModelImageKnown(plm,code,colour)||(legacy&&Object.prototype.hasOwnProperty.call(nextMap,legacy)));
+    if(!authoritative)continue;
+    const oldRef=row._imageRef,oldUrl=row._imageUrl;
+    row._imageRef=ref;row._imageUrl=ref?`${CP_IMAGE_API}/${encodeURIComponent(ref)}`:'';
+    if(oldRef!==ref&&oldUrl)invalidated.add(oldUrl);
+  }
+  if(invalidated.size)BLImageRuntime.invalidate([...invalidated]);
+  return true;
+}
+async function refreshCpStartupImageRegistry(rows){
+  const response=await fetch('/api/model-images/registry/cp',{cache:'no-store'});
+  if(!response.ok)throw new Error(`CP model image registry HTTP ${response.status}`);
+  return applyCpStartupImageRegistry(await response.json(),rows);
+}
+
 async function ensureCpLoaded(options={}){
   if(state.cp&&!options.force){overviewCpLoadState='ready';overviewCpLoadError='';return true;}
   if(cpLoadPromise)return cpLoadPromise;
@@ -1949,6 +1985,9 @@ async function ensureCpLoaded(options={}){
       const result=await fetchProjectionWithFallback('cp','/api/data/cp');if(result.cancelled)return false;
       const data=result.payload||{},rows=Array.isArray(data.rows)?data.rows:[];
       reviveServerDates(rows);
+      // Görünür CP satırları çizilmeden güncel yerel görsel registry'sini eşle.
+      try{await refreshCpStartupImageRegistry(rows);}
+      catch(error){console.warn('CP model image registry:',error);showToast(appLang==='en'?'Some saved model images could not be restored. Try reloading CP.':'Bazı kayıtlı model görselleri yüklenemedi. CP ekranını yeniden açmayı deneyin.');}
       state.cp={fname:'Hazır ekran önbelleği',rows};state.cpLogisticExpanded.clear();
       applyPricingRulesToLoadedRows({render:false});
       overviewCpLoadState='ready';overviewCpLoadError='';
