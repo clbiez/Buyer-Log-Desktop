@@ -637,6 +637,11 @@
       base.reasonTr = text(item.reasonTr).slice(0, 200);
       base.reasonEn = text(item.reasonEn).slice(0, 200);
     } else {
+      // Asking a checklist question and automatically assigning a status are
+      // independent conditions. Empty autoFormula intentionally never writes.
+      const requestedAutoStatus = text(item.autoStatus);
+      base.autoStatus = Checklist.normalizeStatus && Checklist.normalizeStatus(requestedAutoStatus) || '';
+      base.autoFormula = text(item.autoFormula).slice(0, 4000);
       base.questionTr = text(item.questionTr).slice(0, 300);
       base.questionEn = text(item.questionEn).slice(0, 300);
       base.tr = text(item.tr).slice(0, 160) || base.name;
@@ -999,7 +1004,7 @@
       .filter(item => item && text(item.id) && text(item.id) !== excludeId)
       .map(item => ({
         id: `${CHECKLIST_PREFIX}${item.id}`, tr: `Kontrol: ${text(item.tr || item.name || item.id)}`, en: `Check: ${text(item.en || item.name || item.tr || item.id)}`,
-        source: 'checklist', ref: text(item.id), enabled: item.enabled !== false, values: CHECKLIST_STATES.slice(),
+        source: 'checklist', ref: text(item.id), enabled: item.enabled !== false, values: [...(Checklist.statusIds ? Checklist.statusIds() : CHECKLIST_STATES.slice(0, 4)), 'notApplicable'],
       }));
     const rules = (Array.isArray(opts.priorityRules) ? opts.priorityRules : [])
       .filter(rule => rule && text(rule.id) && text(rule.id) !== excludeId && (!rule.kind || rule.kind === 'priority'))
@@ -1061,9 +1066,26 @@
       const rule = byId.get(id);
       return Boolean(checklistEnabled && rule && rule.kind === 'checklist' && matchesRule(rule, facts));
     }, false);
-    const statusOf = typeof Checklist.statusOf === 'function'
-      ? id => Checklist.statusOf(analysis, id, statusContext)
-      : () => 'open';
+    const autoDecisions = [];
+    const statusOf = id => {
+      const rule = byId.get(id);
+      const directKey = Checklist.answerKey ? Checklist.answerKey(analysis.orderKey, id) : '';
+      const direct = directKey && opts.answers && opts.answers[directKey];
+      const directState = direct && Checklist.normalizeStatus && Checklist.normalizeStatus(direct.state);
+      // Explicit edits and imported evidence always win over automation,
+      // including a deliberate Pending selection.
+      if (directState && direct.source !== 'auto_rule') return directState;
+      if (rule && rule.kind === 'checklist' && rule.enabled && rule.autoStatus && rule.autoFormula
+        && checklistApplies(id)) {
+        const probe = { ...rule, kind: 'checklist', mode: 'formula', formula: rule.autoFormula,
+          enabled: true, _compiledFormula: undefined, _compiledFormulaSource: '' };
+        if (matchesRule(probe, facts)) {
+          autoDecisions.push({ itemId: id, state: rule.autoStatus });
+          return rule.autoStatus;
+        }
+      }
+      return typeof Checklist.statusOf === 'function' ? Checklist.statusOf(analysis, id, statusContext) : 'open';
+    };
     facts.resolveChecklist = id => guarded(`checklist:${id}`, () => (checklistApplies(id) ? statusOf(id) : 'notApplicable'), undefined);
     facts.resolveRule = id => guarded(`rule:${id}`, () => {
       const rule = byId.get(id);
@@ -1083,7 +1105,7 @@
     const applied = applyPriorityRules(analysis, rules, checklistState, facts);
     const ruleState = {};
     for (const rule of rules) if (rule.kind === 'priority') ruleState[rule.id] = applied.matched.includes(rule) ? 'matched' : 'notMatched';
-    return { ...applied, checklistState, customItems, ruleState };
+    return { ...applied, checklistState, customItems, ruleState, autoDecisions };
   }
 
   /* ---------------------------------------------------------- bağımlılıklar
@@ -1233,7 +1255,7 @@
     const typeOf = item => (item.numeric ? 'number' : item.date ? 'date' : item.source === 'checklist' || item.source === 'rule' ? 'status' : 'text');
     const valuesOf = item => {
       if (Array.isArray(item.values) && !item.source) return item.values.map(value => `"${value}"`).join(', ');
-      if (item.source === 'checklist') return CHECKLIST_STATES.map(state => `"${state}"`).join(', ');
+      if (item.source === 'checklist') return (Checklist.statusIds ? [...Checklist.statusIds(), 'notApplicable'] : CHECKLIST_STATES).map(state => `"${state}"`).join(', ');
       if (item.source === 'rule') return RULE_STATES.map(state => `"${state}"`).join(', ');
       return '';
     };
@@ -1341,14 +1363,20 @@
 
   function validateRule(rule, options) {
     const item = normalizeRule(rule);
-    if (item.mode !== 'formula') {
-      const errors = [];
-      if (!item.conditions.length) errors.push('En az bir koşul ekleyin');
-      return { valid: errors.length === 0, errors, rule: item };
-    }
     const catalog = options && Array.isArray(options.fields) ? options : undefined;
-    const result = validateExpression(item.formula, catalog);
-    return { ...result, rule: item };
+    const errors = [];
+    if (item.mode !== 'formula' && !item.conditions.length) errors.push('En az bir koşul ekleyin');
+    if (item.mode === 'formula') {
+      const result = validateExpression(item.formula, catalog);
+      errors.push(...(result.errors || []));
+    }
+    if (item.kind === 'checklist' && item.autoStatus && item.autoFormula) {
+      const result = validateExpression(item.autoFormula, catalog);
+      errors.push(...(result.errors || []).map(message => 'Auto status: ' + message));
+    }
+    if (item.kind === 'checklist' && item.autoStatus && !item.autoFormula)
+      errors.push('Automatic status requires a separate TRUE/FALSE formula.');
+    return { valid: errors.length === 0, errors, rule: item };
   }
 
   /* Kaydedilmiş kurallar ile yerleşikleri birleştirir. Kullanıcı yerleşik bir
