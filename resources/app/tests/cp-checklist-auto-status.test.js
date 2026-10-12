@@ -36,6 +36,21 @@ test('checklist automatic status fires only when both question and auto formula 
   assert.equal(evaluate(a, {}, rule({ autoStatus: '' })).checklistState.custom_check, 'open');
 });
 
+test('production-only checklist is auto-approved once loading begins, even outside the question condition', () => {
+  const productionOnly = rule({
+    conditions: [
+      { field: '@stage', operator: 'eq', value: 'PRODUCTION' },
+      { field: '@daysToLoad', operator: 'lte', value: 60 },
+    ],
+  });
+  const production = evaluate(order({ stage: 'PRODUCTION' }), {}, productionOnly);
+  assert.equal(production.checklistState.custom_check, 'open');
+  const loading = evaluate(order({ stage: 'LOADING' }), {}, productionOnly);
+  assert.equal(loading.checklistState.custom_check, 'approved');
+  assert.deepEqual(loading.autoDecisions, [{ itemId: 'custom_check', state: 'approved' }]);
+  assert.ok(loading.customItems.some(item => item.id === 'custom_check'));
+});
+
 test('manual Pending/Rejected and PLM/other-PO approvals take precedence over automation', () => {
   const a = order();
   for (const state of ['open', 'rejected', 'notRequired']) {
