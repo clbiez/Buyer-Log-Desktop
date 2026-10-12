@@ -4618,6 +4618,39 @@
           "en": "Report and checklist writes use native services and current task checks"
         }
       }
+    },
+    {
+      "id": "agent-quality-typed-results",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi / CP",
+        "en": "Agent Office / CP"
+      },
+      "title": {
+        "tr": "Quality sonuçları tam veriyi koruyarak özetlenir",
+        "en": "Quality results summarize and preserve complete native data"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Checklist / haftalık mail",
+        "en": "Agent Office › Tasks › Checklist / weekly email"
+      },
+      "body": {
+        "tr": "Test belgesi eşleştirme, rapor aktarımı, checklist kaydı ve Fail mail taslağı araçları açık giriş/çıkış sözleşmeleriyle çalışır. Büyük eşleşme önizlemeleri, eksik gösterilen aday ve test sayılarını bildirir; açıkça seçilen adaylar tam native eşleşme kümesinden doğrulanır. Geri alma için eksiksiz önceki rapor/checklist kaydı kullanıcıya ve göreve bağlı yerel arşivde korunur. Arşiv kaydı başarısızsa iş verisi değiştirilmez.",
+        "en": "Test matching, report import, checklist writes and Fail email draft tools use explicit input/output contracts. Large match previews declare omitted candidate and test counts; explicit selections are validated against the complete native match set. Complete prior report/checklist records are preserved in owner and task bound local undo archives. If archive storage fails, business data is preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-typed-results.png",
+        "alt": {
+          "tr": "Demo belgelerle gerçek Quality görevinde eşleşme özeti ve doğrulanmış sonuçlar",
+          "en": "Match summary and verified results of an actual Quality task with demo documents"
+        },
+        "caption": {
+          "tr": "Büyük aday kümesi özetlenirken tam kayıt ve güvenli geri alma korunur",
+          "en": "A large candidate set is summarized while complete native records and safe undo are preserved"
+        }
+      }
     }
   ]
 }
