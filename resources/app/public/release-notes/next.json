@@ -4486,6 +4486,39 @@
           "en": "Actual Buyer Log field discovery with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-backlog-typed-delivery-result",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi / Backlog",
+        "en": "Agent Office / Backlog"
+      },
+      "title": {
+        "tr": "Gecikme raporunda tam toplamlar, açık sınırlar",
+        "en": "Full totals and explicit limits in delay reports"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Backlog gecikme analizi",
+        "en": "Agent Office › Tasks › Backlog delay analysis"
+      },
+      "body": {
+        "tr": "Gecikme ve risk sonuçları mevcut Backlog motorundan doğrulanır. Tüm kaynak toplamları korunur; en riskli sipariş ve grup ayrıntılarının sınırı ile gösterilmeyen öğe sayısı bildirilir. Eksik veya sonlu olmayan değerler sıfır olarak uydurulmaz. Kaynak ya da yetki hesap sırasında değişirse eski sonuç yayımlanmaz.",
+        "en": "Delay and risk results are verified through the existing Backlog engine. Full-source totals remain intact; limits and omitted counts for top-risk orders and group details are explicit. Missing or non-finite values are not invented as zero. Source or authority changes during calculation prevent stale results from being published."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-backlog-typed-delivery-result.png",
+        "alt": {
+          "tr": "Tam toplamlar ve gösterilmeyen risk ayrıntıları",
+          "en": "Full totals and omitted risk details"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log gecikme görevi",
+          "en": "Actual Buyer Log delay task with anonymous data"
+        }
+      }
     }
   ]
 }

@@ -1,11 +1,10 @@
 # Explicit output-schema migration gaps
 
-Current executable catalog audit: 176 contract-v2 tools; 126 declare a strict top-level output object; 50 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
+Current executable catalog audit: 176 contract-v2 tools; 127 declare a strict top-level output object; 49 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
 
 | Module | Open output contracts | Registered tool IDs |
 |---|---|---|
 | cp | 4 | `quality.inspect`, `quality.commit`, `quality.checklist.apply`, `quality.fail.drafts` |
-| backlog | 1 | `backlog.delivery` |
 | koleksiyon | 9 | `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.supplier.analyze`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
 | lfl | 1 | `lfl.compare` |
 | quotations | 6 | `quotation.list`, `quotation.apply.collection`, `quotation.create`, `quotation.update`, `quotation.status`, `quotation.approve` |
