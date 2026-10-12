@@ -1,14 +1,14 @@
 # Explicit output-schema migration gaps
 
-Current executable catalog audit: 159 contract-v2 tools; 78 declare a strict top-level output object,81still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is2. This is a pending migration inventory, not a release acceptance result.
+Current executable catalog audit: 159 contract-v2 tools; 83 declare a strict top-level output object; 76 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
 
 | Module | Open output contracts | Registered tool IDs |
 |---|---|---|
-| cp | 8 | `cp.records`, `quality.inspect`, `quality.commit`, `quality.checklist.apply`, `quality.fail.drafts`, `cp.fields`, `cp.analyze`, `cp.analysis.export` |
-| orders | 4 | `orders.records`, `orders.fields`, `orders.analyze`, `orders.analysis.export` |
-| backlog | 6 | `backlog.records`, `backlog.fields`, `backlog.analyze`, `backlog.analysis.export`, `backlog.delivery`, `backlog.delivery.export` |
-| lfl | 6 | `lfl.records`, `lfl.fields`, `lfl.analyze`, `lfl.analysis.export`, `lfl.compare`, `lfl.compare.export` |
-| koleksiyon | 15 | `collection.records`, `collection.fields`, `collection.analyze`, `collection.analysis.export`, `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.pricing.export`, `collection.supplier.analyze`, `collection.supplier.export`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
+| cp | 7 | `quality.inspect`, `quality.commit`, `quality.checklist.apply`, `quality.fail.drafts`, `cp.fields`, `cp.analyze`, `cp.analysis.export` |
+| orders | 3 | `orders.fields`, `orders.analyze`, `orders.analysis.export` |
+| backlog | 5 | `backlog.fields`, `backlog.analyze`, `backlog.analysis.export`, `backlog.delivery`, `backlog.delivery.export` |
+| lfl | 5 | `lfl.fields`, `lfl.analyze`, `lfl.analysis.export`, `lfl.compare`, `lfl.compare.export` |
+| koleksiyon | 14 | `collection.fields`, `collection.analyze`, `collection.analysis.export`, `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.pricing.export`, `collection.supplier.analyze`, `collection.supplier.export`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
 | quotations | 6 | `quotation.list`, `quotation.apply.collection`, `quotation.create`, `quotation.update`, `quotation.status`, `quotation.approve` |
 | source | 16 | `resource.transit.read`, `resource.transit.replace`, `resource.royalty.read`, `resource.royalty.replace`, `resource.fx.read`, `resource.fx.update`, `resource.endeksmatik.read`, `resource.endeksmatik.lookup`, `resource.endeksmatik.calculate`, `resource.endeksmatik.activate`, `resource.endeksmatik.rename`, `resource.endeksmatik.delete`, `resource.endeksmatik.import`, `resource.merch.read`, `resource.merch.import`, `resource.merch.delete` |
 | manufacturers | 4 | `manufacturer.cards.read`, `manufacturer.cards.create`, `manufacturer.cards.update`, `manufacturer.cards.delete` |

@@ -3694,6 +3694,39 @@
           "en": "Atomic commit, current authority and revision-safe undo"
         }
       }
+    },
+    {
+      "id": "agent-canonical-record-output",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kayıt okuma sonuçları doğrulanır ve sınırlandırılır",
+        "en": "Record reading results are validated and bounded"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Kayıt okuma",
+        "en": "Agent Office › Tasks › Record reading"
+      },
+      "body": {
+        "tr": "CP, sipariş, koleksiyon, Backlog ve nakliye kayıtları güncel canonical alanlarla okunur. Toplam ve eşleşme sayıları tüm yetkili kaynak üzerinden hesaplanır; gösterilen satırlar ve bağlam boyutu sınırlandırılır. Tarihler mevcut iş takvimiyle uyumludur. Aktarılamayan değerler ve kısaltmalar açıkça bildirilir.",
+        "en": "CP, order, collection, Backlog and shipping records use current canonical fields. Total and matched counts cover the full authorized source; displayed rows and context size are bounded. Dates follow the existing business calendar. Unrepresentable values and truncation are explicitly reported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-canonical-record-output.png",
+        "alt": {
+          "tr": "Agent kayıt okuma sonucu ve eksik değer bilgisi",
+          "en": "Agent record reading result and omitted value information"
+        },
+        "caption": {
+          "tr": "Doğrulanmış alanlar, tam kaynak sayımları ve sınırlı bağlam",
+          "en": "Validated fields, full source counts and bounded context"
+        }
+      }
     }
   ]
 }
