@@ -2068,8 +2068,9 @@
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
 
-  function aiGuideFor(kind, rule, request) {
-    return Rules.buildAiGuide({ lang: lang(), kind, fields: catalogFor(rule), request: request || '' });
+  function aiGuideFor(kind, rule, request, autoStatus) {
+    return Rules.buildAiGuide({ lang: lang(), kind, fields: catalogFor(rule),
+      request: request || '', autoStatus: autoStatus || '' });
   }
 
   function ruleBlock(rule, view) {
@@ -2152,7 +2153,17 @@
     /* LCW AI ortak paneli (public/lcwai-assistant.js) birincil yoldur; kural
        motorunun doğrulaması ve canlı önizlemesi aynıdır. Kopyala / yapıştır
        rehberi LCW AI erişimi olmayanlar için "Manuel yol" olarak durur. */
-    const aiEditor = `<div class="cpaLcwAi" data-cpa-lcwai-host></div>
+    const aiPurposeEditor = rule.kind === 'checklist' ? `<div class="cpaRuleTarget cpaRuleAutoStatus">
+        <b>${esc(L('LCW AI önerisinin hedefi', 'Target for LCW AI suggestion'))}</b>
+        <select data-cpa-ai-purpose aria-label="${esc(L('LCW AI koşul hedefi', 'LCW AI condition target'))}">
+          <option value="question"${aiDraft.purpose !== 'auto' ? ' selected' : ''}>${esc(L('Sorunun hangi siparişlere sorulacağı', 'Which orders are asked'))}</option>
+          <option value="auto"${aiDraft.purpose === 'auto' ? ' selected' : ''}>${esc(L('Koşul gerçekleşince durum yaz', 'Assign a status when the condition matches'))}</option>
+        </select>
+        ${aiDraft.purpose === 'auto' ? `<label><span>${esc(L('Yazılacak durum', 'Status to write'))}</span><select data-cpa-ai-auto-status>
+          ${Checklist.statusIds().map(id => `<option value="${esc(id)}"${(aiDraft.autoStatus || rule.autoStatus || 'approved') === id ? ' selected' : ''}>${esc(Checklist.statusLabel(id, lang()))}</option>`).join('')}
+        </select></label>` : ''}
+      </div>` : '';
+    const aiEditor = `${aiPurposeEditor}<div class="cpaLcwAi" data-cpa-lcwai-host></div>
         <details class="lcwaiManual"><summary>${esc(L('Manuel yol: rehberi başka bir AI aracına verin', 'Manual route: give the guide to another AI tool'))}</summary>
         <ol class="cpaAiSteps">
           <li><b>${esc(L('Ne istediğinizi kendi cümlenizle yazın', 'Describe what you want in your own words'))}</b>
@@ -2244,7 +2255,7 @@
       get expandedRuleId() { return expandedRuleId; },
       modeOf: rule => uiModes.get(rule.id) || (rule.mode === 'formula' ? 'formula' : 'basic'),
       aiDraftOf: rule => {
-        if (!aiDrafts.has(rule.id)) aiDrafts.set(rule.id, { request: '', answer: '' });
+        if (!aiDrafts.has(rule.id)) aiDrafts.set(rule.id, { request: '', answer: '', purpose: 'question', autoStatus: rule.autoStatus || 'approved' });
         return aiDrafts.get(rule.id);
       },
       isAdvanced: (rule, index, condition) => advancedRows.has(`${rule.id}:${index}`)
@@ -2458,6 +2469,12 @@
     /* AI cevabı: formül bulunur, görünen adlar kimliğe çevrilir, Buyer Log'un
        kendi ayrıştırıcısıyla doğrulanır ve canlı önizleme gösterilir.
        Uygulamak kullanıcının açık onayıdır; metin asla çalıştırılmaz. */
+    function applyAiFormula(rule, formula, draft) {
+      if (rule.kind === 'checklist' && draft.purpose === 'auto') {
+        rule.autoStatus = Checklist.normalizeStatus(draft.autoStatus || 'approved') || 'approved';
+        rule.autoFormula = formula;
+      } else applyFormula(rule, formula);
+    }
     function aiAnswerResult(rule) {
       const draft = view.aiDraftOf(rule);
       const answer = String(draft.answer || '').trim();
@@ -2486,7 +2503,7 @@
         <button type="button" class="cpaBtn sm primary" data-cpa-ai-apply>${esc(L('Bu formülü kullan', 'Use this formula'))}</button>`;
       const applyButton = box.querySelector('[data-cpa-ai-apply]');
       if (applyButton) applyButton.onclick = () => {
-        applyFormula(rule, result.formula);
+        applyAiFormula(rule, result.formula, view.aiDraftOf(rule));
         view.aiDraftOf(rule).answer = '';
         commit(); draw(); scrollToRule(rule.id);
         if (typeof showToast === 'function') showToast(L('Formül kurala uygulandı.', 'The formula was applied to the rule.'));
