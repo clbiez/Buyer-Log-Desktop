@@ -4519,6 +4519,39 @@
           "en": "Actual Buyer Log delay task with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-weighted-comparison-results",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi / Collection / LFL",
+        "en": "Agent Office / Collection / LFL"
+      },
+      "title": {
+        "tr": "Ağırlıklı karşılaştırmalarda doğrulanmış sonuç sözleşmesi",
+        "en": "Verified result contracts for weighted comparisons"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Üretici ve LFL analizi",
+        "en": "Agent Office › Tasks › Supplier and LFL analysis"
+      },
+      "body": {
+        "tr": "Üretici ve LFL sonuçları mevcut miktar ağırlıklı motorlardan gelir. Finansal alanların tipi, para birimi ve karşılaştırma kapsamı açıkça doğrulanır. Farklı para birimleri birleştirilmez; hesaplanmayan bağlam null kalır. Kaynak veya fiyat girdisi bekleme sırasında değişirse eski sonuç reddedilir. Yanıt sınırları ve eksik değerler açıkça bildirilir.",
+        "en": "Supplier and LFL results come from the existing quantity-weighted engines. Financial field types, currency and comparison scope are explicitly verified. Mixed currencies remain incomparable and uncomputed context stays null. Source or pricing input changes during waits reject stale results. Response limits and missing values are explicit."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-weighted-comparison-results.png",
+        "alt": {
+          "tr": "Miktar ağırlıklı sonuçlar, para birimi ve kapsam bilgisi",
+          "en": "Quantity-weighted results, currency and scope details"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log karşılaştırma görevi",
+          "en": "Actual Buyer Log comparison task with anonymous data"
+        }
+      }
     }
   ]
 }

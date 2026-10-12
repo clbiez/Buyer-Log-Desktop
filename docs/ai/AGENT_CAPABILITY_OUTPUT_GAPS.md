@@ -1,12 +1,11 @@
 # Explicit output-schema migration gaps
 
-Current executable catalog audit: 176 contract-v2 tools; 127 declare a strict top-level output object; 49 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
+Current executable catalog audit: 176 contract-v2 tools; 129 declare a strict top-level output object; 47 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
 
 | Module | Open output contracts | Registered tool IDs |
 |---|---|---|
 | cp | 4 | `quality.inspect`, `quality.commit`, `quality.checklist.apply`, `quality.fail.drafts` |
-| koleksiyon | 9 | `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.supplier.analyze`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
-| lfl | 1 | `lfl.compare` |
+| koleksiyon | 8 | `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
 | quotations | 6 | `quotation.list`, `quotation.apply.collection`, `quotation.create`, `quotation.update`, `quotation.status`, `quotation.approve` |
 | source | 16 | `resource.transit.read`, `resource.transit.replace`, `resource.royalty.read`, `resource.royalty.replace`, `resource.fx.read`, `resource.fx.update`, `resource.endeksmatik.read`, `resource.endeksmatik.lookup`, `resource.endeksmatik.calculate`, `resource.endeksmatik.activate`, `resource.endeksmatik.rename`, `resource.endeksmatik.delete`, `resource.endeksmatik.import`, `resource.merch.read`, `resource.merch.import`, `resource.merch.delete` |
 | automations | 10 | `automation.language`, `automation.recipes.read`, `automation.code.preview`, `automation.recipe.create`, `automation.recipe.update`, `automation.recipe.delete`, `automation.recipe.activate`, `automation.recipe.schedule`, `automation.recipe.preview`, `automation.recipe.execute` |
