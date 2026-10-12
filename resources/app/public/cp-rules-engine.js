@@ -1037,6 +1037,17 @@
       itemScopes:Object.fromEntries(checklistRules.map(rule=>[rule.id,rule.approvalScope==='option'?'option':'order']))};
   }
 
+  // One compiled auto-condition per rule object/formula, not per order.
+  const automaticProbeCache = new WeakMap();
+  function automaticProbe(rule) {
+    const cached = automaticProbeCache.get(rule);
+    if (cached && cached.source === rule.autoFormula) return cached.probe;
+    const probe = { ...rule, kind: 'checklist', mode: 'formula', formula: rule.autoFormula,
+      enabled: true, _compiledFormula: undefined, _compiledFormulaSource: '' };
+    automaticProbeCache.set(rule, { source: rule.autoFormula, probe });
+    return probe;
+  }
+
   function evaluateOrder(analysis, options) {
     const opts = options || {};
     const rules = Array.isArray(opts.rules) ? opts.rules : [];
@@ -1077,9 +1088,7 @@
       if (directState && direct.source !== 'auto_rule') return directState;
       if (rule && rule.kind === 'checklist' && rule.enabled && rule.autoStatus && rule.autoFormula
         && checklistApplies(id)) {
-        const probe = { ...rule, kind: 'checklist', mode: 'formula', formula: rule.autoFormula,
-          enabled: true, _compiledFormula: undefined, _compiledFormulaSource: '' };
-        if (matchesRule(probe, facts)) {
+        if (matchesRule(automaticProbe(rule), facts)) {
           autoDecisions.push({ itemId: id, state: rule.autoStatus });
           return rule.autoStatus;
         }
