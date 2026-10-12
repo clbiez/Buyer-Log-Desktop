@@ -148,7 +148,7 @@ function createAgentRuntime({ store, toolRegistry, policyEngine, auditFn } = {})
         if (!ctx.dryRun && (!node.config || node.config.rollback !== false)) {
           while (ctx.rollbackStack.length) {
             const item = ctx.rollbackStack.pop();
-            try { attempts.push({ toolId: item.toolId, nodeId: item.nodeId, ok: true, result: await toolRegistry.rollback(item.toolId, item.token, { ownerId: ctx.ownerId, profile: ctx.profile, runId: ctx.run.id, approvalGranted: Boolean(ctx.approvals[item.nodeId]) }) }); }
+            try { attempts.push({ toolId: item.toolId, nodeId: item.nodeId, ok: true, result: await toolRegistry.rollback(item.toolId, item.token, { ownerId: ctx.ownerId, profile: ctx.profile, runId: ctx.run.id, nodeId:item.nodeId, input:{...(ctx.run.input||{})}, approvalGranted: Boolean(ctx.approvals[item.nodeId]) }) }); }
             catch (error) { attempts.push({ toolId: item.toolId, nodeId: item.nodeId, ok: false, error: error.message }); }
           }
         }
@@ -213,7 +213,7 @@ function createAgentRuntime({ store, toolRegistry, policyEngine, auditFn } = {})
           if (!dryRun) {
             while (rollbackStack.length) {
               const item = rollbackStack.pop();
-              try { rollbackResults.push({ toolId: item.toolId, ok: true, result: await toolRegistry.rollback(item.toolId, item.token, { ownerId, profile, runId: run.id, approvalGranted: Boolean(approvals[item.nodeId]) }) }); }
+              try { rollbackResults.push({ toolId: item.toolId, ok: true, result: await toolRegistry.rollback(item.toolId, item.token, { ownerId, profile, runId: run.id, nodeId:item.nodeId, input:{...(run.input||{})}, approvalGranted: Boolean(approvals[item.nodeId]) }) }); }
               catch (rollbackError) { rollbackResults.push({ toolId: item.toolId, ok: false, error: rollbackError.message }); }
             }
           }

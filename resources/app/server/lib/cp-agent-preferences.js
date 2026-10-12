@@ -19,21 +19,21 @@ function createCpRulePreferences(preferences,userAccess) {
     if(!payload||!Array.isArray(payload.rules))throw error('OFFICE_RULE_STORE_UNREADABLE',409);
     return {key,own,payload,rules:Rules.mergeWithDefaults(payload.rules,payload.deletedRuleIds||[]).filter(r=>r.kind===kind),hash:hash(JSON.stringify({own,entry,deletion:personal.deletions[key]||null}))};
   }
-  function saveRule(profile,rule,before) {
+  function saveRule(profile,rule,before,options={}) {
     if(snapshot(profile,rule.kind).hash!==before.hash)throw error('OFFICE_PREVIEW_CHANGED',409);
     const rules=before.rules.filter(r=>r.id!==rule.id).concat(rule);
     if(rules.length>100)throw error('OFFICE_RULE_CAPACITY',413);
     const payload={...before.payload,version:rule.kind==='checklist'?2:1,rules,deletedRuleIds:(before.payload.deletedRuleIds||[]).filter(id=>id!==rule.id)};
-    const saved=preferences.applyEntryChanges(profile.id,{[before.key]:JSON.stringify(payload)},[],{expectedEntries:{[before.key]:before.own}});
+    const saved=preferences.applyEntryChanges(profile.id,{[before.key]:JSON.stringify(payload)},[],{expectedEntries:{[before.key]:before.own},assertAuthority:options.assertAuthority});
     if(saved.rejected.length)throw error('OFFICE_RULE_SAVE_FAILED',409);
     const after=snapshot(profile,rule.kind);
     if(JSON.stringify(after.rules.find(r=>r.id===rule.id))!==JSON.stringify(rule))throw error('OFFICE_RULE_VERIFY_FAILED',409);
     return {verified:true,ruleId:rule.id,scope:'owner-personal-cp-rules',entries:{[before.key]:saved.entries[before.key]},rollbackToken:{kind:rule.kind,key:before.key,before:before.own,after:saved.entries[before.key]}};
   }
-  function restoreRule(profile,token) {
+  function restoreRule(profile,token,options={}) {
     if(token.key!==`lcw.cp.rules.${token.kind}.v1`)throw error('OFFICE_ROLLBACK_INVALID',422);
     const set=token.before?{[token.key]:token.before.value}:{},remove=token.before?[]:[token.key];
-    const saved=preferences.applyEntryChanges(profile.id,set,remove,{expectedEntries:{[token.key]:token.after}});
+    const saved=preferences.applyEntryChanges(profile.id,set,remove,{expectedEntries:{[token.key]:token.after},assertAuthority:options.assertAuthority});
     return {verified:true,restored:true,entries:token.before?{[token.key]:saved.entries[token.key]}:{},removed:remove};
   }
   return {ruleSnapshot:snapshot,saveRule,restoreRule,context};

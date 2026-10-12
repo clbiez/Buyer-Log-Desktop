@@ -73,10 +73,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.post(base+'/cp/jobs/:id/rollback',json,wrap(async(req,res)=>res.json({ok:true,job:await service.cpRollback(req.currentUser,req.params.id,req.body||{})})));
   app.get(base+'/cp/jobs/:id/drafts/:filename',wrap(async(req,res)=>res.download(await service.cpDraft(req.currentUser,req.params.id,req.params.filename),req.params.filename)));
   app.get(base+'/tasks/:id/drafts/:filename',wrap(async(req,res)=>{
-    const job=await service.store.get(req.currentUser.id,'job',req.params.id);
-    const step=job.steps?.find(step=>['quality.fail.drafts','automation.recipe.execute'].includes(step.toolId)&&['completed','partial'].includes(step.status)&&step.result?.emails?.some(mail=>mail.filename===req.params.filename));
-    const tools=step?await service.taskCatalog(req.currentUser,step.agentId):[];
-    if(!step||!tools.some(tool=>tool.id===step.toolId))throw error('OFFICE_TOOL_FORBIDDEN',403);
+    const {job,step}=await service.taskDraftAccess(req.currentUser,req.params.id,req.params.filename);
     if(step.toolId==='automation.recipe.execute')await deps.automationDraftAccess(req.currentUser,job,step);
     const file=deps.qualityDraftPath(req.currentUser.id,req.params.filename);if(!file)throw error('OFFICE_NOT_FOUND',404);
     res.download(file,req.params.filename);
