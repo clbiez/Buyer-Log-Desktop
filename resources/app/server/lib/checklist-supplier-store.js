@@ -170,6 +170,8 @@ function normalizeState(value) {
   if (['rejected','reject','reddedildi','red','ret','failed','fail','no','hayır','hayir'].includes(raw)) return 'rejected';
   if (['notrequired','not required','n a','na','gerekmiyor','gerek yok','uygulanmaz'].includes(raw)) return 'notRequired';
   if (['open','pending','açık','acik','bekliyor','beklemede','yeniden aç','yeniden ac'].includes(raw)) return 'open';
+  // Canonical user-defined states are safe identifiers, never executable text.
+  if (/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(String(value || '').trim())) return String(value).trim();
   return '';
 }
 function answerKey(orderKey, itemId) { return text(orderKey, 300) + '::' + text(itemId, 160); }

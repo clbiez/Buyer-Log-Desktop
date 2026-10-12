@@ -637,6 +637,11 @@
       base.reasonTr = text(item.reasonTr).slice(0, 200);
       base.reasonEn = text(item.reasonEn).slice(0, 200);
     } else {
+      // Asking a checklist question and automatically assigning a status are
+      // independent conditions. Empty autoFormula intentionally never writes.
+      const requestedAutoStatus = text(item.autoStatus);
+      base.autoStatus = Checklist.normalizeStatus && Checklist.normalizeStatus(requestedAutoStatus) || '';
+      base.autoFormula = text(item.autoFormula).slice(0, 4000);
       base.questionTr = text(item.questionTr).slice(0, 300);
       base.questionEn = text(item.questionEn).slice(0, 300);
       base.tr = text(item.tr).slice(0, 160) || base.name;
@@ -999,7 +1004,7 @@
       .filter(item => item && text(item.id) && text(item.id) !== excludeId)
       .map(item => ({
         id: `${CHECKLIST_PREFIX}${item.id}`, tr: `Kontrol: ${text(item.tr || item.name || item.id)}`, en: `Check: ${text(item.en || item.name || item.tr || item.id)}`,
-        source: 'checklist', ref: text(item.id), enabled: item.enabled !== false, values: CHECKLIST_STATES.slice(),
+        source: 'checklist', ref: text(item.id), enabled: item.enabled !== false, values: [...(Checklist.statusIds ? Checklist.statusIds() : CHECKLIST_STATES.slice(0, 4)), 'notApplicable'],
       }));
     const rules = (Array.isArray(opts.priorityRules) ? opts.priorityRules : [])
       .filter(rule => rule && text(rule.id) && text(rule.id) !== excludeId && (!rule.kind || rule.kind === 'priority'))
@@ -1032,6 +1037,17 @@
       itemScopes:Object.fromEntries(checklistRules.map(rule=>[rule.id,rule.approvalScope==='option'?'option':'order']))};
   }
 
+  // One compiled auto-condition per rule object/formula, not per order.
+  const automaticProbeCache = new WeakMap();
+  function automaticProbe(rule) {
+    const cached = automaticProbeCache.get(rule);
+    if (cached && cached.source === rule.autoFormula) return cached.probe;
+    const probe = { ...rule, kind: 'checklist', mode: 'formula', formula: rule.autoFormula,
+      enabled: true, _compiledFormula: undefined, _compiledFormulaSource: '' };
+    automaticProbeCache.set(rule, { source: rule.autoFormula, probe });
+    return probe;
+  }
+
   function evaluateOrder(analysis, options) {
     const opts = options || {};
     const rules = Array.isArray(opts.rules) ? opts.rules : [];
@@ -1057,13 +1073,38 @@
       memo.set(key, value);
       return value;
     };
+    const autoMatches = id => guarded(`auto:${id}`, () => {
+      const rule = byId.get(id);
+      return Boolean(checklistEnabled && rule && rule.kind === 'checklist'
+        && rule.enabled && rule.autoStatus && rule.autoFormula
+        && matchesRule(automaticProbe(rule), facts));
+    }, false);
     const checklistApplies = id => guarded(`applies:${id}`, () => {
       const rule = byId.get(id);
-      return Boolean(checklistEnabled && rule && rule.kind === 'checklist' && matchesRule(rule, facts));
+      // An auto rule can finish a check after its original "ask" stage ends
+      // (e.g. ask during production, approve once loading begins).
+      return Boolean(checklistEnabled && rule && rule.kind === 'checklist'
+        && (matchesRule(rule, facts) || autoMatches(id)));
     }, false);
-    const statusOf = typeof Checklist.statusOf === 'function'
-      ? id => Checklist.statusOf(analysis, id, statusContext)
-      : () => 'open';
+    const autoDecisions = [];
+    const statusOf = id => {
+      const rule = byId.get(id);
+      const directKey = Checklist.answerKey ? Checklist.answerKey(analysis.orderKey, id) : '';
+      const direct = directKey && opts.answers && opts.answers[directKey];
+      const directState = direct && Checklist.normalizeStatus && Checklist.normalizeStatus(direct.state);
+      // Explicit edits and imported evidence always win over automation,
+      // including a deliberate Pending selection.
+      if (directState && direct.source !== 'auto_rule') return directState;
+      const existing = typeof Checklist.statusOf === 'function'
+        ? Checklist.statusOf(analysis, id, statusContext) : 'open';
+      // Respect PLM evidence and manual approvals reused from another PO.
+      if (!directState && existing !== 'open') return existing;
+      if (rule && rule.kind === 'checklist' && autoMatches(id)) {
+        autoDecisions.push({ itemId: id, state: rule.autoStatus });
+        return rule.autoStatus;
+      }
+      return typeof Checklist.statusOf === 'function' ? Checklist.statusOf(analysis, id, statusContext) : 'open';
+    };
     facts.resolveChecklist = id => guarded(`checklist:${id}`, () => (checklistApplies(id) ? statusOf(id) : 'notApplicable'), undefined);
     facts.resolveRule = id => guarded(`rule:${id}`, () => {
       const rule = byId.get(id);
@@ -1083,7 +1124,7 @@
     const applied = applyPriorityRules(analysis, rules, checklistState, facts);
     const ruleState = {};
     for (const rule of rules) if (rule.kind === 'priority') ruleState[rule.id] = applied.matched.includes(rule) ? 'matched' : 'notMatched';
-    return { ...applied, checklistState, customItems, ruleState };
+    return { ...applied, checklistState, customItems, ruleState, autoDecisions };
   }
 
   /* ---------------------------------------------------------- bağımlılıklar
@@ -1233,7 +1274,7 @@
     const typeOf = item => (item.numeric ? 'number' : item.date ? 'date' : item.source === 'checklist' || item.source === 'rule' ? 'status' : 'text');
     const valuesOf = item => {
       if (Array.isArray(item.values) && !item.source) return item.values.map(value => `"${value}"`).join(', ');
-      if (item.source === 'checklist') return CHECKLIST_STATES.map(state => `"${state}"`).join(', ');
+      if (item.source === 'checklist') return (Checklist.statusIds ? [...Checklist.statusIds(), 'notApplicable'] : CHECKLIST_STATES).map(state => `"${state}"`).join(', ');
       if (item.source === 'rule') return RULE_STATES.map(state => `"${state}"`).join(', ');
       return '';
     };
@@ -1244,8 +1285,11 @@
     const by = source => fields.filter(item => item.source === source);
     const derived = fields.filter(item => text(item.id).indexOf('@') === 0 && !item.source);
     const purpose = kind === 'checklist'
-      ? (en ? 'The formula decides WHICH ORDERS are asked this checklist question. TRUE = the question is asked for that order.'
-        : 'Formül, bu checklist sorusunun HANGİ SİPARİŞLERE sorulacağını belirler. TRUE = soru o siparişe sorulur.')
+      ? (opts.autoStatus
+        ? (en ? 'The formula decides WHEN the checklist automatically saves status "' + opts.autoStatus + '" on a matching order. TRUE = assign that status; manual decisions always win. It is independent of the rule condition that chooses which orders are asked.'
+          : 'Formül, uygun sipariş için "' + opts.autoStatus + '" durumunun NE ZAMAN otomatik yazılacağını belirler. TRUE = bu durum kaydedilir; manuel kararlar korunur. Bu formül, sorunun hangi siparişlere sorulacağını belirleyen koşuldan BAĞIMSIZDIR.')
+        : (en ? 'The formula decides WHICH ORDERS are asked this checklist question. TRUE = the question is asked for that order.'
+          : 'Formül, bu checklist sorusunun HANGİ SİPARİŞLERE sorulacağını belirler. TRUE = soru o siparişe sorulur.'))
       : (en ? 'The formula decides which orders are ESCALATED to the rule\'s priority. TRUE = the order is escalated. Rules can only raise priority, never lower it.'
         : 'Formül, hangi siparişlerin kuralın önceliğine YÜKSELTİLECEĞİNİ belirler. TRUE = sipariş yükseltilir. Kurallar önceliği yalnız yükseltir, düşürmez.');
     const request = text(opts.request);
@@ -1341,14 +1385,20 @@
 
   function validateRule(rule, options) {
     const item = normalizeRule(rule);
-    if (item.mode !== 'formula') {
-      const errors = [];
-      if (!item.conditions.length) errors.push('En az bir koşul ekleyin');
-      return { valid: errors.length === 0, errors, rule: item };
-    }
     const catalog = options && Array.isArray(options.fields) ? options : undefined;
-    const result = validateExpression(item.formula, catalog);
-    return { ...result, rule: item };
+    const errors = [];
+    if (item.mode !== 'formula' && !item.conditions.length) errors.push('En az bir koşul ekleyin');
+    if (item.mode === 'formula') {
+      const result = validateExpression(item.formula, catalog);
+      errors.push(...(result.errors || []));
+    }
+    if (item.kind === 'checklist' && item.autoStatus && item.autoFormula) {
+      const result = validateExpression(item.autoFormula, catalog);
+      errors.push(...(result.errors || []).map(message => 'Auto status: ' + message));
+    }
+    if (item.kind === 'checklist' && item.autoStatus && !item.autoFormula)
+      errors.push('Automatic status requires a separate TRUE/FALSE formula.');
+    return { valid: errors.length === 0, errors, rule: item };
   }
 
   /* Kaydedilmiş kurallar ile yerleşikleri birleştirir. Kullanıcı yerleşik bir

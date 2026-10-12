@@ -98,6 +98,60 @@
      Eski kayıtlardaki 'done' (Tamamlandı) değeri 'approved' olarak okunur. */
   const STATUS_IDS = Object.freeze(['open', 'approved', 'rejected', 'notRequired']);
   const ANSWER_STATES = Object.freeze(['approved', 'rejected', 'notRequired']);
+  // Additional states are user-scoped preferences; the canonical custom:<slug>
+  // value travels with each answer so remote sync never silently downgrades it.
+  const CUSTOM_STATUS_KEY = 'lcw.cp.checklist.custom-statuses.v1';
+  let customStatusCache = null, customStatusOwner = '';
+  function customStorage() {
+    const root = typeof globalThis !== 'undefined' ? globalThis : {};
+    return root.BLStorage || root.localStorage || null;
+  }
+  function customStatuses() {
+    const root = typeof globalThis !== 'undefined' ? globalThis : {};
+    const owner = String((root.BL_USER_CONTEXT || {}).id || '');
+    if (customStatusCache && customStatusOwner === owner) return customStatusCache.slice();
+    customStatusOwner = owner;
+    try {
+      const store = customStorage();
+      const raw = JSON.parse(store && store.getItem(CUSTOM_STATUS_KEY) || '[]');
+      customStatusCache = (Array.isArray(raw) ? raw : []).filter(item =>
+        item && /^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(item.id)
+        && typeof item.name === 'string' && item.name.trim().length > 0)
+        .slice(0, 24).map(item => ({ id: item.id, name: item.name.slice(0, 50), resolved: item.resolved === true }));
+    } catch (_) { customStatusCache = []; }
+    return customStatusCache.slice();
+  }
+  function statusIds() { return [...STATUS_IDS, ...customStatuses().map(item => item.id)]; }
+  function addCustomStatus(name, resolved = false) {
+    const title = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 50);
+    if (title.length < 2) throw new Error('Status name must have at least two characters.');
+    const list = customStatuses();
+    if (list.length >= 24) throw new Error('Custom status limit reached (24).');
+    if (statusIds().some(id => statusLabel(id, 'en').toLocaleLowerCase('tr-TR') === title.toLocaleLowerCase('tr-TR')))
+      throw new Error('This status already exists.');
+    const slug = title.toLocaleLowerCase('tr-TR').replace(/ı/g, 'i').replace(/ğ/g, 'g')
+      .replace(/ş/g, 's').replace(/ü/g, 'u').replace(/ö/g, 'o').replace(/ç/g, 'c')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '').slice(0, 42) || 'status';
+    let id = 'custom:' + slug, counter = 2;
+    while (list.some(item => item.id === id)) id = 'custom:' + slug.slice(0, 38) + '-' + counter++;
+    const next = [...list, { id, name: title, resolved: resolved === true }];
+    const store = customStorage();
+    if (!store || typeof store.setItem !== 'function') throw new Error('Preference storage is unavailable.');
+    store.setItem(CUSTOM_STATUS_KEY, JSON.stringify(next));
+    customStatusCache = next;
+    return id;
+  }
+  function deleteCustomStatus(id) {
+    const list = customStatuses();
+    const next = list.filter(item => item.id !== id);
+    if (next.length === list.length) return false;
+    const store = customStorage();
+    if (!store || typeof store.setItem !== 'function') throw new Error('Preference storage is unavailable.');
+    store.setItem(CUSTOM_STATUS_KEY, JSON.stringify(next));
+    customStatusCache = next;
+    return true;
+  }
   const RESOLVED_STATES = Object.freeze(['approved', 'notRequired']);
   const STATUS_LABELS = Object.freeze({
     tr: { open: 'Bekliyor', approved: 'Onaylandı', rejected: 'Reddedildi', notRequired: 'Gerekmiyor' },
@@ -118,11 +172,17 @@
     if (['rejected', 'reject', 'reddedildi', 'red', 'ret', 'failed', 'fail', 'no', 'hayır', 'hayir'].includes(raw)) return 'rejected'; // i18n-ignore — içe aktarma eş anlamlıları, UI metni değil
     if (['notrequired', 'not required', 'n a', 'na', 'gerekmiyor', 'gerek yok', 'uygulanmaz'].includes(raw)) return 'notRequired'; // i18n-ignore — içe aktarma eş anlamlıları, UI metni değil
     if (['open', 'pending', 'açık', 'acik', 'bekliyor', 'beklemede', 'yeniden aç', 'yeniden ac'].includes(raw)) return 'open'; // i18n-ignore — içe aktarma eş anlamlıları, UI metni değil
+    if (/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(String(value || '').trim())) return String(value).trim();
     return '';
   }
   function statusLabel(status, lang) {
     const labels = STATUS_LABELS[lang === 'en' ? 'en' : 'tr'];
-    return labels[normalizeStatus(status) || 'open'];
+    const id = normalizeStatus(status) || 'open';
+    if (id.startsWith('custom:')) {
+      const item = customStatuses().find(entry => entry.id === id);
+      return item ? item.name : id.slice(7).replace(/-/g, ' ');
+    }
+    return labels[id];
   }
 
 /* GECİKMİŞ SİPARİŞ PENCERESİ.
@@ -275,7 +335,10 @@
     if (plmApproved(plmEvidenceOf(context, analysis, itemId))) return 'approved';
     return 'open';
   }
-  function isResolved(status) { return RESOLVED_STATES.includes(status); }
+  function isResolved(status) {
+    const id = normalizeStatus(status);
+    return RESOLVED_STATES.includes(id) || Boolean(customStatuses().find(item => item.id === id && item.resolved));
+  }
 
   function itemApplies(item, config, analysis, settings) {
     if (!config.enabled) return false;
@@ -435,7 +498,7 @@
 
   return {
     ITEMS, ITEM_BY_ID, GROUP_LABELS, ANSWER_STATES, ANSWER_LABELS, STATUS_IDS, STATUS_LABELS, RESOLVED_STATES,
-    normalizeStatus, statusLabel, statusOf, isResolved,
+    normalizeStatus, statusLabel, statusOf, isResolved, statusIds, customStatuses, addCustomStatus, deleteCustomStatus,
     normalizeSettings, answerKey, optionIdentity, optionAnswerKey, approvalScopeOf, makeAnswer, answerIsStale, stateFor,
     itemApplies, openItems, summarize,
   };
