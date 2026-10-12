@@ -4354,6 +4354,39 @@
           "en": "Actual Buyer Log continuation plan with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-oab-native-job-discovery",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent gerçek OAB iş kaydını ve satırlarını okuyabilir",
+        "en": "Agents can read actual OAB job receipts and rows"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › OAB araçları",
+        "en": "Agent Office › Tasks › OAB tools"
+      },
+      "body": {
+        "tr": "Üç yeni araç, kullanıcının kendi native OAB iş makbuzunu, doğrulanmış gerçek sonuçlarını ve kesilmiş işin devam planını okur. Satırlar mevcut servisten, iş kimliğine bağlı ve sınırlı sayfalarda gelir; tüm raporla değiştirilmez. Kesilmiş veya eksik iş başarı sayılmaz. Bozuk parçalar reddedilir; okuma boyunca güncel kullanıcı yetkisi ve agent revizyonu tekrar kontrol edilir. Araçlar kurumsal yükleme başlatmaz ve kendi kendine onay vermez.",
+        "en": "Three new tools read the user’s own native OAB receipt, verified actual results and interrupted-work continuation plan. Rows come from the existing service, bound to job identity in bounded pages; they are not replaced by the entire report. Interrupted or incomplete work is not counted as success. Corrupt chunks are rejected; current user access and agent revision are checked again throughout the read. These tools do not start corporate fetching or grant their own approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-oab-native-job-discovery.png",
+        "alt": {
+          "tr": "Agent görevinde gerçek iş durumu ve doğrulanmış sonuç",
+          "en": "Actual job state and verified results in an agent task"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log Agent Ofisi",
+          "en": "Actual Buyer Log Agent Office with anonymous data"
+        }
+      }
     }
   ]
 }

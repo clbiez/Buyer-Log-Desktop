@@ -103,6 +103,63 @@
         "approval": false,
         "rollbackable": false,
         "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.receipt",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.results",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.continuation.plan",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
       }
     ]
   },

@@ -10810,6 +10810,7 @@ const agentResourceDeps={withAgentMutation:(ctx,work)=>agentOfficeStore.withProf
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
 require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});
+require('./lib/agent-oab-job-tools').registerOabJobTools(agentToolRegistry,{service:nativeOabBatchService,transport:OAB_DESKTOP_TRANSPORT,office:agentOfficeStore});
 const manufacturerAsasSource=require('./lib/agent-manufacturer-asas-source').createManufacturerAsasSource({office:agentOfficeStore,userAccess,dataset:agentPlatformDataset,stamp:ctx=>{const profile=userAccess.profileById(ctx.ownerId),cache=cacheForUser(ctx.ownerId);return {loadedAt:cache.loadedAt,cpupdateOverrides:cache.cpupdateOverrides,overrides:loadOverrides({projectManufacturers:false}),preferences:userPreferences.load(ctx.ownerId),roleEntries:userAccess.roleWorkspaceEntries(profile),actor:profile};}});
 require('./lib/agent-manufacturer-tools').registerManufacturerTools(agentToolRegistry,{...agentResourceDeps,asasSource:manufacturerAsasSource});
 require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegistry,{...agentResourceDeps,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});

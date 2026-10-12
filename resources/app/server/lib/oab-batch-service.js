@@ -477,6 +477,16 @@ function oabBuildPlan(body) {
     }
     assertAccess(current);return payload;
   }
+  function receipt(profile,jobId) {
+    const current=assertAccess(profile),saved=jobId?jobStore.get(current.id,jobId,{includePlan:false}):jobStore.latest(current.id,{includePlan:false});
+    assertAccess(current);return {ok:true,job:oabBatchPublicJob(saved),sourceFingerprint:commandHash(JSON.stringify({ownerId:current.id,jobId:jobId||null,receipt:saved}))};
+  }
+  function resultReport(profile,jobId) {
+    const current=assertAccess(profile),saved=jobStore.resultReceipt(current.id,jobId);
+    assertAccess(current);
+    const merged=Array.isArray(saved.results)?oabBatch.mergeReportResults(saved.results):null;
+    assertAccess(current);return {ok:true,job:oabBatchPublicJob(saved.job),sourceFingerprint:commandHash(JSON.stringify({ownerId:current.id,jobId,receipt:saved.job})),resultAvailable:!!merged,...(merged?{rows:merged.rows,fields:merged.fields,sources:merged.sources,fetchedAt:merged.sources.at(-1)?.fetchedAt||saved.job?.finishedAt||null}:{})};
+  }
   function completedSnapshot(profile,jobId) {
     const current=assertAccess(profile);
     if(!/^[A-Za-z0-9_-]{1,100}$/.test(current.id))throw serviceError('OAB_CONTINUATION_UNAVAILABLE',403);
@@ -497,6 +507,6 @@ function oabBuildPlan(body) {
     userAccess.appendAudit(current,'OAB_BATCH_CAPABILITY_RESET','oab',capability);
     return {ok:true,capability};
   }
-  return Object.freeze({buildPlan:oabBuildPlan,plan,start,status,cancel,resetCapability,continuationPlan,continueJob,completedSnapshot});
+  return Object.freeze({buildPlan:oabBuildPlan,plan,start,status,cancel,resetCapability,continuationPlan,continueJob,completedSnapshot,receipt,resultReport});
 }
 module.exports={createOabBatchService};

@@ -61,8 +61,9 @@ function createOabJobStore({root=path.join(LOCAL_DATA_ROOT,'oab-job-receipts')}=
   }
   return refs;
  }
- function results(owner,id){return locked(owner,()=>{
-  const value=reconcile(owner,doc(owner,id));if(!value||value.resultRefs==null)return null;
+ function readResults(owner,value){
+  if(!value||value.resultRefs==null)return null;
+  const id=value.jobId;
   if(!Array.isArray(value.resultRefs)||value.resultRefs.length>400)throw fail('OAB_JOB_RESULT_INVALID');
   const result=[];let count=0;
   for(let index=0;index<value.resultRefs.length;index++){
@@ -75,7 +76,9 @@ function createOabJobStore({root=path.join(LOCAL_DATA_ROOT,'oab-job-receipts')}=
    }catch(_){throw fail('OAB_JOB_RESULT_INVALID');}
   }
   if(count!==value.rowCount)throw fail('OAB_JOB_RESULT_INVALID');return result;
- });}
+ }
+ function results(owner,id){return locked(owner,()=>readResults(owner,reconcile(owner,doc(owner,id))));}
+ function resultReceipt(owner,id){return locked(owner,()=>{const job=reconcile(owner,doc(owner,id));return {job:copy(job),results:readResults(owner,job)};});}
  function latestDoc(owner){const ref=read(pointer(owner));if(!ref)return null;if(ref.ownerId!==owner)throw fail('OAB_JOB_STORE_INVALID');const value=doc(owner,ref.jobId);if(!value)throw fail('OAB_JOB_STORE_INVALID');return value;}
  function executorAlive(owner,value){
   if(!value.running)return false;
@@ -123,6 +126,6 @@ function createOabJobStore({root=path.join(LOCAL_DATA_ROOT,'oab-job-receipts')}=
  }
  function cancel(owner,options={}){return locked(owner,()=>{options.assertAuthority?.();const current=reconcile(owner,latestDoc(owner));options.assertAuthority?.();if(!current||!current.running)return {cancelled:false,job:copy(current)};options.beforeCancel?.(copy(current));options.assertAuthority?.();const value=write(owner,{...current,revision:current.revision+1,cancelled:true});return{cancelled:true,job:value};});}
  function release(owner,id){active.delete(key(owner,id));}
- return Object.freeze({reserve,checkpoint,latest,get,cancel,release,results});
+ return Object.freeze({reserve,checkpoint,latest,get,cancel,release,results,resultReceipt});
 }
 module.exports={createOabJobStore};
