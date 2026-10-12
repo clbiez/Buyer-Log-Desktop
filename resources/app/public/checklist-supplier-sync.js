@@ -76,6 +76,10 @@
      Eski Excel/kayıt değerleri (Completed, Tamamlandı, Open…) aynı kanonik
      duruma okunur; tanınmayan değer '' döner ve geçersiz sayılır. */
   const STATUS_ORDER = Object.freeze(['open', 'approved', 'rejected', 'notRequired']);
+  function availableStatuses() {
+    const engine = root.BLCpChecklistEngine;
+    return engine && typeof engine.statusIds === 'function' ? engine.statusIds() : STATUS_ORDER.slice();
+  }
   function normalizeState(value) {
     const raw = text(value).toLocaleLowerCase('tr-TR').replace(/[._-]+/g, ' ');
     if (!raw) return '';
@@ -83,6 +87,13 @@
     if (['rejected', 'reject', 'reddedildi', 'red', 'ret', 'failed', 'fail', 'no', 'hayır', 'hayir'].includes(raw)) return 'rejected'; // i18n-ignore — import aliasları, UI metni değil
     if (['notrequired', 'not required', 'n a', 'na', 'gerekmiyor', 'gerek yok', 'uygulanmaz'].includes(raw)) return 'notRequired';
     if (['open', 'pending', 'açık', 'acik', 'bekliyor', 'beklemede', 'yeniden aç', 'yeniden ac'].includes(raw)) return 'open'; // i18n-ignore — import aliasları, UI metni değil
+    const engine = root.BLCpChecklistEngine;
+    if (engine && typeof engine.customStatuses === 'function') {
+      const match = engine.customStatuses().find(item => item.name.toLocaleLowerCase('tr-TR') === raw);
+      if (match) return match.id;
+    }
+    const direct = String(value == null ? '' : value).trim();
+    if (/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(direct)) return direct;
     return '';
   }
   function statusLabel(status) {
@@ -91,10 +102,13 @@
     if (s === 'rejected') return T('Reddedildi', 'Rejected');
     if (s === 'notRequired') return T('Gerekmiyor', 'Not Required');
     if (s === 'open') return T('Bekliyor', 'Pending');
+    const engine = root.BLCpChecklistEngine;
+    if (s.startsWith('custom:')) return engine && typeof engine.statusLabel === 'function'
+      ? engine.statusLabel(s, isEn() ? 'en' : 'tr') : s.slice(7).replace(/-/g, ' ');
     return '';
   }
   function statusOptions() {
-    return STATUS_ORDER.map(statusLabel);
+    return availableStatuses().map(statusLabel);
   }
   function isoNow() { return new Date().toISOString(); }
 
@@ -2062,10 +2076,10 @@
     menu.className = 'delTypeMenu clStatusMenu';
     menu.setAttribute('role', 'listbox');
     menu.setAttribute('aria-label', T('Checklist durumu', 'Checklist status'));
-    menu.innerHTML = STATUS_ORDER.map(function (status) {
+    menu.innerHTML = [...new Set([...availableStatuses(), current])].map(function (status) {
       return '<button type="button" class="delTypeOption clStatusOption" role="option" data-cl-status="' + status + '" aria-selected="' + (status === current ? 'true' : 'false') + '">'
-        + '<span class="clStatusDot is-' + status + '" aria-hidden="true"></span>'
-        + '<span>' + statusLabel(status) + '</span></button>';
+        + '<span class="clStatusDot is-' + (status.startsWith('custom:') ? 'custom' : status) + '" aria-hidden="true"></span>'
+        + '<span>' + html(statusLabel(status)) + '</span></button>';
     }).join('');
     const evidenceItem = itemCatalog().find(function (item) { return item.id === trigger.dataset.item; });
     if (evidenceEnabled(evidenceItem)) {
