@@ -117,7 +117,7 @@ const MODULES = Object.freeze([
     id: 'manufacturers', agentFilter: false, tableKey: null, label: { tr: 'Üreticiler', en: 'Manufacturers' },
     area: 'orders', route: 'manufacturers',
     datasets: ['orders'],
-    capabilities: ['read', 'analyze'],
+    capabilities: ['read', 'analyze', 'patch-row', 'import'],
     summary: { tr: 'Üretici kartları.', en: 'Manufacturer cards.' },
   },
   {

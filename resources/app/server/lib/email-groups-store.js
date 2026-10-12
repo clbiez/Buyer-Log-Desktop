@@ -387,9 +387,8 @@ function headingField(kind) {
   throw storeError('Geçersiz başlık türü.', 'VALIDATION_ERROR', 400);
 }
 
-function replaceHeadings(kind, list, expectedRevision) {
+function planHeadings(kind, list, store = loadStore()) {
   const field = headingField(kind);
-  const store = loadStore();
   const next = normalizeHeadings(list);
   /* SİLİNEN BAŞLIKTA KAYIT VARSA İŞLEM DURUR. Kayıtları sahipsiz bırakmak,
      onları ekranda hiçbir grupta göstermemek demekti (§142). */
@@ -408,7 +407,11 @@ function replaceHeadings(kind, list, expectedRevision) {
     throw storeError(`Silinmek istenen ${field.label.toLocaleLowerCase('tr-TR')} başlıklarında kayıt var: ${names.join(', ')}. Önce kayıtları başka bir başlığa taşıyın.`,
       'EMAIL_HEADING_IN_USE', 409, { inUse: [...orphaned.keys()] });
   }
-  const saved = saveStore({ ...store, [field.list]: next }, expectedRevision);
+  return {field,next};
+}
+function replaceHeadings(kind, list, expectedRevision, options={}) {
+  const store=loadStore(),{field,next}=planHeadings(kind,list,store);
+  const saved = saveStore({ ...store, [field.list]: next }, expectedRevision,options);
   return { [field.list]: saved[field.list], revision: saved._revision };
 }
 
@@ -631,5 +634,5 @@ module.exports = {
   loadStore, saveStore, publicStore, defaultStore,
   normalizeHeadings, normalizeRecord, activeLock,
   acquireLock, releaseLock, assertHoldsLock,
-  createRecord, updateRecord, deleteRecord, replaceHeadings, importRecords,
+  createRecord, updateRecord, deleteRecord, planHeadings, replaceHeadings, importRecords,
 };
