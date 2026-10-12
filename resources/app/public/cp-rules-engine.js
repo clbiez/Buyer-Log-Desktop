@@ -1073,9 +1073,18 @@
       memo.set(key, value);
       return value;
     };
+    const autoMatches = id => guarded(`auto:${id}`, () => {
+      const rule = byId.get(id);
+      return Boolean(checklistEnabled && rule && rule.kind === 'checklist'
+        && rule.enabled && rule.autoStatus && rule.autoFormula
+        && matchesRule(automaticProbe(rule), facts));
+    }, false);
     const checklistApplies = id => guarded(`applies:${id}`, () => {
       const rule = byId.get(id);
-      return Boolean(checklistEnabled && rule && rule.kind === 'checklist' && matchesRule(rule, facts));
+      // An auto rule can finish a check after its original "ask" stage ends
+      // (e.g. ask during production, approve once loading begins).
+      return Boolean(checklistEnabled && rule && rule.kind === 'checklist'
+        && (matchesRule(rule, facts) || autoMatches(id)));
     }, false);
     const autoDecisions = [];
     const statusOf = id => {
@@ -1090,12 +1099,9 @@
         ? Checklist.statusOf(analysis, id, statusContext) : 'open';
       // Respect PLM evidence and manual approvals reused from another PO.
       if (!directState && existing !== 'open') return existing;
-      if (rule && rule.kind === 'checklist' && rule.enabled && rule.autoStatus && rule.autoFormula
-        && checklistApplies(id)) {
-        if (matchesRule(automaticProbe(rule), facts)) {
-          autoDecisions.push({ itemId: id, state: rule.autoStatus });
-          return rule.autoStatus;
-        }
+      if (rule && rule.kind === 'checklist' && autoMatches(id)) {
+        autoDecisions.push({ itemId: id, state: rule.autoStatus });
+        return rule.autoStatus;
       }
       return typeof Checklist.statusOf === 'function' ? Checklist.statusOf(analysis, id, statusContext) : 'open';
     };
