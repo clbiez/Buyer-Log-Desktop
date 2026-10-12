@@ -20064,9 +20064,7 @@ function openFreightModal(rows){
   }
 
   function storedInputs(entry){
-    const out={};
-    FREIGHT_INPUT_KEYS.forEach(key=>{ const n=BLFreight.num(entry.inputs[key]); if(n!=null) out[key]=n; });
-    return out;
+    return BLFreight.storedInputs(entry.inputs);
   }
   function saveInputs(entry, extra){
     if(!canWrite(entry)) return;
@@ -20080,8 +20078,9 @@ function openFreightModal(rows){
     const prev = entry.row[key];
     // Modalda 2 basamak gösteriliyor; satıra da 2 basamak yazılır ki
     // kullanıcının gördüğü sayı ile hücreye düşen sayı ayrışmasın.
-    const next = Number(item.landed.toFixed(2));
-    saveInputs(entry, {[key]: next, _freightAppliedRate: {id:item.id, label:item.label, mode:item.mode, rate:item.rate, at:new Date().toISOString()}});
+    const nativePatch = BLFreight.landedPatch(item); if(!nativePatch)return;
+    const next = nativePatch[key];
+    saveInputs(entry, nativePatch);
     computeShipFormulas(entry.row);
     if(typeof pushUndo==='function') pushUndo({kind:'ship', shipId:entry.row._shipId, fields:[{key, prev, next}]});
     if(options&&options.quiet) return;

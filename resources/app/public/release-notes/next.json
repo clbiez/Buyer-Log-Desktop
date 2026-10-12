@@ -3529,6 +3529,39 @@
           "en": "Freight reports use saved inputs"
         }
       }
+    },
+    {
+      "id": "agent-freight-inputs-apply",
+      "type": "feature",
+      "module": {
+        "tr": "Nakliye Kıyaslama",
+        "en": "Shipping Comparison"
+      },
+      "title": {
+        "tr": "Agent kayıtlı navlun girdilerini ve landed fiyatını işler",
+        "en": "Agents save freight inputs and apply landed prices"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / Nakliye › Navlun",
+        "en": "Agent Office › Tasks / Shipping › Freight"
+      },
+      "body": {
+        "tr": "Seçili kişisel satırlarda kayıtlı koli, adet ve fiyat girdileri okunur ve onayla kaydedilir. Mevcut ücretin landed sonucu, Navlun penceresindeki iki basamaklı hesapla her satıra uygulanır. Eksik girdiler, değişen ücretler ve güncel yetki işlemi durdurur; geri alma yeni revizyonu korur.",
+        "en": "Saved packing, quantity and price inputs can be read and saved with approval for selected personal rows. Each row receives the existing rate’s landed result using the Freight modal’s two-decimal calculation. Missing inputs, changed rates and current authority stop unsafe effects; undo preserves newer revisions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-freight-inputs-apply.png",
+        "alt": {
+          "tr": "Agent navlun girdileri ve landed uygulama önizlemesi",
+          "en": "Agent freight inputs and landed application preview"
+        },
+        "caption": {
+          "tr": "Kayıtlı girdiler, satır bazlı landed sonucu ve kullanıcı onayı",
+          "en": "Saved inputs, per-row landed result and user approval"
+        }
+      }
     }
   ]
 }

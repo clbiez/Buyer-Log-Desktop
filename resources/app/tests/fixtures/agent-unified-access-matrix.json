@@ -1316,6 +1316,23 @@
         "contractVersion": 2
       },
       {
+        "id": "shipping.freight.inputs.read",
+        "operation": "READ",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
         "id": "shipping.scenarios.calculate",
         "operation": "READ",
         "agentAreas": [
@@ -1428,6 +1445,40 @@
           "opencosting",
           "collection"
         ],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.inputs.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.apply",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "shipping"
         ],
