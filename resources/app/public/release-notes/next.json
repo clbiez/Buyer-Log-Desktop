@@ -5527,6 +5527,35 @@
           "en": "Actual demo source · current configuration revision"
         }
       }
+    },
+    {
+      "id": "cp-plm-source-labels",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "PLM detay sütunlarının kaynağı açıklanır",
+        "en": "PLM detail columns explain their source"
+      },
+      "body": {
+        "tr": "Artwork Detail ve Fabric (PLM) sütunlarının kaynak bilgisi mevcut ortak PLM BOM deposunu ve PLM ID eşleşmesini gösterir.",
+        "en": "Source information for Artwork Detail and Fabric (PLM) identifies the existing shared PLM BOM store and PLM ID matching."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-plm-source-labels.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log sütun penceresinde PLM BOM kaynağı",
+          "en": "PLM BOM source in the actual Buyer Log column dialog"
+        },
+        "caption": {
+          "tr": "Artwork Detail · mevcut ortak PLM BOM kaynağı",
+          "en": "Artwork Detail · existing shared PLM BOM source"
+        }
+      }
     }
   ]
 }
