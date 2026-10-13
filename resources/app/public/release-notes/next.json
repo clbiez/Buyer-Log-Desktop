@@ -4981,6 +4981,72 @@
           "en": "Native save and undo cycles continue within bounded quotas"
         }
       }
+    },
+    {
+      "id": "agent-collection-native-output-inverse",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon / Agent Ofisi",
+        "en": "Collection / Agent Office"
+      },
+      "title": {
+        "tr": "Koleksiyon sonuçları gerçek alanlar ve tam geri almayla doğrulanır",
+        "en": "Collection results validate native fields and complete undo"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Koleksiyon kayıt ve PLM araçları tipli alan, değişiklik, sayım ve makbuz sözleşmeleri kullanır. Önizleme gerçek değişen alanları gösterir; karmaşık veya görsel değerler açık eksiltme bilgisiyle ayrılır. Tam önceki native kayıt yerel arşivde korunur. Kaynak okumasından sonraki beklemelerde ve native journal yazımında kaynak/yetki tekrar doğrulanır; peer düzenlemesi ezilmez. Eksiltilen PLM kayıtları kısmi sonuç olarak işaretlenir ve sessizce sonraki aktarıma geçmez.",
+        "en": "Collection record and PLM tools use typed field, change, count and receipt contracts. Previews show actual changed fields with explicit omissions for complex/image values. Complete prior native records remain in local undo archives. Source and authority are rechecked across waits after source capture and at the native journal commit, preserving peer edits. Omitted PLM records are marked partial and cannot silently proceed into downstream import."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-native-output-inverse.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde demo native PLM kayıt aktarımı ve doğrulanmış sonuç",
+          "en": "Demo native PLM record import and verified result in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek Agent Ofisinde demo native PLM kayıt aktarımı ve doğrulanmış sonuç",
+          "en": "Demo native PLM record import and verified result in the actual Agent Office"
+        }
+      }
+    },
+    {
+      "id": "agent-collection-independent-delete",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon / Agent Ofisi",
+        "en": "Collection / Agent Office"
+      },
+      "title": {
+        "tr": "Grupsuz kayıtlar bağımsız silinebilir",
+        "en": "Ungrouped records can be deleted independently"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Birden fazla grubu olmayan kayıt, yanlışlıkla tek model grubu sayılıp silme engeline takılmaz. Tek kayıt seçilerek onaylı silme ve geri alma çalışır. Gerçek model/renk gruplarında bütün üyeleri seçme koruması devam eder.",
+        "en": "Multiple ungrouped records are no longer incorrectly treated as one model group that blocks deletion. Approved deletion and undo work for a single selected record. Actual model/color groups retain the protection requiring all members to be selected."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-independent-delete.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde bağımsız demo kayıt silme ve geri alma",
+          "en": "Independent demo record deletion and undo in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek Agent Ofisinde bağımsız demo kayıt silme ve geri alma",
+          "en": "Independent demo record deletion and undo in the actual Agent Office"
+        }
+      }
     }
   ]
 }
