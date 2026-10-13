@@ -6,6 +6,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const colourUtils=require('../public/plm-colour-utils.js');
 const APP=fs.readFileSync(path.join(__dirname,'..','public','app-main.js'),'utf8');
+const shared=require('../public/collection-model-groups');
 const INDEX=fs.readFileSync(path.join(__dirname,'..','public','index.html'),'utf8');
 
 test('PLM fill colours become one import variant per colour cell',()=>{
@@ -46,7 +47,9 @@ test('PLM importer reads styles and loads the colour utility before app-main',()
 });
 
 test('PLM import duplicate identity includes colour so legitimate colour variants survive',()=>{
-  const block=APP.slice(APP.indexOf('function kolBuildPlmImportPlan'),APP.indexOf('function kolPlmMappingRows'));
+  const wrapper=APP.slice(APP.indexOf('function kolBuildPlmImportPlan'),APP.indexOf('function kolPlmMappingRows'));
+  assert.match(wrapper,/BLCollectionModelGroups\.kolBuildPlmImportPlan/);
+  const block=require('../public/collection-model-groups').kolBuildPlmImportPlan.toString();
   assert.match(block,/seenInputPlm/);
   assert.match(block,/kolPlmImportColourKey\(parsed\)/);
   assert.match(block,/colourMatches/);

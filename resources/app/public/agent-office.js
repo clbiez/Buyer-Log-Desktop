@@ -22,6 +22,12 @@
       TEST_REPORT_PREVIEW_CHANGED:L('Belge içeriği değişti. Güncel eşleşmeyi yeniden önizleyip onaylayın.','Document content changed. Preview and approve the current match again.'),
       OFFICE_QUALITY_FILE_LIMIT:L('En fazla 30 belge, belge başına 40 MB yükleyebilirsiniz.','Upload up to 30 documents, 40 MB each.'),
       OFFICE_QUALITY_MATCH_REQUIRED:L('Aktarılacak raporu seçip belirsiz sipariş/model/renk eşleşmesini doğrulayın.','Select reports to import and confirm ambiguous order/model/color matches.'),
+      OFFICE_COLLECTION_IDENTITY:L('Kayıt veya onaylı teklif eşleşmesi belirsiz. Güncel kaydı seçip yeniden önizleyin.','The record or approved quotation match is ambiguous. Select the current record and preview again.'),
+      OFFICE_COLLECTION_GROUP_DELETE:L('Model grubunu silmek için bütün renk kayıtlarını açıkça seçin.','Explicitly select every colour record to delete a model group.'),
+      OFFICE_COLLECTION_NO_CHANGE:L('Seçilen veride uygulanacak bir değişiklik yok.','There is no change to apply to the selected data.'),
+      OFFICE_COLLECTION_VERIFY_FAILED:L('Kalıcı sonuç doğrulanamadı. Görev ve güncel kaydı inceleyin; işlemi otomatik tekrar etmeyin.','The persisted result could not be verified. Inspect the task and current record; do not automatically repeat the operation.'),
+      OFFICE_PLM_TRANSLATION_REQUIRED:L('Önce PLM alan çevirilerini Kaynak Yönetiminde onaylayın veya çevrilmeyen alanların atlanmasını açıkça seçin.','Approve PLM field translations in Source Management first, or explicitly choose to skip untranslated fields.'),
+      OFFICE_TASK_DEPENDENCY:L('Bu işlemin sonucuna bağlı başka bir kayıt var. Önce bağlı işlemi geri alın.','Another record depends on this result. Undo the dependent operation first.'),
       OFFICE_TOOL_FORBIDDEN:L('Güncel kullanıcı veya agent kapsamı bu işleme izin vermiyor.','The current user or agent scope does not allow this operation.'),
       OFFICE_MERCH_REQUIRED:L('Önce Veri Yönetiminden Merch Calendar yükleyin.','Upload Merch Calendar from Data Management first.'),
       OFFICE_MERCH_DATE_OUTSIDE:L('Seçili tarih yüklü Merch Calendar kapsamında değil.','The selected date is outside the loaded Merch Calendar.'),
@@ -59,7 +65,7 @@
     };
     if(map[err?.code])return map[err.code];
     if(String(err?.code || '').startsWith('LCWAI_'))return root.BuyerLogAI?.errorText?.(err) || L('LCW AI bağlantısını kontrol edin.','Check the LCW AI connection.');
-    return L('İşlem tamamlanamadı. Yerel kayıtlar korundu; bağlantıyı ve yetkinizi kontrol edin.','The operation could not be completed. Local records were preserved; check connection and permissions.')+` (${err?.code || 'OFFICE_NETWORK'})`;
+    return L('İşlem doğrulanamadı. Görev kaydını, güncel veriyi ve yetkinizi kontrol edin.','The operation could not be verified. Check the task record, current data and permissions.')+` (${err?.code || 'OFFICE_NETWORK'})`;
   }
   const pendingReads=new Map();let readEpoch=0;
   async function api(path,body,method){

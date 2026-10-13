@@ -108,12 +108,13 @@ function loadStore() {
     restore: value => atomicWriteJson(FILE, value),
   });
 }
-function saveStore(store) {
+function saveStore(store,options={}) {
   return withFileLeaseSync(FILE,()=>{
   fs.mkdirSync(path.dirname(FILE), { recursive: true });
-  const current = loadStore();
+  const current = loadStore();options.assertAuthority?.();if(options.expectedRevision!=null&&current._revision!==options.expectedRevision)throw Object.assign(new Error('Quotation preview changed.'),{code:'REVISION_CONFLICT',statusCode:409});
   const expected=Math.max(0,Number(store&&store._revision)||0);
   if(current._revision!==expected){const error=new Error('Quotation records changed in another Buyer Log instance. Reload and retry.');error.code='REVISION_CONFLICT';error.statusCode=409;error.expectedRevision=expected;error.currentRevision=current._revision;throw error;}
+  const persist=()=>{
   const saved = {
     schemaVersion: 1,
     requests: (Array.isArray(store && store.requests) ? store.requests : []).map(item => normalizeRequest(item)),
@@ -124,6 +125,7 @@ function saveStore(store) {
   if (documents.writesLegacy) atomicWriteJson(FILE, saved);
   documents.mirror(DOCUMENT_ID, saved);
   return saved;
+  };return options.withDependencies?options.withDependencies(persist):persist();
   });
 }
 
@@ -231,7 +233,7 @@ function canEdit(profile, request) {
 function canManageAccess(profile, request) {
   return Boolean(profile && request && (profile.role === 'moderator' || request.ownerId === profile.id));
 }
-function createRequest(profile, payload) {
+function createRequest(profile, payload,options={}) {
   const store = loadStore();
   const request = normalizeRequest(payload, { ownerId: profile.id, ownerName: profile.displayName });
   request.ownerId = profile.id;
@@ -243,10 +245,10 @@ function createRequest(profile, payload) {
   request.updatedAt = request.createdAt;
   request.sortOrder = Date.now();
   store.requests.unshift(request);
-  saveStore(store);
+  saveStore(store,options);
   return request;
 }
-function updateRequest(profile, id, payload) {
+function updateRequest(profile, id, payload,options={}) {
   const store = loadStore();
   const current = findRequest(store, id);
   if (!current) return null;
@@ -271,10 +273,10 @@ function updateRequest(profile, id, payload) {
   incoming.sortOrder = Number.isFinite(Number(payload && payload.sortOrder)) ? Number(payload.sortOrder) : current.sortOrder;
   const index = store.requests.findIndex(item => item.id === current.id);
   store.requests[index] = incoming;
-  saveStore(store);
+  saveStore(store,options);
   return incoming;
 }
-function setStatus(profile, id, status) {
+function setStatus(profile, id, status,options={}) {
   const store = loadStore();
   const request = findRequest(store, id);
   if (!request) return null;
@@ -285,7 +287,7 @@ function setStatus(profile, id, status) {
   request.status = status === 'closed' ? 'closed' : 'active';
   request.closedAt = request.status === 'closed' ? now() : '';
   request.updatedAt = now();
-  saveStore(store);
+  saveStore(store,options);
   return request;
 }
 function setEditors(profile, id, editorIds, validUserIds) {
@@ -383,8 +385,13 @@ function importLegacy(profile, requests) {
   return { imported, requests: requestsForUser(profile).requests };
 }
 
+function approveLine(profile,id,lineId,approved,options={}){
+ const store=loadStore(),request=findRequest(store,id),line=request?.items.find(item=>item.id===lineId);if(!request||!line)return null;if(!canEdit(profile,request))throw Object.assign(new Error('Quotation denied.'),{code:'QUOTATION_EDIT_DENIED',statusCode:403});
+ const engine=require('../../public/pricing-workspace-engine');if(approved&&!engine.price(line.price))throw Object.assign(new Error('A valid price is required.'),{code:'QUOTATION_PRICE_REQUIRED',statusCode:422});const affected=engine.approveQuotationLine(store.requests.filter(r=>!options.visibleRequestIds||options.visibleRequestIds.includes(r.id)),request,line,approved,other=>canEdit(profile,other));affected.forEach(item=>item.updatedAt=now());saveStore(store,options);return {request,affectedIds:affected.map(item=>item.id)};
+}
+function restoreRequests(profile,receipt,options={}){const store=loadStore();for(const [id,prior]of Object.entries(receipt.before)){const current=findRequest(store,id);if(current&&!canEdit(profile,current)||prior&&!canEdit(profile,prior))throw Object.assign(new Error('Quotation denied.'),{code:'QUOTATION_EDIT_DENIED',statusCode:403});const index=store.requests.findIndex(item=>item.id===id);if(prior){if(index>=0)store.requests[index]=prior;else store.requests.push(prior);}else if(index>=0)store.requests.splice(index,1);}const saved=saveStore(store,{...options,expectedRevision:receipt.expectedRevision});return {verified:true,revision:saved._revision};}
 module.exports = {
-  attachDeltaStore,
+  FILE,attachDeltaStore,approveLine,restoreRequests,
   loadStore, requestsForUser, createRequest, updateRequest, setStatus, setEditors, deleteRequest, hideRequest, restoreRequest, mergeRequests, importLegacy, cleanupExpired,
   canEdit, canManageAccess, normalizeRequest, isRetentionExpired, RETENTION_YEARS,
 };

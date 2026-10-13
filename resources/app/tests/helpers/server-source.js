@@ -12,7 +12,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const SERVER_ROOT = path.join(__dirname, '..', '..', 'server');
-const REGISTRATION_RE = /^require\('\.\/routes\/([\w-]+)'\)\(app, \{[\s\S]*?\n\}\);$/gm;
+const REGISTRATION_RE = /^(?:const \w+\s*=\s*)?require\('\.\/routes\/([\w-]+)'\)\(app, \{[\s\S]*?\n\}\);$/gm;
 
 function moduleBody(source) {
   // Başlık + deps destructure atlanır; taşınan gövde birebir döner.

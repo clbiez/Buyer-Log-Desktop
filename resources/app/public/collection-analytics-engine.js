@@ -228,5 +228,23 @@
     const raw=matrix(observations,rowKey,columnKey,'recordCount');
     return {rows:raw.rows,columns:raw.columns,items:raw.items,value(row,column){return metricResult(raw.items(row,column),metric);}};
   }
-  return {quantile,bounds,markOutliers,stats,group,aggregate,benchmark,concentration,matrix,relationships,analyze,availableDimensions,availableMetrics,metricResult,filterRecords,aggregateDimensions,analyzeFlexible,supplierIntelligence,compareAnalyses,flexibleMatrix,PRICE_METRICS,SUPPLIER_METRICS};
+  function buildObservations(rows,type,helpers){
+    const {norm,kolParseMoneyNum,kolParseQuantityNum,kolEffectiveProjection,kolConfirmedPricing,kolBestPricing,kolLandedCalc}=helpers;
+    const observations=[];
+    const add=(row,manufacturer,price,currency)=>{const n=Number(price),qty=kolParseQuantityNum(row&&row.quantity);if(!Number.isFinite(n)||n<=0)return;observations.push({row,rowId:row.id,modelKey:`${norm(row.plmId)}\u0000${norm(row.modelKod)}`,manufacturer:norm(manufacturer)||'—',classification:norm(row.urunTipi)||'—',mag:norm(row.mag)||'—',mmyg:norm(row.mmyg)||'—',buyingGroup:norm(row.buyingGroup)||'—',buyer:norm(row.buyer)||norm(row._collectionOwnerName)||'—',country:norm(row.country)||'—',season:norm(row.season)||'—',price:n,currency,quantity:Number.isFinite(qty)&&qty>0?qty:null});};
+    (rows||[]).forEach(sourceRow=>{
+      const row=kolEffectiveProjection(sourceRow),confirmed=kolConfirmedPricing(row),best=kolBestPricing(row),manufacturer=confirmed?.name||norm(row.confirmedManufacturer)||norm(row.buyingSampleManufacturer)||best?.name||'—';
+      if(type==='quotation'){Object.entries(row.pricing||{}).forEach(([name,value])=>add(row,name,kolParseMoneyNum(value),'USD'));return;}
+      if(type==='confirmed'){if(confirmed)add(row,confirmed.name,confirmed.price,'USD');return;}
+      if(type==='best'){if(best)add(row,best.name,best.price,'USD');return;}
+      if(type==='target'){add(row,manufacturer,kolParseMoneyNum(row.targetPrice),'USD');return;}
+      if(type==='fob'){add(row,manufacturer,kolParseMoneyNum(row.fob),'USD');return;}
+      if(type==='ydLanded'){add(row,manufacturer,kolLandedCalc(row).ydLanded,'USD');return;}
+      if(type==='trLanded'){add(row,manufacturer,kolLandedCalc(row).trLanded,'USD');return;}
+      if(type==='trPrice'){add(row,manufacturer,kolParseMoneyNum(row.trPrice),'TRY');return;}
+      if(type==='previousFob')add(row,manufacturer,kolParseMoneyNum(row.previousFob),'USD');
+    });
+    return observations;
+  }
+  return {buildObservations,quantile,bounds,markOutliers,stats,group,aggregate,benchmark,concentration,matrix,relationships,analyze,availableDimensions,availableMetrics,metricResult,filterRecords,aggregateDimensions,analyzeFlexible,supplierIntelligence,compareAnalyses,flexibleMatrix,PRICE_METRICS,SUPPLIER_METRICS};
 });

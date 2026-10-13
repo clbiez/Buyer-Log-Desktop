@@ -40,6 +40,17 @@ for (const [key, value] of Object.entries((workerData && workerData.env) || {}))
   if (value != null && value !== '') process.env[key] = String(value);
 }
 const store = require('./lib/collection-workspaces');
+let agentAccess;
+function accessForAgent(authorization) {
+  const enabled=authorization.centralIamEnabled===true;
+  if(!agentAccess||agentAccess.centralIamHealth().enabled!==enabled){
+    agentAccess=require('./lib/user-access').buildUserAccess({ensureDataLoaded:()=>{},getOrders:()=>[],centralIam:{enabled}});
+    const {LOCAL_DATA_ROOT}=require('./user-data');
+    const permissions=require('./lib/collection-permissions-store').createCollectionPermissionsStore({file:require('node:path').join(LOCAL_DATA_ROOT,'collection-permissions.json'),getProfiles:()=>agentAccess.collectionAccessMigrationProfiles()});
+    agentAccess.setCollectionAccessResolver(profile=>permissions.isReady()?permissions.effectiveOwners(profile.id):null);
+  }
+  return agentAccess;
+}
 
 parentPort.on('message', async task => {
   const id = task && task.id;
@@ -49,7 +60,13 @@ parentPort.on('message', async task => {
     // (eski yol). Eski yol bilerek korunuyor: Excel/PLM içe aktarma gibi
     // sayfanın tamamını değiştiren akışlar hâlâ onu kullanıyor.
     if (task.mode === 'rows') {
-      const result = await store.applyRowChangesAsync(task.ownerId, payload);
+      // Read the same durable delta document when it is authoritative; normal
+      // UI worker jobs retain their existing compatibility path.
+      const delta=task.authorization?require('./lib/delta-store').createDeltaStore({localDb:require('./lib/local-db').createLocalDb(require('./user-data').LOCAL_DB_FILE),mode:task.authorization.deltaStoreMode}):null;
+      const documents=require('./lib/delta-store').createDocumentApi(delta);
+      const refresh=async()=>{if(delta?.isAuthoritative){const hydrated=await delta.hydrate();if(!hydrated.ok)throw Object.assign(new Error('Authoritative source unavailable.'),{code:'DATA_INTEGRITY_ERROR',statusCode:503});}};
+      const assertAuthority=async()=>{await refresh();if(!task.authorization)return;if(task.authorization.quotationRevision!=null&&(documents.read('quotations.json')||require('./lib/quotations-store').loadStore())._revision!==task.authorization.quotationRevision)throw Object.assign(new Error('Quotation changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});if(task.authorization.translationRevision!=null&&require('./lib/plm-translations').loadPlmTranslations()._revision!==task.authorization.translationRevision)throw Object.assign(new Error('Translation changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});const access=accessForAgent(task.authorization),profile=access.profileById(task.authorization.actorId);if(!profile||JSON.stringify(access.publicProfile(profile))!==task.authorization.stamp)throw Object.assign(new Error('Collection authority changed.'),{code:'COLLECTION_EDIT_DENIED',statusCode:403});require('./lib/agent-collection-authority').assertCollectionAccess(access,profile,task.ownerId,true);};
+      const result = await store.applyRowChangesAsync(task.ownerId, payload,{expectedRevision:task.expectedRevision,assertAuthority,...(delta?{readCurrent:async()=>{await refresh();const raw=documents.read(store.documentId(task.ownerId));return raw?store.normalizeWorkspace(task.ownerId,raw):store.loadWorkspace(task.ownerId);},afterWrite:async(saved)=>{if(!documents.exists(store.documentId(task.ownerId)))return;const receipt=await documents.mirror(store.documentId(task.ownerId),saved);if(!receipt.ok)throw Object.assign(new Error('Collection journal write failed.'),{code:'COLLECTION_SAVE_FAILED'});}}:{})});
       parentPort.postMessage({
         id, ok: true,
         revision: result.saved._revision,

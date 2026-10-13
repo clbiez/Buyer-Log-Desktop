@@ -133,5 +133,9 @@
     const counts=modelOptionStats?.getModelOptionStats?.(valid,{modelKey:(record,index)=>modelOptionStats.modelKey({plmId:record?.plmId,modelKod:record?.modelCode||record?.model},index),optionMode:'unique',optionKey:record=>record?.identityKey||record?.id||record?.itemId});
     return {count:valid.length,modelCount:counts?.modelCount||new Set(valid.map(record=>clean(record?.modelKey||record?.model)).filter(Boolean)).size,optionCount:counts?.optionCount||valid.length,best,bestManufacturer:clean(bestRecord?.manufacturer),average,max,spreadPct:best>0?((max-best)/best)*100:null,suppliers:new Set(valid.map(record=>clean(record?.manufacturer)).filter(Boolean)).size};
   }
-  return {price,modelCount,manufacturerCount,requestStats,requestMatchesFilter,workspaceKpis,lineMatchesRow,selectionSummary,historySummary};
+  function applyApprovedPrice(row,line,formatPrice=String,normalize=clean){if(line.approved){if(!row.pricing)row.pricing={};row.pricing[line.manufacturer]=formatPrice(line.price);row.confirmedManufacturer=line.manufacturer;}else if(normalize(row.confirmedManufacturer)===line.manufacturer)row.confirmedManufacturer='';return row;}
+  function approveQuotationLine(requests,request,line,approved,canEdit){
+    const affected=new Set();(requests||[]).forEach(otherRequest=>{if(otherRequest.source!==request.source||otherRequest.ownerId!==request.ownerId||!canEdit(otherRequest))return;otherRequest.items.forEach(other=>{if(other.modelKey===line.modelKey&&other.approved){other.approved=false;affected.add(otherRequest);}});});line.approved=approved===true;affected.add(request);return [...affected];
+  }
+  return {applyApprovedPrice,approveQuotationLine,price,modelCount,manufacturerCount,requestStats,requestMatchesFilter,workspaceKpis,lineMatchesRow,selectionSummary,historySummary};
 });
