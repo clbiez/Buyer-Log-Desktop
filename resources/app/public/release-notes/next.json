@@ -5163,6 +5163,35 @@
           "en": "Actual shared definition operations · approval and complete inverse"
         }
       }
+    },
+    {
+      "id": "agent-checklist-current-facts",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Agent Ofisi",
+        "en": "CP · Agent Office"
+      },
+      "title": {
+        "tr": "Checklist sonuçları güncel ortak kayıtla birleştirilir",
+        "en": "Checklist results merge against current shared records"
+      },
+      "description": {
+        "tr": "Eski kişisel cevap daha yeni ortak sonucu ezmez. Yerel bekleyen düzeltmeler mevcut kurallarla korunur; agent bağlamına yalnız yetki kapsamındaki cevap ve silme kayıtları alınır. Veri beklenirken değişen yetki yeniden kontrol edilir.",
+        "en": "An older personal answer cannot overwrite a newer shared result. Pending local corrections retain native merge rules; only scoped answers and deletion records enter agent context. Authority changes during data waits are checked again."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-checklist-current-facts.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında güncel ortak Testler ret sonucu",
+          "en": "Current shared Tests rejection in the actual Buyer Log screen"
+        },
+        "caption": {
+          "tr": "Gerçek demo kaynak · daha yeni ortak ret sonucu korunur",
+          "en": "Actual demo source · newer shared rejection retained"
+        }
+      }
     }
   ]
 }

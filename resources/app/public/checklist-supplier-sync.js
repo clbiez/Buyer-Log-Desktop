@@ -196,36 +196,10 @@
   function mergeRemoteAnswers(payload) {
     const s = assistantState();
     if (!s) return;
-    const local = s.answers && typeof s.answers === 'object' ? s.answers : {};
-    const answers = payload && payload.answers && typeof payload.answers === 'object' ? payload.answers : {};
-    const tombstones = payload && payload.tombstones && typeof payload.tombstones === 'object' ? payload.tombstones : {};
+    const engine = typeof module === 'object' && module.exports ? require('./checklist-answer-merge-engine') : root.BLChecklistAnswerMergeEngine;
     state.applyingRemote = true;
     try {
-      Object.keys(tombstones).forEach(function (key) {
-        if (state.pendingAnswers[key]) return;
-        const tomb = tombstones[key] || {};
-        const current = local[key];
-        const currentAt = current && String(current.at || '');
-        const tombAt = String(tomb.at || '');
-        if (!currentAt || currentAt <= tombAt) {
-          if (tomb.deleted === true) delete local[key];
-          else local[key] = safeJson({ ...tomb, state: 'open' });
-        }
-      });
-      Object.keys(answers).forEach(function (key) {
-        if (state.pendingAnswers[key]) return;
-        const incoming = answers[key] || {};
-        const current = local[key];
-        if (!current || String(current.at || '') <= String(incoming.at || '')) {
-          local[key] = safeJson(incoming);
-        }
-      });
-      s.answers = local;
-      // Restore the exact unacknowledged decisions before displaying remote data.
-      Object.keys(state.pendingAnswers).forEach(function (key) {
-        const entry = state.pendingAnswers[key];
-        if (entry.deleted === true) delete local[key]; else local[key] = safeJson(entry);
-      });
+      s.answers = engine.merge(s.answers, payload, state.pendingAnswers);
       if (root.BLCpAssistant && typeof root.BLCpAssistant.persistChecklistAnswers === 'function') root.BLCpAssistant.persistChecklistAnswers({ recovered: true });
     } finally {
       state.applyingRemote = false;
