@@ -107,3 +107,39 @@ test('Merch Calendar API yazmaları Veri Yönetimi yetkisi ister',()=>{
   assert.match(route,/MERCH_CALENDAR_UPLOAD/);
   assert.match(route,/MERCH_CALENDAR_DELETE/);
 });
+
+
+test('2034 HTML/.xls icinde kesirli rowspan ile January February ve December okunur',()=>{
+  const monthHeaders={
+    1:['January','5.571428571428571'],
+    6:['February','4.285714285714286'],
+    10:['March','4'],14:['April','5'],19:['May','4'],23:['June','4'],
+    27:['July','5'],32:['August','4'],36:['September','4'],
+    40:['October','5'],45:['November','4'],49:['December','4.142857142857143'],
+  };
+  const firstMonday=Date.UTC(2033,11,26);
+  const rows=Array.from({length:52},(_,index)=>{
+    const week=index+1;
+    const days=Array.from({length:7},(_,day)=>new Date(firstMonday+(index*7+day)*86400000).getUTCDate());
+    const header=monthHeaders[week];
+    const month=header?'<th id="'+header[0]+'" rowspan="'+header[1]+'">'+header[0]+'</th>':'';
+    return '<tr class="nopadding noselect">'+month+'<td class="week-cell">'+week+'</td>'+dayCells(days)+'</tr>';
+  });
+  const source='<html><app-lcw-calendar id="app-lcw-calendar-2034"><table>'+rows.join('')+'</table></app-lcw-calendar></html>';
+  const parsed=store.parseBuffer(Buffer.from(source),'MerchCalendar-2034.xls');
+  assert.equal(parsed.weeks.length,52);
+  assert.deepEqual(parsed.weeks[0],{year:2034,week:1,month:1,monthWeek:1,start:'2033-12-26',end:'2034-01-01'});
+  assert.equal(parsed.weeks[5].month,2);
+  assert.equal(parsed.weeks[48].month,12);
+  assert.equal(parsed.weeks[51].end,'2034-12-24');
+});
+
+test('kaynakta eksik 2034 son haftasi uydurulmaz ve 7 gunluk bosluk raporlanir',()=>{
+  const source='<html>'+
+    '<app-lcw-calendar id="app-lcw-calendar-2034"><table>'+row(52,[18,19,20,21,22,23,24],'December')+'</table></app-lcw-calendar>'+
+    '<app-lcw-calendar id="app-lcw-calendar-2035"><table>'+row(1,[1,2,3,4,5,6,7],'January')+'</table></app-lcw-calendar>'+
+    '</html>';
+  const parsed=store.parseBuffer(Buffer.from(source),'2034-2035.xls');
+  assert.equal(parsed.weeks.length,2);
+  assert.deepEqual(parsed.meta.warnings,[{code:'DATE_GAP',from:'2034-12-24',to:'2035-01-01',days:7}]);
+});
