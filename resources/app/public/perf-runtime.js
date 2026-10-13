@@ -108,7 +108,7 @@
 
   const features={
     versionHistory:['version-history.js'],
-    openCosting:['open-costing.js'],
+    openCosting:['fx-calculation-engine.js','open-costing-engine.js','open-costing.js'],
     // v7.175 — otomasyon asistanı (şablonlar, "Hazır mı?", AI yönergesi) saf
     // yardımcıdır; iki görünüm dosyası da onu window'dan okur, bu yüzden önce.
     automations:['automation-assistant.js','automations.js','ai-automation-import.js'],
