@@ -2342,6 +2342,11 @@ function activeTableFilterTokens(tableKey){
     Object.entries(kolColFilters||{}).forEach(([key,entry])=>{
       if(entry&&entry.size)tokens.push({kind:'column',key,label:activeFilterColumnLabel(tableKey,key),detail:activeFilterEntrySummary({values:entry})});
     });
+    Object.entries(kolFabricDetailFilters).forEach(([key,entry])=>{
+      if(!entry?.size)return;
+      const label=window.BLFabricCards?.DETAIL_LABELS?.[key];
+      tokens.push({kind:'fabricDetail',key,label:(appLang==='en'?'Fabric · ':'Kumaş · ')+(label?(appLang==='en'?label.en:label.tr):key),detail:activeFilterEntrySummary({values:entry})});
+    });
     const checked=normalizeCheckFilterMode(kolCheckFilter);
     if(checked)tokens.push({kind:'check',key:'',label:appLang==='en'?'Rows':'Satırlar',detail:checked==='checked'?(appLang==='en'?'Checked':'İşaretli'):(appLang==='en'?'Unchecked':'İşaretsiz')});
     return tokens;
@@ -2380,6 +2385,8 @@ function removeActiveFilterToken(tableKey,kind,key){
   else if(kind==='column'){
     if(tableKey==='koleksiyon'){delete kolColFilters[key];saveKolColState();}
     else if(state.colFilters[tableKey])delete state.colFilters[tableKey][key];
+  }else if(kind==='fabricDetail'&&tableKey==='koleksiyon'){
+    delete kolFabricDetailFilters[key];saveKolColState();
   }else if(kind==='check'){
     if(tableKey==='koleksiyon'){kolCheckFilter='';saveKolColState();}
     else state.checkFilter[tableKey]='';
@@ -2396,7 +2403,7 @@ function clearTableFilters(tableKey,{announce=true}={}){
   }[tableKey]||[];
   filterIds.forEach(id=>{const control=document.getElementById(id);if(control)control.value='';});
   if(tableKey==='koleksiyon'){
-    kolColFilters={};kolCheckFilter='';saveKolColState();
+    kolColFilters={};kolFabricDetailFilters={};kolCheckFilter='';saveKolColState();
   }else if(tableKey==='cp'||tableKey==='orders'){
     state.colFilters[tableKey]={};state.checkFilter[tableKey]='';
     if(tableKey==='cp')state.cpQuickExf='';
@@ -23676,6 +23683,8 @@ function kolApplyCompactImageRowHeight(img){
   tr.style.setProperty('--kol-text-h',`${Math.max(22,rowHeight-4)}px`);
 }
 let kolColFilters = {}; // {k: Set(değerler)} — sütun başlığı filtreleri
+let kolFabricDetailFilters = {}; // {category/type/yarn/weight/composition/finish/sustainability: Set(values)}
+const KOL_FABRIC_DETAIL_KEYS = ['category','type','yarn','weight','composition','finish','sustainability'];
 let kolSort = {key:null, dir:1}; // CP ile aynı başlığa tıklayarak sıralama
 // Add New Model ile oluşturulan boş satır ilk gösterimde, mevcut filtre/sıralamadan
 // bağımsız olarak tablonun en üstünde tutulur. İlk düzenlemede veya kullanıcı yeni
@@ -23767,7 +23776,7 @@ function saveKolColState(){
   try{
     if(Array.isArray(kolColOrder))kolColOrder=kolNormalizeDisplayOrder(kolColOrder);
     const filters = {}; Object.entries(kolColFilters).forEach(([k,s])=>{ if(s&&s.size) filters[k]=[...s]; });
-    BLStorage.setItem(KOL_COL_STATE_KEY, JSON.stringify({layoutVersion:KOL_COL_LAYOUT_VERSION, order:kolColOrder, hidden:[...kolHiddenCols], custom:kolCustomCols, pictureHidden:kolPictureHidden, imgSize:kolImgSize, widths:kolColWidths, filters}));
+    BLStorage.setItem(KOL_COL_STATE_KEY, JSON.stringify({layoutVersion:KOL_COL_LAYOUT_VERSION, order:kolColOrder, hidden:[...kolHiddenCols], custom:kolCustomCols, pictureHidden:kolPictureHidden, imgSize:kolImgSize, widths:kolColWidths, filters, fabricDetails:Object.fromEntries(Object.entries(kolFabricDetailFilters).filter(([key,set])=>KOL_FABRIC_DETAIL_KEYS.includes(key)&&set?.size).map(([key,set])=>[key,[...set]]))}));
   }catch(e){}
 }
 function loadKolColState(options={}){
@@ -23783,6 +23792,8 @@ function loadKolColState(options={}){
     if(obj.imgSize) kolImgSize = kolNormalizeImgSize(obj.imgSize);
     if(obj.widths) kolColWidths = obj.widths;
     if(obj.filters) Object.entries(obj.filters).forEach(([k,vals])=>{ if(Array.isArray(vals)&&vals.length) kolColFilters[k]=new Set(vals); });
+    kolFabricDetailFilters={};
+    Object.entries(obj.fabricDetails||{}).forEach(([key,vals])=>{ if(KOL_FABRIC_DETAIL_KEYS.includes(key)&&Array.isArray(vals)&&vals.length)kolFabricDetailFilters[key]=new Set(vals.map(String)); });
     if(Number(obj.layoutVersion||0)<KOL_COL_LAYOUT_VERSION){
       // v5.24: Fit artık sabit Koleksiyon alanıdır. Eski kullanıcı görünümünde
       // gizlenmiş kalmış olsa bile görünür hale getir.
@@ -24164,6 +24175,73 @@ function kolFilterMeta(key){
   if(key===KOL_CONFIRMATION_FILTER_KEY) return {k:key,label:appLang==='en'?'Confirmation':'Onay'};
   return null;
 }
+
+/* Structured Fabric Card facets. Multiple values in one detail are OR;
+   different detail fields are AND, evaluated on the SAME fabric within a set. */
+const kolFabricDetailCache=new Map();
+function kolFabricDetailsForRow(row){
+  const api=window.BLFabricCards;
+  if(!api||!row)return [];
+  return api.parts(String(kolEffectiveValue(row,'fabric')??'')).map(part=>{
+    const card=kolFabricCards.get(part.code)||null;
+    const memo=kolFabricDetailCache.get(part.code);
+    if(memo&&memo.card===card&&memo.raw===part.raw)return memo.details;
+    const fallback=api.ruleCard(part.raw).details||{},source=card?.details||{},details={};
+    KOL_FABRIC_DETAIL_KEYS.forEach(key=>{
+      const value=String(source[key]||fallback[key]||'').trim();
+      details[key]=key==='composition'?api.normalizeComposition(value):value;
+    });
+    kolFabricDetailCache.set(part.code,{card,raw:part.raw,details});
+    return details;
+  });
+}
+function kolFabricDetailMatches(row,omitKey=''){
+  const active=Object.entries(kolFabricDetailFilters).filter(([key,set])=>key!==omitKey&&KOL_FABRIC_DETAIL_KEYS.includes(key)&&set?.size);
+  return !active.length||kolFabricDetailsForRow(row).some(details=>active.every(([key,set])=>set.has(details[key]||'')));
+}
+function kolFabricDetailPanel(panel){
+  const api=window.BLFabricCards;
+  if(!api)return;
+  const host=document.createElement('section');host.className='kolFabricFacetPanel';
+  const title=document.createElement('strong');title.textContent=appLang==='en'?'Filter by fabric card details':'Kumaş kartı detaylarına göre süz';
+  host.appendChild(title);
+  const display=(value)=>appLang==='en'?api.translateTerms(value,'en'):api.translateTerms(value,'tr');
+  KOL_FABRIC_DETAIL_KEYS.forEach(key=>{
+    const field=document.createElement('details');field.className='kolFabricFacetField';field.open=key==='category'||key==='composition';
+    const current=kolFabricDetailFilters[key]||new Set();
+    const allowed=kolRows.filter(row=>passesKolColFilters(row)&&kolFabricDetailMatches(row,key));
+    const options=new Set([...current]);
+    allowed.forEach(row=>kolFabricDetailsForRow(row).forEach(details=>{if(details[key])options.add(details[key]);}));
+    const summary=document.createElement('summary');
+    summary.textContent=(appLang==='en'?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)+' ('+current.size+')';
+    field.appendChild(summary);
+    const search=document.createElement('input');search.type='search';search.className='kolFabricFacetSearch';
+    search.placeholder=appLang==='en'?'Search values…':'Değer ara…';
+    search.setAttribute('aria-label',summary.textContent);field.appendChild(search);
+    const list=document.createElement('div');list.className='kolFabricFacetOptions';
+    [...options].sort((a,b)=>display(a).localeCompare(display(b),appLang==='en'?'en':'tr',{numeric:true})).forEach(value=>{
+      const label=document.createElement('label');label.className='kolFabricFacetOption';
+      const box=document.createElement('input');box.type='checkbox';box.dataset.fabricFacet=key;box.value=value;box.checked=current.has(value);
+      const span=document.createElement('span');span.textContent=display(value);label.append(box,span);list.appendChild(label);
+    });
+    search.addEventListener('input',()=>{
+      const query=search.value.toLocaleLowerCase(appLang==='en'?'en':'tr');
+      list.querySelectorAll('label').forEach(label=>{label.hidden=!!query&&!label.textContent.toLocaleLowerCase(appLang==='en'?'en':'tr').includes(query);});
+    });
+    field.appendChild(list);host.appendChild(field);
+  });
+  panel.querySelector('.cfpList')?.before(host);
+  panel._kolReadFabricFacets=(add)=>{
+    const next={};
+    KOL_FABRIC_DETAIL_KEYS.forEach(key=>{
+      const chosen=[...host.querySelectorAll('input[data-fabric-facet]')].filter(box=>box.dataset.fabricFacet===key&&box.checked).map(box=>box.value);
+      const values=new Set(add?[...(kolFabricDetailFilters[key]||[]),...chosen]:chosen);
+      if(values.size)next[key]=values;
+    });
+    kolFabricDetailFilters=next;
+  };
+}
+
 function passesKolColFilters(r){
   return Object.entries(kolColFilters).every(([k,set])=>{
     if(!set || !set.size) return true;
@@ -24272,7 +24350,7 @@ function filteredKol(){
   let rows = kolRows.filter(r=>{
     if(checkMode==='checked' && !selectionHasId(kolSelected,r.id)) return false;
     if(checkMode==='unchecked' && selectionHasId(kolSelected,r.id)) return false;
-    if(!passesKolColFilters(r)) return false;
+    if(!passesKolColFilters(r)||!kolFabricDetailMatches(r)) return false;
     if(q.length){
       if(!tableSearchMatches(kolSearchHaystack(r),q,{plainMode:'contains'})) return false;
     }
@@ -24707,6 +24785,7 @@ function kolCollectionRawCellText(col,row){
   if(col.kind==='confirmedPrice'){ const c=kolConfirmedDisplay(row); return c?('$'+kolFormatMoneyDisplay(String(c.price))):''; }
   const c=col.col;if(!c)return '';
   const v=c.exToRetail?kolExToRetailDays(row):kolEffectiveValue(row,c.k);
+  if(c.k==='fabric')return kolFabricDisplay(v);
   if(c.exToRetail) return v===''?'':(v+' g.');
   if(c.endeksmatik) return endeksmatikCompactText(row);
   if(c.trLanded){ const k=kolLandedCalc(row); return k.trLanded==null?'':`$${kolMoney2(k.trLanded)} (₺${kolMoney2(k.trPrice)} ÷ ${kolMoney2(k.fx)} × ${kolMoney2(k.trMult)})`; }
@@ -26058,6 +26137,7 @@ function openKolHeaderFilter(key, anchorEl){
   panel.querySelectorAll('[data-kol-filter-sort]').forEach(button=>button.addEventListener('click',()=>{
     releaseKolTransientTopRow();kolSort={key,dir:Number(button.dataset.kolFilterSort)||1};panel.remove();renderKol();
   }));
+  if(key==='fabric')kolFabricDetailPanel(panel);
   const searchInput=panel.querySelector('.cfpSearch');
   searchInput.addEventListener('input', e=>{panel.querySelector('.cfpList').innerHTML = renderList(e.target.value);});
   panel.querySelectorAll('.cfpAll').forEach(b=> b.addEventListener('click', ()=>{panel.querySelectorAll('.cfpList input[type=checkbox]').forEach(chk=> chk.checked = (b.dataset.v==='all'));}));
@@ -26066,6 +26146,7 @@ function openKolHeaderFilter(key, anchorEl){
     const chosen=boxes.filter(b=>b.checked).map(b=>b.value);
     const next=new Set(add?[...(kolColFilters[key]||[]),...chosen]:chosen);
     if(next.size===allVals.length)delete kolColFilters[key];else kolColFilters[key]=next;
+    if(key==='fabric')panel._kolReadFabricFacets?.(add);
     releaseKolTransientTopRow();saveKolColState();panel.remove();renderKol();
   };
   panel.querySelector('#kolCfpApply').addEventListener('click',()=>applyKolFilter(false));
@@ -26073,6 +26154,7 @@ function openKolHeaderFilter(key, anchorEl){
   searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();applyKolFilter(false);}});
   panel.querySelector('#kolCfpClear').addEventListener('click', ()=>{
     delete kolColFilters[key];
+    if(key==='fabric')kolFabricDetailFilters={};
     releaseKolTransientTopRow();saveKolColState();
     panel.remove();
     renderKol();
@@ -26084,7 +26166,7 @@ function openKolHeaderFilter(key, anchorEl){
   }, 0);
 }
 document.getElementById('kolClearColFiltersBtn')?.addEventListener('click', ()=>{
-  kolColFilters = {};
+  kolColFilters = {};kolFabricDetailFilters={};
   releaseKolTransientTopRow();saveKolColState();
   renderKol();
   showToast('Koleksiyon sütun filtreleri temizlendi.');
@@ -26561,7 +26643,7 @@ function commitKolPriceEditor(el, options={}){
 
 function kolHasActiveTableFilters(){
   const search=document.getElementById('kolSearch');
-  return Boolean(parseTableSearchTerms(search?.value||'').length||normalizeCheckFilterMode(kolCheckFilter)||Object.values(kolColFilters).some(values=>values&&values.size));
+  return Boolean(parseTableSearchTerms(search?.value||'').length||normalizeCheckFilterMode(kolCheckFilter)||Object.values(kolColFilters).some(values=>values&&values.size)||Object.values(kolFabricDetailFilters).some(values=>values&&values.size));
 }
 function renderKolEmptyState(rows){
   const target=document.getElementById('kolEmptyState');
@@ -26628,7 +26710,7 @@ function renderKol(){
     if(d.kind==='base'){
       const userLabelAttr=kolColumnHasUserLabel(d.col)?' data-bl-user-label="1"':'';
       if(d.col.noFilter)return `<th data-kcol="${d.k}" class="kolComputedHeader"${userLabelAttr}><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
-      const isFiltered=!!(kolColFilters[d.k]&&kolColFilters[d.k].size),active=isFiltered?' filterActive':'',arrow=kolSort.key===d.k?(kolSort.dir===1?'▲':'▼'):'';
+      const isFiltered=!!(kolColFilters[d.k]&&kolColFilters[d.k].size)||(d.k==='fabric'&&Object.values(kolFabricDetailFilters).some(set=>set?.size)),active=isFiltered?' filterActive':'',arrow=kolSort.key===d.k?(kolSort.dir===1?'▲':'▼'):'';
       const filterLabel=appLang==='en'?`Filter: ${d.label}`:`Filtrele: ${d.label}`;
       return `<th data-kcol="${d.k}" class="${isFiltered?'columnFilterActive':''}"${userLabelAttr}><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}<span class="arrow">${arrow}</span></span><button type="button" class="thFilterBtn kolThFilterBtn${active}" data-kcol="${d.k}" title="${escapeHtml(filterLabel)}" aria-label="${escapeHtml(filterLabel)}">▾</button></div></th>`;
     }
@@ -29299,7 +29381,7 @@ function kolFabricParts(raw){const api=kolFabricApi();return api?api.parts(raw):
 function kolFabricCardsSet(data){
   const next=new Map();
   (Array.isArray(data&&data.cards)?data.cards:[]).forEach(card=>{if(card&&card.code&&card.summary)next.set(String(card.code),card);});
-  kolFabricCards=next;
+  kolFabricCards=next;kolFabricDetailCache.clear();
 }
 function kolFabricCardsEnsureLoaded(){
   if(kolFabricCardsState!=='idle'||!kolFabricApi())return;
@@ -29402,7 +29484,7 @@ function showKolFabricBatchPreview(items,analysis){
     const modal=document.createElement('div');modal.id='_kolFabricBatchModal';modal.className='warnOverlay';
     const rows=items.map((item,index)=>{
       const card=analysis.cards[item.code]||kolFabricApi().ruleCard(item.raw);
-      return `<tr><td><input type="checkbox" data-fabric-pick="${index}" checked aria-label="${escapeHtml(en?`Create card ${item.code}`:`${item.code} kartını oluştur`)}"></td><td class="kolFabricBatchCode">${escapeHtml(item.code)}</td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary="${index}" lang="tr" aria-label="${escapeHtml(en?`Turkish summary ${item.code}`:`${item.code} Türkçe özet`)}" value="${escapeHtml(card.summary)}"></td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary-en="${index}" lang="en" aria-label="${escapeHtml(en?`English summary ${item.code}`:`${item.code} İngilizce özet`)}" value="${escapeHtml(card.summaryEn||'')}"></td><td><span class="kolFabricSource is-${escapeHtml(card.summarySource)}" data-fabric-source="${index}">${escapeHtml(kolFabricSourceLabel(card.summarySource))}</span></td><td class="kolFabricBatchRaw" title="${escapeHtml(item.raw)}">${escapeHtml(item.raw)}</td></tr>`;
+      return `<tr><td><input type="checkbox" data-fabric-pick="${index}" checked aria-label="${escapeHtml(en?`Create card ${item.code}`:`${item.code} kartını oluştur`)}"></td><td class="kolFabricBatchCode">${escapeHtml(item.code)}</td><td><input type="text" class="kolFabricBatchSummary" data-fabric-summary="${index}" lang="tr" aria-label="${escapeHtml(en?`Turkish summary ${item.code}`:`${item.code} Türkçe özet`)}" value="${escapeHtml(card.summary)}"></td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary-en="${index}" lang="en" aria-label="${escapeHtml(en?`English summary ${item.code}`:`${item.code} İngilizce özet`)}" value="${escapeHtml(card.summaryEn||'')}"></td><td><span class="kolFabricSource is-${escapeHtml(card.summarySource)}" data-fabric-source="${index}">${escapeHtml(kolFabricSourceLabel(card.summarySource))}</span></td><td class="kolFabricBatchRaw" title="${escapeHtml(item.raw)}">${escapeHtml(item.raw)}</td></tr>`;
     }).join('');
     const ruleCount=items.length-analysis.aiCount;
     const notice=analysis.errorText
@@ -29495,7 +29577,7 @@ function openKolFabricCardDialog(rowId,{trigger=null,code:wantedCode=''}={}){
   document.getElementById('_kolFabricCardModal')?.remove();
   const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';
   const dis=canEdit?'':' disabled';
-  const detailInputs=api.DETAIL_FIELDS.map(key=>`<label><span>${escapeHtml(en?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)}</span><input type="text" maxlength="${api.DETAIL_MAX}" data-fabric-detail="${key}" value="${escapeHtml(draft.details&&draft.details[key]||'')}"${dis}></label>`).join('');
+  const detailInputs=api.DETAIL_FIELDS.map(key=>`<label><span>${escapeHtml(en?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)}</span><input type="text" data-fabric-detail="${key}" value="${escapeHtml(draft.details&&draft.details[key]||'')}"${dis}></label>`).join('');
   const missingCount=api.missingCodes(kolRows,kolFabricCards).filter(item=>item.code!==code).length;
   const meta=existing
     ?(en?`This card is used by every model with fabric code ${code}. Source: ${kolFabricSourceLabel(existing.summarySource)}${existing.updatedBy?` · last edited by ${existing.updatedBy}`:''}${existing.updatedAt?` · ${fmtDate(existing.updatedAt)}`:''}.`:`Bu kart ${code} kumaş kodlu tüm modellerde kullanılır. Kaynak: ${kolFabricSourceLabel(existing.summarySource)}${existing.updatedBy?` · son düzenleyen ${existing.updatedBy}`:''}${existing.updatedAt?` · ${fmtDate(existing.updatedAt)}`:''}.`)
@@ -29508,7 +29590,7 @@ function openKolFabricCardDialog(rowId,{trigger=null,code:wantedCode=''}={}){
     <div class="plmImportBody">
       <div class="kolFabricSummaryHead"><span class="plmListLabel">${escapeHtml(en?'Summary shown in the Collection table':'Koleksiyon tablosunda görünen özet')}</span><span class="kolFabricSource is-${escapeHtml(source)}" data-fabric-source>${escapeHtml(kolFabricSourceLabel(source))}</span></div>
       <div class="plmListOptions kolFabricSummaries">
-        <label><span>${escapeHtml(en?'Turkish':'Türkçe')}</span><input type="text" id="_kolFabricSummary" lang="tr" maxlength="${api.SUMMARY_MAX}" value="${escapeHtml(draft.summary||'')}"${dis}></label>
+        <label><span>${escapeHtml(en?'Turkish':'Türkçe')}</span><input type="text" id="_kolFabricSummary" lang="tr" value="${escapeHtml(draft.summary||'')}"${dis}></label>
         <label><span>${escapeHtml(en?'English':'İngilizce')}</span><input type="text" id="_kolFabricSummaryEn" lang="en" maxlength="${api.SUMMARY_MAX}" value="${escapeHtml(draft.summaryEn||api.summaryFor({summary:draft.summary},'en'))}"${dis}></label>
       </div>
       <h4>${escapeHtml(en?'Details':'Ayrıntılar')}</h4>
@@ -32233,6 +32315,7 @@ function buildKolStyledSheet(rows){
         return;
       }
       const raw = c.exToRetail ? kolExToRetailDays(r) : kolEffectiveValue(r,c.k);
+      if(c.k==='fabric'){put(ri+1,ci+imgOff,{v:kolExportSingleLineText(kolFabricDisplay(raw)),t:'s',s:{border:bd,font:{sz:10},alignment:{vertical:'middle',wrapText:true}}});return;}
       const schema=columnSchemaFor(c,sourceRows);
       const s = {border:bd, font:{sz:10, bold:c.k==='modelKod'}};
       let cell;
@@ -32345,6 +32428,7 @@ function kolPricingMailDate(d=new Date()){
 }
 function kolPricingPreviewValue(r,c){
   const raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k);
+  if(c.k==='fabric')return kolFabricDisplay(raw);
   if(raw==null || raw==='') return '';
   if(c.date) return fmtDate(raw);
   if(c.qty){ const n=kolParseQuantityNum(raw); return Number.isFinite(n)?n.toLocaleString('tr-TR'):String(raw); }
@@ -33901,6 +33985,7 @@ async function kolExportWithImages(rows,fileBase){
         return;
       }
       const c=d.col,raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k),schema=columnSchemaFor(c,sourceRows);
+      if(c.k==='fabric'){cell.value=kolExportSingleLineText(kolFabricDisplay(raw));cell.alignment={vertical:'middle',wrapText:true};return;}
       if(c.endeksmatik){
         const text=kolExportSingleLineText(endeksmatikExcelText(r));cell.value=text;cell.alignment={vertical:'middle',wrapText:true};
         if(text){const result=r&&r.endeksmatikData&&r.endeksmatikData.result,months=result&&result.months||{};cell.note=[
@@ -33945,6 +34030,7 @@ async function kolExportWithImages(rows,fileBase){
 
 function kolStyleExportValue(field,row){
   const raw=row?kolEffectiveValue(row,field.k):'';
+  if(field.k==='fabric')return kolFabricDisplay(raw);
   if(field.custom){ const schema=columnSchemaFor(field,[row]); return schema?schema.exportValue(raw):(raw==null?'':String(raw)); }
   if(field.boolean)return raw?(appLang==='en'?'Yes':'Evet'):(appLang==='en'?'No':'Hayır');
   if(field.date){const date=coerceDateLoose(raw);return date||'';}
