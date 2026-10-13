@@ -1549,13 +1549,27 @@ function renderOverview(){ deferRenderForTab('overview'); }
    Sunucudaki karşılığı: server/lib/model-scopes.js withRefreshTargets. */
 const ALL_REFRESH_TARGETS=Object.freeze(['cp','orders','backlog','lfl','priceanalysis']);
 const DEFAULT_LINKED_REFRESH_TARGETS=Object.freeze(['orders','backlog','lfl','priceanalysis']);
-// Bağlı grubun gerçek üyeleri son yenilemenin kapsam bilgisinden (sharedFilter)
-// okunur; bilgi yoksa varsayılan grup. Sunucu yine kayıttan kesin genişletir.
+// Tek doğruluk kaynağı: /api/refresh'in de kullandığı güncel ASAS kaydı.
+// modelScopes / sharedFilter son refresh snapshot'ından gelir; görünüm değiştirme
+// ya da kısmi yenileme sonrasında menüyü yanlış bölebiliyordu.
+let authoritativeLinkedRefreshTargets=null;
+async function syncLinkedRefreshMembers(){
+  const response=await fetch('/api/refresh-targets',{cache:'no-store'});
+  if(!response.ok){
+    const payload=await response.json().catch(()=>({}));
+    throw new Error(payload.error||(appLang==='en'?'Refresh configuration could not be read.':'Yenileme kapsamı okunamadı.')+` (HTTP ${response.status})`);
+  }
+  const data=await response.json();
+  if(!Array.isArray(data.linkedTargets)||data.linkedTargets.some(target=>!ALL_REFRESH_TARGETS.includes(target))){
+    throw new Error(appLang==='en'?'Invalid refresh configuration returned by the server.':'Sunucudan geçersiz yenileme kapsamı alındı.');
+  }
+  authoritativeLinkedRefreshTargets=[...new Set(data.linkedTargets)];
+  try{renderHorizonBadges();}catch(_){}
+  return authoritativeLinkedRefreshTargets.slice();
+}
 function linkedRefreshMembers(){
-  const scopes=Array.isArray(state&&state.modelScopes)?state.modelScopes:[];
-  const known=scopes.filter(entry=>entry&&ALL_REFRESH_TARGETS.includes(entry.target)&&typeof entry.sharedFilter==='boolean');
-  if(!known.length)return DEFAULT_LINKED_REFRESH_TARGETS.slice();
-  return ALL_REFRESH_TARGETS.filter(target=>known.some(entry=>entry.target===target&&entry.sharedFilter));
+  return Array.isArray(authoritativeLinkedRefreshTargets)
+    ?authoritativeLinkedRefreshTargets.slice():DEFAULT_LINKED_REFRESH_TARGETS.slice();
 }
 function withLinkedRefreshTargets(targets){
   const list=[...new Set((Array.isArray(targets)?targets:[]).map(value=>String(value||'').trim()).filter(Boolean))];
@@ -1713,7 +1727,7 @@ function renderHorizonBadges(){
     // Ortak filtreyi (bağlı grup) kullanan sayfa "Bağlı" rozetini taşır ve
     // grupla birlikte yenilenir; gruptan ayrılan sayfa tek başına yenilenir.
     if(ALL_REFRESH_TARGETS.includes(target)){
-      if(scope&&scope.sharedFilter){
+      if(linkedRefreshMembers().includes(target)){
         const linkBadge=document.createElement('span');
         linkBadge.className='horizonSummaryLinked horizonBadgeSource';
         linkBadge.textContent=en?'Linked':'Bağlı';
@@ -13741,8 +13755,17 @@ function cpClientWorkInProgress(){
   return false;
 }
 async function loadFromServer(force, targets){
-  // Bağlı gruptan tek sayfa istense de grup birlikte yenilenir (tek sorgu);
-  // gruptan ayrı sayfa (ör. CP) yalnız kendini yeniler.
+  // İstemcinin eski snapshot'ı bir hedefi yanlış gruba dahil edip geçerli
+  // filtre bulunamadı hatası üretebiliyordu. Her manuel yenilemeden önce aynı
+  // yapılandırmayı sunucudan oku; API sunucu tarafında yine kesin genişletir.
+  if(force&&Array.isArray(targets)&&targets.length){
+    try{await syncLinkedRefreshMembers();}
+    catch(error){
+      const message=(appLang==='en'?'Refresh could not start: ':'Yenileme başlatılamadı: ')+(error.message||String(error));
+      setServerStatus(message);updSourceHint(message);showToast(message);
+      return false;
+    }
+  }
   if(Array.isArray(targets)&&targets.length)targets=withLinkedRefreshTargets(targets);
   const refreshTimerKey=force?sourceRefreshTimerKey(targets):null;
   const userVisibleRefresh=Boolean(force);
@@ -14570,13 +14593,21 @@ function seedSourceStatusFromServer(result){
 }
 
 let topRefreshMenuCleanup=null;
+let topRefreshMenuSequence=0;
 /* v20260929 — Yenileme grupları üst menüde ayrı satır değildir; menü filtre
    bağına göre satır üretir (v20260930). Veri Yönetimi grup kaydettiğinde
    çağırdığı önbellek kancası uyumluluk için korunur. */
 window.BLInvalidateRefreshGroups=items=>{ window.BL_REFRESH_GROUPS=Array.isArray(items)?items:null; };
-function closeTopRefreshMenu(){ document.getElementById('_topRefreshMenu')?.remove(); if(topRefreshMenuCleanup){topRefreshMenuCleanup();topRefreshMenuCleanup=null;} }
-function openTopRefreshMenu(anchor){
+function closeTopRefreshMenu(){ topRefreshMenuSequence++;document.getElementById('_topRefreshMenu')?.remove(); if(topRefreshMenuCleanup){topRefreshMenuCleanup();topRefreshMenuCleanup=null;} }
+async function openTopRefreshMenu(anchor){
   closeTopRefreshMenu();
+  const requestSequence=topRefreshMenuSequence;
+  try{await syncLinkedRefreshMembers();}
+  catch(error){
+    if(requestSequence===topRefreshMenuSequence)showToast((appLang==='en'?'Refresh menu unavailable: ':'Yenileme menüsü açılamadı: ')+(error.message||String(error)));
+    return;
+  }
+  if(requestSequence!==topRefreshMenuSequence||!anchor.isConnected)return;
   const menu=document.createElement('div'); menu.id='_topRefreshMenu'; menu.className='topRefreshMenu';
   /* v20260930 — MENÜ FİLTRE BAĞINI İZLER. Ortak filtreyi paylaşan sayfalar tek
      satırdır (tek sorgu); gruptan ayrı her sayfa (varsayılan olarak CP) kendi
