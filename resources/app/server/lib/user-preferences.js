@@ -83,6 +83,10 @@ const SYNCED_PREFIXES = Object.freeze([
   'lcw.notifications.',   // kullanıcının bildirim geçmişi
   'lcw.mailTemplates.',   // mail şablonları
   'lcw.prodstatus.mails.',
+  // Already owner-scoped/synchronized by BLStorage; the server must retain
+  // the same CP context used by the UI and deterministic agent previews.
+  'lcw.cp.assistant.',
+  'lcw.cp.checklist.',
   'lcw_view_favorite_',   // kayıtlı görünümler
   'lcw_filter_favorite_', // kayıtlı filtreler
   ...Object.values(WORKSPACE_CATEGORY_PREFIXES).flat(),
@@ -269,8 +273,13 @@ function restoreSnapshot(userId, snapshot) {
    anının zaman damgasıyla yazılır (snapshot semantiği, bkz.
    replaceWorkspaceEntries), `remove` anahtarları mezar taşıyla kaldırılır.
    Ön Ayar Paylaşımı ve onun geri alma yolu bu fonksiyonu kullanır. */
-function applyEntryChanges(userId, set = {}, remove = []) {
+function applyEntryChanges(userId, set = {}, remove = [], options = {}) {
   const current = load(userId), entries = { ...current.entries };
+  for (const [key, expected] of Object.entries(options.expectedEntries || {})) {
+    if (JSON.stringify(current.entries[key] || null) !== JSON.stringify(expected)) {
+      throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'), { code:'OFFICE_PREVIEW_CHANGED', statusCode:409 });
+    }
+  }
   const deletions = { ...current.deletions };
   const now = new Date().toISOString(), rejected = [];
   for (const key of Array.isArray(remove) ? remove : []) {
@@ -654,3 +663,10 @@ module.exports = {
   // v7.81 — Veri Yönetimi ekranı hangi katmanın kazandığını gösterebilsin diye.
   HORIZON_LAYERS, resolveHorizonProvenance, selectHorizonPreference,
 };
+
+// All exported preference writers share the same lease as the CP agent CAS.
+// Internal synchronous calls stay within the outer writer's lease.
+for (const name of ['merge','removeKeys','restoreSnapshot','applyEntryChanges','replaceWorkspaceEntries','copyWorkspaceSnapshot','copyWorkspaceEntrySnapshot','saveHorizon','saveAppliedHorizon','resetWorkspace','supersedePersonalHorizons']) {
+  const writer=module.exports[name];
+  module.exports[name]=(...args)=>require('./shared-file-transaction').withFileLeaseSync(prefsFile(name.startsWith('copyWorkspace')?args[1]:args[0]),()=>writer(...args));
+}

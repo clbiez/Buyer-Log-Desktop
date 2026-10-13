@@ -2320,6 +2320,105 @@
         "tr": "Aynı durumun tekrar gelmesi sahneyi, animasyon saatini veya çizim önbelleğini yeniden başlatmaz. Eşzamanlı aynı okuma tek istekte birleşir; kullanıcı değişimi ve kayıt işlemleri okuma kapsamını geçersiz kılar. Görseller, aydınlatma ve animasyon kalitesi korunur.",
         "en": "Repeated identical state does not restart the scene, animation clock or drawing cache. Overlapping identical reads share one request; user changes and mutations invalidate the read scope. Artwork, lighting and animation quality are preserved."
       }
+    },
+    {
+      "id": "agent-cp-natural-rules",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "CP Agent ile doğal dilden checklist ve Rules",
+        "en": "Natural-language checklist and Rules with CP Agent"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Yeni kişisel kural oluşturun veya mevcut kuralı revize edin. LCW AI koşulu önerir; mevcut CP motoru doğrular ve eşleşen siparişleri onay öncesi gösterir.",
+        "en": "Create a personal rule or revise an existing one. LCW AI proposes the condition; the existing CP engine validates it and shows matching orders before approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-cp-rule-form.png",
+        "alt": {
+          "tr": "Anonim demo verili gerçek Buyer Log: CP kural görev formu",
+          "en": "Actual Buyer Log with anonymous demo data: CP rule task form"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log: CP kural görev formu",
+          "en": "Actual Buyer Log with anonymous demo data: CP rule task form"
+        }
+      }
+    },
+    {
+      "id": "agent-cp-merch-weekly-drafts",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Merch haftasına göre üretici ve genel mail taslakları",
+        "en": "Manufacturer and general email drafts for a Merch week"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Yüklü Merch Calendar ile haftalık yüklemeleri seçin; sorumlu üretici başına veya seçtiğiniz genel grup için EML taslağı hazırlayın. Seçim ve taslak üretimi AI bağlantısı olmadan çalışır. Gerçek mail gönderilmez.",
+        "en": "Select weekly loads using the loaded Merch Calendar and prepare an EML draft per responsible manufacturer or for your chosen general group. Selection and draft creation work without AI connectivity. No email is sent."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-cp-weekly-result.png",
+        "alt": {
+          "tr": "Anonim demo verili gerçek Buyer Log: doğrulanmış haftalık EML sonucu",
+          "en": "Actual Buyer Log with anonymous demo data: verified weekly EML result"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log: doğrulanmış haftalık EML sonucu",
+          "en": "Actual Buyer Log with anonymous demo data: verified weekly EML result"
+        }
+      }
+    },
+    {
+      "id": "agent-cp-verified-durable-tasks",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Onaylı işlemlerde kalıcı sonuç ve güvenli geri alma",
+        "en": "Durable results and safe rollback for approved tasks"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "CP görevleri önizleme, kullanıcı onayı ve gerçek sonuç doğrulamasıyla kaydedilir. Güncel yetki veya kaynak değiştiğinde işlem durur. Tamamlanan görevi yeniden onaylamak tekrar yazmaz; kuralı geri almak sonraki düzenlemeyi ezmez.",
+        "en": "CP tasks retain their preview, user approval and verified actual result. Changed permissions or sources stop execution. Reapproving a completed task does not repeat the write; rule rollback preserves later edits."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-cp-rule-result.png",
+        "alt": {
+          "tr": "Anonim demo verili gerçek Buyer Log: kalıcı CP kural sonucu ve geri alma",
+          "en": "Actual Buyer Log with anonymous demo data: durable CP rule result and rollback"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log: kalıcı CP kural sonucu ve geri alma",
+          "en": "Actual Buyer Log with anonymous demo data: durable CP rule result and rollback"
+        }
+      }
     }
   ]
 }
