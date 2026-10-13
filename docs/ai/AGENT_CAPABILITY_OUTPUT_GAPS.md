@@ -1,6 +1,6 @@
 # Explicit output-schema migration gaps
 
-Current executable catalog audit: 184 contract-v2 tools; 184 declare a strict top-level output object; 0 still use a generic verified envelope or an open top-level result. The currently registered adapters now declare strict result contracts backed by native regression cases. This closes the known top-level migration inventory; it does not prove every native user action is registered or provide release acceptance.
+Current executable catalog audit: 186 contract-v2 tools; 186 declare a strict top-level output object; 0 still use a generic verified envelope or an open top-level result. The currently registered adapters now declare strict result contracts backed by native regression cases. This closes the known top-level migration inventory; it does not prove every native user action is registered or provide release acceptance.
 
 | Module | Open output contracts | Registered tool IDs |
 |---|---|---|
