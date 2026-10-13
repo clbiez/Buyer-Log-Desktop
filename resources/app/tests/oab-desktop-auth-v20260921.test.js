@@ -9,7 +9,8 @@ const ROOT = path.resolve(__dirname, '..');
 const OAB = fs.readFileSync(path.join(ROOT, 'public', 'oab.js'), 'utf8');
 const USER_ACCESS = fs.readFileSync(path.join(ROOT, 'public', 'user-access-ui.js'), 'utf8');
 const SERVER = fs.readFileSync(path.join(ROOT, 'server', 'server.js'), 'utf8');
-const BATCH = fs.readFileSync(path.join(ROOT, 'server', 'routes', 'oab-batch-routes.js'), 'utf8');
+const ROUTES = fs.readFileSync(path.join(ROOT, 'server', 'routes', 'oab-batch-routes.js'), 'utf8');
+const BATCH = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'oab-batch-service.js'), 'utf8');
 const CONNECTOR = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'agent-browser-connector.js'), 'utf8');
 
 function between(source, startNeedle, endNeedle) {
@@ -65,10 +66,11 @@ test('single Get OAB captures browser auth then fetches through PASS connector',
 });
 
 test('batch OAB keeps the transport of the request that started it', () => {
-  assert.match(BATCH, /transport: oabRequestTransport\(req\)/);
-  assert.match(BATCH, /oabFetchOneCombination\(userId, currentUser, item, job\.forceRefresh, job\.transport\)/);
-  assert.match(BATCH, /await ensurePassConnected\(userId, params, transport\)/);
-  assert.match(BATCH, /fetchOabReportWithLoginRecovery\(userId, params, transport\)/);
+  assert.match(ROUTES, /transport: oabRequestTransport\(req\)/);
+  assert.match(BATCH, /transport: options\.transport/);
+  assert.match(BATCH, /oabFetchOneCombination\(userId, currentUser, item, job\.forceRefresh, job\.transport, job\)/);
+  assert.match(BATCH, /await ensurePassConnected\(userId, params, transport, assertAuthority\)/);
+  assert.match(BATCH, /fetchOabReportWithLoginRecovery\(userId, params, transport, assertAuthority\)/);
   assert.doesNotMatch(BATCH, /requireOabInternalAuth|fetchOabReportFromInternalSession/);
 });
 

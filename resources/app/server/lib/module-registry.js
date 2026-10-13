@@ -47,7 +47,7 @@ const MODULES = Object.freeze([
     area: 'overview', route: 'overview',
     datasets: ['cp', 'orders', 'collection'],
     capabilities: ['read', 'analyze', 'compare', 'view'],
-    summary: { tr: 'Özet göstergeler ve koleksiyon özeti.', en: 'Summary indicators and collection overview.' },
+    summary: { tr: 'Özet göstergeler, koleksiyon özeti ve mevcut native OAB/INTAKE yerel raporları.', en: 'Summary indicators, collection overview and existing native local OAB/INTAKE reports.' },
   },
   {
     id: 'cp', agentFilter: true, tableKey: 'cp', label: { tr: 'CP Tracker', en: 'CP Tracker' },

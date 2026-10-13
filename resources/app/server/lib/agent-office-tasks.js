@@ -15,6 +15,25 @@ function attachTasks(service,deps) {
   const assertTaskAvailable=job=>{if(inverseRunning(job))throw error('OFFICE_TASK_RECONCILE',409);};
   const authority=profile=>{const current=access.profileById(profile.id);if(!current||current.enabled===false)throw error('OFFICE_USER_DISABLED',403);return current;};
   const actorHash=profile=>hash(JSON.stringify(access.publicProfile?.(profile)||profile));
+  function receiptState(result,toolId){
+    if(result.completionPending==='pdf')return 'waiting_output';
+    if(result.completionPending==='native-operation'&&registry.hasPendingPoller?.(toolId))return 'waiting_operation';
+    if(result.completionPending!==undefined)throw error('OFFICE_NATIVE_RECEIPT_INVALID',409);
+    return result.outcome==='partial'?'partial':'completed';
+  }
+  function receiptGuard(profile,job,step){return state=>{
+    const current=authority(profile),agent=requireEnabledAgent(state.records['profile:'+step.agentId]?.doc),tool=registry.get(step.toolId);
+    if(agent.revision!==step.agentRevision||actorHash(current)!==step.authorizationFingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);
+    if(!allowed(tool,current,access)||!agentHas(agent,tool))throw error('OFFICE_TOOL_FORBIDDEN',403);
+    if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
+  };}
+  async function receiptPublication(profile,job,step){
+    await store.db(profile.id).privateRecordTransaction(state=>{receiptGuard(profile,job,step)(state);return {result:true};});
+    const current=authority(profile);
+    if(actorHash(current)!==step.authorizationFingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);
+    if(!allowed(registry.get(step.toolId),current,access))throw error('OFFICE_TOOL_FORBIDDEN',403);
+  }
+  async function nativeReceiptPublication(profile,job){for(const step of job.steps||[])if(step.result?.verified===true&&registry.hasPendingPoller?.(step.toolId))await receiptPublication(profile,job,step);}
   async function heartbeat(owner){const instance=service.runtimeContext(owner).runtimeInstanceId;await store.save(owner,'metadata',{id:'executor-'+instance,type:'task-executor',instanceId:instance,pid:process.pid,host,expiresAt:new Date(Date.now()+120000).toISOString()});return instance;}
   const requireEnabledAgent=agent=>{if(!agent||agent.enabled===false||agent.deleted)throw error('OFFICE_AGENT_DISABLED',403);return agent;};
   const agentHas=(agent,tool)=>(tool.agentAreas||tool.areas||[]).every(area=>agent.areas.includes(area==='koleksiyon'?'collection':area))&&(!tool.agentAnyAreas||tool.agentAnyAreas.some(area=>agent.areas.includes(area)));
@@ -22,7 +41,8 @@ function attachTasks(service,deps) {
   async function stepAuthority(profile,step){profile=authority(profile);const agent=requireEnabledAgent(await store.get(profile.id,'profile',step.agentId)),tool=registry.get(step.toolId);
     if(!(tool?.contractVersion>=2)||!allowed(tool,profile,access)||!agentHas(agent,tool))throw error('OFFICE_TOOL_FORBIDDEN',403);
     return {profile,agent,tool};}
-  function resolvedArgs(job,step){const args=clone(step.args);for(const binding of step.bindings||[]){const previous=job.steps.find(item=>item.id===binding.stepId);if(previous?.status!=='completed')throw error('OFFICE_TASK_DEPENDENCY',409);
+  async function resolvedArgs(profile,job,step){const args=clone(step.args);for(const binding of step.bindings||[]){const previous=job.steps.find(item=>item.id===binding.stepId);if(previous?.status!=='completed')throw error('OFFICE_TASK_DEPENDENCY',409);
+    await receiptPublication(profile,job,previous);
     const value=valueAt(previous.result,binding.path);if(value===undefined||['__proto__','constructor','prototype'].includes(binding.argument))throw error('OFFICE_TASK_DEPENDENCY',422);args[binding.argument]=clone(value);}return args;}
   async function create(profile,raw,internal={}){profile=authority(profile);if(!Array.isArray(raw.steps)||!raw.steps.length||raw.steps.length>12)throw error('OFFICE_TASK_INVALID');
     const steps=[];for(const input of raw.steps){const step={id:input.id||id(),agentId:input.agentId||raw.agentId,toolId:input.toolId,args:clone(input.args||{}),bindings:input.bindings||[],status:'queued',attempts:0};
@@ -43,18 +63,20 @@ function attachTasks(service,deps) {
     if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)||!Array.isArray(parsed.steps)||parsed.steps.some(step=>!step||typeof step!=='object'||Array.isArray(step)||!tools.some(tool=>tool.id===step.toolId)))throw error('OFFICE_AI_CONTRACT_INVALID',422);
     return create(profile,{...raw,steps:parsed.steps,aiCalls:1},{assertAuthority:state=>check(state.records['profile:'+raw.agentId]?.doc)});
   }
-  async function prepare(profile,key){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(job.type!=='capability-task')throw error('OFFICE_TASK_INVALID');assertTaskAvailable(job);if(TERMINAL.has(job.status))return job;
+  async function prepare(profile,key){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(job.type!=='capability-task')throw error('OFFICE_TASK_INVALID');assertTaskAvailable(job);if(TERMINAL.has(job.status)){await nativeReceiptPublication(profile,job);return job;}
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
-    const index=job.steps.findIndex(step=>step.status!=='completed');if(index<0){job=await store.save(profile.id,'job',{...job,status:'completed',finishedAt:new Date().toISOString()},{expectedRevision:job.revision});
-      for(const profileId of job.profileIds){const steps=job.steps.filter(step=>step.agentId===profileId);await store.save(profile.id,'memory',{id:'outcome-'+job.id+'-'+profileId,profileId,type:'task',category:'task-history',text:JSON.stringify({task:job.task,status:job.status,steps:steps.map(s=>({toolId:s.toolId,status:s.status,verified:s.result?.verified===true}))}),sourceId:job.id,toolIds:steps.map(s=>s.toolId),taskId:job.id,active:true,approved:false,origin:'verified-service',authorizationFingerprint:steps.every(step=>step.authorizationFingerprint===steps[0]?.authorizationFingerprint)?steps[0]?.authorizationFingerprint:hash(JSON.stringify(steps.map(step=>step.authorizationFingerprint))),confidence:'VERIFIED_RESULT',key:'',conflictingIds:[]},{immutable:true});}return job;}
-    const step=job.steps[index];if(step.status==='waiting_output')return job;if(step.status==='running')throw error('OFFICE_TASK_RECONCILE',409);
-    const {profile:current,agent,tool}=await stepAuthority(profile,step),args=resolvedArgs(job,step);
+    const index=job.steps.findIndex(step=>step.status!=='completed');if(index<0){for(const step of job.steps)await receiptPublication(profile,job,step);job=await store.save(profile.id,'job',{...job,status:'completed',finishedAt:new Date().toISOString()},{expectedRevision:job.revision});
+      for(const step of job.steps)await receiptPublication(profile,job,step);
+      for(const profileId of job.profileIds){const steps=job.steps.filter(step=>step.agentId===profileId);await store.save(profile.id,'memory',{id:'outcome-'+job.id+'-'+profileId,profileId,type:'task',category:'task-history',text:JSON.stringify({task:job.task,status:job.status,steps:steps.map(s=>({toolId:s.toolId,status:s.status,verified:s.result?.verified===true}))}),sourceId:job.id,toolIds:steps.map(s=>s.toolId),taskId:job.id,active:true,approved:false,origin:'verified-service',authorizationFingerprint:steps.every(step=>step.authorizationFingerprint===steps[0]?.authorizationFingerprint)?steps[0]?.authorizationFingerprint:hash(JSON.stringify(steps.map(step=>step.authorizationFingerprint))),confidence:'VERIFIED_RESULT',key:'',conflictingIds:[]},{immutable:true});}
+      for(const step of job.steps)await receiptPublication(profile,job,step);return job;}
+    const step=job.steps[index];if(['waiting_output','waiting_operation'].includes(step.status))return job;if(step.status==='running')throw error('OFFICE_TASK_RECONCILE',409);
+    const {profile:current,agent,tool}=await stepAuthority(profile,step),args=await resolvedArgs(profile,job,step);
     const originalAuthority=actorHash(current),preview=await registry.execute(tool.id,args,{ownerId:profile.id,profile:current,dryRun:true,input:{officeAgentId:step.agentId,officeAgentRevision:agent.revision}});
     const latest=await stepAuthority(profile,step);if(latest.agent.revision!==agent.revision||actorHash(latest.profile)!==originalAuthority)throw error('OFFICE_PREVIEW_CHANGED',409);
     job.steps[index]={...step,argsResolved:args,preview,agentRevision:agent.revision,authorizationFingerprint:actorHash(latest.profile),status:tool.approval?'waiting_approval':'ready'};
     return store.save(profile.id,'job',{...job,status:tool.approval?'waiting_approval':'queued'},{expectedRevision:job.revision});}
   function graph(job,step){const nodes=[{id:'start',type:'trigger.manual',config:{}},{id:'effect',type:'tool.call',config:{toolId:step.toolId,args:{...step.argsResolved,...(step.preview.fingerprint?{fingerprint:step.preview.fingerprint}:{})}}},{id:'verify',type:'verify.result',config:{mode:'equals',path:'verified',value:true}},{id:'result',type:'output.result',config:{}}];return{id:'task_'+job.id+'_'+step.id,ownerId:job.ownerId,name:job.task,nodes,edges:nodes.slice(1).map((n,i)=>({id:'e'+i,from:nodes[i].id,to:n.id,channel:'success'}))};}
-  async function executeOnce(profile,key,raw={}){profile=authority(profile);let job=await store.get(profile.id,'job',key);assertTaskAvailable(job);if(TERMINAL.has(job.status))return job;
+  async function executeOnce(profile,key,raw={}){profile=authority(profile);let job=await store.get(profile.id,'job',key);assertTaskAvailable(job);if(TERMINAL.has(job.status)){await nativeReceiptPublication(profile,job);return job;}
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
     const index=job.steps.findIndex(step=>step.status!=='completed'),step=job.steps[index];if(!step||!['ready','waiting_approval'].includes(step.status))throw error('OFFICE_TASK_RECONCILE',409);
     const {profile:current,agent,tool}=await stepAuthority(profile,step);
@@ -62,16 +84,19 @@ function attachTasks(service,deps) {
     if(tool.approval&&(raw.confirmed!==true||raw.fingerprint!==step.preview.fingerprint))throw error('OFFICE_APPROVAL_REQUIRED',409);
     const executorInstanceId=await heartbeat(profile.id);
     job.steps[index]={...step,status:'running',attempts:step.attempts+1,executorPid:process.pid,executorHost:host,executorInstanceId};job=await store.save(profile.id,'job',{...job,status:'running'},{expectedRevision:job.revision});
+    let receiptCommitted=false;
     try{let execution=await runtime.execute({ownerId:profile.id,profile:current,workflow:graph(job,step),input:{officeJobId:job.id,officeStepId:step.id,officeAgentId:step.agentId,officeAgentRevision:step.agentRevision},onRunCreated:async run=>{job.steps[index].runtimeRunId=run.id;job=await store.save(profile.id,'job',job,{expectedRevision:job.revision});}});
       if(execution.run.status==='waiting_approval')execution=await runtime.resumeApproval({ownerId:profile.id,profile:authority(profile),runId:execution.run.id,approved:true});
       const result=execution.run.executionState.nodes.effect?.output,ok=execution.run.status==='completed'&&result?.verified===true;
       const retry=!ok&&tool.risk==='read'&&job.steps[index].attempts<3;
-      const pending=ok&&result.completionPending==='pdf',partial=ok&&result.outcome==='partial';
-      job.steps[index]={...job.steps[index],result:result||null,status:pending?'waiting_output':partial?'partial':ok?'completed':retry?'queued':'failed',runtimeStatus:execution.run.status,errorCode:execution.run.output?.code||'',finishedAt:pending?null:new Date().toISOString()};
-      job=await store.save(profile.id,'job',{...job,status:pending?'waiting_output':partial?'partial':ok||retry?'queued':'failed'},{expectedRevision:job.revision});
+      const verifiedState=ok?receiptState(result,tool.id):null,pending=verifiedState?.startsWith('waiting_'),partial=verifiedState==='partial';
+      job.steps[index]={...job.steps[index],result:result||null,status:verifiedState|| (retry?'queued':'failed'),runtimeStatus:execution.run.status,errorCode:execution.run.output?.code||'',finishedAt:pending?null:new Date().toISOString()};
+      job=await store.save(profile.id,'job',{...job,status:pending?verifiedState:partial?'partial':ok||retry?'queued':'failed'},{expectedRevision:job.revision,...(ok?{assertAuthority:receiptGuard(profile,job,step)}:{})});
+      receiptCommitted=ok;
+      if(ok)await receiptPublication(profile,job,step);
       access.appendAudit(current,'AGENT_TASK_STEP_RESULT',job.id,{stepId:step.id,toolId:step.toolId,status:job.steps[index].status});
       return ok&&!pending&&!partial?prepare(profile,job.id):job;
-    }catch(err){const latest=await store.get(profile.id,'job',job.id);latest.steps[index]={...latest.steps[index],status:tool.risk==='read'?'queued':'interrupted',errorCode:err.code||'OFFICE_TASK_RECONCILE'};
+    }catch(err){if(receiptCommitted)throw err;const latest=await store.get(profile.id,'job',job.id);latest.steps[index]={...latest.steps[index],status:tool.risk==='read'?'queued':'interrupted',errorCode:err.code||'OFFICE_TASK_RECONCILE'};
       await store.save(profile.id,'job',{...latest,status:tool.risk==='read'&&latest.steps[index].attempts<3?'queued':'interrupted'},{expectedRevision:latest.revision});throw err;}}
   async function execute(profile,key,raw){const token=profile.id+':'+key;if(inFlight.has(token))return inFlight.get(token);const work=executeOnce(profile,key,raw).finally(()=>inFlight.delete(token));inFlight.set(token,work);return work;}
   async function outputAccess(profile,key,stepId){profile=authority(profile);const job=await store.get(profile.id,'job',key),step=job.steps?.find(s=>s.id===stepId);if(!step||job.type!=='capability-task')throw error('OFFICE_NOT_FOUND',404);
@@ -97,7 +122,53 @@ function attachTasks(service,deps) {
     assertTaskAvailable(job);
     const expected=step?{...step.argsResolved,...(step.preview.fingerprint?{fingerprint:step.preview.fingerprint}:{})}:null;
     if(job.type!=='capability-task'||job.status!=='running'||!step||step.status!=='running'||step.runtimeRunId!==ctx.runId||step.toolId!==ctx.toolId||ctx.input.officeAgentId!==step.agentId||ctx.input.officeAgentRevision!==step.agentRevision||JSON.stringify(expected)!==JSON.stringify(args))throw error('OFFICE_APPROVAL_REQUIRED',403);
-    const {profile,agent}=await stepAuthority({id:ctx.ownerId},step);if(step.authorizationFingerprint!==actorHash(profile)||agent.revision!==step.agentRevision)throw error('OFFICE_PREVIEW_CHANGED',409);}
+    const {profile,agent}=await stepAuthority({id:ctx.ownerId},step);if(step.authorizationFingerprint!==actorHash(profile)||agent.revision!==step.agentRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
+    for(const binding of step.bindings||[]){const previous=job.steps.find(s=>s.id===binding.stepId);if(previous?.status!=='completed')throw error('OFFICE_TASK_DEPENDENCY',409);await receiptPublication(profile,job,previous);}
+    await receiptPublication(profile,job,step);
+  }
+  async function authorizePending(ctx,receipt){
+    const job=await store.get(ctx.ownerId,'job',ctx.input?.officeJobId),step=job.steps?.find(s=>s.id===ctx.input?.officeStepId);assertTaskAvailable(job);
+    if(job.type!=='capability-task'||job.status!=='waiting_operation'||!step||step.status!=='waiting_operation'||step.runtimeRunId!==ctx.runId||step.toolId!==ctx.toolId||ctx.input.officeAgentId!==step.agentId||ctx.input.officeAgentRevision!==step.agentRevision||JSON.stringify(step.result)!==JSON.stringify(receipt))throw error('OFFICE_APPROVAL_REQUIRED',403);
+    if(job.runtimeDeviceId!==store.db(ctx.ownerId).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
+    const {profile,agent}=await stepAuthority({id:ctx.ownerId},step);
+    if(step.authorizationFingerprint!==actorHash(profile)||agent.revision!==step.agentRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
+  }
+  async function nativeGuard(ctx,work){
+    if(work!==undefined&&typeof work!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);
+    return store.db(ctx.ownerId).privateRecordTransaction(state=>{
+      const job=state.records['job:'+ctx.input?.officeJobId]?.doc,step=job?.steps?.find(s=>s.id===ctx.input?.officeStepId);
+      if(!job||job.ownerId!==ctx.ownerId||job.deleted||job.type!=='capability-task'||!['running','waiting_operation'].includes(job.status)||!step||!['running','waiting_operation'].includes(step.status)||step.toolId!==ctx.toolId||step.runtimeRunId!==ctx.runId||step.agentId!==ctx.input.officeAgentId||step.agentRevision!==ctx.input.officeAgentRevision)throw error('OFFICE_APPROVAL_REQUIRED',403);
+      assertTaskAvailable(job);receiptGuard({id:ctx.ownerId},job,step)(state);ctx.assertAuthority();
+      for(const binding of step.bindings||[]){const previous=job.steps.find(s=>s.id===binding.stepId);if(previous?.status!=='completed')throw error('OFFICE_TASK_DEPENDENCY',409);receiptGuard({id:ctx.ownerId},job,previous)(state);}
+      const result=work?work():true;
+      if(result&&typeof result.then==='function')throw error('OFFICE_TASK_RECONCILE',409);
+      return {result};
+    });
+  }
+  async function pollOnce(profile,key){
+    profile=authority(profile);let job=await store.get(profile.id,'job',key);assertTaskAvailable(job);
+    if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
+    if(job.status!=='waiting_operation'){await nativeReceiptPublication(profile,job);return job;}
+    const index=job.steps.findIndex(step=>step.status!=='completed'),step=job.steps[index];
+    if(step?.status!=='waiting_operation')throw error('OFFICE_TASK_RECONCILE',409);
+    let receiptCommitted=false;
+    try{
+      const result=await registry.pollPending(step.toolId,step.result,{ownerId:profile.id,profile,runId:step.runtimeRunId,input:{officeJobId:job.id,officeStepId:step.id,officeAgentId:step.agentId,officeAgentRevision:step.agentRevision}}),status=receiptState(result,step.toolId),pending=status==='waiting_operation';
+      job.steps[index]={...step,result,status,pollFailures:0,errorCode:'',finishedAt:pending?null:new Date().toISOString()};
+      job=await store.save(profile.id,'job',{...job,status:pending?'waiting_operation':status==='partial'?'partial':'queued',errorCode:''},{expectedRevision:job.revision,assertAuthority:receiptGuard(profile,job,step)});
+      receiptCommitted=true;
+      await receiptPublication(profile,job,step);
+      return status==='completed'?prepare(profile,job.id):job;
+    }catch(err){
+      if(receiptCommitted)throw err;
+      if(err.code==='OFFICE_REVISION_CONFLICT')return store.get(profile.id,'job',key);
+      const retry=err.code==='OFFICE_SOURCE_UNAVAILABLE'&&(step.pollFailures||0)<2,code=/^(OFFICE_[A-Z_]+|OAB_[A-Z_]+|SHARED_WRITE_BUSY)$/.test(err.code||'')?err.code:'OFFICE_NATIVE_OPERATION_FAILED';
+      job.steps[index]={...step,status:retry?'waiting_operation':'interrupted',pollFailures:(step.pollFailures||0)+1,errorCode:code};
+      try{const saved=await store.save(profile.id,'job',{...job,status:retry?'waiting_operation':'interrupted',errorCode:code},{expectedRevision:job.revision});if(actorHash(authority(profile))!==step.authorizationFingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);return saved;}
+      catch(conflict){if(conflict.code==='OFFICE_REVISION_CONFLICT')return store.get(profile.id,'job',key);throw conflict;}
+    }
+  }
+  async function poll(profile,key){const token=profile.id+':'+key;if(inFlight.has(token))return inFlight.get(token);const work=pollOnce(profile,key).finally(()=>inFlight.delete(token));inFlight.set(token,work);return work;}
   async function reject(profile,key,raw){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(!['waiting_approval','queued'].includes(job.status))throw error('OFFICE_TASK_RECONCILE',409);
     assertTaskAvailable(job);
     job=await store.save(profile.id,'job',{...job,status:'rejected',feedback:text(raw?.feedback||'',2000)},{expectedRevision:job.revision});
@@ -110,7 +181,7 @@ function attachTasks(service,deps) {
     if(!tool.rollbackable||typeof tool.rollback!=='function')throw error('OFFICE_ROLLBACK_INVALID',409);
     // Later receipts and attempted mutations can represent real or uncertain
     // effects, even when their task status is not completed. Undo them first.
-    if(job.steps.slice(index+1).some(s=>['completed','partial','waiting_output','running'].includes(s.status)||s.status!=='rolled_back'&&s.attempts>0&&registry.get(s.toolId)?.risk!=='read'))throw error('OFFICE_ROLLBACK_DEPENDENCY',409);
+    if(job.steps.slice(index+1).some(s=>['completed','partial','waiting_output','waiting_operation','running'].includes(s.status)||s.status!=='rolled_back'&&s.attempts>0&&registry.get(s.toolId)?.risk!=='read'))throw error('OFFICE_ROLLBACK_DEPENDENCY',409);
     job.steps[index]={...step,rollbackStatus:'running'};job=await store.save(profile.id,'job',job,{expectedRevision:job.revision});
     try{const restored=await registry.rollback(tool.id,step.result.rollbackToken,{ownerId:profile.id,profile:current,approvalGranted:true,input:{officeAgentId:step.agentId,officeJobId:job.id,officeStepId:step.id,officeAgentRevision:agent.revision}});if(restored?.verified!==true)throw error('OFFICE_ROLLBACK_VERIFY_FAILED',409);job.steps[index].rollbackStatus='completed';delete job.steps[index].rollbackErrorCode;job.steps[index].status='rolled_back';job.steps[index].restored=restored;job.status='rolled_back';
       for(const downstream of job.steps.slice(index+1)){if(downstream.status!=='rolled_back')downstream.status='cancelled';delete downstream.preview;delete downstream.argsResolved;}return store.save(profile.id,'job',job,{expectedRevision:job.revision});}
@@ -124,10 +195,14 @@ function attachTasks(service,deps) {
     for(let job of docs.filter(d=>d.kind==='job'&&d.type==='capability-task'&&!TERMINAL.has(d.status)&&d.runtimeDeviceId===device)){
       if(inFlight.has(profile.id+':'+job.id)||inverseRunning(job))continue;
       const running=job.steps.find(s=>s.status==='running');if(running){const run=deps.runtimeStore?.runForOwner(profile.id,running.runtimeRunId),receipt=run?.executionState?.nodes?.effect?.output;
-        if(run?.status==='completed'&&receipt?.verified===true){running.status=receipt.completionPending==='pdf'?'waiting_output':receipt.outcome==='partial'?'partial':'completed';running.result=receipt;job=await store.save(profile.id,'job',{...job,status:['waiting_output','partial'].includes(running.status)?running.status:'queued'},{expectedRevision:job.revision});}
+        if(run?.status==='completed'&&receipt?.verified===true){
+          try{validate(registry.get(running.toolId).outputSchema,receipt);running.status=receiptState(receipt,running.toolId);running.result=receipt;job=await store.save(profile.id,'job',{...job,status:['waiting_output','waiting_operation','partial'].includes(running.status)?running.status:'queued'},{expectedRevision:job.revision,assertAuthority:receiptGuard(profile,job,running)});}
+          catch(err){running.status='interrupted';await store.save(profile.id,'job',{...job,status:'interrupted',errorCode:err.code||'OFFICE_NATIVE_RECEIPT_INVALID'},{expectedRevision:job.revision});continue;}
+        }
         else if(executorAlive(running,docs))continue;
         else if(registry.get(running.toolId)?.risk==='read'){running.status='queued';job=await store.save(profile.id,'job',{...job,status:'queued'},{expectedRevision:job.revision});}
         else{running.status='interrupted';await store.save(profile.id,'job',{...job,status:'interrupted',errorCode:'OFFICE_TASK_RECONCILE'},{expectedRevision:job.revision});continue;}}
+      if(job.status==='waiting_operation')job=await poll(profile,job.id);
       if(job.status==='queued'){try{job=await prepare(profile,job.id);if(job.status==='queued')await execute(profile,job.id);}catch(err){deps.onBackgroundError?.(err.code||'OFFICE_TASK_FAILED');}}}
     for(const saved of docs.filter(d=>d.kind==='metadata'&&d.type==='capability-schedule'&&d.enabled&&d.runtimeDeviceId===device&&Date.parse(d.nextRunAt)<=Date.now())){
       try{const agent=await store.get(profile.id,'profile',saved.agentId);if(saved.authorizationFingerprint!==actorHash(profile)||saved.agentRevision!==agent.revision)throw error('OFFICE_PREVIEW_CHANGED',409);
@@ -142,6 +217,6 @@ function attachTasks(service,deps) {
   async function scheduleUpdate(profile,key,raw){profile=authority(profile);const previous=await store.get(profile.id,'metadata',key);if(previous.type!=='capability-schedule')throw error('OFFICE_NOT_FOUND',404);if(!Number.isSafeInteger(raw.revision))throw error('OFFICE_REVISION_CONFLICT',409);if(raw.enabled===true){const tools=await catalog(profile,previous.agentId);if(!tools.some(t=>t.id===previous.toolId&&t.risk==='read')||previous.authorizationFingerprint!==actorHash(profile))throw error('OFFICE_PREVIEW_CHANGED',409);}return store.save(profile.id,'metadata',{...previous,enabled:raw.enabled===true},{expectedRevision:raw.revision});}
   function start(){if(!timer){timer=setInterval(()=>{for(const owner of deps.taskOwners?.()||[]){const profile=access.profileById(owner);if(profile?.enabled!==false&&profile)void tick(profile).catch(err=>deps.onBackgroundError?.(err.code));}},30000);timer.unref?.();}}
   const previousStop=service.stop;service.stop=()=>{if(timer)clearInterval(timer);timer=null;previousStop();};start();
-  return {taskCatalog:catalog,taskCreate:create,taskPlan:plan,taskPrepare:prepare,taskExecute:execute,taskAuthorize:authorize,taskReject:reject,taskFeedback:feedback,taskRollback:rollback,taskSchedule:schedule,taskScheduleUpdate:scheduleUpdate,taskTick:tick,taskPendingOutput:pendingOutput,taskCompleteOutput:completeOutput,taskOutputFile:outputFile,taskPrintOutput:printOutput};
+  return {taskCatalog:catalog,taskCreate:create,taskPlan:plan,taskPrepare:prepare,taskExecute:execute,taskAuthorize:authorize,taskAuthorizePending:authorizePending,taskNativeGuard:nativeGuard,taskPollOperation:poll,taskReject:reject,taskFeedback:feedback,taskRollback:rollback,taskSchedule:schedule,taskScheduleUpdate:scheduleUpdate,taskTick:tick,taskPendingOutput:pendingOutput,taskCompleteOutput:completeOutput,taskOutputFile:outputFile,taskPrintOutput:printOutput};
 }
 module.exports={attachTasks};

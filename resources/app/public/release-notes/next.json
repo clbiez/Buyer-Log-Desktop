@@ -4255,6 +4255,336 @@
           "en": "Actual Buyer Log task result with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-oab-intake-native-snapshot-discovery",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi · OAB / INTAKE",
+        "en": "Agent Office · OAB / INTAKE"
+      },
+      "title": {
+        "tr": "Kaydedilmiş native raporları güvenli keşfetme",
+        "en": "Safely discover saved native reports"
+      },
+      "path": {
+        "tr": "Agent Ofisi › OAB / INTAKE araçları",
+        "en": "Agent Office › OAB / INTAKE tools"
+      },
+      "body": {
+        "tr": "Agent kendi kullanıcısının kaydedilmiş OAB/INTAKE raporlarını güncel Overview ve OAB.VIEW yetkileriyle okur. Gerçek alanlar, INTAKE görünen adları ve native ağırlık bilgileri; kaynak parmak izi, tam sayılar, sayfalama ve açık eksiklik bildirimleriyle sınırlı bağlama girer. Native OAB metadata ve mevcut masaüstü oturum durumu keşfedilir. Canlı yükleme yapılmaz; özel sorgu, bağlantı ve kimlik bilgileri çıktıya girmez.",
+        "en": "The agent reads its user’s saved OAB/INTAKE reports under current Overview and OAB.VIEW permissions. Actual fields, INTAKE labels and native weight information enter bounded context with source fingerprint, full counts, paging and explicit omissions. Native OAB metadata and existing desktop session status are discoverable. No live fetch occurs; private query, connection and credentials never enter the output."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-oab-intake-native-snapshot-discovery.png",
+        "alt": {
+          "tr": "Agent kendi native raporunu sınırlı ve doğrulanmış sonuçla okur",
+          "en": "Agent reads its own native report with a bounded verified result"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log görev sonucu",
+          "en": "Actual Buyer Log task result with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "agent-oab-native-batch-plan",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi · OAB",
+        "en": "Agent Office · OAB"
+      },
+      "title": {
+        "tr": "Native yükleme planı ve gerçek süre tahmini",
+        "en": "Native fetch plan and actual time estimate"
+      },
+      "path": {
+        "tr": "Overview › OAB · Agent Ofisi",
+        "en": "Overview › OAB · Agent Office"
+      },
+      "body": {
+        "tr": "Agent, Buyer Log’un ortak native planlayıcısıyla geçerli kombinasyonları, karşılıksız seçimleri, önbellek ve toplu istek durumunu, en kötü süreyi ve 400 kombinasyon sınırını hesaplar. Tam sayılar, sınırlı sayfalar ve değişen kaynağı reddeden parmak izi kullanılır. Plan hesabı canlı rapor çekmez, yeni oturum açmaz veya AI bağlantısı gerektirmez.",
+        "en": "The agent uses Buyer Log’s shared native planner to calculate valid combinations, unmatched selections, cache and batched-request state, worst-case time and the 400-combination limit. Full counts, bounded pages and a fingerprint reject changed source state. Planning does not fetch a live report, open a session or require an AI connection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-oab-native-batch-plan.png",
+        "alt": {
+          "tr": "Native yükleme planı ve gerçek süre tahmini",
+          "en": "Native fetch plan and actual time estimate"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "oab-native-batch-live-authority",
+      "type": "fix",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Uzun yüklemelerde güncel erişim kontrolü",
+        "en": "Current access checks during long fetches"
+      },
+      "path": {
+        "tr": "Overview › OAB · Agent Ofisi",
+        "en": "Overview › OAB · Agent Office"
+      },
+      "body": {
+        "tr": "OAB toplu yükleme ve HTTP uçları aynı native servis üzerinden çalışır. Kullanıcı erişimi ve varsa agent yetkisi her ağ bekleyişinden sonra yeniden kontrol edilir; yetki değişince sonraki istek, önbellek, yetenek ve snapshot yazımı durur. Mevcut kısmi başarı, iptal, doğrulanmış toplu yanıt ve yeniden denemede rapor birleştirme davranışı korunur. TR/EN hata mesajı işin durduğunu açıklar.",
+        "en": "OAB batch fetching and HTTP routes use the same native service. Current user access and any trusted agent authority are rechecked after every network wait; changed authority stops the next request, cache, capability and snapshot writes. Existing partial success, cancellation, verified batched response and retry snapshot merging remain intact. A TR/EN message explains that the job stopped."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-batch-live-authority.png",
+        "alt": {
+          "tr": "Uzun yüklemelerde güncel erişim kontrolü",
+          "en": "Current access checks during long fetches"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "oab-native-snapshot-concurrency",
+      "type": "fix",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Eski yükleme daha güncel raporu ezmez",
+        "en": "An older fetch cannot overwrite a newer report"
+      },
+      "path": {
+        "tr": "Overview › OAB",
+        "en": "Overview › OAB"
+      },
+      "body": {
+        "tr": "Native OAB snapshot kaydı aynı dosya kirasında gerçek kaynak parmak iziyle karşılaştırılır. Uzun tekli/toplu yükleme veya yeniden deneme sırasında başka sekme raporu değiştirirse yeni rapor korunur. Çekilen toplu satırlar okunabilir; kalıcı kaydın yapılmadığı TR/EN uyarıyla gösterilir. Başarılı kayıt diskteki gerçek snapshot ile doğrulanır. Eski snapshot dosyaları çalışmaya devam eder; native sıkıştırılmış atomik kayıt yolu korunur.",
+        "en": "Native OAB snapshot writes compare the actual source fingerprint under the same file lease. If another tab changes the report during a long single/batch fetch or retry, the newer report is preserved. Fetched batch rows remain available, with a TR/EN warning that persistence did not complete. A successful write verifies the actual snapshot on disk. Legacy snapshots still work and the native compressed atomic writer remains in use."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-snapshot-concurrency.png",
+        "alt": {
+          "tr": "Güncel rapor korundu ve eski toplu sonuç kalıcılaştırılmadı",
+          "en": "The current report was preserved and the older batch result was not persisted"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log uyarısı",
+          "en": "Actual Buyer Log warning with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "oab-native-durable-job-receipts",
+      "type": "improvement",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Kalıcı iş makbuzu ve güvenli kesinti bildirimi",
+        "en": "Durable job receipts and safe interruption reporting"
+      },
+      "path": {
+        "tr": "Overview › OAB › Toplu yükleme",
+        "en": "Overview › OAB › Batch fetch"
+      },
+      "body": {
+        "tr": "Mevcut native yükleme motoru gerçek ilerleme, iptal ve bitiş makbuzlarını kullanıcıya özel kaydeder. Başka uygulama sürecinden iptal aynı işte uygulanır; güvenilir dahili komut kimliği aynı işi tekrar başlatmaz. İşlemi çalıştıran süreç kapanırsa iş belirsiz/kesilmiş olarak işaretlenir ve otomatik tekrar edilmez. Yeni süreçte yalnız makbuz bulunması, rapor satırlarının hazır olduğu anlamına gelmez; arayüz bunu açıkça bildirir. Token, fonksiyon ve satır gövdeleri iş metadata’sına yazılmaz.",
+        "en": "The existing native fetch worker records actual progress, cancellation and completion receipts for its user. Cancellation from another application process applies to the same work; a trusted internal command identity does not launch it twice. Executor loss marks uncertain interrupted work without automatic replay. A receipt found in a new process does not imply report rows are available; the interface explains this explicitly. Tokens, functions and row payloads are excluded from job metadata."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-durable-job-receipts.png",
+        "alt": {
+          "tr": "Gerçek iş makbuzu korundu ve belirsiz iş tekrar edilmedi",
+          "en": "The actual job receipt was retained and uncertain work was not replayed"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log iş durumu",
+          "en": "Actual Buyer Log job status with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "oab-native-verified-durable-results",
+      "type": "improvement",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Gerçek iş satırları yeniden başlatmada korunur",
+        "en": "Actual job rows survive restart"
+      },
+      "path": {
+        "tr": "Overview › OAB › Toplu yükleme",
+        "en": "Overview › OAB › Batch fetch"
+      },
+      "body": {
+        "tr": "Native toplu yüklemenin gerçek sonuçları kullanıcı, iş ve parça kimliğine bağlı sıkıştırılmış kayıtlarda korunur. Yeniden açılan servis satırları, alanları ve kaynak zamanlarını gerçek dosya boyutu ve SHA-256 doğrulamasıyla okur; yeni kurumsal istek göndermez. Yeniden deneme sonucu, kullanıcının tüm birleşmiş raporuyla değiştirilmez. Bozuk veya eksik parçalar açık hata olur; kesilmiş iş ve makbuz hatası başarı sayılmaz. Otomatik iş tekrarı yapılmaz.",
+        "en": "Actual native batch results are retained in compressed records bound to user, job and chunk identity. A reconstructed service reads rows, fields and source times after actual file-size and SHA-256 verification, without a new corporate request. A retry result is not replaced by the user’s entire merged report. Corrupt or missing chunks cause an explicit error; interrupted work and receipt failure are not success. No work is replayed automatically."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-verified-durable-results.png",
+        "alt": {
+          "tr": "Native iş sonucu gerçek doğrulanmış satırlarla geri okunur",
+          "en": "Native job result is recovered with actual verified rows"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log rapor sonucu",
+          "en": "Actual Buyer Log report result with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "oab-native-approved-interrupted-continuation",
+      "type": "feature",
+      "module": {
+        "tr": "OAB",
+        "en": "OAB"
+      },
+      "title": {
+        "tr": "Yarım kalan OAB işi onayla devam eder",
+        "en": "Interrupted OAB work continues with approval"
+      },
+      "path": {
+        "tr": "Overview › OAB › Devam planını incele",
+        "en": "Overview › OAB › Review continuation plan"
+      },
+      "body": {
+        "tr": "Kesilen işin doğrulanmış gerçek sonuçları korunur; devam planı yalnız eksik üçlüleri içerir. Kullanıcı kalan kapsamı ve tahmini süreyi onaylar. İş veya rapor revizyonu, metadata ya da yetki değişirse eski onay uygulanmaz. İptal edilmiş veya hâlâ çalışan işler devam ettirilmez. Aynı onay ikinci bir iş başlatmaz. İlk işteki yenileme ve rapora birleştirme tercihi korunur; yeniden açılmada otomatik kurumsal istek gönderilmez.",
+        "en": "Verified actual results from interrupted work are retained; the continuation plan contains only missing triples. The user approves the remaining scope and estimated time. Changed job or report revisions, metadata or access invalidate the old approval. Cancelled or still running jobs are not continued. The same approval does not start another job. Original refresh and snapshot merge preferences are preserved; reopening does not send an automatic corporate request."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "oab-native-approved-interrupted-continuation.png",
+        "alt": {
+          "tr": "Yarım kalan iş için doğrulanan kapsam ve kullanıcı onayı",
+          "en": "Verified scope and user approval for interrupted work"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log devam planı",
+          "en": "Actual Buyer Log continuation plan with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "agent-oab-native-job-discovery",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent gerçek OAB iş kaydını ve satırlarını okuyabilir",
+        "en": "Agents can read actual OAB job receipts and rows"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › OAB araçları",
+        "en": "Agent Office › Tasks › OAB tools"
+      },
+      "body": {
+        "tr": "Üç yeni araç, kullanıcının kendi native OAB iş makbuzunu, doğrulanmış gerçek sonuçlarını ve kesilmiş işin devam planını okur. Satırlar mevcut servisten, iş kimliğine bağlı ve sınırlı sayfalarda gelir; tüm raporla değiştirilmez. Kesilmiş veya eksik iş başarı sayılmaz. Bozuk parçalar reddedilir; okuma boyunca güncel kullanıcı yetkisi ve agent revizyonu tekrar kontrol edilir. Araçlar kurumsal yükleme başlatmaz ve kendi kendine onay vermez.",
+        "en": "Three new tools read the user’s own native OAB receipt, verified actual results and interrupted-work continuation plan. Rows come from the existing service, bound to job identity in bounded pages; they are not replaced by the entire report. Interrupted or incomplete work is not counted as success. Corrupt chunks are rejected; current user access and agent revision are checked again throughout the read. These tools do not start corporate fetching or grant their own approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-oab-native-job-discovery.png",
+        "alt": {
+          "tr": "Agent görevinde gerçek iş durumu ve doğrulanmış sonuç",
+          "en": "Actual job state and verified results in an agent task"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log Agent Ofisi",
+          "en": "Actual Buyer Log Agent Office with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "agent-office-durable-operation-waiting",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Başlatılan iş tamamlandı sayılmaz",
+        "en": "Starting work no longer counts as completion"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › İş durumunu kontrol et",
+        "en": "Agent Office › Tasks › Check operation status"
+      },
+      "body": {
+        "tr": "Uzun işlemin doğrulanmış başlatma kaydı mevcut kalıcı görev kuyruğunda sonuç bekleme durumuna geçer. Sonraki adımlar yalnız gerçek ve doğrulanmış sonuçla ilerler. Yeniden açılışta mevcut iş kontrol edilir; belirsiz işlem otomatik başlatılmaz. Kullanıcı ve agent yetkisi, iş kimliği ve revizyonu beklemeden sonra ve sonuç kaydı sırasında yeniden kontrol edilir. Güvenli durum okumalarının tekrar denemesi sınırlıdır.",
+        "en": "A verified start receipt for a long operation enters an awaiting-result state in the existing durable task queue. Downstream steps advance only with actual verified results. Reopening checks existing work without automatically starting uncertain operations. User and agent authority, operation identity and revision are rechecked after waits and during result persistence. Retries of safe status reads are bounded."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-durable-operation-waiting.png",
+        "alt": {
+          "tr": "Gerçek sonucu bekleyen görev ve durum kontrolü",
+          "en": "Task awaiting an actual result and its status check"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log görev kuyruğu",
+          "en": "Actual Buyer Log task queue with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "agent-oab-native-execution",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "OAB yüklemesini çalıştır, sonucunu doğrula",
+        "en": "Execute OAB fetching and verify its result"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › OAB",
+        "en": "Agent Office › Tasks › OAB"
+      },
+      "body": {
+        "tr": "Agent, onaylanan OAB kapsamını mevcut yükleme servisiyle başlatır; gerçek satırlar kalıcı rapora kaydedilene kadar bekler. Eksik iş yalnız doğrulanmamış kombinasyonlarla onaylı sürdürülür. İptal, işin durduğunu doğrular. Yetki her ağ beklemesinden sonra ve kayıt kilidi altında tekrar kontrol edilir. Rapor geri alma işlemi, yeni kullanıcı değişikliğini ezmeden önceki raporu geri yükler.",
+        "en": "The agent starts approved OAB scope through the existing fetching service and waits until actual rows persist in the native report. Approved continuation covers only unverified combinations. Cancellation verifies that work stopped. Authority is rechecked after network waits and under the write lock. Report undo restores the prior report without overwriting newer user changes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-oab-native-execution.png",
+        "alt": {
+          "tr": "Gerçek OAB sonucu ve onaylanan iş adımları",
+          "en": "Actual OAB result and approved task steps"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log Agent Ofisi",
+          "en": "Actual Buyer Log Agent Office with anonymous data"
+        }
+      }
     }
   ]
 }
