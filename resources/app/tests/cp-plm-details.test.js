@@ -57,6 +57,7 @@ test('Independent PLM property choices and authorized shared BOM source',()=>{
   assert.match(app,/key:'fabric',label:en\?'Fabric Details'/);
   assert.match(app,/async function cpPlmSyncDetailsRun/);
   assert.match(app,/if\(cpDetails\)\{/);
+  assert.match(app,/if\(result\.styleLinks\)applyPlmStyleLinksPayload\(result\.styleLinks\)/,'PLM must consume nested style link payload');
   assert.match(route,/api\/plm-sync\/fetch', userAccess\.requireAnyArea\('koleksiyon', 'cp', 'orders'\)/);
   assert.match(route,/api\/plm-sync\/bom\/batch/);
   assert.match(store,/fabric: text\(raw && raw\.fabric, 10000\)/);
