@@ -193,7 +193,8 @@ test('kapsam istemciden gelir ve bilinmeyen değer sızmaz', () => {
 
 test('PLM işlemleri iş kaydına bağlı ve kapsamları doğru', () => {
   // Koleksiyon'a özgü işler CP/Orders kapsamına yazılmamalı.
-  assert.match(SERVER, /kind: 'plm-sync', scope: 'koleksiyon'/);
+  assert.match(SERVER, /kind: 'plm-sync', scope, total/);
+  assert.match(SERVER, /\['koleksiyon','cp','orders'\]\.includes\(requestedScope\)\?requestedScope:'koleksiyon'/);
   assert.match(SERVER, /kind: 'plm-files', scope: 'koleksiyon'/);
   // Link ve görsel her üç ekrandan da çalıştığı için kapsam istemciden gelir.
   assert.match(SERVER, /kind:'plm-links', scope:plmJobScope\(req\)/);
@@ -201,7 +202,7 @@ test('PLM işlemleri iş kaydına bağlı ve kapsamları doğru', () => {
 });
 
 test('başarısız modeller işe yazılıyor (yalnız onları yeniden denemek için)', () => {
-  assert.match(SERVER, /plmJobs\.addFailure\(req\.currentUser\.id, fetchRun\.job\.id/);
+  assert.match(SERVER, /plmJobs\.addFailure\(profile\.id, fetchRun\.job\.id/);
   assert.match(SERVER, /plmJobs\.addFailure\(req\.currentUser\.id,linkRun\.job\.id/);
   assert.match(SERVER, /plmJobs\.addFailure\(req\.currentUser\.id, sheetRun\.job\.id/);
 });

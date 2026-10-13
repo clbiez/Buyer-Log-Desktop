@@ -169,3 +169,10 @@ test('license paging rejects a native source replacement between existing snapsh
  const f=await fixture(t);await f.license.discover(f.profile);const original=f.license.read;f.license.read=()=>{const captured=original(),native=db.loadOverrides();native.licenseCards.items[0].workingNotes='Native peer edit during source read';db.saveOverrides(native,native._revision);return captured;};
  await assert.rejects(f.registry.execute('license.cards.read',{limit:1},{ownerId:f.profile.id,profile:f.profile}),{code:'OFFICE_PREVIEW_CHANGED'});
 });
+
+test('main native long fabric text stays readable and survives an approved revision and exact inverse',async t=>{
+ const f=await fixture(t),code='100000098',composition='Native material detail '+'.'.repeat(1000);
+ fabric.upsertFabricCards([{code,summary:'Native full summary '+'.'.repeat(300),summaryEn:'Native full summary '+'.'.repeat(300),details:{composition},raw:'DEMO'}],f.profile);
+ const before=JSON.parse(JSON.stringify(fabric.loadFabricCards().cards[code])),read=await f.registry.execute('collection.fabric.read',{codes:[code]},{ownerId:f.profile.id,profile:f.profile});assert.deepEqual(read.data.cards[0],before);
+ const done=await apply(f,await create(f,'collection.fabric.upsert',{items:[{code,summary:'Approved current revision'}]}));assert.equal(done.status,'completed');await undo(f,done);assert.deepEqual(fabric.loadFabricCards().cards[code],before);
+});

@@ -11,8 +11,8 @@ const path = require('path');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const { RevisionConflictError, expectedNumber } = require('../db');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
-const fabricEngine = require('../../public/fabric-cards-engine');
 const { withFileLeaseSync } = require('./shared-file-transaction');
+const fabricEngine = require('../../public/fabric-cards-engine');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'fabric-cards.json');
 const MAX_CARDS = 20000;

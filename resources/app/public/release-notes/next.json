@@ -5498,6 +5498,35 @@
           "en": "Actual demo user · completed read · current authority check in a stale dialog"
         }
       }
+    },
+    {
+      "id": "source-native-revision-roundtrip",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Kaynak yapılandırma revizyonu dönüşümde korunur",
+        "en": "Source configuration revisions survive conversion"
+      },
+      "body": {
+        "tr": "Mevcut kaynak yapılandırması ortak kaynak modeline aktarılıp geri dönerken revizyon sayacı, sıfır değeri ve alanın bulunmaması korunur. Güncel kaynağın eşzamanlı düzenleme denetimi kaybolmaz.",
+        "en": "Converting existing source configuration through the shared source model preserves its revision counter, zero values and absent fields. Current-source concurrency checks retain their revision identity."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "source-native-revision-roundtrip.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log görev sonucunda anonim kaynak revizyonu",
+          "en": "Anonymous source revision in the actual Buyer Log task result"
+        },
+        "caption": {
+          "tr": "Gerçek demo kaynak · mevcut yapılandırma revizyonu",
+          "en": "Actual demo source · current configuration revision"
+        }
+      }
     }
   ]
 }

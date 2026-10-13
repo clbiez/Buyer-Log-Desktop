@@ -26,13 +26,13 @@ function evaluate(analysis, answers = {}, currentRule = rule(), plmEvidence) {
   return Rules.evaluateOrder(analysis, { rules: [currentRule], answers, plmEvidence });
 }
 
-test('checklist automatic status fires only when both question and auto formula match', () => {
+test('checklist automatic status follows its independent formula while manual states remain authoritative', () => {
   const a = order();
   const matching = evaluate(a);
   assert.equal(matching.checklistState.custom_check, 'approved');
   assert.deepEqual(matching.autoDecisions, [{ itemId: 'custom_check', state: 'approved' }]);
   assert.equal(evaluate(order({ stage: 'PRODUCTION' })).checklistState.custom_check, 'open');
-  assert.deepEqual(evaluate(order({ daysToLoad: 90 })).autoDecisions, []);
+  assert.deepEqual(evaluate(order({ daysToLoad: 90 })).autoDecisions, [{ itemId: 'custom_check', state: 'approved' }], 'The native automatic formula remains independent of the question applicability condition');
   assert.equal(evaluate(a, {}, rule({ autoStatus: '' })).checklistState.custom_check, 'open');
 });
 

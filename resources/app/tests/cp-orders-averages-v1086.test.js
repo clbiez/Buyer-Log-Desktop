@@ -52,7 +52,7 @@ function loadAverages() {
     extractFunction(APP, 'kolWeightedAverage'),
     extractFunction(APP, 'kolArithmeticAverage'),
   ].join('\n');
-  return new Function(`${block}; return {kolWeightedAverage,kolArithmeticAverage};`)();
+  return new Function('window', `${block}; return {kolWeightedAverage,kolArithmeticAverage};`)({BLCollectionModelGroups:require('../public/collection-model-groups')});
 }
 
 test('kolWeightedAverage: getQty verilmezse Koleksiyon davranışı (row.quantity) değişmez', () => {

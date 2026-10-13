@@ -20,7 +20,7 @@ const fn = loadAppMainFunctions([
   'shipRoundHalfUp2', 'endeksmatikRound2Excel', 'endeksmatikNumber',
   'normalizePricingRuleSeasons', 'pricingRuleSeasonMatches', 'pricingRuleSeasonSetsOverlap',
   'sameOrderCode', 'kolPlmLevenshtein', 'kolPlmSeason',
-]);
+], { window: { BLCollectionModelGroups: require('../public/collection-model-groups') }, BLShippingEngine: require('../public/shipping-engine') });
 
 const close = (actual, expected, message) => assert.ok(Math.abs(actual - expected) < 1e-9, `${message || ''} ${actual} ≠ ${expected}`);
 

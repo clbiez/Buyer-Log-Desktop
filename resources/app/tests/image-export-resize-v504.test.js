@@ -65,8 +65,11 @@ test('v5.04 unsupported image conversion preserves source pixel dimensions',()=>
   assert.doesNotMatch(prep,/maxDim=2400/);
 });
 
-test('v5.04 email CID payload keeps original resolution instead of thumbnail re-encoding',()=>{
+test('v5.04 email CID previews are bounded while Excel image preparation keeps original resolution',()=>{
   const asset=between('async function prepareEmailInlineAsset','async function prepareEmailTopicTableContent');
-  assert.match(asset,/const dataUrl=prepared\.dataUrl/);
-  assert.doesNotMatch(asset,/canvas|drawImage|toDataURL/);
+  assert.match(asset,/let dataUrl=prepared\.dataUrl/);
+  assert.match(asset,/maxSide=480/);
+  assert.match(asset,/Math\.min\(1,maxSide\/Math\.max\(prepared\.width,prepared\.height\)\)/);
+  const excel=between('async function kolPrepareExcelImage','function kolExcelImagePlacement');
+  assert.doesNotMatch(excel,/maxSide=480/);
 });
