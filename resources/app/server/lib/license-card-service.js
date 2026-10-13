@@ -24,7 +24,7 @@ function createLicenseCardService(deps){
    const preview=expected||await discovery(profile,{assertAuthority});let change;
    const result=await mutate(async lease=>{
      assertAuthority?.();const current=load();if(!force&&cards.stateOf(current).initialized)return {saved:current,added:0,noEffect:true};
-     const guard=()=>{assertAuthority?.();assertSnapshot(load(),preview.snapshot);if(deps.discoveryStamp&&deps.discoveryStamp(profile)!==preview.sourceStamp)throw error('OFFICE_PREVIEW_CHANGED',409);};guard();
+     const guard=()=>{assertAuthority?.();if(deps.discoveryStamp&&deps.discoveryStamp(profile)!==preview.sourceStamp)throw error('OFFICE_PREVIEW_CHANGED',409);};guard();assertSnapshot(load(),preview.snapshot);
      const imported=cards.appendDiscovered(current,preview.pairs),previous=new Map(cards.stateOf(current).items.map(card=>[card.id,JSON.stringify(card)]));
      change={cards:cards.stateOf(imported.overrides).items.filter(card=>previous.get(card.id)!==JSON.stringify(card)),initialized:true,lastImportedAt:cards.stateOf(imported.overrides).lastImportedAt,actorId:profile.id,added:imported.added};
      const staged=deps.publish?sync.stageChange(imported.overrides,change):imported.overrides;
@@ -43,7 +43,7 @@ function createLicenseCardService(deps){
  async function update(profile,id,body,{assertAuthority,expected}={}){
    let change;
    const saved=await mutate(async lease=>{
-     const guard=()=>{assertAuthority?.();assertSnapshot(load(),expected);};guard();const current=load(),result=cards.updateCard(current,id,body,validators);
+     const guard=()=>{assertAuthority?.();};guard();assertSnapshot(load(),expected);const current=load(),result=cards.updateCard(current,id,body,validators);
      change={card:result.card,rulesChanged:result.rulesChanged,...(result.rulesChanged?{contracts:cards.responseOf(result.overrides,true).cards.find(card=>card.id===id).rules}:{}),initialized:cards.stateOf(result.overrides).initialized,lastImportedAt:cards.stateOf(result.overrides).lastImportedAt,actorId:profile.id};
      const staged=deps.publish?sync.stageChange(result.overrides,change):result.overrides,actual=deps.saveOverrides(staged,Number(current._revision)||0,{...lease,assertAuthority:guard});await lease.commit();
      if(sectionSnapshot(load()).fingerprint!==sectionSnapshot(actual).fingerprint)throw error('OFFICE_RESOURCE_VERIFY_FAILED',409);return actual;
@@ -54,7 +54,7 @@ function createLicenseCardService(deps){
  async function restore(profile,receipt,expected,{assertAuthority}={}){
    let change;
    const saved=await mutate(async lease=>{
-     const guard=()=>{assertAuthority?.();assertSnapshot(load(),expected);};guard();const current=load(),state=clone(cards.stateOf(current)),index=state.items.findIndex(card=>card.id===receipt.card?.id);
+     const guard=()=>{assertAuthority?.();};guard();assertSnapshot(load(),expected);const current=load(),state=clone(cards.stateOf(current)),index=state.items.findIndex(card=>card.id===receipt.card?.id);
      if(index<0||cards.pairKey(state.items[index].license,state.items[index].licensor)!==cards.pairKey(receipt.card.license,receipt.card.licensor))throw error('OFFICE_ROLLBACK_INVALID',409);
      // The receipt is an immutable owner artifact, never caller/model data.
      const card=sync.profileSnapshot(receipt.card);state.items[index]=clone(receipt.card);
