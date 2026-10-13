@@ -37,8 +37,13 @@ test('v5.57 email groups are validated and generic reports can be built without 
   assert.match(SERVER,/automationEmail\.createDraft/);
 });
 
-test('v5.57 scheduled execution is intentionally limited to email recipes',()=>{
-  assert.match(SERVER,/recipe\.purpose!=='email'/);
+test('v5.57 ordinary schedules remain email-only; scoped agent grants add safe deterministic analysis',()=>{
+  const schedule=require('../server/lib/automation-schedule-service'),now=new Date(2026,9,11,9,30),recipe={enabled:true,purpose:'analysis',schedule:{enabled:true,mode:'daily',time:'09:00'}};
+  assert.equal(schedule.automationScheduleKey(recipe,now),'');
+  assert.ok(schedule.automationScheduleKey(recipe,now,{scope:'analysis-or-owner-draft'}));
+  assert.equal(schedule.automationScheduleKey({...recipe,purpose:'mixed',steps:[{action:'script'}]},now,{}),'');
+  assert.equal(schedule.automationScheduleKey({...recipe,appActions:[{action:'refresh_source'}]},now,{}),'');
+  assert.match(SERVER,/automationScheduleService\.automationScheduleKey/);
   assert.match(SERVER,/setInterval\(\(\)=>runScheduledAutomations/);
   assert.match(UI,/Planlı çalışma yalnız E-posta otomasyonlarında/);
 });

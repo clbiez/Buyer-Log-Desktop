@@ -171,7 +171,7 @@ test('v9.47 sunucu bağlantısı: alan seçici ile çalıştırma AYNI satır ü
 });
 
 test('v9.47 sunucu bağlantısı: mail dili grup bazında seçilir, EN metni yoksa TR\'ye düşer', () => {
-  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'automation-execution-service.js'), 'utf8');
   assert.match(server, /const groupLanguage=mailRows=>/);
   assert.match(server, /backlogAutomation\.resolveCommunicationLanguage\(row\)/);
   // EN metni tanımlı değilse Türkçesi kullanılmalı.

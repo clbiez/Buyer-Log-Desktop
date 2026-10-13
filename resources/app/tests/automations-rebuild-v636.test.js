@@ -115,14 +115,16 @@ test('v6.36 alana göre bölme çözülemeyen değerleri ATMIYOR', () => {
   assert.match(block, /unresolved\.push/);
   assert.match(block, /return \{field,resolved,unresolved\}/);
   // Hiçbiri çözülemezse gönderim tamamen kesilmeli.
-  assert.match(SERVER, /AUTOMATION_RECIPIENTS_UNRESOLVED/);
+  assert.match(fs.readFileSync(path.join(ROOT,'server','lib','automation-execution-service.js'),'utf8'), /AUTOMATION_RECIPIENTS_UNRESOLVED/);
   // Çözülemeyenler sonuca taşınmalı.
-  assert.match(SERVER, /result\.unresolvedRecipients=split\.unresolved/);
+  assert.match(fs.readFileSync(path.join(ROOT,'server','lib','automation-execution-service.js'),'utf8'), /result\.unresolvedRecipients=split\.unresolved/);
 });
 
 test('v6.36 iki alıcı kipi de tek gönderim yolundan geçiyor', () => {
   // İki alıcı kipi farklı taslak yollarına ayrışırsa biri sessizce farklı davranır.
-  const block = SERVER.slice(SERVER.indexOf("if(['email','mixed'].includes(purpose)){"));
+  const executor=fs.readFileSync(path.join(ROOT,'server','lib','automation-execution-service.js'),'utf8');
+  assert.match(SERVER,/createAutomationExecutor/);
+  const block=executor.slice(executor.indexOf("if(['email','mixed'].includes(purpose)){"));
   // v9.47: imzaya dil satırları eklendi (subjectBase/langRows) ama gönderimi
   // yürüten TEK fonksiyon olma özelliği korunuyor — asıl korunan kusur bu.
   assert.match(block, /const deliver=async\(group,subjectBase,mailRows,langRows\)=>\{/);
@@ -134,7 +136,9 @@ test('v6.36 iki alıcı kipi de tek gönderim yolundan geçiyor', () => {
 test('v6.36 alıcısı eksik otomasyon KAYDEDİLEMİYOR', () => {
   // Eksiklik kayıtta kesilmezse hata ancak planlı saatte, e-posta gelmeyince
   // fark edilir.
-  const block = bodyOf(SERVER, 'automationNormalizePayload');
+  assert.match(SERVER,/automationDefinition\.normalize/);
+  const definition=fs.readFileSync(path.join(ROOT,'server','lib','automation-definition-service.js'),'utf8');
+  const block=bodyOf(definition,'automationNormalizePayload');
   assert.match(block, /AUTOMATION_RECIPIENT_FIELD_REQUIRED/);
   assert.match(block, /AUTOMATION_EMAIL_GROUP_REQUIRED/);
 });
@@ -149,15 +153,13 @@ test('v6.36 alıcı kipi arayüzden seçilebiliyor', () => {
 /* ------------------------------------------------------ 4) KAÇIRILAN TETİKLER */
 
 test('v6.36 gecikmiş tetik tolerans penceresine göre sınıflanıyor', () => {
-  const fn = new Function(`
-    const AUTOMATION_GRACE_MINUTES=90, AUTOMATION_MISSED_LOOKBACK_DAYS=14;
-    function automationDueOccurrence(recipe, now = new Date()){${bodyOf(SERVER, 'automationDueOccurrence')}}
-    function automationIsWithinGrace(occurrence){${bodyOf(SERVER, 'automationIsWithinGrace')}}
-    return {automationDueOccurrence, automationIsWithinGrace};
-  `)();
+  const fn=require('../server/lib/automation-schedule-service');
   const recipe = { enabled: true, purpose: 'email', schedule: { enabled: true, mode: 'weekly', time: '09:00', weekdays: [1] } };
   // 2026-08-24 bir Pazartesi. Saatler YEREL kurulur; test saat dilimine bağlı olmamalı.
   const onTime = fn.automationDueOccurrence(recipe, new Date(2026, 7, 24, 9, 30));
+  assert.equal(fn.automationDueOccurrence({...recipe,purpose:'analysis'}, new Date(2026, 7, 24, 9, 30)),null);
+  assert.ok(fn.automationDueOccurrence({...recipe,purpose:'analysis'}, new Date(2026, 7, 24, 9, 30),{}));
+  assert.equal(fn.automationDueOccurrence({...recipe,purpose:'mixed',steps:[{action:'script'}]}, new Date(2026, 7, 24, 9, 30)),null);
   assert.equal(fn.automationIsWithinGrace(onTime), true, '30 dk gecikme tolerans içinde');
   const late = fn.automationDueOccurrence(recipe, new Date(2026, 7, 24, 14, 0));
   assert.equal(fn.automationIsWithinGrace(late), false, '5 saat gecikme kaçırılmış sayılmalı');
@@ -170,7 +172,7 @@ test('v6.36 gecikmiş tetik tolerans penceresine göre sınıflanıyor', () => {
 
 test('v6.36 zamanlayıcı tolerans dışındaki tetiği sessizce çalıştırmıyor', () => {
   const block = bodyOf(SERVER, 'runScheduledAutomations');
-  assert.match(block, /if\(occurrence&&occurrence\.key===key&&!automationIsWithinGrace\(occurrence\)\)continue;/);
+  assert.match(block, /if\(occurrence\?\.key===key&&!automationIsWithinGrace\(occurrence\)\)continue;/);
 });
 
 test('v6.36 kaçırılan tetik uçları var ve tetik önce işaretleniyor', () => {
@@ -180,8 +182,10 @@ test('v6.36 kaçırılan tetik uçları var ve tetik önce işaretleniyor', () =
     "app.post('/api/automations/pending-triggers/skip'",
   ]) assert.ok(SERVER.includes(route), route);
   const runBlock = SERVER.slice(SERVER.indexOf("app.post('/api/automations/pending-triggers/run'"));
-  const markAt = runBlock.indexOf('automationRecipeStore.markSchedule');
-  const execAt = runBlock.indexOf('automationExecute');
+  assert.match(runBlock,/automationScheduledRunner\(req\.currentUser,recipe,item\.key/);
+  const runner=fs.readFileSync(path.join(ROOT,'server','lib','automation-scheduled-runner.js'),'utf8');
+  const markAt = runner.indexOf('store.markSchedule');
+  const execAt = runner.indexOf('await execute');
   // Tetik ÖNCE işaretlenmeli: çalışma hata verse bile aynı tetik döngüye girip
   // tekrar tekrar denenmemeli.
   assert.ok(markAt >= 0 && execAt > markAt, 'tetik çalıştırmadan önce işaretlenmeli');

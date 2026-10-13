@@ -138,7 +138,7 @@ test('v6.39 çoklanan ve kodsuz satırlar raporlanıyor', () => {
 
 test('v6.39 zincir istatistiği sonuca ve önizlemeye taşınıyor', () => {
   // Taşınmazsa kullanıcı kaç satırın eşleşmediğini hiç göremez.
-  assert.match(SERVER, /if\(data\.join\)result\.join=data\.join;/);
+  assert.match(fs.readFileSync(path.join(ROOT,'server','lib','automation-execution-service.js'),'utf8'), /if\(data\.join\)result\.join=data\.join;/);
   assert.match(SERVER, /join:joinMeta/);
   assert.match(UI, /preview\.join\?/);
   assert.match(UI, /satır eşleşti/);

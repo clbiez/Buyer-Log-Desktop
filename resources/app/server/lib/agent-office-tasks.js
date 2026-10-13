@@ -30,7 +30,7 @@ function attachTasks(service,deps) {
     access.appendAudit(profile,'AGENT_TASK_CREATE',job.id,{steps:steps.map(s=>s.toolId)});return prepare(profile,job.id);}
   async function plan(profile,raw){const tools=await catalog(profile,raw.agentId);if(!tools.length)throw error('OFFICE_TOOL_FORBIDDEN',403);
     const memory=await store.selectContext(profile.id,[raw.agentId],'',raw.task,6000);
-    const response=await service.engineOf().ask(profile.id,{requestId:id(),source:'agent-task',lang:raw.lang==='en'?'en':'tr',task:text(raw.task,4000),context:{agentId:raw.agentId,tools:tools.map(t=>({id:t.id,operation:t.operation,inputSchema:t.inputSchema})),memory:memory.selected},guide:'Return planJson as a JSON string: {steps:[{id,toolId,args,bindings:[{argument,stepId,path}]}]}. Use only listed tools. Bindings reference earlier actual results. Never invent identifiers, permissions, successful execution, source facts or approvals. Do not place a fingerprint in args. If required identifiers are missing return {steps:[]}.'});
+    const response=await service.engineOf().ask(profile.id,{requestId:id(),source:'agent-task',lang:raw.lang==='en'?'en':'tr',task:text(raw.task,4000),context:{agentId:raw.agentId,tools:tools.map(t=>({id:t.id,operation:t.operation,label:t.label,description:t.description,inputSchema:t.inputSchema})),memory:memory.selected},guide:'Return planJson as a JSON string: {steps:[{id,toolId,args,bindings:[{argument,stepId,path}]}]}. Use only listed tools. Bindings reference earlier actual results. Never invent identifiers, permissions, successful execution, source facts or approvals. Do not place a fingerprint in args. If required identifiers are missing return {steps:[]}.'});
     if(!response.structured?.ok)throw error('OFFICE_AI_CONTRACT_INVALID',422);let parsed;try{parsed=JSON.parse(response.data.planJson);}catch(_){throw error('OFFICE_AI_CONTRACT_INVALID',422);}
     return create(profile,{...raw,steps:parsed.steps,aiCalls:1});}
   async function prepare(profile,key){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(job.type!=='capability-task')throw error('OFFICE_TASK_INVALID');if(TERMINAL.has(job.status))return job;
@@ -39,7 +39,7 @@ function attachTasks(service,deps) {
       await store.save(profile.id,'memory',{id:'outcome-'+job.id,profileId:job.profileIds[0],type:'task',category:'task-history',text:JSON.stringify({task:job.task,status:job.status,steps:job.steps.map(s=>({toolId:s.toolId,status:s.status,verified:s.result?.verified===true}))}),sourceId:job.id,toolIds:job.steps.map(s=>s.toolId),taskId:job.id,active:true,approved:false,origin:'verified-service',confidence:'VERIFIED_RESULT',key:'',conflictingIds:[]},{immutable:true});return job;}
     const step=job.steps[index];if(step.status==='waiting_output')return job;if(step.status==='running')throw error('OFFICE_TASK_RECONCILE',409);
     const {profile:current,agent,tool}=await stepAuthority(profile,step),args=resolvedArgs(job,step);
-    const originalAuthority=actorHash(current),preview=await registry.execute(tool.id,args,{ownerId:profile.id,profile:current,dryRun:true});
+    const originalAuthority=actorHash(current),preview=await registry.execute(tool.id,args,{ownerId:profile.id,profile:current,dryRun:true,input:{officeAgentId:step.agentId,officeAgentRevision:agent.revision}});
     const latest=await stepAuthority(profile,step);if(latest.agent.revision!==agent.revision||actorHash(latest.profile)!==originalAuthority)throw error('OFFICE_PREVIEW_CHANGED',409);
     job.steps[index]={...step,argsResolved:args,preview,agentRevision:agent.revision,authorizationFingerprint:actorHash(latest.profile),status:tool.approval?'waiting_approval':'ready'};
     return store.save(profile.id,'job',{...job,status:tool.approval?'waiting_approval':'queued'},{expectedRevision:job.revision});}
@@ -52,7 +52,7 @@ function attachTasks(service,deps) {
     if(tool.approval&&(raw.confirmed!==true||raw.fingerprint!==step.preview.fingerprint))throw error('OFFICE_APPROVAL_REQUIRED',409);
     const executorInstanceId=await heartbeat(profile.id);
     job.steps[index]={...step,status:'running',attempts:step.attempts+1,executorPid:process.pid,executorHost:host,executorInstanceId};job=await store.save(profile.id,'job',{...job,status:'running'},{expectedRevision:job.revision});
-    try{let execution=await runtime.execute({ownerId:profile.id,profile:current,workflow:graph(job,step),input:{officeJobId:job.id,officeStepId:step.id},onRunCreated:async run=>{job.steps[index].runtimeRunId=run.id;job=await store.save(profile.id,'job',job,{expectedRevision:job.revision});}});
+    try{let execution=await runtime.execute({ownerId:profile.id,profile:current,workflow:graph(job,step),input:{officeJobId:job.id,officeStepId:step.id,officeAgentId:step.agentId,officeAgentRevision:step.agentRevision},onRunCreated:async run=>{job.steps[index].runtimeRunId=run.id;job=await store.save(profile.id,'job',job,{expectedRevision:job.revision});}});
       if(execution.run.status==='waiting_approval')execution=await runtime.resumeApproval({ownerId:profile.id,profile:authority(profile),runId:execution.run.id,approved:true});
       const result=execution.run.executionState.nodes.effect?.output,ok=execution.run.status==='completed'&&result?.verified===true;
       const retry=!ok&&tool.risk==='read'&&job.steps[index].attempts<3;
@@ -97,7 +97,7 @@ function attachTasks(service,deps) {
     // Do not invalidate a completed downstream effect by silently undoing its input.
     if(job.steps.slice(index+1).some(s=>s.status==='completed'))throw error('OFFICE_ROLLBACK_DEPENDENCY',409);
     job.steps[index]={...step,rollbackStatus:'running'};job=await store.save(profile.id,'job',job,{expectedRevision:job.revision});
-    try{const restored=await registry.rollback(tool.id,step.result.rollbackToken,{ownerId:profile.id,profile:current,approvalGranted:true});job.steps[index].rollbackStatus='completed';job.steps[index].status='rolled_back';job.steps[index].restored=restored;job.status='rolled_back';
+    try{const restored=await registry.rollback(tool.id,step.result.rollbackToken,{ownerId:profile.id,profile:current,approvalGranted:true,input:{officeAgentId:step.agentId,officeJobId:job.id,officeStepId:step.id,officeAgentRevision:step.agentRevision}});job.steps[index].rollbackStatus='completed';job.steps[index].status='rolled_back';job.steps[index].restored=restored;job.status='rolled_back';
       for(const downstream of job.steps.slice(index+1)){downstream.status='cancelled';delete downstream.preview;delete downstream.argsResolved;}return store.save(profile.id,'job',job,{expectedRevision:job.revision});}
     catch(err){job.steps[index].rollbackStatus='failed';await store.save(profile.id,'job',job,{expectedRevision:job.revision});throw err;}}
   async function schedule(profile,raw){profile=authority(profile);const tools=await catalog(profile,raw.agentId),tool=tools.find(t=>t.id===raw.toolId);if(!tool||tool.risk!=='read'||raw.confirmed!==true)throw error('OFFICE_SCHEDULE_SCOPE',403);

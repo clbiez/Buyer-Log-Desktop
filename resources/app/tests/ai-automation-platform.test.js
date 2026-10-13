@@ -209,5 +209,6 @@ test('server routes AI code through validation, preview and existing recipe pers
   for (const endpoint of ['/api/automations/ai/capabilities', '/api/automations/ai/guide', '/api/automations/ai/analyze', '/api/automations/ai/preview', '/api/automations/ai/import']) assert.match(server, new RegExp(endpoint.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
   assert.match(server, /automationLanguage\.evaluateConditions\(aiDefinition\.conditions/);
   assert.match(server, /enabled:false/);
-  assert.match(server, /AI_AUTOMATION_NEEDS_REVIEW/);
+  assert.match(server,/automationDefinition\.normalize/);
+  assert.match(fs.readFileSync(path.join(__dirname,'..','server','lib','automation-definition-service.js'),'utf8'), /AI_AUTOMATION_NEEDS_REVIEW/);
 });
