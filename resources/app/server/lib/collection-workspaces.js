@@ -860,7 +860,7 @@ async function applyRowChangesAsync(ownerId, change, options={}) {
     const result = applyRowChanges(current, change);
     // Hiçbir şey uygulanmadıysa (hepsi çakıştı) dosyaya dokunma: gereksiz
     // yazma, gereksiz revizyon artışı ve gereksiz canlı olay üretmez.
-    await options.assertAuthority?.();if (result.changed) {await atomicWriteJsonAsync(workspaceFile(ownerId), result.saved);await options.afterWrite?.(result.saved);}
+    await options.assertAuthority?.();if(result.changed){const writeLegacy=()=>atomicWriteJsonAsync(workspaceFile(ownerId),result.saved);if(options.commitSaved)await options.commitSaved(result.saved,writeLegacy);else await writeLegacy();await options.afterWrite?.(result.saved);}
     return result;
   });
 }
