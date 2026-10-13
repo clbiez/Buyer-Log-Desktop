@@ -5498,6 +5498,35 @@
         "tr": "Aynı durumun tekrar gelmesi sahneyi, animasyon saatini veya çizim önbelleğini yeniden başlatmaz. Eşzamanlı aynı okuma tek istekte birleşir; kullanıcı değişimi ve kayıt işlemleri okuma kapsamını geçersiz kılar. Görseller, aydınlatma ve animasyon kalitesi korunur.",
         "en": "Repeated identical state does not restart the scene, animation clock or drawing cache. Overlapping identical reads share one request; user changes and mutations invalidate the read scope. Artwork, lighting and animation quality are preserved."
       }
+    },
+    {
+      "id": "source-native-revision-roundtrip",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Kaynak yapılandırma revizyonu dönüşümde korunur",
+        "en": "Source configuration revisions survive conversion"
+      },
+      "body": {
+        "tr": "Mevcut kaynak yapılandırması ortak kaynak modeline aktarılıp geri dönerken revizyon sayacı, sıfır değeri ve alanın bulunmaması korunur. Güncel kaynağın eşzamanlı düzenleme denetimi kaybolmaz.",
+        "en": "Converting existing source configuration through the shared source model preserves its revision counter, zero values and absent fields. Current-source concurrency checks retain their revision identity."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "source-native-revision-roundtrip.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log görev sonucunda anonim kaynak revizyonu",
+          "en": "Anonymous source revision in the actual Buyer Log task result"
+        },
+        "caption": {
+          "tr": "Gerçek demo kaynak · mevcut yapılandırma revizyonu",
+          "en": "Actual demo source · current configuration revision"
+        }
+      }
     }
   ]
 }

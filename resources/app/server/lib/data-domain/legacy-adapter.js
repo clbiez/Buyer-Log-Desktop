@@ -180,6 +180,7 @@ function fromLegacy(items) {
       markers: {
         defaultSeasonsApplied: item.defaultSeasonsApplied === true,
         mappingEnhancementScanVersion: Number(item.mappingEnhancementScanVersion) || 0,
+        ...(Object.hasOwn(item, '_configVersion') ? { configVersion: item._configVersion } : {}),
       },
       lastRun: clone(item.lastRun) || null,
       legacyRole,
@@ -323,6 +324,7 @@ function toLegacy(domain) {
       refreshEnabled: source.enabled !== false,
       defaultSeasonsApplied: Boolean(source.markers && source.markers.defaultSeasonsApplied),
       mappingEnhancementScanVersion: Number(source.markers && source.markers.mappingEnhancementScanVersion) || 0,
+      ...(Object.hasOwn(source.markers || {}, 'configVersion') ? { _configVersion: source.markers.configVersion } : {}),
       horizon: clone(defaultFilter.definition) || {},
       scopes,
       parkedBindings: clone(source.parkedBindings) || [],
