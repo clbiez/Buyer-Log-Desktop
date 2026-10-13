@@ -13,7 +13,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   function fail(res,err) {
     if(res.headersSent)return;
     if(isLcwAiError(err))return res.status(err.statusCode || 502).json({ok:false,...publicError(err)});
-    const code=/^OFFICE_|^AI_AUTOMATION_/.test(err?.code || '')?err.code:'OFFICE_INTERNAL';
+    const code=/^OFFICE_|^AI_AUTOMATION_|^TEST_REPORT_[A-Z_]+$|^CHECKLIST_REVISION_CONFLICT$/.test(err?.code || '')?err.code:'OFFICE_INTERNAL';
     return res.status(code==='OFFICE_INTERNAL'?500:(err.statusCode || 400)).json({ok:false,code,error:code});
   }
   const wrap = fn => async(req,res)=>{try{await fn(req,res);}catch(err){fail(res,err);}};
@@ -31,6 +31,19 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.get(base+'/notifications',wrap(async(req,res)=>res.json({ok:true,...await service.notifications(req.currentUser,{timeZone:req.query.timeZone})})));
   app.get(base+'/state',wrap(async(req,res)=>res.json({ok:true,state:await service.state(req.currentUser)})));
   app.get(base+'/tasks/catalog',wrap(async(req,res)=>res.json({ok:true,tools:await service.taskCatalog(req.currentUser,req.query.agentId)})));
+  app.post(base+'/quality/intake',express.json({limit:'160mb'}),wrap(async(req,res)=>{
+    const owner=userAccess.profileById(req.currentUser.id),stamp=JSON.stringify(userAccess.publicProfile(owner));
+    const check=async()=>{if(JSON.stringify(userAccess.publicProfile(userAccess.profileById(owner.id)))!==stamp||!(await service.taskCatalog(owner,req.body?.agentId)).some(tool=>tool.id==='quality.inspect'))throw error('OFFICE_TOOL_FORBIDDEN',403);};
+    await check();
+    const parsed=await deps.qualityService.parse(owner,req.body?.files,{durable:true});
+    try {
+      await check();
+      if(req.body?.useAi===true){await deps.qualityService.extractAi(owner,parsed.sessionId,{engine:service.engineOf(),lang:req.body.lang,assertAuthority:()=>{if(JSON.stringify(userAccess.publicProfile(userAccess.profileById(owner.id)))!==stamp)throw error('OFFICE_TOOL_FORBIDDEN',403);}});}
+      await check();const preview=await deps.qualityTools.inspect(owner,parsed.sessionId);await check();
+      audit(req,'AGENT_QUALITY_INTAKE',parsed.sessionId,{files:parsed.files.length,aiRequested:req.body?.useAi===true});
+      res.json({ok:true,...parsed,preview,canDraft:(await service.taskCatalog(owner,req.body.agentId)).some(tool=>tool.id==='quality.fail.drafts')});
+    }catch(err){require('../lib/test-reports/staging').dropSession(parsed.sessionId);throw err;}
+  }));
   app.post(base+'/tasks',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskCreate(req.currentUser,req.body||{})})));
   app.post(base+'/tasks/plan',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskPlan(req.currentUser,req.body||{})})));
   app.post(base+'/tasks/:id/prepare',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskPrepare(req.currentUser,req.params.id)})));
@@ -45,6 +58,13 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.post(base+'/cp/jobs/:id/execute',json,wrap(async(req,res)=>res.json({ok:true,job:await service.cpExecute(req.currentUser,req.params.id,req.body||{})})));
   app.post(base+'/cp/jobs/:id/rollback',json,wrap(async(req,res)=>res.json({ok:true,job:await service.cpRollback(req.currentUser,req.params.id,req.body||{})})));
   app.get(base+'/cp/jobs/:id/drafts/:filename',wrap(async(req,res)=>res.download(await service.cpDraft(req.currentUser,req.params.id,req.params.filename),req.params.filename)));
+  app.get(base+'/tasks/:id/drafts/:filename',wrap(async(req,res)=>{
+    const job=await service.store.get(req.currentUser.id,'job',req.params.id),tools=await service.taskCatalog(req.currentUser,job.profileIds[0]);
+    const step=job.steps?.find(step=>step.toolId==='quality.fail.drafts'&&step.status==='completed'&&step.result?.emails?.some(mail=>mail.filename===req.params.filename));
+    if(!step||!tools.some(tool=>tool.id===step.toolId))throw error('OFFICE_TOOL_FORBIDDEN',403);
+    const file=deps.qualityDraftPath(req.currentUser.id,req.params.filename);if(!file)throw error('OFFICE_NOT_FOUND',404);
+    res.download(file,req.params.filename);
+  }));
   app.post(base+'/profiles',json,wrap(async(req,res)=>res.status(201).json({ok:true,profile:await service.createProfile(req.currentUser,req.body || {})})));
   app.put(base+'/profiles/:id',json,wrap(async(req,res)=>res.json({ok:true,profile:await service.updateProfile(req.currentUser,req.params.id,req.body || {})})));
   app.delete(base+'/profiles/:id',wrap(async(req,res)=>{

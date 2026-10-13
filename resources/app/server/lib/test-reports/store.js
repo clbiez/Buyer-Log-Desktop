@@ -93,10 +93,11 @@ function actorInfo(actor) {
    items: [{ report, orderKey, itemId }]  (report sunucunun kendi ayrıştırması)
    attach(fileEntry, report, item) → checklist eki meta | null
    Aynı karar ikinci kez gelirse yeni karar sayılmaz (decisionKey). */
-function commit(items, typeMap, actor, attach) {
+function commit(items, typeMap, actor, attach, options = {}) {
   const who = actorInfo(actor);
   return withFileLeaseSync(FILE, () => {
     const store = read();
+    if (options.expectedRevision != null && store.revision !== options.expectedRevision) throw Object.assign(new Error('Test report revision changed.'), { code:'TEST_REPORT_REVISION_CONFLICT', statusCode:409 });
     const at = new Date().toISOString();
     const results = [];
     for (const item of items) {
@@ -142,4 +143,20 @@ function commit(items, typeMap, actor, attach) {
   });
 }
 
-module.exports = { FILE, SCHEMA_VERSION, read: () => read(), publicPayload, commit, tasks };
+function restore(receipt, actor, options = {}) {
+  return withFileLeaseSync(FILE, () => {
+    const applyInverse = () => {
+    const current = read();
+    if (current.revision !== receipt.expectedRevision) throw Object.assign(new Error('Test report revision changed.'), { code:'TEST_REPORT_REVISION_CONFLICT', statusCode:409 });
+    for (const [id, previous] of Object.entries(receipt.records)) {
+      if (previous.report == null) delete current.reports[id]; else current.reports[id] = previous.report;
+      if (previous.link == null) delete current.links[id]; else current.links[id] = previous.link;
+    }
+    current.events.push({type:'agent-report-undo', at:new Date().toISOString(), by:actorInfo(actor), talepNos:Object.keys(receipt.records)});
+    write(current);
+    return {verified:true, revision:current.revision};
+    };
+    return options.withDependencies ? options.withDependencies(applyInverse) : applyInverse();
+  });
+}
+module.exports = { FILE, SCHEMA_VERSION, read: () => read(), publicPayload, commit, restore, tasks };

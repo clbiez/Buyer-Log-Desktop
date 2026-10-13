@@ -101,5 +101,6 @@ test('LCW AI tek ortak yoldan çağrılır; öneri onaysız uygulanmaz', () => {
   assert.match(ui, /E\(\)\.parseReviews\(/, 'AI incelemesi motorun doğrulayıcısından geçer');
   assert.match(ui, /T\('LCW AI bağlı değil', 'LCW AI is not connected'\)/);
   const routes = read('server/routes/test-report-routes.js');
-  assert.match(routes, /Engine\.reportFromAiExtract\(body\.data/, 'AI okuması sunucuda doğrulanır');
+  assert.match(routes, /service\.acceptAi\(req\.currentUser/, 'UI aynı sunucu servisini kullanır');
+  assert.match(read('server/lib/test-reports/service.js'), /Engine\.reportFromAiExtract\(body\.data/, 'AI okuması ortak sunucu servisinde doğrulanır');
 });
