@@ -14597,10 +14597,11 @@ let topRefreshMenuSequence=0;
 /* v20260929 — Yenileme grupları üst menüde ayrı satır değildir; menü filtre
    bağına göre satır üretir (v20260930). Veri Yönetimi grup kaydettiğinde
    çağırdığı önbellek kancası uyumluluk için korunur. */
-window.BLInvalidateRefreshGroups=items=>{ window.BL_REFRESH_GROUPS=Array.isArray(items)?items:null; };
+window.BLInvalidateRefreshGroups=items=>{ window.BL_REFRESH_GROUPS=Array.isArray(items)?items:null; authoritativeLinkedRefreshTargets=null; };
 function closeTopRefreshMenu(){ topRefreshMenuSequence++;document.getElementById('_topRefreshMenu')?.remove(); if(topRefreshMenuCleanup){topRefreshMenuCleanup();topRefreshMenuCleanup=null;} }
 async function openTopRefreshMenu(anchor){
   closeTopRefreshMenu();
+  if(window.BL_REFRESH_BUSY){openRefreshStagesModal();return;}
   const requestSequence=topRefreshMenuSequence;
   try{await syncLinkedRefreshMembers();}
   catch(error){
@@ -14624,10 +14625,10 @@ async function openTopRefreshMenu(anchor){
   /* v7.26 — SAYFANIN SON GÜNCELLENME SAATİ MENÜDE YAZAR (kullanıcı talebi).
      Hem "3 dk önce" gibi okunur bir ifade hem de satırdaki en eski sayfanın saati yazılır. */
   const stamp=targets=>{
-    const times=targets.map(item=>(sourceStatus[item]||{}).at).filter(Boolean);
+    const times=targets.map(item=>(sourceStatus[item]||{}).at).filter(Boolean)
+      .map(value=>new Date(value).getTime()).filter(Number.isFinite);
     if(!times.length) return appLang==='en'?'not refreshed yet':'henüz yenilenmedi';
-    const oldest=times.map(value=>new Date(value).getTime()).filter(Number.isFinite).sort((a,b)=>a-b)[0];
-    const clock=new Date(oldest);
+    const clock=new Date(Math.min(...times));
     const time=Number.isFinite(clock.getTime())?clock.toLocaleTimeString(appLang==='en'?'en-GB':'tr-TR',{hour:'2-digit',minute:'2-digit'}):'';
     return `${sourceRelativeTime(clock.toISOString())}${time?` · ${time}`:''}`;
   };
