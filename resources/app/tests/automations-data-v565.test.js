@@ -21,8 +21,8 @@ test('v5.65 condition builder is searchable, supports field value suggestions an
   assert.equal(recipe.filters[0].operator,'changed');
   assert.match(SERVER,/automationBuildChangeBaseline/);
   assert.match(SERVER,/automationNextChangeBaseline/);
-  assert.match(SERVER,/baseline_created/);
-  assert.match(SERVER,/no_change/);
+  assert.match(fs.readFileSync(path.join(ROOT,'server','lib','automation-execution-service.js'),'utf8'),/baseline_created/);
+  assert.match(fs.readFileSync(path.join(ROOT,'server','lib','automation-execution-service.js'),'utf8'),/no_change/);
 });
 
 test('v5.65 automation field discovery hides internal keys and exposes raw ASAS and IAS database sources',()=>{

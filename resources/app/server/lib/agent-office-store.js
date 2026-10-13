@@ -106,6 +106,14 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
     if (!doc || doc.ownerId !== owner || doc.deleted) throw error('OFFICE_NOT_FOUND', 404);
     return copy(doc);
   }
+  async function withProfileGuard(owner,key,revision,work){
+    return db(owner).privateRecordTransaction(state=>{
+      const agent=state.records['profile:'+key]?.doc;
+      if(!agent||agent.ownerId!==owner||agent.deleted||agent.revision!==revision)throw error('OFFICE_PREVIEW_CHANGED',409);
+      const result=work(copy(agent));if(result&&typeof result.then==='function')throw error('OFFICE_TASK_RECONCILE',409);
+      return {result};
+    });
+  }
   async function save(owner, kind, raw, { expectedRevision, immutable = false } = {}) {
     if (!KINDS.has(kind)) throw error('OFFICE_KIND_INVALID');
     const key = raw.id || id(), database = db(owner);
@@ -259,7 +267,7 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
       return {records:changed, conflicts, result:{applied}};
     });
   }
-  return { db, records, get, save, state, createProfile, updateProfile, learn, editMemory, conversation, appendMessage, messages, selectContext, searchHistory, exportTraining, importRecords,
+  return { db, records, get, withProfileGuard, save, state, createProfile, updateProfile, learn, editMemory, conversation, appendMessage, messages, selectContext, searchHistory, exportTraining, importRecords,
     normalizeOffice, defaultOffice, AREAS, DEFAULT_FURNITURE };
 }
 

@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
+const {withFileLeaseSync}=require('./shared-file-transaction');
 
 const STORE_FILE = path.join(SERVER_DATA_ROOT, 'automation-recipes.json');
 const SCHEMA_VERSION = 4;
@@ -25,7 +26,7 @@ function uniqueEmails(value){
   raw.forEach(item=>{const email=clean(item).toLowerCase();if(!email||seen.has(email)||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return;seen.add(email);out.push(email.slice(0,254));});
   return out.slice(0,120);
 }
-function defaultStore(){ return { schemaVersion:SCHEMA_VERSION, recipes:[], runs:[], emailGroups:[], changeBaselines:{}, revision:0, updatedAt:null }; }
+function defaultStore(){ return { schemaVersion:SCHEMA_VERSION, recipes:[], runs:[], emailGroups:[], changeBaselines:{}, agentScheduleGrants:{}, revision:0, updatedAt:null }; }
 
 function normalizeFilter(raw){
   const item=raw&&typeof raw==='object'?raw:{};
@@ -201,7 +202,9 @@ function normalizeRun(raw){
   const item=raw&&typeof raw==='object'?raw:{};
   return {
     id:clean(item.id)||id('auto_run'), ownerId:clean(item.ownerId), recipeId:clean(item.recipeId), recipeName:clean(item.recipeName).slice(0,180),
-    status:['running','completed','failed','dry_run'].includes(clean(item.status))?clean(item.status):'running', dryRun:item.dryRun===true,
+    status:['reserved','running','completed','partial','interrupted','skipped','failed','dry_run'].includes(clean(item.status))?clean(item.status):'running', dryRun:item.dryRun===true,
+    scopeRecipe:item.scopeRecipe&&typeof item.scopeRecipe==='object'?clone(item.scopeRecipe):null,
+    executor:item.executor&&typeof item.executor==='object'?clone(item.executor):null,
     trigger:['manual','schedule','missed'].includes(clean(item.trigger))?clean(item.trigger):'manual', scheduleKey:clean(item.scheduleKey).slice(0,120),
     source:clean(item.source), matched:Math.max(0,Math.floor(num(item.matched,0))), processed:Math.max(0,Math.floor(num(item.processed,0))), failed:Math.max(0,Math.floor(num(item.failed,0))),
     message:clean(item.message).slice(0,3000), result:item.result==null?null:clone(item.result),
@@ -222,6 +225,7 @@ function loadStore(){
     store.runs=(Array.isArray(raw&&raw.runs)?raw.runs:[]).slice(0,MAX_RUNS).map(normalizeRun);
     store.emailGroups=(Array.isArray(raw&&raw.emailGroups)?raw.emailGroups:[]).slice(0,MAX_EMAIL_GROUPS).map(normalizeEmailGroup);
     store.changeBaselines=raw&&raw.changeBaselines&&typeof raw.changeBaselines==='object'&&!Array.isArray(raw.changeBaselines)?clone(raw.changeBaselines):{};
+    store.agentScheduleGrants=raw&&raw.agentScheduleGrants&&typeof raw.agentScheduleGrants==='object'?clone(raw.agentScheduleGrants):{};
     return store;
     },
     restore:value=>atomicWriteJson(STORE_FILE,value),
@@ -230,19 +234,22 @@ function loadStore(){
 // baselineRevision verilirse ve diskteki güncel revizyon bundan farklıysa (dosya
 // mutate()'in kendi loadStore()'u ile bu yazım arasında başka bir çağrı tarafından
 // değiştirildiyse) yazmadan null döner — mutate() bunu görüp yeniden okuyup dener.
-function saveStore(store,baselineRevision){
-  if(baselineRevision!=null && loadStore().revision!==baselineRevision) return null;
-  const next={schemaVersion:SCHEMA_VERSION,recipes:(store.recipes||[]).slice(0,MAX_RECIPES),runs:(store.runs||[]).slice(0,MAX_RUNS),emailGroups:(store.emailGroups||[]).slice(0,MAX_EMAIL_GROUPS),changeBaselines:store.changeBaselines&&typeof store.changeBaselines==='object'?store.changeBaselines:{},revision:Math.max(0,num(store.revision,0))+1,updatedAt:iso()};
+function saveStore(store,baselineRevision,options={}){return withFileLeaseSync(STORE_FILE,()=>{
+  const current=loadStore();options.assertAuthority?.();
+  if(options.expectedStoreRevision!=null&&current.revision!==options.expectedStoreRevision)throw Object.assign(new Error('Automation changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+  if(baselineRevision!=null && current.revision!==baselineRevision) return null;
+  const next={schemaVersion:SCHEMA_VERSION,recipes:(store.recipes||[]).slice(0,MAX_RECIPES),runs:(store.runs||[]).slice(0,MAX_RUNS),emailGroups:(store.emailGroups||[]).slice(0,MAX_EMAIL_GROUPS),changeBaselines:store.changeBaselines&&typeof store.changeBaselines==='object'?store.changeBaselines:{},agentScheduleGrants:store.agentScheduleGrants||{},revision:Math.max(0,num(store.revision,0))+1,updatedAt:iso()};
   atomicWriteJson(STORE_FILE,next);return next;
+ });
 }
 // Tek dosyada tüm kullanıcıların verisi tutulduğu için (ör. 60sn'lik zamanlayıcı
 // runScheduledAutomations ile kullanıcı tetiklemesi çakışabilir) oku-değiştir-yaz
 // arasına başka bir yazma girerse kayıp güncelleme olmaması için "compare-and-swap"
 // yeniden deneme: çakışma tespit edilirse dosya yeniden okunup fn baştan uygulanır.
 const MAX_MUTATE_ATTEMPTS=8;
-function mutate(fn){
+function mutate(fn,options={}){
   for(let attempt=0;attempt<MAX_MUTATE_ATTEMPTS;attempt++){
-    const store=loadStore(),baselineRevision=store.revision,result=fn(store),saved=saveStore(store,baselineRevision);
+    const store=loadStore(),baselineRevision=store.revision,result=fn(store),saved=saveStore(store,baselineRevision,options);
     if(saved) return{result:clone(result),revision:saved.revision};
   }
   throw Object.assign(new Error('Otomasyon kaydı çok sık aynı anda değiştiriliyor, işlem tekrar denenemedi. Lütfen tekrar deneyin.'),{statusCode:409,code:'AUTOMATION_STORE_CONTENTION'});
@@ -250,10 +257,10 @@ function mutate(fn){
 function stateForOwner(ownerId){const key=clean(ownerId),store=loadStore();return{recipes:store.recipes.filter(r=>r.ownerId===key).map(clone),runs:store.runs.filter(r=>r.ownerId===key).slice(0,100).map(clone),emailGroups:store.emailGroups.map(clone),revision:store.revision,updatedAt:store.updatedAt};}
 function recipeForOwner(ownerId,recipeId){return stateForOwner(ownerId).recipes.find(r=>r.id===clean(recipeId))||null;}
 function allRecipes(){return loadStore().recipes.map(clone);}
-function createRecipe(ownerId,value){return mutate(store=>{const now=iso(),recipe=normalizeRecipe({...value,id:id('recipe'),ownerId,createdAt:now,updatedAt:now,revision:1},ownerId);store.recipes.unshift(recipe);if(store.recipes.length>MAX_RECIPES)store.recipes.length=MAX_RECIPES;return recipe;});}
-function updateRecipe(ownerId,recipeId,value){return mutate(store=>{const index=store.recipes.findIndex(r=>r.id===clean(recipeId)&&r.ownerId===clean(ownerId));if(index<0)throw Object.assign(new Error('Otomasyon bulunamadı.'),{statusCode:404,code:'AUTOMATION_NOT_FOUND'});const prev=store.recipes[index],recipe=normalizeRecipe({...prev,...value,id:prev.id,ownerId:prev.ownerId,createdAt:prev.createdAt,updatedAt:iso(),revision:prev.revision+1},prev.ownerId);store.recipes[index]=recipe;return recipe;});}
-function deleteRecipe(ownerId,recipeId){return mutate(store=>{const index=store.recipes.findIndex(r=>r.id===clean(recipeId)&&r.ownerId===clean(ownerId));if(index<0)throw Object.assign(new Error('Otomasyon bulunamadı.'),{statusCode:404,code:'AUTOMATION_NOT_FOUND'});const removed=store.recipes.splice(index,1)[0];if(store.changeBaselines&&typeof store.changeBaselines==='object')delete store.changeBaselines[removed.id];return removed;});}
-function createRun(ownerId,recipe,{dryRun=false,source='',matched=0,trigger='manual',scheduleKey=''}={}){return mutate(store=>{const run=normalizeRun({id:id('auto_run'),ownerId,recipeId:recipe.id,recipeName:recipe.name,status:dryRun?'dry_run':'running',dryRun,trigger,scheduleKey,source,matched,createdAt:iso(),updatedAt:iso()});store.runs.unshift(run);if(store.runs.length>MAX_RUNS)store.runs.length=MAX_RUNS;return run;});}
+function createRecipe(ownerId,value,options={}){return mutate(store=>{if(store.recipes.length>=MAX_RECIPES)throw Object.assign(new Error('Automation limit reached.'),{code:'AUTOMATION_RECIPE_LIMIT',statusCode:409});const now=iso(),recipe=normalizeRecipe({...value,id:id('recipe'),ownerId,createdAt:now,updatedAt:now,revision:1},ownerId);store.recipes.unshift(recipe);return recipe;},options);}
+function updateRecipe(ownerId,recipeId,value,options={}){return mutate(store=>{const index=store.recipes.findIndex(r=>r.id===clean(recipeId)&&r.ownerId===clean(ownerId));if(index<0)throw Object.assign(new Error('Otomasyon bulunamadı.'),{statusCode:404,code:'AUTOMATION_NOT_FOUND'});const prev=store.recipes[index];if(options.expectedRecipeRevision!=null&&prev.revision!==options.expectedRecipeRevision)throw Object.assign(new Error('Automation changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});const recipe=normalizeRecipe({...prev,...value,schedule:{...prev.schedule,...value.schedule,lastKey:prev.schedule.lastKey,lastRunAt:prev.schedule.lastRunAt},id:prev.id,ownerId:prev.ownerId,createdAt:prev.createdAt,updatedAt:iso(),revision:prev.revision+1},prev.ownerId);store.recipes[index]=recipe;if(options.scheduleGrant!==undefined){if(options.scheduleGrant)store.agentScheduleGrants[recipe.id]=options.scheduleGrant;else delete store.agentScheduleGrants[recipe.id];}return recipe;},options);}
+function deleteRecipe(ownerId,recipeId,options={}){return mutate(store=>{const index=store.recipes.findIndex(r=>r.id===clean(recipeId)&&r.ownerId===clean(ownerId));if(index<0)throw Object.assign(new Error('Otomasyon bulunamadı.'),{statusCode:404,code:'AUTOMATION_NOT_FOUND'});if(options.expectedRecipeRevision!=null&&store.recipes[index].revision!==options.expectedRecipeRevision)throw Object.assign(new Error('Automation changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});const removed=store.recipes.splice(index,1)[0];delete store.agentScheduleGrants[removed.id];if(store.changeBaselines&&typeof store.changeBaselines==='object')delete store.changeBaselines[removed.id];return removed;},options);}
+function createRun(ownerId,recipe,{dryRun=false,source='',matched=0,trigger='manual',scheduleKey=''}={}){return mutate(store=>{const run=normalizeRun({id:id('auto_run'),ownerId,recipeId:recipe.id,recipeName:recipe.name,scopeRecipe:recipe,status:dryRun?'dry_run':'running',dryRun,trigger,scheduleKey,source,matched,createdAt:iso(),updatedAt:iso()});store.runs.unshift(run);if(store.runs.length>MAX_RUNS)store.runs.length=MAX_RUNS;return run;});}
 function updateRun(ownerId,runId,patch){return mutate(store=>{const index=store.runs.findIndex(r=>r.id===clean(runId)&&r.ownerId===clean(ownerId));if(index<0)throw Object.assign(new Error('Otomasyon çalışması bulunamadı.'),{statusCode:404,code:'AUTOMATION_RUN_NOT_FOUND'});const prev=store.runs[index],next=normalizeRun({...prev,...patch,id:prev.id,ownerId:prev.ownerId,recipeId:prev.recipeId,recipeName:prev.recipeName,createdAt:prev.createdAt,updatedAt:iso()});store.runs[index]=next;return next;});}
 function replaceEmailGroups(groups,actor){return mutate(store=>{store.emailGroups=(Array.isArray(groups)?groups:[]).slice(0,MAX_EMAIL_GROUPS).map(item=>normalizeEmailGroup({...item,updatedAt:iso(),updatedBy:clean(actor&&actor.id||actor)}));return store.emailGroups;});}
 
@@ -270,7 +277,7 @@ function setChangeBaseline(ownerId,recipeId,baseline){
     if(!recipe)throw Object.assign(new Error('Otomasyon bulunamadı.'),{statusCode:404,code:'AUTOMATION_NOT_FOUND'});
     if(!store.changeBaselines||typeof store.changeBaselines!=='object')store.changeBaselines={};
     const value=baseline&&typeof baseline==='object'?clone(baseline):{};
-    store.changeBaselines[rid]={...value,updatedAt:iso()};
+    store.changeBaselines[rid]={...value,updatedAt:iso()};recipe.revision++;recipe.updatedAt=iso();
     return store.changeBaselines[rid];
   });
 }
@@ -278,11 +285,24 @@ function clearChangeBaseline(ownerId,recipeId){
   return mutate(store=>{
     const owner=clean(ownerId),rid=clean(recipeId),recipe=store.recipes.find(r=>r.id===rid&&r.ownerId===owner);
     if(!recipe)return null;
-    if(store.changeBaselines&&typeof store.changeBaselines==='object')delete store.changeBaselines[rid];
+    if(store.changeBaselines&&typeof store.changeBaselines==='object')delete store.changeBaselines[rid];recipe.revision++;recipe.updatedAt=iso();
     return null;
   });
 }
 
-function markSchedule(ownerId,recipeId,key){return mutate(store=>{const index=store.recipes.findIndex(r=>r.id===clean(recipeId)&&r.ownerId===clean(ownerId));if(index<0)return null;const recipe=store.recipes[index];recipe.schedule={...recipe.schedule,lastKey:clean(key),lastRunAt:iso()};recipe.updatedAt=iso();store.recipes[index]=normalizeRecipe(recipe,recipe.ownerId);return store.recipes[index];});}
+function markSchedule(ownerId,recipeId,key,options={}){return mutate(store=>{
+ const index=store.recipes.findIndex(r=>r.id===clean(recipeId)&&r.ownerId===clean(ownerId));if(index<0)return null;
+ const recipe=store.recipes[index],now=options.now||new Date();if(recipe.schedule.lastKey===clean(key)||store.runs.some(run=>run.ownerId===clean(ownerId)&&run.recipeId===recipe.id&&run.scheduleKey===clean(key))||options.expectedRecipeRevision!=null&&recipe.revision!==options.expectedRecipeRevision)return null;
+ if(options.strict){const schedule=require('./automation-schedule-service'),grant=store.agentScheduleGrants[recipe.id],due=schedule.automationDueOccurrence(recipe,now,grant),actualKey=schedule.automationScheduleKey(recipe,now,grant);if(options.allowMissed?due?.key!==key:actualKey!==key||due?.key===key&&!schedule.automationIsWithinGrace(due))return null;}
+ recipe.schedule={...recipe.schedule,lastKey:clean(key),lastRunAt:iso(now)};recipe.updatedAt=iso(now);recipe.revision++;store.recipes[index]=normalizeRecipe(recipe,recipe.ownerId);
+ const run=normalizeRun({id:id('auto_run'),ownerId,recipeId:recipe.id,recipeName:recipe.name,scopeRecipe:recipe,status:options.skip?'skipped':'reserved',trigger:options.allowMissed?'missed':'schedule',scheduleKey:key,source:recipe.source,executor:options.executor||{pid:process.pid,host:require('os').hostname(),instanceId:'legacy',expiresAt:iso(Date.now()+120000)},createdAt:iso(now),finishedAt:options.skip?iso(now):''});store.runs.unshift(run);if(store.runs.length>MAX_RUNS)store.runs.length=MAX_RUNS;
+ return {...store.recipes[index],reservation:run};
+ },options);}
+function withEffectGuard(check,work){return withFileLeaseSync(STORE_FILE,()=>{check();return work();});}
+function reconcileScheduleReservations(){const stale=loadStore().runs.filter(run=>['reserved','running'].includes(run.status)&&run.scheduleKey&&run.executor&&(!Number.isFinite(Date.parse(run.executor.expiresAt))||Date.parse(run.executor.expiresAt)<=Date.now()||run.executor.host===require('os').hostname()&&!processAlive(run.executor.pid)));if(!stale.length)return [];
+ return mutate(store=>{const changed=[];for(const run of store.runs)if(stale.some(item=>item.id===run.id)&&['reserved','running'].includes(run.status)){run.status='interrupted';run.message='AUTOMATION_RECONCILE_REQUIRED';run.finishedAt=iso();changed.push(run.id);}return changed;}).result;
+}
+function processAlive(pid){if(!Number.isInteger(Number(pid))||Number(pid)<=0)return false;try{process.kill(Number(pid),0);return true;}catch(err){return err.code==='EPERM';}}
 
-module.exports={STORE_FILE,SCHEMA_VERSION,normalizeRecipe,normalizeJoin,normalizeRun,normalizeEmailGroup,stateForOwner,recipeForOwner,allRecipes,createRecipe,updateRecipe,deleteRecipe,createRun,updateRun,replaceEmailGroups,changeBaselineForRecipe,setChangeBaseline,clearChangeBaseline,markSchedule};
+
+module.exports={loadStore,MAX_RECIPES,mutate,STORE_FILE,SCHEMA_VERSION,normalizeRecipe,normalizeJoin,normalizeRun,normalizeEmailGroup,stateForOwner,recipeForOwner,allRecipes,createRecipe,updateRecipe,deleteRecipe,createRun,updateRun,replaceEmailGroups,changeBaselineForRecipe,setChangeBaseline,clearChangeBaseline,markSchedule,withEffectGuard,reconcileScheduleReservations};

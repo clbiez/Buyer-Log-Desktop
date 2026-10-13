@@ -13,7 +13,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   function fail(res,err) {
     if(res.headersSent)return;
     if(isLcwAiError(err))return res.status(err.statusCode || 502).json({ok:false,...publicError(err)});
-    const code=/^OFFICE_|^AI_AUTOMATION_|^TEST_REPORT_[A-Z_]+$|^CHECKLIST_REVISION_CONFLICT$/.test(err?.code || '')?err.code:'OFFICE_INTERNAL';
+    const code=/^OFFICE_|^AI_AUTOMATION_|^AUTOMATION_[A-Z_]+$|^TEST_REPORT_[A-Z_]+$|^CHECKLIST_REVISION_CONFLICT$/.test(err?.code || '')?err.code:'OFFICE_INTERNAL';
     return res.status(code==='OFFICE_INTERNAL'?500:(err.statusCode || 400)).json({ok:false,code,error:code});
   }
   const wrap = fn => async(req,res)=>{try{await fn(req,res);}catch(err){fail(res,err);}};
@@ -69,9 +69,11 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.post(base+'/cp/jobs/:id/rollback',json,wrap(async(req,res)=>res.json({ok:true,job:await service.cpRollback(req.currentUser,req.params.id,req.body||{})})));
   app.get(base+'/cp/jobs/:id/drafts/:filename',wrap(async(req,res)=>res.download(await service.cpDraft(req.currentUser,req.params.id,req.params.filename),req.params.filename)));
   app.get(base+'/tasks/:id/drafts/:filename',wrap(async(req,res)=>{
-    const job=await service.store.get(req.currentUser.id,'job',req.params.id),tools=await service.taskCatalog(req.currentUser,job.profileIds[0]);
-    const step=job.steps?.find(step=>step.toolId==='quality.fail.drafts'&&step.status==='completed'&&step.result?.emails?.some(mail=>mail.filename===req.params.filename));
+    const job=await service.store.get(req.currentUser.id,'job',req.params.id);
+    const step=job.steps?.find(step=>['quality.fail.drafts','automation.recipe.execute'].includes(step.toolId)&&['completed','partial'].includes(step.status)&&step.result?.emails?.some(mail=>mail.filename===req.params.filename));
+    const tools=step?await service.taskCatalog(req.currentUser,step.agentId):[];
     if(!step||!tools.some(tool=>tool.id===step.toolId))throw error('OFFICE_TOOL_FORBIDDEN',403);
+    if(step.toolId==='automation.recipe.execute')await deps.automationDraftAccess(req.currentUser,job,step);
     const file=deps.qualityDraftPath(req.currentUser.id,req.params.filename);if(!file)throw error('OFFICE_NOT_FOUND',404);
     res.download(file,req.params.filename);
   }));

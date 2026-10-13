@@ -128,7 +128,7 @@
     return {
       active:recipeList().filter(item=>item.enabled!==false&&item.schedule&&item.schedule.enabled).length,
       emails,
-      failed:recent.filter(run=>run.status==='failed').length,
+      failed:recent.filter(run=>['failed','partial','interrupted'].includes(run.status)).length,
     };
   }
   /* v6.37 — Oluşturma yolu seçimi. Kullanıcının iki farklı senaryosu var:
@@ -232,7 +232,7 @@
     const runBadge=item=>{
       const run=lastRunFor(item);
       if(!run)return `<em class="autoRecipeRun none">${esc(tr('Henüz çalışmadı','Never run'))}</em>`;
-      const label=run.status==='failed'?tr('hata','failed'):run.status==='dry_run'?tr('deneme','dry run'):tr('tamam','ok');
+      const label=runStatus(run.status);
       return `<em class="autoRecipeRun ${esc(run.status)}">${esc(label)} · ${esc(fmtDate(run.createdAt))}</em>`;
     };
     const nextBadge=item=>{
@@ -249,7 +249,8 @@
     const stats=dashboardStats();
     host.innerHTML=`<span class="autoStatChip"><b>${stats.active}</b>${esc(tr('planlı otomasyon','scheduled'))}</span><span class="autoStatChip"><b>${stats.emails}</b>${esc(tr('son 7 günde e-posta','emails last 7d'))}</span><span class="autoStatChip${stats.failed?' isWarn':''}"><b>${stats.failed}</b>${esc(tr('hata','failed'))}</span>`;
   }
-  function renderRuns(){const host=document.getElementById('autoRunList');if(!host)return;const runs=runList().slice(0,14);host.innerHTML=runs.length?runs.map(run=>`<div class="autoRun"><span class="autoRunDot ${esc(run.status)}"></span><div><b>${esc(run.recipeName||tr('Otomasyon','Automation'))}</b><small>${esc(run.trigger==='schedule'?tr('planlı','scheduled'):run.status)} · ${fmtDate(run.createdAt)}</small>${run.message?`<em>${esc(run.message)}</em>`:''}${run.result&&run.result.email&&run.result.email.draftUrl?`<a class="autoRunLink" href="${esc(run.result.email.draftUrl)}">${esc(tr('E-posta taslağı','Email draft'))}</a>`:''}</div><strong>${Number(run.processed)||0}${run.failed?` / <u>${Number(run.failed)}</u>`:''}</strong></div>`).join(''):`<div class="autoEmpty small">${esc(tr('Çalışma geçmişi yok.','No run history.'))}</div>`;}
+  function runStatus(status){return ({reserved:tr('Bekliyor','Pending'),running:tr('Çalışıyor','Running'),completed:tr('Tamamlandı','Completed'),partial:tr('Kısmen tamamlandı','Partially completed'),interrupted:tr('Yarım kaldı; kontrol gerekli','Interrupted; review required'),skipped:tr('Atlandı','Skipped'),failed:tr('Başarısız','Failed'),dry_run:tr('Deneme','Dry run')})[status]||status;}
+  function renderRuns(){const host=document.getElementById('autoRunList');if(!host)return;const runs=runList().slice(0,14);host.innerHTML=runs.length?runs.map(run=>`<div class="autoRun"><span class="autoRunDot ${esc(run.status)}"></span><div><b>${esc(run.recipeName||tr('Otomasyon','Automation'))}</b><small>${esc((run.trigger==='schedule'?tr('planlı','scheduled')+' · ':'')+runStatus(run.status))} · ${fmtDate(run.createdAt)}</small>${run.message?`<em>${esc(run.message==='AUTOMATION_RECONCILE_REQUIRED'?tr('Uygulama çalışma sırasında kapandı veya işlem süresi doldu. Gerçek sonucu kontrol edin; otomatik tekrar yapılmadı.','The app closed during execution or the reservation expired. Verify the actual result; it was not automatically replayed.'):run.message==='AUTOMATION_NO_MATCH'?tr('Filtrelere uyan kayıt yok.','No matching records.'):run.message)}</em>`:''}${run.result&&run.result.email&&run.result.email.draftUrl?`<a class="autoRunLink" href="${esc(run.result.email.draftUrl)}">${esc(tr('E-posta taslağı','Email draft'))}</a>`:''}</div><strong>${Number(run.processed)||0}${run.failed?` / <u>${Number(run.failed)}</u>`:''}</strong></div>`).join(''):`<div class="autoEmpty small">${esc(tr('Çalışma geçmişi yok.','No run history.'))}</div>`;}
   function filterOperatorOptions(selected){const opts=[['eq',tr('eşittir','equals')],['neq',tr('eşit değil','is not')],['contains',tr('içerir','contains')],['starts_with',tr('ile başlar','starts with')],['in',tr('şunlardan biri (virgülle)','is one of (comma list)')],['empty',tr('boş','is empty')],['not_empty',tr('dolu','is not empty')],['changed',tr('Değiştiğinde','When changed')],['gt',tr('> büyük / sonra','> greater / after')],['gte',tr('≥ en az / o gün ya da sonra','≥ at least / on or after')],['lt',tr('< küçük / önce','< less / before')],['lte',tr('≤ en fazla / o gün ya da önce','≤ at most / on or before')]];return opts.map(([v,l])=>`<option value="${v}"${selected===v?' selected':''}>${esc(l)}</option>`).join('');}
   function fieldOptions(source,selected,blank=tr('Alan seç','Choose field')){const fields=fieldCache.get(source)||[];return `<option value="">${esc(blank)}</option>${fields.map(v=>`<option value="${esc(v)}"${v===selected?' selected':''}>${esc(v)}</option>`).join('')}`;}
   function fieldListHtml(source,id){const fields=fieldCache.get(source)||[];return `<datalist id="${esc(id)}">${fields.map(v=>`<option value="${esc(v)}"></option>`).join('')}</datalist>`;}

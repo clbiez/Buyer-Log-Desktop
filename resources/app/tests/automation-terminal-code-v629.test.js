@@ -33,7 +33,7 @@ test('v6.29 terminal code is a page-scoped browser step and can run without reco
   assert.equal(step.value,'return document.title;');
   assert.deepEqual(step.targets,[]);
   assert.match(SERVER,/action:'script', value:recipe\.terminalCode/);
-  assert.match(SERVER,/web adımlarını kaydedin veya Terminal Kodu yazın/);
+  assert.match(fs.readFileSync(path.join(root,'server','lib','automation-execution-service.js'),'utf8'),/web adımlarını kaydedin veya Terminal Kodu yazın/);
   assert.match(CONNECTOR,/async function\(item,index\)/);
   assert.match(CONNECTOR,/BROWSER_SCRIPT_FAILED/);
 });
