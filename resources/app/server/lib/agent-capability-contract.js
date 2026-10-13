@@ -11,6 +11,7 @@ const resultSchema={type:'object',required:['verified'],properties:{verified:{en
 function register(registerTool,spec,authorize) {
   if(!spec.id||!spec.module||!spec.inputSchema||typeof spec.read!=='function'||spec.risk!=='read'&&typeof spec.apply!=='function')throw new TypeError('Incomplete capability contract');
   if((spec.capabilities||[]).some(code=>!require('./iam-core').PERMISSION_CODES.has(code)))throw new TypeError('Unknown IAM capability');
+  if(spec.grantScope&&spec.grantScope!=='collection-editor')throw new TypeError('Unknown native resource grant');
   const effect=spec.risk!=='read',schema=effect?{...spec.inputSchema,properties:{...spec.inputSchema.properties,fingerprint:string(64)}}:spec.inputSchema;
   const meta={...spec,contractVersion:2,category:'app',kind:'app',area:spec.areas?.[0]||'',areas:spec.areas||[],approval:effect,rollbackable:!!spec.restore,
     inputSchema:schema,outputSchema:spec.outputSchema||resultSchema,dryRunOutputSchema:resultSchema,executionScope:'office-durable-job',
@@ -32,7 +33,8 @@ function register(registerTool,spec,authorize) {
   },spec.restore?async(token,ctx)=>spec.restore(token,ctx):null);
 }
 function allowed(tool,profile,access) {
-  return !!tool?.contractVersion&&profile?.enabled!==false&&(tool.areas||[tool.area]).filter(Boolean).every(area=>access.hasArea(profile,area))&&
-    (!tool.anyAreas||tool.anyAreas.some(area=>access.hasArea(profile,area)))&&(tool.permissions||[]).every(key=>access.hasPermission?.(profile,key))&&(tool.capabilities||[]).every(key=>access.hasCapability?.(profile,key));
+  return !!tool?.contractVersion&&!!profile&&profile.enabled!==false&&(tool.areas||[tool.area]).filter(Boolean).every(area=>access.hasArea(profile,area))&&
+    (!tool.anyAreas||tool.anyAreas.some(area=>access.hasArea(profile,area)))&&(tool.permissions||[]).every(key=>access.hasPermission?.(profile,key))&&(tool.capabilities||[]).every(key=>access.hasCapability?.(profile,key))&&
+    (!tool.grantScope||tool.grantScope==='collection-editor'&&access.effectiveCollectionAccess?.(profile)?.some(item=>item.level==='edit'));
 }
 module.exports={register,allowed,object,string,array,resultSchema};

@@ -3,7 +3,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const cards=require('../server/lib/license-cards'),sync=require('../server/lib/license-card-sync'),policy=require('../server/lib/shared-sync-policy');
 const source=fs.readFileSync(path.join(__dirname,'../server/server.js'),'utf8');
 const helper=source.slice(source.indexOf('function normalizePricingRuleDate('),source.indexOf("app.get('/api/landed-multipliers'"));
-const deps=vm.runInNewContext(helper+'\n({normalizePricingRuleDate,normalizePricingRuleSeasons,pricingRuleSeasonSetsOverlap,pricingRuleDateRangesOverlap})');
+const deps=vm.runInNewContext(helper+'\n({normalizePricingRuleDate,normalizePricingRuleSeasons,pricingRuleSeasonSetsOverlap,pricingRuleDateRangesOverlap})',{require:require('node:module').createRequire(path.join(__dirname,'../server/server.js'))});
 const fixture=()=>cards.appendDiscovered({_revision:0,_revisions:{pricingRules:3},pricingRules:[],notesmap:{private:{Notes:'local'}}},[{license:'Example',licensor:'Owner'}],'2026-01-01T00:00:00Z').overrides;
 const rule={id:'current',license:'Example',licensor:'Owner',opdStart:'2026-01-01',opdEnd:'',seasons:[],royalty:10,trCommission:2,ydCommission:3,hologramCost:0.05};
 
