@@ -69,7 +69,7 @@ test('concurrent E-Mail Group creates preserve different records', () => {
 test('Endeksmatik snapshot is mirrored through the existing delta sync store', () => {
   assert.match(endeksmatik, /function attachDeltaStore\(store\)/);
   assert.match(endeksmatik, /documents\.read\(DOCUMENT_ID\)/);
-  assert.match(endeksmatik, /documents\.mirror\(DOCUMENT_ID, toSharedDocument\(snapshot\)\)/);
+  assert.match(endeksmatik, /mirrorNativeDocuments\(\{\[DOCUMENT_ID\]:toSharedDocument\(snapshot\)/);
   assert.match(endeksmatik, /function toSharedDocument\(snapshot\)/);
   assert.match(endeksmatik, /function fromSharedDocument\(document\)/);
   assert.match(server, /endeksmatik\.attachDeltaStore\(deltaStore\)/);
@@ -82,8 +82,8 @@ test('Endeksmatik upload returns the snapshot it just accepted when delta storag
 });
 
 test('Endeksmatik upload waits for an authoritative delta write before it acknowledges success', () => {
-  assert.match(deltaStore, /return Promise\.resolve\(store\.mirror\(collection, \{ \[id\]: toDocumentRecord\(value\) \}, options\)\)/);
-  assert.match(endeksmatik, /const mirrored=await documents\.mirror\(DOCUMENT_ID, toSharedDocument\(snapshot\)\);/);
+  assert.match(deltaStore, /return Promise\.resolve\(store\.mirror\(collection,Object\.fromEntries/);
+  assert.match(endeksmatik, /const mirrored=await mirrorNativeDocuments\(\{\[DOCUMENT_ID\]:toSharedDocument\(snapshot\)/);
   // v7.0.172: üçüncü argüman (set etiketi/yükleyen) eklendi; await korunur.
   assert.match(server, /const status = await endeksmatik\.importWorkbookBuffer\(buffer, filename(?:, \{ label, actor \})?\);/);
 });
@@ -91,16 +91,18 @@ test('Endeksmatik upload waits for an authoritative delta write before it acknow
 test('Endeksmatik cannot acknowledge a delta-only snapshot before its journal write resolves', async () => {
   let resolveMirror;
   const mirrorDone = new Promise(resolve => { resolveMirror = resolve; });
+  let enteredMirror; const mirrorEntered = new Promise(resolve => { enteredMirror = resolve; });
   endeksmatikApi.attachDeltaStore({
     isAuthoritative: true,
     writesLegacy: false,
     readAllSync: () => ({}),
-    mirror: async () => { await mirrorDone; return { ok: true, count: 1 }; },
+    flush: async () => ({ok:true}), hydrate: async () => ({ok:true}),
+    mirror: async (_collection, _values, options) => { assert.equal(options.guardSource,true); enteredMirror(); await mirrorDone; return { ok: true, count: 1 }; },
   });
   const save = endeksmatikApi.saveSnapshot({ schemaVersion: 1, months: ['202609'], fx: { '202609': 41.2 }, records: [], generatedAt: '2026-09-09T00:00:00.000Z' });
   let completed = false;
   void save.then(() => { completed = true; });
-  await Promise.resolve();
+  await mirrorEntered;
   assert.equal(completed, false);
   resolveMirror();
   const status = await save;
