@@ -31642,7 +31642,7 @@ async function cpPlmSyncDetailsRun(page,mode,scope,props,button){
       });
       found+=Number(result.found)||0;
       failed+=(Array.isArray(result.failed)?result.failed.length:0);
-      if(result.styleLinks)applyPlmStyleLinksPayload(result);
+      if(result.styleLinks)applyPlmStyleLinksPayload(result.styleLinks);
     }
     if(detailApi)await detailApi.refresh();
     plmSyncRepaintAll();
