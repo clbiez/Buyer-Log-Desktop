@@ -58,7 +58,19 @@ for (const name of modules) {
     } finally {
       global.setInterval = realSetInterval;
     }
-    const declared = (source.match(/^\s*app\.(?:get|post|put|delete|patch|use)\(/gm) || []).length;
+    let declared = (source.match(/\bapp\.(?:get|post|put|delete|patch|use)\(/g) || []).length;
+    if (name === 'agent-office-routes.js') {
+      assert.match(source, /\[\['workbook',[\s\S]*\['merch-calendar',/);
+      declared += 1; // two artifact types share one registration statement
+    }
+    if (name === 'view-profile-routes.js') {
+      const expected = ['POST /api/choose-folder'];
+      for (const route of ['views','filter-profiles']) expected.push(
+        'GET /api/'+route, 'POST /api/'+route, 'PUT /api/'+route+'/:id',
+        'DELETE /api/'+route+'/:id', 'POST /api/'+route+'/:id/favorite', 'POST /api/'+route+'/:id/use');
+      assert.deepEqual([...routes].sort(), expected.sort());
+      declared = expected.length;
+    }
     assert.equal(routes.length, declared, `${routes.length} kayıt, kaynakta ${declared} route/middleware`);
     assert.equal(new Set(routes).size, routes.length, 'aynı route iki kez kaydedilmemeli');
   });
@@ -67,11 +79,17 @@ for (const name of modules) {
     const block = source.match(/const \{\n([\s\S]*?)\n\s*\} = deps;/);
     const expected = block ? block[1].split(',').map(item => item.trim()).filter(Boolean) : [];
     const getters = [...source.matchAll(/const (get\w+) = deps\.\1;/g)].map(match => match[1]);
-    const moduleRef = `require('./routes/${name.replace(/\.js$/, '')}')(app, {`;
+    const moduleRef = `require('./routes/${name.replace(/\.js$/, '')}')(app,`;
     const start = SERVER.indexOf(moduleRef);
     assert.ok(start > 0, `server.js ${name} modülünü kaydetmiyor`);
-    const call = SERVER.slice(start, SERVER.indexOf('\n});', start));
-    for (const dep of expected) assert.match(call, new RegExp(`\\n  ${dep},`), `${dep} enjekte edilmiyor`);
+    const objectStart = SERVER.indexOf('{', start);
+    let depth = 0, end = objectStart;
+    for (; end < SERVER.length; end++) {
+      if (SERVER[end] === '{') depth++;
+      if (SERVER[end] === '}' && --depth === 0) break;
+    }
+    const call = SERVER.slice(objectStart, end + 1);
+    for (const dep of expected) assert.match(call, new RegExp(`(?:[{},]\\s*)${dep}\\s*(?:[:,}])`), `${dep} enjekte edilmiyor`);
     for (const getter of getters) assert.match(call, new RegExp(`\\n  ${getter}: \\(\\) => \\w+,`), `${getter} canlı okuyucu verilmiyor`);
     assert.doesNotMatch(source, /require\(['"]\.\.\/server['"]\)/, 'route modülü server.js\'i geri require etmemeli');
     /* server.js'te require edilen ve aynı adda Node globali de olan adlar (ör. crypto →

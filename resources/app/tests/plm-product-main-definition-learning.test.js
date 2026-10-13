@@ -21,7 +21,9 @@ const turknorm = value => norm(value).toUpperCase().replace(/[İI]/g, 'I')
 
 test('both PLM adapters route Product Main Definition through confirmed translations', () => {
   const excel = block('function kolPlmParseWorkbook', 'function kolPlmImportTouchedKeys');
-  const direct = block('function kolPlmNormalizeDirectRecord', 'async function kolPlmNormalizeAndTranslate');
+  assert.match(block('function kolPlmNormalizeDirectRecord', 'async function kolPlmNormalizeAndTranslate'), /window\.BLCollectionModelGroups\.kolPlmNormalizeDirectRecord\(record,/);
+  const shared = fs.readFileSync(path.join(__dirname, '..', 'public', 'collection-model-groups.js'), 'utf8');
+  const direct = shared.slice(shared.indexOf('function kolPlmNormalizeDirectRecord'), shared.indexOf('function kolBuildPlmImportPlan'));
   for (const adapter of [excel, direct]) {
     assert.match(adapter, /productMainDefinition:kolPlmTranslate\('productMainDefinition',source\.productMainDefinition\)/);
     assert.match(adapter, /productMainDefinition:norm\(/);
