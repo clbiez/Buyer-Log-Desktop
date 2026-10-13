@@ -49,7 +49,7 @@ jobs:
           GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
           BUYER_LOG_GITHUB_RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
           BUYER_LOG_RELEASE_REPO_DIR: ${{ github.workspace }}/release-repo
-        run: node scripts/github-release.js promote-stable "$PROMOTE_VERSION"
+        run: node ../../.github/scripts/buyerlog-release-distribution.js promote-stable "$PROMOTE_VERSION"
 
       - name: Persist immutable visual release archive
         working-directory: resources/app

@@ -155,10 +155,18 @@ jobs:
           token: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
           path: release-repo
           ref: main
+      - name: Checkout CI-only publisher independently of immutable app source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.workflow_sha }}
+          path: release-publisher
+          sparse-checkout: .github/scripts
+          persist-credentials: false
       - name: Publish, verify remote bytes, then advance TEST latest
         working-directory: resources/app
         env:
           GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
           BUYER_LOG_GITHUB_RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
           BUYER_LOG_RELEASE_REPO_DIR: ${{ github.workspace }}/release-repo
-        run: node scripts/github-release.js publish-test
+          BUYER_LOG_RELEASE_APP_ROOT: ${{ github.workspace }}/resources/app
+        run: node ../../release-publisher/.github/scripts/buyerlog-release-distribution.js publish-test
