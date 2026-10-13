@@ -3067,6 +3067,72 @@
           "en": "Scoped schedule grants and safe recovery"
         }
       }
+    },
+    {
+      "id": "agent-memory-corrections",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Hafıza çelişkilerini tek işlemde çöz ve kullanıcı düzeltmesini ilişkilendir",
+        "en": "Resolve memory conflicts atomically and link user corrections"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Hafıza",
+        "en": "Agent Office › Memory"
+      },
+      "body": {
+        "tr": "Çelişen etkin kayıtlar görev bağlamına girmez. İncelenen revizyonlar onayla birlikte pasifleştirilir; kullanıcı düzeltmesi eski kayda ve değişiklik geçmişine bağlanır. AI tahmini onaylı talimata dönüşmez.",
+        "en": "Conflicting active records stay outside task context. Reviewed revisions are superseded together after confirmation; user corrections link to the earlier record and version history. AI inference never becomes an approved instruction."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-memory-corrections.png",
+        "alt": {
+          "tr": "Hafıza çelişkilerini tek işlemde çöz ve kullanıcı düzeltmesini ilişkilendir",
+          "en": "Resolve memory conflicts atomically and link user corrections"
+        },
+        "caption": {
+          "tr": "Hafıza çelişkilerini tek işlemde çöz ve kullanıcı düzeltmesini ilişkilendir",
+          "en": "Resolve memory conflicts atomically and link user corrections"
+        }
+      }
+    },
+    {
+      "id": "agent-memory-source-validation",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kaynağa bağlı hafıza güncel kayıt ve yetkiyle doğrulanır",
+        "en": "Source-linked memory checks the current record and permissions"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Hafıza",
+        "en": "Agent Office › Memory"
+      },
+      "body": {
+        "tr": "Bilgi kayıtları CP, Orders, Backlog, LFL veya Koleksiyon kimliğine bağlanabilir. Belirsiz eşleşme saklanmaz; değişmiş veya erişimi kaldırılmış kaynak bağlama alınmaz. Uzun hafıza kısaltılır, ilgili düzeltmeler sınırlandırılmış bağlamda öncelik alır.",
+        "en": "Facts can link to CP, Orders, Backlog, LFL or Collection identity. Ambiguous matches are not saved; changed or revoked sources stay outside context. Long memory is excerpted and relevant corrections receive priority within the bounded context."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-memory-source-validation.png",
+        "alt": {
+          "tr": "Kaynağa bağlı hafıza güncel kayıt ve yetkiyle doğrulanır",
+          "en": "Source-linked memory checks the current record and permissions"
+        },
+        "caption": {
+          "tr": "Kaynağa bağlı hafıza güncel kayıt ve yetkiyle doğrulanır",
+          "en": "Source-linked memory checks the current record and permissions"
+        }
+      }
     }
   ]
 }
