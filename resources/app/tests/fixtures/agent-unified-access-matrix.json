@@ -497,6 +497,40 @@
         "contractVersion": 2
       },
       {
+        "id": "collection.pricing.calculate",
+        "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.pricing.export",
+        "operation": "EXPORT",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
         "id": "collection.supplier.analyze",
         "operation": "READ",
         "agentAreas": [

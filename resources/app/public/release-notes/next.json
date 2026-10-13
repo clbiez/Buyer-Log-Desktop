@@ -3232,6 +3232,39 @@
           "en": "Run license discovery and royalty contracts through the existing service"
         }
       }
+    },
+    {
+      "id": "agent-collection-pricing",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "FOB ve landed senaryolarını mevcut hesaplamayla karşılaştır",
+        "en": "Compare FOB and landed scenarios with the existing calculation"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevi",
+        "en": "Agent Office › Operation task"
+      },
+      "body": {
+        "tr": "Koleksiyon fiyatları gerçek royalty sözleşmeleri, TR/YD komisyonları ve aylık kurla hesaplanır. Senaryolar kayıtları değiştirmez. Miktar ağırlıklı karşılaştırmalar eksik hesaplamaları açıklar; onaylı HTML/XLSX/PDF çıktıları aynı raporu kullanır.",
+        "en": "Collection prices use actual royalty contracts, TR/YD commissions and monthly FX. Scenarios leave records unchanged. Quantity-weighted comparisons explain missing calculations; approved HTML/XLSX/PDF outputs use the same report."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-pricing.png",
+        "alt": {
+          "tr": "FOB ve landed senaryolarını mevcut hesaplamayla karşılaştır",
+          "en": "Compare FOB and landed scenarios with the existing calculation"
+        },
+        "caption": {
+          "tr": "FOB ve landed senaryolarını mevcut hesaplamayla karşılaştır",
+          "en": "Compare FOB and landed scenarios with the existing calculation"
+        }
+      }
     }
   ]
 }
