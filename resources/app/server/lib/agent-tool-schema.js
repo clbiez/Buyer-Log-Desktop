@@ -4,6 +4,12 @@
 // subset. Legacy descriptive schemas are not advertised as validated contracts.
 function validate(schema,value,path='$') {
   const bad=()=>{throw Object.assign(new Error(`Invalid tool contract: ${path}`),{code:'OFFICE_TOOL_SCHEMA',statusCode:422});};
+  if(schema.anyOf){
+    if(!Array.isArray(schema.anyOf)||!schema.anyOf.length)bad();
+    let matched=false;
+    for(const branch of schema.anyOf){try{validate(branch,value,path);matched=true;break;}catch(err){if(err.code!=='OFFICE_TOOL_SCHEMA')throw err;}}
+    if(!matched)bad();
+  }
   if(schema.enum&&!schema.enum.includes(value))bad();
   if(Array.isArray(schema.type)){for(const type of schema.type){try{return validate({...schema,type},value,path);}catch(err){if(err.code!=='OFFICE_TOOL_SCHEMA')throw err;}}bad();}
   if(schema.type==='null'){if(value!==null)bad();return value;}
