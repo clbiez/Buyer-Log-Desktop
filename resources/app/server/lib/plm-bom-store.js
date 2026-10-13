@@ -146,6 +146,7 @@ function normalizeEntry(raw, fallbackPlmId) {
     sourceCreatedDate: text(raw && raw.sourceCreatedDate, 80) || null,
     sourceModifiedDate: text(raw && raw.sourceModifiedDate, 80) || null,
     fingerprint: text(raw && raw.fingerprint, 128),
+    fabric: text(raw && raw.fabric, 10000),
     fabricSummary,
     artworkSummary,
     setComponents,

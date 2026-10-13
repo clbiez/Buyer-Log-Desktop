@@ -56,8 +56,11 @@ module.exports = function registerPlmSyncRoutes(app, deps) {
    yeniden yazılmaz). PLM linki sözlüğü (plmId→styleId) burada da tazelenir
    (upsertPlmStyleLinks) — Collection PLM Sync çalıştıran kullanıcı, PLM
    model linklerini de bedavaya güncellemiş olur. */
-app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.json({ limit: '4mb' }), async (req, res) => {
+app.post('/api/plm-sync/fetch', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders'), express.json({ limit: '4mb' }), async (req, res) => {
   try {
+     // Source scope influences job visibility only; no Collection table writes.
+     const requestedScope=String(req.body&&req.body.scope||'koleksiyon');
+     const scope=['koleksiyon','cp','orders'].includes(requestedScope)?requestedScope:'koleksiyon';
      const selectedOnly = Boolean(req.body && req.body.selectedOnly === true);
      const language = String(req.body && req.body.language || '').toLowerCase()==='tr'?'tr':String(req.body && req.body.language || '').toLowerCase()==='en'?'en':'';
      const raw = Array.isArray(req.body && req.body.plmIds) ? req.body.plmIds : null;
@@ -71,7 +74,7 @@ app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.js
     /* İş kaydı: bu iş Koleksiyon kapsamına yazılır, böylece CP/Orders
        ekranlarında görünmez ama sayfa değişince de durmaz. */
     const fetchRun = await withPlmJob(req, {
-       kind: 'plm-sync', scope: 'koleksiyon', total: items.length,
+       kind: 'plm-sync', scope, total: items.length,
        label: selectedOnly ? 'PLM seçili modelleri aktar' : `PLM verisi · ${items.length} model`, phase: 'PLM verisi aranıyor',
      }, async job => {
        const collected = await agentBrowserConnector.collectCoreNectumStyleLinks(req.currentUser.id, items, {
@@ -163,7 +166,7 @@ app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.js
     let styleLinks = null;
     try { styleLinks = upsertPlmStyleLinks(collected.links, req.currentUser); } catch (_) {}
     userAccess.appendAudit(req.currentUser, 'PLM_SYNC_FETCH', 'corenectum', {
-      requested: collected.requested, found: collected.links.length, failed: collected.failed.length,
+      scope, requested: collected.requested, found: collected.links.length, failed: collected.failed.length,
       scannedPages: collected.scannedPages, scannedRows: collected.scannedRows,
       bomFetched: collected.bomSync && collected.bomSync.fetched || 0,
       bomWithPrint: collected.bomSync && collected.bomSync.withPrint || 0,
