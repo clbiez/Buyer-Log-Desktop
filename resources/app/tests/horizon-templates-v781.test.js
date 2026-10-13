@@ -121,7 +121,10 @@ test('paylaşılan şablonu herkes silemez — sahibi veya moderatör', () => {
   const at = SERVER.indexOf("app.delete('/api/horizon-templates/:id'");
   const block = SERVER.slice(at, at + 1800);
   assert.match(block, /NOT_OWNER/, 'sahiplik kontrolü yok');
-  assert.match(block, /hasPermission\(req\.currentUser, 'manageAllOrders'\)/);
+  assert.match(block, /horizonTemplateService\.execute\('delete'/);
+  const native=fs.readFileSync(path.join(ROOT,'server/lib/horizon-template-service.js'),'utf8');
+  assert.match(native, /selected\?\.userId===ctx\.ownerId/);
+  assert.match(native, /hasPermission\(current,'manageAllOrders'\)/);
 });
 
 test('paylaşım KOPYALAR, taşımaz', () => {
@@ -129,7 +132,10 @@ test('paylaşım KOPYALAR, taşımaz', () => {
      kendi şablonu kaybolmasın. */
   const at = SERVER.indexOf("app.post('/api/horizon-templates/:id/share'");
   const block = SERVER.slice(at, at + 1200);
-  assert.match(block, /addHorizonTemplate\(item\.name, item\.data, null\)/);
+  assert.match(block, /horizonTemplateService\.execute\('share'/);
+  const native=fs.readFileSync(path.join(ROOT,'server/lib/horizon-template-service.js'),'utf8');
+  assert.match(native, /mutateHorizonTemplates\(ctx\.ownerId/);
+  assert.match(native, /api\.add/);
   assert.doesNotMatch(block, /deleteHorizonTemplate/, 'paylaşım kişisel kaydı silmemeli');
 });
 

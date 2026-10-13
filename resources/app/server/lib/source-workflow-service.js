@@ -73,4 +73,4 @@ function createSourceWorkflowService({db}){
  }
  return {snapshot,preview,update,restore,publicSource,filterFields};
 }
-module.exports={createSourceWorkflowService,publicSource,semanticSource,affectedModules,filterFields};
+module.exports={createSourceWorkflowService,publicSource,publicHorizon,semanticSource,affectedModules,filterFields};

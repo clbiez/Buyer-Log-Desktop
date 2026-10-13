@@ -182,7 +182,7 @@ test('preference copies respect the target-user lease across processes',async t=
   for(const method of ['copyWorkspaceSnapshot','copyWorkspaceEntrySnapshot']){
     const args=method==='copyWorkspaceSnapshot'?['source',f.owner,['cp']]:[{},f.owner,['cp']];
     withFileLeaseSync(path.join(root,'user-preferences',`${f.owner}.json`),()=>{
-      const script=`const p=require('./server/lib/user-preferences');try{p.${method}(...${JSON.stringify(args)});process.exit(2)}catch(e){process.stdout.write(e.code||'unknown')}`;
+      const script=`const p=require('./server/lib/user-preferences');try{p.${method}(...${JSON.stringify(args)});process.exit(2)}catch(e){require('node:fs').writeFileSync(1,e.code||'unknown')}`;
       const result=spawnSync(process.execPath,['-e',script],{cwd:path.resolve(__dirname,'..'),encoding:'utf8'});
       assert.equal(result.status,0);assert.equal(result.stdout,'SHARED_WRITE_BUSY');
     });
