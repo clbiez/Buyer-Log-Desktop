@@ -4750,6 +4750,39 @@
           "en": "Native rates, synchronization status and complete undo are preserved"
         }
       }
+    },
+    {
+      "id": "agent-license-history-paging",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları / Agent Ofisi",
+        "en": "License Cards / Agent Office"
+      },
+      "title": {
+        "tr": "Agent lisans geçmişinin tüm sayfalarına ulaşır",
+        "en": "Agents can read every native license history page"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Checklist / haftalık mail",
+        "en": "Agent Office › Tasks › Checklist / weekly email"
+      },
+      "body": {
+        "tr": "Lisans kartları ve geçmiş royalty kuralları kaynak sürümüne bağlı sayfalarla okunabilir. İlk sayfanın kaynak parmak izi sonraki sayfalarda yeniden kontrol edilir; arada kart veya kural değişirse eski sürümle devam edilmez. Tam eşleşme ve kural sayıları, sonraki konum ve eksik gösterimler açıklanır. Gösterim sınırının ötesindeki native geçmiş de aynı mevcut servislerden okunur; oran hesapları ve yazma yetkileri değişmez.",
+        "en": "License cards and historical royalty rules can be read in source bound pages. The first page source fingerprint is checked again on subsequent pages; a changed card or rule prevents continuing an old snapshot. Complete match/rule counts, next positions and display omissions are explicit. Native history beyond the display limit is read from the same existing services; rate calculations and write permissions stay unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-license-history-paging.png",
+        "alt": {
+          "tr": "Demo geçmişle gerçek Agent Ofisinde sonraki lisans kuralı sayfası ve kaynak sürümü",
+          "en": "Next license rule page and source version with demo history in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Tüm native geçmiş kaynak sürümü değişmeden okunur",
+          "en": "The full native history is read under the same source version"
+        }
+      }
     }
   ]
 }
