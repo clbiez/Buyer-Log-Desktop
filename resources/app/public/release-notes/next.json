@@ -3925,6 +3925,39 @@
           "en": "Profile lease, guarded journal commit and revision-bound undo"
         }
       }
+    },
+    {
+      "id": "agent-manufacturer-headings",
+      "type": "feature",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Agent üretici ülke ve grup başlıklarını düzenler",
+        "en": "Agents edit manufacturer country and group headings"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / Üretici başlıkları",
+        "en": "Agent Office › Tasks / Manufacturer headings"
+      },
+      "body": {
+        "tr": "Agent, mevcut servisten ülke ve grup başlıklarını okur, oluşturur, yeniden adlandırır, sıralar ve siler. Önizleme kullanım etkisini gösterir; kullanımda olan başlık silinmez. Onay, güncel yetki ve profil kilidiyle kaydedilir; yeni peer kayıtları korunur ve uygun revizyonda gerçek başlık listesi geri alınır.",
+        "en": "Agents read, create, rename, reorder and delete country and group headings through the existing service. Preview shows usage impact; headings in use cannot be removed. Approval, current authority and profile leases guard commits; newer peer records remain intact and the actual list can be restored at the matching revision."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-manufacturer-headings.png",
+        "alt": {
+          "tr": "Üretici başlığı görevinde önizleme ve gerçek kayıt sonucu",
+          "en": "Preview and actual saved result in a manufacturer heading task"
+        },
+        "caption": {
+          "tr": "Native başlık yönetimi, kullanım etkisi ve güvenli geri alma",
+          "en": "Native heading management, usage impact and guarded undo"
+        }
+      }
     }
   ]
 }

@@ -1407,7 +1407,9 @@
     "area": "orders",
     "capabilities": [
       "read",
-      "analyze"
+      "analyze",
+      "patch-row",
+      "import"
     ],
     "tools": [
       {
@@ -1468,6 +1470,42 @@
       {
         "id": "manufacturer.cards.delete",
         "operation": "DELETE",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "manufacturer.headings.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "manufacturer.headings.replace",
+        "operation": "UPDATE",
         "agentAreas": [],
         "agentAnyAreas": [
           "orders",
