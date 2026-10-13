@@ -21,14 +21,7 @@ function monthLabel(mk,en){
   return ((en?enN:tr)[idx]||m)+' '+y;
 }
 // Bir ay için kur haritası: tam ay yoksa en yakın ÖNCEKİ ay, hiç yoksa ilk ay.
-function resolveMonth(mk,src){
-  const months=(src||store).months||{};
-  if(months[mk]&&Object.keys(months[mk]).length)return {month:mk,rates:months[mk],exact:true};
-  const keys=Object.keys(months).filter(k=>months[k]&&Object.keys(months[k]).length).sort();
-  if(!keys.length)return {month:null,rates:{},exact:false};
-  const prev=keys.filter(k=>k<=mk).pop();
-  return {month:prev||keys[0],rates:months[prev||keys[0]],exact:false};
-}
+function resolveMonth(mk,src){return window.BLFxCalculationEngine.resolveMonth(mk,src||store);}
 // Belirli bir yıl/ay için anlık kur görüntüsü. Ay bulunamazsa en yakın önceki ayı kullanır.
 function snapshotForMonth(mk,currency){
   const requested=/^\d{4}-\d{2}$/.test(String(mk||''))?String(mk):monthKey(null);
@@ -41,21 +34,7 @@ function snapshotFor(date,currency){return snapshotForMonth(monthKey(date),curre
 // value: from → to. snap yoksa canlı tablo + bugünün ayı kullanılır.
 // dir 'per_base' (yeni): rate = 1 base kaç döviz → unit(cur)=1/rate
 // dir yoksa (eski v2.02 anlık görüntüleri): rate = 1 döviz kaç base → unit(cur)=rate
-function convert(value,from,to,snap){
-  if(!Number.isFinite(value))return null;
-  if(!from||!to||from===to)return value;
-  const s=snap||snapshotFor(null);
-  const base=s.base||store.base||'USD';const rates=s.rates||{};
-  const perBase=s.dir==='per_base'||!snap; // canlı tablo her zaman yeni yön
-  const unit=cur=>{
-    if(cur===base)return 1;
-    const r=num(rates[cur]);if(r==null||r<=0)return null;
-    return perBase?1/r:r;
-  };
-  const uf=unit(from),ut=unit(to);
-  if(uf==null||ut==null)return null;
-  return value*uf/ut;
-}
+function convert(value,from,to,snap){return window.BLFxCalculationEngine.convert(value,from,to,snap||snapshotFor(null),store);}
 // Bugün için "1 USD = 41,32 TRY" metni; kur yoksa null.
 function rateText(currency,snap){
   const s=snap||snapshotFor(null);const base=s.base||'USD';
