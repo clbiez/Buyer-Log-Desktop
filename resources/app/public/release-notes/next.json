@@ -2716,6 +2716,138 @@
           "en": "Actual Buyer Log screen with anonymous demo data"
         }
       }
+    },
+    {
+      "id": "agent-collection-records",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Koleksiyon kayıtlarını gerçek görevlerle yönet",
+        "en": "Manage Collection records through actual tasks"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "Alan düzenleme, tam model grubu silme ve geri alma mevcut kayıt işçisi, güncel IAM ve revizyon kontrolünü kullanır. Renk ve miktar her varyantta korunur.",
+        "en": "Field edits, whole-model-group deletion and undo use the existing save worker, current IAM and revision checks. Colour and quantity remain variant-owned."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-records.png",
+        "alt": {
+          "tr": "Koleksiyon kayıtlarını gerçek görevlerle yönet",
+          "en": "Manage Collection records through actual tasks"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-collection-plm",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "PLM SYNC sonucunu doğrulayarak işle",
+        "en": "Apply verified PLM SYNC results"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "ID listesi mevcut PLM bağlantısıyla alınır. Onaylı çeviriler, belirsiz eşleşme seçimi ve gerçek renk grupları korunur; eksik sonuçlar tamamlanmış sayılmaz.",
+        "en": "ID lists use the existing PLM connection. Approved translations, ambiguous-match selections and actual colour groups are preserved; partial results are never marked complete."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-plm.png",
+        "alt": {
+          "tr": "PLM SYNC sonucunu doğrulayarak işle",
+          "en": "Apply verified PLM SYNC results"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-quotation-approval",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Quotation onayını ve fiyat uygulamasını ayrı yönet",
+        "en": "Review quotation approval and price application separately"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "Gerçek teklif oluşturma, fiyat ve durum düzenleme, üretici onayı ve koleksiyona uygulama ayrı önizleme ve onay adımlarıdır. Bağlı fiyat geri alınmadan kaynak onay geri alınamaz.",
+        "en": "Actual quotation creation, price and status edits, manufacturer approval and Collection application have separate previews and approvals. Source approval cannot be undone before dependent prices."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quotation-approval.png",
+        "alt": {
+          "tr": "Quotation onayını ve fiyat uygulamasını ayrı yönet",
+          "en": "Review quotation approval and price application separately"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
+    },
+    {
+      "id": "agent-collection-weighted-lfl",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Üretici fiyatını ve eşlenmiş LFL dönemlerini karşılaştır",
+        "en": "Compare supplier prices and matched LFL periods"
+      },
+      "path": {
+        "tr": "Agent Ofisi › İşlem görevleri",
+        "en": "Agent Office › Operation tasks"
+      },
+      "body": {
+        "tr": "Hesaplar mevcut motorlarla miktar ağırlıklı yapılır. LFL yalnız aynı MB ayı, klasman ve para birimindeki kayıtları eşler; HTML, Excel ve PDF ortak çıktı yolunu kullanır.",
+        "en": "Existing engines calculate quantity-weighted results. LFL matches the same MB month, class and currency; HTML, Excel and PDF use the shared output path."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-lfl.png",
+        "alt": {
+          "tr": "Üretici fiyatını ve eşlenmiş LFL dönemlerini karşılaştır",
+          "en": "Compare supplier prices and matched LFL periods"
+        },
+        "caption": {
+          "tr": "Anonim demo verili gerçek Buyer Log ekranı",
+          "en": "Actual Buyer Log screen with anonymous demo data"
+        }
+      }
     }
   ]
 }

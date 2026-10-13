@@ -166,8 +166,8 @@
     return (row, key) => effectiveValue(row, key, null, parents);
   }
 
-  function setSharedValue(rows, groupId, key, value) {
-    const next = (rows || []).map(clone), members = groupFor(next, groupId);
+  function setSharedValue(rows, groupId, key, value, options={}) {
+    const next = options.inPlace ? rows : (rows || []).map(clone), members = groupFor(next, groupId);
     if (!members.length) return next;
     const parent = members.find(row => row.modelGroupRole === 'parent') || members[0];
     const sharedValue = clone(value);
@@ -185,12 +185,22 @@
     return next;
   }
 
-  function setVariantOverride(rows, id, key, value) {
-    const next = (rows || []).map(clone), row = next.find(item => String(item && item.id) === String(id));
+  function setVariantOverride(rows, id, key, value, options={}) {
+    const next = options.inPlace ? rows : (rows || []).map(clone), row = next.find(item => String(item && item.id) === String(id));
     if (!row) return next;
     row.variantOverrides = { ...(row.variantOverrides || {}), [key]: clone(value) };
     row[key] = clone(value);
     return next;
+  }
+
+  function writeGroupedValue(rows,id,key,value) {
+    const row=rows.find(item=>String(item.id)===String(id));
+    if(!row)return rows;
+    if(groupFor(rows,row.modelGroupId).length>1){
+      if(hasVariantOverride(row,key)||fieldMetadata(key).inheritance==='model'&&row.modelGroupRole!=='parent')return setVariantOverride(rows,id,key,value,{inPlace:true});
+      if(fieldMetadata(key).inheritance==='model')return setSharedValue(rows,row.modelGroupId,key,value,{inPlace:true});
+    }
+    row[key]=clone(value);return rows;
   }
 
   function clearVariantOverride(rows, id, key) {
@@ -357,5 +367,133 @@
     return { id: groupId, count: members.length, parent: members.find(row => row.modelGroupRole === 'parent') || members[0] || null, mixed };
   }
 
-  return { identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, groupFor, hasVariantOverride, effectiveValue, createValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
+  function bestPricing(pricing,parse){let best=null;Object.entries(pricing||{}).forEach(([name,value])=>{const number=parse(value);if(value!==''&&value!=null&&Number.isFinite(number)&&number>0&&(!best||number<best.price))best={name,price:number};});return best;}
+  function confirmedPricing(row,pricing,parse,normalize=text){const name=normalize(row&&row.confirmedManufacturer),raw=pricing&&pricing[name],number=parse(raw);return name&&raw!==''&&raw!=null&&Number.isFinite(number)&&number>0?{name,price:number}:null;}
+function kolImportMatchKey(plmId, modelKod,helpers){
+  const {norm,turknorm}=helpers;
+  const plm=turknorm(norm(plmId)), model=turknorm(norm(modelKod));
+  if(!plm && !model) return '';
+  return plm+'\u0000'+model;
+}
+function kolImportReadField(row, key,helpers){
+  const {norm,turknorm}=helpers;
+  if(!row) return '';
+  if(key.startsWith('pricing:')) return norm((row.pricing||{})[key.slice(8)]);
+  if(key==='buyingSampleApproved') return row[key]?'true':'false';
+  return norm(row[key]);
+}
+function kolPlmCodePrefix(value,helpers){
+  const {norm,turknorm}=helpers;
+  const raw=norm(value);if(!raw)return '';
+  return norm(raw.split(/\s+-\s+/,1)[0]);
+}
+function kolPlmSeason(value,helpers){
+  const {norm,turknorm}=helpers;
+  const raw=norm(value);if(!raw)return '';
+  const m=/^([WS]\d+)/i.exec(raw);return m?m[1].toUpperCase():raw;
+}
+function kolPlmBrandToken(styleName,helpers){
+  const {norm,turknorm}=helpers;
+  const raw=turknorm(norm(styleName));return raw?raw.split('-')[0].trim():'';
+}
+function kolPlmImportTouchedKeys(){
+  return ['plmId','modelKod','productMainDefinition','specialCode','season','mag','mmyg','buyingGroup','colourCode','colour','fabric','fit','line','urunTipi','lisans','licensor'];
+}
+function kolPlmImportColourKey(row,helpers){
+  const {norm,turknorm}=helpers;
+  return turknorm(norm(row&&row.colourCode||row&&row.colour));
+}
+function kolPlmNormalizeDirectRecord(record,helpers){
+  const {norm,migrateKolRow,kolPlmIsLicensedDesignSource,kolPlmBrandToken,kolPlmTranslate,kolPlmSeason,kolPlmCodePrefix}=helpers;
+  const r=record||{};
+  const modelKod=norm(r.styleName);
+  const source={
+    lineRaw:norm(r.lineRaw),categoryRaw:norm(r.categoryRaw),designSourceRaw:norm(r.designSourceRaw),brandToken:kolPlmIsLicensedDesignSource(r.designSourceRaw)?kolPlmBrandToken(modelKod):'',
+    productMainDefinition:norm(r.productMainDefinition),buyerRaw:norm(r.buyerRaw),fmhSpecialist:norm(r.fmhSpecialist),
+    productType:norm(r.productType),ageGroup:norm(r.ageGroup),statusRaw:norm(r.statusRaw),orderStatusRaw:norm(r.orderStatusRaw),
+  };
+  const row=migrateKolRow({
+    id:0,plmId:norm(r.plmId),modelKod,productMainDefinition:kolPlmTranslate('productMainDefinition',source.productMainDefinition),specialCode:norm(r.specialCode),season:kolPlmSeason(r.season),
+    mag:kolPlmCodePrefix(r.magRaw),mmyg:kolPlmCodePrefix(r.mmygRaw),buyingGroup:norm(r.buyingGroup),
+    colourCode:norm(r.colourCode),colour:norm(r.colour),fabric:norm(r.fabric),fit:norm(r.fit),
+    line:kolPlmTranslate('line',source.lineRaw),urunTipi:kolPlmTranslate('category',source.categoryRaw),
+    lisans:kolPlmTranslate('license',source.brandToken),licensor:norm(r.licensor),pricing:{},pricingSent:{},img:null,_plmSource:source,
+  });
+  // Excel yolunda karşılığı olmayan, yalnız Direct PLM'e özgü bilgi:
+  // Style ID (PLM link sözlüğü zaten sunucu tarafında ayrıca güncellendi,
+  // ama tekil model detayında/§12 URL kurucusunda hızlı erişim için taşınır)
+  // ve görselin kaynağı (henüz İNDİRİLMEDİ — §13, görsel ayrı akışın işi).
+  row._plmStyleId=norm(r.styleId);row._plmImageUrl=norm(r.imageUrl);
+  return row;
+}
+
+function kolBuildPlmImportPlan(kolRows,parsedRows,helpers){
+  const {norm,turknorm,kolImportMatchKey,kolPlmNormalizeId,kolPlmImportColourKey,kolImportReadField,kolImportFieldLabel,knownByKey,touched}=helpers;
+  const byKey=new Map(),byPlm=new Map();
+  kolRows.forEach(row=>{
+    const key=kolImportMatchKey(row.plmId,row.modelKod);if(key&&!byKey.has(key))byKey.set(key,row);
+    const plm=kolPlmNormalizeId(row.plmId);
+    if(plm){if(!byPlm.has(plm))byPlm.set(plm,[]);byPlm.get(plm).push(row);}
+  });
+
+  const existing=[],creates=[],ambiguous=[],inputDuplicates=[],seenInputPlm=new Set();
+  (parsedRows||[]).forEach(parsed=>{
+    const plm=kolPlmNormalizeId(parsed.plmId),key=kolImportMatchKey(parsed.plmId,parsed.modelKod);
+    // Aynı PLM ID PLM Excel içinde birden fazla kez geçerse Koleksiyon'da ikinci bir
+    // model oluşturma. İlk kayıt işlenir, diğerleri raporlanıp atlanır.
+    const parsedColour=kolPlmImportColourKey(parsed),inputIdentity=plm?`${plm}\u0000${parsedColour}`:key;
+    if(plm&&seenInputPlm.has(inputIdentity)){inputDuplicates.push(parsed);return;}
+    if(plm)seenInputPlm.add(inputIdentity);
+    const plmTargets=plm?(byPlm.get(plm)||[]):[];
+    let target=null;
+    if(plmTargets.length===1){
+      const only=plmTargets[0];
+      if(!parsedColour||!kolPlmImportColourKey(only)||kolPlmImportColourKey(only)===parsedColour)target=only;
+    }else if(plmTargets.length>1){
+      const colourMatches=parsedColour?plmTargets.filter(row=>kolPlmImportColourKey(row)===parsedColour):[];
+      if(colourMatches.length===1)target=colourMatches[0];
+      else {
+      const modelKey=turknorm(norm(parsed.modelKod));
+      const exact=plmTargets.filter(row=>turknorm(norm(row.modelKod))===modelKey);
+      if(!parsedColour&&exact.length===1)target=exact[0];
+      else {ambiguous.push({parsed,targets:plmTargets});return;} // PLM mevcutsa ASLA yeni kopya üretme.
+      }
+    }else target=key?byKey.get(key):null;
+    if(!target){creates.push(parsed);return;}
+    const changes=[];
+    touched.forEach(fieldKey=>{
+      const to=kolImportReadField(parsed,fieldKey);if(!to)return; // PLM'de olmayan/çevirisi onaylanmamış alan mevcut değeri silmez.
+      const from=kolImportReadField(target,fieldKey);if(from!==to)changes.push({key:fieldKey,label:kolImportFieldLabel(fieldKey,knownByKey),from,to});
+    });
+    // PLM ID Koleksiyon'da mevcutsa değişiklik olmasa bile kullanıcıya model model sorulur.
+    // Güncelleme yalnız changes içindeki PLM-kaynaklı alanları yazar; pricing/notlar ve
+    // diğer Buyer Log kullanıcı alanları hedef satırda aynen kalır.
+    existing.push({target,parsed,changes,hasImage:Boolean(parsed._plmImage),matchedByPlm:Boolean(plm&&plmTargets.length)});
+  });
+  return {existing,creates,ambiguous,inputDuplicates,knownByKey};
+}
+
+function kolApplyApprovedPlmUpdate(item,kolImportWriteField){
+  // Yalnız PLM'nin açıkça yönettiği alanlar yazılır. pricing, pricingSent, not,
+  // confirmedManufacturer, targetPrice, Buying Sample ve diğer kullanıcı alanlarına
+  // hiçbir assignment yapılmaz; bu nedenle mevcut kullanıcı verisi kaybolmaz.
+  item.changes.forEach(change=>kolImportWriteField(item.target,change.key,change.to));
+  item.target._plmSource={...(item.target._plmSource||{}),...(item.parsed._plmSource||{})};
+}
+
+function kolParseQuantityNum(v){
+  if(v==null || String(v).trim()==='') return NaN;
+  const s=String(v).trim();
+  const neg=s.startsWith('-');
+  const digits=s.replace(/\D/g,'');
+  if(!digits) return NaN;
+  const n=Number(digits);
+  return neg?-n:n;
+}
+
+function kolParseMoneyNum(v){
+  if(v==null || v==='') return NaN;
+  return Number(String(v).trim().replace('%','').replace(',', '.'));
+}
+  return { writeGroupedValue,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, groupFor, hasVariantOverride, effectiveValue, createValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });

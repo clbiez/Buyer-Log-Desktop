@@ -239,6 +239,7 @@ async function syncPlmBoms(records, options = {}) {
     let next = analysis;
     let ai = { status: 'not-needed', model: '', consultedAt: null, confidence: '', notes: [], error: '' };
     if (!next.needsAi) return { analysis: next, ai };
+    if(options.allowAi===false)return {analysis:next,ai:{...ai,status:'deferred',error:'AI not authorized for this sync.'}};
     if (aiConsulted >= maxAiPerSync) {
       return { analysis: next, ai: { ...ai, status: 'deferred', error: 'AI consultation limit reached for this sync.' } };
     }
@@ -431,6 +432,7 @@ async function syncPlmBoms(records, options = {}) {
     }
   }
 
+  options.assertAuthority?.();
   const saved = toSave.length ? store.saveResults(toSave) : { written: 0, revision: snapshot._revision || 0, updatedAt: snapshot._updatedAt || null };
   return {
     requested: targets.length,

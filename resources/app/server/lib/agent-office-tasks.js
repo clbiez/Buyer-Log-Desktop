@@ -3,7 +3,7 @@ const {id,hash,error,text}=require('./agent-office-store');
 const {allowed}=require('./agent-capability-contract');
 const {validate}=require('./agent-tool-schema');
 const {valueAt}=require('./agent-runtime');
-const TERMINAL=new Set(['completed','failed','cancelled','interrupted','rejected','rolled_back']);
+const TERMINAL=new Set(['completed','partial','failed','cancelled','interrupted','rejected','rolled_back']);
 const clone=value=>JSON.parse(JSON.stringify(value));
 const host=require('os').hostname();
 function executorAlive(step,docs){const beat=docs.find(d=>d.id==='executor-'+step.executorInstanceId&&d.kind==='metadata');if(!beat||Date.parse(beat.expiresAt)<=Date.now())return false;if(step.executorHost!==host)return true;try{process.kill(step.executorPid,0);return true;}catch(err){return err.code==='EPERM';}}
@@ -14,7 +14,7 @@ function attachTasks(service,deps) {
   const authority=profile=>{const current=access.profileById(profile.id);if(!current||current.enabled===false)throw error('OFFICE_USER_DISABLED',403);return current;};
   const actorHash=profile=>hash(JSON.stringify(access.publicProfile?.(profile)||profile));
   async function heartbeat(owner){const instance=service.runtimeContext(owner).runtimeInstanceId;await store.save(owner,'metadata',{id:'executor-'+instance,type:'task-executor',instanceId:instance,pid:process.pid,host,expiresAt:new Date(Date.now()+120000).toISOString()});return instance;}
-  const agentHas=(agent,tool)=>(tool.agentAreas||tool.areas||[]).every(area=>agent.areas.includes(area==='koleksiyon'?'collection':area));
+  const agentHas=(agent,tool)=>(tool.agentAreas||tool.areas||[]).every(area=>agent.areas.includes(area==='koleksiyon'?'collection':area))&&(!tool.agentAnyAreas||tool.agentAnyAreas.some(area=>agent.areas.includes(area)));
   async function catalog(profile,agentId){profile=authority(profile);const agent=await store.get(profile.id,'profile',agentId);return registry.catalog().filter(tool=>tool.contractVersion>=2&&tool.executionScope==='office-durable-job'&&allowed(tool,profile,access)&&agentHas(agent,tool));}
   async function stepAuthority(profile,step){profile=authority(profile);const agent=await store.get(profile.id,'profile',step.agentId),tool=registry.get(step.toolId);
     if(!(tool?.contractVersion>=2)||!allowed(tool,profile,access)||!agentHas(agent,tool))throw error('OFFICE_TOOL_FORBIDDEN',403);
@@ -56,11 +56,11 @@ function attachTasks(service,deps) {
       if(execution.run.status==='waiting_approval')execution=await runtime.resumeApproval({ownerId:profile.id,profile:authority(profile),runId:execution.run.id,approved:true});
       const result=execution.run.executionState.nodes.effect?.output,ok=execution.run.status==='completed'&&result?.verified===true;
       const retry=!ok&&tool.risk==='read'&&job.steps[index].attempts<3;
-      const pending=ok&&result.completionPending==='pdf';
-      job.steps[index]={...job.steps[index],result:result||null,status:pending?'waiting_output':ok?'completed':retry?'queued':'failed',runtimeStatus:execution.run.status,errorCode:execution.run.output?.code||'',finishedAt:pending?null:new Date().toISOString()};
-      job=await store.save(profile.id,'job',{...job,status:pending?'waiting_output':ok||retry?'queued':'failed'},{expectedRevision:job.revision});
+      const pending=ok&&result.completionPending==='pdf',partial=ok&&result.outcome==='partial';
+      job.steps[index]={...job.steps[index],result:result||null,status:pending?'waiting_output':partial?'partial':ok?'completed':retry?'queued':'failed',runtimeStatus:execution.run.status,errorCode:execution.run.output?.code||'',finishedAt:pending?null:new Date().toISOString()};
+      job=await store.save(profile.id,'job',{...job,status:pending?'waiting_output':partial?'partial':ok||retry?'queued':'failed'},{expectedRevision:job.revision});
       access.appendAudit(current,'AGENT_TASK_STEP_RESULT',job.id,{stepId:step.id,toolId:step.toolId,status:job.steps[index].status});
-      return ok&&!pending?prepare(profile,job.id):job;
+      return ok&&!pending&&!partial?prepare(profile,job.id):job;
     }catch(err){const latest=await store.get(profile.id,'job',job.id);latest.steps[index]={...latest.steps[index],status:tool.risk==='read'?'queued':'interrupted',errorCode:err.code||'OFFICE_TASK_RECONCILE'};
       await store.save(profile.id,'job',{...latest,status:tool.risk==='read'&&latest.steps[index].attempts<3?'queued':'interrupted'},{expectedRevision:latest.revision});throw err;}}
   async function execute(profile,key,raw){const token=profile.id+':'+key;if(inFlight.has(token))return inFlight.get(token);const work=executeOnce(profile,key,raw).finally(()=>inFlight.delete(token));inFlight.set(token,work);return work;}
@@ -109,7 +109,7 @@ function attachTasks(service,deps) {
     for(let job of docs.filter(d=>d.kind==='job'&&d.type==='capability-task'&&!TERMINAL.has(d.status)&&d.runtimeDeviceId===device)){
       if(inFlight.has(profile.id+':'+job.id))continue;
       const running=job.steps.find(s=>s.status==='running');if(running){const run=deps.runtimeStore?.runForOwner(profile.id,running.runtimeRunId),receipt=run?.executionState?.nodes?.effect?.output;
-        if(run?.status==='completed'&&receipt?.verified===true){running.status=receipt.completionPending==='pdf'?'waiting_output':'completed';running.result=receipt;job=await store.save(profile.id,'job',{...job,status:running.status==='waiting_output'?'waiting_output':'queued'},{expectedRevision:job.revision});}
+        if(run?.status==='completed'&&receipt?.verified===true){running.status=receipt.completionPending==='pdf'?'waiting_output':receipt.outcome==='partial'?'partial':'completed';running.result=receipt;job=await store.save(profile.id,'job',{...job,status:['waiting_output','partial'].includes(running.status)?running.status:'queued'},{expectedRevision:job.revision});}
         else if(executorAlive(running,docs))continue;
         else if(registry.get(running.toolId)?.risk==='read'){running.status='queued';job=await store.save(profile.id,'job',{...job,status:'queued'},{expectedRevision:job.revision});}
         else{running.status='interrupted';await store.save(profile.id,'job',{...job,status:'interrupted',errorCode:'OFFICE_TASK_RECONCILE'},{expectedRevision:job.revision});continue;}}

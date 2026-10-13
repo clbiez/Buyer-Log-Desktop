@@ -150,7 +150,7 @@ test('görsel işlemi link/dosya işi BAŞLATMAZ', () => {
 test('Koleksiyon PLM Sync linki ikinci bir taramaya gerek kalmadan tazeler', () => {
   // Sunucu, upsert sonrası GÜNCEL TAM link deposunu döndürür…
   assert.match(SERVER, /let styleLinks = null;/);
-  assert.match(SERVER, /styleLinks = upsertPlmStyleLinks\(collected\.links, req\.currentUser\)/);
+  assert.match(SERVER, /styleLinks = upsertPlmStyleLinks\(collected\.links, profile\)/);
   // Korunan davranış styleLinks'in AYNI yanıtta dönmesidir; aradaki alanların
   // (ör. tanı izi) sayısı bu sözleşmenin parçası değildir.
   assert.match(SERVER, /scannedRows: collected\.scannedRows,/);
@@ -208,7 +208,8 @@ test('seçilmeyen sütun ne önizlenir ne yazılır; modeli "değişmeyen"e taş
   assert.match(block, /item\.changes\.filter\(change=>keys\.has\(change\.key\)\)/);
   assert.match(block, /else unchanged\.push\(item\)/);
   // Yazma yalnız item.changes üzerinden yapıldığı için budama tek yeterli kontroldür.
-  assert.match(APP, /item\.changes\.forEach\(change=>kolImportWriteField\(item\.target,change\.key,change\.to\)\)/);
+  assert.match(APP, /BLCollectionModelGroups\.kolApplyApprovedPlmUpdate/);
+  assert.match(require('../public/collection-model-groups').kolApplyApprovedPlmUpdate.toString(), /item\.changes\.forEach\(change=>kolImportWriteField\(item\.target,change\.key,change\.to\)\)/);
 });
 
 test('sütun tercihi KAPATILANLAR olarak hatırlanır — yeni alanlar sessizce atlanmaz', () => {

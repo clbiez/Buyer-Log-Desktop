@@ -5,6 +5,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const APP=fs.readFileSync(path.join(__dirname,'..','public','app-main.js'),'utf8');
+const shared=require('../public/collection-model-groups');
 
 function between(source,start,end){
   const a=source.indexOf(start),b=source.indexOf(end,a+start.length);
@@ -36,7 +37,7 @@ test('Add as a New uses the normal new-model creation path in both import flows'
 });
 
 test('automatic PLM planning still never silently duplicates an existing identity',()=>{
-  const plan=between(APP,'function kolBuildPlmImportPlan','function kolPlmMappingRows');
+  const plan=shared.kolBuildPlmImportPlan.toString();
   assert.match(plan,/existing\.push\(\{target,parsed,changes/);
   assert.match(plan,/else \{ambiguous\.push\(\{parsed,targets:plmTargets\}\);return;\}/);
 });

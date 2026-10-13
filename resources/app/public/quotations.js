@@ -1282,19 +1282,11 @@
   function qToggleApproval(req,line){
     if(!qCanEditLine(req,line)){qViewOnlyNotice(req);return;}
     if(!qValidPrice(line.price)){if(typeof showToast==='function')showToast(qLang('Onaylamak için önce geçerli bir teklif fiyatı gir.','Enter a valid quotation price before approval.'));return;}
-    const was=!!line.approved, affected=new Set();
-    qLoad().requests.forEach(otherReq=>{
-      if(otherReq.source!==req.source||otherReq.ownerId!==req.ownerId||!qCanEditRequest(otherReq))return;
-      otherReq.items.forEach(other=>{
-        if(other.modelKey===line.modelKey && other.approved){other.approved=false;otherReq.updatedAt=qNow();affected.add(otherReq);}
-      });
-    });
-    line.approved=!was;req.updatedAt=qNow();affected.add(req);
+    const affected=new Set(window.BLPricingWorkspaceEngine.approveQuotationLine(qLoad().requests,req,line,!line.approved,qCanEditRequest));affected.forEach(request=>request.updatedAt=qNow());
     if(req.source==='collection'&&req.ownerId===qCurrentUserId()){
       const row=qFindCollectionRow(line);
       if(row){
-        if(line.approved){if(!row.pricing)row.pricing={};row.pricing[line.manufacturer]=qMoneyDisplay(line.price);row.confirmedManufacturer=line.manufacturer;}
-        else if(qNorm(row.confirmedManufacturer)===line.manufacturer)row.confirmedManufacturer='';
+        window.BLPricingWorkspaceEngine.applyApprovedPrice(row,line,qMoneyDisplay,qNorm);
         if(typeof kolApplyRulePricing==='function')kolApplyRulePricing(row);
         if(typeof saveKolRows==='function')saveKolRows();
       }

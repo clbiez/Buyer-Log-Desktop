@@ -300,7 +300,7 @@ test('db: çıktı şablonları kişisel ve ortak (senkronlu) profil deposunda; 
     db.addAiOutputTemplate(null, 'Ekip', { definition: { format: 'xlsx' } }, null);
     const personal = db.loadAiOutputTemplates('u1');
     const shared = db.loadAiOutputTemplates(null);
-    process.stdout.write(JSON.stringify({ kind: personal.kind, personal: personal.items.map(item => item.name), shared: shared.items.map(item => item.name), views: db.loadViews ? 'ok' : '' }));
+    require('node:fs').writeSync(1,JSON.stringify({ kind: personal.kind, personal: personal.items.map(item => item.name), shared: shared.items.map(item => item.name), views: db.loadViews ? 'ok' : '' }));
     setTimeout(() => process.exit(0), 50);`;
   const run = spawnSync(process.execPath, ['-e', script], { env: { ...process.env, BUYER_LOG_SERVER_DATA_ROOT: dir, BUYER_LOG_DATA_ROOT: path.join(dir, 'app'), BUYER_LOG_LOCAL_DATA_ROOT: path.join(dir, 'local') }, encoding: 'utf8', timeout: 60000 });
   const line = String(run.stdout || '').split('\n').find(text => text.startsWith('{'));

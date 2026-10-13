@@ -31,6 +31,8 @@
       {
         "id": "cp.rule.preview",
         "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -44,6 +46,8 @@
       {
         "id": "cp.rule.save",
         "operation": "CREATE/UPDATE",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -57,6 +61,8 @@
       {
         "id": "cp.weekly.preview",
         "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "cp",
           "automations"
@@ -71,6 +77,8 @@
       {
         "id": "cp.weekly.draft",
         "operation": "EXPORT",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "cp",
           "automations"
@@ -85,6 +93,8 @@
       {
         "id": "cp.records",
         "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -98,6 +108,10 @@
       {
         "id": "quality.inspect",
         "operation": "READ",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -111,6 +125,10 @@
       {
         "id": "quality.commit",
         "operation": "IMPORT",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -124,6 +142,10 @@
       {
         "id": "quality.checklist.apply",
         "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -137,6 +159,10 @@
       {
         "id": "quality.fail.drafts",
         "operation": "EXPORT",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "cp",
           "automations"
@@ -151,6 +177,10 @@
       {
         "id": "cp.fields",
         "operation": "READ",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -164,6 +194,10 @@
       {
         "id": "cp.analyze",
         "operation": "READ",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -177,6 +211,10 @@
       {
         "id": "cp.analysis.export",
         "operation": "EXPORT",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -210,6 +248,8 @@
       {
         "id": "app.order.update",
         "operation": "UPDATE",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "cp"
         ],
@@ -223,6 +263,8 @@
       {
         "id": "orders.records",
         "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "orders"
         ],
@@ -236,6 +278,10 @@
       {
         "id": "orders.fields",
         "operation": "READ",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "orders"
         ],
@@ -249,6 +295,10 @@
       {
         "id": "orders.analyze",
         "operation": "READ",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "orders"
         ],
@@ -262,6 +312,10 @@
       {
         "id": "orders.analysis.export",
         "operation": "EXPORT",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "orders"
         ],
@@ -294,6 +348,8 @@
       {
         "id": "collection.records",
         "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "koleksiyon"
         ],
@@ -307,6 +363,10 @@
       {
         "id": "collection.fields",
         "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "koleksiyon"
         ],
@@ -320,6 +380,10 @@
       {
         "id": "collection.analyze",
         "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "koleksiyon"
         ],
@@ -333,6 +397,129 @@
       {
         "id": "collection.analysis.export",
         "operation": "EXPORT",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.fetch",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.import",
+        "operation": "IMPORT",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.records.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.records.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.records.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.supplier.analyze",
+        "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.supplier.export",
+        "operation": "EXPORT",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "koleksiyon"
         ],
@@ -358,7 +545,122 @@
       "compare",
       "analyze"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "quotation.list",
+        "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "QUOTATIONS.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "quotation.apply.collection",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "QUOTATIONS.EDIT"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "quotation.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "QUOTATIONS.CREATE"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "quotation.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "QUOTATIONS.EDIT"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "quotation.status",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "QUOTATIONS.EDIT"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "quotation.approve",
+        "operation": "APPROVE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "QUOTATIONS.EDIT"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "pricinghistory",
@@ -435,6 +737,8 @@
       {
         "id": "lfl.records",
         "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "lfl"
         ],
@@ -448,6 +752,10 @@
       {
         "id": "lfl.fields",
         "operation": "READ",
+        "agentAreas": [
+          "lfl"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "lfl"
         ],
@@ -461,6 +769,10 @@
       {
         "id": "lfl.analyze",
         "operation": "READ",
+        "agentAreas": [
+          "lfl"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "lfl"
         ],
@@ -474,6 +786,46 @@
       {
         "id": "lfl.analysis.export",
         "operation": "EXPORT",
+        "agentAreas": [
+          "lfl"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "lfl"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "lfl.compare",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "lfl",
+          "collection"
+        ],
+        "areas": [
+          "lfl"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "lfl.compare.export",
+        "operation": "EXPORT",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "lfl",
+          "collection"
+        ],
         "areas": [
           "lfl"
         ],
@@ -512,6 +864,8 @@
       {
         "id": "backlog.records",
         "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
         "areas": [
           "backlog"
         ],
@@ -525,6 +879,10 @@
       {
         "id": "backlog.fields",
         "operation": "READ",
+        "agentAreas": [
+          "backlog"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "backlog"
         ],
@@ -538,6 +896,10 @@
       {
         "id": "backlog.analyze",
         "operation": "READ",
+        "agentAreas": [
+          "backlog"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "backlog"
         ],
@@ -551,6 +913,10 @@
       {
         "id": "backlog.analysis.export",
         "operation": "EXPORT",
+        "agentAreas": [
+          "backlog"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "backlog"
         ],
@@ -564,6 +930,10 @@
       {
         "id": "backlog.delivery",
         "operation": "READ",
+        "agentAreas": [
+          "backlog"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "backlog"
         ],
@@ -577,6 +947,10 @@
       {
         "id": "backlog.delivery.export",
         "operation": "EXPORT",
+        "agentAreas": [
+          "backlog"
+        ],
+        "agentAnyAreas": [],
         "areas": [
           "backlog"
         ],

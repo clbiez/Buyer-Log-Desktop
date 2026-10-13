@@ -149,13 +149,13 @@
   // boyut başına tekrar tekrar normalleştiriliyordu (59 bin satırda ~4,4 sn).
   // Sınırlı bellekte tutulur; sonuç birebir aynıdır.
   const memoText=fn=>{const cache=new Map();return value=>{const raw=norm(value);if(raw.length>160)return fn(raw);let hit=cache.get(raw);if(hit===undefined){if(cache.size>=50000)cache.clear();hit=fn(raw);cache.set(raw,hit);}return hit;};};
-  const countryKey=memoText(value=>value.toLocaleUpperCase('tr-TR').replace(/İ/g,'I').replace(/Ş/g,'S').replace(/Ç/g,'C').replace(/Ö/g,'O').replace(/Ü/g,'U').replace(/Ğ/g,'G').replace(/\s+/g,' '));
+  const countryKey=memoText(window.BLLflCalculationEngine.countryKey);
   const searchKey=memoText(value=>countryKey(value).replace(/[^A-Z0-9]+/g,' ').trim());
   const searchCompact=memoText(value=>searchKey(value).replace(/\s+/g,''));
   const normalizeSearchTerms=query=>{const parsed=Array.isArray(query)?query:parseTableSearchTerms(query),mapCriterion=criterion=>{const item=criterion&&typeof criterion==='object'?criterion:{mode:'exact',value:criterion};return {...item,value:searchKey(item.value).toLowerCase()};};return Array.isArray(parsed[0])?parsed.map(group=>group.map(mapCriterion)):parsed.map(mapCriterion);};
   const matchesSearch=(value,query)=>{const terms=normalizeSearchTerms(query);if(!terms.length)return true;const text=searchKey(value),groups=Array.isArray(terms[0])?terms:[terms],compactText=searchCompact(text);const compactCriterionMatches=criterion=>{const term=searchCompact(criterion.value);if(!term)return false;if(criterion.mode==='contains')return compactText.includes(term);if(criterion.mode==='notContains')return !compactText.includes(term);return compactText.includes(term);};return tableSearchMatches(text,terms,{plainMode:'contains'})||groups.every(group=>group.some(compactCriterionMatches));};
-  const isTurkeyCountry=value=>['TURKIYE','TURKEY','TR'].includes(countryKey(value));
-  const currencyForRow=row=>isTurkeyCountry(row&&row.country)?'TRY':'USD';
+  const isTurkeyCountry=window.BLLflCalculationEngine.isTurkeyCountry;
+  const currencyForRow=window.BLLflCalculationEngine.currencyForRow;
   const currencySymbol=currency=>currency==='TRY'?'₺':'$';
   const COUNTRY_CURRENCY_MAP={
     TURKEY:'TRY',TURKIYE:'TRY',TR:'TRY',CHINA:'CNY',CIN:'CNY',EGYPT:'EGP',MISIR:'EGP',
@@ -730,45 +730,13 @@
     rows.forEach(r=>{if(currencyForRow(r)!==currency)return;const q=num(r.quantity),p=num(r.fob);if(!(q>0)||!(p>0))return;qty+=q;weighted+=q*p;orders.add(r.orderCode||r.id);});
     return {currency,avg:qty>0?weighted/qty:null,qty,weighted,orders:orders.size};
   }
-  function summary(rows){
-    const byCurrency={},orders=new Set(),models=new Set(),orderTypes=new Map();let validRows=0,totalQty=0;
-    for(const row of rows||[]){
-      const meta=rowMeta(row);if(!meta.valid)continue;validRows++;totalQty+=meta.quantity;
-      let bucket=byCurrency[meta.currency];if(!bucket)bucket=byCurrency[meta.currency]={currency:meta.currency,avg:null,qty:0,weighted:0,orders:0,_orders:new Set()};
-      bucket.qty+=meta.quantity;bucket.weighted+=meta.quantity*meta.fob;if(meta.order)bucket._orders.add(meta.order);
-      if(meta.order){orders.add(meta.order);const type=dtrTypeForRow(row),previous=orderTypes.get(meta.order);orderTypes.set(meta.order,previous==='NON-DTR'||type==='NON-DTR'?'NON-DTR':'DTR');}
-      if(meta.model)models.add(meta.model);
-    }
-    Object.values(byCurrency).forEach(bucket=>{bucket.avg=bucket.qty>0?bucket.weighted/bucket.qty:null;bucket.orders=bucket._orders.size;delete bucket._orders;});
-    const currencies=Object.keys(byCurrency);let dtr=0,nonDtr=0;orderTypes.forEach(type=>{if(type==='NON-DTR')nonDtr++;else dtr++;});
-    return {avg:currencies.length===1?byCurrency[currencies[0]].avg:null,qty:totalQty,orders:orders.size,models:models.size,rows:validRows,byCurrency,currencies,dtrOrders:{dtr,nonDtr,unknown:0},hasDtrBreakdown:orders.size>0};
-  }
+  function summary(rows){return window.BLLflCalculationEngine.summary(rows,{rowMeta,dtrTypeForRow});}
   function moneySummary(sum){
     if(!sum||!sum.currencies||!sum.currencies.length)return '—';
     return ['TRY','USD'].filter(c=>sum.byCurrency[c]).map(c=>money(sum.byCurrency[c].avg,c)).join(' · ');
   }
-  function metricBetween(current,reference,type='change'){
-    if(!current||!reference)return null;let weighted=0,totalQty=0;
-    for(const currency of ['TRY','USD']){
-      const c=current.byCurrency[currency],r=reference.byCurrency[currency];if(!c||!r||!(c.avg>0)||!(r.avg>0)||!(c.qty>0))continue;
-      const value=type==='improvement'?(r.avg-c.avg)/r.avg*100:(c.avg-r.avg)/r.avg*100;weighted+=value*c.qty;totalQty+=c.qty;
-    }
-    return totalQty?weighted/totalQty:null;
-  }
-  function comparablePeriodRows(currentRows,referenceRows,groupBy=state.breakdown){
-    const dims=Array.isArray(groupBy)?groupBy.filter(Boolean):[],pairKey=row=>{
-      const meta=rowMeta(row);if(!meta.valid)return '';
-      const group=dims.length?groupValue(row,dims):'__all__';
-      return group?`${group}\u0001${meta.currency}`:'';
-    };
-    const currentKeys=new Set((currentRows||[]).map(pairKey).filter(Boolean)),referenceKeys=new Set((referenceRows||[]).map(pairKey).filter(Boolean));
-    const sharedKeys=new Set([...currentKeys].filter(key=>referenceKeys.has(key)));
-    return {
-      currentRows:(currentRows||[]).filter(row=>sharedKeys.has(pairKey(row))),
-      referenceRows:(referenceRows||[]).filter(row=>sharedKeys.has(pairKey(row))),
-      sharedKeys,
-    };
-  }
+  function metricBetween(current,reference,type='change'){return window.BLLflCalculationEngine.metricBetween(current,reference,type);}
+  function comparablePeriodRows(currentRows,referenceRows,groupBy=state.breakdown){return window.BLLflCalculationEngine.comparablePeriodRows(currentRows,referenceRows,groupBy,{rowMeta,groupValue});}
   function comparableMetricBetweenRows(currentRows,referenceRows,groupBy=state.breakdown,type='change'){
     const comparable=comparablePeriodRows(currentRows,referenceRows,groupBy);
     return metricBetween(summary(comparable.currentRows),summary(comparable.referenceRows),type);

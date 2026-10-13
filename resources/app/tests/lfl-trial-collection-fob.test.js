@@ -39,6 +39,7 @@ function loadApi(collectionBridge) {
     setTimeout,
     clearTimeout,
   };
+  context.window.BLLflCalculationEngine=require('../public/lfl-calculation-engine');
   vm.runInNewContext(LFL, context, { filename: 'public/lfl.js' });
   return context.window.__lflTest;
 }
