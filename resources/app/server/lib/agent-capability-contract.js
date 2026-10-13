@@ -14,11 +14,12 @@ function register(registerTool,spec,authorize) {
   if(spec.grantScope&&spec.grantScope!=='collection-editor')throw new TypeError('Unknown native resource grant');
   const effect=spec.risk!=='read',schema=effect?{...spec.inputSchema,properties:{...spec.inputSchema.properties,fingerprint:string(64)}}:spec.inputSchema;
   const meta={...spec,contractVersion:2,category:'app',kind:'app',area:spec.areas?.[0]||'',areas:spec.areas||[],approval:effect,rollbackable:!!spec.restore,
-    inputSchema:schema,outputSchema:spec.outputSchema||resultSchema,dryRunOutputSchema:resultSchema,executionScope:'office-durable-job',
+    inputSchema:schema,outputSchema:spec.outputSchema||resultSchema,dryRunOutputSchema:spec.dryRunOutputSchema||resultSchema,executionScope:'office-durable-job',
     dataScope:spec.dataScope||'current-owner-and-live-IAM',preview:'same-tool-dryRun',validation:'schema + existing application service',audit:'AGENT_CAPABILITY_TOOL',
     idempotency:'durable step reservation and verified receipt; no blind effect retry',retry:effect?'reconcile':'bounded-read-only',
     rollback:spec.restore?'revision-bound inverse through existing service':'unsupported',approvalBinding:'owner + device + current IAM + agent revision + normalized args + source snapshot'};
-  for(const key of ['read','apply','restore'])delete meta[key];
+  if(spec.poll)meta.completion='verified native acknowledgement waits for actual result; existing Office queue polls only';
+  for(const key of ['read','apply','restore','poll'])delete meta[key];
   registerTool(meta,async(raw,ctx)=>{
     const {fingerprint,...args}=raw;validate(spec.inputSchema,args);
     const snapshot=await spec.read(args,ctx);ctx.assertAuthority();

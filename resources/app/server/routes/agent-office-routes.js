@@ -56,6 +56,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.post(base+'/tasks/plan',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskPlan(req.currentUser,req.body||{})})));
   app.post(base+'/tasks/:id/prepare',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskPrepare(req.currentUser,req.params.id)})));
   app.post(base+'/tasks/:id/execute',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskExecute(req.currentUser,req.params.id,req.body||{})})));
+  app.post(base+'/tasks/:id/poll-operation',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskPollOperation(req.currentUser,req.params.id)})));
   app.post(base+'/tasks/:id/reject',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskReject(req.currentUser,req.params.id,req.body||{})})));
   app.post(base+'/tasks/:id/feedback',json,wrap(async(req,res)=>res.json({ok:true,memory:await service.taskFeedback(req.currentUser,req.params.id,req.body||{})})));
   app.post(base+'/tasks/:id/rollback',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskRollback(req.currentUser,req.params.id,req.body||{})})));

@@ -2491,6 +2491,7 @@ function cpAgentMail(profile,args,rows,dryRun,expected=null) {
 }
 const agentToolRegistry = createToolRegistry({
   authorizeCapability:(ctx,args)=>agentOfficeService.taskAuthorize(ctx,args),
+  authorizePendingCapability:(ctx,receipt)=>agentOfficeService.taskAuthorizePending(ctx,receipt),
   cp:{...cpAgentPreferences,data:cpAgentData,calendar:()=>require('./lib/merch-calendar-store').publicProjection(),mail:cpAgentMail,
     assertRevision:(profile,revision)=>{if(cpAgentRevision(profile)!==revision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});},
     verifyMail:(result,profile)=>result.emails.length>0&&result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id))),
@@ -5403,32 +5404,53 @@ function oabDesktopAuthRequired() {
   error.code = 'OAB_AUTH_REQUIRED'; error.statusCode = 401;
   return error;
 }
-async function ensurePassConnected(userId, params, transport) {
+function assertOabCurrentAccess(userId) {
+  const current = userAccess.profileById(userId);
+  if (!current || current.enabled === false || !userAccess.hasArea(current,'overview') || !userAccess.hasCapability(current,'OAB.VIEW')) {
+    throw Object.assign(new Error('OAB_ACCESS_REVOKED'),{code:'OAB_ACCESS_REVOKED',statusCode:403});
+  }
+}
+async function ensurePassConnected(userId, params, transport, assertAuthority = () => assertOabCurrentAccess(userId)) {
+  assertOabCurrentAccess(userId); await assertAuthority();
   if (transport === OAB_DESKTOP_TRANSPORT) {
-    if (await oabDesktopSessionReady()) return { connected:true, authenticated:true, transport:'desktop-session' };
+    const ready = await oabDesktopSessionReady();
+    assertOabCurrentAccess(userId); await assertAuthority();
+    if (ready) return { connected:true, authenticated:true, transport:'desktop-session' };
     throw oabDesktopAuthRequired();
   }
   const status = agentBrowserConnector.passAuthStatus(userId);
   if (status.connected) return status;
   const storage = await agentBrowserConnector.passStorageAuthStatus(userId).catch(() => null);
+  assertOabCurrentAccess(userId); await assertAuthority();
   if (storage && storage.connected) return storage;
-  return agentBrowserConnector.capturePassAuthorization(userId, params || {});
+  const connected = await agentBrowserConnector.capturePassAuthorization(userId, params || {});
+  assertOabCurrentAccess(userId); await assertAuthority();
+  return connected;
 }
 // Corporate SSO may expire while the in-memory request template still exists.
 // Browser mode: on the first 401/403, recapture in the SAME browser context and
 // retry once. Desktop mode: oabApiClient clears the RAM token and returns
 // OAB_AUTH_EXPIRED; the renderer renews it through the hidden session and retries.
-async function fetchOabReportWithLoginRecovery(userId, params, transport) {
+async function fetchOabReportWithLoginRecovery(userId, params, transport, assertAuthority = () => assertOabCurrentAccess(userId)) {
+  assertOabCurrentAccess(userId); await assertAuthority('before-request');
   if (transport === OAB_DESKTOP_TRANSPORT) {
     // The desktop relay runs the call inside the hidden signed-in PASS page.
-    return oabDesktopRelay.configured() ? oabDesktopRelay.fetchReportData(params || {}) : oabApiClient.fetchReportData(params || {});
+    const rows = await (oabDesktopRelay.configured() ? oabDesktopRelay.fetchReportData(params || {}) : oabApiClient.fetchReportData(params || {}));
+    assertOabCurrentAccess(userId); await assertAuthority('after-response');
+    return rows;
   }
   try {
-    return await agentBrowserConnector.fetchPassReportData(userId, params);
+    const rows = await agentBrowserConnector.fetchPassReportData(userId, params);
+    assertOabCurrentAccess(userId); await assertAuthority('after-response');
+    return rows;
   } catch (err) {
     if (!err || err.code !== 'PASS_SESSION_EXPIRED') throw err;
+    assertOabCurrentAccess(userId); await assertAuthority('before-request');
     await agentBrowserConnector.capturePassAuthorization(userId, params || {});
-    return agentBrowserConnector.fetchPassReportData(userId, params);
+    assertOabCurrentAccess(userId); await assertAuthority('before-request');
+    const rows = await agentBrowserConnector.fetchPassReportData(userId, params);
+    assertOabCurrentAccess(userId); await assertAuthority('after-response');
+    return rows;
   }
 }
 async function oabDesktopSessionReady() {
@@ -5535,6 +5557,9 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
         details:{ field:metadataSelection.field },
       });
     }
+    assertOabCurrentAccess(req.currentUser.id);
+    const snapshotFingerprint = oabSessionStore.fingerprint(req.currentUser.id);
+    const snapshotOptions = {expectedFingerprint:snapshotFingerprint,assertAuthority:()=>assertOabCurrentAccess(req.currentUser.id)};
     const key = oabStore.cacheKeyOf(seasonRef, merchSubGroupRef, buyerGroupRef);
     if (!body.forceRefresh) {
       const cached = oabStore.get(key);
@@ -5545,7 +5570,7 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
           fields:cached.fields,
           fetchedAt:cached.fetchedAt,
           fromCache:true,
-        });
+        }, snapshotOptions);
         return res.json({ ok:true, rows:cached.rows, fields:cached.fields, fromCache:true, fetchedAt:cached.fetchedAt, ttlMinutes:cached.ttlMinutes });
       }
     }
@@ -5563,7 +5588,7 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
       fields:saved.fields,
       fetchedAt:saved.fetchedAt,
       fromCache:false,
-    });
+    }, snapshotOptions);
     userAccess.appendAudit(req.currentUser, 'OAB_REPORT_FETCH', key, { rows: rows.length, fields: fields.length, forceRefresh: Boolean(body.forceRefresh) });
     res.json({ ok:true, rows:saved.rows, fields:saved.fields, fromCache:false, fetchedAt:saved.fetchedAt, ttlMinutes:oabStore.loadCacheSettings().ttlMinutes });
   } catch (err) { automationError(res, err, 'OAB raporu alınamadı.'); }
@@ -5691,7 +5716,9 @@ require('./routes/agent-office-routes')(app, {
   applyAutomation:async(profile,code)=>{await agentOfficeAutomationPreview(profile,code);const {parsed,validation}=automationAiRequest(code);const compiled=aiAutomationCompiler.compile(parsed,validation,{sourceCode:code});
     const normalized=automationNormalizePayload({...compiled,enabled:false},profile.id);return automationRecipeStore.createRecipe(profile.id,normalized).result;}
 });
+const nativeOabBatchService = require('./lib/oab-batch-service').createOabBatchService({ensurePassConnected,fetchOabReportWithLoginRecovery,logRuntimeFailure,oabBatch,oabSessionStore,oabStaticMetadata,oabStore,redactSecrets,userAccess});
 require('./routes/oab-batch-routes')(app, {
+  oabBatchService: nativeOabBatchService,
   afterSharedCollectionSave,
   automationError,
   canonicalCollectionOwner,
@@ -10823,6 +10850,10 @@ app.put('/api/transit-rules', userAccess.requireArea('source'), userAccess.requi
 // bunu okumaz: öneriler kullanıcı onayıyla /api/transit-rules'a yazılır.
 const agentResourceDeps={withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),flush:async()=>{await deltaStore.flush();},changed:async(profile,section,detail)=>{publishSharedMasterChange(section,{currentUser:profile},detail);userAccess.appendAudit(profile,'AGENT_RESOURCE_UPDATE',section,detail);liveEvents.notifyChange(section,null);},impact:require('./lib/agent-resource-impact').createResourceImpact({office:agentOfficeStore,userAccess,dataset:agentPlatformDataset})};
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
+require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
+require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});
+require('./lib/agent-oab-job-tools').registerOabJobTools(agentToolRegistry,{service:nativeOabBatchService,transport:OAB_DESKTOP_TRANSPORT,office:agentOfficeStore});
+require('./lib/agent-oab-execution-tools').registerOabExecutionTools(agentToolRegistry,{native:nativeOabBatchService,transport:OAB_DESKTOP_TRANSPORT,guard:(ctx,work)=>agentOfficeService.taskNativeGuard(ctx,work),restoreGuard:(ctx,work)=>agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 const manufacturerAsasSource=require('./lib/agent-manufacturer-asas-source').createManufacturerAsasSource({office:agentOfficeStore,userAccess,dataset:agentPlatformDataset,stamp:ctx=>{const profile=userAccess.profileById(ctx.ownerId),cache=cacheForUser(ctx.ownerId);return {loadedAt:cache.loadedAt,cpupdateOverrides:cache.cpupdateOverrides,overrides:loadOverrides({projectManufacturers:false}),preferences:userPreferences.load(ctx.ownerId),roleEntries:userAccess.roleWorkspaceEntries(profile),actor:profile};}});
 require('./lib/agent-manufacturer-tools').registerManufacturerTools(agentToolRegistry,{...agentResourceDeps,asasSource:manufacturerAsasSource});
 require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegistry,{...agentResourceDeps,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});

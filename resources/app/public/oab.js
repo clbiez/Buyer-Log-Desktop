@@ -441,8 +441,11 @@
     // v7.20 — çoklu seçim: plan (maliyet tahmini) ve arka plan toplu çekme.
     plan: selection => oabJson('/api/oab/plan', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(selection) }),
     batchStart: selection => oabJson('/api/oab/batch', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(selection) }),
-    batchStatus: () => oabJson('/api/oab/batch-status'),
+    batchStatus: jobId => oabJson('/api/oab/batch-status'+(jobId?'?jobId='+encodeURIComponent(jobId):'')),
     batchCancel: () => oabJson('/api/oab/batch/cancel', { method: 'POST' }),
+    completedBatchState: jobId => oabJson('/api/oab/batch/completed-state', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId})}),
+    continuationPlan: jobId => oabJson('/api/oab/batch/continuation-plan', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId})}),
+    batchContinue: (jobId,sourceFingerprint) => oabJson('/api/oab/batch/continue', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobId,sourceFingerprint,confirmed:true})}),
     state: () => oabJson('/api/oab/state'),
     getSettings: () => oabJson('/api/oab/settings'),
     saveSettings: settings => oabJson('/api/oab/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(settings) }),
@@ -652,6 +655,42 @@
 
   function oabAuthErrorMessage(err) {
     const code = err && err.code;
+    if (code === 'OAB_BATCH_INTERRUPTED') return oabT(
+      'OAB işini çalıştıran uygulama kapandı veya işlem kesildi. Gerçek iş makbuzu korundu; belirsiz iş otomatik tekrar edilmedi. Mevcut raporu kontrol edip yeni bir planla devam edin.',
+      'The application executing the OAB job closed or the work was interrupted. The actual job receipt was retained; uncertain work was not replayed automatically. Check the current report and continue with a new plan.');
+    if (code === 'OAB_CONTINUATION_CHANGED') return oabT(
+      'OAB devam planından sonra rapor, iş kaydı, metadata veya yetki değişti. Mevcut rapor korundu; yeni bir plan oluşturun.',
+      'The report, job receipt, metadata or access changed after the OAB continuation plan. The existing report was preserved; create a new plan.');
+    if (code === 'OAB_CONTINUATION_UNAVAILABLE') return oabT(
+      'Bu OAB işi güvenle devam ettirilemiyor. İptal edilmiş, hâlâ çalışan veya güncel rapordan farklı bir işe otomatik devam edilmez; mevcut raporu kontrol edin.',
+      'This OAB job cannot be continued safely. Cancelled, still running or outdated jobs are not continued automatically; check the existing report.');
+    if (code === 'OAB_APPROVAL_REQUIRED') return oabT(
+      'OAB devam planı kullanıcı onayı gerektiriyor.',
+      'The OAB continuation plan requires user approval.');
+    if (code === 'OAB_JOB_RESULT_INVALID') return oabT(
+      'Kalıcı OAB iş sonucu doğrulanamadı. Bozuk veya eksik satırlar rapora katılmadı; mevcut raporu kontrol edin.',
+      'The persistent OAB job result could not be verified. Corrupt or missing rows were not added to the report; check the current report.');
+    if (code === 'OAB_JOB_RESULT_UNAVAILABLE') return oabT(
+      'OAB iş makbuzu korundu; bu işin satır sonucu mevcut süreçte bulunmuyor. Son kalıcı raporu açıp kapsamını kontrol edin.',
+      'The OAB job receipt was retained; its row result is unavailable in this process. Open the latest persistent report and check its scope.');
+    if (['OAB_JOB_STORE_INVALID','OAB_JOB_STORE_FAILED','OAB_JOB_STORE_BUSY'].includes(code)) return oabT(
+      'Kalıcı OAB iş makbuzu doğrulanamadı veya kaydedilemedi. İş otomatik tekrar edilmeyecek; mevcut raporu kontrol edin.',
+      'The persistent OAB job receipt could not be verified or saved. The work will not replay automatically; check the current report.');
+    if (code === 'OAB_JOB_COMMAND_CHANGED') return oabT(
+      'Bu OAB iş kimliği farklı bir seçime bağlı. Mevcut iş makbuzunu kontrol edip yeni bir plan oluşturun.',
+      'This OAB command identity is bound to a different selection. Check its existing receipt and create a new plan.');
+    if (code === 'OAB_SNAPSHOT_REVISION_INVALID') return oabT(
+      'Kalıcı OAB raporunun kaynak kimliği doğrulanamadı. Mevcut veri değiştirilmedi; kaynak kaydını kontrol edin.',
+      'The persistent OAB report’s source identity could not be verified. Existing data was not changed; check the source record.');
+    if (code === 'OAB_SNAPSHOT_CHANGED') return oabT(
+      'Başka bir sekmede OAB raporu güncellendi. Güncel rapor korundu; seçiminizi kontrol edip tekrar deneyin.',
+      'The OAB report changed in another tab. The current report was preserved; check your selection and retry.');
+    if (code === 'OAB_SNAPSHOT_SAVE_FAILED') return oabT(
+      'Çekilen OAB sonucu kalıcı olarak kaydedilemedi. Mevcut raporu kontrol edip tekrar deneyin.',
+      'The fetched OAB result could not be saved persistently. Check the existing report and retry.');
+    if (code === 'OAB_ACCESS_REVOKED') return oabT(
+      'OAB erişim yetkiniz değişti. İşlem durduruldu; erişiminizi kontrol edip yeni bir planla tekrar deneyin.',
+      'Your OAB access changed. The job stopped; check your access and retry with a new plan.');
     if (oabUsesDesktopSession()) {
       if (code === 'OAB_AUTH_CANCELLED') return oabT(
         'OAB girişi tamamlanmadan giriş penceresi kapatıldı. Tekrar deneyin.',
@@ -945,11 +984,11 @@
   // eylemi (Season/MAG/BuyerGroup yükleme veya rapor çekme) tek tıkla tekrar
   // deneyebileceği bir şerit. "PASS'e Bağlan" artık AYRI bir ön adım değil —
   // yalnızca bir işlem PASS bağlantısı gerektirip başarısız olduğunda çıkar.
-  function oabShowRetry(message, retryFn) {
+  function oabShowRetry(message, retryFn, label = oabT('Tekrar Dene', 'Retry')) {
     oabFailActivity(message);
     const bar = oabEl('oabAuthBar');
     if (!bar) { oabSetStatus(message, 'error'); return; }
-    bar.innerHTML = `<span>${oabEsc(message)}</span><button type="button" class="navActionBtn" id="oabRetryBtn">${oabEsc(oabT('Tekrar Dene', 'Retry'))}</button>`;
+    bar.innerHTML = `<span>${oabEsc(message)}</span><button type="button" class="navActionBtn" id="oabRetryBtn">${oabEsc(label)}</button>`;
     bar.hidden = false;
     oabEl('oabRetryBtn')?.addEventListener('click', () => { bar.hidden = true; void retryFn(); });
   }
@@ -1169,9 +1208,9 @@
     oabRenderBody();
   }
 
-  async function oabRestoreLastSnapshot() {
+  async function oabRestoreLastSnapshot(expectedJobId) {
     let payload = null;
-    try { payload = await OABApi.state(); }
+    try { payload = expectedJobId?await OABApi.completedBatchState(expectedJobId):await OABApi.state(); }
     catch (_) { return false; } // snapshot yokluğu/açılış hatası OAB ekranını bloke etmez.
     const state = payload && payload.state;
     const selection = state && state.selection;
@@ -1322,7 +1361,11 @@
       const modal = document.createElement('div');
       modal.className = 'warnOverlay';
       modal.innerHTML = `<div class="modalCard" role="dialog" aria-modal="true">
-        <div class="modalTitle">${oabEsc(oabT('Bu rapor uzun sürecek', 'This report will take a while'))}</div>
+        <div class="modalTitle">${oabEsc(plan.retainedCombinationCount!==undefined?oabT('Yarım kalan OAB işine devam et', 'Continue interrupted OAB work'):oabT('Bu rapor uzun sürecek', 'This report will take a while'))}</div>
+        ${plan.retainedCombinationCount!==undefined?`<p>${oabEsc(oabT(
+          `${plan.retainedCombinationCount} kombinasyonun doğrulanmış sonucu korunacak; yalnız kalan kombinasyonlar alınacak. İlk işteki yenileme tercihi korunur. Uygulama kapalıyken iş ilerlemez.`,
+          `Verified results from ${plan.retainedCombinationCount} combinations will be retained; only remaining combinations will be fetched. The original refresh preference is preserved. Work does not progress while the application is closed.`
+        ))}</p>`:''}
         <p>${oabEsc(oabT(
           `Seçiminiz ${plan.combinationCount} kombinasyon üretiyor ve ${plan.requestCount} OAB isteği gerektiriyor. Tahmini süre ${oabFormatDuration(plan.estimateSeconds)}.`,
           `Your selection produces ${plan.combinationCount} combinations and needs ${plan.requestCount} OAB requests. Estimated time ${oabFormatDuration(plan.estimateSeconds)}.`,
@@ -1344,6 +1387,29 @@
       modal.addEventListener('click', event => { if (event.target === modal) done(false); });
     });
   }
+  function oabOfferContinuation(jobId) {
+    oabShowRetry(oabT('Yarım kalan OAB işi bulundu. Devam etmeden önce doğrulanmış sonuçlar ve kalan seçimler kontrol edilir.', 'An interrupted OAB job was found. Verified results and remaining selections are checked before continuing.'),()=>oabContinueInterruptedJob(jobId),oabT('Devam planını incele', 'Review continuation plan'));
+  }
+  async function oabDiscoverInterruptedJob() {
+    try {const status=await OABApi.batchStatus();if(status.job?.interrupted&&!status.job.cancelled)oabOfferContinuation(status.job.jobId);}
+    catch (_) { /* Existing report remains available if the job receipt cannot be read. */ }
+  }
+  async function oabContinueInterruptedJob(jobId) {
+    if(S.busy)return;
+    S.busy=true;S.busyStartedAt=performance.now();oabUpdateActionButtons();
+    try {
+      const plan=await OABApi.continuationPlan(jobId);
+      if(!(await oabConfirmHeavyRun(plan))){oabOfferContinuation(jobId);return;}
+      const started=await OABApi.batchContinue(jobId,plan.sourceFingerprint);
+      S.batchJob=started.job;oabRenderProgress(S.batchJob);oabSetActivity('fetch');
+      const finished=await oabPollBatch(started.job.jobId);
+      if(finished.job?.snapshotSaved!==true){const code=finished.job?.snapshotErrorCode||'OAB_SNAPSHOT_SAVE_FAILED';throw Object.assign(new Error(oabAuthErrorMessage({code})),{code});}
+      oabSetActivity('process');
+      if(!(await oabRestoreLastSnapshot(started.job.jobId)))throw Object.assign(new Error(oabAuthErrorMessage({code:'OAB_JOB_RESULT_UNAVAILABLE'})),{code:'OAB_JOB_RESULT_UNAVAILABLE'});
+      oabReportBatchOutcome(finished);oabFinishActivity();
+    } catch(error) {oabShowRetry(oabReportErrorMessage(error),()=>oabContinueInterruptedJob(jobId),oabT('Devam planını incele', 'Review continuation plan'));}
+    finally {S.busy=false;S.busyStartedAt=0;oabUpdateActionButtons();}
+  }
   async function oabRunBatch(forceRefresh) {
     const plan = await OABApi.plan(oabCurrentSelection(forceRefresh));
     S.plan = plan; oabRenderPlanBar();
@@ -1361,7 +1427,7 @@
     oabRenderProgress(S.batchJob);
     oabUpdateActionButtons();
     oabSetBusyStatus(oabT('OAB kombinasyonları çekiliyor', 'Fetching OAB combinations'));
-    const finished = await oabPollBatch();
+    const finished = await oabPollBatch(started.job.jobId);
     S.batchJob = finished.job;
     oabRenderProgress(S.batchJob);
     oabUpdateActionButtons();
@@ -1376,16 +1442,24 @@
       ? oabT('İşlem iptal edildi; o ana kadar çekilen veriler korundu.', 'The job was cancelled; data fetched up to that point was kept.')
       : '');
   }
-  function oabPollBatch() {
+  function oabPollBatch(expectedJobId) {
     return new Promise((resolve, reject) => {
       const tick = async () => {
         try {
-          const status = await OABApi.batchStatus();
+          const status = await OABApi.batchStatus(expectedJobId);
+          if(expectedJobId&&status.job?.jobId!==expectedJobId){const code='OAB_JOB_COMMAND_CHANGED',error=new Error(oabAuthErrorMessage({code}));error.code=code;reject(error);return;}
           if (!status.job) { resolve({ job: null, rows: null }); return; }
           S.batchJob = status.job;
           oabRenderProgress(status.job);
           if (status.job.running) { S.batchTimer = setTimeout(tick, 1000); return; }
-          if (oabIsAuthErrorCode(status.job.errorCode)) {
+          if (['OAB_JOB_STORE_FAILED','OAB_JOB_STORE_INVALID','OAB_JOB_STORE_BUSY','OAB_BATCH_INTERRUPTED','OAB_CONTINUATION_CHANGED'].includes(status.job.errorCode)) {
+            const code=status.job.errorCode,error=new Error(oabAuthErrorMessage({code}));error.code=code;reject(error);return;
+          }
+          if (status.resultAvailable === false) {
+            const code = status.resultErrorCode || (status.job.interrupted ? 'OAB_BATCH_INTERRUPTED' : 'OAB_JOB_RESULT_UNAVAILABLE');
+            const error = new Error(oabAuthErrorMessage({code}));error.code=code;reject(error);return;
+          }
+          if (oabIsAuthErrorCode(status.job.errorCode) || status.job.errorCode === 'OAB_ACCESS_REVOKED') {
             const error = new Error(status.job.error || oabT('OAB oturumu gerekli.', 'OAB sign-in is required.'));
             error.code = status.job.errorCode;
             reject(error);
@@ -1419,11 +1493,14 @@
       ? oabT(`${sources.length} kombinasyon rapora eklendi`, `${sources.length} combinations added to the report`)
       : oabT(`${sources.length} kombinasyon birleştirildi`, `${sources.length} combinations merged`));
     if (job.cancelled) notes.push(oabT('iş iptal edildi', 'job cancelled'));
+    if (job.snapshotSaved === false) notes.push(job.snapshotErrorCode === 'OAB_SNAPSHOT_CHANGED'
+      ? oabT('sonuç kalıcılaştırılmadı; diğer sekmenin güncel raporu korundu', 'result was not persisted; the other tab’s current report was preserved')
+      : oabT('sonuç kalıcılaştırılamadı; mevcut raporu kontrol edin', 'result could not be persisted; check the existing report'));
     if (failures.length) notes.push(oabT(`${failures.length} kombinasyon alınamadı`, `${failures.length} combinations failed`));
     if (job.batchedBuyerGroups === 'supported') notes.push(oabT('toplu Buyer Group isteği kullanıldı', 'batched Buyer Group request used'));
     if (failures.length) notes.push(oabT('— detay için tıklayın', '— click for details'));
     // Sıra önemli: oabSetStatus listeyi temizler, sonra dolduruyoruz.
-    oabSetStatus(notes.join(' · '), failures.length || job.cancelled ? 'warning' : '');
+    oabSetStatus(notes.join(' · '), failures.length || job.cancelled || job.snapshotSaved === false ? 'warning' : '');
     S.batchFailures = failures;
     oabBindFailureDetails();
   }
@@ -1507,7 +1584,7 @@
       const started = await OABApi.batchStart({ combinations, forceRefresh: true });
       S.batchJob = started.job;
       oabRenderProgress(S.batchJob);
-      const finished = await oabPollBatch();
+      const finished = await oabPollBatch(started.job.jobId);
       S.batchJob = finished.job;
       oabRenderProgress(S.batchJob);
       if (!finished.rows) { oabSetStatus(oabT('Yeniden deneme sonuç döndürmedi.', 'The retry returned no result.'), 'error'); oabFailActivity(oabT('Yeniden deneme sonuç döndürmedi.', 'The retry returned no result.')); return; }
@@ -3267,7 +3344,7 @@
     oabEl('oabExcelExportBtn')?.addEventListener('click', () => void oabExportExcel());
     oabUpdateActionButtons();
     const loaded = await oabLoadSeasons();
-    if (loaded) await oabRestoreLastSnapshot();
+    if (loaded) {await oabRestoreLastSnapshot();await oabDiscoverInterruptedJob();}
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', oabInit, { once: true });
   else oabInit();

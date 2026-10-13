@@ -8,7 +8,217 @@
       "compare",
       "view"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "oab.snapshot.read",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "intake.snapshot.read",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.auth.status",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.metadata.read",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.plan",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.receipt",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.results",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.continuation.plan",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.start",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.continue",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "oab.batch.cancel",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "OAB.VIEW"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "cp",
