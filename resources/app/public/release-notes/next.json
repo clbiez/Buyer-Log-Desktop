@@ -4783,6 +4783,39 @@
           "en": "The full native history is read under the same source version"
         }
       }
+    },
+    {
+      "id": "agent-transit-royalty-typed-results",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynaklar / Agent Ofisi",
+        "en": "Sources / Agent Office"
+      },
+      "title": {
+        "tr": "Transit ve royalty sonuçları tam geri almayla doğrulanır",
+        "en": "Transit and royalty results validate with complete native undo"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Checklist / haftalık mail",
+        "en": "Agent Office › Tasks › Checklist / weekly email"
+      },
+      "body": {
+        "tr": "Transit ve royalty okuma/revizyon araçlarında gerçek kural, etki ve kayıt sonuçları açık alan sözleşmeleriyle doğrulanır. Eski kayıtların tanınmayan alanları önizlemede eksiltme sayısıyla bildirilir; tam önceki native kayıt kullanıcıya ve göreve bağlı yerel arşivde geri alma için korunur. Arşiv başarısızsa veya beklerken agent yetkisi/kaynak revizyonu değişirse iş verisi değiştirilmez. Aynı native kural, journal ve hesaplama motorları kullanılır.",
+        "en": "Transit and royalty read/revision tools validate actual rule, impact and write results with explicit field contracts. Unknown legacy fields are declared as omissions in previews; complete prior native records are preserved in owner and task bound local undo archives. Archive failure or a changed agent/source revision during the wait prevents business changes. Existing native rule, journal and calculation engines are reused."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-transit-royalty-typed-results.png",
+        "alt": {
+          "tr": "Demo kurallarla gerçek Agent Ofisinde transit/royalty etkisi ve doğrulanmış revizyon",
+          "en": "Transit/royalty impact and verified revisions for demo rules in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Native kural ve etki değerleri ile tam önceki kayıt korunur",
+          "en": "Native rule/impact values and complete prior records are preserved"
+        }
+      }
     }
   ]
 }
