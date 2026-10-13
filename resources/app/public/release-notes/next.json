@@ -5279,6 +5279,35 @@
           "en": "Local demo EML documents · actual partial result · inverse available"
         }
       }
+    },
+    {
+      "id": "agent-quality-operation-permissions",
+      "type": "fix",
+      "module": {
+        "tr": "Quality · Agent Ofisi",
+        "en": "Quality · Agent Office"
+      },
+      "title": {
+        "tr": "Quality işlemleri güncel işlem yetkisi gerektirir",
+        "en": "Quality operations require current operation permissions"
+      },
+      "description": {
+        "tr": "Yalnız görüntüleme yetkisi yazma veya taslak üretme izni vermez. Yeni raporda oluşturma, mevcut raporda düzenleme, checklist değişikliğinde düzenleme ve taslakta dışa aktarma yetkisi aranır. Karma raporlar bütün gerekli izinleri ister; yetki kayıt kilidi içinde ve geri almada yeniden kontrol edilir.",
+        "en": "View permission does not grant writes or draft creation. New reports require create, existing reports require edit, checklist changes require edit and drafts require export permission. Mixed reports require every relevant permission; authority is rechecked inside record leases and during inverse execution."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-operation-permissions.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log görüntüleme kullanıcısına yalnız Quality okuma aracı sunulur",
+          "en": "The actual Buyer Log view user is offered only the Quality read tool"
+        },
+        "caption": {
+          "tr": "Gerçek yerel demo kullanıcı · yazma ve dışa aktarma reddedildi",
+          "en": "Actual local demo user · writes and export denied"
+        }
+      }
     }
   ]
 }
