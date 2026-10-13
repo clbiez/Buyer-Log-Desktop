@@ -334,7 +334,9 @@
           "cp"
         ],
         "permissions": [],
-        "capabilities": [],
+        "capabilities": [
+          "CP.VIEW"
+        ],
         "risk": "read",
         "approval": false,
         "rollbackable": false,
@@ -351,7 +353,13 @@
           "cp"
         ],
         "permissions": [],
-        "capabilities": [],
+        "capabilities": [
+          "CP.VIEW"
+        ],
+        "anyCapabilities": [
+          "CP.CREATE",
+          "CP.EDIT"
+        ],
         "risk": "write",
         "approval": true,
         "rollbackable": true,
@@ -368,7 +376,10 @@
           "cp"
         ],
         "permissions": [],
-        "capabilities": [],
+        "capabilities": [
+          "CP.VIEW",
+          "CP.EDIT"
+        ],
         "risk": "write",
         "approval": true,
         "rollbackable": true,
@@ -386,7 +397,10 @@
           "automations"
         ],
         "permissions": [],
-        "capabilities": [],
+        "capabilities": [
+          "CP.VIEW",
+          "CP.EXPORT"
+        ],
         "risk": "write",
         "approval": true,
         "rollbackable": false,
