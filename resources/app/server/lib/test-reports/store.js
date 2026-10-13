@@ -96,6 +96,7 @@ function actorInfo(actor) {
 function commit(items, typeMap, actor, attach, options = {}) {
   const who = actorInfo(actor);
   return withFileLeaseSync(FILE, () => {
+    options.assertAuthority?.();
     const store = read();
     if (options.expectedRevision != null && store.revision !== options.expectedRevision) throw Object.assign(new Error('Test report revision changed.'), { code:'TEST_REPORT_REVISION_CONFLICT', statusCode:409 });
     const at = new Date().toISOString();
@@ -138,7 +139,7 @@ function commit(items, typeMap, actor, attach, options = {}) {
       const typeKey = text(key, 200), itemId = text(value, 160);
       if (typeKey && itemId) store.typeMap[typeKey] = { itemId, at, by: who.name || who.id };
     }
-    write(store);
+    options.assertAuthority?.();write(store);
     return { ok: true, revision: store.revision, results, typeMap: store.typeMap };
   });
 }
@@ -146,6 +147,7 @@ function commit(items, typeMap, actor, attach, options = {}) {
 function restore(receipt, actor, options = {}) {
   return withFileLeaseSync(FILE, () => {
     const applyInverse = () => {
+    options.assertAuthority?.();
     const current = read();
     if (current.revision !== receipt.expectedRevision) throw Object.assign(new Error('Test report revision changed.'), { code:'TEST_REPORT_REVISION_CONFLICT', statusCode:409 });
     for (const [id, previous] of Object.entries(receipt.records)) {
@@ -153,7 +155,7 @@ function restore(receipt, actor, options = {}) {
       if (previous.link == null) delete current.links[id]; else current.links[id] = previous.link;
     }
     current.events.push({type:'agent-report-undo', at:new Date().toISOString(), by:actorInfo(actor), talepNos:Object.keys(receipt.records)});
-    write(current);
+    options.assertAuthority?.();write(current);
     return {verified:true, revision:current.revision};
     };
     return options.withDependencies ? options.withDependencies(applyInverse) : applyInverse();
