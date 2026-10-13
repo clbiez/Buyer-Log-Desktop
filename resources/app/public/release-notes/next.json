@@ -5382,6 +5382,93 @@
           "en": "Actual demo order · approved rejection decision · verified inverse"
         }
       }
+    },
+    {
+      "id": "agent-quality-partial-receipt",
+      "type": "fix",
+      "module": {
+        "tr": "Quality · Agent Ofisi",
+        "en": "Quality · Agent Office"
+      },
+      "title": {
+        "tr": "Kısmi test sonucu gerçek işlem kaydıyla korunur",
+        "en": "Partial test outcomes retain actual execution receipts"
+      },
+      "description": {
+        "tr": "Daha yeni cevap nedeniyle atlanan kayıtlar başarılı yazmaları başarısız göstermez. Güncellenen ve atlanan sayılar doğrulanır; kısmi görev sonraki adımı otomatik çalıştırmaz ve tam geri alma sunar. Uzun kimliklerde ayrıntı sınırı ve eksik sayısı açıklanır; eski görev kayıtları desteklenir.",
+        "en": "Records skipped due to newer answers no longer mark successful writes as failed. Updated and skipped counts are verified; partial tasks stop automatic downstream execution and retain complete inverses. Long identities have declared detail limits and omission counts; historical task receipts remain supported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-partial-receipt.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde bir güncelleme ve bir atlama ile kısmi Quality sonucu",
+          "en": "Actual partial Quality result with one update and one skip in Agent Office"
+        },
+        "caption": {
+          "tr": "Yerel demo EML belgeleri · gerçek kısmi sonuç · geri alma kullanılabilir",
+          "en": "Local demo EML documents · actual partial result · inverse available"
+        }
+      }
+    },
+    {
+      "id": "agent-quality-operation-permissions",
+      "type": "fix",
+      "module": {
+        "tr": "Quality · Agent Ofisi",
+        "en": "Quality · Agent Office"
+      },
+      "title": {
+        "tr": "Quality işlemleri güncel işlem yetkisi gerektirir",
+        "en": "Quality operations require current operation permissions"
+      },
+      "description": {
+        "tr": "Yalnız görüntüleme yetkisi yazma veya taslak üretme izni vermez. Yeni raporda oluşturma, mevcut raporda düzenleme, checklist değişikliğinde düzenleme ve taslakta dışa aktarma yetkisi aranır. Karma raporlar bütün gerekli izinleri ister; yetki kayıt kilidi içinde ve geri almada yeniden kontrol edilir.",
+        "en": "View permission does not grant writes or draft creation. New reports require create, existing reports require edit, checklist changes require edit and drafts require export permission. Mixed reports require every relevant permission; authority is rechecked inside record leases and during inverse execution."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-operation-permissions.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log görüntüleme kullanıcısına yalnız Quality okuma aracı sunulur",
+          "en": "The actual Buyer Log view user is offered only the Quality read tool"
+        },
+        "caption": {
+          "tr": "Gerçek yerel demo kullanıcı · yazma ve dışa aktarma reddedildi",
+          "en": "Actual local demo user · writes and export denied"
+        }
+      }
+    },
+    {
+      "id": "agent-quality-report-own-receipt",
+      "type": "fix",
+      "module": {
+        "tr": "Quality · Agent Ofisi",
+        "en": "Quality · Agent Office"
+      },
+      "title": {
+        "tr": "Rapor aktarımı kendi doğrulanmış sonucunu korur",
+        "en": "Report imports retain their own verified result"
+      },
+      "description": {
+        "tr": "Başarılı rapor aktarımından hemen sonraki başka kullanıcı düzenlemesi işlem kaydını kaybettirmez. Aktarımın gerçek kimlikleri ve revizyonu mevcut servis makbuzundan doğrulanır; daha yeni rapor revizyonu eski geri almayı engeller.",
+        "en": "Another user’s edit immediately after a successful report import no longer discards its receipt. Actual imported identities and revision are verified from the existing service acknowledgement; newer report revisions prevent stale inverses."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-report-own-receipt.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde iki demo EML raporunun doğrulanmış aktarım kaydı",
+          "en": "Verified import receipt for two demo EML reports in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek yerel EML aktarımı · iki rapor · tam geri alma",
+          "en": "Actual local EML import · two reports · complete inverse"
+        }
+      }
     }
   ]
 }

@@ -12,7 +12,8 @@ const itemSchema={...object({talepNo:string(20),orderKey:string(300),itemId:stri
 const picks=array(itemSchema,100);
 function registerQualityTools(registry,deps) {
   const {service,authorizedOrders,dataset,mail}=deps;
-  const base={module:'cp',areas:['cp'],agentAreas:['cp']};
+  const base={module:'cp',areas:['cp'],agentAreas:['cp'],capabilities:['CP.VIEW']};
+  const reportAuthority=(ctx,records)=>{ctx.assertAuthority();for(const previous of Object.values(records)){const permission=previous.report||previous.link?'CP.EDIT':'CP.CREATE';if(!deps.userAccess?.hasCapability(ctx.profile,permission))throw error('OFFICE_TOOL_FORBIDDEN',403);}};
   const guard=(ctx,work,restore=false)=>{ctx.assertAuthority();const run=restore?deps.restoreGuard:deps.guard;if(typeof run!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);return run(ctx,work);};
   const sourceAuthority=(ctx,preview)=>{ctx.assertAuthority();if(deps.sourceRevision&&preview.sourceRevision!==deps.sourceRevision(ctx.profile))throw error('OFFICE_PREVIEW_CHANGED',409);};
   async function backup(ctx,kind,native){
@@ -43,7 +44,7 @@ function registerQualityTools(registry,deps) {
     return {sessionId,sessionFingerprint:require('./test-reports/service').sessionFingerprint(session),...(sourceRevision?{sourceRevision}:{}),reportRevision:reports.read().revision,matches,itemCatalog:[...Checklist.ITEMS,...checklist.publicPayload().definitions].map(item=>({id:item.id,tr:item.tr||item.name,en:item.en||item.name})),suggestedItems:matches.filter(m=>m.level==='exact').map(m=>({talepNo:m.talepNo,orderKey:m.candidates[0].orderKey,itemId})),unresolved:matches.filter(m=>m.level!=='exact').map(m=>m.talepNo)};
   }
   registry.registerCapability({...base,id:'quality.inspect',label:{tr:'Test belgelerini eşleştir',en:'Match test documents'},operation:'READ',risk:'read',outputSchema:Output.readOutput,dryRunOutputSchema:Output.readOutput,inputSchema:{...object({sessionId:string(32),itemId:string(160)}),required:['sessionId']},read:async(args,ctx)=>Output.inspection(await inspect(ctx.profile,args.sessionId,args.itemId))});
-  registry.registerCapability({...base,id:'quality.commit',label:{tr:'Onaylı test raporlarını aktar',en:'Import approved test reports'},operation:'IMPORT',risk:'write',outputSchema:Output.commitResult,dryRunOutputSchema:Output.dry(Output.commitPreview),publicPreview:Output.commitPreviewSummary,inputSchema:{...object({sessionId:string(32),items:picks}),required:['sessionId','items']},read:async(args,ctx)=>{
+  registry.registerCapability({...base,anyCapabilities:['CP.CREATE','CP.EDIT'],permissionPolicy:'CP.CREATE for new native reports; CP.EDIT for existing report/link; rechecked inside native commit and inverse leases',id:'quality.commit',label:{tr:'Onaylı test raporlarını aktar',en:'Import approved test reports'},operation:'IMPORT',risk:'write',outputSchema:Output.commitResult,dryRunOutputSchema:Output.dry(Output.commitPreview),publicPreview:Output.commitPreviewSummary,inputSchema:{...object({sessionId:string(32),items:picks}),required:['sessionId','items']},read:async(args,ctx)=>{
     if(!args.items.length)throw error('OFFICE_QUALITY_MATCH_REQUIRED',409);
     const preview=await inspect(ctx.profile,args.sessionId),before=reports.read(),seen=new Set();
     for(const item of args.items) {
@@ -54,18 +55,18 @@ function registerQualityTools(registry,deps) {
       if(match.level!=='exact'&&item.confirmMatch!==true)throw error('OFFICE_QUALITY_MATCH_REQUIRED',409);
     }
     await service.prepareCommit(ctx.profile,args);
-    return {...preview,selected:args.items,records:Object.fromEntries(args.items.map(item=>[item.talepNo,{report:before.reports[item.talepNo]||null,link:before.links[item.talepNo]||null}]))};
+    const records=Object.fromEntries(args.items.map(item=>[item.talepNo,{report:before.reports[item.talepNo]||null,link:before.links[item.talepNo]||null}]));reportAuthority(ctx,records);return {...preview,selected:args.items,records};
   },apply:async(args,ctx,preview)=>{
     const rollback=await backup(ctx,'quality-report-before',{records:preview.records});
-    const result=await service.commit(ctx.profile,args,{expectedRevision:preview.reportRevision,expectedSessionFingerprint:preview.sessionFingerprint,assertAuthority:()=>sourceAuthority(ctx,preview),withCommitGuard:work=>guard(ctx,work)}),saved=reports.read();
-    if(result.results.length!==args.items.length||!args.items.every(i=>saved.links[i.talepNo]?.orderKey===i.orderKey&&saved.links[i.talepNo]?.itemId===i.itemId))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);
+    const result=await service.commit(ctx.profile,args,{expectedRevision:preview.reportRevision,expectedSessionFingerprint:preview.sessionFingerprint,assertAuthority:()=>{sourceAuthority(ctx,preview);reportAuthority(ctx,preview.records);},withCommitGuard:work=>guard(ctx,work)});
+    if(result.results.length!==args.items.length||!args.items.every(i=>result.results.some(r=>r.talepNo===i.talepNo&&r.orderKey===i.orderKey&&r.itemId===i.itemId)))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);
     return Output.commitSummary(result,{...rollback,expectedRevision:result.revision});
   },restore:async(token,ctx)=>{
     token=inverse(ctx,token,'quality-report-before');
     const inverseSource={sourceRevision:deps.sourceRevision?.(ctx.profile)};
     const allowed=await authorizedOrders(ctx.profile,{write:true}),current=reports.read();
     if(Object.entries(token.records).some(([id,previous])=>!allowed.has(current.links[id]?.orderKey)||(previous.link&&!allowed.has(previous.link.orderKey))))throw error('OFFICE_TOOL_FORBIDDEN',403);
-    sourceAuthority(ctx,inverseSource);return guard(ctx,()=>reports.restore(token,ctx.profile,{assertAuthority:()=>sourceAuthority(ctx,inverseSource),withDependencies:applyInverse=>require('./shared-file-transaction').withFileLeaseSync(checklist.FILE,()=>{
+    sourceAuthority(ctx,inverseSource);reportAuthority(ctx,token.records);return guard(ctx,()=>reports.restore(token,ctx.profile,{assertAuthority:()=>{sourceAuthority(ctx,inverseSource);reportAuthority(ctx,token.records);},withDependencies:applyInverse=>require('./shared-file-transaction').withFileLeaseSync(checklist.FILE,()=>{
       sourceAuthority(ctx,inverseSource);
       const source=reports.read(),answers=checklist._read();
       for(const id of Object.keys(token.records)) {
@@ -75,7 +76,7 @@ function registerQualityTools(registry,deps) {
       return applyInverse();
     })}),true);
   }});
-  registry.registerCapability({...base,id:'quality.checklist.apply',label:{tr:'Test sonucunu checkliste işle',en:'Apply test outcomes to checklist'},operation:'UPDATE',risk:'write',outputSchema:Output.checklistResult,dryRunOutputSchema:Output.dry(Output.checklistPreview),publicPreview:Output.checklistSummary,inputSchema:{...object({items:picks}),required:['items']},read:async(args,ctx)=>{
+  registry.registerCapability({...base,capabilities:['CP.VIEW','CP.EDIT'],id:'quality.checklist.apply',label:{tr:'Test sonucunu checkliste işle',en:'Apply test outcomes to checklist'},operation:'UPDATE',risk:'write',outputSchema:Output.checklistResult,dryRunOutputSchema:Output.dry(Output.checklistPreview),publicPreview:Output.checklistSummary,inputSchema:{...object({items:picks}),required:['items']},read:async(args,ctx)=>{
     if(!args.items.length)throw error('OFFICE_TASK_INVALID',422);
     const sourceRevision=deps.sourceRevision?.(ctx.profile);
     const allowed=await authorizedOrders(ctx.profile,{write:true}),source=reports.read(),target=checklist._read(),groups=new Map();
@@ -86,7 +87,7 @@ function registerQualityTools(registry,deps) {
     const entries=[...groups].map(([key,item])=>{
       const linked=Object.entries(source.links).filter(([,link])=>link.orderKey===item.orderKey&&link.itemId===item.itemId).map(([id])=>source.reports[id]);
       const outcome=Engine.deriveStepStatus(linked),previous=target.answers[key]||target.tombstones[key];
-      return {orderKey:item.orderKey,itemId:item.itemId,state:outcome.state,reportNumber:linked.map(r=>r.talepNo).join(', '),attachments:[...new Map([...(previous?.attachments||[]),...linked.flatMap(r=>(r.dosyalar||[]).filter(f=>f.attachmentId).map(f=>({id:f.attachmentId,filename:f.ad,originalName:f.ad,mimeType:'application/octet-stream',size:f.boyut,addedAt:r.guncelleme})))].map(f=>[f.id,f])).values()]};
+      return {orderKey:item.orderKey,itemId:item.itemId,state:outcome.state,loadDate:previous?.loadDate||null,supplier:previous?.supplier||'',itemLabel:previous?.itemLabel||'',reportNumber:linked.map(r=>r.talepNo).join(', '),attachments:[...new Map([...(previous?.attachments||[]),...linked.flatMap(r=>(r.dosyalar||[]).filter(f=>f.attachmentId).map(f=>({id:f.attachmentId,filename:f.ad,originalName:f.ad,mimeType:'application/octet-stream',size:f.boyut,addedAt:r.guncelleme})))].map(f=>[f.id,f])).values()]};
     });
     if(deps.sourceRevision&&sourceRevision!==deps.sourceRevision(ctx.profile))throw error('OFFICE_PREVIEW_CHANGED',409);
     return {...(sourceRevision?{sourceRevision}:{}),reportRevision:source.revision,checklistRevision:target.revision,entries,before:Object.fromEntries([...groups.keys()].map(key=>[key,{answer:target.answers[key]||null,tombstone:target.tombstones[key]||null}]))};
@@ -98,19 +99,22 @@ function registerQualityTools(registry,deps) {
     const result=await guard(ctx,()=>require('./shared-file-transaction').withFileLeaseSync(reports.FILE,()=>{
       sourceAuthority(ctx,preview);
       if(reports.read().revision!==preview.reportRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
-      return checklist.applyEntries(preview.entries,ctx.profile,{source:'test_report',expectedRevision:preview.checklistRevision,assertAuthority:()=>sourceAuthority(ctx,preview)});
-    })),saved=checklist._read();
-    if(result.skipped||result.conflicts||preview.entries.some(e=>(saved.answers[checklist.answerKey(e.orderKey,e.itemId)]||saved.tombstones[checklist.answerKey(e.orderKey,e.itemId)])?.state!==e.state))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);
-    return Output.checklistReceipt(result,{...rollback,expectedRevision:result.revision});
+      return checklist.applyEntries(preview.entries,ctx.profile,{source:'test_report',expectedRevision:preview.checklistRevision,reserveWrites:2,assertAuthority:()=>sourceAuthority(ctx,preview),receipt:(result,own)=>{
+        const expected=new Map(preview.entries.map(e=>[checklist.answerKey(e.orderKey,e.itemId),e.state]));
+        if(result.changedKeys.length!==result.updated+result.cleared||result.changedKeys.some(key=>!expected.has(key)||(own.entries[key]?.answer||own.entries[key]?.tombstone)?.state!==expected.get(key)))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);
+        return Output.checklistReceipt(result,{...rollback,expectedRevision:result.revision});
+      }});
+    }));
+    return result;
   },restore:async(token,ctx)=>{
     token=inverse(ctx,token,'quality-checklist-before');
     const inverseSource={sourceRevision:deps.sourceRevision?.(ctx.profile)};
     const allowed=await authorizedOrders(ctx.profile,{write:true});if(Object.values(token.entries).some(previous=>{const entry=previous.answer||previous.tombstone;return entry&&!allowed.has(entry.orderKey);}))throw error('OFFICE_TOOL_FORBIDDEN',403);
     // The receipt also contains keys for previously absent answers.
     if(Object.keys(token.entries).some(key=>!allowed.has(key.slice(0,key.lastIndexOf('::')))))throw error('OFFICE_TOOL_FORBIDDEN',403);
-    sourceAuthority(ctx,inverseSource);return guard(ctx,()=>checklist.restoreEntries(token,ctx.profile,{assertAuthority:()=>sourceAuthority(ctx,inverseSource)}),true);
+    sourceAuthority(ctx,inverseSource);return guard(ctx,()=>checklist.restoreEntries(token,ctx.profile,{reserveWrites:1,assertAuthority:()=>sourceAuthority(ctx,inverseSource),receipt:(result,own)=>{if(!require('node:util').isDeepStrictEqual(own.entries,token.entries))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);return result;}}),true);
   }});
-  if(mail)registry.registerCapability({...base,areas:['cp','automations'],id:'quality.fail.drafts',label:{tr:'Fail için üretici mail taslakları',en:'Manufacturer mail drafts for Fail'},operation:'EXPORT',risk:'write',outputSchema:Output.draftResult,dryRunOutputSchema:Output.dry(Output.mailPreview),publicPreview:Output.mailSummary,inputSchema:{...object({talepNos:array(string(20),100),subject:string(200),body:string(4000),language:{enum:['tr','en']}}),required:['talepNos','subject','body','language']},read:async(args,ctx)=>{
+  if(mail)registry.registerCapability({...base,areas:['cp','automations'],capabilities:['CP.VIEW','CP.EXPORT'],id:'quality.fail.drafts',label:{tr:'Fail için üretici mail taslakları',en:'Manufacturer mail drafts for Fail'},operation:'EXPORT',risk:'write',outputSchema:Output.draftResult,dryRunOutputSchema:Output.dry(Output.mailPreview),publicPreview:Output.mailSummary,inputSchema:{...object({talepNos:array(string(20),100),subject:string(200),body:string(4000),language:{enum:['tr','en']}}),required:['talepNos','subject','body','language']},read:async(args,ctx)=>{
     const sourceRevision=deps.sourceRevision?.(ctx.profile);
     const allowed=await authorizedOrders(ctx.profile),source=reports.read(),keys=new Set();
     for(const id of args.talepNos){const link=source.links[id],report=source.reports[id];if(!link||!allowed.has(link.orderKey))throw error('OFFICE_TOOL_FORBIDDEN',403);if(Engine.reportOutcome(report).code==='fail')keys.add(link.orderKey);}
