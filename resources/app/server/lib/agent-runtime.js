@@ -164,11 +164,12 @@ function createAgentRuntime({ store, toolRegistry, policyEngine, auditFn } = {})
     }
   }
 
-  async function execute({ ownerId, profile, workflow, input = {}, dryRun = false, runId = '', approvalNodeId = '' }) {
+  async function execute({ ownerId, profile, workflow, input = {}, dryRun = false, runId = '', approvalNodeId = '', onRunCreated = null }) {
     const validation = validateWorkflow(workflow, toolRegistry);
     if (!validation.valid) throw Object.assign(new Error(`Workflow geçersiz: ${validation.errors.join(' · ')}`), { code: 'WORKFLOW_INVALID', statusCode: 400, details: validation });
     let run = runId ? store.runForOwner(ownerId, runId) : null;
     if (!run) run = store.createRun(ownerId, workflow, { input: { ...(input || {}) }, dryRun }).result;
+    if(onRunCreated)await onRunCreated(run);
     const execution = run.executionState && typeof run.executionState === 'object' ? clone(run.executionState) : {};
     const state = execution.nodes && typeof execution.nodes === 'object' ? execution.nodes : {};
     const approvals = execution.approvals && typeof execution.approvals === 'object' ? execution.approvals : {};
@@ -245,7 +246,7 @@ function createAgentRuntime({ store, toolRegistry, policyEngine, auditFn } = {})
     if (!run) throw Object.assign(new Error('Agent çalışması bulunamadı.'), { code: 'RUN_NOT_FOUND', statusCode: 404 });
     if (run.status !== 'waiting_approval' || !run.pendingApproval || !run.pendingApproval.nodeId) throw Object.assign(new Error('Bu çalışma onay beklemiyor.'), { code: 'RUN_NOT_WAITING_APPROVAL', statusCode: 409 });
     if (!approved) {
-      const cancelled = store.updateRun(ownerId, run.id, { status: 'cancelled', pendingApproval: null, currentNodeId: '', cancelReason:'user_cancelled', message: 'Kullanıcı onayı reddetti.', finishedAt: new Date().toISOString() }).result;
+      const cancelled = store.updateRun(ownerId, run.id, { status: 'cancelled', pendingApproval: null, currentNodeId: '', cancelReason:'user_cancelled', message: 'Kullanıcı onayı reddetti.', finishedAt: new Date().toISOString() },{status:'waiting_approval',nodeId:run.pendingApproval.nodeId}).result;
       store.appendEvent(ownerId, run.id, { type: 'approval_rejected', code:'USER_CANCELLED', reason:'user_cancelled', nodeId: run.pendingApproval.nodeId });
       if (typeof auditFn === 'function') auditFn(profile, 'AGENT_WORKFLOW_APPROVAL_REJECTED', run.workflowId, { runId: run.id, nodeId: run.pendingApproval.nodeId });
       return { run: store.runForOwner(ownerId, cancelled.id) };
@@ -254,7 +255,7 @@ function createAgentRuntime({ store, toolRegistry, policyEngine, auditFn } = {})
     if (!snapshot) throw Object.assign(new Error('Workflow snapshot bulunamadı; çalışma güvenli biçimde devam ettirilemiyor.'), { code: 'WORKFLOW_SNAPSHOT_MISSING', statusCode: 409 });
     const state = clone(run.executionState || {}); state.nodes = state.nodes || {};
     delete state.nodes[run.pendingApproval.nodeId];
-    store.updateRun(ownerId, run.id, { status: 'running', pendingApproval: null, executionState: state, message: 'Kullanıcı onayladı; workflow devam ediyor.' });
+    store.updateRun(ownerId, run.id, { status: 'running', pendingApproval: null, executionState: state, message: 'Kullanıcı onayladı; workflow devam ediyor.' },{status:'waiting_approval',nodeId:run.pendingApproval.nodeId});
     store.appendEvent(ownerId, run.id, { type: 'approval_granted', nodeId: run.pendingApproval.nodeId });
     return execute({ ownerId, profile, workflow: snapshot, input: run.input, dryRun: run.dryRun, runId: run.id, approvalNodeId: run.pendingApproval.nodeId });
   }

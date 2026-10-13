@@ -2490,6 +2490,7 @@ function cpAgentMail(profile,args,rows,dryRun,expected=null) {
   return {emails,unresolved:split.unresolved,sendAvailable:false};
 }
 const agentToolRegistry = createToolRegistry({
+  authorizeCapability:(ctx,args)=>agentOfficeService.taskAuthorize(ctx,args),
   cp:{...cpAgentPreferences,data:cpAgentData,calendar:()=>require('./lib/merch-calendar-store').publicProjection(),mail:cpAgentMail,
     assertRevision:(profile,revision)=>{if(cpAgentRevision(profile)!==revision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});},
     verifyMail:(result,profile)=>result.emails.length>0&&result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id))),
@@ -2519,23 +2520,30 @@ const agentToolRegistry = createToolRegistry({
   snapshotOrder: async (ownerId, profile, orderCode, patch) => {
     const rows = await agentPlatformDataset(ownerId, profile, 'cp');
     const wantedModel = String(patch && patch.model || '').trim(), wantedColour = String(patch && patch.ccode || '').trim();
-    const row = rows.find(item => Number(agentRowOrderCode(item)) === Number(orderCode)
+    const candidates = rows.filter(item => Number(agentRowOrderCode(item)) === Number(orderCode)
       && (!wantedModel || String(item && item['Model Name'] || '').trim() === wantedModel)
       && (!wantedColour || String(item && item['C.Code'] || '').trim() === wantedColour));
-    if (!row) throw Object.assign(new Error('Rollback snapshot için sipariş satırı bulunamadı.'), { code:'ORDER_NOT_FOUND', statusCode:404 });
-    return agentPlatformOrderPatchSnapshot(row, patch);
+    if(candidates.length!==1)throw Object.assign(new Error('Order identity is missing or ambiguous.'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
+    if(!canUserEditOrderCode(profile,orderCode))throw Object.assign(new Error('ORDER_FORBIDDEN'),{code:'ORDER_FORBIDDEN',statusCode:403});
+    assertAgentSharedOwner(profile,orderCode,patch);
+    return require('./db').snapshotOrderOverride(orderCode,patch);
   },
-  updateOrder: async (_ownerId, profile, orderCode, patch) => {
+  updateOrder: async (_ownerId, profile, orderCode, patch,expectedRevision) => {
     if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-    const saved = patchOrderOverride(Number(orderCode), patch || {}, null, null, { actor: noteActorOf(profile) });
+    assertAgentSharedOwner(profile,orderCode,patch);
+    const saved = patchOrderOverride(Number(orderCode), patch || {}, expectedRevision, null, { actor: noteActorOf(profile) });
     userAccess.appendAudit(profile, 'AGENT_ORDER_UPDATE', String(orderCode), { fields:Object.keys(patch || {}) });
-    return { ok:true, updated:saved.updated || 1, revision:saved.revision };
+    liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor([{orderCode,patch}])});
+    void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
+    return { ok:true, verified:require('./db').verifyOrderOverridePatch(orderCode,patch,saved.revision),updated:saved.updated || 1, revision:saved.revision };
   },
-  restoreOrder: async (_ownerId, profile, orderCode, before) => {
+  restoreOrder: async (_ownerId, profile, orderCode, before,expectedRevision,selector) => {
     if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-    const patch = agentNormalizeRestorePatch(before || {}), saved = patchOrderOverride(Number(orderCode), patch, null, null, { actor: noteActorOf(profile) });
-    userAccess.appendAudit(profile, 'AGENT_ORDER_ROLLBACK', String(orderCode), { fields:Object.keys(patch) });
-    return { ok:true, restored:true, revision:saved.revision };
+    if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
+    assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
+    const result=require('./db').restoreOrderOverrideReceipt(orderCode,before,expectedRevision,selector,{actor:noteActorOf(profile)});
+    userAccess.appendAudit(profile, 'AGENT_ORDER_ROLLBACK', String(orderCode), {revision:result.revision});
+    liveEvents.notifyChange('orders','agent-capability',{orderCode});return result;
   },
   httpRequest: agentPlatformHttpRequest,
   browserRun: async (args, ctx) => agentBrowserConnector.run(ctx.ownerId, args, ctx),
@@ -5756,7 +5764,7 @@ async function agentOfficeAutomationPreview(profile,code) {
   return {...automationAiPreviewRows(rows,parsed,validation),name:parsed.name,trigger:parsed.trigger,conditions:parsed.conditions,actionDefinitions:parsed.actions};
 }
 const agentOfficeService=createAgentOfficeService({store:agentOfficeStore,sync:agentOfficeSync,userAccess,engine:()=>require('./lib/lcwai').getDefaultEngine(),
-  toolRegistry:agentToolRegistry,runtime:agentRuntime,cpData:cpAgentData,cpDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),cpGroups:profile=>automationEmailGroupsForOwner(profile.id).map(({id,name})=>({id,name})),
+  toolRegistry:agentToolRegistry,runtime:agentRuntime,runtimeStore:agentWorkflowStore,taskOwners:()=>userAccess.allPublicProfiles().map(profile=>profile.id),cpData:cpAgentData,cpDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),cpGroups:profile=>automationEmailGroupsForOwner(profile.id).map(({id,name})=>({id,name})),
   getOperationalData:agentOfficeOperationalData,
   getEvidenceAttachments:agentOfficeEvidenceAttachments,
   readEvidenceAttachment:async item=>({buffer:await fs.promises.readFile(item.filePath),fileName:item.name}),
@@ -6121,6 +6129,10 @@ function rejectUnauthorizedOrders(req, res, orderCodes) {
   userAccess.appendAudit(req.currentUser, 'WRITE_DENIED', 'orders', { orderCodes: denied.slice(0,50), deniedCount: denied.length });
   res.status(403).json({ error: 'Kapsamınız dışındaki siparişlerde değişiklik yapamazsınız.', code: 'ORDER_VIEW_ONLY', deniedOrderCodes: denied.slice(0,50) });
   return true;
+}
+function assertAgentSharedOwner(profile,orderCode,patch){
+  const response={status(){return this;},json(payload){throw Object.assign(new Error(payload.code),{code:payload.code,statusCode:403});}};
+  rejectSharedOwnerWrites({currentUser:profile},response,[{orderCode,patch}]);
 }
 function rejectSharedOwnerWrites(req, res, items) {
   const fields = ['dates', 'subManufacturer', 'suppFob', 'suppFobMeta'];

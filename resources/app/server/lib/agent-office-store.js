@@ -9,7 +9,7 @@ const { createLocalDb } = require('./local-db');
 const { redactSecrets } = require('../../shared/secret-redaction');
 const workshopModel = require('../../public/agent-office-workshop-model');
 
-const AREAS = ['cp', 'orders', 'collection', 'backlog', 'lfl'];
+const AREAS = [...new Set(['collection',...require('./module-registry').list().map(module=>module.area==='koleksiyon'?'collection':module.area)])];
 const KINDS = new Set(['profile', 'memory', 'memory-version', 'conversation', 'message', 'job', 'snapshot', 'watch', 'alert', 'office', 'summary', 'metadata']);
 const hash = value => crypto.createHash('sha256').update(String(value)).digest('hex');
 const id = () => crypto.randomUUID();
@@ -152,10 +152,11 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
     const type = ['instruction', 'preference', 'fact', 'decision', 'task', 'inference'].includes(raw.type) ? raw.type : 'instruction';
     const key = text(raw.key || '', 120), memories = (await records(owner)).filter(doc => doc.kind === 'memory' && doc.profileId === profileId && doc.active);
     const conflicts = key ? memories.filter(doc => doc.key === key && doc.text !== content).map(doc => doc.id) : [];
-    const memory = await save(owner, 'memory', { id: id(), profileId, text: content, type, key, active: true,
+    const category=({fact:'source-fact',preference:'user-preference',instruction:'business-procedure',decision:'business-procedure',task:'task-history',inference:'unverified-inference'})[type];
+    const memory = await save(owner, 'memory', { id: id(), profileId, text: content, type, category, key, active: true,
       approved: raw.approved === true && type !== 'inference', origin: 'user', confidence: type === 'inference' ? 'LOW' : 'USER_REPORTED',
       sourceId: text(raw.sourceId, 120), expiresAt: raw.expiresAt && Number.isFinite(Date.parse(raw.expiresAt)) ? new Date(raw.expiresAt).toISOString() : '',
-      shareable: raw.shareable === true, conflictingIds: conflicts });
+      shareable: raw.shareable === true, conflictingIds: conflicts,sourceRevision:text(raw.sourceRevision||'',160),correctsMemoryId:text(raw.correctsMemoryId||'',120) });
     return memory;
   }
   async function editMemory(owner, key, raw) {
@@ -166,6 +167,7 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
       deleted: raw.deleted === true, conflictingIds: raw.resolve === true ? [] : previous.conflictingIds };
     if (!next.text) throw error('OFFICE_MEMORY_REQUIRED');
     if (next.type === 'inference') next.approved = false;
+    next.category=({fact:'source-fact',preference:'user-preference',instruction:'business-procedure',decision:'business-procedure',task:'task-history',inference:'unverified-inference'})[next.type];
     return save(owner, 'memory', next, { expectedRevision: raw.revision ?? previous.revision });
   }
   async function conversation(owner, profileIds, title) {
@@ -199,6 +201,7 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
       jobs: docs.filter(doc => doc.kind === 'job').sort((a,b) => b.createdAt.localeCompare(a.createdAt)).slice(0, 100),
       watches: docs.filter(doc => doc.kind === 'watch'), alerts: docs.filter(doc => doc.kind === 'alert' && !doc.dismissed).slice(-100),
       summaries: docs.filter(doc => doc.kind === 'summary'),
+      taskSchedules:docs.filter(doc=>doc.kind==='metadata'&&doc.type==='capability-schedule'),
       office: docs.find(doc => doc.kind === 'office') || { id: 'layout', ...defaultOffice() },
       defaultOffice:defaultOffice(),
       archive: { messages: docs.filter(doc => doc.kind === 'message').length, bytes: docs.filter(doc => doc.kind === 'message').reduce((sum,doc) => sum + Buffer.byteLength(doc.text), 0) },
@@ -211,12 +214,13 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
       (!doc.expiresAt || Date.parse(doc.expiresAt) > Date.now()));
     const history = docs.filter(doc => doc.kind === 'message' && doc.role !== 'system' && doc.profileIds.some(key => profileIds.includes(key)));
     history.sort((a,b) => ((b.conversationId === conversationId ? 5 : 0) + score(b)) - ((a.conversationId === conversationId ? 5 : 0) + score(a)) || b.createdAt.localeCompare(a.createdAt));
-    const candidates = memory.sort((a,b) => (Number(b.approved) - Number(a.approved)) || score(b) - score(a))
+    const candidates = memory.sort((a,b) => (Number(!!b.feedbackKind)-Number(!!a.feedbackKind)) || (Number(b.approved) - Number(a.approved)) || score(b) - score(a) || b.updatedAt.localeCompare(a.updatedAt))
       .concat(docs.filter(doc => doc.kind === 'summary' && doc.contractValid !== false && doc.profileIds?.some(key => profileIds.includes(key))).slice(-4), history);
     const selected = [], omitted = [];
     let size = 0;
     for (const doc of candidates) {
       const value = { id: doc.id, kind: doc.kind, profileId: doc.profileId, role: doc.role, type: doc.type, text: doc.text,
+        category:doc.category,feedbackKind:doc.feedbackKind,toolIds:doc.toolIds,taskId:doc.taskId,sourceRevision:doc.sourceRevision,correctsMemoryId:doc.correctsMemoryId,
         approved: doc.approved, origin: doc.origin, confidence: doc.confidence, createdAt: doc.createdAt, sourceId: doc.sourceId, conflictingIds: doc.conflictingIds };
       if(['message','summary'].includes(doc.kind)&&value.text.length>1800){const haystack=value.text.toLocaleLowerCase('tr-TR'),hit=words.map(word=>haystack.indexOf(word)).find(index=>index>=0),start=Math.max(0,(hit??Math.max(0,value.text.length-1600))-180);value.text=value.text.slice(start,start+1600);value.excerpt=true;value.fullCharacters=doc.text.length;value.excerptStart=start;value.contentHash=hash(doc.text);}
       const chars = JSON.stringify(value).length;

@@ -92,7 +92,18 @@
         "automate",
         "view"
       ],
-      "agentTools": []
+      "agentTools": [
+        {
+          "id": "app.order.update",
+          "operation": "UPDATE",
+          "areas": [
+            "cp"
+          ],
+          "risk": "write",
+          "approval": true,
+          "rollbackable": true
+        }
+      ]
     },
     {
       "id": "koleksiyon",
