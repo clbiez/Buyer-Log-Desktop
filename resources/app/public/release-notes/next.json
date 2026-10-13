@@ -4816,6 +4816,39 @@
           "en": "Fabric details and the complete prior native record are preserved"
         }
       }
+    },
+    {
+      "id": "agent-merch-typed-results",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynaklar / Agent Ofisi",
+        "en": "Sources / Agent Office"
+      },
+      "title": {
+        "tr": "Merch Calendar agent işlemleri gerçek haftalarla doğrulanır",
+        "en": "Agent Merch Calendar operations validate actual native weeks"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Checklist / haftalık mail",
+        "en": "Agent Office › Tasks › Checklist / weekly email"
+      },
+      "body": {
+        "tr": "Takvimi okuma, aktarma ve kaldırma araçlarında native yıl, ay ve hafta sınırları ile kaynak ve geri alma kayıtları açık sözleşmeyle doğrulanır. Eski kayıtların desteklenmeyen metadata alanları önizlemede eksik gösterim sayısıyla bildirilir. Takvimin tam önceki hâli geri alma için korunur; başka bir kullanıcının daha yeni takvimi veya revizyonu eski onayla ezilmez. Aynı mevcut LCW tarih motoru kullanılır.",
+        "en": "Calendar read, import and remove tools validate native year/month/week boundaries and source/undo receipts with explicit contracts. Unsupported legacy metadata fields are reported as omissions in previews. Complete previous calendar state is preserved for undo; newer peer calendars or revisions cannot be overwritten by an old approval. The existing LCW date engine is reused."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-merch-typed-results.png",
+        "alt": {
+          "tr": "Demo takvimle gerçek Agent Ofisinde native hafta sınırları ve takvim işlemi sonucu",
+          "en": "Native week boundaries and calendar operation results with a demo calendar in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Native takvim revizyonu ve tam geri alma kaydı korunur",
+          "en": "Native calendar revisions and complete undo state are preserved"
+        }
+      }
     }
   ]
 }
