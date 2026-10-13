@@ -4717,6 +4717,39 @@
           "en": "Native calendar revisions and complete undo state are preserved"
         }
       }
+    },
+    {
+      "id": "agent-license-typed-results",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans Kartları / Agent Ofisi",
+        "en": "License Cards / Agent Office"
+      },
+      "title": {
+        "tr": "Lisans agent sonuçları erişim bilgilerini ayırır",
+        "en": "License agent results exclude access material"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Checklist / haftalık mail",
+        "en": "Agent Office › Tasks › Checklist / weekly email"
+      },
+      "body": {
+        "tr": "Lisans kartını okuma, ASAS keşfi ve onaylı sözleşme revizyonu araçlarının sonuçları açık alan ve native finansal değer sözleşmeleriyle doğrulanır. Portal kullanıcı adı, erişim referansı ve sembol baytları agent çıktısına taşınmaz; desteklenmeyen eski alanlar ve gösterilmeyen geçmiş kurallar eksiltme sayılarıyla bildirilir. Tam eski kayıt native geri alma için korunur. Eşitleme bekliyorsa sonuç bunu açıkça gösterir; gerçek royalty hesapları mevcut motorlarda kalır.",
+        "en": "License read, ASAS discovery and approved contract revision tools validate explicit fields and native financial value contracts. Portal usernames, access references and symbol bytes stay out of agent results; unsupported legacy fields and undisplayed historical rules have explicit omission counts. Complete prior records are preserved for native undo. Pending synchronization is reported explicitly; royalty calculations remain in existing engines."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-license-typed-results.png",
+        "alt": {
+          "tr": "Demo lisans kartlarıyla gerçek Agent Ofisinde güvenli profil ve native sözleşme sonucu",
+          "en": "Safe profile and native contract results with demo license cards in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Native oranlar, eşitleme durumu ve tam geri alma korunur",
+          "en": "Native rates, synchronization status and complete undo are preserved"
+        }
+      }
     }
   ]
 }
