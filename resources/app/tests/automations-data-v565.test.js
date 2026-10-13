@@ -54,12 +54,13 @@ test('v5.65 Prepare E-Mail recipients are merged into automation groups without 
   assert.match(UI,/#autoGroupRows \.autoGroupRow/);
 });
 
-test('v5.65 report field chooser has search and keeps checked fields first',()=>{
-  assert.match(UI,/data-email-field-search/);
-  assert.match(UI,/refreshReportFieldChoices/);
-  assert.match(UI,/const ac=a\.querySelector\('input'\)\.checked\?0:1,bc=b\.querySelector\('input'\)\.checked\?0:1/);
-  assert.match(UI,/Seçili alanlar listenin en üstünde tutulur/);
-  assert.match(CSS,/autoFieldChoices label:has\(input:checked\)/);
+test('v5.65 report field chooser keeps search and selected fields in the grouped column editor',()=>{
+  assert.match(UI,/data-columns-search/);
+  assert.match(UI,/function openReportColumns\(\)/);
+  assert.match(UI,/data-selected-column/);
+  assert.match(UI,/data-columns-move/);
+  assert.match(UI,/draft\.email\.reportFields=selected\.slice\(\)/);
+  assert.match(fs.readFileSync(path.join(ROOT,'public','automations-fields.css'),'utf8'),/autoColumnsSelectedList/);
 });
 
 test('v5.65 manual automation reuses the confirmed preview snapshot and opens draft email asynchronously',()=>{

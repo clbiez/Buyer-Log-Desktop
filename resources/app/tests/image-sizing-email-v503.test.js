@@ -82,12 +82,13 @@ test('v5.18 Collection Excel follows selected image mode and uses aspect-locked 
   assert.match(APP,/width:i===0\?kolExcelImageMetrics\(\)\.colChars/);
 });
 
-test('v5.18 email Picture cells keep original CID resolution without stretching',()=>{
+test('v5.18 email Picture cells use bounded CID previews without stretching',()=>{
   assert.match(APP,/function prepareEmailTopicTableContent\(rows,columns\)/);
   assert.match(APP,/src="cid:\$\{a\.cid\}"/);
   const asset=between('async function prepareEmailInlineAsset','async function prepareEmailTopicTableContent');
-  assert.doesNotMatch(asset,/canvas|drawImage|toDataURL/);
-  assert.match(asset,/const dataUrl=prepared\.dataUrl/);
+  assert.match(asset,/let dataUrl=prepared\.dataUrl/);
+  assert.match(asset,/maxSide=480/);
+  assert.match(asset,/kolFitImageDimensions\(prepared\.width,prepared\.height,dims\.w,dims\.h\)/);
   assert.match(APP,/inlineImages:\(inlineImages\|\|\[\]\)\.map/);
   assert.match(APP,/imageJobs\.push\(\{src,rowNum,columnIndex:ci\+1,column\}\)/);
   const workbook=between('async function prepareEmailBuildTopicTableWorkbook','function prepareEmailWorkbookFileEntry');

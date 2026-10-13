@@ -61,7 +61,7 @@ test('özet iki dillidir: TR ve EN, aynı sayılarla', () => {
   const card = engine.ruleCard(SUPREM);
   assert.equal(card.summaryEn, 'Single Jersey · 30/1 Ne · 150 gsm · 100% Cotton');
   assert.equal(engine.ruleCard(TWO_THREAD).summaryEn, 'Two Thread · 220 gsm · 80% Cotton 20% Polyester');
-  assert.equal(engine.ruleCard('370380-Interlock,70,Denye Continue Flament 140 gsm,100%Polyester').summary, 'Interlock · 70 Denye · 140 gsm · %100 Poliester', 'TR özette kumaş tipi PLM yazımıyla kalır'); // i18n-ignore
+  assert.equal(engine.ruleCard('370380-Interlock,70,Denye Continue Flament 140 gsm,100%Polyester').summary, 'Interlock · 70 Denye · 140 gsm · 100% Poliester', 'TR özette kumaş tipi PLM yazımıyla kalır'); // i18n-ignore
   const cards = new Map([['3859', card]]);
   assert.equal(engine.displayText(SUPREM, cards, 'tr'), card.summary);
   assert.equal(engine.displayText(SUPREM, cards, 'en'), card.summaryEn);
