@@ -1,14 +1,14 @@
 # Explicit output-schema migration gaps
 
-Current executable catalog audit: 161 contract-v2 tools; 97 declare a strict top-level output object; 64 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
+Current executable catalog audit: 161 contract-v2 tools; 102 declare a strict top-level output object; 59 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
 
 | Module | Open output contracts | Registered tool IDs |
 |---|---|---|
-| cp | 6 | `quality.inspect`, `quality.commit`, `quality.checklist.apply`, `quality.fail.drafts`, `cp.fields`, `cp.analyze` |
-| orders | 2 | `orders.fields`, `orders.analyze` |
-| backlog | 3 | `backlog.fields`, `backlog.analyze`, `backlog.delivery` |
-| lfl | 3 | `lfl.fields`, `lfl.analyze`, `lfl.compare` |
-| koleksiyon | 11 | `collection.fields`, `collection.analyze`, `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.supplier.analyze`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
+| cp | 5 | `quality.inspect`, `quality.commit`, `quality.checklist.apply`, `quality.fail.drafts`, `cp.fields` |
+| orders | 1 | `orders.fields` |
+| backlog | 2 | `backlog.fields`, `backlog.delivery` |
+| lfl | 2 | `lfl.fields`, `lfl.compare` |
+| koleksiyon | 10 | `collection.fields`, `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.supplier.analyze`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
 | quotations | 6 | `quotation.list`, `quotation.apply.collection`, `quotation.create`, `quotation.update`, `quotation.status`, `quotation.approve` |
 | source | 16 | `resource.transit.read`, `resource.transit.replace`, `resource.royalty.read`, `resource.royalty.replace`, `resource.fx.read`, `resource.fx.update`, `resource.endeksmatik.read`, `resource.endeksmatik.lookup`, `resource.endeksmatik.calculate`, `resource.endeksmatik.activate`, `resource.endeksmatik.rename`, `resource.endeksmatik.delete`, `resource.endeksmatik.import`, `resource.merch.read`, `resource.merch.import`, `resource.merch.delete` |
 | manufacturers | 4 | `manufacturer.cards.read`, `manufacturer.cards.create`, `manufacturer.cards.update`, `manufacturer.cards.delete` |

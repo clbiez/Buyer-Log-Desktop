@@ -3958,6 +3958,72 @@
           "en": "Native heading management, usage impact and guarded undo"
         }
       }
+    },
+    {
+      "id": "agent-analysis-output-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Analiz",
+        "en": "Agent Office · Analysis"
+      },
+      "title": {
+        "tr": "Analiz sonuçları tam sayım ve sınırlı bağlamla doğrulanır",
+        "en": "Analysis results use full counts and bounded context"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Analiz",
+        "en": "Agent Office › Tasks › Analysis"
+      },
+      "body": {
+        "tr": "CP, sipariş, koleksiyon, Backlog ve LFL analizleri mevcut deterministik motorla hesaplanır. Agent sonuçları tipli ve sınırlıdır; toplam eşleşme ve grup sayıları tam kaynağı kapsar. Aktarılamayan sayılar, uzun değerler ve kısaltılan metadata açıkça bildirilir. Filtreler literal değerlerle sınırlanır; güvenli olmayan alan ve ölçü adları çalıştırılmaz.",
+        "en": "CP, order, collection, Backlog and LFL analyses use the existing deterministic engine. Agent results are typed and bounded; matched and group counts cover the full source. Unrepresentable numbers, oversized values and shortened metadata are explicitly reported. Filters accept literal values; unsafe field and measure names cannot execute."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-analysis-output-contract.png",
+        "alt": {
+          "tr": "Agent analiz sonucunda tam sayım ve kısaltma bilgisi",
+          "en": "Full counts and truncation information in an agent analysis result"
+        },
+        "caption": {
+          "tr": "Native hesaplar, doğrulanmış sonuçlar ve sınırlı AI bağlamı",
+          "en": "Native calculations, validated results and bounded AI context"
+        }
+      }
+    },
+    {
+      "id": "agent-partial-task-undo",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kısmi görevler doğrulanmış makbuzla geri alınır",
+        "en": "Partial tasks can be undone with verified receipts"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Geri alma",
+        "en": "Agent Office › Tasks › Undo"
+      },
+      "body": {
+        "tr": "Mevcut servis gerçek geri alma makbuzu sağlıyorsa kısmi işlem açık onayla geri alınabilir. Sonraki tamamlanmış veya sonucu belirsiz yazımlar önce çözülür; revizyon, güncel yetki ve profil kilidi korunur. Doğrulanamayan geri alma tamamlandı sayılmaz ve hata gösterilir. Başarısız geri alma yeniden onaylanabilir; doğrulanmış zincir makbuzları korunur.",
+        "en": "A partial operation can be explicitly undone when its existing service supplies an actual inverse receipt. Later completed or uncertain writes must be resolved first; revisions, current authority and profile leases remain enforced. An unverified inverse is not marked complete and displays an error. Failed undo can be confirmed again; verified receipts remain intact across inverse chains."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-partial-task-undo.png",
+        "alt": {
+          "tr": "Kısmi görevde gerçek sonuç, geri alma ve doğrulama hatası",
+          "en": "Actual partial-task result, undo and verification error"
+        },
+        "caption": {
+          "tr": "Onaylı native geri alma ve korunmuş bağımlı adım makbuzları",
+          "en": "Confirmed native undo and preserved dependent-step receipts"
+        }
+      }
     }
   ]
 }
