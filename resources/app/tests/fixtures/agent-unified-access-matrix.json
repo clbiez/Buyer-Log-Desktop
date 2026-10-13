@@ -1065,7 +1065,110 @@
       "export",
       "analyze"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "opencosting.records.read",
+        "operation": "READ",
+        "agentAreas": [
+          "opencosting"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "opencosting"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "opencosting.scenarios.calculate",
+        "operation": "READ",
+        "agentAreas": [
+          "opencosting"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "opencosting"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "opencosting.scenarios.export",
+        "operation": "EXPORT",
+        "agentAreas": [
+          "opencosting"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "opencosting"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "opencosting.record.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "opencosting"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "opencosting"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "opencosting.record.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "opencosting"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "opencosting"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "opencosting.record.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "opencosting"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "opencosting"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "backlog",

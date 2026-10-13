@@ -24,24 +24,7 @@ const tr=()=>typeof appLang==='undefined'||appLang!=='en';
 const tx=(a,b)=>tr()?a:b;
 const clone=v=>JSON.parse(JSON.stringify(v));
 const safe=s=>typeof escapeHtml==='function'?escapeHtml(s):String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-function parseLocalizedNumber(value){
-  if(typeof value==='number')return Number.isFinite(value)?value:0;
-  let s=String(value==null?'':value).trim();
-  if(!s)return 0;
-  s=s.replace(/\s+/g,'').replace(/[^0-9,\.\-+]/g,'');
-  if(!s||s==='-'||s==='+')return 0;
-  const comma=s.lastIndexOf(','),dot=s.lastIndexOf('.');
-  if(comma>=0&&dot>=0){
-    const decimalPos=Math.max(comma,dot),decimal=s[decimalPos];
-    s=s.slice(0,decimalPos).replace(/[,.]/g,'')+'.'+s.slice(decimalPos+1).replace(/[,.]/g,'');
-    if(decimal!==','&&decimal!=='.')s=s.replace(decimal,'.');
-  }else if(comma>=0){
-    const parts=s.split(',');s=parts.length>2?parts.slice(0,-1).join('')+'.'+parts.at(-1):s.replace(',','.');
-  }else if((s.match(/\./g)||[]).length>1){
-    const parts=s.split('.');s=parts.slice(0,-1).join('')+'.'+parts.at(-1);
-  }
-  const out=Number(s);return Number.isFinite(out)?out:0;
-}
+function parseLocalizedNumber(value){return window.BLOpenCostingEngine.parseLocalizedNumber(value);}
 const n=parseLocalizedNumber;
 const pct=v=>Math.max(0,n(v));
 function roundHalfUp(value,decimals=2){
@@ -72,7 +55,7 @@ function defaultSections(currency='USD'){const out={};SECTION_DEFS.forEach((d,i)
 function defaultRecord(){const currency='USD';return {id:null,title:tx('Yeni Ön Maliyet','New Preliminary Costing'),createdAt:null,updatedAt:null,meta:{modelCode:'',plmId:'',manufacturer:'',country:'',season:'',license:'',category:'',quantity:'',currency,fxMonth:currentMonthKey(),targetFob:'',notes:'',image:''},sections:defaultSections(currency),rates:{productionWastePct:'',overheadPct:'',financePct:'',profitPct:''},summary:{}};}
 function normalizeRecord(raw){
   const base=defaultRecord(),r={...base,...clone(raw||{})};
-  r.meta={...base.meta,...(raw&&raw.meta||{})};r.meta.fxMonth=/^\d{4}-\d{2}$/.test(String(r.meta.fxMonth||''))?r.meta.fxMonth:currentMonthKey();
+  r.meta={...base.meta,...(raw&&raw.meta||{})};r.meta.fxMonth=window.BLOpenCostingEngine.normalizeFxMonth(r.meta.fxMonth);
   r.rates={...base.rates,...(raw&&raw.rates||{})};r.sections={};
   SECTION_DEFS.forEach(d=>{r.sections[d.key]=Array.isArray(raw&&raw.sections&&raw.sections[d.key])?raw.sections[d.key].map(x=>{const hadCurrency=!!String(x&&x.currency||'').trim();return {...emptyRow(r.meta.currency),...x,id:x.id||uid('row'),currency:hadCurrency?x.currency:r.meta.currency,_currencyAuto:x&&typeof x._currencyAuto==='boolean'?x._currencyAuto:!hadCurrency};}):[];});
   r.summary=raw&&raw.summary&&typeof raw.summary==='object'?raw.summary:{};return r;
@@ -194,31 +177,8 @@ function renderRecordList(){
   if(!items.length){list.innerHTML=`<div class="ocSidebarEmpty">${tx('Kayıt bulunamadı. Yeni bir ön maliyet oluşturabilirsin.','No costing found. Create a new preliminary costing.')}</div>`;return;}
   list.innerHTML=items.map(r=>`<button type="button" class="ocRecordItem ${current&&current.id===r.id?'active':''}" data-id="${safe(r.id)}"><div class="ocRecordItemTitle"><span>${safe(r.title||tx('İsimsiz Maliyet','Untitled Costing'))}</span></div><div class="ocRecordItemMeta">${safe([r.meta?.modelCode,r.meta?.manufacturer,r.meta?.season].filter(Boolean).join(' · ')||tx('Maliyet çalışması','Costing sheet'))}</div></button>`).join('');
 }
-function lineTotal(row,record=current,missing){
-  const raw=n(row?.qty)*n(row?.unitPrice)*(1+pct(row?.wastePct)/100);
-  if(!record)return raw;
-  const from=String(row?.currency||record.meta?.currency||'USD'),to=String(record.meta?.currency||'USD');
-  if(from===to)return raw;
-  const converted=BLFX.convert(raw,from,to,fxSnapFor(record));
-  if(converted==null){if(Array.isArray(missing)&&!missing.includes(from))missing.push(from);return raw;}
-  return converted;
-}
-function calculateRecord(record){
-  const missingCurrencies=[],sectionTotals={};
-  SECTION_DEFS.forEach(d=>sectionTotals[d.key]=(record?.sections?.[d.key]||[]).reduce((sum,row)=>sum+lineTotal(row,record,missingCurrencies),0));
-  const direct=Object.values(sectionTotals).reduce((a,b)=>a+b,0);
-  const productionWaste=direct*pct(record?.rates?.productionWastePct)/100;
-  const afterWaste=direct+productionWaste;
-  const overhead=afterWaste*pct(record?.rates?.overheadPct)/100;
-  const afterOverhead=afterWaste+overhead;
-  const finance=afterOverhead*pct(record?.rates?.financePct)/100;
-  const afterFinance=afterOverhead+finance;
-  const profit=afterFinance*pct(record?.rates?.profitPct)/100;
-  const finalFobRaw=afterFinance+profit;
-  const finalFob=roundHalfUp(finalFobRaw,2);
-  const target=n(record?.meta?.targetFob),gap=roundHalfUp(target?finalFob-target:0,2),qty=n(record?.meta?.quantity);
-  return {sectionTotals,direct,productionWaste,afterWaste,overhead,afterOverhead,finance,afterFinance,profit,finalFobRaw,finalFob,target,gap,quantity:qty,orderTotal:roundHalfUp(finalFob*qty,2),missingCurrencies};
-}
+function lineTotal(row,record=current,missing){return window.BLOpenCostingEngine.lineTotal(row,record,missing,record?fxSnapFor(record):null);}
+function calculateRecord(record){return window.BLOpenCostingEngine.calculateRecord(record,fxSnapFor(record));}
 function calculate(){return calculateRecord(current);}
 function setTextAll(selector,text){document.querySelectorAll(selector).forEach(el=>{el.textContent=text;});}
 function hasCostValue(value){return Number.isFinite(Number(value))&&Math.abs(Number(value))>=0.0000001;}
@@ -823,7 +783,7 @@ function renderCompareResult(){
 /* ===================== KUR (FX) — uygulama geneli BLFX modülü kullanılır ===================== */
 /* Kurlar "Kur Güncelle" ile Kur Tahmin Raporu Excel'inden yüklenir; yön: 1 USD = X döviz. */
 function fxSnapFor(record){
-  const requested=record?.meta?.fxMonth||currentMonthKey();
+  const requested=window.BLOpenCostingEngine.normalizeFxMonth(record?.meta?.fxMonth);
   return BLFX.snapshotForMonth(requested,record?.meta?.currency||'USD');
 }
 function fxMonthLabel(mk){return BLFX.monthLabel(mk,!tr());}

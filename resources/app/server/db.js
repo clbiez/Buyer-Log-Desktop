@@ -222,7 +222,7 @@ function saveRevisioned(file, value, fallback, expectedRevision, storeName, opti
   options.assertAuthority?.();if (deltaWritesLegacy(file)) {
     if(options.legacyWrites)options.legacyWrites.push(()=>atomicWriteJson(file,saved));else atomicWriteJson(file,saved);
   }
-  const mirrored=mirrorToDelta(file, saved,{guardSource:!!options.mirrorResults,assertAuthority:options.assertAuthority});if(mirrored)options.mirrorResults?.push(mirrored);
+  const mirrored=mirrorToDelta(file, saved,{guardSource:!!options.mirrorResults,assertAuthority:options.assertAuthority,guardDocumentIds:options.guardDocumentIds});if(mirrored)options.mirrorResults?.push(mirrored);
   return saved;
   };
   return options[require('./lib/guarded-document-mutation').HELD_DOCUMENT_LEASE]?write():withFileLeaseSync(file,write);
@@ -1583,10 +1583,11 @@ function deleteShippingRows(shipIds, expectedRevision = null, userId = null) {
 function defaultOpenCostings() { return { items: [], _revision: 0 }; }
 function cloneJson(value) { return JSON.parse(JSON.stringify(value == null ? {} : value)); }
 function loadOpenCostings() { ensureDataDir(); const parsed = storeExists(OPEN_COSTING_FILE) ? readJsonWithBackup(OPEN_COSTING_FILE, defaultOpenCostings) : defaultOpenCostings(); return { items: Array.isArray(parsed.items) ? parsed.items : [], _revision: revisionOf(parsed), _updatedAt: parsed._updatedAt || null }; }
-function saveOpenCostings(store, expectedRevision = null) { return saveRevisioned(OPEN_COSTING_FILE, { items: store.items || [] }, defaultOpenCostings, expectedRevision, 'Ön maliyet'); }
-function createOpenCosting(record, expectedRevision = null) { const store = loadOpenCostings(); assertRevision('Ön maliyet', store, expectedRevision); const now = new Date().toISOString(); const item = { ...cloneJson(record), id: 'oc-' + Date.now() + '-' + Math.round(Math.random() * 100000), createdAt: now, updatedAt: now }; store.items.unshift(item); const saved = saveOpenCostings(store, store._revision); return { items: saved.items, item, _revision: saved._revision }; }
-function updateOpenCosting(id, record, expectedRevision = null) { const store = loadOpenCostings(); assertRevision('Ön maliyet', store, expectedRevision); const index = store.items.findIndex(item => item.id === id); if (index < 0) throw new Error('Açık maliyet kaydı bulunamadı: ' + id); const previous = store.items[index]; const item = { ...cloneJson(record), id, createdAt: previous.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() }; store.items[index] = item; const saved = saveOpenCostings(store, store._revision); return { items: saved.items, item, _revision: saved._revision }; }
-function deleteOpenCosting(id, expectedRevision = null) { const store = loadOpenCostings(); assertRevision('Ön maliyet', store, expectedRevision); store.items = store.items.filter(item => item.id !== id); const saved = saveOpenCostings(store, store._revision); return { items: saved.items, _revision: saved._revision }; }
+function saveOpenCostings(store, expectedRevision = null, options = {}) { return saveRevisioned(OPEN_COSTING_FILE, { items: store.items || [] }, defaultOpenCostings, expectedRevision, 'Ön maliyet', options); }
+function createOpenCosting(record, expectedRevision = null, options = {}) { const store = loadOpenCostings(); assertRevision('Ön maliyet', store, expectedRevision); const now = new Date().toISOString(); const item = { ...cloneJson(record), id: 'oc-' + Date.now() + '-' + Math.round(Math.random() * 100000), createdAt: now, updatedAt: now }; store.items.unshift(item); const saved = saveOpenCostings(store, store._revision, options); return { items: saved.items, item, _revision: saved._revision }; }
+function updateOpenCosting(id, record, expectedRevision = null, options = {}) { const store = loadOpenCostings(); assertRevision('Ön maliyet', store, expectedRevision); const index = store.items.findIndex(item => item.id === id); if (index < 0) throw new Error('Açık maliyet kaydı bulunamadı: ' + id); const previous = store.items[index]; const item = { ...cloneJson(record), id, createdAt: previous.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() }; store.items[index] = item; const saved = saveOpenCostings(store, store._revision, options); return { items: saved.items, item, _revision: saved._revision }; }
+function deleteOpenCosting(id, expectedRevision = null, options = {}) { const store = loadOpenCostings(); assertRevision('Ön maliyet', store, expectedRevision); store.items = store.items.filter(item => item.id !== id); const saved = saveOpenCostings(store, store._revision, options); return { items: saved.items, _revision: saved._revision }; }
+function mutateOpenCostings(work) { return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(),OPEN_COSTING_FILE,work); }
 
 function defaultFx() { return { base: 'USD', currencies: [], months: {}, updatedAt: null, sourceFile: null, sourceType: null, sourceModifiedAt: null, _revision: 0 }; }
 function fxHasValues(value) {
@@ -1823,6 +1824,6 @@ module.exports = {
   setFavoriteFilterProfile: function () { return favoriteScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
   markUsedFilterProfile: function () { return usedScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
   loadShipping, shippingModelKey, addShippingRows, patchShippingRow, deleteShippingRows,
-  loadOpenCostings, createOpenCosting, updateOpenCosting, deleteOpenCosting,
+  loadOpenCostings, createOpenCosting, updateOpenCosting, deleteOpenCosting, saveOpenCostings, mutateOpenCostings,
   loadFx, saveFx, fxMonthResolved, loadRefreshHistory, addRefreshHistory, deleteRefreshHistory, clearRefreshHistory, REFRESH_HISTORY_LIMIT, REFRESH_HISTORY_DETAIL_LIMIT, getUserSourceFolder, setUserSourceFolder,
 };
