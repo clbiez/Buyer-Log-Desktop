@@ -1,0 +1,155 @@
+{
+  "source": "e0f66674 native app-main Freight modal",
+  "at": "2026-10-12T00:00:00.000Z",
+  "stored": [
+    {
+      "input": {
+        "cartonW": "40,5",
+        "cartonL": "",
+        "cartonH": "30",
+        "qtyPerCarton": "100",
+        "kgPerPiece": "0,2",
+        "qtyTotal": "2.000",
+        "stylePrice": "5,5"
+      },
+      "expected": {
+        "cartonW": 40.5,
+        "cartonH": 30,
+        "qtyPerCarton": 100,
+        "kgPerPiece": 0.2,
+        "qtyTotal": 2,
+        "stylePrice": 5.5
+      }
+    },
+    {
+      "input": {
+        "cartonW": null,
+        "cartonL": "0",
+        "qtyPerCarton": 25,
+        "qtyTotal": 1234.5,
+        "stylePrice": ""
+      },
+      "expected": {
+        "cartonL": 0,
+        "qtyPerCarton": 25,
+        "qtyTotal": 1234.5
+      }
+    }
+  ],
+  "applications": [
+    {
+      "item": {
+        "id": "air",
+        "label": "Demo route",
+        "mode": "air",
+        "rate": 3,
+        "landed": 1.005
+      },
+      "expected": {
+        "ydFiyatUsdLandedUcak": 1,
+        "_freightAppliedRate": {
+          "id": "air",
+          "label": "Demo route",
+          "mode": "air",
+          "rate": 3,
+          "at": "2026-10-12T00:00:00.000Z"
+        }
+      }
+    },
+    {
+      "item": {
+        "id": "air",
+        "label": "Demo route",
+        "mode": "air",
+        "rate": 3,
+        "landed": 12.346
+      },
+      "expected": {
+        "ydFiyatUsdLandedUcak": 12.35,
+        "_freightAppliedRate": {
+          "id": "air",
+          "label": "Demo route",
+          "mode": "air",
+          "rate": 3,
+          "at": "2026-10-12T00:00:00.000Z"
+        }
+      }
+    },
+    {
+      "item": {
+        "id": "air",
+        "label": "Demo route",
+        "mode": "air",
+        "rate": 3,
+        "landed": 0
+      },
+      "expected": {
+        "ydFiyatUsdLandedUcak": 0,
+        "_freightAppliedRate": {
+          "id": "air",
+          "label": "Demo route",
+          "mode": "air",
+          "rate": 3,
+          "at": "2026-10-12T00:00:00.000Z"
+        }
+      }
+    },
+    {
+      "item": {
+        "id": "seaAir",
+        "label": "Demo route",
+        "mode": "seaAir",
+        "rate": 3,
+        "landed": 1.005
+      },
+      "expected": {
+        "ydFiyatUsdLandedGemiUcak": 1,
+        "_freightAppliedRate": {
+          "id": "seaAir",
+          "label": "Demo route",
+          "mode": "seaAir",
+          "rate": 3,
+          "at": "2026-10-12T00:00:00.000Z"
+        }
+      }
+    },
+    {
+      "item": {
+        "id": "seaAir",
+        "label": "Demo route",
+        "mode": "seaAir",
+        "rate": 3,
+        "landed": 12.346
+      },
+      "expected": {
+        "ydFiyatUsdLandedGemiUcak": 12.35,
+        "_freightAppliedRate": {
+          "id": "seaAir",
+          "label": "Demo route",
+          "mode": "seaAir",
+          "rate": 3,
+          "at": "2026-10-12T00:00:00.000Z"
+        }
+      }
+    },
+    {
+      "item": {
+        "id": "seaAir",
+        "label": "Demo route",
+        "mode": "seaAir",
+        "rate": 3,
+        "landed": 0
+      },
+      "expected": {
+        "ydFiyatUsdLandedGemiUcak": 0,
+        "_freightAppliedRate": {
+          "id": "seaAir",
+          "label": "Demo route",
+          "mode": "seaAir",
+          "rate": 3,
+          "at": "2026-10-12T00:00:00.000Z"
+        }
+      }
+    }
+  ]
+}

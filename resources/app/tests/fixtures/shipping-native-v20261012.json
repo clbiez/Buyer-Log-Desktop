@@ -1,0 +1,87 @@
+{
+  "days": {
+    "Gemi": 60,
+    "Gemi+Uçak": 30,
+    "Uçak": 10
+  },
+  "multipliers": {
+    "tr": 1.05,
+    "overseas": 1.11
+  },
+  "cases": [
+    {
+      "row": {
+        "exFactory": "2026-08-01",
+        "opd": "2026-05-01",
+        "quantity": 1000,
+        "fob": 10,
+        "kur": 40,
+        "trFiyatTl": 440,
+        "ydFiyatUsdLandedGemiUcak": 12,
+        "ydFiyatUsdLandedUcak": 14
+      },
+      "result": {
+        "exFactory": "2026-08-01",
+        "opd": "2026-05-01",
+        "quantity": 1000,
+        "fob": 10,
+        "kur": 40,
+        "trFiyatTl": 440,
+        "ydFiyatUsdLandedGemiUcak": 12,
+        "ydFiyatUsdLandedUcak": 14,
+        "leadTime": 92,
+        "trFiyatUsd": 11,
+        "trFiyatFobUsdLanded": 11.55,
+        "ydFiyatUsd": 10,
+        "ydFiyatUsdLandedGemi": 11.100000000000001,
+        "gemiAvantaj": -0.03896103896103886,
+        "gemiUcakAvantaj": 0.03896103896103886,
+        "ucakAvantaj": 0.21212121212121215,
+        "retailTrWithVessel": "2026-09-30",
+        "gemiUcakAntrepoTeslim": "2026-08-31",
+        "ucakAntrepoTeslim": "2026-08-11",
+        "_totalGemi": -449.9999999999993,
+        "_totalGemiUcak": 449.9999999999993,
+        "_totalUcak": 2449.999999999999,
+        "_totalTr": 11550
+      }
+    },
+    {
+      "row": {
+        "exFactory": "01.08.2026",
+        "opd": "20260501",
+        "quantity": "2500",
+        "fob": "",
+        "kur": 0,
+        "trFiyatTl": "",
+        "ydFiyatUsdLandedGemiUcak": "",
+        "ydFiyatUsdLandedUcak": 0
+      },
+      "result": {
+        "exFactory": "01.08.2026",
+        "opd": "20260501",
+        "quantity": "2500",
+        "fob": "",
+        "kur": 0,
+        "trFiyatTl": "",
+        "ydFiyatUsdLandedGemiUcak": "",
+        "ydFiyatUsdLandedUcak": 0,
+        "leadTime": 92,
+        "trFiyatUsd": "",
+        "trFiyatFobUsdLanded": "",
+        "ydFiyatUsd": 0,
+        "ydFiyatUsdLandedGemi": 0,
+        "gemiAvantaj": "",
+        "gemiUcakAvantaj": "",
+        "ucakAvantaj": "",
+        "retailTrWithVessel": "2026-09-30",
+        "gemiUcakAntrepoTeslim": "2026-08-31",
+        "ucakAntrepoTeslim": "2026-08-11",
+        "_totalGemi": null,
+        "_totalGemiUcak": null,
+        "_totalUcak": null,
+        "_totalTr": null
+      }
+    }
+  ]
+}

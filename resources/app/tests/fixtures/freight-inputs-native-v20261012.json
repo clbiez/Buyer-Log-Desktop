@@ -1,0 +1,90 @@
+{
+  "settings": {
+    "rates": [
+      {
+        "id": "air",
+        "mode": "air",
+        "label": "Uçak (AIR)",
+        "rate": 5.3
+      },
+      {
+        "id": "seaair-colombo",
+        "mode": "seaAir",
+        "label": "Gemi+Uçak (SEA+AIR) COLOMBO",
+        "rate": 5
+      },
+      {
+        "id": "seaair-maldives",
+        "mode": "seaAir",
+        "label": "Gemi+Uçak (SEA+AIR) MALDIVES",
+        "rate": 3.9
+      }
+    ],
+    "volumetricFactor": 167,
+    "landedMultiplier": 1,
+    "carton": {
+      "cartonL": 58,
+      "cartonH": 38,
+      "cartonW": 30
+    }
+  },
+  "cases": [
+    {
+      "row": {
+        "quantity": 1000,
+        "fob": 10
+      },
+      "input": {
+        "kgPerPiece": "",
+        "qtyTotal": "1000",
+        "qtyPerCarton": "",
+        "cartonL": "58",
+        "cartonH": "38",
+        "cartonW": "30",
+        "stylePrice": "10"
+      }
+    },
+    {
+      "row": {
+        "quantity": 1000,
+        "fob": 10,
+        "_freightInput": {
+          "qtyTotal": 2000,
+          "stylePrice": 5,
+          "kgPerPiece": 0.2,
+          "qtyPerCarton": 100,
+          "cartonW": 40,
+          "cartonH": ""
+        }
+      },
+      "input": {
+        "kgPerPiece": "0.2",
+        "qtyTotal": "2000",
+        "qtyPerCarton": "100",
+        "cartonL": "58",
+        "cartonH": "38",
+        "cartonW": "40",
+        "stylePrice": "5"
+      }
+    },
+    {
+      "row": {
+        "quantity": 1000,
+        "fob": 10,
+        "_freightInput": {
+          "qtyTotal": 0,
+          "stylePrice": 0
+        }
+      },
+      "input": {
+        "kgPerPiece": "",
+        "qtyTotal": "0",
+        "qtyPerCarton": "",
+        "cartonL": "58",
+        "cartonH": "38",
+        "cartonW": "30",
+        "stylePrice": "0"
+      }
+    }
+  ]
+}

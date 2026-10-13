@@ -1297,7 +1297,272 @@
       "compare",
       "analyze"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "shipping.records.read",
+        "operation": "READ",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.inputs.read",
+        "operation": "READ",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.scenarios.calculate",
+        "operation": "READ",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.scenarios.export",
+        "operation": "EXPORT",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.calculate",
+        "operation": "READ",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.export",
+        "operation": "EXPORT",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.record.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.records.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.records.fx.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [
+          "source",
+          "opencosting",
+          "collection"
+        ],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.inputs.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.apply",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.cp.import",
+        "operation": "IMPORT",
+        "agentAreas": [
+          "shipping",
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping",
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.collection.import",
+        "operation": "IMPORT",
+        "agentAreas": [
+          "shipping",
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping",
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.settings.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "shipping",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.freight.settings.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "automations",
