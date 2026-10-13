@@ -5625,6 +5625,7 @@ const agentOfficeStore = createAgentOfficeStore({ root:path.join(agentOfficeRoot
 const agentAutomationTools=require('./lib/agent-automation-tools');
 function agentAutomationStamp(profile,recipe,ignoreRefresh=false){return require('./lib/agent-office-store').hash(JSON.stringify({cp:cpAgentRevision(profile,{ignoreRefresh}),lfl:ignoreRefresh?null:cacheForUser(profile.id).lflLoadedAt,collection:recipe.source==='collection'||recipe.join?.source==='collection'?loadWorkspace(profile.id)._revision:null,intake:recipe.source==='intake'||recipe.join?.source==='intake'?intakeStore.loadSnapshot(profile.id)?.savedAt:null}));}
 const agentAutomationDeps={
+ withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
  normalize:automationNormalizePayload,dataset:automationDataset,execute:automationExecute,emailGroups:profile=>automationEmailGroupsForOwner(profile.id),
  publicProfile:profile=>userAccess.publicProfile(profile),timeZone:()=>Intl.DateTimeFormat().resolvedOptions().timeZone,
  runDraft:(ctx,recipe,check,work)=>agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,agent=>{require('./lib/agent-automation-authority').assertRecipeAuthorityNow(ctx,recipe,{userAccess,actualAgent:agent,sourceArea:source=>source==='intake'?'overview':agentDatasetArea(source)});return automationRecipeStore.withEffectGuard(check,work);}),

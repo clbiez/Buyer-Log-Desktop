@@ -5179,6 +5179,93 @@
           "en": "Independent demo record deletion and undo in the actual Agent Office"
         }
       }
+    },
+    {
+      "id": "agent-automation-native-read-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Otomasyon",
+        "en": "Agent Office · Automation"
+      },
+      "title": {
+        "tr": "Gerçek otomasyon önizlemeleri doğrulanır",
+        "en": "Actual automation previews are validated"
+      },
+      "description": {
+        "tr": "Otomasyon dili, kayıtlar ve eşleşme önizlemeleri gerçek motorun tipli sonuçlarıyla okunur. Değişen alan listeleri desteklenir; tarayıcı kodu, model görselleri ve özel çalışma gövdeleri sonuç bağlamına taşınmaz.",
+        "en": "Automation language, records and match previews use typed results from the actual engine. Changed field lists are supported; browser code, model images and private run bodies are excluded from result context."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-automation-native-read-contract.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde doğrulanmış otomasyon dili sonucu",
+          "en": "Verified automation language result in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek otomasyon motoru · JavaScript ve gönderim kapalı",
+          "en": "Actual automation engine · JavaScript and sending disabled"
+        }
+      }
+    },
+    {
+      "id": "agent-automation-definition-inverse",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Otomasyon",
+        "en": "Agent Office · Automation"
+      },
+      "title": {
+        "tr": "Otomasyon değişiklikleri tam geri alma kaydıyla uygulanır",
+        "en": "Automation changes retain complete inverse records"
+      },
+      "description": {
+        "tr": "Oluşturma, revizyon, silme, etkinlik ve zamanlama gerçek kayıt servisinde uygulanır. Tam önceki tanım, değişiklik bazı ve sınırlı izin sahibi/görev/adıma bağlı saklanır; güncel yetki, profil kilidi ve revizyon yeniden kontrol edilir.",
+        "en": "Creation, revision, deletion, activation and scheduling use the actual record service. Complete prior definition, change baseline and bounded grant are retained under owner/task/step binding; live authority, profile lock and revision are rechecked."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-automation-definition-inverse.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde demo otomasyon silme ve geri alma",
+          "en": "Demo automation deletion and inverse in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Beş gerçek tanım işlemi ve doğrulanmış geri almalar",
+          "en": "Five actual definition operations and verified inverses"
+        }
+      }
+    },
+    {
+      "id": "agent-automation-native-execution-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Otomasyon",
+        "en": "Agent Office · Automation"
+      },
+      "title": {
+        "tr": "Otomasyon sonucu gerçek dosyalarla doğrulanır",
+        "en": "Automation results are verified against actual files"
+      },
+      "description": {
+        "tr": "Gerçek motorun analizi, işlem sayıları ve bütün doğrulanmış EML taslakları tipli sonuçlarla kaydedilir. Kısmi tamamlanma korunur; özel satırlar, görseller, baz ve izin gövdeleri bağlama taşınmaz. Ekran açma talepleri uygulanmış sayılmaz.",
+        "en": "Actual engine analysis, operation counts and every verified EML draft are retained in typed receipts. Partial completion is preserved; private rows, images, baseline and grant bodies stay out of context. UI navigation requests are not reported as executed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-automation-native-execution-contract.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde doğrulanmış otomasyon yürütme sonucu",
+          "en": "Verified automation execution result in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek motor sonucu · AI çağrısı sıfır · gönderim kapalı",
+          "en": "Actual engine result · zero AI calls · sending disabled"
+        }
+      }
     }
   ]
 }
