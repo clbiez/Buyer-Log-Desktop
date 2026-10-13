@@ -5673,7 +5673,7 @@ async function agentOfficeAutomationPreview(profile,code) {
 const agentOfficeService=createAgentOfficeService({
   outputService:()=>require('./lib/lcwai').getDefaultOutputService(),store:agentOfficeStore,sync:agentOfficeSync,userAccess,engine:()=>require('./lib/lcwai').getDefaultEngine(),
   toolRegistry:agentToolRegistry,runtime:agentRuntime,runtimeStore:agentWorkflowStore,taskOwners:()=>userAccess.allPublicProfiles().map(profile=>profile.id),cpData:cpAgentData,cpDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),cpGroups:profile=>automationEmailGroupsForOwner(profile.id).map(({id,name})=>({id,name})),
-  getOperationalData:agentOfficeOperationalData,
+  getOperationalData:agentOfficeOperationalData,memoryDataset:agentPlatformDataset,
   getEvidenceAttachments:agentOfficeEvidenceAttachments,
   readEvidenceAttachment:async item=>({buffer:await fs.promises.readFile(item.filePath),fileName:item.name}),
   automationGuide:async()=>{const model=aiCapabilityRegistry.getCapabilityModel();return aiGuideGenerator.generateGuide({...model,actions:model.actions.filter(action=>['OPEN_PAGE','SHOW_REPORT','REFRESH_SOURCE'].includes(action.id))});},

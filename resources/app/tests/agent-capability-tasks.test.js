@@ -28,6 +28,7 @@ test('real Runtime hands verified data between agents, requires approval and per
  const approval={confirmed:true,fingerprint:job.steps[1].preview.fingerprint};const results=await Promise.all([f.service.taskExecute(f.profile,job.id,approval),f.service.taskExecute(f.profile,job.id,approval)]);
  assert.ok(results.every(j=>j.status==='completed'),JSON.stringify(results));assert.equal(f.effects,1);assert.equal(prefs.load(f.profile.id).entries[f.key].value,'corrected');
  assert.equal((await f.store.get(f.profile.id,'job',job.id)).steps[1].result.verified,true);
+ const history=(await f.store.state(f.profile.id)).memory.filter(memory=>memory.taskId===job.id);assert.equal(history.length,2);assert.deepEqual(history.find(memory=>memory.profileId===f.first.id).toolIds,['test.read']);assert.deepEqual(history.find(memory=>memory.profileId===f.second.id).toolIds,['test.save']);
  await f.service.taskExecute(f.profile,job.id,approval);assert.equal(f.effects,1);
  job=await f.service.taskRollback(f.profile,job.id,{stepId:'save',confirmed:true});assert.equal(job.steps[1].rollbackStatus,'completed');assert.equal(prefs.load(f.profile.id).entries[f.key],undefined);
 });
