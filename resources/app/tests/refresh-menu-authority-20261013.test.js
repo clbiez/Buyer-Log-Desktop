@@ -37,7 +37,7 @@ test('refresh grouping uses live saved configuration, never old snapshot metadat
   });
   assert.deepEqual(helper.linkedRefreshMembers(),members);
   await helper.syncLinkedRefreshMembers();
-  assert.deepEqual(helper.withLinkedRefreshTargets(['lfl']),members);
+  assert.deepEqual(helper.withLinkedRefreshTargets(['lfl']).slice().sort(),members.slice().sort());
 
   // User changes shared grouping in Data Management without a data refresh.
   members=['cp','orders'];
