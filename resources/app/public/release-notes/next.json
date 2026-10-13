@@ -4585,6 +4585,105 @@
           "en": "Actual Buyer Log Agent Office with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-full-field-discovery-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Geç gelen sütunları da keşfet",
+        "en": "Discover columns appearing later in the source"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Alan keşfi",
+        "en": "Agent Office › Tasks › Field discovery"
+      },
+      "body": {
+        "tr": "CP, Orders, Backlog, LFL ve Collection alan keşfi tüm yetkili kaynak satırlarındaki sütunları tarar. İlk örnekte görünmeyen alanlar mevcut filtre ve hesaplama motorunda kullanılabilir. Sonraki alan sayfaları kaynak revizyonuna bağlanır; yanıt boyutu ve gösterilmeyen metaveri açıkça bildirilir. Örneklenen satır sayısı, tüm kaynaktaki dolulukla karıştırılmaz.",
+        "en": "CP, Orders, Backlog, LFL and Collection field discovery scans columns across all authorized source rows. Fields absent from the initial sample remain usable in the existing filter and calculation engine. Subsequent field pages bind to the source revision; response limits and omitted metadata are explicit. Sampled row counts do not imply population across the entire source."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-full-field-discovery-contract.png",
+        "alt": {
+          "tr": "Kaynağa bağlı alan sayfası ve eksik metaveri bilgisi",
+          "en": "Source-bound field page and omitted metadata details"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log alan keşfi",
+          "en": "Actual Buyer Log field discovery with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "agent-backlog-typed-delivery-result",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi / Backlog",
+        "en": "Agent Office / Backlog"
+      },
+      "title": {
+        "tr": "Gecikme raporunda tam toplamlar, açık sınırlar",
+        "en": "Full totals and explicit limits in delay reports"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Backlog gecikme analizi",
+        "en": "Agent Office › Tasks › Backlog delay analysis"
+      },
+      "body": {
+        "tr": "Gecikme ve risk sonuçları mevcut Backlog motorundan doğrulanır. Tüm kaynak toplamları korunur; en riskli sipariş ve grup ayrıntılarının sınırı ile gösterilmeyen öğe sayısı bildirilir. Eksik veya sonlu olmayan değerler sıfır olarak uydurulmaz. Kaynak ya da yetki hesap sırasında değişirse eski sonuç yayımlanmaz.",
+        "en": "Delay and risk results are verified through the existing Backlog engine. Full-source totals remain intact; limits and omitted counts for top-risk orders and group details are explicit. Missing or non-finite values are not invented as zero. Source or authority changes during calculation prevent stale results from being published."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-backlog-typed-delivery-result.png",
+        "alt": {
+          "tr": "Tam toplamlar ve gösterilmeyen risk ayrıntıları",
+          "en": "Full totals and omitted risk details"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log gecikme görevi",
+          "en": "Actual Buyer Log delay task with anonymous data"
+        }
+      }
+    },
+    {
+      "id": "agent-weighted-comparison-results",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi / Collection / LFL",
+        "en": "Agent Office / Collection / LFL"
+      },
+      "title": {
+        "tr": "Ağırlıklı karşılaştırmalarda doğrulanmış sonuç sözleşmesi",
+        "en": "Verified result contracts for weighted comparisons"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Üretici ve LFL analizi",
+        "en": "Agent Office › Tasks › Supplier and LFL analysis"
+      },
+      "body": {
+        "tr": "Üretici ve LFL sonuçları mevcut miktar ağırlıklı motorlardan gelir. Finansal alanların tipi, para birimi ve karşılaştırma kapsamı açıkça doğrulanır. Farklı para birimleri birleştirilmez; hesaplanmayan bağlam null kalır. Kaynak veya fiyat girdisi bekleme sırasında değişirse eski sonuç reddedilir. Yanıt sınırları ve eksik değerler açıkça bildirilir.",
+        "en": "Supplier and LFL results come from the existing quantity-weighted engines. Financial field types, currency and comparison scope are explicitly verified. Mixed currencies remain incomparable and uncomputed context stays null. Source or pricing input changes during waits reject stale results. Response limits and missing values are explicit."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-weighted-comparison-results.png",
+        "alt": {
+          "tr": "Miktar ağırlıklı sonuçlar, para birimi ve kapsam bilgisi",
+          "en": "Quantity-weighted results, currency and scope details"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log karşılaştırma görevi",
+          "en": "Actual Buyer Log comparison task with anonymous data"
+        }
+      }
     }
   ]
 }

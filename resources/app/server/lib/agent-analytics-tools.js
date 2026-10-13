@@ -5,6 +5,8 @@ const {applyResolvedFilters,resolveDatasetField,SUPPORTED_OPERATORS}=require('./
 const Delivery=require('../../public/backlog-delivery-engine');
 const reportOutput=require('./agent-report-output-contract');
 const analysisOutput=require('./agent-analysis-output');
+const fieldOutput=require('./agent-field-discovery-output');
+const deliveryOutput=require('./agent-backlog-delivery-output');
 const fieldRef={...string(160),pattern:'^(?!\\s*(?:__proto__|prototype|constructor)\\s*$)'},literal={type:['string','number','boolean','null'],maxLength:1000};
 const filters=array({...object({field:fieldRef,operator:{enum:SUPPORTED_OPERATORS},value:{anyOf:[literal,array(literal,100)]}}),required:['field','operator']},50);
 const analysis=object({filters,dimensions:array(fieldRef,5),measures:array({...object({op:{enum:['count','sum','avg','min','max','distinctCount']},field:fieldRef,as:{type:'string',pattern:'^(?!(?:__proto__|prototype|constructor)$)[A-Za-z_][A-Za-z0-9_]{0,63}$'}}),required:['op']},8),orderBy:array({...object({field:fieldRef,direction:{enum:['asc','desc']}}),required:['field','direction']},4),limit:{type:'integer',minimum:1,maximum:500}});
@@ -40,6 +42,8 @@ function registerAnalyticsTools(registry,deps){
       const asOf=args.asOf||new Date().toISOString().slice(0,10);if(!Number.isFinite(Date.parse(asOf))||new Date(asOf).toISOString().slice(0,10)!==asOf)throw error('OFFICE_TASK_INVALID',422);
       const rows=applyResolvedFilters(source,sourceRows,args.filters,ctx.now),report=Delivery.analyze(rows,{today:Delivery.defaultOrdinal(asOf)});
       delete report.orders;if(report.context)delete report.context.generatedAt;
+      const currentRows=await dataset(ctx.ownerId,ctx.profile,source);ctx.assertAuthority();
+      if(hash(JSON.stringify(currentRows))!==sourceFingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);
       return {sourceFingerprint,report:{source,asOf,matchedRows:rows.length,...report}};
     }
     const report=await registry.execute('dataset.analyze',{...args,source},{ownerId:ctx.ownerId,profile:ctx.profile,now:ctx.now});ctx.assertAuthority();
@@ -48,10 +52,10 @@ function registerAnalyticsTools(registry,deps){
   }
   for(const source of ['cp','orders','backlog','lfl','collection']){
     const base={module:source==='collection'?'koleksiyon':source,areas:[source==='collection'?'koleksiyon':source],agentAreas:[source]};
-    registry.registerCapability({...base,id:source+'.fields',operation:'READ',risk:'read',label:{tr:source+' alanlarını keşfet',en:'Discover '+source+' fields'},inputSchema:object({}),read:async(_args,ctx)=>registry.execute('dataset.describe',{source},{ownerId:ctx.ownerId,profile:ctx.profile})});
+    registry.registerCapability({...base,id:source+'.fields',operation:'READ',risk:'read',label:{tr:source+' alanlarını keşfet',en:'Discover '+source+' fields'},inputSchema:fieldOutput.inputSchema,outputSchema:fieldOutput.outputSchema(source),read:async(args,ctx)=>{if(args.offset&&!args.sourceFingerprint)throw error('OFFICE_TOOL_SCHEMA',422);const native=await registry.execute('dataset.describe',{source,fullSchema:true,sourceFingerprint:args.sourceFingerprint},{ownerId:ctx.ownerId,profile:ctx.profile,assertAuthority:ctx.assertAuthority});ctx.assertAuthority();return fieldOutput.project(native,args);}});
     registry.registerCapability({...base,id:source+'.analyze',operation:'READ',risk:'read',label:{tr:source+' filtre / grup / ölçü analizi',en:source+' filter / group / measure analysis'},inputSchema:analysis,outputSchema:analysisOutput.outputSchema(source),read:async(args,ctx)=>analysisOutput.project((await read(source,'analysis',args,ctx)).report)});
     for(const mode of source==='backlog'?['analysis','delivery']:['analysis']){
-      if(mode==='delivery')registry.registerCapability({...base,id:'backlog.delivery',operation:'READ',risk:'read',label:{tr:'Backlog gecikme ve risk raporu',en:'Backlog delay and risk report'},inputSchema:delivery,read:async(args,ctx)=>(await read(source,mode,args,ctx)).report});
+      if(mode==='delivery')registry.registerCapability({...base,id:'backlog.delivery',operation:'READ',risk:'read',label:{tr:'Backlog gecikme ve risk raporu',en:'Backlog delay and risk report'},inputSchema:delivery,outputSchema:deliveryOutput.outputSchema,read:async(args,ctx)=>{const native=await read(source,mode,args,ctx);return deliveryOutput.project(native.report,native.sourceFingerprint);}});
       if(!outputService)continue;
       registerReportCapability(registry,{...base,id:source+'.'+mode+'.export',label:{tr:source+' '+mode+' raporunu dışa aktar',en:'Export '+source+' '+mode+' report'},inputSchema:mode==='delivery'?delivery:analysis,read:(args,ctx)=>read(source,mode,args,ctx)},outputService);
     }
