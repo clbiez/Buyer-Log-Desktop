@@ -3007,6 +3007,10 @@
         "alt": {
           "tr": "Agent ile gerçek otomasyon oluşturma ve revizyon",
           "en": "Create and revise real automations with agents"
+        },
+        "caption": {
+          "tr": "Anonim otomasyon · doğrulanmış kayıt",
+          "en": "Anonymous automation · verified record"
         }
       }
     },
@@ -3036,6 +3040,10 @@
         "alt": {
           "tr": "Gerçek analiz ve sahibine özel mail taslakları",
           "en": "Actual analysis and owner-only email drafts"
+        },
+        "caption": {
+          "tr": "Anonim otomasyon · gerçek analiz ve taslak sonucu",
+          "en": "Anonymous automation · actual analysis and draft result"
         }
       }
     },
@@ -3065,6 +3073,10 @@
         "alt": {
           "tr": "Sınırlı zamanlama yetkisi ve güvenli devam",
           "en": "Scoped schedule grants and safe recovery"
+        },
+        "caption": {
+          "tr": "Anonim otomasyon · onaylı yerel zamanlama",
+          "en": "Anonymous automation · approved local schedule"
         }
       }
     },
@@ -5583,6 +5595,35 @@
         "caption": {
           "tr": "Anonim lisans kartı · doğrulanmış profil revizyonu",
           "en": "Anonymous license card · verified profile revision"
+        }
+      }
+    },
+    {
+      "id": "mail-topic-readable-controls",
+      "type": "fix",
+      "module": {
+        "tr": "E-posta Taslakları",
+        "en": "Email Drafts"
+      },
+      "title": {
+        "tr": "Dar ekranlarda konu seçimi okunur kalır",
+        "en": "Subject controls remain readable on compact screens"
+      },
+      "body": {
+        "tr": "Konu başlığı seçicileri ve açıklamaları dar ekranlarda mevcut tasarımın en az 10 px yazı boyutunu korur.",
+        "en": "Subject selectors and their legend retain the existing design minimum of 10 px on compact screens."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "mail-topic-readable-controls.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log konu başlığı düzenleyicisi",
+          "en": "Actual Buyer Log subject editor"
+        },
+        "caption": {
+          "tr": "Dar ekran · 10 px konu kontrolleri",
+          "en": "Compact screen · 10 px subject controls"
         }
       }
     }

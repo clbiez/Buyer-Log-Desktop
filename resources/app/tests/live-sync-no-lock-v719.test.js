@@ -192,8 +192,13 @@ test('v7.19 satır yazma uçları incremental yama taşır; tam checkpoint hydra
   assert.ok(calls.length >= 4, `orders bildirimi beklenenden az: ${calls.length}`);
   const checkpointCalls = calls.filter(call => /notifyChange\('orders',null\)/.test(call));
   assert.equal(checkpointCalls.length, 1, 'yalnız business-checkpoint hydration full-refresh bildirimi kullanmalı');
-  const incremental = calls.filter(call => !/notifyChange\('orders',null\)/.test(call));
+  const inverseCalls = calls.filter(call => /notifyChange\('orders','agent-capability',\{orderCode\}\)/.test(call));
+  assert.equal(inverseCalls.length, 1, 'exact inverse is a structural reload, because it may remove overrides');
+  const incremental = calls.filter(call => !/notifyChange\('orders',null\)/.test(call) && !inverseCalls.includes(call));
   incremental.forEach(call => assert.match(call, /rowPatches:/, `satır yazma bildirimi yama taşımalı: ${call}`));
+  const undo = blockOf(SERVER, 'restoreOrder: async', 'httpRequest: agentPlatformHttpRequest');
+  assert.match(undo, /restoreOrderOverrideReceipt/);
+  assert.match(undo, /notifyChange\('orders','agent-capability',\{orderCode\}\)/, 'exact undo removes overrides; peers must reload source values');
   const hydrate = blockOf(SERVER, 'async function hydrateBusinessCheckpointIfNeeded', 'async function applyMasterCheckpoint');
   assert.match(hydrate, /notifyChange\('collection-workspaces',null\);liveEvents\.notifyChange\('orders',null\);liveEvents\.notifyChange\('overrides',null\)/);
 });

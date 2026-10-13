@@ -5910,7 +5910,7 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
   .mailTopicEditorCard .mailTopicSubjectRow,
   .mailTopicEditorCard .mailTopicFieldGroupHead{grid-template-columns:minmax(85px,1fr) 85px 56px 52px;gap:3px;}
   .mailTopicEditorCard .mailTopicSubjectRow{padding-left:9px;}
-  .mailTopicEditorCard .mailTopicSubjectToggle{font-size:9px;white-space:normal;}
-  .mailTopicEditorCard .mailTopicSubjectLegend{font-size:9px;}
+  .mailTopicEditorCard .mailTopicSubjectToggle{font-size:10px;white-space:normal;}
+  .mailTopicEditorCard .mailTopicSubjectLegend{font-size:10px;}
   .mailTopicEditorCard .mailTopicMoveBtns button{min-width:23px;}
 }
