@@ -14,9 +14,10 @@ function attachTasks(service,deps) {
   const authority=profile=>{const current=access.profileById(profile.id);if(!current||current.enabled===false)throw error('OFFICE_USER_DISABLED',403);return current;};
   const actorHash=profile=>hash(JSON.stringify(access.publicProfile?.(profile)||profile));
   async function heartbeat(owner){const instance=service.runtimeContext(owner).runtimeInstanceId;await store.save(owner,'metadata',{id:'executor-'+instance,type:'task-executor',instanceId:instance,pid:process.pid,host,expiresAt:new Date(Date.now()+120000).toISOString()});return instance;}
+  const requireEnabledAgent=agent=>{if(!agent||agent.enabled===false||agent.deleted)throw error('OFFICE_AGENT_DISABLED',403);return agent;};
   const agentHas=(agent,tool)=>(tool.agentAreas||tool.areas||[]).every(area=>agent.areas.includes(area==='koleksiyon'?'collection':area))&&(!tool.agentAnyAreas||tool.agentAnyAreas.some(area=>agent.areas.includes(area)));
-  async function catalog(profile,agentId){profile=authority(profile);const agent=await store.get(profile.id,'profile',agentId);return registry.catalog().filter(tool=>tool.contractVersion>=2&&tool.executionScope==='office-durable-job'&&allowed(tool,profile,access)&&agentHas(agent,tool));}
-  async function stepAuthority(profile,step){profile=authority(profile);const agent=await store.get(profile.id,'profile',step.agentId),tool=registry.get(step.toolId);
+  async function catalog(profile,agentId){profile=authority(profile);const agent=requireEnabledAgent(await store.get(profile.id,'profile',agentId));return registry.catalog().filter(tool=>tool.contractVersion>=2&&tool.executionScope==='office-durable-job'&&allowed(tool,profile,access)&&agentHas(agent,tool));}
+  async function stepAuthority(profile,step){profile=authority(profile);const agent=requireEnabledAgent(await store.get(profile.id,'profile',step.agentId)),tool=registry.get(step.toolId);
     if(!(tool?.contractVersion>=2)||!allowed(tool,profile,access)||!agentHas(agent,tool))throw error('OFFICE_TOOL_FORBIDDEN',403);
     return {profile,agent,tool};}
   function resolvedArgs(job,step){const args=clone(step.args);for(const binding of step.bindings||[]){const previous=job.steps.find(item=>item.id===binding.stepId);if(previous?.status!=='completed')throw error('OFFICE_TASK_DEPENDENCY',409);
@@ -26,13 +27,20 @@ function attachTasks(service,deps) {
       if(steps.some(item=>item.id===step.id)||step.bindings.length>12||step.bindings.some(b=>!steps.some(p=>p.id===b.stepId)||typeof b.argument!=='string'||typeof b.path!=='string'))throw error('OFFICE_TASK_DEPENDENCY');
       const {agent,tool}=await stepAuthority(profile,step);if(tool.executionScope!=='office-durable-job')throw error('OFFICE_TOOL_FORBIDDEN',403);
       if(!step.bindings.length)validate(tool.inputSchema,step.args);step.agentRevision=agent.revision;steps.push(step);}
-    const job=await store.save(profile.id,'job',{...service.runtimeContext(profile.id),id:internal.id||id(),type:'capability-task',profileIds:[...new Set(steps.map(s=>s.agentId))],task:text(raw.task||'Buyer Log',4000),steps,status:'queued',aiCalls:raw.aiCalls===1?1:0,execution:'existing-agent-runtime'},{immutable:!!internal.id});
+    const job=await store.save(profile.id,'job',{...service.runtimeContext(profile.id),id:internal.id||id(),type:'capability-task',profileIds:[...new Set(steps.map(s=>s.agentId))],task:text(raw.task||'Buyer Log',4000),steps,status:'queued',aiCalls:raw.aiCalls===1?1:0,execution:'existing-agent-runtime'},{immutable:!!internal.id,assertAuthority:internal.assertAuthority});
     access.appendAudit(profile,'AGENT_TASK_CREATE',job.id,{steps:steps.map(s=>s.toolId)});return prepare(profile,job.id);}
-  async function plan(profile,raw){const tools=await catalog(profile,raw.agentId);if(!tools.length)throw error('OFFICE_TOOL_FORBIDDEN',403);
+  async function plan(profile,raw){
+    profile=authority(profile);const initialActor=actorHash(profile),initialAgent=requireEnabledAgent(await store.get(profile.id,'profile',raw.agentId));
+    const check=agent=>{requireEnabledAgent(agent);if(agent.revision!==initialAgent.revision||actorHash(authority(profile))!==initialActor)throw error('OFFICE_PREVIEW_CHANGED',409);};
+    const checkCurrent=async()=>check(await store.get(profile.id,'profile',raw.agentId)),tools=await catalog(profile,raw.agentId);if(!tools.length)throw error('OFFICE_TOOL_FORBIDDEN',403);
     const memory=await service.memoryContext(profile,[raw.agentId],'',raw.task,6000,{toolIds:tools.map(tool=>tool.id)});
+    await checkCurrent();
     const response=await service.engineOf().ask(profile.id,{requestId:id(),source:'agent-task',lang:raw.lang==='en'?'en':'tr',task:text(raw.task,4000),context:{agentId:raw.agentId,tools:tools.map(t=>({id:t.id,operation:t.operation,label:t.label,description:t.description,inputSchema:t.inputSchema})),memory:memory.selected},guide:'Return planJson as a JSON string: {steps:[{id,toolId,args,bindings:[{argument,stepId,path}]}]}. Use only listed tools. Bindings reference earlier actual results. Never invent identifiers, permissions, successful execution, source facts or approvals. Do not place a fingerprint in args. If required identifiers are missing return {steps:[]}.'});
+    await checkCurrent();
     if(!response.structured?.ok)throw error('OFFICE_AI_CONTRACT_INVALID',422);let parsed;try{parsed=JSON.parse(response.data.planJson);}catch(_){throw error('OFFICE_AI_CONTRACT_INVALID',422);}
-    return create(profile,{...raw,steps:parsed.steps,aiCalls:1});}
+    if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)||!Array.isArray(parsed.steps)||parsed.steps.some(step=>!step||typeof step!=='object'||Array.isArray(step)||!tools.some(tool=>tool.id===step.toolId)))throw error('OFFICE_AI_CONTRACT_INVALID',422);
+    return create(profile,{...raw,steps:parsed.steps,aiCalls:1},{assertAuthority:state=>check(state.records['profile:'+raw.agentId]?.doc)});
+  }
   async function prepare(profile,key){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(job.type!=='capability-task')throw error('OFFICE_TASK_INVALID');if(TERMINAL.has(job.status))return job;
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
     const index=job.steps.findIndex(step=>step.status!=='completed');if(index<0){job=await store.save(profile.id,'job',{...job,status:'completed',finishedAt:new Date().toISOString()},{expectedRevision:job.revision});

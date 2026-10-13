@@ -3760,6 +3760,39 @@
           "en": "Current authority and agent profile checks"
         }
       }
+    },
+    {
+      "id": "agent-task-execution-pause",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent görev yürütmesi kalıcı olarak duraklatılır",
+        "en": "Agent task execution can be persistently paused"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Karakter ve agent profili",
+        "en": "Agent Office › Character and agent profile"
+      },
+      "body": {
+        "tr": "Profilde onaylı ve zamanlanmış görev yürütmesi açılıp kapatılır. Duraklatılmış agent için yeni görev planı, yürütme, zamanlama ve geri alma engellenir. Yeniden açılan agentın eski işlem onayı kullanılmaz; güncel önizleme gerekir. Durum kişisel WAL kaydında korunur.",
+        "en": "Profiles can enable or pause approved and scheduled task execution. New task plans, execution, schedules and undo are blocked for paused agents. Re-enabling requires a fresh preview instead of reusing old approval. State persists in the personal WAL record."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-task-execution-pause.png",
+        "alt": {
+          "tr": "Agent profilinde görev yürütme kontrolü",
+          "en": "Task execution control in the agent profile"
+        },
+        "caption": {
+          "tr": "Kalıcı görev duraklatma ve güncel onay denetimi",
+          "en": "Persistent task pause and current approval checks"
+        }
+      }
     }
   ]
 }
