@@ -184,7 +184,9 @@
       "area": "orders",
       "capabilities": [
         "read",
-        "analyze"
+        "analyze",
+        "patch-row",
+        "import"
       ],
       "agentTools": []
     },
@@ -246,7 +248,8 @@
         "patch-row",
         "export",
         "compare",
-        "analyze"
+        "analyze",
+        "view"
       ],
       "agentTools": []
     },

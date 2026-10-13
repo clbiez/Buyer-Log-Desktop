@@ -4684,6 +4684,39 @@
           "en": "Actual Buyer Log comparison task with anonymous data"
         }
       }
+    },
+    {
+      "id": "agent-cp-unified-task-bridge",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi / CP",
+        "en": "Agent Office / CP"
+      },
+      "title": {
+        "tr": "CP pilotunu ortak görev planına bağla",
+        "en": "Connect the CP pilot to unified task plans"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Checklist / haftalık mail",
+        "en": "Agent Office › Tasks › Checklist / weekly email"
+      },
+      "body": {
+        "tr": "Mevcut checklist/Rules ve Merch Calendar yükleme/mail araçları artık ortak görev kataloğunda seçilebilir. Onaylı görev aynı CP motoruyla kaydeder ve gerçek EML dosyasını doğrular. Kayıt öncesi güncel agent kilidi, yetki ve kaynak revizyonu yeniden kontrol edilir. Eski CP pilot ekranı korunur. Taslak indirme, yalnız gerçek görev makbuzu ve güncel kapsamla açılır; gerçek mail gönderimi yoktur.",
+        "en": "Existing checklist/Rules and Merch Calendar loading/email tools are now available in unified task plans. Approved tasks use the same CP engine to persist records and verify actual EML files. Current agent lock, authority and source revision are rechecked before writes. The original CP pilot screen remains available. Draft downloads require an actual task receipt and current scope; actual sending remains unavailable."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-cp-unified-task-bridge.png",
+        "alt": {
+          "tr": "Ortak görev planında kaydedilen CP checklist ve gerçek haftalık taslak",
+          "en": "Persisted CP checklist and actual weekly draft in a unified task plan"
+        },
+        "caption": {
+          "tr": "Anonim verilerle gerçek Buyer Log CP görev zinciri",
+          "en": "Actual Buyer Log CP task chain with anonymous data"
+        }
+      }
     }
   ]
 }
