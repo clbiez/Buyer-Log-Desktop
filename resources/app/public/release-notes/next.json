@@ -5134,6 +5134,35 @@
           "en": "Actual engine result · zero AI calls · sending disabled"
         }
       }
+    },
+    {
+      "id": "agent-shared-checklist-native-inverse",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi · Ortak Checklist",
+        "en": "Agent Office · Shared Checklist"
+      },
+      "title": {
+        "tr": "Ortak checklist tanımları gerçek serviste yönetilir",
+        "en": "Shared checklist definitions use the actual service"
+      },
+      "description": {
+        "tr": "Ortak tanımları oku, oluştur, revize et ve sil. İşlem yetkisi, gerçek revizyon, bağımlılıklar ve onay kontrol edilir; kişisel kurallar ve cevaplar korunur. Eski kayıtların normalleştirilmesi önizlenir; tam eski metadata güvenli geri alma kaydında saklanır.",
+        "en": "Read, create, revise and delete shared definitions. Operation authority, actual revision, dependencies and approval are checked; personal rules and answers remain separate. Legacy normalization is previewed and complete original metadata is retained in a guarded inverse receipt."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-shared-checklist-native-inverse.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde ortak checklist tanımı silme ve geri alma",
+          "en": "Shared checklist definition deletion and inverse in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek ortak tanım işlemleri · onay ve tam geri alma",
+          "en": "Actual shared definition operations · approval and complete inverse"
+        }
+      }
     }
   ]
 }
