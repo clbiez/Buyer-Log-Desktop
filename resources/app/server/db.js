@@ -1397,15 +1397,15 @@ function deleteProfile(file, id, expectedRevision, storeName, userId = null, kin
   const next = removeProfile(store, id);
   return saveProfileFile(file, next, store._revision, storeName, userId, kind, options);
 }
-function setFavoriteProfile(file, id, expectedRevision, storeName, userId = null, kind = 'profile') {
+function setFavoriteProfile(file, id, expectedRevision, storeName, userId = null, kind = 'profile', options = {}) {
   const store = loadProfileFile(file, userId, kind); assertRevision(storeName, store, expectedRevision);
   const next = setFavorite(store, id);
-  return saveProfileFile(file, next, store._revision, storeName, userId, kind);
+  return saveProfileFile(file, next, store._revision, storeName, userId, kind, options);
 }
-function markUsedProfile(file, id, expectedRevision, storeName, userId = null, kind = 'profile') {
+function markUsedProfile(file, id, expectedRevision, storeName, userId = null, kind = 'profile', options = {}) {
   const store = loadProfileFile(file, userId, kind); assertRevision(storeName, store, expectedRevision);
   const next = markUsed(store, id);
-  return saveProfileFile(file, next, store._revision, storeName, userId, kind);
+  return saveProfileFile(file, next, store._revision, storeName, userId, kind, options);
 }
 function updateProfile(file, id, data, expectedRevision, storeName, userId = null, kind = 'profile', name = null, options = {}) {
   const store = loadProfileFile(file, userId, kind); assertRevision(storeName, store, expectedRevision);
@@ -1429,6 +1429,23 @@ function mutateHorizonTemplates(userId, work) {
     update: (id, data, revision, title, guard) => updateProfile(file, id, data, revision, name, userId, kind, title, { ...lease, ...guard }),
     replace: (store, revision, guard) => saveProfileFile(file, store, revision, name, userId, kind, { ...lease, ...guard }),
     commit: lease.commit,
+  }));
+}
+
+
+// View/filter changes use the same owner file and native profile writer.
+function mutateTableProfiles(kind, userId, work) {
+  if (!['view','filter'].includes(kind) || !userId) throw new TypeError('Owned table profile scope required');
+  const file = scopedProfileFile(kind==='view'?VIEWS_FILE:FILTERS_FILE,userId), name = kind==='view'?'Görünümler':'Filtre profilleri';
+  return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(),file,lease=>work({
+    load:()=>loadProfileFile(file,userId,kind),
+    add:(title,data,revision,guard)=>addProfile(file,title,data,revision,name,userId,kind,{...lease,...guard}),
+    update:(id,data,revision,title,guard)=>updateProfile(file,id,data,revision,name,userId,kind,title,{...lease,...guard}),
+    remove:(id,revision,guard)=>deleteProfile(file,id,revision,name,userId,kind,{...lease,...guard}),
+    favorite:(id,revision,guard)=>setFavoriteProfile(file,id,revision,name,userId,kind,{...lease,...guard}),
+    use:(id,revision,guard)=>markUsedProfile(file,id,revision,name,userId,kind,{...lease,...guard}),
+    replace:(store,revision,guard)=>saveProfileFile(file,store,revision,name,userId,kind,{...lease,...guard}),
+    commit:lease.commit,
   }));
 }
 
@@ -1795,7 +1812,7 @@ async function restoreCpExFactoryRevisions(snapshot, { actor = null } = {}) {
 }
 
 module.exports = {
-  mutateHorizonTemplates,
+  mutateTableProfiles,mutateHorizonTemplates,
   snapshotOrderOverride,verifyOrderOverridePatch,restoreOrderOverrideReceipt,
   mutateSharedResource,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
