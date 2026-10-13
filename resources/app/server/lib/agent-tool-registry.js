@@ -234,7 +234,7 @@ function summarize(value) {
 function createToolRegistry(adapter) {
   const tools = new Map();
   function register(meta, execute, rollback = null) {
-    tools.set(meta.id, { ...meta, execute, rollback });
+    tools.set(meta.id, { ...meta, rollbackContract:typeof meta.rollback==='string'?meta.rollback:meta.rollbackContract, execute, rollback });
   }
   function executableFor(moduleId,ctx){
     const profile=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx?.ownerId):ctx?.profile;
@@ -597,7 +597,12 @@ function createToolRegistry(adapter) {
     if(tool.contractVersion){
       const profile=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):ctx.profile;
       if(!profile||profile.id!==ctx.ownerId||profile.enabled===false||!ctx.approvalGranted||!(tool.areas||[tool.area]).filter(Boolean).every(area=>adapter.userAccess?.hasArea(profile,area))||(tool.permissions||[]).some(key=>!adapter.userAccess?.hasPermission(profile,key))||(tool.capabilities||[]).some(key=>!adapter.userAccess?.hasCapability(profile,key)))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
-      ctx={...ctx,profile};
+      const fingerprint=JSON.stringify(adapter.userAccess?.publicProfile?.(profile)||profile);
+      ctx={...ctx,profile,assertAuthority:()=>{
+        const latest=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):profile;
+        if(JSON.stringify(adapter.userAccess?.publicProfile?.(latest)||latest)!==fingerprint)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+        return latest;
+      }};
     }
     const result=await tool.rollback(token,ctx);
     if(tool.contractVersion)adapter.userAccess.appendAudit(ctx.profile,'AGENT_CP_TOOL_ROLLBACK',id,{runId:ctx.runId,verified:result?.verified===true});

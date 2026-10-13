@@ -10,6 +10,7 @@ const resultSchema={type:'object',required:['verified'],properties:{verified:{en
 // URL, SQL or service function name is accepted from the caller or model.
 function register(registerTool,spec,authorize) {
   if(!spec.id||!spec.module||!spec.inputSchema||typeof spec.read!=='function'||spec.risk!=='read'&&typeof spec.apply!=='function')throw new TypeError('Incomplete capability contract');
+  if((spec.capabilities||[]).some(code=>!require('./iam-core').PERMISSION_CODES.has(code)))throw new TypeError('Unknown IAM capability');
   const effect=spec.risk!=='read',schema=effect?{...spec.inputSchema,properties:{...spec.inputSchema.properties,fingerprint:string(64)}}:spec.inputSchema;
   const meta={...spec,contractVersion:2,category:'app',kind:'app',area:spec.areas?.[0]||'',areas:spec.areas||[],approval:effect,rollbackable:!!spec.restore,
     inputSchema:schema,outputSchema:spec.outputSchema||resultSchema,dryRunOutputSchema:resultSchema,executionScope:'office-durable-job',

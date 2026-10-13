@@ -1,0 +1,415 @@
+[
+  {
+    "id": "overview",
+    "area": "overview",
+    "capabilities": [
+      "read",
+      "analyze",
+      "compare",
+      "view"
+    ],
+    "tools": []
+  },
+  {
+    "id": "cp",
+    "area": "cp",
+    "capabilities": [
+      "read",
+      "filter",
+      "select",
+      "sort",
+      "patch-row",
+      "note",
+      "export",
+      "plm-sync",
+      "refresh",
+      "analyze",
+      "automate",
+      "view"
+    ],
+    "tools": [
+      {
+        "id": "cp.rule.preview",
+        "operation": "READ",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 1
+      },
+      {
+        "id": "cp.rule.save",
+        "operation": "CREATE/UPDATE",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 1
+      },
+      {
+        "id": "cp.weekly.preview",
+        "operation": "READ",
+        "areas": [
+          "cp",
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 1
+      },
+      {
+        "id": "cp.weekly.draft",
+        "operation": "EXPORT",
+        "areas": [
+          "cp",
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 1
+      },
+      {
+        "id": "cp.records",
+        "operation": "READ",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "quality.inspect",
+        "operation": "READ",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "quality.commit",
+        "operation": "IMPORT",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "quality.checklist.apply",
+        "operation": "UPDATE",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "quality.fail.drafts",
+        "operation": "EXPORT",
+        "areas": [
+          "cp",
+          "automations"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      }
+    ]
+  },
+  {
+    "id": "orders",
+    "area": "orders",
+    "capabilities": [
+      "read",
+      "filter",
+      "select",
+      "sort",
+      "patch-row",
+      "note",
+      "export",
+      "plm-sync",
+      "refresh",
+      "analyze",
+      "automate",
+      "view"
+    ],
+    "tools": [
+      {
+        "id": "app.order.update",
+        "operation": "UPDATE",
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 1
+      },
+      {
+        "id": "orders.records",
+        "operation": "READ",
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      }
+    ]
+  },
+  {
+    "id": "koleksiyon",
+    "area": "koleksiyon",
+    "capabilities": [
+      "read",
+      "filter",
+      "select",
+      "sort",
+      "patch-row",
+      "export",
+      "import",
+      "plm-sync",
+      "compare",
+      "analyze",
+      "view"
+    ],
+    "tools": [
+      {
+        "id": "collection.records",
+        "operation": "READ",
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      }
+    ]
+  },
+  {
+    "id": "quotations",
+    "area": "koleksiyon",
+    "capabilities": [
+      "read",
+      "filter",
+      "select",
+      "sort",
+      "patch-row",
+      "export",
+      "compare",
+      "analyze"
+    ],
+    "tools": []
+  },
+  {
+    "id": "pricinghistory",
+    "area": "koleksiyon",
+    "capabilities": [
+      "read",
+      "filter",
+      "sort",
+      "export",
+      "compare",
+      "analyze"
+    ],
+    "tools": []
+  },
+  {
+    "id": "priceanalysis",
+    "area": "priceanalysis",
+    "capabilities": [
+      "read",
+      "analyze",
+      "compare"
+    ],
+    "tools": []
+  },
+  {
+    "id": "lcwai",
+    "area": "overview",
+    "capabilities": [
+      "analyze"
+    ],
+    "tools": []
+  },
+  {
+    "id": "agentoffice",
+    "area": "overview",
+    "capabilities": [
+      "analyze",
+      "compare",
+      "export"
+    ],
+    "tools": []
+  },
+  {
+    "id": "manufacturers",
+    "area": "orders",
+    "capabilities": [
+      "read",
+      "analyze"
+    ],
+    "tools": []
+  },
+  {
+    "id": "licensecards",
+    "area": "orders",
+    "capabilities": [
+      "read",
+      "refresh",
+      "analyze"
+    ],
+    "tools": []
+  },
+  {
+    "id": "lfl",
+    "area": "lfl",
+    "capabilities": [
+      "read",
+      "filter",
+      "sort",
+      "export",
+      "analyze",
+      "compare"
+    ],
+    "tools": [
+      {
+        "id": "lfl.records",
+        "operation": "READ",
+        "areas": [
+          "lfl"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      }
+    ]
+  },
+  {
+    "id": "opencosting",
+    "area": "opencosting",
+    "capabilities": [
+      "read",
+      "filter",
+      "export",
+      "analyze"
+    ],
+    "tools": []
+  },
+  {
+    "id": "backlog",
+    "area": "backlog",
+    "capabilities": [
+      "read",
+      "filter",
+      "sort",
+      "export",
+      "analyze",
+      "automate"
+    ],
+    "tools": [
+      {
+        "id": "backlog.records",
+        "operation": "READ",
+        "areas": [
+          "backlog"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      }
+    ]
+  },
+  {
+    "id": "shipping",
+    "area": "shipping",
+    "capabilities": [
+      "read",
+      "filter",
+      "select",
+      "sort",
+      "patch-row",
+      "export",
+      "compare",
+      "analyze"
+    ],
+    "tools": []
+  },
+  {
+    "id": "automations",
+    "area": "automations",
+    "capabilities": [
+      "read",
+      "automate"
+    ],
+    "tools": []
+  },
+  {
+    "id": "source",
+    "area": "source",
+    "capabilities": [
+      "read",
+      "refresh",
+      "import",
+      "analyze"
+    ],
+    "tools": []
+  },
+  {
+    "id": "agents",
+    "area": "agents",
+    "capabilities": [
+      "read",
+      "automate"
+    ],
+    "tools": []
+  }
+]

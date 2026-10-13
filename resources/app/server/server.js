@@ -5463,11 +5463,11 @@ require('./routes/checklist-supplier-routes')(app, {
   userAccess,
 });
 /* Test Raporu Aktarımı: sonuç mailleri / PDF'ler → önizleme → checklist. */
-require('./routes/test-report-routes')(app, {
-  automationError,
-  express,
-  userAccess,
-  authorizedOrders:async (profile,{write=false}={})=>{
+const agentQualityService=require('./lib/test-reports/service').createService({
+  audit:userAccess.appendAudit,
+  authorizedOrders:agentQualityAuthorizedOrders,
+});
+async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
     const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
     await ensureDataLoaded(profile.id);
     const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
@@ -5475,9 +5475,10 @@ require('./routes/test-report-routes')(app, {
     const rows=buildOrdersRowsFromASAS(businessRows,antrepoForTarget(active,source),overrides).filter(row=>!write || canUserEditOrderCode(profile,canonicalFields.value(row,'cp','orderCode')));
     const CP=require('../public/cp-readiness-engine');
     return new Map(rows.map(row=>[CP.analyzeOrder(row).orderKey,{orderCode:String(canonicalFields.value(row,source,'orderCode') || ''),
-      plmId:String(canonicalFields.value(row,source,'plmId') || ''),modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || '')}]));
-  },
-});
+      plmId:String(canonicalFields.value(row,source,'plmId') || ''),modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || ''),colour:String(canonicalFields.value(row,source,'colour')||'')}]));
+}
+require('./routes/test-report-routes')(app,{automationError,express,userAccess,service:agentQualityService,authorizedOrders:(...args)=>agentQualityAuthorizedOrders(...args)});
+const agentQualityTools=require('./lib/agent-quality-tools').registerQualityTools(agentToolRegistry,{service:agentQualityService,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,dataset:profile=>agentPlatformDataset(profile.id,profile,'cp'),mail:cpAgentMail,verifyMail:(result,profile)=>result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id)))});
 /* ===================================================================
    OAB (Order-Assortment-Budget) — Overview modülü.
    PASS'e (LC Waikiki intranet raporlama sistemi) bağlanıp
@@ -5772,6 +5773,7 @@ const agentOfficeService=createAgentOfficeService({store:agentOfficeStore,sync:a
   validateAutomation:agentOfficeAutomationPreview,
   onBackgroundError:code=>logRuntimeFailure('agentOfficeBackground',Object.assign(new Error(code),{code})) });
 require('./routes/agent-office-routes')(app, {
+  qualityService:agentQualityService,qualityTools:agentQualityTools,qualityDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),
   express,
   userAccess,
   service:agentOfficeService,
