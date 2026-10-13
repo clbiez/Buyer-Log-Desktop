@@ -32753,7 +32753,12 @@ function mailTopicDefaultColumnKeys(kind,sourceKind){
 function mailTopicColumnKeys(kind,id,sourceKind){
   const item=mailTopicFindItem(kind,id),valid=new Set(mailTopicSourceColumns(sourceKind).map(c=>c.k));
   const hasStored=Boolean(item?.tableColumns&&Object.prototype.hasOwnProperty.call(item.tableColumns,sourceKind));
-  const stored=hasStored&&Array.isArray(item.tableColumns[sourceKind])?item.tableColumns[sourceKind]:mailTopicDefaultColumnKeys(kind,sourceKind);
+  const defaults=mailTopicDefaultColumnKeys(kind,sourceKind);
+  // Match the user's current CP / Collection arrangement on first use.
+  // An explicit saved order always wins, including an intentional empty selection.
+  const screenOrder=sourceKind==='cp'?visibleCols('cp').map(c=>c.k):kolAllOrderedCols().map(c=>c.k);
+  const initial=[...screenOrder.filter(key=>defaults.includes(key)),...defaults.filter(key=>!screenOrder.includes(key))];
+  const stored=hasStored&&Array.isArray(item.tableColumns[sourceKind])?item.tableColumns[sourceKind]:initial;
   const clean=[];
   stored.forEach(key=>{key=String(key||'');if(valid.has(key)&&!clean.includes(key))clean.push(key);});
   return clean;
@@ -32766,8 +32771,8 @@ function mailTopicSetColumnKeys(kind,id,sourceKind,keys){
   item.tableColumns[sourceKind]=clean;mailTplSave();return true;
 }
 function mailTopicSelectedColumns(kind,id,sourceKind){
-  const selected=new Set(mailTopicColumnKeys(kind,id,sourceKind));
-  return mailTopicSourceColumns(sourceKind).filter(c=>selected.has(c.k)).map(c=>({...c,sourceKind}));
+  const byKey=new Map(mailTopicSourceColumns(sourceKind).map(c=>[c.k,c]));
+  return mailTopicColumnKeys(kind,id,sourceKind).map(key=>byKey.get(key)).filter(Boolean).map(c=>({...c,sourceKind}));
 }
 function mailTopicDefaultContentOptions(kind){
   // Send to Pricing has its own mandatory Quotation Excel. The optional selected-order
@@ -32817,8 +32822,24 @@ function mailTopicSetSubjectOptions(kind,id,sourceKind,{manufacturer,keys}={}){
   mailTplSave();return true;
 }
 function mailTopicSelectedSubjectColumns(kind,id,sourceKind){
-  const selected=new Set(mailTopicSubjectColumnKeys(kind,id,sourceKind));
-  return mailTopicSourceColumns(sourceKind).filter(c=>selected.has(c.k)).map(c=>({...c,sourceKind}));
+  const byKey=new Map(mailTopicSourceColumns(sourceKind).map(c=>[c.k,c]));
+  return mailTopicSubjectColumnKeys(kind,id,sourceKind).map(key=>byKey.get(key)).filter(Boolean).map(c=>({...c,sourceKind}));
+}
+function mailTopicSubjectOrder(kind,id,sourceKind,keys=null,manufacturer=null){
+  const item=mailTopicFindItem(kind,id);
+  const fieldKeys=Array.isArray(keys)?keys:mailTopicSubjectColumnKeys(kind,id,sourceKind);
+  const includeManufacturer=typeof manufacturer==='boolean'?manufacturer:mailTopicSubjectIncludesManufacturer(kind,id,sourceKind);
+  const byKey=new Map(mailTopicSourceColumns(sourceKind).map(c=>[c.k,c]));
+  const priority=fieldKeys.filter(k=>byKey.has(k)&&prepareEmailSubjectColumnPriority(byKey.get(k))<99)
+    .sort((a,b)=>prepareEmailSubjectColumnPriority(byKey.get(a))-prepareEmailSubjectColumnPriority(byKey.get(b)));
+  const others=fieldKeys.filter(k=>byKey.has(k)&&!priority.includes(k));
+  const defaults=[...priority,...(includeManufacturer?['__manufacturer']:[]),...others,'__title','__date'];
+  const saved=Array.isArray(item?.subjectOrder?.[sourceKind])?item.subjectOrder[sourceKind]:[];
+  return [...new Set([...saved.filter(k=>defaults.includes(k)),...defaults])];
+}
+function mailTopicSubjectSeparator(kind,id,sourceKind){
+  const value=mailTopicFindItem(kind,id)?.subjectSeparators?.[sourceKind];
+  return typeof value==='string'&&value.length>0&&value.length<=12&&!/[\r\n]/.test(value)?value:' - ';
 }
 function mailTopicIsProtected(kind,id){
   return id===`${kind}-default` || id===MAIL_QUOTATION_REMINDER_ID || id===MAIL_CHECKLIST_ID;
@@ -33630,30 +33651,52 @@ function prepareEmailRowManufacturer(row){
 }
 function prepareEmailColumnIsPicture(column){return String(column?.k||'')==='__picture'||String(column?.type||'')==='cpImage';}
 function prepareEmailImageSource(row,sourceKind){
-  if(sourceKind==='cp')return String(row?._imageUrl||(row?._imageRef?`${CP_IMAGE_API}/${encodeURIComponent(row._imageRef)}`:'')||'');
+  // CP e-mail and Excel use the same canonical identity as the visible CP picture.
+  if(sourceKind==='cp')return String(tableRowImageSource(row)?.source||'');
   return String(row?.img||(row?.imgRef?`/api/collection-images/${encodeURIComponent(row.imgRef)}`:'')||'');
 }
 function prepareEmailImageDims(sourceKind){return sourceKind==='cp'?cpImageDims():kolImgDims();}
 async function prepareEmailInlineAsset(row,column,rowIndex){
   const sourceKind=column.sourceKind||'collection',src=prepareEmailImageSource(row,sourceKind);if(!src)return null;
-  const prepared=await kolPrepareExcelImage(src);if(!prepared)return null;
+  // Off-screen CP thumbnails may still contain placeholders. Resolve the actual
+  // picture through the same canonical cache as CP clipboard/Excel exports.
+  let canonical='';
+  if(sourceKind==='cp')canonical=await cpOrdersRowImageDataUrl(row);
+  const prepared=await kolPrepareExcelImage(canonical||src);if(!prepared)return null;
   const dims=prepareEmailImageDims(sourceKind),fit=kolFitImageDimensions(prepared.width,prepared.height,dims.w,dims.h);
   const width=Math.max(1,Math.round(fit.width)),height=Math.max(1,Math.round(fit.height));
-  const dataUrl=prepared.dataUrl,mimeType=prepared.extension==='jpeg'?'image/jpeg':'image/png';
+  let dataUrl=prepared.dataUrl,mimeType=prepared.extension==='jpeg'?'image/jpeg':'image/png';
+  // Downscale inline mail previews, not the separate Excel image: Outlook clients
+  // cannot reliably handle hundreds of multi-megabyte inline originals.
+  try{
+    const image=await kolLoadPricingImage(dataUrl),maxSide=480;
+    if(image){
+      const scale=Math.min(1,maxSide/Math.max(prepared.width,prepared.height));
+      const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(prepared.width*scale));canvas.height=Math.max(1,Math.round(prepared.height*scale));
+      const ctx=canvas.getContext('2d');if(ctx){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);dataUrl=canvas.toDataURL('image/jpeg',0.8);mimeType='image/jpeg';}
+    }
+  }catch(_){}
   const match=/^data:(image\/[A-Za-z0-9.+-]+);base64,(.+)$/s.exec(dataUrl);if(!match)return null;
   const cid=`buyerlog-image-${Date.now()}-${rowIndex}-${Math.random().toString(36).slice(2,8)}@local`;
-  // CID ekinde orijinal çözünürlük tutulur; width/height yalnız ilk görünür boyuttur.
   return {cid,filename:`BuyerLog_Image_${rowIndex+1}.${mimeType==='image/jpeg'?'jpg':'png'}`,mimeType,base64:match[2],width,height,src};
 }
 async function prepareEmailTopicTableContent(rows,columns){
   const list=Array.isArray(rows)?rows:[],cols=Array.isArray(columns)?columns:[],assets=new Map(),inlineImages=[];
   const pictureCols=cols.map((column,index)=>({column,index})).filter(item=>prepareEmailColumnIsPicture(item.column));
   if(pictureCols.length){
-    await Promise.all(list.map(async(row,ri)=>{
+    const promises=new Map();
+    // Re-use the MIME Content-ID of a repeated model instead of embedding
+    // identical binary images once per PO.
+    await blMapWithConcurrency(list,6,async(row,ri)=>{
       for(const item of pictureCols){
-        const asset=await prepareEmailInlineAsset(row,item.column,ri);if(asset){assets.set(`${ri}:${item.index}`,asset);inlineImages.push(asset);}
+        const src=prepareEmailImageSource(row,item.column.sourceKind||'collection');if(!src)continue;
+        if(!promises.has(src))promises.set(src,prepareEmailInlineAsset(row,item.column,ri));
+        const asset=await promises.get(src);
+        if(!asset)throw new Error((appLang==='en'?'Model image could not be embedded in the email: ':'Model görseli e-postaya eklenemedi: ')+String(row?.['Model Name']||row?.modelKod||row?.['PLM ID']||src));
+        assets.set(`${ri}:${item.index}`,asset);
       }
-    }));
+    });
+    const seen=new Set();assets.forEach(asset=>{if(!seen.has(asset.cid)){seen.add(asset.cid);inlineImages.push(asset);}});
   }
   const head=cols.map(c=>`<th style="background-color:#F2F4F7;color:#475467;border:thin solid #D0D5DD;padding:5px 8px;text-align:left;font-weight:bold;white-space:nowrap;">${escapeHtml(c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label))}</th>`).join('');
   const body=list.map((row,ri)=>`<tr>${cols.map((c,ci)=>{
@@ -33719,20 +33762,29 @@ function prepareEmailBuildSubject(topic,rows,manufacturerName,sourceKind,dateTex
   const parts=[],seen=new Set();
   const push=value=>{value=prepareEmailSubjectSegment(value);const key=value.toLocaleLowerCase('tr-TR');if(value&&!seen.has(key)){seen.add(key);parts.push(value);}};
   const selectedColumns=Array.isArray(subjectOptions?.columns)?subjectOptions.columns:mailTopicSelectedSubjectColumns(topic.kind,topic.id,sourceKind);
-  const priorityColumns=selectedColumns.filter(column=>prepareEmailSubjectColumnPriority(column)<99).sort((a,b)=>prepareEmailSubjectColumnPriority(a)-prepareEmailSubjectColumnPriority(b));
-  const otherColumns=selectedColumns.filter(column=>prepareEmailSubjectColumnPriority(column)===99);
-  priorityColumns.forEach(column=>push(prepareEmailSubjectColumnValue(rows,column)));
+  const byKey=new Map(selectedColumns.map(c=>[c.k,c]));
   const includeManufacturer=typeof subjectOptions?.manufacturer==='boolean'?subjectOptions.manufacturer:mailTopicSubjectIncludesManufacturer(topic.kind,topic.id,sourceKind);
-  if(includeManufacturer)push(manufacturerName);
-  otherColumns.forEach(column=>push(prepareEmailSubjectColumnValue(rows,column)));
-  if(subjectOptions&&Object.prototype.hasOwnProperty.call(subjectOptions,'subjectTitle'))push(subjectOptions.subjectTitle);
-  else push(topic.subjectTitle||mailTopicSubjectTitle(topic.kind,topic.id));
-  const date=prepareEmailSubjectSegment(dateText),prefix=parts.join(' - ')||'E-Mail';
-  if(!date)return prefix.length<=240?prefix:`${prefix.slice(0,239).trimEnd()}…`;
-  const full=`${prefix} - ${date}`;
+  const order=Array.isArray(subjectOptions?.order)?subjectOptions.order:mailTopicSubjectOrder(topic.kind,topic.id,sourceKind,[...byKey.keys()],includeManufacturer);
+  const separator=typeof subjectOptions?.separator==='string'&&subjectOptions.separator.length&&subjectOptions.separator.length<=12&&!/[\r\n]/.test(subjectOptions.separator)
+    ?subjectOptions.separator:mailTopicSubjectSeparator(topic.kind,topic.id,sourceKind);
+  const title=subjectOptions&&Object.prototype.hasOwnProperty.call(subjectOptions,'subjectTitle')?subjectOptions.subjectTitle:(topic.subjectTitle||mailTopicSubjectTitle(topic.kind,topic.id));
+  const date=prepareEmailSubjectSegment(dateText);
+  const candidates=[...new Set([...order,...mailTopicSubjectOrder(topic.kind,topic.id,sourceKind,[...byKey.keys()],includeManufacturer)])];
+  candidates.forEach(key=>{
+    if(key==='__manufacturer'){if(includeManufacturer)push(manufacturerName);}
+    else if(key==='__title')push(title);
+    else if(key==='__date')push(date);
+    else if(byKey.has(key))push(prepareEmailSubjectColumnValue(rows,byKey.get(key)));
+  });
+  const full=parts.join(separator)||'E-Mail';
   if(full.length<=240)return full;
-  const room=Math.max(20,240-date.length-3),trimmed=prefix.length<=room?prefix:`${prefix.slice(0,Math.max(1,room-1)).trimEnd()}…`;
-  return `${trimmed} - ${date}`;
+  // Preserve the date suffix for the standard date-last layout.
+  if(candidates[candidates.length-1]==='__date'&&date&&full.endsWith(separator+date)){
+    const prefix=full.slice(0,-(separator.length+date.length));
+    const room=Math.max(1,240-separator.length-date.length);
+    return (prefix.length<=room?prefix:prefix.slice(0,Math.max(1,room-1)).trimEnd()+'…')+separator+date;
+  }
+  return full.slice(0,239).trimEnd()+'…';
 }
 function prepareEmailTopicTablePlain(rows,columns){
   const labels=columns.map(c=>c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label));
