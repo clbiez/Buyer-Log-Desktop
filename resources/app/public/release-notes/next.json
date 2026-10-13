@@ -5066,7 +5066,7 @@
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "next-assets/agent-automation-native-read-contract.png",
+        "src": "agent-automation-native-read-contract.png",
         "alt": {
           "tr": "Gerçek Agent Ofisinde doğrulanmış otomasyon dili sonucu",
           "en": "Verified automation language result in the actual Agent Office"
@@ -5074,6 +5074,35 @@
         "caption": {
           "tr": "Gerçek otomasyon motoru · JavaScript ve gönderim kapalı",
           "en": "Actual automation engine · JavaScript and sending disabled"
+        }
+      }
+    },
+    {
+      "id": "agent-automation-definition-inverse",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Otomasyon",
+        "en": "Agent Office · Automation"
+      },
+      "title": {
+        "tr": "Otomasyon değişiklikleri tam geri alma kaydıyla uygulanır",
+        "en": "Automation changes retain complete inverse records"
+      },
+      "description": {
+        "tr": "Oluşturma, revizyon, silme, etkinlik ve zamanlama gerçek kayıt servisinde uygulanır. Tam önceki tanım, değişiklik bazı ve sınırlı izin sahibi/görev/adıma bağlı saklanır; güncel yetki, profil kilidi ve revizyon yeniden kontrol edilir.",
+        "en": "Creation, revision, deletion, activation and scheduling use the actual record service. Complete prior definition, change baseline and bounded grant are retained under owner/task/step binding; live authority, profile lock and revision are rechecked."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-automation-definition-inverse.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde demo otomasyon silme ve geri alma",
+          "en": "Demo automation deletion and inverse in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Beş gerçek tanım işlemi ve doğrulanmış geri almalar",
+          "en": "Five actual definition operations and verified inverses"
         }
       }
     }
