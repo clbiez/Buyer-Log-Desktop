@@ -393,6 +393,83 @@
         "contractVersion": 2
       },
       {
+        "id": "cp.checklist.shared.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "cp",
+          "orders",
+          "overview"
+        ],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.checklist.shared.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "CP.VIEW",
+          "CP.CREATE"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.checklist.shared.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "CP.VIEW",
+          "CP.EDIT"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.checklist.shared.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "CP.VIEW",
+          "CP.DELETE"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
         "id": "cp.fields",
         "operation": "READ",
         "agentAreas": [

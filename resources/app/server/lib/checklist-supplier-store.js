@@ -223,19 +223,31 @@ function publicPayload() {
   };
 }
 
-function replaceDefinitions(definitions, actor) {
+function replaceDefinitions(definitions, actor, options = {}) {
   if (Array.isArray(definitions) && definitions.length > MAX_DEFINITIONS) throw Object.assign(new Error('Too many checklist definitions.'), { code: 'CHECKLIST_CAPACITY', statusCode: 507 });
-  const list = (Array.isArray(definitions) ? definitions : []).map(normalizeDefinition).filter(Boolean);
+  if (options.restoreSnapshot && (typeof options.assertAuthority !== 'function' || !Number.isSafeInteger(options.expectedRevision))) throw Object.assign(new Error('Checklist inverse requires a revision and authority guard.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
+  const list = options.restoreSnapshot ? clone(definitions) : (Array.isArray(definitions) ? definitions : []).map(normalizeDefinition).filter(Boolean);
   const seen = new Set();
-  const unique = list.filter(item => { if (seen.has(item.id)) return false; seen.add(item.id); return true; }).slice(0, MAX_DEFINITIONS);
+  const unique = options.restoreSnapshot ? list : list.filter(item => { if (seen.has(item.id)) return false; seen.add(item.id); return true; }).slice(0, MAX_DEFINITIONS);
   const who = actorInfo(actor);
   return withFileLeaseSync(FILE, () => {
     const store = read();
+    options.assertAuthority?.();
+    if (options.expectedRevision != null && store.revision !== options.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
+    if (options.reserveWrites && (!Number.isSafeInteger(store.revision) || store.revision < 0 || store.revision > Number.MAX_SAFE_INTEGER - options.reserveWrites)) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     store.definitions = unique;
     store.events.push({ type: 'definitions', at: new Date().toISOString(), by: who, count: unique.length });
+    options.assertAuthority?.();
     write(store);
     return { ok: true, revision: store.revision, updatedAt: store.updatedAt, definitions: clone(store.definitions) };
   });
+}
+
+// Trusted inverse snapshots originate in revision/owner-bound native receipts,
+// never in a request body; preserve older metadata through the same writer.
+function restoreDefinitionsSnapshot(definitions, actor, options = {}) {
+  if (!Array.isArray(definitions)) throw Object.assign(new Error('Invalid checklist inverse.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
+  return replaceDefinitions(definitions, actor, {...options, restoreSnapshot:true});
 }
 
 function applyEntries(entries, actor, options = {}) {
@@ -321,7 +333,7 @@ function restoreEntries(receipt, actor, options = {}) {
 }
 module.exports = {
   FILE, ATTACHMENT_ROOT, SCHEMA_VERSION, MAX_ATTACHMENT_BYTES,
-  normalizeState, answerKey, normalizeDefinition, publicPayload, replaceDefinitions, applyEntries, restoreEntries,
+  normalizeState, answerKey, normalizeDefinition, publicPayload, replaceDefinitions, restoreDefinitionsSnapshot, applyEntries, restoreEntries,
   addAttachment, addAttachmentBuffer, getAttachmentPath, deleteAttachment, cleanAttachmentMeta, attachmentDisplayName,
   _read: read,
 };

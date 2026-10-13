@@ -28,6 +28,7 @@ function browser(saved = new Map(), fetch = async () => ({ ok: true, json: async
   ctx.window = ctx; ctx.globalThis = ctx;
   vm.createContext(ctx);
   vm.runInContext(fs.readFileSync(path.join(ROOT,'public/cp-overview-assistant.js'),'utf8'),ctx);
+  vm.runInContext(fs.readFileSync(path.join(ROOT,'public/checklist-answer-merge-engine.js'),'utf8'),ctx);
   vm.runInContext(fs.readFileSync(path.join(ROOT,'public/checklist-supplier-sync.js'),'utf8'),ctx);
   return { ctx, saved, timers, assistant: ctx.BLCpAssistant, sync: ctx.BLChecklistSupplierSync };
 }
