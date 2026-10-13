@@ -3522,6 +3522,9 @@ const CP_COLS = [
   {k:'Category', label:'Category', type:'ro', weight:12, group:'Model Detayları'},
   {k:'PLM ID', label:'PLM ID', type:'plm', weight:8, group:'Model Detayları'},
   {k:'Model Name', label:'Model Name', type:'modelLink', weight:15, group:'Model Detayları'},
+  // Aynı PLM BOM kanıtını Koleksiyon ile paylaşır; sipariş verisini değiştirmez.
+  {k:'Artwork Detail', label:'Artwork Detail', type:'ro', weight:22, group:'Model Detayları'},
+  {k:'Fabric (PLM)', label:'Fabric (PLM)', type:'ro', weight:24, group:'Model Detayları'},
   {k:'C.Code', label:'C.Code', type:'ro', weight:7, group:'Model Detayları'},
   {k:'Colour', label:'Colour', type:'ro', weight:9, group:'Model Detayları'},
   {k:'Special Code', label:'Sp. Code', type:'ro', weight:8, group:'Model Detayları'},
@@ -3573,6 +3576,16 @@ function ordersColumnsFromCp(cpCols){
   return copied;
 }
 const ORDERS_COLS = ordersColumnsFromCp(CP_COLS);
+/* CP/Orders PLM detayları sadece yerel BOM yan deposundan okunur. ASAS satırları
+   kalıcı olarak değiştirilmez; aynı modelin siparişleri aynı veriyi görür. */
+function cpPlmDetailsSync(){
+  const details=window.BLCPPlmDetails;
+  if(!details)return;
+  void details.sync({
+    cpRows:state.cp?.rows||[],ordersRows:state.orders?.rows||[],
+    repaint:()=>{if(state.cp)renderCP();if(state.orders)renderOrders();}
+  });
+}
 /* Grup bantları artık doygun renk + beyaz yazı yerine, tabloyla aynı sakin
    yüzey rengini kullanır; ayrım rengi ince bir ÜST ÇİZGİ ile verilir (yazı
    okunurluğu bozulmaz). Renkler CSS'te .groupRow th[data-grp] ile uygulanır. */
@@ -9004,6 +9017,7 @@ function renderTableEmptyHint(tableKey,visibleCount,totalCount){
 }
 function renderCPNow(){
   if(!state.cp) return;
+  cpPlmDetailsSync();
   if(!ensureUnifiedPrioritiesForTable('cp'))return;
   applyFormulaColumns('cp'); // sıralama ve sayfa filtreleri hesaplanan değeri görsün
   migrateLegacyCpQuickFilters();
@@ -9315,6 +9329,7 @@ function ordersCycleImageSize(){
 }
 function renderOrdersNow(){
   if(!state.orders)return;
+  cpPlmDetailsSync();
   applyFormulaColumns('orders');
   migrateLegacyOrdersQuickFilters();updateOrdersDimBtnLabels();
   document.getElementById('ordersEmpty').style.display='none';
@@ -31539,6 +31554,8 @@ function showPlmSyncPropertyChooser({page='kol',trigger=null}={}){
   ]:[
     {key:'links',label:en?'Model Links':'Model Linkleri',description:en?'Refresh PLM model links':'PLM model bağlantılarını güncelle'},
     {key:'images',label:en?'Model Images':'Model Görselleri',description:en?'Refresh model images':'Model görsellerini güncelle'},
+    {key:'artwork',label:en?'Artwork Details':'Artwork Detayları',description:en?'Sync PLM BOM and print placement details':'PLM BOM ve baskı yerleşimi detaylarını güncelle'},
+    {key:'fabric',label:en?'Fabric Details':'Kumaş Detayları (PLM)',description:en?'Sync fabric details directly from PLM':'Kumaş bilgilerini doğrudan PLM’den güncelle'},
   ];
   return new Promise(resolve=>{
     document.getElementById('_plmSyncPropertyModal')?.remove();
@@ -31597,6 +31614,48 @@ function plmSyncQueuedScope(scope,identities){
   const queue=Array.isArray(identities)?identities:[];
   return scope?{...scope,identities:queue,selectedIdentities:queue}:scope;
 }
+/* CP/Orders: Artwork ve Fabric aynı PLM Style List + BOM yolunu kullanır.
+   Butonlar bağımsız seçilebilir, aynı kapsam için iki kez PLM taranmaz.
+   Scope, görünüm açıldığı anda snapshot olarak alınır; seçimsiz işlem tümüne
+   düşmez. Koleksiyon satırları bu istekle değiştirilmez. */
+async function cpPlmSyncDetailsRun(page,mode,scope,props,button){
+  const selected=mode==='selected';
+  const identities=selected?(scope?.selectedIdentities||[]):(scope?.identities||[]);
+  const detailApi=window.BLCPPlmDetails;
+  const requested=[...new Set(identities.map(item=>normalizePlmLinkId(item&&item.plmId)).filter(Boolean))];
+  const ids=mode==='missing'&&detailApi
+    ?requested.filter(id=>(props.artwork&&!detailApi.hasValue(id,'artwork'))||(props.fabric&&!detailApi.hasValue(id,'fabric')))
+    :requested;
+  if(!ids.length){
+    showToast(appLang==='en'?'No matching models need updating.':'Güncellenecek uygun model bulunamadı.');
+    return {ok:true,skipped:true};
+  }
+  if(!await ensureCoreNectumApiConnection())return {ok:false,reason:'api-not-configured'};
+  const stopProgress=watchModelOperationProgress(button);
+  let found=0,failed=0;
+  try{
+    for(let i=0;i<ids.length;i+=500){
+      const batch=ids.slice(i,i+500);
+      const result=await plmJsonRequest('/api/plm-sync/fetch',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({plmIds:batch,scope:page,language:appLang==='en'?'en':'tr'})
+      });
+      found+=Number(result.found)||0;
+      failed+=(Array.isArray(result.failed)?result.failed.length:0);
+      if(result.styleLinks)applyPlmStyleLinksPayload(result);
+    }
+    if(detailApi)await detailApi.refresh();
+    plmSyncRepaintAll();
+    showToast(appLang==='en'
+      ?\`PLM details: \${found} model(s) updated\${failed?\` · \${failed} not found\`:''}.\`
+      :\`PLM detayları: \${found} model güncellendi\${failed?\` · \${failed} bulunamadı\`:''}.\`,
+      {icon:false,duration:9000});
+    return {ok:true,found,failed};
+  }catch(err){
+    showToast((appLang==='en'?'PLM details could not be updated: ':'PLM detayları güncellenemedi: ')+plmSyncErrorMessage(err),{icon:false,duration:12000});
+    return {ok:false,reason:'fetch-failed',error:err};
+  }finally{stopProgress();}
+}
 async function runPlmUpdateFlow(page,mode,root,scope){
   if(mode==='selected'&&!scope?.selectedIdentities?.length){
     showToast(appLang==='en'?'No models selected.':'Seçili model yok.');
@@ -31615,6 +31674,7 @@ async function runPlmUpdateFlow(page,mode,root,scope){
     const linkQueue=assetPlan.queues.links||[],imageQueue=assetPlan.queues.images||[];
     const rows=collection?collectionPlmRowsForScope(mode,scope):[];
     const detailRows=collection&&props.details?collectionPlmDetailRowsForScope(mode,scope):[];
+    const cpDetails=!collection&&(props.artwork||props.fabric);
     let language='';
     if(collection&&props.details){
       language=await showPlmSyncLanguageChooser({trigger:root});
@@ -31629,10 +31689,14 @@ async function runPlmUpdateFlow(page,mode,root,scope){
         if(details?.cancelled||details?.ok===false)return;
         ran=true;
       }
-      /* Collection Model Details aynı fetch içinde link deposunu da tazeler.
-         All/Selected modunda ikinci link taraması üretme; Missing modunda ise
-         detay kuyruğunda olmayan link-eksik modeller bağımsız kalır. */
-      if(props.links&&linkQueue.length&&!(collection&&props.details&&mode!=='missing')){
+      if(cpDetails){
+        const detailResult=await cpPlmSyncDetailsRun(page,mode,scope,props,root);
+        if(detailResult?.ok===false)return;
+        if(!detailResult?.skipped)ran=true;
+      }
+      /* Hem Koleksiyon hem CP detay isteği PLM link deposunu da tazeler.
+         Başarıyla taranan All/Selected kapsamını ikinci kez sorgulama. */
+      if(props.links&&linkQueue.length&&!(collection&&props.details&&mode!=='missing')&&!(cpDetails&&mode!=='missing')){
         const links=await updateModelLinks(mode,root,{scope:plmSyncQueuedScope(scope,linkQueue),quiet:props.images||props.files||props.details});
         if(links?.ok===false)return;
         if(!links?.skipped)ran=true;
