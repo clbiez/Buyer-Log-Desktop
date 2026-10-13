@@ -10,7 +10,7 @@ function attachCp(service,deps) {
   const fresh=profile=>{const current=userAccess.profileById(profile.id);if(!current||current.enabled===false||!userAccess.hasArea(current,'cp'))throw error('OFFICE_TOOL_FORBIDDEN',403);return current;};
   async function agentFor(profile,key,weekly=false) {
     profile=fresh(profile);const agent=await service.store.get(profile.id,'profile',key);
-    if(!agent.areas.includes('cp')||weekly&&!userAccess.hasArea(profile,'automations'))throw error('OFFICE_TOOL_FORBIDDEN',403);
+    if(agent.enabled===false||agent.deleted||!agent.areas.includes('cp')||weekly&&!userAccess.hasArea(profile,'automations'))throw error('OFFICE_TOOL_FORBIDDEN',403);
     return {profile,agent};
   }
   async function catalog(profile,agentId) {
@@ -61,7 +61,7 @@ function attachCp(service,deps) {
     // A WAL compare-and-swap makes simultaneous browser approvals single-use.
     job=await service.store.save(profile.id,'job',{...job,status:'running'},{expectedRevision:job.revision});
     try {
-      let result=await runtime.execute({ownerId:profile.id,profile:authority.profile,workflow:workflow(job),input:{officeJobId:job.id}});
+      let result=await runtime.execute({ownerId:profile.id,profile:authority.profile,workflow:workflow(job),input:{officeJobId:job.id,officeAgentId:authority.agent.id,officeAgentRevision:authority.agent.revision}});
       job=await service.store.save(profile.id,'job',{...job,runtimeRunId:result.run.id});
       if(result.run.status==='waiting_approval')result=await runtime.resumeApproval({ownerId:profile.id,profile:fresh(profile),runId:result.run.id,approved:true});
       const effect=result.run.executionState.nodes.effect?.output;
@@ -85,13 +85,13 @@ function attachCp(service,deps) {
   }
   async function rollback(profile,key,raw) {
     profile=fresh(profile);let job=await service.store.get(profile.id,'job',key);
-    await agentFor(profile,job.profileIds[0]);
+    const authority=await agentFor(profile,job.profileIds[0]);
     if(job.runtimeDeviceId!==service.store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
     if(job.type!=='cp-task'||job.status!=='completed'||job.toolId!=='cp.rule.save'||raw.confirmed!==true||!job.result?.rollbackToken)throw error('OFFICE_ROLLBACK_INVALID',409);
     if(job.rollbackStatus==='completed')return job;
     if(job.rollbackStatus==='running')throw error('OFFICE_TASK_RECONCILE',409);
     job=await service.store.save(profile.id,'job',{...job,rollbackStatus:'running'},{expectedRevision:job.revision});
-    try {const restored=await toolRegistry.rollback(job.toolId,job.result.rollbackToken,{ownerId:profile.id,profile:fresh(profile),approvalGranted:true});
+    try {const restored=await toolRegistry.rollback(job.toolId,job.result.rollbackToken,{ownerId:profile.id,profile:fresh(profile),approvalGranted:true,input:{officeJobId:job.id,officeAgentId:authority.agent.id,officeAgentRevision:authority.agent.revision}});
       job=await service.store.save(profile.id,'job',{...job,rollbackStatus:'completed',restored});userAccess.appendAudit(profile,'AGENT_CP_ROLLBACK',job.id,{});return job;
     } catch(err){await service.store.save(profile.id,'job',{...job,rollbackStatus:'failed'});throw err;}
   }

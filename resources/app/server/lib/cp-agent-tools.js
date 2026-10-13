@@ -9,13 +9,7 @@ const string=maxLength=>({type:'string',maxLength});
 const object=properties=>({type:'object',properties,additionalProperties:false});
 const ruleSchema={...object({id:string(120),kind:{enum:['priority','checklist']},name:string(160),nameEn:string(160),formula:string(4000),target:{enum:Rules.SEVERITY},approvalScope:{enum:['order','option']}}),required:['id','kind','name','nameEn','formula']};
 const weeklySchema={...object({date:{type:'string',pattern:'^\\d{4}-\\d{2}-\\d{2}$'},recipientMode:{enum:['manufacturer','general']},groupId:string(120),subject:string(200),body:string(4000),language:{enum:['tr','en']}}),required:['date','recipientMode','subject','body','language']};
-const count={type:'number',minimum:0},anyObject={type:'object'},list=items=>({type:'array',items});
-const receipt={type:'object',required:['value'],properties:{value:{type:'string'}},additionalProperties:true};
-const message={type:'object',required:['to','subject','body','rows'],properties:{to:list(string(320)),cc:list(string(320)),bcc:list(string(320)),subject:string(400),body:string(4000),rows:count,groupId:string(120),groupName:string(300),language:{enum:['tr','en']},filename:string(250)},additionalProperties:false};
-const ruleOutput={...object({rule:anyObject,matched:count,quantity:count,sample:list(anyObject),revision:string(64),sourceRevision:{type:'string'},operation:{enum:['CREATE','UPDATE']},fingerprint:string(64),scope:{type:'string'},verified:{type:'boolean'}}),required:['rule','matched','quantity','sample','revision','sourceRevision','operation','fingerprint','scope','verified']};
-const weeklyOutput={...object({range:anyObject,matched:count,sample:list(anyObject),sourceRevision:{type:'string'},mail:{...object({messages:list(message),unresolved:list({}),sendAvailable:{enum:[false]}}),required:['messages','unresolved','sendAvailable']},fingerprint:string(64),verified:{type:'boolean'},sendAvailable:{enum:[false]}}),required:['range','matched','sample','sourceRevision','mail','fingerprint','verified','sendAvailable']};
-const saveOutput={...object({verified:{type:'boolean'},ruleId:string(120),scope:{type:'string'},entries:{type:'object',additionalProperties:receipt},rollbackToken:{...object({kind:{enum:['priority','checklist']},key:{type:'string'},before:{},after:receipt}),required:['kind','key','before','after']}}),required:['verified','ruleId','scope','entries','rollbackToken']};
-const draftOutput={...object({emails:list({...message,required:[...message.required,'filename']}),unresolved:list({}),verified:{type:'boolean'},matched:count,sendAvailable:{enum:[false]}}),required:['emails','unresolved','verified','matched','sendAvailable']};
+const {ruleOutput,weeklyOutput,saveOutput,draftOutput,sampleRows,fingerprint:approvalFingerprint}=require('./agent-cp-output-contract');
 
 function fieldCatalog(data,excludeId='') {
   const rules=Rules.mergeWithDefaults(data.personalRules||[],data.deletedRuleIds||[]);
@@ -43,7 +37,7 @@ function plmEvidenceFor(models={}) {
   };
 }
 async function rulePreview(adapter,args,ctx) {
-  const data=await adapter.data(ctx.profile),snapshot=adapter.ruleSnapshot(ctx.profile,args.rule.kind);
+  const data=await adapter.data(ctx.profile);ctx.assertAuthority?.();const snapshot=adapter.ruleSnapshot(ctx.profile,args.rule.kind);
   const {rule,rules}=normalizeRule(args.rule,data),preparedRules=Rules.prepareEvaluation(rules);
   let matched=0,quantity=0;const sample=[],plmEvidence=data.plmEvidence||plmEvidenceFor(data.samples?.models);
   for(const row of data.cpRows||[]){
@@ -53,10 +47,11 @@ async function rulePreview(adapter,args,ctx) {
     if(hit){matched++;quantity+=analysis.qty||0;if(sample.length<5)sample.push(canonical.project(row,'cp',['orderCode','modelName','colourCode','exFactory']));}
   }
   const fingerprint=hash(JSON.stringify({rule,snapshot,data,day:CP.defaultOrdinal(new Date())}));
-  return {rule,matched,quantity,sample,revision:snapshot.hash,sourceRevision:data.sourceRevision,operation:(data.personalRules||[]).some(r=>r.id===rule.id)?'UPDATE':'CREATE',fingerprint,scope:'owner-personal-cp-rules',verified:true};
+  const shown=sampleRows(sample);
+  return {rule,matched,quantity:Number.isFinite(quantity)?quantity:null,quantityComplete:Number.isFinite(quantity),sample:shown.rows,sampleValuesComplete:shown.complete,revision:snapshot.hash,sourceRevision:data.sourceRevision,operation:(data.personalRules||[]).some(r=>r.id===rule.id)?'UPDATE':'CREATE',fingerprint,scope:'owner-personal-cp-rules',verified:true};
 }
 async function weeklySelection(adapter,args,ctx) {
-  const data=await adapter.data(ctx.profile),calendar=adapter.calendar();
+  const data=await adapter.data(ctx.profile);ctx.assertAuthority?.();const calendar=adapter.calendar();
   if(!calendar.configured||!calendar.calendar)throw error('OFFICE_MERCH_REQUIRED',409);
   Dates.setMerchCalendar(calendar.calendar);
   const range=Dates.businessWeekRange(args.date);
@@ -64,34 +59,37 @@ async function weeklySelection(adapter,args,ctx) {
   const rows=(data.cpRows||[]).filter(row=>{const date=Dates.toISO(Dates.parseDate(canonical.value(row,'cp','exFactory')));return date&&date>=range.start&&date<=range.end;});
   if(rows.length>5000)throw error('OFFICE_DRAFT_CAPACITY',413);
   if(!rows.length)throw error('OFFICE_WEEK_EMPTY',409);
-  const mail=await adapter.mail(ctx.profile,args,rows,true);
+  const mail=await adapter.mail(ctx.profile,args,rows,true);ctx.assertAuthority?.();adapter.assertRevision?.(ctx.profile,data.sourceRevision);
   const fingerprint=hash(JSON.stringify({args,range,calendar,rows,mail}));
-  return {rows,preview:{range,matched:rows.length,sample:rows.slice(0,5).map(row=>canonical.project(row,'cp',['orderCode','modelName','colourCode','exFactory'])),sourceRevision:data.sourceRevision,mail,fingerprint,verified:true,sendAvailable:false}};
+  const shown=sampleRows(rows.slice(0,5).map(row=>canonical.project(row,'cp',['orderCode','modelName','colourCode','exFactory'])));
+  return {rows,preview:{range,matched:rows.length,sample:shown.rows,sampleValuesComplete:shown.complete,sourceRevision:data.sourceRevision,mail,fingerprint,verified:true,sendAvailable:false}};
 }
 function registerCpTools(register,adapter) {
-  const meta=(id,operation,risk,inputSchema,rollbackable=false)=>({id,label:id,module:'cp',operation,category:'app',kind:'app',area:'cp',areas:id.startsWith('cp.weekly')?['cp','automations']:['cp'],risk,approval:risk==='write',rollbackable,contractVersion:1,executionScope:'office-durable-job',inputSchema,outputSchema:id==='cp.rule.save'?saveOutput:id==='cp.weekly.draft'?draftOutput:id==='cp.rule.preview'?ruleOutput:weeklyOutput,dryRunOutputSchema:id.startsWith('cp.rule')?ruleOutput:weeklyOutput,dataScope:'current-owner-and-current-IAM-visible-CP',preview:id.endsWith('save')?'cp.rule.preview':id.endsWith('draft')?'cp.weekly.preview':id,validation:'JSON-schema + existing deterministic Buyer Log engines',audit:'AGENT_CP_TOOL',idempotency:'Office durable job reservation; never auto-replay an interrupted effect',retry:risk==='read'?'bounded-read-only':'manual-reconciliation',rollback:rollbackable?'restore exact personal entry only if current entry matches effect receipt':'unsupported',approvalBinding:'owner + agent revision + normalized args + live source/recipient snapshot hash'});
-  register(meta('cp.rule.preview','READ','read',{...object({rule:ruleSchema}),required:['rule']}),(args,ctx)=>rulePreview(adapter,args,ctx));
-  register(meta('cp.rule.save','CREATE/UPDATE','write',{...object({rule:ruleSchema,fingerprint:string(64)}),required:['rule','fingerprint']},true),async(args,ctx)=>{
+  const labels={'cp.rule.preview':{tr:'Checklist / Rules etkisini önizle',en:'Preview checklist / Rules impact'},'cp.rule.save':{tr:'Checklist / Rules oluştur veya revize et',en:'Create or revise checklist / Rules'},'cp.weekly.preview':{tr:'Merch haftası yüklemelerini seç',en:'Select loading in the Merch week'},'cp.weekly.draft':{tr:'Haftalık üretici mail taslağı hazırla',en:'Prepare weekly producer email drafts'}};
+  const meta=(id,operation,risk,inputSchema,rollbackable=false)=>({id,label:labels[id],module:'cp',operation,category:'app',kind:'app',area:'cp',areas:id.startsWith('cp.weekly')?['cp','automations']:['cp'],risk,approval:risk==='write',rollbackable,agentAreas:['cp'],contractVersion:2,executionScope:'office-durable-job',inputSchema,outputSchema:id==='cp.rule.save'?saveOutput:id==='cp.weekly.draft'?draftOutput:id==='cp.rule.preview'?ruleOutput:weeklyOutput,dryRunOutputSchema:id.startsWith('cp.rule')?ruleOutput:weeklyOutput,dataScope:'current-owner-and-current-IAM-visible-CP',preview:id.endsWith('save')?'cp.rule.preview':id.endsWith('draft')?'cp.weekly.preview':id,validation:'JSON-schema + existing deterministic Buyer Log engines',audit:'AGENT_CP_TOOL',idempotency:'Office durable job reservation; never auto-replay an interrupted effect',retry:risk==='read'?'bounded-read-only':'manual-reconciliation',rollback:rollbackable?'restore exact personal entry only if current entry matches effect receipt':'unsupported',approvalBinding:'owner + agent revision + normalized args + live source/recipient snapshot hash'});
+  const authorizeRead=async(args,ctx)=>{if(!ctx.dryRun&&ctx.input?.officeJobId){if(typeof adapter.authorize!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);await adapter.authorize(ctx,args);ctx.assertAuthority?.();}};
+  register(meta('cp.rule.preview','READ','read',{...object({rule:ruleSchema}),required:['rule']}),async(args,ctx)=>{const result=await rulePreview(adapter,args,ctx);await authorizeRead(args,ctx);return result;});
+  register(meta('cp.rule.save','CREATE/UPDATE','write',{...object({rule:ruleSchema,fingerprint:approvalFingerprint}),required:['rule']},true),async(args,ctx)=>{
     const preview=await rulePreview(adapter,args,ctx);
-    if(preview.fingerprint!==args.fingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);
     if(ctx.dryRun)return preview;
+    if(preview.fingerprint!==args.fingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);
     await adapter.authorize?.(ctx,args);
     ctx.assertAuthority?.();
     adapter.assertRevision?.(ctx.profile,preview.sourceRevision);
-    const snapshot=adapter.ruleSnapshot(ctx.profile,preview.rule.kind);
-    if(snapshot.hash!==preview.revision)throw error('OFFICE_PREVIEW_CHANGED',409);
-    return adapter.saveRule(ctx.profile,preview.rule,snapshot);
-  },(token,ctx)=>adapter.restoreRule(ctx.profile,token));
-  register(meta('cp.weekly.preview','READ','read',weeklySchema),async(args,ctx)=>(await weeklySelection(adapter,args,ctx)).preview);
-  register(meta('cp.weekly.draft','EXPORT','write',{...weeklySchema,properties:{...weeklySchema.properties,fingerprint:string(64)},required:[...weeklySchema.required,'fingerprint']}),async(args,ctx)=>{
+    const assertCommitAuthority=()=>{ctx.assertAuthority?.();adapter.assertRevision?.(ctx.profile,preview.sourceRevision);};
+    const apply=()=>{assertCommitAuthority();const snapshot=adapter.ruleSnapshot(ctx.profile,preview.rule.kind);if(snapshot.hash!==preview.revision)throw error('OFFICE_PREVIEW_CHANGED',409);return adapter.saveRule(ctx.profile,preview.rule,snapshot,{assertAuthority:assertCommitAuthority});};
+    if(typeof adapter.withCommitGuard!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);return adapter.withCommitGuard(ctx,apply);
+  },(token,ctx)=>{if(typeof adapter.withRollbackGuard!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);return adapter.withRollbackGuard(ctx,()=>adapter.restoreRule(ctx.profile,token,{assertAuthority:()=>ctx.assertAuthority?.()}));});
+  register(meta('cp.weekly.preview','READ','read',weeklySchema),async(args,ctx)=>{const result=(await weeklySelection(adapter,args,ctx)).preview;await authorizeRead(args,ctx);return result;});
+  register(meta('cp.weekly.draft','EXPORT','write',{...weeklySchema,properties:{...weeklySchema.properties,fingerprint:approvalFingerprint},required:weeklySchema.required}),async(args,ctx)=>{
     const {fingerprint,...selection}=args;
     const {rows,preview}=await weeklySelection(adapter,selection,ctx);
-    if(preview.fingerprint!==fingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);
     if(ctx.dryRun)return preview;
+    if(preview.fingerprint!==fingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);
     await adapter.authorize?.(ctx,args);
     ctx.assertAuthority?.();
     adapter.assertRevision?.(ctx.profile,preview.sourceRevision);
-    const result=await adapter.mail(ctx.profile,selection,rows,false,preview.mail);
+    if(typeof adapter.withCommitGuard!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);const result=await adapter.withCommitGuard(ctx,()=>{ctx.assertAuthority?.();adapter.assertRevision?.(ctx.profile,preview.sourceRevision);return adapter.mail(ctx.profile,selection,rows,false,preview.mail);});
     return {...result,verified:adapter.verifyMail(result,ctx.profile),matched:rows.length,sendAvailable:false};
   });
 }

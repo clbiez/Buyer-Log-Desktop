@@ -241,7 +241,9 @@
       {
         "id": "cp.rule.preview",
         "operation": "READ",
-        "agentAreas": [],
+        "agentAreas": [
+          "cp"
+        ],
         "agentAnyAreas": [],
         "areas": [
           "cp"
@@ -251,12 +253,14 @@
         "risk": "read",
         "approval": false,
         "rollbackable": false,
-        "contractVersion": 1
+        "contractVersion": 2
       },
       {
         "id": "cp.rule.save",
         "operation": "CREATE/UPDATE",
-        "agentAreas": [],
+        "agentAreas": [
+          "cp"
+        ],
         "agentAnyAreas": [],
         "areas": [
           "cp"
@@ -266,12 +270,14 @@
         "risk": "write",
         "approval": true,
         "rollbackable": true,
-        "contractVersion": 1
+        "contractVersion": 2
       },
       {
         "id": "cp.weekly.preview",
         "operation": "READ",
-        "agentAreas": [],
+        "agentAreas": [
+          "cp"
+        ],
         "agentAnyAreas": [],
         "areas": [
           "cp",
@@ -282,12 +288,14 @@
         "risk": "read",
         "approval": false,
         "rollbackable": false,
-        "contractVersion": 1
+        "contractVersion": 2
       },
       {
         "id": "cp.weekly.draft",
         "operation": "EXPORT",
-        "agentAreas": [],
+        "agentAreas": [
+          "cp"
+        ],
         "agentAnyAreas": [],
         "areas": [
           "cp",
@@ -298,7 +306,7 @@
         "risk": "write",
         "approval": true,
         "rollbackable": false,
-        "contractVersion": 1
+        "contractVersion": 2
       },
       {
         "id": "cp.records",

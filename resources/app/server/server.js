@@ -2497,8 +2497,22 @@ const agentToolRegistry = createToolRegistry({
     verifyMail:(result,profile)=>result.emails.length>0&&result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id))),
     authorize:async(ctx,args)=>{
       if(!ctx.input?.officeJobId)throw Object.assign(new Error('OFFICE_APPROVAL_REQUIRED'),{code:'OFFICE_APPROVAL_REQUIRED',statusCode:403});
-      const job=await agentOfficeStore.get(ctx.ownerId,'job',ctx.input.officeJobId),agent=await agentOfficeStore.get(ctx.ownerId,'profile',job.profileIds[0]);
-      if(job.status!=='running'||job.runtimeRunId!==ctx.runId||job.toolId!==ctx.toolId||JSON.stringify(job.args)!==JSON.stringify(args)||agent.revision!==job.agentRevision||!agent.areas.includes('cp'))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+      const job=await agentOfficeStore.get(ctx.ownerId,'job',ctx.input.officeJobId);if(job.type==='capability-task')return agentOfficeService.taskAuthorize(ctx,args);const agent=await agentOfficeStore.get(ctx.ownerId,'profile',job.profileIds[0]);
+      if(job.status!=='running'||job.runtimeRunId!==ctx.runId||job.toolId!==ctx.toolId||JSON.stringify(job.args)!==JSON.stringify(args)||agent.revision!==job.agentRevision||agent.enabled===false||agent.deleted||!agent.areas.includes('cp'))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+    },
+    withRollbackGuard:async(ctx,work)=>{
+      if(!ctx.input?.officeJobId)throw require('./lib/agent-office-store').error('OFFICE_APPROVAL_REQUIRED',403);
+      const job=await agentOfficeStore.get(ctx.ownerId,'job',ctx.input.officeJobId),agentId=ctx.input.officeAgentId||job.profileIds[0];
+      if(!job.profileIds.includes(agentId))throw require('./lib/agent-office-store').error('OFFICE_TOOL_FORBIDDEN',403);
+      const agent=await agentOfficeStore.get(ctx.ownerId,'profile',agentId),revision=ctx.input.officeAgentRevision||agent.revision;
+      return agentOfficeStore.withProfileGuard(ctx.ownerId,agentId,revision,current=>{ctx.assertAuthority();if(!current.areas.includes('cp'))throw require('./lib/agent-office-store').error('OFFICE_TOOL_FORBIDDEN',403);return work();});
+    },
+    withCommitGuard:async(ctx,work)=>{
+      if(ctx.input?.officeStepId)return agentOfficeService.taskNativeGuard(ctx,work);
+      if(!ctx.input?.officeJobId)throw require('./lib/agent-office-store').error('OFFICE_APPROVAL_REQUIRED',403);
+      const job=await agentOfficeStore.get(ctx.ownerId,'job',ctx.input.officeJobId);
+      if(job.type!=='cp-task'||job.status!=='running'||job.runtimeRunId!==ctx.runId||job.toolId!==ctx.toolId)throw require('./lib/agent-office-store').error('OFFICE_PREVIEW_CHANGED',409);
+      return agentOfficeStore.withProfileGuard(ctx.ownerId,job.profileIds[0],job.agentRevision,()=>{ctx.assertAuthority();return work();});
     }
   },
   // Modul kesif araclari yetki suzmesini burada yapar: ajan erisemeyecegi bir
