@@ -5105,6 +5105,35 @@
           "en": "Five actual definition operations and verified inverses"
         }
       }
+    },
+    {
+      "id": "agent-automation-native-execution-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Otomasyon",
+        "en": "Agent Office · Automation"
+      },
+      "title": {
+        "tr": "Otomasyon sonucu gerçek dosyalarla doğrulanır",
+        "en": "Automation results are verified against actual files"
+      },
+      "description": {
+        "tr": "Gerçek motorun analizi, işlem sayıları ve bütün doğrulanmış EML taslakları tipli sonuçlarla kaydedilir. Kısmi tamamlanma korunur; özel satırlar, görseller, baz ve izin gövdeleri bağlama taşınmaz. Ekran açma talepleri uygulanmış sayılmaz.",
+        "en": "Actual engine analysis, operation counts and every verified EML draft are retained in typed receipts. Partial completion is preserved; private rows, images, baseline and grant bodies stay out of context. UI navigation requests are not reported as executed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-automation-native-execution-contract.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde doğrulanmış otomasyon yürütme sonucu",
+          "en": "Verified automation execution result in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek motor sonucu · AI çağrısı sıfır · gönderim kapalı",
+          "en": "Actual engine result · zero AI calls · sending disabled"
+        }
+      }
     }
   ]
 }
