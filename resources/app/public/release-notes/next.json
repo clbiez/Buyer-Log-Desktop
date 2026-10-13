@@ -5250,6 +5250,35 @@
           "en": "Actual demo order · approved rejection decision · verified inverse"
         }
       }
+    },
+    {
+      "id": "agent-quality-partial-receipt",
+      "type": "fix",
+      "module": {
+        "tr": "Quality · Agent Ofisi",
+        "en": "Quality · Agent Office"
+      },
+      "title": {
+        "tr": "Kısmi test sonucu gerçek işlem kaydıyla korunur",
+        "en": "Partial test outcomes retain actual execution receipts"
+      },
+      "description": {
+        "tr": "Daha yeni cevap nedeniyle atlanan kayıtlar başarılı yazmaları başarısız göstermez. Güncellenen ve atlanan sayılar doğrulanır; kısmi görev sonraki adımı otomatik çalıştırmaz ve tam geri alma sunar. Uzun kimliklerde ayrıntı sınırı ve eksik sayısı açıklanır; eski görev kayıtları desteklenir.",
+        "en": "Records skipped due to newer answers no longer mark successful writes as failed. Updated and skipped counts are verified; partial tasks stop automatic downstream execution and retain complete inverses. Long identities have declared detail limits and omission counts; historical task receipts remain supported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-partial-receipt.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde bir güncelleme ve bir atlama ile kısmi Quality sonucu",
+          "en": "Actual partial Quality result with one update and one skip in Agent Office"
+        },
+        "caption": {
+          "tr": "Yerel demo EML belgeleri · gerçek kısmi sonuç · geri alma kullanılabilir",
+          "en": "Local demo EML documents · actual partial result · inverse available"
+        }
+      }
     }
   ]
 }
