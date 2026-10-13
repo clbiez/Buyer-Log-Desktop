@@ -4849,6 +4849,39 @@
           "en": "Existing native FX service and complete prior record are preserved"
         }
       }
+    },
+    {
+      "id": "agent-endeksmatik-native-financial-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Endeksmatik / Agent Ofisi",
+        "en": "Endeksmatik / Agent Office"
+      },
+      "title": {
+        "tr": "Endeksmatik hesapları ve set sonuçları gerçek motorla doğrulanır",
+        "en": "Endeksmatik calculations and set results validate with the native engine"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Yedi Endeksmatik aracının gerçek set, boyut, finansal sonuç, onay ve geri alma alanları açık sözleşmelerle doğrulanır. Agent mevcut motorun royalty, hologram ve SING OFF girdilerini kullanabilir; TL/USD endeksleri ve fiyatlar aynı native motorlardan gelir. Eski setlerde eksik isteğe bağlı metadata okumayı engellemez. Aynı yetki, kaynak revizyonu ve native set yönetimi korunur.",
+        "en": "Seven Endeksmatik tools validate actual set, dimension, financial result, approval and undo fields with explicit contracts. Agents can use the existing engine’s royalty, hologram and SING OFF inputs; TL/USD indexes and prices come from the same native engines. Missing optional metadata in legacy sets remains readable. Existing authority, source revisions and native set management are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-endeksmatik-native-financial-contract.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde demo Endeksmatik royalty ve hologram hesap sonucu",
+          "en": "Demo Endeksmatik royalty and hologram result in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Native TL/USD finansal değerleri ve set yönetimi",
+          "en": "Native TL/USD financial values and set management"
+        }
+      }
     }
   ]
 }
