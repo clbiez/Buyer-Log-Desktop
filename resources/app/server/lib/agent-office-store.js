@@ -110,6 +110,7 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
     return db(owner).privateRecordTransaction(state=>{
       const agent=state.records['profile:'+key]?.doc;
       if(!agent||agent.ownerId!==owner||agent.deleted||agent.revision!==revision)throw error('OFFICE_PREVIEW_CHANGED',409);
+      if(agent.enabled===false)throw error('OFFICE_AGENT_DISABLED',403);
       const result=work(copy(agent));if(result&&typeof result.then==='function')throw error('OFFICE_TASK_RECONCILE',409);
       return {result};
     });
@@ -120,14 +121,16 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
     return db(owner).privateRecordTransaction(async state=>{
       const agent=state.records['profile:'+key]?.doc;
       if(!agent||agent.ownerId!==owner||agent.deleted||agent.revision!==revision)throw error('OFFICE_PREVIEW_CHANGED',409);
+      if(agent.enabled===false)throw error('OFFICE_AGENT_DISABLED',403);
       return {result:await work(copy(agent))};
     });
   }
-  async function save(owner, kind, raw, { expectedRevision, immutable = false } = {}) {
+  async function save(owner, kind, raw, { expectedRevision, immutable = false, assertAuthority } = {}) {
     if (!KINDS.has(kind)) throw error('OFFICE_KIND_INVALID');
     const key = raw.id || id(), database = db(owner);
     // The WAL transaction gives concurrent browser tabs a single CAS boundary.
     const result = await database.privateRecordTransaction(state => {
+      assertAuthority?.(state);
       const recordKey = `${kind}:${key}`, previous = state.records[recordKey]?.doc;
       if (immutable && previous) return {result:copy(previous)};
       if (expectedRevision != null && Number(previous?.revision || 0) !== Number(expectedRevision)) throw error('OFFICE_REVISION_CONFLICT', 409);
@@ -147,17 +150,19 @@ function createAgentOfficeStore({ root, onChange = () => {} } = {}) {
   async function createProfile(owner, raw = {}, allowed = AREAS) {
     const profiles = (await records(owner)).filter(doc => doc.kind === 'profile');
     if (profiles.length >= 24) throw error('OFFICE_AGENT_LIMIT', 409);
+    if(Object.hasOwn(raw,'enabled')&&typeof raw.enabled!=='boolean')throw error('OFFICE_TASK_INVALID',422);
     const name = text(raw.name, 60);
     if (!name) throw error('OFFICE_NAME_REQUIRED');
-    return save(owner, 'profile', { id: id(), name, role: text(raw.role || 'assistant', 80), instructions: text(raw.instructions, 6000),
+    return save(owner, 'profile', { id: id(), name, enabled:raw.enabled!==false, role: text(raw.role || 'assistant', 80), instructions: text(raw.instructions, 6000),
       areas: [...new Set((Array.isArray(raw.areas) ? raw.areas : allowed).filter(area => AREAS.includes(area) && allowed.includes(area)))],
       avatar: avatar(raw.avatar), deskId: text(raw.deskId, 80), lineage: raw.lineage ? copy(raw.lineage) : null });
   }
   async function updateProfile(owner, key, raw, allowed = AREAS) {
     const previous = await get(owner, 'profile', key);
+    if(Object.hasOwn(raw,'enabled')&&typeof raw.enabled!=='boolean')throw error('OFFICE_TASK_INVALID',422);
     if (!text(raw.name ?? previous.name, 60)) throw error('OFFICE_NAME_REQUIRED');
     if (raw.areas != null && !Array.isArray(raw.areas)) throw error('OFFICE_PARTICIPANTS_INVALID');
-    return save(owner, 'profile', { ...previous, name: text(raw.name ?? previous.name, 60), role: text(raw.role ?? previous.role, 80),
+    return save(owner, 'profile', { ...previous, enabled:raw.enabled==null?previous.enabled!==false:raw.enabled, name: text(raw.name ?? previous.name, 60), role: text(raw.role ?? previous.role, 80),
       instructions: text(raw.instructions ?? previous.instructions, 6000), avatar: avatar(raw.avatar || previous.avatar),
       areas: [...new Set((raw.areas || previous.areas).filter(area => AREAS.includes(area) && allowed.includes(area)))],
       deskId: text(raw.deskId ?? previous.deskId, 80) }, { expectedRevision: raw.revision ?? previous.revision });
