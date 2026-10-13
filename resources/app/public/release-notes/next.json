@@ -5047,6 +5047,35 @@
           "en": "Independent demo record deletion and undo in the actual Agent Office"
         }
       }
+    },
+    {
+      "id": "agent-automation-native-read-contract",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi · Otomasyon",
+        "en": "Agent Office · Automation"
+      },
+      "title": {
+        "tr": "Gerçek otomasyon önizlemeleri doğrulanır",
+        "en": "Actual automation previews are validated"
+      },
+      "description": {
+        "tr": "Otomasyon dili, kayıtlar ve eşleşme önizlemeleri gerçek motorun tipli sonuçlarıyla okunur. Değişen alan listeleri desteklenir; tarayıcı kodu, model görselleri ve özel çalışma gövdeleri sonuç bağlamına taşınmaz.",
+        "en": "Automation language, records and match previews use typed results from the actual engine. Changed field lists are supported; browser code, model images and private run bodies are excluded from result context."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "next-assets/agent-automation-native-read-contract.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde doğrulanmış otomasyon dili sonucu",
+          "en": "Verified automation language result in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek otomasyon motoru · JavaScript ve gönderim kapalı",
+          "en": "Actual automation engine · JavaScript and sending disabled"
+        }
+      }
     }
   ]
 }
