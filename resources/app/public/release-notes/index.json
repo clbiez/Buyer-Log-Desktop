@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.273",
+      "publishedAt": "2026-10-10",
+      "title": {
+        "tr": "Lisans kartları ve Buyer Log iyileştirmeleri",
+        "en": "License cards and Buyer Log improvements"
+      },
+      "stats": {
+        "features": 77,
+        "improvements": 46,
+        "fixes": 49
+      },
+      "file": "release-notes/7.0.273/release.json"
+    },
+    {
       "version": "7.0.269",
       "publishedAt": "2026-10-09",
       "title": {
