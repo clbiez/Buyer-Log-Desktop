@@ -2469,8 +2469,9 @@ async function cpAgentData(profile) {
   if(sourceRevision!==cpAgentRevision(profile))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
   const {settings,checklistEnabled,answers}=cpAgentPreferences.context(profile),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
   const analyses=data.cpRows.map(row=>CP.analyzeOrder(row)),keys=new Set(analyses.map(order=>order.orderKey)),options=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
-  const visibleAnswers=Object.fromEntries(Object.entries({...data.checklist.answers,...answers}).filter(([key])=>{const identity=key.slice(0,key.lastIndexOf('::'));return keys.has(identity)||options.has(identity);}));
-  return {...data,sourceRevision,settings,checklistEnabled,checklist:{...data.checklist,answers:visibleAnswers},personalRules:[...priority.rules,...checklist.rules],deletedRuleIds:[...(priority.payload.deletedRuleIds||[]),...(checklist.payload.deletedRuleIds||[])]};
+  const visible=entries=>Object.fromEntries(Object.entries(entries||{}).filter(([key])=>{const identity=key.slice(0,key.lastIndexOf('::'));return keys.has(identity)||options.has(identity);}));
+  const visibleAnswers=require('../public/checklist-answer-merge-engine').merge(visible(answers),{answers:visible(data.checklist.answers),tombstones:visible(data.checklist.tombstones)});
+  return {...data,sourceRevision,settings,checklistEnabled,checklist:{...data.checklist,answers:visibleAnswers,tombstones:visible(data.checklist.tombstones)},personalRules:[...priority.rules,...checklist.rules],deletedRuleIds:[...(priority.payload.deletedRuleIds||[]),...(checklist.payload.deletedRuleIds||[])]};
 }
 function cpAgentMail(profile,args,rows,dryRun,expected=null) {
   const recipe={email:{groupId:args.groupId,recipientField:'Manufacturer'}};
@@ -5369,6 +5370,7 @@ async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
 }
 require('./routes/test-report-routes')(app,{automationError,express,userAccess,service:agentQualityService,authorizedOrders:(...args)=>agentQualityAuthorizedOrders(...args)});
 const agentQualityTools=require('./lib/agent-quality-tools').registerQualityTools(agentToolRegistry,{service:agentQualityService,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,guard:(ctx,work)=>agentOfficeService.taskNativeGuard(ctx,work),restoreGuard:(ctx,work)=>agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),dataset:profile=>agentPlatformDataset(profile.id,profile,'cp'),mail:cpAgentMail,verifyMail:(result,profile)=>result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id)))});
+require('./lib/agent-shared-checklist-tools').registerSharedChecklistTools(agentToolRegistry,{data:cpAgentData,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-analytics-tools').registerAnalyticsTools(agentToolRegistry,{dataset:agentPlatformDataset,outputService:()=>require('./lib/lcwai').getDefaultOutputService()});
 const agentCollectionSave=async(profile,ownerId,changes,expectedRevision,assertAuthority,guards={})=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);assertAuthority();if(!collectionWorkspaceEditAllowed(current,ownerId))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
     const result=await collectionSaveWorker.runCollectionSave({ownerId,mode:'rows',body:Buffer.from(JSON.stringify(changes)),expectedRevision,authorization:{actorId:profile.id,stamp:JSON.stringify(userAccess.publicProfile(current)),centralIamEnabled:userAccess.publicProfile(current).centralIamEnabled,deltaStoreMode:deltaStore.mode,...guards},env:{BUYER_LOG_SERVER_DATA_ROOT:process.env.BUYER_LOG_SERVER_DATA_ROOT,BUYER_LOG_DATA_ROOT:process.env.BUYER_LOG_DATA_ROOT,BUYER_LOG_LOCAL_DATA_ROOT:process.env.BUYER_LOG_LOCAL_DATA_ROOT,BUYER_LOG_AUTH_DATA_ROOT:process.env.BUYER_LOG_AUTH_DATA_ROOT,BUYER_LOG_LOCAL_DB:process.env.BUYER_LOG_LOCAL_DB,BUYER_LOG_CONFIG_PATH:process.env.BUYER_LOG_CONFIG_PATH,BUYER_LOG_TEMP_ROOT:process.env.BUYER_LOG_TEMP_ROOT,BL_DATA_DIR:process.env.BL_DATA_DIR}});
@@ -5643,6 +5645,10 @@ const agentOfficeSync = createAgentOfficeSync({ store:agentOfficeStore, localRoo
   profileById:id=>userAccess.profileById(id), deviceId:localDb.getDeviceId(),
   audit:(profile,action,target,detail)=>userAccess.appendAudit(profile,action,target,detail) });
 async function agentOfficeOperationalData(profile, scope, areas) {
+  const currentActor=()=>typeof userAccess.profileById==='function'?userAccess.profileById(profile.id):profile;
+  const initial=currentActor();if(!initial||initial.enabled===false)throw Object.assign(new Error('Agent source authority unavailable.'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});profile=initial;
+  const authority=JSON.stringify(userAccess.publicProfile?.(profile)||profile),grantedAreas=areas.filter(area=>userAccess.hasArea(profile,area==='collection'?'koleksiyon':area));
+  const assertAuthority=()=>{const current=currentActor();if(!current||current.enabled===false||grantedAreas.some(area=>!userAccess.hasArea(current,area==='collection'?'koleksiyon':area)))throw Object.assign(new Error('Agent source authority changed.'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});if(JSON.stringify(userAccess.publicProfile?.(current)||current)!==authority)throw Object.assign(new Error('Agent source scope changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});};
   const matches=(row,module)=>['orderCode','plmId','colourCode'].every(key=>{
     if(!scope[key])return true;
     const binding=canonicalFields.bindingFor(module,key);
@@ -5655,7 +5661,7 @@ async function agentOfficeOperationalData(profile, scope, areas) {
   for(const source of [...(orderSource?[orderSource]:[]),'collection']) {
     if(!areas.includes(source) || !userAccess.hasArea(profile,source==='collection'?'koleksiyon':source))continue;
     try {
-      const rows=await agentPlatformDataset(profile.id,profile,source);
+      const rows=await agentPlatformDataset(profile.id,profile,source);assertAuthority();
       const filtered=rows.filter(row=>matches(row,source));
       result[source!=='collection'?'cpRows':'collectionRows']=source==='collection' || source==='cp' ? filtered : filtered.map(row=>{const projected={};for(const [field,value] of Object.entries(canonicalFields.project(row,source))) {const binding=canonicalFields.bindingFor('cp',field);if(binding && value != null)projected[binding.keys[0]]=value;}return projected;});
       result[source!=='collection'?'cpAvailable':'collectionAvailable']=true;
@@ -5665,6 +5671,7 @@ async function agentOfficeOperationalData(profile, scope, areas) {
     if(result.cpAvailable){const identities=new Set(result.cpRows.map(row=>canonicalFields.normalizedValue(row,'cp','plmId')+'|'+canonicalFields.normalizedValue(row,'cp','colourCode')));result.collectionRows=result.collectionRows.filter(row=>identities.has(canonicalFields.normalizedValue(row,'collection','plmId')+'|'+canonicalFields.normalizedValue(row,'collection','colourCode')));}
     else{result.collectionRows=[];result.sourceErrors.push({source:'collection',code:'ORDER_SCOPE_NOT_RESOLVED'});}
   }
+  assertAuthority();
   const active=cacheForUser(profile.id);
   result.sourceUpdatedAt=active.loadedAt || null;
   result.collectionUpdatedAt=areas.includes('collection')?loadWorkspace(profile.id).updatedAt || null:null;
@@ -5674,9 +5681,10 @@ async function agentOfficeOperationalData(profile, scope, areas) {
   result.personalRules=[...(priority?.rules || []),...(checklistRules?.rules || []),...(prefs.rules || []).filter(rule=>![...(priority?.rules || []),...(checklistRules?.rules || [])].some(item=>item.id===rule.id))];
   result.deletedRuleIds=[...new Set([...(priority?.deletedRuleIds || []),...(checklistRules?.deletedRuleIds || []),...(prefs.deletedRuleIds || [])])];
   result.checklistEnabled=prefs.checklistSettings?.enabled !== false;result.settings=prefs.settings || {};
-  result.personalAnswers=readPreference('lcw.cp.checklist.v1') || {};
+  const personalAnswers=readPreference('lcw.cp.checklist.v1') || {};result.personalAnswers={};
 
   if(areas.includes('lfl') && userAccess.hasArea(profile,'lfl')) {try {const rows=await agentPlatformDataset(profile.id,profile,'lfl');result.lflRows=rows.filter(row=>matches(row,'lfl'));result.lflSummary={rows:result.lflRows.length,fields:rows.length?Object.keys(canonicalFields.project(rows[0],'lfl')):[],sourceUpdatedAt:active.loadedAt};}catch(error){result.sourceErrors.push({source:'lfl',code:'SOURCE_UNAVAILABLE'});}}
+  assertAuthority();
   if(result.cpAvailable) {
     const CP=require('../public/cp-readiness-engine'), analyses=result.cpRows.map(row=>CP.analyzeOrder(row)), keys=new Set(analyses.map(order=>order.orderKey));
     const Checklist=require('../public/cp-checklist-engine'), optionKeys=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
@@ -5685,7 +5693,10 @@ async function agentOfficeOperationalData(profile, scope, areas) {
     const links=Object.fromEntries(Object.entries(reports.links).filter(([,link])=>keys.has(link?.orderKey)));
     result.reports={...reports,links,reports:Object.fromEntries(Object.keys(links).map(key=>[key,reports.reports[key]]))};
     const checklist=require('./lib/checklist-supplier-store').publicPayload();
-    result.checklist={...checklist,answers:Object.fromEntries(Object.entries({...checklist.answers,...result.personalAnswers}).filter(([key])=>keys.has(key.slice(0,key.lastIndexOf('::'))) || optionKeys.has(key.slice(0,key.lastIndexOf('::')))))};
+    const visible=entries=>Object.fromEntries(Object.entries(entries||{}).filter(([key])=>keys.has(key.slice(0,key.lastIndexOf('::'))) || optionKeys.has(key.slice(0,key.lastIndexOf('::')))));
+    result.personalAnswers=visible(personalAnswers);
+    const scoped={answers:visible(checklist.answers),tombstones:visible(checklist.tombstones)};
+    result.checklist={...checklist,...scoped,answers:require('../public/checklist-answer-merge-engine').merge(result.personalAnswers,scoped)};
 
     result.attachmentExists=id=>Boolean(require('./lib/checklist-supplier-store').getAttachmentPath(id));
     const analytics=require('../public/collection-analytics-engine');
@@ -5699,7 +5710,7 @@ async function agentOfficeOperationalData(profile, scope, areas) {
   }
   if(result.cpAvailable||result.collectionAvailable){const models=new Set([...result.cpRows.map(r=>String(canonicalFields.value(r,'cp','plmId')||'')),...result.collectionRows.map(r=>String(canonicalFields.value(r,'collection','plmId')||''))]);const samples=sampleRequestStore.load(),bom=require('./lib/plm-bom-store').load();result.samples={models:Object.fromEntries(Object.entries(samples.models).filter(([key])=>models.has(key))),updatedAt:samples._updatedAt};result.bom={models:Object.fromEntries(Object.entries(bom.models).filter(([key])=>models.has(key))),updatedAt:bom._updatedAt};}
   if(!result.personalRules.length && result.checklist?.definitions?.length)result.personalRules=result.checklist.definitions;
-  return result;
+  assertAuthority();return result;
 }
 async function agentOfficeEvidenceAttachments(profile,scope,areas){const data=await agentOfficeOperationalData(profile,scope,areas),found=new Map(),attachmentStore=require('./lib/checklist-supplier-store');
  const add=(id,name,size,source)=>{if(!id)return;const filePath=attachmentStore.getAttachmentPath(id);if(!filePath)return;const previous=found.get(id);if(previous){previous.sources.push(source);return;}const stats=fs.statSync(filePath);found.set(id,{id,name:String(name||path.basename(filePath)),size:stats.size,filePath,sources:[source]});};
