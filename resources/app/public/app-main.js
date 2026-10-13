@@ -32581,7 +32581,7 @@ function mailTplText(){
     topicNamePh:en?'Name shown in E-mail Subjects':'E-posta Başlıklarında görünen ad',
     subjectTitle:en?'E-mail Subject Title':'E-posta Konu Başlığı',
     subjectPh:en?'Editable text used near the end of the e-mail subject':'E-posta başlığının sonuna yakın kullanılan düzenlenebilir metin',
-    subjectHint:en?'Subject order: MMYG, MAG, Season, Manufacturer, selected field values, this title and date.':'Başlık sırası: MMYG, MAG, Sezon, Üretici, seçili alan değerleri, bu başlık ve tarih.',
+    subjectHint:en?'Arrange subject fields and choose a separator below.':'Konu başlığı alanlarını sıralayın, ayırıcıyı seçin.',
     body:en?'Email draft text':'E-posta taslak metni',
     bodyPh:en?'Write the email text here…':'E-posta metnini buraya yaz…',
     close:en?'Cancel':'Vazgeç',
@@ -32740,6 +32740,19 @@ function mailTopicSourceColumns(sourceKind){
   // seçicisinde gerçek bir alan gibi sunulur.
   return [{k:'__picture',label:'Picture',type:'cpImage',weight:8},...kolColDefs().slice()];
 }
+// Reuse the same CP / Collection heading catalog as the Fields panel.
+// Email-only selections do not mutate CP visibility, groups or presets.
+function mailTopicFieldGroupCatalog(columns,sourceKind){
+  const groups=new Map(),kolOrder=sourceKind==='cp'?[]:kolAllOrderedCols().map(c=>c.k);
+  (columns||[]).forEach(column=>{
+    const group=sourceKind==='cp'
+      ?canonicalColumnGroup(column.group)||'Diğer'
+      :(kolColumnGroupFor(column.k==='__picture'?'__picture__':column.k,kolOrder)||'Diğer');
+    if(!groups.has(group))groups.set(group,{group,label:group==='Diğer'?(appLang==='en'?'Other':'Diğer'):tableColumnGroupLabel(group),keys:[]});
+    groups.get(group).keys.push(column.k);
+  });
+  return [...groups.values()];
+}
 function mailTopicDefaultColumnKeys(kind,sourceKind){
   if(sourceKind==='cp'){
     return ['Order Code','PLM ID','Model Name','Colour','Season','Order Quantity','OPD','Ex-factory','STATUS'];
@@ -32753,7 +32766,12 @@ function mailTopicDefaultColumnKeys(kind,sourceKind){
 function mailTopicColumnKeys(kind,id,sourceKind){
   const item=mailTopicFindItem(kind,id),valid=new Set(mailTopicSourceColumns(sourceKind).map(c=>c.k));
   const hasStored=Boolean(item?.tableColumns&&Object.prototype.hasOwnProperty.call(item.tableColumns,sourceKind));
-  const stored=hasStored&&Array.isArray(item.tableColumns[sourceKind])?item.tableColumns[sourceKind]:mailTopicDefaultColumnKeys(kind,sourceKind);
+  const defaults=mailTopicDefaultColumnKeys(kind,sourceKind);
+  // Match the user's current CP / Collection arrangement on first use.
+  // An explicit saved order always wins, including an intentional empty selection.
+  const screenOrder=sourceKind==='cp'?visibleCols('cp').map(c=>c.k):kolAllOrderedCols().map(c=>c.k);
+  const initial=[...screenOrder.filter(key=>defaults.includes(key)),...defaults.filter(key=>!screenOrder.includes(key))];
+  const stored=hasStored&&Array.isArray(item.tableColumns[sourceKind])?item.tableColumns[sourceKind]:initial;
   const clean=[];
   stored.forEach(key=>{key=String(key||'');if(valid.has(key)&&!clean.includes(key))clean.push(key);});
   return clean;
@@ -32766,8 +32784,8 @@ function mailTopicSetColumnKeys(kind,id,sourceKind,keys){
   item.tableColumns[sourceKind]=clean;mailTplSave();return true;
 }
 function mailTopicSelectedColumns(kind,id,sourceKind){
-  const selected=new Set(mailTopicColumnKeys(kind,id,sourceKind));
-  return mailTopicSourceColumns(sourceKind).filter(c=>selected.has(c.k)).map(c=>({...c,sourceKind}));
+  const byKey=new Map(mailTopicSourceColumns(sourceKind).map(c=>[c.k,c]));
+  return mailTopicColumnKeys(kind,id,sourceKind).map(key=>byKey.get(key)).filter(Boolean).map(c=>({...c,sourceKind}));
 }
 function mailTopicDefaultContentOptions(kind){
   // Send to Pricing has its own mandatory Quotation Excel. The optional selected-order
@@ -32817,8 +32835,24 @@ function mailTopicSetSubjectOptions(kind,id,sourceKind,{manufacturer,keys}={}){
   mailTplSave();return true;
 }
 function mailTopicSelectedSubjectColumns(kind,id,sourceKind){
-  const selected=new Set(mailTopicSubjectColumnKeys(kind,id,sourceKind));
-  return mailTopicSourceColumns(sourceKind).filter(c=>selected.has(c.k)).map(c=>({...c,sourceKind}));
+  const byKey=new Map(mailTopicSourceColumns(sourceKind).map(c=>[c.k,c]));
+  return mailTopicSubjectColumnKeys(kind,id,sourceKind).map(key=>byKey.get(key)).filter(Boolean).map(c=>({...c,sourceKind}));
+}
+function mailTopicSubjectOrder(kind,id,sourceKind,keys=null,manufacturer=null){
+  const item=mailTopicFindItem(kind,id);
+  const fieldKeys=Array.isArray(keys)?keys:mailTopicSubjectColumnKeys(kind,id,sourceKind);
+  const includeManufacturer=typeof manufacturer==='boolean'?manufacturer:mailTopicSubjectIncludesManufacturer(kind,id,sourceKind);
+  const byKey=new Map(mailTopicSourceColumns(sourceKind).map(c=>[c.k,c]));
+  const priority=fieldKeys.filter(k=>byKey.has(k)&&prepareEmailSubjectColumnPriority(byKey.get(k))<99)
+    .sort((a,b)=>prepareEmailSubjectColumnPriority(byKey.get(a))-prepareEmailSubjectColumnPriority(byKey.get(b)));
+  const others=fieldKeys.filter(k=>byKey.has(k)&&!priority.includes(k));
+  const defaults=[...priority,...(includeManufacturer?['__manufacturer']:[]),...others,'__title','__date'];
+  const saved=Array.isArray(item?.subjectOrder?.[sourceKind])?item.subjectOrder[sourceKind]:[];
+  return [...new Set([...saved.filter(k=>defaults.includes(k)),...defaults])];
+}
+function mailTopicSubjectSeparator(kind,id,sourceKind){
+  const value=mailTopicFindItem(kind,id)?.subjectSeparators?.[sourceKind];
+  return typeof value==='string'&&value.length>0&&value.length<=12&&!/[\r\n]/.test(value)?value:' - ';
 }
 function mailTopicIsProtected(kind,id){
   return id===`${kind}-default` || id===MAIL_QUOTATION_REMINDER_ID || id===MAIL_CHECKLIST_ID;
@@ -32876,9 +32910,195 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
+  const fieldGrid=modal.querySelector('#mailTopicColsGrid');
+  const cpFieldOrder=()=>sourceKind==='cp'?visibleCols('cp').map(c=>c.k):kolAllOrderedCols().map(c=>c.k);
+  const fieldRows=new Map([...fieldGrid.querySelectorAll('[data-key]')].map(input=>[input.dataset.key,input.closest('.mailTopicSubjectRow')]));
+  const manufacturerRow=fieldGrid.querySelector('.isManufacturer');
+  const catalog=mailTopicFieldGroupCatalog(cols,sourceKind);
+  const groupMap=new Map(),fieldGroup=new Map(),expandedGroups=new Set();
+  catalog.forEach(entry=>entry.keys.forEach(key=>fieldGroup.set(key,entry.group)));
+  const selectedAtOpen=new Set(selected);
+  for(const entry of catalog){
+    if(entry.keys.some(key=>selectedAtOpen.has(key))&&expandedGroups.size<2)expandedGroups.add(entry.group);
+  }
+  fieldGrid.innerHTML='';
+  const legend=modal.querySelector('.mailTopicSubjectLegend');
+  if(legend)legend.innerHTML='<span>'+escapeHtml(en?'Field / Heading':'Alan / Başlık')+'</span><span>'+escapeHtml(en?'Subject':'Konu')+'</span><span>'+escapeHtml(en?'Table / Excel':'Tablo / Excel')+'</span><span>'+escapeHtml(en?'Order':'Sıra')+'</span>';
+  catalog.forEach(entry=>{
+    const group=document.createElement('section');group.className='mailTopicFieldGroup';
+    group.dataset.mailFieldGroup=entry.group;
+    group.style.setProperty('--grp-accent',GROUP_ACCENTS[entry.group]||'var(--acc)');
+    group.innerHTML='<div class="mailTopicFieldGroupHead">'+
+      '<button type="button" class="mailTopicFieldGroupToggle" data-mail-field-toggle="'+escapeHtml(entry.group)+'" aria-expanded="false">'+
+      '<span class="mailTopicFieldChevron" aria-hidden="true">›</span><b>'+escapeHtml(entry.label)+'</b>'+
+      '<span class="mailTopicFieldCount" data-mail-group-count></span></button>'+
+      '<label class="mailTopicGroupCheck" title="'+escapeHtml(en?'Select all fields for subject':'Konu başlığı için tüm alanları seç')+'"><input type="checkbox" data-mail-group-subject="'+escapeHtml(entry.group)+'" aria-label="'+escapeHtml(entry.label+' '+(en?'subject':'konu'))+'"></label>'+
+      '<label class="mailTopicGroupCheck" title="'+escapeHtml(en?'Select all fields for the Excel / email table':'Excel / e-posta tablosu için tüm alanları seç')+'"><input type="checkbox" data-mail-group-table="'+escapeHtml(entry.group)+'" aria-label="'+escapeHtml(entry.label+' '+(en?'Excel':'Excel'))+'"></label>'+
+      '<span class="mailTopicFieldHeadSpacer"></span></div><div class="mailTopicFieldGroupRows"></div>';
+    fieldGrid.appendChild(group);groupMap.set(entry.group,group);
+  });
+  // Manufacturer is a subject-only recipient token, distinct from the actual
+  // CP Manufacturer column. Keep this in Order Details rather than duplicating a top-level row.
+  if(manufacturerRow){
+    const orderGroup=groupMap.get('Sipariş Detayları')||groupMap.values().next().value;
+    const manufacturerLabel=manufacturerRow.querySelector('.mailTopicSubjectLabel');
+    if(manufacturerLabel)manufacturerLabel.textContent=en?'Recipient manufacturer (subject)':'Alıcı üretici (konu)';
+    orderGroup?.querySelector('.mailTopicFieldGroupRows')?.prepend(manufacturerRow);
+  }
+  function arrangeFieldRows(keys){
+    const seen=new Set();
+    [...keys,...cols.map(c=>c.k)].forEach(key=>{
+      if(seen.has(key))return;seen.add(key);
+      const row=fieldRows.get(key),group=groupMap.get(fieldGroup.get(key));
+      if(row&&group)group.querySelector('.mailTopicFieldGroupRows').appendChild(row);
+    });
+  }
+  arrangeFieldRows([...mailTopicColumnKeys(kind,id,sourceKind),...cpFieldOrder()]);
+  const tools=modal.querySelector('.mailTopicColumnsTools');
+  const search=document.createElement('input');search.id='mailTopicFieldSearch';search.type='search';search.className='mailTopicFieldSearch';
+  search.placeholder=en?'Search fields or headings…':'Alan veya başlık ara…';search.setAttribute('aria-label',search.placeholder);tools.prepend(search);
+  const onlyLabel=document.createElement('label');onlyLabel.className='mailTopicSelectedOnly';
+  const only=document.createElement('input');only.type='checkbox';onlyLabel.append(only,document.createTextNode(en?' Selected only':' Yalnız seçilenler'));search.after(onlyLabel);
+  const resetOrder=document.createElement('button');resetOrder.type='button';resetOrder.className='tbtn';
+  resetOrder.textContent=sourceKind==='cp'?(en?'Use my CP order':'CP sıramı kullan'):(en?'Collection order':'Koleksiyon sırası');
+  onlyLabel.after(resetOrder);
+  fieldRows.forEach(row=>{
+    const buttons=document.createElement('span');buttons.className='mailTopicMoveBtns';
+    for(const dir of ['up','down']){
+      const button=document.createElement('button');button.type='button';button.dataset.mailColumnMove=dir;
+      button.textContent=dir==='up'?'↑':'↓';button.title=dir==='up'?(en?'Move up':'Yukarı'):(en?'Move down':'Aşağı');
+      button.setAttribute('aria-label',button.title);buttons.appendChild(button);
+    }
+    row.append(buttons);row.draggable=true;
+  });
+  function updateFieldGroups(){
+    for(const entry of catalog){
+      const group=groupMap.get(entry.group),rows=entry.keys.map(key=>fieldRows.get(key)).filter(Boolean);
+      const checkedTable=rows.filter(row=>row.querySelector('input[data-key]')?.checked).length;
+      const checkedSubject=rows.filter(row=>row.querySelector('[data-topic-subject-key]')?.getAttribute('aria-pressed')==='true').length;
+      const excelCheck=group.querySelector('[data-mail-group-table]'),subjectCheck=group.querySelector('[data-mail-group-subject]');
+      excelCheck.checked=Boolean(rows.length&&checkedTable===rows.length);excelCheck.indeterminate=checkedTable>0&&checkedTable<rows.length;
+      subjectCheck.checked=Boolean(rows.length&&checkedSubject===rows.length);subjectCheck.indeterminate=checkedSubject>0&&checkedSubject<rows.length;
+      group.querySelector('[data-mail-group-count]').textContent=checkedTable+'/'+rows.length;
+      const query=search.value.toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR').trim();
+      const headingMatch=query&&entry.label.toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR').includes(query);
+      let visible=0;
+      rows.forEach((row,index)=>{
+        const name=String(colLabel(cols.find(c=>c.k===entry.keys[index])||{label:entry.keys[index]})).toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR');
+        const match=!query||headingMatch||name.includes(query);
+        const show=match&&(!only.checked||row.querySelector('input[data-key]')?.checked);
+        row.hidden=!show;if(show)visible++;
+      });
+      if(manufacturerRow&&manufacturerRow.parentElement===group.querySelector('.mailTopicFieldGroupRows')){
+        const mfrMatch=!query||headingMatch||(en?'recipient manufacturer':'alıcı üretici').includes(query);
+        manufacturerRow.hidden=!mfrMatch||only.checked;
+        if(!manufacturerRow.hidden)visible++;
+      }
+      group.hidden=visible===0;
+      const open=query?visible>0:expandedGroups.has(entry.group);
+      group.classList.toggle('isOpen',open);
+      group.querySelector('.mailTopicFieldGroupRows').hidden=!open;
+      const toggle=group.querySelector('[data-mail-field-toggle]');toggle.setAttribute('aria-expanded',open?'true':'false');
+    }
+  }
+  search.addEventListener('input',updateFieldGroups);only.addEventListener('change',updateFieldGroups);
+  resetOrder.addEventListener('click',()=>{arrangeFieldRows(cpFieldOrder());refresh();});
+  fieldGrid.addEventListener('click',event=>{
+    const toggle=event.target.closest('[data-mail-field-toggle]');
+    if(toggle){const key=toggle.dataset.mailFieldToggle;if(expandedGroups.has(key))expandedGroups.delete(key);else expandedGroups.add(key);updateFieldGroups();return;}
+    const button=event.target.closest('[data-mail-column-move]');if(!button)return;
+    const row=button.closest('.mailTopicSubjectRow'),list=row?.parentElement;
+    if(!row?.querySelector('[data-key]')?.checked||!list)return;
+    const checked=[...list.querySelectorAll('[data-key]:checked')].map(x=>x.closest('.mailTopicSubjectRow'));
+    const index=checked.indexOf(row),other=checked[index+(button.dataset.mailColumnMove==='up'?-1:1)];
+    if(!other)return;
+    if(button.dataset.mailColumnMove==='up')other.before(row);else other.after(row);
+    refresh();
+  });
+  fieldGrid.addEventListener('change',event=>{
+    const check=event.target.closest('[data-mail-group-table],[data-mail-group-subject]');if(!check)return;
+    const group=groupMap.get(check.dataset.mailGroupTable||check.dataset.mailGroupSubject);
+    if(!group)return;
+    const table=check.hasAttribute('data-mail-group-table');
+    group.querySelectorAll('.mailTopicFieldGroupRows .mailTopicSubjectRow').forEach(row=>{
+      if(table){const input=row.querySelector('input[data-key]');if(input)input.checked=check.checked;}
+      else{const button=row.querySelector('[data-topic-subject-key]');if(button)setToggle(button,check.checked);}
+    });
+    refresh();
+  });
+  let draggedField='';
+  fieldGrid.addEventListener('dragstart',event=>{
+    const row=event.target.closest('.mailTopicSubjectRow'),box=row?.querySelector('[data-key]');
+    if(!box?.checked){event.preventDefault();return;}
+    draggedField=box.dataset.key;event.dataTransfer?.setData('text/plain',draggedField);
+  });
+  fieldGrid.addEventListener('dragover',event=>{
+    if(!draggedField)return;
+    const box=event.target.closest('.mailTopicSubjectRow')?.querySelector('[data-key]');
+    if(box?.checked&&fieldGroup.get(box.dataset.key)===fieldGroup.get(draggedField))event.preventDefault();
+  });
+  fieldGrid.addEventListener('drop',event=>{
+    const target=event.target.closest('.mailTopicSubjectRow'),targetKey=target?.querySelector('[data-key]')?.dataset.key;
+    const moving=fieldRows.get(draggedField);
+    if(moving&&targetKey&&moving!==target&&fieldGroup.get(draggedField)===fieldGroup.get(targetKey)){
+      event.preventDefault();target.before(moving);refresh();
+    }
+    draggedField='';
+  });
+  fieldGrid.addEventListener('dragend',()=>{draggedField='';});
   const boxes=()=>[...modal.querySelectorAll('#mailTopicColsGrid input[data-key]')];
   const subjectButtons=()=>[...modal.querySelectorAll('[data-topic-subject-key]')];
   const setToggle=(btn,active)=>{btn.classList.toggle('isActive',active);btn.setAttribute('aria-pressed',active?'true':'false');};
+  let subjectArrange=mailTopicSubjectOrder(kind,id,sourceKind);
+  const subjectPanel=document.createElement('section');subjectPanel.className='mailTopicSubjectArrange';
+  subjectPanel.innerHTML='<div class="mailTopicArrangeHeading"><strong>'+escapeHtml(en?'Subject field order':'Konu başlığı sırası')+'</strong><small>'+escapeHtml(en?'Drag or use arrows. The title and date can move too.':'Sürükleyerek veya oklarla sıralayın. Başlık metni ve tarih de taşınabilir.')+'</small></div>'+
+    '<div class="mailTopicSubjectOrderList" id="mailTopicSubjectOrderList"></div>'+
+    '<div class="mailTopicSeparatorField"><label for="mailTopicSeparator">'+escapeHtml(en?'Separator':'Ayırıcı')+'</label><select id="mailTopicSeparator"><option value=" - "> - </option><option value=" | "> | </option><option value=" / "> / </option><option value=" • "> • </option><option value=" : "> : </option><option value="custom">'+escapeHtml(en?'Custom':'Özel')+'</option></select><input id="mailTopicSeparatorCustom" maxlength="12" aria-label="'+escapeHtml(en?'Custom separator':'Özel ayırıcı')+'" hidden></div>';
+  modal.querySelector('.mailTopicSubjectPreview').before(subjectPanel);
+  const hint=modal.querySelector('.mailTopicSubjectPreview small');
+  if(hint)hint.textContent=en?'The preview matches the actual subject order and separator.':'Önizleme gerçek başlık sırasını ve ayırıcıyı yansıtır.';
+  const separatorSelect=modal.querySelector('#mailTopicSeparator'),separatorCustom=modal.querySelector('#mailTopicSeparatorCustom');
+  const savedSeparator=mailTopicSubjectSeparator(kind,id,sourceKind);
+  separatorSelect.value=[' - ',' | ',' / ',' • ',' : '].includes(savedSeparator)?savedSeparator:'custom';
+  separatorCustom.hidden=separatorSelect.value!=='custom';separatorCustom.value=savedSeparator;
+  function mailTopicEditorSeparator(){return separatorSelect.value==='custom'?(separatorCustom.value||' - '):separatorSelect.value;}
+  const subjectOrderList=modal.querySelector('#mailTopicSubjectOrderList');
+  function redrawSubjectFields(){
+    const active=subjectButtons().filter(btn=>btn.getAttribute('aria-pressed')==='true').map(btn=>btn.dataset.topicSubjectKey);
+    if(modal.querySelector('[data-topic-subject-manufacturer]')?.getAttribute('aria-pressed')==='true')active.push('__manufacturer');
+    active.push('__title','__date');
+    const allowed=new Set(active);
+    subjectArrange=[...new Set([...subjectArrange.filter(key=>allowed.has(key)),...active])];
+    const labels=new Map(cols.map(c=>[c.k,colLabel(c)]));
+    labels.set('__manufacturer',en?'Manufacturer':'Üretici');labels.set('__title',en?'Subject title':'Başlık metni');labels.set('__date',en?'Date':'Tarih');
+    subjectOrderList.innerHTML=subjectArrange.map((key,index)=>
+      '<div class="mailTopicArrangeItem" draggable="true" data-subject-field="'+escapeHtml(key)+'"><span aria-hidden="true">⋮⋮</span><span>'+escapeHtml(labels.get(key)||key)+'</span>'+
+      '<button type="button" data-subject-move="up" '+(index===0?'disabled':'')+' aria-label="'+escapeHtml(en?'Move up':'Yukarı')+'">↑</button>'+
+      '<button type="button" data-subject-move="down" '+(index===subjectArrange.length-1?'disabled':'')+' aria-label="'+escapeHtml(en?'Move down':'Aşağı')+'">↓</button></div>'
+    ).join('');
+  }
+  const moveSubject=(from,to)=>{
+    if(from<0||to<0||to>=subjectArrange.length||from===to)return;
+    const item=subjectArrange.splice(from,1)[0];subjectArrange.splice(to,0,item);
+    redrawSubjectFields();refreshSubjectPreview();
+  };
+  subjectOrderList.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-subject-move]');if(!btn)return;
+    const index=subjectArrange.indexOf(btn.closest('[data-subject-field]')?.dataset.subjectField);
+    moveSubject(index,index+(btn.dataset.subjectMove==='up'?-1:1));
+  });
+  let draggedSubject='';
+  subjectOrderList.addEventListener('dragstart',e=>{draggedSubject=e.target.closest('[data-subject-field]')?.dataset.subjectField||'';if(draggedSubject)e.dataTransfer?.setData('text/plain',draggedSubject);});
+  subjectOrderList.addEventListener('dragover',e=>{if(draggedSubject&&e.target.closest('[data-subject-field]'))e.preventDefault();});
+  subjectOrderList.addEventListener('drop',e=>{
+    const target=e.target.closest('[data-subject-field]')?.dataset.subjectField;
+    if(!draggedSubject||!target)return;e.preventDefault();
+    moveSubject(subjectArrange.indexOf(draggedSubject),subjectArrange.indexOf(target));draggedSubject='';
+  });
+  subjectOrderList.addEventListener('dragend',()=>{draggedSubject='';});
+  separatorSelect.addEventListener('change',()=>{separatorCustom.hidden=separatorSelect.value!=='custom';refreshSubjectPreview();});
+  separatorCustom.addEventListener('input',()=>refreshSubjectPreview());
+
   const previewRows=()=>{const rows=typeof options.getRows==='function'?options.getRows():options.rows;return Array.isArray(rows)?rows:[];};
   const previewManufacturer=()=>{
     const explicit=typeof options.getManufacturerName==='function'?options.getManufacturerName():options.manufacturerName;
@@ -32899,7 +33119,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     const contexts=Array.isArray(supplied)&&supplied.length?supplied:[{rows:previewRows(),manufacturerName:previewManufacturer()}];
     const previews=[],seen=new Set();
     contexts.forEach(ctx=>{
-      const preview=prepareEmailBuildSubject(topic,Array.isArray(ctx?.rows)?ctx.rows:previewRows(),String(ctx?.manufacturerName||''),sourceKind,previewDate(),{columns:activeColumns,manufacturer,subjectTitle});
+      const preview=prepareEmailBuildSubject(topic,Array.isArray(ctx?.rows)?ctx.rows:previewRows(),String(ctx?.manufacturerName||''),sourceKind,previewDate(),{columns:activeColumns,manufacturer,subjectTitle,order:subjectArrange,separator:mailTopicEditorSeparator()});
       const key=preview.toLocaleLowerCase('tr-TR');if(preview&&!seen.has(key)){seen.add(key);previews.push(preview);}
     });
     const out=modal.querySelector('#mailTopicFinalSubjectPreview');if(out){out.textContent=previews.join('\n');out.title=previews.join('\n');}
@@ -32909,7 +33129,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     const tableCount=boxes().filter(x=>x.checked).length;
     const subjectCount=subjectButtons().filter(x=>x.getAttribute('aria-pressed')==='true').length+(modal.querySelector('[data-topic-subject-manufacturer]')?.getAttribute('aria-pressed')==='true'?1:0);
     modal.querySelector('#mailTopicColsCount').textContent=en?`${tableCount} table columns · ${subjectCount} subject fields`:`${tableCount} tablo sütunu · ${subjectCount} başlık alanı`;
-    refreshSubjectPreview();
+    redrawSubjectFields();updateFieldGroups();refreshSubjectPreview();
   };
   boxes().forEach(x=>x.addEventListener('change',refresh));
   modal.querySelector('#mailTopicEditSubjectTitle')?.addEventListener('input',refreshSubjectPreview);
@@ -32934,6 +33154,10 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     mailTopicSetColumnKeys(kind,id,sourceKind,keys);
     mailTopicSetSubjectOptions(kind,id,sourceKind,{manufacturer,keys:subjectKeys});
     mailTopicSetContentOptions(kind,id,sourceKind,{excel:includeExcel,table:includeTable,tps:includeTps});
+    if(!topic.subjectOrder||typeof topic.subjectOrder!=='object')topic.subjectOrder={};
+    if(!topic.subjectSeparators||typeof topic.subjectSeparators!=='object')topic.subjectSeparators={};
+    topic.subjectOrder[sourceKind]=subjectArrange.slice();
+    topic.subjectSeparators[sourceKind]=mailTopicEditorSeparator();
     mailTplSave();showToast(en?'E-mail subject settings saved.':'E-posta başlığı ayarları kaydedildi.');close();
   });
   refresh();
@@ -33630,30 +33854,54 @@ function prepareEmailRowManufacturer(row){
 }
 function prepareEmailColumnIsPicture(column){return String(column?.k||'')==='__picture'||String(column?.type||'')==='cpImage';}
 function prepareEmailImageSource(row,sourceKind){
-  if(sourceKind==='cp')return String(row?._imageUrl||(row?._imageRef?`${CP_IMAGE_API}/${encodeURIComponent(row._imageRef)}`:'')||'');
+  // CP e-mail and Excel use the same canonical identity as the visible CP picture.
+  if(sourceKind==='cp')return String(tableRowImageSource(row)?.source||'');
   return String(row?.img||(row?.imgRef?`/api/collection-images/${encodeURIComponent(row.imgRef)}`:'')||'');
 }
 function prepareEmailImageDims(sourceKind){return sourceKind==='cp'?cpImageDims():kolImgDims();}
 async function prepareEmailInlineAsset(row,column,rowIndex){
   const sourceKind=column.sourceKind||'collection',src=prepareEmailImageSource(row,sourceKind);if(!src)return null;
-  const prepared=await kolPrepareExcelImage(src);if(!prepared)return null;
+  // Off-screen CP thumbnails may still contain placeholders. Resolve the actual
+  // picture through the same canonical cache as CP clipboard/Excel exports.
+  let canonical='';
+  if(sourceKind==='cp')canonical=await cpOrdersRowImageDataUrl(row);
+  const prepared=await kolPrepareExcelImage(canonical||src);if(!prepared)return null;
   const dims=prepareEmailImageDims(sourceKind),fit=kolFitImageDimensions(prepared.width,prepared.height,dims.w,dims.h);
   const width=Math.max(1,Math.round(fit.width)),height=Math.max(1,Math.round(fit.height));
-  const dataUrl=prepared.dataUrl,mimeType=prepared.extension==='jpeg'?'image/jpeg':'image/png';
+  let dataUrl=prepared.dataUrl,mimeType=prepared.extension==='jpeg'?'image/jpeg':'image/png';
+  // Downscale inline mail previews, not the separate Excel image: Outlook clients
+  // cannot reliably handle hundreds of multi-megabyte inline originals.
+  try{
+    const image=await kolLoadPricingImage(dataUrl),maxSide=480;
+    if(image){
+      const scale=Math.min(1,maxSide/Math.max(prepared.width,prepared.height));
+      const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(prepared.width*scale));canvas.height=Math.max(1,Math.round(prepared.height*scale));
+      const ctx=canvas.getContext('2d');if(ctx){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);dataUrl=canvas.toDataURL('image/jpeg',0.8);mimeType='image/jpeg';}
+    }
+  }catch(_){}
   const match=/^data:(image\/[A-Za-z0-9.+-]+);base64,(.+)$/s.exec(dataUrl);if(!match)return null;
   const cid=`buyerlog-image-${Date.now()}-${rowIndex}-${Math.random().toString(36).slice(2,8)}@local`;
-  // CID ekinde orijinal çözünürlük tutulur; width/height yalnız ilk görünür boyuttur.
   return {cid,filename:`BuyerLog_Image_${rowIndex+1}.${mimeType==='image/jpeg'?'jpg':'png'}`,mimeType,base64:match[2],width,height,src};
 }
 async function prepareEmailTopicTableContent(rows,columns){
   const list=Array.isArray(rows)?rows:[],cols=Array.isArray(columns)?columns:[],assets=new Map(),inlineImages=[];
   const pictureCols=cols.map((column,index)=>({column,index})).filter(item=>prepareEmailColumnIsPicture(item.column));
   if(pictureCols.length){
-    await Promise.all(list.map(async(row,ri)=>{
+    const promises=new Map(),failures=[];
+    // Re-use the MIME Content-ID of a repeated model instead of embedding
+    // identical binary images once per PO.
+    await blMapWithConcurrency(list,6,async(row,ri)=>{
       for(const item of pictureCols){
-        const asset=await prepareEmailInlineAsset(row,item.column,ri);if(asset){assets.set(`${ri}:${item.index}`,asset);inlineImages.push(asset);}
+        const src=prepareEmailImageSource(row,item.column.sourceKind||'collection');if(!src)continue;
+        if(!promises.has(src))promises.set(src,prepareEmailInlineAsset(row,item.column,ri));
+        let asset=null;
+        try{asset=await promises.get(src);}catch(_){/* Report failures outside the concurrency pool. */}
+        if(!asset){failures.push(String(row?.['Model Name']||row?.modelKod||row?.['PLM ID']||src));continue;}
+        assets.set(`${ri}:${item.index}`,asset);
       }
-    }));
+    });
+    if(failures.length)throw new Error((appLang==='en'?'Model image could not be embedded in the email: ':'Model görseli e-postaya eklenemedi: ')+failures.slice(0,3).join(', '));
+    const seen=new Set();assets.forEach(asset=>{if(!seen.has(asset.cid)){seen.add(asset.cid);inlineImages.push(asset);}});
   }
   const head=cols.map(c=>`<th style="background-color:#F2F4F7;color:#475467;border:thin solid #D0D5DD;padding:5px 8px;text-align:left;font-weight:bold;white-space:nowrap;">${escapeHtml(c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label))}</th>`).join('');
   const body=list.map((row,ri)=>`<tr>${cols.map((c,ci)=>{
@@ -33719,20 +33967,29 @@ function prepareEmailBuildSubject(topic,rows,manufacturerName,sourceKind,dateTex
   const parts=[],seen=new Set();
   const push=value=>{value=prepareEmailSubjectSegment(value);const key=value.toLocaleLowerCase('tr-TR');if(value&&!seen.has(key)){seen.add(key);parts.push(value);}};
   const selectedColumns=Array.isArray(subjectOptions?.columns)?subjectOptions.columns:mailTopicSelectedSubjectColumns(topic.kind,topic.id,sourceKind);
-  const priorityColumns=selectedColumns.filter(column=>prepareEmailSubjectColumnPriority(column)<99).sort((a,b)=>prepareEmailSubjectColumnPriority(a)-prepareEmailSubjectColumnPriority(b));
-  const otherColumns=selectedColumns.filter(column=>prepareEmailSubjectColumnPriority(column)===99);
-  priorityColumns.forEach(column=>push(prepareEmailSubjectColumnValue(rows,column)));
+  const byKey=new Map(selectedColumns.map(c=>[c.k,c]));
   const includeManufacturer=typeof subjectOptions?.manufacturer==='boolean'?subjectOptions.manufacturer:mailTopicSubjectIncludesManufacturer(topic.kind,topic.id,sourceKind);
-  if(includeManufacturer)push(manufacturerName);
-  otherColumns.forEach(column=>push(prepareEmailSubjectColumnValue(rows,column)));
-  if(subjectOptions&&Object.prototype.hasOwnProperty.call(subjectOptions,'subjectTitle'))push(subjectOptions.subjectTitle);
-  else push(topic.subjectTitle||mailTopicSubjectTitle(topic.kind,topic.id));
-  const date=prepareEmailSubjectSegment(dateText),prefix=parts.join(' - ')||'E-Mail';
-  if(!date)return prefix.length<=240?prefix:`${prefix.slice(0,239).trimEnd()}…`;
-  const full=`${prefix} - ${date}`;
+  const order=Array.isArray(subjectOptions?.order)?subjectOptions.order:mailTopicSubjectOrder(topic.kind,topic.id,sourceKind,[...byKey.keys()],includeManufacturer);
+  const separator=typeof subjectOptions?.separator==='string'&&subjectOptions.separator.length&&subjectOptions.separator.length<=12&&!/[\r\n]/.test(subjectOptions.separator)
+    ?subjectOptions.separator:mailTopicSubjectSeparator(topic.kind,topic.id,sourceKind);
+  const title=subjectOptions&&Object.prototype.hasOwnProperty.call(subjectOptions,'subjectTitle')?subjectOptions.subjectTitle:(topic.subjectTitle||mailTopicSubjectTitle(topic.kind,topic.id));
+  const date=prepareEmailSubjectSegment(dateText);
+  const candidates=[...new Set([...order,...mailTopicSubjectOrder(topic.kind,topic.id,sourceKind,[...byKey.keys()],includeManufacturer)])];
+  candidates.forEach(key=>{
+    if(key==='__manufacturer'){if(includeManufacturer)push(manufacturerName);}
+    else if(key==='__title')push(title);
+    else if(key==='__date')push(date);
+    else if(byKey.has(key))push(prepareEmailSubjectColumnValue(rows,byKey.get(key)));
+  });
+  const full=parts.join(separator)||'E-Mail';
   if(full.length<=240)return full;
-  const room=Math.max(20,240-date.length-3),trimmed=prefix.length<=room?prefix:`${prefix.slice(0,Math.max(1,room-1)).trimEnd()}…`;
-  return `${trimmed} - ${date}`;
+  // Preserve the date suffix for the standard date-last layout.
+  if(candidates[candidates.length-1]==='__date'&&date&&full.endsWith(separator+date)){
+    const prefix=full.slice(0,-(separator.length+date.length));
+    const room=Math.max(1,240-separator.length-date.length);
+    return (prefix.length<=room?prefix:prefix.slice(0,Math.max(1,room-1)).trimEnd()+'…')+separator+date;
+  }
+  return full.slice(0,239).trimEnd()+'…';
 }
 function prepareEmailTopicTablePlain(rows,columns){
   const labels=columns.map(c=>c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label));
