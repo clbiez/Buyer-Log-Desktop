@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const {createToolRegistry}=require('../server/lib/agent-tool-registry');
 const {registerQualityTools}=require('../server/lib/agent-quality-tools');
-function catalog(){const registry=createToolRegistry({cp:{},getDataset:async()=>[]});registerQualityTools(registry,{mail:()=>{}});return registry.catalog().filter(t=>t.contractVersion);}
+function catalog(){const registry=createToolRegistry({cp:{},getDataset:async()=>[]});registerQualityTools(registry,{mail:()=>{}});require('../server/lib/agent-analytics-tools').registerAnalyticsTools(registry,{dataset:async()=>[],outputService:()=>({})});return registry.catalog().filter(t=>t.contractVersion);}
 function matrix(){return require('../server/lib/module-registry').list().map(module=>({id:module.id,area:module.area,capabilities:module.capabilities,tools:catalog().filter(t=>t.module===module.id).map(t=>({id:t.id,operation:t.operation,areas:t.areas,permissions:t.permissions||[],capabilities:t.capabilities||[],risk:t.risk,approval:t.approval,rollbackable:t.rollbackable,contractVersion:t.contractVersion}))}));}
 test('every real module and migrated adapter requires an explicit unified access-matrix decision',()=>{assert.deepEqual(matrix(),require('./fixtures/agent-unified-access-matrix.json'));});
 test('Office capabilities have strict input/output schemas and explicit effect contracts',()=>{

@@ -37,7 +37,7 @@ function attachTasks(service,deps) {
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
     const index=job.steps.findIndex(step=>step.status!=='completed');if(index<0){job=await store.save(profile.id,'job',{...job,status:'completed',finishedAt:new Date().toISOString()},{expectedRevision:job.revision});
       await store.save(profile.id,'memory',{id:'outcome-'+job.id,profileId:job.profileIds[0],type:'task',category:'task-history',text:JSON.stringify({task:job.task,status:job.status,steps:job.steps.map(s=>({toolId:s.toolId,status:s.status,verified:s.result?.verified===true}))}),sourceId:job.id,toolIds:job.steps.map(s=>s.toolId),taskId:job.id,active:true,approved:false,origin:'verified-service',confidence:'VERIFIED_RESULT',key:'',conflictingIds:[]},{immutable:true});return job;}
-    const step=job.steps[index];if(step.status==='running')throw error('OFFICE_TASK_RECONCILE',409);
+    const step=job.steps[index];if(step.status==='waiting_output')return job;if(step.status==='running')throw error('OFFICE_TASK_RECONCILE',409);
     const {profile:current,agent,tool}=await stepAuthority(profile,step),args=resolvedArgs(job,step);
     const originalAuthority=actorHash(current),preview=await registry.execute(tool.id,args,{ownerId:profile.id,profile:current,dryRun:true});
     const latest=await stepAuthority(profile,step);if(latest.agent.revision!==agent.revision||actorHash(latest.profile)!==originalAuthority)throw error('OFFICE_PREVIEW_CHANGED',409);
@@ -56,13 +56,32 @@ function attachTasks(service,deps) {
       if(execution.run.status==='waiting_approval')execution=await runtime.resumeApproval({ownerId:profile.id,profile:authority(profile),runId:execution.run.id,approved:true});
       const result=execution.run.executionState.nodes.effect?.output,ok=execution.run.status==='completed'&&result?.verified===true;
       const retry=!ok&&tool.risk==='read'&&job.steps[index].attempts<3;
-      job.steps[index]={...job.steps[index],result:result||null,status:ok?'completed':retry?'queued':'failed',runtimeStatus:execution.run.status,errorCode:execution.run.output?.code||'',finishedAt:new Date().toISOString()};
-      job=await store.save(profile.id,'job',{...job,status:ok||retry?'queued':'failed'},{expectedRevision:job.revision});
+      const pending=ok&&result.completionPending==='pdf';
+      job.steps[index]={...job.steps[index],result:result||null,status:pending?'waiting_output':ok?'completed':retry?'queued':'failed',runtimeStatus:execution.run.status,errorCode:execution.run.output?.code||'',finishedAt:pending?null:new Date().toISOString()};
+      job=await store.save(profile.id,'job',{...job,status:pending?'waiting_output':ok||retry?'queued':'failed'},{expectedRevision:job.revision});
       access.appendAudit(current,'AGENT_TASK_STEP_RESULT',job.id,{stepId:step.id,toolId:step.toolId,status:job.steps[index].status});
-      return ok?prepare(profile,job.id):job;
+      return ok&&!pending?prepare(profile,job.id):job;
     }catch(err){const latest=await store.get(profile.id,'job',job.id);latest.steps[index]={...latest.steps[index],status:tool.risk==='read'?'queued':'interrupted',errorCode:err.code||'OFFICE_TASK_RECONCILE'};
       await store.save(profile.id,'job',{...latest,status:tool.risk==='read'&&latest.steps[index].attempts<3?'queued':'interrupted'},{expectedRevision:latest.revision});throw err;}}
   async function execute(profile,key,raw){const token=profile.id+':'+key;if(inFlight.has(token))return inFlight.get(token);const work=executeOnce(profile,key,raw).finally(()=>inFlight.delete(token));inFlight.set(token,work);return work;}
+  async function outputAccess(profile,key,stepId){profile=authority(profile);const job=await store.get(profile.id,'job',key),step=job.steps?.find(s=>s.id===stepId);if(!step||job.type!=='capability-task')throw error('OFFICE_NOT_FOUND',404);
+    const live=await stepAuthority(profile,step);if(step.agentRevision!==live.agent.revision||step.authorizationFingerprint!==actorHash(live.profile)||job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_PREVIEW_CHANGED',409);
+    const output=deps.outputService?.();if(!output)throw error('OFFICE_OUTPUT_INVALID',409);return {job,step,output,profile:live.profile};}
+  async function pendingOutput(profile,key,stepId){const state=await outputAccess(profile,key,stepId);if(state.step.status!=='waiting_output')throw error('OFFICE_TASK_RECONCILE',409);
+    const saved=state.output.store.byRequest(state.profile.id,state.step.result.output.requestId);if(saved)return {output:saved};
+    const pending=state.output.store.takePending(state.profile.id,state.step.result.output.pendingId,{keep:true});if(!pending)throw error('OFFICE_OUTPUT_EXPIRED',409);
+    return {output:{pending:'pdf',pendingId:state.step.result.output.pendingId,html:pending.html,landscape:pending.orientation==='landscape'}};}
+  async function completeOutput(profile,key,raw){const state=await outputAccess(profile,key,raw.stepId);let {job,step}=state;
+    if(step.status==='completed'&&step.result.output.id===raw.outputId)return job;
+    if(step.status!=='waiting_output')throw error('OFFICE_TASK_RECONCILE',409);
+    const record=state.output.get(state.profile.id,raw.outputId);if(!record||record.requestId!==step.result.output.requestId||!(record.format==='pdf'||record.format==='html'&&raw.acceptFallback===true))throw error('OFFICE_OUTPUT_INVALID',409);
+    const bytes=require('fs').readFileSync(record.path);if(bytes.length!==record.bytes||record.format==='pdf'&&bytes.subarray(0,5).toString()!=='%PDF-')throw error('OFFICE_OUTPUT_INVALID',409);
+    step.result={verified:true,output:{id:record.id,fileName:record.fileName,format:record.format,bytes:record.bytes,requestId:record.requestId},...(record.format==='html'?{fallback:'html',requestedFormat:'pdf'}:{})};step.status='completed';step.finishedAt=new Date().toISOString();
+    job=await store.save(state.profile.id,'job',{...job,status:'queued'},{expectedRevision:job.revision});access.appendAudit(state.profile,'AGENT_OUTPUT_COMPLETE',job.id,{stepId:step.id,format:record.format});return prepare(state.profile,job.id);}
+  async function printOutput(profile,key,stepId,bytes){const state=await outputAccess(profile,key,stepId);if(state.step.status!=='waiting_output')throw error('OFFICE_TASK_RECONCILE',409);
+    const saved=state.output.store.byRequest(state.profile.id,state.step.result.output.requestId);if(saved)return saved;
+    const pendingId=state.step.result.output.pendingId;return bytes?state.output.completePdf(state.profile.id,pendingId,bytes,{officeAuthorized:true}):state.output.fallbackHtml(state.profile.id,pendingId,{officeAuthorized:true});}
+  async function outputFile(profile,key,stepId){const state=await outputAccess(profile,key,stepId),record=state.output.get(state.profile.id,state.step.result?.output?.id);if(state.step.status!=='completed'||!record||record.requestId!==state.step.result.output.requestId)throw error('OFFICE_NOT_FOUND',404);return record;}
   async function authorize(ctx,args){const job=await store.get(ctx.ownerId,'job',ctx.input?.officeJobId),step=job.steps?.find(s=>s.id===ctx.input?.officeStepId);
     const expected=step?{...step.argsResolved,...(step.preview.fingerprint?{fingerprint:step.preview.fingerprint}:{})}:null;
     if(job.type!=='capability-task'||job.status!=='running'||!step||step.status!=='running'||step.runtimeRunId!==ctx.runId||step.toolId!==ctx.toolId||JSON.stringify(expected)!==JSON.stringify(args))throw error('OFFICE_APPROVAL_REQUIRED',403);
@@ -90,7 +109,7 @@ function attachTasks(service,deps) {
     for(let job of docs.filter(d=>d.kind==='job'&&d.type==='capability-task'&&!TERMINAL.has(d.status)&&d.runtimeDeviceId===device)){
       if(inFlight.has(profile.id+':'+job.id))continue;
       const running=job.steps.find(s=>s.status==='running');if(running){const run=deps.runtimeStore?.runForOwner(profile.id,running.runtimeRunId),receipt=run?.executionState?.nodes?.effect?.output;
-        if(run?.status==='completed'&&receipt?.verified===true){running.status='completed';running.result=receipt;job=await store.save(profile.id,'job',{...job,status:'queued'},{expectedRevision:job.revision});}
+        if(run?.status==='completed'&&receipt?.verified===true){running.status=receipt.completionPending==='pdf'?'waiting_output':'completed';running.result=receipt;job=await store.save(profile.id,'job',{...job,status:running.status==='waiting_output'?'waiting_output':'queued'},{expectedRevision:job.revision});}
         else if(executorAlive(running,docs))continue;
         else if(registry.get(running.toolId)?.risk==='read'){running.status='queued';job=await store.save(profile.id,'job',{...job,status:'queued'},{expectedRevision:job.revision});}
         else{running.status='interrupted';await store.save(profile.id,'job',{...job,status:'interrupted',errorCode:'OFFICE_TASK_RECONCILE'},{expectedRevision:job.revision});continue;}}
@@ -108,6 +127,6 @@ function attachTasks(service,deps) {
   async function scheduleUpdate(profile,key,raw){profile=authority(profile);const previous=await store.get(profile.id,'metadata',key);if(previous.type!=='capability-schedule')throw error('OFFICE_NOT_FOUND',404);if(!Number.isSafeInteger(raw.revision))throw error('OFFICE_REVISION_CONFLICT',409);if(raw.enabled===true){const tools=await catalog(profile,previous.agentId);if(!tools.some(t=>t.id===previous.toolId&&t.risk==='read')||previous.authorizationFingerprint!==actorHash(profile))throw error('OFFICE_PREVIEW_CHANGED',409);}return store.save(profile.id,'metadata',{...previous,enabled:raw.enabled===true},{expectedRevision:raw.revision});}
   function start(){if(!timer){timer=setInterval(()=>{for(const owner of deps.taskOwners?.()||[]){const profile=access.profileById(owner);if(profile?.enabled!==false&&profile)void tick(profile).catch(err=>deps.onBackgroundError?.(err.code));}},30000);timer.unref?.();}}
   const previousStop=service.stop;service.stop=()=>{if(timer)clearInterval(timer);timer=null;previousStop();};start();
-  return {taskCatalog:catalog,taskCreate:create,taskPlan:plan,taskPrepare:prepare,taskExecute:execute,taskAuthorize:authorize,taskReject:reject,taskFeedback:feedback,taskRollback:rollback,taskSchedule:schedule,taskScheduleUpdate:scheduleUpdate,taskTick:tick};
+  return {taskCatalog:catalog,taskCreate:create,taskPlan:plan,taskPrepare:prepare,taskExecute:execute,taskAuthorize:authorize,taskReject:reject,taskFeedback:feedback,taskRollback:rollback,taskSchedule:schedule,taskScheduleUpdate:scheduleUpdate,taskTick:tick,taskPendingOutput:pendingOutput,taskCompleteOutput:completeOutput,taskOutputFile:outputFile,taskPrintOutput:printOutput};
 }
 module.exports={attachTasks};

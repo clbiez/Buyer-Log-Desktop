@@ -17,6 +17,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const {withFileLeaseSync}=require('../shared-file-transaction');
 
 const MAX_INDEX = 500;
 const PENDING_TTL_MS = 15 * 60 * 1000;
@@ -107,7 +108,7 @@ function createOutputStore(options = {}) {
       template: record.template, templateLabel: record.templateLabel, bytes: record.bytes,
       createdAt: record.createdAt, attempts: record.attempts, path: record.path, folder: path.dirname(record.path),
       // Düzenlenebilir taslağın kimliği (AI Çıktı Düzenleyici); içerik değil.
-      draftId: record.draftId || null, edited: Boolean(record.edited),
+      draftId: record.draftId || null, edited: Boolean(record.edited), requestId:record.requestId||'',
     };
   }
 
@@ -130,9 +131,7 @@ function createOutputStore(options = {}) {
       edited: Boolean(edited),
       createdAt: created.toISOString(),
     };
-    const list = readIndex();
-    list.push(record);
-    writeIndex(list);
+    withFileLeaseSync(indexFile(),()=>{const list=readIndex();list.push(record);writeIndex(list);});
     return publicRecord(record);
   }
 
@@ -156,21 +155,29 @@ function createOutputStore(options = {}) {
   }
 
   /* PDF bekleyenleri: HTML masaüstü kabuğunda basılana kadar bellekte durur. */
-  function putPending(ownerId, data) {
+  const pendingFile=id=>/^[a-f0-9]{24}$/.test(String(id))?path.join(path.dirname(indexFile()),'agent-output-pending',id+'.json'):null;
+  function putPending(ownerId, data, {durable=false}={}) {
     const at = Date.now();
     for (const [key, value] of pending) if (at - value.at > PENDING_TTL_MS) pending.delete(key);
     const id = crypto.randomBytes(12).toString('hex');
-    pending.set(id, { ...data, owner: String(ownerId || 'default'), at });
+    const entry={ ...data, owner: String(ownerId || 'default'), at, durable, ttl:durable?24*60*60*1000:PENDING_TTL_MS };
+    pending.set(id,entry);
+    if(durable){const file=pendingFile(id);fs.mkdirSync(path.dirname(file),{recursive:true});for(const name of fs.readdirSync(path.dirname(file)).filter(n=>/^[a-f0-9]{24}\.json$/.test(n))){const full=path.join(path.dirname(file),name);if(Date.now()-fs.statSync(full).mtimeMs>24*60*60*1000)fs.rmSync(full,{force:true});}fs.writeFileSync(file,JSON.stringify(entry),{flag:'wx'});}
     return id;
   }
   function takePending(ownerId, id, { keep = false } = {}) {
-    const entry = pending.get(String(id || ''));
-    if (!entry || entry.owner !== String(ownerId || 'default') || Date.now() - entry.at > PENDING_TTL_MS) return null;
-    if (!keep) pending.delete(String(id));
+    const file=pendingFile(id);let entry=pending.get(String(id||''));
+    if(entry?.durable&&file&&!fs.existsSync(file))return null;
+    if(file&&fs.existsSync(file)){try{entry=JSON.parse(fs.readFileSync(file,'utf8'));}catch(_){return null;}}
+    if (!entry || entry.owner !== String(ownerId || 'default') || Date.now() - entry.at > (entry.ttl||PENDING_TTL_MS)) return null;
+    if (!keep){pending.delete(String(id));if(file)fs.rmSync(file,{force:true});}
     return entry;
   }
 
-  return { save, get, list, putPending, takePending, root, indexFile };
+  return { save, get, list, putPending, takePending, root, indexFile,
+    byRequest(ownerId,requestId){const record=readIndex().findLast(item=>item.owner===String(ownerId)&&item.requestId===requestId);return record?get(ownerId,record.id):null;},
+    withPending(id,fn){const file=pendingFile(id);if(!file)throw new Error('ai-output-pending-invalid');return withFileLeaseSync(file,fn);},
+  };
 }
 
 module.exports = { createOutputStore, safeFileBase, fileNameFor, EXTENSIONS };

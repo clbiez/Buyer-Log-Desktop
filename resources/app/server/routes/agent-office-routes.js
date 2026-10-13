@@ -51,6 +51,11 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.post(base+'/tasks/:id/reject',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskReject(req.currentUser,req.params.id,req.body||{})})));
   app.post(base+'/tasks/:id/feedback',json,wrap(async(req,res)=>res.json({ok:true,memory:await service.taskFeedback(req.currentUser,req.params.id,req.body||{})})));
   app.post(base+'/tasks/:id/rollback',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskRollback(req.currentUser,req.params.id,req.body||{})})));
+  app.get(base+'/tasks/:id/outputs/:stepId/pending',wrap(async(req,res)=>res.json({ok:true,...await service.taskPendingOutput(req.currentUser,req.params.id,req.params.stepId)})));
+  app.post(base+'/tasks/:id/output',json,wrap(async(req,res)=>res.json({ok:true,job:await service.taskCompleteOutput(req.currentUser,req.params.id,req.body||{})})));
+  app.post(base+'/tasks/:id/outputs/:stepId/pdf',express.raw({type:()=>true,limit:'52mb'}),wrap(async(req,res)=>res.json({ok:true,output:await service.taskPrintOutput(req.currentUser,req.params.id,req.params.stepId,req.body)})));
+  app.post(base+'/tasks/:id/outputs/:stepId/fallback',json,wrap(async(req,res)=>res.json({ok:true,output:await service.taskPrintOutput(req.currentUser,req.params.id,req.params.stepId,null)})));
+  app.get(base+'/tasks/:id/outputs/:stepId/file',wrap(async(req,res)=>{const file=await service.taskOutputFile(req.currentUser,req.params.id,req.params.stepId);res.download(file.path,file.fileName);}));
   app.post(base+'/task-schedules',json,wrap(async(req,res)=>res.json({ok:true,schedule:await service.taskSchedule(req.currentUser,req.body||{})})));
   app.put(base+'/task-schedules/:id',json,wrap(async(req,res)=>res.json({ok:true,schedule:await service.taskScheduleUpdate(req.currentUser,req.params.id,req.body||{})})));
   app.get(base+'/cp/catalog',wrap(async(req,res)=>res.json({ok:true,catalog:await service.cpCatalog(req.currentUser,req.query.agentId)})));

@@ -615,7 +615,7 @@
      baytlar AI Outputs'a kaydedilir. HTML bu sayfanın DOM'una hiç girmez.
      Kabuk yoksa (tarayıcı kipi) ya da baskı başarısızsa rapor HTML olarak
      kaydedilir; kullanıcı onu açıp Yazdır → PDF yapabilir. */
-  async function finalizePdf(result, onProgress) {
+  async function finalizePdf(result, onProgress, endpoints={}) {
     const pending = result.output;
     const id = encodeURIComponent(String(pending.pendingId || ''));
     const desktop = root.buyerLogDesktop;
@@ -625,11 +625,11 @@
       try {
         const rendered = await desktop.renderPdf(pending.html, { landscape: pending.landscape });
         if (rendered && rendered.ok && rendered.data) {
-          record = (await api(`/api/lcwai/outputs/${id}/pdf`, { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: rendered.data })).output;
+          record = (await api(endpoints.pdfUrl||`/api/lcwai/outputs/${id}/pdf`, { method: 'POST', headers: { 'Content-Type': 'application/pdf' }, body: rendered.data })).output;
         }
       } catch (_) { record = null; }
     }
-    if (!record) record = { ...(await api(`/api/lcwai/outputs/${id}/fallback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).output, fallback: 'html' };
+    if (!record) record = { ...(await api(endpoints.fallbackUrl||`/api/lcwai/outputs/${id}/fallback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })).output, fallback: 'html' };
     return { ...result, output: record };
   }
   const outputAction = action => async (id, fileName = '') => {
@@ -744,6 +744,7 @@
     chat: chatAuthed, createConversation, continueConversation, openChat,
     runAgentOffice: options => withDesktopAuth(() => runAgentOffice(options)),
     openOutput, revealOutput, listOutputs, getDraft, renderDraft, draftSkeleton, outputTemplates,
+    finalizeOutput:(result,onProgress=()=>{},endpoints={})=>result.output?.pending==='pdf'?finalizePdf(result,onProgress,endpoints):Promise.resolve(result),
     registerContextProvider, getAvailableContext, buildContext,
     mountAssistant, openPanel, openConnectionDialog, statusBadge, pickField,
     errorText, notifyError, needsLogin, loadConfig,
