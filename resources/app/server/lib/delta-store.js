@@ -115,9 +115,9 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
      kiracısını kısa süreli tuttuğunda aynayı bırakmak, değişikliği delta
      günlüğünden düşürür. Yalnızca açıkça geçici olan lease çakışmasını retry
      et. Disk dolu, bozuk veri veya izin hataları hemen raporlanmalıdır. */
-  async function queueMirrorPatches(items, invocationId) {
+  async function queueMirrorPatches(items, invocationId, assertCurrent) {
     for (let attempt = 0; ; attempt += 1) {
-      try { return await localDb.queuePatches(items); }
+      try { return await localDb.queuePatches(items, {assertCurrent}); }
       catch (error) {
         if (error && error.code === 'SHARED_WRITE_BUSY' && attempt < MIRROR_RETRY_DELAYS_MS.length) {
           trace('mirror:retry', { invocation: invocationId, attempt: attempt + 1, delayMs: MIRROR_RETRY_DELAYS_MS[attempt] }, true);
@@ -131,7 +131,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
 
   /* Aynayı günceller. Hiçbir koşulda fırlatmaz: çağıran kod eski JSON yazmasını
      bunun sonucuna bakmadan tamamlamalıdır. */
-  async function mirror(collection, entries, { userId = null } = {}) {
+  async function mirror(collection, entries, { userId = null, guardSource = false, guardCollection = false } = {}) {
     /* v2 no-op suppression. A caller may hand us a full source map; that must
        not turn into one journal event per record. Compare only fields supplied
        by the caller against the hydrated working set and persist meaningful
@@ -140,6 +140,13 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
     const effectiveEntries = {};
     let unchanged = 0;
     const bucket = hydrated ? memory.get(collection) : null;
+    const expected = guardSource && isAuthoritativeNow() ? Object.fromEntries((guardCollection ? [...(bucket?.entries()||[])] : Object.keys(entries||{}).map(id=>[id,bucket?.get(id)||null])).map(([id,value])=>[id,value?{...value}:null])) : null;
+    const assertCurrent=expected?state=>{
+      const actual={};
+      if(guardCollection)for(const [key,value]of Object.entries(state.records||{})){if(key.startsWith(collection+':')&&!value._deleted)actual[key.slice(collection.length+1)]=flatten(value);}
+      else for(const id of Object.keys(expected)){const value=state.records?.[recordKey(collection,id)];actual[id]=value&&!value._deleted?flatten(value):null;}
+      if(!equalMeaningful(expected,actual))throw Object.assign(new Error('Shared source changed before journal commit.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+    }:undefined;
     for (const [rawId, rawValue] of Object.entries(entries || {})) {
       const id = String(rawId || '').trim();
       if (!id) continue;
@@ -172,7 +179,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
     const run = mirrorTail.catch(() => {}).then(async () => {
       trace('mirror:start', { invocation: invocationId, collection, items: items.length, queued: pendingMirrors - 1 });
       try {
-        const result = await queueMirrorPatches(items, invocationId);
+        const result = await queueMirrorPatches(items, invocationId, assertCurrent);
         trace('mirror:success', { invocation: invocationId, collection, items: items.length });
         return { mirrored: items.length, applied: result.count, unchanged, ok: true };
       } catch (error) {
@@ -406,6 +413,12 @@ function fromDocumentRecord(record) {
 
 function createDocumentApi(store, collection = 'store') {
   return {
+    async refresh() {
+      if (!store || !store.isAuthoritative) return;
+      const flushed = await store.flush();
+      const hydrated = await store.hydrate();
+      if (!flushed.ok || !hydrated.ok) throw Object.assign(new Error('Authoritative shared source unavailable.'), { code: 'SHARED_SYNC_READ_FAILED', statusCode: 503 });
+    },
     get attached() { return Boolean(store); },
     get isAuthoritative() { return Boolean(store && store.isAuthoritative); },
     /* Eski dosya yazılmaya devam etmeli mi? delta-only dışında daima evet. */

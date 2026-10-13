@@ -921,10 +921,11 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
   /* Toplu yazma. Bir içe aktarma binlerce kayıt taşıyabilir; hepsi tek kilit
      turunda ve tek WAL yazımında toplanır. Journal yine kayıt başına bir olay
      üretir — yani sync tanesini ayrı taşıyabilir. */
-  async function queuePatches(items = []) {
+  async function queuePatches(items = [], { assertCurrent } = {}) {
     const list = (Array.isArray(items) ? items : []).filter(item => item && recordId(item.id)).map(resolvePatch);
     if (!list.length) return { count: 0, results: [] };
-    const results = await appendOperations(list.map(payload => ({ op: 'patch', payload, apply: state => applyLocalPatch(state, payload) })));
+    const operations=list.map(payload => ({ op: 'patch', payload, apply: state => applyLocalPatch(state, payload) }));
+    const results = await appendOperations(assertCurrent ? state=>{assertCurrent(state);return operations;} : operations);
     return { count: results.filter(result => !result.duplicate).length, results };
   }
 

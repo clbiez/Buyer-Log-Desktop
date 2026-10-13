@@ -213,10 +213,10 @@ function loadStore() {
    yazmak yerine 409 döner (sessiz üzerine yazma yok). expectedRevision null
    ise denetim atlanır — bunu yalnız kilit tazeleme gibi çekişmesiz işlemler
    kullanır. */
-function saveStore(next, expectedRevision) {
-  return withFileLeaseSync(FILE, () => {
+function saveStore(next, expectedRevision, options={}) {
+  const write=() => {
     fs.mkdirSync(path.dirname(FILE), { recursive: true });
-    const current = loadStore();
+    const current = loadStore();options.assertAuthority?.();
     if (expectedRevision != null) {
       const expected = Math.max(0, Number(expectedRevision) || 0);
       if (current._revision !== expected) {
@@ -238,11 +238,15 @@ function saveStore(next, expectedRevision) {
       _revision: current._revision + 1,
       _updatedAt: now(),
     };
-    if (documents.writesLegacy) atomicWriteJson(FILE, saved);
-    documents.mirror(DOCUMENT_ID, saved);
+    options.assertAuthority?.();if (documents.writesLegacy) {
+      if(options.legacyWrites)options.legacyWrites.push(()=>atomicWriteJson(FILE,saved));else atomicWriteJson(FILE,saved);
+    }
+    const mirrored=documents.mirror(DOCUMENT_ID,saved,{guardSource:!!options.mirrorResults});options.mirrorResults?.push(mirrored);
     return saved;
-  });
+  };
+  return options[require('./guarded-document-mutation').HELD_DOCUMENT_LEASE]?write():withFileLeaseSync(FILE,write);
 }
+function mutateSharedResource(work){return require('./guarded-document-mutation').guardedDocumentMutation(documents,FILE,work);}
 
 /* ---------------- okuma ---------------- */
 
@@ -268,7 +272,7 @@ function recordIndex(store, id) {
 
 /* Kilidi almaya çalışır. Başkası tutuyorsa KİMİN tuttuğu bildirilir; kullanıcı
    "neden düzenleyemiyorum" sorusunu ekranda görür. */
-function acquireLock(id, actor) {
+function acquireLock(id, actor, options={}) {
   const store = loadStore();
   const index = recordIndex(store, id);
   const record = store.records[index];
@@ -279,11 +283,11 @@ function acquireLock(id, actor) {
   }
   const records = store.records.slice();
   records[index] = { ...record, lock: { userId: me, userName: clean(actor && actor.name, 240), at: now() } };
-  const saved = saveStore({ ...store, records }, store._revision);
+  const saved = saveStore({ ...store, records }, options.expectedRevision??store._revision,options);
   return { record: saved.records[index], revision: saved._revision };
 }
 
-function releaseLock(id, actor) {
+function releaseLock(id, actor, options={}) {
   const store = loadStore();
   const index = recordIndex(store, id);
   const record = store.records[index];
@@ -295,7 +299,7 @@ function releaseLock(id, actor) {
   }
   const records = store.records.slice();
   records[index] = { ...record, lock: null };
-  const saved = saveStore({ ...store, records }, store._revision);
+  const saved = saveStore({ ...store, records }, store._revision,options);
   return { record: saved.records[index], revision: saved._revision };
 }
 
@@ -315,7 +319,7 @@ function validateDtrStatus(input) {
   }
 }
 
-function createRecord(input, actor, expectedRevision) {
+function createRecord(input, actor, expectedRevision, options={}) {
   validateDtrStatus(input);
   const stamp = now();
   const record = normalizeRecord({
@@ -335,11 +339,11 @@ function createRecord(input, actor, expectedRevision) {
   const saved = saveStore(current => {
     if (current.records.length >= MAX_RECORDS) throw storeError('E-posta kaydı sınırına ulaşıldı.', 'EMAIL_RECORD_LIMIT', 409);
     return { ...current, records: [...current.records, record] };
-  }, null);
+  }, options.expectedRevision??null,options);
   return { record: saved.records.find(item => item.id === record.id), revision: saved._revision };
 }
 
-function updateRecord(id, patch, actor, expectedRevision) {
+function updateRecord(id, patch, actor, expectedRevision, options={}) {
   validateDtrStatus(patch);
   const store = loadStore();
   const index = recordIndex(store, id);
@@ -361,17 +365,17 @@ function updateRecord(id, patch, actor, expectedRevision) {
   });
   const records = store.records.slice();
   records[index] = next;
-  const saved = saveStore({ ...store, records }, expectedRevision);
+  const saved = saveStore({ ...store, records }, expectedRevision,options);
   return { record: saved.records[index], revision: saved._revision };
 }
 
-function deleteRecord(id, actor, expectedRevision) {
+function deleteRecord(id, actor, expectedRevision, options={}) {
   const store = loadStore();
   const index = recordIndex(store, id);
   assertHoldsLock(store.records[index], actor);
   const records = store.records.filter((_, position) => position !== index);
   const deletedRecords = { ...(store.deletedRecords || {}), [store.records[index].id]: now() };
-  const saved = saveStore({ ...store, records, deletedRecords }, expectedRevision);
+  const saved = saveStore({ ...store, records, deletedRecords }, expectedRevision,options);
   return { deleted: true, revision: saved._revision };
 }
 
@@ -617,8 +621,11 @@ function nonDtrManufacturers(legacyNames, store = migrateNonDtrManufacturers(leg
   ]);
 }
 
+function restoreRecord(receipt,actor,options={}) {
+ return saveStore(current=>{const prior=receipt.before,record=current.records.find(r=>r.id===receipt.id);if(record&&activeLock(record.lock)&&record.lock.userId!==actor.id)throw storeError('Record locked.','EMAIL_RECORD_LOCKED',409);const records=current.records.filter(r=>r.id!==receipt.id);if(prior)records.splice(Math.max(0,receipt.index??records.length),0,{...prior,lock:null});const deletedRecords={...current.deletedRecords};if(receipt.deletedAt)deletedRecords[receipt.id]=receipt.deletedAt;else delete deletedRecords[receipt.id];return {...current,records,deletedRecords};},receipt.expectedRevision,options);
+}
 module.exports = {
-  migrateNonDtrManufacturers, nonDtrManufacturers,
+  mutateSharedResource,restoreRecord,migrateNonDtrManufacturers, nonDtrManufacturers,
   attachDeltaStore, createFromAsas, linkRecord, normalizeAliases,
   FILE, LOCK_TTL_MS, DEFAULT_TYPES,
   loadStore, saveStore, publicStore, defaultStore,
