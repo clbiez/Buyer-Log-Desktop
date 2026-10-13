@@ -32581,7 +32581,7 @@ function mailTplText(){
     topicNamePh:en?'Name shown in E-mail Subjects':'E-posta Başlıklarında görünen ad',
     subjectTitle:en?'E-mail Subject Title':'E-posta Konu Başlığı',
     subjectPh:en?'Editable text used near the end of the e-mail subject':'E-posta başlığının sonuna yakın kullanılan düzenlenebilir metin',
-    subjectHint:en?'Subject order: MMYG, MAG, Season, Manufacturer, selected field values, this title and date.':'Başlık sırası: MMYG, MAG, Sezon, Üretici, seçili alan değerleri, bu başlık ve tarih.',
+    subjectHint:en?'Arrange subject fields and choose a separator below.':'Konu başlığı alanlarını sıralayın, ayırıcıyı seçin.',
     body:en?'Email draft text':'E-posta taslak metni',
     bodyPh:en?'Write the email text here…':'E-posta metnini buraya yaz…',
     close:en?'Cancel':'Vazgeç',
@@ -32900,6 +32900,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   const boxes=()=>[...modal.querySelectorAll('#mailTopicColsGrid input[data-key]')];
   const subjectButtons=()=>[...modal.querySelectorAll('[data-topic-subject-key]')];
   const setToggle=(btn,active)=>{btn.classList.toggle('isActive',active);btn.setAttribute('aria-pressed',active?'true':'false');};
+  let subjectArrange=mailTopicSubjectOrder(kind,id,sourceKind);
   const previewRows=()=>{const rows=typeof options.getRows==='function'?options.getRows():options.rows;return Array.isArray(rows)?rows:[];};
   const previewManufacturer=()=>{
     const explicit=typeof options.getManufacturerName==='function'?options.getManufacturerName():options.manufacturerName;
