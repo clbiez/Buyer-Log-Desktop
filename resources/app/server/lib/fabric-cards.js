@@ -12,6 +12,7 @@ const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const { RevisionConflictError, expectedNumber } = require('../db');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
 const fabricEngine = require('../../public/fabric-cards-engine');
+const { withFileLeaseSync } = require('./shared-file-transaction');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'fabric-cards.json');
 const MAX_CARDS = 20000;
@@ -87,7 +88,9 @@ function persist(store) {
 
 /* Kartları ekler/günceller. onlyMissing=true ise mevcut kart EZİLMEZ
    (otomatik oluşturma başka kullanıcının düzenlemesini bozmasın). */
-function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing = false } = {}) {
+function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing = false, assertAuthority } = {}) {
+  return withFileLeaseSync(FILE, () => {
+  assertAuthority?.();
   const store = loadFabricCards();
   checkRevision(store, expectedRevision);
   const now = new Date().toISOString(), by = actorName(actor);
@@ -110,17 +113,37 @@ function upsertFabricCards(items, actor, expectedRevision = null, { onlyMissing 
     };
     updated += 1;
   }
-  if (updated) persist(store);
+  if (updated) { assertAuthority?.(); persist(store); }
   return { ...publicCards(store), updated, skipped };
+  });
 }
-function deleteFabricCard(code, actor, expectedRevision = null) {
+function deleteFabricCard(code, actor, expectedRevision = null, { assertAuthority } = {}) {
+  return withFileLeaseSync(FILE, () => {
+  assertAuthority?.();
   const store = loadFabricCards();
   checkRevision(store, expectedRevision);
   const key = normalizeCode(code);
   if (!key || !store.cards[key]) return { ...publicCards(store), deleted: false };
   delete store.cards[key];
-  persist(store);
+  assertAuthority?.(); persist(store);
   return { ...publicCards(store), deleted: true, deletedBy: actorName(actor) };
+  });
 }
 
-module.exports = { FILE, DETAIL_FIELDS, SUMMARY_MAX, normalizeCode, normalizeCard, normalizeStore, loadFabricCards, publicCards, upsertFabricCards, deleteFabricCard };
+// Trusted service inverse: target records only, same native lease/CAS. This
+// entry point is never exposed as raw store data or a caller-selected function.
+function restoreFabricCards(before, expectedRevision, { assertAuthority } = {}) {
+  return withFileLeaseSync(FILE, () => {
+    assertAuthority?.();
+    const store=loadFabricCards(); checkRevision(store,expectedRevision);
+    if (expectedNumber(expectedRevision)==null || !before || Array.isArray(before) || Object.keys(before).length>50) throw new TypeError('Invalid fabric inverse');
+    for (const [code,record] of Object.entries(before)) {
+      if (normalizeCode(code)!==code || record && normalizeCard(record)?.code!==code) throw new TypeError('Invalid fabric inverse');
+      if (record===null) delete store.cards[code];
+      else store.cards[code]=normalizeCard(record);
+    }
+    assertAuthority?.(); persist(store); return publicCards(store);
+  });
+}
+
+module.exports = { FILE, DETAIL_FIELDS, SUMMARY_MAX, MAX_CARDS, normalizeCode, normalizeCard, normalizeStore, loadFabricCards, publicCards, upsertFabricCards, deleteFabricCard, restoreFabricCards };

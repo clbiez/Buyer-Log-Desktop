@@ -529,6 +529,59 @@
         "approval": true,
         "rollbackable": false,
         "contractVersion": 2
+      },
+      {
+        "id": "collection.fabric.read",
+        "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.fabric.upsert",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "grantScope": "collection-editor",
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.fabric.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "grantScope": "collection-editor",
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
       }
     ]
   },
@@ -795,7 +848,63 @@
       "refresh",
       "analyze"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "license.cards.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "license.cards.discover",
+        "operation": "IMPORT",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "license.cards.update",
+        "operation": "UPDATE",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "lfl",
@@ -1490,6 +1599,57 @@
           "cp"
         ],
         "areas": [],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.merch.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.merch.import",
+        "operation": "IMPORT",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.merch.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
         "permissions": [
           "manageModelConnections"
         ],

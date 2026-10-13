@@ -1290,7 +1290,7 @@
       const response = await fetch('/api/merch-calendar', {
         method:'POST',
         headers:{ 'Content-Type':'application/json' },
-        body:JSON.stringify({ name:file.name, contentBase64 }),
+        body:JSON.stringify({ name:file.name, contentBase64,expectedFingerprint:merchCalendar?.fingerprint }),
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || T('Merch Calendar yüklenemedi.','Could not upload Merch Calendar.'));
@@ -1318,7 +1318,7 @@
     merchMessage = '';
     render();
     try {
-      const response = await fetch('/api/merch-calendar', { method:'DELETE' });
+      const response = await fetch('/api/merch-calendar', { method:'DELETE',headers:merchCalendar?.fingerprint?{'If-Match':merchCalendar.fingerprint}:{} });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) throw new Error(payload.error || T('Merch Calendar kaldırılamadı.','Could not remove Merch Calendar.'));
       merchCalendar = payload;

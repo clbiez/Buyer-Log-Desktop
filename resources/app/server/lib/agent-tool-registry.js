@@ -265,7 +265,7 @@ function createToolRegistry(adapter) {
     const access = adapter.userAccess;
     if (access && typeof access.hasArea === 'function') {
       const module = moduleRegistry.get(id);
-      if (!access.hasArea(ctx && ctx.profile, module.area)) {
+      if (module.anyAreas ? !module.anyAreas.some(area=>access.hasArea(ctx && ctx.profile,area)) : !access.hasArea(ctx && ctx.profile, module.area)) {
         throw Object.assign(new Error(`${described.label} modülüne erişim yetkiniz yok.`), { code: 'AREA_FORBIDDEN' });
       }
     }
@@ -579,7 +579,7 @@ function createToolRegistry(adapter) {
       require('./agent-tool-schema').validate(tool.inputSchema,args);
       const assertAuthority=()=>{
         const current=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):ctx.profile;
-        if(!current||current.id!==ctx.ownerId||current.enabled===false||!(tool.areas||[tool.area]).filter(Boolean).every(area=>adapter.userAccess?.hasArea(current,area))||tool.anyAreas&&!tool.anyAreas.some(area=>adapter.userAccess?.hasArea(current,area))||(tool.permissions||[]).some(key=>!adapter.userAccess?.hasPermission(current,key))||(tool.capabilities||[]).some(key=>!adapter.userAccess?.hasCapability(current,key)))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+        if(!current||current.id!==ctx.ownerId||!require('./agent-capability-contract').allowed(tool,current,adapter.userAccess))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
         return current;
       };
       const profile=assertAuthority(),authorizationFingerprint=JSON.stringify(adapter.userAccess?.publicProfile?.(profile)||profile);
@@ -596,10 +596,11 @@ function createToolRegistry(adapter) {
     ctx=ctx||{};
     if(tool.contractVersion){
       const profile=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):ctx.profile;
-      if(!profile||profile.id!==ctx.ownerId||profile.enabled===false||!ctx.approvalGranted||!(tool.areas||[tool.area]).filter(Boolean).every(area=>adapter.userAccess?.hasArea(profile,area))||(tool.permissions||[]).some(key=>!adapter.userAccess?.hasPermission(profile,key))||(tool.capabilities||[]).some(key=>!adapter.userAccess?.hasCapability(profile,key)))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+      if(!profile||profile.id!==ctx.ownerId||!ctx.approvalGranted||!require('./agent-capability-contract').allowed(tool,profile,adapter.userAccess))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
       const fingerprint=JSON.stringify(adapter.userAccess?.publicProfile?.(profile)||profile);
       ctx={...ctx,profile,assertAuthority:()=>{
         const latest=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):profile;
+        if(!latest||latest.id!==ctx.ownerId||!require('./agent-capability-contract').allowed(tool,latest,adapter.userAccess))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
         if(JSON.stringify(adapter.userAccess?.publicProfile?.(latest)||latest)!==fingerprint)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
         return latest;
       }};

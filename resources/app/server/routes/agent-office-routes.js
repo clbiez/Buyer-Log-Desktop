@@ -13,7 +13,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   function fail(res,err) {
     if(res.headersSent)return;
     if(isLcwAiError(err))return res.status(err.statusCode || 502).json({ok:false,...publicError(err)});
-    const code=/^OFFICE_|^AI_AUTOMATION_|^AUTOMATION_[A-Z_]+$|^TEST_REPORT_[A-Z_]+$|^CHECKLIST_REVISION_CONFLICT$/.test(err?.code || '')?err.code:'OFFICE_INTERNAL';
+    const code=/^OFFICE_|^AI_AUTOMATION_|^AUTOMATION_[A-Z_]+$|^TEST_REPORT_[A-Z_]+$|^CHECKLIST_REVISION_CONFLICT$|^LICENSE_[A-Z_]+$|^MERCH_[A-Z_]+$|^SHARED_WRITE_BUSY$|^REVISION_(CONFLICT|REQUIRED)$/.test(err?.code || '')?err.code:'OFFICE_INTERNAL';
     return res.status(code==='OFFICE_INTERNAL'?500:(err.statusCode || 400)).json({ok:false,code,error:code});
   }
   const wrap = fn => async(req,res)=>{try{await fn(req,res);}catch(err){fail(res,err);}};
@@ -30,10 +30,13 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.put(base+'/assistant',json,wrap(async(req,res)=>res.json({ok:true,assistant:await service.configureAssistant(req.currentUser,req.body||{})})));
   app.get(base+'/notifications',wrap(async(req,res)=>res.json({ok:true,...await service.notifications(req.currentUser,{timeZone:req.query.timeZone})})));
   app.get(base+'/state',wrap(async(req,res)=>res.json({ok:true,state:await service.state(req.currentUser)})));
-  app.post(base+'/artifacts/workbook',express.raw({type:()=>true,limit:'80mb'}),wrap(async(req,res)=>{
-    const profile=userAccess.profileById(req.currentUser.id);if(!profile||profile.enabled===false||!userAccess.hasPermission(profile,'manageModelConnections'))throw error('OFFICE_TOOL_FORBIDDEN',403);
-    const name=decodeURIComponent(String(req.get('X-BuyerLog-Filename')||'workbook.xlsx'));if(!/\.xlsx?$/i.test(name))throw error('OFFICE_TOOL_SCHEMA',422);
-    const artifact=await require('../lib/agent-artifact-store').put(profile,req.body,name,'workbook');audit(req,'AGENT_WORKBOOK_UPLOAD',artifact.id,{bytes:artifact.bytes,sha256:artifact.sha256});res.json({ok:true,artifact});
+  for(const [route,kind,limit,extension]of [['workbook','workbook','80mb',/\.xlsx?$/i],['merch-calendar','merch-calendar','12mb',/\.(xlsx?|html?)$/i]])app.post(base+'/artifacts/'+route,express.raw({type:()=>true,limit}),wrap(async(req,res)=>{
+    const profile=userAccess.profileById(req.currentUser.id);if(!profile||profile.enabled===false||!userAccess.hasArea(profile,'source')||!userAccess.hasPermission(profile,'manageModelConnections'))throw error('OFFICE_TOOL_FORBIDDEN',403);
+    const stamp=JSON.stringify(userAccess.publicProfile(profile)),name=decodeURIComponent(String(req.get('X-BuyerLog-Filename')||''));if(!extension.test(name))throw error('OFFICE_TOOL_SCHEMA',422);
+    if(kind==='merch-calendar')require('../lib/merch-calendar-store').parseBuffer(req.body,name);
+    const artifact=await require('../lib/agent-artifact-store').put(profile,req.body,name,kind);
+    if(JSON.stringify(userAccess.publicProfile(userAccess.profileById(profile.id)))!==stamp)throw error('OFFICE_PREVIEW_CHANGED',409);
+    audit(req,kind==='workbook'?'AGENT_WORKBOOK_UPLOAD':'AGENT_MERCH_UPLOAD',artifact.id,{bytes:artifact.bytes,sha256:artifact.sha256});res.json({ok:true,artifact});
   }));
   app.get(base+'/tasks/catalog',wrap(async(req,res)=>res.json({ok:true,tools:await service.taskCatalog(req.currentUser,req.query.agentId)})));
   app.post(base+'/quality/intake',express.json({limit:'160mb'}),wrap(async(req,res)=>{
