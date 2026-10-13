@@ -88,3 +88,33 @@ test('editor includes practical field search, ordering and theme-compatible cont
   assert.match(CSS,/\.mailTopicSubjectArrange\{/);
   assert.match(CSS,/background:var\(--card2\)/);
 });
+
+
+test('mail field chooser reuses CP heading groups without modifying CP preferences',()=>{
+  const catalog=isolate('mailTopicFieldGroupCatalog','function mailTopicFieldGroupCatalog','function mailTopicDefaultColumnKeys',{
+    kolAllOrderedCols:()=>[],
+    canonicalColumnGroup:v=>v,
+    tableColumnGroupLabel:v=>({'Model Detayları':'Model Details','Sipariş Detayları':'Order Details'}[v]||v),
+    kolColumnGroupFor:()=> 'Model Detayları',
+    appLang:'en'
+  });
+  assert.deepEqual(catalog([
+    {k:'Model Name',group:'Model Detayları'},
+    {k:'PLM ID',group:'Model Detayları'},
+    {k:'Order Code',group:'Sipariş Detayları'}
+  ],'cp'),[
+    {group:'Model Detayları',label:'Model Details',keys:['Model Name','PLM ID']},
+    {group:'Sipariş Detayları',label:'Order Details',keys:['Order Code']}
+  ]);
+  const editor=between('function openMailTopicEditor','function mailTplToHtml');
+  assert.match(editor,/mailTopicFieldGroupCatalog\(cols,sourceKind\)/);
+  assert.match(editor,/data-mail-field-toggle/);
+  assert.match(editor,/data-mail-group-table/);
+  assert.match(editor,/data-mail-group-subject/);
+  assert.match(editor,/expandedGroups/);
+  assert.match(editor,/excelCheck\.indeterminate=/);
+  assert.match(editor,/subjectCheck\.indeterminate=/);
+  assert.doesNotMatch(editor,/saveAutoTableColumnState\(/);
+  assert.match(CSS,/\.mailTopicEditorCard \.mailTopicFieldGroup\{/);
+  assert.match(CSS,/--grp-accent/);
+});
