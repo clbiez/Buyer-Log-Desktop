@@ -1,0 +1,272 @@
+{
+  "schemaVersion": 1,
+  "declaredCapabilitiesAreNotExecutionGrants": true,
+  "modules": [
+    {
+      "id": "overview",
+      "area": "overview",
+      "capabilities": [
+        "read",
+        "analyze",
+        "compare",
+        "view"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "cp",
+      "area": "cp",
+      "capabilities": [
+        "read",
+        "filter",
+        "select",
+        "sort",
+        "patch-row",
+        "note",
+        "export",
+        "plm-sync",
+        "refresh",
+        "analyze",
+        "automate",
+        "view"
+      ],
+      "agentTools": [
+        {
+          "id": "cp.rule.preview",
+          "operation": "READ",
+          "areas": [
+            "cp"
+          ],
+          "risk": "read",
+          "approval": false,
+          "rollbackable": false
+        },
+        {
+          "id": "cp.rule.save",
+          "operation": "CREATE/UPDATE",
+          "areas": [
+            "cp"
+          ],
+          "risk": "write",
+          "approval": true,
+          "rollbackable": true
+        },
+        {
+          "id": "cp.weekly.preview",
+          "operation": "READ",
+          "areas": [
+            "cp",
+            "automations"
+          ],
+          "risk": "read",
+          "approval": false,
+          "rollbackable": false
+        },
+        {
+          "id": "cp.weekly.draft",
+          "operation": "EXPORT",
+          "areas": [
+            "cp",
+            "automations"
+          ],
+          "risk": "write",
+          "approval": true,
+          "rollbackable": false
+        }
+      ]
+    },
+    {
+      "id": "orders",
+      "area": "orders",
+      "capabilities": [
+        "read",
+        "filter",
+        "select",
+        "sort",
+        "patch-row",
+        "note",
+        "export",
+        "plm-sync",
+        "refresh",
+        "analyze",
+        "automate",
+        "view"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "koleksiyon",
+      "area": "koleksiyon",
+      "capabilities": [
+        "read",
+        "filter",
+        "select",
+        "sort",
+        "patch-row",
+        "export",
+        "import",
+        "plm-sync",
+        "compare",
+        "analyze",
+        "view"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "quotations",
+      "area": "koleksiyon",
+      "capabilities": [
+        "read",
+        "filter",
+        "select",
+        "sort",
+        "patch-row",
+        "export",
+        "compare",
+        "analyze"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "pricinghistory",
+      "area": "koleksiyon",
+      "capabilities": [
+        "read",
+        "filter",
+        "sort",
+        "export",
+        "compare",
+        "analyze"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "priceanalysis",
+      "area": "priceanalysis",
+      "capabilities": [
+        "read",
+        "analyze",
+        "compare"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "lcwai",
+      "area": "overview",
+      "capabilities": [
+        "analyze"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "agentoffice",
+      "area": "overview",
+      "capabilities": [
+        "analyze",
+        "compare",
+        "export"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "manufacturers",
+      "area": "orders",
+      "capabilities": [
+        "read",
+        "analyze"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "licensecards",
+      "area": "orders",
+      "capabilities": [
+        "read",
+        "refresh",
+        "analyze"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "lfl",
+      "area": "lfl",
+      "capabilities": [
+        "read",
+        "filter",
+        "sort",
+        "export",
+        "analyze",
+        "compare"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "opencosting",
+      "area": "opencosting",
+      "capabilities": [
+        "read",
+        "filter",
+        "export",
+        "analyze"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "backlog",
+      "area": "backlog",
+      "capabilities": [
+        "read",
+        "filter",
+        "sort",
+        "export",
+        "analyze",
+        "automate"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "shipping",
+      "area": "shipping",
+      "capabilities": [
+        "read",
+        "filter",
+        "select",
+        "sort",
+        "patch-row",
+        "export",
+        "compare",
+        "analyze"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "automations",
+      "area": "automations",
+      "capabilities": [
+        "read",
+        "automate"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "source",
+      "area": "source",
+      "capabilities": [
+        "read",
+        "refresh",
+        "import",
+        "analyze"
+      ],
+      "agentTools": []
+    },
+    {
+      "id": "agents",
+      "area": "agents",
+      "capabilities": [
+        "read",
+        "automate"
+      ],
+      "agentTools": []
+    }
+  ]
+}

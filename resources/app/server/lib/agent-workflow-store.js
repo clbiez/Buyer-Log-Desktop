@@ -128,10 +128,12 @@ function saveStore(store) {
 }
 
 function mutate(mutator) {
-  const store = loadStore();
-  const result = mutator(store);
-  const saved = saveStore(store);
-  return { result: clone(result), revision: saved.revision };
+  return require('./shared-file-transaction').withFileLeaseSync(STORE_FILE, () => {
+    const store = loadStore();
+    const result = mutator(store);
+    const saved = saveStore(store);
+    return { result: clone(result), revision: saved.revision };
+  });
 }
 
 function stateForOwner(ownerId) {

@@ -126,7 +126,7 @@ function createAgentRuntime({ store, toolRegistry, policyEngine, auditFn } = {})
         const policy = policyEngine.evaluate(ctx.profile, tool, args, { dryRun: ctx.dryRun, approvalGranted });
         if (!policy.allowed && policy.approvalRequired) return { status: 'waiting_approval', approval: { nodeId: node.id, label: node.label || tool && tool.label || toolId, message: policy.reason, tool: tool ? { id: tool.id, label: tool.label, risk: tool.risk } : null, args: compact(args), preview: compact(input) } };
         if (!policy.allowed) throw Object.assign(new Error(policy.reason || 'Tool policy tarafından engellendi.'), { code: policy.code || 'POLICY_BLOCKED', statusCode: 403 });
-        const result = await toolRegistry.execute(toolId, args, { ownerId: ctx.ownerId, profile: ctx.profile, dryRun: ctx.dryRun, input, runId: ctx.run.id, nodeId: node.id });
+        const result = await toolRegistry.execute(toolId, args, { ownerId: ctx.ownerId, profile: ctx.profile, dryRun: ctx.dryRun, approvalGranted, input, runId: ctx.run.id, nodeId: node.id });
         if (!ctx.dryRun && tool && tool.rollbackable && result && result.rollbackToken) ctx.rollbackStack.push({ toolId, token: result.rollbackToken, nodeId: node.id });
         return { status: 'success', output: result };
       }
@@ -148,7 +148,7 @@ function createAgentRuntime({ store, toolRegistry, policyEngine, auditFn } = {})
         if (!ctx.dryRun && (!node.config || node.config.rollback !== false)) {
           while (ctx.rollbackStack.length) {
             const item = ctx.rollbackStack.pop();
-            try { attempts.push({ toolId: item.toolId, nodeId: item.nodeId, ok: true, result: await toolRegistry.rollback(item.toolId, item.token, { ownerId: ctx.ownerId, profile: ctx.profile, runId: ctx.run.id }) }); }
+            try { attempts.push({ toolId: item.toolId, nodeId: item.nodeId, ok: true, result: await toolRegistry.rollback(item.toolId, item.token, { ownerId: ctx.ownerId, profile: ctx.profile, runId: ctx.run.id, approvalGranted: Boolean(ctx.approvals[item.nodeId]) }) }); }
             catch (error) { attempts.push({ toolId: item.toolId, nodeId: item.nodeId, ok: false, error: error.message }); }
           }
         }
@@ -212,7 +212,7 @@ function createAgentRuntime({ store, toolRegistry, policyEngine, auditFn } = {})
           if (!dryRun) {
             while (rollbackStack.length) {
               const item = rollbackStack.pop();
-              try { rollbackResults.push({ toolId: item.toolId, ok: true, result: await toolRegistry.rollback(item.toolId, item.token, { ownerId, profile, runId: run.id }) }); }
+              try { rollbackResults.push({ toolId: item.toolId, ok: true, result: await toolRegistry.rollback(item.toolId, item.token, { ownerId, profile, runId: run.id, approvalGranted: Boolean(approvals[item.nodeId]) }) }); }
               catch (rollbackError) { rollbackResults.push({ toolId: item.toolId, ok: false, error: rollbackError.message }); }
             }
           }
@@ -228,7 +228,12 @@ function createAgentRuntime({ store, toolRegistry, policyEngine, auditFn } = {})
       return completed.length ? completed[completed.length - 1].output : null;
     })();
     // Completed runs keep a compact execution trace; large row payloads do not accumulate forever.
-    const compactState = { ...execution, nodes: Object.fromEntries(Object.entries(state).map(([id, item]) => [id, { ...item, output: compact(item.output) }])) };
+    const compactState = { ...execution, nodes: Object.fromEntries(Object.entries(state).map(([id, item]) => {
+      const tool=toolRegistry.get(byId.get(id)?.config?.toolId);
+      // Revision-safe inverse changes need the exact effect receipt. Truncating
+      // an entry string would silently corrupt a migrated tool's rollback.
+      return [id,{...item,output:tool?.contractVersion?item.output:compact(item.output)}];
+    })) };
     const finished = store.updateRun(ownerId, run.id, { status: dryRun ? 'dry_run' : 'completed', currentNodeId: '', pendingApproval: null, executionState: compactState, rollbackStack: [], output: compact(terminal), message: dryRun ? 'Dry run tamamlandı; kalıcı değişiklik uygulanmadı.' : 'Workflow başarıyla tamamlandı.', finishedAt: new Date().toISOString() }).result;
     store.appendEvent(ownerId, run.id, { type: 'run_complete', status: finished.status, output: compact(terminal) });
     if (typeof auditFn === 'function') auditFn(profile, dryRun ? 'AGENT_WORKFLOW_DRY_RUN' : 'AGENT_WORKFLOW_COMPLETE', workflow.id, { runId: finished.id, workflow: workflow.name });
