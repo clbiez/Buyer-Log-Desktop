@@ -121,7 +121,7 @@ test('yenileme hedefleri: bağlı grup birlikte, gruptan ayrı CP tek başına',
 });
 
 test('sunucu: /api/refresh, performRefresh ve loadFromModels (LFL yolu dahil) kayıttaki bağlı grupla genişletir', () => {
-  assert.match(SERVER, /const \{ withRefreshTargets, linkedTargetsOf \} = require\('\.\/lib\/model-scopes'\);/);
+  assert.match(SERVER, /const \{ withRefreshTargets, linkedTargetsOf, LINKED_TARGETS \} = require\('\.\/lib\/model-scopes'\);/);
   const config = SERVER.slice(SERVER.indexOf('function configuredRefreshMembers()'), SERVER.indexOf('const cpCoverage'));
   assert.match(config, /linkedTargetsOf\(asasItem\)/);
   assert.match(config, /withRefreshTargets\(targets, configuredRefreshMembers\(\)\)/);
