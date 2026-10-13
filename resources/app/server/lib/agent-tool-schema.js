@@ -15,12 +15,12 @@ function validate(schema,value,path='$') {
       else if(schema.additionalProperties&&typeof schema.additionalProperties==='object')validate(schema.additionalProperties,item,`${path}.${key}`);
     }
   } else if(schema.type==='array') {
-    if(!Array.isArray(value)||schema.maxItems!=null&&value.length>schema.maxItems)bad();
+    if(!Array.isArray(value)||schema.maxItems!=null&&value.length>schema.maxItems||schema.minItems!=null&&value.length<schema.minItems)bad();
     if(schema.items)value.forEach((item,i)=>validate(schema.items,item,`${path}[${i}]`));
   } else if(schema.type==='string') {
     if(typeof value!=='string'||schema.maxLength!=null&&value.length>schema.maxLength||schema.minLength!=null&&value.length<schema.minLength||schema.pattern&&!new RegExp(schema.pattern).test(value))bad();
   } else if(schema.type==='boolean'&&typeof value!=='boolean')bad();
-  else if(schema.type==='number'&&(!Number.isFinite(value)||schema.minimum!=null&&value<schema.minimum||schema.maximum!=null&&value>schema.maximum))bad();
+  else if(['number','integer'].includes(schema.type)&&(!Number.isFinite(value)||schema.type==='integer'&&!Number.isSafeInteger(value)||schema.minimum!=null&&value<schema.minimum||schema.maximum!=null&&value>schema.maximum))bad();
   return value;
 }
 module.exports={validate};

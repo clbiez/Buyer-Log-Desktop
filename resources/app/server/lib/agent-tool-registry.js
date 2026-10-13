@@ -75,7 +75,7 @@ function resolvedValue(row, source, resolved) {
   return getField(row, resolved && resolved.sourceKey);
 }
 function resolveFilters(source, rows, filters, now = new Date()) {
-  return (Array.isArray(filters) ? filters : []).slice(0, 20).map(rule => {
+      return (Array.isArray(filters) ? filters : []).map(rule => {
     const resolved = resolveDatasetField(source, rows, rule && rule.field);
     const rawValue = rule && rule.value;
     /* Model tutarlı biçimde "values" dizisi gönderiyor; şema "value" diyor.
@@ -238,7 +238,7 @@ function createToolRegistry(adapter) {
   }
   function executableFor(moduleId,ctx){
     const profile=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx?.ownerId):ctx?.profile;
-    return [...tools.values()].filter(tool=>tool.module===moduleId&&tool.contractVersion&&profile?.enabled!==false&&(tool.areas||[tool.area]).every(area=>adapter.userAccess?.hasArea(profile,area))).map(({execute,rollback,...meta})=>clone(meta));
+    return [...tools.values()].filter(tool=>tool.module===moduleId&&require('./agent-capability-contract').allowed(tool,profile,adapter.userAccess)).map(({execute,rollback,...meta})=>clone(meta));
   }
 
   register({
@@ -506,10 +506,12 @@ function createToolRegistry(adapter) {
   });
 
   register({
-    id: 'app.order.update', label: 'Update Order', category: 'app', kind: 'app', risk: 'write', area: 'cp', approval: true, rollbackable: true,
+    id: 'app.order.update', label: 'Update Order', module:'orders', operation:'UPDATE', contractVersion:1, category: 'app', kind: 'app', risk: 'write', area: 'cp', areas:['cp'], approval: true, rollbackable: true,
     approvalMessage: 'Sipariş üzerinde kullanıcı verisi değiştirilecek. Değişiklikleri uygulamadan önce onaylayın.',
     description: 'Mevcut Buyer Log order override servisinin izin verdiği alanları günceller.',
-    inputSchema: { orderCode: 'number', model: 'string', ccode: 'string', notes: 'object', subManufacturer: 'string', licensor: 'string', delType: 'string', dates: 'object' },
+    inputSchema: {type:'object',required:['orderCode','expectedRevision'],additionalProperties:false,properties:{orderCode:{type:'integer',minimum:1},expectedRevision:{type:'integer',minimum:0},model:{type:'string',maxLength:160},ccode:{type:'string',maxLength:80},notes:{type:'object',properties:Object.fromEntries(require('../db').NOTE_AUTHOR_FIELDS.map(spec=>[spec.field,{type:'string',maxLength:10000}])),additionalProperties:false},subManufacturer:{type:'string',maxLength:200},licensor:{type:'string',maxLength:200},delType:{type:'string',maxLength:80},dates:{type:'object',properties:Object.fromEntries(['exFactory','retailDate','inStoreDate'].map(key=>[key,{type:'string',pattern:'^(?:|\\d{4}-\\d{2}-\\d{2})$'}])),additionalProperties:false}}},
+    outputSchema:{type:'object',required:['verified','revision','rollbackToken']},dryRunOutputSchema:{type:'object',required:['dryRun','orderCode','patch','revision']},
+    dataScope:'current-IAM-editable-order',preview:'same-tool-dryRun',validation:'schema + existing order override service',audit:'AGENT_ORDER_UPDATE',idempotency:'expected order revision; interrupted effects require reconciliation',rollback:'restore only at effect revision',
   }, async (args, ctx) => {
     const patch = {};
     ['model', 'ccode', 'subManufacturer', 'licensor', 'delType'].forEach(key => { if (Object.prototype.hasOwnProperty.call(args || {}, key)) patch[key] = args[key]; });
@@ -517,11 +519,16 @@ function createToolRegistry(adapter) {
     if (args && args.dates && typeof args.dates === 'object') patch.dates = args.dates;
     const orderCode = Number(args && args.orderCode);
     if (!Number.isFinite(orderCode)) throw Object.assign(new Error('Geçerli Order Code zorunlu.'), { code: 'ORDER_CODE_REQUIRED' });
-    if (ctx.dryRun) return { dryRun: true, orderCode, patch };
+    for(const date of Object.values(patch.dates||{}))if(date&&(!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date))throw Object.assign(new Error('OFFICE_DATE_INVALID'),{code:'OFFICE_DATE_INVALID',statusCode:422});
+    if(!['notes','dates','subManufacturer','licensor','delType'].some(key=>Object.hasOwn(patch,key)))throw Object.assign(new Error('OFFICE_TASK_INVALID'),{code:'OFFICE_TASK_INVALID',statusCode:422});
     const before = await adapter.snapshotOrder(ctx.ownerId, ctx.profile, orderCode, patch);
-    const result = await adapter.updateOrder(ctx.ownerId, ctx.profile, orderCode, patch);
-    return { ...result, rollbackToken: { orderCode, before } };
-  }, async (token, ctx) => adapter.restoreOrder(ctx.ownerId, ctx.profile, token && token.orderCode, token && token.before));
+    if(before.revision!==args.expectedRevision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
+    if (ctx.dryRun) return { dryRun: true, orderCode, patch,revision:before.revision };
+    ctx.assertAuthority();
+    const result = await adapter.updateOrder(ctx.ownerId, ctx.profile, orderCode, patch,args.expectedRevision);
+    if(result.verified!==true)throw Object.assign(new Error('OFFICE_ORDER_VERIFY_FAILED'),{code:'OFFICE_ORDER_VERIFY_FAILED',statusCode:409});
+    return { ...result,verified:true, rollbackToken: { orderCode, before:before.patch,selector:{model:patch.model,ccode:patch.ccode},expectedRevision:result.revision } };
+  }, async (token, ctx) => adapter.restoreOrder(ctx.ownerId, ctx.profile, token.orderCode, token.before,token.expectedRevision,token.selector));
 
   register({
     id: 'report.summary', label: 'Build Result Summary', category: 'app', kind: 'transform', risk: 'read', rollbackable: false,
@@ -550,6 +557,16 @@ function createToolRegistry(adapter) {
   });
 
   if (adapter.cp) require('./cp-agent-tools').registerCpTools(register, adapter.cp);
+  if(adapter.getDataset)for(const [source,area,module]of [['cp','cp','cp'],['orders','orders','orders'],['backlog','backlog','backlog'],['lfl','lfl','lfl'],['collection','koleksiyon','koleksiyon']]){
+    const {object,string,array}=require('./agent-capability-contract');
+    require('./agent-capability-contract').register(register,{id:source+'.records',label:{tr:source+' kayıtları',en:source+' records'},module,operation:'READ',areas:[area],risk:'read',inputSchema:object({fields:array(string(160),200),filters:array({...object({field:string(160),operator:{enum:SUPPORTED_OPERATORS},value:{}}),required:['field','operator']},50),limit:{type:'integer',minimum:1,maximum:250}}),read:async(args,ctx)=>{
+      const rows=await adapter.getDataset(ctx.ownerId,ctx.profile,source),matched=applyResolvedFilters(source,rows,args.filters,ctx.now),fields=args.fields?.length?args.fields:canonicalFields.moduleFields(source);
+      // Canonical discovery is complete; record output is explicitly bounded,
+      // while filtering/counting evaluates all authorized source rows.
+      if(fields.some(field=>!canonicalFields.bindingFor(source,field)))throw Object.assign(new Error('OFFICE_FIELD_INVALID'),{code:'OFFICE_FIELD_INVALID',statusCode:422});
+      const limit=args.limit||50;return{source,total:rows.length,matched:matched.length,rows:matched.slice(0,limit).map(row=>canonicalFields.project(row,source,fields)),truncated:matched.length>limit,fields:canonicalFields.moduleFields(source)};
+    }},adapter.authorizeCapability);
+  }
 
   function catalog() {
     return [...tools.values()].map(({ execute, rollback, ...meta }) => clone(meta));
@@ -562,15 +579,16 @@ function createToolRegistry(adapter) {
       require('./agent-tool-schema').validate(tool.inputSchema,args);
       const assertAuthority=()=>{
         const current=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):ctx.profile;
-        if(!current||current.id!==ctx.ownerId||current.enabled===false||!(tool.areas||[tool.area]).every(area=>adapter.userAccess?.hasArea(current,area)))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+        if(!current||current.id!==ctx.ownerId||current.enabled===false||!(tool.areas||[tool.area]).filter(Boolean).every(area=>adapter.userAccess?.hasArea(current,area))||tool.anyAreas&&!tool.anyAreas.some(area=>adapter.userAccess?.hasArea(current,area))||(tool.permissions||[]).some(key=>!adapter.userAccess?.hasPermission(current,key))||(tool.capabilities||[]).some(key=>!adapter.userAccess?.hasCapability(current,key)))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
         return current;
       };
-      const profile=assertAuthority();
+      const profile=assertAuthority(),authorizationFingerprint=JSON.stringify(adapter.userAccess?.publicProfile?.(profile)||profile);
+      const assertUnchanged=()=>{const current=assertAuthority();if(JSON.stringify(adapter.userAccess?.publicProfile?.(current)||current)!==authorizationFingerprint)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return current;};
       if(tool.approval&&!ctx.dryRun&&!ctx.approvalGranted)throw Object.assign(new Error('OFFICE_APPROVAL_REQUIRED'),{code:'OFFICE_APPROVAL_REQUIRED',statusCode:403});
-      ctx={...ctx,profile,assertAuthority,toolId:id};
+      ctx={...ctx,profile,assertAuthority:assertUnchanged,toolId:id};
     }
     const result=await tool.execute(args,ctx);
-    if(tool.contractVersion){require('./agent-tool-schema').validate(ctx.dryRun?tool.dryRunOutputSchema||tool.outputSchema:tool.outputSchema,result);adapter.userAccess.appendAudit(ctx.profile,'AGENT_CP_TOOL',id,{runId:ctx.runId,nodeId:ctx.nodeId,dryRun:!!ctx.dryRun,verified:result.verified});}
+    if(tool.contractVersion){require('./agent-tool-schema').validate(ctx.dryRun?tool.dryRunOutputSchema||tool.outputSchema:tool.outputSchema,result);adapter.userAccess.appendAudit(ctx.profile,tool.audit||'AGENT_CAPABILITY_TOOL',id,{runId:ctx.runId,nodeId:ctx.nodeId,dryRun:!!ctx.dryRun,verified:result.verified});}
     return result;
   }
   async function rollback(id, token, ctx) {
@@ -578,14 +596,14 @@ function createToolRegistry(adapter) {
     ctx=ctx||{};
     if(tool.contractVersion){
       const profile=adapter.userAccess?.profileById?adapter.userAccess.profileById(ctx.ownerId):ctx.profile;
-      if(!profile||profile.id!==ctx.ownerId||profile.enabled===false||!ctx.approvalGranted||!(tool.areas||[tool.area]).every(area=>adapter.userAccess?.hasArea(profile,area)))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+      if(!profile||profile.id!==ctx.ownerId||profile.enabled===false||!ctx.approvalGranted||!(tool.areas||[tool.area]).filter(Boolean).every(area=>adapter.userAccess?.hasArea(profile,area))||(tool.permissions||[]).some(key=>!adapter.userAccess?.hasPermission(profile,key))||(tool.capabilities||[]).some(key=>!adapter.userAccess?.hasCapability(profile,key)))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
       ctx={...ctx,profile};
     }
     const result=await tool.rollback(token,ctx);
     if(tool.contractVersion)adapter.userAccess.appendAudit(ctx.profile,'AGENT_CP_TOOL_ROLLBACK',id,{runId:ctx.runId,verified:result?.verified===true});
     return result;
   }
-  return { catalog, get, execute, rollback };
+  return { catalog, get, execute, rollback, registerCapability(spec){require('./agent-capability-contract').register(register,spec,adapter.authorizeCapability);} };
 }
 
 module.exports = {

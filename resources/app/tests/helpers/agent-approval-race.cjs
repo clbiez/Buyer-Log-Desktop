@@ -1,0 +1,26 @@
+'use strict';
+const fs=require('fs'),path=require('path'),os=require('os'),{spawn}=require('child_process');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-review-race-'));
+for(const key of ['BUYER_LOG_DATA_ROOT','BUYER_LOG_LOCAL_DATA_ROOT','BUYER_LOG_SERVER_DATA_ROOT','BUYER_LOG_AUTH_DATA_ROOT'])process.env[key]=root;
+const libs=path.resolve(__dirname,'../../server/lib');
+const common=`const fs=require('fs'),path=require('path');const libs=${JSON.stringify(libs)};const root=process.env.BUYER_LOG_DATA_ROOT;const profile={id:'buyer',enabled:true,areas:['cp']};const access={profileById:id=>id==='buyer'?profile:null,hasArea:(p,a)=>p.areas.includes(a),hasPermission:()=>true,hasCapability:()=>true,appendAudit:()=>{}};const store=require(path.join(libs,'agent-office-store')).createAgentOfficeStore({root:path.join(root,'office')});let service;const registry=require(path.join(libs,'agent-tool-registry')).createToolRegistry({userAccess:access,authorizeCapability:(ctx,args)=>service.taskAuthorize(ctx,args)});registry.registerCapability({id:'review.export',module:'cp',areas:['cp'],risk:'write',operation:'EXPORT',inputSchema:{type:'object',properties:{},additionalProperties:false},read:async()=>({sourceRevision:1}),apply:async()=>{fs.appendFileSync(path.join(root,'effects.log'),'effect\\n');return{verified:true};}});const runtimeStore=require(path.join(libs,'agent-workflow-store'));`;
+(async()=>{
+  const profile={id:'buyer',enabled:true,areas:['cp']},access={profileById:id=>id==='buyer'?profile:null,hasArea:(p,a)=>p.areas.includes(a),hasPermission:()=>true,hasCapability:()=>true,appendAudit:()=>{}};
+  const store=require(path.join(libs,'agent-office-store')).createAgentOfficeStore({root:path.join(root,'office')});let service;
+  const registry=require(path.join(libs,'agent-tool-registry')).createToolRegistry({userAccess:access,authorizeCapability:(ctx,args)=>service.taskAuthorize(ctx,args)});
+  registry.registerCapability({id:'review.export',module:'cp',areas:['cp'],risk:'write',operation:'EXPORT',inputSchema:{type:'object',properties:{},additionalProperties:false},read:async()=>({sourceRevision:1}),apply:async()=>{fs.appendFileSync(path.join(root,'effects.log'),'effect\n');return{verified:true};}});
+  const base=require(path.join(libs,'agent-workflow-store')),real=require(path.join(libs,'agent-runtime')).createAgentRuntime({store:base,toolRegistry:registry,policyEngine:require(path.join(libs,'agent-policy-engine')).createPolicyEngine({userAccess:access})});
+  let release,pause;const paused=new Promise(resolve=>pause=resolve);
+  const runtime={execute:real.execute,resumeApproval:async args=>{pause(args.runId);return await new Promise(resolve=>release=()=>resolve({run:base.runForOwner('buyer',args.runId)}));}};
+  service=require(path.join(libs,'agent-office-service')).createAgentOfficeService({store,userAccess:access,toolRegistry:registry,runtime,runtimeStore:base,taskOwners:()=>[],getOperationalData:async()=>({})});
+  const agent=await store.createProfile('buyer',{name:'review',areas:['cp']}),job=await service.taskCreate(profile,{agentId:agent.id,steps:[{toolId:'review.export',args:{}}]});
+  const work=service.taskExecute(profile,job.id,{confirmed:true,fingerprint:job.steps[0].preview.fingerprint}),runId=await paused;
+  const child=common+`let waited=false;const wrapped={...runtimeStore,runForOwner:(owner,id)=>{const result=runtimeStore.runForOwner(owner,id);if(!waited&&result?.status==='waiting_approval'){waited=true;fs.writeFileSync(path.join(root,'barrier-'+process.env.REVIEW_WORKER),'1');const start=Date.now(),a=new Int32Array(new SharedArrayBuffer(4));while(!fs.existsSync(path.join(root,'barrier-1'))||!fs.existsSync(path.join(root,'barrier-2'))){if(Date.now()-start>5000)throw Error('barrier timeout');Atomics.wait(a,0,0,5);}}return result;}};const runtime=require(path.join(libs,'agent-runtime')).createAgentRuntime({store:wrapped,toolRegistry:registry,policyEngine:require(path.join(libs,'agent-policy-engine')).createPolicyEngine({userAccess:access})});service=require(path.join(libs,'agent-office-service')).createAgentOfficeService({store,userAccess:access,toolRegistry:registry,runtime,runtimeStore,taskOwners:()=>[],getOperationalData:async()=>({})});runtime.resumeApproval({ownerId:'buyer',profile,runId:process.env.REVIEW_RUN,approved:true}).then(result=>{console.log(result.run.status);service.stop();}).catch(err=>{console.error(err.code||err.message);process.exitCode=1;service.stop();});`;
+  const results=await Promise.all(['1','2'].map(worker=>new Promise(resolve=>{
+    const processChild=spawn(process.execPath,['-e',child],{env:{...process.env,REVIEW_WORKER:worker,REVIEW_RUN:runId}});let output='';
+    processChild.stdout.on('data',data=>output+=data);processChild.stderr.on('data',data=>output+=data);processChild.on('close',code=>resolve({worker,code,output}));
+  })));
+  release();await work;service.stop();
+  const effects=fs.existsSync(path.join(root,'effects.log'))?fs.readFileSync(path.join(root,'effects.log'),'utf8').split(/effect/).length-1:0;
+  console.log(JSON.stringify({workers:results,effects}));fs.rmSync(root,{recursive:true,force:true});
+})().catch(error=>{console.error(error);process.exitCode=1;});

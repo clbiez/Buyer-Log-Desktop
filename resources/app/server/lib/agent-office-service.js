@@ -83,7 +83,7 @@ function createAgentOfficeService(deps) {
           for (const seed of seeds) await store.createProfile(profile.id, seed, allowedAreas(profile));
         }
         if (!seeded) await store.save(profile.id, 'metadata', {id:'initialized'});
-        for (const job of state.jobs.filter(item => item.status === 'running' && !active.has(item.id) && (item.runtimeDeviceId===store.db(profile.id).getDeviceId()&&item.runtimeInstanceId!==runtimeInstanceId || !item.runtimeInstanceId&&Date.now()-Date.parse(item.updatedAt)>360000))) await store.save(profile.id, 'job', {...job, status:'interrupted', errorCode:'OFFICE_PROCESS_INTERRUPTED'});
+        for (const job of state.jobs.filter(item => item.type!=='capability-task'&&item.status === 'running' && !active.has(item.id) && (item.runtimeDeviceId===store.db(profile.id).getDeviceId()&&item.runtimeInstanceId!==runtimeInstanceId || !item.runtimeInstanceId&&Date.now()-Date.parse(item.updatedAt)>360000))) await store.save(profile.id, 'job', {...job, status:'interrupted', errorCode:'OFFICE_PROCESS_INTERRUPTED'});
       })();
       initialized.set(profile.id, work); work.catch(() => initialized.delete(profile.id));
     }
@@ -383,6 +383,7 @@ function createAgentOfficeService(deps) {
     canAutomate,runtimeContext:owner=>({runtimeInstanceId,runtimeDeviceId:store.db(owner).getDeviceId()}), stop:()=>{if(timer)clearInterval(timer);timer=null;}, engineOf, store, sync, packContext };
   Object.assign(service,require('./agent-office-workflow').attachWorkflow(service,deps));
   if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-cp').attachCp(service,deps));
+  if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-tasks').attachTasks(service,deps));
   if(deps.getEvidenceAttachments&&deps.readEvidenceAttachment)Object.assign(service,require('./agent-office-evidence').attachEvidence(service,deps));
   return service;
 }

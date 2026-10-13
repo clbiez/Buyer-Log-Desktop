@@ -31,6 +31,7 @@ const ROW_DATA_KEYS = /^(rows|samplerows|records)$/i;
 const MAX_SAMPLE_ROWS = 20;
 
 const CONTRACTS = Object.freeze({
+  'agent-task': Object.freeze({label:{tr:'Agent Görev Planı',en:'Agent Task Plan'},fields:Object.freeze({planJson:{type:'string',required:true,max:20000},explanation:{type:'string',max:2000}}),example:{planJson:'{"steps":[{"id":"read","toolId":"backlog.analyze","args":{}}]}',explanation:'…'}}),
   'agent-office': Object.freeze({
     label: { tr: 'Agent Ofisi', en: 'Agent Office' },
     fields: Object.freeze({

@@ -194,11 +194,12 @@ function createRun(ownerId, workflow, { input = {}, dryRun = false } = {}) {
   });
 }
 
-function updateRun(ownerId, runId, patch) {
+function updateRun(ownerId, runId, patch, expected = null) {
   return mutate(store => {
     const index = store.runs.findIndex(item => item.id === clean(runId) && item.ownerId === clean(ownerId));
     if (index < 0) throw Object.assign(new Error('Agent çalışması bulunamadı.'), { statusCode: 404, code: 'RUN_NOT_FOUND' });
     const previous = store.runs[index];
+    if(expected&&(previous.status!==expected.status||previous.pendingApproval?.nodeId!==expected.nodeId))throw Object.assign(new Error('Run approval was already reserved.'),{code:'RUN_NOT_WAITING_APPROVAL',statusCode:409});
     const next = normalizeRun({ ...previous, ...(patch || {}), id: previous.id, ownerId: previous.ownerId, workflowId: previous.workflowId, workflowName: previous.workflowName, createdAt: previous.createdAt, updatedAt: iso() });
     store.runs[index] = next;
     return next;

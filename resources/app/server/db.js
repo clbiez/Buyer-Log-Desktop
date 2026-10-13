@@ -761,6 +761,34 @@ function patchOrderOverride(orderCode, patch, expectedRevision = null, expectedS
   cpSharedStore.mirrorPatchDetached(cpKey, cpSharedStore.patchFromOrderPatch(saved, cpKey, patch || {}), { actor: options && options.actor });
   return { overrides: saved, revision: saved._revisions.orders, revisions: { orders: saved._revisions.orders, suppFob: saved._revisions.suppFob }, updated: 1 };
 }
+// Receipts use the same override store and CAS as the ordinary editor. Restoring
+// the absent entry (rather than freezing a source value as a new override) also
+// preserves future source updates and original note authorship.
+function snapshotOrderOverride(orderCode,patch){
+  const ov=loadOverrides(),key=String(overrideWriteKey(orderCode,patch));
+  const maps=['notesmap','submap','licensormap','delmap','datemap'];
+  return {revision:Number(ov._revisions.orders)||0,patch:{key,maps:Object.fromEntries(maps.map(name=>[name,Object.hasOwn(ov[name]||{},key)?cloneJson(ov[name][key]):null]))}};
+}
+function verifyOrderOverridePatch(orderCode,patch,revision){
+  const ov=loadOverrides(),key=overrideWriteKey(orderCode,patch);
+  if(Number(ov._revisions.orders)!==revision)return false;
+  const expected={subManufacturer:'submap',licensor:'licensormap',delType:'delmap'};
+  for(const [field,map]of Object.entries(expected))if(Object.hasOwn(patch,field)&&String(ov[map]?.[key]??'')!==String(field==='licensor'?patch[field].trim():patch[field]))return false;
+  for(const [field,value]of Object.entries(patch.notes||{}))if(!NOTE_AUTHOR_FIELDS.some(spec=>spec.field===field)||String(ov.notesmap?.[key]?.[field]??'')!==value)return false;
+  for(const [field,value]of Object.entries(patch.dates||{}))if(!DATE_OVERRIDE_FIELDS[field]||String(ov.datemap?.[key]?.[DATE_OVERRIDE_FIELDS[field]]??'')!==value)return false;
+  return true;
+}
+function restoreOrderOverrideReceipt(orderCode,receipt,expectedRevision,selector,options){
+  if(receipt?.key!==String(overrideWriteKey(orderCode,selector||{}))||!Number.isSafeInteger(expectedRevision)||Object.keys(receipt.maps||{}).sort().join('|')!==['datemap','delmap','licensormap','notesmap','submap'].join('|'))throw Object.assign(new Error('Invalid order receipt.'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:422});
+  return (()=>{
+    const ov=loadOverrides(),current=Number(ov._revisions.orders)||0;if(current!==expectedRevision)throw new RevisionConflictError('Sipariş düzenlemeleri',expectedRevision,current,'orders');
+    for(const [name,value]of Object.entries(receipt.maps)){ov[name]=ov[name]||{};if(value===null)delete ov[name][receipt.key];else ov[name][receipt.key]=cloneJson(value);}
+    ov._revisions.orders=current+1;const saved=saveOverrides(ov,ov._revision);
+    const sharedPatch={...selector,subManufacturer:saved.submap[receipt.key]??null,dates:Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,key])=>[field,saved.datemap[receipt.key]?.[key]??null]))};
+    cpSharedStore.mirrorPatchDetached(receipt.key,cpSharedStore.patchFromOrderPatch(saved,receipt.key,sharedPatch),{actor:options?.actor});
+    return {verified:JSON.stringify(snapshotOrderOverride(orderCode,selector).patch.maps)===JSON.stringify(receipt.maps),restored:true,revision:saved._revisions.orders};
+  })();
+}
 function patchOrderOverrides(items, expectedRevision = null, expectedSuppFobRevision = null, options = null) {
   const ov = loadOverrides();
   const current = Number(ov._revisions.orders) || 0;
@@ -1720,6 +1748,7 @@ async function restoreCpExFactoryRevisions(snapshot, { actor = null } = {}) {
 }
 
 module.exports = {
+  snapshotOrderOverride,verifyOrderOverridePatch,restoreOrderOverrideReceipt,
   attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
