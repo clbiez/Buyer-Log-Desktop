@@ -241,7 +241,7 @@ function saveStore(next, expectedRevision, options={}) {
     options.assertAuthority?.();if (documents.writesLegacy) {
       if(options.legacyWrites)options.legacyWrites.push(()=>atomicWriteJson(FILE,saved));else atomicWriteJson(FILE,saved);
     }
-    const mirrored=documents.mirror(DOCUMENT_ID,saved,{guardSource:!!options.mirrorResults});options.mirrorResults?.push(mirrored);
+    const mirrored=documents.mirror(DOCUMENT_ID,saved,{guardSource:!!options.mirrorResults,assertAuthority:options.assertAuthority});options.mirrorResults?.push(mirrored);
     return saved;
   };
   return options[require('./guarded-document-mutation').HELD_DOCUMENT_LEASE]?write():withFileLeaseSync(FILE,write);
