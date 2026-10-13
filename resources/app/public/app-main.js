@@ -33795,7 +33795,7 @@ async function prepareEmailTopicTableContent(rows,columns){
   const list=Array.isArray(rows)?rows:[],cols=Array.isArray(columns)?columns:[],assets=new Map(),inlineImages=[];
   const pictureCols=cols.map((column,index)=>({column,index})).filter(item=>prepareEmailColumnIsPicture(item.column));
   if(pictureCols.length){
-    const promises=new Map();
+    const promises=new Map(),failures=[];
     // Re-use the MIME Content-ID of a repeated model instead of embedding
     // identical binary images once per PO.
     await blMapWithConcurrency(list,6,async(row,ri)=>{
@@ -33803,10 +33803,11 @@ async function prepareEmailTopicTableContent(rows,columns){
         const src=prepareEmailImageSource(row,item.column.sourceKind||'collection');if(!src)continue;
         if(!promises.has(src))promises.set(src,prepareEmailInlineAsset(row,item.column,ri));
         const asset=await promises.get(src);
-        if(!asset)throw new Error((appLang==='en'?'Model image could not be embedded in the email: ':'Model görseli e-postaya eklenemedi: ')+String(row?.['Model Name']||row?.modelKod||row?.['PLM ID']||src));
+        if(!asset){failures.push(String(row?.['Model Name']||row?.modelKod||row?.['PLM ID']||src));continue;}
         assets.set(`${ri}:${item.index}`,asset);
       }
     });
+    if(failures.length)throw new Error((appLang==='en'?'Model image could not be embedded in the email: ':'Model görseli e-postaya eklenemedi: ')+failures.slice(0,3).join(', '));
     const seen=new Set();assets.forEach(asset=>{if(!seen.has(asset.cid)){seen.add(asset.cid);inlineImages.push(asset);}});
   }
   const head=cols.map(c=>`<th style="background-color:#F2F4F7;color:#475467;border:thin solid #D0D5DD;padding:5px 8px;text-align:left;font-weight:bold;white-space:nowrap;">${escapeHtml(c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label))}</th>`).join('');
