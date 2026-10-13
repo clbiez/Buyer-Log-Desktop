@@ -152,7 +152,7 @@ const MODULES = Object.freeze([
     id: 'shipping', agentFilter: true, tableKey: 'ship', label: { tr: 'Nakliye Kıyaslama', en: 'Shipping Comparison' },
     area: 'shipping', route: 'shipping',
     datasets: ['cp', 'orders'],
-    capabilities: ['read', 'filter', 'select', 'sort', 'patch-row', 'export', 'compare', 'analyze'],
+    capabilities: ['read', 'filter', 'select', 'sort', 'patch-row', 'export', 'compare', 'analyze', 'view'],
     summary: { tr: 'Domestic ile gemi/uçak landed maliyet kıyası.', en: 'Domestic landed versus sea/sea+air/air landed cost comparison.' },
   },
   {

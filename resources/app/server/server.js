@@ -10828,6 +10828,12 @@ require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegis
 const sourceWorkflowService=require('./lib/source-workflow-service').createSourceWorkflowService({db:require('./db')});
 const personalHorizonService=require('./lib/personal-horizon-service').createPersonalHorizonService({db:require('./db'),preferences:userPreferences});
 const horizonTemplateService=require('./lib/horizon-template-service').createHorizonTemplateService({db:require('./db'),userAccess});
+const tableProfileService=require('./lib/table-profile-service').createTableProfileService({db:require('./db'),userAccess});
+require('./lib/agent-table-profile-tools').registerTableProfileTools(agentToolRegistry,{
+  service:tableProfileService,
+  changed:(profile,kind,page)=>userAccess.appendAudit(profile,'AGENT_TABLE_PROFILE_UPDATE',page,{kind}),
+  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
+});
 require('./lib/agent-freight-rate-tools').registerFreightRateTools(agentToolRegistry,{
   service:freightRateService,
   changed:(profile,receipt)=>{publishSharedMasterChange('freightRates',{currentUser:profile},{revision:receipt.revision,origin:'agent'});userAccess.appendAudit(profile,'AGENT_FREIGHT_RATES_UPDATE','shipping',{revision:receipt.revision});},
@@ -12030,6 +12036,7 @@ app.get('/api/status', (req, res) => {
 require('./routes/global-flow-earth-routes')(app, { express, userAccess });
 // ---- Görünüm ve filtre profilleri + kaynak klasör seçimi route'ları → server/routes/view-profile-routes.js ----
 require('./routes/view-profile-routes')(app, {
+  tableProfileService,
   addFilterProfile,
   addView,
   apiError,

@@ -224,6 +224,210 @@
         "approval": true,
         "rollbackable": false,
         "contractVersion": 2
+      },
+      {
+        "id": "cp.views.read",
+        "operation": "READ",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.view.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.view.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.view.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.view.favorite",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.view.use",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.filters.read",
+        "operation": "READ",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.filter.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.filter.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.filter.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.filter.favorite",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.filter.use",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
       }
     ]
   },
@@ -324,6 +528,210 @@
         "risk": "write",
         "approval": true,
         "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.views.read",
+        "operation": "READ",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.view.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.view.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.view.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.view.favorite",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.view.use",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.filters.read",
+        "operation": "READ",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.filter.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.filter.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.filter.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.filter.favorite",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "orders.filter.use",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "orders"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "orders"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
         "contractVersion": 2
       }
     ]
@@ -612,6 +1020,210 @@
         "permissions": [],
         "capabilities": [],
         "grantScope": "collection-editor",
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.views.read",
+        "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.view.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.view.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.view.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.view.favorite",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.view.use",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.filters.read",
+        "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.filter.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.filter.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.filter.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.filter.favorite",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.filter.use",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
         "risk": "write",
         "approval": true,
         "rollbackable": true,
@@ -1295,7 +1907,8 @@
       "patch-row",
       "export",
       "compare",
-      "analyze"
+      "analyze",
+      "view"
     ],
     "tools": [
       {
@@ -1556,6 +2169,210 @@
         "permissions": [
           "manageBusinessRules"
         ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.views.read",
+        "operation": "READ",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.view.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.view.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.view.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.view.favorite",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.view.use",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.filters.read",
+        "operation": "READ",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.filter.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.filter.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.filter.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.filter.favorite",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "shipping.filter.use",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "shipping"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "shipping"
+        ],
+        "permissions": [],
         "capabilities": [],
         "risk": "write",
         "approval": true,

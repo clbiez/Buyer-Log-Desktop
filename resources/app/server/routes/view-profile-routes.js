@@ -31,27 +31,24 @@ module.exports = function registerViewProfileRoutes(app, deps) {
   } = deps;
 
 
-// ---- Görünüm profilleri (kolon seçimi/sırası/genişliği) ----
-app.get('/api/views', (req, res) => res.json(loadViews(req.currentUser.id)));
-app.post('/api/views', (req, res) => {
-  const { name, data } = req.body || {}; if (!name || !data) return res.status(400).json({ error: 'name ve data alanları zorunlu.' });
-  try { res.json(addView(req.currentUser.id, name, data, requestRevision(req))); } catch (err) { apiError(res, err, 'Görünüm kaydedilemedi.'); }
-});
-app.delete('/api/views/:id', (req, res) => { try { res.json(deleteView(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Görünüm silinemedi.'); } });
-app.put('/api/views/:id', (req, res) => { try { res.json(updateView(req.currentUser.id, req.params.id, (req.body || {}).data, requestRevision(req), (req.body || {}).name)); } catch (err) { apiError(res, err, 'Görünüm güncellenemedi.'); } });
-app.post('/api/views/:id/favorite', (req, res) => { try { res.json(setFavoriteView(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Favori görünüm değiştirilemedi.'); } });
-app.post('/api/views/:id/use', (req, res) => { try { res.json(markUsedView(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Son kullanılan görünüm kaydedilemedi.'); } });
-
-// ---- Filtre profilleri ----
-app.get('/api/filter-profiles', (req, res) => res.json(loadFilterProfiles(req.currentUser.id)));
-app.post('/api/filter-profiles', (req, res) => {
-  const { name, data } = req.body || {}; if (!name || !data) return res.status(400).json({ error: 'name ve data alanları zorunlu.' });
-  try { res.json(addFilterProfile(req.currentUser.id, name, data, requestRevision(req))); } catch (err) { apiError(res, err, 'Filtre profili kaydedilemedi.'); }
-});
-app.delete('/api/filter-profiles/:id', (req, res) => { try { res.json(deleteFilterProfile(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Filtre profili silinemedi.'); } });
-app.put('/api/filter-profiles/:id', (req, res) => { try { res.json(updateFilterProfile(req.currentUser.id, req.params.id, (req.body || {}).data, requestRevision(req), (req.body || {}).name)); } catch (err) { apiError(res, err, 'Filtre profili güncellenemedi.'); } });
-app.post('/api/filter-profiles/:id/favorite', (req, res) => { try { res.json(setFavoriteFilterProfile(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Favori filtre değiştirilemedi.'); } });
-app.post('/api/filter-profiles/:id/use', (req, res) => { try { res.json(markUsedFilterProfile(req.currentUser.id, req.params.id, requestRevision(req))); } catch (err) { apiError(res, err, 'Son kullanılan filtre kaydedilemedi.'); } });
+// Native UI and Office share the owner profile file lease and journal writer.
+const profileService = deps.tableProfileService;
+for (const [kind,route] of [['view','views'],['filter','filter-profiles']]) {
+  app.get('/api/'+route, async (req,res)=>{
+    try { res.json(await profileService.capture(kind,{ownerId:req.currentUser.id,profile:req.currentUser})); }
+    catch(err){ apiError(res,err,'Profil okunamadı.'); }
+  });
+  for (const operation of ['create','update','delete','favorite','use']) {
+    const method=operation==='update'?'put':operation==='delete'?'delete':'post';
+    const suffix=operation==='create'?'':operation==='favorite'||operation==='use'?'/'+operation:'';
+    app[method]('/api/'+route+(operation==='create'?'':'/:id')+suffix,async(req,res)=>{
+      const body=req.body||{};
+      if(operation==='create'&&(!body.name||!body.data))return res.status(400).json({error:'name ve data alanları zorunlu.'});
+      try { res.json(await profileService.execute(kind,operation,{id:req.params?.id,name:body.name,data:body.data},null,{ownerId:req.currentUser.id,profile:req.currentUser},{native:true,revision:requestRevision(req)})); }
+      catch(err){ apiError(res,err,'Profil kaydedilemedi.'); }
+    });
+  }
+}
 
 // "📁 Kaynak Klasörü Seç" her kullanıcı için ayrı bir klasör kaydeder.
 // Seçim yalnız aktif kullanıcının önbelleğini ve KUR kaynağını etkiler.

@@ -3694,6 +3694,39 @@
           "en": "Saved inputs, per-row landed result and user approval"
         }
       }
+    },
+    {
+      "id": "agent-table-profile-workflows",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Kişisel görünüm ve filtre profillerini agent yönetir",
+        "en": "Agents manage personal view and filter profiles"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / CP, Orders, Koleksiyon, Nakliye",
+        "en": "Agent Office › Tasks / CP, Orders, Collection, Shipping"
+      },
+      "body": {
+        "tr": "Agent kayıtlı kişisel görünümleri ve filtre profillerini okuyabilir, kopyalayabilir, oluşturabilir, revize edebilir, silebilir ve favori/son kullanılan seçimini kaydedebilir. Mevcut arayüzle ortak hizmet, onay, güncel yetki, revizyon ve geri alma korumasını uygular. Açık tabloya uygulama ayrı arayüz işlemidir.",
+        "en": "Agents can read, copy, create, revise and delete personal saved views and filter profiles and save favorite/last-used choices. The shared native UI service enforces approval, current authority, revisions and undo. Applying a profile to an open table remains a separate UI operation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-table-profile-workflows.png",
+        "alt": {
+          "tr": "Agent kişisel görünüm ve filtre profili önizlemesi",
+          "en": "Agent personal view and filter profile preview"
+        },
+        "caption": {
+          "tr": "Sayfa ve kullanıcı kapsamlı profil önizlemesi ve onay",
+          "en": "Page and owner scoped profile preview and approval"
+        }
+      }
     }
   ]
 }
