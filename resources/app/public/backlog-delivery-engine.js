@@ -541,6 +541,7 @@
         },
       },
       topRiskOrders,
+      riskOrderCount:riskOrders.length,
     };
   }
 

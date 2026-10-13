@@ -47,18 +47,22 @@ function sourceId(value) {
 function fieldNames(rows) {
   return [...new Set((Array.isArray(rows) ? rows.slice(0, 240) : []).flatMap(row => Object.keys(row || {})))].slice(0, 320);
 }
-function resolveDatasetField(source, rows, fieldRef) {
+function resolveDatasetField(source, rows, fieldRef, availableNames) {
   const ref = clean(fieldRef);
   if (!ref) throw Object.assign(new Error('Alan adı zorunludur.'), { code: 'DATASET_FIELD_REQUIRED' });
-  const names = fieldNames(rows), canonicalId = canonicalFields.field(ref) ? ref : canonicalFields.canonicalId(source, ref);
+  const lookup=availableNames instanceof Map?availableNames:null;
+  const names = lookup?null:availableNames || fieldNames(rows), canonicalId = canonicalFields.field(ref) ? ref : canonicalFields.canonicalId(source, ref);
   const binding = canonicalId && canonicalFields.bindingFor(source, canonicalId);
   if (binding) {
-    const sourceKey = (binding.keys || []).find(key => names.some(name => canonicalFields.token(name) === canonicalFields.token(key))) || (binding.keys || [])[0] || ref;
+    const sourceKey = (binding.keys || []).find(key => lookup?lookup.has(canonicalFields.token(key)):names.some(name => canonicalFields.token(name) === canonicalFields.token(key))) || (binding.keys || [])[0] || ref;
     const definition = canonicalFields.field(canonicalId) || {};
     return { ref, canonicalId, sourceKey, label: canonicalFields.label(canonicalId, 'tr'), type: definition.type || 'text', role: definition.role || 'attribute' };
   }
   const wanted = canonicalFields.token(ref);
-  const sourceKey = names.find(name => canonicalFields.token(name) === wanted);
+  let sourceKey = lookup?lookup.get(wanted):names.find(name => canonicalFields.token(name) === wanted);
+  // A bounded discovery sample does not make later native source columns
+  // unusable. Canonical bindings remain the first choice above.
+  if(!sourceKey&&!availableNames)for(const row of rows||[]){sourceKey=Object.keys(row||{}).find(name=>canonicalFields.token(name)===wanted);if(sourceKey)break;}
   if (!sourceKey) {
     /* Geçerli alanlar mesajın İÇİNDE verilir: modelin ayrıca describe çağırıp
        bir tur daha harcaması gerekmesin. Liste kırpılır — 300 sütunlu bir
@@ -300,19 +304,32 @@ function createToolRegistry(adapter) {
     inputSchema: { source: 'cp|orders|backlog|lfl|collection' },
   }, async (args, ctx) => {
     const source = sourceId(args && args.source);
+    if(args.fullSchema===true&&ctx.assertAuthority)ctx.profile=ctx.assertAuthority();
     const rows = await adapter.getDataset(ctx.ownerId, ctx.profile, source);
+    if(args.fullSchema===true&&ctx.assertAuthority)ctx.profile=ctx.assertAuthority();
     const samples = Array.isArray(rows) ? rows.slice(0, 120) : [];
-    const names = fieldNames(samples);
+    const sourceFingerprint=args.fullSchema===true?require('./agent-office-store').hash(JSON.stringify(rows)):null;
+    if(args.fullSchema===true&&args.sourceFingerprint&&args.sourceFingerprint!==sourceFingerprint)throw require('./agent-office-store').error('OFFICE_PREVIEW_CHANGED',409);
+    const discovered=new Set();if(args.fullSchema===true)for(const row of Array.isArray(rows)?rows:[])for(const name of Object.keys(row||{}))discovered.add(name);
+    const names = args.fullSchema===true?[...discovered]:fieldNames(samples);
+    const fullNameLookup=args.fullSchema===true?new Map(names.map(name=>[canonicalFields.token(name),name])):undefined;
     const fields = names.map(sourceKey => {
       let resolved;
-      try { resolved = resolveDatasetField(source, samples, sourceKey); } catch (_) { resolved = { canonicalId: null, sourceKey, label: sourceKey, type: 'unknown', role: 'attribute' }; }
+      try { resolved = resolveDatasetField(source, samples, sourceKey,fullNameLookup); } catch (_) { resolved = { canonicalId: null,sourceKey,label:sourceKey,type:'unknown',role:'attribute' }; }
       const values = samples.map(row => resolvedValue(row, source, resolved)).filter(value => value != null && value !== '').slice(0, 20);
       const kinds = new Set(values.map(value => value instanceof Date ? 'date' : Array.isArray(value) ? 'array' : typeof value));
-      return { canonicalId: resolved.canonicalId, sourceKey: resolved.sourceKey, label: resolved.label, role: resolved.role, type: resolved.type, observedTypes: [...kinds].slice(0, 4), populatedInSample: values.length };
+      return { canonicalId: resolved.canonicalId, sourceKey:args.fullSchema===true?sourceKey:resolved.sourceKey, label: resolved.label, role: resolved.role, type: resolved.type, observedTypes: [...kinds].slice(0, 4), populatedInSample: values.length };
     });
     const context = typeof adapter.getDataContext === 'function' ? await adapter.getDataContext(ctx.ownerId, ctx.profile, source) : { source };
     const rowCount = Array.isArray(rows) ? rows.length : 0;
     const described = { source, rows: rowCount, fields, context, scope: datasetScope(source, rows, ctx.horizon) };
+    if(args.fullSchema===true){
+      if(ctx.assertAuthority)ctx.profile=ctx.assertAuthority();
+      const latest=await adapter.getDataset(ctx.ownerId,ctx.profile,source);
+      ctx.assertAuthority?.();
+      if(require('./agent-office-store').hash(JSON.stringify(latest))!==sourceFingerprint)throw require('./agent-office-store').error('OFFICE_PREVIEW_CHANGED',409);
+      described.sourceFingerprint=sourceFingerprint;described.sampledRows=samples.length;
+    }
     if (!rowCount) {
       /* Alanlar örnek satırlardan çıkarıldığı için boş datasette alan listesi
          de boş olur. Bunu söylemeden döndürmek modeli ad tahminine iter. */
