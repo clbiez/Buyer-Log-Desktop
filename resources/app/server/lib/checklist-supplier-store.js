@@ -244,6 +244,7 @@ function applyEntries(entries, actor, options = {}) {
   const who = actorInfo(actor);
   const source = text(options.source || 'buyer_log', 80) || 'buyer_log';
   return withFileLeaseSync(FILE, () => {
+    options.assertAuthority?.();
     const store = read();
     if (options.expectedRevision != null && store.revision !== options.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     let updated = 0, cleared = 0, skipped = 0, conflicts = 0;
@@ -300,13 +301,14 @@ function applyEntries(entries, actor, options = {}) {
       store.events.push({ type: 'answer-upserted', ...common, state, previousState: previous && previous.state || '' });
       updated += 1; changedKeys.push(key);
     }
-    write(store);
+    options.assertAuthority?.();write(store);
     return { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys, rejectedAt };
   });
 }
 
-function restoreEntries(receipt, actor) {
+function restoreEntries(receipt, actor, options = {}) {
   return withFileLeaseSync(FILE, () => {
+    options.assertAuthority?.();
     const store = read();
     if (store.revision !== receipt.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     for(const [key, previous] of Object.entries(receipt.entries)) {
@@ -314,7 +316,7 @@ function restoreEntries(receipt, actor) {
       if(previous.tombstone == null) delete store.tombstones[key]; else store.tombstones[key] = previous.tombstone;
     }
     store.events.push({type:'agent-answer-undo',at:new Date().toISOString(),by:actorInfo(actor),keys:Object.keys(receipt.entries)});
-    write(store);return {verified:true,revision:store.revision};
+    options.assertAuthority?.();write(store);return {verified:true,revision:store.revision};
   });
 }
 module.exports = {

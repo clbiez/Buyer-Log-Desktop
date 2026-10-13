@@ -19,13 +19,13 @@ function register(registerTool,spec,authorize) {
     idempotency:'durable step reservation and verified receipt; no blind effect retry',retry:effect?'reconcile':'bounded-read-only',
     rollback:spec.restore?'revision-bound inverse through existing service':'unsupported',approvalBinding:'owner + device + current IAM + agent revision + normalized args + source snapshot'};
   if(spec.poll)meta.completion='verified native acknowledgement waits for actual result; existing Office queue polls only';
-  for(const key of ['read','apply','restore','poll'])delete meta[key];
+  for(const key of ['read','apply','restore','poll','publicPreview'])delete meta[key];
   registerTool(meta,async(raw,ctx)=>{
     const {fingerprint,...args}=raw;validate(spec.inputSchema,args);
     const snapshot=await spec.read(args,ctx);ctx.assertAuthority();
     const currentHash=hash(JSON.stringify({toolId:spec.id,version:2,args,snapshot}));
     if(!effect){if(!ctx.dryRun&&ctx.input?.officeJobId){if(typeof authorize!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);await authorize(ctx,raw);ctx.assertAuthority();}return {verified:true,data:snapshot};}
-    if(ctx.dryRun)return {verified:true,preview:snapshot,fingerprint:currentHash};
+    if(ctx.dryRun)return {verified:true,preview:spec.publicPreview?spec.publicPreview(snapshot):snapshot,fingerprint:currentHash};
     if(currentHash!==fingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);
     if(typeof authorize!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);
     await authorize(ctx,raw);ctx.assertAuthority();
