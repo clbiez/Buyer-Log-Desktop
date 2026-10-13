@@ -63,7 +63,8 @@ test('arayüz ülke satırını kaldırır, TR/YD komisyon ve çift Final FOB g�
 test('sunucu yeni komisyon alanlarını saklar ve countryGroup zorunluluğunu kaldırır', () => {
   const start = SERVER.indexOf("app.put('/api/pricing-rules'");
   const end = SERVER.indexOf('const normalizeTransitDelType', start);
-  const block = SERVER.slice(start, end);
+  assert.match(SERVER.slice(start,end), /resource-rule-service[^\n]*normalizePricingRules\(incoming\)/);
+  const block = fs.readFileSync(path.join(ROOT,'server/lib/resource-rule-service.js'),'utf8');
   assert.match(block, /migrateLicenseRoyaltyRules\(incoming\)/);
   assert.match(block, /trCommission: nullablePercent\(r\.trCommission\)/);
   assert.match(block, /ydCommission: nullablePercent\(r\.ydCommission\)/);

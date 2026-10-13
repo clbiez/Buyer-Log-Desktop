@@ -25,13 +25,17 @@ const ACTIVE_FILE = path.join(SETS_DIR, 'active.json');
 const setCache = new Map();
 let cached = null;
 let cachedFile = '';
+let cachedTag = '';
 let _xlsx = null;
 let documents = createDocumentApi(null, COLLECTION);
 function attachDeltaStore(store) { documents = createDocumentApi(store, COLLECTION); }
 // Delta motoru alan bazlı merge eder. Snapshot'ın kısmi alanlarının farklı
 // cihazlardan karışmaması için bütün içerik tek belge alanında taşınır.
 function toSharedDocument(snapshot){ return {snapshot}; }
-function fromSharedDocument(document){ return document&&document.snapshot&&typeof document.snapshot==='object'?document.snapshot:document; }
+function fromSharedDocument(document){
+  if(document && Object.hasOwn(document,'snapshot')) return document.snapshot && typeof document.snapshot==='object' ? document.snapshot : null;
+  return document;
+}
 function getXLSX() { if (!_xlsx) { _xlsx = require('xlsx'); try { require('../../public/excel-date-utils').installSheetJsHooks(_xlsx); } catch (_) {} } return _xlsx; }
 
 function text(value){ return String(value == null ? '' : value).trim().replace(/\s+/g,' '); }
@@ -76,9 +80,10 @@ function loadSnapshot({force=false}={}){
     cached=buildRuntime(shared); cachedFile=source; return cached;
   }
   const file=fs.existsSync(PERSISTED_FILE)?PERSISTED_FILE:DEFAULT_FILE;
-  if(!force&&cached&&cachedFile===file)return cached;
   if(!fs.existsSync(file))throw new Error('Endeksmatik veri snapshotı bulunamadı.');
-  cached=buildRuntime(readSnapshotFile(file)); cachedFile=file; return cached;
+  const stat=fs.statSync(file),tag=stat.mtimeMs+':'+stat.size+':'+stat.ino;
+  if(!force&&cached&&cachedFile===file&&cachedTag===tag)return cached;
+  cached=buildRuntime(readSnapshotFile(file)); cachedFile=file;cachedTag=tag; return cached;
 }
 /* Hedef düzeltme yüzdesinin varsayılanı YALNIZ yüklenen dosyadan gelir.
    Eski anlık görüntülerde bu alan yok; onlarda 0 kabul edilir çünkü mevcut
@@ -306,9 +311,9 @@ async function saveSnapshot(snapshot){
   // Validation/build first: an invalid upload can never replace the last working snapshot.
   buildRuntime(snapshot);
   const payload=zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9});
-  if(documents.writesLegacy)atomicWriteBuffer(PERSISTED_FILE,payload);
-  const mirrored=await documents.mirror(DOCUMENT_ID, toSharedDocument(snapshot));
+  const mirrored=await documents.mirror(DOCUMENT_ID,toSharedDocument(snapshot),{guardSource:true,guardCollection:true});
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik verisi ortak senkron günlüğüne yazılamadı.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
+  if(documents.writesLegacy)atomicWriteBuffer(PERSISTED_FILE,payload);
   cached=buildRuntime(snapshot);cachedFile=`delta:${snapshot.generatedAt||snapshot.sourceUpdatedAt||''}`; return publicStatusForSnapshot(snapshot,false);
 }
 async function seedMissing(deltaStore){
@@ -407,9 +412,9 @@ function lookup(input){
 }
 async function writeActiveSelection(id,actor=''){
   const value={activeSetId:id,updatedAt:new Date().toISOString(),updatedBy:String(actor||'')};
-  if(documents.writesLegacy){fs.mkdirSync(SETS_DIR,{recursive:true});atomicWriteBuffer(ACTIVE_FILE,Buffer.from(JSON.stringify(value),'utf8'));}
-  const mirrored=await documents.mirror(ACTIVE_DOCUMENT_ID,value);
+  const mirrored=await documents.mirror(ACTIVE_DOCUMENT_ID,value,{guardSource:true,guardCollection:true});
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik set seçimi ortak senkron günlüğüne yazılamadı.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
+  if(documents.writesLegacy){fs.mkdirSync(SETS_DIR,{recursive:true});atomicWriteBuffer(ACTIVE_FILE,Buffer.from(JSON.stringify(value),'utf8'));}
 }
 async function setActiveSet(id,actor=''){
   const target=id===LEGACY_SET_ID?LEGACY_SET_ID:safeSetId(id);
@@ -422,9 +427,9 @@ async function saveSet(snapshot,{activate=true,actor=''}={}){
   model.buildIndex(snapshot); // doğrulanmadan yazılmaz
   const id=safeSetId(snapshot.id);if(!id)throw Object.assign(new Error('Endeksmatik set kimliği geçersiz.'),{code:'SET_INVALID',statusCode:500});
   if(actor)snapshot.uploadedBy=String(actor);
-  if(documents.writesLegacy){fs.mkdirSync(SETS_DIR,{recursive:true});atomicWriteBuffer(setFile(id),zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9}));}
-  const mirrored=await documents.mirror(setDocumentId(id),{set:snapshot,label:snapshot.label||'',deleted:false,deletedAt:null});
+  const mirrored=await documents.mirror(setDocumentId(id),{set:snapshot,label:snapshot.label||'',deleted:false,deletedAt:null},{guardSource:true,guardCollection:true});
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik seti ortak senkron günlüğüne yazılamadı.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
+  if(documents.writesLegacy){fs.mkdirSync(SETS_DIR,{recursive:true});atomicWriteBuffer(setFile(id),zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9}));}
   setCache.delete(id);
   if(activate)await writeActiveSelection(id,actor);
   return model.publicMeta(snapshot);
@@ -432,19 +437,19 @@ async function saveSet(snapshot,{activate=true,actor=''}={}){
 async function renameSet(id,label){
   const safe=safeSetId(id),entry=safe&&loadSet(safe);
   if(!entry)throw Object.assign(new Error('Endeksmatik seti bulunamadı.'),{code:'SET_NOT_FOUND',statusCode:404});
-  const clean=String(label||'').replace(/[\x00-\x1F]/g,'').trim().slice(0,80);
+  const clean=normalizeLabel(label);
   const snapshot={...entry.snapshot,label:clean};
-  if(documents.writesLegacy)atomicWriteBuffer(setFile(safe),zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9}));
   // Yalnız etiket alanı değişir; büyük set içeriği yeniden yayınlanmaz.
-  const mirrored=await documents.mirror(setDocumentId(safe),{label:clean});
+  const mirrored=await documents.mirror(setDocumentId(safe),{label:clean},{guardSource:true,guardCollection:true});
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik set adı ortak senkron günlüğüne yazılamadı.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
+  if(documents.writesLegacy)atomicWriteBuffer(setFile(safe),zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9}));
   setCache.delete(safe);
   return model.publicMeta(snapshot);
 }
 async function deleteSet(id){
   const safe=safeSetId(id);
   if(!safe||!loadSet(safe))throw Object.assign(new Error('Endeksmatik seti bulunamadı.'),{code:'SET_NOT_FOUND',statusCode:404});
-  const mirrored=await documents.mirror(setDocumentId(safe),{set:null,deleted:true,deletedAt:new Date().toISOString()});
+  const mirrored=await documents.mirror(setDocumentId(safe),{set:null,deleted:true,deletedAt:new Date().toISOString()},{guardSource:true,guardCollection:true});
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik seti ortak senkron günlüğünden silinemedi.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
   if(documents.writesLegacy){try{fs.unlinkSync(setFile(safe));}catch(_){}}
   setCache.delete(safe);
@@ -454,20 +459,29 @@ async function deleteSet(id){
    yapısında değilse eski TL şablonu ayrıştırıcısına düşülür. USD modeli sayfa
    yapısına sahip ama imza/uzlaştırma tutmuyorsa kitap REDDEDİLİR; eski
    ayrıştırıcıyla "bir şekilde" okunmaz. */
-async function importWorkbookBuffer(buffer,sourceFile,{label='',actor=''}={}){
+function parseImportWorkbook(buffer,sourceFile){
   let names=[];
   try{names=getXLSX().read(buffer,{type:'buffer',bookSheets:true}).SheetNames||[];}catch(err){throw Object.assign(new Error('Excel dosyası okunamadı.'),{code:'WORKBOOK_INVALID',statusCode:422});}
-  if(!model.looksLikeModel(names))return {...await importLegacyWorkbookBuffer(buffer,sourceFile),model:'legacy-tl',setId:LEGACY_SET_ID};
+  if(!model.looksLikeModel(names))return {snapshot:parseWorkbookBuffer(buffer,sourceFile),model:'legacy-tl',setId:LEGACY_SET_ID};
   let snapshot;
   try{snapshot=model.parseWorkbookBuffer(buffer,sourceFile);}
   catch(err){
     // Eski TL şablonu da aynı sayfa adlarını taşır; kitap eski şablonsa onu kabul et.
-    if(err&&err.code==='MODEL_SIGNATURE_MISMATCH'){try{return {...await importLegacyWorkbookBuffer(buffer,sourceFile),model:'legacy-tl',setId:LEGACY_SET_ID};}catch(_){}}
+    if(err&&err.code==='MODEL_SIGNATURE_MISMATCH'){try{return {snapshot:parseWorkbookBuffer(buffer,sourceFile),model:'legacy-tl',setId:LEGACY_SET_ID};}catch(_){}}
     throw err;
   }
-  if(label)snapshot.label=String(label).trim().slice(0,80);
-  const meta=await saveSet(snapshot,{activate:true,actor});
-  return {...publicStatus(),uploaded:meta};
+  return {snapshot,model:snapshot.model,setId:snapshot.id};
+}
+async function importWorkbookBuffer(buffer,sourceFile,{label='',actor=''}={}){
+  const parsed=parseImportWorkbook(buffer,sourceFile);
+  if(parsed.model==='legacy-tl')return {...await saveSnapshot(parsed.snapshot),model:'legacy-tl',setId:LEGACY_SET_ID};
+  const snapshot=parsed.snapshot;if(label)snapshot.label=normalizeLabel(label);
+  const meta=await saveSet(snapshot,{activate:true,actor});return {...publicStatus(),uploaded:meta};
 }
 
-module.exports={SCHEMA_VERSION,DEFAULT_FILE,PERSISTED_FILE,COLLECTION,DOCUMENT_ID,COMPONENTS,LEGACY_SET_ID,ACTIVE_DOCUMENT_ID,SETS_DIR,attachDeltaStore,seedMissing,text,norm,keyOf,numberValue,monthCode,loadSnapshot,publicStatus,legacyStatus,resolveRecord,calculate,calculateLegacy,lookup,listSets,activeSetId,setActiveSet,saveSet,renameSet,deleteSet,parseWorkbookBuffer,saveSnapshot,importWorkbookBuffer,importLegacyWorkbookBuffer};
+function sourceFingerprint(){try{loadSnapshot();}catch(_){}return require('./agent-office-store').hash(JSON.stringify({active:readActiveSelection(),sets:listSets()}));}
+function normalizeLabel(label){return String(label||'').replace(/[\x00-\x1F]/g,'').trim().slice(0,80);}
+async function mutate(options,work){return require('./shared-file-transaction').withFileLeaseAsync(ACTIVE_FILE,async()=>{await documents.refresh();cached=null;setCache.clear();options.assertAuthority?.();if(options.expectedFingerprint&&sourceFingerprint()!==options.expectedFingerprint)throw Object.assign(new Error('Endeksmatik changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});await options.beforeMutation?.();await documents.refresh();cached=null;setCache.clear();options.assertAuthority?.();if(options.expectedFingerprint&&sourceFingerprint()!==options.expectedFingerprint)throw Object.assign(new Error('Endeksmatik changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return work();});}
+async function restoreSet(snapshot,active,options={}){return mutate(options,async()=>{await saveSet(snapshot,{activate:false});if(active)await writeActiveSelection(active,options.actor||'');return publicStatus();});}
+async function restoreLegacyReceipt(snapshot,active,wasDefault,options={}) {return mutate(options,async()=>{if(wasDefault){const result=await documents.mirror(DOCUMENT_ID,{snapshot:null},{guardSource:true,guardCollection:true});if(documents.attached&&!result.ok)throw Object.assign(new Error('Legacy journal failed.'),{code:'SHARED_SYNC_WRITE_FAILED'});if(documents.writesLegacy)fs.rmSync(PERSISTED_FILE,{force:true});cached=null;cachedFile='';}else await saveSnapshot(snapshot);if(active)await writeActiveSelection(active,options.actor||'');return publicStatus();});}
+module.exports={normalizeLabel,restoreLegacyReceipt,removeImportedSet:(id,active,options={})=>mutate(options,async()=>{await deleteSet(id);if(active)await writeActiveSelection(active,options.actor||'');return publicStatus();}),sourceFingerprint,parseImportWorkbook,restoreSet,readSetSnapshot:id=>{const entry=loadSet(id);return entry?entry.snapshot:null;},SCHEMA_VERSION,DEFAULT_FILE,PERSISTED_FILE,COLLECTION,DOCUMENT_ID,COMPONENTS,LEGACY_SET_ID,ACTIVE_DOCUMENT_ID,SETS_DIR,attachDeltaStore,seedMissing,text,norm,keyOf,numberValue,monthCode,loadSnapshot,publicStatus,legacyStatus,resolveRecord,calculate,calculateLegacy,lookup,listSets,activeSetId,setActiveSet:(id,actor,options={})=>mutate(options,()=>setActiveSet(id,actor)),saveSet:(snapshot,options={})=>mutate(options,()=>saveSet(snapshot,options)),renameSet:(id,label,options={})=>mutate(options,()=>renameSet(id,label)),deleteSet:(id,options={})=>mutate(options,()=>deleteSet(id)),parseWorkbookBuffer,saveSnapshot:(snapshot,options={})=>mutate(options,()=>saveSnapshot(snapshot)),importWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importWorkbookBuffer(buffer,name,options)),importLegacyWorkbookBuffer:(buffer,name,options={})=>mutate(options,()=>importLegacyWorkbookBuffer(buffer,name))};

@@ -5,6 +5,9 @@
 function validate(schema,value,path='$') {
   const bad=()=>{throw Object.assign(new Error(`Invalid tool contract: ${path}`),{code:'OFFICE_TOOL_SCHEMA',statusCode:422});};
   if(schema.enum&&!schema.enum.includes(value))bad();
+  if(Array.isArray(schema.type)){for(const type of schema.type){try{return validate({...schema,type},value,path);}catch(err){if(err.code!=='OFFICE_TOOL_SCHEMA')throw err;}}bad();}
+  if(schema.type==='null'){if(value!==null)bad();return value;}
+  if(schema.type&&!['object','array','string','boolean','number','integer'].includes(schema.type))bad();
   if(schema.type==='object') {
     if(!value||typeof value!=='object'||Array.isArray(value))bad();
     for(const key of schema.required||[])if(!Object.prototype.hasOwnProperty.call(value,key))bad();

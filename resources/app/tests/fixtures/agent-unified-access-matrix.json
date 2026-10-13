@@ -710,7 +710,82 @@
       "read",
       "analyze"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "manufacturer.cards.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "manufacturer.cards.create",
+        "operation": "CREATE",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "manufacturer.cards.update",
+        "operation": "UPDATE",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "manufacturer.cards.delete",
+        "operation": "DELETE",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "licensecards",
@@ -996,7 +1071,235 @@
       "import",
       "analyze"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "resource.transit.read",
+        "operation": "READ",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.transit.replace",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.royalty.read",
+        "operation": "READ",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.royalty.replace",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.fx.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "source",
+          "opencosting",
+          "collection"
+        ],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.fx.update",
+        "operation": "UPDATE",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "source",
+          "opencosting",
+          "collection"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.endeksmatik.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.endeksmatik.lookup",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.endeksmatik.calculate",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.endeksmatik.activate",
+        "operation": "UPDATE",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "source",
+          "collection",
+          "orders",
+          "cp"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.endeksmatik.rename",
+        "operation": "UPDATE",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "source",
+          "collection",
+          "orders",
+          "cp"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.endeksmatik.delete",
+        "operation": "DELETE",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "source",
+          "collection",
+          "orders",
+          "cp"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.endeksmatik.import",
+        "operation": "IMPORT",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "source",
+          "collection",
+          "orders",
+          "cp"
+        ],
+        "areas": [],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "agents",
