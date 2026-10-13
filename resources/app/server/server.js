@@ -268,15 +268,17 @@ const refreshGroupRules = require('./lib/data-domain/refresh-groups');
 // v20260930 — Yenileme filtre bağını izler: bağlı gruptaki bir sayfa grubu
 // (tek sorgu) birlikte yeniler, gruptan ayrı sayfa (ör. CP) yalnız kendini.
 // Kısmi yenileme hedefleri refreshTargetsFor ile genişletilir.
-const { withRefreshTargets, linkedTargetsOf } = require('./lib/model-scopes');
+const { withRefreshTargets, linkedTargetsOf, LINKED_TARGETS } = require('./lib/model-scopes');
 /** Bağlı grubun GERÇEK üyeleri ASAS bağlantı kaydından okunur (düzenlenebilir). */
+function configuredRefreshMembers() {
+  // Kaydedilmiş ASAS bağlantısı tek doğruluk kaynağıdır. Son refresh snapshot'ı
+  // farklı kullanıcılarda eski / eksik olabileceği için menü üyeliği üretmez.
+  const asasItem = (loadModelConnections().items || [])
+    .find(item => item && String(item.role || '') === 'asas' && item.refreshEnabled !== false);
+  return asasItem ? linkedTargetsOf(asasItem) : LINKED_TARGETS.slice();
+}
 function refreshTargetsFor(targets) {
-  let members;
-  try {
-    const asasItem = (loadModelConnections().items || []).find(item => item && String(item.role || '') === 'asas' && item.refreshEnabled !== false);
-    if (asasItem) members = linkedTargetsOf(asasItem);
-  } catch (_) { /* kayıt okunamazsa varsayılan grup */ }
-  return withRefreshTargets(targets, members);
+  return withRefreshTargets(targets, configuredRefreshMembers());
 }
 const cpCoverage = require('./lib/cp-coverage');
 /* v20260930 — Kaynak değişiklik sinyali: ASAS modelinin son işlenme zamanı
@@ -9608,6 +9610,17 @@ app.post('/api/sync-settings/sync-now', userAccess.requireArea('source'), async 
   }
   catch (err) { apiError(res, err, 'Senkron başlatılamadı.'); }
 });
+// Üst Yenile menüsü, /api/refresh ile AYNI güncel grup üyelerini okur.
+// Stale snapshot / sharedFilter bilgisine bakılmaz. Kaynak yetkisi korunur.
+app.get('/api/refresh-targets', userAccess.requireArea('source'), (_req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.json({ linkedTargets: configuredRefreshMembers() });
+  } catch (error) {
+    apiError(res, error, 'Yenileme kapsamı okunamadı.');
+  }
+});
+
 app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
   const id = sourceUserId(req);
   if (refreshInFlight.has(id)) {
