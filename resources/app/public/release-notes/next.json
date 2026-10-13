@@ -5556,6 +5556,35 @@
           "en": "Artwork Detail · existing shared PLM BOM source"
         }
       }
+    },
+    {
+      "id": "license-native-journal-guard",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans Kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Lisans kartı işlemleri kendi değişiklikleriyle çakışmaz",
+        "en": "License card operations do not conflict with their own changes"
+      },
+      "body": {
+        "tr": "Keşif, profil revizyonu ve geri alma ortak işlem kilidi ve canlı yetki kontrolüyle tamamlanır. Başka kullanıcının eşzamanlı değişikliği gerçek kaynak revizyonuyla korunur.",
+        "en": "Discovery, profile revision and undo complete through the shared transaction lease and live authority checks. Concurrent changes by another user remain protected by the actual source revision."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-native-journal-guard.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartı profil değişikliği sonucu",
+          "en": "Actual Buyer Log license card profile change result"
+        },
+        "caption": {
+          "tr": "Anonim lisans kartı · doğrulanmış profil revizyonu",
+          "en": "Anonymous license card · verified profile revision"
+        }
+      }
     }
   ]
 }

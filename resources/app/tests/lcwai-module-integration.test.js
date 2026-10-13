@@ -115,13 +115,15 @@ test('Hesaplanan Sütun entegrasyonu: ortak panel + formül motoru doğrulaması
 test('CP Kuralları entegrasyonu: ortak panel + kural motoru doğrulaması + Uygula → applyFormula', () => {
   const block = CPA.slice(CPA.indexOf('function mountRuleLcwAi(row, rule)'), CPA.indexOf('function confirmDelete(rule)'));
   assert.match(block, /AI\.mountAssistant\(host, \{\s*source: 'rules'/);
-  assert.match(block, /guide: aiGuideFor\(rule\.kind, rule, text\)/);
+  assert.match(block, /guide: aiGuideFor\(rule\.kind, rule, text,[\s\S]*draft\.purpose === 'auto'[\s\S]*draft\.autoStatus/);
   assert.match(CPA, /availableFields: fields/);
   assert.match(CPA, /const fields = formulaFieldCatalog\(rule\)\.map/);
   assert.match(block, /Rules\.formulaFromDisplay\(Rules\.extractFormula\(picked\.value\), catalogFor\(rule\)\)/);
   assert.match(block, /Rules\.validateExpression\(formula, \{ fields: formulaFieldIds\(rule\) \}\)/);
   assert.match(block, /rulePreview\(probe\)/, 'canlı eşleşme sayısı önizlenir');
-  assert.match(block, /onApply: \(\{ formula, priority \}\) => \{\s*applyFormula\(rule, formula\);/);
+  assert.match(block, /onApply: \(\{ formula, priority \}\) => \{\s*applyAiFormula\(rule, formula, draft\);/);
+  assert.match(block, /taskPurpose: draft\.purpose === 'auto' \? 'auto_status_assignment' : 'checklist_question'/);
+  assert.match(CPA, /function applyAiFormula\(rule, formula, draft\)[\s\S]*rule\.autoFormula = formula;[\s\S]*else applyFormula\(rule, formula\);/);
   assert.match(CPA, /renderAiResult\(openRow, openRule\); mountRuleLcwAi\(openRow, openRule\);/);
   assert.match(CPA, /L\('✦ LCW AI’dan Destek Al', '✦ Get help from LCW AI'\)/);
 });
@@ -168,6 +170,6 @@ test('Kurallar bağlamı alan ANLAMLARINI, hedef türünü ve seçilebilir önce
   assert.match(block, /deliveryTarget: state\.settings\.targetType === 'inStore'/);
   assert.match(block, /availablePriorities:/);
   assert.match(block, /entry\.allowedValues = values/);
-  assert.match(block, /context: lcwaiRuleContext\(rule\)/);
+  assert.match(block, /context: \{\s*\.\.\.lcwaiRuleContext\(rule\)/);
   assert.match(block, /if \(priority && rule\.kind === 'priority'\) rule\.target = priority;/);
 });
