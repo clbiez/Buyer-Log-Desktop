@@ -11,6 +11,8 @@ function executorAlive(step,docs){const beat=docs.find(d=>d.id==='executor-'+ste
 function attachTasks(service,deps) {
   const {store}=service,{toolRegistry:registry,runtime,userAccess:access}=deps;
   const inFlight=new Map();let timer;
+  const inverseRunning=job=>job.steps?.some(step=>step.rollbackStatus==='running');
+  const assertTaskAvailable=job=>{if(inverseRunning(job))throw error('OFFICE_TASK_RECONCILE',409);};
   const authority=profile=>{const current=access.profileById(profile.id);if(!current||current.enabled===false)throw error('OFFICE_USER_DISABLED',403);return current;};
   const actorHash=profile=>hash(JSON.stringify(access.publicProfile?.(profile)||profile));
   async function heartbeat(owner){const instance=service.runtimeContext(owner).runtimeInstanceId;await store.save(owner,'metadata',{id:'executor-'+instance,type:'task-executor',instanceId:instance,pid:process.pid,host,expiresAt:new Date(Date.now()+120000).toISOString()});return instance;}
@@ -41,7 +43,7 @@ function attachTasks(service,deps) {
     if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)||!Array.isArray(parsed.steps)||parsed.steps.some(step=>!step||typeof step!=='object'||Array.isArray(step)||!tools.some(tool=>tool.id===step.toolId)))throw error('OFFICE_AI_CONTRACT_INVALID',422);
     return create(profile,{...raw,steps:parsed.steps,aiCalls:1},{assertAuthority:state=>check(state.records['profile:'+raw.agentId]?.doc)});
   }
-  async function prepare(profile,key){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(job.type!=='capability-task')throw error('OFFICE_TASK_INVALID');if(TERMINAL.has(job.status))return job;
+  async function prepare(profile,key){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(job.type!=='capability-task')throw error('OFFICE_TASK_INVALID');assertTaskAvailable(job);if(TERMINAL.has(job.status))return job;
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
     const index=job.steps.findIndex(step=>step.status!=='completed');if(index<0){job=await store.save(profile.id,'job',{...job,status:'completed',finishedAt:new Date().toISOString()},{expectedRevision:job.revision});
       for(const profileId of job.profileIds){const steps=job.steps.filter(step=>step.agentId===profileId);await store.save(profile.id,'memory',{id:'outcome-'+job.id+'-'+profileId,profileId,type:'task',category:'task-history',text:JSON.stringify({task:job.task,status:job.status,steps:steps.map(s=>({toolId:s.toolId,status:s.status,verified:s.result?.verified===true}))}),sourceId:job.id,toolIds:steps.map(s=>s.toolId),taskId:job.id,active:true,approved:false,origin:'verified-service',authorizationFingerprint:steps.every(step=>step.authorizationFingerprint===steps[0]?.authorizationFingerprint)?steps[0]?.authorizationFingerprint:hash(JSON.stringify(steps.map(step=>step.authorizationFingerprint))),confidence:'VERIFIED_RESULT',key:'',conflictingIds:[]},{immutable:true});}return job;}
@@ -52,7 +54,7 @@ function attachTasks(service,deps) {
     job.steps[index]={...step,argsResolved:args,preview,agentRevision:agent.revision,authorizationFingerprint:actorHash(latest.profile),status:tool.approval?'waiting_approval':'ready'};
     return store.save(profile.id,'job',{...job,status:tool.approval?'waiting_approval':'queued'},{expectedRevision:job.revision});}
   function graph(job,step){const nodes=[{id:'start',type:'trigger.manual',config:{}},{id:'effect',type:'tool.call',config:{toolId:step.toolId,args:{...step.argsResolved,...(step.preview.fingerprint?{fingerprint:step.preview.fingerprint}:{})}}},{id:'verify',type:'verify.result',config:{mode:'equals',path:'verified',value:true}},{id:'result',type:'output.result',config:{}}];return{id:'task_'+job.id+'_'+step.id,ownerId:job.ownerId,name:job.task,nodes,edges:nodes.slice(1).map((n,i)=>({id:'e'+i,from:nodes[i].id,to:n.id,channel:'success'}))};}
-  async function executeOnce(profile,key,raw={}){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(TERMINAL.has(job.status))return job;
+  async function executeOnce(profile,key,raw={}){profile=authority(profile);let job=await store.get(profile.id,'job',key);assertTaskAvailable(job);if(TERMINAL.has(job.status))return job;
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
     const index=job.steps.findIndex(step=>step.status!=='completed'),step=job.steps[index];if(!step||!['ready','waiting_approval'].includes(step.status))throw error('OFFICE_TASK_RECONCILE',409);
     const {profile:current,agent,tool}=await stepAuthority(profile,step);
@@ -80,28 +82,31 @@ function attachTasks(service,deps) {
     const pending=state.output.store.takePending(state.profile.id,state.step.result.output.pendingId,{keep:true});if(!pending)throw error('OFFICE_OUTPUT_EXPIRED',409);
     return {output:{pending:'pdf',pendingId:state.step.result.output.pendingId,html:pending.html,landscape:pending.orientation==='landscape'}};}
   async function completeOutput(profile,key,raw){const state=await outputAccess(profile,key,raw.stepId);let {job,step}=state;
+    assertTaskAvailable(job);
     if(step.status==='completed'&&step.result.output.id===raw.outputId)return job;
     if(step.status!=='waiting_output')throw error('OFFICE_TASK_RECONCILE',409);
     const record=state.output.get(state.profile.id,raw.outputId);if(!record||record.requestId!==step.result.output.requestId||!(record.format==='pdf'||record.format==='html'&&raw.acceptFallback===true))throw error('OFFICE_OUTPUT_INVALID',409);
     const bytes=require('fs').readFileSync(record.path);if(bytes.length!==record.bytes||record.format==='pdf'&&bytes.subarray(0,5).toString()!=='%PDF-')throw error('OFFICE_OUTPUT_INVALID',409);
     step.result=require('./agent-report-output-contract').fileResult(record,{fallback:record.format==='html'});step.status='completed';step.finishedAt=new Date().toISOString();
     job=await store.save(state.profile.id,'job',{...job,status:'queued'},{expectedRevision:job.revision});access.appendAudit(state.profile,'AGENT_OUTPUT_COMPLETE',job.id,{stepId:step.id,format:record.format});return prepare(state.profile,job.id);}
-  async function printOutput(profile,key,stepId,bytes){const state=await outputAccess(profile,key,stepId);if(state.step.status!=='waiting_output')throw error('OFFICE_TASK_RECONCILE',409);
+  async function printOutput(profile,key,stepId,bytes){const state=await outputAccess(profile,key,stepId);assertTaskAvailable(state.job);if(state.step.status!=='waiting_output')throw error('OFFICE_TASK_RECONCILE',409);
     const saved=state.output.store.byRequest(state.profile.id,state.step.result.output.requestId);if(saved)return saved;
     const pendingId=state.step.result.output.pendingId;return bytes?state.output.completePdf(state.profile.id,pendingId,bytes,{officeAuthorized:true}):state.output.fallbackHtml(state.profile.id,pendingId,{officeAuthorized:true});}
   async function outputFile(profile,key,stepId){const state=await outputAccess(profile,key,stepId),record=state.output.get(state.profile.id,state.step.result?.output?.id);if(state.step.status!=='completed'||!record||record.requestId!==state.step.result.output.requestId)throw error('OFFICE_NOT_FOUND',404);return record;}
   async function authorize(ctx,args){const job=await store.get(ctx.ownerId,'job',ctx.input?.officeJobId),step=job.steps?.find(s=>s.id===ctx.input?.officeStepId);
+    assertTaskAvailable(job);
     const expected=step?{...step.argsResolved,...(step.preview.fingerprint?{fingerprint:step.preview.fingerprint}:{})}:null;
     if(job.type!=='capability-task'||job.status!=='running'||!step||step.status!=='running'||step.runtimeRunId!==ctx.runId||step.toolId!==ctx.toolId||ctx.input.officeAgentId!==step.agentId||ctx.input.officeAgentRevision!==step.agentRevision||JSON.stringify(expected)!==JSON.stringify(args))throw error('OFFICE_APPROVAL_REQUIRED',403);
     const {profile,agent}=await stepAuthority({id:ctx.ownerId},step);if(step.authorizationFingerprint!==actorHash(profile)||agent.revision!==step.agentRevision)throw error('OFFICE_PREVIEW_CHANGED',409);}
   async function reject(profile,key,raw){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(!['waiting_approval','queued'].includes(job.status))throw error('OFFICE_TASK_RECONCILE',409);
+    assertTaskAvailable(job);
     job=await store.save(profile.id,'job',{...job,status:'rejected',feedback:text(raw?.feedback||'',2000)},{expectedRevision:job.revision});
     if(job.feedback)await feedback(profile,key,{text:job.feedback,outcome:'rejected'});access.appendAudit(profile,'AGENT_TASK_REJECT',key,{});return job;}
   async function feedback(profile,key,raw){profile=authority(profile);const expected=actorHash(profile),job=await store.get(profile.id,'job',key);
     return store.learn(profile.id,job.profileIds[0],{type:'preference',text:text(raw.text,2000),key:raw.key||'',sourceId:job.id,approved:raw.approved===true},{assertAuthority:()=>{if(actorHash(authority(profile))!==expected)throw error('OFFICE_PREVIEW_CHANGED',409);},metadata:{feedbackKind:raw.outcome==='rejected'?'rejection':'correction',toolIds:job.steps?.map(s=>s.toolId)||[],taskId:job.id,authorizationFingerprint:expected}});}
   async function rollback(profile,key,raw){profile=authority(profile);let job=await store.get(profile.id,'job',key);const index=job.steps?.findIndex(s=>s.id===raw.stepId),step=job.steps?.[index];
     if(raw.confirmed!==true||!step||!['completed','partial','rolled_back'].includes(step.status)||!step.result?.rollbackToken||job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_ROLLBACK_INVALID',409);
-    const {tool,profile:current,agent}=await stepAuthority(profile,step);if(step.rollbackStatus==='completed')return job;if(step.rollbackStatus==='running'||job.status==='running')throw error('OFFICE_TASK_RECONCILE',409);
+    const {tool,profile:current,agent}=await stepAuthority(profile,step);if(step.rollbackStatus==='completed')return job;assertTaskAvailable(job);if(job.status==='running')throw error('OFFICE_TASK_RECONCILE',409);
     if(!tool.rollbackable||typeof tool.rollback!=='function')throw error('OFFICE_ROLLBACK_INVALID',409);
     // Later receipts and attempted mutations can represent real or uncertain
     // effects, even when their task status is not completed. Undo them first.
@@ -117,7 +122,7 @@ function attachTasks(service,deps) {
   async function tick(profile){profile=authority(profile);const docs=await store.records(profile.id),device=store.db(profile.id).getDeviceId();
     if(docs.some(d=>d.type==='capability-task'&&!TERMINAL.has(d.status)||d.type==='capability-schedule'&&d.enabled))await heartbeat(profile.id);
     for(let job of docs.filter(d=>d.kind==='job'&&d.type==='capability-task'&&!TERMINAL.has(d.status)&&d.runtimeDeviceId===device)){
-      if(inFlight.has(profile.id+':'+job.id))continue;
+      if(inFlight.has(profile.id+':'+job.id)||inverseRunning(job))continue;
       const running=job.steps.find(s=>s.status==='running');if(running){const run=deps.runtimeStore?.runForOwner(profile.id,running.runtimeRunId),receipt=run?.executionState?.nodes?.effect?.output;
         if(run?.status==='completed'&&receipt?.verified===true){running.status=receipt.completionPending==='pdf'?'waiting_output':receipt.outcome==='partial'?'partial':'completed';running.result=receipt;job=await store.save(profile.id,'job',{...job,status:['waiting_output','partial'].includes(running.status)?running.status:'queued'},{expectedRevision:job.revision});}
         else if(executorAlive(running,docs))continue;

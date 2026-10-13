@@ -51,6 +51,18 @@
     if (status.pendingReady && status.pendingVersion) {
       return String(status.pendingVersion) + ' ' + tr('indirildi ve doğrulandı. Yeniden başlatınca kurulacak.','was downloaded and verified. Restart to install it.');
     }
+    const code = String(status.lastError && status.lastError.code || '');
+    if (code === 'UPDATE_ADMIN_REQUIRED') return tr('Bu güncelleme işlemi için güncel moderatör yetkisi gerekiyor.','Current moderator authority is required for this update operation.');
+    if (code === 'UPDATE_RETRY_TARGET_CHANGED') return tr('Yeniden denenecek sürüm veya kanal değişti. Güncellemeyi kontrol edip paketi yeniden seçin.','The version or channel to retry changed. Check for updates and select the package again.');
+    if (code === 'UPDATE_FAILED_VERSION_BLOCKED' || code === 'UPDATE_HEALTH_FAILED') {
+      const failure = status.failedVersions && status.failedVersions[status.latestVersion];
+      const reason = ({
+        'health-timeout': tr('Açılış doğrulaması zaman aşımına uğradı.','Startup verification timed out.'),
+        'previous-launch-unconfirmed': tr('Önceki açılış doğrulanmadan kapandı.','The previous launch ended before verification.'),
+        'main-load-failed': tr('Yeni uygulama çekirdeği yüklenemedi.','The new app core could not be loaded.'),
+      })[failure && failure.reason] || '';
+      return tr('Bu sürümün önceki açılışı doğrulanamadı. Moderatör “Tekrar Dene” ile paketi yeniden indirip doğrulayabilir; yine başarısız olursa önceki sürüme dönülür.','This version’s previous launch could not be verified. A moderator can use “Retry” to download and verify it again; another failed launch returns to the previous version.') + (reason ? ' ' + reason : '');
+    }
     if (status.state === 'CHECKING') return tr('Yeni sürüm kontrol ediliyor…','Checking for a new version…');
     if (status.state === 'UPDATE_AVAILABLE') {
       return status.latestVersion
@@ -138,7 +150,7 @@
     // Health check'te geri alınan sürüm aynı paketle tekrar indirilmez; yalnız
     // moderatör bu engeli kaldırıp sürümü yeniden deneyebilir.
     const retry = overlay.querySelector('[data-update-retry]');
-    if (retry) retry.hidden = !canRetry(status);
+    if (retry) { retry.hidden = !canRetry(status); retry.dataset.version = String(status.latestVersion || ''); retry.dataset.channel = String(status.channel || 'stable'); }
   }
 
   function canRetry(status) {
@@ -261,10 +273,9 @@
       if (typeof api.retry !== 'function') return;
       setBusy(true);
       try {
-        const latest = overlay && overlay.querySelector('[data-update-value="latest"]');
-        const version = latest && /^\d+\.\d+\.\d+$/.test(latest.textContent.trim()) ? latest.textContent.trim() : '';
-        const result = await api.retry({userId:userId(),version});
-        if (!result || result.ok === false) throw new Error(result && (result.error || result.code) || tr('Sürüm yeniden denenemedi.','The version could not be retried.'));
+        const version = retry.dataset.version, channel = retry.dataset.channel;
+        const result = await api.retry({userId:userId(),version,channel});
+        if (!result || result.ok === false) throw new Error(result && ['UPDATE_RETRY_TARGET_CHANGED','UPDATE_ADMIN_REQUIRED'].includes(result.code) ? messageFor({lastError:{code:result.code}}) : result && (result.error || result.code) || tr('Sürüm yeniden denenemedi.','The version could not be retried.'));
         render(result);
       } catch (error) {
         const message = overlay && overlay.querySelector('[data-update-message]');

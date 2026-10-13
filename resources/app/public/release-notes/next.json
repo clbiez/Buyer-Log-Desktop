@@ -4008,8 +4008,8 @@
         "en": "Agent Office › Tasks › Undo"
       },
       "body": {
-        "tr": "Mevcut servis gerçek geri alma makbuzu sağlıyorsa kısmi işlem açık onayla geri alınabilir. Sonraki tamamlanmış veya sonucu belirsiz yazımlar önce çözülür; revizyon, güncel yetki ve profil kilidi korunur. Doğrulanamayan geri alma tamamlandı sayılmaz ve hata gösterilir. Başarısız geri alma yeniden onaylanabilir; doğrulanmış zincir makbuzları korunur.",
-        "en": "A partial operation can be explicitly undone when its existing service supplies an actual inverse receipt. Later completed or uncertain writes must be resolved first; revisions, current authority and profile leases remain enforced. An unverified inverse is not marked complete and displays an error. Failed undo can be confirmed again; verified receipts remain intact across inverse chains."
+        "tr": "Mevcut servis gerçek geri alma makbuzu sağlıyorsa kısmi işlem açık onayla geri alınabilir. Sonraki tamamlanmış veya sonucu belirsiz yazımlar önce çözülür; revizyon, güncel yetki ve profil kilidi korunur. Doğrulanamayan geri alma tamamlandı sayılmaz ve hata gösterilir. Başarısız geri alma yeniden onaylanabilir; doğrulanmış zincir makbuzları korunur. Geri alma rezervasyonu varken başka bir sekme sonraki adımı çalıştıramaz veya görevi reddedemez.",
+        "en": "A partial operation can be explicitly undone when its existing service supplies an actual inverse receipt. Later completed or uncertain writes must be resolved first; revisions, current authority and profile leases remain enforced. An unverified inverse is not marked complete and displays an error. Failed undo can be confirmed again; verified receipts remain intact across inverse chains. While undo is reserved, another tab cannot execute a later step or reject the task."
       },
       "visual": {
         "kind": "screenshot",
@@ -4022,6 +4022,39 @@
         "caption": {
           "tr": "Onaylı native geri alma ve korunmuş bağımlı adım makbuzları",
           "en": "Confirmed native undo and preserved dependent-step receipts"
+        }
+      }
+    },
+    {
+      "id": "updater-failed-health-retry",
+      "type": "fix",
+      "module": {
+        "tr": "Güncellemeler",
+        "en": "Updates"
+      },
+      "title": {
+        "tr": "Başarısız açılıştan sonra TEST yeniden denenebilir",
+        "en": "TEST can be retried after a failed launch"
+      },
+      "path": {
+        "tr": "Kullanıcı menüsü › Güncellemeleri Kontrol Et",
+        "en": "User menu › Check for Updates"
+      },
+      "body": {
+        "tr": "Moderatörün Tekrar Dene isteği devam eden arka plan kontrolünde kaybolmaz; seçilen sürüm, SHA-256 ve kanal için kendi kontrolünü yürütür. Başarısız kayıt indirmeden önce silinmez. TEST ve yeniden deneme güncel yetkiyi kuyruk ve indirme sonrasında yeniden kontrol eder; yalnız doğrulanmış paket kuruluma hazır olur. Başarılı açılış eşleşen engel kaydını temizler, yeni başarısızlık eski sürüme ve veri checkpointine döner. Ekran bilinen açılış nedenini ve yeniden deneme yolunu TR/EN gösterir.",
+        "en": "A moderator’s Retry request no longer disappears into a running background check; it performs its own check for the selected version, SHA-256 and channel. Starting a download preserves the failure record. TEST and retry recheck current authority after queue and download waits; only a verified package becomes ready to install. A successful launch clears the matching block; another failure restores the previous version and data checkpoint. The screen explains known launch reasons and the retry path in TR/EN."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "updater-failed-health-retry.png",
+        "alt": {
+          "tr": "Gerçek güncelleme ekranında engellenen TEST ve moderatör yeniden deneme yolu",
+          "en": "Blocked TEST and moderator retry path in the actual update screen"
+        },
+        "caption": {
+          "tr": "Sürüm ve kanal bağlı yeniden deneme, güncel yetki ve doğrulanmış paket",
+          "en": "Version- and channel-bound retry, current authority and verified package"
         }
       }
     }
