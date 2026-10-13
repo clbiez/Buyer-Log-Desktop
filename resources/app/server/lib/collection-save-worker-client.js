@@ -29,12 +29,13 @@ const pending = new Map();      // görev id → { resolve, reject, timer }
 const queueByOwner = new Map(); // ownerId → kuyruk kuyruğu
 let nextTaskId = 1;
 
-function failAllPending(error) {
-  for (const [, entry] of pending) {
+function failAllPending(error,sourceWorker) {
+  for (const [id, entry] of pending) {
+    if(sourceWorker && entry.worker!==sourceWorker)continue;
+    pending.delete(id);
     clearTimeout(entry.timer);
     entry.reject(error);
   }
-  pending.clear();
 }
 function envKeyOf(env) { return JSON.stringify(env || {}); }
 function ensureWorker(env) {
@@ -64,7 +65,7 @@ function ensureWorker(env) {
     if (worker === created) { worker = null; workerEnvKey = ''; }
     const error = new Error(`Koleksiyon kaydetme iş parçacığı durdu: ${reason}`);
     error.code = 'COLLECTION_SAVE_WORKER_DOWN';
-    failAllPending(error);
+    failAllPending(error,created);
   };
   created.on('error', error => onDead(String(error && error.message || error)));
   created.on('exit', code => { if (code !== 0) onDead(`çıkış kodu ${code}`); });
@@ -87,7 +88,7 @@ function send(task, timeoutMs) {
       error.statusCode = 504;
       reject(error);
     }, timeoutMs);
-    pending.set(id, { resolve, reject, timer });
+    pending.set(id, { resolve, reject, timer, worker:active });
     try {
       // Gövde TAŞINIR, kopyalanmaz. postMessage varsayılan olarak yapısal
       // klonlama yapar; 8-18 MB'lık bir gövdede bu, kaçmaya çalıştığımız

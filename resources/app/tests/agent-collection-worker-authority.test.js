@@ -32,3 +32,8 @@ test('delta-only quotation and Collection documents are the actual worker source
  const saved=await run('moderator',{...authoritative.rows[0],modelKod:'DELTA SAVED'},authoritative._revision,{deltaStoreMode:'delta-only',quotationRevision:7});assert.equal(saved.revision,authoritative._revision+1);await delta.hydrate();assert.equal(docs.read(workspace.documentId('moderator')).rows[0].modelKod,'DELTA SAVED');
  await assert.rejects(run('moderator',{...authoritative.rows[0],modelKod:'STALE SOURCE'},saved.revision,{deltaStoreMode:'delta-only',quotationRevision:6}),{code:'OFFICE_PREVIEW_CHANGED'});assert.equal(workspace.loadWorkspace('moderator').rows[0].modelKod,'DELTA SAVED');
 });
+
+test('persistent native worker configuration rollover preserves the new worker tasks and their actual receipts',async()=>{
+ const alternate={...env};delete alternate.BUYER_LOG_AUTH_DATA_ROOT;
+ for(const [index,selectedEnv]of [alternate,env,alternate].entries()){const before=workspace.loadWorkspace('moderator'),rows=[{...(before.rows[0]||{id:1}),modelKod:'NATIVE ENV '+index}];const saved=await worker.runCollectionSave({ownerId:'moderator',mode:'rows',env:selectedEnv,body:Buffer.from(JSON.stringify({upserts:rows,atomic:true})),expectedRevision:before._revision,authorization:authorization()});assert.equal(saved.revision,before._revision+1);assert.equal(workspace.loadWorkspace('moderator').rows[0].modelKod,'NATIVE ENV '+index);}
+});

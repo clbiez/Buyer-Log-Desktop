@@ -4915,6 +4915,39 @@
           "en": "Native price/approval data, full counts and guarded undo"
         }
       }
+    },
+    {
+      "id": "agent-collection-worker-env-rollover",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon / Agent Ofisi",
+        "en": "Collection / Agent Office"
+      },
+      "title": {
+        "tr": "Yeni kaydetme worker görevleri eski worker kapanışında korunur",
+        "en": "New save worker tasks survive the previous worker’s exit"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Native kaydetme worker yapılandırması değiştiğinde eski worker kapanışı artık yeni worker görevini hatalı düşürmez. Görev ve doğrulanmış makbuz doğru worker kimliğiyle ilişkilendirilir. Gerçek quotation onayından Koleksiyon fiyat aktarımı ve geri alma aynı native servislerle tamamlanır; yetki ve revizyon kontrolleri korunur.",
+        "en": "When native save worker configuration changes, the previous worker’s exit no longer falsely fails the new worker’s task. Tasks and verified receipts are associated with the correct worker identity. Actual approved quotation prices can complete Collection application and undo through the same native services, preserving authority and revision checks."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-worker-env-rollover.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Agent Ofisinde tamamlanmış demo quotation fiyat aktarımı",
+          "en": "Completed demo quotation price application in the actual Buyer Log Agent Office"
+        },
+        "caption": {
+          "tr": "Native kaydetme worker ile doğrulanmış aktarım ve geri alma",
+          "en": "Verified application and undo through the native save worker"
+        }
+      }
     }
   ]
 }
