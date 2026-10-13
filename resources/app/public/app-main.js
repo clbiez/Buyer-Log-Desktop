@@ -31647,8 +31647,8 @@ async function cpPlmSyncDetailsRun(page,mode,scope,props,button){
     if(detailApi)await detailApi.refresh();
     plmSyncRepaintAll();
     showToast(appLang==='en'
-      ?\`PLM details: \${found} model(s) updated\${failed?\` · \${failed} not found\`:''}.\`
-      :\`PLM detayları: \${found} model güncellendi\${failed?\` · \${failed} bulunamadı\`:''}.\`,
+      ?`PLM details: ${found} model(s) updated${failed?` · ${failed} not found`:''}.`
+      :`PLM detayları: ${found} model güncellendi${failed?` · ${failed} bulunamadı`:''}.`,
       {icon:false,duration:9000});
     return {ok:true,found,failed};
   }catch(err){
