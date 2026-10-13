@@ -549,14 +549,14 @@ function replaceNonDtrManufacturers(manufacturers, expectedRevision = null) {
   const saved = saveOverrides(ov, ov._revision);
   return { manufacturers: saved.nonDtrManufacturers, revision: saved._revisions.nonDtrManufacturers };
 }
-function replaceFreightRates(value, expectedRevision = null) {
+function replaceFreightRates(value, expectedRevision = null, options = {}) {
   const ov = loadOverrides();
   const current = Number(ov._revisions.freightRates) || 0;
   const wanted = expectedNumber(expectedRevision);
   if (wanted != null && wanted !== current) throw new RevisionConflictError('Navlun ücretleri', wanted, current, 'freightRates');
   ov.freightRates = BLFreight.normalizeSettings(value);
   ov._revisions.freightRates = current + 1;
-  const saved = saveOverrides(ov, ov._revision);
+  const saved = saveOverrides(ov, ov._revision, options);
   return { freight: BLFreight.normalizeSettings(saved.freightRates), revision: saved._revisions.freightRates };
 }
 function replaceTransitAnalysis(value, expectedRevision = null) {
@@ -1487,11 +1487,13 @@ function loadShipping(userId) {
   const inherited = legacy.filter(row => row && !own.has(row._shipId)).map(row => ({ ...row, _inherited: true }));
   return { ...personal, rows: inherited.concat(personal.rows) };
 }
-function saveShipping(data, expectedRevision = null, userId = null) {
+function saveShipping(data, expectedRevision = null, userId = null, options = {}) {
   const file = userId ? shippingFileFor(userId) : SHIP_FILE;
   const rows = (data.rows || []).map(({ _inherited, ...row }) => row);
-  return saveRevisioned(file, { rows, legacyAdopted: userId ? true : Boolean(data.legacyAdopted) }, defaultShipping, expectedRevision, 'Nakliye kıyaslama');
+  return saveRevisioned(file, { rows, legacyAdopted: userId ? true : Boolean(data.legacyAdopted) }, defaultShipping, expectedRevision, 'Nakliye kıyaslama', options);
 }
+function mutateShipping(userId,work) { return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(),shippingFileFor(userId),work); }
+function shippingDocumentId(userId) { return deltaStoreId(shippingFileFor(userId)); }
 function shippingColourOptions(record) {
   const row = record && typeof record === 'object' ? record : {};
   const clean = value => String(value == null ? '' : value).trim();
@@ -1545,7 +1547,7 @@ function shippingModelKey(record) {
   const order = Number(String(rawOrder == null ? '' : rawOrder).replace(/\./g, '').trim());
   return Number.isFinite(order) ? `ORDER:${order}` : '';
 }
-function addShippingRows(newRows, expectedRevision = null, userId = null) {
+function addShippingRows(newRows, expectedRevision = null, userId = null, options = {}) {
   const store = loadShipping(userId); assertRevision('Nakliye kıyaslama', store, expectedRevision);
   const existingKeys = new Set(store.rows.map(shippingModelKey).filter(Boolean));
   const existingByKey = new Map(store.rows.map(row => [shippingModelKey(row), row]).filter(([key]) => key));
@@ -1563,21 +1565,21 @@ function addShippingRows(newRows, expectedRevision = null, userId = null) {
     if (key) existingByKey.set(key, addedRow);
   });
   store.rows.push(...added);
-  const saved = saveShipping(store, store._revision, userId);
+  const saved = saveShipping(store, store._revision, userId, options);
   return { ...saved, addedCount: added.length, skippedCount: skipped.length, skippedModelKeys: skipped };
 }
-function patchShippingRow(shipId, patch, expectedRevision = null, userId = null) {
+function patchShippingRow(shipId, patch, expectedRevision = null, userId = null, options = {}) {
   const store = loadShipping(userId); assertRevision('Nakliye kıyaslama', store, expectedRevision);
   const row = store.rows.find(r => r._shipId === shipId);
   if (!row) throw new Error('Satır bulunamadı: ' + shipId);
   Object.assign(row, patch);
-  return saveShipping(store, store._revision, userId);
+  return saveShipping(store, store._revision, userId, options);
 }
-function deleteShippingRows(shipIds, expectedRevision = null, userId = null) {
+function deleteShippingRows(shipIds, expectedRevision = null, userId = null, options = {}) {
   const store = loadShipping(userId); assertRevision('Nakliye kıyaslama', store, expectedRevision);
   const idSet = new Set(shipIds);
   store.rows = store.rows.filter(r => !idSet.has(r._shipId));
-  return saveShipping(store, store._revision, userId);
+  return saveShipping(store, store._revision, userId, options);
 }
 
 function defaultOpenCostings() { return { items: [], _revision: 0 }; }
@@ -1823,7 +1825,7 @@ module.exports = {
   deleteFilterProfile: function () { return deleteScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
   setFavoriteFilterProfile: function () { return favoriteScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
   markUsedFilterProfile: function () { return usedScopedProfile(FILTERS_FILE, 'Filtre profilleri', arguments); },
-  loadShipping, shippingModelKey, addShippingRows, patchShippingRow, deleteShippingRows,
+  loadShipping, saveShipping, mutateShipping, shippingDocumentId, shippingModelKey, addShippingRows, patchShippingRow, deleteShippingRows,
   loadOpenCostings, createOpenCosting, updateOpenCosting, deleteOpenCosting, saveOpenCostings, mutateOpenCostings,
   loadFx, saveFx, fxMonthResolved, loadRefreshHistory, addRefreshHistory, deleteRefreshHistory, clearRefreshHistory, REFRESH_HISTORY_LIMIT, REFRESH_HISTORY_DETAIL_LIMIT, getUserSourceFolder, setUserSourceFolder,
 };

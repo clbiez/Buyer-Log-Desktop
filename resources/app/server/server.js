@@ -6072,6 +6072,7 @@ function sharedAccessRows(rows, profile) {
 }
 function recordOrderCode(record) {
   const raw = record && (record.orderCode ?? record['Order Code'] ?? record.ocode ?? record.siparisKod ?? record._sourceOrderCode);
+  if (raw == null || String(raw).trim() === '') return null;
   const code = Number(String(raw == null ? '' : raw).replace(/\./g, '').trim());
   return Number.isFinite(code) ? code : null;
 }
@@ -10326,38 +10327,9 @@ require('./routes/note-column-routes')(app, {
 // Ücretler kaynak Excel'de tablonun başında duruyordu ve elle güncelleniyordu.
 // Burada tek merkezde tutulur: bir kez güncellenince tüm kullanıcıların
 // hesabı yeni ücretle çalışır.
-app.get('/api/freight-rates', userAccess.requireAnyArea('shipping', 'source'), (req, res) => {
-  const ov = loadOverrides();
-  const revision = Number(ov._revisions && ov._revisions.freightRates) || 0;
-  res.set('ETag', `"${revision}"`);
-  res.json({ freight: BLFreight.normalizeSettings(ov.freightRates), revision });
-});
-app.put('/api/freight-rates', userAccess.requireArea('shipping'), userAccess.requirePermission('manageBusinessRules'), express.json({ limit: '32kb' }), (req, res) => {
-  try {
-    const raw = req.body && req.body.freight;
-    const rates = Array.isArray(raw && raw.rates) ? raw.rates : null;
-    if (!rates || !rates.length) return res.status(400).json({ error: 'En az bir navlun ücreti tanımlanmalıdır.' });
-    if (rates.length > 20) return res.status(400).json({ error: 'En fazla 20 navlun ücreti tanımlanabilir.' });
-    for (const item of rates) {
-      const rate = Number(item && item.rate);
-      if (!Number.isFinite(rate) || rate <= 0 || rate > 1000) return res.status(400).json({ error: 'Her navlun birim ücreti 0 ile 1000 arasında pozitif bir sayı olmalıdır.' });
-      if (!String(item && item.label || '').trim()) return res.status(400).json({ error: 'Her navlun satırının bir adı olmalıdır.' });
-      if (!BLFreight.MODES.includes(item && item.mode)) return res.status(400).json({ error: 'Navlun tipi yalnız Uçak veya Gemi+Uçak olabilir.' });
-    }
-    const factor = Number(raw && raw.volumetricFactor);
-    if (!Number.isFinite(factor) || factor <= 0 || factor > 1000) return res.status(400).json({ error: 'Hacimsel ağırlık katsayısı 0 ile 1000 arasında pozitif bir sayı olmalıdır.' });
-    const landedMultiplier = Number(raw && raw.landedMultiplier);
-    if (!Number.isFinite(landedMultiplier) || landedMultiplier <= 0 || landedMultiplier > 10) return res.status(400).json({ error: 'Landed çarpanı 0 ile 10 arasında pozitif bir sayı olmalıdır.' });
-    const carton = raw && raw.carton;
-    for (const key of ['cartonL', 'cartonH', 'cartonW']) {
-      const side = Number(carton && carton[key]);
-      if (!Number.isFinite(side) || side <= 0 || side > 1000) return res.status(400).json({ error: 'Varsayılan koli ölçüleri 0 ile 1000 cm arasında olmalıdır.' });
-    }
-    const saved = replaceFreightRates({ rates, volumetricFactor: factor, landedMultiplier, carton }, requestRevision(req));
-    userAccess.appendAudit(req.currentUser, 'FREIGHT_RATES_UPDATE', 'shipping', { count: saved.freight.rates.length, revision: saved.revision });
-    publishSharedMasterChange('freightRates', req);
-    res.json(saved);
-  } catch (err) { apiError(res, err, 'Navlun ücretleri kaydedilemedi.'); }
+const freightRateService=require('./lib/freight-rate-service').createFreightRateService({db:require('./db')});
+require('./routes/freight-rates-routes')(app, {
+  service:freightRateService, userAccess, express, requestRevision, publishSharedMasterChange, apiError,
 });
 
 const licenseCardSync=require('./lib/license-card-sync').createLicenseCardSync({
@@ -10856,7 +10828,27 @@ require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegis
 const sourceWorkflowService=require('./lib/source-workflow-service').createSourceWorkflowService({db:require('./db')});
 const personalHorizonService=require('./lib/personal-horizon-service').createPersonalHorizonService({db:require('./db'),preferences:userPreferences});
 const horizonTemplateService=require('./lib/horizon-template-service').createHorizonTemplateService({db:require('./db'),userAccess});
+require('./lib/agent-freight-rate-tools').registerFreightRateTools(agentToolRegistry,{
+  service:freightRateService,
+  changed:(profile,receipt)=>{publishSharedMasterChange('freightRates',{currentUser:profile},{revision:receipt.revision,origin:'agent'});userAccess.appendAudit(profile,'AGENT_FREIGHT_RATES_UPDATE','shipping',{revision:receipt.revision});},
+  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
+});
 const openCostingService=require('./lib/open-costing-service').createOpenCostingService({db:require('./db')});
+const shippingWorkflowService=require('./lib/shipping-workflow-service').createShippingWorkflowService({
+  db:require('./db'),orderCode:recordOrderCode,
+  canReadFx:async ctx=>{const current=userAccess.profileById(ctx.profile.id);if(!current||!['source','opencosting','koleksiyon'].some(area=>userAccess.hasArea(current,area)))return false;if(!ctx.input?.officeAgentId)return false;const agent=await agentOfficeStore.get(ctx.ownerId,'profile',ctx.input.officeAgentId);ctx.assertAuthority?.();if(agent.deleted||agent.enabled===false||agent.revision!==ctx.input.officeAgentRevision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return ['source','opencosting','collection'].some(area=>agent.areas.includes(area));},
+  canEditRow:(ctx,row)=>{const current=userAccess.profileById(ctx.profile.id);return !!current&&(recordOrderCode(row)==null?(row._sourceModule==='collection'||userAccess.hasPermission(current,'manageAllOrders')):canUserEditOrderCode(current,recordOrderCode(row)));},
+  authorizeRows:(ctx,rows)=>{const current=userAccess.profileById(ctx.profile.id);if(!current||current.enabled===false||!userAccess.hasArea(current,'shipping'))throw Object.assign(new Error('AREA_FORBIDDEN'),{code:'AREA_FORBIDDEN',statusCode:403});for(const row of rows){const code=recordOrderCode(row);if(code==null?row._sourceModule!=='collection'&&!userAccess.hasPermission(current,'manageAllOrders'):!canUserEditOrderCode(current,code))throw Object.assign(new Error('ORDER_VIEW_ONLY'),{code:'ORDER_VIEW_ONLY',statusCode:403});}},
+  dataset:(ctx,source)=>agentPlatformDataset(ctx.ownerId,userAccess.profileById(ctx.profile.id),source),
+  sourceStamp:(ctx,source)=>source==='collection'?require('./lib/agent-office-store').hash(JSON.stringify(loadWorkspace(ctx.ownerId))):cpAgentRevision(userAccess.profileById(ctx.profile.id)),
+  sourceDocuments:(ctx,source)=>source==='collection'?[collectionWorkspaces.documentId(ctx.ownerId)]:[],
+});
+require('./lib/agent-shipping-tools').registerShippingTools(agentToolRegistry,{
+  service:shippingWorkflowService,
+  registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService()),
+  changed:profile=>{userAccess.appendAudit(profile,'AGENT_SHIPPING_UPDATE',profile.id);liveEvents.notifyChange('shipping',null,{ownerId:profile.id});},
+  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
+});
 require('./lib/agent-open-costing-tools').registerOpenCostingTools(agentToolRegistry,{
   service:openCostingService,
   registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService()),
@@ -12607,6 +12599,7 @@ require('./routes/holiday-routes')(app, {
 // ---- Ön Maliyet, Aylık Döviz Kurları ve Nakliye Kıyaslaması route'ları → server/routes/costing-fx-shipping-routes.js ----
 require('./routes/costing-fx-shipping-routes')(app, {
   openCostingService,
+  shippingWorkflowService,
   addShippingRows,
   apiError,
   createOpenCosting,

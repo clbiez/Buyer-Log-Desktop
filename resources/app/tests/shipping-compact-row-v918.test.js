@@ -31,6 +31,11 @@ const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const APP = read('public/app-main.js');
 const CSS = read('public/app.css');
 const HTML = read('public/index.html');
+const ENGINE = read('public/shipping-engine.js');
+const engineFn = name => {
+  const match=ENGINE.match(new RegExp(`function ${name}\\([^)]*\\)\\{[\\s\\S]*?\\n\\}`));
+  assert.ok(match,`${name} native engine helper exists`);return match[0];
+};
 
 const fn = name => {
   const match = APP.match(new RegExp(`function ${name}\\([^)]*\\)\\{[\\s\\S]*?\\n\\}`));
@@ -41,7 +46,8 @@ const fn = name => {
 /* ------------------------------------------- 1) KARŞILAŞTIRMA TABANI DOĞRU */
 
 test('v9.18 avantaj tabanı domestic LANDED, domestic FOB değil', () => {
-  const compute = fn('computeShipFormulas');
+  assert.match(fn('computeShipFormulas'),/return BLShippingEngine\.compute\(row,/);
+  const compute = engineFn('compute');
   assert.match(compute, /const trLanded = row\.trFiyatFobUsdLanded;/);
   assert.match(compute, /const advantage = landed => \(trLanded!==''/);
   // Eski FOB tabanlı formül kalmamalı.
@@ -50,12 +56,12 @@ test('v9.18 avantaj tabanı domestic LANDED, domestic FOB değil', () => {
 });
 
 test('v9.18 çarpanlar ayardan geliyor, koda gömülü değil', () => {
-  const multipliers = fn('shipLandedMultipliers');
-  assert.match(multipliers, /state\.overrides\.landedMultipliers/);
+  assert.match(fn('shipLandedMultipliers'), /BLShippingEngine\.landedMultipliers\(state\.overrides\.landedMultipliers\)/);
+  const multipliers = engineFn('landedMultipliers');
   // Ayar yoksa uygulamanın varsayılanlarına düşmeli.
   assert.match(multipliers, /pick\(raw\.tr,1\.05\)/);
   assert.match(multipliers, /pick\(raw\.overseas,1\.11\)/);
-  const compute = fn('computeShipFormulas');
+  const compute = engineFn('compute');
   assert.match(compute, /row\.trFiyatUsd\*multipliers\.tr/);
   assert.match(compute, /fob\*multipliers\.overseas/);
   // Sabit çarpan kalmamalı.
@@ -189,7 +195,8 @@ test('v9.18 görsel CP ile aynı override haritasından çözülüyor', () => {
   const resolver = fn('shipRowImageRef');
   assert.match(resolver, /cpImageRefFromOverride\(state&&state\.overrides,row\.plm,row\.colorCode,row\.orderCode/);
   // Aktarımda PLM kimliği taşınmalı, yoksa birleşik anahtar hiç kurulamaz.
-  assert.match(APP, /plm: row\['PLM ID'\] \?\? row\['PLM Code'\] \?\? row\.plmId \?\? '',/);
+  assert.match(fn('mapCPRowToShip'),/return BLShippingEngine\.mapCPRow\(row,/);
+  assert.match(engineFn('mapCPRow'), /plm: row\['PLM ID'\] \?\? row\['PLM Code'\] \?\? row\.plmId \?\? '',/);
   assert.match(CSS, /\.shipThumb\{/);
 });
 
@@ -366,7 +373,7 @@ test('v9.20 görsel aktarımda satıra yazılıyor', () => {
   /* Yalnız override haritasından çözmek yetmiyordu: kullanıcı CP'yi hiç
      açmadan Nakliye sekmesine geçerse harita BOŞ olur ve hücre boş kalır.
      Sahadaki belirti tam olarak buydu. */
-  assert.match(APP, /_imageRef: row\._imageRef \|\| '',/);
+  assert.match(engineFn('mapCPRow'), /_imageRef: row\._imageRef \|\| '',/);
   const resolver = fn('shipRowImageRef');
   assert.match(resolver, /const stored=String\(row\._imageRef\|\|''\)\.trim\(\);/);
 });
