@@ -4948,6 +4948,39 @@
           "en": "Verified application and undo through the native save worker"
         }
       }
+    },
+    {
+      "id": "agent-native-undo-capacity",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Geri alma arşivleri kullanıcı yükleme kotasını tüketmez",
+        "en": "Undo archives no longer consume the user upload quota"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Yüklenen belgeler için 20 dosyalık kota korunur. Uygulamanın ürettiği native geri alma kayıtları ayrı ve 1.000 dosyayla sınırlı havuza alınır; aynı kullanıcı için ortak 200 MB, dosya başına 80 MB ve 48 saatlik saklama sınırları devam eder. Böylece birkaç onaylı görev, sonraki belge yüklemelerini veya iş adımlarını durdurmaz. Kullanıcı kimliği, dosya türü ve SHA doğrulaması korunur.",
+        "en": "Uploaded documents retain their 20-file quota. Application-generated native undo records use a separate pool capped at 1,000 files, while the shared owner limit of 200 MB, 80 MB per file and 48-hour retention remain in force. A few approved tasks no longer block subsequent document uploads or work steps. Owner, artifact kind and SHA checks are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-native-undo-capacity.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde 20 arşivden sonra tamamlanan demo native aktarım",
+          "en": "Demo native import completed after 20 archives in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Native kayıt ve geri alma döngüleri kota sınırları içinde devam eder",
+          "en": "Native save and undo cycles continue within bounded quotas"
+        }
+      }
     }
   ]
 }
