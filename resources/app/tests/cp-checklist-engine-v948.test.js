@@ -281,8 +281,9 @@ test('v9.48 kaydedilmiş null yaş eşiği 0\'a dönüşmez: eşikler ayırt etm
   assert.ok(!ids.includes('tests'), 'tests eşiği 28; 40 gün kala sorulmamalı');
 });
 
-test('v9.48 kontrol listesi motoru saf: DOM, ağ, AI yok', () => {
+test('v9.48 checklist calculations have no DOM, network or AI dependencies', () => {
   const source = fs.readFileSync(path.join(__dirname, '..', 'public', 'cp-checklist-engine.js'), 'utf8');
-  assert.doesNotMatch(source, /document\.|fetch\(|localStorage/);
+  assert.doesNotMatch(source, /document\.|fetch\(/);
+  assert.match(source, /root\.BLStorage \|\| root\.localStorage/); // Native user-scoped custom status preferences; no order persistence here.
   assert.doesNotMatch(source, /\/api\/copilot|BLCopilot|octopus/i);
 });
