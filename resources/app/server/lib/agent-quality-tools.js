@@ -58,8 +58,8 @@ function registerQualityTools(registry,deps) {
     const records=Object.fromEntries(args.items.map(item=>[item.talepNo,{report:before.reports[item.talepNo]||null,link:before.links[item.talepNo]||null}]));reportAuthority(ctx,records);return {...preview,selected:args.items,records};
   },apply:async(args,ctx,preview)=>{
     const rollback=await backup(ctx,'quality-report-before',{records:preview.records});
-    const result=await service.commit(ctx.profile,args,{expectedRevision:preview.reportRevision,expectedSessionFingerprint:preview.sessionFingerprint,assertAuthority:()=>{sourceAuthority(ctx,preview);reportAuthority(ctx,preview.records);},withCommitGuard:work=>guard(ctx,work)}),saved=reports.read();
-    if(result.results.length!==args.items.length||!args.items.every(i=>saved.links[i.talepNo]?.orderKey===i.orderKey&&saved.links[i.talepNo]?.itemId===i.itemId))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);
+    const result=await service.commit(ctx.profile,args,{expectedRevision:preview.reportRevision,expectedSessionFingerprint:preview.sessionFingerprint,assertAuthority:()=>{sourceAuthority(ctx,preview);reportAuthority(ctx,preview.records);},withCommitGuard:work=>guard(ctx,work)});
+    if(result.results.length!==args.items.length||!args.items.every(i=>result.results.some(r=>r.talepNo===i.talepNo&&r.orderKey===i.orderKey&&r.itemId===i.itemId)))throw error('OFFICE_QUALITY_VERIFY_FAILED',409);
     return Output.commitSummary(result,{...rollback,expectedRevision:result.revision});
   },restore:async(token,ctx)=>{
     token=inverse(ctx,token,'quality-report-before');

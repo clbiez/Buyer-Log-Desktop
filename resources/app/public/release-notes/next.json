@@ -5308,6 +5308,35 @@
           "en": "Actual local demo user · writes and export denied"
         }
       }
+    },
+    {
+      "id": "agent-quality-report-own-receipt",
+      "type": "fix",
+      "module": {
+        "tr": "Quality · Agent Ofisi",
+        "en": "Quality · Agent Office"
+      },
+      "title": {
+        "tr": "Rapor aktarımı kendi doğrulanmış sonucunu korur",
+        "en": "Report imports retain their own verified result"
+      },
+      "description": {
+        "tr": "Başarılı rapor aktarımından hemen sonraki başka kullanıcı düzenlemesi işlem kaydını kaybettirmez. Aktarımın gerçek kimlikleri ve revizyonu mevcut servis makbuzundan doğrulanır; daha yeni rapor revizyonu eski geri almayı engeller.",
+        "en": "Another user’s edit immediately after a successful report import no longer discards its receipt. Actual imported identities and revision are verified from the existing service acknowledgement; newer report revisions prevent stale inverses."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quality-report-own-receipt.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde iki demo EML raporunun doğrulanmış aktarım kaydı",
+          "en": "Verified import receipt for two demo EML reports in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek yerel EML aktarımı · iki rapor · tam geri alma",
+          "en": "Actual local EML import · two reports · complete inverse"
+        }
+      }
     }
   ]
 }
