@@ -22,11 +22,16 @@ module.exports = function registerHorizonTemplateRoutes(app, deps) {
     replaceModelConnections,
     requestRevision,
     sourceUserId,
+    sourceWorkflowService,
     userAccess,
     userPreferences,
   } = deps;
-  // Saf yazma planlayıcısı (disk/ağ yok); enjeksiyon gerektirmez.
-  const dataManagementLinkWriter = require('../lib/data-domain/link-writer');
+  // Both native UI and Office use the existing planners inside the same lease.
+  const sourceGuard=req=>({assertAuthority:()=>{
+    const current=userAccess.profileById(req.currentUser.id);
+    if(!current||current.enabled===false||!userAccess.hasArea(current,'source')||!userAccess.hasPermission(current,'manageModelConnections'))throw Object.assign(new Error('PERMISSION_REQUIRED'),{code:'PERMISSION_REQUIRED',statusCode:403});
+    return current;
+  }});
 
 
 /* ===================================================================
@@ -129,7 +134,7 @@ app.post('/api/horizon-templates/:id/share', userAccess.requireArea('source'), u
    Kişisel kaydetme 'source' alanına erişen herkese açıktır (yalnız kendi
    ayarını değiştirir). Ortak varsayılanı ('shared' / 'split') yazmak yine
    manageModelConnections yetkisi ister. */
-app.post('/api/data-management/filter', userAccess.requireArea('source'), express.json({ limit: '256kb' }), (req, res) => {
+app.post('/api/data-management/filter', userAccess.requireArea('source'), express.json({ limit: '256kb' }), async (req, res) => {
   try {
     const body = req.body || {};
     const sourceId = String(body.sourceId || '').trim();
@@ -162,34 +167,13 @@ app.post('/api/data-management/filter', userAccess.requireArea('source'), expres
         code: 'PERMISSION_REQUIRED',
       });
     }
-    // Eşzamanlılık kontrolü kaynak başınadır (P9 ile aynı sözleşme).
-    const expected = String(body.expectedSourceRevision || '').trim();
-    if (expected) {
-      const current = store.items.find(item => item && String(item.id) === sourceId);
-      const actual = current ? dataManagementAdapter.configRevision(current) : '';
-      if (actual && actual !== expected) {
-        return res.status(409).json({
-          error: 'Bu kaynak siz bakarken başka bir pencerede değiştirildi. Ekranı tazeleyip tekrar deneyin.',
-          code: 'SOURCE_CHANGED',
-        });
-      }
-    }
-
-    const plan = dataManagementFilterWriter.planFilterChange(store.items, {
-      sourceId, moduleId,
-      definition: body.definition,
-      mode: body.mode,
+    const saved = await sourceWorkflowService.update('filter', {
+      sourceId, moduleId, definition: body.definition, mode: body.mode,
       name: Object.prototype.hasOwnProperty.call(body, 'name') ? body.name : null,
-    });
-    if (!plan.ok) {
-      const status = plan.code === 'SOURCE_NOT_FOUND' ? 404 : (plan.code === 'FILTER_INVALID' || plan.code === 'FILTER_MODE_INVALID' ? 400 : 409);
-      return res.status(status).json({ error: plan.message, code: plan.code, warnings: plan.warnings });
-    }
-
-    const saved = replaceModelConnections(plan.items, null);
+    }, String(body.expectedSourceRevision || '').trim(), sourceGuard(req));
     userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_FILTER_UPDATE', sourceId, { moduleId, mode: body.mode || 'shared' });
-    publishSharedMasterChange('modelConnections', req);
-    res.json({ ok: true, revision: saved.revision, warnings: plan.warnings, appliedScopeId: plan.appliedScopeId || '' });
+    if (saved.changed) publishSharedMasterChange('modelConnections', req);
+    res.json({ ok: true, ...saved });
   } catch (err) { apiError(res, err, 'Modül filtresi kaydedilemedi.'); }
 });
 
@@ -237,7 +221,7 @@ app.post('/api/data-management/layer', userAccess.requireArea('source'), express
    modül bağlantısıdır; revizyon kontrolü yine uygulanır.
 
    Kapatılan bağlantının filtresi SİLİNMEZ, park edilir (§11). */
-app.post('/api/data-management/binding', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '16kb' }), (req, res) => {
+app.post('/api/data-management/binding', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '16kb' }), async (req, res) => {
   try {
     const body = req.body || {};
     const sourceId = String(body.sourceId || '').trim();
@@ -249,48 +233,12 @@ app.post('/api/data-management/binding', userAccess.requireArea('source'), userA
       return res.status(400).json({ error: 'enabled (boolean) zorunlu.', code: 'VALIDATION_ERROR' });
     }
 
-    const store = loadModelConnections();
-
-    /* EŞZAMANLILIK KONTROLÜ KAYNAK BAŞINADIR (P9).
-
-       Depodaki revizyon sayacı bütün diziye ait. Onu kullansaydık —ki P5'te
-       öyleydi— ASAS'ı düzenleyen bir yönetici, IAS'ı düzenleyen diğerini
-       "başkası değiştirdi" diye reddederdi. Ölçüldü ve doğrulandı.
-
-       Artık yalnız DOKUNULAN kaynağın yapılandırma parmak izi karşılaştırılır.
-       İstemci sürüm göndermezse kontrol atlanır: eski istemciler ve betikler
-       çalışmaya devam eder, yalnız korumasız kalır. */
-    const expected = String(body.expectedSourceRevision || '').trim();
-    if (expected) {
-      const current = store.items.find(item => item && String(item.id) === sourceId);
-      const actual = current ? dataManagementAdapter.configRevision(current) : '';
-      if (actual && actual !== expected) {
-        return res.status(409).json({
-          error: 'Bu kaynak siz bakarken başka bir pencerede değiştirildi. Ekranı tazeleyip tekrar deneyin.',
-          code: 'SOURCE_CHANGED',
-        });
-      }
+    const saved = await sourceWorkflowService.update('binding', { sourceId, moduleId, enabled: body.enabled }, String(body.expectedSourceRevision || '').trim(), sourceGuard(req));
+    if (saved.changed) {
+      userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_BINDING_UPDATE', sourceId, { moduleId, enabled: body.enabled });
+      publishSharedMasterChange('modelConnections', req);
     }
-
-    const plan = dataManagementBindingWriter.planBindingChange(store.items, { sourceId, moduleId, enabled: body.enabled });
-    if (!plan.ok) {
-      // Kilitli hedef ya da imkânsız hücre: 409, çünkü istek biçimsel olarak
-      // geçerli ama mevcut yapılandırmayla çelişiyor.
-      const status = plan.code === 'SOURCE_NOT_FOUND' ? 404 : 409;
-      return res.status(status).json({ error: plan.message, code: plan.code });
-    }
-    if (plan.code === 'NO_CHANGE') {
-      return res.json({ ok: true, changed: false, revision: store.revision });
-    }
-
-    /* Global revizyon BİLEREK geçilmiyor. Plan, az önce okunan güncel depo
-       üzerine uygulandı; dizinin başka bir kaydı bu arada değiştiyse o değişiklik
-       plan.items içinde zaten var ve korunur. Kaybolabilecek tek şey, aynı
-       kaynağa yapılan eşzamanlı bir düzenlemedir — yukarıda o kontrol edildi. */
-    const saved = replaceModelConnections(plan.items, null);
-    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_BINDING_UPDATE', sourceId, { moduleId, enabled: body.enabled });
-    publishSharedMasterChange('modelConnections', req);
-    res.json({ ok: true, changed: true, revision: saved.revision });
+    res.json({ ok: true, ...saved });
   } catch (err) { apiError(res, err, 'Modül bağlantısı güncellenemedi.'); }
 });
 
@@ -300,7 +248,7 @@ app.post('/api/data-management/binding', userAccess.requireArea('source'), userA
    Kullanıcı bir modülü gruptan ayırabilir (kendi filtresiyle ayrı sorgu olur)
    ya da geri ekleyebilir (grubun filtresini kullanır; kendi filtresi saklanır).
    Yenileme her iki durumda da TEKTİR. Eşzamanlılık kontrolü kaynak başınadır. */
-app.post('/api/data-management/link', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '16kb' }), (req, res) => {
+app.post('/api/data-management/link', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '16kb' }), async (req, res) => {
   try {
     const body = req.body || {};
     const sourceId = String(body.sourceId || '').trim();
@@ -311,28 +259,12 @@ app.post('/api/data-management/link', userAccess.requireArea('source'), userAcce
     if (typeof body.linked !== 'boolean') {
       return res.status(400).json({ error: 'linked (boolean) zorunlu.', code: 'VALIDATION_ERROR' });
     }
-    const store = loadModelConnections();
-    const expected = String(body.expectedSourceRevision || '').trim();
-    if (expected) {
-      const current = store.items.find(item => item && String(item.id) === sourceId);
-      const actual = current ? dataManagementAdapter.configRevision(current) : '';
-      if (actual && actual !== expected) {
-        return res.status(409).json({
-          error: 'Bu kaynak siz bakarken başka bir pencerede değiştirildi. Ekranı tazeleyip tekrar deneyin.',
-          code: 'SOURCE_CHANGED',
-        });
-      }
+    const saved = await sourceWorkflowService.update('link', { sourceId, moduleId, linked: body.linked }, String(body.expectedSourceRevision || '').trim(), sourceGuard(req));
+    if (saved.changed) {
+      userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_LINK_UPDATE', sourceId, { moduleId, linked: body.linked });
+      publishSharedMasterChange('modelConnections', req);
     }
-    const plan = dataManagementLinkWriter.planLinkChange(store.items, { sourceId, moduleId, linked: body.linked });
-    if (!plan.ok) {
-      const status = plan.code === 'SOURCE_NOT_FOUND' ? 404 : (plan.code === 'VALIDATION_ERROR' ? 400 : 409);
-      return res.status(status).json({ error: plan.message, code: plan.code });
-    }
-    if (plan.code === 'NO_CHANGE') return res.json({ ok: true, changed: false, revision: store.revision, warnings: [] });
-    const saved = replaceModelConnections(plan.items, null);
-    userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_LINK_UPDATE', sourceId, { moduleId, linked: body.linked });
-    publishSharedMasterChange('modelConnections', req);
-    res.json({ ok: true, changed: true, revision: saved.revision, warnings: plan.warnings });
+    res.json({ ok: true, ...saved });
   } catch (err) { apiError(res, err, 'Bağlı grup güncellenemedi.'); }
 });
 

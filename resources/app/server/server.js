@@ -10853,6 +10853,11 @@ const agentResourceDeps={flush:async()=>{await deltaStore.flush();},changed:asyn
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-manufacturer-tools').registerManufacturerTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegistry,agentResourceDeps);
+const sourceWorkflowService=require('./lib/source-workflow-service').createSourceWorkflowService({db:require('./db')});
+require('./lib/agent-source-tools').registerSourceTools(agentToolRegistry,{
+  source:sourceWorkflowService,...agentResourceDeps,
+  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
+});
 require('./lib/agent-supporting-resource-tools').registerSupportingResourceTools(agentToolRegistry,{
   ...agentResourceDeps,license:licenseCardService,userAccess,
   authorizeFabric:async ctx=>{await refreshCollectionPermissionScope();ctx.assertAuthority();},
@@ -11933,6 +11938,7 @@ app.delete('/api/data-management/source/:id', userAccess.requireArea('source'), 
    başka bir sayfanın verisi değişince durumu keşfetmesi demekti. */
 // ---- Horizon şablonları ve Veri Yönetimi katman route'ları → server/routes/horizon-template-routes.js ----
 require('./routes/horizon-template-routes')(app, {
+  sourceWorkflowService,
   addHorizonTemplate,
   apiError,
   dataManagementAdapter,
