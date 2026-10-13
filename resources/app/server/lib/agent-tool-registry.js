@@ -613,5 +613,5 @@ function createToolRegistry(adapter) {
 
 module.exports = {
   createToolRegistry, filterRows, projectRows, compare, getField,
-  calculateExpression, resolveDatasetField, applyResolvedFilters,
+  calculateExpression, resolveDatasetField, applyResolvedFilters, SUPPORTED_OPERATORS,
 };
