@@ -25,6 +25,8 @@ Generated from the current unified access-matrix fixture on 2026-10-12. This tab
 
 Total: 159 registered contract-v2 capabilities. READ calculations use the native deterministic engines. EXPORT is an approved file effect; it does not imply SEND. Business APPROVE tools belong to native quotation/status workflows. The generic Office read-only scheduler and native approved automation schedule services are separately represented by their actual APIs and existing automation tools. SEND remains unavailable because no authorized corporate sending channel has been verified.
 
+Output-contract audit: 78 strict top-level output objects and 81 generic/open output envelopes remain. See `AGENT_CAPABILITY_OUTPUT_GAPS.md` for exact tool IDs; contractVersion 2 alone does not prove complete field-level output typing.
+
 ## Remaining native workflow decisions
 
 - Source connection create/delete, approved configured query targets, mapping/schema discovery, refresh-group execution and native exports: reuse model/source services; reject arbitrary hosts, queries, credentials and code.
@@ -38,4 +40,4 @@ Total: 159 registered contract-v2 capabilities. READ calculations use the native
 
 ## Delivery status
 
-Expanded full regression has not yet run. Actual HTTP/browser/PDF and corporate acceptance are unfinished or environment-blocked. Thirty-six real post-change release-note captures are pending, including the new task pause UI. GitHub write operations require approval unavailable under this environment policy. No new PR beyond the earlier drafts #498–#500, merge, TEST or STABLE release is claimed. The user cancelled partial TEST delivery; final STABLE must promote the same signed bytes of a fully verified package.
+Expanded full regression has not yet run. Actual HTTP/browser/PDF and corporate acceptance are unfinished or environment-blocked. Thirty-seven real post-change release-note captures are pending, including the new task pause UI. GitHub write operations require approval unavailable under this environment policy. No new PR beyond the earlier drafts #498–#500, merge, TEST or STABLE release is claimed. The user cancelled partial TEST delivery; final STABLE must promote the same signed bytes of a fully verified package.

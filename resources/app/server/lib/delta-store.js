@@ -415,6 +415,10 @@ function fromDocumentRecord(record) {
 }
 
 function createDocumentApi(store, collection = 'store') {
+  const mirrorDocuments=(values,options)=>{
+    if(!store)return Promise.resolve({mirrored:0,applied:0,unchanged:0,ok:true});
+    return Promise.resolve(store.mirror(collection,Object.fromEntries(Object.entries(values).map(([id,value])=>[id,toDocumentRecord(value)])),options)).catch(error=>({mirrored:0,ok:false,error}));
+  };
   return {
     async refresh() {
       if (!store || !store.isAuthoritative) return;
@@ -445,11 +449,10 @@ function createDocumentApi(store, collection = 'store') {
     },
     /* Eski çağrılar dönüş değerini kullanmadan ateşle-unut devam eder. Yeni
        çağrılar ise ortak veri için journal sonucunu bekleyebilir. */
-    mirror(id, value, options) {
-      if (!store) return Promise.resolve({ mirrored: 0, applied: 0, unchanged: 0, ok: true });
-      return Promise.resolve(store.mirror(collection, { [id]: toDocumentRecord(value) }, options))
-        .catch(error => ({ mirrored: 0, ok: false, error }));
-    },
+    mirror(id,value,options){return mirrorDocuments({[id]:value},options);},
+    // Trusted native services may commit related documents in one journal
+    // transaction; models never choose document IDs or write payloads.
+    mirrorMany:mirrorDocuments,
   };
 }
 
