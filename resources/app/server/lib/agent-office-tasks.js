@@ -33,7 +33,18 @@ function attachTasks(service,deps) {
     if(actorHash(current)!==step.authorizationFingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);
     if(!allowed(registry.get(step.toolId),current,access))throw error('OFFICE_TOOL_FORBIDDEN',403);
   }
-  async function nativeReceiptPublication(profile,job){for(const step of job.steps||[])if(step.result?.verified===true&&registry.hasPendingPoller?.(step.toolId))await receiptPublication(profile,job,step);}
+  async function taskReceiptPublication(profile,job){
+    const steps=(job.steps||[]).filter(step=>step.preview||step.result||step.restored);
+    for(const step of steps)await receiptPublication(profile,job,step);
+    if(steps.length)await store.db(profile.id).privateRecordTransaction(state=>{
+      const latest=state.records['job:'+job.id]?.doc;
+      if(!latest||latest.revision!==job.revision)throw error('OFFICE_REVISION_CONFLICT',409);
+      for(const step of steps)receiptGuard(profile,job,step)(state);
+      return {result:true};
+    });
+    const current=authority(profile);
+    for(const step of steps){if(actorHash(current)!==step.authorizationFingerprint)throw error('OFFICE_PREVIEW_CHANGED',409);if(!allowed(registry.get(step.toolId),current,access))throw error('OFFICE_TOOL_FORBIDDEN',403);}
+  }
   async function heartbeat(owner){const instance=service.runtimeContext(owner).runtimeInstanceId;await store.save(owner,'metadata',{id:'executor-'+instance,type:'task-executor',instanceId:instance,pid:process.pid,host,expiresAt:new Date(Date.now()+120000).toISOString()});return instance;}
   const requireEnabledAgent=agent=>{if(!agent||agent.enabled===false||agent.deleted)throw error('OFFICE_AGENT_DISABLED',403);return agent;};
   const agentHas=(agent,tool)=>(tool.agentAreas||tool.areas||[]).every(area=>agent.areas.includes(area==='koleksiyon'?'collection':area))&&(!tool.agentAnyAreas||tool.agentAnyAreas.some(area=>agent.areas.includes(area)));
@@ -63,7 +74,7 @@ function attachTasks(service,deps) {
     if(!parsed||typeof parsed!=='object'||Array.isArray(parsed)||!Array.isArray(parsed.steps)||parsed.steps.some(step=>!step||typeof step!=='object'||Array.isArray(step)||!tools.some(tool=>tool.id===step.toolId)))throw error('OFFICE_AI_CONTRACT_INVALID',422);
     return create(profile,{...raw,steps:parsed.steps,aiCalls:1},{assertAuthority:state=>check(state.records['profile:'+raw.agentId]?.doc)});
   }
-  async function prepare(profile,key){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(job.type!=='capability-task')throw error('OFFICE_TASK_INVALID');assertTaskAvailable(job);if(TERMINAL.has(job.status)){await nativeReceiptPublication(profile,job);return job;}
+  async function prepare(profile,key){profile=authority(profile);let job=await store.get(profile.id,'job',key);if(job.type!=='capability-task')throw error('OFFICE_TASK_INVALID');assertTaskAvailable(job);if(TERMINAL.has(job.status)){await taskReceiptPublication(profile,job);return job;}
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
     const index=job.steps.findIndex(step=>step.status!=='completed');if(index<0){for(const step of job.steps)await receiptPublication(profile,job,step);job=await store.save(profile.id,'job',{...job,status:'completed',finishedAt:new Date().toISOString()},{expectedRevision:job.revision});
       for(const step of job.steps)await receiptPublication(profile,job,step);
@@ -77,7 +88,7 @@ function attachTasks(service,deps) {
     return store.save(profile.id,'job',{...job,status:tool.approval?'waiting_approval':'queued',errorCode:'',nextPrepareAt:null},{expectedRevision:job.revision});}
   function executionArgs(step){return {...step.argsResolved,...(registry.get(step.toolId)?.approval&&step.preview.fingerprint?{fingerprint:step.preview.fingerprint}:{})};}
   function graph(job,step){const nodes=[{id:'start',type:'trigger.manual',config:{}},{id:'effect',type:'tool.call',config:{toolId:step.toolId,args:executionArgs(step)}},{id:'verify',type:'verify.result',config:{mode:'equals',path:'verified',value:true}},{id:'result',type:'output.result',config:{}}];return{id:'task_'+job.id+'_'+step.id,ownerId:job.ownerId,name:job.task,nodes,edges:nodes.slice(1).map((n,i)=>({id:'e'+i,from:nodes[i].id,to:n.id,channel:'success'}))};}
-  async function executeOnce(profile,key,raw={}){profile=authority(profile);let job=await store.get(profile.id,'job',key);assertTaskAvailable(job);if(TERMINAL.has(job.status)){await nativeReceiptPublication(profile,job);return job;}
+  async function executeOnce(profile,key,raw={}){profile=authority(profile);let job=await store.get(profile.id,'job',key);assertTaskAvailable(job);if(TERMINAL.has(job.status)){await taskReceiptPublication(profile,job);return job;}
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
     const index=job.steps.findIndex(step=>step.status!=='completed'),step=job.steps[index];if(!step||!['ready','waiting_approval'].includes(step.status))throw error('OFFICE_TASK_RECONCILE',409);
     const {profile:current,agent,tool}=await stepAuthority(profile,step);
@@ -149,7 +160,7 @@ function attachTasks(service,deps) {
   async function pollOnce(profile,key){
     profile=authority(profile);let job=await store.get(profile.id,'job',key);assertTaskAvailable(job);
     if(job.runtimeDeviceId!==store.db(profile.id).getDeviceId())throw error('OFFICE_TASK_DEVICE',409);
-    if(job.status!=='waiting_operation'){await nativeReceiptPublication(profile,job);return job;}
+    if(job.status!=='waiting_operation'){await taskReceiptPublication(profile,job);return job;}
     const index=job.steps.findIndex(step=>step.status!=='completed'),step=job.steps[index];
     if(step?.status!=='waiting_operation')throw error('OFFICE_TASK_RECONCILE',409);
     let receiptCommitted=false;
