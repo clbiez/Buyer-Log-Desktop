@@ -121,7 +121,7 @@
     });
     out = out.replace(/\u0001(\d+)\u0002/g, function (_, index) { return marks[Number(index)]; });
     // Both Turkish and English use 100% Cotton / 100% Pamuk notation.
-    return normalizeComposition(out.replace(/%\\s*(\\d{1,3}(?:[.,]\\d+)?)\\s*/g, '$1% '));
+    return normalizeComposition(out.replace(/%\s*(\d{1,3}(?:[.,]\d+)?)\s*/g, '$1% '));
   }
   /* Canonical blend formatter: percentages on the right in both languages,
      fibres ordered by descending percentage. Works with saved/legacy/manual/AI
@@ -135,12 +135,12 @@
   ].sort(function(a,b){return b.length-a.length;});
   var FIBRE_RX = new RegExp('(%\\s*\\d{1,3}(?:[.,]\\d+)?|\\d{1,3}(?:[.,]\\d+)?\\s*%)\\s*('+
     FIBRE_NAMES.map(escapeRx).join('|')+')(?=$|[^A-Za-zÇĞİÖŞÜçğıöşü])','gi'); // i18n-ignore
-  function formatPercentage(value){return String(value).replace(/^%\\s*/,'').replace(/\\s*%$/,'').trim()+'%';}
+  function formatPercentage(value){return String(value).replace(/^%\s*/,'').replace(/\s*%$/,'').trim()+'%';}
   function normalizeComposition(value){
     var src=clean(value),matches=[],hit;
     FIBRE_RX.lastIndex=0;
     while((hit=FIBRE_RX.exec(src))!==null){
-      var amount=Number(hit[1].replace(/[%\\s]/g,'').replace(',','.'));
+      var amount=Number(hit[1].replace(/[%\s]/g,'').replace(',','.'));
       if(!Number.isFinite(amount))continue;
       matches.push({start:hit.index,end:FIBRE_RX.lastIndex,text:formatPercentage(hit[1])+' '+hit[2],amount:amount});
     }
@@ -148,7 +148,7 @@
     var out='',cursor=0,i=0;
     while(i<matches.length){
       var j=i+1;
-      while(j<matches.length && /^\\s*(?:[,;/]\\s*)?$/.test(src.slice(matches[j-1].end,matches[j].start)))j++;
+      while(j<matches.length && /^\s*(?:[,;/]\s*)?$/.test(src.slice(matches[j-1].end,matches[j].start)))j++;
       out+=src.slice(cursor,matches[i].start);
       out+=matches.slice(i,j).sort(function(a,b){return b.amount-a.amount||a.start-b.start;}).map(function(e){return e.text;}).join(' ');
       cursor=matches[j-1].end;i=j;
