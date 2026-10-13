@@ -32921,7 +32921,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     const contexts=Array.isArray(supplied)&&supplied.length?supplied:[{rows:previewRows(),manufacturerName:previewManufacturer()}];
     const previews=[],seen=new Set();
     contexts.forEach(ctx=>{
-      const preview=prepareEmailBuildSubject(topic,Array.isArray(ctx?.rows)?ctx.rows:previewRows(),String(ctx?.manufacturerName||''),sourceKind,previewDate(),{columns:activeColumns,manufacturer,subjectTitle});
+      const preview=prepareEmailBuildSubject(topic,Array.isArray(ctx?.rows)?ctx.rows:previewRows(),String(ctx?.manufacturerName||''),sourceKind,previewDate(),{columns:activeColumns,manufacturer,subjectTitle,order:subjectArrange,separator:mailTopicEditorSeparator()});
       const key=preview.toLocaleLowerCase('tr-TR');if(preview&&!seen.has(key)){seen.add(key);previews.push(preview);}
     });
     const out=modal.querySelector('#mailTopicFinalSubjectPreview');if(out){out.textContent=previews.join('\n');out.title=previews.join('\n');}
@@ -32956,6 +32956,10 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     mailTopicSetColumnKeys(kind,id,sourceKind,keys);
     mailTopicSetSubjectOptions(kind,id,sourceKind,{manufacturer,keys:subjectKeys});
     mailTopicSetContentOptions(kind,id,sourceKind,{excel:includeExcel,table:includeTable,tps:includeTps});
+    if(!topic.subjectOrder||typeof topic.subjectOrder!=='object')topic.subjectOrder={};
+    if(!topic.subjectSeparators||typeof topic.subjectSeparators!=='object')topic.subjectSeparators={};
+    topic.subjectOrder[sourceKind]=subjectArrange.slice();
+    topic.subjectSeparators[sourceKind]=mailTopicEditorSeparator();
     mailTplSave();showToast(en?'E-mail subject settings saved.':'E-posta başlığı ayarları kaydedildi.');close();
   });
   refresh();
