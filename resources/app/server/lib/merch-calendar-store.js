@@ -136,7 +136,9 @@ function parseHtmlCalendar(text) {
     let rowMatch;
     while ((rowMatch = rowRe.exec(section.html))) {
       const html = rowMatch[1];
-      const monthMatch = /<th\b[^>]*\bid=["']([^"']+)["'][^>]*\browspan=["']\d+["'][^>]*>/i.exec(html);
+      // HTML/.xls exports may contain fractional rowspan values (e.g. 5.571428571428571).
+      // The month is encoded in the header id; its visual row span is not part of the data.
+      const monthMatch = /<th\b[^>]*\bid=["']([^"']+)["'][^>]*>/i.exec(html);
       if (monthMatch) currentMonth = monthNumber(monthMatch[1]);
       const weekMatch = /<td\b[^>]*\bclass=["'][^"']*week-cell[^"']*["'][^>]*>([\s\S]*?)<\/td>/i.exec(html);
       if (!weekMatch) continue;

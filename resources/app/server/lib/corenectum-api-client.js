@@ -4,6 +4,7 @@
  * involved. The request shape mirrors PLM_Image_Test_v2.ps1 supplied by the
  * user: Bearer Authorization + Origin/Referer and JSON POST bodies. */
 const settings = require('./corenectum-api-settings');
+const { createHash } = require('crypto');
 const styleApi = require('./corenectum-style-api');
 const requestApi = require('./corenectum-request-api');
 const bomApi = require('./corenectum-bom-api');
@@ -15,6 +16,10 @@ const TECHNICAL_SHEET_URL = 'https://mym-api.lcwaikiki.com/lcw/live/corenectum/s
 const ALLOWED_ENDPOINTS = new Set([styleApi.GET_STYLE_LIST_URL, styleApi.GET_STYLE_IMAGES_URL, TECHNICAL_SHEET_URL, bomApi.GET_STYLE_BOM_INFORMATION_URL, setStyleApi.SET_STYLE_CHILD_ASSOCIATION_URL, requestApi.GET_REQUEST_LIST_URL]);
 const DEFAULT_TIMEOUT_MS = 90000;
 const DEFAULT_RETRIES = 3;
+// Only overlap is shared: there is no completed-response cache or report reuse.
+const SHARED_READ_ENDPOINTS = new Set([styleApi.GET_STYLE_LIST_URL, styleApi.GET_STYLE_IMAGES_URL, bomApi.GET_STYLE_BOM_INFORMATION_URL, setStyleApi.SET_STYLE_CHILD_ASSOCIATION_URL, requestApi.GET_REQUEST_LIST_URL]);
+const pendingReads = new Map();
+const MAX_PENDING_READS = 128;
 
 function apiError(message, code, statusCode = 502, details = null) {
   const error = new Error(message); error.code = code; error.statusCode = statusCode;
@@ -96,13 +101,31 @@ async function jsonResponse(response) {
   try { return text ? JSON.parse(text) : {}; }
   catch (_) { throw apiError('CoreNectum API geçerli JSON döndürmedi.','CORENECTUM_API_INVALID_JSON',502,{remoteStatus:response.status}); }
 }
+async function readJson(userId, url, body, options) {
+  const endpoint = assertEndpoint(url), token = tokenFor(userId, options.token);
+  const scopedOptions = { ...options, token };
+  const load = async () => jsonResponse(await request(userId, endpoint, body, scopedOptions));
+  if (!SHARED_READ_ENDPOINTS.has(endpoint)) return load();
+  // Token rotation and owner changes must never join a previous authority's read.
+  // The opaque key lives only in process memory and is never exposed or logged.
+  const key = createHash('sha256').update(JSON.stringify([String(userId || ''), token,
+    options.method, endpoint, body, options.query, options.language, options.accept,
+    options.timeoutMs, options.retries])).digest('hex');
+  let pending = pendingReads.get(key);
+  if (!pending) {
+    if (pendingReads.size >= MAX_PENDING_READS) return load();
+    pending = load().finally(() => { if (pendingReads.get(key) === pending) pendingReads.delete(key); });
+    pendingReads.set(key, pending);
+  }
+  // Callers normalize/enrich records independently; sharing mutable JSON would
+  // let one operation corrupt another operation's cache or result.
+  return structuredClone(await pending);
+}
 async function postJson(userId, url, body, options = {}) {
-  const response = await request(userId, url, body, { ...options, method:'POST', accept:options.accept || 'application/json, text/plain, */*' });
-  return jsonResponse(response);
+  return readJson(userId, url, body, { ...options, method:'POST', accept:options.accept || 'application/json, text/plain, */*' });
 }
 async function getJson(userId, url, query, options = {}) {
-  const response = await request(userId, url, null, { ...options, method:'GET', query, accept:options.accept || 'application/json, text/plain, */*' });
-  return jsonResponse(response);
+  return readJson(userId, url, null, { ...options, method:'GET', query, accept:options.accept || 'application/json, text/plain, */*' });
 }
 async function postBuffer(userId, url, body, options = {}) {
   const response = await request(userId, url, body, { ...options, accept:options.accept || 'application/pdf, application/octet-stream, */*' });

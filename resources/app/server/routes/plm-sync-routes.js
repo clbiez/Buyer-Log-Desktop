@@ -57,7 +57,7 @@ module.exports = function registerPlmSyncRoutes(app, deps) {
    (upsertPlmStyleLinks) — Collection PLM Sync çalıştıran kullanıcı, PLM
    model linklerini de bedavaya güncellemiş olur. */
 const fetchService=createPlmFetchService(deps);
-app.post('/api/plm-sync/fetch', userAccess.requireArea('koleksiyon'), express.json({limit:'4mb'}), async(req,res)=>{try{res.json(await fetchService.fetch(req.currentUser,req.body||{},{request:req,allowAi:true}));}catch(err){automationError(res,err,'PLM verileri alınamadı.');}});
+app.post('/api/plm-sync/fetch', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders'), express.json({limit:'4mb'}), async(req,res)=>{try{res.json(await fetchService.fetch(req.currentUser,req.body||{},{request:req,allowAi:true}));}catch(err){automationError(res,err,'PLM verileri alınamadı.');}});
 
 
 /* Koleksiyon tablosundaki Artwork Detayı sanal sistem sütunu görünür
@@ -261,6 +261,8 @@ function createPlmFetchService(deps){
   const {normalizePlmId,setModelOperationProgress,withPlmJob,agentBrowserConnector,getModelImageSettings,plmJobs,upsertPlmStyleLinks,userAccess,clearModelOperationProgress}=deps;
   async function fetch(profile,input={}, {request,assertAuthority=()=>{},allowAi=false}={}){
   try {
+     const requestedScope=String(input.scope||'koleksiyon');
+     const scope=['koleksiyon','cp','orders'].includes(requestedScope)?requestedScope:'koleksiyon';
      const selectedOnly = Boolean(input && input.selectedOnly === true);
      const language = String(input && input.language || '').toLowerCase()==='tr'?'tr':String(input && input.language || '').toLowerCase()==='en'?'en':'';
      const raw = Array.isArray(input && input.plmIds) ? input.plmIds : null;
@@ -274,7 +276,7 @@ function createPlmFetchService(deps){
     /* İş kaydı: bu iş Koleksiyon kapsamına yazılır, böylece CP/Orders
        ekranlarında görünmez ama sayfa değişince de durmaz. */
     const fetchRun = await withPlmJob(request||{currentUser:profile}, {
-       kind: 'plm-sync', scope: 'koleksiyon', total: items.length,
+       kind: 'plm-sync', scope, total: items.length,
        label: selectedOnly ? 'PLM seçili modelleri aktar' : `PLM verisi · ${items.length} model`, phase: 'PLM verisi aranıyor',
      }, async job => {
        const collected = await agentBrowserConnector.collectCoreNectumStyleLinks(profile.id, items, {
@@ -367,7 +369,7 @@ function createPlmFetchService(deps){
     let styleLinks = null;
     try { styleLinks = upsertPlmStyleLinks(collected.links, profile); } catch (_) {}
     userAccess.appendAudit(profile, 'PLM_SYNC_FETCH', 'corenectum', {
-      requested: collected.requested, found: collected.links.length, failed: collected.failed.length,
+      scope, requested: collected.requested, found: collected.links.length, failed: collected.failed.length,
       scannedPages: collected.scannedPages, scannedRows: collected.scannedRows,
       bomFetched: collected.bomSync && collected.bomSync.fetched || 0,
       bomWithPrint: collected.bomSync && collected.bomSync.withPrint || 0,

@@ -288,7 +288,9 @@ async function syncPlmBoms(records, options = {}) {
     if (old && !aiPending && old.styleId === target.styleId && old.fingerprint && old.fingerprint === item.fingerprint) {
       unchanged += 1;
       if (old.hasPrint) withPrint += 1;
-      const upgraded=old.fullFingerprint===fullFingerprint?old:{...old,...fullEvidence,fetchedAt:new Date().toISOString()};
+      const currentFabric=item.kind==='set'?(old.fabricSummary||target.fabric):target.fabric;
+      const upgraded=old.fullFingerprint===fullFingerprint&&old.fabric===currentFabric
+        ?old:{...old,...fullEvidence,fabric:currentFabric,fetchedAt:new Date().toISOString()};
       if(upgraded!==old)toSave.push(upgraded);
       entries.set(target.plmId, upgraded);
       if (item.kind === 'set') {
@@ -362,6 +364,7 @@ async function syncPlmBoms(records, options = {}) {
         sourceCreatedDate: null,
         sourceModifiedDate: null,
         fingerprint: item.fingerprint,
+        fabric:fabricSummary||target.fabric,
         fabricSummary,
         artworkSummary,
         setComponents,
@@ -393,6 +396,7 @@ async function syncPlmBoms(records, options = {}) {
         styleId: target.styleId,
         styleBomId: analysis.styleBomId,
         isSetStyle: false,
+        fabric:target.fabric,
         fetchedAt: new Date().toISOString(),
         sourceCreatedDate: analysis.sourceCreatedDate,
         sourceModifiedDate: analysis.sourceModifiedDate,

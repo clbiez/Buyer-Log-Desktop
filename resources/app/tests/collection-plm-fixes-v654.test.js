@@ -110,8 +110,9 @@ test('v6.54 PLM Excel başlık takma adlarında Licensor tanınıyor', () => {
 });
 
 test('v6.54 licensor "dokunulan alanlar" listesinde (satıra gerçekten yazılır)', () => {
-  const body = bodyOf(APP, 'kolPlmImportTouchedKeys');
-  assert.match(body, /'licensor'/);
+  assert.match(bodyOf(APP, 'kolPlmImportTouchedKeys'), /BLCollectionModelGroups\.kolPlmImportTouchedKeys/);
+  const keys=require('../public/collection-model-groups').kolPlmImportTouchedKeys();
+  assert.ok(keys.includes('licensor'), 'Native PLM import must persist licensor');
 });
 
 test('v6.54 satır objesine licensor GERÇEKTEN yazılıyor (yalnız alias yetmez)', () => {

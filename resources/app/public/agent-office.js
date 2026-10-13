@@ -106,9 +106,20 @@
     if(String(err?.code || '').startsWith('LCWAI_'))return root.BuyerLogAI?.errorText?.(err) || L('LCW AI bağlantısını kontrol edin.','Check the LCW AI connection.');
     return L('İşlem doğrulanamadı. Görev kaydını, güncel veriyi ve yetkinizi kontrol edin.','The operation could not be verified. Check the task record, current data and permissions.')+` (${err?.code || 'OFFICE_NETWORK'})`;
   }
+  const pendingReads=new Map();let readEpoch=0;
   async function api(path,body,method){
-    const owner=state.generation;const response=await fetch('/api/agent-office'+path,{method:method || (body===undefined?'GET':'POST'),credentials:'same-origin',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
-    const value=await response.json().catch(()=>({}));if(owner!==state.generation)throw {code:'OFFICE_SESSION_CHANGED'};if(!response.ok)throw Object.assign(new Error(value.code || 'OFFICE_NETWORK'),value);return value;
+    const owner=state.generation,verb=method || (body===undefined?'GET':'POST');
+    if(verb!=='GET'){readEpoch++;pendingReads.clear();}
+    const key=JSON.stringify([owner,readEpoch,path]);
+    let pending=verb==='GET'?pendingReads.get(key):null;
+    if(!pending){
+      pending=(async()=>{const response=await fetch('/api/agent-office'+path,{method:verb,credentials:'same-origin',headers:body===undefined?{}:{'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)});
+        const value=await response.json().catch(()=>({}));if(owner!==state.generation)throw {code:'OFFICE_SESSION_CHANGED'};if(!response.ok)throw Object.assign(new Error(value.code || 'OFFICE_NETWORK'),value);return value;
+      })().finally(()=>{if(pendingReads.get(key)===pending)pendingReads.delete(key);if(verb!=='GET'&&owner===state.generation){readEpoch++;pendingReads.clear();}});
+      if(verb==='GET'&&pendingReads.size<64)pendingReads.set(key,pending);
+    }
+    const value=await pending;if(owner!==state.generation)throw {code:'OFFICE_SESSION_CHANGED'};
+    return verb==='GET'?structuredClone(value):value;
   }
   async function refresh(){const owner=state.generation;const data=(await api('/state')).state;if(owner!==state.generation)return;state.data=data;if(!state.data.profiles.some(item=>item.id===state.selected))state.selected=state.data.profiles[0]?.id || '';}
   function scopeForm(){return `<div class="aoScope">${[['orderCode',L('Sipariş kodu','Order code')],['plmId','PLM ID'],['colourCode',L('Renk kodu','Color code')]].map(([key,title])=>`<label>${esc(title)}<input class="aoInput" data-ao-scope="${key}" value="${esc(state.scope[key] || '')}" maxlength="80" placeholder="${esc(L('Tümü','All'))}"></label>`).join('')}</div>`;}
@@ -496,7 +507,7 @@
       new MutationObserver(records=>{for(const record of records){if(record.attributeName==='lang'&&visible())render();else if(record.attributeName==='data-active-tab'){if(visible())state.scene?.start();else state.scene?.pause();}}}).observe(document.documentElement,{attributes:true,attributeFilter:['lang']});
       new MutationObserver(()=>{if(visible())state.scene?.start();else state.scene?.pause();}).observe(document.body,{attributes:true,attributeFilter:['data-active-tab']});
       document.addEventListener('visibilitychange',()=>{if(visible())state.scene?.start();else state.scene?.pause();});
-      root.addEventListener('bl:user-access-applied',event=>{state.generation++;state.controller?.abort();state.scene?.destroy();document.getElementById('agentOfficeModal')?.remove();Object.assign(state,{data:null,messages:[],moderation:null,mergeSelections:[],catalog:[],analysis:null,archivePreview:null,selected:'',conversationId:'',before:'',hasMore:false,draft:'',scope:{},live:'',busy:false,furnitureCategory:'all',furnitureSelection:'',simulation:true,renderer:'',officeDraft:null,editUndo:false,editRedo:false,avatarDraft:null,avatarKey:'',avatarChanged:false,editFloor:0,layoutBusy:false,customizing:false,appearanceTab:'hair',owner:event.detail?.id || '',scene:null});host().innerHTML='';if(visible())void mount();});
+      root.addEventListener('bl:user-access-applied',event=>{state.generation++;pendingReads.clear();readEpoch++;state.controller?.abort();state.scene?.destroy();document.getElementById('agentOfficeModal')?.remove();Object.assign(state,{data:null,messages:[],moderation:null,mergeSelections:[],catalog:[],analysis:null,archivePreview:null,selected:'',conversationId:'',before:'',hasMore:false,draft:'',scope:{},live:'',busy:false,furnitureCategory:'all',furnitureSelection:'',simulation:true,renderer:'',officeDraft:null,editUndo:false,editRedo:false,avatarDraft:null,avatarKey:'',avatarChanged:false,editFloor:0,layoutBusy:false,customizing:false,appearanceTab:'hair',owner:event.detail?.id || '',scene:null});host().innerHTML='';if(visible())void mount();});
       setInterval(()=>{if(!visible()||state.busy)return;const clock=host()?.querySelector('[data-ao-clock]');if(clock)clock.textContent=new Date().toLocaleTimeString(en()?'en-GB':'tr-TR',{hour:'2-digit',minute:'2-digit'});void api('/state').then(value=>{if(!state.data)return;const prior=state.data.alerts.length;state.data=value.state;state.scene?.update(sceneData());if(prior!==state.data.alerts.length)render();}).catch(()=>{});},60000);
     }
     try{const generation=state.generation;await refresh();if(generation!==state.generation)return;state.owner=root.BL_USER_CONTEXT?.id || state.owner;state.conn=await root.BuyerLogAI.getStatus({refresh:false}).catch(()=>null);if(generation!==state.generation)return;render();

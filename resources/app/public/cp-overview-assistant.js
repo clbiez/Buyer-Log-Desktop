@@ -326,7 +326,7 @@
       saved = false;
       if (typeof window.showToast === 'function') window.showToast(L('Checklist yerel kaydı başarısız; sunucu kaydı bekleniyor: ', 'Checklist local save failed; waiting for server save: ') + error.message);
     }
-    notifyDecisionContextChanged('checklist-answer');
+    if (!options || options.silent !== true) notifyDecisionContextChanged('checklist-answer');
     return saved;
   }
 
@@ -1461,7 +1461,7 @@
   const STATUS_TONE = Object.freeze({ open: 'blue', approved: 'green', rejected: 'red', notRequired: 'gray' });
   const statusText = status => Checklist.statusLabel(status, lang());
   function statusButtons(orderKey, current) {
-    return Checklist.STATUS_IDS.map(status => `<button type="button" class="cpaStatusBtn tone-${STATUS_TONE[status]}${current === status ? ' is-on' : ''}" data-cpa-answer="${status}" data-cpa-key="${esc(orderKey)}" aria-pressed="${current === status ? 'true' : 'false'}">${esc(statusText(status))}</button>`).join('');
+    return Checklist.statusIds().map(status => `<button type="button" class="cpaStatusBtn tone-${STATUS_TONE[status] || 'gray'}${current === status ? ' is-on' : ''}" data-cpa-answer="${status}" data-cpa-key="${esc(orderKey)}" aria-pressed="${current === status ? 'true' : 'false'}">${esc(statusText(status))}</button>`).join('');
   }
 
   function openChecklist(itemId) {
@@ -1711,7 +1711,9 @@
     const kind = fieldKind(fieldId, rule);
     if (kind === 'checklist') {
       const labels = Rules.CHECKLIST_STATE_LABELS[lang()];
-      return Rules.CHECKLIST_STATES.map(value => ({ value, label: labels[value] || value }));
+      return [...Checklist.statusIds(), 'notApplicable'].map(value => ({
+        value, label: labels[value] || Checklist.statusLabel(value, lang()) || value,
+      }));
     }
     if (kind === 'rule') {
       const labels = Rules.RULE_STATE_LABELS[lang()];
@@ -2066,8 +2068,9 @@
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   }
 
-  function aiGuideFor(kind, rule, request) {
-    return Rules.buildAiGuide({ lang: lang(), kind, fields: catalogFor(rule), request: request || '' });
+  function aiGuideFor(kind, rule, request, autoStatus) {
+    return Rules.buildAiGuide({ lang: lang(), kind, fields: catalogFor(rule),
+      request: request || '', autoStatus: autoStatus || '' });
   }
 
   function ruleBlock(rule, view) {
@@ -2107,6 +2110,17 @@
           </div>
           <small>${esc(L('Seçilen alanlar CP durum menüsündeki Checklist Detayları ekranında açılır.', 'Selected fields appear in Checklist Details from the CP status menu.'))}</small>
         </div>`;
+    const automaticStatusFields = rule.kind === 'checklist' ? `<div class="cpaRuleTarget cpaRuleAutoStatus">
+      <b>${esc(L('Koşula bağlı otomatik durum', 'Automatic status when a condition matches'))}</b>
+      <small>${esc(L('Soru koşulundan bağımsızdır. Aşağıdaki formül TRUE olursa durum yazılır. Manuel kararlar korunur; koşul artık sağlanmasa bile daha önce kaydedilen durum kendiliğinden silinmez.', 'This is separate from the question condition. When the formula is TRUE, the status is saved. Manual decisions win and previously assigned states are not erased when the condition stops matching.'))}</small>
+      <label><span>${esc(L('Otomatik yazılacak durum', 'Status to assign'))}</span>
+        <select data-cpa-auto-status><option value="">${esc(L('Kapalı (otomatik yazma)', 'Disabled (do not auto-assign)'))}</option>
+          ${Checklist.statusIds().map(id => `<option value="${esc(id)}"${rule.autoStatus === id ? ' selected' : ''}>${esc(Checklist.statusLabel(id, lang()))}</option>`).join('')}
+        </select></label>
+      <label><span>${esc(L('Otomatik atama koşulu (TRUE / FALSE)', 'Auto-assignment condition (TRUE / FALSE)'))}</span>
+        <textarea rows="3" data-cpa-auto-formula spellcheck="false" placeholder="${esc(L('=IN([Aşama],"LOADING","IN_WAREHOUSE")', '=IN([Stage],"LOADING","IN_WAREHOUSE")'))}">${esc(Rules.formulaToDisplay(rule.autoFormula || '', catalogFor(rule), lang()))}</textarea></label>
+      <small data-cpa-auto-feedback aria-live="polite">${esc(L('Örnek: Üretim bittiyse Approved yaz. Yalnızca doğrulanabilen veri alanlarını kullanın.', 'Example: Set Approved when production is finished. Use verifiable data fields only.'))}</small>
+    </div>` : '';
     const reasonFields = rule.kind === 'priority'
       ? `<div class="cpaRuleReasons">
           <label class="cpaRuleTarget cpaRuleReasonField"><span>${esc(L('Siparişte görünecek sebep (TR)', 'Reason shown on the order (TR)'))}</span>
@@ -2139,7 +2153,17 @@
     /* LCW AI ortak paneli (public/lcwai-assistant.js) birincil yoldur; kural
        motorunun doğrulaması ve canlı önizlemesi aynıdır. Kopyala / yapıştır
        rehberi LCW AI erişimi olmayanlar için "Manuel yol" olarak durur. */
-    const aiEditor = `<div class="cpaLcwAi" data-cpa-lcwai-host></div>
+    const aiPurposeEditor = rule.kind === 'checklist' ? `<div class="cpaRuleTarget cpaRuleAutoStatus">
+        <b>${esc(L('LCW AI önerisinin hedefi', 'Target for LCW AI suggestion'))}</b>
+        <select data-cpa-ai-purpose aria-label="${esc(L('LCW AI koşul hedefi', 'LCW AI condition target'))}">
+          <option value="question"${aiDraft.purpose !== 'auto' ? ' selected' : ''}>${esc(L('Sorunun hangi siparişlere sorulacağı', 'Which orders are asked'))}</option>
+          <option value="auto"${aiDraft.purpose === 'auto' ? ' selected' : ''}>${esc(L('Koşul gerçekleşince durum yaz', 'Assign a status when the condition matches'))}</option>
+        </select>
+        ${aiDraft.purpose === 'auto' ? `<label><span>${esc(L('Yazılacak durum', 'Status to write'))}</span><select data-cpa-ai-auto-status>
+          ${Checklist.statusIds().map(id => `<option value="${esc(id)}"${(aiDraft.autoStatus || rule.autoStatus || 'approved') === id ? ' selected' : ''}>${esc(Checklist.statusLabel(id, lang()))}</option>`).join('')}
+        </select></label>` : ''}
+      </div>` : '';
+    const aiEditor = `${aiPurposeEditor}<div class="cpaLcwAi" data-cpa-lcwai-host></div>
         <details class="lcwaiManual"><summary>${esc(L('Manuel yol: rehberi başka bir AI aracına verin', 'Manual route: give the guide to another AI tool'))}</summary>
         <ol class="cpaAiSteps">
           <li><b>${esc(L('Ne istediğinizi kendi cümlenizle yazın', 'Describe what you want in your own words'))}</b>
@@ -2176,6 +2200,7 @@
     const body = isOpen ? `<div class="cpaRuleBody" id="cpa-rule-body-${esc(rule.id)}">
         <div class="cpaRuleHead">${editorFields}</div>
         ${reasonFields}
+        ${automaticStatusFields}
         ${modeEditor}
         <div class="cpaRuleModePanel" id="cpa-rule-mode-panel-${esc(rule.id)}" role="tabpanel" aria-labelledby="cpa-rule-mode-${uiMode}-${esc(rule.id)}" tabindex="0">${panel}</div>
         <div class="cpaRulePreview" data-cpa-rule-preview aria-live="polite">${previewHtml(rule)}</div>
@@ -2230,7 +2255,7 @@
       get expandedRuleId() { return expandedRuleId; },
       modeOf: rule => uiModes.get(rule.id) || (rule.mode === 'formula' ? 'formula' : 'basic'),
       aiDraftOf: rule => {
-        if (!aiDrafts.has(rule.id)) aiDrafts.set(rule.id, { request: '', answer: '' });
+        if (!aiDrafts.has(rule.id)) aiDrafts.set(rule.id, { request: '', answer: '', purpose: 'question', autoStatus: rule.autoStatus || 'approved' });
         return aiDrafts.get(rule.id);
       },
       isAdvanced: (rule, index, condition) => advancedRows.has(`${rule.id}:${index}`)
@@ -2377,6 +2402,7 @@
           <div class="cpaRulesToolbar">
             <p class="cpaNote cpaRulesNote">${esc(note)}</p>
             <div class="cpaRulesToolbarActions">
+              ${isChecklist ? `<button type="button" class="cpaBtn sm" data-cpa-manage-statuses>${esc(L('Durumları Yönet', 'Manage statuses'))}</button>` : ''}
               <button type="button" class="cpaBtn sm" data-cpa-ai-guide title="${esc(L('Kural dilini anlatan Markdown rehberi; ChatGPT gibi bir araca verin.', 'Markdown guide to the rule language; give it to a tool like ChatGPT.'))}">${esc(L('AI rehberi (.md)', 'AI guide (.md)'))}</button>
               ${addButton}
             </div>
@@ -2443,6 +2469,12 @@
     /* AI cevabı: formül bulunur, görünen adlar kimliğe çevrilir, Buyer Log'un
        kendi ayrıştırıcısıyla doğrulanır ve canlı önizleme gösterilir.
        Uygulamak kullanıcının açık onayıdır; metin asla çalıştırılmaz. */
+    function applyAiFormula(rule, formula, draft) {
+      if (rule.kind === 'checklist' && draft.purpose === 'auto') {
+        rule.autoStatus = Checklist.normalizeStatus(draft.autoStatus || 'approved') || 'approved';
+        rule.autoFormula = formula;
+      } else applyFormula(rule, formula);
+    }
     function aiAnswerResult(rule) {
       const draft = view.aiDraftOf(rule);
       const answer = String(draft.answer || '').trim();
@@ -2471,7 +2503,7 @@
         <button type="button" class="cpaBtn sm primary" data-cpa-ai-apply>${esc(L('Bu formülü kullan', 'Use this formula'))}</button>`;
       const applyButton = box.querySelector('[data-cpa-ai-apply]');
       if (applyButton) applyButton.onclick = () => {
-        applyFormula(rule, result.formula);
+        applyAiFormula(rule, result.formula, view.aiDraftOf(rule));
         view.aiDraftOf(rule).answer = '';
         commit(); draw(); scrollToRule(rule.id);
         if (typeof showToast === 'function') showToast(L('Formül kurala uygulandı.', 'The formula was applied to the rule.'));
@@ -2510,7 +2542,7 @@
         howRulesWork: L('Formül TRUE ise kural siparişe uygulanır. Öncelik kuralı eşleşen siparişi seçili önceliğe YÜKSELTİR (CRITICAL = Kritik/kırmızı). Renk/öncelik formülde değil "priority" alanında verilir.', 'When the formula is TRUE the rule applies to the order. A priority rule ESCALATES a matching order to the chosen priority (CRITICAL = Critical/red). Colour/priority is given in the "priority" field, not in the formula.'),
         currentFormula: Rules.formulaToDisplay(rule.formula || '', catalogFor(rule), lang()),
         availableFields: fields,
-        checklistValues: ['open', 'approved', 'rejected', 'notRequired', 'notApplicable'],
+        checklistValues: [...Checklist.statusIds(), 'notApplicable'],
       };
     }
 
@@ -2529,8 +2561,19 @@
           onRequestChange: text => { draft.request = text; },
           buildRequest: text => ({
             task: text,
-            guide: aiGuideFor(rule.kind, rule, text),
-            context: lcwaiRuleContext(rule),
+            guide: aiGuideFor(rule.kind, rule, text,
+              rule.kind === 'checklist' && draft.purpose === 'auto'
+                ? (draft.autoStatus || 'approved') : ''),
+            context: {
+              ...lcwaiRuleContext(rule),
+              ...(rule.kind === 'checklist' ? {
+                taskPurpose: draft.purpose === 'auto' ? 'auto_status_assignment' : 'checklist_question',
+                targetChecklistStatus: draft.purpose === 'auto' ? (draft.autoStatus || 'approved') : '',
+                howRulesWork: draft.purpose === 'auto'
+                  ? L('Formül TRUE olunca seçilen checklist durumu otomatik kaydedilir. Soru kapsamı değişmez. Manuel cevaplar korunur.', 'When the formula is TRUE, the chosen checklist state is automatically recorded. The question scope is unchanged and manual choices always win.')
+                  : L('Formül, hangi siparişlere checklist sorusunun sorulacağını belirler. Durumu otomatik atamak için üstteki hedefi değiştirin.', 'The formula decides which orders are asked. Change the target selector above to auto-assign a status.'),
+              } : {}),
+            },
           }),
           interpret: result => {
             const picked = AI.pickField(result, 'formula', Rules.extractFormula);
@@ -2547,15 +2590,18 @@
               if (preview) matchLine = `<div class="lcwaiResultLine is-ok"><span>${esc(L('Önizleme', 'Preview'))}</span>✓ ${esc(L(`Formül geçerli · şu an ${int(preview.count)} sipariş eşleşiyor`, `Formula is valid · ${int(preview.count)} orders match right now`))}</div>`;
             }
             const priorityLine = suggestedPriority ? `<div class="lcwaiResultLine"><span>${esc(L('Öncelik', 'Priority'))}</span><b>${esc(priorityLabel(suggestedPriority))}</b></div>` : '';
+            const autoLine = rule.kind === 'checklist' && draft.purpose === 'auto'
+              ? `<div class="lcwaiResultLine"><span>${esc(L('Otomatik yazılacak', 'Automatically set'))}</span><b>${esc(Checklist.statusLabel(draft.autoStatus || 'approved', lang()))}</b></div>`
+              : '';
             return {
               ok: Boolean(validation.valid),
               value: { formula, priority: suggestedPriority },
               issues: validation.valid ? [] : (validation.errors || []),
-              html: `<div class="lcwaiResultLine"><span>${esc(L('Koşul', 'Condition'))}</span></div><code>${esc(shown)}</code>${priorityLine}${matchLine}`,
+              html: `<div class="lcwaiResultLine"><span>${esc(L('Koşul', 'Condition'))}</span></div><code>${esc(shown)}</code>${priorityLine}${autoLine}${matchLine}`,
             };
           },
           onApply: ({ formula, priority }) => {
-            applyFormula(rule, formula);
+            applyAiFormula(rule, formula, draft);
             if (priority && rule.kind === 'priority') rule.target = priority;
             draft.answer = '';
             commit(); draw(); scrollToRule(rule.id);
@@ -2565,6 +2611,46 @@
       };
       if (window.BuyerLogAI) mount(window.BuyerLogAI);
       else Promise.resolve(window.BLPerf?._loadScript?.('lcwai-assistant.js?rev=1')).catch(() => null).then(() => mount(window.BuyerLogAI || null));
+    }
+
+    function openStatusManager() {
+      const overlay = document.createElement('div');
+      overlay.className = 'cpaModalOverlay';
+      overlay.innerHTML = `<div class="cpaModal cpaChecklistAnswerModal" role="dialog" aria-modal="true">
+        <header><div><b>${esc(L('Checklist durumları', 'Checklist statuses'))}</b><small>${esc(L('Yeni durumlar yalnız sizin tercihlerinizde saklanır.', 'Custom states are saved in your user preferences.'))}</small></div>
+          <button type="button" data-status-close aria-label="${esc(L('Kapat', 'Close'))}">×</button></header>
+        <div class="cpaModalBody">
+          <div data-status-list></div>
+          <label class="cpaRuleTarget"><span>${esc(L('Yeni durum adı', 'New status name'))}</span>
+            <input data-status-name maxlength="50" placeholder="${esc(L('Örn. Üreticiden Bekleniyor', 'e.g. Waiting Supplier'))}"></label>
+          <label class="cpaCheck"><input type="checkbox" data-status-resolved><span>${esc(L('Bu durum seçilince soruyu tamamlanmış kabul et', 'Treat this status as resolved and close the question'))}</span></label>
+          <p class="cpaNote" data-status-error role="alert"></p>
+        </div><footer><button type="button" class="cpaBtn" data-status-close>${esc(L('Kapat', 'Close'))}</button>
+          <button type="button" class="cpaBtn primary" data-status-add>+ ${esc(L('Durum ekle', 'Add status'))}</button></footer></div>`;
+      document.body.appendChild(overlay);
+      const refresh = () => {
+        overlay.querySelector('[data-status-list]').innerHTML =
+          Checklist.statusIds().map(id => `<div class="cpaRowBetween" style="margin:6px 0"><span>${esc(Checklist.statusLabel(id, lang()))}${Checklist.customStatuses().some(item => item.id === id && item.resolved) ? ' ✓' : ''}</span>
+            ${id.startsWith('custom:') ? `<button type="button" class="cpaBtn sm" data-status-remove="${esc(id)}">${esc(L('Kaldır', 'Remove'))}</button>` : ''}</div>`).join('');
+        overlay.querySelectorAll('[data-status-remove]').forEach(button => button.onclick = () => {
+          if (!confirm(L('Bu durum tanımını kaldıralım mı? Eski cevaplar korunur, ancak adı artık özel görünmez.', 'Remove this status definition? Existing answers remain, but the custom label will no longer be shown.'))) return;
+          Checklist.deleteCustomStatus(button.dataset.statusRemove);
+          refresh(); draw(); recompute();
+          window.BLChecklistSupplierSync?.refreshColumns?.({ render: true });
+        });
+      };
+      refresh();
+      overlay.querySelectorAll('[data-status-close]').forEach(button => button.onclick = () => { overlay.remove(); draw(); });
+      overlay.onclick = event => { if (event.target === overlay) { overlay.remove(); draw(); } };
+      overlay.querySelector('[data-status-add]').onclick = () => {
+        try {
+          Checklist.addCustomStatus(overlay.querySelector('[data-status-name]').value, overlay.querySelector('[data-status-resolved]').checked);
+          overlay.querySelector('[data-status-name]').value = '';
+          overlay.querySelector('[data-status-error]').textContent = '';
+          refresh(); draw(); recompute();
+          window.BLChecklistSupplierSync?.refreshColumns?.({ render: true });
+        } catch (error) { overlay.querySelector('[data-status-error]').textContent = String(error.message || error); }
+      };
     }
 
     function confirmDelete(rule) {
@@ -2580,6 +2666,17 @@
       modal.querySelectorAll('[data-cpa-close]').forEach(el => el.onclick = close);
       modal.querySelectorAll('[data-cpa-add-priority]').forEach(el => el.onclick = addPriority);
       modal.querySelectorAll('[data-cpa-add-checklist]').forEach(el => el.onclick = addChecklist);
+      modal.querySelectorAll('[data-cpa-manage-statuses]').forEach(el => el.onclick = openStatusManager);
+      modal.querySelectorAll('[data-cpa-ai-purpose]').forEach(el => el.onchange = () => {
+        const rule = findRule(ruleIdOf(el));
+        view.aiDraftOf(rule).purpose = el.value === 'auto' ? 'auto' : 'question';
+        draw(); scrollToRule(rule.id);
+      });
+      modal.querySelectorAll('[data-cpa-ai-auto-status]').forEach(el => el.onchange = () => {
+        const rule = findRule(ruleIdOf(el));
+        view.aiDraftOf(rule).autoStatus = Checklist.normalizeStatus(el.value) || 'approved';
+        draw(); scrollToRule(rule.id);
+      });
       modal.querySelectorAll('[data-cpa-new-rule]').forEach(el => el.onclick = () => { showTemplates = !showTemplates; draw(); });
       modal.querySelectorAll('[data-cpa-template]').forEach(el => el.onclick = () => {
         const template = ruleTemplates(activeTab).find(item => item.id === el.dataset.cpaTemplate);
@@ -2614,6 +2711,28 @@
         commit(); draw();
       });
       modal.querySelectorAll('[data-cpa-rule-target]').forEach(el => el.onchange = () => { findRule(ruleIdOf(el)).target = el.value; commit(); draw(); });
+      modal.querySelectorAll('[data-cpa-auto-status]').forEach(el => el.onchange = () => {
+        const rule = findRule(ruleIdOf(el));
+        rule.autoStatus = Checklist.normalizeStatus(el.value) || '';
+        commit(); draw(); scrollToRule(rule.id);
+      });
+      modal.querySelectorAll('[data-cpa-auto-formula]').forEach(el => {
+        const rule = findRule(ruleIdOf(el));
+        const feedback = el.closest('.cpaRuleAutoStatus').querySelector('[data-cpa-auto-feedback]');
+        el.oninput = () => {
+          const formula = Rules.formulaFromDisplay(el.value, catalogFor(rule));
+          const result = formula ? Rules.validateExpression(formula, { fields: formulaFieldIds(rule) }) : { valid: !rule.autoStatus, errors: ['Condition required'] };
+          feedback.textContent = result.valid ? L('✓ Geçerli koşul', '✓ Valid condition') : (result.errors || []).join(' · ');
+          feedback.classList.toggle('is-invalid', !result.valid);
+        };
+        el.onchange = () => {
+          const formula = Rules.formulaFromDisplay(el.value, catalogFor(rule));
+          const valid = !formula || Rules.validateExpression(formula, { fields: formulaFieldIds(rule) }).valid;
+          if (!valid) { el.oninput(); return; }
+          rule.autoFormula = formula;
+          commit();
+        };
+      });
       const syncReasonField = (el, rule, key) => {
         const value = String(el.value || '').trim();
         rule[key] = value;
@@ -3080,7 +3199,7 @@
       for (const rule of reusableRules) {
         const directKey = Checklist.answerKey(analysis.orderKey, rule.id);
         const direct = state.answers[directKey];
-        if (!direct || Checklist.normalizeStatus(direct.state) !== 'approved') continue;
+        if (!direct || direct.source === 'auto_rule' || Checklist.normalizeStatus(direct.state) !== 'approved') continue;
         const optionKey = Checklist.optionAnswerKey(analysis, rule.id);
         if (!optionKey) continue;
         const reusable = state.answers[optionKey];
@@ -3108,12 +3227,13 @@
   }
   const decisionRuntime = window.BLCpDecisionRuntime.create({
     contextKey:decisionCacheKey, analyzeRow:Engine.analyzeOrder, summarize:Engine.summarizeAnalyses,
+    workerFactory:typeof window.Worker==='function' ? ()=>new window.Worker('/cp-decision-worker.js?rev=worker272') : null,
   });
   const personalEvaluations = new WeakMap();
   async function analyzeRowsWithPersonalRulesAsync(rows, options = {}) {
     const key = decisionCacheKey();
     const transitRules = window.state?.overrides?.transitRules || [];
-    const model = await decisionRuntime.computeAsync(rows, { settings:{targetType:state.settings.targetType},transitRules });
+    const model = await decisionRuntime.computeAsync(rows, { today:Engine.defaultOrdinal(new Date()),settings:{targetType:state.settings.targetType},transitRules });
     if (!model || decisionCacheKey() !== key || options.isCurrent?.() === false) return null;
     const steps = personalModelSteps(model, options);
     let start = performance.now(),step;
@@ -3136,6 +3256,17 @@
     return step.value;
   }
 
+  let pendingAutomaticStatusSync = false;
+  function flushAutomaticStatusSync() {
+    if (!pendingAutomaticStatusSync) return;
+    const sync = window.BLChecklistSupplierSync;
+    if (!sync || typeof sync.syncAnswerChanges !== 'function') return;
+    pendingAutomaticStatusSync = false;
+    void sync.syncAnswerChanges().catch(error => {
+      pendingAutomaticStatusSync = true;
+      if (typeof showToast === 'function') showToast(L('Otomatik Checklist cevapları senkronize edilemedi: ', 'Could not sync automatic Checklist statuses: ') + String(error.message || error));
+    });
+  }
   function* personalModelSteps(initialModel, opts) {
     let model = initialModel;
     // v1'den kalan PO-bazlı onayları, yeni model/renk kapsamı seçiliyse
@@ -3151,6 +3282,7 @@
     const customItems = new Map();
     const evaluations = new Map();
     const preparedRules=Rules.prepareEvaluation?.(state.rules);
+    const autoWrites = [];
     for (const analysis of model.orders) {
       if (analysis.calculatedPriority == null) analysis.calculatedPriority = analysis.priority;
       let evaluated = personalEvaluations.get(analysis);
@@ -3161,11 +3293,41 @@
         personalEvaluations.set(analysis, evaluated);
       }
       evaluations.set(analysis.orderKey, evaluated);
+      if (opts.commit === true && state.checklistSettings.enabled) {
+        for (const decision of (evaluated.autoDecisions || [])) {
+          const key = Checklist.answerKey(analysis.orderKey, decision.itemId);
+          const previous = state.answers[key];
+          if (previous && previous.source !== 'auto_rule') continue;
+          if (previous && Checklist.normalizeStatus(previous.state) === decision.state) continue;
+          autoWrites.push({ key, analysis, decision, previous });
+        }
+      }
       analysis.checklistItemIds = evaluated.customItems.map(item => item.id);
       analysis.checklistState = evaluated.checklistState;
       customItems.set(analysis.orderKey, evaluated.customItems);
       checklistState.set(analysis.orderKey, evaluated.checklistState);
       yield;
+    }
+    // Persist deterministic status assignments only for a committed data pass.
+    // Never write during previews, row hover, exports or background probes.
+    // A single save batches updates for the supplier-sync journal.
+    if (autoWrites.length) {
+      const by = (window.BL_USER_CONTEXT || {}).id || '';
+      let at = Math.max(Date.now(), state.lastAnswerAt || 0);
+      for (const { key, analysis, decision, previous } of autoWrites) {
+        const preserved = {};
+        for (const name of ['note', 'reportNumber', 'actualDate', 'attachments']) {
+          if (previous && Object.prototype.hasOwnProperty.call(previous, name)) preserved[name] = previous[name];
+        }
+        at = Math.max(at + 1, (Date.parse(previous && previous.at || '') || 0) + 1);
+        state.answers[key] = Checklist.makeAnswer(decision.state, analysis, {
+          ...preserved, by, at: new Date(at).toISOString(), source: 'auto_rule',
+        });
+      }
+      state.lastAnswerAt = at;
+      // Do not invalidate the active async decision batch midway through a pass.
+      // Its computed checklistState already contains these answers.
+      if (saveAnswers({ silent: true })) pendingAutomaticStatusSync = true;
     }
     for (const analysis of model.orders) {
       const applied = evaluations.get(analysis.orderKey);
@@ -3214,6 +3376,7 @@
   function recompute() {
     if (!lastRows) return;
     analyzeRowsWithPersonalRules(lastRows, { commit: true });
+    flushAutomaticStatusSync();
   }
 
   /* CP / Orders Priority hücreleri de Overview ile AYNI kişisel decision
@@ -3285,6 +3448,7 @@
       overviewDecisionPending=false;
       if (!model) { state.rowsSignature='';onOverviewRendered(lastRows,context);return; }
       render();
+      flushAutomaticStatusSync();
     }).catch(error=>{if(generation!==overviewDecisionGeneration)return;overviewDecisionPending=false;state.rowsSignature='';if(typeof showToast==='function')showToast(error.message);});
   }
 
@@ -3310,6 +3474,7 @@
     onOverviewRendered, render, computeDecisionsForRows, computeDecisionsForRowsAsync, peekDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions, createChecklistItem,
     persistChecklistAnswers: saveAnswers,
     openRules, openSettings,
+    decisionRuntimeStats: () => decisionRuntime.getStats(),
     decisionContextRevision: () => decisionContextRevision, _state: state,
   };
 })();

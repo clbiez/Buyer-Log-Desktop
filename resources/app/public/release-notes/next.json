@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-10",
+  "publishedAt": "2026-10-13",
   "bootstrapVisual": false,
   "title": {
     "tr": "Lisans kartları ve Buyer Log iyileştirmeleri",
@@ -5365,6 +5365,138 @@
           "tr": "Gerçek demo kullanıcı · tamamlanmış okuma · eski pencerede güncel yetki kontrolü",
           "en": "Actual demo user · completed read · current authority check in a stale dialog"
         }
+      }
+    },
+    {
+      "id": "cp-background-worker",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "CP hesaplamaları ekranı bekletmeden hazırlanır",
+        "en": "CP calculations run in the background"
+      },
+      "path": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-worker.png",
+        "alt": {
+          "tr": "Demo CP tablosunda hesaplanmış öncelikler ve satır toplamları",
+          "en": "Calculated priorities and row totals in the demo CP table"
+        },
+        "caption": {
+          "tr": "Demo CP tablosunda hesaplanmış öncelikler ve satır toplamları",
+          "en": "Calculated priorities and row totals in the demo CP table"
+        }
+      },
+      "body": {
+        "tr": "CP üretim hazırlığı ve toplulaştırma kanonik motorla Web Worker içinde hazırlanır. Satırlar küçük parçalarla aktarılır; kullanıcı, yetki, veri veya kural değişirse eski sonuç yayımlanmaz. Kişisel kurallar ve Checklist onayları aynı doğrulama yolunu kullanır. Worker kullanılamazsa mevcut parçalı hesaplama devam eder.",
+        "en": "CP readiness and aggregation run in a Web Worker using the canonical engine. Rows transfer in small batches; results are discarded if user, authority, data or rule revisions change. Personal rules and Checklist approvals retain their canonical validation path. Existing cooperative computation remains available if the Worker cannot run."
+      }
+    },
+    {
+      "id": "excel-refresh-bounded-queue",
+      "type": "improvement",
+      "module": {
+        "tr": "Veri Yenileme",
+        "en": "Data Refresh"
+      },
+      "title": {
+        "tr": "Bağımsız Excel işleri gereksiz sırada beklemez",
+        "en": "Independent Excel jobs avoid unnecessary queue waits"
+      },
+      "path": {
+        "tr": "CP Tracker › Yenileme › Teknik Detayları Gör",
+        "en": "CP Tracker › Refresh › View technical details"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "excel-refresh.png",
+        "alt": {
+          "tr": "Gerçek demo yenilemesinde Excel kuyruğu ve hesaplama süreleri",
+          "en": "Excel queue and calculation timings from an actual demo refresh"
+        },
+        "caption": {
+          "tr": "Gerçek demo yenilemesinde Excel kuyruğu ve hesaplama süreleri",
+          "en": "Excel queue and calculation timings from an actual demo refresh"
+        }
+      },
+      "body": {
+        "tr": "Excel işleri bellek tahminine göre en fazla iki işçiyle çalışır; aynı kullanıcıya ait kaynak işlemlerinin sırası korunur. Büyük işler tek başına çalışır ve bekleyen iş sayısı ile veri boyutu sınırlıdır. Teknik detaylar kuyruk, hesaplama, ek süre ve bellek ölçümlerini gösterir. İptal edilen işin işçisi kapanmadan yeni iş başlatılmaz.",
+        "en": "Excel work uses up to two workers subject to estimated memory admission, while preserving same-user source ordering. Large tasks run alone; pending task count and payload size are bounded. Technical details show queue, calculation, overhead and heap measurements. Cancelled workers release their slots only after termination."
+      }
+    },
+    {
+      "id": "plm-scoped-overlapping-reads",
+      "type": "improvement",
+      "module": {
+        "tr": "PLM SYNC",
+        "en": "PLM SYNC"
+      },
+      "title": {
+        "tr": "Aynı PLM okuması eşzamanlı işlemlerde bir kez yapılır",
+        "en": "Overlapping identical PLM reads share one request"
+      },
+      "path": {
+        "tr": "PLM › Operasyon Merkezi",
+        "en": "PLM › Operations Center"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "plm-read-coalescing.png",
+        "alt": {
+          "tr": "Demo CP üzerinde değişiklik sonrası PLM Operasyon Merkezi",
+          "en": "Post-change PLM Operations Center over demo CP data"
+        },
+        "caption": {
+          "tr": "Demo CP üzerinde değişiklik sonrası PLM Operasyon Merkezi",
+          "en": "Post-change PLM Operations Center over demo CP data"
+        }
+      },
+      "body": {
+        "tr": "Aynı kullanıcı ve token kapsamındaki özdeş eşzamanlı JSON okumaları tek ağ isteğini paylaşır. Tamamlanmış cevaplar saklanmaz; her çağıran bağımsız veri kopyası alır. Token, kullanıcı, dil, sorgu ve zaman aşımı farklıysa istekler birleşmez. Dosya, rapor ve ikili veri indirmeleri bu paylaşımın dışındadır.",
+        "en": "Identical overlapping JSON reads share a network request only within the same user and token scope. Completed responses are not cached and each caller receives an independent copy. Token, user, language, query or timeout differences prevent sharing. File, report and binary downloads retain their separate paths."
+      }
+    },
+    {
+      "id": "agent-office-idempotent-render",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Değişmeyen ofis yeniden çizilmez",
+        "en": "Unchanged office state avoids redundant rendering"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Ofis",
+        "en": "Agent Office › Office"
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-after.png",
+        "alt": {
+          "tr": "Gerçek demo Agent Ofisi; sahne kalitesi ve karakterler korunur",
+          "en": "Actual demo Agent Office with scene quality and characters preserved"
+        },
+        "caption": {
+          "tr": "Gerçek demo Agent Ofisi; sahne kalitesi ve karakterler korunur",
+          "en": "Actual demo Agent Office with scene quality and characters preserved"
+        }
+      },
+      "body": {
+        "tr": "Aynı durumun tekrar gelmesi sahneyi, animasyon saatini veya çizim önbelleğini yeniden başlatmaz. Eşzamanlı aynı okuma tek istekte birleşir; kullanıcı değişimi ve kayıt işlemleri okuma kapsamını geçersiz kılar. Görseller, aydınlatma ve animasyon kalitesi korunur.",
+        "en": "Repeated identical state does not restart the scene, animation clock or drawing cache. Overlapping identical reads share one request; user changes and mutations invalidate the read scope. Artwork, lighting and animation quality are preserved."
       }
     }
   ]

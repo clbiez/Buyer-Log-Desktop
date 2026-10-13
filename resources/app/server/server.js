@@ -268,15 +268,17 @@ const refreshGroupRules = require('./lib/data-domain/refresh-groups');
 // v20260930 — Yenileme filtre bağını izler: bağlı gruptaki bir sayfa grubu
 // (tek sorgu) birlikte yeniler, gruptan ayrı sayfa (ör. CP) yalnız kendini.
 // Kısmi yenileme hedefleri refreshTargetsFor ile genişletilir.
-const { withRefreshTargets, linkedTargetsOf } = require('./lib/model-scopes');
+const { withRefreshTargets, linkedTargetsOf, LINKED_TARGETS } = require('./lib/model-scopes');
 /** Bağlı grubun GERÇEK üyeleri ASAS bağlantı kaydından okunur (düzenlenebilir). */
+function configuredRefreshMembers() {
+  // Kaydedilmiş ASAS bağlantısı tek doğruluk kaynağıdır. Son refresh snapshot'ı
+  // farklı kullanıcılarda eski / eksik olabileceği için menü üyeliği üretmez.
+  const asasItem = (loadModelConnections().items || [])
+    .find(item => item && String(item.role || '') === 'asas' && item.refreshEnabled !== false);
+  return asasItem ? linkedTargetsOf(asasItem) : LINKED_TARGETS.slice();
+}
 function refreshTargetsFor(targets) {
-  let members;
-  try {
-    const asasItem = (loadModelConnections().items || []).find(item => item && String(item.role || '') === 'asas' && item.refreshEnabled !== false);
-    if (asasItem) members = linkedTargetsOf(asasItem);
-  } catch (_) { /* kayıt okunamazsa varsayılan grup */ }
-  return withRefreshTargets(targets, members);
+  return withRefreshTargets(targets, configuredRefreshMembers());
 }
 const cpCoverage = require('./lib/cp-coverage');
 /* v20260930 — Kaynak değişiklik sinyali: ASAS modelinin son işlenme zamanı
@@ -344,6 +346,7 @@ const modelImageRefreshLeases = require('./lib/model-image-refresh-leases');
 const refreshHistoryDiff = require('./lib/refresh-history-diff');
 const backlogPlanActual = require('./lib/backlog-plan-actual');
 const modelImageRegistry = require('./lib/model-image-registry');
+const { scopedCpImageRegistry } = require('./lib/cp-image-startup-registry');
 const {
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
   loadViews, addView, updateView, deleteView, setFavoriteView, markUsedView,
@@ -6994,7 +6997,7 @@ async function syncFxFromKurWorkbook(value, force = false) {
     const parsed = await runExcelTask('loadFxWorkbookFromDirectories', {
       directories: [sourceFolder, ...(id === 'moderator' ? [appRoot] : [])].filter(Boolean),
       current, force,
-    }, { timeoutMs: 5000 });
+    }, { timeoutMs: 5000, serializationKey: 'shared-fx' });
     if (!parsed.found || !parsed.updated) return parsed;
     const saved = saveFx({
       ...parsed.data,
@@ -7112,7 +7115,7 @@ async function loadFromDisk(value, withExcelRefresh) {
       antrepoPath: found.antrepo ? found.antrepo.full : null,
       cpupdatePath: found.cpupdate ? found.cpupdate.full : null,
       matchRule: effectiveOverridesForUser(id).antrepoMatchConfig,
-    }, { timeoutMs: computeParseTimeoutMs(found, config.excelRefreshTimeoutMs) });
+    }, { timeoutMs: computeParseTimeoutMs(found, config.excelRefreshTimeoutMs), serializationKey: `source:${id}` });
   } catch (err) {
     err.code = err.code || 'SOURCE_PARSE_FAILED';
     err.publicMessage = 'ASAS veya Antrepo Excel dosyası okunamadı. Dosyanın bozuk olmadığını, başka bir program tarafından kilitlenmediğini ve beklenen sütunları içerdiğini kontrol edin.';
@@ -7261,7 +7264,8 @@ async function loadAntrepoFromExcel(value, matchRule = null, options = {}) {
     parsed = await runRefreshTelemetry(options.telemetry, 'ANTREPO Excel', 'file-parse', 'wait', () => runExcelTask('parseAntrepoFile', {
       fullPath: found.antrepo.full,
       matchRule: matchRule || loadOverrides().antrepoMatchConfig,
-    }, { timeoutMs: excelParseTimeoutMs(stat.size) }));
+    }, { timeoutMs: excelParseTimeoutMs(stat.size), serializationKey: `source:${id}`, signal: options.signal,
+      onMetrics: metrics => recordRefreshExcelMetrics(id, 'antrepo', metrics) }));
   } catch (err) {
     err.code = err.code || 'ANTREPO_EXCEL_PARSE_FAILED';
     err.publicMessage = `Antrepo Excel dosyası okunamadı: ${found.antrepo.name}. Dosyanın açık/kilitli olmadığını ve Sipariş Kod, Ürün Ad, Renk Kod sütunlarını içerdiğini kontrol edin.`;
@@ -7488,7 +7492,8 @@ async function loadAsasFromExcel(value, matchRule = null, options = {}) {
     parsed = await runRefreshTelemetry(options.telemetry, 'ASAS Excel', 'file-parse', 'wait', () => runExcelTask('parseAsasFile', {
       fullPath: found.asas.full,
       matchRule: matchRule || loadOverrides().antrepoMatchConfig,
-    }, { timeoutMs: excelParseTimeoutMs(stat.size) }));
+    }, { timeoutMs: excelParseTimeoutMs(stat.size), serializationKey: `source:${id}`, signal: options.signal,
+      onMetrics: metrics => recordRefreshExcelMetrics(id, 'asas', metrics) }));
   } catch (err) {
     err.code = err.code || 'ASAS_EXCEL_PARSE_FAILED';
     err.publicMessage = `ASAS Excel dosyası okunamadı: ${found.asas.name}. Dosyanın açık/kilitli olmadığını ve Sipariş Kod sütununu içerdiğini kontrol edin.`;
@@ -7562,6 +7567,7 @@ async function loadFromModels(value, targets = null, options = {}) {
   const asasExcel = needsAsasExcel ? await loadAsasFromExcel(id, matchRule, {
     refreshBeforeRead: true,
     telemetry: options.telemetry,
+    signal: options.signal,
     onRefreshStart: () => markSourcePhase('asas-excel-refresh'),
     onParseStart: () => markSourcePhase('asas-excel-parse'),
   }) : null;
@@ -7674,6 +7680,7 @@ async function loadFromModels(value, targets = null, options = {}) {
     const excel = await loadAntrepoFromExcel(id, matchRule, {
       refreshBeforeRead: true,
       telemetry: options.telemetry,
+      signal: options.signal,
       onRefreshStart: () => markSourcePhase('antrepo-excel-refresh'),
       onParseStart: () => markSourcePhase('antrepo-excel-parse'),
     });
@@ -8597,6 +8604,22 @@ app.get('/api/data/cp', userAccess.requireArea('cp'), async (req, res) => {
   } catch (err) { apiError(res, err, 'CP verisi yüklenemedi.'); }
 });
 
+/* CP'nin hazır gzip projection'ı görsel linklerini eski bir snapshot'tan
+   taşıyabilir. Burada yalnız o kullanıcının CP projection'ındaki PLM+renk
+   anahtarları döner; tüm imagemap veya görsel dosyaları sızdırılmaz.
+   PLM/ASAS erişimi yoktur. */
+app.get('/api/model-images/registry/cp', userAccess.requireArea('cp'), async (req, res) => {
+  try {
+    const ctx = pageProjectionContext(req.currentUser);
+    const cached = await pageProjectionCache.readProjection(ctx.id, 'cp', ctx.contextHash);
+    if (!cached || !pageProjectionMatchesRuntime(cached.manifest, cacheForUser(ctx.id))) {
+      return res.status(409).set('Cache-Control','no-store').json({ error:'CP image scope is not ready.', code:'CP_IMAGE_SCOPE_UNAVAILABLE' });
+    }
+    const scoped = scopedCpImageRegistry(cached.data.rows, loadOverrides().imagemap);
+    res.set('Cache-Control','no-store').json({ ok:true, ...scoped });
+  } catch (err) { apiError(res, err, 'CP model image registry could not be loaded.'); }
+});
+
 app.get('/api/data/collection-catalog', userAccess.requireArea('koleksiyon'), async (req, res) => {
   try {
     const value = await singleFlightPageProjection(req.currentUser, 'collection-catalog', async ctx => {
@@ -9133,6 +9156,12 @@ function recordRefreshTelemetry(id, event = {}) {
   if (job.operations.length > 400) job.operations.splice(0, job.operations.length - 400);
 }
 
+function recordRefreshExcelMetrics(id, source, metrics) {
+  const job = refreshJobs.get(id);
+  if (!job || !job.running) return;
+  job.excelWorkers = { ...(job.excelWorkers || {}), [source]: { ...metrics } };
+}
+
 function createRefreshTelemetry(id) {
   return event => {
     if (!event || event.type !== 'measure') return recordRefreshTelemetry(id, event);
@@ -9179,6 +9208,7 @@ function refreshJobState(id) {
     sourceRequest:job.sourceRequest||null,
     connections: job.connections || null,
     operations: Array.isArray(job.operations) ? job.operations.slice(-400) : [],
+    excelWorkers: job.excelWorkers || null,
     // Aşama dökümü: sayaç panelinde adım adım gösterilir.
     phases: Array.isArray(job.phases) ? job.phases.map(item => ({
       phase: item.phase,
@@ -9602,6 +9632,17 @@ app.post('/api/sync-settings/sync-now', userAccess.requireArea('source'), async 
   }
   catch (err) { apiError(res, err, 'Senkron başlatılamadı.'); }
 });
+// Üst Yenile menüsü, /api/refresh ile AYNI güncel grup üyelerini okur.
+// Stale snapshot / sharedFilter bilgisine bakılmaz. Kaynak yetkisi korunur.
+app.get('/api/refresh-targets', userAccess.requireArea('source'), (_req, res) => {
+  try {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
+    res.json({ linkedTargets: configuredRefreshMembers() });
+  } catch (error) {
+    apiError(res, error, 'Yenileme kapsamı okunamadı.');
+  }
+});
+
 app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
   const id = sourceUserId(req);
   if (refreshInFlight.has(id)) {
@@ -10252,7 +10293,7 @@ app.post('/api/antrepo-source/upload', userAccess.requireArea('source'), userAcc
     const parsedResult = await runExcelTask('parseAntrepoFile', {
       fullPath: temp,
       matchRule: loadOverrides().antrepoMatchConfig,
-    }, { timeoutMs: excelParseTimeoutMs(stat.size) });
+    }, { timeoutMs: excelParseTimeoutMs(stat.size), serializationKey: `source:${id}` });
     const parsedMap = parsedResult && parsedResult.map && typeof parsedResult.map === 'object' ? parsedResult.map : {};
     const parsedMeta = parsedResult && parsedResult.meta ? parsedResult.meta : parseLib.antrepoParseMeta(parsedMap);
     if (parsedMeta && parsedMap && typeof parsedMap === 'object') {

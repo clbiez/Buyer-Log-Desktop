@@ -189,10 +189,10 @@ test('/api/plm-sync/fetch İKİNCİ bir GetStyleList/pagination uygulaması YAZM
   assert.doesNotMatch(FETCH_SERVICE, /StyleList\/GetStyleList/i);
 });
 
-test('/api/plm-sync/fetch koleksiyon yetkisi ister ve girdi doğrulaması yapar', () => {
+test('/api/plm-sync/fetch Koleksiyon, CP ve Orders alan izinlerini denetler ve girdi doğrulaması yapar', () => {
   const routeStart = SERVER.indexOf("app.post('/api/plm-sync/fetch'");
   const header = SERVER.slice(routeStart, routeStart + 200);
-  assert.match(header, /userAccess\.requireArea\('koleksiyon'\)/);
+  assert.match(header, /userAccess\.requireAnyArea\('koleksiyon', 'cp', 'orders'\)/);
   const route = SERVER.slice(routeStart, SERVER.indexOf('\n});', routeStart) + 4);
   assert.match(FETCH_SERVICE, /VALIDATION_ERROR/);
   assert.match(FETCH_SERVICE, /PLM_ID_REQUIRED/);

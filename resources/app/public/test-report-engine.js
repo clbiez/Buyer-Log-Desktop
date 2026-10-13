@@ -67,9 +67,10 @@
 
   /* --------------------------------------------------- kimlik alanları */
   // Talep no metindir: baştaki sıfır korunur, Number() kullanılmaz.
+  // Labright 4 haneli talep numarası da verebilir (örn. 7375); 4-8 hane desteklenir.
   function normalizeTalepNo(value) {
     const raw = text(value).replace(/\.0+$/, '');
-    return /^\d{5,8}$/.test(raw) ? raw : '';
+    return /^\d{4,8}$/.test(raw) ? raw : '';
   }
   function normalizeOrderCode(value) {
     const raw = text(value).replace(/\.0+$/, '').replace(/\s+/g, '');
@@ -262,7 +263,7 @@
     const report = emptyReport();
     const subject = text(mail.subject);
     const fs = fold(subject);
-    const t = fs.match(/(\d{5,8})\s+NUMARALI TALEP SONUC RAPORU/);
+    const t = fs.match(/(\d{4,8})\s+NUMARALI TALEP SONUC RAPORU/);
     parseColonPairs(mail.body, report);
     if (!report.talepNo && t) report.talepNo = t[1];
     const g = fs.match(/GENEL DEGERLENDIRME\s*:\s*([^;]+)/);
@@ -279,7 +280,7 @@
     const report = emptyReport();
     const fs = fold(mail.subject);
     parseTabPairs(mail.body, report);
-    if (!report.talepNo) { const t = fs.match(/TALEP NO(?:\s*\/\s*REQUEST NO)?\s*:\s*(\d{5,8})/); if (t) report.talepNo = t[1]; }
+    if (!report.talepNo) { const t = fs.match(/(?:TALEP NO(?:\s*\/\s*REQUEST NO)?|REQUEST NO)\s*:\s*(\d{4,8})(?!\d)/); if (t) report.talepNo = t[1]; }
     if (!report.siparisKodu) { const o = fs.match(/SIPARIS NO\s*:\s*(\d{5,9})/); if (o) report.siparisKodu = o[1]; }
     const region = fs.match(/\[(TR|BD)\]/);
     report.lab = region ? 'Labright ' + region[1] : 'Labright';
@@ -312,7 +313,7 @@
       if (normalizeTalepNo(row.talepNo)) rows.push(row);
     }
     const fs = fold(mail.subject);
-    const sm = fs.match(/^(.*?)\s+TEDARIKCISI TARAFINDAN URETILEN\s+(\d+)\s+SIPARIS NUMARALI\s+(.+?)\s+MODELINDEKI\s+(\d{5,8})\s+NUMARALI TEST TALEBINE/);
+    const sm = fs.match(/^(.*?)\s+TEDARIKCISI TARAFINDAN URETILEN\s+(\d+)\s+SIPARIS NUMARALI\s+(.+?)\s+MODELINDEKI\s+(\d{4,8})\s+NUMARALI TEST TALEBINE/);
     for (const row of rows) {
       for (const field of ['talepNo', 'talepTipi', 'siparisKodu', 'modelAdi', 'renk']) assignField(report, field, row[field]);
       const offset = inferOffsetMinutes(row.tarih, mail.date);
@@ -1045,8 +1046,8 @@
         : 'A) Tedarikçi lab sonuç maili (SupplierLabUser) + TestRequestResultReport PDF. B) Labright sonuç maili [RESULT REPORT]/[SONUÇ RAPORU] + TestRequestResultForm Lang1 (TR) / Lang2 (EN) PDF. C) Labright ticari karar maili (tablo: test, karar, açıklama, karar veren, tarih). D) Tek başına Labright PDF (ör. Gold Seal). R) ROS Lab Dip renk değerlendirme maili (tek talepte çoklu bağımsız renk sonuçları ve revizyonlar olabilir).',
       (en ? 'Field labels: ' : 'Alan etiketleri: ') + labels,
       en ? 'Result dictionary (raw value is stored, never a binary pass/fail):' : 'Sonuç sözlüğü (ham değer saklanır, ikili geçer/kalır değildir):', ...dict,
-      en ? 'Rules: request number is text (BD 6 digits, TR 7 digits). Variant colour is the colour description (e.g. MID GREEN); codes like "R9J EKRU" in the component list are component colours. A retest (Retest Request No) replaces the earlier result. Commercial Approval counts as pass. Retest, awaiting buying feedback and lack of sample keep the step pending. The step status is derived from ALL reports of the row; a status entered by the user has priority.'
-        : 'Kurallar: talep no metindir (BD 6 hane, TR 7 hane). Varyant rengi renk tanımıdır (ör. MID GREEN); bileşen listesindeki "R9J EKRU" gibi değerler bileşen rengidir. Tekrar test (Retest Request No) eski sonucun yerine geçer. Ticari Onay geçer sayılır. Tekrar test, Buying dönüşü ve numune yetersizliği adımı bekletir. Adım durumu satırın BÜTÜN raporlarından türetilir; kullanıcının girdiği durum önceliklidir.',
+      en ? 'Rules: request number is text (4–8 digits, including newer Labright 4-digit requests; preserve leading zeros). Variant colour is the colour description (e.g. MID GREEN); codes like "R9J EKRU" in the component list are component colours. A retest (Retest Request No) replaces the earlier result. Commercial Approval counts as pass. Retest, awaiting buying feedback and lack of sample keep the step pending. The step status is derived from ALL reports of the row; a status entered by the user has priority.'
+        : 'Kurallar: talep no metindir (yeni Labright 4 haneli talepler dâhil 4–8 hane; baştaki sıfır korunur). Varyant rengi renk tanımıdır (ör. MID GREEN); bileşen listesindeki "R9J EKRU" gibi değerler bileşen rengidir. Tekrar test (Retest Request No) eski sonucun yerine geçer. Ticari Onay geçer sayılır. Tekrar test, Buying dönüşü ve numune yetersizliği adımı bekletir. Adım durumu satırın BÜTÜN raporlarından türetilir; kullanıcının girdiği durum önceliklidir.',
       en ? 'ROS request ID is NOT an order code. Evaluate each ROS colour independently; Digital Approved/Approved=pass, Rejected=fail, request-only=pending. Revised submissions supersede earlier decisions for that specific colour only. Do not invent missing PO matches. Matching rows and writing the checklist are always done by Buyer Log, never by AI.' : 'ROS talep ID sipariş kodu DEĞİLDİR. ROS renklerini birbirinden bağımsız değerlendir; Digital Approved/Approved=onay, Rejected=ret, sadece talep=beklemede. Revizyon yalnız ilgili rengin eski kararının yerine geçer. Eksik sipariş eşleşmesi uydurma. Satır eşleştirme ve checklist yazımı her zaman Buyer Log tarafından yapılır, AI tarafından değil.',
     ].join('\n');
   }
