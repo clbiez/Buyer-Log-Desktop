@@ -51,3 +51,25 @@ test('native rule inverse archive cannot be transplanted to a different Office s
  const f=await fixture(t),done=await apply(f,await create(f,'resource.transit.replace',{rules:[{id:'bound_inverse',delType:'Sea',days:25}]})),before=db.loadOverrides().transitRules;
  await assert.rejects(f.registry.rollback('resource.transit.replace',done.steps[0].result.rollbackToken,{ownerId:f.profile.id,profile:f.profile,approvalGranted:true,input:{officeAgentId:f.agent.id,officeAgentRevision:f.agent.revision,officeJobId:done.id,officeStepId:'another'}}),{code:'OFFICE_ROLLBACK_INVALID'});assert.deepEqual(db.loadOverrides().transitRules,before);
 });
+
+test('FX public contracts preserve native rate literals and hide private source paths while retaining the complete inverse',async t=>{
+ const f=await fixture(t);for(const id of ['resource.fx.read','resource.fx.update']){assert.equal(f.registry.get(id).outputSchema.additionalProperties,false);assert.equal(f.registry.get(id).dryRunOutputSchema.additionalProperties,false);}
+ db.saveFx({base:'USD',currencies:['USD','TRY','OLD'],months:{'2026-09':{USD:1,TRY:'40.125',OLD:null}},sourceFile:'PRIVATE_LOCAL_FX_SOURCE_PATH',sourceType:'xlsx',sourceModifiedAt:'2026-09-01',updatedAt:'2026-09-02'});const before=db.loadFx();
+ const read=await f.registry.execute('resource.fx.read',{}, {ownerId:f.profile.id,profile:f.profile});assert.equal(read.data.months['2026-09'].TRY,'40.125');assert.equal(read.data.months['2026-09'].OLD,null);assert.equal(read.data.sourceFileAvailable,true);assert.doesNotMatch(JSON.stringify(read),/PRIVATE_LOCAL_FX_SOURCE_PATH/);
+ const ready=await create(f,'resource.fx.update',{rates:[{month:'2026-10',currency:'TRY',rate:42.25}]}),done=await apply(f,ready);assert.doesNotMatch(JSON.stringify(ready.steps[0].preview),/PRIVATE_LOCAL_FX_SOURCE_PATH/);assert.equal(done.status,'completed');assert.equal(done.steps[0].result.data.rates['2026-10'].TRY,42.25);assert.equal(done.steps[0].result.rollbackToken.before,undefined);assert.doesNotMatch(JSON.stringify(done.steps[0].result),/PRIVATE_LOCAL_FX_SOURCE_PATH/);await undo(f,done);const restored=db.loadFx();for(const key of ['base','currencies','months','sourceFile','sourceType','sourceModifiedAt','updatedAt'])assert.deepEqual(restored[key],before[key]);
+});
+test('FX archive failure and authority/source changes during backup prevent native writes',async t=>{
+ for(const kind of ['disk','agent','source']){const f=await fixture(t),ready=await create(f,'resource.fx.update',{rates:[{month:'2026-11',currency:'EUR',rate:0.95}]}),put=artifacts.put;let expected=db.loadFx();
+ artifacts.put=async(...args)=>{if(kind==='disk')throw Object.assign(Error('disk unavailable'),{code:'EIO'});const meta=await put(...args);if(kind==='agent')await f.officeStore.updateProfile(f.profile.id,f.agent.id,{enabled:false});else expected=db.saveFx({...db.loadFx(),months:{'2026-12':{USD:1,EUR:0.96}}});return meta;};
+ let done;try{done=await apply(f,ready);}finally{artifacts.put=put;}assert.equal(done.status,'failed');assert.ok(['EIO','OFFICE_PREVIEW_CHANGED','OFFICE_AGENT_DISABLED'].includes(done.steps[0].errorCode));assert.deepEqual(db.loadFx(),expected);
+ }
+});
+test('FX inverse is bound to its original Office step and refuses later native revisions',async t=>{
+ const f=await fixture(t),done=await apply(f,await create(f,'resource.fx.update',{rates:[{month:'2026-11',currency:'TRY',rate:44}]})),before=db.loadFx();
+ await assert.rejects(f.registry.rollback('resource.fx.update',done.steps[0].result.rollbackToken,{ownerId:f.profile.id,profile:f.profile,approvalGranted:true,input:{officeAgentId:f.agent.id,officeAgentRevision:f.agent.revision,officeJobId:done.id,officeStepId:'another'}}),{code:'OFFICE_ROLLBACK_INVALID'});assert.deepEqual(db.loadFx(),before);
+ db.saveFx({...before,months:{...before.months,'2026-12':{USD:1,TRY:45}}});await assert.rejects(undo(f,done),{code:'OFFICE_PREVIEW_CHANGED'});assert.equal(db.loadFx().months['2026-12'].TRY,45);
+});
+
+test('FX exhausted revision capacity is refused before preview or any native effect',async t=>{
+ const f=await fixture(t),file=path.join(root,'fx-rates.json'),before=fs.readFileSync(file);try{for(const revision of [Number.MAX_SAFE_INTEGER-1,Number.MAX_SAFE_INTEGER]){require('../server/user-data').atomicWriteJson(file,{base:'USD',currencies:['USD','TRY'],months:{'2026-10':{USD:1,TRY:40}},updatedAt:'2026-10-01',_revision:revision});const captured=db.loadFx();await assert.rejects(create(f,'resource.fx.update',{rates:[{month:'2026-10',currency:'TRY',rate:42.25}]}),{code:'OFFICE_TOOL_SCHEMA'});assert.deepEqual(db.loadFx(),captured);}}finally{fs.writeFileSync(file,before);}
+});
