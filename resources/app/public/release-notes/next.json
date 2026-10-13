@@ -5047,6 +5047,138 @@
           "en": "Native price/approval data, full counts and guarded undo"
         }
       }
+    },
+    {
+      "id": "agent-collection-worker-env-rollover",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon / Agent Ofisi",
+        "en": "Collection / Agent Office"
+      },
+      "title": {
+        "tr": "Yeni kaydetme worker görevleri eski worker kapanışında korunur",
+        "en": "New save worker tasks survive the previous worker’s exit"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Native kaydetme worker yapılandırması değiştiğinde eski worker kapanışı artık yeni worker görevini hatalı düşürmez. Görev ve doğrulanmış makbuz doğru worker kimliğiyle ilişkilendirilir. Gerçek quotation onayından Koleksiyon fiyat aktarımı ve geri alma aynı native servislerle tamamlanır; yetki ve revizyon kontrolleri korunur.",
+        "en": "When native save worker configuration changes, the previous worker’s exit no longer falsely fails the new worker’s task. Tasks and verified receipts are associated with the correct worker identity. Actual approved quotation prices can complete Collection application and undo through the same native services, preserving authority and revision checks."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-worker-env-rollover.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Agent Ofisinde tamamlanmış demo quotation fiyat aktarımı",
+          "en": "Completed demo quotation price application in the actual Buyer Log Agent Office"
+        },
+        "caption": {
+          "tr": "Native kaydetme worker ile doğrulanmış aktarım ve geri alma",
+          "en": "Verified application and undo through the native save worker"
+        }
+      }
+    },
+    {
+      "id": "agent-native-undo-capacity",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Geri alma arşivleri kullanıcı yükleme kotasını tüketmez",
+        "en": "Undo archives no longer consume the user upload quota"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Yüklenen belgeler için 20 dosyalık kota korunur. Uygulamanın ürettiği native geri alma kayıtları ayrı ve 1.000 dosyayla sınırlı havuza alınır; aynı kullanıcı için ortak 200 MB, dosya başına 80 MB ve 48 saatlik saklama sınırları devam eder. Böylece birkaç onaylı görev, sonraki belge yüklemelerini veya iş adımlarını durdurmaz. Kullanıcı kimliği, dosya türü ve SHA doğrulaması korunur.",
+        "en": "Uploaded documents retain their 20-file quota. Application-generated native undo records use a separate pool capped at 1,000 files, while the shared owner limit of 200 MB, 80 MB per file and 48-hour retention remain in force. A few approved tasks no longer block subsequent document uploads or work steps. Owner, artifact kind and SHA checks are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-native-undo-capacity.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde 20 arşivden sonra tamamlanan demo native aktarım",
+          "en": "Demo native import completed after 20 archives in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Native kayıt ve geri alma döngüleri kota sınırları içinde devam eder",
+          "en": "Native save and undo cycles continue within bounded quotas"
+        }
+      }
+    },
+    {
+      "id": "agent-collection-native-output-inverse",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon / Agent Ofisi",
+        "en": "Collection / Agent Office"
+      },
+      "title": {
+        "tr": "Koleksiyon sonuçları gerçek alanlar ve tam geri almayla doğrulanır",
+        "en": "Collection results validate native fields and complete undo"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Koleksiyon kayıt ve PLM araçları tipli alan, değişiklik, sayım ve makbuz sözleşmeleri kullanır. Önizleme gerçek değişen alanları gösterir; karmaşık veya görsel değerler açık eksiltme bilgisiyle ayrılır. Tam önceki native kayıt yerel arşivde korunur. Kaynak okumasından sonraki beklemelerde ve native journal yazımında kaynak/yetki tekrar doğrulanır; peer düzenlemesi ezilmez. Eksiltilen PLM kayıtları kısmi sonuç olarak işaretlenir ve sessizce sonraki aktarıma geçmez.",
+        "en": "Collection record and PLM tools use typed field, change, count and receipt contracts. Previews show actual changed fields with explicit omissions for complex/image values. Complete prior native records remain in local undo archives. Source and authority are rechecked across waits after source capture and at the native journal commit, preserving peer edits. Omitted PLM records are marked partial and cannot silently proceed into downstream import."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-native-output-inverse.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde demo native PLM kayıt aktarımı ve doğrulanmış sonuç",
+          "en": "Demo native PLM record import and verified result in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek Agent Ofisinde demo native PLM kayıt aktarımı ve doğrulanmış sonuç",
+          "en": "Demo native PLM record import and verified result in the actual Agent Office"
+        }
+      }
+    },
+    {
+      "id": "agent-collection-independent-delete",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon / Agent Ofisi",
+        "en": "Collection / Agent Office"
+      },
+      "title": {
+        "tr": "Grupsuz kayıtlar bağımsız silinebilir",
+        "en": "Ungrouped records can be deleted independently"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Birden fazla grubu olmayan kayıt, yanlışlıkla tek model grubu sayılıp silme engeline takılmaz. Tek kayıt seçilerek onaylı silme ve geri alma çalışır. Gerçek model/renk gruplarında bütün üyeleri seçme koruması devam eder.",
+        "en": "Multiple ungrouped records are no longer incorrectly treated as one model group that blocks deletion. Approved deletion and undo work for a single selected record. Actual model/color groups retain the protection requiring all members to be selected."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-collection-independent-delete.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde bağımsız demo kayıt silme ve geri alma",
+          "en": "Independent demo record deletion and undo in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek Agent Ofisinde bağımsız demo kayıt silme ve geri alma",
+          "en": "Independent demo record deletion and undo in the actual Agent Office"
+        }
+      }
     }
   ]
 }
