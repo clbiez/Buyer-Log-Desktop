@@ -32740,6 +32740,19 @@ function mailTopicSourceColumns(sourceKind){
   // seçicisinde gerçek bir alan gibi sunulur.
   return [{k:'__picture',label:'Picture',type:'cpImage',weight:8},...kolColDefs().slice()];
 }
+// Reuse the same CP / Collection heading catalog as the Fields panel.
+// Email-only selections do not mutate CP visibility, groups or presets.
+function mailTopicFieldGroupCatalog(columns,sourceKind){
+  const groups=new Map(),kolOrder=sourceKind==='cp'?[]:kolAllOrderedCols().map(c=>c.k);
+  (columns||[]).forEach(column=>{
+    const group=sourceKind==='cp'
+      ?canonicalColumnGroup(column.group)||'Diğer'
+      :(kolColumnGroupFor(column.k==='__picture'?'__picture__':column.k,kolOrder)||'Diğer');
+    if(!groups.has(group))groups.set(group,{group,label:group==='Diğer'?(appLang==='en'?'Other':'Diğer'):tableColumnGroupLabel(group),keys:[]});
+    groups.get(group).keys.push(column.k);
+  });
+  return [...groups.values()];
+}
 function mailTopicDefaultColumnKeys(kind,sourceKind){
   if(sourceKind==='cp'){
     return ['Order Code','PLM ID','Model Name','Colour','Season','Order Quantity','OPD','Ex-factory','STATUS'];
@@ -32900,14 +32913,50 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   const fieldGrid=modal.querySelector('#mailTopicColsGrid');
   const cpFieldOrder=()=>sourceKind==='cp'?visibleCols('cp').map(c=>c.k):kolAllOrderedCols().map(c=>c.k);
   const fieldRows=new Map([...fieldGrid.querySelectorAll('[data-key]')].map(input=>[input.dataset.key,input.closest('.mailTopicSubjectRow')]));
+  const manufacturerRow=fieldGrid.querySelector('.isManufacturer');
+  const catalog=mailTopicFieldGroupCatalog(cols,sourceKind);
+  const groupMap=new Map(),fieldGroup=new Map(),expandedGroups=new Set();
+  catalog.forEach(entry=>entry.keys.forEach(key=>fieldGroup.set(key,entry.group)));
+  const selectedAtOpen=new Set(selected);
+  for(const entry of catalog){
+    if(entry.keys.some(key=>selectedAtOpen.has(key))&&expandedGroups.size<2)expandedGroups.add(entry.group);
+  }
+  fieldGrid.innerHTML='';
+  const legend=modal.querySelector('.mailTopicSubjectLegend');
+  if(legend)legend.innerHTML='<span>'+escapeHtml(en?'Field / Heading':'Alan / Başlık')+'</span><span>'+escapeHtml(en?'Subject':'Konu')+'</span><span>'+escapeHtml(en?'Table / Excel':'Tablo / Excel')+'</span><span>'+escapeHtml(en?'Order':'Sıra')+'</span>';
+  catalog.forEach(entry=>{
+    const group=document.createElement('section');group.className='mailTopicFieldGroup';
+    group.dataset.mailFieldGroup=entry.group;
+    group.style.setProperty('--grp-accent',GROUP_ACCENTS[entry.group]||'var(--acc)');
+    group.innerHTML='<div class="mailTopicFieldGroupHead">'+
+      '<button type="button" class="mailTopicFieldGroupToggle" data-mail-field-toggle="'+escapeHtml(entry.group)+'" aria-expanded="false">'+
+      '<span class="mailTopicFieldChevron" aria-hidden="true">›</span><b>'+escapeHtml(entry.label)+'</b>'+
+      '<span class="mailTopicFieldCount" data-mail-group-count></span></button>'+
+      '<label class="mailTopicGroupCheck" title="'+escapeHtml(en?'Select all fields for subject':'Konu başlığı için tüm alanları seç')+'"><input type="checkbox" data-mail-group-subject="'+escapeHtml(entry.group)+'" aria-label="'+escapeHtml(entry.label+' '+(en?'subject':'konu'))+'"></label>'+
+      '<label class="mailTopicGroupCheck" title="'+escapeHtml(en?'Select all fields for the Excel / email table':'Excel / e-posta tablosu için tüm alanları seç')+'"><input type="checkbox" data-mail-group-table="'+escapeHtml(entry.group)+'" aria-label="'+escapeHtml(entry.label+' '+(en?'Excel':'Excel'))+'"></label>'+
+      '<span class="mailTopicFieldHeadSpacer"></span></div><div class="mailTopicFieldGroupRows"></div>';
+    fieldGrid.appendChild(group);groupMap.set(entry.group,group);
+  });
+  // Manufacturer is a subject-only recipient token, distinct from the actual
+  // CP Manufacturer column. Keep this in Order Details rather than duplicating a top-level row.
+  if(manufacturerRow){
+    const orderGroup=groupMap.get('Sipariş Detayları')||groupMap.values().next().value;
+    const manufacturerLabel=manufacturerRow.querySelector('.mailTopicSubjectLabel');
+    if(manufacturerLabel)manufacturerLabel.textContent=en?'Recipient manufacturer (subject)':'Alıcı üretici (konu)';
+    orderGroup?.querySelector('.mailTopicFieldGroupRows')?.prepend(manufacturerRow);
+  }
   function arrangeFieldRows(keys){
     const seen=new Set();
-    [...keys,...cols.map(c=>c.k)].forEach(key=>{if(seen.has(key))return;seen.add(key);if(fieldRows.has(key))fieldGrid.appendChild(fieldRows.get(key));});
+    [...keys,...cols.map(c=>c.k)].forEach(key=>{
+      if(seen.has(key))return;seen.add(key);
+      const row=fieldRows.get(key),group=groupMap.get(fieldGroup.get(key));
+      if(row&&group)group.querySelector('.mailTopicFieldGroupRows').appendChild(row);
+    });
   }
   arrangeFieldRows([...mailTopicColumnKeys(kind,id,sourceKind),...cpFieldOrder()]);
   const tools=modal.querySelector('.mailTopicColumnsTools');
   const search=document.createElement('input');search.id='mailTopicFieldSearch';search.type='search';search.className='mailTopicFieldSearch';
-  search.placeholder=en?'Search fields…':'Alan ara…';search.setAttribute('aria-label',search.placeholder);tools.prepend(search);
+  search.placeholder=en?'Search fields or headings…':'Alan veya başlık ara…';search.setAttribute('aria-label',search.placeholder);tools.prepend(search);
   const onlyLabel=document.createElement('label');onlyLabel.className='mailTopicSelectedOnly';
   const only=document.createElement('input');only.type='checkbox';onlyLabel.append(only,document.createTextNode(en?' Selected only':' Yalnız seçilenler'));search.after(onlyLabel);
   const resetOrder=document.createElement('button');resetOrder.type='button';resetOrder.className='tbtn';
@@ -32922,35 +32971,78 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     }
     row.append(buttons);row.draggable=true;
   });
-  function filterEmailFields(){
-    const term=search.value.toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR').trim();
-    fieldRows.forEach((row,key)=>{
-      const label=cols.find(c=>c.k===key);
-      const name=String(label?colLabel(label):key).toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR');
-      row.hidden=Boolean((term&&!name.includes(term))||(only.checked&&!row.querySelector('[data-key]')?.checked));
-    });
+  function updateFieldGroups(){
+    for(const entry of catalog){
+      const group=groupMap.get(entry.group),rows=entry.keys.map(key=>fieldRows.get(key)).filter(Boolean);
+      const checkedTable=rows.filter(row=>row.querySelector('input[data-key]')?.checked).length;
+      const checkedSubject=rows.filter(row=>row.querySelector('[data-topic-subject-key]')?.getAttribute('aria-pressed')==='true').length;
+      const excelCheck=group.querySelector('[data-mail-group-table]'),subjectCheck=group.querySelector('[data-mail-group-subject]');
+      excelCheck.checked=Boolean(rows.length&&checkedTable===rows.length);excelCheck.indeterminate=checkedTable>0&&checkedTable<rows.length;
+      subjectCheck.checked=Boolean(rows.length&&checkedSubject===rows.length);subjectCheck.indeterminate=checkedSubject>0&&checkedSubject<rows.length;
+      group.querySelector('[data-mail-group-count]').textContent=checkedTable+'/'+rows.length;
+      const query=search.value.toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR').trim();
+      const headingMatch=query&&entry.label.toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR').includes(query);
+      let visible=0;
+      rows.forEach((row,index)=>{
+        const name=String(colLabel(cols.find(c=>c.k===entry.keys[index])||{label:entry.keys[index]})).toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR');
+        const match=!query||headingMatch||name.includes(query);
+        const show=match&&(!only.checked||row.querySelector('input[data-key]')?.checked);
+        row.hidden=!show;if(show)visible++;
+      });
+      if(manufacturerRow&&manufacturerRow.parentElement===group.querySelector('.mailTopicFieldGroupRows')){
+        const mfrMatch=!query||headingMatch||(en?'recipient manufacturer':'alıcı üretici').includes(query);
+        manufacturerRow.hidden=!mfrMatch||only.checked;
+        if(!manufacturerRow.hidden)visible++;
+      }
+      group.hidden=visible===0;
+      const open=query?visible>0:expandedGroups.has(entry.group);
+      group.classList.toggle('isOpen',open);
+      group.querySelector('.mailTopicFieldGroupRows').hidden=!open;
+      const toggle=group.querySelector('[data-mail-field-toggle]');toggle.setAttribute('aria-expanded',open?'true':'false');
+    }
   }
-  search.addEventListener('input',filterEmailFields);only.addEventListener('change',filterEmailFields);
+  search.addEventListener('input',updateFieldGroups);only.addEventListener('change',updateFieldGroups);
   resetOrder.addEventListener('click',()=>{arrangeFieldRows(cpFieldOrder());refresh();});
-  let draggedField='';
-  fieldGrid.addEventListener('click',e=>{
-    const button=e.target.closest('[data-mail-column-move]');if(!button)return;
-    const row=button.closest('.mailTopicSubjectRow');if(!row?.querySelector('[data-key]')?.checked)return;
-    const checked=[...fieldGrid.querySelectorAll('[data-key]:checked')].map(x=>x.closest('.mailTopicSubjectRow'));
+  fieldGrid.addEventListener('click',event=>{
+    const toggle=event.target.closest('[data-mail-field-toggle]');
+    if(toggle){const key=toggle.dataset.mailFieldToggle;if(expandedGroups.has(key))expandedGroups.delete(key);else expandedGroups.add(key);updateFieldGroups();return;}
+    const button=event.target.closest('[data-mail-column-move]');if(!button)return;
+    const row=button.closest('.mailTopicSubjectRow'),list=row?.parentElement;
+    if(!row?.querySelector('[data-key]')?.checked||!list)return;
+    const checked=[...list.querySelectorAll('[data-key]:checked')].map(x=>x.closest('.mailTopicSubjectRow'));
     const index=checked.indexOf(row),other=checked[index+(button.dataset.mailColumnMove==='up'?-1:1)];
     if(!other)return;
     if(button.dataset.mailColumnMove==='up')other.before(row);else other.after(row);
     refresh();
   });
-  fieldGrid.addEventListener('dragstart',e=>{
-    const row=e.target.closest('.mailTopicSubjectRow'),box=row?.querySelector('[data-key]');
-    if(!box?.checked){e.preventDefault();return;}
-    draggedField=box.dataset.key;e.dataTransfer?.setData('text/plain',draggedField);
+  fieldGrid.addEventListener('change',event=>{
+    const check=event.target.closest('[data-mail-group-table],[data-mail-group-subject]');if(!check)return;
+    const group=groupMap.get(check.dataset.mailGroupTable||check.dataset.mailGroupSubject);
+    if(!group)return;
+    const table=check.hasAttribute('data-mail-group-table');
+    group.querySelectorAll('.mailTopicFieldGroupRows .mailTopicSubjectRow').forEach(row=>{
+      if(table){const input=row.querySelector('input[data-key]');if(input)input.checked=check.checked;}
+      else{const button=row.querySelector('[data-topic-subject-key]');if(button)setToggle(button,check.checked);}
+    });
+    refresh();
   });
-  fieldGrid.addEventListener('dragover',e=>{if(draggedField&&e.target.closest('[data-key]'))e.preventDefault();});
-  fieldGrid.addEventListener('drop',e=>{
-    const target=e.target.closest('.mailTopicSubjectRow'),moving=fieldRows.get(draggedField);
-    if(moving&&target&&moving!==target&&target.querySelector('[data-key]')?.checked){e.preventDefault();target.before(moving);refresh();}
+  let draggedField='';
+  fieldGrid.addEventListener('dragstart',event=>{
+    const row=event.target.closest('.mailTopicSubjectRow'),box=row?.querySelector('[data-key]');
+    if(!box?.checked){event.preventDefault();return;}
+    draggedField=box.dataset.key;event.dataTransfer?.setData('text/plain',draggedField);
+  });
+  fieldGrid.addEventListener('dragover',event=>{
+    if(!draggedField)return;
+    const box=event.target.closest('.mailTopicSubjectRow')?.querySelector('[data-key]');
+    if(box?.checked&&fieldGroup.get(box.dataset.key)===fieldGroup.get(draggedField))event.preventDefault();
+  });
+  fieldGrid.addEventListener('drop',event=>{
+    const target=event.target.closest('.mailTopicSubjectRow'),targetKey=target?.querySelector('[data-key]')?.dataset.key;
+    const moving=fieldRows.get(draggedField);
+    if(moving&&targetKey&&moving!==target&&fieldGroup.get(draggedField)===fieldGroup.get(targetKey)){
+      event.preventDefault();target.before(moving);refresh();
+    }
     draggedField='';
   });
   fieldGrid.addEventListener('dragend',()=>{draggedField='';});
@@ -33037,7 +33129,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     const tableCount=boxes().filter(x=>x.checked).length;
     const subjectCount=subjectButtons().filter(x=>x.getAttribute('aria-pressed')==='true').length+(modal.querySelector('[data-topic-subject-manufacturer]')?.getAttribute('aria-pressed')==='true'?1:0);
     modal.querySelector('#mailTopicColsCount').textContent=en?`${tableCount} table columns · ${subjectCount} subject fields`:`${tableCount} tablo sütunu · ${subjectCount} başlık alanı`;
-    redrawSubjectFields();filterEmailFields();refreshSubjectPreview();
+    redrawSubjectFields();updateFieldGroups();refreshSubjectPreview();
   };
   boxes().forEach(x=>x.addEventListener('change',refresh));
   modal.querySelector('#mailTopicEditSubjectTitle')?.addEventListener('input',refreshSubjectPreview);
