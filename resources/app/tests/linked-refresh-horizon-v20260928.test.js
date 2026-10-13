@@ -162,7 +162,8 @@ test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre b
   assert.match(APP, /fetch\('\/api\/refresh-targets',\{cache:'no-store'\}\)/);
   const refreshConfig=APP.slice(APP.indexOf('function linkedRefreshMembers(){'),APP.indexOf('function withLinkedRefreshTargets'));
   assert.doesNotMatch(refreshConfig, /state\.modelScopes|sharedFilter/);
-  const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('async function loadFromServer(force, targets){') + 300);
+  const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('async function loadFromServer(force, targets){') + 1350);
+  assert.match(load, /await syncLinkedRefreshMembers\(\)/);
   assert.match(load, /targets=withLinkedRefreshTargets\(targets\)/);
   // Menü: ayrı sayfa kendi satırı, bağlı grup tek satır, ayrıca "Tümünü yenile".
   const menu = APP.slice(APP.indexOf('function openTopRefreshMenu'), APP.indexOf('// Yenileme sürerken aynı düğmeye tekrar basmak'));
