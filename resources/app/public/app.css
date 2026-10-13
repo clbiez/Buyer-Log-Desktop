@@ -5875,3 +5875,42 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
   .mailTopicMoveBtns button{height:26px;min-width:25px;}
   .mailTopicSubjectRow{padding:5px;}
 }
+
+
+/* Prepare E-Mail field chooser follows CP's grouped Fields/preset panel. */
+.mailTopicEditorCard .mailTopicSubjectGrid{gap:4px;max-height:475px;padding:4px;overflow:auto;}
+.mailTopicEditorCard .mailTopicSubjectLegend,
+.mailTopicEditorCard .mailTopicSubjectRow,
+.mailTopicEditorCard .mailTopicFieldGroupHead{grid-template-columns:minmax(130px,1fr) 118px 90px 66px;gap:8px;align-items:center;}
+.mailTopicEditorCard .mailTopicSubjectLegend{padding:6px 13px;}
+.mailTopicEditorCard .mailTopicSubjectRow{background:transparent;border:0;border-bottom:1px solid var(--line);border-radius:0;min-height:36px;padding:4px 10px 4px 25px;}
+.mailTopicEditorCard .mailTopicSubjectRow:hover{background:var(--card);}
+.mailTopicEditorCard .mailTopicSubjectRow .mailTopicSubjectLabel{grid-column:1;grid-row:1;font-weight:550;}
+.mailTopicEditorCard .mailTopicSubjectRow .mailTopicSubjectToggle{grid-column:2;grid-row:1;padding:4px 5px;}
+.mailTopicEditorCard .mailTopicSubjectRow .mailTopicTableCheck,
+.mailTopicEditorCard .mailTopicSubjectRow .mailTopicTablePlaceholder{grid-column:3;grid-row:1;}
+.mailTopicEditorCard .mailTopicSubjectRow .mailTopicMoveBtns{grid-column:4;grid-row:1;}
+.mailTopicEditorCard .mailTopicFieldGroup{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);box-shadow:inset 3px 0 0 var(--grp-accent,var(--acc));overflow:hidden;}
+.mailTopicEditorCard .mailTopicFieldGroup[hidden],
+.mailTopicEditorCard .mailTopicFieldGroupRows[hidden]{display:none!important;}
+.mailTopicEditorCard .mailTopicFieldGroup.isOpen{background:color-mix(in srgb,var(--card2) 55%,var(--card));}
+.mailTopicEditorCard .mailTopicFieldGroupHead{display:grid;min-height:36px;padding:3px 10px 3px 7px;}
+.mailTopicEditorCard .mailTopicFieldGroupToggle{min-width:0;display:flex;align-items:center;gap:7px;padding:5px;border:0;background:transparent;color:var(--ink);font:650 12px/1.25 var(--sans,inherit);text-align:left;cursor:pointer;}
+.mailTopicEditorCard .mailTopicFieldGroupToggle b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.mailTopicEditorCard .mailTopicFieldChevron{display:inline-block;font-size:19px;font-weight:500;line-height:1;color:var(--muted);transform:rotate(0deg);transition:transform .15s ease;}
+.mailTopicEditorCard .mailTopicFieldGroup.isOpen .mailTopicFieldChevron{transform:rotate(90deg);}
+.mailTopicEditorCard .mailTopicFieldCount{font-size:10px;font-weight:600;color:var(--muted);white-space:nowrap;}
+.mailTopicEditorCard .mailTopicGroupCheck{display:grid;place-items:center;min-height:30px;cursor:pointer;}
+.mailTopicEditorCard .mailTopicGroupCheck input{width:17px;height:17px;accent-color:var(--acc);cursor:pointer;}
+.mailTopicEditorCard .mailTopicFieldGroupRows{display:flex;flex-direction:column;padding:0 3px 4px 3px;border-top:1px solid var(--line);}
+.mailTopicEditorCard .mailTopicFieldGroupToggle:focus-visible,
+.mailTopicEditorCard .mailTopicGroupCheck input:focus-visible{outline:2px solid var(--acc);outline-offset:2px;}
+@media(max-width:650px){
+  .mailTopicEditorCard .mailTopicSubjectLegend,
+  .mailTopicEditorCard .mailTopicSubjectRow,
+  .mailTopicEditorCard .mailTopicFieldGroupHead{grid-template-columns:minmax(85px,1fr) 85px 56px 52px;gap:3px;}
+  .mailTopicEditorCard .mailTopicSubjectRow{padding-left:9px;}
+  .mailTopicEditorCard .mailTopicSubjectToggle{font-size:9px;white-space:normal;}
+  .mailTopicEditorCard .mailTopicSubjectLegend{font-size:9px;}
+  .mailTopicEditorCard .mailTopicMoveBtns button{min-width:23px;}
+}
