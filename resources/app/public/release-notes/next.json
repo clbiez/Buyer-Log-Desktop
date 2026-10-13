@@ -5353,6 +5353,35 @@
           "en": "Actual tool, parameters, time zone and missed-run policy"
         }
       }
+    },
+    {
+      "id": "agent-checklist-order-answers",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Agent Ofisi",
+        "en": "CP · Agent Office"
+      },
+      "title": {
+        "tr": "Sipariş checklist cevapları onayla işlenir",
+        "en": "Order checklist answers are applied with approval"
+      },
+      "description": {
+        "tr": "Yetki kapsamındaki sipariş cevaplarını sayfalayarak oku; siparişe özel Bekliyor, Onaylandı, Reddedildi veya Gerekmiyor kararını önizle ve onayla. Mevcut kanıtlar korunur, atlanan güncellemeler kısmi olarak raporlanır ve tam önceki kayıt gerçek revizyonla geri alınır. Opsiyon geneline yazma bu işlemin kapsamı dışındadır.",
+        "en": "Page answers for authorized orders; preview and approve order-specific Pending, Approved, Rejected or Not Required decisions. Existing evidence is retained, skipped updates are reported as partial and complete prior records can be restored against their actual revision. Option-wide updates are outside this operation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-checklist-order-answers.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde sipariş checklist düzeltmesi ve tam geri alma",
+          "en": "Order checklist correction and complete inverse in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek demo sipariş · onaylı ret kararı · doğrulanmış geri alma",
+          "en": "Actual demo order · approved rejection decision · verified inverse"
+        }
+      }
     }
   ]
 }

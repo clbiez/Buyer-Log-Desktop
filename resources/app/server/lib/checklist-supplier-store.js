@@ -250,6 +250,10 @@ function restoreDefinitionsSnapshot(definitions, actor, options = {}) {
   return replaceDefinitions(definitions, actor, {...options, restoreSnapshot:true});
 }
 
+function entryReceipt(store,keys) {
+  return {revision:store.revision,updatedAt:store.updatedAt,entries:JSON.parse(JSON.stringify(Object.fromEntries(keys.map(key=>[key,{answer:store.answers[key]||null,tombstone:store.tombstones[key]||null}]))))};
+}
+
 function applyEntries(entries, actor, options = {}) {
   if (Array.isArray(entries) && entries.length > 100000) throw Object.assign(new Error('Too many checklist changes in one request.'), { code: 'CHECKLIST_CAPACITY', statusCode: 413 });
   const input = Array.isArray(entries) ? entries : [];
@@ -258,6 +262,7 @@ function applyEntries(entries, actor, options = {}) {
   return withFileLeaseSync(FILE, () => {
     options.assertAuthority?.();
     const store = read();
+    if (options.reserveWrites && (!Number.isSafeInteger(store.revision) || store.revision < 0 || store.revision > Number.MAX_SAFE_INTEGER - options.reserveWrites)) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     if (options.expectedRevision != null && store.revision !== options.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     let updated = 0, cleared = 0, skipped = 0, conflicts = 0;
     const changedKeys = [], rejectedAt = {};
@@ -314,7 +319,8 @@ function applyEntries(entries, actor, options = {}) {
       updated += 1; changedKeys.push(key);
     }
     options.assertAuthority?.();write(store);
-    return { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys, rejectedAt };
+    const result = { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys, rejectedAt };
+    return options.receipt ? options.receipt(result,entryReceipt(store,changedKeys)) : result;
   });
 }
 
@@ -322,13 +328,15 @@ function restoreEntries(receipt, actor, options = {}) {
   return withFileLeaseSync(FILE, () => {
     options.assertAuthority?.();
     const store = read();
+    if (options.reserveWrites && (!Number.isSafeInteger(store.revision) || store.revision < 0 || store.revision > Number.MAX_SAFE_INTEGER - options.reserveWrites)) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     if (store.revision !== receipt.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     for(const [key, previous] of Object.entries(receipt.entries)) {
       if(previous.answer == null) delete store.answers[key]; else store.answers[key] = previous.answer;
       if(previous.tombstone == null) delete store.tombstones[key]; else store.tombstones[key] = previous.tombstone;
     }
     store.events.push({type:'agent-answer-undo',at:new Date().toISOString(),by:actorInfo(actor),keys:Object.keys(receipt.entries)});
-    options.assertAuthority?.();write(store);return {verified:true,revision:store.revision};
+    options.assertAuthority?.();write(store);const result={verified:true,revision:store.revision};
+    return options.receipt ? options.receipt(result,entryReceipt(store,Object.keys(receipt.entries))) : result;
   });
 }
 module.exports = {
