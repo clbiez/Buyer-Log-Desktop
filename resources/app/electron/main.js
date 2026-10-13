@@ -580,7 +580,7 @@ async function runUpdateCheck(options={}) {
   const userId=String(options.userId||await currentRendererUserId()||'');
   const channel=await effectiveUpdateChannel(userId);
   try{
-    const result=await updater.checkAndStage({baseConfig:updaterBaseConfig(),channel,manual:options.manual===true,retryFailed:options.retryFailed===true});
+    const result=await updater.checkAndStage({baseConfig:updaterBaseConfig(),channel,manual:options.manual===true,retryFailed:options.retryFailed===true,retryVersion:options.retryVersion,retrySha256:options.retrySha256,retryChannel:options.retryChannel,assertCheckAuthority:channel==='test'||options.retryFailed===true?async()=>{if(!(await verifyUpdateModerator(userId)))throw Object.assign(new Error('UPDATE_ADMIN_REQUIRED'),{code:'UPDATE_ADMIN_REQUIRED'});if(await effectiveUpdateChannel(userId)!==channel||options.retryFailed===true&&channel!==options.retryChannel)throw Object.assign(new Error('UPDATE_RETRY_TARGET_CHANGED'),{code:'UPDATE_RETRY_TARGET_CHANGED'});}:undefined});
     emitUpdateStatus(await updateStatusFor(userId));
     return result;
   }catch(error){emitUpdateStatus(await updateStatusFor(userId));throw error;}
@@ -2476,7 +2476,7 @@ function registerIpc() {
   ipcMain.handle('buyerlog:update-check', async (event, options = {}) => {
     if (!trustedBuyerLogIpcSender(event)) return { ok:false, code:'IPC_FORBIDDEN' };
     try {
-      return await runUpdateCheck({ ...options, manual:true, userId:String(options.userId || '') });
+      return await runUpdateCheck({ manual:true, userId:String(options.userId || '') });
     } catch (error) {
       return { ok:false, code:error && error.code || 'UPDATE_CHECK_FAILED', error:'Güncelleme kaynağına şu anda ulaşılamıyor. Buyer Log mevcut sürümle çalışmaya devam edecek.', detail:String(error && error.message || '').slice(0,300), ...(await updateStatusFor(String(options.userId || ''))) };
     }
@@ -2509,9 +2509,11 @@ function registerIpc() {
     const userId=String(options.userId || '');
     if (!(await verifyUpdateModerator(userId))) return {ok:false,code:'UPDATE_ADMIN_REQUIRED'};
     try {
-      const version=String(options.version || (updater && updater.state().latestVersion) || '');
-      if(version)updater.markRetry(version);
-      return await runUpdateCheck({manual:true,retryFailed:true,userId});
+      const state=updater?.state(),version=String(options.version || state?.latestVersion || ''),failed=state?.failedVersions?.[version];
+      if(!version||!failed||!/^[a-f0-9]{64}$/.test(String(failed.sha256||'')))return {ok:false,code:'UPDATE_RETRY_TARGET_CHANGED'};
+      const channel=await effectiveUpdateChannel(userId);
+      if(options.channel&&options.channel!==channel)return {ok:false,code:'UPDATE_RETRY_TARGET_CHANGED'};
+      return await runUpdateCheck({manual:true,retryFailed:true,retryVersion:version,retrySha256:failed.sha256,retryChannel:channel,userId});
     } catch(error){return {ok:false,code:error && error.code || 'UPDATE_RETRY_FAILED',error:String(error && error.message || error)};}
   });
   ipcMain.handle('buyerlog:update-restart', async event => {

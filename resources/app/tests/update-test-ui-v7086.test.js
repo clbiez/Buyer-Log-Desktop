@@ -49,7 +49,7 @@ test('Update Test UI polls updater status and renders live download stages', () 
 });
 
 test('Update Test UI is loaded before the user menu module in deferred UI', () => {
-  assert.match(perf, /update-test-ui\.js\?rev=4','user-access-ui\.js\?rev=APP-UPDATE-V3/);
+  assert.match(perf, /update-test-ui\.js\?rev=5','user-access-ui\.js\?rev=APP-UPDATE-V3/);
 });
 
 
