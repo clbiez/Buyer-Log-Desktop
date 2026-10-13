@@ -559,12 +559,12 @@ function createToolRegistry(adapter) {
   if (adapter.cp) require('./cp-agent-tools').registerCpTools(register, adapter.cp);
   if(adapter.getDataset)for(const [source,area,module]of [['cp','cp','cp'],['orders','orders','orders'],['backlog','backlog','backlog'],['lfl','lfl','lfl'],['collection','koleksiyon','koleksiyon']]){
     const {object,string,array}=require('./agent-capability-contract');
-    require('./agent-capability-contract').register(register,{id:source+'.records',label:{tr:source+' kayıtları',en:source+' records'},module,operation:'READ',areas:[area],risk:'read',inputSchema:object({fields:array(string(160),200),filters:array({...object({field:string(160),operator:{enum:SUPPORTED_OPERATORS},value:{}}),required:['field','operator']},50),limit:{type:'integer',minimum:1,maximum:250}}),read:async(args,ctx)=>{
+    require('./agent-capability-contract').register(register,{id:source+'.records',label:{tr:source+' kayıtları',en:source+' records'},module,operation:'READ',areas:[area],risk:'read',outputSchema:require('./agent-canonical-record-output').outputSchema(source),inputSchema:object({fields:array(string(160),200),filters:array({...object({field:string(160),operator:{enum:SUPPORTED_OPERATORS},value:{}}),required:['field','operator']},50),limit:{type:'integer',minimum:1,maximum:250}}),read:async(args,ctx)=>{
       const rows=await adapter.getDataset(ctx.ownerId,ctx.profile,source),matched=applyResolvedFilters(source,rows,args.filters,ctx.now),fields=args.fields?.length?args.fields:canonicalFields.moduleFields(source);
       // Canonical discovery is complete; record output is explicitly bounded,
       // while filtering/counting evaluates all authorized source rows.
       if(fields.some(field=>!canonicalFields.bindingFor(source,field)))throw Object.assign(new Error('OFFICE_FIELD_INVALID'),{code:'OFFICE_FIELD_INVALID',statusCode:422});
-      const limit=args.limit||50;return{source,total:rows.length,matched:matched.length,rows:matched.slice(0,limit).map(row=>canonicalFields.project(row,source,fields)),truncated:matched.length>limit,fields:canonicalFields.moduleFields(source)};
+      const limit=args.limit||50;return require('./agent-canonical-record-output').projectRecords(source,rows,matched,fields,limit,comparable);
     }},adapter.authorizeCapability);
   }
 

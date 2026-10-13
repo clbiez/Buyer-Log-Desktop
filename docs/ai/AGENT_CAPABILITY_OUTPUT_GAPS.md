@@ -1,20 +1,18 @@
 # Explicit output-schema migration gaps
 
-Current executable catalog audit: 159 contract-v2 tools; 78 declare a strict top-level output object,81still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is2. This is a pending migration inventory, not a release acceptance result.
+Current executable catalog audit: 159 contract-v2 tools; 95 declare a strict top-level output object; 64 still use a generic verified envelope or an open top-level result. Runtime checks the envelope, but these declarations do not yet provide the complete field-level output contract requested for Platform 2.0. They must not be reported as fully typed simply because contractVersion is 2. This is a pending migration inventory, not a release acceptance result.
 
 | Module | Open output contracts | Registered tool IDs |
 |---|---|---|
-| cp | 8 | `cp.records`, `quality.inspect`, `quality.commit`, `quality.checklist.apply`, `quality.fail.drafts`, `cp.fields`, `cp.analyze`, `cp.analysis.export` |
-| orders | 4 | `orders.records`, `orders.fields`, `orders.analyze`, `orders.analysis.export` |
-| backlog | 6 | `backlog.records`, `backlog.fields`, `backlog.analyze`, `backlog.analysis.export`, `backlog.delivery`, `backlog.delivery.export` |
-| lfl | 6 | `lfl.records`, `lfl.fields`, `lfl.analyze`, `lfl.analysis.export`, `lfl.compare`, `lfl.compare.export` |
-| koleksiyon | 15 | `collection.records`, `collection.fields`, `collection.analyze`, `collection.analysis.export`, `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.pricing.export`, `collection.supplier.analyze`, `collection.supplier.export`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
+| cp | 6 | `quality.inspect`, `quality.commit`, `quality.checklist.apply`, `quality.fail.drafts`, `cp.fields`, `cp.analyze` |
+| orders | 2 | `orders.fields`, `orders.analyze` |
+| backlog | 3 | `backlog.fields`, `backlog.analyze`, `backlog.delivery` |
+| lfl | 3 | `lfl.fields`, `lfl.analyze`, `lfl.compare` |
+| koleksiyon | 11 | `collection.fields`, `collection.analyze`, `collection.plm.fetch`, `collection.plm.import`, `collection.records.create`, `collection.records.update`, `collection.records.delete`, `collection.supplier.analyze`, `collection.fabric.read`, `collection.fabric.upsert`, `collection.fabric.delete` |
 | quotations | 6 | `quotation.list`, `quotation.apply.collection`, `quotation.create`, `quotation.update`, `quotation.status`, `quotation.approve` |
 | source | 16 | `resource.transit.read`, `resource.transit.replace`, `resource.royalty.read`, `resource.royalty.replace`, `resource.fx.read`, `resource.fx.update`, `resource.endeksmatik.read`, `resource.endeksmatik.lookup`, `resource.endeksmatik.calculate`, `resource.endeksmatik.activate`, `resource.endeksmatik.rename`, `resource.endeksmatik.delete`, `resource.endeksmatik.import`, `resource.merch.read`, `resource.merch.import`, `resource.merch.delete` |
 | manufacturers | 4 | `manufacturer.cards.read`, `manufacturer.cards.create`, `manufacturer.cards.update`, `manufacturer.cards.delete` |
 | automations | 10 | `automation.language`, `automation.recipes.read`, `automation.code.preview`, `automation.recipe.create`, `automation.recipe.update`, `automation.recipe.delete`, `automation.recipe.activate`, `automation.recipe.schedule`, `automation.recipe.preview`, `automation.recipe.execute` |
 | licensecards | 3 | `license.cards.read`, `license.cards.discover`, `license.cards.update` |
-| opencosting | 1 | `opencosting.scenarios.export` |
-| shipping | 2 | `shipping.scenarios.export`, `shipping.freight.export` |
 
 Tighten each adapter group around its real native result and inverse receipt. Dynamic canonical records and analytical columns need a bounded typed value/dictionary or row/cell contract, with declared omissions. Before changing a write result schema, verify the actual native effect/receipt so a valid persisted effect does not become a false failed task because of a newly invented response shape. Preserve the existing engine, IAM, record scope, audit and approval boundary. Validate groups with their actual capability/native regression cases and one focused review; do not combine independent risky adapters into one delivery PR.

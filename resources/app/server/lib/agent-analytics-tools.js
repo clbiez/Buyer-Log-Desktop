@@ -3,6 +3,7 @@ const {object,string,array}=require('./agent-capability-contract');
 const {hash,error}=require('./agent-office-store');
 const {applyResolvedFilters,SUPPORTED_OPERATORS}=require('./agent-tool-registry');
 const Delivery=require('../../public/backlog-delivery-engine');
+const reportOutput=require('./agent-report-output-contract');
 const filters=array({...object({field:string(160),operator:{enum:SUPPORTED_OPERATORS},value:{}}),required:['field','operator']},50);
 const analysis=object({filters,dimensions:array(string(160),5),measures:array({...object({op:{enum:['count','sum','avg','min','max','distinctCount']},field:string(160),as:{type:'string',pattern:'^[A-Za-z_][A-Za-z0-9_]{0,63}$'}}),required:['op']},8),orderBy:array({...object({field:string(160),direction:{enum:['asc','desc']}}),required:['field','direction']},4),limit:{type:'integer',minimum:1,maximum:500}});
 const delivery=object({filters,asOf:{type:'string',pattern:'^\\d{4}-\\d{2}-\\d{2}$'}});
@@ -16,13 +17,13 @@ function reportData(report,title){
 }
 function registerReportCapability(registry,spec,outputService){
   const querySchema=spec.inputSchema,inputSchema={...object({query:querySchema,format:{enum:['html','xlsx','pdf']},title:string(140),language:{enum:['tr','en']}}),required:['query','format','title','language']};
-  registry.registerCapability({...spec,operation:'EXPORT',risk:'write',inputSchema,
+  registry.registerCapability({...spec,operation:'EXPORT',risk:'write',inputSchema,outputSchema:reportOutput.outputSchema,
     read:async(args,ctx)=>{const data=await spec.read(args.query,ctx);reportData(data.report,args.title);return data;},
     apply:async(args,ctx,preview)=>{const current=await spec.read(args.query,ctx);ctx.assertAuthority();if(JSON.stringify(current)!==JSON.stringify(preview))throw error('OFFICE_PREVIEW_CHANGED',409);
-      const requestId=hash(ctx.input.officeJobId+':'+ctx.input.officeStepId),data=reportData(preview.report,args.title),output=outputService().renderStructured(ctx.ownerId,{format:args.format,data:args.format==='xlsx'?data.workbook:data.html,title:args.title,lang:args.language,requestId});
-      if(output.pending)return {verified:true,completionPending:'pdf',output:{pendingId:output.pendingId,format:'pdf',requestId}};
-      if(!outputService().get(ctx.ownerId,output.id))throw error('OFFICE_OUTPUT_INVALID',409);
-      return {verified:true,output:{id:output.id,fileName:output.fileName,format:output.format,bytes:output.bytes,requestId}};
+      const requestId=hash(ctx.input.officeJobId+':'+ctx.input.officeStepId),data=reportData(preview.report,args.title),service=outputService(),output=service.renderStructured(ctx.ownerId,{format:args.format,data:args.format==='xlsx'?data.workbook:data.html,title:args.title,lang:args.language,requestId});
+      if(output.pending){const pending=service.store.takePending(ctx.ownerId,output.pendingId,{keep:true});if(output.pending!=='pdf'||!pending||pending.stage!=='pdf'||pending.requestId!==requestId)throw error('OFFICE_OUTPUT_INVALID',409);return reportOutput.pendingResult(output.pendingId,requestId);}
+      const record=service.get(ctx.ownerId,output.id);if(!record||record.requestId!==requestId||record.format!==args.format)throw error('OFFICE_OUTPUT_INVALID',409);
+      return reportOutput.fileResult(record);
     }});
 }
 function registerAnalyticsTools(registry,deps){
