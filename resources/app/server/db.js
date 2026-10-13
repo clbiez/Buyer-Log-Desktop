@@ -1357,7 +1357,8 @@ function scopedProfileFile(baseFile, userId) {
 }
 function loadProfileFile(file, userId = null, kind = 'profile') {
   ensureDataDir();
-  const parsed = storeExists(file) ? readJsonWithBackup(file, defaultProfileStore) : defaultProfileStore();
+  const authoritative = readFromDelta(file);
+  const parsed = authoritative || (storeExists(file) ? readJsonWithBackup(file, defaultProfileStore) : defaultProfileStore());
   const store = normalizeProfileStore(parsed, { userId, kind });
   const rawItems = Array.isArray(parsed.items) ? parsed.items : [];
   const needsMigration = parsed.schemaVersion !== PROFILE_SCHEMA_VERSION
@@ -1366,19 +1367,21 @@ function loadProfileFile(file, userId = null, kind = 'profile') {
     || rawItems.length !== store.items.length
     || store.items.some(item => item.schemaVersion !== PROFILE_SCHEMA_VERSION
       || item.userId !== (userId || item.userId || null)
-      || item.moduleId !== pageOf(item) || item.tableId !== pageOf(item));
-  if (fs.existsSync(file) && needsMigration) {
+      || (item.moduleId || '') !== pageOf(item) || (item.tableId || '') !== pageOf(item));
+  // Authoritative legacy records normalize on read without inventing a new
+  // revision. The next native guarded write persists schema v2 in the journal.
+  if (!authoritative && fs.existsSync(file) && needsMigration) {
     const saved = revisioned(store, revisionOf(parsed) + 1);
     atomicWriteJson(file, saved);
     return { ...store, _revision: revisionOf(saved), _updatedAt: saved._updatedAt || null };
   }
   return { ...store, _revision: revisionOf(parsed), _updatedAt: parsed._updatedAt || null };
 }
-function saveProfileFile(file, data, expectedRevision = null, storeName = 'Profil verileri', userId = null, kind = 'profile') {
+function saveProfileFile(file, data, expectedRevision = null, storeName = 'Profil verileri', userId = null, kind = 'profile', options = {}) {
   const normalized = normalizeProfileStore(data, { userId, kind });
-  return saveRevisioned(file, normalized, defaultProfileStore, expectedRevision, storeName);
+  return saveRevisioned(file, normalized, defaultProfileStore, expectedRevision, storeName, options);
 }
-function addProfile(file, name, data, expectedRevision, storeName, userId = null, kind = 'profile') {
+function addProfile(file, name, data, expectedRevision, storeName, userId = null, kind = 'profile', options = {}) {
   const store = loadProfileFile(file, userId, kind); assertRevision(storeName, store, expectedRevision);
   const now = new Date().toISOString();
   const page = pageOf({ data });
@@ -1387,12 +1390,12 @@ function addProfile(file, name, data, expectedRevision, storeName, userId = null
     id, name, createdAt: now, updatedAt: now, userId, moduleId: page || null, tableId: page || null,
     schemaVersion: PROFILE_SCHEMA_VERSION, data,
   }] }, { userId, kind });
-  return saveProfileFile(file, next, store._revision, storeName, userId, kind);
+  return saveProfileFile(file, next, store._revision, storeName, userId, kind, options);
 }
-function deleteProfile(file, id, expectedRevision, storeName, userId = null, kind = 'profile') {
+function deleteProfile(file, id, expectedRevision, storeName, userId = null, kind = 'profile', options = {}) {
   const store = loadProfileFile(file, userId, kind); assertRevision(storeName, store, expectedRevision);
   const next = removeProfile(store, id);
-  return saveProfileFile(file, next, store._revision, storeName, userId, kind);
+  return saveProfileFile(file, next, store._revision, storeName, userId, kind, options);
 }
 function setFavoriteProfile(file, id, expectedRevision, storeName, userId = null, kind = 'profile') {
   const store = loadProfileFile(file, userId, kind); assertRevision(storeName, store, expectedRevision);
@@ -1404,7 +1407,7 @@ function markUsedProfile(file, id, expectedRevision, storeName, userId = null, k
   const next = markUsed(store, id);
   return saveProfileFile(file, next, store._revision, storeName, userId, kind);
 }
-function updateProfile(file, id, data, expectedRevision, storeName, userId = null, kind = 'profile', name = null) {
+function updateProfile(file, id, data, expectedRevision, storeName, userId = null, kind = 'profile', name = null, options = {}) {
   const store = loadProfileFile(file, userId, kind); assertRevision(storeName, store, expectedRevision);
   const item = store.items.find(it => it.id === id); if (!item) throw new Error('Profil bulunamadı: ' + id);
   const now = new Date().toISOString();
@@ -1412,7 +1415,21 @@ function updateProfile(file, id, data, expectedRevision, storeName, userId = nul
     ? { ...candidate, ...(name != null && String(name).trim() ? { name: String(name).trim() } : {}), data, updatedAt: now, schemaVersion: PROFILE_SCHEMA_VERSION }
     : candidate);
   const next = normalizeProfileStore({ ...store, items: nextItems }, { userId, kind });
-  return saveProfileFile(file, next, store._revision, storeName, userId, kind);
+  return saveProfileFile(file, next, store._revision, storeName, userId, kind, options);
+}
+
+// Native profile operations retain their existing normalization and writer.
+// Only trusted services receive this facade; paths/options cannot be tool input.
+function mutateHorizonTemplates(userId, work) {
+  const file = scopedProfileFile(HORIZON_TEMPLATES_FILE, userId), kind = 'horizonTemplate', name = 'Horizon şablonları';
+  return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(), file, lease => work({
+    load: () => loadProfileFile(file, userId, kind),
+    add: (title, data, revision, guard) => addProfile(file, title, data, revision, name, userId, kind, { ...lease, ...guard }),
+    remove: (id, revision, guard) => deleteProfile(file, id, revision, name, userId, kind, { ...lease, ...guard }),
+    update: (id, data, revision, title, guard) => updateProfile(file, id, data, revision, name, userId, kind, title, { ...lease, ...guard }),
+    replace: (store, revision, guard) => saveProfileFile(file, store, revision, name, userId, kind, { ...lease, ...guard }),
+    commit: lease.commit,
+  }));
 }
 
 
@@ -1775,6 +1792,7 @@ async function restoreCpExFactoryRevisions(snapshot, { actor = null } = {}) {
 }
 
 module.exports = {
+  mutateHorizonTemplates,
   snapshotOrderOverride,verifyOrderOverridePatch,restoreOrderOverrideReceipt,
   mutateSharedResource,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,

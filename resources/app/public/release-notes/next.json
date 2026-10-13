@@ -3331,6 +3331,138 @@
           "en": "If the source changed, reopen the editor with the current record"
         }
       }
+    },
+    {
+      "id": "agent-personal-horizon",
+      "type": "feature",
+      "module": {
+        "tr": "Kaynak Veri",
+        "en": "Source Data"
+      },
+      "title": {
+        "tr": "Agent kişisel filtreleri ve katmanları yönetir",
+        "en": "Agents manage personal filters and layers"
+      },
+      "path": {
+        "tr": "Kaynak Veri › Kişisel Filtreler",
+        "en": "Source Data › Personal Filters"
+      },
+      "body": {
+        "tr": "Agent, kullanıcının kendi kaynak filtresini bağlı modül grubu için önizleme ve onayla kaydeder; kişisel veya varsayılan katmanı kaldırıp güvenli biçimde geri alabilir. Ortak kaynak ayarları ve rol şablonları korunur. INTAKE kaynak hedefi de desteklenir.",
+        "en": "Agents preview and save the owner’s source filter for a linked module group with approval, clear personal or default layers, and safely undo the change. Shared source settings and role templates are preserved. The INTAKE source target is also supported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-personal-horizon.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo kişisel filtre işlem sonucu",
+          "en": "Demo personal filter operation result in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Agent kişisel filtreleri ve katmanları yönetir",
+          "en": "Agents manage personal filters and layers"
+        }
+      }
+    },
+    {
+      "id": "personal-horizon-atomic",
+      "type": "fix",
+      "module": {
+        "tr": "Kaynak Veri",
+        "en": "Source Data"
+      },
+      "title": {
+        "tr": "Bağlı kişisel filtreler tek işlemde kaydedilir",
+        "en": "Linked personal filters save in one transaction"
+      },
+      "path": {
+        "tr": "Kaynak Veri › Kişisel Filtreler",
+        "en": "Source Data › Personal Filters"
+      },
+      "body": {
+        "tr": "Normal Veri Yönetimi ve Agent Ofisi aynı tercih servisini kullanır. Bağlı grubun bütün filtreleri tek dosya işlemiyle kaydedilir; boyut sınırı, güncel yetki veya eski onay hatasında hiçbiri kısmen yazılmaz. Silip yeniden oluşturma eski onayı geçerli yapmaz.",
+        "en": "Normal Data Management and Agent Office use the same preference service. Every filter in a linked group saves in one file transaction; size limits, revoked permissions or stale approval cannot cause partial writes. Deleting and recreating a filter does not revalidate an old approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "personal-horizon-atomic.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo kişisel filtre işlem sonucu",
+          "en": "Demo personal filter operation result in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Bağlı kişisel filtreler tek işlemde kaydedilir",
+          "en": "Linked personal filters save in one transaction"
+        }
+      }
+    },
+    {
+      "id": "agent-horizon-templates",
+      "type": "feature",
+      "module": {
+        "tr": "Kaynak Veri",
+        "en": "Source Data"
+      },
+      "title": {
+        "tr": "Agent Horizon şablonlarını kaydeder, paylaşır ve siler",
+        "en": "Agents save, share and delete Horizon templates"
+      },
+      "path": {
+        "tr": "Kaynak Veri › Horizon Şablonları",
+        "en": "Source Data › Horizon Templates"
+      },
+      "body": {
+        "tr": "Kişisel ve ortak şablonlar mevcut depoda onaylı görevlerle yönetilir. Paylaşım kişisel kaydı koruyarak kopyalar; filtreyi kendiliğinden uygulamaz. Ortak kaydı silmek mevcut sahip veya moderatör yetkisini gerektirir. Geri alma güncel sürümü kontrol eder.",
+        "en": "Personal and shared templates are managed through approved tasks in the existing store. Sharing copies and preserves the personal item; it does not apply a filter automatically. Shared deletion requires the existing owner or moderator authority. Undo checks the current version."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-horizon-templates.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo Horizon şablonu sonucu",
+          "en": "Demo Horizon template result in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Agent Horizon şablonlarını kaydeder, paylaşır ve siler",
+          "en": "Agents save, share and delete Horizon templates"
+        }
+      }
+    },
+    {
+      "id": "horizon-template-native-revision",
+      "type": "fix",
+      "module": {
+        "tr": "Kaynak Veri",
+        "en": "Source Data"
+      },
+      "title": {
+        "tr": "Şablon okumak sürümü tekrar değiştirmez",
+        "en": "Reading a template no longer changes its version repeatedly"
+      },
+      "path": {
+        "tr": "Kaynak Veri › Horizon Şablonları",
+        "en": "Source Data › Horizon Templates"
+      },
+      "body": {
+        "tr": "Modüle bağlı olmayan geçerli Horizon şablonları artık her okumada yeniden migration edilmez. Normal arayüz ve agent aynı dosya kilidini ve journal yetki kontrolünü kullanır; bekleme sırasında kaldırılan yetki gerçek yazmayı durdurur.",
+        "en": "Valid Horizon templates without a module binding are no longer migrated on every read. Native UI and agents share the same file lease and journal authority check; permissions revoked while waiting prevent the actual write."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "horizon-template-native-revision.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo Horizon şablonu sonucu",
+          "en": "Demo Horizon template result in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Şablon okumak sürümü tekrar değiştirmez",
+          "en": "Reading a template no longer changes its version repeatedly"
+        }
+      }
     }
   ]
 }

@@ -9,6 +9,14 @@ const publicDefinition=object({...definition.properties,groups:array(object({id:
 const sourceSchema=object({id:string(160),name:string(80),profileId:string(80),role:string(40),sourceRevision:revision,refreshEnabled:{type:'boolean'},requiredModules:strings,linkedTargets:strings,scopes:array(object({name:string(80),targets:strings,enabled:{type:'boolean'},limitToCpOrders:{type:'boolean'},horizon:publicDefinition}),20),parkedModules:strings,restoreModules:strings,manualQueryPresent:{type:'boolean'},lastRun:{...object({at:string(40),ok:{type:'boolean'},rowCount:{type:'number'},elapsedMs:{type:'number'}}),type:['object','null']},fields:array(object({table:string(200),field:string(200)}),200),fieldCount:count,fieldsTruncated:{type:'boolean'}});
 const receipt=object({verified:{enum:[true]},changed:{type:'boolean'},revision:count,sourceRevision:revision,warnings:array(string(2048),100),appliedScopeId:string(160)});
 const writeResult={...object({verified:{enum:[true]},data:receipt,rollbackToken:object({sourceId:id,expectedSourceRevision:revision,artifactId:{...string(32),pattern:'^[a-f0-9]{32}$'}})}),required:['verified','data']};
+async function validateFilterDefinition(source,args,ctx){
+    if(Buffer.byteLength(JSON.stringify(args.definition))>256*1024)throw error('OFFICE_TOOL_SCHEMA',413);
+    const current=await source.snapshot(ctx),item=current.items.find(item=>item.id===args.sourceId);if(!item)throw error('SOURCE_NOT_FOUND',404);
+    const fields=source.filterFields(item),known=new Set(fields.map(field=>JSON.stringify([field.table,field.field]))),ids=new Set();
+    const normalized=require('./modelHorizon').normalizeHorizon(args.definition);
+    for(const group of normalized.groups){if(ids.has(group.id))throw error('OFFICE_TOOL_SCHEMA',422);ids.add(group.id);for(const condition of group.conditions){if(ids.has(condition.id))throw error('OFFICE_TOOL_SCHEMA',422);ids.add(condition.id);if(!known.has(JSON.stringify([condition.table||normalized.table,condition.field])))throw error('OFFICE_FIELD_INVALID',422);}}
+    for(const [active,table,field]of [[normalized.seasons.length,normalized.seasonTable,normalized.seasonField],[normalized.dateStart||normalized.dateEnd,normalized.dateTable,normalized.dateField]])if(active&&!known.has(JSON.stringify([table,field])))throw error('OFFICE_FIELD_INVALID',422);
+}
 function registerSourceTools(registry,deps){
  const source=deps.source,base={module:'source',areas:['source'],agentAreas:['source'],dataScope:'native source configuration; private connection/query/credential material excluded'},write={...base,permissions:['manageModelConnections']};
  const mutation=(ctx,work)=>{if(typeof deps.withAgentMutation!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);return deps.withAgentMutation(ctx,work);};
@@ -22,12 +30,7 @@ function registerSourceTools(registry,deps){
   inputSchema:{...object({sourceId:id,moduleId:id,...(kind==='binding'?{enabled:{type:'boolean'}}:kind==='link'?{linked:{type:'boolean'}}:{mode:{enum:['shared','split']},definition,name:string(80)})}),required:['sourceId','moduleId',...(kind==='binding'?['enabled']:kind==='link'?['linked']:['mode','definition'])]},
   read:async(args,ctx)=>{
    if(kind==='filter'){
-    if(Buffer.byteLength(JSON.stringify(args.definition))>256*1024)throw error('OFFICE_TOOL_SCHEMA',413);
-    const current=await source.snapshot(ctx),item=current.items.find(item=>item.id===args.sourceId);if(!item)throw error('SOURCE_NOT_FOUND',404);
-    const fields=source.filterFields(item),known=new Set(fields.map(field=>JSON.stringify([field.table,field.field]))),ids=new Set();
-    const normalized=require('./modelHorizon').normalizeHorizon(args.definition);
-    for(const group of normalized.groups){if(ids.has(group.id))throw error('OFFICE_TOOL_SCHEMA',422);ids.add(group.id);for(const condition of group.conditions){if(ids.has(condition.id))throw error('OFFICE_TOOL_SCHEMA',422);ids.add(condition.id);if(!known.has(JSON.stringify([condition.table||normalized.table,condition.field])))throw error('OFFICE_FIELD_INVALID',422);}}
-    for(const [active,table,field]of [[normalized.seasons.length,normalized.seasonTable,normalized.seasonField],[normalized.dateStart||normalized.dateEnd,normalized.dateTable,normalized.dateField]])if(active&&!known.has(JSON.stringify([table,field])))throw error('OFFICE_FIELD_INVALID',422);
+    await validateFilterDefinition(source,args,ctx);
    }
    return source.preview(kind,args,ctx);
   },
@@ -39,4 +42,4 @@ function registerSourceTools(registry,deps){
   },
   restore:async(token,ctx)=>mutation(ctx,async()=>{const {buffer}=artifacts.read(ctx.profile,token.artifactId,'source-configuration-backup'),before=JSON.parse(buffer);if(before.id!==token.sourceId)throw error('OFFICE_ROLLBACK_INVALID',409);const receipt=await source.restore(before,token.expectedSourceRevision,ctx);await deps.changed?.(ctx.profile,'modelConnections',{sourceId:token.sourceId,sourceRevision:receipt.sourceRevision,restored:true});return receipt;})});
 }
-module.exports={registerSourceTools,definition};
+module.exports={registerSourceTools,definition,publicDefinition,validateFilterDefinition};
