@@ -26,8 +26,8 @@
 }(typeof globalThis !== 'undefined' ? globalThis : this, function () {
   'use strict';
 
-  var SUMMARY_MAX = 80;
-  var DETAIL_MAX = 200;
+  var SUMMARY_MAX = Infinity; // No arbitrary character limit on user-edited card fields.
+  var DETAIL_MAX = Infinity;
   var AI_BATCH_SIZE = 20;
   var RAW_CONTEXT_MAX = 700;
   var DETAIL_FIELDS = Object.freeze(['category', 'type', 'yarn', 'weight', 'composition', 'finish', 'sustainability']);
@@ -42,7 +42,7 @@
   });
 
   function clean(value) { return String(value == null ? '' : value).replace(/[\u0000-\u001f]+/g, ' ').replace(/\s+/g, ' ').trim(); }
-  function limit(value, max) { var text = clean(value); return text.length > max ? text.slice(0, max - 1).trim() + '…' : text; }
+  function limit(value, max) { var text = clean(value); return Number.isFinite(max) && text.length > max ? text.slice(0, max) : text; }
 
   /* Kumaş kodu: kumaş metninin başındaki "1234-" ya da "100000627-"
      (3–12 hane). Çok kumaşlı hücrede her kumaş "A - 3859-…", "B - 361819-…"
@@ -120,12 +120,42 @@
       out = out.replace(rx, function (all, lead) { marks.push(pair[to]); return lead + '\u0001' + (marks.length - 1) + '\u0002'; });
     });
     out = out.replace(/\u0001(\d+)\u0002/g, function (_, index) { return marks[Number(index)]; });
-    // Yüzde yazımı: TR "%100 Pamuk", EN "100% Cotton".
-    return lang === 'en'
-      ? out.replace(/%\s*(\d{1,3}(?:[.,]\d+)?)\s*/g, '$1% ').replace(/(\d)%(?=[A-Za-z])/g, '$1% ')
-      : out.replace(/(\d{1,3}(?:[.,]\d+)?)\s*%\s*/g, '%$1 ');
+    // Both Turkish and English use 100% Cotton / 100% Pamuk notation.
+    return normalizeComposition(out.replace(/%\\s*(\\d{1,3}(?:[.,]\\d+)?)\\s*/g, '$1% '));
   }
-  function languageSummary(summary, lang) { return limit(translateTerms(summary, lang).replace(/\s+·/g, ' ·'), SUMMARY_MAX); }
+  /* Canonical blend formatter: percentages on the right in both languages,
+     fibres ordered by descending percentage. Works with saved/legacy/manual/AI
+     cards; only recognized percentage+fibre tokens are reordered. */
+  var FIBRE_NAMES = [
+    'Geri Dönüşümlü Polyester','Geri Dönüşümlü Pamuk','Recycled Polyester','Recycled Cotton',
+    'Organik Pamuk','Organic Cotton','Poliester','Polyester','Poliamid','Polyamide',
+    'Viskon','Viskoz','Viscose','Akrilik','Acrylic','Elastan','Elastane','Lycra',
+    'Pamuk','Cotton','Yün','Wool','Keten','Linen','Modal','Lyocell','Tencel',
+    'Naylon','Nylon','Bambu','Bamboo','Asetat','Acetate','Kaşmir','Cashmere','İpek','Silk'
+  ].sort(function(a,b){return b.length-a.length;});
+  var FIBRE_RX = new RegExp('(%\\s*\\d{1,3}(?:[.,]\\d+)?|\\d{1,3}(?:[.,]\\d+)?\\s*%)\\s*('+
+    FIBRE_NAMES.map(escapeRx).join('|')+')(?=$|[^A-Za-zÇĞİÖŞÜçğıöşü])','gi'); // i18n-ignore
+  function formatPercentage(value){return String(value).replace(/^%\\s*/,'').replace(/\\s*%$/,'').trim()+'%';}
+  function normalizeComposition(value){
+    var src=clean(value),matches=[],hit;
+    FIBRE_RX.lastIndex=0;
+    while((hit=FIBRE_RX.exec(src))!==null){
+      var amount=Number(hit[1].replace(/[%\\s]/g,'').replace(',','.'));
+      if(!Number.isFinite(amount))continue;
+      matches.push({start:hit.index,end:FIBRE_RX.lastIndex,text:formatPercentage(hit[1])+' '+hit[2],amount:amount});
+    }
+    if(!matches.length)return src;
+    var out='',cursor=0,i=0;
+    while(i<matches.length){
+      var j=i+1;
+      while(j<matches.length && /^\\s*(?:[,;/]\\s*)?$/.test(src.slice(matches[j-1].end,matches[j].start)))j++;
+      out+=src.slice(cursor,matches[i].start);
+      out+=matches.slice(i,j).sort(function(a,b){return b.amount-a.amount||a.start-b.start;}).map(function(e){return e.text;}).join(' ');
+      cursor=matches[j-1].end;i=j;
+    }
+    return out+src.slice(cursor);
+  }
+  function languageSummary(summary, lang) { return limit(normalizeComposition(translateTerms(summary, lang).replace(/\\s+·/g, ' ·')), SUMMARY_MAX); }
 
   /* Deterministik kural kartı: LCW AI erişilemezse ya da önerisi
      doğrulanamazsa kullanılır. Değer uydurmaz; bulamadığını boş bırakır. */
@@ -149,7 +179,7 @@
       if (seen.has(key)) return;
       seen.add(key); parts.push(text);
     });
-    details.composition = parts.join(' ');
+    details.composition = normalizeComposition(parts.join(' '));
     details.finish = tokens.filter(function (token) { return FINISH_RX.test(token) && !SUSTAIN_RX.test(token); }).join(', ');
     details.sustainability = tokens.filter(function (token) { return SUSTAIN_RX.test(token); }).join(', ');
     DETAIL_FIELDS.forEach(function (key) { details[key] = limit(details[key], DETAIL_MAX); });
@@ -212,9 +242,9 @@
       var details = {};
       DETAIL_FIELDS.forEach(function (key) {
         var value = clean(parsed[key]);
-        details[key] = value && numbersSupported(value, present) ? limit(value, DETAIL_MAX) : '';
+        details[key] = value && numbersSupported(value, present) ? (key === 'composition' ? normalizeComposition(value) : limit(value, DETAIL_MAX)) : '';
       });
-      cards[code] = { code: code, summary: limit(summary, SUMMARY_MAX), summaryEn: limit(summaryEn, SUMMARY_MAX), details: details, summarySource: 'ai', raw: raw };
+      cards[code] = { code: code, summary: normalizeComposition(summary), summaryEn: normalizeComposition(summaryEn), details: details, summarySource: 'ai', raw: raw };
     });
     wanted.forEach(function (raw, code) {
       if (!cards[code]) cards[code] = Object.assign(ruleCard(raw), { code: code, raw: raw });
@@ -228,10 +258,10 @@
     var code = normalizeCode(source.code);
     if (!code) return null;
     var details = {};
-    DETAIL_FIELDS.forEach(function (key) { details[key] = limit(source.details && source.details[key], DETAIL_MAX); });
-    var summary = limit(source.summary, SUMMARY_MAX);
+    DETAIL_FIELDS.forEach(function (key) { var value=limit(source.details && source.details[key], DETAIL_MAX); details[key]=key==='composition'?normalizeComposition(value):value; });
+    var summary = normalizeComposition(limit(source.summary, SUMMARY_MAX));
     if (!summary) return null;
-    var summaryEn = limit(source.summaryEn, SUMMARY_MAX) || languageSummary(summary, 'en');
+    var summaryEn = normalizeComposition(limit(source.summaryEn, SUMMARY_MAX)) || languageSummary(summary, 'en');
     var origin = clean(source.summarySource);
     return {
       code: code,
@@ -247,7 +277,7 @@
   function summaryFor(card, lang) {
     if (!card) return '';
     // Eski (yalnız TR özetli) kartta EN görünüm sözlük çevirisine düşer.
-    return lang === 'en' ? clean(card.summaryEn) || (card.summary ? languageSummary(card.summary, 'en') : '') : clean(card.summary) || clean(card.summaryEn);
+    return normalizeComposition(lang === 'en' ? clean(card.summaryEn) || (card.summary ? languageSummary(card.summary, 'en') : '') : clean(card.summary) || clean(card.summaryEn));
   }
   /* Tabloda görünen metin: kart varsa aktif dildeki özet, yoksa PLM metni. */
   function cardOf(cards, code) {
@@ -292,6 +322,7 @@
     validateAiCards: validateAiCards,
     normalizeCard: normalizeCard,
     translateTerms: translateTerms,
+    normalizeComposition: normalizeComposition,
     summaryFor: summaryFor,
     displayText: displayText,
     missingCodes: missingCodes,
