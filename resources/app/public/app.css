@@ -5837,3 +5837,41 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 .clRosStatusDetails { padding: 7px 9px; margin-top: 4px; border-top: 1px solid var(--line, #d6dce2); max-width: 360px; max-height: 230px; overflow: auto; background: var(--card2, #fff); }
 .clRosStatusDetails b { font-size: 12px; }
 .clRosStatusDetails p { border-top: 1px solid var(--line, #d6dce2); margin: 6px 0 0; padding-top: 6px; font-size: 11px; line-height: 1.45; white-space: normal; overflow-wrap: anywhere; }
+
+
+/* Prepare E-Mail vNext: ordered CP/Excel fields and independent subject composer.
+   Reuses Buyer Log's light/dark theme tokens; no hard-coded theme colours. */
+.mailTopicEditorCard{width:min(1080px,96vw);}
+.mailTopicColumnsTools{align-items:center;}
+.mailTopicFieldSearch{width:min(245px,100%);min-width:155px;height:34px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font:500 12px/1.4 inherit;padding:6px 10px;}
+.mailTopicFieldSearch:focus-visible,.mailTopicSeparatorField :is(select,input):focus-visible{outline:2px solid var(--acc);outline-offset:2px;}
+.mailTopicSelectedOnly{display:inline-flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2);cursor:pointer;}
+.mailTopicSelectedOnly input{accent-color:var(--acc);}
+.mailTopicSubjectLegend,.mailTopicSubjectRow{grid-template-columns:minmax(110px,134px) 60px minmax(110px,1fr) 66px;}
+.mailTopicSubjectRow{min-height:40px;padding:5px 9px;}
+.mailTopicSubjectRow[hidden]{display:none!important;}
+.mailTopicSubjectRow[draggable=true]{cursor:grab;}
+.mailTopicSubjectRow[draggable=true]:active{cursor:grabbing;}
+.mailTopicSubjectLabel{font-weight:600;}
+.mailTopicMoveBtns{display:flex;gap:2px;justify-self:end;}
+.mailTopicMoveBtns button,.mailTopicArrangeItem button{height:27px;min-width:27px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink2);font:700 13px/1 inherit;cursor:pointer;}
+.mailTopicMoveBtns button:hover,.mailTopicArrangeItem button:not(:disabled):hover{color:var(--acc);border-color:var(--acc);}
+.mailTopicArrangeItem button:disabled{opacity:.3;cursor:default;}
+.mailTopicSubjectArrange{display:flex;flex-direction:column;gap:9px;padding:12px;border:1px solid var(--line);border-radius:var(--r-md);background:var(--card2);min-width:0;}
+.mailTopicArrangeHeading{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap;}
+.mailTopicArrangeHeading strong{font-size:12px;color:var(--ink);}
+.mailTopicArrangeHeading small{font-size:10px;color:var(--muted);}
+.mailTopicSubjectOrderList{display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;}
+.mailTopicArrangeItem{display:grid;grid-template-columns:20px minmax(0,1fr) 30px 30px;gap:6px;align-items:center;padding:5px 8px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-size:11px;cursor:grab;}
+.mailTopicArrangeItem span:first-child{color:var(--muted);font-size:15px;text-align:center;}
+.mailTopicSeparatorField{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:11px;color:var(--ink2);}
+.mailTopicSeparatorField select,.mailTopicSeparatorField input{height:31px;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);color:var(--ink);padding:4px 8px;font-size:12px;}
+.mailTopicSeparatorField input{max-width:140px;}
+.mailTopicSeparatorField input[hidden]{display:none;}
+@media(max-width:650px){
+  .mailTopicColumnsTools{gap:5px;}
+  .mailTopicFieldSearch{flex:1 1 100%;}
+  .mailTopicSubjectLegend,.mailTopicSubjectRow{grid-template-columns:97px 38px minmax(76px,1fr) 56px;gap:5px;}
+  .mailTopicMoveBtns button{height:26px;min-width:25px;}
+  .mailTopicSubjectRow{padding:5px;}
+}
