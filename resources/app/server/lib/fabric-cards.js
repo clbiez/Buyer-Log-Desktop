@@ -11,11 +11,12 @@ const path = require('path');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
 const { RevisionConflictError, expectedNumber } = require('../db');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
+const fabricEngine = require('../../public/fabric-cards-engine');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'fabric-cards.json');
 const MAX_CARDS = 20000;
-const SUMMARY_MAX = 80;
-const DETAIL_MAX = 200;
+const SUMMARY_MAX = Infinity;
+const DETAIL_MAX = Infinity;
 const RAW_MAX = 4000;
 const DETAIL_FIELDS = Object.freeze(['category', 'type', 'yarn', 'weight', 'composition', 'finish', 'sustainability']);
 const SOURCES = new Set(['ai', 'rule', 'manual']);
@@ -34,15 +35,15 @@ function emptyStore() {
 function normalizeCard(raw, fallbackCode = '') {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const code = normalizeCode(raw.code || fallbackCode);
-  const summary = clean(raw.summary, SUMMARY_MAX);
+  const summary = fabricEngine.normalizeComposition(clean(raw.summary, SUMMARY_MAX));
   if (!code || !summary) return null;
   const details = {};
-  for (const key of DETAIL_FIELDS) details[key] = clean(raw.details && raw.details[key], DETAIL_MAX);
+  for (const key of DETAIL_FIELDS) { const value=clean(raw.details && raw.details[key], DETAIL_MAX); details[key]=key==='composition'?fabricEngine.normalizeComposition(value):value; }
   const source = clean(raw.summarySource, 20);
   return {
     code,
     summary,
-    summaryEn: clean(raw.summaryEn, SUMMARY_MAX),
+    summaryEn: fabricEngine.normalizeComposition(clean(raw.summaryEn, SUMMARY_MAX)),
     details,
     summarySource: SOURCES.has(source) ? source : 'manual',
     raw: clean(raw.raw, RAW_MAX),

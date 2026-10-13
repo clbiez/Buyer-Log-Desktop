@@ -1,0 +1,81 @@
+/* Buyer Log Automations — quiet CP-inspired column picker
+ * Uses the same design tokens and density as the CP Fields drawer.
+ */
+.automationStudio .autoShell{border-radius:var(--r-sm,9px);background:var(--card);box-shadow:none}
+.automationStudio .autoHeader{padding:14px 18px;gap:16px}
+.automationStudio .autoHeader h2{font:750 17px/1.25 var(--heading)}
+.automationStudio .autoHeader p{font-size:11px;line-height:1.45;color:var(--muted)}
+.automationStudio .autoWorkspace{grid-template-columns:248px minmax(0,1fr)}
+.automationStudio .autoSidebar{background:var(--card);border-right:1px solid var(--line)}
+.automationStudio .autoSideHead{height:39px;padding-inline:13px}
+.automationStudio .autoEditor{background:var(--card2)}
+.automationStudio .autoEditorHead{padding:11px 17px;background:var(--card);border-bottom:1px solid var(--line)}
+.automationStudio .autoEditorScroll{padding:15px;gap:12px}
+.automationStudio .autoSection{padding:14px 15px;gap:12px;border-radius:var(--r-sm,9px);border-color:var(--line);box-shadow:none}
+.automationStudio .autoSectionTitle b{font:750 12px/1.4 var(--heading)}
+.automationStudio .autoSectionTitle small{font-size:11px;line-height:1.5}
+.automationStudio .autoGrid label>span,.automationStudio .autoField>span{font-size:11px}
+.automationStudio .autoGrid input,.automationStudio .autoGrid select,.automationStudio .autoField input,.automationStudio .autoField textarea,.automationStudio .autoField select{font-size:12px;background:var(--card);border-color:var(--line2)}
+.automationStudio .autoField textarea{line-height:1.55}
+.automationStudio .autoEditorFoot{background:var(--card)}
+.automationStudio .autoPreviewNote{background:var(--card2);border-style:solid;border-color:var(--line)}
+.autoReportFields{padding:11px 12px;border:1px solid var(--line);border-radius:var(--r-sm,8px);background:var(--card2)}
+.autoReportPicker{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.autoReportPicker>div{min-width:0;display:grid;gap:3px}
+.autoReportPicker b{font:720 12px/1.3 var(--heading);color:var(--ink)}
+.autoReportPicker small{font-size:11px;line-height:1.4;color:var(--muted)}
+.autoReportPicker button{flex:none;white-space:nowrap}
+.autoReportChips{display:flex;flex-wrap:wrap;gap:5px}
+.autoReportChips>span{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 8px;border:1px solid var(--line);border-radius:5px;background:var(--card);color:var(--ink2);font-size:10px}
+.autoReportChips>.autoReportAuto{max-width:none;background:transparent;border:0;padding-left:0;color:var(--muted)}
+.autoColumnsOverlay{position:fixed;inset:0;z-index:11000;background:rgba(12,18,28,.36);display:flex;justify-content:flex-end;align-items:stretch;padding:10px}
+.autoColumnsDrawer{width:min(910px,100%);min-width:0;max-height:100%;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line2);border-radius:var(--r-sm,9px);background:var(--card);color:var(--ink);box-shadow:var(--shadow-lg)}
+.autoColumnsHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:15px 17px;border-bottom:1px solid var(--line)}
+.autoColumnsHead>div{display:grid;gap:4px;min-width:0}
+.autoColumnsHead b{font:750 15px/1.3 var(--heading)}
+.autoColumnsHead span{color:var(--muted);font-size:11px;line-height:1.4}
+.autoColumnsClose{width:29px;height:29px;flex:none;border:0;border-radius:6px;background:transparent;color:var(--ink2);font-size:20px;cursor:pointer}
+.autoColumnsClose:hover{background:var(--card2)}
+.autoColumnsToolbar{display:flex;gap:8px;padding:10px 15px;border-bottom:1px solid var(--line);background:var(--card2)}
+.autoColumnsToolbar input,.autoColumnsToolbar select{height:33px;min-width:0;padding:0 9px;background:var(--card);color:var(--ink);border:1px solid var(--line2);border-radius:var(--r-xs,6px);font:12px var(--sans)}
+.autoColumnsToolbar input{flex:1}
+.autoColumnsToolbar select{width:165px;flex:none}
+.autoColumnsToolbar input:focus-visible,.autoColumnsToolbar select:focus-visible,.autoColumnsDrawer button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
+.autoColumnsContent{min-height:0;flex:1;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(260px,.78fr);overflow:auto}
+.autoColumnsGroups{min-width:0;min-height:0;border-right:1px solid var(--line)}
+.autoColumnsTableHead{display:flex;justify-content:space-between;align-items:center;padding:9px 14px 9px 19px;background:var(--card2);border-bottom:1px solid var(--line);font:700 10px/1 var(--heading);letter-spacing:.055em;color:var(--muted)}
+.autoColumnsGroupList{padding:8px;display:grid;align-content:start;gap:4px}
+.autoColumnsGroup{border-radius:var(--r-xs,6px);border-left:3px solid var(--acc);background:color-mix(in srgb,var(--card2) 45%,var(--card));overflow:hidden}
+.autoColumnsGroup:nth-child(4n+2){border-left-color:var(--blue,var(--acc))}
+.autoColumnsGroup:nth-child(4n+3){border-left-color:var(--green,var(--acc))}
+.autoColumnsGroup:nth-child(4n+4){border-left-color:var(--muted)}
+.autoColumnsGroupHead{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:35px;padding:2px 10px}
+.autoColumnsGroupHead>button{flex:1;display:flex;align-items:center;gap:8px;min-width:0;padding:6px 0;border:0;background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:650 12px/1.25 var(--sans)}
+.autoColumnsGroupHead>button>b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.autoColumnsGroupHead>button>span{font-size:16px;width:12px;color:var(--muted)}
+.autoColumnsGroupHead>button>small{flex:none;color:var(--muted);font:600 10px var(--mono)}
+.autoColumnsGroupHead>label{display:flex;align-items:center;justify-content:center;padding:5px;cursor:pointer}
+.autoColumnsGroup input[type=checkbox]{width:15px;height:15px;margin:0;accent-color:var(--acc);cursor:pointer}
+.autoColumnsGroupItems{padding:0 5px 5px 14px}
+.autoColumnsField{display:flex;align-items:center;gap:12px;min-height:31px;padding:5px 10px 5px 16px;border-radius:5px;cursor:pointer;color:var(--ink2);font:11px/1.35 var(--sans)}
+.autoColumnsField:hover{background:var(--card)}
+.autoColumnsField>span{flex:1;min-width:0;overflow-wrap:anywhere}
+.autoColumnsSelected{display:flex;flex-direction:column;min-width:0;min-height:0;padding:12px;gap:7px}
+.autoColumnsSelectedHead{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.autoColumnsSelectedHead b{font:750 12px var(--heading)}
+.autoColumnsSelectedHead small{font:650 11px var(--mono);color:var(--muted)}
+.autoColumnsSelected>p{margin:0 0 4px;color:var(--muted);font-size:10px;line-height:1.5}
+.autoColumnsSelectedList{display:grid;align-content:start;gap:4px}
+.autoSelectedColumn{display:flex;align-items:center;gap:4px;min-height:34px;padding:4px 5px;border:1px solid var(--line);border-radius:6px;background:var(--card2)}
+.autoSelectedColumn.isDragging{opacity:.5}
+.autoColumnsGrip{flex:none;color:var(--muted);cursor:grab;font-size:13px;letter-spacing:-2px;width:18px;text-align:center;user-select:none}
+.autoSelectedColumn>span:nth-child(2){min-width:0;flex:1;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.autoSelectedColumn button{flex:none;display:grid;place-items:center;width:24px;height:24px;padding:0;border:0;border-radius:4px;background:transparent;color:var(--ink2);cursor:pointer;font-size:13px}
+.autoSelectedColumn button:hover:not(:disabled){background:var(--card);color:var(--acc-ink)}
+.autoSelectedColumn button:disabled{opacity:.25;cursor:default}
+.autoColumnsEmpty{margin:12px;color:var(--muted);font-size:11px}
+.autoColumnsFoot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-top:1px solid var(--line);background:var(--card)}
+.autoColumnsFoot>span{color:var(--muted);font-size:11px}
+.autoColumnsFoot>div{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px}
+@media(max-width:880px){.automationStudio .autoWorkspace{grid-template-columns:195px minmax(0,1fr)}.autoColumnsContent{grid-template-columns:minmax(0,1fr)}.autoColumnsGroups{border-right:0;border-bottom:1px solid var(--line)}.autoColumnsSelected{padding:12px}}
+@media(max-width:620px){.automationStudio .autoWorkspace{display:flex;flex-direction:column}.automationStudio .autoSidebar{border-right:0;border-bottom:1px solid var(--line)}.automationStudio .autoEditorScroll{padding:9px}.autoColumnsOverlay{padding:0}.autoColumnsDrawer{border-radius:0}.autoColumnsToolbar{flex-wrap:wrap}.autoColumnsToolbar select{width:100%}.autoReportPicker{flex-wrap:wrap}.autoColumnsFoot{align-items:flex-start;flex-direction:column}.autoColumnsFoot>div{width:100%}}

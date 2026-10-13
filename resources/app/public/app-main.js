@@ -2342,6 +2342,11 @@ function activeTableFilterTokens(tableKey){
     Object.entries(kolColFilters||{}).forEach(([key,entry])=>{
       if(entry&&entry.size)tokens.push({kind:'column',key,label:activeFilterColumnLabel(tableKey,key),detail:activeFilterEntrySummary({values:entry})});
     });
+    Object.entries(kolFabricDetailFilters).forEach(([key,entry])=>{
+      if(!entry?.size)return;
+      const label=window.BLFabricCards?.DETAIL_LABELS?.[key];
+      tokens.push({kind:'fabricDetail',key,label:(appLang==='en'?'Fabric · ':'Kumaş · ')+(label?(appLang==='en'?label.en:label.tr):key),detail:activeFilterEntrySummary({values:entry})});
+    });
     const checked=normalizeCheckFilterMode(kolCheckFilter);
     if(checked)tokens.push({kind:'check',key:'',label:appLang==='en'?'Rows':'Satırlar',detail:checked==='checked'?(appLang==='en'?'Checked':'İşaretli'):(appLang==='en'?'Unchecked':'İşaretsiz')});
     return tokens;
@@ -2380,6 +2385,8 @@ function removeActiveFilterToken(tableKey,kind,key){
   else if(kind==='column'){
     if(tableKey==='koleksiyon'){delete kolColFilters[key];saveKolColState();}
     else if(state.colFilters[tableKey])delete state.colFilters[tableKey][key];
+  }else if(kind==='fabricDetail'&&tableKey==='koleksiyon'){
+    delete kolFabricDetailFilters[key];saveKolColState();
   }else if(kind==='check'){
     if(tableKey==='koleksiyon'){kolCheckFilter='';saveKolColState();}
     else state.checkFilter[tableKey]='';
@@ -2396,7 +2403,7 @@ function clearTableFilters(tableKey,{announce=true}={}){
   }[tableKey]||[];
   filterIds.forEach(id=>{const control=document.getElementById(id);if(control)control.value='';});
   if(tableKey==='koleksiyon'){
-    kolColFilters={};kolCheckFilter='';saveKolColState();
+    kolColFilters={};kolFabricDetailFilters={};kolCheckFilter='';saveKolColState();
   }else if(tableKey==='cp'||tableKey==='orders'){
     state.colFilters[tableKey]={};state.checkFilter[tableKey]='';
     if(tableKey==='cp')state.cpQuickExf='';
@@ -3515,6 +3522,9 @@ const CP_COLS = [
   {k:'Category', label:'Category', type:'ro', weight:12, group:'Model Detayları'},
   {k:'PLM ID', label:'PLM ID', type:'plm', weight:8, group:'Model Detayları'},
   {k:'Model Name', label:'Model Name', type:'modelLink', weight:15, group:'Model Detayları'},
+  // Aynı PLM BOM kanıtını Koleksiyon ile paylaşır; sipariş verisini değiştirmez.
+  {k:'Artwork Detail', label:'Artwork Detail', type:'ro', weight:22, group:'Model Detayları'},
+  {k:'Fabric (PLM)', label:'Fabric (PLM)', type:'ro', weight:24, group:'Model Detayları'},
   {k:'C.Code', label:'C.Code', type:'ro', weight:7, group:'Model Detayları'},
   {k:'Colour', label:'Colour', type:'ro', weight:9, group:'Model Detayları'},
   {k:'Special Code', label:'Sp. Code', type:'ro', weight:8, group:'Model Detayları'},
@@ -3566,6 +3576,16 @@ function ordersColumnsFromCp(cpCols){
   return copied;
 }
 const ORDERS_COLS = ordersColumnsFromCp(CP_COLS);
+/* CP/Orders PLM detayları sadece yerel BOM yan deposundan okunur. ASAS satırları
+   kalıcı olarak değiştirilmez; aynı modelin siparişleri aynı veriyi görür. */
+function cpPlmDetailsSync(){
+  const details=window.BLCPPlmDetails;
+  if(!details)return;
+  void details.sync({
+    cpRows:state.cp?.rows||[],ordersRows:state.orders?.rows||[],
+    repaint:()=>{if(state.cp)renderCP();if(state.orders)renderOrders();}
+  });
+}
 /* Grup bantları artık doygun renk + beyaz yazı yerine, tabloyla aynı sakin
    yüzey rengini kullanır; ayrım rengi ince bir ÜST ÇİZGİ ile verilir (yazı
    okunurluğu bozulmaz). Renkler CSS'te .groupRow th[data-grp] ile uygulanır. */
@@ -8997,6 +9017,7 @@ function renderTableEmptyHint(tableKey,visibleCount,totalCount){
 }
 function renderCPNow(){
   if(!state.cp) return;
+  cpPlmDetailsSync();
   if(!ensureUnifiedPrioritiesForTable('cp'))return;
   applyFormulaColumns('cp'); // sıralama ve sayfa filtreleri hesaplanan değeri görsün
   migrateLegacyCpQuickFilters();
@@ -9308,6 +9329,7 @@ function ordersCycleImageSize(){
 }
 function renderOrdersNow(){
   if(!state.orders)return;
+  cpPlmDetailsSync();
   applyFormulaColumns('orders');
   migrateLegacyOrdersQuickFilters();updateOrdersDimBtnLabels();
   document.getElementById('ordersEmpty').style.display='none';
@@ -23677,6 +23699,8 @@ function kolApplyCompactImageRowHeight(img){
   tr.style.setProperty('--kol-text-h',`${Math.max(22,rowHeight-4)}px`);
 }
 let kolColFilters = {}; // {k: Set(değerler)} — sütun başlığı filtreleri
+let kolFabricDetailFilters = {}; // {category/type/yarn/weight/composition/finish/sustainability: Set(values)}
+const KOL_FABRIC_DETAIL_KEYS = ['category','type','yarn','weight','composition','finish','sustainability'];
 let kolSort = {key:null, dir:1}; // CP ile aynı başlığa tıklayarak sıralama
 // Add New Model ile oluşturulan boş satır ilk gösterimde, mevcut filtre/sıralamadan
 // bağımsız olarak tablonun en üstünde tutulur. İlk düzenlemede veya kullanıcı yeni
@@ -23768,7 +23792,7 @@ function saveKolColState(){
   try{
     if(Array.isArray(kolColOrder))kolColOrder=kolNormalizeDisplayOrder(kolColOrder);
     const filters = {}; Object.entries(kolColFilters).forEach(([k,s])=>{ if(s&&s.size) filters[k]=[...s]; });
-    BLStorage.setItem(KOL_COL_STATE_KEY, JSON.stringify({layoutVersion:KOL_COL_LAYOUT_VERSION, order:kolColOrder, hidden:[...kolHiddenCols], custom:kolCustomCols, pictureHidden:kolPictureHidden, imgSize:kolImgSize, widths:kolColWidths, filters}));
+    BLStorage.setItem(KOL_COL_STATE_KEY, JSON.stringify({layoutVersion:KOL_COL_LAYOUT_VERSION, order:kolColOrder, hidden:[...kolHiddenCols], custom:kolCustomCols, pictureHidden:kolPictureHidden, imgSize:kolImgSize, widths:kolColWidths, filters, fabricDetails:Object.fromEntries(Object.entries(kolFabricDetailFilters).filter(([key,set])=>KOL_FABRIC_DETAIL_KEYS.includes(key)&&set?.size).map(([key,set])=>[key,[...set]]))}));
   }catch(e){}
 }
 function loadKolColState(options={}){
@@ -23784,6 +23808,8 @@ function loadKolColState(options={}){
     if(obj.imgSize) kolImgSize = kolNormalizeImgSize(obj.imgSize);
     if(obj.widths) kolColWidths = obj.widths;
     if(obj.filters) Object.entries(obj.filters).forEach(([k,vals])=>{ if(Array.isArray(vals)&&vals.length) kolColFilters[k]=new Set(vals); });
+    kolFabricDetailFilters={};
+    Object.entries(obj.fabricDetails||{}).forEach(([key,vals])=>{ if(KOL_FABRIC_DETAIL_KEYS.includes(key)&&Array.isArray(vals)&&vals.length)kolFabricDetailFilters[key]=new Set(vals.map(String)); });
     if(Number(obj.layoutVersion||0)<KOL_COL_LAYOUT_VERSION){
       // v5.24: Fit artık sabit Koleksiyon alanıdır. Eski kullanıcı görünümünde
       // gizlenmiş kalmış olsa bile görünür hale getir.
@@ -24165,6 +24191,73 @@ function kolFilterMeta(key){
   if(key===KOL_CONFIRMATION_FILTER_KEY) return {k:key,label:appLang==='en'?'Confirmation':'Onay'};
   return null;
 }
+
+/* Structured Fabric Card facets. Multiple values in one detail are OR;
+   different detail fields are AND, evaluated on the SAME fabric within a set. */
+const kolFabricDetailCache=new Map();
+function kolFabricDetailsForRow(row){
+  const api=window.BLFabricCards;
+  if(!api||!row)return [];
+  return api.parts(String(kolEffectiveValue(row,'fabric')??'')).map(part=>{
+    const card=kolFabricCards.get(part.code)||null;
+    const memo=kolFabricDetailCache.get(part.code);
+    if(memo&&memo.card===card&&memo.raw===part.raw)return memo.details;
+    const fallback=api.ruleCard(part.raw).details||{},source=card?.details||{},details={};
+    KOL_FABRIC_DETAIL_KEYS.forEach(key=>{
+      const value=String(source[key]||fallback[key]||'').trim();
+      details[key]=key==='composition'?api.normalizeComposition(value):value;
+    });
+    kolFabricDetailCache.set(part.code,{card,raw:part.raw,details});
+    return details;
+  });
+}
+function kolFabricDetailMatches(row,omitKey=''){
+  const active=Object.entries(kolFabricDetailFilters).filter(([key,set])=>key!==omitKey&&KOL_FABRIC_DETAIL_KEYS.includes(key)&&set?.size);
+  return !active.length||kolFabricDetailsForRow(row).some(details=>active.every(([key,set])=>set.has(details[key]||'')));
+}
+function kolFabricDetailPanel(panel){
+  const api=window.BLFabricCards;
+  if(!api)return;
+  const host=document.createElement('section');host.className='kolFabricFacetPanel';
+  const title=document.createElement('strong');title.textContent=appLang==='en'?'Filter by fabric card details':'Kumaş kartı detaylarına göre süz';
+  host.appendChild(title);
+  const display=(value)=>appLang==='en'?api.translateTerms(value,'en'):api.translateTerms(value,'tr');
+  KOL_FABRIC_DETAIL_KEYS.forEach(key=>{
+    const field=document.createElement('details');field.className='kolFabricFacetField';field.open=key==='category'||key==='composition';
+    const current=kolFabricDetailFilters[key]||new Set();
+    const allowed=kolRows.filter(row=>passesKolColFilters(row)&&kolFabricDetailMatches(row,key));
+    const options=new Set([...current]);
+    allowed.forEach(row=>kolFabricDetailsForRow(row).forEach(details=>{if(details[key])options.add(details[key]);}));
+    const summary=document.createElement('summary');
+    summary.textContent=(appLang==='en'?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)+' ('+current.size+')';
+    field.appendChild(summary);
+    const search=document.createElement('input');search.type='search';search.className='kolFabricFacetSearch';
+    search.placeholder=appLang==='en'?'Search values…':'Değer ara…';
+    search.setAttribute('aria-label',summary.textContent);field.appendChild(search);
+    const list=document.createElement('div');list.className='kolFabricFacetOptions';
+    [...options].sort((a,b)=>display(a).localeCompare(display(b),appLang==='en'?'en':'tr',{numeric:true})).forEach(value=>{
+      const label=document.createElement('label');label.className='kolFabricFacetOption';
+      const box=document.createElement('input');box.type='checkbox';box.dataset.fabricFacet=key;box.value=value;box.checked=current.has(value);
+      const span=document.createElement('span');span.textContent=display(value);label.append(box,span);list.appendChild(label);
+    });
+    search.addEventListener('input',()=>{
+      const query=search.value.toLocaleLowerCase(appLang==='en'?'en':'tr');
+      list.querySelectorAll('label').forEach(label=>{label.hidden=!!query&&!label.textContent.toLocaleLowerCase(appLang==='en'?'en':'tr').includes(query);});
+    });
+    field.appendChild(list);host.appendChild(field);
+  });
+  panel.querySelector('.cfpList')?.before(host);
+  panel._kolReadFabricFacets=(add)=>{
+    const next={};
+    KOL_FABRIC_DETAIL_KEYS.forEach(key=>{
+      const chosen=[...host.querySelectorAll('input[data-fabric-facet]')].filter(box=>box.dataset.fabricFacet===key&&box.checked).map(box=>box.value);
+      const values=new Set(add?[...(kolFabricDetailFilters[key]||[]),...chosen]:chosen);
+      if(values.size)next[key]=values;
+    });
+    kolFabricDetailFilters=next;
+  };
+}
+
 function passesKolColFilters(r){
   return Object.entries(kolColFilters).every(([k,set])=>{
     if(!set || !set.size) return true;
@@ -24273,7 +24366,7 @@ function filteredKol(){
   let rows = kolRows.filter(r=>{
     if(checkMode==='checked' && !selectionHasId(kolSelected,r.id)) return false;
     if(checkMode==='unchecked' && selectionHasId(kolSelected,r.id)) return false;
-    if(!passesKolColFilters(r)) return false;
+    if(!passesKolColFilters(r)||!kolFabricDetailMatches(r)) return false;
     if(q.length){
       if(!tableSearchMatches(kolSearchHaystack(r),q,{plainMode:'contains'})) return false;
     }
@@ -24708,6 +24801,7 @@ function kolCollectionRawCellText(col,row){
   if(col.kind==='confirmedPrice'){ const c=kolConfirmedDisplay(row); return c?('$'+kolFormatMoneyDisplay(String(c.price))):''; }
   const c=col.col;if(!c)return '';
   const v=c.exToRetail?kolExToRetailDays(row):kolEffectiveValue(row,c.k);
+  if(c.k==='fabric')return kolFabricDisplay(v);
   if(c.exToRetail) return v===''?'':(v+' g.');
   if(c.endeksmatik) return endeksmatikCompactText(row);
   if(c.trLanded){ const k=kolLandedCalc(row); return k.trLanded==null?'':`$${kolMoney2(k.trLanded)} (₺${kolMoney2(k.trPrice)} ÷ ${kolMoney2(k.fx)} × ${kolMoney2(k.trMult)})`; }
@@ -26059,6 +26153,7 @@ function openKolHeaderFilter(key, anchorEl){
   panel.querySelectorAll('[data-kol-filter-sort]').forEach(button=>button.addEventListener('click',()=>{
     releaseKolTransientTopRow();kolSort={key,dir:Number(button.dataset.kolFilterSort)||1};panel.remove();renderKol();
   }));
+  if(key==='fabric')kolFabricDetailPanel(panel);
   const searchInput=panel.querySelector('.cfpSearch');
   searchInput.addEventListener('input', e=>{panel.querySelector('.cfpList').innerHTML = renderList(e.target.value);});
   panel.querySelectorAll('.cfpAll').forEach(b=> b.addEventListener('click', ()=>{panel.querySelectorAll('.cfpList input[type=checkbox]').forEach(chk=> chk.checked = (b.dataset.v==='all'));}));
@@ -26067,6 +26162,7 @@ function openKolHeaderFilter(key, anchorEl){
     const chosen=boxes.filter(b=>b.checked).map(b=>b.value);
     const next=new Set(add?[...(kolColFilters[key]||[]),...chosen]:chosen);
     if(next.size===allVals.length)delete kolColFilters[key];else kolColFilters[key]=next;
+    if(key==='fabric')panel._kolReadFabricFacets?.(add);
     releaseKolTransientTopRow();saveKolColState();panel.remove();renderKol();
   };
   panel.querySelector('#kolCfpApply').addEventListener('click',()=>applyKolFilter(false));
@@ -26074,6 +26170,7 @@ function openKolHeaderFilter(key, anchorEl){
   searchInput.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();applyKolFilter(false);}});
   panel.querySelector('#kolCfpClear').addEventListener('click', ()=>{
     delete kolColFilters[key];
+    if(key==='fabric')kolFabricDetailFilters={};
     releaseKolTransientTopRow();saveKolColState();
     panel.remove();
     renderKol();
@@ -26085,7 +26182,7 @@ function openKolHeaderFilter(key, anchorEl){
   }, 0);
 }
 document.getElementById('kolClearColFiltersBtn')?.addEventListener('click', ()=>{
-  kolColFilters = {};
+  kolColFilters = {};kolFabricDetailFilters={};
   releaseKolTransientTopRow();saveKolColState();
   renderKol();
   showToast('Koleksiyon sütun filtreleri temizlendi.');
@@ -26562,7 +26659,7 @@ function commitKolPriceEditor(el, options={}){
 
 function kolHasActiveTableFilters(){
   const search=document.getElementById('kolSearch');
-  return Boolean(parseTableSearchTerms(search?.value||'').length||normalizeCheckFilterMode(kolCheckFilter)||Object.values(kolColFilters).some(values=>values&&values.size));
+  return Boolean(parseTableSearchTerms(search?.value||'').length||normalizeCheckFilterMode(kolCheckFilter)||Object.values(kolColFilters).some(values=>values&&values.size)||Object.values(kolFabricDetailFilters).some(values=>values&&values.size));
 }
 function renderKolEmptyState(rows){
   const target=document.getElementById('kolEmptyState');
@@ -26629,7 +26726,7 @@ function renderKol(){
     if(d.kind==='base'){
       const userLabelAttr=kolColumnHasUserLabel(d.col)?' data-bl-user-label="1"':'';
       if(d.col.noFilter)return `<th data-kcol="${d.k}" class="kolComputedHeader"${userLabelAttr}><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
-      const isFiltered=!!(kolColFilters[d.k]&&kolColFilters[d.k].size),active=isFiltered?' filterActive':'',arrow=kolSort.key===d.k?(kolSort.dir===1?'▲':'▼'):'';
+      const isFiltered=!!(kolColFilters[d.k]&&kolColFilters[d.k].size)||(d.k==='fabric'&&Object.values(kolFabricDetailFilters).some(set=>set?.size)),active=isFiltered?' filterActive':'',arrow=kolSort.key===d.k?(kolSort.dir===1?'▲':'▼'):'';
       const filterLabel=appLang==='en'?`Filter: ${d.label}`:`Filtrele: ${d.label}`;
       return `<th data-kcol="${d.k}" class="${isFiltered?'columnFilterActive':''}"${userLabelAttr}><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}<span class="arrow">${arrow}</span></span><button type="button" class="thFilterBtn kolThFilterBtn${active}" data-kcol="${d.k}" title="${escapeHtml(filterLabel)}" aria-label="${escapeHtml(filterLabel)}">▾</button></div></th>`;
     }
@@ -29300,7 +29397,7 @@ function kolFabricParts(raw){const api=kolFabricApi();return api?api.parts(raw):
 function kolFabricCardsSet(data){
   const next=new Map();
   (Array.isArray(data&&data.cards)?data.cards:[]).forEach(card=>{if(card&&card.code&&card.summary)next.set(String(card.code),card);});
-  kolFabricCards=next;
+  kolFabricCards=next;kolFabricDetailCache.clear();
 }
 function kolFabricCardsEnsureLoaded(){
   if(kolFabricCardsState!=='idle'||!kolFabricApi())return;
@@ -29403,7 +29500,7 @@ function showKolFabricBatchPreview(items,analysis){
     const modal=document.createElement('div');modal.id='_kolFabricBatchModal';modal.className='warnOverlay';
     const rows=items.map((item,index)=>{
       const card=analysis.cards[item.code]||kolFabricApi().ruleCard(item.raw);
-      return `<tr><td><input type="checkbox" data-fabric-pick="${index}" checked aria-label="${escapeHtml(en?`Create card ${item.code}`:`${item.code} kartını oluştur`)}"></td><td class="kolFabricBatchCode">${escapeHtml(item.code)}</td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary="${index}" lang="tr" aria-label="${escapeHtml(en?`Turkish summary ${item.code}`:`${item.code} Türkçe özet`)}" value="${escapeHtml(card.summary)}"></td><td><input type="text" class="kolFabricBatchSummary" maxlength="${kolFabricApi().SUMMARY_MAX}" data-fabric-summary-en="${index}" lang="en" aria-label="${escapeHtml(en?`English summary ${item.code}`:`${item.code} İngilizce özet`)}" value="${escapeHtml(card.summaryEn||'')}"></td><td><span class="kolFabricSource is-${escapeHtml(card.summarySource)}" data-fabric-source="${index}">${escapeHtml(kolFabricSourceLabel(card.summarySource))}</span></td><td class="kolFabricBatchRaw" title="${escapeHtml(item.raw)}">${escapeHtml(item.raw)}</td></tr>`;
+      return `<tr><td><input type="checkbox" data-fabric-pick="${index}" checked aria-label="${escapeHtml(en?`Create card ${item.code}`:`${item.code} kartını oluştur`)}"></td><td class="kolFabricBatchCode">${escapeHtml(item.code)}</td><td><input type="text" class="kolFabricBatchSummary" data-fabric-summary="${index}" lang="tr" aria-label="${escapeHtml(en?`Turkish summary ${item.code}`:`${item.code} Türkçe özet`)}" value="${escapeHtml(card.summary)}"></td><td><input type="text" class="kolFabricBatchSummary" data-fabric-summary-en="${index}" lang="en" aria-label="${escapeHtml(en?`English summary ${item.code}`:`${item.code} İngilizce özet`)}" value="${escapeHtml(card.summaryEn||'')}"></td><td><span class="kolFabricSource is-${escapeHtml(card.summarySource)}" data-fabric-source="${index}">${escapeHtml(kolFabricSourceLabel(card.summarySource))}</span></td><td class="kolFabricBatchRaw" title="${escapeHtml(item.raw)}">${escapeHtml(item.raw)}</td></tr>`;
     }).join('');
     const ruleCount=items.length-analysis.aiCount;
     const notice=analysis.errorText
@@ -29496,7 +29593,7 @@ function openKolFabricCardDialog(rowId,{trigger=null,code:wantedCode=''}={}){
   document.getElementById('_kolFabricCardModal')?.remove();
   const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';
   const dis=canEdit?'':' disabled';
-  const detailInputs=api.DETAIL_FIELDS.map(key=>`<label><span>${escapeHtml(en?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)}</span><input type="text" maxlength="${api.DETAIL_MAX}" data-fabric-detail="${key}" value="${escapeHtml(draft.details&&draft.details[key]||'')}"${dis}></label>`).join('');
+  const detailInputs=api.DETAIL_FIELDS.map(key=>`<label><span>${escapeHtml(en?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)}</span><input type="text" data-fabric-detail="${key}" value="${escapeHtml(draft.details&&draft.details[key]||'')}"${dis}></label>`).join('');
   const missingCount=api.missingCodes(kolRows,kolFabricCards).filter(item=>item.code!==code).length;
   const meta=existing
     ?(en?`This card is used by every model with fabric code ${code}. Source: ${kolFabricSourceLabel(existing.summarySource)}${existing.updatedBy?` · last edited by ${existing.updatedBy}`:''}${existing.updatedAt?` · ${fmtDate(existing.updatedAt)}`:''}.`:`Bu kart ${code} kumaş kodlu tüm modellerde kullanılır. Kaynak: ${kolFabricSourceLabel(existing.summarySource)}${existing.updatedBy?` · son düzenleyen ${existing.updatedBy}`:''}${existing.updatedAt?` · ${fmtDate(existing.updatedAt)}`:''}.`)
@@ -29509,8 +29606,8 @@ function openKolFabricCardDialog(rowId,{trigger=null,code:wantedCode=''}={}){
     <div class="plmImportBody">
       <div class="kolFabricSummaryHead"><span class="plmListLabel">${escapeHtml(en?'Summary shown in the Collection table':'Koleksiyon tablosunda görünen özet')}</span><span class="kolFabricSource is-${escapeHtml(source)}" data-fabric-source>${escapeHtml(kolFabricSourceLabel(source))}</span></div>
       <div class="plmListOptions kolFabricSummaries">
-        <label><span>${escapeHtml(en?'Turkish':'Türkçe')}</span><input type="text" id="_kolFabricSummary" lang="tr" maxlength="${api.SUMMARY_MAX}" value="${escapeHtml(draft.summary||'')}"${dis}></label>
-        <label><span>${escapeHtml(en?'English':'İngilizce')}</span><input type="text" id="_kolFabricSummaryEn" lang="en" maxlength="${api.SUMMARY_MAX}" value="${escapeHtml(draft.summaryEn||api.summaryFor({summary:draft.summary},'en'))}"${dis}></label>
+        <label><span>${escapeHtml(en?'Turkish':'Türkçe')}</span><input type="text" id="_kolFabricSummary" lang="tr" value="${escapeHtml(draft.summary||'')}"${dis}></label>
+        <label><span>${escapeHtml(en?'English':'İngilizce')}</span><input type="text" id="_kolFabricSummaryEn" lang="en" value="${escapeHtml(draft.summaryEn||api.summaryFor({summary:draft.summary},'en'))}"${dis}></label>
       </div>
       <h4>${escapeHtml(en?'Details':'Ayrıntılar')}</h4>
       <div class="plmListOptions kolFabricDetails">${detailInputs}</div>
@@ -31458,6 +31555,8 @@ function showPlmSyncPropertyChooser({page='kol',trigger=null}={}){
   ]:[
     {key:'links',label:en?'Model Links':'Model Linkleri',description:en?'Refresh PLM model links':'PLM model bağlantılarını güncelle'},
     {key:'images',label:en?'Model Images':'Model Görselleri',description:en?'Refresh model images':'Model görsellerini güncelle'},
+    {key:'artwork',label:en?'Artwork Details':'Artwork Detayları',description:en?'Sync PLM BOM and print placement details':'PLM BOM ve baskı yerleşimi detaylarını güncelle'},
+    {key:'fabric',label:en?'Fabric Details':'Kumaş Detayları (PLM)',description:en?'Sync fabric details directly from PLM':'Kumaş bilgilerini doğrudan PLM’den güncelle'},
   ];
   return new Promise(resolve=>{
     document.getElementById('_plmSyncPropertyModal')?.remove();
@@ -31516,6 +31615,48 @@ function plmSyncQueuedScope(scope,identities){
   const queue=Array.isArray(identities)?identities:[];
   return scope?{...scope,identities:queue,selectedIdentities:queue}:scope;
 }
+/* CP/Orders: Artwork ve Fabric aynı PLM Style List + BOM yolunu kullanır.
+   Butonlar bağımsız seçilebilir, aynı kapsam için iki kez PLM taranmaz.
+   Scope, görünüm açıldığı anda snapshot olarak alınır; seçimsiz işlem tümüne
+   düşmez. Koleksiyon satırları bu istekle değiştirilmez. */
+async function cpPlmSyncDetailsRun(page,mode,scope,props,button){
+  const selected=mode==='selected';
+  const identities=selected?(scope?.selectedIdentities||[]):(scope?.identities||[]);
+  const detailApi=window.BLCPPlmDetails;
+  const requested=[...new Set(identities.map(item=>normalizePlmLinkId(item&&item.plmId)).filter(Boolean))];
+  const ids=mode==='missing'&&detailApi
+    ?requested.filter(id=>(props.artwork&&!detailApi.hasValue(id,'artwork'))||(props.fabric&&!detailApi.hasValue(id,'fabric')))
+    :requested;
+  if(!ids.length){
+    showToast(appLang==='en'?'No matching models need updating.':'Güncellenecek uygun model bulunamadı.');
+    return {ok:true,skipped:true};
+  }
+  if(!await ensureCoreNectumApiConnection())return {ok:false,reason:'api-not-configured'};
+  const stopProgress=watchModelOperationProgress(button);
+  let found=0,failed=0;
+  try{
+    for(let i=0;i<ids.length;i+=500){
+      const batch=ids.slice(i,i+500);
+      const result=await plmJsonRequest('/api/plm-sync/fetch',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({plmIds:batch,scope:page,language:appLang==='en'?'en':'tr'})
+      });
+      found+=Number(result.found)||0;
+      failed+=(Array.isArray(result.failed)?result.failed.length:0);
+      if(result.styleLinks)applyPlmStyleLinksPayload(result.styleLinks);
+    }
+    if(detailApi)await detailApi.refresh();
+    plmSyncRepaintAll();
+    showToast(appLang==='en'
+      ?`PLM details: ${found} model(s) updated${failed?` · ${failed} not found`:''}.`
+      :`PLM detayları: ${found} model güncellendi${failed?` · ${failed} bulunamadı`:''}.`,
+      {icon:false,duration:9000});
+    return {ok:true,found,failed};
+  }catch(err){
+    showToast((appLang==='en'?'PLM details could not be updated: ':'PLM detayları güncellenemedi: ')+plmSyncErrorMessage(err),{icon:false,duration:12000});
+    return {ok:false,reason:'fetch-failed',error:err};
+  }finally{stopProgress();}
+}
 async function runPlmUpdateFlow(page,mode,root,scope){
   if(mode==='selected'&&!scope?.selectedIdentities?.length){
     showToast(appLang==='en'?'No models selected.':'Seçili model yok.');
@@ -31534,6 +31675,7 @@ async function runPlmUpdateFlow(page,mode,root,scope){
     const linkQueue=assetPlan.queues.links||[],imageQueue=assetPlan.queues.images||[];
     const rows=collection?collectionPlmRowsForScope(mode,scope):[];
     const detailRows=collection&&props.details?collectionPlmDetailRowsForScope(mode,scope):[];
+    const cpDetails=!collection&&(props.artwork||props.fabric);
     let language='';
     if(collection&&props.details){
       language=await showPlmSyncLanguageChooser({trigger:root});
@@ -31548,10 +31690,14 @@ async function runPlmUpdateFlow(page,mode,root,scope){
         if(details?.cancelled||details?.ok===false)return;
         ran=true;
       }
-      /* Collection Model Details aynı fetch içinde link deposunu da tazeler.
-         All/Selected modunda ikinci link taraması üretme; Missing modunda ise
-         detay kuyruğunda olmayan link-eksik modeller bağımsız kalır. */
-      if(props.links&&linkQueue.length&&!(collection&&props.details&&mode!=='missing')){
+      if(cpDetails){
+        const detailResult=await cpPlmSyncDetailsRun(page,mode,scope,props,root);
+        if(detailResult?.ok===false)return;
+        if(!detailResult?.skipped)ran=true;
+      }
+      /* Hem Koleksiyon hem CP detay isteği PLM link deposunu da tazeler.
+         Başarıyla taranan All/Selected kapsamını ikinci kez sorgulama. */
+      if(props.links&&linkQueue.length&&!(collection&&props.details&&mode!=='missing')&&!(cpDetails&&mode!=='missing')){
         const links=await updateModelLinks(mode,root,{scope:plmSyncQueuedScope(scope,linkQueue),quiet:props.images||props.files||props.details});
         if(links?.ok===false)return;
         if(!links?.skipped)ran=true;
@@ -32234,6 +32380,7 @@ function buildKolStyledSheet(rows){
         return;
       }
       const raw = c.exToRetail ? kolExToRetailDays(r) : kolEffectiveValue(r,c.k);
+      if(c.k==='fabric'){put(ri+1,ci+imgOff,{v:kolExportSingleLineText(kolFabricDisplay(raw)),t:'s',s:{border:bd,font:{sz:10},alignment:{vertical:'middle',wrapText:true}}});return;}
       const schema=columnSchemaFor(c,sourceRows);
       const s = {border:bd, font:{sz:10, bold:c.k==='modelKod'}};
       let cell;
@@ -32346,6 +32493,7 @@ function kolPricingMailDate(d=new Date()){
 }
 function kolPricingPreviewValue(r,c){
   const raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k);
+  if(c.k==='fabric')return kolFabricDisplay(raw);
   if(raw==null || raw==='') return '';
   if(c.date) return fmtDate(raw);
   if(c.qty){ const n=kolParseQuantityNum(raw); return Number.isFinite(n)?n.toLocaleString('tr-TR'):String(raw); }
@@ -32498,7 +32646,7 @@ function mailTplText(){
     topicNamePh:en?'Name shown in E-mail Subjects':'E-posta Başlıklarında görünen ad',
     subjectTitle:en?'E-mail Subject Title':'E-posta Konu Başlığı',
     subjectPh:en?'Editable text used near the end of the e-mail subject':'E-posta başlığının sonuna yakın kullanılan düzenlenebilir metin',
-    subjectHint:en?'Subject order: MMYG, MAG, Season, Manufacturer, selected field values, this title and date.':'Başlık sırası: MMYG, MAG, Sezon, Üretici, seçili alan değerleri, bu başlık ve tarih.',
+    subjectHint:en?'Arrange subject fields and choose a separator below.':'Konu başlığı alanlarını sıralayın, ayırıcıyı seçin.',
     body:en?'Email draft text':'E-posta taslak metni',
     bodyPh:en?'Write the email text here…':'E-posta metnini buraya yaz…',
     close:en?'Cancel':'Vazgeç',
@@ -32657,6 +32805,19 @@ function mailTopicSourceColumns(sourceKind){
   // seçicisinde gerçek bir alan gibi sunulur.
   return [{k:'__picture',label:'Picture',type:'cpImage',weight:8},...kolColDefs().slice()];
 }
+// Reuse the same CP / Collection heading catalog as the Fields panel.
+// Email-only selections do not mutate CP visibility, groups or presets.
+function mailTopicFieldGroupCatalog(columns,sourceKind){
+  const groups=new Map(),kolOrder=sourceKind==='cp'?[]:kolAllOrderedCols().map(c=>c.k);
+  (columns||[]).forEach(column=>{
+    const group=sourceKind==='cp'
+      ?canonicalColumnGroup(column.group)||'Diğer'
+      :(kolColumnGroupFor(column.k==='__picture'?'__picture__':column.k,kolOrder)||'Diğer');
+    if(!groups.has(group))groups.set(group,{group,label:group==='Diğer'?(appLang==='en'?'Other':'Diğer'):tableColumnGroupLabel(group),keys:[]});
+    groups.get(group).keys.push(column.k);
+  });
+  return [...groups.values()];
+}
 function mailTopicDefaultColumnKeys(kind,sourceKind){
   if(sourceKind==='cp'){
     return ['Order Code','PLM ID','Model Name','Colour','Season','Order Quantity','OPD','Ex-factory','STATUS'];
@@ -32670,7 +32831,12 @@ function mailTopicDefaultColumnKeys(kind,sourceKind){
 function mailTopicColumnKeys(kind,id,sourceKind){
   const item=mailTopicFindItem(kind,id),valid=new Set(mailTopicSourceColumns(sourceKind).map(c=>c.k));
   const hasStored=Boolean(item?.tableColumns&&Object.prototype.hasOwnProperty.call(item.tableColumns,sourceKind));
-  const stored=hasStored&&Array.isArray(item.tableColumns[sourceKind])?item.tableColumns[sourceKind]:mailTopicDefaultColumnKeys(kind,sourceKind);
+  const defaults=mailTopicDefaultColumnKeys(kind,sourceKind);
+  // Match the user's current CP / Collection arrangement on first use.
+  // An explicit saved order always wins, including an intentional empty selection.
+  const screenOrder=sourceKind==='cp'?visibleCols('cp').map(c=>c.k):kolAllOrderedCols().map(c=>c.k);
+  const initial=[...screenOrder.filter(key=>defaults.includes(key)),...defaults.filter(key=>!screenOrder.includes(key))];
+  const stored=hasStored&&Array.isArray(item.tableColumns[sourceKind])?item.tableColumns[sourceKind]:initial;
   const clean=[];
   stored.forEach(key=>{key=String(key||'');if(valid.has(key)&&!clean.includes(key))clean.push(key);});
   return clean;
@@ -32683,8 +32849,8 @@ function mailTopicSetColumnKeys(kind,id,sourceKind,keys){
   item.tableColumns[sourceKind]=clean;mailTplSave();return true;
 }
 function mailTopicSelectedColumns(kind,id,sourceKind){
-  const selected=new Set(mailTopicColumnKeys(kind,id,sourceKind));
-  return mailTopicSourceColumns(sourceKind).filter(c=>selected.has(c.k)).map(c=>({...c,sourceKind}));
+  const byKey=new Map(mailTopicSourceColumns(sourceKind).map(c=>[c.k,c]));
+  return mailTopicColumnKeys(kind,id,sourceKind).map(key=>byKey.get(key)).filter(Boolean).map(c=>({...c,sourceKind}));
 }
 function mailTopicDefaultContentOptions(kind){
   // Send to Pricing has its own mandatory Quotation Excel. The optional selected-order
@@ -32734,8 +32900,24 @@ function mailTopicSetSubjectOptions(kind,id,sourceKind,{manufacturer,keys}={}){
   mailTplSave();return true;
 }
 function mailTopicSelectedSubjectColumns(kind,id,sourceKind){
-  const selected=new Set(mailTopicSubjectColumnKeys(kind,id,sourceKind));
-  return mailTopicSourceColumns(sourceKind).filter(c=>selected.has(c.k)).map(c=>({...c,sourceKind}));
+  const byKey=new Map(mailTopicSourceColumns(sourceKind).map(c=>[c.k,c]));
+  return mailTopicSubjectColumnKeys(kind,id,sourceKind).map(key=>byKey.get(key)).filter(Boolean).map(c=>({...c,sourceKind}));
+}
+function mailTopicSubjectOrder(kind,id,sourceKind,keys=null,manufacturer=null){
+  const item=mailTopicFindItem(kind,id);
+  const fieldKeys=Array.isArray(keys)?keys:mailTopicSubjectColumnKeys(kind,id,sourceKind);
+  const includeManufacturer=typeof manufacturer==='boolean'?manufacturer:mailTopicSubjectIncludesManufacturer(kind,id,sourceKind);
+  const byKey=new Map(mailTopicSourceColumns(sourceKind).map(c=>[c.k,c]));
+  const priority=fieldKeys.filter(k=>byKey.has(k)&&prepareEmailSubjectColumnPriority(byKey.get(k))<99)
+    .sort((a,b)=>prepareEmailSubjectColumnPriority(byKey.get(a))-prepareEmailSubjectColumnPriority(byKey.get(b)));
+  const others=fieldKeys.filter(k=>byKey.has(k)&&!priority.includes(k));
+  const defaults=[...priority,...(includeManufacturer?['__manufacturer']:[]),...others,'__title','__date'];
+  const saved=Array.isArray(item?.subjectOrder?.[sourceKind])?item.subjectOrder[sourceKind]:[];
+  return [...new Set([...saved.filter(k=>defaults.includes(k)),...defaults])];
+}
+function mailTopicSubjectSeparator(kind,id,sourceKind){
+  const value=mailTopicFindItem(kind,id)?.subjectSeparators?.[sourceKind];
+  return typeof value==='string'&&value.length>0&&value.length<=12&&!/[\r\n]/.test(value)?value:' - ';
 }
 function mailTopicIsProtected(kind,id){
   return id===`${kind}-default` || id===MAIL_QUOTATION_REMINDER_ID || id===MAIL_CHECKLIST_ID;
@@ -32793,9 +32975,195 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
+  const fieldGrid=modal.querySelector('#mailTopicColsGrid');
+  const cpFieldOrder=()=>sourceKind==='cp'?visibleCols('cp').map(c=>c.k):kolAllOrderedCols().map(c=>c.k);
+  const fieldRows=new Map([...fieldGrid.querySelectorAll('[data-key]')].map(input=>[input.dataset.key,input.closest('.mailTopicSubjectRow')]));
+  const manufacturerRow=fieldGrid.querySelector('.isManufacturer');
+  const catalog=mailTopicFieldGroupCatalog(cols,sourceKind);
+  const groupMap=new Map(),fieldGroup=new Map(),expandedGroups=new Set();
+  catalog.forEach(entry=>entry.keys.forEach(key=>fieldGroup.set(key,entry.group)));
+  const selectedAtOpen=new Set(selected);
+  for(const entry of catalog){
+    if(entry.keys.some(key=>selectedAtOpen.has(key))&&expandedGroups.size<2)expandedGroups.add(entry.group);
+  }
+  fieldGrid.innerHTML='';
+  const legend=modal.querySelector('.mailTopicSubjectLegend');
+  if(legend)legend.innerHTML='<span>'+escapeHtml(en?'Field / Heading':'Alan / Başlık')+'</span><span>'+escapeHtml(en?'Subject':'Konu')+'</span><span>'+escapeHtml(en?'Table / Excel':'Tablo / Excel')+'</span><span>'+escapeHtml(en?'Order':'Sıra')+'</span>';
+  catalog.forEach(entry=>{
+    const group=document.createElement('section');group.className='mailTopicFieldGroup';
+    group.dataset.mailFieldGroup=entry.group;
+    group.style.setProperty('--grp-accent',GROUP_ACCENTS[entry.group]||'var(--acc)');
+    group.innerHTML='<div class="mailTopicFieldGroupHead">'+
+      '<button type="button" class="mailTopicFieldGroupToggle" data-mail-field-toggle="'+escapeHtml(entry.group)+'" aria-expanded="false">'+
+      '<span class="mailTopicFieldChevron" aria-hidden="true">›</span><b>'+escapeHtml(entry.label)+'</b>'+
+      '<span class="mailTopicFieldCount" data-mail-group-count></span></button>'+
+      '<label class="mailTopicGroupCheck" title="'+escapeHtml(en?'Select all fields for subject':'Konu başlığı için tüm alanları seç')+'"><input type="checkbox" data-mail-group-subject="'+escapeHtml(entry.group)+'" aria-label="'+escapeHtml(entry.label+' '+(en?'subject':'konu'))+'"></label>'+
+      '<label class="mailTopicGroupCheck" title="'+escapeHtml(en?'Select all fields for the Excel / email table':'Excel / e-posta tablosu için tüm alanları seç')+'"><input type="checkbox" data-mail-group-table="'+escapeHtml(entry.group)+'" aria-label="'+escapeHtml(entry.label+' '+(en?'Excel':'Excel'))+'"></label>'+
+      '<span class="mailTopicFieldHeadSpacer"></span></div><div class="mailTopicFieldGroupRows"></div>';
+    fieldGrid.appendChild(group);groupMap.set(entry.group,group);
+  });
+  // Manufacturer is a subject-only recipient token, distinct from the actual
+  // CP Manufacturer column. Keep this in Order Details rather than duplicating a top-level row.
+  if(manufacturerRow){
+    const orderGroup=groupMap.get('Sipariş Detayları')||groupMap.values().next().value;
+    const manufacturerLabel=manufacturerRow.querySelector('.mailTopicSubjectLabel');
+    if(manufacturerLabel)manufacturerLabel.textContent=en?'Recipient manufacturer (subject)':'Alıcı üretici (konu)';
+    orderGroup?.querySelector('.mailTopicFieldGroupRows')?.prepend(manufacturerRow);
+  }
+  function arrangeFieldRows(keys){
+    const seen=new Set();
+    [...keys,...cols.map(c=>c.k)].forEach(key=>{
+      if(seen.has(key))return;seen.add(key);
+      const row=fieldRows.get(key),group=groupMap.get(fieldGroup.get(key));
+      if(row&&group)group.querySelector('.mailTopicFieldGroupRows').appendChild(row);
+    });
+  }
+  arrangeFieldRows([...mailTopicColumnKeys(kind,id,sourceKind),...cpFieldOrder()]);
+  const tools=modal.querySelector('.mailTopicColumnsTools');
+  const search=document.createElement('input');search.id='mailTopicFieldSearch';search.type='search';search.className='mailTopicFieldSearch';
+  search.placeholder=en?'Search fields or headings…':'Alan veya başlık ara…';search.setAttribute('aria-label',search.placeholder);tools.prepend(search);
+  const onlyLabel=document.createElement('label');onlyLabel.className='mailTopicSelectedOnly';
+  const only=document.createElement('input');only.type='checkbox';onlyLabel.append(only,document.createTextNode(en?' Selected only':' Yalnız seçilenler'));search.after(onlyLabel);
+  const resetOrder=document.createElement('button');resetOrder.type='button';resetOrder.className='tbtn';
+  resetOrder.textContent=sourceKind==='cp'?(en?'Use my CP order':'CP sıramı kullan'):(en?'Collection order':'Koleksiyon sırası');
+  onlyLabel.after(resetOrder);
+  fieldRows.forEach(row=>{
+    const buttons=document.createElement('span');buttons.className='mailTopicMoveBtns';
+    for(const dir of ['up','down']){
+      const button=document.createElement('button');button.type='button';button.dataset.mailColumnMove=dir;
+      button.textContent=dir==='up'?'↑':'↓';button.title=dir==='up'?(en?'Move up':'Yukarı'):(en?'Move down':'Aşağı');
+      button.setAttribute('aria-label',button.title);buttons.appendChild(button);
+    }
+    row.append(buttons);row.draggable=true;
+  });
+  function updateFieldGroups(){
+    for(const entry of catalog){
+      const group=groupMap.get(entry.group),rows=entry.keys.map(key=>fieldRows.get(key)).filter(Boolean);
+      const checkedTable=rows.filter(row=>row.querySelector('input[data-key]')?.checked).length;
+      const checkedSubject=rows.filter(row=>row.querySelector('[data-topic-subject-key]')?.getAttribute('aria-pressed')==='true').length;
+      const excelCheck=group.querySelector('[data-mail-group-table]'),subjectCheck=group.querySelector('[data-mail-group-subject]');
+      excelCheck.checked=Boolean(rows.length&&checkedTable===rows.length);excelCheck.indeterminate=checkedTable>0&&checkedTable<rows.length;
+      subjectCheck.checked=Boolean(rows.length&&checkedSubject===rows.length);subjectCheck.indeterminate=checkedSubject>0&&checkedSubject<rows.length;
+      group.querySelector('[data-mail-group-count]').textContent=checkedTable+'/'+rows.length;
+      const query=search.value.toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR').trim();
+      const headingMatch=query&&entry.label.toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR').includes(query);
+      let visible=0;
+      rows.forEach((row,index)=>{
+        const name=String(colLabel(cols.find(c=>c.k===entry.keys[index])||{label:entry.keys[index]})).toLocaleLowerCase(appLang==='en'?'en-US':'tr-TR');
+        const match=!query||headingMatch||name.includes(query);
+        const show=match&&(!only.checked||row.querySelector('input[data-key]')?.checked);
+        row.hidden=!show;if(show)visible++;
+      });
+      if(manufacturerRow&&manufacturerRow.parentElement===group.querySelector('.mailTopicFieldGroupRows')){
+        const mfrMatch=!query||headingMatch||(en?'recipient manufacturer':'alıcı üretici').includes(query);
+        manufacturerRow.hidden=!mfrMatch||only.checked;
+        if(!manufacturerRow.hidden)visible++;
+      }
+      group.hidden=visible===0;
+      const open=query?visible>0:expandedGroups.has(entry.group);
+      group.classList.toggle('isOpen',open);
+      group.querySelector('.mailTopicFieldGroupRows').hidden=!open;
+      const toggle=group.querySelector('[data-mail-field-toggle]');toggle.setAttribute('aria-expanded',open?'true':'false');
+    }
+  }
+  search.addEventListener('input',updateFieldGroups);only.addEventListener('change',updateFieldGroups);
+  resetOrder.addEventListener('click',()=>{arrangeFieldRows(cpFieldOrder());refresh();});
+  fieldGrid.addEventListener('click',event=>{
+    const toggle=event.target.closest('[data-mail-field-toggle]');
+    if(toggle){const key=toggle.dataset.mailFieldToggle;if(expandedGroups.has(key))expandedGroups.delete(key);else expandedGroups.add(key);updateFieldGroups();return;}
+    const button=event.target.closest('[data-mail-column-move]');if(!button)return;
+    const row=button.closest('.mailTopicSubjectRow'),list=row?.parentElement;
+    if(!row?.querySelector('[data-key]')?.checked||!list)return;
+    const checked=[...list.querySelectorAll('[data-key]:checked')].map(x=>x.closest('.mailTopicSubjectRow'));
+    const index=checked.indexOf(row),other=checked[index+(button.dataset.mailColumnMove==='up'?-1:1)];
+    if(!other)return;
+    if(button.dataset.mailColumnMove==='up')other.before(row);else other.after(row);
+    refresh();
+  });
+  fieldGrid.addEventListener('change',event=>{
+    const check=event.target.closest('[data-mail-group-table],[data-mail-group-subject]');if(!check)return;
+    const group=groupMap.get(check.dataset.mailGroupTable||check.dataset.mailGroupSubject);
+    if(!group)return;
+    const table=check.hasAttribute('data-mail-group-table');
+    group.querySelectorAll('.mailTopicFieldGroupRows .mailTopicSubjectRow').forEach(row=>{
+      if(table){const input=row.querySelector('input[data-key]');if(input)input.checked=check.checked;}
+      else{const button=row.querySelector('[data-topic-subject-key]');if(button)setToggle(button,check.checked);}
+    });
+    refresh();
+  });
+  let draggedField='';
+  fieldGrid.addEventListener('dragstart',event=>{
+    const row=event.target.closest('.mailTopicSubjectRow'),box=row?.querySelector('[data-key]');
+    if(!box?.checked){event.preventDefault();return;}
+    draggedField=box.dataset.key;event.dataTransfer?.setData('text/plain',draggedField);
+  });
+  fieldGrid.addEventListener('dragover',event=>{
+    if(!draggedField)return;
+    const box=event.target.closest('.mailTopicSubjectRow')?.querySelector('[data-key]');
+    if(box?.checked&&fieldGroup.get(box.dataset.key)===fieldGroup.get(draggedField))event.preventDefault();
+  });
+  fieldGrid.addEventListener('drop',event=>{
+    const target=event.target.closest('.mailTopicSubjectRow'),targetKey=target?.querySelector('[data-key]')?.dataset.key;
+    const moving=fieldRows.get(draggedField);
+    if(moving&&targetKey&&moving!==target&&fieldGroup.get(draggedField)===fieldGroup.get(targetKey)){
+      event.preventDefault();target.before(moving);refresh();
+    }
+    draggedField='';
+  });
+  fieldGrid.addEventListener('dragend',()=>{draggedField='';});
   const boxes=()=>[...modal.querySelectorAll('#mailTopicColsGrid input[data-key]')];
   const subjectButtons=()=>[...modal.querySelectorAll('[data-topic-subject-key]')];
   const setToggle=(btn,active)=>{btn.classList.toggle('isActive',active);btn.setAttribute('aria-pressed',active?'true':'false');};
+  let subjectArrange=mailTopicSubjectOrder(kind,id,sourceKind);
+  const subjectPanel=document.createElement('section');subjectPanel.className='mailTopicSubjectArrange';
+  subjectPanel.innerHTML='<div class="mailTopicArrangeHeading"><strong>'+escapeHtml(en?'Subject field order':'Konu başlığı sırası')+'</strong><small>'+escapeHtml(en?'Drag or use arrows. The title and date can move too.':'Sürükleyerek veya oklarla sıralayın. Başlık metni ve tarih de taşınabilir.')+'</small></div>'+
+    '<div class="mailTopicSubjectOrderList" id="mailTopicSubjectOrderList"></div>'+
+    '<div class="mailTopicSeparatorField"><label for="mailTopicSeparator">'+escapeHtml(en?'Separator':'Ayırıcı')+'</label><select id="mailTopicSeparator"><option value=" - "> - </option><option value=" | "> | </option><option value=" / "> / </option><option value=" • "> • </option><option value=" : "> : </option><option value="custom">'+escapeHtml(en?'Custom':'Özel')+'</option></select><input id="mailTopicSeparatorCustom" maxlength="12" aria-label="'+escapeHtml(en?'Custom separator':'Özel ayırıcı')+'" hidden></div>';
+  modal.querySelector('.mailTopicSubjectPreview').before(subjectPanel);
+  const hint=modal.querySelector('.mailTopicSubjectPreview small');
+  if(hint)hint.textContent=en?'The preview matches the actual subject order and separator.':'Önizleme gerçek başlık sırasını ve ayırıcıyı yansıtır.';
+  const separatorSelect=modal.querySelector('#mailTopicSeparator'),separatorCustom=modal.querySelector('#mailTopicSeparatorCustom');
+  const savedSeparator=mailTopicSubjectSeparator(kind,id,sourceKind);
+  separatorSelect.value=[' - ',' | ',' / ',' • ',' : '].includes(savedSeparator)?savedSeparator:'custom';
+  separatorCustom.hidden=separatorSelect.value!=='custom';separatorCustom.value=savedSeparator;
+  function mailTopicEditorSeparator(){return separatorSelect.value==='custom'?(separatorCustom.value||' - '):separatorSelect.value;}
+  const subjectOrderList=modal.querySelector('#mailTopicSubjectOrderList');
+  function redrawSubjectFields(){
+    const active=subjectButtons().filter(btn=>btn.getAttribute('aria-pressed')==='true').map(btn=>btn.dataset.topicSubjectKey);
+    if(modal.querySelector('[data-topic-subject-manufacturer]')?.getAttribute('aria-pressed')==='true')active.push('__manufacturer');
+    active.push('__title','__date');
+    const allowed=new Set(active);
+    subjectArrange=[...new Set([...subjectArrange.filter(key=>allowed.has(key)),...active])];
+    const labels=new Map(cols.map(c=>[c.k,colLabel(c)]));
+    labels.set('__manufacturer',en?'Manufacturer':'Üretici');labels.set('__title',en?'Subject title':'Başlık metni');labels.set('__date',en?'Date':'Tarih');
+    subjectOrderList.innerHTML=subjectArrange.map((key,index)=>
+      '<div class="mailTopicArrangeItem" draggable="true" data-subject-field="'+escapeHtml(key)+'"><span aria-hidden="true">⋮⋮</span><span>'+escapeHtml(labels.get(key)||key)+'</span>'+
+      '<button type="button" data-subject-move="up" '+(index===0?'disabled':'')+' aria-label="'+escapeHtml(en?'Move up':'Yukarı')+'">↑</button>'+
+      '<button type="button" data-subject-move="down" '+(index===subjectArrange.length-1?'disabled':'')+' aria-label="'+escapeHtml(en?'Move down':'Aşağı')+'">↓</button></div>'
+    ).join('');
+  }
+  const moveSubject=(from,to)=>{
+    if(from<0||to<0||to>=subjectArrange.length||from===to)return;
+    const item=subjectArrange.splice(from,1)[0];subjectArrange.splice(to,0,item);
+    redrawSubjectFields();refreshSubjectPreview();
+  };
+  subjectOrderList.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-subject-move]');if(!btn)return;
+    const index=subjectArrange.indexOf(btn.closest('[data-subject-field]')?.dataset.subjectField);
+    moveSubject(index,index+(btn.dataset.subjectMove==='up'?-1:1));
+  });
+  let draggedSubject='';
+  subjectOrderList.addEventListener('dragstart',e=>{draggedSubject=e.target.closest('[data-subject-field]')?.dataset.subjectField||'';if(draggedSubject)e.dataTransfer?.setData('text/plain',draggedSubject);});
+  subjectOrderList.addEventListener('dragover',e=>{if(draggedSubject&&e.target.closest('[data-subject-field]'))e.preventDefault();});
+  subjectOrderList.addEventListener('drop',e=>{
+    const target=e.target.closest('[data-subject-field]')?.dataset.subjectField;
+    if(!draggedSubject||!target)return;e.preventDefault();
+    moveSubject(subjectArrange.indexOf(draggedSubject),subjectArrange.indexOf(target));draggedSubject='';
+  });
+  subjectOrderList.addEventListener('dragend',()=>{draggedSubject='';});
+  separatorSelect.addEventListener('change',()=>{separatorCustom.hidden=separatorSelect.value!=='custom';refreshSubjectPreview();});
+  separatorCustom.addEventListener('input',()=>refreshSubjectPreview());
+
   const previewRows=()=>{const rows=typeof options.getRows==='function'?options.getRows():options.rows;return Array.isArray(rows)?rows:[];};
   const previewManufacturer=()=>{
     const explicit=typeof options.getManufacturerName==='function'?options.getManufacturerName():options.manufacturerName;
@@ -32816,7 +33184,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     const contexts=Array.isArray(supplied)&&supplied.length?supplied:[{rows:previewRows(),manufacturerName:previewManufacturer()}];
     const previews=[],seen=new Set();
     contexts.forEach(ctx=>{
-      const preview=prepareEmailBuildSubject(topic,Array.isArray(ctx?.rows)?ctx.rows:previewRows(),String(ctx?.manufacturerName||''),sourceKind,previewDate(),{columns:activeColumns,manufacturer,subjectTitle});
+      const preview=prepareEmailBuildSubject(topic,Array.isArray(ctx?.rows)?ctx.rows:previewRows(),String(ctx?.manufacturerName||''),sourceKind,previewDate(),{columns:activeColumns,manufacturer,subjectTitle,order:subjectArrange,separator:mailTopicEditorSeparator()});
       const key=preview.toLocaleLowerCase('tr-TR');if(preview&&!seen.has(key)){seen.add(key);previews.push(preview);}
     });
     const out=modal.querySelector('#mailTopicFinalSubjectPreview');if(out){out.textContent=previews.join('\n');out.title=previews.join('\n');}
@@ -32826,7 +33194,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     const tableCount=boxes().filter(x=>x.checked).length;
     const subjectCount=subjectButtons().filter(x=>x.getAttribute('aria-pressed')==='true').length+(modal.querySelector('[data-topic-subject-manufacturer]')?.getAttribute('aria-pressed')==='true'?1:0);
     modal.querySelector('#mailTopicColsCount').textContent=en?`${tableCount} table columns · ${subjectCount} subject fields`:`${tableCount} tablo sütunu · ${subjectCount} başlık alanı`;
-    refreshSubjectPreview();
+    redrawSubjectFields();updateFieldGroups();refreshSubjectPreview();
   };
   boxes().forEach(x=>x.addEventListener('change',refresh));
   modal.querySelector('#mailTopicEditSubjectTitle')?.addEventListener('input',refreshSubjectPreview);
@@ -32851,6 +33219,10 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     mailTopicSetColumnKeys(kind,id,sourceKind,keys);
     mailTopicSetSubjectOptions(kind,id,sourceKind,{manufacturer,keys:subjectKeys});
     mailTopicSetContentOptions(kind,id,sourceKind,{excel:includeExcel,table:includeTable,tps:includeTps});
+    if(!topic.subjectOrder||typeof topic.subjectOrder!=='object')topic.subjectOrder={};
+    if(!topic.subjectSeparators||typeof topic.subjectSeparators!=='object')topic.subjectSeparators={};
+    topic.subjectOrder[sourceKind]=subjectArrange.slice();
+    topic.subjectSeparators[sourceKind]=mailTopicEditorSeparator();
     mailTplSave();showToast(en?'E-mail subject settings saved.':'E-posta başlığı ayarları kaydedildi.');close();
   });
   refresh();
@@ -33547,30 +33919,54 @@ function prepareEmailRowManufacturer(row){
 }
 function prepareEmailColumnIsPicture(column){return String(column?.k||'')==='__picture'||String(column?.type||'')==='cpImage';}
 function prepareEmailImageSource(row,sourceKind){
-  if(sourceKind==='cp')return String(row?._imageUrl||(row?._imageRef?`${CP_IMAGE_API}/${encodeURIComponent(row._imageRef)}`:'')||'');
+  // CP e-mail and Excel use the same canonical identity as the visible CP picture.
+  if(sourceKind==='cp')return String(tableRowImageSource(row)?.source||'');
   return String(row?.img||(row?.imgRef?`/api/collection-images/${encodeURIComponent(row.imgRef)}`:'')||'');
 }
 function prepareEmailImageDims(sourceKind){return sourceKind==='cp'?cpImageDims():kolImgDims();}
 async function prepareEmailInlineAsset(row,column,rowIndex){
   const sourceKind=column.sourceKind||'collection',src=prepareEmailImageSource(row,sourceKind);if(!src)return null;
-  const prepared=await kolPrepareExcelImage(src);if(!prepared)return null;
+  // Off-screen CP thumbnails may still contain placeholders. Resolve the actual
+  // picture through the same canonical cache as CP clipboard/Excel exports.
+  let canonical='';
+  if(sourceKind==='cp')canonical=await cpOrdersRowImageDataUrl(row);
+  const prepared=await kolPrepareExcelImage(canonical||src);if(!prepared)return null;
   const dims=prepareEmailImageDims(sourceKind),fit=kolFitImageDimensions(prepared.width,prepared.height,dims.w,dims.h);
   const width=Math.max(1,Math.round(fit.width)),height=Math.max(1,Math.round(fit.height));
-  const dataUrl=prepared.dataUrl,mimeType=prepared.extension==='jpeg'?'image/jpeg':'image/png';
+  let dataUrl=prepared.dataUrl,mimeType=prepared.extension==='jpeg'?'image/jpeg':'image/png';
+  // Downscale inline mail previews, not the separate Excel image: Outlook clients
+  // cannot reliably handle hundreds of multi-megabyte inline originals.
+  try{
+    const image=await kolLoadPricingImage(dataUrl),maxSide=480;
+    if(image){
+      const scale=Math.min(1,maxSide/Math.max(prepared.width,prepared.height));
+      const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(prepared.width*scale));canvas.height=Math.max(1,Math.round(prepared.height*scale));
+      const ctx=canvas.getContext('2d');if(ctx){ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(image,0,0,canvas.width,canvas.height);dataUrl=canvas.toDataURL('image/jpeg',0.8);mimeType='image/jpeg';}
+    }
+  }catch(_){}
   const match=/^data:(image\/[A-Za-z0-9.+-]+);base64,(.+)$/s.exec(dataUrl);if(!match)return null;
   const cid=`buyerlog-image-${Date.now()}-${rowIndex}-${Math.random().toString(36).slice(2,8)}@local`;
-  // CID ekinde orijinal çözünürlük tutulur; width/height yalnız ilk görünür boyuttur.
   return {cid,filename:`BuyerLog_Image_${rowIndex+1}.${mimeType==='image/jpeg'?'jpg':'png'}`,mimeType,base64:match[2],width,height,src};
 }
 async function prepareEmailTopicTableContent(rows,columns){
   const list=Array.isArray(rows)?rows:[],cols=Array.isArray(columns)?columns:[],assets=new Map(),inlineImages=[];
   const pictureCols=cols.map((column,index)=>({column,index})).filter(item=>prepareEmailColumnIsPicture(item.column));
   if(pictureCols.length){
-    await Promise.all(list.map(async(row,ri)=>{
+    const promises=new Map(),failures=[];
+    // Re-use the MIME Content-ID of a repeated model instead of embedding
+    // identical binary images once per PO.
+    await blMapWithConcurrency(list,6,async(row,ri)=>{
       for(const item of pictureCols){
-        const asset=await prepareEmailInlineAsset(row,item.column,ri);if(asset){assets.set(`${ri}:${item.index}`,asset);inlineImages.push(asset);}
+        const src=prepareEmailImageSource(row,item.column.sourceKind||'collection');if(!src)continue;
+        if(!promises.has(src))promises.set(src,prepareEmailInlineAsset(row,item.column,ri));
+        let asset=null;
+        try{asset=await promises.get(src);}catch(_){/* Report failures outside the concurrency pool. */}
+        if(!asset){failures.push(String(row?.['Model Name']||row?.modelKod||row?.['PLM ID']||src));continue;}
+        assets.set(`${ri}:${item.index}`,asset);
       }
-    }));
+    });
+    if(failures.length)throw new Error((appLang==='en'?'Model image could not be embedded in the email: ':'Model görseli e-postaya eklenemedi: ')+failures.slice(0,3).join(', '));
+    const seen=new Set();assets.forEach(asset=>{if(!seen.has(asset.cid)){seen.add(asset.cid);inlineImages.push(asset);}});
   }
   const head=cols.map(c=>`<th style="background-color:#F2F4F7;color:#475467;border:thin solid #D0D5DD;padding:5px 8px;text-align:left;font-weight:bold;white-space:nowrap;">${escapeHtml(c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label))}</th>`).join('');
   const body=list.map((row,ri)=>`<tr>${cols.map((c,ci)=>{
@@ -33636,20 +34032,29 @@ function prepareEmailBuildSubject(topic,rows,manufacturerName,sourceKind,dateTex
   const parts=[],seen=new Set();
   const push=value=>{value=prepareEmailSubjectSegment(value);const key=value.toLocaleLowerCase('tr-TR');if(value&&!seen.has(key)){seen.add(key);parts.push(value);}};
   const selectedColumns=Array.isArray(subjectOptions?.columns)?subjectOptions.columns:mailTopicSelectedSubjectColumns(topic.kind,topic.id,sourceKind);
-  const priorityColumns=selectedColumns.filter(column=>prepareEmailSubjectColumnPriority(column)<99).sort((a,b)=>prepareEmailSubjectColumnPriority(a)-prepareEmailSubjectColumnPriority(b));
-  const otherColumns=selectedColumns.filter(column=>prepareEmailSubjectColumnPriority(column)===99);
-  priorityColumns.forEach(column=>push(prepareEmailSubjectColumnValue(rows,column)));
+  const byKey=new Map(selectedColumns.map(c=>[c.k,c]));
   const includeManufacturer=typeof subjectOptions?.manufacturer==='boolean'?subjectOptions.manufacturer:mailTopicSubjectIncludesManufacturer(topic.kind,topic.id,sourceKind);
-  if(includeManufacturer)push(manufacturerName);
-  otherColumns.forEach(column=>push(prepareEmailSubjectColumnValue(rows,column)));
-  if(subjectOptions&&Object.prototype.hasOwnProperty.call(subjectOptions,'subjectTitle'))push(subjectOptions.subjectTitle);
-  else push(topic.subjectTitle||mailTopicSubjectTitle(topic.kind,topic.id));
-  const date=prepareEmailSubjectSegment(dateText),prefix=parts.join(' - ')||'E-Mail';
-  if(!date)return prefix.length<=240?prefix:`${prefix.slice(0,239).trimEnd()}…`;
-  const full=`${prefix} - ${date}`;
+  const order=Array.isArray(subjectOptions?.order)?subjectOptions.order:mailTopicSubjectOrder(topic.kind,topic.id,sourceKind,[...byKey.keys()],includeManufacturer);
+  const separator=typeof subjectOptions?.separator==='string'&&subjectOptions.separator.length&&subjectOptions.separator.length<=12&&!/[\r\n]/.test(subjectOptions.separator)
+    ?subjectOptions.separator:mailTopicSubjectSeparator(topic.kind,topic.id,sourceKind);
+  const title=subjectOptions&&Object.prototype.hasOwnProperty.call(subjectOptions,'subjectTitle')?subjectOptions.subjectTitle:(topic.subjectTitle||mailTopicSubjectTitle(topic.kind,topic.id));
+  const date=prepareEmailSubjectSegment(dateText);
+  const candidates=[...new Set([...order,...mailTopicSubjectOrder(topic.kind,topic.id,sourceKind,[...byKey.keys()],includeManufacturer)])];
+  candidates.forEach(key=>{
+    if(key==='__manufacturer'){if(includeManufacturer)push(manufacturerName);}
+    else if(key==='__title')push(title);
+    else if(key==='__date')push(date);
+    else if(byKey.has(key))push(prepareEmailSubjectColumnValue(rows,byKey.get(key)));
+  });
+  const full=parts.join(separator)||'E-Mail';
   if(full.length<=240)return full;
-  const room=Math.max(20,240-date.length-3),trimmed=prefix.length<=room?prefix:`${prefix.slice(0,Math.max(1,room-1)).trimEnd()}…`;
-  return `${trimmed} - ${date}`;
+  // Preserve the date suffix for the standard date-last layout.
+  if(candidates[candidates.length-1]==='__date'&&date&&full.endsWith(separator+date)){
+    const prefix=full.slice(0,-(separator.length+date.length));
+    const room=Math.max(1,240-separator.length-date.length);
+    return (prefix.length<=room?prefix:prefix.slice(0,Math.max(1,room-1)).trimEnd()+'…')+separator+date;
+  }
+  return full.slice(0,239).trimEnd()+'…';
 }
 function prepareEmailTopicTablePlain(rows,columns){
   const labels=columns.map(c=>c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label));
@@ -33902,6 +34307,7 @@ async function kolExportWithImages(rows,fileBase){
         return;
       }
       const c=d.col,raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k),schema=columnSchemaFor(c,sourceRows);
+      if(c.k==='fabric'){cell.value=kolExportSingleLineText(kolFabricDisplay(raw));cell.alignment={vertical:'middle',wrapText:true};return;}
       if(c.endeksmatik){
         const text=kolExportSingleLineText(endeksmatikExcelText(r));cell.value=text;cell.alignment={vertical:'middle',wrapText:true};
         if(text){const result=r&&r.endeksmatikData&&r.endeksmatikData.result,months=result&&result.months||{};cell.note=[
@@ -33946,6 +34352,7 @@ async function kolExportWithImages(rows,fileBase){
 
 function kolStyleExportValue(field,row){
   const raw=row?kolEffectiveValue(row,field.k):'';
+  if(field.k==='fabric')return kolFabricDisplay(raw);
   if(field.custom){ const schema=columnSchemaFor(field,[row]); return schema?schema.exportValue(raw):(raw==null?'':String(raw)); }
   if(field.boolean)return raw?(appLang==='en'?'Yes':'Evet'):(appLang==='en'?'No':'Hayır');
   if(field.date){const date=coerceDateLoose(raw);return date||'';}
