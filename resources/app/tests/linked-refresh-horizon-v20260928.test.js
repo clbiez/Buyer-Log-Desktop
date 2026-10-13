@@ -157,8 +157,11 @@ test('kişisel/rol ufku bağlı grubu yeniden bölmez', () => {
 test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre bağına göre satır üretir', () => {
   assert.match(APP, /const ALL_REFRESH_TARGETS=Object\.freeze\(\['cp','orders','backlog','lfl','priceanalysis'\]\);/);
   assert.match(APP, /const DEFAULT_LINKED_REFRESH_TARGETS=Object\.freeze\(\['orders','backlog','lfl','priceanalysis'\]\);/);
-  // Grup üyeliği son yenilemenin sharedFilter bilgisinden okunur.
-  assert.match(APP, /typeof entry\.sharedFilter==='boolean'/);
+  // Menü üyeliği son yenileme snapshot'ından değil güncel ASAS kaydından okunur.
+  assert.match(APP, /async function syncLinkedRefreshMembers\(\)/);
+  assert.match(APP, /fetch\('\/api\/refresh-targets',\{cache:'no-store'\}\)/);
+  const refreshConfig=APP.slice(APP.indexOf('function linkedRefreshMembers(){'),APP.indexOf('function withLinkedRefreshTargets'));
+  assert.doesNotMatch(refreshConfig, /state\.modelScopes|sharedFilter/);
   const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('async function loadFromServer(force, targets){') + 300);
   assert.match(load, /targets=withLinkedRefreshTargets\(targets\)/);
   // Menü: ayrı sayfa kendi satırı, bağlı grup tek satır, ayrıca "Tümünü yenile".
@@ -197,8 +200,8 @@ test('istemci: yenileme açık olmayan sayfaları bayat bırakmaz ve verilerini 
 test('istemci: ufuk rozeti bağlı grubu ve son yenileme saatini gösterir', () => {
   const badge = APP.slice(APP.indexOf('function renderHorizonBadges(){'), APP.indexOf('function sourceFilterNoticeText'));
   assert.match(badge, /ALL_REFRESH_TARGETS\.includes\(target\)/);
-  // "Bağlı" rozeti yalnız ortak filtreyi kullanan sayfada çıkar (gruptan ayrılan sayfada yok).
-  assert.match(badge, /if\(scope&&scope\.sharedFilter\)\{/);
+  // "Bağlı" rozeti menüyle aynı güncel grup üyeliğine göre hesaplanır.
+  assert.match(badge, /if\(linkedRefreshMembers\(\)\.includes\(target\)\)\{/);
   // Saat, sayfanın kendi yenileme kümesinin (grup ya da tek sayfa) en eskisidir.
   assert.match(badge, /refreshTargetsStamp\(withLinkedRefreshTargets\(\[target\]\)\)/);
   assert.match(APP, /function seedSourceStatusFromServer\(result\)/);
