@@ -32958,6 +32958,55 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   const subjectButtons=()=>[...modal.querySelectorAll('[data-topic-subject-key]')];
   const setToggle=(btn,active)=>{btn.classList.toggle('isActive',active);btn.setAttribute('aria-pressed',active?'true':'false');};
   let subjectArrange=mailTopicSubjectOrder(kind,id,sourceKind);
+  const subjectPanel=document.createElement('section');subjectPanel.className='mailTopicSubjectArrange';
+  subjectPanel.innerHTML='<div class="mailTopicArrangeHeading"><strong>'+escapeHtml(en?'Subject field order':'Konu başlığı sırası')+'</strong><small>'+escapeHtml(en?'Drag or use arrows. The title and date can move too.':'Sürükleyerek veya oklarla sıralayın. Başlık metni ve tarih de taşınabilir.')+'</small></div>'+
+    '<div class="mailTopicSubjectOrderList" id="mailTopicSubjectOrderList"></div>'+
+    '<div class="mailTopicSeparatorField"><label for="mailTopicSeparator">'+escapeHtml(en?'Separator':'Ayırıcı')+'</label><select id="mailTopicSeparator"><option value=" - "> - </option><option value=" | "> | </option><option value=" / "> / </option><option value=" • "> • </option><option value=" : "> : </option><option value="custom">'+escapeHtml(en?'Custom':'Özel')+'</option></select><input id="mailTopicSeparatorCustom" maxlength="12" aria-label="'+escapeHtml(en?'Custom separator':'Özel ayırıcı')+'" hidden></div>';
+  modal.querySelector('.mailTopicSubjectPreview').before(subjectPanel);
+  const hint=modal.querySelector('.mailTopicSubjectPreview small');
+  if(hint)hint.textContent=en?'The preview matches the actual subject order and separator.':'Önizleme gerçek başlık sırasını ve ayırıcıyı yansıtır.';
+  const separatorSelect=modal.querySelector('#mailTopicSeparator'),separatorCustom=modal.querySelector('#mailTopicSeparatorCustom');
+  const savedSeparator=mailTopicSubjectSeparator(kind,id,sourceKind);
+  separatorSelect.value=[' - ',' | ',' / ',' • ',' : '].includes(savedSeparator)?savedSeparator:'custom';
+  separatorCustom.hidden=separatorSelect.value!=='custom';separatorCustom.value=savedSeparator;
+  function mailTopicEditorSeparator(){return separatorSelect.value==='custom'?(separatorCustom.value||' - '):separatorSelect.value;}
+  const subjectOrderList=modal.querySelector('#mailTopicSubjectOrderList');
+  function redrawSubjectFields(){
+    const active=subjectButtons().filter(btn=>btn.getAttribute('aria-pressed')==='true').map(btn=>btn.dataset.topicSubjectKey);
+    if(modal.querySelector('[data-topic-subject-manufacturer]')?.getAttribute('aria-pressed')==='true')active.push('__manufacturer');
+    active.push('__title','__date');
+    const allowed=new Set(active);
+    subjectArrange=[...new Set([...subjectArrange.filter(key=>allowed.has(key)),...active])];
+    const labels=new Map(cols.map(c=>[c.k,colLabel(c)]));
+    labels.set('__manufacturer',en?'Manufacturer':'Üretici');labels.set('__title',en?'Subject title':'Başlık metni');labels.set('__date',en?'Date':'Tarih');
+    subjectOrderList.innerHTML=subjectArrange.map((key,index)=>
+      '<div class="mailTopicArrangeItem" draggable="true" data-subject-field="'+escapeHtml(key)+'"><span aria-hidden="true">⋮⋮</span><span>'+escapeHtml(labels.get(key)||key)+'</span>'+
+      '<button type="button" data-subject-move="up" '+(index===0?'disabled':'')+' aria-label="'+escapeHtml(en?'Move up':'Yukarı')+'">↑</button>'+
+      '<button type="button" data-subject-move="down" '+(index===subjectArrange.length-1?'disabled':'')+' aria-label="'+escapeHtml(en?'Move down':'Aşağı')+'">↓</button></div>'
+    ).join('');
+  }
+  const moveSubject=(from,to)=>{
+    if(from<0||to<0||to>=subjectArrange.length||from===to)return;
+    const item=subjectArrange.splice(from,1)[0];subjectArrange.splice(to,0,item);
+    redrawSubjectFields();refreshSubjectPreview();
+  };
+  subjectOrderList.addEventListener('click',e=>{
+    const btn=e.target.closest('[data-subject-move]');if(!btn)return;
+    const index=subjectArrange.indexOf(btn.closest('[data-subject-field]')?.dataset.subjectField);
+    moveSubject(index,index+(btn.dataset.subjectMove==='up'?-1:1));
+  });
+  let draggedSubject='';
+  subjectOrderList.addEventListener('dragstart',e=>{draggedSubject=e.target.closest('[data-subject-field]')?.dataset.subjectField||'';if(draggedSubject)e.dataTransfer?.setData('text/plain',draggedSubject);});
+  subjectOrderList.addEventListener('dragover',e=>{if(draggedSubject&&e.target.closest('[data-subject-field]'))e.preventDefault();});
+  subjectOrderList.addEventListener('drop',e=>{
+    const target=e.target.closest('[data-subject-field]')?.dataset.subjectField;
+    if(!draggedSubject||!target)return;e.preventDefault();
+    moveSubject(subjectArrange.indexOf(draggedSubject),subjectArrange.indexOf(target));draggedSubject='';
+  });
+  subjectOrderList.addEventListener('dragend',()=>{draggedSubject='';});
+  separatorSelect.addEventListener('change',()=>{separatorCustom.hidden=separatorSelect.value!=='custom';refreshSubjectPreview();});
+  separatorCustom.addEventListener('input',()=>refreshSubjectPreview());
+
   const previewRows=()=>{const rows=typeof options.getRows==='function'?options.getRows():options.rows;return Array.isArray(rows)?rows:[];};
   const previewManufacturer=()=>{
     const explicit=typeof options.getManufacturerName==='function'?options.getManufacturerName():options.manufacturerName;
@@ -32988,7 +33037,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     const tableCount=boxes().filter(x=>x.checked).length;
     const subjectCount=subjectButtons().filter(x=>x.getAttribute('aria-pressed')==='true').length+(modal.querySelector('[data-topic-subject-manufacturer]')?.getAttribute('aria-pressed')==='true'?1:0);
     modal.querySelector('#mailTopicColsCount').textContent=en?`${tableCount} table columns · ${subjectCount} subject fields`:`${tableCount} tablo sütunu · ${subjectCount} başlık alanı`;
-    refreshSubjectPreview();
+    redrawSubjectFields();filterEmailFields();refreshSubjectPreview();
   };
   boxes().forEach(x=>x.addEventListener('change',refresh));
   modal.querySelector('#mailTopicEditSubjectTitle')?.addEventListener('input',refreshSubjectPreview);
