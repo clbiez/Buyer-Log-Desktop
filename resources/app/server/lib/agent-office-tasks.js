@@ -10,7 +10,7 @@ function executorAlive(step,docs){const beat=docs.find(d=>d.id==='executor-'+ste
 
 function attachTasks(service,deps) {
   const {store}=service,{toolRegistry:registry,runtime,userAccess:access}=deps;
-  const inFlight=new Map();let timer;
+  const inFlight=new Map(),ticks=new Map();let timer;
   const inverseRunning=job=>job.steps?.some(step=>step.rollbackStatus==='running');
   const assertTaskAvailable=job=>{if(inverseRunning(job))throw error('OFFICE_TASK_RECONCILE',409);};
   const authority=profile=>{const current=access.profileById(profile.id);if(!current||current.enabled===false)throw error('OFFICE_USER_DISABLED',403);return current;};
@@ -73,8 +73,8 @@ function attachTasks(service,deps) {
     const {profile:current,agent,tool}=await stepAuthority(profile,step),args=await resolvedArgs(profile,job,step);
     const originalAuthority=actorHash(current),preview=await registry.execute(tool.id,args,{ownerId:profile.id,profile:current,dryRun:true,input:{officeAgentId:step.agentId,officeAgentRevision:agent.revision}});
     const latest=await stepAuthority(profile,step);if(latest.agent.revision!==agent.revision||actorHash(latest.profile)!==originalAuthority)throw error('OFFICE_PREVIEW_CHANGED',409);
-    job.steps[index]={...step,argsResolved:args,preview,agentRevision:agent.revision,authorizationFingerprint:actorHash(latest.profile),status:tool.approval?'waiting_approval':'ready'};
-    return store.save(profile.id,'job',{...job,status:tool.approval?'waiting_approval':'queued'},{expectedRevision:job.revision});}
+    job.steps[index]={...step,argsResolved:args,preview,agentRevision:agent.revision,authorizationFingerprint:actorHash(latest.profile),status:tool.approval?'waiting_approval':'ready',prepareFailures:0,errorCode:''};
+    return store.save(profile.id,'job',{...job,status:tool.approval?'waiting_approval':'queued',errorCode:'',nextPrepareAt:null},{expectedRevision:job.revision});}
   function executionArgs(step){return {...step.argsResolved,...(registry.get(step.toolId)?.approval&&step.preview.fingerprint?{fingerprint:step.preview.fingerprint}:{})};}
   function graph(job,step){const nodes=[{id:'start',type:'trigger.manual',config:{}},{id:'effect',type:'tool.call',config:{toolId:step.toolId,args:executionArgs(step)}},{id:'verify',type:'verify.result',config:{mode:'equals',path:'verified',value:true}},{id:'result',type:'output.result',config:{}}];return{id:'task_'+job.id+'_'+step.id,ownerId:job.ownerId,name:job.task,nodes,edges:nodes.slice(1).map((n,i)=>({id:'e'+i,from:nodes[i].id,to:n.id,channel:'success'}))};}
   async function executeOnce(profile,key,raw={}){profile=authority(profile);let job=await store.get(profile.id,'job',key);assertTaskAvailable(job);if(TERMINAL.has(job.status)){await nativeReceiptPublication(profile,job);return job;}
@@ -190,8 +190,37 @@ function attachTasks(service,deps) {
   async function schedule(profile,raw){profile=authority(profile);const tools=await catalog(profile,raw.agentId),tool=tools.find(t=>t.id===raw.toolId);if(!tool||tool.risk!=='read'||raw.confirmed!==true)throw error('OFFICE_SCHEDULE_SCOPE',403);
     validate(tool.inputSchema,raw.args||{});const due=Date.parse(raw.nextRunAt),minutes=Number(raw.intervalMinutes);if(!Number.isFinite(due)||!Number.isInteger(minutes)||minutes<15||minutes>525600)throw error('OFFICE_TASK_INVALID');
     try{new Intl.DateTimeFormat('en',{timeZone:raw.timeZone}).format();}catch(_){throw error('OFFICE_TIMEZONE_INVALID');}
-    const agent=await store.get(profile.id,'profile',raw.agentId);return store.save(profile.id,'metadata',{id:'schedule-'+id(),type:'capability-schedule',...service.runtimeContext(profile.id),agentId:agent.id,agentRevision:agent.revision,toolId:tool.id,args:raw.args||{},nextRunAt:new Date(due).toISOString(),intervalMinutes:minutes,timeZone:raw.timeZone,missedRunPolicy:raw.missedRunPolicy==='skip'?'skip':'run-once',enabled:true,authorizationFingerprint:actorHash(profile),hostRequirement:'Buyer Log backend must be running'});}
-  async function tick(profile){profile=authority(profile);const docs=await store.records(profile.id),device=store.db(profile.id).getDeviceId();
+    const agent=requireEnabledAgent(await store.get(profile.id,'profile',raw.agentId)),saved={id:'schedule-'+id(),type:'capability-schedule',...service.runtimeContext(profile.id),agentId:agent.id,agentRevision:agent.revision,toolId:tool.id,args:raw.args||{},nextRunAt:new Date(due).toISOString(),intervalMinutes:minutes,timeZone:raw.timeZone,missedRunPolicy:raw.missedRunPolicy==='skip'?'skip':'run-once',enabled:true,authorizationFingerprint:actorHash(profile),hostRequirement:'Buyer Log backend must be running'};return store.save(profile.id,'metadata',saved,{assertAuthority:scheduleGuard(profile,saved)});}
+  const transientPreview=code=>['OFFICE_SOURCE_UNAVAILABLE','SHARED_WRITE_BUSY','OFFICE_WORKER_UNAVAILABLE'].includes(code);
+  const publicFailure=(err,fallback)=>/^(OFFICE_[A-Z_]+|AI_AUTOMATION_[A-Z_]+|OAB_[A-Z_]+|SHARED_WRITE_BUSY)$/.test(err?.code||'')?err.code:fallback;
+  function scheduleGuard(profile,saved,{active=false}={}){return state=>{
+    if(active){const current=state.records['metadata:'+saved.id]?.doc;if(!current?.enabled||current.revision!==saved.revision)throw error('OFFICE_REVISION_CONFLICT',409);}
+    const agent=requireEnabledAgent(state.records['profile:'+saved.agentId]?.doc),current=authority(profile),tool=registry.get(saved.toolId);
+    if(actorHash(current)!==saved.authorizationFingerprint||agent.revision!==saved.agentRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
+    if(tool?.risk!=='read'||tool.executionScope!=='office-durable-job'||!allowed(tool,current,access)||!agentHas(agent,tool))throw error('OFFICE_SCHEDULE_SCOPE',403);
+  };}
+  async function backgroundFailure(profile,kind,snapshot,err){
+    if(err.code==='OFFICE_REVISION_CONFLICT')return;
+    const latest=await store.get(profile.id,kind,snapshot.id);
+    if(latest.revision!==snapshot.revision)return;
+    const code=publicFailure(err,kind==='job'?'OFFICE_TASK_FAILED':'OFFICE_SCHEDULE_FAILED'),at=new Date().toISOString();
+    let update;
+    if(kind==='job'){
+      if(latest.status!=='queued')return;
+      const index=latest.steps.findIndex(step=>step.status!=='completed'),step=latest.steps[index];
+      if(!step||!['queued','ready'].includes(step.status))return;
+      const failures=(step.prepareFailures||0)+1,retry=registry.get(step.toolId)?.risk==='read'&&transientPreview(code)&&failures<3;
+      latest.steps[index]={...step,status:retry?'queued':'failed',prepareFailures:failures,errorCode:code,...(!retry?{finishedAt:at}:{})};
+      update={...latest,status:retry?'queued':'failed',errorCode:code,nextPrepareAt:retry?new Date(Date.now()+30000*2**(failures-1)).toISOString():null,...(!retry?{finishedAt:at}:{})};
+    }else{
+      if(!latest.enabled)return;
+      const failures=(latest.backgroundFailures||0)+1,retry=transientPreview(code)&&failures<3;
+      update={...latest,enabled:retry,errorCode:code,backgroundFailures:failures,nextAttemptAt:retry?new Date(Date.now()+30000*2**(failures-1)).toISOString():null,...(!retry?{pausedAt:at}:{})};
+    }
+    try{await store.save(profile.id,kind,update,{expectedRevision:latest.revision});access.appendAudit(authority(profile),kind==='job'?'AGENT_TASK_BACKGROUND_FAILURE':'AGENT_SCHEDULE_BACKGROUND_FAILURE',latest.id,{code,retry:kind==='job'?update.status==='queued':update.enabled});}
+    catch(failure){if(failure.code!=='OFFICE_REVISION_CONFLICT')throw failure;}
+  }
+  async function tickOnce(profile){profile=authority(profile);const docs=await store.records(profile.id),device=store.db(profile.id).getDeviceId();
     if(docs.some(d=>d.type==='capability-task'&&!TERMINAL.has(d.status)||d.type==='capability-schedule'&&d.enabled))await heartbeat(profile.id);
     for(let job of docs.filter(d=>d.kind==='job'&&d.type==='capability-task'&&!TERMINAL.has(d.status)&&d.runtimeDeviceId===device)){
       if(inFlight.has(profile.id+':'+job.id)||inverseRunning(job))continue;
@@ -204,18 +233,29 @@ function attachTasks(service,deps) {
         else if(registry.get(running.toolId)?.risk==='read'){running.status='queued';job=await store.save(profile.id,'job',{...job,status:'queued'},{expectedRevision:job.revision});}
         else{running.status='interrupted';await store.save(profile.id,'job',{...job,status:'interrupted',errorCode:'OFFICE_TASK_RECONCILE'},{expectedRevision:job.revision});continue;}}
       if(job.status==='waiting_operation')job=await poll(profile,job.id);
-      if(job.status==='queued'){try{job=await prepare(profile,job.id);if(job.status==='queued')await execute(profile,job.id);}catch(err){deps.onBackgroundError?.(err.code||'OFFICE_TASK_FAILED');}}}
-    for(const saved of docs.filter(d=>d.kind==='metadata'&&d.type==='capability-schedule'&&d.enabled&&d.runtimeDeviceId===device&&Date.parse(d.nextRunAt)<=Date.now())){
-      try{const agent=await store.get(profile.id,'profile',saved.agentId);if(saved.authorizationFingerprint!==actorHash(profile)||saved.agentRevision!==agent.revision)throw error('OFFICE_PREVIEW_CHANGED',409);
+      if(job.status==='queued'&&(!job.nextPrepareAt||Date.parse(job.nextPrepareAt)<=Date.now())){try{job=await prepare(profile,job.id);if(job.status==='queued')await execute(profile,job.id);}catch(err){await backgroundFailure(profile,'job',job,err);deps.onBackgroundError?.(publicFailure(err,'OFFICE_TASK_FAILED'));}}}
+    for(const saved of docs.filter(d=>d.kind==='metadata'&&d.type==='capability-schedule'&&d.enabled&&d.runtimeDeviceId===device&&Date.parse(d.nextRunAt)<=Date.now()&&(!d.nextAttemptAt||Date.parse(d.nextAttemptAt)<=Date.now()))){
+      try{await store.db(profile.id).privateRecordTransaction(state=>{scheduleGuard(profile,saved,{active:true})(state);return {result:true};});
         const missed=Date.now()-Date.parse(saved.nextRunAt)>saved.intervalMinutes*60000;
         // The occurrence ID is deterministic and WAL-immutable: a crash between
         // job creation and advancing the schedule returns that same job.
         const occurrence=hash(saved.id+':'+saved.nextRunAt);
-        if(!missed||saved.missedRunPolicy==='run-once')await create(profile,{agentId:saved.agentId,task:saved.toolId,steps:[{toolId:saved.toolId,args:saved.args}]},{id:occurrence});
-        await store.save(profile.id,'metadata',{...saved,lastOccurrence:occurrence,lastDueAt:saved.nextRunAt,lastOccurrenceStatus:missed&&saved.missedRunPolicy==='skip'?'skipped':'queued',nextRunAt:new Date(Date.now()+saved.intervalMinutes*60000).toISOString()},{expectedRevision:saved.revision});
-      }catch(err){deps.onBackgroundError?.(err.code||'OFFICE_SCHEDULE_FAILED');}}
+        if(!missed||saved.missedRunPolicy==='run-once')await create(profile,{agentId:saved.agentId,task:saved.toolId,steps:[{toolId:saved.toolId,args:saved.args}]},{id:occurrence,assertAuthority:scheduleGuard(profile,saved,{active:true})});
+        await store.save(profile.id,'metadata',{...saved,lastOccurrence:occurrence,lastDueAt:saved.nextRunAt,lastOccurrenceStatus:missed&&saved.missedRunPolicy==='skip'?'skipped':'queued',backgroundFailures:0,errorCode:'',nextAttemptAt:null,nextRunAt:new Date(Date.now()+saved.intervalMinutes*60000).toISOString()},{expectedRevision:saved.revision,assertAuthority:scheduleGuard(profile,saved,{active:true})});
+      }catch(err){await backgroundFailure(profile,'metadata',saved,err);deps.onBackgroundError?.(publicFailure(err,'OFFICE_SCHEDULE_FAILED'));}}
   }
-  async function scheduleUpdate(profile,key,raw){profile=authority(profile);const previous=await store.get(profile.id,'metadata',key);if(previous.type!=='capability-schedule')throw error('OFFICE_NOT_FOUND',404);if(!Number.isSafeInteger(raw.revision))throw error('OFFICE_REVISION_CONFLICT',409);if(raw.enabled===true){const tools=await catalog(profile,previous.agentId);if(!tools.some(t=>t.id===previous.toolId&&t.risk==='read')||previous.authorizationFingerprint!==actorHash(profile))throw error('OFFICE_PREVIEW_CHANGED',409);}return store.save(profile.id,'metadata',{...previous,enabled:raw.enabled===true},{expectedRevision:raw.revision});}
+  async function tick(profile){const key=profile.id;if(ticks.has(key))return ticks.get(key);const work=tickOnce(profile).finally(()=>ticks.delete(key));ticks.set(key,work);return work;}
+  async function scheduleUpdate(profile,key,raw){
+    profile=authority(profile);const previous=await store.get(profile.id,'metadata',key);
+    if(previous.type!=='capability-schedule')throw error('OFFICE_NOT_FOUND',404);
+    if(!Number.isSafeInteger(raw.revision))throw error('OFFICE_REVISION_CONFLICT',409);
+    if(raw.enabled!==true)return store.save(profile.id,'metadata',{...previous,enabled:false},{expectedRevision:raw.revision});
+    if(raw.confirmed!==true)throw error('OFFICE_APPROVAL_REQUIRED',409);
+    const tools=await catalog(profile,previous.agentId);if(!tools.some(t=>t.id===previous.toolId&&t.risk==='read'))throw error('OFFICE_SCHEDULE_SCOPE',403);
+    const agent=requireEnabledAgent(await store.get(profile.id,'profile',previous.agentId)),renewed={...previous,enabled:true,agentRevision:agent.revision,authorizationFingerprint:actorHash(profile),errorCode:'',backgroundFailures:0,nextAttemptAt:null,pausedAt:null};
+    validate(registry.get(previous.toolId).inputSchema,previous.args);
+    return store.save(profile.id,'metadata',renewed,{expectedRevision:raw.revision,assertAuthority:scheduleGuard(profile,renewed)});
+  }
   function start(){if(!timer){timer=setInterval(()=>{for(const owner of deps.taskOwners?.()||[]){const profile=access.profileById(owner);if(profile?.enabled!==false&&profile)void tick(profile).catch(err=>deps.onBackgroundError?.(err.code));}},30000);timer.unref?.();}}
   const previousStop=service.stop;service.stop=()=>{if(timer)clearInterval(timer);timer=null;previousStop();};start();
   async function draftAccess(profile,key,filename){profile=authority(profile);const job=await store.get(profile.id,'job',key),step=job.steps?.find(item=>['cp.weekly.draft','quality.fail.drafts','automation.recipe.execute'].includes(item.toolId)&&['completed','partial'].includes(item.status)&&item.result?.verified===true&&item.result.emails?.some(mail=>mail.filename===filename));if(!step)throw error('OFFICE_TOOL_FORBIDDEN',403);await receiptPublication(profile,job,step);return {job,step};}

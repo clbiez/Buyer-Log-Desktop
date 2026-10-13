@@ -5324,6 +5324,35 @@
           "en": "Actual demo source · newer shared rejection retained"
         }
       }
+    },
+    {
+      "id": "agent-task-background-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Başarısız görevler ve eski zamanlamalar sonsuza dek denenmez",
+        "en": "Failed tasks and stale schedules no longer retry indefinitely"
+      },
+      "description": {
+        "tr": "Kalıcı önizleme hatası kaydedilir; geçici okuma hatası gecikmeli ve en fazla üç kez denenir. Yetki veya agent değişirse zamanlama duraklatılır ve güncel kapsamla yeniden onay bekler. Eşzamanlı duraklatma yeni görev oluşmasını engeller.",
+        "en": "Permanent preview failures are recorded; transient read failures retry with a delay up to three times. Authority or agent changes pause schedules and require renewed approval under current scope. Concurrent pauses prevent new task creation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-task-background-recovery.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde okuma zamanlamasının yeniden onay ekranı",
+          "en": "Read schedule reapproval in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Gerçek araç, parametre, saat dilimi ve kaçırılan çalışma politikası",
+          "en": "Actual tool, parameters, time zone and missed-run policy"
+        }
+      }
     }
   ]
 }
