@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
+const {guardedDocumentMutation,HELD_DOCUMENT_LEASE}=require('./guarded-document-mutation');
 const { withFileLeaseSync } = require('./shared-file-transaction');
 const { readJsonWithValidatedBackup } = require('./safe-json-read');
 
@@ -109,7 +110,7 @@ function loadStore() {
   });
 }
 function saveStore(store,options={}) {
-  return withFileLeaseSync(FILE,()=>{
+  const write=()=>{
   fs.mkdirSync(path.dirname(FILE), { recursive: true });
   const current = loadStore();options.assertAuthority?.();if(options.expectedRevision!=null&&current._revision!==options.expectedRevision)throw Object.assign(new Error('Quotation preview changed.'),{code:'REVISION_CONFLICT',statusCode:409});
   const expected=Math.max(0,Number(store&&store._revision)||0);
@@ -122,11 +123,11 @@ function saveStore(store,options={}) {
     _revision: current._revision + 1,
     _updatedAt: now(),
   };
-  if (documents.writesLegacy) atomicWriteJson(FILE, saved);
-  documents.mirror(DOCUMENT_ID, saved);
+  if (documents.writesLegacy){if(options.legacyWrites)options.legacyWrites.push(()=>{if(!documents.attached)options.assertAuthority?.();atomicWriteJson(FILE,saved);});else atomicWriteJson(FILE,saved);}
+  const mirrored=documents.mirror(DOCUMENT_ID,saved,{guardSource:!!options.mirrorResults,assertAuthority:options.assertAuthority});options.mirrorResults?.push(mirrored);
   return saved;
   };return options.withDependencies?options.withDependencies(persist):persist();
-  });
+  };return options[HELD_DOCUMENT_LEASE]?write():withFileLeaseSync(FILE,write);
 }
 
 function retentionTimestamp(request) {
@@ -391,7 +392,7 @@ function approveLine(profile,id,lineId,approved,options={}){
 }
 function restoreRequests(profile,receipt,options={}){const store=loadStore();for(const [id,prior]of Object.entries(receipt.before)){const current=findRequest(store,id);if(current&&!canEdit(profile,current)||prior&&!canEdit(profile,prior))throw Object.assign(new Error('Quotation denied.'),{code:'QUOTATION_EDIT_DENIED',statusCode:403});const index=store.requests.findIndex(item=>item.id===id);if(prior){if(index>=0)store.requests[index]=prior;else store.requests.push(prior);}else if(index>=0)store.requests.splice(index,1);}const saved=saveStore(store,{...options,expectedRevision:receipt.expectedRevision});return {verified:true,revision:saved._revision};}
 module.exports = {
-  FILE,attachDeltaStore,approveLine,restoreRequests,
+  FILE,attachDeltaStore,approveLine,restoreRequests,mutateAgent:work=>guardedDocumentMutation(documents,FILE,work),
   loadStore, requestsForUser, createRequest, updateRequest, setStatus, setEditors, deleteRequest, hideRequest, restoreRequest, mergeRequests, importLegacy, cleanupExpired,
   canEdit, canManageAccess, normalizeRequest, isRetentionExpired, RETENTION_YEARS,
 };

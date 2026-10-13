@@ -4882,6 +4882,39 @@
           "en": "Native TL/USD financial values and set management"
         }
       }
+    },
+    {
+      "id": "agent-quotation-native-contract-inverse",
+      "type": "improvement",
+      "module": {
+        "tr": "Quotations / Agent Ofisi",
+        "en": "Quotations / Agent Office"
+      },
+      "title": {
+        "tr": "Quotation sonuçları güvenli native kayıt ve geri almayla doğrulanır",
+        "en": "Quotation results validate with guarded native writes and undo"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Altı quotation aracı gerçek satır sayıları, fiyat/onay alanları ve geri alma makbuzlarıyla doğrulanır. Model görseli agent çıktısına taşınmaz; tam önceki native kayıt kullanıcı/görev/adım bağlı yerel arşivde korunur. Kaynak ve güncel yetki native Delta journal yazımında tekrar kontrol edilir; başka kullanıcının düzenlemesi ezilmez. Koleksiyon aktarımı mevcut native kaydetme ve fiyat seçimi servislerini kullanır.",
+        "en": "Six quotation tools validate actual line counts, price/approval fields and undo receipts. Model image bytes stay out of agent output; complete prior native records are retained in owner/task/step bound local archives. Current authority and source state are rechecked at the native Delta journal commit, preserving peer edits. Collection application reuses native save and price selection services."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-quotation-native-contract-inverse.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde demo quotation onayından sonra doğrulanmış native satırlar",
+          "en": "Verified native lines after demo quotation approval in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Native fiyat/onay verileri, tam sayım ve güvenli geri alma",
+          "en": "Native price/approval data, full counts and guarded undo"
+        }
+      }
     }
   ]
 }
