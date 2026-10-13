@@ -3892,6 +3892,39 @@
           "en": "Actual file receipts, persistent pending state and explicit fallback acceptance"
         }
       }
+    },
+    {
+      "id": "agent-resource-profile-authority",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi · Kurallar ve Kur",
+        "en": "Data Management · Rules and FX"
+      },
+      "title": {
+        "tr": "Kural ve kur görevleri güncel agent profiliyle yazılır",
+        "en": "Rule and FX tasks commit under the current agent profile"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler / Transit, Royalty ve Kur",
+        "en": "Agent Office › Tasks / Transit, Royalty and FX"
+      },
+      "body": {
+        "tr": "Transit, royalty ve kur değişiklikleri ile geri alma mevcut profil WAL kilidini kullanır. Yazım girişinde duraklatılan agentın eski onayı uygulanmaz. Gerçek journal sınırında güncel IAM ve peer kaydı korunur; işlemin kendi kuyruğa alınmış revizyonu başka kullanıcının değişikliği sanılmaz. Etki verisi yalnız kullanıcının ve agentın ortak yetkili modüllerinden alınır; uygun kaynak yoksa açıkça kullanılamaz olarak bildirilir.",
+        "en": "Transit, royalty and FX changes and undo use the existing profile WAL lease. Old approvals cannot apply after a profile is paused at mutation entry. Current IAM and peer records remain protected at the actual journal boundary; an operation’s own queued revision is no longer mistaken for a peer edit. Impact data comes only from modules authorized for both user and agent; unavailable scope is explicitly reported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-resource-profile-authority.png",
+        "alt": {
+          "tr": "Agent kural görevinde güncel yetki ve işlem sonucu",
+          "en": "Current authority and result in an agent rule task"
+        },
+        "caption": {
+          "tr": "Profil kilidi, güvenli journal kaydı ve revizyon bağlı geri alma",
+          "en": "Profile lease, guarded journal commit and revision-bound undo"
+        }
+      }
     }
   ]
 }

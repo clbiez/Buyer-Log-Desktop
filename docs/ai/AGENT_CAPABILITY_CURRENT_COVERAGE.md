@@ -36,8 +36,8 @@ Output-contract audit: 95 strict top-level output objects and 64 generic/open ou
 - Personal presets: Focus/Extended and cross-user preset sharing remain outside the delivered saved view/filter lifecycle. Applying saved profiles to an already open renderer is explicitly not claimed.
 - Manufacturer directory: card/e-mail record CRUD is delivered; heading management, exact ASAS linking and native import workflows still need adapters.
 - Native landed multipliers, supported larger exports and remaining module functions must be assessed against the initial route inventory, not inferred from a broad module capability flag.
-- Earlier native multi-document adapters still require a final live-IAM/profile/journal and partial-effect audit. The directory gap discovered during this continuation is fixed and covered by actual durable-reader regression.
+- Earlier native multi-document adapters still require a final live-IAM/profile/journal and partial-effect audit. Directory, Endeksmatik and Transit/Royalty/FX boundary gaps found during this continuation are fixed and covered by actual durable-reader regressions.
 
 ## Delivery status
 
-Expanded full regression has not yet run. Actual HTTP/browser/PDF and corporate acceptance are unfinished or environment-blocked. Thirty-nine real post-change release-note captures are pending, including the new task pause UI. GitHub write operations require approval unavailable under this environment policy. No new PR beyond the earlier drafts #498–#500, merge, TEST or STABLE release is claimed. The user cancelled partial TEST delivery; final STABLE must promote the same signed bytes of a fully verified package.
+Expanded full regression has not yet run. Actual HTTP/browser/PDF and corporate acceptance are unfinished or environment-blocked. Forty real post-change release-note captures are pending, including the new task pause UI. GitHub write operations require approval unavailable under this environment policy. No new PR beyond the earlier drafts #498–#500, merge, TEST or STABLE release is claimed. The user cancelled partial TEST delivery; final STABLE must promote the same signed bytes of a fully verified package.
