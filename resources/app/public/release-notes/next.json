@@ -4783,6 +4783,39 @@
           "en": "A large candidate set is summarized while complete native records and safe undo are preserved"
         }
       }
+    },
+    {
+      "id": "agent-fabric-typed-results",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi / CP",
+        "en": "Agent Office / CP"
+      },
+      "title": {
+        "tr": "Agent kumaş kartlarını tam alanlarıyla doğrular",
+        "en": "Agents validate complete native fabric card fields"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler › Checklist / haftalık mail",
+        "en": "Agent Office › Tasks › Checklist / weekly email"
+      },
+      "body": {
+        "tr": "Kumaş kartlarını okuma, oluşturma/revize etme ve silme araçlarında tam kayıt alanları doğrulanır. Türkçe/İngilizce özet, native kumaş ayrıntıları, ham PLM metni ve kayıt bilgileri korunur. Gerçekten değişen kayıtlar tam önceki hâline geri alınabilir; yalnız mevcut kartları atlayan işlem değişiklik ya da geri alma kaydı oluşturmuş gibi gösterilmez. Mevcut koleksiyon düzenleme yetkisi, native dosya kilidi ve revizyon kontrolleri kullanılır.",
+        "en": "Fabric card read, create/revise and delete tools validate complete native record fields. Turkish/English summaries, fabric details, original PLM text and record metadata are preserved. Actual changes can restore complete prior records; work that only skips existing cards does not invent a change or undo receipt. Existing collection editor grants, native file locks and revision checks are used."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-fabric-typed-results.png",
+        "alt": {
+          "tr": "Demo kumaş kartlarıyla gerçek Agent Ofisinde doğrulanmış kayıt ve geri alma sonucu",
+          "en": "Verified record and undo results for demo fabric cards in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Kumaş kartı ayrıntıları ve önceki tam kayıt korunur",
+          "en": "Fabric details and the complete prior native record are preserved"
+        }
+      }
     }
   ]
 }
