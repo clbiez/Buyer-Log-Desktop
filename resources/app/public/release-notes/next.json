@@ -5337,6 +5337,35 @@
           "en": "Actual local EML import · two reports · complete inverse"
         }
       }
+    },
+    {
+      "id": "agent-terminal-task-authority",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Görev sonuçları güncel yetkiyle yeniden doğrulanır",
+        "en": "Task results are rechecked against current authority"
+      },
+      "body": {
+        "tr": "Tamamlanmış ve kısmi görevlerin işlem uçlarından yeniden alınan sonuçları güncel kullanıcı kapsamı, agent profili ve görev revizyonuyla doğrulanır. Yetki değiştiğinde eski açık işlem penceresi yeni önizleme ister; aynı işlem tekrar uygulanmaz.",
+        "en": "Results republished from completed and partial task operation endpoints recheck current user scope, agent profiles and task revision. A stale open task dialog requests a fresh preview after authority changes without replaying the effect."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-terminal-task-authority.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log görev penceresinde kapsam değişince yeni önizleme gerekliliği",
+          "en": "Fresh preview required after scope change in the actual Buyer Log task dialog"
+        },
+        "caption": {
+          "tr": "Gerçek demo kullanıcı · tamamlanmış okuma · eski pencerede güncel yetki kontrolü",
+          "en": "Actual demo user · completed read · current authority check in a stale dialog"
+        }
+      }
     }
   ]
 }

@@ -299,7 +299,7 @@
     const previous=document.activeElement,close=()=>{root.BLLayerSystem?.closeDialog?.(overlay);overlay.remove();previous?.focus?.();};
     overlay.querySelectorAll('[data-ao-action="modal-close"]').forEach(el=>el.addEventListener('click',close));
     overlay.addEventListener('keydown',event=>{if(event.key==='Escape')close();if(event.key==='Tab'){const nodes=[...overlay.querySelectorAll('button,input,select,textarea,a[href]')].filter(el=>!el.disabled);const first=nodes[0],last=nodes[nodes.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}}});
-    overlay.querySelector('[data-ao-action="modal-save"]')?.addEventListener('click',async event=>{event.currentTarget.disabled=true;try{await onSave(overlay);close();await refresh();render();}catch(err){overlay.querySelector('[data-ao-modal-error]').textContent=errorText(err);event.currentTarget.disabled=false;}});
+    overlay.querySelector('[data-ao-action="modal-save"]')?.addEventListener('click',async event=>{const saveButton=event.currentTarget;saveButton.disabled=true;try{await onSave(overlay);close();await refresh();render();}catch(err){overlay.querySelector('[data-ao-modal-error]').textContent=errorText(err);saveButton.disabled=false;}});
     document.body.append(overlay);root.BLLayerSystem?.openDialog?.(overlay,{onClose:()=>overlay.remove()});overlay.querySelector('input,textarea,select,button')?.focus();return overlay;
   }
   const value=(el,key)=>el.querySelector(`[name="${key}"]`)?.value || '';
