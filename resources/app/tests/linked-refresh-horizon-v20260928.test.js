@@ -121,7 +121,7 @@ test('yenileme hedefleri: bağlı grup birlikte, gruptan ayrı CP tek başına',
 });
 
 test('sunucu: /api/refresh, performRefresh ve loadFromModels (LFL yolu dahil) kayıttaki bağlı grupla genişletir', () => {
-  assert.match(SERVER, /const \{ withRefreshTargets, linkedTargetsOf \} = require\('\.\/lib\/model-scopes'\);/);
+  assert.match(SERVER, /const \{ withRefreshTargets, linkedTargetsOf, LINKED_TARGETS \} = require\('\.\/lib\/model-scopes'\);/);
   const config = SERVER.slice(SERVER.indexOf('function configuredRefreshMembers()'), SERVER.indexOf('const cpCoverage'));
   assert.match(config, /linkedTargetsOf\(asasItem\)/);
   assert.match(config, /withRefreshTargets\(targets, configuredRefreshMembers\(\)\)/);
@@ -162,7 +162,8 @@ test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre b
   assert.match(APP, /fetch\('\/api\/refresh-targets',\{cache:'no-store'\}\)/);
   const refreshConfig=APP.slice(APP.indexOf('function linkedRefreshMembers(){'),APP.indexOf('function withLinkedRefreshTargets'));
   assert.doesNotMatch(refreshConfig, /state\.modelScopes|sharedFilter/);
-  const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('async function loadFromServer(force, targets){') + 300);
+  const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('async function loadFromServer(force, targets){') + 1350);
+  assert.match(load, /await syncLinkedRefreshMembers\(\)/);
   assert.match(load, /targets=withLinkedRefreshTargets\(targets\)/);
   // Menü: ayrı sayfa kendi satırı, bağlı grup tek satır, ayrıca "Tümünü yenile".
   const menu = APP.slice(APP.indexOf('function openTopRefreshMenu'), APP.indexOf('// Yenileme sürerken aynı düğmeye tekrar basmak'));
