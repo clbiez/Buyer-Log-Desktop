@@ -33802,7 +33802,8 @@ async function prepareEmailTopicTableContent(rows,columns){
       for(const item of pictureCols){
         const src=prepareEmailImageSource(row,item.column.sourceKind||'collection');if(!src)continue;
         if(!promises.has(src))promises.set(src,prepareEmailInlineAsset(row,item.column,ri));
-        const asset=await promises.get(src);
+        let asset=null;
+        try{asset=await promises.get(src);}catch(_){/* Report failures outside the concurrency pool. */}
         if(!asset){failures.push(String(row?.['Model Name']||row?.modelKod||row?.['PLM ID']||src));continue;}
         assets.set(`${ri}:${item.index}`,asset);
       }
