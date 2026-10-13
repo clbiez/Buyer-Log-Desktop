@@ -4816,6 +4816,39 @@
           "en": "Native rule/impact values and complete prior records are preserved"
         }
       }
+    },
+    {
+      "id": "agent-fx-native-output-inverse",
+      "type": "improvement",
+      "module": {
+        "tr": "Kaynaklar / Agent Ofisi",
+        "en": "Sources / Agent Office"
+      },
+      "title": {
+        "tr": "Kur revizyonları gerçek kaynak ve tam geri almayla doğrulanır",
+        "en": "FX revisions validate with native sources and complete undo"
+      },
+      "path": {
+        "tr": "Agent Ofisi › Görevler",
+        "en": "Agent Office › Tasks"
+      },
+      "body": {
+        "tr": "Kur okuma ve revizyon araçları gerçek aylık değerleri açık sözleşmelerle doğrular. Eski metin/sayısal kur değerleri aynen korunur, yerel kaynak dosya yolu agent çıktısından çıkarılır. Tam önceki kur kaydı kullanıcıya ve göreve bağlı yerel geri alma arşivine yazılmadan iş verisi değiştirilmez. Bekleme sırasında yetki veya kaynak revizyonu değişirse işlem durur.",
+        "en": "FX read and revision tools validate actual monthly values with explicit contracts. Native legacy string/numeric rates are preserved; local source file paths are excluded from agent results. Business data changes only after the complete prior FX record is archived for owner and task bound undo. Authority or source revision changes during waits stop the effect."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-fx-native-output-inverse.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisinde demo aylık kur revizyonu ve doğrulanmış geri alma",
+          "en": "Demo monthly FX revision and verified undo in the actual Agent Office"
+        },
+        "caption": {
+          "tr": "Mevcut native kur servisi ve tam önceki kayıt korunur",
+          "en": "Existing native FX service and complete prior record are preserved"
+        }
+      }
     }
   ]
 }
