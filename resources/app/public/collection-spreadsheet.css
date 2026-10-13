@@ -295,3 +295,20 @@
 .kolFabricBatchRaw{max-width:240px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:720px){.kolFabricBatchRaw{display:none}}
 .kolFabricParts{margin:0 0 4px}
+
+/* Fabric Card: structured facets inside the existing Fabric column filter.
+   Uses Buyer Log's shared theme tokens in both light and dark modes. */
+.kolColFilterPanel:has(.kolFabricFacetPanel){width:min(460px,calc(100vw - 16px));max-height:min(82vh,760px);overflow:auto;overscroll-behavior:contain}
+.kolFabricFacetPanel{display:grid;gap:6px;margin:9px 0;padding:10px 0;border-block:1px solid var(--line);color:var(--ink)}
+.kolFabricFacetPanel>strong{font-size:12px;font-weight:700;padding:0 3px}
+.kolFabricFacetField{border:1px solid var(--line);border-radius:7px;background:var(--card2,var(--bg));min-width:0}
+.kolFabricFacetField>summary{cursor:pointer;padding:8px 10px;font-weight:600;font-size:12px;list-style-position:inside}
+.kolFabricFacetField[open]>summary{border-bottom:1px solid var(--line)}
+.kolFabricFacetSearch{box-sizing:border-box;margin:7px 7px 3px;width:calc(100% - 14px);min-height:30px;border:1px solid var(--line);border-radius:5px;padding:4px 8px;color:var(--ink);background:var(--card,var(--bg))}
+.kolFabricFacetOptions{max-height:150px;overflow:auto;padding:5px 7px 7px;display:grid;gap:2px}
+.kolFabricFacetOption{display:flex;align-items:flex-start;gap:8px;padding:4px 5px;border-radius:5px;font-size:12px;line-height:1.45;cursor:pointer;overflow-wrap:anywhere}
+.kolFabricFacetOption:hover{background:var(--acc-bg,var(--card2))}
+.kolFabricFacetOption[hidden]{display:none}
+.kolFabricFacetOption input{margin-top:2px;accent-color:var(--acc)}
+.kolFabricFacetOption span{min-width:0;flex:1}
+.kolFabricSummaries input,.kolFabricDetails input{min-width:0;width:100%;box-sizing:border-box}
