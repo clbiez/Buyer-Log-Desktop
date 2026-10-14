@@ -97,6 +97,64 @@
           "en": "Verified TR and overseas default factors with the native inverse action in an actual Agent Office task."
         }
       }
+    },
+    {
+      "id": "agent-source-rename",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Kaynak bağlantılarını onaylı görevle yeniden adlandır",
+        "en": "Rename source connections through approved tasks"
+      },
+      "body": {
+        "tr": "Agent mevcut kaynak türlerini keşfedebilir ve bağlantı adını önizleme ile değiştirebilir. Bağlantı, sorgu ve kimlik bilgileri korunur. Güncel yetki, native revizyon, kalıcı işlem makbuzu ve tam geri alma denetlenir.",
+        "en": "Agents can discover existing source types and rename a connection with a preview. Connection, query and credential configuration is preserved. Current authority, native revision, durable receipts and exact inverse are checked."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-lifecycle-native.png",
+        "alt": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde doğrulanmış kaynak adlandırma işlemi ve geri alma seçeneği.",
+          "en": "Verified source rename and inverse action in an actual anonymous Agent Office task."
+        },
+        "caption": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde doğrulanmış kaynak adlandırma işlemi ve geri alma seçeneği.",
+          "en": "Verified source rename and inverse action in an actual anonymous Agent Office task."
+        }
+      }
+    },
+    {
+      "id": "agent-source-refresh-toggle",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Kaynak yenilemesini güvenli biçimde aç veya kapat",
+        "en": "Enable or disable source refresh safely"
+      },
+      "body": {
+        "tr": "Agent kaynak yenilemesini kullanıcı onayıyla açıp kapatabilir. Aynı türde tek aktif kaynak kuralı native planlayıcıyla korunur. Geri alma sırasında başka bir kaynak etkinleştirilmişse işlem onu değiştirmeden reddedilir.",
+        "en": "Agents can enable or disable source refresh with user approval. The native planner preserves the single active source per type rule. If another source was activated before inverse, it refuses the inverse without changing that source."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-refresh-native.png",
+        "alt": {
+          "tr": "Gerçek anonim görevde doğrulanmış kaynak yenileme değişikliği ve native geri alma seçeneği.",
+          "en": "Verified source refresh change and native inverse action in an actual anonymous task."
+        },
+        "caption": {
+          "tr": "Gerçek anonim görevde doğrulanmış kaynak yenileme değişikliği ve native geri alma seçeneği.",
+          "en": "Verified source refresh change and native inverse action in an actual anonymous task."
+        }
+      }
     }
   ]
 }
