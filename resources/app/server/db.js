@@ -768,6 +768,10 @@ function patchOrderOverride(orderCode, patch, expectedRevision = null, expectedS
   const touchesSuppFob=Object.prototype.hasOwnProperty.call(patch||{},'suppFob');
   const currentSuppFob=Number(ov._revisions.suppFob)||0, wantedSuppFob=expectedNumber(expectedSuppFobRevision);
   if(touchesSuppFob && wantedSuppFob!=null && wantedSuppFob!==currentSuppFob)throw new RevisionConflictError('Sipariş Supp. FOB düzenlemeleri',wantedSuppFob,currentSuppFob,'suppFob');
+  // Note-column values are only written against the definitions the caller saw;
+  // otherwise a column deleted meanwhile would be skipped silently (partial write).
+  const wantedDefs=expectedNumber(options&&options.expectedNoteColumnDefsRevision),currentDefs=Number(ov._revisions.noteColumnDefs)||0;
+  if(patch&&patch.noteColumns&&wantedDefs!=null&&wantedDefs!==currentDefs)throw new RevisionConflictError('Not sütunları',wantedDefs,currentDefs,'noteColumnDefs');
   applyOrderPatch(ov, orderCode, patch || {}, options);
   ov._revisions.orders = current + 1;
   if(touchesSuppFob)ov._revisions.suppFob=currentSuppFob+1;
@@ -779,10 +783,11 @@ function patchOrderOverride(orderCode, patch, expectedRevision = null, expectedS
 // Receipts use the same override store and CAS as the ordinary editor. Restoring
 // the absent entry (rather than freezing a source value as a new override) also
 // preserves future source updates and original note authorship.
+const ORDER_RECEIPT_MAPS=Object.freeze(['notesmap','submap','licensormap','delmap','datemap','noteColumnValues','shortagemap']);
+const LEGACY_ORDER_RECEIPT_MAPS=Object.freeze(['notesmap','submap','licensormap','delmap','datemap']);
 function snapshotOrderOverride(orderCode,patch){
   const ov=loadOverrides(),key=String(overrideWriteKey(orderCode,patch));
-  const maps=['notesmap','submap','licensormap','delmap','datemap'];
-  return {revision:Number(ov._revisions.orders)||0,patch:{key,maps:Object.fromEntries(maps.map(name=>[name,Object.hasOwn(ov[name]||{},key)?cloneJson(ov[name][key]):null]))}};
+  return {revision:Number(ov._revisions.orders)||0,patch:{key,noteColumnDefsRevision:Number(ov._revisions.noteColumnDefs)||0,maps:Object.fromEntries(ORDER_RECEIPT_MAPS.map(name=>[name,Object.hasOwn(ov[name]||{},key)?cloneJson(ov[name][key]):null]))}};
 }
 function verifyOrderOverridePatch(orderCode,patch,revision){
   const ov=loadOverrides(),key=overrideWriteKey(orderCode,patch);
@@ -791,17 +796,38 @@ function verifyOrderOverridePatch(orderCode,patch,revision){
   for(const [field,map]of Object.entries(expected))if(Object.hasOwn(patch,field)&&String(ov[map]?.[key]??'')!==String(field==='licensor'?patch[field].trim():patch[field]))return false;
   for(const [field,value]of Object.entries(patch.notes||{}))if(!NOTE_AUTHOR_FIELDS.some(spec=>spec.field===field)||String(ov.notesmap?.[key]?.[field]??'')!==value)return false;
   for(const [field,value]of Object.entries(patch.dates||{}))if(!DATE_OVERRIDE_FIELDS[field]||String(ov.datemap?.[key]?.[DATE_OVERRIDE_FIELDS[field]]??'')!==value)return false;
+  const columnIds=new Set((ov.noteColumnDefs||[]).map(def=>def.id));
+  for(const [id,value]of Object.entries(patch.noteColumns||{}))if(!columnIds.has(id)||String(ov.noteColumnValues?.[key]?.[id]??'')!==String(value??''))return false;
+  if(Object.hasOwn(patch,'shortage')){
+    const marked=patch.shortage===true||Boolean(patch.shortage&&typeof patch.shortage==='object'&&patch.shortage.marked!==false),record=ov.shortagemap?.[key];
+    if(marked!==Boolean(record))return false;
+    if(marked&&patch.shortage&&typeof patch.shortage==='object'&&Number.isFinite(Number(patch.shortage.qty))&&Number(record.qty)!==Math.max(0,Number(patch.shortage.qty)))return false;
+  }
   return true;
 }
+/* A receipt restores exactly the maps it captured. Receipts written before
+   note columns and shortage marks were agent-editable carry the five legacy
+   maps and keep working. A newer receipt is refused when the note-column
+   definitions changed in between: restoring a value of a since-deleted column
+   would resurrect data the definition change pruned. */
 function restoreOrderOverrideReceipt(orderCode,receipt,expectedRevision,selector,options){
-  if(receipt?.key!==String(overrideWriteKey(orderCode,selector||{}))||!Number.isSafeInteger(expectedRevision)||Object.keys(receipt.maps||{}).sort().join('|')!==['datemap','delmap','licensormap','notesmap','submap'].join('|'))throw Object.assign(new Error('Invalid order receipt.'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:422});
+  const names=Object.keys(receipt?.maps||{}).sort().join('|');
+  const legacy=names===[...LEGACY_ORDER_RECEIPT_MAPS].sort().join('|'),current=names===[...ORDER_RECEIPT_MAPS].sort().join('|');
+  if(receipt?.key!==String(overrideWriteKey(orderCode,selector||{}))||!Number.isSafeInteger(expectedRevision)||(!legacy&&!current)||(current&&!Number.isSafeInteger(receipt.noteColumnDefsRevision)))throw Object.assign(new Error('Invalid order receipt.'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:422});
   return (()=>{
-    const ov=loadOverrides(),current=Number(ov._revisions.orders)||0;if(current!==expectedRevision)throw new RevisionConflictError('Sipariş düzenlemeleri',expectedRevision,current,'orders');
+    const ov=loadOverrides(),revision=Number(ov._revisions.orders)||0;if(revision!==expectedRevision)throw new RevisionConflictError('Sipariş düzenlemeleri',expectedRevision,revision,'orders');
+    const defsRevision=Number(ov._revisions.noteColumnDefs)||0;
+    if(current&&defsRevision!==receipt.noteColumnDefsRevision)throw new RevisionConflictError('Not sütunları',receipt.noteColumnDefsRevision,defsRevision,'noteColumnDefs');
     for(const [name,value]of Object.entries(receipt.maps)){ov[name]=ov[name]||{};if(value===null)delete ov[name][receipt.key];else ov[name][receipt.key]=cloneJson(value);}
-    ov._revisions.orders=current+1;const saved=saveOverrides(ov,ov._revision);
-    const sharedPatch={...selector,subManufacturer:saved.submap[receipt.key]??null,dates:Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,key])=>[field,saved.datemap[receipt.key]?.[key]??null]))};
+    ov._revisions.orders=revision+1;const saved=saveOverrides(ov,ov._revision);
+    // Every restored field is mirrored to peers, not only sub-manufacturer and dates.
+    // A line entry that is absent again falls back to the order-level entry;
+    // mirroring an empty line value would shadow that fallback on peers.
+    const lineFallsBack=name=>receipt.key!==String(orderCode)&&receipt.maps[name]===null&&Object.hasOwn(saved[name]||{},String(orderCode));
+    const sharedPatch={...selector,...(lineFallsBack('notesmap')?{}:{notes:{}}),subManufacturer:saved.submap[receipt.key]??null,licensor:null,delType:null,dates:Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,key])=>[field,saved.datemap[receipt.key]?.[key]??null])),...(current?{...(lineFallsBack('noteColumnValues')?{}:{noteColumns:{}}),shortage:null}:{})};
     cpSharedStore.mirrorPatchDetached(receipt.key,cpSharedStore.patchFromOrderPatch(saved,receipt.key,sharedPatch),{actor:options?.actor});
-    return {verified:JSON.stringify(snapshotOrderOverride(orderCode,selector).patch.maps)===JSON.stringify(receipt.maps),restored:true,revision:saved._revisions.orders};
+    const after=snapshotOrderOverride(orderCode,selector).patch.maps;
+    return {verified:Object.keys(receipt.maps).every(name=>JSON.stringify(after[name])===JSON.stringify(receipt.maps[name])),restored:true,revision:saved._revisions.orders};
   })();
 }
 function patchOrderOverrides(items, expectedRevision = null, expectedSuppFobRevision = null, options = null) {

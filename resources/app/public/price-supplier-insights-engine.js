@@ -332,5 +332,26 @@
     return out.slice(0,6);
   }
 
-  return {DIMENSIONS,FILTER_DIMENSIONS,COLUMN_PREFIX,isColumnDim,columnName,isFilterDim,columnKeys,PERIOD_FIELDS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,periodValues,analyze,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
+  /* Canonical observation of one CP/Orders/Collection/LFL row. Moved here from
+     app-main so the browser bridge and the server (Agent Office) build the very
+     same observation; `fields` is the shared canonical field registry. */
+  const toNumber=value=>{const n=Number(value);return isNaN(n)?null:n;};
+  const isTurkeyCountry=value=>/^t[üu]rk/i.test(text(value));
+  function canonicalObservation(row,moduleId,base,fields){
+    base=base||{};const norm=text,toNum=toNumber;
+    if(!fields)throw new Error('Canonical field registry is unavailable.');
+    const read=id=>fields.value(row,moduleId,id),country=norm(read('country')),inStore=norm(read('inStore')),manufacturer=norm(read('manufacturer')),subManufacturer=norm(read('subManufacturer'));
+    const plmId=norm(read('plmId')),orderCode=norm(read('orderCode')),colourCode=norm(read('colourCode')),model=norm(read('modelName')),classification=norm(read('category'))||'—',productMainDefinition=norm(read(moduleId==='collection'?'productMainDefinition':'productDescription'));
+    const quantity=base.quantity!=null?base.quantity:toNum(read(moduleId==='collection'?'collectionQuantity':'orderQuantity'));
+    return {...base,source:moduleId,row,raw:row,rowId:base.rowId??row.id??row._id,plmId,orderCode,orderKey:orderCode,colourCode,modelKey:plmId||model||String(base.rowId??row.id??row._id??''),model,classification,category:classification,
+      manufacturer:norm(base.manufacturer||manufacturer)||'—',subManufacturer,supplierFob:toNum(read('supplierFob')),country:country||'—',buyer:norm(read('buyer'))||'—',buyingGroup:norm(read('buyingGroup'))||'—',mag:norm(read('mag'))||norm(base.mag)||'—',mmyg:norm(read('mmyg'))||norm(base.mmyg)||'—',collection:norm(read('collectionName')),
+      productGroup:norm(read('productGroup')),productMainDefinition,season:norm(read('season'))||'—',status:norm(read('orderStatus')),colour:norm(read('colour')),month:inStore,planStartMonth:inStore,quantity:Number.isFinite(Number(quantity))&&Number(quantity)>0?Number(quantity):null};
+  }
+  // ASAS order row priced by Final FOB or Supplier FOB; TRY for Turkey, USD otherwise.
+  function orderPriceObservation(row,moduleId,chosen,index,fields){
+    const country=text(fields.value(row,moduleId,'country')),price=toNumber(fields.value(row,moduleId,chosen==='supplierFob'?'supplierFob':'fob'));
+    return canonicalObservation(row,moduleId,{rowId:row._id??index,price:Number.isFinite(price)&&price>0?price:null,currency:isTurkeyCountry(country)?'TRY':'USD'},fields);
+  }
+
+  return {canonicalObservation,orderPriceObservation,DIMENSIONS,FILTER_DIMENSIONS,COLUMN_PREFIX,isColumnDim,columnName,isFilterDim,columnKeys,PERIOD_FIELDS,GROUP_DIMENSIONS,RELATION_DIMENSIONS,keyOf,prepare,seasons,defaultPeriods,previousSeason,dimensionValues,availableDimensions,periodValues,analyze,priceMovers,volumeMovers,newcomers,leavers,relations,insights,round};
 });

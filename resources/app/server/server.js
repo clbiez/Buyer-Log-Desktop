@@ -2490,6 +2490,55 @@ function cpAgentMail(profile,args,rows,dryRun,expected=null) {
   });
   return {emails,unresolved:split.unresolved,sendAvailable:false};
 }
+// Order override adapter shared by app.order.update (legacy Runtime) and the
+// Office cp.order.update capability; one native service, one rule set.
+const agentOrderAdapter = {
+  snapshotOrder: async (ownerId, profile, orderCode, patch) => {
+    // A line is addressed by model AND colour; one alone would write the
+    // order-level override that every line of the order falls back to.
+    if(Boolean(String(patch&&patch.model||'').trim())!==Boolean(String(patch&&patch.ccode||'').trim()))throw Object.assign(new Error('OFFICE_ORDER_IDENTITY'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
+    const rows = await agentPlatformDataset(ownerId, profile, 'cp');
+    const wantedModel = String(patch && patch.model || '').trim(), wantedColour = String(patch && patch.ccode || '').trim();
+    const candidates = rows.filter(item => Number(agentRowOrderCode(item)) === Number(orderCode)
+      && (!wantedModel || String(item && item['Model Name'] || '').trim() === wantedModel)
+      && (!wantedColour || String(item && item['C.Code'] || '').trim() === wantedColour));
+    if(candidates.length!==1)throw Object.assign(new Error('Order identity is missing or ambiguous.'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
+    if(!canUserEditOrderCode(profile,orderCode))throw Object.assign(new Error('ORDER_FORBIDDEN'),{code:'ORDER_FORBIDDEN',statusCode:403});
+    assertAgentSharedOwner(profile,orderCode,patch);
+    // The native editor silently skips unknown note-column ids; an agent preview
+    // must refuse them instead of approving a write that changes nothing.
+    const columnIds=new Set((loadOverrides().noteColumnDefs||[]).map(def=>def.id));
+    if(Object.keys(patch&&patch.noteColumns||{}).some(id=>!columnIds.has(id)))throw Object.assign(new Error('OFFICE_NOTE_COLUMN_UNKNOWN'),{code:'OFFICE_NOTE_COLUMN_UNKNOWN',statusCode:422});
+    return require('./db').snapshotOrderOverride(orderCode,patch);
+  },
+  // Light read of the exact override maps for a line (no dataset load).
+  currentOrderMaps: (orderCode, selector) => require('./db').snapshotOrderOverride(orderCode, selector || {}).patch.maps,
+  updateOrder: async (_ownerId, profile, orderCode, patch,expectedRevision,options={}) => {
+    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
+    assertAgentSharedOwner(profile,orderCode,patch);
+    const beforeContext=pageProjectionContext(profile);
+    const saved = patchOrderOverride(Number(orderCode), patch || {}, expectedRevision, null, { actor: noteActorOf(profile), expectedNoteColumnDefsRevision: options.noteColumnDefsRevision });
+    // Same incremental screen-cache rewrite as the HTTP editor: without it every
+    // agent edit invalidated the whole page cache and forced a cold rebuild.
+    try { await rewriteProjectionCacheForRowPatches(profile,beforeContext,[{orderCode,patch}]); }
+    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
+    userAccess.appendAudit(profile, 'AGENT_ORDER_UPDATE', String(orderCode), { fields:Object.keys(patch || {}) });
+    liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor([{orderCode,patch}])});
+    void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
+    return { ok:true, verified:require('./db').verifyOrderOverridePatch(orderCode,patch,saved.revision),updated:saved.updated || 1, revision:saved.revision };
+  },
+  restoreOrder: async (_ownerId, profile, orderCode, before,expectedRevision,selector) => {
+    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
+    if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
+    // Shared-owner fields are checked only when the inverse actually changes
+    // them; a non-owner may edit and undo notes, note columns or the shortage mark.
+    const currentMaps=require('./db').snapshotOrderOverride(orderCode,selector||{}).patch.maps;
+    if(['submap','datemap'].some(name=>Object.hasOwn(before&&before.maps||{},name)&&JSON.stringify(currentMaps[name])!==JSON.stringify(before.maps[name])))assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
+    const result=require('./db').restoreOrderOverrideReceipt(orderCode,before,expectedRevision,selector,{actor:noteActorOf(profile)});
+    userAccess.appendAudit(profile, 'AGENT_ORDER_ROLLBACK', String(orderCode), {revision:result.revision});
+    liveEvents.notifyChange('orders','agent-capability',{orderCode});return result;
+  },
+};
 const agentToolRegistry = createToolRegistry({
   authorizeCapability:(ctx,args)=>agentOfficeService.taskAuthorize(ctx,args),
   authorizePendingCapability:(ctx,receipt)=>agentOfficeService.taskAuthorizePending(ctx,receipt),
@@ -2533,34 +2582,7 @@ const agentToolRegistry = createToolRegistry({
   },
   getDataset: agentPlatformDataset,
   refresh: async (ownerId, profile, targets) => performRefresh(ownerId, profile, targets),
-  snapshotOrder: async (ownerId, profile, orderCode, patch) => {
-    const rows = await agentPlatformDataset(ownerId, profile, 'cp');
-    const wantedModel = String(patch && patch.model || '').trim(), wantedColour = String(patch && patch.ccode || '').trim();
-    const candidates = rows.filter(item => Number(agentRowOrderCode(item)) === Number(orderCode)
-      && (!wantedModel || String(item && item['Model Name'] || '').trim() === wantedModel)
-      && (!wantedColour || String(item && item['C.Code'] || '').trim() === wantedColour));
-    if(candidates.length!==1)throw Object.assign(new Error('Order identity is missing or ambiguous.'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
-    if(!canUserEditOrderCode(profile,orderCode))throw Object.assign(new Error('ORDER_FORBIDDEN'),{code:'ORDER_FORBIDDEN',statusCode:403});
-    assertAgentSharedOwner(profile,orderCode,patch);
-    return require('./db').snapshotOrderOverride(orderCode,patch);
-  },
-  updateOrder: async (_ownerId, profile, orderCode, patch,expectedRevision) => {
-    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-    assertAgentSharedOwner(profile,orderCode,patch);
-    const saved = patchOrderOverride(Number(orderCode), patch || {}, expectedRevision, null, { actor: noteActorOf(profile) });
-    userAccess.appendAudit(profile, 'AGENT_ORDER_UPDATE', String(orderCode), { fields:Object.keys(patch || {}) });
-    liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor([{orderCode,patch}])});
-    void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    return { ok:true, verified:require('./db').verifyOrderOverridePatch(orderCode,patch,saved.revision),updated:saved.updated || 1, revision:saved.revision };
-  },
-  restoreOrder: async (_ownerId, profile, orderCode, before,expectedRevision,selector) => {
-    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-    if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
-    assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
-    const result=require('./db').restoreOrderOverrideReceipt(orderCode,before,expectedRevision,selector,{actor:noteActorOf(profile)});
-    userAccess.appendAudit(profile, 'AGENT_ORDER_ROLLBACK', String(orderCode), {revision:result.revision});
-    liveEvents.notifyChange('orders','agent-capability',{orderCode});return result;
-  },
+  ...agentOrderAdapter,
   httpRequest: agentPlatformHttpRequest,
   browserRun: async (args, ctx) => agentBrowserConnector.run(ctx.ownerId, args, ctx),
 });
@@ -5372,6 +5394,7 @@ require('./routes/test-report-routes')(app,{automationError,express,userAccess,s
 const agentQualityTools=require('./lib/agent-quality-tools').registerQualityTools(agentToolRegistry,{service:agentQualityService,userAccess,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,guard:(ctx,work)=>agentOfficeService.taskNativeGuard(ctx,work),restoreGuard:(ctx,work)=>agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),dataset:profile=>agentPlatformDataset(profile.id,profile,'cp'),mail:cpAgentMail,verifyMail:(result,profile)=>result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id)))});
 require('./lib/agent-shared-checklist-tools').registerSharedChecklistTools(agentToolRegistry,{data:cpAgentData,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-checklist-answer-tools').registerChecklistAnswerTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
+require('./lib/agent-checklist-attachment-tools').registerChecklistAttachmentTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-checklist-option-tools').registerChecklistOptionTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-analytics-tools').registerAnalyticsTools(agentToolRegistry,{dataset:agentPlatformDataset,outputService:()=>require('./lib/lcwai').getDefaultOutputService()});
 const agentCollectionSave=async(profile,ownerId,changes,expectedRevision,assertAuthority,guards={})=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);assertAuthority();if(!collectionWorkspaceEditAllowed(current,ownerId))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
@@ -6108,7 +6131,8 @@ function rejectSharedOwnerWrites(req, res, items) {
     const patch = item.patch || item;
     if (!fields.some(field => Object.hasOwn(patch, field))) return false;
     const code = item.orderCode;
-    const recordId = `cp-order:${patch.model || patch.ccode ? parseLib.orderLineKey(code, patch.model, patch.ccode) : code}`;
+    // Same key rule as db.overrideWriteKey: a line needs model AND colour.
+    const recordId = `cp-order:${patch.model && patch.ccode ? parseLib.orderLineKey(code, patch.model, patch.ccode) : code}`;
     const decision = userAccess.sharedOwnerOf(recordId, req.currentUser && req.currentUser.id);
     if (!decision.known || decision.allowed) return false;
     const rows = userAccess.authoritativeOrderRows(Number(code));
@@ -9431,21 +9455,29 @@ app.get('/api/shared-revisions',async(_req,res)=>{
 // Price & Supplier Analysis için Horizon kaynağı: ASAS satırlarının yalnızca
 // bu modüle ait kapsamı transfer edilir. Büyük ham küme başlangıçta /api/data
 // içine eklenmez; analiz ekranı açıldığında mevcut runtime snapshot'tan okunur.
+// Price & Supplier Analysis source rows; shared by the screen route and the
+// Office priceanalysis.insights.read capability (same scope and Horizon).
+async function priceAnalysisRowsFor(currentUser) {
+  const id = sourceUserId(currentUser), filterStatus = sourceFilterReadiness(['priceanalysis'], currentUser);
+  if (!filterStatus.ready) return { rows: [], loadedAt: null, sources: {}, sourceFilterRequired: true, filterStatus };
+  const runtime = cacheForUser(id);
+  if (!runtime.asasOrders) await ensureDataLoaded(id);
+  const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
+  const sourceRows = active.asasOrdersByTarget && Array.isArray(active.asasOrdersByTarget.priceanalysis)
+    ? active.asasOrdersByTarget.priceanalysis : (Array.isArray(active.asasOrders) ? active.asasOrders : []);
+  const rows = userAccess.filterRowsByScope(currentUser,
+    filterRowsByEffectiveHorizon(currentUser, 'priceanalysis', applyDateOverrides(sourceRows, overrides)));
+  return { rows, loadedAt: active.loadedAt, sources: active.sources || {}, modelRefresh: active.modelRefresh || null };
+}
 app.get('/api/data/price-analysis', userAccess.requireArea('priceanalysis'), async (req, res) => {
   try {
-    const id = sourceUserId(req), filterStatus = sourceFilterReadiness(['priceanalysis'], req);
-    if (!filterStatus.ready) {
+    const data = await priceAnalysisRowsFor(req.currentUser);
+    if (data.sourceFilterRequired) {
       return sendDateSafeJson(res, { rows: [], loadedAt: null, sources: {}, sourceFilterRequired: true,
-        sourceFilterStatus: filterStatus, sourceFilterMessage: sourceFilterReadinessMessage(filterStatus, 'tr') });
+        sourceFilterStatus: data.filterStatus, sourceFilterMessage: sourceFilterReadinessMessage(data.filterStatus, 'tr') });
     }
-    const runtime = cacheForUser(id);
-    if (!runtime.asasOrders) await ensureDataLoaded(id);
-    const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
-    const sourceRows = active.asasOrdersByTarget && Array.isArray(active.asasOrdersByTarget.priceanalysis)
-      ? active.asasOrdersByTarget.priceanalysis : (Array.isArray(active.asasOrders) ? active.asasOrders : []);
-    const rows = userAccess.filterRowsByScope(req.currentUser,
-      filterRowsByEffectiveHorizon(req.currentUser, 'priceanalysis', applyDateOverrides(sourceRows, overrides)));
-    sendDateSafeJson(res, { rows, rawCount: rows.length, loadedAt: active.loadedAt, sources: active.sources || {}, modelRefresh: active.modelRefresh || null });
+    const { rows } = data;
+    sendDateSafeJson(res, { rows, rawCount: rows.length, loadedAt: data.loadedAt, sources: data.sources, modelRefresh: data.modelRefresh });
   } catch (err) { apiError(res, err, 'Price & Supplier Analysis Horizon verisi yüklenemedi.'); }
 });
 async function currentSyncStatus() {
@@ -10907,6 +10939,20 @@ const agentResourceDeps={withAgentMutation:(ctx,work)=>agentOfficeStore.withProf
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-landed-multiplier-tools').registerLandedMultiplierTools(agentToolRegistry,{...agentResourceDeps,service:landedMultiplierService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'landedMultipliers',{revision:receipt.revision,origin:'agent'})});
 const nativeRefreshGroupService=require('./lib/refresh-group-service').createRefreshGroupService({db:require('./db')});
+require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
+require('./lib/agent-price-analysis-tools').registerPriceAnalysisTools(agentToolRegistry,{rows:profile=>priceAnalysisRowsFor(profile)});
+require('./lib/agent-holiday-tools').registerHolidayTools(agentToolRegistry,{holidayService});
+require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership});
+{
+  // Same active-user and display rules as /api/preset-share; target is always the owner.
+  const activePresetProfile=profile=>Boolean(profile)&&profile.enabled!==false&&profile.status!=='INACTIVE';
+  const presetDisplayName=profile=>profile.displayName||profile.username||profile.id;
+  require('./lib/agent-preset-tools').registerPresetTools(agentToolRegistry,{...agentResourceDeps,presetShare,
+    users:me=>userAccess.allPublicProfiles().filter(profile=>activePresetProfile(profile)&&profile.id!==me.id).map(profile=>({id:profile.id,name:presetDisplayName(profile),title:profile.title||'',role:profile.systemRoleLabel||profile.roleLabel||''})).sort((a,b)=>a.name.localeCompare(b.name,'tr',{sensitivity:'base'})),
+    sourceProfile:id=>{const profile=userAccess.profileById(id);return activePresetProfile(profile)?profile:null;},displayName:presetDisplayName,
+    loadProfiles:id=>({views:loadViews(id),filters:loadFilterProfiles(id)}),restoreProfiles:(id,stores)=>require('./db').restoreUserBackupStores(id,stores),
+    applyEntryChanges:(...args)=>userPreferences.applyEntryChanges(...args)});
+}
 require('./lib/agent-refresh-group-tools').registerRefreshGroupTools(agentToolRegistry,{...agentResourceDeps,service:nativeRefreshGroupService,refresh:{plan:(profile,moduleIds)=>nativeRefreshPlan(profile,moduleIds),start:(profile,moduleIds,options)=>startNativeRefresh(profile,moduleIds,options),state:profile=>refreshJobState(sourceUserId(profile))},changed:(profile,receipt)=>agentResourceDeps.changed(profile,'refreshGroups',{revision:receipt.revision,origin:'agent'})});
 require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
 require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});

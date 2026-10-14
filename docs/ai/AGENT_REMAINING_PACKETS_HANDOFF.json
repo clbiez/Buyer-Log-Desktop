@@ -12,14 +12,16 @@
     "scope": "Native sample, BOM, model image and attachment job adapters",
     "reuse": "PLM native jobs/session/store",
     "boundary": "current corporate session; canonical model/order/color identity; durable native completion",
-    "status": "pending"
+    "status": "in_progress",
+    "delivery": "Stored-asset reads added: collection.plm.bom.read, collection.plm.techsheet.status (no PLM request, no index migration). Pending: approved PLM download jobs (technical sheet, BOM refresh, samples, images) — the native technical-sheet download runs inside the HTTP route; it must be extracted into a job service with durable completion before an agent can start it; live corporate PLM session acceptance is required."
   },
   {
     "packet": "order-editor",
     "scope": "Current permitted order overrides, notes and custom note columns",
     "reuse": "db order editor + note-column routes",
     "boundary": "scope over every relevant order line; revision/lease; complete inverse including deleted values",
-    "status": "pending"
+    "status": "implemented",
+    "delivery": "cp.order.update (contract v2) over the native order override service; see AGENT_ORDER_EDITOR_ACCEPTANCE.md. Not included: note-column definition edits and multi-line batch edits."
   },
   {
     "packet": "checklist-options",
@@ -27,14 +29,15 @@
     "reuse": "checklist supplier services and exporter",
     "boundary": "native CP operation grants; evidence scope; ambiguity approval; stored-file ownership",
     "status": "in_progress",
-    "delivery": "PR #564 merged reusable option READ/approved UPDATE/inverse; 44 targeted PASS and actual native TR/EN UI. Supplier XLSX and attachment lifecycle pending. Outside Stable 7.0.273."
+    "delivery": "PR #564 merged reusable option READ/approved UPDATE/inverse; 44 targeted PASS and actual native TR/EN UI. Attachment lifecycle: cp.checklist.attachments.read and cp.checklist.attachment.remove (approved, exact inverse; adding evidence stays in the test-report import tools); see AGENT_CHECKLIST_ATTACHMENT_ACCEPTANCE.md. Supplier XLSX pending: export/import is implemented only in the renderer (ExcelJS in public/checklist-supplier-sync.js); an agent path needs that engine shared server-side first, not a second implementation. Outside Stable 7.0.273."
   },
   {
     "packet": "presets",
     "scope": "Focus/Extended and native cross-user preset sharing/apply/undo",
     "reuse": "preset-share + table profile services",
     "boundary": "owner/category and source visibility; exact revision-bound inverse",
-    "status": "pending"
+    "status": "implemented",
+    "delivery": "presets.share.read / presets.share.apply (contract v2) over the native preset-share plan/commit service; see AGENT_PRESET_SHARE_ACCEPTANCE.md. Focus/Extended per-page editing itself stays in the table profile tools."
   },
   {
     "packet": "landed-multipliers",
@@ -49,7 +52,8 @@
     "scope": "Remaining pricing history, price/supplier analysis, INTAKE, holidays and native module functions",
     "reuse": "existing deterministic native engines",
     "boundary": "operation-by-operation route/UI inventory; zero inferred grants",
-    "status": "pending"
+    "status": "in_progress",
+    "delivery": "See AGENT_NATIVE_MODULE_AUDIT.md. Added: priceanalysis.insights.read (shared observation builder moved into price-supplier-insights-engine; screen output identical), overview.holidays.read. Pricing History reads quotations/collection already covered by quotation.* and collection.* tools; INTAKE read is intake.snapshot.read; INTAKE settings writes stay user-only."
   },
   {
     "packet": "workflow-office",

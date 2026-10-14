@@ -217,6 +217,57 @@
         "approval": true,
         "rollbackable": false,
         "contractVersion": 2
+      },
+      {
+        "id": "overview.holidays.read",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "presets.share.read",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "presets.share.apply",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
       }
     ]
   },
@@ -811,6 +862,62 @@
         ],
         "permissions": [],
         "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.order.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.checklist.attachments.read",
+        "operation": "READ",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "CP.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.checklist.attachment.remove",
+        "operation": "DELETE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "CP.VIEW",
+          "CP.EDIT"
+        ],
         "risk": "write",
         "approval": true,
         "rollbackable": true,
@@ -1615,6 +1722,40 @@
         "approval": true,
         "rollbackable": true,
         "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.bom.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "collection",
+          "cp",
+          "orders"
+        ],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.techsheet.status",
+        "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
       }
     ]
   },
@@ -1769,7 +1910,25 @@
       "analyze",
       "compare"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "priceanalysis.insights.read",
+        "operation": "READ",
+        "agentAreas": [
+          "priceanalysis"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "priceanalysis"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "lcwai",

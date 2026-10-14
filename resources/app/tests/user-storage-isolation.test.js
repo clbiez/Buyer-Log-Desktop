@@ -132,6 +132,8 @@ test('BLStorage ile okunan her ön ek ya kullanıcıya ayrılır ya da bilinçli
      veya bir defalık taşıma işaretidir; kullanıcı tercihi değildir. */
   const SHARED_ON_PURPOSE = [
     'bl.user.', 'bl.presetShare.notice',
+    // sessionStorage, tab-scoped one-shot marker of adopted Office preset steps (job/step ids), like bl.presetShare.notice.
+    'bl.office.presetAdopted',
     'lcw.quotations.v1', 'lcw.quotations.serverMigrated.', 'lcw.quotations.dropDetached.', 'lcw.quotations.notebookDetached.',
     'lcw.transitRules.', 'lcw.transitAnalysis.v1', 'lcw.suppFobPricingRules.', 'lcw.nonDtrManufacturers.',
     'lcw.emailGroups.centralMigration.', 'lcw.appr.dimFilters.',

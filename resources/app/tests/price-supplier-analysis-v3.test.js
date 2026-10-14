@@ -150,14 +150,16 @@ test('LFL görünümünden Üretici & Ülke Sipariş Analizi paneli ve dosyalar�
 });
 
 test('yeni ekran lazy yüklenir, köprü dışında veri sorgusu yapmaz ve kanonik MAG/MMYG alanlarını alır',()=>{
-  const ui=read('public/price-supplier-analysis.js'),perf=read('public/perf-runtime.js'),html=read('public/index.html'),app=read('public/app-main.js');
+  const ui=read('public/price-supplier-analysis.js'),perf=read('public/perf-runtime.js'),html=read('public/index.html'),app=read('public/app-main.js')+read('public/price-supplier-insights-engine.js');
   assert.match(perf,/collectionTools:\[[^\]]*'collection-analytics-engine\.js','price-supplier-insights-engine\.js','price-supplier-analysis\.js'\]/);
   assert.match(html,/price-supplier-analysis\.css\?v=__BL_ASSET_VERSION__&rev=\d+/);
   assert.doesNotMatch(ui,/\bfetch\s*\(|XMLHttpRequest/);
   assert.match(ui,/window\.BLPriceSupplierAnalysisBridge\.get\(state\.source,'all'/);
   assert.match(ui,/const STORAGE_KEY='lcw\.priceSupplierAnalysis\.v3'/);
   assert.doesNotMatch(ui,/<section/,'global section{display:none} tuzağına düşmemek için section üretilmez');
-  const bridge=app.slice(app.indexOf('function canonicalPriceObservation'),app.indexOf('window.BLPriceSupplierAnalysisBridge='));
+  // The observation builder lives in the shared engine (browser + server Agent Office).
+  const engine=read('public/price-supplier-insights-engine.js'),bridge=engine.slice(engine.indexOf('function canonicalObservation'),engine.indexOf('function orderPriceObservation'));
+  assert.match(app,/function canonicalPriceObservation\(row,moduleId,base=\{\}\)\{\n  return window\.BLPriceSupplierInsights\.canonicalObservation\(/);
   assert.match(bridge,/mag:norm\(read\('mag'\)\)/);
   assert.match(bridge,/mmyg:norm\(read\('mmyg'\)\)/);
 });

@@ -77,6 +77,8 @@ function shareError(message, code, statusCode = 400) {
   return Object.assign(new Error(message), { code, statusCode });
 }
 function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
+// Content digest of a profile store as plan() captures it (missing = empty store).
+function profileDigest(store) { return require('crypto').createHash('sha256').update(JSON.stringify(store || { items: [] })).digest('hex'); }
 function parseJson(value) { try { return JSON.parse(value); } catch (_) { return undefined; } }
 function isPlainObject(value) { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function itemById(id) { return SHARE_ITEMS.find(item => item.id === id) || null; }
@@ -204,7 +206,10 @@ function createPresetShare({ loadProfiles, restoreProfiles } = {}) {
     });
   }
 
-  function apply({ sourceUserId, targetUserId, items, mode }) {
+  /* plan() computes the exact change without writing; commit() writes it.
+     apply() = commit(plan()) keeps the user-menu behaviour unchanged; the
+     Office capability previews the same plan and commits it CAS-bound. */
+  function plan({ sourceUserId, targetUserId, items, mode }) {
     const source = String(sourceUserId || ''), target = String(targetUserId || '');
     if (!source || !target) throw shareError('Kaynak ve hedef kullanıcı zorunludur.', 'PRESET_SHARE_USER_REQUIRED');
     if (source === target) throw shareError('Kendi ayarlarınızı kendinize aktaramazsınız.', 'PRESET_SHARE_SELF', 400);
@@ -240,10 +245,25 @@ function createPresetShare({ loadProfiles, restoreProfiles } = {}) {
       nextProfiles[kind] = mergeProfileStore(targetProfiles[kind] || { items: [] }, sourceStore, copyMode);
     }
 
+    return { source, target, mode: copyMode, items: selected.map(item => item.id), set, remove, previous, nextProfiles, previousProfiles,
+      targetEntries: Object.fromEntries([...Object.keys(set), ...remove].map(key => [key, targetEntries[key] ? clone(targetEntries[key]) : null])) };
+  }
+  function commit(planned, options = {}) {
+    const { source, target, mode: copyMode, set, remove, previous, nextProfiles, previousProfiles } = planned;
+    const selected = planned.items.map(itemById);
     const changedKeys = Object.keys(set).length + remove.length;
     const changedProfiles = Object.keys(nextProfiles).length;
     if (!changedKeys && !changedProfiles) {
       return { ok: true, changed: false, mode: copyMode, items: selected.map(item => item.id), setKeys: [], removedKeys: [] };
+    }
+    options.assertAuthority?.();
+    // Profile stores are CAS-checked before any write: a view saved by another
+    // tab after the preview must not be overwritten (entries use expectedEntries).
+    if (options.expectedProfiles && Object.keys(nextProfiles).length) {
+      const current = loadProfiles(target) || {};
+      for (const kind of Object.keys(nextProfiles)) {
+        if (profileDigest(current[kind]) !== options.expectedProfiles[kind]) throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'), { code: 'OFFICE_PREVIEW_CHANGED', statusCode: 409 });
+      }
     }
     // Geri alma kaydı yazmadan ÖNCE diske iner: uygulama yarıda kalsa bile
     // kullanıcının eski ayarı kaybolmaz.
@@ -253,7 +273,7 @@ function createPresetShare({ loadProfiles, restoreProfiles } = {}) {
     try { earlierUndo = fs.readFileSync(undoFile(target), 'utf8'); } catch (_) {}
     atomicWriteJson(undoFile(target), { version: 1, createdAt, sourceUserId: source, mode: copyMode, items: selected.map(item => item.id), entries: previous, profiles: previousProfiles });
     try {
-      if (changedKeys) userPreferences.applyEntryChanges(target, set, remove);
+      if (changedKeys) userPreferences.applyEntryChanges(target, set, remove, options.expectedEntries ? { expectedEntries: options.expectedEntries, assertAuthority: options.assertAuthority } : {});
     } catch (error) {
       // Hiçbir şey yazılmadı (ör. kişisel veri sınırı): önceki geri alma kaydı
       // aynen geri konur, "geri al" boş bir aktarımı göstermez.
@@ -270,6 +290,7 @@ function createPresetShare({ loadProfiles, restoreProfiles } = {}) {
       entries: storedEntries(target, Object.keys(set)),
     };
   }
+  function apply(request) { return commit(plan(request)); }
 
   function undoInfo(userId) {
     try {
@@ -292,10 +313,17 @@ function createPresetShare({ loadProfiles, restoreProfiles } = {}) {
     return { ok: true, setKeys: Object.keys(set), removedKeys: remove, profiles: Object.keys(raw.profiles || {}), sourceUserId: raw.sourceUserId || null, entries: storedEntries(userId, Object.keys(set)) };
   }
 
-  return { preview, apply, undo, undoInfo };
+  // An Office inverse already restored this application: its menu undo slot
+  // would otherwise offer to restore the same state again later.
+  function discardUndo(userId, createdAt) {
+    const info = undoInfo(userId);
+    if (info.available && info.createdAt === createdAt) fs.rmSync(undoFile(userId), { force: true });
+  }
+
+  return { preview, plan, commit, apply, undo, undoInfo, discardUndo, storedEntries };
 }
 
 module.exports = {
   SHARE_ITEMS, SHARE_ITEM_IDS, PAGE_KEYED_KEYS, UNDO_ROOT,
-  createPresetShare, mergeValue, mergeProfileStore, normalizeItems, normalizeMode,
+  createPresetShare, profileDigest, mergeValue, mergeProfileStore, normalizeItems, normalizeMode,
 };

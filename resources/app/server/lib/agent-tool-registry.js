@@ -527,7 +527,7 @@ function createToolRegistry(adapter) {
     id: 'app.order.update', label: 'Update Order', module:'orders', operation:'UPDATE', contractVersion:1, category: 'app', kind: 'app', risk: 'write', area: 'cp', areas:['cp'], approval: true, rollbackable: true,
     approvalMessage: 'Sipariş üzerinde kullanıcı verisi değiştirilecek. Değişiklikleri uygulamadan önce onaylayın.',
     description: 'Mevcut Buyer Log order override servisinin izin verdiği alanları günceller.',
-    inputSchema: {type:'object',required:['orderCode','expectedRevision'],additionalProperties:false,properties:{orderCode:{type:'integer',minimum:1},expectedRevision:{type:'integer',minimum:0},model:{type:'string',maxLength:160},ccode:{type:'string',maxLength:80},notes:{type:'object',properties:Object.fromEntries(require('../db').NOTE_AUTHOR_FIELDS.map(spec=>[spec.field,{type:'string',maxLength:10000}])),additionalProperties:false},subManufacturer:{type:'string',maxLength:200},licensor:{type:'string',maxLength:200},delType:{type:'string',maxLength:80},dates:{type:'object',properties:Object.fromEntries(['exFactory','retailDate','inStoreDate'].map(key=>[key,{type:'string',pattern:'^(?:|\\d{4}-\\d{2}-\\d{2})$'}])),additionalProperties:false}}},
+    inputSchema: {type:'object',required:['orderCode','expectedRevision'],additionalProperties:false,properties:{orderCode:{type:'integer',minimum:1},expectedRevision:{type:'integer',minimum:0},model:{type:'string',maxLength:160},ccode:{type:'string',maxLength:80},notes:{type:'object',properties:Object.fromEntries(require('../db').NOTE_AUTHOR_FIELDS.map(spec=>[spec.field,{type:'string',maxLength:10000}])),additionalProperties:false},subManufacturer:{type:'string',maxLength:200},licensor:{type:'string',maxLength:200},delType:{type:'string',maxLength:80},dates:{type:'object',properties:Object.fromEntries(['exFactory','retailDate','inStoreDate'].map(key=>[key,{type:'string',pattern:'^(?:|\\d{4}-\\d{2}-\\d{2})$'}])),additionalProperties:false},noteColumns:{type:'object',additionalProperties:{type:'string',maxLength:2000}},shortage:{anyOf:[{type:'boolean'},{type:'object',required:['marked'],additionalProperties:false,properties:{marked:{type:'boolean'},qty:{type:'integer',minimum:0,maximum:10000000}}}]}}},
     outputSchema:{type:'object',required:['verified','revision','rollbackToken']},dryRunOutputSchema:{type:'object',required:['dryRun','orderCode','patch','revision']},
     dataScope:'current-IAM-editable-order',preview:'same-tool-dryRun',validation:'schema + existing order override service',audit:'AGENT_ORDER_UPDATE',idempotency:'expected order revision; interrupted effects require reconciliation',rollback:'restore only at effect revision',
   }, async (args, ctx) => {
@@ -535,10 +535,13 @@ function createToolRegistry(adapter) {
     ['model', 'ccode', 'subManufacturer', 'licensor', 'delType'].forEach(key => { if (Object.prototype.hasOwnProperty.call(args || {}, key)) patch[key] = args[key]; });
     if (args && args.notes && typeof args.notes === 'object') patch.notes = args.notes;
     if (args && args.dates && typeof args.dates === 'object') patch.dates = args.dates;
+    if (args && args.noteColumns && typeof args.noteColumns === 'object') patch.noteColumns = args.noteColumns;
+    if (args && Object.prototype.hasOwnProperty.call(args, 'shortage')) patch.shortage = args.shortage;
     const orderCode = Number(args && args.orderCode);
     if (!Number.isFinite(orderCode)) throw Object.assign(new Error('Geçerli Order Code zorunlu.'), { code: 'ORDER_CODE_REQUIRED' });
+    if (Boolean(patch.model) !== Boolean(patch.ccode)) throw Object.assign(new Error('OFFICE_ORDER_IDENTITY'), { code: 'OFFICE_ORDER_IDENTITY', statusCode: 409 });
     for(const date of Object.values(patch.dates||{}))if(date&&(!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date))throw Object.assign(new Error('OFFICE_DATE_INVALID'),{code:'OFFICE_DATE_INVALID',statusCode:422});
-    if(!['notes','dates','subManufacturer','licensor','delType'].some(key=>Object.hasOwn(patch,key)))throw Object.assign(new Error('OFFICE_TASK_INVALID'),{code:'OFFICE_TASK_INVALID',statusCode:422});
+    if(!['notes','dates','subManufacturer','licensor','delType','noteColumns','shortage'].some(key=>Object.hasOwn(patch,key)))throw Object.assign(new Error('OFFICE_TASK_INVALID'),{code:'OFFICE_TASK_INVALID',statusCode:422});
     const before = await adapter.snapshotOrder(ctx.ownerId, ctx.profile, orderCode, patch);
     if(before.revision!==args.expectedRevision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
     if (ctx.dryRun) return { dryRun: true, orderCode, patch,revision:before.revision };

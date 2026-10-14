@@ -24,4 +24,4 @@ function collectionPipeline(rows,orders) {
  const snapshots=[];for(let i=0;i<(rows||[]).length;i++){const row=rows[i],values=fields.project(row,'collection'),season=String(values.season||''),status=String(values.orderStatus||''),key=season+'|'+status;if(!groups.has(key))groups.set(key,{season,status,options:0,linkedOrders:0,atRisk:0,approvalConflicts:0,missingSupplier:0});const item=groups.get(key);item.options++;const matches=linked.get(String(values.plmId||'')+'|'+String(values.colourCode||'').toUpperCase())||[];item.linkedOrders+=matches.length;item.atRisk+=matches.filter(o=>['CRITICAL','HIGH'].includes(o.analysis.priority)).length;item.approvalConflicts+=matches.reduce((n,o)=>n+o.findings.filter(f=>f.code.startsWith('APPROVAL_CONFLICT_')).length,0);item.missingSupplier+=Number(!values.manufacturer);snapshots.push({key:'collection:'+String(row.id||row._id||[values.plmId,values.colourCode,i].join('|')),values,origin:'Collection',evidence:[]});}
  return {groups:[...groups.values()],snapshots};
 }
-module.exports={historicalPrices,supplierHistory,collectionPipeline};
+module.exports={historicalPrices,supplierHistory,collectionPipeline,aggregateSupplier};
