@@ -213,6 +213,35 @@
           "en": "Actual Buyer Log UI explicitly shows the native Windows/corporate provider requirement for schema discovery."
         }
       }
+    },
+    {
+      "id": "agent-checklist-reusable-options",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / CP",
+        "en": "Agent Office / CP"
+      },
+      "title": {
+        "tr": "Etkin opsiyon sorusunu ortak onayla ve revize et",
+        "en": "Approve and revise an effective reusable option question"
+      },
+      "body": {
+        "tr": "Agent, yetkili siparişten native PLM/model/renk kimliğini türeterek opsiyon kapsamındaki etkin checklist sorusunu onaylayabilir veya Pending durumuna alabilir. Siparişe özel cevaplar ve ekli kanıtlar korunur. Sipariş kapsamındaki sorular, silinmiş kurallar ve eksik kimlikler yazımdan önce reddedilir. Önizleme, kullanıcı onayı ve revizyona bağlı tam geri alma desteklenir.",
+        "en": "Agents derive the native PLM/model/colour identity from an authorized order to approve an effective option-scoped checklist question or return it to Pending. Order-specific answers and attached evidence are preserved. Order-scoped questions, deleted rules and missing identities are rejected before writing. Preview, user approval and complete revision-bound inverse are supported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-checklist-reusable-option.png",
+        "alt": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde native ortak opsiyon onayı ve geri alma sonucu.",
+          "en": "Native reusable option approval and inverse result in an actual anonymous Agent Office task."
+        },
+        "caption": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde native ortak opsiyon onayı ve geri alma sonucu.",
+          "en": "Native reusable option approval and inverse result in an actual anonymous Agent Office task."
+        }
+      }
     }
   ]
 }

@@ -23,4 +23,4 @@ function registerChecklistAnswerTools(registry,deps){
  restore:async(token,ctx)=>{if(token.ownerId!==ctx.ownerId)throw error('OFFICE_ROLLBACK_INVALID',403);const before=Inverse.restore(ctx,'cp.checklist.answers.update',token).before,sourceRevision=deps.sourceRevision(ctx.profile);await authorized(ctx,before.orderKeys,true,sourceRevision);return mutate(ctx,()=>{assert(ctx,sourceRevision);return native.restoreEntries({entries:before.entries,expectedRevision:token.expectedRevision},ctx.profile,{reserveWrites:1,assertAuthority:()=>assert(ctx,sourceRevision),receipt:(restored,own)=>{if(Object.entries(before.entries).some(([key,entry])=>hash(JSON.stringify(own.entries[key]))!==hash(JSON.stringify(entry))))throw error('OFFICE_RULE_VERIFY_FAILED',409);return restored;}});});}
  });
 }
-module.exports={registerChecklistAnswerTools};
+module.exports={registerChecklistAnswerTools,record,project,edit};
