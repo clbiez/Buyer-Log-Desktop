@@ -126,6 +126,35 @@
           "en": "After an End task in Task Manager, reopened Buyer Log completes all three preparation steps."
         }
       }
+    },
+    {
+      "id": "agent-refresh-group-execute",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar yenileme grubunu onayla çalıştırır",
+        "en": "Agents run a refresh group with approval"
+      },
+      "body": {
+        "tr": "Agent, ortak yenileme grubunu kullanıcının kendi yenilemesiyle çalıştırır: aynı native yenileme işi başlar, gerçek sonuç beklenir ve görev buna göre tamamlanır ya da durur. Kaynak filtresi hazır değilse veya başka bir yenileme sürüyorsa işlem başlamaz; aynı adım yeniden oynatılırsa ikinci yenileme açılmaz. Yenileme mevcut anlık görüntüyü değiştirdiği için geri alma sunulmaz ve bu önizlemede açıkça yazar.",
+        "en": "An agent runs a shared refresh group through the user's own refresh: the same native refresh job starts, its actual result is awaited and the task completes or stops accordingly. It does not start when the source filter is not ready or another refresh is running, and replaying the same step does not open a second refresh. Because a refresh replaces the current snapshot, no undo is offered and the preview says so."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-refresh-group-execute.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi görevinde yenileme grubunun hedefleri, filtre durumu ve geri alınamaz etkisi onaydan önce gösterilir.",
+          "en": "An actual Agent Office task shows the refresh group's targets, filter readiness and non-reversible effect before approval."
+        },
+        "alt": {
+          "tr": "Gerçek Agent Ofisi görevinde yenileme grubunun hedefleri, filtre durumu ve geri alınamaz etkisi onaydan önce gösterilir.",
+          "en": "An actual Agent Office task shows the refresh group's targets, filter readiness and non-reversible effect before approval."
+        }
+      }
     }
   ]
 }

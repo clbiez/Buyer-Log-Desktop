@@ -8,7 +8,9 @@ const path = require('node:path');
 const SERVER = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
 
 function refreshRoute() {
-  const start = SERVER.indexOf("app.post('/api/refresh'");
+  // The async source policy lives in the shared native start that the route delegates to.
+  const start = SERVER.indexOf('function startNativeRefresh(');
+  assert.ok(SERVER.indexOf("app.post('/api/refresh'") > start, 'route follows the shared native start');
   const end = SERVER.indexOf("app.post('/api/overrides/batch'", start);
   assert.ok(start >= 0 && end > start, 'refresh route bulunmalı');
   return SERVER.slice(start, end);

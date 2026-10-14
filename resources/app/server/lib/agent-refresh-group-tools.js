@@ -5,6 +5,32 @@ const impact=req({shared:ok,executesRefresh:{enum:[false]},requiresUserRefresh:o
 function registerRefreshGroupTools(registry,deps){
  const base={module:'source',areas:['source'],agentAreas:['source'],dataScope:'native shared refresh-group definitions only; execution remains the current owner refresh workflow'},mutate=(ctx,work)=>{if(!deps.withAgentMutation)throw error('OFFICE_APPROVAL_REQUIRED',403);return deps.withAgentMutation(ctx,work);};
  registry.registerCapability({...base,id:'source.refreshgroups.read',operation:'READ',risk:'read',label:{tr:'Native yenileme gruplarını oku',en:'Read native refresh groups'},inputSchema:object({}),outputSchema:read,dryRunOutputSchema:read,read:(_args,ctx)=>deps.service.snapshot(ctx)});
+ // EXECUTE: runs the current owner's existing asynchronous model refresh for the
+ // group's native targets. The refresh replaces only that owner's snapshot; there
+ // is no inverse, so the tool is approval-gated and declares no rollback.
+ const jobId={...string(100),pattern:'^[A-Za-z0-9_-]{1,100}$'},targets={...array({enum:Rules.refreshableModules()},Rules.refreshableModules().length),uniqueItems:true,minItems:1},nullableText=n=>({type:['string','null'],maxLength:n});
+ const operationRef=req({id:jobId,kind:{enum:['source-refresh']},groupId:id}),jobView=req({jobId,running:{type:'boolean'},phase:string(40),requestedTargets:targets,startedAt:nullableText(40),finishedAt:nullableText(40),elapsedMs:count,errorCode:nullableText(80),cancelRequested:{type:'boolean'}});
+ const execPreview=req({revision:count,groupId:id,name:group.properties.name,targets,filterReady:{type:'boolean'},running:{type:'boolean'},activeJobId:{type:['string','null'],maxLength:100},canStart:{type:'boolean'},impact:req({ownerSnapshotOnly:ok,replacesCurrentSnapshot:ok,rollback:{enum:['unavailable']}})});
+ const execPending=req({verified:ok,completionPending:{enum:['native-operation']},operation:operationRef,job:jobView}),execDone=req({verified:ok,operation:operationRef,data:req({jobId,requestedTargets:targets,loadedAt:nullableText(40),elapsedMs:count})});
+ const execOutput={...object({verified:ok,completionPending:{enum:['native-operation']},operation:operationRef,job:jobView,data:execDone.properties.data}),required:['verified','operation'],anyOf:[execPending,execDone]};
+ const owner=ctx=>{ctx.assertAuthority?.();if(ctx.ownerId!==ctx.profile.id)throw error('OFFICE_TOOL_FORBIDDEN',403);if(!deps.refresh)throw error('OFFICE_SOURCE_UNAVAILABLE',503);};
+ const publicRefreshJob=job=>({jobId:String(job.jobId||''),running:job.running===true,phase:String(job.phase||'idle').slice(0,40),requestedTargets:(job.requestedTargets||[]).filter(t=>Rules.refreshableModules().includes(t)),startedAt:job.startedAt||null,finishedAt:job.finishedAt||null,elapsedMs:Math.max(0,Math.round(Number(job.elapsedMs)||0)),errorCode:job.errorCode?String(job.errorCode).slice(0,80):null,cancelRequested:job.cancelRequested===true});
+ async function executePreview(args,ctx){owner(ctx);const snapshot=await deps.service.snapshot(ctx);const item=snapshot.items.find(g=>g.id===args.groupId);if(!item)throw error('OFFICE_NOT_FOUND',404);if(snapshot.legacyNormalizationRequired)throw error('OFFICE_RESOURCE_VERIFY_FAILED',409);
+  const plan=deps.refresh.plan(ctx.profile,item.moduleIds);owner(ctx);
+  return{revision:snapshot.revision,groupId:item.id,name:item.name,targets:plan.requestedTargets,filterReady:plan.filterReady,running:plan.running,activeJobId:plan.activeJobId||null,canStart:plan.filterReady&&!plan.running,impact:{ownerSnapshotOnly:true,replacesCurrentSnapshot:true,rollback:'unavailable'}};}
+ const ack=(groupId,job)=>({verified:true,completionPending:'native-operation',operation:{id:String(job.jobId),kind:'source-refresh',groupId},job:publicRefreshJob(job)});
+ async function executePoll(receipt,ctx){owner(ctx);const job=deps.refresh.state(ctx.profile);owner(ctx);
+  if(!job||job.jobId!==receipt.operation.id)throw error('OFFICE_NATIVE_RECEIPT_INVALID',409);
+  if(job.running)return ack(receipt.operation.groupId,job);
+  if(job.phase!=='done'||job.errorCode)throw error(job.errorCode==='REFRESH_CANCELLED'?'OFFICE_NATIVE_OPERATION_CANCELLED':'OFFICE_NATIVE_OPERATION_FAILED',409);
+  const view=publicRefreshJob(job);return{verified:true,operation:receipt.operation,data:{jobId:view.jobId,requestedTargets:view.requestedTargets,loadedAt:job.loadedAt||null,elapsedMs:view.elapsedMs}};}
+ registry.registerCapability({...base,id:'source.refreshgroup.execute',operation:'EXECUTE',risk:'write',dataScope:'current owner refresh job and snapshot only; group targets from the native shared definition; existing asynchronous refresh worker',label:{tr:'Yenileme grubunu çalıştır ve sonucu bekle',en:'Run a refresh group and await its result'},inputSchema:req({groupId:id}),outputSchema:execOutput,dryRunOutputSchema:req({verified:ok,fingerprint:sha,preview:execPreview}),publicPreview:p=>p,
+  read:(args,ctx)=>executePreview(args,ctx),
+  apply:async(args,ctx,p)=>{if(!p.canStart)throw error(p.running?'OFFICE_OPERATION_IN_PROGRESS':'OFFICE_SOURCE_FILTER_REQUIRED',409);
+   return mutate(ctx,async()=>{const now=await executePreview(args,ctx);if(now.revision!==p.revision||JSON.stringify(now.targets)!==JSON.stringify(p.targets)||!now.canStart)throw error('OFFICE_PREVIEW_CHANGED',409);
+    let started;try{started=deps.refresh.start(ctx.profile,p.targets,{commandKey:ctx.input.officeJobId+':'+ctx.input.officeStepId});}catch(e){if(e&&e.code==='OPERATION_IN_PROGRESS')throw error('OFFICE_OPERATION_IN_PROGRESS',409);if(e&&e.code==='SOURCE_FILTER_REQUIRED')throw error('OFFICE_SOURCE_FILTER_REQUIRED',409);throw e;}
+    return ack(p.groupId,started.job);});},
+  poll:executePoll});
  for(const operation of ['create','update','delete']){
   const toolId='source.refreshgroup.'+operation,labels={create:{tr:'Yenileme grubu oluştur',en:'Create refresh group'},update:{tr:'Yenileme grubunu revize et',en:'Revise refresh group'},delete:{tr:'Yenileme grubunu sil',en:'Delete refresh group'}};
   registry.registerCapability({...base,id:toolId,operation:operation.toUpperCase(),risk:'write',permissions:['manageModelConnections'],label:labels[operation],inputSchema:operation==='create'?req({group}):operation==='update'?req({groupId:id,group:req({name:group.properties.name,moduleIds:modules})}):req({groupId:id}),outputSchema:result,dryRunOutputSchema:req({verified:ok,fingerprint:sha,preview}),publicPreview:s=>({revision:s.revision,groupId:s.id,before:s.before,after:s.after,impact:s.impact}),

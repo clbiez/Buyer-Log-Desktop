@@ -21,7 +21,9 @@ test('v5.09 refresh job has an identity and terminal loadedAt marker', () => {
   const state = between(SERVER, 'function refreshJobState(id)', 'async function performRefresh');
   assert.match(state, /jobId:\s*job\.jobId/);
   assert.match(state, /loadedAt:\s*job\.loadedAt/);
-  const route = between(SERVER, "app.post('/api/refresh'", "app.post('/api/overrides/batch'");
+  // The async job is created by the shared native start used by the HTTP route and Agent Office.
+  const route = between(SERVER, 'function startNativeRefresh(', "app.post('/api/overrides/batch'");
+  assert.match(route, /startNativeRefresh\(req\.currentUser, rawTargets\)/);
   assert.match(route, /jobId:\s*`\$\{Date\.now\(\)\.toString\(36\)\}/);
   assert.match(route, /job\.loadedAt\s*=\s*cacheForUser\(id\)\.loadedAt/);
 });

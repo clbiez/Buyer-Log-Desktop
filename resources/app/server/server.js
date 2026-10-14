@@ -9645,27 +9645,27 @@ app.get('/api/refresh-targets', userAccess.requireArea('source'), (_req, res) =>
   }
 });
 
-app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
-  const id = sourceUserId(req);
-  if (refreshInFlight.has(id)) {
-    return res.status(409).json({ error: 'Bu kullanıcı için bir veri yenileme işlemi zaten devam ediyor.', code: 'OPERATION_IN_PROGRESS', job: refreshJobState(id) });
-  }
-
-  // Eski davranış (isteği yanıt dönene kadar bekletmek) korunuyor; testler ve
-  // otomasyon bunu { sync: true } ile isteyebilir.
-  const wantSync = Boolean(req.body && req.body.sync);
-  // Yalnız belirli sayfaları yenile: ['cp'], ['orders'], ['backlog'], ['lfl'] veya birkaçı.
-  const rawTargets = req.body && Array.isArray(req.body.targets) ? req.body.targets : null;
+/* Asenkron model yenilemesini başlatan tek native yol. HTTP /api/refresh ve
+   Agent Office yenileme grubu çalıştırması aynı fonksiyonu kullanır. */
+function nativeRefreshPlan(currentUser, rawTargets) {
+  const { requestedTargets } = nativeRefreshTargets(rawTargets), id = sourceUserId(currentUser), filterError = sourceFilterRequiredError(requestedTargets, currentUser);
+  return { requestedTargets, filterReady: !filterError, running: refreshInFlight.has(id), activeJobId: refreshInFlight.has(id) ? (refreshJobs.get(id) || {}).jobId || null : null };
+}
+function nativeRefreshTargets(rawTargets) {
+  rawTargets = Array.isArray(rawTargets) ? rawTargets : null;
   const targets = rawTargets ? refreshTargetsFor(rawTargets.filter(t => ['cp', 'orders', 'backlog', 'lfl', 'priceanalysis'].includes(String(t)))) : null;
-  const requestedTargets = targets && targets.length ? targets : ['cp','orders','backlog','lfl','priceanalysis'];
-  const filterError = sourceFilterRequiredError(requestedTargets,req);
-  if (filterError) {
-    return res.status(filterError.statusCode).json({ error: filterError.message, code: filterError.code, sourceFilterRequired: true, sourceFilterStatus: filterError.filterStatus });
-  }
-
-  if (!wantSync) {
+  return { targets, requestedTargets: targets && targets.length ? targets : ['cp','orders','backlog','lfl','priceanalysis'] };
+}
+function startNativeRefresh(currentUser, rawTargets, options = {}) {
+  const id = sourceUserId(currentUser), commandKey = String(options.commandKey || '').slice(0, 220);
+  // Aynı Office adımı yeniden oynatılırsa ikinci bir yenileme başlatılmaz.
+  const previous = refreshJobs.get(id);
+  if (commandKey && previous && previous.commandKey === commandKey) return { started: false, replayed: true, job: refreshJobState(id) };
+  if (refreshInFlight.has(id)) throw Object.assign(new Error('Bu kullanıcı için bir veri yenileme işlemi zaten devam ediyor.'), { code: 'OPERATION_IN_PROGRESS', statusCode: 409, job: refreshJobState(id) });
+  const { targets, requestedTargets } = nativeRefreshTargets(rawTargets);
+  const filterError = sourceFilterRequiredError(requestedTargets, currentUser);
+  if (filterError) throw filterError;
     const startedAt=new Date().toISOString();
-    const currentUser = req.currentUser;
     // Kaynak modu sözleşmesi dashboard/Excel/Database davranışı için mevcut
     // isimleri korur; ETA aynı politikayı yalnız profil anahtarı olarak okur.
     const refreshOverrides = loadOverrides();
@@ -9676,7 +9676,7 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
     const performanceProfile=refreshPerformanceProfile(currentUser,requestedTargets,sourcePolicy);
     const job={jobId:`${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`,running:true,phase:'source-setup',startedAt,startedMs:Date.now(),error:null,
       requestedTargets:requestedTargets.slice(),loadedAt:null,controller:new AbortController(),cancelRequested:false,commitStarted:false,
-      operations:[],performanceProfile,eta:refreshPerformance.estimate(performanceProfile),diagnosis:null};
+      operations:[],performanceProfile,eta:refreshPerformance.estimate(performanceProfile),diagnosis:null,commandKey};
     refreshJobs.set(id,job);refreshInFlight.add(id);
     void refreshPerformance.refreshSharedCache().then(()=>{if(job.running)job.eta=refreshPerformance.estimate(job.performanceProfile);});
     performRefresh(id,currentUser,targets&&targets.length?targets:null,{signal:job.controller.signal,sourcePolicy:{asasMode:selectedAsasMode,antrepoMode:selectedAntrepoMode,lflMode:selectedLflMode},refreshId:job.jobId}).then(result=>{
@@ -9702,7 +9702,28 @@ app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
       void refreshPerformance.record({eventId:job.jobId,startedAt:job.startedAt,finishedAt:job.finishedAt,durationMs:job.elapsedMs,status,profile:finalProfile});
       refreshInFlight.delete(id);
     });
-    return res.status(202).json({started:true,job:refreshJobState(id)});
+    return {started:true,job:refreshJobState(id)};
+}
+app.post('/api/refresh', userAccess.requireArea('source'), async (req, res) => {
+  const id = sourceUserId(req);
+  if (refreshInFlight.has(id)) {
+    return res.status(409).json({ error: 'Bu kullanıcı için bir veri yenileme işlemi zaten devam ediyor.', code: 'OPERATION_IN_PROGRESS', job: refreshJobState(id) });
+  }
+
+  // Eski davranış (isteği yanıt dönene kadar bekletmek) korunuyor; testler ve
+  // otomasyon bunu { sync: true } ile isteyebilir.
+  const wantSync = Boolean(req.body && req.body.sync);
+  // Yalnız belirli sayfaları yenile: ['cp'], ['orders'], ['backlog'], ['lfl'] veya birkaçı.
+  const rawTargets = req.body && Array.isArray(req.body.targets) ? req.body.targets : null;
+  const { targets, requestedTargets } = nativeRefreshTargets(rawTargets);
+  const filterError = sourceFilterRequiredError(requestedTargets,req.currentUser);
+  if (filterError) {
+    return res.status(filterError.statusCode).json({ error: filterError.message, code: filterError.code, sourceFilterRequired: true, sourceFilterStatus: filterError.filterStatus });
+  }
+
+  if (!wantSync) {
+    try { return res.status(202).json(startNativeRefresh(req.currentUser, rawTargets)); }
+    catch (err) { if (err && err.code === 'OPERATION_IN_PROGRESS') return res.status(409).json({ error: err.message, code: err.code, job: err.job }); return apiError(res, err, 'Yenileme başlatılamadı.'); }
   }
   const syncStartedAt=new Date().toISOString(),syncStartedMs=Date.now();
   const syncEventId=`sync-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,10)}`;
@@ -10886,7 +10907,7 @@ const agentResourceDeps={withAgentMutation:(ctx,work)=>agentOfficeStore.withProf
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-landed-multiplier-tools').registerLandedMultiplierTools(agentToolRegistry,{...agentResourceDeps,service:landedMultiplierService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'landedMultipliers',{revision:receipt.revision,origin:'agent'})});
 const nativeRefreshGroupService=require('./lib/refresh-group-service').createRefreshGroupService({db:require('./db')});
-require('./lib/agent-refresh-group-tools').registerRefreshGroupTools(agentToolRegistry,{...agentResourceDeps,service:nativeRefreshGroupService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'refreshGroups',{revision:receipt.revision,origin:'agent'})});
+require('./lib/agent-refresh-group-tools').registerRefreshGroupTools(agentToolRegistry,{...agentResourceDeps,service:nativeRefreshGroupService,refresh:{plan:(profile,moduleIds)=>nativeRefreshPlan(profile,moduleIds),start:(profile,moduleIds,options)=>startNativeRefresh(profile,moduleIds,options),state:profile=>refreshJobState(sourceUserId(profile))},changed:(profile,receipt)=>agentResourceDeps.changed(profile,'refreshGroups',{revision:receipt.revision,origin:'agent'})});
 require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
 require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});
 require('./lib/agent-oab-job-tools').registerOabJobTools(agentToolRegistry,{service:nativeOabBatchService,transport:OAB_DESKTOP_TRANSPORT,office:agentOfficeStore});
