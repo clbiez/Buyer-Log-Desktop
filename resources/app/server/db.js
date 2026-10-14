@@ -233,9 +233,11 @@ function mutateSharedResource(section,work) {
   return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(),file,work);
 }
 // Source planners and their per-record CAS run under the native SETTINGS lease.
-function mutateModelConnections(work) {
+function mutateSettings(work) {
   return require('./lib/guarded-document-mutation').guardedDocumentMutation(documents(),SETTINGS_FILE,work);
 }
+
+const mutateModelConnections=mutateSettings;
 
 function normalizeLandedMultipliers(value) {
   const raw = value && typeof value === 'object' ? value : {};
@@ -1319,7 +1321,7 @@ function loadRefreshGroups() {
   const revision = Number(settings._revisions && settings._revisions.refreshGroups) || 0;
   return { items: refreshGroups.normalizeGroups(settings.refreshGroups), revision };
 }
-function replaceRefreshGroups(items, expectedRevision = null) {
+function replaceRefreshGroups(items, expectedRevision = null, options = {}) {
   const settings = loadSettings();
   settings._revisions = settings._revisions && typeof settings._revisions === 'object' ? { ...settings._revisions } : {};
   const current = Number(settings._revisions.refreshGroups) || 0;
@@ -1327,7 +1329,7 @@ function replaceRefreshGroups(items, expectedRevision = null) {
   if (wanted != null && wanted !== current) throw new RevisionConflictError('Yenileme grupları', wanted, current, 'refreshGroups');
   settings.refreshGroups = refreshGroups.normalizeGroups(items);
   settings._revisions.refreshGroups = current + 1;
-  const saved = saveSettings(settings, settings._revision);
+  const saved = saveSettings(settings, settings._revision, options);
   return { items: saved.refreshGroups, revision: saved._revisions.refreshGroups };
 }
 
@@ -1814,7 +1816,7 @@ async function restoreCpExFactoryRevisions(snapshot, { actor = null } = {}) {
 module.exports = {
   mutateTableProfiles,mutateHorizonTemplates,
   snapshotOrderOverride,verifyOrderOverridePatch,restoreOrderOverrideReceipt,
-  mutateSharedResource,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
+  mutateSharedResource,mutateSettings,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
   loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,

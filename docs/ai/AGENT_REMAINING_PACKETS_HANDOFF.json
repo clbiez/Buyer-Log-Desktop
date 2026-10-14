@@ -1,0 +1,68 @@
+[
+  {
+    "packet": "source-connections",
+    "scope": "Configured source connection lifecycle, query/schema/mapping discovery and refresh-group execution",
+    "reuse": "model-connection/source services",
+    "boundary": "source IAM; configured targets only; secrets and arbitrary SQL/hosts excluded",
+    "status": "in_progress",
+    "delivery": "PR #562 and #563 merged: native options/name/enable and tabular metadata/mapping. Refresh-group definition packet uncommitted and paused for user-reported Stable login stall. Create/delete, saved queries/export and actual refresh execution remain pending."
+  },
+  {
+    "packet": "plm-assets",
+    "scope": "Native sample, BOM, model image and attachment job adapters",
+    "reuse": "PLM native jobs/session/store",
+    "boundary": "current corporate session; canonical model/order/color identity; durable native completion",
+    "status": "pending"
+  },
+  {
+    "packet": "order-editor",
+    "scope": "Current permitted order overrides, notes and custom note columns",
+    "reuse": "db order editor + note-column routes",
+    "boundary": "scope over every relevant order line; revision/lease; complete inverse including deleted values",
+    "status": "pending"
+  },
+  {
+    "packet": "checklist-options",
+    "scope": "Reusable checklist options, supplier XLSX exchange and attachment lifecycle",
+    "reuse": "checklist supplier services and exporter",
+    "boundary": "native CP operation grants; evidence scope; ambiguity approval; stored-file ownership",
+    "status": "in_progress",
+    "delivery": "PR #564 merged reusable option READ/approved UPDATE/inverse; 44 targeted PASS and actual native TR/EN UI. Supplier XLSX and attachment lifecycle pending. Outside Stable 7.0.273."
+  },
+  {
+    "packet": "presets",
+    "scope": "Focus/Extended and native cross-user preset sharing/apply/undo",
+    "reuse": "preset-share + table profile services",
+    "boundary": "owner/category and source visibility; exact revision-bound inverse",
+    "status": "pending"
+  },
+  {
+    "packet": "landed-multipliers",
+    "scope": "Shared TR/Overseas landed factor impact/preview/update/undo",
+    "reuse": "resource service/db replaceLandedMultipliers",
+    "boundary": "manageBusinessRules + source scope; native journal commit/readback",
+    "status": "implemented",
+    "delivery": "PR #561 merged; 32 targeted PASS; actual native UI/inverse; outside Stable 7.0.273"
+  },
+  {
+    "packet": "native-module-audit",
+    "scope": "Remaining pricing history, price/supplier analysis, INTAKE, holidays and native module functions",
+    "reuse": "existing deterministic native engines",
+    "boundary": "operation-by-operation route/UI inventory; zero inferred grants",
+    "status": "pending"
+  },
+  {
+    "packet": "workflow-office",
+    "scope": "Supported Workflow Studio/Office lifecycle and task handoff coverage",
+    "reuse": "existing Agent Runtime/Office stores",
+    "boundary": "no extra AI engine; current IAM; bounded context and safe restart",
+    "status": "pending"
+  },
+  {
+    "packet": "acceptance",
+    "scope": "Final multi-user, restart/approval, inverse, performance and regression matrix",
+    "reuse": "same framework/native fixtures and authorized live services",
+    "boundary": "corporate/Windows evidence stays explicitly unverified until genuinely run",
+    "status": "pending"
+  }
+]
