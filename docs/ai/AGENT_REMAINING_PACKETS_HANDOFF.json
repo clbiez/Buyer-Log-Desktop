@@ -35,7 +35,8 @@
     "scope": "Focus/Extended and native cross-user preset sharing/apply/undo",
     "reuse": "preset-share + table profile services",
     "boundary": "owner/category and source visibility; exact revision-bound inverse",
-    "status": "pending"
+    "status": "implemented",
+    "delivery": "presets.share.read / presets.share.apply (contract v2) over the native preset-share plan/commit service; see AGENT_PRESET_SHARE_ACCEPTANCE.md. Focus/Extended per-page editing itself stays in the table profile tools."
   },
   {
     "packet": "landed-multipliers",

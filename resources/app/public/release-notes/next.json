@@ -213,6 +213,35 @@
           "en": "Agent Office task steps dialog with a completed order edit step and an undo button"
         }
       }
+    },
+    {
+      "id": "agent-preset-share",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar başka kullanıcının ön ayarlarını onayla alır",
+        "en": "Agents take another user's presets with approval"
+      },
+      "body": {
+        "tr": "Agent Ofisi, Ön Ayar Paylaşımı'ndaki ayarları (Focus/Extended ön ayarları, sütun düzeni, oluşturulan sütunlar, Horizon filtreleri, görünüm ve filtre profilleri) seçili bir kullanıcıdan yalnız sizin çalışma alanınıza alabilir. Hangi anahtarların değişeceği önizlenir, onaydan sonra kullanıcı menüsüyle aynı birleştirme kuralı uygulanır ve sonuç doğrulanır. \"Bu adımı geri al\" önceki ayarlarınızı birebir geri getirir; aradan sonra ayarı siz değiştirdiyseniz geri alma güvenle durur. Kaynak kullanıcının kaydına hiç yazılmaz.",
+        "en": "Agent Office can take Preset Sharing settings (Focus/Extended presets, column layout, created columns, Horizon filters, views and filter profiles) from a selected user into your own workspace only. The keys to change are previewed, the user menu's merge rule applies after approval and the result is verified. \"Undo this step\" restores your previous settings exactly; if you changed a setting meanwhile, undo stops safely. The source user's record is never written."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-preset-share.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: Focus/Extended ön ayarlarını alma adımı onaylandı, doğrulandı ve geri alınabilir.",
+          "en": "Actual Agent Office: the step taking Focus/Extended presets was approved, verified and can be undone."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında doğrulanmış ön ayar aktarımı sonucu ve geri al düğmesi",
+          "en": "Agent Office task steps with a verified preset transfer result and an undo button"
+        }
+      }
     }
   ]
 }

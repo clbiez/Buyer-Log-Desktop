@@ -97,6 +97,8 @@
       OFFICE_TASK_DEVICE:L('Bu önizleme başka cihazda oluşturuldu. Bu cihazda yeni önizleme hazırlayın.','This preview was created on another device. Prepare a fresh preview on this device.'),
       OFFICE_EVIDENCE_SCOPE_REQUIRED:L('Önce Veri kapsamından sipariş veya PLM seçin.','First select an order or PLM in Data scope.'),
       OFFICE_EVIDENCE_LIMIT:L('En fazla beş belge ve dosya başına 19 MiB sınırı geçerlidir.','Up to five documents and a 19 MiB limit per file apply.'),
+      OFFICE_PRESET_VERIFY_FAILED:L('Ön ayarlar yazıldı ancak doğrulanamadı. Ön Ayar Paylaşımı ekranından kontrol edin.','Presets were written but could not be verified. Check them in Preset Sharing.'),
+      OFFICE_ORDER_VERIFY_FAILED:L('Sipariş düzenlemesi doğrulanamadı. CP Tracker\'da kontrol edin.','The order edit could not be verified. Check it in CP Tracker.'),
       OFFICE_NOTE_COLUMN_UNKNOWN:L('Not sütunu bulunamadı. Sütun silinmiş veya adı değişmiş olabilir; güncel sütunlarla yeniden önizleyin.','Note column not found. It may have been deleted or renamed; preview again with the current columns.'),
       OFFICE_PREVIEW_CHANGED:L('Kapsam, belgeler, agent profili veya yetki değişti. Yeni önizlemeyi onaylayın.','The scope, documents, agent profile or permissions changed. Approve a fresh preview.'),
       OFFICE_TEMPLATE_LIMIT:L('En fazla altı düzen saklanabilir. Önce bir şablonu kaldırın.','Up to six layouts can be saved. Remove a template first.'),

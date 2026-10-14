@@ -10922,6 +10922,16 @@ require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,ag
 require('./lib/agent-landed-multiplier-tools').registerLandedMultiplierTools(agentToolRegistry,{...agentResourceDeps,service:landedMultiplierService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'landedMultipliers',{revision:receipt.revision,origin:'agent'})});
 const nativeRefreshGroupService=require('./lib/refresh-group-service').createRefreshGroupService({db:require('./db')});
 require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
+{
+  // Same active-user and display rules as /api/preset-share; target is always the owner.
+  const activePresetProfile=profile=>Boolean(profile)&&profile.enabled!==false&&profile.status!=='INACTIVE';
+  const presetDisplayName=profile=>profile.displayName||profile.username||profile.id;
+  require('./lib/agent-preset-tools').registerPresetTools(agentToolRegistry,{...agentResourceDeps,presetShare,
+    users:me=>userAccess.allPublicProfiles().filter(profile=>activePresetProfile(profile)&&profile.id!==me.id).map(profile=>({id:profile.id,name:presetDisplayName(profile),title:profile.title||'',role:profile.systemRoleLabel||profile.roleLabel||''})).sort((a,b)=>a.name.localeCompare(b.name,'tr',{sensitivity:'base'})),
+    sourceProfile:id=>{const profile=userAccess.profileById(id);return activePresetProfile(profile)?profile:null;},displayName:presetDisplayName,
+    loadProfiles:id=>({views:loadViews(id),filters:loadFilterProfiles(id)}),restoreProfiles:(id,stores)=>require('./db').restoreUserBackupStores(id,stores),
+    applyEntryChanges:(...args)=>userPreferences.applyEntryChanges(...args)});
+}
 require('./lib/agent-refresh-group-tools').registerRefreshGroupTools(agentToolRegistry,{...agentResourceDeps,service:nativeRefreshGroupService,refresh:{plan:(profile,moduleIds)=>nativeRefreshPlan(profile,moduleIds),start:(profile,moduleIds,options)=>startNativeRefresh(profile,moduleIds,options),state:profile=>refreshJobState(sourceUserId(profile))},changed:(profile,receipt)=>agentResourceDeps.changed(profile,'refreshGroups',{revision:receipt.revision,origin:'agent'})});
 require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
 require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});
