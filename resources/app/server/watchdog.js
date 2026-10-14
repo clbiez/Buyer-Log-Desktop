@@ -162,6 +162,17 @@ function stopWatchdog(signal) {
     process.exit(0);
   }
 }
+/* Masaüstü ana süreci Görev Yöneticisi'nden zorla kapatılırsa SIGTERM gelmez;
+   gözetmen ve sunucu öksüz kalıp portu ve veritabanını tutardı. Ana süreç
+   kaybolunca nazik kapanış aynı yoldan yapılır. */
+const DESKTOP_PARENT_PID = Number(process.env.BUYER_LOG_DESKTOP_PARENT_PID) || 0;
+if (DESKTOP_PARENT_PID > 0 && DESKTOP_PARENT_PID !== process.pid) {
+  const pollMs = Math.max(100, Number(process.env.BUYER_LOG_PARENT_POLL_MS) || 2000);
+  setInterval(() => {
+    try { process.kill(DESKTOP_PARENT_PID, 0); }
+    catch (error) { if (error && error.code === 'ESRCH') stopWatchdog('desktop-parent-exited'); }
+  }, pollMs).unref();
+}
 process.on('SIGINT', () => stopWatchdog('SIGINT'));
 process.on('SIGTERM', () => stopWatchdog('SIGTERM'));
 process.on('uncaughtException', err => {

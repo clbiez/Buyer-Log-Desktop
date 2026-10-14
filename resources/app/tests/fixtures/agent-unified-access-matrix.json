@@ -3782,6 +3782,23 @@
         "contractVersion": 2
       },
       {
+        "id": "source.refreshgroup.execute",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
         "id": "source.refreshgroup.create",
         "operation": "CREATE",
         "agentAreas": [

@@ -5,8 +5,8 @@ const db=require('../server/db'),Rules=require('../server/lib/data-domain/refres
 const clone=v=>JSON.parse(JSON.stringify(v));let seq=0;test.after(()=>fs.rmSync(root,{recursive:true,force:true}));
 async function fixture(t,hooks={}){
  const profile={id:'refresh'+(++seq),enabled:true,areas:['source'],permissions:['manageModelConnections']},access={profileById:id=>id===profile.id?profile:null,publicProfile:p=>p,hasArea:(p,a)=>p.areas.includes(a),hasPermission:(p,a)=>p.permissions.includes(a),appendAudit(){}};
- db.replaceRefreshGroups([]);let office,store;const registry=createToolRegistry({userAccess:access,authorizeCapability:(ctx,args)=>office.taskAuthorize(ctx,args)}),native=createRefreshGroupService({db}),changes=[];
- require('../server/lib/agent-refresh-group-tools').registerRefreshGroupTools(registry,{service:native,beforeBackup:hooks.beforeBackup,changed:(p,r)=>changes.push(r.revision),withAgentMutation:(ctx,work)=>store.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
+ db.replaceRefreshGroups([]);let office,store;const registry=createToolRegistry({userAccess:access,authorizeCapability:(ctx,args)=>office.taskAuthorize(ctx,args),authorizePendingCapability:(ctx,receipt)=>office.taskAuthorizePending(ctx,receipt)}),native=createRefreshGroupService({db}),changes=[];
+ require('../server/lib/agent-refresh-group-tools').registerRefreshGroupTools(registry,{service:native,refresh:hooks.refresh,beforeBackup:hooks.beforeBackup,changed:(p,r)=>changes.push(r.revision),withAgentMutation:(ctx,work)=>store.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
  const restart=()=>{office?.stop();store=createAgentOfficeStore({root:path.join(root,profile.id)});office=createAgentOfficeService({store,userAccess:access,toolRegistry:registry,runtime:createAgentRuntime({store:runtimeStore,toolRegistry:registry,policyEngine:createPolicyEngine({userAccess:access})}),runtimeStore,getOperationalData:async()=>({})});};restart();t.after(()=>office.stop());const agent=await store.createProfile(profile.id,{name:'Refresh groups',areas:['source']});return {profile,registry,native,agent,changes,restart,get store(){return store;},get office(){return office;}};
 }
 const group={id:'demo-group',name:'DEMO Buying',moduleIds:['backlog']},create=(f,operation='create',args={group})=>f.office.taskCreate(f.profile,{agentId:f.agent.id,steps:[{toolId:'source.refreshgroup.'+operation,args}]}),apply=(f,j)=>f.office.taskExecute(f.profile,j.id,{confirmed:true,fingerprint:j.steps[0].preview.fingerprint}),undo=(f,j)=>f.office.taskRollback(f.profile,j.id,{stepId:j.steps[0].id,confirmed:true}),current=()=>db.loadRefreshGroups();
@@ -45,4 +45,40 @@ test('the final two safe SETTINGS root and refresh-group revisions support forwa
 });
 for(const mode of ['delta','delta-only'])test(mode+': IAM loss after native journal append preserves the private committed receipt and inverse',async t=>{
  const local=require('../server/lib/local-db').createLocalDb(path.join(root,'journal-'+mode+'.db')),delta=require('../server/lib/delta-store').createDeltaStore({localDb:local,mode});await delta.hydrate();db.attachDeltaStore(delta);t.after(()=>db.attachDeltaStore(null));const f=await fixture(t);await delta.flush();await delta.hydrate();const before=current(),j=await create(f),queue=local.queuePatches.bind(local);let appended=false;local.queuePatches=async(...args)=>{const r=await queue(...args);appended=true;f.profile.permissions=[];return r;};try{await assert.rejects(apply(f,j),{code:'OFFICE_PREVIEW_CHANGED'});}finally{local.queuePatches=queue;}assert.equal(appended,true);await delta.hydrate();assert.deepEqual(current().items,[Rules.normalizeGroup(group)]);const actual=await f.store.get(f.profile.id,'job',j.id);assert.equal(actual.steps[0].status,'completed');assert.ok(actual.steps[0].result.rollbackToken.artifactId);f.profile.permissions=['manageModelConnections'];await undo(f,actual);await delta.hydrate();assert.deepEqual(current().items,before.items);
+});
+
+function fakeRefresh(){
+ // Mirrors the native startNativeRefresh/refreshJobState contract (one job per owner, command-key replay).
+ const r={calls:[],filterReady:true,job:null,plan:(profile,moduleIds)=>({requestedTargets:Rules.normalizeModuleIds(moduleIds),filterReady:r.filterReady,running:!!r.job?.running,activeJobId:r.job?.running?r.job.jobId:null}),
+  start(profile,targets,options){if(r.job&&options.commandKey&&r.job.commandKey===options.commandKey)return{started:false,replayed:true,job:r.job};if(r.job?.running)throw Object.assign(Error('busy'),{code:'OPERATION_IN_PROGRESS'});r.calls.push({owner:profile.id,targets,commandKey:options.commandKey});r.job={jobId:'job'+r.calls.length,running:true,phase:'source-setup',requestedTargets:targets,startedAt:new Date().toISOString(),elapsedMs:0,commandKey:options.commandKey};return{started:true,job:r.job};},
+  state:()=>r.job||{running:false,phase:'idle',jobId:null},finish(extra={}){Object.assign(r.job,{running:false,phase:'done',finishedAt:new Date().toISOString(),elapsedMs:1200,loadedAt:new Date().toISOString()},extra);}};
+ return r;
+}
+const run=(f,groupId=group.id)=>create(f,'execute',{groupId});
+test('refresh-group EXECUTE previews native targets, needs approval, starts the owner refresh once and completes from the real job state',async t=>{
+ const refresh=fakeRefresh(),f=await fixture(t,{refresh});db.replaceRefreshGroups([group]);
+ const j=await run(f),p=j.steps[0].preview.preview;
+ assert.deepEqual([...p.targets],[...Rules.normalizeGroup(group).moduleIds]);assert.equal(p.canStart,true);assert.equal(p.impact.rollback,'unavailable');
+ await assert.rejects(f.office.taskExecute(f.profile,j.id),{code:'OFFICE_APPROVAL_REQUIRED'});assert.equal(refresh.calls.length,0);
+ const waiting=await apply(f,j);assert.equal(waiting.status,'waiting_operation');assert.equal(refresh.calls.length,1);assert.equal(refresh.calls[0].owner,f.profile.id);
+ assert.equal(refresh.calls[0].commandKey,j.id+':'+j.steps[0].id);
+ const still=await f.office.taskPollOperation(f.profile,j.id);assert.equal(still.status,'waiting_operation',JSON.stringify(still.steps[0].errorCode));
+ refresh.finish();const done=await f.office.taskPollOperation(f.profile,j.id);assert.equal(done.status,'completed');
+ assert.equal(done.steps[0].result.data.jobId,'job1');assert.deepEqual([...done.steps[0].result.data.requestedTargets],[...p.targets]);assert.equal(done.steps[0].result.rollbackToken,undefined);
+ assert.equal(f.registry.get('source.refreshgroup.execute').rollbackable,false);
+});
+test('refresh-group EXECUTE never starts a second refresh, refuses a missing source filter and fails a superseded or failed job',async t=>{
+ const refresh=fakeRefresh(),f=await fixture(t,{refresh});db.replaceRefreshGroups([group]);
+ refresh.job={jobId:'manual',running:true,phase:'models',requestedTargets:['cp']};
+ const busy=await run(f);assert.equal(busy.steps[0].preview.preview.canStart,false);assert.equal((await apply(f,busy)).status,'failed');assert.equal(refresh.calls.length,0);
+ refresh.job=null;refresh.filterReady=false;const unfiltered=await run(f);assert.equal(unfiltered.steps[0].preview.preview.filterReady,false);assert.equal((await apply(f,unfiltered)).status,'failed');assert.equal(refresh.calls.length,0);
+ refresh.filterReady=true;const a=await apply(f,await run(f));assert.equal(a.status,'waiting_operation');
+ refresh.job={jobId:'other',running:false,phase:'done'};const superseded=await f.office.taskPollOperation(f.profile,a.id);assert.notEqual(superseded.status,'completed');
+ refresh.job=null;const b=await apply(f,await run(f));refresh.finish({phase:'error',errorCode:'MODEL_REFRESH_FAILED'});const failed=await f.office.taskPollOperation(f.profile,b.id);assert.notEqual(failed.status,'completed');
+});
+test('refresh-group EXECUTE requires current source access and an unchanged definition before starting',async t=>{
+ const refresh=fakeRefresh(),f=await fixture(t,{refresh});db.replaceRefreshGroups([group]);
+ const j=await run(f);db.replaceRefreshGroups([{...group,moduleIds:['cp']}]);assert.equal((await apply(f,j)).status,'failed');assert.equal(refresh.calls.length,0);
+ const k=await run(f);f.profile.areas=[];await assert.rejects(apply(f,k),{code:'OFFICE_TOOL_FORBIDDEN'});assert.equal(refresh.calls.length,0);
+ f.profile.areas=['source'];await assert.rejects(run(f,'missing'),{code:'OFFICE_NOT_FOUND'});
 });

@@ -1,14 +1,102 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-14",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Ofiste doğru oturuş, güvenli zorla kapatma ve yenileme grubu çalıştırma",
+    "en": "Correct office seating, safe forced close and refresh group execution"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Agent Ofisi tek bir gerçek ölçek kullanır ve agent'lar masalarına doğru oturur. Zorla kapatma sonrası arka plan süreci kalmaz. Agent'lar yenileme grubunu onayla çalıştırır.",
+    "en": "Agent Office uses one real-world scale and agents sit correctly at their desks. No background process remains after a forced close. Agents run a refresh group with approval."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "agent-office-seated-proportions",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Ofiste tutarlı ölçek ve doğru oturuş",
+        "en": "Consistent office scale and correct seating"
+      },
+      "body": {
+        "tr": "Piksel Atölye tek bir gerçek ölçek kullanır: masa yüzeyleri aynı yükseklikte, kanepe, toplantı masası, raf, askılık ve manken orantılı, karakterler daha gerçekçi boyda. Çalışan agent masanın önünde klavye hizasında, sırtı izleyiciye dönük ve masa çizimiyle aynı açıdaki sandalyede oturur. Toplantıda ön sandalyeler arkadan, uç sandalyeler profilden görünür; yakın isim etiketleri üst üste binmez.",
+        "en": "Pixel Workshop uses one real-world scale: desk surfaces share the same height, the sofa, meeting table, shelves, rack and dress form are proportional and agents have realistic height. A working agent sits in front of the desk at the keyboard, back to the viewer, on a chair drawn at the same angle as the desk. At meetings near-side chairs show their backs and end chairs are in profile; nearby name tags no longer overlap."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-seated-proportions.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: agent'lar masalarının önünde, ekrana dönük ve sandalyeleriyle oturuyor; mobilyalar ortak ölçekte.",
+          "en": "Actual Agent Office: agents sit at their desks facing the screen on their chairs; furniture shares one scale."
+        },
+        "alt": {
+          "tr": "Gerçek Agent Ofisi: agent'lar masalarının önünde, ekrana dönük ve sandalyeleriyle oturuyor; mobilyalar ortak ölçekte.",
+          "en": "Actual Agent Office: agents sit at their desks facing the screen on their chairs; furniture shares one scale."
+        }
+      }
+    },
+    {
+      "id": "backend-parent-exit",
+      "type": "fix",
+      "module": {
+        "tr": "Masaüstü",
+        "en": "Desktop"
+      },
+      "title": {
+        "tr": "Zorla kapatma sonrası arka plan süreci kalmaz",
+        "en": "No background process left after a forced close"
+      },
+      "body": {
+        "tr": "Buyer Log Görev Yöneticisi'nden sonlandırılırsa arka plan sunucusu bunu birkaç saniye içinde fark eder ve düzgün kapanır. Port ve veritabanı boşalır; uygulama yeniden açıldığında çalışan kopya engeline takılmaz.",
+        "en": "If Buyer Log is ended from Task Manager, the background server notices within a few seconds and shuts down cleanly. The port and database are released, so reopening the app is not blocked by a running copy."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backend-parent-exit-reopen.png",
+        "caption": {
+          "tr": "Görev Yöneticisi'nden kapatıldıktan sonra yeniden açılan Buyer Log'da üç hazırlık adımı tamamlanır.",
+          "en": "After an End task in Task Manager, reopened Buyer Log completes all three preparation steps."
+        },
+        "alt": {
+          "tr": "Görev Yöneticisi'nden kapatıldıktan sonra yeniden açılan Buyer Log'da üç hazırlık adımı tamamlanır.",
+          "en": "After an End task in Task Manager, reopened Buyer Log completes all three preparation steps."
+        }
+      }
+    },
+    {
+      "id": "agent-refresh-group-execute",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar yenileme grubunu onayla çalıştırır",
+        "en": "Agents run a refresh group with approval"
+      },
+      "body": {
+        "tr": "Agent, ortak yenileme grubunu kullanıcının kendi yenilemesiyle çalıştırır: aynı native yenileme işi başlar, gerçek sonuç beklenir ve görev buna göre tamamlanır ya da durur. Kaynak filtresi hazır değilse veya başka bir yenileme sürüyorsa işlem başlamaz; aynı adım yeniden oynatılırsa ikinci yenileme açılmaz. Yenileme mevcut anlık görüntüyü değiştirdiği için geri alma sunulmaz ve bu önizlemede açıkça yazar.",
+        "en": "An agent runs a shared refresh group through the user's own refresh: the same native refresh job starts, its actual result is awaited and the task completes or stops accordingly. It does not start when the source filter is not ready or another refresh is running, and replaying the same step does not open a second refresh. Because a refresh replaces the current snapshot, no undo is offered and the preview says so."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-refresh-group-execute.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi görevinde yenileme grubunun hedefleri, filtre durumu ve geri alınamaz etkisi onaydan önce gösterilir.",
+          "en": "An actual Agent Office task shows the refresh group's targets, filter readiness and non-reversible effect before approval."
+        },
+        "alt": {
+          "tr": "Gerçek Agent Ofisi görevinde yenileme grubunun hedefleri, filtre durumu ve geri alınamaz etkisi onaydan önce gösterilir.",
+          "en": "An actual Agent Office task shows the refresh group's targets, filter readiness and non-reversible effect before approval."
+        }
+      }
+    }
+  ]
 }
