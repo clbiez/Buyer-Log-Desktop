@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.275",
+  "channel": "stable",
+  "publishedAt": "2026-10-14",
+  "title": {
+    "tr": "Güvenli açılış ve native Agent işlemleri",
+    "en": "Safe startup and native agent actions"
+  },
+  "summary": {
+    "tr": "Agent bildirimleri başlangıç veri yüklemesiyle yarışmaz. Kaydedilmiş görev sonuçları, ortak Landed çarpanları, kaynak eşlemeleri ve opsiyon onayları native servisler ve güncel yetkilerle korunur.",
+    "en": "Agent notifications do not compete with initial data loading. Saved task receipts, shared Landed factors, source mappings and option approvals use native services and current authority."
+  },
+  "stats": {
+    "features": 6,
+    "improvements": 0,
+    "fixes": 4
+  },
+  "changes": [
+    {
+      "id": "agent-committed-native-receipt",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Yetki sonradan değişse de işlem kaydı korunur",
+        "en": "Operation receipts survive later access changes"
+      },
+      "body": {
+        "tr": "Native yazı yetkili olarak kaydedildikten sonra erişim değişirse doğrulanmış sonuç ve geri alma kaydı silinmez. Sonuç gösterimi ve sonraki işlemler güncel yetkiye göre durur; işlem tekrar yazılmaz.",
+        "en": "If access changes after an authorized native commit, its verified result and inverse receipt remain stored. Display and downstream operations stop under current access; the write is not repeated."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-committed-native-receipt.png",
+        "caption": {
+          "tr": "Gerçek native Transit güncellemesinin kalıcı doğrulanmış sonucu ve geri alma seçeneği.",
+          "en": "The retained verified result and inverse action for an actual native Transit update."
+        },
+        "alt": {
+          "tr": "Gerçek native Transit güncellemesinin kalıcı doğrulanmış sonucu ve geri alma seçeneği.",
+          "en": "The retained verified result and inverse action for an actual native Transit update."
+        }
+      }
+    },
+    {
+      "id": "agent-restricted-task-record",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Görev ayrıntıları güncel yetkiye göre gizlenir",
+        "en": "Task details follow current access"
+      },
+      "body": {
+        "tr": "Görev listesi kapsam dışı görevlerin yalnız işlem durumunu gösterir. Talep metni, girişler, önizlemeler, sonuçlar ve geri alma dosya kimlikleri gizlenir; işlem geçmişi korunur.",
+        "en": "The task list shows only operation status for tasks outside current access. Request text, inputs, previews, results and inverse file identifiers are hidden while the operation history is retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-restricted-task-record.png",
+        "caption": {
+          "tr": "Agent duraklatıldıktan sonra gerçek görev listesindeki korunan durum ve gizlenen ayrıntılar.",
+          "en": "Retained status and hidden details in the actual task list after pausing the agent."
+        },
+        "alt": {
+          "tr": "Agent duraklatıldıktan sonra gerçek görev listesindeki korunan durum ve gizlenen ayrıntılar.",
+          "en": "Retained status and hidden details in the actual task list after pausing the agent."
+        }
+      }
+    },
+    {
+      "id": "agent-landed-defaults",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Ortak Landed varsayılanlarını onayla ve geri al",
+        "en": "Approve and undo shared landed defaults"
+      },
+      "body": {
+        "tr": "Yetkili agent ortak TR ve Overseas Landed varsayılanlarını okuyup etki önizlemesiyle güncelleyebilir. Native revizyon ve yazı yetkisi tekrar kontrol edilir; tam geri alma ve kalıcı işlem kaydı korunur. Satırların özel çarpanları ve kayıtlı fiyatları değiştirilmez. Önizleme ortak varsayılan etkisini bildirir; diğer kullanıcıların fiyat kayıtlarını okumaz.",
+        "en": "An authorized agent can read and revise shared TR and overseas landed defaults with an impact preview. Native revision and write authority are rechecked, preserving exact inverse and durable receipts. Explicit row factors and stored prices are retained. The preview reports shared default changes and does not read other users’ price records."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-landed-native.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisi görevinde doğrulanmış TR ve Overseas varsayılan çarpanları ile native geri alma seçeneği.",
+          "en": "Verified TR and overseas default factors with the native inverse action in an actual Agent Office task."
+        },
+        "caption": {
+          "tr": "Gerçek Agent Ofisi görevinde doğrulanmış TR ve Overseas varsayılan çarpanları ile native geri alma seçeneği.",
+          "en": "Verified TR and overseas default factors with the native inverse action in an actual Agent Office task."
+        }
+      }
+    },
+    {
+      "id": "agent-source-rename",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Kaynak bağlantılarını onaylı görevle yeniden adlandır",
+        "en": "Rename source connections through approved tasks"
+      },
+      "body": {
+        "tr": "Agent mevcut kaynak türlerini keşfedebilir ve bağlantı adını önizleme ile değiştirebilir. Bağlantı, sorgu ve kimlik bilgileri korunur. Güncel yetki, native revizyon, kalıcı işlem makbuzu ve tam geri alma denetlenir.",
+        "en": "Agents can discover existing source types and rename a connection with a preview. Connection, query and credential configuration is preserved. Current authority, native revision, durable receipts and exact inverse are checked."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-lifecycle-native.png",
+        "alt": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde doğrulanmış kaynak adlandırma işlemi ve geri alma seçeneği.",
+          "en": "Verified source rename and inverse action in an actual anonymous Agent Office task."
+        },
+        "caption": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde doğrulanmış kaynak adlandırma işlemi ve geri alma seçeneği.",
+          "en": "Verified source rename and inverse action in an actual anonymous Agent Office task."
+        }
+      }
+    },
+    {
+      "id": "agent-source-refresh-toggle",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Kaynak yenilemesini güvenli biçimde aç veya kapat",
+        "en": "Enable or disable source refresh safely"
+      },
+      "body": {
+        "tr": "Agent kaynak yenilemesini kullanıcı onayıyla açıp kapatabilir. Aynı türde tek aktif kaynak kuralı native planlayıcıyla korunur. Geri alma sırasında başka bir kaynak etkinleştirilmişse işlem onu değiştirmeden reddedilir.",
+        "en": "Agents can enable or disable source refresh with user approval. The native planner preserves the single active source per type rule. If another source was activated before inverse, it refuses the inverse without changing that source."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-refresh-native.png",
+        "alt": {
+          "tr": "Gerçek anonim görevde doğrulanmış kaynak yenileme değişikliği ve native geri alma seçeneği.",
+          "en": "Verified source refresh change and native inverse action in an actual anonymous task."
+        },
+        "caption": {
+          "tr": "Gerçek anonim görevde doğrulanmış kaynak yenileme değişikliği ve native geri alma seçeneği.",
+          "en": "Verified source refresh change and native inverse action in an actual anonymous task."
+        }
+      }
+    },
+    {
+      "id": "agent-source-mapping",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Native alan eşlemesini doğrula, onayla ve geri al",
+        "en": "Validate, approve and undo native field mapping"
+      },
+      "body": {
+        "tr": "Agent mevcut native alan kataloğu ve şemadan otomatik eşleme önerebilir; onaylı değişiklikler mevcut kaynak planlayıcısıyla kaydedilir. Gerçek native normalizasyon, 100 alan sınırı ve revizyon kapasitesi yazımdan önce denetlenir. Diğer eşlemeler korunur ve tam geri alma görev/adım kimliğine bağlanır. Eşleme kaldırma AI veya model bağlantısı kapalıyken de çalışır.",
+        "en": "Agents can propose automatic mapping from the existing native field catalog and schema; approved changes use the current source planner. Actual native normalization, the 100-field limit and revision capacity are checked before writing. Other mappings are retained, and exact inverse is bound to task and step. Removing mappings also works when AI or the model connection is offline."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-mapping-native.png",
+        "alt": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde doğrulanmış native eşleme değişikliği ve geri alma seçeneği.",
+          "en": "Verified native mapping change and inverse action in an actual anonymous Agent Office task."
+        },
+        "caption": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde doğrulanmış native eşleme değişikliği ve geri alma seçeneği.",
+          "en": "Verified native mapping change and inverse action in an actual anonymous Agent Office task."
+        }
+      }
+    },
+    {
+      "id": "agent-source-schema",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Kayıtlı kaynak şemasını güvenli ve sayfalı keşfet",
+        "en": "Discover saved source schema safely in pages"
+      },
+      "body": {
+        "tr": "Tabular kaynakların tablo, sütun ve şemaları yalnız kayıtlı kaynak kimliğiyle keşfedilir. Çıktı sayfalıdır; bağlantı, kimlik bilgileri ve ham sağlayıcı hataları gösterilmez. Her native metadata isteğinden önce güncel kullanıcı/agent yetkisi ve kaynak revizyonu denetlenir. Sağlayıcı bulunmayan cihazlarda gereksinim açıkça gösterilir; işlem başarılı sayılmaz.",
+        "en": "Tables, columns and schemas of tabular sources are discovered only by saved source ID. Output is paged; connection, credential and raw provider diagnostics are excluded. Current user/agent authority and source revision are checked before every native metadata request. Devices without the provider show the requirement explicitly; the operation is not marked successful."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-schema-provider-boundary.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında şema keşfinin native Windows/kurumsal sağlayıcı gereksinimi açıkça gösteriliyor.",
+          "en": "Actual Buyer Log UI explicitly shows the native Windows/corporate provider requirement for schema discovery."
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log ekranında şema keşfinin native Windows/kurumsal sağlayıcı gereksinimi açıkça gösteriliyor.",
+          "en": "Actual Buyer Log UI explicitly shows the native Windows/corporate provider requirement for schema discovery."
+        }
+      }
+    },
+    {
+      "id": "agent-checklist-reusable-options",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / CP",
+        "en": "Agent Office / CP"
+      },
+      "title": {
+        "tr": "Etkin opsiyon sorusunu ortak onayla ve revize et",
+        "en": "Approve and revise an effective reusable option question"
+      },
+      "body": {
+        "tr": "Agent, yetkili siparişten native PLM/model/renk kimliğini türeterek opsiyon kapsamındaki etkin checklist sorusunu onaylayabilir veya Pending durumuna alabilir. Siparişe özel cevaplar ve ekli kanıtlar korunur. Sipariş kapsamındaki sorular, silinmiş kurallar ve eksik kimlikler yazımdan önce reddedilir. Önizleme, kullanıcı onayı ve revizyona bağlı tam geri alma desteklenir.",
+        "en": "Agents derive the native PLM/model/colour identity from an authorized order to approve an effective option-scoped checklist question or return it to Pending. Order-specific answers and attached evidence are preserved. Order-scoped questions, deleted rules and missing identities are rejected before writing. Preview, user approval and complete revision-bound inverse are supported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-checklist-reusable-option.png",
+        "alt": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde native ortak opsiyon onayı ve geri alma sonucu.",
+          "en": "Native reusable option approval and inverse result in an actual anonymous Agent Office task."
+        },
+        "caption": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde native ortak opsiyon onayı ve geri alma sonucu.",
+          "en": "Native reusable option approval and inverse result in an actual anonymous Agent Office task."
+        }
+      }
+    },
+    {
+      "id": "login-agent-notifications-critical-path",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış / Agent Ofisi",
+        "en": "Startup / Agent Office"
+      },
+      "title": {
+        "tr": "Agent bildirimi açılışta tam veri taraması başlatmaz",
+        "en": "Agent notifications no longer start a full scan during startup"
+      },
+      "body": {
+        "tr": "Bildirim okuma yalnız kaydedilmiş uyarıları döndürür; CP, sipariş, koleksiyon, LFL ve Backlog taramasını beklemez. Otomatik bildirim isteği Devam düğmesinden sonra, mevcut arka plan taraması arayüz hazır bildirildikten sonra başlar. Büyük veya erişilemeyen kaynaklar bildirim üzerinden çalışma alanı hazırlığını bloke etmez.",
+        "en": "Notification reads return saved alerts without awaiting scans of CP, Orders, Collection, LFL and Backlog. Automatic notification requests start after Continue; the existing background scan starts after UI readiness is reported. Large or unavailable sources no longer block workspace preparation through notification reads."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "login-startup-notifications-fixed.png",
+        "alt": {
+          "tr": "Gerçek anonim kullanıcı girişi sonrasında üç hazırlık adımı tamamlandı; Agent bildirim isteği Devam sonrasına bırakıldı.",
+          "en": "All three preparation stages completed after an actual anonymous sign-in; the agent notification request starts after Continue."
+        },
+        "caption": {
+          "tr": "Gerçek anonim kullanıcı girişi sonrasında üç hazırlık adımı tamamlandı; Agent bildirim isteği Devam sonrasına bırakıldı.",
+          "en": "All three preparation stages completed after an actual anonymous sign-in; the agent notification request starts after Continue."
+        }
+      }
+    },
+    {
+      "id": "manufacturer-native-unique-identities",
+      "type": "fix",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Toplu kart oluşturmada güvenilir kimlikler",
+        "en": "Reliable identities for bulk card creation"
+      },
+      "body": {
+        "tr": "Native üretici kartları ve grup başlıkları UUID ile oluşturulur. Aynı saat diliminde yüksek hacimli içe aktarımın kısa rastgele kimlik çakışması nedeniyle durması önlenir; mevcut kayıt kimlikleri, yetki, revizyon, kilit ve geri alma kontrolleri korunur.",
+        "en": "Native manufacturer cards and group headings are created with UUIDs. High-volume import no longer stops due to short random identity collisions within the same clock tick; existing identities, authority, revision, lock and inverse checks are retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturer-native-unique-ids.png",
+        "caption": {
+          "tr": "Gerçek native içe aktarımda iki benzersiz kart kimliği, doğrulanmış sonuç ve geri alma seçeneği.",
+          "en": "Two unique card identities, a verified receipt and inverse action in actual native import."
+        },
+        "alt": {
+          "tr": "Gerçek native içe aktarımda iki benzersiz kart kimliği, doğrulanmış sonuç ve geri alma seçeneği.",
+          "en": "Two unique card identities, a verified receipt and inverse action in actual native import."
+        }
+      }
+    }
+  ]
+}

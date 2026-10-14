@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.275",
+      "publishedAt": "2026-10-14",
+      "title": {
+        "tr": "Güvenli açılış ve native Agent işlemleri",
+        "en": "Safe startup and native agent actions"
+      },
+      "stats": {
+        "features": 6,
+        "improvements": 0,
+        "fixes": 4
+      },
+      "file": "release-notes/7.0.275/release.json"
+    },
+    {
       "version": "7.0.273",
       "publishedAt": "2026-10-10",
       "title": {
