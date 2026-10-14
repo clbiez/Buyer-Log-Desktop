@@ -33,7 +33,7 @@ test('farklı para birimleri fiyat metriğini ve delta kıyasını kapatır',()=
 });
 
 test('bağımsız ekran yalnız seçilen kaynağı hazırlayan köprü ve kendi erişim alanını kullanır',()=>{
-  const html=read('public/index.html'),app=read('public/app-main.js'),access=read('public/user-access-ui.js'),ui=read('public/price-supplier-analysis.js');
+  const html=read('public/index.html'),app=read('public/app-main.js')+read('public/price-supplier-insights-engine.js'),access=read('public/user-access-ui.js'),ui=read('public/price-supplier-analysis.js');
   assert.match(html,/data-tab="priceanalysis"/);
   assert.match(html,/id="view-priceanalysis"/);
   assert.match(app,/if\(selected==='cp'\)await ensureCpLoaded\(\)/);
@@ -47,14 +47,14 @@ test('CP ve Orders analizinde girilmiş Sub-Manufacturer canonical supplier olar
   assert.equal(canonical.value({'Sub-Manufacturer':'Factory One',Manufacturer:'Main Factory'},'orders','subManufacturer'),'Factory One');
   assert.equal(canonical.value({'Sub Mfr':'Factory Two'},'orders','subManufacturer'),'Factory Two');
   assert.equal(canonical.value({Manufacturer:'Main Factory'},'orders','subManufacturer'),undefined);
-  const app=read('public/app-main.js');
+  const app=read('public/app-main.js')+read('public/price-supplier-insights-engine.js');
   assert.match(app,/manufacturer:norm\(base\.manufacturer\|\|manufacturer\)/);
   assert.match(app,/chosen==='supplierFob'\?'supplierFob':'fob'/);
 });
 
 test('Price & Supplier Analysis Product Group, Line ve Product Main Definition alanlarını ayırır',()=>{
   const fields=read('public/canonical-fields.js');
-  const app=read('public/app-main.js');
+  const app=read('public/app-main.js')+read('public/price-supplier-insights-engine.js');
   const ui=read('public/price-supplier-insights-engine.js');
   assert.match(fields,/productGroup:\{label:\{en:'Product Group',tr:'Ürün Grubu'\}/);
   assert.doesNotMatch(fields,/line:\{label:\{en:'Line',tr:'Line'\},type:'text',role:'dimension',aliases:\[[^\]]*'Ürün Grubu'/);
@@ -74,7 +74,7 @@ test('lowest/high price özetleri kullanıcı limitine kadar veri sağlayabilir'
 
 test('Price & Supplier Analysis Horizon kaynağını ve kendine ait horizon rozetini tanımlar',()=>{
   const html=read('public/index.html');
-  const app=read('public/app-main.js');
+  const app=read('public/app-main.js')+read('public/price-supplier-insights-engine.js');
   const ui=read('public/price-supplier-analysis.js');
   const scopes=read('server/lib/model-scopes.js');
   const refresh=read('server/lib/model-refresh.js');
@@ -94,7 +94,7 @@ test('Price & Supplier Analysis Horizon kaynağını ve kendine ait horizon roze
 });
 
 test('Horizon identities survive Price & Supplier drilldown and PLM image request',()=>{
-  const app=read('public/app-main.js'),drawer=read('public/detail-drawer.js'),bindings=read('public/canonical-module-bindings.js');
+  const app=read('public/app-main.js')+read('public/price-supplier-insights-engine.js'),drawer=read('public/detail-drawer.js'),bindings=read('public/canonical-module-bindings.js');
   assert.match(bindings,/plmId:\['plm'\]/);
   assert.match(bindings,/orderCode:\['ocode'\]/);
   assert.match(bindings,/colourCode:\['ccode'\]/);

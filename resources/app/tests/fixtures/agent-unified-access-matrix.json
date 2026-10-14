@@ -219,6 +219,23 @@
         "contractVersion": 2
       },
       {
+        "id": "overview.holidays.read",
+        "operation": "READ",
+        "agentAreas": [
+          "overview"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "overview"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
         "id": "presets.share.read",
         "operation": "READ",
         "agentAreas": [
@@ -1859,7 +1876,25 @@
       "analyze",
       "compare"
     ],
-    "tools": []
+    "tools": [
+      {
+        "id": "priceanalysis.insights.read",
+        "operation": "READ",
+        "agentAreas": [
+          "priceanalysis"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "priceanalysis"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      }
+    ]
   },
   {
     "id": "lcwai",

@@ -103,6 +103,7 @@
       OFFICE_ORDER_VERIFY_FAILED:L('Sipariş düzenlemesi doğrulanamadı. CP Tracker\'da kontrol edin.','The order edit could not be verified. Check it in CP Tracker.'),
       OFFICE_ORDER_SHARED_OWNER:L('Tarih ve alt üretici gibi paylaşılan alanları yalnız siparişin sahibi değiştirebilir.','Only the order owner can change shared fields such as dates and sub-manufacturer.'),
       OFFICE_ORDER_IDENTITY:L('Sipariş satırı belirlenemedi. Sipariş kodunu, model ve renk kodunu birlikte verin ya da ikisini de boş bırakın.','The order line could not be identified. Give the order code with both model and colour code, or leave both empty.'),
+      OFFICE_HOLIDAY_UNAVAILABLE:L('Resmi tatil takvimine şu an ulaşılamadı. Biraz sonra tekrar deneyin.','The public holiday calendar is unavailable right now. Try again later.'),
       OFFICE_NOTE_COLUMN_UNKNOWN:L('Not sütunu bulunamadı. Sütun silinmiş veya adı değişmiş olabilir; güncel sütunlarla yeniden önizleyin.','Note column not found. It may have been deleted or renamed; preview again with the current columns.'),
       OFFICE_PREVIEW_CHANGED:L('Kapsam, belgeler, agent profili veya yetki değişti. Yeni önizlemeyi onaylayın.','The scope, documents, agent profile or permissions changed. Approve a fresh preview.'),
       OFFICE_TEMPLATE_LIMIT:L('En fazla altı düzen saklanabilir. Önce bir şablonu kaldırın.','Up to six layouts can be saved. Remove a template first.'),

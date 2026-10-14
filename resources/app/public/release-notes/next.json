@@ -300,6 +300,64 @@
           "en": "CP Tracker table without an error banner after an order edit"
         }
       }
+    },
+    {
+      "id": "agent-price-analysis",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar Fiyat & Üretici Analizi'ni okur",
+        "en": "Agents read Price & Supplier Analysis"
+      },
+      "body": {
+        "tr": "Agent Ofisi, Fiyat & Üretici Analizi ekranının Horizon kaynağını aynı yetki kapsamı ve aynı hesap motoruyla okuyabilir: sezon kıyası, üretici bazında hacim ve fiyat konumu, ülke ve klasman kırılımları. Final FOB veya tedarikçi FOB, para birimi, sezon, kırılım ve filtre seçilebilir. Ekran ile agent artık tek gözlem üreticisini paylaşır; ekrandaki sonuçlar değişmez. Yalnız okuma yapılır.",
+        "en": "Agent Office can read the Horizon source of the Price & Supplier Analysis screen with the same access scope and calculation engine: season comparison, volume and price position per supplier, country and category breakdowns. Final FOB or supplier FOB, currency, season, breakdown and filters can be chosen. The screen and the agent now share one observation builder; screen results do not change. Read only."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-price-analysis.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: fiyat ve üretici analizi adımının doğrulanmış sonucu (demo veri).",
+          "en": "Actual Agent Office: verified result of the price and supplier analysis step (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında fiyat ve üretici analizi sonucu",
+          "en": "Agent Office task steps with a price and supplier analysis result"
+        }
+      }
+    },
+    {
+      "id": "agent-holidays",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar ülke resmi tatillerini okur",
+        "en": "Agents read country public holidays"
+      },
+      "body": {
+        "tr": "Agent Ofisi, dünya saatlerindeki resmi tatil takvimini bir ülke ve yıl için okuyabilir; üretim ülkesi planlarında kullanılabilir. Dışarı yalnız ülke kodu ve yıl gider, Buyer Log verisi gönderilmez. Takvime ulaşılamazsa açık bir uyarı gösterilir.",
+        "en": "Agent Office can read the public holiday calendar of the world clocks for a country and year, useful for production-country planning. Only the country code and year leave Buyer Log; no Buyer Log data is sent. If the calendar is unreachable, a clear notice is shown."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-holidays.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: Hindistan 2026 resmi tatilleri adımının doğrulanmış sonucu.",
+          "en": "Actual Agent Office: verified result of the India 2026 public holidays step."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında resmi tatil listesi",
+          "en": "Agent Office task steps with a public holiday list"
+        }
+      }
     }
   ]
 }

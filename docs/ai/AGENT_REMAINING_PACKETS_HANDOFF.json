@@ -51,7 +51,8 @@
     "scope": "Remaining pricing history, price/supplier analysis, INTAKE, holidays and native module functions",
     "reuse": "existing deterministic native engines",
     "boundary": "operation-by-operation route/UI inventory; zero inferred grants",
-    "status": "pending"
+    "status": "in_progress",
+    "delivery": "See AGENT_NATIVE_MODULE_AUDIT.md. Added: priceanalysis.insights.read (shared observation builder moved into price-supplier-insights-engine; screen output identical), overview.holidays.read. Pricing History reads quotations/collection already covered by quotation.* and collection.* tools; INTAKE read is intake.snapshot.read; INTAKE settings writes stay user-only."
   },
   {
     "packet": "workflow-office",

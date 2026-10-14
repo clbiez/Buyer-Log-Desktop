@@ -9455,21 +9455,29 @@ app.get('/api/shared-revisions',async(_req,res)=>{
 // Price & Supplier Analysis için Horizon kaynağı: ASAS satırlarının yalnızca
 // bu modüle ait kapsamı transfer edilir. Büyük ham küme başlangıçta /api/data
 // içine eklenmez; analiz ekranı açıldığında mevcut runtime snapshot'tan okunur.
+// Price & Supplier Analysis source rows; shared by the screen route and the
+// Office priceanalysis.insights.read capability (same scope and Horizon).
+async function priceAnalysisRowsFor(currentUser) {
+  const id = sourceUserId(currentUser), filterStatus = sourceFilterReadiness(['priceanalysis'], currentUser);
+  if (!filterStatus.ready) return { rows: [], loadedAt: null, sources: {}, sourceFilterRequired: true, filterStatus };
+  const runtime = cacheForUser(id);
+  if (!runtime.asasOrders) await ensureDataLoaded(id);
+  const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
+  const sourceRows = active.asasOrdersByTarget && Array.isArray(active.asasOrdersByTarget.priceanalysis)
+    ? active.asasOrdersByTarget.priceanalysis : (Array.isArray(active.asasOrders) ? active.asasOrders : []);
+  const rows = userAccess.filterRowsByScope(currentUser,
+    filterRowsByEffectiveHorizon(currentUser, 'priceanalysis', applyDateOverrides(sourceRows, overrides)));
+  return { rows, loadedAt: active.loadedAt, sources: active.sources || {}, modelRefresh: active.modelRefresh || null };
+}
 app.get('/api/data/price-analysis', userAccess.requireArea('priceanalysis'), async (req, res) => {
   try {
-    const id = sourceUserId(req), filterStatus = sourceFilterReadiness(['priceanalysis'], req);
-    if (!filterStatus.ready) {
+    const data = await priceAnalysisRowsFor(req.currentUser);
+    if (data.sourceFilterRequired) {
       return sendDateSafeJson(res, { rows: [], loadedAt: null, sources: {}, sourceFilterRequired: true,
-        sourceFilterStatus: filterStatus, sourceFilterMessage: sourceFilterReadinessMessage(filterStatus, 'tr') });
+        sourceFilterStatus: data.filterStatus, sourceFilterMessage: sourceFilterReadinessMessage(data.filterStatus, 'tr') });
     }
-    const runtime = cacheForUser(id);
-    if (!runtime.asasOrders) await ensureDataLoaded(id);
-    const active = cacheForUser(id), overrides = effectiveOverridesForUser(id);
-    const sourceRows = active.asasOrdersByTarget && Array.isArray(active.asasOrdersByTarget.priceanalysis)
-      ? active.asasOrdersByTarget.priceanalysis : (Array.isArray(active.asasOrders) ? active.asasOrders : []);
-    const rows = userAccess.filterRowsByScope(req.currentUser,
-      filterRowsByEffectiveHorizon(req.currentUser, 'priceanalysis', applyDateOverrides(sourceRows, overrides)));
-    sendDateSafeJson(res, { rows, rawCount: rows.length, loadedAt: active.loadedAt, sources: active.sources || {}, modelRefresh: active.modelRefresh || null });
+    const { rows } = data;
+    sendDateSafeJson(res, { rows, rawCount: rows.length, loadedAt: data.loadedAt, sources: data.sources, modelRefresh: data.modelRefresh });
   } catch (err) { apiError(res, err, 'Price & Supplier Analysis Horizon verisi yüklenemedi.'); }
 });
 async function currentSyncStatus() {
@@ -10932,6 +10940,8 @@ require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,ag
 require('./lib/agent-landed-multiplier-tools').registerLandedMultiplierTools(agentToolRegistry,{...agentResourceDeps,service:landedMultiplierService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'landedMultipliers',{revision:receipt.revision,origin:'agent'})});
 const nativeRefreshGroupService=require('./lib/refresh-group-service').createRefreshGroupService({db:require('./db')});
 require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
+require('./lib/agent-price-analysis-tools').registerPriceAnalysisTools(agentToolRegistry,{rows:profile=>priceAnalysisRowsFor(profile)});
+require('./lib/agent-holiday-tools').registerHolidayTools(agentToolRegistry,{holidayService});
 {
   // Same active-user and display rules as /api/preset-share; target is always the owner.
   const activePresetProfile=profile=>Boolean(profile)&&profile.enabled!==false&&profile.status!=='INACTIVE';

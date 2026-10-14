@@ -27760,15 +27760,9 @@ window.BLCollectionAnalyticsBridge={
 async function priceAnalysisMapInBatches(rows,mapper,batchSize=800){
   const out=[];for(let start=0;start<(rows||[]).length;start+=batchSize){const part=rows.slice(start,start+batchSize);for(let index=0;index<part.length;index++)out.push(mapper(part[index],start+index));if(start+batchSize<rows.length)await new Promise(resolve=>setTimeout(resolve,0));}return out;
 }
+// One observation builder for browser and server: price-supplier-insights-engine.
 function canonicalPriceObservation(row,moduleId,base={}){
-  const fields=window.BLCanonicalFields;
-  if(!fields)throw new Error('Canonical field registry is unavailable.');
-  const read=id=>fields.value(row,moduleId,id),country=norm(read('country')),inStore=norm(read('inStore')),manufacturer=norm(read('manufacturer')),subManufacturer=norm(read('subManufacturer'));
-  const plmId=norm(read('plmId')),orderCode=norm(read('orderCode')),colourCode=norm(read('colourCode')),model=norm(read('modelName')),classification=norm(read('category'))||'—',productMainDefinition=norm(read(moduleId==='collection'?'productMainDefinition':'productDescription'));
-  const quantity=base.quantity!=null?base.quantity:toNum(read(moduleId==='collection'?'collectionQuantity':'orderQuantity'));
-  return {...base,source:moduleId,row,raw:row,rowId:base.rowId??row.id??row._id,plmId,orderCode,orderKey:orderCode,colourCode,modelKey:plmId||model||String(base.rowId??row.id??row._id??''),model,classification,category:classification,
-    manufacturer:norm(base.manufacturer||manufacturer)||'—',subManufacturer,supplierFob:toNum(read('supplierFob')),country:country||'—',buyer:norm(read('buyer'))||'—',buyingGroup:norm(read('buyingGroup'))||'—',mag:norm(read('mag'))||norm(base.mag)||'—',mmyg:norm(read('mmyg'))||norm(base.mmyg)||'—',collection:norm(read('collectionName')),
-    productGroup:norm(read('productGroup')),productMainDefinition,season:norm(read('season'))||'—',status:norm(read('orderStatus')),colour:norm(read('colour')),month:inStore,planStartMonth:inStore,quantity:Number.isFinite(Number(quantity))&&Number(quantity)>0?Number(quantity):null};
+  return window.BLPriceSupplierInsights.canonicalObservation(row,moduleId,base,window.BLCanonicalFields);
 }
 /* v7.0.229 — Üreticiler sayfasının veri köprüsü. Orders/LFL/Fiyat & Üretici
    Analizi'nin paylaştığı ASAS sipariş projeksiyonunu (Siparişler satırları)
@@ -27815,10 +27809,7 @@ window.BLPriceSupplierAnalysisBridge={
       const rows=Array.isArray(data.rows)?data.rows:[];
       const priceTypes=[{key:'finalFob',label:appLang==='en'?'Final FOB':'Final FOB',currency:'ROW'},{key:'supplierFob',label:appLang==='en'?'Supplier FOB':'Tedarikçi FOB',currency:'ROW'}];
       const chosen=priceTypes.some(item=>item.key===priceType)?priceType:'finalFob';
-      const observations=await priceAnalysisMapInBatches(rows,(row,index)=>{
-        const fields=window.BLCanonicalFields,country=norm(fields.value(row,'orders','country')),price=toNum(fields.value(row,'orders',chosen==='supplierFob'?'supplierFob':'fob'));
-        return canonicalPriceObservation(row,'orders',{rowId:row._id??index,price:Number.isFinite(price)&&price>0?price:null,currency:isTurkeyCountry(country)?'TRY':'USD'});
-      });
+      const observations=await priceAnalysisMapInBatches(rows,(row,index)=>window.BLPriceSupplierInsights.orderPriceObservation(row,'orders',chosen,index,window.BLCanonicalFields));
       return {source:selected,scope,priceType:chosen,priceTypes,observations,rawCount:rows.length,version:`horizon:${data.loadedAt||''}:${rows.length}`};
     }
     if(selected==='cp')await ensureCpLoaded();
@@ -27836,10 +27827,7 @@ window.BLPriceSupplierAnalysisBridge={
     }
     const priceTypes=[{key:'finalFob',label:appLang==='en'?'Final FOB':'Final FOB',currency:'ROW'},{key:'supplierFob',label:appLang==='en'?'Supplier FOB':'Tedarikçi FOB',currency:'ROW'}];
     const chosen=priceTypes.some(item=>item.key===priceType)?priceType:'finalFob';
-    const observations=await priceAnalysisMapInBatches(rows,(row,index)=>{
-      const fields=window.BLCanonicalFields,country=norm(fields.value(row,selected,'country')),price=toNum(fields.value(row,selected,chosen==='supplierFob'?'supplierFob':'fob'));
-      return canonicalPriceObservation(row,selected,{rowId:row._id??index,price:Number.isFinite(price)&&price>0?price:null,currency:isTurkeyCountry(country)?'TRY':'USD'});
-    });
+    const observations=await priceAnalysisMapInBatches(rows,(row,index)=>window.BLPriceSupplierInsights.orderPriceObservation(row,selected,chosen,index,window.BLCanonicalFields));
     return {source:selected,scope,priceType:chosen,priceTypes,observations,rawCount:rows.length,version:`${selected}:${rows.length}:${rows[0]?._id||''}:${rows[rows.length-1]?._id||''}`};
   },
   openDrilldown(source,observations,title){
