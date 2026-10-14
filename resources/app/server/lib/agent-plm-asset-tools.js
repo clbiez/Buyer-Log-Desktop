@@ -61,27 +61,34 @@ function registerPlmAssetTools(registry,deps){
     const index=JSON.parse(JSON.stringify(deps.readModelFilesIndex()||[]));
     const {statusByPlmId}=deps.ownership.resolveTechnicalSheetOwnership(index,items.map(item=>item.plmId),{fileExists:deps.fileExists});
     const running=Boolean(deps.technicalSheets.running(ctx.profile));owner(ctx);
-    return {language:lang,items:items.map(item=>({plmId:item.plmId,styleLinked:Boolean(item.styleId),currentStatus:statusByPlmId[item.plmId]?.status||'missing'})),requested:items.length,
+    // styleIds bind the approval to the exact PLM styles; not shown in the preview.
+    return {styleIds:items.map(item=>item.styleId||''),language:lang,items:items.map(item=>({plmId:item.plmId,styleLinked:Boolean(item.styleId),currentStatus:statusByPlmId[item.plmId]?.status||'missing'})),requested:items.length,
       withoutStyleLink:items.filter(item=>!item.styleId).length,running,canStart:!running,impact:{ownerPlmSession:true,replacesEarlierPlmSheet:true,keepsUserUploads:true,rollback:'unavailable'}};
   }
+  // Known native failures keep their meaning; anything else stays a failed operation.
+  const failureCode=run=>{const code=String(run.errorCode||'');
+    if(run.job&&run.job.status==='cancelled'||code==='PLM_JOB_CANCELLED')return 'OFFICE_NATIVE_OPERATION_CANCELLED';
+    if(/^CORENECTUM_(API_TOKEN_(REQUIRED|INVALID|INVALID_FORMAT)|LOGIN_REQUIRED)$/.test(code))return 'OFFICE_PLM_SESSION_REQUIRED';
+    if(code==='OFFICE_PREVIEW_CHANGED'||code==='OFFICE_TOOL_FORBIDDEN')return code;
+    return 'OFFICE_NATIVE_OPERATION_FAILED';};
   const ack=(lang,started)=>({verified:true,completionPending:'native-operation',operation:{id:String(started.jobId),kind:'plm-technical-sheet',language:lang},job:publicJob(started.jobId,started.job)});
   registry.registerCapability({id:'collection.plm.techsheet.download',module:'koleksiyon',operation:'EXECUTE',risk:'write',areas:['koleksiyon'],agentAreas:['collection'],
     label:{tr:'PLM teknik föylerini indir ve sonucu bekle',en:'Download PLM technical sheets and await the result'},
     dataScope:'owner PLM session; technical sheets of the given PLM IDs in the model files store; existing PLM job',
-    inputSchema:{...object({plmIds,language}),required:['plmIds']},outputSchema:execOutput,dryRunOutputSchema:req({verified:ok,fingerprint:sha,preview:execPreview}),publicPreview:p=>p,
+    inputSchema:{...object({plmIds,language}),required:['plmIds']},outputSchema:execOutput,dryRunOutputSchema:req({verified:ok,fingerprint:sha,preview:execPreview}),publicPreview:({styleIds,...p})=>p,
     read:async(args,ctx)=>sheetPreview(args,ctx),
     apply:async(args,ctx,p)=>{if(!p.canStart)throw error('OFFICE_OPERATION_IN_PROGRESS',409);
       if(!deps.withAgentMutation)throw error('OFFICE_APPROVAL_REQUIRED',403);
       return deps.withAgentMutation(ctx,async()=>{const now=sheetPreview(args,ctx);
         if(!now.canStart)throw error('OFFICE_OPERATION_IN_PROGRESS',409);
-        if(JSON.stringify(now.items.map(i=>[i.plmId,i.styleLinked]))!==JSON.stringify(p.items.map(i=>[i.plmId,i.styleLinked])))throw error('OFFICE_PREVIEW_CHANGED',409);
+        if(JSON.stringify([now.styleIds,now.items.map(i=>i.plmId)])!==JSON.stringify([p.styleIds,p.items.map(i=>i.plmId)]))throw error('OFFICE_PREVIEW_CHANGED',409);
         const items=deps.technicalSheets.prepare(args.plmIds.map(plmId=>({plmId})));
         return ack(p.language,deps.technicalSheets.start(ctx.profile,items,p.language,{assertAuthority:ctx.assertAuthority}));});},
     poll:async(receipt,ctx)=>{owner(ctx);
       const run=deps.technicalSheets.run(ctx.profile,receipt.operation.id);
       if(!run)throw error('OFFICE_NATIVE_RECEIPT_INVALID',409);
       if(!run.done)return {verified:true,completionPending:'native-operation',operation:receipt.operation,job:publicJob(receipt.operation.id,run.job)};
-      if(run.errorCode||!run.result)throw error(run.job&&run.job.status==='cancelled'?'OFFICE_NATIVE_OPERATION_CANCELLED':'OFFICE_NATIVE_OPERATION_FAILED',409);
+      if(run.errorCode||!run.result)throw error(failureCode(run),409);
       const r=run.result,failedItems=(r.failedItems||[]).slice(0,200).map(item=>({plmId:text(item&&item.plmId,80),code:text(item&&item.code,80)}));
       // A model that could not be downloaded or stored makes the step partial.
       return {verified:true,...((r.failedItems||[]).length?{outcome:'partial'}:{}),operation:receipt.operation,data:{jobId:String(receipt.operation.id),language:r.language==='tr'?'tr':'en',requested:Number(r.requested)||0,downloaded:Number(r.downloaded)||0,saved:Number(r.saved)||0,failed:(r.failedItems||[]).length,failedItems}};}});

@@ -10,19 +10,19 @@ test.after(()=>fs.rmSync(root,{recursive:true,force:true}));
 const {createJobRegistry}=require('../server/lib/job-registry'),ownership=require('../server/lib/plm-technical-sheet-ownership');
 const {createToolRegistry}=require('../server/lib/agent-tool-registry'),{registerPlmAssetTools}=require('../server/lib/agent-plm-asset-tools');
 
-function harness(){
+function harness(opts={}){
   const files=path.join(root,'files-'+crypto.randomBytes(3).toString('hex'));fs.mkdirSync(files,{recursive:true});
-  let index=[],release;const gate=new Promise(resolve=>{release=resolve;});const calls=[];
+  let index=[],release;const links={'100001':{styleId:'S-1'},'100002':{styleId:'S-2'}};const gate=new Promise(resolve=>{release=resolve;});const calls=[];
   const plmJobs=createJobRegistry(),handlers={};
   async function withPlmJob(req,meta,fn){const userId=req.currentUser.id,job=plmJobs.create(userId,meta);
     try{const result=await fn({id:job.id,report:p=>plmJobs.update(userId,job.id,p||{}),fail:f=>plmJobs.addFailure(userId,job.id,f||{}),cancelled:()=>plmJobs.isCancelled(userId,job.id)});plmJobs.finish(userId,job.id,{status:'succeeded'});return {job:plmJobs.describe(userId,job.id),result};}
     catch(err){plmJobs.finish(userId,job.id,{status:'failed',error:err.message});throw err;}}
   const service=require('../server/routes/plm-sync-routes')({post:(route,...h)=>{handlers[route]=h.at(-1);},get:()=>{}},{
     MODEL_FILES_ROOT:files,crypto,fs,express:{json:()=>(_q,_s,n)=>n()},userAccess:{requireArea:()=>(_q,_s,n)=>n(),requireAnyArea:()=>(_q,_s,n)=>n(),appendAudit:()=>{}},
-    agentBrowserConnector:{downloadCoreNectumTechnicalSheets:async(_user,items,options)=>{calls.push({items,language:options.language});await gate;
+    agentBrowserConnector:{downloadCoreNectumTechnicalSheets:async(_user,items,options)=>{calls.push({items,language:options.language});await gate;if(opts.connectorError)throw Object.assign(new Error('DEMO'),{code:opts.connectorError});
       return {requested:items.length,files:items.filter(i=>i.styleId).map(i=>({plmId:i.plmId,styleId:i.styleId,base64:Buffer.from('%PDF DEMO '+i.plmId).toString('base64')})),failed:items.filter(i=>!i.styleId).map(i=>({plmId:i.plmId,code:'PLM_STYLE_LINK_MISSING',error:'DEMO'}))};}},
     automationError:(res,err)=>res.status(err.statusCode||500).json({code:err.code}),apiError:()=>{},clearModelOperationProgress:()=>{},setModelOperationProgress:()=>{},ensureModelFilesRoot:()=>{},
-    loadPlmStyleLinks:()=>({links:{'100001':{styleId:'S-1'},'100002':{styleId:'S-2'}}}),modelStoredFileExists:item=>fs.existsSync(path.join(files,item.storedName)),
+    loadPlmStyleLinks:()=>({links:links}),modelStoredFileExists:item=>fs.existsSync(path.join(files,item.storedName)),
     normalizePlmId:v=>String(v||'').replace(/\D/g,''),plmJobs,publicModelFileMeta:item=>({id:item.id,filename:item.filename,plmId:item.plmId}),
     readModelFilesIndex:()=>JSON.parse(JSON.stringify(index)),writeModelFilesIndex:next=>{index=JSON.parse(JSON.stringify(next));},resolveStoredFile:(dir,name)=>path.join(dir,path.basename(name)),
     safeMailFilename:name=>String(name).replace(/[^\w.-]/g,'_'),technicalSheetOwnership:ownership,withPlmJob,getModelImageSettings:()=>({}),qtxStore:{},upsertPlmStyleLinks:()=>null});
@@ -31,7 +31,7 @@ function harness(){
   registerPlmAssetTools(registry,{bomStore:{load:()=>({})},normalizePlmId:v=>String(v||'').replace(/\D/g,''),readModelFilesIndex:()=>index,fileExists:item=>fs.existsSync(path.join(files,item.storedName)),ownership,
     technicalSheets:service.technicalSheets,withAgentMutation:(_c,work)=>work()});
   const ctx={ownerId:profile.id,profile,input:{officeJobId:'job-t',officeStepId:'step-t',officeAgentId:'agent-t'},approvalGranted:true,assertAuthority:()=>{}};
-  return {registry,ctx,handlers,release,calls,index:()=>index,files,plmJobs,profile};
+  return {registry,ctx,handlers,release,calls,index:()=>index,files,plmJobs,profile,links};
 }
 const TOOL='collection.plm.techsheet.download';
 
@@ -72,4 +72,30 @@ test('another owner or an unknown receipt cannot read the run; the user route ke
   assert.equal(out.body.code,'PLM_ID_REQUIRED');
   await h.handlers['/api/plm-sync/model-files']({currentUser:h.profile,body:{items:[{plmId:'100002'}],language:'en'}},res);
   assert.equal(out.body.ok,true);assert.equal(out.body.saved,1);assert.equal(out.body.language,'en');
+});
+
+const settle=()=>new Promise(r=>setTimeout(r,20));
+test('a missing PLM session and a lost grant during the job end as distinct failures; nothing is stored',async()=>{
+  const h=harness({connectorError:'CORENECTUM_LOGIN_REQUIRED'});
+  const dry=await h.registry.execute(TOOL,{plmIds:['100001']},{...h.ctx,dryRun:true});
+  const started=await h.registry.execute(TOOL,{plmIds:['100001'],fingerprint:dry.fingerprint},h.ctx);
+  h.release();await settle();
+  await assert.rejects(h.registry.pollPending(TOOL,started,h.ctx),{code:'OFFICE_PLM_SESSION_REQUIRED'});
+  const g=harness();
+  const dry2=await g.registry.execute(TOOL,{plmIds:['100002']},{...g.ctx,dryRun:true});
+  const started2=await g.registry.execute(TOOL,{plmIds:['100002'],fingerprint:dry2.fingerprint},g.ctx);
+  // The owner's grants change while PLM is downloading.
+  g.profile.iamRevision=2;g.release();await settle();
+  await assert.rejects(g.registry.pollPending(TOOL,started2,g.ctx),{code:'OFFICE_PREVIEW_CHANGED'});
+  assert.equal(g.plmJobs.describe(g.profile.id,started2.operation.id).status,'failed','the PLM job is not reported as succeeded');
+  assert.deepEqual(g.index(),[]);
+});
+
+test('approval is bound to the resolved PLM style: a re-linked ID is refused before PLM is contacted',async()=>{
+  const h=harness();
+  const dry=await h.registry.execute(TOOL,{plmIds:['100001']},{...h.ctx,dryRun:true});
+  assert.equal(dry.preview.styleIds,undefined,'style ids stay out of the shown preview');
+  h.links['100001']={styleId:'S-OTHER'};
+  await assert.rejects(h.registry.execute(TOOL,{plmIds:['100001'],fingerprint:dry.fingerprint},h.ctx),{code:'OFFICE_PREVIEW_CHANGED'});
+  assert.equal(h.calls.length,0);
 });

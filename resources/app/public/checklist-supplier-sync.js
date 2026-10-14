@@ -1539,6 +1539,10 @@
         const noteCell = metaItem.noteColumn ? row.getCell(metaItem.noteColumn) : null;
         const reportCell = metaItem.reportColumn ? row.getCell(metaItem.reportColumn) : null;
         const actualDateCell = metaItem.actualDateColumn ? row.getCell(metaItem.actualDateColumn) : null;
+        const note = noteCell ? String(noteCell.text || noteCell.value || '') : '';
+        const reportNumber = reportCell ? text(reportCell.text || reportCell.value) : '';
+        // The native answer store refuses the whole batch for longer evidence.
+        if (note.length > 2000 || reportNumber.length > 300) { invalid += 1; return; }
         let actualDate = '';
         if (actualDateCell && actualDateCell.value) {
           const date = excelDate(actualDateCell.value);
@@ -1556,8 +1560,8 @@
           at: importedAt,
           baseAt: meta.exportedAt || '',
           loadDate: loadDate || null,
-          note: noteCell ? String(noteCell.text || noteCell.value || '') : '',
-          ...(metaItem.reportColumn ? { reportNumber: reportCell ? text(reportCell.text || reportCell.value) : '' } : {}),
+          note: note,
+          ...(metaItem.reportColumn ? { reportNumber: reportNumber } : {}),
           ...(metaItem.actualDateColumn ? { actualDate: actualDate } : {}),
           // Workbook attachment names are read-only; preserve authoritative
           // server attachments even when this device has no complete mirror.

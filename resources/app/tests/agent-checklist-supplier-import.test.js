@@ -95,6 +95,15 @@ test('source change after preview, foreign or empty workbooks are refused before
   await assert.rejects(registry.execute(TOOL_ID,{artifactId:file.id},{...ctx,dryRun:true}),{code:'OFFICE_SUPPLIER_IMPORT_EMPTY'});
 });
 
+test('evidence longer than the native store accepts is counted invalid instead of failing the approved batch',async()=>{
+  const k1=keyOf(rows[0]),k3=keyOf(rows[2]);resetStore();allowed=new Map([[k1,{}],[k3,{}]]);revision=1;
+  const file=await workbook('2026-02-01T00:00:00.000Z',[{key:k1,load:loadOf(rows[0]),check:'approved',note:'x'.repeat(2001)},{key:k3,load:loadOf(rows[2]),check:'approved',note:'DEMO'}]);
+  const registry=tools(),dry=await registry.execute(TOOL_ID,{artifactId:file.id},{...ctx,dryRun:true});
+  assert.equal(dry.preview.counts.invalid,1);assert.equal(dry.preview.counts.entries,1);
+  const done=await registry.execute(TOOL_ID,{artifactId:file.id,fingerprint:dry.fingerprint},ctx);
+  assert.equal(done.data.updated,1);assert.equal(done.outcome,'partial');
+});
+
 test('the CP import button and the Office capability share one workbook parser',()=>{
   const src=fs.readFileSync(path.join(__dirname,'../public/checklist-supplier-sync.js'),'utf8');
   assert.match(src,/async function importWorkbook\(file\)[\s\S]*?parseSupplierWorkbook\(workbook,/);

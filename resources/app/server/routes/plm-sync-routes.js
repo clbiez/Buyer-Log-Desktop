@@ -143,7 +143,7 @@ async function downloadTechnicalSheets(profile, items, language, options = {}) {
       phase: 'Teknik föy indiriliyor',
     }, async job => {
       if (typeof options.onJob === 'function') options.onJob(job.id);
-      return agentBrowserConnector.downloadCoreNectumTechnicalSheets(
+      const downloaded = await agentBrowserConnector.downloadCoreNectumTechnicalSheets(
         profile.id,
         items.map(item => ({ plmId: item.plmId, styleId: item.styleId })),
         { language, isCancelled: job.cancelled, onProgress: progress => {
@@ -151,11 +151,13 @@ async function downloadTechnicalSheets(profile, items, language, options = {}) {
           job.report({ phase: progress && progress.phase, processed: progress && progress.current, total: (progress && progress.total) || items.length, activeModel: progress && progress.model });
         } }
       );
+      // Authority is rechecked inside the job, so a lost grant ends it as failed.
+      assertAuthority();
+      return downloaded;
     });
     const collected = sheetRun.result;
     for (const item of collected.failed || []) plmJobs.addFailure(profile.id, sheetRun.job.id, { plmId: item && item.plmId, error: item && item.error, code: item && item.code });
 
-    assertAuthority();
     ensureModelFilesRoot();
     const index = readModelFilesIndex();
     const ownership = technicalSheetOwnership.resolveTechnicalSheetOwnership(index, items.map(item => item.plmId), { fileExists: modelStoredFileExists });
@@ -211,12 +213,17 @@ async function downloadTechnicalSheets(profile, items, language, options = {}) {
    the poll fails closed (saved sheets remain visible in the status read). */
 const technicalSheetRuns = new Map();
 function startTechnicalSheetDownload(profile, items, language, options = {}) {
-  let jobId = '';
-  const promise = downloadTechnicalSheets(profile, items, language, { ...options, onJob: id => { jobId = String(id); } });
-  if (!jobId) { promise.catch(() => {}); throw Object.assign(new Error('PLM job did not start.'), { code: 'OFFICE_NATIVE_OPERATION_FAILED', statusCode: 409 }); }
+  let jobId = '', abandoned = false;
+  const promise = downloadTechnicalSheets(profile, items, language, { ...options, onJob: id => {
+    // A job id that arrives after the start was refused never reaches PLM.
+    if (abandoned) throw Object.assign(new Error('PLM job abandoned.'), { code: 'OFFICE_NATIVE_OPERATION_FAILED' });
+    jobId = String(id);
+  } });
+  if (!jobId) { abandoned = true; promise.catch(() => {}); throw Object.assign(new Error('PLM job did not start.'), { code: 'OFFICE_NATIVE_OPERATION_FAILED', statusCode: 409 }); }
   const run = { ownerId: profile.id, done: false, result: null, errorCode: null };
   technicalSheetRuns.set(jobId, run);
-  while (technicalSheetRuns.size > 50) technicalSheetRuns.delete(technicalSheetRuns.keys().next().value);
+  // Only finished runs are evicted; a running receipt stays pollable.
+  for (const [id, old] of technicalSheetRuns) { if (technicalSheetRuns.size <= 50) break; if (old.done) technicalSheetRuns.delete(id); }
   promise.then(result => { run.done = true; run.result = result; }, err => { run.done = true; run.errorCode = String(err && err.code || 'PLM_TECHNICAL_SHEET_FAILED').slice(0, 80); });
   return { jobId, job: plmJobs.describe(profile.id, jobId) };
 }
