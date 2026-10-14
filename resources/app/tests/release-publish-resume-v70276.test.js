@@ -91,6 +91,8 @@ test('TEST resume workflow requires the gated run, immutable source and no build
   assert.match(workflow,/\[\[ "\$REGRESSION" == "success" \]\]/);
   assert.match(workflow,/Sign release manifest \(Ed25519\)/);
   assert.match(workflow,/grep -qF "\$SOURCE_SHA"/);
+  assert.match(workflow,/curl -fsSL -H "Authorization: Bearer \$\{GH_TOKEN\}"[\s\S]*actions\/jobs\/\$\{JOB\}\/logs/);
+  assert.doesNotMatch(workflow,/gh api "repos\/\$\{GITHUB_REPOSITORY\}\/actions\/jobs\/\$\{JOB\}\/logs"/);
   assert.match(workflow,/group: buyerlog-release-publish/);
   assert.match(workflow,/resume-test "\$VERSION"/);
   assert.doesNotMatch(workflow,/npm test|release:build|release-signing|BUYER_LOG_RELEASE_SIGNING_KEY|upload-artifact/);
