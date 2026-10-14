@@ -162,7 +162,7 @@ test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre b
   assert.match(APP, /fetch\('\/api\/refresh-targets',\{cache:'no-store'\}\)/);
   const refreshConfig=APP.slice(APP.indexOf('function linkedRefreshMembers(){'),APP.indexOf('function withLinkedRefreshTargets'));
   assert.doesNotMatch(refreshConfig, /state\.modelScopes|sharedFilter/);
-  const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('async function loadFromServer(force, targets){') + 1350);
+  const load = APP.slice(APP.indexOf('async function loadFromServer('), APP.indexOf('async function loadFromServer(') + 1350);
   assert.match(load, /await syncLinkedRefreshMembers\(\)/);
   assert.match(load, /targets=withLinkedRefreshTargets\(targets\)/);
   // Menü: ayrı sayfa kendi satırı, bağlı grup tek satır, ayrıca "Tümünü yenile".
@@ -188,7 +188,7 @@ test('istemci: sayfa düğmeleri yalnız kendi sayfasını ister; menü filtre b
 });
 
 test('istemci: yenileme açık olmayan sayfaları bayat bırakmaz ve verilerini arka planda hazırlar', () => {
-  const load = APP.slice(APP.indexOf('async function loadFromServer(force, targets){'), APP.indexOf('let sharedRevisionSnapshot'));
+  const load = APP.slice(APP.indexOf('async function loadFromServer('), APP.indexOf('let sharedRevisionSnapshot'));
   assert.match(load, /backlogLoadedOnce=false;/);
   assert.match(load, /window\.BLPriceSupplierAnalysis\?\.invalidate\?\.\(\)/);
   assert.match(load, /if\(userVisibleRefresh\)\{\s*scheduleRefreshPrewarm\(targets\);\s*notifyCpCoverage\(data\.lastRefreshResult\);\s*\}/);
