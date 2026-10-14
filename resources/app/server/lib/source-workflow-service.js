@@ -84,6 +84,63 @@ function createSourceWorkflowService({db}){
    return {verified:true,revision:saved.revision,sourceRevision:adapter.configRevision(own)};
   });
  }
- return {snapshot,preview,update,restore,publicSource,filterFields,planMapping:(items,args)=>plan('mapping',items,args),createOptions:writer.createOptions};
+ // CREATE copies the connection target of an already configured source; no host or
+ // model name is accepted from the caller. Only manually creatable profiles qualify.
+ const manualProfile=profileId=>{const option=writer.createOptions().find(item=>item.id===profileId);if(!option||!option.creationMethods.includes('manual'))throw fail('SOURCE_PROFILE_NOT_ALLOWED',422);return option;};
+ const headroom=(store,reserve)=>{const settings=db.loadSettings();for(const value of [settings._revision,store.revision])if(!Number.isSafeInteger(value)||value<0||value>Number.MAX_SAFE_INTEGER-reserve)throw fail('OFFICE_RESOURCE_REVISION_INVALID');};
+ const planCreate=(store,args)=>{manualProfile(args.profileId);const target=checked(store,args.targetSourceId),value=writer.planSourceCreate(store.items,{name:args.name,profileId:args.profileId,server:target.server,catalog:target.catalog,moduleIds:args.moduleIds||[]});
+  if(!value.ok)throw fail(value.code,['NAME_REQUIRED','PROFILE_UNKNOWN','MODULE_NOT_FEEDABLE','SERVER_INVALID','CATALOG_INVALID'].includes(value.code)?422:409);
+  const created=checked({items:db.normalizeModelConnections(value.items)},value.sourceId);return {value,created};};
+ const withoutId=item=>{const {id,...rest}=semanticSource(item,true);return rest;};
+ async function createPreview(args,guard){
+  const store=await db.mutateModelConnections(()=>{guard?.assertAuthority?.();const current=db.loadModelConnections();headroom(current,2);return current;}),{value,created}=planCreate(store,args);
+  return {storeRevision:store.revision,targetSourceId:args.targetSourceId,after:withoutId(created),warnings:value.warnings||[],impact:{shared:true,modules:[...new Set((created.scopes||[]).flatMap(scope=>scope.targets||[]))].sort(),refreshEnabled:created.refreshEnabled!==false}};
+ }
+ async function create(args,expectedStoreRevision,guard={}){
+  return db.mutateModelConnections(async lease=>{
+   guard.assertAuthority?.();const store=db.loadModelConnections();if(store.revision!==expectedStoreRevision)throw fail('OFFICE_PREVIEW_CHANGED');headroom(store,2);
+   const {value}=planCreate(store,args),saved=db.replaceModelConnections(value.items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
+   const actual=db.loadModelConnections(),own=checked(saved,value.sourceId),current=checked(actual,value.sourceId);
+   if(actual.revision!==saved.revision||adapter.configRevision(own)!==adapter.configRevision(current))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
+   return {verified:true,changed:true,revision:saved.revision,sourceId:value.sourceId,sourceRevision:adapter.configRevision(own),warnings:value.warnings||[]};
+  });
+ }
+ // DELETE uses the native planner (required-module protection); the complete prior
+ // configuration is returned for the caller's private inverse archive.
+ const planDelete=(store,args)=>{const value=writer.planSourceDelete(store.items,{sourceId:args.sourceId,expectedName:args.expectedName??null});if(!value.ok)throw fail(value.code,value.code==='SOURCE_NOT_FOUND'?404:409);return value;};
+ async function deletePreview(args,guard){
+  const store=await snapshot(guard,{sourceId:args.sourceId,reserve:2}),before=checked(store,args.sourceId),value=planDelete(store,args);
+  return {sourceId:before.id,sourceRevision:adapter.configRevision(before),before:semanticSource(before,true),warnings:value.warnings||[],removed:value.removed,impact:{shared:true,modules:[...new Set((before.scopes||[]).flatMap(scope=>scope.targets||[]))].sort()}};
+ }
+ async function remove(args,expectedSourceRevision,guard={}){
+  return db.mutateModelConnections(async lease=>{
+   guard.assertAuthority?.();const store=db.loadModelConnections(),before=checked(store,args.sourceId,expectedSourceRevision);capacity(store,before,2);
+   const value=planDelete(store,args),saved=db.replaceModelConnections(value.items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
+   const actual=db.loadModelConnections();if(actual.revision!==saved.revision||actual.items.some(item=>item.id===args.sourceId))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
+   return {receipt:{verified:true,changed:true,revision:saved.revision,sourceId:args.sourceId,sourceRevision:expectedSourceRevision,warnings:value.warnings||[]},before:clone(before),index:store.items.findIndex(item=>item.id===args.sourceId)};
+  });
+ }
+ // Inverse of CREATE: removes only the created source while it is unchanged.
+ async function removeCreated(sourceId,expectedSourceRevision,guard={}){
+  return db.mutateModelConnections(async lease=>{
+   guard.assertAuthority?.();const store=db.loadModelConnections(),current=checked(store,sourceId,expectedSourceRevision);capacity(store,current,1);
+   const saved=db.replaceModelConnections(store.items.filter(item=>item.id!==sourceId),store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
+   const actual=db.loadModelConnections();if(actual.revision!==saved.revision||actual.items.some(item=>item.id===sourceId))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
+   return {verified:true,revision:saved.revision};
+  });
+ }
+ // Inverse of DELETE: reinserts the exact archived configuration; refuses an id clash
+ // or a peer that activated the same role meanwhile.
+ async function restoreDeleted(before,index,guard={}){
+  return db.mutateModelConnections(async lease=>{
+   guard.assertAuthority?.();const store=db.loadModelConnections();if(store.items.some(item=>item.id===before.id))throw fail('SOURCE_EXISTS');headroom(store,1);
+   if(before.refreshEnabled!==false&&store.items.some(item=>item.role===before.role&&item.refreshEnabled!==false))throw fail('ROLE_ALREADY_ACTIVE');
+   const items=store.items.slice();items.splice(Math.max(0,Math.min(items.length,Number.isSafeInteger(index)?index:items.length)),0,clone(before));const saved=db.replaceModelConnections(items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
+   const actual=db.loadModelConnections(),latest=checked(actual,before.id),own=checked(saved,before.id);
+   if(actual.revision!==saved.revision||adapter.configRevision(own)!==adapter.configRevision(latest)||adapter.configRevision({...before,_configVersion:0})!==adapter.configRevision({...latest,_configVersion:0}))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
+   return {verified:true,revision:saved.revision,sourceRevision:adapter.configRevision(own)};
+  });
+ }
+ return {snapshot,preview,update,restore,createPreview,create,removeCreated,deletePreview,remove,restoreDeleted,publicSource,filterFields,planMapping:(items,args)=>plan('mapping',items,args),createOptions:writer.createOptions};
 }
 module.exports={createSourceWorkflowService,publicSource,publicHorizon,semanticSource,affectedModules,filterFields};
