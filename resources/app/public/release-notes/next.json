@@ -68,6 +68,35 @@
           "en": "With tray monitoring enabled, Restart after an update still closes the app and reopens it on the new version."
         }
       }
+    },
+    {
+      "id": "agent-office-seated-proportions",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Ofiste tutarlı ölçek ve doğru oturuş",
+        "en": "Consistent office scale and correct seating"
+      },
+      "body": {
+        "tr": "Piksel Atölye tek bir gerçek ölçek kullanır: masa yüzeyleri aynı yükseklikte, kanepe, toplantı masası, raf, askılık ve manken orantılı, karakterler daha gerçekçi boyda. Çalışan agent masanın önünde klavye hizasında, sırtı izleyiciye dönük ve masa çizimiyle aynı açıdaki sandalyede oturur. Toplantıda ön sandalyeler arkadan, uç sandalyeler profilden görünür; yakın isim etiketleri üst üste binmez.",
+        "en": "Pixel Workshop uses one real-world scale: desk surfaces share the same height, the sofa, meeting table, shelves, rack and dress form are proportional and agents have realistic height. A working agent sits in front of the desk at the keyboard, back to the viewer, on a chair drawn at the same angle as the desk. At meetings near-side chairs show their backs and end chairs are in profile; nearby name tags no longer overlap."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-seated-proportions.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: agent'lar masalarının önünde, ekrana dönük ve sandalyeleriyle oturuyor; mobilyalar ortak ölçekte.",
+          "en": "Actual Agent Office: agents sit at their desks facing the screen on their chairs; furniture shares one scale."
+        },
+        "alt": {
+          "tr": "Gerçek Agent Ofisi: agent'lar masalarının önünde, ekrana dönük ve sandalyeleriyle oturuyor; mobilyalar ortak ölçekte.",
+          "en": "Actual Agent Office: agents sit at their desks facing the screen on their chairs; furniture shares one scale."
+        }
+      }
     }
   ]
 }
