@@ -226,8 +226,8 @@
         "en": "Agents read stored PLM BOM summaries and technical sheet status"
       },
       "body": {
-        "tr": "Agent Ofisi, PLM Sync'in daha önce kaydettiği kumaş ve baskı (BOM) özetlerini ve modellerin teknik föyünün dosyalarda olup olmadığını okuyabilir. PLM'e istek atılmaz; okuma dosya dizinini değiştirmez. PLM'den yeni veri veya föy indirme kullanıcının PLM Sync akışında kalır.",
-        "en": "Agent Office can read the fabric and print (BOM) summaries PLM Sync already saved, and whether a model's technical sheet is on file. No PLM request is made and a read never changes the file index. Downloading new data or sheets from PLM stays in the user's PLM Sync flow."
+        "tr": "Agent Ofisi, PLM Sync'in daha önce kaydettiği kumaş ve baskı (BOM) özetlerini ve modellerin teknik föyünün dosyalarda olup olmadığını okuyabilir. PLM'e istek atılmaz; okuma dosya dizinini değiştirmez.",
+        "en": "Agent Office can read the fabric and print (BOM) summaries PLM Sync already saved, and whether a model's technical sheet is on file. No PLM request is made and a read never changes the file index."
       },
       "visual": {
         "kind": "screenshot",
@@ -240,6 +240,64 @@
         "alt": {
           "tr": "Agent Ofisi görev adımlarında kayıtlı PLM BOM özeti",
           "en": "Agent Office task steps with a stored PLM BOM summary"
+        }
+      }
+    },
+    {
+      "id": "agent-supplier-xlsx-import",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar tedarikçinin doldurduğu checklist Excel'ini içe aktarır",
+        "en": "Agents import the supplier-filled checklist workbook"
+      },
+      "body": {
+        "tr": "CP › Checklist › Excel ile gönderilen ve tedarikçinin doldurduğu dosya, Agent Ofisi'nde \"İşlem görevi oluştur\" penceresinden yüklenir. CP'deki içe aktarma ile aynı okuyucu ve karar kuralları kullanılır; düzenleme yetkiniz olmayan siparişler atlanır. Önizleme her atlama nedenini ve dışa aktarımdan sonra Buyer Log'da değişmiş (korunacak) cevapları gösterir; uygulama onayınızla yapılır ve tek adımda geri alınabilir.",
+        "en": "The workbook sent with CP › Checklist › Excel and filled by the supplier is uploaded in Agent Office from \"Create operation task\". It uses the same reader and decision rules as the CP import; orders you may not edit are skipped. The preview lists every skip reason and the answers changed in Buyer Log after the export (which are kept); applying needs your approval and can be undone in one step."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-supplier-xlsx-import.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: tedarikçi checklist Excel'i içe aktarma önizlemesi ve onay adımı (demo veri).",
+          "en": "Actual Agent Office: supplier checklist workbook import preview and approval step (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında tedarikçi checklist içe aktarma önizlemesi",
+          "en": "Agent Office task steps with the supplier checklist import preview"
+        }
+      }
+    },
+    {
+      "id": "agent-plm-techsheet-download",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar onayla PLM teknik föylerini indirir",
+        "en": "Agents download PLM technical sheets with approval"
+      },
+      "body": {
+        "tr": "Agent Ofisi, Koleksiyon › PLM Sync'teki teknik föy indirmesini onayınızla başlatır ve sonucu bekler. Kendi PLM oturumunuz ve aynı PLM işi kullanılır (operasyon merkezinden iptal edilebilir). Önizleme PLM'e bağlanmaz; inemeyen modeller hata koduyla listelenir ve adım kısmen tamamlandı olarak görünür. Yeni föy, modelin önceki PLM föyünün yerine geçer; kendi yüklediğiniz dosyalar korunur.",
+        "en": "Agent Office starts the Collection › PLM Sync technical sheet download with your approval and waits for the result. Your own PLM session and the same PLM job are used (cancel from the operations centre). The preview does not contact PLM; models that could not be downloaded are listed with an error code and the step shows as partially completed. A new sheet replaces the model's earlier PLM sheet; files you uploaded are kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-plm-techsheet-download.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: teknik föy indirme adımının doğrulanmış sonucu, PLM bağlantısı olmayan modeller listelenmiş (demo veri).",
+          "en": "Actual Agent Office: verified result of the technical sheet download step, models without a PLM link listed (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında teknik föy indirme sonucu",
+          "en": "Agent Office task steps with the technical sheet download result"
         }
       }
     }

@@ -2467,11 +2467,11 @@ async function cpAgentData(profile) {
   if(!data.cpAvailable)throw Object.assign(new Error('OFFICE_CP_UNAVAILABLE'),{code:'OFFICE_CP_UNAVAILABLE',statusCode:409});
   const priority=cpAgentPreferences.ruleSnapshot(profile,'priority'),checklist=cpAgentPreferences.ruleSnapshot(profile,'checklist');
   if(sourceRevision!==cpAgentRevision(profile))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
-  const {settings,checklistEnabled,answers}=cpAgentPreferences.context(profile),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
+  const {settings,checklistEnabled,answers,customStatuses}=cpAgentPreferences.context(profile),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
   const analyses=data.cpRows.map(row=>CP.analyzeOrder(row)),keys=new Set(analyses.map(order=>order.orderKey)),options=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
   const visible=entries=>Object.fromEntries(Object.entries(entries||{}).filter(([key])=>{const identity=key.slice(0,key.lastIndexOf('::'));return keys.has(identity)||options.has(identity);}));
   const visibleAnswers=require('../public/checklist-answer-merge-engine').merge(visible(answers),{answers:visible(data.checklist.answers),tombstones:visible(data.checklist.tombstones)});
-  return {...data,sourceRevision,settings,checklistEnabled,checklist:{...data.checklist,answers:visibleAnswers,tombstones:visible(data.checklist.tombstones)},personalRules:[...priority.rules,...checklist.rules],deletedRuleIds:[...(priority.payload.deletedRuleIds||[]),...(checklist.payload.deletedRuleIds||[])]};
+  return {...data,sourceRevision,settings,checklistEnabled,customStatuses,checklist:{...data.checklist,answers:visibleAnswers,tombstones:visible(data.checklist.tombstones)},personalRules:[...priority.rules,...checklist.rules],deletedRuleIds:[...(priority.payload.deletedRuleIds||[]),...(checklist.payload.deletedRuleIds||[])]};
 }
 function cpAgentMail(profile,args,rows,dryRun,expected=null) {
   const recipe={email:{groupId:args.groupId,recipientField:'Manufacturer'}};
@@ -5395,6 +5395,7 @@ const agentQualityTools=require('./lib/agent-quality-tools').registerQualityTool
 require('./lib/agent-shared-checklist-tools').registerSharedChecklistTools(agentToolRegistry,{data:cpAgentData,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-checklist-answer-tools').registerChecklistAnswerTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-checklist-attachment-tools').registerChecklistAttachmentTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
+require('./lib/agent-checklist-supplier-tools').registerChecklistSupplierTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-checklist-option-tools').registerChecklistOptionTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-analytics-tools').registerAnalyticsTools(agentToolRegistry,{dataset:agentPlatformDataset,outputService:()=>require('./lib/lcwai').getDefaultOutputService()});
 const agentCollectionSave=async(profile,ownerId,changes,expectedRevision,assertAuthority,guards={})=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);assertAuthority();if(!collectionWorkspaceEditAllowed(current,ownerId))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
@@ -10942,7 +10943,7 @@ const nativeRefreshGroupService=require('./lib/refresh-group-service').createRef
 require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
 require('./lib/agent-price-analysis-tools').registerPriceAnalysisTools(agentToolRegistry,{rows:profile=>priceAnalysisRowsFor(profile)});
 require('./lib/agent-holiday-tools').registerHolidayTools(agentToolRegistry,{holidayService});
-require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership});
+require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership,technicalSheets:agentPlmSyncService.technicalSheets,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 {
   // Same active-user and display rules as /api/preset-share; target is always the owner.
   const activePresetProfile=profile=>Boolean(profile)&&profile.enabled!==false&&profile.status!=='INACTIVE';

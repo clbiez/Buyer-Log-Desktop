@@ -108,48 +108,54 @@ app.get('/api/plm-sync/bom/:plmId', userAccess.requireAnyArea('koleksiyon', 'cp'
    styleId BURADA çözülür (PLM link deposundan) ve tarayıcıya hazır verilir.
    Bulunamayan model atlanır ve raporlanır — asla tahmin edilmez, çünkü yanlış
    bir styleId hata vermeden BAŞKA BİR MODELİN PDF'ini getirir. */
-app.post('/api/plm-sync/model-files', userAccess.requireArea('koleksiyon'), express.json({ limit: '2mb' }), async (req, res) => {
-  try {
-    const rawItems = Array.isArray(req.body && req.body.items) ? req.body.items : null;
-    if (!rawItems) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
-    const language = String(req.body && req.body.language || 'en').toLowerCase() === 'tr' ? 'tr' : 'en';
-    const links = loadPlmStyleLinks().links || {};
-    const seen = new Set();
-    const items = [];
-    for (const raw of rawItems.slice(0, 500)) {
-      const plmId = normalizePlmId(raw && raw.plmId);
-      if (!plmId || seen.has(plmId)) continue;
-      seen.add(plmId);
-      const link = links[plmId];
-      items.push({
-        plmId,
-        styleId: link && link.styleId ? String(link.styleId) : '',
-        // A technical sheet belongs to a PLM style, not to the first colour
-        // row that happened to request it.
-        modelKey: technicalSheetOwnership.canonicalTechnicalSheetKey(plmId),
-        modelLabel: String(raw && raw.modelLabel || '').trim().slice(0, 300),
-        filename: String(raw && raw.filename || '').trim().slice(0, 200),
-      });
-    }
-    if (!items.length) return res.status(400).json({ error: 'Geçerli PLM ID bulunamadı.', code: 'PLM_ID_REQUIRED' });
-    const byPlmId = new Map(items.map(item => [item.plmId, item]));
+/* Shared by the route below and the Office technical sheet capability: one
+   item preparation, one PLM job, one store write. */
+function prepareTechnicalSheetItems(rawItems) {
+  const links = loadPlmStyleLinks().links || {};
+  const seen = new Set();
+  const items = [];
+  for (const raw of rawItems.slice(0, 500)) {
+    const plmId = normalizePlmId(raw && raw.plmId);
+    if (!plmId || seen.has(plmId)) continue;
+    seen.add(plmId);
+    const link = links[plmId];
+    items.push({
+      plmId,
+      styleId: link && link.styleId ? String(link.styleId) : '',
+      // A technical sheet belongs to a PLM style, not to the first colour
+      // row that happened to request it.
+      modelKey: technicalSheetOwnership.canonicalTechnicalSheetKey(plmId),
+      modelLabel: String(raw && raw.modelLabel || '').trim().slice(0, 300),
+      filename: String(raw && raw.filename || '').trim().slice(0, 200),
+    });
+  }
+  return items;
+}
 
-    setModelOperationProgress(req.currentUser.id, { kind: 'plm-technical-sheet', phase: 'Teknik föy indiriliyor', current: 0, total: items.length, model: '' });
-    const sheetRun = await withPlmJob(req, {
+async function downloadTechnicalSheets(profile, items, language, options = {}) {
+  const assertAuthority = typeof options.assertAuthority === 'function' ? options.assertAuthority : () => {};
+  const byPlmId = new Map(items.map(item => [item.plmId, item]));
+  try {
+    setModelOperationProgress(profile.id, { kind: 'plm-technical-sheet', phase: 'Teknik föy indiriliyor', current: 0, total: items.length, model: '' });
+    const sheetRun = await withPlmJob({ currentUser: profile }, {
       kind: 'plm-files', scope: 'koleksiyon', total: items.length,
       label: `Teknik föy · ${items.length} model (${language.toUpperCase()})`,
       phase: 'Teknik föy indiriliyor',
-    }, async job => agentBrowserConnector.downloadCoreNectumTechnicalSheets(
-      req.currentUser.id,
-      items.map(item => ({ plmId: item.plmId, styleId: item.styleId })),
-      { language, isCancelled: job.cancelled, onProgress: progress => {
-        setModelOperationProgress(req.currentUser.id, { kind: 'plm-technical-sheet', ...progress });
-        job.report({ phase: progress && progress.phase, processed: progress && progress.current, total: (progress && progress.total) || items.length, activeModel: progress && progress.model });
-      } }
-    ));
+    }, async job => {
+      if (typeof options.onJob === 'function') options.onJob(job.id);
+      return agentBrowserConnector.downloadCoreNectumTechnicalSheets(
+        profile.id,
+        items.map(item => ({ plmId: item.plmId, styleId: item.styleId })),
+        { language, isCancelled: job.cancelled, onProgress: progress => {
+          setModelOperationProgress(profile.id, { kind: 'plm-technical-sheet', ...progress });
+          job.report({ phase: progress && progress.phase, processed: progress && progress.current, total: (progress && progress.total) || items.length, activeModel: progress && progress.model });
+        } }
+      );
+    });
     const collected = sheetRun.result;
-    for (const item of collected.failed || []) plmJobs.addFailure(req.currentUser.id, sheetRun.job.id, { plmId: item && item.plmId, error: item && item.error, code: item && item.code });
+    for (const item of collected.failed || []) plmJobs.addFailure(profile.id, sheetRun.job.id, { plmId: item && item.plmId, error: item && item.error, code: item && item.code });
 
+    assertAuthority();
     ensureModelFilesRoot();
     const index = readModelFilesIndex();
     const ownership = technicalSheetOwnership.resolveTechnicalSheetOwnership(index, items.map(item => item.plmId), { fileExists: modelStoredFileExists });
@@ -190,14 +196,48 @@ app.post('/api/plm-sync/model-files', userAccess.requireArea('koleksiyon'), expr
     if (saved.length || ownership.migrated.length) writeModelFilesIndex(index);
 
     const failed = [...collected.failed, ...storeFailed];
-    userAccess.appendAudit(req.currentUser, 'PLM_SYNC_MODEL_FILES', 'corenectum', {
+    userAccess.appendAudit(profile, 'PLM_SYNC_MODEL_FILES', 'corenectum', {
       requested: collected.requested, downloaded: collected.files.length, saved: saved.length, failed: failed.length, language,
     });
-    for (const item of storeFailed) plmJobs.addFailure(req.currentUser.id, sheetRun.job.id, { plmId: item.plmId, error: item.error, code: item.code });
-    plmJobs.update(req.currentUser.id, sheetRun.job.id, { processed: items.length, succeeded: saved.length });
-    res.json({ ok: true, requested: collected.requested, downloaded: collected.files.length, saved: saved.length, files: saved, failedItems: failed, language, jobId: sheetRun.job.id, migrated: ownership.migrated, ownershipConflicts: ownership.conflicts });
+    for (const item of storeFailed) plmJobs.addFailure(profile.id, sheetRun.job.id, { plmId: item.plmId, error: item.error, code: item.code });
+    plmJobs.update(profile.id, sheetRun.job.id, { processed: items.length, succeeded: saved.length });
+    return { ok: true, requested: collected.requested, downloaded: collected.files.length, saved: saved.length, files: saved, failedItems: failed, language, jobId: sheetRun.job.id, migrated: ownership.migrated, ownershipConflicts: ownership.conflicts };
+  } finally { clearModelOperationProgress(profile.id); }
+}
+
+/* Office: start the same download without holding the request. The PLM job
+   is created synchronously, so its id is the operation receipt; the result
+   stays in memory for the poller. After a restart the receipt is unknown and
+   the poll fails closed (saved sheets remain visible in the status read). */
+const technicalSheetRuns = new Map();
+function startTechnicalSheetDownload(profile, items, language, options = {}) {
+  let jobId = '';
+  const promise = downloadTechnicalSheets(profile, items, language, { ...options, onJob: id => { jobId = String(id); } });
+  if (!jobId) { promise.catch(() => {}); throw Object.assign(new Error('PLM job did not start.'), { code: 'OFFICE_NATIVE_OPERATION_FAILED', statusCode: 409 }); }
+  const run = { ownerId: profile.id, done: false, result: null, errorCode: null };
+  technicalSheetRuns.set(jobId, run);
+  while (technicalSheetRuns.size > 50) technicalSheetRuns.delete(technicalSheetRuns.keys().next().value);
+  promise.then(result => { run.done = true; run.result = result; }, err => { run.done = true; run.errorCode = String(err && err.code || 'PLM_TECHNICAL_SHEET_FAILED').slice(0, 80); });
+  return { jobId, job: plmJobs.describe(profile.id, jobId) };
+}
+function technicalSheetRun(profile, jobId) {
+  const run = technicalSheetRuns.get(String(jobId));
+  if (!run || run.ownerId !== profile.id) return null;
+  return { ...run, job: plmJobs.describe(profile.id, jobId) };
+}
+function runningTechnicalSheetJob(profile) {
+  return plmJobs.list(profile.id, { scope: 'koleksiyon', running: true }).find(job => job.kind === 'plm-files') || null;
+}
+
+app.post('/api/plm-sync/model-files', userAccess.requireArea('koleksiyon'), express.json({ limit: '2mb' }), async (req, res) => {
+  try {
+    const rawItems = Array.isArray(req.body && req.body.items) ? req.body.items : null;
+    if (!rawItems) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
+    const language = String(req.body && req.body.language || 'en').toLowerCase() === 'tr' ? 'tr' : 'en';
+    const items = prepareTechnicalSheetItems(rawItems);
+    if (!items.length) return res.status(400).json({ error: 'Geçerli PLM ID bulunamadı.', code: 'PLM_ID_REQUIRED' });
+    res.json(await downloadTechnicalSheets(req.currentUser, items, language));
   } catch (err) { automationError(res, err, 'PLM teknik föyleri alınamadı.'); }
-  finally { clearModelOperationProgress(req.currentUser && req.currentUser.id); }
 });
 
 /* Pricing preflight reads only the normalized model-file metadata. It neither
@@ -254,7 +294,7 @@ app.get('/api/qtx/file/:colourCode', userAccess.requireAnyArea('cp', 'orders', '
   } catch (err) { automationError(res,err,'QTX dosyası indirilemedi.'); }
 });
 
-return fetchService;
+return {...fetchService,technicalSheets:{prepare:prepareTechnicalSheetItems,start:startTechnicalSheetDownload,run:technicalSheetRun,running:runningTechnicalSheetJob}};
 };
 
 function createPlmFetchService(deps){

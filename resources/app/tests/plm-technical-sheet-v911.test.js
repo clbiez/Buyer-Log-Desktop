@@ -119,11 +119,22 @@ test('PDF olmayan yanıt dosya olarak kaydedilmez', () => {
 
 /* ---------- sunucu ucu ---------- */
 
+/* The route and the Office technical sheet capability share one service
+   (prepareTechnicalSheetItems + downloadTechnicalSheets); the route only
+   validates the request and calls it. */
+function modelFilesBlock() {
+  const start = SERVER.indexOf('function prepareTechnicalSheetItems(');
+  const route = SERVER.indexOf("app.post('/api/plm-sync/model-files'");
+  const end = SERVER.indexOf("app.post('/api/plm-sync/model-files/status'");
+  assert.ok(start >= 0 && route > start && end > route, 'rota yok');
+  const routeBlock = SERVER.slice(route, end);
+  assert.match(routeBlock, /prepareTechnicalSheetItems\(rawItems\)/);
+  assert.match(routeBlock, /downloadTechnicalSheets\(req\.currentUser, items, language\)/);
+  return SERVER.slice(start, end);
+}
+
 test('rota styleId\'yi PLM link deposundan çözer, istemciden almaz', () => {
-  const start = SERVER.indexOf("app.post('/api/plm-sync/model-files'");
-  assert.ok(start >= 0, 'rota yok');
-  const end = SERVER.indexOf('\napp.', start + 10);
-  const block = SERVER.slice(start, end);
+  const block = modelFilesBlock();
   assert.match(block, /const links = loadPlmStyleLinks\(\)\.links \|\| \{\}/);
   assert.match(block, /styleId: link && link\.styleId \? String\(link\.styleId\) : ''/);
   // İstemcinin gönderdiği styleId'ye GÜVENİLMEZ; body'den okunmaz.
@@ -137,9 +148,7 @@ test('rota PLM Sync yetkisiyle çalışır (source yetkisi şart koşulmaz)', ()
 });
 
 test('aynı PLM ID için önceki canonical föy dil fark etmeksizin değiştirilir, kullanıcı dosyalarına dokunulmaz', () => {
-  const start = SERVER.indexOf("app.post('/api/plm-sync/model-files'");
-  const end = SERVER.indexOf('\napp.', start + 10);
-  const block = SERVER.slice(start, end);
+  const block = modelFilesBlock();
   // Canonical ownership PLM ID başına tektir; dil ikinci bir aktif referans yaratmaz.
   assert.match(block, /old\.modelKey === meta\.modelKey && old\.plmSource === 'technical-sheet'/);
   assert.doesNotMatch(block, /old\.plmLanguage === language/);
@@ -147,9 +156,7 @@ test('aynı PLM ID için önceki canonical föy dil fark etmeksizin değiştiril
 });
 
 test('rota mevcut Dosyalar deposuna yazar (ayrı bir depo açmaz)', () => {
-  const start = SERVER.indexOf("app.post('/api/plm-sync/model-files'");
-  const end = SERVER.indexOf('\napp.', start + 10);
-  const block = SERVER.slice(start, end);
+  const block = modelFilesBlock();
   assert.match(block, /readModelFilesIndex\(\)/);
   assert.match(block, /writeModelFilesIndex\(index\)/);
   assert.match(block, /resolveStoredFile\(MODEL_FILES_ROOT, storedName\)/);
@@ -157,9 +164,7 @@ test('rota mevcut Dosyalar deposuna yazar (ayrı bir depo açmaz)', () => {
 });
 
 test('rota operasyon merkezi iptalini teknik föy indiricisine taşır', () => {
-  const start = SERVER.indexOf("app.post('/api/plm-sync/model-files'");
-  const end = SERVER.indexOf('\napp.', start + 10);
-  const block = SERVER.slice(start, end);
+  const block = modelFilesBlock();
   assert.match(block, /isCancelled: job\.cancelled/);
   assert.match(SERVER, /status: cancelled\(\) \? 'cancelled' : 'failed'/);
 });
