@@ -48,7 +48,7 @@ Targeted import/OAB 38 cases plus native manufacturer/headings/journal/output 10
 
 Final run result at handoff: FAILURE. Windows regression succeeded, but publish job 115761435879 failed at Publish, verify remote bytes, then advance TEST latest. Build and Ed25519 signing completed. Error: [RELEASE_FAILED] Command failed: git -C release-repo push origin HEAD:main; remote rejected HEAD -> main (failed). The job log does not establish a specific quota, large-file, protection or permissions cause; inspect actual Git/publication state and preserve detailed stderr before naming it.
 
-Public test-v7.0.275 was created at 08:42:39 UTC and contains BuyerLog-7.0.275.json (711 bytes) and BuyerLog-7.0.275.zip (151,587,373 bytes). Asset existence is NOT completed publication or Stable acceptance. Stable remains 7.0.273; no Stable promotion or new installer was started. Check the actual canonical TEST latest pointer before promotion.
+Public test-v7.0.275 was created at 08:42:39 UTC and contains BuyerLog-7.0.275.json (711 bytes) and BuyerLog-7.0.275.zip (151,587,373 bytes). Asset existence is NOT completed publication or Stable acceptance. Stable remains 7.0.273; no Stable promotion or new installer was started. The canonical public test/latest.json was checked and still names 7.0.273. The downloaded 7.0.275 JSON passes the native trusted-key verifier (verified:true, enforced:true, keyId:c4b9c0d6f8a4be0d). Manifest ZIP size is 151,587,373 and expected SHA-256 is 0e2d7315f1986d3ed2cda03986165ab0ae8eb620a0e9d949dfc74b562377e537. Codex did not independently download/hash the ZIP at handoff; Claude must verify actual public bytes and complete publication before advancing pointers or promotion.
 
 Next action: fix the CI-only delivery/publication boundary, reuse and verify the already-built same signed 7.0.275 artifact, and complete required remote checks/feed publication. Do not blindly rerun the unchanged failed workflow, rebuild/overwrite the existing version artifacts, or unnecessarily repeat the successful 40-minute Windows suite when app code is unchanged. .github/scripts/buyerlog-release-distribution.js already separates publish-test and promote-stable and uses existing native providers, signature and immutable-asset verification. A delivery-only repair must retain all those safeguards. The workflow checks out its CI publisher independently of pinned app source; an app-code change requires a new unused version, while a strictly CI-only transport repair can retain the exact accepted existing app bytes.
 
@@ -106,6 +106,12 @@ Stable 7.0.273 delivered PRs through #559 and accumulated native main updates. P
 - #563: configured source table/column/schema discovery, native canonical mapping proposal/approved update; bounded pages and full framed inverse.
 - #564: reusable checklist option READ/approved UPDATE using authorized anchor orders, actual effective native option scope, evidence-preserving full inverse. Native order-scope defaults cannot grant reuse.
 - #565/#566: urgent startup and release reliability fixes described above.
+
+### Original target behavior to retain
+
+CP: natural-language checklist/Rule/automation creation and revision, calendar-based weekly loading selection and manufacturer/general mail drafts. Quality: uploaded PDF/MSG/EML/supported tests, exact order/model/color matching, ambiguous match approval, native tests/checklists and Fail mail draft. Collection: PLM-ID lists, existing PLM SYNC, native record/create/update and approved quotation workflows, manufacturer/price comparison, same-currency MB-month/classification quantity-weighted LFL and native PDF/XLSX/HTML output. Backlog: natural requested filters/groups/measures, delay/risk reports and exports. Moderator: native Transit/Endeksmatik/FX/DTR/cards/email groups with impact, preview, approval, revision and applicable inverse. These examples are not a closed list; complete the audited native action inventory.
+
+Review the existing architecture at server/lib/agent-office-store.js, agent-office-service.js, agent-office-workflow.js, agent-tool-registry.js, agent-runtime.js, module-registry.js, ai-capability-registry.js and existing LCW AI/canonical/automation/module services. Do not restart the completed audit or recreate engines; verify current code for each remaining packet.
 
 ### Remaining development packets
 
