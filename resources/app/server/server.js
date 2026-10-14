@@ -5726,6 +5726,7 @@ async function agentOfficeAutomationPreview(profile,code) {
   return {...automationAiPreviewRows(rows,parsed,validation),name:parsed.name,trigger:parsed.trigger,conditions:parsed.conditions,actionDefinitions:parsed.actions};
 }
 const agentOfficeService=createAgentOfficeService({
+  canRunBackground:()=>uiReadySignaled,
   outputService:()=>require('./lib/lcwai').getDefaultOutputService(),store:agentOfficeStore,sync:agentOfficeSync,userAccess,engine:()=>require('./lib/lcwai').getDefaultEngine(),
   toolRegistry:agentToolRegistry,runtime:agentRuntime,runtimeStore:agentWorkflowStore,taskOwners:()=>userAccess.allPublicProfiles().map(profile=>profile.id),cpData:cpAgentData,cpDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),cpGroups:profile=>automationEmailGroupsForOwner(profile.id).map(({id,name})=>({id,name})),
   getOperationalData:agentOfficeOperationalData,memoryDataset:agentPlatformDataset,
