@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.277",
-  "commit_sha": "cb443d982a503b1d063965de48cec10355eaccbc",
-  "release_notes": "Buyer Log 7.0.277 TEST: initial-data bounded wait; lightweight startup override metadata; diagnostic startup stages. PR #573. Windows release request path corrected in CI (PR #574). Mandatory full Windows regression, release visuals, browser acceptance and signed publication are required."
+  "version": "7.0.278",
+  "commit_sha": "d071b790f39c013348608f968c9e54c4920e89cf",
+  "release_notes": "Buyer Log 7.0.278 TEST: Initial data startup now uses bounded attempts and avoids unnecessary large override-map merges; startup tracing improved. Source PR #573; release regression repair PR #575. TEST only; affected-device acceptance remains pending."
 }
