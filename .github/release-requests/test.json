@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.265",
-  "commit_sha": "fed7554576550add8461d75dfe157b6d0623e248",
-  "release_notes": "Buyer Log 7.0.265 TEST: CP/Orders Original Ex-F. sütunu ASAS Dates tablosundaki ilk tarihten (Initial Inspection Geçme Tarih Gün Ay Yıl) okunuyor ve Ex-factory revizyonundan bağımsız. Kullanılmayan kod temizliği (61 fonksiyon). PR #453, #454."
+  "version": "7.0.277",
+  "commit_sha": "cb443d982a503b1d063965de48cec10355eaccbc",
+  "release_notes": "Buyer Log 7.0.277 TEST: Initial data startup request timeout and bounded retry; remove heavyweight CP override map merging from the initial response; privacy-safe startup diagnostics. PR #573. Full Windows regression and signed TEST publication remain mandatory."
 }
