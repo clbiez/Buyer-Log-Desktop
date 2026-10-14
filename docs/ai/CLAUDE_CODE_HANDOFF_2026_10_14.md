@@ -38,7 +38,7 @@ Current main / TEST source:
 4d9a1023a44e4e8211524d1f3f46c9a4cc38952d
 Immutable updates/v7.0.275 points exactly to this source. Immutable workflow 38532064963 succeeded.
 
-### Running release — resume, do not dispatch a duplicate
+### Latest release result — Windows passed, publication failed
 
 TEST workflow 38532090289:
 https://github.com/clbiez/Buyer-Log-Desktop/actions/runs/38532090289
@@ -46,7 +46,11 @@ Windows job 115746117377 completed SUCCESS on 2026-10-14 08:40:21 UTC. Actual lo
 Local complete regression: 994 files / 9 batches; 7,659 cases, 7,593 passed, 0 failed, 66 existing Linux/platform/opt-in skips, 304.6 seconds.
 Targeted import/OAB 38 cases plus native manufacturer/headings/journal/output 102 cases passed. One focused review has no open P0/P1 in these narrow diffs.
 
-At snapshot, publish job 115761435879 is running: artifact built and manifest signed, remote publication verification pending. Stable promotion has NOT been started. This existing run may finish after this document was written; check its actual result.
+Final run result at handoff: FAILURE. Windows regression succeeded, but publish job 115761435879 failed at Publish, verify remote bytes, then advance TEST latest. Build and Ed25519 signing completed. Error: [RELEASE_FAILED] Command failed: git -C release-repo push origin HEAD:main; remote rejected HEAD -> main (failed). The job log does not establish a specific quota, large-file, protection or permissions cause; inspect actual Git/publication state and preserve detailed stderr before naming it.
+
+Public test-v7.0.275 was created at 08:42:39 UTC and contains BuyerLog-7.0.275.json (711 bytes) and BuyerLog-7.0.275.zip (151,587,373 bytes). Asset existence is NOT completed publication or Stable acceptance. Stable remains 7.0.273; no Stable promotion or new installer was started. Check the actual canonical TEST latest pointer before promotion.
+
+Next action: fix the CI-only delivery/publication boundary, reuse and verify the already-built same signed 7.0.275 artifact, and complete required remote checks/feed publication. Do not blindly rerun the unchanged failed workflow, rebuild/overwrite the existing version artifacts, or unnecessarily repeat the successful 40-minute Windows suite when app code is unchanged. .github/scripts/buyerlog-release-distribution.js already separates publish-test and promote-stable and uses existing native providers, signature and immutable-asset verification. A delivery-only repair must retain all those safeguards. The workflow checks out its CI publisher independently of pinned app source; an app-code change requires a new unused version, while a strictly CI-only transport repair can retain the exact accepted existing app bytes.
 
 Commands:
 ```
@@ -54,7 +58,7 @@ gh run view 38532090289 -R clbiez/Buyer-Log-Desktop
 gh run watch 38532090289 -R clbiez/Buyer-Log-Desktop --exit-status
 gh release view test-v7.0.275 -R clbiez/Buyer-Log-Releases
 ```
-Only after all required release/browser/remote checks succeed, verify the signed TEST manifest with the existing native trusted-key verifier. Then, under the existing Stable authorization:
+Only after the failed publication boundary is repaired and all required release/browser/remote checks truly succeed, verify the signed TEST manifest with the existing native trusted-key verifier. Never promote merely because assets exist. Then, under the existing Stable authorization:
 ```
 gh workflow run buyerlog-promote-stable.yml -R clbiez/Buyer-Log-Desktop --ref main -f version=7.0.275
 ```
