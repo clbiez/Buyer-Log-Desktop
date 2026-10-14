@@ -97,6 +97,35 @@
           "en": "Actual Agent Office: agents sit at their desks facing the screen on their chairs; furniture shares one scale."
         }
       }
+    },
+    {
+      "id": "backend-parent-exit",
+      "type": "fix",
+      "module": {
+        "tr": "Masaüstü",
+        "en": "Desktop"
+      },
+      "title": {
+        "tr": "Zorla kapatma sonrası arka plan süreci kalmaz",
+        "en": "No background process left after a forced close"
+      },
+      "body": {
+        "tr": "Buyer Log Görev Yöneticisi'nden sonlandırılırsa arka plan sunucusu bunu birkaç saniye içinde fark eder ve düzgün kapanır. Port ve veritabanı boşalır; uygulama yeniden açıldığında çalışan kopya engeline takılmaz.",
+        "en": "If Buyer Log is ended from Task Manager, the background server notices within a few seconds and shuts down cleanly. The port and database are released, so reopening the app is not blocked by a running copy."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backend-parent-exit-reopen.png",
+        "caption": {
+          "tr": "Görev Yöneticisi'nden kapatıldıktan sonra yeniden açılan Buyer Log'da üç hazırlık adımı tamamlanır.",
+          "en": "After an End task in Task Manager, reopened Buyer Log completes all three preparation steps."
+        },
+        "alt": {
+          "tr": "Görev Yöneticisi'nden kapatıldıktan sonra yeniden açılan Buyer Log'da üç hazırlık adımı tamamlanır.",
+          "en": "After an End task in Task Manager, reopened Buyer Log completes all three preparation steps."
+        }
+      }
     }
   ]
 }

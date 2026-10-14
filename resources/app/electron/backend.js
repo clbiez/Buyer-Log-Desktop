@@ -204,6 +204,8 @@ class BackendProcess {
     // OAB requests are relayed to the hidden signed-in PASS page in Electron main.
     if (this.desktopOabRelayUrl) env.BUYER_LOG_DESKTOP_OAB_RELAY_URL = this.desktopOabRelayUrl;
     env.BUYER_LOG_USER_SESSION_SECRET = this.sessionSecret;
+    // Gözetmen bu PID kaybolunca (ör. Görev Yöneticisi) sunucuyu kapatır; öksüz backend kalmaz.
+    env.BUYER_LOG_DESKTOP_PARENT_PID = String(process.pid);
     // LCW AI tarafından üretilen PDF/PPTX/XLSX/HTML dosyaları, diğer
     // Buyer Log dışa aktarımlarıyla aynı gerçek İndirilenler klasörüne gider.
     // Sunucu Electron API'sini göremez; ana süreç güvenilir yolu env ile verir.
