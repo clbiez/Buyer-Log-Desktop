@@ -14,7 +14,7 @@ function between(start, end) {
 }
 
 test('Yenileme sonrası lisans royalty kuralları yüklenen CP, Siparişler ve özet satırlarına uygulanır', () => {
-  const load = between('async function loadFromServer(', 'let sharedRevisionSnapshot');
+  const load = between('async function loadFromServer(force, targets)', 'let sharedRevisionSnapshot');
   const ordersLoad = between('async function ensureOrdersLoaded(options={})', 'window.BLEnsureOrdersLoaded=ensureOrdersLoaded');
 
   assert.match(load, /state\.orderSummary\s*=\s*\{\s*fname:\s*`Sunucu:/);
@@ -40,7 +40,7 @@ test('Kural hidrasyonu tek bir sürüm korumalı yardımcıdan geçer', () => {
 });
 
 test('Açılış yüklemesi ve canlı senkron kuralları doğrudan değil yardımcı üzerinden yazar', () => {
-  const load = between('async function loadFromServer(', 'let sharedRevisionSnapshot');
+  const load = between('async function loadFromServer(force, targets)', 'let sharedRevisionSnapshot');
   const refresh = between('async function refreshPricingRulesFromServer()', 'function pricingRuleMatchCount');
 
   // Açılış yanıtı, storeRevisions birleştirilmeden önceki revizyonla kıyaslanır.

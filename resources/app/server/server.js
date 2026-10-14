@@ -8446,19 +8446,14 @@ async function buildResponse(currentUser = null, options = {}) {
   }
 
   const sharedOverrides = loadOverrides();
-  // The initial response carries metadata only: CP/Orders projections are lazy.
-  // Do not spread potentially massive CP override maps into three new objects
-  // before the first screen. Preserve the full merge for non-startup consumers.
-  const overrides = startup ? sharedOverrides : (() => {
-    const sourceOverrides = active.cpupdateOverrides && typeof active.cpupdateOverrides === 'object'
-      ? active.cpupdateOverrides : { submap: {}, suppfobmap: {}, suppfobmetamap: {} };
-    return {
-      ...sharedOverrides,
-      submap: { ...(sourceOverrides.submap || {}), ...(sharedOverrides.submap || {}) },
-      suppfobmap: { ...(sourceOverrides.suppfobmap || {}), ...(sharedOverrides.suppfobmap || {}) },
-      suppfobmetamap: { ...(sourceOverrides.suppfobmetamap || {}), ...(sharedOverrides.suppfobmetamap || {}) },
-    };
-  })();
+  const sourceOverrides = active.cpupdateOverrides && typeof active.cpupdateOverrides === 'object'
+    ? active.cpupdateOverrides : { submap: {}, suppfobmap: {}, suppfobmetamap: {} };
+  const overrides = {
+    ...sharedOverrides,
+    submap: { ...(sourceOverrides.submap || {}), ...(sharedOverrides.submap || {}) },
+    suppfobmap: { ...(sourceOverrides.suppfobmap || {}), ...(sharedOverrides.suppfobmap || {}) },
+    suppfobmetamap: { ...(sourceOverrides.suppfobmetamap || {}), ...(sharedOverrides.suppfobmetamap || {}) },
+  };
   const cpDataAllowed = !currentUser || ['overview','cp','orders','koleksiyon','shipping','source'].some(area => userAccess.hasArea(currentUser, area));
   const orderSummaryDataAllowed = !currentUser || ['overview','backlog','source'].some(area => userAccess.hasArea(currentUser, area));
   return {
@@ -8513,23 +8508,16 @@ async function buildResponse(currentUser = null, options = {}) {
 // sadece dosyadaki mevcut değerleri okur — hızlıdır, sayfa açılışında kullanılır).
 app.get('/api/data', async (req, res) => {
   const started = process.hrtime.bigint();
-  const initial = String(req.query.mode || '') === 'initial';
-  // An authenticated, metadata-only startup trace. No user/paths/source data.
-  if (initial) console.log('[STARTUP_INITIAL_DATA] request-start');
   try {
     await localDbReadyPromise;
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
-    const response = await buildResponse(req.currentUser, { startup: initial });
-    const totalMs = Number(process.hrtime.bigint() - started) / 1e6;
-    if (initial) console.log(`[STARTUP_INITIAL_DATA] response-ready durationMs=${totalMs.toFixed(1)}`);
+    const response = await buildResponse(req.currentUser, { startup: String(req.query.mode || '') === 'initial' });
     if (process.env.NODE_ENV !== 'production') {
+      const totalMs = Number(process.hrtime.bigint() - started) / 1e6;
       res.set('Server-Timing', `total;dur=${totalMs.toFixed(1)}, page-cache;dur=${Number(response.pageCache && response.pageCache.readMs || 0).toFixed(1)}`);
     }
     sendDateSafeJson(res, response);
-  } catch (err) {
-    if (initial) console.warn(`[STARTUP_INITIAL_DATA] request-failed durationMs=${(Number(process.hrtime.bigint() - started) / 1e6).toFixed(1)} code=${String(err && err.code || 'UNKNOWN').slice(0,48)}`);
-    apiError(res, err, 'Ana veri yüklenemedi. Kaynak dosyaları ve klasör erişimini kontrol edin.');
-  }
+  } catch (err) { apiError(res, err, 'Ana veri yüklenemedi. Kaynak dosyaları ve klasör erişimini kontrol edin.'); }
 });
 
 // Hazır projection'ı disk/RAM'deki gzip buffer olarak doğrudan yollar. Bu yol
