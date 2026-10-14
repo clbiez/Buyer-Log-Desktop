@@ -13776,7 +13776,7 @@ function cpClientWorkInProgress(){
   }catch(_){}
   return false;
 }
-async function loadFromServer(force, targets){
+async function loadFromServer(force, targets, options = {}){
   // İstemcinin eski snapshot'ı bir hedefi yanlış gruba dahil edip geçerli
   // filtre bulunamadı hatası üretebiliyordu. Her manuel yenilemeden önce aynı
   // yapılandırmayı sunucudan oku; API sunucu tarafında yine kesin genişletir.
@@ -13911,6 +13911,10 @@ async function waitForRefreshJob(expectedJob=null){
         ...(Array.isArray(targets)&&targets.length?{targets}:{}),
       }) : undefined,
       cache:'no-store',
+      // A stalled initial-data endpoint must not pin the login curtain forever.
+      // Manual refreshes and later background reads retain their own lifetimes.
+      signal: !force && options.startup === true && typeof AbortSignal !== 'undefined' && typeof AbortSignal.timeout === 'function'
+        ? AbortSignal.timeout(30000) : undefined,
     });
     if(!res.ok){
       const e = await res.json().catch(()=>({error:res.statusText}));
@@ -14223,6 +14227,11 @@ async function waitForRefreshJob(expectedJob=null){
     }
     return true;
   }catch(err){
+    if(options.startup === true){
+      const code = err && err.name === 'TimeoutError' ? 'INITIAL_DATA_TIMEOUT' : String(err && (err.code || err.name) || 'INITIAL_DATA_FAILED').slice(0,64);
+      window.BLPerf?.mark?.('INITIAL_DATA_ATTEMPT_FAILED', {attempt:Number(options.attempt)||0,code});
+      window.BLBootGuard?.noteFailure?.(code);
+    }
     if(err&&err.code==='REFRESH_CANCELLED'){
       // Hata değil, kullanıcının kendi kararı: başarısızlık göstergesi yakılmaz.
       setRefreshFailureState(false);
@@ -15594,7 +15603,11 @@ async function loadInitialBuyerLogData(){
   const waits=[0,450,1100];
   for(let attempt=0;attempt<waits.length;attempt++){
     if(waits[attempt])await new Promise(resolve=>setTimeout(resolve,waits[attempt]));
-    if(await loadFromServer(false))return true;
+    window.BLPerf?.mark?.('INITIAL_DATA_ATTEMPT_START',{attempt:attempt+1});
+    if(await loadFromServer(false,undefined,{startup:true,attempt:attempt+1})){
+      window.BLPerf?.mark?.('INITIAL_DATA_ATTEMPT_READY',{attempt:attempt+1});
+      return true;
+    }
   }
   const msg=appLang==='en'?'Buyer Log opened, but the initial data could not be loaded. Use Refresh to try again.':'Buyer Log açıldı ancak başlangıç verisi yüklenemedi. Yeniden denemek için Yenile düğmesini kullanın.';
   setServerStatus(msg);showToast(msg);return false;
