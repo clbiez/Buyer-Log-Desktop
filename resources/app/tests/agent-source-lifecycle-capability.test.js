@@ -60,3 +60,9 @@ test('DELETE inverse refuses an id clash and IAM loss stops create and delete be
  const g=await fixture(t),before=ids(),c=await create(g,'source.connection.create',newSource),d=await create(g,'source.connection.delete',{sourceId:'custom1'});g.profile.permissions=[];
  await assert.rejects(apply(g,c),{code:'OFFICE_TOOL_FORBIDDEN'});await assert.rejects(apply(g,d),{code:'OFFICE_TOOL_FORBIDDEN'});assert.deepEqual(ids(),before);
 });
+test('DELETE inverse never drops a peer source when the restore would exceed the native source limit',async t=>{
+ const f=await fixture(t),done=await apply(f,await create(f,'source.connection.delete',{sourceId:'custom1'})),limit=require('../server/lib/data-domain/source-writer').MAX_SOURCES;
+ const list=db.loadModelConnections().items;for(let i=list.length;i<limit;i++)list.push({id:'peer'+i,name:'Peer '+i,server:'P',catalog:'Q',role:'custom',refreshEnabled:false,scopes:[]});db.replaceModelConnections(list);
+ const before=ids();assert.equal(before.length,limit);
+ await assert.rejects(undo(f,done),{code:'SOURCE_LIMIT'});assert.deepEqual(ids(),before);
+});

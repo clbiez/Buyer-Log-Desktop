@@ -100,7 +100,7 @@ function createSourceWorkflowService({db}){
   return db.mutateModelConnections(async lease=>{
    guard.assertAuthority?.();const store=db.loadModelConnections();if(store.revision!==expectedStoreRevision)throw fail('OFFICE_PREVIEW_CHANGED');headroom(store,2);
    const {value}=planCreate(store,args),saved=db.replaceModelConnections(value.items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
-   const actual=db.loadModelConnections(),own=checked(saved,value.sourceId),current=checked(actual,value.sourceId);
+   const actual=db.loadModelConnections(),own=checked(saved,value.sourceId),current=checked(actual,value.sourceId);if(store.items.some(item=>!actual.items.some(next=>next.id===item.id)))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
    if(actual.revision!==saved.revision||adapter.configRevision(own)!==adapter.configRevision(current))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
    return {verified:true,changed:true,revision:saved.revision,sourceId:value.sourceId,sourceRevision:adapter.configRevision(own),warnings:value.warnings||[]};
   });
@@ -134,9 +134,11 @@ function createSourceWorkflowService({db}){
  async function restoreDeleted(before,index,guard={}){
   return db.mutateModelConnections(async lease=>{
    guard.assertAuthority?.();const store=db.loadModelConnections();if(store.items.some(item=>item.id===before.id))throw fail('SOURCE_EXISTS');headroom(store,1);
+   // Native normalization keeps only MAX_SOURCES entries; never let a restore push a peer out.
+   if(store.items.length>=writer.MAX_SOURCES)throw fail('SOURCE_LIMIT');
    if(before.refreshEnabled!==false&&store.items.some(item=>item.role===before.role&&item.refreshEnabled!==false))throw fail('ROLE_ALREADY_ACTIVE');
    const items=store.items.slice();items.splice(Math.max(0,Math.min(items.length,Number.isSafeInteger(index)?index:items.length)),0,clone(before));const saved=db.replaceModelConnections(items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
-   const actual=db.loadModelConnections(),latest=checked(actual,before.id),own=checked(saved,before.id);
+   const actual=db.loadModelConnections(),latest=checked(actual,before.id),own=checked(saved,before.id);if(store.items.some(item=>!actual.items.some(next=>next.id===item.id)))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
    if(actual.revision!==saved.revision||adapter.configRevision(own)!==adapter.configRevision(latest)||adapter.configRevision({...before,_configVersion:0})!==adapter.configRevision({...latest,_configVersion:0}))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
    return {verified:true,revision:saved.revision,sourceRevision:adapter.configRevision(own)};
   });
