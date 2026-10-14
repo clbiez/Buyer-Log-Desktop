@@ -12,7 +12,8 @@
     "scope": "Native sample, BOM, model image and attachment job adapters",
     "reuse": "PLM native jobs/session/store",
     "boundary": "current corporate session; canonical model/order/color identity; durable native completion",
-    "status": "pending"
+    "status": "in_progress",
+    "delivery": "Stored-asset reads added: collection.plm.bom.read, collection.plm.techsheet.status (no PLM request, no index migration). Pending: approved PLM download jobs (technical sheet, BOM refresh, samples, images) — the native technical-sheet download runs inside the HTTP route; it must be extracted into a job service with durable completion before an agent can start it; live corporate PLM session acceptance is required."
   },
   {
     "packet": "order-editor",

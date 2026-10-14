@@ -358,6 +358,35 @@
           "en": "Agent Office task steps with a public holiday list"
         }
       }
+    },
+    {
+      "id": "agent-plm-assets",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar kayıtlı PLM BOM özetini ve teknik föy durumunu okur",
+        "en": "Agents read stored PLM BOM summaries and technical sheet status"
+      },
+      "body": {
+        "tr": "Agent Ofisi, PLM Sync'in daha önce kaydettiği kumaş ve baskı (BOM) özetlerini ve modellerin teknik föyünün dosyalarda olup olmadığını okuyabilir. PLM'e istek atılmaz; okuma dosya dizinini değiştirmez. PLM'den yeni veri veya föy indirme kullanıcının PLM Sync akışında kalır.",
+        "en": "Agent Office can read the fabric and print (BOM) summaries PLM Sync already saved, and whether a model's technical sheet is on file. No PLM request is made and a read never changes the file index. Downloading new data or sheets from PLM stays in the user's PLM Sync flow."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-plm-assets.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: kayıtlı BOM özeti okuma adımının doğrulanmış sonucu (demo veri).",
+          "en": "Actual Agent Office: verified result of the stored BOM summary read (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında kayıtlı PLM BOM özeti",
+          "en": "Agent Office task steps with a stored PLM BOM summary"
+        }
+      }
     }
   ]
 }

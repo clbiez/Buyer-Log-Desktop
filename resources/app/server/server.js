@@ -10942,6 +10942,7 @@ const nativeRefreshGroupService=require('./lib/refresh-group-service').createRef
 require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
 require('./lib/agent-price-analysis-tools').registerPriceAnalysisTools(agentToolRegistry,{rows:profile=>priceAnalysisRowsFor(profile)});
 require('./lib/agent-holiday-tools').registerHolidayTools(agentToolRegistry,{holidayService});
+require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership});
 {
   // Same active-user and display rules as /api/preset-share; target is always the owner.
   const activePresetProfile=profile=>Boolean(profile)&&profile.enabled!==false&&profile.status!=='INACTIVE';

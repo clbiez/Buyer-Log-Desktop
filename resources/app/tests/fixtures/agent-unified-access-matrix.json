@@ -1722,6 +1722,40 @@
         "approval": true,
         "rollbackable": true,
         "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.bom.read",
+        "operation": "READ",
+        "agentAreas": [],
+        "agentAnyAreas": [
+          "collection",
+          "cp",
+          "orders"
+        ],
+        "areas": [],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.techsheet.status",
+        "operation": "READ",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
       }
     ]
   },
