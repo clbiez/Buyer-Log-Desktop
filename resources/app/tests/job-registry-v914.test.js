@@ -204,7 +204,8 @@ test('PLM işlemleri iş kaydına bağlı ve kapsamları doğru', () => {
 test('başarısız modeller işe yazılıyor (yalnız onları yeniden denemek için)', () => {
   assert.match(SERVER, /plmJobs\.addFailure\(profile\.id, fetchRun\.job\.id/);
   assert.match(SERVER, /plmJobs\.addFailure\(req\.currentUser\.id,linkRun\.job\.id/);
-  assert.match(SERVER, /plmJobs\.addFailure\(req\.currentUser\.id, sheetRun\.job\.id/);
+  // Technical sheets run in the shared service used by the route and Office.
+  assert.match(SERVER, /plmJobs\.addFailure\(profile\.id, sheetRun\.job\.id/);
 });
 
 test('istemci işi izleyebilsin diye yanıtlar jobId taşıyor', () => {
