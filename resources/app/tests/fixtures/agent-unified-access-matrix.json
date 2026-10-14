@@ -3763,6 +3763,80 @@
         "approval": true,
         "rollbackable": true,
         "contractVersion": 2
+      },
+      {
+        "id": "source.refreshgroups.read",
+        "operation": "READ",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "source.refreshgroup.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "source.refreshgroup.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "source.refreshgroup.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
       }
     ]
   },
