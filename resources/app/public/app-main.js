@@ -2211,7 +2211,16 @@ function switchTab(tab){
     void window.BLPerf.ensureFeature('dataManagement').then(()=>{
       if(currentActiveTab()!=='source')return;
       window.BLDataManagement?.mount?.(document.getElementById('dataManagementRoot'));
-    }).catch(err=>showToast(err&&err.message||String(err)));
+    }).catch(err=>{
+      if(currentActiveTab()!=='source')return;
+      window.BLUI?.renderState(document.getElementById('dataManagementRoot'),{
+        kind:'error',title:appLang==='en'?'Data Management could not be loaded.':'Veri Yönetimi yüklenemedi.',
+        detail:appLang==='en'?'Check the server connection and try again.':'Sunucu bağlantısını kontrol edip yeniden deneyin.',
+        actionLabel:err?.code==='BL_SCRIPT_TIMEOUT'?(appLang==='en'?'Reload':'Yeniden yükle'):(appLang==='en'?'Retry':'Yeniden dene'),
+        onAction:()=>err?.code==='BL_SCRIPT_TIMEOUT'?window.location.reload():switchTab('source'),
+      });
+      showToast(err&&err.message||String(err));
+    });
   }
   if(['cp','orders','shipping'].includes(tab)){
     // Özellik zaten yüklüyse değişmemiş tablo baştan çizilmez (30k satırda her

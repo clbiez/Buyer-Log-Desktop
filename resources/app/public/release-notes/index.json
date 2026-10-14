@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.279",
+      "publishedAt": "2026-10-14",
+      "title": {
+        "tr": "Büyük veride açılış düzeltmesi, ofiste doğru oturuş ve güvenli zorla kapatma",
+        "en": "Large-data startup fix, correct office seating and safe forced close"
+      },
+      "stats": {
+        "features": 3,
+        "improvements": 1,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.279/release.json"
+    },
+    {
       "version": "7.0.276",
       "publishedAt": "2026-10-14",
       "title": {
