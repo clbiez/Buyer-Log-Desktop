@@ -1,9 +1,13 @@
 name: Buyer Log Tests
 
-# GitHub Actions kotasını korumak için PR'lar otomatik test koşmaz.
-# Tek zorunlu tam regresyon TEST yayınındadır (buyerlog-test-release.yml).
-# Riskli bir PR'ı yayından önce doğrulamak için elle çalıştırılabilir.
+# GitHub Actions kotasını korumak için normal PR'lar otomatik test koşmaz.
+# Yalnız test çalıştırıcısı veya bu doğrulama workflow'u değişirse PR'da tam regresyon gerekir.
+# TEST yayınında zorunlu tam regresyon ayrıca korunur (buyerlog-test-release.yml).
 on:
+  pull_request:
+    paths:
+      - 'resources/app/tests/run-tests.js'
+      - '.github/workflows/buyerlog-tests.yml'
   workflow_dispatch:
     inputs:
       ref:
