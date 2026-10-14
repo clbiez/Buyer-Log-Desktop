@@ -97,6 +97,7 @@
       OFFICE_TASK_DEVICE:L('Bu önizleme başka cihazda oluşturuldu. Bu cihazda yeni önizleme hazırlayın.','This preview was created on another device. Prepare a fresh preview on this device.'),
       OFFICE_EVIDENCE_SCOPE_REQUIRED:L('Önce Veri kapsamından sipariş veya PLM seçin.','First select an order or PLM in Data scope.'),
       OFFICE_EVIDENCE_LIMIT:L('En fazla beş belge ve dosya başına 19 MiB sınırı geçerlidir.','Up to five documents and a 19 MiB limit per file apply.'),
+      OFFICE_NOTE_COLUMN_UNKNOWN:L('Not sütunu bulunamadı. Sütun silinmiş veya adı değişmiş olabilir; güncel sütunlarla yeniden önizleyin.','Note column not found. It may have been deleted or renamed; preview again with the current columns.'),
       OFFICE_PREVIEW_CHANGED:L('Kapsam, belgeler, agent profili veya yetki değişti. Yeni önizlemeyi onaylayın.','The scope, documents, agent profile or permissions changed. Approve a fresh preview.'),
       OFFICE_TEMPLATE_LIMIT:L('En fazla altı düzen saklanabilir. Önce bir şablonu kaldırın.','Up to six layouts can be saved. Remove a template first.'),
       OFFICE_TEMPLATE_NAME:L('Düzen için bir isim yazın.','Enter a layout name.'),

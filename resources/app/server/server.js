@@ -2542,12 +2542,21 @@ const agentToolRegistry = createToolRegistry({
     if(candidates.length!==1)throw Object.assign(new Error('Order identity is missing or ambiguous.'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
     if(!canUserEditOrderCode(profile,orderCode))throw Object.assign(new Error('ORDER_FORBIDDEN'),{code:'ORDER_FORBIDDEN',statusCode:403});
     assertAgentSharedOwner(profile,orderCode,patch);
+    // The native editor silently skips unknown note-column ids; an agent preview
+    // must refuse them instead of approving a write that changes nothing.
+    const columnIds=new Set((loadOverrides().noteColumnDefs||[]).map(def=>def.id));
+    if(Object.keys(patch&&patch.noteColumns||{}).some(id=>!columnIds.has(id)))throw Object.assign(new Error('OFFICE_NOTE_COLUMN_UNKNOWN'),{code:'OFFICE_NOTE_COLUMN_UNKNOWN',statusCode:422});
     return require('./db').snapshotOrderOverride(orderCode,patch);
   },
   updateOrder: async (_ownerId, profile, orderCode, patch,expectedRevision) => {
     if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
     assertAgentSharedOwner(profile,orderCode,patch);
+    const beforeContext=pageProjectionContext(profile);
     const saved = patchOrderOverride(Number(orderCode), patch || {}, expectedRevision, null, { actor: noteActorOf(profile) });
+    // Same incremental screen-cache rewrite as the HTTP editor: without it every
+    // agent edit invalidated the whole page cache and forced a cold rebuild.
+    try { await rewriteProjectionCacheForRowPatches(profile,beforeContext,[{orderCode,patch}]); }
+    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
     userAccess.appendAudit(profile, 'AGENT_ORDER_UPDATE', String(orderCode), { fields:Object.keys(patch || {}) });
     liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor([{orderCode,patch}])});
     void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
