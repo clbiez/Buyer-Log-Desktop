@@ -768,6 +768,10 @@ function patchOrderOverride(orderCode, patch, expectedRevision = null, expectedS
   const touchesSuppFob=Object.prototype.hasOwnProperty.call(patch||{},'suppFob');
   const currentSuppFob=Number(ov._revisions.suppFob)||0, wantedSuppFob=expectedNumber(expectedSuppFobRevision);
   if(touchesSuppFob && wantedSuppFob!=null && wantedSuppFob!==currentSuppFob)throw new RevisionConflictError('Sipariş Supp. FOB düzenlemeleri',wantedSuppFob,currentSuppFob,'suppFob');
+  // Note-column values are only written against the definitions the caller saw;
+  // otherwise a column deleted meanwhile would be skipped silently (partial write).
+  const wantedDefs=expectedNumber(options&&options.expectedNoteColumnDefsRevision),currentDefs=Number(ov._revisions.noteColumnDefs)||0;
+  if(patch&&patch.noteColumns&&wantedDefs!=null&&wantedDefs!==currentDefs)throw new RevisionConflictError('Not sütunları',wantedDefs,currentDefs,'noteColumnDefs');
   applyOrderPatch(ov, orderCode, patch || {}, options);
   ov._revisions.orders = current + 1;
   if(touchesSuppFob)ov._revisions.suppFob=currentSuppFob+1;
@@ -817,7 +821,10 @@ function restoreOrderOverrideReceipt(orderCode,receipt,expectedRevision,selector
     for(const [name,value]of Object.entries(receipt.maps)){ov[name]=ov[name]||{};if(value===null)delete ov[name][receipt.key];else ov[name][receipt.key]=cloneJson(value);}
     ov._revisions.orders=revision+1;const saved=saveOverrides(ov,ov._revision);
     // Every restored field is mirrored to peers, not only sub-manufacturer and dates.
-    const sharedPatch={...selector,notes:{},subManufacturer:saved.submap[receipt.key]??null,licensor:null,delType:null,dates:Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,key])=>[field,saved.datemap[receipt.key]?.[key]??null])),...(current?{noteColumns:{},shortage:null}:{})};
+    // A line entry that is absent again falls back to the order-level entry;
+    // mirroring an empty line value would shadow that fallback on peers.
+    const lineFallsBack=name=>receipt.key!==String(orderCode)&&receipt.maps[name]===null&&Object.hasOwn(saved[name]||{},String(orderCode));
+    const sharedPatch={...selector,...(lineFallsBack('notesmap')?{}:{notes:{}}),subManufacturer:saved.submap[receipt.key]??null,licensor:null,delType:null,dates:Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,key])=>[field,saved.datemap[receipt.key]?.[key]??null])),...(current?{...(lineFallsBack('noteColumnValues')?{}:{noteColumns:{}}),shortage:null}:{})};
     cpSharedStore.mirrorPatchDetached(receipt.key,cpSharedStore.patchFromOrderPatch(saved,receipt.key,sharedPatch),{actor:options?.actor});
     const after=snapshotOrderOverride(orderCode,selector).patch.maps;
     return {verified:Object.keys(receipt.maps).every(name=>JSON.stringify(after[name])===JSON.stringify(receipt.maps[name])),restored:true,revision:saved._revisions.orders};

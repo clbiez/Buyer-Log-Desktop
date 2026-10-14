@@ -77,6 +77,8 @@ function shareError(message, code, statusCode = 400) {
   return Object.assign(new Error(message), { code, statusCode });
 }
 function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
+// Content digest of a profile store as plan() captures it (missing = empty store).
+function profileDigest(store) { return require('crypto').createHash('sha256').update(JSON.stringify(store || { items: [] })).digest('hex'); }
 function parseJson(value) { try { return JSON.parse(value); } catch (_) { return undefined; } }
 function isPlainObject(value) { return Boolean(value) && typeof value === 'object' && !Array.isArray(value); }
 function itemById(id) { return SHARE_ITEMS.find(item => item.id === id) || null; }
@@ -255,6 +257,14 @@ function createPresetShare({ loadProfiles, restoreProfiles } = {}) {
       return { ok: true, changed: false, mode: copyMode, items: selected.map(item => item.id), setKeys: [], removedKeys: [] };
     }
     options.assertAuthority?.();
+    // Profile stores are CAS-checked before any write: a view saved by another
+    // tab after the preview must not be overwritten (entries use expectedEntries).
+    if (options.expectedProfiles && Object.keys(nextProfiles).length) {
+      const current = loadProfiles(target) || {};
+      for (const kind of Object.keys(nextProfiles)) {
+        if (profileDigest(current[kind]) !== options.expectedProfiles[kind]) throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'), { code: 'OFFICE_PREVIEW_CHANGED', statusCode: 409 });
+      }
+    }
     // Geri alma kaydı yazmadan ÖNCE diske iner: uygulama yarıda kalsa bile
     // kullanıcının eski ayarı kaybolmaz.
     fs.mkdirSync(UNDO_ROOT, { recursive: true });
@@ -315,5 +325,5 @@ function createPresetShare({ loadProfiles, restoreProfiles } = {}) {
 
 module.exports = {
   SHARE_ITEMS, SHARE_ITEM_IDS, PAGE_KEYED_KEYS, UNDO_ROOT,
-  createPresetShare, mergeValue, mergeProfileStore, normalizeItems, normalizeMode,
+  createPresetShare, profileDigest, mergeValue, mergeProfileStore, normalizeItems, normalizeMode,
 };

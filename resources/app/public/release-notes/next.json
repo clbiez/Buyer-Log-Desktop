@@ -271,6 +271,35 @@
           "en": "Agent Office task steps with a verified checklist attachment removal and an undo button"
         }
       }
+    },
+    {
+      "id": "cp-worker-error-banner",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Veri değişince kırmızı \"JS HATA\" bandı çıkmıyor",
+        "en": "No red \"JS error\" banner when data changes"
+      },
+      "body": {
+        "tr": "CP verisi yenilendiğinde öncelik hesaplayan arka plan işi yeniden başlatılır. İptal edilen eski işin yarım kalan dosya yüklemesi zaten ele alındığı hâlde ekranın altında kırmızı \"JS HATA\" bandı olarak görünüyordu. Hesaplama sonucu değişmez; ele alınan hata artık bant olarak gösterilmez.",
+        "en": "When CP data refreshes, the background job that computes priorities restarts. The interrupted file load of the cancelled old job was already handled but still appeared as a red \"JS error\" banner at the bottom of the screen. Results do not change; the handled error is no longer shown as a banner."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-worker-error-banner.png",
+        "caption": {
+          "tr": "Gerçek CP Tracker: bir sipariş düzenlemesinden sonraki yeniden hesaplamada hata bandı görünmüyor.",
+          "en": "Actual CP Tracker: no error banner after the recalculation that follows an order edit."
+        },
+        "alt": {
+          "tr": "Sipariş düzenlemesinden sonra hata bandı olmadan CP Tracker tablosu",
+          "en": "CP Tracker table without an error banner after an order edit"
+        }
+      }
     }
   ]
 }

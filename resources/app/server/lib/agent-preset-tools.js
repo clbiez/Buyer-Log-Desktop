@@ -9,7 +9,7 @@
    the effect. */
 const crypto=require('node:crypto');
 const {object,string,array}=require('./agent-capability-contract'),{error}=require('./agent-office-store'),Inverse=require('./agent-native-inverse-artifact');
-const {SHARE_ITEM_IDS}=require('./preset-share');
+const {SHARE_ITEM_IDS,profileDigest}=require('./preset-share');
 const digest=value=>crypto.createHash('sha256').update(JSON.stringify(value===undefined?null:value)).digest('hex');
 const userId={...string(160),minLength:1,pattern:'^[^\\s]+$'};
 const itemIds={...array({enum:[...SHARE_ITEM_IDS]},SHARE_ITEM_IDS.length),minItems:1,uniqueItems:true};
@@ -35,7 +35,7 @@ function registerPresetTools(registry,deps){
   async function plan(args,ctx){
     owner(ctx);const from=source(ctx,args.sourceUserId);
     const planned=deps.presetShare.plan({sourceUserId:from.id,targetUserId:ctx.profile.id,items:args.items,mode:args.mode});
-    const currentProfiles=Object.fromEntries(Object.keys(planned.nextProfiles).map(kind=>[kind,digest(planned.previousProfiles[kind])]));
+    const currentProfiles=Object.fromEntries(Object.keys(planned.nextProfiles).map(kind=>[kind,profileDigest(planned.previousProfiles[kind])]));
     ctx.assertAuthority?.();
     // Fingerprint inputs: the exact keys, values and the target's current state.
     // Profile copies carry a fresh updatedAt per plan, so the time stamp is not
@@ -59,21 +59,25 @@ function registerPresetTools(registry,deps){
       if(!view.changed)return {verified:true,data:view};
       const artifactId=await Inverse.archive(ctx,'presets.share.apply',{entries:p.targetEntries,profiles:p.previousProfiles});
       return mutate(ctx,async()=>{
-        const result=deps.presetShare.commit(p,{expectedEntries:p.targetEntries,assertAuthority:ctx.assertAuthority});
+        const result=deps.presetShare.commit(p,{expectedEntries:p.targetEntries,expectedProfiles:snapshot.binding.profiles,assertAuthority:ctx.assertAuthority});
         const after=deps.presetShare.storedEntries(ctx.profile.id,[...Object.keys(p.set),...p.remove]);
         const verified=Object.entries(p.set).every(([key,value])=>after[key]&&after[key].value===value)&&p.remove.every(key=>!after[key]);
         if(!verified||result.changed!==true)throw error('OFFICE_PRESET_VERIFY_FAILED',409);
         const profiles=Object.keys(p.nextProfiles).length?deps.loadProfiles(ctx.profile.id):{};
-        return {verified:true,data:view,rollbackToken:{artifactId,nativeUndoCreatedAt:result.createdAt||null,afterEntries:Object.fromEntries([...Object.keys(p.set),...p.remove].map(key=>[key,after[key]||null])),afterProfiles:Object.fromEntries(Object.keys(p.nextProfiles).map(kind=>[kind,digest(profiles[kind])]))}};
+        return {verified:true,data:view,rollbackToken:{artifactId,nativeUndoCreatedAt:result.createdAt||null,afterEntries:Object.fromEntries([...Object.keys(p.set),...p.remove].map(key=>[key,digest(after[key]||null)])),afterProfiles:Object.fromEntries(Object.keys(p.nextProfiles).map(kind=>[kind,profileDigest(profiles[kind])]))}};
       });
     },
     restore:(token,ctx)=>mutate(ctx,async()=>{
       owner(ctx);const bound=Inverse.restore(ctx,'presets.share.apply',token),before=bound.before||{};
       const current=Object.keys(token.afterProfiles||{}).length?deps.loadProfiles(ctx.profile.id):{};
-      for(const [kind,hash]of Object.entries(token.afterProfiles||{}))if(digest(current[kind])!==hash)throw error('OFFICE_PREVIEW_CHANGED',409);
+      for(const [kind,hash]of Object.entries(token.afterProfiles||{}))if(profileDigest(current[kind])!==hash)throw error('OFFICE_PREVIEW_CHANGED',409);
+      // The token keeps only digests of the post-effect entries; the current
+      // entries must still be exactly those, and the write is CAS-bound to them.
+      const live=deps.presetShare.storedEntries(ctx.profile.id,Object.keys(token.afterEntries||{})),expectedEntries={};
+      for(const [key,hash]of Object.entries(token.afterEntries||{})){if(digest(live[key]||null)!==hash)throw error('OFFICE_PREVIEW_CHANGED',409);expectedEntries[key]=live[key]||null;}
       const set={},remove=[];
       for(const [key,entry]of Object.entries(before.entries||{})){if(entry)set[key]=entry.value;else remove.push(key);}
-      deps.applyEntryChanges(ctx.profile.id,set,remove,{expectedEntries:token.afterEntries||{},assertAuthority:ctx.assertAuthority});
+      deps.applyEntryChanges(ctx.profile.id,set,remove,{expectedEntries,assertAuthority:ctx.assertAuthority});
       if(Object.keys(before.profiles||{}).length)deps.restoreProfiles(ctx.profile.id,before.profiles);
       const now=deps.presetShare.storedEntries(ctx.profile.id,Object.keys(before.entries||{}));
       const verified=Object.entries(before.entries||{}).every(([key,entry])=>entry?now[key]&&now[key].value===entry.value:!now[key]);

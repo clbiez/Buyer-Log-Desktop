@@ -539,6 +539,7 @@ function createToolRegistry(adapter) {
     if (args && Object.prototype.hasOwnProperty.call(args, 'shortage')) patch.shortage = args.shortage;
     const orderCode = Number(args && args.orderCode);
     if (!Number.isFinite(orderCode)) throw Object.assign(new Error('Geçerli Order Code zorunlu.'), { code: 'ORDER_CODE_REQUIRED' });
+    if (Boolean(patch.model) !== Boolean(patch.ccode)) throw Object.assign(new Error('OFFICE_ORDER_IDENTITY'), { code: 'OFFICE_ORDER_IDENTITY', statusCode: 409 });
     for(const date of Object.values(patch.dates||{}))if(date&&(!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date))throw Object.assign(new Error('OFFICE_DATE_INVALID'),{code:'OFFICE_DATE_INVALID',statusCode:422});
     if(!['notes','dates','subManufacturer','licensor','delType','noteColumns','shortage'].some(key=>Object.hasOwn(patch,key)))throw Object.assign(new Error('OFFICE_TASK_INVALID'),{code:'OFFICE_TASK_INVALID',statusCode:422});
     const before = await adapter.snapshotOrder(ctx.ownerId, ctx.profile, orderCode, patch);

@@ -46,7 +46,10 @@
         stats.maxRoundTripMs=Math.max(stats.maxRoundTripMs,now()-next.started);
         message.ok?next.resolve(message.result):next.reject(new Error('CP_WORKER_FAILED'));
       };
-      worker.onerror=()=>{fatalError=new Error('CP_WORKER_FAILED');if(pending){pending.reject(fatalError);pending=null;}};
+      // The failure is handled here (the job falls back); preventDefault keeps a
+      // handled worker error, e.g. a cancelled worker's interrupted
+      // importScripts, from surfacing as a global "JS error" banner.
+      worker.onerror=event=>{event?.preventDefault?.();fatalError=new Error('CP_WORKER_FAILED');if(pending){pending.reject(fatalError);pending=null;}};
       worker.onmessageerror=worker.onerror;
       const send=(type,payload)=>new Promise((resolve,reject)=>{
         if(fatalError){reject(fatalError);return;}
@@ -84,7 +87,7 @@
         Object.defineProperty(result.model,'priorityGroups',{value:Object.fromEntries(Object.entries(result.groups).map(([group,indices])=>[group,indices.map(index=>analyses[index])])),enumerable:false});
         stats.lastExecutionMs=executionMs;stats.workerJobs++;
         return result.model;
-      }finally{clearInterval(watchdog);worker.terminate();worker.onmessage=null;worker.onerror=null;worker.onmessageerror=null;active=null;}
+      }finally{clearInterval(watchdog);worker.terminate();worker.onmessage=null;worker.onerror=event=>event?.preventDefault?.();worker.onmessageerror=null;active=null;}
     }
     async function run(job){
       const started=now();stats.lastQueueMs=started-job.queuedAt;

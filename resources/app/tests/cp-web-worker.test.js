@@ -80,3 +80,14 @@ test('bounded queue rejection yields so retrying callers cannot starve worker me
   assert.equal(await subject.computeAsync(rows(),{}),null);assert.equal(taskRan,true);
   subject.dispose();await active;await Promise.all(queued);
 });
+test('a cancelled worker\'s late load error is handled and never reaches the global error banner',async()=>{
+  // Field/UI acceptance: a CP refresh cancels the running worker; its interrupted
+  // importScripts then fired an unhandled error shown as a red "JS HATA" banner.
+  let worker;const prevented=[],list=rows(),context={today:20000};
+  const subject=runtime({workerFactory:()=>(worker={postMessage(){},terminate(){}})});
+  const pending=subject.computeAsync(list,context);
+  worker.onerror({preventDefault(){prevented.push('running');}});
+  assert.deepEqual((await pending).orders,Engine.analyze(list,context).orders,'handled failure falls back to the canonical engine');
+  worker.onerror({preventDefault(){prevented.push('terminated');}});
+  assert.deepEqual(prevented,['running','terminated']);subject.dispose();
+});

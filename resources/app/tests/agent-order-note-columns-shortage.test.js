@@ -83,8 +83,9 @@ test('Office cp.order.update (contract v2) binds approval to the live order snap
   registerOrderTools(tools,{
     withAgentMutation:(_ctx,work)=>work(),
     snapshotOrder:async(_o,_p,code,patch)=>{const ids=new Set((db.loadOverrides().noteColumnDefs||[]).map(def=>def.id));if(Object.keys(patch.noteColumns||{}).some(id=>!ids.has(id)))throw Object.assign(new Error('OFFICE_NOTE_COLUMN_UNKNOWN'),{code:'OFFICE_NOTE_COLUMN_UNKNOWN'});return db.snapshotOrderOverride(code,patch);},
-    updateOrder:async(_o,_p,code,patch,revision)=>{const saved=db.patchOrderOverride(code,patch,revision,null,{actor:{id:office.id}});return{ok:true,verified:db.verifyOrderOverridePatch(code,patch,saved.revision),revision:saved.revision};},
+    updateOrder:async(_o,_p,code,patch,revision,options={})=>{const saved=db.patchOrderOverride(code,patch,revision,null,{actor:{id:office.id},expectedNoteColumnDefsRevision:options.noteColumnDefsRevision});return{ok:true,verified:db.verifyOrderOverridePatch(code,patch,saved.revision),revision:saved.revision};},
     restoreOrder:async(_o,_p,code,receipt,revision,selector)=>db.restoreOrderOverrideReceipt(code,receipt,revision,selector,{actor:{id:office.id}}),
+    currentOrderMaps:(code,selector)=>db.snapshotOrderOverride(code,selector||{}).patch.maps,
   });
   const meta=tools.get('cp.order.update');
   assert.equal(meta.contractVersion,2);assert.equal(meta.approval,true);assert.equal(meta.rollbackable,true);
@@ -107,4 +108,43 @@ test('Office cp.order.update (contract v2) binds approval to the live order snap
   const restored=await tools.rollback('cp.order.update',result.rollbackToken,ctx);
   assert.equal(restored.verified,true);
   assert.deepEqual(db.snapshotOrderOverride(code,{}).patch.maps,before);
+});
+
+test('a line needs model AND colour; one alone is refused instead of writing the order-level override',async()=>{
+  const {registerOrderTools}=require('../server/lib/agent-order-tools');
+  const office={id:'office-owner',enabled:true,areas:['cp']},tools=createToolRegistry({userAccess:{profileById:()=>office,hasArea:()=>true,appendAudit:()=>{}},authorizeCapability:async()=>true});
+  let forbidden=false;
+  registerOrderTools(tools,{withAgentMutation:(_c,w)=>w(),snapshotOrder:async()=>{if(forbidden)throw Object.assign(new Error('x'),{code:'ORDER_SHARED_OWNER_ONLY'});return db.snapshotOrderOverride(7100006,{});},updateOrder:async()=>({}),restoreOrder:async()=>({}),currentOrderMaps:()=>({})});
+  const ctx={ownerId:office.id,profile:office,input:{officeJobId:'j',officeStepId:'s'},approvalGranted:true,assertAuthority:()=>{}};
+  await assert.rejects(tools.execute('cp.order.update',{orderCode:7100006,model:'M1',notes:{Notes:'x'}},{...ctx,dryRun:true}),{code:'OFFICE_ORDER_IDENTITY'});
+  await assert.rejects(tools.execute('cp.order.update',{orderCode:7100006,ccode:'C1',notes:{Notes:'x'}},{...ctx,dryRun:true}),{code:'OFFICE_ORDER_IDENTITY'});
+  forbidden=true;
+  await assert.rejects(tools.execute('cp.order.update',{orderCode:7100006,dates:{exFactory:'2026-11-01'}},{...ctx,dryRun:true}),{code:'OFFICE_ORDER_SHARED_OWNER'});
+  const legacy=registry();
+  await assert.rejects(legacy.execute('app.order.update',{orderCode:7100006,expectedRevision:revision(),model:'M1',notes:{Notes:'x'}},{ownerId:profile.id,profile,approvalGranted:true}),{code:'OFFICE_ORDER_IDENTITY'});
+});
+
+test('note-column values are CAS-bound to the column definitions the preview saw',()=>{
+  const code=7100007,defs=defsRevision();
+  db.replaceNoteColumnDefs([{id:'pack',label:'Paket'},{id:'extra',label:'Ek'}],defs);
+  assert.throws(()=>db.patchOrderOverride(code,{noteColumns:{pack:'x'}},revision(),null,{expectedNoteColumnDefsRevision:defs}),{code:'REVISION_CONFLICT'});
+  assert.equal(db.loadOverrides().noteColumnValues[code],undefined);
+  db.patchOrderOverride(code,{noteColumns:{pack:'x'}},revision(),null,{expectedNoteColumnDefsRevision:defsRevision()});
+  assert.equal(db.loadOverrides().noteColumnValues[code].pack,'x');
+});
+
+test('Office inverse is refused when the line changed after the effect, even without a new local revision',async()=>{
+  const {registerOrderTools}=require('../server/lib/agent-order-tools');
+  const office={id:'office-owner',enabled:true,areas:['cp']},tools=createToolRegistry({userAccess:{profileById:()=>office,hasArea:()=>true,appendAudit:()=>{}},authorizeCapability:async()=>true});
+  let overlay=null;
+  registerOrderTools(tools,{withAgentMutation:(_c,w)=>w(),snapshotOrder:async(_o,_p,code,patch)=>db.snapshotOrderOverride(code,patch),
+    updateOrder:async(_o,_p,code,patch,rev)=>{const saved=db.patchOrderOverride(code,patch,rev,null,{actor:{id:office.id}});return{verified:true,revision:saved.revision};},
+    restoreOrder:async(_o,_p,code,receipt,rev,selector)=>db.restoreOrderOverrideReceipt(code,receipt,rev,selector,{}),
+    currentOrderMaps:(code,selector)=>overlay||db.snapshotOrderOverride(code,selector||{}).patch.maps});
+  const ctx={ownerId:office.id,profile:office,input:{officeJobId:'j2',officeStepId:'s2'},approvalGranted:true,assertAuthority:()=>{}};
+  const args={orderCode:7100008,notes:{Notes:'agent'}},fresh=await tools.execute('cp.order.update',args,{...ctx,dryRun:true});
+  const done=await tools.execute('cp.order.update',{...args,fingerprint:fresh.fingerprint},ctx);
+  overlay={...db.snapshotOrderOverride(7100008,{}).patch.maps,notesmap:{Notes:'peer via hub'}};
+  await assert.rejects(tools.rollback('cp.order.update',done.rollbackToken,ctx),{code:'OFFICE_PREVIEW_CHANGED'});
+  overlay=null;assert.equal((await tools.rollback('cp.order.update',done.rollbackToken,ctx)).verified,true);
 });

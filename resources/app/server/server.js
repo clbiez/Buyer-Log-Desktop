@@ -2494,6 +2494,9 @@ function cpAgentMail(profile,args,rows,dryRun,expected=null) {
 // Office cp.order.update capability; one native service, one rule set.
 const agentOrderAdapter = {
   snapshotOrder: async (ownerId, profile, orderCode, patch) => {
+    // A line is addressed by model AND colour; one alone would write the
+    // order-level override that every line of the order falls back to.
+    if(Boolean(String(patch&&patch.model||'').trim())!==Boolean(String(patch&&patch.ccode||'').trim()))throw Object.assign(new Error('OFFICE_ORDER_IDENTITY'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
     const rows = await agentPlatformDataset(ownerId, profile, 'cp');
     const wantedModel = String(patch && patch.model || '').trim(), wantedColour = String(patch && patch.ccode || '').trim();
     const candidates = rows.filter(item => Number(agentRowOrderCode(item)) === Number(orderCode)
@@ -2508,11 +2511,13 @@ const agentOrderAdapter = {
     if(Object.keys(patch&&patch.noteColumns||{}).some(id=>!columnIds.has(id)))throw Object.assign(new Error('OFFICE_NOTE_COLUMN_UNKNOWN'),{code:'OFFICE_NOTE_COLUMN_UNKNOWN',statusCode:422});
     return require('./db').snapshotOrderOverride(orderCode,patch);
   },
-  updateOrder: async (_ownerId, profile, orderCode, patch,expectedRevision) => {
+  // Light read of the exact override maps for a line (no dataset load).
+  currentOrderMaps: (orderCode, selector) => require('./db').snapshotOrderOverride(orderCode, selector || {}).patch.maps,
+  updateOrder: async (_ownerId, profile, orderCode, patch,expectedRevision,options={}) => {
     if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
     assertAgentSharedOwner(profile,orderCode,patch);
     const beforeContext=pageProjectionContext(profile);
-    const saved = patchOrderOverride(Number(orderCode), patch || {}, expectedRevision, null, { actor: noteActorOf(profile) });
+    const saved = patchOrderOverride(Number(orderCode), patch || {}, expectedRevision, null, { actor: noteActorOf(profile), expectedNoteColumnDefsRevision: options.noteColumnDefsRevision });
     // Same incremental screen-cache rewrite as the HTTP editor: without it every
     // agent edit invalidated the whole page cache and forced a cold rebuild.
     try { await rewriteProjectionCacheForRowPatches(profile,beforeContext,[{orderCode,patch}]); }
@@ -2525,7 +2530,10 @@ const agentOrderAdapter = {
   restoreOrder: async (_ownerId, profile, orderCode, before,expectedRevision,selector) => {
     if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
     if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
-    assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
+    // Shared-owner fields are checked only when the inverse actually changes
+    // them; a non-owner may edit and undo notes, note columns or the shortage mark.
+    const currentMaps=require('./db').snapshotOrderOverride(orderCode,selector||{}).patch.maps;
+    if(['submap','datemap'].some(name=>Object.hasOwn(before&&before.maps||{},name)&&JSON.stringify(currentMaps[name])!==JSON.stringify(before.maps[name])))assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
     const result=require('./db').restoreOrderOverrideReceipt(orderCode,before,expectedRevision,selector,{actor:noteActorOf(profile)});
     userAccess.appendAudit(profile, 'AGENT_ORDER_ROLLBACK', String(orderCode), {revision:result.revision});
     liveEvents.notifyChange('orders','agent-capability',{orderCode});return result;
@@ -6123,7 +6131,8 @@ function rejectSharedOwnerWrites(req, res, items) {
     const patch = item.patch || item;
     if (!fields.some(field => Object.hasOwn(patch, field))) return false;
     const code = item.orderCode;
-    const recordId = `cp-order:${patch.model || patch.ccode ? parseLib.orderLineKey(code, patch.model, patch.ccode) : code}`;
+    // Same key rule as db.overrideWriteKey: a line needs model AND colour.
+    const recordId = `cp-order:${patch.model && patch.ccode ? parseLib.orderLineKey(code, patch.model, patch.ccode) : code}`;
     const decision = userAccess.sharedOwnerOf(recordId, req.currentUser && req.currentUser.id);
     if (!decision.known || decision.allowed) return false;
     const rows = userAccess.authoritativeOrderRows(Number(code));

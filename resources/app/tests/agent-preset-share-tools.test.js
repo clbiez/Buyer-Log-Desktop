@@ -85,3 +85,14 @@ test('user menu apply keeps its behaviour after the plan/commit split',()=>{
   assert.equal(result.changed,true);assert.deepEqual(value('menu-user','lcw.freeze.v1'),{cp:2});
   const undone=presetShare.undo('menu-user');assert.equal(undone.ok,true);assert.equal(value('menu-user','lcw.freeze.v1'),undefined);
 });
+
+test('commit refuses a profile store changed after the plan before writing anything',()=>{
+  stores.set('source:filters',{items:[{id:'f1',name:'DEMO filtre',page:'cp',settings:{}}],favoriteByPage:{}});
+  const planned=presetShare.plan({sourceUserId:'source',targetUserId:'cas-user',items:['filters','columnLayout'],mode:'MERGE'});
+  const {profileDigest}=require('../server/lib/preset-share');
+  const expectedProfiles={filters:profileDigest(planned.previousProfiles.filters)};
+  stores.set('cas-user:filters',{items:[{id:'mine',name:'Saved in another tab',page:'cp',settings:{}}]});
+  assert.throws(()=>presetShare.commit(planned,{expectedEntries:planned.targetEntries,expectedProfiles}),{code:'OFFICE_PREVIEW_CHANGED'});
+  assert.equal(loadProfiles('cas-user').filters.items[0].id,'mine');
+  assert.equal(value('cas-user','lcw.freeze.v1'),undefined,'no entry was written either');
+});

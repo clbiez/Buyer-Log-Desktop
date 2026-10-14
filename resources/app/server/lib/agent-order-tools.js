@@ -5,7 +5,7 @@
    are checked by snapshotOrder; the write is CAS-bound to the orders revision,
    read back, and its exact prior override entry is archived as an owner/job/
    step-bound inverse artifact. No second business rule exists here. */
-const {object,string}=require('./agent-capability-contract'),{error}=require('./agent-office-store'),Inverse=require('./agent-native-inverse-artifact');
+const {object,string}=require('./agent-capability-contract'),{error,hash}=require('./agent-office-store'),Inverse=require('./agent-native-inverse-artifact');
 const {NOTE_AUTHOR_FIELDS}=require('../db');
 const TOOL_ID='cp.order.update';
 const DATE_FIELDS=['exFactory','retailDate','inStoreDate'];
@@ -30,13 +30,17 @@ function patchOf(args){
   for(const date of Object.values(patch.dates||{}))if(date&&(!Number.isFinite(Date.parse(date))||new Date(date).toISOString().slice(0,10)!==date))throw error('OFFICE_DATE_INVALID',422);
   const fields=EDIT_FIELDS.filter(key=>Object.hasOwn(patch,key));
   if(!fields.length||Object.hasOwn(patch,'notes')&&!Object.keys(patch.notes).length&&fields.length===1)throw error('OFFICE_TASK_INVALID',422);
+  if(Boolean(patch.model)!==Boolean(patch.ccode))throw error('OFFICE_ORDER_IDENTITY',409);
   return {patch,fields};
 }
+// Native adapter codes become Office codes with TR/EN texts.
+const NATIVE_CODES={ORDER_FORBIDDEN:['OFFICE_TOOL_FORBIDDEN',403],ORDER_SHARED_OWNER_ONLY:['OFFICE_ORDER_SHARED_OWNER',403]};
+async function nativeCall(work){try{return await work();}catch(err){const mapped=NATIVE_CODES[err&&err.code];if(mapped)throw error(mapped[0],mapped[1]);throw err;}}
 function registerOrderTools(registry,deps){
   const mutate=(ctx,work)=>{if(!deps.withAgentMutation)throw error('OFFICE_APPROVAL_REQUIRED',403);return deps.withAgentMutation(ctx,work);};
   async function read(args,ctx){
     ctx.assertAuthority?.();
-    const {patch,fields}=patchOf(args),snapshot=await deps.snapshotOrder(ctx.ownerId,ctx.profile,args.orderCode,patch);
+    const {patch,fields}=patchOf(args),snapshot=await nativeCall(()=>deps.snapshotOrder(ctx.ownerId,ctx.profile,args.orderCode,patch));
     ctx.assertAuthority?.();
     return {orderCode:args.orderCode,revision:snapshot.revision,patch,fields,receipt:snapshot.patch};
   }
@@ -48,15 +52,20 @@ function registerOrderTools(registry,deps){
     apply:async(args,ctx,p)=>{
       const artifactId=await Inverse.archive(ctx,TOOL_ID,p.receipt);
       return mutate(ctx,async()=>{
-        const result=await deps.updateOrder(ctx.ownerId,ctx.profile,args.orderCode,p.patch,p.revision);
+        const selector={model:p.patch.model,ccode:p.patch.ccode};
+        const result=await nativeCall(()=>deps.updateOrder(ctx.ownerId,ctx.profile,args.orderCode,p.patch,p.revision,{noteColumnDefsRevision:p.patch.noteColumns?p.receipt.noteColumnDefsRevision:undefined}));
         if(result.verified!==true)throw error('OFFICE_ORDER_VERIFY_FAILED',409);
+        // The inverse is bound to the exact post-effect state of the line, which
+        // also covers peer edits that reach the overlay without a local revision.
+        const afterMaps=hash(JSON.stringify(deps.currentOrderMaps(args.orderCode,selector)));
         return {verified:true,data:{orderCode:args.orderCode,revision:result.revision,fields:p.fields},
-          rollbackToken:{artifactId,orderCode:args.orderCode,selector:{model:p.patch.model,ccode:p.patch.ccode},expectedRevision:result.revision}};
+          rollbackToken:{artifactId,orderCode:args.orderCode,selector,expectedRevision:result.revision,afterMaps}};
       });
     },
     restore:(token,ctx)=>mutate(ctx,async()=>{
       const bound=Inverse.restore(ctx,TOOL_ID,token);
-      const result=await deps.restoreOrder(ctx.ownerId,ctx.profile,bound.orderCode,bound.before,bound.expectedRevision,bound.selector);
+      if(hash(JSON.stringify(deps.currentOrderMaps(bound.orderCode,bound.selector)))!==token.afterMaps)throw error('OFFICE_PREVIEW_CHANGED',409);
+      const result=await nativeCall(()=>deps.restoreOrder(ctx.ownerId,ctx.profile,bound.orderCode,bound.before,bound.expectedRevision,bound.selector));
       if(result.verified!==true)throw error('OFFICE_ORDER_VERIFY_FAILED',409);
       return {verified:true,revision:result.revision};
     })});
