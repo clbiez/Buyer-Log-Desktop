@@ -40,22 +40,34 @@ function affectedModules(before,after){
 }
 function createSourceWorkflowService({db}){
  if(!db?.mutateModelConnections)throw new TypeError('Native source transaction is required');
- const planner={binding:binding.planBindingChange,filter:filter.planFilterChange,link:link.planLinkChange,rename:writer.planSourceUpdate,enabled:writer.planSourceEnabled};
+ const planner={binding:binding.planBindingChange,filter:filter.planFilterChange,link:link.planLinkChange,rename:writer.planSourceUpdate,enabled:writer.planSourceEnabled,mapping:writer.planMappingChanges};
  const checked=(store,sourceId,expected)=>{
   const matches=store.items.filter(item=>item.id===sourceId),item=matches[0];if(!item)throw fail('SOURCE_NOT_FOUND',404);if(matches.length!==1)throw fail('SOURCE_AMBIGUOUS');
   if(expected&&adapter.configRevision(item)!==expected)throw fail('SOURCE_CHANGED');return item;
  };
- const plan=(kind,items,args)=>{if(!planner[kind])throw fail('VALIDATION_ERROR',400);const value=planner[kind](items,args);if(!value.ok)throw fail(value.code,value.code==='SOURCE_NOT_FOUND'?404:['FILTER_INVALID','FILTER_MODE_INVALID','VALIDATION_ERROR'].includes(value.code)?400:409);return value;};
- const snapshot=guard=>db.mutateModelConnections(()=>{guard?.assertAuthority?.();return db.loadModelConnections();});
+ const plan=(kind,items,args)=>{
+  if(!planner[kind])throw fail('VALIDATION_ERROR',400);const value=planner[kind](items,args);if(!value.ok)throw fail(value.code,value.code==='SOURCE_NOT_FOUND'?404:['FILTER_INVALID','FILTER_MODE_INVALID','VALIDATION_ERROR'].includes(value.code)?400:409);
+  if(kind==='mapping'){
+   const normalized=db.normalizeModelConnections(value.items),wanted=checked({items:value.items},args.sourceId),actual=checked({items:normalized},args.sourceId);
+   for(const change of args.changes){const before=wanted.mapping?.[change.header],after=actual.mapping?.[change.header];if(JSON.stringify(before)!==JSON.stringify(after))throw fail(before&&!after?'SOURCE_MAPPING_CAPACITY':'OFFICE_FIELD_INVALID',422);}
+   return {...value,items:normalized};
+  }
+  return value;
+ };
+ const capacity=(store,item,reserve)=>{
+  const settings=db.loadSettings(),versions=settings._revisions?.modelConnectionRecords||{};
+  for(const value of [settings._revision,store.revision,item._configVersion,versions[item.id]??0])if(!Number.isSafeInteger(value)||value<0||value>Number.MAX_SAFE_INTEGER-reserve)throw fail('OFFICE_RESOURCE_REVISION_INVALID');
+ };
+ const snapshot=(guard,headroom)=>db.mutateModelConnections(()=>{guard?.assertAuthority?.();const store=db.loadModelConnections();if(headroom)capacity(store,checked(store,headroom.sourceId),headroom.reserve);return store;});
  async function preview(kind,args,guard){
-  const store=await snapshot(guard),before=checked(store,args.sourceId),planned=plan(kind,store.items,args),after=checked({items:db.normalizeModelConnections(planned.items)},args.sourceId),old=semanticSource(before),next=semanticSource(after);
+  const store=await snapshot(guard,{sourceId:args.sourceId,reserve:2}),before=checked(store,args.sourceId),planned=plan(kind,store.items,args),after=checked({items:db.normalizeModelConnections(planned.items)},args.sourceId),old=semanticSource(before),next=semanticSource(after);
   return {sourceId:before.id,sourceRevision:adapter.configRevision(before),before:semanticSource(before,true),after:semanticSource(after,true),changed:planned.code!=='NO_CHANGE',warnings:planned.warnings||[],impact:{shared:true,modules:affectedModules(old,next),requiresRefresh:true,executesQuery:false,bounded:kind==='filter'?filter.describeBounds(args.definition).bounded:null}};
  }
  async function update(kind,args,expected,guard={}){
   return db.mutateModelConnections(async lease=>{
    guard.assertAuthority?.();const store=db.loadModelConnections(),before=checked(store,args.sourceId,expected),planned=plan(kind,store.items,args);
    if(planned.code==='NO_CHANGE')return {verified:true,changed:false,revision:store.revision,sourceRevision:adapter.configRevision(before),warnings:planned.warnings||[]};
-   const saved=db.replaceModelConnections(planned.items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
+   capacity(store,before,2);const saved=db.replaceModelConnections(planned.items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
    const actual=db.loadModelConnections(),own=checked(saved,args.sourceId),current=checked(actual,args.sourceId);
    if(actual.revision!==saved.revision||adapter.configRevision(own)!==adapter.configRevision(current))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
    return {verified:true,changed:true,revision:saved.revision,sourceRevision:adapter.configRevision(own),warnings:planned.warnings||[],appliedScopeId:planned.appliedScopeId||''};
@@ -65,13 +77,13 @@ function createSourceWorkflowService({db}){
   return db.mutateModelConnections(async lease=>{
    guard.assertAuthority?.();const store=db.loadModelConnections(),current=checked(store,before.id,expected),wanted={...clone(before),lastRun:current.lastRun};
    const enabledPlan=writer.planSourceEnabled(store.items,{sourceId:before.id,enabled:wanted.refreshEnabled!==false});if(!enabledPlan.ok)throw fail(enabledPlan.code);
-   const items=store.items.map(item=>item.id===before.id?wanted:item),saved=db.replaceModelConnections(items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
+   capacity(store,current,1);const items=store.items.map(item=>item.id===before.id?wanted:item),saved=db.replaceModelConnections(items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
    const own=checked(saved,before.id),actual=db.loadModelConnections(),latest=checked(actual,before.id);
    const originalConfig=adapter.configRevision({...before,_configVersion:0}),restoredConfig=adapter.configRevision({...latest,_configVersion:0});
    if(actual.revision!==saved.revision||adapter.configRevision(own)!==adapter.configRevision(latest)||restoredConfig!==originalConfig)throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
    return {verified:true,revision:saved.revision,sourceRevision:adapter.configRevision(own)};
   });
  }
- return {snapshot,preview,update,restore,publicSource,filterFields,createOptions:writer.createOptions};
+ return {snapshot,preview,update,restore,publicSource,filterFields,planMapping:(items,args)=>plan('mapping',items,args),createOptions:writer.createOptions};
 }
 module.exports={createSourceWorkflowService,publicSource,publicHorizon,semanticSource,affectedModules,filterFields};

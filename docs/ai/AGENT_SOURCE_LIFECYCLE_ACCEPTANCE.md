@@ -1,6 +1,6 @@
 # Native source connection names and refresh state
 
-Three contract-v2 adapters reuse actual Buyer Log planners: `source.connection.options` reads native supported profiles; `source.connection.rename` and `source.connection.enabled` perform approved shared source effects. Strict inputs accept source IDs, names or booleans; they expose no new host, SQL/DAX, credential or JavaScript surface. Private configuration is retained in owner/tool/task/step-bound inverse archives and excluded from public source views.
+Three contract-v2 adapters reuse actual Buyer Log planners: `source.connection.options` reads native supported profiles; `source.connection.rename` and `source.connection.enabled` perform approved shared source effects. Strict inputs accept source IDs, names or booleans; they expose no new host, SQL/DAX, credential or JavaScript surface. Private configuration is retained in owner-isolated inverse archives selected by the stored Office task and excluded from public source views.
 
 The existing source transaction checks per-source native revisions, Office profile/WAL authority and the shared journal lease. After a completed authorized commit, the native factual receipt reaches the private committed-receipt guard; public responses still require current IAM. Delta and Delta-only tests retain inverse receipts across immediate post-commit access loss. Current pre-commit IAM controls remain active.
 

@@ -10940,6 +10940,10 @@ require('./lib/agent-source-tools').registerSourceTools(agentToolRegistry,{
   source:sourceWorkflowService,...agentResourceDeps,
   withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
 });
+require('./lib/agent-source-metadata-tools').registerSourceMetadataTools(agentToolRegistry,{
+  source:sourceWorkflowService,metadata:require('./lib/source-metadata-service').createSourceMetadataService({source:sourceWorkflowService,assertAgentAuthority:ctx=>ctx.input?.officeAgentId?agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>ctx.assertAuthority()):ctx.assertAuthority()}),...agentResourceDeps,
+  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
+});
 require('./lib/agent-supporting-resource-tools').registerSupportingResourceTools(agentToolRegistry,{
   ...agentResourceDeps,license:licenseCardService,userAccess,
   authorizeFabric:async ctx=>{await refreshCollectionPermissionScope();ctx.assertAuthority();},
