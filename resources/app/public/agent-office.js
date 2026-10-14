@@ -36,7 +36,7 @@
       PROFILE_UNKNOWN:L('Bilinmeyen kaynak türü.','Unknown source type.'),
       MODULE_NOT_FEEDABLE:L('Bu kaynak türü seçilen modülleri besleyemez.','This source type cannot feed the selected modules.'),
       OFFICE_OPERATION_IN_PROGRESS:L('Bu kullanıcı için başka bir yenileme sürüyor; bitince yeniden deneyin.','Another refresh is running for this user; try again when it finishes.'),
-      OFFICE_SOURCE_FILTER_REQUIRED:L('Yenileme için önce kaynak filtresini tanımlayın.','Define the source filter before refreshing.'),
+      OFFICE_SOURCE_FILTER_REQUIRED:L('Bu işlem için önce kaynak filtresini (Horizon) tanımlayın.','Define the source filter (Horizon) before this operation.'),
       OFFICE_NATIVE_OPERATION_CANCELLED:L('Native işlem iptal edildi; veri değişmedi.','The native operation was cancelled; no data changed.'),
       SOURCE_AMBIGUOUS:L('Aynı kaynak kimliğiyle birden fazla kayıt var. Önce kaynak kayıtlarını düzeltin.','Multiple records have the same source ID. Correct the source records first.'),
       SOURCE_NOT_FOUND:L('Kayıtlı kaynak bulunamadı. Güncel kaynak kimliğini seçin.','The saved source was not found. Select a current source ID.'),

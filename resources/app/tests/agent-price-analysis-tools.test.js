@@ -44,7 +44,33 @@ test('holiday READ sends only country and year through the native service and ma
   registerHolidayTools(registry,{holidayService:{getYear:async args=>{calls.push(args);if(fail)throw Object.assign(new Error('x'),{code:fail});return {countryCode:'BD',year:2026,rows:[{date:'2026-12-16',name:'Victory Day',localName:'বিজয় দিবস',extra:'ignored'}],source:'verified-catalog',stale:false};}}});
   const result=await registry.execute('overview.holidays.read',{countryCode:'bd',year:2026},{ownerId:profile.id,profile});
   assert.deepEqual(calls,[{countryCode:'BD',year:2026}]);
-  assert.deepEqual(result.data.holidays,[{date:'2026-12-16',name:'Victory Day',localName:'বিজয় দিবস'}]);
+  assert.deepEqual(result.data.holidays,[{date:'2026-12-16',name:'Victory Day',localName:'বিজয় দিবস',nationalHoliday:true,global:true,subdivisionCodes:null,holidayTypes:['Public'],estimated:false}]);
   await assert.rejects(registry.execute('overview.holidays.read',{countryCode:'BDX',year:2026},{ownerId:profile.id,profile}),{code:'OFFICE_TOOL_SCHEMA'});
   fail='HOLIDAY_PROVIDER_FAILED';await assert.rejects(registry.execute('overview.holidays.read',{countryCode:'BD',year:2026},{ownerId:profile.id,profile}),{code:'OFFICE_HOLIDAY_UNAVAILABLE'});
+});
+
+test('a real provider outage is refused instead of returning an empty or estimate-only calendar',async()=>{
+  const {registerHolidayTools}=require('../server/lib/agent-holiday-tools'),{createHolidayService}=require('../server/lib/holiday-service');
+  const profile={id:'demo',enabled:true},registry=createToolRegistry({userAccess:{profileById:()=>profile,hasArea:()=>true,appendAudit:()=>{}}});
+  registerHolidayTools(registry,{holidayService:createHolidayService({fetchFn:async()=>{throw new Error('offline');}})});
+  for(const countryCode of ['DE','EG'])await assert.rejects(registry.execute('overview.holidays.read',{countryCode,year:2026},{ownerId:profile.id,profile}),{code:'OFFICE_HOLIDAY_UNAVAILABLE'});
+});
+
+test('regional and non-public holidays keep the flags the screen uses',async()=>{
+  const {registerHolidayTools}=require('../server/lib/agent-holiday-tools');
+  const profile={id:'demo',enabled:true},registry=createToolRegistry({userAccess:{profileById:()=>profile,hasArea:()=>true,appendAudit:()=>{}}});
+  registerHolidayTools(registry,{holidayService:{getYear:async()=>({ok:true,countryCode:'DE',year:2026,source:'nager',rows:[{date:'2026-01-06',name:'Epiphany',localName:'Heilige Drei Könige',nationalHoliday:false,global:false,subdivisionCodes:['DE-BW','DE-BY'],holidayTypes:['Public']},{date:'2026-12-24',name:'Christmas Eve',localName:'Heiligabend',nationalHoliday:true,global:true,subdivisionCodes:null,holidayTypes:['Bank']}]})}});
+  const [regional,bank]=(await registry.execute('overview.holidays.read',{countryCode:'DE',year:2026},{ownerId:profile.id,profile})).data.holidays;
+  assert.equal(regional.nationalHoliday,false);assert.deepEqual(regional.subdivisionCodes,['DE-BW','DE-BY']);assert.deepEqual(bank.holidayTypes,['Bank']);
+});
+
+test('only a current season compares against the season before it, like the screen',async()=>{
+  const profile={id:'demo',enabled:true},seasonRows=['6S25','6W25','6S26','6W26'].flatMap((season,i)=>[row(10+i,season,'ALPHA',10+i),row(20+i,season,'BETA',12+i)]);
+  const registry=createToolRegistry({userAccess:{profileById:()=>profile,hasArea:()=>true,appendAudit:()=>{}}});
+  registerPriceAnalysisTools(registry,{rows:async()=>({rows:seasonRows})});
+  const result=await registry.execute('priceanalysis.insights.read',{currentSeason:'6S26'},{ownerId:profile.id,profile});
+  const seasons=Prices.seasons(Prices.prepare(seasonRows.map((r,i)=>Prices.orderPriceObservation(r,'orders','finalFob',i,fields))));
+  assert.equal(result.data.currentSeason,'6S26');assert.equal(result.data.previousSeason,Prices.previousSeason('6S26',seasons));
+  await assert.rejects(registry.execute('priceanalysis.insights.read',{filters:{manufacturer:['—']}},{ownerId:profile.id,profile}),{code:'OFFICE_TASK_INVALID'});
+  await assert.rejects(registry.execute('priceanalysis.insights.read',{filters:{manufacturer:['']}},{ownerId:profile.id,profile}),{code:'OFFICE_TOOL_SCHEMA'});
 });
