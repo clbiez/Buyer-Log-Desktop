@@ -10884,6 +10884,8 @@ app.put('/api/transit-rules', userAccess.requireArea('source'), userAccess.requi
 const agentResourceDeps={withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),flush:async()=>{await deltaStore.flush();},changed:async(profile,section,detail)=>{publishSharedMasterChange(section,{currentUser:profile},detail);userAccess.appendAudit(profile,'AGENT_RESOURCE_UPDATE',section,detail);liveEvents.notifyChange(section,null);},impact:require('./lib/agent-resource-impact').createResourceImpact({office:agentOfficeStore,userAccess,dataset:agentPlatformDataset})};
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-landed-multiplier-tools').registerLandedMultiplierTools(agentToolRegistry,{...agentResourceDeps,service:landedMultiplierService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'landedMultipliers',{revision:receipt.revision,origin:'agent'})});
+const nativeRefreshGroupService=require('./lib/refresh-group-service').createRefreshGroupService({db:require('./db')});
+require('./lib/agent-refresh-group-tools').registerRefreshGroupTools(agentToolRegistry,{...agentResourceDeps,service:nativeRefreshGroupService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'refreshGroups',{revision:receipt.revision,origin:'agent'})});
 require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
 require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});
 require('./lib/agent-oab-job-tools').registerOabJobTools(agentToolRegistry,{service:nativeOabBatchService,transport:OAB_DESKTOP_TRANSPORT,office:agentOfficeStore});
@@ -11682,7 +11684,7 @@ app.get('/api/data-management/refresh-groups', userAccess.requireArea('source'),
   } catch (err) { apiError(res, err, 'Yenileme grupları okunamadı.'); }
 });
 
-app.put('/api/data-management/refresh-groups', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), (req, res) => {
+app.put('/api/data-management/refresh-groups', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit: '64kb' }), async (req, res) => {
   try {
     const items = (req.body || {}).items;
     if (!Array.isArray(items)) return res.status(400).json({ error: 'items (dizi) zorunlu.', code: 'VALIDATION_ERROR' });
@@ -11691,7 +11693,10 @@ app.put('/api/data-management/refresh-groups', userAccess.requireArea('source'),
     const check = refreshGroupRules.validateGroups(items);
     if (!check.ok) return res.status(400).json({ error: check.problems.join(' '), code: 'REFRESH_GROUP_INVALID', problems: check.problems });
 
-    const saved = replaceRefreshGroups(items, requestRevision(req));
+    const saved = await nativeRefreshGroupService.replaceAll(items, requestRevision(req), {assertAuthority:()=>{
+      const current=userAccess.profileById(req.currentUser.id);
+      if(!current||current.enabled===false||!userAccess.hasArea(current,'source')||!userAccess.hasPermission(current,'manageModelConnections'))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+    }});
     userAccess.appendAudit(req.currentUser, 'REFRESH_GROUPS_UPDATE', 'settings', { count: saved.items.length });
     res.set('ETag', `"${saved.revision}"`).json({ ok: true, items: saved.items, revision: saved.revision });
   } catch (err) { apiError(res, err, 'Yenileme grupları kaydedilemedi.'); }
