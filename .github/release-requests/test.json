@@ -2,5 +2,5 @@
   "schemaVersion": 1,
   "version": "7.0.277",
   "commit_sha": "cb443d982a503b1d063965de48cec10355eaccbc",
-  "release_notes": "Buyer Log 7.0.277 TEST: Initial data startup request timeout and bounded retry; remove heavyweight CP override map merging from the initial response; privacy-safe startup diagnostics. PR #573. Full Windows regression and signed TEST publication remain mandatory."
+  "release_notes": "Buyer Log 7.0.277 TEST: initial-data bounded wait; lightweight startup override metadata; diagnostic startup stages. PR #573. Windows release request path corrected in CI (PR #574). Mandatory full Windows regression, release visuals, browser acceptance and signed publication are required."
 }
