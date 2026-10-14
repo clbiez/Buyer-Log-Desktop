@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.278",
-  "commit_sha": "d071b790f39c013348608f968c9e54c4920e89cf",
-  "release_notes": "Buyer Log 7.0.278 TEST: Initial data startup now uses bounded attempts and avoids unnecessary large override-map merges; startup tracing improved. Source PR #573; release regression repair PR #575. TEST only; affected-device acceptance remains pending."
+  "version": "7.0.265",
+  "commit_sha": "fed7554576550add8461d75dfe157b6d0623e248",
+  "release_notes": "Buyer Log 7.0.265 TEST: CP/Orders Original Ex-F. sütunu ASAS Dates tablosundaki ilk tarihten (Initial Inspection Geçme Tarih Gün Ay Yıl) okunuyor ve Ex-factory revizyonundan bağımsız. Kullanılmayan kod temizliği (61 fonksiyon). PR #453, #454."
 }
