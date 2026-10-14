@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-14",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Agent görev kayıtları ve güvenli sonuç gösterimi",
+    "en": "Agent task records and safe result display"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Kaydedilmiş native işlemler için doğrulanmış sonuç ve geri alma kaydı korunur; ayrıntılar güncel kullanıcı ve agent yetkisiyle gösterilir.",
+    "en": "Verified results and inverses are retained for committed native operations; details follow current user and agent access."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "agent-committed-native-receipt",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Yetki sonradan değişse de işlem kaydı korunur",
+        "en": "Operation receipts survive later access changes"
+      },
+      "body": {
+        "tr": "Native yazı yetkili olarak kaydedildikten sonra erişim değişirse doğrulanmış sonuç ve geri alma kaydı silinmez. Sonuç gösterimi ve sonraki işlemler güncel yetkiye göre durur; işlem tekrar yazılmaz.",
+        "en": "If access changes after an authorized native commit, its verified result and inverse receipt remain stored. Display and downstream operations stop under current access; the write is not repeated."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-committed-native-receipt.png",
+        "caption": {
+          "tr": "Gerçek native Transit güncellemesinin kalıcı doğrulanmış sonucu ve geri alma seçeneği.",
+          "en": "The retained verified result and inverse action for an actual native Transit update."
+        },
+        "alt": {
+          "tr": "Gerçek native Transit güncellemesinin kalıcı doğrulanmış sonucu ve geri alma seçeneği.",
+          "en": "The retained verified result and inverse action for an actual native Transit update."
+        }
+      }
+    },
+    {
+      "id": "agent-restricted-task-record",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Görev ayrıntıları güncel yetkiye göre gizlenir",
+        "en": "Task details follow current access"
+      },
+      "body": {
+        "tr": "Görev listesi kapsam dışı görevlerin yalnız işlem durumunu gösterir. Talep metni, girişler, önizlemeler, sonuçlar ve geri alma dosya kimlikleri gizlenir; işlem geçmişi korunur.",
+        "en": "The task list shows only operation status for tasks outside current access. Request text, inputs, previews, results and inverse file identifiers are hidden while the operation history is retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-restricted-task-record.png",
+        "caption": {
+          "tr": "Agent duraklatıldıktan sonra gerçek görev listesindeki korunan durum ve gizlenen ayrıntılar.",
+          "en": "Retained status and hidden details in the actual task list after pausing the agent."
+        },
+        "alt": {
+          "tr": "Agent duraklatıldıktan sonra gerçek görev listesindeki korunan durum ve gizlenen ayrıntılar.",
+          "en": "Retained status and hidden details in the actual task list after pausing the agent."
+        }
+      }
+    }
+  ]
 }
