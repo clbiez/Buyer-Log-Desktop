@@ -56,7 +56,10 @@ jobs:
             [[ "$RESULT" == "success" ]] || { echo "::error::publish step '${STEP}' concluded ${RESULT:-missing}"; exit 1; }
           done
           for JOB in "$REGRESSION_ID" "$PUBLISH_ID"; do
-            gh api "repos/${GITHUB_REPOSITORY}/actions/jobs/${JOB}/logs" > "$RUNNER_TEMP/job-${JOB}.log"
+            # gh api refuses log bodies that contain ANSI colour codes; curl drops
+            # the token on the cross-host redirect to log storage.
+            curl -fsSL -H "Authorization: Bearer ${GH_TOKEN}" -H 'Accept: application/vnd.github+json' \
+              "${GITHUB_API_URL}/repos/${GITHUB_REPOSITORY}/actions/jobs/${JOB}/logs" -o "$RUNNER_TEMP/job-${JOB}.log"
             grep -qF "$SOURCE_SHA" "$RUNNER_TEMP/job-${JOB}.log" || { echo "::error::job ${JOB} did not check out ${SOURCE_SHA}"; exit 1; }
           done
           echo "SOURCE_SHA=${SOURCE_SHA}" >> "$GITHUB_ENV"
