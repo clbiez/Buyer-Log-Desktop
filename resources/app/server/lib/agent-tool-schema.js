@@ -26,6 +26,8 @@ function validate(schema,value,path='$') {
   } else if(schema.type==='array') {
     if(!Array.isArray(value)||schema.maxItems!=null&&value.length>schema.maxItems||schema.minItems!=null&&value.length<schema.minItems)bad();
     if(schema.items)value.forEach((item,i)=>validate(schema.items,item,`${path}[${i}]`));
+    // An advertised uniqueItems contract is enforced, never silently ignored.
+    if(schema.uniqueItems===true&&new Set(value.map(item=>JSON.stringify(item))).size!==value.length)bad();
   } else if(schema.type==='string') {
     if(typeof value!=='string'||schema.maxLength!=null&&value.length>schema.maxLength||schema.minLength!=null&&value.length<schema.minLength||schema.pattern&&!new RegExp(schema.pattern).test(value))bad();
   } else if(schema.type==='boolean'&&typeof value!=='boolean')bad();
