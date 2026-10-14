@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.276",
+      "publishedAt": "2026-10-14",
+      "title": {
+        "tr": "Güvenilir güncelleme yeniden başlatması ve onaylı yenileme grupları",
+        "en": "Reliable update restart and approved refresh groups"
+      },
+      "stats": {
+        "features": 1,
+        "improvements": 0,
+        "fixes": 1
+      },
+      "file": "release-notes/7.0.276/release.json"
+    },
+    {
       "version": "7.0.275",
       "publishedAt": "2026-10-14",
       "title": {
