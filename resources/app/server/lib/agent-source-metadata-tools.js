@@ -14,4 +14,14 @@ function registerSourceMetadataTools(registry,deps){
   return deps.withAgentMutation(ctx,async()=>{ctx.assertAuthority();const receipt=await deps.source.update('mapping',args,preview.sourceRevision,ctx);await deps.changed?.(ctx.profile,'modelConnections',{sourceId:args.sourceId,sourceRevision:receipt.sourceRevision,modules:preview.impact.modules});return {verified:true,data:receipt,rollbackToken:{sourceId:args.sourceId,expectedSourceRevision:receipt.sourceRevision,artifactId}};});
  },restore:(token,ctx)=>deps.withAgentMutation(ctx,async()=>{const {before}=inverse.restore(ctx,'source.mapping.update',token);if(before.id!==token.sourceId)throw error('OFFICE_ROLLBACK_INVALID',409);const receipt=await deps.source.restore(before,token.expectedSourceRevision,ctx);await deps.changed?.(ctx.profile,'modelConnections',{sourceId:token.sourceId,restored:true});return receipt;})});
 }
-module.exports={registerSourceMetadataTools};
+function registerSavedQueryTools(registry,deps){
+ const base={module:'source',areas:['source'],agentAreas:['source'],permissions:['manageModelConnections'],dataScope:'saved query of a configured database source only; no caller SQL; connection and credential material excluded'};
+ const value={type:['string','number','boolean','null'],maxLength:500},row={type:'object',additionalProperties:value},columns=array(string(200),40),maxRows={type:'integer',minimum:1,maximum:1000};
+ registry.registerCapability({...base,id:'source.query.read',operation:'READ',risk:'read',label:{tr:'Kaynağın kayıtlı sorgusunu çalıştır ve sonucu sayfalı oku',en:'Run the saved source query and read results in pages'},
+  inputSchema:{...object({sourceId:id,maxRows,...paging}),required:['sourceId']},
+  outputSchema:object({verified:{enum:[true]},data:object({sourceId:id,sourceRevision:revision,columns,rows:array(row,200),rowCount:count,truncated:{type:'boolean'},provider:string(40),matched:count,offset:count,nextOffset:count,rowsTruncated:{type:'boolean'}})}),
+  read:(args,ctx)=>deps.metadata.readSavedQuery(args,ctx)});
+ if(typeof deps.registerReport==='function')deps.registerReport({...base,id:'source.query.export',label:{tr:'Kayıtlı sorgu sonucunu dosya olarak dışa aktar',en:'Export the saved query result as a file'},inputSchema:{...object({sourceId:id,maxRows}),required:['sourceId']},
+  read:async(query,ctx)=>{const result=await deps.metadata.savedQuery(query,ctx);return {sourceFingerprint:require('./agent-office-store').hash(JSON.stringify(result.rows)),report:{sourceId:result.sourceId,sourceRevision:result.sourceRevision,rowCount:result.rowCount,truncated:result.truncated,rows:result.rows}};}});
+}
+module.exports={registerSourceMetadataTools,registerSavedQueryTools};

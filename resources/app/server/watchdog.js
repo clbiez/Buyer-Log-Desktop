@@ -36,6 +36,12 @@ let child = null;
 let restartTimer = null;
 let stopping = false;
 let recentRestarts = [];
+/* Sunucuya RAM'e göre V8 bellek sınırı verilir (bkz. lib/server-heap-policy).
+   Bayrak bir nedenle reddedilirse (Node "bad option" = çıkış kodu 9) sonraki
+   başlatma bayraksız yapılır; sunucu hiçbir zaman bu yüzden açılmaz kalmaz. */
+const heapPolicy = require('./lib/server-heap-policy').serverHeapArgs({ env: process.env, execArgv: process.execArgv, totalMemBytes: os.totalmem() });
+let heapArgsRejected = false;
+let serverStartedAt = 0;
 
 function stamp() {
   return new Date().toISOString();
@@ -117,8 +123,11 @@ function startServer() {
     BL_KEEP_ALIVE: '1',
     BUYER_LOG_USER_SESSION_SECRET: USER_SESSION_SECRET,
   };
+  const heapArgs = heapArgsRejected ? [] : heapPolicy.args;
+  writeLog(`Sunucu bellek sınırı: ${heapArgs.length ? `${heapPolicy.limitMb} MB (${heapPolicy.source})` : `V8 varsayılanı (${heapArgsRejected ? 'bayrak reddedildi' : heapPolicy.source})`} · RAM ${heapPolicy.totalMb} MB`);
+  serverStartedAt = Date.now();
   try {
-    child = spawn(process.execPath, [SERVER_FILE], {
+    child = spawn(process.execPath, [...heapArgs, SERVER_FILE], {
       cwd: APP_ROOT,
       env,
       stdio: 'inherit',
@@ -140,6 +149,7 @@ function startServer() {
     child = null;
     writeRuntimeState(null);
     if (stopping) return;
+    if (!signal && code === 9 && !heapArgsRejected && heapPolicy.args.length && Date.now() - serverStartedAt < 15000) heapArgsRejected = true;
     if (!signal && code === EXIT_ALREADY_RUNNING) {
       giveUp('Buyer Log zaten çalışıyor; bu gözetmene gerek yok.');
       return;

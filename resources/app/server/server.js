@@ -10969,8 +10969,14 @@ require('./lib/agent-source-tools').registerSourceLifecycleTools(agentToolRegist
   source:sourceWorkflowService,...agentResourceDeps,hasCredential:sourceId=>databaseCredentialStore.publicStatus(sourceId).hasCredential,
   withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
 });
+const agentSourceMetadataService=require('./lib/source-metadata-service').createSourceMetadataService({source:sourceWorkflowService,assertAgentAuthority:ctx=>ctx.input?.officeAgentId?agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>ctx.assertAuthority()):ctx.assertAuthority(),
+  // Same providers as /api/database-sources/:id/query, but only the saved query and stored credential.
+  runSavedQuery:async(item,{maxRows,beforeQuery})=>{await beforeQuery();const credential=localDatabaseCredential(item,{});
+    if(item.connector.kind==='analysis-services')return modelQuery.runModelRows({server:item.connector.server,catalog:item.connector.database,query:item.query,generated:false,maxRows,timeoutMs:120000});
+    return databaseConnector.runRows(item.connector,item.query,{credentials:credential,maxRows,timeoutSeconds:120});}});
+require('./lib/agent-source-metadata-tools').registerSavedQueryTools(agentToolRegistry,{metadata:agentSourceMetadataService,registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService())});
 require('./lib/agent-source-metadata-tools').registerSourceMetadataTools(agentToolRegistry,{
-  source:sourceWorkflowService,metadata:require('./lib/source-metadata-service').createSourceMetadataService({source:sourceWorkflowService,assertAgentAuthority:ctx=>ctx.input?.officeAgentId?agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>ctx.assertAuthority()):ctx.assertAuthority()}),...agentResourceDeps,
+  source:sourceWorkflowService,metadata:agentSourceMetadataService,...agentResourceDeps,
   withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
 });
 require('./lib/agent-supporting-resource-tools').registerSupportingResourceTools(agentToolRegistry,{
@@ -12819,6 +12825,8 @@ const httpServer = app.listen(PORT, HOST, () => {
   console.log(`Buyer Log sunucusu çalışıyor: http://${displayHost}:${PORT}`);
   console.log(`Dinleme adresi: ${HOST} (yerel kullanım için varsayılan 127.0.0.1)`);
   console.log(`Moderatör kaynak klasörü: ${sourceFolderForUser('moderator') || '(seçilmedi)'}`);
+  // Bellek baskısı / olay döngüsü kilitlenmesi yalnız sayısal olarak loglanır.
+  if (process.env.BL_AUTOMATION_RUN !== '1') require('./lib/runtime-pressure-monitor').startRuntimePressureMonitor();
   // Açılışta kimlik doğrulama yolu MUTLAKA hafif kalır. Büyük model snapshot'ı
   // burada hydrate edilmez ve tüm kullanıcı page-cache warm-up'ı ana HTTP
   // sürecinde başlatılmaz. gzip/JSON parse ile CP/Orders/Overview projection

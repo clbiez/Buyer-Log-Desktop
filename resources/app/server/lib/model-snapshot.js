@@ -124,12 +124,25 @@ function prepareSnapshot(payload) {
 }
 function finishSnapshot(prepared) {
   // Gövde = metadata + içerik; çözücü gövdeyi olduğu gibi ayrıştırır.
-  const { contentJson, contentKey, metadata, savedAt } = prepared;
+  // contentJson is not carried into the result: the caller awaits gzip, gunzip
+  // and the write while holding the result, and the full content string would
+  // otherwise stay on the heap next to those buffers for the whole save.
+  const { contentJson, ...rest } = prepared, { contentKey, metadata, savedAt } = rest;
   const metadataJson = JSON.stringify({ savedAt, ...metadata });
-  const bodyJson = contentJson === '{}' ? metadataJson : `${metadataJson.slice(0, -1)},${contentJson.slice(1)}`;
-  const digest = checksum(bodyJson);
-  const json = `{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","contentKey":"${contentKey}","payload":${bodyJson}}`;
-  return { ...prepared, json: Buffer.from(json, 'utf8'), baseChecksum:digest };
+  // Gövde parçalar halinde hash'lenir ve tek tampona yazılır. Eskiden parçalar
+  // birleştirilmiş tek metne dönüştürülüyordu; V8 bu metni düzleştirirken büyük
+  // veri setinde içeriğin ikinci tam kopyasını heap'te açıyor ve yenileme
+  // "snapshot-save" adımında heap out of memory ile çöküyordu. Baytlar aynıdır.
+  const bodyParts = contentJson === '{}' ? [metadataJson] : [`${metadataJson.slice(0, -1)},`, contentJson.slice(1)];
+  const hash = crypto.createHash('sha256');
+  for (const part of bodyParts) hash.update(part, 'utf8');
+  const digest = hash.digest('hex');
+  const parts = [`{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","contentKey":"${contentKey}","payload":`, ...bodyParts, '}'];
+  const json = Buffer.allocUnsafe(parts.reduce((sum, part) => sum + Buffer.byteLength(part, 'utf8'), 0));
+  let offset = 0;
+  for (const part of parts) offset += json.write(part, offset, 'utf8');
+  if (offset !== json.length) throw new Error('Snapshot gövdesi yazılamadı.');
+  return { ...rest, json, baseChecksum:digest };
 }
 function encodeSnapshot(payload) { return finishSnapshot(prepareSnapshot(payload)); }
 
@@ -226,7 +239,8 @@ async function writeModelSnapshotAsync(userId, payload) {
   const started = Date.now();
   await new Promise(resolve => setImmediate(resolve));
   assertSnapshotPayload(payload);
-  const serializeStarted = Date.now(), prepared = prepareSnapshot(payload), previous = verifiedSnapshots.get(safeUserId(userId));
+  const serializeStarted = Date.now(), previous = verifiedSnapshots.get(safeUserId(userId));
+  let prepared = prepareSnapshot(payload);
   if (previous && previous.contentKey === prepared.contentKey) {
     // Re-read and hash the compressed primary: a replaced/deleted/corrupt file
     // must never inherit an in-memory verification from an older generation.
@@ -240,9 +254,10 @@ async function writeModelSnapshotAsync(userId, payload) {
     }
   }
   const encoded = finishSnapshot(prepared);
+  prepared = null; // release the content string before the awaited gzip/write
   const compressStarted = Date.now(), buffer = await gzip(encoded.json, { level: 6 });
-  const validateStarted = Date.now(), raw = await gunzip(buffer);
-  assertRoundTrip(raw, encoded);
+  const validateStarted = Date.now();
+  { const raw = await gunzip(buffer); assertRoundTrip(raw, encoded); } // raw is released before the write
   const writeStarted = Date.now(), file = snapshotPath(userId);
   await atomicWriteBufferAsync(file, buffer);
   rememberSnapshot(userId, encoded.contentKey, encoded.baseChecksum, buffer, { uncompressedBytes:encoded.json.length });

@@ -10,7 +10,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
     if (!req.currentUser?.id || req.currentUser.enabled === false) return res.status(401).json({ok:false,code:'USER_LOGIN_REQUIRED'});
     res.set('Cache-Control','no-store'); next();
   });
-  const sourceCodes=new Set(['MODEL_QUERY_UNSUPPORTED','MODEL_SCHEMA_UNAVAILABLE','SOURCE_SCHEMA_UNSUPPORTED','SOURCE_CHANGED','SOURCE_AMBIGUOUS','SOURCE_NOT_FOUND','SOURCE_MAPPING_CAPACITY','ROLE_ALREADY_ACTIVE','REFRESH_CANCELLED']);
+  const sourceCodes=new Set(['MODEL_QUERY_UNSUPPORTED','MODEL_SCHEMA_UNAVAILABLE','SOURCE_SCHEMA_UNSUPPORTED','SOURCE_CHANGED','SOURCE_AMBIGUOUS','SOURCE_NOT_FOUND','SOURCE_MAPPING_CAPACITY','ROLE_ALREADY_ACTIVE','REFRESH_CANCELLED','SOURCE_QUERY_UNAVAILABLE','SOURCE_QUERY_FAILED','SOURCE_PROFILE_NOT_ALLOWED','SOURCE_CREDENTIAL_PRESENT','SOURCE_LIMIT','SOURCE_EXISTS','SOURCE_REQUIRED','NAME_MISMATCH','NAME_REQUIRED','PROFILE_UNKNOWN','MODULE_NOT_FEEDABLE']);
   function fail(res,err) {
     if(res.headersSent)return;
     if(isLcwAiError(err))return res.status(err.statusCode || 502).json({ok:false,...publicError(err)});
