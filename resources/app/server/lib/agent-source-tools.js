@@ -45,4 +45,4 @@ function registerSourceTools(registry,deps){
   },
   restore:async(token,ctx)=>mutation(ctx,async()=>{const {buffer}=artifacts.read(ctx.profile,token.artifactId,'source-configuration-backup'),before=JSON.parse(buffer);if(before.id!==token.sourceId)throw error('OFFICE_ROLLBACK_INVALID',409);const receipt=await source.restore(before,token.expectedSourceRevision,ctx);await deps.changed?.(ctx.profile,'modelConnections',{sourceId:token.sourceId,sourceRevision:receipt.sourceRevision,restored:true});return receipt;})});
 }
-module.exports={registerSourceTools,definition,publicDefinition,validateFilterDefinition};
+module.exports={registerSourceTools,definition,publicDefinition,validateFilterDefinition,writeResult};

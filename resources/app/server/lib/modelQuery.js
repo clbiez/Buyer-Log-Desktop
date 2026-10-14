@@ -137,6 +137,9 @@ function defaultRunner(args, timeoutMs, options = {}) {
  */
 async function runModelQuery(input = {}, options = {}) {
   const runner = options.runner || defaultRunner;
+  // Trusted native caller guard; input/query data cannot supply this callback.
+  try { if (typeof options.beforeQuery === 'function') await options.beforeQuery(); options.assertAuthority?.(); }
+  catch (err) { err.nativeQueryAuthorityDenied = true; throw err; }
   const server = validateName(input.server, 'Sunucu');
   const catalog = validateName(input.catalog, 'Model');
   const query = validateQuery(input.query, { generated: Boolean(input.generated) });
@@ -387,6 +390,7 @@ async function discoverTablesUncached(input = {}, options = {}) {
         return { tables, method: strategy.id, methodNote: strategy.note, provider: result.provider, elapsedMs: result.elapsedMs, attempts };
       }
     } catch (err) {
+      if (err.nativeQueryAuthorityDenied) throw err;
       attempts.push({ method: strategy.id, ok: false, error: String(err && err.message || err) });
       // Bağlantı hiç kurulamıyorsa sıradaki görünümü denemenin anlamı yok.
       if (err && err.code === 'MODEL_QUERY_UNSUPPORTED') throw err;
@@ -466,7 +470,7 @@ async function discoverColumnTypes(input, options) {
         }
       }
       if (types.size) return { types, method: strategy.id };
-    } catch (err) {
+    } catch (err) { if (err.nativeQueryAuthorityDenied) throw err;
       if (err && err.code === 'MODEL_QUERY_UNSUPPORTED') throw err;
       // Bu görünüm okunamadı; sıradakini dene.
     }
@@ -494,7 +498,7 @@ async function discoverSchemaUncached(input = {}, options = {}) {
       out.columns.push({ table, name, kind: 'column' });
     }
     out.provider = result.provider;
-  } catch (err) { out.errors.push({ source: 'columns', error: String(err && err.message || err) }); }
+  } catch (err) { if (err.nativeQueryAuthorityDenied || err.code === 'MODEL_QUERY_UNSUPPORTED') throw err; out.errors.push({ source: 'columns', error: String(err && err.message || err) }); }
 
   try {
     const result = await runModelRows({
@@ -516,7 +520,7 @@ async function discoverSchemaUncached(input = {}, options = {}) {
       });
     }
     out.provider = out.provider || result.provider;
-  } catch (err) { out.errors.push({ source: 'measures', error: String(err && err.message || err) }); }
+  } catch (err) { if (err.nativeQueryAuthorityDenied || err.code === 'MODEL_QUERY_UNSUPPORTED') throw err; out.errors.push({ source: 'measures', error: String(err && err.message || err) }); }
 
   /* Sütun tipleri ayrı bir görünümden gelir ve BEST-EFFORT'tur: okunamazsa
      şema tipsiz döner, filtre üreticisi bugünkü davranışına düşer. Tip için
@@ -531,7 +535,7 @@ async function discoverSchemaUncached(input = {}, options = {}) {
       }
       out.columnTypeMethod = discovered.method;
     }
-  } catch (err) { out.errors.push({ source: 'columnTypes', error: String(err && err.message || err) }); }
+  } catch (err) { if (err.nativeQueryAuthorityDenied || err.code === 'MODEL_QUERY_UNSUPPORTED') throw err; out.errors.push({ source: 'columnTypes', error: String(err && err.message || err) }); }
 
   if (!out.columns.length && !out.measures.length) {
 

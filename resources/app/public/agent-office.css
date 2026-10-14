@@ -69,3 +69,5 @@ button[data-tab="agentoffice"][data-agent-alerts]:not([data-agent-alerts="0"])::
 @media(max-width:1450px){.aoAppearanceFields{grid-template-columns:minmax(0,1fr) 90px}}
 @media(max-height:850px){.aoCharacterBench:not(.is-open) .aoAppearanceFields{display:none}}
 @media(max-width:800px){.aoAppearanceFields{grid-template-columns:minmax(0,1fr) 90px}}
+
+.aoModalCard [hidden]{display:none}

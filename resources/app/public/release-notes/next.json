@@ -155,6 +155,64 @@
           "en": "Verified source refresh change and native inverse action in an actual anonymous task."
         }
       }
+    },
+    {
+      "id": "agent-source-mapping",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Native alan eşlemesini doğrula, onayla ve geri al",
+        "en": "Validate, approve and undo native field mapping"
+      },
+      "body": {
+        "tr": "Agent mevcut native alan kataloğu ve şemadan otomatik eşleme önerebilir; onaylı değişiklikler mevcut kaynak planlayıcısıyla kaydedilir. Gerçek native normalizasyon, 100 alan sınırı ve revizyon kapasitesi yazımdan önce denetlenir. Diğer eşlemeler korunur ve tam geri alma görev/adım kimliğine bağlanır. Eşleme kaldırma AI veya model bağlantısı kapalıyken de çalışır.",
+        "en": "Agents can propose automatic mapping from the existing native field catalog and schema; approved changes use the current source planner. Actual native normalization, the 100-field limit and revision capacity are checked before writing. Other mappings are retained, and exact inverse is bound to task and step. Removing mappings also works when AI or the model connection is offline."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-mapping-native.png",
+        "alt": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde doğrulanmış native eşleme değişikliği ve geri alma seçeneği.",
+          "en": "Verified native mapping change and inverse action in an actual anonymous Agent Office task."
+        },
+        "caption": {
+          "tr": "Gerçek anonim Agent Ofisi görevinde doğrulanmış native eşleme değişikliği ve geri alma seçeneği.",
+          "en": "Verified native mapping change and inverse action in an actual anonymous Agent Office task."
+        }
+      }
+    },
+    {
+      "id": "agent-source-schema",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Kayıtlı kaynak şemasını güvenli ve sayfalı keşfet",
+        "en": "Discover saved source schema safely in pages"
+      },
+      "body": {
+        "tr": "Tabular kaynakların tablo, sütun ve şemaları yalnız kayıtlı kaynak kimliğiyle keşfedilir. Çıktı sayfalıdır; bağlantı, kimlik bilgileri ve ham sağlayıcı hataları gösterilmez. Her native metadata isteğinden önce güncel kullanıcı/agent yetkisi ve kaynak revizyonu denetlenir. Sağlayıcı bulunmayan cihazlarda gereksinim açıkça gösterilir; işlem başarılı sayılmaz.",
+        "en": "Tables, columns and schemas of tabular sources are discovered only by saved source ID. Output is paged; connection, credential and raw provider diagnostics are excluded. Current user/agent authority and source revision are checked before every native metadata request. Devices without the provider show the requirement explicitly; the operation is not marked successful."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-schema-provider-boundary.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında şema keşfinin native Windows/kurumsal sağlayıcı gereksinimi açıkça gösteriliyor.",
+          "en": "Actual Buyer Log UI explicitly shows the native Windows/corporate provider requirement for schema discovery."
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log ekranında şema keşfinin native Windows/kurumsal sağlayıcı gereksinimi açıkça gösteriliyor.",
+          "en": "Actual Buyer Log UI explicitly shows the native Windows/corporate provider requirement for schema discovery."
+        }
+      }
     }
   ]
 }

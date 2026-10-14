@@ -19,6 +19,15 @@
   function errorText(err){
     const map={
       OFFICE_ROLLBACK_INVALID:L('Bu adım için geçerli geri alma makbuzu yok. Gerçek kaydı ve görev adımını kontrol edin.','There is no valid undo receipt for this step. Check the actual record and task step.'),
+      MODEL_QUERY_UNSUPPORTED:L('Bu cihaz native model sağlayıcısını desteklemiyor. Kaynak şeması Windows ve kurulu kurumsal sağlayıcı gerektirir.','This device does not support the native model provider. Source schema discovery requires Windows and an installed corporate provider.'),
+      MODEL_SCHEMA_UNAVAILABLE:L('Kaynak şeması okunamadı. Bağlantıyı ve kurumsal sağlayıcı erişimini kontrol edin.','Source schema could not be read. Check the connection and corporate provider access.'),
+      SOURCE_SCHEMA_UNSUPPORTED:L('Bu bağlantı türünde şema keşfi henüz agent aracıyla desteklenmiyor.','Schema discovery for this connection type is not yet supported by the agent tool.'),
+      SOURCE_MAPPING_CAPACITY:L('Kaynağın native 100 alan eşleme sınırı dolu. Yeni eşleme kaydedilmedi.','The source reached the native limit of 100 field mappings. The new mapping was not saved.'),
+      SOURCE_CHANGED:L('Kaynak başka bir işlemde değişti. Güncel kaydı yeniden önizleyin.','The source changed in another operation. Preview the current record again.'),
+      SOURCE_AMBIGUOUS:L('Aynı kaynak kimliğiyle birden fazla kayıt var. Önce kaynak kayıtlarını düzeltin.','Multiple records have the same source ID. Correct the source records first.'),
+      SOURCE_NOT_FOUND:L('Kayıtlı kaynak bulunamadı. Güncel kaynak kimliğini seçin.','The saved source was not found. Select a current source ID.'),
+      ROLE_ALREADY_ACTIVE:L('Bu türde başka bir kaynak etkin. Değişiklik veya geri alma başka kaynağı kapatmadan durduruldu.','Another source of this type is active. The change or inverse was stopped without disabling the other source.'),
+      OFFICE_FIELD_INVALID:L('Alan native katalog veya şemayla eşleşmiyor. Güncel alanları keşfedin.','The field does not match the native catalog or schema. Discover the current fields.'),
       OFFICE_RESOURCE_REVISION_INVALID:L('Kaynağın revizyon bilgisi güvenli işlem için geçersiz. Veri değiştirilmedi; kaynak metadata’sı incelenmelidir.','The source revision metadata is invalid for a safe operation. Data was not changed; the source metadata needs review.'),
       OFFICE_MANUFACTURER_ASAS_MATCH:L('Seçilen ad güncel ve yetkili ASAS üretici listesinde birebir bulunamadı. Listeyi yeniden keşfedin ve gerçek adı seçin.','The selected name is not an exact match in the current authorized ASAS manufacturer list. Discover the list again and select the actual name.'),
       OFFICE_SOURCE_UNAVAILABLE:L('Yetkili kaynak verisi kullanılamıyor. Kaynak bağlantısını ve güncel kullanıcı erişimini kontrol edin.','Authorized source data is unavailable. Check the source connection and current user access.'),
