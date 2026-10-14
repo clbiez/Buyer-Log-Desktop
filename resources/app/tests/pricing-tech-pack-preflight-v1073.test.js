@@ -29,7 +29,8 @@ test('PLM Tech Pack download sends canonical ownership rather than a Collection 
   const run = block(app, 'async function kolPlmSyncModelFilesRun(button, suppliedRows=null, options={}){', "/* Eski tek \"Model Dosyalarını PLM'den Çek\" düğmesi kaldırıldı;");
   assert.match(run, /kolCanonicalTechnicalSheetKey\(row\)/);
   assert.doesNotMatch(run, /modelKey:kolModelFileKey\(row\)/);
-  const route = block(server, "app.post('/api/plm-sync/model-files'", "app.post('/api/plm-sync/model-files/status'");
+  // The route delegates to the shared technical sheet service (also used by Office).
+  const route = block(server, 'function prepareTechnicalSheetItems(', "app.post('/api/plm-sync/model-files/status'");
   assert.match(route, /technicalSheetOwnership\.canonicalTechnicalSheetKey\(plmId\)/);
 });
 

@@ -80,7 +80,7 @@
     const engine = root.BLCpChecklistEngine;
     return engine && typeof engine.statusIds === 'function' ? engine.statusIds() : STATUS_ORDER.slice();
   }
-  function normalizeState(value) {
+  function normalizeState(value, customList) {
     const raw = text(value).toLocaleLowerCase('tr-TR').replace(/[._-]+/g, ' ');
     if (!raw) return '';
     if (['approved', 'approve', 'onaylandı', 'onaylandi', 'onaylı', 'onayli', 'done', 'completed', 'complete', 'tamam', 'tamamlandı', 'tamamlandi', 'yes', 'evet'].includes(raw)) return 'approved'; // i18n-ignore — import aliasları, UI metni değil
@@ -88,10 +88,11 @@
     if (['notrequired', 'not required', 'n a', 'na', 'gerekmiyor', 'gerek yok', 'uygulanmaz'].includes(raw)) return 'notRequired';
     if (['open', 'pending', 'açık', 'acik', 'bekliyor', 'beklemede', 'yeniden aç', 'yeniden ac'].includes(raw)) return 'open'; // i18n-ignore — import aliasları, UI metni değil
     const engine = root.BLCpChecklistEngine;
-    if (engine && typeof engine.customStatuses === 'function') {
-      const match = engine.customStatuses().find(item => item.name.toLocaleLowerCase('tr-TR') === raw);
-      if (match) return match.id;
-    }
+    // The server import passes the owner's custom statuses explicitly.
+    const custom = Array.isArray(customList) ? customList
+      : engine && typeof engine.customStatuses === 'function' ? engine.customStatuses() : [];
+    const match = custom.find(item => item && typeof item.name === 'string' && item.name.toLocaleLowerCase('tr-TR') === raw);
+    if (match) return match.id;
     const direct = String(value == null ? '' : value).trim();
     if (/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(direct)) return direct;
     return '';
@@ -1443,10 +1444,10 @@
   function readMeta(workbook) {
     const meta = workbook.getWorksheet(META_SHEET);
     if (!meta || text(meta.getCell('A1').text) !== 'BUYER_LOG_CHECKLIST_SUPPLIER') {
-      throw new Error(T('Bu dosya Buyer Log üretici checklist şablonu değil.', 'This is not a Buyer Log supplier checklist workbook.'));
+      throw workbookError(T('Bu dosya Buyer Log üretici checklist şablonu değil.', 'This is not a Buyer Log supplier checklist workbook.'));
     }
     const version = Number(meta.getCell('B1').value) || 0;
-    if (version < 1 || version > SCHEMA_VERSION) throw new Error(T('Checklist Excel şablon sürümü desteklenmiyor.', 'Checklist workbook schema version is not supported.'));
+    if (version < 1 || version > SCHEMA_VERSION) throw workbookError(T('Checklist Excel şablon sürümü desteklenmiyor.', 'Checklist workbook schema version is not supported.'));
     const exportedAt = text(meta.getCell('B2').text || meta.getCell('B2').value);
     const items = [];
     for (let rowNo = 5; rowNo <= meta.rowCount; rowNo += 1) {
@@ -1483,27 +1484,32 @@
     return 0;
   }
 
-  async function importWorkbook(file) {
-    if (!file) return false;
-    await loadShared();
-    const ExcelJS = await ensureExcel();
-    const workbook = new ExcelJS.Workbook();
-    await workbook.xlsx.load(await file.arrayBuffer());
+  function workbookError(message) {
+    return Object.assign(new Error(message), { code: 'CHECKLIST_WORKBOOK_INVALID' });
+  }
+
+  /* Pure supplier workbook reader shared by the CP import button and the
+     Office import capability. The caller supplies the live decisions
+     (analysisFor), the checklist catalog and the applicability rule, so the
+     browser and the server use one parser and one set of skip rules. */
+  function parseSupplierWorkbook(workbook, options) {
+    const opts = options || {};
     const meta = readMeta(workbook);
     const sheet = workbook.getWorksheet(DATA_SHEET) || workbook.worksheets.find(function (ws) { return ws.state === 'visible'; });
-    if (!sheet) throw new Error(T('Checklist sayfası bulunamadı.', 'Checklist sheet was not found.'));
+    if (!sheet) throw workbookError(T('Checklist sayfası bulunamadı.', 'Checklist sheet was not found.'));
 
     const orderKeyCol = headerIndex(sheet, '__BL_ORDER_KEY');
     const loadDateCol = headerIndex(sheet, '__BL_LOAD_DATE');
     const supplierCol = headerIndex(sheet, T('Üretici', 'Supplier')) || headerIndex(sheet, 'Supplier') || headerIndex(sheet, 'Üretici');
-    if (!orderKeyCol) throw new Error(T('Buyer Log eşleşme anahtarı bulunamadı.', 'Buyer Log match key is missing.'));
+    if (!orderKeyCol) throw workbookError(T('Buyer Log eşleşme anahtarı bulunamadı.', 'Buyer Log match key is missing.'));
 
-    const liveRows = currentRows(), liveDecision = analysesForRows(liveRows);
-    const liveByOrder = liveDecision.byOrderKey || new Map();
-    const catalog = new Map(itemCatalog().map(function (item) { return [item.id, item]; }));
+    const analysisFor = typeof opts.analysisFor === 'function' ? opts.analysisFor : function () { return null; };
+    const catalog = opts.catalog instanceof Map ? opts.catalog : new Map();
+    const applies = typeof opts.applies === 'function' ? opts.applies : itemApplies;
+    const english = typeof opts.english === 'boolean' ? opts.english : isEn();
     const entries = [];
     let blank = 0, invalid = 0, notApplicable = 0, formulaCells = 0, staleRows = 0;
-    const importedAt = isoNow();
+    const importedAt = opts.at || isoNow();
 
     for (let rowNo = 2; rowNo <= sheet.rowCount; rowNo += 1) {
       const row = sheet.getRow(rowNo);
@@ -1511,7 +1517,7 @@
       if (!orderKey) continue;
       const loadDate = loadDateCol ? text(row.getCell(loadDateCol).text || row.getCell(loadDateCol).value) : '';
       const supplier = supplierCol ? text(row.getCell(supplierCol).text || row.getCell(supplierCol).value) : '';
-      const analysis = liveByOrder && liveByOrder.get ? liveByOrder.get(orderKey) : null;
+      const analysis = analysisFor(orderKey);
       if (!analysis) { invalid += meta.items.length; continue; }
       if (loadDate && analysis.plannedLoadDate && loadDate !== String(analysis.plannedLoadDate)) {
         staleRows += 1;
@@ -1525,14 +1531,18 @@
         }
         const raw = text(cell.text || cell.value);
         if (!raw) { blank += 1; return; }
-        const nextState = normalizeState(raw);
+        const nextState = normalizeState(raw, opts.customStatuses);
         if (!nextState) { invalid += 1; return; }
         const item = catalog.get(metaItem.id);
         if (!item) { invalid += 1; return; }
-        if (analysis && !itemApplies(item, analysis)) { notApplicable += 1; return; }
+        if (analysis && !applies(item, analysis)) { notApplicable += 1; return; }
         const noteCell = metaItem.noteColumn ? row.getCell(metaItem.noteColumn) : null;
         const reportCell = metaItem.reportColumn ? row.getCell(metaItem.reportColumn) : null;
         const actualDateCell = metaItem.actualDateColumn ? row.getCell(metaItem.actualDateColumn) : null;
+        const note = noteCell ? String(noteCell.text || noteCell.value || '') : '';
+        const reportNumber = reportCell ? text(reportCell.text || reportCell.value) : '';
+        // The native answer store refuses the whole batch for longer evidence.
+        if (note.length > 2000 || reportNumber.length > 300) { invalid += 1; return; }
         let actualDate = '';
         if (actualDateCell && actualDateCell.value) {
           const date = excelDate(actualDateCell.value);
@@ -1545,13 +1555,13 @@
         entries.push({
           orderKey: orderKey,
           itemId: metaItem.id,
-          itemLabel: isEn() ? item.en : item.tr,
+          itemLabel: english ? item.en : item.tr,
           state: nextState,
           at: importedAt,
           baseAt: meta.exportedAt || '',
           loadDate: loadDate || null,
-          note: noteCell ? String(noteCell.text || noteCell.value || '') : '',
-          ...(metaItem.reportColumn ? { reportNumber: reportCell ? text(reportCell.text || reportCell.value) : '' } : {}),
+          note: note,
+          ...(metaItem.reportColumn ? { reportNumber: reportNumber } : {}),
           ...(metaItem.actualDateColumn ? { actualDate: actualDate } : {}),
           // Workbook attachment names are read-only; preserve authoritative
           // server attachments even when this device has no complete mirror.
@@ -1560,6 +1570,30 @@
         });
       });
     }
+    return {
+      meta: meta, entries: entries,
+      counts: { blank: blank, invalid: invalid, notApplicable: notApplicable, formulaCells: formulaCells, staleRows: staleRows },
+    };
+  }
+
+  async function importWorkbook(file) {
+    if (!file) return false;
+    await loadShared();
+    const ExcelJS = await ensureExcel();
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.load(await file.arrayBuffer());
+    const liveRows = currentRows(), liveDecision = analysesForRows(liveRows);
+    const liveByOrder = liveDecision.byOrderKey || new Map();
+    const parsed = parseSupplierWorkbook(workbook, {
+      analysisFor: function (orderKey) { return liveByOrder && liveByOrder.get ? liveByOrder.get(orderKey) : null; },
+      catalog: new Map(itemCatalog().map(function (item) { return [item.id, item]; })),
+      applies: itemApplies,
+      english: isEn(),
+      at: isoNow(),
+    });
+    const entries = parsed.entries;
+    const invalid = parsed.counts.invalid, notApplicable = parsed.counts.notApplicable;
+    const formulaCells = parsed.counts.formulaCells, staleRows = parsed.counts.staleRows;
 
     if (!entries.length) {
       toast(T('İçe aktarılacak checklist güncellemesi bulunamadı.', 'No checklist updates were found to import.'));
@@ -2358,6 +2392,7 @@
     exportWorkbook: exportWorkbook,
     prepareSupplierChecklistEmail: prepareSupplierChecklistEmail,
     importWorkbook: importWorkbook,
+    parseSupplierWorkbook: parseSupplierWorkbook,
     normalizeState: normalizeState,
     statusLabel: statusLabel,
     statusOptions: statusOptions,

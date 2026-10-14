@@ -3,13 +3,19 @@ const Rules=require('../../public/cp-rules-engine');
 const CP=require('../../public/cp-readiness-engine');
 const {hash,error}=require('./agent-office-store');
 function createCpRulePreferences(preferences,userAccess) {
+  // Owner's additional checklist statuses (CP › Checklist › statuses); the
+  // same validation as cp-checklist-engine customStatuses().
+  function customStatuses(effective){
+    let raw;try{raw=JSON.parse(effective['lcw.cp.checklist.custom-statuses.v1']?.value||'[]');}catch(_){return [];}
+    return (Array.isArray(raw)?raw:[]).filter(item=>item&&/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(item.id)&&typeof item.name==='string'&&item.name.trim()).slice(0,24).map(item=>({id:item.id,name:item.name.slice(0,50)}));
+  }
   function context(profile){
     // Assistant settings/answers are personal keys; only rule stores belong
     // to the inherited workspace categories supported by Buyer Log.
     const effective=preferences.load(profile.id).entries;
     const read=key=>{try{return effective[key]?.value?JSON.parse(effective[key].value):{};}catch(_){throw error('OFFICE_RULE_STORE_UNREADABLE',409);}};
     const assistant=read('lcw.cp.assistant.v1');
-    return {settings:{...CP.DEFAULT_SETTINGS,targetType:assistant.settings?.targetType==='inStore'?'inStore':'retail'},checklistEnabled:assistant.checklistSettings?.enabled!==false,answers:read('lcw.cp.checklist.v1')};
+    return {settings:{...CP.DEFAULT_SETTINGS,targetType:assistant.settings?.targetType==='inStore'?'inStore':'retail'},checklistEnabled:assistant.checklistSettings?.enabled!==false,answers:read('lcw.cp.checklist.v1'),customStatuses:customStatuses(effective)};
   }
   function snapshot(profile,kind) {
     const key=`lcw.cp.rules.${kind}.v1`,personal=preferences.load(profile.id),effective=preferences.effectiveWorkspaceEntries(profile.id,userAccess.roleWorkspaceEntries?.(profile)||{});
