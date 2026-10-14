@@ -45,4 +45,33 @@ function registerSourceTools(registry,deps){
   },
   restore:async(token,ctx)=>mutation(ctx,async()=>{const {buffer}=artifacts.read(ctx.profile,token.artifactId,'source-configuration-backup'),before=JSON.parse(buffer);if(before.id!==token.sourceId)throw error('OFFICE_ROLLBACK_INVALID',409);const receipt=await source.restore(before,token.expectedSourceRevision,ctx);await deps.changed?.(ctx.profile,'modelConnections',{sourceId:token.sourceId,sourceRevision:receipt.sourceRevision,restored:true});return receipt;})});
 }
-module.exports={registerSourceTools,definition,publicDefinition,validateFilterDefinition,writeResult};
+// Native planner warnings are Turkish; append the English text for the bilingual receipt.
+const LIFECYCLE_WARNINGS=[[/^Aynı sunucu ve model zaten "(.*)" olarak kayıtlı\.$/,m=>`The same server and model is already registered as "${m[1]}".`],[/^"(.*)" türünde zaten aktif bir kaynak var \((.*)\)\. Yeni kaynak KAPALI olarak eklendi; etkinleştirmek için önce diğerini kapatın\.$/,m=>`An active "${m[1]}" source already exists (${m[2]}). The new source was added DISABLED; disable the other one first to enable it.`],[/^(.*) artık bu kaynaktan veri almayacak\.$/,m=>`${m[1]} will no longer receive data from this source.`]];
+const bilingual=warnings=>(warnings||[]).map(text=>{for(const [pattern,en] of LIFECYCLE_WARNINGS){const m=String(text).match(pattern);if(m)return text+' / '+en(m);}return text;});
+function registerSourceLifecycleTools(registry,deps){
+ const source=deps.source,write={module:'source',areas:['source'],agentAreas:['source'],permissions:['manageModelConnections'],dataScope:'native shared source configuration; connection target copied from an existing configured source; private connection/query/credential material excluded'};
+ const mutation=(ctx,work)=>{if(typeof deps.withAgentMutation!=='function')throw error('OFFICE_APPROVAL_REQUIRED',403);return deps.withAgentMutation(ctx,work);};
+ const name={...string(80),minLength:1,pattern:'\\S'},profileId={...string(80),minLength:1,pattern:'^[a-z0-9_-]+$'},modules={...array({...string(40),pattern:'^[a-z0-9_-]+$'},20),uniqueItems:true},art={...string(32),pattern:'^[a-f0-9]{32}$'};
+ const lifecycleReceipt=object({verified:{enum:[true]},changed:{type:'boolean'},revision:count,sourceId:id,sourceRevision:revision,warnings:array(string(2048),100)});
+ const createOut={...object({verified:{enum:[true]},data:lifecycleReceipt,rollbackToken:{...object({sourceId:id,expectedSourceRevision:revision}),required:['sourceId','expectedSourceRevision']}}),required:['verified','data','rollbackToken']};
+ const deleteOut={...object({verified:{enum:[true]},data:lifecycleReceipt,rollbackToken:{...object({sourceId:id,artifactId:art}),required:['sourceId','artifactId']}}),required:['verified','data','rollbackToken']};
+ const credential=sourceId=>{if(typeof deps.hasCredential!=='function'||deps.hasCredential(sourceId))throw error('SOURCE_CREDENTIAL_PRESENT',409);};
+ registry.registerCapability({...write,id:'source.connection.create',operation:'CREATE',risk:'write',label:{tr:'Yapılandırılmış hedeften kaynak bağlantısı oluştur',en:'Create a source connection from a configured target'},
+  inputSchema:{...object({name,profileId,targetSourceId:id,moduleIds:modules}),required:['name','profileId','targetSourceId']},outputSchema:createOut,
+  read:async(args,ctx)=>{const preview=await source.createPreview(args,ctx);return {...preview,warnings:bilingual(preview.warnings)};},
+  apply:async(args,ctx,preview)=>{await deps.beforeBackup?.(ctx);return mutation(ctx,async()=>{ctx.assertAuthority();const receipt=await source.create(args,preview.storeRevision,ctx);await deps.changed?.(ctx.profile,'modelConnections',{sourceId:receipt.sourceId,sourceRevision:receipt.sourceRevision,created:true,modules:preview.impact.modules});return {verified:true,data:{...receipt,warnings:bilingual(receipt.warnings)},rollbackToken:{sourceId:receipt.sourceId,expectedSourceRevision:receipt.sourceRevision}};});},
+  restore:async(token,ctx)=>mutation(ctx,async()=>{const receipt=await source.removeCreated(token.sourceId,token.expectedSourceRevision,ctx);await deps.changed?.(ctx.profile,'modelConnections',{sourceId:token.sourceId,removed:true,restored:true});return receipt;})});
+ registry.registerCapability({...write,id:'source.connection.delete',operation:'DELETE',risk:'write',label:{tr:'Kaynak bağlantısını sil',en:'Delete source connection'},
+  inputSchema:{...object({sourceId:id,expectedName:string(80)}),required:['sourceId']},outputSchema:deleteOut,
+  read:async(args,ctx)=>{const preview=await source.deletePreview(args,ctx);credential(args.sourceId);return {...preview,warnings:bilingual(preview.warnings)};},
+  apply:async(args,ctx,preview)=>{
+   credential(args.sourceId);const current=await source.snapshot(ctx),before=current.items.find(item=>item.id===args.sourceId);if(!before||require('./data-domain/legacy-adapter').configRevision(before)!==preview.sourceRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
+   const archive=await artifacts.put(ctx.profile,Buffer.from(JSON.stringify({ownerId:ctx.ownerId,officeJobId:ctx.input?.officeJobId||'',officeStepId:ctx.input?.officeStepId||'',index:current.items.indexOf(before),before})),'source-delete-backup.json','source-delete-backup');
+   await deps.beforeBackup?.(ctx);
+   return mutation(ctx,async()=>{ctx.assertAuthority();credential(args.sourceId);const {receipt}=await source.remove(args,preview.sourceRevision,ctx);await deps.changed?.(ctx.profile,'modelConnections',{sourceId:args.sourceId,removed:true,modules:preview.impact.modules});return {verified:true,data:{...receipt,warnings:bilingual(receipt.warnings)},rollbackToken:{sourceId:args.sourceId,artifactId:archive.id}};});
+  },
+  restore:async(token,ctx)=>mutation(ctx,async()=>{const {buffer}=artifacts.read(ctx.profile,token.artifactId,'source-delete-backup');let frame;try{frame=JSON.parse(buffer);}catch(_){throw error('OFFICE_ROLLBACK_INVALID',409);}
+   if(frame.ownerId!==ctx.ownerId||frame.before?.id!==token.sourceId||(ctx.input?.officeJobId&&frame.officeJobId!==ctx.input.officeJobId)||(ctx.input?.officeStepId&&frame.officeStepId!==ctx.input.officeStepId))throw error('OFFICE_ROLLBACK_INVALID',409);
+   const receipt=await source.restoreDeleted(frame.before,frame.index,ctx);await deps.changed?.(ctx.profile,'modelConnections',{sourceId:token.sourceId,sourceRevision:receipt.sourceRevision,restored:true});return receipt;})});
+}
+module.exports={registerSourceTools,registerSourceLifecycleTools,definition,publicDefinition,validateFilterDefinition,writeResult};

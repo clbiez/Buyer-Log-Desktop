@@ -3507,6 +3507,44 @@
         "contractVersion": 2
       },
       {
+        "id": "source.connection.create",
+        "operation": "CREATE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "source.connection.delete",
+        "operation": "DELETE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [
+          "manageModelConnections"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
         "id": "source.tables.read",
         "operation": "READ",
         "agentAreas": [

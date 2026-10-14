@@ -97,6 +97,35 @@
           "en": "An actual Agent Office task shows the refresh group's targets, filter readiness and non-reversible effect before approval."
         }
       }
+    },
+    {
+      "id": "agent-source-connection-lifecycle",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar kaynak bağlantısı oluşturur ve siler",
+        "en": "Agents create and delete source connections"
+      },
+      "body": {
+        "tr": "Agent, zaten yapılandırılmış bir kaynağın bağlantı hedefini kullanarak yeni kaynak bağlantısı oluşturabilir; sunucu, model, sorgu veya kimlik bilgisi kabul edilmez ve hedef görevde gösterilmez. Silme native kurallara uyar: zorunlu modülü besleyen veya saklı kimlik bilgisi olan kaynak silinmez. Her iki işlem önizlenir, onay ister ve tam geri alınabilir.",
+        "en": "An agent can create a source connection using the connection target of an already configured source; no server, model, query or credential is accepted and the target is not shown in the task. Deletion follows native rules: a source feeding a required module or holding a stored credential is not deleted. Both actions are previewed, need approval and can be fully undone."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-source-connection-lifecycle.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi görevinde onaylı kaynak oluşturma sonucu, native uyarılar ve geri alma seçeneği.",
+          "en": "An approved source creation result with native warnings and the undo action in an actual Agent Office task."
+        },
+        "alt": {
+          "tr": "Gerçek Agent Ofisi görevinde onaylı kaynak oluşturma sonucu, native uyarılar ve geri alma seçeneği.",
+          "en": "An approved source creation result with native warnings and the undo action in an actual Agent Office task."
+        }
+      }
     }
   ]
 }
