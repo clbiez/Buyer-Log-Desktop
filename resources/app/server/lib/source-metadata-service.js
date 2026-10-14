@@ -16,7 +16,7 @@ function page(items,args,project){
  }
  return {items:values,matched:items.length,offset,nextOffset:offset+scanned,truncated:offset+scanned<items.length,omitted};
 }
-function createSourceMetadataService({source,modelQuery=modelQueryDefault,modelOptions={},assertAgentAuthority=async()=>{}}){
+function createSourceMetadataService({source,modelQuery=modelQueryDefault,modelOptions={},assertAgentAuthority=async()=>{},runSavedQuery=null}){
  const checked=async(sourceId,ctx,reserve=0)=>{
   const store=await source.snapshot(ctx,reserve?{sourceId,reserve}:undefined),matches=store.items.filter(item=>item.id===sourceId);
   if(!matches.length)throw error('SOURCE_NOT_FOUND',404);if(matches.length!==1)throw error('SOURCE_AMBIGUOUS',409);return matches[0];
@@ -59,6 +59,23 @@ function createSourceMetadataService({source,modelQuery=modelQueryDefault,modelO
   const projection=value=>args.changes.map(change=>({header:change.header,entry:value.mapping?.[change.header]?safeEntry(value.mapping[change.header]):null}));
   return {sourceId:args.sourceId,sourceRevision:revision,schemaHash,before:projection(item),after:projection(next),missingRequiredBefore:fields.missingRequired(item.role,item.mapping),missingRequiredAfter:fields.missingRequired(item.role,next.mapping),impact:{shared:true,modules:[...new Set((item.scopes||[]).flatMap(scope=>scope.targets||[]))].sort(),requiresRefresh:true,executesQuery:false}};
  }
- return {read,autoMap,mappingPreview};
+ // Runs only the query already saved on a configured database source (no query text
+ // from the caller). Revision and live authority are rechecked around the provider call.
+ const cell=value=>value==null?null:typeof value==='number'?(Number.isFinite(value)?value:null):typeof value==='boolean'?value:String(value).slice(0,500);
+ async function savedQuery(args,ctx){
+  const before=await checked(args.sourceId,ctx),revision=adapter.configRevision(before);
+  if(typeof runSavedQuery!=='function')throw error('SOURCE_QUERY_UNAVAILABLE',503);
+  if(before.role!=='custom'||!before.connector||!String(before.query||'').trim())throw error('SOURCE_QUERY_UNAVAILABLE',409);
+  const beforeQuery=async()=>{ctx.assertAuthority();const latest=await checked(args.sourceId,ctx);if(adapter.configRevision(latest)!==revision)throw error('SOURCE_CHANGED',409);await assertAgentAuthority(ctx);ctx.assertAuthority();};
+  await beforeQuery();let result;
+  try{result=await runSavedQuery(before,{maxRows:Math.min(1000,Math.max(1,args.maxRows||100)),beforeQuery});}
+  catch(err){ctx.assertAuthority();if(err.nativeQueryAuthorityDenied||['SOURCE_CHANGED','OFFICE_TOOL_FORBIDDEN','OFFICE_PREVIEW_CHANGED'].includes(err.code))throw err;throw error(err.code==='MODEL_QUERY_UNSUPPORTED'?'MODEL_QUERY_UNSUPPORTED':'SOURCE_QUERY_FAILED',err.code==='MODEL_QUERY_UNSUPPORTED'?409:502);}
+  ctx.assertAuthority();const current=await checked(args.sourceId,ctx);if(adapter.configRevision(current)!==revision)throw error('SOURCE_CHANGED',409);
+  const raw=Array.isArray(result?.rows)?result.rows:[],columns=[...new Set(raw.flatMap(row=>row&&typeof row==='object'?Object.keys(row):[]))].filter(key=>typeof key==='string'&&key.length<=200&&!['__proto__','prototype','constructor'].includes(key)).slice(0,40);
+  const rows=raw.map(row=>Object.fromEntries(columns.map(key=>[key,cell(row?.[key])])));
+  return {sourceId:args.sourceId,sourceRevision:revision,columns,rows,rowCount:Number(result?.rowCount)||rows.length,truncated:Boolean(result?.truncated)||raw.some(row=>row&&Object.keys(row).length>columns.length),provider:String(result?.provider||'').slice(0,40)};
+ }
+ async function readSavedQuery(args,ctx){const value=await savedQuery(args,ctx),{rows,...rest}=value,paged=page(rows,args,row=>row);return {...rest,rows:paged.items,matched:paged.matched,offset:paged.offset,nextOffset:paged.nextOffset,rowsTruncated:paged.truncated};}
+ return {read,autoMap,mappingPreview,savedQuery,readSavedQuery};
 }
 module.exports={createSourceMetadataService,safeEntry,page};

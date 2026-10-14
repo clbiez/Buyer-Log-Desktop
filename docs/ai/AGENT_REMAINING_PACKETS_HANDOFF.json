@@ -4,8 +4,8 @@
     "scope": "Configured source connection lifecycle, query/schema/mapping discovery and refresh-group execution",
     "reuse": "model-connection/source services",
     "boundary": "source IAM; configured targets only; secrets and arbitrary SQL/hosts excluded",
-    "status": "in_progress",
-    "delivery": "PR #562 and #563 merged: native options/name/enable and tabular metadata/mapping. Refresh-group definition READ/CREATE/UPDATE/DELETE with approval and exact inverse delivered in the 2026-10-14 Claude Code packet (executesRefresh:false). Approved refresh-group execution through the shared native refresh start is delivered. Approved connection create (configured targets only) and delete (native required/credential protection) with exact inverses are delivered. Saved query execution/export remains pending."
+    "status": "implemented",
+    "delivery": "PR #562 and #563 merged: native options/name/enable and tabular metadata/mapping. Refresh-group definition READ/CREATE/UPDATE/DELETE with approval and exact inverse delivered in the 2026-10-14 Claude Code packet (executesRefresh:false). Approved refresh-group execution through the shared native refresh start is delivered. Approved connection create (configured targets only) and delete (native required/credential protection) with exact inverses are delivered. Saved configured query READ/EXPORT delivered (provider execution unverified on corporate Windows)."
   },
   {
     "packet": "plm-assets",

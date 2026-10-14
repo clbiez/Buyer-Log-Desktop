@@ -126,6 +126,35 @@
           "en": "An approved source creation result with native warnings and the undo action in an actual Agent Office task."
         }
       }
+    },
+    {
+      "id": "agent-saved-query",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar kayıtlı kaynak sorgusunu okur ve dışa aktarır",
+        "en": "Agents read and export a saved source query"
+      },
+      "body": {
+        "tr": "Agent, yapılandırılmış bir veritabanı kaynağının kayıtlı sorgusunu çalıştırıp sonucu sayfalı okuyabilir veya onayla PDF, Excel ya da HTML olarak dışa aktarabilir. Sorgu metni, sunucu veya kimlik bilgisi kabul edilmez ve gösterilmez; kaynak çalışma sırasında değişirse sonuç verilmez. Kaynak hataları artık Agent Ofisi'nde Türkçe ve İngilizce açıklamayla gösterilir.",
+        "en": "An agent can run the saved query of a configured database source and read the result in pages, or export it as PDF, Excel or HTML with approval. No query text, server or credential is accepted or shown; if the source changes during the run, no result is returned. Source errors are now explained in Turkish and English in Agent Office."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-saved-query-export.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi işlem görevinde kayıtlı sorgu dışa aktarma işlemi seçili.",
+          "en": "The saved query export operation selected in an actual Agent Office operation task."
+        },
+        "alt": {
+          "tr": "Gerçek Agent Ofisi işlem görevinde kayıtlı sorgu dışa aktarma işlemi seçili.",
+          "en": "The saved query export operation selected in an actual Agent Office operation task."
+        }
+      }
     }
   ]
 }
