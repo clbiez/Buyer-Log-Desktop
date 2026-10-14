@@ -15699,11 +15699,16 @@ async function refreshSyncStatusBadge(){
 // Await only the primary projection of the opening screen. Secondary Overview
 // widgets, off-screen modules, images and Excel engines remain on demand.
 async function waitForStartupPrimaryScreen(){
+  // Source snapshots/projections can take minutes or fail while the user still
+  // needs navigation, personal preferences and lazy screen controls. The hard
+  // boot gates already validate core, initial metadata and authenticated user.
+  // switchTab requests CP/Orders on demand; Overview is fetched after UI_READY.
   const tab=currentActiveTab();
-  if(tab==='overview'&&state.overviewDeferred)return ensureOverviewLoaded();
-  if(window.BL_CP_SOURCE_FILTER_REQUIRED||window.BL_HAS_CACHED_MODEL_DATA===false)return true;
-  if(tab==='cp'&&!state.cp)return ensureCpLoaded();
-  if(tab==='orders'&&!state.orders)return ensureOrdersLoaded();
+  if((tab==='overview'&&state.overviewDeferred)
+    ||(tab==='cp'&&!state.cp)
+    ||(tab==='orders'&&!state.orders)){
+    window.BLPerf?.mark?.('STARTUP_PRIMARY_PROJECTION_DEFERRED',{tab});
+  }
   return true;
 }
 window.addEventListener('DOMContentLoaded', async () => {
@@ -15733,6 +15738,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     if(primaryScreenReady)window.BLBootGuard?.ready('ui');
     window.BLPerf?.record?.('firstUsableInteractionMs',performance.now()-(window.BLPerf?.origin?.()||performance.now()));
     signalStartupReady();
+    // Start account-scoped settings before heavy Overview/CP requests can fill
+    // HTTP slots. The existing function single-flights with post-UI startup.
+    void hydrateUserPreferencesAfterUi();
     window.dispatchEvent(new CustomEvent('bl:primary-screen-ready'));
     schedulePostUiStartupTasks();
     if(currentActiveTab()==='overview')void ensureOverviewCpDependency();
