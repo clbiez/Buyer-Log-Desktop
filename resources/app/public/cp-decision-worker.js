@@ -1,10 +1,15 @@
 /* Canonical CP engines only; no network, storage, credentials or user cache. */
 'use strict';
-importScripts('business-rules.js','order-decision-engine.js','backlog-delivery-engine.js','cp-readiness-engine.js');
+let importsReady=false;
+try{
+  importScripts('business-rules.js','order-decision-engine.js','backlog-delivery-engine.js','cp-readiness-engine.js');
+  importsReady=true;
+}catch(_){/* The runtime falls back to the same engines already loaded in the UI. */}
 let context, analyses=[], rowCache=new Map();
 self.onmessage=function(event){
   const {id,type,payload}=event.data;
   const started=performance.now();
+  if(!importsReady){self.postMessage({id,ok:false,error:'CP_WORKER_IMPORT_FAILED'});return;}
   try{
     let result;
     if(type==='begin'){context=payload;analyses=[];rowCache=new Map();result=true;}

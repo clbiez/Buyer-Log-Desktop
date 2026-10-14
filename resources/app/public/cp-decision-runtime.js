@@ -46,7 +46,7 @@
         stats.maxRoundTripMs=Math.max(stats.maxRoundTripMs,now()-next.started);
         message.ok?next.resolve(message.result):next.reject(new Error('CP_WORKER_FAILED'));
       };
-      worker.onerror=()=>{fatalError=new Error('CP_WORKER_FAILED');if(pending){pending.reject(fatalError);pending=null;}};
+      worker.onerror=event=>{event?.preventDefault?.();fatalError=new Error('CP_WORKER_FAILED');if(pending){pending.reject(fatalError);pending=null;}};
       worker.onmessageerror=worker.onerror;
       const send=(type,payload)=>new Promise((resolve,reject)=>{
         if(fatalError){reject(fatalError);return;}
@@ -55,8 +55,11 @@
       });
       const started=now();
       const watchdog=setInterval(()=>{if(disposed||current()!==expected||now()-started>120000)cancel();},16);
+      // Loading importScripts is network work; it must not monopolize the queue.
+      const startupTimer=setTimeout(cancel,Math.max(1,Number(options.workerStartTimeoutMs)||10000));
       try{
         await send('begin',context);
+        clearTimeout(startupTimer);
         for(let offset=0;offset<rows.length;offset+=128){
           if(disposed||current()!==expected)return null;
           const batch=rows.slice(offset,offset+128);
@@ -84,7 +87,7 @@
         Object.defineProperty(result.model,'priorityGroups',{value:Object.fromEntries(Object.entries(result.groups).map(([group,indices])=>[group,indices.map(index=>analyses[index])])),enumerable:false});
         stats.lastExecutionMs=executionMs;stats.workerJobs++;
         return result.model;
-      }finally{clearInterval(watchdog);worker.terminate();worker.onmessage=null;worker.onerror=null;worker.onmessageerror=null;active=null;}
+      }finally{clearTimeout(startupTimer);clearInterval(watchdog);worker.terminate();worker.onmessage=null;worker.onerror=null;worker.onmessageerror=null;active=null;}
     }
     async function run(job){
       const started=now();stats.lastQueueMs=started-job.queuedAt;
