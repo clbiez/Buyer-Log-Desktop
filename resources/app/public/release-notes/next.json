@@ -68,6 +68,35 @@
           "en": "Retained status and hidden details in the actual task list after pausing the agent."
         }
       }
+    },
+    {
+      "id": "agent-landed-defaults",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi / Kaynak Veri",
+        "en": "Agent Office / Source Data"
+      },
+      "title": {
+        "tr": "Ortak Landed varsayılanlarını onayla ve geri al",
+        "en": "Approve and undo shared landed defaults"
+      },
+      "body": {
+        "tr": "Yetkili agent ortak TR ve Overseas Landed varsayılanlarını okuyup etki önizlemesiyle güncelleyebilir. Native revizyon ve yazı yetkisi tekrar kontrol edilir; tam geri alma ve kalıcı işlem kaydı korunur. Satırların özel çarpanları ve kayıtlı fiyatları değiştirilmez. Önizleme ortak varsayılan etkisini bildirir; diğer kullanıcıların fiyat kayıtlarını okumaz.",
+        "en": "An authorized agent can read and revise shared TR and overseas landed defaults with an impact preview. Native revision and write authority are rechecked, preserving exact inverse and durable receipts. Explicit row factors and stored prices are retained. The preview reports shared default changes and does not read other users’ price records."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-landed-native.png",
+        "alt": {
+          "tr": "Gerçek Agent Ofisi görevinde doğrulanmış TR ve Overseas varsayılan çarpanları ile native geri alma seçeneği.",
+          "en": "Verified TR and overseas default factors with the native inverse action in an actual Agent Office task."
+        },
+        "caption": {
+          "tr": "Gerçek Agent Ofisi görevinde doğrulanmış TR ve Overseas varsayılan çarpanları ile native geri alma seçeneği.",
+          "en": "Verified TR and overseas default factors with the native inverse action in an actual Agent Office task."
+        }
+      }
     }
   ]
 }

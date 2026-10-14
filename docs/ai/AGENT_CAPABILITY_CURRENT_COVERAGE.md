@@ -1,6 +1,6 @@
 # Buyer Log: current registered Office capability coverage
 
-Generated from the current unified access-matrix fixture on 2026-10-13 (Europe/Istanbul). This table counts registered contract-v2 tools, not all native user actions. It does not prove module completion, UI acceptance, a merged PR or a release. Local package checkpoints and the original native route inventory remain in AGENT_CAPABILITY_PLATFORM_2.md.
+Generated from the current unified access-matrix fixture on 2026-10-14 (Europe/Istanbul). This table counts registered contract-v2 tools, not all native user actions. It does not prove module completion, UI acceptance, a merged PR or a release. Local package checkpoints and the original native route inventory remain in AGENT_CAPABILITY_PLATFORM_2.md.
 
 | Module | Tools | READ | CREATE | UPDATE | DELETE | IMPORT | EXPORT | EXECUTE | SCHEDULE | SEND | APPROVE |
 |---|---|---|---|---|---|---|---|---|---|---|---|
@@ -20,12 +20,12 @@ Generated from the current unified access-matrix fixture on 2026-10-13 (Europe/I
 | backlog | 6 | 4 | — | — | — | — | 2 | — | — | — | — |
 | shipping | 27 | 7 | 2 | 11 | 3 | 2 | 2 | — | — | — | — |
 | automations | 10 | 4 | 1 | 2 | 1 | — | — | 1 | 1 | — | — |
-| source | 27 | 10 | 2 | 9 | 4 | 2 | — | — | — | — | — |
+| source | 29 | 11 | 2 | 10 | 4 | 2 | — | — | — | — | — |
 | agents | 0 | — | — | — | — | — | — | — | — | — | — |
 
-Total: 186 registered contract-v2 capabilities. CP Rule save is one native upsert tool covering both CREATE and UPDATE, so those operation columns overlap. READ calculations use the native deterministic engines. EXPORT is an approved file effect; it does not imply SEND. Business APPROVE tools belong to native quotation/status workflows. The generic Office read-only scheduler and native approved automation schedule services are separately represented by their actual APIs and existing automation tools. SEND remains unavailable because no authorized corporate sending channel has been verified.
+Total: 188 registered contract-v2 capabilities. CP Rule save is one native upsert tool covering both CREATE and UPDATE, so those operation columns overlap. READ calculations use the native deterministic engines. EXPORT is an approved file effect; it does not imply SEND. Business APPROVE tools belong to native quotation/status workflows. The generic Office read-only scheduler and native approved automation schedule services are separately represented by their actual APIs and existing automation tools. SEND remains unavailable because no authorized corporate sending channel has been verified.
 
-Output-contract audit: 186 strict top-level output objects and 0 generic/open output envelopes remain. See `AGENT_CAPABILITY_OUTPUT_GAPS.md` for exact tool IDs; contractVersion 2 alone does not prove complete field-level output typing.
+Output-contract audit: 188 strict top-level output objects and 0 generic/open output envelopes remain. See `AGENT_CAPABILITY_OUTPUT_GAPS.md` for exact tool IDs; contractVersion 2 alone does not prove complete field-level output typing.
 
 ## Remaining native workflow decisions
 
@@ -35,7 +35,7 @@ Output-contract audit: 186 strict top-level output objects and 0 generic/open ou
 - Orders/checklist: native shared definition READ/create/revise/delete now use actual CP operation permissions, bounded metadata-only public projections, existing Rule validation/dependency engines, shared native revision lease and Office profile WAL, explicit approval and complete native inverses. Legacy normalization is declared in preview; original legacy metadata is restored exactly. Personal rules and stored answers are preserved. Explicit scoped order-answer READ and approved UPDATE/Pending/Rejected/NotRequired now use the same native store, preserve evidence, report partial skipped updates and archive full revision-bound inverses. Reusable option writes, supplier workbook import/export and attachment lifecycle remain separate gaps beyond the Quality adapter.
 - Personal presets: Focus/Extended and cross-user preset sharing remain outside the delivered saved view/filter lifecycle. Applying saved profiles to an already open renderer is explicitly not claimed.
 - Manufacturer directory: card/e-mail record CRUD is delivered; country/group heading management is now delivered; native import/merge is now delivered with verified partial receipts and selective native inverses; exact authorized ASAS name discovery/linking and native missing-card/country creation are now delivered with approval, source binding and atomic inverse.
-- Native landed multipliers, supported larger exports and remaining module functions must be assessed against the initial route inventory, not inferred from a broad module capability flag.
+- Native shared Landed defaults now have READ and approved UPDATE adapters using the same HTTP/Office service, native journal/source guards, full task-bound inverse and safe revision headroom. Their preview explicitly reports default-factor changes without claiming a scan of other owners’ prices. Supported larger exports and remaining module functions still require operation-by-operation inventory.
 - Earlier native multi-document adapters still require a final live-IAM/profile/journal and partial-effect audit. Directory, Endeksmatik and Transit/Royalty/FX boundary gaps found during this continuation are fixed and covered by actual durable-reader regressions.
 
 ## Delivery status — 2026-10-14 (Europe/Istanbul)
