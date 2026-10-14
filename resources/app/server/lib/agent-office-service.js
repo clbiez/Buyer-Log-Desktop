@@ -71,7 +71,7 @@ function createAgentOfficeService(deps) {
   const memoryContext=(profile,ids,conversationId,query,budget,options)=>memoryPolicy.context(profile,ids,conversationId,query,budget,options);
   function activate(profile) {
     actors.set(profile.id, { lastSeen: Date.now() });
-    if (!timer) { timer = setInterval(() => { void background(); }, 120000); timer.unref?.(); }
+    if (!timer) { timer = setInterval(background, 120000); timer.unref?.(); }
   }
   async function ensure(profile) {
     profile = freshProfile(profile); activate(profile);
@@ -391,11 +391,13 @@ function createAgentOfficeService(deps) {
   async function notifications(profile,hints={}) {
     profile = await ensure(profile);
     const settings=await assistantSettings(profile);if(!settings.revision&&hints.timeZone){try{new Intl.DateTimeFormat('en',{timeZone:hints.timeZone}).format();await store.save(profile.id,'metadata',{...settings,timeZone:hints.timeZone},{expectedRevision:0});}catch(err){if(err.code!=='OFFICE_REVISION_CONFLICT'&&!(err instanceof RangeError))throw err;}}
-    await checkAssistant(profile);
+    // A notification read must not project every native data source. The
+    // existing background worker performs scans after application readiness.
     const docs = await store.records(profile.id);
     return {ownerId:profile.id,assistant:await assistantSettings(profile),alerts:docs.filter(doc => doc.kind === 'alert' && !doc.dismissed).slice(-100).map(({id,title,createdAt,totalFindings,sourceUpdatedAt})=>({id,title,createdAt,totalFindings,sourceUpdatedAt})), watching:docs.filter(doc => doc.kind === 'watch' && doc.enabled).length};
   }
   async function background() {
+    if (deps.canRunBackground && !deps.canRunBackground()) return;
     if (backgroundRunning) return; backgroundRunning = true;
     try { for(const [owner,entry] of actors) {
       if(Date.now()-entry.lastSeen>30*60000){actors.delete(owner);continue;}

@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-14",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Agent görev kayıtları ve güvenli sonuç gösterimi",
-    "en": "Agent task records and safe result display"
+    "tr": "Güvenli açılış ve native Agent işlemleri",
+    "en": "Safe startup and native agent actions"
   },
   "summary": {
-    "tr": "Kaydedilmiş native işlemler için doğrulanmış sonuç ve geri alma kaydı korunur; ayrıntılar güncel kullanıcı ve agent yetkisiyle gösterilir.",
-    "en": "Verified results and inverses are retained for committed native operations; details follow current user and agent access."
+    "tr": "Agent bildirimleri başlangıç veri yüklemesiyle yarışmaz. Kaydedilmiş görev sonuçları, ortak Landed çarpanları, kaynak eşlemeleri ve opsiyon onayları native servisler ve güncel yetkilerle korunur.",
+    "en": "Agent notifications do not compete with initial data loading. Saved task receipts, shared Landed factors, source mappings and option approvals use native services and current authority."
   },
   "changes": [
     {
@@ -240,6 +240,35 @@
         "caption": {
           "tr": "Gerçek anonim Agent Ofisi görevinde native ortak opsiyon onayı ve geri alma sonucu.",
           "en": "Native reusable option approval and inverse result in an actual anonymous Agent Office task."
+        }
+      }
+    },
+    {
+      "id": "login-agent-notifications-critical-path",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış / Agent Ofisi",
+        "en": "Startup / Agent Office"
+      },
+      "title": {
+        "tr": "Agent bildirimi açılışta tam veri taraması başlatmaz",
+        "en": "Agent notifications no longer start a full scan during startup"
+      },
+      "body": {
+        "tr": "Bildirim okuma yalnız kaydedilmiş uyarıları döndürür; CP, sipariş, koleksiyon, LFL ve Backlog taramasını beklemez. Otomatik bildirim isteği Devam düğmesinden sonra, mevcut arka plan taraması arayüz hazır bildirildikten sonra başlar. Büyük veya erişilemeyen kaynaklar bildirim üzerinden çalışma alanı hazırlığını bloke etmez.",
+        "en": "Notification reads return saved alerts without awaiting scans of CP, Orders, Collection, LFL and Backlog. Automatic notification requests start after Continue; the existing background scan starts after UI readiness is reported. Large or unavailable sources no longer block workspace preparation through notification reads."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "login-startup-notifications-fixed.png",
+        "alt": {
+          "tr": "Gerçek anonim kullanıcı girişi sonrasında üç hazırlık adımı tamamlandı; Agent bildirim isteği Devam sonrasına bırakıldı.",
+          "en": "All three preparation stages completed after an actual anonymous sign-in; the agent notification request starts after Continue."
+        },
+        "caption": {
+          "tr": "Gerçek anonim kullanıcı girişi sonrasında üç hazırlık adımı tamamlandı; Agent bildirim isteği Devam sonrasına bırakıldı.",
+          "en": "All three preparation stages completed after an actual anonymous sign-in; the agent notification request starts after Continue."
         }
       }
     }
