@@ -3,14 +3,43 @@
   "publishedAt": "2026-10-14",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Ofiste doğru oturuş, güvenli zorla kapatma ve yenileme grubu çalıştırma",
-    "en": "Correct office seating, safe forced close and refresh group execution"
+    "tr": "Büyük veride açılış düzeltmesi, ofiste doğru oturuş ve güvenli zorla kapatma",
+    "en": "Large-data startup fix, correct office seating and safe forced close"
   },
   "summary": {
-    "tr": "Agent Ofisi tek bir gerçek ölçek kullanır ve agent'lar masalarına doğru oturur. Zorla kapatma sonrası arka plan süreci kalmaz. Agent'lar yenileme grubunu onayla çalıştırır.",
-    "en": "Agent Office uses one real-world scale and agents sit correctly at their desks. No background process remains after a forced close. Agents run a refresh group with approval."
+    "tr": "Büyük veri setinde kullanıcı verileri açılışta yeniden yüklenir ve yenileme kaydı tamamlanır. Agent Ofisi tek bir gerçek ölçek kullanır; zorla kapatma sonrası arka plan süreci kalmaz.",
+    "en": "With large data sets user data loads again at startup and refresh saving completes. Agent Office uses one real-world scale; no background process remains after a forced close."
   },
   "changes": [
+    {
+      "id": "startup-memory-headroom",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış ve Yenileme",
+        "en": "Startup and Refresh"
+      },
+      "title": {
+        "tr": "Büyük veride veriler açılışta yeniden yükleniyor",
+        "en": "User data loads again at startup with large data"
+      },
+      "body": {
+        "tr": "Çok büyük ASAS verisinde sunucu bellek sınırına takılıyor; açılışta veriler yüklenmiyor, Genel Bakış \"CP verisi hazırlanıyor\" durumunda kalıyor ve yenileme kayıt adımında yarıda kesiliyordu. Sunucu artık bilgisayarın belleğine göre daha geniş bir sınırla başlar, snapshot kaydı verinin ikinci bir kopyasını oluşturmaz ve olası bellek baskısı tanı için loga yazılır. Kaydedilen dosya biçimi değişmedi.",
+        "en": "With very large ASAS data the server hit its memory limit: data did not load at startup, Overview stayed on \"Preparing CP data\" and refresh stopped while saving. The server now starts with a larger limit based on the computer's memory, saving the snapshot no longer creates a second copy of the data and memory pressure is logged for diagnosis. The saved file format is unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "startup-memory-headroom.png",
+        "caption": {
+          "tr": "Önbelleksiz soğuk açılıştan sonra gerçek Genel Bakış: üretim öncelikleri ve sipariş özeti demo veriyle yüklendi.",
+          "en": "Actual Overview after a cold start without screen cache: production priorities and order summary loaded with demo data."
+        },
+        "alt": {
+          "tr": "Genel Bakış ekranında yüklenmiş üretim öncelikleri, kontrol listesi ve sipariş özeti",
+          "en": "Overview screen with loaded production priorities, checklist and order summary"
+        }
+      }
+    },
     {
       "id": "agent-office-seated-proportions",
       "type": "improvement",

@@ -12825,6 +12825,8 @@ const httpServer = app.listen(PORT, HOST, () => {
   console.log(`Buyer Log sunucusu çalışıyor: http://${displayHost}:${PORT}`);
   console.log(`Dinleme adresi: ${HOST} (yerel kullanım için varsayılan 127.0.0.1)`);
   console.log(`Moderatör kaynak klasörü: ${sourceFolderForUser('moderator') || '(seçilmedi)'}`);
+  // Bellek baskısı / olay döngüsü kilitlenmesi yalnız sayısal olarak loglanır.
+  if (process.env.BL_AUTOMATION_RUN !== '1') require('./lib/runtime-pressure-monitor').startRuntimePressureMonitor();
   // Açılışta kimlik doğrulama yolu MUTLAKA hafif kalır. Büyük model snapshot'ı
   // burada hydrate edilmez ve tüm kullanıcı page-cache warm-up'ı ana HTTP
   // sürecinde başlatılmaz. gzip/JSON parse ile CP/Orders/Overview projection

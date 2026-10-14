@@ -126,10 +126,20 @@ function finishSnapshot(prepared) {
   // Gövde = metadata + içerik; çözücü gövdeyi olduğu gibi ayrıştırır.
   const { contentJson, contentKey, metadata, savedAt } = prepared;
   const metadataJson = JSON.stringify({ savedAt, ...metadata });
-  const bodyJson = contentJson === '{}' ? metadataJson : `${metadataJson.slice(0, -1)},${contentJson.slice(1)}`;
-  const digest = checksum(bodyJson);
-  const json = `{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","contentKey":"${contentKey}","payload":${bodyJson}}`;
-  return { ...prepared, json: Buffer.from(json, 'utf8'), baseChecksum:digest };
+  // Gövde parçalar halinde hash'lenir ve tek tampona yazılır. Eskiden parçalar
+  // birleştirilmiş tek metne dönüştürülüyordu; V8 bu metni düzleştirirken büyük
+  // veri setinde içeriğin ikinci tam kopyasını heap'te açıyor ve yenileme
+  // "snapshot-save" adımında heap out of memory ile çöküyordu. Baytlar aynıdır.
+  const bodyParts = contentJson === '{}' ? [metadataJson] : [`${metadataJson.slice(0, -1)},`, contentJson.slice(1)];
+  const hash = crypto.createHash('sha256');
+  for (const part of bodyParts) hash.update(part, 'utf8');
+  const digest = hash.digest('hex');
+  const parts = [`{"schemaVersion":${SNAPSHOT_SCHEMA_VERSION},"checksum":"${digest}","contentKey":"${contentKey}","payload":`, ...bodyParts, '}'];
+  const json = Buffer.allocUnsafe(parts.reduce((sum, part) => sum + Buffer.byteLength(part, 'utf8'), 0));
+  let offset = 0;
+  for (const part of parts) offset += json.write(part, offset, 'utf8');
+  if (offset !== json.length) throw new Error('Snapshot gövdesi yazılamadı.');
+  return { ...prepared, json, baseChecksum:digest };
 }
 function encodeSnapshot(payload) { return finishSnapshot(prepareSnapshot(payload)); }
 
