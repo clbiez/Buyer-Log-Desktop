@@ -866,6 +866,45 @@
         "approval": true,
         "rollbackable": true,
         "contractVersion": 2
+      },
+      {
+        "id": "cp.checklist.attachments.read",
+        "operation": "READ",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "CP.VIEW"
+        ],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.checklist.attachment.remove",
+        "operation": "DELETE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "CP.VIEW",
+          "CP.EDIT"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
       }
     ]
   },

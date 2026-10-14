@@ -97,6 +97,8 @@
       OFFICE_TASK_DEVICE:L('Bu önizleme başka cihazda oluşturuldu. Bu cihazda yeni önizleme hazırlayın.','This preview was created on another device. Prepare a fresh preview on this device.'),
       OFFICE_EVIDENCE_SCOPE_REQUIRED:L('Önce Veri kapsamından sipariş veya PLM seçin.','First select an order or PLM in Data scope.'),
       OFFICE_EVIDENCE_LIMIT:L('En fazla beş belge ve dosya başına 19 MiB sınırı geçerlidir.','Up to five documents and a 19 MiB limit per file apply.'),
+      CHECKLIST_REVISION_CONFLICT:L('Checklist cevapları bu adımdan sonra değişti; geri alma güvenle durduruldu. Güncel durumu kontrol edin.','Checklist answers changed after this step; undo was stopped safely. Check the current state.'),
+      OFFICE_RULE_VERIFY_FAILED:L('Değişiklik yazıldı ancak doğrulanamadı. İlgili ekranda kontrol edin.','The change was written but could not be verified. Check it on the related screen.'),
       OFFICE_PRESET_VERIFY_FAILED:L('Ön ayarlar yazıldı ancak doğrulanamadı. Ön Ayar Paylaşımı ekranından kontrol edin.','Presets were written but could not be verified. Check them in Preset Sharing.'),
       OFFICE_ORDER_VERIFY_FAILED:L('Sipariş düzenlemesi doğrulanamadı. CP Tracker\'da kontrol edin.','The order edit could not be verified. Check it in CP Tracker.'),
       OFFICE_NOTE_COLUMN_UNKNOWN:L('Not sütunu bulunamadı. Sütun silinmiş veya adı değişmiş olabilir; güncel sütunlarla yeniden önizleyin.','Note column not found. It may have been deleted or renamed; preview again with the current columns.'),

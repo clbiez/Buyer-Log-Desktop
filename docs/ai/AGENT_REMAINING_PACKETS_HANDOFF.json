@@ -28,7 +28,7 @@
     "reuse": "checklist supplier services and exporter",
     "boundary": "native CP operation grants; evidence scope; ambiguity approval; stored-file ownership",
     "status": "in_progress",
-    "delivery": "PR #564 merged reusable option READ/approved UPDATE/inverse; 44 targeted PASS and actual native TR/EN UI. Supplier XLSX and attachment lifecycle pending. Outside Stable 7.0.273."
+    "delivery": "PR #564 merged reusable option READ/approved UPDATE/inverse; 44 targeted PASS and actual native TR/EN UI. Attachment lifecycle: cp.checklist.attachments.read and cp.checklist.attachment.remove (approved, exact inverse; adding evidence stays in the test-report import tools); see AGENT_CHECKLIST_ATTACHMENT_ACCEPTANCE.md. Supplier XLSX pending: export/import is implemented only in the renderer (ExcelJS in public/checklist-supplier-sync.js); an agent path needs that engine shared server-side first, not a second implementation. Outside Stable 7.0.273."
   },
   {
     "packet": "presets",

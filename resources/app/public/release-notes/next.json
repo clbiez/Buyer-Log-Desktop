@@ -242,6 +242,35 @@
           "en": "Agent Office task steps with a verified preset transfer result and an undo button"
         }
       }
+    },
+    {
+      "id": "agent-checklist-attachments",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar checklist eklerini listeler ve onayla kaldırır",
+        "en": "Agents list checklist attachments and remove them with approval"
+      },
+      "body": {
+        "tr": "Agent Ofisi, yetkili siparişlerin checklist cevaplarındaki kanıt eklerini listeleyebilir ve yanlış eklenmiş bir dosyayı cevaptan onayla kaldırabilir. Cevabın durumu, notu, rapor numarası ve tarihleri korunur; dosyanın kendisi silinmez, cevap geçmişi onu göstermeye devam eder. \"Bu adımı geri al\" cevabı birebir eski haline getirir; aradan sonra checklist değiştiyse geri alma güvenle durur.",
+        "en": "Agent Office can list the evidence attachments on checklist answers of authorized orders and remove a wrongly attached file from an answer with approval. The answer's status, note, report number and dates are kept; the file itself is not deleted and the answer history still points to it. \"Undo this step\" restores the answer exactly; if the checklist changed meanwhile, undo stops safely."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-checklist-attachment.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: yanlış kanıt dosyasını kaldırma adımı onaylandı, doğrulandı ve geri alınabilir.",
+          "en": "Actual Agent Office: the step removing a wrong evidence file was approved, verified and can be undone."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında doğrulanmış checklist eki kaldırma sonucu ve geri al düğmesi",
+          "en": "Agent Office task steps with a verified checklist attachment removal and an undo button"
+        }
+      }
     }
   ]
 }
