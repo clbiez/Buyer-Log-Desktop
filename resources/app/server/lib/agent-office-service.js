@@ -106,7 +106,9 @@ function createAgentOfficeService(deps) {
   async function state(profile) {
     profile = await ensure(profile);
     const value = await store.state(profile.id);
-    return { ...value, assistant:await assistantSettings(profile), capabilities: { areas: allowedAreas(profile), canModerate: profile.systemRole === 'moderator', canAutomate: canAutomate(profile),
+    const assistant=await assistantSettings(profile);profile=freshProfile(profile);
+    const publicTasks=service.taskPublicState?await service.taskPublicState(profile,value.jobs,value.memory):{jobs:value.jobs,memory:value.memory};
+    return { ...value, ...publicTasks, assistant, capabilities: { areas: allowedAreas(profile), canModerate: profile.systemRole === 'moderator', canAutomate: canAutomate(profile),
       learning: 'persistent-context', runtime: 'buyer-log-open', outlook: false, voice: false, plmChanges: false, cpTools:Boolean(deps.toolRegistry && deps.runtime)&&userAccess.hasArea(profile,'cp'), cpDrafts:userAccess.hasArea(profile,'automations') },
       activeJobs: [...active.values()].filter(job => job.ownerId === profile.id).map(job => ({ id:job.id, profileIds:job.profileIds,phase:job.phase||'review' })), sync: sync?.status(profile.id) || { state:'local' } };
   }
