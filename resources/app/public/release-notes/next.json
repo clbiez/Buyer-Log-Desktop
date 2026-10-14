@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-14",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Onaylı yenileme grubu yönetimi",
-    "en": "Approved refresh group management"
+    "tr": "Güvenilir güncelleme yeniden başlatması ve onaylı yenileme grupları",
+    "en": "Reliable update restart and approved refresh groups"
   },
   "summary": {
-    "tr": "Agent'lar ortak yenileme grubu tanımlarını native servis, güncel yetki, onay ve tam geri alma ile yönetir.",
-    "en": "Agents manage shared refresh group definitions through the native service with current authority, approval and exact inverse."
+    "tr": "Güncelleme sonrası yeniden başlatma ve kapanış takılmaz. Agent'lar ortak yenileme grubu tanımlarını onay ve tam geri alma ile yönetir.",
+    "en": "Restart after an update and shutdown no longer stall. Agents manage shared refresh group definitions with approval and exact inverse."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "alt": {
           "tr": "Gerçek anonim Agent Ofisi görevinde onaylı ortak yenileme grubu, doğrulanmış sonuç ve geri alma seçeneği.",
           "en": "An approved shared refresh group, its verified result and the inverse action in an actual anonymous Agent Office task."
+        }
+      }
+    },
+    {
+      "id": "update-restart-tray-shutdown",
+      "type": "fix",
+      "module": {
+        "tr": "Güncelleme",
+        "en": "Updates"
+      },
+      "title": {
+        "tr": "Güncelleme sonrası yeniden başlatma takılmaz",
+        "en": "Restart after an update no longer gets stuck"
+      },
+      "body": {
+        "tr": "Yeniden başlat, tepside takip modu açıkken pencereyi yalnız gizlemiyor; uygulama gerçekten kapanıp yeni sürümle açılır. Kapanış meşgul bir arka uçta beklemez ve en geç 20 saniyede tamamlanır; Buyer Log kapatıldıktan sonra Görev Yöneticisi'nde asılı kalmaz.",
+        "en": "Restart no longer only hides the window while tray monitoring is on; the app really exits and opens on the new version. Shutdown does not wait on a busy backend and finishes within 20 seconds, so Buyer Log does not linger in Task Manager after closing."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "update-restart-tray-shutdown.png",
+        "caption": {
+          "tr": "Tepside takibe devam seçeneği açıkken de güncelleme sonrası Yeniden başlat uygulamayı kapatıp yeni sürümle açar.",
+          "en": "With tray monitoring enabled, Restart after an update still closes the app and reopens it on the new version."
+        },
+        "alt": {
+          "tr": "Tepside takibe devam seçeneği açıkken de güncelleme sonrası Yeniden başlat uygulamayı kapatıp yeni sürümle açar.",
+          "en": "With tray monitoring enabled, Restart after an update still closes the app and reopens it on the new version."
         }
       }
     }
