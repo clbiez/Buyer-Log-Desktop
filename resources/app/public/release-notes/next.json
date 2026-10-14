@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-14",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Yükleme hatalarından kurtarma",
+    "en": "Loading failure recovery"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP hesaplamaları ve Veri Yönetimi yüklemeleri bağlantı hatalarından sonra kontrollü biçimde devam eder.",
+    "en": "CP calculations and Data Management loads recover safely after connection failures."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "cp-worker-import-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Hesaplama işçisi yüklenemediğinde devam et",
+        "en": "Continue when the calculation worker cannot load"
+      },
+      "body": {
+        "tr": "İşçi bağımlılığı yüklenemezse aynı kanonik motor ana ekranda hesaplamayı tamamlar. İşçi açılışı 10 saniyede yanıt vermezse hesaplama kuyruğunu serbest bırakır.",
+        "en": "If a worker dependency cannot load, the same canonical engine completes the calculation on the main thread. Worker startup releases the calculation queue if it does not respond within 10 seconds."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-worker-loading-recovery.png",
+        "caption": {
+          "tr": "Bağımlılık isteği başarısızken 215 demo siparişin öncelikleri gerçek CP tablosunda tamamlandı.",
+          "en": "With a dependency request failing, priorities for 215 demo orders completed in the actual CP table."
+        },
+        "alt": {
+          "tr": "Bağımlılık isteği başarısızken 215 demo siparişin öncelikleri gerçek CP tablosunda tamamlandı.",
+          "en": "With a dependency request failing, priorities for 215 demo orders completed in the actual CP table."
+        }
+      }
+    },
+    {
+      "id": "data-management-bounded-loading",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Takılan yükleme için yeniden açma yolu",
+        "en": "Recovery for stalled loading"
+      },
+      "body": {
+        "tr": "Modül dosyaları ve Veri Yönetimi yanıtları süresiz beklenmez. Dosya hatasında yeniden deneme, zaman aşımında güvenli yeniden yükleme sunulur; yardımcı servis hataları ana özeti engellemez.",
+        "en": "Module files and Data Management responses no longer wait indefinitely. File errors offer retry and timeouts offer a safe reload; auxiliary service failures do not block the main summary."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-loading-retry.png",
+        "caption": {
+          "tr": "Gerçek Veri Yönetimi ekranı takılan dosya isteğinden sonra yeniden yükleme düğmesini gösteriyor.",
+          "en": "Actual Data Management shows the reload button after a stalled file request."
+        },
+        "alt": {
+          "tr": "Gerçek Veri Yönetimi ekranı takılan dosya isteğinden sonra yeniden yükleme düğmesini gösteriyor.",
+          "en": "Actual Data Management shows the reload button after a stalled file request."
+        }
+      }
+    }
+  ]
 }

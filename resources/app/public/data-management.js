@@ -122,31 +122,41 @@
     return loadPromise;
   }
 
+  async function readLoadPayload(url, optional = false) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30000);
+    try {
+      const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+      const payload = await response.json();
+      if (!response.ok || !payload.ok) throw new Error(payload.error || T('Veri Yönetimi özeti okunamadı.', 'Could not read the Data Management summary.'));
+      return payload;
+    } catch (error) {
+      if (optional) return null;
+      if (controller.signal.aborted) throw new Error(T('Sunucu zamanında yanıt vermedi. Yeniden deneyin.', 'The server did not respond in time. Try again.'));
+      throw error;
+    } finally { clearTimeout(timer); }
+  }
+
   async function runLoad() {
     loading = true;
     loadError = '';
     render();
     try {
-      const [overviewRes, groupsRes, labRes, merchRes] = await Promise.all([
-        fetch(`/api/data-management/overview?language=${en() ? 'en' : 'tr'}`, { cache: 'no-store' }),
-        fetch('/api/data-management/refresh-groups', { cache: 'no-store' }),
-        fetch(`/api/data-management/integration-lab?language=${en() ? 'en' : 'tr'}`, { cache: 'no-store' }).catch(() => null),
-        fetch('/api/merch-calendar', { cache: 'no-store' }).catch(() => null),
+      const [payload, groupPayload, labPayload, merchPayload] = await Promise.all([
+        readLoadPayload(`/api/data-management/overview?language=${en() ? 'en' : 'tr'}`),
+        readLoadPayload('/api/data-management/refresh-groups', true),
+        readLoadPayload(`/api/data-management/integration-lab?language=${en() ? 'en' : 'tr'}`, true),
+        readLoadPayload('/api/merch-calendar', true),
       ]);
-      const payload = await overviewRes.json().catch(() => ({}));
-      if (!overviewRes.ok || !payload.ok) throw new Error(payload.error || T('Veri Yönetimi özeti okunamadı.', 'Could not read the Data Management summary.'));
       model = payload;
       // Gruplar okunamazsa ekran yine açılır; yalnız grup bölümü boş kalır.
-      const groupPayload = await groupsRes.json().catch(() => ({}));
-      if (groupsRes.ok && groupPayload.ok) groups = groupPayload;
-      const labPayload = labRes ? await labRes.json().catch(() => null) : null;
-      if (labRes && labRes.ok && labPayload && labPayload.ok) {
+      if (groupPayload) groups = groupPayload;
+      if (labPayload) {
         lab = labPayload;
         if (!selectedLabSourceId) selectedLabSourceId = lab.selectedInspector && lab.selectedInspector.sourceId || '';
         if (!selectedAutomationId) selectedAutomationId = lab.automations && lab.automations[0] && lab.automations[0].id || '';
       }
-      const merchPayload = merchRes ? await merchRes.json().catch(() => null) : null;
-      if (merchRes && merchRes.ok && merchPayload && merchPayload.ok) {
+      if (merchPayload) {
         merchCalendar = merchPayload;
         window.BLMerchCalendarRuntime?.apply?.(merchPayload);
       }

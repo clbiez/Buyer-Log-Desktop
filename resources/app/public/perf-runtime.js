@@ -49,6 +49,9 @@
     const known=scriptStates.get(key);
     if(known?.state==='loaded')return Promise.resolve(known.element);
     if(known?.state==='loading')return known.promise;
+    // Removing a pending script cannot guarantee it will never execute. Keep
+    // a timeout latched until document reload so retry cannot execute it twice.
+    if(known?.error?.code==='BL_SCRIPT_TIMEOUT')return Promise.reject(known.error);
     if(known?.state==='error')scriptStates.delete(key);
 
     let existing=[...document.scripts].find(el=>scriptKey(el.src||'')===key || el.dataset.blLazy===rawSrc || el.dataset.blLazy===src);
@@ -63,11 +66,14 @@
 
     const el=existing||document.createElement('script');
     const promise=new Promise((resolve,reject)=>{
-      const cleanup=()=>{el.removeEventListener('load',onLoad);el.removeEventListener('error',onError);};
-      const onLoad=()=>{cleanup();markLoaded(el,key);resolve(el);};
-      const onError=()=>{cleanup();const error=new Error(rawSrc+(uiEn()?' could not be loaded.':' yüklenemedi.'));markFailed(el,key,error);reject(error);};
+      let settled=false,timer;
+      const cleanup=()=>{clearTimeout(timer);el.removeEventListener('load',onLoad);el.removeEventListener('error',onError);};
+      const onLoad=()=>{if(settled)return;settled=true;cleanup();markLoaded(el,key);resolve(el);};
+      const onError=()=>fail(false);
+      const fail=timedOut=>{if(settled)return;settled=true;cleanup();const error=new Error(rawSrc+(uiEn()?' could not be loaded.':' yüklenemedi.'));if(timedOut)error.code='BL_SCRIPT_TIMEOUT';markFailed(el,key,error);reject(error);};
       el.addEventListener('load',onLoad,{once:true});
       el.addEventListener('error',onError,{once:true});
+      timer=setTimeout(()=>{fail(true);try{el.remove();}catch(_){}},30000);
       if(!existing){
         el.src=src;
         el.async=true;
@@ -91,7 +97,7 @@
      beklemeyle yeniden istenir. loadScript hatalı kaydı zaten temizler. */
   async function loadScriptWithRetry(rawSrc){
     try{return await loadScript(rawSrc);}
-    catch(_){await new Promise(resolve=>setTimeout(resolve,600));return loadScript(rawSrc);}
+    catch(error){if(error?.code==='BL_SCRIPT_TIMEOUT')throw error;await new Promise(resolve=>setTimeout(resolve,600));return loadScript(rawSrc);}
   }
 
   async function ensureLibrary(name){
