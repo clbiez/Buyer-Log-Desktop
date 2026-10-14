@@ -184,6 +184,35 @@
           "en": "The saved query export operation selected in an actual Agent Office operation task."
         }
       }
+    },
+    {
+      "id": "agent-order-editor",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar onayla sipariş düzenler",
+        "en": "Agents edit orders with approval"
+      },
+      "body": {
+        "tr": "Agent Ofisi artık tek bir CP sipariş satırında notları, tarih revizyonlarını, alt üreticiyi, lisansörü, teslimat tipini, kullanıcı tanımlı not sütunlarını ve Eksik Adet işaretini düzenleyebilir. Değişiklik önizlenir, yalnız onayla ve CP düzenleyicisinin kullandığı aynı servisle yazılır, ardından okunarak doğrulanır. \"Bu adımı geri al\" önceki değerleri birebir geri getirir. Bilinmeyen not sütunu önizlemede reddedilir; sütun tanımları değiştiyse geri alma güvenle durdurulur.",
+        "en": "Agent Office can now edit notes, date revisions, sub-manufacturer, licensor, delivery type, user-defined note columns and the Shortage mark on one CP order line. The change is previewed, written only after approval through the same service the CP editor uses, then read back. \"Undo this step\" restores the exact previous values. An unknown note column is refused at preview; if column definitions changed, undo stops safely."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-order-editor.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: onaylanan sipariş düzenleme adımı tamamlandı ve geri alınabilir.",
+          "en": "Actual Agent Office: the approved order edit step completed and can be undone."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımları penceresinde tamamlanan sipariş düzenleme adımı ve geri al düğmesi",
+          "en": "Agent Office task steps dialog with a completed order edit step and an undo button"
+        }
+      }
     }
   ]
 }

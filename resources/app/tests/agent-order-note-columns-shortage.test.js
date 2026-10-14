@@ -75,3 +75,36 @@ test('agent order adapter rewrites the screen cache like the HTTP editor and ref
   assert.match(adapter,/const beforeContext=pageProjectionContext\(profile\);\n    const saved = patchOrderOverride/);
   assert.match(adapter,/rewriteProjectionCacheForRowPatches\(profile,beforeContext,\[\{orderCode,patch\}\]\)/);
 });
+
+test('Office cp.order.update (contract v2) binds approval to the live order snapshot and restores through a bound inverse',async()=>{
+  const {registerOrderTools}=require('../server/lib/agent-order-tools');
+  const office={id:'office-owner',enabled:true,areas:['cp']};
+  const tools=createToolRegistry({userAccess:{profileById:()=>office,hasArea:()=>true,appendAudit:()=>{}},authorizeCapability:async()=>true});
+  registerOrderTools(tools,{
+    withAgentMutation:(_ctx,work)=>work(),
+    snapshotOrder:async(_o,_p,code,patch)=>{const ids=new Set((db.loadOverrides().noteColumnDefs||[]).map(def=>def.id));if(Object.keys(patch.noteColumns||{}).some(id=>!ids.has(id)))throw Object.assign(new Error('OFFICE_NOTE_COLUMN_UNKNOWN'),{code:'OFFICE_NOTE_COLUMN_UNKNOWN'});return db.snapshotOrderOverride(code,patch);},
+    updateOrder:async(_o,_p,code,patch,revision)=>{const saved=db.patchOrderOverride(code,patch,revision,null,{actor:{id:office.id}});return{ok:true,verified:db.verifyOrderOverridePatch(code,patch,saved.revision),revision:saved.revision};},
+    restoreOrder:async(_o,_p,code,receipt,revision,selector)=>db.restoreOrderOverrideReceipt(code,receipt,revision,selector,{actor:{id:office.id}}),
+  });
+  const meta=tools.get('cp.order.update');
+  assert.equal(meta.contractVersion,2);assert.equal(meta.approval,true);assert.equal(meta.rollbackable,true);
+  const code=7100005,input={officeJobId:'job-1',officeStepId:'step-1',officeAgentId:'agent-1'};
+  const ctx={ownerId:office.id,profile:office,input,approvalGranted:true,assertAuthority:()=>{}};
+  const args={orderCode:code,noteColumns:{pack:'karton 6'},shortage:{marked:true,qty:4}};
+  await assert.rejects(tools.execute('cp.order.update',{orderCode:code},{...ctx,dryRun:true}),{code:'OFFICE_TASK_INVALID'});
+  const preview=await tools.execute('cp.order.update',args,{...ctx,dryRun:true});
+  assert.deepEqual(preview.preview.fields,['noteColumns','shortage']);
+  // A concurrent edit after the preview invalidates the approval.
+  db.patchOrderOverride(code,{notes:{Notes:'peer'}},revision(),null,{actor:{id:'peer'}});
+  await assert.rejects(tools.execute('cp.order.update',{...args,fingerprint:preview.fingerprint},ctx),{code:'OFFICE_PREVIEW_CHANGED'});
+  const before=db.snapshotOrderOverride(code,{}).patch.maps;
+  const fresh=await tools.execute('cp.order.update',args,{...ctx,dryRun:true});
+  const result=await tools.execute('cp.order.update',{...args,fingerprint:fresh.fingerprint},ctx);
+  assert.equal(result.verified,true);assert.ok(/^[a-f0-9]{32}$/.test(result.rollbackToken.artifactId));
+  assert.equal(result.rollbackToken.before,undefined,'prior override data lives in the bound artifact, not the token');
+  assert.equal(db.loadOverrides().noteColumnValues[code].pack,'karton 6');
+  await assert.rejects(tools.rollback('cp.order.update',result.rollbackToken,{...ctx,input:{...input,officeStepId:'other'}}),{code:'OFFICE_ROLLBACK_INVALID'});
+  const restored=await tools.rollback('cp.order.update',result.rollbackToken,ctx);
+  assert.equal(restored.verified,true);
+  assert.deepEqual(db.snapshotOrderOverride(code,{}).patch.maps,before);
+});

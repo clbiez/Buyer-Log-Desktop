@@ -2490,6 +2490,47 @@ function cpAgentMail(profile,args,rows,dryRun,expected=null) {
   });
   return {emails,unresolved:split.unresolved,sendAvailable:false};
 }
+// Order override adapter shared by app.order.update (legacy Runtime) and the
+// Office cp.order.update capability; one native service, one rule set.
+const agentOrderAdapter = {
+  snapshotOrder: async (ownerId, profile, orderCode, patch) => {
+    const rows = await agentPlatformDataset(ownerId, profile, 'cp');
+    const wantedModel = String(patch && patch.model || '').trim(), wantedColour = String(patch && patch.ccode || '').trim();
+    const candidates = rows.filter(item => Number(agentRowOrderCode(item)) === Number(orderCode)
+      && (!wantedModel || String(item && item['Model Name'] || '').trim() === wantedModel)
+      && (!wantedColour || String(item && item['C.Code'] || '').trim() === wantedColour));
+    if(candidates.length!==1)throw Object.assign(new Error('Order identity is missing or ambiguous.'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
+    if(!canUserEditOrderCode(profile,orderCode))throw Object.assign(new Error('ORDER_FORBIDDEN'),{code:'ORDER_FORBIDDEN',statusCode:403});
+    assertAgentSharedOwner(profile,orderCode,patch);
+    // The native editor silently skips unknown note-column ids; an agent preview
+    // must refuse them instead of approving a write that changes nothing.
+    const columnIds=new Set((loadOverrides().noteColumnDefs||[]).map(def=>def.id));
+    if(Object.keys(patch&&patch.noteColumns||{}).some(id=>!columnIds.has(id)))throw Object.assign(new Error('OFFICE_NOTE_COLUMN_UNKNOWN'),{code:'OFFICE_NOTE_COLUMN_UNKNOWN',statusCode:422});
+    return require('./db').snapshotOrderOverride(orderCode,patch);
+  },
+  updateOrder: async (_ownerId, profile, orderCode, patch,expectedRevision) => {
+    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
+    assertAgentSharedOwner(profile,orderCode,patch);
+    const beforeContext=pageProjectionContext(profile);
+    const saved = patchOrderOverride(Number(orderCode), patch || {}, expectedRevision, null, { actor: noteActorOf(profile) });
+    // Same incremental screen-cache rewrite as the HTTP editor: without it every
+    // agent edit invalidated the whole page cache and forced a cold rebuild.
+    try { await rewriteProjectionCacheForRowPatches(profile,beforeContext,[{orderCode,patch}]); }
+    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
+    userAccess.appendAudit(profile, 'AGENT_ORDER_UPDATE', String(orderCode), { fields:Object.keys(patch || {}) });
+    liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor([{orderCode,patch}])});
+    void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
+    return { ok:true, verified:require('./db').verifyOrderOverridePatch(orderCode,patch,saved.revision),updated:saved.updated || 1, revision:saved.revision };
+  },
+  restoreOrder: async (_ownerId, profile, orderCode, before,expectedRevision,selector) => {
+    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
+    if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
+    assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
+    const result=require('./db').restoreOrderOverrideReceipt(orderCode,before,expectedRevision,selector,{actor:noteActorOf(profile)});
+    userAccess.appendAudit(profile, 'AGENT_ORDER_ROLLBACK', String(orderCode), {revision:result.revision});
+    liveEvents.notifyChange('orders','agent-capability',{orderCode});return result;
+  },
+};
 const agentToolRegistry = createToolRegistry({
   authorizeCapability:(ctx,args)=>agentOfficeService.taskAuthorize(ctx,args),
   authorizePendingCapability:(ctx,receipt)=>agentOfficeService.taskAuthorizePending(ctx,receipt),
@@ -2533,43 +2574,7 @@ const agentToolRegistry = createToolRegistry({
   },
   getDataset: agentPlatformDataset,
   refresh: async (ownerId, profile, targets) => performRefresh(ownerId, profile, targets),
-  snapshotOrder: async (ownerId, profile, orderCode, patch) => {
-    const rows = await agentPlatformDataset(ownerId, profile, 'cp');
-    const wantedModel = String(patch && patch.model || '').trim(), wantedColour = String(patch && patch.ccode || '').trim();
-    const candidates = rows.filter(item => Number(agentRowOrderCode(item)) === Number(orderCode)
-      && (!wantedModel || String(item && item['Model Name'] || '').trim() === wantedModel)
-      && (!wantedColour || String(item && item['C.Code'] || '').trim() === wantedColour));
-    if(candidates.length!==1)throw Object.assign(new Error('Order identity is missing or ambiguous.'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
-    if(!canUserEditOrderCode(profile,orderCode))throw Object.assign(new Error('ORDER_FORBIDDEN'),{code:'ORDER_FORBIDDEN',statusCode:403});
-    assertAgentSharedOwner(profile,orderCode,patch);
-    // The native editor silently skips unknown note-column ids; an agent preview
-    // must refuse them instead of approving a write that changes nothing.
-    const columnIds=new Set((loadOverrides().noteColumnDefs||[]).map(def=>def.id));
-    if(Object.keys(patch&&patch.noteColumns||{}).some(id=>!columnIds.has(id)))throw Object.assign(new Error('OFFICE_NOTE_COLUMN_UNKNOWN'),{code:'OFFICE_NOTE_COLUMN_UNKNOWN',statusCode:422});
-    return require('./db').snapshotOrderOverride(orderCode,patch);
-  },
-  updateOrder: async (_ownerId, profile, orderCode, patch,expectedRevision) => {
-    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-    assertAgentSharedOwner(profile,orderCode,patch);
-    const beforeContext=pageProjectionContext(profile);
-    const saved = patchOrderOverride(Number(orderCode), patch || {}, expectedRevision, null, { actor: noteActorOf(profile) });
-    // Same incremental screen-cache rewrite as the HTTP editor: without it every
-    // agent edit invalidated the whole page cache and forced a cold rebuild.
-    try { await rewriteProjectionCacheForRowPatches(profile,beforeContext,[{orderCode,patch}]); }
-    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
-    userAccess.appendAudit(profile, 'AGENT_ORDER_UPDATE', String(orderCode), { fields:Object.keys(patch || {}) });
-    liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor([{orderCode,patch}])});
-    void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    return { ok:true, verified:require('./db').verifyOrderOverridePatch(orderCode,patch,saved.revision),updated:saved.updated || 1, revision:saved.revision };
-  },
-  restoreOrder: async (_ownerId, profile, orderCode, before,expectedRevision,selector) => {
-    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-    if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
-    assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
-    const result=require('./db').restoreOrderOverrideReceipt(orderCode,before,expectedRevision,selector,{actor:noteActorOf(profile)});
-    userAccess.appendAudit(profile, 'AGENT_ORDER_ROLLBACK', String(orderCode), {revision:result.revision});
-    liveEvents.notifyChange('orders','agent-capability',{orderCode});return result;
-  },
+  ...agentOrderAdapter,
   httpRequest: agentPlatformHttpRequest,
   browserRun: async (args, ctx) => agentBrowserConnector.run(ctx.ownerId, args, ctx),
 });
@@ -10916,6 +10921,7 @@ const agentResourceDeps={withAgentMutation:(ctx,work)=>agentOfficeStore.withProf
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
 require('./lib/agent-landed-multiplier-tools').registerLandedMultiplierTools(agentToolRegistry,{...agentResourceDeps,service:landedMultiplierService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'landedMultipliers',{revision:receipt.revision,origin:'agent'})});
 const nativeRefreshGroupService=require('./lib/refresh-group-service').createRefreshGroupService({db:require('./db')});
+require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
 require('./lib/agent-refresh-group-tools').registerRefreshGroupTools(agentToolRegistry,{...agentResourceDeps,service:nativeRefreshGroupService,refresh:{plan:(profile,moduleIds)=>nativeRefreshPlan(profile,moduleIds),start:(profile,moduleIds,options)=>startNativeRefresh(profile,moduleIds,options),state:profile=>refreshJobState(sourceUserId(profile))},changed:(profile,receipt)=>agentResourceDeps.changed(profile,'refreshGroups',{revision:receipt.revision,origin:'agent'})});
 require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
 require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});

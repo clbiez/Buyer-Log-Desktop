@@ -815,6 +815,23 @@
         "approval": true,
         "rollbackable": true,
         "contractVersion": 2
+      },
+      {
+        "id": "cp.order.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
       }
     ]
   },
