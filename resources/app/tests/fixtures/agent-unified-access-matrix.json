@@ -3538,6 +3538,42 @@
         "approval": true,
         "rollbackable": true,
         "contractVersion": 2
+      },
+      {
+        "id": "resource.landed.read",
+        "operation": "READ",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "read",
+        "approval": false,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "resource.landed.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "source"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "source"
+        ],
+        "permissions": [
+          "manageBusinessRules"
+        ],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
       }
     ]
   },

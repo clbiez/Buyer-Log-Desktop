@@ -10347,20 +10347,24 @@ function normalizePricingCountryGroup(value){return require('./lib/resource-rule
 function normalizePricingRuleSeasons(value){return require('./lib/resource-rule-service').normalizePricingRuleSeasons(value);}
 function pricingRuleSeasonSetsOverlap(a, b){return require('./lib/resource-rule-service').pricingRuleSeasonSetsOverlap(a, b);}
 function pricingRuleDateRangesOverlap(a, b){return require('./lib/resource-rule-service').pricingRuleDateRangesOverlap(a, b);}
+const landedMultiplierService=require('./lib/landed-multiplier-service').createLandedMultiplierService({db:require('./db')});
 app.get('/api/landed-multipliers', (req, res) => {
   const ov = loadOverrides();
   const revision = Number(ov._revisions && ov._revisions.landedMultipliers) || 0;
   res.set('ETag', `"${revision}"`);
   res.json({ multipliers: ov.landedMultipliers || { tr: 1.05, overseas: 1.11 }, revision });
 });
-app.put('/api/landed-multipliers', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), express.json({limit:'32kb'}), (req, res) => {
+app.put('/api/landed-multipliers', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), express.json({limit:'32kb'}), async (req, res) => {
   try {
     const raw = req.body && req.body.multipliers;
-    const tr = Number(raw && raw.tr), overseas = Number(raw && raw.overseas);
-    if (!Number.isFinite(tr) || tr <= 0 || tr > 10 || !Number.isFinite(overseas) || overseas <= 0 || overseas > 10) {
-      return res.status(400).json({ error:'TR ve Overseas Landed çarpanları 0 ile 10 arasında pozitif sayı olmalıdır.' });
-    }
-    const saved = replaceLandedMultipliers({ tr, overseas }, requestRevision(req));
+    let multipliers;
+    try { multipliers=require('./lib/landed-multiplier-service').validateMultipliers(raw); }
+    catch(error){if(error.code!=='LANDED_MULTIPLIERS_INVALID')throw error;return res.status(400).json({ error:'TR ve Overseas Landed çarpanları 0 ile 10 arasında pozitif sayı olmalıdır.' });}
+    const receipt = await landedMultiplierService.replace(multipliers, {revision:requestRevision(req)}, {assertAuthority:()=>{
+      const current=userAccess.profileById(req.currentUser.id);
+      if(!current||current.enabled===false||!userAccess.hasArea(current,'source')||!userAccess.hasPermission(current,'manageBusinessRules'))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+    }});
+    const saved={multipliers:receipt.multipliers,revision:receipt.revision};
     userAccess.appendAudit(req.currentUser, 'LANDED_MULTIPLIERS_UPDATE', 'collection', { tr:saved.multipliers.tr, overseas:saved.multipliers.overseas, revision:saved.revision });
     publishSharedMasterChange('landedMultipliers', req);
     res.json(saved);
@@ -10878,6 +10882,7 @@ app.put('/api/transit-rules', userAccess.requireArea('source'), userAccess.requi
 // bunu okumaz: öneriler kullanıcı onayıyla /api/transit-rules'a yazılır.
 const agentResourceDeps={withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),flush:async()=>{await deltaStore.flush();},changed:async(profile,section,detail)=>{publishSharedMasterChange(section,{currentUser:profile},detail);userAccess.appendAudit(profile,'AGENT_RESOURCE_UPDATE',section,detail);liveEvents.notifyChange(section,null);},impact:require('./lib/agent-resource-impact').createResourceImpact({office:agentOfficeStore,userAccess,dataset:agentPlatformDataset})};
 require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
+require('./lib/agent-landed-multiplier-tools').registerLandedMultiplierTools(agentToolRegistry,{...agentResourceDeps,service:landedMultiplierService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'landedMultipliers',{revision:receipt.revision,origin:'agent'})});
 require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
 require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});
 require('./lib/agent-oab-job-tools').registerOabJobTools(agentToolRegistry,{service:nativeOabBatchService,transport:OAB_DESKTOP_TRANSPORT,office:agentOfficeStore});

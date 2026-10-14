@@ -620,14 +620,14 @@ function replaceNoteColumnDefs(value, expectedRevision = null) {
   }
   return { columns: saved.noteColumnDefs, revision: saved._revisions.noteColumnDefs };
 }
-function replaceLandedMultipliers(value, expectedRevision = null) {
+function replaceLandedMultipliers(value, expectedRevision = null, options = {}) {
   const ov = loadOverrides();
   const current = Number(ov._revisions.landedMultipliers) || 0;
   const wanted = expectedNumber(expectedRevision);
   if (wanted != null && wanted !== current) throw new RevisionConflictError('Landed çarpanları', wanted, current, 'landedMultipliers');
   ov.landedMultipliers = normalizeLandedMultipliers(value);
   ov._revisions.landedMultipliers = current + 1;
-  const saved = saveOverrides(ov, ov._revision);
+  const saved = saveOverrides(ov, ov._revision, options);
   return { multipliers: normalizeLandedMultipliers(saved.landedMultipliers), revision: saved._revisions.landedMultipliers };
 }
 // Kullanıcı düzenlemeleri sipariş + model + renk koduyla saklanır. İstemci model
