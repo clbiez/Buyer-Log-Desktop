@@ -77,6 +77,8 @@ let updateStartupTimer = null;
 let updateSignInTimer = null;
 let updatePeriodicTimer = null;
 let updateRelaunchRequested = false;
+// Longer than the bounded backend stop (graceful wait + taskkill) so the tree is never orphaned.
+const SHUTDOWN_DEADLINE_MS = 20000;
 
 function activeBuyerLogWindow(contents) {
   return (workspace && contents && workspace.windowForContents(contents))
@@ -1295,6 +1297,8 @@ async function clearOabBackendAuthorization() {
     await fetch(backend.origin + '/api/internal/desktop/oab-authorization', {
       method: 'DELETE', cache: 'no-store', redirect: 'error',
       headers: { 'X-BuyerLog-Desktop-Bridge': desktopBridgeSecret },
+      // A busy backend must not hold the whole desktop shutdown open.
+      signal: AbortSignal.timeout(1500),
     });
   } catch (_) {}
 }
@@ -2329,7 +2333,7 @@ function trustedDesktopShellSender(event) {
 }
 
 let agentBackground=null;
-function agentBackgroundRuntime(){if(!agentBackground)agentBackground=require('./agent-office-background').createAgentOfficeBackground({app,BrowserWindow,Tray,Menu,Notification,icon:APP_ICON_SOURCE,isQuitting:()=>quitting||restarting,isAppWindow:w=>w===mainWindow||Boolean(workspace?.windowForShellContents(w.webContents))});return agentBackground;}
+function agentBackgroundRuntime(){if(!agentBackground)agentBackground=require('./agent-office-background').createAgentOfficeBackground({app,BrowserWindow,Tray,Menu,Notification,icon:APP_ICON_SOURCE,isQuitting:()=>quitting||restarting||updateRelaunchRequested,isAppWindow:w=>w===mainWindow||Boolean(workspace?.windowForShellContents(w.webContents))});return agentBackground;}
 function registerIpc() {
   ipcMain.handle('buyerlog:agent-background', (event, options={})=>{
     if(!trustedBuyerLogIpcSender(event))return{ok:false,code:'OFFICE_IPC_FORBIDDEN'};
@@ -2797,7 +2801,11 @@ function bootstrap() {
     agentBackground?.dispose();
     closeSplash();
     event.preventDefault();
-    shutdown().finally(() => app.exit(0));
+    /* Shutdown steps are individually bounded; this hard deadline guarantees the
+       process exits (and an update relaunch runs) even if one of them stalls. */
+    let deadlineTimer = null;
+    const deadline = new Promise(resolve => { deadlineTimer = setTimeout(() => { log('Kapanış süre sınırı aşıldı; çıkılıyor.'); resolve(); }, SHUTDOWN_DEADLINE_MS); });
+    Promise.race([shutdown(), deadline]).catch(() => {}).finally(() => { clearTimeout(deadlineTimer); app.exit(0); });
   });
 
   app.whenReady().then(async () => {
