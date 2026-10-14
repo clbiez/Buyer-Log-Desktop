@@ -32,12 +32,14 @@ if (!tests.length) {
   process.exit(2);
 }
 
-// Keep each child-process command safely below the Windows command-line limit.
+// Keep each child-process command conservatively below the Windows command-line limit.
+// Larger sequential batches avoid idle test workers at batch boundaries;
+// the same test files, test concurrency and failure gates are preserved.
 const batches = [];
 let batch = [];
 let commandChars = 0;
-const MAX_COMMAND_CHARS = 5600;
-const MAX_BATCH_FILES = 120;
+const MAX_COMMAND_CHARS = 16000;
+const MAX_BATCH_FILES = 300;
 for (const file of tests) {
   const arg = rel(file);
   const cost = arg.length + 3;
@@ -60,12 +62,14 @@ console.log(`[Buyer Log tests] ${tests.length} test dosyası, ${batches.length} 
 for (let i = 0; i < batches.length; i += 1) {
   const files = batches[i];
   console.log(`\n[Buyer Log tests] Batch ${i + 1}/${batches.length} (${files.length} dosya)`);
+  const batchStartedAt = Date.now();
   const result = spawnSync(process.execPath, ['--test', `--test-concurrency=${testConcurrency}`, ...files], {
     cwd: APP_ROOT,
     env: { ...process.env, BUYER_LOG_TEST_SUITE: '1' },
     stdio: 'inherit',
     windowsHide: true,
   });
+  console.log(`[Buyer Log tests] Batch ${i + 1}/${batches.length} süresi: ${((Date.now() - batchStartedAt) / 1000).toFixed(1)}s.`);
   if (result.error) {
     console.error(`[Buyer Log tests] Test runner başlatılamadı: ${result.error.message}`);
     process.exit(1);
