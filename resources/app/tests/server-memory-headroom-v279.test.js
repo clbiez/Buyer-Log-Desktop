@@ -22,10 +22,13 @@ test('8 GB machine gets a larger server heap than the ~2 GB V8 default; 16 GB ke
   const big = serverHeapArgs({ totalMemBytes: 16 * GB });
   assert.deepEqual(big.args, []); assert.equal(big.source, 'v8-default');
   assert.deepEqual(serverHeapArgs({ totalMemBytes: 64 * GB }).args, []);
+  assert.deepEqual(serverHeapArgs({ totalMemBytes: 12 * GB }).args, ['--max-old-space-size=4096']);
+  assert.deepEqual(serverHeapArgs({ totalMemBytes: 4 * GB }).args, ['--max-old-space-size=1638']);
 });
 test('administrator settings win and the policy can be disabled', () => {
   assert.equal(serverHeapArgs({ env:{ NODE_OPTIONS:'--max-old-space-size=3000' }, totalMemBytes: 8 * GB }).source, 'inherited');
-  assert.equal(serverHeapArgs({ execArgv:['--max-old-space-size=3000'], totalMemBytes: 8 * GB }).source, 'inherited');
+  const forwarded = serverHeapArgs({ execArgv:['--max-old-space-size=3000'], totalMemBytes: 8 * GB });
+  assert.deepEqual(forwarded.args, ['--max-old-space-size=3000']); assert.equal(forwarded.source, 'watchdog-flag');
   assert.deepEqual(serverHeapArgs({ env:{ BUYER_LOG_MAX_HEAP_MB:'0' }, totalMemBytes: 8 * GB }).args, []);
   assert.deepEqual(serverHeapArgs({ env:{ BUYER_LOG_MAX_HEAP_MB:'99999' }, totalMemBytes: 8 * GB }).args, ['--max-old-space-size=4096']);
   assert.deepEqual(serverHeapArgs({ env:{ BUYER_LOG_MAX_HEAP_MB:'100' }, totalMemBytes: 8 * GB }).args, ['--max-old-space-size=1024']);
@@ -57,13 +60,21 @@ test('snapshot body is written without a joined copy and stays byte-compatible w
   assert.deepEqual((await snapshots.loadModelSnapshotAsync('heap-empty')).asasOrders, []);
 });
 test('runtime monitor reports the heap limit and a blocked event loop with numbers only', async () => {
-  const lines = []; let shift = 0;
-  const monitor = startRuntimePressureMonitor({ log: line => lines.push(line), intervalMs: 20, stallMs: 1000, now: () => Date.now() + shift });
-  shift = 5000;
+  const lines = []; let shift = 0, cpuUs = 0;
+  const monitor = startRuntimePressureMonitor({ log: line => lines.push(line), intervalMs: 20, stallMs: 1000, now: () => Date.now() + shift, cpu: () => cpuUs });
+  shift = 5000; cpuUs = 4900 * 1000;
   await new Promise(resolve => setTimeout(resolve, 70));
   monitor.stop();
   assert.match(lines[0], /^\[RUNTIME\] heap-limit heapUsedMb=\d+ heapLimitMb=\d+ rssMb=\d+$/);
   const stall = lines.find(line => line.includes('event-loop-stall'));
-  assert.match(stall, /^\[RUNTIME\] event-loop-stall blockedMs=\d+ heapUsedMb=\d+ heapLimitMb=\d+ rssMb=\d+$/);
+  assert.match(stall, /^\[RUNTIME\] event-loop-stall blockedMs=\d+ cpuMs=4900 heapUsedMb=\d+ heapLimitMb=\d+ rssMb=\d+$/);
   assert.equal(lines.filter(line => line.includes('event-loop-stall')).length, 1);
+});
+test('laptop sleep or a clock jump (long lag, no CPU) is not reported as a stall', async () => {
+  const lines = []; let shift = 0;
+  const monitor = startRuntimePressureMonitor({ log: line => lines.push(line), intervalMs: 20, stallMs: 1000, now: () => Date.now() + shift, cpu: () => 0 });
+  shift = 8 * 3600 * 1000;
+  await new Promise(resolve => setTimeout(resolve, 70));
+  monitor.stop();
+  assert.equal(lines.filter(line => line.includes('event-loop-stall')).length, 0);
 });
