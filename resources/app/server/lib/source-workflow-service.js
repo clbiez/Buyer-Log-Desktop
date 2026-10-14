@@ -1,5 +1,5 @@
 'use strict';
-const adapter=require('./data-domain/legacy-adapter'),binding=require('./data-domain/binding-writer'),filter=require('./data-domain/filter-writer'),link=require('./data-domain/link-writer'),profiles=require('./data-domain/source-profiles'),horizon=require('./modelHorizon');
+const adapter=require('./data-domain/legacy-adapter'),binding=require('./data-domain/binding-writer'),filter=require('./data-domain/filter-writer'),link=require('./data-domain/link-writer'),writer=require('./data-domain/source-writer'),profiles=require('./data-domain/source-profiles'),horizon=require('./modelHorizon');
 const clone=value=>JSON.parse(JSON.stringify(value));
 const fail=(code,statusCode=409)=>Object.assign(new Error(code),{code,statusCode});
 function publicHorizon(value,bounded=true){
@@ -36,11 +36,11 @@ function semanticSource(item,bounded=false){const {sourceRevision,lastRun,...saf
 function affectedModules(before,after){
  const view=(item,moduleId)=>{const scope=item.scopes.find(scope=>scope.targets.includes(moduleId));return {scope:scope||null,linked:item.linkedTargets.includes(moduleId)?item.linkedTargets:[],parked:item.parkedModules.includes(moduleId)};};
  const ids=[...new Set([...before.scopes,...after.scopes].flatMap(scope=>scope.targets).concat(before.parkedModules,after.parkedModules))];
- return ids.filter(id=>JSON.stringify(view(before,id))!==JSON.stringify(view(after,id))).sort();
+ return ids.filter(id=>before.refreshEnabled!==after.refreshEnabled||JSON.stringify(view(before,id))!==JSON.stringify(view(after,id))).sort();
 }
 function createSourceWorkflowService({db}){
  if(!db?.mutateModelConnections)throw new TypeError('Native source transaction is required');
- const planner={binding:binding.planBindingChange,filter:filter.planFilterChange,link:link.planLinkChange};
+ const planner={binding:binding.planBindingChange,filter:filter.planFilterChange,link:link.planLinkChange,rename:writer.planSourceUpdate,enabled:writer.planSourceEnabled};
  const checked=(store,sourceId,expected)=>{
   const matches=store.items.filter(item=>item.id===sourceId),item=matches[0];if(!item)throw fail('SOURCE_NOT_FOUND',404);if(matches.length!==1)throw fail('SOURCE_AMBIGUOUS');
   if(expected&&adapter.configRevision(item)!==expected)throw fail('SOURCE_CHANGED');return item;
@@ -55,7 +55,7 @@ function createSourceWorkflowService({db}){
   return db.mutateModelConnections(async lease=>{
    guard.assertAuthority?.();const store=db.loadModelConnections(),before=checked(store,args.sourceId,expected),planned=plan(kind,store.items,args);
    if(planned.code==='NO_CHANGE')return {verified:true,changed:false,revision:store.revision,sourceRevision:adapter.configRevision(before),warnings:planned.warnings||[]};
-   const saved=db.replaceModelConnections(planned.items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();guard.assertAuthority?.();
+   const saved=db.replaceModelConnections(planned.items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
    const actual=db.loadModelConnections(),own=checked(saved,args.sourceId),current=checked(actual,args.sourceId);
    if(actual.revision!==saved.revision||adapter.configRevision(own)!==adapter.configRevision(current))throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
    return {verified:true,changed:true,revision:saved.revision,sourceRevision:adapter.configRevision(own),warnings:planned.warnings||[],appliedScopeId:planned.appliedScopeId||''};
@@ -64,13 +64,14 @@ function createSourceWorkflowService({db}){
  async function restore(before,expected,guard={}){
   return db.mutateModelConnections(async lease=>{
    guard.assertAuthority?.();const store=db.loadModelConnections(),current=checked(store,before.id,expected),wanted={...clone(before),lastRun:current.lastRun};
-   const items=store.items.map(item=>item.id===before.id?wanted:item),saved=db.replaceModelConnections(items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();guard.assertAuthority?.();
+   const enabledPlan=writer.planSourceEnabled(store.items,{sourceId:before.id,enabled:wanted.refreshEnabled!==false});if(!enabledPlan.ok)throw fail(enabledPlan.code);
+   const items=store.items.map(item=>item.id===before.id?wanted:item),saved=db.replaceModelConnections(items,store.revision,{...lease,assertAuthority:guard.assertAuthority});await lease.commit();
    const own=checked(saved,before.id),actual=db.loadModelConnections(),latest=checked(actual,before.id);
    const originalConfig=adapter.configRevision({...before,_configVersion:0}),restoredConfig=adapter.configRevision({...latest,_configVersion:0});
    if(actual.revision!==saved.revision||adapter.configRevision(own)!==adapter.configRevision(latest)||restoredConfig!==originalConfig)throw fail('OFFICE_RESOURCE_VERIFY_FAILED');
    return {verified:true,revision:saved.revision,sourceRevision:adapter.configRevision(own)};
   });
  }
- return {snapshot,preview,update,restore,publicSource,filterFields};
+ return {snapshot,preview,update,restore,publicSource,filterFields,createOptions:writer.createOptions};
 }
 module.exports={createSourceWorkflowService,publicSource,publicHorizon,semanticSource,affectedModules,filterFields};

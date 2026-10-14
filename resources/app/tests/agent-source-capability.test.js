@@ -90,3 +90,40 @@ for(const mode of ['delta','delta-only'])test(mode+' rechecks live authority in 
  f.profile.permissions=['manageModelConnections'];local.queuePatches=queue;const done=await apply(f,await create(f,'source.filter.update',{sourceId:'ias',moduleId:'cp',mode:'shared',definition:horizon('W98')}));assert.equal(done.status,'completed');const committed=adapter.configRevision(source('ias'));revoke=true;local.queuePatches=async(...args)=>{if(revoke){revoke=false;f.profile.permissions=[];await Promise.resolve();}return queue(...args);};await assert.rejects(undo(f,done),{code:'OFFICE_TOOL_FORBIDDEN'});
  const secondReader=require('../server/lib/delta-store').createDeltaStore({localDb:require('../server/lib/local-db').createLocalDb(local.file),mode});assert.equal((await secondReader.hydrate()).ok,true);db.attachDeltaStore(secondReader);assert.equal(adapter.configRevision(source('ias')),committed);assert.deepEqual(values(source('ias'),'cp'),['W98']);db.attachDeltaStore(delta);
 });
+
+test('approved native rename and refresh toggle preserve private configuration, survive restart and undo exactly',async t=>{
+ const f=await fixture(t),before=source('ias'),job=await create(f,'source.connection.rename',{sourceId:'ias',name:'Demo revised warehouse'});
+ await assert.rejects(f.service.taskExecute(f.profile,job.id),{code:'OFFICE_APPROVAL_REQUIRED'});
+ const done=await apply(f,job);assert.equal(done.status,'completed');assert.equal(source('ias').name,'Demo revised warehouse');
+ const disabled=await apply(f,await create(f,'source.connection.enabled',{sourceId:'ias',enabled:false}));assert.equal(disabled.status,'completed');assert.match(disabled.steps[0].result.data.warnings[0],/Source refresh is disabled/);assert.equal(source('ias').refreshEnabled,false);assert.deepEqual(source('ias').mapping,before.mapping);assert.deepEqual(source('ias').scopes,before.scopes);assert.equal(source('ias').server,before.server);
+ const restarted=createSourceWorkflowService({db});assert.equal((await restarted.snapshot()).items.find(item=>item.id==='ias').refreshEnabled,false);
+ await undo(f,disabled);assert.equal(source('ias').refreshEnabled,true);await undo(f,await apply(f,await create(f,'source.connection.rename',{sourceId:'ias',name:before.name})));
+ assert.equal(source('ias').name,'Demo revised warehouse');assert.doesNotMatch(JSON.stringify(done),/PRIVATE_/);
+ const reads=await f.registry.execute('source.connection.options',{}, {ownerId:f.profile.id,profile:f.profile});assert.ok(reads.data.profiles.some(p=>p.id==='asas-orders'));assert.doesNotMatch(JSON.stringify(reads),/PRIVATE_/);
+ for(const args of [{sourceId:'ias',name:'x',server:'external'},{sourceId:'ias',name:'x',connector:{password:'x'}},{sourceId:'ias',name:'x',query:'EVALUATE'}])await assert.rejects(create(f,'source.connection.rename',args),{code:'OFFICE_TOOL_SCHEMA'});
+});
+test('source refresh toggle respects the native one-active-role rule and stale approval protection',async t=>{
+ const f=await fixture(t),list=db.loadModelConnections().items;list.push({...source('ias'),id:'ias-peer',name:'Demo peer',refreshEnabled:false});db.replaceModelConnections(list);
+ await assert.rejects(create(f,'source.connection.enabled',{sourceId:'ias-peer',enabled:true}),{code:'ROLE_ALREADY_ACTIVE'});
+ const job=await create(f,'source.connection.rename',{sourceId:'ias',name:'Should not apply'}),changed=db.loadModelConnections().items;changed.find(i=>i.id==='ias').name='Native peer change';db.replaceModelConnections(changed);
+ assert.equal((await apply(f,job)).status,'failed');assert.equal(source('ias').name,'Native peer change');
+});
+for(const mode of ['delta','delta-only'])test(mode+' retains the source inverse after an authorized commit followed by access loss',async t=>{
+ const local=require('../server/lib/local-db').createLocalDb(path.join(root,'source-post-commit-'+mode+'.db')),delta=require('../server/lib/delta-store').createDeltaStore({localDb:local,mode});assert.equal((await delta.hydrate()).ok,true);db.attachDeltaStore(delta);t.after(()=>db.attachDeltaStore(null));
+ const f=await fixture(t),before=source('ias'),job=await create(f,'source.connection.rename',{sourceId:'ias',name:'Native committed change'}),queue=local.queuePatches.bind(local);assert.equal((await delta.flush()).ok,true);
+ local.queuePatches=async(...args)=>{const result=await queue(...args);f.profile.permissions=[];return result;};
+ await assert.rejects(apply(f,job),{code:'OFFICE_PREVIEW_CHANGED'});assert.equal(source('ias').name,'Native committed change');
+ const persisted=await f.store.get(f.profile.id,'job',job.id);assert.equal(persisted.steps[0].status,'completed');assert.ok(persisted.steps[0].result.rollbackToken);
+ f.profile.permissions=['manageModelConnections'];local.queuePatches=queue;await undo(f,persisted);assert.equal(source('ias').name,before.name);
+});
+test('rename and refresh writes recheck agent/IAM after staging; newer source changes prevent inverse',async t=>{
+ let f;f=await fixture(t,{beforeBackup:async()=>f.store.updateProfile(f.profile.id,f.agent.id,{enabled:false})});const original=adapter.configRevision(source('ias')),pending=await create(f,'source.connection.rename',{sourceId:'ias',name:'Blocked by pause'});assert.equal((await apply(f,pending)).status,'failed');assert.equal(adapter.configRevision(source('ias')),original);
+ let g;g=await fixture(t,{beforeBackup:async()=>{g.profile.permissions=[];}});const enabled=source('ias').refreshEnabled;const blocked=await apply(g,await create(g,'source.connection.enabled',{sourceId:'ias',enabled:false}));assert.equal(blocked.status,'failed');assert.equal(blocked.accessRestricted,true);assert.equal(source('ias').refreshEnabled,enabled);
+ const h=await fixture(t),done=await apply(h,await create(h,'source.connection.enabled',{sourceId:'ias',enabled:false})),list=db.loadModelConnections().items;list.find(i=>i.id==='ias').name='Latest peer';db.replaceModelConnections(list);await assert.rejects(undo(h,done),{code:'SOURCE_CHANGED'});assert.equal(source('ias').name,'Latest peer');assert.equal(source('ias').refreshEnabled,false);
+});
+
+test('inverse cannot silently disable a native peer activated after source refresh was disabled',async t=>{
+ const f=await fixture(t),list=db.loadModelConnections().items;list.push({...source('ias'),id:'ias-peer',name:'Demo peer',refreshEnabled:false});db.replaceModelConnections(list);
+ const done=await apply(f,await create(f,'source.connection.enabled',{sourceId:'ias',enabled:false}));const peer=db.loadModelConnections().items;peer.find(i=>i.id==='ias-peer').refreshEnabled=true;db.replaceModelConnections(peer);const expected=adapter.configRevision(source('ias-peer'));
+ await assert.rejects(undo(f,done),{code:'ROLE_ALREADY_ACTIVE'});assert.equal(source('ias').refreshEnabled,false);assert.equal(source('ias-peer').refreshEnabled,true);assert.equal(adapter.configRevision(source('ias-peer')),expected);
+});

@@ -1,0 +1,9 @@
+# Native source connection names and refresh state
+
+Three contract-v2 adapters reuse actual Buyer Log planners: `source.connection.options` reads native supported profiles; `source.connection.rename` and `source.connection.enabled` perform approved shared source effects. Strict inputs accept source IDs, names or booleans; they expose no new host, SQL/DAX, credential or JavaScript surface. Private configuration is retained in owner/tool/task/step-bound inverse archives and excluded from public source views.
+
+The existing source transaction checks per-source native revisions, Office profile/WAL authority and the shared journal lease. After a completed authorized commit, the native factual receipt reaches the private committed-receipt guard; public responses still require current IAM. Delta and Delta-only tests retain inverse receipts across immediate post-commit access loss. Current pre-commit IAM controls remain active.
+
+Focused independent review found inverse role normalization could silently disable a newly activated peer. Restore now checks the actual `planSourceEnabled` inside the same lease, refusing ROLE_ALREADY_ACTIVE before writing. The unchanged retained repro passes with peerPreserved:true. Sixty targeted tests passed without failures or skips, including existing source routes, independent native journal readers and Horizon owner/template adapters. Unified discovery now counts 191 strict contract-v2 capabilities, not all application operations.
+
+Actual anonymous Chromium/API acceptance verifies explicit approval, completed rename and refresh disable, exact inverses, native readback and zero page errors. Two actual 1440×960 PNGs document the resulting native receipts. No real corporate connection or physical Windows provider acceptance is claimed. Connection creation/deletion, mapping, schema/count/saved-query workers and refresh-group lifecycle are later scoped packets. This packet is not contained in immutable Stable 7.0.273.
