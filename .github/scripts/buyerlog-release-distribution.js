@@ -12,9 +12,34 @@ const {parseReleaseManifest}=require(APP_ROOT+'/electron/update/manifest');
 const {parseGitHubSource,GitHubReleaseProvider}=require(APP_ROOT+'/electron/update/github-provider');
 const {loadTrustedKeys,verifyManifestSignature}=require(APP_ROOT+'/electron/update/signature');
 /* Clients that bundle trusted keys reject unsigned/mis-signed manifests; refuse to publish one. */
-function assertSignedForClients(manifest){verifyManifestSignature(manifest,loadTrustedKeys(C.APP_ROOT));}
+function assertSignedForClients(manifest){return verifyManifestSignature(manifest,loadTrustedKeys(C.APP_ROOT));}
 
 function run(command,args,options={}){return cp.execFileSync(command,args,{encoding:'utf8',stdio:['ignore','pipe','pipe'],...options}).trim();}
+function sleepSync(ms){Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,ms);}
+function remoteHead(repoDir,branch){
+  const r=cp.spawnSync('git',['-C',repoDir,'ls-remote','origin',`refs/heads/${branch}`],{encoding:'utf8'});
+  return r.status===0?String(r.stdout||'').trim().split(/\s+/)[0]||'':null;
+}
+/* A server-side "remote rejected (failed)" carries no reason and has been
+   transient. Retry only that case, keep every attempt's stderr in the job
+   log, accept a push that actually landed, and never force or overwrite a
+   moved remote branch. */
+function pushBranch(repoDir,branch,{attempts=3,delayMs=5000,expectedRemote}={}){
+  const local=run('git',['-C',repoDir,'rev-parse','HEAD']);
+  let detail='';
+  for(let attempt=1;attempt<=attempts;attempt++){
+    const r=cp.spawnSync('git',['-C',repoDir,'push','origin',`HEAD:refs/heads/${branch}`],{encoding:'utf8'});
+    if(r.status===0)return {attempts:attempt,commit:local};
+    detail=`${r.stderr||''}${r.stdout||''}`.trim();
+    console.error(`[RELEASE_PUSH_ATTEMPT ${attempt}/${attempts}] ${branch}\n${detail}`);
+    const remote=remoteHead(repoDir,branch);
+    if(remote===local)return {attempts:attempt,commit:local};
+    if(/\[rejected\]|non-fast-forward|fetch first/i.test(detail)||(expectedRemote&&remote&&remote!==expectedRemote))
+      C.fail(`Release repo ${branch} başka bir yayınla ilerledi; üzerine yazılmadı.\n${detail}`,'RELEASE_REMOTE_MOVED');
+    if(attempt<attempts)sleepSync(delayMs*attempt);
+  }
+  C.fail(`git push origin HEAD:${branch} ${attempts} denemede reddedildi.\n${detail}`,'RELEASE_PUSH_REJECTED');
+}
 function gh(args){return run('gh',args,{env:{...process.env,GH_REPO:process.env.BUYER_LOG_GITHUB_RELEASE_REPO}});}
 function assertCi(){
   const repo=String(process.env.BUYER_LOG_GITHUB_RELEASE_REPO||'');parseGitHubSource(`github:${repo}`);
@@ -113,8 +138,9 @@ function updateLatest(repoDir,channel,manifest){
   const changed=cp.spawnSync('git',['-C',repoDir,'diff','--cached','--quiet','--',`${channel}/latest.json`],{stdio:'ignore'}).status;
   if(changed===0)return;
   if(changed!==1)C.fail('Release repo staged diff doğrulanamadı.','RELEASE_GIT_VERIFY');
+  const parent=run('git',['-C',repoDir,'rev-parse','HEAD']);
   run('git',['-C',repoDir,'-c','user.name=Buyer Log Release Bot','-c','user.email=buyer-log-release-bot@users.noreply.github.com','commit','-m',`Publish ${channel} latest ${manifest.version}`]);
-  run('git',['-C',repoDir,'push','origin','HEAD:main']);
+  pushBranch(repoDir,'main',{expectedRemote:parent});
 }
 function updateRawMirror(repoDir,channel,manifest,artifact){
   if(!['test','stable'].includes(channel))C.fail('Raw mirror channel geçersiz.','RELEASE_CHANNEL_INVALID');
@@ -132,7 +158,7 @@ function updateRawMirror(repoDir,channel,manifest,artifact){
     const changed=cp.spawnSync('git',['-C',worktree,'diff','--cached','--quiet','--',channel],{stdio:'ignore'}).status;
     if(changed===1){
       run('git',['-C',worktree,'-c','user.name=Buyer Log Release Bot','-c','user.email=buyer-log-release-bot@users.noreply.github.com','commit','-m',`Mirror ${channel} ${manifest.version}`]);
-      run('git',['-C',worktree,'push','origin','HEAD:raw-dist']);
+      pushBranch(worktree,'raw-dist',{expectedRemote:run('git',['-C',repoDir,'rev-parse','origin/raw-dist'])});
     }else if(changed!==0)C.fail('Raw mirror staged diff doğrulanamadı.','RELEASE_GIT_VERIFY');
   }finally{
     try{run('git',['-C',repoDir,'worktree','remove','--force',worktree]);}catch(_){fs.rmSync(worktree,{recursive:true,force:true});}
@@ -150,6 +176,28 @@ async function publishTest(repoDir){
     if(!releaseExists('test',manifest.version))gh(['release','create',tag('test',manifest.version),'--title',`Buyer Log TEST ${manifest.version}`,'--notes',`TEST release for ${manifest.version}`]);
     ensureReleaseAssets('test',manifest.version,manifest,[artifact,per],temp);
     await verifyDownloaded('test',manifest.version,manifest,temp);
+    await verifyPublicArtifact('test',manifest,temp);
+    await publishRawMirror(repoDir,{test:manifest});
+    updateLatest(repoDir,'test',manifest);
+  }finally{fs.rmSync(temp,{recursive:true,force:true});}
+}
+/* Completes a TEST publication whose gated build already signed and uploaded
+   the artifact, without rebuilding: the exact public bytes must match the
+   CI-signed manifest and the pinned source version before TEST latest moves. */
+async function resumeTest(repoDir,version){
+  assertCi();tag('test',version);
+  if(C.readPackage().version!==version)C.fail('Kaynak package version devam edilen TEST sürümüyle eşleşmiyor.','RELEASE_VERSION_MISMATCH');
+  const name=`BuyerLog-${version}.json`,zip=`BuyerLog-${version}.zip`;
+  if(!releaseExists('test',version))C.fail('TEST release bulunamadı; resume yalnız yüklenmiş imzalı paketi tamamlar.','RELEASE_RESUME_MISSING');
+  const names=releaseAssetNames('test',version);
+  if(!names.has(name)||!names.has(zip))C.fail('TEST release imzalı manifest ve artifact içermiyor.','RELEASE_RESUME_MISSING');
+  const temp=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-resume-'));
+  try{
+    gh(['release','download',tag('test',version),'--pattern',name,'--dir',temp,'--clobber']);
+    const manifest=parseReleaseManifest(C.readJson(path.join(temp,name),null),'test');
+    if(manifest.version!==version||path.posix.basename(manifest.artifact)!==zip)C.fail('TEST manifest istenen version ile eşleşmiyor.','RELEASE_VERSION_MISMATCH');
+    if(!assertSignedForClients(manifest).verified)C.fail('TEST manifest güvenilen anahtarla doğrulanamadı.','RELEASE_SIGNATURE_REQUIRED');
+    await verifyDownloaded('test',version,manifest,temp);
     await verifyPublicArtifact('test',manifest,temp);
     await publishRawMirror(repoDir,{test:manifest});
     updateLatest(repoDir,'test',manifest);
@@ -193,8 +241,9 @@ async function main(){
   const repoDir=path.resolve(process.env.BUYER_LOG_RELEASE_REPO_DIR||'');
   if(!fs.existsSync(path.join(repoDir,'.git')))C.fail('Release-only repo checkout bulunamadı.','RELEASE_REPO_REQUIRED');
   if(action==='publish-test'&&!arg)return publishTest(repoDir);
+  if(action==='resume-test'&&arg)return resumeTest(repoDir,arg);
   if(action==='promote-stable'&&arg)return promoteStable(repoDir,arg);
-  C.fail('Kullanım: github-release.js publish-test | promote-stable VERSION','RELEASE_ARG_INVALID');
+  C.fail('Kullanım: github-release.js publish-test | resume-test VERSION | promote-stable VERSION','RELEASE_ARG_INVALID');
 }
 if(require.main===module)main().catch(error=>{console.error(`[${error.code||'RELEASE_FAILED'}] ${error.message}`);process.exitCode=1;});
-module.exports={MAX_RAW_MIRROR_BYTES,canMirror,updateRawMirror,tag,releaseAssetNames,ensureReleaseAssets,currentLatest,downloadMirrorArtifact,publishRawMirror,updateLatest,publishTest,promoteStable};
+module.exports={MAX_RAW_MIRROR_BYTES,canMirror,pushBranch,updateRawMirror,tag,releaseAssetNames,ensureReleaseAssets,currentLatest,downloadMirrorArtifact,publishRawMirror,updateLatest,publishTest,resumeTest,promoteStable};
