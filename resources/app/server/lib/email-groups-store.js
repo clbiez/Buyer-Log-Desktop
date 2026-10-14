@@ -66,7 +66,7 @@ function clean(value, max = 500) { return String(value == null ? '' : value).tri
 function cleanId(value) { return clean(value, 160).replace(/[^A-Za-z0-9_.:-]/g, '_'); }
 function cleanObject(value) { return value && typeof value === 'object' && !Array.isArray(value) ? value : {}; }
 function now() { return new Date().toISOString(); }
-function newId(prefix) { return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`; }
+function newId(prefix) { return `${prefix}-${crypto.randomUUID()}`; }
 function turkishKey(value) { return clean(value, 300).toLocaleLowerCase('tr-TR'); }
 
 function storeError(message, code, statusCode, extra = {}) {

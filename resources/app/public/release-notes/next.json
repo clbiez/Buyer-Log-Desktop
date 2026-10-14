@@ -271,6 +271,35 @@
           "en": "All three preparation stages completed after an actual anonymous sign-in; the agent notification request starts after Continue."
         }
       }
+    },
+    {
+      "id": "manufacturer-native-unique-identities",
+      "type": "fix",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Toplu kart oluşturmada güvenilir kimlikler",
+        "en": "Reliable identities for bulk card creation"
+      },
+      "body": {
+        "tr": "Native üretici kartları ve grup başlıkları UUID ile oluşturulur. Aynı saat diliminde yüksek hacimli içe aktarımın kısa rastgele kimlik çakışması nedeniyle durması önlenir; mevcut kayıt kimlikleri, yetki, revizyon, kilit ve geri alma kontrolleri korunur.",
+        "en": "Native manufacturer cards and group headings are created with UUIDs. High-volume import no longer stops due to short random identity collisions within the same clock tick; existing identities, authority, revision, lock and inverse checks are retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manufacturer-native-unique-ids.png",
+        "caption": {
+          "tr": "Gerçek native içe aktarımda iki benzersiz kart kimliği, doğrulanmış sonuç ve geri alma seçeneği.",
+          "en": "Two unique card identities, a verified receipt and inverse action in actual native import."
+        },
+        "alt": {
+          "tr": "Gerçek native içe aktarımda iki benzersiz kart kimliği, doğrulanmış sonuç ve geri alma seçeneği.",
+          "en": "Two unique card identities, a verified receipt and inverse action in actual native import."
+        }
+      }
     }
   ]
 }
