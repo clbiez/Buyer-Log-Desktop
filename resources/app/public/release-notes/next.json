@@ -300,6 +300,64 @@
           "en": "Agent Office task steps with the technical sheet download result"
         }
       }
+    },
+    {
+      "id": "agent-order-batch",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar birden çok sipariş satırını birlikte düzenler",
+        "en": "Agents edit several order lines together"
+      },
+      "body": {
+        "tr": "Agent Ofisi en fazla 50 sipariş satırının notunu, tarihlerini, alt üreticisini, not sütunlarını ve eksik işaretini tek görevde düzenleyebilir. Her satır tek tek düzenlemedeki aynı yetki ve kimlik kontrollerinden geçer; tek bir geçersiz satır tüm görevi durdurur. Değişiklik onayınızla tek seferde yazılır ve tek adımda tamamen geri alınır.",
+        "en": "Agent Office can edit notes, dates, sub-manufacturer, note columns and the shortage mark of up to 50 order lines in one task. Every line passes the same permission and identity checks as a single edit; one invalid line stops the whole task. The change is written at once with your approval and undone completely in one step."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-order-batch.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: üç siparişe toplu not adımının doğrulanmış sonucu (demo veri).",
+          "en": "Actual Agent Office: verified result of a batch note step on three orders (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında toplu sipariş düzenleme sonucu",
+          "en": "Agent Office task steps with a multi-line order edit result"
+        }
+      }
+    },
+    {
+      "id": "agent-note-columns",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar not sütunu tanımlarını düzenler",
+        "en": "Agents edit note column definitions"
+      },
+      "body": {
+        "tr": "CP › Sütun ekle'deki ortak not sütunları Agent Ofisi'nden eklenebilir, yeniden adlandırılabilir veya kaldırılabilir. Önizleme eklenen, değişen ve kaldırılan sütunları ve silinecek değerlerin satır sayısını gösterir. Geri alma önceki listeyi ve kaldırılan sütunların değerlerini aynen geri getirir; eklenen sütuna sonradan değer girildiyse geri alma reddedilir.",
+        "en": "The shared note columns from CP › Add Column can be added, renamed or removed from Agent Office. The preview lists added, changed and removed columns and how many lines lose values. Undo brings back the previous list and the removed columns' values exactly; it is refused once a value was entered in an added column."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-note-columns.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: not sütunu ekleme adımının doğrulanmış sonucu (demo veri, İngilizce arayüz).",
+          "en": "Actual Agent Office: verified result of adding a note column (demo data, English UI)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında not sütunu tanımı sonucu",
+          "en": "Agent Office task steps with a note column definition result"
+        }
+      }
     }
   ]
 }

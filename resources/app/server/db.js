@@ -622,6 +622,41 @@ function replaceNoteColumnDefs(value, expectedRevision = null) {
   }
   return { columns: saved.noteColumnDefs, revision: saved._revisions.noteColumnDefs };
 }
+/* Office inverse of a note-column definition change: the exact prior
+   definitions and the values the change pruned. Values entered afterwards in
+   a column the inverse removes would be lost, so the caller binds that. */
+function noteColumnSnapshot(ids) {
+  const ov = loadOverrides(), wanted = new Set(ids || []), values = {};
+  for (const [key, bucket] of Object.entries(ov.noteColumnValues || {})) {
+    if (!bucket || typeof bucket !== 'object') continue;
+    for (const [id, value] of Object.entries(bucket)) if (wanted.has(id)) (values[key] = values[key] || {})[id] = value;
+  }
+  return { revision: Number(ov._revisions.noteColumnDefs) || 0, defs: cloneJson(ov.noteColumnDefs || []), values };
+}
+function restoreNoteColumnDefs(snapshot, expectedRevision) {
+  const ov = loadOverrides();
+  const current = Number(ov._revisions.noteColumnDefs) || 0;
+  if (!Number.isSafeInteger(expectedRevision) || expectedRevision !== current) throw new RevisionConflictError('Not sütunları', expectedRevision, current, 'noteColumnDefs');
+  ov.noteColumnDefs = cloneJson(snapshot.defs || []);
+  const validIds = new Set(ov.noteColumnDefs.map(def => def.id));
+  ov.noteColumnValues = ov.noteColumnValues || {};
+  for (const key of Object.keys(ov.noteColumnValues)) {
+    const bucket = ov.noteColumnValues[key];
+    if (!bucket || typeof bucket !== 'object') { delete ov.noteColumnValues[key]; continue; }
+    for (const id of Object.keys(bucket)) if (!validIds.has(id)) delete bucket[id];
+    if (!Object.keys(bucket).length) delete ov.noteColumnValues[key];
+  }
+  for (const [key, bucket] of Object.entries(snapshot.values || {})) {
+    for (const [id, value] of Object.entries(bucket || {})) if (validIds.has(id)) (ov.noteColumnValues[key] = ov.noteColumnValues[key] || {})[id] = value;
+  }
+  ov._revisions.noteColumnDefs = current + 1;
+  const saved = saveOverrides(ov, ov._revision);
+  for (const key of cpSharedStore.legacyKeys({ noteColumnValues: saved.noteColumnValues })) {
+    cpSharedStore.mirrorPatchDetached(key, { noteColumns: saved.noteColumnValues[key] || null });
+  }
+  for (const key of Object.keys(snapshot.values || {})) cpSharedStore.mirrorPatchDetached(key, { noteColumns: saved.noteColumnValues[key] || null });
+  return { columns: saved.noteColumnDefs, revision: saved._revisions.noteColumnDefs };
+}
 function replaceLandedMultipliers(value, expectedRevision = null, options = {}) {
   const ov = loadOverrides();
   const current = Number(ov._revisions.landedMultipliers) || 0;
@@ -810,25 +845,35 @@ function verifyOrderOverridePatch(orderCode,patch,revision){
    maps and keep working. A newer receipt is refused when the note-column
    definitions changed in between: restoring a value of a since-deleted column
    would resurrect data the definition change pruned. */
-function restoreOrderOverrideReceipt(orderCode,receipt,expectedRevision,selector,options){
+function receiptKind(orderCode,receipt,expectedRevision,selector){
   const names=Object.keys(receipt?.maps||{}).sort().join('|');
   const legacy=names===[...LEGACY_ORDER_RECEIPT_MAPS].sort().join('|'),current=names===[...ORDER_RECEIPT_MAPS].sort().join('|');
   if(receipt?.key!==String(overrideWriteKey(orderCode,selector||{}))||!Number.isSafeInteger(expectedRevision)||(!legacy&&!current)||(current&&!Number.isSafeInteger(receipt.noteColumnDefsRevision)))throw Object.assign(new Error('Invalid order receipt.'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:422});
-  return (()=>{
-    const ov=loadOverrides(),revision=Number(ov._revisions.orders)||0;if(revision!==expectedRevision)throw new RevisionConflictError('Sipariş düzenlemeleri',expectedRevision,revision,'orders');
-    const defsRevision=Number(ov._revisions.noteColumnDefs)||0;
-    if(current&&defsRevision!==receipt.noteColumnDefsRevision)throw new RevisionConflictError('Not sütunları',receipt.noteColumnDefsRevision,defsRevision,'noteColumnDefs');
-    for(const [name,value]of Object.entries(receipt.maps)){ov[name]=ov[name]||{};if(value===null)delete ov[name][receipt.key];else ov[name][receipt.key]=cloneJson(value);}
-    ov._revisions.orders=revision+1;const saved=saveOverrides(ov,ov._revision);
+  return {legacy,current};
+}
+function restoreOrderOverrideReceipt(orderCode,receipt,expectedRevision,selector,options){
+  return restoreOrderOverrideReceipts([{orderCode,receipt,selector}],expectedRevision,options);
+}
+/* Several line receipts are restored in one override write (one revision step),
+   so a multi-line Office edit is undone completely or not at all. */
+function restoreOrderOverrideReceipts(items,expectedRevision,options){
+  const list=(Array.isArray(items)?items:[]).map(item=>({...item,kind:receiptKind(item.orderCode,item.receipt,expectedRevision,item.selector)}));
+  if(!list.length||new Set(list.map(item=>item.receipt.key)).size!==list.length)throw Object.assign(new Error('Invalid order receipt.'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:422});
+  const ov=loadOverrides(),revision=Number(ov._revisions.orders)||0;if(revision!==expectedRevision)throw new RevisionConflictError('Sipariş düzenlemeleri',expectedRevision,revision,'orders');
+  const defsRevision=Number(ov._revisions.noteColumnDefs)||0;
+  for(const {receipt,kind}of list)if(kind.current&&defsRevision!==receipt.noteColumnDefsRevision)throw new RevisionConflictError('Not sütunları',receipt.noteColumnDefsRevision,defsRevision,'noteColumnDefs');
+  for(const {receipt}of list)for(const [name,value]of Object.entries(receipt.maps)){ov[name]=ov[name]||{};if(value===null)delete ov[name][receipt.key];else ov[name][receipt.key]=cloneJson(value);}
+  ov._revisions.orders=revision+1;const saved=saveOverrides(ov,ov._revision);
+  for(const {orderCode,receipt,selector,kind}of list){
     // Every restored field is mirrored to peers, not only sub-manufacturer and dates.
     // A line entry that is absent again falls back to the order-level entry;
     // mirroring an empty line value would shadow that fallback on peers.
     const lineFallsBack=name=>receipt.key!==String(orderCode)&&receipt.maps[name]===null&&Object.hasOwn(saved[name]||{},String(orderCode));
-    const sharedPatch={...selector,...(lineFallsBack('notesmap')?{}:{notes:{}}),subManufacturer:saved.submap[receipt.key]??null,licensor:null,delType:null,dates:Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,key])=>[field,saved.datemap[receipt.key]?.[key]??null])),...(current?{...(lineFallsBack('noteColumnValues')?{}:{noteColumns:{}}),shortage:null}:{})};
+    const sharedPatch={...selector,...(lineFallsBack('notesmap')?{}:{notes:{}}),subManufacturer:saved.submap[receipt.key]??null,licensor:null,delType:null,dates:Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,key])=>[field,saved.datemap[receipt.key]?.[key]??null])),...(kind.current?{...(lineFallsBack('noteColumnValues')?{}:{noteColumns:{}}),shortage:null}:{})};
     cpSharedStore.mirrorPatchDetached(receipt.key,cpSharedStore.patchFromOrderPatch(saved,receipt.key,sharedPatch),{actor:options?.actor});
-    const after=snapshotOrderOverride(orderCode,selector).patch.maps;
-    return {verified:Object.keys(receipt.maps).every(name=>JSON.stringify(after[name])===JSON.stringify(receipt.maps[name])),restored:true,revision:saved._revisions.orders};
-  })();
+  }
+  const verified=list.every(({orderCode,receipt,selector})=>{const after=snapshotOrderOverride(orderCode,selector).patch.maps;return Object.keys(receipt.maps).every(name=>JSON.stringify(after[name])===JSON.stringify(receipt.maps[name]));});
+  return {verified,restored:true,revision:saved._revisions.orders};
 }
 function patchOrderOverrides(items, expectedRevision = null, expectedSuppFobRevision = null, options = null) {
   const ov = loadOverrides();
@@ -838,6 +883,8 @@ function patchOrderOverrides(items, expectedRevision = null, expectedSuppFobRevi
   const touchesSuppFob=(Array.isArray(items)?items:[]).some(item=>item&&item.patch&&Object.prototype.hasOwnProperty.call(item.patch,'suppFob'));
   const currentSuppFob=Number(ov._revisions.suppFob)||0,wantedSuppFob=expectedNumber(expectedSuppFobRevision);
   if(touchesSuppFob&&wantedSuppFob!=null&&wantedSuppFob!==currentSuppFob)throw new RevisionConflictError('Sipariş Supp. FOB düzenlemeleri',wantedSuppFob,currentSuppFob,'suppFob');
+  const wantedDefs=expectedNumber(options&&options.expectedNoteColumnDefsRevision),currentDefs=Number(ov._revisions.noteColumnDefs)||0;
+  if((Array.isArray(items)?items:[]).some(item=>item&&item.patch&&item.patch.noteColumns)&&wantedDefs!=null&&wantedDefs!==currentDefs)throw new RevisionConflictError('Not sütunları',wantedDefs,currentDefs,'noteColumnDefs');
   let updated = 0;
   const cpTouched = [];
   // Geçersiz satırlar sessizce atlanır ancak hangi satırların ve neden atlandığı
@@ -1841,7 +1888,7 @@ async function restoreCpExFactoryRevisions(snapshot, { actor = null } = {}) {
 
 module.exports = {
   mutateTableProfiles,mutateHorizonTemplates,
-  snapshotOrderOverride,verifyOrderOverridePatch,restoreOrderOverrideReceipt,
+  snapshotOrderOverride,verifyOrderOverridePatch,restoreOrderOverrideReceipt,restoreOrderOverrideReceipts,noteColumnSnapshot,restoreNoteColumnDefs,normalizeNoteColumnDefs,
   mutateSharedResource,mutateSettings,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,

@@ -885,6 +885,40 @@
         "contractVersion": 2
       },
       {
+        "id": "cp.orders.update.batch",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.notecolumns.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
         "id": "cp.checklist.attachments.read",
         "operation": "READ",
         "agentAreas": [

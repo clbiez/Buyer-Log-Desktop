@@ -2493,11 +2493,11 @@ function cpAgentMail(profile,args,rows,dryRun,expected=null) {
 // Order override adapter shared by app.order.update (legacy Runtime) and the
 // Office cp.order.update capability; one native service, one rule set.
 const agentOrderAdapter = {
-  snapshotOrder: async (ownerId, profile, orderCode, patch) => {
+  snapshotOrder: async (ownerId, profile, orderCode, patch, preloadedRows=null) => {
     // A line is addressed by model AND colour; one alone would write the
     // order-level override that every line of the order falls back to.
     if(Boolean(String(patch&&patch.model||'').trim())!==Boolean(String(patch&&patch.ccode||'').trim()))throw Object.assign(new Error('OFFICE_ORDER_IDENTITY'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
-    const rows = await agentPlatformDataset(ownerId, profile, 'cp');
+    const rows = preloadedRows || await agentPlatformDataset(ownerId, profile, 'cp');
     const wantedModel = String(patch && patch.model || '').trim(), wantedColour = String(patch && patch.ccode || '').trim();
     const candidates = rows.filter(item => Number(agentRowOrderCode(item)) === Number(orderCode)
       && (!wantedModel || String(item && item['Model Name'] || '').trim() === wantedModel)
@@ -2526,6 +2526,58 @@ const agentOrderAdapter = {
     liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor([{orderCode,patch}])});
     void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     return { ok:true, verified:require('./db').verifyOrderOverridePatch(orderCode,patch,saved.revision),updated:saved.updated || 1, revision:saved.revision };
+  },
+  // Multi-line edit: every line is checked like a single edit, then written in
+  // one native batch (one revision step) and verified line by line.
+  snapshotOrders: async (ownerId, profile, entries) => {
+    const rows = await agentPlatformDataset(ownerId, profile, 'cp');
+    const snapshots = [];
+    for (const entry of entries) snapshots.push(await agentOrderAdapter.snapshotOrder(ownerId, profile, entry.orderCode, entry.patch, rows));
+    return snapshots;
+  },
+  updateOrders: async (_ownerId, profile, items, expectedRevision, options={}) => {
+    for (const item of items) {
+      if (!canUserEditOrderCode(profile, item.orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
+      assertAgentSharedOwner(profile, item.orderCode, item.patch);
+    }
+    const beforeContext=pageProjectionContext(profile);
+    const saved = patchOrderOverrides(items, expectedRevision, null, { actor: noteActorOf(profile), expectedNoteColumnDefsRevision: options.noteColumnDefsRevision });
+    try { await rewriteProjectionCacheForRowPatches(profile,beforeContext,items); }
+    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
+    userAccess.appendAudit(profile, 'AGENT_ORDER_BATCH_UPDATE', 'orders', { orderCodes:items.map(item=>Number(item.orderCode)), count:items.length });
+    liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor(items)});
+    void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
+    const verified=saved.updated===items.length&&!(saved.skipped||[]).length&&items.every(item=>require('./db').verifyOrderOverridePatch(item.orderCode,item.patch,saved.revision));
+    return { ok:true, verified, updated:saved.updated, revision:saved.revision };
+  },
+  restoreOrders: async (_ownerId, profile, items, expectedRevision) => {
+    if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
+    for (const {orderCode,before,selector} of items) {
+      if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
+      const currentMaps=require('./db').snapshotOrderOverride(orderCode,selector||{}).patch.maps;
+      if(['submap','datemap'].some(name=>Object.hasOwn(before&&before.maps||{},name)&&JSON.stringify(currentMaps[name])!==JSON.stringify(before.maps[name])))assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
+    }
+    const result=require('./db').restoreOrderOverrideReceipts(items.map(({orderCode,before,selector})=>({orderCode,receipt:before,selector})),expectedRevision,{actor:noteActorOf(profile)});
+    userAccess.appendAudit(profile, 'AGENT_ORDER_BATCH_ROLLBACK', 'orders', {orderCodes:items.map(item=>Number(item.orderCode)),revision:result.revision});
+    liveEvents.notifyChange('orders','agent-capability',{});return result;
+  },
+  // Note-column definitions: the same shared list and native service as
+  // CP › Add Column (PUT /api/note-columns).
+  noteColumns: {
+    snapshot: ids => require('./db').noteColumnSnapshot(ids),
+    normalize: columns => require('./db').normalizeNoteColumnDefs(columns),
+    replace: (profile, columns, expectedRevision) => {
+      const saved = replaceNoteColumnDefs(columns, expectedRevision);
+      userAccess.appendAudit(profile, 'NOTE_COLUMNS_UPDATE', 'cp', { count: saved.columns.length, revision: saved.revision, origin:'agent' });
+      publishSharedMasterChange('noteColumnDefs', { currentUser: profile, headers: {} });
+      return saved;
+    },
+    restore: (profile, snapshot, expectedRevision) => {
+      const saved = require('./db').restoreNoteColumnDefs(snapshot, expectedRevision);
+      userAccess.appendAudit(profile, 'NOTE_COLUMNS_UPDATE', 'cp', { count: saved.columns.length, revision: saved.revision, origin:'agent-rollback' });
+      publishSharedMasterChange('noteColumnDefs', { currentUser: profile, headers: {} });
+      return saved;
+    },
   },
   restoreOrder: async (_ownerId, profile, orderCode, before,expectedRevision,selector) => {
     if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });

@@ -17,4 +17,28 @@ Review follow-ups:
 - Note-column values are CAS-bound to the definitions revision the preview saw (no partial write if a column is deleted meanwhile).
 - The inverse token carries a digest of the post-effect line maps; undo is refused if the line changed afterwards (also covering peer edits that reach the Shared Hub overlay without a local revision). Restoring an absent line entry no longer mirrors an empty note that would shadow the order-level fallback on peers.
 
-Not included: editing note-column definitions and multi-line batch edits (the HTTP batch editor remains user-only).
+## Multi-line edits (`cp.orders.update.batch`)
+
+Up to 50 lines, each with the same fields and checks as `cp.order.update`: identity, IAM edit right, shared owner and unknown note columns. One invalid line refuses the whole batch at preview, and a duplicate line identity is refused too.
+
+- **Write:** the native batch writer of the HTTP batch editor (`db.patchOrderOverrides`) writes all lines in one orders revision. Note columns are CAS-bound to the definitions revision. Every line is read back and the screen cache is rewritten incrementally.
+- **Inverse:** the prior entries of all lines are archived owner/job/step-bound. Undo restores them in one write (`db.restoreOrderOverrideReceipts`, one revision), so a batch is undone completely or not at all. The single-line restore now shares this code path.
+- **Undo refusal:** the token carries a digest of all post-effect line maps, so undo is refused if any line changed afterwards. It is also refused after a note-column definition change, the same rule as single edits.
+
+## Note-column definitions (`cp.notecolumns.update`)
+
+The full shared definition list, as CP › Add Column saves it, using the same `replaceNoteColumnDefs` service. A new column without an id gets a deterministic id; a column whose label matches an existing one keeps that column's id.
+
+- **Duplicates and no-ops:** duplicate ids or labels (which the native normalizer would drop silently) and a request that changes nothing are refused.
+- **Preview:** added, changed and removed ids, the resulting list and the number of order lines whose values the removal prunes.
+- **Apply:** refused if a value was written to a removed column after the preview. The write is CAS-bound to the definitions revision and verified.
+- **Inverse:** restores the exact prior list and the pruned values (`db.restoreNoteColumnDefs`). It is refused once a value was entered in a column that the inverse would remove.
+
+Validation: `tests/agent-order-batch-notecolumns.test.js` has 4 cases on the real override store. The single-edit and overview source contracts were updated to the new adapter and call site with all assertions kept.
+
+Real Chromium acceptance on an isolated demo server, TR and EN:
+- **Batch:** a 3-line note batch returned 409 without approval. The approved run completed in one revision and the notes were visible in the CP rows. Undo removed them.
+- **Note columns:** adding a column completed, and undo removed it.
+- No page errors.
+
+An undo is refused once the definitions changed after a batch that touches note columns (`REVISION_CONFLICT`), as for single edits. This is deliberate.

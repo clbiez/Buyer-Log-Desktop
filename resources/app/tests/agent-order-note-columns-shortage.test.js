@@ -70,7 +70,7 @@ test('legacy five-map receipts still restore, and a mixed receipt is refused',as
 
 test('agent order adapter rewrites the screen cache like the HTTP editor and refuses unknown columns',()=>{
   const source=fs.readFileSync(path.join(__dirname,'..','server','server.js'),'utf8');
-  const adapter=source.slice(source.indexOf('  snapshotOrder: async (ownerId, profile, orderCode, patch) => {'),source.indexOf('  restoreOrder: async (_ownerId'));
+  const adapter=source.slice(source.indexOf('  snapshotOrder: async (ownerId, profile, orderCode, patch, preloadedRows=null) => {'),source.indexOf('  restoreOrder: async (_ownerId'));
   assert.match(adapter,/OFFICE_NOTE_COLUMN_UNKNOWN/);
   assert.match(adapter,/const beforeContext=pageProjectionContext\(profile\);\n    const saved = patchOrderOverride/);
   assert.match(adapter,/rewriteProjectionCacheForRowPatches\(profile,beforeContext,\[\{orderCode,patch\}\]\)/);
