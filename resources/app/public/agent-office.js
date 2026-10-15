@@ -382,6 +382,22 @@
   const CHAT_FILE_TYPES='.pdf,.msg,.eml,.png,.jpg,.jpeg,.xlsx,.xls,.csv';
   function chatAgents(){return (state.data?.profiles||[]).filter(item=>item.enabled!==false);}
   function agentName(key){return state.data?.profiles.find(item=>item.id===key)?.name||L('Agent','Agent');}
+  /* Cevaptaki markdown tabloları: başlık + satırlar; ayraç satırı ve ** biçimi atılır. */
+  function chatTables(value){const tables=[];let current=null;
+    for(const line of String(value||'').split('\n')){const row=line.trim();
+      if(!/^\|.*\|$/.test(row)){current=null;continue;}
+      if(/^\|[\s:|-]+\|$/.test(row))continue;
+      const cells=row.slice(1,-1).split('|').map(cell=>cell.trim().replace(/\*\*/g,''));
+      if(!current){current=[];tables.push(current);}current.push(cells);}
+    return tables.filter(table=>table.length>1);}
+  async function chatExcel(item){const tables=chatTables(item.text);if(!tables.length)return;
+    if(root.BLPerf?.ensureLibrary)await root.BLPerf.ensureLibrary('exceljs');
+    if(!root.ExcelJS?.Workbook)throw new Error(L('Excel motoru yüklenemedi.','Excel engine could not be loaded.'));
+    const book=new root.ExcelJS.Workbook();
+    tables.forEach((table,index)=>{const sheet=book.addWorksheet(L('Tablo','Table')+' '+(index+1));table.forEach(row=>sheet.addRow(row));sheet.getRow(1).font={bold:true};
+      sheet.columns.forEach(column=>{let width=8;column.eachCell({includeEmpty:false},cell=>{width=Math.max(width,Math.min(60,String(cell.value??'').length+2));});column.width=width;});});
+    const blob=new Blob([await book.xlsx.writeBuffer()],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),link=document.createElement('a');
+    link.href=url;link.download='BuyerLog_'+String(agentName(item.provenance?.speaker||item.profileIds?.[0])||'Agent').replace(/[^\wÇĞİÖŞÜçğıöşü-]+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
   function chatMarkdown(value){return root.BLMarkdown?root.BLMarkdown.render(String(value||'')):`<p>${esc(value).replace(/\n/g,'<br>')}</p>`;}
   function chatBubble(agentId,body,extra=''){const agent=state.data.profiles.find(item=>item.id===agentId);
     return `<article class="aoSimpleMsg is-agent">${agent?`<span class="aoSimplePortrait is-small" style="${portrait(agent,36,44)}" aria-hidden="true"></span>`:''}<div class="aoSimpleBody"><div class="aoSimpleWho">${esc(agent?.name||L('Agent','Agent'))}</div><div class="aoSimpleText">${body}</div>${extra}</div></article>`;}
@@ -395,13 +411,14 @@
   function chatTaskCard(data){const c=chatState(),job=c.tasks[data.taskId];
     // Teknik kimlikler (dosya/oturum anahtarı) sahibe gösterilmez; Ayrıntılar'da durur.
     const brief=String(data.brief||'').replace(/\b(?:artifactId|sessionId)\s*[=:]\s*[a-f0-9]{32}\b/gi,'').replace(/\b[a-f0-9]{32}\b/g,'').replace(/\s{2,}/g,' ').trim();
-    const intro=brief?`<p>${esc(L('Şunu yapacağım:','Here is what I will do:'))} ${esc(brief)}</p>`:'';
-    if(!job)return chatBubble(data.agentId,intro+`<p class="aoSimpleNote">${esc(L('İş bilgisi yükleniyor…','Loading the task…'))}</p>`);
+    if(!job)return chatBubble(data.agentId,`<p class="aoSimpleNote">${esc(L('İş bilgisi yükleniyor…','Loading the task…'))}</p>`);
     const tools=c.tools[data.agentId]||{},next=taskNextStep(job),waiting=next?.status==='waiting_approval',undo=job.steps.find(canUndoTaskStep);
     const steps=job.steps.map(step=>`<li><span>${esc(label(tools[step.toolId]?.label)||step.toolId)}</span><em>${esc(jobStatus(step.status))}</em></li>`).join('');
     const actions=[waiting?button(L('Onayla','Approve'),'chat-approve',`class="aoButton is-primary" data-id="${esc(job.id)}"`)+button(L('Vazgeç','Cancel'),'chat-reject',`data-id="${esc(job.id)}"`):'',
       undo?button(L('Geri al','Undo'),'chat-undo',`data-id="${esc(job.id)}" data-step="${esc(undo.id)}"`):'',button(L('Ayrıntılar','Details'),'chat-task-details',`data-id="${esc(job.id)}"`)].join('');
-    return chatBubble(data.agentId,intro+`<ol class="aoSimpleSteps">${steps}</ol><p class="aoSimpleNote">${esc(chatTaskStatus(job))}</p><div class="aoSimpleActions">${actions}</div>`);}
+    /* Okuma işi sade bir satır olarak kapanır, cevap ayrı mesajda gelir; yalnız onay bekleyen iş açık gösterilir. */
+    const intro=waiting&&brief?`<p>${esc(L('Bunu yapmadan önce onayınızı istiyorum:','I need your approval before I do this:'))} ${esc(brief)}</p>`:'';
+    return chatBubble(data.agentId,intro+`<details class="aoSimpleStepsBox"${waiting?' open':''}><summary>${esc(L(`Buyer Log'da ${job.steps.length} adım`,`${job.steps.length} steps in Buyer Log`))} · ${esc(chatTaskStatus(job))}</summary><ol class="aoSimpleSteps">${steps}</ol></details><div class="aoSimpleActions">${actions}</div>`);}
   /* Paydaş belgesinin Buyer Log'da doğrulanmış eşleşmesi: rakamlar CP motorundan. */
   function chatDocumentCard(data){const t=data.totals||{},risk=value=>({high:L('Yüksek','High'),medium:L('Orta','Medium'),low:L('Düşük','Low'),unknown:L('Bilinmiyor','Unknown'),unmatched:L('Eşleşmedi','Not matched')})[value]||value;
     const shift=value=>value==null?'':`${value>0?'+':''}${value} ${L('gün','days')}`;
@@ -428,16 +445,35 @@
     const meta=item.provenance||{},lead=meta.speaker||item.profileIds?.[0];
     const perspectives=(meta.perspectives||[]).map(value=>{const index=String(value).indexOf('|');return {id:String(value).slice(0,index),text:String(value).slice(index+1)};}).filter(entry=>entry.text.trim());
     if(item.status&&item.status!=='complete'&&!item.text)return '';
-    const memory=chatMemoryHtml(item,lead);
+    // Cevap doğrudan kullanılabilsin: kopyala; tablo varsa Excel dosyası olarak indir.
+    const tools=item.text&&item.id!=='pending'?`<div class="aoSimpleActions aoSimpleMsgTools">${button(L('Kopyala','Copy'),'chat-copy',`data-id="${esc(item.id)}"`)}${chatTables(item.text).length?button(L('Excel olarak indir','Download as Excel'),'chat-excel',`data-id="${esc(item.id)}"`):''}</div>`:'';
+    const memory=tools+chatMemoryHtml(item,lead);
     if(perspectives.length>1)return perspectives.map(entry=>chatBubble(entry.id,chatMarkdown(entry.text))).join('')+chatBubble(lead,chatMarkdown(item.text),`<small class="aoSimpleNote">${esc(L('Ortak sonuç','Shared conclusion'))}</small>${memory}`);
     return chatBubble(lead,chatMarkdown(item.text),memory);}
   /* Agentın fark ettiği kalıcı tercihler: yalnız sahip "Hatırla" derse saklanır. */
   function chatMemoryHtml(item,agentId){const list=(item.provenance?.memoryCandidates||[]).map(value=>String(value||'').trim()).filter(Boolean).slice(0,3);if(!list.length||!agentId)return '';
     const kept=chatState().remembered||{},saved=(value,index)=>kept[item.id+':'+index]||(state.data.memory||[]).some(doc=>doc.profileId===agentId&&doc.text===value&&doc.active!==false);
     return `<div class="aoSimpleMemory"><small>${esc(L('Bunu hatırlamamı ister misiniz?','Shall I remember this?'))}</small>${list.map((value,index)=>`<div><span>${esc(value)}</span>${saved(value,index)?`<em>${esc(L('Hatırlıyorum','Remembered'))}</em>`:button(L('Hatırla','Remember'),'chat-remember',`data-id="${esc(item.id)}" data-index="${index}" data-agent="${esc(agentId)}"`)}</div>`).join('')}</div>`;}
+  /* Günlük öncelikler: deterministik tarama; tek tıkla agenta sorulur. */
+  function chatBriefHtml(){const b=chatState().brief;if(!b)return '';const n=b.counts||{};
+    const items=(b.top||[]).map(item=>{const ask=L(`${item.orderCode||item.model} siparişi için şimdi ne yapmamız gerekiyor?`,`What do we need to do now for order ${item.orderCode||item.model}?`);
+      return `<li class="is-level-${esc(item.level||0)}"><div><b>${esc(item.orderCode||'—')}</b> ${esc([item.model,item.colour,item.supplier].filter(Boolean).join(' · '))} — ${esc(label(item.title))}${item.reasons?.length?`<small>${esc(item.reasons.map(reason=>label(reason)).join(' · '))}</small>`:''}</div>${button(L('Sor','Ask'),'chat-ask',`data-text="${esc(ask)}"`)}</li>`;}).join('');
+    const collection=(b.collection||[]).map(group=>`<li><div><b>${esc(L('Koleksiyon','Collection'))} ${esc(group.season||'')}</b>${group.status?` (${esc(group.status)})`:''}: ${esc(L(`${group.unlinked} seçenek henüz siparişe bağlanmadı`,`${group.unlinked} options are not linked to an order yet`))}${group.missingSupplier?` · ${esc(L(`${group.missingSupplier} seçenekte üretici boş`,`${group.missingSupplier} options have no supplier`))}`:''}</div>${button(L('Sor','Ask'),'chat-ask',`data-text="${esc(L(`Koleksiyon ${group.season} sezonunda siparişe bağlanmamış seçenekler için ne yapmalıyız?`,`What should we do about the options in collection season ${group.season} that are not linked to an order?`))}"`)}</li>`).join('');
+    return `<section class="aoSimpleBriefCard"><header><b>${esc(L('Bugünün öncelikleri','Today\'s priorities'))}</b><small>${esc(date(b.computedAt))}</small>${button(L('Yenile','Refresh'),'chat-brief-refresh')}</header>
+      <div class="aoSimpleChips"><span class="aoBadge is-high">${esc(L('Kritik','Critical'))}: ${esc(n.critical||0)}</span><span class="aoBadge is-medium">${esc(L('Bugün aksiyon','Action today'))}: ${esc(n.today||0)}</span><span class="aoBadge">${esc(L('Bu hafta aksiyon','Action this week'))}: ${esc(n.week||0)}</span><span class="aoBadge">${esc(L('Değişen kayıt','Changed records'))}: ${esc(n.changes||0)}</span></div>
+      ${items||collection?`<ul>${items}${collection}</ul>`:`<p class="aoSimpleNote">${esc(L('Bugün ya da bu hafta aksiyon bekleyen bir sipariş görünmüyor.','No order needs action today or this week.'))}</p>`}
+      <div class="aoSimpleActions">${button(L('Bugünü benim için değerlendir','Assess today for me'),'chat-ask',`class="aoButton is-primary" data-text="${esc(L('Bugünün önceliklerini değerlendirip ne yapmam gerektiğini sırayla söyler misin?','Could you assess today\'s priorities and tell me what to do, in order?'))}"`)}</div></section>`;}
   function chatMessagesHtml(){const c=chatState();
-    if(!c.messages.length)return `<div class="aoSimpleWelcome"><b>${esc(L('Ne yapmamı istersiniz?','What would you like me to do?'))}</b><p>${esc(L('Derdinizi ya da talebinizi kendi cümlelerinizle yazın. Gerekirse ekipten başka birini de konuya katarım; bir şeyi değiştirmeden önce mutlaka size sorarım.','Write what you need in your own words. I bring in a teammate when needed and always ask before changing anything.'))}</p></div>`;
-    return c.messages.map(chatMessageHtml).join('');}
+    if(!c.messages.length)return chatBriefHtml()+`<div class="aoSimpleWelcome"><b>${esc(L('Ne yapmamı istersiniz?','What would you like me to do?'))}</b><p>${esc(L('Derdinizi ya da talebinizi kendi cümlelerinizle yazın. Gerekirse ekipten başka birini de konuya katarım; bir şeyi değiştirmeden önce mutlaka size sorarım.','Write what you need in your own words. I bring in a teammate when needed and always ask before changing anything.'))}</p></div>`;
+    return c.messages.map(chatMessageHtml).join('')+(c.busy&&c.live?`<div data-ao-chat-live>${chatBubble(c.agentId,chatMarkdown(c.live))}</div>`:'');}
+  /* LCW AI cevabı JSON olarak akar ve "answer" ilk alandır: yazılan kısım
+     canlı gösterilir. Kaçış dizileri çözülür; kapanmamış dizide durulur. */
+  function liveAnswer(raw){const match=/"answer"\s*:\s*"/.exec(raw);if(!match)return '';let out='',i=match.index+match[0].length;
+    const escapes={n:'\n',t:'\t',r:'',b:'',f:'','"':'"','\\':'\\','/':'/'};
+    while(i<raw.length){const ch=raw[i];if(ch==='"')break;
+      if(ch==='\\'){const next=raw[i+1];if(next===undefined)break;if(next==='u'){const hex=raw.slice(i+2,i+6);if(hex.length<4)break;out+=String.fromCharCode(parseInt(hex,16));i+=6;continue;}out+=escapes[next]??next;i+=2;continue;}
+      out+=ch;i++;}
+    return out;}
   /* Agentı doğal dille yetiştirme: sahip anlatır, LCW AI taslak çıkarır,
      sahip düzeltir ve kaydeder. Alanlar sahibin erişimiyle sınırlıdır. */
   function agentTrainer(agentId){const agent=agentId?state.data.profiles.find(item=>item.id===agentId):null;let draft=null;
@@ -480,19 +516,22 @@
       if(data?.type==='task'&&data.taskId){await chatTools(data.agentId);if(!c.tasks[data.taskId]||!CHAT_TERMINAL.has(c.tasks[data.taskId].status)){try{c.tasks[data.taskId]=(await api(`/chat/tasks/${encodeURIComponent(data.taskId)}`)).task;}catch(_){}}}}}
   /* Uzun süren işler arka planda ilerler; kart açıkken kısa aralıkla tazelenir. */
   function chatWatch(){const c=chatState(),owner=state.generation;clearTimeout(c.watch);if(!Object.values(c.tasks).some(job=>job&&['waiting_operation','queued','running'].includes(job.status)))return;
-    c.watch=setTimeout(async()=>{if(owner!==state.generation||state.chat!==c)return;if(!visible()||state.pane!=='chat')return chatWatch();for(const [key,job] of Object.entries(c.tasks)){if(job&&['waiting_operation','queued','running'].includes(job.status)){try{c.tasks[key]=(await api(`/chat/tasks/${encodeURIComponent(key)}/advance`,{})).task;}catch(_){}}}paintChat();chatWatch();},8000);}
+    c.watch=setTimeout(async()=>{if(owner!==state.generation||state.chat!==c)return;if(!visible()||state.pane!=='chat')return chatWatch();let done=false;for(const [key,job] of Object.entries(c.tasks)){if(job&&['waiting_operation','queued','running'].includes(job.status)){try{c.tasks[key]=(await api(`/chat/tasks/${encodeURIComponent(key)}/advance`,{})).task;done=done||CHAT_TERMINAL.has(c.tasks[key]?.status);}catch(_){}}}if(done&&c.conversationId&&!c.busy)await chatLoad(c.conversationId).catch(()=>{});paintChat();chatWatch();},8000);}
   function chatFileData(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:file.name,base64:String(reader.result).split(',')[1]||''});reader.onerror=()=>reject(Object.assign(new Error('OFFICE_ATTACHMENT_READ'),{code:'OFFICE_ATTACHMENT_READ'}));reader.readAsDataURL(file);});}
   async function chatSend(){const c=chatState(),text=c.draft.trim(),attached=(c.files||[]).slice();if(c.busy||(!text&&!attached.length)||!c.agentId)return;
     const owner=state.generation;c.draft='';c.files=[];c.busy=true;c.error='';c.progress=L('Konuyu değerlendiriyorum…','Thinking about it…');c.controller=new AbortController();
     c.messages.push({id:'pending',role:'user',text:[text,attached.map(file=>file.name).join(', ')].filter(Boolean).join('\n\n'),createdAt:new Date().toISOString()});render();
-    const phases={attachments:L('Dosyaları okuyorum ve siparişlerle eşleştiriyorum…','Reading the files and matching them to orders…'),route:L('Konuyu değerlendiriyorum…','Thinking about it…'),plan:L('İşi planlıyorum…','Planning the work…'),prepare:L('Buyer Log’da hazırlıyorum…','Preparing it in Buyer Log…'),reply:L('Yanıtı hazırlıyorum…','Preparing the answer…'),sending:L('LCW AI ile konuşuyorum…','Talking to LCW AI…')};
+    const phases={attachments:L('Dosyaları okuyorum ve siparişlerle eşleştiriyorum…','Reading the files and matching them to orders…'),route:L('Konuyu değerlendiriyorum…','Thinking about it…'),plan:L('İşi planlıyorum…','Planning the work…'),prepare:L('Buyer Log’da hazırlıyorum…','Preparing it in Buyer Log…'),answer:L('Sonuçlardan cevabını yazıyorum…','Writing up your answer from the results…'),reply:L('Yanıtı hazırlıyorum…','Preparing the answer…'),sending:L('LCW AI ile konuşuyorum…','Talking to LCW AI…')};
     try{const files=attached.length?await Promise.all(attached.map(item=>chatFileData(item.file))):undefined;
       const result=await root.BuyerLogAI.runAgentOffice({chat:true,payload:{text,agentId:c.agentId,conversationId:c.conversationId,lang:en()?'en':'tr',...(files?{files}:{})},signal:c.controller.signal,
-        onProgress:event=>{if(owner!==state.generation)return;if(event.delta)c.progress=phases.reply;else if(phases[event.phase])c.progress=phases[event.phase];const node=host()?.querySelector('[data-ao-chat-progress]');if(node)node.textContent=c.progress;}});
+        onProgress:event=>{if(owner!==state.generation)return;if(event.phase==='ai-call'){c.raw='';c.live='';}
+          if(event.delta){c.progress=phases.reply;c.raw=(c.raw||'')+event.delta;const text=liveAnswer(c.raw);
+            if(text&&text!==c.live){c.live=text;const live=host()?.querySelector('[data-ao-chat-live]'),box=host()?.querySelector('[data-ao-chat-messages]');if(live)live.innerHTML=chatBubble(c.agentId,chatMarkdown(text));else paintChat();if(box)box.scrollTop=box.scrollHeight;}}
+          else if(phases[event.phase])c.progress=phases[event.phase];const node=host()?.querySelector('[data-ao-chat-progress]');if(node)node.textContent=c.progress;}});
       if(owner!==state.generation)return;c.conversationId=result.conversation.id;if(result.task){c.tasks[result.task.id]=result.task;await chatTools(result.route?.lead);}
       c.progress='';
     }catch(err){if(owner!==state.generation)return;c.error=errorText(err);c.progress='';if(!c.draft)c.draft=text;if(!c.files.length)c.files=attached;}
-    finally{if(owner!==state.generation)return;c.busy=false;c.controller=null;await refresh();if(c.conversationId)await chatLoad(c.conversationId).catch(()=>{});else c.messages=c.messages.filter(item=>item.id!=='pending');render();chatWatch();host()?.querySelector('[data-ao-chat-draft]')?.focus();}}
+    finally{if(owner!==state.generation)return;c.busy=false;c.controller=null;c.raw='';c.live='';await refresh();if(c.conversationId)await chatLoad(c.conversationId).catch(()=>{});else c.messages=c.messages.filter(item=>item.id!=='pending');render();chatWatch();host()?.querySelector('[data-ao-chat-draft]')?.focus();}}
   async function chatAction(name,target){const c=chatState(),key=target?.dataset.id||'';
     if(name==='chat-agent'){if(c.busy)return true;const conv=state.data.conversations.find(item=>item.id===c.conversationId);c.agentId=key;if(!conv||!conv.profileIds.includes(key)){c.conversationId='';c.messages=[];}render();return true;}
     if(name==='chat-new'){if(c.busy)return true;c.conversationId='';c.messages=[];c.error='';render();return true;}
@@ -505,17 +544,22 @@
       return true;}
     if(name==='chat-agent-new'||name==='chat-agent-train'){agentTrainer(name==='chat-agent-train'?key:'');return true;}
     if(name==='chat-dismiss'){c.error='';render();return true;}
+    if(name==='chat-copy'){const item=c.messages.find(m=>m.id===key);if(!item)return true;
+      try{await root.navigator.clipboard.writeText(String(item.text||''));target.textContent=L('Kopyalandı','Copied');setTimeout(()=>{target.textContent=L('Kopyala','Copy');},1500);}catch(_){c.error=L('Metin panoya kopyalanamadı; metni seçip kopyalayabilirsiniz.','The text could not be copied; you can select and copy it.');render();}return true;}
+    if(name==='chat-excel'){const item=c.messages.find(m=>m.id===key);if(!item)return true;try{await chatExcel(item);}catch(err){c.error=err.message||errorText(err);render();}return true;}
+    if(name==='chat-ask'){if(c.busy)return true;c.draft=String(target.dataset.text||'');await chatSend();return true;}
+    if(name==='chat-brief-refresh'){target.disabled=true;try{c.brief=(await api('/chat/brief?refresh=1')).brief;}catch(err){c.error=errorText(err);}render();return true;}
     if(name==='chat-file-remove'){c.files.splice(Number(target.dataset.index),1);render();return true;}
     if(name==='chat-task-details'){const job=c.tasks[key];if(job)capabilityReview(job);return true;}
-    if(name==='chat-approve'){const job=c.tasks[key],next=job&&taskNextStep(job);if(!next)return true;target.disabled=true;
+    if(name==='chat-approve'){const job=c.tasks[key],next=job&&taskNextStep(job);if(!next||c.busy)return true;target.disabled=true;c.busy=true;c.progress=L('Onayladığınız işi yapıyorum, sonra sonucu yazacağım…','Doing the work you approved, then I will write up the result…');render();
       try{c.tasks[key]=(await api(`/chat/tasks/${encodeURIComponent(key)}/approve`,{confirmed:true,fingerprint:next.preview?.fingerprint||''})).task;}catch(err){c.error=errorText(err);}
-      render();chatWatch();return true;}
+      c.busy=false;c.progress='';if(c.conversationId)await chatLoad(c.conversationId).catch(()=>{});render();chatWatch();return true;}
     if(name==='chat-reject'){target.disabled=true;try{c.tasks[key]=(await api(`/tasks/${encodeURIComponent(key)}/reject`,{})).job;}catch(err){c.error=errorText(err);}render();return true;}
     if(name==='chat-undo'){if(!root.confirm(L('Bu değişikliği geri almak istiyor musunuz?','Do you want to undo this change?')))return true;target.disabled=true;
       try{c.tasks[key]=(await api(`/tasks/${encodeURIComponent(key)}/rollback`,{stepId:target.dataset.step,confirmed:true})).job;}catch(err){c.error=errorText(err);}render();return true;}
     return false;}
   function render(){
-    const el=host();if(!el||!state.data)return;if(state.pane==='chat'){state.scene?.destroy();state.scene=null;el.innerHTML=simpleView();const box=el.querySelector('[data-ao-chat-messages]');if(box)box.scrollTop=box.scrollHeight;return;}const retained=state.pane==='office'&&state.scene?el.querySelector('.aoSceneViewport'):null;if(retained)retained.remove();else{state.scene?.destroy();state.scene=null;}
+    const el=host();if(!el||!state.data)return;if(state.pane==='chat'){state.scene?.destroy();state.scene=null;const c=chatState();if(!c.briefRequested&&state.data.capabilities?.cpTools){c.briefRequested=true;void api('/chat/brief').then(value=>{c.brief=value.brief;if(state.pane==='chat'&&!c.messages.length)paintChat();}).catch(()=>{});}el.innerHTML=simpleView();const box=el.querySelector('[data-ao-chat-messages]');if(box)box.scrollTop=box.scrollHeight;return;}const retained=state.pane==='office'&&state.scene?el.querySelector('.aoSceneViewport'):null;if(retained)retained.remove();else{state.scene?.destroy();state.scene=null;}
     const panes=[['chat',L('Sohbet','Chat')],['office',L('Ofis','Office')],['history',L('Sohbetler','Conversations')],['memory',L('Hafıza','Memory')],['actions',L('Görevler','Tasks')],['catalog',L('Agent kataloğu','Agent catalog')]];
     if(state.data.capabilities.canModerate)panes.push(['moderation',L('Moderatör','Moderator')]);
     el.innerHTML=`<div class="agentOffice"><header class="aoHeader"><div><h2>BUYER LOG / ${esc(L('AGENT OFİSİ','AGENT OFFICE'))}</h2><div class="aoEyebrow">${esc(L('AI agentlarla daha iyi koleksiyonlar','Better collections with AI agents'))}</div></div><div class="aoHeaderActions"><span class="aoBadge" data-ao-clock>${esc(new Date().toLocaleTimeString(en()?'en-GB':'tr-TR',{hour:'2-digit',minute:'2-digit'}))}</span>${button(L('Sync','Sync'),'sync')}${button(L('Sync cihazları','Sync devices'),'sync-keys')}${button(state.conn?.connected?L('AI bağlı','AI connected'):L('AI bağlan','Connect AI'),'connect')}${button(L('Yenile','Refresh'),'refresh')}</div></header>

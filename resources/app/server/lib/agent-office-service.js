@@ -1,7 +1,7 @@
 'use strict';
 
 const { id, hash, error, text, AREAS } = require('./agent-office-store');
-const { analyzeOperationalData, compareSnapshots, bilingual } = require('./agent-office-intelligence');
+const { analyzeOperationalData, compareSnapshots, severityLevel, bilingual } = require('./agent-office-intelligence');
 const { MAX_BYTES } = require('./agent-office-sync');
 const scopeOf = raw => Object.fromEntries(['orderCode','plmId','colourCode'].filter(key => raw?.[key]).map(key => [key, text(raw[key], 80)]));
 // Only explicit business identifiers become filters; amounts/dates remain text.
@@ -122,7 +122,7 @@ function createAgentOfficeService(deps) {
     const settings={...previous,enabled:raw.enabled===undefined?previous.enabled:raw.enabled===true,desktopBackground:raw.desktopBackground===undefined?previous.desktopBackground:raw.desktopBackground===true,timeZone,intervalMinutes:Math.max(2,Math.min(30,Math.round(Number(raw.intervalMinutes)||previous.intervalMinutes))),dailyHour:Math.max(0,Math.min(23,Math.round(Number(raw.dailyHour??previous.dailyHour)))),severity:['HIGH','MEDIUM','WATCH'].includes(raw.severity)?raw.severity:previous.severity};
     const result=await store.save(profile.id,'metadata',settings,{expectedRevision:raw.revision??previous.revision});assistantChecks.delete(profile.id);audit(profile,'AGENT_ASSISTANT_CONFIGURE',profile.id,{enabled:result.enabled,intervalMinutes:result.intervalMinutes});return result;}
   async function checkAssistant(profile){profile=freshProfile(profile);const settings=await assistantSettings(profile);if(!settings.enabled)return;const previous=assistantChecks.get(profile.id),now=Date.now();if(previous&&(previous.running||now-previous.at<settings.intervalMinutes*60000))return;assistantChecks.set(profile.id,{at:now,running:true});
-    try{const result=await scan(profile,{},{});const actionable=result.findings.filter(f=>({CRITICAL:4,HIGH:3,MEDIUM:2,WATCH:1}[f.severity]||0)>=({HIGH:3,MEDIUM:2,WATCH:1}[settings.severity]||3));
+    try{const result=await scan(profile,{},{});const actionable=result.findings.filter(f=>severityLevel(f.severity)>=({HIGH:3,MEDIUM:2,WATCH:1}[settings.severity]||3));
       const fingerprint=hash(JSON.stringify({findings:actionable.map(f=>[f.id,f.severity,f.reasons,f.action]),snapshots:result.snapshots})),docs=await store.records(profile.id),record=docs.find(d=>d.kind==='metadata'&&d.id==='assistant-observation');
       const local=new Intl.DateTimeFormat('en-CA',{timeZone:settings.timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'numeric',hourCycle:'h23'}).formatToParts(new Date());const datePart=type=>local.find(p=>p.type===type)?.value;const day=[datePart('year'),datePart('month'),datePart('day')].join('-'),daily=Number(datePart('hour'))>=settings.dailyHour&&record?.lastDay!==day,changed=record?.fingerprint!==fingerprint;
       if((actionable.length||result.changes.length)&&(changed||daily))await store.save(profile.id,'alert',{id:id(),kind:daily?'daily-brief':'assistant-risk',title:bilingual(daily?'Günlük asistan özeti hazır':'Asistanın operasyonel risk tespit etti',daily?'Your daily assistant brief is ready':'Your assistant detected operational risk'),findings:actionable.slice(0,30),changes:result.changes.slice(0,20),totalFindings:actionable.length,sourceUpdatedAt:result.sourceUpdatedAt,coverage:Object.fromEntries(['cp','orders','collection','backlog','lfl','bom','checklists','tests','samples'].filter(key=>result.coverage[key]!==undefined).map(key=>[key,typeof result.coverage[key]==='object'?'available':result.coverage[key]])),aiCalls:0,dismissed:false});
@@ -193,7 +193,9 @@ function createAgentOfficeService(deps) {
     const requestId = id(), resolvedScope = inferScope(task,raw.scope);
     const runAuthority=memoryPolicy.fingerprint(profile);
     async function assertRunScope(){const latest=await Promise.all(ids.map(key=>store.get(profile.id,'profile',key)));if(latest.some((agent,i)=>agent.revision!==participants[i].revision)||runAuthority!==memoryPolicy.fingerprint(freshProfile(profile)))throw error('OFFICE_PREVIEW_CHANGED',409);}
-    const userMessage = await store.appendMessage(profile.id, conv.id, { role:'user', text:task, requestId,authorizationFingerprint:runAuthority });
+    // Görev cevabı, sahibin konuşmada zaten yazdığı mesaja bağlanır; mesaj ikinci kez eklenmez.
+    const reused = internal.reuseUserMessage ? (await store.messages(profile.id, conv.id, { limit: 40 })).messages.filter(item => item.role === 'user').pop() : null;
+    const userMessage = reused || await store.appendMessage(profile.id, conv.id, { role:'user', text:task, requestId,authorizationFingerprint:runAuthority });
     if (typeof internal.afterUserMessage === 'function') await internal.afterUserMessage(conv);
     let job = await store.save(profile.id, 'job', { id:requestId, profileIds:ids, conversationId:conv.id, userMessageId:userMessage.id, type:raw.mode === 'automation' ? 'automation' : 'analysis',
       runtimeInstanceId,runtimeDeviceId:store.db(profile.id).getDeviceId(),authorizationFingerprint:runAuthority,status:'running', task, scope:resolvedScope, calls:0, perspectiveMode:ids.length > 1 ? 'one-call-shared-perspectives' : 'single-agent' });
@@ -215,6 +217,21 @@ function createAgentOfficeService(deps) {
         supplierInsights:(operations.suppliers || []).slice(0,8), collectionEvidence:(operations.collection?.options || []).slice(0,8) });
       if(context.handoffs.length!==(internal.handoffs||[]).length||context.evidenceAttachments.length!==(internal.evidenceAttachments||[]).length||context.orchestration.length!==(internal.orchestration?1:0))throw error('OFFICE_CONTEXT_TOO_LARGE',413);
       let source = 'agent-office', guide = '';
+      // Az önce çalışan görev adımlarının doğrulanmış sonuçları rehber metni olarak gider (bağlam JSON sınırına takılmaz).
+      // Konuşmanın son mesajları tam metin gider: önceki cevaptaki liste/taslak üzerinde sohbet sürebilsin.
+      if (raw.mode !== 'automation') {
+        const recent = (await store.messages(profile.id, conv.id, { limit: 14 })).messages.filter(item => item.role !== 'system' && item.id !== userMessage.id && item.text && (!item.status || item.status === 'complete')).slice(-6);
+        const lines = []; let room = 8000;
+        for (const item of recent.reverse()) {
+          const who = item.role === 'user' ? 'owner' : participants.filter(agent => (item.profileIds || []).includes(agent.id) || item.provenance?.speaker === agent.id).map(agent => agent.name).join(', ') || 'agent';
+          if (room < 200) break;
+          const body = String(item.text).slice(0, room - 40);
+          lines.unshift(`--- ${who}${body.length < item.text.length ? ' (cut)' : ''} ---\n${body}`); room -= body.length + 40;
+        }
+        if (lines.length) { guide = '=== RECENT CONVERSATION ===\n' + lines.join('\n'); context.recentConversation = [{ messages: lines.length }]; }
+      }
+      // Az önce çalışan görev adımlarının doğrulanmış sonuçları rehber metni olarak gider (bağlam JSON sınırına takılmaz).
+      if (internal.taskResults?.text) { guide = [guide, '=== TASK RESULTS ===\n' + internal.taskResults.text].filter(Boolean).join('\n\n'); context.taskResults = [{ taskId: internal.taskResults.taskId, lead: internal.taskResults.lead }]; }
       if (raw.mode === 'automation') {
         if (!canAutomate(profile)) throw error('OFFICE_AUTOMATION_FORBIDDEN', 403);
         source = 'automations'; guide = await deps.automationGuide(profile);

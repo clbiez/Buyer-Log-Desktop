@@ -10,7 +10,11 @@ const DecisionSupport=require('./agent-office-decision-support');
 const { hash } = require('./agent-office-store');
 const IDENTITY = ['orderCode', 'plmId', 'colourCode'];
 const SNAPSHOT_FIELDS = ['orderCode', 'plmId', 'colourCode', 'modelName', 'orderQuantity', 'shipmentQuantity', 'remainingUnits', 'manufacturer', 'exFactory', 'retailDate', 'orderStatus'];
-const PRIORITY = { CRITICAL: 100, HIGH: 80, MEDIUM: 50, WATCH: 30, ON_TRACK: 0 };
+const PRIORITY = { CRITICAL: 100, ACTION_TODAY: 90, HIGH: 80, ACTION_THIS_WEEK: 60, MEDIUM: 50, WATCH: 30, ON_TRACK: 0 };
+/* CP öncelikleri (Bugün/Bu hafta aksiyon) genel bulgu düzeyleriyle aynı basamakta
+   sayılır: eşik ve sayımlar tek yerden okunur. */
+const SEVERITY_LEVEL = { CRITICAL: 4, ACTION_TODAY: 3, HIGH: 3, ACTION_THIS_WEEK: 2, MEDIUM: 2, WATCH: 1 };
+const severityLevel = severity => SEVERITY_LEVEL[severity] || 0;
 const bilingual = (tr, en) => ({ tr, en });
 function identity(row, module = 'cp') { return fields.project(row, module, IDENTITY); }
 function orderKey(row) { return Reports.defaultKey ? Reports.defaultKey(row, { orderCode: CP.FIELDS.orderCode, model: CP.FIELDS.model, colourCode: CP.FIELDS.colourCode }) : CP.analyzeOrder(row).orderKey; }
@@ -156,4 +160,4 @@ function compareSnapshots(previous, current) {
   for (const item of previous || []) if (!keys.has(item.key)) changes.push({ key: item.key, kind: 'left-current-scope', before: item, after: null });
   return changes;
 }
-module.exports = { analyzeOperationalData, compareSnapshots, correlate, identity, provenance, SNAPSHOT_FIELDS, PRIORITY, bilingual };
+module.exports = { analyzeOperationalData, compareSnapshots, correlate, identity, provenance, SNAPSHOT_FIELDS, PRIORITY, severityLevel, bilingual };
