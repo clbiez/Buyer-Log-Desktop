@@ -59,7 +59,26 @@
     const sum=nums.reduce((a,b)=>a+b,0);
     return {count:flat.length,numericCount:nums.length,sum,average:nums.length?sum/nums.length:null};
   }
+  // Resolve pasted status/dropdown labels against the target cell's actual options.
+  // The stored canonical value may differ from its translated on-screen label.
+  function resolveSelectPasteValue(raw,options){
+    const value=String(raw==null?'':raw);
+    if(!value.trim())return {ok:true,value:''};
+    const fold=text=>String(text==null?'':text).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[Iİı]/g,'i').trim().replace(/\s+/g,' ').toLowerCase();
+    const choices=(Array.isArray(options)?options:[]).map(option=>({
+      value:String(option?.value??''),label:String(option?.label??'')
+    }));
+    // Exact canonical names must win over loose/diacritic-insensitive matching:
+    // two user-created statuses may intentionally differ only by accents.
+    const exact=choices.filter(option=>option.value.trim()===value.trim());
+    if(exact.length===1)return {ok:true,value:exact[0].value};
+    const needle=fold(value),matches=new Set();
+    for(const option of choices){
+      if(fold(option.value)===needle||fold(option.label)===needle)matches.add(option.value);
+    }
+    return matches.size===1?{ok:true,value:[...matches][0]}:{ok:false,reason:'invalid-option'};
+  }
   function pasteSummary(plan){const geometry=plan&&plan.geometry||{};return {kind:'paste',mode:geometry.mode||'',changed:Array.isArray(plan&&plan.ops)?plan.ops.length:0,readonly:Number(plan&&plan.readonly)||0,invalid:Number(plan&&plan.invalid)||0,skipped:Number(plan&&plan.skipped)||0,source:{...(geometry.clipboard||{rows:0,columns:0})},target:{...(geometry.selection||{rows:0,columns:0})}};}
-  global.BLCollectionSpreadsheetEngine={columnLetter,parseClipboardMatrix,normalizeSingleCellPasteText,rangeBounds,cellsInRange,expandPasteMatrix,planPasteGeometry,pasteSummary,tsv,selectionStats};
-  if(typeof module!=='undefined'&&module.exports)module.exports={columnLetter,parseClipboardMatrix,normalizeSingleCellPasteText,rangeBounds,cellsInRange,expandPasteMatrix,planPasteGeometry,pasteSummary,tsv,selectionStats};
+  global.BLCollectionSpreadsheetEngine={columnLetter,parseClipboardMatrix,normalizeSingleCellPasteText,rangeBounds,cellsInRange,expandPasteMatrix,planPasteGeometry,pasteSummary,tsv,selectionStats,resolveSelectPasteValue};
+  if(typeof module!=='undefined'&&module.exports)module.exports={columnLetter,parseClipboardMatrix,normalizeSingleCellPasteText,rangeBounds,cellsInRange,expandPasteMatrix,planPasteGeometry,pasteSummary,tsv,selectionStats,resolveSelectPasteValue};
 })(typeof window!=='undefined'?window:globalThis);
