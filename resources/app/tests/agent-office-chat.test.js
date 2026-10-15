@@ -208,3 +208,11 @@ test('a stakeholder document is matched before the reply: a card shows the verif
   assert.equal(result.message.text,'7300001 yüksek riskli.');
   assert.match(list.find(m=>m.role==='user').text,/Ekler: DEMO\.xlsx$/,'each file is named once');
 });
+
+test('a failed document analysis does not block the test report reader',async()=>{
+  const {prepareAttachments}=require('../server/lib/agent-office-chat');const calls=[];
+  const out=await prepareAttachments({id:'o'},[{name:'DEMO-test.pdf',base64:'JVBERg=='}],{analyzeDocuments:async()=>{throw Object.assign(new Error('x'),{code:'OFFICE_AI_CONTRACT_INVALID'});},
+    canReadDocuments:async()=>true,qualityService:{parse:async()=>{calls.push('parse');return {sessionId:'s'.repeat(32)};},extractAi:async()=>{}},qualityTools:{inspect:async()=>({matches:[]})},engine:{},staging:{dropSession:()=>{}}});
+  assert.deepEqual(out.map(i=>i.kind),['test-documents']);assert.deepEqual(calls,['parse']);
+  await assert.rejects(prepareAttachments({id:'o'},[{name:'DEMO.csv',base64:'YSxi'}],{analyzeDocuments:async()=>{throw Object.assign(new Error('x'),{code:'OFFICE_AI_CONTRACT_INVALID'});}}),{code:'OFFICE_AI_CONTRACT_INVALID'},'with nothing else to show, the analysis error is reported');
+});

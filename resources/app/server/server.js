@@ -5473,8 +5473,9 @@ async function agentDocumentOrders(profile) {
     const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
     const businessRows=userAccess.filterRowsByScope(profile, filterRowsByEffectiveHorizon(profile,source,ordersForTarget(active,source,overrides)));
     const rows=buildOrdersRowsFromASAS(businessRows,antrepoForTarget(active,source),overrides);
-    const CP=require('../public/cp-readiness-engine');
-    return rows.map(row=>{const analysis=CP.analyzeOrder(row);return {orderKey:analysis.orderKey,orderCode:String(canonicalFields.value(row,source,'orderCode') || analysis.orderCode || ''),plmId:String(canonicalFields.value(row,source,'plmId') || ''),
+    // CP ekranıyla aynı bağlam: hedef türü ve yol süresi kuralları (yoksa en geç güvenli yükleme hesaplanamaz).
+    const CP=require('../public/cp-readiness-engine'),context={settings:{targetType:cpAgentPreferences.context(profile).settings?.targetType},transitRules:overrides.transitRules||[]};
+    return rows.map(row=>{const analysis=CP.analyzeOrder(row,context);return {orderKey:analysis.orderKey,orderCode:String(canonicalFields.value(row,source,'orderCode') || analysis.orderCode || ''),plmId:String(canonicalFields.value(row,source,'plmId') || ''),
       modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || ''),colour:String(canonicalFields.value(row,source,'colour') || ''),
       quantity:analysis.qty,plannedLoadDate:analysis.plannedLoadDate,latestSafeLoadDate:analysis.latestSafeLoadDate,targetType:analysis.targetType,targetDate:analysis.targetDate};});
 }

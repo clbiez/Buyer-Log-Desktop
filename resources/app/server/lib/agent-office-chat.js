@@ -16,6 +16,8 @@
    araç kimliği düşer, lider katılımcı listesinde olmalıdır. */
 const { id, error, text } = require('./agent-office-store');
 
+// AI ve belge kaynaklı metin kesilir, reddedilmez.
+const cut = (value, max) => String(value == null ? '' : value).trim().slice(0, max);
 const WAITING = new Set(['waiting_approval', 'waiting_output', 'waiting_operation']);
 const TERMINAL = new Set(['completed', 'partial', 'failed', 'cancelled', 'interrupted', 'rejected', 'rolled_back']);
 const MODES = new Set(['reply', 'task', 'clarify']);
@@ -47,7 +49,7 @@ function validateRoute(data, { roster, toolsBy, current }) {
   agentIds = agentIds.slice(0, 4);
   const allowedTools = new Set(toolsBy[lead] || []);
   const toolIds = [...new Set((Array.isArray(data?.toolIds) ? data.toolIds : []).map(String).filter(key => allowedTools.has(key)))].slice(0, 8);
-  const route = { mode, agentIds, lead, toolIds, brief: text(data?.brief, 4000), note: text(data?.note, 600), suggestion: text(data?.suggestion, 2000) };
+  const route = { mode, agentIds, lead, toolIds, brief: cut(data?.brief, 4000), note: cut(data?.note, 600), suggestion: cut(data?.suggestion, 2000) };
   // Uygun araç yoksa iş planı kurulmaz; cevap yoluna düşer.
   if (route.mode === 'task' && !route.toolIds.length) route.mode = 'reply';
   return route;
@@ -84,23 +86,27 @@ async function prepareAttachments(profile, files, { qualityService, qualityTools
   assertAuthority();
   let sessionId = '', docKind = '';
   try {
+    let analysisFailed = null;
     if (analyzeDocuments) {
-      const analysis = await analyzeDocuments(list); assertAuthority();
-      if (analysis) { docKind = analysis.docKind; out.push(analysis); }
+      // Belge analizi başarısız olsa da test belgesi ve dosya deposu yolları çalışır.
+      try { const analysis = await analyzeDocuments(list); if (analysis) { docKind = analysis.docKind; out.push(analysis); } }
+      catch (err) { if (err.code === 'OFFICE_PREVIEW_CHANGED' || err.code === 'OFFICE_TOOL_FORBIDDEN' || err.code === 'LCWAI_CANCELLED') throw err; analysisFailed = err; }
+      assertAuthority();
     }
-    if (readTests && (!analyzeDocuments || docKind === 'test-report')) {
+    if (readTests && (!analyzeDocuments || analysisFailed || docKind === 'test-report')) {
       const parsed = await qualityService.parse(profile, documents, { durable: true });
       sessionId = parsed.sessionId; assertAuthority();
       if (engine && documents.length <= AI_DOCUMENT_LIMIT) { await qualityService.extractAi(profile, parsed.sessionId, { engine, lang, assertAuthority }); assertAuthority(); }
       const preview = await qualityTools.inspect(profile, parsed.sessionId); assertAuthority();
-      out.push({ kind: 'test-documents', sessionId: parsed.sessionId, files: documents.map(file => text(file.name, 160)),
-        matches: (preview.matches || []).slice(0, 20).map(match => ({ talepNo: text(match.talepNo, 80), outcome: text(match.outcome?.status || match.outcome, 40), level: text(match.level, 20),
-          orders: (match.candidates || []).slice(0, 3).map(candidate => text(candidate.identity?.orderCode || candidate.orderKey, 80)) })) });
+      out.push({ kind: 'test-documents', sessionId: parsed.sessionId, files: documents.map(file => cut(file.name, 160)),
+        matches: (preview.matches || []).slice(0, 20).map(match => ({ talepNo: cut(match.talepNo, 80), outcome: cut(match.outcome?.status || match.outcome, 40), level: cut(match.level, 20),
+          orders: (match.candidates || []).slice(0, 3).map(candidate => cut(candidate.identity?.orderCode || candidate.orderKey, 80)) })) });
     }
     for (const file of storeBooks ? workbooks : []) {
-      const meta = await artifacts.put(profile, Buffer.from(file.base64, 'base64'), text(file.name, 160), 'workbook'); assertAuthority();
-      out.push({ kind: 'workbook', artifactId: meta.id, name: text(file.name, 160) });
+      const meta = await artifacts.put(profile, Buffer.from(file.base64, 'base64'), cut(file.name, 160), 'workbook'); assertAuthority();
+      out.push({ kind: 'workbook', artifactId: meta.id, name: cut(file.name, 160) });
     }
+    if (!out.length && analysisFailed) throw analysisFailed;
     return out;
   } catch (err) { if (sessionId) staging?.dropSession(sessionId); throw err; }
 }
@@ -277,8 +283,8 @@ function attachChat(service, deps = {}) {
     const data = response.data, areas = [...new Set((Array.isArray(data.areas) ? data.areas : []).map(String).filter(key => allowed.includes(key)))];
     // Mevcut agent eğitilirken alanları daralmaz; yeni iş gerekiyorsa alan eklenir. Sahip önizlemede değiştirebilir.
     const kept = (current?.areas || []).filter(key => allowed.includes(key));
-    const draft = { name: text(data.name || current?.name || '', 60), role: text(data.role || current?.role || '', 80), areas: [...new Set([...kept, ...areas])],
-      instructions: text(data.instructions, 6000), summary: text(data.summary, 400) };
+    const draft = { name: cut(data.name || current?.name || '', 60), role: cut(data.role || current?.role || '', 80), areas: [...new Set([...kept, ...areas])],
+      instructions: cut(data.instructions, 6000), summary: cut(data.summary, 400) };
     if (!draft.name || !draft.instructions) throw error('OFFICE_AI_CONTRACT_INVALID', 422);
     return { draft, agentId: current?.id || '', revision: current?.revision ?? null, areaLabels: Object.fromEntries(allowed.map(key => [key, AREA_LABELS[key] || { tr: key, en: key }])) };
   }

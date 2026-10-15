@@ -38,9 +38,11 @@ test('a messy workbook is turned into a local table; only text reaches LCW AI, i
   const calls=[];
   const engine={ask:async()=>{throw new Error('should upload');},askWithFiles:async(_o,input)=>{calls.push(input);return {structured:{ok:true},data:{kind:'ex-factory-revision',request:'Ex-factory 2 hafta ertelensin',sender:'DEMO TEKSTIL',summary:'DEMO',rowsJson:JSON.stringify([{orderCode:'7300001',requestedExFactory:'2026-12-05',currentExFactory:'2026-11-20'}])}};}};
   const result=await Docs.analyzeDocuments({id:'owner'},files,{engine,orders:async()=>orders});
-  const table=calls[0].context.documents[0];
-  assert.equal(table.kind,'table');assert.deepEqual(table.sheets.map(s=>s.sheet),['Revize'],'hidden sheets are skipped');
-  assert.match(table.sheets[0].rows.join('\n'),/7300001 \| DEMO KAZAK \| C1 \| 1200 \| 2026-11-20 \| 05\.12\.2026/);
+  // What LCW AI really receives: the built prompt, not the raw call arguments.
+  const prompt=require('../server/lib/lcwai/lcwai-prompt').buildPrompt(calls[0]).prompt;
+  assert.match(prompt,/7300001 \| DEMO KAZAK \| C1 \| 1200 \| 2026-11-20 \| 05\.12\.2026/,'table cells reach the LCW AI prompt');
+  assert.match(prompt,/=== DEMO-revize\.xlsx \(table\) ===/);assert.doesNotMatch(prompt,/\[Gizli\]/,'hidden sheets are skipped');
+  assert.deepEqual(calls[0].context.documents.map(doc=>doc.kind),['table','attached-file']);
   assert.deepEqual(calls[0].files.map(f=>f.fileName),['DEMO-ekran.png']);
   assert.equal(result.totals.high,1);assert.equal(result.docKind,'ex-factory-revision');
   assert.equal(Docs.ordinalOf('05.12.2026'),Docs.ordinalOf('2026-12-05'),'day-first dates are read');
@@ -48,8 +50,33 @@ test('a messy workbook is turned into a local table; only text reaches LCW AI, i
 
 test('an e-mail body is read locally; invented or broken rows never become matches',async()=>{
   const eml=['From: DEMO Tedarikci <demo@example.com>','Subject: EXF revize','Content-Type: text/plain; charset=utf-8','','Merhaba, 7300002 siparisinin ex-factory tarihini 2026-11-17 olarak revize edebilir miyiz?'].join('\r\n');
-  let seen;const engine={ask:async(_o,input)=>{seen=input.context.documents[0];return {structured:{ok:true},data:{kind:'ex-factory-revision',rowsJson:'not json'}};}};
+  let seen,guide;const engine={ask:async(_o,input)=>{seen=input.context.documents[0];guide=input.guide;return {structured:{ok:true},data:{kind:'ex-factory-revision',rowsJson:'not json'}};}};
   await assert.rejects(Docs.analyzeDocuments({id:'o'},[{name:'DEMO.eml',base64:Buffer.from(eml).toString('base64')}],{engine,orders:async()=>orders}),{code:'OFFICE_AI_CONTRACT_INVALID'});
-  assert.equal(seen.kind,'mail');assert.match(seen.subject,/EXF revize/);assert.match(seen.text.join(''),/7300002/);
+  assert.equal(seen.kind,'mail');
+  assert.match(guide,/EXF revize/);assert.match(guide,/7300002/);
   await assert.rejects(Docs.analyzeDocuments({id:'o'},[{name:'DEMO.exe',base64:'AA=='}],{engine,orders:async()=>orders}),{code:'OFFICE_ATTACHMENT_TYPE'});
+});
+
+test('long fields are cut, impossible dates are not guessed, old .xls and oversized archives are refused safely',async()=>{
+  const rows=Docs.parseRows({rowsJson:JSON.stringify([{orderCode:'7300001',note:'x'.repeat(5000),model:'m'.repeat(500),requestedExFactory:'12/31/2026'},{orderCode:'7300002',requestedExFactory:'2026-02-31'}])});
+  assert.equal(rows[0].note.length,300);assert.equal(Docs.ordinalOf('12/31/2026'),null);assert.equal(Docs.ordinalOf('2026-02-31'),null);
+  assert.deepEqual(Docs.evaluate(rows,orders).rows.map(r=>r.risk),['unknown','unknown']);
+  const engine={ask:async()=>{throw new Error('not called');}};
+  const result=await Docs.analyzeDocuments({id:'o'},[{name:'eski.xls',base64:'0M8R4KGxGuE='}],{engine,orders:async()=>orders});
+  assert.deepEqual(result.skipped,[{name:'eski.xls',reason:'xls'}]);assert.equal(result.rows.length,0);
+  // A zip whose central directory claims a huge unpacked size is refused before it is opened.
+  const fake=Buffer.alloc(46+22);fake.writeUInt32LE(0x02014b50,0);fake.writeUInt32LE(500*1048576,24);fake.writeUInt32LE(0x06054b50,46);fake.writeUInt16LE(1,56);fake.writeUInt32LE(0,62);
+  assert.ok(Docs.zipUnpackedSize(fake).total>=500*1048576);
+  await assert.rejects(Docs.analyzeDocuments({id:'o'},[{name:'bomba.xlsx',base64:fake.toString('base64')}],{engine,orders:async()=>orders}),{code:'OFFICE_ATTACHMENT_LIMIT'});
+});
+
+test('the evidence of a long document stays small enough for a four-agent team chat',()=>{
+  const many=Docs.parseRows({rowsJson:JSON.stringify(Array.from({length:120},(_,i)=>({orderCode:'73000'+String(10+i).padStart(2,'0'),model:'DEMO MODEL ADI UZUN '+i,colourCode:'C'+i,requestedExFactory:'2026-12-01'})))});
+  const compact=Docs.compactSummary(Docs.evaluate(many,orders));
+  assert.ok(compact.length<=3500);
+  const {packContext}=require('../server/lib/agent-office-service');
+  const participants=['a','b','c','d'].map(id=>({id,instructions:'Talimat '.repeat(750)}));
+  const coverage=Object.fromEntries(Array.from({length:20},(_,i)=>['k'+i,'x'.repeat(700)]));
+  const packed=packContext({participants,coverage,evidenceAttachments:[{id:'document-orders-1',text:'İstek\n'+compact}],findings:[{id:'f',text:'y'.repeat(1500)}]},17800);
+  assert.equal(packed.evidenceAttachments.length,1,'evidence is never dropped');
 });
