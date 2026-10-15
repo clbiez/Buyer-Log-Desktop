@@ -5,7 +5,7 @@
 (function(global){
   'use strict';
   if(global.BLCPOrdersFabricCards)return;
-  const engine=global.BLFabricCardsEngine;
+  const engine=global.BLFabricCards;
   if(!engine||typeof engine.ruleCard!=='function')return;
   const labels=[
     ['category','Kumaş grubu','Fabric group'],
@@ -46,7 +46,7 @@
     const code=card.code||'';
     const details=card.details||{};
     const lang=isEn()?'en':'tr';
-    const summary=engine.displayText?engine.displayText(value,new Map(),lang):(lang==='en'?card.summaryEn:card.summary);
+    const summary=lang==='en'?(card.summaryEn||card.summary):(card.summary||card.summaryEn);
     return {raw:value,code,summary:summary||value,details};
   }
   function valuesFor(table,index){
