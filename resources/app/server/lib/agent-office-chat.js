@@ -53,32 +53,48 @@ function validateRoute(data, { roster, toolsBy, current }) {
   return route;
 }
 
-const DOCUMENT_FILE = /\.(pdf|msg|eml|png|jpe?g)$/i, WORKBOOK_FILE = /\.xlsx?$/i;
-/* Sohbete eklenen dosyalar mevcut motorlarla hazırlanır: test raporu ve
-   e-postalar test motoruyla okunup sahibin yazabildiği siparişlerle eşlenir;
-   Excel kitapları agent dosya deposuna alınır. LCW AI'a yalnız kimlik, dosya
-   adı ve eşleşme özeti gider. Hiçbir iş burada uygulanmaz. */
-async function prepareAttachments(profile, files, { qualityService, qualityTools, artifacts, canReadDocuments, engine, lang, assertAuthority } = {}) {
-  const list = Array.isArray(files) ? files.slice(0, 10) : [];
+const DOCUMENT_FILE = /\.(pdf|msg|eml|png|jpe?g)$/i, WORKBOOK_FILE = /\.xlsx?$/i, AI_DOCUMENT_LIMIT = 5;
+/* Sohbete eklenen dosyalar mevcut motorlarla ve mevcut yükleme kurallarıyla
+   hazırlanır:
+   - test raporu ve e-postalar: seçili agentın test belgesi okuma yetkisi olmalı;
+     test motoru okur ve sahibin yazabildiği siparişlerle eşler. En çok 5 belgede
+     metin çıkarımı için belgeler şirket içi LCW AI'a gider (mevcut test
+     akışındaki AI okuma ile aynı yol); daha fazlasında yalnız yerel okuma yapılır.
+   - Excel: Veri Yönetimi'ndeki yükleme ile aynı alan/izin şartı.
+   Yönlendirici ve planlayıcıya yalnız kimlik, dosya adı ve eşleşme özeti gider.
+   Her adımın arasında sahibin erişimi yeniden doğrulanır; hata olursa geçici
+   oturum silinir. Hiçbir iş burada uygulanmaz. */
+async function prepareAttachments(profile, files, { qualityService, qualityTools, artifacts, staging, canReadDocuments, canStoreWorkbooks, engine, lang, assertAuthority = () => {} } = {}) {
+  const list = Array.isArray(files) ? files : [];
   if (!list.length) return [];
+  if (list.length > 10) throw error('OFFICE_ATTACHMENT_LIMIT', 413);
   if (list.some(file => !file || typeof file.name !== 'string' || typeof file.base64 !== 'string')) throw error('OFFICE_TASK_INVALID', 422);
   const out = [], documents = list.filter(file => DOCUMENT_FILE.test(file.name)), workbooks = list.filter(file => WORKBOOK_FILE.test(file.name));
   if (list.length !== documents.length + workbooks.length) throw error('OFFICE_ATTACHMENT_TYPE', 415);
-  if (documents.length) {
-    if (!qualityService || !qualityTools || !(await canReadDocuments?.())) throw error('OFFICE_ATTACHMENT_AGENT_REQUIRED', 403);
-    const parsed = await qualityService.parse(profile, documents, { durable: true });
-    if (engine) await qualityService.extractAi(profile, parsed.sessionId, { engine, lang, assertAuthority });
-    const preview = await qualityTools.inspect(profile, parsed.sessionId);
-    out.push({ kind: 'test-documents', sessionId: parsed.sessionId, files: documents.map(file => text(file.name, 160)),
-      matches: (preview.matches || []).slice(0, 20).map(match => ({ talepNo: text(match.talepNo, 80), outcome: text(match.outcome?.status || match.outcome, 40), level: text(match.level, 20),
-        orders: (match.candidates || []).slice(0, 3).map(candidate => text(candidate.identity?.orderCode || candidate.orderKey, 80)) })) });
-  }
-  for (const file of workbooks) {
-    const buffer = Buffer.from(file.base64, 'base64');
-    const meta = await artifacts.put(profile, buffer, text(file.name, 160), 'workbook');
-    out.push({ kind: 'workbook', artifactId: meta.id, name: text(file.name, 160) });
-  }
-  return out;
+  if (documents.length && (!qualityService || !qualityTools || !(await canReadDocuments?.()))) throw error('OFFICE_ATTACHMENT_AGENT_REQUIRED', 403);
+  if (workbooks.length && !(await canStoreWorkbooks?.())) throw error('OFFICE_TOOL_FORBIDDEN', 403);
+  assertAuthority();
+  let sessionId = '';
+  try {
+    if (documents.length) {
+      const parsed = await qualityService.parse(profile, documents, { durable: true });
+      sessionId = parsed.sessionId; assertAuthority();
+      if (engine && documents.length <= AI_DOCUMENT_LIMIT) { await qualityService.extractAi(profile, parsed.sessionId, { engine, lang, assertAuthority }); assertAuthority(); }
+      const preview = await qualityTools.inspect(profile, parsed.sessionId); assertAuthority();
+      out.push({ kind: 'test-documents', sessionId: parsed.sessionId, files: documents.map(file => text(file.name, 160)),
+        matches: (preview.matches || []).slice(0, 20).map(match => ({ talepNo: text(match.talepNo, 80), outcome: text(match.outcome?.status || match.outcome, 40), level: text(match.level, 20),
+          orders: (match.candidates || []).slice(0, 3).map(candidate => text(candidate.identity?.orderCode || candidate.orderKey, 80)) })) });
+    }
+    for (const file of workbooks) {
+      const meta = await artifacts.put(profile, Buffer.from(file.base64, 'base64'), text(file.name, 160), 'workbook'); assertAuthority();
+      out.push({ kind: 'workbook', artifactId: meta.id, name: text(file.name, 160) });
+    }
+    return out;
+  } catch (err) { if (sessionId) staging?.dropSession(sessionId); throw err; }
+}
+/* Sohbet işi başarısız olursa hazırlanan test oturumu bekletilmez. */
+function dropAttachments(attachments, staging) {
+  for (const item of attachments || []) if (item.kind === 'test-documents' && item.sessionId) staging?.dropSession(item.sessionId);
 }
 
 function attachChat(service, deps = {}) {
@@ -242,7 +258,7 @@ function attachChat(service, deps = {}) {
     return { draft, agentId: current?.id || '', revision: current?.revision ?? null, areaLabels: Object.fromEntries(allowed.map(key => [key, AREA_LABELS[key] || { tr: key, en: key }])) };
   }
 
-  return { officeAgentDraft: agentDraft, officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => publicTask(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
+  return { officeAgentDraft: agentDraft, officeChatBusy: owner => busy.has(owner), officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => publicTask(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
 }
 
-module.exports = { attachChat, validateRoute, chunks, prepareAttachments };
+module.exports = { attachChat, validateRoute, chunks, prepareAttachments, dropAttachments };

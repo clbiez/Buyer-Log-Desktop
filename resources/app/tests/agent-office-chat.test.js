@@ -160,7 +160,7 @@ test('attached reports are read and matched by the test engine, workbooks are st
   const calls=[],profile={id:'owner-x'};
   const deps={qualityService:{parse:async(_p,files)=>{calls.push(['parse',files.map(f=>f.name)]);return {sessionId:'s'.repeat(32),files};},extractAi:async()=>{calls.push(['ai']);}},
     qualityTools:{inspect:async()=>({matches:[{talepNo:'T-1',outcome:{status:'fail'},level:'exact',candidates:[{orderKey:'k1',identity:{orderCode:'7300001'}}]}]})},
-    artifacts:{put:async(_p,buffer,name)=>{calls.push(['put',name,buffer.length]);return {id:'a'.repeat(32)};}},canReadDocuments:async()=>true,engine:{}};
+    artifacts:{put:async(_p,buffer,name)=>{calls.push(['put',name,buffer.length]);return {id:'a'.repeat(32)};}},canReadDocuments:async()=>true,canStoreWorkbooks:async()=>true,engine:{},staging:{dropSession:id=>calls.push(['drop',id])}};
   const files=[{name:'DEMO-rapor.pdf',base64:Buffer.from('%PDF').toString('base64')},{name:'DEMO-kur.xlsx',base64:Buffer.from('PK').toString('base64')}];
   const out=await prepareAttachments(profile,files,deps);
   assert.deepEqual(out.map(item=>item.kind),['test-documents','workbook']);
@@ -168,6 +168,15 @@ test('attached reports are read and matched by the test engine, workbooks are st
   assert.equal(JSON.stringify(out).includes('%PDF'),false,'file content never goes to the summary');
   await assert.rejects(prepareAttachments(profile,[{name:'virus.exe',base64:'AA=='}],deps),{code:'OFFICE_ATTACHMENT_TYPE'});
   await assert.rejects(prepareAttachments(profile,[files[0]],{...deps,canReadDocuments:async()=>false}),{code:'OFFICE_ATTACHMENT_AGENT_REQUIRED'});
+  await assert.rejects(prepareAttachments(profile,[files[1]],{...deps,canStoreWorkbooks:async()=>false}),{code:'OFFICE_TOOL_FORBIDDEN'},'workbooks need the same right as the Data Management upload');
+  await assert.rejects(prepareAttachments(profile,[files[0]],{...deps,qualityTools:{inspect:async()=>{throw Object.assign(new Error('x'),{code:'TEST_REPORT_PREVIEW_CHANGED'});}}}),{code:'TEST_REPORT_PREVIEW_CHANGED'});
+  assert.deepEqual(calls.at(-1),['drop','s'.repeat(32)],'a failed read drops the staged documents');
+  calls.length=0;let stamp=1;
+  await assert.rejects(prepareAttachments(profile,files,{...deps,assertAuthority:()=>{if(calls.some(c=>c[0]==='parse')&&stamp++)throw Object.assign(new Error('x'),{code:'OFFICE_PREVIEW_CHANGED'});}}),{code:'OFFICE_PREVIEW_CHANGED'});
+  assert.equal(calls.some(c=>c[0]==='put'),false,'an access change stops before anything else is stored');
+  calls.length=0;
+  await prepareAttachments(profile,Array.from({length:6},(_,i)=>({name:'r'+i+'.pdf',base64:'JVBERg=='})),deps);
+  assert.equal(calls.some(c=>c[0]==='ai'),false,'more than five documents are read locally only');
   // The router and the planner see the attachment ids.
   let a,routerSaw,plannerSaw;const engine=fakeEngine({'agent-chat-route':input=>{routerSaw=input.context.attachments;return {mode:'task',agentIds:[a.ada.id],lead:a.ada.id,toolIds:['collection.plm.bom.read'],brief:'DEMO'};},
     'agent-task':input=>{plannerSaw=input.context.attachments;return {planJson:JSON.stringify({steps:[]})};}});

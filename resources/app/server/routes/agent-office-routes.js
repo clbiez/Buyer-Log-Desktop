@@ -25,7 +25,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
     res.type('application/x-ndjson');res.set('X-Accel-Buffering','no');res.flushHeaders?.();
     const send=event=>{if(!res.destroyed&&!res.writableEnded)res.write(JSON.stringify(event)+'\n');};
     try{const result=await work(req,controller.signal,event=>send({type:'progress',...event}));send({type:'result',result});}
-    catch(err){send({type:'error',error:isLcwAiError(err)?publicError(err):{code:/^OFFICE_|^AI_AUTOMATION_/.test(err.code || '')?err.code:'OFFICE_AI_FAILED'}});}
+    catch(err){send({type:'error',error:isLcwAiError(err)?publicError(err):{code:/^OFFICE_|^AI_AUTOMATION_|^TEST_REPORT_[A-Z_]+$/.test(err.code || '')?err.code:'OFFICE_AI_FAILED'}});}
     finally{if(!res.destroyed)res.end();}
   });
   app.put(base+'/assistant',json,wrap(async(req,res)=>res.json({ok:true,assistant:await service.configureAssistant(req.currentUser,req.body||{})})));
@@ -103,16 +103,24 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.post(base+'/run',json,stream((req,signal,onProgress)=>service.run(req.currentUser,{...req.body,signal},onProgress)));
   // Sade sohbet: tek kutu, LCW AI yönlendirir (cevap / iş / soru), gerekirse ekibi büyütür.
   app.post(base+'/chat',express.json({limit:'160mb'}),stream(async(req,signal,onProgress)=>{
-    const owner=userAccess.profileById(req.currentUser.id)||req.currentUser,stamp=JSON.stringify(userAccess.publicProfile?.(owner)||owner.id);
-    const assertAuthority=()=>{if(JSON.stringify(userAccess.publicProfile?.(userAccess.profileById(owner.id))||owner.id)!==stamp)throw error('OFFICE_TOOL_FORBIDDEN',403);};
+    const owner=userAccess.profileById(req.currentUser.id);if(!owner||owner.enabled===false)throw error('OFFICE_USER_DISABLED',403);
+    const stamp=JSON.stringify(userAccess.publicProfile(owner)),Chat=require('../lib/agent-office-chat'),staging=require('../lib/test-reports/staging');
+    const assertAuthority=()=>{const current=userAccess.profileById(owner.id);if(!current||JSON.stringify(userAccess.publicProfile(current))!==stamp)throw error('OFFICE_PREVIEW_CHANGED',409);};
     let attachments=[];
-    if(Array.isArray(req.body?.files)&&req.body.files.length){onProgress({phase:'attachments'});
-      attachments=await require('../lib/agent-office-chat').prepareAttachments(owner,req.body.files,{qualityService:deps.qualityService,qualityTools:deps.qualityTools,artifacts:require('../lib/agent-artifact-store'),
-        canReadDocuments:async()=>{for(const agent of await service.officeChatRoster(owner)){if((await service.taskCatalog(owner,agent.id).catch(()=>[])).some(tool=>tool.id==='quality.inspect'))return true;}return false;},
+    if(Array.isArray(req.body?.files)&&req.body.files.length){
+      // Meşgulken dosyalar hiç okunmaz.
+      if(service.officeChatBusy(owner.id))throw error('OFFICE_BUSY',429);
+      onProgress({phase:'attachments'});
+      attachments=await Chat.prepareAttachments(owner,req.body.files,{qualityService:deps.qualityService,qualityTools:deps.qualityTools,artifacts:require('../lib/agent-artifact-store'),staging,
+        // /quality/intake ile aynı şart: seçili agentın test belgesi okuma aracı olmalı.
+        canReadDocuments:async()=>(await service.taskCatalog(owner,req.body.agentId).catch(()=>[])).some(tool=>tool.id==='quality.inspect'),
+        // /artifacts/workbook ile aynı şart.
+        canStoreWorkbooks:async()=>userAccess.hasArea(owner,'source')&&userAccess.hasPermission(owner,'manageModelConnections'),
         engine:service.engineOf(),lang:req.body.lang,assertAuthority});
-      audit(req,'AGENT_CHAT_ATTACHMENTS',req.currentUser.id,{files:req.body.files.length});}
+      audit(req,'AGENT_CHAT_ATTACHMENTS',req.currentUser.id,{files:req.body.files.length,kinds:attachments.map(item=>item.kind)});}
     const {files,...body}=req.body||{};
-    return service.officeChat(req.currentUser,{...body,attachments,signal},onProgress);
+    try{return await service.officeChat(req.currentUser,{...body,attachments,signal},onProgress);}
+    catch(err){Chat.dropAttachments(attachments,staging);throw err;}
   }));
   app.post(base+'/chat/agent-draft',json,wrap(async(req,res)=>res.json({ok:true,...await service.officeAgentDraft(req.currentUser,req.body||{})})));
   app.get(base+'/chat/tasks/:id',wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatTask(req.currentUser,req.params.id)})));
