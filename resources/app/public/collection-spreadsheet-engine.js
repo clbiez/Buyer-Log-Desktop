@@ -59,7 +59,20 @@
     const sum=nums.reduce((a,b)=>a+b,0);
     return {count:flat.length,numericCount:nums.length,sum,average:nums.length?sum/nums.length:null};
   }
+  // Resolve pasted status/dropdown labels against the target cell's actual options.
+  // The stored canonical value may differ from its translated on-screen label.
+  function resolveSelectPasteValue(raw,options){
+    const value=String(raw==null?'':raw);
+    if(!value.trim())return {ok:true,value:''};
+    const fold=text=>String(text==null?'':text).normalize('NFKC').trim().replace(/\\s+/g,' ').toLocaleLowerCase('tr-TR');
+    const needle=fold(value),matches=new Set();
+    for(const option of (Array.isArray(options)?options:[])){
+      const optionValue=String(option?.value??''),optionLabel=String(option?.label??'');
+      if(fold(optionValue)===needle||fold(optionLabel)===needle)matches.add(optionValue);
+    }
+    return matches.size===1?{ok:true,value:[...matches][0]}:{ok:false,reason:'invalid-option'};
+  }
   function pasteSummary(plan){const geometry=plan&&plan.geometry||{};return {kind:'paste',mode:geometry.mode||'',changed:Array.isArray(plan&&plan.ops)?plan.ops.length:0,readonly:Number(plan&&plan.readonly)||0,invalid:Number(plan&&plan.invalid)||0,skipped:Number(plan&&plan.skipped)||0,source:{...(geometry.clipboard||{rows:0,columns:0})},target:{...(geometry.selection||{rows:0,columns:0})}};}
-  global.BLCollectionSpreadsheetEngine={columnLetter,parseClipboardMatrix,normalizeSingleCellPasteText,rangeBounds,cellsInRange,expandPasteMatrix,planPasteGeometry,pasteSummary,tsv,selectionStats};
-  if(typeof module!=='undefined'&&module.exports)module.exports={columnLetter,parseClipboardMatrix,normalizeSingleCellPasteText,rangeBounds,cellsInRange,expandPasteMatrix,planPasteGeometry,pasteSummary,tsv,selectionStats};
+  global.BLCollectionSpreadsheetEngine={columnLetter,parseClipboardMatrix,normalizeSingleCellPasteText,rangeBounds,cellsInRange,expandPasteMatrix,planPasteGeometry,pasteSummary,tsv,selectionStats,resolveSelectPasteValue};
+  if(typeof module!=='undefined'&&module.exports)module.exports={columnLetter,parseClipboardMatrix,normalizeSingleCellPasteText,rangeBounds,cellsInRange,expandPasteMatrix,planPasteGeometry,pasteSummary,tsv,selectionStats,resolveSelectPasteValue};
 })(typeof window!=='undefined'?window:globalThis);
