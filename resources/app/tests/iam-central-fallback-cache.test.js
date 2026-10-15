@@ -20,13 +20,13 @@ function store(name, revision) {
     users: [{ id: 'u1', role: 'buyer', systemRole: 'buyer', username: 'DEMO Buyer', displayName: 'DEMO Buyer', passwordHash: 'y'.repeat(64), enabled: true, status: 'ACTIVE' }],
     orderAccess: {}, scopeCatalog: {} };
 }
-function setup() {
+function setup({ backups = 4, local = true } = {}) {
   const base = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-iam-central-fallback-'));
   const install = path.join(base, 'BuyerLog DEMO'), auth = path.join(install, 'data', 'app', 'auth'), server = path.join(install, 'data', 'server');
   fs.mkdirSync(auth, { recursive: true }); fs.mkdirSync(server, { recursive: true });
-  fs.writeFileSync(path.join(auth, 'user-access.json'), JSON.stringify(store('DEMO Moderator', 5)));
+  if (local) fs.writeFileSync(path.join(auth, 'user-access.json'), JSON.stringify(store('DEMO Moderator', 5)));
   // Historical copies the recovery scan finds and parses.
-  for (let i = 0; i < 4; i += 1) {
+  for (let i = 0; i < backups; i += 1) {
     const dir = path.join(install, 'data-BACKUP-' + i, 'auth'); fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, 'user-access.json'), JSON.stringify(store('DEMO Old', 1)));
   }
@@ -61,4 +61,28 @@ test('without a valid central cache, a repeated read reuses the resolved directo
   const changed = ua.readStore();
   assert.equal(changed.moderator.username, 'DEMO Renamed');
   assert.equal(changed.users.find(user => user.id === 'u1').displayName, 'DEMO Buyer 2');
+});
+
+test('a device without any local directory caches the empty result too', t => {
+  const { base, ua } = setup({ backups: 0, local: false });
+  t.after(() => { delete process.env.BUYER_LOG_CENTRAL_IAM_ENABLED; fs.rmSync(base, { recursive: true, force: true }); });
+  const first = ua.readStore();
+  assert.equal(first.moderator, null);
+  const second = countReads(() => ua.readStore());
+  assert.equal(second.value, first, 'same cached result');
+  assert.deepEqual([second.dirs, second.files], [0, 0]);
+});
+
+test('a read blocked by a momentary file lock is not cached; the next read sees the directory', t => {
+  const { base, auth, ua } = setup({ backups: 0 });
+  t.after(() => { delete process.env.BUYER_LOG_CENTRAL_IAM_ENABLED; fs.rmSync(base, { recursive: true, force: true }); });
+  const file = path.join(auth, 'user-access.json'), readFile = fs.readFileSync;
+  fs.readFileSync = function (target, ...rest) {
+    if (path.resolve(String(target)) === path.resolve(file)) throw Object.assign(new Error('EBUSY'), { code: 'EBUSY' });
+    return readFile.call(this, target, ...rest);
+  };
+  let locked;
+  try { locked = ua.readStore(); } finally { fs.readFileSync = readFile; }
+  assert.equal(locked.moderator, null, 'the locked read falls back');
+  assert.equal(ua.readStore().moderator.username, 'DEMO Moderator', 'the fallback was not kept');
 });

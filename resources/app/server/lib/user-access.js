@@ -645,6 +645,7 @@ function resolveStore(shared) {
       return shared ? storeCache.value : JSON.parse(JSON.stringify(storeCache.value));
     }
   }
+  let fallbackCacheable = false;
   if (centralConfigured) {
     /* Merkezi IAM önbelleği de dosya imzasıyla bellekte tutulur. Eskiden her
        readStore() çağrısı user-access.json'u iki kez, iam-derived.json'u
@@ -708,10 +709,15 @@ function resolveStore(shared) {
     // accounts whenever the Moderator had no local password on this device.
     // A full-system restore seed is also intentionally accepted here.
     const raw = restoreSeed || readAccessStoreFile(ACCESS_FILE + '.bak');
+    // Yalnız kesin karar önbelleğe girer: var olan bir kimlik dosyası bu çağrıda
+    // okunamadıysa (antivirüs/OneDrive kilidi) ya da merkezi önbellek gibi
+    // görünüp reddedildiyse sonraki çağrı yeniden dener.
+    fallbackCacheable = restoreSeed ? !restoreSeed._centralIam
+      : !fs.existsSync(ACCESS_FILE) && !(raw && raw._centralIam) && (Boolean(raw) || !fs.existsSync(ACCESS_FILE + '.bak'));
     // Son çare: bu cihazda daha önce giriş yapmış kişinin kendi kişisel kaydı.
     if (!raw || raw._centralIam || !hasUsableOfflineAuthStore(raw)) {
       const fallback = personalLoginFallbackStore() || { schemaVersion: 8, _revision: 0, users: [], moderator: null, iam: iam.migrateStore({}).iam, orderAccess: {}, scopeCatalog: {} };
-      storeCache = { tag: null, fallbackTag: centralFallbackTag(), value: fallback };
+      if (fallbackCacheable) storeCache = { tag: null, fallbackTag: centralFallbackTag(), value: fallback };
       return shared ? fallback : JSON.parse(JSON.stringify(fallback));
     }
   } else if (!((() => { const primary = readAccessStoreFile(ACCESS_FILE); return primary && primary._restoreSeed; })())) migrateLegacyAuthStoreIfNeeded();
@@ -750,7 +756,7 @@ function resolveStore(shared) {
     orderAccess: raw && raw.orderAccess && typeof raw.orderAccess === 'object' ? raw.orderAccess : {},
     _revision: Number.isInteger(Number(raw && raw._revision)) ? Number(raw._revision) : 0,
   });
-  if (tag) storeCache = { tag, value: store, ...(centralConfigured ? { fallbackTag: centralFallbackTag() } : {}) };
+  if (tag) storeCache = { tag, value: store, ...(fallbackCacheable ? { fallbackTag: centralFallbackTag() } : {}) };
   /* Iska yolunda da tutarli ol: YAZAN cagiran ozel kopya alir.
      Eski kod burada onbellege aldigi nesnenin KENDISINI donduruyordu;
      cagiran onu degistirdiginde onbellek de bozuluyordu. Iska nadir
