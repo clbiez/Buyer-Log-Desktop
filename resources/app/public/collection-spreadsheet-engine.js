@@ -65,10 +65,16 @@
     const value=String(raw==null?'':raw);
     if(!value.trim())return {ok:true,value:''};
     const fold=text=>String(text==null?'':text).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[Iİı]/g,'i').trim().replace(/\s+/g,' ').toLowerCase();
+    const choices=(Array.isArray(options)?options:[]).map(option=>({
+      value:String(option?.value??''),label:String(option?.label??'')
+    }));
+    // Exact canonical names must win over loose/diacritic-insensitive matching:
+    // two user-created statuses may intentionally differ only by accents.
+    const exact=choices.filter(option=>option.value.trim()===value.trim());
+    if(exact.length===1)return {ok:true,value:exact[0].value};
     const needle=fold(value),matches=new Set();
-    for(const option of (Array.isArray(options)?options:[])){
-      const optionValue=String(option?.value??''),optionLabel=String(option?.label??'');
-      if(fold(optionValue)===needle||fold(optionLabel)===needle)matches.add(optionValue);
+    for(const option of choices){
+      if(fold(option.value)===needle||fold(option.label)===needle)matches.add(option.value);
     }
     return matches.size===1?{ok:true,value:[...matches][0]}:{ok:false,reason:'invalid-option'};
   }
