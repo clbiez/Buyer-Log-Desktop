@@ -84,5 +84,27 @@ test('a read blocked by a momentary file lock is not cached; the next read sees 
   let locked;
   try { locked = ua.readStore(); } finally { fs.readFileSync = readFile; }
   assert.equal(locked.moderator, null, 'the locked read falls back');
-  assert.equal(ua.readStore().moderator.username, 'DEMO Moderator', 'the fallback was not kept');
+  assert.equal(ua.readStore(), locked, 'kept briefly so a burst of reads does not rescan');
+  const now = Date.now;
+  Date.now = () => now() + 31000;
+  try { assert.equal(ua.readStore().moderator.username, 'DEMO Moderator', 'retried after 30 s'); } finally { Date.now = now; }
+});
+
+test('a local file that stays unreadable does not rescan on every read', t => {
+  const { base, auth, ua } = setup();
+  t.after(() => { delete process.env.BUYER_LOG_CENTRAL_IAM_ENABLED; fs.rmSync(base, { recursive: true, force: true }); });
+  const file = path.join(auth, 'user-access.json');
+  fs.renameSync(file, file + '.bak'); fs.mkdirSync(file); // exists, never readable, cannot be replaced
+  const first = countReads(() => ua.readStore());
+  assert.equal(first.value.moderator.username, 'DEMO Moderator', 'served from the backup');
+  assert.ok(first.dirs > 0);
+  const second = countReads(() => ua.readStore());
+  assert.deepEqual([second.dirs, second.files], [0, 0], 'burst of reads is served from memory');
+  const now = Date.now;
+  Date.now = () => now() + 31000;
+  try {
+    const later = countReads(() => ua.readStore());
+    assert.equal(later.value.moderator.username, 'DEMO Moderator');
+    assert.equal(later.dirs, 0, 'the legacy scan is not repeated for unchanged files');
+  } finally { Date.now = now; }
 });
