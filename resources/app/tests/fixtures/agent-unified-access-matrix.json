@@ -467,6 +467,11 @@
           "overview"
         ],
         "areas": [],
+        "anyAreas": [
+          "cp",
+          "orders",
+          "overview"
+        ],
         "permissions": [],
         "capabilities": [],
         "risk": "read",
@@ -885,6 +890,40 @@
         "contractVersion": 2
       },
       {
+        "id": "cp.orders.update.batch",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.notecolumns.update",
+        "operation": "UPDATE",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
         "id": "cp.checklist.attachments.read",
         "operation": "READ",
         "agentAreas": [
@@ -941,6 +980,25 @@
         "risk": "write",
         "approval": true,
         "rollbackable": true,
+        "contractVersion": 2
+      },
+      {
+        "id": "cp.checklist.supplier.export",
+        "operation": "EXPORT",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "CP.VIEW"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
         "contractVersion": 2
       }
     ]
@@ -1753,6 +1811,11 @@
           "orders"
         ],
         "areas": [],
+        "anyAreas": [
+          "koleksiyon",
+          "cp",
+          "orders"
+        ],
         "permissions": [],
         "capabilities": [],
         "risk": "read",
@@ -1786,6 +1849,43 @@
         "agentAnyAreas": [],
         "areas": [
           "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.images.import",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.samples.sync",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [],
+        "anyAreas": [
+          "koleksiyon",
+          "cp",
+          "orders"
         ],
         "permissions": [],
         "capabilities": [],
@@ -2005,6 +2105,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [],
         "capabilities": [],
         "risk": "read",
@@ -2022,6 +2127,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [
           "manageBusinessRules"
         ],
@@ -2041,6 +2151,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [
           "manageBusinessRules"
         ],
@@ -2060,6 +2175,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [
           "manageBusinessRules"
         ],
@@ -2079,6 +2199,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [],
         "capabilities": [],
         "risk": "read",
@@ -2096,6 +2221,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [
           "manageBusinessRules"
         ],
@@ -2170,6 +2300,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [
           "manageBusinessRules"
         ],
@@ -2200,6 +2335,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [],
         "capabilities": [],
         "risk": "read",
@@ -2217,6 +2357,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [
           "manageBusinessRules"
         ],
@@ -2236,6 +2381,11 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "orders",
+          "cp",
+          "source"
+        ],
         "permissions": [
           "manageBusinessRules"
         ],
@@ -2756,6 +2906,11 @@
         "areas": [
           "shipping"
         ],
+        "anyAreas": [
+          "source",
+          "opencosting",
+          "koleksiyon"
+        ],
         "permissions": [],
         "capabilities": [],
         "risk": "write",
@@ -2844,6 +2999,10 @@
           "source"
         ],
         "areas": [],
+        "anyAreas": [
+          "shipping",
+          "source"
+        ],
         "permissions": [],
         "capabilities": [],
         "risk": "read",
@@ -3377,6 +3536,11 @@
           "collection"
         ],
         "areas": [],
+        "anyAreas": [
+          "source",
+          "opencosting",
+          "koleksiyon"
+        ],
         "permissions": [],
         "capabilities": [],
         "risk": "read",
@@ -3394,6 +3558,11 @@
           "collection"
         ],
         "areas": [],
+        "anyAreas": [
+          "source",
+          "opencosting",
+          "koleksiyon"
+        ],
         "permissions": [
           "manageBusinessRules"
         ],

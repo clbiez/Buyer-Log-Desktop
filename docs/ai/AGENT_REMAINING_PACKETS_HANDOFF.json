@@ -13,7 +13,7 @@
     "reuse": "PLM native jobs/session/store",
     "boundary": "current corporate session; canonical model/order/color identity; durable native completion",
     "status": "implemented",
-    "delivery": "Stored-asset reads: collection.plm.bom.read, collection.plm.techsheet.status (no PLM request, no index migration). Approved technical sheet download: collection.plm.techsheet.download (EXECUTE, native-operation poll) over the shared plm-sync-routes service the HTTP route uses; see AGENT_SUPPLIER_XLSX_ACCEPTANCE.md. BOM/link refresh is collection.plm.fetch. Model image import and sample refresh remain user flows. Corporate CoreNectum session acceptance is unverified."
+    "delivery": "Stored-asset reads: collection.plm.bom.read, collection.plm.techsheet.status (no PLM request, no index migration). Approved technical sheet download: collection.plm.techsheet.download (EXECUTE, native-operation poll) over the shared plm-sync-routes service the HTTP route uses; see AGENT_SUPPLIER_XLSX_ACCEPTANCE.md. BOM/link refresh is collection.plm.fetch. Model image import (collection.plm.images.import) and sample request refresh (collection.plm.samples.sync) run the same route handlers in-process. Corporate CoreNectum session acceptance is unverified."
   },
   {
     "packet": "order-editor",
@@ -21,7 +21,7 @@
     "reuse": "db order editor + note-column routes",
     "boundary": "scope over every relevant order line; revision/lease; complete inverse including deleted values",
     "status": "implemented",
-    "delivery": "cp.order.update (contract v2) over the native order override service; see AGENT_ORDER_EDITOR_ACCEPTANCE.md. Not included: note-column definition edits and multi-line batch edits."
+    "delivery": "cp.order.update (contract v2) over the native order override service; cp.orders.update.batch (multi-line, one native batch write, atomic undo) and cp.notecolumns.update (shared definition list with exact inverse of pruned values); see AGENT_ORDER_EDITOR_ACCEPTANCE.md."
   },
   {
     "packet": "checklist-options",
@@ -29,7 +29,7 @@
     "reuse": "checklist supplier services and exporter",
     "boundary": "native CP operation grants; evidence scope; ambiguity approval; stored-file ownership",
     "status": "implemented",
-    "delivery": "PR #564 merged reusable option READ/approved UPDATE/inverse; 44 targeted PASS and actual native TR/EN UI. Attachment lifecycle: cp.checklist.attachments.read and cp.checklist.attachment.remove (approved, exact inverse; adding evidence stays in the test-report import tools); see AGENT_CHECKLIST_ATTACHMENT_ACCEPTANCE.md. Supplier XLSX import: cp.checklist.supplier.import over the shared parseSupplierWorkbook parser, the CP decision engines and native applyEntries (supplier_excel baseAt gate) with exact inverse; see AGENT_SUPPLIER_XLSX_ACCEPTANCE.md. Building the supplier workbook stays in CP (images/protection from the open page)."
+    "delivery": "PR #564 merged reusable option READ/approved UPDATE/inverse; 44 targeted PASS and actual native TR/EN UI. Attachment lifecycle: cp.checklist.attachments.read and cp.checklist.attachment.remove (approved, exact inverse; adding evidence stays in the test-report import tools); see AGENT_CHECKLIST_ATTACHMENT_ACCEPTANCE.md. Supplier XLSX import: cp.checklist.supplier.import over the shared parseSupplierWorkbook parser, the CP decision engines and native applyEntries (supplier_excel baseAt gate) with exact inverse; see AGENT_SUPPLIER_XLSX_ACCEPTANCE.md. Supplier XLSX export: cp.checklist.supplier.export over the shared buildSupplierWorkbook builder, saved as an Office output."
   },
   {
     "packet": "presets",
@@ -60,7 +60,8 @@
     "scope": "Supported Workflow Studio/Office lifecycle and task handoff coverage",
     "reuse": "existing Agent Runtime/Office stores",
     "boundary": "no extra AI engine; current IAM; bounded context and safe restart",
-    "status": "pending"
+    "status": "implemented",
+    "delivery": "Lifecycle, restart safety and cross-module handoff: durable native completion for in-process route runs (technical sheets, images, samples), list projection in step bindings (data.entries[].plmId) with per-step agents, live task dialog; see AGENT_OFFICE_LIFECYCLE_ACCEPTANCE.md."
   },
   {
     "packet": "acceptance",

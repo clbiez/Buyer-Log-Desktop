@@ -47,7 +47,12 @@
     runtimeSignature: '',
   };
 
+  // Set only while the server builds a supplier workbook for Office: the
+  // owner's language and custom statuses replace the page-level sources.
+  let buildContext = null, parseLanguage = null;
   function isEn() {
+    if (parseLanguage) return parseLanguage === 'en';
+    if (buildContext && buildContext.language) return buildContext.language === 'en';
     return String((root.document && root.document.documentElement.lang) || root.appLang || 'tr').toLowerCase().startsWith('en');
   }
   function T(tr, en) { return isEn() ? en : tr; }
@@ -77,6 +82,7 @@
      duruma okunur; tanınmayan değer '' döner ve geçersiz sayılır. */
   const STATUS_ORDER = Object.freeze(['open', 'approved', 'rejected', 'notRequired']);
   function availableStatuses() {
+    if (buildContext) return STATUS_ORDER.concat((buildContext.customStatuses || []).map(function (item) { return item.id; }));
     const engine = root.BLCpChecklistEngine;
     return engine && typeof engine.statusIds === 'function' ? engine.statusIds() : STATUS_ORDER.slice();
   }
@@ -90,6 +96,7 @@
     const engine = root.BLCpChecklistEngine;
     // The server import passes the owner's custom statuses explicitly.
     const custom = Array.isArray(customList) ? customList
+      : buildContext ? (buildContext.customStatuses || [])
       : engine && typeof engine.customStatuses === 'function' ? engine.customStatuses() : [];
     const match = custom.find(item => item && typeof item.name === 'string' && item.name.toLocaleLowerCase('tr-TR') === raw);
     if (match) return match.id;
@@ -104,6 +111,8 @@
     if (s === 'notRequired') return T('Gerekmiyor', 'Not Required');
     if (s === 'open') return T('Bekliyor', 'Pending');
     const engine = root.BLCpChecklistEngine;
+    const named = s.startsWith('custom:') && buildContext && (buildContext.customStatuses || []).find(function (item) { return item.id === s; });
+    if (named) return named.name;
     if (s.startsWith('custom:')) return engine && typeof engine.statusLabel === 'function'
       ? engine.statusLabel(s, isEn() ? 'en' : 'tr') : s.slice(7).replace(/-/g, ' ');
     return '';
@@ -1122,21 +1131,21 @@
     };
   }
 
-  async function exportWorkbook(options) {
-    const opts = options || {};
-    await loadShared();
-    const rows = Array.isArray(opts.rows) ? opts.rows : selectedRows();
-    if (!rows.length) {
-      toast(T('Önce CP tablosundan üreticiye göndereceğiniz sipariş satırlarını seçin.', 'Select the CP order rows you want to send to the supplier first.'));
-      return false;
-    }
-    const items = itemCatalog();
-    if (!items.length) {
-      toast(T('Aktarılacak aktif checklist başlığı yok.', 'There are no active checklist headings to export.'));
-      return false;
-    }
-
-    const ExcelJS = await ensureExcel();
+  /* Supplier workbook builder shared by CP › Checklist › Excel and the Office
+     export capability. The caller supplies the rows, their decisions and the
+     checklist items; the server also supplies answers, images, language and
+     custom statuses. Sheet layout, protection and meta are identical. */
+  async function buildSupplierWorkbook(options) {
+    const o = options || {};
+    const previousContext = buildContext;
+    if (o.language || o.customStatuses) buildContext = { language: o.language || null, customStatuses: o.customStatuses || [] };
+    try {
+    const ExcelJS = o.ExcelJS, rows = o.rows || [], items = o.items || [];
+    const analysisFor = typeof o.analysisFor === 'function' ? o.analysisFor : function () { return null; };
+    const applies = typeof o.itemApplies === 'function' ? o.itemApplies : itemApplies;
+    const answerOf = typeof o.answerFor === 'function' ? o.answerFor : answerFor;
+    const prepareImage = typeof o.prepareImage === 'function' ? o.prepareImage : prepareRowModelImage;
+    const exportedAt = o.exportedAt || isoNow();
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'Buyer Log';
     workbook.created = new Date();
@@ -1156,10 +1165,8 @@
       properties: { tabColor: { argb: CHECKLIST_EXCEL_COLORS.acc } },
     });
     sheet.properties.defaultRowHeight = 18;
-    const decision = analysesForRows(rows);
-    const exportedAt = isoNow();
 
-    const selectedIds = excelColumnIds();
+    const selectedIds = Array.isArray(o.columnIds) ? o.columnIds : excelColumnIds();
     const infoDefinitions = excelColumnDefinitions().filter(function (item) { return selectedIds.includes(item.id); });
     const columns = infoDefinitions.map(function (item) {
       return { header: isEn() ? item.en : item.tr, key: item.id, width: item.width || 12, infoDefinition: item };
@@ -1212,7 +1219,7 @@
       + excelColumnName(validationColumn) + '$' + (optionValues.length + 1);
 
     for (const row of rows) {
-      const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+      const analysis = analysisFor(row);
       const values = {
         __orderKey: analysis && analysis.orderKey || '',
         __loadDate: analysis && analysis.plannedLoadDate || '',
@@ -1221,12 +1228,12 @@
         if (definition.id !== 'image') values[definition.id] = valueForExcelColumn(definition, row);
       });
       items.forEach(function (item, index) {
-        if (!analysis || !itemApplies(item, analysis)) {
+        if (!analysis || !applies(item, analysis)) {
           values['s' + index] = '';
           values['n' + index] = '';
           return;
         }
-        const answer = answerFor(item, analysis);
+        const answer = answerOf(item, analysis);
         values['s' + index] = answer ? statusLabel(answer.state) : statusLabel('open');
         values['n' + index] = answer && answer.note || '';
         if (reportColumns[index]) values['r' + index] = answer && answer.reportNumber || '';
@@ -1258,7 +1265,7 @@
       });
 
       items.forEach(function (item, index) {
-        const applicable = Boolean(analysis && itemApplies(item, analysis));
+        const applicable = Boolean(analysis && applies(item, analysis));
         const statusCell = excelRow.getCell(statusColumns[index]);
         const noteCell = excelRow.getCell(noteColumns[index]);
         const evidenceCells = [
@@ -1312,7 +1319,7 @@
       });
 
       if (imageColumn) {
-        const prepared = await prepareRowModelImage(row);
+        const prepared = await prepareImage(row);
         const extension = preparedImageExtension(prepared && prepared.dataUrl);
         if (prepared && extension) {
           try {
@@ -1434,6 +1441,31 @@
     const buffer = await workbook.xlsx.writeBuffer();
     const stamp = new Date().toISOString().slice(0, 10);
     const filename = 'BuyerLog_Checklist_' + safeFilePart(supplierNameFor(rows)) + '_' + stamp + '.xlsx';
+    return { buffer: buffer, filename: filename, supplier: supplierNameFor(rows), exportedAt: exportedAt };
+    } finally { buildContext = previousContext; }
+  }
+
+  async function exportWorkbook(options) {
+    const opts = options || {};
+    await loadShared();
+    const rows = Array.isArray(opts.rows) ? opts.rows : selectedRows();
+    if (!rows.length) {
+      toast(T('Önce CP tablosundan üreticiye göndereceğiniz sipariş satırlarını seçin.', 'Select the CP order rows you want to send to the supplier first.'));
+      return false;
+    }
+    const items = itemCatalog();
+    if (!items.length) {
+      toast(T('Aktarılacak aktif checklist başlığı yok.', 'There are no active checklist headings to export.'));
+      return false;
+    }
+
+    const ExcelJS = await ensureExcel();
+    const decision = analysesForRows(rows);
+    const built = await buildSupplierWorkbook({
+      ExcelJS: ExcelJS, rows: rows, items: items,
+      analysisFor: function (row) { return decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null; },
+    });
+    const buffer = built.buffer, filename = built.filename;
     if (opts.download !== false) {
       downloadBuffer(buffer, filename);
       toast(T('Üretici checklist Excel’i oluşturuldu.', 'Supplier checklist workbook created.'));
@@ -1494,6 +1526,13 @@
      browser and the server use one parser and one set of skip rules. */
   function parseSupplierWorkbook(workbook, options) {
     const opts = options || {};
+    // An explicit language holds for this synchronous parse only, so a
+    // concurrent server export cannot change the import's messages.
+    const previousLanguage = parseLanguage;
+    if (typeof opts.english === 'boolean') parseLanguage = opts.english ? 'en' : 'tr';
+    try { return parseSupplierRows(workbook, opts); } finally { parseLanguage = previousLanguage; }
+  }
+  function parseSupplierRows(workbook, opts) {
     const meta = readMeta(workbook);
     const sheet = workbook.getWorksheet(DATA_SHEET) || workbook.worksheets.find(function (ws) { return ws.state === 'visible'; });
     if (!sheet) throw workbookError(T('Checklist sayfası bulunamadı.', 'Checklist sheet was not found.'));
@@ -2392,6 +2431,7 @@
     exportWorkbook: exportWorkbook,
     prepareSupplierChecklistEmail: prepareSupplierChecklistEmail,
     importWorkbook: importWorkbook,
+    buildSupplierWorkbook: buildSupplierWorkbook,
     parseSupplierWorkbook: parseSupplierWorkbook,
     normalizeState: normalizeState,
     statusLabel: statusLabel,

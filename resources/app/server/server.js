@@ -2492,12 +2492,37 @@ function cpAgentMail(profile,args,rows,dryRun,expected=null) {
 }
 // Order override adapter shared by app.order.update (legacy Runtime) and the
 // Office cp.order.update capability; one native service, one rule set.
+/* Model image of a CP row for the Office supplier workbook: the same
+   colour-then-model key order as the screen, read from the local image store.
+   An empty colour entry is a deletion tombstone and hides the model image. */
+function imageSize(buffer){
+  if(buffer.length>24&&buffer.readUInt32BE(0)===0x89504e47)return {width:buffer.readUInt32BE(16),height:buffer.readUInt32BE(20)};
+  for(let i=2;i+9<buffer.length&&buffer[0]===0xff&&buffer[1]===0xd8;){
+    if(buffer[i]!==0xff){i++;continue;}const marker=buffer[i+1],length=buffer.readUInt16BE(i+2);
+    if(marker>=0xc0&&marker<=0xcf&&![0xc4,0xc8,0xcc].includes(marker))return {width:buffer.readUInt16BE(i+7),height:buffer.readUInt16BE(i+5)};
+    i+=2+length;
+  }
+  return {width:1,height:1};
+}
+const AGENT_SUPPLIER_IMAGE_MAX_BYTES=1024*1024;
+function agentSupplierRowImage(row){
+  const plm=String(row&&row['PLM ID']||'').trim();if(!plm)return null;
+  const map=loadOverrides().imagemap||{},keys=[parseLib.plmColourImageNameKey(plm,row['C.Code']||'',row['Colour']||''),parseLib.plmImageKey(plm)].filter(Boolean);
+  let ref=null;for(const key of keys)if(Object.hasOwn(map,key)){ref=map[key];break;}
+  if(!ref)return null;
+  const found=getCollectionImage(ref),mime=String(found&&found.item&&found.item.mimeType||'').toLowerCase();
+  if(!found||!/^image\/(png|jpe?g)$/.test(mime))return null;
+  // No server-side resizer exists; an oversized original stays out of the workbook.
+  try{if(fs.statSync(found.full).size>AGENT_SUPPLIER_IMAGE_MAX_BYTES)return null;}catch(_){return null;}
+  let buffer;try{buffer=fs.readFileSync(found.full);}catch(_){return null;}
+  return {dataUrl:'data:'+(mime==='image/jpg'?'image/jpeg':mime)+';base64,'+buffer.toString('base64'),...imageSize(buffer)};
+}
 const agentOrderAdapter = {
-  snapshotOrder: async (ownerId, profile, orderCode, patch) => {
+  snapshotOrder: async (ownerId, profile, orderCode, patch, preloadedRows=null) => {
     // A line is addressed by model AND colour; one alone would write the
     // order-level override that every line of the order falls back to.
     if(Boolean(String(patch&&patch.model||'').trim())!==Boolean(String(patch&&patch.ccode||'').trim()))throw Object.assign(new Error('OFFICE_ORDER_IDENTITY'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
-    const rows = await agentPlatformDataset(ownerId, profile, 'cp');
+    const rows = preloadedRows || await agentPlatformDataset(ownerId, profile, 'cp');
     const wantedModel = String(patch && patch.model || '').trim(), wantedColour = String(patch && patch.ccode || '').trim();
     const candidates = rows.filter(item => Number(agentRowOrderCode(item)) === Number(orderCode)
       && (!wantedModel || String(item && item['Model Name'] || '').trim() === wantedModel)
@@ -2526,6 +2551,60 @@ const agentOrderAdapter = {
     liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor([{orderCode,patch}])});
     void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
     return { ok:true, verified:require('./db').verifyOrderOverridePatch(orderCode,patch,saved.revision),updated:saved.updated || 1, revision:saved.revision };
+  },
+  // Multi-line edit: every line is checked like a single edit, then written in
+  // one native batch (one revision step) and verified line by line.
+  snapshotOrders: async (ownerId, profile, entries) => {
+    const rows = await agentPlatformDataset(ownerId, profile, 'cp');
+    const snapshots = [];
+    for (const entry of entries) snapshots.push(await agentOrderAdapter.snapshotOrder(ownerId, profile, entry.orderCode, entry.patch, rows));
+    return snapshots;
+  },
+  updateOrders: async (_ownerId, profile, items, expectedRevision, options={}) => {
+    for (const item of items) {
+      if (!canUserEditOrderCode(profile, item.orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
+      assertAgentSharedOwner(profile, item.orderCode, item.patch);
+    }
+    const beforeContext=pageProjectionContext(profile);
+    const saved = patchOrderOverrides(items, expectedRevision, null, { actor: noteActorOf(profile), expectedNoteColumnDefsRevision: options.noteColumnDefsRevision });
+    try { await rewriteProjectionCacheForRowPatches(profile,beforeContext,items); }
+    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
+    userAccess.appendAudit(profile, 'AGENT_ORDER_BATCH_UPDATE', 'orders', { orderCodes:items.map(item=>Number(item.orderCode)), count:items.length });
+    liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor(items)});
+    void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
+    const verified=saved.updated===items.length&&!(saved.skipped||[]).length&&items.every(item=>require('./db').verifyOrderOverridePatch(item.orderCode,item.patch,saved.revision));
+    return { ok:true, verified, updated:saved.updated, revision:saved.revision };
+  },
+  restoreOrders: async (_ownerId, profile, items, expectedRevision) => {
+    if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
+    for (const {orderCode,before,selector} of items) {
+      if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
+      const currentMaps=require('./db').snapshotOrderOverride(orderCode,selector||{}).patch.maps;
+      if(['submap','datemap'].some(name=>Object.hasOwn(before&&before.maps||{},name)&&JSON.stringify(currentMaps[name])!==JSON.stringify(before.maps[name])))assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
+    }
+    const result=require('./db').restoreOrderOverrideReceipts(items.map(({orderCode,before,selector})=>({orderCode,receipt:before,selector})),expectedRevision,{actor:noteActorOf(profile)});
+    userAccess.appendAudit(profile, 'AGENT_ORDER_BATCH_ROLLBACK', 'orders', {orderCodes:items.map(item=>Number(item.orderCode)),revision:result.revision});
+    // Exact undo may remove overrides: peers reload each restored order, as for a single undo.
+    for (const {orderCode} of items) liveEvents.notifyChange('orders','agent-capability',{orderCode});
+    return result;
+  },
+  // Note-column definitions: the same shared list and native service as
+  // CP › Add Column (PUT /api/note-columns).
+  noteColumns: {
+    snapshot: ids => require('./db').noteColumnSnapshot(ids),
+    normalize: columns => require('./db').normalizeNoteColumnDefs(columns),
+    replace: (profile, columns, expectedRevision) => {
+      const saved = replaceNoteColumnDefs(columns, expectedRevision);
+      userAccess.appendAudit(profile, 'NOTE_COLUMNS_UPDATE', 'cp', { count: saved.columns.length, revision: saved.revision, origin:'agent' });
+      publishSharedMasterChange('noteColumnDefs', { currentUser: profile, headers: {} });
+      return saved;
+    },
+    restore: (profile, snapshot, expectedRevision) => {
+      const saved = require('./db').restoreNoteColumnDefs(snapshot, expectedRevision);
+      userAccess.appendAudit(profile, 'NOTE_COLUMNS_UPDATE', 'cp', { count: saved.columns.length, revision: saved.revision, origin:'agent-rollback' });
+      publishSharedMasterChange('noteColumnDefs', { currentUser: profile, headers: {} });
+      return saved;
+    },
   },
   restoreOrder: async (_ownerId, profile, orderCode, before,expectedRevision,selector) => {
     if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
@@ -4883,7 +4962,11 @@ function plmImageJobCounts(counts) {
     missing: value.missing || 0, failed: value.failed || 0, bytesDownloaded: value.bytesDownloaded || 0,
   };
 }
-app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({ limit: '16mb' }), async (req,res)=>{
+app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({ limit: '16mb' }), (req,res)=>runPlmImageImport(req,res));
+/* Shared by the route above and the Office image import capability, which
+   calls it in-process with the owner's own profile (req.onPlmJob receives the
+   job id; req.assertAuthority is rechecked before PLM is contacted). */
+async function runPlmImageImport(req,res){
   if(!plmContextScopeAllowed(req,res))return;
   const imageJobRef = { id: null };
   let apiSession = null;
@@ -4901,6 +4984,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       label: 'Model gorseli · ' + raw.length + ' model (PLM)',
       phase: 'PLM cozumleniyor',
     }).id;
+    if(typeof req.onPlmJob==='function')req.onPlmJob(imageJobRef.id);
 
     /* Phase timing (field report: 129-model job ~9 min with 124 cache hits).
        Names and durations only — no PLM data — so backend.log shows which
@@ -4974,6 +5058,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
         scope: plmJobScope(req), source: 'live', mode, overwriteManual, items: upstreamRequests,
       });
       try {
+      if(typeof req.assertAuthority==='function')req.assertAuthority();
       apiSession = await agentBrowserConnector.openCoreNectumStyleApiSession(req.currentUser.id, {
         isCancelled: () => plmJobs.isCancelled(req.currentUser.id, imageJobRef.id),
       });
@@ -5049,7 +5134,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
     finishImageJob(req, imageJobRef, result.status===plmImageJobStore.STATUS_FAILED ? new Error('PLM gorsel isi basarisiz.') : null);
   } catch(err){ if(checkpoint)try{checkpoint.finish(plmImageJobStore.STATUS_FAILED,{error:err&&err.message});}catch(_){} finishImageJob(req, imageJobRef, err); automationError(res,err,'PLM model görselleri içe aktarılamadı.');}
   finally { if(apiSession)await apiSession.close().catch(()=>{}); clearModelOperationProgress(req.currentUser&&req.currentUser.id); }
-});
+}
 app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), express.json({ limit: '16mb' }), async (req,res)=>{
   const imageJobRef = { id: null };
   try {
@@ -5354,7 +5439,7 @@ const agentPlmSyncService=require('./routes/plm-sync-routes')(app, {
 /* PLM numune talepleri (CoreNectum Requests sekmesi) → CP kontrol listesi. */
 const sampleRequestStore = require('./lib/plm-sample-requests-store');
 const sampleRequestSync = require('./lib/plm-sample-request-sync');
-require('./routes/plm-request-routes')(app, {
+const plmRequestService=require('./routes/plm-request-routes')(app, {
   automationError,
   clearModelOperationProgress,
   coreNectumApiClient,
@@ -5396,6 +5481,7 @@ require('./lib/agent-shared-checklist-tools').registerSharedChecklistTools(agent
 require('./lib/agent-checklist-answer-tools').registerChecklistAnswerTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-checklist-attachment-tools').registerChecklistAttachmentTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-checklist-supplier-tools').registerChecklistSupplierTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
+require('./lib/agent-checklist-supplier-tools').registerChecklistSupplierExport(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,outputService:()=>require('./lib/lcwai').getDefaultOutputService(),rowImage:agentSupplierRowImage});
 require('./lib/agent-checklist-option-tools').registerChecklistOptionTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-analytics-tools').registerAnalyticsTools(agentToolRegistry,{dataset:agentPlatformDataset,outputService:()=>require('./lib/lcwai').getDefaultOutputService()});
 const agentCollectionSave=async(profile,ownerId,changes,expectedRevision,assertAuthority,guards={})=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);assertAuthority();if(!collectionWorkspaceEditAllowed(current,ownerId))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
@@ -10943,7 +11029,7 @@ const nativeRefreshGroupService=require('./lib/refresh-group-service').createRef
 require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
 require('./lib/agent-price-analysis-tools').registerPriceAnalysisTools(agentToolRegistry,{rows:profile=>priceAnalysisRowsFor(profile)});
 require('./lib/agent-holiday-tools').registerHolidayTools(agentToolRegistry,{holidayService});
-require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership,technicalSheets:agentPlmSyncService.technicalSheets,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
+require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership,technicalSheets:agentPlmSyncService.technicalSheets,routeRuns:require('./lib/agent-native-route-runs').createRouteRuns({jobs:plmJobs,root:path.join(SERVER_DATA_ROOT,'agent-native-runs')}),imageImport:runPlmImageImport,sampleSync:plmRequestService.runSampleRequestSync,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 {
   // Same active-user and display rules as /api/preset-share; target is always the owner.
   const activePresetProfile=profile=>Boolean(profile)&&profile.enabled!==false&&profile.status!=='INACTIVE';

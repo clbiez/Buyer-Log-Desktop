@@ -193,7 +193,7 @@ test('v7.19 satır yazma uçları incremental yama taşır; tam checkpoint hydra
   const checkpointCalls = calls.filter(call => /notifyChange\('orders',null\)/.test(call));
   assert.equal(checkpointCalls.length, 1, 'yalnız business-checkpoint hydration full-refresh bildirimi kullanmalı');
   const inverseCalls = calls.filter(call => /notifyChange\('orders','agent-capability',\{orderCode\}\)/.test(call));
-  assert.equal(inverseCalls.length, 1, 'exact inverse is a structural reload, because it may remove overrides');
+  assert.equal(inverseCalls.length, 2, 'exact single and multi-line inverses are structural reloads, because they may remove overrides');
   const incremental = calls.filter(call => !/notifyChange\('orders',null\)/.test(call) && !inverseCalls.includes(call));
   incremental.forEach(call => assert.match(call, /rowPatches:/, `satır yazma bildirimi yama taşımalı: ${call}`));
   const undo = blockOf(SERVER, 'restoreOrder: async', 'httpRequest: agentPlatformHttpRequest');
