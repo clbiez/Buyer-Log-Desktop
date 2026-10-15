@@ -188,3 +188,31 @@ test('attached reports are read and matched by the test engine, workbooks are st
   assert.equal(result.task,null);
   assert.ok((await msgs(w,result.conversation)).some(m=>m.role==='system'&&JSON.parse(m.text).type==='task-empty'),'an empty plan asks the owner for details instead of failing');
 });
+
+test('a stakeholder document is matched before the reply: a card shows the verified rows and the agent gets them as evidence',async t=>{
+  const {prepareAttachments}=require('../server/lib/agent-office-chat');
+  const analysis={kind:'document-orders',docKind:'ex-factory-revision',request:'EXF 2 hafta ertelensin',summary:'DEMO',files:['DEMO.xlsx'],totals:{rows:1,matched:1,ambiguous:0,unmatched:0,high:1,medium:0,low:0,unknown:0},
+    rows:[{line:1,match:'order-code',orderCode:'7300001',model:'DEMO KAZAK',colour:'C1',currentExFactory:'2026-11-20',requestedExFactory:'2026-12-05',latestSafeLoad:'2026-11-28',shiftDays:15,slackDays:-7,risk:'high'}],compact:'1|7300001|DEMO KAZAK|C1|2026-11-20→2026-12-05|+15d|safe 2026-11-28|high|order-code'};
+  const calls=[];
+  const out=await prepareAttachments({id:'o'},[{name:'DEMO.xlsx',base64:'UEs='},{name:'DEMO.csv',base64:Buffer.from('a,b').toString('base64')}],{analyzeDocuments:async list=>{calls.push(list.length);return analysis;},
+    canStoreWorkbooks:async()=>false,canReadDocuments:async()=>false,artifacts:{put:async()=>{throw new Error('not allowed');}}});
+  assert.deepEqual(out.map(i=>i.kind),['document-orders'],'without the upload right the workbook is analysed but not stored');assert.deepEqual(calls,[2]);
+  let a,routerSaw,evidence;const engine=fakeEngine({'agent-chat-route':input=>{routerSaw=input.context.attachments[0];return {mode:'reply',agentIds:[a.ada.id],lead:a.ada.id};},
+    'agent-office':input=>{evidence=input.context.evidenceAttachments;return {answer:'7300001 yüksek riskli.',confidence:'MEDIUM'};}});
+  const w=world(t,engine);a=await team(w);
+  const result=await w.service.officeChat(w.profile,{text:'Bu revizeye göre risk analizi yap',attachments:[...out,{kind:'workbook',artifactId:'b'.repeat(32),name:'DEMO.xlsx'}],agentId:a.ada.id});
+  assert.equal(routerSaw.rows[0].risk,'high');assert.equal('compact' in routerSaw,false);
+  assert.match(evidence[0].id,/^document-orders-1$/);assert.match(JSON.stringify(evidence[0].text),/safe 2026-11-28\|high/);
+  const list=await msgs(w,result.conversation),card=list.map(m=>m.role==='system'?JSON.parse(m.text):null).find(m=>m?.type==='document-orders');
+  assert.equal(card.rows[0].orderCode,'7300001');assert.ok(list.findIndex(m=>m.role==='system'&&JSON.parse(m.text).type==='document-orders')>list.findIndex(m=>m.role==='user'));
+  assert.equal(result.message.text,'7300001 yüksek riskli.');
+  assert.match(list.find(m=>m.role==='user').text,/Ekler: DEMO\.xlsx$/,'each file is named once');
+});
+
+test('a failed document analysis does not block the test report reader',async()=>{
+  const {prepareAttachments}=require('../server/lib/agent-office-chat');const calls=[];
+  const out=await prepareAttachments({id:'o'},[{name:'DEMO-test.pdf',base64:'JVBERg=='}],{analyzeDocuments:async()=>{throw Object.assign(new Error('x'),{code:'OFFICE_AI_CONTRACT_INVALID'});},
+    canReadDocuments:async()=>true,qualityService:{parse:async()=>{calls.push('parse');return {sessionId:'s'.repeat(32)};},extractAi:async()=>{}},qualityTools:{inspect:async()=>({matches:[]})},engine:{},staging:{dropSession:()=>{}}});
+  assert.deepEqual(out.map(i=>i.kind),['test-documents']);assert.deepEqual(calls,['parse']);
+  await assert.rejects(prepareAttachments({id:'o'},[{name:'DEMO.csv',base64:'YSxi'}],{analyzeDocuments:async()=>{throw Object.assign(new Error('x'),{code:'OFFICE_AI_CONTRACT_INVALID'});}}),{code:'OFFICE_AI_CONTRACT_INVALID'},'with nothing else to show, the analysis error is reported');
+});

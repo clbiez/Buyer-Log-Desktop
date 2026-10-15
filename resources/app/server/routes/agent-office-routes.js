@@ -116,6 +116,8 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
         canReadDocuments:async()=>(await service.taskCatalog(owner,req.body.agentId).catch(()=>[])).some(tool=>tool.id==='quality.inspect'),
         // /artifacts/workbook ile aynı şart.
         canStoreWorkbooks:async()=>userAccess.hasArea(owner,'source')&&userAccess.hasPermission(owner,'manageModelConnections'),
+        // Paydaş belgeleri (karışık Excel, e-posta, PDF, ekran görüntüsü) sahibin görebildiği siparişlerle eşlenir.
+        analyzeDocuments:deps.documentOrders&&(userAccess.hasArea(owner,'cp')||userAccess.hasArea(owner,'orders'))?list=>require('../lib/agent-document-orders').analyzeDocuments(owner,list,{engine:service.engineOf(),orders:deps.documentOrders,lang:req.body.lang,signal,request:String(req.body.text||'')}):null,
         engine:service.engineOf(),lang:req.body.lang,assertAuthority});
       audit(req,'AGENT_CHAT_ATTACHMENTS',req.currentUser.id,{files:req.body.files.length,kinds:attachments.map(item=>item.kind)});}
     const {files,...body}=req.body||{};
