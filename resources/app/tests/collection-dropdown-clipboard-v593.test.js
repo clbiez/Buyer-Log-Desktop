@@ -139,3 +139,31 @@ test('dropdown resolver rejects unknown or ambiguous status labels, preserving e
   assert.deepEqual(Engine.resolveSelectPasteValue('No Such Status',options),{ok:false,reason:'invalid-option'});
   assert.deepEqual(Engine.resolveSelectPasteValue('',options),{ok:true,value:''});
 });
+
+test('single status cell copy exports canonical stored value, not its localized label',()=>{
+  const h=harness({key:'durum',value:'Approved'});
+  const event={target:{closest(){return null;}},preventDefault(){},stopImmediatePropagation(){}};
+  assert.equal(h.window.BLCollectionSpreadsheet.handleCopyShortcut(event),true);
+  assert.deepEqual(h.copies,['Approved']);
+});
+
+test('explicit Copy with Headers still includes a header for a single cell',()=>{
+  const h=harness({key:'durum',value:'Approved'});
+  const event={target:{closest(){return null;}},preventDefault(){},stopImmediatePropagation(){}};
+  assert.equal(h.window.BLCollectionSpreadsheet.handleCopyShortcut(event,{includeHeaders:true,forceCellCopy:true}),true);
+  assert.match(h.copies[0],/^durum\r?\nApproved$/);
+});
+
+test('canonical statuses take precedence over ambiguous accent-insensitive matches',()=>{
+  const options=[{value:'İş',label:'İş'},{value:'Is',label:'Is'}];
+  assert.deepEqual(Engine.resolveSelectPasteValue('İş',options),{ok:true,value:'İş'});
+  assert.deepEqual(Engine.resolveSelectPasteValue('Is',options),{ok:true,value:'Is'});
+  assert.deepEqual(Engine.resolveSelectPasteValue('is',options),{ok:false,reason:'invalid-option'});
+});
+
+test('invalid pasted status explains rejection instead of silently replacing a selection',async()=>{
+  const h=harness();
+  assert.equal(await h.window.BLCollectionSpreadsheet.pasteText('Nonexistent Status'),false);
+  assert.deepEqual(h.writes,[]);
+  assert.match(h.toasts.at(-1),/geçersiz değer/);
+});
