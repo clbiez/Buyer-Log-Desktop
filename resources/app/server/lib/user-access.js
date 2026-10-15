@@ -597,6 +597,10 @@ function normalizeStoredProfile(profile, fallback = {}) {
 // guvence hicbir zaman yoktu. Yazan yollar loadStore() kullanmaya devam eder.
 //
 let storeCache = null;
+/* Eski depo kurtarma taraması, yerel kimlik dosyaları aynı kaldıkça bir kez
+   çalışır; başarısız deneme bir dakika sonra yeniden denenir. */
+let legacyMigrationMemo = null, lastFallbackReportTag = '';
+const CENTRAL_FALLBACK_RETRY_MS = 30 * 1000;
 // Son başarılı merkezi IAM okuması (yalnız anlık okuma hatalarına karşı kısa tampon).
 let lastGoodCentralStore = null;
 const CENTRAL_READ_GRACE_MS = 60 * 1000;
@@ -664,7 +668,7 @@ function resolveStore(shared) {
        Sahada tek okuma dakikalar sürdü; girişten sonra sunucu kilitlendi
        (7.0.279–7.0.281). Kurtarma bir açılış/geçiş kararıdır: yerel kimlik
        dosyaları değişmedikçe çözülen dizin yeniden kullanılır. */
-    if (storeCache && storeCache.fallbackTag && storeCache.fallbackTag === centralFallbackTag()) {
+    if (storeCache && storeCache.fallbackTag && storeCache.fallbackTag === centralFallbackTag() && !(storeCache.retryAt && Date.now() >= storeCache.retryAt)) {
       return shared ? storeCache.value : JSON.parse(JSON.stringify(storeCache.value));
     }
     let restoreSeed = readAccessStoreFile(ACCESS_FILE);
@@ -691,7 +695,11 @@ function resolveStore(shared) {
     // remain fail-closed and available for recovery/diagnostics.
     if (!restoreSeed || !restoreSeed._centralIam) {
       let recovered = false;
-      try { recovered = migrateLegacyAuthStoreIfNeeded(); } catch (_) {}
+      const migrationTag = centralFallbackTag();
+      if (!legacyMigrationMemo || legacyMigrationMemo.tag !== migrationTag || (legacyMigrationMemo.retryAt && Date.now() >= legacyMigrationMemo.retryAt)) {
+        try { recovered = migrateLegacyAuthStoreIfNeeded(); legacyMigrationMemo = { tag: centralFallbackTag() }; }
+        catch (_) { legacyMigrationMemo = { tag: migrationTag, retryAt: Date.now() + 60 * 1000 }; }
+      }
       restoreSeed = readAccessStoreFile(ACCESS_FILE);
       // The strongest recovered candidate may itself be a valid Central IAM
       // cache. readLocal() ran before recovery, so retry once after importing it.
@@ -709,15 +717,26 @@ function resolveStore(shared) {
     // accounts whenever the Moderator had no local password on this device.
     // A full-system restore seed is also intentionally accepted here.
     const raw = restoreSeed || readAccessStoreFile(ACCESS_FILE + '.bak');
-    // Yalnız kesin karar önbelleğe girer: var olan bir kimlik dosyası bu çağrıda
-    // okunamadıysa (antivirüs/OneDrive kilidi) ya da merkezi önbellek gibi
-    // görünüp reddedildiyse sonraki çağrı yeniden dener.
-    fallbackCacheable = restoreSeed ? !restoreSeed._centralIam
-      : !fs.existsSync(ACCESS_FILE) && !(raw && raw._centralIam) && (Boolean(raw) || !fs.existsSync(ACCESS_FILE + '.bak'));
+    // Kesin karar dosyalar değişene dek önbellekte kalır. Var olan bir kimlik
+    // dosyası okunamadıysa (antivirüs/OneDrive kilidi ya da kalıcı bozulma) veya
+    // merkezi önbellek gibi görünüp reddedildiyse sonuç 30 sn tutulur ve sonra
+    // yeniden denenir; her çağrıda yeniden okuma sunucuyu kilitliyordu.
+    const accessExists = fs.existsSync(ACCESS_FILE);
+    const definitive = restoreSeed ? !restoreSeed._centralIam
+      : !accessExists && !(raw && raw._centralIam) && (Boolean(raw) || !fs.existsSync(ACCESS_FILE + '.bak'));
+    fallbackCacheable = definitive ? true : Date.now() + CENTRAL_FALLBACK_RETRY_MS;
+    const reportTag = centralFallbackTag();
+    if (reportTag !== lastFallbackReportTag) {
+      lastFallbackReportTag = reportTag;
+      // Yalnız durum adları; yol, kullanıcı veya iş verisi yazılmaz.
+      const local = !accessExists ? 'missing' : !restoreSeed ? 'unreadable' : restoreSeed._centralIam ? 'central-rejected' : 'local-store';
+      const source = restoreSeed ? 'local' : raw ? 'backup' : 'personal-or-empty';
+      console.warn(`[IAM] central-cache-unavailable local=${local} source=${source} usable=${Boolean(raw && !raw._centralIam && hasUsableOfflineAuthStore(raw))} cache=${definitive ? 'until-change' : 'retry-30s'}`);
+    }
     // Son çare: bu cihazda daha önce giriş yapmış kişinin kendi kişisel kaydı.
     if (!raw || raw._centralIam || !hasUsableOfflineAuthStore(raw)) {
       const fallback = personalLoginFallbackStore() || { schemaVersion: 8, _revision: 0, users: [], moderator: null, iam: iam.migrateStore({}).iam, orderAccess: {}, scopeCatalog: {} };
-      if (fallbackCacheable) storeCache = { tag: null, fallbackTag: centralFallbackTag(), value: fallback };
+      storeCache = { tag: null, fallbackTag: centralFallbackTag(), value: fallback, ...(fallbackCacheable === true ? {} : { retryAt: fallbackCacheable }) };
       return shared ? fallback : JSON.parse(JSON.stringify(fallback));
     }
   } else if (!((() => { const primary = readAccessStoreFile(ACCESS_FILE); return primary && primary._restoreSeed; })())) migrateLegacyAuthStoreIfNeeded();
@@ -725,6 +744,14 @@ function resolveStore(shared) {
   // Tasima dosyayi degistirmis olabilir; imza tasimadan SONRA hesaplanir.
   const tag = storeTag();
   if (tag && storeCache && storeCache.tag === tag) {
+    /* Merkezi yedek yolundan gelindiyse kayıt yedek imzasıyla işaretlenir.
+       Merkezi mod açılışta sonradan devreye girdiğinde önceki yerel okumanın
+       kaydı işaretsiz kalıyor, her okuma eski depo taramasını yeniden
+       yapıp bu satırda dönüyordu (sahadaki kalıcı kilitlenme). */
+    if (fallbackCacheable) {
+      storeCache.fallbackTag = centralFallbackTag();
+      if (fallbackCacheable === true) delete storeCache.retryAt; else storeCache.retryAt = fallbackCacheable;
+    }
     return shared ? storeCache.value : JSON.parse(JSON.stringify(storeCache.value));
   }
   let raw = null;
@@ -756,7 +783,7 @@ function resolveStore(shared) {
     orderAccess: raw && raw.orderAccess && typeof raw.orderAccess === 'object' ? raw.orderAccess : {},
     _revision: Number.isInteger(Number(raw && raw._revision)) ? Number(raw._revision) : 0,
   });
-  if (tag) storeCache = { tag, value: store, ...(fallbackCacheable ? { fallbackTag: centralFallbackTag() } : {}) };
+  if (tag) storeCache = { tag, value: store, ...(fallbackCacheable ? { fallbackTag: centralFallbackTag(), ...(fallbackCacheable === true ? {} : { retryAt: fallbackCacheable }) } : {}) };
   /* Iska yolunda da tutarli ol: YAZAN cagiran ozel kopya alir.
      Eski kod burada onbellege aldigi nesnenin KENDISINI donduruyordu;
      cagiran onu degistirdiginde onbellek de bozuluyordu. Iska nadir
@@ -1223,7 +1250,7 @@ function readAudit(limit = 200, filters = {}) {
 function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptions, onIamApplied }) {
   if (typeof onIamApplied === 'function') iamApplied = onIamApplied;
   if (centralOptions) {
-    centralConfigured = centralOptions.enabled === true;
+    centralConfigured = centralOptions.enabled === true; storeCache = null;
     if (typeof centralOptions.getSharedRoot === 'function') iamSharedRoot = centralOptions.getSharedRoot;
     else if (centralOptions.sharedRoot) iamSharedRoot = async () => centralOptions.sharedRoot;
     centralService = centralConfigured ? centralIam.createCentralIam({ ...centralOptions, cacheFile: ACCESS_FILE, onApply: cache => { storeCache = null; reconcilePersonalLogin(cache); iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive }) : null;

@@ -23,8 +23,8 @@
         "en": "Fixed the freeze and partial data load after login"
       },
       "body": {
-        "tr": "Merkezi kullanıcı dizini açıkken bu cihazda geçerli dizin önbelleği yoksa her yetki kontrolü eski kullanıcı dosyalarını yeniden tarıyordu; sunucu dakikalarca yanıt vermiyor, veriler kısmen yükleniyor, modüller ve yenileme çalışmıyordu. Kurtarma artık yalnız açılışta ve kimlik dosyaları değiştiğinde yapılır; güvenlik kontrolleri aynıdır.",
-        "en": "With the central user directory enabled and no valid directory cache on this device, every access check rescanned old user files; the server stopped responding for minutes, data loaded partially, and modules and refresh did not work. Recovery now runs only at startup and when the identity files change; security checks are unchanged."
+        "tr": "Merkezi kullanıcı dizini açıkken bu cihazda geçerli dizin önbelleği yoksa her yetki kontrolü eski kullanıcı dosyalarını yeniden tarıyordu; sunucu dakikalarca yanıt vermiyor, veriler kısmen yükleniyor, modüller ve yenileme çalışmıyor, her tıklama dakikalarca bekliyordu. Kurtarma artık yalnız açılışta ve kimlik dosyaları değiştiğinde yapılır; güvenlik kontrolleri aynıdır.",
+        "en": "With the central user directory enabled and no valid directory cache on this device, every access check rescanned old user files; the server stopped responding for minutes, data loaded partially, and modules and refresh did not work, and every click waited for minutes. Recovery now runs only at startup and when the identity files change; security checks are unchanged."
       },
       "visual": {
         "kind": "screenshot",
