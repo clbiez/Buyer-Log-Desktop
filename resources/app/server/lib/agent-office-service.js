@@ -243,6 +243,7 @@ function createAgentOfficeService(deps) {
       }
       // Az önce çalışan görev adımlarının doğrulanmış sonuçları rehber metni olarak gider (bağlam JSON sınırına takılmaz).
       if (internal.taskResults?.text) { guide = [guide, '=== TASK RESULTS ===\n' + internal.taskResults.text].filter(Boolean).join('\n\n'); context.taskResults = [{ taskId: internal.taskResults.taskId, lead: internal.taskResults.lead }]; }
+      if (Array.isArray(internal.pricingPackages) && internal.pricingPackages.length) context.pricingPackages = internal.pricingPackages.slice(0, 30);
       if (raw.mode === 'automation') {
         if (!canAutomate(profile)) throw error('OFFICE_AUTOMATION_FORBIDDEN', 403);
         source = 'automations'; guide = await deps.automationGuide(profile);
@@ -271,6 +272,7 @@ function createAgentOfficeService(deps) {
           perspectives:(response.perspectives || []).filter(value => ids.includes(String(value).split('|')[0])),
           actions:response.actions || [], contradictions:response.contradictions || [], memoryCandidates:response.memoryCandidates || [],
           emailDrafts:require('./agent-email-drafts').parseDrafts(response.emailDrafts),
+          ...(internal.extraProvenance?.pricingPackages ? { pricingPackages: internal.extraProvenance.pricingPackages } : {}),
           warnings:response.warnings || [], truncated:result.truncated === true, independentReviews:false } });
       archivedReply = true;
       let proposal = null;

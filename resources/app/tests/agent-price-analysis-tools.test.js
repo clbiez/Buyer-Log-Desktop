@@ -74,3 +74,19 @@ test('only a current season compares against the season before it, like the scre
   await assert.rejects(registry.execute('priceanalysis.insights.read',{filters:{manufacturer:['—']}},{ownerId:profile.id,profile}),{code:'OFFICE_TASK_INVALID'});
   await assert.rejects(registry.execute('priceanalysis.insights.read',{filters:{manufacturer:['']}},{ownerId:profile.id,profile}),{code:'OFFICE_TOOL_SCHEMA'});
 });
+
+test('pricing supplier suggestion: filtered Collection models go to below-average suppliers; output passes its schema; needs Collection and Price Analysis',async()=>{
+  const profile={id:'demo',enabled:true},registry=createToolRegistry({userAccess:{profileById:()=>profile,hasArea:()=>true,appendAudit:()=>{}}});
+  const priced=[row(11,'6S27','ALPHA',8),row(12,'6S27','ALPHA',8),row(13,'6S27','BETA',12),row(14,'6S27','BETA',12)];
+  const options=[{id:'k1','PLM ID':'900001','Style Name':'DEMO A',Season:'June 2027',Category:'KAZAK'},{id:'k2','PLM ID':'900002','Style Name':'DEMO B',Season:'June 2027',Category:'HIRKA'},{id:'k3','PLM ID':'900003','Style Name':'DEMO C',Season:'May 2027',Category:'KAZAK'}];
+  let owner='';
+  registerPriceAnalysisTools(registry,{rows:async()=>({rows:priced}),collectionRows:async ownerId=>{owner=ownerId;return options;}});
+  const tool=registry.catalog?(await registry.catalog({...profile})).find(item=>item.id==='pricing.suppliers.suggest'):null;
+  if(tool){assert.deepEqual(tool.areas,['koleksiyon','priceanalysis']);assert.match(tool.description,/below the classification average/);}
+  const result=await registry.execute('pricing.suppliers.suggest',{filters:[{field:'season',operator:'eq',value:'June 2027'}]},{ownerId:profile.id,profile});
+  assert.equal(owner,'demo');
+  assert.deepEqual(result.data.suppliers.map(s=>[s.name,s.models.map(m=>m.rowId),Math.round(s.classifications[0].index)]),[['ALPHA',['k1'],-20]],'only June 2027 models; BETA is above the KAZAK average');
+  assert.deepEqual(result.data.unmatched['no-price-data'].models.map(m=>m.rowId),['k2']);
+  require('../server/lib/agent-tool-schema').validate(registry.get('pricing.suppliers.suggest').outputSchema,result);
+  await assert.rejects(registry.execute('pricing.suppliers.suggest',{perGroup:9},{ownerId:profile.id,profile}),{code:'OFFICE_TOOL_SCHEMA'});
+});

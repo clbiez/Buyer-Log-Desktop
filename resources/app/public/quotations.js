@@ -1726,7 +1726,7 @@
       : {proceed:true};
     if(!preflight?.proceed)return false;
     if(typeof renderKolMfrModal!=='function')return false;
-    renderKolMfrModal({rows:Array.isArray(ctx.rows)?ctx.rows:null,count:selected.length,btnId:ctx.btnId||'kolSendPricingBtn',persist:ctx.persist!==false,defaultTopicKind:'pricing',pricingTaskV2:true,title:'Send to Pricing',subtitle:qLang('Seçili modeller için üreticilerden fiyat talebi oluştur.','Create pricing requests for the selected models and manufacturers.')});
+    renderKolMfrModal({rows:Array.isArray(ctx.rows)?ctx.rows:null,count:selected.length,btnId:ctx.btnId||'kolSendPricingBtn',persist:ctx.persist!==false,defaultTopicKind:'pricing',pricingTaskV2:true,...(Array.isArray(ctx.preselect)?{preselect:ctx.preselect}:{}),title:'Send to Pricing',subtitle:qLang('Seçili modeller için üreticilerden fiyat talebi oluştur.','Create pricing requests for the selected models and manufacturers.')});
     return true;
   }
 

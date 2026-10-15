@@ -7,8 +7,8 @@
     "en": "Login freeze fix and plain Agent chat"
   },
   "summary": {
-    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar. Agentları kendi cümlelerinizle yetiştirebilir, tercihlerinizi hatırlatabilir, sohbete rapor ve Excel ekleyebilirsiniz. Agentlar işi bitirince istenen çıktıyı (tablo, e-posta taslağı) sohbette canlı yazar; cevabı kopyalayabilir veya Excel olarak indirebilirsiniz. E-posta taslakları Outlook'ta taslak olarak açılır.",
-    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat. You can train agents in your own words, have them remember your preferences and attach reports and Excel files. When the work is done, agents write the requested output (tables, e-mail drafts) live in the chat; you can copy it or download it as Excel. E-mail drafts open as drafts in Outlook."
+    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar. Agentları kendi cümlelerinizle yetiştirebilir, tercihlerinizi hatırlatabilir, sohbete rapor ve Excel ekleyebilirsiniz. Agentlar işi bitirince istenen çıktıyı (tablo, e-posta taslağı) sohbette canlı yazar; cevabı kopyalayabilir veya Excel olarak indirebilirsiniz. E-posta taslakları Outlook'ta taslak olarak açılır. Agent, koleksiyon modellerini klasmanında ortalamanın altında fiyat veren üreticilere Send to Pricing ile fiyata gönderebilir.",
+    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat. You can train agents in your own words, have them remember your preferences and attach reports and Excel files. When the work is done, agents write the requested output (tables, e-mail drafts) live in the chat; you can copy it or download it as Excel. E-mail drafts open as drafts in Outlook. Agents can send collection models to pricing, via Send to Pricing, with suppliers pricing below their classification average."
   },
   "changes": [
     {
@@ -385,6 +385,35 @@
         "alt": {
           "tr": "Ada iki üretici e-postası hazırladı; her biri Outlook'ta taslak olarak açılır, eksik alıcı ayrıca belirtilir (demo veri).",
           "en": "Ada prepared two supplier e-mails; each opens as a draft in Outlook and a missing recipient is flagged (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-send-to-pricing",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent modelleri en avantajlı üreticilere fiyata gönderiyor",
+        "en": "Agents send models to pricing with the most advantageous suppliers"
+      },
+      "body": {
+        "tr": "\"Koleksiyondaki June 2027 modellerini en avantajlı üreticilere fiyata gönder\" gibi bir istekte agent, Fiyat & Üretici Analizi motoruyla her modelin ürün klasmanında ortalamanın altında fiyat veren üreticileri bulur (en az 2 fiyatlı modeli olanlar, en ucuzdan başlayarak). Sonuç üretici başına bir kart olarak gelir: klasmanlar ve ortalamaya göre fark, model listesi. \"Fiyatlamaya gönder\" bu modeller ve üretici seçili olarak Send to Pricing'i açar; model görselli teklif Excel'i, Tech Pack/model dosyaları, teklif kaydı ve Outlook taslağı her zamanki gibi sizin onayınızla oluşur. Eşleşmeyen modeller nedeniyle (klasman yok, fiyat geçmişi yok, karşılaştırılamıyor) belirtilir.",
+        "en": "For a request such as \"send the June 2027 collection models to pricing with the most advantageous suppliers\", the agent uses the Price & Supplier Analysis engine to find, for each model's product classification, the suppliers pricing below the classification average (with at least 2 priced models, cheapest first). The result comes as one card per supplier with the classifications, the difference to the average and the model list. \"Send to pricing\" opens Send to Pricing with those models and that supplier selected; the quotation Excel with model images, Tech Pack/model files, the quotation record and the Outlook draft are created as usual after your confirmation. Models that could not be matched are listed with the reason (no classification, no price history, not comparable)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-send-to-pricing.png",
+        "caption": {
+          "tr": "Atlas, June 2027 modellerini klasman bazında ortalamanın altında fiyat veren 7 üreticiye ayırdı; her kart Send to Pricing'i açar (demo veri).",
+          "en": "Atlas split the June 2027 models across 7 suppliers pricing below their classification average; each card opens Send to Pricing (demo data)."
+        },
+        "alt": {
+          "tr": "Atlas, June 2027 modellerini klasman bazında ortalamanın altında fiyat veren 7 üreticiye ayırdı; her kart Send to Pricing'i açar (demo veri).",
+          "en": "Atlas split the June 2027 models across 7 suppliers pricing below their classification average; each card opens Send to Pricing (demo data)."
         }
       }
     }
