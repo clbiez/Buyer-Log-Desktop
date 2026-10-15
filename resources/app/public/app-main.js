@@ -2576,6 +2576,7 @@ const BL_OVERLAY_SELECTOR = [
   '.warnOverlay', '.backlogDetailOverlay', '.backlogDimAddOverlay',
   '.accessAdminOverlay', '.autoModalOverlay', '.awModalOverlay',
   '.globalSearchOverlay', '.quotationAccessOverlay', '.uaOverlay',
+  '.blCmdOverlay',
 ].join(',');
 
 function blOverlayStack(){

@@ -88,7 +88,7 @@ html[data-font-step="3"]{--ui-font-add:3px;}
 /* Interface Size, yalnız metni değil bütün etkileşim geometrisini birlikte
    ölçekler. Eski data-font-step saklama anahtarı geriye uyumluluk için kalır. */
 html[data-ui-scale="compact"]{
-  --ui-scale:.9;--ui-font-add:-1px;--rail-w:196px;--rail-min-w:60px;
+  --rail-full-w:196px;--ui-scale:.9;--ui-font-add:-1px;--rail-w:196px;--rail-min-w:60px;
   --ctl-h:30px;--table-row-h:28px;--table-group-head-h:25px;
   --table-head-pad-y:6px;--table-cell-pad-y:5px;--table-edit-pad-y:1px;
   --rail-item-h:32px;--rail-foot-h:32px;--rail-control-size:28px;
@@ -96,14 +96,14 @@ html[data-ui-scale="compact"]{
   --sp-1:3px;--sp-2:7px;--sp-3:10px;--sp-4:14px;--sp-5:18px;--sp-6:24px;--sp-7:32px;
 }
 html[data-ui-scale="standard"]{
-  --ui-scale:1;--ui-font-add:0px;--rail-w:208px;--rail-min-w:66px;
+  --rail-full-w:208px;--ui-scale:1;--ui-font-add:0px;--rail-w:208px;--rail-min-w:66px;
   --ctl-h:34px;--table-row-h:32px;--table-group-head-h:29px;
   --table-head-pad-y:8px;--table-cell-pad-y:7px;--table-edit-pad-y:2px;
   --rail-item-h:36px;--rail-foot-h:34px;--rail-control-size:30px;
   --icon-btn-size:34px;--topbar-h:52px;
 }
 html[data-ui-scale="large"]{
-  --ui-scale:1.125;--ui-font-add:1.5px;--rail-w:224px;--rail-min-w:72px;
+  --rail-full-w:224px;--ui-scale:1.125;--ui-font-add:1.5px;--rail-w:224px;--rail-min-w:72px;
   --ctl-h:38px;--table-row-h:36px;--table-group-head-h:33px;
   --table-head-pad-y:9px;--table-cell-pad-y:8px;--table-edit-pad-y:3px;
   --rail-item-h:40px;--rail-foot-h:38px;--rail-control-size:34px;
@@ -111,7 +111,7 @@ html[data-ui-scale="large"]{
   --sp-1:5px;--sp-2:9px;--sp-3:14px;--sp-4:18px;--sp-5:23px;--sp-6:31px;--sp-7:40px;
 }
 html[data-ui-scale="xl"]{
-  --ui-scale:1.25;--ui-font-add:3px;--rail-w:240px;--rail-min-w:78px;
+  --rail-full-w:240px;--ui-scale:1.25;--ui-font-add:3px;--rail-w:240px;--rail-min-w:78px;
   --ctl-h:42px;--table-row-h:40px;--table-group-head-h:37px;
   --table-head-pad-y:10px;--table-cell-pad-y:9px;--table-edit-pad-y:4px;
   --rail-item-h:44px;--rail-foot-h:42px;--rail-control-size:38px;
@@ -178,6 +178,7 @@ select{color-scheme:light;}
 html[data-theme="dark"] select{color-scheme:dark;}
 html[data-theme="grey"] select{color-scheme:light;}
 *,*::before,*::after{box-sizing:border-box}
+html{--rail-full-w:208px;}
 html[data-rail="min"]{--rail-w:var(--rail-min-w);}
 body{margin:0;max-width:100%;overflow-x:clip;font-family:var(--sans);background:var(--paper);color:var(--ink);font-size:var(--fs-base);-webkit-font-smoothing:antialiased;padding-left:var(--rail-w);transition:padding-left .15s var(--ease);}
 /* Tema değişiminde aktif sayfadaki binlerce tablo hücresinin aynı karede
@@ -231,6 +232,16 @@ html[data-rail="min"] nav.tabs button span{display:none;}
 html[data-rail="min"] nav.tabs>.railGroupLabel{display:none;}
 html[data-rail="min"] .railFoot button{justify-content:center;padding:0;width:50px;}
 html[data-rail="min"] .railFoot button span{display:none;}
+/* Kompakt ray: dar modda üzerine gelince (veya klavyeyle odaklanınca) etiketler
+   içeriği itmeden ray üstünde açılır. Kısa gecikme, istemsiz açılmayı önler. */
+html[data-rail="min"] .rail:is(:hover,:focus-within){width:var(--rail-full-w);align-items:stretch;box-shadow:var(--shadow-3);transition-delay:.18s;}
+html[data-rail="min"] .rail:is(:hover,:focus-within) nav.tabs button,html[data-rail="min"] .rail:is(:hover,:focus-within) .railFoot button{justify-content:flex-start;padding:0 10px;width:100%;}
+html[data-rail="min"] .rail:is(:hover,:focus-within) nav.tabs button span,html[data-rail="min"] .rail:is(:hover,:focus-within) .railFoot button span{display:inline;}
+html[data-rail="min"] .rail:is(:hover,:focus-within) nav.tabs>.railGroupLabel{display:block;}
+html[data-rail="min"] .rail:is(:hover,:focus-within) .railTop{flex-direction:row;gap:8px;padding:0 4px 8px;}
+html[data-rail="min"] .rail:is(:hover,:focus-within) .brandName{display:block;}
+html[data-rail="min"] .rail:is(:hover,:focus-within) .railCollapse{margin-left:auto;}
+@media(prefers-reduced-motion:reduce){html[data-rail="min"] .rail{transition:none;}}
 /* ===================== ÜST BAR ===================== */
 .appTop{position:sticky;top:0;z-index:300;height:var(--topbar-h);max-width:100%;min-width:0;background:var(--card);border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px;padding:0 var(--sp-5);overflow:hidden;}
 .appTop h1{font-size:var(--fs-md);margin:0 auto 0 0;font-weight:650;min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
