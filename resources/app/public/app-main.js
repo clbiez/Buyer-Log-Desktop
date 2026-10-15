@@ -687,7 +687,7 @@ function positionDateCalendarPopup(){
   if(!_dateCalendarPopup || !_dateCalendarDisplay || !_dateCalendarDisplay.isConnected) return;
   const rect=(_dateCalendarDisplay.closest('.dateFieldWrap')||_dateCalendarDisplay).getBoundingClientRect();
   const gap=5, margin=8;
-  const pw=_dateCalendarPopup.offsetWidth || 292;
+  const pw=_dateCalendarPopup.offsetWidth || 316;
   const ph=_dateCalendarPopup.offsetHeight || 330;
   let left=rect.left;
   if(left+pw>window.innerWidth-margin) left=window.innerWidth-pw-margin;
@@ -712,6 +712,15 @@ function setDateFromCalendar(display,iso){
     native.dispatchEvent(new Event('change',{bubbles:true}));
   }
 }
+// Merch Calendar iş haftası (LCW) ile GLB/ISO haftayı birlikte verir. Takvim
+// yüklenmemiş/eşleşmeyen tarihte LCW '—' kalır; GLB her zaman gösterilir.
+function dateCalendarWeekPair(monday){
+  const api=window.BLDateDimension;
+  const pair=api&&typeof api.weekPair==='function'?api.weekPair(monday):null;
+  const glb=pair&&pair.glb!=null?pair.glb:isoWeekNumber(monday);
+  const merchActive=Boolean(api&&typeof api.hasMerchCalendar==='function'&&api.hasMerchCalendar());
+  return {lcw:merchActive&&pair&&pair.lcw!=null?String(pair.lcw):'—',glb:glb?String(glb):'—'};
+}
 function renderDateCalendarPopup(){
   if(!_dateCalendarPopup || !_dateCalendarDisplay || !_dateCalendarMonth) return;
   const native=_dateCalendarDisplay._nativeDateInput;
@@ -722,11 +731,13 @@ function renderDateCalendarPopup(){
   const calEn=appLang==='en';
   const gridStart=new Date(view); gridStart.setDate(1-firstDow);
   let html=`<div class="dateCalendarHead"><button type="button" class="dateCalendarNav" data-cal-nav="-1" aria-label="${calEn?'Previous month':'Önceki ay'}">‹</button><div class="dateCalendarTitle">${(calEn?DATE_CAL_MONTHS_EN:DATE_CAL_MONTHS)[view.getMonth()]} ${view.getFullYear()}</div><button type="button" class="dateCalendarNav" data-cal-nav="1" aria-label="${calEn?'Next month':'Sonraki ay'}">›</button></div>`;
-  html+=`<div class="dateCalendarGrid"><div class="dateCalendarWeekHead" title="${calEn?'Week of year':'Yılın haftası'}">${calEn?'Wk':'Hf'}</div>`;
+  html+=`<div class="dateCalendarGrid"><div class="dateCalendarWeekHead" title="${calEn?'LCW Merch week / Global (ISO) week':'LCW Merch hafta / Global (ISO) hafta'}">LCW / GLB</div>`;
   html+=(calEn?DATE_CAL_DAYS_EN:DATE_CAL_DAYS).map(d=>`<div class="dateCalendarDow">${d}</div>`).join('');
   for(let row=0;row<6;row++){
     const monday=new Date(gridStart); monday.setDate(gridStart.getDate()+row*7);
-    html+=`<div class="dateCalendarWeek" title="${calEn?`Week ${isoWeekNumber(monday)} of the year`:`Yılın ${isoWeekNumber(monday)}. haftası`}">${isoWeekNumber(monday)}.</div>`;
+    const weeks=dateCalendarWeekPair(monday);
+    const weekTitle=calEn?`LCW Merch Week: ${weeks.lcw} · Global Week: ${weeks.glb}`:`LCW Merch Hafta: ${weeks.lcw} · Global Hafta: ${weeks.glb}`;
+    html+=`<div class="dateCalendarWeek" title="${weekTitle}" aria-label="${weekTitle}"><strong>${weeks.lcw}</strong><span>/</span><span>${weeks.glb}</span></div>`;
     for(let col=0;col<7;col++){
       const day=new Date(monday); day.setDate(monday.getDate()+col);
       const iso=toISODate(day);
@@ -741,7 +752,7 @@ function renderDateCalendarPopup(){
       html+=`<button type="button" class="${cls.join(' ')}" data-cal-date="${iso}" ${disabled?'disabled':''} aria-label="${dateDisplayFromISO(iso)}">${day.getDate()}</button>`;
     }
   }
-  html+='</div><div class="dateCalendarFoot"><button type="button" data-cal-clear>Temizle</button><button type="button" data-cal-today>Bugün</button></div>';
+  html+=`</div><div class="dateCalendarFoot"><button type="button" data-cal-clear>${calEn?'Clear':'Temizle'}</button><button type="button" data-cal-today>${calEn?'Today':'Bugün'}</button></div>`;
   _dateCalendarPopup.innerHTML=html;
   _dateCalendarPopup.querySelectorAll('[data-cal-nav]').forEach(btn=>btn.addEventListener('click',()=>{
     _dateCalendarMonth=new Date(view.getFullYear(),view.getMonth()+Number(btn.dataset.calNav),1);
@@ -782,6 +793,7 @@ document.addEventListener('keydown',e=>{
   if(e.key==='Escape' && _dateCalendarPopup){ e.preventDefault(); closeDateCalendarPopup(true); }
 });
 window.addEventListener('resize',()=>{ if(_dateCalendarPopup) positionDateCalendarPopup(); });
+window.addEventListener('bl:merch-calendar-change',()=>{ if(_dateCalendarPopup) renderDateCalendarPopup(); });
 window.addEventListener('scroll',()=>{ if(_dateCalendarPopup) positionDateCalendarPopup(); },true);
 
 function enhanceDateInput(native){
@@ -22207,6 +22219,11 @@ function kolWeekCode(value,fallbackDate=''){
 function kolWeekDisplay(value,fallbackDate=''){
   const code=kolWeekCode(value,fallbackDate);return code?String(Number(code.slice(5))):'';
 }
+function kolGlobalWeekDisplay(value){
+  const pair=window.BLDateDimension?.weekPair?.(value);
+  if(pair&&pair.glb!=null)return String(pair.glb);
+  const date=window.BLDateDimension?.parseDate?.(value);return date?String(isoWeekNumber(date)):'';
+}
 function kolMondayFromIsoWeek(year,week){
   return window.BLDateDimension?.mondayFromBusinessWeek?.(Number(year),Number(week))||null;
 }
@@ -22303,14 +22320,16 @@ function openKolPeriodDrawer(rowId,mode){
   const backdrop=document.createElement('div');backdrop.className='kolPeriodDrawerBackdrop';
   const panel=document.createElement('aside');panel.className='kolPeriodDrawer';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','true');
   const title=mode==='week'?(appLang==='en'?'Select Model Budget Week':'Model Bütçe Hafta Seç'):(appLang==='en'?'Select Model Budget Month':'Model Bütçe Ayı Seç');
-  const currentText=appLang==='en'?`${kolMonthDisplay(current.inStoreMonth)} · Week ${kolWeekDisplay(current.inStoreWeek)} · ${fmtDate(current.inStore)}`:`${kolMonthDisplay(current.inStoreMonth)} · ${kolWeekDisplay(current.inStoreWeek)}. hafta · ${fmtDate(current.inStore)}`;
+  const currentGlb=kolGlobalWeekDisplay(current.inStore);
+  const currentText=appLang==='en'?`${kolMonthDisplay(current.inStoreMonth)} · LCW Week ${kolWeekDisplay(current.inStoreWeek)} · GLB Week ${currentGlb} · ${fmtDate(current.inStore)}`:`${kolMonthDisplay(current.inStoreMonth)} · LCW ${kolWeekDisplay(current.inStoreWeek)}. hafta · GLB ${currentGlb}. hafta · ${fmtDate(current.inStore)}`;
   const items=mode==='week'?kolPeriodDrawerWeekItems():kolPeriodDrawerMonthItems();
   const rows=items.map(schedule=>{
-    const week=kolWeekDisplay(schedule.inStoreWeek),month=kolMonthDisplay(schedule.inStoreMonth),date=fmtDate(schedule.inStore);
+    const week=kolWeekDisplay(schedule.inStoreWeek),month=kolMonthDisplay(schedule.inStoreMonth),date=fmtDate(schedule.inStore),glb=kolGlobalWeekDisplay(schedule.inStore);
+    const glbText=glb?(appLang==='en'?`GLB Week ${glb}`:`GLB ${glb}. hafta`):'';
     const isCurrent=mode==='week'?schedule.inStoreWeek===current.inStoreWeek:schedule.inStoreMonth===current.inStoreMonth;
     const isSelected=mode==='week'?schedule.inStoreWeek===selectedWeek:schedule.inStoreMonth===selectedMonth;
-    const primary=mode==='week'?(appLang==='en'?`Week ${week}`:`${week}. Hafta`):month;
-    const secondary=mode==='week'?`${month} · ${date}`:(appLang==='en'?`Week ${week} · ${date}`:`${week}. hafta · ${date}`);
+    const primary=mode==='week'?(appLang==='en'?`LCW Week ${week}`:`LCW ${week}. Hafta`):month;
+    const secondary=mode==='week'?[glbText,month,date].filter(Boolean).join(' · '):[appLang==='en'?`LCW Week ${week}`:`LCW ${week}. hafta`,glbText,date].filter(Boolean).join(' · ');
     return `<button type="button" class="kolPeriodOption${isCurrent?' isCurrent':''}${isSelected?' isSelected':''}" data-period-week="${escapeHtml(schedule.inStoreWeek)}" data-period-month="${escapeHtml(schedule.inStoreMonth)}"><span class="kolPeriodPrimary">${escapeHtml(primary)}</span><span class="kolPeriodSecondary">${escapeHtml(secondary)}</span>${isCurrent?`<em>${escapeHtml(appLang==='en'?'CURRENT':'GÜNCEL')}</em>`:''}</button>`;
   }).join('');
   panel.innerHTML=`<div class="kolPeriodDrawerHead"><div><small>${escapeHtml(appLang==='en'?'IN STORE PERIOD':'MAĞAZA DÖNEMİ')}</small><h3>${escapeHtml(title)}</h3></div><button type="button" class="kolPeriodDrawerClose" aria-label="${escapeHtml(appLang==='en'?'Close':'Kapat')}">×</button></div><div class="kolPeriodCurrent"><span>${escapeHtml(appLang==='en'?'Current week':'Bulunduğumuz hafta')}</span><strong>${escapeHtml(currentText)}</strong></div><div class="kolPeriodDrawerList">${rows}</div>`;

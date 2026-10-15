@@ -35,7 +35,7 @@ test('Etkileşim, drawer, modal ve takvim hareketi ortak ve azaltılabilir', () 
     assert.match(experience, new RegExp(`@keyframes ${name}`));
   }
   assert.match(experience, /@media\(prefers-reduced-motion:reduce\)/);
-  assert.match(experience, /\.dateCalendarPopup\{width:min\(308px/);
+  assert.match(experience, /\.dateCalendarPopup\{width:min\(332px/);
   assert.doesNotMatch(integrity, /\*,\*::before,\*::after\{\s*animation:none\s*!important/);
   assert.doesNotMatch(integrity, /\*\{background-image:none\s*!important/);
 });
