@@ -64,7 +64,7 @@
   function resolveSelectPasteValue(raw,options){
     const value=String(raw==null?'':raw);
     if(!value.trim())return {ok:true,value:''};
-    const fold=text=>String(text==null?'':text).normalize('NFKC').trim().replace(/\\s+/g,' ').toLocaleLowerCase('tr-TR');
+    const fold=text=>String(text==null?'':text).normalize('NFKC').trim().replace(/\s+/g,' ').toLocaleLowerCase('tr-TR');
     const needle=fold(value),matches=new Set();
     for(const option of (Array.isArray(options)?options:[])){
       const optionValue=String(option?.value??''),optionLabel=String(option?.label??'');
