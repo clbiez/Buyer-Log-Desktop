@@ -129,3 +129,27 @@ test('when the conversation is full the agent doing the work opens its own conve
   assert.notEqual(next.conversation.id,first.conversation.id);
   assert.ok(next.conversation.profileIds.includes(extra[2].id),'the lead is a participant');
 });
+
+test('an agent described in plain words becomes a draft limited to the owner\'s areas; nothing is saved by the draft',async t=>{
+  let a,seen;const engine=fakeEngine({'agent-profile-draft':input=>{seen=input.context;return {name:'Mert',role:'Test Uzmanı',areas:['cp','shipping','collection','ghost'],instructions:'Test raporlarını incele, siparişle eşleştir, CP\'ye işle.',summary:'Mert testleri takip eder.'};}});
+  const w=world(t,engine);a=await team(w);
+  const before=(await w.store.records(w.profile.id)).filter(d=>d.kind==='profile').length;
+  const result=await w.service.officeAgentDraft(w.profile,{text:'Mert testlerle ilgilensin'});
+  assert.deepEqual(result.draft.areas,['cp','collection'],'only areas the owner can access');
+  assert.ok(seen.areas.every(area=>['cp','collection'].includes(area.key)),'LCW AI only sees allowed areas');
+  assert.equal((await w.store.records(w.profile.id)).filter(d=>d.kind==='profile').length,before,'a draft saves nothing');
+  const edit=await w.service.officeAgentDraft(w.profile,{text:'Haftalık özet de hazırlasın',agentId:a.ada.id});
+  assert.equal(edit.agentId,a.ada.id);assert.equal(edit.revision,a.ada.revision);
+  assert.equal(seen.current.name,'Ada','editing merges into the current profile');
+});
+
+test('a memory the agent noticed is saved only when the owner keeps it, linked to its reply',async t=>{
+  let a;const engine=fakeEngine({'agent-chat-route':()=>({mode:'reply',agentIds:[a.ada.id],lead:a.ada.id}),
+    'agent-office':{answer:'Tamam, pazartesi hazırlarım.',memoryCandidates:['Haftalık kontrol pazartesi sabahı hazırlanır.'],confidence:'MEDIUM'}});
+  const w=world(t,engine);a=await team(w);
+  const result=await w.service.officeChat(w.profile,{text:'Bundan sonra haftalık kontrolü pazartesi sabahı hazırla',agentId:a.ada.id});
+  assert.deepEqual(result.message.provenance.memoryCandidates,['Haftalık kontrol pazartesi sabahı hazırlanır.']);
+  assert.equal((await w.store.records(w.profile.id)).filter(d=>d.kind==='memory'&&d.text.includes('pazartesi')).length,0,'not saved by itself');
+  const saved=await w.service.learn(w.profile,a.ada.id,{text:'Haftalık kontrol pazartesi sabahı hazırlanır.',type:'preference',approved:true,sourceId:result.message.id});
+  assert.equal(saved.approved,true);assert.equal(saved.sourceId,result.message.id);
+});

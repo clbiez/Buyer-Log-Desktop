@@ -7,8 +7,8 @@
     "en": "Login freeze fix and plain Agent chat"
   },
   "summary": {
-    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar.",
-    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat."
+    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar. Agentları kendi cümlelerinizle yetiştirebilir, tercihlerinizi hatırlatabilirsiniz.",
+    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat. You can train agents in your own words and have them remember your preferences."
   },
   "changes": [
     {
@@ -124,6 +124,64 @@
         "alt": {
           "tr": "6000 karakterlik talimatı olan Ada sohbette hatasız yanıt veriyor (demo veri).",
           "en": "Ada, with 6,000 characters of instructions, answers in the chat without an error (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-train-plain-words",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agentı kendi cümlelerinizle yetiştirin",
+        "en": "Train an agent in your own words"
+      },
+      "body": {
+        "tr": "\"Yeni agent yetiştir\" ile agentın ne yapacağını anlatırsınız; LCW AI adını, unvanını, çalışacağı alanları ve talimatlarını taslak olarak hazırlar. Taslağı düzeltip kaydedersiniz. Mevcut bir agentı \"eğit\" ile yeni görev veya alışkanlık ekleyerek geliştirebilirsiniz. Agent yalnız sizin erişebildiğiniz alanlarda çalışır.",
+        "en": "With \"Train a new agent\" you describe what the agent should do; LCW AI drafts its name, role, working areas and instructions. You adjust the draft and save it. Use \"Train\" on an existing agent to add a new duty or habit. An agent only works in areas you can access."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-train-plain-words.png",
+        "caption": {
+          "tr": "Mert'in görevleri doğal dille anlatıldı; ad, unvan, alanlar ve talimatlar taslak olarak hazırlandı (demo veri).",
+          "en": "Mert's duties were described in plain words; name, role, areas and instructions were drafted (demo data)."
+        },
+        "alt": {
+          "tr": "Mert'in görevleri doğal dille anlatıldı; ad, unvan, alanlar ve talimatlar taslak olarak hazırlandı (demo veri).",
+          "en": "Mert's duties were described in plain words; name, role, areas and instructions were drafted (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-memory-remember",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agentlar tercihlerinizi hatırlar",
+        "en": "Agents remember your preferences"
+      },
+      "body": {
+        "tr": "Sohbette kalıcı bir tercih veya çalışma kuralı söylediğinizde agent cevabın altında \"Bunu hatırlamamı ister misiniz?\" diye sorar. \"Hatırla\" derseniz bu bilgi agentın hafızasına kaydedilir ve sonraki işlerde kullanılır; aynı konuyu tekrar anlatmanız gerekmez.",
+        "en": "When you state a lasting preference or working rule in the chat, the agent asks \"Shall I remember this?\" under its reply. If you choose \"Remember\", it is saved to the agent's memory and used in later work, so you do not have to explain it again."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-memory-remember.png",
+        "caption": {
+          "tr": "Ada haftalık kontrolün pazartesi hazırlanacağını sordu ve hatırladı (demo veri).",
+          "en": "Ada asked whether to remember that the weekly check is prepared on Mondays, and remembered it (demo data)."
+        },
+        "alt": {
+          "tr": "Ada haftalık kontrolün pazartesi hazırlanacağını sordu ve hatırladı (demo veri).",
+          "en": "Ada asked whether to remember that the weekly check is prepared on Mondays, and remembered it (demo data)."
         }
       }
     }

@@ -18,6 +18,7 @@
   function deferDialog(callback){const generation=state.generation;setTimeout(()=>{if(generation===state.generation)callback();},0);}
   function errorText(err){
     const map={
+      OFFICE_DRAFT_REQUIRED:L('Önce "Taslak hazırla" ile agentın tanımını oluşturun.','First create the agent profile with "Prepare draft".'),
       OFFICE_ROLLBACK_INVALID:L('Bu adım için geçerli geri alma makbuzu yok. Gerçek kaydı ve görev adımını kontrol edin.','There is no valid undo receipt for this step. Check the actual record and task step.'),
       MODEL_QUERY_UNSUPPORTED:L('Bu cihaz native model sağlayıcısını desteklemiyor. Kaynak şeması Windows ve kurulu kurumsal sağlayıcı gerektirir.','This device does not support the native model provider. Source schema discovery requires Windows and an installed corporate provider.'),
       MODEL_SCHEMA_UNAVAILABLE:L('Kaynak şeması okunamadı. Bağlantıyı ve kurumsal sağlayıcı erişimini kontrol edin.','Source schema could not be read. Check the connection and corporate provider access.'),
@@ -411,21 +412,45 @@
     const meta=item.provenance||{},lead=meta.speaker||item.profileIds?.[0];
     const perspectives=(meta.perspectives||[]).map(value=>{const index=String(value).indexOf('|');return {id:String(value).slice(0,index),text:String(value).slice(index+1)};}).filter(entry=>entry.text.trim());
     if(item.status&&item.status!=='complete'&&!item.text)return '';
-    if(perspectives.length>1)return perspectives.map(entry=>chatBubble(entry.id,chatMarkdown(entry.text))).join('')+chatBubble(lead,chatMarkdown(item.text),`<small class="aoSimpleNote">${esc(L('Ortak sonuç','Shared conclusion'))}</small>`);
-    return chatBubble(lead,chatMarkdown(item.text));}
+    const memory=chatMemoryHtml(item,lead);
+    if(perspectives.length>1)return perspectives.map(entry=>chatBubble(entry.id,chatMarkdown(entry.text))).join('')+chatBubble(lead,chatMarkdown(item.text),`<small class="aoSimpleNote">${esc(L('Ortak sonuç','Shared conclusion'))}</small>${memory}`);
+    return chatBubble(lead,chatMarkdown(item.text),memory);}
+  /* Agentın fark ettiği kalıcı tercihler: yalnız sahip "Hatırla" derse saklanır. */
+  function chatMemoryHtml(item,agentId){const list=(item.provenance?.memoryCandidates||[]).map(value=>String(value||'').trim()).filter(Boolean).slice(0,3);if(!list.length||!agentId)return '';
+    const saved=value=>(state.data.memory||[]).some(doc=>doc.sourceId===item.id&&doc.text===value&&doc.active!==false);
+    return `<div class="aoSimpleMemory"><small>${esc(L('Bunu hatırlamamı ister misiniz?','Shall I remember this?'))}</small>${list.map((value,index)=>`<div><span>${esc(value)}</span>${saved(value)?`<em>${esc(L('Hatırlıyorum','Remembered'))}</em>`:button(L('Hatırla','Remember'),'chat-remember',`data-id="${esc(item.id)}" data-index="${index}" data-agent="${esc(agentId)}"`)}</div>`).join('')}</div>`;}
   function chatMessagesHtml(){const c=chatState();
     if(!c.messages.length)return `<div class="aoSimpleWelcome"><b>${esc(L('Ne yapmamı istersiniz?','What would you like me to do?'))}</b><p>${esc(L('Derdinizi ya da talebinizi kendi cümlelerinizle yazın. Gerekirse ekipten başka birini de konuya katarım; bir şeyi değiştirmeden önce mutlaka size sorarım.','Write what you need in your own words. I bring in a teammate when needed and always ask before changing anything.'))}</p></div>`;
     return c.messages.map(chatMessageHtml).join('');}
+  /* Agentı doğal dille yetiştirme: sahip anlatır, LCW AI taslak çıkarır,
+     sahip düzeltir ve kaydeder. Alanlar sahibin erişimiyle sınırlıdır. */
+  function agentTrainer(agentId){const agent=agentId?state.data.profiles.find(item=>item.id===agentId):null;let draft=null;
+    const example=L('Örnek: Mert testlerle ilgilensin. İlettiğim test raporlarını ve mailleri inceleyip hangi siparişe ait olduğunu, sorunun ne olduğunu ve onay olup olmadığını bulsun, CP\'ye işlesin; her hafta üreticilere test takip maili hazırlasın.','Example: Mert handles tests. He reads the test reports and e-mails I forward, finds the order, the problem and whether it is approved, records it in CP, and prepares a weekly test follow-up e-mail for suppliers.');
+    const body=`<p class="aoSimpleNote">${esc(agent?L(`${agent.name} için yeni bir görev, kural veya alışkanlık yazın; mevcut talimatla birleştirilir.`,`Write a new duty, rule or habit for ${agent.name}; it is merged with the current instructions.`):L('Bu agent kim olsun, ne yapsın? Kendi cümlelerinizle anlatın.','Who should this agent be and what should it do? Describe it in your own words.'))}</p>
+      <textarea class="aoInput aoSimpleBrief" data-ao-trainer-brief rows="4" maxlength="4000" placeholder="${esc(example)}"></textarea>
+      <div class="aoSimpleActions">${button(L('Taslak hazırla','Prepare draft'),'trainer-draft','class="aoButton is-primary"')}</div><div data-ao-trainer-preview></div>`;
+    const modal=dialog(agent?L(`${agent.name} · eğit`,`Train ${agent.name}`):L('Yeni agent yetiştir','Train a new agent'),body,async overlay=>{
+      if(!draft)throw Object.assign(new Error('OFFICE_DRAFT_REQUIRED'),{code:'OFFICE_DRAFT_REQUIRED'});
+      const payload={name:overlay.querySelector('[data-ao-trainer-name]').value.trim(),role:overlay.querySelector('[data-ao-trainer-role]').value.trim(),areas:draft.draft.areas,instructions:overlay.querySelector('[data-ao-trainer-instructions]').value};
+      if(draft.agentId)await api(`/profiles/${encodeURIComponent(draft.agentId)}`,{...payload,revision:draft.revision},'PUT');else{const created=await api('/profiles',payload);chatState().agentId=created.profile?.id||chatState().agentId;}
+    },agent?L('Kaydet','Save'):L('Agentı ekle','Add agent'));
+    modal.querySelector('[data-ao-action="trainer-draft"]').addEventListener('click',async event=>{const trigger=event.currentTarget,text=modal.querySelector('[data-ao-trainer-brief]').value.trim(),error=modal.querySelector('[data-ao-modal-error]');if(!text)return;
+      trigger.disabled=true;error.textContent=L('Taslak hazırlanıyor…','Preparing the draft…');
+      try{draft=await api('/chat/agent-draft',{text,agentId:agent?.id||'',lang:en()?'en':'tr'});error.textContent='';const d=draft.draft;
+        modal.querySelector('[data-ao-trainer-preview]').innerHTML=`<div class="aoSimpleDraft"><p><b>${esc(d.summary||'')}</b></p><div class="aoSimpleDraftRow"><label>${esc(L('Ad','Name'))}<input class="aoInput" data-ao-trainer-name maxlength="60" value="${esc(d.name)}"></label><label>${esc(L('Unvan','Role'))}<input class="aoInput" data-ao-trainer-role maxlength="80" value="${esc(d.role)}"></label></div>
+          <p>${esc(L('Çalışacağı alanlar','Areas it works in'))}: ${d.areas.map(key=>`<span class="aoBadge">${esc(label(draft.areaLabels[key])||key)}</span>`).join(' ')||esc(L('yok','none'))}</p><label>${esc(L('Talimatlar','Instructions'))}<textarea class="aoInput" data-ao-trainer-instructions rows="5" maxlength="6000">${esc(d.instructions)}</textarea></label></div>`;
+        modal.querySelector('[data-ao-action="modal-save"]')?.scrollIntoView({block:'nearest'});
+      }catch(err){error.textContent=errorText(err);}finally{trigger.disabled=false;}});}
   function simpleView(){const c=chatState(),agents=chatAgents();
     if(!agents.some(item=>item.id===c.agentId))c.agentId=agents[0]?.id||'';
     const conv=state.data.conversations.find(item=>item.id===c.conversationId),people=conv?conv.profileIds:(c.agentId?[c.agentId]:[]),lead=agents.find(item=>item.id===people[0]);
     const recent=state.data.conversations.slice(0,8);
     return `<div class="agentOffice aoSimple"><aside class="aoSimpleSide"><h2>${esc(L('Ofisim','My office'))}</h2>
       <div class="aoSimpleTeam">${agents.map(agent=>`<button type="button" class="aoSimpleAgent${people.includes(agent.id)?' is-active':''}" data-ao-action="chat-agent" data-id="${esc(agent.id)}"><span class="aoSimplePortrait" style="${portrait(agent,40,48)}" aria-hidden="true"></span><span><b>${esc(agent.name)}</b><small>${esc(agent.role||'')}</small></span></button>`).join('')||empty(L('Henüz agent yok. Ayarlardan ilk agentınızı ekleyin.','No agents yet. Add your first agent in Settings.'))}</div>
-      ${button(L('Yeni konu','New topic'),'chat-new')}
+      ${button(L('Yeni konu','New topic'),'chat-new')}${button(L('Yeni agent yetiştir','Train a new agent'),'chat-agent-new')}
       ${recent.length?`<h3>${esc(L('Son konuşmalar','Recent conversations'))}</h3><div class="aoSimpleRecent">${recent.map(item=>`<button type="button" data-ao-action="chat-open" data-id="${esc(item.id)}" class="${item.id===c.conversationId?'is-active':''}"><b>${esc(item.title)}</b><small>${esc(item.profileIds.map(agentName).join(', '))}</small></button>`).join('')}</div>`:''}
       <div class="aoSimpleFoot">${button(L('Ayarlar ve gelişmiş ofis','Settings and advanced office'),'chat-advanced')}</div></aside>
-      <section class="aoSimpleChat"><header class="aoSimpleHead">${people.map(key=>{const agent=agents.find(item=>item.id===key);return agent?`<span class="aoSimplePortrait is-small" style="${portrait(agent,36,44)}" aria-hidden="true"></span>`:'';}).join('')}<strong>${esc(people.map(agentName).join(', ')||L('Agent seçin','Select an agent'))}</strong>${state.conn?.connected?'':button(L('LCW AI’a bağlan','Connect LCW AI'),'connect','class="aoButton is-primary"')}</header>
+      <section class="aoSimpleChat"><header class="aoSimpleHead">${people.map(key=>{const agent=agents.find(item=>item.id===key);return agent?`<span class="aoSimplePortrait is-small" style="${portrait(agent,36,44)}" aria-hidden="true"></span>`:'';}).join('')}<strong>${esc(people.map(agentName).join(', ')||L('Agent seçin','Select an agent'))}</strong>${lead?button(L(`${lead.name} · eğit`,`Train ${lead.name}`),'chat-agent-train',`data-id="${esc(lead.id)}"`):''}${state.conn?.connected?'':button(L('LCW AI’a bağlan','Connect LCW AI'),'connect','class="aoButton is-primary"')}</header>
       <div class="aoSimpleMessages" data-ao-chat-messages aria-live="polite">${chatMessagesHtml()}</div>
       ${c.error?`<div class="aoNotice aoError" role="alert">${esc(c.error)}${button(L('Kapat','Dismiss'),'chat-dismiss')}</div>`:''}
       <form class="aoSimpleComposer" data-ao-simple-chat><textarea class="aoInput" data-ao-chat-draft rows="2" maxlength="4000" aria-label="${esc(L('Mesaj','Message'))}" placeholder="${esc(lead?L('Ne yapılmasını istersiniz? Kendi cümlelerinizle yazın.','What would you like done? Write it in your own words.'):L('Önce bir agent ekleyin.','Add an agent first.'))}" ${c.busy||!lead?'disabled':''}>${esc(c.draft)}</textarea><button type="submit" class="aoButton is-primary" ${c.busy||!lead?'disabled':''}>${esc(L('Gönder','Send'))}</button></form>
@@ -454,6 +479,9 @@
     if(name==='chat-new'){if(c.busy)return true;c.conversationId='';c.messages=[];c.error='';render();return true;}
     if(name==='chat-open'){if(c.busy)return true;const conv=state.data.conversations.find(item=>item.id===key);if(!conv)return true;c.conversationId=key;c.agentId=conv.profileIds[0];c.error='';await chatLoad(key);render();chatWatch();return true;}
     if(name==='chat-advanced'){state.pane='office';render();return true;}
+    if(name==='chat-remember'){const item=c.messages.find(entry=>entry.id===key),value=String(item?.provenance?.memoryCandidates?.[Number(target.dataset.index)]||'').trim();if(!item||!value)return true;target.disabled=true;
+      try{await api(`/profiles/${encodeURIComponent(target.dataset.agent)}/memory`,{text:value,type:'preference',approved:true,sourceId:item.id});await refresh();}catch(err){c.error=errorText(err);}render();return true;}
+    if(name==='chat-agent-new'||name==='chat-agent-train'){agentTrainer(name==='chat-agent-train'?key:'');return true;}
     if(name==='chat-dismiss'){c.error='';render();return true;}
     if(name==='chat-task-details'){const job=c.tasks[key];if(job)capabilityReview(job);return true;}
     if(name==='chat-approve'){const job=c.tasks[key],next=job&&taskNextStep(job);if(!next)return true;target.disabled=true;

@@ -19,6 +19,12 @@ const { id, error, text } = require('./agent-office-store');
 const WAITING = new Set(['waiting_approval', 'waiting_output', 'waiting_operation']);
 const TERMINAL = new Set(['completed', 'partial', 'failed', 'cancelled', 'interrupted', 'rejected', 'rolled_back']);
 const MODES = new Set(['reply', 'task', 'clarify']);
+const AREA_LABELS = Object.freeze({
+  collection: { tr: 'Koleksiyon', en: 'Collection' }, overview: { tr: 'Genel Bakış', en: 'Overview' }, cp: { tr: 'CP Tracker', en: 'CP Tracker' },
+  orders: { tr: 'Siparişler', en: 'Orders' }, priceanalysis: { tr: 'Fiyat ve Üretici Analizi', en: 'Price and Supplier Analysis' }, lfl: { tr: 'LFL Analizi', en: 'LFL Analysis' },
+  opencosting: { tr: 'Ön Maliyet', en: 'Open Costing' }, backlog: { tr: 'Backlog', en: 'Backlog' }, shipping: { tr: 'Nakliye Kıyaslama', en: 'Shipping Comparison' },
+  automations: { tr: 'Otomasyonlar', en: 'Automations' }, source: { tr: 'Kaynak Veri', en: 'Source Data' }, agents: { tr: 'Agent Ofisi', en: 'Agent Office' },
+});
 
 function chunks(list, size = 1800) {
   const out = []; let current = '';
@@ -177,7 +183,27 @@ function attachChat(service, deps = {}) {
     return publicTask(profile, await advance(profile, jobId));
   }
 
-  return { officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => publicTask(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
+  /* Doğal dille agent tanımı: LCW AI yalnız TASLAK üretir; alanlar sahibin
+     erişebildikleriyle sınırlanır, kayıt mevcut profil uçlarıyla ve sahibin
+     onayıyla yapılır. */
+  async function agentDraft(profile, raw = {}) {
+    const description = text(raw.text, 4000);
+    if (!description) throw error('OFFICE_TASK_INVALID', 422);
+    const allowed = typeof service.allowedAreas === 'function' ? service.allowedAreas(profile) : Object.keys(AREA_LABELS);
+    const current = raw.agentId ? await store.get(profile.id, 'profile', raw.agentId) : null;
+    const lang = raw.lang === 'en' ? 'en' : 'tr';
+    const context = { areas: allowed.map(key => ({ key, label: (AREA_LABELS[key] || { tr: key, en: key })[lang] })),
+      ...(current ? { current: { name: current.name, role: current.role, areas: current.areas || [], instructions: String(current.instructions || '') } } : {}) };
+    const response = await service.engineOf().ask(profile.id, { requestId: id(), source: 'agent-profile-draft', lang, task: description, context, signal: raw.signal });
+    if (!response?.structured?.ok || !response.data) throw error('OFFICE_AI_CONTRACT_INVALID', 422);
+    const data = response.data, areas = [...new Set((Array.isArray(data.areas) ? data.areas : []).map(String).filter(key => allowed.includes(key)))];
+    const draft = { name: text(data.name || current?.name || '', 60), role: text(data.role || current?.role || '', 80), areas: areas.length ? areas : (current?.areas || []).filter(key => allowed.includes(key)),
+      instructions: text(data.instructions, 6000), summary: text(data.summary, 400) };
+    if (!draft.name || !draft.instructions) throw error('OFFICE_AI_CONTRACT_INVALID', 422);
+    return { draft, agentId: current?.id || '', revision: current?.revision ?? null, areaLabels: Object.fromEntries(draft.areas.map(key => [key, AREA_LABELS[key] || { tr: key, en: key }])) };
+  }
+
+  return { officeAgentDraft: agentDraft, officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => publicTask(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
 }
 
 module.exports = { attachChat, validateRoute, chunks };
