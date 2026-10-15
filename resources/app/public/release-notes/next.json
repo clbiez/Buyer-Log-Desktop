@@ -7,8 +7,8 @@
     "en": "Login freeze fix and plain Agent chat"
   },
   "summary": {
-    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar.",
-    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat."
+    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar. Agentları kendi cümlelerinizle yetiştirebilir, tercihlerinizi hatırlatabilir, sohbete rapor ve Excel ekleyebilirsiniz.",
+    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat. You can train agents in your own words, have them remember your preferences and attach reports and Excel files."
   },
   "changes": [
     {
@@ -124,6 +124,93 @@
         "alt": {
           "tr": "6000 karakterlik talimatı olan Ada sohbette hatasız yanıt veriyor (demo veri).",
           "en": "Ada, with 6,000 characters of instructions, answers in the chat without an error (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-train-plain-words",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agentı kendi cümlelerinizle yetiştirin",
+        "en": "Train an agent in your own words"
+      },
+      "body": {
+        "tr": "\"Yeni agent yetiştir\" ile agentın ne yapacağını anlatırsınız; LCW AI adını, unvanını, çalışacağı alanları ve talimatlarını taslak olarak hazırlar. Taslağı ve çalışacağı alanları düzeltip kaydedersiniz. Mevcut bir agentı \"eğit\" ile yeni görev veya alışkanlık ekleyerek geliştirebilirsiniz. Agent yalnız sizin erişebildiğiniz alanlarda çalışır.",
+        "en": "With \"Train a new agent\" you describe what the agent should do; LCW AI drafts its name, role, working areas and instructions. You adjust the draft and its areas, then save it. Use \"Train\" on an existing agent to add a new duty or habit. An agent only works in areas you can access."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-train-plain-words.png",
+        "caption": {
+          "tr": "Mert'in görevleri doğal dille anlatıldı; ad, unvan, alanlar ve talimatlar taslak olarak hazırlandı (demo veri).",
+          "en": "Mert's duties were described in plain words; name, role, areas and instructions were drafted (demo data)."
+        },
+        "alt": {
+          "tr": "Mert'in görevleri doğal dille anlatıldı; ad, unvan, alanlar ve talimatlar taslak olarak hazırlandı (demo veri).",
+          "en": "Mert's duties were described in plain words; name, role, areas and instructions were drafted (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-memory-remember",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agentlar tercihlerinizi hatırlar",
+        "en": "Agents remember your preferences"
+      },
+      "body": {
+        "tr": "Sohbette kalıcı bir tercih veya çalışma kuralı söylediğinizde agent cevabın altında \"Bunu hatırlamamı ister misiniz?\" diye sorar. \"Hatırla\" derseniz cümleyi gerekirse düzeltip onaylarsınız; agent bunu sonraki işlerde kullanır, aynı konuyu tekrar anlatmanız gerekmez.",
+        "en": "When you state a lasting preference or working rule in the chat, the agent asks \"Shall I remember this?\" under its reply. Choose \"Remember\", correct the sentence if needed and confirm; the agent uses it in later work, so you do not have to explain it again."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-memory-remember.png",
+        "caption": {
+          "tr": "Ada haftalık kontrolün pazartesi hazırlanacağını sordu ve hatırladı (demo veri).",
+          "en": "Ada asked whether to remember that the weekly check is prepared on Mondays, and remembered it (demo data)."
+        },
+        "alt": {
+          "tr": "Ada haftalık kontrolün pazartesi hazırlanacağını sordu ve hatırladı (demo veri).",
+          "en": "Ada asked whether to remember that the weekly check is prepared on Mondays, and remembered it (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-chat-attachments",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Sohbete rapor, e-posta ve Excel ekleyin",
+        "en": "Attach reports, e-mails and Excel files to the chat"
+      },
+      "body": {
+        "tr": "\"Dosya ekle\" ile test raporu, e-posta (PDF, MSG, EML, görsel) veya Excel dosyası verebilirsiniz. Raporlar mevcut test motoruyla okunup siparişlerle eşleştirilir; agent sonucu checklist'e işleme veya raporu aktarma gibi işleri, Excel'i de Endeksmatik içe aktarma gibi işleri önerir. Değiştiren her adım yine onay kartıyla gelir.",
+        "en": "Use \"Attach file\" to give a test report, e-mail (PDF, MSG, EML, image) or an Excel file. Reports are read by the existing test engine and matched to orders; the agent then offers work such as applying results to the checklist or importing the report, and for Excel files work such as an Endeksmatik import. Every change still comes with an approval card."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-chat-attachments.png",
+        "caption": {
+          "tr": "Eklenen Endeksmatik dosyası için Ada içe aktarma adımını onaya sundu (demo veri).",
+          "en": "For the attached Endeksmatik file Ada put the import step up for approval (demo data)."
+        },
+        "alt": {
+          "tr": "Eklenen Endeksmatik dosyası için Ada içe aktarma adımını onaya sundu (demo veri).",
+          "en": "For the attached Endeksmatik file Ada put the import step up for approval (demo data)."
         }
       }
     }

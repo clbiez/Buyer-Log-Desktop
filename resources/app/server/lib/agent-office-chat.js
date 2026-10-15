@@ -19,6 +19,12 @@ const { id, error, text } = require('./agent-office-store');
 const WAITING = new Set(['waiting_approval', 'waiting_output', 'waiting_operation']);
 const TERMINAL = new Set(['completed', 'partial', 'failed', 'cancelled', 'interrupted', 'rejected', 'rolled_back']);
 const MODES = new Set(['reply', 'task', 'clarify']);
+const AREA_LABELS = Object.freeze({
+  collection: { tr: 'Koleksiyon', en: 'Collection' }, overview: { tr: 'Genel Bakış', en: 'Overview' }, cp: { tr: 'CP Tracker', en: 'CP Tracker' },
+  orders: { tr: 'Siparişler', en: 'Orders' }, priceanalysis: { tr: 'Fiyat ve Üretici Analizi', en: 'Price and Supplier Analysis' }, lfl: { tr: 'LFL Analizi', en: 'LFL Analysis' },
+  opencosting: { tr: 'Ön Maliyet', en: 'Open Costing' }, backlog: { tr: 'Backlog', en: 'Backlog' }, shipping: { tr: 'Nakliye Kıyaslama', en: 'Shipping Comparison' },
+  automations: { tr: 'Otomasyonlar', en: 'Automations' }, source: { tr: 'Kaynak Veri', en: 'Source Data' }, agents: { tr: 'Agent Ofisi', en: 'Agent Office' },
+});
 
 function chunks(list, size = 1800) {
   const out = []; let current = '';
@@ -47,6 +53,50 @@ function validateRoute(data, { roster, toolsBy, current }) {
   return route;
 }
 
+const DOCUMENT_FILE = /\.(pdf|msg|eml|png|jpe?g)$/i, WORKBOOK_FILE = /\.xlsx?$/i, AI_DOCUMENT_LIMIT = 5;
+/* Sohbete eklenen dosyalar mevcut motorlarla ve mevcut yükleme kurallarıyla
+   hazırlanır:
+   - test raporu ve e-postalar: seçili agentın test belgesi okuma yetkisi olmalı;
+     test motoru okur ve sahibin yazabildiği siparişlerle eşler. En çok 5 belgede
+     metin çıkarımı için belgeler şirket içi LCW AI'a gider (mevcut test
+     akışındaki AI okuma ile aynı yol); daha fazlasında yalnız yerel okuma yapılır.
+   - Excel: Veri Yönetimi'ndeki yükleme ile aynı alan/izin şartı.
+   Yönlendirici ve planlayıcıya yalnız kimlik, dosya adı ve eşleşme özeti gider.
+   Her adımın arasında sahibin erişimi yeniden doğrulanır; hata olursa geçici
+   oturum silinir. Hiçbir iş burada uygulanmaz. */
+async function prepareAttachments(profile, files, { qualityService, qualityTools, artifacts, staging, canReadDocuments, canStoreWorkbooks, engine, lang, assertAuthority = () => {} } = {}) {
+  const list = Array.isArray(files) ? files : [];
+  if (!list.length) return [];
+  if (list.length > 10) throw error('OFFICE_ATTACHMENT_LIMIT', 413);
+  if (list.some(file => !file || typeof file.name !== 'string' || typeof file.base64 !== 'string')) throw error('OFFICE_TASK_INVALID', 422);
+  const out = [], documents = list.filter(file => DOCUMENT_FILE.test(file.name)), workbooks = list.filter(file => WORKBOOK_FILE.test(file.name));
+  if (list.length !== documents.length + workbooks.length) throw error('OFFICE_ATTACHMENT_TYPE', 415);
+  if (documents.length && (!qualityService || !qualityTools || !(await canReadDocuments?.()))) throw error('OFFICE_ATTACHMENT_AGENT_REQUIRED', 403);
+  if (workbooks.length && !(await canStoreWorkbooks?.())) throw error('OFFICE_TOOL_FORBIDDEN', 403);
+  assertAuthority();
+  let sessionId = '';
+  try {
+    if (documents.length) {
+      const parsed = await qualityService.parse(profile, documents, { durable: true });
+      sessionId = parsed.sessionId; assertAuthority();
+      if (engine && documents.length <= AI_DOCUMENT_LIMIT) { await qualityService.extractAi(profile, parsed.sessionId, { engine, lang, assertAuthority }); assertAuthority(); }
+      const preview = await qualityTools.inspect(profile, parsed.sessionId); assertAuthority();
+      out.push({ kind: 'test-documents', sessionId: parsed.sessionId, files: documents.map(file => text(file.name, 160)),
+        matches: (preview.matches || []).slice(0, 20).map(match => ({ talepNo: text(match.talepNo, 80), outcome: text(match.outcome?.status || match.outcome, 40), level: text(match.level, 20),
+          orders: (match.candidates || []).slice(0, 3).map(candidate => text(candidate.identity?.orderCode || candidate.orderKey, 80)) })) });
+    }
+    for (const file of workbooks) {
+      const meta = await artifacts.put(profile, Buffer.from(file.base64, 'base64'), text(file.name, 160), 'workbook'); assertAuthority();
+      out.push({ kind: 'workbook', artifactId: meta.id, name: text(file.name, 160) });
+    }
+    return out;
+  } catch (err) { if (sessionId) staging?.dropSession(sessionId); throw err; }
+}
+/* Sohbet işi başarısız olursa hazırlanan test oturumu bekletilmez. */
+function dropAttachments(attachments, staging) {
+  for (const item of attachments || []) if (item.kind === 'test-documents' && item.sessionId) staging?.dropSession(item.sessionId);
+}
+
 function attachChat(service, deps = {}) {
   const store = service.store;
   const busy = new Map();
@@ -64,7 +114,7 @@ function attachChat(service, deps = {}) {
     return out;
   }
 
-  async function route(profile, conv, message, agents, lang, signal) {
+  async function route(profile, conv, message, agents, lang, signal, attachments) {
     const toolsBy = await toolsFor(profile, agents);
     const history = conv ? (await store.messages(profile.id, conv.id, { limit: 8 })).messages
       .filter(item => item.role !== 'system')
@@ -73,6 +123,7 @@ function attachChat(service, deps = {}) {
       agents: agents.map(agent => ({ id: agent.id, name: agent.name, role: agent.role, areas: agent.areas || [],
         brief: String(agent.instructions || '').slice(0, 400), toolIds: chunks(toolsBy[agent.id] || []) })),
       currentParticipants: conv ? conv.profileIds : [],
+      attachments: attachments || [],
       conversation: history,
     };
     const response = await service.engineOf().ask(profile.id, { requestId: id(), source: 'agent-chat-route', lang: lang === 'en' ? 'en' : 'tr', task: message, context, signal });
@@ -115,8 +166,10 @@ function attachChat(service, deps = {}) {
   }
 
   async function chat(profile, raw = {}, onProgress = () => {}) {
-    const message = text(raw.text, 4000);
-    if (!message) throw error('OFFICE_TASK_INVALID', 422);
+    const names = (Array.isArray(raw.attachments) ? raw.attachments : []).flatMap(item => item.kind === 'workbook' ? [item.name] : (item.files || [])).filter(Boolean);
+    const typed = text(raw.text, 4000);
+    if (!typed && !names.length) throw error('OFFICE_TASK_INVALID', 422);
+    const message = text([typed || (raw.lang === 'en' ? 'Please review the attached files.' : 'Ekteki dosyaları inceler misin?'), names.length ? (raw.lang === 'en' ? 'Attachments: ' : 'Ekler: ') + names.join(', ') : ''].filter(Boolean).join('\n\n'), 6000);
     if (busy.get(profile.id)) throw error('OFFICE_BUSY', 429);
     busy.set(profile.id, true);
     try {
@@ -125,7 +178,8 @@ function attachChat(service, deps = {}) {
       let conv = raw.conversationId ? await store.get(profile.id, 'conversation', raw.conversationId) : null;
       const selected = agents.find(agent => agent.id === raw.agentId) || (conv ? null : agents[0]);
       onProgress({ phase: 'route' });
-      const decision = await route(profile, conv, message, agents, raw.lang, raw.signal);
+      const attachments = Array.isArray(raw.attachments) ? raw.attachments.slice(0, 10) : [];
+      const decision = await route(profile, conv, message, agents, raw.lang, raw.signal, attachments);
       // Sahibin seçtiği agent konuşmanın içinde kalır.
       let ids = [...new Set([...(selected ? [selected.id] : []), ...(conv ? conv.profileIds : []), ...decision.agentIds])].slice(0, 4);
       // Konuşma doluysa ve lider içinde değilse lider kendi yeni konuşmasını açar; işi yapan agent daima katılımcıdır.
@@ -148,8 +202,13 @@ function attachChat(service, deps = {}) {
         onProgress({ phase: 'plan' });
         let job;
         try {
-          job = await service.taskPlan(profile, { agentId: decision.lead, task: decision.brief || message, toolIds: decision.toolIds, lang: raw.lang, conversationId: conv.id });
+          job = await service.taskPlan(profile, { agentId: decision.lead, task: decision.brief || message, toolIds: decision.toolIds, lang: raw.lang, conversationId: conv.id, attachments });
         } catch (err) {
+          // Boş veya geçersiz plan: güvenle yapılabilecek adım yok; sahipten ayrıntı istenir.
+          if (err.code === 'OFFICE_TASK_INVALID' || err.code === 'OFFICE_AI_CONTRACT_INVALID') {
+            await note(profile, conv, { type: 'task-empty', agentId: decision.lead });
+            return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: null };
+          }
           await note(profile, conv, { type: 'task-failed', agentId: decision.lead, code: err.code || 'OFFICE_TASK_FAILED' });
           throw err;
         }
@@ -177,7 +236,29 @@ function attachChat(service, deps = {}) {
     return publicTask(profile, await advance(profile, jobId));
   }
 
-  return { officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => publicTask(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
+  /* Doğal dille agent tanımı: LCW AI yalnız TASLAK üretir; alanlar sahibin
+     erişebildikleriyle sınırlanır, kayıt mevcut profil uçlarıyla ve sahibin
+     onayıyla yapılır. */
+  async function agentDraft(profile, raw = {}) {
+    const description = text(raw.text, 4000);
+    if (!description) throw error('OFFICE_TASK_INVALID', 422);
+    const allowed = typeof service.allowedAreas === 'function' ? service.allowedAreas(profile) : Object.keys(AREA_LABELS);
+    const current = raw.agentId ? await store.get(profile.id, 'profile', raw.agentId) : null;
+    const lang = raw.lang === 'en' ? 'en' : 'tr';
+    const context = { areas: allowed.map(key => ({ key, label: (AREA_LABELS[key] || { tr: key, en: key })[lang] })),
+      ...(current ? { current: { name: current.name, role: current.role, areas: current.areas || [], instructions: String(current.instructions || '') } } : {}) };
+    const response = await service.engineOf().ask(profile.id, { requestId: id(), source: 'agent-profile-draft', lang, task: description, context, signal: raw.signal });
+    if (!response?.structured?.ok || !response.data) throw error('OFFICE_AI_CONTRACT_INVALID', 422);
+    const data = response.data, areas = [...new Set((Array.isArray(data.areas) ? data.areas : []).map(String).filter(key => allowed.includes(key)))];
+    // Mevcut agent eğitilirken alanları daralmaz; yeni iş gerekiyorsa alan eklenir. Sahip önizlemede değiştirebilir.
+    const kept = (current?.areas || []).filter(key => allowed.includes(key));
+    const draft = { name: text(data.name || current?.name || '', 60), role: text(data.role || current?.role || '', 80), areas: [...new Set([...kept, ...areas])],
+      instructions: text(data.instructions, 6000), summary: text(data.summary, 400) };
+    if (!draft.name || !draft.instructions) throw error('OFFICE_AI_CONTRACT_INVALID', 422);
+    return { draft, agentId: current?.id || '', revision: current?.revision ?? null, areaLabels: Object.fromEntries(allowed.map(key => [key, AREA_LABELS[key] || { tr: key, en: key }])) };
+  }
+
+  return { officeAgentDraft: agentDraft, officeChatBusy: owner => busy.has(owner), officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => publicTask(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
 }
 
-module.exports = { attachChat, validateRoute, chunks };
+module.exports = { attachChat, validateRoute, chunks, prepareAttachments, dropAttachments };

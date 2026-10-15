@@ -129,3 +129,62 @@ test('when the conversation is full the agent doing the work opens its own conve
   assert.notEqual(next.conversation.id,first.conversation.id);
   assert.ok(next.conversation.profileIds.includes(extra[2].id),'the lead is a participant');
 });
+
+test('an agent described in plain words becomes a draft limited to the owner\'s areas; nothing is saved by the draft',async t=>{
+  let a,seen;const engine=fakeEngine({'agent-profile-draft':input=>{seen=input.context;return {name:'Mert',role:'Test Uzmanı',areas:['cp','shipping','collection','ghost'],instructions:'Test raporlarını incele, siparişle eşleştir, CP\'ye işle.',summary:'Mert testleri takip eder.'};}});
+  const w=world(t,engine);a=await team(w);
+  const before=(await w.store.records(w.profile.id)).filter(d=>d.kind==='profile').length;
+  const result=await w.service.officeAgentDraft(w.profile,{text:'Mert testlerle ilgilensin'});
+  assert.deepEqual(result.draft.areas,['cp','collection'],'only areas the owner can access');
+  assert.ok(seen.areas.every(area=>['cp','collection'].includes(area.key)),'LCW AI only sees allowed areas');
+  assert.equal((await w.store.records(w.profile.id)).filter(d=>d.kind==='profile').length,before,'a draft saves nothing');
+  const edit=await w.service.officeAgentDraft(w.profile,{text:'Haftalık özet de hazırlasın',agentId:a.ada.id});
+  assert.equal(edit.agentId,a.ada.id);assert.equal(edit.revision,a.ada.revision);
+  assert.equal(seen.current.name,'Ada','editing merges into the current profile');
+  assert.ok(a.ada.areas.every(area=>edit.draft.areas.includes(area)),'training an agent never narrows its areas');
+});
+
+test('a memory the agent noticed is saved only when the owner keeps it, linked to its reply',async t=>{
+  let a;const engine=fakeEngine({'agent-chat-route':()=>({mode:'reply',agentIds:[a.ada.id],lead:a.ada.id}),
+    'agent-office':{answer:'Tamam, pazartesi hazırlarım.',memoryCandidates:['Haftalık kontrol pazartesi sabahı hazırlanır.'],confidence:'MEDIUM'}});
+  const w=world(t,engine);a=await team(w);
+  const result=await w.service.officeChat(w.profile,{text:'Bundan sonra haftalık kontrolü pazartesi sabahı hazırla',agentId:a.ada.id});
+  assert.deepEqual(result.message.provenance.memoryCandidates,['Haftalık kontrol pazartesi sabahı hazırlanır.']);
+  assert.equal((await w.store.records(w.profile.id)).filter(d=>d.kind==='memory'&&d.text.includes('pazartesi')).length,0,'not saved by itself');
+  const saved=await w.service.learn(w.profile,a.ada.id,{text:'Haftalık kontrol pazartesi sabahı hazırlanır.',type:'preference',approved:true});
+  assert.equal(saved.approved,true);assert.equal(saved.authorizationFingerprint||'','','an owner-kept preference does not expire with an access change');
+});
+
+test('attached reports are read and matched by the test engine, workbooks are stored; only ids and summaries reach LCW AI',async t=>{
+  const {prepareAttachments}=require('../server/lib/agent-office-chat');
+  const calls=[],profile={id:'owner-x'};
+  const deps={qualityService:{parse:async(_p,files)=>{calls.push(['parse',files.map(f=>f.name)]);return {sessionId:'s'.repeat(32),files};},extractAi:async()=>{calls.push(['ai']);}},
+    qualityTools:{inspect:async()=>({matches:[{talepNo:'T-1',outcome:{status:'fail'},level:'exact',candidates:[{orderKey:'k1',identity:{orderCode:'7300001'}}]}]})},
+    artifacts:{put:async(_p,buffer,name)=>{calls.push(['put',name,buffer.length]);return {id:'a'.repeat(32)};}},canReadDocuments:async()=>true,canStoreWorkbooks:async()=>true,engine:{},staging:{dropSession:id=>calls.push(['drop',id])}};
+  const files=[{name:'DEMO-rapor.pdf',base64:Buffer.from('%PDF').toString('base64')},{name:'DEMO-kur.xlsx',base64:Buffer.from('PK').toString('base64')}];
+  const out=await prepareAttachments(profile,files,deps);
+  assert.deepEqual(out.map(item=>item.kind),['test-documents','workbook']);
+  assert.deepEqual(out[0].matches,[{talepNo:'T-1',outcome:'fail',level:'exact',orders:['7300001']}]);
+  assert.equal(JSON.stringify(out).includes('%PDF'),false,'file content never goes to the summary');
+  await assert.rejects(prepareAttachments(profile,[{name:'virus.exe',base64:'AA=='}],deps),{code:'OFFICE_ATTACHMENT_TYPE'});
+  await assert.rejects(prepareAttachments(profile,[files[0]],{...deps,canReadDocuments:async()=>false}),{code:'OFFICE_ATTACHMENT_AGENT_REQUIRED'});
+  await assert.rejects(prepareAttachments(profile,[files[1]],{...deps,canStoreWorkbooks:async()=>false}),{code:'OFFICE_TOOL_FORBIDDEN'},'workbooks need the same right as the Data Management upload');
+  await assert.rejects(prepareAttachments(profile,[files[0]],{...deps,qualityTools:{inspect:async()=>{throw Object.assign(new Error('x'),{code:'TEST_REPORT_PREVIEW_CHANGED'});}}}),{code:'TEST_REPORT_PREVIEW_CHANGED'});
+  assert.deepEqual(calls.at(-1),['drop','s'.repeat(32)],'a failed read drops the staged documents');
+  calls.length=0;let stamp=1;
+  await assert.rejects(prepareAttachments(profile,files,{...deps,assertAuthority:()=>{if(calls.some(c=>c[0]==='parse')&&stamp++)throw Object.assign(new Error('x'),{code:'OFFICE_PREVIEW_CHANGED'});}}),{code:'OFFICE_PREVIEW_CHANGED'});
+  assert.equal(calls.some(c=>c[0]==='put'),false,'an access change stops before anything else is stored');
+  calls.length=0;
+  await prepareAttachments(profile,Array.from({length:6},(_,i)=>({name:'r'+i+'.pdf',base64:'JVBERg=='})),deps);
+  assert.equal(calls.some(c=>c[0]==='ai'),false,'more than five documents are read locally only');
+  // The router and the planner see the attachment ids.
+  let a,routerSaw,plannerSaw;const engine=fakeEngine({'agent-chat-route':input=>{routerSaw=input.context.attachments;return {mode:'task',agentIds:[a.ada.id],lead:a.ada.id,toolIds:['collection.plm.bom.read'],brief:'DEMO'};},
+    'agent-task':input=>{plannerSaw=input.context.attachments;return {planJson:JSON.stringify({steps:[]})};}});
+  const w=world(t,engine);a=await team(w);
+  const result=await w.service.officeChat(w.profile,{text:'',attachments:out,agentId:a.ada.id});
+  assert.equal(routerSaw[1].artifactId,'a'.repeat(32));assert.equal(plannerSaw[0].sessionId,'s'.repeat(32));
+  const user=(await msgs(w,result.conversation)).find(m=>m.role==='user');
+  assert.match(user.text,/DEMO-rapor\.pdf, DEMO-kur\.xlsx/);
+  assert.equal(result.task,null);
+  assert.ok((await msgs(w,result.conversation)).some(m=>m.role==='system'&&JSON.parse(m.text).type==='task-empty'),'an empty plan asks the owner for details instead of failing');
+});
