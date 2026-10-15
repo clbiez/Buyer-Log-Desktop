@@ -1892,9 +1892,17 @@
     });
   }
 
-  function evidenceEnabled(item) {
-    const fields = item && item.evidenceFields || {};
+  function evidenceEnabled(item, answer) {
+    const fields = evidenceFieldsFor(item, answer);
     return Boolean(fields.reportNumber || fields.actualDate || fields.attachments);
+  }
+  /* Test raporu aktarımı ekleri, adımda "Ekler" alanı kapalı olsa da kayda
+     ekler. Kayıtta ek varsa ekler alanı her zaman görünür; aksi hâlde dosya
+     Buyer Log'da durur ama hiçbir yerden açılamaz. */
+  function evidenceFieldsFor(item, answer) {
+    const fields = Object.assign({}, item && item.evidenceFields || {});
+    if (answer && Array.isArray(answer.attachments) && answer.attachments.length) fields.attachments = true;
+    return fields;
   }
   function fileBase64(file) {
     return new Promise(function (resolve, reject) {
@@ -1948,11 +1956,12 @@
     const row = cpRowById(trigger && trigger.dataset.id);
     const itemId = trigger && trigger.dataset.item;
     const item = itemCatalog().find(function (entry) { return entry.id === itemId; });
-    if (!row || !item || !evidenceEnabled(item)) return;
+    if (!row || !item) return;
     const decision = analysesForRows([row]);
     const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
     if (!analysis) return;
     const answer = answerFor(item, analysis);
+    if (!evidenceEnabled(item, answer)) return;
     const status = normalizeState(answer && answer.state) || normalizeState(trigger.dataset.status) || 'open';
     root.document.getElementById('_blChecklistEvidence')?.remove();
     let kept = Array.isArray(answer && answer.attachments) ? answer.attachments.slice() : [];
@@ -1962,7 +1971,7 @@
     const modal = root.document.createElement('div');
     modal.id = '_blChecklistEvidence';
     modal.className = 'cpaModalOverlay';
-    const fields = item.evidenceFields || {};
+    const fields = evidenceFieldsFor(item, answer);
     const attachmentRows = function () {
       const current = kept.filter(function (entry) { return !removed.has(entry.id); });
       return current.map(function (entry) {
@@ -2131,24 +2140,28 @@
     menu.className = 'delTypeMenu clStatusMenu';
     menu.setAttribute('role', 'listbox');
     menu.setAttribute('aria-label', T('Checklist durumu', 'Checklist status'));
-    menu.innerHTML = [...new Set([...availableStatuses(), current])].map(function (status) {
+    const statusOptions = [...new Set([...availableStatuses(), current])].map(function (status) {
       return '<button type="button" class="delTypeOption clStatusOption" role="option" data-cl-status="' + status + '" aria-selected="' + (status === current ? 'true' : 'false') + '">'
         + '<span class="clStatusDot is-' + (status.startsWith('custom:') ? 'custom' : status) + '" aria-hidden="true"></span>'
-        + '<span>' + html(statusLabel(status)) + '</span></button>';
+        // Kullanıcının yazdığı özel durum adı çeviri ağına girmez ("In Progress" kalır).
+        + '<span' + (status.startsWith('custom:') ? ' data-no-i18n' : '') + '>' + html(statusLabel(status)) + '</span></button>';
     }).join('');
+    // Ekler eylemi durum listesinin ÜSTÜNDE durur: özel durumlar eklendikçe
+    // uzayan liste onu ekranın dışına itmez.
     const evidenceItem = itemCatalog().find(function (item) { return item.id === trigger.dataset.item; });
-    if (evidenceEnabled(evidenceItem)) {
-      menu.innerHTML += '<div style="height:1px;background:var(--line);margin:5px 4px"></div>'
-        + '<button type="button" class="delTypeOption clStatusOption" data-cl-evidence>'
-        + '<span aria-hidden="true">📎</span><span>' + T('Checklist Detayları / Ekler', 'Checklist Details / Attachments') + '</span></button>';
-    }
+    const menuRow = evidenceItem ? cpRowById(trigger.dataset.id) : null;
+    const menuDecision = menuRow ? analysesForRows([menuRow]) : null;
+    const menuAnalysis = menuDecision && menuDecision.byRow && menuDecision.byRow.get ? menuDecision.byRow.get(menuRow) : null;
+    const menuAnswer = menuAnalysis ? answerFor(evidenceItem, menuAnalysis) : null;
+    menu.innerHTML = (evidenceEnabled(evidenceItem, menuAnswer)
+      ? '<button type="button" class="delTypeOption clStatusOption" data-cl-evidence>'
+        + '<span aria-hidden="true">📎</span><span>' + T('Checklist Detayları / Ekler', 'Checklist Details / Attachments') + '</span></button>'
+        + '<div style="height:1px;background:var(--line);margin:5px 4px"></div>'
+      : '') + statusOptions;
     // ROS/Lab Dip is a single CP checklist cell: on click, show all
     // colour decisions beneath the existing status actions, not new columns.
     if (evidenceItem && /LAB\s*DIP|LABDIP/i.test([evidenceItem.tr, evidenceItem.en].join(' '))) {
-      const row = cpRowById(trigger.dataset.id);
-      const decision = row ? analysesForRows([row]) : null;
-      const analysis = decision && decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
-      const answer = analysis ? answerFor(evidenceItem, analysis) : null;
+      const answer = menuAnswer;
       if (answer && answer.note && answer.source === 'test_report') {
         const lines = String(answer.note).split(/\n/).filter(Boolean).slice(0, 30);
         menu.innerHTML += '<section class="clRosStatusDetails"><b>' + html(T('Lab Dip renk sonuçları', 'Lab Dip colour results')) + '</b>'
@@ -2158,12 +2171,18 @@
     root.document.body.appendChild(menu);
     const rect = trigger.getBoundingClientRect();
     const width = Math.max(rect.width, 160);
-    const height = menu.getBoundingClientRect().height || 140;
     const viewportHeight = root.innerHeight || 800;
-    const openAbove = rect.bottom + height + 8 > viewportHeight && rect.top > height + 8;
+    // Uzun menü (çok sayıda özel durum) görünür alana sığdırılır ve kendi içinde kayar.
+    const spaceBelow = Math.max(0, viewportHeight - rect.bottom - 12);
+    const spaceAbove = Math.max(0, rect.top - 12);
+    const natural = menu.getBoundingClientRect().height || 140;
+    const openAbove = natural > spaceBelow && spaceAbove > spaceBelow;
+    const height = Math.min(natural, Math.max(120, openAbove ? spaceAbove : spaceBelow));
+    menu.style.maxHeight = height + 'px';
+    menu.style.overflowY = 'auto';
     menu.style.minWidth = width + 'px';
     menu.style.left = Math.max(8, Math.min(rect.left, (root.innerWidth || 1200) - width - 8)) + 'px';
-    menu.style.top = (openAbove ? rect.top - height - 4 : rect.bottom + 4) + 'px';
+    menu.style.top = Math.max(4, openAbove ? rect.top - height - 4 : rect.bottom + 4) + 'px';
     if (openAbove) menu.classList.add('openAbove');
     statusMenu.el = menu;
     statusMenu.trigger = trigger;

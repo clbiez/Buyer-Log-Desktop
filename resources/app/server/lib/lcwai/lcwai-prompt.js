@@ -162,10 +162,10 @@ const CONTRACTS = Object.freeze({
   'test-report-review': Object.freeze({
     label: { tr: 'Test Raporu İnceleme', en: 'Test Report Review' },
     fields: Object.freeze({
-      reviews: { type: 'string[]', required: true, max: 1400, items: 30, hint: { tr: 'rapor başına bir satır: "talepNo=<no>|step=<context.checklistSteps id ya da boş>|summary=<kısa özet>|actions=<iş 1; iş 2>|risks=<risk 1; risk 2>"', en: 'one line per report: "talepNo=<no>|step=<context.checklistSteps id or empty>|summary=<short summary>|actions=<task 1; task 2>|risks=<risk 1; risk 2>"' } },
+      reviews: { type: 'string[]', required: true, max: 1400, items: 30, hint: { tr: 'rapor başına bir satır: "talepNo=<no>|step=<context.checklistSteps id ya da boş>|status=<context.checklistStatuses id ya da boş>|summary=<kısa özet>|actions=<iş 1; iş 2>|risks=<risk 1; risk 2>"', en: 'one line per report: "talepNo=<no>|step=<context.checklistSteps id or empty>|status=<context.checklistStatuses id or empty>|summary=<short summary>|actions=<task 1; task 2>|risks=<risk 1; risk 2>"' } },
       explanation: { type: 'string', required: true, max: 1500 },
     }),
-    example: { reviews: ['talepNo=3465774|step=tests|summary=…|actions=…; …|risks=…'], explanation: '…' },
+    example: { reviews: ['talepNo=3465774|step=tests|status=|summary=…|actions=…; …|risks=…'], explanation: '…' },
   }),
   /* Koleksiyon › PLM ID Listesinden Ekle: serbest metinden (mail, not, PDF
      metni) PLM Code ayıklama. AI yalnız ADAY üretir; public/kol-plm-list-import.js
@@ -349,8 +349,8 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
         : 'Şemayı yalnız ekli dosyada ya da BAĞLAM.mailText içinde görünen değerlerle doldur. Tahmin etmek yerine alanı boş bırak; sonucu hesaplama ya da çevirme. Taranmış ya da kısmen okunamayan belgede "confidence" değerini düşür ve nedenini "explanation" içinde yaz.');
     } else if (key === 'test-report-review') {
       lines.push(english
-        ? 'Review each report in CONTEXT.reports as a buyer assistant. "step" must be one id from CONTEXT.checklistSteps that fits the request type, or empty. "actions" are concrete next steps for the buyer (e.g. ask the supplier for a retest or an image, reply to the lab). Do not change Buyer Log\'s outcome (buyerLogOutcome); explain it. Write summary, actions and risks in English.'
-        : 'CONTEXT.reports içindeki her raporu bir buyer asistanı olarak incele. "step", talep tipine uyan CONTEXT.checklistSteps kimliklerinden biri ya da boş olmalı. "actions" buyer için somut sonraki adımlardır (ör. tedarikçiden tekrar test ya da görsel iste, laboratuvara dönüş yap). Buyer Log\'un sonucunu (buyerLogOutcome) değiştirme; açıkla. summary, actions ve risks Türkçe olsun.');
+        ? 'Review each report in CONTEXT.reports as a buyer assistant. "step" must be one id from CONTEXT.checklistSteps that fits the request type, or empty. "status" must be one id from CONTEXT.checklistStatuses whose name fits what the report or mail says (e.g. Lack of Sample, In Progress / received for processing), or empty; Buyer Log validates it and the buyer applies it. "actions" are concrete next steps for the buyer (e.g. ask the supplier for a retest or an image, reply to the lab). Do not change Buyer Log\'s outcome (buyerLogOutcome); explain it. Write summary, actions and risks in English.'
+        : 'CONTEXT.reports içindeki her raporu bir buyer asistanı olarak incele. "step", talep tipine uyan CONTEXT.checklistSteps kimliklerinden biri ya da boş olmalı. "status", adı rapor ya da mailde yazana uyan (ör. Lack of Sample, In Progress / işleme alındı) CONTEXT.checklistStatuses kimliklerinden biri ya da boş olmalı; Buyer Log doğrular, buyer uygular. "actions" buyer için somut sonraki adımlardır (ör. tedarikçiden tekrar test ya da görsel iste, laboratuvara dönüş yap). Buyer Log\'un sonucunu (buyerLogOutcome) değiştirme; açıkla. summary, actions ve risks Türkçe olsun.');
     } else if (key === 'plm-id-extract') {
       lines.push(english
         ? 'List in "plmIds" only the LC Waikiki PLM Codes (PLM ID; a positive whole number, usually 6–8 digits, sometimes written with a leading underscore or dot separators) that are written in CONTEXT.text. Copy each one exactly as written; never invent, complete, reorder or compute a number. Ignore order numbers, prices, quantities, dates, phone numbers, barcodes and colour codes unless the text clearly labels the value as a PLM Code/PLM ID or it sits in a plain list of such codes. Buyer Log checks every value against the text; anything not found there is discarded. Note any uncertainty in "explanation".'

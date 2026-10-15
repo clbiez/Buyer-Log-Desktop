@@ -36,7 +36,7 @@
   function firstPart(value) { return text(String(value == null ? '' : value).split(' / ')[0]); }
 
   /* ------------------------------------------------------- sonuç sözlüğü */
-  const RESULT_CODES = Object.freeze(['pass', 'fail', 'lackOfSample', 'commercialApproval', 'retest', 'awaitingBuying']);
+  const RESULT_CODES = Object.freeze(['pass', 'fail', 'lackOfSample', 'commercialApproval', 'retest', 'awaitingBuying', 'inProgress']);
   const RESULT_LABELS = Object.freeze({
     pass: Object.freeze({ tr: 'Geçer', en: 'Pass' }),
     fail: Object.freeze({ tr: 'Kalır', en: 'Fail' }),
@@ -44,6 +44,7 @@
     commercialApproval: Object.freeze({ tr: 'Ticari onay', en: 'Commercial approval' }),
     retest: Object.freeze({ tr: 'Tekrar test', en: 'Retest' }),
     awaitingBuying: Object.freeze({ tr: 'Buying dönüşü bekleniyor', en: 'Awaiting buying feedback' }),
+    inProgress: Object.freeze({ tr: 'İşleme alındı', en: 'In progress' }),
   });
   function normalizeResult(value) {
     const parts = String(value == null ? '' : value).split('/').map(fold).filter(Boolean);
@@ -54,6 +55,7 @@
       if (/^(TICARI ONAY|COMMERCIAL APPROVAL|COMMERCIAL ACCEPT(ANCE)?)$/.test(raw)) return 'commercialApproval';
       if (/^(TEKRAR TEST|RETEST|RE-TEST|RE TEST)$/.test(raw)) return 'retest';
       if (/^(LACK OF SAMPLE|NUMUNE YETERSIZ|EKSIK NUMUNE|YETERSIZ NUMUNE)$/.test(raw)) return 'lackOfSample';
+      if (/^(ISLEME ALINDI|ISLEMDE|ISLEME ALINMISTIR|IN PROGRESS|IN PROCESS|PROCESSING|ONGOING|DEVAM EDIYOR|TEST EDILIYOR|TESTTE|UNDER TEST|UNDER TESTING|TEST IN PROGRESS)$/.test(raw)) return 'inProgress'; // i18n-ignore — rapor sonucu eş anlamlıları, UI metni değil
       if (/^(GECER|PASS|PASSED|APPROVED|DIGITAL APPROVED)$/.test(raw)) return 'pass';
       if (/^(KALIR|FAIL|FAILED|REJECTED|REJECT)$/.test(raw)) return 'fail';
     }
@@ -771,9 +773,9 @@
     const tests = Array.isArray(report.testler) ? report.testler : [];
     const decisions = latestDecisions(report);
     const tasks = [];
-    let pending = base === 'lackOfSample' || base === 'retest' || base === 'awaitingBuying';
+    let pending = base === 'lackOfSample' || base === 'retest' || base === 'awaitingBuying' || base === 'inProgress';
     let commercial = false;
-    if (tests.some(t => normalizeResult(t.sonuc) === 'lackOfSample')) pending = true;
+    if (tests.some(t => ['lackOfSample', 'inProgress'].includes(normalizeResult(t.sonuc)))) pending = true;
     let failing = tests.filter(t => normalizeResult(t.sonuc) === 'fail').map(t => t.ad);
     if (!tests.length && (base === 'fail' || !base)) failing = decisions.map(d => d.test);
     // Test ayrıntısı ve karar yoksa genel "Kalır" doğrudan başarısızdır.
@@ -832,6 +834,49 @@
       else state = 'approved';
     }
     return { state, outcomes, tasks, superseded: [...superseded] };
+  }
+
+  /* Analiz sonucu → checklist hücresi durumu (dinamik özel durumlar).
+     Rapor/mail ham değerleri ("Lack of Sample", "İşleme alındı" …) ve sonuç
+     kodları kullanıcının eklediği özel durum adlarıyla eşleştirilir:
+       - ad ham değerle birebir aynıysa ("Waiting Fabric" ↔ "Waiting Fabric"), ya da
+       - ad aynı sonuç koduna çözülüyorsa ("Lack of Sample" ↔ "Numune yetersiz").
+     Güvenlik: türetilmiş durumun "çözüldü" anlamı korunur. Bekleyen adım yalnız
+     çözülmemiş özel duruma, onaylı adım yalnız çözülmüş özel duruma çevrilir;
+     reddedilen adım her zaman Reddedildi kalır. Eşleşme yoksa türetilen durum. */
+  function stepSignals(reports) {
+    const list = (reports || []).filter(Boolean);
+    const superseded = supersededSet(list);
+    const raws = new Set(), codes = new Set();
+    const add = value => {
+      const raw = fold(value);
+      if (!raw) return;
+      raws.add(raw);
+      String(value).split(' / ').forEach(part => { const f = fold(part); if (f) raws.add(f); });
+      const code = normalizeResult(value);
+      if (code) codes.add(code);
+    };
+    for (const r of list) {
+      if (superseded.has(r.talepNo)) continue;
+      add(r.genelSonuc);
+      (r.testler || []).forEach(t => add(t.sonuc));
+      latestDecisions(r).forEach(d => add(d.karar));
+      (r.labDipColors || []).forEach(c => add(c.result));
+    }
+    return { raws, codes };
+  }
+  function suggestChecklistStatus(step, reports, customStatuses) {
+    const state = step && step.state || '';
+    if (!state || state === 'rejected') return { status: state, custom: false, matched: '' };
+    const signals = stepSignals(reports);
+    const wantResolved = state === 'approved';
+    for (const item of customStatuses || []) {
+      if (!item || !item.id || !text(item.name) || (item.resolved === true) !== wantResolved) continue;
+      const name = fold(item.name);
+      const code = normalizeResult(item.name);
+      if (signals.raws.has(name) || (code && signals.codes.has(code))) return { status: item.id, custom: true, matched: item.name };
+    }
+    return { status: state, custom: false, matched: '' };
   }
 
   /* ------------------------------------------------------- eşleştirme */
@@ -982,9 +1027,10 @@
 
   /* İnceleme bağlamı: rapor başına kısa özet (bileşen ayrıntısı yok,
      yalnız başarısız/bekleyen testler). */
-  function reviewContext(items, steps) {
+  function reviewContext(items, steps, statuses) {
     return {
       checklistSteps: (steps || []).map(s => ({ id: text(s.id), name: text(s.name) })).slice(0, 80),
+      checklistStatuses: (statuses || []).map(s => ({ id: text(s.id), name: text(s.name), resolved: s.resolved === true })).slice(0, 40),
       resultDictionary: RESULT_CODES.map(code => code + ' = ' + RESULT_LABELS[code].tr + ' / ' + RESULT_LABELS[code].en),
       reports: (items || []).slice(0, 30).map(item => {
         const r = item.report || {};
@@ -1007,12 +1053,13 @@
       }),
     };
   }
-  /* "talepNo=…|step=…|summary=…|actions=a; b|risks=c; d" satırları. Bilinmeyen
+  /* "talepNo=…|step=…|status=…|summary=…|actions=a; b|risks=c; d" satırları. Bilinmeyen
      talep no atılır; adım kimliği mevcut değilse öneri boş kalır. */
   function parseReviews(lines, options) {
     const opts = options || {};
     const talepSet = new Set((opts.talepNos || []).map(String));
     const stepSet = new Set((opts.stepIds || []).map(String));
+    const statusSet = new Set((opts.statusIds || []).map(String));
     const out = {};
     for (const line of aiList(lines, 60)) {
       const fields = {};
@@ -1024,10 +1071,13 @@
       if (!talepNo || (talepSet.size && !talepSet.has(talepNo))) continue;
       const split = value => String(value || '').split(';').map(text).filter(Boolean).slice(0, 6).map(v => v.slice(0, 240));
       const step = text(fields.step);
+      const status = text(fields.status);
       out[talepNo] = {
         summary: text(fields.summary).slice(0, 600),
         step: step && stepSet.has(step) ? step : '',
         stepRejected: Boolean(step && !stepSet.has(step)),
+        // Durum önerisi yalnız bilinen bir checklist durum kimliğiyse kabul edilir.
+        status: status && statusSet.has(status) ? status : '',
         actions: split(fields.actions),
         risks: split(fields.risks),
       };
@@ -1046,8 +1096,8 @@
         : 'A) Tedarikçi lab sonuç maili (SupplierLabUser) + TestRequestResultReport PDF. B) Labright sonuç maili [RESULT REPORT]/[SONUÇ RAPORU] + TestRequestResultForm Lang1 (TR) / Lang2 (EN) PDF. C) Labright ticari karar maili (tablo: test, karar, açıklama, karar veren, tarih). D) Tek başına Labright PDF (ör. Gold Seal). R) ROS Lab Dip renk değerlendirme maili (tek talepte çoklu bağımsız renk sonuçları ve revizyonlar olabilir).',
       (en ? 'Field labels: ' : 'Alan etiketleri: ') + labels,
       en ? 'Result dictionary (raw value is stored, never a binary pass/fail):' : 'Sonuç sözlüğü (ham değer saklanır, ikili geçer/kalır değildir):', ...dict,
-      en ? 'Rules: request number is text (4–8 digits, including newer Labright 4-digit requests; preserve leading zeros). Variant colour is the colour description (e.g. MID GREEN); codes like "R9J EKRU" in the component list are component colours. A retest (Retest Request No) replaces the earlier result. Commercial Approval counts as pass. Retest, awaiting buying feedback and lack of sample keep the step pending. The step status is derived from ALL reports of the row; a status entered by the user has priority.'
-        : 'Kurallar: talep no metindir (yeni Labright 4 haneli talepler dâhil 4–8 hane; baştaki sıfır korunur). Varyant rengi renk tanımıdır (ör. MID GREEN); bileşen listesindeki "R9J EKRU" gibi değerler bileşen rengidir. Tekrar test (Retest Request No) eski sonucun yerine geçer. Ticari Onay geçer sayılır. Tekrar test, Buying dönüşü ve numune yetersizliği adımı bekletir. Adım durumu satırın BÜTÜN raporlarından türetilir; kullanıcının girdiği durum önceliklidir.',
+      en ? 'Rules: request number is text (4–8 digits, including newer Labright 4-digit requests; preserve leading zeros). Variant colour is the colour description (e.g. MID GREEN); codes like "R9J EKRU" in the component list are component colours. A retest (Retest Request No) replaces the earlier result. Commercial Approval counts as pass. Retest, awaiting buying feedback, lack of sample and in progress keep the step pending. The step status is derived from ALL reports of the row; a user-defined checklist status whose name matches the result (e.g. Lack of Sample, In Progress) is written instead of Pending; a status entered by the user has priority.'
+        : 'Kurallar: talep no metindir (yeni Labright 4 haneli talepler dâhil 4–8 hane; baştaki sıfır korunur). Varyant rengi renk tanımıdır (ör. MID GREEN); bileşen listesindeki "R9J EKRU" gibi değerler bileşen rengidir. Tekrar test (Retest Request No) eski sonucun yerine geçer. Ticari Onay geçer sayılır. Tekrar test, Buying dönüşü, numune yetersizliği ve işleme alındı adımı bekletir. Adım durumu satırın BÜTÜN raporlarından türetilir; adı sonuçla eşleşen kullanıcı tanımlı checklist durumu (ör. Lack of Sample, In Progress) Bekliyor yerine yazılır; kullanıcının girdiği durum önceliklidir.',
       en ? 'ROS request ID is NOT an order code. Evaluate each ROS colour independently; Digital Approved/Approved=pass, Rejected=fail, request-only=pending. Revised submissions supersede earlier decisions for that specific colour only. Do not invent missing PO matches. Matching rows and writing the checklist are always done by Buyer Log, never by AI.' : 'ROS talep ID sipariş kodu DEĞİLDİR. ROS renklerini birbirinden bağımsız değerlendir; Digital Approved/Approved=onay, Rejected=ret, sadece talep=beklemede. Revizyon yalnız ilgili rengin eski kararının yerine geçer. Eksik sipariş eşleşmesi uydurma. Satır eşleştirme ve checklist yazımı her zaman Buyer Log tarafından yapılır, AI tarafından değil.',
     ].join('\n');
   }
@@ -1060,7 +1110,7 @@
     parseDate, inferOffsetMinutes, regionOffset,
     classifyMail, parseMail, parsePdfItems, linesFromItems,
     emptyReport, mergeReports, groupReports, decisionKey, fileKey,
-    reportOutcome, supersededSet, deriveStepStatus, testsMatch, resolveLabDipColors, labDipSummary,
+    reportOutcome, supersededSet, deriveStepStatus, stepSignals, suggestChecklistStatus, testsMatch, resolveLabDipColors, labDipSummary,
     matchReport, warningText,
   };
 });
