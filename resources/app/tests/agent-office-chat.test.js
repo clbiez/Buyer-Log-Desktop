@@ -82,12 +82,14 @@ test('a question that spans two areas becomes a team conversation with one share
   const long='DEMO ortak cevap '+'x'.repeat(3000);engine.calls.length=0;
   const authority=w.service.memoryFingerprint(w.profile);
   await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'assistant',text:'REVOKED PRICE ANSWER',profileIds:[a.ada.id],requestId:'r-old',authorizationFingerprint:'an-earlier-authority'});
-  await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'assistant',text:long,profileIds:[a.ada.id],requestId:'r-demo',authorizationFingerprint:authority});
+  await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'assistant',text:long,profileIds:[a.ada.id],requestId:'r-demo',authorizationFingerprint:authority,
+    provenance:{emailDrafts:[{to:['supplier@example.com'],cc:['merch@example.com'],subject:'DEMO status',body:'Dear supplier'}]}});
   await w.service.officeChat(w.profile,{text:'Taslaklar nerede?',agentId:a.ada.id,conversationId:result.conversation.id});
   const follow=engine.calls.find(c=>c.source==='agent-office');
   assert.ok(follow.guide.startsWith('=== RECENT CONVERSATION ===\n--- owner ---\nKoleksiyonda'),'oldest first');
   assert.ok(follow.guide.includes(long),'the earlier answer is not cut to an excerpt');
-  assert.ok(!follow.guide.includes('REVOKED PRICE ANSWER'),'an answer written under other permissions never goes back to LCW AI');assert.ok(!follow.guide.includes('Taslaklar nerede?'),'the current message is the request, not history');
+  assert.ok(!follow.guide.includes('REVOKED PRICE ANSWER'),'an answer written under other permissions never goes back to LCW AI');
+  assert.ok(follow.guide.includes('[draft 1]\nTo: supplier@example.com\nCc: merch@example.com\nSubject: DEMO status\nDear supplier'),'earlier drafts stay in the history so they can be edited');assert.ok(!follow.guide.includes('Taslaklar nerede?'),'the current message is the request, not history');
   assert.deepEqual(follow.context.recentConversation,[{messages:3}]);
   // The topic continues with both agents; a follow-up keeps the team.
   const next=await w.service.officeChat(w.profile,{text:'Peki öncelik ne olmalı?',conversationId:result.conversation.id});

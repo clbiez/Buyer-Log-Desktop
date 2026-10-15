@@ -5,7 +5,8 @@
    (.eml, X-Unsent) gözden geçirmek için açılır. */
 
 const MAX_DRAFTS = 20, MAX_ADDRESSES = 40, MAX_SUBJECT = 300, MAX_BODY = 12000;
-const EMAIL = /^[^\s@<>()",;:\\[\]]+@[^\s@<>()",;:\\[\]]+\.[^\s@<>()",;:\\[\]]{2,}$/;
+// Başlığa ham UTF-8 gitmesin: adres yalnız yazdırılabilir ASCII (ad kısmı ayrıca RFC 2047 ile kodlanır).
+const EMAIL = /^[A-Za-z0-9._%+'-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$/;
 
 // "Ad Soyad <adres>" ya da "adres"; geçersiz veya yer tutucu ("[adres gerekli]") atılır.
 function address(raw) {
@@ -14,12 +15,26 @@ function address(raw) {
   const match = value.match(/^(.*?)<([^<>]+)>\s*$/);
   const email = (match ? match[2] : value).trim().replace(/^mailto:/i, '');
   if (!EMAIL.test(email)) return null;
-  const name = match ? match[1].replace(/["<>]/g, '').trim().slice(0, 120) : '';
+  const name = match ? match[1].replace(/["<>\\]/g, '').trim().slice(0, 120) : '';
   return name ? `${name} <${email}>` : email;
 }
 
+// Tek metin olarak gelen liste: ; ve satır sonu her zaman, virgül yalnız tırnak ve <> dışında ayırır ("Khan, Salem" <k@x.com>).
+function split(text) {
+  const out = []; let current = '', quoted = false, angle = false;
+  for (const ch of text) {
+    if (ch === '"') quoted = !quoted;
+    else if (ch === '<') angle = true;
+    else if (ch === '>') angle = false;
+    if (ch === ';' || ch === '\n' || (ch === ',' && !quoted && !angle)) { out.push(current); current = ''; continue; }
+    current += ch;
+  }
+  out.push(current);
+  return out;
+}
+
 function addresses(raw) {
-  const list = Array.isArray(raw) ? raw : String(raw == null ? '' : raw).split(/[;,\n]+/);
+  const list = Array.isArray(raw) ? raw : split(String(raw == null ? '' : raw));
   const seen = new Set(), out = [];
   let dropped = 0;
   for (const item of list) {

@@ -407,9 +407,11 @@
     return `<section class="aoSimpleDrafts"><header><b>${esc(L(`${list.length} e-posta taslağı`,`${list.length} e-mail ${list.length===1?'draft':'drafts'}`))}</b><small>${esc(L('Outlook\'ta taslak olarak açılır; kontrol edip siz gönderirsiniz.','They open as drafts in Outlook; you review and send them.'))}</small>${list.length>1?button(L('Hepsini Outlook\'ta aç','Open all in Outlook'),'chat-draft-all',`data-id="${esc(item.id)}"`):''}</header>${rows}</section>`;}
   // Adlarda Türkçe karakter olabilir: başlıkta RFC 2047 ile kodlanır.
   function mailAddress(value){const match=String(value).match(/^(.*?)<([^<>]+)>$/);if(!match)return String(value);const name=match[1].trim();
-    return (/[^\x20-\x7e]/.test(name)?`=?UTF-8?B?${btoa(unescape(encodeURIComponent(name)))}?=`:`"${name.replace(/"/g,'')}"`)+` <${match[2]}>`;}
+    return (/[^\x20-\x7e]/.test(name)?`=?UTF-8?B?${btoa(unescape(encodeURIComponent(name)))}?=`:`"${name.replace(/["\\]/g,'')}"`)+` <${match[2]}>`;}
+  // E-posta HTML'i: sohbet içi kod bloğu araç çubuğu (Kopyala düğmesi) e-postaya girmez.
+  function mailBodyHtml(body){const box=document.createElement('div');box.innerHTML=chatMarkdown(body);box.querySelectorAll('.lcwaiCodeHead,button').forEach(node=>node.remove());return box.innerHTML;}
   async function chatOpenDraft(draft){
-    const html=`<html><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt}table{border-collapse:collapse}th,td{border:1px solid #999;padding:4px 8px;text-align:left}</style></head><body>${chatMarkdown(draft.body)}</body></html>`;
+    const html=`<html><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt}table{border-collapse:collapse}th,td{border:1px solid #999;padding:4px 8px;text-align:left}</style></head><body>${mailBodyHtml(draft.body)}</body></html>`;
     const response=await root.fetch('/api/email-drafts/pricing',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
       body:JSON.stringify({kind:'Agent',to:draft.to.map(mailAddress).join('; '),cc:draft.cc.map(mailAddress).join('; '),subject:draft.subject||L('Buyer Log','Buyer Log'),text:draft.body,html})});
     const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||L('E-posta taslağı oluşturulamadı.','The e-mail draft could not be created.'));

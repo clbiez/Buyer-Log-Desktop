@@ -234,8 +234,10 @@ function createAgentOfficeService(deps) {
         for (const item of recent.reverse()) {
           const who = item.role === 'user' ? 'owner' : participants.filter(agent => (item.profileIds || []).includes(agent.id) || item.provenance?.speaker === agent.id).map(agent => agent.name).join(', ') || 'agent';
           if (room < 200) break;
-          const body = String(item.text).slice(0, room - 40);
-          lines.unshift(`--- ${who}${body.length < item.text.length ? ' (cut)' : ''} ---\n${body}`); room -= body.length + 40;
+          // Taslaklar cevap metninde değil, kendi alanında durur: "CC'ye ekle", "Türkçe yap" gibi devam istekleri için birlikte gider.
+          const drafts = (item.provenance?.emailDrafts || []).map((draft, index) => [`[draft ${index + 1}]`, `To: ${draft.to.join('; ')}`, draft.cc.length ? `Cc: ${draft.cc.join('; ')}` : '', `Subject: ${draft.subject}`, draft.body].filter(Boolean).join('\n'));
+          const full = [item.text, ...drafts].join('\n\n'), body = full.slice(0, room - 40);
+          lines.unshift(`--- ${who}${body.length < full.length ? ' (cut)' : ''} ---\n${body}`); room -= body.length + 40;
         }
         if (lines.length) { guide = '=== RECENT CONVERSATION ===\n' + lines.join('\n'); context.recentConversation = [{ messages: lines.length }]; }
       }

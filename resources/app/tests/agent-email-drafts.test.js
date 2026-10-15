@@ -51,3 +51,22 @@ test('the .eml draft carries To, Cc and X-Unsent so Outlook opens it as an edita
   const noCc = build({ to: 'a@example.com', subject: 'S', text: 't', html: 'h' });
   assert.ok(!/\r\nCc:/.test(noCc.split('\r\n\r\n')[0]), 'pricing drafts without CC are unchanged');
 });
+
+test('review follow-ups: long drafts survive, names cannot break the header, ASCII-only addresses, commas inside names', () => {
+  const body = Array.from({ length: 320 }, (_, i) => '| 41' + String(i).padStart(5, '0') + ' | DEMO | 2026-10-12 |').join('\n');
+  const parsed = parseStructured(JSON.stringify({ answer: 'a', emailDrafts: [{ to: ['a@example.com'], subject: 'S', body }, JSON.stringify({ to: ['b@example.com'], subject: 'T', body })] }), 'agent-office');
+  assert.deepEqual(parseDrafts(parsed.data.emailDrafts).map(d => d.body.length), [body.length, body.length], 'a draft with a long order table is not cut into broken JSON');
+  assert.equal(parseStructured(JSON.stringify({ answer: 'a', perspectives: ['x'.repeat(5000)] }), 'agent-office').data.perspectives[0].length, 2000, 'other fields keep their limits');
+  assert.equal(address('Evil\\ <a@example.com>'), 'Evil <a@example.com>', 'a backslash cannot escape the closing quote');
+  assert.equal(address('ayşe@lcwaikiki.com'), null);assert.equal(address('a@b.c.'), null);
+  assert.equal(address('first.last@lcwaikiki.com'), 'first.last@lcwaikiki.com');assert.equal(address("o'neil@corp.co.uk"), "o'neil@corp.co.uk");
+  assert.deepEqual(parseDrafts([{ subject: 'S', body: 'B', to: 'x@example.com', cc: '"Khan, Salem" <k@example.com>; b@example.com, c@example.com' }])[0].cc,
+    ['Khan, Salem <k@example.com>', 'b@example.com', 'c@example.com'], 'a comma inside a quoted name does not split the address');
+});
+
+test('the e-mail HTML leaves out the chat copy toolbar and names are quoted safely', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'public', 'agent-office.js'), 'utf8');
+  assert.match(src, /function mailBodyHtml\(body\)\{[^}]*\.lcwaiCodeHead,button[^}]*remove\(\)/);
+  assert.match(src, /<body>\$\{mailBodyHtml\(draft\.body\)\}<\/body>/);
+  assert.match(src, /name\.replace\(\/\["\\\\\]\/g,''\)/, 'quotes and backslashes are removed from ASCII display names');
+});
