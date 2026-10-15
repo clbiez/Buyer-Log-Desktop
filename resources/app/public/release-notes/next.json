@@ -416,6 +416,64 @@
           "en": "Atlas split the June 2027 models across 7 suppliers pricing below their classification average; each card opens Send to Pricing (demo data)."
         }
       }
+    },
+    {
+      "id": "checklist-dynamic-status-from-reports",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Checklist",
+        "en": "CP Tracker · Checklist"
+      },
+      "title": {
+        "tr": "Checklist durumu rapor ve mail analizine göre şekillenir",
+        "en": "Checklist status follows the report and e-mail analysis"
+      },
+      "body": {
+        "tr": "Test raporu aktarımında Buyer Log artık yalnız Bekliyor/Onaylandı/Reddedildi yazmaz: analizdeki sonuç, eklediğiniz özel durumun adıyla eşleşirse o durum yazılır (ör. \"Lack of Sample\" sonucu → Lack of Sample, PDF'te \"İşleme alındı\" → In Progress). Önizlemede her rapor için Checklist durumu listesinden özel durumlar dâhil istediğiniz durumu elle seçebilirsiniz. LCW AI bağlıysa uygun durumu da önerir; öneri yalnız Uygula ile seçilir. Reddedilen adım her zaman Reddedildi kalır, bekleyen adım tamamlanmış sayılan bir duruma çevrilmez.",
+        "en": "In test report import Buyer Log no longer writes only Pending/Approved/Rejected: when the analysed result matches the name of a custom status you added, that status is written (e.g. a \"Lack of Sample\" result → Lack of Sample, \"received for processing\" in the PDF → In Progress). In the preview you can pick any status, custom ones included, from the Checklist status list for each report. With LCW AI connected it also suggests a fitting status, applied only when you click Apply. A rejected step always stays Rejected, and a pending step is never turned into a status that counts as resolved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-dynamic-status-from-reports.png",
+        "caption": {
+          "tr": "Numune yetersiz ve İşleme alındı sonuçları Lack of Sample ve In Progress özel durumlarıyla eşleşti; durum elle de seçilebilir (demo veri).",
+          "en": "Lack of sample and in-progress results matched the Lack of Sample and In Progress custom statuses; the status can also be chosen by hand (demo data)."
+        },
+        "alt": {
+          "tr": "Test raporu aktarım önizlemesinde Checklist durumu seçimi ve özel durum eşleşmesi (demo veri).",
+          "en": "Test report import preview with the Checklist status picker and custom status match (demo data)."
+        }
+      }
+    },
+    {
+      "id": "checklist-status-menu-attachments",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Checklist",
+        "en": "CP Tracker · Checklist"
+      },
+      "title": {
+        "tr": "Özel durumlar eklenince checklist ekleri kaybolmuyor",
+        "en": "Checklist attachments stay visible after adding custom statuses"
+      },
+      "body": {
+        "tr": "Checklist durum menüsünde Checklist Detayları / Ekler artık listenin en üstündedir ve menü ekrana sığacak şekilde kendi içinde kayar; özel durumlar eklendikçe ekler ekranın dışına itilmez. Test raporu aktarımıyla eklenen dosyalar, adımda Ekler alanı kapalı olsa da açılabilir. Eklediğiniz durum adları (ör. In Progress) çevrilmeden yazdığınız gibi görünür.",
+        "en": "In the checklist status menu, Checklist Details / Attachments is now at the top and the menu scrolls within the screen, so adding custom statuses no longer pushes attachments off screen. Files added by test report import can be opened even when the step's Attachments field is off. Your status names (e.g. In Progress) show exactly as you typed them, without translation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-status-menu-attachments.png",
+        "caption": {
+          "tr": "Durum menüsünde Ekler en üstte; altında Lack of Sample, In Progress ve diğer özel durumlar (demo veri).",
+          "en": "Attachments at the top of the status menu, followed by Lack of Sample, In Progress and other custom statuses (demo data)."
+        },
+        "alt": {
+          "tr": "CP checklist durum menüsü: Ekler en üstte, özel durumlar listede (demo veri).",
+          "en": "CP checklist status menu: attachments at the top, custom statuses listed (demo data)."
+        }
+      }
     }
   ]
 }
