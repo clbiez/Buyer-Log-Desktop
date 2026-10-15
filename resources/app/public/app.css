@@ -42,6 +42,7 @@
   --fs-2xs:calc(10.5px + var(--ui-font-add)); --fs-2xl:calc(24px + var(--ui-font-add)); --fs-3xl:calc(30px + var(--ui-font-add)); --fs-4xl:calc(40px + var(--ui-font-add));
   --kol-cell-fs:calc(12px + var(--ui-font-add));
   --ctl-h:34px;
+  --ctl-h-sm:calc(var(--ctl-h) - 8px);
   --table-row-h:32px;
   --table-group-head-h:29px;
   --table-head-pad-y:8px;
@@ -254,6 +255,8 @@ html[data-rail="min"] .railFoot button span{display:none;}
 .notificationHistoryBtn.hasUnread{color:var(--acc-ink);background:var(--acc-bg);}
 .notificationUnreadBadge{position:absolute;top:-5px;right:-6px;min-width:16px;height:16px;padding:0 4px;box-sizing:border-box;border:2px solid var(--card);border-radius:var(--r-full);background:var(--red);color:#fff;font-size:var(--fs-2xs);font-weight:800;line-height:12px;text-align:center;font-family:var(--sans);}
 .notificationUnreadBadge[hidden]{display:none!important;}
+/* Sınıfın display değeri hidden özelliğini ezmesin (2026-10-15 denetimi). */
+.oabPlanBar[hidden],.oabProgressBar[hidden],.kpirow[hidden],.lflTrialBanner[hidden],.lflFabricGroupPanel[hidden],.blvFilterCount[hidden],.tbtn[hidden]{display:none!important;}
 .userAvatar{width:31px;height:31px;border-radius:50%;background:var(--acc-bg);color:var(--acc-ink);display:flex;align-items:center;justify-content:center;font-size:var(--fs-xs);font-weight:700;}
 
 /* ============ KAYNAK VERİ PENCERESİ (Source Data düğmesine bağlı açılır) ============ */

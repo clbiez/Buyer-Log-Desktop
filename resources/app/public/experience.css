@@ -252,8 +252,6 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
 .dmSub{color:var(--ink2);line-height:1.45;}
 .dmPanelHead,.dmLabOverview{background:var(--bl-surface-soft);border-bottom-color:var(--bl-stroke-subtle);}
 .dmPanelTitle,.dmSectionLabel{font-family:var(--sans);font-size:var(--fs-xs);font-weight:700;color:var(--ink2);letter-spacing:.065em;}
-.dmLabTab{border-right:0;border-radius:0;}
-.dmLabTab.isActive{background:transparent;border-bottom-color:var(--acc);color:var(--acc-ink);}
 .dmSourceCard{border-radius:var(--r-md);background:var(--card);}
 .dmModuleRow,.dmLabTable td{border-bottom-color:var(--bl-stroke-subtle);}
 .lflCard,.ocCard{background:var(--card);}
@@ -323,9 +321,6 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
 /* KPI şeritleri: okunur etiket, net rakam, taşmayan kolonlar. */
 .pricingWorkspaceKpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
 .pricingMetric{min-height:64px;padding:10px 18px;column-gap:10px;}
-.pricingMetric span,.autoStats span{font-family:var(--sans);font-size:var(--fs-2xs);font-weight:600;letter-spacing:.06em;color:var(--muted);}
-.pricingMetric b{font-family:var(--sans);font-size:calc(20px + var(--ui-font-add));font-weight:700;letter-spacing:-.02em;}
-.pricingMetric.isHistory b{font-size:calc(20px + var(--ui-font-add));}
 
 /* Çalışma alanı gövdesi: tek yazı ailesi, rahat filtre satırı, sakin paneller. */
 .pricingPaneTitle,.pricingHistoryTable th{font-family:var(--sans);font-size:var(--fs-2xs);font-weight:700;letter-spacing:.06em;}
@@ -341,8 +336,6 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
 .pricingEmptyState,.autoEmpty{padding:28px 18px;font-size:var(--fs-sm);line-height:1.55;color:var(--muted);}
 .quotationWorkspaceShell .quotationNavItem{padding:10px 12px;}
 
-/* Veri Yönetimi: kaynak modu anahtarı okunur. */
-.sourceModeBtn{height:26px;padding:0 11px;font-size:var(--fs-xs);font-weight:650;}
 
 /* Genel Bakış: modüller arası boşluğu yalnız ızgara boşluğu belirler. */
 main{padding-top:16px;}
@@ -691,3 +684,71 @@ html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um
   .appTop .corporateConnections{gap:3px;}
   .appTop .corporateConnection{height:25px;min-width:38px;padding-inline:6px;font-size:var(--fs-2xs);}
 }
+
+/* =====================================================================
+   BİLEŞEN SÖZLEŞMELERİ (DESIGN_SYSTEM.md §7)
+   Eşdeğer modül bileşenleri tek kuralda toplanır; görsel karar burada
+   bir kez verilir. Modül CSS'i bu bileşenlerin yüksekliğini, yazısını,
+   çerçevesini ve aktif durumunu yeniden tanımlamaz. :root öneki,
+   sonradan yüklenen modül dosyalarına karşı sözleşmenin kazanmasını sağlar.
+   ===================================================================== */
+
+/* Düğme L — ana eylem: --ctl-h, --fs-xs, 600. */
+:root :is(.psaGhostBtn,.mfpBtn,.cpaBtn:not(.sm),.aoButton,.dmViewBtn){
+  height:var(--ctl-h);min-height:var(--ctl-h);padding-inline:12px;
+  font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;
+}
+/* Düğme S — kart içi eylem: --ctl-h-sm. */
+:root :is(.cpaBtn.sm,.ovClockManageBtn,.bpaTodayBtn,.lflCpTableTool,.ovBreakdownViewBtn,.ovNotesSortBtn,.lflTrialBannerOff,.quotationWorkspaceTopBar .quotationStatusTabs button){
+  height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);padding-block:0;padding-inline:10px;
+  font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;border-radius:var(--r-sm);
+}
+/* İkon düğmesi S — kare. */
+:root :is(.cpaIconBtn,.lflScenarioIconBtn,.blWorkspaceIconBtn){width:var(--ctl-h-sm);height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);border-radius:var(--r-sm);}
+
+/* Segment — tek seçim: saç teli kap, S yükseklik, aktif = dolu vurgu. */
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle){
+  display:inline-flex;height:auto;gap:0;padding:0;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);overflow:hidden;
+}
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle)>button{
+  height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);min-width:0;padding:0 11px;margin:0;border:0;border-radius:0;border-left:1px solid var(--line2);
+  background:transparent;box-shadow:none;color:var(--ink2);font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;line-height:1;white-space:nowrap;
+}
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle)>button:first-child{border-left:0;}
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle)>button:hover{background:var(--card2);color:var(--ink);}
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle)>button:is(.is-active,.is-on,.active,.isActive,[aria-pressed="true"],[aria-selected="true"]){
+  background:var(--acc);color:var(--on-acc);box-shadow:none;
+}
+
+/* Filtre çipi — çoklu seçim / süzgeç: aktif = açık vurgu zemini. */
+:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn){
+  height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);padding:0 10px;border:1px solid var(--line);border-radius:var(--r-sm);
+  background:var(--card);color:var(--ink2);font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;
+}
+:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn):is(.isActive,.is-active,[aria-pressed="true"]){
+  border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);
+}
+:root .sourceModeGroup{min-height:0;padding:0;gap:4px;border:0;border-radius:0;background:transparent;}
+
+/* Sayfa sekmesi — sayfa içi gezinme: alt çizgi, zemin yok. */
+:root :is(.ovHomePager>.ovHomePageTab,.psaTabs>[role="tab"],.dmLabTabs>.dmLabTab){
+  height:var(--ctl-h);min-height:var(--ctl-h);padding:0 12px;border:0;border-bottom:2px solid transparent;border-radius:0;
+  background:transparent;color:var(--ink2);font-family:var(--sans);font-size:var(--fs-sm);font-weight:600;
+}
+:root :is(.ovHomePager>.ovHomePageTab,.psaTabs>[role="tab"],.dmLabTabs>.dmLabTab):hover{color:var(--ink);background:transparent;}
+:root :is(.ovHomePager>.ovHomePageTab,.psaTabs>[role="tab"],.dmLabTabs>.dmLabTab):is(.isActive,[aria-selected="true"]){
+  border-bottom-color:var(--acc);background:transparent;color:var(--acc-ink);
+}
+
+/* KPI kartı — etiket / değer / alt satır. Değer rengi durum taşıyorsa modülde kalır. */
+:root :is(.cpaChip .l,.gfKpi>span,.bdaKpiLabel,.bpaTileLabel,.psaKpi small,.pricingMetric span,.autoStats span){
+  font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink2);
+}
+:root :is(.cpaChip .n,.bdaKpiValue,.bpaTileValue,.psaKpi strong,.pricingMetric b){
+  font-family:var(--sans);font-size:var(--fs-2xl);font-weight:700;letter-spacing:-.01em;line-height:1.1;font-variant-numeric:tabular-nums;
+}
+:root .gfKpi>b{font-family:var(--sans);font-size:var(--fs-md);font-weight:700;font-variant-numeric:tabular-nums;}
+:root :is(.cpaChip .q,.bdaKpiMeta,.bpaTileSub,.psaKpi em){
+  font-family:var(--sans);font-size:var(--fs-xs);font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;
+}
+

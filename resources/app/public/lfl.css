@@ -809,3 +809,4 @@ body.lflPortfolioModalOpen{overflow:hidden;}
 /* İlk yükleme: yalnız ortak bekleme durumu görünür, boş kontroller gizlenir. */
 #view-lfl.lflIsLoading>:not(#lflLoadingState){display:none!important}
 .lflLoadingState{display:flex;justify-content:center;padding:24px 0}
+.lflLoadingState[hidden]{display:none}
