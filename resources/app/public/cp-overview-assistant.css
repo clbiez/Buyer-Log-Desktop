@@ -21,7 +21,7 @@
 .cpaSeg{display:inline-flex;border:1px solid var(--line);border-radius:var(--r-sm);overflow:hidden;background:var(--card2)}
 .cpaSeg button{border:0;background:transparent;color:var(--ink2);font-family:var(--sans);font-size:var(--fs-sm);font-weight:650;padding:0 12px;height:32px;cursor:pointer}
 .cpaSeg button+button{border-left:1px solid var(--line)}
-.cpaSeg button.is-on{background:var(--acc);color:#fff}
+.cpaSeg button.is-on{background:var(--acc);color:var(--on-solid)}
 .cpaSeg button:focus-visible,.cpaBtn:focus-visible,.cpaToggle:focus-visible,.cpaChip:focus-visible{outline:none;box-shadow:var(--focus-ring)}
 
 .cpaBtn{height:32px;padding:0 12px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--ink);font-family:var(--sans);font-size:var(--fs-sm);font-weight:650;cursor:pointer}
@@ -117,7 +117,7 @@
 .cpaDims{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
 .cpaDim b{display:block;font-size:var(--fs-sm);margin-bottom:5px}
 
-.cpaModalOverlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:var(--sp-5);background:var(--overlay,rgba(15,23,42,.45))}
+.cpaModalOverlay{position:fixed;inset:0;z-index:80;display:flex;align-items:center;justify-content:center;padding:var(--sp-5);background:var(--scrim)}
 .cpaModal{display:flex;flex-direction:column;width:min(900px,100%);max-height:88vh;border:1px solid var(--line);border-radius:var(--r-md);background:var(--card);overflow:hidden}
 .cpaModal>header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:var(--sp-3) var(--sp-4);border-bottom:1px solid var(--line)}
 .cpaModal>header b{font-size:var(--fs-md)}
@@ -225,7 +225,7 @@
 .cpaFormulaEditor textarea{width:100%;min-height:116px;resize:vertical;padding:9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-family:var(--mono);font-size:var(--fs-sm);line-height:1.45;box-sizing:border-box}
 .cpaFormulaActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cpaFormulaStatus{font-size:var(--fs-sm);color:var(--muted)}
-.cpaFormulaStatus.is-valid{color:var(--good);font-weight:700}
+.cpaFormulaStatus.is-valid{color:var(--green);font-weight:700}
 .cpaFormulaStatus.is-invalid{color:var(--danger);font-weight:700}
 .cpaFormulaDiagnostics{display:flex;flex-wrap:wrap;gap:5px}
 .cpaFormulaDiagnostics span{padding:4px 7px;border:1px solid var(--line);background:var(--card);color:var(--muted);font-size:var(--fs-xs)}
@@ -314,7 +314,7 @@ button.cpaValueOption:hover,.cpaValueOption:hover{background:var(--card2-strong)
 .cpaAiRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cpaAiResult{display:grid;gap:6px;justify-items:start}
 .cpaAiResult:empty{display:none}
-.cpaAiFound{display:grid;gap:3px;width:100%;padding:8px;border:1px solid var(--line);border-left:3px solid var(--good);background:var(--card)}
+.cpaAiFound{display:grid;gap:3px;width:100%;padding:8px;border:1px solid var(--line);border-left:3px solid var(--green);background:var(--card)}
 .cpaAiFound.is-invalid{border-left-color:var(--danger)}
 .cpaAiFound span{font-size:var(--fs-xs);color:var(--muted)}
 .cpaAiFound code{font-family:var(--mono);font-size:var(--fs-sm);white-space:pre-wrap;word-break:break-word}

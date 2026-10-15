@@ -24,8 +24,8 @@
 .bdaControl select, .bdaControl input { height: var(--ctl-h, 28px); border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: var(--r-xs); padding: 0 6px; font-size: var(--fs-sm); }
 
 .bdaParity { font-size: var(--fs-xs); padding: 1px 6px; border: 1px solid var(--line); border-radius: var(--r-xs); }
-.bdaParity.is-ok { color: var(--ok, #2e7d32); border-color: currentColor; }
-.bdaParity.is-warn { color: var(--warn, #b26a00); border-color: currentColor; }
+.bdaParity.is-ok { color: var(--green); border-color: currentColor; }
+.bdaParity.is-warn { color: var(--orange); border-color: currentColor; }
 
 /* --------------------------------------------------------------- KPI satırı */
 .bdaKpiRow { display: grid; grid-template-columns: repeat(6, minmax(132px, 1fr)); gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
@@ -36,9 +36,9 @@
 .bdaKpiLabel { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 .bdaKpiValue { font-size: var(--fs-xl); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1.1; }
 .bdaKpiMeta { font-size: var(--fs-2xs); color: var(--muted); font-variant-numeric: tabular-nums; }
-.bdaKpi.is-ok .bdaKpiValue { color: var(--ok, #2e7d32); }
-.bdaKpi.is-warn .bdaKpiValue { color: var(--warn, #b26a00); }
-.bdaKpi.is-bad .bdaKpiValue { color: var(--bad, #c62828); }
+.bdaKpi.is-ok .bdaKpiValue { color: var(--green); }
+.bdaKpi.is-warn .bdaKpiValue { color: var(--orange); }
+.bdaKpi.is-bad .bdaKpiValue { color: var(--red); }
 .bdaKpi.is-mute .bdaKpiValue { color: var(--muted); }
 
 /* ----------------------------------------------------------------- bölümler */
@@ -48,7 +48,7 @@
   letter-spacing: .05em; color: var(--muted); margin: 0 0 6px; }
 .bdaMuted { color: var(--muted); font-size: var(--fs-xs); }
 .bdaPad { padding: 10px 0; }
-.bdaError { color: var(--bad, #c62828); font-size: var(--fs-sm); padding: 8px 0; }
+.bdaError { color: var(--red); font-size: var(--fs-sm); padding: 8px 0; }
 .bdaLink { background: none; border: 0; color: var(--acc); font-size: var(--fs-xs); cursor: pointer; padding: 4px 0; }
 
 /* --------------------------------------------------------------- nedenler
@@ -62,10 +62,10 @@
   border: 1px solid var(--line); background: var(--paper); border-radius: var(--r-xs); padding: 7px 9px; cursor: pointer; }
 .bdaInsightBtn:hover { border-color: var(--acc); }
 .bdaInsightDot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--muted); transform: translateY(-1px); }
-.bdaInsight.is-critical .bdaInsightDot { background: var(--bad, #c62828); }
-.bdaInsight.is-warning .bdaInsightDot { background: var(--warn, #b26a00); }
+.bdaInsight.is-critical .bdaInsightDot { background: var(--red); }
+.bdaInsight.is-warning .bdaInsightDot { background: var(--orange); }
 .bdaInsight.is-watch .bdaInsightDot { background: var(--muted); }
-.bdaInsight.is-positive .bdaInsightDot { background: var(--ok, #2e7d32); }
+.bdaInsight.is-positive .bdaInsightDot { background: var(--green); }
 .bdaInsightText { flex: 1; font-size: var(--fs-sm); color: var(--ink); line-height: 1.45; }
 .bdaInsightMeta { font-size: var(--fs-2xs); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
@@ -80,7 +80,7 @@
   background: var(--paper); border-radius: var(--r-xs); padding: 5px 9px; cursor: pointer; font-size: var(--fs-xs); color: var(--ink); }
 .bdaChip:hover { border-color: var(--acc); }
 .bdaChip b { font-variant-numeric: tabular-nums; }
-.bdaChip.is-warn { color: var(--warn, #b26a00); border-color: currentColor; }
+.bdaChip.is-warn { color: var(--orange); border-color: currentColor; }
 
 /* ---------------------------------------------------------------- tablolar */
 .bdaTableWrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-xs); }
@@ -112,9 +112,9 @@
 /* Uyarı bandı: eksik yol süresi kuralı — kullanıcının doğrudan aksiyon
    alabileceği tek şey olduğu için en üstte ve ayırt edici. */
 .bdaWarnBand { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline;
-  border: 1px solid var(--warn, #b26a00); border-left-width: 3px; background: var(--paper);
+  border: 1px solid var(--orange); border-left-width: 3px; background: var(--paper);
   border-radius: var(--r-xs); padding: 8px 10px; margin-bottom: 10px; font-size: var(--fs-xs); color: var(--ink); }
-.bdaWarnBand b { color: var(--warn, #b26a00); }
+.bdaWarnBand b { color: var(--orange); }
 .bdaSettingsGroup { display: block; }
 .bdaCheckWide { grid-column: 1 / -1; margin-top: 6px; }
 /* v9.51 — analizden otomasyon kısayolları */

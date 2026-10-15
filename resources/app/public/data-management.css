@@ -60,11 +60,11 @@
 .dmLabMetrics span { background: var(--card2); padding: 7px 9px; display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-2xs); color: var(--muted); }
 .dmLabMetrics strong { color: var(--ink); font-size: var(--fs-md); }
 .dmLabTraceResult { display: flex; gap: 12px; flex-wrap: wrap; padding: 7px 10px; border-top: 1px solid var(--line); color: var(--ink2); font-size: var(--fs-xs); }
-.dmLabJoin { border: 1px solid var(--line); background: var(--panel2); padding: 8px 10px; }
+.dmLabJoin { border: 1px solid var(--line); background: var(--card2); padding: 8px 10px; }
 .dmLabJoin summary { cursor: pointer; font-weight: 700; color: var(--ink); }
 .dmLabJoin p { margin: 7px 0; color: var(--ink2); }
 .dmLabJoinConditions { display: flex; gap: 6px; flex-wrap: wrap; }
-.dmLabJoinConditions span { border: 1px solid var(--line); background: var(--panel); padding: 4px 6px; font-size: var(--fs-xs); color: var(--ink2); }
+.dmLabJoinConditions span { border: 1px solid var(--line); background: var(--card); padding: 4px 6px; font-size: var(--fs-xs); color: var(--ink2); }
 .dmLabJoin ul { margin: 7px 0 0; padding-left: 20px; color: var(--ink2); }
 .dmLabStepList { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; }
 .dmLabStepList li { display: grid; grid-template-columns: 24px minmax(130px, .6fr) 1fr; gap: 8px; align-items: baseline; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: var(--fs-xs); }
@@ -208,7 +208,7 @@
 /* Park edilmiş besleme: ikinci bir uyarı öğesi eklemeden ayırt edilir.
    Kapalı bir bağlantı, hiç kurulmamış bir bağlantıyla aynı görünmemeli. */
 .dmConnect.isParked { border-style: dashed; color: var(--ink2); }
-.dmParkedNote { color: var(--ink3, var(--ink2)); font-size: var(--fs-2xs); }
+.dmParkedNote { color: var(--muted); font-size: var(--fs-2xs); }
 .dmDisconnect:focus-visible, .dmConnect:focus-visible, .dmToggle:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
 /* --- Matris (ikincil görünüm) --- */

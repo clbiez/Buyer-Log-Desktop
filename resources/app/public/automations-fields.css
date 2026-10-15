@@ -28,7 +28,7 @@
 .autoReportChips{display:flex;flex-wrap:wrap;gap:5px}
 .autoReportChips>span{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:4px 8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink2);font-size:var(--fs-2xs)}
 .autoReportChips>.autoReportAuto{max-width:none;background:transparent;border:0;padding-left:0;color:var(--muted)}
-.autoColumnsOverlay{position:fixed;inset:0;z-index:11000;background:rgba(12,18,28,.36);display:flex;justify-content:flex-end;align-items:stretch;padding:10px}
+.autoColumnsOverlay{position:fixed;inset:0;z-index:11000;background:var(--scrim);display:flex;justify-content:flex-end;align-items:stretch;padding:10px}
 .autoColumnsDrawer{width:min(910px,100%);min-width:0;max-height:100%;display:flex;flex-direction:column;overflow:hidden;border:1px solid var(--line2);border-radius:var(--r-sm,9px);background:var(--card);color:var(--ink);box-shadow:var(--shadow-lg)}
 .autoColumnsHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:15px 17px;border-bottom:1px solid var(--line)}
 .autoColumnsHead>div{display:grid;gap:4px;min-width:0}

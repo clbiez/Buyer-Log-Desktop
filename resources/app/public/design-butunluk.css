@@ -367,7 +367,7 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
 .autoPendingBanner{margin:0 0 12px;}
 .autoPendingCard{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;
   flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line2);
-  background:var(--yellow-lite,#fdf3d0);border-radius:var(--radius,0);}
+  background:var(--orange);border-radius:var(--r-sm);}
 .autoPendingCard b{display:block;font-size:var(--fs-base);}
 .autoPendingCard small{display:block;margin-top:2px;font-size:var(--fs-xs);opacity:.8;}
 .autoPendingCard ul{margin:8px 0 0;padding-left:18px;font-size:var(--fs-sm);line-height:1.7;}
@@ -376,7 +376,7 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
 /* v6.37 — Otomasyon panosu: durum sayıları ve zenginleşen tarif kartları. */
 .autoStatChips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
 .autoStatChip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 11px;
-  border:1px solid var(--line2);font-size:var(--fs-xs);background:var(--paper2,transparent);}
+  border:1px solid var(--line2);font-size:var(--fs-xs);background:var(--card2);}
 .autoStatChip b{font-size:var(--fs-md);font-weight:700;}
 .autoStatChip.isWarn{border-color:var(--red,#b4433a);color:var(--red,#b4433a);}
 .autoRecipeSummary{display:block;margin-top:4px;font-size:var(--fs-xs);line-height:1.5;

@@ -109,3 +109,23 @@ test('Ham renk kodu sayısı dosya başına dondurulmuş tavanı aşamaz; yeni d
     assert.ok(Number.isInteger(ceiling) && ceiling > 0, `${file} tavanı pozitif tam sayı olmalı; sıfıra inen dosya listeden çıkarılır`);
   }
 });
+
+test('Kullanılan her CSS değişkeni bir yerde tanımlıdır (hayalet token yok)', () => {
+  /* Denetimde 21 tanımsız token bulundu (--bg 50 kez, --warn, --ok, --surface …):
+     tanımsız var() geçersiz değer üretir; zemin şeffaf kalır, sabit fallback her
+     temada aynı renge düşer. Değişken CSS'te tanımlanmalı ya da JS'te
+     setProperty/style ile çalışma anında atanmalıdır. */
+  const js = fs.readdirSync(PUBLIC).filter(name => name.endsWith('.js') && name !== 'i18n-dictionary.js').map(name => fs.readFileSync(path.join(PUBLIC, name), 'utf8')).join('\n');
+  const css = CSS_FILES.map(read).join('\n').replace(/\/\*[\s\S]*?\*\//g, '');
+  const html = fs.readdirSync(PUBLIC).filter(name => name.endsWith('.html')).map(read).join('\n');
+  const defined = new Set();
+  for (const source of [css, js, html]) for (const m of source.matchAll(/(?:^|[\s;{"'`(])(--[a-zA-Z][\w-]*)\s*:/g)) defined.add(m[1]);
+  for (const m of js.matchAll(/setProperty\(\s*['"`](--[a-zA-Z][\w-]*)/g)) defined.add(m[1]);
+  for (const m of js.matchAll(/['"`](--[a-zA-Z][\w-]*)['"`]\s*[,)]/g)) defined.add(m[1]);
+  const used = new Set();
+  for (const source of [css, js]) for (const m of source.matchAll(/var\(\s*(--[a-zA-Z][\w-]*)/g)) used.add(m[1]);
+  // Çalışma anında üretilen dinamik isimler: `--cp-row-h-${tableKey}` → '--cp-row-h-' öneki
+  const dynamicPrefixes = [...js.matchAll(/`(--[a-zA-Z][\w-]*-)\$\{/g)].map(m => m[1]);
+  const phantom = [...used].filter(name => !defined.has(name) && !dynamicPrefixes.some(prefix => name.startsWith(prefix))).sort();
+  assert.deepEqual(phantom, [], 'tanımsız token; kanonik karşılığını kullan (DESIGN_SYSTEM.md §5)');
+});

@@ -29,7 +29,9 @@
     showAverage:false,
     showSubtotal:false,
   });
-  const COLORS = ['#2563eb','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#db2777','#4f46e5','#0f766e','#9333ea','#475569','#ca8a04'];
+  /* Kategorik grafik paleti tema token'larından okunur (app.css --chart-1…8); tema değişince yeniden çizimde güncellenir. */
+  const CHART_FALLBACK=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#6250d6','#e34948'];
+  function chartColors(){try{const cs=getComputedStyle(document.documentElement);const out=[];for(let i=1;i<=8;i++){const v=cs.getPropertyValue('--chart-'+i).trim();if(v)out.push(v);}return out.length===8?out:CHART_FALLBACK;}catch(_){return CHART_FALLBACK;}}
   let state = Object.assign({}, DEFAULT_STATE);
   let initialized = false;
   let cache = { signature:'', headers:[], rows:[] };
@@ -303,7 +305,7 @@
           timeField:spec.field,
           timeFieldIndex:spec.index,
           dash:spec.index===2,
-          color:COLORS[colorIndex%COLORS.length],
+          color:chartColors()[colorIndex%CHART_FALLBACK.length],
           values:categoryKeys.map(key=>accumulatorValue(map.get(key),st.aggregation,st.metricField)),
         });
       });
@@ -562,7 +564,7 @@
     const available=model.availableSeriesNames||[],selected=new Set(filterSelection(model));
     return '<div class="backlogChartLegend" aria-label="'+esc(tr('Grafik serileri','Chart series'))+'">'+available.map((name,index)=>{
       const active=selected.has(name),hasSecond=!!model.state.timeField2;
-      return '<button type="button" class="backlogChartLegendItem'+(active?'':' is-muted')+'" data-backlog-chart-legend-name="'+esc(name)+'" style="--series-color:'+COLORS[index%COLORS.length]+'" title="'+esc(tr('Tıkla: gizle/göster · Çift tık: yalnız bu seri','Click: hide/show · Double-click: isolate series'))+'"><span></span><b>'+esc(name)+'</b>'+(hasSecond?'<i class="backlogChartOverlayMark">A/B</i>':'')+'</button>';
+      return '<button type="button" class="backlogChartLegendItem'+(active?'':' is-muted')+'" data-backlog-chart-legend-name="'+esc(name)+'" style="--series-color:'+chartColors()[index%CHART_FALLBACK.length]+'" title="'+esc(tr('Tıkla: gizle/göster · Çift tık: yalnız bu seri','Click: hide/show · Double-click: isolate series'))+'"><span></span><b>'+esc(name)+'</b>'+(hasSecond?'<i class="backlogChartOverlayMark">A/B</i>':'')+'</button>';
     }).join('')+'</div>';
   }
   function timelineCategoryLabel(category,granularity) {

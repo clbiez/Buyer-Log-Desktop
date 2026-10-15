@@ -3,7 +3,7 @@
 .blDetailDrawer.is-open{pointer-events:auto}
 .blDetailDrawerBackdrop{position:absolute;inset:0;background:rgba(3,10,18,.18);opacity:0;transition:opacity .2s ease}
 .blDetailDrawer.is-open .blDetailDrawerBackdrop{opacity:1}
-.blDetailDrawerPanel{position:absolute;top:0;right:0;width:min(980px,96vw);height:100vh;display:flex;flex-direction:column;background:var(--card);border-left:1px solid var(--line);box-shadow:-24px 0 64px rgba(0,0,0,.22);transform:translateX(102%);transition:transform .22s ease}
+.blDetailDrawerPanel{position:absolute;top:0;right:0;width:min(980px,96vw);height:100vh;display:flex;flex-direction:column;background:var(--card);border-left:1px solid var(--line);box-shadow:var(--shadow-3);transform:translateX(102%);transition:transform .22s ease}
 .blDetailResizeHandle{position:absolute;z-index:8;left:-5px;top:0;width:10px;height:100%;cursor:ew-resize;touch-action:none}.blDetailResizeHandle::after{content:"";position:absolute;left:4px;top:0;width:1px;height:100%;background:transparent;transition:background .15s ease}.blDetailResizeHandle:hover::after,.blDetailResizing .blDetailResizeHandle::after{background:var(--acc)}.blDetailResizing{user-select:none;cursor:ew-resize!important}
 .blDetailDrawer.is-open .blDetailDrawerPanel{transform:translateX(0)}
 .blDetailDrawerHead{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line);background:var(--card2)}

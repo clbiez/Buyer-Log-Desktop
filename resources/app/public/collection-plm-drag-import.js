@@ -191,7 +191,7 @@
     style.id = 'blKolPlmDragStyle';
     style.textContent = [
       '#view-koleksiyon.blPlmDragOver{position:relative;outline:2px dashed var(--acc);outline-offset:-4px;}',
-      '#view-koleksiyon.blPlmDragOver::after{content:"PLM modelini bırak → Koleksiyona ekle";position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9998;padding:14px 20px;border-radius:12px;background:var(--panel);border:1px solid var(--acc);box-shadow:0 12px 40px rgba(0,0,0,.22);font-weight:650;color:var(--ink);pointer-events:none;}',
+      '#view-koleksiyon.blPlmDragOver::after{content:"PLM modelini bırak → Koleksiyona ekle";position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:9998;padding:14px 20px;border-radius:12px;background:var(--card);border:1px solid var(--acc);box-shadow:0 12px 40px rgba(0,0,0,.22);font-weight:650;color:var(--ink);pointer-events:none;}',
       '#view-koleksiyon.blPlmDragBusy::after{content:"PLM modeli Koleksiyona ekleniyor…";}',
     ].join('');
     document.head.appendChild(style);
