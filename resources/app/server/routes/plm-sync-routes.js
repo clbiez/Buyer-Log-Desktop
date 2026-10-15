@@ -207,30 +207,13 @@ async function downloadTechnicalSheets(profile, items, language, options = {}) {
   } finally { clearModelOperationProgress(profile.id); }
 }
 
-/* Office: start the same download without holding the request. The PLM job
-   is created synchronously, so its id is the operation receipt; the result
-   stays in memory for the poller. After a restart the receipt is unknown and
-   the poll fails closed (saved sheets remain visible in the status read). */
-const technicalSheetRuns = new Map();
-function startTechnicalSheetDownload(profile, items, language, options = {}) {
-  let jobId = '', abandoned = false;
-  const promise = downloadTechnicalSheets(profile, items, language, { ...options, onJob: id => {
-    // A job id that arrives after the start was refused never reaches PLM.
-    if (abandoned) throw Object.assign(new Error('PLM job abandoned.'), { code: 'OFFICE_NATIVE_OPERATION_FAILED' });
-    jobId = String(id);
-  } });
-  if (!jobId) { abandoned = true; promise.catch(() => {}); throw Object.assign(new Error('PLM job did not start.'), { code: 'OFFICE_NATIVE_OPERATION_FAILED', statusCode: 409 }); }
-  const run = { ownerId: profile.id, done: false, result: null, errorCode: null };
-  technicalSheetRuns.set(jobId, run);
-  // Only finished runs are evicted; a running receipt stays pollable.
-  for (const [id, old] of technicalSheetRuns) { if (technicalSheetRuns.size <= 50) break; if (old.done) technicalSheetRuns.delete(id); }
-  promise.then(result => { run.done = true; run.result = result; }, err => { run.done = true; run.errorCode = String(err && err.code || 'PLM_TECHNICAL_SHEET_FAILED').slice(0, 80); });
-  return { jobId, job: plmJobs.describe(profile.id, jobId) };
-}
-function technicalSheetRun(profile, jobId) {
-  const run = technicalSheetRuns.get(String(jobId));
-  if (!run || run.ownerId !== profile.id) return null;
-  return { ...run, job: plmJobs.describe(profile.id, jobId) };
+/* Office: the same download as a route handler for agent-native-route-runs
+   (req.onPlmJob receives the job id; req.assertAuthority is rechecked inside
+   the job before anything is stored). */
+async function technicalSheetHandler(req, res) {
+  try {
+    res.json(await downloadTechnicalSheets(req.currentUser, req.body.items, req.body.language === 'tr' ? 'tr' : 'en', { onJob: req.onPlmJob, assertAuthority: req.assertAuthority }));
+  } catch (err) { res.status(Number(err && err.statusCode) || 500).json({ code: err && err.code || 'PLM_TECHNICAL_SHEET_FAILED' }); }
 }
 function runningTechnicalSheetJob(profile) {
   return plmJobs.list(profile.id, { scope: 'koleksiyon', running: true }).find(job => job.kind === 'plm-files') || null;
@@ -301,7 +284,7 @@ app.get('/api/qtx/file/:colourCode', userAccess.requireAnyArea('cp', 'orders', '
   } catch (err) { automationError(res,err,'QTX dosyası indirilemedi.'); }
 });
 
-return {...fetchService,technicalSheets:{prepare:prepareTechnicalSheetItems,start:startTechnicalSheetDownload,run:technicalSheetRun,running:runningTechnicalSheetJob}};
+return {...fetchService,technicalSheets:{prepare:prepareTechnicalSheetItems,handler:technicalSheetHandler,running:runningTechnicalSheetJob}};
 };
 
 function createPlmFetchService(deps){

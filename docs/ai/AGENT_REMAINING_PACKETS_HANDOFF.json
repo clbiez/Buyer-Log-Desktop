@@ -60,7 +60,8 @@
     "scope": "Supported Workflow Studio/Office lifecycle and task handoff coverage",
     "reuse": "existing Agent Runtime/Office stores",
     "boundary": "no extra AI engine; current IAM; bounded context and safe restart",
-    "status": "pending"
+    "status": "implemented",
+    "delivery": "Lifecycle, restart safety and cross-module handoff: durable native completion for in-process route runs (technical sheets, images, samples), list projection in step bindings (data.entries[].plmId) with per-step agents, live task dialog; see AGENT_OFFICE_LIFECYCLE_ACCEPTANCE.md."
   },
   {
     "packet": "acceptance",

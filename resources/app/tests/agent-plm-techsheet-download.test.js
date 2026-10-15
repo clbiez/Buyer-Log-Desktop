@@ -29,7 +29,7 @@ function harness(opts={}){
   const profile={id:'plm-owner'};
   const registry=createToolRegistry({userAccess:{profileById:()=>profile,hasArea:()=>true,hasCapability:()=>true,appendAudit:()=>{}},authorizeCapability:async()=>true,authorizePendingCapability:async()=>true});
   registerPlmAssetTools(registry,{bomStore:{load:()=>({})},normalizePlmId:v=>String(v||'').replace(/\D/g,''),readModelFilesIndex:()=>index,fileExists:item=>fs.existsSync(path.join(files,item.storedName)),ownership,
-    technicalSheets:service.technicalSheets,withAgentMutation:(_c,work)=>work()});
+    technicalSheets:service.technicalSheets,routeRuns:require('../server/lib/agent-native-route-runs').createRouteRuns({jobs:plmJobs}),withAgentMutation:(_c,work)=>work()});
   const ctx={ownerId:profile.id,profile,input:{officeJobId:'job-t',officeStepId:'step-t',officeAgentId:'agent-t'},approvalGranted:true,assertAuthority:()=>{}};
   return {registry,ctx,handlers,release,calls,index:()=>index,files,plmJobs,profile,links};
 }

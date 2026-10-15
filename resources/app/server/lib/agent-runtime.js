@@ -15,9 +15,28 @@ function isEmpty(value) {
   }
   return false;
 }
+/* A dotted path into an earlier result. "items[].plmId" projects every element
+   of an array (Office task handoff between modules); a projected list of plain
+   values is de-duplicated so it fits unique identifier arguments. */
 function valueAt(source, pathText) {
   const path = clean(pathText); if (!path) return source;
-  return path.split('.').reduce((current, key) => current == null ? undefined : current[key], source);
+  return walkPath(source, path.split('.'));
+}
+function walkPath(current, keys) {
+  if (!keys.length) return current;
+  if (current == null) return undefined;
+  const [key, ...rest] = keys;
+  if (key.endsWith('[]')) {
+    const name = key.slice(0, -2);
+    if (['__proto__', 'constructor', 'prototype'].includes(name)) return undefined;
+    const list = name ? current[name] : current;
+    if (!Array.isArray(list)) return undefined;
+    const values = list.map(item => walkPath(item, rest));
+    if (values.some(value => value === undefined)) return undefined;
+    return values.every(value => value === null || ['string', 'number', 'boolean'].includes(typeof value)) ? [...new Set(values)] : values;
+  }
+  if (['__proto__', 'constructor', 'prototype'].includes(key)) return undefined;
+  return walkPath(current[key], rest);
 }
 function activeChannel(state) {
   if (!state) return null;

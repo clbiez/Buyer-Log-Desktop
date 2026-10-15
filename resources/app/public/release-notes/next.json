@@ -416,6 +416,35 @@
           "en": "Agent Office task steps with a PLM image import result"
         }
       }
+    },
+    {
+      "id": "agent-office-handoff",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Görevler ajanlar arasında devredilir ve yeniden başlatmada güvenle sürer",
+        "en": "Tasks hand off between agents and continue safely across restarts"
+      },
+      "body": {
+        "tr": "Bir görevin adımları farklı modüllerin ajanlarına verilebilir; bir adımın sonucundaki liste (ör. bulunan PLM ID'leri) sonraki ajanın adımına aktarılır. Program yeniden başlatılırsa onay bekleyen görevler beklemeye devam eder, bitmiş PLM işlerinin sonucu kaybolmaz; yarıda kalan işler açıkça durdurulur. Açık görev penceresi iş ilerledikçe kendiliğinden güncellenir.",
+        "en": "Steps of one task can go to agents of different modules; a list in one step's result (e.g. the PLM IDs found) is passed to the next agent's step. After a restart, tasks awaiting approval keep waiting, results of finished PLM jobs are kept, and jobs cut off by the restart are stopped clearly. An open task dialog updates by itself as the work progresses."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-handoff.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: CP ajanından Koleksiyon ajanına devredilen iki adımlı görev, yeniden başlatma sonrası onaylanmış (demo veri).",
+          "en": "Actual Agent Office: a two-step task handed from the CP agent to the Collection agent, approved after a restart (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi'nde iki ajanlı görevin adımları",
+          "en": "Agent Office steps of a task handled by two agents"
+        }
+      }
     }
   ]
 }

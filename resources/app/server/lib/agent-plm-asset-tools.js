@@ -59,7 +59,7 @@ function registerPlmAssetTools(registry,deps){
   const execDone={...req({verified:ok,operation:operationRef,data:execData}),properties:{verified:ok,operation:operationRef,data:execData,outcome:{enum:['partial']}}};
   const execOutput={...object({verified:ok,completionPending:{enum:['native-operation']},operation:operationRef,job:jobView,data:execData,outcome:{enum:['partial']}}),required:['verified','operation'],anyOf:[execPending,execDone]};
   const ownerOnly=ctx=>{ctx.assertAuthority?.();if(!ctx.profile||ctx.ownerId!==ctx.profile.id)throw error('OFFICE_TOOL_FORBIDDEN',403);};
-  const owner=ctx=>{ownerOnly(ctx);if(!deps.technicalSheets)throw error('OFFICE_SOURCE_UNAVAILABLE',503);};
+  const owner=ctx=>{ownerOnly(ctx);if(!deps.technicalSheets||!deps.routeRuns)throw error('OFFICE_SOURCE_UNAVAILABLE',503);};
   const publicJob=(id,job)=>({jobId:String(id),status:text(job&&job.status,20),phase:text(job&&job.phase,120),total:Number(job&&job.total)||0,processed:Number(job&&job.processed)||0,succeeded:Number(job&&job.succeeded)||0,failed:Number(job&&job.failed)||0});
   function sheetPreview(args,ctx){owner(ctx);
     const lang=args.language||'en',items=deps.technicalSheets.prepare(args.plmIds.map(plmId=>({plmId})));
@@ -71,12 +71,6 @@ function registerPlmAssetTools(registry,deps){
     return {styleIds:items.map(item=>item.styleId||''),language:lang,items:items.map(item=>({plmId:item.plmId,styleLinked:Boolean(item.styleId),currentStatus:statusByPlmId[item.plmId]?.status||'missing'})),requested:items.length,
       withoutStyleLink:items.filter(item=>!item.styleId).length,running,canStart:!running,impact:{ownerPlmSession:true,replacesEarlierPlmSheet:true,keepsUserUploads:true,rollback:'unavailable'}};
   }
-  // Known native failures keep their meaning; anything else stays a failed operation.
-  const failureCode=run=>{const code=String(run.errorCode||'');
-    if(run.job&&run.job.status==='cancelled'||code==='PLM_JOB_CANCELLED')return 'OFFICE_NATIVE_OPERATION_CANCELLED';
-    if(/^CORENECTUM_(API_TOKEN_(REQUIRED|INVALID|INVALID_FORMAT)|LOGIN_REQUIRED)$/.test(code))return 'OFFICE_PLM_SESSION_REQUIRED';
-    if(code==='OFFICE_PREVIEW_CHANGED'||code==='OFFICE_TOOL_FORBIDDEN')return code;
-    return 'OFFICE_NATIVE_OPERATION_FAILED';};
   const ack=(lang,started)=>({verified:true,completionPending:'native-operation',operation:{id:String(started.jobId),kind:'plm-technical-sheet',language:lang},job:publicJob(started.jobId,started.job)});
   registry.registerCapability({id:'collection.plm.techsheet.download',module:'koleksiyon',operation:'EXECUTE',risk:'write',areas:['koleksiyon'],agentAreas:['collection'],
     label:{tr:'PLM teknik föylerini indir ve sonucu bekle',en:'Download PLM technical sheets and await the result'},
@@ -89,15 +83,17 @@ function registerPlmAssetTools(registry,deps){
         if(!now.canStart)throw error('OFFICE_OPERATION_IN_PROGRESS',409);
         if(JSON.stringify([now.styleIds,now.items.map(i=>i.plmId)])!==JSON.stringify([p.styleIds,p.items.map(i=>i.plmId)]))throw error('OFFICE_PREVIEW_CHANGED',409);
         const items=deps.technicalSheets.prepare(args.plmIds.map(plmId=>({plmId})));
-        return ack(p.language,deps.technicalSheets.start(ctx.profile,items,p.language,{assertAuthority:ctx.assertAuthority}));});},
+        return ack(p.language,deps.routeRuns.start(ctx.profile,deps.technicalSheets.handler,{items,language:p.language},{assertAuthority:ctx.assertAuthority,
+          summary:r=>({language:r.language==='tr'?'tr':'en',requested:r.requested,downloaded:r.downloaded,saved:r.saved,failedItems:(r.failedItems||[]).slice(0,200).map(item=>({plmId:text(item&&item.plmId,80),code:text(item&&item.code,80)})),failedCount:(r.failedItems||[]).length})}));});},
     poll:async(receipt,ctx)=>{owner(ctx);
-      const run=deps.technicalSheets.run(ctx.profile,receipt.operation.id);
+      const run=deps.routeRuns.run(ctx.profile,receipt.operation.id);
       if(!run)throw error('OFFICE_NATIVE_RECEIPT_INVALID',409);
       if(!run.done)return {verified:true,completionPending:'native-operation',operation:receipt.operation,job:publicJob(receipt.operation.id,run.job)};
-      if(run.errorCode||!run.result)throw error(failureCode(run),409);
-      const r=run.result,failedItems=(r.failedItems||[]).slice(0,200).map(item=>({plmId:text(item&&item.plmId,80),code:text(item&&item.code,80)}));
+      const r=run.body||{};
+      if(run.statusCode>=400||r.ok!==true)throw error(require('./agent-native-route-runs').officeCode(r.code,run.job&&run.job.status==='cancelled'),409);
+      const failedItems=r.failedItems||[];
       // A model that could not be downloaded or stored makes the step partial.
-      return {verified:true,...((r.failedItems||[]).length?{outcome:'partial'}:{}),operation:receipt.operation,data:{jobId:String(receipt.operation.id),language:r.language==='tr'?'tr':'en',requested:Number(r.requested)||0,downloaded:Number(r.downloaded)||0,saved:Number(r.saved)||0,failed:(r.failedItems||[]).length,failedItems}};}});
+      return {verified:true,...(Number(r.failedCount)?{outcome:'partial'}:{}),operation:receipt.operation,data:{jobId:String(receipt.operation.id),language:r.language==='tr'?'tr':'en',requested:Number(r.requested)||0,downloaded:Number(r.downloaded)||0,saved:Number(r.saved)||0,failed:Number(r.failedCount)||0,failedItems}};}});
   // EXECUTE: model images and sample requests through the existing route handlers.
   const plmItem={...object({plmId:{...string(80),minLength:1},colourCode:string(40),colour:string(80)}),required:['plmId']};
   const failedList=array(req({plmId:string(80),code:string(80)}),200);
@@ -117,7 +113,7 @@ function registerPlmAssetTools(registry,deps){
         return deps.withAgentMutation(ctx,async()=>{const now=view(args,ctx);
           if(!now.canStart)throw error('OFFICE_OPERATION_IN_PROGRESS',409);
           if(JSON.stringify({...now,running:false,canStart:true})!==JSON.stringify({...p,running:false,canStart:true}))throw error('OFFICE_PREVIEW_CHANGED',409);
-          const started=runs().start(ctx.profile,spec.handler(),spec.body(args),{assertAuthority:ctx.assertAuthority});
+          const started=runs().start(ctx.profile,spec.handler(),spec.body(args),{assertAuthority:ctx.assertAuthority,summary:spec.summary});
           return {verified:true,completionPending:'native-operation',operation:{id:started.jobId,kind:spec.kind},job:publicJob(started.jobId,started.job)};});},
       poll:async(receipt,ctx)=>{ownerOnly(ctx);
         const run=runs().run(ctx.profile,receipt.operation.id);
@@ -142,6 +138,7 @@ function registerPlmAssetTools(registry,deps){
       return {mode,items,requested:items.length,impact:{ownerPlmSession:true,keepsManualImages:true,refreshesAutomaticImages:mode==='all',rollback:'unavailable'}};},
     body:args=>({items:args.items.map(item=>({plmId:deps.normalizePlmId(item.plmId),colourCode:String(item.colourCode||'').trim(),colour:String(item.colour||'').trim()})),mode:args.mode==='all'?'all':'missing',scope:'koleksiyon',overwriteManual:false}),
     result:(id,body)=>({jobId:id,mode:body.mode==='all'?'all':'missing',requested:Number(body.requested)||0,saved:Number(body.imagesSaved)||0,downloaded:Number(body.imagesDownloaded)||0,missing:Number(body.imagesMissing)||0,failed:Number(body.imagesFailed)||0,manualPreserved:Number(body.manualPreserved)||0,failedItems:failedOf(body.imageFailedItems||body.failedItems)}),
+    summary:body=>({mode:body.mode,requested:body.requested,imagesSaved:body.imagesSaved,imagesDownloaded:body.imagesDownloaded,imagesMissing:body.imagesMissing,imagesFailed:body.imagesFailed,manualPreserved:body.manualPreserved,status:body.status,imageFailedItems:failedOf(body.imageFailedItems||body.failedItems)}),
     partial:(body,data)=>data.failed>0||data.missing>0||(body.status&&body.status!=='completed')});
   const sampleData=req({jobId,checked:count,synced:count,withRequests:count,requestCount:count,notFound:count,failed:count,failedItems:failedList});
   routeCapability({id:'collection.plm.samples.sync',kind:'plm-requests',data:sampleData,jobKind:'plm-requests',areas:[],anyAreas:['koleksiyon','cp','orders'],agentAreas:['collection'],
@@ -156,6 +153,7 @@ function registerPlmAssetTools(registry,deps){
     body:args=>({plmIds:[...new Set(args.plmIds.map(id=>deps.normalizePlmId(id)))],scope:args.scope==='cp'?'cp':'koleksiyon'}),
     result:(id,body)=>({jobId:id,checked:Number(body.checked)||0,synced:Number(body.synced)||0,withRequests:Number(body.withRequests)||0,requestCount:Number(body.requestCount)||0,notFound:(body.notFound||[]).length,failed:(body.failed||[]).length,
       failedItems:failedOf([...(body.failed||[]),...(body.notFound||[]).map(plmId=>({plmId,code:'PLM_NOT_FOUND'}))])}),
+    summary:body=>({checked:body.checked,synced:body.synced,withRequests:body.withRequests,requestCount:body.requestCount,notFound:(body.notFound||[]).slice(0,200),failed:failedOf(body.failed)}),
     partial:(_body,data)=>data.failed+data.notFound>0});
 }
 module.exports={registerPlmAssetTools};
