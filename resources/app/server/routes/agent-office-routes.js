@@ -101,6 +101,10 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.post(base+'/workflow/preview',json,wrap(async(req,res)=>res.json({ok:true,preview:await service.workflowPreview(req.currentUser,req.body||{})})));
   app.post(base+'/workflow/run',json,stream((req,signal,onProgress)=>service.runWorkflow(req.currentUser,{...req.body,signal},onProgress)));
   app.post(base+'/run',json,stream((req,signal,onProgress)=>service.run(req.currentUser,{...req.body,signal},onProgress)));
+  // Sade sohbet: tek kutu, LCW AI yönlendirir (cevap / iş / soru), gerekirse ekibi büyütür.
+  app.post(base+'/chat',json,stream((req,signal,onProgress)=>service.officeChat(req.currentUser,{...req.body,signal},onProgress)));
+  app.post(base+'/chat/tasks/:id/approve',json,wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatApprove(req.currentUser,req.params.id,req.body||{})})));
+  app.post(base+'/chat/tasks/:id/advance',json,wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatAdvance(req.currentUser,req.params.id)})));
   app.post(base+'/cancel',json,wrap(async(req,res)=>res.json({ok:true,cancelled:service.engineOf().cancel(req.currentUser.id,text(req.body?.requestId,120))})));
   app.post(base+'/report',json,wrap(async(req,res)=>{const result=await service.scan(req.currentUser,req.body?.scope);const {snapshots,...report}=result;res.attachment('Buyer-Log-Operational-Review.json').json(report);}));
   app.post(base+'/scan',json,wrap(async(req,res)=>{

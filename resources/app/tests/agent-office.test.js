@@ -225,3 +225,12 @@ test('four local-time periods and agent states derive from actual jobs and tasks
  const {periodForHour,status}=require('../public/agent-office-workshop-model');assert.deepEqual([0,7,13,18,23].map(periodForHour),['night','morning','noon','evening','night']);
  assert.equal(status('a',{activeJobs:[{profileIds:['b']}],connected:true}),'available');assert.equal(status('a',{activeJobs:[{profileIds:['a'],phase:'responding'}]}),'responding');assert.equal(status('a',{jobs:[{profileIds:['a'],status:'failed'}]}),'error');assert.equal(status('a',{memory:[{profileId:'a',type:'task',active:true}]}),'waiting');assert.equal(status('a',{connected:false}),'offline');
 });
+
+test('a long-instruction team and large coverage still fit the shared context instead of failing',()=>{
+  const participants=['ada','mert','beril','ahmet'].map(id=>({id,name:id,role:'DEMO',instructions:'Talimat '.repeat(750)}));
+  const packed=packContext({participants,coverage:{lfl:{rows:10,fields:Array.from({length:400},(_,i)=>'Alan '+i)},completeArchive:false},memory:[{id:'m1',text:'DEMO hafıza'}]},17800);
+  assert.ok(JSON.stringify(packed).length<=17800);
+  assert.ok(packed.participants.every(item=>item.instructionsTrimmed&&item.instructions.join('').length>=400));
+  assert.deepEqual(packed.coverage.lfl.omitted,true);
+  assert.equal(packed.memory.length,1,'evidence still has room after trimming');
+});

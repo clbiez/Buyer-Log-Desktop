@@ -19,8 +19,22 @@ function packContext(parts, max = 17800) {
   const context = { referenceIds: [], coverage: parts.coverage || {}, participants: parts.participants || [], omitted: 0 };
   // Prompt sanitizer's per-string limit is respected without truncating an
   // instruction mid-sentence invisibly: long text is sent in numbered chunks.
+  /* Taban (katılımcılar + kapsam) bütçeyi aşarsa çağrı reddedilmez: büyük
+     kapsam alanları özetlenir, talimatlar katılımcı başına eşit payla kısaltılır
+     ve bu açıkça işaretlenir. Eskiden 6000 karakterlik talimatlı bir agentla
+     bile "talimatlar çok büyük" hatası alınabiliyordu. */
+  for (const [key, value] of Object.entries(context.coverage)) {
+    const size = JSON.stringify(value ?? null).length;
+    if (size > 800) context.coverage[key] = { omitted: true, size };
+  }
+  const baseBudget = Math.floor(max * 0.55);
+  const withoutInstructions = JSON.stringify({ ...context, participants: context.participants.map(item => ({ ...item, instructions: [] })) }).length;
+  const share = Math.max(400, Math.floor((baseBudget - withoutInstructions) / Math.max(1, context.participants.length)));
   for (const participant of context.participants) {
-    participant.instructions = String(participant.instructions || '').match(/[\s\S]{1,1500}/g) || [];
+    const full = String(participant.instructions || '');
+    const kept = full.length > share ? full.slice(0, share) : full;
+    if (kept.length < full.length) { participant.instructionsTrimmed = { kept: kept.length, total: full.length }; context.omitted++; }
+    participant.instructions = kept.match(/[\s\S]{1,1500}/g) || [];
   }
   for (const [name, list] of Object.entries(parts)) {
     if (name === 'coverage' || name === 'participants') continue;
@@ -414,6 +428,7 @@ function createAgentOfficeService(deps) {
   if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-cp').attachCp(service,deps));
   if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-tasks').attachTasks(service,deps));
   if(deps.getEvidenceAttachments&&deps.readEvidenceAttachment)Object.assign(service,require('./agent-office-evidence').attachEvidence(service,deps));
+  if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-chat').attachChat(service,deps));
   return service;
 }
 module.exports = { createAgentOfficeService, packContext, trainingChunks, scopeOf, inferScope };
