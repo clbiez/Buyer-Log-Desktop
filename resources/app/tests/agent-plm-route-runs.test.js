@@ -88,3 +88,17 @@ test('a lost grant before PLM is contacted fails the job; a route refusal before
   assert.throws(()=>runs.start({id:'x'},async(req,res)=>res.status(403).json({code:'ACCESS_AREA_REQUIRED'}),{}),{code:'OFFICE_TOOL_FORBIDDEN'});
   assert.equal(officeCode('PLM_JOB_CANCELLED'),'OFFICE_NATIVE_OPERATION_CANCELLED');
 });
+
+test('sample refresh keeps the route area rule; a broken summary fails the run instead of crashing',async()=>{
+  const h=harness(),tool=h.registry.get(SAMPLES);
+  assert.deepEqual(tool.anyAreas,['koleksiyon','cp','orders']);
+  const {allowed}=require('../server/lib/agent-capability-contract');
+  const access={hasArea:(p,a)=>p.areas.includes(a),hasCapability:()=>true};
+  assert.equal(allowed(tool,{id:'x',areas:['overview']},access),false,'a user without Collection/CP/Orders may not refresh samples');
+  assert.equal(allowed(tool,{id:'x',areas:['cp']},access),true);
+  const jobs=createJobRegistry(),runs=createRouteRuns({jobs});
+  const started=runs.start({id:'owner'},async(req,res)=>{const job=jobs.create('owner',{kind:'demo'});req.onPlmJob(job.id);await settle();res.json({ok:true,notFound:'not-a-list'});},{},{summary:body=>({count:body.notFound.slice(0)+body.missing.length})});
+  await settle();await settle();
+  const run=runs.run({id:'owner'},started.jobId);
+  assert.deepEqual([run.done,run.statusCode,run.body.code],[true,500,'OFFICE_NATIVE_OPERATION_FAILED']);
+});

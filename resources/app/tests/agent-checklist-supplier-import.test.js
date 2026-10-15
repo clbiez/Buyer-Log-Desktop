@@ -110,4 +110,7 @@ test('the CP import button and the Office capability share one workbook parser',
   assert.equal(typeof Sync.parseSupplierWorkbook,'function');
   assert.equal(Sync.normalizeState('DEMO Bekleme',[{id:'custom:wait',name:'DEMO Bekleme'}]),'custom:wait');
   assert.equal(Sync.normalizeState('Onaylandı'),'approved');
+  const plain=new ExcelJS.Workbook();plain.addWorksheet('Sheet1');
+  assert.throws(()=>Sync.parseSupplierWorkbook(plain,{english:true}),/not a Buyer Log supplier checklist workbook/,'explicit language holds for the parse');
+  assert.throws(()=>Sync.parseSupplierWorkbook(plain,{english:false}),/üretici checklist şablonu değil/);
 });

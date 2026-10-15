@@ -144,10 +144,12 @@ test('waiting approval survives a restart; refusal is terminal; a completed writ
 
 test('an open task dialog follows a running or waiting job and keeps typed correction text',()=>{
   const src=fs.readFileSync(path.join(__dirname,'..','public','agent-office.js'),'utf8');
-  const follow=src.slice(src.indexOf('function followReview(job){'),src.indexOf('function capabilityReview(job){'));
+  const follow=src.slice(src.indexOf('function followReview('),src.indexOf('function capabilityReview(job){'));
   assert.match(follow,/\['queued','running','waiting_operation'\]\.includes\(job\.status\)/);
   assert.match(follow,/api\('\/state'\)/);
   assert.match(follow,/querySelectorAll\('textarea'\)\]\.some\(el=>el\.value\.trim\(\)\)/,'typed text is never replaced');
   assert.match(follow,/dataset\.aoReview!==job\.id/,'only the dialog of that job is refreshed');
+  assert.match(follow,/stepSignature\(live\)===rendered/,'changes are compared with what the dialog shows, not re-baselined');
+  assert.match(follow,/data-ao-review-changed/);
   assert.match(src,/modal\.dataset\.aoReview=job\.id;followReview\(job\);/);
 });

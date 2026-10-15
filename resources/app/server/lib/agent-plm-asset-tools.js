@@ -105,7 +105,7 @@ function registerPlmAssetTools(registry,deps){
     const outputSchema={...object({verified:ok,completionPending:{enum:['native-operation']},operation:opRef,job:jobView,data:spec.data,outcome:{enum:['partial']}}),required:['verified','operation'],anyOf:[pending,done]};
     const runs=()=>{if(!deps.routeRuns||!spec.handler())throw error('OFFICE_SOURCE_UNAVAILABLE',503);return deps.routeRuns;};
     const view=(args,ctx)=>{ownerOnly(ctx);const running=Boolean(runs().running(ctx.profile,spec.jobKind));const p=spec.preview(args,ctx);ownerOnly(ctx);return {...p,running,canStart:!running};};
-    registry.registerCapability({id:spec.id,module:'koleksiyon',operation:'EXECUTE',risk:'write',areas:spec.areas,agentAreas:spec.agentAreas,label:spec.label,dataScope:spec.dataScope,
+    registry.registerCapability({id:spec.id,module:'koleksiyon',operation:'EXECUTE',risk:'write',areas:spec.areas,...(spec.anyAreas?{anyAreas:spec.anyAreas}:{}),agentAreas:spec.agentAreas,label:spec.label,dataScope:spec.dataScope,
       inputSchema:spec.inputSchema,outputSchema,dryRunOutputSchema:req({verified:ok,fingerprint:sha,preview:spec.previewSchema}),publicPreview:p=>p,
       read:async(args,ctx)=>view(args,ctx),
       apply:async(args,ctx,p)=>{if(!p.canStart)throw error('OFFICE_OPERATION_IN_PROGRESS',409);

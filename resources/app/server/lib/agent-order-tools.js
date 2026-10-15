@@ -6,7 +6,7 @@
    read back, and its exact prior override entry is archived as an owner/job/
    step-bound inverse artifact. No second business rule exists here. */
 const {object,string,array}=require('./agent-capability-contract'),{error,hash}=require('./agent-office-store'),Inverse=require('./agent-native-inverse-artifact');
-const {NOTE_AUTHOR_FIELDS}=require('../db');
+const {NOTE_AUTHOR_FIELDS,overrideWriteKey}=require('../db');
 const TOOL_ID='cp.order.update',BATCH_TOOL_ID='cp.orders.update.batch',COLUMNS_TOOL_ID='cp.notecolumns.update',BATCH_MAX=50;
 const DATE_FIELDS=['exFactory','retailDate','inStoreDate'];
 const EDIT_FIELDS=['notes','dates','subManufacturer','licensor','delType','noteColumns','shortage'];
@@ -73,7 +73,8 @@ function registerOrderTools(registry,deps){
   /* Multi-line edit: each line passes the same identity/IAM/shared-owner/
      note-column checks as a single edit; all lines are written in one native
      batch (one orders revision) and undone together in one write. */
-  const lineKey=entry=>[entry.orderCode,String(entry.model||'').trim(),String(entry.ccode||'').trim()].join('|');
+  // The native write key (with its text normalization) decides line identity.
+  const lineKey=entry=>String(overrideWriteKey(entry.orderCode,{model:entry.model,ccode:entry.ccode}));
   const lineView=line=>({orderCode:line.orderCode,patch:line.patch,fields:line.fields});
   const batchPreview={...object({revision:count,lines:array({...object({orderCode:{type:'integer',minimum:1},patch:patchSchema,fields:preview.properties.fields}),required:['orderCode','patch','fields']},BATCH_MAX)}),required:['revision','lines']};
   async function readBatch(args,ctx){

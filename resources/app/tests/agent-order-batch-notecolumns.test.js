@@ -46,6 +46,8 @@ test('one invalid or duplicate line refuses the whole batch; a later peer edit r
   await assert.rejects(registry.execute(BATCH_TOOL_ID,{entries:[{orderCode:a,notes:{Notes:'x'}},{orderCode:b,noteColumns:{invented:'y'}}]},{...ctx,dryRun:true}),{code:'OFFICE_NOTE_COLUMN_UNKNOWN'});
   await assert.rejects(registry.execute(BATCH_TOOL_ID,{entries:[{orderCode:a,notes:{Notes:'x'}},{orderCode:a,notes:{Notes:'y'}}]},{...ctx,dryRun:true}),{code:'OFFICE_TASK_INVALID'});
   await assert.rejects(registry.execute(BATCH_TOOL_ID,{entries:[{orderCode:a,model:'DEMO',notes:{Notes:'x'}}]},{...ctx,dryRun:true}),{code:'OFFICE_ORDER_IDENTITY'});
+  // Lines that differ only in letter case write the same native override key.
+  await assert.rejects(registry.execute(BATCH_TOOL_ID,{entries:[{orderCode:a,model:'DEMO',ccode:'C1',notes:{Notes:'x'}},{orderCode:a,model:'demo',ccode:'c1',notes:{Notes:'y'}}]},{...ctx,dryRun:true}),{code:'OFFICE_TASK_INVALID'});
   const {done}=await run(registry,BATCH_TOOL_ID,{entries:[{orderCode:a,notes:{Notes:'DEMO a'}},{orderCode:b,notes:{Notes:'DEMO b'}}]});
   db.patchOrderOverride(b,{notes:{Notes:'DEMO peer'}},revision(),null,{actor:{id:'peer',name:'Peer'}});
   await assert.rejects(registry.rollback(BATCH_TOOL_ID,done.rollbackToken,ctx),{code:'OFFICE_PREVIEW_CHANGED'});

@@ -64,11 +64,14 @@ function createRouteRuns({jobs,root}){
     // Only finished runs are evicted; a running receipt stays pollable.
     for(const [id,old]of runs){if(runs.size<=LIMIT)break;if(old.done)runs.delete(id);}
     const settle=failed=>{
-      run.done=true;run.statusCode=failed&&res.statusCode<400?500:res.statusCode;run.body=reduce(res.body);if(typeof options.summary==='function'&&run.body.ok)Object.assign(run.body,JSON.parse(JSON.stringify(options.summary(res.body))));
+      run.done=true;run.statusCode=failed&&res.statusCode<400?500:res.statusCode;run.body=reduce(res.body);
+      // A summary that cannot be built is a failed operation, never an unhandled rejection.
+      try{if(typeof options.summary==='function'&&run.body.ok)Object.assign(run.body,JSON.parse(JSON.stringify(options.summary(res.body))));}
+      catch(_){run.statusCode=500;run.body={ok:false,code:'OFFICE_NATIVE_OPERATION_FAILED'};}
       const job=jobs.describe(profile.id,jobId);
       persist(profile.id,jobId,{ownerId:profile.id,jobId,statusCode:run.statusCode,body:run.body,jobStatus:job&&job.status||'',finishedAt:new Date().toISOString()});
     };
-    promise.then(()=>settle(false),()=>settle(true));
+    promise.then(()=>settle(false),()=>settle(true)).catch(()=>{});
     prune(profile.id);
     return {jobId,job:jobs.describe(profile.id,jobId)};
   }

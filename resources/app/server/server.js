@@ -2504,6 +2504,7 @@ function imageSize(buffer){
   }
   return {width:1,height:1};
 }
+const AGENT_SUPPLIER_IMAGE_MAX_BYTES=1024*1024;
 function agentSupplierRowImage(row){
   const plm=String(row&&row['PLM ID']||'').trim();if(!plm)return null;
   const map=loadOverrides().imagemap||{},keys=[parseLib.plmColourImageNameKey(plm,row['C.Code']||'',row['Colour']||''),parseLib.plmImageKey(plm)].filter(Boolean);
@@ -2511,6 +2512,8 @@ function agentSupplierRowImage(row){
   if(!ref)return null;
   const found=getCollectionImage(ref),mime=String(found&&found.item&&found.item.mimeType||'').toLowerCase();
   if(!found||!/^image\/(png|jpe?g)$/.test(mime))return null;
+  // No server-side resizer exists; an oversized original stays out of the workbook.
+  try{if(fs.statSync(found.full).size>AGENT_SUPPLIER_IMAGE_MAX_BYTES)return null;}catch(_){return null;}
   let buffer;try{buffer=fs.readFileSync(found.full);}catch(_){return null;}
   return {dataUrl:'data:'+(mime==='image/jpg'?'image/jpeg':mime)+';base64,'+buffer.toString('base64'),...imageSize(buffer)};
 }

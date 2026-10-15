@@ -289,18 +289,24 @@
   /* While an open task dialog shows a step that is still running or awaiting
      its operation result, the dialog follows the durable job state (the
      server queue polls the operation); typed correction text is never lost. */
-  function followReview(job){
+  const stepSignature=job=>JSON.stringify(job.steps.map(step=>step.status));
+  function followReview(job,rendered=stepSignature(job)){
     clearTimeout(state.reviewTimer);state.reviewTimer=null;
     if(!['queued','running','waiting_operation'].includes(job.status))return;
-    const signature=JSON.stringify(job.steps.map(step=>step.status)),generation=state.generation;
+    const generation=state.generation;
     state.reviewTimer=setTimeout(async()=>{
       const modal=document.getElementById('agentOfficeModal');
       if(!modal||modal.dataset.aoReview!==job.id||generation!==state.generation)return;
       try{const value=await api('/state');if(generation!==state.generation)return;state.data=value.state;
         const live=(value.state.jobs||[]).find(item=>item.id===job.id),current=document.getElementById('agentOfficeModal');
         if(!live||!current||current.dataset.aoReview!==job.id)return;
-        if(JSON.stringify(live.steps.map(step=>step.status))!==signature&&![...current.querySelectorAll('textarea')].some(el=>el.value.trim()))capabilityReview(live);else followReview(live);
-      }catch(_){followReview(job);}
+        if(stepSignature(live)===rendered){followReview(live,rendered);return;}
+        if(![...current.querySelectorAll('textarea')].some(el=>el.value.trim())){capabilityReview(live);return;}
+        // Typed correction text is kept: say the task moved on and keep comparing with what is shown.
+        const note=current.querySelector('[data-ao-review-changed]')||current.querySelector('[data-ao-modal-body]').insertAdjacentElement('afterbegin',Object.assign(document.createElement('p'),{className:'aoNote'}));
+        note.dataset.aoReviewChanged='1';note.textContent=L('Görev ilerledi. Yazdığınız metni kaydettikten sonra güncel durumu görmek için pencereyi yeniden açın.','The task has moved on. After saving your text, reopen this window to see the current state.');
+        followReview(live,rendered);
+      }catch(_){followReview(job,rendered);}
     },5000);
   }
   function capabilityReview(job){void adoptOfficePresetSteps(job);const next=taskNextStep(job),data=next?.preview?.preview||next?.preview?.data;

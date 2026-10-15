@@ -49,8 +49,9 @@
 
   // Set only while the server builds a supplier workbook for Office: the
   // owner's language and custom statuses replace the page-level sources.
-  let buildContext = null;
+  let buildContext = null, parseLanguage = null;
   function isEn() {
+    if (parseLanguage) return parseLanguage === 'en';
     if (buildContext && buildContext.language) return buildContext.language === 'en';
     return String((root.document && root.document.documentElement.lang) || root.appLang || 'tr').toLowerCase().startsWith('en');
   }
@@ -1525,6 +1526,13 @@
      browser and the server use one parser and one set of skip rules. */
   function parseSupplierWorkbook(workbook, options) {
     const opts = options || {};
+    // An explicit language holds for this synchronous parse only, so a
+    // concurrent server export cannot change the import's messages.
+    const previousLanguage = parseLanguage;
+    if (typeof opts.english === 'boolean') parseLanguage = opts.english ? 'en' : 'tr';
+    try { return parseSupplierRows(workbook, opts); } finally { parseLanguage = previousLanguage; }
+  }
+  function parseSupplierRows(workbook, opts) {
     const meta = readMeta(workbook);
     const sheet = workbook.getWorksheet(DATA_SHEET) || workbook.worksheets.find(function (ws) { return ws.state === 'visible'; });
     if (!sheet) throw workbookError(T('Checklist sayfası bulunamadı.', 'Checklist sheet was not found.'));

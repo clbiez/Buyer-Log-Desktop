@@ -108,6 +108,7 @@ function registerChecklistSupplierTools(registry,deps){
 }
 const EXPORT_ID='cp.checklist.supplier.export';
 const Checklist=require('../../public/cp-checklist-engine'),reportOutput=require('./agent-report-output-contract');
+const IMAGE_BUDGET=40*1024*1024;
 const COLUMN_IDS=['image','order','plm','model','colour','supplier','exfactory','season','buyer','buyerGroup','category','license'];
 const DEFAULT_COLUMNS=['image','order','plm','model','colour','supplier','exfactory'];
 // The builder reads the language and custom statuses from one module-level
@@ -161,9 +162,12 @@ function registerChecklistSupplierExport(registry,deps){
     apply:(args,ctx,p)=>serialized(async()=>{
       ctx.assertAuthority();
       const b=p.build,requestId=hash(ctx.input.officeJobId+':'+ctx.input.officeStepId);
+      // Embedded images are bounded per workbook; rows past the budget keep an empty image cell.
+      let imageBytes=0;
+      const prepareImage=async row=>{if(!p.withImages||!deps.rowImage)return null;const image=deps.rowImage(row);if(!image)return null;const bytes=Math.ceil(image.dataUrl.length*3/4);if(imageBytes+bytes>IMAGE_BUDGET)return null;imageBytes+=bytes;return image;};
       const built=await Sync.buildSupplierWorkbook({ExcelJS,rows:b.rows,items:b.items,language:p.language,customStatuses:b.customStatuses,columnIds:p.columns,
         analysisFor:row=>b.byRow.get(row)||null,itemApplies:b.applies,answerFor:b.answerFor,
-        prepareImage:async row=>p.withImages&&deps.rowImage?deps.rowImage(row):null});
+        prepareImage});
       ctx.assertAuthority();
       const service=deps.outputService();
       const record=service.store.save(ctx.ownerId,{buffer:Buffer.from(built.buffer),title:built.filename.replace(/_\d{4}-\d{2}-\d{2}\.xlsx$/,''),format:'xlsx',template:'buyer-log-supplier-checklist',templateLabel:p.language==='en'?'Buyer Log supplier checklist':'Buyer Log tedarikçi checklist',requestId});
