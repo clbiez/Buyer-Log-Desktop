@@ -103,7 +103,7 @@ test('v(satır yönetimi) yüzde artık tipografik olarak baskın değil, fiyatl
 
 test('v(satır yönetimi) antrepo tarihi ve transit süresi büyütüldü', () => {
   const block = CSS.slice(CSS.indexOf('.shipCard:not(.isPriceOnly) [data-ship-date]'), CSS.indexOf('.shipCard:not(.isPriceOnly) [data-ship-date]') + 220);
-  assert.match(block, /font-size:12px/);
+  assert.match(block, /font-size:var\(--fs-sm\)/);
   assert.match(block, /\.shipTransit/);
 });
 
@@ -240,10 +240,10 @@ test('v9.18 A4 baskı düzeni tanımlı', () => {
 
 test('v9.18 ekran yazıları da büyütüldü', () => {
   // Eski düzende 8,2-9,5px alanlar okunmuyordu.
-  assert.match(CSS, /\.shipCompare\{[\s\S]*?font-size:11px/);
-  assert.match(CSS, /\.shipProductName\{\s*font-size:11\.5px/);
-  assert.match(CSS, /\.shipCardMetrics\{[\s\S]*?font-size:10px/);
-  assert.match(CSS, /\.shipCardInput\{[\s\S]*?font:11px inherit/);
+  assert.match(CSS, /\.shipCompare\{[\s\S]*?font-size:var\(--fs-xs\)/);
+  assert.match(CSS, /\.shipProductName\{\s*font-size:var\(--fs-xs\)/);
+  assert.match(CSS, /\.shipCardMetrics\{[\s\S]*?font-size:var\(--fs-2xs\)/);
+  assert.match(CSS, /\.shipCardInput\{[\s\S]*?font:var\(--fs-xs\) inherit/);
 });
 
 /* --------------------------------------- 7) İŞLEVSELLİK SÖZLEŞMESİ DURUYOR */

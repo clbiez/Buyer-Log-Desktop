@@ -134,7 +134,7 @@ select option,select optgroup{background:var(--card);color:var(--ink);}
 }
 #view-lfl label,#view-opencosting label,
 .lflKpiLabel,.ocField label,.ocRateRow label,.lflCardKicker{
-  font-size:10px;
+  font-size:var(--fs-2xs);
   font-weight:400;
   letter-spacing:.08em;
   text-transform:uppercase;
@@ -188,7 +188,7 @@ select option,select optgroup{background:var(--card);color:var(--ink);}
 .lflSourceBadge,.lflDimCount,.lflTrialBanner,.ocDirtyBadge,
 .ocFxBadge,.ocFxRateChip,.lflTrialIssueTags span,.ocComparePickChip{
   border-radius:0;
-  font-size:10px;
+  font-size:var(--fs-2xs);
   letter-spacing:.07em;
   text-transform:uppercase;
   font-weight:500;
@@ -353,7 +353,7 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
    .cfpRange ile aynı ölçüleri paylaşır; ayrı sınıf, aralık kutularının
    düzenini bozmadan kendi alt çizgisini taşıyabilsin diye. */
 .cfpRevision{padding:8px 9px 7px;display:grid;gap:3px;border-bottom:1px solid var(--line2);}
-.cfpRevision .cfpItem{display:flex;align-items:center;gap:6px;font-size:11px;cursor:pointer;padding:2px 0;}
+.cfpRevision .cfpItem{display:flex;align-items:center;gap:6px;font-size:var(--fs-xs);cursor:pointer;padding:2px 0;}
 .cfpRevision .cfpItem input{margin:0;}
 
 /* v6.35 — Fiyat Geçmişi "Üretici bazlı" görünümünde sütun sürükleme. */
@@ -368,21 +368,21 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
 .autoPendingCard{display:flex;gap:16px;align-items:flex-start;justify-content:space-between;
   flex-wrap:wrap;padding:12px 14px;border:1px solid var(--line2);
   background:var(--yellow-lite,#fdf3d0);border-radius:var(--radius,0);}
-.autoPendingCard b{display:block;font-size:13px;}
-.autoPendingCard small{display:block;margin-top:2px;font-size:11.5px;opacity:.8;}
-.autoPendingCard ul{margin:8px 0 0;padding-left:18px;font-size:12px;line-height:1.7;}
+.autoPendingCard b{display:block;font-size:var(--fs-base);}
+.autoPendingCard small{display:block;margin-top:2px;font-size:var(--fs-xs);opacity:.8;}
+.autoPendingCard ul{margin:8px 0 0;padding-left:18px;font-size:var(--fs-sm);line-height:1.7;}
 .autoPendingActions{display:flex;gap:8px;align-items:center;flex-shrink:0;}
 
 /* v6.37 — Otomasyon panosu: durum sayıları ve zenginleşen tarif kartları. */
 .autoStatChips{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;}
 .autoStatChip{display:inline-flex;align-items:baseline;gap:6px;padding:5px 11px;
-  border:1px solid var(--line2);font-size:11.5px;background:var(--paper2,transparent);}
-.autoStatChip b{font-size:15px;font-weight:700;}
+  border:1px solid var(--line2);font-size:var(--fs-xs);background:var(--paper2,transparent);}
+.autoStatChip b{font-size:var(--fs-md);font-weight:700;}
 .autoStatChip.isWarn{border-color:var(--red,#b4433a);color:var(--red,#b4433a);}
-.autoRecipeSummary{display:block;margin-top:4px;font-size:11px;line-height:1.5;
+.autoRecipeSummary{display:block;margin-top:4px;font-size:var(--fs-xs);line-height:1.5;
   opacity:.78;text-decoration:none;}
 .autoRecipeMeta{display:flex;gap:8px;flex-wrap:wrap;margin-top:5px;}
-.autoRecipeRun,.autoRecipeNext{font-style:normal;font-size:10.5px;padding:1px 6px;
+.autoRecipeRun,.autoRecipeNext{font-style:normal;font-size:var(--fs-2xs);padding:1px 6px;
   border:1px solid var(--line2);opacity:.85;}
 .autoRecipeRun.failed{border-color:var(--red,#b4433a);color:var(--red,#b4433a);}
 .autoRecipeRun.none{opacity:.55;}
@@ -414,20 +414,20 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
 .imageDeleteConfirmPopover .imageDeleteConfirmActions{flex-wrap:wrap;}
 
 /* v6.41 — Yerleşik web betikleri düzenleyicisi. */
-.autoWebScriptsBtn{margin-left:auto;height:24px;padding:0 10px;font-size:11px;}
+.autoWebScriptsBtn{margin-left:auto;height:24px;padding:0 10px;font-size:var(--fs-xs);}
 .autoWebScriptLayout{display:grid;grid-template-columns:minmax(200px,240px) minmax(0,1fr);
   gap:14px;padding:14px;align-items:start;}
 .autoWebScriptList{display:grid;gap:6px;align-content:start;}
 .autoWebScriptItem{display:grid;gap:2px;text-align:left;padding:8px 10px;
   border:1px solid var(--line2);background:transparent;cursor:pointer;}
 .autoWebScriptItem.active{border-color:var(--acc,#5980a6);background:var(--acc-bg,rgba(89,128,166,.08));}
-.autoWebScriptItem b{font-size:12px;}
-.autoWebScriptItem small{font-size:10.5px;opacity:.72;}
+.autoWebScriptItem b{font-size:var(--fs-sm);}
+.autoWebScriptItem small{font-size:var(--fs-2xs);opacity:.72;}
 .autoWebScriptEditor{display:grid;gap:9px;min-width:0;}
-.autoWebScriptHead b{display:block;font-size:13px;}
-.autoWebScriptHead small{display:block;margin-top:3px;font-size:11.5px;opacity:.8;line-height:1.5;}
+.autoWebScriptHead b{display:block;font-size:var(--fs-base);}
+.autoWebScriptHead small{display:block;margin-top:3px;font-size:var(--fs-xs);opacity:.8;line-height:1.5;}
 .autoWebScriptActions{display:flex;gap:8px;justify-content:flex-end;}
-.autoWebScriptStatus{min-height:16px;font-size:11.5px;}
+.autoWebScriptStatus{min-height:16px;font-size:var(--fs-xs);}
 .autoWebScriptStatus.isOk{color:var(--green,#3f7d55);}
 .autoWebScriptStatus.isError{color:var(--red,#b4433a);}
 

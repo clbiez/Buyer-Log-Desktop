@@ -102,5 +102,6 @@ test('Collection Status keeps native select lifecycle while rendering shared cat
   assert.match(css,/#kolTable select\.kolStatusNoArrow/);
   assert.match(css,/appearance:none/);
   assert.match(css,/--kol-status-color/);
-  assert.match(css,/border-radius:999px/);
+  // Tasarım dili denetimi (2026-10-15): durum etiketi diğer çiplerle aynı --r-full token'ını kullanır.
+  assert.match(css,/border-radius:var\(--r-full\)/);
 });

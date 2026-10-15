@@ -26,6 +26,11 @@
   --login-font:"Barlow",system-ui,-apple-system,"Segoe UI",Arial,sans-serif;
   --login-heading:"Barlow Condensed",var(--login-font);
   --login-control-h:30px;
+  /* Giriş sayfası app.css'i yüklemez; ortak ölçek burada aynı değerlerle tanımlıdır. */
+  --ui-font-add:0px;
+  --sans:var(--login-font); --head:var(--login-heading); --mono:"Cascadia Code",ui-monospace,Consolas,monospace;
+  --fs-2xs:calc(10.5px + var(--ui-font-add)); --fs-xs:calc(11.5px + var(--ui-font-add)); --fs-sm:calc(12.5px + var(--ui-font-add)); --fs-base:calc(13px + var(--ui-font-add)); --fs-md:calc(14.5px + var(--ui-font-add)); --fs-lg:calc(16px + var(--ui-font-add)); --fs-xl:calc(20px + var(--ui-font-add)); --fs-2xl:calc(24px + var(--ui-font-add)); --fs-3xl:calc(30px + var(--ui-font-add)); --fs-4xl:calc(40px + var(--ui-font-add));
+  --r-xs:0; --r-sm:0; --r-md:0; --r-lg:0; --r-xl:0; --r-full:0; --r-pill:999px; --r-round:50%;
 }
 
 *{box-sizing:border-box}
@@ -60,27 +65,27 @@ button{touch-action:manipulation}
   width:48px;height:48px;display:grid;place-items:center;
   border:1px solid rgba(255,255,255,.25);
   border-radius:0;background:rgba(255,255,255,.10);
-  font-size:18px;font-weight:700;letter-spacing:.01em;
+  font-size:var(--fs-xl);font-weight:700;letter-spacing:.01em;
 }
 .logoMark--image{width:112px;height:112px;margin:-5px 0 0 -5px;border:0;background:none;filter:drop-shadow(0 6px 14px rgba(0,0,0,.28))}
 .logoMark--image img{width:100%;height:100%;display:block;object-fit:contain}
-.brandTitle,.formHeading h1{font-family:"Barlow Condensed",var(--login-font)}
-.brandTitle{margin:28px 0 8px;font-size:34px;line-height:1.12;font-weight:600;letter-spacing:.01em}
-.brandText{margin:0;font-size:14px;line-height:1.65;color:rgba(255,255,255,.84)}
-.brandFoot{display:flex;align-items:center;gap:8px;font-size:11px;line-height:1.4;color:rgba(255,255,255,.78)}
+.brandTitle,.formHeading h1{font-family:var(--head)}
+.brandTitle{margin:28px 0 8px;font-size:var(--fs-3xl);line-height:1.12;font-weight:600;letter-spacing:.01em}
+.brandText{margin:0;font-size:var(--fs-md);line-height:1.65;color:rgba(255,255,255,.84)}
+.brandFoot{display:flex;align-items:center;gap:8px;font-size:var(--fs-xs);line-height:1.4;color:rgba(255,255,255,.78)}
 .statusDot{width:7px;height:7px;flex:0 0 7px;border-radius:0;background:#cfe6d5;border:1px solid rgba(255,255,255,.55)}
 
 .formPane{min-height:560px;padding:46px 56px;display:flex;align-items:center;justify-content:center;background:var(--login-surface)}
 .formFrame{width:100%;max-width:440px}
 .formTop{display:flex;align-items:flex-start;justify-content:space-between;gap:20px}
 .formHeading{min-width:0}
-.formHeading h1{margin:0;font-size:25px;line-height:1.2;font-weight:600;letter-spacing:-.02em;color:var(--login-text)}
-.formHeading p{margin:9px 0 0;font-size:12.5px;line-height:1.55;color:var(--login-subtle);max-width:360px}
+.formHeading h1{margin:0;font-size:var(--fs-2xl);line-height:1.2;font-weight:600;letter-spacing:-.02em;color:var(--login-text)}
+.formHeading p{margin:9px 0 0;font-size:var(--fs-sm);line-height:1.55;color:var(--login-subtle);max-width:360px}
 .languageToggle{
   flex:0 0 auto;display:inline-flex;align-items:center;gap:5px;
   min-height:var(--login-control-h);padding:5px 9px;border:1px solid var(--login-line);
   border-radius:0;background:#fff;color:var(--login-subtle);cursor:pointer;
-  font-size:11px;line-height:1;transition:border-color .14s ease,background-color .14s ease,color .14s ease;
+  font-size:var(--fs-xs);line-height:1;transition:border-color .14s ease,background-color .14s ease,color .14s ease;
 }
 .languageToggle:hover{border-color:var(--login-focus);background:var(--login-soft);color:var(--login-text)}
 .languageToggle:focus-visible{outline:3px solid var(--login-focus-ring);outline-offset:1px;border-color:var(--login-focus)}
@@ -89,8 +94,8 @@ button{touch-action:manipulation}
 
 .loginForm{margin-top:30px;display:grid;gap:18px}
 .field{position:relative;display:grid;gap:7px}
-.field label{font-size:11.5px;line-height:1.3;font-weight:600;color:#495768}
-.fieldHelp{margin:-1px 0 0;font-size:10.5px;line-height:1.45;color:var(--login-muted)}
+.field label{font-size:var(--fs-xs);line-height:1.3;font-weight:600;color:#495768}
+.fieldHelp{margin:-1px 0 0;font-size:var(--fs-2xs);line-height:1.45;color:var(--login-muted)}
 .inputWrap{
   min-height:var(--login-control-h);display:flex;align-items:center;gap:10px;padding:0 10px;
   background:#fff;border:1px solid var(--login-line-strong);border-radius:0;
@@ -99,7 +104,7 @@ button{touch-action:manipulation}
 .inputWrap:focus-within{border-color:var(--login-focus);outline:2px solid var(--login-focus-ring);outline-offset:1px}
 .inputWrap.isSelected{border-color:var(--login-focus);background:var(--login-selected)}
 .fieldIcon{width:17px;height:17px;flex:0 0 17px;color:#7c8997}
-.inputWrap input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--login-text);font-size:13.5px;line-height:1.3;padding:0}
+.inputWrap input{width:100%;min-width:0;border:0;outline:0;background:transparent;color:var(--login-text);font-size:var(--fs-base);line-height:1.3;padding:0}
 .inputWrap input::placeholder{color:#99a3ae}
 .inputWrap.isSelected input{font-weight:600;color:#2f536f}
 .clearSelection,.togglePassword{
@@ -107,7 +112,7 @@ button{touch-action:manipulation}
   border:0;border-radius:0;background:transparent;color:#748190;cursor:pointer;
   transition:background-color .14s ease,color .14s ease;
 }
-.clearSelection{font-size:19px;line-height:1}
+.clearSelection{font-size:var(--fs-xl);line-height:1}
 .togglePassword svg{width:18px;height:18px}
 .clearSelection:hover,.togglePassword:hover{background:#eef2f5;color:#334b60}
 .clearSelection:focus-visible,.togglePassword:focus-visible{outline:2px solid var(--login-focus);outline-offset:1px}
@@ -128,23 +133,23 @@ button{touch-action:manipulation}
 .suggestion:focus-visible{outline:2px solid var(--login-focus);outline-offset:-2px}
 .suggestionAvatar{
   width:30px;height:30px;display:grid;place-items:center;border-radius:0;
-  background:#dde8f1;color:#315979;border:1px solid #c9d8e4;font-size:11px;font-weight:700;
+  background:#dde8f1;color:#315979;border:1px solid #c9d8e4;font-size:var(--fs-xs);font-weight:700;
 }
 .suggestionCopy{display:block;min-width:0}
-.suggestionName{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px;font-weight:600;color:var(--login-text)}
-.suggestionLogin{margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10.5px;color:var(--login-muted)}
-.suggestionState{min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;text-align:center;font-size:11px;color:var(--login-subtle)}
+.suggestionName{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-sm);font-weight:600;color:var(--login-text)}
+.suggestionLogin{margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-2xs);color:var(--login-muted)}
+.suggestionState{min-height:48px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px;text-align:center;font-size:var(--fs-xs);color:var(--login-subtle)}
 .miniSpinner{width:13px;height:13px;border:2px solid #d8e0e7;border-top-color:var(--login-focus);border-radius:0;animation:loginSpin .72s linear infinite}
 
-.setupBox{border:1px solid var(--login-warning-line);background:var(--login-warning-bg);color:var(--login-warning);border-radius:0;padding:10px 12px;font-size:11px;line-height:1.5}
+.setupBox{border:1px solid var(--login-warning-line);background:var(--login-warning-bg);color:var(--login-warning);border-radius:0;padding:10px 12px;font-size:var(--fs-xs);line-height:1.5}
 .setupBox[hidden]{display:none}
-.errorBox{border:1px solid var(--login-danger-line);background:var(--login-danger-bg);color:var(--login-danger);border-radius:0;padding:10px 12px;font-size:11px;line-height:1.45}
+.errorBox{border:1px solid var(--login-danger-line);background:var(--login-danger-bg);color:var(--login-danger);border-radius:0;padding:10px 12px;font-size:var(--fs-xs);line-height:1.45}
 .errorBox[hidden]{display:none}
 
 .loginBtn{
   min-height:var(--login-control-h);width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
   border:1px solid var(--login-brand);border-radius:0;background:var(--login-brand);color:#fff;
-  font-size:12.5px;font-weight:600;cursor:pointer;
+  font-size:var(--fs-sm);font-weight:600;cursor:pointer;
   transition:background-color .14s ease,border-color .14s ease,box-shadow .14s ease;
 }
 .loginBtn:not(:disabled):hover{background:var(--login-brand-deep);border-color:var(--login-brand-deep)}
@@ -154,7 +159,7 @@ button{touch-action:manipulation}
 .spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:0;animation:loginSpin .72s linear infinite}
 @keyframes loginSpin{to{transform:rotate(360deg)}}
 
-.hint{margin:16px 0 0;padding-top:14px;border-top:1px solid #e8ebef;font-size:10.5px;line-height:1.5;color:var(--login-muted)}
+.hint{margin:16px 0 0;padding-top:14px;border-top:1px solid #e8ebef;font-size:var(--fs-2xs);line-height:1.5;color:var(--login-muted)}
 
 /* Legacy standalone password form also loads this stylesheet. */
 .card{
@@ -177,8 +182,8 @@ button{touch-action:manipulation}
   .logoMark{width:44px;height:44px;grid-row:1 / span 2}
   .logoMark--image{width:64px;height:64px;margin:0}
   .brandContent:has(.logoMark--image){grid-template-columns:64px 1fr}
-  .brandTitle{margin:0;font-size:25px}
-  .brandText{margin-top:4px;font-size:12px;line-height:1.45}
+  .brandTitle{margin:0;font-size:var(--fs-2xl)}
+  .brandText{margin-top:4px;font-size:var(--fs-sm);line-height:1.45}
   .brandFoot{display:none}
   .formPane{min-height:0;padding:34px 28px 38px}
 }
@@ -188,7 +193,7 @@ button{touch-action:manipulation}
   .brandPane{padding:20px}
   .formPane{padding:28px 20px 34px;align-items:flex-start}
   .formTop{gap:12px}
-  .formHeading h1{font-size:23px}
+  .formHeading h1{font-size:var(--fs-2xl)}
   .suggestions{top:69px;max-height:42vh}
 }
 @media(prefers-reduced-motion:reduce){
@@ -207,11 +212,11 @@ button{touch-action:manipulation}
 .startupUpdateIcon{
   width:24px;height:24px;display:grid;place-items:center;
   border:1px solid var(--login-focus);background:#fff;color:var(--login-focus);
-  font-size:14px;font-weight:700;line-height:1;
+  font-size:var(--fs-md);font-weight:700;line-height:1;
 }
 .startupUpdateCopy{min-width:0;display:flex;flex-direction:column;gap:2px}
-.startupUpdateCopy strong{font-size:11px;line-height:1.25;color:var(--login-text)}
-.startupUpdateCopy span{font-size:10px;line-height:1.4;color:var(--login-subtle)}
+.startupUpdateCopy strong{font-size:var(--fs-xs);line-height:1.25;color:var(--login-text)}
+.startupUpdateCopy span{font-size:var(--fs-2xs);line-height:1.4;color:var(--login-subtle)}
 .startupUpdateNotice[data-state="ready"]{background:#f4f8f5}
 .startupUpdateNotice[data-state="ready"] .startupUpdateIcon{border-color:#7e9e86;color:#476c51}
 
@@ -221,12 +226,12 @@ button{touch-action:manipulation}
 .hubDetails[hidden]{display:none!important}
 .hubDetails{margin:0 0 18px}
 .hubGate{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 8px;padding:10px 12px;border:1px solid var(--login-line-strong);background:#f7f9fb}
-.hubGate[hidden],.hubPanel[hidden]{display:none!important}.hubGateCopy{display:flex;min-width:0;flex-direction:column;gap:2px}.hubGateCopy strong{font-size:11px;color:var(--login-text)}.hubGateCopy span{font-size:10px;line-height:1.35;color:var(--login-subtle)}
+.hubGate[hidden],.hubPanel[hidden]{display:none!important}.hubGateCopy{display:flex;min-width:0;flex-direction:column;gap:2px}.hubGateCopy strong{font-size:var(--fs-xs);color:var(--login-text)}.hubGateCopy span{font-size:var(--fs-2xs);line-height:1.35;color:var(--login-subtle)}
 .hubGate[data-state="ready"]{background:#f4f8f5}.hubGate[data-state="offline"],.hubGate[data-state="error"]{background:var(--login-warning-bg)}
 .hubSteps{display:grid;gap:3px;margin-top:7px;padding-top:7px;border-top:1px solid var(--login-line)}
 .hubSteps[hidden]{display:none!important}
-.hubStep{display:grid;grid-template-columns:14px minmax(0,1fr) auto;align-items:center;gap:5px;min-height:17px;font-size:10px;line-height:1.3;color:var(--login-muted)}
-.hubStepIcon{display:grid;place-items:center;width:12px;height:12px;border:1px solid var(--login-line);font-size:10px;font-weight:700;color:var(--login-muted);background:#fff}
+.hubStep{display:grid;grid-template-columns:14px minmax(0,1fr) auto;align-items:center;gap:5px;min-height:17px;font-size:var(--fs-2xs);line-height:1.3;color:var(--login-muted)}
+.hubStepIcon{display:grid;place-items:center;width:12px;height:12px;border:1px solid var(--login-line);font-size:var(--fs-2xs);font-weight:700;color:var(--login-muted);background:#fff}
 .hubStep[data-state="active"]{color:var(--login-text)}
 .hubStep[data-state="active"] .hubStepIcon{border-color:var(--login-focus);color:var(--login-focus)}
 .hubStep[data-state="done"] .hubStepIcon{border-color:#7e9e86;color:#476c51;background:#f4f8f5}
@@ -234,8 +239,8 @@ button{touch-action:manipulation}
 .hubStepLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hubStepDetail{padding-left:6px;color:var(--login-subtle);white-space:nowrap}
 
-.hubSettingsBtn,.hubSecondaryBtn,.hubPrimaryBtn{min-height:34px;border-radius:0;font-family:var(--login-font);font-size:11px;font-weight:600;cursor:pointer}.hubSettingsBtn,.hubSecondaryBtn{border:1px solid var(--login-line-strong);background:#fff;color:var(--login-text);padding:0 11px}.hubPrimaryBtn{border:1px solid var(--login-brand);background:var(--login-brand);color:#fff;padding:0 13px}.hubSettingsBtn:hover,.hubSecondaryBtn:hover{background:#eef2f5}.hubPrimaryBtn:hover{background:var(--login-brand-deep)}.hubSettingsBtn:disabled,.hubSecondaryBtn:disabled,.hubPrimaryBtn:disabled{opacity:.55;cursor:not-allowed}
- .hubPanel{margin:0;padding:12px;border:1px solid var(--login-line-strong);background:#fff}.hubPanel label{display:block;margin-bottom:6px;font-size:10.5px;font-weight:600;color:var(--login-text)}.hubPathRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.hubPathRow input{min-width:0;height:36px;border:1px solid var(--login-line-strong);border-radius:0;padding:0 9px;font:11px var(--login-font);color:var(--login-text);outline:0}.hubPathRow input:focus{border-color:var(--login-focus);outline:2px solid var(--login-focus-ring);outline-offset:1px}.hubStatusText{min-height:14px;margin:8px 0 0;font-size:10px;line-height:1.4;color:var(--login-subtle)}.hubActions{display:flex;justify-content:flex-end;gap:7px;margin-top:10px}
+.hubSettingsBtn,.hubSecondaryBtn,.hubPrimaryBtn{min-height:34px;border-radius:0;font-family:var(--login-font);font-size:var(--fs-xs);font-weight:600;cursor:pointer}.hubSettingsBtn,.hubSecondaryBtn{border:1px solid var(--login-line-strong);background:#fff;color:var(--login-text);padding:0 11px}.hubPrimaryBtn{border:1px solid var(--login-brand);background:var(--login-brand);color:#fff;padding:0 13px}.hubSettingsBtn:hover,.hubSecondaryBtn:hover{background:#eef2f5}.hubPrimaryBtn:hover{background:var(--login-brand-deep)}.hubSettingsBtn:disabled,.hubSecondaryBtn:disabled,.hubPrimaryBtn:disabled{opacity:.55;cursor:not-allowed}
+ .hubPanel{margin:0;padding:12px;border:1px solid var(--login-line-strong);background:#fff}.hubPanel label{display:block;margin-bottom:6px;font-size:var(--fs-2xs);font-weight:600;color:var(--login-text)}.hubPathRow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px}.hubPathRow input{min-width:0;height:36px;border:1px solid var(--login-line-strong);border-radius:0;padding:0 9px;font:var(--fs-xs) var(--login-font);color:var(--login-text);outline:0}.hubPathRow input:focus{border-color:var(--login-focus);outline:2px solid var(--login-focus-ring);outline-offset:1px}.hubStatusText{min-height:14px;margin:8px 0 0;font-size:var(--fs-2xs);line-height:1.4;color:var(--login-subtle)}.hubActions{display:flex;justify-content:flex-end;gap:7px;margin-top:10px}
 /* Girişten bekleme ekranına yumuşak geçiş: kart solar, zemin perdenin rengine döner. */
 html.blLeaving body{background:#f6f7f9;transition:background-color .28s ease}
 html.blLeaving body>*{opacity:0;transform:translateY(-6px) scale(.99);transition:opacity .28s ease,transform .28s ease;pointer-events:none}
@@ -256,7 +261,7 @@ html.blLeaving body>*{opacity:0;transform:translateY(-6px) scale(.99);transition
 .brandText{max-width:290px;color:rgba(255,255,255,.88)}
 .brandFoot{padding-top:18px;border-top:1px solid rgba(255,255,255,.15)}
 .formPane{padding:50px 58px}
-.formHeading h1{font-size:27px;letter-spacing:-.015em}
+.formHeading h1{font-size:var(--fs-3xl);letter-spacing:-.015em}
 .formHeading p{max-width:350px}
 .languageToggle{background:#fbfcfd}
 .loginForm{margin-top:27px}
@@ -272,7 +277,7 @@ html.blLeaving body>*{opacity:0;transform:translateY(-6px) scale(.99);transition
 .hubSettingsBtn--quiet{
   width:28px;min-width:28px;height:28px;min-height:28px;padding:0;
   display:grid;place-items:center;border:0;background:transparent;color:#7b8794;
-  font-size:14px;font-weight:500;opacity:.78;
+  font-size:var(--fs-md);font-weight:500;opacity:.78;
 }
 .hubSettingsBtn--quiet:hover{background:#eef2f5;color:#334b60;opacity:1}
 .hubSettingsBtn--quiet:focus-visible{outline:2px solid var(--login-focus);outline-offset:1px}
@@ -282,12 +287,12 @@ html.blLeaving body>*{opacity:0;transform:translateY(-6px) scale(.99);transition
   gap:10px;margin:18px 0 -10px;padding:10px 11px;
   border-color:#c8d4df;background:#f4f8fb;
 }
-.startupUpdateCopy strong{font-size:11.5px}
-.startupUpdateCopy span{font-size:10.5px}
+.startupUpdateCopy strong{font-size:var(--fs-xs)}
+.startupUpdateCopy span{font-size:var(--fs-2xs)}
 .startupUpdateRestart{
   min-height:30px;padding:0 11px;border:1px solid var(--login-brand);
   border-radius:0;background:var(--login-brand);color:#fff;
-  font:600 10.5px var(--login-font);white-space:nowrap;cursor:pointer;
+  font:600 var(--fs-2xs) var(--login-font);white-space:nowrap;cursor:pointer;
 }
 .startupUpdateRestart:hover:not(:disabled){background:var(--login-brand-deep);border-color:var(--login-brand-deep)}
 .startupUpdateRestart:focus-visible{outline:3px solid var(--login-focus-ring);outline-offset:2px}

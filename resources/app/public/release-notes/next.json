@@ -532,6 +532,93 @@
           "en": "CP checklist status menu: attachments at the top, custom statuses listed (demo data)."
         }
       }
+    },
+    {
+      "id": "design-language-unified-scale",
+      "type": "improvement",
+      "module": {
+        "tr": "Arayüz ve tema",
+        "en": "Interface and theme"
+      },
+      "title": {
+        "tr": "Tüm modüllerde tek yazı ölçeği, köşe ve yazı ailesi",
+        "en": "One type scale, corner style and typeface across all modules"
+      },
+      "body": {
+        "tr": "Modüller kendi sabit yazı boyutlarını, köşe yuvarlaklıklarını ve yazı ailelerini kullanıyordu; 82 farklı yazı boyutu ve 56 farklı köşe değeri vardı. Hepsi ortak ölçeğe bağlandı. Arayüz boyutu (Büyük, Çok Büyük) artık yalnız bazı yazıları değil, form etiketleri, rozetler, menü ve tablo metinleri dahil tüm metni aynı oranda büyütür. Yuvarlak çip ve düğmeler köşeli tasarım diline uyar.",
+        "en": "Modules used their own fixed font sizes, corner radii and typefaces; there were 82 font sizes and 56 corner values. All of them now follow one shared scale. Interface size (Large, Extra large) now enlarges all text in the same proportion, including form labels, badges, the menu and table text, not just some of it. Rounded chips and buttons follow the square design language."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "design-language-unified-scale.png",
+        "caption": {
+          "tr": "Fiyat & Üretici Analizi, Arayüz: Çok Büyük ayarında; sekmeler, filtre etiketleri, kartlar ve menü birlikte büyür (demo veri).",
+          "en": "Price & Supplier Analysis at Interface size Extra large; tabs, filter labels, cards and the menu scale together (demo data)."
+        },
+        "alt": {
+          "tr": "Fiyat & Üretici Analizi, Arayüz: Çok Büyük ayarında; sekmeler, filtre etiketleri, kartlar ve menü birlikte büyür (demo veri).",
+          "en": "Price & Supplier Analysis at Interface size Extra large; tabs, filter labels, cards and the menu scale together (demo data)."
+        }
+      }
+    },
+    {
+      "id": "overview-clock-country-code",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Saat kartında Türkiye kodu doğru görünür",
+        "en": "The clock card shows the correct code for Türkiye"
+      },
+      "body": {
+        "tr": "Dünya saatleri kartında Türkiye'nin ülke kodu çeviri katmanına takılıp \"EN\" olarak görünüyordu. Ülke kodları artık çevrilmez.",
+        "en": "On the world clocks card the country code for Türkiye was caught by the translation layer and shown as \"EN\". Country codes are no longer translated."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-clock-country-code.png",
+        "caption": {
+          "tr": "Dünya saatleri kartında Türkiye için TR kodu (demo veri).",
+          "en": "The world clocks card showing TR for Türkiye (demo data)."
+        },
+        "alt": {
+          "tr": "Dünya saatleri kartında Türkiye için TR kodu (demo veri).",
+          "en": "The world clocks card showing TR for Türkiye (demo data)."
+        }
+      }
+    },
+    {
+      "id": "data-lab-environment-labels",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Entegrasyon ortamı etiketleri seçili dilde",
+        "en": "Integration environment labels follow the selected language"
+      },
+      "body": {
+        "tr": "Kurumsal Entegrasyon Laboratuvarı'nda ortam ve doğrulama etiketleri Türkçe arayüzde \"Yerel Simulation\" ve \"CORPORATE VALIDATION REQUIRED\" olarak görünüyordu. Etiketler artık Türkçe ve İngilizce olarak doğru gösterilir.",
+        "en": "In the Corporate Integration Lab, the environment and validation labels appeared as \"Yerel Simulation\" and \"CORPORATE VALIDATION REQUIRED\" in the Turkish interface. The labels are now shown correctly in Turkish and English."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-lab-environment-labels.png",
+        "caption": {
+          "tr": "Veri Yönetimi laboratuvarında \"Yerel simülasyon\" ve \"Kurumsal doğrulama gerekli\" etiketleri (demo veri).",
+          "en": "The Data Management lab showing the \"Local simulation\" and \"Corporate validation required\" labels in Turkish (demo data)."
+        },
+        "alt": {
+          "tr": "Veri Yönetimi laboratuvarında \"Yerel simülasyon\" ve \"Kurumsal doğrulama gerekli\" etiketleri (demo veri).",
+          "en": "The Data Management lab showing the \"Local simulation\" and \"Corporate validation required\" labels in Turkish (demo data)."
+        }
+      }
     }
   ]
 }

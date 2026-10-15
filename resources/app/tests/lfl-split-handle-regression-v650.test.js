@@ -112,7 +112,7 @@ test('v6.50 sürükleme tutamacı DOM\'da ve "kibar" görsel tasarımda', () => 
   const handleDef = allDefinitions(CSS, '.lflSplitHandle>span')[0];
   assert.ok(handleDef);
   assert.match(handleDef.body, /width:3px/, 'ince, göze batmayan çizgi');
-  assert.match(handleDef.body, /border-radius:999px/, 'yumuşak köşeli');
+  assert.match(handleDef.body, /border-radius:var\(--r-pill\)/, 'yumuşak köşeli');
 });
 
 test('v6.50 JS tarafı doğru elemanları hedefliyor ve bir kez bağlanıyor', () => {

@@ -13,27 +13,27 @@
 
 /* --- Başlık --- */
 .dmHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-.dmTitle { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-size: 22px; font-weight: 600; margin: 0; color: var(--ink); letter-spacing: .2px; }
-.dmSub { margin: 2px 0 0; font-size: 12px; color: var(--ink2); }
+.dmTitle { font-family: var(--head); font-size: var(--fs-2xl); font-weight: 600; margin: 0; color: var(--ink); letter-spacing: .2px; }
+.dmSub { margin: 2px 0 0; font-size: var(--fs-sm); color: var(--ink2); }
 .dmHeadActions { display: flex; gap: 6px; flex-shrink: 0; }
-.dmSectionLabel { font-size: 11px; font-weight: 700; letter-spacing: .55px; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
+.dmSectionLabel { font-size: var(--fs-xs); font-weight: 700; letter-spacing: .55px; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
 
 /* --- Corporate Integration Lab --- */
 .dmLabPanel { border: 1px solid var(--line); background: var(--card); display: flex; flex-direction: column; min-width: 0; }
-.dmLabOverview { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--card2); font-size: 11px; color: var(--ink2); }
-.dmLabEnvironment, .dmLabValidation, .dmLabStatus, .dmLabSafety { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line2); padding: 2px 7px; font-size: 10px; font-weight: 700; letter-spacing: .25px; }
+.dmLabOverview { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 8px 10px; border-bottom: 1px solid var(--line); background: var(--card2); font-size: var(--fs-xs); color: var(--ink2); }
+.dmLabEnvironment, .dmLabValidation, .dmLabStatus, .dmLabSafety { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--line2); padding: 2px 7px; font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .25px; }
 .dmLabEnvironment.isLive { border-color: var(--green); color: var(--green); }
 .dmLabEnvironment.isLocal { border-color: var(--acc); color: var(--acc-ink); }
 .dmLabValidation { border-color: var(--orange); color: var(--orange); }
 .dmLabSafety { color: var(--orange); font-weight: 600; }
 .dmLabTabs { display: flex; align-items: stretch; gap: 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
-.dmLabTab { border: none; border-right: 1px solid var(--line); border-bottom: 2px solid transparent; background: none; color: var(--ink2); padding: 7px 11px 6px; font: inherit; font-size: 12px; cursor: pointer; white-space: nowrap; }
+.dmLabTab { border: none; border-right: 1px solid var(--line); border-bottom: 2px solid transparent; background: none; color: var(--ink2); padding: 7px 11px 6px; font: inherit; font-size: var(--fs-sm); cursor: pointer; white-space: nowrap; }
 .dmLabTab:hover { background: var(--card2); color: var(--ink); }
 .dmLabTab.isActive { border-bottom-color: var(--acc); color: var(--acc-ink); background: var(--acc-bg); font-weight: 600; }
 .dmLabBody { min-width: 0; }
-.dmLabEmpty { margin: 0; padding: 16px; color: var(--muted); font-size: 12px; }
+.dmLabEmpty { margin: 0; padding: 16px; color: var(--muted); font-size: var(--fs-sm); }
 .dmLabTableWrap { overflow: auto; max-height: 360px; }
-.dmLabTable { width: 100%; border-collapse: collapse; font-size: 11px; }
+.dmLabTable { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); }
 .dmLabTable th { position: sticky; top: 0; z-index: 1; background: var(--card2); color: var(--muted); text-align: left; font-weight: 600; padding: 5px 8px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .dmLabTable td { padding: 6px 8px; border-bottom: 1px solid var(--line); color: var(--ink2); vertical-align: middle; }
 .dmLabTable tbody tr:hover { background: var(--table-hover); }
@@ -43,8 +43,8 @@
 .dmLabStatus--bad { color: var(--red); }
 .dmLabStatus--muted { color: var(--muted); }
 .dmLabTools { display: flex; align-items: flex-end; gap: 8px; flex-wrap: wrap; padding: 9px 10px; border-bottom: 1px solid var(--line); }
-.dmLabField { display: flex; flex-direction: column; gap: 3px; min-width: 190px; color: var(--muted); font-size: 10px; }
-.dmLabField select, .dmLabField input { height: var(--ctl-h); border: 1px solid var(--line2); background: var(--card); color: var(--ink); padding: 0 8px; font: inherit; font-size: 12px; }
+.dmLabField { display: flex; flex-direction: column; gap: 3px; min-width: 190px; color: var(--muted); font-size: var(--fs-2xs); }
+.dmLabField select, .dmLabField input { height: var(--ctl-h); border: 1px solid var(--line2); background: var(--card); color: var(--ink); padding: 0 8px; font: inherit; font-size: var(--fs-sm); }
 .dmLabField select:focus-visible, .dmLabField input:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--acc); }
 .dmLabTrace { flex: 1; min-width: 220px; }
 .dmLabPipeline { display: grid; grid-template-columns: repeat(7, minmax(120px, 1fr)); gap: 1px; background: var(--line); overflow-x: auto; }
@@ -52,26 +52,26 @@
 .dmLabStage--pass { border-top-color: var(--green); }
 .dmLabStage--warning { border-top-color: var(--orange); }
 .dmLabStage--fail, .dmLabStage--blocked { border-top-color: var(--red); }
-.dmLabStageNo { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border: 1px solid var(--line2); color: var(--muted); font-size: 10px; }
-.dmLabStage strong { font-size: 11px; color: var(--ink); white-space: nowrap; }
-.dmLabStage > span:nth-child(3) { grid-column: 1 / -1; color: var(--ink); font-size: 16px; font-weight: 600; }
-.dmLabStage small { grid-column: 1 / -1; color: var(--muted); font-size: 10px; line-height: 1.25; }
+.dmLabStageNo { display: inline-flex; align-items: center; justify-content: center; width: 17px; height: 17px; border: 1px solid var(--line2); color: var(--muted); font-size: var(--fs-2xs); }
+.dmLabStage strong { font-size: var(--fs-xs); color: var(--ink); white-space: nowrap; }
+.dmLabStage > span:nth-child(3) { grid-column: 1 / -1; color: var(--ink); font-size: var(--fs-lg); font-weight: 600; }
+.dmLabStage small { grid-column: 1 / -1; color: var(--muted); font-size: var(--fs-2xs); line-height: 1.25; }
 .dmLabMetrics { display: grid; grid-template-columns: repeat(4, minmax(120px, 1fr)); gap: 1px; background: var(--line); border-top: 1px solid var(--line); }
-.dmLabMetrics span { background: var(--card2); padding: 7px 9px; display: flex; flex-direction: column; gap: 2px; font-size: 10px; color: var(--muted); }
-.dmLabMetrics strong { color: var(--ink); font-size: 15px; }
-.dmLabTraceResult { display: flex; gap: 12px; flex-wrap: wrap; padding: 7px 10px; border-top: 1px solid var(--line); color: var(--ink2); font-size: 11px; }
+.dmLabMetrics span { background: var(--card2); padding: 7px 9px; display: flex; flex-direction: column; gap: 2px; font-size: var(--fs-2xs); color: var(--muted); }
+.dmLabMetrics strong { color: var(--ink); font-size: var(--fs-md); }
+.dmLabTraceResult { display: flex; gap: 12px; flex-wrap: wrap; padding: 7px 10px; border-top: 1px solid var(--line); color: var(--ink2); font-size: var(--fs-xs); }
 .dmLabJoin { border: 1px solid var(--line); background: var(--panel2); padding: 8px 10px; }
 .dmLabJoin summary { cursor: pointer; font-weight: 700; color: var(--ink); }
 .dmLabJoin p { margin: 7px 0; color: var(--ink2); }
 .dmLabJoinConditions { display: flex; gap: 6px; flex-wrap: wrap; }
-.dmLabJoinConditions span { border: 1px solid var(--line); background: var(--panel); padding: 4px 6px; font-size: 11px; color: var(--ink2); }
+.dmLabJoinConditions span { border: 1px solid var(--line); background: var(--panel); padding: 4px 6px; font-size: var(--fs-xs); color: var(--ink2); }
 .dmLabJoin ul { margin: 7px 0 0; padding-left: 20px; color: var(--ink2); }
 .dmLabStepList { list-style: none; margin: 0; padding: 0; max-height: 360px; overflow-y: auto; }
-.dmLabStepList li { display: grid; grid-template-columns: 24px minmax(130px, .6fr) 1fr; gap: 8px; align-items: baseline; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: 11px; }
+.dmLabStepList li { display: grid; grid-template-columns: 24px minmax(130px, .6fr) 1fr; gap: 8px; align-items: baseline; padding: 6px 10px; border-bottom: 1px solid var(--line); font-size: var(--fs-xs); }
 .dmLabStepList li > span { color: var(--muted); }
 .dmLabStepList li > strong { color: var(--ink); }
 .dmLabStepList li > small { color: var(--ink2); }
-.dmLabPreview { margin: 0; padding: 9px 10px; max-height: 320px; overflow: auto; border-top: 1px solid var(--line); background: var(--card2); color: var(--ink2); font-size: 10px; white-space: pre-wrap; }
+.dmLabPreview { margin: 0; padding: 9px 10px; max-height: 320px; overflow: auto; border-top: 1px solid var(--line); background: var(--card2); color: var(--ink2); font-size: var(--fs-2xs); white-space: pre-wrap; }
 .dmLabPanel > .dmfMessage { margin: 0; padding: 7px 10px; border-top: 1px solid var(--line); }
 
 @media (max-width: 900px) {
@@ -81,11 +81,11 @@
 }
 
 /* --- Bildirimler --- */
-.dmNotice { border: 1px solid var(--line); border-left: 3px solid var(--acc); background: var(--card2); color: var(--ink2); padding: 7px 10px; font-size: 12px; }
+.dmNotice { border: 1px solid var(--line); border-left: 3px solid var(--acc); background: var(--card2); color: var(--ink2); padding: 7px 10px; font-size: var(--fs-sm); }
 .dmNotice--warn { border-left-color: var(--orange); }
 .dmError { border: 1px solid var(--line); background: var(--card); padding: 16px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
-.dmError p { margin: 0; color: var(--red); font-size: 13px; }
-.dmReadOnly { margin: 0; font-size: 11px; color: var(--muted); }
+.dmError p { margin: 0; color: var(--red); font-size: var(--fs-base); }
+.dmReadOnly { margin: 0; font-size: var(--fs-xs); color: var(--muted); }
 
 /* --- Kaynak kartları --- */
 .dmSources { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; }
@@ -98,35 +98,35 @@
 .dmSourceCard.isOpen { border-color: var(--acc); background: var(--acc-bg); }
 .dmSourceCard:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .dmSourceTop { display: flex; align-items: center; gap: 6px; }
-.dmSourceName { font-weight: 600; font-size: 13px; }
-.dmSourceMeta { font-size: 11px; color: var(--ink2); }
+.dmSourceName { font-weight: 600; font-size: var(--fs-base); }
+.dmSourceMeta { font-size: var(--fs-xs); color: var(--ink2); }
 .dmSourceMeta--quiet { color: var(--muted); }
-.dmSourceFoot { display: flex; justify-content: space-between; gap: 8px; font-size: 11px; color: var(--ink2); margin-top: 3px; padding-top: 4px; border-top: 1px solid var(--line); }
-.dmSourceError { font-size: 11px; color: var(--red); margin-top: 3px; }
-.dmSourceNote { font-size: 11px; color: var(--orange); margin-top: 3px; }
+.dmSourceFoot { display: flex; justify-content: space-between; gap: 8px; font-size: var(--fs-xs); color: var(--ink2); margin-top: 3px; padding-top: 4px; border-top: 1px solid var(--line); }
+.dmSourceError { font-size: var(--fs-xs); color: var(--red); margin-top: 3px; }
+.dmSourceNote { font-size: var(--fs-xs); color: var(--orange); margin-top: 3px; }
 .dmSourceNote.isBad { color: var(--red); }
 
 /* --- Eşleme sağlığı --- */
 .dmMapping { border-top: 1px solid var(--line); padding-top: 9px; display: flex; flex-direction: column; gap: 7px; }
 .dmMapping--ok { flex-direction: column; gap: 2px; }
 .dmMappingHead { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.dmMappingSummary { display: flex; gap: 14px; font-size: 12px; color: var(--ink2); flex-wrap: wrap; }
+.dmMappingSummary { display: flex; gap: 14px; font-size: var(--fs-sm); color: var(--ink2); flex-wrap: wrap; }
 .dmMappingSummary .isOk { color: var(--green); }
 .dmMappingSummary .isWarn { color: var(--orange); }
 .dmMappingSummary .isBad { color: var(--red); }
 
 .dmMapList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; border: 1px solid var(--line); }
-.dmMapRow { display: grid; grid-template-columns: 18px minmax(130px, 1fr) 14px minmax(130px, 1fr) minmax(160px, 1.4fr); align-items: baseline; gap: 8px; padding: 5px 9px; font-size: 12px; border-bottom: 1px solid var(--line); }
+.dmMapRow { display: grid; grid-template-columns: 18px minmax(130px, 1fr) 14px minmax(130px, 1fr) minmax(160px, 1.4fr); align-items: baseline; gap: 8px; padding: 5px 9px; font-size: var(--fs-sm); border-bottom: 1px solid var(--line); }
 .dmMapRow:last-child { border-bottom: none; }
 .dmMapRow.isBlocking { background: color-mix(in srgb, var(--red) 7%, transparent); }
-.dmMapMark { font-size: 11px; }
+.dmMapMark { font-size: var(--fs-xs); }
 .dmMapField { font-weight: 600; color: var(--ink); }
-.dmReq { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; color: var(--red); margin-left: 5px; }
+.dmReq { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .4px; color: var(--red); margin-left: 5px; }
 .dmMapArrow { color: var(--muted); }
 .dmMapCol { color: var(--ink2); }
 .dmMapCol em { color: var(--muted); }
-.dmMapWhy { font-size: 11px; color: var(--muted); }
-.dmMapNote { margin: 0; font-size: 11px; color: var(--red); }
+.dmMapWhy { font-size: var(--fs-xs); color: var(--muted); }
+.dmMapNote { margin: 0; font-size: var(--fs-xs); color: var(--red); }
 
 @media (max-width: 760px) {
   .dmMapRow { grid-template-columns: 18px 1fr; }
@@ -143,8 +143,8 @@
 .dmDetailGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 9px; }
 .dmDetailGrid > div, .dmDetailRow { display: flex; flex-direction: column; gap: 2px; }
 .dmDetailRow--quiet .dmValue { color: var(--muted); }
-.dmLabel { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
-.dmValue { font-size: 12px; color: var(--ink); }
+.dmLabel { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+.dmValue { font-size: var(--fs-sm); color: var(--ink); }
 .dmDetailActions { display: flex; gap: 6px; }
 /* Silme diğer eylemlerden UZAKTA durur: geri alınamaz bir işlem,
    "düzenle"nin yanında kazara tıklanabilecek bir komşu olmamalı. */
@@ -153,17 +153,17 @@
 /* --- Modül paneli --- */
 .dmPanel { border: 1px solid var(--line); background: var(--card); }
 .dmPanelHead { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 11px; border-bottom: 1px solid var(--line); background: var(--card2); }
-.dmPanelTitle { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--ink2); }
+.dmPanelTitle { font-size: var(--fs-xs); font-weight: 600; text-transform: uppercase; letter-spacing: .6px; color: var(--ink2); }
 
 .dmViewToggle { display: flex; border: 1px solid var(--line2); }
-.dmViewBtn { font: inherit; font-size: 11px; padding: 2px 10px; height: var(--ctl-h); background: var(--card); color: var(--ink2); border: none; cursor: pointer; }
+.dmViewBtn { font: inherit; font-size: var(--fs-xs); padding: 2px 10px; height: var(--ctl-h); background: var(--card); color: var(--ink2); border: none; cursor: pointer; }
 .dmViewBtn + .dmViewBtn { border-left: 1px solid var(--line2); }
 .dmViewBtn.isActive { background: var(--acc); color: var(--on-acc); }
 .dmViewBtn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
 /* --- Modül listesi (varsayılan görünüm) --- */
 .dmModules { display: flex; flex-direction: column; }
-.dmModuleRow { display: flex; align-items: center; gap: 12px; padding: 7px 11px; border-bottom: 1px solid var(--line); font-size: 12px; }
+.dmModuleRow { display: flex; align-items: center; gap: 12px; padding: 7px 11px; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
 .dmModuleRow:last-child { border-bottom: none; }
 .dmModuleRow:hover { background: var(--table-hover); }
 /* Sayfa rozetindeki "Yönet" ile gelindiğinde hangi satıra bakılacağı belli
@@ -176,31 +176,31 @@
 
 .dmFeed { display: inline-flex; align-items: center; gap: 6px; }
 .dmFeed.isOff { opacity: .5; }
-.dmFeedSource { font-size: 11px; color: var(--ink2); border: 1px solid var(--line2); padding: 0 5px; }
-.dmFeedFilter { font: inherit; font-size: 12px; background: none; border: none; border-bottom: 1px dashed var(--line2); color: var(--acc-ink); cursor: pointer; padding: 0 0 1px; display: inline-flex; align-items: center; gap: 5px; }
+.dmFeedSource { font-size: var(--fs-xs); color: var(--ink2); border: 1px solid var(--line2); padding: 0 5px; }
+.dmFeedFilter { font: inherit; font-size: var(--fs-sm); background: none; border: none; border-bottom: 1px dashed var(--line2); color: var(--acc-ink); cursor: pointer; padding: 0 0 1px; display: inline-flex; align-items: center; gap: 5px; }
 .dmFeedFilter:hover { border-bottom-style: solid; }
 .dmFeedFilter:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .dmFeedFilter.isUnbounded { color: var(--orange); }
-.dmShared { font-size: 10px; color: var(--muted); border: 1px solid var(--line2); padding: 0 3px; }
+.dmShared { font-size: var(--fs-2xs); color: var(--muted); border: 1px solid var(--line2); padding: 0 3px; }
 
 /* Katman rozeti: yalnız ortak ayar EZİLDİĞİNDE çıkar. Durum rengi değil,
    kimlik rengi kullanılır — bu bir hata değil, bir açıklamadır. */
-.dmLayer { font-size: 10px; letter-spacing: .3px; padding: 0 5px; border: 1px solid var(--acc); color: var(--acc-ink); background: var(--acc-bg); white-space: nowrap; cursor: help; }
+.dmLayer { font-size: var(--fs-2xs); letter-spacing: .3px; padding: 0 5px; border: 1px solid var(--acc); color: var(--acc-ink); background: var(--acc-bg); white-space: nowrap; cursor: help; }
 .dmLayer--preset, .dmLayer--roleTemplate, .dmLayer--roleDefault { border-color: var(--line2); color: var(--ink2); background: transparent; }
-.dmWarn { font-size: 10px; text-transform: uppercase; letter-spacing: .4px; color: var(--orange); flex-shrink: 0; }
+.dmWarn { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .4px; color: var(--orange); flex-shrink: 0; }
 
 /* --- Bağlantı denetimleri --- */
 .dmDisconnect, .dmConnect { font: inherit; cursor: pointer; background: none; }
 .dmDisconnect {
-  font-size: 13px; line-height: 1; color: var(--muted);
+  font-size: var(--fs-base); line-height: 1; color: var(--muted);
   border: 1px solid transparent; padding: 0 4px;
 }
 .dmDisconnect:hover { color: var(--red); border-color: var(--red); }
 .dmDisconnect:disabled { opacity: .4; cursor: default; }
-.dmLockMark { font-size: 10px; opacity: .55; cursor: help; }
+.dmLockMark { font-size: var(--fs-2xs); opacity: .55; cursor: help; }
 
 .dmConnect {
-  font-size: 11px; color: var(--acc-ink); border: 1px dashed var(--line2);
+  font-size: var(--fs-xs); color: var(--acc-ink); border: 1px dashed var(--line2);
   padding: 1px 7px; display: inline-flex; align-items: center; gap: 4px;
 }
 .dmConnect:hover { border-style: solid; border-color: var(--acc); background: var(--acc-bg); }
@@ -208,50 +208,50 @@
 /* Park edilmiş besleme: ikinci bir uyarı öğesi eklemeden ayırt edilir.
    Kapalı bir bağlantı, hiç kurulmamış bir bağlantıyla aynı görünmemeli. */
 .dmConnect.isParked { border-style: dashed; color: var(--ink2); }
-.dmParkedNote { color: var(--ink3, var(--ink2)); font-size: 10px; }
+.dmParkedNote { color: var(--ink3, var(--ink2)); font-size: var(--fs-2xs); }
 .dmDisconnect:focus-visible, .dmConnect:focus-visible, .dmToggle:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
 /* --- Matris (ikincil görünüm) --- */
 .dmMatrixWrap { overflow-x: auto; }
-.dmMatrix { border-collapse: collapse; width: 100%; font-size: 12px; }
+.dmMatrix { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); }
 .dmMatrix th, .dmMatrix td { border: 1px solid var(--line); padding: 6px 10px; text-align: center; }
-.dmMatrix thead th { background: var(--thead-bg, var(--card2)); color: var(--thead-ink, var(--ink2)); font-size: 11px; font-weight: 600; white-space: nowrap; }
+.dmMatrix thead th { background: var(--thead-bg, var(--card2)); color: var(--thead-ink, var(--ink2)); font-size: var(--fs-xs); font-weight: 600; white-space: nowrap; }
 .dmMatrix tbody th { text-align: left; font-weight: 600; color: var(--ink); white-space: nowrap; position: sticky; left: 0; background: var(--card); }
 .dmCell { min-width: 96px; }
 .dmCell--na { color: var(--muted); background: var(--card2); }
-.dmPill { display: inline-block; font-size: 10px; letter-spacing: .5px; padding: 1px 7px; border: 1px solid var(--line2); color: var(--ink2); }
+.dmPill { display: inline-block; font-size: var(--fs-2xs); letter-spacing: .5px; padding: 1px 7px; border: 1px solid var(--line2); color: var(--ink2); }
 .dmCell--on .dmPill { background: var(--acc); border-color: var(--acc); color: var(--on-acc); }
 /* Kilitli hücre: açık görünür ama düğme değildir — kenarlığı kesikli, imleç yok. */
 .dmCell--locked { background: var(--card2); }
 .dmPill--locked { background: color-mix(in srgb, var(--acc) 30%, transparent); border-style: dashed; border-color: var(--acc-lite); color: var(--ink2); }
 
 .dmToggle {
-  font: inherit; font-size: 10px; letter-spacing: .5px; padding: 1px 9px; cursor: pointer;
+  font: inherit; font-size: var(--fs-2xs); letter-spacing: .5px; padding: 1px 9px; cursor: pointer;
   border: 1px solid var(--line2); background: var(--card); color: var(--ink2);
 }
 .dmToggle:hover:not(:disabled) { border-color: var(--acc); color: var(--acc-ink); }
 .dmToggle.isOn { background: var(--acc); border-color: var(--acc); color: var(--on-acc); }
 .dmToggle:disabled { opacity: .45; cursor: default; }
 .dmCellSub--parked { color: var(--acc-ink); }
-.dmCellSub { display: block; font-size: 10px; color: var(--muted); margin-top: 2px; }
-.dmMatrixNote { margin: 8px 11px; font-size: 11px; color: var(--muted); }
+.dmCellSub { display: block; font-size: var(--fs-2xs); color: var(--muted); margin-top: 2px; }
+.dmMatrixNote { margin: 8px 11px; font-size: var(--fs-xs); color: var(--muted); }
 .dmMatrix .srOnly { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 /* --- Kaynak beslemeyen modüller --- */
 .dmLocalNote { border-top: 1px solid var(--line); padding: 8px 11px; display: flex; flex-direction: column; gap: 3px; background: var(--card2); }
-.dmLocalNote .dmValue { color: var(--ink2); font-size: 11px; }
+.dmLocalNote .dmValue { color: var(--ink2); font-size: var(--fs-xs); }
 
 /* --- Kaynak ekleme sihirbazı --- */
 .dmWizardSlot:empty { display: none; }
 .dmSourceWizard { border: 1px solid var(--acc); background: var(--card); display: flex; flex-direction: column; }
 .dmsHead { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; padding: 9px 11px; border-bottom: 1px solid var(--line); background: var(--card2); }
-.dmsTitle { font-size: 12px; font-weight: 600; color: var(--ink); }
+.dmsTitle { font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
 
 .dmsSteps { list-style: none; margin: 0; padding: 0; display: flex; gap: 14px; flex-wrap: wrap; }
-.dmsStep { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; color: var(--muted); }
+.dmsStep { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-xs); color: var(--muted); }
 .dmsStep.isActive { color: var(--ink); font-weight: 600; }
 .dmsStep.isDone { color: var(--ink2); }
-.dmsStepNo { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: 10px; border: 1px solid var(--line2); }
+.dmsStepNo { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; font-size: var(--fs-2xs); border: 1px solid var(--line2); }
 .dmsStep.isActive .dmsStepNo { background: var(--acc); border-color: var(--acc); color: var(--on-acc); }
 .dmsStep.isDone .dmsStepNo { border-color: var(--green); color: var(--green); }
 
@@ -259,13 +259,13 @@
 .dmsGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 9px; }
 .dmsField { display: flex; flex-direction: column; gap: 3px; max-width: 320px; }
 .dmsField input {
-  font: inherit; font-size: 12px; height: var(--ctl-h); padding: 0 8px;
+  font: inherit; font-size: var(--fs-sm); height: var(--ctl-h); padding: 0 8px;
   border: 1px solid var(--line2); background: var(--card); color: var(--ink);
 }
 .dmsField input:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--acc); }
 .dmsRow { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
-.dmsProbe { font-size: 11px; color: var(--green); }
-.dmsNote, .dmsHint { margin: 0; font-size: 11px; color: var(--ink2); }
+.dmsProbe { font-size: var(--fs-xs); color: var(--green); }
+.dmsNote, .dmsHint { margin: 0; font-size: var(--fs-xs); color: var(--ink2); }
 .dmsHint { color: var(--muted); }
 
 .dmsProfiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 7px; }
@@ -276,12 +276,12 @@
 .dmsProfile:hover { background: var(--card2); }
 .dmsProfile.isActive { border-color: var(--acc); background: var(--acc-bg); }
 .dmsProfile:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.dmsProfileName { font-size: 12px; font-weight: 600; }
-.dmsProfileSummary { font-size: 11px; color: var(--ink2); }
-.dmsProfileFeeds { font-size: 10px; color: var(--muted); }
+.dmsProfileName { font-size: var(--fs-sm); font-weight: 600; }
+.dmsProfileSummary { font-size: var(--fs-xs); color: var(--ink2); }
+.dmsProfileFeeds { font-size: var(--fs-2xs); color: var(--muted); }
 
 .dmsModules { display: flex; flex-wrap: wrap; gap: 6px 18px; }
-.dmsMapSummary { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; }
+.dmsMapSummary { display: flex; gap: 14px; flex-wrap: wrap; font-size: var(--fs-sm); }
 .dmsMapSummary .isOk { color: var(--green); }
 .dmsMapSummary .isWarn { color: var(--orange); }
 .dmsMapSummary .isBad { color: var(--red); }
@@ -293,59 +293,59 @@
 .dmFilterEditor { padding: 11px; display: flex; flex-direction: column; gap: 9px; border-left: 3px solid var(--acc); }
 
 .dmfHead { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.dmfTitle { font-size: 12px; font-weight: 600; color: var(--ink); }
+.dmfTitle { font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
 .dmfNameField { display: flex; flex-direction: column; gap: 3px; }
 .dmfNameField input, .dmfRange {
-  font: inherit; font-size: 12px; height: var(--ctl-h); padding: 0 8px;
+  font: inherit; font-size: var(--fs-sm); height: var(--ctl-h); padding: 0 8px;
   border: 1px solid var(--line2); background: var(--card); color: var(--ink);
 }
 .dmfNameField input:focus-visible, .dmfRange:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--acc); }
-.dmfShared { margin: 0; font-size: 11px; color: var(--orange); }
+.dmfShared { margin: 0; font-size: var(--fs-xs); color: var(--orange); }
 
 /* Ezen katman uyarısı: açıklama ve (varsa) kaldırma düğmesi aynı satırda.
    Ayrı bir kutu açmak satır içi düzenleyiciyi modal-içinde-modal görüntüsüne
    yaklaştırırdı (§48). */
 .dmfLayerNote { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dmfClearLayer { flex: none; }
-.dmfLayerFixed { color: var(--ink2); font-size: 11px; }
+.dmfLayerFixed { color: var(--ink2); font-size: var(--fs-xs); }
 /* Kaldırılabilir katman rozeti tıklanabilir olduğunu göstermeli. */
-.dmLayer.isRemovable { cursor: pointer; border-style: dashed; font: inherit; font-size: 10px; line-height: 1.6; }
+.dmLayer.isRemovable { cursor: pointer; border-style: dashed; font: inherit; font-size: var(--fs-2xs); line-height: 1.6; }
 .dmLayer.isRemovable:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
 .dmfGroups { display: flex; flex-direction: column; gap: 6px; }
 .dmfGroup { border: 1px solid var(--line); background: var(--card); padding: 7px; display: flex; flex-direction: column; gap: 5px; }
-.dmfOr { font-size: 10px; font-weight: 700; letter-spacing: .6px; color: var(--muted); text-align: center; }
+.dmfOr { font-size: var(--fs-2xs); font-weight: 700; letter-spacing: .6px; color: var(--muted); text-align: center; }
 
 .dmfRow { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(120px, auto) minmax(180px, 2fr) 28px; gap: 7px; align-items: center; }
 .dmfField, .dmfOp, .dmfAddValue, .dmfAdd, .dmfChip, .dmfDrop { font: inherit; cursor: pointer; }
 .dmfField {
-  font-size: 12px; text-align: left; min-height: var(--ctl-h); height: auto; padding: 4px 8px;
+  font-size: var(--fs-sm); text-align: left; min-height: var(--ctl-h); height: auto; padding: 4px 8px;
   border: 1px solid var(--line2); background: var(--card); color: var(--ink);
   display: flex; flex-direction: column; justify-content: center; gap: 1px;
 }
 .dmfField:hover { border-color: var(--acc); }
 .dmfField em { color: var(--muted); }
-.dmfFieldPhysical { display: block; color: var(--muted); font-size: 10px; line-height: 1.2; }
+.dmfFieldPhysical { display: block; color: var(--muted); font-size: var(--fs-2xs); line-height: 1.2; }
 .dmfFieldPhysical.is-warn { color: var(--orange); }
-.dmfOp { font-size: 12px; height: var(--ctl-h); border: 1px solid var(--line2); background: var(--card); color: var(--ink); }
+.dmfOp { font-size: var(--fs-sm); height: var(--ctl-h); border: 1px solid var(--line2); background: var(--card); color: var(--ink); }
 .dmfValues { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
-.dmfChip { font-size: 11px; padding: 1px 6px; border: 1px solid var(--acc); background: var(--acc-bg); color: var(--acc-ink); }
+.dmfChip { font-size: var(--fs-xs); padding: 1px 6px; border: 1px solid var(--acc); background: var(--acc-bg); color: var(--acc-ink); }
 .dmfChip:hover { border-color: var(--red); color: var(--red); }
-.dmfAddValue { font-size: 11px; padding: 1px 7px; border: 1px dashed var(--line2); background: none; color: var(--acc-ink); }
+.dmfAddValue { font-size: var(--fs-xs); padding: 1px 7px; border: 1px dashed var(--line2); background: none; color: var(--acc-ink); }
 .dmfAddValue:hover:not(:disabled) { border-style: solid; border-color: var(--acc); }
 .dmfAddValue:disabled { opacity: .45; cursor: default; }
-.dmfArrow { color: var(--muted); font-size: 11px; }
-.dmfNoValue { font-size: 11px; color: var(--muted); font-style: italic; }
-.dmfDrop { font-size: 12px; background: none; border: 1px solid transparent; color: var(--muted); padding: 0 3px; }
+.dmfArrow { color: var(--muted); font-size: var(--fs-xs); }
+.dmfNoValue { font-size: var(--fs-xs); color: var(--muted); font-style: italic; }
+.dmfDrop { font-size: var(--fs-sm); background: none; border: 1px solid transparent; color: var(--muted); padding: 0 3px; }
 .dmfDrop:hover { color: var(--red); border-color: var(--red); }
-.dmfEmpty { margin: 0; font-size: 11px; color: var(--muted); font-style: italic; }
+.dmfEmpty { margin: 0; font-size: var(--fs-xs); color: var(--muted); font-style: italic; }
 .dmfGroupActions { display: flex; gap: 8px; align-items: center; }
-.dmfAdd { font-size: 11px; background: none; border: none; color: var(--acc-ink); padding: 0; text-decoration: underline dotted; }
+.dmfAdd { font-size: var(--fs-xs); background: none; border: none; color: var(--acc-ink); padding: 0; text-decoration: underline dotted; }
 .dmfAdd:hover { text-decoration-style: solid; }
 
 .dmfFoot { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .dmfSpacer { flex: 1; }
-.dmfMessage { font-size: 11px; }
+.dmfMessage { font-size: var(--fs-xs); }
 .dmfMessage.is-bad { color: var(--red); }
 .dmfMessage.is-warn { color: var(--orange); }
 .dmfMessage.is-info { color: var(--ink2); }
@@ -356,13 +356,13 @@
   border: 1px solid var(--line2); background: var(--card); box-shadow: var(--shadow-3);
 }
 .dmfPickerSearch {
-  font: inherit; font-size: 12px; height: var(--ctl-h); padding: 0 8px; border: none;
+  font: inherit; font-size: var(--fs-sm); height: var(--ctl-h); padding: 0 8px; border: none;
   border-bottom: 1px solid var(--line); background: var(--card2); color: var(--ink);
 }
 .dmfPickerSearch:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .dmfPickerList { overflow-y: auto; display: flex; flex-direction: column; }
 .dmfPickerItem {
-  font: inherit; font-size: 12px; text-align: left; padding: 4px 9px; cursor: pointer;
+  font: inherit; font-size: var(--fs-sm); text-align: left; padding: 4px 9px; cursor: pointer;
   background: none; border: none; color: var(--ink);
 }
 .dmfPickerItem:hover, .dmfPickerItem:focus-visible { background: var(--acc-bg); outline: none; }
@@ -370,35 +370,35 @@
   background: var(--acc-bg); color: var(--acc-ink); font-weight: 600; cursor: default;
 }
 .dmfPickerItem:disabled { opacity: 1; }
-.dmfPickerEmpty { margin: 0; padding: 9px; font-size: 11px; color: var(--muted); }
+.dmfPickerEmpty { margin: 0; padding: 9px; font-size: var(--fs-xs); color: var(--muted); }
 
 @media (max-width: 900px) {
   .dmfRow { grid-template-columns: 1fr; }
 }
 
 /* --- Yenileme grupları --- */
-.dmGroupRow { display: flex; align-items: center; gap: 12px; padding: 7px 11px; border-bottom: 1px solid var(--line); font-size: 12px; }
+.dmGroupRow { display: flex; align-items: center; gap: 12px; padding: 7px 11px; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
 .dmGroupRow:last-of-type { border-bottom: none; }
 .dmGroupRow:hover { background: var(--table-hover); }
 .dmGroupName { flex: 0 0 170px; font-weight: 600; color: var(--ink); }
 .dmGroupModules { flex: 1; color: var(--ink2); }
-.dmGroupEmpty { margin: 0; padding: 11px; font-size: 12px; color: var(--muted); }
-.dmGroupNote { margin: 0; padding: 7px 11px; border-top: 1px solid var(--line); font-size: 11px; color: var(--muted); background: var(--card2); }
+.dmGroupEmpty { margin: 0; padding: 11px; font-size: var(--fs-sm); color: var(--muted); }
+.dmGroupNote { margin: 0; padding: 7px 11px; border-top: 1px solid var(--line); font-size: var(--fs-xs); color: var(--muted); background: var(--card2); }
 
 .dmGroupForm { border-top: 1px solid var(--line); padding: 11px; display: flex; flex-direction: column; gap: 9px; background: var(--card2); }
 .dmGroupNameField { display: flex; flex-direction: column; gap: 3px; max-width: 280px; }
 .dmGroupNameField input {
-  font: inherit; font-size: 12px; height: var(--ctl-h); padding: 0 8px;
+  font: inherit; font-size: var(--fs-sm); height: var(--ctl-h); padding: 0 8px;
   border: 1px solid var(--line2); background: var(--card); color: var(--ink);
 }
 .dmGroupNameField input:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--acc); }
 .dmGroupChecks { display: flex; flex-wrap: wrap; gap: 6px 18px; }
-.dmCheck { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--ink); cursor: pointer; }
+.dmCheck { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-sm); color: var(--ink); cursor: pointer; }
 .dmGroupActions { display: flex; gap: 6px; justify-content: flex-end; }
-.dmGroupError { margin: 0; font-size: 11px; color: var(--red); }
+.dmGroupError { margin: 0; font-size: var(--fs-xs); color: var(--red); }
 
 /* --- Özet --- */
-.dmSummary { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 12px; color: var(--ink2); border: 1px solid var(--line); background: var(--card2); padding: 7px 11px; }
+.dmSummary { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; font-size: var(--fs-sm); color: var(--ink2); border: 1px solid var(--line); background: var(--card2); padding: 7px 11px; }
 .dmSummary strong { color: var(--ink); }
 .dmSummary .isWarn strong { color: var(--orange); }
 .dmSummarySpacer { flex: 1; }
@@ -409,34 +409,34 @@
 }
 
 /* Alan eşlemesi başlığının tamamı çalışır; yeni bir kart/tema yaratılmaz. */
-.dmMappingLink { display: inline-flex; align-items: center; padding: 0; font: inherit; font-size: 11px; font-weight: 600; color: var(--ink2); background: transparent; border: 0; border-bottom: 1px dashed var(--ink2); cursor: pointer; }
+.dmMappingLink { display: inline-flex; align-items: center; padding: 0; font: inherit; font-size: var(--fs-xs); font-weight: 600; color: var(--ink2); background: transparent; border: 0; border-bottom: 1px dashed var(--ink2); cursor: pointer; }
 .dmMappingLink:hover { color: var(--acc); border-color: var(--acc); }
 .dmMappingLink:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
 /* --- Alan eşleme düzenleyicisi --- */
 .dmMappingEditor { border: 1px solid var(--acc); background: var(--card); display: flex; flex-direction: column; gap: 9px; padding: 11px; }
 .dmmList { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); display: flex; flex-direction: column; }
-.dmmRow { display: grid; grid-template-columns: 18px minmax(130px, 1fr) minmax(150px, 1fr) minmax(200px, 1.6fr) 28px; gap: 8px; align-items: baseline; padding: 6px 9px; border-bottom: 1px solid var(--line); font-size: 12px; }
+.dmmRow { display: grid; grid-template-columns: 18px minmax(130px, 1fr) minmax(150px, 1fr) minmax(200px, 1.6fr) 28px; gap: 8px; align-items: baseline; padding: 6px 9px; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
 .dmmRow:last-child { border-bottom: none; }
 .dmmRow[hidden] { display: none; }
 .dmmRow.isChanged { border-left: 3px solid var(--acc); padding-left: 6px; }
 .dmmToolbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .dmmToolbar input[type="search"] { min-width: 180px; flex: 1 1 220px; height: var(--ctl-h); border: 1px solid var(--line2); background: var(--card); color: var(--ink); padding: 0 9px; border-radius: 0; }
 .dmmToolbar input[type="search"]:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.dmmSummary { font-size: 11px; color: var(--muted); }
+.dmmSummary { font-size: var(--fs-xs); color: var(--muted); }
 .dmmList { max-height: 430px; overflow-y: auto; }
 
 .dmmRow.isBlocking { background: color-mix(in srgb, var(--red) 7%, transparent); }
-.dmmMark { font-size: 11px; }
+.dmmMark { font-size: var(--fs-xs); }
 .dmmField { font-weight: 600; color: var(--ink); }
-.dmmColumn { font: inherit; font-size: 12px; text-align: left; cursor: pointer; height: var(--ctl-h); padding: 0 8px; border: 1px solid var(--line2); background: var(--card); color: var(--ink); }
+.dmmColumn { font: inherit; font-size: var(--fs-sm); text-align: left; cursor: pointer; height: var(--ctl-h); padding: 0 8px; border: 1px solid var(--line2); background: var(--card); color: var(--ink); }
 .dmmColumn:hover:not(:disabled) { border-color: var(--acc); }
 .dmmColumn:disabled { opacity: .5; cursor: default; }
 .dmmColumn em { color: var(--muted); }
 .dmmColumn:focus-visible { outline: none; box-shadow: var(--focus-ring); }
-.dmmWhy { font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 1px; }
+.dmmWhy { font-size: var(--fs-xs); color: var(--muted); display: flex; flex-direction: column; gap: 1px; }
 .dmmExpected { color: var(--ink2); }
-.dmfPickerHint { color: var(--muted); font-size: 10px; margin-left: 6px; }
+.dmfPickerHint { color: var(--muted); font-size: var(--fs-2xs); margin-left: 6px; }
 
 @media (max-width: 900px) { .dmmRow { grid-template-columns: 18px 1fr; } }
 .dmMappingSlot:empty { display: none; }
@@ -449,7 +449,7 @@
 .dmCpSlot:empty { display: none; }
 .dmCpColumns { border: 1px solid var(--line); background: var(--card); padding: 10px 12px; display: grid; gap: 10px; }
 .dmcList { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); }
-.dmcRow { display: grid; grid-template-columns: minmax(120px, 1fr) 14px minmax(140px, 1.4fr) minmax(90px, .8fr) auto auto; gap: 8px; align-items: baseline; padding: 6px 9px; border-bottom: 1px solid var(--line); font-size: 12px; }
+.dmcRow { display: grid; grid-template-columns: minmax(120px, 1fr) 14px minmax(140px, 1.4fr) minmax(90px, .8fr) auto auto; gap: 8px; align-items: baseline; padding: 6px 9px; border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
 .dmcRow:last-child { border-bottom: none; }
 .dmcLabel { font-weight: 600; color: var(--ink); }
 .dmcArrow { color: var(--muted); }
@@ -462,7 +462,7 @@
 
 /* Satır içi "düzenle / ekle" bağlantısı: ayrı bir düğme bandı açmadan
    bölümün kendi satırından erişim. */
-.dmInlineLink { font: inherit; font-size: 11px; margin-left: 8px; padding: 0; border: none; background: none; color: var(--acc); text-decoration: underline; cursor: pointer; }
+.dmInlineLink { font: inherit; font-size: var(--fs-xs); margin-left: 8px; padding: 0; border: none; background: none; color: var(--acc); text-decoration: underline; cursor: pointer; }
 .dmInlineLink:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 
 /* --- Veri eşleştirme kuralları (§7 — v7.81 ASAS↔IAS ekranının genellemesi) ---
@@ -474,7 +474,7 @@
    eklendiğinde taşardı. */
 .dmMatchSlot:empty { display: none; }
 .dmMatchRule { border: 1px solid var(--line); background: var(--card); padding: 10px 12px; display: grid; gap: 10px; }
-.dmrNote { margin: 0; font-size: 11px; color: var(--ink2); }
+.dmrNote { margin: 0; font-size: var(--fs-xs); color: var(--ink2); }
 .dmrNote--bad { color: var(--red); }
 .dmrList { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); }
 .dmrRow { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; padding: 6px 9px; border-bottom: 1px solid var(--line); }
@@ -482,11 +482,11 @@
 .dmrOperands { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .dmrOperand { display: grid; grid-template-columns: auto minmax(120px, 1fr) auto; gap: 4px; align-items: center; }
 .dmrRowActions { display: flex; gap: 6px; align-items: center; }
-.dmrEq { text-align: center; color: var(--muted); font-size: 12px; }
+.dmrEq { text-align: center; color: var(--muted); font-size: var(--fs-sm); }
 /* Çözülemeyen alan GÖRÜNÜR olmalı: sessizce eşleşmeyen bir sütun, kullanıcının
    veriyi suçlayıp kuralı aramadığı en pahalı durumdur. */
 .dmrOperand.isUnresolved .dmmColumn { border-color: var(--red); color: var(--red); }
-.dmrSource { font: inherit; font-size: 11px; cursor: pointer; height: var(--ctl-h); padding: 0 6px; border: 1px solid var(--line2); background: var(--card2, var(--card)); color: var(--ink2); }
+.dmrSource { font: inherit; font-size: var(--fs-xs); cursor: pointer; height: var(--ctl-h); padding: 0 6px; border: 1px solid var(--line2); background: var(--card2, var(--card)); color: var(--ink2); }
 .dmrSource:hover:not(:disabled) { border-color: var(--acc); color: var(--ink); }
 .dmrSource:disabled { opacity: .5; cursor: default; }
 .dmrSource:focus-visible { outline: none; box-shadow: var(--focus-ring); }
@@ -499,19 +499,19 @@
 .dmQuerySlot:empty { display: none; }
 .dmQueryEditor { border: 1px solid var(--line); background: var(--card); padding: 10px 12px; display: grid; gap: 10px; }
 .dmqModes { display: grid; gap: 6px; }
-.dmqMode { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; font-size: 12px; cursor: pointer; }
+.dmqMode { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; font-size: var(--fs-sm); cursor: pointer; }
 .dmqMode span { display: grid; gap: 1px; }
 .dmqField { display: grid; gap: 3px; }
-.dmqField textarea { font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace); font-size: 12px; line-height: 1.5; padding: 7px 9px; border: 1px solid var(--line2); background: var(--card2, var(--card)); color: var(--ink); resize: vertical; }
+.dmqField textarea { font-family: var(--mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace); font-size: var(--fs-sm); line-height: 1.5; padding: 7px 9px; border: 1px solid var(--line2); background: var(--card2, var(--card)); color: var(--ink); resize: vertical; }
 .dmqField textarea:focus-visible { outline: none; box-shadow: var(--focus-ring); border-color: var(--acc); }
-.dmqProbe { display: grid; gap: 2px; border: 1px solid var(--line); padding: 7px 9px; font-size: 11px; }
+.dmqProbe { display: grid; gap: 2px; border: 1px solid var(--line); padding: 7px 9px; font-size: var(--fs-xs); }
 .dmqProbeHead { font-weight: 600; color: var(--ink); }
 
 /* --- Bağlantı düzenleyicisi (§7 — eski ekrandan taşınan yetenek) --- */
 .dmConnSlot:empty { display: none; }
 .dmConnEditor { border: 1px solid var(--line); background: var(--card); padding: 10px 12px; display: grid; gap: 10px; }
 .dmcnGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 8px; }
-.dmcnToggle { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; font-size: 12px; cursor: pointer; }
+.dmcnToggle { display: grid; grid-template-columns: auto 1fr; gap: 8px; align-items: start; font-size: var(--fs-sm); cursor: pointer; }
 .dmcnToggle span { display: grid; gap: 1px; }
 
 /* --- Araçlar (§7 — "Kaynak Veri" ayarlar menüsünden taşınanlar) ---
@@ -524,7 +524,7 @@
 .dmTools { display: grid; gap: 14px; }
 .dmToolGroup { display: grid; gap: 6px; }
 .dmToolGroupHead { display: grid; gap: 1px; }
-.dmToolGroupTitle { font-size: 12px; font-weight: 600; color: var(--ink); }
+.dmToolGroupTitle { font-size: var(--fs-sm); font-weight: 600; color: var(--ink); }
 .dmToolList { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); }
 .dmToolRow { border-bottom: 1px solid var(--line); }
 .dmToolRow:last-child { border-bottom: none; }
@@ -537,10 +537,10 @@
 .dmTool:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .dmTool .ic { width: 15px; height: 15px; margin-top: 2px; color: var(--ink2); }
 .dmToolText { display: grid; gap: 1px; min-width: 0; }
-.dmToolName { font-size: 12px; font-weight: 600; }
+.dmToolName { font-size: var(--fs-sm); font-weight: 600; }
 /* Açıklama satırı sessiz kalır: satırı tararken önce ADLAR okunmalı,
    açıklama ancak doğru satıra yaklaşınca devreye girmeli. */
-.dmToolHint { font-size: 11px; color: var(--ink2); }
+.dmToolHint { font-size: var(--fs-xs); color: var(--ink2); }
 .dmToolRow.isOpen .dmTool { background: var(--card2, var(--card)); }
 .dmToolRow.isOpen .dmTool .ic { color: var(--acc); }
 .dmToolSlot:empty { display: none; }
@@ -558,7 +558,7 @@
    kendi etiketinde taşıyordu; ayrı bir parça olarak tutulur ki satır yeniden
    çizildiğinde ad ve açıklama silinmesin. */
 .dmToolValue {
-  font-size: 10.5px; color: var(--ink2); font-family: var(--mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: var(--fs-2xs); color: var(--ink2); font-family: var(--mono, ui-monospace, Menlo, Consolas, monospace);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%;
 }
 
@@ -572,7 +572,7 @@
   padding: 8px 10px; border: 1px solid var(--line);
 }
 .dmModeText { display: grid; gap: 1px; min-width: 0; }
-.dmAutoSelect { height: var(--ctl-h); padding: 0 8px; border: 1px solid var(--line2); background: var(--card); color: var(--ink); font: inherit; font-size: 12px; }
+.dmAutoSelect { height: var(--ctl-h); padding: 0 8px; border: 1px solid var(--line2); background: var(--card); color: var(--ink); font: inherit; font-size: var(--fs-sm); }
 .dmAutoSelect:focus-visible { outline: none; box-shadow: var(--focus-ring); }
 .dmSectionLabel--sub { margin-top: 4px; }
 @media (max-width: 900px) { .dmModeRow { grid-template-columns: 1fr; } }
@@ -584,7 +584,7 @@
    kenarlıkla ayrışır (renk bütçesi — DESIGN_SYSTEM). */
 .dmfTemplates { display: flex; flex-direction: column; gap: 4px; }
 .dmfTplRow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-.dmfTplEmpty { font-size: 11px; color: var(--muted); }
+.dmfTplEmpty { font-size: var(--fs-xs); color: var(--muted); }
 .dmfTplChip {
   display: inline-flex; align-items: center; gap: 2px;
   border: 1px solid var(--line); background: var(--card2);
@@ -593,20 +593,20 @@
 .dmfTplChip.isShared { border-color: var(--line2); }
 .dmfTplName {
   border: 0; background: transparent; cursor: pointer;
-  font-size: 11px; color: var(--ink2); padding: 2px 2px;
+  font-size: var(--fs-xs); color: var(--ink2); padding: 2px 2px;
 }
 .dmfTplName:hover { color: var(--ink); text-decoration: underline; }
 .dmfTplAct {
   border: 0; background: transparent; cursor: pointer;
-  font-size: 11px; line-height: 1; color: var(--muted); padding: 3px 4px;
+  font-size: var(--fs-xs); line-height: 1; color: var(--muted); padding: 3px 4px;
 }
 .dmfTplAct:hover { color: var(--ink); background: var(--card2-strong); border-radius: var(--r-sm); }
 .dmfTplSave {
   border: 1px solid var(--line); background: var(--card); cursor: pointer;
-  border-radius: var(--r-sm); padding: 3px 9px; font-size: 11px; color: var(--ink2);
+  border-radius: var(--r-sm); padding: 3px 9px; font-size: var(--fs-xs); color: var(--ink2);
 }
 .dmfTplSave:hover { border-color: var(--line2); background: var(--card2-strong); color: var(--ink); }
-.dmfTplMsg { margin: 0; font-size: 11px; color: var(--muted); }
+.dmfTplMsg { margin: 0; font-size: var(--fs-xs); color: var(--muted); }
 
 /* v7.81 — ASAS→IAS filtre eşleme teklifi ve onayı.
    Şablon çubuğuyla aynı ölçü ve token ailesi: ikinci bir görsel dil değil,
@@ -614,30 +614,30 @@
 .dmfMapBar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 6px 0 0; }
 .dmfMapAsk {
   border: 1px solid var(--line); background: var(--card); cursor: pointer;
-  border-radius: var(--r-sm); padding: 3px 9px; font-size: 11px; color: var(--ink2);
+  border-radius: var(--r-sm); padding: 3px 9px; font-size: var(--fs-xs); color: var(--ink2);
 }
 .dmfMapAsk:hover:not(:disabled) { border-color: var(--line2); background: var(--card2-strong); color: var(--ink); }
 .dmfMapAsk:disabled { opacity: .6; cursor: default; }
-.dmfMapMsg { font-size: 11px; color: var(--muted); }
+.dmfMapMsg { font-size: var(--fs-xs); color: var(--muted); }
 
 .dmfMapPanel {
   margin: 8px 0 0; padding: 8px 10px;
   border: 1px solid var(--line2); border-radius: var(--r-sm); background: var(--card2);
 }
-.dmfMapHead { margin: 0 0 6px; font-size: 11px; color: var(--ink2); }
-.dmfMapTable { width: 100%; border-collapse: collapse; font-size: 11px; }
+.dmfMapHead { margin: 0 0 6px; font-size: var(--fs-xs); color: var(--ink2); }
+.dmfMapTable { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); }
 .dmfMapTable td { padding: 2px 6px 2px 0; color: var(--ink2); vertical-align: top; }
-.dmfMapPhysical { display: block; margin-top: 1px; color: var(--muted); font-size: 10px; }
+.dmfMapPhysical { display: block; margin-top: 1px; color: var(--muted); font-size: var(--fs-2xs); }
 .dmfMapArrow { color: var(--muted); width: 1.5em; text-align: center; }
 .dmfMapTag {
   display: inline-block; margin-right: 4px; padding: 0 5px;
   border: 1px solid var(--line); border-radius: var(--r-sm);
-  font-size: 10px; color: var(--muted);
+  font-size: var(--fs-2xs); color: var(--muted);
 }
 /* Kontrol edilmesi gereken iki durum RENKLE değil, yalnız kenarlıkla ayrılır:
    yeni ton uydurmuyoruz; vurgu mevcut uyarı token'ından gelir. */
 .dmfMapTag.is-fuzzy, .dmfMapTag.is-warn { border-color: var(--orange); color: var(--orange); }
-.dmfMapSkip { margin: 6px 0 0; font-size: 11px; color: var(--muted); }
+.dmfMapSkip { margin: 6px 0 0; font-size: var(--fs-xs); color: var(--muted); }
 .dmfMapActions { display: flex; justify-content: flex-end; gap: 6px; margin-top: 8px; }
 
 /* --- Excel'den database connection metadata keşfi ---
@@ -651,9 +651,9 @@
 .dmsExcelConnection:hover { background: var(--card2); }
 .dmsExcelConnection.isUnsupported { opacity: .64; }
 .dmsExcelConnectionMain { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.dmsExcelConnectionMain strong { font-size: 12px; color: var(--ink); }
-.dmsExcelConnectionMain > span { font-size: 11px; color: var(--ink2); }
-.dmsExcelConnectionMain small { font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
+.dmsExcelConnectionMain strong { font-size: var(--fs-sm); color: var(--ink); }
+.dmsExcelConnectionMain > span { font-size: var(--fs-xs); color: var(--ink2); }
+.dmsExcelConnectionMain small { font-size: var(--fs-2xs); color: var(--muted); overflow-wrap: anywhere; }
 .dmsExcelConnectionMain small.isBad { color: var(--red); }
 .dmConnectionPreview {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 7px 12px;
@@ -671,13 +671,13 @@
    Grubun üyeleri tek filtreyi paylaşır; ayrılan modül kendi filtresiyle
    çalışır. Yalnız tasarım sistemi token'ları kullanılır. */
 .dmLinkGroup { display: flex; flex-direction: column; gap: 6px; padding: 8px 11px; border-bottom: 1px solid var(--line); background: var(--card2); }
-.dmLinkRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12px; min-width: 0; }
+.dmLinkRow { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: var(--fs-sm); min-width: 0; }
 .dmLinkTitle { font-weight: 600; color: var(--ink); }
-.dmLinkHint { font-size: 11px; color: var(--muted); }
-.dmLinkChip { display: inline-flex; align-items: center; gap: 2px; font-size: 11px; padding: 0 2px 0 7px; border: 1px solid var(--acc); background: var(--acc-bg); color: var(--acc-ink); }
-.dmLinkOutside { font-size: 11px; color: var(--ink2); border: 1px dashed var(--line2); padding: 1px 7px; }
+.dmLinkHint { font-size: var(--fs-xs); color: var(--muted); }
+.dmLinkChip { display: inline-flex; align-items: center; gap: 2px; font-size: var(--fs-xs); padding: 0 2px 0 7px; border: 1px solid var(--acc); background: var(--acc-bg); color: var(--acc-ink); }
+.dmLinkOutside { font-size: var(--fs-xs); color: var(--ink2); border: 1px dashed var(--line2); padding: 1px 7px; }
 .dmLinkOutsideLabel { margin-left: 8px; }
-.dmLinkMark { font-size: 10px; opacity: .7; cursor: help; }
+.dmLinkMark { font-size: var(--fs-2xs); opacity: .7; cursor: help; }
 
 
 /* --- Merch Calendar -------------------------------------------------
@@ -685,17 +685,17 @@
    yeni yüzeylerde oval köşe yoktur; renkler yalnız mevcut tema tokenlarından. */
 .dmMerchPanel{border:1px solid var(--line);background:var(--card);border-radius:0!important}
 .dmMerchHead{align-items:flex-start}
-.dmMerchIntro{margin-top:3px;max-width:760px;font-size:11px;line-height:1.4;color:var(--muted)}
-.dmMerchState{flex:0 0 auto;border:1px solid var(--line2);padding:2px 7px;font-size:10px;font-weight:700;letter-spacing:.35px;color:var(--muted);background:var(--card);border-radius:0!important}
+.dmMerchIntro{margin-top:3px;max-width:760px;font-size:var(--fs-xs);line-height:1.4;color:var(--muted)}
+.dmMerchState{flex:0 0 auto;border:1px solid var(--line2);padding:2px 7px;font-size:var(--fs-2xs);font-weight:700;letter-spacing:.35px;color:var(--muted);background:var(--card);border-radius:0!important}
 .dmMerchState.isReady{border-color:var(--green);color:var(--green)}
 .dmMerchBody{display:flex;flex-direction:column;gap:8px;padding:9px 11px}
 .dmMerchFacts{display:grid;grid-template-columns:repeat(4,minmax(140px,1fr));border:1px solid var(--line);background:var(--line);gap:1px}
 .dmMerchFacts>div{min-width:0;display:flex;flex-direction:column;gap:3px;padding:7px 8px;background:var(--card2)}
-.dmMerchFacts strong{font-size:11px;color:var(--ink);font-weight:600;overflow-wrap:anywhere}
-.dmMerchYears{border:1px solid var(--line);padding:6px 8px;background:var(--card2);color:var(--ink2);font-size:10px;line-height:1.45}
+.dmMerchFacts strong{font-size:var(--fs-xs);color:var(--ink);font-weight:600;overflow-wrap:anywhere}
+.dmMerchYears{border:1px solid var(--line);padding:6px 8px;background:var(--card2);color:var(--ink2);font-size:var(--fs-2xs);line-height:1.45}
 .dmMerchRules{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line)}
-.dmMerchRules span{background:var(--card);padding:6px 8px;color:var(--ink2);font-size:11px;line-height:1.35}
-.dmMerchMessage{border-left:3px solid var(--acc);padding:6px 8px;background:var(--card2);color:var(--ink2);font-size:11px}
+.dmMerchRules span{background:var(--card);padding:6px 8px;color:var(--ink2);font-size:var(--fs-xs);line-height:1.35}
+.dmMerchMessage{border-left:3px solid var(--acc);padding:6px 8px;background:var(--card2);color:var(--ink2);font-size:var(--fs-xs)}
 .dmMerchActions{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .dmMerchUpload{position:relative;overflow:hidden;border-radius:0!important}
 .dmMerchUpload input[type="file"]{display:none}

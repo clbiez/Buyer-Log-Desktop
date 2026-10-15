@@ -222,7 +222,7 @@
 .cpaCondOffset input,.cpaCondOffset select{height:28px!important;padding:0 6px!important;font-size:var(--fs-xs)!important}
 .cpaCondToday{display:flex;align-items:center;height:34px;padding:0 9px;border:1px dashed var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--acc-ink);font-weight:700;box-sizing:border-box}
 .cpaFormulaEditor{display:grid;gap:8px;padding:9px;border:1px solid var(--line);background:var(--card2)}
-.cpaFormulaEditor textarea{width:100%;min-height:116px;resize:vertical;padding:9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:var(--fs-sm);line-height:1.45;box-sizing:border-box}
+.cpaFormulaEditor textarea{width:100%;min-height:116px;resize:vertical;padding:9px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-family:var(--mono);font-size:var(--fs-sm);line-height:1.45;box-sizing:border-box}
 .cpaFormulaActions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cpaFormulaStatus{font-size:var(--fs-sm);color:var(--muted)}
 .cpaFormulaStatus.is-valid{color:var(--good);font-weight:700}
@@ -310,14 +310,14 @@ button.cpaValueOption:hover,.cpaValueOption:hover{background:var(--card2-strong)
 .cpaAiSteps li{display:grid;gap:5px}
 .cpaAiSteps li>b{font-size:var(--fs-sm)}
 .cpaAiSteps textarea{width:100%;box-sizing:border-box;resize:vertical;padding:8px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font-family:var(--sans);font-size:var(--fs-sm)}
-.cpaAiSteps textarea[data-cpa-ai-answer]{font-family:ui-monospace,SFMono-Regular,Consolas,monospace}
+.cpaAiSteps textarea[data-cpa-ai-answer]{font-family:var(--mono)}
 .cpaAiRow{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .cpaAiResult{display:grid;gap:6px;justify-items:start}
 .cpaAiResult:empty{display:none}
 .cpaAiFound{display:grid;gap:3px;width:100%;padding:8px;border:1px solid var(--line);border-left:3px solid var(--good);background:var(--card)}
 .cpaAiFound.is-invalid{border-left-color:var(--danger)}
 .cpaAiFound span{font-size:var(--fs-xs);color:var(--muted)}
-.cpaAiFound code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:var(--fs-sm);white-space:pre-wrap;word-break:break-word}
+.cpaAiFound code{font-family:var(--mono);font-size:var(--fs-sm);white-space:pre-wrap;word-break:break-word}
 .cpaBtn.primary{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
 .cpaBtn.primary:hover{background:var(--acc-hover)}
 .cpaStatusGroup{display:inline-flex;flex-wrap:wrap;gap:3px}

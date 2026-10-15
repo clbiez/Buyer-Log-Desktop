@@ -344,7 +344,7 @@
       const showAnalog=displayMode==='analog'||displayMode==='both',showDigital=displayMode==='digital'||displayMode==='both';
       const code=item.dynamic?'TZ':item.id.replace(/^US-/,'US');
       return '<div class="ovClockCard" data-clock-id="'+esc(item.id)+'" data-clock-zone="'+esc(item.timeZone)+'" data-clock-display="'+esc(displayMode)+'">'+
-        '<div class="ovClockCountry"><span class="ovClockCode">'+esc(code)+'</span><span title="'+esc(countryName(item,l))+'">'+esc(countryName(item,l))+'</span></div>'+
+        '<div class="ovClockCountry"><span class="ovClockCode" data-no-i18n>'+esc(code)+'</span><span title="'+esc(countryName(item,l))+'">'+esc(countryName(item,l))+'</span></div>'+
         '<div class="ovClockReadout is-'+esc(displayMode)+'">'+(showAnalog?analogHtml(parts):'')+'<div class="ovClockText">'+
           (showDigital?'<div class="ovClockTime" data-clock-time>'+esc(parts.time)+'</div>':'')+'<div class="ovClockDate" data-clock-date title="'+esc(parts.date)+'">'+esc(parts.date)+'</div></div></div>'+
         (holidayEnabled&&item.countryCode?'<div class="ovClockHolidays" data-clock-holidays data-clock-country="'+esc(item.countryCode)+'" data-clock-zone="'+esc(item.timeZone)+'"'+(item.subdivisionCode?' data-clock-subdivision="'+esc(item.subdivisionCode)+'"':'')+' hidden></div>':'')+

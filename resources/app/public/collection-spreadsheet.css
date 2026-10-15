@@ -24,35 +24,35 @@
    Shift-range selection, read-only cells, buttons, links and pictures. */
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td .editCell{pointer-events:auto}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly{background-image:linear-gradient(rgba(15,23,42,.022),rgba(15,23,42,.022))}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly:hover::after{content:attr(data-kol-formula-tip);position:absolute;z-index:22;left:8px;top:calc(100% + 4px);max-width:280px;padding:5px 7px;border:1px solid var(--line);background:var(--card);color:var(--ink2);font-size:10px;box-shadow:0 4px 14px rgba(15,23,42,.12);white-space:normal;pointer-events:none}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly:hover::after{content:attr(data-kol-formula-tip);position:absolute;z-index:22;left:8px;top:calc(100% + 4px);max-width:280px;padding:5px 7px;border:1px solid var(--line);background:var(--card);color:var(--ink2);font-size:var(--fs-2xs);box-shadow:0 4px 14px rgba(15,23,42,.12);white-space:normal;pointer-events:none}
 .kolSpreadsheetHelper{display:flex;align-items:center;min-height:25px;padding:2px 7px;border:1px solid var(--line);border-top:0;background:var(--card2);min-width:0}
-.kolSpreadsheetBusinessSelection{flex:0 0 auto;min-width:92px;color:var(--ink2);font-size:10.5px;font-weight:600;white-space:nowrap}
+.kolSpreadsheetBusinessSelection{flex:0 0 auto;min-width:92px;color:var(--ink2);font-size:var(--fs-2xs);font-weight:600;white-space:nowrap}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow{height:18px}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{height:18px!important;min-height:18px!important;padding:0 4px!important;text-align:center!important;font:600 9px/18px var(--mono,monospace)!important;color:var(--muted)!important;background:var(--paper)!important;border-bottom:1px solid var(--line)!important;user-select:none}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{height:18px!important;min-height:18px!important;padding:0 4px!important;text-align:center!important;font:600 var(--fs-2xs)/18px var(--mono,monospace)!important;color:var(--muted)!important;background:var(--paper)!important;border-bottom:1px solid var(--line)!important;user-select:none}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.kolSpreadsheetLetterActive{color:var(--acc)!important;background:var(--card2)!important}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable .chkTh,
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:72px!important;min-width:72px!important}
 .kolSpreadsheetRowGutter{padding:0 3px!important;white-space:nowrap;text-align:center}
-.kolSpreadsheetRowNumber{display:inline-grid;place-items:center;width:25px;height:22px;margin-right:3px;padding:0;border:0;background:transparent;color:var(--muted);font:600 9px/1 var(--mono,monospace);cursor:pointer;border-radius:2px}
+.kolSpreadsheetRowNumber{display:inline-grid;place-items:center;width:25px;height:22px;margin-right:3px;padding:0;border:0;background:transparent;color:var(--muted);font:600 var(--fs-2xs)/1 var(--mono,monospace);cursor:pointer;border-radius:var(--r-xs)}
 .kolSpreadsheetRowNumber:hover,.kolSpreadsheetRowNumber.isActive{background:color-mix(in srgb,var(--acc) 14%,var(--card2));color:var(--acc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 28%,var(--line))}
 .kolSpreadsheetRowGutter .rowChk{width:14px;height:14px;margin:0;vertical-align:middle;box-sizing:border-box;}
-.kolSpreadsheetStatusBar{display:flex;align-items:center;gap:14px;min-height:25px;padding:3px 8px;border:1px solid var(--line);border-top:0;background:var(--card2);color:var(--ink2);font-size:10px;white-space:nowrap;overflow:auto}
+.kolSpreadsheetStatusBar{display:flex;align-items:center;gap:14px;min-height:25px;padding:3px 8px;border:1px solid var(--line);border-top:0;background:var(--card2);color:var(--ink2);font-size:var(--fs-2xs);white-space:nowrap;overflow:auto}
 .kolSpreadsheetStatusBar b{color:var(--ink);font-weight:700}
-.kolSpreadsheetContextMenu{position:fixed;z-index:10070;min-width:210px;padding:4px;border:1px solid var(--line);background:var(--card);box-shadow:0 8px 28px rgba(15,23,42,.16);font-size:10.5px}
+.kolSpreadsheetContextMenu{position:fixed;z-index:10070;min-width:210px;padding:4px;border:1px solid var(--line);background:var(--card);box-shadow:0 8px 28px rgba(15,23,42,.16);font-size:var(--fs-2xs)}
 .kolSpreadsheetContextMenu button{display:flex;width:100%;align-items:center;justify-content:space-between;min-height:28px;padding:5px 8px;border:0;background:transparent;color:var(--ink);text-align:left;font:inherit;cursor:pointer}
 .kolSpreadsheetContextMenu button:hover:not(:disabled){background:var(--card2)}
 .kolSpreadsheetContextMenu button:disabled{opacity:.45;cursor:not-allowed}
 .kolSpreadsheetContextMenu .sep{height:1px;margin:4px;background:var(--line)}
-.kolSpreadsheetContextMenu kbd{color:var(--muted);font-size:9px}
+.kolSpreadsheetContextMenu kbd{color:var(--muted);font-size:var(--fs-2xs)}
 .kolSpreadsheetPasteOverlay{position:fixed;inset:0;z-index:10090;display:grid;place-items:center;background:rgba(15,23,42,.22)}
 .kolSpreadsheetPasteCard{width:min(520px,calc(100vw - 32px));border:1px solid var(--line);background:var(--card);box-shadow:0 16px 44px rgba(15,23,42,.22)}
 .kolSpreadsheetPasteHead{padding:12px 14px;border-bottom:1px solid var(--line)}
-.kolSpreadsheetPasteHead b{font:700 16px/1.1 "Barlow Condensed",Barlow,sans-serif;color:var(--ink)}
+.kolSpreadsheetPasteHead b{font:700 var(--fs-lg)/1.1 var(--head);color:var(--ink)}
 .kolSpreadsheetPasteBody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:12px 14px}
 .kolSpreadsheetPasteMetric{padding:8px;border:1px solid var(--line);background:var(--card2)}
-.kolSpreadsheetPasteMetric b{display:block;font:700 18px/1 "Barlow Condensed",Barlow,sans-serif;color:var(--ink)}
-.kolSpreadsheetPasteMetric span{font-size:9.5px;color:var(--muted)}
-.kolSpreadsheetPasteIssues{grid-column:1/-1;max-height:110px;overflow:auto;color:var(--danger,#b42318);font-size:9.5px}
+.kolSpreadsheetPasteMetric b{display:block;font:700 var(--fs-xl)/1 var(--head);color:var(--ink)}
+.kolSpreadsheetPasteMetric span{font-size:var(--fs-2xs);color:var(--muted)}
+.kolSpreadsheetPasteIssues{grid-column:1/-1;max-height:110px;overflow:auto;color:var(--danger,#b42318);font-size:var(--fs-2xs)}
 .kolSpreadsheetPasteFoot{display:flex;justify-content:flex-end;gap:6px;padding:9px 14px;border-top:1px solid var(--line);background:var(--card2)}
 @media(max-width:620px){.kolEmptyState{min-height:180px;padding:var(--sp-3)}.kolEmptyState .uiState{width:100%}}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.editTd:has(.editCell:focus){box-shadow:inset 0 0 0 2px var(--acc)!important;background-image:linear-gradient(rgba(29,95,145,.035),rgba(29,95,145,.035))}
@@ -63,7 +63,7 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.frzL{z-index:16;background:var(--paper)!important}
 
 .kolSpreadsheetFilterSort{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:5px;border-bottom:1px solid var(--line);background:var(--card2)}
-.kolSpreadsheetFilterSort button{min-height:27px;padding:4px 7px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 10px/1.2 Barlow,sans-serif;cursor:pointer;text-align:left}
+.kolSpreadsheetFilterSort button{min-height:27px;padding:4px 7px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 var(--fs-2xs)/1.2 var(--sans);cursor:pointer;text-align:left}
 .kolSpreadsheetFilterSort button:hover{border-color:var(--acc);color:var(--acc);background:var(--blue-soft,#eaf3fb)}
 
 /* Concept 2 — Mini Sub-Rows. Business data remains a flat table; only the
@@ -98,7 +98,7 @@
 }
 .kolModelGroupToggle{
   padding:0;border:1px solid color-mix(in srgb,var(--acc) 34%,var(--line));
-  border-radius:4px;background:color-mix(in srgb,var(--acc) 8%,var(--card));color:var(--acc);
+  border-radius:var(--r-sm);background:color-mix(in srgb,var(--acc) 8%,var(--card));color:var(--acc);
   cursor:pointer;transition:background .12s var(--ease),border-color .12s var(--ease),color .12s var(--ease),transform .12s var(--ease);
 }
 .kolModelGroupToggle .ic{width:12px;height:12px;stroke-width:2.3;}
@@ -110,7 +110,7 @@
   content:"";width:10px;height:15px;align-self:start;margin-top:0;
   border-left:2px solid color-mix(in srgb,var(--acc) 55%,var(--line2));
   border-bottom:2px solid color-mix(in srgb,var(--acc) 55%,var(--line2));
-  border-radius:0 0 0 4px;
+  border-radius:0 0 0 var(--r-sm);
 }
 .kolModelGroupGutterSpacer.isVariant::after{
   content:"";position:absolute;right:1px;bottom:4px;width:4px;height:4px;border-radius:50%;
@@ -269,8 +269,8 @@
 #kolTable tbody .kolFabricCell{display:flex;flex-direction:column;justify-content:center;gap:2px;width:100%;height:100%;min-height:27px;padding:3px 8px;pointer-events:none;user-select:none;overflow:hidden}
 #kolTable tbody .kolFabricLine{display:flex;align-items:center;gap:6px;min-width:0}
 #kolTable tbody td.kolFabricTd.isMulti .kolFabricText{-webkit-line-clamp:1;line-clamp:1}
-#kolTable tbody .kolFabricLabel{flex:none;font-size:10.5px;font-weight:700;color:var(--ink2);min-width:10px}
-#kolTable tbody .kolFabricCode{flex:none;font-size:10.5px;font-weight:600;line-height:16px;padding:0 5px;border-radius:4px;background:var(--acc-bg);color:var(--acc-ink)}
+#kolTable tbody .kolFabricLabel{flex:none;font-size:var(--fs-2xs);font-weight:700;color:var(--ink2);min-width:10px}
+#kolTable tbody .kolFabricCode{flex:none;font-size:var(--fs-2xs);font-weight:600;line-height:16px;padding:0 5px;border-radius:var(--r-sm);background:var(--acc-bg);color:var(--acc-ink)}
 #kolTable tbody .kolFabricText{min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;line-height:15px;overflow-wrap:anywhere}
 #kolTable tbody .kolFabricLine:not(.hasCard) .kolFabricCode{background:var(--card2-strong,var(--line));color:var(--muted)}
 #kolTable tbody .kolFabricLine:not(.hasCard) .kolFabricText{color:var(--ink2)}
@@ -280,14 +280,14 @@
 .kolFabricSummaryHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .kolFabricSummaries{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:640px){.kolFabricSummaries{grid-template-columns:1fr}}
-.kolFabricSource{flex:none;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
+.kolFabricSource{flex:none;font-size:var(--fs-xs);font-weight:600;padding:1px 7px;border-radius:var(--r-full);border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
 .kolFabricSource.is-ai{border-color:var(--acc-lite);color:var(--acc-ink);background:var(--acc-bg)}
 .kolFabricSource.is-manual{border-color:var(--line2);color:var(--ink)}
 .kolFabricRaw{width:100%;resize:vertical}
 .kolFabricFoot{flex-wrap:wrap;gap:8px}
 .kolFabricFootSpacer{flex:1}
-.kolFabricBatchWrap{max-height:min(56vh,520px);overflow:auto;border:1px solid var(--line);border-radius:8px}
-.kolFabricBatchTable{width:100%;border-collapse:collapse;font-size:12px}
+.kolFabricBatchWrap{max-height:min(56vh,520px);overflow:auto;border:1px solid var(--line);border-radius:var(--r-md)}
+.kolFabricBatchTable{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
 .kolFabricBatchTable th,.kolFabricBatchTable td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
 .kolFabricBatchTable thead th{position:sticky;top:0;background:var(--card2,var(--bg));z-index:1;font-weight:600}
 .kolFabricBatchCode{font-weight:600;white-space:nowrap}
@@ -300,13 +300,13 @@
    Uses Buyer Log's shared theme tokens in both light and dark modes. */
 .kolColFilterPanel:has(.kolFabricFacetPanel){width:min(460px,calc(100vw - 16px));max-height:min(82vh,760px);overflow:auto;overscroll-behavior:contain}
 .kolFabricFacetPanel{display:grid;gap:6px;margin:9px 0;padding:10px 0;border-block:1px solid var(--line);color:var(--ink)}
-.kolFabricFacetPanel>strong{font-size:12px;font-weight:700;padding:0 3px}
-.kolFabricFacetField{border:1px solid var(--line);border-radius:7px;background:var(--card2,var(--bg));min-width:0}
-.kolFabricFacetField>summary{cursor:pointer;padding:8px 10px;font-weight:600;font-size:12px;list-style-position:inside}
+.kolFabricFacetPanel>strong{font-size:var(--fs-sm);font-weight:700;padding:0 3px}
+.kolFabricFacetField{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2,var(--bg));min-width:0}
+.kolFabricFacetField>summary{cursor:pointer;padding:8px 10px;font-weight:600;font-size:var(--fs-sm);list-style-position:inside}
 .kolFabricFacetField[open]>summary{border-bottom:1px solid var(--line)}
-.kolFabricFacetSearch{box-sizing:border-box;margin:7px 7px 3px;width:calc(100% - 14px);min-height:30px;border:1px solid var(--line);border-radius:5px;padding:4px 8px;color:var(--ink);background:var(--card,var(--bg))}
+.kolFabricFacetSearch{box-sizing:border-box;margin:7px 7px 3px;width:calc(100% - 14px);min-height:30px;border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 8px;color:var(--ink);background:var(--card,var(--bg))}
 .kolFabricFacetOptions{max-height:150px;overflow:auto;padding:5px 7px 7px;display:grid;gap:2px}
-.kolFabricFacetOption{display:flex;align-items:flex-start;gap:8px;padding:4px 5px;border-radius:5px;font-size:12px;line-height:1.45;cursor:pointer;overflow-wrap:anywhere}
+.kolFabricFacetOption{display:flex;align-items:flex-start;gap:8px;padding:4px 5px;border-radius:var(--r-sm);font-size:var(--fs-sm);line-height:1.45;cursor:pointer;overflow-wrap:anywhere}
 .kolFabricFacetOption:hover{background:var(--acc-bg,var(--card2))}
 .kolFabricFacetOption[hidden]{display:none}
 .kolFabricFacetOption input{margin-top:2px;accent-color:var(--acc)}

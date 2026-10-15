@@ -1095,8 +1095,8 @@
     const body = labTab === 'inspector' ? labInspector() : labTab === 'automation' ? labAutomation() : labInventory();
     return `<div class="dmLabPanel">
       <div class="dmLabOverview">
-        <span class="dmLabEnvironment ${environment.mode === 'CORPORATE_LIVE' ? 'isLive' : 'isLocal'}">${esc(environment.label || environment.mode)}</span>
-        ${environment.validationRequired ? `<span class="dmLabValidation">CORPORATE VALIDATION REQUIRED</span>` : ''}
+        <span class="dmLabEnvironment ${environment.mode === 'CORPORATE_LIVE' ? 'isLive' : 'isLocal'}">${esc(environment.mode === 'CORPORATE_LIVE' ? T('Kurumsal canlı', 'Corporate live') : T('Yerel simülasyon', 'Local simulation'))}</span>
+        ${environment.validationRequired ? `<span class="dmLabValidation">${esc(T('Kurumsal doğrulama gerekli', 'Corporate validation required'))}</span>` : ''}
         <span>${Number(lab.summary && lab.summary.integrationCount || 0)} ${esc(T('entegrasyon', 'integrations'))}</span>
         <span>${Number(lab.summary && lab.summary.attentionCount || 0)} ${esc(T('dikkat isteyen', 'need attention'))}</span>
         <span class="dmSummarySpacer"></span>

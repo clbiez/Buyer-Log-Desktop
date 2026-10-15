@@ -55,7 +55,7 @@ test('v5.49 server store Landed çarpanlarını revision ile kalıcı tutar',()=
 
 test('v5.51 Landed hücreleri kompakt tek satır düzeninde gereksiz rozetleri kaldırır',()=>{
   const landed=between(CSS,'.kolLandedCard{','.kolLandedTd:hover');
-  for(const token of ['min-height:38px','border:1px solid var(--line)','border-radius:9px','background:var(--card2)','display:flex','padding:5px 7px']){
+  for(const token of ['min-height:38px','border:1px solid var(--line)','border-radius:var(--r-md)','background:var(--card2)','display:flex','padding:5px 7px']){
     assert.ok(landed.includes(token),`Landed ${token}`);
   }
   assert.match(APP,/class="kolLandedMeta"/);

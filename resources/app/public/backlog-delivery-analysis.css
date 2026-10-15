@@ -12,30 +12,30 @@
 #backlogAnalysis[hidden] { display: none; }
 
 .bdaHead { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
-.bdaTitle { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-size: 17px; font-weight: 600; letter-spacing: .01em; color: var(--ink); }
+.bdaTitle { font-family: var(--head); font-size: var(--fs-lg); font-weight: 600; letter-spacing: .01em; color: var(--ink); }
 .bdaTitleToggle { appearance: none; display: inline-flex; align-items: center; gap: 7px; margin: 0; padding: 0; border: 0; background: transparent; cursor: pointer; text-align: left; }
 .bdaTitleToggle:hover { color: var(--acc); }
-.bdaTitleToggle:focus-visible { outline: 1px solid var(--acc); outline-offset: 3px; border-radius: 2px; }
+.bdaTitleToggle:focus-visible { outline: 1px solid var(--acc); outline-offset: 3px; border-radius: var(--r-xs); }
 .bdaTitleChevron { width: 7px; height: 7px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform .16s ease; }
 .bdaTitleToggle[aria-expanded="false"] .bdaTitleChevron { transform: rotate(-45deg); }
-.bdaSub { font-size: 11.5px; color: var(--muted); margin-top: 2px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.bdaSub { font-size: var(--fs-xs); color: var(--muted); margin-top: 2px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .bdaHeadControls { display: flex; flex-wrap: wrap; gap: 8px; align-items: flex-end; }
-.bdaControl { display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--muted); }
-.bdaControl select, .bdaControl input { height: var(--ctl-h, 28px); border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: 3px; padding: 0 6px; font-size: 12px; }
+.bdaControl { display: flex; flex-direction: column; gap: 3px; font-size: var(--fs-xs); color: var(--muted); }
+.bdaControl select, .bdaControl input { height: var(--ctl-h, 28px); border: 1px solid var(--line); background: var(--paper); color: var(--ink); border-radius: var(--r-xs); padding: 0 6px; font-size: var(--fs-sm); }
 
-.bdaParity { font-size: 11px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 2px; }
+.bdaParity { font-size: var(--fs-xs); padding: 1px 6px; border: 1px solid var(--line); border-radius: var(--r-xs); }
 .bdaParity.is-ok { color: var(--ok, #2e7d32); border-color: currentColor; }
 .bdaParity.is-warn { color: var(--warn, #b26a00); border-color: currentColor; }
 
 /* --------------------------------------------------------------- KPI satırı */
 .bdaKpiRow { display: grid; grid-template-columns: repeat(6, minmax(132px, 1fr)); gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 2px; }
 .bdaKpi { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left;
-  border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 8px 10px; cursor: pointer; }
+  border: 1px solid var(--line); background: var(--paper); border-radius: var(--r-xs); padding: 8px 10px; cursor: pointer; }
 .bdaKpi.is-total { cursor: default; }
 .bdaKpi:not(.is-total):hover { border-color: var(--acc); }
-.bdaKpiLabel { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
-.bdaKpiValue { font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1.1; }
-.bdaKpiMeta { font-size: 10.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.bdaKpiLabel { font-size: var(--fs-2xs); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.bdaKpiValue { font-size: var(--fs-xl); font-weight: 600; font-variant-numeric: tabular-nums; color: var(--ink); line-height: 1.1; }
+.bdaKpiMeta { font-size: var(--fs-2xs); color: var(--muted); font-variant-numeric: tabular-nums; }
 .bdaKpi.is-ok .bdaKpiValue { color: var(--ok, #2e7d32); }
 .bdaKpi.is-warn .bdaKpiValue { color: var(--warn, #b26a00); }
 .bdaKpi.is-bad .bdaKpiValue { color: var(--bad, #c62828); }
@@ -44,12 +44,12 @@
 /* ----------------------------------------------------------------- bölümler */
 .bdaSection { margin-top: 14px; }
 .bdaSplit { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
-.bdaH { font-family: 'Barlow Condensed', 'Barlow', sans-serif; font-size: 13px; font-weight: 600; text-transform: uppercase;
+.bdaH { font-family: var(--head); font-size: var(--fs-base); font-weight: 600; text-transform: uppercase;
   letter-spacing: .05em; color: var(--muted); margin: 0 0 6px; }
-.bdaMuted { color: var(--muted); font-size: 11.5px; }
+.bdaMuted { color: var(--muted); font-size: var(--fs-xs); }
 .bdaPad { padding: 10px 0; }
-.bdaError { color: var(--bad, #c62828); font-size: 12px; padding: 8px 0; }
-.bdaLink { background: none; border: 0; color: var(--acc); font-size: 11.5px; cursor: pointer; padding: 4px 0; }
+.bdaError { color: var(--bad, #c62828); font-size: var(--fs-sm); padding: 8px 0; }
+.bdaLink { background: none; border: 0; color: var(--acc); font-size: var(--fs-xs); cursor: pointer; padding: 4px 0; }
 
 /* --------------------------------------------------------------- nedenler
    KPI kartlarıyla aynı görsel dil: aynı kart, tipografi ve yoğunluk. */
@@ -59,15 +59,15 @@
 /* --------------------------------------------------------------- yorumlar */
 .bdaInsightList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .bdaInsightBtn { display: flex; gap: 8px; align-items: baseline; width: 100%; text-align: left;
-  border: 1px solid var(--line); background: var(--paper); border-radius: 3px; padding: 7px 9px; cursor: pointer; }
+  border: 1px solid var(--line); background: var(--paper); border-radius: var(--r-xs); padding: 7px 9px; cursor: pointer; }
 .bdaInsightBtn:hover { border-color: var(--acc); }
 .bdaInsightDot { width: 6px; height: 6px; border-radius: 50%; flex: none; background: var(--muted); transform: translateY(-1px); }
 .bdaInsight.is-critical .bdaInsightDot { background: var(--bad, #c62828); }
 .bdaInsight.is-warning .bdaInsightDot { background: var(--warn, #b26a00); }
 .bdaInsight.is-watch .bdaInsightDot { background: var(--muted); }
 .bdaInsight.is-positive .bdaInsightDot { background: var(--ok, #2e7d32); }
-.bdaInsightText { flex: 1; font-size: 12px; color: var(--ink); line-height: 1.45; }
-.bdaInsightMeta { font-size: 10.5px; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bdaInsightText { flex: 1; font-size: var(--fs-sm); color: var(--ink); line-height: 1.45; }
+.bdaInsightMeta { font-size: var(--fs-2xs); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
 /* ------------------------------------------------------------ needs attention
    KPI kartlarıyla aynı görsel dil; durum renkleri .bdaKpi is-* kurallarından gelir. */
@@ -77,17 +77,17 @@
 /* ------------------------------------------------------------------ çipler */
 .bdaChipRow { display: flex; flex-wrap: wrap; gap: 6px; }
 .bdaChip { display: inline-flex; gap: 6px; align-items: baseline; border: 1px solid var(--line);
-  background: var(--paper); border-radius: 3px; padding: 5px 9px; cursor: pointer; font-size: 11.5px; color: var(--ink); }
+  background: var(--paper); border-radius: var(--r-xs); padding: 5px 9px; cursor: pointer; font-size: var(--fs-xs); color: var(--ink); }
 .bdaChip:hover { border-color: var(--acc); }
 .bdaChip b { font-variant-numeric: tabular-nums; }
 .bdaChip.is-warn { color: var(--warn, #b26a00); border-color: currentColor; }
 
 /* ---------------------------------------------------------------- tablolar */
-.bdaTableWrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 3px; }
-.bdaTable { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.bdaTableWrap { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r-xs); }
+.bdaTable { width: 100%; border-collapse: collapse; font-size: var(--fs-xs); }
 .bdaTable th, .bdaTable td { padding: 5px 8px; border-bottom: 1px solid var(--line); text-align: left; white-space: nowrap; }
 .bdaTable thead th { background: var(--paper); color: var(--muted); font-weight: 600; text-transform: uppercase;
-  font-size: 10px; letter-spacing: .04em; position: sticky; top: 0; }
+  font-size: var(--fs-2xs); letter-spacing: .04em; position: sticky; top: 0; }
 .bdaTable tbody tr:last-child td { border-bottom: 0; }
 .bdaTable .num { text-align: right; font-variant-numeric: tabular-nums; }
 .bdaCellBtn { background: none; border: 0; color: var(--acc); cursor: pointer; font: inherit; font-variant-numeric: tabular-nums; padding: 0; }
@@ -95,25 +95,25 @@
 
 .bdaTabs { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 6px; }
 .bdaTab { border: 1px solid var(--line); background: var(--paper); color: var(--muted);
-  border-radius: 3px; padding: 4px 9px; font-size: 11px; cursor: pointer; }
+  border-radius: var(--r-xs); padding: 4px 9px; font-size: var(--fs-xs); cursor: pointer; }
 .bdaTab.is-active { color: var(--ink); border-color: var(--acc); }
 
-.bdaMissing { margin: 0; padding-left: 18px; font-size: 11.5px; color: var(--ink); display: flex; flex-direction: column; gap: 2px; }
+.bdaMissing { margin: 0; padding-left: 18px; font-size: var(--fs-xs); color: var(--ink); display: flex; flex-direction: column; gap: 2px; }
 
 /* ------------------------------------------------------------------ ayarlar */
 .bdaSettingsCard { width: min(94vw, 720px); max-height: 88vh; display: flex; flex-direction: column; padding: 0; }
 .bdaSettingsHead { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; border-bottom: 1px solid var(--line); }
 .bdaSettingsBody { padding: 12px 14px; overflow: auto; display: flex; flex-direction: column; gap: 16px; }
-.bdaSettingsBody h5 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
+.bdaSettingsBody h5 { margin: 0 0 6px; font-size: var(--fs-sm); text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 .bdaCheckGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 4px 12px; }
-.bdaCheck { display: flex; gap: 6px; align-items: center; font-size: 12px; color: var(--ink); }
+.bdaCheck { display: flex; gap: 6px; align-items: center; font-size: var(--fs-sm); color: var(--ink); }
 .bdaFieldRow { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; }
 
 /* Uyarı bandı: eksik yol süresi kuralı — kullanıcının doğrudan aksiyon
    alabileceği tek şey olduğu için en üstte ve ayırt edici. */
 .bdaWarnBand { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline;
   border: 1px solid var(--warn, #b26a00); border-left-width: 3px; background: var(--paper);
-  border-radius: 3px; padding: 8px 10px; margin-bottom: 10px; font-size: 11.5px; color: var(--ink); }
+  border-radius: var(--r-xs); padding: 8px 10px; margin-bottom: 10px; font-size: var(--fs-xs); color: var(--ink); }
 .bdaWarnBand b { color: var(--warn, #b26a00); }
 .bdaSettingsGroup { display: block; }
 .bdaCheckWide { grid-column: 1 / -1; margin-top: 6px; }
@@ -126,10 +126,10 @@
 .backlogPivotWorkspacePanel,.backlogRadarCard{min-width:0;margin:0!important}
 .backlogWorkspaceCardHead{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px;padding:7px 9px;border-bottom:1px solid var(--line);background:var(--card)}
 .backlogWorkspaceCardHead>div:first-child{display:flex;align-items:baseline;gap:8px;min-width:0}
-.backlogWorkspaceCardHead strong{font-size:11px;color:var(--ink);white-space:nowrap}
-.backlogWorkspaceCardHead span{font-size:10px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.backlogWorkspaceCardHead strong{font-size:var(--fs-xs);color:var(--ink);white-space:nowrap}
+.backlogWorkspaceCardHead span{font-size:var(--fs-2xs);color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .backlogWorkspaceCardActions{display:flex;align-items:center;gap:3px;flex:0 0 auto}
-.blWorkspaceIconBtn{width:25px;height:24px;padding:0;border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--muted);font:700 13px/1 var(--font,system-ui,sans-serif);cursor:pointer}
+.blWorkspaceIconBtn{width:25px;height:24px;padding:0;border:1px solid transparent;border-radius:var(--r-xs);background:transparent;color:var(--muted);font:700 var(--fs-base)/1 var(--sans);cursor:pointer}
 .blWorkspaceIconBtn:hover,.blWorkspaceIconBtn:focus-visible{border-color:var(--line);background:var(--card2);color:var(--ink);outline:none}
 .backlogWorkspaceSplitter{position:relative;min-width:7px;cursor:col-resize;touch-action:none;background:transparent}
 .backlogWorkspaceSplitter::before{content:"";position:absolute;top:10px;bottom:10px;left:3px;width:1px;background:var(--line2)}
@@ -144,17 +144,17 @@
 .blRadarAxis{stroke:var(--line);stroke-width:1}
 .blRadarArea{fill:color-mix(in srgb,var(--acc) 15%,transparent);stroke:var(--acc);stroke-width:1.7}
 .blRadarPoint{fill:var(--acc);stroke:var(--card);stroke-width:1.2}
-.blRadarLabel{fill:var(--muted);font:600 10px var(--font,system-ui,sans-serif)}
-.blRadarValue{fill:var(--ink);font:700 10px var(--mono,ui-monospace,monospace)}
-.blRadarEmpty{padding:24px;color:var(--muted);font-size:10.5px;text-align:center}
+.blRadarLabel{fill:var(--muted);font:600 var(--fs-2xs) var(--sans)}
+.blRadarValue{fill:var(--ink);font:700 var(--fs-2xs) var(--mono,ui-monospace,monospace)}
+.blRadarEmpty{padding:24px;color:var(--muted);font-size:var(--fs-2xs);text-align:center}
 .bdaRadarCard{margin:8px 0;border:1px solid var(--line);background:var(--card2);overflow:visible}
 .bdaRadarCard .backlogRadarBody{min-height:280px}
 .bdaRadarCard .blRadarSvg{width:min(100%,560px)}
 .backlogRadarFilter{padding:8px 9px;border-bottom:1px solid var(--line);background:var(--card2)}
 .backlogRadarFilter[hidden]{display:none}
-.backlogRadarFilterHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;color:var(--ink);font-size:10.5px}
+.backlogRadarFilterHead{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px;color:var(--ink);font-size:var(--fs-2xs)}
 .backlogRadarFilterList{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:5px 10px;max-height:150px;overflow:auto;overscroll-behavior:contain}
-.backlogRadarFilterList label{display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink);font-size:10.5px;cursor:pointer}
+.backlogRadarFilterList label{display:flex;align-items:center;gap:6px;min-width:0;color:var(--ink);font-size:var(--fs-2xs);cursor:pointer}
 .backlogRadarFilterList span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media(max-width:1100px){
   .backlogPivotRadarWorkspace{grid-template-columns:1fr!important;gap:8px}
@@ -170,13 +170,13 @@
 
 /* Radar chart type switching: Radar / Bar / Line */
 .backlogChartTypeSwitch{display:inline-grid;grid-template-columns:repeat(3,auto);gap:1px;padding:1px;border:1px solid var(--line);border-radius:var(--r-xs);background:var(--card2)}
-.backlogChartTypeSwitch button{min-width:38px;height:22px;padding:0 5px;border:0;border-radius:calc(var(--r-xs) - 1px);background:transparent;color:var(--muted);font:700 10px/1 var(--font,system-ui,sans-serif);cursor:pointer}
+.backlogChartTypeSwitch button{min-width:38px;height:22px;padding:0 5px;border:0;border-radius:var(--r-xs);background:transparent;color:var(--muted);font:700 var(--fs-2xs)/1 var(--sans);cursor:pointer}
 .backlogChartTypeSwitch button:hover{background:var(--card);color:var(--ink)}
 .backlogChartTypeSwitch button.is-active{background:var(--card);color:var(--acc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 35%,var(--line))}
 .blChartGrid{stroke:var(--line2);stroke-width:1}
-.blChartYLabel{fill:var(--muted);font:500 10px var(--mono,ui-monospace,monospace)}
-.blChartXLabel{fill:var(--muted);font:600 10px var(--font,system-ui,sans-serif)}
+.blChartYLabel{fill:var(--muted);font:500 var(--fs-2xs) var(--mono,ui-monospace,monospace)}
+.blChartXLabel{fill:var(--muted);font:600 var(--fs-2xs) var(--sans)}
 .blChartBar{fill:var(--acc);opacity:.82;stroke:var(--acc);stroke-width:1}
 .blChartLine{fill:none;stroke:var(--acc);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
 .blChartPoint{fill:var(--acc);stroke:var(--card);stroke-width:1.4}
-@media(max-width:680px){.backlogChartTypeSwitch button{min-width:31px;padding:0 3px;font-size:10px}}
+@media(max-width:680px){.backlogChartTypeSwitch button{min-width:31px;padding:0 3px;font-size:var(--fs-2xs)}}
