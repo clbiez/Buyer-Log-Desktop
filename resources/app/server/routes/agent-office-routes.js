@@ -102,7 +102,18 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.post(base+'/workflow/run',json,stream((req,signal,onProgress)=>service.runWorkflow(req.currentUser,{...req.body,signal},onProgress)));
   app.post(base+'/run',json,stream((req,signal,onProgress)=>service.run(req.currentUser,{...req.body,signal},onProgress)));
   // Sade sohbet: tek kutu, LCW AI yönlendirir (cevap / iş / soru), gerekirse ekibi büyütür.
-  app.post(base+'/chat',json,stream((req,signal,onProgress)=>service.officeChat(req.currentUser,{...req.body,signal},onProgress)));
+  app.post(base+'/chat',express.json({limit:'160mb'}),stream(async(req,signal,onProgress)=>{
+    const owner=userAccess.profileById(req.currentUser.id)||req.currentUser,stamp=JSON.stringify(userAccess.publicProfile?.(owner)||owner.id);
+    const assertAuthority=()=>{if(JSON.stringify(userAccess.publicProfile?.(userAccess.profileById(owner.id))||owner.id)!==stamp)throw error('OFFICE_TOOL_FORBIDDEN',403);};
+    let attachments=[];
+    if(Array.isArray(req.body?.files)&&req.body.files.length){onProgress({phase:'attachments'});
+      attachments=await require('../lib/agent-office-chat').prepareAttachments(owner,req.body.files,{qualityService:deps.qualityService,qualityTools:deps.qualityTools,artifacts:require('../lib/agent-artifact-store'),
+        canReadDocuments:async()=>{for(const agent of await service.officeChatRoster(owner)){if((await service.taskCatalog(owner,agent.id).catch(()=>[])).some(tool=>tool.id==='quality.inspect'))return true;}return false;},
+        engine:service.engineOf(),lang:req.body.lang,assertAuthority});
+      audit(req,'AGENT_CHAT_ATTACHMENTS',req.currentUser.id,{files:req.body.files.length});}
+    const {files,...body}=req.body||{};
+    return service.officeChat(req.currentUser,{...body,attachments,signal},onProgress);
+  }));
   app.post(base+'/chat/agent-draft',json,wrap(async(req,res)=>res.json({ok:true,...await service.officeAgentDraft(req.currentUser,req.body||{})})));
   app.get(base+'/chat/tasks/:id',wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatTask(req.currentUser,req.params.id)})));
   app.post(base+'/chat/tasks/:id/approve',json,wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatApprove(req.currentUser,req.params.id,req.body||{})})));
