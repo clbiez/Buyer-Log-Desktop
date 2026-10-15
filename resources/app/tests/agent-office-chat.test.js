@@ -78,6 +78,19 @@ test('a question that spans two areas becomes a team conversation with one share
   assert.equal(list.at(-1).provenance.perspectives.length,2,'each agent speaks in the reply');
   const routeCall=engine.calls.find(c=>c.source==='agent-chat-route');
   assert.ok(routeCall.context.agents.every(agent=>Array.isArray(agent.toolIds)),'router sees each agent\'s tools');
+  // A follow-up continues the conversation: the earlier answer is passed in full, in order.
+  const long='DEMO ortak cevap '+'x'.repeat(3000);engine.calls.length=0;
+  const authority=w.service.memoryFingerprint(w.profile);
+  await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'assistant',text:'REVOKED PRICE ANSWER',profileIds:[a.ada.id],requestId:'r-old',authorizationFingerprint:'an-earlier-authority'});
+  await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'assistant',text:long,profileIds:[a.ada.id],requestId:'r-demo',authorizationFingerprint:authority,
+    provenance:{emailDrafts:[{to:['supplier@example.com'],cc:['merch@example.com'],subject:'DEMO status',body:'Dear supplier'}]}});
+  await w.service.officeChat(w.profile,{text:'Taslaklar nerede?',agentId:a.ada.id,conversationId:result.conversation.id});
+  const follow=engine.calls.find(c=>c.source==='agent-office');
+  assert.ok(follow.guide.startsWith('=== RECENT CONVERSATION ===\n--- owner ---\nKoleksiyonda'),'oldest first');
+  assert.ok(follow.guide.includes(long),'the earlier answer is not cut to an excerpt');
+  assert.ok(!follow.guide.includes('REVOKED PRICE ANSWER'),'an answer written under other permissions never goes back to LCW AI');
+  assert.ok(follow.guide.includes('[draft 1]\nTo: supplier@example.com\nCc: merch@example.com\nSubject: DEMO status\nDear supplier'),'earlier drafts stay in the history so they can be edited');assert.ok(!follow.guide.includes('Taslaklar nerede?'),'the current message is the request, not history');
+  assert.deepEqual(follow.context.recentConversation,[{messages:3}]);
   // The topic continues with both agents; a follow-up keeps the team.
   const next=await w.service.officeChat(w.profile,{text:'Peki öncelik ne olmalı?',conversationId:result.conversation.id});
   assert.equal(next.conversation.profileIds.length,2);
@@ -85,13 +98,53 @@ test('a question that spans two areas becomes a team conversation with one share
 
 test('a read request is planned with only the routed tools and finishes without approval',async t=>{
   let a,plannerTools;const engine=fakeEngine({'agent-chat-route':()=>({mode:'task',agentIds:[a.ada.id],lead:a.ada.id,toolIds:['collection.plm.bom.read'],brief:'100001 ve 100002 BOM özetini oku'}),
-    'agent-task':input=>{plannerTools=input.context.tools.map(tool=>tool.id);return {planJson:JSON.stringify({steps:[{id:'bom',toolId:'collection.plm.bom.read',args:{plmIds:['100001','100002']}}]})};}});
+    'agent-task':input=>{plannerTools=input.context.tools.map(tool=>tool.id);return {planJson:JSON.stringify({steps:[{id:'bom',toolId:'collection.plm.bom.read',args:{plmIds:['100001','100002']}}]})};},
+    'agent-office':()=>({answer:'100001 için BOM özeti DEMO; 100002 bulunamadı.',confidence:'MEDIUM',emailDrafts:[JSON.stringify({to:['DEMO Supplier <supplier@example.com>'],cc:['[adres]'],subject:'BOM 100002',body:'Merhaba'})]})});
   const w=world(t,engine);a=await team(w);
   const result=await w.service.officeChat(w.profile,{text:'100001 ve 100002 için BOM bilgisine bak',agentId:a.ada.id});
   assert.deepEqual(plannerTools,['collection.plm.bom.read'],'planner sees only the routed tool');
   assert.equal(result.task.status,'completed');
-  const card=(await msgs(w,result.conversation)).map(m=>m.role==='system'?JSON.parse(m.text):null).find(m=>m?.type==='task');
+  assert.equal(engine.calls.find(c=>c.source==='agent-chat-route').reasoningLevel,'Low','routing is a quick decision');
+  const list=await msgs(w,result.conversation);
+  const card=list.map(m=>m.role==='system'?JSON.parse(m.text):null).find(m=>m?.type==='task');
   assert.equal(card.taskId,result.task.id);
+  // The lead writes the actual answer from the verified step results, after the card, without repeating the owner's message.
+  const answer=engine.calls.find(c=>c.source==='agent-office');
+  assert.equal(answer.task,'100001 ve 100002 için BOM bilgisine bak');
+  assert.match(answer.guide,/=== 1\. collection\.plm\.bom\.read ===\n/);assert.match(answer.guide,/100001/);
+  assert.deepEqual(answer.context.taskResults,[{taskId:result.task.id,lead:a.ada.id}]);
+  assert.equal(list.filter(m=>m.role==='user').length,1,'the owner\'s message is not duplicated');
+  assert.equal(list.at(-1).text,'100001 için BOM özeti DEMO; 100002 bulunamadı.');
+  assert.deepEqual(list.at(-1).provenance.emailDrafts,[{to:['DEMO Supplier <supplier@example.com>'],cc:[],subject:'BOM 100002',body:'Merhaba',missingRecipient:false,droppedAddresses:1}],'drafts are saved with the answer, sanitized');assert.equal(result.message.id,list.at(-1).id);
+  await w.service.officeChatAdvance(w.profile,result.task.id);
+  assert.equal(engine.calls.filter(c=>c.source==='agent-office').length,1,'a task is answered once');
+});
+
+test('step results reach the answer without internal tokens and within the size limit',()=>{
+  const {stepResultsText}=require('../server/lib/agent-office-chat');
+  const text=stepResultsText({steps:[{toolId:'cp.records.read',status:'completed',result:{verified:true,rollbackToken:'SECRET-TOKEN',data:{rows:[{order:'7300001'}]}}},
+    {toolId:'orders.records.read',status:'failed',result:{verified:true,data:{rows:[]}}},
+    {toolId:'manufacturer.cards.read',status:'completed',result:{verified:true,data:{text:'x'.repeat(50000)}}}]});
+  assert.doesNotMatch(text,/SECRET-TOKEN|rollbackToken/);
+  assert.match(text,/=== 1\. cp\.records\.read ===\n\{"rows":\[\{"order":"7300001"\}\]\}/,'a single row stays JSON');
+  const table=stepResultsText({steps:[{toolId:'cp.records.read',status:'completed',result:{verified:true,data:{revision:4,rows:[{order:'7300001',exf:'2026-10-12'},{order:'7300002',note:'a|b'}]}}}]});
+  assert.equal(table,'=== 1. cp.records.read ===\n{"revision":4}\nrows:\nTABLE order | exf | note\n7300001 | 2026-10-12 | \n7300002 |  | a b','row lists become a compact table');
+  assert.doesNotMatch(text,/orders\.records\.read/,'failed steps are not facts');
+  assert.match(text,/=== 3\. manufacturer\.cards\.read \(truncated\) ===/);assert.ok(text.length<23000);
+  assert.ok(text.includes('x'.repeat(21000)),'a single large result gets the budget the small ones leave');
+});
+
+test('the answer prompt carries the results and a human voice, and stays under the LCW AI prompt limit',()=>{
+  const {buildPrompt}=require('../server/lib/lcwai/lcwai-prompt'),config=require('../server/lib/lcwai/lcwai-config');
+  const out=buildPrompt({source:'agent-office',lang:'tr',task:'Bu haftanın siparişleri için e-posta taslakları',guide:'=== 1. cp.records.read ===\n'+'y'.repeat(24000),
+    context:{taskResults:[{taskId:'t1',lead:'a1'}],findings:Array.from({length:40},(_,i)=>({id:'f'+i,text:'z'.repeat(1500)}))}});
+  assert.match(out.prompt,/doğrulanmış sonuçlarını içerir/);assert.match(out.prompt,/iş arkadaşısın/);
+  assert.equal(out.truncated,false);assert.ok(out.prompt.length<=config.LIMITS.maxPromptChars);
+  assert.match(out.prompt,/=== KULLANICI İSTEĞİ ===/,'the request and answer format are never cut off');
+  const huge=buildPrompt({source:'agent-office',lang:'tr',task:'Otomasyon kuralı ile geciken siparişler için tedarikçiye mail taslağı yaz '+'k'.repeat(3800),guide:'g'.repeat(40000),
+    context:{findings:Array.from({length:40},(_,i)=>({id:'f'+i,text:'z'.repeat(1500)}))}});
+  assert.equal(huge.truncated,true);assert.ok(huge.prompt.length<=config.LIMITS.maxPromptChars);
+  assert.match(huge.prompt,/=== CEVAP BİÇİMİ[\s\S]*"emailDrafts"/,'an oversized prompt is cut in the middle; the answer format at the end survives');assert.match(huge.prompt,/…\[cut\]/);
 });
 
 test('a change waits on the approval card and runs only with the previewed fingerprint',async t=>{
@@ -103,8 +156,19 @@ test('a change waits on the approval card and runs only with the previewed finge
   assert.equal(result.task.status,'waiting_approval');
   assert.equal(db.loadOverrides().noteColumnDefs.length,before,'nothing changes before approval');
   await assert.rejects(w.service.officeChatApprove(w.profile,result.task.id,{confirmed:true,fingerprint:'wrong'}),{code:'OFFICE_APPROVAL_REQUIRED'});
+  // The owner talks about something else before approving: the answer still belongs to the original request.
+  await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'user',text:'Arada başka bir soru',requestId:'r-other'});
   const done=await w.service.officeChatApprove(w.profile,result.task.id,{confirmed:true,fingerprint:result.task.steps[0].preview.fingerprint});
   assert.equal(done.status,'completed');assert.equal(db.loadOverrides().noteColumnDefs.length,before+1);
+  const last=(await msgs(w,result.conversation)).at(-1);
+  assert.ok(last.role==='system'&&/OFFICE_AI/.test(last.text),'after approval the lead tries to write the answer; a failed answer is noted, the change stays done');
+  const answers=()=>engine.calls.filter(c=>c.source==='agent-office');
+  assert.equal(answers().length,1);assert.equal(answers()[0].task,'Siparişlere DEMO Sohbet adında not sütunu ekle');
+  assert.ok(!answers()[0].guide||!answers()[0].guide.includes('Arada başka bir soru'),'messages written after the request are not its history');
+  const users=(await msgs(w,result.conversation)).filter(m=>m.role==='user').map(m=>m.text);
+  assert.deepEqual(users,['Siparişlere DEMO Sohbet adında not sütunu ekle','Arada başka bir soru'],'the request is not appended again');
+  await w.service.officeChatAdvance(w.profile,result.task.id);
+  assert.equal(answers().length,1,'a failed answer is tried once, not on every poll');
 });
 
 test('invented agents or tools never reach the conversation or the planner; a missing identifier asks one question',async t=>{
@@ -215,4 +279,31 @@ test('a failed document analysis does not block the test report reader',async()=
     canReadDocuments:async()=>true,qualityService:{parse:async()=>{calls.push('parse');return {sessionId:'s'.repeat(32)};},extractAi:async()=>{}},qualityTools:{inspect:async()=>({matches:[]})},engine:{},staging:{dropSession:()=>{}}});
   assert.deepEqual(out.map(i=>i.kind),['test-documents']);assert.deepEqual(calls,['parse']);
   await assert.rejects(prepareAttachments({id:'o'},[{name:'DEMO.csv',base64:'YSxi'}],{analyzeDocuments:async()=>{throw Object.assign(new Error('x'),{code:'OFFICE_AI_CONTRACT_INVALID'});}}),{code:'OFFICE_AI_CONTRACT_INVALID'},'with nothing else to show, the analysis error is reported');
+});
+
+test('the daily brief lists CP critical, today and this-week orders with reasons and unordered collection options, once a day',async t=>{
+  const w=world(t,fakeEngine({}));await team(w);let scans=0;
+  w.service.scan=async()=>{scans++;return {sourceUpdatedAt:'2026-10-15T06:00:00Z',changes:[{}, {}],
+    orders:[{orderKey:'k1',identity:{orderCode:'7300001',colourCode:'C1'},analysis:{modelName:'DEMO KAZAK'},dimensions:{manufacturer:'DEMO TRIKO'}},{orderKey:'k2',identity:{orderCode:'7300002',modelName:'DEMO HIRKA',colourCode:'C2'}}],
+    findings:[{code:'CP_PRIORITY',orderKey:'k2',severity:'ACTION_TODAY',title:{tr:'Bugün Aksiyon',en:'Action Today'},reasons:[{title:{tr:'Numune onayı yok',en:'No sample approval'}}]},
+      {code:'CP_PRIORITY',orderKey:'k1',severity:'CRITICAL',title:{tr:'Kritik',en:'Critical'},reasons:[]},{code:'CP_PRIORITY',orderKey:'k3',severity:'ACTION_THIS_WEEK',title:{tr:'Bu Hafta Aksiyon',en:'Action This Week'}},
+      {code:'CP_PRIORITY',orderKey:'k4',severity:'WATCH',title:{tr:'İzlemede',en:'Watch'}},{code:'QUANTITY_REVIEW',orderKey:'k1',severity:'MEDIUM'}],
+    decisionSupport:{collectionPipeline:[{season:'6S27',status:'Fiyatlama',options:20,unlinked:12,missingSupplier:4},{season:'6W26',status:'Sipariş',options:5,unlinked:0,missingSupplier:0}]}};};
+  const brief=await w.service.officeChatBrief(w.profile);
+  assert.deepEqual(brief.counts,{critical:1,today:1,week:1,changes:2},'the CP engine vocabulary is counted, watch-only orders are not');
+  assert.deepEqual(brief.top.map(item=>[item.severity,item.level,item.orderCode]),[['CRITICAL',4,'7300001'],['ACTION_TODAY',3,'7300002'],['ACTION_THIS_WEEK',2,'']],'most severe first');
+  assert.deepEqual(brief.top[1].reasons,[{tr:'Numune onayı yok',en:'No sample approval'}]);
+  assert.deepEqual([brief.top[0].model,brief.top[0].colour,brief.top[0].supplier],['DEMO KAZAK','C1','DEMO TRIKO'],'the model comes from the CP analysis, the supplier from the order');
+  assert.deepEqual(brief.collection,[{season:'6S27',status:'Fiyatlama',options:20,unlinked:12,missingSupplier:4}]);
+  await w.service.officeChatBrief(w.profile);assert.equal(scans,1,'computed once a day');
+  await w.service.officeChatBrief(w.profile,{refresh:true});assert.equal(scans,2,'refresh recomputes');
+  w.profile.areas=['koleksiyon'];await w.service.officeChatBrief(w.profile);assert.equal(scans,3,'a permission change recomputes the saved brief');
+});
+
+test('CP action priorities rank with the general severities',()=>{
+  const {severityLevel,PRIORITY}=require('../server/lib/agent-office-intelligence');
+  assert.deepEqual(['CRITICAL','ACTION_TODAY','HIGH','ACTION_THIS_WEEK','MEDIUM','WATCH','ON_TRACK','UNKNOWN'].map(severityLevel),[4,3,3,2,2,1,0,0]);
+  assert.ok(PRIORITY.ACTION_TODAY>PRIORITY.HIGH&&PRIORITY.ACTION_THIS_WEEK>PRIORITY.MEDIUM&&PRIORITY.ACTION_THIS_WEEK<PRIORITY.HIGH,'findings sort today/this-week actions above watch items');
+  const src=require('fs').readFileSync(require('path').join(__dirname,'..','server','lib','agent-office-service.js'),'utf8');
+  assert.match(src,/result\.findings\.filter\(f=>severityLevel\(f\.severity\)>=/,'background assistant alerts use the shared level, so ACTION_TODAY orders alert');
 });

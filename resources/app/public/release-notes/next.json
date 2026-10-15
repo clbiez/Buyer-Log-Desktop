@@ -7,8 +7,8 @@
     "en": "Login freeze fix and plain Agent chat"
   },
   "summary": {
-    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar. Agentları kendi cümlelerinizle yetiştirebilir, tercihlerinizi hatırlatabilir, sohbete rapor ve Excel ekleyebilirsiniz.",
-    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat. You can train agents in your own words, have them remember your preferences and attach reports and Excel files."
+    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar. Agentları kendi cümlelerinizle yetiştirebilir, tercihlerinizi hatırlatabilir, sohbete rapor ve Excel ekleyebilirsiniz. Agentlar işi bitirince istenen çıktıyı (tablo, e-posta taslağı) sohbette canlı yazar; cevabı kopyalayabilir veya Excel olarak indirebilirsiniz. E-posta taslakları Outlook'ta taslak olarak açılır.",
+    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat. You can train agents in your own words, have them remember your preferences and attach reports and Excel files. When the work is done, agents write the requested output (tables, e-mail drafts) live in the chat; you can copy it or download it as Excel. E-mail drafts open as drafts in Outlook."
   },
   "changes": [
     {
@@ -240,6 +240,151 @@
         "alt": {
           "tr": "Üreticinin karışık EXF revize Excel'i okundu; 10 satırdan 9'u siparişlerle eşleşti, riskler CP verisiyle hesaplandı (demo veri).",
           "en": "A supplier's messy ex-factory revision workbook was read; 9 of 10 rows matched orders and risks were calculated from CP data (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-task-answer",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent işi bitirince istediğiniz çıktıyı sohbette veriyor",
+        "en": "Agents now give you the output in the chat when the work is done"
+      },
+      "body": {
+        "tr": "Agent Buyer Log'dan veri okuyunca sohbette yalnız \"Tamamlandı\" görünüyor, liste veya e-posta taslağı hiç gelmiyordu. Artık okunan sonuçlar agenta verilir ve agent istediğinizi doğrudan yazar: tablolar, alıcı grubuna göre e-posta taslakları, analiz ve sonuç. Agent konuşmanın son mesajlarını tam görür; \"taslaklar nerede?\", \"CC'ye şunu ekle\" gibi devam soruları önceki cevabın üzerinden yürür. Cevaplar daha doğal ve kısa; ne yapacağını anlatan robotik giriş kalktı, yapılan adımlar tek satırda toplanır.",
+        "en": "When an agent read data from Buyer Log, the chat only showed \"Done\" and the list or e-mail drafts never arrived. The results are now handed to the agent, which writes what you asked for directly: tables, e-mail drafts per recipient group, analysis and conclusion. The agent sees the latest messages of the conversation in full, so follow-ups such as \"where are the drafts?\" or \"add this to CC\" build on the previous answer. Replies are more natural and shorter; the robotic \"here is what I will do\" intro is gone and the steps collapse into one line."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-task-answer.png",
+        "caption": {
+          "tr": "Tek mesajla geçmiş, bu hafta ve gelecek hafta yüklenecek siparişler tablo olarak ve üreticiye e-posta taslağı hazır geldi (demo veri).",
+          "en": "A single message returns past-due, this week's and next week's orders as a table with a ready supplier e-mail draft (demo data)."
+        },
+        "alt": {
+          "tr": "Tek mesajla geçmiş, bu hafta ve gelecek hafta yüklenecek siparişler tablo olarak ve üreticiye e-posta taslağı hazır geldi (demo veri).",
+          "en": "A single message returns past-due, this week's and next week's orders as a table with a ready supplier e-mail draft (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-answer-live",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Cevap yazılırken canlı görünüyor; yönlendirme daha hızlı",
+        "en": "Answers appear live while being written; routing is faster"
+      },
+      "body": {
+        "tr": "Agentın cevabı bitmesini beklemeden, yazıldıkça sohbette belirir. Mesajın hangi agenta ve işe gideceğine karar veren adım daha hafif çalışır; böylece ilk tepki daha erken gelir.",
+        "en": "The agent's answer shows up in the chat as it is written instead of after it finishes. The step that decides which agent and job a message goes to runs lighter, so the first response arrives sooner."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-answer-live.png",
+        "caption": {
+          "tr": "Ada'nın cevabı yazılırken sohbette canlı görünüyor (demo veri).",
+          "en": "Ada's answer appears live in the chat while it is being written (demo data)."
+        },
+        "alt": {
+          "tr": "Ada'nın cevabı yazılırken sohbette canlı görünüyor (demo veri).",
+          "en": "Ada's answer appears live in the chat while it is being written (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-answer-excel",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent cevabını kopyalayın veya Excel olarak indirin",
+        "en": "Copy an agent's answer or download it as Excel"
+      },
+      "body": {
+        "tr": "Her agent cevabının altında \"Kopyala\" düğmesi var; e-posta taslaklarını tek tıkla panoya alabilirsiniz. Cevapta tablo varsa \"Excel olarak indir\" her tabloyu ayrı sayfada bir .xlsx dosyasına aktarır.",
+        "en": "Every agent answer has a \"Copy\" button, so e-mail drafts go to the clipboard in one click. When the answer contains tables, \"Download as Excel\" exports each table to its own sheet in an .xlsx file."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-answer-excel.png",
+        "caption": {
+          "tr": "Cevabın altında Kopyala ve Excel olarak indir düğmeleri (demo veri).",
+          "en": "Copy and Download as Excel buttons under the answer (demo data)."
+        },
+        "alt": {
+          "tr": "Cevabın altında Kopyala ve Excel olarak indir düğmeleri (demo veri).",
+          "en": "Copy and Download as Excel buttons under the answer (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-daily-priorities",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Sohbet açılışında bugünün öncelikleri",
+        "en": "Today's priorities when the chat opens"
+      },
+      "body": {
+        "tr": "Boş sohbet ekranında CP motorundan günün kritik, bugün ve bu hafta aksiyon bekleyen siparişleri gerekçeleri, modeli ve üreticisiyle listelenir; koleksiyonda siparişe bağlanmamış veya üreticisi boş seçenekler de görünür. \"Sor\" ile o sipariş agenta sorulur, \"Bugünü benim için değerlendir\" tüm günü sıralar. Liste günde bir kez hesaplanır ve AI çağırmaz; \"Yenile\" yeniden hesaplar. Proaktif asistan uyarıları da artık CP'nin \"Bugün aksiyon\" ve \"Bu hafta aksiyon\" önceliklerini sayıyor.",
+        "en": "The empty chat screen lists the day's critical, action-today and action-this-week orders from the CP engine with their reasons, model and supplier; collection options not linked to an order or without a supplier are shown too. \"Ask\" asks the agent about that order and \"Assess today for me\" ranks the whole day. The list is computed once a day without calling AI; \"Refresh\" recalculates it. Proactive assistant alerts now also count CP's \"Action today\" and \"Action this week\" priorities."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-daily-priorities.png",
+        "caption": {
+          "tr": "Bugünün öncelikleri: bu hafta aksiyon bekleyen siparişler gerekçeleriyle ve koleksiyon özeti (demo veri).",
+          "en": "Today's priorities: orders needing action this week with reasons, plus a collection summary (demo data)."
+        },
+        "alt": {
+          "tr": "Bugünün öncelikleri: bu hafta aksiyon bekleyen siparişler gerekçeleriyle ve koleksiyon özeti (demo veri).",
+          "en": "Today's priorities: orders needing action this week with reasons, plus a collection summary (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-outlook-drafts",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agentın e-posta taslakları Outlook'ta taslak olarak açılıyor",
+        "en": "Agent e-mail drafts open as drafts in Outlook"
+      },
+      "body": {
+        "tr": "Agenttan e-posta istediğinizde her alıcı grubu için ayrı bir taslak kartı gelir: Kime, CC, konu ve metin. \"Outlook'ta aç\" taslağı Outlook'ta düzenlenebilir yeni e-posta olarak açar; CC, Türkçe karakterli adlar ve tablolar korunur. \"Hepsini Outlook'ta aç\" tüm taslakları açar. Verilerde adresi olmayan alıcı kartta belirtilir; Outlook açılamazsa taslak .eml dosyası olarak iner ve çift tıklayınca Outlook'ta açılır. Hiçbir e-posta otomatik gönderilmez.",
+        "en": "When you ask an agent for e-mails, you get a draft card per recipient group with To, CC, subject and text. \"Open in Outlook\" opens it in Outlook as an editable new e-mail, keeping CC, names with Turkish characters and tables. \"Open all in Outlook\" opens every draft. A recipient whose address is not in the data is flagged on the card; if Outlook cannot be opened the draft downloads as an .eml file that opens in Outlook on double-click. No e-mail is ever sent automatically."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-outlook-drafts.png",
+        "caption": {
+          "tr": "Ada iki üretici e-postası hazırladı; her biri Outlook'ta taslak olarak açılır, eksik alıcı ayrıca belirtilir (demo veri).",
+          "en": "Ada prepared two supplier e-mails; each opens as a draft in Outlook and a missing recipient is flagged (demo data)."
+        },
+        "alt": {
+          "tr": "Ada iki üretici e-postası hazırladı; her biri Outlook'ta taslak olarak açılır, eksik alıcı ayrıca belirtilir (demo veri).",
+          "en": "Ada prepared two supplier e-mails; each opens as a draft in Outlook and a missing recipient is flagged (demo data)."
         }
       }
     }

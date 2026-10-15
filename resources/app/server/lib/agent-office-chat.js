@@ -15,9 +15,12 @@
    Yönlendirici kararı deterministik olarak doğrulanır: bilinmeyen agent veya
    araç kimliği düşer, lider katılımcı listesinde olmalıdır. */
 const { id, error, text } = require('./agent-office-store');
+const { severityLevel } = require('./agent-office-intelligence');
 
 // AI ve belge kaynaklı metin kesilir, reddedilmez.
 const cut = (value, max) => String(value == null ? '' : value).trim().slice(0, max);
+// Yerel takvim günü: araçların @today değeriyle aynı gün (UTC gece yarısı kayması olmaz).
+const localDay = (date = new Date()) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
 const WAITING = new Set(['waiting_approval', 'waiting_output', 'waiting_operation']);
 const TERMINAL = new Set(['completed', 'partial', 'failed', 'cancelled', 'interrupted', 'rejected', 'rolled_back']);
 const MODES = new Set(['reply', 'task', 'clarify']);
@@ -115,9 +118,53 @@ function dropAttachments(attachments, staging) {
   for (const item of attachments || []) if (item.kind === 'test-documents' && item.sessionId) staging?.dropSession(item.sessionId);
 }
 
+/* Görev adımlarının doğrulanmış sonuçları, lider agentın cevabı için düz
+   metne çevrilir. Geri alma anahtarı gibi iç alanlar gitmez; büyük sonuç
+   kesilir ve bu açıkça yazılır. Metin yalnız şirket içi LCW AI'a gider. */
+const RESULT_LIMIT = 22000, HIDDEN_RESULT_KEYS = new Set(['rollbackToken', 'verified', 'receipt', 'fingerprint']);
+/* Satır listeleri (nesne dizileri) JSON yerine "sütunlar + satırlar" tablosu
+   olarak yazılır: her satırda alan adları tekrarlanmadığı için aynı bütçeye
+   çok daha fazla sipariş sığar. Diğer değerler JSON kalır. */
+const flat = value => value == null ? '' : typeof value === 'object' ? JSON.stringify(value) : String(value);
+function compactValue(value) {
+  if (Array.isArray(value) && value.length >= 2 && value.every(item => item && typeof item === 'object' && !Array.isArray(item))) {
+    const columns = [...new Set(value.flatMap(item => Object.keys(item)))];
+    return 'TABLE ' + columns.join(' | ') + '\n' + value.map(item => columns.map(column => flat(item[column]).replace(/[|\n]/g, ' ')).join(' | ')).join('\n');
+  }
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const parts = [], scalars = {};
+    for (const [key, item] of Object.entries(value)) {
+      const text = compactValue(item);
+      if (typeof text === 'string' && text.startsWith('TABLE ')) parts.push(key + ':\n' + text);
+      else scalars[key] = item;
+    }
+    if (parts.length) return [Object.keys(scalars).length ? JSON.stringify(scalars) : '', ...parts].filter(Boolean).join('\n');
+  }
+  return JSON.stringify(value);
+}
+function stepResultsText(job) {
+  const items = (job?.steps || []).map((step, index) => {
+    if (!step || !step.result || !['completed', 'partial'].includes(step.status)) return null;
+    const value = Object.fromEntries(Object.entries(step.result).filter(([key]) => !HIDDEN_RESULT_KEYS.has(key)));
+    return { index, toolId: step.toolId, body: compactValue(value.data !== undefined && Object.keys(value).length <= 2 ? value.data : value) };
+  }).filter(Boolean);
+  // Bütçe adil bölünür: küçük sonuç tam kalır, artanı büyük sonuçlar paylaşır.
+  let left = RESULT_LIMIT;
+  const room = new Map();
+  [...items].sort((a, b) => a.body.length - b.body.length).forEach((item, order, sorted) => {
+    const share = Math.floor(left / (sorted.length - order));
+    room.set(item, Math.min(item.body.length, share)); left -= room.get(item);
+  });
+  return items.map(item => {
+    const limit = room.get(item), cutOff = item.body.length > limit;
+    if (limit < 200 && cutOff) return `=== ${item.index + 1}. ${item.toolId}: omitted (size limit) ===`;
+    return `=== ${item.index + 1}. ${item.toolId}${cutOff ? ' (truncated)' : ''} ===\n${item.body.slice(0, limit)}`;
+  }).join('\n\n');
+}
+
 function attachChat(service, deps = {}) {
   const store = service.store;
-  const busy = new Map();
+  const busy = new Map(), answering = new Set();
 
   async function roster(profile) {
     return (await store.records(profile.id)).filter(doc => doc.kind === 'profile' && doc.enabled !== false)
@@ -144,7 +191,7 @@ function attachChat(service, deps = {}) {
       attachments: attachments || [],
       conversation: history,
     };
-    const response = await service.engineOf().ask(profile.id, { requestId: id(), source: 'agent-chat-route', lang: lang === 'en' ? 'en' : 'tr', task: message, context, signal });
+    const response = await service.engineOf().ask(profile.id, { requestId: id(), source: 'agent-chat-route', lang: lang === 'en' ? 'en' : 'tr', task: message, context, signal, reasoningLevel: 'Low' });
     if (!response?.structured?.ok || !response.data) {
       return { mode: 'reply', agentIds: conv ? conv.profileIds.slice(0, 4) : [agents[0].id], lead: conv ? conv.profileIds[0] : agents[0].id, toolIds: [], brief: '', note: '', suggestion: '', routed: false };
     }
@@ -181,6 +228,37 @@ function attachChat(service, deps = {}) {
 
   async function note(profile, conv, payload) {
     return store.appendMessage(profile.id, conv.id, { role: 'system', text: JSON.stringify(payload).slice(0, 8000), status: 'complete', requestId: id() });
+  }
+
+  /* Görev bitince lider agent sonuçları sahibin isteğine göre cevaba
+     çevirir (liste, tablo, e-posta taslağı…). Her görev bir kez cevaplanır;
+     cevap aynı konuşmaya yazılır, böylece sonraki sorular da onu görür. */
+  async function answerTask(profile, job, onProgress = () => {}, signal) {
+    if (!job || !['completed', 'partial'].includes(job.status) || job.accessRestricted || answering.has(job.id)) return null;
+    answering.add(job.id);
+    try { return await writeAnswer(profile, job, onProgress, signal); } finally { answering.delete(job.id); }
+  }
+  async function writeAnswer(profile, job, onProgress, signal) {
+    const records = await store.records(profile.id);
+    const link = records.find(doc => doc.kind === 'metadata' && doc.id === 'task-chat-' + job.id);
+    if (!link || link.answeredMessageId) return null;
+    const results = stepResultsText(job);
+    if (!results) return null;
+    let conv;
+    try { conv = await store.get(profile.id, 'conversation', link.conversationId); } catch (_) { return null; }
+    const lead = conv.profileIds.includes(link.lead) ? link.lead : conv.profileIds[0];
+    onProgress({ phase: 'answer', taskId: job.id });
+    // Cevap bir kez denenir: başarısız olursa da işaretlenir, her yoklamada yeni AI çağrısı yapılmaz.
+    let answered = 'failed';
+    try {
+      const result = await service.run(profile, { profileIds: conv.profileIds, conversationId: conv.id, task: link.request, lang: link.lang, signal }, onProgress,
+        { reuseUserMessageId: link.userMessageId, taskResults: { taskId: job.id, lead, text: results } });
+      answered = result.message?.id || 'failed';
+      return result.message || null;
+    } finally {
+      try { await store.save(profile.id, 'metadata', { ...link, answeredMessageId: answered }, { expectedRevision: link.revision }); }
+      catch (err) { if (err.code !== 'OFFICE_REVISION_CONFLICT') throw err; }
+    }
   }
 
   async function chat(profile, raw = {}, onProgress = () => {}) {
@@ -225,7 +303,7 @@ function attachChat(service, deps = {}) {
         return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, message: reply };
       }
       if (decision.mode === 'task') {
-        await store.appendMessage(profile.id, conv.id, { role: 'user', text: message, requestId: id() });
+        const asked = await store.appendMessage(profile.id, conv.id, { role: 'user', text: message, requestId: id() });
         if (joinNote) await note(profile, conv, joinNote);
         for (const card of cards) await note(profile, conv, card);
         onProgress({ phase: 'plan' });
@@ -245,10 +323,17 @@ function attachChat(service, deps = {}) {
           await note(profile, conv, { type: 'task-empty', agentId: decision.lead });
           return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: await publicTask(profile, job) };
         }
+        await store.save(profile.id, 'metadata', { id: 'task-chat-' + job.id, conversationId: conv.id, userMessageId: asked.id, lead: decision.lead, request: message, lang: raw.lang === 'en' ? 'en' : 'tr', answeredMessageId: null });
         onProgress({ phase: 'prepare', taskId: job.id });
         try { job = await advance(profile, job.id); } catch (err) { await note(profile, conv, { type: 'task', taskId: job.id, agentId: decision.lead, code: err.code || 'OFFICE_TASK_FAILED' }); throw err; }
         await note(profile, conv, { type: 'task', taskId: job.id, agentId: decision.lead, brief: decision.brief });
-        return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: await publicTask(profile, job) };
+        const shown = await publicTask(profile, job);
+        // Okuma adımları bittiyse cevap hemen yazılır; onay bekleyen iş onaydan sonra cevaplanır.
+        // Cevap yazılamazsa iş sonucu korunur; hata konuşmaya not düşülür ve sahibe gösterilir.
+        let answer = null, answerError = '';
+        try { answer = await answerTask(profile, shown, onProgress, raw.signal); }
+        catch (err) { answerError = raw.signal?.aborted ? 'LCWAI_CANCELLED' : err.code || 'OFFICE_AI_FAILED'; }
+        return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: shown, message: answer, ...(answerError ? { answerError } : {}) };
       }
       onProgress({ phase: 'reply' });
       const result = await service.run(profile, { profileIds: conv.profileIds, conversationId: conv.id, task: message, lang: raw.lang, signal: raw.signal }, onProgress,
@@ -264,7 +349,14 @@ function attachChat(service, deps = {}) {
      kalan okuma adımlarını ilerletir. */
   async function approve(profile, jobId, raw = {}) {
     await service.taskExecute(profile, jobId, { confirmed: raw.confirmed === true, fingerprint: String(raw.fingerprint || '') });
-    return publicTask(profile, await advance(profile, jobId));
+    return finished(profile, await advance(profile, jobId));
+  }
+  // Onaydan ya da bekleyen adımdan sonra iş bittiyse lider agent cevabını yazar.
+  async function finished(profile, job) {
+    const shown = await publicTask(profile, job);
+    // Sahibin o anki sohbetini kilitlemez; aynı işin iki kez cevaplanmasını `answering` önler.
+    try { await answerTask(profile, shown); } catch (_) { /* hata run() tarafından konuşmaya yazıldı */ }
+    return shown;
   }
 
   /* Doğal dille agent tanımı: LCW AI yalnız TASLAK üretir; alanlar sahibin
@@ -289,7 +381,35 @@ function attachChat(service, deps = {}) {
     return { draft, agentId: current?.id || '', revision: current?.revision ?? null, areaLabels: Object.fromEntries(allowed.map(key => [key, AREA_LABELS[key] || { tr: key, en: key }])) };
   }
 
-  return { officeAgentDraft: agentDraft, officeChatBusy: owner => busy.has(owner), officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => publicTask(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
+  /* Günlük öncelikler: tarama motorunun deterministik bulguları (CP kritik/yüksek
+     öncelik ve gerekçeleri) ve koleksiyon akışı (siparişe bağlanmamış, üreticisi
+     boş seçenekler). Günde bir kez hesaplanıp saklanır; "yenile" yeniden hesaplar.
+     LCW AI çağrılmaz. */
+  async function brief(profile, raw = {}) {
+    const day = localDay(), authority = typeof service.memoryFingerprint === 'function' ? service.memoryFingerprint(profile) : '';
+    const saved = (await store.records(profile.id)).find(doc => doc.kind === 'metadata' && doc.id === 'chat-brief');
+    // Yetki değişince saklı özet kullanılmaz: kaldırılan alanın siparişleri görünmeye devam etmez.
+    if (saved && saved.day === day && saved.authority === authority && raw.refresh !== true) return saved.brief;
+    const result = await service.scan(profile, {}, {});
+    const orders = new Map((result.orders || []).map(order => [order.orderKey, order]));
+    const priority = (result.findings || []).filter(item => item.code === 'CP_PRIORITY');
+    const count = level => priority.filter(item => severityLevel(item.severity) === level).length;
+    const top = priority.filter(item => severityLevel(item.severity) >= 2).sort((a, b) => severityLevel(b.severity) - severityLevel(a.severity)).slice(0, 8).map(item => {
+      const order = orders.get(item.orderKey) || {}, identity = order.identity || {};
+      return { severity: item.severity, level: severityLevel(item.severity), title: item.title, reasons: (item.reasons || []).slice(0, 3).map(reason => reason.title),
+        orderCode: cut(identity.orderCode, 40), model: cut(order.analysis?.modelName || identity.modelName, 120), colour: cut(identity.colourCode, 40), supplier: cut(order.dimensions?.manufacturer, 80) };
+    });
+    const collection = (result.decisionSupport?.collectionPipeline || []).filter(group => group.unlinked || group.missingSupplier)
+      .sort((a, b) => (b.unlinked || 0) - (a.unlinked || 0)).slice(0, 4)
+      .map(group => ({ season: cut(group.season, 40), status: cut(group.status, 60), options: group.options || 0, unlinked: group.unlinked || 0, missingSupplier: group.missingSupplier || 0 }));
+    const value = { day, computedAt: new Date().toISOString(), sourceUpdatedAt: result.sourceUpdatedAt || null,
+      counts: { critical: count(4), today: count(3), week: count(2), changes: (result.changes || []).length }, top, collection };
+    try { await store.save(profile.id, 'metadata', { ...(saved || {}), id: 'chat-brief', day, authority, brief: value }, saved ? { expectedRevision: saved.revision } : {}); }
+    catch (err) { if (err.code !== 'OFFICE_REVISION_CONFLICT') throw err; }
+    return value;
+  }
+
+  return { officeChatBrief: brief, officeAgentDraft: agentDraft, officeChatBusy: owner => busy.has(owner), officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => finished(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
 }
 
-module.exports = { attachChat, validateRoute, chunks, prepareAttachments, dropAttachments };
+module.exports = { attachChat, validateRoute, chunks, prepareAttachments, dropAttachments, stepResultsText };

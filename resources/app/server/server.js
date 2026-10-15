@@ -12731,6 +12731,8 @@ function buildPricingEml(payload) {
   const related = `related_${crypto.randomBytes(12).toString('hex')}`;
   const alt = `alt_${crypto.randomBytes(12).toString('hex')}`;
   const to = String(payload.to || '').replace(/[\r\n]/g, '').trim();
+  // Agent taslakları CC de taşır (ör. üretim ülkesine göre merchandiser ekibi).
+  const cc = String(payload.cc || '').replace(/[\r\n]/g, '').trim();
   const subject = String(payload.subject || 'Quotation Request').replace(/[\r\n]/g, ' ').trim();
   const text = String(payload.text || '');
   const html = String(payload.html || '');
@@ -12739,6 +12741,7 @@ function buildPricingEml(payload) {
   const lines = [
     'X-Unsent: 1',
     `To: ${to}`,
+    ...(cc ? [`Cc: ${cc}`] : []),
     `Subject: ${mimeHeader(subject)}`,
     `Date: ${new Date().toUTCString()}`,
     'MIME-Version: 1.0',

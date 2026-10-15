@@ -124,6 +124,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
     try{return await service.officeChat(req.currentUser,{...body,attachments,signal},onProgress);}
     catch(err){Chat.dropAttachments(attachments,staging);throw err;}
   }));
+  app.get(base+'/chat/brief',wrap(async(req,res)=>res.json({ok:true,brief:await service.officeChatBrief(req.currentUser,{refresh:req.query.refresh==='1'})})));
   app.post(base+'/chat/agent-draft',json,wrap(async(req,res)=>res.json({ok:true,...await service.officeAgentDraft(req.currentUser,req.body||{})})));
   app.get(base+'/chat/tasks/:id',wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatTask(req.currentUser,req.params.id)})));
   app.post(base+'/chat/tasks/:id/approve',json,wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatApprove(req.currentUser,req.params.id,req.body||{})})));
