@@ -73,6 +73,7 @@ test('a question that spans two areas becomes a team conversation with one share
   const list=await msgs(w,result.conversation);
   const join=list.find(m=>m.role==='system'&&JSON.parse(m.text).type==='join');
   assert.deepEqual(JSON.parse(join.text).agentIds,[a.beril.id]);
+  assert.ok(list.indexOf(join)>list.findIndex(m=>m.role==='user'),'the join note follows the owner\'s message');
   assert.equal(list.at(-1).text,'DEMO ortak cevap');
   assert.equal(list.at(-1).provenance.perspectives.length,2,'each agent speaks in the reply');
   const routeCall=engine.calls.find(c=>c.source==='agent-chat-route');

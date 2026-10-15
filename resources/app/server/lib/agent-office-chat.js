@@ -103,6 +103,13 @@ function attachChat(service, deps = {}) {
     return job;
   }
 
+  // Sohbet kartı görev motorunun görünürlük denetiminden geçmiş görünümü kullanır.
+  async function publicTask(profile, job) {
+    if (typeof service.taskPublicJobs !== 'function') return job;
+    return (await service.taskPublicJobs(profile, [job]))[0] || null;
+  }
+  async function task(profile, jobId) { return publicTask(profile, await store.get(profile.id, 'job', jobId)); }
+
   async function note(profile, conv, payload) {
     return store.appendMessage(profile.id, conv.id, { role: 'system', text: JSON.stringify(payload).slice(0, 8000), status: 'complete', requestId: id() });
   }
@@ -125,7 +132,8 @@ function attachChat(service, deps = {}) {
       if (!conv) conv = await store.conversation(profile.id, ids, message.slice(0, 80));
       else conv = await joinConversation(profile, conv, ids);
       const joined = ids.filter(key => !before.includes(key));
-      if (decision.note && joined.length) await note(profile, conv, { type: 'join', agentIds: joined, text: decision.note });
+      // "Katıldı" notu, sahibin mesajından hemen sonra görünür.
+      const joinNote = decision.note && joined.length ? { type: 'join', agentIds: joined, text: decision.note } : null;
 
       if (decision.mode === 'clarify' && decision.note) {
         await store.appendMessage(profile.id, conv.id, { role: 'user', text: message, requestId: id() });
@@ -134,6 +142,7 @@ function attachChat(service, deps = {}) {
       }
       if (decision.mode === 'task') {
         await store.appendMessage(profile.id, conv.id, { role: 'user', text: message, requestId: id() });
+        if (joinNote) await note(profile, conv, joinNote);
         onProgress({ phase: 'plan' });
         let job;
         try {
@@ -144,15 +153,16 @@ function attachChat(service, deps = {}) {
         }
         if (!job.steps?.length) {
           await note(profile, conv, { type: 'task-empty', agentId: decision.lead });
-          return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: job };
+          return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: await publicTask(profile, job) };
         }
         onProgress({ phase: 'prepare', taskId: job.id });
         try { job = await advance(profile, job.id); } catch (err) { await note(profile, conv, { type: 'task', taskId: job.id, agentId: decision.lead, code: err.code || 'OFFICE_TASK_FAILED' }); throw err; }
-        await note(profile, conv, { type: 'task', taskId: job.id, agentId: decision.lead });
-        return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: job };
+        await note(profile, conv, { type: 'task', taskId: job.id, agentId: decision.lead, brief: decision.brief });
+        return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: await publicTask(profile, job) };
       }
       onProgress({ phase: 'reply' });
-      const result = await service.run(profile, { profileIds: conv.profileIds, conversationId: conv.id, task: message, lang: raw.lang, signal: raw.signal }, onProgress);
+      const result = await service.run(profile, { profileIds: conv.profileIds, conversationId: conv.id, task: message, lang: raw.lang, signal: raw.signal }, onProgress,
+        { afterUserMessage: joinNote ? current => note(profile, current, joinNote) : null });
       if (decision.suggestion) await note(profile, conv, { type: 'suggestion', agentId: decision.lead, text: decision.suggestion });
       return { ...result, conversation: await store.get(profile.id, 'conversation', conv.id), route: decision };
     } finally { busy.delete(profile.id); }
@@ -162,10 +172,10 @@ function attachChat(service, deps = {}) {
      kalan okuma adımlarını ilerletir. */
   async function approve(profile, jobId, raw = {}) {
     await service.taskExecute(profile, jobId, { confirmed: raw.confirmed === true, fingerprint: String(raw.fingerprint || '') });
-    return advance(profile, jobId);
+    return publicTask(profile, await advance(profile, jobId));
   }
 
-  return { officeChat: chat, officeChatApprove: approve, officeChatAdvance: advance, officeChatRoster: roster };
+  return { officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => publicTask(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
 }
 
 module.exports = { attachChat, validateRoute, chunks };

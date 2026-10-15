@@ -103,6 +103,7 @@ module.exports = function registerAgentOfficeRoutes(app, deps) {
   app.post(base+'/run',json,stream((req,signal,onProgress)=>service.run(req.currentUser,{...req.body,signal},onProgress)));
   // Sade sohbet: tek kutu, LCW AI yönlendirir (cevap / iş / soru), gerekirse ekibi büyütür.
   app.post(base+'/chat',json,stream((req,signal,onProgress)=>service.officeChat(req.currentUser,{...req.body,signal},onProgress)));
+  app.get(base+'/chat/tasks/:id',wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatTask(req.currentUser,req.params.id)})));
   app.post(base+'/chat/tasks/:id/approve',json,wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatApprove(req.currentUser,req.params.id,req.body||{})})));
   app.post(base+'/chat/tasks/:id/advance',json,wrap(async(req,res)=>res.json({ok:true,task:await service.officeChatAdvance(req.currentUser,req.params.id)})));
   app.post(base+'/cancel',json,wrap(async(req,res)=>res.json({ok:true,cancelled:service.engineOf().cancel(req.currentUser.id,text(req.body?.requestId,120))})));
