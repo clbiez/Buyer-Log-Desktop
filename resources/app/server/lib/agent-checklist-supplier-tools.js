@@ -7,8 +7,10 @@
    export-time conflict gate (baseAt) keeps newer Buyer Log answers. Rows the
    owner may not edit are skipped and counted. The inverse is the exact prior
    answer/tombstone of every touched key, bound to the owner/job/step.
-   Building the supplier workbook stays in CP: it embeds product images and
-   sheet protection from the open page. */
+   cp.checklist.supplier.export builds the supplier workbook with the same
+   builder as CP › Checklist › Excel (buildSupplierWorkbook): scoped orders,
+   the same decisions and answers, model images from the local image store,
+   sheet protection and meta. The file is an Office output (download). */
 const ExcelJS=require('../../public/vendor/exceljs.min.js');
 const Sync=require('../../public/checklist-supplier-sync');
 const Rules=require('../../public/cp-rules-engine'),CP=require('../../public/cp-readiness-engine');
@@ -104,4 +106,70 @@ function registerChecklistSupplierTools(registry,deps){
         return native.restoreEntries({entries:before.entries,expectedRevision:token.expectedRevision},ctx.profile,{reserveWrites:1,assertAuthority:()=>assert(ctx,sourceRevision),
           receipt:(restored,own)=>{if(Object.entries(before.entries).some(([key,entry])=>hash(JSON.stringify(own.entries[key]))!==hash(JSON.stringify(entry))))throw error('OFFICE_RULE_VERIFY_FAILED',409);return restored;}});});}});
 }
-module.exports={registerChecklistSupplierTools,TOOL_ID};
+const EXPORT_ID='cp.checklist.supplier.export';
+const Checklist=require('../../public/cp-checklist-engine'),reportOutput=require('./agent-report-output-contract');
+const COLUMN_IDS=['image','order','plm','model','colour','supplier','exfactory','season','buyer','buyerGroup','category','license'];
+const DEFAULT_COLUMNS=['image','order','plm','model','colour','supplier','exfactory'];
+// The builder reads the language and custom statuses from one module-level
+// context; builds are serialized so concurrent exports cannot mix them.
+let buildQueue=Promise.resolve();
+function serialized(work){const next=buildQueue.then(work,work);buildQueue=next.catch(()=>{});return next;}
+function catalogItem(rule){return {id:rule.id,tr:rule.tr||rule.name||rule.id,en:rule.en||rule.name||rule.id,questionTr:rule.questionTr||rule.name||rule.id,questionEn:rule.questionEn||rule.name||rule.id,builtIn:rule.builtIn===true,approvalScope:rule.approvalScope==='option'?'option':'order',
+  evidenceFields:{reportNumber:Boolean(rule.evidenceFields&&rule.evidenceFields.reportNumber),actualDate:Boolean(rule.evidenceFields&&rule.evidenceFields.actualDate),attachments:Boolean(rule.evidenceFields&&rule.evidenceFields.attachments)}};}
+function registerChecklistSupplierExport(registry,deps){
+  const exportPreview=req({orders:count,missing:count,items:count,supplier:text,language:{enum:['tr','en']},columns:array({enum:COLUMN_IDS},COLUMN_IDS.length),withImages:{type:'boolean'},sourceRevision:text});
+  async function plan(args,ctx){
+    const sourceRevision=deps.sourceRevision(ctx.profile);
+    const data=await deps.data(ctx.profile);ctx.assertAuthority();
+    const allowed=await deps.authorizedOrders(ctx.profile,{write:false});ctx.assertAuthority();
+    if(deps.sourceRevision(ctx.profile)!==sourceRevision)throw error('OFFICE_PREVIEW_CHANGED',409);
+    const rules=Rules.mergeWithDefaults(data.personalRules||[],data.deletedRuleIds||[]),preparedRules=Rules.prepareEvaluation(rules);
+    const plmEvidence=data.plmEvidence||plmEvidenceFor(data.samples?.models);
+    const items=rules.filter(rule=>rule.kind==='checklist'&&rule.enabled!==false).map(catalogItem);
+    if(!items.length)throw error('OFFICE_SUPPLIER_EXPORT_EMPTY',409);
+    const wanted=new Set(args.orderKeys),rows=[],analyses=new Map(),byRow=new Map();
+    for(const row of data.cpRows||[]){
+      const analysis=CP.analyzeOrder(row,{transitRules:data.transitRules||[],settings:data.settings||{},today:data.today});
+      if(!analysis||!wanted.has(analysis.orderKey)||!allowed.has(analysis.orderKey)||analyses.has(analysis.orderKey))continue;
+      analyses.set(analysis.orderKey,analysis);byRow.set(row,analysis);rows.push(row);
+    }
+    if(!rows.length)throw error('OFFICE_SUPPLIER_EXPORT_EMPTY',409);
+    const columns=args.columns&&args.columns.length?['order',...args.columns.filter(id=>id!=='order')]:DEFAULT_COLUMNS.slice();
+    const answers=data.checklist?.answers||{},applicable=new Map();
+    const applies=(item,analysis)=>{let ids=applicable.get(analysis.orderKey);
+      if(!ids){ids=new Set(Rules.evaluateOrder(analysis,{rules,preparedRules,answers,plmEvidence,checklistEnabled:data.checklistEnabled!==false,today:data.today}).customItems.map(item=>item.id));applicable.set(analysis.orderKey,ids);}
+      return ids.has(item.id);};
+    // Same answer lookup as the CP export: order answer, approved reusable
+    // option answer, then an approved PLM milestone for built-in items.
+    const answerFor=(item,analysis)=>{
+      const own=answers[Checklist.answerKey(analysis.orderKey,item.id)];if(own)return own;
+      if(item.approvalScope==='option'){const key=Checklist.optionAnswerKey(analysis,item.id),reusable=key&&answers[key];if(reusable&&Checklist.normalizeStatus(reusable.state)==='approved')return reusable;}
+      if(item.builtIn){try{const evidence=plmEvidence(analysis,item.id);if(evidence&&evidence.state==='approved')return {state:'approved',at:evidence.date||'',by:'PLM',source:'plm'};}catch(_){}}
+      return null;};
+    const binding={rows:hash(JSON.stringify(rows)),answers:hash(JSON.stringify([...analyses.keys()].sort().map(key=>Object.entries(answers).filter(([k])=>k.startsWith(key+'::')).sort(([a],[b])=>a.localeCompare(b))))),items:hash(JSON.stringify(items))};
+    const snapshot={orders:rows.length,missing:args.orderKeys.length-rows.length,items:items.length,supplier:supplierName(rows),language:args.language==='en'?'en':'tr',columns,withImages:columns.includes('image'),sourceRevision,binding};
+    Object.defineProperty(snapshot,'build',{value:{rows,items,byRow,applies,answerFor,customStatuses:data.customStatuses||[]},enumerable:false});
+    return snapshot;
+  }
+  const supplierName=rows=>{const names=new Set(rows.map(row=>String(row['Sub-Manufacturer']||row.Manufacturer||'').trim()).filter(Boolean));return names.size===1?[...names][0]:'';};
+  registry.registerCapability({module:'cp',areas:['cp'],agentAreas:['cp'],capabilities:['CP.VIEW'],id:EXPORT_ID,operation:'EXPORT',risk:'write',
+    label:{tr:'Tedarikçi checklist Excel\'ini oluştur',en:'Create supplier checklist workbook'},
+    dataScope:'explicit current scoped CP order keys; checklist decisions and answers; model images from the local image store',
+    inputSchema:{...object({orderKeys:{...array({...string(300),minLength:1},500),minItems:1,uniqueItems:true},language:{enum:['tr','en']},columns:{...array({enum:COLUMN_IDS},COLUMN_IDS.length),uniqueItems:true}}),required:['orderKeys']},
+    outputSchema:reportOutput.outputSchema,dryRunOutputSchema:req({verified:ok,fingerprint:sha,preview:exportPreview}),
+    read:plan,publicPreview:({binding,...view})=>view,
+    apply:(args,ctx,p)=>serialized(async()=>{
+      ctx.assertAuthority();
+      const b=p.build,requestId=hash(ctx.input.officeJobId+':'+ctx.input.officeStepId);
+      const built=await Sync.buildSupplierWorkbook({ExcelJS,rows:b.rows,items:b.items,language:p.language,customStatuses:b.customStatuses,columnIds:p.columns,
+        analysisFor:row=>b.byRow.get(row)||null,itemApplies:b.applies,answerFor:b.answerFor,
+        prepareImage:async row=>p.withImages&&deps.rowImage?deps.rowImage(row):null});
+      ctx.assertAuthority();
+      const service=deps.outputService();
+      const record=service.store.save(ctx.ownerId,{buffer:Buffer.from(built.buffer),title:built.filename.replace(/_\d{4}-\d{2}-\d{2}\.xlsx$/,''),format:'xlsx',template:'buyer-log-supplier-checklist',templateLabel:p.language==='en'?'Buyer Log supplier checklist':'Buyer Log tedarikçi checklist',requestId});
+      const saved=service.get(ctx.ownerId,record.id);
+      if(!saved||saved.requestId!==requestId||saved.format!=='xlsx')throw error('OFFICE_OUTPUT_INVALID',409);
+      return reportOutput.fileResult(saved);
+    })});
+}
+module.exports={registerChecklistSupplierTools,registerChecklistSupplierExport,TOOL_ID,EXPORT_ID};

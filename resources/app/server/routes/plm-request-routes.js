@@ -24,7 +24,10 @@ app.get('/api/plm-requests', userAccess.requireAnyArea('koleksiyon', 'cp', 'orde
   catch (err) { automationError(res, err, 'PLM numune talepleri okunamadı.'); }
 });
 
-app.post('/api/plm-requests/sync', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders'), express.json({ limit: '2mb' }), async (req, res) => {
+/* Shared by the route below and the Office sample request capability, which
+   calls it in-process with the owner's profile (req.onPlmJob receives the job
+   id; req.assertAuthority is rechecked before PLM is contacted). */
+async function runSampleRequestSync(req, res) {
   const userId = req.currentUser && req.currentUser.id;
   try {
     const raw = Array.isArray(req.body && req.body.plmIds) ? req.body.plmIds : null;
@@ -35,6 +38,8 @@ app.post('/api/plm-requests/sync', userAccess.requireAnyArea('koleksiyon', 'cp',
       kind: 'plm-requests', scope, total: raw.length,
       label: `PLM numune talepleri · ${raw.length} model`, phase: 'PLM numune talepleri alınıyor',
     }, async job => {
+      if (typeof req.onPlmJob === 'function') req.onPlmJob(job.id);
+      if (typeof req.assertAuthority === 'function') req.assertAuthority();
       const result = await sampleRequestSync.syncSampleRequests(raw, {
         normalizePlmId,
         loadLinks: loadPlmStyleLinks,
@@ -59,5 +64,7 @@ app.post('/api/plm-requests/sync', userAccess.requireAnyArea('koleksiyon', 'cp',
     res.json({ ok: true, ...summary, jobId: run.job.id });
   } catch (err) { automationError(res, err, 'PLM numune talepleri alınamadı.'); }
   finally { clearModelOperationProgress(userId); }
-});
+}
+app.post('/api/plm-requests/sync', userAccess.requireAnyArea('koleksiyon', 'cp', 'orders'), express.json({ limit: '2mb' }), (req, res) => runSampleRequestSync(req, res));
+return { runSampleRequestSync };
 };

@@ -2492,6 +2492,28 @@ function cpAgentMail(profile,args,rows,dryRun,expected=null) {
 }
 // Order override adapter shared by app.order.update (legacy Runtime) and the
 // Office cp.order.update capability; one native service, one rule set.
+/* Model image of a CP row for the Office supplier workbook: the same
+   colour-then-model key order as the screen, read from the local image store.
+   An empty colour entry is a deletion tombstone and hides the model image. */
+function imageSize(buffer){
+  if(buffer.length>24&&buffer.readUInt32BE(0)===0x89504e47)return {width:buffer.readUInt32BE(16),height:buffer.readUInt32BE(20)};
+  for(let i=2;i+9<buffer.length&&buffer[0]===0xff&&buffer[1]===0xd8;){
+    if(buffer[i]!==0xff){i++;continue;}const marker=buffer[i+1],length=buffer.readUInt16BE(i+2);
+    if(marker>=0xc0&&marker<=0xcf&&![0xc4,0xc8,0xcc].includes(marker))return {width:buffer.readUInt16BE(i+7),height:buffer.readUInt16BE(i+5)};
+    i+=2+length;
+  }
+  return {width:1,height:1};
+}
+function agentSupplierRowImage(row){
+  const plm=String(row&&row['PLM ID']||'').trim();if(!plm)return null;
+  const map=loadOverrides().imagemap||{},keys=[parseLib.plmColourImageNameKey(plm,row['C.Code']||'',row['Colour']||''),parseLib.plmImageKey(plm)].filter(Boolean);
+  let ref=null;for(const key of keys)if(Object.hasOwn(map,key)){ref=map[key];break;}
+  if(!ref)return null;
+  const found=getCollectionImage(ref),mime=String(found&&found.item&&found.item.mimeType||'').toLowerCase();
+  if(!found||!/^image\/(png|jpe?g)$/.test(mime))return null;
+  let buffer;try{buffer=fs.readFileSync(found.full);}catch(_){return null;}
+  return {dataUrl:'data:'+(mime==='image/jpg'?'image/jpeg':mime)+';base64,'+buffer.toString('base64'),...imageSize(buffer)};
+}
 const agentOrderAdapter = {
   snapshotOrder: async (ownerId, profile, orderCode, patch, preloadedRows=null) => {
     // A line is addressed by model AND colour; one alone would write the
@@ -4935,7 +4957,11 @@ function plmImageJobCounts(counts) {
     missing: value.missing || 0, failed: value.failed || 0, bytesDownloaded: value.bytesDownloaded || 0,
   };
 }
-app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({ limit: '16mb' }), async (req,res)=>{
+app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({ limit: '16mb' }), (req,res)=>runPlmImageImport(req,res));
+/* Shared by the route above and the Office image import capability, which
+   calls it in-process with the owner's own profile (req.onPlmJob receives the
+   job id; req.assertAuthority is rechecked before PLM is contacted). */
+async function runPlmImageImport(req,res){
   if(!plmContextScopeAllowed(req,res))return;
   const imageJobRef = { id: null };
   let apiSession = null;
@@ -4953,6 +4979,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
       label: 'Model gorseli · ' + raw.length + ' model (PLM)',
       phase: 'PLM cozumleniyor',
     }).id;
+    if(typeof req.onPlmJob==='function')req.onPlmJob(imageJobRef.id);
 
     /* Phase timing (field report: 129-model job ~9 min with 124 cache hits).
        Names and durations only — no PLM data — so backend.log shows which
@@ -5026,6 +5053,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
         scope: plmJobScope(req), source: 'live', mode, overwriteManual, items: upstreamRequests,
       });
       try {
+      if(typeof req.assertAuthority==='function')req.assertAuthority();
       apiSession = await agentBrowserConnector.openCoreNectumStyleApiSession(req.currentUser.id, {
         isCancelled: () => plmJobs.isCancelled(req.currentUser.id, imageJobRef.id),
       });
@@ -5101,7 +5129,7 @@ app.post('/api/model-images/import-plm', requirePlmContextAccess, express.json({
     finishImageJob(req, imageJobRef, result.status===plmImageJobStore.STATUS_FAILED ? new Error('PLM gorsel isi basarisiz.') : null);
   } catch(err){ if(checkpoint)try{checkpoint.finish(plmImageJobStore.STATUS_FAILED,{error:err&&err.message});}catch(_){} finishImageJob(req, imageJobRef, err); automationError(res,err,'PLM model görselleri içe aktarılamadı.');}
   finally { if(apiSession)await apiSession.close().catch(()=>{}); clearModelOperationProgress(req.currentUser&&req.currentUser.id); }
-});
+}
 app.post('/api/model-images/import-asas', userAccess.requireAnyArea('cp', 'orders', 'koleksiyon'), express.json({ limit: '16mb' }), async (req,res)=>{
   const imageJobRef = { id: null };
   try {
@@ -5406,7 +5434,7 @@ const agentPlmSyncService=require('./routes/plm-sync-routes')(app, {
 /* PLM numune talepleri (CoreNectum Requests sekmesi) → CP kontrol listesi. */
 const sampleRequestStore = require('./lib/plm-sample-requests-store');
 const sampleRequestSync = require('./lib/plm-sample-request-sync');
-require('./routes/plm-request-routes')(app, {
+const plmRequestService=require('./routes/plm-request-routes')(app, {
   automationError,
   clearModelOperationProgress,
   coreNectumApiClient,
@@ -5448,6 +5476,7 @@ require('./lib/agent-shared-checklist-tools').registerSharedChecklistTools(agent
 require('./lib/agent-checklist-answer-tools').registerChecklistAnswerTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-checklist-attachment-tools').registerChecklistAttachmentTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-checklist-supplier-tools').registerChecklistSupplierTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
+require('./lib/agent-checklist-supplier-tools').registerChecklistSupplierExport(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,outputService:()=>require('./lib/lcwai').getDefaultOutputService(),rowImage:agentSupplierRowImage});
 require('./lib/agent-checklist-option-tools').registerChecklistOptionTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 require('./lib/agent-analytics-tools').registerAnalyticsTools(agentToolRegistry,{dataset:agentPlatformDataset,outputService:()=>require('./lib/lcwai').getDefaultOutputService()});
 const agentCollectionSave=async(profile,ownerId,changes,expectedRevision,assertAuthority,guards={})=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);assertAuthority();if(!collectionWorkspaceEditAllowed(current,ownerId))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
@@ -10995,7 +11024,7 @@ const nativeRefreshGroupService=require('./lib/refresh-group-service').createRef
 require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
 require('./lib/agent-price-analysis-tools').registerPriceAnalysisTools(agentToolRegistry,{rows:profile=>priceAnalysisRowsFor(profile)});
 require('./lib/agent-holiday-tools').registerHolidayTools(agentToolRegistry,{holidayService});
-require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership,technicalSheets:agentPlmSyncService.technicalSheets,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
+require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership,technicalSheets:agentPlmSyncService.technicalSheets,routeRuns:require('./lib/agent-native-route-runs').createRouteRuns({jobs:plmJobs}),imageImport:runPlmImageImport,sampleSync:plmRequestService.runSampleRequestSync,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 {
   // Same active-user and display rules as /api/preset-share; target is always the owner.
   const activePresetProfile=profile=>Boolean(profile)&&profile.enabled!==false&&profile.status!=='INACTIVE';

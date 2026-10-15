@@ -358,6 +358,64 @@
           "en": "Agent Office task steps with a note column definition result"
         }
       }
+    },
+    {
+      "id": "agent-supplier-xlsx-export",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar tedarikçi checklist Excel'ini oluşturur",
+        "en": "Agents create the supplier checklist workbook"
+      },
+      "body": {
+        "tr": "Agent Ofisi, seçilen siparişler için CP › Checklist › Excel ile aynı tedarikçi dosyasını oluşturur: aynı sayfalar, koruma, açılır listeler, güncel cevaplar ve model görselleri. Dosya görevden indirilir; tedarikçinin doldurduğu kopya yine Agent Ofisi'nden içe aktarılabilir.",
+        "en": "Agent Office creates the same supplier workbook as CP › Checklist › Excel for the selected orders: same sheets, protection, dropdowns, current answers and model images. The file downloads from the task; the supplier-filled copy can be imported back from Agent Office."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-supplier-xlsx-export.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: tedarikçi checklist Excel'i oluşturma adımı ve indirme bağlantısı (demo veri).",
+          "en": "Actual Agent Office: supplier checklist workbook step with its download link (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında tedarikçi Excel'i indirme bağlantısı",
+          "en": "Agent Office task steps with the supplier workbook download link"
+        }
+      }
+    },
+    {
+      "id": "agent-plm-images-samples",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar PLM model görsellerini ve numune taleplerini yeniler",
+        "en": "Agents refresh PLM model images and sample requests"
+      },
+      "body": {
+        "tr": "Koleksiyon › PLM Sync'teki model görseli alma ve numune talebi yenileme, Agent Ofisi'nden onayınızla başlatılır ve sonucu beklenir. Kendi PLM oturumunuz ve aynı PLM işi kullanılır; elle koyduğunuz görseller değiştirilmez. PLM oturumu yoksa görev bunu açıkça bildirir.",
+        "en": "Model image import and sample request refresh from Collection › PLM Sync can be started from Agent Office with your approval, and the result is awaited. Your own PLM session and the same PLM job are used; images you placed manually are never replaced. Without a PLM session the task says so clearly."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-plm-images-samples.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: PLM görsel adımı, PLM oturumu olmadığında gösterilen mesajla (demo veri, İngilizce arayüz).",
+          "en": "Actual Agent Office: PLM image step with the message shown when there is no PLM session (demo data, English UI)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında PLM görsel alma sonucu",
+          "en": "Agent Office task steps with a PLM image import result"
+        }
+      }
     }
   ]
 }

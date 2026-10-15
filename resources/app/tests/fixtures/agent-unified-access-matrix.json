@@ -976,6 +976,25 @@
         "approval": true,
         "rollbackable": true,
         "contractVersion": 2
+      },
+      {
+        "id": "cp.checklist.supplier.export",
+        "operation": "EXPORT",
+        "agentAreas": [
+          "cp"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "cp"
+        ],
+        "permissions": [],
+        "capabilities": [
+          "CP.VIEW"
+        ],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
       }
     ]
   },
@@ -1821,6 +1840,38 @@
         "areas": [
           "koleksiyon"
         ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.images.import",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [
+          "koleksiyon"
+        ],
+        "permissions": [],
+        "capabilities": [],
+        "risk": "write",
+        "approval": true,
+        "rollbackable": false,
+        "contractVersion": 2
+      },
+      {
+        "id": "collection.plm.samples.sync",
+        "operation": "EXECUTE",
+        "agentAreas": [
+          "collection"
+        ],
+        "agentAnyAreas": [],
+        "areas": [],
         "permissions": [],
         "capabilities": [],
         "risk": "write",
