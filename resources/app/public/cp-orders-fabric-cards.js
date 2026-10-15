@@ -75,7 +75,7 @@
       if(!cell){return;}
       const raw=cell.dataset.blFabricRaw||cell.innerText||cell.textContent||'';
       const card=parse(raw);
-      const pass=!!card&&Object.entries(filters).every(([key,value])=>!value||String(card.details[key]||'').toLocaleLowerCase().includes(value.toLocaleLowerCase()));
+      const pass=!Object.keys(filters).length||(!card?false:Object.entries(filters).every(([key,value])=>!value||String(card.details[key]||'').toLocaleLowerCase().includes(value.toLocaleLowerCase())));
       row.dataset.blFabricFacetHidden=pass?'0':'1';
       row.style.display=pass?'':'none';
     });
