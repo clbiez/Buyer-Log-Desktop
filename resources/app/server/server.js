@@ -11042,7 +11042,7 @@ require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,ag
 require('./lib/agent-landed-multiplier-tools').registerLandedMultiplierTools(agentToolRegistry,{...agentResourceDeps,service:landedMultiplierService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'landedMultipliers',{revision:receipt.revision,origin:'agent'})});
 const nativeRefreshGroupService=require('./lib/refresh-group-service').createRefreshGroupService({db:require('./db')});
 require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
-require('./lib/agent-price-analysis-tools').registerPriceAnalysisTools(agentToolRegistry,{rows:profile=>priceAnalysisRowsFor(profile)});
+require('./lib/agent-price-analysis-tools').registerPriceAnalysisTools(agentToolRegistry,{rows:profile=>priceAnalysisRowsFor(profile),collectionRows:(ownerId,profile)=>agentPlatformDataset(ownerId,profile,'collection')});
 require('./lib/agent-holiday-tools').registerHolidayTools(agentToolRegistry,{holidayService});
 require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership,technicalSheets:agentPlmSyncService.technicalSheets,routeRuns:require('./lib/agent-native-route-runs').createRouteRuns({jobs:plmJobs,root:path.join(SERVER_DATA_ROOT,'agent-native-runs')}),imageImport:runPlmImageImport,sampleSync:plmRequestService.runSampleRequestSync,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
 {

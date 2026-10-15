@@ -40,5 +40,28 @@ function registerPriceAnalysisTools(registry,deps){
         groups:model.groups.slice(0,30).map(g=>({...project(g,['key','name','volume','share','price','models']),suppliers:(g.suppliers||[]).slice(0,10).map(s=>project(s,['key','name','price','index','volume','share','models','eligible']))})),
         records:dataset.records.length,loadedAt:source.loadedAt||null};
     }});
+  /* Fiyata gönderme önerisi: seçilen koleksiyon modelleri, klasmanında ortalamanın altında
+     fiyat veren üreticilerle eşlenir. Okuma; e-posta ve teklif kaydı Send to Pricing'de sahibin onayıyla oluşur. */
+  if(typeof deps.collectionRows!=='function')return;
+  const {SUPPORTED_OPERATORS,applyResolvedFilters}=require('./agent-tool-registry'),{suggestSuppliers}=require('./pricing-supplier-match');
+  const id=string(160),model=object({rowId:id,plmId:string(40),model:string(160),colourCode:string(40),classification:string(120)});
+  const bucket=object({count,models:array(model,40)});
+  const suggestOutput={...object({verified:{enum:[true]},data:{...object({priceType:{enum:['finalFob','supplierFob']},currency:string(8),currentSeason:string(80),maxIndex:{type:'number'},perGroup:count,collectionModels:count,assignedModels:count,
+    suppliers:array(object({key:label,name:label,classifications:array(object({name:label,index:num,price:num,groupPrice:num,pricedModels:count}),30),modelCount:count,models:array(model,200),modelsTruncated:{type:'boolean'}}),30),omittedSuppliers:count,
+    unmatched:object({'no-classification':bucket,'no-price-data':bucket,'not-comparable':bucket,'none-below-threshold':bucket})}),required:['currentSeason','suppliers','unmatched','assignedModels']}}),required:['verified','data']};
+  registry.registerCapability({id:'pricing.suppliers.suggest',module:'priceanalysis',operation:'READ',risk:'read',areas:['koleksiyon','priceanalysis'],agentAreas:['collection','priceanalysis'],
+    label:{tr:'Fiyata gönderilecek modeller için avantajlı üreticileri öner',en:'Suggest advantageous suppliers for models to send to pricing'},
+    description:'Matches the filtered Collection models to suppliers whose average price in the same product classification is below the classification average (index = % difference, negative is cheaper; only suppliers with at least 2 priced models). Same engine as the Price & Supplier Analysis screen. Use it before preparing pricing requests.',
+    dataScope:'owner Collection rows and the Price & Supplier Analysis source in the current IAM scope',
+    inputSchema:object({filters:array({...object({field:string(160),operator:{enum:SUPPORTED_OPERATORS},value:{}}),required:['field','operator']},50),priceType:{enum:['finalFob','supplierFob']},currency:string(8),currentSeason:string(80),
+      maxIndex:{type:'number',minimum:-100,maximum:100},perGroup:{type:'integer',minimum:1,maximum:5}}),
+    outputSchema:suggestOutput,dryRunOutputSchema:suggestOutput,
+    read:async(args,ctx)=>{
+      ctx.assertAuthority?.();
+      const [source,rows]=await Promise.all([deps.rows(ctx.profile),deps.collectionRows(ctx.ownerId,ctx.profile)]);ctx.assertAuthority?.();
+      if(source.sourceFilterRequired)throw error('OFFICE_SOURCE_FILTER_REQUIRED',409);
+      const collectionRows=applyResolvedFilters('collection',rows,args.filters,ctx.now);
+      return suggestSuppliers({collectionRows,priceRows:source.rows,fields,priceType:args.priceType||'finalFob',currency:args.currency,currentSeason:args.currentSeason,maxIndex:args.maxIndex??0,perGroup:args.perGroup||3});
+    }});
 }
 module.exports={registerPriceAnalysisTools};

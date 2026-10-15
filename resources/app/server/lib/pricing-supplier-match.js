@@ -1,0 +1,50 @@
+'use strict';
+/* Fiyatlamaya gönderilecek modeller için avantajlı üretici önerisi.
+   Fiyat & Üretici Analizi ekranının motoruyla (public/price-supplier-insights-engine)
+   ürün klasmanı bazında üreticinin ortalama fiyatı klasman ortalamasıyla
+   karşılaştırılır (index: % fark, negatif = ortalamanın altında). Yeterli
+   fiyatlı modeli olan (eligible) ve eşiğin altında kalan üreticiler, o
+   klasmandaki koleksiyon modelleriyle eşlenir. Karar deterministiktir; LCW AI
+   yalnız sonucu anlatır ve e-postayı yazar. */
+
+const Prices = require('../../public/price-supplier-insights-engine');
+
+const MAX_SUPPLIERS = 30, MAX_MODELS = 200, MAX_UNMATCHED = 40;
+const round = value => value == null || !Number.isFinite(Number(value)) ? null : Math.round(Number(value) * 100) / 100;
+const text = (value, max = 200) => String(value == null ? '' : value).trim().slice(0, max);
+
+function suggestSuppliers({ collectionRows = [], priceRows = [], fields, priceType = 'finalFob', currency, currentSeason, maxIndex = 0, perGroup = 3 } = {}) {
+  const dataset = Prices.prepare(priceRows.map((row, index) => Prices.orderPriceObservation(row, 'orders', priceType, index, fields)));
+  const seasons = Prices.seasons(dataset), periods = Prices.defaultPeriods(seasons);
+  const season = currentSeason || periods.currentSeason;
+  const model = Prices.analyze(dataset, { currency, currentSeason: season, previousSeason: Prices.previousSeason(season, seasons), groupBy: 'classification', minSample: 2 });
+  const groups = new Map((model.groups || []).map(group => [group.key, group]));
+  const suppliers = new Map(), unmatched = { 'no-classification': [], 'no-price-data': [], 'not-comparable': [], 'none-below-threshold': [] };
+  let assigned = 0;
+  for (const row of collectionRows) {
+    const values = fields.project(row, 'collection');
+    const identity = { rowId: text(row.id ?? row._id ?? row.rowId, 160), plmId: text(values.plmId, 40), model: text(values.modelName, 160), colourCode: text(values.colourCode, 40), classification: text(values.category, 120) };
+    const key = identity.classification ? Prices.keyOf(identity.classification) : '';
+    const group = key ? groups.get(key) : null;
+    const reason = !key ? 'no-classification' : !group ? 'no-price-data' : !group.comparable ? 'not-comparable' : '';
+    const picked = reason ? [] : group.suppliers.filter(s => s.eligible && s.index != null && s.index <= maxIndex).sort((a, b) => a.price - b.price).slice(0, perGroup);
+    if (reason || !picked.length) { unmatched[reason || 'none-below-threshold'].push(identity); continue; }
+    assigned += 1;
+    for (const supplier of picked) {
+      if (!suppliers.has(supplier.key)) suppliers.set(supplier.key, { key: supplier.key, name: supplier.name, classifications: new Map(), models: [] });
+      const entry = suppliers.get(supplier.key);
+      if (!entry.classifications.has(group.key)) entry.classifications.set(group.key, { name: group.name, index: round(supplier.index), price: round(supplier.price), groupPrice: round(group.price), pricedModels: supplier.models });
+      entry.models.push(identity);
+    }
+  }
+  const list = [...suppliers.values()].sort((a, b) => b.models.length - a.models.length || a.name.localeCompare(b.name, 'tr'));
+  return {
+    priceType, currency: model.currency, currentSeason: model.currentSeason, maxIndex, perGroup, collectionModels: collectionRows.length, assignedModels: assigned,
+    suppliers: list.slice(0, MAX_SUPPLIERS).map(entry => ({ key: entry.key, name: entry.name, classifications: [...entry.classifications.values()],
+      modelCount: entry.models.length, models: entry.models.slice(0, MAX_MODELS), modelsTruncated: entry.models.length > MAX_MODELS })),
+    omittedSuppliers: Math.max(0, list.length - MAX_SUPPLIERS),
+    unmatched: Object.fromEntries(Object.entries(unmatched).map(([name, items]) => [name, { count: items.length, models: items.slice(0, MAX_UNMATCHED) }])),
+  };
+}
+
+module.exports = { suggestSuppliers };

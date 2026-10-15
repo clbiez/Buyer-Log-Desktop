@@ -398,6 +398,25 @@
       sheet.columns.forEach(column=>{let width=8;column.eachCell({includeEmpty:false},cell=>{width=Math.max(width,Math.min(60,String(cell.value??'').length+2));});column.width=width;});});
     const blob=new Blob([await book.xlsx.writeBuffer()],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),link=document.createElement('a');
     link.href=url;link.download='BuyerLog_'+String(agentName(item.provenance?.speaker||item.profileIds?.[0])||'Agent').replace(/[^\wÇĞİÖŞÜçğıöşü-]+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  /* Fiyata gönderme paketleri: Buyer Log doğrulanmış analizden kurar; her biri Send to Pricing
+     penceresini bu modeller ve üretici seçili açar (model görselli Excel, model dosyaları, Outlook taslağı). */
+  function chatPricingHtml(item){const list=item.provenance?.pricingPackages||[];if(!list.length||item.id==='pending')return '';
+    const pct=value=>value==null?'':` ${value>0?'+':''}${Math.round(value)}%`;
+    const rows=list.map((pack,index)=>`<article class="aoSimpleDraft"><div><b data-no-i18n>${esc(pack.supplier)}</b>
+      <small>${esc(L(`${pack.rowIds.length} model`,`${pack.rowIds.length} ${pack.rowIds.length===1?'model':'models'}`))}${pack.season?` · ${esc(L('fiyat sezonu','price season'))} <span data-no-i18n>${esc(pack.season)}</span>`:''}</small>
+      <div class="aoSimpleChips" data-no-i18n>${pack.classifications.map(c=>`<span class="aoBadge">${esc(c.name)}${esc(pct(c.index))}</span>`).join('')}</div>
+      <div class="aoSimpleActions">${button(L('Fiyatlamaya gönder','Send to pricing'),'chat-pricing-open',`class="aoButton is-primary" data-id="${esc(item.id)}" data-index="${index}"`)}</div>
+      <details><summary>${esc(L('Modelleri gör','View models'))}</summary><ul class="aoSimplePricingModels" data-no-i18n>${pack.models.map(m=>`<li>${esc([m.plmId,m.model,m.colourCode].filter(Boolean).join(' · '))}</li>`).join('')}</ul></details></div></article>`).join('');
+    return `<section class="aoSimpleDrafts"><header><b>${esc(L(`${list.length} üreticiye fiyat talebi`,`Pricing requests to ${list.length} ${list.length===1?'supplier':'suppliers'}`))}</b><small>${esc(L('Send to Pricing açılır: model görselli teklif Excel\'i ve model dosyaları taslağa eklenir, onaylayınca Outlook\'ta açılır.','Send to Pricing opens: the quotation Excel with model images and the model files are added to the draft, which opens in Outlook when you confirm.'))}</small></header>${rows}</section>`;}
+  async function chatOpenPricing(pack){const wanted=new Set((pack.rowIds||[]).map(String)),find=()=>(root.BLCollection?.rows?.()||[]).filter(row=>wanted.has(String(row.id)));
+    // Send to Pricing bir Koleksiyon işlemidir: modeller Koleksiyon'da yüklenip görünür olsun.
+    if(typeof root.switchTab==='function')root.switchTab('koleksiyon');
+    for(let i=0;i<60&&find().length<wanted.size;i++)await new Promise(resolve=>setTimeout(resolve,500));
+    const rows=find();if(!rows.length)throw new Error(L('Bu modeller açık Koleksiyon sayfasında bulunamadı. Kendi Koleksiyon sayfanızı açıp tekrar deneyin.','These models were not found in the open Collection page. Open your own Collection page and try again.'));
+    if(root.BLPerf?.ensureFeature)await root.BLPerf.ensureFeature('collectionTools');
+    if(!root.BL_QUOTATIONS?.openSendToPricing)throw new Error(L('Send to Pricing açılamadı.','Send to Pricing could not be opened.'));
+    await root.BL_QUOTATIONS.openSendToPricing({rows,preselect:[pack.supplier],persist:true});
+    if(rows.length<wanted.size&&typeof root.showToast==='function')root.showToast(L(`${wanted.size-rows.length} model Koleksiyon'da artık yok; kalan ${rows.length} model gönderiliyor.`,`${wanted.size-rows.length} models are no longer in Collection; sending the remaining ${rows.length}.`));}
   /* Agentın e-posta taslakları: her biri Outlook'ta taslak (.eml, X-Unsent) olarak açılır; hiçbir şey gönderilmez. */
   function chatDraftsHtml(item){const list=item.provenance?.emailDrafts||[];if(!list.length||item.id==='pending')return '';
     const rows=list.map((draft,index)=>`<article class="aoSimpleDraft"><div><b data-no-i18n>${esc(draft.subject||L('(konu yok)','(no subject)'))}</b>
@@ -468,7 +487,7 @@
     if(item.status&&item.status!=='complete'&&!item.text)return '';
     // Cevap doğrudan kullanılabilsin: kopyala; tablo varsa Excel dosyası olarak indir.
     const tools=item.text&&item.id!=='pending'?`<div class="aoSimpleActions aoSimpleMsgTools">${button(L('Kopyala','Copy'),'chat-copy',`data-id="${esc(item.id)}"`)}${chatTables(item.text).length?button(L('Excel olarak indir','Download as Excel'),'chat-excel',`data-id="${esc(item.id)}"`):''}</div>`:'';
-    const memory=chatDraftsHtml(item)+tools+chatMemoryHtml(item,lead);
+    const memory=chatPricingHtml(item)+chatDraftsHtml(item)+tools+chatMemoryHtml(item,lead);
     if(perspectives.length>1)return perspectives.map(entry=>chatBubble(entry.id,chatMarkdown(entry.text))).join('')+chatBubble(lead,chatMarkdown(item.text),`<small class="aoSimpleNote">${esc(L('Ortak sonuç','Shared conclusion'))}</small>${memory}`);
     return chatBubble(lead,chatMarkdown(item.text),memory);}
   /* Agentın fark ettiği kalıcı tercihler: yalnız sahip "Hatırla" derse saklanır. */
@@ -573,6 +592,8 @@
         target.textContent=opened===picked.length?L('Outlook\'ta açıldı','Opened in Outlook'):L('.eml indirildi, çift tıklayarak açın','.eml downloaded, double-click to open');}
       catch(err){c.error=err.message||errorText(err);render();return true;}
       setTimeout(()=>{target.textContent=label;target.disabled=false;},2500);return true;}
+    if(name==='chat-pricing-open'){const item=c.messages.find(m=>m.id===key),pack=item?.provenance?.pricingPackages?.[Number(target.dataset.index)];if(!pack)return true;
+      target.disabled=true;try{await chatOpenPricing(pack);}catch(err){c.error=err.message||errorText(err);render();}finally{target.disabled=false;}return true;}
     if(name==='chat-excel'){const item=c.messages.find(m=>m.id===key);if(!item)return true;try{await chatExcel(item);}catch(err){c.error=err.message||errorText(err);render();}return true;}
     if(name==='chat-ask'){if(c.busy)return true;c.draft=String(target.dataset.text||'');await chatSend();return true;}
     if(name==='chat-brief-refresh'){target.disabled=true;try{c.brief=(await api('/chat/brief?refresh=1')).brief;}catch(err){c.error=errorText(err);}render();return true;}

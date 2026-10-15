@@ -142,6 +142,26 @@ function compactValue(value) {
   }
   return JSON.stringify(value);
 }
+/* Fiyata gönderme paketleri doğrulanmış araç sonucundan Buyer Log tarafından kurulur;
+   LCW AI model listesini kopyalamaz. Her paket Send to Pricing penceresini açar. */
+function pricingPackages(job) {
+  const out = [];
+  for (const step of job?.steps || []) {
+    if (step?.toolId !== 'pricing.suppliers.suggest' || !['completed', 'partial'].includes(step.status)) continue;
+    const data = step.result?.data || {};
+    for (const supplier of data.suppliers || []) {
+      const models = (supplier.models || []).filter(item => item && item.rowId);
+      if (!models.length) continue;
+      out.push({ supplier: String(supplier.name || '').slice(0, 200), season: String(data.currentSeason || '').slice(0, 80),
+        classifications: (supplier.classifications || []).slice(0, 30).map(item => ({ name: String(item.name || '').slice(0, 120), index: item.index ?? null })),
+        rowIds: models.map(item => String(item.rowId)), models: models.map(item => ({ plmId: item.plmId || '', model: item.model || '', colourCode: item.colourCode || '' })),
+        truncated: supplier.modelsTruncated === true });
+      if (out.length >= 30) return out;
+    }
+  }
+  return out;
+}
+
 function stepResultsText(job) {
   const items = (job?.steps || []).map((step, index) => {
     if (!step || !step.result || !['completed', 'partial'].includes(step.status)) return null;
@@ -242,7 +262,7 @@ function attachChat(service, deps = {}) {
     const records = await store.records(profile.id);
     const link = records.find(doc => doc.kind === 'metadata' && doc.id === 'task-chat-' + job.id);
     if (!link || link.answeredMessageId) return null;
-    const results = stepResultsText(job);
+    const results = stepResultsText(job), packages = pricingPackages(job);
     if (!results) return null;
     let conv;
     try { conv = await store.get(profile.id, 'conversation', link.conversationId); } catch (_) { return null; }
@@ -252,7 +272,8 @@ function attachChat(service, deps = {}) {
     let answered = 'failed';
     try {
       const result = await service.run(profile, { profileIds: conv.profileIds, conversationId: conv.id, task: link.request, lang: link.lang, signal }, onProgress,
-        { reuseUserMessageId: link.userMessageId, taskResults: { taskId: job.id, lead, text: results } });
+        { reuseUserMessageId: link.userMessageId, taskResults: { taskId: job.id, lead, text: results },
+          ...(packages.length ? { extraProvenance: { pricingPackages: packages }, pricingPackages: packages.map(item => ({ supplier: item.supplier, models: item.rowIds.length })) } : {}) });
       answered = result.message?.id || 'failed';
       return result.message || null;
     } finally {
@@ -412,4 +433,4 @@ function attachChat(service, deps = {}) {
   return { officeChatBrief: brief, officeAgentDraft: agentDraft, officeChatBusy: owner => busy.has(owner), officeChat: chat, officeChatApprove: approve, officeChatAdvance: async (profile, jobId) => finished(profile, await advance(profile, jobId)), officeChatTask: task, officeChatRoster: roster };
 }
 
-module.exports = { attachChat, validateRoute, chunks, prepareAttachments, dropAttachments, stepResultsText };
+module.exports = { attachChat, validateRoute, chunks, prepareAttachments, dropAttachments, stepResultsText, pricingPackages };
