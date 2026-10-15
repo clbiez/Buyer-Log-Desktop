@@ -64,7 +64,7 @@ function attachChat(service, deps = {}) {
     return out;
   }
 
-  async function route(profile, conv, message, agents, lang) {
+  async function route(profile, conv, message, agents, lang, signal) {
     const toolsBy = await toolsFor(profile, agents);
     const history = conv ? (await store.messages(profile.id, conv.id, { limit: 8 })).messages
       .filter(item => item.role !== 'system')
@@ -75,7 +75,7 @@ function attachChat(service, deps = {}) {
       currentParticipants: conv ? conv.profileIds : [],
       conversation: history,
     };
-    const response = await service.engineOf().ask(profile.id, { requestId: id(), source: 'agent-chat-route', lang: lang === 'en' ? 'en' : 'tr', task: message, context });
+    const response = await service.engineOf().ask(profile.id, { requestId: id(), source: 'agent-chat-route', lang: lang === 'en' ? 'en' : 'tr', task: message, context, signal });
     if (!response?.structured?.ok || !response.data) {
       return { mode: 'reply', agentIds: conv ? conv.profileIds.slice(0, 4) : [agents[0].id], lead: conv ? conv.profileIds[0] : agents[0].id, toolIds: [], brief: '', note: '', suggestion: '', routed: false };
     }
@@ -125,9 +125,11 @@ function attachChat(service, deps = {}) {
       let conv = raw.conversationId ? await store.get(profile.id, 'conversation', raw.conversationId) : null;
       const selected = agents.find(agent => agent.id === raw.agentId) || (conv ? null : agents[0]);
       onProgress({ phase: 'route' });
-      const decision = await route(profile, conv, message, agents, raw.lang);
+      const decision = await route(profile, conv, message, agents, raw.lang, raw.signal);
       // Sahibin seçtiği agent konuşmanın içinde kalır.
-      const ids = [...new Set([...(selected ? [selected.id] : []), ...(conv ? conv.profileIds : []), ...decision.agentIds])].slice(0, 4);
+      let ids = [...new Set([...(selected ? [selected.id] : []), ...(conv ? conv.profileIds : []), ...decision.agentIds])].slice(0, 4);
+      // Konuşma doluysa ve lider içinde değilse lider kendi yeni konuşmasını açar; işi yapan agent daima katılımcıdır.
+      if (decision.lead && !ids.includes(decision.lead)) { conv = null; ids = [...new Set([decision.lead, ...decision.agentIds])].slice(0, 4); }
       const before = conv ? conv.profileIds : (selected ? [selected.id] : []);
       if (!conv) conv = await store.conversation(profile.id, ids, message.slice(0, 80));
       else conv = await joinConversation(profile, conv, ids);

@@ -117,3 +117,15 @@ test('invented agents or tools never reach the conversation or the planner; a mi
   const asked=await w.service.officeChat(w.profile,{text:'Notu güncelle, sor bana',agentId:a.ada.id});
   assert.equal(asked.message.text,'Hangi sipariş kodu?');
 });
+
+test('when the conversation is full the agent doing the work opens its own conversation',async t=>{
+  let a,extra;const engine=fakeEngine({'agent-chat-route':input=>input.context.currentParticipants.length<4?{mode:'reply',agentIds:[a.ada.id,a.beril.id,...extra.slice(0,2).map(x=>x.id)],lead:a.ada.id}:{mode:'reply',agentIds:[extra[2].id],lead:extra[2].id},
+    'agent-office':{answer:'DEMO',confidence:'LOW'}});
+  const w=world(t,engine);a=await team(w);
+  extra=[];for(const name of ['Mert','Ahmet','Deniz'])extra.push(await w.store.createProfile(w.profile.id,{name,areas:['cp']}));
+  const first=await w.service.officeChat(w.profile,{text:'DEMO ekip',agentId:a.ada.id});
+  assert.equal(first.conversation.profileIds.length,4);
+  const next=await w.service.officeChat(w.profile,{text:'DEMO Deniz işi',conversationId:first.conversation.id});
+  assert.notEqual(next.conversation.id,first.conversation.id);
+  assert.ok(next.conversation.profileIds.includes(extra[2].id),'the lead is a participant');
+});
