@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-15",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Girişten sonra takılma düzeltmesi",
-    "en": "Fix for the freeze after login"
+    "tr": "Girişten sonra takılma düzeltmesi ve sade Agent sohbeti",
+    "en": "Login freeze fix and plain Agent chat"
   },
   "summary": {
-    "tr": "Merkezi kullanıcı dizini açık ama bu cihazda dizin önbelleği yokken girişten sonra sunucunun dakikalarca kilitlenmesi ve verilerin kısmen yüklenmesi giderildi.",
-    "en": "Fixed the server locking up for minutes and data loading partially after login when the central user directory is enabled but this device has no directory cache."
+    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar.",
+    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat."
   },
   "changes": [
     {
@@ -37,6 +37,93 @@
         "alt": {
           "tr": "Merkezi dizin önbelleği olmayan demo cihazda girişten 6,7 sn sonra 220 demo sipariş ve modüller yüklendi.",
           "en": "On a demo device without a central directory cache, 220 demo orders and the modules loaded 6.7 s after login."
+        }
+      }
+    },
+    {
+      "id": "agent-chat-simple-team",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agentlarla doğal dille sade sohbet",
+        "en": "Plain-language chat with your agents"
+      },
+      "body": {
+        "tr": "Agent Ofisi artık tek bir sohbet ekranıyla açılır: solda agentlarınız, ortada sohbet. Derdinizi kendi cümlelerinizle yazarsınız; LCW AI cevap mı vereceğine, Buyer Log'da iş mi yapacağına karar verir. Konu başka bir agentın alanına giriyorsa onu da konuşmaya katar; her agent kendi görüşünü söyler, ardından ortak sonuç gelir. Eski ofis ekranı Ayarlar ve gelişmiş ofis altında durur.",
+        "en": "Agent Office now opens with a single chat screen: your agents on the left, the conversation in the middle. You write what you need in your own words; LCW AI decides whether to answer or to do the work in Buyer Log. When the topic touches another agent's area it brings that agent in; each agent gives its view, followed by a shared conclusion. The previous office screen stays under Settings and advanced office."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-chat-team.png",
+        "caption": {
+          "tr": "Koleksiyon ve CP sorusunda Ada, Atlas'ı konuşmaya kattı; ikisi ayrı görüş verdi ve ortak sonuç geldi (demo veri).",
+          "en": "For a collection and CP question Ada brought Atlas in; both gave their view and a shared conclusion followed (demo data)."
+        },
+        "alt": {
+          "tr": "Koleksiyon ve CP sorusunda Ada, Atlas'ı konuşmaya kattı; ikisi ayrı görüş verdi ve ortak sonuç geldi (demo veri).",
+          "en": "For a collection and CP question Ada brought Atlas in; both gave their view and a shared conclusion followed (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-chat-approval-card",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Değişiklikler sohbet içinde onayla yapılır",
+        "en": "Changes are approved inside the chat"
+      },
+      "body": {
+        "tr": "Agent Buyer Log'da bir şey değiştirecekse önce ne yapacağını yazar ve sohbet içinde Onayla / Vazgeç kartı gösterir. Okuma işleri hemen yapılır; değişiklik yalnız onayınızla ve önizlenen haliyle uygulanır. Biten işi aynı karttan geri alabilirsiniz.",
+        "en": "When an agent is about to change something in Buyer Log it first says what it will do and shows an Approve / Cancel card in the chat. Read-only work runs at once; a change is applied only with your approval and exactly as previewed. You can undo finished work from the same card."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-chat-approval.png",
+        "caption": {
+          "tr": "Ada yeni not sütunu eklemeden önce onay kartında bekliyor (demo veri).",
+          "en": "Ada waits on the approval card before adding a new note column (demo data)."
+        },
+        "alt": {
+          "tr": "Ada yeni not sütunu eklemeden önce onay kartında bekliyor (demo veri).",
+          "en": "Ada waits on the approval card before adding a new note column (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-chat-context-too-large",
+      "type": "fix",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "\"Talimatlar çok büyük\" hatası giderildi",
+        "en": "Fixed the \"Instructions are too large\" error"
+      },
+      "body": {
+        "tr": "Gerçek veride bulgular sohbet paketini doldurduğunda, basit bir selamlaşma bile \"Talimatlar bu ortak görev için fazla büyük\" hatasıyla reddedilebiliyordu. Paket artık sınırı aşmaz; uzun talimatlar ve büyük veri özetleri kısaltılıp açıkça işaretlenir.",
+        "en": "When findings filled the chat context with real data, even a simple greeting could be refused with \"Instructions are too large for this shared job\". The context now never exceeds its limit; long instructions and large data summaries are shortened and clearly marked."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-chat-long-instructions.png",
+        "caption": {
+          "tr": "6000 karakterlik talimatı olan Ada sohbette hatasız yanıt veriyor (demo veri).",
+          "en": "Ada, with 6,000 characters of instructions, answers in the chat without an error (demo data)."
+        },
+        "alt": {
+          "tr": "6000 karakterlik talimatı olan Ada sohbette hatasız yanıt veriyor (demo veri).",
+          "en": "Ada, with 6,000 characters of instructions, answers in the chat without an error (demo data)."
         }
       }
     }

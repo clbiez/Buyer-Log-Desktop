@@ -104,7 +104,9 @@ function attachTasks(service,deps) {
   async function plan(profile,raw){
     profile=authority(profile);const initialActor=actorHash(profile),initialAgent=requireEnabledAgent(await store.get(profile.id,'profile',raw.agentId));
     const check=agent=>{requireEnabledAgent(agent);if(agent.revision!==initialAgent.revision||actorHash(authority(profile))!==initialActor)throw error('OFFICE_PREVIEW_CHANGED',409);};
-    const checkCurrent=async()=>check(await store.get(profile.id,'profile',raw.agentId)),tools=await catalog(profile,raw.agentId);if(!tools.length)throw error('OFFICE_TOOL_FORBIDDEN',403);
+    const checkCurrent=async()=>check(await store.get(profile.id,'profile',raw.agentId)),allTools=await catalog(profile,raw.agentId);if(!allTools.length)throw error('OFFICE_TOOL_FORBIDDEN',403);
+    // Sohbet yönlendiricisi aday araçları seçtiyse planlayıcı yalnız onların şemasını görür; tüm katalog bağlam sınırında kesiliyordu.
+    const wanted=new Set(Array.isArray(raw.toolIds)?raw.toolIds.map(String):[]),picked=allTools.filter(tool=>wanted.has(tool.id)),tools=picked.length?picked:allTools;
     const memory=await service.memoryContext(profile,[raw.agentId],'',raw.task,6000,{toolIds:tools.map(tool=>tool.id)});
     await checkCurrent();
     const response=await service.engineOf().ask(profile.id,{requestId:id(),source:'agent-task',lang:raw.lang==='en'?'en':'tr',task:text(raw.task,4000),context:{agentId:raw.agentId,tools:tools.map(t=>({id:t.id,operation:t.operation,label:t.label,description:t.description,inputSchema:t.inputSchema})),memory:memory.selected},guide:'Return planJson as a JSON string: {steps:[{id,toolId,args,bindings:[{argument,stepId,path}]}]}. Use only listed tools. Bindings reference earlier actual results; a path may project a list, e.g. data.items[].plmId, so the result of one module feeds a step of another module. Never invent identifiers, permissions, successful execution, source facts or approvals. Do not place a fingerprint in args. If required identifiers are missing return {steps:[]}.'});

@@ -19,12 +19,37 @@ function packContext(parts, max = 17800) {
   const context = { referenceIds: [], coverage: parts.coverage || {}, participants: parts.participants || [], omitted: 0 };
   // Prompt sanitizer's per-string limit is respected without truncating an
   // instruction mid-sentence invisibly: long text is sent in numbered chunks.
-  for (const participant of context.participants) {
-    participant.instructions = String(participant.instructions || '').match(/[\s\S]{1,1500}/g) || [];
+  /* Taban (katılımcılar + kapsam) bütçeyi aşarsa çağrı reddedilmez: büyük
+     kapsam alanları özetlenir, talimatlar katılımcı başına eşit payla kısaltılır
+     ve bu açıkça işaretlenir. Eskiden 6000 karakterlik talimatlı bir agentla
+     bile "talimatlar çok büyük" hatası alınabiliyordu. */
+  context.coverage = { ...context.coverage };
+  for (const [key, value] of Object.entries(context.coverage)) {
+    const size = JSON.stringify(value ?? null).length;
+    if (size > 800) context.coverage[key] = { omitted: true, size };
   }
-  for (const [name, list] of Object.entries(parts)) {
-    if (name === 'coverage' || name === 'participants') continue;
-    context[name] = [];
+  // Tek tek küçük ama toplamda büyük kapsam da bütçenin dörtte birini aşmaz: en büyük alanlar özetlenir.
+  const coverageBudget = Math.floor(max * 0.25);
+  while (JSON.stringify(context.coverage).length > coverageBudget) {
+    const [key, size] = Object.entries(context.coverage).filter(([, value]) => !(value && value.omitted === true))
+      .map(([name, value]) => [name, JSON.stringify(value ?? null).length]).sort((a, b) => b[1] - a[1])[0] || [];
+    if (!key || size <= 40) break;
+    context.coverage[key] = { omitted: true, size };
+  }
+  const baseBudget = Math.floor(max * 0.55);
+  const withoutInstructions = JSON.stringify({ ...context, participants: context.participants.map(item => ({ ...item, instructions: [] })) }).length;
+  const share = Math.max(400, Math.floor((baseBudget - withoutInstructions) / Math.max(1, context.participants.length)));
+  for (const participant of context.participants) {
+    const full = String(participant.instructions || '');
+    const kept = full.length > share ? full.slice(0, share) : full;
+    if (kept.length < full.length) { participant.instructionsTrimmed = { kept: kept.length, total: full.length }; context.omitted++; }
+    participant.instructions = kept.match(/[\s\S]{1,1500}/g) || [];
+  }
+  // Kalem listeleri doldurmadan ÖNCE açılır; sonradan eklenen boş listeler
+  // sınırın hemen altına kadar dolmuş paketi taşırıyordu.
+  const lists = Object.entries(parts).filter(([name]) => name !== 'coverage' && name !== 'participants');
+  for (const [name] of lists) context[name] = [];
+  for (const [name, list] of lists) {
     for (const item of Array.isArray(list) ? list : []) {
       const safe = JSON.parse(JSON.stringify(item));
       if (safe.text && safe.text.length > 1800) safe.text = { parts: safe.text.match(/[\s\S]{1,1500}/g) };
@@ -169,6 +194,7 @@ function createAgentOfficeService(deps) {
     const runAuthority=memoryPolicy.fingerprint(profile);
     async function assertRunScope(){const latest=await Promise.all(ids.map(key=>store.get(profile.id,'profile',key)));if(latest.some((agent,i)=>agent.revision!==participants[i].revision)||runAuthority!==memoryPolicy.fingerprint(freshProfile(profile)))throw error('OFFICE_PREVIEW_CHANGED',409);}
     const userMessage = await store.appendMessage(profile.id, conv.id, { role:'user', text:task, requestId,authorizationFingerprint:runAuthority });
+    if (typeof internal.afterUserMessage === 'function') await internal.afterUserMessage(conv);
     let job = await store.save(profile.id, 'job', { id:requestId, profileIds:ids, conversationId:conv.id, userMessageId:userMessage.id, type:raw.mode === 'automation' ? 'automation' : 'analysis',
       runtimeInstanceId,runtimeDeviceId:store.db(profile.id).getDeviceId(),authorizationFingerprint:runAuthority,status:'running', task, scope:resolvedScope, calls:0, perspectiveMode:ids.length > 1 ? 'one-call-shared-perspectives' : 'single-agent' });
     active.set(job.id, {...job,ownerId:profile.id,phase:'review'});
@@ -414,6 +440,7 @@ function createAgentOfficeService(deps) {
   if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-cp').attachCp(service,deps));
   if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-tasks').attachTasks(service,deps));
   if(deps.getEvidenceAttachments&&deps.readEvidenceAttachment)Object.assign(service,require('./agent-office-evidence').attachEvidence(service,deps));
+  if(deps.toolRegistry&&deps.runtime)Object.assign(service,require('./agent-office-chat').attachChat(service,deps));
   return service;
 }
 module.exports = { createAgentOfficeService, packContext, trainingChunks, scopeOf, inferScope };

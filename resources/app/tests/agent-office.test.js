@@ -225,3 +225,28 @@ test('four local-time periods and agent states derive from actual jobs and tasks
  const {periodForHour,status}=require('../public/agent-office-workshop-model');assert.deepEqual([0,7,13,18,23].map(periodForHour),['night','morning','noon','evening','night']);
  assert.equal(status('a',{activeJobs:[{profileIds:['b']}],connected:true}),'available');assert.equal(status('a',{activeJobs:[{profileIds:['a'],phase:'responding'}]}),'responding');assert.equal(status('a',{jobs:[{profileIds:['a'],status:'failed'}]}),'error');assert.equal(status('a',{memory:[{profileId:'a',type:'task',active:true}]}),'waiting');assert.equal(status('a',{connected:false}),'offline');
 });
+
+test('a long-instruction team and large coverage still fit the shared context instead of failing',()=>{
+  const participants=['ada','mert','beril','ahmet'].map(id=>({id,name:id,role:'DEMO',instructions:'Talimat '.repeat(750)}));
+  const packed=packContext({participants,coverage:{lfl:{rows:10,fields:Array.from({length:400},(_,i)=>'Alan '+i)},completeArchive:false},memory:[{id:'m1',text:'DEMO hafıza'}]},17800);
+  assert.ok(JSON.stringify(packed).length<=17800);
+  assert.ok(packed.participants.every(item=>item.instructionsTrimmed&&item.instructions.join('').length>=400));
+  assert.deepEqual(packed.coverage.lfl.omitted,true);
+  assert.equal(packed.memory.length,1,'evidence still has room after trimming');
+});
+
+test('many mid-size coverage fields together are summarized so a team chat still fits',()=>{
+  const coverage=Object.fromEntries(Array.from({length:40},(_,i)=>['source'+i,{note:'DEMO kapsam '.repeat(60).slice(0,700)}]));
+  const participants=[{id:'ada',instructions:'Talimat '.repeat(750)},{id:'atlas',instructions:'Koleksiyon '.repeat(100)}];
+  const packed=packContext({participants,coverage,findings:[{id:'f1',text:'DEMO bulgu'}]},17800);
+  assert.ok(JSON.stringify(packed).length<=17800);
+  assert.ok(JSON.stringify(packed.coverage).length<=17800*0.25);
+  assert.equal(packed.findings.length,1);
+});
+
+test('item lists opened after the earlier ones filled up never push the context over the limit',()=>{
+  const findings=Array.from({length:60},(_,i)=>({id:'f'+i,text:'DEMO bulgu '.repeat(30)}));
+  const parts={participants:[{id:'ada',instructions:'x'.repeat(5000)}],coverage:{},memory:[],findings};
+  for(const name of ['changes','orderEvidence','decisionSupport','bomEvidence','supplierInsights','collectionEvidence','handoffs','orchestration','evidenceAttachments'])parts[name]=[];
+  for(let max=17000;max<17900;max+=37){const packed=packContext(parts,max);assert.ok(JSON.stringify(packed).length<=max,'fits at '+max);}
+});
