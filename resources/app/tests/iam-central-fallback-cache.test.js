@@ -126,3 +126,22 @@ test('central mode switched on at startup after an earlier local read still reus
   assert.deepEqual([warm.dirs, warm.files], [0, 0], 'no legacy scan on every read after Central IAM is enabled');
   void ua;
 });
+
+test('after a retry window expires the directory is cached again, not re-read on every call', t => {
+  const { base, auth, ua } = setup({ backups: 0 });
+  t.after(() => { delete process.env.BUYER_LOG_CENTRAL_IAM_ENABLED; fs.rmSync(base, { recursive: true, force: true }); });
+  // Normal read first, then one read during a momentary lock (cache gets a retry time).
+  ua.readStore();
+  const file = path.join(auth, 'user-access.json'), readFile = fs.readFileSync, now = Date.now;
+  fs.readFileSync = function (target, ...rest) {
+    if (path.resolve(String(target)) === path.resolve(file)) throw Object.assign(new Error('EBUSY'), { code: 'EBUSY' });
+    return readFile.call(this, target, ...rest);
+  };
+  try { ua.readStore(); } finally { fs.readFileSync = readFile; }
+  Date.now = () => now() + 31000;
+  try {
+    assert.equal(ua.readStore().moderator.username, 'DEMO Moderator');
+    const warm = countReads(() => ua.readStore());
+    assert.deepEqual([warm.dirs, warm.files], [0, 0], 'field: every read re-parsed both directory files');
+  } finally { Date.now = now; }
+});
