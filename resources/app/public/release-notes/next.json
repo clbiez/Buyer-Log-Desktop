@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-15",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Girişten sonra takılma düzeltmesi",
+    "en": "Fix for the freeze after login"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Merkezi kullanıcı dizini açık ama bu cihazda dizin önbelleği yokken girişten sonra sunucunun dakikalarca kilitlenmesi ve verilerin kısmen yüklenmesi giderildi.",
+    "en": "Fixed the server locking up for minutes and data loading partially after login when the central user directory is enabled but this device has no directory cache."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "login-central-iam-fallback-stall",
+      "type": "fix",
+      "module": {
+        "tr": "Giriş ve kullanıcı yetkileri",
+        "en": "Login and user access"
+      },
+      "title": {
+        "tr": "Girişten sonra takılma ve eksik veri yüklemesi giderildi",
+        "en": "Fixed the freeze and partial data load after login"
+      },
+      "body": {
+        "tr": "Merkezi kullanıcı dizini açıkken bu cihazda geçerli dizin önbelleği yoksa her yetki kontrolü eski kullanıcı dosyalarını yeniden tarıyordu; sunucu dakikalarca yanıt vermiyor, veriler kısmen yükleniyor, modüller ve yenileme çalışmıyordu. Kurtarma artık yalnız açılışta ve kimlik dosyaları değiştiğinde yapılır; güvenlik kontrolleri aynıdır.",
+        "en": "With the central user directory enabled and no valid directory cache on this device, every access check rescanned old user files; the server stopped responding for minutes, data loaded partially, and modules and refresh did not work. Recovery now runs only at startup and when the identity files change; security checks are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "login-central-iam-fallback.png",
+        "caption": {
+          "tr": "Merkezi dizin önbelleği olmayan demo cihazda girişten 6,7 sn sonra 220 demo sipariş ve modüller yüklendi.",
+          "en": "On a demo device without a central directory cache, 220 demo orders and the modules loaded 6.7 s after login."
+        },
+        "alt": {
+          "tr": "Merkezi dizin önbelleği olmayan demo cihazda girişten 6,7 sn sonra 220 demo sipariş ve modüller yüklendi.",
+          "en": "On a demo device without a central directory cache, 220 demo orders and the modules loaded 6.7 s after login."
+        }
+      }
+    }
+  ]
 }
