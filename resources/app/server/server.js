@@ -2581,7 +2581,9 @@ const agentOrderAdapter = {
     }
     const result=require('./db').restoreOrderOverrideReceipts(items.map(({orderCode,before,selector})=>({orderCode,receipt:before,selector})),expectedRevision,{actor:noteActorOf(profile)});
     userAccess.appendAudit(profile, 'AGENT_ORDER_BATCH_ROLLBACK', 'orders', {orderCodes:items.map(item=>Number(item.orderCode)),revision:result.revision});
-    liveEvents.notifyChange('orders','agent-capability',{});return result;
+    // Exact undo may remove overrides: peers reload each restored order, as for a single undo.
+    for (const {orderCode} of items) liveEvents.notifyChange('orders','agent-capability',{orderCode});
+    return result;
   },
   // Note-column definitions: the same shared list and native service as
   // CP › Add Column (PUT /api/note-columns).
