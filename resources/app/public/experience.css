@@ -237,7 +237,7 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
 .modalCard,.globalSearchCard,.lflPortfolioModalPanel,.lflScenarioEditorDialog,.lflTrialStudio,
 .kolSpreadsheetPasteCard{background:var(--bl-surface-raised);border:1px solid var(--bl-stroke-strong);border-radius:var(--r-xl);box-shadow:var(--shadow-3);animation:blDialogIn var(--bl-motion-enter) var(--bl-ease) both;}
 .kolPeriodDrawer,.cfpDrawer{background:var(--bl-surface-raised);box-shadow:var(--shadow-3);animation:blDrawerIn var(--bl-motion-enter) var(--bl-ease) both;}
-.dateCalendarPopup{width:min(308px,calc(100vw - 16px));padding:12px;}
+.dateCalendarPopup{width:min(332px,calc(100vw - 16px));padding:12px;}
 .dateCalendarHead{margin-bottom:10px;}
 .dateCalendarTitle{font-family:var(--sans);font-size:13px;letter-spacing:0;}
 .dateCalendarNav,.dateCalendarFoot button{border-radius:var(--r-sm);background:var(--bl-surface-soft);border-color:var(--bl-stroke-subtle);}

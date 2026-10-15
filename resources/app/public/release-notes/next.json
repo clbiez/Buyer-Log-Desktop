@@ -416,6 +416,64 @@
           "en": "Atlas split the June 2027 models across 7 suppliers pricing below their classification average; each card opens Send to Pricing (demo data)."
         }
       }
+    },
+    {
+      "id": "date-picker-lcw-glb-weeks",
+      "type": "fix",
+      "module": {
+        "tr": "Tarih seçimi",
+        "en": "Date picker"
+      },
+      "title": {
+        "tr": "Tarih seçicide LCW Merch ve Global hafta birlikte",
+        "en": "LCW Merch and Global week together in the date picker"
+      },
+      "body": {
+        "tr": "Ex-Factory revizesi gibi tüm tarih alanlarında açılan takvim yalnız global (ISO) haftayı gösteriyordu. Artık her hafta satırında Merch Calendar'a göre LCW haftası ve global hafta yan yana görünür (ör. 10 / 9). Merch Calendar yüklü değilse LCW sütununda tire görünür.",
+        "en": "The calendar opened by date fields such as the Ex-Factory revision showed only the global (ISO) week. Each week row now shows the LCW week from the Merch Calendar next to the global week (e.g. 10 / 9). Without an uploaded Merch Calendar the LCW column shows a dash."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "date-picker-lcw-glb-weeks.png",
+        "caption": {
+          "tr": "Demo Merch Calendar ile Mart 2027: her satırda LCW / GLB hafta numarası.",
+          "en": "March 2027 with a demo Merch Calendar: LCW / GLB week number on every row."
+        },
+        "alt": {
+          "tr": "Demo Merch Calendar ile Mart 2027: her satırda LCW / GLB hafta numarası.",
+          "en": "March 2027 with a demo Merch Calendar: LCW / GLB week number on every row."
+        }
+      }
+    },
+    {
+      "id": "collection-mb-week-glb",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "MB Week seçiminde global hafta da görünür",
+        "en": "Global week also shown when picking MB Week"
+      },
+      "body": {
+        "tr": "Koleksiyonda Model Bütçe hafta/ay seçim panelinde yalnız Merch Calendar haftası görünüyordu. Artık her seçenekte ve bulunduğumuz hafta satırında LCW haftasının yanında GLB haftası da yazar.",
+        "en": "The Model Budget week/month picker in Collection showed only the Merch Calendar week. Every option and the current-week line now also show the GLB week next to the LCW week."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-mb-week-glb.png",
+        "caption": {
+          "tr": "Demo Merch Calendar ile MB hafta paneli: LCW 1. hafta = GLB 53. hafta.",
+          "en": "MB week panel with a demo Merch Calendar: LCW week 1 = GLB week 53."
+        },
+        "alt": {
+          "tr": "Demo Merch Calendar ile MB hafta paneli: LCW 1. hafta = GLB 53. hafta.",
+          "en": "MB week panel with a demo Merch Calendar: LCW week 1 = GLB week 53."
+        }
+      }
     }
   ]
 }
