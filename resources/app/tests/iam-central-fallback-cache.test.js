@@ -108,3 +108,21 @@ test('a local file that stays unreadable does not rescan on every read', t => {
     assert.equal(later.dirs, 0, 'the legacy scan is not repeated for unchanged files');
   } finally { Date.now = now; }
 });
+
+test('central mode switched on at startup after an earlier local read still reuses the directory', t => {
+  process.env.BUYER_LOG_CENTRAL_IAM_ENABLED = '0';
+  const { base, ua } = setup();
+  process.env.BUYER_LOG_CENTRAL_IAM_ENABLED = '0';
+  t.after(() => { delete process.env.BUYER_LOG_CENTRAL_IAM_ENABLED; fs.rmSync(base, { recursive: true, force: true }); });
+  // The field order: the local directory is read before buildUserAccess turns Central IAM on.
+  for (const key of Object.keys(require.cache)) if (key.endsWith(path.join('server', 'lib', 'user-access.js'))) delete require.cache[key];
+  const fresh = require(path.join(ROOT, 'server', 'lib', 'user-access.js'));
+  fresh.readStore();
+  const access = fresh.buildUserAccess({ ensureDataLoaded: async () => {}, getOrders: () => [], centralIam: { enabled: true, sharedRoot: path.join(base, 'no-shared-hub') } });
+  t.after(() => access.stop?.());
+  fresh.readStore();
+  const warm = countReads(() => fresh.readStore());
+  assert.equal(warm.value.moderator.username, 'DEMO Moderator');
+  assert.deepEqual([warm.dirs, warm.files], [0, 0], 'no legacy scan on every read after Central IAM is enabled');
+  void ua;
+});

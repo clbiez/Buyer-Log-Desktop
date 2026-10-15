@@ -744,6 +744,14 @@ function resolveStore(shared) {
   // Tasima dosyayi degistirmis olabilir; imza tasimadan SONRA hesaplanir.
   const tag = storeTag();
   if (tag && storeCache && storeCache.tag === tag) {
+    /* Merkezi yedek yolundan gelindiyse kayıt yedek imzasıyla işaretlenir.
+       Merkezi mod açılışta sonradan devreye girdiğinde önceki yerel okumanın
+       kaydı işaretsiz kalıyor, her okuma eski depo taramasını yeniden
+       yapıp bu satırda dönüyordu (sahadaki kalıcı kilitlenme). */
+    if (fallbackCacheable) {
+      storeCache.fallbackTag = centralFallbackTag();
+      if (fallbackCacheable === true) delete storeCache.retryAt; else storeCache.retryAt = fallbackCacheable;
+    }
     return shared ? storeCache.value : JSON.parse(JSON.stringify(storeCache.value));
   }
   let raw = null;
@@ -1242,7 +1250,7 @@ function readAudit(limit = 200, filters = {}) {
 function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptions, onIamApplied }) {
   if (typeof onIamApplied === 'function') iamApplied = onIamApplied;
   if (centralOptions) {
-    centralConfigured = centralOptions.enabled === true;
+    centralConfigured = centralOptions.enabled === true; storeCache = null;
     if (typeof centralOptions.getSharedRoot === 'function') iamSharedRoot = centralOptions.getSharedRoot;
     else if (centralOptions.sharedRoot) iamSharedRoot = async () => centralOptions.sharedRoot;
     centralService = centralConfigured ? centralIam.createCentralIam({ ...centralOptions, cacheFile: ACCESS_FILE, onApply: cache => { storeCache = null; reconcilePersonalLogin(cache); iamApplied(cache._revision); }, canApply: () => !restoreActive, canCommit: () => !restoreActive }) : null;
