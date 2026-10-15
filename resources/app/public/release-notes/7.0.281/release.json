@@ -1,0 +1,456 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.281",
+  "channel": "stable",
+  "publishedAt": "2026-10-14",
+  "title": {
+    "tr": "Yükleme hatalarından kurtarma ve Agent Ofisi'nde yeni işler",
+    "en": "Loading failure recovery and new Agent Office work"
+  },
+  "summary": {
+    "tr": "Hesaplama işçisi ve Veri Yönetimi yükleme hatalarından kurtulur. Agent'lar onayla sipariş düzenler, ön ayar alır, checklist eki kaldırır; fiyat/üretici analizi, resmi tatil ve kayıtlı PLM BOM okur.",
+    "en": "The calculation worker and Data Management recover from loading failures. Agents edit orders, take presets and remove checklist attachments with approval; they read price/supplier analysis, public holidays and stored PLM BOMs."
+  },
+  "stats": {
+    "features": 12,
+    "improvements": 1,
+    "fixes": 2
+  },
+  "changes": [
+    {
+      "id": "cp-worker-import-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Hesaplama işçisi yüklenemediğinde devam et",
+        "en": "Continue when the calculation worker cannot load"
+      },
+      "body": {
+        "tr": "İşçi bağımlılığı yüklenemezse aynı kanonik motor ana ekranda hesaplamayı tamamlar. İşçi açılışı 10 saniyede yanıt vermezse hesaplama kuyruğunu serbest bırakır.",
+        "en": "If a worker dependency cannot load, the same canonical engine completes the calculation on the main thread. Worker startup releases the calculation queue if it does not respond within 10 seconds."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-worker-loading-recovery.png",
+        "caption": {
+          "tr": "Bağımlılık isteği başarısızken 215 demo siparişin öncelikleri gerçek CP tablosunda tamamlandı.",
+          "en": "With a dependency request failing, priorities for 215 demo orders completed in the actual CP table."
+        },
+        "alt": {
+          "tr": "Bağımlılık isteği başarısızken 215 demo siparişin öncelikleri gerçek CP tablosunda tamamlandı.",
+          "en": "With a dependency request failing, priorities for 215 demo orders completed in the actual CP table."
+        }
+      }
+    },
+    {
+      "id": "data-management-bounded-loading",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Takılan yükleme için yeniden açma yolu",
+        "en": "Recovery for stalled loading"
+      },
+      "body": {
+        "tr": "Modül dosyaları ve Veri Yönetimi yanıtları süresiz beklenmez. Dosya hatasında yeniden deneme, zaman aşımında güvenli yeniden yükleme sunulur; yardımcı servis hataları ana özeti engellemez.",
+        "en": "Module files and Data Management responses no longer wait indefinitely. File errors offer retry and timeouts offer a safe reload; auxiliary service failures do not block the main summary."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-management-loading-retry.png",
+        "caption": {
+          "tr": "Gerçek Veri Yönetimi ekranı takılan dosya isteğinden sonra yeniden yükleme düğmesini gösteriyor.",
+          "en": "Actual Data Management shows the reload button after a stalled file request."
+        },
+        "alt": {
+          "tr": "Gerçek Veri Yönetimi ekranı takılan dosya isteğinden sonra yeniden yükleme düğmesini gösteriyor.",
+          "en": "Actual Data Management shows the reload button after a stalled file request."
+        }
+      }
+    },
+    {
+      "id": "agent-order-editor",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar onayla sipariş düzenler",
+        "en": "Agents edit orders with approval"
+      },
+      "body": {
+        "tr": "Agent Ofisi artık tek bir CP sipariş satırında notları, tarih revizyonlarını, alt üreticiyi, lisansörü, teslimat tipini, kullanıcı tanımlı not sütunlarını ve Eksik Adet işaretini düzenleyebilir. Değişiklik önizlenir, yalnız onayla ve CP düzenleyicisinin kullandığı aynı servisle yazılır, ardından okunarak doğrulanır. \"Bu adımı geri al\" önceki değerleri birebir geri getirir. Bilinmeyen not sütunu önizlemede reddedilir; sütun tanımları değiştiyse geri alma güvenle durdurulur.",
+        "en": "Agent Office can now edit notes, date revisions, sub-manufacturer, licensor, delivery type, user-defined note columns and the Shortage mark on one CP order line. The change is previewed, written only after approval through the same service the CP editor uses, then read back. \"Undo this step\" restores the exact previous values. An unknown note column is refused at preview; if column definitions changed, undo stops safely."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-order-editor.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: onaylanan sipariş düzenleme adımı tamamlandı ve geri alınabilir.",
+          "en": "Actual Agent Office: the approved order edit step completed and can be undone."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımları penceresinde tamamlanan sipariş düzenleme adımı ve geri al düğmesi",
+          "en": "Agent Office task steps dialog with a completed order edit step and an undo button"
+        }
+      }
+    },
+    {
+      "id": "agent-preset-share",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar başka kullanıcının ön ayarlarını onayla alır",
+        "en": "Agents take another user's presets with approval"
+      },
+      "body": {
+        "tr": "Agent Ofisi, Ön Ayar Paylaşımı'ndaki ayarları (Focus/Extended ön ayarları, sütun düzeni, oluşturulan sütunlar, Horizon filtreleri, görünüm ve filtre profilleri) seçili bir kullanıcıdan yalnız sizin çalışma alanınıza alabilir. Hangi anahtarların değişeceği önizlenir, onaydan sonra kullanıcı menüsüyle aynı birleştirme kuralı uygulanır ve sonuç doğrulanır. \"Bu adımı geri al\" önceki ayarlarınızı birebir geri getirir; aradan sonra ayarı siz değiştirdiyseniz geri alma güvenle durur. Kaynak kullanıcının kaydına hiç yazılmaz.",
+        "en": "Agent Office can take Preset Sharing settings (Focus/Extended presets, column layout, created columns, Horizon filters, views and filter profiles) from a selected user into your own workspace only. The keys to change are previewed, the user menu's merge rule applies after approval and the result is verified. \"Undo this step\" restores your previous settings exactly; if you changed a setting meanwhile, undo stops safely. The source user's record is never written."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-preset-share.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: Focus/Extended ön ayarlarını alma adımı onaylandı, doğrulandı ve geri alınabilir.",
+          "en": "Actual Agent Office: the step taking Focus/Extended presets was approved, verified and can be undone."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında doğrulanmış ön ayar aktarımı sonucu ve geri al düğmesi",
+          "en": "Agent Office task steps with a verified preset transfer result and an undo button"
+        }
+      }
+    },
+    {
+      "id": "agent-checklist-attachments",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar checklist eklerini listeler ve onayla kaldırır",
+        "en": "Agents list checklist attachments and remove them with approval"
+      },
+      "body": {
+        "tr": "Agent Ofisi, yetkili siparişlerin checklist cevaplarındaki kanıt eklerini listeleyebilir ve yanlış eklenmiş bir dosyayı cevaptan onayla kaldırabilir. Cevabın durumu, notu, rapor numarası ve tarihleri korunur; dosyanın kendisi silinmez, cevap geçmişi onu göstermeye devam eder. \"Bu adımı geri al\" cevabı birebir eski haline getirir; aradan sonra checklist değiştiyse geri alma güvenle durur.",
+        "en": "Agent Office can list the evidence attachments on checklist answers of authorized orders and remove a wrongly attached file from an answer with approval. The answer's status, note, report number and dates are kept; the file itself is not deleted and the answer history still points to it. \"Undo this step\" restores the answer exactly; if the checklist changed meanwhile, undo stops safely."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-checklist-attachment.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: yanlış kanıt dosyasını kaldırma adımı onaylandı, doğrulandı ve geri alınabilir.",
+          "en": "Actual Agent Office: the step removing a wrong evidence file was approved, verified and can be undone."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında doğrulanmış checklist eki kaldırma sonucu ve geri al düğmesi",
+          "en": "Agent Office task steps with a verified checklist attachment removal and an undo button"
+        }
+      }
+    },
+    {
+      "id": "agent-price-analysis",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar Fiyat & Üretici Analizi'ni okur",
+        "en": "Agents read Price & Supplier Analysis"
+      },
+      "body": {
+        "tr": "Agent Ofisi, Fiyat & Üretici Analizi ekranının Horizon kaynağını aynı yetki kapsamı ve aynı hesap motoruyla okuyabilir: sezon kıyası, üretici bazında hacim ve fiyat konumu, ülke ve klasman kırılımları. Final FOB veya tedarikçi FOB, para birimi, sezon, kırılım ve filtre seçilebilir. Ekran ile agent artık tek gözlem üreticisini paylaşır; ekrandaki sonuçlar değişmez. Yalnız okuma yapılır.",
+        "en": "Agent Office can read the Horizon source of the Price & Supplier Analysis screen with the same access scope and calculation engine: season comparison, volume and price position per supplier, country and category breakdowns. Final FOB or supplier FOB, currency, season, breakdown and filters can be chosen. The screen and the agent now share one observation builder; screen results do not change. Read only."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-price-analysis.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: fiyat ve üretici analizi adımının doğrulanmış sonucu (demo veri).",
+          "en": "Actual Agent Office: verified result of the price and supplier analysis step (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında fiyat ve üretici analizi sonucu",
+          "en": "Agent Office task steps with a price and supplier analysis result"
+        }
+      }
+    },
+    {
+      "id": "agent-holidays",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar ülke resmi tatillerini okur",
+        "en": "Agents read country public holidays"
+      },
+      "body": {
+        "tr": "Agent Ofisi, dünya saatlerindeki resmi tatil takvimini bir ülke ve yıl için okuyabilir; üretim ülkesi planlarında kullanılabilir. Dışarı yalnız ülke kodu ve yıl gider, Buyer Log verisi gönderilmez. Takvime ulaşılamazsa açık bir uyarı gösterilir.",
+        "en": "Agent Office can read the public holiday calendar of the world clocks for a country and year, useful for production-country planning. Only the country code and year leave Buyer Log; no Buyer Log data is sent. If the calendar is unreachable, a clear notice is shown."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-holidays.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: Hindistan 2026 resmi tatilleri adımının doğrulanmış sonucu.",
+          "en": "Actual Agent Office: verified result of the India 2026 public holidays step."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında resmi tatil listesi",
+          "en": "Agent Office task steps with a public holiday list"
+        }
+      }
+    },
+    {
+      "id": "agent-plm-assets",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar kayıtlı PLM BOM özetini ve teknik föy durumunu okur",
+        "en": "Agents read stored PLM BOM summaries and technical sheet status"
+      },
+      "body": {
+        "tr": "Agent Ofisi, PLM Sync'in daha önce kaydettiği kumaş ve baskı (BOM) özetlerini ve modellerin teknik föyünün dosyalarda olup olmadığını okuyabilir. PLM'e istek atılmaz; okuma dosya dizinini değiştirmez.",
+        "en": "Agent Office can read the fabric and print (BOM) summaries PLM Sync already saved, and whether a model's technical sheet is on file. No PLM request is made and a read never changes the file index."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-plm-assets.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: kayıtlı BOM özeti okuma adımının doğrulanmış sonucu (demo veri).",
+          "en": "Actual Agent Office: verified result of the stored BOM summary read (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında kayıtlı PLM BOM özeti",
+          "en": "Agent Office task steps with a stored PLM BOM summary"
+        }
+      }
+    },
+    {
+      "id": "agent-supplier-xlsx-import",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar tedarikçinin doldurduğu checklist Excel'ini içe aktarır",
+        "en": "Agents import the supplier-filled checklist workbook"
+      },
+      "body": {
+        "tr": "CP › Checklist › Excel ile gönderilen ve tedarikçinin doldurduğu dosya, Agent Ofisi'nde \"İşlem görevi oluştur\" penceresinden yüklenir. CP'deki içe aktarma ile aynı okuyucu ve karar kuralları kullanılır; düzenleme yetkiniz olmayan siparişler atlanır. Önizleme her atlama nedenini ve dışa aktarımdan sonra Buyer Log'da değişmiş (korunacak) cevapları gösterir; uygulama onayınızla yapılır ve tek adımda geri alınabilir.",
+        "en": "The workbook sent with CP › Checklist › Excel and filled by the supplier is uploaded in Agent Office from \"Create operation task\". It uses the same reader and decision rules as the CP import; orders you may not edit are skipped. The preview lists every skip reason and the answers changed in Buyer Log after the export (which are kept); applying needs your approval and can be undone in one step."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-supplier-xlsx-import.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: tedarikçi checklist Excel'i içe aktarma önizlemesi ve onay adımı (demo veri).",
+          "en": "Actual Agent Office: supplier checklist workbook import preview and approval step (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında tedarikçi checklist içe aktarma önizlemesi",
+          "en": "Agent Office task steps with the supplier checklist import preview"
+        }
+      }
+    },
+    {
+      "id": "agent-plm-techsheet-download",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar onayla PLM teknik föylerini indirir",
+        "en": "Agents download PLM technical sheets with approval"
+      },
+      "body": {
+        "tr": "Agent Ofisi, Koleksiyon › PLM Sync'teki teknik föy indirmesini onayınızla başlatır ve sonucu bekler. Kendi PLM oturumunuz ve aynı PLM işi kullanılır (operasyon merkezinden iptal edilebilir). Önizleme PLM'e bağlanmaz; inemeyen modeller hata koduyla listelenir ve adım kısmen tamamlandı olarak görünür. Yeni föy, modelin önceki PLM föyünün yerine geçer; kendi yüklediğiniz dosyalar korunur.",
+        "en": "Agent Office starts the Collection › PLM Sync technical sheet download with your approval and waits for the result. Your own PLM session and the same PLM job are used (cancel from the operations centre). The preview does not contact PLM; models that could not be downloaded are listed with an error code and the step shows as partially completed. A new sheet replaces the model's earlier PLM sheet; files you uploaded are kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-plm-techsheet-download.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: teknik föy indirme adımının doğrulanmış sonucu, PLM bağlantısı olmayan modeller listelenmiş (demo veri).",
+          "en": "Actual Agent Office: verified result of the technical sheet download step, models without a PLM link listed (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında teknik föy indirme sonucu",
+          "en": "Agent Office task steps with the technical sheet download result"
+        }
+      }
+    },
+    {
+      "id": "agent-order-batch",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar birden çok sipariş satırını birlikte düzenler",
+        "en": "Agents edit several order lines together"
+      },
+      "body": {
+        "tr": "Agent Ofisi en fazla 50 sipariş satırının notunu, tarihlerini, alt üreticisini, not sütunlarını ve eksik işaretini tek görevde düzenleyebilir. Her satır tek tek düzenlemedeki aynı yetki ve kimlik kontrollerinden geçer; tek bir geçersiz satır tüm görevi durdurur. Değişiklik onayınızla tek seferde yazılır ve tek adımda tamamen geri alınır.",
+        "en": "Agent Office can edit notes, dates, sub-manufacturer, note columns and the shortage mark of up to 50 order lines in one task. Every line passes the same permission and identity checks as a single edit; one invalid line stops the whole task. The change is written at once with your approval and undone completely in one step."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-order-batch.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: üç siparişe toplu not adımının doğrulanmış sonucu (demo veri).",
+          "en": "Actual Agent Office: verified result of a batch note step on three orders (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında toplu sipariş düzenleme sonucu",
+          "en": "Agent Office task steps with a multi-line order edit result"
+        }
+      }
+    },
+    {
+      "id": "agent-note-columns",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar not sütunu tanımlarını düzenler",
+        "en": "Agents edit note column definitions"
+      },
+      "body": {
+        "tr": "CP › Sütun ekle'deki ortak not sütunları Agent Ofisi'nden eklenebilir, yeniden adlandırılabilir veya kaldırılabilir. Önizleme eklenen, değişen ve kaldırılan sütunları ve silinecek değerlerin satır sayısını gösterir. Geri alma önceki listeyi ve kaldırılan sütunların değerlerini aynen geri getirir; eklenen sütuna sonradan değer girildiyse geri alma reddedilir.",
+        "en": "The shared note columns from CP › Add Column can be added, renamed or removed from Agent Office. The preview lists added, changed and removed columns and how many lines lose values. Undo brings back the previous list and the removed columns' values exactly; it is refused once a value was entered in an added column."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-note-columns.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: not sütunu ekleme adımının doğrulanmış sonucu (demo veri, İngilizce arayüz).",
+          "en": "Actual Agent Office: verified result of adding a note column (demo data, English UI)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında not sütunu tanımı sonucu",
+          "en": "Agent Office task steps with a note column definition result"
+        }
+      }
+    },
+    {
+      "id": "agent-supplier-xlsx-export",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar tedarikçi checklist Excel'ini oluşturur",
+        "en": "Agents create the supplier checklist workbook"
+      },
+      "body": {
+        "tr": "Agent Ofisi, seçilen siparişler için CP › Checklist › Excel ile aynı tedarikçi dosyasını oluşturur: aynı sayfalar, koruma, açılır listeler, güncel cevaplar ve model görselleri. Dosya görevden indirilir; tedarikçinin doldurduğu kopya yine Agent Ofisi'nden içe aktarılabilir.",
+        "en": "Agent Office creates the same supplier workbook as CP › Checklist › Excel for the selected orders: same sheets, protection, dropdowns, current answers and model images. The file downloads from the task; the supplier-filled copy can be imported back from Agent Office."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-supplier-xlsx-export.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: tedarikçi checklist Excel'i oluşturma adımı ve indirme bağlantısı (demo veri).",
+          "en": "Actual Agent Office: supplier checklist workbook step with its download link (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında tedarikçi Excel'i indirme bağlantısı",
+          "en": "Agent Office task steps with the supplier workbook download link"
+        }
+      }
+    },
+    {
+      "id": "agent-plm-images-samples",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agent'lar PLM model görsellerini ve numune taleplerini yeniler",
+        "en": "Agents refresh PLM model images and sample requests"
+      },
+      "body": {
+        "tr": "Koleksiyon › PLM Sync'teki model görseli alma ve numune talebi yenileme, Agent Ofisi'nden onayınızla başlatılır ve sonucu beklenir. Kendi PLM oturumunuz ve aynı PLM işi kullanılır; elle koyduğunuz görseller değiştirilmez. PLM oturumu yoksa görev bunu açıkça bildirir.",
+        "en": "Model image import and sample request refresh from Collection › PLM Sync can be started from Agent Office with your approval, and the result is awaited. Your own PLM session and the same PLM job are used; images you placed manually are never replaced. Without a PLM session the task says so clearly."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-plm-images-samples.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: PLM görsel adımı, PLM oturumu olmadığında gösterilen mesajla (demo veri, İngilizce arayüz).",
+          "en": "Actual Agent Office: PLM image step with the message shown when there is no PLM session (demo data, English UI)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi görev adımlarında PLM görsel alma sonucu",
+          "en": "Agent Office task steps with a PLM image import result"
+        }
+      }
+    },
+    {
+      "id": "agent-office-handoff",
+      "type": "improvement",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Görevler ajanlar arasında devredilir ve yeniden başlatmada güvenle sürer",
+        "en": "Tasks hand off between agents and continue safely across restarts"
+      },
+      "body": {
+        "tr": "Bir görevin adımları farklı modüllerin ajanlarına verilebilir; bir adımın sonucundaki liste (ör. bulunan PLM ID'leri) sonraki ajanın adımına aktarılır. Program yeniden başlatılırsa onay bekleyen görevler beklemeye devam eder, bitmiş PLM işlerinin sonucu kaybolmaz; yarıda kalan işler açıkça durdurulur. Açık görev penceresi iş ilerledikçe kendiliğinden güncellenir.",
+        "en": "Steps of one task can go to agents of different modules; a list in one step's result (e.g. the PLM IDs found) is passed to the next agent's step. After a restart, tasks awaiting approval keep waiting, results of finished PLM jobs are kept, and jobs cut off by the restart are stopped clearly. An open task dialog updates by itself as the work progresses."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-office-handoff.png",
+        "caption": {
+          "tr": "Gerçek Agent Ofisi: CP ajanından Koleksiyon ajanına devredilen iki adımlı görev, yeniden başlatma sonrası onaylanmış (demo veri).",
+          "en": "Actual Agent Office: a two-step task handed from the CP agent to the Collection agent, approved after a restart (demo data)."
+        },
+        "alt": {
+          "tr": "Agent Ofisi'nde iki ajanlı görevin adımları",
+          "en": "Agent Office steps of a task handled by two agents"
+        }
+      }
+    }
+  ]
+}

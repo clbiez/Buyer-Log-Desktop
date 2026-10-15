@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.281",
+      "publishedAt": "2026-10-14",
+      "title": {
+        "tr": "Yükleme hatalarından kurtarma ve Agent Ofisi'nde yeni işler",
+        "en": "Loading failure recovery and new Agent Office work"
+      },
+      "stats": {
+        "features": 12,
+        "improvements": 1,
+        "fixes": 2
+      },
+      "file": "release-notes/7.0.281/release.json"
+    },
+    {
       "version": "7.0.279",
       "publishedAt": "2026-10-14",
       "title": {
