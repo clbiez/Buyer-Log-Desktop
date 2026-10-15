@@ -7,8 +7,8 @@
     "en": "Login freeze fix and plain Agent chat"
   },
   "summary": {
-    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar. Agentları kendi cümlelerinizle yetiştirebilir, tercihlerinizi hatırlatabilir, sohbete rapor ve Excel ekleyebilirsiniz. Agentlar işi bitirince istenen çıktıyı (tablo, e-posta taslağı) sohbette canlı yazar; cevabı kopyalayabilir veya Excel olarak indirebilirsiniz.",
-    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat. You can train agents in your own words, have them remember your preferences and attach reports and Excel files. When the work is done, agents write the requested output (tables, e-mail drafts) live in the chat; you can copy it or download it as Excel."
+    "tr": "Girişten sonraki takılma ve yavaşlık giderildi. Agent Ofisi tek bir sohbet ekranıyla açılır: agentlar doğal dille konuşur, gerektiğinde birbirini konuya katar, değişiklikleri sohbet içinde onayınıza sunar. Agentları kendi cümlelerinizle yetiştirebilir, tercihlerinizi hatırlatabilir, sohbete rapor ve Excel ekleyebilirsiniz. Agentlar işi bitirince istenen çıktıyı (tablo, e-posta taslağı) sohbette canlı yazar; cevabı kopyalayabilir veya Excel olarak indirebilirsiniz. E-posta taslakları Outlook'ta taslak olarak açılır.",
+    "en": "The freeze and slowness after login are fixed. Agent Office opens with a single chat screen: agents talk in plain language, bring each other in when needed and ask for your approval inside the chat. You can train agents in your own words, have them remember your preferences and attach reports and Excel files. When the work is done, agents write the requested output (tables, e-mail drafts) live in the chat; you can copy it or download it as Excel. E-mail drafts open as drafts in Outlook."
   },
   "changes": [
     {
@@ -356,6 +356,35 @@
         "alt": {
           "tr": "Bugünün öncelikleri: bu hafta aksiyon bekleyen siparişler gerekçeleriyle ve koleksiyon özeti (demo veri).",
           "en": "Today's priorities: orders needing action this week with reasons, plus a collection summary (demo data)."
+        }
+      }
+    },
+    {
+      "id": "agent-outlook-drafts",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Agentın e-posta taslakları Outlook'ta taslak olarak açılıyor",
+        "en": "Agent e-mail drafts open as drafts in Outlook"
+      },
+      "body": {
+        "tr": "Agenttan e-posta istediğinizde her alıcı grubu için ayrı bir taslak kartı gelir: Kime, CC, konu ve metin. \"Outlook'ta aç\" taslağı Outlook'ta düzenlenebilir yeni e-posta olarak açar; CC, Türkçe karakterli adlar ve tablolar korunur. \"Hepsini Outlook'ta aç\" tüm taslakları açar. Verilerde adresi olmayan alıcı kartta belirtilir; Outlook açılamazsa taslak .eml dosyası olarak iner ve çift tıklayınca Outlook'ta açılır. Hiçbir e-posta otomatik gönderilmez.",
+        "en": "When you ask an agent for e-mails, you get a draft card per recipient group with To, CC, subject and text. \"Open in Outlook\" opens it in Outlook as an editable new e-mail, keeping CC, names with Turkish characters and tables. \"Open all in Outlook\" opens every draft. A recipient whose address is not in the data is flagged on the card; if Outlook cannot be opened the draft downloads as an .eml file that opens in Outlook on double-click. No e-mail is ever sent automatically."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-outlook-drafts.png",
+        "caption": {
+          "tr": "Ada iki üretici e-postası hazırladı; her biri Outlook'ta taslak olarak açılır, eksik alıcı ayrıca belirtilir (demo veri).",
+          "en": "Ada prepared two supplier e-mails; each opens as a draft in Outlook and a missing recipient is flagged (demo data)."
+        },
+        "alt": {
+          "tr": "Ada iki üretici e-postası hazırladı; her biri Outlook'ta taslak olarak açılır, eksik alıcı ayrıca belirtilir (demo veri).",
+          "en": "Ada prepared two supplier e-mails; each opens as a draft in Outlook and a missing recipient is flagged (demo data)."
         }
       }
     }

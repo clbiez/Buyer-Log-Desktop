@@ -398,9 +398,28 @@
       sheet.columns.forEach(column=>{let width=8;column.eachCell({includeEmpty:false},cell=>{width=Math.max(width,Math.min(60,String(cell.value??'').length+2));});column.width=width;});});
     const blob=new Blob([await book.xlsx.writeBuffer()],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),url=URL.createObjectURL(blob),link=document.createElement('a');
     link.href=url;link.download='BuyerLog_'+String(agentName(item.provenance?.speaker||item.profileIds?.[0])||'Agent').replace(/[^\wÇĞİÖŞÜçğıöşü-]+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.xlsx';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  /* Agentın e-posta taslakları: her biri Outlook'ta taslak (.eml, X-Unsent) olarak açılır; hiçbir şey gönderilmez. */
+  function chatDraftsHtml(item){const list=item.provenance?.emailDrafts||[];if(!list.length||item.id==='pending')return '';
+    const rows=list.map((draft,index)=>`<article class="aoSimpleDraft"><div><b data-no-i18n>${esc(draft.subject||L('(konu yok)','(no subject)'))}</b>
+      <small>${esc(L('Kime','To'))}: <span data-no-i18n>${draft.to.length?esc(draft.to.join('; ')):`<em class="is-missing">${esc(L('alıcı eksik, Outlook\'ta ekleyin','recipient missing, add it in Outlook'))}</em>`}</span>${draft.cc.length?` · CC: <span data-no-i18n>${esc(draft.cc.join('; '))}</span>`:''}</small>
+      <div class="aoSimpleActions">${button(L('Outlook\'ta aç','Open in Outlook'),'chat-draft-open',`class="aoButton is-primary" data-id="${esc(item.id)}" data-index="${index}"`)}</div>
+      <details><summary>${esc(L('Metni gör','View text'))}</summary><div class="aoSimpleDraftBody" data-no-i18n>${chatMarkdown(draft.body)}</div></details></div></article>`).join('');
+    return `<section class="aoSimpleDrafts"><header><b>${esc(L(`${list.length} e-posta taslağı`,`${list.length} e-mail ${list.length===1?'draft':'drafts'}`))}</b><small>${esc(L('Outlook\'ta taslak olarak açılır; kontrol edip siz gönderirsiniz.','They open as drafts in Outlook; you review and send them.'))}</small>${list.length>1?button(L('Hepsini Outlook\'ta aç','Open all in Outlook'),'chat-draft-all',`data-id="${esc(item.id)}"`):''}</header>${rows}</section>`;}
+  // Adlarda Türkçe karakter olabilir: başlıkta RFC 2047 ile kodlanır.
+  function mailAddress(value){const match=String(value).match(/^(.*?)<([^<>]+)>$/);if(!match)return String(value);const name=match[1].trim();
+    return (/[^\x20-\x7e]/.test(name)?`=?UTF-8?B?${btoa(unescape(encodeURIComponent(name)))}?=`:`"${name.replace(/"/g,'')}"`)+` <${match[2]}>`;}
+  async function chatOpenDraft(draft){
+    const html=`<html><head><meta charset="utf-8"><style>body{font-family:Calibri,Arial,sans-serif;font-size:11pt}table{border-collapse:collapse}th,td{border:1px solid #999;padding:4px 8px;text-align:left}</style></head><body>${chatMarkdown(draft.body)}</body></html>`;
+    const response=await root.fetch('/api/email-drafts/pricing',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({kind:'Agent',to:draft.to.map(mailAddress).join('; '),cc:draft.cc.map(mailAddress).join('; '),subject:draft.subject||L('Buyer Log','Buyer Log'),text:draft.body,html})});
+    const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||L('E-posta taslağı oluşturulamadı.','The e-mail draft could not be created.'));
+    // Outlook açılamadıysa aynı taslak .eml dosyası olarak iner; çift tıklayınca Outlook'ta taslak açılır.
+    if(!data.opened&&data.emlBase64){const bytes=Uint8Array.from(atob(data.emlBase64),ch=>ch.charCodeAt(0)),url=URL.createObjectURL(new Blob([bytes],{type:'message/rfc822'})),link=document.createElement('a');
+      link.href=url;link.download=String(draft.subject||'Buyer-Log').replace(/[^\wÇĞİÖŞÜçğıöşü -]+/g,'_').slice(0,80)+'.eml';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    return data.opened===true;}
   function chatMarkdown(value){return root.BLMarkdown?root.BLMarkdown.render(String(value||'')):`<p>${esc(value).replace(/\n/g,'<br>')}</p>`;}
   function chatBubble(agentId,body,extra=''){const agent=state.data.profiles.find(item=>item.id===agentId);
-    return `<article class="aoSimpleMsg is-agent">${agent?`<span class="aoSimplePortrait is-small" style="${portrait(agent,36,44)}" aria-hidden="true"></span>`:''}<div class="aoSimpleBody"><div class="aoSimpleWho">${esc(agent?.name||L('Agent','Agent'))}</div><div class="aoSimpleText">${body}</div>${extra}</div></article>`;}
+    return `<article class="aoSimpleMsg is-agent">${agent?`<span class="aoSimplePortrait is-small" style="${portrait(agent,36,44)}" aria-hidden="true"></span>`:''}<div class="aoSimpleBody"><div class="aoSimpleWho">${esc(agent?.name||L('Agent','Agent'))}</div><div class="aoSimpleText" data-no-i18n>${body}</div>${extra}</div></article>`;}
   function chatTaskStatus(job){const next=taskNextStep(job);
     if(next?.status==='waiting_approval')return L('Bir şeyi değiştirmeden önce onayınızı bekliyorum.','I am waiting for your approval before changing anything.');
     if(job.status==='waiting_output')return L('Belge dosyası hazırlanmayı bekliyor; Ayrıntılar\'dan tamamlayabilirsiniz.','The document file is waiting to be produced; finish it from Details.');
@@ -447,7 +466,7 @@
     if(item.status&&item.status!=='complete'&&!item.text)return '';
     // Cevap doğrudan kullanılabilsin: kopyala; tablo varsa Excel dosyası olarak indir.
     const tools=item.text&&item.id!=='pending'?`<div class="aoSimpleActions aoSimpleMsgTools">${button(L('Kopyala','Copy'),'chat-copy',`data-id="${esc(item.id)}"`)}${chatTables(item.text).length?button(L('Excel olarak indir','Download as Excel'),'chat-excel',`data-id="${esc(item.id)}"`):''}</div>`:'';
-    const memory=tools+chatMemoryHtml(item,lead);
+    const memory=chatDraftsHtml(item)+tools+chatMemoryHtml(item,lead);
     if(perspectives.length>1)return perspectives.map(entry=>chatBubble(entry.id,chatMarkdown(entry.text))).join('')+chatBubble(lead,chatMarkdown(item.text),`<small class="aoSimpleNote">${esc(L('Ortak sonuç','Shared conclusion'))}</small>${memory}`);
     return chatBubble(lead,chatMarkdown(item.text),memory);}
   /* Agentın fark ettiği kalıcı tercihler: yalnız sahip "Hatırla" derse saklanır. */
@@ -516,7 +535,7 @@
       if(data?.type==='task'&&data.taskId){await chatTools(data.agentId);if(!c.tasks[data.taskId]||!CHAT_TERMINAL.has(c.tasks[data.taskId].status)){try{c.tasks[data.taskId]=(await api(`/chat/tasks/${encodeURIComponent(data.taskId)}`)).task;}catch(_){}}}}}
   /* Uzun süren işler arka planda ilerler; kart açıkken kısa aralıkla tazelenir. */
   function chatWatch(){const c=chatState(),owner=state.generation;clearTimeout(c.watch);if(!Object.values(c.tasks).some(job=>job&&['waiting_operation','queued','running'].includes(job.status)))return;
-    c.watch=setTimeout(async()=>{if(owner!==state.generation||state.chat!==c)return;if(!visible()||state.pane!=='chat')return chatWatch();let done=false;for(const [key,job] of Object.entries(c.tasks)){if(job&&['waiting_operation','queued','running'].includes(job.status)){try{c.tasks[key]=(await api(`/chat/tasks/${encodeURIComponent(key)}/advance`,{})).task;done=done||CHAT_TERMINAL.has(c.tasks[key]?.status);}catch(_){}}}if(done&&c.conversationId&&!c.busy)await chatLoad(c.conversationId).catch(()=>{});paintChat();chatWatch();},8000);}
+    c.watch=setTimeout(async()=>{if(owner!==state.generation||state.chat!==c)return;if(!visible()||state.pane!=='chat'||c.busy)return chatWatch();let done=false;for(const [key,job] of Object.entries(c.tasks)){if(job&&['waiting_operation','queued','running'].includes(job.status)){try{c.tasks[key]=(await api(`/chat/tasks/${encodeURIComponent(key)}/advance`,{})).task;done=done||CHAT_TERMINAL.has(c.tasks[key]?.status);}catch(_){}}}if(done&&c.conversationId&&!c.busy)await chatLoad(c.conversationId).catch(()=>{});paintChat();chatWatch();},8000);}
   function chatFileData(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve({name:file.name,base64:String(reader.result).split(',')[1]||''});reader.onerror=()=>reject(Object.assign(new Error('OFFICE_ATTACHMENT_READ'),{code:'OFFICE_ATTACHMENT_READ'}));reader.readAsDataURL(file);});}
   async function chatSend(){const c=chatState(),text=c.draft.trim(),attached=(c.files||[]).slice();if(c.busy||(!text&&!attached.length)||!c.agentId)return;
     const owner=state.generation;c.draft='';c.files=[];c.busy=true;c.error='';c.progress=L('Konuyu değerlendiriyorum…','Thinking about it…');c.controller=new AbortController();
@@ -546,6 +565,12 @@
     if(name==='chat-dismiss'){c.error='';render();return true;}
     if(name==='chat-copy'){const item=c.messages.find(m=>m.id===key);if(!item)return true;
       try{await root.navigator.clipboard.writeText(String(item.text||''));target.textContent=L('Kopyalandı','Copied');setTimeout(()=>{target.textContent=L('Kopyala','Copy');},1500);}catch(_){c.error=L('Metin panoya kopyalanamadı; metni seçip kopyalayabilirsiniz.','The text could not be copied; you can select and copy it.');render();}return true;}
+    if(name==='chat-draft-open'||name==='chat-draft-all'){const item=c.messages.find(m=>m.id===key),list=item?.provenance?.emailDrafts||[];if(!list.length)return true;
+      const picked=name==='chat-draft-all'?list:[list[Number(target.dataset.index)]].filter(Boolean),label=target.textContent;target.disabled=true;
+      try{let opened=0;for(const draft of picked)opened+=Number(await chatOpenDraft(draft));
+        target.textContent=opened===picked.length?L('Outlook\'ta açıldı','Opened in Outlook'):L('.eml indirildi, çift tıklayarak açın','.eml downloaded, double-click to open');}
+      catch(err){c.error=err.message||errorText(err);render();return true;}
+      setTimeout(()=>{target.textContent=label;target.disabled=false;},2500);return true;}
     if(name==='chat-excel'){const item=c.messages.find(m=>m.id===key);if(!item)return true;try{await chatExcel(item);}catch(err){c.error=err.message||errorText(err);render();}return true;}
     if(name==='chat-ask'){if(c.busy)return true;c.draft=String(target.dataset.text||'');await chatSend();return true;}
     if(name==='chat-brief-refresh'){target.disabled=true;try{c.brief=(await api('/chat/brief?refresh=1')).brief;}catch(err){c.error=errorText(err);}render();return true;}

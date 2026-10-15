@@ -194,7 +194,11 @@ function createAgentOfficeService(deps) {
     const runAuthority=memoryPolicy.fingerprint(profile);
     async function assertRunScope(){const latest=await Promise.all(ids.map(key=>store.get(profile.id,'profile',key)));if(latest.some((agent,i)=>agent.revision!==participants[i].revision)||runAuthority!==memoryPolicy.fingerprint(freshProfile(profile)))throw error('OFFICE_PREVIEW_CHANGED',409);}
     // Görev cevabı, sahibin konuşmada zaten yazdığı mesaja bağlanır; mesaj ikinci kez eklenmez.
-    const reused = internal.reuseUserMessage ? (await store.messages(profile.id, conv.id, { limit: 40 })).messages.filter(item => item.role === 'user').pop() : null;
+    let reused = null;
+    if (internal.reuseUserMessageId) {
+      try { reused = await store.get(profile.id, 'message', internal.reuseUserMessageId); } catch (_) { reused = null; }
+      if (reused && (reused.conversationId !== conv.id || reused.role !== 'user')) reused = null;
+    }
     const userMessage = reused || await store.appendMessage(profile.id, conv.id, { role:'user', text:task, requestId,authorizationFingerprint:runAuthority });
     if (typeof internal.afterUserMessage === 'function') await internal.afterUserMessage(conv);
     let job = await store.save(profile.id, 'job', { id:requestId, profileIds:ids, conversationId:conv.id, userMessageId:userMessage.id, type:raw.mode === 'automation' ? 'automation' : 'analysis',
@@ -220,7 +224,12 @@ function createAgentOfficeService(deps) {
       // Az önce çalışan görev adımlarının doğrulanmış sonuçları rehber metni olarak gider (bağlam JSON sınırına takılmaz).
       // Konuşmanın son mesajları tam metin gider: önceki cevaptaki liste/taslak üzerinde sohbet sürebilsin.
       if (raw.mode !== 'automation') {
-        const recent = (await store.messages(profile.id, conv.id, { limit: 14 })).messages.filter(item => item.role !== 'system' && item.id !== userMessage.id && item.text && (!item.status || item.status === 'complete')).slice(-6);
+        /* Yalnız isteğe kadarki mesajlar ve yalnız sahibin bugünkü yetkisiyle yazılmış agent cevapları gider:
+           yetkisi kaldırılan bir alandan gelen eski cevap LCW AI'a yeniden taşınmaz. Sahibin kendi yazdığı mesaj
+           parmak izi taşımasa da onun sözüdür. */
+        const before = (await store.messages(profile.id, conv.id, { before: userMessage.id, limit: 14 })).messages;
+        const recent = before.filter(item => item.role !== 'system' && item.text && (!item.status || item.status === 'complete')
+          && (item.role === 'user' ? !item.authorizationFingerprint || item.authorizationFingerprint === runAuthority : item.authorizationFingerprint === runAuthority)).slice(-6);
         const lines = []; let room = 8000;
         for (const item of recent.reverse()) {
           const who = item.role === 'user' ? 'owner' : participants.filter(agent => (item.profileIds || []).includes(agent.id) || item.provenance?.speaker === agent.id).map(agent => agent.name).join(', ') || 'agent';
@@ -259,6 +268,7 @@ function createAgentOfficeService(deps) {
           sourceUpdatedAt:operations.sourceUpdatedAt || null, contextOmitted:context.omitted + memory.omittedCount, unsupportedReferences,
           perspectives:(response.perspectives || []).filter(value => ids.includes(String(value).split('|')[0])),
           actions:response.actions || [], contradictions:response.contradictions || [], memoryCandidates:response.memoryCandidates || [],
+          emailDrafts:require('./agent-email-drafts').parseDrafts(response.emailDrafts),
           warnings:response.warnings || [], truncated:result.truncated === true, independentReviews:false } });
       archivedReply = true;
       let proposal = null;

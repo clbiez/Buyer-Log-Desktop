@@ -19,6 +19,8 @@ const { severityLevel } = require('./agent-office-intelligence');
 
 // AI ve belge kaynaklı metin kesilir, reddedilmez.
 const cut = (value, max) => String(value == null ? '' : value).trim().slice(0, max);
+// Yerel takvim günü: araçların @today değeriyle aynı gün (UTC gece yarısı kayması olmaz).
+const localDay = (date = new Date()) => [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
 const WAITING = new Set(['waiting_approval', 'waiting_output', 'waiting_operation']);
 const TERMINAL = new Set(['completed', 'partial', 'failed', 'cancelled', 'interrupted', 'rejected', 'rolled_back']);
 const MODES = new Set(['reply', 'task', 'clarify']);
@@ -162,7 +164,7 @@ function stepResultsText(job) {
 
 function attachChat(service, deps = {}) {
   const store = service.store;
-  const busy = new Map();
+  const busy = new Map(), answering = new Set();
 
   async function roster(profile) {
     return (await store.records(profile.id)).filter(doc => doc.kind === 'profile' && doc.enabled !== false)
@@ -232,7 +234,11 @@ function attachChat(service, deps = {}) {
      çevirir (liste, tablo, e-posta taslağı…). Her görev bir kez cevaplanır;
      cevap aynı konuşmaya yazılır, böylece sonraki sorular da onu görür. */
   async function answerTask(profile, job, onProgress = () => {}, signal) {
-    if (!job || !['completed', 'partial'].includes(job.status) || job.accessRestricted) return null;
+    if (!job || !['completed', 'partial'].includes(job.status) || job.accessRestricted || answering.has(job.id)) return null;
+    answering.add(job.id);
+    try { return await writeAnswer(profile, job, onProgress, signal); } finally { answering.delete(job.id); }
+  }
+  async function writeAnswer(profile, job, onProgress, signal) {
     const records = await store.records(profile.id);
     const link = records.find(doc => doc.kind === 'metadata' && doc.id === 'task-chat-' + job.id);
     if (!link || link.answeredMessageId) return null;
@@ -242,11 +248,17 @@ function attachChat(service, deps = {}) {
     try { conv = await store.get(profile.id, 'conversation', link.conversationId); } catch (_) { return null; }
     const lead = conv.profileIds.includes(link.lead) ? link.lead : conv.profileIds[0];
     onProgress({ phase: 'answer', taskId: job.id });
-    const result = await service.run(profile, { profileIds: conv.profileIds, conversationId: conv.id, task: link.request, lang: link.lang, signal }, onProgress,
-      { reuseUserMessage: true, taskResults: { taskId: job.id, lead, text: results } });
-    try { await store.save(profile.id, 'metadata', { ...link, answeredMessageId: result.message?.id || 'failed' }, { expectedRevision: link.revision }); }
-    catch (err) { if (err.code !== 'OFFICE_REVISION_CONFLICT') throw err; }
-    return result.message || null;
+    // Cevap bir kez denenir: başarısız olursa da işaretlenir, her yoklamada yeni AI çağrısı yapılmaz.
+    let answered = 'failed';
+    try {
+      const result = await service.run(profile, { profileIds: conv.profileIds, conversationId: conv.id, task: link.request, lang: link.lang, signal }, onProgress,
+        { reuseUserMessageId: link.userMessageId, taskResults: { taskId: job.id, lead, text: results } });
+      answered = result.message?.id || 'failed';
+      return result.message || null;
+    } finally {
+      try { await store.save(profile.id, 'metadata', { ...link, answeredMessageId: answered }, { expectedRevision: link.revision }); }
+      catch (err) { if (err.code !== 'OFFICE_REVISION_CONFLICT') throw err; }
+    }
   }
 
   async function chat(profile, raw = {}, onProgress = () => {}) {
@@ -291,7 +303,7 @@ function attachChat(service, deps = {}) {
         return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, message: reply };
       }
       if (decision.mode === 'task') {
-        await store.appendMessage(profile.id, conv.id, { role: 'user', text: message, requestId: id() });
+        const asked = await store.appendMessage(profile.id, conv.id, { role: 'user', text: message, requestId: id() });
         if (joinNote) await note(profile, conv, joinNote);
         for (const card of cards) await note(profile, conv, card);
         onProgress({ phase: 'plan' });
@@ -311,7 +323,7 @@ function attachChat(service, deps = {}) {
           await note(profile, conv, { type: 'task-empty', agentId: decision.lead });
           return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: await publicTask(profile, job) };
         }
-        await store.save(profile.id, 'metadata', { id: 'task-chat-' + job.id, conversationId: conv.id, lead: decision.lead, request: message, lang: raw.lang === 'en' ? 'en' : 'tr', answeredMessageId: null });
+        await store.save(profile.id, 'metadata', { id: 'task-chat-' + job.id, conversationId: conv.id, userMessageId: asked.id, lead: decision.lead, request: message, lang: raw.lang === 'en' ? 'en' : 'tr', answeredMessageId: null });
         onProgress({ phase: 'prepare', taskId: job.id });
         try { job = await advance(profile, job.id); } catch (err) { await note(profile, conv, { type: 'task', taskId: job.id, agentId: decision.lead, code: err.code || 'OFFICE_TASK_FAILED' }); throw err; }
         await note(profile, conv, { type: 'task', taskId: job.id, agentId: decision.lead, brief: decision.brief });
@@ -320,7 +332,7 @@ function attachChat(service, deps = {}) {
         // Cevap yazılamazsa iş sonucu korunur; hata konuşmaya not düşülür ve sahibe gösterilir.
         let answer = null, answerError = '';
         try { answer = await answerTask(profile, shown, onProgress, raw.signal); }
-        catch (err) { if (raw.signal?.aborted) throw err; answerError = err.code || 'OFFICE_AI_FAILED'; }
+        catch (err) { answerError = raw.signal?.aborted ? 'LCWAI_CANCELLED' : err.code || 'OFFICE_AI_FAILED'; }
         return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, task: shown, message: answer, ...(answerError ? { answerError } : {}) };
       }
       onProgress({ phase: 'reply' });
@@ -342,9 +354,8 @@ function attachChat(service, deps = {}) {
   // Onaydan ya da bekleyen adımdan sonra iş bittiyse lider agent cevabını yazar.
   async function finished(profile, job) {
     const shown = await publicTask(profile, job);
-    if (busy.get(profile.id)) return shown;
-    busy.set(profile.id, true);
-    try { await answerTask(profile, shown); } catch (_) { /* hata run() tarafından konuşmaya yazıldı */ } finally { busy.delete(profile.id); }
+    // Sahibin o anki sohbetini kilitlemez; aynı işin iki kez cevaplanmasını `answering` önler.
+    try { await answerTask(profile, shown); } catch (_) { /* hata run() tarafından konuşmaya yazıldı */ }
     return shown;
   }
 
@@ -375,9 +386,10 @@ function attachChat(service, deps = {}) {
      boş seçenekler). Günde bir kez hesaplanıp saklanır; "yenile" yeniden hesaplar.
      LCW AI çağrılmaz. */
   async function brief(profile, raw = {}) {
-    const day = new Date().toISOString().slice(0, 10);
+    const day = localDay(), authority = typeof service.memoryFingerprint === 'function' ? service.memoryFingerprint(profile) : '';
     const saved = (await store.records(profile.id)).find(doc => doc.kind === 'metadata' && doc.id === 'chat-brief');
-    if (saved && saved.day === day && raw.refresh !== true) return saved.brief;
+    // Yetki değişince saklı özet kullanılmaz: kaldırılan alanın siparişleri görünmeye devam etmez.
+    if (saved && saved.day === day && saved.authority === authority && raw.refresh !== true) return saved.brief;
     const result = await service.scan(profile, {}, {});
     const orders = new Map((result.orders || []).map(order => [order.orderKey, order]));
     const priority = (result.findings || []).filter(item => item.code === 'CP_PRIORITY');
@@ -392,7 +404,7 @@ function attachChat(service, deps = {}) {
       .map(group => ({ season: cut(group.season, 40), status: cut(group.status, 60), options: group.options || 0, unlinked: group.unlinked || 0, missingSupplier: group.missingSupplier || 0 }));
     const value = { day, computedAt: new Date().toISOString(), sourceUpdatedAt: result.sourceUpdatedAt || null,
       counts: { critical: count(4), today: count(3), week: count(2), changes: (result.changes || []).length }, top, collection };
-    try { await store.save(profile.id, 'metadata', { ...(saved || {}), id: 'chat-brief', day, brief: value }, saved ? { expectedRevision: saved.revision } : {}); }
+    try { await store.save(profile.id, 'metadata', { ...(saved || {}), id: 'chat-brief', day, authority, brief: value }, saved ? { expectedRevision: saved.revision } : {}); }
     catch (err) { if (err.code !== 'OFFICE_REVISION_CONFLICT') throw err; }
     return value;
   }

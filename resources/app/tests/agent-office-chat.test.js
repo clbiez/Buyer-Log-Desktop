@@ -80,11 +80,14 @@ test('a question that spans two areas becomes a team conversation with one share
   assert.ok(routeCall.context.agents.every(agent=>Array.isArray(agent.toolIds)),'router sees each agent\'s tools');
   // A follow-up continues the conversation: the earlier answer is passed in full, in order.
   const long='DEMO ortak cevap '+'x'.repeat(3000);engine.calls.length=0;
-  await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'assistant',text:long,profileIds:[a.ada.id],requestId:'r-demo'});
+  const authority=w.service.memoryFingerprint(w.profile);
+  await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'assistant',text:'REVOKED PRICE ANSWER',profileIds:[a.ada.id],requestId:'r-old',authorizationFingerprint:'an-earlier-authority'});
+  await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'assistant',text:long,profileIds:[a.ada.id],requestId:'r-demo',authorizationFingerprint:authority});
   await w.service.officeChat(w.profile,{text:'Taslaklar nerede?',agentId:a.ada.id,conversationId:result.conversation.id});
   const follow=engine.calls.find(c=>c.source==='agent-office');
   assert.ok(follow.guide.startsWith('=== RECENT CONVERSATION ===\n--- owner ---\nKoleksiyonda'),'oldest first');
-  assert.ok(follow.guide.includes(long),'the earlier answer is not cut to an excerpt');assert.ok(!follow.guide.includes('Taslaklar nerede?'),'the current message is the request, not history');
+  assert.ok(follow.guide.includes(long),'the earlier answer is not cut to an excerpt');
+  assert.ok(!follow.guide.includes('REVOKED PRICE ANSWER'),'an answer written under other permissions never goes back to LCW AI');assert.ok(!follow.guide.includes('Taslaklar nerede?'),'the current message is the request, not history');
   assert.deepEqual(follow.context.recentConversation,[{messages:3}]);
   // The topic continues with both agents; a follow-up keeps the team.
   const next=await w.service.officeChat(w.profile,{text:'Peki öncelik ne olmalı?',conversationId:result.conversation.id});
@@ -94,7 +97,7 @@ test('a question that spans two areas becomes a team conversation with one share
 test('a read request is planned with only the routed tools and finishes without approval',async t=>{
   let a,plannerTools;const engine=fakeEngine({'agent-chat-route':()=>({mode:'task',agentIds:[a.ada.id],lead:a.ada.id,toolIds:['collection.plm.bom.read'],brief:'100001 ve 100002 BOM özetini oku'}),
     'agent-task':input=>{plannerTools=input.context.tools.map(tool=>tool.id);return {planJson:JSON.stringify({steps:[{id:'bom',toolId:'collection.plm.bom.read',args:{plmIds:['100001','100002']}}]})};},
-    'agent-office':()=>({answer:'100001 için BOM özeti DEMO; 100002 bulunamadı.',confidence:'MEDIUM'})});
+    'agent-office':()=>({answer:'100001 için BOM özeti DEMO; 100002 bulunamadı.',confidence:'MEDIUM',emailDrafts:[JSON.stringify({to:['DEMO Supplier <supplier@example.com>'],cc:['[adres]'],subject:'BOM 100002',body:'Merhaba'})]})});
   const w=world(t,engine);a=await team(w);
   const result=await w.service.officeChat(w.profile,{text:'100001 ve 100002 için BOM bilgisine bak',agentId:a.ada.id});
   assert.deepEqual(plannerTools,['collection.plm.bom.read'],'planner sees only the routed tool');
@@ -109,7 +112,8 @@ test('a read request is planned with only the routed tools and finishes without 
   assert.match(answer.guide,/=== 1\. collection\.plm\.bom\.read ===\n/);assert.match(answer.guide,/100001/);
   assert.deepEqual(answer.context.taskResults,[{taskId:result.task.id,lead:a.ada.id}]);
   assert.equal(list.filter(m=>m.role==='user').length,1,'the owner\'s message is not duplicated');
-  assert.equal(list.at(-1).text,'100001 için BOM özeti DEMO; 100002 bulunamadı.');assert.equal(result.message.id,list.at(-1).id);
+  assert.equal(list.at(-1).text,'100001 için BOM özeti DEMO; 100002 bulunamadı.');
+  assert.deepEqual(list.at(-1).provenance.emailDrafts,[{to:['DEMO Supplier <supplier@example.com>'],cc:[],subject:'BOM 100002',body:'Merhaba',missingRecipient:false,droppedAddresses:1}],'drafts are saved with the answer, sanitized');assert.equal(result.message.id,list.at(-1).id);
   await w.service.officeChatAdvance(w.profile,result.task.id);
   assert.equal(engine.calls.filter(c=>c.source==='agent-office').length,1,'a task is answered once');
 });
@@ -135,6 +139,10 @@ test('the answer prompt carries the results and a human voice, and stays under t
   assert.match(out.prompt,/doğrulanmış sonuçlarını içerir/);assert.match(out.prompt,/iş arkadaşısın/);
   assert.equal(out.truncated,false);assert.ok(out.prompt.length<=config.LIMITS.maxPromptChars);
   assert.match(out.prompt,/=== KULLANICI İSTEĞİ ===/,'the request and answer format are never cut off');
+  const huge=buildPrompt({source:'agent-office',lang:'tr',task:'Otomasyon kuralı ile geciken siparişler için tedarikçiye mail taslağı yaz '+'k'.repeat(3800),guide:'g'.repeat(40000),
+    context:{findings:Array.from({length:40},(_,i)=>({id:'f'+i,text:'z'.repeat(1500)}))}});
+  assert.equal(huge.truncated,true);assert.ok(huge.prompt.length<=config.LIMITS.maxPromptChars);
+  assert.match(huge.prompt,/=== CEVAP BİÇİMİ[\s\S]*"emailDrafts"/,'an oversized prompt is cut in the middle; the answer format at the end survives');assert.match(huge.prompt,/…\[cut\]/);
 });
 
 test('a change waits on the approval card and runs only with the previewed fingerprint',async t=>{
@@ -146,10 +154,19 @@ test('a change waits on the approval card and runs only with the previewed finge
   assert.equal(result.task.status,'waiting_approval');
   assert.equal(db.loadOverrides().noteColumnDefs.length,before,'nothing changes before approval');
   await assert.rejects(w.service.officeChatApprove(w.profile,result.task.id,{confirmed:true,fingerprint:'wrong'}),{code:'OFFICE_APPROVAL_REQUIRED'});
+  // The owner talks about something else before approving: the answer still belongs to the original request.
+  await w.store.appendMessage(w.profile.id,result.conversation.id,{role:'user',text:'Arada başka bir soru',requestId:'r-other'});
   const done=await w.service.officeChatApprove(w.profile,result.task.id,{confirmed:true,fingerprint:result.task.steps[0].preview.fingerprint});
   assert.equal(done.status,'completed');assert.equal(db.loadOverrides().noteColumnDefs.length,before+1);
   const last=(await msgs(w,result.conversation)).at(-1);
   assert.ok(last.role==='system'&&/OFFICE_AI/.test(last.text),'after approval the lead tries to write the answer; a failed answer is noted, the change stays done');
+  const answers=()=>engine.calls.filter(c=>c.source==='agent-office');
+  assert.equal(answers().length,1);assert.equal(answers()[0].task,'Siparişlere DEMO Sohbet adında not sütunu ekle');
+  assert.ok(!answers()[0].guide||!answers()[0].guide.includes('Arada başka bir soru'),'messages written after the request are not its history');
+  const users=(await msgs(w,result.conversation)).filter(m=>m.role==='user').map(m=>m.text);
+  assert.deepEqual(users,['Siparişlere DEMO Sohbet adında not sütunu ekle','Arada başka bir soru'],'the request is not appended again');
+  await w.service.officeChatAdvance(w.profile,result.task.id);
+  assert.equal(answers().length,1,'a failed answer is tried once, not on every poll');
 });
 
 test('invented agents or tools never reach the conversation or the planner; a missing identifier asks one question',async t=>{
@@ -278,6 +295,7 @@ test('the daily brief lists CP critical, today and this-week orders with reasons
   assert.deepEqual(brief.collection,[{season:'6S27',status:'Fiyatlama',options:20,unlinked:12,missingSupplier:4}]);
   await w.service.officeChatBrief(w.profile);assert.equal(scans,1,'computed once a day');
   await w.service.officeChatBrief(w.profile,{refresh:true});assert.equal(scans,2,'refresh recomputes');
+  w.profile.areas=['koleksiyon'];await w.service.officeChatBrief(w.profile);assert.equal(scans,3,'a permission change recomputes the saved brief');
 });
 
 test('CP action priorities rank with the general severities',()=>{
