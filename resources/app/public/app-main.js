@@ -26195,6 +26195,8 @@ window.BLCollection={
   rows(){ return Array.isArray(kolRows)?kolRows:[]; },
   selectedIds(){ return [...kolSelected].map(String); },
   selectedRows(){ return kolRows.filter(row=>selectionHasId(kolSelected,row.id)); },
+  // Agent fiyat paketleri yalnız sahibin kendi tek Koleksiyon sayfasındaki satırlarla eşlenir (satır kimlikleri sayfaya özgüdür).
+  isOwnWorkspace(){ return kolWorkspaceMode==='single'&&kolIsOwnWorkspace(); },
   pricingPreflight(rows){ return kolPricingPreflight(rows); },
   // Siparise donmus olmak: ayni PLM ID + Model Adi cifti CP satirlarinda var mi.
   // Uygulamanin baska yerlerinde (Koleksiyon ice aktarimi, Fiyat Gecmisi) kullanilan
@@ -34894,10 +34896,13 @@ function renderKolMfrModal(ctx){
   // ctx.preselect verilirse ilgili üreticiler baştan işaretli gelir.
   _mfrPicked = new Set();
   if(Array.isArray(SRC.preselect)){
+    // Türkçe büyük harf (İ) ve boşluk farkı eşleşmeyi bozmasın.
+    const mfrKey=v=>String(v==null?'':v).toLocaleLowerCase('tr').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i').replace(/\s+/g,' ').trim();
     SRC.preselect.forEach(name=>{
-      const i = kolManufacturers.findIndex(m=>m && String(m.name).toLowerCase()===String(name).toLowerCase());
+      const i = kolManufacturers.findIndex(m=>m && mfrKey(m.name)===mfrKey(name));
       if(i>=0) _mfrPicked.add(i);
     });
+    if(SRC.preselect.length&&!_mfrPicked.size&&typeof showToast==='function')showToast(appLang==='en'?`${SRC.preselect.join(', ')} is not in the Collection manufacturer list; pick the supplier in the list.`:`${SRC.preselect.join(', ')} Koleksiyon üretici listesinde yok; üreticiyi listeden seçin.`);
   }
   let modal = document.getElementById('kolMfrModal');
   if(modal) modal.remove();

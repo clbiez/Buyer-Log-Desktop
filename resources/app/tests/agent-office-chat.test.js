@@ -314,5 +314,13 @@ test('pricing packages come from the verified suggestion result, not from LCW AI
     {name:'ALPHA',classifications:[{name:'KAZAK',index:-20,price:8,groupPrice:10,pricedModels:2}],models:[{rowId:'k1',plmId:'900001',model:'DEMO A',colourCode:'C1'},{plmId:'no-row'}],modelsTruncated:false},
     {name:'EMPTY',classifications:[],models:[]}]}}},{toolId:'collection.records',status:'completed',result:{verified:true,data:{rows:[]}}},
     {toolId:'pricing.suppliers.suggest',status:'failed',result:{data:{suppliers:[{name:'FAILED',models:[{rowId:'x'}]}]}}}]};
-  assert.deepEqual(pricingPackages(job),[{supplier:'ALPHA',season:'6S27',classifications:[{name:'KAZAK',index:-20}],rowIds:['k1'],models:[{plmId:'900001',model:'DEMO A',colourCode:'C1'}],truncated:false}]);
+  assert.deepEqual(pricingPackages(job),[{supplier:'ALPHA',season:'6S27',classifications:[{name:'KAZAK',index:-20}],rowIds:['k1'],models:[{plmId:'900001',model:'DEMO A',colourCode:'C1'}],modelCount:1,truncated:false}]);
+});
+
+test('the pricing card refuses another owner\'s Collection page and matches rows by id and PLM ID',()=>{
+  const src=require('fs').readFileSync(require('path').join(__dirname,'..','public','agent-office.js'),'utf8'),main=require('fs').readFileSync(require('path').join(__dirname,'..','public','app-main.js'),'utf8');
+  assert.match(src,/if\(!root\.BLCollection\?\.isOwnWorkspace\?\.\(\)\)throw/);
+  assert.match(src,/wanted\.has\(String\(row\.id\)\)&&\(!wanted\.get\(String\(row\.id\)\)\|\|plmOf\(row\)===wanted\.get\(String\(row\.id\)\)\)/);
+  assert.match(main,/isOwnWorkspace\(\)\{ return kolWorkspaceMode==='single'&&kolIsOwnWorkspace\(\); \}/);
+  assert.match(main,/mfrKey\(m\.name\)===mfrKey\(name\)/,'supplier preselect is Turkish-case and whitespace tolerant');
 });

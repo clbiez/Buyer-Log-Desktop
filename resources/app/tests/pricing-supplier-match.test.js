@@ -31,3 +31,28 @@ test('models go to suppliers pricing below their classification average, cheapes
   const strict = suggestSuppliers({ collectionRows, priceRows, fields, maxIndex: -15, perGroup: 1 });
   assert.deepEqual(strict.suppliers.map(s => s.name), ['DEMO A'], 'a stricter threshold and one supplier per classification');
 });
+
+test('review follow-ups: many classifications and long names stay within the tool schema; the season falls back to one that matches', async () => {
+  const { createToolRegistry } = require('../server/lib/agent-tool-registry'), { registerPriceAnalysisTools } = require('../server/lib/agent-price-analysis-tools');
+  const long = 'DEMO ' + 'X'.repeat(400);
+  let i = 0;
+  const priceRows = [], collectionRows = [];
+  for (let c = 0; c < 32; c++) {
+    const cat = 'CLASS ' + c;
+    priceRows.push(order(i++, long, cat, 5), order(i++, long, cat, 5), order(i++, 'DEMO OTHER', cat, 9), order(i++, 'DEMO OTHER', cat, 9));
+    collectionRows.push(option('c' + c, String(950000 + c), cat));
+  }
+  // one unrelated, newer season order must not empty the result
+  priceRows.push({ ...order(i++, 'DEMO NEW', 'UNRELATED', 7), [key('orders', 'season')]: '6W27' });
+  const profile = { id: 'demo', enabled: true }, registry = createToolRegistry({ userAccess: { profileById: () => profile, hasArea: () => true, appendAudit: () => {} } });
+  registerPriceAnalysisTools(registry, { rows: async () => ({ rows: priceRows }), collectionRows: async () => collectionRows });
+  const result = await registry.execute('pricing.suppliers.suggest', {}, { ownerId: profile.id, profile });
+  require('../server/lib/agent-tool-schema').validate(registry.get('pricing.suppliers.suggest').outputSchema, result);
+  const top = result.data.suppliers[0];
+  assert.equal(result.data.currentSeason, '6S26', 'the newest season (6W27) has no match, so the newest matching season is used');
+  assert.deepEqual(result.data.seasons, ['6S26', '6W27']);
+  assert.equal(top.name.length, 300);assert.equal(top.classifications.length, 30);assert.equal(top.classificationsTruncated, true);
+  assert.equal(top.modelCount, 32);assert.equal(top.classifications[0].pricedModels, 2);
+  const pinned = await registry.execute('pricing.suppliers.suggest', { currentSeason: '6W27' }, { ownerId: profile.id, profile });
+  assert.equal(pinned.data.currentSeason, '6W27');assert.equal(pinned.data.suppliers.length, 0, 'an explicit season is respected');
+});

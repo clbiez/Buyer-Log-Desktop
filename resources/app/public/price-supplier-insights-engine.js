@@ -221,7 +221,7 @@
       const suppliers=[...g.suppliers.values()].filter(s=>s.cur.records>0).map(s=>{
         /* Örnek eşiği yalnız seçili para biriminde fiyatı olan modelleri sayar. */
         const price=avg(s.cur),models=s.cur.models.size,priced=s.cur.pricedModels.size;
-        return {key:s.key,name:s.name,price,index:pct(price,groupAvg),volume:s.cur.volume,share:g.cur.volume>0?s.cur.volume/g.cur.volume*100:0,models,eligible:price!=null&&priced>=minSample,items:s.cur.items};
+        return {key:s.key,name:s.name,price,index:pct(price,groupAvg),volume:s.cur.volume,share:g.cur.volume>0?s.cur.volume/g.cur.volume*100:0,models,pricedModels:priced,eligible:price!=null&&priced>=minSample,items:s.cur.items};
       }).sort((a,b)=>b.volume-a.volume||a.name.localeCompare(b.name,'tr'));
       const eligible=suppliers.filter(s=>s.eligible);
       const ranked=eligible.slice().sort((a,b)=>a.price-b.price);

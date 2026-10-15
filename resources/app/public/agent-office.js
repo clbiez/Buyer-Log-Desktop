@@ -403,16 +403,22 @@
   function chatPricingHtml(item){const list=item.provenance?.pricingPackages||[];if(!list.length||item.id==='pending')return '';
     const pct=value=>value==null?'':` ${value>0?'+':''}${Math.round(value)}%`;
     const rows=list.map((pack,index)=>`<article class="aoSimpleDraft"><div><b data-no-i18n>${esc(pack.supplier)}</b>
-      <small>${esc(L(`${pack.rowIds.length} model`,`${pack.rowIds.length} ${pack.rowIds.length===1?'model':'models'}`))}${pack.season?` · ${esc(L('fiyat sezonu','price season'))} <span data-no-i18n>${esc(pack.season)}</span>`:''}</small>
+      <small>${esc(L(`${pack.rowIds.length} model`,`${pack.rowIds.length} ${pack.rowIds.length===1?'model':'models'}`))}${pack.truncated?` · <em class="is-missing">${esc(L(`toplam ${pack.modelCount} modelin ilk ${pack.rowIds.length} tanesi; kalanlar için isteği daraltın (ör. klasman)`,`first ${pack.rowIds.length} of ${pack.modelCount} models; narrow the request for the rest (e.g. by classification)`))}</em>`:''}${pack.season?` · ${esc(L('fiyat sezonu','price season'))} <span data-no-i18n>${esc(pack.season)}</span>`:''}</small>
       <div class="aoSimpleChips" data-no-i18n>${pack.classifications.map(c=>`<span class="aoBadge">${esc(c.name)}${esc(pct(c.index))}</span>`).join('')}</div>
       <div class="aoSimpleActions">${button(L('Fiyatlamaya gönder','Send to pricing'),'chat-pricing-open',`class="aoButton is-primary" data-id="${esc(item.id)}" data-index="${index}"`)}</div>
       <details><summary>${esc(L('Modelleri gör','View models'))}</summary><ul class="aoSimplePricingModels" data-no-i18n>${pack.models.map(m=>`<li>${esc([m.plmId,m.model,m.colourCode].filter(Boolean).join(' · '))}</li>`).join('')}</ul></details></div></article>`).join('');
     return `<section class="aoSimpleDrafts"><header><b>${esc(L(`${list.length} üreticiye fiyat talebi`,`Pricing requests to ${list.length} ${list.length===1?'supplier':'suppliers'}`))}</b><small>${esc(L('Send to Pricing açılır: model görselli teklif Excel\'i ve model dosyaları taslağa eklenir, onaylayınca Outlook\'ta açılır.','Send to Pricing opens: the quotation Excel with model images and the model files are added to the draft, which opens in Outlook when you confirm.'))}</small></header>${rows}</section>`;}
-  async function chatOpenPricing(pack){const wanted=new Set((pack.rowIds||[]).map(String)),find=()=>(root.BLCollection?.rows?.()||[]).filter(row=>wanted.has(String(row.id)));
-    // Send to Pricing bir Koleksiyon işlemidir: modeller Koleksiyon'da yüklenip görünür olsun.
+  async function chatOpenPricing(pack){
+    // Satır kimliği + PLM ID birlikte eşleşmeli: kimlikler Koleksiyon sayfasına özgüdür, model sonradan değişmiş olabilir.
+    const plmKey=value=>String(value==null?'':value).replace(/\s+/g,'').toUpperCase();
+    const wanted=new Map((pack.rowIds||[]).map((id,i)=>[String(id),plmKey(pack.models?.[i]?.plmId)]));
+    const plmOf=row=>plmKey(row.plmId??row['PLM ID']);
+    const find=()=>(root.BLCollection?.rows?.()||[]).filter(row=>wanted.has(String(row.id))&&(!wanted.get(String(row.id))||plmOf(row)===wanted.get(String(row.id))));
+    // Send to Pricing bir Koleksiyon işlemidir: modeller Koleksiyon'da görünür olsun. Sayfa yüklenince beklemeyi bırak.
     if(typeof root.switchTab==='function')root.switchTab('koleksiyon');
-    for(let i=0;i<60&&find().length<wanted.size;i++)await new Promise(resolve=>setTimeout(resolve,500));
-    const rows=find();if(!rows.length)throw new Error(L('Bu modeller açık Koleksiyon sayfasında bulunamadı. Kendi Koleksiyon sayfanızı açıp tekrar deneyin.','These models were not found in the open Collection page. Open your own Collection page and try again.'));
+    let last=-1;for(let i=0;i<20;i++){const count=(root.BLCollection?.rows?.()||[]).length;if(count&&count===last)break;last=count;await new Promise(resolve=>setTimeout(resolve,500));}
+    if(!root.BLCollection?.isOwnWorkspace?.())throw new Error(L('Fiyata gönderme kendi Koleksiyon sayfanızdaki modellerle yapılır. Koleksiyon\'da kendi sayfanızı açıp tekrar deneyin.','Pricing requests use the models in your own Collection page. Open your own page in Collection and try again.'));
+    const rows=find();if(!rows.length)throw new Error(L('Bu modeller Koleksiyon sayfanızda artık bulunamadı; agenttan listeyi yenilemesini isteyin.','These models are no longer in your Collection page; ask the agent to refresh the list.'));
     if(root.BLPerf?.ensureFeature)await root.BLPerf.ensureFeature('collectionTools');
     if(!root.BL_QUOTATIONS?.openSendToPricing)throw new Error(L('Send to Pricing açılamadı.','Send to Pricing could not be opened.'));
     await root.BL_QUOTATIONS.openSendToPricing({rows,preselect:[pack.supplier],persist:true});
@@ -593,7 +599,8 @@
       catch(err){c.error=err.message||errorText(err);render();return true;}
       setTimeout(()=>{target.textContent=label;target.disabled=false;},2500);return true;}
     if(name==='chat-pricing-open'){const item=c.messages.find(m=>m.id===key),pack=item?.provenance?.pricingPackages?.[Number(target.dataset.index)];if(!pack)return true;
-      target.disabled=true;try{await chatOpenPricing(pack);}catch(err){c.error=err.message||errorText(err);render();}finally{target.disabled=false;}return true;}
+      // Pencere Koleksiyon'a geçtiği için hata toast ile gösterilir.
+      target.disabled=true;try{await chatOpenPricing(pack);}catch(err){const message=err.message||errorText(err);if(typeof root.showToast==='function')root.showToast(message);c.error=message;render();}finally{target.disabled=false;}return true;}
     if(name==='chat-excel'){const item=c.messages.find(m=>m.id===key);if(!item)return true;try{await chatExcel(item);}catch(err){c.error=err.message||errorText(err);render();}return true;}
     if(name==='chat-ask'){if(c.busy)return true;c.draft=String(target.dataset.text||'');await chatSend();return true;}
     if(name==='chat-brief-refresh'){target.disabled=true;try{c.brief=(await api('/chat/brief?refresh=1')).brief;}catch(err){c.error=errorText(err);}render();return true;}

@@ -155,7 +155,7 @@ function pricingPackages(job) {
       out.push({ supplier: String(supplier.name || '').slice(0, 200), season: String(data.currentSeason || '').slice(0, 80),
         classifications: (supplier.classifications || []).slice(0, 30).map(item => ({ name: String(item.name || '').slice(0, 120), index: item.index ?? null })),
         rowIds: models.map(item => String(item.rowId)), models: models.map(item => ({ plmId: item.plmId || '', model: item.model || '', colourCode: item.colourCode || '' })),
-        truncated: supplier.modelsTruncated === true });
+        modelCount: Math.max(models.length, Number(supplier.modelCount) || 0), truncated: supplier.modelsTruncated === true });
       if (out.length >= 30) return out;
     }
   }
@@ -273,7 +273,7 @@ function attachChat(service, deps = {}) {
     try {
       const result = await service.run(profile, { profileIds: conv.profileIds, conversationId: conv.id, task: link.request, lang: link.lang, signal }, onProgress,
         { reuseUserMessageId: link.userMessageId, taskResults: { taskId: job.id, lead, text: results },
-          ...(packages.length ? { extraProvenance: { pricingPackages: packages }, pricingPackages: packages.map(item => ({ supplier: item.supplier, models: item.rowIds.length })) } : {}) });
+          ...(packages.length ? { extraProvenance: { pricingPackages: packages }, pricingPackages: packages.map(item => ({ supplier: item.supplier, models: item.modelCount, inThisRequest: item.rowIds.length })) } : {}) });
       answered = result.message?.id || 'failed';
       return result.message || null;
     } finally {
