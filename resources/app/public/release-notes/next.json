@@ -213,6 +213,35 @@
           "en": "For the attached Endeksmatik file Ada put the import step up for approval (demo data)."
         }
       }
+    },
+    {
+      "id": "agent-document-orders",
+      "type": "feature",
+      "module": {
+        "tr": "Agent Ofisi",
+        "en": "Agent Office"
+      },
+      "title": {
+        "tr": "Paydaş belgelerini siparişlerinizle eşleyip risk değerlendirmesi",
+        "en": "Match stakeholder documents to your orders with a risk assessment"
+      },
+      "body": {
+        "tr": "Üreticiden veya paydaştan gelen karışık Excel, e-posta, PDF ya da ekran görüntüsünü sohbete ekleyin. Buyer Log satırları okur, sizin görebildiğiniz siparişlerle sipariş kodu, PLM + renk veya model + renkle eşler; emin olamadığı satırları ayrıca gösterir. İstenen ex-factory tarihinin kaç gün kaydığı ve en geç güvenli yükleme tarihine göre riski CP verisinden hesaplanır; agent bunun üzerine durum değerlendirmesi ve öneri yazar.",
+        "en": "Attach a messy Excel, e-mail, PDF or screenshot from a supplier or stakeholder to the chat. Buyer Log reads the rows and matches them to the orders you can see by order code, PLM + colour or model + colour; rows it cannot match with certainty are listed separately. The shift of the requested ex-factory date and the risk against the latest safe load date are calculated from CP data; the agent then writes a status assessment and recommendations."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "agent-document-orders.png",
+        "caption": {
+          "tr": "Üreticinin karışık EXF revize Excel'i okundu; 10 satırdan 9'u siparişlerle eşleşti, riskler CP verisiyle hesaplandı (demo veri).",
+          "en": "A supplier's messy ex-factory revision workbook was read; 9 of 10 rows matched orders and risks were calculated from CP data (demo data)."
+        },
+        "alt": {
+          "tr": "Üreticinin karışık EXF revize Excel'i okundu; 10 satırdan 9'u siparişlerle eşleşti, riskler CP verisiyle hesaplandı (demo veri).",
+          "en": "A supplier's messy ex-factory revision workbook was read; 9 of 10 rows matched orders and risks were calculated from CP data (demo data)."
+        }
+      }
     }
   ]
 }

@@ -379,7 +379,7 @@
      "Ayarlar ve gelişmiş ofis" altında kalır. */
   const CHAT_TERMINAL=new Set(['completed','partial','failed','cancelled','interrupted','rejected','rolled_back']);
   function chatState(){return state.chat||(state.chat={conversationId:'',messages:[],tasks:{},tools:{},busy:false,progress:'',draft:'',agentId:'',error:'',controller:null,files:[]});}
-  const CHAT_FILE_TYPES='.pdf,.msg,.eml,.png,.jpg,.jpeg,.xlsx,.xls';
+  const CHAT_FILE_TYPES='.pdf,.msg,.eml,.png,.jpg,.jpeg,.xlsx,.xls,.csv';
   function chatAgents(){return (state.data?.profiles||[]).filter(item=>item.enabled!==false);}
   function agentName(key){return state.data?.profiles.find(item=>item.id===key)?.name||L('Agent','Agent');}
   function chatMarkdown(value){return root.BLMarkdown?root.BLMarkdown.render(String(value||'')):`<p>${esc(value).replace(/\n/g,'<br>')}</p>`;}
@@ -402,6 +402,16 @@
     const actions=[waiting?button(L('Onayla','Approve'),'chat-approve',`class="aoButton is-primary" data-id="${esc(job.id)}"`)+button(L('Vazgeç','Cancel'),'chat-reject',`data-id="${esc(job.id)}"`):'',
       undo?button(L('Geri al','Undo'),'chat-undo',`data-id="${esc(job.id)}" data-step="${esc(undo.id)}"`):'',button(L('Ayrıntılar','Details'),'chat-task-details',`data-id="${esc(job.id)}"`)].join('');
     return chatBubble(data.agentId,intro+`<ol class="aoSimpleSteps">${steps}</ol><p class="aoSimpleNote">${esc(chatTaskStatus(job))}</p><div class="aoSimpleActions">${actions}</div>`);}
+  /* Paydaş belgesinin Buyer Log'da doğrulanmış eşleşmesi: rakamlar CP motorundan. */
+  function chatDocumentCard(data){const t=data.totals||{},risk=value=>({high:L('Yüksek','High'),medium:L('Orta','Medium'),low:L('Düşük','Low'),unknown:L('Bilinmiyor','Unknown'),unmatched:L('Eşleşmedi','Not matched')})[value]||value;
+    const shift=value=>value==null?'':`${value>0?'+':''}${value} ${L('gün','days')}`;
+    const rows=(data.rows||[]).map(row=>`<tr class="is-${esc(row.risk)}"><td>${esc(row.line)}</td><td>${esc(row.orderCode||'—')}</td><td>${esc([row.model,row.colour].filter(Boolean).join(' · ')||'—')}</td><td>${esc(row.currentExFactory||'—')}</td><td>${esc(row.requestedExFactory||'—')}</td><td>${esc(shift(row.shiftDays))}</td><td>${esc(row.latestSafeLoad||'—')}</td><td><b>${esc(risk(row.risk))}</b>${row.match==='ambiguous'?`<small>${esc(L('Birden çok aday','Several candidates'))}: ${esc((row.candidates||[]).join(', '))}</small>`:''}${row.documentDiffers?`<small>${esc(L('Belgedeki mevcut tarih Buyer Log ile farklı','The document\'s current date differs from Buyer Log'))}</small>`:''}</td></tr>`).join('');
+    return `<article class="aoSimpleDoc"><header><b>${esc(L(`Belgedeki ${t.rows||0} satır siparişlerinizle eşleştirildi`,`${t.rows||0} rows in the document were matched to your orders`))}</b><small>${esc((data.files||[]).join(', '))}${data.sender?' · '+esc(data.sender):''}</small></header>
+      ${data.request?`<p>${esc(L('İstek','Request'))}: ${esc(data.request)}</p>`:''}
+      <div class="aoSimpleChips"><span class="aoBadge is-high">${esc(L('Yüksek risk','High risk'))}: ${esc(t.high||0)}</span><span class="aoBadge is-medium">${esc(L('Orta','Medium'))}: ${esc(t.medium||0)}</span><span class="aoBadge">${esc(L('Düşük','Low'))}: ${esc(t.low||0)}</span><span class="aoBadge">${esc(L('Eşleşmedi','Not matched'))}: ${esc((t.unmatched||0)+(t.ambiguous||0))}</span></div>
+      <div class="aoSimpleTableWrap"><table class="aoSimpleTable"><thead><tr><th>#</th><th>${esc(L('Sipariş','Order'))}</th><th>${esc(L('Model · Renk','Model · Colour'))}</th><th>${esc(L('Mevcut EXF','Current EXF'))}</th><th>${esc(L('İstenen EXF','Requested EXF'))}</th><th>${esc(L('Kayma','Shift'))}</th><th>${esc(L('En geç güvenli yükleme','Latest safe load'))}</th><th>${esc(L('Risk','Risk'))}</th></tr></thead><tbody>${rows}</tbody></table></div>
+      ${(data.rows||[]).some(row=>row.basis==='shift')?`<small class="aoSimpleNote">${esc(L('Bazı siparişlerde yol süresi kuralı olmadığı için en geç güvenli yükleme tarihi hesaplanamadı; bu satırlarda risk yalnız kayma gününe göre (7 günden fazla orta, 14 günden fazla yüksek).','Some orders have no transit rule, so the latest safe load date could not be calculated; for those rows the risk is based on the shift only (over 7 days medium, over 14 days high).'))}</small>`:''}
+      <small class="aoSimpleNote">${esc(L('Eşleşme ve risk Buyer Log verisinden hesaplandı; agent değerlendirmesi aşağıda.','Matching and risk are calculated from Buyer Log data; the agent\'s assessment follows.'))}</small></article>`;}
   function chatMessageHtml(item){
     if(item.role==='user')return `<article class="aoSimpleMsg is-user"><div class="aoSimpleText">${esc(item.text).replace(/\n/g,'<br>')}</div></article>`;
     if(item.role==='system'){let data=null;try{data=JSON.parse(item.text);}catch(_){}
@@ -409,6 +419,7 @@
       if(data.type==='join')return `<div class="aoSimpleEvent">${esc((data.agentIds||[]).map(agentName).join(', '))} ${esc(L('konuşmaya katıldı','joined the conversation'))}${data.text?' · '+esc(data.text):''}</div>`;
       if(data.type==='suggestion')return chatBubble(data.agentId,`<b>${esc(L('Buyer Log için geliştirme önerim','My improvement idea for Buyer Log'))}</b>`+chatMarkdown(data.text));
       if(data.type==='task')return chatTaskCard(data);
+      if(data.type==='document-orders')return chatDocumentCard(data);
       if(data.type==='task-empty')return chatBubble(data.agentId,`<p>${esc(L('Bunu güvenle yapabileceğim bir adım bulamadım. Sipariş kodu, PLM ID veya model adı gibi bilgileri ekleyip tekrar yazar mısınız?','I could not find a step I can safely run for this. Could you add details such as an order code, PLM ID or model name?'))}</p>`);
       if(data.type==='task-failed')return chatBubble(data.agentId,`<p>${esc(errorText({code:data.code}))}</p>`);
       return '';}
@@ -457,7 +468,7 @@
       <div class="aoSimpleMessages" data-ao-chat-messages aria-live="polite">${chatMessagesHtml()}</div>
       ${c.error?`<div class="aoNotice aoError" role="alert">${esc(c.error)}${button(L('Kapat','Dismiss'),'chat-dismiss')}</div>`:''}
       <form class="aoSimpleComposer" data-ao-simple-chat><div class="aoSimpleInput"><textarea class="aoInput" data-ao-chat-draft rows="2" maxlength="4000" aria-label="${esc(L('Mesaj','Message'))}" placeholder="${esc(lead?L('Ne yapılmasını istersiniz? Kendi cümlelerinizle yazın.','What would you like done? Write it in your own words.'):L('Önce bir agent ekleyin.','Add an agent first.'))}" ${c.busy||!lead?'disabled':''}>${esc(c.draft)}</textarea>${(c.files||[]).length?`<div class="aoSimpleFiles">${c.files.map((file,index)=>`<span class="aoBadge">${esc(file.name)}${button('×','chat-file-remove',`class="aoSimpleFileRemove" data-index="${index}" aria-label="${esc(L('Dosyayı kaldır','Remove file'))}"`)}</span>`).join('')}</div>`:''}</div>
-        <label class="aoButton aoSimpleAttach${c.busy||!lead?' is-disabled':''}" title="${esc(L('Test raporu, e-posta (PDF, MSG, EML, görsel) veya Excel dosyası ekleyin','Attach a test report, e-mail (PDF, MSG, EML, image) or an Excel file'))}">${esc(L('Dosya ekle','Attach file'))}<input type="file" data-ao-chat-files multiple accept="${CHAT_FILE_TYPES}" hidden ${c.busy||!lead?'disabled':''}></label><button type="submit" class="aoButton is-primary" ${c.busy||!lead?'disabled':''}>${esc(L('Gönder','Send'))}</button></form>
+        <label class="aoButton aoSimpleAttach${c.busy||!lead?' is-disabled':''}" title="${esc(L('E-posta, Excel, PDF, ekran görüntüsü veya test raporu ekleyin','Attach an e-mail, Excel, PDF, screenshot or test report'))}">${esc(L('Dosya ekle','Attach file'))}<input type="file" data-ao-chat-files multiple accept="${CHAT_FILE_TYPES}" hidden ${c.busy||!lead?'disabled':''}></label><button type="submit" class="aoButton is-primary" ${c.busy||!lead?'disabled':''}>${esc(L('Gönder','Send'))}</button></form>
       <div class="aoSimpleProgress" data-ao-chat-progress>${esc(c.progress)}</div></section></div>`;}
   function paintChat(){const box=host()?.querySelector('[data-ao-chat-messages]');if(box){box.innerHTML=chatMessagesHtml();box.scrollTop=box.scrollHeight;}}
   async function chatTools(agentId){const c=chatState();if(!agentId||c.tools[agentId])return;try{const value=await api(`/tasks/catalog?agentId=${encodeURIComponent(agentId)}`);c.tools[agentId]=Object.fromEntries((value.tools||[]).map(tool=>[tool.id,tool]));}catch(_){c.tools[agentId]={};}}

@@ -53,7 +53,7 @@ function validateRoute(data, { roster, toolsBy, current }) {
   return route;
 }
 
-const DOCUMENT_FILE = /\.(pdf|msg|eml|png|jpe?g)$/i, WORKBOOK_FILE = /\.xlsx?$/i, AI_DOCUMENT_LIMIT = 5;
+const DOCUMENT_FILE = /\.(pdf|msg|eml|png|jpe?g)$/i, WORKBOOK_FILE = /\.xlsx?$/i, TABLE_FILE = /\.csv$/i, AI_DOCUMENT_LIMIT = 5;
 /* Sohbete eklenen dosyalar mevcut motorlarla ve mevcut yükleme kurallarıyla
    hazırlanır:
    - test raporu ve e-postalar: seçili agentın test belgesi okuma yetkisi olmalı;
@@ -64,19 +64,31 @@ const DOCUMENT_FILE = /\.(pdf|msg|eml|png|jpe?g)$/i, WORKBOOK_FILE = /\.xlsx?$/i
    Yönlendirici ve planlayıcıya yalnız kimlik, dosya adı ve eşleşme özeti gider.
    Her adımın arasında sahibin erişimi yeniden doğrulanır; hata olursa geçici
    oturum silinir. Hiçbir iş burada uygulanmaz. */
-async function prepareAttachments(profile, files, { qualityService, qualityTools, artifacts, staging, canReadDocuments, canStoreWorkbooks, engine, lang, assertAuthority = () => {} } = {}) {
+async function prepareAttachments(profile, files, { qualityService, qualityTools, artifacts, staging, canReadDocuments, canStoreWorkbooks, analyzeDocuments, engine, lang, assertAuthority = () => {} } = {}) {
   const list = Array.isArray(files) ? files : [];
   if (!list.length) return [];
   if (list.length > 10) throw error('OFFICE_ATTACHMENT_LIMIT', 413);
   if (list.some(file => !file || typeof file.name !== 'string' || typeof file.base64 !== 'string')) throw error('OFFICE_TASK_INVALID', 422);
-  const out = [], documents = list.filter(file => DOCUMENT_FILE.test(file.name)), workbooks = list.filter(file => WORKBOOK_FILE.test(file.name));
-  if (list.length !== documents.length + workbooks.length) throw error('OFFICE_ATTACHMENT_TYPE', 415);
-  if (documents.length && (!qualityService || !qualityTools || !(await canReadDocuments?.()))) throw error('OFFICE_ATTACHMENT_AGENT_REQUIRED', 403);
-  if (workbooks.length && !(await canStoreWorkbooks?.())) throw error('OFFICE_TOOL_FORBIDDEN', 403);
+  const out = [], documents = list.filter(file => DOCUMENT_FILE.test(file.name)), workbooks = list.filter(file => WORKBOOK_FILE.test(file.name)), tables = list.filter(file => TABLE_FILE.test(file.name));
+  if (list.length !== documents.length + workbooks.length + tables.length) throw error('OFFICE_ATTACHMENT_TYPE', 415);
+  /* Paydaş belgesi analizi varsa her dosya önce siparişlerle eşlenir; test belgesi
+     motoru ve dosya deposu yalnız ilgili yetki varsa ek olarak çalışır. Analiz
+     yoksa (eski yol) yetki eksikliği reddedilir. */
+  const readTests = documents.length > 0 && !!qualityService && !!qualityTools && !!(await canReadDocuments?.());
+  const storeBooks = workbooks.length > 0 && !!(await canStoreWorkbooks?.());
+  if (!analyzeDocuments) {
+    if (tables.length) throw error('OFFICE_ATTACHMENT_TYPE', 415);
+    if (documents.length && !readTests) throw error('OFFICE_ATTACHMENT_AGENT_REQUIRED', 403);
+    if (workbooks.length && !storeBooks) throw error('OFFICE_TOOL_FORBIDDEN', 403);
+  }
   assertAuthority();
-  let sessionId = '';
+  let sessionId = '', docKind = '';
   try {
-    if (documents.length) {
+    if (analyzeDocuments) {
+      const analysis = await analyzeDocuments(list); assertAuthority();
+      if (analysis) { docKind = analysis.docKind; out.push(analysis); }
+    }
+    if (readTests && (!analyzeDocuments || docKind === 'test-report')) {
       const parsed = await qualityService.parse(profile, documents, { durable: true });
       sessionId = parsed.sessionId; assertAuthority();
       if (engine && documents.length <= AI_DOCUMENT_LIMIT) { await qualityService.extractAi(profile, parsed.sessionId, { engine, lang, assertAuthority }); assertAuthority(); }
@@ -85,7 +97,7 @@ async function prepareAttachments(profile, files, { qualityService, qualityTools
         matches: (preview.matches || []).slice(0, 20).map(match => ({ talepNo: text(match.talepNo, 80), outcome: text(match.outcome?.status || match.outcome, 40), level: text(match.level, 20),
           orders: (match.candidates || []).slice(0, 3).map(candidate => text(candidate.identity?.orderCode || candidate.orderKey, 80)) })) });
     }
-    for (const file of workbooks) {
+    for (const file of storeBooks ? workbooks : []) {
       const meta = await artifacts.put(profile, Buffer.from(file.base64, 'base64'), text(file.name, 160), 'workbook'); assertAuthority();
       out.push({ kind: 'workbook', artifactId: meta.id, name: text(file.name, 160) });
     }
@@ -166,7 +178,7 @@ function attachChat(service, deps = {}) {
   }
 
   async function chat(profile, raw = {}, onProgress = () => {}) {
-    const names = (Array.isArray(raw.attachments) ? raw.attachments : []).flatMap(item => item.kind === 'workbook' ? [item.name] : (item.files || [])).filter(Boolean);
+    const names = [...new Set((Array.isArray(raw.attachments) ? raw.attachments : []).flatMap(item => item.kind === 'workbook' ? [item.name] : (item.files || [])).filter(Boolean))];
     const typed = text(raw.text, 4000);
     if (!typed && !names.length) throw error('OFFICE_TASK_INVALID', 422);
     const message = text([typed || (raw.lang === 'en' ? 'Please review the attached files.' : 'Ekteki dosyaları inceler misin?'), names.length ? (raw.lang === 'en' ? 'Attachments: ' : 'Ekler: ') + names.join(', ') : ''].filter(Boolean).join('\n\n'), 6000);
@@ -178,7 +190,16 @@ function attachChat(service, deps = {}) {
       let conv = raw.conversationId ? await store.get(profile.id, 'conversation', raw.conversationId) : null;
       const selected = agents.find(agent => agent.id === raw.agentId) || (conv ? null : agents[0]);
       onProgress({ phase: 'route' });
-      const attachments = Array.isArray(raw.attachments) ? raw.attachments.slice(0, 10) : [];
+      const prepared = Array.isArray(raw.attachments) ? raw.attachments.slice(0, 10) : [];
+      // LCW AI'a giden ek özeti: satırların yalnız eşleşme/risk/tarih alanları.
+      const attachments = prepared.map(item => item.kind === 'document-orders'
+        ? { kind: item.kind, docKind: item.docKind, request: item.request, summary: item.summary, totals: item.totals,
+          rows: (item.rows || []).map(row => ({ line: row.line, orderCode: row.orderCode, requestedExFactory: row.requestedExFactory, risk: row.risk, match: row.match })) }
+        : item);
+      const documentOrders = prepared.filter(item => item.kind === 'document-orders');
+      const cards = documentOrders.map(({ compact, ...card }) => ({ type: 'document-orders', ...card }));
+      const evidence = documentOrders.map((item, index) => ({ id: 'document-orders-' + (index + 1), text: [item.request, item.summary,
+        'line|order|model|colour|currentEXF→requestedEXF|shift|latestSafeLoad|risk|match|basis', item.compact].filter(Boolean).join('\n') }));
       const decision = await route(profile, conv, message, agents, raw.lang, raw.signal, attachments);
       // Sahibin seçtiği agent konuşmanın içinde kalır.
       let ids = [...new Set([...(selected ? [selected.id] : []), ...(conv ? conv.profileIds : []), ...decision.agentIds])].slice(0, 4);
@@ -193,12 +214,14 @@ function attachChat(service, deps = {}) {
 
       if (decision.mode === 'clarify' && decision.note) {
         await store.appendMessage(profile.id, conv.id, { role: 'user', text: message, requestId: id() });
+        for (const card of cards) await note(profile, conv, card);
         const reply = await store.appendMessage(profile.id, conv.id, { role: 'assistant', text: decision.note, requestId: id(), provenance: { origin: 'route-question', speaker: decision.lead } });
         return { conversation: await store.get(profile.id, 'conversation', conv.id), route: decision, message: reply };
       }
       if (decision.mode === 'task') {
         await store.appendMessage(profile.id, conv.id, { role: 'user', text: message, requestId: id() });
         if (joinNote) await note(profile, conv, joinNote);
+        for (const card of cards) await note(profile, conv, card);
         onProgress({ phase: 'plan' });
         let job;
         try {
@@ -223,7 +246,9 @@ function attachChat(service, deps = {}) {
       }
       onProgress({ phase: 'reply' });
       const result = await service.run(profile, { profileIds: conv.profileIds, conversationId: conv.id, task: message, lang: raw.lang, signal: raw.signal }, onProgress,
-        { afterUserMessage: joinNote ? current => note(profile, current, joinNote) : null });
+        { afterUserMessage: joinNote || cards.length ? async current => { if (joinNote) await note(profile, current, joinNote); for (const card of cards) await note(profile, current, card); } : null,
+          // Eşleme ve risk rakamları Buyer Log'dan gelir; agent bunların üstüne değerlendirme yazar.
+          ...(evidence.length ? { evidenceAttachments: evidence } : {}) });
       if (decision.suggestion) await note(profile, conv, { type: 'suggestion', agentId: decision.lead, text: decision.suggestion });
       return { ...result, conversation: await store.get(profile.id, 'conversation', conv.id), route: decision };
     } finally { busy.delete(profile.id); }

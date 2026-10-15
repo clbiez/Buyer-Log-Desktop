@@ -5465,6 +5465,19 @@ const agentQualityService=require('./lib/test-reports/service').createService({
   audit:userAccess.appendAudit,
   authorizedOrders:agentQualityAuthorizedOrders,
 });
+/* Paydaş belgesi eşlemesi: sahibin GÖREBİLDİĞİ siparişler ve kanonik CP tarihleri
+   (planlanan yükleme, hedefi kaçırmadan en geç yükleme). Yalnız okunur. */
+async function agentDocumentOrders(profile) {
+    const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
+    await ensureDataLoaded(profile.id);
+    const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
+    const businessRows=userAccess.filterRowsByScope(profile, filterRowsByEffectiveHorizon(profile,source,ordersForTarget(active,source,overrides)));
+    const rows=buildOrdersRowsFromASAS(businessRows,antrepoForTarget(active,source),overrides);
+    const CP=require('../public/cp-readiness-engine');
+    return rows.map(row=>{const analysis=CP.analyzeOrder(row);return {orderKey:analysis.orderKey,orderCode:String(canonicalFields.value(row,source,'orderCode') || analysis.orderCode || ''),plmId:String(canonicalFields.value(row,source,'plmId') || ''),
+      modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || ''),colour:String(canonicalFields.value(row,source,'colour') || ''),
+      quantity:analysis.qty,plannedLoadDate:analysis.plannedLoadDate,latestSafeLoadDate:analysis.latestSafeLoadDate,targetType:analysis.targetType,targetDate:analysis.targetDate};});
+}
 async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
     const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
     await ensureDataLoaded(profile.id);
@@ -5847,6 +5860,7 @@ const agentOfficeService=createAgentOfficeService({
   onBackgroundError:code=>logRuntimeFailure('agentOfficeBackground',Object.assign(new Error(code),{code})) });
 require('./routes/agent-office-routes')(app, {
   automationDraftAccess:async(profile,job,step)=>{const check=()=>{if(step.result.data.agentScope?.actorFingerprint!==require('./lib/agent-office-store').hash(JSON.stringify(userAccess.publicProfile(userAccess.profileById(profile.id)))))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});};check();await agentAutomationDeps.authorizeRecipe({ownerId:profile.id,profile,input:{officeAgentId:step.agentId}},step.preview.preview.recipe);check();},
+  documentOrders:agentDocumentOrders,
   qualityService:agentQualityService,qualityTools:agentQualityTools,qualityDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),
   express,
   userAccess,
