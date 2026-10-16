@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.282",
+      "publishedAt": "2026-10-15",
+      "title": {
+        "tr": "Girişten sonra takılma düzeltmesi ve sade Agent sohbeti",
+        "en": "Login freeze fix and plain Agent chat"
+      },
+      "stats": {
+        "features": 14,
+        "improvements": 5,
+        "fixes": 9
+      },
+      "file": "release-notes/7.0.282/release.json"
+    },
+    {
       "version": "7.0.281",
       "publishedAt": "2026-10-14",
       "title": {
