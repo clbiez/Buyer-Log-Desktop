@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-16",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "CP ve Siparişler'de Koleksiyon ile aynı kumaş kartları",
+    "en": "Collection fabric cards in CP and Orders"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "CP Tracker ve Siparişler'deki Fabric (PLM) sütunu Koleksiyon Kumaş sütunuyla aynı görünür ve çalışır: kart özeti, çift tıkla kartı düzenleme ve sütun filtresinde kumaş kartı alanlarına göre süzme.",
+    "en": "The Fabric (PLM) column in CP Tracker and Orders looks and works like the Collection Fabric column: card summary, double-click to edit the card and filtering by fabric card fields in the column filter."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "cp-orders-fabric-card-cell",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Fabric (PLM) sütunu Koleksiyon Kumaş sütunuyla aynı çalışır",
+        "en": "Fabric (PLM) column now works like the Collection Fabric column"
+      },
+      "body": {
+        "tr": "CP Tracker ve Siparişler'deki Fabric (PLM) hücresi artık Koleksiyon'daki gibi kumaş kodunu ve kart özetini gösterir; takım modellerde her kumaş ayrı satırdadır. Hücreye çift tıklayınca Koleksiyon'daki Kumaş Kartı penceresi açılır; kartı düzenleyip kaydettiğinizde üç tablo da yeni özeti gösterir. Kopyala ve Excel çıktısı da görünen özeti kullanır. PLM kumaş bilgisi değiştirilmeden saklanır.",
+        "en": "The Fabric (PLM) cell in CP Tracker and Orders now shows the fabric code and card summary, as in the Collection; set models list each fabric on its own line. Double-clicking the cell opens the same Fabric Card window as the Collection; when you edit and save the card, all three tables show the new summary. Copy and Excel export also use the visible summary. The PLM fabric information is kept unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-fabric-card-cell.png",
+        "caption": {
+          "tr": "Siparişler'de demo veriyle Fabric (PLM) hücresine çift tıklayınca açılan ortak Kumaş Kartı penceresi.",
+          "en": "The shared Fabric Card window opened by double-clicking a Fabric (PLM) cell in Orders with demo data."
+        },
+        "alt": {
+          "tr": "Siparişler'de demo veriyle Fabric (PLM) hücresine çift tıklayınca açılan ortak Kumaş Kartı penceresi.",
+          "en": "The shared Fabric Card window opened by double-clicking a Fabric (PLM) cell in Orders with demo data."
+        }
+      }
+    },
+    {
+      "id": "cp-orders-fabric-card-filter",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Fabric (PLM) filtresinde kumaş kartı alanlarına göre süzme",
+        "en": "Filter Fabric (PLM) by fabric card fields"
+      },
+      "body": {
+        "tr": "Ayrı açılan ve yalnız metin arayan kumaş filtresi kaldırıldı. Fabric (PLM) sütun filtresi artık Koleksiyon'daki gibi kart özetlerini listeler ve aynı panelde Kategori, Kumaş tipi, İplik, Gramaj, Karışım, Boya / apre ve Sürdürülebilirlik seçimleri sunar. Seçim değer filtresiyle birlikte uygulanır, filtre yeniden açıldığında korunur ve Filtreyi Kaldır ile temizlenir.",
+        "en": "The separate fabric filter that only searched text was removed. The Fabric (PLM) column filter now lists card summaries as in the Collection and offers Category, Fabric type, Yarn, Weight, Composition, Dye / finish and Sustainability choices in the same panel. The selection is applied together with the value filter, is kept when the filter is reopened and is cleared by Remove Filter."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-fabric-card-filter.png",
+        "caption": {
+          "tr": "CP Tracker'da demo veriyle Fabric (PLM) filtresi: kart özetleri ve kumaş kartı alan seçimleri tek panelde.",
+          "en": "Fabric (PLM) filter in CP Tracker with demo data: card summaries and fabric card field choices in one panel."
+        },
+        "alt": {
+          "tr": "CP Tracker'da demo veriyle Fabric (PLM) filtresi: kart özetleri ve kumaş kartı alan seçimleri tek panelde.",
+          "en": "Fabric (PLM) filter in CP Tracker with demo data: card summaries and fabric card field choices in one panel."
+        }
+      }
+    }
+  ]
 }

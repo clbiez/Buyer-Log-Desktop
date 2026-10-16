@@ -261,20 +261,20 @@
 .kolAllVariantsToggle[aria-pressed="true"]{border-color:color-mix(in srgb,var(--acc) 55%,var(--line));background:color-mix(in srgb,var(--acc) 11%,var(--card));color:var(--acc);}
 .kolAllVariantsToggle:disabled{opacity:.42;cursor:not-allowed;}
 
-/* Collection fabric cards — the PLM fabric text stays in the row; the cell
+/* Collection / CP / Orders fabric cards — the PLM fabric text stays in the row; the cell
    shows the short card summary. The inner view is not a pointer target so
    click/drag/Shift selection stays with the spreadsheet; the detail dialog
    opens only from the td dblclick handler. */
-#kolTable tbody td.kolFabricTd{padding:0!important}
-#kolTable tbody .kolFabricCell{display:flex;flex-direction:column;justify-content:center;gap:2px;width:100%;height:100%;min-height:27px;padding:3px 8px;pointer-events:none;user-select:none;overflow:hidden}
-#kolTable tbody .kolFabricLine{display:flex;align-items:center;gap:6px;min-width:0}
-#kolTable tbody td.kolFabricTd.isMulti .kolFabricText{-webkit-line-clamp:1;line-clamp:1}
-#kolTable tbody .kolFabricLabel{flex:none;font-size:var(--fs-2xs);font-weight:700;color:var(--ink2);min-width:10px}
-#kolTable tbody .kolFabricCode{flex:none;font-size:var(--fs-2xs);font-weight:600;line-height:16px;padding:0 5px;border-radius:var(--r-sm);background:var(--acc-bg);color:var(--acc-ink)}
-#kolTable tbody .kolFabricText{min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;line-height:15px;overflow-wrap:anywhere}
-#kolTable tbody .kolFabricLine:not(.hasCard) .kolFabricCode{background:var(--card2-strong,var(--line));color:var(--muted)}
-#kolTable tbody .kolFabricLine:not(.hasCard) .kolFabricText{color:var(--ink2)}
-#kolTable tbody td.kolFabricTd:hover .kolFabricCell{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+:is(#kolTable,#cpTable,#ordersTable) tbody td.kolFabricTd{padding:0!important}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricCell{display:flex;flex-direction:column;justify-content:center;gap:2px;width:100%;height:100%;min-height:27px;padding:3px 8px;pointer-events:none;user-select:none;overflow:hidden}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricLine{display:flex;align-items:center;gap:6px;min-width:0}
+:is(#kolTable,#cpTable,#ordersTable) tbody td.kolFabricTd.isMulti .kolFabricText{-webkit-line-clamp:1;line-clamp:1}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricLabel{flex:none;font-size:var(--fs-2xs);font-weight:700;color:var(--ink2);min-width:10px}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricCode{flex:none;font-size:var(--fs-2xs);font-weight:600;line-height:16px;padding:0 5px;border-radius:var(--r-sm);background:var(--acc-bg);color:var(--acc-ink)}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricText{min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;line-height:15px;overflow-wrap:anywhere}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricLine:not(.hasCard) .kolFabricCode{background:var(--card2-strong,var(--line));color:var(--muted)}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricLine:not(.hasCard) .kolFabricText{color:var(--ink2)}
+:is(#kolTable,#cpTable,#ordersTable) tbody td.kolFabricTd:hover .kolFabricCell{background:color-mix(in srgb,var(--acc) 8%,transparent)}
 .kolFabricCardModal{width:min(760px,calc(100vw - 32px))}
 .kolFabricBatchModal{width:min(1240px,calc(100vw - 32px))}
 .kolFabricSummaryHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
@@ -298,7 +298,7 @@
 
 /* Fabric Card: structured facets inside the existing Fabric column filter.
    Uses Buyer Log's shared theme tokens in both light and dark modes. */
-.kolColFilterPanel:has(.kolFabricFacetPanel){width:min(460px,calc(100vw - 16px));max-height:min(82vh,760px);overflow:auto;overscroll-behavior:contain}
+.kolColFilterPanel:has(.kolFabricFacetPanel),.colFilterPanel:has(.kolFabricFacetPanel){width:min(460px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:min(82vh,760px);overflow:auto;overscroll-behavior:contain}
 .kolFabricFacetPanel{display:grid;gap:6px;margin:9px 0;padding:10px 0;border-block:1px solid var(--line);color:var(--ink)}
 .kolFabricFacetPanel>strong{font-size:var(--fs-sm);font-weight:700;padding:0 3px}
 .kolFabricFacetField{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2,var(--card));min-width:0}
