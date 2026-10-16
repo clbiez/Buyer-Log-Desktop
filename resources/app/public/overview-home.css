@@ -21,14 +21,14 @@
 .ovHomePager{display:flex;align-items:center;gap:4px;min-width:0;overflow-x:auto;scrollbar-width:none;}
 .ovHomePager[hidden]{display:none;}
 .ovHomePageTab{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 12px;border:1px solid transparent;border-radius:var(--r-full,999px);background:transparent;color:var(--muted);font:600 var(--fs-sm)/1 var(--sans);white-space:nowrap;cursor:pointer;}
-.ovHomePageTab small{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:999px;background:var(--card2);color:var(--muted);font:700 10px/1 var(--mono);}
+.ovHomePageTab small{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:var(--r-full);background:var(--card2);color:var(--muted);font:700 var(--fs-2xs)/1 var(--mono);}
 .ovHomePageTab:hover{color:var(--ink);background:var(--card2);}
 .ovHomePageTab.isActive{border-color:color-mix(in srgb,var(--acc) 35%,var(--line));background:var(--acc-bg);color:var(--acc-ink);}
 .ovHomePageTab.isActive small{background:var(--card);color:var(--acc-ink);}
 .ovHomePageTab:focus-visible,.ovHomeDot:focus-visible{outline:none;box-shadow:var(--focus-ring);}
 .ovHomeDots{display:flex;justify-content:center;gap:8px;padding:14px 0 4px;}
 .ovHomeDots[hidden]{display:none;}
-.ovHomeDot{width:8px;height:8px;padding:0;border:0;border-radius:999px;background:var(--line2);cursor:pointer;transition:width .18s ease,background .18s ease;}
+.ovHomeDot{width:8px;height:8px;padding:0;border:0;border-radius:var(--r-pill);background:var(--line2);cursor:pointer;transition:width .18s ease,background .18s ease;}
 .ovHomeDot.isActive{width:22px;background:var(--acc);}
 
 /* ---------- Izgara ---------- */
@@ -76,8 +76,8 @@
 .ovHomeShieldBar{position:absolute;top:8px;left:8px;right:8px;display:flex;align-items:center;gap:6px;min-width:0;padding:5px 6px 5px 10px;border:1px solid var(--line);border-radius:var(--r-full,999px);background:var(--card);box-shadow:var(--shadow-2);color:var(--ink);font-size:var(--fs-xs);}
 .ovHomeShieldBar .ic{flex:0 0 auto;width:15px;height:15px;color:var(--acc-ink);}
 .ovHomeShieldBar b{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:650;}
-.ovHomeSize{flex:0 0 auto;padding:2px 7px;border-radius:999px;background:var(--acc-bg);color:var(--acc-ink);font:700 10.5px/1.2 var(--mono);}
-.ovHomeShieldBar button{flex:0 0 auto;display:inline-grid;place-items:center;width:24px;height:24px;padding:0;border:1px solid var(--line);border-radius:999px;background:var(--card2);color:var(--ink2);font:700 14px/1 var(--sans);cursor:pointer;}
+.ovHomeSize{flex:0 0 auto;padding:2px 7px;border-radius:var(--r-full);background:var(--acc-bg);color:var(--acc-ink);font:700 var(--fs-2xs)/1.2 var(--mono);}
+.ovHomeShieldBar button{flex:0 0 auto;display:inline-grid;place-items:center;width:24px;height:24px;padding:0;border:1px solid var(--line);border-radius:var(--r-full);background:var(--card2);color:var(--ink2);font:700 var(--fs-md)/1 var(--sans);cursor:pointer;}
 .ovHomeShieldBar button:hover:not(:disabled){border-color:var(--acc);color:var(--acc-ink);}
 .ovHomeShieldBar button:disabled{opacity:.35;cursor:default;}
 .ovHomeShieldBar .ovHomeRemoveBtn:hover{border-color:var(--red);background:var(--red-bg);color:var(--red);}
@@ -91,24 +91,24 @@
 .ovHomeHandle--sw{left:-8px;bottom:-8px;cursor:nesw-resize;}
 .ovHomeHandle--nw{left:-8px;top:-8px;cursor:nwse-resize;}
 .ovHomeHandle--se{right:-8px;bottom:-8px;cursor:nwse-resize;}
-.ovHomeHandle--n,.ovHomeHandle--s{width:28px;left:calc(50% - 14px);border-radius:999px;height:10px;}
+.ovHomeHandle--n,.ovHomeHandle--s{width:28px;left:calc(50% - 14px);border-radius:var(--r-pill);height:10px;}
 .ovHomeHandle--n{top:-6px;}.ovHomeHandle--s{bottom:-6px;}
-.ovHomeHandle--e,.ovHomeHandle--w{height:28px;top:calc(50% - 14px);border-radius:999px;width:10px;}
+.ovHomeHandle--e,.ovHomeHandle--w{height:28px;top:calc(50% - 14px);border-radius:var(--r-pill);width:10px;}
 .ovHomeHandle--e{right:-6px;}.ovHomeHandle--w{left:-6px;}
 .ovHomeResizing,.ovHomeResizing *{cursor:grabbing!important;}
 .ovHome>[data-overview-widget].isLifted{z-index:40;box-shadow:var(--shadow-3);opacity:.94;transition:none;will-change:transform;}
 .ovHomeGhost{z-index:1;border:2px dashed var(--acc);border-radius:var(--bl-radius-panel,var(--r-lg));background:color-mix(in srgb,var(--acc) 10%,transparent);}
 .ovHomeGhost[hidden]{display:none;}
-.ovHomeDropRemove{position:fixed;z-index:50600;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:40px;padding:0 18px;border:1px solid var(--line);border-radius:999px;background:var(--card);box-shadow:var(--shadow-2);color:var(--ink2);font:600 var(--fs-sm) var(--sans);pointer-events:none;}
+.ovHomeDropRemove{position:fixed;z-index:50600;top:10px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;height:40px;padding:0 18px;border:1px solid var(--line);border-radius:var(--r-full);background:var(--card);box-shadow:var(--shadow-2);color:var(--ink2);font:600 var(--fs-sm) var(--sans);pointer-events:none;}
 .ovHomeDropRemove .ic{width:16px;height:16px;}
 .ovHomeDropRemove.isHot{border-color:var(--red);background:var(--red-bg);color:var(--red);transform:translateX(-50%) scale(1.06);}
-.ovHomeEdge{position:fixed;z-index:50500;width:28px;display:grid;place-items:center;border-radius:14px;background:color-mix(in srgb,var(--acc) 8%,transparent);color:var(--acc-ink);pointer-events:none;transition:background .15s ease;}
+.ovHomeEdge{position:fixed;z-index:50500;width:28px;display:grid;place-items:center;border-radius:var(--r-lg);background:color-mix(in srgb,var(--acc) 8%,transparent);color:var(--acc-ink);pointer-events:none;transition:background .15s ease;}
 .ovHomeEdge[hidden]{display:none;}
 .ovHomeEdge .ic{width:18px;height:18px;}
 .ovHomeEdge.isHot{background:color-mix(in srgb,var(--acc) 26%,transparent);}
 
 /* ---------- Widget çekmecesi ---------- */
-.ovHomeDrawerOverlay{position:fixed;inset:0;z-index:50700;display:flex;align-items:flex-end;justify-content:center;background:color-mix(in srgb,#000 22%,transparent);opacity:0;transition:opacity .18s ease;}
+.ovHomeDrawerOverlay{position:fixed;inset:0;z-index:50700;display:flex;align-items:flex-end;justify-content:center;background:color-mix(in srgb,var(--ink) 22%,transparent);opacity:0;transition:opacity .18s ease;}
 .ovHomeDrawerOverlay.isOpen{opacity:1;}
 .ovHomeDrawer{width:min(960px,calc(100vw - 32px));max-height:min(78vh,760px);display:flex;flex-direction:column;border:1px solid var(--line);border-bottom:0;border-radius:var(--r-xl,18px) var(--r-xl,18px) 0 0;background:var(--card);box-shadow:var(--shadow-lg,var(--shadow-3));transform:translateY(24px);transition:transform .22s cubic-bezier(.2,.8,.2,1);}
 .ovHomeDrawerOverlay.isOpen .ovHomeDrawer{transform:none;}
@@ -117,7 +117,7 @@
 .ovHomeDrawer>header b{font-size:var(--fs-lg);}
 .ovHomeDrawer>header small{color:var(--muted);font-size:var(--fs-xs);}
 .ovHomeDrawer>header input{width:min(260px,40vw);height:var(--ctl-h);padding:0 10px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);color:var(--ink);font:500 var(--fs-sm) var(--sans);}
-.ovHomeDrawerClose{width:32px;height:32px;border:1px solid var(--line);border-radius:999px;background:var(--card2);color:var(--ink2);font-size:18px;line-height:1;cursor:pointer;}
+.ovHomeDrawerClose{width:32px;height:32px;border:1px solid var(--line);border-radius:var(--r-full);background:var(--card2);color:var(--ink2);font-size:var(--fs-xl);line-height:1;cursor:pointer;}
 .ovHomeDrawerBody{overflow:auto;padding:6px 18px 20px;}
 .ovHomeDrawerBody h3{margin:14px 0 8px;color:var(--muted);font-size:var(--fs-xs);font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
 .ovHomeDrawerGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px;}
@@ -125,15 +125,15 @@
 .ovHomeDrawerCard:hover,.ovHomeDrawerCard:focus-visible{outline:none;border-color:var(--acc);box-shadow:var(--shadow-1);}
 .ovHomeDrawerCard.isPlaced{background:var(--card2);}
 .ovHomeDrawerPreview{display:grid;place-items:center;width:64px;height:52px;border-radius:var(--r-md);background:var(--card2);}
-.ovHomeDrawerPreview>span{display:block;width:calc(var(--pw) / 12 * 52px);height:calc(var(--ph) / 8 * 40px);min-width:10px;min-height:8px;border:1.5px solid var(--acc);border-radius:4px;background:var(--acc-bg);}
+.ovHomeDrawerPreview>span{display:block;width:calc(var(--pw) / 12 * 52px);height:calc(var(--ph) / 8 * 40px);min-width:10px;min-height:8px;border:1.5px solid var(--acc);border-radius:var(--r-sm);background:var(--acc-bg);}
 .ovHomeDrawerText{display:grid;gap:3px;min-width:0;}
 .ovHomeDrawerText b{display:flex;align-items:center;gap:6px;font-size:var(--fs-sm);}
 .ovHomeDrawerText b .ic{width:14px;height:14px;color:var(--acc-ink);}
 .ovHomeDrawerText small{color:var(--muted);font-size:var(--fs-xs);line-height:1.35;}
 .ovHomeDrawerMeta{display:flex;gap:8px;align-items:center;font-size:var(--fs-xs);color:var(--muted);}
-.ovHomeDrawerMeta em{font:700 10.5px/1.2 var(--mono);font-style:normal;color:var(--acc-ink);}
+.ovHomeDrawerMeta em{font:700 var(--fs-2xs)/1.2 var(--mono);font-style:normal;color:var(--acc-ink);}
 .ovHomeDrawerMeta i{font-style:normal;}
-.ovHomeDrawerAction{padding:5px 10px;border-radius:999px;background:var(--acc);color:var(--on-acc);font:700 var(--fs-xs) var(--sans);}
+.ovHomeDrawerAction{padding:5px 10px;border-radius:var(--r-full);background:var(--acc);color:var(--on-acc);font:700 var(--fs-xs) var(--sans);}
 .ovHomeDrawerCard.isPlaced .ovHomeDrawerAction{background:var(--card);color:var(--acc-ink);border:1px solid var(--line);}
 .ovHomeDrawerEmpty{padding:24px;text-align:center;color:var(--muted);}
 .srOnly{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;}
@@ -212,7 +212,7 @@
 .ovBreakdownViewBtn:hover{border-color:var(--acc);color:var(--acc-ink);}
 .ovBreakdown[data-dim="buyingGroup"] .ovBreakdownFilterMain,.ovBreakdown:not([data-dim="buyingGroup"]) .ovBreakdownFilterBg{display:none;}
 .ovBreakdownDims{display:flex;gap:5px;padding:0 14px 10px;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:thin;}
-.ovBreakdownDims button{flex:0 0 auto;height:28px;padding:0 11px;border:1px solid var(--line);border-radius:999px;background:var(--card);color:var(--ink2);font:600 var(--fs-xs) var(--sans);white-space:nowrap;cursor:pointer;}
+.ovBreakdownDims button{flex:0 0 auto;height:28px;padding:0 11px;border:1px solid var(--line);border-radius:var(--r-full);background:var(--card);color:var(--ink2);font:600 var(--fs-xs) var(--sans);white-space:nowrap;cursor:pointer;}
 .ovBreakdownDims button:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line));color:var(--ink);}
 .ovBreakdownDims button.isActive{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
 .ovBreakdownDims button:focus-visible,.ovBdRow:focus-visible{outline:none;box-shadow:var(--focus-ring);}
@@ -227,17 +227,17 @@
 .ovBdSummary span{color:var(--muted);font-size:var(--fs-xs);}
 .ovBdLegend{display:flex;flex-wrap:wrap;gap:4px 12px;margin:0 0 8px;color:var(--ink2);font-size:var(--fs-xs);}
 .ovBdLegend span{display:inline-flex;align-items:center;gap:5px;}
-.ovBdLegend i{display:inline-block;width:10px;height:10px;border-radius:3px;}
+.ovBdLegend i{display:inline-block;width:10px;height:10px;border-radius:var(--r-xs);}
 .ovBdList{display:grid;grid-template-columns:fit-content(34%) minmax(40px,1fr) max-content;gap:2px 0;}
 .ovBdRow{grid-column:1/-1;display:grid;grid-template-columns:subgrid;align-items:center;gap:10px;width:100%;min-height:32px;padding:4px 6px;border:0;border-radius:var(--r-sm);background:transparent;color:var(--ink);text-align:left;cursor:pointer;font:inherit;}
 .ovBdRow:hover{background:var(--table-hover,var(--card2));}
 .ovBdRow[data-bd-static]{cursor:default;}
 .ovBdLabel{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-sm);}
 .ovBdTrack{position:relative;display:block;height:10px;}
-.ovBdFill{display:block;height:100%;border-radius:0 4px 4px 0;background:var(--acc);}
+.ovBdFill{display:block;height:100%;border-radius:0 var(--r-sm) var(--r-sm) 0;background:var(--acc);}
 .ovBdStack{display:flex;gap:2px;width:var(--bd-w,100%);height:100%;}
 .ovBdSeg{display:block;min-width:3px;height:100%;}
-.ovBdSeg:last-child{border-radius:0 4px 4px 0;}
+.ovBdSeg:last-child{border-radius:0 var(--r-sm) var(--r-sm) 0;}
 .ovBdSeg:hover{filter:brightness(1.1);}
 .ovBdValue{display:flex;align-items:baseline;justify-content:flex-end;gap:6px;line-height:1.1;white-space:nowrap;}
 .ovBdValue b{font:700 var(--fs-sm) var(--mono);}
@@ -281,19 +281,19 @@
 .ovClockReadout.is-both,.ovClockReadout.is-analog{grid-template-columns:64px minmax(0,1fr);}
 .ovClockReadout.is-digital{grid-template-columns:minmax(0,1fr);}
 .ovClockText{min-width:0;}
-.ovAnalogClock{position:relative;width:62px;height:62px;border:1px solid var(--bl-stroke-subtle);border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--bl-surface-panel) 0 7%,transparent 8%),var(--bl-surface-panel);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bl-stroke-subtle) 35%,transparent);color:var(--muted);font:600 10px/1 var(--mono);}
+.ovAnalogClock{position:relative;width:62px;height:62px;border:1px solid var(--bl-stroke-subtle);border-radius:50%;background:radial-gradient(circle at 50% 50%,var(--bl-surface-panel) 0 7%,transparent 8%),var(--bl-surface-panel);box-shadow:inset 0 0 0 2px color-mix(in srgb,var(--bl-stroke-subtle) 35%,transparent);color:var(--muted);font:600 var(--fs-2xs)/1 var(--mono);}
 .ovAnalogDialMark{position:absolute;z-index:1;}
 .ovAnalogDialMark--12{top:4px;left:50%;transform:translateX(-50%);}
 .ovAnalogDialMark--3{right:4px;top:50%;transform:translateY(-50%);}
 .ovAnalogDialMark--6{bottom:4px;left:50%;transform:translateX(-50%);}
 .ovAnalogDialMark--9{left:4px;top:50%;transform:translateY(-50%);}
-.ovAnalogHand{position:absolute;left:50%;bottom:50%;display:block;transform-origin:50% 100%;border-radius:99px;z-index:2;}
+.ovAnalogHand{position:absolute;left:50%;bottom:50%;display:block;transform-origin:50% 100%;border-radius:var(--r-full);z-index:2;}
 .ovAnalogHand--hour{width:3px;height:17px;background:var(--ink);}
 .ovAnalogHand--minute{width:2px;height:23px;background:var(--ink2);}
 .ovAnalogHand--second{width:1px;height:25px;background:var(--acc);}
 .ovAnalogPin{position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:var(--acc);transform:translate(-50%,-50%);z-index:3;}
 .ovClockCountry{display:flex;align-items:center;gap:7px;min-width:0;color:var(--ink2);font-size:var(--fs-xs);font-weight:650;}
-.ovClockCode{display:inline-grid;place-items:center;min-width:26px;height:20px;padding:0 5px;border-radius:999px;background:var(--acc-bg);color:var(--acc-ink);font:700 10px/1 var(--mono);}
+.ovClockCode{display:inline-grid;place-items:center;min-width:26px;height:20px;padding:0 5px;border-radius:var(--r-full);background:var(--acc-bg);color:var(--acc-ink);font:700 var(--fs-2xs)/1 var(--mono);}
 .ovClockCountry span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ovClockTime{margin-top:7px;color:var(--ink);font:700 clamp(18px,1.25vw,calc(22px + var(--ui-font-add)))/1 var(--mono);letter-spacing:-.035em;white-space:nowrap;}
 .ovClockDate{margin-top:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:var(--fs-xs);}
@@ -303,10 +303,10 @@
 .ovClockHolidayTitle span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .ovClockHolidayTitle small{flex:0 0 auto;color:var(--muted);font-size:var(--fs-xs);font-weight:600;white-space:nowrap;}
 .ovClockHoliday{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:5px;min-width:0;font-size:var(--fs-xs);line-height:1.2;}
-.ovClockHolidayWhen{padding:2px 5px;border-radius:999px;background:var(--acc-bg);color:var(--acc-ink);font-weight:700;white-space:nowrap;}
+.ovClockHolidayWhen{padding:2px 5px;border-radius:var(--r-full);background:var(--acc-bg);color:var(--acc-ink);font-weight:700;white-space:nowrap;}
 .ovClockHolidayName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2);cursor:default;}
 .ovClockHolidayDate{color:var(--muted);white-space:nowrap;}
-.ovClockRemove{position:absolute;top:5px;right:5px;width:24px;min-height:24px;border-color:transparent;background:transparent;font-size:16px;line-height:1;}
+.ovClockRemove{position:absolute;top:5px;right:5px;width:24px;min-height:24px;border-color:transparent;background:transparent;font-size:var(--fs-lg);line-height:1;}
 .ovClockRemove:hover{background:var(--card2);color:var(--red);}
 .ovClockEmpty{padding:22px;border:1px dashed var(--bl-stroke-subtle);color:var(--muted);text-align:center;font-size:var(--fs-sm);}
 

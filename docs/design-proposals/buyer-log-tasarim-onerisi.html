@@ -1,0 +1,823 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Buyer Log Pulse</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+[hidden]{display:none!important}
+body{margin:0}
+/* Layout: 56px kompakt ikon rayı (üzerine gelince açılır) + yapışkan komut çubuğu + 12 sütun yoğun kart ızgarası.
+   Üç yön aynı bileşenleri paylaşır; yalnız tokenlar değişir: A Industry Lite · B Gece Vardiyası · C Atölye. */
+:root{
+  --bg:#eef0f3; --surface:#ffffff; --surface-2:#f6f7f9; --line:#dfe3e8; --line-2:#c9cfd6;
+  --ink:#1b1f24; --ink-2:#555e68; --muted:#8a929c;
+  --acc:#3f6488; --acc-2:#5b8cbf; --on-acc:#ffffff; --acc-soft:#e6edf4;
+  --rail:#1d2d3d; --rail-ink:#b9c8d8; --rail-hi:#ffffff;
+  --good:#177a4c; --warn:#a86b00; --bad:#b42318;
+  --glow:rgba(63,100,136,.16); --shadow:0 1px 2px rgba(20,30,40,.06),0 4px 14px rgba(20,30,40,.06);
+  --r:6px; --r-lg:8px;
+  --texture:none;
+  --display:"Barlow Condensed","Arial Narrow",system-ui,sans-serif;
+  --sans:"Barlow",system-ui,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,"Cascadia Code",Consolas,monospace;
+  --row:30px; --pad:12px; --gap:12px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0b1016; --surface:#121922; --surface-2:#17202b; --line:#222e3c; --line-2:#334255;
+  --ink:#e8eef5; --ink-2:#a3b1c2; --muted:#6f7e90; --acc:#8fb4d8; --acc-2:#5fd3f3; --on-acc:#0b1016; --acc-soft:#1b2a3a;
+  --rail:#070b10; --rail-ink:#8da0b5; --rail-hi:#ffffff; --good:#7cd58c; --warn:#f0b44c; --bad:#ef5b5b;
+  --glow:rgba(95,211,243,.2); --shadow:0 0 0 1px rgba(255,255,255,.02),0 10px 30px rgba(0,0,0,.35); --r:10px; --r-lg:12px; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0b1016; --surface:#121922; --surface-2:#17202b; --line:#222e3c; --line-2:#334255;
+  --ink:#e8eef5; --ink-2:#a3b1c2; --muted:#6f7e90; --acc:#8fb4d8; --acc-2:#5fd3f3; --on-acc:#0b1016; --acc-soft:#1b2a3a;
+  --rail:#070b10; --rail-ink:#8da0b5; --rail-hi:#ffffff; --good:#7cd58c; --warn:#f0b44c; --bad:#ef5b5b;
+  --glow:rgba(95,211,243,.2); --shadow:0 0 0 1px rgba(255,255,255,.02),0 10px 30px rgba(0,0,0,.35); --r:10px; --r-lg:12px; color-scheme:dark}
+/* Yön seçimi (JS ile) sistem temasını ezer */
+:root:root[data-dir="a"]{
+  --bg:#eef0f3; --surface:#ffffff; --surface-2:#f6f7f9; --line:#dfe3e8; --line-2:#c9cfd6;
+  --ink:#1b1f24; --ink-2:#555e68; --muted:#8a929c; --acc:#3f6488; --acc-2:#5b8cbf; --on-acc:#ffffff; --acc-soft:#e6edf4;
+  --rail:#1d2d3d; --rail-ink:#b9c8d8; --rail-hi:#ffffff; --good:#177a4c; --warn:#a86b00; --bad:#b42318;
+  --glow:rgba(63,100,136,.16); --shadow:0 1px 2px rgba(20,30,40,.06),0 4px 14px rgba(20,30,40,.06); --r:6px; --r-lg:8px; --texture:none; color-scheme:light}
+:root:root[data-dir="b"]{
+  --bg:#0b1016; --surface:#121922; --surface-2:#17202b; --line:#222e3c; --line-2:#334255;
+  --ink:#e8eef5; --ink-2:#a3b1c2; --muted:#6f7e90; --acc:#8fb4d8; --acc-2:#5fd3f3; --on-acc:#0b1016; --acc-soft:#1b2a3a;
+  --rail:#070b10; --rail-ink:#8da0b5; --rail-hi:#ffffff; --good:#7cd58c; --warn:#f0b44c; --bad:#ef5b5b;
+  --glow:rgba(95,211,243,.2); --shadow:0 0 0 1px rgba(255,255,255,.02),0 10px 30px rgba(0,0,0,.35); --r:10px; --r-lg:12px; --texture:none; color-scheme:dark}
+:root:root[data-dir="c"]{
+  --bg:#eef1f0; --surface:#fbfcfc; --surface-2:#f2f5f4; --line:#d9e0de; --line-2:#c2ccc9;
+  --ink:#16201f; --ink-2:#4f5d5b; --muted:#85918f; --acc:#1f6f78; --acc-2:#c58b2b; --on-acc:#ffffff; --acc-soft:#dcebec;
+  --rail:#13393d; --rail-ink:#b7d0d0; --rail-hi:#ffffff; --good:#2f7d4f; --warn:#a96a00; --bad:#b4322a;
+  --glow:rgba(31,111,120,.18); --shadow:0 2px 0 rgba(19,57,61,.05),0 8px 24px rgba(19,57,61,.08); --r:14px; --r-lg:18px;
+  --texture:repeating-linear-gradient(60deg,rgba(255,255,255,.05) 0 2px,transparent 2px 9px),repeating-linear-gradient(-60deg,rgba(255,255,255,.05) 0 2px,transparent 2px 9px); color-scheme:light}
+:root[data-density="compact"]{--row:26px;--pad:9px;--gap:9px}
+:root[data-density="comfy"]{--row:36px;--pad:16px;--gap:16px}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:13.5px;line-height:1.4;-webkit-font-smoothing:antialiased;transition:background .4s,color .4s}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc-2);outline-offset:2px}
+.num{font-variant-numeric:tabular-nums}
+svg text{fill:var(--muted);font-family:var(--sans);font-size:10.5px}
+
+/* ---------- Öneri çubuğu ---------- */
+.proposal{position:fixed;left:50%;width:max-content;bottom:calc(14px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:60;display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;background:color-mix(in srgb,var(--surface) 82%,transparent);backdrop-filter:blur(16px) saturate(1.4);border:1px solid var(--line-2);border-radius:16px;padding:7px 9px;box-shadow:0 18px 50px rgba(0,0,0,.22);max-width:calc(100vw - 24px)}
+.proposal .lbl{font:500 10.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:0 4px}
+.segc{display:flex;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:2px;position:relative}
+.segc button{border:0;background:none;padding:5px 10px;border-radius:8px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-2);display:flex;gap:6px;align-items:center;position:relative;z-index:1;transition:color .2s}
+.segc button[aria-pressed="true"]{color:var(--on-acc)}
+.segc .pill{position:absolute;top:2px;bottom:2px;border-radius:8px;background:var(--acc);transition:left .4s cubic-bezier(.3,1.3,.5,1),width .4s cubic-bezier(.3,1.3,.5,1)}
+.sw{width:12px;height:12px;border-radius:4px;border:1px solid rgba(0,0,0,.15)}
+.tgl{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:5px 10px;cursor:pointer;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+.tgl[aria-pressed="true"]{border-color:var(--acc);color:var(--acc);background:var(--acc-soft)}
+
+/* ---------- Kabuk ---------- */
+.app{display:grid;grid-template-columns:56px minmax(0,1fr);min-height:100%}
+.rail{position:sticky;top:0;height:100vh;height:100dvh;z-index:40;width:56px;background:var(--rail);background-image:var(--texture);color:var(--rail-ink);display:flex;flex-direction:column;transition:width .35s cubic-bezier(.2,.9,.2,1),box-shadow .35s;overflow:hidden;padding-top:env(safe-area-inset-top,0px);padding-left:env(safe-area-inset-left,0px)}
+.rail:hover,.rail:focus-within{width:212px;box-shadow:20px 0 50px rgba(0,0,0,.25)}
+.railTop{display:flex;align-items:center;gap:10px;padding:12px 11px;height:56px}
+.logo{width:34px;height:34px;flex:none;border-radius:calc(var(--r) + 2px);display:grid;place-items:center;font:700 14px var(--display);color:var(--rail);background:linear-gradient(135deg,#fff,var(--rail-ink));position:relative;overflow:hidden}
+.logo::after{content:"";position:absolute;inset:-50%;background:conic-gradient(from 0deg,transparent 0 70%,rgba(255,255,255,.9) 80%,transparent 90%);animation:spin 4s linear infinite;mix-blend-mode:overlay}
+@keyframes spin{to{transform:rotate(360deg)}}
+.railTop b{font:600 17px var(--display);color:var(--rail-hi);white-space:nowrap}
+.railTop small{display:block;font:400 10.5px var(--mono);opacity:.6}
+.nav{flex:1;overflow-y:auto;overflow-x:hidden;padding:4px 8px;position:relative;scrollbar-width:none}
+.grp{font:500 9.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;opacity:.45;padding:10px 8px 4px;white-space:nowrap;height:24px}
+.rail:not(:hover):not(:focus-within) .grp{opacity:0}
+.nav button{width:100%;display:flex;align-items:center;gap:12px;border:0;background:none;color:inherit;padding:0 8px;height:34px;border-radius:var(--r);cursor:pointer;white-space:nowrap;position:relative;z-index:1;font-size:13px;transition:color .2s}
+.nav button:hover{color:var(--rail-hi)}
+.nav button[aria-current="page"]{color:var(--rail-hi);font-weight:600}
+.nav svg{width:20px;height:20px;flex:none}
+.nav .badge{margin-left:auto;font:600 10px var(--mono);background:#ef5b5b;color:#fff;border-radius:999px;padding:1px 6px}
+.rail:not(:hover):not(:focus-within) .nav .badge{position:absolute;left:24px;top:3px;margin:0;padding:0 4px;font-size:9px}
+.ind{position:absolute;left:8px;right:8px;height:34px;border-radius:var(--r);background:rgba(255,255,255,.1);transition:top .45s cubic-bezier(.3,1.25,.5,1);z-index:0;box-shadow:inset 3px 0 0 var(--acc-2)}
+.railFoot{padding:8px;border-top:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;gap:2px}
+.railFoot button{display:flex;gap:12px;align-items:center;border:0;background:none;color:inherit;height:32px;padding:0 8px;border-radius:var(--r);cursor:pointer;white-space:nowrap;font-size:12.5px}
+.railFoot button:hover{background:rgba(255,255,255,.08)}
+.railFoot svg{width:18px;height:18px;flex:none}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in srgb,var(--bg) 84%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:31;background:var(--bg)}
+.topIn{display:flex;align-items:center;gap:10px;padding-block:9px;padding-left:16px;padding-right:max(16px,env(safe-area-inset-right,0px));flex-wrap:wrap}
+.crumb{display:flex;flex-direction:column;min-width:0}
+.crumb small{font:500 10.5px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.crumb h1{font:600 22px/1.05 var(--display);margin:0;letter-spacing:.01em;white-space:nowrap}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 10px;font-size:12px;color:var(--ink-2);cursor:pointer;transition:border-color .2s,transform .2s;white-space:nowrap}
+.chip:hover{border-color:var(--acc);transform:translateY(-1px)}
+.chip b{color:var(--ink);font-weight:600}
+.chip .x{opacity:.5}
+.cmd{margin-left:auto;display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:calc(var(--r) + 2px);padding:6px 10px;min-width:220px;color:var(--muted);cursor:text;transition:border-color .2s,box-shadow .2s}
+.cmd:hover{border-color:var(--acc);box-shadow:0 0 0 4px var(--glow)}
+.cmd kbd{margin-left:auto;font:500 10.5px var(--mono);border:1px solid var(--line-2);border-radius:5px;padding:1px 5px;color:var(--ink-2)}
+.cmd svg{width:15px;height:15px}
+.sync{display:flex;gap:7px;align-items:center;font-size:12px;color:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:4px 10px;background:var(--surface);white-space:nowrap}
+.sync i{width:7px;height:7px;border-radius:50%;background:var(--good);box-shadow:0 0 0 0 var(--good);animation:ping 2s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.av{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--acc),var(--acc-2));color:var(--on-acc);display:grid;place-items:center;font:700 12px var(--display);flex:none}
+@media (max-width:760px){.cmd{min-width:0;flex:1;order:5}.sync{display:none}}
+
+.content{padding-block:14px 110px;padding-left:16px;padding-right:max(16px,env(safe-area-inset-right,0px));flex:1}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--gap)}
+.c12{grid-column:span 12}.c8{grid-column:span 8}.c7{grid-column:span 7}.c6{grid-column:span 6}.c5{grid-column:span 5}.c4{grid-column:span 4}.c3{grid-column:span 3}
+@media (max-width:1180px){.c3{grid-column:span 6}.c4,.c5,.c7,.c8{grid-column:span 12}.c6{grid-column:span 12}}
+@media (max-width:560px){.c3{grid-column:span 12}}
+.card{position:relative;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--pad);box-shadow:var(--shadow);min-width:0;overflow:hidden;transition:border-color .25s,transform .25s,box-shadow .25s}
+.card::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(360px circle at var(--mx,-500px) var(--my,-500px),var(--glow),transparent 65%);opacity:.9}
+.card:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--line))}
+.card>*{position:relative}
+.cardH{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+.cardH h3{margin:0;font:600 15px var(--display);letter-spacing:.03em}
+.cardH small{color:var(--muted);font-size:11.5px}
+.link{border:0;background:none;color:var(--acc);font-weight:600;font-size:12px;cursor:pointer;padding:2px 4px;border-radius:4px}
+.link:hover{background:var(--acc-soft)}
+
+/* KPI */
+.kpiRow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--gap)}
+@media (max-width:1180px){.kpiRow{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:560px){.kpiRow{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi .l{font-size:11.5px;color:var(--muted);display:flex;justify-content:space-between;gap:6px}
+.kpi .v{font:700 28px/1.05 var(--display);font-variant-numeric:tabular-nums;margin-top:2px}
+.kpi .d{font-size:11.5px;font-weight:600;display:inline-flex;gap:3px;align-items:center;padding:1px 6px;border-radius:999px}
+.up{color:var(--good);background:color-mix(in srgb,var(--good) 12%,transparent)}
+.dn{color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,transparent)}
+.kpi svg{display:block;width:100%;height:30px;margin-top:6px}
+.kpi:hover{transform:translateY(-2px)}
+
+/* Akış şeridi */
+.ribbon{display:flex;height:44px;border-radius:var(--r);overflow:hidden;gap:2px;margin-top:4px}
+.ribbon>div{flex:var(--f) 1 0;background:var(--c);position:relative;cursor:pointer;display:flex;align-items:center;padding:0 8px;color:#0b1016;font:600 11.5px var(--mono);white-space:nowrap;overflow:hidden;transition:flex-grow .5s cubic-bezier(.3,1,.4,1),filter .2s;background-image:repeating-linear-gradient(115deg,rgba(255,255,255,.16) 0 8px,transparent 8px 16px);background-size:40px 100%;animation:stripe 2s linear infinite}
+.ribbon>div:hover{filter:brightness(1.1);flex-grow:calc(var(--f) * 1.5)}
+@keyframes stripe{to{background-position:40px 0}}
+.rleg{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px;margin-top:10px}
+@media (max-width:760px){.rleg{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.rleg div{border-left:3px solid var(--c);padding:2px 0 2px 8px}
+.rleg span{display:block;font-size:11px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rleg b{font:700 18px var(--display);font-variant-numeric:tabular-nums}
+
+/* AI kartı */
+.ai{background:linear-gradient(135deg,color-mix(in srgb,var(--acc) 14%,var(--surface)),var(--surface) 60%)}
+.ai .orb{width:34px;height:34px;border-radius:50%;background:conic-gradient(from var(--a,0deg),var(--acc),var(--acc-2),var(--acc));animation:orb 3s linear infinite;flex:none;position:relative}
+.ai .orb::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--surface)}
+@property --a{syntax:"<angle>";inherits:false;initial-value:0deg}
+@keyframes orb{to{--a:360deg}}
+.ai p{margin:8px 0;min-height:4.2em;font-size:13.5px;line-height:1.5}
+.ai p .caret{display:inline-block;width:7px;height:14px;background:var(--acc);vertical-align:-2px;animation:blink 1s steps(1) infinite;margin-left:2px}
+@keyframes blink{50%{opacity:0}}
+.btn{border:1px solid var(--line-2);background:var(--surface);border-radius:var(--r);padding:5px 11px;font-weight:600;font-size:12.5px;cursor:pointer;display:inline-flex;gap:6px;align-items:center;transition:transform .15s,border-color .2s,box-shadow .2s}
+.btn:hover{border-color:var(--acc);transform:translateY(-1px)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.btn.pri:hover{box-shadow:0 6px 18px var(--glow)}
+
+/* Listeler */
+.list{display:flex;flex-direction:column}
+.li{display:grid;grid-template-columns:3px minmax(0,1fr) auto;gap:10px;align-items:center;min-height:calc(var(--row) + 12px);border-bottom:1px solid var(--line);cursor:pointer;transition:background .2s,padding .2s}
+.li:last-child{border-bottom:0}
+.li::before{content:"";align-self:stretch;margin:6px 0;border-radius:2px;background:var(--c)}
+.li:hover{background:var(--surface-2);padding-left:4px}
+.li .t{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .t code{font:500 11px var(--mono);color:var(--acc)}
+.li .s{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li .q{text-align:right;font:600 14px var(--display);white-space:nowrap}
+.li .q small{display:block;font:500 10.5px var(--sans);color:var(--c)}
+.li .acts{display:flex;gap:4px;opacity:0;transform:translateX(6px);transition:all .2s}
+.li:hover .acts{opacity:1;transform:none}
+
+/* Takvim ısı şeridi */
+.cal{display:grid;grid-template-columns:30px repeat(7,minmax(0,1fr));gap:3px;font-size:10.5px;color:var(--muted)}
+.cal i{aspect-ratio:1.6;border-radius:3px;background:color-mix(in srgb,var(--acc) var(--p),var(--surface-2));display:block;transition:transform .2s;cursor:default}
+.cal i:hover{transform:scale(1.25);outline:1px solid var(--acc)}
+.cal i.today{outline:2px solid var(--acc-2);outline-offset:1px}
+.cal span{display:flex;align-items:center}
+
+/* Donut */
+.donut{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;align-items:center}
+.donut svg{width:130px;height:130px}
+.dleg div{display:flex;gap:7px;align-items:center;font-size:12px;padding:3px 0;border-bottom:1px dashed var(--line)}
+.dleg div:last-child{border:0}
+.dleg b{margin-left:auto;font-variant-numeric:tabular-nums}
+
+/* Zaman çizgisi */
+.feed{position:relative;padding-left:16px}
+.feed::before{content:"";position:absolute;left:4px;top:4px;bottom:4px;width:2px;background:var(--line)}
+.feed div{position:relative;padding:4px 0 8px;font-size:12.5px}
+.feed div::before{content:"";position:absolute;left:-16px;top:8px;width:10px;height:10px;border-radius:50%;background:var(--surface);border:2px solid var(--c)}
+.feed div.new::before{background:var(--c);animation:ping 1.6s infinite;box-shadow:0 0 0 0 var(--c)}
+.feed small{display:block;color:var(--muted);font-size:11px}
+
+/* Üretici barları */
+.sup{display:grid;grid-template-columns:minmax(0,130px) minmax(0,1fr) 46px;gap:8px;align-items:center;font-size:12.5px;padding:4px 0}
+.sup .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sup .tr{height:8px;border-radius:4px;background:var(--surface-2);overflow:hidden}
+.sup .tr i{display:block;height:100%;width:var(--w);border-radius:4px;background:linear-gradient(90deg,var(--acc),var(--acc-2))}
+.sup b{text-align:right;font-variant-numeric:tabular-nums}
+
+/* Tablo */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.fchip{border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600;cursor:pointer;display:inline-flex;gap:6px;align-items:center;color:var(--ink-2);transition:all .2s}
+.fchip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:var(--on-acc)}
+.fchip em{font-style:normal;font:500 10.5px var(--mono);opacity:.75}
+.search{display:flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:var(--r);padding:4px 9px;background:var(--surface);margin-left:auto}
+.search input{border:0;background:none;outline:none;width:180px}
+.tbl{overflow:auto;border:1px solid var(--line);border-radius:var(--r-lg);background:var(--surface);max-height:calc(100vh - 230px)}
+table.t{border-collapse:collapse;width:100%;min-width:900px;font-size:12.5px}
+.t th{position:sticky;top:0;z-index:1;background:var(--surface-2);text-align:left;font:500 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:7px 10px;border-bottom:1px solid var(--line-2);white-space:nowrap}
+.t td{padding:0 10px;height:var(--row);border-bottom:1px solid var(--line);white-space:nowrap}
+.t td.n{text-align:right;font-variant-numeric:tabular-nums}
+.t tbody tr{cursor:pointer;transition:background .15s}
+.t tbody tr:hover{background:color-mix(in srgb,var(--acc) 7%,transparent)}
+.t tbody tr.in{animation:rin .4s ease both;animation-delay:calc(min(var(--i),30) * 16ms)}
+@keyframes rin{from{opacity:0;transform:translateY(6px)}}
+.pillS{display:inline-flex;align-items:center;gap:5px;padding:1px 8px;border-radius:999px;font-size:11px;font-weight:600;background:color-mix(in srgb,var(--c) 18%,transparent);color:color-mix(in srgb,var(--c) 65%,var(--ink))}
+.pillS::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--c)}
+.prog{width:90px;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;display:inline-block;vertical-align:middle}
+.prog i{display:block;height:100%;width:var(--w);background:var(--c);border-radius:3px}
+.thumbM{width:24px;height:24px;border-radius:5px;display:inline-grid;place-items:center;font:700 9px var(--mono);color:#fff;vertical-align:middle;margin-right:6px}
+
+/* Görünüm geçişleri + iskelet */
+.view{display:none}
+.view.on{display:block}
+.view.on .stag{animation:stag .55s cubic-bezier(.2,.8,.2,1) both;animation-delay:calc(var(--i,0) * 55ms)}
+@keyframes stag{from{opacity:0;transform:translateY(14px) scale(.985)}}
+.skel{position:relative;overflow:hidden;background:var(--surface-2);border-radius:var(--r)}
+.skel::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--surface) 70%,transparent),transparent);animation:shim 1.2s infinite}
+@keyframes shim{to{transform:translateX(100%)}}
+
+/* Pinler */
+.pin{position:absolute;z-index:20;width:22px;height:22px;border-radius:50%;background:var(--acc-2);color:#0b1016;font:700 11px var(--mono);display:grid;place-items:center;box-shadow:0 0 0 4px var(--glow);cursor:help;border:0;animation:pinIn .5s cubic-bezier(.3,1.6,.5,1) both;animation-delay:calc(var(--i) * 70ms)}
+.pin::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--acc-2);opacity:0;animation:ring 2s infinite;animation-delay:calc(var(--i) * 200ms)}
+@keyframes ring{0%{transform:scale(.6);opacity:.8}100%{transform:scale(1.6);opacity:0}}
+@keyframes pinIn{from{transform:scale(0)}}
+.notes{position:fixed;right:max(14px,env(safe-area-inset-right,0px));top:76px;z-index:55;width:min(340px,calc(100vw - 28px));max-height:calc(100vh - 170px);overflow:auto;background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);box-shadow:0 30px 70px rgba(0,0,0,.28);padding:14px;animation:nIn .45s cubic-bezier(.2,1.2,.3,1) both}
+@keyframes nIn{from{opacity:0;transform:translateX(30px)}}
+.notes h4{margin:0 0 2px;font:600 18px var(--display)}
+.notes ol{margin:10px 0 0;padding:0;list-style:none;counter-reset:n;display:flex;flex-direction:column;gap:9px}
+.notes li{counter-increment:n;display:grid;grid-template-columns:22px 1fr;gap:8px;font-size:12.5px;color:var(--ink-2)}
+.notes li::before{content:counter(n);width:22px;height:22px;border-radius:50%;background:var(--acc-2);color:#0b1016;font:700 11px var(--mono);display:grid;place-items:center}
+.notes li b{color:var(--ink);display:block}
+.notes .dirs{display:grid;gap:6px;margin-top:10px}
+.notes .dirs div{border:1px solid var(--line);border-radius:var(--r);padding:7px 9px;font-size:12px;color:var(--ink-2)}
+.notes .dirs b{color:var(--ink)}
+
+/* Komut paleti */
+.pal{position:fixed;inset:0;z-index:80;display:grid;place-items:start center;padding:12vh 16px 16px;background:rgba(5,10,15,.35);backdrop-filter:blur(6px)}
+.palC{width:min(620px,100%);background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-lg);box-shadow:0 40px 90px rgba(0,0,0,.4);overflow:hidden;animation:pIn .3s cubic-bezier(.2,1.3,.3,1) both}
+@keyframes pIn{from{opacity:0;transform:translateY(-14px) scale(.97)}}
+.palC input{width:100%;border:0;border-bottom:1px solid var(--line);background:none;padding:14px 16px;font-size:15px;outline:none}
+.palL{max-height:50vh;overflow:auto;padding:6px}
+.palL div{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:var(--r);cursor:pointer;font-size:13px}
+.palL div small{margin-left:auto;color:var(--muted);font:500 10.5px var(--mono)}
+.palL div.on{background:var(--acc-soft);color:var(--acc)}
+.palL .sec{font:500 10px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);padding:8px 10px 2px;cursor:default}
+
+/* Çekmece */
+.scrim{position:fixed;inset:0;z-index:70;background:rgba(5,10,15,.35);opacity:0;pointer-events:none;transition:opacity .3s}
+.scrim.on{opacity:1;pointer-events:auto}
+.drawer{position:fixed;right:0;top:0;bottom:0;z-index:75;width:min(420px,100vw);background:var(--surface);border-left:1px solid var(--line-2);box-shadow:-30px 0 60px rgba(0,0,0,.2);transform:translateX(105%);transition:transform .45s cubic-bezier(.2,.9,.2,1);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0px);padding-right:env(safe-area-inset-right,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.drawer.on{transform:none}
+.dH{padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:10px}
+.dH h4{margin:2px 0 0;font:600 21px var(--display)}
+.dB{padding:16px;overflow:auto;flex:1}
+.xb{width:30px;height:30px;border:1px solid var(--line-2);background:var(--surface);border-radius:var(--r);cursor:pointer;flex:none}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.kv div{border:1px solid var(--line);border-radius:var(--r);padding:6px 9px}
+.kv span{display:block;font-size:10.5px;color:var(--muted)}
+.kv b{font-size:13px}
+.steps{display:flex;margin:16px 0 6px;position:relative}
+.steps::before{content:"";position:absolute;left:8px;right:8px;top:7px;height:2px;background:var(--line)}
+.steps::after{content:"";position:absolute;left:8px;top:7px;height:2px;width:var(--p,0%);background:linear-gradient(90deg,var(--acc),var(--acc-2));transition:width 1.1s cubic-bezier(.3,.8,.2,1) .15s}
+.steps div{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:10px;color:var(--muted);text-align:center;position:relative;z-index:1}
+.steps div i{width:16px;height:16px;border-radius:50%;background:var(--surface);border:2px solid var(--line-2);transition:all .3s}
+.steps div.ok i{background:var(--acc);border-color:var(--acc)}
+.steps div.now i{background:var(--acc-2);border-color:var(--acc-2);box-shadow:0 0 0 4px var(--glow)}
+.steps div.now{color:var(--ink);font-weight:600}
+
+.toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;z-index:90;background:var(--ink);color:var(--bg);padding:9px 14px;border-radius:var(--r-lg);font-size:13px;box-shadow:0 14px 30px rgba(0,0,0,.3);transition:all .35s cubic-bezier(.2,1.3,.3,1);pointer-events:none;white-space:nowrap}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.tip{position:fixed;z-index:95;pointer-events:none;background:var(--ink);color:var(--bg);padding:6px 9px;border-radius:6px;font-size:12px;opacity:0;transition:opacity .15s}
+.tip.on{opacity:1}
+
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal}
+::view-transition-new(root){animation:reveal .8s cubic-bezier(.5,0,.2,1)}
+@keyframes reveal{from{clip-path:circle(0 at var(--vx,50%) var(--vy,100%))}to{clip-path:circle(150% at var(--vx,50%) var(--vy,100%))}}
+:root[data-motion="off"] *,:root[data-motion="off"] *::before,:root[data-motion="off"] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+@media (max-width:640px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{position:fixed;left:0;right:0;bottom:0;top:auto;height:auto;width:100%!important;flex-direction:row;padding-bottom:env(safe-area-inset-bottom,0px);padding-top:0;box-shadow:none!important}
+  .railTop,.railFoot,.grp,.nav .hideM{display:none!important}
+  .nav{display:flex;overflow-x:auto;padding:4px}
+  .nav button{width:auto;flex:none;flex-direction:column;gap:2px;height:48px;font-size:10px;padding:0 10px}
+  .ind{display:none}
+  .proposal{bottom:calc(70px + env(safe-area-inset-bottom,0px))}
+  .content{padding-bottom:170px}
+  .donut{grid-template-columns:1fr;justify-items:center}
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+  <symbol id="i-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-6h4v6"/></symbol>
+  <symbol id="i-ai" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="8" width="14" height="11" rx="3"/><path d="M12 4v4M9 13h.01M15 13h.01M3 13v2M21 13v2"/></symbol>
+  <symbol id="i-cp" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></symbol>
+  <symbol id="i-orders" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 10h6M9 14h6M9 18h4"/></symbol>
+  <symbol id="i-backlog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></symbol>
+  <symbol id="i-ship" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 15l2 5h14l2-5z"/><path d="M6 15V9h12v6M12 9V4"/></symbol>
+  <symbol id="i-col" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4l4 2 4-2 4 4-3 3v9H7v-9L4 8z"/></symbol>
+  <symbol id="i-quote" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8"/><path d="M14.5 9.5a2.5 2.5 0 0 0-2.5-1.5c-1.4 0-2.5.8-2.5 2s1.1 1.7 2.5 2 2.5.8 2.5 2-1.1 2-2.5 2a2.5 2.5 0 0 1-2.5-1.5M12 6.5v11"/></symbol>
+  <symbol id="i-hist" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 8v4l3 2"/></symbol>
+  <symbol id="i-fac" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V10l6 4v-4l6 4V5h6v16z"/></symbol>
+  <symbol id="i-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M13 3L4 14h7l-1 7 9-11h-7z"/></symbol>
+  <symbol id="i-data" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></symbol>
+  <symbol id="i-search" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+  <symbol id="i-globe" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3.5 3 14 0 18M12 3c-3 3.5-3 14 0 18"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+  <aside class="rail" aria-label="Ana modüller">
+    <div class="railTop"><div class="logo">BL</div><div><b>Buyer Log</b><small>v5 öneri · Pulse</small></div></div>
+    <nav class="nav" id="nav"><div class="ind" id="ind"></div></nav>
+    <div class="railFoot"><button id="langBtn"><svg><use href="#i-globe"/></svg><span>Dil: TR</span></button><button id="themeBtn"><svg><use href="#i-moon"/></svg><span>Yön değiştir</span></button></div>
+  </aside>
+  <div class="main">
+    <header class="top"><div class="topIn">
+      <div class="crumb"><small id="crumbG">Ana sayfa</small><h1 id="pageTitle">Genel Bakış</h1></div>
+      <div class="chips" id="scope" data-pin="3"></div>
+      <div class="cmd" id="cmdOpen" role="button" tabindex="0" data-pin="2"><svg><use href="#i-search"/></svg><span>Sipariş, model, üretici ara veya komut yaz</span><kbd>Ctrl K</kbd></div>
+      <div class="sync"><i></i><span id="syncT">PLM senkron · az önce</span></div>
+      <div class="av">GÇ</div>
+    </div></header>
+    <main class="content" id="content">
+      <section class="view on" id="v-overview"></section>
+      <section class="view" id="v-orders"></section>
+      <section class="view" id="v-backlog"></section>
+      <section class="view" id="v-other"></section>
+    </main>
+  </div>
+</div>
+
+<div class="proposal" id="proposal" role="toolbar" aria-label="Tasarım önerisi kontrolleri">
+  <span class="lbl">Tasarım önerisi</span>
+  <div class="segc" id="dirSeg"><span class="pill"></span>
+    <button data-dir="a" aria-pressed="true"><span class="sw" style="background:linear-gradient(135deg,#eef0f3 50%,#3f6488 50%)"></span>A · Industry Lite</button>
+    <button data-dir="b" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#0b1016 50%,#5fd3f3 50%)"></span>B · Gece Vardiyası</button>
+    <button data-dir="c" aria-pressed="false"><span class="sw" style="background:linear-gradient(135deg,#eef1f0 50%,#1f6f78 50%)"></span>C · Atölye</button>
+  </div>
+  <div class="segc" id="denSeg"><span class="pill"></span>
+    <button data-den="compact" aria-pressed="true">Kompakt</button><button data-den="normal" aria-pressed="false">Standart</button><button data-den="comfy" aria-pressed="false">Rahat</button>
+  </div>
+  <button class="tgl" id="motionBtn" aria-pressed="true">Animasyon</button>
+  <button class="tgl" id="notesBtn" aria-pressed="false">Öneri notları</button>
+</div>
+
+<div id="pins"></div>
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"><div class="dH"><div id="dH"></div><button class="xb" id="dX" aria-label="Kapat">✕</button></div><div class="dB" id="dB"></div></aside>
+<div class="toast" id="toast"></div>
+<div class="tip" id="tip"></div>
+
+<script>
+/* ---------- Demo veri üreticisi (deterministik; gerçek sipariş içermez) ---------- */
+const BL = (function () {
+  function mulberry(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  const R = mulberry(20261015);
+  const rnd = (a, b) => a + R() * (b - a), ri = (a, b) => Math.floor(rnd(a, b + 1)), pick = a => a[Math.floor(R() * a.length)];
+  function wpick(items, w) { let s = 0; for (const i of items) s += (typeof w === 'function' ? w(i) : i[w]); let x = R() * s; for (const i of items) { x -= (typeof w === 'function' ? w(i) : i[w]); if (x <= 0) return i; } return items[items.length - 1]; }
+  const DAY = 864e5, TODAY = new Date(2026, 9, 15);
+  const addD = (d, n) => new Date(d.getTime() + n * DAY);
+  const dd = (a, b) => Math.round((a - b) / DAY);
+
+  const STAGES = [
+    { k: 'prod', tr: 'Üretimde', short: 'Üretim', color: '#7f93b8' },
+    { k: 'late', tr: 'Ex-F geçti · yüklenmedi', short: 'Ex-F geçti', color: '#ef5b5b' },
+    { k: 'transit', tr: 'Yolda', short: 'Yolda', color: '#4fa3e0' },
+    { k: 'customs', tr: 'Gümrükte', short: 'Gümrük', color: '#f0b44c' },
+    { k: 'antrepo', tr: 'Antrepoda', short: 'Antrepo', color: '#a98bea' },
+    { k: 'depot', tr: 'Depoda + Retail bekleyen', short: 'Depo', color: '#3cc6b4' }
+  ];
+  const SI = Object.fromEntries(STAGES.map((s, i) => [s.k, i]));
+  const RISKS = [
+    { k: 'ok', tr: 'Zamanında', color: '#7cd58c' },
+    { k: 'buffer', tr: 'Tampon < 7 gün', color: '#c9d46a' },
+    { k: 'risk', tr: 'Riskli', color: '#f0b44c' },
+    { k: 'late', tr: 'Gecikti', color: '#ef5b5b' },
+    { k: 'na', tr: 'Hesaplanamıyor', color: '#6f8299' }
+  ];
+  const MODES = { sea: { tr: 'Gemi', color: '#4fa3e0' }, air: { tr: 'Uçak', color: '#5fd3f3' }, road: { tr: 'Tır', color: '#f0b44c' } };
+
+  const FAR = { prod: .33, late: .08, transit: .27, customs: .07, antrepo: .11, depot: .14 };
+  const ORIGINS = [
+    { k: 'TR', name: 'Türkiye', city: 'İstanbul · Bursa', lat: 40.6, lon: 29.4, mode: 'road', days: 1, share: .36, st: { prod: .47, late: .05, transit: .05, customs: 0, antrepo: 0, depot: .43 }, sup: ['Anadolu Örme', 'Marmara Triko', 'Uludağ Knit', 'Boğaz Tekstil'] },
+    { k: 'BD', name: 'Bangladeş', city: 'Chittagong', lat: 22.3, lon: 91.8, air: { lat: 23.8, lon: 90.4, city: 'Dakka' }, mode: 'sea', days: 30, share: .21, st: FAR, sup: ['Delta Knit BD', 'Padma Knitwear', 'Meghna Loom'] },
+    { k: 'CN', name: 'Çin', city: 'Ningbo', lat: 29.9, lon: 121.6, air: { lat: 31.1, lon: 121.8, city: 'Şanghay' }, mode: 'sea', days: 38, share: .14, st: FAR, sup: ['Ningbo Yarnworks', 'Zhejiang Loom Co.'] },
+    { k: 'IN', name: 'Hindistan', city: 'Chennai', lat: 13.1, lon: 80.3, air: { lat: 12.99, lon: 80.17, city: 'Chennai' }, mode: 'sea', days: 26, share: .1, st: FAR, sup: ['Tiruppur Knit House', 'Kaveri Garments'] },
+    { k: 'PK', name: 'Pakistan', city: 'Karaçi', lat: 24.85, lon: 66.95, air: { lat: 24.9, lon: 67.16, city: 'Karaçi' }, mode: 'sea', days: 22, share: .07, st: FAR, sup: ['Indus Knit'] },
+    { k: 'EG', name: 'Mısır', city: 'İskenderiye', lat: 31.2, lon: 29.9, mode: 'sea', days: 6, share: .07, st: FAR, sup: ['Nil Örme'] },
+    { k: 'UZ', name: 'Özbekistan', city: 'Taşkent', lat: 41.3, lon: 69.25, mode: 'road', days: 9, share: .05, st: { prod: .4, late: .08, transit: .2, customs: .08, antrepo: .12, depot: .12 }, sup: ['Taşkent Tekstil'] }
+  ];
+  const DEST = { name: 'LCW Antrepo · İstanbul', lat: 41.05, lon: 28.75 };
+  const BUYERS = [{ k: 'Erkek Triko', w: 24 }, { k: 'Kadın Triko', w: 26 }, { k: 'Genç', w: 14 }, { k: 'Çocuk Erkek', w: 14 }, { k: 'Çocuk Kız', w: 13 }, { k: 'Bebek', w: 9 }];
+  const PRODUCTS = [{ k: 'Kazak', gg: '12GG', w: 38 }, { k: 'Hırka', gg: '7GG', w: 20 }, { k: 'Yelek', gg: '12GG', w: 10 }, { k: 'Triko Sweatshirt', gg: '14GG', w: 20 }, { k: 'Bere & Atkı', gg: '5GG', w: 12 }];
+  const LICENSES = ['Marvel', 'Disney', 'Harry Potter', 'Pokémon', 'NBA', 'Looney Tunes', 'Star Wars'];
+  const SEASONS = [{ k: 'AW26', w: 62 }, { k: 'SS27', w: 38 }];
+
+  const orders = [];
+  for (let i = 0; i < 248; i++) {
+    const o = wpick(ORIGINS, 'share');
+    const stage = wpick(STAGES, s => o.st[s.k] || 0).k;
+    let mode = o.mode; if (mode === 'sea' && R() < .16) mode = 'air';
+    const days = mode === 'air' ? 3 : o.days;
+    const qty = Math.round((1200 + Math.pow(R(), 1.7) * 10400) / 100) * 100;
+    let exf, eta;
+    if (stage === 'prod') { exf = addD(TODAY, ri(1, 56)); eta = addD(exf, days + ri(0, 2)); }
+    else if (stage === 'late') { exf = addD(TODAY, -ri(1, 18)); eta = addD(TODAY, days + ri(2, 6)); }
+    else if (stage === 'transit') { const done = rnd(.12, .9); exf = addD(TODAY, -Math.max(1, Math.round(days * done))); eta = addD(exf, days + ri(0, 3)); if (eta <= TODAY) eta = addD(TODAY, ri(1, 3)); }
+    else if (stage === 'customs') { eta = addD(TODAY, -ri(0, 4)); exf = addD(eta, -days); }
+    else if (stage === 'antrepo') { eta = addD(TODAY, -ri(3, 12)); exf = addD(eta, -days); }
+    else { eta = addD(TODAY, -ri(10, 30)); exf = addD(eta, -days); }
+    const revs = R() < .3 ? ri(1, 3) : 0;
+    const exfPlan = addD(exf, -(revs ? ri(3, 16) : 0));
+    const inStorePlan = addD(exfPlan, days + ri(14, 30));
+    const inStoreFc = addD(eta, ri(9, 14));
+    const slack = dd(inStorePlan, inStoreFc);
+    let risk = stage === 'late' ? 'late' : slack < 0 ? 'risk' : slack < 7 ? 'buffer' : 'ok';
+    if (stage === 'depot' || stage === 'antrepo') risk = slack < -6 ? 'late' : slack < 0 ? 'risk' : 'ok';
+    if (R() < .03) risk = 'na';
+    const prodPct = stage === 'prod' ? Math.min(.95, Math.max(.08, 1 - dd(exf, TODAY) / 60 + rnd(-.1, .1))) : 1;
+    const progress = stage === 'transit' ? Math.min(.94, Math.max(.06, dd(TODAY, exf) / Math.max(1, dd(eta, exf)))) : stage === 'customs' || stage === 'antrepo' || stage === 'depot' ? 1 : 0;
+    const buyer = wpick(BUYERS, 'w').k, prod = wpick(PRODUCTS, 'w');
+    orders.push({
+      id: 'PO-26-' + (10412 + i * 7 + ri(0, 5)), model: 'KOL-' + (301 + i), origin: o.k, country: o.name, supplier: pick(o.sup), buyer, product: prod.k, gauge: prod.gg,
+      license: pick(LICENSES), season: wpick(SEASONS, 'w').k, qty, stage, mode, days, exf, exfPlan, eta, inStorePlan, inStoreFc, slack, revs, risk, prodPct, progress
+    });
+  }
+
+  // Sevkiyatlar: yoldaki + gümrükteki siparişler taşıt bazında
+  const SHIPNAMES = ['ANATOLIA', 'BOSPHORUS', 'MARMARA', 'KAPADOKYA', 'EFES', 'TRUVA', 'NEMRUT', 'ASSOS', 'LİKYA', 'PERGE', 'SARDES', 'MİLET'];
+  const shipMap = new Map();
+  for (const o of orders) {
+    if (o.stage !== 'transit' && o.stage !== 'customs' && o.stage !== 'late') continue;
+    if (o.stage === 'late' && o.origin !== 'TR') continue;
+    const wk = Math.floor(dd(o.eta, TODAY) / 6);
+    const key = o.origin + o.mode + (o.stage === 'customs' ? 'C' : wk);
+    if (!shipMap.has(key)) shipMap.set(key, { key, origin: o.origin, mode: o.mode, orders: [], customs: o.stage === 'customs' });
+    shipMap.get(key).orders.push(o);
+  }
+  let sn = 0;
+  const shipments = [...shipMap.values()].map(s => {
+    const qty = s.orders.reduce((a, o) => a + o.qty, 0);
+    const eta = new Date(Math.max(...s.orders.map(o => +o.eta)));
+    const exf = new Date(Math.min(...s.orders.map(o => +o.exf)));
+    const progress = s.customs ? 1 : Math.min(.95, Math.max(.05, s.orders.reduce((a, o) => a + o.progress * o.qty, 0) / qty));
+    const delayed = s.orders.some(o => o.risk === 'risk' || o.risk === 'late');
+    const name = s.mode === 'sea' ? 'Gemi · ' + SHIPNAMES[sn++ % SHIPNAMES.length] + ' ' + (210 + sn * 13) : s.mode === 'air' ? 'Hava kargo · HK-' + (7400 + sn++ * 17) : 'Tır · 34 BL ' + (120 + sn++ * 37);
+    return Object.assign(s, { qty, eta, exf, progress, delayed, name });
+  }).sort((a, b) => a.eta - b.eta);
+
+  const sum = (arr, f) => arr.reduce((a, o) => a + f(o), 0);
+  const total = sum(orders, o => o.qty);
+  const byStage = STAGES.map(s => { const os = orders.filter(o => o.stage === s.k); return Object.assign({}, s, { qty: sum(os, o => o.qty), n: os.length }); });
+  function group(dim) {
+    const m = new Map();
+    for (const o of orders) { const k = o[dim]; if (!m.has(k)) m.set(k, { k, qty: 0, n: 0, st: STAGES.map(() => 0) }); const g = m.get(k); g.qty += o.qty; g.n++; g.st[SI[o.stage]] += o.qty; }
+    return [...m.values()].sort((a, b) => b.qty - a.qty);
+  }
+  // 30 günlük projeksiyon
+  const proj = [];
+  for (let d = 0; d < 30; d++) {
+    const day = addD(TODAY, d);
+    const same = x => dd(x, day) === 0;
+    const exfPlan = sum(orders.filter(o => (o.stage === 'prod') && same(o.exfPlan)), o => o.qty);
+    const exfFc = sum(orders.filter(o => (o.stage === 'prod') && same(o.exf)), o => o.qty) + (d < 6 ? sum(orders.filter(o => o.stage === 'late' && dd(TODAY, o.exf) % 6 === d), o => o.qty) : 0);
+    const arr = sum(orders.filter(o => o.stage !== 'depot' && o.stage !== 'antrepo' && same(o.stage === 'customs' ? addD(TODAY, 2) : o.eta)), o => o.qty);
+    const store = sum(orders.filter(o => same(o.inStoreFc)), o => o.qty);
+    proj.push({ day, exfPlan, exfFc, arr, store });
+  }
+  let c1 = 0, c2 = 0, c3 = 0, c4 = 0;
+  for (const p of proj) { c1 += p.exfPlan; c2 += p.exfFc; c3 += p.arr; c4 += p.store; p.cPlan = c1; p.cFc = c2; p.cArr = c3; p.cStore = c4; }
+
+  function isoWeek(d) { const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const day = t.getUTCDay() || 7; t.setUTCDate(t.getUTCDate() + 4 - day); const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1)); return Math.ceil(((t - y0) / DAY + 1) / 7); }
+  const weeks = [];
+  for (let w = 36; w <= 50; w++) weeks.push({ w, st: STAGES.map(() => 0), lateQty: 0, plan: 0, actual: 0 });
+  for (const o of orders) { const w = isoWeek(o.exf); const row = weeks.find(x => x.w === w); if (row) { row.st[SI[o.stage]] += o.qty; if (o.stage === 'late') row.lateQty += o.qty; } }
+  const curW = isoWeek(TODAY);
+  for (const row of weeks) {
+    const planQ = sum(orders.filter(o => isoWeek(o.exfPlan) === row.w), o => o.qty);
+    row.plan = planQ; row.actual = row.w < curW ? sum(orders.filter(o => isoWeek(o.exfPlan) === row.w && o.stage !== 'prod' && o.stage !== 'late'), o => o.qty) : 0;
+  }
+  const pastPlan = sum(weeks.filter(w => w.w < curW && w.w >= curW - 6), w => w.plan);
+  const pastAct = sum(weeks.filter(w => w.w < curW && w.w >= curW - 6), w => w.actual);
+  const matrix = STAGES.map(s => RISKS.map(r => sum(orders.filter(o => o.stage === s.k && o.risk === r.k), o => o.qty)));
+
+  const fmt = n => Math.round(n).toLocaleString('tr-TR');
+  const fmtK = n => n >= 1e6 ? (n / 1e6).toLocaleString('tr-TR', { maximumFractionDigits: 2 }) + ' M' : n >= 1e4 ? Math.round(n / 1e3).toLocaleString('tr-TR') + ' B' : fmt(n);
+  const MONTHS = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+  const fdate = d => d.getDate() + ' ' + MONTHS[d.getMonth()];
+  const fdateL = d => String(d.getDate()).padStart(2, '0') + '.' + String(d.getMonth() + 1).padStart(2, '0') + '.' + d.getFullYear();
+
+  return { R, rnd, ri, TODAY, DAY, addD, dd, STAGES, SI, RISKS, MODES, ORIGINS, DEST, BUYERS, PRODUCTS, LICENSES, orders, shipments, total, byStage, group, proj, weeks, curW, isoWeek, pastPlan, pastAct, matrix, sum, fmt, fmtK, fdate, fdateL };
+})();
+
+(function () {
+'use strict';
+const { STAGES, RISKS, MODES, ORIGINS, orders, shipments, total, byStage, proj, fmt, fmtK, fdate, fdateL, TODAY, dd, sum } = BL;
+const $ = s => document.querySelector(s), $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const root = document.documentElement;
+const RM = () => matchMedia('(prefers-reduced-motion: reduce)').matches || root.dataset.motion === 'off';
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const stageOf = k => STAGES.find(s => s.k === k), riskOf = k => RISKS.find(r => r.k === k);
+const byId = Object.fromEntries(orders.map(o => [o.id, o]));
+const REPORT_URL = 'backlog-rapor-studyosu.html';
+
+const NAV = [
+  { g: 'Ana Sayfa' }, { k: 'overview', t: 'Genel Bakış', i: 'home' }, { k: 'lcwai', t: 'LCW AI', i: 'ai' },
+  { g: 'Planla & Yürüt' }, { k: 'cp', t: 'CP Tracker', i: 'cp', b: 7 }, { k: 'orders', t: 'Siparişler', i: 'orders' }, { k: 'backlog', t: 'Backlog', i: 'backlog', b: BL.byStage[1].n }, { k: 'shipping', t: 'Nakliye Kıyaslama', i: 'ship' },
+  { g: 'Ticari' }, { k: 'koleksiyon', t: 'Koleksiyon', i: 'col' }, { k: 'quotations', t: 'Quotations', i: 'quote' }, { k: 'pricing', t: 'Fiyat Geçmişi', i: 'hist' }, { k: 'manufacturers', t: 'Üreticiler', i: 'fac' },
+  { g: 'Operasyonlar' }, { k: 'automations', t: 'Otomasyonlar', i: 'auto' },
+  { g: 'Sistem' }, { k: 'source', t: 'Veri Yönetimi', i: 'data' }
+];
+const GROUP_OF = {}; let cg = ''; NAV.forEach(n => { if (n.g) cg = n.g; else GROUP_OF[n.k] = cg; });
+
+/* ---------- yardımcılar ---------- */
+const tip = $('#tip');
+function showTip(t, x, y) { tip.textContent = t; tip.classList.add('on'); tip.style.left = Math.min(innerWidth - tip.offsetWidth - 8, x + 12) + 'px'; tip.style.top = (y + 14) + 'px'; }
+function hideTip() { tip.classList.remove('on'); }
+function toast(t) { const el = $('#toast'); el.textContent = t; el.classList.add('on'); clearTimeout(toast.t); toast.t = setTimeout(() => el.classList.remove('on'), 2600); }
+function countUp(el) { const to = +el.dataset.count, pre = el.dataset.pre || ''; if (RM()) { el.textContent = pre + fmt(to); return; } const t0 = performance.now(), d = 1200; (function f(t) { const p = Math.min(1, (t - t0) / d), e = 1 - Math.pow(1 - p, 4); el.textContent = pre + fmt(to * e); if (p < 1) requestAnimationFrame(f); })(t0); }
+function spark(vals, color, w = 160, h = 30) {
+  const mx = Math.max(...vals), mn = Math.min(...vals), pts = vals.map((v, i) => [i / (vals.length - 1) * w, h - 3 - (v - mn) / (mx - mn || 1) * (h - 6)]);
+  const d = 'M' + pts.map(p => p.map(n => n.toFixed(1)).join(' ')).join('L'), e = pts[pts.length - 1];
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="none"><path d="${d}L${w} ${h}L0 ${h}Z" fill="${color}" opacity=".12"/><path d="${d}" fill="none" stroke="${color}" stroke-width="1.6" vector-effect="non-scaling-stroke" pathLength="1" style="stroke-dasharray:1;animation:dr 1.4s ease both"/><circle cx="${e[0]}" cy="${e[1]}" r="2.6" fill="${color}"/></svg>`;
+}
+const st = document.createElement('style'); st.textContent = '@keyframes dr{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}'; document.head.appendChild(st);
+function spot(el) { el.addEventListener('pointermove', e => { const r = el.getBoundingClientRect(); el.style.setProperty('--mx', e.clientX - r.left + 'px'); el.style.setProperty('--my', e.clientY - r.top + 'px'); }); }
+
+/* ---------- ray ---------- */
+function buildNav() {
+  const nav = $('#nav');
+  nav.insertAdjacentHTML('beforeend', NAV.map(n => n.g ? `<div class="grp">${n.g}</div>` : `<button data-k="${n.k}" title="${n.t}" class="${['shipping', 'quotations', 'pricing', 'automations', 'source', 'lcwai'].includes(n.k) ? 'hideM' : ''}"><svg><use href="#i-${n.i}"/></svg><span>${n.t}</span>${n.b ? `<span class="badge">${n.b}</span>` : ''}</button>`).join(''));
+  $$('#nav button').forEach(b => b.addEventListener('click', () => go(b.dataset.k)));
+}
+function moveInd() { const a = $('#nav button[aria-current="page"]'); if (a) $('#ind').style.top = a.offsetTop + 'px'; }
+
+/* ---------- kapsam çipleri ---------- */
+function buildScope() {
+  $('#scope').innerHTML = [['Sezon', 'AW26 + SS27'], ['Buyer', 'Tüm triko'], ['Lisans', '7 lisans']].map(c => `<span class="chip">${c[0]}: <b>${c[1]}</b><span class="x">▾</span></span>`).join('');
+  $$('#scope .chip').forEach(c => c.addEventListener('click', () => toast('Kapsam filtresi tüm modüllere uygulanır (demo)')));
+}
+
+/* ---------- Genel bakış ---------- */
+function overview() {
+  const late = byStage[1], risk = sum(orders.filter(o => o.risk === 'risk' || o.risk === 'late'), o => o.qty);
+  const exfWeek = sum(orders.filter(o => o.stage === 'prod' && dd(o.exf, TODAY) <= 6), o => o.qty);
+  const kpis = [
+    ['Aktif sipariş', orders.length, [231, 236, 240, 238, 244, 246, 248], 'up', '▲ 6 bu hafta', 'var(--acc)'],
+    ['Açık backlog adedi', total, [1.19, 1.21, 1.2, 1.23, 1.24, 1.26, 1.2506].map(x => x * 1e6), 'dn', '▼ 38,2 B', 'var(--acc-2)'],
+    ['Bu hafta Ex-Factory', exfWeek, [31, 44, 39, 52, 47, 58, exfWeek / 1000].map(x => x * 1000), 'up', '▲ %12', '#7f93b8'],
+    ['Ex-F geçti · yüklenmedi', late.qty, [22, 30, 28, 41, 38, 52, late.qty / 1000].map(x => x * 1000), 'dn', `▲ ${late.n} sipariş`, '#ef5b5b'],
+    ['Riskli adet', risk, [320, 312, 305, 301, 298, 302, risk / 1000].map(x => x * 1000), 'up', '▼ 9,4 B', '#f0b44c']
+  ];
+  const lic = BL.group('license').slice(0, 6), licC = ['#3f6488', '#5fd3f3', '#a98bea', '#3cc6b4', '#f0b44c', '#ef5b5b'];
+  const sups = BL.group('supplier').slice(0, 6).map(g => { const os = orders.filter(o => o.supplier === g.k); const ok = os.filter(o => o.risk === 'ok' || o.risk === 'buffer').length; return Object.assign(g, { otd: Math.round(ok / os.length * 100) }); }).sort((a, b) => b.otd - a.otd);
+  const actions = orders.filter(o => o.stage === 'late' || o.risk === 'risk').sort((a, b) => a.slack - b.slack).slice(0, 6);
+  let C = 2 * Math.PI * 48, off = 0;
+  const donut = lic.map((l, i) => { const len = l.qty / sum(lic, x => x.qty) * C; const s = `<circle cx="65" cy="65" r="48" fill="none" stroke="${licC[i]}" stroke-width="16" stroke-dasharray="${len - 2} ${C - len + 2}" stroke-dashoffset="${-off}" transform="rotate(-90 65 65)" style="animation:dn 1.2s cubic-bezier(.5,0,.2,1) both;animation-delay:${i * 90}ms" data-t="${l.k} · ${fmt(l.qty)} adet"/>`; off += len; return s; }).join('');
+  // takvim: 6 hafta x 7 gün Ex-F yoğunluğu
+  const start = BL.addD(TODAY, -((TODAY.getDay() + 6) % 7) - 14);
+  let cal = '<span></span>' + ['Pt', 'Sa', 'Ça', 'Pe', 'Cu', 'Ct', 'Pz'].map(d => `<span style="justify-content:center">${d}</span>`).join('');
+  const dayQ = []; for (let i = 0; i < 42; i++) { const d = BL.addD(start, i); dayQ.push(sum(orders.filter(o => dd(o.exf, d) === 0), o => o.qty)); }
+  const mq = Math.max(...dayQ);
+  for (let w = 0; w < 6; w++) { cal += `<span>H${BL.isoWeek(BL.addD(start, w * 7))}</span>`; for (let d = 0; d < 7; d++) { const i = w * 7 + d, day = BL.addD(start, i); cal += `<i class="${dd(day, TODAY) === 0 ? 'today' : ''}" style="--p:${Math.round(6 + dayQ[i] / mq * 88)}%" data-t="${fdateL(day)} · Ex-F ${fmt(dayQ[i])} adet"></i>`; } }
+  const feed = [
+    ['#5fd3f3', 'PLM senkron tamamlandı', '248 sipariş · 3 değişiklik', 'az önce', 'new'],
+    ['#ef5b5b', `${actions[0].id} Ex-F tarihi geçti`, actions[0].supplier + ' · ' + fmt(actions[0].qty) + ' adet', '12 dk'],
+    ['#4fa3e0', shipments[8].name + ' yola çıktı', fmt(shipments[8].qty) + ' adet · ETA ' + fdate(shipments[8].eta), '38 dk'],
+    ['#a98bea', 'Otomasyon: Ex-F hatırlatma', '6 üreticiye e-posta taslağı hazır', '1 sa'],
+    ['#3cc6b4', 'KOL-318 antrepoya girdi', 'Gümrük işlemi kapandı', '2 sa']
+  ];
+  return `<div class="grid">
+    <div class="c12 kpiRow">    ${kpis.map((k, i) => `<div class="card kpi stag" style="--i:${i}" ${i === 0 ? 'data-pin="4"' : ''}><div class="l"><span>${k[0]}</span><span class="d ${k[3]}">${k[4]}</span></div><div class="v num" data-count="${k[1]}">${fmt(k[1])}</div>${spark(k[2], k[5])}</div>`).join('')}</div>
+    <div class="card c8 stag" style="--i:5" data-pin="5"><div class="cardH"><h3>Sipariş akışı</h3><small>${fmt(total)} adet · tıkla: aşama siparişleri</small></div>
+      <div class="ribbon">${byStage.map((s, i) => `<div style="--c:${s.color};--f:${s.qty}" data-s="${i}" data-t="${s.tr} · ${fmt(s.qty)} adet · ${s.n} sipariş">${s.qty / total > .08 ? '%' + Math.round(s.qty / total * 100) : ''}</div>`).join('')}</div>
+      <div class="rleg">${byStage.map(s => `<div style="--c:${s.color}"><span>${s.tr}</span><b data-count="${s.qty}">${fmt(s.qty)}</b></div>`).join('')}</div></div>
+    <div class="card c4 ai stag" style="--i:6" data-pin="6"><div class="cardH"><div style="display:flex;gap:10px;align-items:center"><div class="orb"></div><div><h3>LCW AI içgörü</h3><small>Deterministik veriden · onayla uygulanır</small></div></div></div>
+      <p id="aiText"></p><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn pri" id="aiGo">Önizle</button><button class="btn" id="aiNext">Sonraki içgörü</button></div></div>
+    <div class="card c5 stag" style="--i:7"><div class="cardH"><h3>Bugün aksiyon</h3><button class="link" data-go="backlog">Tümü →</button></div><div class="list">${actions.map(o => { const r = riskOf(o.risk); return `<div class="li" data-id="${o.id}" style="--c:${r.color}"><div style="min-width:0"><div class="t"><code>${o.id}</code> ${o.model} · ${esc(o.supplier)}</div><div class="s">${o.stage === 'late' ? `Ex-F ${dd(TODAY, o.exf)} gün geçti · yüklenmedi` : `In Store tamponu ${o.slack} gün · ETA ${fdate(o.eta)}`}</div></div><div style="display:flex;gap:8px;align-items:center"><div class="acts"><button class="btn" data-a="mail" title="Üreticiye yaz">✉</button><button class="btn" data-a="snooze" title="Ertele">⏱</button></div><div class="q">${fmt(o.qty)}<small>${r.tr}</small></div></div></div>`; }).join('')}</div></div>
+    <div class="card c4 stag" style="--i:8"><div class="cardH"><h3>Ex-Factory takvimi</h3><small>günlük adet yoğunluğu</small></div><div class="cal" id="cal">${cal}</div></div>
+    <div class="card c3 stag" style="--i:9"><div class="cardH"><h3>Lisans dağılımı</h3></div><div class="donut"><svg viewBox="0 0 130 130"><circle cx="65" cy="65" r="48" fill="none" stroke="var(--surface-2)" stroke-width="16"/>${donut}<text x="65" y="62" text-anchor="middle" style="font:700 20px var(--display);fill:var(--ink)">${lic.length}</text><text x="65" y="78" text-anchor="middle">lisans</text></svg><div class="dleg">${lic.map((l, i) => `<div><i style="width:8px;height:8px;border-radius:2px;background:${licC[i]}"></i>${l.k}<b>%${Math.round(l.qty / total * 100)}</b></div>`).join('')}</div></div></div>
+    <div class="card c6 stag" style="--i:10"><div class="cardH"><h3>Üretici zamanında teslim</h3><small>OTD · son 90 gün</small></div>${sups.map(s => `<div class="sup"><span class="nm">${esc(s.k)}</span><span class="tr"><i style="--w:${s.otd}%;animation:gx 1s cubic-bezier(.2,.9,.2,1) both"></i></span><b>%${s.otd}</b></div>`).join('')}</div>
+    <div class="card c6 stag" style="--i:11"><div class="cardH"><h3>Son hareketler</h3><small>canlı akış</small></div><div class="feed" id="feed">${feed.map(f => `<div class="${f[4] || ''}" style="--c:${f[0]}"><b>${f[1]}</b><small>${f[2]} · ${f[3]}</small></div>`).join('')}</div></div>
+  </div>`;
+}
+const st2 = document.createElement('style'); st2.textContent = '@keyframes dn{from{stroke-dasharray:0 400}}@keyframes gx{from{width:0}}'; document.head.appendChild(st2);
+
+const INSIGHTS = () => {
+  const late = orders.filter(o => o.stage === 'late'), sup = BL.group('supplier').find(s => late.some(o => o.supplier === s.k));
+  const air = shipments.filter(s => s.delayed && s.mode === 'sea').length;
+  return [
+    `${late.length} sipariş Ex-F tarihini geçti ve toplam ${fmt(sum(late, o => o.qty))} adet bekliyor. En büyük pay ${sup ? sup.k : ''} üreticisinde; hatırlatma e-postası taslağı hazır.`,
+    `Denizyolundaki ${air} sevkiyatın In Store tamponu negatif. Bu siparişlerden ${Math.min(4, air)} tanesini havayoluna kaydırmak tamponu ortalama 9 gün iyileştirir.`,
+    `Önümüzdeki 30 günde ${fmt(proj[29].cArr)} adetin antrepoya girmesi bekleniyor. H44 haftası kapasite eşiğini %14 aşıyor; iki yüklemeyi H45'e kaydırmak dengeler.`
+  ];
+};
+let aiI = 0, aiTimer;
+function typeAI() {
+  const el = $('#aiText'); if (!el) return; clearInterval(aiTimer);
+  const txt = INSIGHTS()[aiI % 3]; let n = 0;
+  if (RM()) { el.innerHTML = esc(txt); return; }
+  aiTimer = setInterval(() => { n += 2; el.innerHTML = esc(txt.slice(0, n)) + '<span class="caret"></span>'; if (n >= txt.length) { clearInterval(aiTimer); el.innerHTML = esc(txt) + '<span class="caret"></span>'; } }, 18);
+}
+
+/* ---------- Siparişler ---------- */
+let oFilter = 'all', oQuery = '';
+function ordersView() {
+  const chips = [['all', 'Tümü', orders.length], ...STAGES.map(s => [s.k, s.short, byStage.find(b => b.k === s.k).n])];
+  return `<div class="toolbar stag" style="--i:0">${chips.map(c => `<button class="fchip" data-f="${c[0]}" aria-pressed="${oFilter === c[0]}">${c[1]} <em>${c[2]}</em></button>`).join('')}
+    <label class="search"><svg width="14" height="14"><use href="#i-search"/></svg><input id="oq" placeholder="Sipariş, model, üretici…" value="${esc(oQuery)}" aria-label="Siparişlerde ara"></label></div>
+    <div class="tbl stag" style="--i:1" data-pin="7"><table class="t"><thead><tr><th>Sipariş</th><th>Model</th><th>Buyer</th><th>Lisans</th><th>Üretici</th><th style="text-align:right">Adet</th><th>Aşama</th><th>İlerleme</th><th>Ex-F</th><th>ETA</th><th>Risk</th></tr></thead><tbody id="obody"></tbody></table></div>`;
+}
+function fillOrders() {
+  const q = oQuery.toLowerCase();
+  const rows = orders.filter(o => (oFilter === 'all' || o.stage === oFilter) && (!q || (o.id + o.model + o.supplier + o.license + o.buyer).toLowerCase().includes(q))).slice(0, 120);
+  const pal = ['#3f6488', '#1f6f78', '#a98bea', '#c58b2b', '#4fa3e0', '#3cc6b4'];
+  $('#obody').innerHTML = rows.map((o, i) => { const s = stageOf(o.stage), r = riskOf(o.risk); const p = o.stage === 'prod' ? o.prodPct : o.stage === 'late' ? 1 : o.stage === 'transit' ? o.progress : 1; return `<tr class="in" style="--i:${i}" data-id="${o.id}"><td style="font-family:var(--mono);font-size:11.5px">${o.id}</td><td><span class="thumbM" style="background:${pal[i % 6]}">${o.model.slice(4)}</span>${o.model}</td><td>${o.buyer}</td><td>${o.license}</td><td>${esc(o.supplier)}</td><td class="n">${fmt(o.qty)}</td><td><span class="pillS" style="--c:${s.color}">${s.short}</span></td><td><span class="prog"><i style="--w:${Math.round(p * 100)}%;--c:${s.color}"></i></span></td><td>${fdate(o.exf)}</td><td>${fdate(o.eta)}</td><td><span class="pillS" style="--c:${r.color}">${r.tr}</span></td></tr>`; }).join('') || `<tr><td colspan="11" style="text-align:center;padding:30px;color:var(--muted)">“${esc(oQuery)}” için sipariş yok. Aramayı temizleyin.</td></tr>`;
+}
+
+/* ---------- Backlog ---------- */
+function backlogView() {
+  const bg = BL.group('buyer');
+  return `<div class="grid">
+    <div class="card c12 stag" style="--i:0;background:linear-gradient(120deg,color-mix(in srgb,var(--acc) 16%,var(--surface)),var(--surface) 55%)" data-pin="8"><div class="cardH"><div><h3 style="font-size:20px">Backlog rapor stüdyosu</h3><small>HTML, PDF ve Excel çıktıları tek tıkla · animasyonlu sunum modu</small></div><a class="btn pri" href="${REPORT_URL}" target="_blank" rel="noopener" id="repLink">Raporu aç ↗</a></div>
+      <div class="ribbon" style="height:30px">${byStage.map(s => `<div style="--c:${s.color};--f:${s.qty}" data-t="${s.tr} · ${fmt(s.qty)}">${s.qty / total > .08 ? s.short : ''}</div>`).join('')}</div></div>
+    <div class="card c7 stag" style="--i:1"><div class="cardH"><h3>Buyer grup kırılımı</h3><small>adet · aşama dağılımı</small></div>
+      ${bg.map(g => `<div class="sup" style="grid-template-columns:minmax(0,110px) minmax(0,1fr) 70px"><span class="nm">${g.k}</span><span style="display:flex;height:12px;border-radius:3px;overflow:hidden;gap:1px;width:${(g.qty / bg[0].qty * 100).toFixed(0)}%;animation:gx 1s cubic-bezier(.2,.9,.2,1) both">${g.st.map((q, i) => q ? `<i style="flex:${q} 1 0;background:${STAGES[i].color}"></i>` : '').join('')}</span><b>${fmtK(g.qty)}</b></div>`).join('')}</div>
+    <div class="card c5 stag" style="--i:2"><div class="cardH"><h3>30 gün projeksiyon</h3><small>kümülatif antrepo girişi</small></div>${spark(proj.map(p => p.cArr), 'var(--acc-2)', 300, 120).replace('<svg', '<svg style="width:100%;height:150px"')}<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted)"><span>${fdate(proj[0].day)}</span><b style="color:var(--ink);font:700 20px var(--display)">${fmt(proj[29].cArr)}</b><span>${fdate(proj[29].day)}</span></div></div>
+  </div>`;
+}
+function otherView(k) {
+  const n = NAV.find(x => x.k === k);
+  return `<div class="grid">${[0, 1, 2, 3].map(i => `<div class="card c3 stag" style="--i:${i}"><div class="skel" style="height:14px;width:50%"></div><div class="skel" style="height:30px;width:70%;margin-top:10px"></div><div class="skel" style="height:24px;margin-top:10px"></div></div>`).join('')}
+    <div class="card c12 stag" style="--i:4;text-align:center;padding:40px 16px"><h3 style="font:600 22px var(--display);margin:0">${n.t}</h3><p style="color:var(--ink-2);max-width:52ch;margin:8px auto 14px">Bu demo Genel Bakış, Siparişler ve Backlog ekranlarını yeni dille gösteriyor. ${n.t} aynı kart, tablo ve çekmece bileşenleriyle yeniden çizilir.</p><button class="btn pri" data-go="overview">Genel Bakış’a dön</button></div></div>`;
+}
+
+/* ---------- yönlendirme ---------- */
+let cur = 'overview';
+function go(k) {
+  cur = k; const n = NAV.find(x => x.k === k);
+  $$('#nav button').forEach(b => { if (b.dataset.k === k) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+  moveInd();
+  $('#pageTitle').textContent = n.t; $('#crumbG').textContent = GROUP_OF[k];
+  const vid = ['overview', 'orders', 'backlog'].includes(k) ? k : 'other';
+  $$('.view').forEach(v => v.classList.remove('on'));
+  const v = $('#v-' + vid);
+  v.innerHTML = vid === 'overview' ? overview() : vid === 'orders' ? ordersView() : vid === 'backlog' ? backlogView() : otherView(k);
+  void v.offsetWidth; v.classList.add('on');
+  bindView(v); scrollTo({ top: 0 });
+  if (notesOn) setTimeout(placePins, 60);
+}
+function bindView(v) {
+  $$('.card', v).forEach(spot);
+  $$('[data-count]', v).forEach(countUp);
+  $$('[data-go]', v).forEach(b => b.addEventListener('click', () => go(b.dataset.go)));
+  $$('[data-t]', v).forEach(el => { el.addEventListener('mousemove', e => showTip(el.dataset.t, e.clientX, e.clientY)); el.addEventListener('mouseleave', hideTip); });
+  $$('.ribbon>div[data-s]', v).forEach(el => el.addEventListener('click', () => { oFilter = STAGES[+el.dataset.s].k; go('orders'); }));
+  $$('.li[data-id]', v).forEach(el => el.addEventListener('click', e => { const a = e.target.closest('[data-a]'); if (a) { e.stopPropagation(); toast(a.dataset.a === 'mail' ? 'E-posta taslağı LCW AI ile hazırlandı · onay bekliyor' : 'Hatırlatma yarın 09:00’a ertelendi'); return; } openOrder(byId[el.dataset.id]); }));
+  if ($('#aiText', v)) { typeAI(); $('#aiNext').addEventListener('click', () => { aiI++; typeAI(); }); $('#aiGo').addEventListener('click', () => toast('Öneri önizlemesi açıldı · uygulamak için onay gerekir')); }
+  if ($('#obody', v)) {
+    fillOrders();
+    $$('.fchip', v).forEach(b => b.addEventListener('click', () => { oFilter = b.dataset.f; $$('.fchip', v).forEach(x => x.setAttribute('aria-pressed', x === b)); fillOrders(); }));
+    $('#oq').addEventListener('input', e => { oQuery = e.target.value; fillOrders(); });
+    $('#obody').addEventListener('click', e => { const tr = e.target.closest('tr[data-id]'); if (tr) openOrder(byId[tr.dataset.id]); });
+  }
+}
+
+/* ---------- çekmece ---------- */
+function openOrder(o) {
+  if (!o) return; const s = stageOf(o.stage), r = riskOf(o.risk), si = BL.SI[o.stage];
+  const steps = ['Sipariş', 'Örme', 'Ex-F', 'Yükleme', 'Antrepo', 'Depo'];
+  const nowI = [1, 2, 3, 4, 4, 5][si];
+  $('#dH').innerHTML = `<small style="font:500 10.5px var(--mono);letter-spacing:.1em;color:${s.color}">${s.tr.toUpperCase()}</small><h4>${o.id} · ${o.model}</h4><div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap"><span class="chip">${o.license}</span><span class="chip">${o.product} · ${o.gauge}</span><span class="chip">${o.season}</span></div>`;
+  $('#dB').innerHTML = `<div class="steps" id="dsteps">${steps.map((x, i) => `<div class="${i < nowI ? 'ok' : i === nowI ? 'now' : ''}"><i></i>${x}</div>`).join('')}</div>
+    <div class="kv" style="margin-top:14px"><div><span>Adet</span><b>${fmt(o.qty)}</b></div><div><span>Üretici</span><b>${esc(o.supplier)}</b></div><div><span>Ex-F plan → güncel</span><b>${fdate(o.exfPlan)} → ${fdate(o.exf)}</b></div><div><span>ETA · ${MODES[o.mode].tr}</span><b>${fdateL(o.eta)}</b></div><div><span>In Store plan</span><b>${fdateL(o.inStorePlan)}</b></div><div><span>Tampon</span><b style="color:${r.color}">${o.slack} gün</b></div></div>
+    <div class="card" style="margin-top:12px;border-color:${r.color}"><b style="color:${r.color}">● ${r.tr}</b><div style="font-size:12.5px;color:var(--ink-2);margin-top:4px">${o.revs ? o.revs + ' Ex-F revizyonu var. ' : ''}${o.stage === 'late' ? 'Ex-F geçti, yükleme bekleniyor.' : o.slack < 0 ? 'Tahmini In Store tarihi planı aşıyor.' : 'Plan içinde ilerliyor.'}</div></div>
+    <div style="display:flex;gap:6px;margin-top:12px;flex-wrap:wrap"><button class="btn pri" id="dMail">Üreticiye hatırlat</button><button class="btn" id="dAi">LCW AI’a sor</button></div>`;
+  $('#drawer').classList.add('on'); $('#scrim').classList.add('on'); $('#drawer').setAttribute('aria-hidden', 'false');
+  requestAnimationFrame(() => requestAnimationFrame(() => $('#dsteps').style.setProperty('--p', (nowI / (steps.length - 1) * 100) + '%')));
+  $('#dMail').addEventListener('click', () => toast('Hatırlatma taslağı hazır · gönderim için onay gerekir'));
+  $('#dAi').addEventListener('click', () => toast('LCW AI paneli bu siparişin bağlamıyla açıldı (demo)'));
+}
+function closeDrawer() { $('#drawer').classList.remove('on'); $('#scrim').classList.remove('on'); $('#drawer').setAttribute('aria-hidden', 'true'); }
+$('#dX').addEventListener('click', closeDrawer); $('#scrim').addEventListener('click', closeDrawer);
+
+/* ---------- komut paleti ---------- */
+function openPalette() {
+  if ($('.pal')) return;
+  const items = [
+    ...NAV.filter(n => n.k).map(n => ({ sec: 'Modüller', t: n.t, k: 'Git', run: () => go(n.k) })),
+    { sec: 'Komutlar', t: 'Backlog raporu oluştur (PDF)', k: 'Rapor', run: () => window.open(REPORT_URL + '#pdf', '_blank') },
+    { sec: 'Komutlar', t: 'Excel Backlog V3 indir', k: 'Rapor', run: () => window.open(REPORT_URL + '#excel', '_blank') },
+    { sec: 'Komutlar', t: 'Veri modelinden güncelle', k: 'Senkron', run: () => { toast('Veri modeli güncellendi · 3 değişiklik'); $('#syncT').textContent = 'PLM senkron · az önce'; } },
+    { sec: 'Komutlar', t: 'Yönü değiştir: Gece Vardiyası', k: 'Görünüm', run: () => setDir('b') },
+    ...orders.slice(0, 60).map(o => ({ sec: 'Siparişler', t: `${o.id} · ${o.model} · ${o.supplier}`, k: stageOf(o.stage).short, run: () => openOrder(o) }))
+  ];
+  const el = document.createElement('div'); el.className = 'pal';
+  el.innerHTML = `<div class="palC" role="dialog" aria-label="Komut paleti"><input id="palQ" placeholder="Ara: modül, komut, sipariş…" aria-label="Komut ara"><div class="palL" id="palL"></div></div>`;
+  document.body.appendChild(el);
+  let sel = 0, list = [];
+  const render = () => {
+    const q = $('#palQ').value.toLowerCase(); list = items.filter(i => i.t.toLowerCase().includes(q)).slice(0, 14); sel = Math.min(sel, Math.max(0, list.length - 1));
+    let h = '', last = ''; list.forEach((it, i) => { if (it.sec !== last) { h += `<div class="sec">${it.sec}</div>`; last = it.sec; } h += `<div class="${i === sel ? 'on' : ''}" data-i="${i}">${esc(it.t)}<small>${it.k}</small></div>`; });
+    $('#palL').innerHTML = h || '<div class="sec">Sonuç yok</div>';
+  };
+  const close = () => el.remove();
+  const run = i => { const it = list[i]; close(); if (it) it.run(); };
+  $('#palQ').addEventListener('input', () => { sel = 0; render(); });
+  $('#palQ').addEventListener('keydown', e => { if (e.key === 'ArrowDown') { sel = Math.min(list.length - 1, sel + 1); render(); e.preventDefault(); } if (e.key === 'ArrowUp') { sel = Math.max(0, sel - 1); render(); e.preventDefault(); } if (e.key === 'Enter') run(sel); if (e.key === 'Escape') close(); });
+  $('#palL').addEventListener('click', e => { const d = e.target.closest('[data-i]'); if (d) run(+d.dataset.i); });
+  el.addEventListener('click', e => { if (e.target === el) close(); });
+  render(); $('#palQ').focus();
+}
+$('#cmdOpen').addEventListener('click', openPalette);
+$('#cmdOpen').addEventListener('keydown', e => { if (e.key === 'Enter') openPalette(); });
+addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); openPalette(); } if (e.key === 'Escape') { closeDrawer(); const p = $('.pal'); if (p) p.remove(); } });
+
+/* ---------- öneri kontrolleri ---------- */
+function movePills() { $$('.segc').forEach(s => { const b = s.querySelector('button[aria-pressed="true"]'), p = s.querySelector('.pill'); if (b && p) { p.style.left = b.offsetLeft + 'px'; p.style.width = b.offsetWidth + 'px'; } }); }
+function setDir(d, ev) {
+  const apply = () => { root.dataset.dir = d; $$('#dirSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.dir === d)); movePills(); };
+  if (ev) { root.style.setProperty('--vx', ev.clientX + 'px'); root.style.setProperty('--vy', ev.clientY + 'px'); }
+  if (document.startViewTransition && !RM()) document.startViewTransition(apply); else apply();
+  try { localStorage.setItem('blp-dir', d); } catch (e) { }
+}
+$$('#dirSeg button').forEach(b => b.addEventListener('click', e => setDir(b.dataset.dir, e)));
+$$('#denSeg button').forEach(b => b.addEventListener('click', () => { root.dataset.density = b.dataset.den; $$('#denSeg button').forEach(x => x.setAttribute('aria-pressed', x === b)); movePills(); if (notesOn) setTimeout(placePins, 50); }));
+$('#motionBtn').addEventListener('click', e => { const on = e.currentTarget.getAttribute('aria-pressed') !== 'true'; e.currentTarget.setAttribute('aria-pressed', on); root.dataset.motion = on ? 'on' : 'off'; });
+$('#themeBtn').addEventListener('click', e => { const order = ['a', 'b', 'c']; setDir(order[(order.indexOf(root.dataset.dir) + 1) % 3], e); });
+$('#langBtn').addEventListener('click', () => toast('TR/EN: tüm metinler L(tr,en) çiftleriyle anında değişir (demo)'));
+
+const NOTES = [
+  ['Kompakt ray', '216px menü 56px ikon rayına iner; üzerine gelince etiketlerle açılır. Aktif gösterge yaylı animasyonla kayar. Telefonda alt sekme çubuğu olur.'],
+  ['Komut paleti · Ctrl K', 'Modül, sipariş ve komutlara klavyeden erişim. “Backlog PDF oluştur” gibi işlemler tek satırdan.'],
+  ['Kapsam çipleri', 'Sezon, Buyer ve Lisans filtresi başlıkta tek yerde; tüm modüllere aynı kapsam uygulanır.'],
+  ['Canlı KPI şeridi', 'Sayılar sayarak gelir, mini çizgi grafik kendini çizer, değişim rozeti renkle anlam taşır.'],
+  ['Akan sipariş şeridi', 'Aşamalar tek bantta; çizgili akış hareketi “süreç ilerliyor” hissi verir. Tıklayınca o aşamanın siparişleri açılır.'],
+  ['LCW AI içgörü kartı', 'Deterministik veriden üretilen tek cümlelik öneri; yazı efektiyle gelir, yalnız onayla uygulanır.'],
+  ['Yoğun tablo', 'Satır yüksekliği yoğunluk ayarına bağlı (26/30/36px). Satırlar kademeli belirir, ilerleme çubuğu ve durum hapı tek bakışta okunur.'],
+  ['Rapor stüdyosu', 'Backlog çıktıları (HTML, PDF, Excel) tek kartta; animasyonlu sunum modu ayrı sayfada açılır.']
+];
+let notesOn = false;
+function placePins() {
+  const box = $('#pins'); box.innerHTML = '';
+  if (!notesOn) return;
+  $$('[data-pin]').forEach(el => { if (!el.offsetParent && el.id !== 'scope') return; const r = el.getBoundingClientRect(); if (!r.width) return; const p = document.createElement('button'); p.className = 'pin'; p.textContent = el.dataset.pin; p.style.setProperty('--i', el.dataset.pin); p.style.left = (r.left + scrollX - 8) + 'px'; p.style.top = (r.top + scrollY - 8) + 'px'; p.title = NOTES[el.dataset.pin - 1][0]; p.addEventListener('click', () => toast(NOTES[el.dataset.pin - 1][0])); box.appendChild(p); });
+  const rail = $('.rail').getBoundingClientRect(); const p1 = document.createElement('button'); p1.className = 'pin'; p1.textContent = '1'; p1.style.setProperty('--i', 1); p1.style.position = 'fixed'; p1.style.left = (rail.right - 14) + 'px'; p1.style.top = (rail.top + 64) + 'px'; p1.title = NOTES[0][0]; box.appendChild(p1);
+}
+$('#pins').style.cssText = 'position:absolute;left:0;top:0;width:0;height:0;z-index:20';
+$('#notesBtn').addEventListener('click', e => {
+  notesOn = !notesOn; e.currentTarget.setAttribute('aria-pressed', notesOn);
+  const ex = $('.notes'); if (ex) ex.remove();
+  if (notesOn) {
+    const n = document.createElement('div'); n.className = 'notes';
+    n.innerHTML = `<h4>Neyi değiştiriyoruz?</h4><div style="font-size:12px;color:var(--muted)">Kompakt, yalın, hareketli. Mevcut çelik mavisi kimlik korunur.</div><ol>${NOTES.map(x => `<li><span><b>${x[0]}</b>${x[1]}</span></li>`).join('')}</ol>
+      <div class="dirs"><div><b>A · Industry Lite</b> Bugünkü “Industry” temasının evrimi: koyu ray, açık zemin, 6px köşe, tek çelik mavisi vurgu.</div><div><b>B · Gece Vardiyası</b> Kontrol odası: koyu zemin, camgöbeği parıltı, imleci izleyen ışık. Uzun ekran başı ve sunum için.</div><div><b>C · Atölye</b> Triko dokulu ray, yuvarlak kartlar, petrol yeşili + iplik hardalı. Daha sıcak ve markaya yakın.</div></div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:10px">Bütün tokenlar design.css anahtarlarıyla eşleşir; Excel çıktısının okuduğu tablo başlığı ve rozet renkleri değişmez.</div>`;
+    document.body.appendChild(n);
+  }
+  placePins();
+});
+addEventListener('resize', () => { movePills(); moveInd(); if (notesOn) placePins(); });
+addEventListener('scroll', () => { if (notesOn) placePins(); }, { passive: true });
+
+// canlı senkron metni
+let ago = 0; setInterval(() => { ago++; $('#syncT').textContent = `PLM senkron · ${ago} dk önce`; }, 60000);
+// yeni hareket simülasyonu
+setInterval(() => {
+  const f = $('#feed'); if (!f || RM()) return;
+  const o = orders[Math.floor(Math.random() * orders.length)], s = stageOf(o.stage);
+  const d = document.createElement('div'); d.className = 'new'; d.style.setProperty('--c', s.color); d.style.animation = 'stag .5s ease both';
+  d.innerHTML = `<b>${o.id} · ${s.tr}</b><small>${esc(o.supplier)} · ${fmt(o.qty)} adet · şimdi</small>`;
+  $$('.new', f).forEach(x => x.classList.remove('new'));
+  f.prepend(d); if (f.children.length > 5) f.lastElementChild.remove();
+}, 6000);
+
+/* ---------- başlat ---------- */
+let initial = 'a';
+try { initial = localStorage.getItem('blp-dir') || ''; } catch (e) { }
+if (!initial) initial = (root.dataset.theme === 'dark' || (!root.dataset.theme && matchMedia('(prefers-color-scheme: dark)').matches)) ? 'b' : 'a';
+root.dataset.dir = initial; root.dataset.density = 'compact';
+$$('#dirSeg button').forEach(b => b.setAttribute('aria-pressed', b.dataset.dir === initial));
+buildNav(); buildScope(); go('overview'); movePills();
+if (document.fonts) document.fonts.ready.then(() => { movePills(); moveInd(); });
+})();
+
+</script>
+
+</html>

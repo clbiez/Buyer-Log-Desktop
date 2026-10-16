@@ -11,7 +11,7 @@ const INDEX=fs.readFileSync(path.join(root,'public','index.html'),'utf8');
 test('v5.62 Collection cells are vertically centered and use consistent typography with requested exceptions',()=>{
   assert.match(CSS,/#kolTable tbody td\{vertical-align:middle!important;font-size:var\(--kol-cell-fs\);\}/);
   assert.match(CSS,/td:not\(\.endeksmatikTd\).*font-size:var\(--kol-cell-fs\)!important/);
-  assert.match(CSS,/\.kolLandedMeta[\s\S]*font-size:9px!important/);
+  assert.match(CSS,/\.kolLandedMeta[\s\S]*font-size:var\(--fs-2xs\)!important/);
 });
 
 test('v5.62 truncated Collection text gets a hover preview',()=>{

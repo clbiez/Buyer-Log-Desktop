@@ -222,7 +222,7 @@
   }
   function render(){
     if(!root)return;
-    const head=`<div class="psaHead"><div class="psaTitle"><h2>${esc(t('title'))}</h2><p>${esc(t('subtitle'))}</p></div>
+    const head=`<div class="psaHead"><div class="psaTitle"><p>${esc(t('subtitle'))}</p></div>
       <div class="psaHeadActions"><label class="psaField psaSource"><span>${esc(t('source'))}</span><select data-ps="source">${sourceOptions()}</select></label>
       <button type="button" class="psaGhostBtn" data-ps="export"${model&&model.totals.records>0?'':' disabled'}>${icon('file-export')}<span>${esc(t('excel'))}</span></button></div></div>`;
     let body='';

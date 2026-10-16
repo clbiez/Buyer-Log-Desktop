@@ -1,0 +1,19 @@
+/* Komut paleti (Ctrl+Shift+K). Yalnız token kullanır; DESIGN_SYSTEM.md §7 ve §8. */
+.blCmdOverlay{position:fixed;inset:0;z-index:12000;display:grid;place-items:start center;padding:12vh 16px 16px;background:var(--scrim);}
+.blCmdOverlay[hidden]{display:none;}
+.blCmdCard{width:min(620px,100%);max-height:min(560px,76vh);display:flex;flex-direction:column;background:var(--pop,var(--card));border:1px solid var(--line2);border-radius:var(--r-lg);box-shadow:var(--shadow-3);overflow:hidden;animation:blDialogIn var(--bl-motion-enter,190ms) var(--bl-ease,ease) both;}
+.blCmdField{display:flex;align-items:center;gap:10px;padding:0 14px;border-bottom:1px solid var(--line);}
+.blCmdField .ic{width:18px;height:18px;color:var(--muted);flex:none;}
+.blCmdInput{flex:1;min-width:0;height:calc(var(--ctl-h) + 14px);border:0;outline:none;background:transparent;color:var(--ink);font-family:var(--sans);font-size:var(--fs-md);}
+.blCmdInput:focus-visible{box-shadow:none;}
+.blCmdField kbd{font-family:var(--mono);font-size:var(--fs-2xs);color:var(--muted);border:1px solid var(--line);border-radius:var(--r-xs);padding:1px 6px;}
+.blCmdList{flex:1;overflow:auto;padding:6px;}
+.blCmdGroup{padding:10px 10px 4px;font-family:var(--sans);font-size:var(--fs-2xs);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);}
+.blCmdItem{display:flex;align-items:center;gap:10px;min-height:var(--ctl-h);padding:0 10px;border-radius:var(--r-sm);cursor:pointer;color:var(--ink);font-family:var(--sans);font-size:var(--fs-sm);}
+.blCmdItem span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.blCmdItem small{margin-left:auto;flex:none;font-size:var(--fs-2xs);color:var(--muted);}
+.blCmdItem.isActive{background:var(--acc-bg);color:var(--acc-ink);box-shadow:inset 2px 0 0 var(--acc);}
+.blCmdItem.isActive small{color:var(--acc-ink);}
+.blCmdEmpty{padding:24px 12px;text-align:center;color:var(--muted);font-size:var(--fs-sm);}
+.blCmdFoot{padding:8px 14px;border-top:1px solid var(--line);font-size:var(--fs-2xs);color:var(--muted);background:var(--card2);}
+@media(prefers-reduced-motion:reduce){.blCmdCard{animation:none;}}

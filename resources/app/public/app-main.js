@@ -2576,6 +2576,7 @@ const BL_OVERLAY_SELECTOR = [
   '.warnOverlay', '.backlogDetailOverlay', '.backlogDimAddOverlay',
   '.accessAdminOverlay', '.autoModalOverlay', '.awModalOverlay',
   '.globalSearchOverlay', '.quotationAccessOverlay', '.uaOverlay',
+  '.blCmdOverlay', '.blpOverlay',
 ].join(',');
 
 function blOverlayStack(){
@@ -3610,7 +3611,7 @@ function cpPlmDetailsSync(){
 /* Grup bantları artık doygun renk + beyaz yazı yerine, tabloyla aynı sakin
    yüzey rengini kullanır; ayrım rengi ince bir ÜST ÇİZGİ ile verilir (yazı
    okunurluğu bozulmaz). Renkler CSS'te .groupRow th[data-grp] ile uygulanır. */
-const GROUP_ACCENTS = {'Öncelik':'var(--red,var(--acc))','PLM Numune':'var(--teal)','Marka Detayları':'var(--acc)','Model Detayları':'var(--acc)','Sipariş Detayları':'var(--green)','Lisans Detayları':'var(--purple)','Tarihler':'var(--teal)','Tarihler & Sevkiyat':'var(--teal)','Kumaş Detayları':'var(--orange)','Lojistik':'var(--purple)','Notlar':'var(--ink2)','Checklist':'var(--green)','Fiyatlandırma':'var(--green)','Endeksmatik & Avantaj':'var(--orange)','Hesaplanan':'var(--pink,var(--purple))'}; // i18n-ignore — sütun grubu anahtarları (veri)
+const GROUP_ACCENTS = {'Öncelik':'var(--red,var(--acc))','PLM Numune':'var(--teal)','Marka Detayları':'var(--acc)','Model Detayları':'var(--acc)','Sipariş Detayları':'var(--green)','Lisans Detayları':'var(--purple)','Tarihler':'var(--teal)','Tarihler & Sevkiyat':'var(--teal)','Kumaş Detayları':'var(--orange)','Lojistik':'var(--purple)','Notlar':'var(--ink2)','Checklist':'var(--green)','Fiyatlandırma':'var(--green)','Endeksmatik & Avantaj':'var(--orange)','Hesaplanan':'var(--chart-5)'}; // i18n-ignore — sütun grubu anahtarları (veri)
 /* Tablo ana başlıklarının (sütun grubu) görünen TR/EN adları. `group` değeri
    kimliktir; ekranda daima aktif dile göre bu katalogdan okunur. */
 const TABLE_COLUMN_GROUP_LABELS = Object.freeze({

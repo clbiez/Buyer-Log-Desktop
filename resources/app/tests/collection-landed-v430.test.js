@@ -253,7 +253,7 @@ test('sütun sırası Overseas Landed → TR Landed ve ikisi tablonun en sağın
 test('v5.62 landed hücreleri Endeksmatik ile aynı minimum yükseklikte kompakt kart kullanıyor', () => {
   assert.ok(HTML.includes('kolLandedCard'), 'Landed kart kapsayıcısı kullanılmalı');
   assert.ok(/\.kolLandedCard\{[\s\S]*?min-height:38px/.test(CSS), 'kart Endeksmatik gibi minimum 38px yüksekliğinde olmalı');
-  assert.ok(/\.kolLandedCard\{[\s\S]*?border-radius:9px/.test(CSS), 'Endeksmatik ile uyumlu kart köşe yapısı kullanılmalı');
+  assert.ok(/\.kolLandedCard\{[\s\S]*?border-radius:var\(--r-md\)/.test(CSS), 'Endeksmatik ile uyumlu kart köşe yapısı kullanılmalı');
   assert.ok(/\.kolLandedTd\{padding:3px 5px/.test(CSS), 'hücre dolgusu Endeksmatik yüksekliğiyle uyumlu olmalı');
   assert.ok(/\.kolLandedCard\{[\s\S]*?display:flex/.test(CSS), 'kalan veriler aynı satırda hizalanmalı');
 });

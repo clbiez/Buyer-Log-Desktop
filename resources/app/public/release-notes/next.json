@@ -532,6 +532,296 @@
           "en": "CP checklist status menu: attachments at the top, custom statuses listed (demo data)."
         }
       }
+    },
+    {
+      "id": "design-language-unified-scale",
+      "type": "improvement",
+      "module": {
+        "tr": "Arayüz ve tema",
+        "en": "Interface and theme"
+      },
+      "title": {
+        "tr": "Tüm modüllerde tek yazı ölçeği, köşe ve yazı ailesi",
+        "en": "One type scale, corner style and typeface across all modules"
+      },
+      "body": {
+        "tr": "Modüller kendi sabit yazı boyutlarını, köşe yuvarlaklıklarını ve yazı ailelerini kullanıyordu; 82 farklı yazı boyutu ve 56 farklı köşe değeri vardı. Hepsi ortak ölçeğe bağlandı. Arayüz boyutu (Büyük, Çok Büyük) artık yalnız bazı yazıları değil, form etiketleri, rozetler, menü ve tablo metinleri dahil tüm metni aynı oranda büyütür. Yuvarlak çip ve düğmeler köşeli tasarım diline uyar.",
+        "en": "Modules used their own fixed font sizes, corner radii and typefaces; there were 82 font sizes and 56 corner values. All of them now follow one shared scale. Interface size (Large, Extra large) now enlarges all text in the same proportion, including form labels, badges, the menu and table text, not just some of it. Rounded chips and buttons follow the square design language."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "design-language-unified-scale.png",
+        "caption": {
+          "tr": "Fiyat & Üretici Analizi, Arayüz: Çok Büyük ayarında; sekmeler, filtre etiketleri, kartlar ve menü birlikte büyür (demo veri).",
+          "en": "Price & Supplier Analysis at Interface size Extra large; tabs, filter labels, cards and the menu scale together (demo data)."
+        },
+        "alt": {
+          "tr": "Fiyat & Üretici Analizi, Arayüz: Çok Büyük ayarında; sekmeler, filtre etiketleri, kartlar ve menü birlikte büyür (demo veri).",
+          "en": "Price & Supplier Analysis at Interface size Extra large; tabs, filter labels, cards and the menu scale together (demo data)."
+        }
+      }
+    },
+    {
+      "id": "overview-clock-country-code",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Saat kartında Türkiye kodu doğru görünür",
+        "en": "The clock card shows the correct code for Türkiye"
+      },
+      "body": {
+        "tr": "Dünya saatleri kartında Türkiye'nin ülke kodu çeviri katmanına takılıp \"EN\" olarak görünüyordu. Ülke kodları artık çevrilmez.",
+        "en": "On the world clocks card the country code for Türkiye was caught by the translation layer and shown as \"EN\". Country codes are no longer translated."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-clock-country-code.png",
+        "caption": {
+          "tr": "Dünya saatleri kartında Türkiye için TR kodu (demo veri).",
+          "en": "The world clocks card showing TR for Türkiye (demo data)."
+        },
+        "alt": {
+          "tr": "Dünya saatleri kartında Türkiye için TR kodu (demo veri).",
+          "en": "The world clocks card showing TR for Türkiye (demo data)."
+        }
+      }
+    },
+    {
+      "id": "data-lab-environment-labels",
+      "type": "fix",
+      "module": {
+        "tr": "Veri Yönetimi",
+        "en": "Data Management"
+      },
+      "title": {
+        "tr": "Entegrasyon ortamı etiketleri seçili dilde",
+        "en": "Integration environment labels follow the selected language"
+      },
+      "body": {
+        "tr": "Kurumsal Entegrasyon Laboratuvarı'nda ortam ve doğrulama etiketleri Türkçe arayüzde \"Yerel Simulation\" ve \"CORPORATE VALIDATION REQUIRED\" olarak görünüyordu. Etiketler artık Türkçe ve İngilizce olarak doğru gösterilir.",
+        "en": "In the Corporate Integration Lab, the environment and validation labels appeared as \"Yerel Simulation\" and \"CORPORATE VALIDATION REQUIRED\" in the Turkish interface. The labels are now shown correctly in Turkish and English."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "data-lab-environment-labels.png",
+        "caption": {
+          "tr": "Veri Yönetimi laboratuvarında \"Yerel simülasyon\" ve \"Kurumsal doğrulama gerekli\" etiketleri (demo veri).",
+          "en": "The Data Management lab showing the \"Local simulation\" and \"Corporate validation required\" labels in Turkish (demo data)."
+        },
+        "alt": {
+          "tr": "Veri Yönetimi laboratuvarında \"Yerel simülasyon\" ve \"Kurumsal doğrulama gerekli\" etiketleri (demo veri).",
+          "en": "The Data Management lab showing the \"Local simulation\" and \"Corporate validation required\" labels in Turkish (demo data)."
+        }
+      }
+    },
+    {
+      "id": "ui-component-contracts",
+      "type": "improvement",
+      "module": {
+        "tr": "Arayüz ve tema",
+        "en": "Interface and theme"
+      },
+      "title": {
+        "tr": "Düğme, segment, çip, sekme ve KPI kartları her modülde aynı",
+        "en": "Buttons, segments, chips, tabs and KPI cards match across modules"
+      },
+      "body": {
+        "tr": "Eylem düğmeleri 10 farklı yükseklikte, seçim kontrolleri 9 ayrı stilde, KPI kartları 4 ayrı tipografide çiziliyordu. Artık iki düğme boyu, tek seçimli segment (aktif seçenek dolu renkte), filtre çipi (aktif çip açık vurguda), alt çizgili sayfa sekmesi ve tek KPI düzeni var. KPI değerleri modül açılırken sayarak gelir; azaltılmış hareket ayarında durur.",
+        "en": "Action buttons came in 10 heights, selection controls in 9 styles and KPI cards in 4 typographies. There are now two button sizes, one single-choice segment (the active option is filled), one filter chip (the active chip uses a light accent), underlined page tabs and one KPI layout. KPI values count up when a module opens and stay still when reduced motion is on."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ui-component-contracts.png",
+        "caption": {
+          "tr": "Genel Bakış: alt çizgili sayfa sekmeleri, tek segment ve köşeli filtre çipleri (demo veri).",
+          "en": "Overview: underlined page tabs, a single segment style and square filter chips (demo data)."
+        },
+        "alt": {
+          "tr": "Genel Bakış: alt çizgili sayfa sekmeleri, tek segment ve köşeli filtre çipleri (demo veri).",
+          "en": "Overview: underlined page tabs, a single segment style and square filter chips (demo data)."
+        }
+      }
+    },
+    {
+      "id": "ui-color-system",
+      "type": "improvement",
+      "module": {
+        "tr": "Arayüz ve tema",
+        "en": "Interface and theme"
+      },
+      "title": {
+        "tr": "Tek renk sistemi ve doğrulanmış grafik paleti",
+        "en": "One colour system and a validated chart palette"
+      },
+      "body": {
+        "tr": "Ekranlarda 200'den fazla sabit renk ve tanımsız renk adları kullanılıyordu; bazı paneller bu yüzden zeminsiz kalıyor ya da karanlık temada açık renk görünüyordu. Renkler tema renklerine bağlandı. Backlog zaman akışı ve grafikler, renk körlüğünde de ayırt edilen 8 renklik ortak paleti kullanır.",
+        "en": "Screens used more than 200 fixed colours and undefined colour names; some panels lost their background or stayed light in the dark theme. Colours now follow the theme. The Backlog timeline and charts use a shared 8-colour palette that also stays distinguishable with colour blindness."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "ui-color-system-chart-palette.png",
+        "caption": {
+          "tr": "Backlog zaman akışında ortak grafik paleti (demo veri).",
+          "en": "The shared chart palette on the Backlog timeline (demo data)."
+        },
+        "alt": {
+          "tr": "Backlog zaman akışında ortak grafik paleti (demo veri).",
+          "en": "The shared chart palette on the Backlog timeline (demo data)."
+        }
+      }
+    },
+    {
+      "id": "command-palette",
+      "type": "feature",
+      "module": {
+        "tr": "Arayüz",
+        "en": "Interface"
+      },
+      "title": {
+        "tr": "Komut paleti: Ctrl+Shift+K",
+        "en": "Command palette: Ctrl+Shift+K"
+      },
+      "body": {
+        "tr": "Ctrl+Shift+K ile açılan palette modül adı veya komut yazıp Enter ile gidilir: veri modelinden güncelle, kaydet, tema, dil, arayüz boyutu, Backlog sunum raporu ve Excel Backlog V3. Ctrl+K eskisi gibi CP Tracker aramasını açar.",
+        "en": "Press Ctrl+Shift+K, type a module name or a command and press Enter: refresh from the data model, save, theme, language, interface size, Backlog presentation report and Excel Backlog V3. Ctrl+K still opens the CP Tracker search."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "command-palette.png",
+        "caption": {
+          "tr": "Komut paletinde \"sunum\" araması (demo veri).",
+          "en": "Searching \"sunum\" in the command palette (demo data)."
+        },
+        "alt": {
+          "tr": "Komut paletinde \"sunum\" araması (demo veri).",
+          "en": "Searching \"sunum\" in the command palette (demo data)."
+        }
+      }
+    },
+    {
+      "id": "compact-rail-hover",
+      "type": "feature",
+      "module": {
+        "tr": "Arayüz",
+        "en": "Interface"
+      },
+      "title": {
+        "tr": "Daraltılmış menü üzerine gelince açılır",
+        "en": "The collapsed menu opens on hover"
+      },
+      "body": {
+        "tr": "Menü daraltıldığında simgelerin üzerine gelince veya klavyeyle odaklanınca etiketler içeriği itmeden menü üstünde görünür; ayrılınca menü yeniden daralır.",
+        "en": "When the menu is collapsed, hovering or keyboard focus shows the labels over the content without pushing it; the menu collapses again when you leave."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "compact-rail-hover.png",
+        "caption": {
+          "tr": "Daraltılmış menü üzerine gelinince etiketlerle açılır (demo veri).",
+          "en": "The collapsed menu opens with labels on hover (demo data)."
+        },
+        "alt": {
+          "tr": "Daraltılmış menü üzerine gelinince etiketlerle açılır (demo veri).",
+          "en": "The collapsed menu opens with labels on hover (demo data)."
+        }
+      }
+    },
+    {
+      "id": "page-title-single",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat & Üretici Analizi",
+        "en": "Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "Sayfa başlığı tek yerde",
+        "en": "The page title appears once"
+      },
+      "body": {
+        "tr": "Fiyat & Üretici Analizi ve Lisans kartlarında üst çubuktaki başlık sayfa içinde de tekrar yazılıyordu. Başlık artık yalnız üst çubukta; sayfada kısa açıklama kalır.",
+        "en": "Price & Supplier Analysis and License cards repeated the top-bar title inside the page. The title now appears only in the top bar; the page keeps its short description."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "page-title-single.png",
+        "caption": {
+          "tr": "Fiyat & Üretici Analizi başlığı yalnız üst çubukta (demo veri).",
+          "en": "The Price & Supplier Analysis title appears only in the top bar (demo data)."
+        },
+        "alt": {
+          "tr": "Fiyat & Üretici Analizi başlığı yalnız üst çubukta (demo veri).",
+          "en": "The Price & Supplier Analysis title appears only in the top bar (demo data)."
+        }
+      }
+    },
+    {
+      "id": "lfl-hidden-band-fix",
+      "type": "fix",
+      "module": {
+        "tr": "LFL Analizi",
+        "en": "LFL Analysis"
+      },
+      "title": {
+        "tr": "LFL'de boş bant ve gereksiz Trial bandı kalktı",
+        "en": "LFL no longer shows an empty band and an unneeded Trial banner"
+      },
+      "body": {
+        "tr": "Gizli olması gereken yükleme kutusu sayfanın üstünde boş bir bant bırakıyor, Trial modeli yokken de \"Trial kapalı · 0 model\" bandı görünüyordu. Aynı hata Nakliye'deki Gizlenenler düğmesi dahil 8 öğede düzeltildi.",
+        "en": "The loading box that should be hidden left an empty band at the top, and the \"Trial off · 0 models\" banner appeared even without Trial models. The same fault was fixed in 8 elements, including the Hidden rows button in Shipping."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lfl-hidden-band-fix.png",
+        "caption": {
+          "tr": "LFL Analizi boş bant ve 0 modelli Trial bandı olmadan açılır (demo veri).",
+          "en": "LFL Analysis opens without the empty band and the 0-model Trial banner (demo data)."
+        },
+        "alt": {
+          "tr": "LFL Analizi boş bant ve 0 modelli Trial bandı olmadan açılır (demo veri).",
+          "en": "LFL Analysis opens without the empty band and the 0-model Trial banner (demo data)."
+        }
+      }
+    },
+    {
+      "id": "backlog-presentation-report",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Animasyonlu Backlog sunum raporu (HTML / PDF)",
+        "en": "Animated Backlog presentation report (HTML / PDF)"
+      },
+      "body": {
+        "tr": "Backlog araç çubuğundaki Sunum raporu, aktif filtredeki backlog'u animasyonlu bir rapora çevirir: özet, operasyon akışı, dünya haritasında üretim ülkeleri ve İstanbul'a deniz/hava/kara rotaları, 30 günlük projeksiyon, aşama mozaiği, kırılımlar, haftalık akış, aksiyonlar ve veri kalitesi. Rapor HTML olarak indirilir, masaüstünde PDF olarak basılır; Excel için Backlog V3 kullanılır. Sayılar ekrandaki Backlog ve Excel Backlog V3 ile aynıdır.",
+        "en": "Presentation report in the Backlog toolbar turns the backlog in the active filter into an animated report: summary, operational flow, production countries on a world map with sea/air/road routes to Istanbul, a 30-day projection, a stage mosaic, breakdowns, weekly flow, actions and data quality. Download it as HTML or, in the desktop app, as PDF; Excel uses Backlog V3. Figures match the on-screen Backlog and Excel Backlog V3."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-presentation-report.png",
+        "caption": {
+          "tr": "Sunum raporunda üretim ülkeleri ve İstanbul'a nakliye rotaları (demo veri).",
+          "en": "Production countries and shipping routes to Istanbul in the presentation report (demo data)."
+        },
+        "alt": {
+          "tr": "Sunum raporunda üretim ülkeleri ve İstanbul'a nakliye rotaları (demo veri).",
+          "en": "Production countries and shipping routes to Istanbul in the presentation report (demo data)."
+        }
+      }
     }
   ]
 }

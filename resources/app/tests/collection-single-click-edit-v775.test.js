@@ -82,7 +82,8 @@ test('Ctrl+C from a focused Collection editor copies spreadsheet cell/range unle
 test('matrix paste is intercepted from a focused editor while a single scalar paste stays native',()=>{
   const bind=between(sheet,'function bind(){',"q('kolSpreadsheetPasteBtn')");
   assert.match(bind,/matrixLike=\/\\t\/\.test\(text\)/);
-  assert.match(bind,/if\(gridEditor&&!matrixLike\)return/);
+  // #593: dropdown/status editors route even scalar Ctrl+V through the validated transaction.
+  assert.match(bind,/if\(gridEditor&&!matrixLike&&!choiceEditor\)return/);
   assert.match(bind,/void pasteText\(text\)/);
 });
 
@@ -102,7 +103,7 @@ test('multiline Collection notes keep native newline paste unless the clipboard 
   const bind=between(sheet,'function bind(){',"q('kolSpreadsheetPasteBtn')");
   assert.match(bind,/gridEditor\?\.dataset\?\.k==='not'/);
   assert.match(bind,/gridEditor\.tagName==='TEXTAREA'/);
-  assert.match(bind,/!\/\\t\/\.test\(text\)/);
+  assert.match(bind,/gridEditor\.tagName==='TEXTAREA'&&!matrixLike\)return/);
 });
 
 test('single click itself has no persistence/calculation calls',()=>{

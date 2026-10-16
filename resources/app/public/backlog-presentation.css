@@ -1,0 +1,15 @@
+/* Backlog sunum raporu önizleme penceresi. Yalnız token kullanır (DESIGN_SYSTEM.md). */
+.blpOverlay{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;padding:14px;background:var(--scrim);}
+.blpOverlay[hidden]{display:none;}
+.blpDialog{width:min(1500px,100%);height:min(960px,100%);display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line2);border-radius:var(--r-lg);box-shadow:var(--shadow-3);overflow:hidden;animation:blDialogIn var(--bl-motion-enter,190ms) var(--bl-ease,ease) both;}
+.blpHead{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line);background:var(--card2);}
+.blpTitleBox{display:flex;align-items:baseline;gap:10px;min-width:0;margin-right:auto;}
+.blpTitleBox h2{margin:0;font-family:var(--head);font-size:var(--fs-lg);font-weight:700;color:var(--ink);}
+.blpMeta{font-size:var(--fs-xs);color:var(--muted);white-space:nowrap;}
+.blpActions{display:flex;gap:6px;flex-wrap:wrap;}
+.blpBody{position:relative;flex:1;min-height:0;background:var(--paper);}
+.blpFrame{display:block;width:100%;height:100%;border:0;background:var(--paper);}
+.blpFrame[hidden]{display:none;}
+.blpState{position:absolute;inset:0;display:grid;place-items:center;padding:24px;color:var(--ink2);font-size:var(--fs-sm);text-align:center;}
+.blpState[hidden]{display:none;}
+@media(prefers-reduced-motion:reduce){.blpDialog{animation:none;}}

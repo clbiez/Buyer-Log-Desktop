@@ -15,7 +15,9 @@ const lang=()=>document.documentElement.lang==='en'?'en':'tr';
 const L=(tr,en)=>lang()==='en'?en:tr;
 const nf=new Intl.NumberFormat('tr-TR',{maximumFractionDigits:0});
 const pf=new Intl.NumberFormat('tr-TR',{maximumFractionDigits:1});
-const TIMELINE_GROUP_COLORS=['#2563eb','#7c3aed','#0891b2','#059669','#d97706','#dc2626','#db2777','#4f46e5','#0f766e','#9333ea','#475569','#ca8a04'];
+/* Kategorik grafik paleti tema token'larından okunur (app.css --chart-1…8); tema değişince yeniden çizimde güncellenir. */
+const CHART_FALLBACK=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#6250d6','#e34948'];
+function chartColors(){try{const cs=getComputedStyle(document.documentElement);const out=[];for(let i=1;i<=8;i++){const v=cs.getPropertyValue('--chart-'+i).trim();if(v)out.push(v);}return out.length===8?out:CHART_FALLBACK;}catch(_){return CHART_FALLBACK;}}
 const n=v=>nf.format(Number(v)||0);
 const pct=v=>v==null||!Number.isFinite(v)?'—':'%'+pf.format(v*100);
 const R=()=>window.BLBacklogV3Report;
@@ -243,7 +245,7 @@ function timelineTipHtml(title,bucket){
   const total=Number(bucket&&bucket.qty)||0,overdue=Number(bucket&&bucket.overdueQty)||0;
   return `<strong>${esc(title)}</strong>${rows}<span class="backlogChartTooltipTotal"><i></i><b>${esc(L('Dönem toplamı','Period total'))}</b><em>${esc(n(total))}</em></span>${overdue?`<span class="blvTimelineTooltipOverdue"><i></i><b>${esc(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'))}</b><em>${esc(n(overdue))}</em></span>`:''}`;
 }
-function timelineGroupColor(index){return TIMELINE_GROUP_COLORS[Math.max(0,Number(index)||0)%TIMELINE_GROUP_COLORS.length]}
+function timelineGroupColor(index){const colors=chartColors();return colors[Math.max(0,Number(index)||0)%colors.length]}
 function timelineDimensionTipHtml(title,bucket,dimension,names){
   const grouped=R().groupBy(bucket&&bucket.items||[],dimension,{blank:L('(boş)','(blank)')}),byName=new Map(grouped.map(g=>[g.name,g]));
   const rows=(names||[]).map((name,index)=>{
