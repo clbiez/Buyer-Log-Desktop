@@ -74,10 +74,20 @@ Aile listesi (`"Barlow Condensed",…`) yalnız token tanımında ve `@font-face
 - Metin: `--ink`, `--ink2`, `--muted`. Çizgi: `--line`, `--line2`, `--hair`.
 - Vurgu: `--acc`, `--acc-bg`, `--acc-ink`, `--on-acc`, `--acc-hover`.
 - Durum: `--red`, `--orange`, `--yellow`, `--green` ve `*-bg` eşleri. Durum rengi vurgu değildir.
+- Doygun dolgu üzerindeki yazı `--on-solid`; modal/katman perdesi `--scrim`; gölge yalnız `--shadow-1|2|3`.
+- Grafik: kategorik `--chart-1 … --chart-8` (açık + karanlık değerler). Palet dataviz
+  doğrulayıcısından geçmiştir (renk körlüğü ΔE ≥ 8, normal görüş ΔE ≥ 15); sıra sabittir,
+  JS grafikleri değeri `getComputedStyle` ile okur. Backlog aşama renkleri ayrı ve anlamsaldır
+  (`BLBacklogV3Report.STAGES`).
 - **Dokunulmaz:** `--thead-bg`, `--thead-ink` ve rozet renkleri. Excel'e Aktar / Kopyala
   hücre rengini canlı DOM'dan okur; bu değerleri değiştirmek dışa aktarılan dosyayı değiştirir.
+  Excel yeşili (`#217346`), baskı stilleri, e-posta HTML'i ve pano/Excel HTML'i de bilinçli
+  olarak ham renk kullanır (Outlook ve Excel CSS değişkeni okumaz).
 - Yeni ham renk kodu (`#hex`, `rgb()`, `hsl()`) eklenmez. Mevcut ham renkler dosya başına
   `tests/fixtures/design-color-baseline.json` tavanıyla dondurulmuştur; tavan yalnız düşer.
+- Kullanılan her `var(--x)` tanımlı olmalıdır (CSS'te ya da JS `setProperty` ile). Tanımsız
+  değişken geçersiz değer üretir: zemin şeffaf kalır, fallback her temada aynı renge düşer.
+  `--bg`, `--surface`, `--warn`, `--ok`, `--accent` gibi takma adlar kullanılmaz.
 
 ## 6 · Tema
 
@@ -87,17 +97,23 @@ yalnız token kullanır. Yeni bileşen üç temada da ekran görüntüsüyle do�
 
 ## 7 · Bileşen sözleşmeleri
 
-Her biri için **tek** varyant hedeflenir. Modüle özel kopya açılmaz.
+Eşdeğer modül bileşenleri `experience.css` sonundaki **BİLEŞEN SÖZLEŞMELERİ** bölümünde tek
+kuralda toplanır (`tests/ui-component-contract-v20261015.test.js`). Modül CSS'i bu bileşenlerin
+yüksekliğini, yazısını, çerçevesini ve aktif durumunu yeniden tanımlamaz; yeni bir eşdeğer
+bileşen sözleşme seçicisine eklenir.
 
 | Bileşen | Sözleşme |
 | --- | --- |
-| Düğme | Yükseklik `--ctl-h`; ikincil = saç teli çerçeve, birincil = dolu `--acc` (ekranda tek). |
-| Sekme / segment | Ekran içi görünüm değişimi tek segment kontrolüyle; alt çizgili sekme yalnız sayfa düzeyi gezinmede. |
-| KPI kartı | Etiket `--fs-xs` `--ink2`, değer `--fs-xl`/`--fs-2xl` `--sans` 700, alt satır `--fs-xs`. Renkli üst çizgi yalnız durum taşıyorsa. |
-| Sayfa başlığı | Başlık yalnız üst çubukta (`#pageTitle`); sayfa içinde aynı başlık tekrar yazılmaz. |
-| Çip / rozet | Köşeli, `--fs-xs`, durum rengi `*-bg` zemin + `*` metin. |
+| Düğme L | Ana eylem: `--ctl-h`, `--fs-xs` 600. Birincil = dolu `--acc` (ekranda tek). |
+| Düğme S | Kart içi eylem: `--ctl-h-sm` (= `--ctl-h` − 8px, arayüz boyutuyla büyür). |
+| Segment | Tek seçim: saç teli kap, S yükseklik, aktif seçenek dolu `--acc` / `--on-acc`. |
+| Filtre çipi | Çoklu seçim / süzgeç: köşeli, S yükseklik, aktif = `--acc-bg` + `--acc` çerçeve. |
+| Sayfa sekmesi | Sayfa içi gezinme: alt çizgi, zemin yok, aktif = `--acc` alt çizgi. |
+| KPI kartı | Etiket `--fs-xs` 600 `--ink2`; değer `--fs-2xl` 700 `--sans` `tabular-nums`; alt satır `--fs-xs` `--muted`. Değer rengi yalnız durum taşıyorsa değişir. |
+| Sayfa başlığı | Yalnız üst çubukta (`#pageTitle`); sayfa içinde tekrar yazılmaz. |
 | Boş durum | Tek ikon + başlık + tek cümle + en fazla bir eylem. |
-| Tablo | Başlık `--thead-*`, satır yüksekliği `--table-row-h`, sayılar sağa hizalı ve `tabular-nums`. |
+| Tablo | Başlık `--thead-*`, satır `--table-row-h`, sayılar sağa hizalı ve `tabular-nums`. |
+| Gizli öğe | Sınıfı `display` tanımlıyorsa `.sınıf[hidden]{display:none}` de tanımlanır. |
 
 ## 8 · Hareket ve erişilebilirlik
 
@@ -108,10 +124,23 @@ Her biri için **tek** varyant hedeflenir. Modüle özel kopya açılmaz.
 - Her görünen metin TR/EN çiftidir (CLAUDE.md §4.1). Kod, ülke kodu, kimlik gibi çevrilmeyecek
   metin `data-no-i18n` taşır.
 
-## 9 · Bilinen borç (2026-10-15 denetimi)
+## 9 · Uygulama düzeyi desenler
 
-- Bileşen varyantları: 133 düğme sınıfı, 194 kart/panel sınıfı, 81 çip/rozet sınıfı, 37 KPI sınıfı.
-  §7'ye göre tekleştirilecek.
-- Sayfa başlığı tekrarı: Fiyat & Üretici Analizi, Lisans kartları, Veri Yönetimi.
-- `app-main.js` içinde ~215 satır içi `style="…"` ve ham renk; JS'te üretilen renkler token'a taşınacak.
-- `app.css` 212, `giris.css` 67 ham renk kullanımı (tavanlı).
+- **Komut paleti** (`command-palette.js`): Ctrl+Shift+K. Ctrl+K mevcut "CP Tracker'da ara"
+  kısayoludur. Başlıkta görünür arama kutusu yoktur (v7.26 kullanıcı kararı).
+- **Kompakt ray:** dar modda üzerine gelince/odaklanınca etiketler içeriği itmeden açılır
+  (`--rail-full-w`).
+- **KPI sayacı** (`kpi-motion.js`): modül açılışında sayar, sonunda özgün metne döner.
+- **Sunum raporu** (`backlog-presentation-report.js`): saf üretici; JS kapalıyken tam, katı CSP,
+  dış kaynak yok. Uygulamada `allow-same-origin` olmadan iframe'de; PDF `buyerlog:render-pdf`.
+
+## 10 · Bilinen borç (2026-10-16)
+
+- **z-index:** 98 farklı değer. Katmanların (menü, modal, bildirim, kilit perdesi) üst üste
+  açılma sırası davranış testiyle doğrulanmadan kademeye sıkıştırılmadı. Önerilen kademeler:
+  içerik 1–10 · yapışkan 30 · ray 60 · üst çubuk 300 · açılır 1000 · modal 10000 · bildirim 12000+.
+- **Bileşen kopyaları:** sözleşme görünümü tekleştirdi, ama modül sınıfları (133 düğme,
+  81 çip/rozet sınıfı) hâlâ ayrı. Yeni ekranlar mevcut sınıfları kullanmalı.
+- **Veri gösterimi:** ülke adları kaynaktaki gibi (TURKIYE / Georgia) karışık yazımda.
+- **LFL Üretici Sipariş Hacimleri:** dar bölmede sütun başlıkları harf harf kırılıyor (CP tablo motoru).
+- **Ham renk:** `app.css` 48, `giris.css` 68 (bağımsız giriş sayfası paleti) — tavanlı.
