@@ -30,7 +30,7 @@ test('Palet Ctrl+Shift+K ile açılır ve mevcut Ctrl+K CP aramasını korur', (
 test('Palet görünür arama kutusu eklemez, katman sistemine ve overlay listesine kayıtlıdır', () => {
   assert.doesNotMatch(INDEX, /class="gsearch"/);
   assert.match(PALETTE, /BLLayerSystem\?\.openDialog\)root\.BLLayerSystem\.openDialog\(overlay,\{onClose:close,initialFocus:input\}\)/);
-  assert.match(read('app-main.js'), /'\.blCmdOverlay',\n\]\.join\(','\);/, 'yazınca-ara kısayolu palet açıkken tuşları çalmamalı');
+  assert.match(read('app-main.js'), /'\.blCmdOverlay', '\.blpOverlay',\n\]\.join\(','\);/, 'yazınca-ara kısayolu palet açıkken tuşları çalmamalı');
   assert.match(INDEX, /<script src="command-palette\.js\?v=__BL_ASSET_VERSION__&rev=1"><\/script>/);
   assert.match(INDEX, /<link rel="stylesheet" href="command-palette\.css\?v=__BL_ASSET_VERSION__&rev=1">/);
 });
