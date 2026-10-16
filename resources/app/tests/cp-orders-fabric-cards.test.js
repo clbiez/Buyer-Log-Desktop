@@ -10,7 +10,7 @@ const engine=require('../public/fabric-cards-engine.js');
 test('CP and Orders load shared fabric cards without changing PLM data or update pipeline',()=>{
   assert.match(html,/cp-orders-fabric-cards\.js\?v=__BL_ASSET_VERSION__/);
   assert.match(helper,/global\.BLFabricCards/);
-  assert.match(helper,/data\.blFabricRaw/);
+  assert.match(helper,/dataset\.blFabricRaw/);
   assert.match(helper,/sustainability/);
   assert.match(helper,/data-fabric-filter/);
   assert.match(helper,/row\.style\.display=pass\?'':'none'/);
