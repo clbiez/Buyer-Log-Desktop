@@ -29,7 +29,8 @@ test('CP and Orders render Fabric (PLM) with the Collection fabric-card cell and
   assert.match(APP,/openFabricCardDialog\(String\(kolEffectiveValue\(row,'fabric'\)\?\?''\),\{trigger,code,collection:true\}\)/);
   assert.match(APP,/await kolFabricCardsSave\(\[card\]\);close\(\);fabricCardsRepaintTables\(\);/);
   assert.match(APP,/await kolFabricCardDelete\(code\);close\(\);fabricCardsRepaintTables\(\);/);
-  assert.match(APP,/function fabricCardsRepaintTables\(\)\{\n\s*renderKol\(\);\n\s*if\(state\.cp\)renderCP\(\);\n\s*if\(state\.orders\)renderOrders\(\);/);
+  assert.match(APP,/function fabricCardsRepaintTables\(\)\{[\s\S]{0,160}if\(currentActiveTab\(\)==='koleksiyon'\)renderKol\(\);else kolFabricRepaintPending=true;\n\s*if\(state\.cp\)renderCP\(\);\n\s*if\(state\.orders\)renderOrders\(\);/);
+  assert.match(APP,/if\(tab==='koleksiyon'&&kolFabricRepaintPending\)\{kolFabricRepaintPending=false;/);
   // Görünüm stili Koleksiyon'la aynı kuraldır.
   assert.match(CSS,/:is\(#kolTable,#cpTable,#ordersTable\) tbody \.kolFabricCell\{/);
   assert.match(CSS,/\.colFilterPanel:has\(\.kolFabricFacetPanel\)/);
@@ -44,11 +45,15 @@ test('CP and Orders Fabric (PLM) filter shows card summaries and the same fabric
   assert.match(APP,/const read=fabricCardFacetSection\(panel,\{\n\s*current,\n\s*detailsForKey:field=>universe\.filter\(list=>fabricCardDetailsMatch\(list,current,field\)\)\.flat\(\)/);
   // Alan süzgeci değer seçimiyle birlikte saklanır ve tüm filtre yollarında uygulanır.
   assert.match(APP,/fabricDetails:Object\.fromEntries\(Object\.entries\(details\)\.map/);
-  assert.match(APP,/if\(isCpFabricFilterKey\(tableKey,key\)&&entry\.fabricDetails\)\{/);
+  assert.match(APP,/const fabricKey=\(tableKey==='cp'\|\|tableKey==='orders'\)&&key==='Fabric \(PLM\)';\n\s*if\(fabricKey\)kolFabricCardsEnsureLoaded\(\);\n\s*if\(fabricKey&&entry\.fabricDetails\)\{/);
   assert.match(APP,/if\(prepared\.kind==='fabric-card'\)\{\n\s*if\(prepared\.base&&!preparedColFilterPasses\(prepared\.base,key,row\)\)return false;\n\s*return fabricCardDetailsMatch\(fabricCardDetailsForRaw\(row\?row\[key\]:''\),prepared\.details\);/);
   // Uygula yalnız değer listesini okur; alan süzgeci kutuları değer kümesine karışmaz.
   assert.match(APP,/const boxes = \[\.\.\.bodyEl\.querySelectorAll\('\.cfpList input\[type=checkbox\]'\)\];/);
-  // Kayıtlı filtre profili: yalnız alan süzgeci varsa boş değer kümesi satır elemez.
+  // Otomatik sayfa filtresi kaydı (yeniden açılış) alan süzgecini korur.
+  assert.match(APP,/\.\.\.\(entry\.fabricDetails\?\{fabricDetails:entry\.fabricDetails,hasValues:!!entry\.values\}:\{\}\)/);
+  assert.match(APP,/if\(entry\.fabricDetails&&typeof entry\.fabricDetails==='object'\)\{out\[key\]\.fabricDetails=entry\.fabricDetails;if\(entry\.hasValues===false\)delete out\[key\]\.values;\}/);
+  // Sütun gizliyken de kayıtlı kumaş filtresi kart sözlüğünü yükletir.
+    // Kayıtlı filtre profili: yalnız alan süzgeci varsa boş değer kümesi satır elemez.
   assert.match(APP,/if\(v\.fabricDetails&&typeof v\.fabricDetails==='object'\)\{out\[k\]\.fabricDetails=v\.fabricDetails;if\(v\.hasValues===false\)delete out\[k\]\.values;\}/);
 });
 

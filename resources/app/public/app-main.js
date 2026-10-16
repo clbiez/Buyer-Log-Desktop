@@ -39,6 +39,7 @@ function coreSerializeFilters(bucket){
       numericRule:entry.numericRule||null,
       quickPriority:!!entry.quickPriority,
       quickExf:!!entry.quickExf,
+      ...(entry.fabricDetails?{fabricDetails:entry.fabricDetails,hasValues:!!entry.values}:{}),
     };
   });
   return out;
@@ -54,6 +55,8 @@ function coreDeserializeFilters(bucket){
       quickPriority:!!entry.quickPriority,
       quickExf:!!entry.quickExf,
     };
+    // CP/Orders kumaş kartı alan süzgeci: yalnız alan seçimi varsa boş değer kümesi satır elememeli.
+    if(entry.fabricDetails&&typeof entry.fabricDetails==='object'){out[key].fabricDetails=entry.fabricDetails;if(entry.hasValues===false)delete out[key].values;}
   });
   return out;
 }
@@ -2185,6 +2188,7 @@ function switchTab(tab){
     const dataReady=ensureCollectionCatalogLoaded({deferRender:true});
     void Promise.all([dataReady,profileReady]).then(()=>{if(currentActiveTab()==='koleksiyon'&&typeof renderKol==='function')renderKol();});
   }
+  if(tab==='koleksiyon'&&kolFabricRepaintPending){kolFabricRepaintPending=false;if(typeof renderKol==='function')renderKol();}
   if(tab==='koleksiyon'||tab==='priceanalysis'||tab==='quotations'||tab==='pricinghistory'){
     void window.BLPerf.ensureFeature('collectionTools').then(()=>{
       if(tab==='priceanalysis')return window.initPriceSupplierAnalysis?.();
@@ -6253,7 +6257,10 @@ function cpFabricFilterDetails(entry){
 const _preparedFabricFilterCache=new WeakMap();
 function prepareColFilter(tableKey,key,entry){
   if(!entry)return null;
-  if(isCpFabricFilterKey(tableKey,key)&&entry.fabricDetails){
+  // Yalnız CP/Orders kumaş sütununda yardımcılara dokunulur (sandbox testleri diğer dalları ayrı çalıştırır).
+  const fabricKey=(tableKey==='cp'||tableKey==='orders')&&key==='Fabric (PLM)';
+  if(fabricKey)kolFabricCardsEnsureLoaded();
+  if(fabricKey&&entry.fabricDetails){
     const cached=_preparedFabricFilterCache.get(entry);
     if(cached)return cached;
     const details=cpFabricFilterDetails(entry);
@@ -29226,8 +29233,10 @@ function kolFabricCardsSet(data){
 }
 /* Kart sözlüğü değişince onu gösteren üç tablo da yeniden çizilir (CP/Orders
    yalnız açık sekmede çizilir; renderCP/renderOrders bunu kendisi erteler). */
+var kolFabricRepaintPending=false;
 function fabricCardsRepaintTables(){
-  renderKol();
+  // Koleksiyon görünmüyorsa gizli tabloyu (ve yan etkilerini) şimdi çizme; sekmeye girişte çizilir.
+  if(currentActiveTab()==='koleksiyon')renderKol();else kolFabricRepaintPending=true;
   if(state.cp)renderCP();
   if(state.orders)renderOrders();
 }
