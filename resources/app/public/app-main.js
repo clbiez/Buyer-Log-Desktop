@@ -18900,13 +18900,13 @@ function updateShippingBtnVisibility(){
     ctk.disabled = !has;
     ctk.title = has ? `${cpCount} satırı Koleksiyon'a kopyala` : "Koleksiyon'a kopyalamak için önce satır seç";
   }
-  const endeksmatikBtn=document.getElementById('ordersEndeksmatikBtn');
-  if(endeksmatikBtn){
-    const enabled=activeTab==='orders'&&ordersCount===1;
-    endeksmatikBtn.disabled=!enabled;
-    endeksmatikBtn.title=enabled
-      ?(appLang==='en'?'Calculate the selected order’s Endeksmatik price one year later':'Seçili siparişin 1 yıl sonraki Endeksmatik fiyatını hesapla')
-      :(appLang==='en'?'Select exactly one order first':'Endeksmatik için önce tek bir sipariş seçin');
+  for(const mode of ['cp','orders']){
+    const button=document.getElementById(mode+'EndeksmatikBtn');if(!button)continue;
+    const rows=activeTab===mode?selectedEndeksmatikRows(mode):[];
+    button.disabled=rows.length!==1;
+    button.title=rows.length===1
+      ?(appLang==='en'?'Calculate Endeksmatik one year before or after the selected order':'Seçili siparişin bir yıl öncesi veya sonrası için Endeksmatik hesapla')
+      :(appLang==='en'?'Select exactly one visible order first':'Önce görünür tek bir sipariş seçin');
   }
   /* "Seçilenleri Güncelle" seçim YOKKEN kapalıdır. Kapalı bırakmak, sessizce
      tüm filtrelenmiş kümeye genişlemekten güvenlidir. */
@@ -22549,8 +22549,8 @@ function endeksmatikDefaultAdjustment(){
 }
 function endeksmatikRoyaltyRule(mode,row){
   try{
-    const rule=mode==='orders'
-      ?findSuppFobRule(row&&row.OPD,row&&row.Country,row&&row.Season,row&&row.Licensor,row&&row.License)
+    const rule=mode==='orders'||mode==='cp'
+      ?findSuppFobRule(...['orderPlacementDate','country','season','licensor','license'].map(id=>window.BLCanonicalFields.canonicalValue(row,mode,id)))
       :kolFindPricingRule(row);
     if(!rule)return null;
     const royalty=Number(rule.royalty), hologramCost=Number(rule.hologramCost);
@@ -22559,16 +22559,29 @@ function endeksmatikRoyaltyRule(mode,row){
     return {license:rule.license||'',licensor:rule.licensor||'',royalty,hologramCost};
   }catch(_){ return null; }
 }
+function selectedEndeksmatikRows(mode){
+  const selected=mode==='orders'?state.ordersSelected:state.cpSelected;
+  if(!selected?.size)return [];
+  return (mode==='orders'?filteredOrders():filteredCP()).filter(row=>selected?.has(row._id));
+}
+function selectedEndeksmatikOrder(mode){
+  const activeTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
+  if(activeTab!==mode)return null;
+  const rows=selectedEndeksmatikRows(mode);
+  if(rows.length!==1){showToast(appLang==='en'?'Select exactly one visible order for Endeksmatik.':'Endeksmatik için görünür tek bir sipariş seçin.');return null;}
+  return rows[0];
+}
 function endeksmatikModelContext(mode,row){
-  if(mode==='orders'){
-    const oldOrder=endeksmatikMonthFromDate(row&&row.OPD),oldStore=endeksmatikMonthFromDate(row&&row['In-Store (Model Budget)']);
+  if(mode==='orders'||mode==='cp'){
+    const value=id=>window.BLCanonicalFields.canonicalValue(row,mode,id);
+    const oldOrder=endeksmatikMonthFromDate(value('orderPlacementDate')),oldStore=endeksmatikMonthFromDate(value('inStore'));
     return {
       mode,row,
-      modelName:norm(row&&row['Model Name']),orderCode:norm(row&&row['Order Code']),
-      mmyg:norm(row&&row['Merch Marka Yaş Grup Kod']),mag:norm(row&&row['Merch Alt Grup Kod']),buyingGroup:norm(row&&row['Buyer Grup (TR)']),category:norm(row&&row.Category),
+      modelName:norm(value('modelName')),orderCode:norm(value('orderCode')),
+      mmyg:norm(value('mmyg')),mag:norm(value('mag')),buyingGroup:norm(value('buyingGroup')),category:norm(value('category')),
       supplyGroup:'',previousOrderMonth:oldOrder,previousInStoreMonth:oldStore,newOrderMonth:endeksmatikAddYear(oldOrder),newInStoreMonth:endeksmatikAddYear(oldStore),
       separateTryPeriods:false,previousTryOrderMonth:oldOrder,previousTryInStoreMonth:oldStore,
-      previousUsdPrice:row&&row['FOB ($)']!=null?row['FOB ($)']:'',previousTryPrice:'',adjustmentPct:endeksmatikDefaultAdjustment(),defaultAdjustmentPct:endeksmatikDefaultAdjustment(),royaltyIncluded:false,royaltyRule:endeksmatikRoyaltyRule(mode,row),
+      previousUsdPrice:value('fob')??'',previousTryPrice:'',adjustmentPct:endeksmatikDefaultAdjustment(),defaultAdjustmentPct:endeksmatikDefaultAdjustment(),royaltyIncluded:false,royaltyRule:endeksmatikRoyaltyRule(mode,row),
       setId:'',level:5,singOff:{},
     };
   }
@@ -22606,13 +22619,14 @@ function endeksmatikResultHtml(result){
   if(!result)return '';
   const c=result.class||{},i=result.indexes||{},fx=result.fx||{},months=result.months||{},separate=Boolean(months.separateTryPeriods),usdModel=Boolean(result.model&&result.model!=='legacy-tl');
   const sharedComponents=Array.isArray(result.components)?result.components:[],usdComponents=Array.isArray(result.componentsUsd)?result.componentsUsd:sharedComponents,tryComponents=Array.isArray(result.componentsTry)?result.componentsTry:sharedComponents;
+  const backward=result.priceReference==='new';
   const usd=endeksmatikMoney(result.prices&&result.prices.usd,'USD'),tr=endeksmatikMoney(result.prices&&result.prices.try,'TRY'),adjustment=Number(i.adjustmentPct),adjustmentLabel=Number.isFinite(adjustment)?adjustment.toLocaleString(appLang==='en'?'en-US':'tr-TR',{maximumFractionDigits:4})+'%':'—';
   const componentHtml=separate
     ? `${endeksmatikComponentTableHtml(usdComponents,appLang==='en'?'Overseas USD reference periods':'Overseas USD referans dönemleri')}${endeksmatikComponentTableHtml(tryComponents,appLang==='en'?'Domestic TRY reference periods':'Domestic TL referans dönemleri')}`
     : endeksmatikComponentTableHtml(sharedComponents);
-  return `<div class="endeksmatikResultGrid">
-    <div><span>${escapeHtml(appLang==='en'?'Suggested overseas price':'Önerilen YD fiyat')}</span><strong>${escapeHtml(usd||'—')}</strong><small>${escapeHtml(endeksmatikPct(i.targetUsd))}</small></div>
-    <div><span>${escapeHtml(appLang==='en'?'Suggested TR price':'Önerilen TR fiyat')}</span><strong>${escapeHtml(tr||'—')}</strong><small>${escapeHtml(endeksmatikPct(i.targetTl))}</small></div>
+  return `${backward?`<div class="endeksmatikNotice">${escapeHtml(appLang==='en'?'Prices below estimate the previous period. The tables show the forward index from the previous period to the selected order; the price uses its inverse.':'Aşağıdaki fiyatlar önceki dönem tahminidir. Tablolar önceki dönemden seçili siparişe doğru endeksi gösterir; fiyat bu endeksin tersiyle hesaplanır.')}</div>`:''}<div class="endeksmatikResultGrid">
+    <div><span>${escapeHtml(backward?(appLang==='en'?'Estimated previous overseas price':'Tahmini önceki YD fiyatı'):(appLang==='en'?'Suggested overseas price':'Önerilen YD fiyat'))}</span><strong>${escapeHtml(usd||'—')}</strong><small>${escapeHtml(endeksmatikPct(i.targetUsd))}</small></div>
+    <div><span>${escapeHtml(backward?(appLang==='en'?'Estimated previous TR price':'Tahmini önceki TR fiyatı'):(appLang==='en'?'Suggested TR price':'Önerilen TR fiyat'))}</span><strong>${escapeHtml(tr||'—')}</strong><small>${escapeHtml(endeksmatikPct(i.targetTl))}</small></div>
     <div><span>${escapeHtml(appLang==='en'?'USD/TL change':'USD/TL değişimi')}</span><strong>${escapeHtml(endeksmatikPct(fx.change))}</strong><small>${escapeHtml(`${fx.previous??'—'} → ${fx.new??'—'}`)}</small></div>
   </div>
   <div class="endeksmatikResolvedClass"><b>${escapeHtml(appLang==='en'?'Resolved class':'Eşleşen klasman')}</b><span>${escapeHtml([c.mmyg,c.mag,c.supplyGroup,c.buyingGroup,c.category].filter(Boolean).join(' · '))}${usdModel&&result.levelLabel&&Number(result.level)!==5?escapeHtml(` · ${appLang==='en'?'level':'seviye'}: ${result.levelLabel}`):''}</span></div>
@@ -22690,7 +22704,8 @@ async function openEndeksmatikModal({mode='collection',row}={}){
         <label class="endeksmatikField"><span>${escapeHtml(en?'Calculation level':'Hesap seviyesi')}</span><select data-em-field="level">${[5,4,3,2,1].map(level=>`<option value="${level}"${Number(ctx.level||5)===level?' selected':''}>${escapeHtml(['','MMYG','MAG',en?'Supply Group':'Tedarik Grup','Buyer Grup',en?'Class':'Klasman'][level])}</option>`).join('')}</select><small data-em-level-note>${escapeHtml(en?'Upper levels use the workbook subtotals (USD model sets only).':'Üst seviyeler Excel’deki ara toplamları kullanır (yalnız USD modeli setleri).')}</small></label>
       </div>
       <div class="endeksmatikSourceBar" data-em-update title="${escapeHtml(en?'Double-click to load a new ENDEKSMATIK workbook':'Yeni ENDEKSMATİK Excel’i yüklemek için çift tıklayın')}">${endeksmatikSourceBarHtml(selectedSet)}</div>
-      ${mode==='collection'?`<div class="endeksmatikNotice">${escapeHtml(en?'Previous-season periods remain manual. You can type a month or choose only month/year from the calendar. Previous Season FOB is only a starting value and remains editable.':'Geçen sezon dönemleri manuel kalır. Ayı elle yazabilir veya takvimden yalnız ay/yıl seçebilirsiniz. Previous Season FOB yalnız başlangıç değeridir ve elle değiştirilebilir.')}</div>`:`<div class="endeksmatikNotice">${escapeHtml(en?'Orders starts from the selected order’s OPD, In Store and FOB; the new periods are initially +1 year. All dates and prices remain editable.':'Orders, seçili siparişin OPD, In Store ve FOB değerleriyle başlar; yeni dönemler ilk olarak +1 yıl gelir. Tüm tarih ve fiyatlar değiştirilebilir.')}</div>`}
+      ${mode!=='collection'?`<label class="endeksmatikField"><span>${escapeHtml(en?'Calculation direction':'Hesap yönü')}</span><select data-em-order-direction><option value="forward">${escapeHtml(en?'One year after the order (+1 year)':'Siparişten bir yıl sonrası (+1 yıl)')}</option><option value="backward">${escapeHtml(en?'One year before the order (−1 year)':'Siparişten bir yıl öncesi (−1 yıl)')}</option></select></label>`:''}
+      ${mode==='collection'?`<div class="endeksmatikNotice">${escapeHtml(en?'Previous-season periods remain manual. You can type a month or choose only month/year from the calendar. Previous Season FOB is only a starting value and remains editable.':'Geçen sezon dönemleri manuel kalır. Ayı elle yazabilir veya takvimden yalnız ay/yıl seçebilirsiniz. Previous Season FOB yalnız başlangıç değeridir ve elle değiştirilebilir.')}</div>`:`<div class="endeksmatikNotice">${escapeHtml(en?'OPD, In Store, FOB and classification come from the selected order. Choose ±1 year to fill the periods and calculate automatically. Missing dates remain empty; dates and prices are editable.':'OPD, In Store, FOB ve klasman seçili siparişten alınır. ±1 yıl seçimi dönemleri doldurup otomatik hesaplar. Eksik tarihler boş kalır; tarih ve fiyatlar değiştirilebilir.')}</div>`}
       <div class="endeksmatikIdentityGrid">
         <label><span>MMYG</span><input value="${endeksmatikInputValue(ctx.mmyg)}" readonly></label>
         <label><span>MAG</span><input value="${endeksmatikInputValue(ctx.mag)}" readonly></label>
@@ -22720,8 +22735,8 @@ async function openEndeksmatikModal({mode='collection',row}={}){
       </div>
       <div class="endeksmatikValidation" data-em-validation hidden></div>
       <div class="endeksmatikPriceGrid">
-        <label class="endeksmatikField"><span>${escapeHtml(en?'Previous overseas price (USD)':'Geçen YD fiyatı (USD)')}</span><div class="endeksmatikMoneyInput"><i>$</i><input type="text" inputmode="decimal" data-em-field="previousUsdPrice" value="${endeksmatikInputValue(ctx.previousUsdPrice)}" placeholder="0,00"></div><small>${escapeHtml(mode==='collection'?(en?'Previous Season FOB is only the default; manual entry is allowed.':'Previous Season FOB yalnız varsayılandır; manuel giriş serbesttir.'):(en?'Selected order FOB is only the default; manual entry is allowed.':'Seçili sipariş FOB’u yalnız varsayılandır; manuel giriş serbesttir.'))}</small></label>
-        <label class="endeksmatikField"><span>${escapeHtml(en?'Previous TR price (TRY)':'Geçen TR fiyatı (TRY)')}</span><div class="endeksmatikMoneyInput"><i>₺</i><input type="text" inputmode="decimal" data-em-field="previousTryPrice" value="${endeksmatikInputValue(ctx.previousTryPrice)}" placeholder="0,00"></div><small>${escapeHtml(en?'Optional manual reference price':'Opsiyonel manuel referans fiyat')}</small></label>
+        <label class="endeksmatikField"><span data-em-usd-label>${escapeHtml(en?'Previous overseas price (USD)':'Geçen YD fiyatı (USD)')}</span><div class="endeksmatikMoneyInput"><i>$</i><input type="text" inputmode="decimal" data-em-field="previousUsdPrice" value="${endeksmatikInputValue(ctx.previousUsdPrice)}" placeholder="0,00"></div><small>${escapeHtml(mode==='collection'?(en?'Previous Season FOB is only the default; manual entry is allowed.':'Previous Season FOB yalnız varsayılandır; manuel giriş serbesttir.'):(en?'Selected order FOB is only the default; manual entry is allowed.':'Seçili sipariş FOB’u yalnız varsayılandır; manuel giriş serbesttir.'))}</small></label>
+        <label class="endeksmatikField"><span data-em-try-label>${escapeHtml(en?'Previous TR price (TRY)':'Geçen TR fiyatı (TRY)')}</span><div class="endeksmatikMoneyInput"><i>₺</i><input type="text" inputmode="decimal" data-em-field="previousTryPrice" value="${endeksmatikInputValue(ctx.previousTryPrice)}" placeholder="0,00"></div><small>${escapeHtml(en?'Optional manual reference price':'Opsiyonel manuel referans fiyat')}</small></label>
         <label class="endeksmatikField"><span>${escapeHtml(en?'Target adjustment %':'Hedef düzeltme %')}</span><div class="endeksmatikMoneyInput"><i>%</i><input type="text" inputmode="decimal" data-em-field="adjustmentPct" value="${endeksmatikInputValue(ctx.adjustmentPct)}" placeholder="${escapeHtml(String(ctx.defaultAdjustmentPct))}" aria-label="${escapeHtml(en?'Adjustment rate percent':'Adjustment rate yüzde')}"></div><small>${escapeHtml(en
           ? `Comes from the ENDEKSMATIK workbook (${ctx.defaultAdjustmentPct}%); type another value to override it for this model.`
           : `ENDEKSMATİK dosyasından gelir (%${ctx.defaultAdjustmentPct}); bu model için başka bir değer yazarak değiştirebilirsiniz.`)}</small></label>
@@ -22760,6 +22775,7 @@ async function openEndeksmatikModal({mode='collection',row}={}){
   const close=()=>{document.removeEventListener('keydown',keyHandler);overlay.remove();};overlay.querySelectorAll('[data-em-close]').forEach(btn=>btn.addEventListener('click',close));
   overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
   document.addEventListener('keydown',keyHandler);
+  const directionSelect=overlay.querySelector('[data-em-order-direction]');
   const calcBtn=overlay.querySelector('[data-em-calc]'),validationEl=overlay.querySelector('[data-em-validation]'),separateToggle=overlay.querySelector('[data-em-separate-try]'),trySection=overlay.querySelector('[data-em-try-periods]');
   const get=name=>overlay.querySelector(`[data-em-field="${name}"]`)?.value||'';
   const monthCodeOf=name=>kolMonthCode(get(name));
@@ -22822,6 +22838,7 @@ async function openEndeksmatikModal({mode='collection',row}={}){
       royaltyIncluded:get('royaltyIncluded')==='1',
       royaltyPct:ctx.royaltyRule?ctx.royaltyRule.royalty:0,
       hologramCost:ctx.royaltyRule?ctx.royaltyRule.hologramCost:0};
+    if(directionSelect?.value==='backward')payload.priceReference='new';
     payload.setId=get('setId')||'';
     payload.level=Number(get('level'))||5;
     const singOff={};
@@ -22916,11 +22933,13 @@ async function openEndeksmatikModal({mode='collection',row}={}){
   updateSetUi();
   overlay.querySelector('[data-em-copy]')?.addEventListener('click',()=>{
     let payload;try{payload=buildPayload();}catch(err){showToast(err.message);return;}
-    const copied={schemaVersion:1,sourceModel:ctx.modelName||ctx.orderCode||'',copiedAt:new Date().toISOString(),previousOrderMonth:payload.previousOrderMonth,previousInStoreMonth:payload.previousInStoreMonth,newOrderMonth:payload.newOrderMonth,newInStoreMonth:payload.newInStoreMonth,separateTryPeriods:payload.separateTryPeriods,previousTryOrderMonth:payload.previousTryOrderMonth,previousTryInStoreMonth:payload.previousTryInStoreMonth,previousUsdPrice:get('previousUsdPrice'),previousTryPrice:get('previousTryPrice'),adjustmentPct:get('adjustmentPct'),royaltyIncluded:payload.royaltyIncluded};
+    const copied={schemaVersion:1,sourceModel:ctx.modelName||ctx.orderCode||'',copiedAt:new Date().toISOString(),priceReference:payload.priceReference||'previous',previousOrderMonth:payload.previousOrderMonth,previousInStoreMonth:payload.previousInStoreMonth,newOrderMonth:payload.newOrderMonth,newInStoreMonth:payload.newInStoreMonth,separateTryPeriods:payload.separateTryPeriods,previousTryOrderMonth:payload.previousTryOrderMonth,previousTryInStoreMonth:payload.previousTryInStoreMonth,previousUsdPrice:get('previousUsdPrice'),previousTryPrice:get('previousTryPrice'),adjustmentPct:get('adjustmentPct'),royaltyIncluded:payload.royaltyIncluded};
     if(endeksmatikClipboardWrite(copied)){const paste=overlay.querySelector('[data-em-paste]');if(paste)paste.disabled=false;showToast(en?'Endeksmatik setup copied. Open another model and apply it; the result will be recalculated for that model.':'Endeksmatik hesabı kopyalandı. Başka modeli açıp uygulayın; sonuç hedef model için yeniden hesaplanacaktır.');}
   });
   overlay.querySelector('[data-em-paste]')?.addEventListener('click',()=>{
     const copied=endeksmatikClipboardRead();if(!copied){showToast(en?'No copied Endeksmatik setup found.':'Kopyalanmış Endeksmatik hesabı bulunamadı.');return;}
+    if(copied.priceReference==='new'&&!directionSelect){showToast(en?'Paste a backward calculation into CP or Orders.':'Geriye dönük hesabı CP veya Orders ekranına yapıştırın.');return;}
+    if(directionSelect)directionSelect.value=copied.priceReference==='new'?'backward':'forward';
     ['previousOrderMonth','previousInStoreMonth','newOrderMonth','newInStoreMonth'].forEach(name=>setMonth(name,copied[name]||''));
     if(separateToggle)separateToggle.checked=Boolean(copied.separateTryPeriods);updateTrySection({seed:true});
     if(copied.separateTryPeriods){setMonth('previousTryOrderMonth',copied.previousTryOrderMonth||copied.previousOrderMonth||'');setMonth('previousTryInStoreMonth',copied.previousTryInStoreMonth||copied.previousInStoreMonth||'');}
@@ -22930,7 +22949,9 @@ async function openEndeksmatikModal({mode='collection',row}={}){
   });
   calcBtn?.addEventListener('click',async()=>{
     let payload;try{payload=buildPayload();}catch(err){if(!validationEl?.textContent)showToast(err.message);return;}
-    calcBtn.disabled=true;const old=calcBtn.textContent;calcBtn.textContent=en?'Calculating…':'Hesaplanıyor…';
+    const controls=Array.from(overlay.querySelectorAll('input,select,button')).filter(el=>!el.matches('[data-em-close]')).map(el=>[el,el.disabled]);
+    controls.forEach(([el])=>{el.disabled=true;});
+    const old=calcBtn.textContent;calcBtn.textContent=en?'Calculating…':'Hesaplanıyor…';
     try{
       const res=await fetch('/api/endeksmatik/calculate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)}),data=await res.json().catch(()=>({}));
       if(!res.ok){
@@ -22948,9 +22969,30 @@ async function openEndeksmatikModal({mode='collection',row}={}){
         kolPushUndo();row=kolWriteGroupedStorageValue(row,'endeksmatikData',nextEndeksmatik);
         saveKolRows();renderKol();showToast(en?'Endeksmatik benchmark saved to Collection.':'Endeksmatik benchmark Koleksiyon’a kaydedildi.');
       }
-    }catch(err){showToast((en?'Endeksmatik calculation failed: ':'Endeksmatik hesabı yapılamadı: ')+(err?.message||String(err)));}
-    finally{if(calcBtn.isConnected){calcBtn.textContent=old;validateChronology();}}
+    }catch(err){const message=(en?'Endeksmatik calculation failed: ':'Endeksmatik hesabı yapılamadı: ')+(err?.message||String(err));const resultEl=overlay.querySelector('#_endeksmatikResult');if(resultEl)resultEl.textContent=message;showToast(message);}
+    finally{if(calcBtn.isConnected){controls.forEach(([el,disabled])=>{el.disabled=disabled;});calcBtn.textContent=old;validateChronology();}}
   });
+  if(directionSelect){
+    const applyOrderDirection=()=>{
+      const backward=directionSelect.value==='backward';
+      const sourceOrder=ctx.previousOrderMonth,sourceStore=ctx.previousInStoreMonth;
+      setMonth('previousOrderMonth',backward?endeksmatikShiftMonthCode(sourceOrder,-1):sourceOrder);
+      setMonth('previousInStoreMonth',backward?endeksmatikShiftMonthCode(sourceStore,-1):sourceStore);
+      setMonth('newOrderMonth',backward?sourceOrder:endeksmatikAddYear(sourceOrder));
+      setMonth('newInStoreMonth',backward?sourceStore:endeksmatikAddYear(sourceStore));
+      setMonth('previousTryOrderMonth',monthCodeOf('previousOrderMonth'));
+      setMonth('previousTryInStoreMonth',monthCodeOf('previousInStoreMonth'));
+      separateToggle.checked=false;updateTrySection();
+      overlay.querySelector('[data-em-usd-label]').textContent=en?'Reference overseas price (USD)':'Referans YD fiyatı (USD)';
+      overlay.querySelector('[data-em-try-label]').textContent=en?'Reference TR price (TRY)':'Referans TR fiyatı (TRY)';
+      overlay.querySelector('#_endeksmatikResult').innerHTML='';
+      const ready=['previousOrderMonth','previousInStoreMonth','newOrderMonth','newInStoreMonth'].every(name=>monthCodeOf(name));
+      if(ready&&endeksmatikNumber(get('previousUsdPrice'))>0&&validateChronology())calcBtn.click();
+      else overlay.querySelector('#_endeksmatikResult').textContent=en?'Complete the order dates and reference FOB, then calculate.':'Sipariş tarihlerini ve referans FOB’u tamamlayıp hesaplayın.';
+    };
+    directionSelect.addEventListener('change',applyOrderDirection);
+    applyOrderDirection();
+  }
 }
 function endeksmatikFileBase64(file){
   return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||'').split(',').pop()||'');reader.onerror=()=>reject(reader.error||new Error('FileReader error'));reader.readAsDataURL(file);});
@@ -23071,12 +23113,9 @@ document.getElementById('sourceEndeksmatikUploadBtn')?.addEventListener('click',
   
   triggerEndeksmatikUpload();
 });
-document.getElementById('ordersEndeksmatikBtn')?.addEventListener('click',()=>{
-  const activeTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
-  if(activeTab!=='orders'){showToast(appLang==='en'?'Open Orders and select one order first.':'Önce Orders sayfasını açıp tek bir sipariş seçin.');return;}
-  const rows=selectedCpRowsForAction();if(rows===null)return;
-  if(!rows||rows.length!==1){showToast(appLang==='en'?'Select exactly one order for Endeksmatik.':'Endeksmatik için yalnızca bir sipariş seçin.');return;}
-  void openEndeksmatikModal({mode:'orders',row:rows[0]});
+for(const mode of ['cp','orders'])document.getElementById(mode+'EndeksmatikBtn')?.addEventListener('click',()=>{
+  const row=selectedEndeksmatikOrder(mode);
+  if(row)void openEndeksmatikModal({mode,row});
 });
 setTimeout(()=>void refreshEndeksmatikStatus({silent:true}).then(()=>{if(document.body.dataset.activeTab==='koleksiyon')renderKol();}),0);
 function kolCurrentUserProfile(){ return (state&&state.currentUser)||window.BL_USER_CONTEXT||{}; }

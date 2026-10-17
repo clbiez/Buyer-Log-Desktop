@@ -398,6 +398,15 @@ function singOffDecision(input = {}) {
   };
 }
 
+// Geri hesap, aynı kronolojik endeksin tersidir; endekslenmeyen masraflar
+// kaynak dönemde çıkarılır, hedef dönemde yeniden eklenir.
+function applyPriceIndex(base, index, backward) {
+  if (base == null) return null;
+  const factor = index == null ? NaN : 1 + index;
+  if (backward && (!Number.isFinite(factor) || factor <= 0)) throw modelError('Endeks geri hesaplanamıyor / Index cannot be inverted.', 'INDEX_NOT_INVERTIBLE');
+  return backward ? base / factor : base * factor;
+}
+
 /* ------------------------------------------------------------------ hesap */
 function calculate(snapshot, input = {}, runtime = buildIndex(snapshot)) {
   const { record, level } = resolveRecord(runtime, input);
@@ -436,33 +445,34 @@ function calculate(snapshot, input = {}, runtime = buildIndex(snapshot)) {
   // Royalty + Hologram: masraflar endekslenmez (bkz. endeksmatik.js v5.94 notu).
   const royaltyRaw = numberValue(input.royaltyPct), royaltyPct = Number.isFinite(royaltyRaw) && royaltyRaw >= 0 && royaltyRaw < 100 ? royaltyRaw : 0;
   const hologramRaw = numberValue(input.hologramCost), hologramUsd = Number.isFinite(hologramRaw) && hologramRaw >= 0 ? hologramRaw : 0;
+  const backward = input.priceReference === 'new';
   const royaltyIncluded = Boolean(input.royaltyIncluded), royaltyActive = royaltyPct > 0 || hologramUsd > 0;
   const stripCosts = (price, hologram) => (!Number.isFinite(price) || !royaltyActive ? price : (price - hologram) * (1 - royaltyPct / 100));
   const addCosts = (price, hologram) => (!Number.isFinite(price) || !royaltyActive ? price : price / (1 - royaltyPct / 100) + hologram);
   const previousUsdPrice = numberValue(input.previousUsdPrice), previousTryPrice = numberValue(input.previousTryPrice);
   const baseUsd = Number.isFinite(previousUsdPrice) && previousUsdPrice > 0 ? (royaltyIncluded ? stripCosts(previousUsdPrice, hologramUsd) : previousUsdPrice) : null;
-  const indexedUsdPrice = baseUsd != null ? baseUsd * (1 + usd.target) : null;
+  const indexedUsdPrice = baseUsd != null ? applyPriceIndex(baseUsd, usd.target, backward) : null;
   const newUsdPrice = indexedUsdPrice != null ? addCosts(indexedUsdPrice, hologramUsd) : null;
   let baseTry = null, indexedTryPrice = null, newTryPrice = null;
   if (Number.isFinite(previousTryPrice) && previousTryPrice > 0) {
     if (!fxReady) throw modelError('TR fiyatı için seçilen depo aylarından birinin USD/TL (DOLAR) kuru bu sette yok.', 'FX_MISSING', { previousInStoreMonth: previousTryInStoreMonth, newInStoreMonth });
-    baseTry = royaltyIncluded ? stripCosts(previousTryPrice, hologramUsd * oldFx) : previousTryPrice;
-    indexedTryPrice = baseTry * (1 + targetTlIndex);
-    newTryPrice = addCosts(indexedTryPrice, hologramUsd * newFx);
+    baseTry = royaltyIncluded ? stripCosts(previousTryPrice, hologramUsd * (backward ? newFx : oldFx)) : previousTryPrice;
+    indexedTryPrice = applyPriceIndex(baseTry, targetTlIndex, backward);
+    newTryPrice = addCosts(indexedTryPrice, hologramUsd * (backward ? oldFx : newFx));
   }
 
   let singOff = null;
   const so = input.singOff && typeof input.singOff === 'object' ? input.singOff : null;
   if (so) {
-    const trMonth = monthCodeOf(so.trMonth) || newInStoreMonth;
+    const trMonth = monthCodeOf(so.trMonth) || (backward ? previousInStoreMonth : newInStoreMonth);
     const soFx = numberValue(so.trFx) > 0 ? numberValue(so.trFx) : fxAt(trMonth);
     const ederIdx = numberValue(so.ederIndexPct);
-    singOff = singOffDecision({ ...so, idealPrice: newUsdPrice, trMonth, trFx: soFx, ederIndex: Number.isFinite(ederIdx) ? ederIdx / 100 : usd.target });
+    singOff = singOffDecision({ ...so, idealPrice: newUsdPrice, trMonth, trFx: soFx, ederIndex: Number.isFinite(ederIdx) ? ederIdx / 100 : backward ? applyPriceIndex(1, usd.target, true) - 1 : usd.target });
   }
 
   const [, mmyg, mag, supplyGroup, buyingGroup, category] = record;
   return {
-    ok: true, model: MODEL_ID, level, levelLabel: LEVEL_LABELS[level],
+    ok: true, ...(backward ? { priceReference: 'new' } : {}), model: MODEL_ID, level, levelLabel: LEVEL_LABELS[level],
     class: { mmyg, mag, supplyGroup, buyingGroup, category },
     months: { previousOrderMonth, newOrderMonth, previousInStoreMonth, newInStoreMonth, previousTryOrderMonth, previousTryInStoreMonth, separateTryPeriods },
     previousPrices: { try: Number.isFinite(previousTryPrice) ? previousTryPrice : null, usd: Number.isFinite(previousUsdPrice) ? previousUsdPrice : null },
@@ -685,5 +695,5 @@ module.exports = {
   text, norm, keyOf, levelKey, numberValue, monthCodeOf, formulaRefs, traceFormula, checkSignature,
   looksLikeModel, parseWorkbookBuffer, describeScreen, buildIndex,
   // Yapı raporu (endeksmatik-report.js) için iç okuyucular:
-  findSheetName, sheetRows, locateDimHeader, walkHierarchy, findMonthColumns, parseRateTables, DIM_HEADERS, WEIGHT_PATTERNS, resolveRecord, calculate, singOffDecision, reconcile, publicMeta, lookup,
+  findSheetName, sheetRows, locateDimHeader, walkHierarchy, findMonthColumns, parseRateTables, DIM_HEADERS, WEIGHT_PATTERNS, resolveRecord, calculate, applyPriceIndex, singOffDecision, reconcile, publicMeta, lookup,
 };

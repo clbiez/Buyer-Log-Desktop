@@ -57,11 +57,12 @@ test('v5.47 Collection keeps old order/In Store and new order months manual, Pre
 
 test('v5.47 Orders Endeksmatik starts from selected order dates/FOB and proposes exactly +1 year',()=>{
   const block=APP.slice(APP.indexOf("function endeksmatikModelContext"),APP.indexOf("function endeksmatikResultHtml"));
-  assert.match(block,/row&&row\.OPD/);
-  assert.match(block,/row&&row\['In-Store \(Model Budget\)'\]/);
+  assert.match(block,/canonicalValue\(row,mode,id\)/);
+  assert.match(block,/value\('orderPlacementDate'\)/);
+  assert.match(block,/value\('inStore'\)/);
   assert.match(block,/newOrderMonth:endeksmatikAddYear\(oldOrder\)/);
   assert.match(block,/newInStoreMonth:endeksmatikAddYear\(oldStore\)/);
-  assert.match(block,/row&&row\['FOB \(\$\)'\]/);
+  assert.match(block,/value\('fob'\)/);
   assert.match(INDEX,/id="ordersEndeksmatikBtn"/);
   assert.match(APP,/rows\.length!==1/);
 });

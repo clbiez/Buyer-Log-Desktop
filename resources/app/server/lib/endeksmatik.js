@@ -187,6 +187,7 @@ function calculateLegacy(input,runtime=loadSnapshot()){
   const royaltyPct=Number.isFinite(royaltyRaw)&&royaltyRaw>=0&&royaltyRaw<100?royaltyRaw:0;
   const hologramRaw=numberValue(input.hologramCost);
   const hologramUsd=Number.isFinite(hologramRaw)&&hologramRaw>=0?hologramRaw:0;
+  const backward=input.priceReference==='new';
   const royaltyIncluded=Boolean(input.royaltyIncluded);
   const royaltyActive=royaltyPct>0||hologramUsd>0;
   const stripCosts=(price,hologram)=>{
@@ -223,17 +224,17 @@ function calculateLegacy(input,runtime=loadSnapshot()){
   const hologramTryOld=hologramUsd*oldFx, hologramTryNew=hologramUsd*newFx;
   // Endekslenecek taban: kullanıcı masraf dahil girdiyse önce masraflar çıkarılır.
   const baseTry=Number.isFinite(previousTryPrice)&&previousTryPrice>0
-    ?(royaltyIncluded?stripCosts(previousTryPrice,hologramTryOld):previousTryPrice):null;
+    ?(royaltyIncluded?stripCosts(previousTryPrice,backward?hologramTryNew:hologramTryOld):previousTryPrice):null;
   const baseUsd=Number.isFinite(previousUsdPrice)&&previousUsdPrice>0
     ?(royaltyIncluded?stripCosts(previousUsdPrice,hologramUsd):previousUsdPrice):null;
-  const indexedTryPrice=baseTry!=null?baseTry*(1+domestic.targetTlIndex):null;
-  const indexedUsdPrice=baseUsd!=null?baseUsd*(1+targetUsdIndex):null;
+  const indexedTryPrice=baseTry!=null?model.applyPriceIndex(baseTry,domestic.targetTlIndex,backward):null;
+  const indexedUsdPrice=baseUsd!=null?model.applyPriceIndex(baseUsd,targetUsdIndex,backward):null;
   // Sonuç her iki durumda da masraflar DAHİL verilir.
-  const newTryPrice=indexedTryPrice!=null?addCosts(indexedTryPrice,hologramTryNew):null;
+  const newTryPrice=indexedTryPrice!=null?addCosts(indexedTryPrice,backward?hologramTryOld:hologramTryNew):null;
   const newUsdPrice=indexedUsdPrice!=null?addCosts(indexedUsdPrice,hologramUsd):null;
   const {snapshot}=runtime;
   return {
-    ok:true,
+    ok:true,...(backward?{priceReference:'new'}:{}),
     class:{mmyg:record[0],mag:record[1],supplyGroup:record[2],buyingGroup:record[3],category:record[4]},
     months:{previousOrderMonth,previousInStoreMonth,newOrderMonth,newInStoreMonth,previousTryOrderMonth,previousTryInStoreMonth,separateTryPeriods},
     previousPrices:{try:Number.isFinite(previousTryPrice)?previousTryPrice:null,usd:Number.isFinite(previousUsdPrice)?previousUsdPrice:null},

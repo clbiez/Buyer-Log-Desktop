@@ -108,8 +108,8 @@ test('v5.94 hologram TL tarafında dönemin kuruyla çevriliyor', () => {
   // ESKİ dönem kuru, yeni fiyata eklerken YENİ dönem kuru kullanılmalı; aksi
   // halde iki farklı dönemin TL'si aynı kurla karıştırılırdı.
   assert.match(ENGINE, /const hologramTryOld=hologramUsd\*oldFx, hologramTryNew=hologramUsd\*newFx;/);
-  assert.match(ENGINE, /stripCosts\(previousTryPrice,hologramTryOld\)/);
-  assert.match(ENGINE, /addCosts\(indexedTryPrice,hologramTryNew\)/);
+  assert.match(ENGINE, /stripCosts\(previousTryPrice,backward\?hologramTryNew:hologramTryOld\)/);
+  assert.match(ENGINE, /addCosts\(indexedTryPrice,backward\?hologramTryOld:hologramTryNew\)/);
 });
 
 test('v5.94 geçersiz royalty/hologram hesabı bozmuyor', () => {
@@ -125,7 +125,7 @@ test('v5.94 kural ekrandan seçilmiyor, modelin eşleşmesinden geliyor', () => 
   const block = APP.slice(APP.indexOf('function endeksmatikRoyaltyRule'), APP.indexOf('function endeksmatikModelContext'));
   // Koleksiyon ve Siparişler kendi mevcut eşleştiricilerini kullanmalı ki
   // Endeksmatik ile Koleksiyon/CP aynı kuralı görsün.
-  assert.match(block, /mode==='orders'\s*\?findSuppFobRule\(/);
+  assert.match(block, /mode==='orders'\|\|mode==='cp'\s*\?findSuppFobRule\(/ );
   assert.match(block, /:kolFindPricingRule\(row\)/);
   // Geçersiz kural sessizce kabul edilmemeli.
   assert.match(block, /royalty<0\|\|royalty>=100\)return null/);
