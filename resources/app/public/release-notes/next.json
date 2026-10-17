@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-16",
+  "publishedAt": "2026-10-17",
   "bootstrapVisual": false,
   "title": {
-    "tr": "CP ve Siparişler'de Koleksiyon ile aynı kumaş kartları",
-    "en": "Collection fabric cards in CP and Orders"
+    "tr": "CP ve Siparişler’de Endeksmatik ve kumaş kartları",
+    "en": "Endeksmatik and fabric cards in CP and Orders"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler'deki Fabric (PLM) sütunu Koleksiyon Kumaş sütunuyla aynı görünür ve çalışır: kart özeti, çift tıkla kartı düzenleme ve sütun filtresinde kumaş kartı alanlarına göre süzme.",
-    "en": "The Fabric (PLM) column in CP Tracker and Orders looks and works like the Collection Fabric column: card summary, double-click to edit the card and filtering by fabric card fields in the column filter."
+    "tr": "CP Tracker ve Siparişler’de seçili siparişin tarih, klasman ve FOB bilgileriyle bir yıl önce/sonra Endeksmatik hesabı; Koleksiyon ile ortak kumaş kartları ve alan filtreleri.",
+    "en": "Calculate Endeksmatik one year before or after a selected order using its dates, classification and FOB in CP Tracker and Orders; shared Collection fabric cards and field filters."
   },
   "changes": [
     {
@@ -66,6 +66,35 @@
         "alt": {
           "tr": "CP Tracker'da demo veriyle Fabric (PLM) filtresi: kart özetleri ve kumaş kartı alan seçimleri tek panelde.",
           "en": "Fabric (PLM) filter in CP Tracker with demo data: card summaries and fabric card field choices in one panel."
+        }
+      }
+    },
+    {
+      "id": "cp-orders-endeksmatik-year",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Siparişten bir yıl önce ve sonrası için otomatik Endeksmatik",
+        "en": "Automatic Endeksmatik one year before or after an order"
+      },
+      "body": {
+        "tr": "Her iki tabloda tek sipariş seçip Araçlar › Endeksmatik’i açın. OPD, Model Budget tarihi, FOB ve klasman siparişten alınır; açılışta bir yıl sonrası hesaplanır. Bir yıl öncesi seçimi tarihleri otomatik doldurur ve fiyatı endeksin tersiyle hesaplar. Royalty ve hologram kendi dönem kuru ile korunur. Eksik tarih veya set aralığı dışındaki dönemler tahmin edilmez; tarih ve fiyatlar elle düzenlenebilir.",
+        "en": "Select one order in either table and open Tools › Endeksmatik. OPD, Model Budget date, FOB and classification come from the order; opening calculates one year later. Selecting one year earlier fills the periods automatically and calculates the price with the inverse index. Royalty and hologram retain their period-specific exchange rates. Missing dates and periods outside the set range are not guessed; dates and prices remain editable."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-endeksmatik-year.png",
+        "caption": {
+          "tr": "CP Tracker’da demo siparişten otomatik alınan OPD, Model Budget, klasman ve FOB ile bir yıl sonrası Endeksmatik hesabı.",
+          "en": "Endeksmatik calculation one year later, with OPD, Model Budget, classification and FOB automatically taken from a demo order in CP Tracker."
+        },
+        "alt": {
+          "tr": "CP Tracker’da demo siparişten otomatik alınan OPD, Model Budget, klasman ve FOB ile bir yıl sonrası Endeksmatik hesabı.",
+          "en": "Endeksmatik calculation one year later, with OPD, Model Budget, classification and FOB automatically taken from a demo order in CP Tracker."
         }
       }
     }
