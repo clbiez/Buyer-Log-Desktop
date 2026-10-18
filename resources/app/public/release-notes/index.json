@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.283",
+      "publishedAt": "2026-10-18",
+      "title": {
+        "tr": "Premium Overview, Endeksmatik ve kumaş kartları",
+        "en": "Premium Overview, Endeksmatik and fabric cards"
+      },
+      "stats": {
+        "features": 7,
+        "improvements": 6,
+        "fixes": 3
+      },
+      "file": "release-notes/7.0.283/release.json"
+    },
+    {
       "version": "7.0.282",
       "publishedAt": "2026-10-15",
       "title": {
