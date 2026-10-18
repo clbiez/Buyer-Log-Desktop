@@ -8910,12 +8910,12 @@ async function ensureBacklogSourceFields(value) {
 app.get('/api/backlog', userAccess.requireArea('backlog'), async (req, res) => {
   try {
     const id = sourceUserId(req), filterStatus = sourceFilterReadiness(['backlog'], req);
-    const { retailFrom, retailTo, inStoreFrom, inStoreTo, buyerGrup, groupBy, dimFilters, antrepoFrom, antrepoTo, antrepoDateLevels } = req.query;
+    const { retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, buyerGrup, groupBy, dimFilters, antrepoFrom, antrepoTo, antrepoDateLevels } = req.query;
     const dims = groupBy ? String(groupBy).split(',').filter(Boolean) : [];
     const dateLevels = antrepoDateLevels ? String(antrepoDateLevels).split(',').filter(Boolean) : undefined;
     let parsedDimFilters = {};
     if (dimFilters) { try { parsedDimFilters = JSON.parse(dimFilters); } catch { parsedDimFilters = {}; } }
-    const params = { retailFrom:retailFrom||'', retailTo:retailTo||'', inStoreFrom:inStoreFrom||'', inStoreTo:inStoreTo||'', buyerGrup:buyerGrup||'', groupBy:dims, dimFilters:parsedDimFilters, antrepoFrom:antrepoFrom||'', antrepoTo:antrepoTo||'', antrepoDateLevels:dateLevels||[] };
+    const params = { retailFrom:retailFrom||'', retailTo:retailTo||'', inStoreFrom:inStoreFrom||'', inStoreTo:inStoreTo||'', exFactoryFrom:exFactoryFrom||'', exFactoryTo:exFactoryTo||'', buyerGrup:buyerGrup||'', groupBy:dims, dimFilters:parsedDimFilters, antrepoFrom:antrepoFrom||'', antrepoTo:antrepoTo||'', antrepoDateLevels:dateLevels||[] };
     if (!filterStatus.ready) {
       const overrides = loadOverrides();
       const emptyReport = buildBacklogGrouped([], {}, overrides, params);
@@ -9001,11 +9001,11 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
     if(!runtime.asasOrders) await loadFromDisk(id,false);
     await ensureBacklogSourceFields(id);
     const active=cacheForUser(id),overrides=effectiveOverridesForUser(id);
-    const {retailFrom,retailTo,inStoreFrom,inStoreTo,buyerGrup,groupBy,dimFilters,antrepoFrom,antrepoTo,antrepoDateLevels}=req.query;
+    const {retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy,dimFilters,antrepoFrom,antrepoTo,antrepoDateLevels}=req.query;
     const dims=groupBy?String(groupBy).split(',').filter(Boolean):[];
     const dateLevels=antrepoDateLevels?String(antrepoDateLevels).split(',').filter(Boolean):undefined;
     let parsedDimFilters={}; if(dimFilters){try{parsedDimFilters=JSON.parse(dimFilters);}catch{}}
-    const filterOpts={retailFrom,retailTo,inStoreFrom,inStoreTo,buyerGrup,groupBy:dims,dimFilters:parsedDimFilters,antrepoFrom,antrepoTo,antrepoDateLevels:dateLevels};
+    const filterOpts={retailFrom,retailTo,inStoreFrom,inStoreTo,exFactoryFrom,exFactoryTo,buyerGrup,groupBy:dims,dimFilters:parsedDimFilters,antrepoFrom,antrepoTo,antrepoDateLevels:dateLevels};
     const backlogOrders=userAccess.filterRowsByScope(req.currentUser,ordersForTarget(active,'backlog',overrides));
     const backlogAntrepo=antrepoForTarget(active,'backlog');
     // Excel detayı Backlog ekranıyla AYNI hedef kapsamını ve AYNI aktif filtreleri
@@ -9069,6 +9069,7 @@ app.post('/api/backlog-detail', userAccess.requireAnyArea('backlog','cp','orders
         path: String(body.path),
         retailFrom: body.retailFrom || '', retailTo: body.retailTo || '',
         inStoreFrom: body.inStoreFrom || '', inStoreTo: body.inStoreTo || '',
+        exFactoryFrom: body.exFactoryFrom || '', exFactoryTo: body.exFactoryTo || '',
         antrepoFrom: body.antrepoFrom || '', antrepoTo: body.antrepoTo || '',
         buyerGrup: list(body.buyerGrup),
         groupBy: list(body.groupBy),

@@ -307,6 +307,7 @@
 <link rel="stylesheet" href="dual-week-datepicker.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="backlog-delivery-analysis.css?v=__BL_ASSET_VERSION__&rev=20260926-1">
 <link rel="stylesheet" href="backlog-plan-actual.css?v=__BL_ASSET_VERSION__&rev=2">
+<link rel="stylesheet" href="backlog-date-range.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="backlog-overview.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="cp-overview-assistant.css?v=__BL_ASSET_VERSION__&rev=7144">
 <link rel="stylesheet" href="lcwai-assistant.css?v=__BL_ASSET_VERSION__&rev=3">
@@ -1327,9 +1328,12 @@
       <input type="date" id="backlogTo">
       <input type="date" id="backlogInStoreFrom">
       <input type="date" id="backlogInStoreTo">
+      <input type="date" id="backlogExFactoryFrom">
+      <input type="date" id="backlogExFactoryTo">
       <input type="date" id="backlogAntrepoFrom">
       <input type="date" id="backlogAntrepoTo">
     </div>
+    <div id="backlogDateRange" class="panel backlogDateRange"></div>
     <div id="backlogEmpty" class="empty">Backlog raporu, veri modeli yenilendiğinde ("Veri Modelinden Güncelle") otomatik oluşur.</div>
     <div id="backlogDetailModal" class="backlogDetailOverlay" hidden></div>
     <div id="backlogContent" style="display:none">
@@ -1480,6 +1484,7 @@
 <script src="corporate-connections-toolbar.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <!-- Sütun EN/TR görünen adları + veri kaynağı kataloğu (CP / Orders / Koleksiyon). -->
 <script src="column-display-names.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="backlog-date-range.js?v=__BL_ASSET_VERSION__"></script>
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=OVERVIEW-PREMIUM-20261018"></script>
 <script src="collection-artwork-detail.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="checklist-answer-merge-engine.js?v=__BL_ASSET_VERSION__"></script>

@@ -2966,15 +2966,23 @@ function filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, dimensions
     return true;
   }) : inWindow;
 
+  const exFactoryFrom = opts.exFactoryFrom ? parseDateFlexible(opts.exFactoryFrom) : null;
+  const exFactoryTo = opts.exFactoryTo ? parseDateFlexible(opts.exFactoryTo) : null;
+  // Kanonik, güncel/revize Exfactory; IAS handover tarihi ayrı kalır.
+  const exFactoryFiltered = (exFactoryFrom || exFactoryTo) ? inStoreFiltered.filter(o => {
+    const exFactory = toDateOnly(o.ex);
+    return !!exFactory && (!exFactoryFrom || exFactory >= exFactoryFrom) && (!exFactoryTo || exFactory <= exFactoryTo);
+  }) : inStoreFiltered;
+
   const antrepoFrom = opts.antrepoFrom ? parseDateFlexible(opts.antrepoFrom) : null;
   const antrepoTo = opts.antrepoTo ? parseDateFlexible(opts.antrepoTo) : null;
-  const antrepoFiltered = (antrepoFrom || antrepoTo) ? inStoreFiltered.filter(o => {
+  const antrepoFiltered = (antrepoFrom || antrepoTo) ? exFactoryFiltered.filter(o => {
     const antrepo = toDateOnly(o._arr);
     if (!antrepo) return false;
     if (antrepoFrom && antrepo < antrepoFrom) return false;
     if (antrepoTo && antrepo > antrepoTo) return false;
     return true;
-  }) : inStoreFiltered;
+  }) : exFactoryFiltered;
 
   const windowed = antrepoFiltered;
   const buyerGrupFiltered = buyerGrupFilterSet
@@ -3000,7 +3008,7 @@ function filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, dimensions
     ? dimFiltered.filter(o => dateValues.includes(backlogDateBucketKey(o, dateGran)))
     : dimFiltered;
 
-  return { filtered, windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, antrepoFrom, antrepoTo };
+  return { filtered, windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, antrepoFrom, antrepoTo };
 }
 
 // Her boyut için sipariş kümesinde GERÇEKTEN bulunan değerler.
@@ -3046,7 +3054,7 @@ function buildBacklogGrouped(asasOrders, antrepoMap, overrides, opts) {
   opts = opts || {};
   const custom = backlogCustomDimensionContext(asasOrders, antrepoMap);
   const dims = (opts.groupBy || []).filter(d => custom.dimensions[d] || d === 'antrepoDate');
-  const { filtered, windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, antrepoFrom, antrepoTo } = filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, custom.dimensions);
+  const { filtered, windowed, retailFrom, retailTo, inStoreFrom, inStoreTo, exFactoryFrom, exFactoryTo, antrepoFrom, antrepoTo } = filterBacklogOrders(asasOrders, antrepoMap, overrides, opts, custom.dimensions);
 
   const antrepoDateLevels = (opts.antrepoDateLevels && opts.antrepoDateLevels.length) ? opts.antrepoDateLevels : ['year','month','week','day'];
   const tree = dims.length ? buildBacklogTree(filtered, dims, 0, antrepoDateLevels, custom.dimensions) : null;
@@ -3056,6 +3064,8 @@ function buildBacklogGrouped(asasOrders, antrepoMap, overrides, opts) {
     retailTo: retailTo ? toISODateLocal(retailTo) : null,
     inStoreFrom: inStoreFrom ? toISODateLocal(inStoreFrom) : null,
     inStoreTo: inStoreTo ? toISODateLocal(inStoreTo) : null,
+    exFactoryFrom: exFactoryFrom ? toISODateLocal(exFactoryFrom) : null,
+    exFactoryTo: exFactoryTo ? toISODateLocal(exFactoryTo) : null,
     antrepoFrom: antrepoFrom ? toISODateLocal(antrepoFrom) : null,
     antrepoTo: antrepoTo ? toISODateLocal(antrepoTo) : null,
     buyerGrup: opts.buyerGrup || null,
