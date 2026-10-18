@@ -1896,6 +1896,8 @@ function scheduleOverviewRender(reason='data'){
   });
 }
 function renderOverviewCpDependencyState(mode,errorMessage=''){
+  window.BLCpAssistant?.invalidateOverview?.(mode,errorMessage);
+  window.BLOverviewPremium?.update?.({model:null,status:mode,message:errorMessage});
   const host=document.getElementById('cpAssistant');
   const attention=document.getElementById('cpAssistantAttention');
   const coverage=document.getElementById('cpAssistantCoverage');
@@ -10440,7 +10442,9 @@ function renderOverviewCollectionSummary(){
   if(!root||!dashboard||!window.BLOverviewCollectionSummary)return;
   /* Ana ekran widget'ı flex kabuktur; satır içi display gövde kaydırmasını bozar. */
   root.style.display='';
-  dashboard.render(overviewCollectionSummaryDashboardContext());
+  const context=overviewCollectionSummaryDashboardContext();
+  dashboard.render(context);
+  window.BLOverviewPremium?.updateCollection?.(context);
 }
 function scheduleOverviewCollectionSummaryRender(){
   if(overviewCollectionSummaryRenderFrame)return;
@@ -10588,6 +10592,7 @@ function renderOverviewPriorityReminder(rows){
     return;
   }
   const groups=overviewNoteGroups(rows);
+  root.dataset.empty=groups.length?'false':'true';
   const totalOrders=groups.reduce((sum,group)=>sum+group.rows.length,0);
   // v7.29 — metinler artık "SİZİN notlarınız" der: başkalarının notları burada
   // görünmediğinde kullanıcı bunun bir eksiklik değil kural olduğunu bilsin.
@@ -10693,17 +10698,21 @@ function renderOverviewState(options){
 
 function renderOverviewNow(){
   renderOverviewCollectionSummary();
-  if(!state.cp && !state.orderSummary && !state.overviewSummary) return;
+  if(!state.cp && !state.orderSummary && !state.overviewSummary){renderOverviewCpDependencyState('loading');return;}
   const empty=document.getElementById('ovEmpty');
   /* Ana ekran widget'ları konumlarını korur; veri yokken her widget kendi boş
      durumunu gösterir, üstteki durum kartı nedenini ve aksiyonu söyler. */
   if(window.BL_CP_SOURCE_FILTER_REQUIRED){
+    window.BLCpAssistant?.invalidateOverview?.('empty');
+    window.BLOverviewPremium?.update?.({model:null,message:appLang==='en'?'Select the data source scope first.':'Önce veri kaynağı kapsamını seçin.'});
     const text=sourceFilterNoticeText(window.BL_CP_SOURCE_FILTER_STATUS,window.BL_CP_SOURCE_FILTER_MESSAGE);
     renderOverviewState({kind:'warning',icon:'binary-tree-2',title:text.title,detail:text.detail,actionLabel:text.action,onAction:()=>openDataSourceAndFilters({target:'cp'})});
     empty.style.display='flex';
     return;
   }
   if(window.BL_HAS_CACHED_MODEL_DATA===false){
+    window.BLCpAssistant?.invalidateOverview?.('empty');
+    window.BLOverviewPremium?.update?.({model:null,message:appLang==='en'?'Load data to see the summary.':'Özet için önce verileri yükleyin.'});
     const en=appLang==='en';
     renderOverviewState({kind:'empty',icon:'database-import',title:en?'No data has been loaded yet.':'Henüz veri yüklenmedi.',detail:en?'The source filter is ready. Run Refresh to load data; the wait may increase with the active filter scope and data volume.':'Kaynak filtresi hazır. Verileri almak için Yenile\'yi çalıştırın; aktif filtre kapsamı ve veri hacmine göre bekleme süresi uzayabilir.',actionLabel:en?'Refresh data':'Veriyi yenile',actionPrimary:true,onAction:()=>document.getElementById('topRefreshBtn')?.click()});
     empty.style.display='flex';return;
@@ -15721,7 +15730,7 @@ function ensureOverviewOabModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'oab',mode:'after-ui'});
-  overviewOabLoadPromise=loader('oab.js?rev=7')
+  overviewOabLoadPromise=loader('oab.js?rev=20261018')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui'});return window.BLOAB||null;})
     .catch(error=>{overviewOabLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'oab',mode:'after-ui',failed:true});console.warn('OAB modülü yüklenemedi:',error);return null;});
   return overviewOabLoadPromise;
@@ -15732,7 +15741,7 @@ function ensureOverviewIntakeModule(){
   const loader=window.BLPerf?._loadScript;
   if(typeof loader!=='function')return Promise.resolve(null);
   window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_START',{module:'intake',mode:'after-ui'});
-  overviewIntakeLoadPromise=loader('intake.js?rev=5')
+  overviewIntakeLoadPromise=loader('intake.js?rev=20261018')
     .then(()=>{window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui'});return window.BLINTAKE||null;})
     .catch(error=>{overviewIntakeLoadPromise=null;window.BLPerf?.mark?.('OVERVIEW_MODULE_LOAD_READY',{module:'intake',mode:'after-ui',failed:true});console.warn('INTAKE modülü yüklenemedi:',error);return null;});
   return overviewIntakeLoadPromise;

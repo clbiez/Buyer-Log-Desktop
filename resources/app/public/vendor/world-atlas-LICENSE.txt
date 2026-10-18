@@ -1,6 +1,10 @@
 World map data: Natural Earth countries via topojson/world-atlas.
 Vendored countries-110m.json was retrieved from open-energy-transition/Awesome-Electrical-Grid-Mapping/docs/data/countries-110m.json.
 
+Vendored countries-50m.json: world-atlas 2.0.2 / Natural Earth 1:50m.
+Source: https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json
+Natural Earth geographic data is public domain.
+
 Copyright 2013-2019 Michael Bostock
 
 Permission to use, copy, modify, and/or distribute this software for any purpose

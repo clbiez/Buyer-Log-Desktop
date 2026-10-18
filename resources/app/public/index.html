@@ -208,7 +208,7 @@
   },120000);
 })();
 </script>
-<script src="perf-runtime.js?v=__BL_ASSET_VERSION__&rev=8"></script>
+<script src="perf-runtime.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
 <script src="release-notes.js?v=__BL_ASSET_VERSION__&rev=4"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_LOCAL_CONTEXT_START');</script>
 <script src="/user-context.js"></script>
@@ -316,7 +316,7 @@
 <link rel="stylesheet" href="excel-import.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="user-management.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=3">
-<link rel="stylesheet" href="overview-home.css?v=__BL_ASSET_VERSION__&rev=1">
+<link rel="stylesheet" href="overview-home.css?v=__BL_ASSET_VERSION__&rev=20261018">
 <link rel="stylesheet" href="overview-global-flow.css?v=__BL_ASSET_VERSION__&rev=5">
 <link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=6">
 <link rel="stylesheet" href="command-palette.css?v=__BL_ASSET_VERSION__&rev=1">
@@ -628,9 +628,14 @@
         <button type="button" id="ovLayoutResetBtn" class="tbtn" data-i18n-tr="Varsayılan düzen" data-i18n-en="Reset layout">Varsayılan düzen</button>
         <button type="button" id="ovLayoutDoneBtn" class="tbtn primary" data-i18n-tr="Bitti" data-i18n-en="Done">Bitti</button>
       </div>
+      <button type="button" id="ovMotionBtn" class="navActionBtn" aria-pressed="true" data-i18n-tr="Hareket" data-i18n-en="Motion">Hareket</button>
+      <button type="button" id="ovHomePremiumBtn" class="navActionBtn" data-i18n-tr="Premium düzen" data-i18n-en="Premium layout">Premium düzen</button>
       <button type="button" id="ovLayoutEditBtn" class="navActionBtn" aria-pressed="false" title="Ana ekranı düzenle (bir widget başlığına veya boş alana basılı tut)" data-i18n-title-tr="Ana ekranı düzenle (bir widget başlığına veya boş alana basılı tut)" data-i18n-title-en="Edit home screen (or press and hold a widget header or empty space)"><svg class="ic"><use href="#i-layout-dashboard"/></svg><span data-i18n-tr="Düzenle" data-i18n-en="Edit">Düzenle</span></button>
     </div>
     <div id="ovDashboardGrid" class="ovDashboardGrid ovHome" data-page="0">
+    <section id="ovPulse" data-overview-widget="pulse" class="ovPremiumHost" aria-label="Operasyon Nabzı" data-i18n-aria-label-tr="Operasyon Nabzı" data-i18n-aria-label-en="Operation Pulse"></section>
+    <section id="ovDeadline" data-overview-widget="deadline" class="ovPremiumHost" aria-label="Termin Ufku" data-i18n-aria-label-tr="Termin Ufku" data-i18n-aria-label-en="Delivery Horizon"></section>
+    <section id="ovCollectionPreview" data-overview-widget="collectionPreview" class="ovPremiumHost" aria-label="Koleksiyon Vitrini" data-i18n-aria-label-tr="Koleksiyon Vitrini" data-i18n-aria-label-en="Collection Showcase"></section>
     <section id="ovLaunchpad" data-overview-widget="launchpad" class="ovLaunchpad" aria-label="Dünya Saatleri" data-i18n-aria-label-tr="Dünya Saatleri" data-i18n-aria-label-en="World Clocks"></section>
     <section id="ovProductionFocus" data-overview-widget="productionFocus" class="ovHomeHost" aria-label="Üretim Odağı" data-i18n-aria-label-tr="Üretim Odağı" data-i18n-aria-label-en="Production Focus">
       <div id="cpAssistant"></div>
@@ -718,7 +723,7 @@
           <strong data-i18n-tr="Etkileşim" data-i18n-en="Interaction">Etkileşim</strong>
           <span data-i18n-tr="Sürükle: hareket · Tekerlek: yakınlaştır · Tıkla: detay" data-i18n-en="Drag: move · Wheel: zoom · Click: details">Sürükle: hareket · Tekerlek: yakınlaştır · Tıkla: detay</span>
           <span class="gfSpacer"></span>
-          <span data-i18n-tr="Rotalar operasyonel yaklaşımdır; canlı GPS/AIS değildir." data-i18n-en="Routes are operational approximations, not live GPS/AIS.">Rotalar operasyonel yaklaşımdır; canlı GPS/AIS değildir.</span>
+          <span data-i18n-tr="Referans terminal rotaları; canlı GPS/AIS değildir." data-i18n-en="Reference terminal routes; not live GPS/AIS.">Referans terminal rotaları; canlı GPS/AIS değildir.</span>
         </div>
       </div>
       <aside id="globalFlowDrawer" class="globalFlowDrawer" aria-hidden="true"></aside>
@@ -1445,18 +1450,20 @@
 <script src="merch-calendar-runtime.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="dual-week-datepicker.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="column-schema.js?v=__BL_ASSET_VERSION__"></script>
-<script src="overview-layout.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="overview-layout.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
 <script src="model-option-stats.js?v=__BL_ASSET_VERSION__"></script>
 <script src="collection-status-catalog.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-collection-summary.js?v=__BL_ASSET_VERSION__"></script>
 <script src="overview-collection-dashboard.js?v=__BL_ASSET_VERSION__"></script>
-<script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=3"></script>
-<script src="overview-breakdown.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="overview-home.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="overview-launchpad.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
+<script src="overview-breakdown.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
+<script src="overview-premium.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="overview-home.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
 <script src="detail-report-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="detail-drawer.js?v=__BL_ASSET_VERSION__&rev=6"></script>
 <script src="thinking-orb-working.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="overview-global-flow.js?v=__BL_ASSET_VERSION__&rev=5"></script>
+<script src="overview-flow-routes.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="overview-global-flow.js?v=__BL_ASSET_VERSION__&rev=20261018"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_SCRIPTS_START');</script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_APP_MAIN_START');</script>
 <script src="plm-colour-utils.js?v=__BL_ASSET_VERSION__&rev=2"></script>
@@ -1473,7 +1480,7 @@
 <script src="corporate-connections-toolbar.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <!-- Sütun EN/TR görünen adları + veri kaynağı kataloğu (CP / Orders / Koleksiyon). -->
 <script src="column-display-names.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=COLLECTION-STATUS-CATALOG-V1"></script>
+<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=OVERVIEW-PREMIUM-20261018"></script>
 <script src="collection-artwork-detail.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="checklist-answer-merge-engine.js?v=__BL_ASSET_VERSION__"></script>
 <script src="cp-plm-details.js?v=__BL_ASSET_VERSION__&rev=1"></script>

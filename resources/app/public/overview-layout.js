@@ -17,13 +17,16 @@
   /* Widget kataloğu. Boyutlar hücre cinsindendir; presets widget çekmecesinde
      ve klavye kısayollarında kullanılır. `group` çekmecedeki kategoridir. */
   const REGISTRY=Object.freeze({
-    launchpad:{icon:'clock',group:'today',tr:'Dünya Saatleri',en:'World Clocks',descTr:'Selamlama ve çalıştığın ülkelerin canlı saatleri.',descEn:'Greeting and live clocks of the countries you work with.',w:12,h:3,minW:3,minH:2,maxW:12,maxH:5},
+    pulse:{icon:'chart-bar',group:'today',tr:'Operasyon Nabzı',en:'Operation Pulse',descTr:'Gerçek CP kapsamı, öncelik dağılımı ve yakın yüklemeler.',descEn:'Current CP scope, priority mix and upcoming loading.',w:12,h:2,minW:6,minH:2,maxW:12,maxH:4},
+    deadline:{icon:'calendar',group:'operations',tr:'Termin Ufku',en:'Delivery Horizon',descTr:'Önümüzdeki 7 veya 14 günün planlı yüklemeleri.',descEn:'Planned loading over the next 7 or 14 days.',w:5,h:4,minW:3,minH:4,maxW:12,maxH:9},
+    collectionPreview:{icon:'table',group:'commercial',tr:'Koleksiyon Vitrini',en:'Collection Showcase',descTr:'Seçili ayın model görselleri ve durum dağılımı.',descEn:'Model images and status mix for the selected month.',w:4,h:4,minW:3,minH:4,maxW:12,maxH:10},
+    launchpad:{icon:'clock',group:'today',tr:'Dünya Saatleri',en:'World Clocks',descTr:'Selamlama ve çalıştığın ülkelerin canlı saatleri.',descEn:'Greeting and live clocks of the countries you work with.',w:12,h:1,minW:3,minH:1,maxW:12,maxH:5},
     productionFocus:{icon:'bl-cp',group:'operations',tr:'Üretim Odağı',en:'Production Focus',descTr:'Öncelik dağılımı, risk nedenleri ve kontrol listesi.',descEn:'Priority mix, risk reasons and checklist.',w:8,h:6,minW:4,minH:4,maxW:12,maxH:12},
-    notes:{icon:'notebook',group:'operations',tr:'Not Hatırlatıcısı',en:'Notes Reminder',descTr:'Yalnız senin yazdığın CP notları.',descEn:'Only the CP notes you wrote.',w:4,h:6,minW:3,minH:3,maxW:12,maxH:12},
-    breakdown:{icon:'chart-bar',group:'operations',tr:'Aktif Sipariş Kırılımı',en:'Active Order Breakdown',descTr:'Ülke, alt üretici, sezon ve buying group dağılımı tek grafikte.',descEn:'Country, sub-manufacturer, season and buying group in one chart.',w:6,h:7,minW:3,minH:4,maxW:12,maxH:14},
+    notes:{icon:'notebook',group:'operations',tr:'Not Hatırlatıcısı',en:'Notes Reminder',descTr:'Yalnız senin yazdığın CP notları.',descEn:'Only the CP notes you wrote.',w:4,h:2,minW:3,minH:2,maxW:12,maxH:12},
+    breakdown:{icon:'chart-bar',group:'operations',tr:'Aktif Sipariş Kırılımı',en:'Active Order Breakdown',descTr:'Ülke, alt üretici, sezon ve buying group dağılımı tek grafikte.',descEn:'Country, sub-manufacturer, season and buying group in one chart.',w:3,h:4,minW:3,minH:4,maxW:12,maxH:14},
     attention:{icon:'alert-triangle',group:'operations',tr:'Aksiyon Gerekenler',en:'Orders Requiring Attention',descTr:'Bugün müdahale bekleyen sipariş satırları.',descEn:'Order rows that need action today.',w:6,h:7,minW:4,minH:4,maxW:12,maxH:16},
     dataCoverage:{icon:'checklist',group:'operations',tr:'Veri Kapsamı',en:'Data Coverage',descTr:'Eksik tarih/kural sayıları ve takip dışı alanlar.',descEn:'Missing dates/rules and untracked fields.',w:4,h:5,minW:3,minH:3,maxW:12,maxH:12},
-    globalFlowMap:{icon:'globe',group:'operations',tr:'Global Flow Map',en:'Global Flow Map',descTr:'Üretim ve sevkiyat akışı haritası.',descEn:'Production and shipment flow map.',w:12,h:9,minW:5,minH:5,maxW:12,maxH:16},
+    globalFlowMap:{icon:'globe',group:'operations',tr:'Global Flow Map',en:'Global Flow Map',descTr:'Üretim ve sevkiyat akışı haritası.',descEn:'Production and shipment flow map.',w:8,h:6,minW:5,minH:5,maxW:12,maxH:16},
     collectionSummary:{icon:'table',group:'commercial',tr:'Koleksiyon',en:'Collection',descTr:'Aylık adet, model görselleri ve status dağılımı.',descEn:'Monthly quantity, model images and status mix.',w:12,h:3,minW:4,minH:3,maxW:12,maxH:12},
     oab:{icon:'chart-histogram',group:'commercial',tr:'OAB',en:'OAB',descTr:'Order-Assortment-Budget pivotu.',descEn:'Order-Assortment-Budget pivot.',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
     intake:{icon:'database-import',group:'commercial',tr:'INTAKE',en:'INTAKE',descTr:'INTAKE bütçe pivotu.',descEn:'INTAKE budget pivot.',w:12,h:8,minW:6,minH:4,maxW:12,maxH:20},
@@ -31,18 +34,21 @@
   const WIDGETS=Object.freeze(Object.keys(REGISTRY));
   const DEFAULT_PAGES=Object.freeze([
     {name:{tr:'Operasyon',en:'Operations'},items:[
-      {key:'launchpad',x:0,y:0,w:12,h:3},
-      {key:'productionFocus',x:0,y:3,w:8,h:6},
-      {key:'notes',x:8,y:3,w:4,h:6},
-      {key:'breakdown',x:0,y:9,w:6,h:7},
-      {key:'attention',x:6,y:9,w:6,h:7},
-      {key:'globalFlowMap',x:0,y:16,w:8,h:9},
-      {key:'dataCoverage',x:8,y:16,w:4,h:9},
+      {key:'launchpad',x:0,y:0,w:12,h:1},
+      {key:'pulse',x:0,y:1,w:12,h:2},
+      {key:'globalFlowMap',x:0,y:3,w:8,h:7},
+      {key:'attention',x:8,y:3,w:4,h:7},
+      {key:'deadline',x:0,y:10,w:5,h:4},
+      {key:'breakdown',x:5,y:10,w:3,h:4},
+      {key:'collectionPreview',x:8,y:10,w:4,h:4},
+      {key:'productionFocus',x:0,y:14,w:8,h:6},
+      {key:'notes',x:8,y:14,w:4,h:3},
+      {key:'dataCoverage',x:8,y:17,w:4,h:3},
     ]},
     {name:{tr:'Ticari',en:'Commercial'},items:[
-      {key:'collectionSummary',x:0,y:0,w:12,h:3},
-      {key:'oab',x:0,y:3,w:12,h:8},
-      {key:'intake',x:0,y:11,w:12,h:8},
+      {key:'collectionSummary',x:0,y:0,w:12,h:4},
+      {key:'oab',x:0,y:4,w:6,h:9},
+      {key:'intake',x:6,y:4,w:6,h:9},
     ]},
   ]);
   /* v1 → v2 taşıması için eski anahtarlar. */
@@ -123,7 +129,7 @@
   }
   function blankState(){return {version:VERSION,page:0,known:WIDGETS.slice(),pages:[]};}
   function defaults(){
-    const state=blankState();
+    const state=blankState();state.density='compact';
     state.pages=DEFAULT_PAGES.map(page=>({name:{...page.name},items:page.items.map(item=>clampItem(item))}));
     return state;
   }
@@ -170,7 +176,7 @@
       const at=firstFit(items,sized.w,sized.h);
       items.push({...sized,...at});
     });
-    const state=blankState();
+    const state=blankState();state.density='compact';
     state.pages=[{name:null,items}];
     return state;
   }
@@ -201,7 +207,7 @@
       target.items.push({key,x:at.x,y:at.y,w:s.w,h:s.h});placed.add(key);
     });
     const page=clampNum(int(input.page,0),0,pages.length-1);
-    return {version:VERSION,page,known:WIDGETS.slice(),pages};
+    return {version:VERSION,page,density:input.density==='compact'?'compact':'comfortable',known:WIDGETS.slice(),pages};
   }
   function locate(state,key){
     for(let p=0;p<state.pages.length;p++){const index=state.pages[p].items.findIndex(item=>item.key===key);if(index>=0)return {page:p,index,item:state.pages[p].items[index]};}

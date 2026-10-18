@@ -396,6 +396,7 @@
     state.tableSignature = signature;
     const fields = activeColumns();
     if (!fields.length) {
+      window.BLOverviewPremium?.renderMetricChart('intake',{raw:true});
       intakeUpdateGroupButtons([]);
       table.innerHTML = `<tbody><tr><td class="intakeEmpty" colspan="1">${esc(text('Alan seçilmedi.', 'No fields selected.'))}</td></tr></tbody>`;
       return;
@@ -416,6 +417,7 @@
       const direction = sort.id === field.id ? (sort.dir === -1 ? ' ↓' : ' ↑') : '';
       return `<th data-intake-sort="${esc(field.id)}" data-intake-rename="${esc(field.id)}" title="${esc(text('Sıralamak için tıklayın · yeniden adlandırmak için çift tıklayın', 'Click to sort · double-click to rename'))}">${esc(fieldLabel(field))}${direction}</th>`;
     }).join('');
+    renderOverviewChart(sorted,fields);
     const viewRows = intakeDisplayRows(sorted);
     const rows = viewRows.map(item => {
       const cls = item.kind === 'grand' ? 'oabPivotGrandTotalRow' : (item.kind === 'group' ? (item.subtotal ? 'oabPivotSubtotalRow' : 'oabPivotGroupRow') : '');
@@ -423,6 +425,22 @@
     }).join('');
     table.innerHTML = `<thead><tr>${header}</tr></thead><tbody>${rows || `<tr><td class="intakeEmpty" colspan="${fields.length}">${esc(text('Veri yok.', 'No data.'))}</td></tr>`}</tbody>`;
     attachColumnResize(table, fields);
+  }
+
+  function renderOverviewChart(rows,columns){
+    if(!window.BLOverviewPremium)return;
+    const fields=columns.filter(field=>field.fieldType==='measure'&&clean(field.agg).toUpperCase()!=='FIRST');
+    fields.sort((a,b)=>Number(intakeIsCurrentBudgetField(b))-Number(intakeIsCurrentBudgetField(a)));
+    const dimensions=query().rows||[],groups=new Map();
+    rows.forEach(row=>{const label=dimensions.length?clean(row[dimensions[0].id])||text('(boş)','(blank)'):text('Toplam','Total');if(!groups.has(label))groups.set(label,[]);groups.get(label).push(row);});
+    window.BLOverviewPremium.renderMetricChart('intake',{
+      fields:fields.map(field=>({key:field.id,label:fieldLabel(field),field})),
+      rows:[...groups].map(([label,sourceRows])=>({label,sourceRows})),
+      labelFor:row=>row.label,valueFor:(row,descriptor)=>intakeAggregateRows(row.sourceRows,descriptor.field),
+      format:value=>numberText(value),
+      scope:(state.offline?text('Son snapshot','Last snapshot'):text('Seçili INTAKE kapsamı','Selected INTAKE scope'))+(state.fetchedAt?' · '+new Date(state.fetchedAt).toLocaleString(isEnglish()?'en-GB':'tr-TR'):''),
+      drill:group=>window.BLDetailDrawer?.open({storageKey:'intake.overview.chart',source:'intake',title:'INTAKE · '+group.label,rows:group.sourceRows,columns:columns.map(field=>({key:field.id,label:fieldLabel(field)})),images:false}),
+    });
   }
 
   /* Sütun genişliği: minimum ALT HÜCRE içeriğine göre belirlenir; uzun başlık

@@ -1865,7 +1865,7 @@
     if (!table) return;
     const filtered = oabFilteredRows();
     table.parentElement?.querySelectorAll('.oabTableNote').forEach(note => note.remove());
-    if (S.view === 'raw') { oabRenderRawTable(table, filtered); oabUpdateGroupButtons(null); return; }
+    if (S.view === 'raw') { global.BLOverviewPremium?.renderMetricChart('oab',{raw:true}); oabRenderRawTable(table, filtered); oabUpdateGroupButtons(null); return; }
     oabRenderPivotTable(table, filtered);
   }
 
@@ -2829,8 +2829,24 @@
     setTimeout(() => search?.focus(), 0);
   }
 
+  function oabRenderOverviewChart(rows){
+    if(!global.BLOverviewPremium)return;
+    const section=oabEl('oabSection');
+    if(!section)return;
+    const chart=oabBuildPivotViewModel(rows,{respectCollapse:false});
+    const fields=chart.valueDescriptors.filter(d=>d.numeric);
+    global.BLOverviewPremium.renderMetricChart('oab',{
+      fields,rows:chart.displayRows.filter(row=>row.__oabKind==='leaf'),
+      labelFor:row=>chart.rowDescriptors.map(d=>row[d.key]).filter(value=>value!==null&&value!==undefined&&value!=='').join(' / ')||oabT('Toplam','Total'),
+      valueFor:(row,field)=>row[field.key],
+      format:(value,field)=>Number(value).toLocaleString(oabT('tr-TR','en-GB'),{maximumFractionDigits:2})+(String(field.label).includes('%')?'%':''),
+      scope:oabT('Seçili OAB kapsamı','Selected OAB scope')+(S.fetchedAt?' · '+new Date(S.fetchedAt).toLocaleString(oabT('tr-TR','en-GB')):''),
+      drill:(row,field)=>oabOpenPivotDetail(row,field,chart),
+    });
+  }
   function oabRenderPivotTable(table, rows) {
     const model = oabBuildPivotViewModel(rows, { respectCollapse: true });
+    oabRenderOverviewChart(rows);
     if (!model.displayRows.length) {
       table.innerHTML = `<tbody><tr><td>${oabEsc(oabT('Veri yok.', 'No data.'))}</td></tr></tbody>`;
       oabUpdateGroupButtons(model);

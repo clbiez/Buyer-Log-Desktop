@@ -19,10 +19,11 @@
   const LEGACY_KEY='buyerlog.overview.layout.v1';
   const LONG_PRESS_MS=520;
   const EDGE_DWELL_MS=650;
-  const HEADER_SELECTOR=['.ovLaunchHead','.globalFlowHead','.ovPriorityHeader','.ovCollectionSummaryHeader','.oabHeader','.intakeHeader','.ovBreakdownHead','.cpaBar','#ovAttention .cpaCard>header','#ovDataCoverage .cpaCard>header'].join(',');
+  const HEADER_SELECTOR=['.ovPremiumHead','.ovLaunchHead','.globalFlowHead','.ovPriorityHeader','.ovCollectionSummaryHeader','.oabHeader','.intakeHeader','.ovBreakdownHead','.cpaBar','#ovAttention .cpaCard>header','#ovDataCoverage .cpaCard>header'].join(',');
   const INTERACTIVE='button,a,input,select,textarea,label,summary,[role="button"],[role="tab"],[contenteditable="true"],canvas';
   const NARROW_QUERY='(max-width: 900px)';
 
+  let previousLayout=null;
   let state=null,editing=false,selectedKey='',session=null,longPress=null,wheelAccum=0,wheelTimer=0;
   const reducedMotion=()=>{try{return window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}};
   const isNarrow=()=>{try{return window.matchMedia(NARROW_QUERY).matches;}catch(_){return false;}};
@@ -92,6 +93,10 @@
       el.style.order=String(ordered.indexOf(key));
     });
     g.dataset.page=String(pageIndex);
+    g.dataset.density=view.density||'comfortable';
+    const preset=document.getElementById('ovHomePremiumBtn');
+    if(preset){preset.hidden=view.density==='compact'&&!previousLayout;preset.textContent=previousLayout?T('Önceki düzen','Previous layout'):T('Premium düzen','Premium layout');}
+    window.BLOverviewPremium?.onViewChanged?.();
     g.style.setProperty('--ov-rows',String(Math.max(L.rows(page.items)+(editing?3:0),editing?6:1)));
     g.classList.toggle('isEditing',editing);
     document.body.classList.toggle('ovHomeEditing',editing);
@@ -515,6 +520,10 @@
      Yalnız kullanıcı eylemi kaydeder; sunucudan gelen düzen reload ile alınır. */
   function init(){
     state=load();bind();apply();
+    document.getElementById('ovHomePremiumBtn')?.addEventListener('click',()=>{
+      if(previousLayout){const old=previousLayout;previousLayout=null;commit(old);}
+      else{previousLayout=L.normalize(state);commit(L.defaults());}
+    });
   }
   function reload(){
     if(session||editing)return;

@@ -510,8 +510,8 @@
     /* Öncelik dağılım çubuğu: eski CP Öncelik Radarı'nın yerini alır. Aynı
        sipariş sayılarını tek eksende, pay olarak gösterir; renk yanında her
        parçanın başlığı ve çiplerdeki metin etiketi vardır. */
-    const totalRows = order.reduce((sum, key) => sum + ((byKey.get(key) || { rows: 0 }).rows || 0), 0);
-    const mix = totalRows ? `<div class="cpaMix" role="img" aria-label="${esc(L('Öncelik dağılımı', 'Priority mix'))}">${order.map(key => {
+    const totalRows = order.filter(key => key !== 'UNKNOWN').reduce((sum, key) => sum + ((byKey.get(key) || { rows: 0 }).rows || 0), 0);
+    const mix = totalRows ? `<div class="cpaMix" role="img" aria-label="${esc(L('Öncelik dağılımı', 'Priority mix'))}">${order.filter(key => key !== 'UNKNOWN').map(key => {
       const rows = (byKey.get(key) || { rows: 0 }).rows || 0;
       if (!rows) return '';
       const share = Math.round(rows / totalRows * 1000) / 10;
@@ -558,7 +558,7 @@
     const disabled = summary.disabled.length
       ? `<p class="cpaNote">${esc(L('Takip edilmeyen kontroller', 'Not tracked'))}: ${summary.disabled.map(item => esc(itemLabel(item))).join(', ')}</p>` : '';
     return card('checklist', L('Kontrol Listesi', 'Checklist'), `
-      <p class="cpaNote">${esc(L('Her soru CP\'de bir checklist sütunudur. Durumlar: Bekliyor · Onaylandı · Reddedildi · Gerekmiyor. Onaylandı ya da Gerekmiyor seçilen soru tekrar sorulmaz; Reddedildi açık kalır. PPS, S/Off, kritik numune ve Artwork soruları PLM\'de onaylı numune talebi varsa (PPS onayı Fit, S/Off ve Artwork\'ü de kapsar; S/Off onayı Artwork\'ü kapsar) ya da sipariş üretimi bitirdiyse kendiliğinden Onaylandı olur.', 'Every question is a checklist column in CP. Statuses: Pending · Approved · Rejected · Not Required. Approved or Not Required stops the question; Rejected stays open. PPS, S/Off, critical sample and artwork questions become Approved automatically when PLM has an approved sample request (PPS approval also covers Fit, S/Off and artwork; S/Off approval covers artwork) or when the order has finished production.'))}</p>
+      <details class="cpaChecklistGuide"><summary>${esc(L('Nasıl çalışır?','How it works'))}</summary><p class="cpaNote">${esc(L('Her soru CP\'de bir checklist sütunudur. Durumlar: Bekliyor · Onaylandı · Reddedildi · Gerekmiyor. Onaylandı ya da Gerekmiyor seçilen soru tekrar sorulmaz; Reddedildi açık kalır. PPS, S/Off, kritik numune ve Artwork soruları PLM\'de onaylı numune talebi varsa (PPS onayı Fit, S/Off ve Artwork\'ü de kapsar; S/Off onayı Artwork\'ü kapsar) ya da sipariş üretimi bitirdiyse kendiliğinden Onaylandı olur.', 'Every question is a checklist column in CP. Statuses: Pending · Approved · Rejected · Not Required. Approved or Not Required stops the question; Rejected stays open. PPS, S/Off, critical sample and artwork questions become Approved automatically when PLM has an approved sample request (PPS approval also covers Fit, S/Off and artwork; S/Off approval covers artwork) or when the order has finished production.'))}</p></details>
       ${items ? `<table class="cpaTable"><thead><tr><th>${esc(L('Kontrol', 'Check'))}</th><th class="num">${esc(L('Bekliyor', 'Pending'))}</th><th class="num">${esc(L('Reddedildi', 'Rejected'))}</th><th class="num">${esc(L('Yeniden', 'Re-asked'))}</th><th></th></tr></thead><tbody>${items}</tbody></table>`
     : `<p class="cpaEmpty">${esc(L('Şu an açık kontrol yok.', 'No open checks right now.'))}</p>`}
       ${summary.answeredTotal ? `<p class="cpaNote">${esc(L('Onaylanan / gerekmeyen kontrol', 'Approved / not required checks'))}: <b>${int(summary.answeredTotal)}</b>${summary.plmAnsweredTotal ? ` · ${esc(L('PLM onayı / üretim sonrası ile', 'via PLM approval / post-production'))}: <b>${int(summary.plmAnsweredTotal)}</b>` : ''}</p>` : ''}
@@ -769,6 +769,15 @@
     }
   }
 
+  let attentionVisual=true;
+  function attentionVisualRows(rows){
+    return `<div class="cpaVisualAttention">${rows.slice(0,3).map(item=>{
+      const image=typeof tableRowImageSource==='function'?tableRowImageSource(item.sourceRow||{}).source:'';
+      const reason=attentionReasonEntries(item)[0]?.text||priorityLabel(item.priority);
+      const days=item.scheduleBufferDays,known=days!==null&&days!==undefined&&Number.isFinite(Number(days));
+      return `<article class="cpaVisualRow tone-${item.priority==='CRITICAL'?'red':'blue'}"><button type="button" class="cpaVisualOpen" data-cpa-open-attention="${esc(item.orderKey)}"><span class="cpaVisualThumb">${image?`<img src="${esc(image)}" alt="${esc(item.modelName)}" loading="lazy" decoding="async">`:'<svg class="ic" aria-hidden="true"><use href="#i-photo-size"/></svg>'}</span><span class="cpaVisualText"><b>${esc(reason)}</b><small>${esc([item.orderCode,item.modelName].filter(Boolean).join(' · '))}</small><em>${esc(priorityLabel(item.priority))}${item.calculationStatus==='UNKNOWN'?` · ${esc(L('Hesaplanamıyor','Uncalculable'))}`:''}</em></span><span class="cpaVisualBuffer${known&&days<0?' isLate':''}"><b>${known?`${days>0?'+':''}${int(days)}`:'—'}</b><small>${esc(L('gün tampon','days buffer'))}</small></span></button><button type="button" class="cpaIconBtn cpaVisualExclude" data-cpa-attention-exclude="${esc(item.orderKey)}" aria-label="${esc(L('Hariç tutma seçenekleri','Exclusion options'))}">⋮</button></article>`;
+    }).join('')}</div>`;
+  }
   function attentionCard() {
     const rowState = attentionRowsState();
     const all = rowState.visible;
@@ -783,10 +792,12 @@
     const excludedNote = rowState.excluded.length
       ? ` · ${int(rowState.excluded.length)} ${esc(L('hariç', 'excluded'))}` : '';
     return card('attention', L('Aksiyon Gerekenler', 'Orders Requiring Attention'), `
+      <div class="cpaAttentionMode"><button type="button" class="cpaBtn sm" data-cpa-attention-view aria-pressed="${!attentionVisual}">${esc(attentionVisual?L('Tablo','Table'):L('Görsel özet','Visual summary'))}</button><span>${int(all.length)} ${esc(L('satır','rows'))}</span></div>
       <div class="cpaRowBetween cpaAttentionToolbar"><span class="cpaNote">${int(all.length)} ${esc(L('görünür sipariş satırı', 'visible order rows'))}${excludedNote}${all.length > shown.length ? ` · ${esc(L('ilk', 'first'))} ${int(shown.length)}` : ''}</span><div class="cpaAttentionActions">${filterNote}<button type="button" class="cpaBtn sm ghost" data-cpa-attention-excluded>${esc(L('Hariç Tutulanlar', 'Excluded'))} (${int(exclusionCount)})</button><button type="button" class="cpaBtn sm" data-cpa-attention-columns>${esc(L('Sütunlar', 'Columns'))}</button></div></div>
-      ${shown.length ? `<div class="cpaScroll cpaAttentionScroll"><table class="cpaTable cpaAttentionTable"><thead><tr>${head}<th class="cpaAttentionActionHead" aria-label="${esc(L('Aksiyon', 'Action'))}"></th></tr></thead><tbody>${body}</tbody></table></div>`
+      ${shown.length&&attentionVisual?attentionVisualRows(all):''}
+      ${shown.length ? `<div class="cpaScroll cpaAttentionScroll${attentionVisual?' isVisualHidden':''}"><table class="cpaTable cpaAttentionTable"><thead><tr>${head}<th class="cpaAttentionActionHead" aria-label="${esc(L('Aksiyon', 'Action'))}"></th></tr></thead><tbody>${body}</tbody></table></div>`
     : `<p class="cpaEmpty">${esc(L('Bu filtrede görünür aksiyon gereken sipariş yok.', 'No visible orders need action in this filter.'))}</p>`}
-      ${all.length > shown.length ? `<button type="button" class="cpaBtn" data-cpa-more>${esc(L('Daha fazla göster', 'Show more'))}</button>` : ''}`);
+      ${!attentionVisual&&all.length > shown.length ? `<button type="button" class="cpaBtn" data-cpa-more>${esc(L('Daha fazla göster', 'Show more'))}</button>` : ''}`);
   }
 
   function dimensionsCard() {
@@ -801,6 +812,7 @@
 
   function coverageCard() {
     const quality = state.model.dataQuality;
+    const coverage = window.BLOverviewPremium?.buildCoverage(state.model.orders);
     // Kurulum hatasını veri sorunu gibi göstermek yanlış teşhise yol açar.
     const engineWarning = quality.deliveryEngineMissing
       ? `<p class="cpaWarn">${esc(L('Teslimat motoru yüklenemedi; risk ve ETA hesaplanamıyor. Sayfayı yenileyin, sürerse bildirin.', 'The delivery engine could not be loaded; risk and ETA cannot be calculated. Reload the page and report it if it persists.'))}</p>`
@@ -816,11 +828,13 @@
     const unavailable = quality.unavailableDimensions.map(item =>
       `<li><span>${esc(isEn() ? item.en : item.tr)}</span></li>`).join('');
     return card('coverage', L('Veri Kapsamı', 'Data Coverage'), `
+      ${coverage?`<div class="cpaCoverageVisual"><div><b>${coverage.percent==null?'—':coverage.percent+'%'}</b><span>${esc(L('Yükleme + hedef tarihi','Loading + target dates'))}</span></div><div><b>${int(coverage.unknown)}</b><span>${esc(L('Hesaplanamıyor','Uncalculable'))}</span></div><span class="cpaCoverageTrack"><i style="width:${coverage.percent||0}%"></i></span></div>`:''}
       ${engineWarning}
+      <details class="cpaCoverageDetails"><summary>${esc(L('Eksik alanlar ve kapsam','Missing fields and coverage'))}</summary>
       ${missing ? `<b class="cpaSub">${esc(L('Eksik veri', 'Missing data'))}</b><ul class="cpaMiniList">${missing}</ul>` : ''}
       <b class="cpaSub">${esc(L('Buyer Log\'da bu veri tutulmuyor', 'Not stored in Buyer Log'))}</b>
       <p class="cpaNote">${esc(L('Aşağıdakiler sütun olarak yok; kontrol listesi soruları ve takip e-postaları üzerinden yürütülüyor. Bunlar için otomatik uyarı üretilmez.', 'The items below are not columns; they are handled through checklist questions and follow-up emails. No automatic warning is produced for them.'))}</p>
-      <ul class="cpaMiniList is-plain">${unavailable}</ul>`);
+      <ul class="cpaMiniList is-plain">${unavailable}</ul></details>`);
   }
 
   function card(key, title, body) {
@@ -840,6 +854,7 @@
       container.innerHTML = '';
       if (attention) attention.innerHTML = '';
       if (coverage) coverage.innerHTML = '';
+      window.BLOverviewPremium?.update?.({model:null});
       return;
     }
     const builders = { priorities: prioritiesCard, checklist: checklistCard, dimensions: dimensionsCard };
@@ -850,6 +865,7 @@
     container.innerHTML = toolbarHtml() + `<div class="cpaGrid${visible.length === 1 ? ' is-single' : ''}">${cards || `<div class="cpaLayoutEmpty">${esc(L('Bu görünümde tüm modüller gizli. Düzen ayarlarından tekrar gösterebilirsiniz.', 'All modules are hidden in this view. Use Customize Layout to show them again.'))}</div>`}</div>`;
     if (attention) attention.innerHTML = attentionCard();
     if (coverage) coverage.innerHTML = coverageCard();
+    window.BLOverviewPremium?.update?.({model:state.model,checklist:state.checklist});
     bind(container);
     if (attention) bind(attention);
     if (coverage) bind(coverage);
@@ -857,6 +873,8 @@
 
   /* ------------------------------------------------------------ etkileşim */
   function bind(container) {
+    container.querySelector('[data-cpa-attention-view]')?.addEventListener('click',()=>{attentionVisual=!attentionVisual;render();});
+    container.querySelectorAll('[data-cpa-open-attention]').forEach(el=>el.onclick=()=>openAttentionDetail(el.dataset.cpaOpenAttention));
     container.querySelectorAll('[data-cpa-target]').forEach(el => el.onclick = () => {
       state.settings.targetType = el.dataset.cpaTarget === 'inStore' ? 'inStore' : 'retail';
       savePrefs(); recompute(); render();
@@ -1242,6 +1260,12 @@
   }
 
   /* Drill-down mevcut CP ekranını kullanır; ikinci bir liste kurulmaz. */
+  function openOverviewRows(rows,title){
+    if(!window.BLDetailDrawer?.open)return;
+    const columns=attentionCpColumns().map(column=>({key:column.key,label:column.label||column.key}));
+    window.BLDetailDrawer.open({storageKey:'cp.overview.summary',source:'cp',title,rows,columns,images:true,fileName:'Overview_CP'});
+  }
+  function selectPriority(key){state.activePriority=key;state.attentionLimit=25;render();}
   function openAttentionDetail(orderKey) {
     const item = state.model && state.model.orders ? state.model.orders.find(row => row.orderKey === orderKey) : null;
     if (!item || !item.sourceRow || !window.BLDetailDrawer?.open) {
@@ -3419,7 +3443,12 @@
      hesap yapılmaz — açılış ve filtre akışı ağırlaşmasın (CLAUDE.md §11). */
   let overviewDecisionGeneration = 0;
   let overviewDecisionPending = false;
+  function invalidateOverview(status='loading',message=''){
+    overviewDecisionGeneration++;overviewDecisionPending=false;state.model=null;state.rowsSignature='';
+    window.BLOverviewPremium?.update?.({model:null,status,message});
+  }
   function renderPreparing() {
+    window.BLOverviewPremium?.update?.({model:null,status:'loading'});
     const host=document.getElementById('cpAssistant');
     for(const id of ['cpAssistantAttention','cpAssistantCoverage']){const node=document.getElementById(id);if(node)node.innerHTML='';}
     if(host)host.innerHTML='<section class="cpaCard"><header><b>'+L('Bugünün Üretim Öncelikleri',"Today's Production Focus")+'</b></header><div class="cpaCardBody"><p class="cpaEmpty">'+L('Üretim öncelikleri arka planda hazırlanıyor…','Production priorities are being prepared in the background…')+'</p></div></section>';
@@ -3449,7 +3478,7 @@
       if (!model) { state.rowsSignature='';onOverviewRendered(lastRows,context);return; }
       render();
       flushAutomaticStatusSync();
-    }).catch(error=>{if(generation!==overviewDecisionGeneration)return;overviewDecisionPending=false;state.rowsSignature='';if(typeof showToast==='function')showToast(error.message);});
+    }).catch(error=>{if(generation!==overviewDecisionGeneration)return;overviewDecisionPending=false;state.rowsSignature='';state.model=null;window.BLOverviewPremium?.update?.({model:null,status:'error',message:L('CP özeti hesaplanamadı. Yenileyerek tekrar deneyin.','CP summary could not be calculated. Refresh to try again.')});if(typeof showToast==='function')showToast(error.message);});
   }
 
   loadPrefs();
@@ -3473,7 +3502,7 @@
   window.BLCpAssistant = {
     onOverviewRendered, render, computeDecisionsForRows, computeDecisionsForRowsAsync, peekDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions, createChecklistItem,
     persistChecklistAnswers: saveAnswers,
-    openRules, openSettings,
+    openRules, openSettings, openOverviewRows, selectPriority, invalidateOverview,
     decisionRuntimeStats: () => decisionRuntime.getStats(),
     decisionContextRevision: () => decisionContextRevision, _state: state,
   };
