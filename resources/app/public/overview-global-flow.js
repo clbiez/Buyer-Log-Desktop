@@ -17,8 +17,9 @@
  * yoksa yakın ilerlemedeki parsiyeller kümelenir.
  */
 
+const ROUTING=typeof module==='object'&&module.exports?require('./overview-flow-routes.js'):globalThis.BLOverviewFlowRoutes;
 const ISTANBUL=Object.freeze({name:'İstanbul',lat:41.0082,lon:28.9784}); // i18n-ignore — ülke adı eşleştirmesi / özel ad (veri)
-const COLOMBO=Object.freeze({name:'Colombo',lat:6.93,lon:79.85});
+const COLOMBO=ROUTING.COLOMBO_PORT;
 const STORAGE_KEY='buyerlog.overview.globalFlow.v1';
 const SOURCE_PRIORITY=Object.freeze({cp:1,orders:2,backlog:3});
 /* Gemi+Uçak akışında aktarma limanından İstanbul'a hava ayağının süresi (gün).
@@ -73,6 +74,7 @@ const CANONICAL_FIELD_IDS=Object.freeze({
 const RECORD_FIELDS=Object.freeze(Object.keys(FIELD_CANDIDATES));
 
 const COUNTRY_POINTS=Object.freeze({
+  'georgia':{name:'Georgia',lat:42.3154,lon:43.3569},'gurcistan':{name:'Georgia',lat:42.3154,lon:43.3569},
   'turkey':ISTANBUL,'turkiye':ISTANBUL,'türkiye':ISTANBUL,'tr':ISTANBUL, // i18n-ignore — ülke adı eşleştirmesi / özel ad (veri)
   'bangladesh':{name:'Bangladesh',lat:23.685,lon:90.3563},'bd':{name:'Bangladesh',lat:23.685,lon:90.3563},
   'india':{name:'India',lat:20.5937,lon:78.9629},'in':{name:'India',lat:20.5937,lon:78.9629},
@@ -480,64 +482,12 @@ function decodeWorldTopology(topology){
   return polygons.filter(poly=>poly.length);
 }
 
-const SEA_CORRIDOR_EAST=Object.freeze([[88,15],[81,7],[72,8],[59,11.5],[48,12.2],[43.4,12.6],[39,20],[35,27.2],[32.55,30],[32.3,31.3],[29.2,33.4],[26.1,35.1],[24.7,37.3],[26.4,40.2],[27.7,40.7],[28.9784,41.0082]]);
-const SEA_CORRIDOR_MED_WEST=Object.freeze([[-5.5,35.9],[1,37],[10,37.5],[18,36],[24.7,37.3],[26.4,40.2],[27.7,40.7],[28.9784,41.0082]]);
-function dedupePoints(points){
-  const out=[];points.forEach(point=>{if(!out.length||Math.abs(out[out.length-1][0]-point[0])>.0001||Math.abs(out[out.length-1][1]-point[1])>.0001)out.push(point);});
-  return out.map(point=>({lon:Number(point[0]),lat:Number(point[1])}));
-}
-function seaRouteCoordinates(countryValue){
-  const key=norm(countryValue),origin=countryCoordinate(countryValue);let prefix=[];
-  if(/bangladesh/.test(key))prefix=[[91.82,22.35],[90,17],...SEA_CORRIDOR_EAST];
-  else if(/india/.test(key))prefix=[[72.88,19.08],[66,15],[59,11.5],...SEA_CORRIDOR_EAST.slice(4)];
-  else if(/pakistan/.test(key))prefix=[[67.01,24.86],[62,18],[56,13],...SEA_CORRIDOR_EAST.slice(5)];
-  else if(/sri lanka/.test(key))prefix=[[79.85,6.93],[72,8],...SEA_CORRIDOR_EAST.slice(3)];
-  else if(/china/.test(key))prefix=[[121.5,31.2],[122,24],[116,15],[107,7],[103,1.6],[94,3],[82,6],...SEA_CORRIDOR_EAST.slice(2)];
-  else if(/vietnam|viet nam/.test(key))prefix=[[106.72,10.75],[105,5],[103,1.6],[94,3],[82,6],...SEA_CORRIDOR_EAST.slice(2)];
-  else if(/cambodia/.test(key))prefix=[[103.5,10.5],[103,1.6],[94,3],[82,6],...SEA_CORRIDOR_EAST.slice(2)];
-  else if(/myanmar/.test(key))prefix=[[96.16,16.77],[92,10],[84,7],...SEA_CORRIDOR_EAST.slice(2)];
-  else if(/indonesia/.test(key))prefix=[[106.8,-6],[105,-7],[96,-4],[88,2],[82,6],...SEA_CORRIDOR_EAST.slice(2)];
-  else if(/japan/.test(key))prefix=[[139.7,35.2],[132,28],[123,22],[116,15],[107,7],[103,1.6],[94,3],[82,6],...SEA_CORRIDOR_EAST.slice(2)];
-  else if(/south korea|korea/.test(key))prefix=[[129.04,35.1],[124,27],[116,15],[107,7],[103,1.6],[94,3],[82,6],...SEA_CORRIDOR_EAST.slice(2)];
-  else if(/uae|united arab emirates|bae/.test(key))prefix=[[55.03,25],[56.4,25.7],[58,20],[55,15],[48,12.2],...SEA_CORRIDOR_EAST.slice(5)];
-  else if(/saudi arabia/.test(key))prefix=[[39.17,21.5],[37,24],[34.8,28],[32.55,30],...SEA_CORRIDOR_EAST.slice(9)];
-  else if(/egypt|misir/.test(key))prefix=[[29.9,31.2],[27,33],[25,36],[24.7,37.3],[26.4,40.2],[27.7,40.7],[28.9784,41.0082]];
-  else if(/morocco|fas/.test(key))prefix=[[-7.62,33.6],[-8,35],...SEA_CORRIDOR_MED_WEST];
-  else if(/portugal/.test(key))prefix=[[-9.14,38.7],[-9,36.5],...SEA_CORRIDOR_MED_WEST];
-  else if(/spain|ispanya/.test(key))prefix=[[-5.35,36.14],...SEA_CORRIDOR_MED_WEST];
-  else if(/tunisia|tunus/.test(key))prefix=[[10.3,36.8],[12,36],[18,36],...SEA_CORRIDOR_MED_WEST.slice(3)];
-  else if(/italy|italya/.test(key))prefix=[[15.3,37],[19,36],[24.7,37.3],[26.4,40.2],[27.7,40.7],[28.9784,41.0082]];
-  else if(/greece|yunanistan/.test(key))prefix=[[23.7,37.9],[24.7,39],[26.4,40.2],[27.7,40.7],[28.9784,41.0082]];
-  else if(/south africa/.test(key))prefix=[[18.4,-34],[5,-28],[-5,-10],[-12,12],[-12,28],...SEA_CORRIDOR_MED_WEST];
-  else if(/australia/.test(key))prefix=[[115.8,-32],[100,-25],[88,-10],[80,2],[72,8],...SEA_CORRIDOR_EAST.slice(3)];
-  else if(/usa|united states/.test(key))prefix=[[-74,40],[-50,39],[-30,38],[-12,36],...SEA_CORRIDOR_MED_WEST];
-  else if(/mexico/.test(key))prefix=[[-96,20],[-80,25],[-60,33],[-30,37],[-12,36],...SEA_CORRIDOR_MED_WEST];
-  else if(/brazil/.test(key))prefix=[[-43,-23],[-25,-5],[-18,15],[-12,30],...SEA_CORRIDOR_MED_WEST];
-  else if(origin)prefix=[[origin.lon,origin.lat],...SEA_CORRIDOR_MED_WEST];
-  else prefix=[[28.9784,41.0082]];
-  return dedupePoints(prefix);
-}
-function seaAirRouteCoordinates(countryValue){
-  const key=norm(countryValue),origin=countryCoordinate(countryValue);let sea=[];
-  if(/bangladesh/.test(key))sea=[[91.82,22.35],[88,15],[80,8],[70,10],[60,17],[55.03,25]];
-  else if(/india/.test(key))sea=[[72.88,19.08],[66,19],[60,21],[55.03,25]];
-  else if(/pakistan/.test(key))sea=[[67.01,24.86],[61,24],[55.03,25]];
-  else if(/china|vietnam|cambodia|myanmar|indonesia|japan|korea/.test(key)){
-    const full=seaRouteCoordinates(countryValue),cut=full.findIndex(p=>p.lon<80);
-    sea=(cut>1?full.slice(0,cut):full.slice(0,Math.min(7,full.length))).map(p=>[p.lon,p.lat]);sea.push([64,18],[58,22],[55.03,25]);
-  }else if(origin)sea=[[origin.lon,origin.lat],[55.03,25]];else sea=[[55.03,25]];
-  return sea.map(point=>({lon:Number(point[0]),lat:Number(point[1])}));
-}
-/* Bangladesh ve India Gemi+Uçak: origin → Colombo deniz, Colombo → İstanbul
-   hava. Bangladesh deniz ayağı saf deniz rotasıyla aynı koridor noktalarını
-   kullanır; böylece ortak kısım tek hat olarak birleşir. */
+/* Real terminal coordinates and waypoint corridors are shared by both map
+   engines. Inland production nodes remain country-level operational markers. */
+function seaRouteCoordinates(countryValue){const name=countryCoordinate(countryValue)?.name;return ROUTING.sea(name);}
+function seaAirRouteCoordinates(countryValue){const name=countryCoordinate(countryValue)?.name;return ROUTING.dubaiSea(name);}
 const COLOMBO_SEA_AIR_ORIGINS=Object.freeze(['Bangladesh','India']);
-function colomboSeaCoordinates(countryValue){
-  const name=(countryCoordinate(countryValue)||{}).name;
-  if(name==='Bangladesh')return dedupePoints([[91.82,22.35],[90,17],[88,15],[81,7],[COLOMBO.lon,COLOMBO.lat]]);
-  if(name==='India')return dedupePoints([[78.15,8.78],[79.3,7.9],[COLOMBO.lon,COLOMBO.lat]]);
-  return [];
-}
+function colomboSeaCoordinates(countryValue){return ROUTING.colomboSea(countryCoordinate(countryValue)?.name);}
 function usesColomboTransit(countryValue,mode){
   if(mode!=='sea-air')return false;
   const origin=countryCoordinate(countryValue);return Boolean(origin&&COLOMBO_SEA_AIR_ORIGINS.includes(origin.name));
@@ -549,13 +499,28 @@ function routeLeg(mode,from,to,points){
 }
 function routeLegsFor(countryValue,mode){
   const origin=countryCoordinate(countryValue);if(!origin||origin.name===ISTANBUL.name)return [];
-  if(mode==='sea')return [routeLeg('sea',origin.name,ISTANBUL.name,seaRouteCoordinates(countryValue))];
+  if(mode==='sea'){const sea=seaRouteCoordinates(countryValue);return sea.length>1?[routeLeg('sea',origin.name,ISTANBUL.name,sea)]:[];}
   if(mode==='sea-air'){
-    if(usesColomboTransit(countryValue,mode))return [routeLeg('sea',origin.name,COLOMBO.name,colomboSeaCoordinates(countryValue)),routeLeg('air',COLOMBO.name,ISTANBUL.name,[COLOMBO,ISTANBUL])];
-    const sea=seaAirRouteCoordinates(countryValue),hub=sea[sea.length-1]||{lon:55.03,lat:25};
-    return [routeLeg('sea',origin.name,'Dubai',sea),routeLeg('air','Dubai',ISTANBUL.name,[hub,ISTANBUL])];
+    const colombo=usesColomboTransit(countryValue,mode),sea=colombo?colomboSeaCoordinates(countryValue):seaAirRouteCoordinates(countryValue);
+    if(sea.length<2)return [];
+    const airport=colombo?ROUTING.COLOMBO_AIRPORT:ROUTING.DUBAI_AIRPORT,hub=colombo?'Colombo':'Dubai';
+    return [routeLeg('sea',origin.name,hub,sea),routeLeg('air',hub,ISTANBUL.name,[airport,ROUTING.ARRIVAL_AIRPORT])];
   }
-  return [routeLeg(mode||'unknown',origin.name,ISTANBUL.name,[origin,ISTANBUL])];
+  if(mode==='air'){const airport=ROUTING.AIRPORTS[origin.name];return airport?[routeLeg('air',origin.name,ISTANBUL.name,[airport,ROUTING.ARRIVAL_AIRPORT])]:[];}
+  if(mode==='road'){const road=ROUTING.road(origin.name);return road.length>1?[routeLeg('road',origin.name,ISTANBUL.name,road)]:[];}
+  return [];
+}
+function referenceHubs(model){
+  const hubs=new Map();
+  (model?.placementById?[...model.placementById.values()]:[]).forEach(placement=>placement.legs.forEach(leg=>{
+    if(!['sea','air'].includes(leg.mode))return;
+    [leg.points[0],leg.points.at(-1)].forEach(location=>{
+      const key=leg.mode+'|'+pointKey(location),terminal=ROUTING.terminals.find(p=>Math.abs(p.lon-location.lon)+Math.abs(p.lat-location.lat)<.0001);
+      if(!hubs.has(key))hubs.set(key,{key,kind:leg.mode==='air'?'airport':'port',name:terminal?.name||leg.from,location,records:[]});
+      const hub=hubs.get(key);if(!hub.records.includes(placement.rec))hub.records.push(placement.rec);
+    });
+  }));
+  return [...hubs.values()];
 }
 /* Kanonik segment grafı: iki rota yalnız AYNI iki ardışık koridor noktasını
    aynı yükleme tipiyle paylaşıyorsa aynı kenardır. Geometrik kesişme
@@ -921,7 +886,7 @@ function routeTransportModes(edge){
 }
 
 if(typeof document==='undefined'){
-  return {ISTANBUL,COLOMBO,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,SEA_AIR_AIR_LEG_DAYS,PROGRESS_BUCKET,SYMBOL_MIN_DISTANCE,VEHICLE_CLUSTER_DISTANCE,
+  return {ISTANBUL,COLOMBO,ROUTING,referenceHubs,FIELD_CANDIDATES,WORLD_ASPECT_2D,MIN_ZOOM,MAX_ZOOM_2D,MAX_ZOOM_3D,fitWorld2dViewport,mapSurfacePalette,QUICK_FILTERS,DEFAULT_QUICK_FILTERS,SEA_AIR_AIR_LEG_DAYS,PROGRESS_BUCKET,SYMBOL_MIN_DISTANCE,VEHICLE_CLUSTER_DISTANCE,
     clean,norm,toNumber,pick,createFieldResolver,countryCoordinate,detectMode,operationalStage,classifyState,actionPriorityCode,
     normalizeRecord,expandSourceRow,shipmentPartialsFromRows,partialIdentity,recordKey,dedupeRecords,aggregateRecords,uniqueValues,
     parseDateMs,resolveRecordTransitDays,recordRouteProgress,distancePointToSegment,distanceToPolyline,decodeWorldTopology,
@@ -937,7 +902,7 @@ const L=(tr,en)=>isEn()?en:tr;
 const esc=value=>clean(value).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 let numberFormat=null,numberFormatLang='';
 const nf=()=>{const lang=isEn()?'en-GB':'tr-TR';if(!numberFormat||numberFormatLang!==lang){numberFormat=new Intl.NumberFormat(lang,{maximumFractionDigits:0});numberFormatLang=lang;}return numberFormat;};
-const reducedMotion=()=>{try{return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}};
+const reducedMotion=()=>{try{return document.documentElement.dataset.overviewMotion==='paused'||window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}};
 const state={
   source:'backlog',view:'2d',records:[],panelFiltered:[],filtered:[],model:null,modelRevision:0,loading:false,error:'',warning:'',
   filters:emptyFilters(),quick:{items:DEFAULT_QUICK_FILTERS.slice(),active:[]},quickEditorOpen:false,
@@ -1034,7 +999,9 @@ async function loadWorldTopology(){
   if(state.worldPolygons.length){state.worldLoading=false;return state.worldPolygons;}
   state.worldLoading=true;syncLoadingOverlay();
   try{
-    const response=await fetch('vendor/world-atlas-countries-110m.json',{cache:'force-cache'});if(!response.ok)throw new Error('HTTP '+response.status);
+    let response=await fetch('vendor/world-atlas-countries-50m.json',{cache:'force-cache'});
+    if(!response.ok)response=await fetch('vendor/world-atlas-countries-110m.json',{cache:'force-cache'});
+    if(!response.ok)throw new Error('HTTP '+response.status);
     const topology=await response.json();state.worldPolygons=decodeWorldTopology(topology);if(!state.worldPolygons.length)throw new Error('World topology is empty');state.worldError='';
   }catch(error){state.worldError=String(error&&error.message||error);}
   finally{state.worldLoading=false;state.worldRevision++;syncLoadingOverlay();scheduleDraw();}
@@ -1243,7 +1210,9 @@ function renderMeta(){
   const orders=new Set(state.filtered.map(r=>r.orderKey||r.id)).size,totalQty=state.filtered.reduce((sum,r)=>sum+(Number(r.qty)||0),0),vehicles=state.model?state.model.vehicles.length:0;
   meta.textContent=sourceLabel(state.source)+' · '+nf().format(state.filtered.length)+' '+L('parsiyel','partials')+' · '+nf().format(orders)+' '+L('sipariş','orders')+' · '+nf().format(totalQty)+' '+L('adet','units')+
     (vehicles?' · '+nf().format(vehicles)+' '+L('araç','vehicles'):'')+(state.warning?' · '+state.warning:'');
-  meta.dataset.tone=state.warning?'warn':'normal';
+  const unplaced=state.model?.unplaced?.length||0;
+  if(unplaced)meta.textContent+=' · '+nf().format(unplaced)+' '+L('parsiyelde doğrulanmış referans rota yok.','partials have no verified reference route.');
+  meta.dataset.tone=state.warning||unplaced?'warn':'normal';
 }
 function ensureLoadingOverlay(){
   const wrap=$('globalFlowCanvasWrap');if(!wrap)return null;let overlay=$('globalFlowLoadingOverlay');if(overlay)return overlay;
@@ -1317,7 +1286,7 @@ function canvasInfo(){
   const canvas=$('globalFlowCanvas');if(!canvas)return null;
   const rect=canvas.getBoundingClientRect();if(!rect.width||!rect.height)return null;
   const dpr=Math.max(1,Math.min(2,window.devicePixelRatio||1));
-  const w=Math.max(320,Math.round(rect.width)),h=Math.max(280,Math.round(rect.height));
+  const w=Math.max(1,Math.round(rect.width)),h=Math.max(1,Math.round(rect.height));
   if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
   const ctx=canvas.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);return {canvas,ctx,w,h,dpr};
 }
@@ -1427,11 +1396,65 @@ function buildScene(info,p){
     }else if(symbol.kind==='vehicleCluster')hitTargets.push({type:'vehicleCluster',x:symbol.x,y:symbol.y,r:14,cluster:symbol,records:symbol.records,priority:90});
     else hitTargets.push({type:'vehicle',x:symbol.x,y:symbol.y,r:SYMBOL_MIN_DISTANCE/2,vehicle:symbol.vehicle,records:symbol.vehicle.records,priority:90});
   });
-  state.scene={key,edges,symbols,hitTargets};
+  const hubs=referenceHubs(model).map(hub=>{const q=screenPoint(hub.location,w,h);return q?.visible?{hub,x:q.x,y:q.y}:null;}).filter(Boolean);
+  hubs.forEach(h=>hitTargets.push({type:'hub',hub:h.hub,records:h.hub.records,x:h.x,y:h.y,r:5,priority:55}));
+  state.scene={key,edges,symbols,hubs,hitTargets};
   return state.scene;
 }
 function strokePath(ctx,points){ctx.beginPath();points.forEach((q,i)=>{if(i===0||q.gap)ctx.moveTo(q.x,q.y);else ctx.lineTo(q.x,q.y);});ctx.stroke();}
 const FLOW_STYLE=Object.freeze({sea:{dash:[2,9],speed:16},air:{dash:[7,9],speed:42},road:{dash:[5,7],speed:24},unknown:{dash:[4,8],speed:20}});
+/* Ambient particles follow the exact projected waypoint polyline. They are
+   flow cues, not additional vehicles or a change to shipment progress. */
+function drawRouteParticles(ctx,item,now){
+  if(!item.travel){
+    let total=0;const segments=[];
+    for(let i=1;i<item.points.length;i++){
+      const a=item.points[i-1],b=item.points[i];if(b.gap)continue;
+      const length=Math.hypot(b.x-a.x,b.y-a.y);if(!length)continue;
+      segments.push({a,b,start:total,length});total+=length;
+    }
+    item.travel={segments,total};
+  }
+  const {segments,total}=item.travel;if(total<16)return;
+  const speed=(FLOW_STYLE[item.edge.mode]||FLOW_STYLE.unknown).speed,count=Math.min(3,Math.max(1,Math.floor(total/90)));
+  ctx.save();ctx.fillStyle=item.color;ctx.globalAlpha=.9;
+  for(let i=0;i<count;i++){
+    const distance=((now/1000*speed)+i*total/count)%total,segment=segments.find(s=>distance<=s.start+s.length);if(!segment)continue;
+    const t=(distance-segment.start)/segment.length;
+    ctx.beginPath();ctx.arc(segment.a.x+(segment.b.x-segment.a.x)*t,segment.a.y+(segment.b.y-segment.a.y)*t,1.7,0,Math.PI*2);ctx.fill();
+  }
+  ctx.restore();
+}
+function countryDisplayName(name){
+  const names={Bangladesh:L('Bangladeş','Bangladesh'),India:L('Hindistan','India'),China:L('Çin','China'),Egypt:L('Mısır','Egypt'),Georgia:L('Gürcistan','Georgia'),Morocco:L('Fas','Morocco'),Pakistan:L('Pakistan','Pakistan'),Vietnam:L('Vietnam','Vietnam'),'Sri Lanka':L('Sri Lanka','Sri Lanka')};
+  return name===ISTANBUL.name?L('Türkiye','Türkiye'):names[name]||name;
+}
+function drawCountryLabels(ctx,scene,info,p){
+  if(!scene.countryLabels){
+    const style=getComputedStyle($('globalFlowMeta')),font='600 '+style.fontSize+' '+style.fontFamily;
+    ctx.save();ctx.font=font;const names=new Map(),rects=[],labels=[];
+    state.filtered.forEach(rec=>{if(rec.origin)names.set(rec.origin.name,rec.origin);});
+    for(const [name,location] of names){
+      const q=screenPoint(location,info.w,info.h);if(!q?.visible)continue;
+      const text=countryDisplayName(name),width=ctx.measureText(text).width+8,height=16;
+      const alternatives=[[q.x-width/2,q.y+17],[q.x-width/2,q.y-31],[q.x+17,q.y-8],[q.x-width-17,q.y-8]];
+      const position=alternatives.find(([x,y])=>x>=2&&y>=2&&x+width<=info.w-2&&y+height<=info.h-2&&!rects.some(r=>x<r.x+r.width&&x+width>r.x&&y<r.y+r.height&&y+height>r.y));
+      if(!position)continue;const [x,y]=position;rects.push({x,y,width,height});labels.push({text,x,y,width,font});
+    }
+    ctx.restore();scene.countryLabels=labels;
+  }
+  for(const label of scene.countryLabels){
+    ctx.save();ctx.font=label.font;ctx.fillStyle=p.card;ctx.globalAlpha=.86;ctx.fillRect(label.x,label.y,label.width,16);
+    ctx.globalAlpha=1;ctx.fillStyle=p.ink;ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(label.text,label.x+4,label.y+8);ctx.restore();
+  }
+}
+function drawReferenceHubs(ctx,scene,p){
+  for(const h of scene.hubs||[]){
+    ctx.save();ctx.translate(h.x,h.y);if(h.hub.kind==='airport')ctx.rotate(Math.PI/4);
+    ctx.fillStyle=p.card;ctx.strokeStyle=modeColor(h.hub.kind==='airport'?'air':'sea',p);ctx.lineWidth=1;
+    ctx.fillRect(-2.5,-2.5,5,5);ctx.strokeRect(-2.5,-2.5,5,5);ctx.restore();
+  }
+}
 /* Ortak kenar bir kez çizilir; ince akış çizgileri varış yönüne (kenarın
    a→b yönü, yani İstanbul/aktarma limanı yönü) kayar. */
 function drawEdges(ctx,scene,now,animate){
@@ -1442,6 +1465,7 @@ function drawEdges(ctx,scene,now,animate){
     ctx.globalAlpha=.92;ctx.lineWidth=Math.max(1.2,item.width*.55);ctx.setLineDash(style.dash);
     ctx.lineDashOffset=animate?-((now/1000*style.speed)%period):0;strokePath(ctx,item.points);
     ctx.restore();
+    if(animate)drawRouteParticles(ctx,item,now);
   });
 }
 /* Taşıma tipi simgesi (orijin merkezli, dolgu rengi çağırandan). Buyer Log
@@ -1531,6 +1555,8 @@ function draw(now){
   const t=Number(now)||performance.now();applyGlobeInertia(t);const p=palette(),{ctx,w,h}=info,animate=wantsAnimation();
   ctx.clearRect(0,0,w,h);ctx.drawImage(baseLayer(info,p),0,0,w,h);
   const scene=buildScene(info,p);drawEdges(ctx,scene,t,animate);
+  drawReferenceHubs(ctx,scene,p);
+  drawCountryLabels(ctx,scene,info,p);
   scene.symbols.forEach(symbol=>{if(symbol.kind==='node')drawNode(ctx,symbol,p);});
   scene.symbols.forEach(symbol=>{if(symbol.kind==='vehicle')drawVehicle(ctx,symbol,p);else if(symbol.kind==='vehicleCluster')drawVehicleCluster(ctx,symbol,p);});
   const selected=selectedTarget();if(selected)drawSelection(ctx,selected,p);
@@ -1577,7 +1603,7 @@ function showTooltip(hit,event){
     title=nf().format(hit.vehicles.length)+' '+L('araç','vehicles');
     lines.push([...hit.byMode.entries()].map(entry=>modeLabel(entry[0])+' '+nf().format(entry[1])).join(' · '));
     lines.push(countSummary(hit.records));lines.push(L('Yakınlaştırmak için tıklayın.','Click to zoom in.'));critical=hit.vehicles.some(v=>v.critical);
-  }else if(hit.type==='hub'){title=hitTitle(hit);lines.push(countSummary(hit.records));critical=hit.records.some(r=>r.critical);}
+  }else if(hit.type==='hub'){title=hitTitle(hit);lines.push(L('Referans terminal · gerçek koordinat','Reference terminal · real coordinate'));lines.push(hit.hub.location.lat.toFixed(3)+', '+hit.hub.location.lon.toFixed(3));lines.push(countSummary(hit.records));critical=hit.records.some(r=>r.critical);}
   else if(hit.type==='shipment'){
     const rec=hit.rec,p=hit.placement;title=hitTitle(hit);
     if(p)lines.push(modeLabel(p.leg.mode)+' · '+p.leg.from+' → '+p.leg.to);
@@ -1804,7 +1830,7 @@ async function saveEarthProviderSettings(body){
 }
 function earthBridge(){
   return {
-    L,esc,isEn,palette,drawModeGlyph,nodeRadius,edgeSamples,pointAlongLeg,geoInterpolate,heightForSpan,spanForHeight,hitIdentity,hitTitle,vehicleTitle,
+    referenceHubs,L,esc,isEn,palette,drawModeGlyph,nodeRadius,edgeSamples,pointAlongLeg,geoInterpolate,heightForSpan,spanForHeight,hitIdentity,hitTitle,vehicleTitle,
     angularDistanceDeg:(a,b)=>angularDistance(a,b)*180/Math.PI,
     modeColor:mode=>modeColor(mode,palette()),
     istanbul:()=>ISTANBUL,istanbulName:()=>ISTANBUL.name,
@@ -1901,6 +1927,7 @@ function bindCanvas(){
   canvas.addEventListener('dblclick',event=>event.preventDefault());
 }
 function bindObservers(){
+  window.addEventListener('bl:overview-motion-changed',()=>{scheduleDraw();notifyEarth('motion');});
   // Kaynak verisi değiştiğinde app-main bildirir; ızgara DOM'u izlenmez.
   window.addEventListener('bl:global-flow-data-changed',event=>{
     const tables=event&&event.detail&&Array.isArray(event.detail.tables)?event.detail.tables:['cp','orders'];

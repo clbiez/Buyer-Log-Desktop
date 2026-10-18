@@ -92,7 +92,7 @@ function assertColomboSeaAir(country){
   assert.equal(legs[0].mode,'sea');assert.equal(legs[0].from,country);assert.equal(legs[0].to,'Colombo');
   const last=legs[0].points.at(-1);assert.ok(Math.abs(last.lon-flow.COLOMBO.lon)<.001&&Math.abs(last.lat-flow.COLOMBO.lat)<.001);
   assert.equal(legs[1].mode,'air');assert.equal(legs[1].from,'Colombo');assert.equal(legs[1].to,'İstanbul');
-  assert.deepEqual(legs[1].points.map(p=>[p.lon,p.lat]),[[flow.COLOMBO.lon,flow.COLOMBO.lat],[flow.ISTANBUL.lon,flow.ISTANBUL.lat]]);
+  assert.deepEqual(legs[1].points.map(p=>[p.lon,p.lat]),[[flow.ROUTING.COLOMBO_AIRPORT.lon,flow.ROUTING.COLOMBO_AIRPORT.lat],[flow.ROUTING.ARRIVAL_AIRPORT.lon,flow.ROUTING.ARRIVAL_AIRPORT.lat]]);
   // Konum: yol süresinin deniz kısmı bitmeden deniz ayağında, sonra hava ayağında.
   const early=transitRec('C1',{delType:'Gemi + Uçak',handover:iso(NOW-10*DAY)});early.country=country;early.origin=flow.countryCoordinate(country);
   const late=transitRec('C2',{delType:'Gemi + Uçak',handover:iso(NOW-34*DAY)});late.country=country;late.origin=flow.countryCoordinate(country);

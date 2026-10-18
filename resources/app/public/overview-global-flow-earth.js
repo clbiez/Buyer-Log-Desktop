@@ -55,7 +55,7 @@ function ensureStylesheet(href,id){
   if(document.getElementById(id))return;
   const link=document.createElement('link');link.rel='stylesheet';link.id=id;link.href=href;document.head.appendChild(link);
 }
-function reducedMotion(){try{return window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}}
+function reducedMotion(){try{return document.documentElement.dataset.overviewMotion==='paused'||window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){return false;}}
 function withTimeout(promise,ms,label){
   let timer=0;
   return Promise.race([promise,new Promise((_,reject)=>{timer=setTimeout(()=>reject(Object.assign(new Error(label+((typeof appLang!=='undefined'&&appLang==='en')?' timed out':' zaman aşımı')),{code:'EARTH_TIMEOUT'})),ms);})]).finally(()=>clearTimeout(timer));
@@ -367,6 +367,7 @@ function create(options){
 
   /* ---------- Model → sahne ---------- */
   function hubsFromModel(model){
+    if(host.referenceHubs)return host.referenceHubs(model);
     const hubs=new Map();
     const add=(kind,point,name,rec)=>{
       const key=kind+'|'+Number(point.lon).toFixed(2)+','+Number(point.lat).toFixed(2);

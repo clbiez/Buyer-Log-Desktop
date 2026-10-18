@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-17",
+  "publishedAt": "2026-10-18",
   "bootstrapVisual": false,
   "title": {
-    "tr": "CP ve Siparişler’de Endeksmatik ve kumaş kartları",
-    "en": "Endeksmatik and fabric cards in CP and Orders"
+    "tr": "Premium Overview, Endeksmatik ve kumaş kartları",
+    "en": "Premium Overview, Endeksmatik and fabric cards"
   },
   "summary": {
-    "tr": "CP Tracker ve Siparişler’de seçili siparişin tarih, klasman ve FOB bilgileriyle bir yıl önce/sonra Endeksmatik hesabı; Koleksiyon ile ortak kumaş kartları ve alan filtreleri.",
-    "en": "Calculate Endeksmatik one year before or after a selected order using its dates, classification and FOB in CP Tracker and Orders; shared Collection fabric cards and field filters."
+    "tr": "Görsel ve kompakt Overview; gerçek terminal rotaları, hareketli özetler ve ticari grafikler. CP Tracker ve Siparişler’de seçili siparişin tarih, klasman ve FOB bilgileriyle bir yıl önce/sonra Endeksmatik hesabı; Koleksiyon ile ortak kumaş kartları ve alan filtreleri.",
+    "en": "Visual, compact Overview with real terminal routes, animated summaries and commercial charts. Calculate Endeksmatik one year before or after a selected order using its dates, classification and FOB in CP Tracker and Orders; shared Collection fabric cards and field filters."
   },
   "changes": [
     {
@@ -95,6 +95,325 @@
         "alt": {
           "tr": "CP Tracker’da demo siparişten otomatik alınan OPD, Model Budget, klasman ve FOB ile bir yıl sonrası Endeksmatik hesabı.",
           "en": "Endeksmatik calculation one year later, with OPD, Model Budget, classification and FOB automatically taken from a demo order in CP Tracker."
+        }
+      }
+    },
+    {
+      "id": "overview-compact-layout",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Kompakt premium yerleşim",
+        "en": "Compact premium layout"
+      },
+      "body": {
+        "tr": "Overview, üstte ince dünya saatleri ve KPI şeridiyle daha kompakt açılır. Kayıtlı kişisel düzenler korunur; Premium düzen düğmesi yeni yerleşimi uygular ve aynı oturumda önceki düzene dönebilir.",
+        "en": "Overview opens more compactly with a thin world-clock strip and KPI row. Saved personal layouts are retained; Premium layout applies the new arrangement and can restore the previous layout during the same session."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-premium-operations.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "Kompakt premium yerleşim — demo verilerle Buyer Log.",
+          "en": "Compact premium layout — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-world-clock-detail",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Dünya saatleri ve tatiller tek şeritte",
+        "en": "World clocks and holidays in one strip"
+      },
+      "body": {
+        "tr": "Canlı ülke saatleri ince bir şeritte gösterilir. Saat düğmesi aynı saat ve resmi tatil ayarlarını ayrıntı penceresinde açar.",
+        "en": "Live country times appear in a thin strip. The clock button opens the same clock and public holiday settings in a detail dialog."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-world-clocks.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "Dünya saatleri ve tatiller tek şeritte — demo verilerle Buyer Log.",
+          "en": "World clocks and holidays in one strip — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-pulse",
+      "type": "feature",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Hareketli KPI özeti",
+        "en": "Animated KPI summary"
+      },
+      "body": {
+        "tr": "Aktif CP kapsamı, kritik aksiyonlar, yakın yükleme adedi ve tarih kapsamı gerçek CP karar modelinden gelir. Sayaçlar ve dağılım bantları detay listelerine açılır; hesaplanamayan satırlar ayrıca gösterilir.",
+        "en": "Active CP scope, critical actions, upcoming loading units and date coverage come from the real CP decision model. Animated counters and distribution bands open detail lists; uncalculable rows are shown separately."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-premium-operations.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "Hareketli KPI özeti — demo verilerle Buyer Log.",
+          "en": "Animated KPI summary — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-delivery-horizon",
+      "type": "feature",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "7 ve 14 günlük termin ufku",
+        "en": "7- and 14-day delivery horizon"
+      },
+      "body": {
+        "tr": "Planlı yükleme adetleri günlük sütunlarda, riskli adetler ayrı renkte görünür. Günler, tarihi geçmiş ve tarihsiz siparişler detay listesine açılır.",
+        "en": "Planned loading quantities appear in daily columns, with at-risk units in a separate colour. Days, past-date orders and undated orders open detail lists."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-premium-details.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "7 ve 14 günlük termin ufku — demo verilerle Buyer Log.",
+          "en": "7- and 14-day delivery horizon — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-collection-showcase",
+      "type": "feature",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Görsel koleksiyon vitrini",
+        "en": "Visual collection showcase"
+      },
+      "body": {
+        "tr": "Seçili koleksiyon kapsamındaki model görselleri, aylık adet ve durum dağılımı kompakt bir vitrinde gösterilir. Ay ve durum seçimleri mevcut detay akışını kullanır.",
+        "en": "Model images, monthly quantities and status distribution from the selected Collection scope appear in a compact showcase. Month and status selections use the existing detail flow."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-premium-details.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "Görsel koleksiyon vitrini — demo verilerle Buyer Log.",
+          "en": "Visual collection showcase — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-visual-attention",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Görsel aksiyon kartları",
+        "en": "Visual action cards"
+      },
+      "body": {
+        "tr": "Öncelikli siparişler model görseli, aksiyon nedeni ve gün tamponuyla gösterilir. Mevcut tablo, sütunlar, hariç tutmalar ve detay listesi erişilebilir kalır.",
+        "en": "Priority orders show their model image, action reason and day buffer. The existing table, columns, exclusions and detail list remain available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-premium-operations.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "Görsel aksiyon kartları — demo verilerle Buyer Log.",
+          "en": "Visual action cards — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-coverage-visual",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Veri kapsamı ve kontrol listesi daha okunaklı",
+        "en": "Clearer data coverage and checklist"
+      },
+      "body": {
+        "tr": "Yükleme ve hedef tarihi kapsamı yüzde ve bantla, hesaplanamayan kayıtlar ayrı sayaçla gösterilir. Eksik alanlar ve kontrol listesi açıklamaları açılır ayrıntılara taşındı.",
+        "en": "Loading and target date coverage use a percentage and band, with a separate count for uncalculable records. Missing fields and checklist explanations are available in expandable details."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-premium-details.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "Veri kapsamı ve kontrol listesi daha okunaklı — demo verilerle Buyer Log.",
+          "en": "Clearer data coverage and checklist — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-oab-charts",
+      "type": "feature",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "OAB için etkileşimli özet grafik",
+        "en": "Interactive OAB summary chart"
+      },
+      "body": {
+        "tr": "Mevcut pivot hesaplarını kullanan grafik, seçili sayısal ölçüyü gruplara göre karşılaştırır. Ölçü seçimi, grup detayı ve Pivot / Tablo geçişi desteklenir; gizli görünümde gelen yeni veri de korunur.",
+        "en": "A chart using the existing pivot calculations compares the selected numeric measure across groups. Measure selection, group details and Pivot / Table switching are supported; fresh data received while hidden is retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-premium-commercial.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "OAB için etkileşimli özet grafik — demo verilerle Buyer Log.",
+          "en": "Interactive OAB summary chart — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-intake-charts",
+      "type": "feature",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "INTAKE için etkileşimli özet grafik",
+        "en": "Interactive INTAKE summary chart"
+      },
+      "body": {
+        "tr": "Seçili rapor kapsamı, mevcut toplama kurallarıyla hesaplanan karşılaştırma grafiğine dönüşür. Kullanıcı ölçüyü değiştirebilir, grup satırlarını açabilir ve tabloya dönebilir.",
+        "en": "The selected report scope becomes a comparison chart calculated with the existing aggregation rules. Users can change the measure, open group rows and return to the table."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-premium-commercial.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "INTAKE için etkileşimli özet grafik — demo verilerle Buyer Log.",
+          "en": "Interactive INTAKE summary chart — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-reference-geography",
+      "type": "fix",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Rotalar gerçek liman ve havalimanlarına bağlandı",
+        "en": "Routes connect to real ports and airports"
+      },
+      "body": {
+        "tr": "Haritanın mevcut renk ve projeksiyonu korunur. Deniz koridorları kıyılardan, boğazlardan ve Süveyş Kanalı’ndan geçer; uçuşlar gerçek havalimanlarına bağlanır. Deniz-hava aktarmalarında liman ve havalimanı ayrıdır. Doğrulanmış referansı olmayan bağlantılar çizilmez; rotalar canlı GPS/AIS değildir.",
+        "en": "The existing map colours and projection are retained. Sea corridors follow coastlines, straits and the Suez Canal; flights connect to real airports. Sea-air transfers separate ports from airports. Connections without a verified reference are omitted; routes are not live GPS/AIS."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-reference-routes.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "Rotalar gerçek liman ve havalimanlarına bağlandı — demo verilerle Buyer Log.",
+          "en": "Routes connect to real ports and airports — Buyer Log with demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-map-motion",
+      "type": "improvement",
+      "module": {
+        "tr": "Overview",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Ülke etiketleri ve rota hareketi",
+        "en": "Country labels and route motion"
+      },
+      "body": {
+        "tr": "Ülke etiketleri, gerçek terminal işaretleri ve rota üzerindeki hareketli parçacıklar haritayı daha okunaklı yapar. Hareket düğmesi animasyonları durdurur; azaltılmış hareket tercihi desteklenir. Kompakt tuvalde coğrafi oran korunur.",
+        "en": "Country labels, real terminal markers and moving route particles make the map easier to read. The motion button pauses animations and reduced motion preferences are supported. Compact canvases retain their geographic aspect."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-reference-routes.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "Ülke etiketleri ve rota hareketi — demo verilerle Buyer Log.",
+          "en": "Country labels and route motion — Buyer Log with demo data."
         }
       }
     }
