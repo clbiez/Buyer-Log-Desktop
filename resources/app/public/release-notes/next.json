@@ -416,6 +416,64 @@
           "en": "Country labels and route motion — Buyer Log with demo data."
         }
       }
+    },
+    {
+      "id": "backlog-date-range-slider",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Kaydırmalı tarih aralığı",
+        "en": "Sliding date range"
+      },
+      "body": {
+        "tr": "MB, güncel/revize Exfactory ve retail depo tarihlerini gün, hafta veya ay adımıyla filtreleyin. İki tutamakla başlangıç ve bitişi, oklarla tüm aralığı kaydırın; hazır dönemler, açık uçlar ve kalıcı seçimler desteklenir. Pivot, detay ve Excel aynı filtreleri kullanır.",
+        "en": "Filter MB, current/revised Exfactory and retail warehouse dates by day, week or month. Slide two handles to set start and end, or use arrows to shift the range; presets, open ends and persistent selections are supported. Pivot, detail and Excel use the same filters."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-date-range.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log Backlog ekranı; anonim demo veriler.",
+          "en": "Actual Buyer Log Backlog interface after the change, using anonymous demo data."
+        },
+        "alt": {
+          "tr": "MB, Exfactory ve retail depo tarihi seçimleriyle kaydırmalı Backlog tarih aralığı.",
+          "en": "Sliding Backlog date range with MB, Exfactory and retail warehouse date choices."
+        }
+      }
+    },
+    {
+      "id": "backlog-date-range-compact",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Tarih aralığı daha kompakt",
+        "en": "More compact date range"
+      },
+      "body": {
+        "tr": "Tarih modülü dar bir alanda sıkı bir yerleşim kullanır. Tarih türü, gün/hafta/ay, başlangıç-bitiş ve kaydırıcı görünür kalır; hazır dönemler, aktif filtreler ve yardım açılır bölümdedir.",
+        "en": "The date module uses a tighter layout in a narrower area. Date field, day/week/month, start/end and the slider stay visible; presets, active filters and help are in an expandable section."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-date-range-compact.png",
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log; anonim demo verileriyle kompakt tarih modülü.",
+          "en": "Actual Buyer Log after the change, showing the compact date module with anonymous demo data."
+        },
+        "alt": {
+          "tr": "Kompakt Backlog tarih şeridi ve açılır kısayollar bölümü.",
+          "en": "Compact Backlog date strip and expandable presets section."
+        }
+      }
     }
   ]
 }

@@ -1,0 +1,34 @@
+.backlogDateRange{box-sizing:border-box;width:100%;max-width:980px;padding:6px 10px;margin:6px 0;background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.backlogDateTop,.backlogDateControls,.backlogDateBottom,.backlogDatePresets,.backlogDateActive{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.backlogDateTitle{display:flex;align-items:center;gap:4px;font-size:var(--fs-xs);margin-right:4px}
+.backlogDateSpacer{flex:1}
+.backlogDateControls{margin:4px 0;flex-wrap:nowrap}
+.backlogDateControls label{display:grid;gap:1px;font-size:var(--fs-2xs);color:var(--ink2)}
+.backlogDateControls .dateFieldWrap{width:122px}
+.backlogDateControls>.tbtn,.backlogDatePresets>.tbtn,.backlogDateActive>.tbtn{height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);padding-block:0}
+.backlogDateTimeline{flex:1;min-width:120px;padding:3px 4px 0}
+.backlogDateRail{position:relative;height:24px;isolation:isolate}
+.backlogDateRail::before,.backlogDateSelection{content:"";position:absolute;top:10px;height:4px;border-radius:var(--r-pill);background:var(--line);left:0;right:0}
+.backlogDateSelection{left:var(--range-start);right:calc(100% - var(--range-end));background:var(--acc)}
+.backlogDateRange .backlogDateRail input[type="range"]{position:absolute;inset:0;width:100%;height:24px;margin:0;padding:0;appearance:none;background:transparent;pointer-events:none;border:0;accent-color:var(--acc)}
+.backlogDateRange .backlogDateRail input[type="range"]::-webkit-slider-thumb{appearance:none;width:16px;height:24px;border:2px solid var(--acc);border-radius:var(--r-pill);background:var(--card);cursor:ew-resize;pointer-events:auto}
+.backlogDateRange .backlogDateRail input[type="range"]::-moz-range-thumb{width:12px;height:20px;border:2px solid var(--acc);border-radius:var(--r-pill);background:var(--card);cursor:ew-resize;pointer-events:auto}
+.backlogDateRange .backlogDateRail input[type="range"]::-moz-range-track{background:transparent}
+.backlogDateRange .backlogDateRail input[type="range"]:focus-visible{outline:2px solid var(--acc);outline-offset:3px}
+.backlogDateTicks{display:flex;justify-content:space-between;gap:8px;font-size:var(--fs-2xs);color:var(--muted)}
+.backlogDateTicks span:nth-child(2){display:none}
+.backlogDateBottom{justify-content:space-between}
+.backlogDateBottom output{font-size:var(--fs-2xs);color:var(--ink2);font-variant-numeric:tabular-nums}
+.backlogDateBottom output.is-error{color:var(--red)}
+.backlogDateActive{margin-top:8px}
+.backlogDateActive:empty{display:none}
+.backlogDateActive .tbtn{background:var(--acc-bg);color:var(--acc-ink)}
+.backlogDateHelp{margin-top:8px;font-size:var(--fs-xs);color:var(--muted)}
+.backlogDateHelp summary{cursor:pointer;width:fit-content}
+.backlogDateHelp p{margin:6px 0;line-height:1.6}
+.backlogDateOptions{min-width:0;font-size:var(--fs-2xs);color:var(--muted)}
+.backlogDateOptions>summary{cursor:pointer;width:fit-content}
+.backlogDateOptions[open]{flex-basis:100%;order:2}
+.backlogDateOptionsBody{padding-top:6px}
+@media(max-width:1050px){.backlogDateTitle{display:none}}
+@media(max-width:800px){.backlogDateControls{flex-wrap:wrap}.backlogDateTimeline{order:2;flex-basis:100%}.backlogDateTop .backlogDateSpacer{display:none}.backlogDateControls label{flex:1;min-width:100px}.backlogDateControls .dateFieldWrap{width:100%}.backlogDateBottom{align-items:flex-start}}
