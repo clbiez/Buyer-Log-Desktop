@@ -20786,6 +20786,7 @@ function themeCycleTitle(){ const names=THEME_CYCLE.map(themeLabel).join(' → '
 const THEME_CYCLE = ['light','grey','dark'];
 function systemTheme(){ return (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light'; }
 let _themeSwitchRelease=null;
+let _themeRequested=null;
 function beginFastThemeSwitch(){
   const root=document.documentElement,body=document.body;
   if(!body||document.readyState==='loading')return null;
@@ -20813,23 +20814,31 @@ function beginFastThemeSwitch(){
   _themeSwitchRelease=release;
   return release;
 }
-function applyTheme(name){
+function applyTheme(name,options){
   const resolved = THEMES[name] ? name : systemTheme();
+  _themeRequested=resolved;
   const root = document.documentElement;
   const use=document.querySelector('#railThemeBtn use');
+  // Finish a previous requested palette before comparing the live root state.
+  window.BLThemeTransition?.cancel();
   try{void window.buyerLogDesktop?.workspace?.setTheme?.(resolved);}catch(_){}
   if(root.dataset.theme===resolved){
     if(use)use.setAttribute('href',THEMES[resolved].icon);
     try{BLStorage.setItem('lcw_theme',resolved);}catch(e){}
     return;
   }
+  const update=()=>{
+    root.dataset.theme = resolved;
+    // colorScheme: gri tema açık tarafta olduğu için yerel kontroller aydınlık kalır.
+    root.style.colorScheme = (resolved==='dark') ? 'dark' : 'light';
+    if(use) use.setAttribute('href', THEMES[resolved].icon);
+    try{ BLStorage.setItem('lcw_theme', resolved); }catch(e){}
+    syncThemeButtonTitle();
+  };
+  if(typeof _themeSwitchRelease==='function')_themeSwitchRelease(true);
+  if(options&&options.animate&&window.BLThemeTransition?.start(update))return;
   const release=beginFastThemeSwitch();
-  root.dataset.theme = resolved;
-  // colorScheme: gri tema açık tarafta olduğu için tarayıcı yerel kontrolleri aydınlık görünsün.
-  root.style.colorScheme = (resolved==='dark') ? 'dark' : 'light';
-  if(use) use.setAttribute('href', THEMES[resolved].icon);
-  try{ BLStorage.setItem('lcw_theme', resolved); }catch(e){}
-  syncThemeButtonTitle();
+  update();
   if(release)release(false);
 }
 // Ray düğmesinin ipucu artık elle yazılmıyor; tema listesi değişirse metin de değişir.
@@ -20842,7 +20851,7 @@ function syncThemeButtonTitle(){
   btn.setAttribute('data-i18n-title-en','Theme: '+THEME_CYCLE.map(k=>THEMES[k]?(THEMES[k].labelEn||THEMES[k].label):k).join(' → '));
 }
 function nextTheme(){
-  const cur = document.documentElement.dataset.theme || 'light';
+  const cur = _themeRequested || document.documentElement.dataset.theme || 'light';
   const i = THEME_CYCLE.indexOf(cur);
   return THEME_CYCLE[(i<0?0:i+1) % THEME_CYCLE.length];
 }
@@ -20853,7 +20862,8 @@ function renderThemePanel(){
     `<button class="themeOptBtn" data-theme="${key}"><span class="tik">${key===cur?'✓':''}</span><span>${escapeHtml(themeLabel(key))}</span></button>`
   ).join('');
   panel.querySelectorAll('.themeOptBtn').forEach(b=> b.addEventListener('click', ()=>{
-    applyTheme(b.dataset.theme); renderThemePanel(); panel.style.display='none';
+    panel.style.display='none';
+    applyTheme(b.dataset.theme,{animate:true}); renderThemePanel();
   }));
 }
 const UI_SCALE_PRESETS=[
@@ -20896,7 +20906,7 @@ document.addEventListener('click', e=>{
 
 (function premiumEnhancements(){
   document.documentElement.lang='tr';
-  const themeBtn=document.getElementById('headerThemeBtn'); if(themeBtn) themeBtn.addEventListener('click',()=>applyTheme(nextTheme()));
+  const themeBtn=document.getElementById('headerThemeBtn'); if(themeBtn) themeBtn.addEventListener('click',()=>applyTheme(nextTheme(),{animate:true}));
   document.querySelectorAll('button[title]').forEach(b=>{if(!b.getAttribute('aria-label'))b.setAttribute('aria-label',b.title)});
   if(window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change',()=>{try{if((BLStorage.getItem('lcw_theme')||'dark')==='__never_system__')applyTheme('system')}catch(e){}});
 })();

@@ -316,7 +316,7 @@
 <link rel="stylesheet" href="collection-spreadsheet.css?v=__BL_ASSET_VERSION__&rev=7">
 <link rel="stylesheet" href="excel-import.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="user-management.css?v=__BL_ASSET_VERSION__">
-<link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=3">
+<link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=4">
 <link rel="stylesheet" href="overview-home.css?v=__BL_ASSET_VERSION__&rev=20261018">
 <link rel="stylesheet" href="overview-global-flow.css?v=__BL_ASSET_VERSION__&rev=5">
 <link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=6">
@@ -1485,7 +1485,8 @@
 <!-- Sütun EN/TR görünen adları + veri kaynağı kataloğu (CP / Orders / Koleksiyon). -->
 <script src="column-display-names.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-date-range.js?v=__BL_ASSET_VERSION__"></script>
-<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=OVERVIEW-PREMIUM-20261018"></script>
+<script src="theme-transition.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=THEME-WAVE-20261018"></script>
 <script src="collection-artwork-detail.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="checklist-answer-merge-engine.js?v=__BL_ASSET_VERSION__"></script>
 <script src="cp-plm-details.js?v=__BL_ASSET_VERSION__&rev=1"></script>
@@ -1585,7 +1586,7 @@
      da onunla birlikte gitti. */
 
   document.getElementById('railThemeBtn')?.addEventListener('click',()=>{
-    applyTheme(nextTheme());
+    applyTheme(nextTheme(),{animate:true});
   });
 
   document.getElementById('topRefreshBtn')?.addEventListener('click',e=>{
