@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.284",
+      "publishedAt": "2026-10-18",
+      "title": {
+        "tr": "Buyer Log görünümünü koruyan tema dalgası",
+        "en": "Theme wave with the familiar Buyer Log interface"
+      },
+      "stats": {
+        "features": 0,
+        "improvements": 1,
+        "fixes": 0
+      },
+      "file": "release-notes/7.0.284/release.json"
+    },
+    {
       "version": "7.0.283",
       "publishedAt": "2026-10-18",
       "title": {
