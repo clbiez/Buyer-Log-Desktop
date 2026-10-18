@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-18",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Buyer Log görünümünü koruyan tema dalgası",
+    "en": "Theme wave with the familiar Buyer Log interface"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Aydınlık, Kurşun ve Karanlık temaları arasında dalgalı geçiş; mevcut köşeli arayüz, tablolar ve araçlar korunur.",
+    "en": "Wave transitions between Light, Slate and Dark while preserving square controls, tables and tools."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "native-theme-wave",
+      "type": "improvement",
+      "module": {
+        "tr": "Görünüm ve temalar",
+        "en": "Appearance and themes"
+      },
+      "title": {
+        "tr": "Mevcut arayüzde dalgalı tema geçişi",
+        "en": "Wave theme transition in the existing interface"
+      },
+      "body": {
+        "tr": "Sol menüdeki Tema düğmesiyle Aydınlık, Kurşun ve Karanlık paletleri ekran boyunca yayılan bir dalgayla değişir. CP Tracker, Siparişler ve Koleksiyon tablolarının sütunları, filtreleri, seçimleri ve kaydırma konumları korunur; düğmeler ve alanlar köşeli kalır. Hızlı art arda seçimlerde son tema geçerlidir. Azaltılmış hareket tercihinde ve geçişi desteklemeyen tarayıcılarda tema mevcut hızlı yoldan değişir.",
+        "en": "The Theme button switches Light, Slate and Dark palettes with a wave across the screen. CP Tracker, Orders and Collection retain their columns, filters, selections and scroll positions; buttons and fields remain square. Rapid selections resolve to the latest requested theme. Reduced motion and browsers without transition support use the existing fast switch."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "native-theme-wave.png",
+        "caption": {
+          "tr": "Gerçek Buyer Log CP Tracker ekranında temsili verilerle Aydınlık → Kurşun tema dalgası.",
+          "en": "Light-to-Slate theme wave in the real Buyer Log CP Tracker with illustrative data."
+        },
+        "alt": {
+          "tr": "Köşeli CP Tracker tablosu ve mevcut araçlar üzerinde yayılan tema dalgası.",
+          "en": "A theme wave across the square CP Tracker table and its existing tools."
+        }
+      }
+    }
+  ]
 }

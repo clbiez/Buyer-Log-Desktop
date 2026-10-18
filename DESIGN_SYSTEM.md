@@ -117,7 +117,10 @@ bileşen sözleşme seçicisine eklenir.
 
 ## 8 · Hareket ve erişilebilirlik
 
-- Süreler `--bl-motion-fast|standard|enter`, eğri `--bl-ease`. Sayfa, açılır yüzey, diyalog ve çekmece
+- Süreler `--bl-motion-fast|standard|enter`, eğri `--bl-ease`. Kullanıcının tema
+  seçimindeki dalga `--bl-motion-theme` süresini kullanır; `theme-transition.js`
+  mevcut üç paleti yerel View Transitions görüntüleriyle değiştirir. Başlangıçta,
+  azaltılmış harekette ve API yoksa mevcut hızlı geçiş yolu kullanılır. Sayfa, açılır yüzey, diyalog ve çekmece
   ortak `blViewIn / blPopoverIn / blDialogIn / blDrawerIn` animasyonlarını kullanır.
 - `prefers-reduced-motion` her yeni animasyonda desteklenir.
 - Odak halkası `--focus-ring`; `outline:none` yalnız eşdeğer bir odak göstergesiyle.
