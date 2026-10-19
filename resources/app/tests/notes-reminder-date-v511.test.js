@@ -90,12 +90,23 @@ test('v5.11 legacy notes without timestamp are not assigned a fake historical da
   assert.equal(row._notesAt,'');
 });
 
-test('Overview Notes Reminder exposes separate open and order-note delete actions',()=>{
-  assert.match(APP,/function clearOverviewNoteOrder\(row\)/);
-  assert.match(APP,/class="ovNoteOrderOpen"/);
-  assert.match(APP,/class="noteCellDelete ovNoteOrderDelete"/);
-  assert.match(APP,/data-note-delete/);
+// PR #604 removed inline order summaries. The same per-order deletion must
+// remain available through the note-count side report, including its stale-note guard.
+test('Overview note count opens order details and preserves guarded per-order note deletion',async()=>{
+  const vm=require('node:vm'),current={_id:42,Notes:'Follow up'},deleted=[];let detail;
+  const context=vm.createContext({appLang:'en',state:{cp:{rows:[current]}},
+    window:{BLPerf:{ensureFeature:async()=>{}},BLCpAssistant:{openOverviewRows:(rows,title,options)=>{detail={rows,title,options};}}},
+    sameOrderLine:(a,b)=>a._id===b._id,overviewOrderNoteText:row=>row.Notes,
+    overviewNoteCanonical:value=>String(value||'').trim(),clearOverviewNoteOrder:row=>{deleted.push(row);return true;}});
+  const start=APP.indexOf('async function openOverviewNoteGroupInCp('),end=APP.indexOf('function renderOverviewPriorityReminder(',start);
+  vm.runInContext(APP.slice(start,end),context);
+  await context.openOverviewNoteGroupInCp({rows:[{_id:42}],note:'Follow up'});
+  assert.equal(detail.title,'Notes · Order details');assert.equal(detail.options.notes,true);assert.equal(detail.options.note,'Follow up');
+  assert.equal(detail.options.deleteNote({_id:42}),true);assert.deepEqual(deleted,[current]);
+  current.Notes='Newer note';assert.equal(detail.options.deleteNote({_id:42}),false);assert.equal(deleted.length,1);
+  assert.equal(detail.options.deleteNote({_id:999}),false);
+  const render=APP.slice(end,APP.indexOf('function ',end+20));
+  assert.match(render,/data-note-group-count/);assert.match(render,/openOverviewNoteGroupInCp\(groups/);
+  assert.doesNotMatch(render,/class="ovNoteOrderOpen"|class="noteCellDelete ovNoteOrderDelete"/);
   assert.match(APP,/clearRowNote\(Number\(row\._id\),key\)/);
-  assert.match(CSS,/grid-template-columns:minmax\(0,1fr\) 28px 16px/);
-  assert.match(CSS,/\.ovNoteOrderDelete\{/);
 });
