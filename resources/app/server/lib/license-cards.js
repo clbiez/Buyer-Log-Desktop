@@ -185,16 +185,31 @@ function mergeRules(existing, incoming, card, deps) {
   }
   return merged;
 }
+// Scope optimistic edits to the opened card and its contracts. Import timestamps
+// and changes to unrelated cards/rates must not invalidate an editor.
+function editToken(card, rules) {
+  const stable = value => Array.isArray(value) ? value.map(stable) : value && typeof value === 'object'
+    ? Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])])) : value;
+  const profile = Object.fromEntries([...Object.keys(PROFILE_LIMITS), 'symbolDataUrl'].map(key => [key, card[key] || '']));
+  const contracts = rules.filter(rule => pairKey(rule.license, rule.licensor) === pairKey(card.license, card.licensor)).map(stable);
+  contracts.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
+  return crypto.createHash('sha256').update(JSON.stringify(stable({ id: card.id, license: card.license, licensor: card.licensor, profile, contracts }))).digest('hex');
+}
 function updateCard(overrides, id, body, deps, now = new Date().toISOString()) {
-  assertRevision(body.revision != null ? body.revision : body.expectedRevision, revisionOf(overrides, 'licenseCards'), 'licenseCards');
   const state = clone(stateOf(overrides)), index = state.items.findIndex(card => card.id === id);
   if (index < 0) fail('LICENSE_CARD_NOT_FOUND', 'Lisans kartı bulunamadı. / License card not found.', 404);
-  const profile = body.profile == null ? Object.fromEntries(Object.entries(body).filter(([key]) => !['revision','expectedRevision','pricingRevision','expectedPricingRevision','rules'].includes(key))) : body.profile;
+  const scoped = Object.hasOwn(body, 'editToken');
+  if (scoped) {
+    if (typeof body.editToken !== 'string' || body.editToken !== editToken(state.items[index], overrides.pricingRules || [])) {
+      fail('REVISION_CONFLICT', 'Açılan kart değişti; güncel kaydı açın. / The opened card changed; open the current record.', 409);
+    }
+  } else assertRevision(body.revision != null ? body.revision : body.expectedRevision, revisionOf(overrides, 'licenseCards'), 'licenseCards');
+  const profile = body.profile == null ? Object.fromEntries(Object.entries(body).filter(([key]) => !['revision','expectedRevision','pricingRevision','expectedPricingRevision','rules','editToken'].includes(key))) : body.profile;
   state.items[index] = { ...state.items[index], ...normalizeProfile(profile), updatedAt: now };
   const next = { ...overrides, licenseCards: state, _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
   let rulesChanged = false;
   if (Object.hasOwn(body, 'rules')) {
-    assertRevision(body.pricingRevision != null ? body.pricingRevision : body.expectedPricingRevision, revisionOf(overrides, 'pricingRules'), 'pricingRules');
+    if (!scoped) assertRevision(body.pricingRevision != null ? body.pricingRevision : body.expectedPricingRevision, revisionOf(overrides, 'pricingRules'), 'pricingRules');
     const existing = Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [];
     const rules = mergeRules(existing, normalizeRules(body.rules, state.items[index], deps), state.items[index], deps);
     rulesChanged = JSON.stringify(existing) !== JSON.stringify(rules);
@@ -206,8 +221,8 @@ function responseOf(overrides, canEdit) {
   const state = stateOf(overrides), rules = Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [];
   const byPair = new Map();
   for (const rule of rules) { const key = pairKey(rule.license, rule.licensor); if (!byPair.has(key)) byPair.set(key, []); byPair.get(key).push(rule); }
-  return { cards: state.items.map(card => ({ ...card, rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
-    revision: revisionOf(overrides, 'licenseCards'), pricingRevision: revisionOf(overrides, 'pricingRules'), initialized: state.initialized,
+  return { cards: state.items.map(card => ({ ...card, editToken: editToken(card, rules), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
+    pricingRules: rules, revision: revisionOf(overrides, 'licenseCards'), pricingRevision: revisionOf(overrides, 'pricingRules'), initialized: state.initialized,
     lastImportedAt: state.lastImportedAt, canEdit: Boolean(canEdit) };
 }
 

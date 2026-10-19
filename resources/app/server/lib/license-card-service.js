@@ -11,7 +11,7 @@ function createLicenseCardService(deps){
  const mutate=work=>deps.mutate?deps.mutate('licenseCards',work):work({commit:async()=>{}});
  const read=()=>cards.responseOf(load(),false);
  async function published(profile,change){if(!deps.publish)return Object.keys(load().licenseCardOutbox||{}).length>0;try{const result=await deps.publish(profile,change);return Boolean(result?.pending||result?.ok===false);}catch(_){return true;}}
- async function notify(profile,change,saved){await deps.changed?.(profile,'licenseCards',{revision:cards.revisionOf(saved,'licenseCards'),cardId:change.card?.id,added:change.added});if(change.rulesChanged)await deps.changed?.(profile,'pricingRules',{revision:cards.revisionOf(saved,'pricingRules'),changedLicenses:[change.card.license]});}
+ async function notify(profile,change,saved,context){await deps.changed?.(profile,'licenseCards',{revision:cards.revisionOf(saved,'licenseCards'),cardId:change.card?.id,added:change.added},context);if(change.rulesChanged)await deps.changed?.(profile,'pricingRules',{revision:cards.revisionOf(saved,'pricingRules'),changedLicenses:[change.card.license]},context);}
  async function discovery(profile,{assertAuthority}={}){
    assertAuthority?.();const rows=await deps.getDiscoveryRows(profile);assertAuthority?.();
    const sourceStamp=rows?.sourceStamp??deps.discoveryStamp?.(profile)??'';if(deps.discoveryStamp&&deps.discoveryStamp(profile)!==sourceStamp)throw error('OFFICE_PREVIEW_CHANGED',409);
@@ -19,7 +19,7 @@ function createLicenseCardService(deps){
    const before=cards.stateOf(current),next=cards.appendDiscovered(current,pairs,'').overrides;
    return {snapshot:sectionSnapshot(current),pairs,sourceStamp,added:cards.stateOf(next).items.length-before.items.length,resolved:cards.stateOf(next).items.filter(card=>before.items.some(previous=>previous.id===card.id&&previous.licensor!==card.licensor)).map(card=>({id:card.id,license:card.license,licensor:card.licensor})),initialized:before.initialized};
  }
- async function discover(profile,{assertAuthority,expected,force=true}={}){
+ async function discover(profile,{assertAuthority,expected,force=true,originClientId=''}={}){
    if(!force&&cards.stateOf(load()).initialized)return {saved:load(),added:0,syncPending:Object.keys(load().licenseCardOutbox||{}).length>0};
    const preview=expected||await discovery(profile,{assertAuthority});let change;
    const result=await mutate(async lease=>{
@@ -33,14 +33,14 @@ function createLicenseCardService(deps){
      return {saved,added:imported.added};
    });
    if(result.noEffect)return {...result,syncPending:Object.keys(load().licenseCardOutbox||{}).length>0};
-   const syncPending=await published(profile,change);await notify(profile,change,result.saved);return {...result,syncPending};
+   const syncPending=await published(profile,change);await notify(profile,change,result.saved,{originClientId});return {...result,syncPending};
  }
  function updatePreview(id,body){
    const current=load(),snapshot=sectionSnapshot(current),before=cards.stateOf(current).items.find(card=>card.id===id);
    const result=cards.updateCard(current,id,{...body,revision:snapshot.revision,pricingRevision:snapshot.pricingRevision},validators,before?.updatedAt||'');
    return {snapshot,card:result.card,rulesChanged:result.rulesChanged,rules:result.overrides.pricingRules||[]};
  }
- async function update(profile,id,body,{assertAuthority,expected}={}){
+ async function update(profile,id,body,{assertAuthority,expected,originClientId=''}={}){
    let change;
    const saved=await mutate(async lease=>{
      const guard=()=>{assertAuthority?.();};guard();assertSnapshot(load(),expected);const current=load(),result=cards.updateCard(current,id,body,validators);
@@ -48,7 +48,7 @@ function createLicenseCardService(deps){
      const staged=deps.publish?sync.stageChange(result.overrides,change):result.overrides,actual=deps.saveOverrides(staged,Number(current._revision)||0,{...lease,assertAuthority:guard});await lease.commit();
      if(sectionSnapshot(load()).fingerprint!==sectionSnapshot(actual).fingerprint)throw error('OFFICE_RESOURCE_VERIFY_FAILED',409);return actual;
    });
-   const syncPending=await published(profile,change);await notify(profile,change,saved);return {saved,card:change.card,rulesChanged:change.rulesChanged,syncPending};
+   const syncPending=await published(profile,change);await notify(profile,change,saved,{originClientId});return {saved,card:change.card,rulesChanged:change.rulesChanged,syncPending};
  }
  function inverseSnapshot(id,includeRules){const current=load(),card=cards.stateOf(current).items.find(item=>item.id===id);if(!card)throw error('OFFICE_NOT_FOUND',404);return {card:clone(card),...(includeRules?{rules:clone(current.pricingRules||[])}:{})};}
  async function restore(profile,receipt,expected,{assertAuthority}={}){

@@ -10574,7 +10574,7 @@ const licenseCardService=require('./lib/license-card-service').createLicenseCard
   loadOverrides,saveOverrides,mutate:require('./db').mutateSharedResource,pricing:require('./lib/resource-rule-service'),
   getDiscoveryRows:profile=>getLicenseDiscoveryRows({currentUser:profile}),discoveryStamp:profile=>String(cacheForUser(profile.id).loadedAt||''),
   publish:(profile,change)=>licenseCardSync.publish({currentUser:profile},change),
-  changed:(profile,section,detail)=>publishSharedMasterChange(section,{currentUser:profile},detail),
+  changed:(profile,section,detail,context)=>publishSharedMasterChange(section,{currentUser:profile,headers:{'x-client-id':context?.originClientId||''}},detail),
 });
 require('./routes/license-card-routes')(app, {
   service:licenseCardService,
