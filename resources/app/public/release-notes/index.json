@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.286",
+      "publishedAt": "2026-10-19",
+      "title": {
+        "tr": "Genel Bakış ve e-posta tablo düzeni",
+        "en": "Overview and email table layout"
+      },
+      "stats": {
+        "features": 7,
+        "improvements": 5,
+        "fixes": 3
+      },
+      "file": "release-notes/7.0.286/release.json"
+    },
+    {
       "version": "7.0.284",
       "publishedAt": "2026-10-18",
       "title": {
