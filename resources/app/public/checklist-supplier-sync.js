@@ -80,7 +80,7 @@
   /* v7.221 — dört durum: Pending (open) · Approved · Rejected · Not Required.
      Eski Excel/kayıt değerleri (Completed, Tamamlandı, Open…) aynı kanonik
      duruma okunur; tanınmayan değer '' döner ve geçersiz sayılır. */
-  const STATUS_ORDER = Object.freeze(['open', 'approved', 'rejected', 'notRequired']);
+  const STATUS_ORDER = Object.freeze(['open', 'approved', 'rejected', 'notRequired', 'custom:ordered']);
   function availableStatuses() {
     if (buildContext) return STATUS_ORDER.concat((buildContext.customStatuses || []).map(function (item) { return item.id; }));
     const engine = root.BLCpChecklistEngine;
@@ -89,6 +89,7 @@
   function normalizeState(value, customList) {
     const raw = text(value).toLocaleLowerCase('tr-TR').replace(/[._-]+/g, ' ');
     if (!raw) return '';
+    if (['ordered', 'sipariş geçildi', 'siparis gecildi'].includes(raw)) return 'custom:ordered'; // i18n-ignore — import aliases
     if (['approved', 'approve', 'onaylandı', 'onaylandi', 'onaylı', 'onayli', 'done', 'completed', 'complete', 'tamam', 'tamamlandı', 'tamamlandi', 'yes', 'evet'].includes(raw)) return 'approved'; // i18n-ignore — import aliasları, UI metni değil
     if (['rejected', 'reject', 'reddedildi', 'red', 'ret', 'failed', 'fail', 'no', 'hayır', 'hayir'].includes(raw)) return 'rejected'; // i18n-ignore — import aliasları, UI metni değil
     if (['notrequired', 'not required', 'n a', 'na', 'gerekmiyor', 'gerek yok', 'uygulanmaz'].includes(raw)) return 'notRequired';
@@ -106,6 +107,7 @@
   }
   function statusLabel(status) {
     const s = normalizeState(status);
+    if (s === 'custom:ordered') return T('Sipariş Geçildi', 'Ordered');
     if (s === 'approved') return T('Onaylandı', 'Approved');
     if (s === 'rejected') return T('Reddedildi', 'Rejected');
     if (s === 'notRequired') return T('Gerekmiyor', 'Not Required');

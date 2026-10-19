@@ -82,6 +82,7 @@ const SYNCED_PREFIXES = Object.freeze([
   'lcw.todo.',            // Not Defteri — asıl istek
   'lcw.notifications.',   // kullanıcının bildirim geçmişi
   'lcw.mailTemplates.',   // mail şablonları
+  'bl.excelTemplates.',   // personal fixed-format Excel templates (native settings UI)
   'lcw.prodstatus.mails.',
   // Already owner-scoped/synchronized by BLStorage; the server must retain
   // the same CP context used by the UI and deterministic agent previews.

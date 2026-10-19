@@ -1,0 +1,13 @@
+.excelTemplateCard{width:min(1040px,94vw);max-height:90vh;overflow:auto;display:grid;gap:var(--sp-3);padding:var(--sp-4);}
+.excelTemplateCard p{margin:0;color:var(--ink2);font-size:var(--fs-sm);line-height:1.5;}
+.excelTemplateControls{display:flex;align-items:end;gap:var(--sp-3);flex-wrap:wrap;}
+.excelTemplateControls label{display:grid;gap:var(--sp-1);font-size:var(--fs-sm);}
+.excelTemplateControls input[type=number]{width:100px;}
+.excelTemplateCard select,.excelTemplateCard input{background:var(--card);color:var(--ink);border:1px solid var(--line);padding:var(--sp-2);font:inherit;}
+.excelTemplateMapping{max-height:42vh;overflow:auto;border:1px solid var(--line);}
+.excelTemplateMapping table{width:100%;border-collapse:collapse;}
+.excelTemplateMapping th,.excelTemplateMapping td{text-align:left;padding:var(--sp-2);border-bottom:1px solid var(--line);font-size:var(--fs-sm);}
+.excelTemplateMapping th{position:sticky;top:0;background:var(--card2);color:var(--ink);}
+.excelTemplateMapping select{width:100%;}
+
+.excelTemplateCard .modalTitle{display:flex;align-items:center;justify-content:space-between;font-size:var(--fs-lg);}

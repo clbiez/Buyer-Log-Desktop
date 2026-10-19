@@ -244,8 +244,8 @@ test('formül görünen adlarla yazılır, kimlikle saklanır; AI rehberi satır
   assert.doesNotMatch(guide, /GIZLI-LISANS|SECRET-123/, 'rehber yalnız alan ADLARINI içerir');
 });
 
-test('Excel / CP köprüsü dört durumu kullanır ve CP hücresi serbest metin değildir', () => {
-  assert.deepEqual(SYNC.statusOptions(), ['Bekliyor', 'Onaylandı', 'Reddedildi', 'Gerekmiyor']);
+test('Excel / CP köprüsü temel durumları ve Ordered kullanır; CP hücresi serbest metin değildir', () => {
+  assert.deepEqual(SYNC.statusOptions(), ['Bekliyor', 'Onaylandı', 'Reddedildi', 'Gerekmiyor', 'Sipariş Geçildi']);
   const bridge = read('public/checklist-supplier-sync.js');
   assert.match(bridge, /type: 'checklistStatus'/);
   assert.doesNotMatch(bridge, /group: 'Checklist',\s*type: 'text'/);

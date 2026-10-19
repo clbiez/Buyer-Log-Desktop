@@ -85,7 +85,8 @@
       overview:binding(['Ürün Ana Tanım','Ürün Tanım','Ürün Tanımı','Product Description','productDescription'],'asasProductDescription'),lfl:binding(['productDescription','Ürün Ana Tanım','Ürün Tanım','Product Description'],'asasProductDescription')
     }},
     productMainDefinition:{label:{en:'Product Main Definition',tr:'Ürün Ana Tanım'},type:'text',role:'attribute',aliases:['Product Main Definition','Ürün Ana Tanım'],modules:{
-      collection:binding(['productMainDefinition','Product Main Definition'],'plmProductMainDefinition')
+      collection:binding(['productMainDefinition','Product Main Definition'],'plmProductMainDefinition'),
+      cp:binding(['Product Main Definition','productMainDefinition','Ürün Ana Tanım'],'asasProductMainDefinition')
     }},
     category:{label:{en:'Category',tr:'Kategori'},type:'text',role:'dimension',aliases:['Category','Classification','Klasman','Ürün Klasman','Product Classification','Kategori'],modules:{
       collection:binding(['urunTipi','Category'],'productClassification'),cp:binding(['Category','Ürün Klasman','classification'],'productClassification'),orders:binding(['Category','Ürün Klasman','classification'],'productClassification'),

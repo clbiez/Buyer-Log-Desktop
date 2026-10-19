@@ -121,7 +121,7 @@
     } catch (_) { customStatusCache = []; }
     return customStatusCache.slice();
   }
-  function statusIds() { return [...STATUS_IDS, ...customStatuses().map(item => item.id)]; }
+  function statusIds() { return [...STATUS_IDS, 'custom:ordered', ...customStatuses().map(item => item.id).filter(id => id !== 'custom:ordered')]; }
   function addCustomStatus(name, resolved = false) {
     const title = String(name || '').trim().replace(/\s+/g, ' ').slice(0, 50);
     if (title.length < 2) throw new Error('Status name must have at least two characters.');
@@ -168,6 +168,7 @@
   function normalizeStatus(value) {
     const raw = String(value == null ? '' : value).trim().toLocaleLowerCase('tr-TR').replace(/[._-]+/g, ' ').replace(/\s+/g, ' ');
     if (!raw) return '';
+    if (['ordered', 'sipariş geçildi', 'siparis gecildi'].includes(raw)) return 'custom:ordered'; // i18n-ignore — import aliases
     if (['approved', 'approve', 'onaylandı', 'onaylandi', 'onaylı', 'onayli', 'done', 'completed', 'complete', 'tamam', 'tamamlandı', 'tamamlandi', 'yes', 'evet'].includes(raw)) return 'approved'; // i18n-ignore — içe aktarma eş anlamlıları, UI metni değil
     if (['rejected', 'reject', 'reddedildi', 'red', 'ret', 'failed', 'fail', 'no', 'hayır', 'hayir'].includes(raw)) return 'rejected'; // i18n-ignore — içe aktarma eş anlamlıları, UI metni değil
     if (['notrequired', 'not required', 'n a', 'na', 'gerekmiyor', 'gerek yok', 'uygulanmaz'].includes(raw)) return 'notRequired'; // i18n-ignore — içe aktarma eş anlamlıları, UI metni değil
@@ -178,6 +179,7 @@
   function statusLabel(status, lang) {
     const labels = STATUS_LABELS[lang === 'en' ? 'en' : 'tr'];
     const id = normalizeStatus(status) || 'open';
+    if (id === 'custom:ordered') return lang === 'en' ? 'Ordered' : 'Sipariş Geçildi';
     if (id.startsWith('custom:')) {
       const item = customStatuses().find(entry => entry.id === id);
       return item ? item.name : id.slice(7).replace(/-/g, ' ');
