@@ -164,6 +164,7 @@ function write(store) {
 function normalizeState(value) {
   const raw = text(value, 80).toLocaleLowerCase('tr-TR').replace(/[._-]+/g, ' ');
   if (!raw) return '';
+    if (['ordered', 'sipariş geçildi', 'siparis gecildi'].includes(raw)) return 'custom:ordered'; // i18n-ignore — import aliases
   // v7.221 — Pending (open) · Approved · Rejected · Not Required. Eski 'done'
   // kayıtları ve Excel değerleri 'approved' olarak okunur.
   if (['approved','approve','onaylandı','onaylandi','onaylı','onayli','done','completed','complete','tamam','tamamlandı','tamamlandi','yes','evet'].includes(raw)) return 'approved';

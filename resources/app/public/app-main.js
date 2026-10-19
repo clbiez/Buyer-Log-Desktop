@@ -18873,6 +18873,8 @@ function updateShippingBtnVisibility(){
     oc.disabled = !hasActionSelection;
     oc.title = hasActionSelection ? `${count} satırdan ön maliyet oluştur` : 'Ön maliyet oluşturmak için önce satır seç';
   }
+  const hologramRequestBtn=document.getElementById('cpHologramRequestBtn');
+  if(hologramRequestBtn)hologramRequestBtn.disabled=!hasActionSelection;
   const capacityRequestBtn=document.getElementById('cpCapacityRequestBtn');
   if(capacityRequestBtn){
     capacityRequestBtn.disabled=!hasActionSelection;
@@ -34491,8 +34493,7 @@ function mbValue(row,index,forExcel=false){
   }
 }
 function mbHeaderFill(index){if(index<=2)return 'FF99FF99';if(index<=4)return 'FF9EC3E6';if(index<=11)return 'FFCCECFF';if(index<=16)return 'FFF4B183';if(index<=19)return 'FFC6E0B4';if(index<=27)return 'FFCFC8DE';if(index<=34)return 'FFCCECFF';return 'FFF2F4F7';}
-async function mbExportExcel(rows,fileBase='7S_MB_Listesi'){
-  if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');if(typeof ExcelJS==='undefined')throw new Error(appLang==='en'?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
+function mbBuildWorkbook(rows){
   const wb=new ExcelJS.Workbook();wb.creator='Buyer Log';wb.created=new Date();wb.calcProperties.fullCalcOnLoad=true;
   const ws=wb.addWorksheet('7S MODELLER',{views:[{state:'frozen',ySplit:1}]});
   const widths=[14,12,13,18,14,27,18,13,12,18,11,16,12,13,13,14,14,12,18,28,11,13,14,13,13,10,15,15,18,12,18,12,14,30,14,24,24,24,24,24,18];
@@ -34503,17 +34504,51 @@ async function mbExportExcel(rows,fileBase='7S_MB_Listesi'){
     const r=ws.getRow(idx+2);r.height=22;
     for(let ci=0;ci<MB_LIST_HEADERS.length;ci++){
       const cell=r.getCell(ci+1),value=mbValue(source,ci,true);cell.value=value==null?'':value;cell.alignment={vertical:'middle',wrapText:ci===19||ci===33||ci>=35&&ci<=39};
-      if([12,13,14].includes(ci)&&value instanceof Date)cell.numFmt='m/d/yy';
-      if([20,21,22,26,29,31].includes(ci)&&typeof value==='number')cell.numFmt='$#,##0.00';
-      if(ci===24&&typeof value==='number')cell.numFmt='₺#,##0.00';
-      if([23,27,32].includes(ci)&&typeof value==='number')cell.numFmt='0.00%';
-      if(ci===25&&typeof value==='number')cell.numFmt='0.00';
-      if([16,17].includes(ci)&&typeof value==='number')cell.numFmt='#,##0';
+      if([12,13,14].includes(ci))cell.numFmt='m/d/yy';
+      if([20,21,22,26,29,31].includes(ci))cell.numFmt='$#,##0.00';
+      if(ci===24)cell.numFmt='₺#,##0.00';
+      if([23,27,32].includes(ci))cell.numFmt='0.00%';
+      if(ci===25)cell.numFmt='0.00';
+      if([16,17].includes(ci))cell.numFmt='#,##0';
       if(ci===10){cell.value=String(value==null?'':value);cell.numFmt='@';cell.alignment={horizontal:'left',vertical:'middle'};}
     }
   });
-  const buffer=await wb.xlsx.writeBuffer(),d=new Date(),pad=n=>String(n).padStart(2,'0'),name=`${fileBase}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.xlsx`;kolDownloadBuffer(buffer,name,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');return name;
+  return wb;
 }
+async function mbExportExcel(rows,fileBase='7S_MB_Listesi'){
+  if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');if(typeof ExcelJS==='undefined')throw new Error(appLang==='en'?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
+  const wb=mbBuildWorkbook(rows);
+  const extra=rows.map(row=>Object.fromEntries(MB_LIST_HEADERS.map((_,i)=>['mb:'+i,mbValue(row,i,true)])));
+  const buffer=await window.BLExcelTemplates.build('mb',window.BLExcelTemplates.records(rows,'collection',extra),await wb.xlsx.writeBuffer()),d=new Date(),pad=n=>String(n).padStart(2,'0'),name=`${fileBase}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.xlsx`;kolDownloadBuffer(buffer,name,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');return name;
+}
+window.BLFixedExcelDefaults={
+  mbHeaders:MB_LIST_HEADERS,download:kolDownloadBuffer,
+  mb:()=>mbBuildWorkbook([{}])
+};
+for(const id of ['cpExcelTemplatesBtn','kolExcelTemplatesBtn'])document.getElementById(id)?.addEventListener('click',()=>window.BLExcelTemplates.open().catch(error=>showToast(error.message)));
+async function createHologramRequestExcel(rows){
+  if(!Array.isArray(rows)||!rows.length){showToast(appLang==='en'?'Select rows first.':'Önce satır seçin.');return null;}
+  let result;try{result=window.BLHologramRequest.buildExport(rows);}catch(error){throw window.BLExcelTemplates.error(error.message);}
+  await window.BLPerf.ensureFeature('cpAssistant');
+  await window.BLChecklistSupplierSync?.loadShared?.();
+  // Resolve identities before creating the file; export never silently drops a row.
+  window.BLCpAssistant.validateHologramOrders(rows);
+  const records=window.BLExcelTemplates.records(rows,'cp',result.rows);
+  const buffer=await window.BLExcelTemplates.build('hologram',records),name=window.BLHologramRequest.fileName(result.today);
+  kolDownloadBuffer(buffer,name,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  try{
+    window.BLCpAssistant.markHologramOrdered(rows);
+    await window.BLChecklistSupplierSync?.syncAnswerChanges?.();
+  }catch(error){throw new Error((appLang==='en'?'Excel created; checklist could not be saved: ':'Excel oluşturuldu; checklist kaydedilemedi: ')+error.message);}
+  showToast(appLang==='en'?'Hologram Excel created; Hologram Check is Ordered.':'Hologram Excel oluşturuldu; Hologram Check: Sipariş Geçildi.');
+  return name;
+}
+document.getElementById('cpHologramRequestBtn')?.addEventListener('click',async()=>{
+  const btn=document.getElementById('cpHologramRequestBtn');btn.disabled=true;window.BLTableToolbarActionCleanup?.begin?.(btn);
+  try{const name=await createHologramRequestExcel(selectedCpRowsForAction());window.BLTableToolbarActionCleanup?.finish?.(btn,Boolean(name));}
+  catch(error){window.BLTableToolbarActionCleanup?.finish?.(btn,false);showToast(error.message);}
+  finally{updateShippingBtnVisibility();}
+});
 function mbCurrentWorkspaceMeta(){
   const item=(kolWorkspaceList||[]).find(entry=>String(entry.ownerId)===String(kolWorkspaceOwnerId));
   return {ownerName:item&&item.ownerName||window.BL_USER_CONTEXT?.displayName||'',pblName:item&&item.supervisorName||''};
@@ -34574,7 +34609,9 @@ async function capacityRequestExport(rows,source){
   if(typeof ExcelJS==='undefined')throw new Error(en?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
   // Sayfa düzeni de ortak motordadır: testler birebir aynı yazıcıyı çalıştırır.
   const wb=engine.buildWorkbook(result,ExcelJS,window.BLExcelDates?.DATE_FORMAT);
-  const buffer=await wb.xlsx.writeBuffer(),name=engine.fileName(result.today);
+  const extras=result.rows.map(item=>Object.fromEntries(Object.entries(item).map(([key,value])=>['capacity:'+key,value])));
+  const accepted=rows.filter((_,i)=>!result.rejected.some(item=>item.index===i));
+  const buffer=await window.BLExcelTemplates.build('capacity',window.BLExcelTemplates.records(accepted,source,extras),await wb.xlsx.writeBuffer()),name=engine.fileName(result.today);
   kolDownloadBuffer(buffer,name,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   if(result.rejected.length)showToast(capacityRequestReport(result),{kind:'warning'});
   return name;

@@ -242,6 +242,64 @@
           "en": "Actual Buyer Log interface after the change, with anonymous demo notes."
         }
       }
+    },
+    {
+      "id": "hologram-request-excel",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Tek adımda hologram talep Exceli",
+        "en": "Create a hologram request Excel"
+      },
+      "body": {
+        "tr": "Araçlar menüsündeki Hologram Talep Excel Oluştur, seçili siparişleri orijinal şablona doldurur. Tarih oluşturma günüdür; kategori Product Main Definition’dan, talep eden Buyer’dan, termin Ex-Factory’den gelir. Sipariş adedinin %3’ü 50’nin üst katına yuvarlanır. Dosya oluşturulduğunda Hologram Check, Sipariş Geçildi olarak kaydedilir.",
+        "en": "Create Hologram Request Excel in Tools fills the original template for selected orders. Date is the creation day; category comes from Product Main Definition, requester from Buyer and due date from Ex-Factory. 3% of order quantity is rounded up to a multiple of 50. Creating the file records Hologram Check as Ordered."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "hologram-request-tools.png",
+        "alt": {
+          "tr": "Tek adımda hologram talep Exceli",
+          "en": "Create a hologram request Excel"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo verileri.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "fixed-excel-template-manager",
+      "type": "feature",
+      "module": {
+        "tr": "Excel Şablonları",
+        "en": "Excel Templates"
+      },
+      "title": {
+        "tr": "Kod değişmeden Excel formatını güncelleyin",
+        "en": "Update Excel formats without code changes"
+      },
+      "body": {
+        "tr": "Araçlar → Excel Şablonlarını Yönet ile MB List, Capacity Request ve Hologram Request formatlarını indirin veya güncel .xlsx yükleyin. Sayfa ve başlık/veri satırını seçip yeni sütunları Buyer Log alanlarına eşleştirin. Başlık eşleşmeleri otomatik önerilir; kaydedilen şablon hesabınıza bağlıdır ve sonraki çıktılara uygulanır.",
+        "en": "Use Tools → Manage Excel Templates to download or upload MB List, Capacity Request and Hologram Request formats. Select the sheet and header/data rows, then map new columns to Buyer Log fields. Matching headers are suggested automatically; the saved template belongs to your account and is used for future exports."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "excel-template-manager.png",
+        "alt": {
+          "tr": "Kod değişmeden Excel formatını güncelleyin",
+          "en": "Update Excel formats without code changes"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo verileri.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
     }
   ]
 }

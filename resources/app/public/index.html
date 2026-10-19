@@ -244,6 +244,10 @@
      kayıt defteri bu yüzden burada açıkça yüklenir (lazy enjeksiyona bırakılmaz). -->
 <script src="canonical-fields.js?v=__BL_ASSET_VERSION__" data-bl-canonical-fields="1"></script>
 <script src="capacity-request-export.js?v=__BL_ASSET_VERSION__"></script>
+<script src="hologram-request-export.js?v=__BL_ASSET_VERSION__"></script>
+<script src="excel-template-engine.js?v=__BL_ASSET_VERSION__"></script>
+<script src="excel-templates.js?v=__BL_ASSET_VERSION__"></script>
+<link rel="stylesheet" href="excel-templates.css?v=__BL_ASSET_VERSION__">
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_CORE_RESOURCES_READY');</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="128x128" href="icons/icon-mark.png?v=__BL_ASSET_VERSION__">
@@ -896,6 +900,8 @@
               <button type="button" class="tbtn" id="cpEndeksmatikBtn" title="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-tr="Seçili siparişten bir yıl önce veya sonrası için Endeksmatik hesapla" data-i18n-title-en="Calculate Endeksmatik one year before or after the selected order" disabled><svg class="ic"><use href="#i-calculator"/></svg><span>Endeksmatik</span></button>
               <button type="button" class="navActionBtn" id="cpLicenseRoyaltyBtn" data-license-royalty title="License Royalty hesaplarını düzenle"><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="License Royalty Hesapları" data-i18n-en="License Royalty Calculations">License Royalty Hesapları</span></button>
               <button type="button" class="tbtn" id="cpCapacityRequestBtn" disabled title="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-tr="Seçili satırları Capacity Request formatında Excel'e aktar" data-i18n-title-en="Export selected rows in Capacity Request format"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Capacity Request Excel Oluştur" data-i18n-en="Create Capacity Request Excel">Capacity Request Excel Oluştur</span></button>
+<button type="button" class="tbtn" id="cpHologramRequestBtn" disabled><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Hologram Talep Excel Oluştur" data-i18n-en="Create Hologram Request Excel">Hologram Talep Excel Oluştur</span></button>
+<button type="button" class="tbtn" id="cpExcelTemplatesBtn"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Excel Şablonlarını Yönet" data-i18n-en="Manage Excel Templates">Excel Şablonlarını Yönet</span></button>
               <button type="button" class="tbtn" id="cpExcelImportBtn" data-excel-import="cp" title="Kendi Excel dosyanızdaki sütunları CP alanlarına eşleyerek içeri aktarın" data-i18n-title-tr="Kendi Excel dosyanızdaki sütunları CP alanlarına eşleyerek içeri aktarın" data-i18n-title-en="Map columns from your own Excel workbook onto CP fields and import them"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Kullanıcı Excelini İçeri Aktar" data-i18n-en="Import Your Excel">Kullanıcı Excelini İçeri Aktar</span></button>
             </div>
           </div>
@@ -1042,6 +1048,7 @@
             <button class="tbtn" id="kolCreateOcBtn" title="Seçili modellerden ön maliyet oluştur" disabled><svg class="ic"><use href="#i-calculator"/></svg><span data-i18n-tr="Maliyet Oluştur" data-i18n-en="Create OC">Maliyet Oluştur</span></button>
             <button class="tbtn" id="kolLflTrialBtn" title="Seçili modelleri LFL Trial simülasyonuna gönder" disabled><svg class="ic"><use href="#i-chart-histogram"/></svg><span data-i18n-tr="LFL Trial" data-i18n-en="LFL Trial">LFL Trial</span></button>
             <button class="tbtn" id="kolCapacityRequestBtn" disabled title="Seçili modelleri Capacity Request formatında Excel'e aktar" data-i18n-title-tr="Seçili modelleri Capacity Request formatında Excel'e aktar" data-i18n-title-en="Export selected models in Capacity Request format"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="Capacity Request Excel Oluştur" data-i18n-en="Create Capacity Request Excel">Capacity Request Excel Oluştur</span></button>
+<button type="button" class="tbtn" id="kolExcelTemplatesBtn"><svg class="ic"><use href="#i-settings"/></svg><span data-i18n-tr="Excel Şablonlarını Yönet" data-i18n-en="Manage Excel Templates">Excel Şablonlarını Yönet</span></button>
             <button class="tbtn" id="kolMbExportBtn" title="Seçili modelleri MB Listesi formatında Excel'e aktar"><svg class="ic"><use href="#i-file-export"/></svg><span data-i18n-tr="MB Listesi Excel'i" data-i18n-en="MB List Excel">MB Listesi Excel'i</span></button>
             <button type="button" class="tbtn" id="kolExcelImportBtn" data-excel-import="collection" title="Kendi Excel dosyanızdaki sütunları Koleksiyon alanlarına eşleyerek içeri aktarın" data-i18n-title-tr="Kendi Excel dosyanızdaki sütunları Koleksiyon alanlarına eşleyerek içeri aktarın" data-i18n-title-en="Map columns from your own Excel workbook onto Collection fields and import them"><svg class="ic"><use href="#i-file-import"/></svg><span data-i18n-tr="Kullanıcı Excelini İçeri Aktar" data-i18n-en="Import Your Excel">Kullanıcı Excelini İçeri Aktar</span></button>
           </div>

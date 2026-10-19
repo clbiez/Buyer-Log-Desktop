@@ -4,6 +4,7 @@
   var ctx=global.BL_USER_CONTEXT||{};
   var uid=String(ctx.id||'anonymous').replace(/[^A-Za-z0-9_-]/g,'_');
   var prefixes=[
+    'bl.excelTemplates.',
     'lcw_theme','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step',
     'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
     'lcw.orders.dimFilters.','lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.dateRange.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
@@ -104,7 +105,7 @@
      Filtre, kolon, görünüm ve Horizon ayarları hesapla birlikte taşınır.
      Collection satırları/notları gibi ortak iş verileri bu listede değildir. */
   var SYNCED=[
-    'lcw.todo.','lcw.notifications.','lcw.mailTemplates.','lcw.prodstatus.mails.',
+    'bl.excelTemplates.','lcw.todo.','lcw.notifications.','lcw.mailTemplates.','lcw.prodstatus.mails.',
     'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.orders.dimFilters.',
     'lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
     'lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.',

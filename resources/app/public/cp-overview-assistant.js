@@ -373,8 +373,22 @@
       // varsa seçenek onayının üzerinde istisna olarak önceliklidir.
       state.answers[key] = Checklist.makeAnswer(next, analysis, answerMeta);
     }
-    saveAnswers();
-    return true;
+    return saveAnswers();
+  }
+
+  function validateHologramOrders(rows) {
+    if(state.answerStoreError)throw new Error(L('Checklist kaydı okunamıyor.','Checklist record cannot be read.'));
+    const decision=computeDecisionsForRows(rows);
+    if(rows.some(row=>!String(window.BLCanonicalFields.value(row,'cp','orderCode')||'').trim()||!decision.byRow.get(row)?.orderKey))throw new Error(L('Sipariş kimliği çözülemedi.','Order identity could not be resolved.'));
+    return decision;
+  }
+  function markHologramOrdered(rows) {
+    const decision=validateHologramOrders(rows),token=value=>String(value||'').toLowerCase().replace(/[^a-z]/g,'');
+    let item=state.rules.find(rule=>rule.kind==='checklist'&&[rule.id,rule.name,rule.nameEn,rule.tr,rule.en].some(value=>['hologramcheck','hologramkontrol','hologramkontrolu'].includes(token(value))));
+    if(!item)item=createChecklistItem({tr:'Hologram Check',en:'Hologram Check'});
+    for(const row of rows)if(!setChecklistAnswer(decision.byRow.get(row),item.id,'custom:ordered'))throw new Error(L('Checklist kaydedilemedi.','Checklist could not be saved.'));
+    if(state.answerStoreError)throw new Error(L('Checklist kaydı okunamıyor.','Checklist record cannot be read.'));
+    return item.id;
   }
 
   /* Test Raporu Aktarımı: talep tipi Buyer Log'da karşılığı olmayan bir
@@ -3499,7 +3513,7 @@
      aynı oturumda sunucudan yeni değer gelirse (BLStorage hydrate) kurallar
      depodan yeniden okunur. */
   window.BLCpAssistant = {
-    onOverviewRendered, render, computeDecisionsForRows, computeDecisionsForRowsAsync, peekDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions, createChecklistItem,
+    onOverviewRendered, render, validateHologramOrders, markHologramOrdered, computeDecisionsForRows, computeDecisionsForRowsAsync, peekDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions, createChecklistItem,
     persistChecklistAnswers: saveAnswers,
     openRules, openSettings, openOverviewRows, selectPriority, invalidateOverview,
     decisionRuntimeStats: () => decisionRuntime.getStats(),
