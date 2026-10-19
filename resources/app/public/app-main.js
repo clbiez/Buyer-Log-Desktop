@@ -10615,40 +10615,13 @@ function renderOverviewPriorityReminder(rows){
     list.innerHTML=groups.map((group,groupIndex)=>{
       const noteHtml=escapeHtml(group.note).replace(/\n/g,'<br>');
       const noteDate=overviewNoteDateText(group.noteTimestamp);
-      const orders=group.rows.map((row,rowIndex)=>{
-        const orderCode=norm(row['Order Code'])||'—';
-        const model=norm(row['Model Name'])||'—';
-        const manufacturer=norm(row['Manufacturer'])||norm(row['Sub-Manufacturer'])||'—';
-        const season=norm(row['Season'])||'—';
-        const exf=fmtDate(row['Ex-factory'])||'—';
-        return `<div class="ovNoteOrder" data-note-group="${groupIndex}" data-note-order="${rowIndex}">
-          <button type="button" class="ovNoteOrderOpen" data-note-group="${groupIndex}" data-note-order="${rowIndex}" title="${appLang==='en'?'Show this order in CP Tracker':'Bu siparişi CP Tracker’da göster'}">
-          <span class="ovNoteOrderBody">
-            <span class="ovNoteOrderHeadline"><strong>${escapeHtml(orderCode)}</strong><span>${escapeHtml(model)}</span></span>
-            <span class="ovNoteOrderMeta">${escapeHtml(manufacturer)} · ${escapeHtml(season)} · Ex-Factory ${escapeHtml(exf)}</span>
-          </span>
-          </button>
-          <button type="button" class="noteCellDelete ovNoteOrderDelete" data-note-delete="${rowIndex}" data-note-group="${groupIndex}" data-note-order="${rowIndex}" title="${escapeHtml(L('Notu sil'))}" aria-label="${escapeHtml(L('Notu sil'))}"><svg class="ic"><use href="#i-trash"/></svg></button>
-          <svg class="ic ovNoteOrderArrow" aria-hidden="true"><use href="#i-chevron-right"/></svg>
-        </div>`;
-      }).join('');
       return `<article class="ovNoteGroup">
         <div class="ovNoteGroupHeader">
           <button type="button" class="ovNoteText ovNoteTextEdit" data-note-edit="${groupIndex}" title="${escapeHtml(appLang==='en'?'Edit note':'Notu düzenle')}">${noteHtml}${noteDate?` <span class="ovNoteDate">- ${escapeHtml(noteDate)}</span>`:''}</button>
           <button type="button" class="ovNoteCount" data-note-group-count="${groupIndex}" title="${escapeHtml(appLang==='en'?'Open order details for this note':'Bu notun sipariş detaylarını aç')}"><b>${group.rows.length}</b>${appLang==='en'?(group.rows.length===1?'order':'orders'):'sipariş'}</button>
         </div>
-        <div class="ovNoteOrders">${orders}</div>
       </article>`;
     }).join('');
-    list.querySelectorAll('.ovNoteOrderOpen').forEach(btn=>btn.addEventListener('click',()=>{
-      const group=groups[Number(btn.dataset.noteGroup)];
-      openOverviewNoteOrderInCp(group&&group.rows[Number(btn.dataset.noteOrder)]);
-    }));
-    list.querySelectorAll('.ovNoteOrderDelete').forEach(btn=>btn.addEventListener('click',event=>{
-      event.preventDefault();event.stopPropagation();
-      const group=groups[Number(btn.dataset.noteGroup)];
-      clearOverviewNoteOrder(group&&group.rows[Number(btn.dataset.noteOrder)]);
-    }));
     list.querySelectorAll('[data-note-edit]').forEach(node=>node.addEventListener('click',event=>{
       event.preventDefault();event.stopPropagation();openOverviewNoteEditor(groups[Number(node.dataset.noteEdit)]);
     }));
@@ -10659,8 +10632,8 @@ function renderOverviewPriorityReminder(rows){
   /* Kullanım açıklaması her zaman görünen uzun paragraf değil; tek tıkla açılan
      "Nasıl çalışır?" notu. Açık/kapalı tercihi oturum boyunca korunur. */
   const methodText=appLang==='en'
-    ?'Only notes YOU wrote are listed here — notes from other users appear on CP Tracker and Orders, not on Overview. Identical note texts are grouped together. Click note text to edit it, click an order to open it, or click the order count to open the side report and delete your note per order.'
-    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine, tek siparişi açmak için siparişe tıkla; sağ üstteki sipariş adedine tıklayarak yan raporu aç ve sipariş bazında kendi notunu sil.';;
+    ?'Only notes YOU wrote are listed here — notes from other users appear on CP Tracker and Orders, not on Overview. Identical note texts are grouped together. Click note text to edit it. Click the order count to open order details in the side report and delete your note per order.'
+    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine tıkla. Sağ üstteki sipariş adedine tıklayarak sipariş detaylarını yan raporda aç ve sipariş bazında kendi notunu sil.';;
   const methodOpen=method.querySelector('details')?.open||false;
   method.innerHTML=`<details class="ovHelp"${methodOpen?' open':''}><summary>${escapeHtml(appLang==='en'?'How does this work?':'Nasıl çalışır?')}</summary><span>${escapeHtml(methodText)}</span></details>`
 }
