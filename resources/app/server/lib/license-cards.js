@@ -3,6 +3,7 @@
 const crypto = require('node:crypto');
 const canonical = require('./canonical-fields');
 const businessRules = require('../../public/business-rules');
+const atlas = require('../../public/license-atlas-engine');
 
 const PROFILE_LIMITS = Object.freeze({ workingNotes: 12000, contactName: 200, contactEmail: 320,
   portalUrl: 2048, portalUsername: 200, accessReference: 1000, artworkBrief: 6000 });
@@ -125,6 +126,7 @@ function normalizeProfile(profile) {
   if (!profile || typeof profile !== 'object' || Array.isArray(profile)) fail('LICENSE_PROFILE_INVALID', 'Kart bilgileri zorunlu. / Card profile is required.');
   const out = {};
   for (const [field, value] of Object.entries(profile)) {
+    if (field === 'processAtlas') { out[field] = atlas.normalize(value); continue; }
     if (field === 'symbolDataUrl') { out[field] = validateSymbol(value); continue; }
     if (!Object.hasOwn(PROFILE_LIMITS, field)) fail('LICENSE_PROFILE_FIELD', 'Desteklenmeyen kart alanı. / Unsupported card field.');
     if (value != null && typeof value !== 'string') fail('LICENSE_PROFILE_INVALID', 'Kart alanı metin olmalı. / Card field must be text.');
@@ -190,7 +192,7 @@ function mergeRules(existing, incoming, card, deps) {
 function editToken(card, rules) {
   const stable = value => Array.isArray(value) ? value.map(stable) : value && typeof value === 'object'
     ? Object.fromEntries(Object.keys(value).sort().map(key => [key, stable(value[key])])) : value;
-  const profile = Object.fromEntries([...Object.keys(PROFILE_LIMITS), 'symbolDataUrl'].map(key => [key, card[key] || '']));
+  const profile = Object.fromEntries([...Object.keys(PROFILE_LIMITS), 'symbolDataUrl', 'processAtlas'].map(key => [key, card[key] || '']));
   const contracts = rules.filter(rule => pairKey(rule.license, rule.licensor) === pairKey(card.license, card.licensor)).map(stable);
   contracts.sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b)));
   return crypto.createHash('sha256').update(JSON.stringify(stable({ id: card.id, license: card.license, licensor: card.licensor, profile, contracts }))).digest('hex');

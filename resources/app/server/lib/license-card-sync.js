@@ -11,7 +11,7 @@ const validId = id => /^license-[a-f0-9]{24}$/.test(String(id));
 
 function profileSnapshot(card) {
   if (!card || !validId(card.id) || !card.license || String(card.license).length > 200 || String(card.licensor || '').length > 200) throw new Error('LICENSE_CARD_SYNC_INVALID');
-  const profile = Object.fromEntries([...Object.keys(cards.PROFILE_LIMITS), 'symbolDataUrl'].filter(key => Object.hasOwn(card, key)).map(key => [key, card[key]]));
+  const profile = Object.fromEntries([...Object.keys(cards.PROFILE_LIMITS), 'symbolDataUrl', 'processAtlas'].filter(key => Object.hasOwn(card, key)).map(key => [key, card[key]]));
   return { id:card.id, license:String(card.license), licensor:String(card.licensor || ''), ...cards.normalizeProfile(profile), createdAt:card.createdAt || '', updatedAt:card.updatedAt || '' };
 }
 
@@ -56,6 +56,9 @@ function applyRecords(overrides, records, deps) {
       const profile = profileSnapshot(record.profile);
       if (profile.id !== id) throw new Error('LICENSE_CARD_SYNC_ID');
       const index = byId.get(id), current = index == null ? null : state.items[index];
+      // Older clients do not publish the optional atlas field. Their profile
+      // updates must retain an atlas already stored by an upgraded client.
+      if (current?.processAtlas && !Object.hasOwn(record.profile, 'processAtlas')) profile.processAtlas = clone(current.processAtlas);
       if (current && (cards.pairKey(current.license, '') !== cards.pairKey(profile.license, '') || (current.licensor && cards.pairKey(current.license, current.licensor) !== cards.pairKey(profile.license, profile.licensor)))) throw new Error('LICENSE_CARD_SYNC_PAIR');
       if (!current || JSON.stringify(current) !== JSON.stringify(profile)) {
         if (index == null) { byId.set(id, state.items.length); state.items.push(profile); }
