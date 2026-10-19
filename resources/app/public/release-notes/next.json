@@ -1,14 +1,73 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-19",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "E-posta tablo düzeni",
+    "en": "Email table layout"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "E-posta düzenleyicisinde sütun seçimi ve tablo ön izlemesi iyileştirildi.",
+    "en": "Column selection and table preview improved in the email editor."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "mail-topic-column-visibility",
+      "type": "fix",
+      "module": {
+        "tr": "E-posta",
+        "en": "Email"
+      },
+      "title": {
+        "tr": "E-posta sütunları yeniden seçilebiliyor",
+        "en": "Email columns can be selected again"
+      },
+      "body": {
+        "tr": "Genel bölüm gizleme kuralının sütun gruplarını gizlemesi ve kaydırılan pencerede sütun listesinin daralması düzeltildi. Arama, grup seçimi ve sıralama kullanılabilir.",
+        "en": "Fixed column groups being hidden by the global section rule and the chooser shrinking inside the scrollable dialog. Search, group selection and ordering remain available."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "mail-topic-columns-preview.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log arayüzünde seçili sütunlar ve tablo ön izlemesi",
+          "en": "Selected columns and table preview in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Anonim demo siparişleriyle sütun seçimi, sıralama ve canlı tablo ön izlemesi.",
+          "en": "Column selection, ordering and live table preview using anonymous demo orders."
+        }
+      }
+    },
+    {
+      "id": "mail-topic-table-preview",
+      "type": "improvement",
+      "module": {
+        "tr": "E-posta",
+        "en": "Email"
+      },
+      "title": {
+        "tr": "Seçilen Excel ve tablo düzenini önizleyin",
+        "en": "Preview the selected Excel and table layout"
+      },
+      "body": {
+        "tr": "Seçilen sütunlar ve sıraları anında ön izlenir. Seçili siparişlerin ilk beş satırı, dışa aktarmayla aynı hücre biçimleriyle gösterilir; sipariş seçilmemişse sütun başlıkları görünür.",
+        "en": "Selected columns and their order are previewed immediately. The first five selected orders use the same cell formatting as exports; column headings remain visible when no orders are selected."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "mail-topic-columns-preview.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log arayüzünde seçili sütunlar ve tablo ön izlemesi",
+          "en": "Selected columns and table preview in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Anonim demo siparişleriyle sütun seçimi, sıralama ve canlı tablo ön izlemesi.",
+          "en": "Column selection, ordering and live table preview using anonymous demo orders."
+        }
+      }
+    }
+  ]
 }
