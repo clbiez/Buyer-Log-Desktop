@@ -2210,7 +2210,7 @@ td.viewOnlyCell{color:var(--ink2);background:color-mix(in srgb,var(--card2) 38%,
 .ovPriorityStat.total{background:var(--acc-bg);border-color:color-mix(in srgb,var(--acc) 22%,var(--line));color:var(--acc-ink);}.ovPriorityStat.total b{color:var(--acc-ink);}
 .ovPriorityList{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start;}
 .ovNoteGroup{min-width:0;overflow:hidden;border:1px solid var(--line);border-radius:var(--r-md);background:var(--card);box-shadow:var(--shadow-1);}
-.ovNoteGroupHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 13px;background:color-mix(in srgb,var(--acc-bg) 55%,var(--card));border-bottom:1px solid var(--line);}
+.ovNoteGroupHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:12px 13px;background:color-mix(in srgb,var(--acc-bg) 55%,var(--card));}
 .ovNoteText{min-width:0;margin:0;color:var(--ink);font-size:var(--fs-sm);font-weight:650;line-height:1.48;overflow-wrap:anywhere;}
 .ovNoteTextEdit{flex:1 1 auto;padding:0;border:0;background:none;text-align:left;font-family:inherit;cursor:text;transition:color .14s var(--ease);}.ovNoteTextEdit:hover{color:var(--acc-ink);}.ovNoteTextEdit:focus-visible{outline:1px solid var(--acc);outline-offset:3px;}
 .ovNoteCount{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;padding:4px 7px;border:1px solid color-mix(in srgb,var(--acc) 20%,var(--line));border-radius:var(--r-full);background:var(--card);color:var(--ink2);font-size:var(--fs-2xs);font-weight:600;white-space:nowrap;}

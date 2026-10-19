@@ -213,6 +213,35 @@
           "en": "Actual Buyer Log interface after the change, using anonymous demo data."
         }
       }
+    },
+    {
+      "id": "overview-notes-text-only-cards",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Not kartlarında yalnız not ve sipariş adedi",
+        "en": "Note cards show only the note and order count"
+      },
+      "body": {
+        "tr": "Not Hatırlatıcısı kartlarının altındaki sipariş özetleri kaldırıldı. Not metni, not tarihi ve sipariş adedi düğmesi görünür; sipariş detayları ve sipariş bazında not silme, adet düğmesiyle açılan yan raporda kullanılmaya devam eder.",
+        "en": "Order summaries beneath Notes Reminder cards were removed. The note text, note date and order-count button remain visible; order details and per-order note deletion remain available in the side report opened by the count button."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-notes-text-only.png",
+        "alt": {
+          "tr": "Sipariş özetleri kaldırılmış, 28 sipariş ve 1 sipariş düğmelerini içeren not kartları.",
+          "en": "Note cards without order summaries, with 28-order and 1-order buttons."
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo notları.",
+          "en": "Actual Buyer Log interface after the change, with anonymous demo notes."
+        }
+      }
     }
   ]
 }
