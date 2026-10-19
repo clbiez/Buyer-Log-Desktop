@@ -21,10 +21,9 @@
     deadline:{icon:'calendar',group:'operations',tr:'Termin Ufku',en:'Delivery Horizon',descTr:'Önümüzdeki 7 veya 14 günün planlı yüklemeleri.',descEn:'Planned loading over the next 7 or 14 days.',w:5,h:4,minW:3,minH:4,maxW:12,maxH:9},
     collectionPreview:{icon:'table',group:'commercial',tr:'Koleksiyon Vitrini',en:'Collection Showcase',descTr:'Seçili ayın model görselleri ve durum dağılımı.',descEn:'Model images and status mix for the selected month.',w:4,h:4,minW:3,minH:4,maxW:12,maxH:10},
     launchpad:{icon:'clock',group:'today',tr:'Dünya Saatleri',en:'World Clocks',descTr:'Selamlama ve çalıştığın ülkelerin canlı saatleri.',descEn:'Greeting and live clocks of the countries you work with.',w:12,h:1,minW:3,minH:1,maxW:12,maxH:5},
-    productionFocus:{icon:'bl-cp',group:'operations',tr:'Üretim Odağı',en:'Production Focus',descTr:'Öncelik dağılımı, risk nedenleri ve kontrol listesi.',descEn:'Priority mix, risk reasons and checklist.',w:8,h:6,minW:4,minH:4,maxW:12,maxH:12},
+    checklistRules:{icon:'checklist',group:'operations',tr:'Kontrol Listesi ve Kurallar',en:'Checklist & Rules',descTr:'Kontroller, onay durumları ve kişisel kurallar.',descEn:'Checks, approval statuses and personal rules.',w:8,h:10,minW:4,minH:4,maxW:12,maxH:16},
     notes:{icon:'notebook',group:'operations',tr:'Not Hatırlatıcısı',en:'Notes Reminder',descTr:'Yalnız senin yazdığın CP notları.',descEn:'Only the CP notes you wrote.',w:4,h:2,minW:3,minH:2,maxW:12,maxH:12},
     breakdown:{icon:'chart-bar',group:'operations',tr:'Aktif Sipariş Kırılımı',en:'Active Order Breakdown',descTr:'Ülke, alt üretici, sezon ve buying group dağılımı tek grafikte.',descEn:'Country, sub-manufacturer, season and buying group in one chart.',w:3,h:4,minW:3,minH:4,maxW:12,maxH:14},
-    attention:{icon:'alert-triangle',group:'operations',tr:'Aksiyon Gerekenler',en:'Orders Requiring Attention',descTr:'Bugün müdahale bekleyen sipariş satırları.',descEn:'Order rows that need action today.',w:6,h:7,minW:4,minH:4,maxW:12,maxH:16},
     dataCoverage:{icon:'checklist',group:'operations',tr:'Veri Kapsamı',en:'Data Coverage',descTr:'Eksik tarih/kural sayıları ve takip dışı alanlar.',descEn:'Missing dates/rules and untracked fields.',w:4,h:5,minW:3,minH:3,maxW:12,maxH:12},
     globalFlowMap:{icon:'globe',group:'operations',tr:'Global Flow Map',en:'Global Flow Map',descTr:'Üretim ve sevkiyat akışı haritası.',descEn:'Production and shipment flow map.',w:8,h:6,minW:5,minH:5,maxW:12,maxH:16},
     collectionSummary:{icon:'table',group:'commercial',tr:'Koleksiyon',en:'Collection',descTr:'Aylık adet, model görselleri ve status dağılımı.',descEn:'Monthly quantity, model images and status mix.',w:12,h:3,minW:4,minH:3,maxW:12,maxH:12},
@@ -37,13 +36,12 @@
       {key:'launchpad',x:0,y:0,w:12,h:1},
       {key:'pulse',x:0,y:1,w:12,h:2},
       {key:'globalFlowMap',x:0,y:3,w:8,h:7},
-      {key:'attention',x:8,y:3,w:4,h:7},
+      {key:'notes',x:8,y:3,w:4,h:7},
       {key:'deadline',x:0,y:10,w:5,h:4},
       {key:'breakdown',x:5,y:10,w:3,h:4},
       {key:'collectionPreview',x:8,y:10,w:4,h:4},
-      {key:'productionFocus',x:0,y:14,w:8,h:6},
-      {key:'notes',x:8,y:14,w:4,h:3},
-      {key:'dataCoverage',x:8,y:17,w:4,h:3},
+      {key:'checklistRules',x:0,y:14,w:8,h:10},
+      {key:'dataCoverage',x:8,y:14,w:4,h:6},
     ]},
     {name:{tr:'Ticari',en:'Commercial'},items:[
       {key:'collectionSummary',x:0,y:0,w:12,h:4},
@@ -144,7 +142,8 @@
     const detailHidden=new Set(Array.isArray(detail.hidden)?detail.hidden.map(String):[]);
     const widths={...(input.widths||{})},heights={...(input.heights||{})};
     const detailWidths={...(detail.widths||{})},detailHeights={...(detail.heights||{})};
-    const flat=[];const push=(key,width,height,hidden)=>{if(!REGISTRY[key]||flat.some(item=>item.key===key))return;flat.push({key,width,height,hidden});};
+    const flat=[];const push=(key,width,height,hidden)=>{
+      if(key==='productionFocus')key='checklistRules';if(!REGISTRY[key]||flat.some(item=>item.key===key))return;flat.push({key,width,height,hidden});};
     const expandDetails=hiddenParent=>{
       const seen=new Set();
       detailOrder.forEach(key=>{
@@ -184,12 +183,13 @@
     const input=value&&typeof value==='object'?value:null;
     if(!input)return defaults();
     if(input.version!==VERSION)return ('order' in input||'details' in input||'widths' in input||'hidden' in input)?migrateV1(input):defaults();
-    const known=new Set((Array.isArray(input.known)?input.known:[]).filter(key=>REGISTRY[key]));
+    const widgetKey=key=>key==='productionFocus'?'checklistRules':key;
+    const known=new Set((Array.isArray(input.known)?input.known:[]).map(widgetKey).filter(key=>REGISTRY[key]));
     const placed=new Set();
     let pages=(Array.isArray(input.pages)?input.pages:[]).slice(0,MAX_PAGES).map(page=>{
       const items=[];
       (Array.isArray(page&&page.items)?page.items:[]).forEach(raw=>{
-        const item=clampItem(raw);if(!item||placed.has(item.key))return;
+        const item=clampItem({...raw,key:widgetKey(raw?.key)});if(!item||placed.has(item.key))return;
         placed.add(item.key);items.push(item);
       });
       /* Bozuk kayıtta çakışan konumlar sabit sıra ile çözülür. */

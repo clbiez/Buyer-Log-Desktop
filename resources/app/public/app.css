@@ -5946,3 +5946,6 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
   .mailTopicEditorCard .mailTopicSubjectLegend{font-size:var(--fs-2xs);}
   .mailTopicEditorCard .mailTopicMoveBtns button{min-width:23px;}
 }
+
+button.ovNoteCount{cursor:pointer;font-family:var(--sans);}
+button.ovNoteCount:hover{background:var(--acc-bg);border-color:var(--acc);}

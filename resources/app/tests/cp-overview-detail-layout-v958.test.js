@@ -16,7 +16,7 @@ const CPA_CSS=fs.readFileSync(path.join(ROOT,'public','cp-overview-assistant.css
 const layout=require('../public/overview-layout.js');
 
 test('CP modülleri ana ekranda bağımsız widget olarak bulunur',()=>{
-  for(const key of ['productionFocus','attention','dataCoverage','breakdown']){
+  for(const key of ['checklistRules','dataCoverage','breakdown']){
     assert.ok(layout.widgets.includes(key),key);
     assert.match(INDEX,new RegExp(`data-overview-widget="${key}"`));
   }
@@ -37,13 +37,14 @@ test('v1 detay kaydı ana ekrana taşınır: gizlenenler gizli kalır, dört kı
   assert.ok(!allHidden.pages.some(page=>page.items.some(item=>item.key==='breakdown')),'dört kırılım da gizliyse birleşik widget da gizli');
 });
 
-test('v9.58 Today Production Focus, Attention ve Data Coverage bağımsız hostlara çizilir',()=>{
+test('Kontrol listesi ve Veri Kapsamı bağımsız hostlara çizilir',()=>{
   assert.match(INDEX,/id="cpAssistant"/);
-  assert.match(INDEX,/id="cpAssistantAttention"/);
+  assert.doesNotMatch(INDEX,/id="cpAssistantAttention"/);
   assert.match(INDEX,/id="cpAssistantCoverage"/);
   assert.match(VIEW,/function attentionHost\(\)/);
   assert.match(VIEW,/function coverageHost\(\)/);
-  assert.match(VIEW,/attention\.innerHTML = attentionCard\(\)/);
+  assert.doesNotMatch(VIEW,/attention\.innerHTML = attentionCard\(\)/);
+  assert.match(VIEW,/cpaChecklistOverview/);
   assert.doesNotMatch(VIEW,/state\.perspective === 'manager'/);
   assert.match(VIEW,/coverage\.innerHTML = coverageCard\(\)/);
 });

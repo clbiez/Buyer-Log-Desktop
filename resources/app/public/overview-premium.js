@@ -41,7 +41,16 @@
     const list=(Array.isArray(rows)?rows:[]).filter(row=>finite(row.value)).map(row=>({...row,value:Number(row.value)}));
     return {rows:list.sort((a,b)=>Math.abs(b.value)-Math.abs(a.value)),max:Math.max(0,...list.map(row=>Math.abs(row.value)))};
   }
-  const api={buildHorizon,buildCoverage,metricSeries};
+  function pulseScopes(model,options={}){
+    const orders=Array.isArray(model?.orders)?model.orders:[];
+    const loading=buildHorizon(orders,options).days.flatMap(day=>day.rows);
+    return [
+      {key:'scope',orders},
+      ...[['critical','CRITICAL'],['today','ACTION_TODAY'],['week','ACTION_THIS_WEEK']].map(([key,priority])=>({key,orders:orders.filter(item=>item.priority===priority)})),
+      {key:'loading',orders:loading},
+    ].filter(entry=>entry.orders.length);
+  }
+  const api={buildHorizon,buildCoverage,metricSeries,pulseScopes};
   if(!root.document)return api;
   const doc=root.document;
   const L=(tr,en)=>String(doc.documentElement.lang||'tr').startsWith('en')?en:tr;
@@ -80,14 +89,14 @@
   function renderPulse(){
     const node=doc.getElementById('ovPulse');if(!visible(node))return;
     if(!model){draw(node,empty(context.message||L('CP özeti hazırlanıyor…','Preparing CP summary…')));return;}
-    const horizon=buildHorizon(model.orders),critical=number(model.priorities.find(x=>x.name==='CRITICAL')?.rows),coverage=buildCoverage(model.orders);
-    const records=[
-      {key:'scope',label:L('Aktif CP kapsamı','Active CP scope'),value:fmt(model.totals.rows),unit:L('satır','rows'),sub:`${fmt(model.totals.qty)} ${L('adet','units')}`,visual:priorityBand()},
-      {key:'critical',label:L('Kritik aksiyon','Critical action'),value:fmt(critical),unit:L('satır','rows'),sub:`${fmt(coverage.unknown)} ${L('hesaplanamıyor','uncalculable')}`,visual:priorityBand()},
-      {key:'loading',label:L('Yakın yükleme · 7 gün','Upcoming loading · 7 days'),value:fmt(horizon.qty),unit:L('adet','units'),sub:`${fmt(horizon.days.reduce((n,d)=>n+d.rows.length,0))} ${L('planlı satır','planned rows')}`,visual:`<div class="ovPulseMini" aria-hidden="true">${horizon.days.map(d=>`<i style="--ov-level:${Math.max(4,100*d.qty/Math.max(1,...horizon.days.map(x=>x.qty)))}%"></i>`).join('')}</div>`},
-      {key:'coverage',label:L('Tarih kapsamı','Date coverage'),value:coverage.percent==null?'—':`${coverage.percent}%`,unit:'',sub:`${fmt(coverage.complete)} / ${fmt(coverage.total)} ${L('yükleme + hedef','loading + target')}`,visual:`<div class="ovPulseBand" aria-hidden="true"><i class="ovBdTone--ok" style="flex:${coverage.complete}"></i><i class="ovBdTone--unknown" style="flex:${coverage.total-coverage.complete}"></i></div>`},
-    ];
-    const changed=draw(node,`<div class="ovPulseGrid">${records.map(r=>`<button type="button" class="ovPulseKpi${r.key==='critical'?' isRisk':''}" data-ov-pulse="${r.key}" data-ov-focus="pulse-${r.key}"><span>${esc(r.label)}</span><strong><b data-ov-count>${esc(r.value)}</b><small>${esc(r.unit)}</small></strong><em>${esc(r.sub)}</em>${r.visual}</button>`).join('')}</div>`);
+    const horizon=buildHorizon(model.orders);
+    const labels={scope:L('Aktif CP kapsamı','Active CP scope'),critical:L('Kritik aksiyon','Critical action'),today:L('Bugün Aksiyon','Action Today'),week:L('Bu Hafta Aksiyon','Action This Week'),loading:L('Yakın yükleme · 7 gün','Upcoming loading · 7 days')};
+    const records=pulseScopes(model).map(entry=>{
+      const qty=entry.orders.reduce((sum,item)=>sum+number(item.qty),0),loading=entry.key==='loading';
+      return {...entry,label:labels[entry.key],value:fmt(loading?qty:entry.orders.length),unit:loading?L('adet','units'):L('satır','rows'),sub:loading?`${fmt(entry.orders.length)} ${L('planlı satır','planned rows')}`:`${fmt(qty)} ${L('adet','units')}`,
+        visual:loading?`<div class="ovPulseMini" aria-hidden="true">${horizon.days.map(d=>`<i style="--ov-level:${Math.max(4,100*d.qty/Math.max(1,...horizon.days.map(x=>x.qty)))}%"></i>`).join('')}</div>`:priorityBand()};
+    });
+    const changed=draw(node,records.length?`<div class="ovPulseGrid" style="--ov-pulse-count:${records.length}">${records.map(r=>`<button type="button" class="ovPulseKpi${r.key==='critical'?' isRisk':''}" data-ov-pulse="${r.key}" data-ov-focus="pulse-${r.key}"><span>${esc(r.label)}</span><strong><b data-ov-count>${esc(r.value)}</b><small>${esc(r.unit)}</small></strong><em>${esc(r.sub)}</em>${r.visual}</button>`).join('')}</div>`:empty(L('Bu kapsamda aktif sipariş yok.','No active orders in this scope.')));
     if(changed)animatePulse(node);
   }
   function renderHorizon(){
@@ -158,7 +167,7 @@
     doc.addEventListener('click' ,event=>{
       const button=event.target.closest('[data-ov-pulse],[data-ov-days],[data-ov-day],[data-ov-horizon],[data-ov-model],[data-ov-status],[data-ov-collection],[data-ov-metric-table],[data-ov-metric-row]');if(!button)return;
       if(!model&&(button.hasAttribute('data-ov-pulse')||button.hasAttribute('data-ov-day')||button.hasAttribute('data-ov-horizon')))return;
-      if(button.dataset.ovPulse){const key=button.dataset.ovPulse;if(key==='critical'){root.BLCpAssistant?.selectPriority?.('CRITICAL');revealWidget('attention');}else if(key==='loading')revealWidget('deadline');else if(key==='coverage')revealWidget('dataCoverage');else openRows(model?.orders,L('Aktif CP kapsamı','Active CP scope'));}
+      if(button.dataset.ovPulse){const entry=pulseScopes(model).find(item=>item.key===button.dataset.ovPulse);if(entry)openRows(entry.orders,button.querySelector('span').textContent);}
       else if(button.dataset.ovDays){horizonDays=Number(button.dataset.ovDays);renderHorizon();}
       else if(button.dataset.ovDay!=null){const slot=buildHorizon(model?.orders,{days:horizonDays}).days[Number(button.dataset.ovDay)];openRows(slot.rows,`${L('Planlı yükleme','Planned loading')} · ${dateLabel(slot.date)}`);}
       else if(button.dataset.ovHorizon){const h=buildHorizon(model?.orders,{days:horizonDays});openRows(h[button.dataset.ovHorizon],button.dataset.ovHorizon==='missing'?L('Yükleme tarihi eksik','Missing loading date'):L('Planlı yükleme tarihi geçmiş','Planned loading date passed'));}

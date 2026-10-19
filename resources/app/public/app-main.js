@@ -1905,9 +1905,9 @@ function renderOverviewCpDependencyState(mode,errorMessage=''){
   if(coverage)coverage.innerHTML='';
   if(!host)return;
   const en=appLang==='en';
-  const title=en?"Today's Production Focus":'Bugünün Üretim Öncelikleri';
+  const title=en?'Checklist & Rules':'Kontrol Listesi ve Kurallar';
   if(mode==='error'){
-    const message=errorMessage||(en?'Production priority data could not be loaded.':'Üretim önceliği verileri yüklenemedi.');
+    const message=errorMessage||(en?'Checklist data could not be loaded.':'Kontrol listesi verileri yüklenemedi.');
     const retry=en?'Retry':'Tekrar dene';
     host.innerHTML=`<section class="cpaCard"><header><b>${escapeHtml(title)}</b></header><div class="cpaCardBody"><p class="cpaEmpty">${escapeHtml(message)}</p><div class="cpaRowBetween"><span></span><button type="button" class="cpaBtn sm" data-overview-cp-retry>${escapeHtml(retry)}</button></div></div></section>`;
     host.querySelector('[data-overview-cp-retry]')?.addEventListener('click',()=>{
@@ -1916,7 +1916,7 @@ function renderOverviewCpDependencyState(mode,errorMessage=''){
     });
     return;
   }
-  host.innerHTML=`<section class="cpaCard"><header><b>${escapeHtml(title)}</b></header><div class="cpaCardBody"><p class="cpaEmpty">${escapeHtml(en?'Preparing production priorities…':'Üretim öncelikleri hazırlanıyor…')}</p></div></section>`;
+  host.innerHTML=`<section class="cpaCard"><header><b>${escapeHtml(title)}</b></header><div class="cpaCardBody"><p class="cpaEmpty">${escapeHtml(en?'Preparing checks…':'Kontroller hazırlanıyor…')}</p></div></section>`;
 }
 function ensureOverviewCpDependency(){
   if(state.cp){overviewCpLoadState='ready';overviewCpLoadError='';return Promise.resolve(true);}
@@ -9756,11 +9756,12 @@ function clearRowNote(id,key='Notes'){
   showToast(L('Not silindi.'));
 }
 function clearOverviewNoteOrder(row){
-  if(!row||row._id==null)return;
+  if(!row||row._id==null||row._canEdit===false)return false;
   const keys=[];
   if(norm(row['Notes'])&&noteAuthoredByCurrentUser(row._notesBy,row._notesByName))keys.push('Notes');
   if(norm(row['Ek Not'])&&noteAuthoredByCurrentUser(row._ekNotBy,row._ekNotByName))keys.push('Ek Not');
   keys.forEach(key=>clearRowNote(Number(row._id),key));
+  return keys.length>0;
 }
 
 function commitCpEditor(t, options={}){
@@ -10564,13 +10565,17 @@ function openOverviewNoteOrderInCp(row){
   if(search)search.value=orderCode||modelName;switchTab('cp');renderCP();
   requestAnimationFrame(()=>document.querySelector('#cpTable tbody tr')?.scrollIntoView({block:'center',behavior:'smooth'}));
 }
-function openOverviewNoteGroupInCp(group){
+async function openOverviewNoteGroupInCp(group){
   const rows=Array.isArray(group?.rows)?group.rows:[];if(!rows.length)return;
-  clearCpQuickFilters();state.colFilters.cp={};
-  const search=document.getElementById('cpSearch');if(search)search.value='';
-  const ids=new Set(rows.map(row=>row&&row._id).filter(id=>id!=null));state.cpSelected=new Set(ids);state.checkFilter.cp='checked';
-  switchTab('cp');renderCP();
-  requestAnimationFrame(()=>{document.querySelector('#cpTable tbody tr')?.scrollIntoView({block:'center',behavior:'smooth'});updateShippingBtnVisibility();});
+  await window.BLPerf?.ensureFeature?.('cpAssistant');
+  window.BLCpAssistant?.openOverviewRows?.(rows,appLang==='en'?'Notes · Order details':'Notlar · Sipariş detayları',{
+    notes:true,note:group.note,
+    deleteNote:row=>{
+      const current=state.cp?.rows?.find(item=>sameOrderLine(item,row));
+      if(!current||overviewNoteCanonical(overviewOrderNoteText(current))!==overviewNoteCanonical(group.note))return false;
+      return clearOverviewNoteOrder(current);
+    },
+  });
 }
 function renderOverviewPriorityReminder(rows){
   const root=document.getElementById('ovPriorityReminder');
@@ -10630,7 +10635,7 @@ function renderOverviewPriorityReminder(rows){
       return `<article class="ovNoteGroup">
         <div class="ovNoteGroupHeader">
           <button type="button" class="ovNoteText ovNoteTextEdit" data-note-edit="${groupIndex}" title="${escapeHtml(appLang==='en'?'Edit note':'Notu düzenle')}">${noteHtml}${noteDate?` <span class="ovNoteDate">- ${escapeHtml(noteDate)}</span>`:''}</button>
-          <span class="ovNoteCount" data-note-group-count="${groupIndex}" title="${escapeHtml(appLang==='en'?'Double-click to open all orders with this note':'Bu notu içeren tüm siparişleri açmak için çift tıkla')}"><b>${group.rows.length}</b>${appLang==='en'?(group.rows.length===1?'order':'orders'):'sipariş'}</span>
+          <button type="button" class="ovNoteCount" data-note-group-count="${groupIndex}" title="${escapeHtml(appLang==='en'?'Open order details for this note':'Bu notun sipariş detaylarını aç')}"><b>${group.rows.length}</b>${appLang==='en'?(group.rows.length===1?'order':'orders'):'sipariş'}</button>
         </div>
         <div class="ovNoteOrders">${orders}</div>
       </article>`;
@@ -10647,15 +10652,15 @@ function renderOverviewPriorityReminder(rows){
     list.querySelectorAll('[data-note-edit]').forEach(node=>node.addEventListener('click',event=>{
       event.preventDefault();event.stopPropagation();openOverviewNoteEditor(groups[Number(node.dataset.noteEdit)]);
     }));
-    list.querySelectorAll('[data-note-group-count]').forEach(node=>node.addEventListener('dblclick',event=>{
+    list.querySelectorAll('[data-note-group-count]').forEach(node=>node.addEventListener('click',event=>{
       event.preventDefault();event.stopPropagation();openOverviewNoteGroupInCp(groups[Number(node.dataset.noteGroupCount)]);
     }));
   }
   /* Kullanım açıklaması her zaman görünen uzun paragraf değil; tek tıkla açılan
      "Nasıl çalışır?" notu. Açık/kapalı tercihi oturum boyunca korunur. */
   const methodText=appLang==='en'
-    ?'Only notes YOU wrote are listed here — notes from other users appear on CP Tracker and Orders, not on Overview. Identical note texts are grouped together. Click note text to edit it, click an order to open it, or double-click the order count to open the whole note group.'
-    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine, tek siparişi açmak için siparişe tıkla; sağ üstteki sipariş adedine çift tıklayarak grubun tamamını aç.';;
+    ?'Only notes YOU wrote are listed here — notes from other users appear on CP Tracker and Orders, not on Overview. Identical note texts are grouped together. Click note text to edit it, click an order to open it, or click the order count to open the side report and delete your note per order.'
+    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine, tek siparişi açmak için siparişe tıkla; sağ üstteki sipariş adedine tıklayarak yan raporu aç ve sipariş bazında kendi notunu sil.';;
   const methodOpen=method.querySelector('details')?.open||false;
   method.innerHTML=`<details class="ovHelp"${methodOpen?' open':''}><summary>${escapeHtml(appLang==='en'?'How does this work?':'Nasıl çalışır?')}</summary><span>${escapeHtml(methodText)}</span></details>`
 }

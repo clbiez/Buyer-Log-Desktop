@@ -152,12 +152,12 @@
 .ovHome>.ovHomeHost>div:empty{display:none!important;}
 
 /* Üretim Odağı */
-.ovHome>#ovProductionFocus{padding:12px 14px;}
-.ovHome>#ovProductionFocus>#cpAssistant{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;margin:0;}
-.ovHome>#ovProductionFocus .cpaBar{flex:0 0 auto;}
-.ovHome>#ovProductionFocus .cpaGrid{flex:1 1 auto;min-height:0;overflow:auto;grid-auto-rows:max-content;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-content:start;}
-.ovHome>#ovProductionFocus .cpaGrid.is-single{grid-template-columns:minmax(0,1fr);}
-.ovHome>#ovProductionFocus>#cpAssistant>.cpaCard{flex:1 1 auto;}
+.ovHome>#ovChecklistRules{padding:12px 14px;}
+.ovHome>#ovChecklistRules>#cpAssistant{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;margin:0;}
+.ovHome>#ovChecklistRules .cpaBar{flex:0 0 auto;}
+.ovHome>#ovChecklistRules .cpaGrid{flex:1 1 auto;min-height:0;overflow:auto;grid-auto-rows:max-content;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));align-content:start;}
+.ovHome>#ovChecklistRules .cpaGrid.is-single{grid-template-columns:minmax(0,1fr);}
+.ovHome>#ovChecklistRules>#cpAssistant>.cpaCard{flex:1 1 auto;}
 @container ovw (max-width:620px){.cpaBar{align-items:stretch;}.cpaBarActions{width:100%;}.cpaTitle small{display:none;}}
 
 /* Aksiyon Gerekenler / Veri Kapsamı: tek kart ızgara hücresini doldurur */
@@ -336,7 +336,7 @@
 .ovPremiumSegment button[aria-pressed="true"]{border-color:var(--acc);background:var(--acc);color:var(--on-acc);}
 .ovPremiumEmpty{display:grid;align-content:center;justify-items:center;gap:8px;flex:1;min-height:60px;padding:12px;text-align:center;font-size:var(--fs-xs);color:var(--muted);}
 .ovPremiumEmpty .ic{width:22px;height:22px;color:var(--acc);}
-.ovPulseGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:100%;}
+.ovPulseGrid{display:grid;grid-template-columns:repeat(var(--ov-pulse-count,5),minmax(0,1fr));height:100%;}
 .ovPulseKpi{display:flex;flex-direction:column;justify-content:center;position:relative;min-width:0;padding:8px 14px;text-align:left;border:0;border-right:1px solid var(--line);background:var(--card);color:var(--ink);cursor:pointer;overflow:hidden;}
 .ovPulseKpi:last-child{border-right:0;}
 .ovPulseKpi>span{color:var(--ink2);font:600 var(--fs-xs)/1.2 var(--sans);}
@@ -436,10 +436,10 @@
 .ovHome[data-density="compact"]>#ovPriorityReminder .ovPriorityMethod{display:none;}
 .ovHome[data-density="compact"]>#ovPriorityReminder .ovPriorityEmpty{padding:8px 0;min-height:0;font-size:var(--fs-xs);}
 .ovHome[data-density="compact"]>#ovDataCoverage .cpaCardBody{padding:8px 12px;}
-.ovHome[data-density="compact"]>#ovProductionFocus .cpaTitle small{display:none;}
-.ovHome[data-density="compact"]>#ovProductionFocus .cpaChip .n{font-size:var(--fs-xl);}
-.ovHome[data-density="compact"]>#ovProductionFocus .cpaBar{flex-wrap:wrap;gap:6px;}
-.ovHome[data-density="compact"]>#ovProductionFocus .cpaGrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
+.ovHome[data-density="compact"]>#ovChecklistRules .cpaTitle small{display:none;}
+.ovHome[data-density="compact"]>#ovChecklistRules .cpaChip .n{font-size:var(--fs-xl);}
+.ovHome[data-density="compact"]>#ovChecklistRules .cpaBar{flex-wrap:wrap;gap:6px;}
+.ovHome[data-density="compact"]>#ovChecklistRules .cpaGrid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);}
 .ovHome[data-density="compact"]>#ovCollectionSummary{padding:10px 12px;}
 .ovHome[data-density="compact"]>#ovCollectionSummary .ovCollectionMonthThumb{transition:transform var(--bl-motion-enter) var(--bl-ease);}
 .ovHome[data-density="compact"]>#ovCollectionSummary .ovCollectionMonthThumb:hover{transform:scale(1.12);}
@@ -478,8 +478,8 @@
   .ovHome[data-density="compact"]>#ovPulse{height:180px;}
   .ovPulseGrid{grid-template-columns:repeat(2,minmax(0,1fr));}
   .ovPulseKpi:nth-child(-n+2){border-bottom:1px solid var(--line);}
-  .ovHome[data-density="compact"]>#ovProductionFocus{height:450px;}
-  .ovHome[data-density="compact"]>#ovProductionFocus .cpaGrid{grid-template-columns:minmax(0,1fr);}
+  .ovHome[data-density="compact"]>#ovChecklistRules{height:450px;}
+  .ovHome[data-density="compact"]>#ovChecklistRules .cpaGrid{grid-template-columns:minmax(0,1fr);}
   .ovHome[data-density="compact"]>#ovAttention{height:350px;}
   .ovHome[data-density="compact"]>#globalFlowMapWidget{height:390px;}
   .ovHome[data-density="compact"]>#ovCollectionSummary{height:240px;}

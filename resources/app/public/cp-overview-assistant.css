@@ -514,3 +514,32 @@ button.cpaValueOption:hover,.cpaValueOption:hover{background:var(--card2-strong)
 .trAi{display:grid;gap:3px;margin-top:6px;padding:6px 8px;border-left:3px solid var(--acc);background:var(--acc-bg)}
 .trAi p{margin:0}
 .trAi .cpaBtn{justify-self:start;height:auto;min-height:24px;white-space:normal;text-align:left}
+
+/* Standalone checklist: engine counts remain the only source of status. */
+.cpaChecklistOverview{flex:1 1 auto;min-height:0;overflow:auto;}
+.cpaChecklistOverview>.cpaCard{border:0;background:transparent;}
+.cpaChecklistOverview>.cpaCard>header{display:none;}
+.cpaChecklistOverview .cpaCardBody{padding:0;}
+.cpaCheckSummary{display:flex;align-items:center;gap:16px;padding:16px;background:linear-gradient(120deg,var(--acc-bg),var(--card));border:1px solid var(--line);}
+.cpaCheckSummary>div:last-child{display:grid;gap:5px;min-width:0;}
+.cpaCheckSummary b{font-size:var(--fs-md);}
+.cpaCheckSummary span{font-size:var(--fs-sm);color:var(--ink2);font-variant-numeric:tabular-nums;}
+.cpaCheckSummary small{font-size:var(--fs-xs);color:var(--muted);}
+.cpaCheckRing{display:grid;place-items:center;position:relative;isolation:isolate;flex:0 0 76px;width:76px;height:76px;border-radius:50%;background:conic-gradient(var(--green) var(--check-progress),var(--line) 0);}
+.cpaCheckRing:before{content:'';position:absolute;inset:6px;background:var(--card);border-radius:50%;z-index:-1;}
+.cpaCheckRing b{font-size:var(--fs-xl);font-variant-numeric:tabular-nums;}
+.cpaCheckTiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.cpaCheckTile{display:flex;flex-direction:column;align-items:stretch;gap:9px;min-width:0;padding:12px;text-align:left;cursor:pointer;border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:var(--r-sm);background:var(--card);color:var(--ink);font:400 var(--fs-sm)/1.4 var(--sans);transition:background var(--bl-motion-fast) var(--bl-ease),transform var(--bl-motion-fast) var(--bl-ease);animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both;animation-delay:var(--check-delay,0ms);}
+.cpaCheckTile:hover{background:var(--acc-bg);transform:translateY(-2px);}
+.cpaCheckTile:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.cpaCheckTile.hasRejected{border-left-color:var(--red);}
+.cpaCheckTileHead{display:flex;align-items:center;gap:8px;}
+.cpaCheckTileHead b{flex:1;min-width:0;}
+.cpaCheckTileHead>.ic{color:var(--acc-ink);}
+.cpaCheckTile>small{color:var(--muted);font-size:var(--fs-xs);overflow-wrap:anywhere;}
+.cpaCheckTileCounts{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;color:var(--ink2);font-size:var(--fs-xs);font-variant-numeric:tabular-nums;}
+.cpaCheckTileCounts>span{padding:3px 6px;background:var(--card2);}
+.cpaCheckTileCounts .cpaCheckRejected{color:var(--red);background:var(--red-bg);}
+@container ovw (max-width:520px){.cpaCheckTiles{grid-template-columns:minmax(0,1fr);}.cpaCheckSummary{padding:10px;gap:10px;}}
+@media(prefers-reduced-motion:reduce){.cpaCheckTile{animation:none;transition:none;}.cpaCheckTile:hover{transform:none;}}
+html[data-overview-motion="paused"] .cpaCheckTile{animation:none;transition:none;}
