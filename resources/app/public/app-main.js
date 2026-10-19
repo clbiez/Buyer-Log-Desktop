@@ -11179,7 +11179,7 @@ function syncPricingRulesToAllLoadedViews({saveCollection=true,renderCollection=
   }
   return {cpChanged,collectionChanged};
 }
-async function persistPricingRules(rules){
+async function persistPricingRules(rules,{expectedRevision=state.storeRevisions.pricingRules||0}={}){
   const clean=normalizePricingRules(rules);
   const previous=normalizePricingRules(state.overrides.pricingRules||[]);
   state.overrides.pricingRules=clean; saveLocalPricingRules(clean);
@@ -11188,20 +11188,20 @@ async function persistPricingRules(rules){
   let syncResult=syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
   try{
     if(window.SERVER_BACKED){
-      const res=await fetch('/api/pricing-rules',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(state.storeRevisions.pricingRules||0)},body:JSON.stringify({rules:clean})});
+      const res=await fetch('/api/pricing-rules',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(expectedRevision),...(window.BL_CLIENT_ID?{'X-Client-Id':window.BL_CLIENT_ID}:{})},body:JSON.stringify({rules:clean})});
       const data=await res.json().catch(()=>({}));
-      if(!res.ok){ const err=new Error(data.error||res.statusText);err.code=data.code;throw err; }
-      state.storeRevisions.pricingRules=Number(data.revision)||state.storeRevisions.pricingRules||0;
-      state.overrides.pricingRules=normalizePricingRules(data.rules||clean); saveLocalPricingRules(state.overrides.pricingRules);
+      if(!res.ok){ const err=new Error(res.status===409?(appLang==='en'?'Royalty rules changed while this window was open. Your draft is preserved; close and reopen to edit the current rules.':'Bu pencere açıkken royalty kuralları değişti. Taslağınız korunuyor; güncel kuralları düzenlemek için pencereyi kapatıp yeniden açın.'):(data.error||res.statusText));err.code=data.code;err.status=res.status;throw err; }
+      applyIncomingPricingRules(data.rules||clean,data.revision);
       // Sunucunun normalize ettiği son kural setini de tekrar uygula. Böylece client/server
       // normalizasyon farkı yüzünden Koleksiyon eski Royalty/Hologram/FOB ile kalmaz.
       syncResult=syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
     }
+    window.BLLicenseCardsPage?.invalidate?.();
     return syncResult;
   }catch(err){
     // Kaydetme başarısızsa ekranda geçici olarak uygulanan kuralları geri al; CP ve
     // Koleksiyon aynı kural setini kullanmaya devam etsin.
-    state.overrides.pricingRules=previous; saveLocalPricingRules(previous);
+    if(state.overrides.pricingRules===clean){state.overrides.pricingRules=previous;saveLocalPricingRules(previous);}
     syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
     throw err;
   }
@@ -27967,7 +27967,9 @@ window.BLLicenseDataBridge={
     return {rows,module,version:module==='orders'?window.BLManufacturerDataBridge.version():`cp:${_unifiedPriorityTableRevision.cp}`};
   },
   async rulesChanged(data){
-    if(Number(data&&data.pricingRevision)!==Number(state.storeRevisions.pricingRules||0))await refreshPricingRulesFromServer();
+    if(Array.isArray(data?.pricingRules)){
+      if(applyIncomingPricingRules(data.pricingRules,data.pricingRevision))syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
+    }else if(Number(data&&data.pricingRevision)!==Number(state.storeRevisions.pricingRules||0))await refreshPricingRulesFromServer();
   },
 };
 window.BLPriceSupplierAnalysisBridge={

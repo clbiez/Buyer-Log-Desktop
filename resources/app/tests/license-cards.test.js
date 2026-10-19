@@ -126,8 +126,8 @@ function routeHarness(initial, publication = {}) {
   registerRoutes(app, deps);
   return {
     state: () => ({ store, reads, commits, sourceCalls, events, mirrored, audits }),
-    request: async (method, url, { user = { area: true, edit: false }, body = {}, id } = {}) => {
-      const handlers = routes.get(method + ' ' + url), req = { currentUser: user, body, params: { id } };
+    request: async (method, url, { user = { area: true, edit: false }, body = {}, id, headers = {} } = {}) => {
+      const handlers = routes.get(method + ' ' + url), req = { currentUser: user, body, params: { id }, headers };
       const result = { status: 200, body: null, headers: {} }, res = { status: status => { result.status = status; return res; }, json: value => { result.body = value; return res; }, set: (key, value) => { result.headers[key] = value; return res; } };
       for (const handler of handlers) { let next = false; await handler(req, res, () => { next = true; }); if (!next) break; }
       return result;
@@ -183,4 +183,38 @@ test('an initial import keeps discovered cards pending when the transport throws
   assert.equal(response.status, 200); assert.equal(response.body.syncPending, true);
   assert.equal(response.body.cards.length, 1); assert.equal(harness.state().commits, 1);
   assert.ok(JSON.stringify(harness.state().store.licenseCardOutbox).includes('Marvel'));
+});
+
+test('card edit tokens permit unrelated card/rate changes but reject changes to the opened card atomically', () => {
+  let current = fixture([rule('opened', '', ''), rule('other', '', '', { license: 'Disney' })]);
+  const opened = cards.responseOf(current, true).cards[0];
+  assert.match(opened.editToken, /^[a-f0-9]{64}$/);
+  current = cards.appendDiscovered(current, [{ license: 'Disney', licensor: 'DTR' }]).overrides;
+  current.pricingRules[1].royalty = 15; current._revisions.pricingRules++;
+  const body = { revision: 1, pricingRevision: 3, editToken: opened.editToken, profile: { workingNotes: 'My draft' }, rules: [{ ...opened.rules[0], royalty: 12 }] };
+  const updated = cards.updateCard(current, opened.id, body, validators);
+  assert.equal(updated.overrides.pricingRules.find(r => r.id === 'other').royalty, 15);
+  assert.equal(updated.card.workingNotes, 'My draft');
+  assert.throws(() => cards.updateCard(updated.overrides, opened.id, body, validators), { code: 'REVISION_CONFLICT' });
+  const remote = copied(current); remote.pricingRules[0].royalty = 18;
+  const snapshot = copied(remote);
+  assert.throws(() => cards.updateCard(remote, opened.id, body, validators), { code: 'REVISION_CONFLICT' });
+  assert.deepEqual(remote, snapshot);
+  assert.throws(() => cards.updateCard(current, opened.id, {...body, editToken: ''}, validators), {code:'REVISION_CONFLICT'});
+});
+
+test('card tokens ignore import bookkeeping and rule object key order', () => {
+  const current = fixture([rule('opened', '', '')]), before = cards.responseOf(current, true).cards[0];
+  const refreshed = cards.appendDiscovered(current, []).overrides;
+  refreshed.licenseCards.items[0].updatedAt = '2026-10-19';
+  refreshed.pricingRules[0] = Object.fromEntries(Object.entries(refreshed.pricingRules[0]).reverse());
+  assert.equal(cards.responseOf(refreshed, true).cards[0].editToken, before.editToken);
+});
+
+test('HTTP request client identity reaches both profile and pricing notifications', async () => {
+  const harness = routeHarness(fixture()), id = harness.state().store.licenseCards.items[0].id;
+  const response = await harness.request('put', '/api/license-cards/:id', {id, user:{id:'editor',area:true,edit:true}, headers:{'x-client-id':'editing-tab'}, body:{revision:1,pricingRevision:3,profile:{workingNotes:'Saved'},rules:[rule('new','','')]}});
+  assert.equal(response.status, 200);
+  assert.equal(harness.state().events.length, 2);
+  for(const event of harness.state().events)assert.equal(event[1].headers['x-client-id'], 'editing-tab');
 });

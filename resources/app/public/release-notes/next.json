@@ -300,6 +300,93 @@
           "en": "Actual Buyer Log interface after the change, using anonymous demo data."
         }
       }
+    },
+    {
+      "id": "license-card-verified-conflicts",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Kendi düzenlemeniz çakışma sayılmaz",
+        "en": "Your own edit no longer creates a conflict"
+      },
+      "body": {
+        "tr": "Yenileme, bağlantının yeniden kurulması ve kendi kayıt bildiriminiz taslağı kilitlemez. Yalnız açılan kartın bilgileri veya sözleşmeleri gerçekten değiştiğinde uyarı gösterilir; yazdıklarınız korunur. Başka kartların değişmesi kaydı engellemez. İptal sonrası düzenleme ve geciken sembol yüklemeleri de güvenli hale getirildi.",
+        "en": "Refreshes, reconnects and your own save notifications keep the draft editable. A warning appears only when the opened card or its contracts actually change; your draft is retained. Unrelated card changes allow saving. Cancelling and delayed symbol uploads also preserve the correct draft."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-card-safe-editing.png",
+        "alt": {
+          "tr": "Arka plan yenilemesi sonrası açık ve kaydedilebilir demo lisans kartı taslağı",
+          "en": "An editable demo license-card draft after a background refresh"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "license-royalty-shared-canonical-rates",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları ve Royalty",
+        "en": "License cards and Royalty"
+      },
+      "title": {
+        "tr": "İki ekranda aynı güncel royalty oranları",
+        "en": "Both screens use the same current royalty rates"
+      },
+      "body": {
+        "tr": "Lisans Kartları ile License Royalty Calculations aynı güncel sözleşme listesini kullanır. Her iki yöndeki kayıt diğer ekranın önbelleğini günceller. Royalty penceresi açılırken sunucudan yenilenir; açık kalmış eski bir taslak daha yeni oranların üzerine yazamaz.",
+        "en": "License Cards and License Royalty Calculations use the same current contracts. Saving in either screen refreshes the other screen’s cache. The Royalty window loads from the server before opening, and a stale draft cannot overwrite newer rates."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-royalty-canonical-rates.png",
+        "alt": {
+          "tr": "Demo Orbit için Lisans Kartlarıyla aynı yüzde 19 royalty oranını gösteren gerçek Royalty penceresi",
+          "en": "The real Royalty window showing the same 19 percent Demo Orbit rate as License Cards"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "license-cards-stacked-icon",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisans Kartları için kart simgesi",
+        "en": "A cards icon for License Cards"
+      },
+      "body": {
+        "tr": "Lisans Kartları menüsündeki hesap makinesi simgesi üst üste kartlardan oluşan bir simgeyle değiştirildi.",
+        "en": "The calculator icon in the License Cards menu has been replaced with a stack of cards."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-card-safe-editing.png",
+        "alt": {
+          "tr": "Sol menüde yeni üst üste kart simgesiyle açık Lisans Kartları ekranı",
+          "en": "License Cards open with its new stack-of-cards icon in the left menu"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
     }
   ]
 }

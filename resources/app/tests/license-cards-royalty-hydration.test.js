@@ -59,3 +59,31 @@ test('server CP and Orders projections apply temporal TR/YD commissions and refr
     assert.equal(manual[0]['Supp. FOB'],1);
   }
 });
+
+test('a complete card response hydrates the same canonical royalty rules even when a revision hint is already known', async () => {
+  const context={window:{},state:{storeRevisions:{pricingRules:9}},applyIncomingPricingRules:(rules,revision)=>{context.rules=rules;context.revision=revision;return true;},syncPricingRulesToAllLoadedViews:()=>{context.synced=true;},refreshPricingRulesFromServer:async()=>{throw new Error('Canonical response must not refetch');}};
+  vm.createContext(context);
+  vm.runInContext(block('window.BLLicenseDataBridge={', 'window.BLPriceSupplierAnalysisBridge='),context);
+  await context.window.BLLicenseDataBridge.rulesChanged({pricingRevision:9,pricingRules:[{id:'one',royalty:16}]});
+  assert.equal(context.rules[0].royalty,16);assert.equal(context.revision,9);assert.equal(context.synced,true);
+});
+
+test('royalty saves use the editor revision and notify card caches only after a successful commit', async () => {
+  const requests=[],invalidations=[];
+  const context={window:{SERVER_BACKED:true,BL_CLIENT_ID:'royalty-tab',BLLicenseCardsPage:{invalidate:()=>invalidations.push('saved')}},state:{storeRevisions:{pricingRules:9},overrides:{pricingRules:[{royalty:16}]}},normalizePricingRules:r=>r,saveLocalPricingRules:()=>{},syncPricingRulesToAllLoadedViews:()=>({}),fetch:async(url,options)=>{requests.push(options);return {ok:false,status:409,json:async()=>({code:'REVISION_CONFLICT'})};},appLang:'en',applyIncomingPricingRules:(rules,revision)=>{context.state.overrides.pricingRules=rules;context.state.storeRevisions.pricingRules=revision;}};
+  vm.createContext(context);vm.runInContext(block('async function persistPricingRules(', '/* v10.24'),context);
+  await assert.rejects(context.persistPricingRules([{royalty:13}],{expectedRevision:8}));
+  assert.equal(requests[0].headers['If-Match'],'8');assert.equal(requests[0].headers['X-Client-Id'],'royalty-tab');
+  assert.equal(context.state.overrides.pricingRules[0].royalty,16);assert.equal(invalidations.length,0);
+  context.fetch=async()=>({ok:true,json:async()=>({revision:10,rules:[{royalty:17}]})});
+  await context.persistPricingRules([{royalty:17}],{expectedRevision:9});assert.equal(invalidations.length,1);
+});
+
+
+test('a delayed failed royalty write cannot roll back a newer canonical response received meanwhile', async () => {
+  const fresh=[{royalty:19}];
+  const context={window:{SERVER_BACKED:true},state:{storeRevisions:{pricingRules:9},overrides:{pricingRules:[{royalty:13}]}},normalizePricingRules:r=>r,saveLocalPricingRules:()=>{},syncPricingRulesToAllLoadedViews:()=>({}),fetch:async()=>{context.state.overrides.pricingRules=fresh;context.state.storeRevisions.pricingRules=10;return {ok:false,status:409,json:async()=>({code:'REVISION_CONFLICT'})};},appLang:'en'};
+  vm.createContext(context);vm.runInContext(block('async function persistPricingRules(', '/* v10.24'),context);
+  await assert.rejects(context.persistPricingRules([{royalty:16}],{expectedRevision:9}));
+  assert.equal(context.state.overrides.pricingRules,fresh);assert.equal(context.state.storeRevisions.pricingRules,10);
+});
