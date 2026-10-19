@@ -32892,6 +32892,21 @@ function mailTopicDelete(kind,id){
   if(branch.activeId===id)branch.activeId=branch.items[0].id;
   mailTplSave();return true;
 }
+function mailTopicTablePreviewHtml(rows,columns){
+  const en=appLang==='en',list=Array.isArray(rows)?rows:[];
+  if(!columns.length)return '<p>'+escapeHtml(en?'Select at least one column to preview the table.':'Tabloyu önizlemek için en az bir sütun seçin.')+'</p>';
+  const head=columns.map(c=>'<th scope="col">'+escapeHtml(c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label))+'</th>').join('');
+  const body=list.slice(0,5).map(row=>'<tr>'+columns.map(c=>{
+    if(prepareEmailColumnIsPicture(c)){
+      const src=prepareEmailImageSource(row,c.sourceKind||'collection');
+      return '<td>'+(src?'<img src="'+escapeHtml(src)+'" alt="'+escapeHtml(en?'Model image':'Model görseli')+'">':'')+'</td>';
+    }
+    const cell=prepareEmailTopicCell(row,c);
+    return '<td'+(cell.numeric?' class="isNumeric"':'')+'>'+escapeHtml(cell.display)+'</td>';
+  }).join('')+'</tr>').join('');
+  const note=list.length?(en?`Showing ${Math.min(5,list.length)} of ${list.length} selected orders.`:`Seçili ${list.length} siparişin ${Math.min(5,list.length)} satırı gösteriliyor.`):(en?'Select orders to preview their values. Column headings show the current layout.':'Değerleri önizlemek için sipariş seçin. Sütun başlıkları mevcut düzeni gösterir.');
+  return '<div class="mailTopicTablePreviewScroll"><table><thead><tr>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div><small>'+escapeHtml(note)+'</small>';
+}
 function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   const topic=mailTopicFindItem(kind,id);if(!topic)return;
   document.getElementById('mailTopicEditorModal')?.remove();
@@ -32929,6 +32944,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
         <div class="mailTopicSubjectRow isManufacturer">${subjectButton('data-topic-subject-manufacturer',subjectManufacturer)}<span class="mailTopicTablePlaceholder">—</span><span class="mailTopicSubjectLabel">${escapeHtml(en?'Manufacturer':'Üretici')}</span></div>
         ${cols.map(c=>`<div class="mailTopicSubjectRow">${subjectButton(`data-topic-subject-key="${escapeHtml(c.k)}"`,subjectSelected.has(c.k))}<label class="mailTopicTableCheck"><input type="checkbox" data-key="${escapeHtml(c.k)}" ${selected.has(c.k)?'checked':''}><span class="mfrChkBox">${selected.has(c.k)?'<svg class="ic"><use href="#i-check"/></svg>':''}</span></label><span class="mailTopicSubjectLabel">${escapeHtml(colLabel(c))}</span></div>`).join('')}
       </div>
+      <div class="mailTopicTablePreview"><strong>${escapeHtml(en?'Excel / email table preview':'Excel / e-posta tablosu ön izlemesi')}</strong><div id="mailTopicTablePreview" aria-live="polite"></div></div>
       <div class="mailTopicSubjectPreview"><strong>${escapeHtml(en?'Final e-mail subject':'E-posta başlığının son hâli')}:</strong><div id="mailTopicFinalSubjectPreview"></div><small>${escapeHtml(en?'Order: MMYG → MAG → Season → Manufacturer → other selected values → subject title → date':'Sıra: MMYG → MAG → Sezon → Üretici → diğer seçili değerler → konu başlığı → tarih')}</small></div>
     </div>
     <div class="mailTopicColumnsFoot"><button type="button" class="tbtn topicEditorClose">${escapeHtml(t.close)}</button><button type="button" class="navActionBtn" id="mailTopicEditorSave"><svg class="ic"><use href="#i-device-floppy"/></svg>${escapeHtml(t.save)}</button></div>
@@ -33155,6 +33171,9 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
     const tableCount=boxes().filter(x=>x.checked).length;
     const subjectCount=subjectButtons().filter(x=>x.getAttribute('aria-pressed')==='true').length+(modal.querySelector('[data-topic-subject-manufacturer]')?.getAttribute('aria-pressed')==='true'?1:0);
     modal.querySelector('#mailTopicColsCount').textContent=en?`${tableCount} table columns · ${subjectCount} subject fields`:`${tableCount} tablo sütunu · ${subjectCount} başlık alanı`;
+    const byKey=new Map(cols.map(c=>[c.k,{...c,sourceKind}]));
+    const previewColumns=boxes().filter(x=>x.checked).map(x=>byKey.get(x.dataset.key));
+    modal.querySelector('#mailTopicTablePreview').innerHTML=mailTopicTablePreviewHtml(previewRows(),previewColumns);
     redrawSubjectFields();updateFieldGroups();refreshSubjectPreview();
   };
   boxes().forEach(x=>x.addEventListener('change',refresh));

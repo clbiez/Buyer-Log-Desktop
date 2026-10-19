@@ -5902,7 +5902,7 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 
 
 /* Prepare E-Mail field chooser follows CP's grouped Fields/preset panel. */
-.mailTopicEditorCard .mailTopicSubjectGrid{gap:4px;max-height:475px;padding:4px;overflow:auto;}
+.mailTopicEditorCard .mailTopicSubjectGrid{flex-shrink:0;gap:4px;max-height:475px;padding:4px;overflow:auto;}
 .mailTopicEditorCard .mailTopicSubjectLegend,
 .mailTopicEditorCard .mailTopicSubjectRow,
 .mailTopicEditorCard .mailTopicFieldGroupHead{grid-template-columns:minmax(130px,1fr) 118px 90px 66px;gap:8px;align-items:center;}
@@ -5914,7 +5914,7 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 .mailTopicEditorCard .mailTopicSubjectRow .mailTopicTableCheck,
 .mailTopicEditorCard .mailTopicSubjectRow .mailTopicTablePlaceholder{grid-column:3;grid-row:1;}
 .mailTopicEditorCard .mailTopicSubjectRow .mailTopicMoveBtns{grid-column:4;grid-row:1;}
-.mailTopicEditorCard .mailTopicFieldGroup{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);box-shadow:inset 3px 0 0 var(--grp-accent,var(--acc));overflow:hidden;}
+.mailTopicEditorCard .mailTopicFieldGroup{display:block;flex-shrink:0;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2);box-shadow:inset 3px 0 0 var(--grp-accent,var(--acc));overflow:hidden;}
 .mailTopicEditorCard .mailTopicFieldGroup[hidden],
 .mailTopicEditorCard .mailTopicFieldGroupRows[hidden]{display:none!important;}
 .mailTopicEditorCard .mailTopicFieldGroup.isOpen{background:color-mix(in srgb,var(--card2) 55%,var(--card));}
@@ -5927,6 +5927,14 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 .mailTopicEditorCard .mailTopicGroupCheck{display:grid;place-items:center;min-height:30px;cursor:pointer;}
 .mailTopicEditorCard .mailTopicGroupCheck input{width:17px;height:17px;accent-color:var(--acc);cursor:pointer;}
 .mailTopicEditorCard .mailTopicFieldGroupRows{display:flex;flex-direction:column;padding:0 3px 4px 3px;border-top:1px solid var(--line);}
+.mailTopicTablePreview{min-width:0;display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);background:var(--card2);font-size:var(--fs-sm);color:var(--ink);}
+.mailTopicTablePreviewScroll{max-height:260px;overflow:auto;border:1px solid var(--line);}
+.mailTopicTablePreview table{width:max-content;min-width:100%;border-collapse:collapse;font-size:var(--fs-sm);}
+.mailTopicTablePreview :is(th,td){position:static;padding:6px 9px;border:1px solid var(--line);text-align:left;max-width:240px;white-space:pre-wrap;overflow-wrap:anywhere;background:var(--card);color:var(--ink);}
+.mailTopicTablePreview th{background:var(--thead-bg);color:var(--thead-ink);white-space:nowrap;}
+.mailTopicTablePreview td.isNumeric{text-align:right;}
+.mailTopicTablePreview img{display:block;width:64px;height:64px;object-fit:contain;}
+.mailTopicTablePreview small,.mailTopicTablePreview p{font-size:var(--fs-xs);color:var(--muted);line-height:1.5;}
 .mailTopicEditorCard .mailTopicFieldGroupToggle:focus-visible,
 .mailTopicEditorCard .mailTopicGroupCheck input:focus-visible{outline:2px solid var(--acc);outline-offset:2px;}
 @media(max-width:650px){
