@@ -3,5 +3,5 @@
   "version": "7.0.285",
   "commit_sha": "61ef95a196fb37f7400621358ada17889852aefc",
   "release_notes": "Buyer Log 7.0.285 TEST / Test release: Genel Bakış kontrol listesi, operasyon nabzı ve not kartları; e-posta sütun seçimi ve tablo ön izlemesi; Hologram Request Excel ve düzenlenebilir şablonlar; lisans düzenleme çatışması ve royalty ekranı düzeltmeleri. / Overview checklist, operation pulse and note cards; email column selection and table preview; editable Hologram Request Excel templates; license edit conflict and royalty screen fixes. PR #602–#606.",
-  "request_id": "7.0.285-test-r1"
+  "request_id": "7.0.285-test-r2"
 }
