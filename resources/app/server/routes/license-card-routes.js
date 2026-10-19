@@ -31,6 +31,10 @@ module.exports = function registerLicenseCardRoutes(app, deps) {
 app.get('/api/license-cards', area, async (req, res) => {
     try { const result = await importCards(req, false); send(req, res, result.saved, { syncPending: result.syncPending }); } catch (err) { error(res, err); }
   });
+app.get('/api/license-cards/atlas-library', area, (req, res) => {
+    res.set('Cache-Control', 'no-store');
+    res.json(require('../lib/license-atlas-library.json'));
+  });
 app.post('/api/license-cards/refresh', area, permission, async (req, res) => {
     try { const result = await importCards(req, true); send(req, res, result.saved, { added: result.added, syncPending: result.syncPending }); } catch (err) { error(res, err); }
   });

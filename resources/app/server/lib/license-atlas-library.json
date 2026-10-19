@@ -1,0 +1,2837 @@
+{
+  "version": 2,
+  "source": "License Processess.xlsx",
+  "licenses": [
+    {
+      "id": "lic-3",
+      "name": "BARCELONA",
+      "agency": "DTR - EUREKA",
+      "rightsHolder": "EUREKA",
+      "category": "Spor",
+      "symbol": "⚽",
+      "color": "#123a78",
+      "color2": "#2450b8",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": true,
+          "note": "Hologram: Available (Yelda Çakar)",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail information to EUREKA.\n1 psychial PP to BARCELONA for approval.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "licensor",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "EUREKA’ya bilgilendirme e-postası",
+              "recipient": "EUREKA",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Barcelona",
+              "qty": "1 adet",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail information to EUREKA.\n1 psychial PP to BARCELONA for approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "licensor",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "EUREKA’ya bilgilendirme e-postası",
+              "recipient": "EUREKA",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Barcelona",
+              "qty": "1 adet",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Dea Stojadinović Gulić \ndea.stojadinovic@blm.fcbarcelona.cat \n+34 618 935 730 \nTravessera de les Corts, 39-43 \n(Entrada pel Carrer d’Aurora Bertrana) \n08028 Barcelona, Spain"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 3
+    },
+    {
+      "id": "lic-4",
+      "name": "BRAWL STARS",
+      "agency": "DTR",
+      "rightsHolder": "",
+      "category": "Oyun",
+      "symbol": "◆",
+      "color": "#6c35a4",
+      "color2": "#a646d7",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Psychial submission to LCW.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "LCW",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "LCW",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Psychial submission to LCW.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "LCW",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "LCW",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Psychially submission (3 pcs to Licensor to 2 pcs to Agency)",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "mixed",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "licensor-3",
+              "method": "physical",
+              "label": "Lisansöre fiziki numune gönderimi",
+              "recipient": "Lisansör",
+              "qty": "3 adet",
+              "timing": "approval",
+              "addressId": "",
+              "note": "Gönderim adresi kaynak dosyada belirtilmiyor; öncesinde teyit edin."
+            },
+            {
+              "id": "agency-2",
+              "method": "physical",
+              "label": "Acente için fiziki numune gönderimi",
+              "recipient": "Acente",
+              "qty": "2 adet",
+              "timing": "approval",
+              "addressId": "",
+              "note": "Acente gönderim adresi kaynak dosyada belirtilmiyor; öncesinde teyit edin."
+            }
+          ]
+        }
+      ],
+      "addresses": [],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 4
+    },
+    {
+      "id": "lic-5",
+      "name": "FORMULA 1",
+      "agency": "FASHION UK",
+      "rightsHolder": "",
+      "category": "Motor Sporları",
+      "symbol": "◈",
+      "color": "#8d251e",
+      "color2": "#e06143",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "On PPS.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "linked0",
+              "method": "linked",
+              "label": "PPS aşamasına bağlı inceleme",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": true,
+          "note": "Hologram: Available",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Psychial submission to FUK. (3 pcs in mid size to Fashion UK)",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Fashion UK",
+              "qty": "3 adet",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Psychial submission to FUK. (5 pcs in mid size to Fashion UK)",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Fashion UK",
+              "qty": "5 adet",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "BD Office: Samiul Islam\n \nAssistant Merchandiser\nMobile: +88 01677970930 \nFlat 3A, House 36A, Road 7, Sector 3, Uttara, Dhaka – 1230\nEmail : Samiul.islam@fashions-uk.com"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 5
+    },
+    {
+      "id": "lic-6",
+      "name": "FORTNITE",
+      "agency": "ERMODA UK",
+      "rightsHolder": "",
+      "category": "Oyun",
+      "symbol": "◆",
+      "color": "#6c35a4",
+      "color2": "#a646d7",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": true,
+          "note": "Hologram: Available",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n1 pcs PP to Ermoda after approval.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "1 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n6 pcs GS to Ermoda after approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "6 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Att.: Abdullah Tiryaki\n\nERMODA - Abdullah Tiryaki\nAltayçeşme Mah. Efe Boz Sok.\nNo:25 Maltepe İstanbul\nPhone: +90 216 429 29 73\nMobile: +90 545 500 60 28"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 6
+    },
+    {
+      "id": "lic-7",
+      "name": "HARRY POTTER",
+      "agency": "DTR",
+      "rightsHolder": "WARNER BROSS",
+      "category": "Eğlence",
+      "symbol": "✦",
+      "color": "#833c57",
+      "color2": "#dc607a",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Submission to LCW Office.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "LCW",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "internal0",
+              "method": "internal",
+              "label": "LCW ofisine iletim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Psychial submission to LCW.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "LCW",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "LCW",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Psychial submission to LCW.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "LCW",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "LCW",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [],
+      "portal": {
+        "url": "https://teams.public.onecdn.static.microsoft/evergreen-assets/safelinks/2/atp-safelinks.html",
+        "notes": "Excel’deki bağlantı Microsoft Safe Links yönlendirmesidir; gerçek portal adresi doğrulanmalıdır."
+      },
+      "requirements": "",
+      "excelRow": 7
+    },
+    {
+      "id": "lic-8",
+      "name": "LIVERPOOL",
+      "agency": "ULUPINAR",
+      "rightsHolder": "EUREKA",
+      "category": "Spor",
+      "symbol": "⚽",
+      "color": "#123a78",
+      "color2": "#2450b8",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Psychial submission to Somerbond.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Somerbond",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Psychial submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Teyit edilmeli",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": true,
+          "note": "Hologram: Available",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Psychial submission to Somerbond. (2 pieces)",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Somerbond",
+              "qty": "2 adet",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Psychial submission to Somerbond. (1 piece)",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Somerbond",
+              "qty": "1 adet",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Somerbond Ltd\n250 The Kinetic centre \nTheobald Street \nBorehamwood , Hertfordshire \nWD6 4PJ \nUnited Kingdom \nAtt :Hamish Sabreen"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 8
+    },
+    {
+      "id": "lic-9",
+      "name": "MANCHESTER UNITED",
+      "agency": "ERMODA UK",
+      "rightsHolder": "",
+      "category": "Spor",
+      "symbol": "⚽",
+      "color": "#123a78",
+      "color2": "#2450b8",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": true,
+          "note": "Hologram: Available",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n1 pcs PP to Ermoda after approval.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "1 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n6 pcs GS to Ermoda after approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "6 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Att.: Abdullah Tiryaki\n\nERMODA - Abdullah Tiryaki\nAltayçeşme Mah. Efe Boz Sok.\nNo:25 Maltepe İstanbul\nPhone: +90 216 429 29 73\nMobile: +90 545 500 60 28"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 9
+    },
+    {
+      "id": "lic-10",
+      "name": "MANDALORIAN",
+      "agency": "DTR",
+      "rightsHolder": "DISNEY",
+      "category": "Eğlence",
+      "symbol": "✦",
+      "color": "#833c57",
+      "color2": "#dc607a",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Submission to LCW Office.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "LCW",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "internal0",
+              "method": "internal",
+              "label": "LCW ofisine iletim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Portal submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "portal0",
+              "method": "portal",
+              "label": "Portal üzerinden submission",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Psychial submission to LCW.\n3 pcs PP to Disney after approval.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "mixed",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "LCW",
+              "qty": "3 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Psychial submission to LCW.\n3 pcs PP to Disney after approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "mixed",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "LCW",
+              "qty": "3 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Now Networks Group Turkey – The Walt Disney Company Turkey\nKazlıçeşme, Kennedy Cd. No:44, 34096 Zeytinburnu / İstanbul"
+        }
+      ],
+      "portal": {
+        "url": "https://opa.disney.com",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 10
+    },
+    {
+      "id": "lic-11",
+      "name": "MINECRAFT",
+      "agency": "FASHION UK",
+      "rightsHolder": "",
+      "category": "Oyun",
+      "symbol": "◆",
+      "color": "#6c35a4",
+      "color2": "#a646d7",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail submission to FUK.\n\nPsychial samples need to be send to FUK after approval. (7 pcs in mid size to Fashion UK)",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Fashion UK",
+              "qty": "7 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail submission to FUK.\n\nPsychial samples need to be send to FUK after approval. (7 pcs in mid size to Fashion UK)",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Fashion UK",
+              "qty": "7 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "BD Office: Samiul Islam\n \nAssistant Merchandiser\nMobile: +88 01677970930 \nFlat 3A, House 36A, Road 7, Sector 3, Uttara, Dhaka – 1230\nEmail : Samiul.islam@fashions-uk.com"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 11
+    },
+    {
+      "id": "lic-12",
+      "name": "PARIS SAINT GERMAN",
+      "agency": "MARKAPERA",
+      "rightsHolder": "FANATICS",
+      "category": "Spor",
+      "symbol": "⚽",
+      "color": "#123a78",
+      "color2": "#2450b8",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "On PPS.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "linked0",
+              "method": "linked",
+              "label": "PPS aşamasına bağlı inceleme",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": true,
+          "note": "Hologram: Available (Yelda Çakar)",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "1.Pre submission by mail to MARKAPERA.\n2.Psychial submission to Fanatics. (1 pc in mid size to Fanatics)\n3.Portal Entry",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "mixed",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical2",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Fanatics",
+              "qty": "1 adet",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            },
+            {
+              "id": "portal1",
+              "method": "portal",
+              "label": "Portal üzerinden submission",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "1.Pre submission by mail to MARKAPERA.\n2.Psychial submission to Fanatics. (1 pc in mid size to Fanatics)\n3.Portal Entry",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "mixed",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical2",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Fanatics",
+              "qty": "1 adet",
+              "timing": "approval",
+              "addressId": "primary",
+              "note": ""
+            },
+            {
+              "id": "portal1",
+              "method": "portal",
+              "label": "Portal üzerinden submission",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Steave MENDY (smendy@fanatics.com)\nFANATICS / 147 avenue de Malakoff 75116 Paris\n+(33) 02 59 51 01 50"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 12
+    },
+    {
+      "id": "lic-13",
+      "name": "PLAYSTATION",
+      "agency": "FAN MANIA",
+      "rightsHolder": "",
+      "category": "Oyun",
+      "symbol": "◆",
+      "color": "#6c35a4",
+      "color2": "#a646d7",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission to Fan Mania.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission to Fan Mania.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail submission to Fan Mania.\n1 pc PP to Dubai after approval.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Dubai / Fan Mania",
+              "qty": "1 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail submission to Fan Mania.\n6 pcs GS to Dubai after approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Dubai / Fan Mania",
+              "qty": "6 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Attn: Ms Lora Cortes\nFAN MANIA Br. FZCO\nPlot No. S31107, JAFZA South, PO BOX – 448956\nJebel Ali, Dubai, United Arab Emirates"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 13
+    },
+    {
+      "id": "lic-14",
+      "name": "REAL MADRID",
+      "agency": "ERMODA UK",
+      "rightsHolder": "",
+      "category": "Spor",
+      "symbol": "⚽",
+      "color": "#123a78",
+      "color2": "#2450b8",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": true,
+          "note": "Hologram: Available",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n1 pcs PP to Ermoda after approval.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "1 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n6 pcs GS to Ermoda after approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "6 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Att.: Abdullah Tiryaki\n\nERMODA - Abdullah Tiryaki\nAltayçeşme Mah. Efe Boz Sok.\nNo:25 Maltepe İstanbul\nPhone: +90 216 429 29 73\nMobile: +90 545 500 60 28"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 14
+    },
+    {
+      "id": "lic-15",
+      "name": "SONIC",
+      "agency": "CPGL",
+      "rightsHolder": "SEGA",
+      "category": "Oyun",
+      "symbol": "◆",
+      "color": "#6c35a4",
+      "color2": "#a646d7",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Portal submission.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "portal0",
+              "method": "portal",
+              "label": "Portal üzerinden submission",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Portal submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "portal0",
+              "method": "portal",
+              "label": "Portal üzerinden submission",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Portal submission.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "portal0",
+              "method": "portal",
+              "label": "Portal üzerinden submission",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Portal submission.\n1 pc to SEGA after approval.\n1 pc to CPGL after approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "licensor",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "sonic-portal",
+              "method": "portal",
+              "label": "GS submission kaydı",
+              "recipient": "SEGA portalı",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "sega-sample",
+              "method": "physical",
+              "label": "SEGA fizikî GS numunesi",
+              "recipient": "SEGA Europe",
+              "qty": "1 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            },
+            {
+              "id": "cpgl-sample",
+              "method": "physical",
+              "label": "CPGL fizikî GS numunesi",
+              "recipient": "CPGL / Gizem Murkoyunlu",
+              "qty": "1 adet",
+              "timing": "after",
+              "addressId": "secondary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "SEGA Europe\nAtt. Josephine Hodges\nBuilding 12, Chiswick Business Park\n566 Chiswick High Road, London, W4 5AN"
+        },
+        {
+          "id": "secondary",
+          "label": "İkinci gönderim adresi",
+          "text": "Gizem Murkoyunlu\nKüçükbakkalköy, Brandium Residence\nR2/57 Ataşehir, 34750, İstanbul, Turkey\nm +90 (539) 221 07 72"
+        }
+      ],
+      "portal": {
+        "url": "https://sega.dsidrm.com/signin",
+        "notes": "Her submission için Gizem Murkoyunlu’ya ayrıca bilgilendirme e-postası gönderilir (kaynak Excel talimatı)."
+      },
+      "requirements": "",
+      "excelRow": 15
+    },
+    {
+      "id": "lic-16",
+      "name": "SPACE JAM",
+      "agency": "DTR",
+      "rightsHolder": "WARNER BROSS",
+      "category": "Eğlence",
+      "symbol": "✦",
+      "color": "#833c57",
+      "color2": "#dc607a",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Submission to LCW Office.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "LCW",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "internal0",
+              "method": "internal",
+              "label": "LCW ofisine iletim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Psychial submission to LCW.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "LCW",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "LCW",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Psychial submission to LCW.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "LCW",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "physical0",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "LCW",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [],
+      "portal": {
+        "url": "https://teams.public.onecdn.static.microsoft/evergreen-assets/safelinks/2/atp-safelinks.html",
+        "notes": "Excel’deki bağlantı Microsoft Safe Links yönlendirmesidir; gerçek portal adresi doğrulanmalıdır."
+      },
+      "requirements": "",
+      "excelRow": 16
+    },
+    {
+      "id": "lic-17",
+      "name": "SPONGE BOB",
+      "agency": "ERMODA UK",
+      "rightsHolder": "",
+      "category": "Eğlence",
+      "symbol": "✦",
+      "color": "#833c57",
+      "color2": "#dc607a",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n1 pcs PP to Ermoda after approval.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "1 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n6 pcs GS to Ermoda after approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "6 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Att.: Abdullah Tiryaki\n\nERMODA - Abdullah Tiryaki\nAltayçeşme Mah. Efe Boz Sok.\nNo:25 Maltepe İstanbul\nPhone: +90 216 429 29 73\nMobile: +90 545 500 60 28"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 17
+    },
+    {
+      "id": "lic-18",
+      "name": "STAR WARS",
+      "agency": "FASHION UK",
+      "rightsHolder": "",
+      "category": "Eğlence",
+      "symbol": "✦",
+      "color": "#833c57",
+      "color2": "#dc607a",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission to FUK.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission to FUK.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail submission to FUK.\n\nPsychial samples need to be send to FUK after approval. (7 pcs in mid size to Fashion UK)",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Fashion UK",
+              "qty": "7 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail submission to FUK.\n\nPsychial samples need to be send to FUK after approval. (7 pcs in mid size to Fashion UK)",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Fashion UK",
+              "qty": "7 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "BD Office: Samiul Islam\n \nAssistant Merchandiser\nMobile: +88 01677970930 \nFlat 3A, House 36A, Road 7, Sector 3, Uttara, Dhaka – 1230\nEmail : Samiul.islam@fashions-uk.com"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 18
+    },
+    {
+      "id": "lic-19",
+      "name": "STRANGER THINGS",
+      "agency": "FAN MANIA",
+      "rightsHolder": "",
+      "category": "Eğlence",
+      "symbol": "✦",
+      "color": "#833c57",
+      "color2": "#dc607a",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail submission to Fan Mania.\n1 pc PP to Dubai after approval.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Dubai / Fan Mania",
+              "qty": "1 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail submission to Fan Mania.\n6 pcs GS to Dubai after approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "Dubai / Fan Mania",
+              "qty": "6 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Attn: Ms Lora Cortes\nFAN MANIA Br. FZCO\nPlot No. S31107, JAFZA South, PO BOX – 448956\nJebel Ali, Dubai, United Arab Emirates"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 19
+    },
+    {
+      "id": "lic-20",
+      "name": "STUMBLE GUYS",
+      "agency": "ERMODA UK",
+      "rightsHolder": "",
+      "category": "Oyun",
+      "symbol": "◆",
+      "color": "#6c35a4",
+      "color2": "#a646d7",
+      "cover": "",
+      "description": "",
+      "stages": [
+        {
+          "id": "concept",
+          "title": "Konsept Onayı",
+          "icon": "lightbulb",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Artwork olarak geçen yönlendirme. Konsept onayı kapsamı ayrıca teyit edilmelidir.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Artwork",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "soff",
+          "title": "S/OFF Onayı",
+          "icon": "layers",
+          "enabled": false,
+          "note": "",
+          "description": "Kaynak Excel’de ayrı bir S/OFF alanı bulunmadığından başlangıçta devre dışıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "",
+          "submissions": []
+        },
+        {
+          "id": "accessory",
+          "title": "Aksesuar Onayı",
+          "icon": "tag",
+          "enabled": true,
+          "note": "Mail submission.",
+          "description": "Excel’de Labels alanından aktarılmıştır. Etiket ve aksesuar onayı kapsamını düzenleyebilirsiniz.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Labels",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "hologram",
+          "title": "Hologram & Hangtag Siparişi",
+          "icon": "sparkles",
+          "enabled": false,
+          "note": "Hologram: N/A",
+          "description": "Excel’de hologram mevcudiyeti verilmiş; sipariş adımları ayrıca tanımlanmalıdır.",
+          "approver": "unknown",
+          "approvalNotes": "",
+          "source": "Hologram",
+          "submissions": []
+        },
+        {
+          "id": "pps",
+          "title": "PPS Onayı",
+          "icon": "package-check",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n1 pcs PP to Ermoda after approval.",
+          "description": "Pre-Production Sample (PPS) yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "PPS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "1 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        },
+        {
+          "id": "gs",
+          "title": "GS Onayı",
+          "icon": "flag",
+          "enabled": true,
+          "note": "Mail submission to ERMODA.\n6 pcs GS to Ermoda after approval.",
+          "description": "Gold Seal / GS yönlendirmeleri.",
+          "approver": "agency",
+          "approvalNotes": "",
+          "source": "GS",
+          "submissions": [
+            {
+              "id": "email0",
+              "method": "email",
+              "label": "E-posta / fotoğraf ile gönderim",
+              "recipient": "",
+              "qty": "",
+              "timing": "approval",
+              "addressId": "",
+              "note": ""
+            },
+            {
+              "id": "physical1",
+              "method": "physical",
+              "label": "Fiziki numune gönderimi",
+              "recipient": "ERMODA",
+              "qty": "6 adet",
+              "timing": "after",
+              "addressId": "primary",
+              "note": ""
+            }
+          ]
+        }
+      ],
+      "addresses": [
+        {
+          "id": "primary",
+          "label": "Birincil gönderim adresi",
+          "text": "Att.: Abdullah Tiryaki\n\nERMODA - Abdullah Tiryaki\nAltayçeşme Mah. Efe Boz Sok.\nNo:25 Maltepe İstanbul\nPhone: +90 216 429 29 73\nMobile: +90 545 500 60 28"
+        }
+      ],
+      "portal": {
+        "url": "",
+        "notes": ""
+      },
+      "requirements": "",
+      "excelRow": 20
+    }
+  ]
+}

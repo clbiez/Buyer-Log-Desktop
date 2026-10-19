@@ -1,0 +1,50 @@
+/* Pure atlas validation and producer projection, shared by server and UI. */
+(function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.BLLicenseAtlasEngine=api;})(typeof window==='object'?window:globalThis,()=>{
+ 'use strict';
+ const MAX_BYTES=2*1024*1024;
+ const clone=value=>JSON.parse(JSON.stringify(value));
+ function invalid(){throw Object.assign(new Error('Atlas verisi geçersiz veya sınırı aşıyor. / Atlas data is invalid or exceeds its limits.'),{code:'LICENSE_ATLAS_INVALID',statusCode:400});}
+ function object(v){if(!v||typeof v!=='object'||Array.isArray(v))invalid();return v;}
+ function str(v,max=12000){if(v==null)return '';if(typeof v!=='string'||v.length>max)invalid();return v;}
+ function url(v){v=str(v,2048).trim();if(!v)return '';let u;try{u=new URL(v);}catch(_){invalid();}if(!['https:','http:'].includes(u.protocol)||u.username||u.password)invalid();return u.href;}
+ function image(v){v=str(v,720000);if(!v)return '';if(!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(v))invalid();return v;}
+ function list(v,max){if(v==null)return [];if(!Array.isArray(v)||v.length>max)invalid();return v;}
+ function unique(items){const ids=new Set();for(const item of items){if(!item.id||ids.has(item.id))invalid();ids.add(item.id);}return items;}
+ function fields(value,texts=[],flags=[]){object(value);const out={};for(const k of texts)if(Object.hasOwn(value,k))out[k]=str(value[k]);for(const k of flags)if(Object.hasOwn(value,k)){if(typeof value[k]!=='boolean')invalid();out[k]=value[k];}
+  if(value.i18n){object(value.i18n);out.i18n={};for(const lang of ['tr','en'])if(value.i18n[lang]){object(value.i18n[lang]);out.i18n[lang]={};for(const k of texts)if(Object.hasOwn(value.i18n[lang],k))out.i18n[lang][k]=str(value.i18n[lang][k]);}}
+  return out;
+ }
+ const address=a=>fields(a,['id','label','text'],['manufacturerVisible']);
+ const route=s=>fields(s,['id','method','label','recipient','recipientType','qty','timing','addressId','note','supplierInstructions'],['manufacturerVisible','supplierShowNotes']);
+ function stage(s){const out=fields(s,['id','title','icon','note','description','approver','approvalNotes','source','testQty','testNotes','visualGuideId','supplierInstructions'],['enabled','manufacturerVisible','supplierShowNotes','supplierShowApprovalNotes','testRequired']);out.submissions=unique(list(s.submissions,40).map(route));return out;}
+ function normalize(value){
+  if(value==null)return null;object(value);if(new TextEncoder().encode(JSON.stringify(value)).length>MAX_BYTES)invalid();const l=object(value.license);
+  const license=fields(l,['id','name','agency','rightsHolder','category','symbol','description','requirements'],['manufacturerVisible','supplierShowRequirements']);
+  license.cover=image(l.cover);license.stages=unique(list(l.stages,50).map(stage));license.addresses=unique(list(l.addresses,100).map(address));
+  license.portal=fields(l.portal||{},['notes'],['manufacturerVisible']);license.portal.url=url(l.portal?.url);
+  const out={version:1,license,sharedAddresses:unique(list(value.sharedAddresses,100).map(address)),visualLibrary:unique(list(value.visualLibrary,30).map(v=>({id:str(v.id,200),name:str(v.name,200),data:image(v.data)}))),customSelectOptions:{}};
+  for(const key of ['category','approver','recipientType','method','timing'])if(value.customSelectOptions?.[key])out.customSelectOptions[key]=list(value.customSelectOptions[key],100).map(v=>fields(v,['value','label','side','kind']));
+  return out;
+ }
+ const localized=(v,key,lang='tr')=>v?.i18n?.[lang]?.[key]||v?.[key]||'';
+ function project(card,lang='tr'){
+  if(!card.processAtlas)return null;const a=normalize(card.processAtlas),l=a.license;if(l.manufacturerVisible!==true)return null;
+  const tx=(v,key)=>localized(v,key,lang),publicAddresses=[...l.addresses,...a.sharedAddresses].filter(a=>a.manufacturerVisible===true),ids=new Set(publicAddresses.map(a=>a.id)),used=new Set(),visuals=new Set();
+  const stages=l.stages.filter(s=>s.enabled!==false&&s.manufacturerVisible===true).map(s=>{
+   const submissions=s.submissions.filter(r=>r.manufacturerVisible===true).map(r=>{const addressId=ids.has(r.addressId)?r.addressId:'';if(addressId)used.add(addressId);return {method:r.method,label:tx(r,'label'),recipient:r.recipient||'',recipientType:r.recipientType||'',qty:r.qty||'',timing:r.timing||'',addressId,note:r.supplierShowNotes===true?tx(r,'note'):'',supplierInstructions:tx(r,'supplierInstructions')};});
+   if(s.visualGuideId)visuals.add(s.visualGuideId);
+   return {id:s.id,title:tx(s,'title'),approver:s.approver||'',note:s.supplierShowNotes===true?tx(s,'note'):'',approvalNotes:s.supplierShowApprovalNotes===true?tx(s,'approvalNotes'):'',supplierInstructions:tx(s,'supplierInstructions'),testRequired:s.testRequired===true,testQty:s.testQty||'',testNotes:tx(s,'testNotes'),visualGuideId:s.visualGuideId||'',submissions};
+  });
+  // The exported identity is the bound Buyer Log card, never an imported alias.
+  return {name:card.license||l.name,agency:l.agency||'',rightsHolder:l.rightsHolder||'',cover:l.cover,requirements:l.supplierShowRequirements===true?tx(l,'requirements'):'',stages,addresses:publicAddresses.filter(a=>used.has(a.id)).map(a=>({id:a.id,label:tx(a,'label'),text:a.text})),portal:l.portal.manufacturerVisible===true?{url:l.portal.url,notes:tx(l.portal,'notes')}:{url:'',notes:''},visualLibrary:a.visualLibrary.filter(v=>visuals.has(v.id)),customSelectOptions:a.customSelectOptions};
+ }
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ function exportHTML(cards,lang='tr'){
+  const en=lang==='en',T=(tr,enText)=>en?enText:tr,licenses=cards.map(c=>project(c,lang)).filter(Boolean);
+  const text=v=>`<div class="text">${esc(v)}</div>`;
+  const label=(key,value)=>value?`<p><b>${esc(key)}</b> ${esc(value)}</p>`:'';
+  const option=(l,key,value)=>{const custom=l.customSelectOptions[key]?.find(o=>o.value===value);if(custom)return custom.label;return ({email:T('E-posta','Email'),physical:T('Fiziki numune','Physical sample'),portal:T('Portal','Portal'),both:T('E-posta ve numune','Email and sample'),approval:T('Onay için','For approval'),after:T('Onay sonrası','After approval'),licensor:T('Lisansör','Licensor'),agency:T('Ajans','Agency'),buyer:T('Alıcı','Buyer'),unknown:T('Teyit edilmeli','To be confirmed')})[value]||value;};
+  return `<!doctype html><html lang="${en?'en':'tr'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'none'; base-uri 'none'; form-action 'none'"><title>${esc(T('Üretici Lisans Atlası','Supplier License Atlas'))}</title><style>body{margin:0;background:#f2f2f3;color:#1d1f20;font:15px/1.6 system-ui,sans-serif}main{max-width:1100px;margin:auto;padding:36px}header{border-top:4px solid #3f6488;padding:22px 0}h1{font-size:34px;margin:8px 0}h2{font-size:26px}h3{font-size:21px}a{color:#3f6488}nav{display:flex;flex-wrap:wrap;gap:12px}article{background:#fff;border:1px solid #d4d4d7;padding:28px;margin:24px 0}.stage{border-top:1px solid #d4d4d7;margin-top:20px;padding-top:16px;break-inside:avoid}.text{white-space:pre-wrap;overflow-wrap:anywhere}.route{background:#f2f2f3;border-left:3px solid #3f6488;padding:12px;margin:12px 0}.guide{max-width:100%;max-height:480px;object-fit:contain}.cover{width:100px;height:100px;object-fit:contain}summary{cursor:pointer;font-weight:600}small{color:#5d5d60}@media(max-width:600px){main{padding:16px}article{padding:18px}h1{font-size:26px}}@media print{body{background:white}main{padding:0}nav{display:none}article{break-before:page;border:0;padding:0}article:first-of-type{break-before:auto}details{display:block}}</style></head><body><main><header><small>BUYER LOG / ${esc(T('ÜRETİCİ REHBERİ','SUPPLIER GUIDE'))}</small><h1>${esc(T('Lisans süreç atlası','License process atlas'))}</h1><p>${esc(T('Onay adımları, gönderim yöntemleri ve üretim talimatları.','Approval steps, submission methods and production instructions.'))}</p><small>${esc(new Date().toISOString().slice(0,10))} · ${licenses.length} ${esc(T('lisans','licenses'))}</small></header><nav>${licenses.map((l,i)=>`<a href="#license-${i}">${esc(l.name)}</a>`).join('')}</nav>${licenses.map((l,i)=>`<article id="license-${i}">${l.cover?`<img class="cover" src="${esc(l.cover)}" alt="">`:''}<h2>${esc(l.name)}</h2><small>${esc([l.agency,l.rightsHolder].filter(Boolean).join(' · '))}</small>${text(l.requirements)}${l.stages.map((s,n)=>`<section class="stage"><h3>${n+1}. ${esc(s.title)}</h3>${label(T('Onay mercii:','Approver:'),option(l,'approver',s.approver))}${text(s.supplierInstructions)}${text(s.note)}${text(s.approvalNotes)}${s.testRequired?label(T('Test numunesi:','Test samples:'),s.testQty)+text(s.testNotes):''}${s.submissions.map(r=>`<div class="route"><b>${esc(option(l,'method',r.method))} · ${esc(r.label)}</b>${label(T('Alıcı:','Recipient:'),r.recipient)}${label(T('Adet:','Quantity:'),r.qty)}${label(T('Zaman:','Timing:'),option(l,'timing',r.timing))}${text(r.supplierInstructions)}${text(r.note)}${r.addressId?text(l.addresses.find(a=>a.id===r.addressId)?.text||''):''}</div>`).join('')}${l.visualLibrary.filter(v=>v.id===s.visualGuideId).map(v=>`<img class="guide" src="${esc(v.data)}" alt="${esc(v.name)}">`).join('')}</section>`).join('')}${l.portal.url?`<section class="stage"><h3>Portal</h3><a href="${esc(l.portal.url)}" rel="noopener noreferrer">${esc(l.portal.url)}</a>${text(l.portal.notes)}</section>`:''}</article>`).join('')}<footer><small>${esc(T('Salt okunur üretici kopyası. Bu dosyayı tarayıcınızdan yazdırabilir veya PDF olarak kaydedebilirsiniz.','Read-only supplier copy. Print this file or save it as PDF from your browser.'))}</small></footer></main></body></html>`;
+ }
+ return {MAX_BYTES,normalize,project,exportHTML,localized,clone};
+});

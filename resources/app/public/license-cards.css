@@ -64,6 +64,42 @@
 .lcMore{margin-top:var(--sp-4)}
 .lcEmpty{padding:var(--sp-6);font-size:var(--fs-base);color:var(--muted)}
 .lcSrOnly{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
-@media(min-width:1600px){.lcLayout.hasDetail{grid-template-columns:minmax(400px,1.4fr) minmax(430px,1fr)}}
+/* Atlas uses the same card, controls, palette and motion primitives. */
+.lcAtlasCardStatus{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);padding:var(--sp-3) var(--sp-4);border-top:1px solid var(--line)}
+.laTop{display:flex;align-items:flex-start;justify-content:space-between;gap:var(--sp-3);padding:var(--sp-3) 0}
+.laTop p{margin:var(--sp-2) 0}
+.laRoadmap{display:flex;gap:var(--sp-2);overflow-x:auto;padding:var(--sp-3) 0 var(--sp-4);scroll-snap-type:x proximity}
+.laStep{flex:1 0 130px;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:var(--sp-2);border:1px solid var(--line);border-top:3px solid var(--line2);background:var(--card2);color:var(--ink);padding:var(--sp-3);font:inherit;text-align:left;cursor:pointer;scroll-snap-align:start;transition:background var(--bl-motion-fast) var(--bl-ease),border-color var(--bl-motion-fast) var(--bl-ease),transform var(--bl-motion-fast) var(--bl-ease)}
+.laStep:hover{border-color:var(--acc);transform:translateY(-2px)}
+.laStep.isActive{background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink)}
+.laStep.isInactive{opacity:.6}
+.laStepNumber{font:600 var(--fs-xl) var(--mono);font-variant-numeric:tabular-nums;color:var(--acc)}
+.laStep b{font-size:var(--fs-sm);line-height:1.4}
+.laStep small{font-size:var(--fs-xs);color:var(--muted)}
+.laStageBody{border:1px solid var(--line);background:var(--card);padding:var(--sp-4);animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both}
+.laStageBody h3,.laEmpty h3{font:600 var(--fs-xl) var(--head);margin:var(--sp-3) 0}
+.laRoute{border:1px solid var(--line);border-left:3px solid var(--acc);background:var(--card2);padding:var(--sp-3);margin:var(--sp-3) 0;font-size:var(--fs-sm)}
+.laRoute>.lcActions{justify-content:space-between;margin-bottom:var(--sp-3)}
+.laRoute p{margin:var(--sp-2) 0}
+.laText{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.65}
+.laCheck{display:flex;align-items:center;gap:var(--sp-2);padding:var(--sp-2) 0;font-size:var(--fs-sm);color:var(--ink2);cursor:pointer}
+.laCheck input{accent-color:var(--acc);width:18px;height:18px;flex:0 0 18px}
+.laChecks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--sp-1);margin:var(--sp-3) 0}
+.laEditTools{margin:var(--sp-3) 0}
+.laEditTools [aria-pressed="true"]{background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink)}
+.laEmpty{padding:var(--sp-5);background:var(--card2);border:1px dashed var(--line2)}
+.lcField select{box-sizing:border-box;width:100%;min-height:var(--ctl-h);background:var(--card2);color:var(--ink);border:1px solid var(--line);padding:var(--sp-2);font:inherit}
+.lcField select:focus-visible,.laStep:focus-visible,.laCheck input:focus-visible{outline:0;box-shadow:var(--focus-ring)}
+.laGuide{max-width:100%;max-height:400px;object-fit:contain;display:block;margin:var(--sp-3) 0}
+.lcAtlasDialog{width:min(1000px,calc(100vw - 40px));max-height:calc(100dvh - 64px);overflow:auto;box-sizing:border-box;background:var(--card);color:var(--ink);border:1px solid var(--line);padding:var(--sp-5);font:var(--fs-base)/1.5 var(--sans);box-shadow:var(--shadow-3);animation:blDialogIn var(--bl-motion-enter) var(--bl-ease) both}
+.lcAtlasDialog::backdrop{background:var(--scrim)}
+.lcAtlasDialog h2{font:600 var(--fs-2xl) var(--head);margin:0}
+.lcAtlasDialog .lcDetailHead{position:sticky;top:calc(-1 * var(--sp-5));background:var(--card);padding-top:var(--sp-3);z-index:1}
+.laExportList{max-height:240px;overflow:auto;border-block:1px solid var(--line);padding:var(--sp-3) 0;margin-bottom:var(--sp-4)}
+.laExportPreview{width:100%;height:520px;border:1px solid var(--line);margin-top:var(--sp-4);background:var(--card)}
+@media(min-width:1001px){.lcLayout.hasDetail{grid-template-columns:minmax(275px,.65fr) minmax(600px,1.8fr)}.lcLayout.hasDetail>.lcDetail{position:relative}.lcLayout.hasDetail .lcGrid{grid-template-columns:1fr}}
+@media(max-width:650px){.laTop{flex-direction:column}.laChecks{grid-template-columns:1fr}.lcAtlasDialog{padding:var(--sp-3);width:calc(100vw - 20px)}.laStageBody{padding:var(--sp-3)}.lcAtlasDialog .lcDetailHead{top:calc(-1 * var(--sp-3))}}
+@media(prefers-reduced-motion:reduce){.laStep,.laStageBody,.lcAtlasDialog{animation:none;transition:none}.laStep:hover{transform:none}}
+@media(min-width:1600px){.lcLayout.hasDetail{grid-template-columns:minmax(300px,.65fr) minmax(600px,1.8fr)}}
 @media(max-width:1000px){.lcLayout.hasDetail{grid-template-columns:1fr}.lcDetail{grid-row:1}.lcPageHead{align-items:flex-start}.lcPageHead .lcActions{justify-content:flex-end}}
 @media(max-width:550px){.lcPage{padding:var(--sp-3)}.lcPageHead{flex-direction:column}.lcPageHead .lcActions{justify-content:flex-start}.lcGrid{grid-template-columns:1fr}.lcFormGrid{grid-template-columns:1fr}.lcDetail{padding:var(--sp-4)}.lcDetailHead{flex-wrap:wrap}.lcToolbar{align-items:stretch;flex-direction:column}.lcSearch{max-width:none}}

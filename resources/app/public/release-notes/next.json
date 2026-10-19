@@ -387,6 +387,64 @@
           "en": "Actual Buyer Log interface after the change, using anonymous demo data."
         }
       }
+    },
+    {
+      "id": "license-atlas-native-cards",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Lisans kartında düzenlenebilir süreç atlası",
+        "en": "Editable process atlas inside License Cards"
+      },
+      "body": {
+        "tr": "Yüklenen atlasın 18 lisanslık kütüphanesi mevcut kartlara açık seçimle bağlanır. Adımlar, gönderimler, adresler, portal, görsel rehberler ve TR/EN içerik kartın kendi kaydı ve eşitlemesiyle yönetilir. Royalty, komisyon, hologram ve sözleşme geçmişi korunur.",
+        "en": "The uploaded 18-license library can be explicitly linked to existing cards. Steps, submissions, addresses, portal, visual guides and TR/EN content use the card’s existing persistence and synchronization. Royalty, commissions, hologram costs and contract history remain intact."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-light.png",
+        "alt": {
+          "tr": "Lisans kartında düzenlenebilir süreç atlası",
+          "en": "Editable process atlas inside License Cards"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo lisansları.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo licenses."
+        }
+      }
+    },
+    {
+      "id": "license-atlas-producer-export",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License Cards"
+      },
+      "title": {
+        "tr": "Seçilebilir alanlarla üretici atlası",
+        "en": "Supplier atlas with selectable shared fields"
+      },
+      "body": {
+        "tr": "Lisans, adım, gönderim, adres, portal ve not paylaşımı ayrı ayrı seçilir. Tek veya birden çok kayıtlı lisans TR/EN önizlemeyle, internet gerektirmeyen salt okunur HTML olarak indirilir. Kartın ticari oranları ve erişim bilgileri çıktıya eklenmez.",
+        "en": "Sharing is selected separately for licenses, steps, submissions, addresses, portal and notes. One or multiple saved licenses can be previewed in TR/EN and downloaded as an offline read-only HTML file. Card commercial rates and access details are excluded."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-producer-export.png",
+        "alt": {
+          "tr": "Seçilebilir alanlarla üretici atlası",
+          "en": "Supplier atlas with selectable shared fields"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo lisansları.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo licenses."
+        }
+      }
     }
   ]
 }
