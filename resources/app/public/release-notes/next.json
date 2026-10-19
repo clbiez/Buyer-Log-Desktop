@@ -1,14 +1,160 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-19",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Genel Bakış: kontroller ve sipariş detayları",
+    "en": "Overview: checks and order details"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Bağımsız görsel kontrol listesi, sadeleştirilmiş operasyon özeti ve sipariş bazında not yönetimi.",
+    "en": "A standalone visual checklist, a streamlined operation summary and per-order note management."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "overview-checklist-rules",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Bağımsız Kontrol Listesi ve Kurallar",
+        "en": "Standalone Checklist & Rules"
+      },
+      "body": {
+        "tr": "Kontrol listesi ve kişisel kurallar ayrı bir ana ekran widget’ına taşındı. İlerleme halkası, durum kartları, animasyonlar ve doğrudan kontrol detaylarıyla takip kolaylaştı.",
+        "en": "Checklist and personal rules now have their own home widget, with a progress ring, status cards, animations and direct check details."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-checklist-rules.png",
+        "alt": {
+          "tr": "Bağımsız Kontrol Listesi ve Kurallar",
+          "en": "Standalone Checklist & Rules"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-retired-focus-attention",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Üretim öncelikleri ve Aksiyon Gerekenler kaldırıldı",
+        "en": "Production Focus and Needs Attention retired"
+      },
+      "body": {
+        "tr": "Bugünün Üretim Öncelikleri, içindeki otomasyon düğmeleri ve Aksiyon Gerekenler widget’ı kaldırıldı. Eski yerleşimlerde kontrol listesi kendi konumunu koruyarak bağımsız widget’a taşınır.",
+        "en": "Today’s Production Focus, its automation buttons and the Needs Attention widget were removed. Saved layouts carry the checklist into its standalone widget at the same position."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-checklist-rules.png",
+        "alt": {
+          "tr": "Üretim öncelikleri ve Aksiyon Gerekenler kaldırıldı",
+          "en": "Production Focus and Needs Attention retired"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-pulse-scope-drill",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Operasyon Nabzı’nda aksiyon kapsamları ve yan raporlar",
+        "en": "Action scopes and side reports in Operation Pulse"
+      },
+      "body": {
+        "tr": "Tarih Kapsamı kaldırıldı; Bugün Aksiyon ve Bu Hafta Aksiyon eklendi. Sipariş içermeyen etiketler gizlenir ve alanı kalan etiketlere bırakır. Her etiket kendi sipariş kapsamını aynı yan detay raporunda açar.",
+        "en": "Date Coverage was removed and Action Today and Action This Week were added. Empty scopes are hidden so the remaining labels share the space. Every label opens its own orders in the same side report."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-pulse-actions.png",
+        "alt": {
+          "tr": "Operasyon Nabzı’nda aksiyon kapsamları ve yan raporlar",
+          "en": "Action scopes and side reports in Operation Pulse"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-notes-count-drawer",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Not adedinden siparişlerin yan detay raporuna",
+        "en": "Open order side reports from note counts"
+      },
+      "body": {
+        "tr": "Not Hatırlatıcısı’ndaki sipariş adedine tek tıklayınca, o notu taşıyan siparişler Aktif CP kapsamıyla aynı yan raporda açılır. Arama, görseller ve sütun seçenekleri kullanılabilir.",
+        "en": "A single click on a note’s order count opens its orders in the same side report as Active CP Scope, with search, images and column options."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-note-order-report.png",
+        "alt": {
+          "tr": "Not adedinden siparişlerin yan detay raporuna",
+          "en": "Open order side reports from note counts"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "overview-notes-per-order-delete",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Not raporunda sipariş bazında Notu sil",
+        "en": "Per-order Delete note in the note report"
+      },
+      "body": {
+        "tr": "Yalnız not raporunda her sipariş için Notu sil düğmesi bulunur. İşlem sizin notunuzu yalnız seçili siparişten kaldırır; diğer siparişlerin ve diğer yazarların notları korunur. Salt okunur siparişlerde düğme kapalıdır.",
+        "en": "Only note reports show a Delete note button per order. It removes your note from that order while preserving other orders and other authors’ notes. Read-only orders have a disabled button."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-note-order-report.png",
+        "alt": {
+          "tr": "Not raporunda sipariş bazında Notu sil",
+          "en": "Per-order Delete note in the note report"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası gerçek Buyer Log arayüzü; anonim demo veriler.",
+          "en": "Actual Buyer Log interface after the change, using anonymous demo data."
+        }
+      }
+    }
+  ]
 }

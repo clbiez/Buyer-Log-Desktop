@@ -402,7 +402,7 @@ function columnWidth(col){
   active.autoWidths[col.key]=px;return px;
 }
 function applyTableWidth(table,columns,showImages){
-  const total=columns.reduce((sum,col)=>sum+columnWidth(col),showImages?74:0);
+  const total=columns.reduce((sum,col)=>sum+columnWidth(col),(showImages?74:0)+(active?.rowActions?.length?120:0));
   table.style.width=total+'px';
 }
 function fitAllColumns(){
@@ -553,17 +553,18 @@ function renderTable(){
   const table=host.querySelector('[data-bl-detail-table]'),summary=host.querySelector('[data-bl-detail-summary]');if(!table)return;
   const rows=filteredRows(),columns=reportColumns(),helper=root.BLDetailImages;
   const imageIndex=helper?.buildIndex?helper.buildIndex():null,showImages=active.images&&Boolean(helper);
-  const shown=rows.slice(0,Math.max(RENDER_CHUNK,active.limit||RENDER_CHUNK)),rest=rows.length-shown.length,colspan=Math.max(1,columns.length+(showImages?1:0));
-  table.querySelector('colgroup').innerHTML=(showImages?'<col class="blDetailImageCol" style="width:74px">':'')+columns.map(col=>'<col style="width:'+columnWidth(col)+'px">').join('');
+  const shown=rows.slice(0,Math.max(RENDER_CHUNK,active.limit||RENDER_CHUNK)),rest=rows.length-shown.length,hasRowActions=active.rowActions.length>0,colspan=Math.max(1,columns.length+(showImages?1:0)+(hasRowActions?1:0));
+  active.renderedRows=shown;
+  table.querySelector('colgroup').innerHTML=(hasRowActions?'<col style="width:120px">':'')+(showImages?'<col class="blDetailImageCol" style="width:74px">':'')+columns.map(col=>'<col style="width:'+columnWidth(col)+'px">').join('');
   applyTableWidth(table,columns,showImages);
-  table.querySelector('thead').innerHTML=(active.flatColumns?groupHeaderHtml(columns,showImages):'')+'<tr class="blDetailColumnRow">'+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>{
+  table.querySelector('thead').innerHTML=(active.flatColumns&&!hasRowActions?groupHeaderHtml(columns,showImages):'')+'<tr class="blDetailColumnRow">'+(hasRowActions?'<th>'+escapeHtml(L('İşlem','Action'))+'</th>':'')+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>{
     const filtered=col.fields.some(field=>active.filters.has(field.key));
     return '<th data-key="'+escapeHtml(col.key)+'" class="'+(col.reportRole==='number'?'blDetailNumeric ':'')+(filtered?'columnFilterActive':'')+'"><div class="blDetailReportHeading"><span>'+escapeHtml(col.label)+'</span>'+
       '<details class="blDetailReportFilter"><summary aria-label="'+escapeHtml(L('Alanları filtrele','Filter fields')+': '+col.label)+'">▾</summary><div>'+col.fields.map(field=>'<button type="button" data-bl-detail-filter="'+escapeHtml(field.key)+'"'+(active.filters.has(field.key)?' class="filterActive"':'')+'>'+escapeHtml(field.label)+'</button>').join('')+'</div></details></div>'+
       '<span class="colResizer" data-bl-detail-col-resize="'+escapeHtml(col.key)+'" title="'+escapeHtml(L('Sürükleyerek genişliği ayarla · çift tıklayarak sığdır','Drag to resize · double-click to fit'))+'"></span></th>';
   }).join('')+'</tr>';
   bindColumnResize(table);
-  table.querySelector('tbody').innerHTML=shown.length?shown.map(row=>'<tr>'+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map(col=>'<td class="'+(col.reportRole==='number'?'blDetailNumeric':'')+'">'+reportCell(col,row)+'</td>').join('')+'</tr>').join('')+
+  table.querySelector('tbody').innerHTML=shown.length?shown.map((row,index)=>'<tr>'+(hasRowActions?'<td class="blDetailRowActions">'+active.rowActions.map((action,actionIndex)=>'<button type="button" class="blDetailTool" data-bl-detail-row-action="'+actionIndex+'" data-bl-detail-row="'+index+'"'+(action.disabled?.(row)?' disabled':'')+'>'+escapeHtml(action.label)+'</button>').join('')+'</td>':'')+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map(col=>'<td class="'+(col.reportRole==='number'?'blDetailNumeric':'')+'">'+reportCell(col,row)+'</td>').join('')+'</tr>').join('')+
     (rest>0?'<tr><td class="blDetailMore" colspan="'+colspan+'"><button type="button" class="blDetailTool" data-bl-detail-more>'+escapeHtml(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+escapeHtml(L('satır kaldı','rows left'))+'</button></td></tr>':''):
     '<tr><td class="blDetailEmpty" colspan="'+colspan+'">'+escapeHtml(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>';
   if(summary)summary.textContent=(active.subtitle?active.subtitle+' · ':'')+rows.length.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+L('satır','rows');
@@ -676,6 +677,19 @@ function render(){
   });
   host.querySelector('[data-bl-detail-table]')?.addEventListener('click',event=>{
     if(!active)return;
+    const rowButton=event.target.closest('[data-bl-detail-row-action]');
+    if(rowButton){
+      event.preventDefault();event.stopPropagation();
+      const report=active,row=report.renderedRows[Number(rowButton.dataset.blDetailRow)],action=report.rowActions[Number(rowButton.dataset.blDetailRowAction)];
+      if(!row||!action||rowButton.disabled)return;
+      rowButton.disabled=true;
+      Promise.resolve().then(()=>action.run(row)).then(removed=>{
+        if(active!==report)return;
+        if(removed===true){report.rows=report.rows.filter(item=>item!==row);report.searchIndex=null;report.filterCache=null;report.autoWidths=null;}
+        renderTable();
+      }).catch(error=>{if(active===report){rowButton.disabled=false;root.showToast?.(error.message||L('Not silinemedi.','Could not delete the note.'));}});
+      return;
+    }
     const filterButton=event.target.closest('[data-bl-detail-filter]');
     if(filterButton){event.preventDefault();event.stopPropagation();const menu=filterButton.closest('details');if(menu)menu.open=false;openColumnFilter(filterButton.dataset.blDetailFilter,filterButton);return;}
     if(!event.target.closest('[data-bl-detail-more]'))return;active.limit=(active.limit||RENDER_CHUNK)+RENDER_CHUNK;renderTable();
@@ -739,6 +753,7 @@ function open(options){
     tableSetup:null,viewPresets,contextKeys,preset,flatColumns:input.flatColumns===true,requiredVisible:new Set(requiredVisible),
     colWidths:loadColWidths(scope,page),autoWidths:null,filters:new Map(),filterVersion:0,
     images:input.images!==false,search:'',limit:RENDER_CHUNK,searchIndex:null,filterCache:null,searchTimer:0,actions:Array.isArray(input.actions)?input.actions:[],
+    rowActions:Array.isArray(input.rowActions)?input.rowActions:[],
     exporter:typeof input.exporter==='function'?input.exporter:null
   };
   render();

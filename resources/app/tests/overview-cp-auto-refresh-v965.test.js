@@ -25,8 +25,8 @@ test('cold Overview distinguishes loading from a genuinely empty CP dataset', ()
   assert.match(renderBlock, /if\(!state\.cp\)\{/);
   assert.match(renderBlock, /renderOverviewCpDependencyState\(mode,overviewCpLoadError\)/);
   assert.match(renderBlock, /void ensureOverviewCpDependency\(\)/);
-  assert.match(APP, /Üretim öncelikleri hazırlanıyor…/);
-  assert.match(APP, /Preparing production priorities…/);
+  assert.match(APP, /Kontroller hazırlanıyor…/);
+  assert.match(APP, /Preparing checks…/);
   assert.match(APP, /overviewCpLoadState='error'/);
   assert.match(APP, /data-overview-cp-retry/);
 });

@@ -133,7 +133,7 @@ test('v9.48 panel kabuğu Genel Bakış içeriğinde ve stil sayfası kayıtlı'
   assert.match(HTML, /cp-overview-assistant\.css/);
   // Kabuk artık kendi ana ekran widget'ının içindedir; veri yokken boş kart
   // yerine açıklayıcı boş durum görünür (ovContent sarmalayıcısı kaldırıldı).
-  const widgetIndex = HTML.indexOf('data-overview-widget="productionFocus"');
+  const widgetIndex = HTML.indexOf('data-overview-widget="checklistRules"');
   const hostIndex = HTML.indexOf('<div id="cpAssistant">');
   assert.ok(widgetIndex > 0 && hostIndex > widgetIndex);
   assert.match(HTML.slice(hostIndex, hostIndex + 300), /class="ovHomeHostEmpty"/);

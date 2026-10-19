@@ -62,17 +62,17 @@ test('kaldırılan widget gizli kalır; sonradan eklenen yeni widget ilk sayfaya
 
 test('taşıma: komşu widget önce aynı satırda yana kayarak yer açar, yer yoksa aşağı itilir', () => {
   const base = L.normalize({ version: 2, known: L.widgets, pages: [{ items: [
-    { key: 'productionFocus', x: 0, y: 0, w: 8, h: 6 },
+    { key: 'checklistRules', x: 0, y: 0, w: 8, h: 6 },
     { key: 'notes', x: 8, y: 0, w: 4, h: 6 },
     { key: 'oab', x: 0, y: 6, w: 12, h: 8 },
   ] }] });
   const swapped = L.moveWidget(base, 'notes', 0, 0);
   assert.deepEqual(item(swapped, 'notes'), { key: 'notes', x: 0, y: 0, w: 4, h: 6 });
-  assert.equal(item(swapped, 'productionFocus').x, 4);
-  assert.equal(item(swapped, 'productionFocus').y, 0);
+  assert.equal(item(swapped, 'checklistRules').x, 4);
+  assert.equal(item(swapped, 'checklistRules').y, 0);
   const pushed = L.moveWidget(base, 'oab', 0, 0);
   assert.equal(item(pushed, 'oab').y, 0);
-  assert.ok(item(pushed, 'productionFocus').y >= 8);
+  assert.ok(item(pushed, 'checklistRules').y >= 8);
   noOverlap(pushed.pages[0].items);
 });
 

@@ -483,8 +483,8 @@
 
   function toolbarHtml() {
     return `<div class="cpaBar">
-      <div class="cpaTitle"><b>${esc(L('Bugünün Üretim Öncelikleri', "Today's Production Focus"))}</b>
-        <small>${esc(L('Yükleme, tarih ve teslimat risklerini tek yerde takip et.', 'Track loading, date and delivery risks in one place.'))}</small></div>
+      <div class="cpaTitle"><b>${esc(L('Kontrol Listesi ve Kurallar', 'Checklist & Rules'))}</b>
+        <small>${esc(L('Kontrolleri tamamla, kurallarını yönet.', 'Complete checks and manage your rules.'))}</small></div>
       <div class="cpaBarActions">
         <div class="cpaSeg" role="group" aria-label="${esc(L('Hedef tarih', 'Target date'))}">
           <button type="button" data-cpa-target="retail" class="${state.settings.targetType !== 'inStore' ? 'is-on' : ''}">${esc(L('Retail Depo', 'Retail'))}</button>
@@ -492,7 +492,6 @@
         </div>
         <button type="button" class="cpaBtn" data-cpa-rules>${esc(L('Kurallar', 'Rules'))}</button>
         <button type="button" class="cpaBtn" data-cpa-settings>${esc(L('Kontrol Ayarları', 'Checklist Settings'))}</button>
-        <button type="button" class="cpaBtn" data-cpa-layout>${esc(L('Düzen', 'Customize Layout'))}</button>
       </div>
     </div>`;
   }
@@ -548,19 +547,25 @@
       return card('checklist', L('Kontrol Listesi', 'Checklist'),
         `<p class="cpaNote">${esc(L('Kontrol listesi kapalı. Ayarlardan açabilirsiniz.', 'The checklist is off. You can turn it on in settings.'))}</p>`);
     }
-    const items = summary.items.map(item => `<tr>
-      <td><b>${esc(itemLabel(item))}</b><small>${esc(questionOf(item))}</small></td>
-      <td class="num">${int(item.rows - (item.rejected || 0))}${item.plmOpen ? ` <span class="cpaPlm tone-wait" title="${esc(L('PLM\'de açık numune talebi olan sipariş', 'Orders with an open sample request in PLM'))}">PLM ${int(item.plmOpen)}</span>` : ''}${item.plmRejected ? ` <span class="cpaPlm tone-bad" title="${esc(L('PLM\'de reddedilmiş numune talebi olan sipariş', 'Orders with a rejected sample request in PLM'))}">PLM ${int(item.plmRejected)}</span>` : ''}</td>
-      <td class="num">${item.rejected ? `<span class="cpaFlag tone-bad" title="${esc(L('Reddedildi olarak işaretlenen sipariş', 'Orders marked as rejected'))}">${int(item.rejected)}</span>` : ''}</td>
-      <td class="num">${item.reopened ? `<span class="cpaFlag" title="${esc(L('Yükleme tarihi değişti; kayıtlı seçim korundu', 'Load date changed; the saved decision was kept'))}">${int(item.reopened)}</span>` : ''}</td>
-      <td class="act"><button type="button" class="cpaBtn sm" data-cpa-open-checklist="${esc(item.id)}">${esc(L('Aç', 'Open'))}</button></td>
-    </tr>`).join('');
+    const pending=summary.items.reduce((sum,item)=>sum+Math.max(0,item.rows-(item.rejected||0)),0);
+    const rejected=summary.items.reduce((sum,item)=>sum+(item.rejected||0),0);
+    const approved=summary.answeredTotal||0,total=pending+rejected+approved;
+    const progress=total?Math.round(100*approved/total):100;
+    const overview=`<div class="cpaCheckSummary"><div class="cpaCheckRing" style="--check-progress:${progress}%" role="img" aria-label="${esc(L('Tamamlanan kontrol','Completed checks'))}: ${progress}%"><b>${progress}%</b></div><div><b>${esc(L('Kontrol durumun','Your check status'))}</b><span>${int(approved)} ${esc(L('tamamlandı','completed'))} · ${int(pending)} ${esc(L('bekliyor','pending'))} · ${int(rejected)} ${esc(L('reddedildi','rejected'))}</span><small>${esc(L('Detay ve yanıtlar için bir kontrol seçin.','Select a check to view details and answers.'))}</small></div></div>`;
+    const items=summary.items.map((item,index)=>{
+      const waiting=Math.max(0,item.rows-(item.rejected||0));
+      return `<button type="button" class="cpaCheckTile${item.rejected?' hasRejected':''}" data-cpa-open-checklist="${esc(item.id)}" style="--check-delay:${index*30}ms">
+        <span class="cpaCheckTileHead"><svg class="ic" aria-hidden="true"><use href="#i-checklist"/></svg><b>${esc(itemLabel(item))}</b><svg class="ic" aria-hidden="true"><use href="#i-chevron-right"/></svg></span>
+        <small>${esc(questionOf(item))}</small><span class="cpaCheckTileCounts"><span><b>${int(waiting)}</b> ${esc(L('Bekliyor','Pending'))}</span>${item.rejected?`<span class="cpaCheckRejected"><b>${int(item.rejected)}</b> ${esc(L('Reddedildi','Rejected'))}</span>`:''}${item.reopened?`<span><b>${int(item.reopened)}</b> ${esc(L('Yeniden','Re-asked'))}</span>`:''}</span>
+        ${item.plmOpen||item.plmRejected?`<span class="cpaNote">PLM · ${int(item.plmOpen||0)} ${esc(L('açık','open'))} · ${int(item.plmRejected||0)} ${esc(L('reddedildi','rejected'))}</span>`:''}
+      </button>`;
+    }).join('');
     const disabled = summary.disabled.length
       ? `<p class="cpaNote">${esc(L('Takip edilmeyen kontroller', 'Not tracked'))}: ${summary.disabled.map(item => esc(itemLabel(item))).join(', ')}</p>` : '';
     return card('checklist', L('Kontrol Listesi', 'Checklist'), `
       <details class="cpaChecklistGuide"><summary>${esc(L('Nasıl çalışır?','How it works'))}</summary><p class="cpaNote">${esc(L('Her soru CP\'de bir checklist sütunudur. Durumlar: Bekliyor · Onaylandı · Reddedildi · Gerekmiyor. Onaylandı ya da Gerekmiyor seçilen soru tekrar sorulmaz; Reddedildi açık kalır. PPS, S/Off, kritik numune ve Artwork soruları PLM\'de onaylı numune talebi varsa (PPS onayı Fit, S/Off ve Artwork\'ü de kapsar; S/Off onayı Artwork\'ü kapsar) ya da sipariş üretimi bitirdiyse kendiliğinden Onaylandı olur.', 'Every question is a checklist column in CP. Statuses: Pending · Approved · Rejected · Not Required. Approved or Not Required stops the question; Rejected stays open. PPS, S/Off, critical sample and artwork questions become Approved automatically when PLM has an approved sample request (PPS approval also covers Fit, S/Off and artwork; S/Off approval covers artwork) or when the order has finished production.'))}</p></details>
-      ${items ? `<table class="cpaTable"><thead><tr><th>${esc(L('Kontrol', 'Check'))}</th><th class="num">${esc(L('Bekliyor', 'Pending'))}</th><th class="num">${esc(L('Reddedildi', 'Rejected'))}</th><th class="num">${esc(L('Yeniden', 'Re-asked'))}</th><th></th></tr></thead><tbody>${items}</tbody></table>`
-    : `<p class="cpaEmpty">${esc(L('Şu an açık kontrol yok.', 'No open checks right now.'))}</p>`}
+      ${overview}
+      ${items ? `<div class="cpaCheckTiles">${items}</div>` : `<p class="cpaEmpty">${esc(L('Şu an açık kontrol yok.', 'No open checks right now.'))}</p>`}
       ${summary.answeredTotal ? `<p class="cpaNote">${esc(L('Onaylanan / gerekmeyen kontrol', 'Approved / not required checks'))}: <b>${int(summary.answeredTotal)}</b>${summary.plmAnsweredTotal ? ` · ${esc(L('PLM onayı / üretim sonrası ile', 'via PLM approval / post-production'))}: <b>${int(summary.plmAnsweredTotal)}</b>` : ''}</p>` : ''}
       ${sampleRequests() ? `<div class="cpaRowBetween"><span class="cpaNote">${esc(L('PLM numune senkronu', 'PLM sample sync'))}: ${esc(sampleRequests().updatedAt ? new Date(sampleRequests().updatedAt).toLocaleString(locale()) : L('henüz yapılmadı', 'not run yet'))}</span>
         <button type="button" class="cpaBtn sm" data-cpa-plm-requests-sync>${esc(L('PLM numune durumunu güncelle', 'Update PLM sample status'))}</button></div>` : ''}
@@ -838,7 +843,7 @@
   }
 
   function card(key, title, body) {
-    const collapsed = state.hidden[key] === true;
+    const collapsed = key !== 'checklist' && state.hidden[key] === true;
     return `<section class="cpaCard" data-cpa-card="${key}">
       <header><b>${esc(title)}</b><button type="button" class="cpaToggle" data-cpa-collapse="${key}" aria-expanded="${collapsed ? 'false' : 'true'}">${collapsed ? '+' : '−'}</button></header>
       ${collapsed ? '' : `<div class="cpaCardBody">${body}</div>`}
@@ -857,13 +862,7 @@
       window.BLOverviewPremium?.update?.({model:null});
       return;
     }
-    const builders = { priorities: prioritiesCard, checklist: checklistCard, dimensions: dimensionsCard };
-    const layout = activeModuleLayout();
-    const hidden = new Set(layout.hidden);
-    const visible = layout.order.filter(key => !hidden.has(key) && builders[key]);
-    const cards = visible.map(key => builders[key]()).join('');
-    container.innerHTML = toolbarHtml() + `<div class="cpaGrid${visible.length === 1 ? ' is-single' : ''}">${cards || `<div class="cpaLayoutEmpty">${esc(L('Bu görünümde tüm modüller gizli. Düzen ayarlarından tekrar gösterebilirsiniz.', 'All modules are hidden in this view. Use Customize Layout to show them again.'))}</div>`}</div>`;
-    if (attention) attention.innerHTML = attentionCard();
+    container.innerHTML = toolbarHtml() + `<div class="cpaChecklistOverview">${checklistCard()}</div>`;
     if (coverage) coverage.innerHTML = coverageCard();
     window.BLOverviewPremium?.update?.({model:state.model,checklist:state.checklist});
     bind(container);
@@ -1260,10 +1259,10 @@
   }
 
   /* Drill-down mevcut CP ekranını kullanır; ikinci bir liste kurulmaz. */
-  function openOverviewRows(rows,title){
+  function openOverviewRows(rows,title,options={}){
     if(!window.BLDetailDrawer?.open)return;
     const columns=attentionCpColumns().map(column=>({key:column.key,label:column.label||column.key}));
-    window.BLDetailDrawer.open({storageKey:'cp.overview.summary',source:'cp',title,rows,columns,images:true,fileName:'Overview_CP'});
+    window.BLDetailDrawer.open({storageKey:'cp.overview.summary',source:'cp',title,rows,columns,images:true,fileName:'Overview_CP',...(options.notes===true?{storageKey:'cp.overview.notes',note:options.note||'',rowActions:[{label:L('Notu sil','Delete note'),disabled:row=>row._canEdit===false,run:options.deleteNote}]}:{})});
   }
   function selectPriority(key){state.activePriority=key;state.attentionLimit=25;render();}
   function openAttentionDetail(orderKey) {
@@ -3451,7 +3450,7 @@
     window.BLOverviewPremium?.update?.({model:null,status:'loading'});
     const host=document.getElementById('cpAssistant');
     for(const id of ['cpAssistantAttention','cpAssistantCoverage']){const node=document.getElementById(id);if(node)node.innerHTML='';}
-    if(host)host.innerHTML='<section class="cpaCard"><header><b>'+L('Bugünün Üretim Öncelikleri',"Today's Production Focus")+'</b></header><div class="cpaCardBody"><p class="cpaEmpty">'+L('Üretim öncelikleri arka planda hazırlanıyor…','Production priorities are being prepared in the background…')+'</p></div></section>';
+    if(host)host.innerHTML='<section class="cpaCard"><header><b>'+L('Kontrol Listesi ve Kurallar','Checklist & Rules')+'</b></header><div class="cpaCardBody"><p class="cpaEmpty">'+L('Kontroller hazırlanıyor…','Preparing checks…')+'</p></div></section>';
   }
   function onOverviewRendered(rows, context = {}) {
     const list = Array.isArray(rows) ? rows : [];

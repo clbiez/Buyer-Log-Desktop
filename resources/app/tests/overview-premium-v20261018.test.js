@@ -39,7 +39,7 @@ test('metric chart retains signed values and plots each category once, never sub
 
 test('premium defaults surface map above details; saved v2 geometry and density survive normalisation',()=>{
  const next=layout.defaults();assert.equal(next.density,'compact');
- assert.ok(layout.locate(next,'globalFlowMap').item.y<layout.locate(next,'productionFocus').item.y);
+ assert.ok(layout.locate(next,'globalFlowMap').item.y<layout.locate(next,'checklistRules').item.y);
  for(const key of ['pulse','deadline','collectionPreview'])assert.ok(layout.locate(next,key));
  const old={version:2,known:layout.widgets,pages:[{items:[{key:'globalFlowMap',x:0,y:16,w:8,h:9}]}]};
  const restored=layout.normalize(old);
