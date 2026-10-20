@@ -21,6 +21,8 @@
   const DATA_SHEET = 'Checklist';
   const SCHEMA_VERSION = 2;
   const EXCEL_COLUMNS_KEY = 'lcw.cp.checklist.excel.columns.v1';
+  const SUPPLIER_QUESTIONS_KEY = 'lcw.cp.checklist.supplier.questions.v1';
+  const STATUS_VALIDATION_NAME = 'BL_CHECKLIST_STATUSES';
   const EXCEL_DATE_FORMAT = 'dd.mm.yyyy';
   const EXCEL_PROTECTION_PASSWORD = 'BuyerLogChecklist';
   const DEFAULT_EXCEL_COLUMNS = Object.freeze(['image', 'order', 'plm', 'model', 'colour', 'supplier', 'exfactory']);
@@ -770,6 +772,112 @@
     storageSet(EXCEL_COLUMNS_KEY, JSON.stringify(clean));
     return clean;
   }
+  function readSupplierQuestionPreferences() {
+    let saved = null;
+    try { saved = JSON.parse(storageGet(SUPPLIER_QUESTIONS_KEY) || 'null'); } catch (_) {}
+    return saved && saved.version === 1 && saved.bySupplier && typeof saved.bySupplier === 'object' && !Array.isArray(saved.bySupplier)
+      ? { version: 1, defaultIds: Array.isArray(saved.defaultIds) ? saved.defaultIds : [], bySupplier: saved.bySupplier }
+      : { version: 1, defaultIds: [], bySupplier: {} };
+  }
+
+  function supplierQuestionScope(supplier) {
+    const value = text(supplier).toLocaleLowerCase('tr-TR');
+    return !value || value === 'karma' || value === 'mixed' ? '*' : value;
+  }
+
+  function supplierQuestionIdsFor(supplier) {
+    const prefs = readSupplierQuestionPreferences();
+    const scope = supplierQuestionScope(supplier);
+    const selected = scope !== '*' && Object.prototype.hasOwnProperty.call(prefs.bySupplier, scope)
+      ? prefs.bySupplier[scope] : prefs.defaultIds;
+    return Array.isArray(selected) ? selected.filter(id => typeof id === 'string') : [];
+  }
+
+  function saveSupplierQuestionIdsFor(supplier, ids) {
+    const prefs = readSupplierQuestionPreferences();
+    const clean = [...new Set((Array.isArray(ids) ? ids : []).filter(id => typeof id === 'string' && id.length <= 200))];
+    const scope = supplierQuestionScope(supplier);
+    if (scope === '*') prefs.defaultIds = clean;
+    else prefs.bySupplier[scope] = clean;
+    storageSet(SUPPLIER_QUESTIONS_KEY, JSON.stringify(prefs));
+  }
+
+  async function chooseSupplierQuestionIds(groups, catalog) {
+    if (!root.document) return null;
+    const prepared = groups.map(group => {
+      const decision = analysesForRows(group.rows);
+      const available = catalog.filter(item => group.rows.some(row => {
+        const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+        return itemApplies(item, analysis);
+      }));
+      return { ...group, available, selected: new Set(supplierQuestionIdsFor(group.supplier)) };
+    });
+    if (prepared.some(group => !group.available.length)) {
+      toast(T('Seçili siparişler için uygulanabilir checklist sorusu yok.', 'There are no applicable checklist questions for the selected orders.'));
+      return null;
+    }
+    root.document.getElementById('_blSupplierQuestions')?.remove();
+    const modal = root.document.createElement('div');
+    modal.id = '_blSupplierQuestions';
+    modal.className = 'cpaModalOverlay';
+    modal.innerHTML = '<div class="cpaModal" role="dialog" aria-modal="true" aria-label="' + html(T('Üretici checklist soruları', 'Supplier checklist questions')) + '" style="max-width:680px">'
+      + '<header><div><b>' + html(T('Üreticiye gönderilecek soruları seçin', 'Choose questions to send to suppliers')) + '</b>'
+      + '<small>' + html(T('Yalnız seçili sorular Excel’e ve e-posta eklerine alınır. Seçimler üretici bazında sonraki işlemler için saklanır.', 'Only selected questions are included in workbooks and e-mail attachments. Your selections are remembered per supplier.')) + '</small></div>'
+      + '<button type="button" data-sq-cancel aria-label="' + html(T('Kapat', 'Close')) + '">×</button></header>'
+      + '<div class="cpaModalBody" style="max-height:65vh;overflow-y:auto">'
+      + prepared.map((group, groupIndex) => '<section class="cpaSettingGroup" data-sq-section="' + groupIndex + '">'
+        + '<div class="cpaSettingRow"><b>' + html(group.supplier) + '</b> <small data-sq-count aria-live="polite"></small>'
+        + '<button type="button" class="cpaBtn" data-sq-all="' + groupIndex + '">' + html(T('Tümünü seç', 'Select all')) + '</button>'
+        + '<button type="button" class="cpaBtn" data-sq-clear="' + groupIndex + '">' + html(T('Temizle', 'Clear')) + '</button></div>'
+        + group.available.map(item => '<div class="cpaSettingRow"><label class="cpaCheck">'
+          + '<input type="checkbox" data-sq-item="' + html(item.id) + '" data-sq-group="' + groupIndex + '"'
+          + (group.selected.has(item.id) ? ' checked' : '') + '>'
+          + '<span><b>' + html(isEn() ? item.tr === item.en ? item.en : item.en : item.tr) + '</b>'
+          + '<small>' + html(isEn() ? item.questionEn : item.questionTr) + '</small></span></label></div>').join('')
+        + '</section>').join('')
+      + '<p class="cpaNote">' + html(T('İlk kullanımda sorular varsayılan olarak işaretlenmez. Yanlışlıkla iç kontrol bilgisi gönderilmesini önlemek için seçim yapın.', 'Questions are unchecked on first use to avoid accidentally sending internal checks. Make your selection.')) + '</p></div>'
+      + '<footer><button type="button" class="cpaBtn" data-sq-cancel>' + html(T('Vazgeç', 'Cancel')) + '</button>'
+      + '<button type="button" class="cpaBtn primary" data-sq-confirm>' + html(T('Seçimi kaydet ve devam et', 'Save selection and continue')) + '</button></footer></div>';
+    root.document.body.appendChild(modal);
+    const updateCount = () => prepared.forEach((group, index) => {
+      const section = modal.querySelector('[data-sq-section="' + index + '"]');
+      const count = section.querySelectorAll('input[data-sq-item]:checked').length;
+      section.querySelector('[data-sq-count]').textContent = count + ' / ' + group.available.length;
+    });
+    updateCount();
+    return new Promise(resolve => {
+      const finish = value => { modal.remove(); resolve(value); };
+      modal.querySelectorAll('[data-sq-cancel]').forEach(button => { button.onclick = () => finish(null); });
+      modal.onclick = event => { if (event.target === modal) finish(null); };
+      modal.onkeydown = event => { if (event.key === 'Escape') { event.preventDefault(); finish(null); } };
+      modal.querySelectorAll('input[data-sq-item]').forEach(input => { input.onchange = updateCount; });
+      prepared.forEach((group, index) => {
+        const section = modal.querySelector('[data-sq-section="' + index + '"]');
+        section.querySelector('[data-sq-all]').onclick = () => { section.querySelectorAll('input[data-sq-item]').forEach(input => { input.checked = true; }); updateCount(); };
+        section.querySelector('[data-sq-clear]').onclick = () => { section.querySelectorAll('input[data-sq-item]').forEach(input => { input.checked = false; }); updateCount(); };
+      });
+      modal.querySelector('[data-sq-confirm]').onclick = () => {
+        const selections = new Map();
+        for (let i = 0; i < prepared.length; i += 1) {
+          const group = prepared[i], section = modal.querySelector('[data-sq-section="' + i + '"]');
+          const ids = [...section.querySelectorAll('input[data-sq-item]:checked')].map(input => input.dataset.sqItem);
+          if (!ids.length) {
+            toast(T('Her üretici için en az bir soru seçin.', 'Select at least one question for each supplier.'));
+            return;
+          }
+          // Preserve previously selected questions outside this order batch;
+          // a narrower export must not erase a supplier's wider preference.
+          const available = new Set(group.available.map(item => item.id));
+          const retained = supplierQuestionIdsFor(group.supplier).filter(id => !available.has(id));
+          saveSupplierQuestionIdsFor(group.supplier, retained.concat(ids));
+          selections.set(group.supplier, ids);
+        }
+        finish(selections);
+      };
+      modal.querySelector('[data-sq-confirm]').focus();
+    });
+  }
+
   function rawValue(row, candidates) {
     for (const key of (candidates || [])) {
       const value = row && row[key];
@@ -1314,15 +1422,11 @@
       return columns.findIndex(function (column) { return column.key === 'a' + index; }) + 1;
     });
     const imageColumn = columns.findIndex(function (column) { return column.key === 'image'; }) + 1;
+    // Validation choices belong on the hidden metadata sheet, NOT Checklist.
+    // Populating rows 2..N on Checklist before addRow() pushed order data
+    // down to row 12 whenever ten statuses existed.
     const optionValues = statusOptions();
-    // Inline Excel validation lists are limited to 255 characters.
-    const validationColumn = columns.length + 1;
-    const choices = sheet.getColumn(validationColumn);
-    choices.header = '__BL_STATUS_CHOICES';
-    choices.hidden = true;
-    optionValues.forEach((name, index) => { sheet.getCell(index + 2, validationColumn).value = name; });
-    const validationRange = '$' + excelColumnName(validationColumn) + '$2:$'
-      + excelColumnName(validationColumn) + '$' + (optionValues.length + 1);
+    const validationRange = STATUS_VALIDATION_NAME;
 
     for (const row of rows) {
       const analysis = analysisFor(row);
@@ -1543,6 +1647,10 @@
         item.id, item.tr, item.en, item.questionTr, item.questionEn,
       ]);
     });
+    // Named range allows Excel validation to refer to another (very hidden)
+    // sheet without creating phantom supplier rows on Checklist.
+    optionValues.forEach(function (name, index) { meta.getCell(index + 2, 12).value = name; });
+    workbook.definedNames.add("'" + META_SHEET + "'!$L$2:$L$" + (optionValues.length + 1), STATUS_VALIDATION_NAME);
 
     const buffer = await workbook.xlsx.writeBuffer();
     const stamp = new Date().toISOString().slice(0, 10);
@@ -1559,9 +1667,22 @@
       toast(T('Önce CP tablosundan üreticiye göndereceğiniz sipariş satırlarını seçin.', 'Select the CP order rows you want to send to the supplier first.'));
       return false;
     }
-    const items = itemCatalog();
-    if (!items.length) {
+    const catalog = itemCatalog();
+    if (!catalog.length) {
       toast(T('Aktarılacak aktif checklist başlığı yok.', 'There are no active checklist headings to export.'));
+      return false;
+    }
+    let questionIds = Array.isArray(opts.questionIds) ? opts.questionIds : null;
+    if (!questionIds) {
+      const supplier = supplierNameFor(rows);
+      const choices = await chooseSupplierQuestionIds([{ supplier, rows }], catalog);
+      if (!choices) return false;
+      questionIds = choices.get(supplier);
+    }
+    const allowedIds = new Set(questionIds);
+    const items = catalog.filter(item => allowedIds.has(item.id));
+    if (!items.length) {
+      toast(T('Excel için en az bir checklist sorusu seçin.', 'Select at least one checklist question for the workbook.'));
       return false;
     }
 
@@ -1812,6 +1933,12 @@
     }
 
     const items = itemCatalog();
+    if (!items.length) {
+      toast(T('Aktarılacak aktif checklist başlığı yok.', 'There are no active checklist headings to export.'));
+      return false;
+    }
+    const selectedQuestions = await chooseSupplierQuestionIds(supplierGroups, items);
+    if (!selectedQuestions) return false;
     const initialFiles = [];
     const tempRows = [];
     const directory = typeof root.BLPrepareEmailManufacturers === 'function' ? root.BLPrepareEmailManufacturers() : null;
@@ -1819,7 +1946,9 @@
 
     for (const group of supplierGroups) {
       const supplier = group.supplier, supplierRows = group.rows;
-      const artifact = await exportWorkbook({ rows: supplierRows, download: false });
+      const questionIds = selectedQuestions.get(supplier) || [];
+      const selectedCatalog = items.filter(item => questionIds.includes(item.id));
+      const artifact = await exportWorkbook({ rows: supplierRows, questionIds: questionIds, download: false });
       if (!artifact || !artifact.buffer) {
         throw new Error(T('Checklist Excel hazırlanamadı: ', 'Checklist workbook could not be prepared: ') + supplier);
       }
@@ -1838,7 +1967,7 @@
       supplierRows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
         if (!analysis) return;
-        expandedItems(items, [analysis]).forEach(function (item) {
+        expandedItems(selectedCatalog, [analysis]).forEach(function (item) {
           if (!itemApplies(item, analysis)) return;
           const answer = answerFor(item, analysis);
           (answer && Array.isArray(answer.attachments) ? answer.attachments : []).forEach(function (entry) {
@@ -2612,6 +2741,8 @@
     excelDate: excelDate,
     excelColumnIds: excelColumnIds,
     saveExcelColumnIds: saveExcelColumnIds,
+    supplierQuestionIdsFor: supplierQuestionIdsFor,
+    saveSupplierQuestionIdsFor: saveSupplierQuestionIdsFor,
     _state: state,
   };
 }));
