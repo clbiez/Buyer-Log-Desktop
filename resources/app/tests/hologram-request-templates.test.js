@@ -5,14 +5,24 @@ const fields=require('../public/canonical-fields.js'),dates=require('../public/e
 const file=fs.readFileSync(path.join(__dirname,'../public/excel-templates/hologram-request.xlsx'));
 const today=new Date(2026,9,19);
 const row={_id:'one','Order Code':'000123','PLM ID':'123','Model Name':'DEMO < Tee','C.Code':'01','Order Quantity':4000,Category:'wrong category','Product Main Definition':'KNIT','Buyer':'Demo Buyer',License:'Demo license',MMYG:'Demo MMYG','Buying Group':'Demo Group','Special Code':'0007','Ex-factory':'2026-11-20'};
-test('rounding uses order quantity and always rounds 3% upward to a multiple of 50',()=>{
-  for(const [q,expected] of [[1,50],[1000,50],[4000,150],[5000,150],[10000,300],[10001,350],['5.000',150],['4,000',150]])assert.equal(H.quantity(q),expected);
-  for(const q of ['',null,undefined,'bad',0,-10,4.5])assert.throws(()=>H.quantity(q),/INVALID_ORDER_QUANTITY/);
+test('hologram quantity includes the full order plus 3%, rounded up to a multiple of 50',()=>{
+  for(const [q,expected] of [[1,50],[1000,1050],[4000,4150],[5000,5150],[10000,10300],[10001,10350],['5.000',5150],['4,000',4150]])assert.equal(H.quantity(q),expected);
+  for(const q of ['',null,undefined,'bad',0,-10,4.5,Number.MAX_SAFE_INTEGER])assert.throws(()=>H.quantity(q),/INVALID_ORDER_QUANTITY/);
   assert.throws(()=>H.buildExport([row,{'Order Quantity':''}]),/INVALID_ORDER_QUANTITY/);
+});
+test('template quantity rules can change both multiplier and upward rounding',()=>{
+  assert.deepEqual(H.normalizeQuantityRule(),{multiplier:1.03,roundTo:50});
+  assert.deepEqual(H.template().quantityRule,{multiplier:1.03,roundTo:50});
+  assert.equal(H.quantity(1000,{multiplier:1.03,roundTo:1}),1030);
+  assert.equal(H.quantity(4000,{multiplier:1.01,roundTo:25}),4050);
+  assert.equal(H.quantity(1000,{multiplier:1.1,roundTo:25}),1100);
+  assert.equal(H.buildExport([row],{today,quantityRule:{multiplier:1.01,roundTo:25}}).rows[0].hologramQuantity,4050);
+  for(const rule of [{multiplier:0,roundTo:50},{multiplier:-1,roundTo:50},{multiplier:101,roundTo:50},{multiplier:1.03,roundTo:0},{multiplier:1.03,roundTo:2.5},{multiplier:'bad',roundTo:50}])
+    assert.throws(()=>H.quantity(1000,rule),/INVALID_HOLOGRAM_RULE/);
 });
 test('canonical mapping uses Product Main Definition, not Category, and creation day',()=>{
   const mapped=H.buildExport([row],{today}).rows[0];
-  assert.equal(mapped.productMainDefinition,'KNIT');assert.equal(mapped.orderCode,'000123');assert.equal(mapped.specialCode,'0007');assert.equal(mapped.hologramQuantity,150);
+  assert.equal(mapped.productMainDefinition,'KNIT');assert.equal(mapped.orderCode,'000123');assert.equal(mapped.specialCode,'0007');assert.equal(mapped.hologramQuantity,4150);
   assert.equal(mapped.today.getTime(),today.getTime());assert.equal(mapped.exFactory.getFullYear(),2026);assert.equal(mapped.exFactory.getMonth(),10);assert.equal(mapped.buyer,'Demo Buyer');
   assert.equal(fields.value({'Ürün Ana Tanım':'JERSEY'},'cp','productMainDefinition'),'JERSEY');
 });
@@ -23,7 +33,7 @@ test('real uploaded workbook preserves title, merges, widths, page settings and 
   for(const name of Object.keys(before.files))if(!before.files[name].dir&&name!=='xl/worksheets/sheet1.xml'&&name!=='xl/styles.xml')assert.deepEqual(await after.file(name).async('uint8array'),await before.file(name).async('uint8array'),name);
   const wb=new ExcelJS.Workbook();await wb.xlsx.load(output);const ws=wb.getWorksheet('Hologram Talep');
   assert.equal(ws.getCell('C2').text,'HOLOGRAM TALEBİ');assert.deepEqual(ws.getRow(4).values.slice(1),H.HEADERS);assert.equal(ws.getRow(4).height,38.45);
-  assert.equal(ws.getCell('G5').value,150);assert.equal(ws.getCell('G6').value,150);assert.equal(ws.getCell('E5').text,'KNIT');assert.equal(ws.getCell('H5').text,'000123');assert.equal(ws.getCell('I5').text,'DEMO < Tee');assert.equal(ws.getCell('J5').text,'0007');
+  assert.equal(ws.getCell('G5').value,4150);assert.equal(ws.getCell('G6').value,5150);assert.equal(ws.getCell('E5').text,'KNIT');assert.equal(ws.getCell('H5').text,'000123');assert.equal(ws.getCell('I5').text,'DEMO < Tee');assert.equal(ws.getCell('J5').text,'0007');
   assert.ok(ws.model.merges.includes('C2:I2'));assert.equal(ws.getColumn(1).width,17);assert.equal(ws.getColumn(11).width,22.28515625);
   const original=new ExcelJS.Workbook();await original.xlsx.load(file);assert.deepEqual(ws.pageSetup,original.worksheets[0].pageSetup);assert.deepEqual(ws.getCell('A5').style,original.worksheets[0].getCell('A5').style);
   const read=XLSX.read(output,{type:'array'}).Sheets['Hologram Talep'];assert.equal(read.A5.v,dates.excelSerial(today));assert.equal(read.K5.v,dates.excelSerial(new Date(2026,10,20)));
@@ -46,6 +56,30 @@ test('Ordered status stays distinct from Approved and is recognized by browser a
   const c=require('../public/cp-checklist-engine.js'),sync=require('../public/checklist-supplier-sync.js'),server=require('../server/lib/checklist-supplier-store.js');
   assert.ok(c.statusIds().includes('custom:ordered'));assert.equal(c.statusLabel('custom:ordered','en'),'Ordered');assert.equal(c.statusLabel('custom:ordered','tr'),'Sipariş Geçildi');
   for(const status of ['Ordered','Sipariş Geçildi','custom:ordered']){assert.equal(c.normalizeStatus(status),'custom:ordered');assert.equal(sync.normalizeState(status),'custom:ordered');assert.equal(server.normalizeState(status),'custom:ordered');}
+});
+test('saved hologram calculation is applied to exports, including legacy templates',async()=>{
+  const source=fs.readFileSync(path.join(__dirname,'../public/excel-templates.js'),'utf8');
+  const entryKey='bl.excelTemplates.hologram.v1',captured=[],defaultConfig=H.template();
+  const preference={version:1,name:'hologram.xlsx',config:{...defaultConfig,quantityRule:{multiplier:1.1,roundTo:25}},bytes:Buffer.from('template').toString('base64')};
+  const root={
+    BLHologramRequest:H,BLPerf:{ensureLibrary:async()=>{}},
+    BLExcelTemplateEngine:{fill:async(_bytes,config,records)=>{captured.push({config,records});return 'output';}},
+    BLExcelDates:{},JSZip:{}
+  };
+  const context=vm.createContext({
+    window:root,appLang:'tr',Uint8Array,Date,
+    atob:s=>Buffer.from(s,'base64').toString('binary'),
+    fetch:async()=>({ok:true,json:async()=>({entries:{[entryKey]:{value:JSON.stringify(preference)}}})})
+  });
+  vm.runInContext(source,context);
+  const record={orderQuantity:1000,hologramQuantity:50};
+  assert.equal(await root.BLExcelTemplates.build('hologram',[record]),'output');
+  assert.equal(captured.pop().records[0].hologramQuantity,1100);
+  assert.equal(record.hologramQuantity,50,'input records are not mutated');
+  delete preference.config.quantityRule;
+  assert.equal(await root.BLExcelTemplates.build('hologram',[record]),'output');
+  assert.equal(captured.pop().records[0].hologramQuantity,1050,'legacy template uses the corrected default');
+  assert.equal(root.BLExcelTemplates.catalog('hologram').find(x=>x.id==='hologramQuantity').label.includes('%3'),false);
 });
 test('templates use the authenticated personal preference store',()=>{
   assert.equal(require('../server/lib/user-preferences.js').isSyncedKey('bl.excelTemplates.hologram.v1'),true);
