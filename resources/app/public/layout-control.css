@@ -1,5 +1,5 @@
 .layoutControlOverlay{position:fixed;inset:0;z-index:14000;background:color-mix(in srgb,var(--ink) 42%,transparent);display:flex;align-items:center;justify-content:center;padding:22px}
-.layoutControlModal{width:min(1180px,96vw);height:min(860px,94vh);display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:0;box-shadow:var(--shadow-3);overflow:hidden;color:var(--ink)}
+.layoutControlModal{width:min(1600px,98vw);height:96vh;display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:0;box-shadow:var(--shadow-3);overflow:hidden;color:var(--ink)}
 .layoutControlHead{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:20px 22px 16px;border-bottom:1px solid var(--line);background:var(--card)}
 .layoutControlHead h2{margin:2px 0 5px;font-size:var(--fs-2xl);letter-spacing:-.02em}.layoutControlHead p{margin:0;color:var(--muted);font-size:var(--fs-sm);line-height:1.5;max-width:760px}
 .layoutEyebrow{font-size:var(--fs-2xs);font-weight:750;letter-spacing:.08em;text-transform:uppercase;color:var(--acc)}
@@ -41,3 +41,20 @@
 @media(max-width:760px){.layoutControlOverlay{padding:0}.layoutControlModal{width:100vw;height:100vh;max-height:none;border-radius:0}.layoutUploadCard{grid-template-columns:44px 1fr}.layoutUploadCard>[data-layout-file]{grid-column:1/-1}.layoutSummary{grid-template-columns:repeat(2,1fr)}.layoutCompare{grid-template-columns:1fr}.layoutHistoryHead{align-items:flex-start;flex-direction:column}.layoutControlFoot span{display:none}}
 
 .layoutControlModal *{border-radius:0!important}
+.layoutWorkspace{display:grid;grid-template-columns:minmax(0,1fr) minmax(380px,1fr);gap:16px;align-items:start}
+.layoutDocument{position:sticky;top:0;border:1px solid var(--line);padding:12px;background:var(--card2);max-height:72vh;overflow:auto}
+.layoutResult{max-height:72vh;overflow:auto;min-width:0}
+.layoutPageTools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.layoutPageTools span{flex:1;overflow-wrap:anywhere;font-size:var(--fs-xs)}
+.layoutPage{position:relative;line-height:0;max-width:100%;background:var(--card)}
+.layoutPage canvas,[data-layout-reference] canvas{display:block;width:100%;height:auto}
+.layoutMarkers{position:absolute;inset:0;pointer-events:none}.layoutMarkers.is-annotating{pointer-events:auto;cursor:crosshair}
+.layoutMarker{position:absolute;border:2px solid var(--orange);background:color-mix(in srgb,var(--orange) 10%,transparent);padding:0;cursor:pointer;pointer-events:auto;min-width:8px;min-height:8px;color:var(--orange)}
+.layoutMarker span{position:absolute;top:0;left:0;line-height:1.2;background:var(--card);font-size:var(--fs-2xs);white-space:nowrap;padding:2px;color:inherit}
+.layoutMarker.is-match{border-color:var(--green);color:var(--green)}.layoutMarker.is-mismatch{border-color:var(--red);color:var(--red)}
+.layoutMarker.is-selected,.layoutCheck.is-selected{outline:2px solid var(--acc);outline-offset:2px}
+.layoutCritical{color:var(--red);font-size:var(--fs-2xs)}
+.layoutReviewActions{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;border-top:1px solid var(--line);padding-top:10px}
+.layoutReviewActions label{display:block;width:100%;font-size:var(--fs-xs)}.layoutReviewActions textarea{display:block;width:100%;box-sizing:border-box;min-height:52px;background:var(--card2);color:var(--ink);border:1px solid var(--line);font:inherit;margin-top:4px;padding:6px}
+.layoutTemplateGuide{border:1px solid var(--line);padding:10px;font-size:var(--fs-xs)}.layoutTemplateGuide summary{cursor:pointer;font-weight:700}.layoutTemplateGuide p{line-height:1.6}
+.layoutDecision{padding:8px 17px;font-size:var(--fs-sm);font-weight:700;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+@media(max-width:950px){.layoutWorkspace{grid-template-columns:1fr}.layoutDocument{position:relative;max-height:none}.layoutResult{max-height:none}}

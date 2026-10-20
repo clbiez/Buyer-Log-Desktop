@@ -132,6 +132,7 @@
 .cpaPlm.tone-bad{border-color:var(--red);background:var(--red-bg);color:var(--red)}
 .cpaPlm.tone-off{color:var(--muted)}
 .cpaModal .cpaTable a{color:var(--acc);font-weight:650}
+.cpDocumentFlow{z-index:14000}.cpDocumentFlow .cpaModal{width:min(700px,90vw);padding:24px}.cpDocumentFlow .cpaModalActions{display:flex;gap:10px;flex-wrap:wrap}
 
 .cpaSettingGroup{display:grid;gap:6px}
 .cpaSettingRow{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-3);padding:9px 11px;border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2)}

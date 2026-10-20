@@ -189,7 +189,7 @@ test('layout-control wiring reuses central BuyerLogAI and exposes LCW AI workspa
   assert.doesNotMatch(ui,/mym\.prod\.lcwaikiki\.com|Authorization|access_token/);
   assert.match(chat,/data-layout-control/);
   assert.match(perf,/lcwaiChat:\['lcwai-assistant\.js\?rev=1','lcwai-markdown\.js\?rev=1','lcwai-chat\.js\?rev=1'\]/);
-  assert.match(perf,/layoutControl:\['layout-control-engine\.js\?rev=1','layout-control\.js\?rev=1'\]/);
+  assert.match(perf,/layoutControl:\['layout-control-template\.js\?rev=1','layout-control-engine\.js\?rev=2','layout-control\.js\?rev=2'\]/);
   assert.match(chat,/ensureFeature\('layoutControl'\)/);
 });
 

@@ -236,7 +236,7 @@
     };
   }
 
-  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','specialCodes','seasonCodes','magCodes','mmygCodes','lineCodes','productMainDefinitions','countries','composition','careInstructions','warnings','sizes','barcodes','qrCodes','pageVariants','prices','visualFindings'];
+  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','specialCodes','seasonCodes','magCodes','mmygCodes','lineCodes','productMainDefinitions','countries','composition','careInstructions','warnings','sizes','barcodes','qrCodes','pageVariants','prices','visualFindings','standardFindings'];
   function mergeExtraction(localData, aiData) {
     const local=localData&&typeof localData==='object'?localData:{};
     const ai=aiData&&typeof aiData==='object'?aiData:{};
@@ -455,7 +455,7 @@
       else if(check.status===STATUS.REVIEW) summary.review++;
       else if(check.status===STATUS.NOT_CHECKED) summary.notChecked++;
     });
-    summary.status=summary.errors?'ERROR':(summary.review?'REVIEW':'APPROVED');
+    summary.status=summary.errors?'ERROR':(summary.review||summary.notChecked?'REVIEW':'APPROVED');
     return summary;
   }
 
