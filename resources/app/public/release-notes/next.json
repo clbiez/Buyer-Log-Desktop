@@ -242,6 +242,35 @@
           "en": "The actual downloaded HTML was opened, verifying visible submission instructions and excluded private data."
         }
       }
+    },
+    {
+      "id": "backlog-date-range-responsive-width",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · Tarih aralığı",
+        "en": "Backlog · Date range"
+      },
+      "title": {
+        "tr": "Tarih aralığı paneli pencere genişliğine uyum sağlar",
+        "en": "Date range panel adapts to the window width"
+      },
+      "body": {
+        "tr": "Tarih aralığı panelinin 980 piksel genişlik sınırı kaldırıldı. Panel ve kaydırıcı Backlog alanının tamamına yayılır; dar pencerelerde kontroller alt satıra geçer.",
+        "en": "Removed the date range panel’s 980-pixel width limit. The panel and slider fill the Backlog content area, while controls wrap onto another row in narrow windows."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-date-range-responsive.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog ekranında panel genişliğine yayılan tarih aralığı ve kaydırıcı; demo veriler",
+          "en": "Date range panel and slider filling the real Buyer Log Backlog content area with demo data"
+        },
+        "caption": {
+          "tr": "1920 piksel pencerede tarih aralığı Backlog paneliyle aynı genişliktedir. 640–1920 piksel aralığında beş pencere boyutu doğrulandı.",
+          "en": "In a 1920-pixel window, the date range matches the Backlog panel width. Five window sizes between 640 and 1920 pixels were verified."
+        }
+      }
     }
   ]
 }
