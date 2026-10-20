@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-20",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Backlog sunum raporu zaman filtresi",
+    "en": "Backlog presentation report time filter"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Sunum raporunu MB, Retail veya Ex-Factory tarihine göre hafta, ay ya da gün aralığında süzün; HTML/PDF çıktıları aynı kapsamı kullanır.",
+    "en": "Filter the presentation report by MB, Retail or Ex-Factory in week, month or day ranges; HTML/PDF outputs use the same scope."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "backlog-presentation-time-range",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog · Sunum raporu",
+        "en": "Backlog · Presentation report"
+      },
+      "title": {
+        "tr": "Sunum raporunda minimal zaman aralığı çubuğu",
+        "en": "Minimal time range bar in the presentation report"
+      },
+      "body": {
+        "tr": "MB (Model Bütçe Tarihi), Retail veya Ex-Factory seçin; Hafta, Ay veya Tarih biriminde iki tutamaçla aralığı daraltın. Tüm rapor bölümleri ve HTML/PDF çıktıları seçili satırlardan üretilir. Tümü seçimi tarihsiz satırları da geri getirir; boş aralıklar açıkça gösterilir.",
+        "en": "Choose MB (Model Budget Date), Retail or Ex-Factory, then narrow the range with two handles in Week, Month or Date units. Every report section and HTML/PDF output uses the selected rows. All restores undated rows too, and empty ranges are clearly indicated."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-presentation-time-range.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log sunum raporunda demo verileriyle MB ve Hafta seçili zaman aralığı çubuğu",
+          "en": "Time range bar with MB and Week selected on demo data in the real Buyer Log presentation report"
+        },
+        "caption": {
+          "tr": "İki tutamaçlı kaydırıcı raporu seçilen MB haftalarıyla sınırlar; HTML/PDF çıktıları aynı kapsamı kullanır.",
+          "en": "The two-handle slider limits the report to the selected MB weeks; HTML/PDF outputs use the same scope."
+        }
+      }
+    }
+  ]
 }

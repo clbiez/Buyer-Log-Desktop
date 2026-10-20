@@ -7,6 +7,24 @@
 .blpTitleBox h2{margin:0;font-family:var(--head);font-size:var(--fs-lg);font-weight:700;color:var(--ink);}
 .blpMeta{font-size:var(--fs-xs);color:var(--muted);white-space:nowrap;}
 .blpActions{display:flex;gap:6px;flex-wrap:wrap;}
+.blpTime{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--line);background:var(--card);color:var(--ink);}
+.blpTime[hidden]{display:none;}
+.blpTime select{width:auto;min-width:90px;max-width:150px;height:var(--ctl-h-sm);font:600 var(--fs-xs)/1.2 var(--sans);color:var(--ink);background:var(--card2);border:1px solid var(--line);border-radius:var(--r-sm);padding:0 8px;}
+.blpTimeRange{flex:1;min-width:120px;padding:0 7px;}
+.blpTimeTrack{position:relative;height:20px;display:flex;align-items:center;}
+.blpTimeTrack::before,.blpTimeTrack>i{content:'';position:absolute;height:3px;border-radius:var(--r-pill);}
+.blpTimeTrack::before{inset-inline:0;background:var(--line2);}
+.blpTimeTrack>i{left:var(--blp-from,0%);right:calc(100% - var(--blp-to,100%));background:var(--acc);}
+.blpTime .blpTimeTrack input[type="range"]{position:absolute;inset:0;width:100%;height:20px;margin:0;padding:0;border:0;appearance:none;background:transparent;pointer-events:none;cursor:pointer;}
+.blpTimeTrack input::-webkit-slider-thumb{appearance:none;pointer-events:auto;width:12px;height:12px;border:2px solid var(--acc);border-radius:var(--r-round);background:var(--card);}
+.blpTimeTrack input::-moz-range-thumb{pointer-events:auto;width:9px;height:9px;border:2px solid var(--acc);border-radius:var(--r-round);background:var(--card);}
+.blpTimeTrack input:disabled{cursor:default;opacity:.5;}
+.blpTime .blpTimeTrack input:focus-visible{box-shadow:var(--focus-ring);}
+.blpTimeLabels{display:flex;justify-content:space-between;gap:8px;font-size:var(--fs-2xs);color:var(--muted);font-variant-numeric:tabular-nums;}
+.blpTimeLabels output{white-space:nowrap;}
+.blpTimeNote{text-align:center;}
+.blpTime>[data-blp="reset"]{height:var(--ctl-h-sm);font-size:var(--fs-xs);}
+@media(max-width:640px){.blpTime{flex-wrap:wrap;gap:6px;}.blpTimeRange{order:4;flex-basis:100%;}.blpTime>[data-blp="reset"]{margin-left:auto;}}
 .blpBody{position:relative;flex:1;min-height:0;background:var(--paper);}
 .blpFrame{display:block;width:100%;height:100%;border:0;background:var(--paper);}
 .blpFrame[hidden]{display:none;}

@@ -84,6 +84,48 @@
   function stages() { return V3().STAGES; }
   function stageColor(key) { const s = stages().find(x => x.key === key); return '#' + (s ? s.color : '98A2B3'); }
 
+  /* Zaman çubuğu yalnız V3'ün normalize edilmiş takvim günlerini kullanır.
+     Hafta Pazartesi başlar; aradaki boş dönemler de seçilebilir. */
+  function validDay(value) {
+    const n = ord(value);
+    return n != null && isoOf(n) === value ? n : null;
+  }
+  function timeDomain(items, field, unit) {
+    const key = ['inStore', 'retail', 'exFactory'].includes(field) ? field : 'inStore';
+    const mode = ['week', 'month', 'date'].includes(unit) ? unit : 'week';
+    let min = Infinity, max = -Infinity, missing = 0;
+    (items || []).forEach(it => {
+      const n = validDay(it[key]);
+      if (n == null) { missing++; return; }
+      min = Math.min(min, n); max = Math.max(max, n);
+    });
+    if (!Number.isFinite(min)) return { field:key, unit:mode, min:'', max:'', count:0, missing };
+    const startOf = n => mode === 'week' ? n - ((new Date(n * DAY).getUTCDay() + 6) % 7)
+      : mode === 'month' ? ord(isoOf(n).slice(0, 7) + '-01') : n;
+    min = startOf(min); max = startOf(max);
+    const first = isoOf(min), last = isoOf(max);
+    const count = mode === 'month' ? (+last.slice(0, 4) - +first.slice(0, 4)) * 12 + (+last.slice(5, 7) - +first.slice(5, 7)) + 1
+      : (max - min) / (mode === 'week' ? 7 : 1) + 1;
+    return { field:key, unit:mode, min:first, max:last, count, missing };
+  }
+  function timeBounds(domain, lo, hi) {
+    if (!domain || !domain.count) return null;
+    const clamp = n => Math.max(0, Math.min(domain.count - 1, Math.floor(Number(n) || 0)));
+    const a = clamp(lo), b = Math.max(a, clamp(hi)), base = ord(domain.min);
+    const at = i => domain.unit === 'month'
+      ? Math.floor(Date.UTC(+domain.min.slice(0, 4), +domain.min.slice(5, 7) - 1 + i, 1) / DAY)
+      : base + i * (domain.unit === 'week' ? 7 : 1);
+    return { start:isoOf(at(a)), end:isoOf(at(b + 1) - 1) };
+  }
+  function filterTimeRange(items, selection) {
+    const list = Array.isArray(items) ? items : [], s = selection || {};
+    if (s.all) return list.slice();
+    if (!['inStore', 'retail', 'exFactory'].includes(s.field)) return [];
+    const start = validDay(s.start), end = validDay(s.end);
+    if (start == null || end == null || start > end) return [];
+    return list.filter(it => { const n = validDay(it[s.field]); return n != null && n >= start && n <= end; });
+  }
+
   /* 30 günlük projeksiyon: bugünden itibaren günlük ve kümülatif adet. */
   const PRELOAD = new Set(['SHORTAGE', 'PRODUCTION', 'LOADING']);
   const ARRIVED = new Set(['IN_WAREHOUSE', 'AWAITING_RETAIL_TRANSFER']);
@@ -423,5 +465,5 @@ document.querySelectorAll('[data-count]').forEach(function(el){var to=Number(el.
 function f(t){if(!t0)t0=t;var p=Math.min(1,(t-t0)/1200),e=1-Math.pow(1-p,4);el.textContent=Math.round(to*e).toLocaleString(lang);if(p<1)requestAnimationFrame(f);else el.textContent=orig;}requestAnimationFrame(f);});
 })();`;
 
-  return Object.freeze({ build, projection, countries, countryOf, COUNTRIES, landPath, fold });
+  return Object.freeze({ build, projection, countries, countryOf, COUNTRIES, landPath, fold, timeDomain, timeBounds, filterTimeRange });
 });
