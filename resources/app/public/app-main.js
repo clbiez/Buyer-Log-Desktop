@@ -9689,9 +9689,14 @@ document.addEventListener('click',e=>{
   }
 },true);
 
-function openNotesEditor(id, key){
+function openNotesEditor(id, key, options={}){
   const row = state.cp && state.cp.rows ? state.cp.rows.find(r=>r._id===Number(id)) : null;
-  if(!row) return;
+  if(!row || !['Notes','Ek Not'].includes(key)) return;
+  if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return;}
+  // Display indices can change while the editor is open; retain canonical identities.
+  const targets=(options.targets||[{row,key}]).map(target=>({row:{...target.row},key:target.key,prev:String(target.row[target.key]??''),clear:Boolean(target.clear)}));
+  const initialValue=options.value??norm(row[key]);
+  const orderCount=new Set(targets.map(target=>lineKeyOfRow(target.row))).size;
   document.getElementById('_notesEditorModal')?.remove();
   const previousFocus = document.activeElement;
   const modal = document.createElement('div');
@@ -9709,8 +9714,8 @@ function openNotesEditor(id, key){
       <button type="button" class="notesEditorClose" title="${escapeHtml(L('Kapat'))}" style="border:none;background:none;color:var(--muted);cursor:pointer;padding:4px;"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div class="noteEditorBody">
-      <textarea class="noteEditorArea" spellcheck="true" placeholder="${escapeHtml(L('Notunuzu buraya yazın…'))}">${escapeHtml(norm(row[key]))}</textarea>
-      <div class="noteEditorHint">${escapeHtml(L('Ctrl+Enter ile kaydedebilirsiniz.'))}</div>
+      <textarea class="noteEditorArea" spellcheck="true" placeholder="${escapeHtml(L('Notunuzu buraya yazın…'))}">${escapeHtml(initialValue)}</textarea>
+      <div class="noteEditorHint">${escapeHtml(orderCount>1?(appLang==='en'?`This edit applies to ${orderCount} orders in this note group. Ctrl+Enter to save.`:`Bu düzenleme not grubundaki ${orderCount} siparişe uygulanır. Ctrl+Enter ile kaydedebilirsiniz.`):L('Ctrl+Enter ile kaydedebilirsiniz.'))}</div>
     </div>
     <div style="padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;">
       <button type="button" class="tbtn notesEditorCancel">${escapeHtml(L('Vazgeç'))}</button>
@@ -9721,17 +9726,20 @@ function openNotesEditor(id, key){
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const ta = modal.querySelector('.noteEditorArea');
-  const close = ()=>{ modal.remove(); if(previousFocus && previousFocus.focus) previousFocus.focus(); };
-  const save = ()=>{
-    const prev = row[key] == null ? '' : String(row[key]);
-    const next = ta.value;
-    if(!editableValuesEqual(prev,next)){
-      row[key] = next;
-      markDirty(Number(id));
-      pushUndo({id:Number(id), fields:[{key,prev,next}]});
-      refreshRowEverywhere(Number(id));
-    }
-    close();
+  let saving=false;
+  const saveButton=modal.querySelector('.notesEditorSave');
+  const close = ()=>{ if(saving)return;modal.remove(); if(previousFocus && previousFocus.focus) previousFocus.focus(); };
+  const save = async()=>{
+    if(saving)return;
+    const next=ta.value;
+    if(editableValuesEqual(initialValue,next)){close();return;}
+    saving=true;saveButton.disabled=true;ta.disabled=true;
+    try{
+      await saveNotesEditorTargets(targets,next,Boolean(options.ownNotes));
+      saving=false;close();
+    }catch(err){
+      showToast(err.message||(appLang==='en'?'The note could not be saved. Your draft is still open; please try again.':'Not kaydedilemedi. Taslağınız açık; lütfen yeniden deneyin.'));
+    }finally{saving=false;saveButton.disabled=false;ta.disabled=false;}
   };
   modal.querySelector('.notesEditorClose').addEventListener('click', close);
   modal.querySelector('.notesEditorCancel').addEventListener('click', close);
@@ -9742,6 +9750,66 @@ function openNotesEditor(id, key){
     else if(e.key==='Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); save(); }
   });
   setTimeout(()=>{ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); },0);
+}
+// Explicit note saves use one revisioned, note-only transaction. Do not route an
+// acknowledged save through markDirty's delayed full-row write a second time.
+async function saveNotesEditorTargets(targets,next,ownNotes=false){
+  const desired=targets.map(target=>({...target,next:target.clear?'':next}));
+  const resolve=()=>desired.map(target=>{
+    const row=state.cp?.rows?.find(item=>sameOrderLine(item,target.row));
+    const by=target.key==='Notes'?'_notesBy':'_ekNotBy',byName=target.key==='Notes'?'_notesByName':'_ekNotByName';
+    if(!row||row._canEdit===false||isAreaFrozen('cp')||!editableValuesEqual(String(row[target.key]??''),target.prev)||
+      (ownNotes&&(!noteAuthoredByCurrentUser(row[by],row[byName])||overviewNoteCanonical(overviewOrderNoteText(row))!==overviewNoteCanonical(overviewOrderNoteText(target.row)))))throw new Error(appLang==='en'
+        ?'The order or note changed while editing. Your draft is still open; reopen the current note before saving.'
+        :'Düzenleme sırasında sipariş veya not değişti. Taslağınız açık; kaydetmeden önce güncel notu yeniden açın.');
+    return {...target,row};
+  });
+  resolve();
+  if(window.SERVER_BACKED)await settleOverrideWrites();
+  const current=resolve().filter(target=>!editableValuesEqual(target.prev,target.next)),items=new Map();
+  if(!current.length)return;
+  current.forEach(target=>{
+    const identity=lineKeyOfRow(target.row);
+    if(!items.has(identity))items.set(identity,{orderCode:target.row['Order Code'],patch:{...lineIdentity(target.row),notes:{}}});
+    items.get(identity).patch.notes[target.key==='Notes'?'Notes':'EkNot']=target.next;
+  });
+  let saved=null;
+  if(window.SERVER_BACKED){
+    saved=await enqueueOverrideMutation('orders','/api/overrides/batch',{
+      method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({items:[...items.values()]}),
+    });
+    if(!saved?.ok||saved.updated!==items.size||saved.skipped?.length)throw new Error(appLang==='en'
+      ?'The note save was not confirmed. Your draft is still open; please try again.'
+      :'Not kaydı doğrulanamadı. Taslağınız açık; lütfen yeniden deneyin.');
+  }
+  const author=noteAuthorIdentity(),now=new Date().toISOString(),actions=new Map();
+  state.overrides.notesmap=state.overrides.notesmap||{};
+  current.forEach(target=>{
+    const identity=lineKeyOfRow(target.row),field=target.key==='Notes'?'Notes':'EkNot',prefix=target.key==='Notes'?'_notes':'_ekNot';
+    const record=saved?.overrides?.notesmap?.[identity]||{
+      Notes:String(target.row.Notes??''),EkNot:String(target.row['Ek Not']??''),
+      NotesAt:target.row._notesAt||'',NotesBy:target.row._notesBy||'',NotesByName:target.row._notesByName||'',
+      EkNotAt:target.row._ekNotAt||'',EkNotBy:target.row._ekNotBy||'',EkNotByName:target.row._ekNotByName||'',
+      ...(state.overrides.notesmap[identity]||state.overrides.notesmap[target.row['Order Code']]||{}),
+      [field]:target.next,[field+'At']:target.next?now:'',
+      [field+'By']:target.next?(author.id||target.row[prefix+'By']||''):'',
+      [field+'ByName']:target.next?(author.name||target.row[prefix+'ByName']||''):'',
+    };
+    state.overrides.notesmap[identity]=record;
+    // Update each current projection, including rows replaced during the request.
+    for(const rows of [state.cp?.rows,state.orders?.rows,state.orderSummary?.rows].filter(Array.isArray)){
+      rows.filter(row=>sameOrderLine(row,target.row)).forEach(row=>{
+        row[target.key]=record[field]??target.next;
+        row[prefix+'At']=record[field+'At']||'';
+        row[prefix+'By']=record[field+'By']||'';row[prefix+'ByName']=record[field+'ByName']||'';
+      });
+    }
+    const row=state.cp?.rows?.find(row=>sameOrderLine(row,target.row));
+    if(!row)return;
+    if(!actions.has(identity))actions.set(identity,{id:row._id,fields:[]});
+    actions.get(identity).fields.push({key:target.key,prev:target.prev,next:record[field]??target.next});
+  });
+  actions.forEach(action=>{_origMarkDirty(action.id);pushUndo(action);refreshRowEverywhere(action.id);});
 }
 function clearRowNote(id,key='Notes'){
   const row=state.cp&&state.cp.rows?state.cp.rows.find(r=>r._id===Number(id)):null;
@@ -10556,7 +10624,25 @@ function overviewNoteEditTarget(group){
 function openOverviewNoteEditor(group){
   const target=overviewNoteEditTarget(group);
   if(!target)return;
-  openNotesEditor(Number(target.row._id),target.key);
+  const targets=[];
+  for(const previous of group.rows){
+    const row=state.cp?.rows?.find(item=>sameOrderLine(item,previous));
+    if(!row||overviewNoteCanonical(overviewOrderNoteText(row))!==overviewNoteCanonical(group.note)){
+      showToast(appLang==='en'?'The note group changed. Reopen the current note to edit it.':'Not grubu değişti. Düzenlemek için güncel notu yeniden açın.');return;
+    }
+    // The group displays the combined own-note text, even when it is stored in
+    // different fields per order. Replace that text once per order and clear
+    // only the remaining OWN fields; another author's note is never touched.
+    let first=true;
+    for(const key of ['Notes','Ek Not']){
+      const prefix=key==='Notes'?'_notes':'_ekNot';
+      if(norm(row[key])&&noteAuthoredByCurrentUser(row[prefix+'By'],row[prefix+'ByName'])){
+        targets.push({row,key,clear:!first});first=false;
+      }
+    }
+  }
+  if(!targets.length)return;
+  openNotesEditor(Number(targets[0].row._id),targets[0].key,{targets,ownNotes:true,value:group.note});
 }
 function openOverviewNoteOrderInCp(row){
   if(!row)return;
@@ -10632,8 +10718,8 @@ function renderOverviewPriorityReminder(rows){
   /* Kullanım açıklaması her zaman görünen uzun paragraf değil; tek tıkla açılan
      "Nasıl çalışır?" notu. Açık/kapalı tercihi oturum boyunca korunur. */
   const methodText=appLang==='en'
-    ?'Only notes YOU wrote are listed here — notes from other users appear on CP Tracker and Orders, not on Overview. Identical note texts are grouped together. Click note text to edit it. Click the order count to open order details in the side report and delete your note per order.'
-    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Düzenlemek için not metnine tıkla. Sağ üstteki sipariş adedine tıklayarak sipariş detaylarını yan raporda aç ve sipariş bazında kendi notunu sil.';;
+    ?'Only notes YOU wrote are listed here — notes from other users appear on CP Tracker and Orders, not on Overview. Identical note texts are grouped together. Click note text to edit your displayed note for every order in the group. Click the order count to open order details in the side report and delete your note per order.'
+    :'Burada YALNIZ sizin yazdığınız notlar listelenir — diğer kullanıcıların notları CP Tracker ve Siparişler ekranlarında görünür, Genel Bakış’a gelmez. Aynı not metnine sahip siparişler birlikte gruplanır. Not metnine tıklayarak gruptaki tüm siparişlerde görünen kendi notunu birlikte düzenle. Sağ üstteki sipariş adedine tıklayarak sipariş detaylarını yan raporda aç ve sipariş bazında kendi notunu sil.';;
   const methodOpen=method.querySelector('details')?.open||false;
   method.innerHTML=`<details class="ovHelp"${methodOpen?' open':''}><summary>${escapeHtml(appLang==='en'?'How does this work?':'Nasıl çalışır?')}</summary><span>${escapeHtml(methodText)}</span></details>`
 }

@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-20",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Genel Bakış not kaydı düzeltmesi",
+    "en": "Overview note saving fix"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Not grubu düzenlemeleri kalıcı kaydedilir; ön izleme güncellenir ve kayıt hatasında taslak korunur.",
+    "en": "Note group edits are saved persistently, previews update and drafts are retained when saving fails."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "overview-note-edit-persistence",
+      "type": "fix",
+      "module": {
+        "tr": "Genel Bakış · Notlar",
+        "en": "Overview · Notes"
+      },
+      "title": {
+        "tr": "Düzenlenen notlar kaydedilir ve ön izleme güncellenir",
+        "en": "Edited notes save reliably and update their preview"
+      },
+      "body": {
+        "tr": "Not metnini düzenlemek gruptaki tüm siparişlerde görünen kendi notunuzu birlikte günceller. Kayıt güncel sipariş kimliğiyle yapılır; pencere yalnız sunucu kaydı doğruladığında kapanır. Hata olursa taslağınız açık kalır. Diğer kullanıcıların notları korunur.",
+        "en": "Editing note text updates your displayed note on every order in its group. Saves use the current order identity, and the editor closes only after the server confirms the save. Your draft stays open if saving fails. Other users’ notes are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-notes-saved.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log arayüzünde birlikte kaydedilen üç demo siparişinin güncel not ön izlemesi",
+          "en": "Updated note preview for three demo orders saved together in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Üç demo siparişinin notu tek işlemde kaydedildi; sayfa yenilemesi ve hatadan sonra yeniden deneme doğrulandı.",
+          "en": "Three demo orders saved in one operation; page reload and retry after a save failure were verified."
+        }
+      }
+    }
+  ]
 }
