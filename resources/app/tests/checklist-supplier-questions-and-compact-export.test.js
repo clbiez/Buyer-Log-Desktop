@@ -58,7 +58,7 @@ test('supplier workbook starts data at row 2 and uses a hidden named status list
   assert.equal(sheet.getRow(2).getCell(statusColumn).dataValidation.formulae[0], 'BL_CHECKLIST_STATUSES');
   assert.equal(meta.state, 'veryHidden');
   assert.equal(meta.getCell('L2').text, 'Pending');
-  assert.equal(meta.getCell('L20').text, 'Custom 14');
+  assert.equal(meta.getCell('L21').text, 'Custom 14');
   assert.equal(Boolean(sheet.sheetProtection && sheet.sheetProtection.sheet), true);
   sheet.getRow(2).getCell(statusColumn).value = 'Approved';
   const parsed = Supplier.parseSupplierWorkbook(book, {
