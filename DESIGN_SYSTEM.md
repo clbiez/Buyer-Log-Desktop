@@ -132,7 +132,7 @@ bileşen sözleşme seçicisine eklenir.
 - **Komut paleti** (`command-palette.js`): Ctrl+Shift+K. Ctrl+K mevcut "CP Tracker'da ara"
   kısayoludur. Başlıkta görünür arama kutusu yoktur (v7.26 kullanıcı kararı).
 - **Kompakt ray:** dar modda üzerine gelince/odaklanınca etiketler içeriği itmeden açılır
-  (`--rail-full-w`).
+  (`--rail-full-w`); genişleyen ray üst çubuğun önündedir (`z-index:301`).
 - **KPI sayacı** (`kpi-motion.js`): modül açılışında sayar, sonunda özgün metne döner.
 - **Sunum raporu** (`backlog-presentation-report.js`): saf üretici; JS kapalıyken tam, katı CSP,
   dış kaynak yok. Uygulamada `allow-same-origin` olmadan iframe'de; PDF `buyerlog:render-pdf`.
