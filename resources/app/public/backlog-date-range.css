@@ -1,4 +1,4 @@
-.backlogDateRange{box-sizing:border-box;width:100%;max-width:980px;padding:6px 10px;margin:6px 0;background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.backlogDateRange{box-sizing:border-box;width:100%;padding:6px 10px;margin:6px 0;background:var(--card);border:1px solid var(--line);color:var(--ink)}
 .backlogDateTop,.backlogDateControls,.backlogDateBottom,.backlogDatePresets,.backlogDateActive{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .backlogDateTitle{display:flex;align-items:center;gap:4px;font-size:var(--fs-xs);margin-right:4px}
 .backlogDateSpacer{flex:1}
