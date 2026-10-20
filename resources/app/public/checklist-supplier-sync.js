@@ -832,7 +832,7 @@
         + group.available.map(item => '<div class="cpaSettingRow"><label class="cpaCheck">'
           + '<input type="checkbox" data-sq-item="' + html(item.id) + '" data-sq-group="' + groupIndex + '"'
           + (group.selected.has(item.id) ? ' checked' : '') + '>'
-          + '<span><b>' + html(isEn() ? item.tr === item.en ? item.en : item.en : item.tr) + '</b>'
+          + '<span><b>' + html(isEn() ? item.en : item.tr) + '</b>'
           + '<small>' + html(isEn() ? item.questionEn : item.questionTr) + '</small></span></label></div>').join('')
         + '</section>').join('')
       + '<p class="cpaNote">' + html(T('İlk kullanımda sorular varsayılan olarak işaretlenmez. Yanlışlıkla iç kontrol bilgisi gönderilmesini önlemek için seçim yapın.', 'Questions are unchecked on first use to avoid accidentally sending internal checks. Make your selection.')) + '</p></div>'
