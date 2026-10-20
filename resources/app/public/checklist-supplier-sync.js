@@ -2291,6 +2291,25 @@
       toast(T('Test raporu aktarımı açılamadı: ', 'Test report import could not be opened: ') + (error.message || error));
     }
   }
+  function chooseCpDocumentFlow(files) {
+    if(!files.every(file=>/\.pdf$/i.test(file.name||''))){openTestReportImport(files);return;}
+    const chooser=root.document.createElement('div');
+    chooser.className='cpaModalOverlay cpDocumentFlow';
+    chooser.innerHTML='<div class="cpaModal" role="dialog" aria-modal="true" aria-labelledby="cpDocumentFlowTitle"><h3 id="cpDocumentFlowTitle">'+html(T('PDF belgelerini nasıl inceleyelim?', 'How should these PDFs be reviewed?'))+'</h3><p>'+html(files.map(f=>f.name).join(' · '))+'</p><p>'+html(T('Layout kontrolü yalnız belge üzerinde yorum/onay kaydeder; CP durumunu değiştirmez.', 'Layout control saves document comments/approvals only; it does not change CP status.'))+'</p><div class="cpaModalActions"><button type="button" class="lcwaiBtn is-primary" data-cp-document-layout>'+html(T('Layout Kontrolü · Price Tag / Care Label', 'Layout Control · Price Tag / Care Label'))+'</button><button type="button" class="lcwaiBtn" data-cp-document-test>'+html(T('Test Raporu', 'Test Report'))+'</button><button type="button" class="lcwaiBtn" data-cp-document-cancel>'+html(T('Vazgeç', 'Cancel'))+'</button></div></div>';
+    root.document.body.appendChild(chooser);
+    const close=()=>chooser.remove();
+    chooser.addEventListener('keydown',event=>{if(event.key==='Escape')close();});
+    chooser.querySelector('[data-cp-document-cancel]').onclick=close;
+    chooser.querySelector('[data-cp-document-test]').onclick=()=>{close();openTestReportImport(files);};
+    chooser.querySelector('[data-cp-document-layout]').onclick=async()=>{
+      close();
+      try{
+        if(root.BLPerf)await root.BLPerf.ensureFeature('layoutControl');
+        root.BLLayoutControl.open(files);
+      }catch(_){toast(T('Layout kontrolü açılamadı.', 'Layout control could not be opened.'));}
+    };
+    chooser.querySelector('[data-cp-document-layout]').focus();
+  }
   function activeTab() {
     const active = root.document && root.document.querySelector('nav.tabs button.active[data-tab]');
     return active && active.dataset ? String(active.dataset.tab || '') : '';
@@ -2313,7 +2332,7 @@
     root.document.addEventListener('drop', endInternal, true);
     const eligible = function (event) {
       // Açık bir pencere (ek ekleme vb.) kendi bırakmasını yönetir.
-      return activeTab() === 'cp' && !(event.target && event.target.closest && event.target.closest('.cpaModalOverlay'));
+      return activeTab() === 'cp' && !root.document.querySelector('.layoutControlOverlay,.trImportOverlay,.cpDocumentFlow') && !(event.target && event.target.closest && event.target.closest('.cpaModalOverlay'));
     };
     const hide = function () { depth = 0; if (overlay) { overlay.remove(); overlay = null; } };
     root.document.addEventListener('dragenter', function (event) {
@@ -2323,7 +2342,7 @@
       overlay = root.document.createElement('div');
       overlay.className = 'trDropOverlay';
       overlay.setAttribute('role', 'status');
-      overlay.innerHTML = '<div><b>' + html(T('Test raporlarını bırakın', 'Drop test reports')) + '</b><small>' + html(T('.msg, .eml, .pdf · önizleme açılır, onaysız yazılmaz', '.msg, .eml, .pdf · a preview opens, nothing is written without approval')) + '</small></div>';
+      overlay.innerHTML = '<div><b>' + html(T('Layout veya test raporlarını bırakın', 'Drop layouts or test reports')) + '</b><small>' + html(T('PDF: Layout Kontrolü / Test Raporu seçimi · .msg, .eml: Test Raporu · Layout sonuçları CP’ye yazılmaz', 'PDF: choose Layout Control / Test Report · .msg, .eml: Test Report · Layout results are not written to CP')) + '</small></div>';
       root.document.body.appendChild(overlay);
     });
     root.document.addEventListener('dragover', function (event) {
@@ -2346,7 +2365,7 @@
         toast(T('Bırakılan öğe dosya içermiyor. Outlook\'tan maili .msg olarak kaydedip bırakın.', 'The dropped item has no file. Save the e-mail from Outlook as .msg and drop it.'));
         return;
       }
-      openTestReportImport(Array.prototype.slice.call(files));
+      chooseCpDocumentFlow(Array.prototype.slice.call(files));
     });
   }
   /* "Buyingden dönüş bekleniyor" gibi kullanıcıdan beklenen işler CP

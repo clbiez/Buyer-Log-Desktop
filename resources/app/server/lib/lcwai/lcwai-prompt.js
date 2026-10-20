@@ -125,6 +125,7 @@ const CONTRACTS = Object.freeze({
       identityText: { type: 'string', max: 5000, hint: { tr: 'özellikle Price Tag üst kimlik/kod bandını görünür olduğu haliyle aynen kopyala', en: 'especially for Price Tag, transcribe the visible upper identity/code band verbatim' } },
       prices: { type: 'string[]', max: 120, items: 20 },
       visualFindings: { type: 'string[]', max: 500, items: 30, hint: { tr: 'yalnız görünür kanıta dayalı görsel/semantik inceleme bulguları', en: 'only visual/semantic review findings supported by visible evidence' } },
+      standardFindings: { type: 'string[]', max: 2400, items: 80, hint: { tr: 'Her öğe JSON metni: {ruleId,verdict:PASS|ISSUE|UNCERTAIN|NA,page,bbox:[x,y,w,h],actual,comment,correction}; bbox sayfanın sol üstünden 0–1; yalnız layout sayfa numarası; comment/correction Türkçe', en: 'Each entry is a JSON string: {ruleId,verdict:PASS|ISSUE|UNCERTAIN|NA,page,bbox:[x,y,w,h],actual,comment,correction}; bbox 0–1 from page top-left; layout page number only; comment/correction in English' } },
       confidence: { type: 'string', required: true, max: 12, hint: { tr: 'EXACT, HIGH, MEDIUM veya LOW', en: 'EXACT, HIGH, MEDIUM or LOW' } },
       explanation: { type: 'string', required: true, max: 2000 }
     }),

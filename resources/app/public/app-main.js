@@ -37419,6 +37419,7 @@ function applyLanguage(lang){
   // CSS text-transform:uppercase follows the document language. Keep English
   // headers (e.g. LICENSE) from receiving Turkish dotted İ casing.
   if(document.documentElement) document.documentElement.lang = appLang;
+  window.BLLayoutControl?.refreshLanguage();
   saveLang();
   applyStaticI18n();
   if(typeof syncThemeButtonTitle==='function') syncThemeButtonTitle();
