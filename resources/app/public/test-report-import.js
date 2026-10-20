@@ -91,8 +91,9 @@
       .map(function (rule) { return { id: rule.id, tr: rule.tr || rule.name || rule.id, en: rule.en || rule.nameEn || rule.name || rule.id }; });
   }
   function itemLabel(itemId) {
-    const item = catalog().find(function (entry) { return entry.id === itemId; });
-    return item ? (isEn() ? item.en : item.tr) : itemId;
+    const part = Checklist().Components.parseItem(itemId);
+    const item = catalog().find(function (entry) { return entry.id === (part ? part.baseId : itemId); });
+    return item ? (isEn() ? item.en : item.tr) + (part ? ' · ' + part.partId : '') : itemId;
   }
   function value(row, keys) {
     for (const key of keys) if (row && row[key] != null && text(row[key])) return text(row[key]);
@@ -151,7 +152,7 @@
       const ignored = Boolean(E().normalizeOrderCode(report.siparisKodu)) && match.level === 'none' && match.reason === 'order';
       const entry = {
         id: 'r' + (ui.seq++), report: report, scope: scope, match: match, candidates: candidates, chosen: chosen,
-        typeKey: typeKey, itemId: mapped && catalog().some(function (i) { return i.id === mapped; }) ? mapped : '',
+        typeKey: typeKey, itemId: mapped && catalog().some(function (i) { return i.id === ((Checklist().Components.parseItem(mapped) || {}).baseId || mapped); }) ? mapped : '',
         // CP'de siparişi olmayan raporlar aktarım ve LCW AI incelemesi dışında kalır.
         // LCW AI'ın okuduğu rapor da varsayılan olarak seçilmez: kullanıcı alanları kontrol edip işaretler.
         include: !ignored && Boolean(chosen) && !fromAi, override: false, linked: Boolean(link), fromAi: fromAi, ignored: ignored,
@@ -201,6 +202,12 @@
     const analysis = analysisFor(row);
     if (!analysis) { out.reason = T('Sipariş checklist için okunamadı.', 'The order could not be read for the checklist.'); return out; }
     const s = assistantState();
+    const components = Checklist().Components, parts = Checklist().componentsFor(analysis, { answers: s && s.answers });
+    const part = components.parseItem(entry.itemId);
+    if ((parts.length || components.isSet(analysis.sourceRow || analysis, 'cp')) && (!part || !parts.some(p => p.id === part.partId))) {
+      out.reason = parts.length ? T('Checklist adımını ve set parçasını seçin.', 'Choose the checklist step and set part.') : T('Önce CP hücresinden set parçalarını tanımlayın.', 'Define the set parts from the CP cell first.');
+      return out;
+    }
     const answer = s && s.answers ? s.answers[answerKey(analysis.orderKey, entry.itemId)] : null;
     const engine = Checklist();
     const current = engine && answer ? (engine.normalizeStatus(answer.state) || 'open') : 'open';
@@ -212,7 +219,7 @@
     out.suggested = E().suggestChecklistStatus(out.step, reports, customStatusList());
     out.manual = chosenStatus(entry);
     out.next = out.manual || (out.userOwned && !entry.override ? current : (out.suggested.status || current));
-    out.notAsked = Array.isArray(analysis.checklistItemIds) && analysis.checklistItemIds.indexOf(entry.itemId) < 0;
+    out.notAsked = Array.isArray(analysis.checklistItemIds) && analysis.checklistItemIds.indexOf(part ? part.baseId : entry.itemId) < 0;
     out.ready = true;
     return out;
   }
@@ -284,9 +291,12 @@
     return '<select data-tr-row="' + entry.id + '"><option value="">' + html(T('Satır seçin…', 'Choose a row…')) + '</option>'
       + entry.candidates.map(function (c) { return '<option value="' + html(c.key) + '"' + (c.key === entry.chosen ? ' selected' : '') + '>' + html(rowLabel(c.row)) + '</option>'; }).join('') + '</select>';
   }
-  function itemOptions(selected) {
+  function itemOptions(selected, entry) {
+    const analysis = entry && analysisFor(rowFor(entry)), s = assistantState();
+    const parts = analysis ? Checklist().componentsFor(analysis, { answers: s && s.answers }) : [];
+    const items = parts.length ? catalog().flatMap(item => parts.map(part => ({ ...item, id: Checklist().Components.itemId(item.id, part.id), tr: item.tr + ' · ' + part.label, en: item.en + ' · ' + part.label }))) : catalog();
     return '<option value="">' + html(T('Adım seçin…', 'Choose a step…')) + '</option>'
-      + catalog().map(function (item) { return '<option value="' + html(item.id) + '"' + (item.id === selected ? ' selected' : '') + '>' + html(isEn() ? item.en : item.tr) + '</option>'; }).join('')
+      + items.map(function (item) { return '<option value="' + html(item.id) + '"' + (item.id === selected ? ' selected' : '') + '>' + html(isEn() ? item.en : item.tr) + '</option>'; }).join('')
       + '<option value="' + NEW_ITEM + '">' + html(T('+ Yeni checklist adımı oluştur…', '+ Create a new checklist step…')) + '</option>';
   }
   function changeCell(entry, p) {
@@ -440,7 +450,7 @@
         + '<td>' + resultBadge(r) + '</td>'
         + '<td>' + levelBadge(entry) + '</td>'
         + '<td>' + rowCell(entry) + '</td>'
-        + '<td>' + (entry.ignored ? '<span class="trMuted">—</span>' : '<select data-tr-item="' + entry.id + '">' + itemOptions(entry.itemId) + '</select>') + '</td>'
+        + '<td>' + (entry.ignored ? '<span class="trMuted">—</span>' : '<select data-tr-item="' + entry.id + '">' + itemOptions(entry.itemId, entry) + '</select>') + '</td>'
         + '<td>' + changeCell(entry, p) + '</td>'
         + '<td>' + warningsCell(entry, p) + '<div class="trFiles">' + filesCell(r) + '</div></td></tr>';
     }).join('');
@@ -645,7 +655,7 @@
         };
       });
       const typeMap = {};
-      chosen.forEach(function (entry) { if (entry.typeKey && ui.newTypeMap[entry.typeKey]) typeMap[entry.typeKey] = entry.itemId; });
+      chosen.forEach(function (entry) { if (entry.typeKey && ui.newTypeMap[entry.typeKey]) typeMap[entry.typeKey] = (Checklist().Components.parseItem(entry.itemId) || {}).baseId || entry.itemId; });
       const result = await jsonFetch(API + '/commit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: ui.session, items: items, typeMap: typeMap }) });
       ui.store = await jsonFetch(API);
       // Checklist cevabı: satır + adım başına BÜTÜN raporlardan türetilir.
@@ -684,9 +694,12 @@
         // Öncelik: önizlemede elle seçilen durum → kullanıcı girişi → analizden
         // türetilen durum (kullanıcı tanımlı özel durum eşleşmesi dâhil).
         const suggested = E().suggestChecklistStatus(step, reports, customStatusList());
-        if (group.manual) { assistant().setChecklistAnswer(analysis, entry.itemId, group.manual, Object.assign(meta, { source: 'test_report' })); written += 1; }
-        else if (userOwned) { assistant().setChecklistAnswer(analysis, entry.itemId, group.plan.current, meta); kept += 1; }
-        else { assistant().setChecklistAnswer(analysis, entry.itemId, suggested.status || group.plan.current || 'open', Object.assign(meta, { source: 'test_report' })); written += 1; }
+        let saved;
+        if (group.manual) { saved = assistant().setChecklistAnswer(analysis, entry.itemId, group.manual, Object.assign(meta, { source: 'test_report' })); }
+        else if (userOwned) { saved = assistant().setChecklistAnswer(analysis, entry.itemId, group.plan.current, meta); }
+        else { saved = assistant().setChecklistAnswer(analysis, entry.itemId, suggested.status || group.plan.current || 'open', Object.assign(meta, { source: 'test_report' })); }
+        if (!saved) throw new Error(T('Checklist kaydedilemedi.', 'Checklist could not be saved.'));
+        if (userOwned && !group.manual) kept += 1; else written += 1;
       });
       const sync = root.BLChecklistSupplierSync;
       if (sync && typeof sync.syncAnswerChanges === 'function') await sync.syncAnswerChanges();

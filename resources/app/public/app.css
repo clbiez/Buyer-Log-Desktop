@@ -5950,3 +5950,16 @@ td.plmSampleCell .plmSampleEmpty{color:var(--muted)}
 
 button.ovNoteCount{cursor:pointer;font-family:var(--sans);}
 button.ovNoteCount:hover{background:var(--acc-bg);border-color:var(--acc);}
+
+/* Set parts fit the existing fixed row height, including virtualized CP rows. */
+.clPartsStack{display:flex;align-items:center;gap:var(--sp-1);min-width:0;max-width:100%;overflow-x:auto;}
+.clPartsStack .clStatusTrigger,.clPartsStack .kolChecklistStatusBtn{flex:0 0 auto;width:auto;min-width:0;min-height:22px;padding:2px 4px;gap:3px;border-radius:var(--r-xs);}
+.clPartsStack .clStatusText,.clPartsStack .delTypeChevron{display:none;}
+.clPartLabel{min-width:1em;font-family:var(--mono);color:inherit;}
+.clPartsFooter{display:flex;flex:0 0 auto;align-items:center;gap:var(--sp-1);color:var(--muted);font-size:var(--fs-2xs);}
+.clPartsConfigure{flex:0 0 auto;border:0;background:transparent;color:var(--acc-ink);font:inherit;font-size:var(--fs-sm);cursor:pointer;padding:2px;}
+.clPartsConfigure:hover{background:var(--card2);}
+.clPartsConfigure:focus-visible{outline:2px solid var(--acc);outline-offset:1px;}
+.clPartAnswerGroup{display:flex;align-items:center;gap:var(--sp-2);margin-block:var(--sp-1);}
+.clPartAnswerGroup>div{display:flex;flex-wrap:wrap;gap:var(--sp-1);}
+.clPartsLegacyNote{white-space:pre-wrap;}
