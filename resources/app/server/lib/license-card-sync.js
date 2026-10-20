@@ -20,7 +20,8 @@ function stageChange(overrides, change) {
   const stage=(id,fields)=>{outbox[id]={actorId:String(change.actorId||''),fields:{...(outbox[id]?.fields||{}),...fields}};};
   for(const card of change.cards||(change.card?[change.card]:[])){
     const fields={profile:profileSnapshot(card)};
-    if(change.contracts)fields.contracts={pair:cards.pairKey(card.license,card.licensor),rules:clone(change.contracts)};
+    const contracts=change.contractsByCard?.[card.id]||change.contracts;
+    if(contracts)fields.contracts={pair:cards.pairKey(card.license,card.licensor),rules:clone(contracts)};
     stage(card.id,fields);
   }
   if(change.initialized)stage('state',{initialized:true,lastImportedAt:change.lastImportedAt||null});

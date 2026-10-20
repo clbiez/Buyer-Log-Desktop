@@ -23,6 +23,10 @@
     const source=Array.isArray(rules)?rules:[];
     return {active:source.filter(r=>ruleStatus(r,day)==='active'),history:source.map(rule=>({rule,status:ruleStatus(rule,day)})).sort((a,b)=>String(b.rule.opdStart||'').localeCompare(String(a.rule.opdStart||'')))};
   }
+  function latestContract(rules,day=today()){
+    const groups=contracts(rules,day),byStart=(a,b)=>String(b.opdStart||'').localeCompare(String(a.opdStart||''))||String(a.id||'').localeCompare(String(b.id||''));
+    return groups.active.sort(byStart)[0]||groups.history.filter(x=>x.status==='future').map(x=>x.rule).sort((a,b)=>String(a.opdStart).localeCompare(String(b.opdStart)))[0]||groups.history.filter(x=>x.status==='expired').map(x=>x.rule).sort(byStart)[0]||null;
+  }
   function quantity(v){
     if(v==null||text(v)==='')return null;
     let s=text(v).replace(/\s/g,'');
@@ -49,5 +53,5 @@
   }
   function portalHref(value){try{const u=new URL(text(value));return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:'';}catch(_){return '';}}
   function symbolUrl(value){const s=text(value);return /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(s)&&s.length<=350000?s:'';}
-  return Object.freeze({contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
+  return Object.freeze({latestContract,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
 });

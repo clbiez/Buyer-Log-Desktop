@@ -42,7 +42,7 @@
   });
   const publicOptions={};for(const [key,options] of Object.entries(a.customSelectOptions)){const values=key==='category'?[l.category]:key==='approver'?stages.map(s=>s.approver):stages.flatMap(s=>s.submissions.map(r=>r[key]));publicOptions[key]=options.filter(o=>values.includes(o.value));}
   // The exported identity is the bound Buyer Log card, never an imported alias.
-  return {id:card.id||l.id,name:card.license||l.name,category:l.category||'',symbol:l.symbol||'',color:l.color,color2:l.color2,agency:l.agency||'',rightsHolder:l.rightsHolder||'',cover:l.cover,requirements:l.supplierShowRequirements===true?tx(l,'requirements'):'',stages,addresses:publicAddresses.filter(a=>used.has(a.id)).map(a=>({id:a.id,label:tx(a,'label'),text:a.text})),portal:l.portal.manufacturerVisible===true?{url:l.portal.url,notes:tx(l.portal,'notes')}:{url:'',notes:''},visualLibrary:a.visualLibrary.filter(v=>visuals.has(v.id)),customSelectOptions:publicOptions};
+  return {id:card.id||l.id,name:card.license||l.name,category:l.category||'',symbol:l.symbol||'',color:l.color,color2:l.color2,agency:Object.hasOwn(card,'licensor')?card.licensor:l.agency||'',rightsHolder:l.rightsHolder||'',cover:l.cover,requirements:l.supplierShowRequirements===true?tx(l,'requirements'):'',stages,addresses:publicAddresses.map(a=>({id:a.id,label:tx(a,'label'),text:a.text})),portal:l.portal.manufacturerVisible===true?{url:l.portal.url,notes:tx(l.portal,'notes')}:{url:'',notes:''},visualLibrary:a.visualLibrary.filter(v=>visuals.has(v.id)),customSelectOptions:publicOptions};
  }
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function exportHTML(cards,lang='tr'){

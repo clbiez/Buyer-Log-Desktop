@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-20",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Backlog sunum raporu zaman filtresi",
-    "en": "Backlog presentation report time filter"
+    "tr": "Lisans Atlası ve Buyer Log iyileştirmeleri",
+    "en": "License Atlas and Buyer Log improvements"
   },
   "summary": {
-    "tr": "Sunum raporunu MB, Retail veya Ex-Factory tarihine göre hafta, ay ya da gün aralığında süzün; HTML/PDF çıktıları aynı kapsamı kullanır.",
-    "en": "Filter the presentation report by MB, Retail or Ex-Factory in week, month or day ranges; HTML/PDF outputs use the same scope."
+    "tr": "Lisansörleri tek kartta seçin, sözleşmeleri iki alandan düzenleyin ve atlas yedeklerini topluca geri yükleyin. Backlog sunum raporunda zaman filtresi de yer alır. Sunum raporunu MB, Retail veya Ex-Factory tarihine göre hafta, ay ya da gün aralığında süzün; HTML/PDF çıktıları aynı kapsamı kullanır.",
+    "en": "Select licensors within one card, edit shared contracts from both areas and restore Atlas backups in bulk. Also includes the Backlog presentation time filter. Filter the presentation report by MB, Retail or Ex-Factory in week, month or day ranges; HTML/PDF outputs use the same scope."
   },
   "changes": [
     {
@@ -124,6 +124,151 @@
         "caption": {
           "tr": "Anonim demo PDF doğrudan Layout Kontrolü’ne açılır; fiyat farkı belge üzerinde ve yanında CP referansıyla gösterilir.",
           "en": "The anonymous demo PDF opens directly in Layout Control; the price difference is marked on the document with the CP reference alongside."
+        }
+      }
+    },
+    {
+      "id": "license-licensor-selection",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları · Atlas",
+        "en": "License cards · Atlas"
+      },
+      "title": {
+        "tr": "Tek lisansta birden fazla lisansör",
+        "en": "Multiple licensors under one license"
+      },
+      "body": {
+        "tr": "Lisans kartları lisans başına tek kartta toplanır. Gerçek lisansörler ve DTR seçilebilir; Royalty Calculations’a eklenen taraflar hemen görünür. Kart en güncel sözleşme kapsamını gösterir.",
+        "en": "License cards are grouped into one card per license. Select the actual licensor or DTR; parties added in Royalty Calculations appear immediately. The card shows its latest contract scope."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-licensor-selection.png",
+        "alt": {
+          "tr": "Tek lisansta birden fazla lisansör — gerçek Buyer Log, demo kayıtlar",
+          "en": "Multiple licensors under one license — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Tek lisansta birden fazla lisansör",
+          "en": "Multiple licensors under one license"
+        }
+      }
+    },
+    {
+      "id": "license-unified-details",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Atlas",
+        "en": "License cards · Atlas"
+      },
+      "title": {
+        "tr": "Süreçler ve sözleşmeler Lisans Detayları’nda",
+        "en": "Processes and contracts in License Details"
+      },
+      "body": {
+        "tr": "Royalty, TR/YD komisyonları, hologram bedelleri, tarih ve sezon kapsamları Lisans Detayları içinde düzenlenir; Royalty Calculations aynı kayıtları kullanır. Ayrı sözleşme geçmişi alanı, Unicode simge alanı, kısa açıklama alanı ve dil açıklama bandı kaldırıldı. Mevcut süreç ağacı korunur.",
+        "en": "Edit royalty, domestic/international commissions, hologram costs, dates and season scopes inside License Details; Royalty Calculations uses the same records. The separate contract history panel, Unicode symbol field, short description field and language banner have been removed. The existing process tree is retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-unified-details.png",
+        "alt": {
+          "tr": "Süreçler ve sözleşmeler Lisans Detayları’nda — gerçek Buyer Log, demo kayıtlar",
+          "en": "Processes and contracts in License Details — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Süreçler ve sözleşmeler Lisans Detayları’nda",
+          "en": "Processes and contracts in License Details"
+        }
+      }
+    },
+    {
+      "id": "license-atlas-bulk-recovery",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları · Atlas",
+        "en": "License cards · Atlas"
+      },
+      "title": {
+        "tr": "Backup yanında toplu Recovery",
+        "en": "Bulk Recovery beside Backup"
+      },
+      "body": {
+        "tr": "JSON atlas yedeğini seçin, eşleşen tüm lisans/lisansörleri önizleyin ve tek işlemde geri yükleyin. Süreçler, görseller, adresler ve paylaşım seçimleri güncellenir; royalty ve sözleşmeler korunur. Geçersiz kayıt veya eşzamanlı değişiklikte hiçbir kart kısmen kaydedilmez.",
+        "en": "Choose an Atlas JSON backup, preview all matching licenses/licensors and restore them in one operation. Processes, images, addresses and sharing choices are restored; royalty and contracts are preserved. Invalid records or concurrent changes prevent partial saves."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-bulk-recovery.png",
+        "alt": {
+          "tr": "Backup yanında toplu Recovery — gerçek Buyer Log, demo kayıtlar",
+          "en": "Bulk Recovery beside Backup — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Backup yanında toplu Recovery",
+          "en": "Bulk Recovery beside Backup"
+        }
+      }
+    },
+    {
+      "id": "license-supplier-sharing",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Atlas",
+        "en": "License cards · Atlas"
+      },
+      "title": {
+        "tr": "Adres görünürlüğü Portal’dan bağımsız",
+        "en": "Address visibility independent of Portal"
+      },
+      "body": {
+        "tr": "Yeni paylaşım seçimleri Portal dışında açık başlar; mevcut açık/kapalı tercihler korunur. Üreticiye açık adresler Portal paylaşılmasa da dışa aktarılır. Üretici görünümündeki Tek veri, iki farklı görünüm açıklaması kaldırıldı.",
+        "en": "New sharing settings start enabled except Portal; existing on/off choices are retained. Supplier-visible addresses are exported even when Portal is hidden. The One source, two views introduction has been removed from Supplier Visibility."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-supplier-sharing.png",
+        "alt": {
+          "tr": "Adres görünürlüğü Portal’dan bağımsız — gerçek Buyer Log, demo kayıtlar",
+          "en": "Address visibility independent of Portal — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Adres görünürlüğü Portal’dan bağımsız",
+          "en": "Address visibility independent of Portal"
+        }
+      }
+    },
+    {
+      "id": "license-inherit-theme-language",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Atlas",
+        "en": "License cards · Atlas"
+      },
+      "title": {
+        "tr": "Atlas Buyer Log temasını ve dilini izler",
+        "en": "Atlas follows the Buyer Log theme and language"
+      },
+      "body": {
+        "tr": "Atlas’ın ayrı tema ve dil düğmeleri kaldırıldı. Açık, gri ve koyu tema ile TR/EN değişimleri Buyer Log’dan uygulanır; açık sözleşme taslakları sekme ve dil değişiminde korunur.",
+        "en": "Separate Atlas theme and language buttons have been removed. Light, grey and dark themes and TR/EN changes follow Buyer Log; open contract drafts survive tab and language changes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-inherit-theme-language.png",
+        "alt": {
+          "tr": "Atlas Buyer Log temasını ve dilini izler — gerçek Buyer Log, demo kayıtlar",
+          "en": "Atlas follows the Buyer Log theme and language — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Atlas Buyer Log temasını ve dilini izler",
+          "en": "Atlas follows the Buyer Log theme and language"
         }
       }
     }

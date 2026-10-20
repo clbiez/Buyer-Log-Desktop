@@ -10614,7 +10614,8 @@ app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requi
     const saved = replacePricingRules(rules, requestRevision(req));
     // Keep edits from the existing calculator and the cards on the same peer path.
     const cardEngine=require('./lib/license-cards');
-    for(const card of cardEngine.stateOf(loadOverrides()).items){
+    const affectedCards=new Map([...cardEngine.catalogue(before),...cardEngine.catalogue(loadOverrides())].map(card=>[cardEngine.pairKey(card.license,card.licensor),card]));
+    for(const card of affectedCards.values()){
       if(changedLicenses.some(license=>cardEngine.pairKey(license,'')===cardEngine.pairKey(card.license,'')))await licenseCardSync.publish(req,{card,contracts:saved.rules.filter(rule=>cardEngine.pairKey(rule.license,rule.licensor)===cardEngine.pairKey(card.license,card.licensor))});
     }
     userAccess.appendAudit(req.currentUser, 'PRICING_RULES_UPDATE', 'settings', {

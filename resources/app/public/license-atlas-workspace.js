@@ -18,7 +18,7 @@
    const stages=(items,local=[])=>{const localIds=new Set(local.map(x=>x.id));return (items||[]).map(item=>{const st=copy(item);if(visuals.has(st.visualGuideId))st.visualGuideId=visuals.get(st.visualGuideId);option(st,'approver');st.submissions=(st.submissions||[]).map(r=>{if(!localIds.has(r.addressId)&&addresses.has(r.addressId))r.addressId=addresses.get(r.addressId);for(const k of ['recipientType','method','timing'])option(r,k);return r;});return st;});};
    const matches=(library.licenses||[]).filter(l=>String(l.name).trim().toLocaleUpperCase('en-US')===String(c.license).trim().toLocaleUpperCase('en-US'));
    const license=copy(a.license||(matches.length===1?matches[0]:{category:'',symbol:'✦',stages:[],addresses:[],portal:{url:'',notes:''}}));
-   license.id=c.id;license.name=c.license;license.agency=license.agency||c.licensor;license.addresses??=[];license.portal??={url:'',notes:''};license.stages=stages(license.stages,license.addresses);option(license,'category');
+   license.id=c.id;license.name=c.license;license.agency=c.licensor===undefined?license.agency||'':c.licensor||'';license.addresses??=[];license.portal??={url:'',notes:''};license.stages=stages(license.stages,license.addresses);option(license,'category');
    for(const t of a.processTemplates||[]){const item={...copy(t),stages:stages(t.stages,t.addresses)};const id=add(db.processTemplates,item,prefix);owned.processTemplates.push(id);if(license.workflowTemplate?.id===t.id)license.workflowTemplate.id=id;}
    if(a.stageClipboard&&String(c.updatedAt||'')>=clipboardTime){db.stageClipboard={...copy(a.stageClipboard),stage:stages([a.stageClipboard.stage],a.stageClipboard.addresses)[0]};clipboardTime=String(c.updatedAt||'');}
    db.licenses.push(license);
@@ -41,5 +41,25 @@
   }
   return {processTemplates,customSelectOptions,stageClipboard:db.stageClipboard,visualLibrary:(db.visualLibrary||[]).filter(v=>include('visualLibrary',v.id,visualIds)),sharedAddresses:(db.sharedAddresses||[]).filter(a=>include('sharedAddresses',a.id,addressIds))};
  }
- return {merge,metadata};
+ // Legacy backups have operational agency names; only canonical IDs or unique
+ // names/licensors identify a target. Preview every fan-out before applying.
+ function recovery(cards,backup){
+  const fail=()=>{throw Object.assign(new Error('LICENSE_ATLAS_INVALID'),{code:'LICENSE_ATLAS_INVALID'});};
+  if(!backup||!Array.isArray(backup.licenses)||!backup.licenses.length||backup.licenses.length>500)fail();
+  const key=v=>String(v||'').trim().toUpperCase().replace(/[İŞÇÖÜĞ]/g,c=>({'İ':'I','Ş':'S','Ç':'C','Ö':'O','Ü':'U','Ğ':'G'}[c])).replace(/\s+/g,' ');
+  const changes=[],claimed=new Set(),unmatched=[];
+  for(const l of backup.licenses){
+   if(!l||typeof l.name!=='string'||!Array.isArray(l.stages)||!Array.isArray(l.addresses))fail();
+   const named=cards.filter(c=>key(c.license)===key(l.name)),bound=named.find(c=>c.id===l.id);
+   let targets=bound?[bound]:named;
+   if(!bound&&named.length>1){const sameName=backup.licenses.filter(x=>key(x.name)===key(l.name));if(sameName.length>1){targets=named.filter(c=>key(c.licensor)===key(l.agency));if(targets.length!==1)fail();}}
+   if(!targets.length){unmatched.push(l.name);continue;}
+   for(const c of targets){if(claimed.has(c.id))fail();claimed.add(c.id);
+    const assets=backup.ownership?.[l.id]?metadata(backup,l,backup,l.id):Object.fromEntries(['sharedAddresses','visualLibrary','customSelectOptions','processTemplates','stageClipboard'].filter(k=>Object.hasOwn(backup,k)).map(k=>[k,copy(backup[k])]));
+    changes.push({id:c.id,editToken:c.editToken,license:c.license,licensor:c.licensor,processAtlas:{version:1,license:{...copy(l),id:c.id,name:c.license,agency:c.licensor},...assets}});
+   }
+  }
+  return {changes,unmatched};
+ }
+ return {merge,metadata,recovery};
 });
