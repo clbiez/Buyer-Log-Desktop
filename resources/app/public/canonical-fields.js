@@ -74,6 +74,8 @@
       cp:binding(['Order Code','Sipariş Kod','orderCode'],'asasOrder'),orders:binding(['Order Code','Sipariş Kod','orderCode'],'asasOrder'),backlog:binding(['Order Code','Sipariş Kod','orderCode'],'asasOrder'),
       overview:binding(['Order Code','Sipariş Kod','orderCode'],'asasOrder'),lfl:binding(['orderCode','Order Code','Sipariş Kod'],'asasOrder'),logistics:binding(['orderCode','Order Code','Sipariş Kod'],'asasOrder'),antrepo:binding(['orderCode','Order Code','Sipariş Kod'],'asasOrder')
     }},
+    fabricComposition:{label:{en:'Fabric Composition',tr:'Kumaş Kompozisyonu'},type:'text',role:'attribute',aliases:['Karışım','Composition','Fabric Composition'],modules:{cp:binding(['Karışım','Composition','fabricComposition','karisim'],'mainFabricComposition')}},
+    cashRetailPrice:{label:{en:'Cash Retail Price',tr:'Peşin Satış Fiyatı'},type:'number',role:'measure',aliases:['Peşin Satış Fiyatı','Peşin Fiyat','Cash Retail Price','Cash Price'],modules:{cp:binding(['Peşin Satış Fiyatı','Peşin Fiyat','Cash Retail Price','Cash Price','cashRetailPrice'],'cashRetailPrice')}},
     modelName:{label:{en:'Model Name',tr:'Model Adı'},type:'text',role:'identity',aliases:['Model Name','Model Adı','Style Name','Product Name','Ürün Adı','Model'],modules:{
       collection:binding(['modelKod','Style Name'],'plmStyleName'),cp:binding(['Model Name','Model Adı','modelName'],'asasModelName'),orders:binding(['Model Name','Model Adı','modelName'],'asasModelName'),
       backlog:binding(['Model Name','Model Adı','modelName'],'asasModelName'),overview:binding(['Model Name','Model Adı','modelName'],'asasModelName'),lfl:binding(['modelName','Model Name','Model Adı'],'asasModelName'),

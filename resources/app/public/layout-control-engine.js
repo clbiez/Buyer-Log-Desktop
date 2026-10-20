@@ -1,10 +1,11 @@
 'use strict';
 
 (function (root, factory) {
-  const api = factory();
+  const canonical=typeof module==='object'&&module.exports?require('../server/lib/canonical-fields'):root&&root.BLCanonicalFields;
+  const api = factory(canonical);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.BLLayoutControlEngine = api;
-})(typeof window !== 'undefined' ? window : null, function () {
+})(typeof window !== 'undefined' ? window : null, function (canonical) {
   const STATUS = Object.freeze({ MATCH:'MATCH', MISMATCH:'MISMATCH', REVIEW:'REVIEW', NOT_CHECKED:'NOT_CHECKED' });
   const DOC = Object.freeze({ CARE_LABEL:'CARE_LABEL', PRICE_TAG:'PRICE_TAG', UNKNOWN:'UNKNOWN' });
   const T=(tr,en)=>{try{const lang=typeof window!=='undefined'?String(window.appLang||document.documentElement.lang||'tr'):String(process&&process.env&&process.env.BUYER_LOG_LANG||'tr');return lang.toLowerCase().startsWith('en')?en:tr;}catch(_){return tr;}};
@@ -111,6 +112,14 @@
     const parsed=parseComposition(value);
     return parsed.map(item=>item.material+':'+String(item.percent)).join('|');
   }
+  function mainComposition(value){
+    const text=fold(value),rx=/ANA\s*KUMAS|MAIN\s*FABRIC/g;let match;
+    while((match=rx.exec(text))){
+      const rest=text.slice(match.index+match[0].length),end=rest.search(/\b(?:ANA\s*KUMAS|MAIN\s*FABRIC|ASTAR|LINING|DOLGU|FILLING|AKSESUAR|ACCESSOR(?:Y|IES)|POCKET|CEP\s*KUMAS|MADE\s*IN)\b/);
+      const parsed=parseComposition(end>=0?rest.slice(0,end):rest);if(parsed.length)return parsed;
+    }
+    return /\bASTAR|\bLINING|\bFILLING/.test(text)?[]:parseComposition(text);
+  }
   function normalizeCountry(value) {
     const f=fold(value);
     for(const [canonical,aliases] of Object.entries(COUNTRY_ALIASES)) {
@@ -191,15 +200,33 @@
     });
     return uniq(out);
   }
-  function cpCatalog(rows, field) { return uniq((Array.isArray(rows)?rows:[]).map(row=>row&&row[field]).filter(v=>v!=null&&v!=='')); }
+  const CP_FIELDS={'Model Name':'modelName','C.Code':'colourCode','Colour':'colour','Order Code':'orderCode','Special Code':'specialCode','Country':'country','Karışım':'fabricComposition','Season':'season','Merch Alt Grup Kod':'mag','Merch Marka Yaş Grup Kod':'mmyg','Line':'line','Ürün Tanım':'productDescription','Category':'category'};
+  function cpValue(row,field){const id=CP_FIELDS[field]||field;return canonical&&canonical.field(id)?canonical.value(row,'cp',id):row&&row[field];}
+  function cpCatalog(rows, field) { return uniq((Array.isArray(rows)?rows:[]).map(row=>cpValue(row,field)).filter(v=>v!=null&&v!=='')); }
+
+  function printedFields(value){
+    const raw=clean(value).replace(/\[\[PAGE\s+\d+\]\]/gi,' '),f=fold(raw);
+    const captures=rx=>uniq([...raw.matchAll(rx)].map(m=>m[1]));
+    const orderNumbers=uniq([...f.matchAll(/(?:SIP(?:ARIS)?[.\s]*(?:NO|NUMARASI|KODU)|ORD(?:ER)?[.\s]*(?:NO\.?|CODE))\s*[:#.\-]?\s*(\d{5,10})\b/g)].map(m=>m[1]));
+    const modelCodes=captures(/(?:KK\s*[.,]\s*BDY\s*[.,]|(?:MODEL|STYLE)\s*(?:ADI|NAME|CODE)?\s*[:=])\s*([A-Z0-9]+(?:[\-][A-Z0-9]+)+)/gi);
+    const specialCodes=uniq([...f.matchAll(/\b([A-Z0-9]{6}Z[148])\b/g),...f.matchAll(/\b([A-Z0-9]{6})\s*[-/]\s*KK[.,]\s*BDY/g)].map(m=>m[1]));
+    const colourBlock=/\(([A-Z0-9]{3})\s*[-–]\s*([^)]{1,80})\)/i.exec(raw);
+    const colourBand=/\b[A-Z0-9]{6}Z[148]\s*\/\s*([A-Z0-9]{3})\b/i.exec(raw);
+    const price=(label)=>{const rx=new RegExp(label+'\\s*[:\\-]?\\s*((?:₺|TL|TRY|€|EUR|USD|\\$)?\\s*\\d+(?:[.,]\\d{3})*[.,]\\d{2}(?:\\s*(?:TL|TRY|EUR|USD|₺))?)','gi');return captures(rx);};
+    const cashPrices=price('(?:Pe[şs][ıiİI]n\\s*(?:Sat[ıiİI][şs]\\s*)?F[ıiİI]yat(?:[ıi])?|Cash\\s*(?:Retail\\s*)?Price)'); // i18n-ignore — printed label parsing pattern, not UI text
+    const instalmentPrices=price('(?:Taks[ıiİI]tl[ıiİI]\\s*F[ıiİI]yat(?:[ıi])?|Instalments?\\s*Price)'); // i18n-ignore — printed label parsing pattern, not UI text
+    const origin=uniq(extractOriginCountries(raw).concat([...f.matchAll(/(?:URETIM\s*YERI|COUNTRY\s*OF\s*ORIGIN)\s*[:\-]?\s*([^/]{1,100})/g)].flatMap(m=>extractCountries(m[1]))));
+    return {modelCodes,orderNumbers,specialCodes,cashPrices,instalmentPrices,countries:origin,colourCodes:colourBlock?[colourBlock[1]]:colourBand?[colourBand[1]]:[],colours:colourBlock?[colourBlock[2]]:[]};
+  }
 
   function deriveLocalExtraction(text, cpRows) {
     const raw=clean(text), rows=Array.isArray(cpRows)?cpRows:[];
-    const modelCodes=scanKnown(raw,cpCatalog(rows,'Model Name'),false);
-    const colourCodes=scanKnown(raw,cpCatalog(rows,'C.Code'),true);
-    const colours=scanKnown(raw,cpCatalog(rows,'Colour'),false);
-    const orderNumbers=scanKnown(raw,cpCatalog(rows,'Order Code').map(String),true);
-    const specialCodes=scanKnown(raw,cpCatalog(rows,'Special Code'),true);
+    const printed=printedFields(raw);
+    const modelCodes=printed.modelCodes.length?printed.modelCodes:scanKnown(raw,cpCatalog(rows,'Model Name'),true);
+    const colourCodes=printed.colourCodes.length?printed.colourCodes:scanKnown(raw,cpCatalog(rows,'C.Code'),true);
+    const colours=printed.colours.length?printed.colours:scanKnown(raw,cpCatalog(rows,'Colour'),false);
+    const orderNumbers=printed.orderNumbers.length?printed.orderNumbers:scanKnown(raw,cpCatalog(rows,'Order Code').map(String),true);
+    const specialCodes=printed.specialCodes.length?printed.specialCodes:scanKnown(raw,cpCatalog(rows,'Special Code'),true);
     const seasonCodes=scanKnown(raw,cpCatalog(rows,'Season'),true);
     const magCodes=scanKnown(raw,cpCatalog(rows,'Merch Alt Grup Kod'),true);
     const mmygCodes=scanKnown(raw,cpCatalog(rows,'Merch Marka Yaş Grup Kod'),true);
@@ -217,8 +244,8 @@
       mmygCodes,
       lineCodes,
       productMainDefinitions,
-      countries: extractOriginCountries(raw),
-      composition: parseComposition(raw).map(item=>String(item.percent)+'% '+item.material),
+      countries: printed.countries,
+      composition: mainComposition(raw).map(item=>String(item.percent)+'% '+item.material),
       careInstructions: [],
       warnings: /KEEP\s+AWAY\s+FROM\s+FIRE|ATES.*UZAK/i.test(fold(raw))?['KEEP AWAY FROM FIRE']:[],
       sizes: [],
@@ -227,8 +254,8 @@
       pageVariants: [],
       productClass:'',
       fit:'',
-      identityText:raw,
-      prices:[],
+      identityText:raw.replace(/\[\[PAGE\s+\d+\]\]/gi,' ').trim(),
+      prices:printed.cashPrices,cashPrices:printed.cashPrices,instalmentPrices:printed.instalmentPrices,
       visualFindings:[],
       confidence: raw ? (modelCodes.length?'EXACT':'HIGH') : 'LOW',
       explanation: raw ? 'PDF native text layer analysed locally.' : 'No native PDF text was available.',
@@ -236,23 +263,26 @@
     };
   }
 
-  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','specialCodes','seasonCodes','magCodes','mmygCodes','lineCodes','productMainDefinitions','countries','composition','careInstructions','warnings','sizes','barcodes','qrCodes','pageVariants','prices','visualFindings','standardFindings'];
+  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','specialCodes','seasonCodes','magCodes','mmygCodes','lineCodes','productMainDefinitions','countries','composition','careInstructions','warnings','sizes','barcodes','qrCodes','pageVariants','prices','cashPrices','instalmentPrices','visualFindings','standardFindings','languageCodes','languageTexts','companyAddresses','websites','fieldEvidence'];
   function mergeExtraction(localData, aiData) {
     const local=localData&&typeof localData==='object'?localData:{};
     const ai=aiData&&typeof aiData==='object'?aiData:{};
-    const out={_sources:{}};
+    const out={_sources:{},_localValues:{}};
     out.documentType=local.documentType&&local.documentType!==DOC.UNKNOWN?local.documentType:(clean(ai.documentType)||DOC.UNKNOWN);
     out._sources.documentType=local.documentType&&local.documentType!==DOC.UNKNOWN?'local':'ai';
     ARRAY_FIELDS.forEach(field => {
       const a=list(local[field]), b=list(ai[field]);
-      out[field]=a.length?a:uniq(a.concat(b));
-      if(!a.length) out[field]=b;
+      out[field]=uniq(a.concat(b));
+      out._localValues[field]=a;
       out._sources[field]=a.length?'local':'ai';
     });
     ['productClass','fit','identityText'].forEach(field=>{
       out[field]=clean(local[field])||clean(ai[field]);
       out._sources[field]=clean(local[field])?'local':'ai';
     });
+    out.identityText=[clean(local.identityText),clean(ai.identityText)].filter(Boolean).join('\n');
+    out.modelCodes=list(out.modelCodes).map(v=>v.replace(/^KK\s*[.,]\s*BDY\s*[,\.\s]+/i,'').replace(/-?\([^)]*\)$/,''));
+    out.fireWarning=clean(ai.fireWarning)||(/KEEP AWAY FROM FIRE|ATES.*UZAK/.test(fold(out._nativeText||local._nativeText))?'PRESENT':'UNKNOWN');
     out.confidence=clean(local.confidence)==='EXACT'?'EXACT':(clean(ai.confidence)||clean(local.confidence)||'LOW').toUpperCase();
     out.explanation=clean(ai.explanation)||clean(local.explanation);
     out._nativeText=clean(local._nativeText);
@@ -276,6 +306,7 @@
       ['productMainDefinitions','Ürün Tanım',false]
     ];
     specs.forEach(([field,cpField,exactToken])=>{
+      if(list(ex[field]).length)return;
       const candidates=cpCatalog(cpRows,cpField);
       if(!candidates.length) return;
       const localHits=nativeText?scanKnown(nativeText,candidates,exactToken):[];
@@ -292,29 +323,34 @@
     const orders=list(extraction&&extraction.orderNumbers).map(compactIdentifier).filter(Boolean);
     const specials=list(extraction&&extraction.specialCodes).map(compactIdentifier).filter(Boolean);
     let matched=[];
-    if(orders.length) matched=rows.filter(row=>orders.includes(compactIdentifier(row&&row['Order Code'])));
-    if(!matched.length && models.length) matched=rows.filter(row=>models.includes(compactIdentifier(row&&row['Model Name'])));
-    if(!matched.length && specials.length) matched=rows.filter(row=>specials.includes(compactIdentifier(row&&row['Special Code'])));
+    if(orders.length)return rows.filter(row=>orders.includes(compactIdentifier(cpValue(row,'orderCode'))));
+    if(models.length) matched=rows.filter(row=>models.includes(compactIdentifier(cpValue(row,'modelName'))));
+    if(!matched.length && specials.length) matched=rows.filter(row=>specials.includes(compactIdentifier(cpValue(row,'specialCode'))));
     if(!matched.length) return [];
 
     if(models.length) {
-      const narrowed=matched.filter(row=>models.includes(compactIdentifier(row&&row['Model Name'])));
+      const narrowed=matched.filter(row=>models.includes(compactIdentifier(cpValue(row,'modelName'))));
       if(narrowed.length) matched=narrowed;
     }
     const colours=list(extraction&&extraction.colourCodes).map(compactIdentifier).filter(Boolean);
     if(colours.length) {
-      const narrowed=matched.filter(row=>colours.includes(compactIdentifier(row&&row['C.Code'])));
+      const narrowed=matched.filter(row=>colours.includes(compactIdentifier(cpValue(row,'colourCode'))));
       if(narrowed.length) matched=narrowed;
     }
     if(specials.length) {
-      const narrowed=matched.filter(row=>specials.includes(compactIdentifier(row&&row['Special Code'])));
+      const narrowed=matched.filter(row=>specials.includes(compactIdentifier(cpValue(row,'specialCode'))));
       if(narrowed.length) matched=narrowed;
     }
     return matched;
   }
 
-  function statusForMismatch(extraction, field) {
+  function statusForMismatch(extraction, field, expected, normalizer, equivalent) {
     const source=extraction&&extraction._sources&&extraction._sources[field];
+    if(expected&&normalizer&&extraction._localValues){
+      const known=list(expected).map(normalizer).filter(Boolean);
+      const conflict=equivalent?list(extraction._localValues[field]).some(v=>!list(expected).some(e=>equivalent(v,e))):list(extraction._localValues[field]).map(normalizer).filter(Boolean).some(v=>!known.includes(v));
+      return conflict?STATUS.MISMATCH:STATUS.REVIEW;
+    }
     // ERROR yalnız deterministik/yerel extraction + CP çatışmasından doğar.
     // LCW AI'dan okunan değer CP ile çelişse bile kullanıcı doğrulaması gerekir.
     return source==='local' ? STATUS.MISMATCH : STATUS.REVIEW;
@@ -459,8 +495,63 @@
     return summary;
   }
 
+  function assess(extraction,cpRows,options={}){
+    const merged=extraction&&extraction._sources?extraction:extraction&&Object.prototype.hasOwnProperty.call(extraction,'_nativeText')?mergeExtraction(extraction,{}):mergeExtraction({},extraction);
+    const ex=enrichExtractionFromCp(merged,cpRows),doc=ex.documentType||DOC.UNKNOWN,checks=[];
+    const readable=['modelCodes','orderNumbers','specialCodes','countries','composition','cashPrices'].some(f=>list(ex[f]).length);
+    const rows=readable?exactMatchRows(cpRows,ex):[],orders=cpCatalog(rows,'orderCode');
+    const reference={status:!rows.length?'NONE':orders.length>1?'AMBIGUOUS':'MATCH',orderCodes:orders,modelNames:cpCatalog(rows,'modelName'),colourCodes:cpCatalog(rows,'colourCode')};
+    const add=(rule,category,status,expected,actual,detail,source)=>checks.push(makeCheck(rule,category,status,expected,actual,detail,source));
+    if(!readable||doc===DOC.UNKNOWN){
+      add('DOCUMENT_READING','READING',STATUS.REVIEW,[],[],T('Belge okunamadı; alan doğruluğu kontrol edilemedi. Yeniden deneyin.','Document could not be read; field accuracy could not be checked. Retry.'),'PDF / LCW AI');
+      return {documentType:doc,extraction:ex,referenceRows:rows,reference,checks,summary:summarize(checks),reading:options.reading||{}};
+    }
+    if(reference.status!=='MATCH')add('CP_ORDER_LINK','REFERENCE',STATUS.REVIEW,[],orders.length?orders:list(ex.orderNumbers),reference.status==='AMBIGUOUS'?T('Model/renk birden fazla CP siparişiyle eşleşiyor; sipariş kesinleşmedi.','Model/colour matches multiple CP orders; the order is ambiguous.'):T('Okunan kimlikle erişilebilir CP siparişi bulunamadı.','No accessible CP order matches the extracted identity.'),'CP');
+    const field=(rule,id,exField,normalizer=compactIdentifier)=>{
+      const actual=list(ex[exField]),expected=cpCatalog(rows,id);
+      if(!expected.length)return add(rule,'IDENTITY',STATUS.NOT_CHECKED,[],actual,T('Layout değeri gösteriliyor; CP referansı yok.','Layout value shown; no CP reference is available.'));
+      if(!actual.length)return add(rule,'IDENTITY',STATUS.REVIEW,expected,[],T('Bu alan okunamadı.','This field could not be read.'));
+      const normalized=uniq(expected.map(normalizer)),values=actual.map(normalizer).filter(Boolean);
+      if(reference.status==='AMBIGUOUS'&&normalized.length>1)return add(rule,'IDENTITY',STATUS.REVIEW,expected,actual,T('CP adaylarının bu alanı farklı; kesin sipariş gerekli.','CP candidates disagree on this field; an exact order is required.'));
+      add(rule,'IDENTITY',values.length&&values.every(v=>normalized.includes(v))?STATUS.MATCH:statusForMismatch(ex,exField,expected,normalizer),expected,actual,T('Okunan layout değeri CP alanıyla karşılaştırıldı.','Extracted layout value compared with the CP field.'));
+    };
+    field('MODEL_MATCH','modelName','modelCodes');
+    if(doc===DOC.PRICE_TAG||list(ex.orderNumbers).length)field('ORDER_MATCH','orderCode','orderNumbers');
+    field('SPECIAL_CODE_MATCH','specialCode','specialCodes',v=>doc===DOC.CARE_LABEL?compactIdentifier(v).replace(/Z[148]$/,''):compactIdentifier(v));field('COLOR_CODE_MATCH','colourCode','colourCodes');
+    if(doc===DOC.CARE_LABEL||list(ex.colours).length)field('COLOR_NAME_MATCH','colour','colours',key);
+    field('COUNTRY_MATCH','country','countries',normalizeCountry);
+    if(doc===DOC.CARE_LABEL)field('COMPOSITION_MATCH','fabricComposition','composition',v=>compositionKey(v));
+    if(doc===DOC.PRICE_TAG){
+      const actual=list(ex.cashPrices),expected=cpCatalog(rows,'cashRetailPrice');
+      const amount=v=>{const n=normalizePrice(v);return n.includes(':')?n.split(':').pop():n;};
+      const equal=(a,b)=>{const x=normalizePrice(a),y=normalizePrice(b);return Boolean(x&&y)&&amount(a)===amount(b)&&(!x.includes(':')||!y.includes(':')||x.split(':')[0]===y.split(':')[0]);};
+      add('PRICE_MATCH','PRICE',!actual.length||actual.some(v=>!normalizePrice(v))?STATUS.REVIEW:!expected.length?STATUS.NOT_CHECKED:expected.some(v=>!normalizePrice(v))?STATUS.REVIEW:reference.status==='AMBIGUOUS'&&new Set(expected.map(amount)).size>1?STATUS.REVIEW:actual.every(a=>expected.some(b=>equal(a,b)))?STATUS.MATCH:statusForMismatch(ex,'cashPrices',expected,normalizePrice,equal),expected,actual,!actual.length||actual.some(v=>!normalizePrice(v))?T('Peşin satış fiyatı okunamadı.','Cash selling price could not be read.'):!expected.length?T('Peşin fiyat okundu. CP’de peşin satış fiyatı referansı yok; FOB veya taksitli fiyatla karşılaştırılmaz.','Cash price read. CP has no cash retail price reference; FOB and instalment prices are not comparable.'):T('Yalnız geçerli peşin satış fiyatları karşılaştırılır.','Only valid cash retail prices are compared.'));
+    }
+    const reading=options.reading||{};
+    if(options.aiUnavailable||arrFailed(reading).length)add('LAYOUT_PAGE_COVERAGE','READING',STATUS.REVIEW,[],arrFailed(reading).map(String),T('Bazı sayfaların görsel incelemesi tamamlanamadı. Okunan alanlar korundu.','Visual review of some pages was incomplete. Extracted fields were retained.'),'LCW AI');
+    const evidenceFields={MODEL_MATCH:'modelCodes',ORDER_MATCH:'orderNumbers',SPECIAL_CODE_MATCH:'specialCodes',COLOR_CODE_MATCH:'colourCodes',COLOR_NAME_MATCH:'colours',COUNTRY_MATCH:'countries',COMPOSITION_MATCH:'composition',PRICE_MATCH:'cashPrices'};
+    const evidence=(ex.fieldEvidence||[]).flatMap(line=>{try{const f=JSON.parse(line),b=f.bbox;return Number.isInteger(f.page)&&f.page>=1&&f.page<=Math.min(80,Number(reading.totalPages)||80)&&Array.isArray(b)&&b.length===4&&b.every(n=>typeof n==='number'&&Number.isFinite(n))&&b[0]>=0&&b[1]>=0&&b[2]>0&&b[3]>0&&b[0]+b[2]<=1.001&&b[1]+b[3]<=1.001&&clean(f.text)?[f]:[];}catch(_){return [];}});
+    checks.forEach(check=>{const field=evidenceFields[check.rule],f=evidence.find(f=>f.field===field);if(f){check.page=f.page;check.bbox=f.bbox;}});
+    return {documentType:doc,extraction:ex,referenceRows:rows,reference,reading,checks,summary:summarize(checks)};
+  }
+  function arrFailed(reading){return Array.isArray(reading.failedPages)?reading.failedPages:[];}
+  function fireRequirement(rows){
+    if(!rows||!rows.length)return null;
+    const results=rows.map(row=>{
+      const special=fold(cpValue(row,'specialCode')),category=fold(cpValue(row,'category')||cpValue(row,'productDescription'));
+      const nightwear=/PYJAMA|PIJAMA|NIGHT(?:WEAR|DRESS)|GECELIK|BATHROBE|BORNOZ/.test(category);
+      const groups=fold([cpValue(row,'mmyg'),cpValue(row,'mag'),cpValue(row,'buyingGroup')].join(' '));
+      if(nightwear&&/\b(?:BU|BG)(?:\b|\d)/.test(groups))return true;
+      const wearable=nightwear||/T.?SHIRT|SHIRT|KAZAK|SWEATER|PANT|TROUSER|ELBISE|DRESS|HIRKA|CARDIGAN|SWEAT|YELEK|VEST|SORT|SHORT|ETEK|SKIRT|CEKET|JACKET|BLOUSE|BLUZ|COAT|MONT|LEGGING|TAYT|SOCK|CORAP|UNDERWEAR|IC GIYIM/.test(category);
+      if(/Z[14]$/.test(special)&&wearable)return true;
+      if(nightwear&&!groups)return null;
+      if(/Z[148]$/.test(special)&&category)return false;
+      return null;
+    });return results.every(v=>v===true)?true:results.every(v=>v===false)?false:null;
+  }
+
   return {
     STATUS,DOC,FIELD_ALIASES,clean,fold,key,uniq,list,normalizeCountry,normalizeSize,normalizeBarcode,normalizePrice,
-    parseComposition,compositionKey,classifyDocument,extractCountries,extractOriginCountries,deriveLocalExtraction,mergeExtraction,enrichExtractionFromCp,exactMatchRows,compare,summarize
+    parseComposition,compositionKey,classifyDocument,extractCountries,extractOriginCountries,deriveLocalExtraction,mergeExtraction,enrichExtractionFromCp,exactMatchRows,compare,summarize,printedFields,assess,cpValue,cpCatalog,fireRequirement
   };
 });

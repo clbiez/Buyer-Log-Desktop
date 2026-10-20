@@ -5,7 +5,7 @@
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(root)root.BLLayoutTemplate=api;
 })(typeof window!=='undefined'?window:null,function(){
-  const VERSION='LCW-004.4-003.5';
+  const VERSION='LCW-004.4-003.5-core2';
   const SOURCES=Object.freeze({
     CARE_LABEL:{code:'LC.KSU.ST.004',revision:4,date:'2025-03-28',url:'layout-control-standards/care-v4.pdf',pages:18},
     PRICE_TAG:{code:'LC.KSU.ST.003',revision:5,date:'2025-08-14',url:'layout-control-standards/price-v5.pdf',pages:28}
@@ -85,6 +85,17 @@
     'Tüm layout sayfalarında kesilme, üst üste binme, okunaksız metin ve tutarsız model/renk/menşe/beden/barkod varyantlarını işaretle. Görünmeyen sayfa veya eksik kanıt varsa onaylama.',
     'Mark clipping, overlap, illegible text and inconsistent model/colour/origin/size/barcode variants across all layout pages. Do not approve unseen pages or missing evidence.');
 
+  rule('CARE_TRANSLATIONS','CARE_LABEL',4,'ERROR','Diller ve çevirilerin anlamı','Languages and translation meaning',
+    'Her dilde kumaş yeri, ana kumaş yüzdeleri, menşe, bakım ve gerekli ateş uyarısı TR/EN aslıyla aynı anlamda olmalı; dil atlanmamalı. Görülmeyen/okunamayan çeviri uygun sayılmaz.',
+    'Fabric area, main-fabric percentages, origin, care and required fire warning must preserve the TR/EN meaning in every language; no omitted languages. Unseen/illegible translations cannot pass.');
+  rule('CARE_CONTACT','CARE_LABEL',3,'ERROR','LCW adresi, telefonu ve sitesi','LCW address, phone and website',
+    'LC WAIKIKI MAĞAZACILIK HİZ.TİC.A.Ş.; 15 Temmuz Mahallesi Gülbahar Caddesi No:41, 34212 Bağcılar/İSTANBUL; +90(212)6575555; www.lcwaikiki.com. İthalatçı adresi bu firma bloğunun yerine geçmez.',
+    'LC WAIKIKI MAĞAZACILIK HİZ.TİC.A.Ş.; 15 Temmuz Mahallesi Gülbahar Caddesi No:41, 34212 Bağcılar/İSTANBUL; +90(212)6575555; www.lcwaikiki.com. An importer address does not replace this company block.');
+  rule('PRICE_CASH','PRICE_TAG',14,'ERROR','Peşin satış fiyatı ve para birimi','Cash retail price and currency',
+    'Peşin Fiyat ve basılı para birimi açıkça okunmalı; taksitli fiyatla karıştırılmamalı. Yurt içi etikette TL sembolü rakamın solunda, KDV Dahildir ve fiyat oluşturma tarihi ilgili blokta. Yurt dışı etiketinde yerel pazar bilgisi esas alınır.',
+    'Read Cash Price and its printed currency separately from the instalment price. Domestic label: TL symbol left of amount, VAT included and price creation date in the relevant block. Foreign labels follow their local market.');
+  const LANGUAGES='TR EN RU UA RO BG PL KZ AZ AR FR ID AL BH SR MS MK ES HR GR PT HU UZ'.split(' ');
+  function focusedRules(type){const ids=type==='CARE_LABEL'?['CARE_LANG','CARE_TRANSLATIONS','CARE_CONTACT','CARE_FIRE']:type==='PRICE_TAG'?['PRICE_CASH']:[];return rules.filter(r=>ids.includes(r.id));}
   function applicable(type){return rules.filter(r=>r.type===type||r.type==='ANY');}
   function normalizeFinding(value,pageCount){
     let item;try{item=typeof value==='string'?JSON.parse(value):value;}catch(_){return null;}
@@ -110,10 +121,51 @@
     });
   }
   function guide(){return rules.map(r=>r.id+' ['+r.type+'] '+r.expected.en).join('\n');}
+  function focusedGuide(){return ['Standards: LC.KSU.ST.004 rev.4; LC.KSU.ST.003 rev.5.',...focusedRules('CARE_LABEL'),...focusedRules('PRICE_TAG')].map(r=>typeof r==='string'?r:r.id+': '+r.expected.en).join('\n');}
+  function focusedChecks(type,findings,pageCount,language,options={}){
+    const lang=language==='en'?'en':'tr',ex=options.extraction||{},complete=options.complete===true;
+    const parsed=(Array.isArray(findings)?findings:[]).map(f=>normalizeFinding(f,pageCount)).filter(Boolean);
+    const selected=focusedRules(type).filter(r=>r.id!=='CARE_FIRE'||options.fireRequired!==false);
+    const result=selected.map(r=>{
+      const matches=parsed.filter(f=>f.ruleId===r.id),issue=matches.find(f=>f.verdict==='ISSUE'),uncertain=matches.find(f=>f.verdict==='UNCERTAIN'),passed=matches.filter(f=>f.verdict==='PASS'&&f.actual);
+      const f=issue||uncertain||passed[0]||null;
+      let status=issue?'MISMATCH':uncertain||!passed.length?'REVIEW':'MATCH';
+      let actual=matches.map(f=>f.actual).filter(Boolean),detail=matches.map(f=>f.comment).filter(Boolean).join(' · ');
+      if(r.id==='CARE_LANG'){
+        const codes=Array.from(new Set((ex.languageCodes||[]).filter(c=>LANGUAGES.includes(c))));actual=codes;
+        const missing=LANGUAGES.filter(c=>!codes.includes(c));
+        status=issue?'MISMATCH':missing.length?(complete&&codes.length?'MISMATCH':'REVIEW'):'MATCH';
+        detail=[detail,missing.length?(lang==='en'?'Missing/unread languages: ':'Eksik/okunamayan diller: ')+missing.join(', '):(lang==='en'?'All 23 required language sections were read.':'Zorunlu 23 dil bölümü okundu.')].filter(Boolean).join(' · ');
+      }
+      if(r.id==='CARE_TRANSLATIONS'&&status==='MATCH'){
+        const codes=(ex.languageTexts||[]).flatMap(line=>{try{return [JSON.parse(line).code];}catch(_){return [];}});
+        if(!complete||LANGUAGES.some(c=>!codes.includes(c)))status='REVIEW';
+      }
+      if(r.id==='CARE_TRANSLATIONS'&&options.compositionKey){
+        const base=options.compositionKey(ex.composition||[]),conflicts=[];
+        (ex.languageTexts||[]).forEach(line=>{try{const item=JSON.parse(line),value=options.compositionKey(item.composition||'');if(base&&value&&base!==value)conflicts.push(item.code+': '+item.composition);}catch(_){}});
+        if(conflicts.length){status='MISMATCH';actual=conflicts;detail=lang==='en'?'Translated composition differs from the main fabric.':'Çevirideki kompozisyon ana kumaşla farklı.';}
+      }
+      if(r.id==='CARE_CONTACT'&&options.fold){
+        const text=options.fold([...(ex.companyAddresses||[]),...actual].join(' '));
+        const urls=(ex.websites||[]).map(v=>String(v).trim().toLowerCase().replace(/^https?:\/\//,'').replace(/^www\./,'').replace(/\/$/,''));
+        const parts=[/LC\s*WAIKIKI/,/15\s*TEMMUZ/,/GULBAHAR/,/\b41\b/,/34212/,/BAGCILAR/,/ISTANBUL/,/657\D*55\D*55/];
+        if(urls.length&&urls.some(v=>v!=='lcwaikiki.com')||text&&parts.some(rx=>!rx.test(text))){status='MISMATCH';actual=[...(ex.companyAddresses||[]),...(ex.websites||[])];detail=lang==='en'?'The LCW company block/website differs from the standard.':'LCW firma bloğu/sitesi standarttan farklı.';}
+      }
+      if(r.id==='CARE_FIRE'){
+        if(options.fireRequired===true&&ex.fireWarning==='ABSENT'&&complete){status='MISMATCH';detail=lang==='en'?'CP product group requires the fire warning; it is absent from the inspected label.':'CP ürün grubu ateş uyarısını gerektiriyor; incelenen etikette uyarı yok.';}
+        else if(options.fireRequired==null&&ex.fireWarning!=='PRESENT'){status='REVIEW';detail=lang==='en'?'Fire-warning applicability could not be determined from CP product/age group.':'CP ürün/yaş grubundan ateş uyarısı gerekliliği belirlenemedi.';}
+      }
+      return {rule:'STD_'+r.id,ruleId:r.id,category:'STANDARD',status,assessmentStatus:status,severity:r.severity,expected:[r.expected[lang]],actual,detail:detail||(lang==='en'?'No readable evidence for this check.':'Bu kontrol için okunabilir kanıt yok.'),correction:issue&&issue.correction||'',aiVerdict:issue?'ISSUE':status==='MATCH'?'PASS':'UNCERTAIN',page:f&&f.page||null,bbox:f&&f.bbox||null,source:'LCW AI',standardType:type,standardPage:r.page,decision:'PENDING',comment:''};
+    });
+    parsed.filter(f=>f.ruleId==='VISUAL_PAGES'&&f.verdict==='ISSUE').forEach((f,i)=>result.push({rule:'STD_VISUAL_PAGES_'+i,ruleId:'VISUAL_PAGES',category:'STANDARD',status:'MISMATCH',assessmentStatus:'MISMATCH',expected:[],actual:[f.actual],detail:f.comment,correction:f.correction,page:f.page,bbox:f.bbox,source:'LCW AI',aiVerdict:'ISSUE',decision:'PENDING',standardType:type,standardPage:1}));
+    return result;
+  }
   function reviewStatus(checks){
     const all=Array.isArray(checks)?checks:[],layout=all.filter(c=>['STANDARD','ANNOTATION'].includes(c.category));
-    if(all.some(c=>c.status==='MISMATCH')||layout.some(c=>c.decision==='REJECTED'))return 'REJECTED';
+    if(all.some(c=>c.status==='MISMATCH'&&c.category!=='STANDARD')||layout.some(c=>c.decision==='REJECTED'))return 'REJECTED';
+    if(all.some(c=>c.status==='REVIEW'&&!['STANDARD','ANNOTATION'].includes(c.category)))return 'PENDING';
     return layout.some(c=>/^STD_(CARE|PRICE)_/.test(c.rule))&&layout.some(c=>c.decision==='APPROVED')&&layout.every(c=>['APPROVED','NOT_APPLICABLE'].includes(c.decision))?'APPROVED':'PENDING';
   }
-  return {VERSION,SOURCES,rules:Object.freeze(rules),applicable,normalizeFinding,checks,guide,reviewStatus};
+  return {VERSION,SOURCES,LANGUAGES,rules:Object.freeze(rules),applicable,normalizeFinding,checks,guide,reviewStatus,focusedChecks,focusedGuide,focusedRules};
 });
