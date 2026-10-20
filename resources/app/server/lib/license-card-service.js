@@ -50,6 +50,26 @@ function createLicenseCardService(deps){
    });
    const syncPending=await published(profile,change);await notify(profile,change,saved,{originClientId});return {saved,card:change.card,rulesChanged:change.rulesChanged,syncPending};
  }
+ // Process Studio may touch several trees. Validate every card before one durable write.
+ async function updateAtlasBatch(profile,entries,{assertAuthority,originClientId=''}={}){
+   if(!Array.isArray(entries)||!entries.length||entries.length>200||new Set(entries.map(e=>e?.id)).size!==entries.length)throw error('LICENSE_ATLAS_INVALID',400);
+   let change;
+   const saved=await mutate(async lease=>{
+     const guard=()=>{assertAuthority?.();};guard();const current=load();let next=current;const changed=[];
+     for(const entry of entries){
+       if(!entry||typeof entry.id!=='string'||typeof entry.editToken!=='string'||!entry.processAtlas)throw error('LICENSE_ATLAS_INVALID',400);
+       // The token scopes concurrent contract AND profile edits. Arbitrary profile/rule fields are excluded.
+       const result=cards.updateCard(next,entry.id,{editToken:entry.editToken,profile:{processAtlas:entry.processAtlas}},validators);
+       next=result.overrides;changed.push(result.card);
+     }
+     next._revisions.licenseCards=cards.revisionOf(current,'licenseCards')+1;
+     change={cards:changed,rulesChanged:false,initialized:cards.stateOf(next).initialized,lastImportedAt:cards.stateOf(next).lastImportedAt,actorId:profile.id};
+     const staged=deps.publish?sync.stageChange(next,change):next;
+     const actual=deps.saveOverrides(staged,Number(current._revision)||0,{...lease,assertAuthority:guard});await lease.commit();
+     if(sectionSnapshot(load()).fingerprint!==sectionSnapshot(actual).fingerprint)throw error('OFFICE_RESOURCE_VERIFY_FAILED',409);return actual;
+   });
+   const syncPending=await published(profile,change);await notify(profile,change,saved,{originClientId});return {saved,syncPending,updated:change.cards.length};
+ }
  function inverseSnapshot(id,includeRules){const current=load(),card=cards.stateOf(current).items.find(item=>item.id===id);if(!card)throw error('OFFICE_NOT_FOUND',404);return {card:clone(card),...(includeRules?{rules:clone(current.pricingRules||[])}:{})};}
  async function restore(profile,receipt,expected,{assertAuthority}={}){
    let change;
@@ -66,6 +86,6 @@ function createLicenseCardService(deps){
    });
    const syncPending=await published(profile,change);await notify(profile,change,saved);return {saved,syncPending};
  }
- return {read,discovery,discover,updatePreview,update,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
+ return {read,discovery,discover,updatePreview,update,updateAtlasBatch,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
 }
 module.exports={createLicenseCardService,sectionSnapshot};

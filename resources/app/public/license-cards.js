@@ -89,10 +89,10 @@
   function detailHtml(c){
     if(!S.draft)S.draft=makeDraft(c);
     const symbol=E.symbolUrl(S.draft.profile.symbolDataUrl),portal=E.portalHref(S.draft.profile.portalUrl);
-    return `<div class="lcDetail panel" aria-label="${esc(T('Lisans detayları','License details'))}"><div class="lcDetailHead"><div><span class="lcEyebrow">${esc(T('Lisans kartı','License card'))}</span><h2>${esc(c.license)}</h2><p>${esc(c.licensor||'—')}</p></div><div class="lcActions"><button class="tbtn" type="button" data-lc-action="exportSelectedAtlas" ${S.editing||S.saving?'disabled':''}>${esc(T('Üretici atlası','Supplier atlas'))}</button>${S.data.canEdit&&!S.editing&&!S.loading?`<button class="tbtn" type="button" data-lc-action="edit">${esc(T('Düzenle','Edit'))}</button>`:''}<button class="tbtn" type="button" data-lc-action="close" ${S.saving?'disabled':''}>${esc(T('Kapat','Close'))}</button></div></div>
+    return `<div class="lcDetail panel" aria-label="${esc(T('Lisans detayları','License details'))}"><div class="lcDetailHead"><div><span class="lcEyebrow">${esc(T('Lisans kartı','License card'))}</span><h2>${esc(c.license)}</h2><p>${esc(c.licensor||'—')}</p></div><div class="lcActions"><button class="tbtn" type="button" data-lc-action="exportSelectedAtlas" ${S.editing||S.saving?'disabled':''}>${esc(T('Üretici atlası','Supplier atlas'))}</button>${window.BLLicenseAtlasShell&&S.editing?`<button class="tbtn" type="button" data-lc-action="importAtlas" ${S.saving?'disabled':''}>${esc(T('Atlas bağla','Link atlas'))}</button>`:''}${S.data.canEdit&&!S.editing&&!S.loading?`<button class="tbtn" type="button" data-lc-action="edit">${esc(T('Düzenle','Edit'))}</button>`:''}<button class="tbtn" type="button" data-lc-action="close" ${S.saving?'disabled':''}>${esc(T('Kapat','Close'))}</button></div></div>
     ${S.conflict?`<div class="lcNotice" role="alert">${esc(T('Kaydın daha güncel bir sürümü var. Düzenlemeleriniz korunuyor.','A newer version of this record exists. Your edits are preserved.'))}<button class="tbtn" type="button" data-lc-action="reload" ${S.saving?'disabled':''}>${esc(T('Düzenlemeyi bırak ve güncel kaydı aç','Discard edits and open current record'))}</button></div>`:''}
     <form id="lcCardForm"><details open><summary>${esc(T('Sözleşmeler ve oran geçmişi','Contracts and rate history'))} <span class="lcMuted">(${S.draft.rules.length})</span></summary><p class="lcMuted">${esc(T('Oranlar siparişin OPD tarihi ve sezonuna göre uygulanır. Yeni dönem eklerken eski sözleşmenin bitiş tarihini koruyun.','Rates apply by the order’s OPD date and season. When adding a period, retain the previous contract’s end date.'))}</p>${S.draft.rules.map(contractHtml).join('')}<p class="lcMuted">${esc(T('Boş komisyon alanı o ülke grubu için sözleşme tanımlı olmadığını belirtir.','An empty commission field means no contract is configured for that country group.'))}</p>${!c.licensor?`<p class="lcMuted">${esc(T('Royalty sözleşmesi eklemek için ASAS kaydında lisansör tanımlı olmalı.','The ASAS record must have a licensor before adding a royalty contract.'))}</p>`:''}${S.editing?`<button class="tbtn" type="button" data-lc-action="add" ${S.saving||!c.licensor?'disabled':''}>+ ${esc(T('Yeni dönem ekle','Add contract period'))}</button>`:''}</details>
-    ${window.BLLicenseAtlas?.html(c,S.draft.profile.processAtlas,S.editing&&!S.saving)||''}
+    ${!window.BLLicenseAtlasShell?(window.BLLicenseAtlas?.html(c,S.draft.profile.processAtlas,S.editing&&!S.saving)||''):''}
     <details open><summary>${esc(T('Lisansör ve portal','Licensor and portal'))}</summary><div class="lcFormGrid">${textarea('workingNotes',T('Çalışma şekli ve notlar','Working process and notes'))}${input('contactName',T('İlgili kişi','Contact person'),'text','maxlength="200"')}${input('contactEmail',T('E-posta','Email'),'email','maxlength="320"')}${input('portalUrl',T('Portal web sitesi','Portal website'),'url','maxlength="2048"')}${input('portalUsername',T('Portal kullanıcı adı','Portal username'),'text','autocomplete="off" maxlength="200"')}${input('accessReference',T('Şifre yöneticisi kayıt referansı','Password manager record reference'),'text','autocomplete="off" maxlength="1000"')}</div>${portal?`<p><a href="${esc(portal)}" target="_blank" rel="noopener noreferrer">${esc(T('Portalı aç','Open portal'))} ↗</a></p>`:''}<p class="lcMuted">${esc(T('Parolayı burada saklamayın; şifre yöneticisindeki kayıt adını kullanın.','Use the password manager record name here to keep passwords in your password manager.'))}</p></details>
     <details><summary>${esc(T('Lisans sembolü ve Artwork','License symbol and Artwork'))}</summary><div class="lcSymbolPreview">${symbol?`<img src="${esc(symbol)}" alt="${esc(T('Lisans sembolü önizleme','License symbol preview'))}">`:esc(T('Henüz sembol yüklenmedi.','No symbol uploaded yet.'))}</div>${S.editing?`<label class="lcField"><span>${esc(T('Sembol yükle (PNG / JPEG / WebP, en fazla 256 KB)','Upload symbol (PNG / JPEG / WebP, max 256 KB)'))}</span><input type="file" id="lcSymbolFile" accept="image/png,image/jpeg,image/webp" ${S.saving?'disabled':''}></label>`:''}${textarea('artworkBrief',T('Buyer Log için Artwork fikri / brief','Artwork idea / brief for Buyer Log'))}<p class="lcMuted">${esc(T('Artwork isteğe bağlıdır. Burada briefinizi saklayabilirsiniz; görsel üretimi ve uygulaması son seçiminizden sonra yapılır.','Artwork is optional. Save your brief here; image generation and application follow your final choice.'))}</p></details>
     <details id="lcStatsDetail" ${S.statsOpen?'open':''}><summary>${esc(T('Sipariş özeti','Order summary'))}</summary><div id="lcStatsContent">${statsHtml(c)}</div></details>
@@ -100,6 +100,15 @@
   }
   function render(){
     if(!visible())return;
+    if(window.BLLicenseAtlasShell){
+      const c=card();
+      window.BLLicenseAtlasShell.render(S.host,{data:S.data,selected:S.selected,detail:c?detailHtml(c):'',locale:isEn()?'en':'tr',error:S.error,api,failMessage,action,reload:()=>load(),
+        select:id=>{S.selected=id;S.draft=null;S.statsOpen=false;render();},selectOnly:id=>{if(!S.editing){S.selected=id;S.draft=null;}},
+        accept:result=>{S.data=result;S.draft=null;S.conflict=false;S.error='';window.BLLicenseDataBridge?.rulesChanged?.(result);},
+        showError:message=>{S.error=message;render();},setLocale:locale=>{if(typeof applyLanguage==='function')applyLanguage(locale);},
+      });
+      bind();return;
+    }
     const focus=document.activeElement,searchFocus=focus?.id==='lcSearch',selection=searchFocus?focus.selectionStart:null;
     const cards=(S.data?.cards||[]).filter(c=>`${c.license} ${c.licensor}`.toLocaleLowerCase(isEn()?'en':'tr').includes(S.query.toLocaleLowerCase(isEn()?'en':'tr')));
     const c=card();
@@ -115,7 +124,7 @@
       S.host.querySelector('.lcDetail h2')?.scrollIntoView({block:'nearest'});
     }));
     S.host.querySelectorAll('[data-lc-action]').forEach(el=>el.addEventListener('click',()=>action(el.dataset.lcAction)));
-    if(card()&&S.draft)window.BLLicenseAtlas?.bind(S.host,{card:card(),get:()=>S.draft.profile.processAtlas,set:value=>{S.draft.profile.processAtlas=value;},editing:S.editing&&!S.saving,render,api,error:message=>{S.error=message;render();}});
+    if(!window.BLLicenseAtlasShell&&card()&&S.draft)window.BLLicenseAtlas?.bind(S.host,{card:card(),get:()=>S.draft.profile.processAtlas,set:value=>{S.draft.profile.processAtlas=value;},editing:S.editing&&!S.saving,render,api,error:message=>{S.error=message;render();}});
     const form=S.host.querySelector('#lcCardForm');
     form?.addEventListener('input',e=>{
       if(!S.editing||S.saving)return;
@@ -131,6 +140,10 @@
     });
   }
   function action(name){
+    if(name==='importAtlas'&&S.editing&&!S.saving&&window.BLLicenseAtlas?.importDialog)return window.BLLicenseAtlas.importDialog({card:card(),api,get:()=>S.draft.profile.processAtlas,set:value=>{S.draft.profile.processAtlas=value;},render});
+    if(name==='close'&&S.editing&&!S.saving&&!confirm(T('Kaydedilmemiş ticari değişiklikler bırakılsın mı?','Discard unsaved commercial changes?')))return;
+
+    if((name==='exportAtlas'||name==='exportSelectedAtlas')&&!S.editing&&!S.saving&&window.BLLicenseAtlasShell)return window.BLLicenseAtlasShell.exportSupplier(name==='exportSelectedAtlas'?S.selected:'');
     if((name==='exportAtlas'||name==='exportSelectedAtlas')&&!S.editing&&!S.saving)return window.BLLicenseAtlas?.exportDialog(S.data?.cards||[],name==='exportSelectedAtlas'?S.selected:'');
     if(name==='refresh'&&!S.editing&&S.data?.canEdit)return load(true);
     if(name==='retry')return load();

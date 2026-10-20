@@ -38,6 +38,13 @@ app.get('/api/license-cards/atlas-library', area, (req, res) => {
 app.post('/api/license-cards/refresh', area, permission, async (req, res) => {
     try { const result = await importCards(req, true); send(req, res, result.saved, { added: result.added, syncPending: result.syncPending }); } catch (err) { error(res, err); }
   });
+app.put('/api/license-cards/atlas-batch', area, permission, async (req, res) => {
+    try {
+      const result=await service.updateAtlasBatch(req.currentUser,req.body?.changes,{assertAuthority:authority(req,true),originClientId:String(req.headers?.['x-client-id']||'').slice(0,80)});
+      userAccess.appendAudit(req.currentUser,'LICENSE_ATLAS_BATCH_UPDATE','licenseCards',{updated:result.updated,revision:cards.revisionOf(result.saved,'licenseCards')});
+      send(req,res,result.saved,{syncPending:result.syncPending});
+    } catch(err){error(res,err);}
+  });
 app.put('/api/license-cards/:id', area, permission, async (req, res) => {
     try {
       const result=await service.update(req.currentUser,req.params.id,req.body||{},{assertAuthority:authority(req,true),originClientId:String(req.headers?.['x-client-id']||'').slice(0,80)}),{saved,syncPending}=result;
