@@ -5815,9 +5815,7 @@ async function agentOfficeOperationalData(profile, scope, areas) {
     const CP=require('../public/cp-readiness-engine'), analyses=result.cpRows.map(row=>CP.analyzeOrder(row)), keys=new Set(analyses.map(order=>order.orderKey));
     const Checklist=require('../public/cp-checklist-engine'), optionKeys=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
     const models=new Set(result.cpRows.map(row=>String(canonicalFields.value(row,'cp','plmId') || '')));
-    const reports=require('./lib/test-reports/store').publicPayload();
-    const links=Object.fromEntries(Object.entries(reports.links).filter(([,link])=>keys.has(link?.orderKey)));
-    result.reports={...reports,links,reports:Object.fromEntries(Object.keys(links).map(key=>[key,reports.reports[key]]))};
+    result.reports=require('./lib/test-reports/store').publicPayload(keys);
     const checklist=require('./lib/checklist-supplier-store').publicPayload();
     const visible=entries=>Object.fromEntries(Object.entries(entries||{}).filter(([key])=>keys.has(key.slice(0,key.lastIndexOf('::'))) || optionKeys.has(key.slice(0,key.lastIndexOf('::')))));
     result.personalAnswers=visible(personalAnswers);

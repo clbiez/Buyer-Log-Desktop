@@ -237,3 +237,25 @@ test('current native role CREATE revocation with EDIT retained is checked inside
 test('actual native peer successor cannot discard its own successful Quality report import acknowledgement',async t=>{const f=await fixture(t),parsed=await f.source.parse(f.profile,[file('B-labright-result-364790.msg')]),items=(await f.tools.inspect(f.profile,parsed.sessionId)).suggestedItems,ready=await f.create([{toolId:'quality.commit',args:{sessionId:parsed.sessionId,items}}]),commit=reports.commit;let ownRevision;reports.commit=(entries,typeMap,actor,attach,options)=>{const own=commit(entries,typeMap,actor,attach,options);if(options?.expectedRevision!==undefined){ownRevision=own.revision;commit([{report:own.results[0].report,orderKey:items[0].orderKey,itemId:'pps'}],{},actor,()=>null);}return own;};let done;try{done=await f.execute(ready);}finally{reports.commit=commit;}assert.equal(done.status,'completed');assert.ok(done.steps[0].result.rollbackToken);assert.equal(done.steps[0].result.results[0].itemId,'tests');assert.equal(done.steps[0].result.revision,ownRevision);assert.equal(reports.read().revision,ownRevision+1);await assert.rejects(f.office.taskRollback(f.profile,done.id,{stepId:done.steps[0].id,confirmed:true}),{code:'TEST_REPORT_REVISION_CONFLICT'});assert.equal(reports.read().links[items[0].talepNo].itemId,'pps');});
 
 test('real partial Quality receipt requires current scope on terminal prepare, execute and poll without replay',async t=>{const {f,items}=await committedNativePair(t);checklist.applyEntries([{orderKey:items[0].orderKey,itemId:'tests',state:'approved',at:'2099-01-01T00:00:00Z'}],f.profile);const done=await f.execute(await f.create([{toolId:'quality.checklist.apply',args:{items}}]));assert.equal(done.status,'partial');const before=checklist._read(),saved=await f.store.get(f.profile.id,'job',done.id);f.profile.areas=[];for(const method of ['taskPrepare','taskExecute','taskPollOperation'])await assert.rejects(f.office[method](f.profile,done.id),{code:'OFFICE_PREVIEW_CHANGED'});assert.deepEqual(checklist._read(),before);assert.deepEqual(await f.store.get(f.profile.id,'job',done.id),saved);});
+
+test('multiple order scopes survive agent preview, explicit approval and independent checklist writes',async t=>{
+  const f=await fixture(t),codes=['1000011','1000012','1000013'];
+  f.setAllowed(new Map(codes.map(orderCode=>[orderCode+'|DEMO|NVY',{orderCode,modelName:'DEMO',colourCode:'NVY',colour:'NAVY'}])));
+  const evidence='MAIN FABRIC '.repeat(65)+'ORDER: '+codes.join('/');
+  const content=Buffer.from('From: labright@example.invalid\nSubject: [RESULT REPORT] TALEP NO: 4400011\nContent-Type: text/plain; charset=utf-8\n\nTest Talep Bilgileri\nTalep No / Request no\t4400011\tSipariş Kodu / Order No\t1000011\nModel\tDEMO\tRenk / Color\tNAVY\nAçıklama / Description\t'+evidence+'\nGenel Değerlendirme\tPass');
+  const parsed=await f.source.parse(f.profile,[{name:'multiple-demo.eml',base64:content.toString('base64')}]);
+  const inspected=await f.registry.execute('quality.inspect',{sessionId:parsed.sessionId},{ownerId:f.profile.id,profile:f.profile});
+  assert.equal(inspected.data.matches.length,3);
+  const extra=inspected.data.matches.find(m=>m.scopeOrderCode==='1000012');
+  assert.equal(extra.requiresReview,true);assert.equal(extra.scopeEvidence,evidence,'long source proof remains reviewable');
+  assert.equal(inspected.data.suggestedItems.length,1,'extra POs cannot be auto-approved');
+  const items=codes.map(orderCode=>({talepNo:'4400011',orderKey:orderCode+'|DEMO|NVY',itemId:'tests',confirmMatch:true}));
+  await assert.rejects(f.registry.execute('quality.commit',{sessionId:parsed.sessionId,items:[{...items[1],confirmMatch:false}]},{ownerId:f.profile.id,profile:f.profile,dryRun:true}),{code:'OFFICE_QUALITY_MATCH_REQUIRED'});
+  let reportJob=await f.create([{toolId:'quality.commit',args:{sessionId:parsed.sessionId,items}}]);reportJob=await f.execute(reportJob);assert.equal(reportJob.status,'completed');
+  assert.equal(E.reportLinks(reports.read().links['4400011']).length,3);
+  let answerJob=await f.create([{toolId:'quality.checklist.apply',args:{items}}]);answerJob=await f.execute(answerJob);assert.equal(answerJob.status,'completed');
+  const answers=checklist._read().answers,ids=[];
+  for(const item of items){const answer=answers[item.orderKey+'::tests'];assert.equal(answer.state,'approved');assert.equal(answer.attachments.length,1);ids.push(answer.attachments[0].id);}
+  assert.equal(new Set(ids).size,3,'each scope has its own attachment identity');
+  await assert.rejects(f.office.taskRollback(f.profile,reportJob.id,{stepId:reportJob.steps[0].id,confirmed:true}),{code:'OFFICE_TASK_DEPENDENCY'});
+});

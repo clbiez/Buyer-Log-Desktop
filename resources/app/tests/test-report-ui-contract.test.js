@@ -56,7 +56,7 @@ test('CP\'de siparişi olmayan raporlar dikkate alınmaz ve LCW AI incelemesine 
   const ui = read('public/test-report-import.js');
   assert.match(ui, /const ignored = Boolean\(E\(\)\.normalizeOrderCode\(report\.siparisKodu\)\) && match\.level === 'none' && match\.reason === 'order'/);
   assert.match(ui, /include: !ignored && Boolean\(chosen\) && !fromAi/);
-  assert.match(ui, /function reviewableEntries\(\) \{ return ui\.entries\.filter\(function \(e\) \{ return e\.report\.talepNo && !e\.ignored; \}\); \}/);
+  assert.match(ui, /if \(e\.report\.talepNo && !e\.ignored && !reports\.has\(e\.report\.talepNo\)\)/, 'CP dışında kalan kapsamlar elenir; aynı rapor AI incelemesine yalnız bir kez gider');
   assert.match(ui, /T\('Dikkate alınmadı', 'Ignored'\)/);
   assert.match(ui, /LCW AI\\'a gönderilmedi/);
   assert.match(ui, /if \(!entry\.ignored && !entry\.itemId && entry\.typeKey/);

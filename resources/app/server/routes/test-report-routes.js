@@ -34,9 +34,7 @@ module.exports = function registerTestReportRoutes(app, deps) {
 
 app.get('/api/test-reports', userAccess.requireAnyArea('cp', 'orders', 'overview'), async (req, res) => {
     try {
-      const allowed=await authorizedOrders(req),payload=store.publicPayload();
-      payload.links=Object.fromEntries(Object.entries(payload.links).filter(([,link])=>allowed.has(link?.orderKey)));
-      payload.reports=Object.fromEntries(Object.keys(payload.links).map(key=>[key,payload.reports[key]]));
+      const allowed=await authorizedOrders(req),payload=store.publicPayload(new Set(allowed.keys()));
       res.set('Cache-Control', 'no-store').json(payload);
     }
     catch (err) { automationError(res, err, 'Test raporları okunamadı.'); }
