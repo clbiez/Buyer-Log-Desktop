@@ -35,7 +35,7 @@ test('9 haneli kod ve takım modelin A/B kumaşları ayrı kart kodu olarak okun
   const SCUBA = '100000627-Örme,Soft Touch Scuba,230 gsm,40/1,%47 Poliester, %48 Viskoz, %5 Elastan'; // i18n-ignore
   assert.equal(engine.codeOf(SCUBA), '100000627');
   assert.equal(engine.ruleCard(SCUBA).code, '100000627');
-  assert.equal(engine.ruleCard(SCUBA).summary, 'Soft Touch Scuba · 230 gsm · 48% Viskoz 47% Poliester 5% Elastan'); // i18n-ignore
+  assert.equal(engine.ruleCard(SCUBA).summary, 'Soft Touch Scuba · 230 gsm · 48% Viskoz 47% Polyester 5% Elastan'); // i18n-ignore
   const SET = `A - ${SUPREM}\nB - ${TWO_THREAD}`;
   assert.deepEqual(engine.parts(SET).map(part => [part.label, part.code]), [['A', '3859'], ['B', '361819']]);
   assert.equal(engine.parts(SET)[1].raw, TWO_THREAD, 'her kumaş kendi PLM metniyle analiz edilir');
@@ -60,8 +60,8 @@ test('kural kartı PLM metninden kısa özet çıkarır ve değer uydurmaz', () 
 test('özet iki dillidir: TR ve EN, aynı sayılarla', () => {
   const card = engine.ruleCard(SUPREM);
   assert.equal(card.summaryEn, 'Single Jersey · 30/1 Ne · 150 gsm · 100% Cotton');
-  assert.equal(engine.ruleCard(TWO_THREAD).summaryEn, 'Two Thread · 220 gsm · 80% Cotton 20% Polyester');
-  assert.equal(engine.ruleCard('370380-Interlock,70,Denye Continue Flament 140 gsm,100%Polyester').summary, 'Interlock · 70 Denye · 140 gsm · 100% Poliester', 'TR özette kumaş tipi PLM yazımıyla kalır'); // i18n-ignore
+  assert.equal(engine.ruleCard(TWO_THREAD).summaryEn, 'Two Thread · 220 gsm · 80% Cotton 20% Poliester');
+  assert.equal(engine.ruleCard('370380-Interlock,70,Denye Continue Flament 140 gsm,100%Polyester').summary, 'Interlock · 70 Denye · 140 gsm · 100% Polyester', 'TR özette kumaş tipi PLM yazımıyla kalır'); // i18n-ignore
   const cards = new Map([['3859', card]]);
   assert.equal(engine.displayText(SUPREM, cards, 'tr'), card.summary);
   assert.equal(engine.displayText(SUPREM, cards, 'en'), card.summaryEn);
@@ -122,6 +122,9 @@ test('LCW AI sözleşmesi tek kayıtta tanımlı ve cevap biçimi şekil olarak 
   const built = prompts.buildPrompt({ source: 'fabric-card', task: 'x', context: engine.aiContext([{ code: '3859', raw: SUPREM }]), lang: 'en' });
   assert.equal(built.contract, 'fabric-card');
   assert.match(built.prompt, /3859 :: 3859-/);
+  assert.match(built.prompt, /"Polyester" in the Turkish "summary" and "Poliester" in the English "summaryEn"/);
+  const trPrompt = prompts.buildPrompt({ source: 'fabric-card', task: 'x', context: engine.aiContext([{ code: '3859', raw: SUPREM }]), lang: 'tr' });
+  assert.match(trPrompt.prompt, /Türkçe "summary" içinde "Polyester", İngilizce "summaryEn" içinde "Poliester"/);
   const parsed = prompts.parseStructured('{"cards":["code=3859|summary=Suprem"]}', 'fabric-card');
   assert.equal(parsed.ok, true);
   assert.deepEqual(parsed.data.cards, ['code=3859|summary=Suprem']);
@@ -143,18 +146,63 @@ test('Koleksiyon tablosu PLM metnini korur, kart özetini gösterir ve içe akta
 
 test('fabric blends use numeric descending order and suffix percent signs in both languages',()=>{
   const raw='360236-Dokuma,Gabardin,250 gsm,15*15,%2 Yün, %2 Poliamid, %8 Akrilik, %6 Viskoz, %37 Pamuk, %45 Poliester,İpliği Boyalı'; // i18n-ignore
-  const tr='45% Poliester 37% Pamuk 8% Akrilik 6% Viskoz 2% Yün 2% Poliamid'; // i18n-ignore
-  const en='45% Polyester 37% Cotton 8% Acrylic 6% Viscose 2% Wool 2% Polyamide';
+  const tr='45% Polyester 37% Pamuk 8% Akrilik 6% Viskoz 2% Yün 2% Poliamid'; // i18n-ignore
+  const en='45% Poliester 37% Cotton 8% Acrylic 6% Viscose 2% Wool 2% Polyamide';
   const card=engine.ruleCard(raw);
-  assert.equal(card.details.composition,tr);
+  assert.equal(card.details.composition,'45% Poliester 37% Pamuk 8% Akrilik 6% Viskoz 2% Yün 2% Poliamid','original PLM detail stays unchanged'); // i18n-ignore
   assert.equal(card.summary,'Gabardin · 250 gsm · '+tr);
   assert.equal(card.summaryEn,'Gabardin · 250 gsm · '+en);
   const old={code:'360236',summary:'Gabardin · 2% Yün 45% Poliester 37% Pamuk',summaryEn:'Gabardin · 2% Wool 45% Polyester 37% Cotton'};
-  assert.equal(engine.summaryFor(old,'tr'),'Gabardin · 45% Poliester 37% Pamuk 2% Yün');
-  assert.equal(engine.summaryFor(old,'en'),'Gabardin · 45% Polyester 37% Cotton 2% Wool');
+  assert.equal(engine.summaryFor(old,'tr'),'Gabardin · 45% Polyester 37% Pamuk 2% Yün');
+  assert.equal(engine.summaryFor(old,'en'),'Gabardin · 45% Poliester 37% Cotton 2% Wool');
   assert.equal(engine.translateTerms('%100 Pamuk','tr'),'100% Pamuk'); // i18n-ignore
   assert.equal(engine.normalizeComposition('100% Cotton'),'100% Cotton');
   assert.equal(engine.displayText(raw,new Map([['360236',card]]),'tr'),card.summary);
+});
+
+
+test('Polyester spelling is consistent in TR/EN rule, AI, manual and legacy saved cards',()=>{
+  const raw='364632-Örme,Üç İplik,70 D,240 gsm,65% Pamuk,35% Poliester'; // i18n-ignore
+  const rule=engine.ruleCard(raw);
+  assert.match(rule.summary,/65% Pamuk 35% Polyester/);
+  assert.match(rule.summaryEn,/65% Cotton 35% Poliester/);
+  assert.equal(rule.details.composition,'65% Pamuk 35% Poliester','PLM detail spelling stays original');
+  assert.equal(engine.translateTerms('100% Poliester','tr'),'100% Polyester'); // i18n-ignore
+  assert.equal(engine.translateTerms('100% Polyester','en'),'100% Poliester');
+  assert.equal(engine.translateTerms('Geri Dönüşümlü Polyester','en'),'Recycled Poliester'); // i18n-ignore
+  assert.equal(engine.translateTerms('Recycled Poliester','tr'),'Geri Dönüşümlü Polyester'); // i18n-ignore
+  assert.equal(engine.normalizeSummaryPolyester('Polyesterli karışım','en'),'Polyesterli karışım','whole words only'); // i18n-ignore
+
+  const ai=engine.validateAiCards([
+    'code=364632|summary=Üç İplik · 240 gsm · 65% Pamuk 35% Poliester|summaryEn=Three Thread · 240 gsm · 65% Cotton 35% Polyester|composition=65% Pamuk 35% Poliester', // i18n-ignore
+  ],[{code:'364632',raw}]).cards['364632'];
+  assert.equal(ai.summary,'Üç İplik · 240 gsm · 65% Pamuk 35% Polyester'); // i18n-ignore
+  assert.equal(ai.summaryEn,'Three Thread · 240 gsm · 65% Cotton 35% Poliester');
+  assert.equal(ai.details.composition,'65% Pamuk 35% Poliester','AI detail is source data');
+  assert.equal(ai.raw,raw);
+
+  const legacy={
+    code:'364632',summary:'Özel Üç İplik · 35% Poliester 65% Pamuk',
+    summaryEn:'Custom Three Thread · 35% Polyester 65% Cotton',
+    summarySource:'manual',raw,details:{composition:'65% Pamuk 35% Poliester'},
+  }; // i18n-ignore
+  const loaded=store.normalizeStore({cards:{364632:legacy}}).cards['364632'];
+  assert.equal(loaded.summary,'Özel Üç İplik · 65% Pamuk 35% Polyester'); // i18n-ignore
+  assert.equal(loaded.summaryEn,'Custom Three Thread · 65% Cotton 35% Poliester');
+  assert.equal(loaded.details.composition,legacy.details.composition);
+  assert.equal(loaded.raw,raw,'persisted original PLM text is not rewritten');
+  assert.equal(loaded.summarySource,'manual');
+  assert.equal(engine.summaryFor(legacy,'tr'),loaded.summary);
+  assert.equal(engine.summaryFor(legacy,'en'),loaded.summaryEn);
+
+  const fromClient=engine.normalizeCard(legacy);
+  assert.equal(fromClient.summary,loaded.summary);
+  assert.equal(fromClient.summaryEn,loaded.summaryEn);
+  const saved=store.upsertFabricCards([legacy],{id:'u1',displayName:'Buyer'});
+  assert.equal(saved.cards.find(card=>card.code==='364632').summary,loaded.summary);
+  assert.equal(saved.cards.find(card=>card.code==='364632').summaryEn,loaded.summaryEn);
+  assert.equal(engine.displayText(raw,new Map([['364632',legacy]]),'en'),loaded.summaryEn);
+  assert.equal(engine.summaryFor({summary:'Üç İplik · 35% Poliester'},'en'),'Three Thread · 35% Poliester'); // i18n-ignore
 });
 
 test('no arbitrary text limits: UI and persistent server preserve complete summaries and details',()=>{

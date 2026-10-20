@@ -99,14 +99,24 @@
   /* Kural kartının iki dilli özeti için kumaş terimleri sözlüğü.
      [Türkçe, İngilizce]; uzun terim önce eşleşir. */
   var TERMS = [
-    ['Geri Dönüşümlü Pamuk', 'Recycled Cotton'], ['Geri Dönüşümlü Polyester', 'Recycled Polyester'], ['Organik Pamuk', 'Organic Cotton'], // i18n-ignore
+    ['Geri Dönüşümlü Pamuk', 'Recycled Cotton'], ['Geri Dönüşümlü Polyester', 'Recycled Polyester'], ['Geri Dönüşümlü Polyester', 'Recycled Poliester'], ['Organik Pamuk', 'Organic Cotton'], // i18n-ignore
     ['İki İplik', 'Two Thread', 'type'], ['Üç İplik', 'Three Thread', 'type'], ['Süprem', 'Single Jersey', 'type'], ['Ribana', 'Rib', 'type'], ['Kaşkorse', 'Rib', 'type'], // i18n-ignore
     ['Interlok', 'Interlock', 'type'], ['Pike', 'Pique', 'type'], ['Polar', 'Fleece', 'type'], ['Havlu', 'Terry', 'type'], ['Petek', 'Waffle', 'type'], ['Dalgıç', 'Scuba', 'type'], // i18n-ignore
-    ['Kadife', 'Velvet', 'type'], ['Triko', 'Knitwear', 'type'], ['Örme', 'Knit'], ['Dokuma', 'Woven'], ['Pamuk', 'Cotton'], ['Poliester', 'Polyester'], // i18n-ignore
+    ['Kadife', 'Velvet', 'type'], ['Triko', 'Knitwear', 'type'], ['Örme', 'Knit'], ['Dokuma', 'Woven'], ['Pamuk', 'Cotton'], ['Polyester', 'Poliester'], // i18n-ignore
     ['Elastan', 'Elastane'], ['Viskon', 'Viscose'], ['Viskoz', 'Viscose'], ['Keten', 'Linen'], ['Yün', 'Wool'], ['Akrilik', 'Acrylic'], // i18n-ignore
     ['Poliamid', 'Polyamide'], ['Organik', 'Organic'], ['Penye', 'Combed'], ['Karde', 'Carded'], ['Denye', 'Denier'], // i18n-ignore
   ];
   function escapeRx(value) { return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
+  /* Fabric Card summaries follow the product's TR/EN spelling convention.
+     Correct old/manual/AI summaries at the boundary, without mutating the
+     original PLM text or non-summary details. Match whole fibre names only. */
+  function normalizeSummaryPolyester(value, lang) {
+    var canonical = lang === 'en' ? 'Poliester' : 'Polyester';
+    return String(value == null ? '' : value).replace(/(^|[^A-Za-zÇĞİÖŞÜçğıöşü])(polyester|poliester)(?=$|[^A-Za-zÇĞİÖŞÜçğıöşü])/gi, function (_match, lead, word) {
+      var replacement = word === word.toUpperCase() ? canonical.toUpperCase() : word[0] === word[0].toLowerCase() ? canonical.toLowerCase() : canonical;
+      return lead + replacement;
+    });
+  }
   function translateTerms(text, lang) {
     var from = lang === 'en' ? 0 : 1, to = lang === 'en' ? 1 : 0;
     var pairs = TERMS.slice().sort(function (a, b) { return b[from].length - a[from].length; });
@@ -121,7 +131,7 @@
     });
     out = out.replace(/\u0001(\d+)\u0002/g, function (_, index) { return marks[Number(index)]; });
     // Both Turkish and English use 100% Cotton / 100% Pamuk notation.
-    return normalizeComposition(out.replace(/%\s*(\d{1,3}(?:[.,]\d+)?)\s*/g, '$1% '));
+    return normalizeSummaryPolyester(normalizeComposition(out.replace(/%\s*(\d{1,3}(?:[.,]\d+)?)\s*/g, '$1% ')), lang);
   }
   /* Canonical blend formatter: percentages on the right in both languages,
      fibres ordered by descending percentage. Works with saved/legacy/manual/AI
@@ -244,7 +254,7 @@
         var value = clean(parsed[key]);
         details[key] = value && numbersSupported(value, present) ? (key === 'composition' ? normalizeComposition(value) : limit(value, DETAIL_MAX)) : '';
       });
-      cards[code] = { code: code, summary: normalizeComposition(summary), summaryEn: normalizeComposition(summaryEn), details: details, summarySource: 'ai', raw: raw };
+      cards[code] = { code: code, summary: normalizeSummaryPolyester(normalizeComposition(summary), 'tr'), summaryEn: normalizeSummaryPolyester(normalizeComposition(summaryEn), 'en'), details: details, summarySource: 'ai', raw: raw };
     });
     wanted.forEach(function (raw, code) {
       if (!cards[code]) cards[code] = Object.assign(ruleCard(raw), { code: code, raw: raw });
@@ -259,9 +269,9 @@
     if (!code) return null;
     var details = {};
     DETAIL_FIELDS.forEach(function (key) { var value=limit(source.details && source.details[key], DETAIL_MAX); details[key]=key==='composition'?normalizeComposition(value):value; });
-    var summary = normalizeComposition(limit(source.summary, SUMMARY_MAX));
+    var summary = normalizeSummaryPolyester(normalizeComposition(limit(source.summary, SUMMARY_MAX)), 'tr');
     if (!summary) return null;
-    var summaryEn = normalizeComposition(limit(source.summaryEn, SUMMARY_MAX)) || languageSummary(summary, 'en');
+    var summaryEn = normalizeSummaryPolyester(normalizeComposition(limit(source.summaryEn, SUMMARY_MAX)), 'en') || languageSummary(summary, 'en');
     var origin = clean(source.summarySource);
     return {
       code: code,
@@ -277,7 +287,7 @@
   function summaryFor(card, lang) {
     if (!card) return '';
     // Eski (yalnız TR özetli) kartta EN görünüm sözlük çevirisine düşer.
-    return normalizeComposition(lang === 'en' ? clean(card.summaryEn) || (card.summary ? languageSummary(card.summary, 'en') : '') : clean(card.summary) || clean(card.summaryEn));
+    return normalizeSummaryPolyester(normalizeComposition(lang === 'en' ? clean(card.summaryEn) || (card.summary ? languageSummary(card.summary, 'en') : '') : clean(card.summary) || clean(card.summaryEn)), lang);
   }
   /* Tabloda görünen metin: kart varsa aktif dildeki özet, yoksa PLM metni. */
   function cardOf(cards, code) {
@@ -322,6 +332,7 @@
     validateAiCards: validateAiCards,
     normalizeCard: normalizeCard,
     translateTerms: translateTerms,
+    normalizeSummaryPolyester: normalizeSummaryPolyester,
     normalizeComposition: normalizeComposition,
     summaryFor: summaryFor,
     displayText: displayText,
