@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-20",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Genel Bakış not kaydı düzeltmesi",
-    "en": "Overview note saving fix"
+    "tr": "Layout kontrolü ve not iyileştirmeleri",
+    "en": "Layout review and note improvements"
   },
   "summary": {
-    "tr": "Not grubu düzenlemeleri kalıcı kaydedilir; ön izleme güncellenir ve kayıt hatasında taslak korunur.",
-    "en": "Note group edits are saved persistently, previews update and drafts are retained when saving fails."
+    "tr": "Standartlara göre görsel layout incelemesi, CP sürükle-bırak girişi ve Overview notlarında kalıcı düzenleme.",
+    "en": "Visual standards-based layout review, CP drag-and-drop entry and persistent Overview note editing."
   },
   "changes": [
     {
@@ -37,6 +37,64 @@
         "caption": {
           "tr": "Üç demo siparişinin notu tek işlemde kaydedildi; sayfa yenilemesi ve hatadan sonra yeniden deneme doğrulandı.",
           "en": "Three demo orders saved in one operation; page reload and retry after a save failure were verified."
+        }
+      }
+    },
+    {
+      "id": "lcw-layout-standards-visual-review",
+      "type": "feature",
+      "module": {
+        "tr": "Layout Kontrolü",
+        "en": "Layout Control"
+      },
+      "title": {
+        "tr": "Standart, belge ve buyer kararı yan yana",
+        "en": "Standards, document and buyer decision side by side"
+      },
+      "body": {
+        "tr": "LC.KSU.ST.004 rev.4 ve LC.KSU.ST.003 rev.5 kaynaklarıyla 24 kontrol kuralı; PDF üzerinde sayfaya bağlı AI/buyer işaretleri, beklenen düzen, düzeltme, kritik/hata/yorum ve kullanıcı onayı. Kararlar kişisel Layout Geçmişi’nde saklanır. Orijinal PDF parmak iziyle doğrulanarak işaretler yeniden açılır.",
+        "en": "24 review rules backed by LC.KSU.ST.004 rev.4 and LC.KSU.ST.003 rev.5; page-linked AI/buyer PDF annotations, expected layout, corrections, critical/error/comments and buyer approval. Decisions persist in personal Layout History. Reattach the fingerprint-verified original PDF to restore annotations."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "layout-standards-visual-review.png",
+        "alt": {
+          "tr": "Demo belge üzerinde hata işareti, standart koşulu ve buyer yorumu.",
+          "en": "Error marker, standard criterion and buyer comment on a demo document."
+        },
+        "caption": {
+          "tr": "Demo belge üzerinde hata işareti, standart koşulu ve buyer yorumu.",
+          "en": "Error marker, standard criterion and buyer comment on a demo document."
+        }
+      }
+    },
+    {
+      "id": "cp-layout-drop-review-only",
+      "type": "feature",
+      "module": {
+        "tr": "Layout Kontrolü",
+        "en": "Layout Control"
+      },
+      "title": {
+        "tr": "CP’ye bırakılan PDF için layout kontrolü",
+        "en": "Layout review for PDFs dropped on CP"
+      },
+      "body": {
+        "tr": "CP’ye bırakılan PDF’ler için Layout Kontrolü veya Test Raporu seçilebilir. Layout akışı yalnız kontrol, yorum ve onay kaydeder; CP ve checklist durumunu değiştirmez. Birden fazla layout belge listesinden ayrı ayrı incelenir.",
+        "en": "Choose Layout Control or Test Report for PDFs dropped on CP. The layout flow saves only checks, comments and approvals; CP and checklist status are unchanged. Review multiple layouts individually from the document list."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-layout-drop.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP ekranında layout/test raporu seçimi.",
+          "en": "Layout/test report selection in the actual Buyer Log CP screen."
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log CP ekranında layout/test raporu seçimi.",
+          "en": "Layout/test report selection in the actual Buyer Log CP screen."
         }
       }
     }

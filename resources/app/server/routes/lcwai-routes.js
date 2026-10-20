@@ -202,7 +202,7 @@ app.get('/api/lcwai/layout-control/history', (req, res) => {
     } catch (error) { fail(res, error); }
   });
 
-app.post('/api/lcwai/layout-control/history', express.json({ limit: '256kb' }), (req, res) => {
+app.post('/api/lcwai/layout-control/history', express.json({ limit: '512kb' }), (req, res) => {
     try {
       const result = layoutControlStore.add(ownerOf(req), req.body || {});
       audit(req, 'LCWAI_LAYOUT_CHECK', {
@@ -223,6 +223,14 @@ app.delete('/api/lcwai/layout-control/history', (req, res) => {
       audit(req, 'LCWAI_LAYOUT_HISTORY_CLEAR', { count: result.cleared });
       res.set('Cache-Control', 'no-store').json({ ok: true, ...result });
     } catch (error) { fail(res, error); }
+  });
+
+app.patch('/api/lcwai/layout-control/history/:id', express.json({ limit: '16kb' }), (req, res) => {
+    try {
+      const result=layoutControlStore.review(ownerOf(req),req.params.id,req.body||{});
+      audit(req,'LCWAI_LAYOUT_REVIEW',{runId:result.run.id,rule:req.body&&req.body.check&&req.body.check.rule,status:result.run.summary.status});
+      res.set('Cache-Control','no-store').json({ok:true,...result});
+    }catch(error){fail(res,error);}
   });
 
   /* ---------------- AI Çıktı Düzenleyici (taslaklar) ----------------
