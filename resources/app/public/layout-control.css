@@ -58,4 +58,5 @@
 .layoutTemplateGuide{border:1px solid var(--line);padding:10px;font-size:var(--fs-xs)}.layoutTemplateGuide summary{cursor:pointer;font-weight:700}.layoutTemplateGuide p{line-height:1.6}
 .layoutDecision{padding:8px 17px;font-size:var(--fs-sm);font-weight:700;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .layoutExtraction{padding:12px 17px;font-size:var(--fs-xs);border-block:1px solid var(--line)}.layoutExtraction p{color:var(--muted);margin:6px 0 10px}.layoutExtraction table{width:100%;border-collapse:collapse;table-layout:fixed}.layoutExtraction th,.layoutExtraction td{padding:6px;text-align:left;vertical-align:top;border:1px solid var(--line);overflow-wrap:anywhere;font-size:var(--fs-xs)}.layoutExtraction thead{background:var(--card2)}
+.layoutAiSummary{line-height:1.6;overflow-wrap:anywhere}
 @media(max-width:950px){.layoutWorkspace{grid-template-columns:1fr}.layoutDocument{position:relative;max-height:none}.layoutResult{max-height:none}}

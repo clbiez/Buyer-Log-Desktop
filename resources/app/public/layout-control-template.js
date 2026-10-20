@@ -5,7 +5,7 @@
   if(typeof module==='object'&&module.exports)module.exports=api;
   if(root)root.BLLayoutTemplate=api;
 })(typeof window!=='undefined'?window:null,function(){
-  const VERSION='LCW-004.4-003.5-core2';
+  const VERSION='LCW-004.4-003.5-ai3';
   const SOURCES=Object.freeze({
     CARE_LABEL:{code:'LC.KSU.ST.004',revision:4,date:'2025-03-28',url:'layout-control-standards/care-v4.pdf',pages:18},
     PRICE_TAG:{code:'LC.KSU.ST.003',revision:5,date:'2025-08-14',url:'layout-control-standards/price-v5.pdf',pages:28}
@@ -162,6 +162,13 @@
     return result;
   }
   function reviewStatus(checks){
+    const ai=(Array.isArray(checks)?checks:[]).filter(c=>c.category==='AI_REVIEW');
+    if(ai.length){
+      const all=checks.filter(c=>['AI_REVIEW','ANNOTATION'].includes(c.category));
+      if(all.some(c=>c.decision==='REJECTED'))return 'REJECTED';
+      if(checks.some(c=>!['AI_REVIEW','ANNOTATION'].includes(c.category)&&c.status==='REVIEW'))return 'PENDING';
+      return all.some(c=>c.decision==='APPROVED')&&all.every(c=>['APPROVED','NOT_APPLICABLE'].includes(c.decision))?'APPROVED':'PENDING';
+    }
     const all=Array.isArray(checks)?checks:[],layout=all.filter(c=>['STANDARD','ANNOTATION'].includes(c.category));
     if(all.some(c=>c.status==='MISMATCH'&&c.category!=='STANDARD')||layout.some(c=>c.decision==='REJECTED'))return 'REJECTED';
     if(all.some(c=>c.status==='REVIEW'&&!['STANDARD','ANNOTATION'].includes(c.category)))return 'PENDING';

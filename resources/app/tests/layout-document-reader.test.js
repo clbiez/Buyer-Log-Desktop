@@ -4,9 +4,9 @@ const engine=require('../public/layout-control-engine'),template=require('../pub
 const {createLcwAiClient}=require('../server/lib/lcwai/lcwai-client');
 const source=fs.readFileSync(require.resolve('../public/layout-document-reader'),'utf8');
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aC9sAAAAASUVORK5CYII=','base64');
-function fixture(count,ask){
+function fixture(count,ask,extra={}){
  const pdf={numPages:count,getPage:async n=>({getTextContent:async()=>({items:[]}),getViewport:({scale})=>({width:100*scale,height:200*scale}),render:()=>({promise:Promise.resolve()})}),destroy:async()=>{}};
- const root={BLLayoutControlEngine:engine,BLLayoutTemplate:template,BLPerf:{ensureLibrary:async()=>{}},pdfjsLib:{getDocument:()=>({promise:Promise.resolve(pdf)})},document:{createElement:()=>({getContext:()=>({}),toBlob:callback=>callback(new Blob([png],{type:'image/png'}))})},BuyerLogAI:{askWithFiles:ask}};
+ const root={BLLayoutControlEngine:engine,BLLayoutTemplate:template,BLPerf:{ensureLibrary:async()=>{}},pdfjsLib:{getDocument:()=>({promise:Promise.resolve(pdf)})},document:{createElement:()=>({getContext:()=>({}),toBlob:callback=>callback(new Blob([png],{type:'image/png'}))})},BuyerLogAI:{askWithFiles:ask},...extra};
  const context=vm.createContext({window:root,File,Blob,Uint8Array,WeakMap,Map,Set,Promise,Error,JSON,Array,Number,String,Math,Object});vm.runInContext(source,context);return root.BLLayoutReader;
 }
 test('test reports and layouts route from content/name without a chooser',()=>{
@@ -15,6 +15,20 @@ test('test reports and layouts route from content/name without a chooser',()=>{
  assert.equal(reader.kindFromEvidence('scan.pdf','ANA KUMAŞ 100% COTTON MADE IN INDIA'),'CARE_LABEL');
  assert.equal(reader.kindFromEvidence('scan.pdf',''),'UNKNOWN');
  const ui=fs.readFileSync(require.resolve('../public/checklist-supplier-sync'),'utf8');assert.doesNotMatch(ui,/data-cp-document-layout|chooseCpDocumentFlow/);assert.match(ui,/BLLayoutReader\.classify/);
+});
+test('LCW AI review receives exact CP facts, both original standards and layout with vision, not Buyer Log verdicts',async()=>{
+ const uploads=[],calls=[],client=createLcwAiClient({auth:{getAuthorization:async()=>''}});
+ const cpOrders=[{orderCode:'9000001',modelName:'DEMO-YD',country:'India',line:'LSN-DEMO',mag:'CU4E',fabricComposition:'100% Cotton'}];
+ const ask=async input=>{
+  calls.push(input);assert.equal(input.source,'layout-review');assert.deepEqual(input.context.cpOrders,cpOrders);assert.equal(input.attachments.length,3);assert.ok(input.files.length<=2);
+  const payload=client.messagePayload({content:input.guide,attachments:[...input.attachments,...input.files.map(f=>({blobName:f.name,contentType:f.type,fileName:f.name,size:f.size}))]});assert.equal(payload.visionEnabled,true);assert.ok(payload.attachments.length<=5);
+  assert.ok(!('checks' in input.context));assert.ok(!('verdict' in input.context));
+  return {data:{documentType:'MIXED',summary:'AI review',inspectedPages:input.context.imagePages.map(String),findings:[JSON.stringify({section:'PRICE_TAG',title:'Model',field:'modelName',verdict:'ERROR',actual:'DEMO-Y',expected:'DEMO-YD',comment:'Final letter missing.'})]}};
+ };
+ const api=fixture(5,ask,{fetch:async()=>({ok:true,blob:async()=>new Blob(['%PDF standard'],{type:'application/pdf'})}),BuyerLogAI:{askWithFiles:ask,uploadFile:async file=>{uploads.push(file);return {blobName:file.name,fileName:file.name,contentType:file.type,size:file.size};}}});
+ const file=new File(['%PDF layout'],'mixed.pdf',{type:'application/pdf'}),info=await api.readPdf(file),out=await api.review(file,info,{cpOrders,reference:{status:'MATCH',orderCodes:['9000001']},requestId:'r'});
+ assert.equal(out.error,null);assert.equal(out.batches.length,3);assert.equal(uploads.length,3);assert.strictEqual(uploads[2],file);
+ assert.deepEqual(uploads.slice(0,2).map(f=>f.name),['LC.KSU.ST.004_rev4.pdf','LC.KSU.ST.003_rev5.pdf']);assert.deepEqual(calls.map(c=>Array.from(c.context.imagePages)),[[1,2],[3,4],[5]]);
 });
 test('image-only PDF produces real PNG attachments, vision enabled and all page batches within upload limit',async()=>{
  const client=createLcwAiClient({auth:{getAuthorization:async()=>''}}),calls=[];
@@ -27,6 +41,14 @@ test('image-only PDF produces real PNG attachments, vision enabled and all page 
  const file=new File([Buffer.from('%PDF demo')],'scan.pdf',{type:'application/pdf'}),info=await api.readPdf(file);assert.equal(info.text,'');
  const result=await api.analyse(file,info,{requestId:'r'});assert.equal(calls.length,2);assert.deepEqual(Array.from(calls[0].context.imagePages),[1,2,3,4]);assert.deepEqual(Array.from(calls[1].context.imagePages),[5,6,7]);
  assert.equal(result.data._reading.readPages.length,7);assert.equal(result.data._reading.failedPages.length,0);assert.ok(calls.every(c=>!c.files.some(f=>f.type==='application/pdf')));
+});
+test('review context cannot silently exceed the shared pretty-JSON or per-string limit',async()=>{
+ let calls=0;const api=fixture(1,async()=>{calls++;return {};},{fetch:async()=>({ok:true,blob:async()=>new Blob(['%PDF standard'])}),BuyerLogAI:{askWithFiles:async()=>{calls++;return {};},uploadFile:async f=>({blobName:f.name,contentType:f.type})}});
+ const file=new File(['%PDF'],'layout.pdf',{type:'application/pdf'}),info=await api.readPdf(file);
+ for(const cpOrders of [[{orderCode:'1',modelName:'x'.repeat(2001)}],Array.from({length:40},()=>Object.fromEntries(Array.from({length:17},(_,i)=>['key'+i,'x'.repeat(16)])))]){
+  const out=await api.review(file,info,{cpOrders,requestId:'r'});assert.equal(out.error.message,'LAYOUT_CONTEXT_LIMIT');assert.equal(out.batches.length,0);
+ }
+ assert.equal(calls,0);
 });
 test('failed or unacknowledged pages stay incomplete rather than claiming a successful full review',()=>{
  const data=reader.mergeBatches([{pages:[1,2],data:{documentType:'CARE_LABEL',modelCodes:['MINECRAFT-9-YD'],inspectedPages:['1']}}],6);

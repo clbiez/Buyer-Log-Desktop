@@ -2424,7 +2424,7 @@
         if(!/\.pdf$/i.test(file.name||'')){reports.push(file);continue;}
         try{
           const type=await root.BLLayoutReader.classify(file);
-          if(type==='PRICE_TAG'||type==='CARE_LABEL')layouts.push(file);
+          if(['PRICE_TAG','CARE_LABEL','INNER_BARCODE','MIXED'].includes(type))layouts.push(file);
           else {if(type==='TEST_REPORT')reports.push(file);else unknown.push(file.name);await root.BLLayoutReader.release(file);}
         }catch(_){unknown.push(file.name);await root.BLLayoutReader.release(file);}
       }
