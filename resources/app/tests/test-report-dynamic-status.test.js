@@ -69,7 +69,8 @@ test('önizleme hedef durumu dinamik seçtirir ve yazar', () => {
   assert.match(ui, /t\.dataset\.trStatus/);
   assert.match(ui, /T\('Checklist durumu', 'Checklist status'\)/);
   assert.match(ui, /suggestChecklistStatus\(step, reports, customStatusList\(\)\)/, 'aktarımda eşleşen özel durum yazılır');
-  assert.match(ui, /if \(group\.manual\) \{ assistant\(\)\.setChecklistAnswer\(analysis, entry\.itemId, group\.manual/);
+  assert.match(ui, /if \(group\.manual\) \{ saved = assistant\(\)\.setChecklistAnswer\(analysis, entry\.itemId, group\.manual/);
+  assert.match(ui, /if \(\!saved\) throw new Error/, 'failed native writes must never be counted as successful imports');
   assert.match(ui, /data-tr-ai-status/);
 });
 

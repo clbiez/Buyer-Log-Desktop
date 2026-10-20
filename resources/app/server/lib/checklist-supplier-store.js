@@ -175,7 +175,7 @@ function normalizeState(value) {
   if (/^custom:[a-z0-9][a-z0-9-]{0,47}$/.test(String(value || '').trim())) return String(value).trim();
   return '';
 }
-function answerKey(orderKey, itemId) { return text(orderKey, 300) + '::' + text(itemId, 160); }
+function answerKey(orderKey, itemId) { return text(orderKey, 300) + '::' + text(itemId, 200); }
 function actorInfo(actor) {
   return {
     id: text(actor && actor.id, 160),
@@ -265,12 +265,34 @@ function applyEntries(entries, actor, options = {}) {
     const store = read();
     if (options.reserveWrites && (!Number.isSafeInteger(store.revision) || store.revision < 0 || store.revision > Number.MAX_SAFE_INTEGER - options.reserveWrites)) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     if (options.expectedRevision != null && store.revision !== options.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
+    const pendingRosters = new Map();
+    for (const entry of input) {
+      if (!entry || entry.itemId !== '@set-components') continue;
+      const order = text(entry.orderKey, 300), key = answerKey(order, '@set-components');
+      const previous = store.answers[key] || store.tombstones[key];
+      if (entry.deleted === true) throw Object.assign(new Error('Existing set parts must be preserved.'), {code:'CHECKLIST_COMPONENTS_INVALID',statusCode:409});
+      const previousAt = previous && text(previous.at, 80), at = iso(entry.at), baseAt = text(entry.baseAt, 80);
+      // A stale/skipped roster cannot authorize a new part in the same batch.
+      if (previousAt && (previousAt > at || (source === 'supplier_excel' && baseAt && previousAt > baseAt))) continue;
+      if (normalizeState(entry.state) !== 'open' || !Number.isInteger(entry.componentCount) || entry.componentCount < 2 || entry.componentCount > 26) throw Object.assign(new Error('Invalid set component count.'), {code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
+      pendingRosters.set(order, Math.max(pendingRosters.get(order) || 0, entry.componentCount));
+    }
+    // Validate every part against the saved roster or a roster in this same
+    // transaction before applying any effects. Ordering inside a batch is irrelevant.
+    for (const entry of input) {
+      const part = entry && String(entry.itemId || '').match(/~part~([A-Z])$/);
+      if (!part) continue;
+      const order = text(entry.orderKey, 300), rosterKey = answerKey(order, '@set-components');
+      const saved = store.answers[rosterKey] || store.tombstones[rosterKey];
+      const count = Math.max(saved && saved.componentCount || 0, pendingRosters.get(order) || 0);
+      if (!Number.isInteger(count) || count < 2 || count > 26 || part[1].charCodeAt(0) - 64 > count) throw Object.assign(new Error('Define the set roster before updating a component.'), {code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
+    }
     let updated = 0, cleared = 0, skipped = 0, conflicts = 0;
     const changedKeys = [], rejectedAt = {};
     for (const raw of input) {
       if (!raw || typeof raw !== 'object') { skipped += 1; continue; }
       const orderKey = text(raw.orderKey, 300);
-      const itemId = text(raw.itemId, 160);
+      const itemId = text(raw.itemId, 200);
       const state = normalizeState(raw.state);
       if (!orderKey || !itemId || !state) { skipped += 1; continue; }
       const key = answerKey(orderKey, itemId);
@@ -295,7 +317,11 @@ function applyEntries(entries, actor, options = {}) {
       }
       if (Object.prototype.hasOwnProperty.call(raw, 'attachments') && !Array.isArray(raw.attachments)) throw Object.assign(new Error('Checklist attachments must be an array.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
       if (String(raw.note || '').length > 2000 || String(raw.reportNumber || '').length > 300) throw Object.assign(new Error('Checklist evidence exceeds the allowed field length.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
+      const componentCount = Object.prototype.hasOwnProperty.call(raw, 'componentCount') ? raw.componentCount : previousEvidence && previousEvidence.componentCount;
+      if (componentCount != null && (itemId !== '@set-components' || !Number.isInteger(componentCount) || componentCount < 2 || componentCount > 26)) throw Object.assign(new Error('Invalid set component count.'), { code:'CHECKLIST_COMPONENTS_INVALID', statusCode:400 });
+      if (itemId === '@set-components' && previousEvidence && previousEvidence.componentCount > componentCount) throw Object.assign(new Error('Existing set parts must be preserved.'), { code:'CHECKLIST_COMPONENTS_INVALID', statusCode:409 });
       const common = {
+        ...(componentCount != null ? {componentCount} : {}),
         key, orderKey, itemId, at, by: text(raw.by || who.name || who.id, 200),
         byId: who.id, source: text(raw.source || source, 80), loadDate: text(raw.loadDate, 40) || null,
         note: String(Object.prototype.hasOwnProperty.call(raw, 'note') ? raw.note || '' : previousEvidence && previousEvidence.note || '').slice(0, 2000),

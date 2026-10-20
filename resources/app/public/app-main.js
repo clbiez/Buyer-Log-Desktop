@@ -5755,6 +5755,8 @@ function cellHtml(c,r,cf,tableKey='cp'){
        bir düğmedir; seçim BLChecklistSupplierSync durum menüsünden yazılır.
        Soru bu siparişe sorulmuyorsa hücre boş ve etkileşimsizdir. */
     case 'checklistStatus': {
+      const componentCell=window.BLChecklistSupplierSync?.componentCellHtml(r,c.checklistItemId,canEdit);
+      if(componentCell)return componentCell;
       const label=norm(v);
       if(!label) return `<td class="clStatusNa" title="${escapeHtml(appLang==='en'?'This question is not asked for this order':'Bu soru bu siparişe sorulmuyor')}">—</td>`;
       const status=(r._checklistStatus&&r._checklistStatus[c.checklistItemId])||'open';
@@ -12808,7 +12810,7 @@ window.BLAIScreenData = {
           readValue: row => {
             if (info.tableKey === 'koleksiyon') {
               const effective = collectionRow(row);
-              if (col.col && col.col.checklist) return kolChecklistStatusLabel(kolChecklistStatus(kolEffectiveValue(effective, col.k)));
+              if (col.col && col.col.checklist) return kolChecklistDisplay(kolEffectiveValue(effective, col.k),effective);
               const displayRow = col.col?.endeksmatik ? kolEffectiveEndeksmatikRow(effective) :
                 (col.col?.trLanded || col.col?.ydLanded) ? kolGroupSummaryEffectiveLandedRow(effective) : effective;
               return kolCollectionRawCellText(col, displayRow);
@@ -23986,6 +23988,7 @@ async function kolAddCustomColumn(panelEl){
    Hiç madde yoksa Checklist başlığı tabloda hiç açılmaz. */
 const KOL_CHECKLIST_STATUSES = Object.freeze(['open','approved','rejected','notRequired']);
 function kolChecklistStatus(value){
+  if(value&&typeof value==='object'&&Array.isArray(value.parts))return window.BLChecklistComponents.aggregate(value.parts.map(part=>part.state));
   const status=String(value==null?'':value).trim();
   return KOL_CHECKLIST_STATUSES.includes(status)?status:'open';
 }
@@ -23997,12 +24000,43 @@ function kolChecklistStatusLabel(status){
   return en?'Pending':'Bekliyor';
 }
 function kolChecklistColumns(){return kolCustomCols.filter(c=>c.checklist);}
+function kolChecklistParts(row,value){
+  const api=window.BLChecklistComponents;
+  return api.valueParts(value,api.count(row,'collection'));
+}
+function kolChecklistDisplay(value,row){
+  const parts=kolChecklistParts(row||{},value);
+  return parts.length?parts.map(part=>part.label+': '+kolChecklistStatusLabel(part.state)).join(' / '):kolChecklistStatusLabel(kolChecklistStatus(value));
+}
+function kolConfigureChecklistParts(row,key){
+  if(!kolRequireWorkspaceEdit()||kolCellLinkedToModel(row,key))return;
+  const api=window.BLChecklistComponents,value=kolEffectiveValue(row,key),parts=kolChecklistParts(row,value);
+  window.BLChecklistSupplierSync.openComponentCountDialog(parts.length,Math.max(2,parts.length),count=>{
+    kolPushUndo();
+    kolWriteGroupedStorageValue(row,'setPieceCount',count);
+    // Freeze every editable checklist cell's roster before the next source refresh.
+    for(const col of kolChecklistColumns()){
+      if(kolCellLinkedToModel(row,col.k))continue;
+      const previous=kolEffectiveValue(row,col.k),existing=api.valueParts(previous,count);
+      const all=api.labels(Math.max(count,existing.length)).map(id=>existing.find(part=>part.id===id)||{id,label:id,state:'open'});
+      kolWriteGroupedStorageValue(row,col.k,{schemaVersion:1,legacyStatus:previous&&typeof previous==='object'?previous.legacyStatus||'':String(previous||''),parts:all});
+    }
+    const saved=saveKolRows();void kolSaveWorkspaceNow();renderKol();return saved;
+  });
+}
 function kolChecklistCellHtml(row,c,value,rc){
+  const parts=kolChecklistParts(row,value),api=window.BLChecklistComponents;
+  if(parts.length||api.isSet(row,'collection')){
+    const buttons=parts.map(part=>`<button type="button" class="kolChecklistStatusBtn is-${escapeHtml(part.state)}" data-kol-checklist-row="${escapeHtml(String(row.id))}" data-kol-checklist-key="${escapeHtml(c.k)}" data-kol-checklist-part="${part.id}" title="${escapeHtml(part.label+' · '+kolChecklistStatusLabel(part.state))}" aria-label="${escapeHtml(part.label+' · '+kolChecklistStatusLabel(part.state))}" aria-haspopup="menu"${kolWorkspaceCanEdit?'':' disabled aria-disabled="true"'}><b class="clPartLabel">${part.label}</b><span class="kolChecklistDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(kolChecklistStatusLabel(part.state))}</span></button>`).join('');
+    const configureLabel=appLang==='en'?'Parts':'Parçalar';
+    const summary=parts.length?`${parts.filter(part=>part.state==='approved').length}/${parts.length}`:(appLang==='en'?'Define the part count':'Parça sayısını belirleyin');
+    return `<td class="kolChecklistTd clPartsCell"${rc}><div class="clPartsStack">${buttons}<div class="clPartsFooter"><small>${escapeHtml(summary)}</small>${kolWorkspaceCanEdit?`<button type="button" class="clPartsConfigure" data-kol-config-parts="${escapeHtml(String(row.id))}" data-kol-checklist-key="${escapeHtml(c.k)}" title="${escapeHtml(configureLabel)}" aria-label="${escapeHtml(configureLabel)}"><span aria-hidden="true">⋯</span></button>`:''}</div></div></td>`;
+  }
   const status=kolChecklistStatus(value),label=kolChecklistStatusLabel(status);
   const title=appLang==='en'?`${kolColumnLabel(c)}: ${label} · Click to change`:`${kolColumnLabel(c)}: ${label} · Değiştirmek için tıklayın`;
   return `<td class="kolChecklistTd"${rc}><button type="button" class="kolChecklistStatusBtn is-${status}" data-kol-checklist-row="${escapeHtml(String(row.id))}" data-kol-checklist-key="${escapeHtml(c.k)}" title="${escapeHtml(title)}" aria-haspopup="menu"${kolWorkspaceCanEdit?'':' disabled aria-disabled="true"'}><span class="kolChecklistDot" aria-hidden="true"></span><span>${escapeHtml(label)}</span></button></td>`;
 }
-function kolSetChecklistStatus(rowId,key,status){
+function kolSetChecklistStatus(rowId,key,status,partId){
   if(!kolRequireWorkspaceEdit())return false;
   const row=kolRows.find(item=>String(item.id)===String(rowId)),col=kolChecklistColumns().find(c=>c.k===key);
   if(!row||!col||!KOL_CHECKLIST_STATUSES.includes(status))return false;
@@ -24010,9 +24044,19 @@ function kolSetChecklistStatus(rowId,key,status){
     showToast(appLang==='en'?'This field is linked to the model. Use right-click › Make this field colour-specific first.':'Bu alan modele bağlı. Önce sağ tık › Bu alanı renk özelinde yap.');
     return false;
   }
-  if(kolChecklistStatus(kolEffectiveValue(row,key))===status)return true;
+  const value=kolEffectiveValue(row,key);
+  let next=status==='open'?'':status;
+  if(partId){
+    const parts=kolChecklistParts(row,value);
+    if(!parts.some(part=>part.id===partId))return false;
+    if(parts.find(part=>part.id===partId).state===status&&value&&typeof value==='object')return true;
+    next=window.BLChecklistComponents.updateValue(value,parts.length,partId,status);
+  }else{
+    if(typeof window!=='undefined'&&window.BLChecklistComponents&&(kolChecklistParts(row,value).length||window.BLChecklistComponents.isSet(row,'collection')))return false;
+    if(kolChecklistStatus(value)===status)return true;
+  }
   kolPushUndo();
-  kolWriteGroupedStorageValue(row,key,status==='open'?'':status);
+  kolWriteGroupedStorageValue(row,key,next);
   const saved=saveKolRows();
   void kolSaveWorkspaceNow();
   renderKol();
@@ -24022,7 +24066,8 @@ function openKolChecklistStatusMenu(button){
   document.querySelector('.kolChecklistMenu')?.remove();
   const rowId=button.dataset.kolChecklistRow,key=button.dataset.kolChecklistKey;
   const row=kolRows.find(item=>String(item.id)===String(rowId));if(!row)return;
-  const current=kolChecklistStatus(kolEffectiveValue(row,key));
+  const partId=button.dataset.kolChecklistPart;
+  const current=partId?kolChecklistParts(row,kolEffectiveValue(row,key)).find(part=>part.id===partId)?.state||'open':kolChecklistStatus(kolEffectiveValue(row,key));
   const menu=document.createElement('div');menu.className='kolChecklistMenu';menu.setAttribute('role','menu');
   menu.innerHTML=KOL_CHECKLIST_STATUSES.map(status=>`<button type="button" role="menuitemradio" aria-checked="${status===current}" class="kolChecklistMenuItem is-${status}" data-status="${status}"><span class="kolChecklistDot" aria-hidden="true"></span><span>${escapeHtml(kolChecklistStatusLabel(status))}</span></button>`).join('');
   document.body.appendChild(menu);
@@ -24034,7 +24079,7 @@ function openKolChecklistStatusMenu(button){
   const onKey=event=>{if(event.key==='Escape'){close();button.focus();}};
   setTimeout(()=>document.addEventListener('pointerdown',outside,true),0);
   document.addEventListener('keydown',onKey,true);
-  menu.querySelectorAll('[data-status]').forEach(item=>item.addEventListener('click',()=>{close();kolSetChecklistStatus(rowId,key,item.dataset.status);}));
+  menu.querySelectorAll('[data-status]').forEach(item=>item.addEventListener('click',()=>{close();kolSetChecklistStatus(rowId,key,item.dataset.status,partId);}));
   menu.querySelector('[aria-checked="true"]')?.focus();
 }
 async function kolAddChecklistItem(panelEl){
@@ -24063,6 +24108,10 @@ async function kolAddChecklistItem(panelEl){
   showToast(appLang==='en'?'Checklist item added.':'Checklist maddesi eklendi.');
   return true;
 }
+document.addEventListener('click',event=>{
+  const configure=event.target.closest?.('[data-kol-config-parts]');
+  if(configure){event.preventDefault();event.stopPropagation();const row=kolRows.find(item=>String(item.id)===configure.dataset.kolConfigParts);if(row)kolConfigureChecklistParts(row,configure.dataset.kolChecklistKey);return;}
+});
 document.addEventListener('pointerdown',event=>{
   const button=event.target.closest?.('.kolChecklistStatusBtn[data-kol-checklist-row]');
   if(!button||button.disabled||event.button!==0)return;
@@ -24280,7 +24329,7 @@ function kolFilterValue(row,key){
   }
   const col=kolColDefs().find(c=>c.k===key),schema=col&&columnSchemaFor(col,kolRows);
   const effective=kolEffectiveValue(row,key);
-  if(col?.checklist)return kolChecklistStatusLabel(kolChecklistStatus(effective));
+  if(col?.checklist)return kolChecklistDisplay(effective,row);
   if(col?.custom&&schema){ const value=schema.filterValue(effective); return value==null?'':String(value); }
   if(key==='fabric')return kolFabricDisplay(effective);
   return norm(effective);
@@ -24824,7 +24873,7 @@ function kolCollapsedGroupSummary(members,descriptors){
       const fallback=valueOf(parent);put(key,weighted==null?(Number.isFinite(fallback)?`$${kolMoney2(fallback)}`:''):`$${kolMoney2(weighted)}`);return;
     }
     if(column.checklist){
-      put(key,kolGroupSummaryDistinct(rows.map(row=>kolChecklistStatusLabel(kolChecklistStatus(kolEffectiveValue(row,column.k))))).join(KOL_GROUP_SUMMARY_SEPARATOR));return;
+      put(key,kolGroupSummaryDistinct(rows.map(row=>kolChecklistDisplay(kolEffectiveValue(row,column.k),row))).join(KOL_GROUP_SUMMARY_SEPARATOR));return;
     }
     if(column.qty){
       let total=0;
@@ -27293,7 +27342,7 @@ function kolSpreadsheetRawValue(row,key){
   if(d.kind==='confirmedName')return kolConfirmedDisplay(row)?.name??'';
   if(d.kind==='confirmedPrice')return kolConfirmedDisplay(row)?.price??'';
   const c=d.col;if(c.exToRetail)return kolExToRetailDays(row);
-  if(c.checklist)return kolChecklistStatusLabel(kolChecklistStatus(kolEffectiveValue(row,c.k)));
+  if(c.checklist)return kolChecklistDisplay(kolEffectiveValue(row,c.k),row);
   if(c.endeksmatik)return endeksmatikExcelText(kolEffectiveEndeksmatikRow(row));
   if(c.ydLanded)return kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).ydLanded??'';
   if(c.trLanded)return kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).trLanded??'';
@@ -32414,7 +32463,7 @@ function buildKolStyledSheet(rows){
       const s = {border:bd, font:{sz:10, bold:c.k==='modelKod'}};
       let cell;
       // Checklist hücresi kanonik durum kimliğini değil, ekrandaki TR/EN etiketi yazar.
-      if(c.checklist){put(ri+1,ci+imgOff,{v:kolChecklistStatusLabel(kolChecklistStatus(raw)),t:'s',s:{...s,alignment:{vertical:'middle'}}});return;}
+      if(c.checklist){put(ri+1,ci+imgOff,{v:kolChecklistDisplay(raw,r),t:'s',s:{...s,alignment:{vertical:'middle'}}});return;}
       if(c.endeksmatik){
         // v6.42 — Ekranda hücre fiyat + index olmak üzere İKİ satır gösterirken
         // ("YD $.. · TR $.." ve "YD %.. · TR %.."), bu yol yalnız fiyat satırını

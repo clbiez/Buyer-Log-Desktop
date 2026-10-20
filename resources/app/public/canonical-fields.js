@@ -90,6 +90,9 @@
       collection:binding(['productMainDefinition','Product Main Definition'],'plmProductMainDefinition'),
       cp:binding(['Product Main Definition','productMainDefinition','Ürün Ana Tanım'],'asasProductMainDefinition')
     }},
+    setPieceCount:{label:{en:'Set Piece Count',tr:'Set Parça Sayısı'},type:'number',role:'attribute',aliases:['Set Piece Count','Set Parça Sayısı','setPieceCount'],modules:{
+      collection:binding(['setPieceCount','Set Piece Count','Set Parça Sayısı'],'setPieceCount'),cp:binding(['setPieceCount','Set Piece Count','Set Parça Sayısı'],'setPieceCount'),orders:binding(['setPieceCount','Set Piece Count','Set Parça Sayısı'],'setPieceCount')
+    }},
     category:{label:{en:'Category',tr:'Kategori'},type:'text',role:'dimension',aliases:['Category','Classification','Klasman','Ürün Klasman','Product Classification','Kategori'],modules:{
       collection:binding(['urunTipi','Category'],'productClassification'),cp:binding(['Category','Ürün Klasman','classification'],'productClassification'),orders:binding(['Category','Ürün Klasman','classification'],'productClassification'),
       backlog:binding(['Category','Ürün Klasman','classification'],'productClassification'),overview:binding(['Category','Ürün Klasman','classification'],'productClassification'),lfl:binding(['classification','Category','Ürün Klasman'],'productClassification'),openCosting:binding(['category'],'productClassification')

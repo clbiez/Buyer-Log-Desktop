@@ -334,9 +334,14 @@
      durumu yazar. Pending dahil tüm seçimler ek bilgileriyle saklanır. */
   function setChecklistAnswer(analysis, itemId, status, meta) {
     if (!analysis || !analysis.orderKey || !itemId) return false;
+    const Components = Checklist.Components;
+    const scoped = Components.parseItem(itemId);
+    const parts = Checklist.componentsFor(analysis, { answers: state.answers });
+    if (scoped && !parts.some(part => part.id === scoped.partId)) return false;
+    if (!scoped && itemId !== Components.CONFIG_ITEM && (parts.length || Components.isSet(analysis.sourceRow || analysis, 'cp'))) return false;
     const key = Checklist.answerKey(analysis.orderKey, itemId);
     const next = Checklist.normalizeStatus(status) || 'open';
-    const rule = state.rules.find(item => item && item.kind === 'checklist' && item.id === itemId);
+    const rule = state.rules.find(item => item && item.kind === 'checklist' && item.id === (scoped ? scoped.baseId : itemId));
     const reusable = Boolean(rule && rule.approvalScope === 'option' && typeof Checklist.optionAnswerKey === 'function');
     const optionKey = reusable ? Checklist.optionAnswerKey(analysis, itemId) : '';
     const by = (window.BL_USER_CONTEXT || {}).id || '';
@@ -345,7 +350,7 @@
     // Kullanıcı ayrıntı penceresinde alanı açıkça boşaltırsa meta içindeki boş
     // değer eski değerin üzerine yazar.
     const preserved = {};
-    ['note', 'reportNumber', 'actualDate', 'attachments'].forEach(field => {
+    ['note', 'reportNumber', 'actualDate', 'attachments', 'componentCount'].forEach(field => {
       if (Object.prototype.hasOwnProperty.call(previous, field)) preserved[field] = previous[field];
     });
     const answerMeta = { ...preserved, ...(meta || {}), by };
@@ -373,20 +378,37 @@
       // varsa seçenek onayının üzerinde istisna olarak önceliklidir.
       state.answers[key] = Checklist.makeAnswer(next, analysis, answerMeta);
     }
+    // Freeze the inferred roster on first edit; later source refreshes cannot
+    // silently remove parts or inherit a legacy whole-set approval.
+    if (scoped && !state.answers[Components.configKey(analysis)]) {
+      state.answers[Components.configKey(analysis)] = Checklist.makeAnswer('open', analysis, { componentCount: parts.length, at: answerMeta.at, by });
+    }
     return saveAnswers();
+  }
+  function setChecklistComponents(analysis, count) {
+    const Components = Checklist.Components, n = Components.validCount(count);
+    if (!analysis || !analysis.orderKey || n < 2) return false;
+    const previous = state.answers[Components.configKey(analysis)];
+    if (previous && previous.componentCount > n) return false;
+    return setChecklistAnswer(analysis, Components.CONFIG_ITEM, 'open', { componentCount: n });
   }
 
   function validateHologramOrders(rows) {
     if(state.answerStoreError)throw new Error(L('Checklist kaydı okunamıyor.','Checklist record cannot be read.'));
     const decision=computeDecisionsForRows(rows);
     if(rows.some(row=>!String(window.BLCanonicalFields.value(row,'cp','orderCode')||'').trim()||!decision.byRow.get(row)?.orderKey))throw new Error(L('Sipariş kimliği çözülemedi.','Order identity could not be resolved.'));
+    if(rows.some(row=>{const analysis=decision.byRow.get(row);return Checklist.Components.isSet(analysis.sourceRow||analysis,'cp')&&!Checklist.componentsFor(analysis,{answers:state.answers}).length;}))throw new Error(L('Önce CP hücresinden set parçalarını tanımlayın.','Define the set parts from the CP cell first.'));
     return decision;
   }
   function markHologramOrdered(rows) {
     const decision=validateHologramOrders(rows),token=value=>String(value||'').toLowerCase().replace(/[^a-z]/g,'');
     let item=state.rules.find(rule=>rule.kind==='checklist'&&[rule.id,rule.name,rule.nameEn,rule.tr,rule.en].some(value=>['hologramcheck','hologramkontrol','hologramkontrolu'].includes(token(value))));
     if(!item)item=createChecklistItem({tr:'Hologram Check',en:'Hologram Check'});
-    for(const row of rows)if(!setChecklistAnswer(decision.byRow.get(row),item.id,'custom:ordered'))throw new Error(L('Checklist kaydedilemedi.','Checklist could not be saved.'));
+    for(const row of rows){
+      const analysis=decision.byRow.get(row),parts=Checklist.componentsFor(analysis,{answers:state.answers});
+      const targets=parts.length?parts.map(part=>Checklist.Components.itemId(item.id,part.id)):[item.id];
+      for(const target of targets)if(!setChecklistAnswer(analysis,target,'custom:ordered'))throw new Error(L('Checklist kaydedilemedi.','Checklist could not be saved.'));
+    }
     if(state.answerStoreError)throw new Error(L('Checklist kaydı okunamıyor.','Checklist record cannot be read.'));
     return item.id;
   }
@@ -1497,8 +1519,8 @@
 
   const STATUS_TONE = Object.freeze({ open: 'blue', approved: 'green', rejected: 'red', notRequired: 'gray' });
   const statusText = status => Checklist.statusLabel(status, lang());
-  function statusButtons(orderKey, current) {
-    return Checklist.statusIds().map(status => `<button type="button" class="cpaStatusBtn tone-${STATUS_TONE[status] || 'gray'}${current === status ? ' is-on' : ''}" data-cpa-answer="${status}" data-cpa-key="${esc(orderKey)}" aria-pressed="${current === status ? 'true' : 'false'}">${esc(statusText(status))}</button>`).join('');
+  function statusButtons(orderKey, current, partId) {
+    return Checklist.statusIds().map(status => `<button type="button" class="cpaStatusBtn tone-${STATUS_TONE[status] || 'gray'}${current === status ? ' is-on' : ''}" data-cpa-answer="${status}" data-cpa-part="${partId || ''}" data-cpa-key="${esc(orderKey)}" aria-pressed="${current === status ? 'true' : 'false'}">${esc(statusText(status))}</button>`).join('');
   }
 
   function openChecklist(itemId) {
@@ -1515,7 +1537,7 @@
       <td>${esc(analysis.dims.manufacturer)}</td>
       <td class="num">${analysis.daysToLoad == null ? '—' : int(analysis.daysToLoad)}</td>
       <td>${plmCell(analysis, itemId)}</td>
-      <td class="act"><div class="cpaStatusGroup" role="group" aria-label="${esc(L('Durum', 'Status'))}">${statusButtons(analysis.orderKey, currentStatus(analysis))}</div></td></tr>`).join('');
+      <td class="act"><div class="cpaStatusGroup" role="group" aria-label="${esc(L('Durum', 'Status'))}">${Checklist.componentsFor(analysis, { answers: state.answers }).length ? Checklist.componentsFor(analysis, { answers: state.answers }).map(part => `<div class="clPartAnswerGroup"><b>${esc(part.label)}</b><div>${statusButtons(analysis.orderKey, Checklist.statusOf(analysis, Checklist.Components.itemId(itemId, part.id), { answers: state.answers, item: state.rules.find(rule => rule.id === itemId) }), part.id)}</div></div>`).join('') : statusButtons(analysis.orderKey, currentStatus(analysis))}</div></td></tr>`).join('');
     const modal = document.createElement('div');
     modal.className = 'cpaModalOverlay';
     modal.innerHTML = `<div class="cpaModal cpaChecklistAnswerModal"><header>
@@ -1540,11 +1562,16 @@
       const analysis = orders.find(item => item.orderKey === el.dataset.cpaKey);
       if (!analysis) return;
       const status = el.dataset.cpaAnswer;
-      setChecklistAnswer(analysis, itemId, status);
+      const targetId = el.dataset.cpaPart ? Checklist.Components.itemId(itemId, el.dataset.cpaPart) : itemId;
+      if (!setChecklistAnswer(analysis, targetId, status)) {
+        if (typeof showToast === 'function') showToast(L('Önce CP hücresinden set parçalarını tanımlayın.', 'Define the set parts from the CP cell first.'));
+        return;
+      }
       const row = modal.querySelector(`[data-cpa-answer-row="${CSS.escape(analysis.orderKey)}"]`);
       if (row) {
-        row.classList.toggle('is-answered', Checklist.isResolved(status));
+        row.classList.toggle('is-answered', Checklist.isResolved(Checklist.statusOf(analysis, itemId, { answers: state.answers, item: state.rules.find(rule => rule.id === itemId) })));
         row.querySelectorAll('[data-cpa-answer]').forEach(button => {
+          if ((button.dataset.cpaPart || '') !== (el.dataset.cpaPart || '')) return;
           const on = button.dataset.cpaAnswer === status;
           button.classList.toggle('is-on', on);
           button.setAttribute('aria-pressed', on ? 'true' : 'false');
@@ -3513,7 +3540,7 @@
      aynı oturumda sunucudan yeni değer gelirse (BLStorage hydrate) kurallar
      depodan yeniden okunur. */
   window.BLCpAssistant = {
-    onOverviewRendered, render, validateHologramOrders, markHologramOrdered, computeDecisionsForRows, computeDecisionsForRowsAsync, peekDecisionsForRows, setChecklistAnswer, adoptSharedChecklistDefinitions, createChecklistItem,
+    onOverviewRendered, render, validateHologramOrders, markHologramOrdered, computeDecisionsForRows, computeDecisionsForRowsAsync, peekDecisionsForRows, setChecklistAnswer, setChecklistComponents, adoptSharedChecklistDefinitions, createChecklistItem,
     persistChecklistAnswers: saveAnswers,
     openRules, openSettings, openOverviewRows, selectPriority, invalidateOverview,
     decisionRuntimeStats: () => decisionRuntime.getStats(),

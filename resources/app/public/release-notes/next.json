@@ -126,6 +126,35 @@
           "en": "The anonymous demo PDF opens directly in Layout Control; the price difference is marked on the document with the CP reference alongside."
         }
       }
+    },
+    {
+      "id": "checklist-set-components",
+      "type": "feature",
+      "module": {
+        "tr": "CP ve Koleksiyon · Checklist",
+        "en": "CP and Collection · Checklist"
+      },
+      "title": {
+        "tr": "Set parçalarını tek hücrede ayrı takip edin",
+        "en": "Track set parts independently in one cell"
+      },
+      "body": {
+        "tr": "Set/Takım modellerinin A, B, C parçaları aynı checklist hücresinde ayrı durumlarla izlenir. Parça sayısı ürün bilgisinden alınır veya hücreden tanımlanır; kayıtlı parçalar, notlar ve ekler korunur. Üretici Excel’i ve test raporu aktarımı doğru parçayı günceller; eski set onayları parçalara otomatik dağıtılmaz.",
+        "en": "Set components A, B, C have independent statuses inside the same checklist cell. The part count comes from product data or is defined from the cell; saved parts, notes and attachments are retained. Supplier workbooks and test report imports update the selected part; legacy set approvals are not automatically copied to parts."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-set-components.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP tablosunda anonim üç parçalı set için aynı checklist hücresindeki A, B, C durumları",
+          "en": "A, B, C statuses in one checklist cell for an anonymous three-part set in the real Buyer Log CP table"
+        },
+        "caption": {
+          "tr": "Her parça ayrı düzenlenir; tekil ürünler tek durumla gösterilir.",
+          "en": "Each part is edited independently; single products retain one status."
+        }
+      }
     }
   ]
 }

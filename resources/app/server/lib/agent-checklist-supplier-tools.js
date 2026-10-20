@@ -52,7 +52,7 @@ function registerChecklistSupplierTools(registry,deps){
     };
     let parsed;
     // The effect time is stamped at apply; the preview binding stays stable.
-    try{parsed=Sync.parseSupplierWorkbook(workbook,{analysisFor:key=>analyses.get(key)||null,catalog,applies,english:args.language==='en',customStatuses:data.customStatuses||[],at:'1970-01-01T00:00:00.000Z'});}
+    try{parsed=Sync.parseSupplierWorkbook(workbook,{analysisFor:key=>analyses.get(key)||null,catalog,applies,answers:data.checklist?.answers||{},english:args.language==='en',customStatuses:data.customStatuses||[],at:'1970-01-01T00:00:00.000Z'});}
     catch(err){if(err&&err.code==='CHECKLIST_WORKBOOK_INVALID')throw error('OFFICE_SUPPLIER_WORKBOOK_INVALID',422);throw err;}
     const store=native._read(),before={},byKey=new Map();let forbidden=0;
     for(const entry of parsed.entries){
@@ -145,11 +145,11 @@ function registerChecklistSupplierExport(registry,deps){
     const answerFor=(item,analysis)=>{
       const own=answers[Checklist.answerKey(analysis.orderKey,item.id)];if(own)return own;
       if(item.approvalScope==='option'){const key=Checklist.optionAnswerKey(analysis,item.id),reusable=key&&answers[key];if(reusable&&Checklist.normalizeStatus(reusable.state)==='approved')return reusable;}
-      if(item.builtIn){try{const evidence=plmEvidence(analysis,item.id);if(evidence&&evidence.state==='approved')return {state:'approved',at:evidence.date||'',by:'PLM',source:'plm'};}catch(_){}}
+      if(!Checklist.Components.parseItem(item.id)&&item.builtIn){try{const evidence=plmEvidence(analysis,item.id);if(evidence&&evidence.state==='approved')return {state:'approved',at:evidence.date||'',by:'PLM',source:'plm'};}catch(_){}}
       return null;};
     const binding={rows:hash(JSON.stringify(rows)),answers:hash(JSON.stringify([...analyses.keys()].sort().map(key=>Object.entries(answers).filter(([k])=>k.startsWith(key+'::')).sort(([a],[b])=>a.localeCompare(b))))),items:hash(JSON.stringify(items))};
     const snapshot={orders:rows.length,missing:args.orderKeys.length-rows.length,items:items.length,supplier:supplierName(rows),language:args.language==='en'?'en':'tr',columns,withImages:columns.includes('image'),sourceRevision,binding};
-    Object.defineProperty(snapshot,'build',{value:{rows,items,byRow,applies,answerFor,customStatuses:data.customStatuses||[]},enumerable:false});
+    Object.defineProperty(snapshot,'build',{value:{rows,items,byRow,applies,answerFor,answers,customStatuses:data.customStatuses||[]},enumerable:false});
     return snapshot;
   }
   const supplierName=rows=>{const names=new Set(rows.map(row=>String(row['Sub-Manufacturer']||row.Manufacturer||'').trim()).filter(Boolean));return names.size===1?[...names][0]:'';};
@@ -166,7 +166,7 @@ function registerChecklistSupplierExport(registry,deps){
       let imageBytes=0;
       const prepareImage=async row=>{if(!p.withImages||!deps.rowImage)return null;const image=deps.rowImage(row);if(!image)return null;const bytes=Math.ceil(image.dataUrl.length*3/4);if(imageBytes+bytes>IMAGE_BUDGET)return null;imageBytes+=bytes;return image;};
       const built=await Sync.buildSupplierWorkbook({ExcelJS,rows:b.rows,items:b.items,language:p.language,customStatuses:b.customStatuses,columnIds:p.columns,
-        analysisFor:row=>b.byRow.get(row)||null,itemApplies:b.applies,answerFor:b.answerFor,
+        analysisFor:row=>b.byRow.get(row)||null,itemApplies:b.applies,answerFor:b.answerFor,answers:b.answers,
         prepareImage});
       ctx.assertAuthority();
       const service=deps.outputService();

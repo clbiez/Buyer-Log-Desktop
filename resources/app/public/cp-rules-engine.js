@@ -1087,7 +1087,12 @@
         && (matchesRule(rule, facts) || autoMatches(id)));
     }, false);
     const autoDecisions = [];
+    const componentTracking = Boolean(Checklist.componentsFor && (Checklist.componentsFor(analysis, statusContext).length
+      || Checklist.Components.isSet(analysis.sourceRow || analysis, 'cp')));
     const statusOf = id => {
+      // A whole-set legacy decision or automatic formula is not evidence for
+      // individual pieces. Every consumer must use the same part aggregate.
+      if (componentTracking) return Checklist.statusOf(analysis, id, statusContext);
       const rule = byId.get(id);
       const directKey = Checklist.answerKey ? Checklist.answerKey(analysis.orderKey, id) : '';
       const direct = directKey && opts.answers && opts.answers[directKey];
