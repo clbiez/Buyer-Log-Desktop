@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-20",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Genel Bakış not kaydı düzeltmesi",
-    "en": "Overview note saving fix"
+    "tr": "Genel Bakış ve sol menü düzeltmeleri",
+    "en": "Overview and sidebar fixes"
   },
   "summary": {
-    "tr": "Not grubu düzenlemeleri kalıcı kaydedilir; ön izleme güncellenir ve kayıt hatasında taslak korunur.",
-    "en": "Note group edits are saved persistently, previews update and drafts are retained when saving fails."
+    "tr": "Not düzenlemeleri kalıcı kaydedilir; hover veya klavye odağıyla açılan sol menü üst başlığın önünde görünür.",
+    "en": "Note edits are saved persistently; the sidebar expanded by hover or keyboard focus appears in front of the top header."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Üç demo siparişinin notu tek işlemde kaydedildi; sayfa yenilemesi ve hatadan sonra yeniden deneme doğrulandı.",
           "en": "Three demo orders saved in one operation; page reload and retry after a save failure were verified."
+        }
+      }
+    },
+    {
+      "id": "sidebar-hover-header-layer",
+      "type": "fix",
+      "module": {
+        "tr": "Arayüz · Sol menü",
+        "en": "Interface · Sidebar"
+      },
+      "title": {
+        "tr": "Açılan sol menü üst başlığın arkasında kalmaz",
+        "en": "Expanded sidebar stays in front of the top header"
+      },
+      "body": {
+        "tr": "Daraltılmış sol menü, fareyle üzerine gelindiğinde veya klavyeyle odaklandığında üst başlığın önünde açılır. Buyer Log başlığı, sürüm bilgisi ve menüyü sabitleme düğmesi görünür ve erişilebilir kalır; sayfa içeriği yerinden oynamaz.",
+        "en": "The collapsed sidebar opens in front of the top header on hover or keyboard focus. The Buyer Log title, version information and menu pin button remain visible and accessible, while page content stays in place."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sidebar-hover-layer.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log arayüzünde üst başlığın önünde açılmış sol menü ve görünür sabitleme düğmesi",
+          "en": "Expanded sidebar and visible pin button in front of the top header in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Dar menü hover ile genişler; marka, sürüm ve sabitleme düğmesi üst başlık tarafından örtülmez.",
+          "en": "The collapsed menu expands on hover; the brand, version and pin button remain clear of the top header."
         }
       }
     }
