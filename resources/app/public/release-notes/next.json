@@ -7,8 +7,8 @@
     "en": "Layout review and note improvements"
   },
   "summary": {
-    "tr": "Standartlara göre görsel layout incelemesi, CP sürükle-bırak girişi ve Overview notlarında kalıcı düzenleme.",
-    "en": "Visual standards-based layout review, CP drag-and-drop entry and persistent Overview note editing."
+    "tr": "Standartlara göre görsel layout kontrolü, CP sürükle-bırak, kalıcı Overview notları ve menü katman düzeltmesi.",
+    "en": "Visual standards-based layout review, CP drag-and-drop, persistent Overview notes and sidebar layering fix."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Üç demo siparişinin notu tek işlemde kaydedildi; sayfa yenilemesi ve hatadan sonra yeniden deneme doğrulandı.",
           "en": "Three demo orders saved in one operation; page reload and retry after a save failure were verified."
+        }
+      }
+    },
+    {
+      "id": "sidebar-hover-header-layer",
+      "type": "fix",
+      "module": {
+        "tr": "Arayüz · Sol menü",
+        "en": "Interface · Sidebar"
+      },
+      "title": {
+        "tr": "Açılan sol menü üst başlığın arkasında kalmaz",
+        "en": "Expanded sidebar stays in front of the top header"
+      },
+      "body": {
+        "tr": "Daraltılmış sol menü, fareyle üzerine gelindiğinde veya klavyeyle odaklandığında üst başlığın önünde açılır. Buyer Log başlığı, sürüm bilgisi ve menüyü sabitleme düğmesi görünür ve erişilebilir kalır; sayfa içeriği yerinden oynamaz.",
+        "en": "The collapsed sidebar opens in front of the top header on hover or keyboard focus. The Buyer Log title, version information and menu pin button remain visible and accessible, while page content stays in place."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "sidebar-hover-layer.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log arayüzünde üst başlığın önünde açılmış sol menü ve görünür sabitleme düğmesi",
+          "en": "Expanded sidebar and visible pin button in front of the top header in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Dar menü hover ile genişler; marka, sürüm ve sabitleme düğmesi üst başlık tarafından örtülmez.",
+          "en": "The collapsed menu expands on hover; the brand, version and pin button remain clear of the top header."
         }
       }
     },
