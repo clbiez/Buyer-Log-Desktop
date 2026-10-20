@@ -146,7 +146,7 @@ test('fabric blends use numeric descending order and suffix percent signs in bot
   const tr='45% Polyester 37% Pamuk 8% Akrilik 6% Viskoz 2% Yün 2% Poliamid'; // i18n-ignore
   const en='45% Poliester 37% Cotton 8% Acrylic 6% Viscose 2% Wool 2% Polyamide';
   const card=engine.ruleCard(raw);
-  assert.equal(card.details.composition,tr);
+  assert.equal(card.details.composition,'45% Poliester 37% Pamuk 8% Akrilik 6% Viskoz 2% Yün 2% Poliamid','original PLM detail stays unchanged'); // i18n-ignore
   assert.equal(card.summary,'Gabardin · 250 gsm · '+tr);
   assert.equal(card.summaryEn,'Gabardin · 250 gsm · '+en);
   const old={code:'360236',summary:'Gabardin · 2% Yün 45% Poliester 37% Pamuk',summaryEn:'Gabardin · 2% Wool 45% Polyester 37% Cotton'};
