@@ -544,7 +544,7 @@
         // right. Only consume a description cell in the report header area.
         const first = items.filter(v => v.p === item.p && Math.abs(v.y - item.y) <= 3 && v.x > item.x && !isLabelItem(v)).sort((a, b) => a.x - b.x)[0];
         if (!first || !valueRightOf(items, item)) continue;
-        const next = sorted.find(v => v.p === item.p && v.y < item.y - 3 && (isLabelItem(v) || v.x <= item.x + 8 || /^(DEGERLENDIRME|EVALUATION|TEST RESULTS|COMPONENT|BILESEN|UYGULANAN TEST|APPLIED TEST)/.test(fold(v.s))));
+        const next = sorted.find(v => v.p === item.p && v.y < item.y - 3 && (isLabelItem(v) || v.x <= item.x + 8 || /^\d+\s*\/\s*\d+$/.test(v.s) || /^(DEGERLENDIRME|EVALUATION|TEST RESULTS|COMPONENT|BILESEN|UYGULANAN TEST|APPLIED TEST)/.test(fold(v.s))));
         const bottom = next ? next.y + 3 : 0;
         if (!next) report.uyarilar.push({ code: 'descriptionBoundary' });
         assignField(report, fieldKey, linesFromItems(items.filter(v => v.p === item.p && v.x >= first.x && v.y <= item.y + 3 && v.y > bottom)));

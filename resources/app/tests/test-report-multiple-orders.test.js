@@ -69,6 +69,13 @@ test('multi-order and unresolved annotated descriptions never auto-select a scop
  assert.equal(E.orderScopeNeedsReview(mail('100% COTTON, 150 GSM')),false);
 });
 
+test('a page-ending Explanation stops at its footer before the next-page summary',()=>{
+ const item=(p,x,y,s)=>({p,x,y,s});
+ const r=E.parsePdfItems([item(1,20,700,'Order No'),item(1,100,700,'1354555'),item(1,20,444,'Explanation'),item(1,78,444,'ORDER:1354555/1354546'),item(1,280,20,'1 / 12'),item(2,200,700,'EVALUATION SUMMARY')]).report;
+ assert.equal(r.aciklama,'ORDER:1354555/1354546');
+ assert.ok(!r.uyarilar.some(w=>w.code==='descriptionBoundary'));
+});
+
 test('operational intelligence reads secondary links without false primary-PO mismatch',()=>{
  const Intelligence=require('../server/lib/agent-office-intelligence'),CP=require('../public/cp-readiness-engine');
  const rows=['1354555','1354546'].map(po=>({'Order Code':po,'Model Name':'DEMO-YD','Colour':'NAVY','C.Code':'NVY','PLM ID':'2000011','STATUS':'ÜRETİM','Ex-factory':'2026-11-20'}));
