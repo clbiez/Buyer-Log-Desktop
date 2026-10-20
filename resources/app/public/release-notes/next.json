@@ -126,6 +126,35 @@
           "en": "The anonymous demo PDF opens directly in Layout Control; the price difference is marked on the document with the CP reference alongside."
         }
       }
+    },
+    {
+      "id": "test-report-multiple-orders",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Test raporu aktarımı",
+        "en": "CP · Test report import"
+      },
+      "title": {
+        "tr": "Tek raporda birden fazla sipariş kapsamı",
+        "en": "Multiple orders covered by one report"
+      },
+      "body": {
+        "tr": "Açıklama ve Explanation alanlarındaki ek siparişler kaynak metniyle korunur; her sipariş ayrı önizlenir ve kapsamı doğrulanarak seçilir. LCW AI tüm kapsamı görür. Rapor birden fazla siparişe bağlanır; bağlantılar ve her siparişin ekleri yeniden aktarımda korunur. Belirsiz numaralar otomatik seçilmez.",
+        "en": "Additional orders in Description and Explanation are preserved with source text. Each order is previewed and selected after scope verification, and LCW AI sees the full scope. One report can link to multiple orders; links and per-order attachments survive reimport. Unverified numbers are never automatically selected."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-multiple-orders.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log test raporu aktarımında anonim demo raporunun üç ayrı sipariş kapsamı ve açıklama kanıtı",
+          "en": "Three independent order scopes and description evidence for an anonymous demo report in the real Buyer Log test report import"
+        },
+        "caption": {
+          "tr": "Ana sipariş, ek sipariş ve CP’de bulunmayan sipariş birlikte gösterilir; kullanıcı her kapsamı açıkça doğrular.",
+          "en": "The primary order, an additional order and an order absent from CP are shown together; each scope requires explicit user verification."
+        }
+      }
     }
   ]
 }
