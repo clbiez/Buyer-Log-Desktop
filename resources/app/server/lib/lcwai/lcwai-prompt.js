@@ -98,6 +98,11 @@ const CONTRACTS = Object.freeze({
     }),
     example: { explanation: '…', code: 'AUTOMATION "…"\nSOURCE cp\n…', warnings: [] },
   }),
+  'cp-document-kind': Object.freeze({
+    label:{tr:'CP Belge Türü',en:'CP Document Type'},
+    fields:Object.freeze({documentType:{type:'string',required:true,max:20,hint:{tr:'TEST_REPORT, PRICE_TAG, CARE_LABEL veya UNKNOWN',en:'TEST_REPORT, PRICE_TAG, CARE_LABEL or UNKNOWN'}},explanation:{type:'string',required:true,max:500}}),
+    example:{documentType:'PRICE_TAG',explanation:'Visible size, order number and cash price blocks.'}
+  }),
   'layout-control': Object.freeze({
     label: { tr: 'Layout Kontrolü', en: 'Layout Control' },
     fields: Object.freeze({
@@ -124,6 +129,15 @@ const CONTRACTS = Object.freeze({
       fit: { type: 'string', max: 120 },
       identityText: { type: 'string', max: 5000, hint: { tr: 'özellikle Price Tag üst kimlik/kod bandını görünür olduğu haliyle aynen kopyala', en: 'especially for Price Tag, transcribe the visible upper identity/code band verbatim' } },
       prices: { type: 'string[]', max: 120, items: 20 },
+      cashPrices: { type:'string[]',max:120,items:40,hint:{tr:'yalnız Peşin Satış Fiyatı; basılı para birimi ve tutar',en:'cash retail prices only; printed currency and amount'} },
+      instalmentPrices: { type:'string[]',max:120,items:40 },
+      languageCodes: { type:'string[]',max:8,items:30 },
+      languageTexts: { type:'string[]',max:1200,items:80,hint:{tr:'Her dil için JSON metni: {code,page,composition,origin,care,fireWarning}; yalnız görülen özgün çeviri',en:'JSON string per language: {code,page,composition,origin,care,fireWarning}; original visible translation only'} },
+      companyAddresses: { type:'string[]',max:1200,items:12 },
+      websites: { type:'string[]',max:200,items:12 },
+      fireWarning: { type:'string',max:12,hint:{tr:'PRESENT, ABSENT veya UNKNOWN; bu sayfalardaki ateş uyarısı',en:'PRESENT, ABSENT or UNKNOWN; fire warning on these pages'} },
+      inspectedPages: { type:'string[]',max:8,items:80,hint:{tr:'Gerçekten okunabilen özgün PDF sayfa numaraları; ör. ["1","2"]',en:'Original PDF page numbers actually read; e.g. ["1","2"]'} },
+      fieldEvidence: { type:'string[]',max:1200,items:80,hint:{tr:'JSON metni: {field,page,bbox:[x,y,w,h],text}; temel etiket alanının basılı kanıtı ve 0–1 koordinatı',en:'JSON string: {field,page,bbox:[x,y,w,h],text}; printed core-field evidence and normalized 0–1 coordinates'} },
       visualFindings: { type: 'string[]', max: 500, items: 30, hint: { tr: 'yalnız görünür kanıta dayalı görsel/semantik inceleme bulguları', en: 'only visual/semantic review findings supported by visible evidence' } },
       standardFindings: { type: 'string[]', max: 2400, items: 80, hint: { tr: 'Her öğe JSON metni: {ruleId,verdict:PASS|ISSUE|UNCERTAIN|NA,page,bbox:[x,y,w,h],actual,comment,correction}; bbox sayfanın sol üstünden 0–1; yalnız layout sayfa numarası; comment/correction Türkçe', en: 'Each entry is a JSON string: {ruleId,verdict:PASS|ISSUE|UNCERTAIN|NA,page,bbox:[x,y,w,h],actual,comment,correction}; bbox 0–1 from page top-left; layout page number only; comment/correction in English' } },
       confidence: { type: 'string', required: true, max: 12, hint: { tr: 'EXACT, HIGH, MEDIUM veya LOW', en: 'EXACT, HIGH, MEDIUM or LOW' } },
@@ -336,8 +350,8 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. "explanation" Türkçe olsun.');
     } else if (key === 'layout-control') {
       lines.push(english
-        ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Preserve all extracted label values in the language and spelling printed in the PDF; only "explanation" should be English.'
-        : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. PDF’den çıkarılan tüm etiket değerlerini basıldığı dil ve yazımla koru; yalnız "explanation" Türkçe olsun.');
+        ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Preserve all extracted label values in the language and spelling printed in the supplied page images; only "explanation" should be English.'
+        : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. Sayfa görsellerinden çıkarılan tüm etiket değerlerini basıldığı dil ve yazımla koru; yalnız "explanation" Türkçe olsun.');
     } else {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write "explanation" and "warnings" in English.'
@@ -362,8 +376,8 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
         : 'CONTEXT.fabrics içindeki her öğe "<kod> :: <PLM kumaş metni>" biçimindedir. Her kod için tam o kodu kullanarak bir "cards" satırı yaz. "summary" buyer\'ın Koleksiyon tablosunda gördüğü metindir: karakter sınırı olmadan; sırasıyla kumaş tipi, iplik numarası, gramaj ve karışım. İki kez yaz: "summary" Türkçe (ör. "Süprem · 30/1 Ne Penye · 150 gsm · 100% Pamuk"), "summaryEn" standart tekstil terimleriyle İngilizce (ör. "Single Jersey · 30/1 Ne Combed · 150 gsm · 100% Cotton"); ikisi de birebir aynı sayıları taşır. Ürün adlandırma kuralı: bu elyafı Türkçe "summary" içinde "Polyester", İngilizce "summaryEn" içinde "Poliester" olarak yaz (standart İngilizcede farklı olsa da). Diğer alanları yalnız metinden doldur; tahmin etmek yerine boş bırak. Sayı uydurma, yuvarlama ya da hesaplama: Buyer Log sayıları PLM metninde yazılı olmayan her değeri atar. Bir değerin içinde "|" karakterini kullanma.');
     } else if (key === 'layout-control') {
       lines.push(english
-        ? 'Fill the schema only from values visibly supported by the attached layout PDF. "warnings" means warnings printed on the product label, not your own cautions. "countries" means manufacturing/country-of-origin only: never treat importer, distributor, company-address or legal-contact countries (for example MAROC in an importer block) as production country. For PRICE_TAG, transcribe the whole visible upper identity/code band verbatim into "identityText" and extract modelCodes, orderNumbers, specialCodes, colourCodes, seasonCodes, magCodes, mmygCodes, lineCodes, productMainDefinitions and countries when their meaning is visually supportable. If an unlabeled slash-separated code cannot be assigned safely, keep it only in identityText rather than guessing its business meaning. Put uncertainty only in "explanation" and lower "confidence". Do not invent CP/reference values.'
-        : 'Şemayı yalnız ekli layout PDF içinde görünür kanıtı olan değerlerle doldur. "warnings", senin uyarıların değil ürün etiketinde basılı uyarılardır. "countries" yalnız üretim/menşe ülkesidir; ithalatçı, distribütör, şirket adresi veya yasal iletişim bloklarındaki ülkeleri (ör. ithalatçı bloğundaki MAROC) üretim ülkesi sayma. PRICE_TAG için üstteki görünür kimlik/kod bandının tamamını "identityText" alanına aynen kopyala; anlamı görsel olarak destekleniyorsa modelCodes, orderNumbers, specialCodes, colourCodes, seasonCodes, magCodes, mmygCodes, lineCodes, productMainDefinitions ve countries alanlarını doldur. Etiketsiz slash-ayrımlı bir kodun iş anlamından emin değilsen tahmin etme; yalnız identityText içinde bırak. Belirsizliği yalnız "explanation" içinde belirt ve "confidence" değerini düşür. CP/reference değeri uydurma.');
+        ? 'Fill the schema only from values visibly supported by the attached layout page images. "warnings" means warnings printed on the product label, not your own cautions. "countries" means manufacturing/country-of-origin only: never treat importer, distributor, company-address or legal-contact countries (for example MAROC in an importer block) as production country. For PRICE_TAG, transcribe the whole visible upper identity/code band verbatim into "identityText" and extract modelCodes, orderNumbers, specialCodes, colourCodes, seasonCodes, magCodes, mmygCodes, lineCodes, productMainDefinitions and countries when their meaning is visually supportable. If an unlabeled slash-separated code cannot be assigned safely, keep it only in identityText rather than guessing its business meaning. Put uncertainty only in "explanation" and lower "confidence". Do not invent CP/reference values.'
+        : 'Şemayı yalnız ekli layout sayfa görselleri içinde görünür kanıtı olan değerlerle doldur. "warnings", senin uyarıların değil ürün etiketinde basılı uyarılardır. "countries" yalnız üretim/menşe ülkesidir; ithalatçı, distribütör, şirket adresi veya yasal iletişim bloklarındaki ülkeleri (ör. ithalatçı bloğundaki MAROC) üretim ülkesi sayma. PRICE_TAG için üstteki görünür kimlik/kod bandının tamamını "identityText" alanına aynen kopyala; anlamı görsel olarak destekleniyorsa modelCodes, orderNumbers, specialCodes, colourCodes, seasonCodes, magCodes, mmygCodes, lineCodes, productMainDefinitions ve countries alanlarını doldur. Etiketsiz slash-ayrımlı bir kodun iş anlamından emin değilsen tahmin etme; yalnız identityText içinde bırak. Belirsizliği yalnız "explanation" içinde belirt ve "confidence" değerini düşür. CP/reference değeri uydurma.');
     } else {
       lines.push(english
         ? 'Use the field meanings in CONTEXT and build the closest condition achievable with the listed fields; state any assumption in "explanation" and "warnings". Leave the required fields as empty strings only if nothing close is possible, and explain why.'

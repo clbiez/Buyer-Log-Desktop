@@ -25,13 +25,15 @@ function normalizeCheck(raw){
   const item=raw&&typeof raw==='object'?raw:{};
   const decision=status(item.decision,['PENDING','APPROVED','REJECTED','NOT_APPLICABLE'],'PENDING');
   const editable=item.category==='STANDARD'||item.category==='ANNOTATION';
+  const assessmentStatus=status(item.assessmentStatus||item.status,['MATCH','MISMATCH','REVIEW','NOT_CHECKED'],'REVIEW');
   const box=item.bbox;
   const page=Number.isInteger(item.page)&&item.page>0&&item.page<=80?item.page:null;
   const bbox=page&&Array.isArray(box)&&box.length===4&&box.every(v=>typeof v==='number'&&Number.isFinite(v))&&box[0]>=0&&box[1]>=0&&box[2]>0&&box[3]>0&&box[0]+box[2]<=1.001&&box[1]+box[3]<=1.001?box:null;
   return {
     rule:clean(item.rule,100),
     category:clean(item.category,80),
-    status:editable?({APPROVED:'MATCH',REJECTED:'MISMATCH',NOT_APPLICABLE:'NOT_CHECKED'}[decision]||'REVIEW'):status(item.status,['MATCH','MISMATCH','REVIEW','NOT_CHECKED'],'REVIEW'),
+    status:editable?({APPROVED:'MATCH',REJECTED:'MISMATCH',NOT_APPLICABLE:'NOT_CHECKED'}[decision]||assessmentStatus):assessmentStatus,
+    assessmentStatus,
     expected:list(item.expected,20,500),
     actual:list(item.actual,20,500),
     detail:clean(item.detail,1200),
@@ -75,6 +77,9 @@ function normalizeRun(raw,nowFallback){
     documentType:status(item.documentType,['CARE_LABEL','PRICE_TAG','UNKNOWN'],'UNKNOWN'),
     templateVersion:clean(item.templateVersion,80),
     fileHash:/^[a-f0-9]{64}$/.test(item.fileHash||'')?item.fileHash:'',
+    extraction:Object.fromEntries(['modelCodes','specialCodes','colourCodes','colours','orderNumbers','countries','composition','cashPrices','instalmentPrices'].map(field=>[field,list(item.extraction&&item.extraction[field]||item[field],40,180)])),
+    reference:{status:status(item.reference&&item.reference.status,['MATCH','AMBIGUOUS','NONE'],'NONE'),orderCodes:list(item.reference&&item.reference.orderCodes,40,80)},
+    reading:{totalPages:number(item.reading&&item.reading.totalPages),readPages:(Array.isArray(item.reading&&item.reading.readPages)?item.reading.readPages:[]).slice(0,80).map(number),failedPages:(Array.isArray(item.reading&&item.reading.failedPages)?item.reading.failedPages:[]).slice(0,80).map(number)},
     modelCodes:list(item.modelCodes,12,120),
     colourCodes:list(item.colourCodes,12,80),
     summary:summaryFromChecks(checks,item.summary),

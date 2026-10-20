@@ -2291,24 +2291,30 @@
       toast(T('Test raporu aktarımı açılamadı: ', 'Test report import could not be opened: ') + (error.message || error));
     }
   }
-  function chooseCpDocumentFlow(files) {
-    if(!files.every(file=>/\.pdf$/i.test(file.name||''))){openTestReportImport(files);return;}
-    const chooser=root.document.createElement('div');
-    chooser.className='cpaModalOverlay cpDocumentFlow';
-    chooser.innerHTML='<div class="cpaModal" role="dialog" aria-modal="true" aria-labelledby="cpDocumentFlowTitle"><h3 id="cpDocumentFlowTitle">'+html(T('PDF belgelerini nasıl inceleyelim?', 'How should these PDFs be reviewed?'))+'</h3><p>'+html(files.map(f=>f.name).join(' · '))+'</p><p>'+html(T('Layout kontrolü yalnız belge üzerinde yorum/onay kaydeder; CP durumunu değiştirmez.', 'Layout control saves document comments/approvals only; it does not change CP status.'))+'</p><div class="cpaModalActions"><button type="button" class="lcwaiBtn is-primary" data-cp-document-layout>'+html(T('Layout Kontrolü · Price Tag / Care Label', 'Layout Control · Price Tag / Care Label'))+'</button><button type="button" class="lcwaiBtn" data-cp-document-test>'+html(T('Test Raporu', 'Test Report'))+'</button><button type="button" class="lcwaiBtn" data-cp-document-cancel>'+html(T('Vazgeç', 'Cancel'))+'</button></div></div>';
-    root.document.body.appendChild(chooser);
-    const close=()=>chooser.remove();
-    chooser.addEventListener('keydown',event=>{if(event.key==='Escape')close();});
-    chooser.querySelector('[data-cp-document-cancel]').onclick=close;
-    chooser.querySelector('[data-cp-document-test]').onclick=()=>{close();openTestReportImport(files);};
-    chooser.querySelector('[data-cp-document-layout]').onclick=async()=>{
-      close();
-      try{
+  let documentRouting=false;
+  async function routeCpDocuments(files) {
+    if(documentRouting)return;
+    documentRouting=true;
+    const layouts=[],reports=[],unknown=[];
+    try{
+      if(root.BLPerf)await root.BLPerf.ensureFeature('layoutDocument');
+      toast(T('Belgeler otomatik tanınıyor…','Detecting document types…'));
+      for(const file of files){
+        if(!/\.pdf$/i.test(file.name||'')){reports.push(file);continue;}
+        try{
+          const type=await root.BLLayoutReader.classify(file);
+          if(type==='PRICE_TAG'||type==='CARE_LABEL')layouts.push(file);
+          else {if(type==='TEST_REPORT')reports.push(file);else unknown.push(file.name);await root.BLLayoutReader.release(file);}
+        }catch(_){unknown.push(file.name);await root.BLLayoutReader.release(file);}
+      }
+      if(unknown.length)toast(T('Belge türü okunamadı: ','Document type could not be read: ')+unknown.join(', '));
+      if(layouts.length){
         if(root.BLPerf)await root.BLPerf.ensureFeature('layoutControl');
-        root.BLLayoutControl.open(files);
-      }catch(_){toast(T('Layout kontrolü açılamadı.', 'Layout control could not be opened.'));}
-    };
-    chooser.querySelector('[data-cp-document-layout]').focus();
+        root.BLLayoutControl.open(layouts,{onClose:reports.length?()=>openTestReportImport(reports):null});
+        if(reports.length)toast(T('Layoutlar açıldı; test raporları layout penceresi kapanınca açılacak.','Layouts opened; test reports will open when the layout window closes.'));
+      }else if(reports.length)await openTestReportImport(reports);
+    }catch(_){toast(T('Belge incelemesi açılamadı.','Document review could not be opened.'));}
+    finally{documentRouting=false;}
   }
   function activeTab() {
     const active = root.document && root.document.querySelector('nav.tabs button.active[data-tab]');
@@ -2332,7 +2338,7 @@
     root.document.addEventListener('drop', endInternal, true);
     const eligible = function (event) {
       // Açık bir pencere (ek ekleme vb.) kendi bırakmasını yönetir.
-      return activeTab() === 'cp' && !root.document.querySelector('.layoutControlOverlay,.trImportOverlay,.cpDocumentFlow') && !(event.target && event.target.closest && event.target.closest('.cpaModalOverlay'));
+      return activeTab() === 'cp' && !root.document.querySelector('.layoutControlOverlay,.trImportOverlay') && !(event.target && event.target.closest && event.target.closest('.cpaModalOverlay'));
     };
     const hide = function () { depth = 0; if (overlay) { overlay.remove(); overlay = null; } };
     root.document.addEventListener('dragenter', function (event) {
@@ -2342,7 +2348,7 @@
       overlay = root.document.createElement('div');
       overlay.className = 'trDropOverlay';
       overlay.setAttribute('role', 'status');
-      overlay.innerHTML = '<div><b>' + html(T('Layout veya test raporlarını bırakın', 'Drop layouts or test reports')) + '</b><small>' + html(T('PDF: Layout Kontrolü / Test Raporu seçimi · .msg, .eml: Test Raporu · Layout sonuçları CP’ye yazılmaz', 'PDF: choose Layout Control / Test Report · .msg, .eml: Test Report · Layout results are not written to CP')) + '</small></div>';
+      overlay.innerHTML = '<div><b>' + html(T('Layout veya test raporlarını bırakın', 'Drop layouts or test reports')) + '</b><small>' + html(T('Belge türü otomatik algılanır · Layout sonuçları CP’ye yazılmaz', 'Document type is detected automatically · Layout results are not written to CP')) + '</small></div>';
       root.document.body.appendChild(overlay);
     });
     root.document.addEventListener('dragover', function (event) {
@@ -2365,7 +2371,7 @@
         toast(T('Bırakılan öğe dosya içermiyor. Outlook\'tan maili .msg olarak kaydedip bırakın.', 'The dropped item has no file. Save the e-mail from Outlook as .msg and drop it.'));
         return;
       }
-      chooseCpDocumentFlow(Array.prototype.slice.call(files));
+      routeCpDocuments(Array.prototype.slice.call(files));
     });
   }
   /* "Buyingden dönüş bekleniyor" gibi kullanıcıdan beklenen işler CP
