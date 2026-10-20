@@ -1,0 +1,18 @@
+/* Additive commerce UI. The uploaded Atlas tree geometry is unchanged. */
+.bl-commerce{margin:0 0 24px;padding:20px 24px;border:1px solid var(--line);border-radius:18px;background:var(--panel);display:flex;align-items:center;gap:24px;flex-wrap:wrap;animation:rise .4s var(--smooth) both}
+.bl-commerce-title{flex:1;min-width:180px}.bl-commerce-title small{font-size:10px;letter-spacing:1.5px;color:var(--muted);font-weight:800}.bl-commerce-title h3{margin:4px 0;font-size:17px}.bl-commerce-title p{margin:0;color:var(--muted);font-size:11px}
+.bl-rates{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;flex:2;min-width:300px}.bl-rates span{display:block;color:var(--muted);font-size:10px;line-height:1.5}.bl-rates b{display:block;font-size:19px;letter-spacing:-.5px}.card-meta .bl-rates{min-width:0;gap:6px;margin:14px 0}.card-meta .bl-rates b{font-size:14px}.card-meta .bl-rates span{font-size:9px}.bl-contract{width:100%}.bl-contract+.bl-contract{border-top:1px solid var(--line);padding-top:12px}.bl-contract small{color:var(--muted)}
+.bl-savebar{position:sticky;top:83px;z-index:29;background:var(--panel);border-bottom:1px solid var(--line);padding:10px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:var(--shadow)}.bl-savebar[hidden]{display:none}.bl-savebar p{margin:0;font-size:12px}.bl-savebar .bl-save-actions{display:flex;gap:8px}.bl-status{font-size:11px;color:var(--muted);margin-left:10px}.bl-locked{opacity:.6}
+@media(max-width:600px){.bl-commerce{padding:16px;gap:14px}.bl-rates{min-width:0;width:100%;flex-basis:100%;gap:8px}.bl-rates b{font-size:17px}.bl-savebar{top:72px;padding:8px 15px;flex-wrap:wrap}.card-meta .bl-rates{grid-template-columns:repeat(2,1fr)}.bl-status{display:none}}
+
+[hidden]{display:none!important}.bl-commerce>.bl-contract{flex:3;width:auto;min-width:320px}
+
+.bl-route-instructions{grid-column:1/-1}.bl-route-instructions textarea{width:100%;border:1px solid var(--line);padding:8px;background:var(--panel);color:var(--ink);font:inherit;resize:vertical}
+@media(max-width:600px){
+ body{min-width:0}.bl-commerce>.bl-contract{min-width:0;flex-basis:100%}
+ .nav-actions [data-action="theme"],.nav-actions [data-action="help"],.nav-actions [data-action="export"],.nav-actions [data-action="studio"]{display:none}
+ .navinner{gap:8px}.brandmark{width:28px;height:28px}.brand{gap:7px}.brandname{font-size:12px}.brandname small{display:none}.lang-switch{min-width:70px}
+ .nav-actions [data-action="new"]{width:36px;padding:8px}.nav-actions [data-action="new"] .hide-mobile{display:none}
+ .tree-actions{flex-wrap:wrap}.tree-actions button{white-space:normal}.bl-rates{min-width:0;gap:6px}.bl-rates span{overflow-wrap:anywhere}
+}
+@media(max-width:600px){.tree-section-heading{display:flex;flex-direction:column;align-items:stretch}.tree-actions{width:100%;min-width:0;justify-content:flex-start;flex-wrap:wrap}.tree-actions>*{max-width:100%;flex-shrink:1}}

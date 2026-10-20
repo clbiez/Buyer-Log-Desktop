@@ -16,27 +16,33 @@
  }
  const address=a=>fields(a,['id','label','text'],['manufacturerVisible']);
  const route=s=>fields(s,['id','method','label','recipient','recipientType','qty','timing','addressId','note','supplierInstructions'],['manufacturerVisible','supplierShowNotes']);
- function stage(s){const out=fields(s,['id','title','icon','note','description','approver','approvalNotes','source','testQty','testNotes','visualGuideId','supplierInstructions'],['enabled','manufacturerVisible','supplierShowNotes','supplierShowApprovalNotes','testRequired']);out.submissions=unique(list(s.submissions,40).map(route));return out;}
+ function stage(s){const out=fields(s,['id','title','icon','note','description','internalNotes','approver','approvalNotes','source','testQty','testNotes','visualGuideId','supplierInstructions'],['enabled','manufacturerVisible','supplierShowNotes','supplierShowSourceNote','supplierShowApprovalNotes','testRequired']);out.submissions=unique(list(s.submissions,40).map(route));return out;}
  function normalize(value){
   if(value==null)return null;object(value);if(new TextEncoder().encode(JSON.stringify(value)).length>MAX_BYTES)invalid();const l=object(value.license);
-  const license=fields(l,['id','name','agency','rightsHolder','category','symbol','description','requirements'],['manufacturerVisible','supplierShowRequirements']);
+  const license=fields(l,['id','name','agency','rightsHolder','category','symbol','description','requirements','internalNotes'],['manufacturerVisible','supplierShowRequirements']);
+  for(const key of ['color','color2'])if(l[key]!=null){if(!/^#[0-9a-fA-F]{6}$/.test(l[key]))invalid();license[key]=l[key];}
+  if(l.workflowTemplate)license.workflowTemplate=fields(l.workflowTemplate,['id','name','appliedAt']);
   license.cover=image(l.cover);license.stages=unique(list(l.stages,50).map(stage));license.addresses=unique(list(l.addresses,100).map(address));
   license.portal=fields(l.portal||{},['notes'],['manufacturerVisible']);license.portal.url=url(l.portal?.url);
   const out={version:1,license,sharedAddresses:unique(list(value.sharedAddresses,100).map(address)),visualLibrary:unique(list(value.visualLibrary,30).map(v=>({id:str(v.id,200),name:str(v.name,200),data:image(v.data)}))),customSelectOptions:{}};
   for(const key of ['category','approver','recipientType','method','timing'])if(value.customSelectOptions?.[key])out.customSelectOptions[key]=list(value.customSelectOptions[key],100).map(v=>fields(v,['value','label','side','kind']));
+  out.processTemplates=unique(list(value.processTemplates,40).map(t=>({...fields(t,['id','name','savedAt']),version:2,stages:unique(list(t.stages,50).map(stage)),addresses:unique(list(t.addresses,100).map(address))})));
+  out.stageClipboard=value.stageClipboard?{sourceLicense:str(value.stageClipboard.sourceLicense,200),stage:stage(value.stageClipboard.stage),addresses:unique(list(value.stageClipboard.addresses,100).map(address))}:null;
   return out;
  }
  const localized=(v,key,lang='tr')=>v?.i18n?.[lang]?.[key]||v?.[key]||'';
  function project(card,lang='tr'){
   if(!card.processAtlas)return null;const a=normalize(card.processAtlas),l=a.license;if(l.manufacturerVisible!==true)return null;
-  const tx=(v,key)=>localized(v,key,lang),publicAddresses=[...l.addresses,...a.sharedAddresses].filter(a=>a.manufacturerVisible===true),ids=new Set(publicAddresses.map(a=>a.id)),used=new Set(),visuals=new Set();
+  const tx=(v,key)=>localized(v,key,lang),addressMap=new Map();for(const address of [...l.addresses,...a.sharedAddresses])if(!addressMap.has(address.id))addressMap.set(address.id,address);
+  const publicAddresses=[...addressMap.values()].filter(a=>a.manufacturerVisible===true),ids=new Set(publicAddresses.map(a=>a.id)),used=new Set(),visuals=new Set();
   const stages=l.stages.filter(s=>s.enabled!==false&&s.manufacturerVisible===true).map(s=>{
-   const submissions=s.submissions.filter(r=>r.manufacturerVisible===true).map(r=>{const addressId=ids.has(r.addressId)?r.addressId:'';if(addressId)used.add(addressId);return {method:r.method,label:tx(r,'label'),recipient:r.recipient||'',recipientType:r.recipientType||'',qty:r.qty||'',timing:r.timing||'',addressId,note:r.supplierShowNotes===true?tx(r,'note'):'',supplierInstructions:tx(r,'supplierInstructions')};});
+   const submissions=s.submissions.filter(r=>r.manufacturerVisible===true).map(r=>{const addressId=ids.has(r.addressId)?r.addressId:'';if(addressId)used.add(addressId);return {id:r.id,method:r.method,label:tx(r,'label'),recipient:r.recipient||'',recipientType:r.recipientType||'',qty:r.qty||'',timing:r.timing||'',addressId,note:r.supplierShowNotes===true?tx(r,'note'):'',supplierInstructions:tx(r,'supplierInstructions')};});
    if(s.visualGuideId)visuals.add(s.visualGuideId);
-   return {id:s.id,title:tx(s,'title'),approver:s.approver||'',note:s.supplierShowNotes===true?tx(s,'note'):'',approvalNotes:s.supplierShowApprovalNotes===true?tx(s,'approvalNotes'):'',supplierInstructions:tx(s,'supplierInstructions'),testRequired:s.testRequired===true,testQty:s.testQty||'',testNotes:tx(s,'testNotes'),visualGuideId:s.visualGuideId||'',submissions};
+   return {id:s.id,title:tx(s,'title'),enabled:true,icon:s.icon||'layers',approver:s.approver||'',note:(Object.hasOwn(s,'supplierShowSourceNote')?s.supplierShowSourceNote===true:s.supplierShowNotes===true)?tx(s,'note'):'',approvalNotes:s.supplierShowApprovalNotes===true?tx(s,'approvalNotes'):'',supplierInstructions:tx(s,'supplierInstructions'),testRequired:s.testRequired===true,testQty:s.testQty||'',testNotes:tx(s,'testNotes'),visualGuideId:s.visualGuideId||'',submissions};
   });
+  const publicOptions={};for(const [key,options] of Object.entries(a.customSelectOptions)){const values=key==='category'?[l.category]:key==='approver'?stages.map(s=>s.approver):stages.flatMap(s=>s.submissions.map(r=>r[key]));publicOptions[key]=options.filter(o=>values.includes(o.value));}
   // The exported identity is the bound Buyer Log card, never an imported alias.
-  return {name:card.license||l.name,agency:l.agency||'',rightsHolder:l.rightsHolder||'',cover:l.cover,requirements:l.supplierShowRequirements===true?tx(l,'requirements'):'',stages,addresses:publicAddresses.filter(a=>used.has(a.id)).map(a=>({id:a.id,label:tx(a,'label'),text:a.text})),portal:l.portal.manufacturerVisible===true?{url:l.portal.url,notes:tx(l.portal,'notes')}:{url:'',notes:''},visualLibrary:a.visualLibrary.filter(v=>visuals.has(v.id)),customSelectOptions:a.customSelectOptions};
+  return {id:card.id||l.id,name:card.license||l.name,category:l.category||'',symbol:l.symbol||'',color:l.color,color2:l.color2,agency:l.agency||'',rightsHolder:l.rightsHolder||'',cover:l.cover,requirements:l.supplierShowRequirements===true?tx(l,'requirements'):'',stages,addresses:publicAddresses.filter(a=>used.has(a.id)).map(a=>({id:a.id,label:tx(a,'label'),text:a.text})),portal:l.portal.manufacturerVisible===true?{url:l.portal.url,notes:tx(l.portal,'notes')}:{url:'',notes:''},visualLibrary:a.visualLibrary.filter(v=>visuals.has(v.id)),customSelectOptions:publicOptions};
  }
  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  function exportHTML(cards,lang='tr'){

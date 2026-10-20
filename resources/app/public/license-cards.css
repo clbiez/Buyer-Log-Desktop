@@ -103,3 +103,9 @@
 @media(min-width:1600px){.lcLayout.hasDetail{grid-template-columns:minmax(300px,.65fr) minmax(600px,1.8fr)}}
 @media(max-width:1000px){.lcLayout.hasDetail{grid-template-columns:1fr}.lcDetail{grid-row:1}.lcPageHead{align-items:flex-start}.lcPageHead .lcActions{justify-content:flex-end}}
 @media(max-width:550px){.lcPage{padding:var(--sp-3)}.lcPageHead{flex-direction:column}.lcPageHead .lcActions{justify-content:flex-start}.lcGrid{grid-template-columns:1fr}.lcFormGrid{grid-template-columns:1fr}.lcDetail{padding:var(--sp-4)}.lcDetailHead{flex-wrap:wrap}.lcToolbar{align-items:stretch;flex-direction:column}.lcSearch{max-width:none}}
+/* Original Atlas runs in a sandbox so its uploaded theme stays local to the module. */
+.lcAtlasShell{position:relative;width:100%;min-width:0}.lcAtlasFrame{display:block;border:0;width:100%;height:calc(100dvh - 76px);min-height:540px;background:var(--card)}
+.lcAtlasBackdrop{position:fixed;inset:0;z-index:1100;background:var(--scrim);backdrop-filter:blur(3px);display:flex;justify-content:flex-end;animation:lcAtlasFade .2s ease}
+.lcAtlasDrawer{width:min(780px,100%);height:100%;overflow:auto;background:var(--card);box-shadow:var(--shadow-3);animation:lcAtlasSlide .3s ease}.lcAtlasDrawer .lcDetail{border:0;box-shadow:none;border-radius:0;padding:28px;max-height:none;position:static}.lcAtlasDrawer .lcDetailHead{position:sticky;top:-1px;background:var(--card);z-index:2;padding:18px 0;border-bottom:1px solid var(--line)}.lcAtlasDrawer .lcRates{border-radius:var(--r-md)}.lcAtlasDrawer .lcContract{border-radius:var(--r-md)}.lcAtlasDrawer .lcField input,.lcAtlasDrawer .lcField textarea{border-radius:var(--r-md)}.lcAtlasDrawer .tbtn{border-radius:var(--r-md)}
+@keyframes lcAtlasFade{from{opacity:0}to{opacity:1}}@keyframes lcAtlasSlide{from{transform:translateX(40px);opacity:.7}to{transform:translateX(0);opacity:1}}
+@media(prefers-reduced-motion:reduce){.lcAtlasBackdrop,.lcAtlasDrawer{animation:none}}

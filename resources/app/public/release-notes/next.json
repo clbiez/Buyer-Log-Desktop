@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-20",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Genel Bakış not kaydı düzeltmesi",
-    "en": "Overview note saving fix"
+    "tr": "Özgün Lisans Atlası ve Genel Bakış iyileştirmeleri",
+    "en": "Original License Atlas and Overview improvements"
   },
   "summary": {
-    "tr": "Not grubu düzenlemeleri kalıcı kaydedilir; ön izleme güncellenir ve kayıt hatasında taslak korunur.",
-    "en": "Note group edits are saved persistently, previews update and drafts are retained when saving fails."
+    "tr": "Lisans kartları, Atlas’ın özgün arayüzü ve süreç ağacıyla birleşti. Ticari detaylar, toplu ağaç kopyalama ve üretici rehberi aynı akışta; Genel Bakış not kaydı da iyileştirildi.",
+    "en": "License cards now use the original Atlas interface and workflow tree. Commercial details, complete-tree copying and supplier guides share one flow; Overview note saving is also improved."
   },
   "changes": [
     {
@@ -37,6 +37,122 @@
         "caption": {
           "tr": "Üç demo siparişinin notu tek işlemde kaydedildi; sayfa yenilemesi ve hatadan sonra yeniden deneme doğrulandı.",
           "en": "Three demo orders saved in one operation; page reload and retry after a save failure were verified."
+        }
+      }
+    },
+    {
+      "id": "license-atlas-original-interface",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Atlas",
+        "en": "License cards · Atlas"
+      },
+      "title": {
+        "tr": "Lisans Atlası’nın özgün arayüzü Buyer Log’da",
+        "en": "The original License Atlas interface inside Buyer Log"
+      },
+      "body": {
+        "tr": "Kart kapakları, animasyonlar ve LCW / onay / lisansör sütunlarından oluşan süreç ağacı özgün Atlas bileşeniyle çalışır. Aşamalar ağacın içinde açılır ve düzenlenir; eski atlas kayıtları, görselleri ve adresleri korunur.",
+        "en": "Card covers, animations and the LCW / approval / licensor workflow tree use the original Atlas component. Stages expand and can be edited inside the tree; existing atlas records, images and addresses are retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-original-tree.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo lisansın özgün üç sütunlu süreç ağacı ve ticari oran özeti",
+          "en": "Original three-column workflow tree and commercial rate summary for a demo license in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Demo lisans: ticari özet ağacın üstünde, süreç adımları özgün Atlas düzeninde.",
+          "en": "Demo license: commercial summary above the workflow steps in the original Atlas layout."
+        }
+      }
+    },
+    {
+      "id": "license-atlas-commercial-drawer",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Ticari bilgiler",
+        "en": "License cards · Commercial details"
+      },
+      "title": {
+        "tr": "Royalty ve sözleşme geçmişi Atlas’ın içinden açılır",
+        "en": "Open royalty and contract history from the Atlas"
+      },
+      "body": {
+        "tr": "Royalty, TR / YD komisyon ve hologram oranları Atlas kartlarında ve lisans detayında görünür. Sözleşme geçmişi, yeni dönem, portal ve çalışma notları detay çekmecesinde düzenlenir; mevcut tarih, sezon, yetki ve çakışma kontrolleri korunur.",
+        "en": "Royalty, domestic / international commission and hologram rates appear on Atlas cards and license details. Edit contract history, new periods, portal and working notes in the details drawer, retaining existing date, season, permission and conflict checks."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-commercial-details.png",
+        "alt": {
+          "tr": "Demo lisansın sözleşme ve oran geçmişi çekmecesi",
+          "en": "Contract and rate-history drawer for a demo license"
+        },
+        "caption": {
+          "tr": "Royalty düzenlemesi gerçek API üzerinden kaydedildi; Atlas özeti de güncellendi.",
+          "en": "A royalty edit was saved through the real API and updated the Atlas summary."
+        }
+      }
+    },
+    {
+      "id": "license-atlas-complete-tree-studio",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları · Süreç stüdyosu",
+        "en": "License cards · Process Studio"
+      },
+      "title": {
+        "tr": "Tam süreç ağacını lisanslar arasında kopyalayın",
+        "en": "Copy complete workflow trees between licenses"
+      },
+      "body": {
+        "tr": "Özgün süreç stüdyosunda kaynak, aşamalar, hedef lisanslar ve birleştirme yöntemi seçilir. Atlası kaydet tüm değişen kartları tek işlemde kaydeder; bir kartta çakışma veya geçersiz veri varsa hiçbir karta kısmi kayıt yapılmaz.",
+        "en": "Choose a source, stages, target licenses and merge mode in the original Process Studio. Save atlas writes all changed cards in one transaction; a conflict or invalid data on any card prevents a partial save."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-process-studio.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log içindeki süreç stüdyosunda demo kaynak ve hedef lisans seçimi",
+          "en": "Demo source and target license selection in Process Studio inside the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Demo kaynaktaki üç aşamanın hedef lisansa tam ağaç olarak aktarılması doğrulandı.",
+          "en": "Copying all three source stages as a complete tree to the demo target was verified."
+        }
+      }
+    },
+    {
+      "id": "license-atlas-original-supplier-export",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Üretici rehberi",
+        "en": "License cards · Supplier guide"
+      },
+      "title": {
+        "tr": "Üretici dosyası da özgün Atlas arayüzünde",
+        "en": "Supplier files use the original Atlas interface too"
+      },
+      "body": {
+        "tr": "Kaydedilmiş Atlas’tan aynı görsel süreç rehberiyle salt okunur üretici HTML dosyası hazırlanır. Paylaşıma açılan aşamalar, gönderim talimatları ve adresler aktarılır. Ticari oranlar, portal kullanıcı bilgileri ve paylaşılmayan iç notlar dosyaya eklenmez.",
+        "en": "Create a read-only supplier HTML file from the saved Atlas using the same visual workflow guide. Shared stages, submission instructions and addresses are included. Commercial rates, portal user details and unshared internal notes are excluded."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-original-supplier.png",
+        "alt": {
+          "tr": "Buyer Log’dan indirilen demo üretici HTML dosyasında özgün Atlas süreç detayı",
+          "en": "Original Atlas workflow detail in a demo supplier HTML file downloaded from Buyer Log"
+        },
+        "caption": {
+          "tr": "İndirilen gerçek HTML dosyası açıldı; gönderim talimatının görünürlüğü ve özel verilerin hariç tutulması kontrol edildi.",
+          "en": "The actual downloaded HTML was opened, verifying visible submission instructions and excluded private data."
         }
       }
     }
