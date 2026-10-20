@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.287",
+      "publishedAt": "2026-10-20",
+      "title": {
+        "tr": "Lisans Atlası, LCW standartları ve arayüz iyileştirmeleri",
+        "en": "License Atlas, LCW standards and interface improvements"
+      },
+      "stats": {
+        "features": 3,
+        "improvements": 3,
+        "fixes": 3
+      },
+      "file": "release-notes/7.0.287/release.json"
+    },
+    {
       "version": "7.0.286",
       "publishedAt": "2026-10-19",
       "title": {
