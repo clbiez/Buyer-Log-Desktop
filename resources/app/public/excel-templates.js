@@ -5,8 +5,10 @@
   const esc=s=>root.BLExcelTemplateEngine.escapeXml(s);
   const error=code=>new Error(code==='INVALID_ORDER_QUANTITY'
     ?T('Sipariş adedi pozitif bir tam sayı olmalıdır.','Order quantity must be a positive integer.')
+    :code==='INVALID_HOLOGRAM_RULE'
+    ?T('Hologram çarpanı 0–100 arasında (0 hariç), yuvarlama adımı 1–1.000.000 arasında tam sayı olmalıdır.','The hologram multiplier must be above 0 and at most 100; rounding must be an integer from 1 to 1,000,000.')
     :T('Excel şablonu işlenemedi. Dosyayı, sayfayı ve alan eşleştirmelerini kontrol edin.','The Excel template could not be processed. Check the file, sheet and field mappings.'));
-  const failureMessage=err=>/^[A-Z_]+$/.test(String(err&&err.message||''))?error().message:(err&&err.message||error().message);
+  const failureMessage=err=>/^[A-Z_]+$/.test(String(err&&err.message||''))?error(err.message).message:(err&&err.message||error().message);
   const key=type=>KEY+type+'.v1';
   async function json(url,options){const response=await fetch(url,options);if(!response.ok)throw new Error(T('Excel ayarlarına erişilemedi.','Excel settings could not be accessed.'));return response.json();}
   async function saved(type){const data=await json('/api/user-preferences',{cache:'no-store'});const value=data.entries&&data.entries[key(type)];return value?JSON.parse(value.value):null;}
@@ -29,7 +31,7 @@
     const fields=root.BLCanonicalFields,ids=new Map();
     ['cp','collection'].forEach(module=>fields.moduleFields(module).forEach(id=>ids.set(id,{id,label:fields.label(id,typeof appLang!=='undefined'?appLang:'tr')})));
     ids.set('today',{id:'today',label:T('Oluşturma tarihi','Creation date')});
-    if(type==='hologram')ids.set('hologramQuantity',{id:'hologramQuantity',label:T('Sipariş adedi × %3, üst 50 katı','Order quantity × 3%, rounded up to 50')});
+    if(type==='hologram')ids.set('hologramQuantity',{id:'hologramQuantity',label:T('Hologram adedi (çarpan + yukarı yuvarlama)','Hologram quantity (multiplier + round up)')});
     if(type==='capacity')root.BLCapacityRequest.ORDER.forEach((id,i)=>ids.set('capacity:'+id,{id:'capacity:'+id,label:root.BLCapacityRequest.HEADERS[i]}));
     if(type==='mb')root.BLFixedExcelDefaults.mbHeaders.forEach((label,i)=>ids.set('mb:'+i,{id:'mb:'+i,label}));
     return [...ids.values()];
@@ -45,7 +47,10 @@
     const item=await saved(type);
     if(!item&&type!=='hologram')return fallback;
     await libraries();const config=item?item.config:root.BLHologramRequest.template(),bytes=item?decode(item.bytes):await defaultBytes(type);
-    try{return await root.BLExcelTemplateEngine.fill(bytes,config,data,root.JSZip,root.BLExcelDates);}catch(_){throw error();}
+    // Recalculate using the saved per-template rule; do not reuse the default
+    // quantity produced before the user's template preferences were loaded.
+    const recordsForExport=type==='hologram'?data.map(record=>({...record,hologramQuantity:root.BLHologramRequest.quantity(record.orderQuantity,config.quantityRule)})):data;
+    try{return await root.BLExcelTemplateEngine.fill(bytes,config,recordsForExport,root.JSZip,root.BLExcelDates);}catch(_){throw error();}
   }
   async function open(){
     await libraries();document.getElementById('excelTemplateManager')?.remove();
@@ -56,11 +61,28 @@
     <div class="excelTemplateControls"><label>${T('Format','Format')}<select data-type><option value="hologram">Hologram Request Excel</option><option value="capacity">Capacity Request Excel</option><option value="mb">MB List Excel</option></select></label>
     <button class="tbtn" data-download>${T('Mevcut şablonu indir','Download current template')}</button><label class="tbtn">${T('Yeni Excel yükle','Upload new Excel')}<input data-upload type="file" accept=".xlsx" hidden></label></div>
     <div class="excelTemplateControls"><label>${T('Sayfa','Sheet')}<select data-sheet></select></label><label>${T('Başlık satırı','Header row')}<input data-header type="number" min="1" max="9999"></label><label>${T('İlk veri satırı','First data row')}<input data-start type="number" min="2" max="10000"></label><button class="tbtn" data-match>${T('Alanları eşleştir','Match fields')}</button></div>
+    <div class="excelTemplateQuantity" data-hologram-rule hidden><strong>${T('Hologram adet hesabı','Hologram quantity calculation')}</strong>
+    <div class="excelTemplateControls"><label>${T('Sipariş adedi çarpanı','Order quantity multiplier')}<input data-multiplier type="number" min="0.000001" max="100" step="0.01" value="1.03"></label>
+    <label>${T('Yukarı yuvarlama katı (adet)','Round up to a multiple of')}<input data-round-to type="number" min="1" max="1000000" step="1" value="50"></label></div>
+    <p data-quantity-preview></p></div>
     <p data-file></p><div class="excelTemplateMapping" data-mapping></div><p role="status" data-status></p><div class="modalFoot"><button class="tbtn" data-reset>${T('Varsayılana dön','Restore default')}</button><button class="tbtn primary" data-save>${T('Formatı kaydet','Save format')}</button><button class="tbtn" data-close>${T('Kapat','Close')}</button></div></div>`;
     document.body.appendChild(modal);const $=s=>modal.querySelector(s),type=()=> $('[data-type]').value;
     let bytes,wb,previous,columns=[],loading=false;
     const status=message=>{$('[data-status]').textContent=message;};
-    const busy=on=>{loading=on;['[data-save]','[data-reset]','[data-type]','[data-download]','[data-match]'].forEach(s=>$(s).disabled=on);};
+    const busy=on=>{loading=on;['[data-save]','[data-reset]','[data-type]','[data-download]','[data-match]','[data-multiplier]','[data-round-to]'].forEach(s=>$(s).disabled=on);};
+    const quantityRule=()=>root.BLHologramRequest.normalizeQuantityRule({
+      multiplier:$('[data-multiplier]').value,roundTo:$('[data-round-to]').value
+    });
+    function previewQuantityRule(){
+      try{
+        const rule=quantityRule(),example=root.BLHologramRequest.quantity(1000,rule);
+        $('[data-quantity-preview]').textContent=T(
+          'Örnek: 1.000 × '+String(rule.multiplier).replace('.',',')+' → '+example+' adet ('+rule.roundTo+' katına yukarı yuvarlandı).',
+          'Example: 1,000 × '+rule.multiplier+' → '+example+' units (rounded up to a multiple of '+rule.roundTo+').'
+        );
+      }catch(_){$('[data-quantity-preview]').textContent=error('INVALID_HOLOGRAM_RULE').message;}
+    }
+    ['[data-multiplier]','[data-round-to]'].forEach(s=>$(s).addEventListener('input',previewQuantityRule));
     const token=s=>root.BLCanonicalFields.token(s);
     function match(){
       const sheet=wb.getWorksheet($('[data-sheet]').value),header=Number($('[data-header]').value),start=Number($('[data-start]').value),available=catalog(type());
@@ -80,6 +102,11 @@
     }
     async function inspect(item){
       bytes=item.bytes;previous=item.config;wb=new root.ExcelJS.Workbook();await wb.xlsx.load(bytes);
+      const hologram=type()==='hologram';$('[data-hologram-rule]').hidden=!hologram;
+      if(hologram){
+        const rule=root.BLHologramRequest.normalizeQuantityRule(previous?.quantityRule);
+        $('[data-multiplier]').value=rule.multiplier;$('[data-round-to]').value=rule.roundTo;previewQuantityRule();
+      }
       $('[data-sheet]').innerHTML=wb.worksheets.map(s=>'<option>'+esc(s.name)+'</option>').join('');
       $('[data-sheet]').value=wb.getWorksheet(previous?.sheetName||'')?.name||wb.worksheets[0].name;
       $('[data-header]').value=previous?.headerRow||1;$('[data-start]').value=previous?.dataRow||2;
@@ -89,12 +116,12 @@
     $('[data-type]').onchange=load;
     $('[data-upload]').onchange=async e=>{const file=e.target.files[0];if(!file||loading)return;
       if(!/\.xlsx$/i.test(file.name)||file.size>500*1024){status(T('En fazla 500 KB boyutunda .xlsx yükleyin.','Upload an .xlsx file no larger than 500 KB.'));return;}
-      busy(true);try{const current={sheetName:$('[data-sheet]').value,headerRow:Number($('[data-header]').value),dataRow:Number($('[data-start]').value),columns};await inspect({bytes:new Uint8Array(await file.arrayBuffer()),config:current,name:file.name});}catch(_){status(error().message);}finally{busy(false);}};
+      busy(true);try{const current={sheetName:$('[data-sheet]').value,headerRow:Number($('[data-header]').value),dataRow:Number($('[data-start]').value),columns,...(type()==='hologram'?{quantityRule:quantityRule()}:{})};await inspect({bytes:new Uint8Array(await file.arrayBuffer()),config:current,name:file.name});}catch(_){status(error().message);}finally{busy(false);}};
     $('[data-match]').onclick=()=>{try{match();}catch(_){status(error().message);}};
     $('[data-download]').onclick=()=>root.BLFixedExcelDefaults.download(bytes,type()+'-template.xlsx',MIME);
     $('[data-reset]').onclick=async()=>{busy(true);try{await json('/api/user-preferences/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({keys:[key(type())]})});await load();}catch(e){status(failureMessage(e));}finally{busy(false);}};
     $('[data-save]').onclick=async()=>{busy(true);try{
-      const config={sheetName:$('[data-sheet]').value,headerRow:Number($('[data-header]').value),dataRow:Number($('[data-start]').value),columns};root.BLExcelTemplateEngine.validate(config);
+      const config={sheetName:$('[data-sheet]').value,headerRow:Number($('[data-header]').value),dataRow:Number($('[data-start]').value),columns,...(type()==='hologram'?{quantityRule:quantityRule()}:{})};root.BLExcelTemplateEngine.validate(config);
       const actual=wb.getWorksheet(config.sheetName);if(!actual||columns.some(c=>actual.getRow(config.headerRow).getCell(c.column).text!==c.header))throw error();
       await root.BLExcelTemplateEngine.fill(bytes,config,[{}],root.JSZip,root.BLExcelDates);
       const value=JSON.stringify({version:1,name:$('[data-file]').textContent,config,bytes:encode(bytes)}),entryKey=key(type()),data=await json('/api/user-preferences',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({entries:{[entryKey]:{value,updatedAt:new Date().toISOString()}}})});
