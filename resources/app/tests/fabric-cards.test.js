@@ -122,6 +122,9 @@ test('LCW AI sözleşmesi tek kayıtta tanımlı ve cevap biçimi şekil olarak 
   const built = prompts.buildPrompt({ source: 'fabric-card', task: 'x', context: engine.aiContext([{ code: '3859', raw: SUPREM }]), lang: 'en' });
   assert.equal(built.contract, 'fabric-card');
   assert.match(built.prompt, /3859 :: 3859-/);
+  assert.match(built.prompt, /"Polyester" in the Turkish "summary" and "Poliester" in the English "summaryEn"/);
+  const trPrompt = prompts.buildPrompt({ source: 'fabric-card', task: 'x', context: engine.aiContext([{ code: '3859', raw: SUPREM }]), lang: 'tr' });
+  assert.match(trPrompt.prompt, /Türkçe "summary" içinde "Polyester", İngilizce "summaryEn" içinde "Poliester"/);
   const parsed = prompts.parseStructured('{"cards":["code=3859|summary=Suprem"]}', 'fabric-card');
   assert.equal(parsed.ok, true);
   assert.deepEqual(parsed.data.cards, ['code=3859|summary=Suprem']);
