@@ -36,7 +36,7 @@ function emptyStore() {
 function normalizeCard(raw, fallbackCode = '') {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const code = normalizeCode(raw.code || fallbackCode);
-  const summary = fabricEngine.normalizeComposition(clean(raw.summary, SUMMARY_MAX));
+  const summary = fabricEngine.normalizeSummaryPolyester(fabricEngine.normalizeComposition(clean(raw.summary, SUMMARY_MAX)), 'tr');
   if (!code || !summary) return null;
   const details = {};
   for (const key of DETAIL_FIELDS) { const value=clean(raw.details && raw.details[key], DETAIL_MAX); details[key]=key==='composition'?fabricEngine.normalizeComposition(value):value; }
@@ -44,7 +44,7 @@ function normalizeCard(raw, fallbackCode = '') {
   return {
     code,
     summary,
-    summaryEn: fabricEngine.normalizeComposition(clean(raw.summaryEn, SUMMARY_MAX)),
+    summaryEn: fabricEngine.normalizeSummaryPolyester(fabricEngine.normalizeComposition(clean(raw.summaryEn, SUMMARY_MAX)), 'en'),
     details,
     summarySource: SOURCES.has(source) ? source : 'manual',
     raw: clean(raw.raw, RAW_MAX),
