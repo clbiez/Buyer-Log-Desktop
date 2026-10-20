@@ -67,6 +67,10 @@
         TEST_REPORT_SESSION_EXPIRED: T('Önizleme süresi doldu; dosyaları yeniden bırakın.', 'The preview expired; drop the files again.'),
         TEST_REPORT_TOO_MANY_FILES: T('Tek seferde en fazla 30 dosya bırakılabilir.', 'Up to 30 files can be dropped at once.'),
         TEST_REPORT_FILE_SIZE: T('Dosya boş ya da 40 MB sınırını aşıyor.', 'The file is empty or exceeds the 40 MB limit.'),
+        TEST_REPORT_SHARED_SCOPE_FORBIDDEN: T('Bu raporu güncellemek için bağlı tüm siparişlerde düzenleme yetkisi gerekir.', 'Updating this report requires edit access to every linked order.'),
+        TEST_REPORT_SCOPE_CONFIRMATION_REQUIRED: T('Sipariş kapsamını doğrulayıp ilgili satırı işaretleyin.', 'Verify the order scope and tick the relevant row.'),
+        TEST_REPORT_ORDER_MISMATCH: T('Seçilen sipariş rapor kapsamına ait değil.', 'The selected order is outside the report scope.'),
+        TEST_REPORT_DUPLICATE_TARGET: T('Aynı rapor ve sipariş adımı iki kez seçildi.', 'The same report and order step was selected twice.'),
       };
       throw new Error(known[code] || (payload && payload.error) || (T('İstek başarısız: ', 'Request failed: ') + response.status));
     }
@@ -129,10 +133,12 @@
       return analysis ? analysis.orderKey : '';
     };
     const store = ui.store || { reports: {}, links: {}, typeMap: {} };
-    return reports.map(function (report, index) {
-      const match = report.talepNo ? E().matchReport(report, rows, { keyOf: keyOf }) : { level: 'none', reason: 'talep', candidates: [] };
+    return reports.flatMap(function (report) {
+      return E().matchReportScopes(report, rows, { keyOf: keyOf }).map(function (scoped) {
+      const scope = scoped.scope;
+      const match = report.talepNo ? scoped.match : { level: 'none', reason: 'talep', candidates: [] };
       const candidates = match.candidates.filter(function (c) { return c.key; });
-      const link = report.talepNo ? store.links[report.talepNo] : null;
+      const link = E().reportLinks(store.links[report.talepNo]).find(function (l) { return candidates.some(function (c) { return c.key === l.orderKey; }); });
       let chosen = '';
       // Daha önce bağlanmış talep aynı satıra gider; yeniden sorulmaz.
       if (link && candidates.some(function (c) { return c.key === link.orderKey; })) chosen = link.orderKey;
@@ -145,15 +151,17 @@
       const fromAi = report.kaynak === 'ai';
       const ignored = Boolean(E().normalizeOrderCode(report.siparisKodu)) && match.level === 'none' && match.reason === 'order';
       const entry = {
-        id: 'r' + (ui.seq++), report: report, match: match, candidates: candidates, chosen: chosen,
-        typeKey: typeKey, itemId: mapped && catalog().some(function (i) { return i.id === mapped; }) ? mapped : '',
+        id: 'r' + (ui.seq++), report: report, scope: scope, match: match, candidates: candidates, chosen: chosen,
+        typeKey: typeKey, itemId: mapped && catalog().some(function (i) { return i.id === ((Checklist().Components.parseItem(mapped) || {}).baseId || mapped); }) ? mapped : '',
         // CP'de siparişi olmayan raporlar aktarım ve LCW AI incelemesi dışında kalır.
         // LCW AI'ın okuduğu rapor da varsayılan olarak seçilmez: kullanıcı alanları kontrol edip işaretler.
         include: !ignored && Boolean(chosen) && !fromAi, override: false, linked: Boolean(link), fromAi: fromAi, ignored: ignored,
       };
       // ROS sonucu tek PO'ya aday olsa bile kullanıcı açıkça işaretlemeli.
       if ((report.labDipColors || []).length) entry.include = false;
+      if (E().orderScopeNeedsReview(report)) entry.include = false;
       return entry;
+      });
     });
   }
   function rowFor(entry) {
@@ -169,8 +177,7 @@
     const store = ui.store || { reports: {}, links: {} };
     const map = new Map();
     Object.keys(store.links).forEach(function (talepNo) {
-      const link = store.links[talepNo];
-      if (link && link.orderKey === orderKey && link.itemId === itemId && store.reports[talepNo]) map.set(talepNo, store.reports[talepNo]);
+      if (E().reportLinks(store.links[talepNo]).some(function (link) { return link.orderKey === orderKey && link.itemId === itemId; }) && store.reports[talepNo]) map.set(talepNo, store.reports[talepNo]);
     });
     ui.entries.forEach(function (entry) {
       if (!entry.include || entry.chosen !== orderKey || entry.itemId !== itemId || !entry.report.talepNo) return;
@@ -384,7 +391,8 @@
       + ui.files.reduce(function (n, f) { return n + (f.warnings || []).length; }, 0);
     const chips = [
       [T('Dosya', 'Files'), ui.files.length, ''],
-      [T('Rapor', 'Reports'), ui.entries.length, ''],
+      [T('Rapor', 'Reports'), new Set(ui.entries.map(function (e) { return e.report.talepNo || e.id; })).size, ''],
+      [T('Sipariş kapsamı', 'Order scopes'), ui.entries.length, ''],
       [T('Tam eşleşme', 'Exact'), count(function (e) { return e.match.level === 'exact'; }), 'green'],
       [T('Kısmi', 'Partial'), count(function (e) { return e.match.level === 'partial'; }), 'orange'],
       [T('Belirsiz', 'Ambiguous'), count(function (e) { return e.match.level === 'ambiguous'; }), 'orange'],
@@ -434,7 +442,11 @@
       const p = plans[index], r = entry.report, tests = testNames(r);
       return '<tr class="' + (p.ready ? '' : 'is-blocked') + '">'
         + '<td><input type="checkbox" data-tr-include="' + entry.id + '"' + (entry.include && p.ready ? ' checked' : '') + (p.ready ? '' : ' disabled') + ' aria-label="' + html(T('Bu raporu yaz', 'Write this report')) + '"></td>'
-        + '<td><b>' + html(r.talepNo || '—') + '</b>' + (entry.fromAi ? ' <span class="trBadge tone-blue">' + html(T('LCW AI okudu', 'Read by LCW AI')) + '</span>' : '') + '<small>' + html(r.talepTipi || '') + '</small><small>' + html([r.siparisKodu, r.modelAdi, r.renk].filter(Boolean).join(' · ')) + '</small>' + (tests.length ? '<small><b>' + html(T('Test adı: ', 'Test name: ')) + '</b>' + html(tests.join(', ')) + '</small>' : '') + '</td>'
+        + '<td><b>' + html(r.talepNo || '—') + '</b>' + (entry.fromAi ? ' <span class="trBadge tone-blue">' + html(T('LCW AI okudu', 'Read by LCW AI')) + '</span>' : '') + '<small>' + html(r.talepTipi || '') + '</small><small>' + html([entry.scope ? entry.scope.orderCode : r.siparisKodu, r.modelAdi, r.renk].filter(Boolean).join(' · ')) + '</small>'
+        + (E().orderScopeNeedsReview(r) ? '<small><b>' + html(T('Rapor kapsamını doğrulayın: ', 'Verify report scope: ')) + '</b>' + html(E().orderScopes(r).map(function (s) { return s.orderCode; }).join(', ')) + '</small>' : '')
+        + (entry.scope && entry.scope.requiresReview ? '<small class="trBadge tone-orange">' + html(entry.scope.confidence === 'candidate' ? T('Doğrulanmamış numara · sipariş olduğunu doğrulayın', 'Unverified number · verify it is an order') : T('Ek sipariş · kapsamı doğrulayıp işaretleyin', 'Additional order · verify scope and tick')) + '</small>' : '')
+        + (E().reportDescriptions(r).length ? '<details><summary>' + html(T('Açıklama / kaynak kanıtı', 'Description / source evidence')) + '</summary>' + E().reportDescriptions(r).map(function (d) { return '<small>' + html(d) + '</small>'; }).join('') + '</details>' : '')
+        + (tests.length ? '<small><b>' + html(T('Test adı: ', 'Test name: ')) + '</b>' + html(tests.join(', ')) + '</small>' : '') + '</td>'
         + '<td>' + resultBadge(r) + '</td>'
         + '<td>' + levelBadge(entry) + '</td>'
         + '<td>' + rowCell(entry) + '</td>'
@@ -481,7 +493,11 @@
 
   /* ----------------------------------------------------------- LCW AI */
   function aiCandidates() { return ui.files.filter(function (f) { return f.ai; }).slice(0, MAX_AI_FILES); }
-  function reviewableEntries() { return ui.entries.filter(function (e) { return e.report.talepNo && !e.ignored; }); }
+  function reviewableEntries() {
+    const reports = new Map();
+    ui.entries.forEach(function (e) { if (e.report.talepNo && !e.ignored && !reports.has(e.report.talepNo)) reports.set(e.report.talepNo, e); });
+    return [...reports.values()];
+  }
   function aiDone() { return ui.aiRun; }
   async function stagedFile(candidate) {
     const response = await root.fetch(API + '/staged/' + encodeURIComponent(ui.session) + '/' + encodeURIComponent(candidate.ai.uploadId), { cache: 'no-store' });
@@ -507,15 +523,15 @@
   }
   function addAiReport(report) {
     if (!report) return;
-    const existing = report.talepNo ? ui.entries.find(function (e) { return e.report.talepNo === report.talepNo; }) : null;
-    const entry = buildEntries([report])[0];
-    if (existing) {
-      // Aynı talep zaten okunduysa AI parçası birleşmiş raporla değişir; seçimler korunur.
-      existing.report = report;
-      if (!existing.chosen && entry.chosen) { existing.chosen = entry.chosen; existing.candidates = entry.candidates; existing.match = entry.match; }
-      return;
-    }
-    ui.entries.push(entry);
+    const previous = ui.entries.filter(function (e) { return e.report.talepNo === report.talepNo; });
+    const entries = buildEntries([report]);
+    entries.forEach(function (entry) {
+      const old = previous.find(function (e) { return (e.scope && e.scope.orderCode) === (entry.scope && entry.scope.orderCode); });
+      if (old && entry.candidates.some(function (c) { return c.key === old.chosen; })) Object.assign(entry, { chosen: old.chosen, itemId: old.itemId, status: old.status, override: old.override });
+      // A new AI read changes the evidence: require fresh explicit selection.
+      entry.include = false;
+    });
+    ui.entries = ui.entries.filter(function (e) { return e.report.talepNo !== report.talepNo; }).concat(entries);
   }
   async function runAi(options) {
     const AI = root.BuyerLogAI;
@@ -555,7 +571,13 @@
       if (entries.length) {
         set({ progress: T('Raporlar inceleniyor: ', 'Reviewing reports: ') + entries.length });
         const steps = catalog().map(function (item) { return { id: item.id, name: isEn() ? item.en : item.tr }; });
-        const items = entries.map(function (e) { const p = plan(e); return { report: e.report, matchLevel: e.match.level, currentStep: e.itemId, currentStatus: p.current }; });
+        const items = entries.map(function (e) {
+          const p = plan(e);
+          return { report: e.report, matchLevel: e.match.level, currentStep: e.itemId, currentStatus: p.current,
+            orderMatches: ui.entries.filter(function (s) { return s.report.talepNo === e.report.talepNo; }).map(function (s) {
+              return { orderCode: s.scope ? s.scope.orderCode : s.report.siparisKodu, matchLevel: s.match.level, reason: s.match.reason, ignored: s.ignored, currentStep: s.itemId, currentStatus: plan(s).current };
+            }) };
+        });
         const statuses = statusIdList().map(function (id) {
           const custom = customStatusList().find(function (c) { return c.id === id; });
           return { id: id, name: statusText(id), resolved: custom ? custom.resolved === true : (id === 'approved' || id === 'notRequired') };
@@ -591,7 +613,7 @@
   function setTypeItem(typeKey, itemId) {
     ui.newTypeMap[typeKey] = itemId;
     ui.entries.forEach(function (entry) {
-      if (!entry.ignored && entry.typeKey === typeKey && !entry.itemId) { entry.itemId = itemId; entry.include = Boolean(entry.chosen) && !entry.fromAi; if ((entry.report.labDipColors || []).length) entry.include = false; }
+      if (!entry.ignored && entry.typeKey === typeKey && !entry.itemId) { entry.itemId = itemId; entry.include = Boolean(entry.chosen) && !entry.fromAi && !E().orderScopeNeedsReview(entry.report); if ((entry.report.labDipColors || []).length) entry.include = false; }
     });
     render();
   }
@@ -625,6 +647,7 @@
         const row = rowFor(entry);
         return {
           talepNo: entry.report.talepNo, orderKey: entry.chosen, itemId: entry.itemId,
+          confirmMatch: Boolean(entry.include),
           context: {
             orderCode: value(row, ['Order Code']), plmId: value(row, ['PLM ID']), modelName: value(row, ['Model Name']),
             colourCode: value(row, ['C.Code']), checklistName: itemLabel(entry.itemId), checklistStatus: entry.report.talepNo,
@@ -641,7 +664,7 @@
         const key = answerKey(entry.chosen, entry.itemId);
         if (!groups.has(key)) groups.set(key, { entry: entry, plan: plans[ui.entries.indexOf(entry)], attachments: [], manual: '' });
         if (chosenStatus(entry)) groups.get(key).manual = chosenStatus(entry);
-        const res = result.results.find(function (r) { return r.talepNo === items[index].talepNo; });
+        const res = result.results.find(function (r) { return r.talepNo === items[index].talepNo && r.orderKey === items[index].orderKey && r.itemId === items[index].itemId; });
         if (res) groups.get(key).attachments.push.apply(groups.get(key).attachments, res.attachments.map(attachmentMeta));
       });
       const s = assistantState();
@@ -652,8 +675,7 @@
         if (!analysis) return;
         const reports = [];
         Object.keys(ui.store.links).forEach(function (talepNo) {
-          const link = ui.store.links[talepNo];
-          if (link.orderKey === entry.chosen && link.itemId === entry.itemId && ui.store.reports[talepNo]) reports.push(ui.store.reports[talepNo]);
+          if (E().reportLinks(ui.store.links[talepNo]).some(function (link) { return link.orderKey === entry.chosen && link.itemId === entry.itemId; }) && ui.store.reports[talepNo]) reports.push(ui.store.reports[talepNo]);
         });
         const step = E().deriveStepStatus(reports);
         const previous = (s && s.answers && s.answers[key]) || {};

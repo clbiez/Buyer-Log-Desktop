@@ -46,10 +46,12 @@ function analyzeOperationalData(input = {}) {
   const collectionIndex = correlate(rows, input.collectionRows || []), findings = [], orders = [], groups = new Map(), suppliers = new Map();
   const scope = input.scope || {}, asAt = input.sourceUpdatedAt || null;
   const reportGroups = new Map();
-  for (const [request, link] of Object.entries(reports.links || {})) {
-    if (!link || !reports.reports?.[request]) continue;
-    if (!reportGroups.has(link.orderKey)) reportGroups.set(link.orderKey, []);
-    reportGroups.get(link.orderKey).push({ request, link, report: reports.reports[request] });
+  for (const [request, storedLink] of Object.entries(reports.links || {})) {
+    if (!reports.reports?.[request]) continue;
+    for (const link of Reports.reportLinks(storedLink)) {
+      if (!reportGroups.has(link.orderKey)) reportGroups.set(link.orderKey, []);
+      reportGroups.get(link.orderKey).push({ request, link, report: reports.reports[request] });
+    }
   }
   const rules = Rules.mergeWithDefaults(input.personalRules || checklist.definitions || [], input.deletedRuleIds || []), preparedRules = Rules.prepareEvaluation(rules);
   let processed = 0;
@@ -109,7 +111,8 @@ function analyzeOperationalData(input = {}) {
         bilingual('Checklist eki bu cihazda erişilebilir değil', 'Checklist attachment is unavailable on this device'), bilingual('Ekin kaynağını veya aktarımını kontrol et.', 'Check the attachment source or transfer.'), sources));
     }
     for (const test of linked) {
-      const match = Reports.matchReport(test.report, [row], { keyOf: () => key });
+      const scoped = Reports.matchReportScopes(test.report, [row], { keyOf: () => key });
+      const match = (scoped.find(s => s.scope && s.scope.orderCode === Reports.normalizeOrderCode(ident.orderCode)) || scoped[0]).match;
       if (match.level === 'none' || match.status === 'none' || match.reason) local.push(finding('REPORT_MATCH_' + test.request, key, 'HIGH',
         bilingual('Bağlı test raporunun kimlik/kapsam eşleşmesini doğrula', 'Verify the identity/scope match of the linked test report'),
         bilingual('Sipariş, model, renk ve bileşen bilgisini raporla karşılaştır.', 'Compare order, model, color and component with the report.'), [provenance('Test report', test.request, reports.updatedAt)], { match }));

@@ -31,15 +31,23 @@ function createService({authorizedOrders,audit=()=>{}}) {
   async function prepareCommit(profile,body) {
     const allowed=await authorizedOrders(profile,{write:true}),session=sessionFor(profile,body.sessionId);
     const byTalep=new Map(session.reports.filter(r=>r.talepNo).map(r=>[r.talepNo,r]));
+    const seen=new Set();
     const items=(Array.isArray(body.items)?body.items:[]).map(raw=>{
       const report=byTalep.get(text(raw?.talepNo,20));if(!report)throw fail('TEST_REPORT_UNKNOWN');
       const orderKey=text(raw.orderKey),authoritative=allowed.get(orderKey);if(!authoritative)throw fail('TEST_REPORT_ORDER_FORBIDDEN',403);
+      const scopes=Engine.orderScopes(report),scope=scopes.find(s=>s.orderCode===Engine.normalizeOrderCode(authoritative.orderCode));
+      if(scopes.length&&!scope)throw fail('TEST_REPORT_ORDER_MISMATCH',409);
+      if(scope?.requiresReview&&raw.confirmMatch!==true)throw fail('TEST_REPORT_SCOPE_CONFIRMATION_REQUIRED',409);
+      const key=[report.talepNo,orderKey].join('::');
+      if(seen.has(key))throw fail('TEST_REPORT_DUPLICATE_TARGET',409);seen.add(key);
       return {report,orderKey,itemId:text(raw.itemId,160),context:{...(raw.context&&typeof raw.context==='object'?raw.context:{}),...authoritative}};
     });
-    return {session,items,sessionFingerprint:sessionFingerprint(session)};
+    const saved=store.read();
+    if(items.some(item=>Engine.reportLinks(saved.links[item.report.talepNo]).some(link=>!allowed.has(link.orderKey))))throw fail('TEST_REPORT_SHARED_SCOPE_FORBIDDEN',403);
+    return {session,items,authorizedOrderKeys:new Set(allowed.keys()),sessionFingerprint:sessionFingerprint(session)};
   }
   async function commit(profile,body,options={}) {
-    const {session,items,sessionFingerprint:fingerprint}=await prepareCommit(profile,body);
+    const {session,items,authorizedOrderKeys,sessionFingerprint:fingerprint}=await prepareCommit(profile,body);
     if(options.expectedSessionFingerprint && options.expectedSessionFingerprint!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
     const attach=(file,report,item)=>{
       const staged=file.stagingId?session.files.get(file.stagingId):null;if(!staged)return null;
@@ -50,7 +58,7 @@ function createService({authorizedOrders,audit=()=>{}}) {
     const apply=()=>staging.withSessionLease(body.sessionId,profile.id,()=>{
       const latest=sessionFor(profile,body.sessionId);
       if(sessionFingerprint(latest)!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
-      options.assertAuthority?.();return store.commit(items,body.typeMap||{},profile,attach,options);
+      options.assertAuthority?.();return store.commit(items,body.typeMap||{},profile,attach,{...options,authorizedOrderKeys});
     });
     // Native preparation can await order scope. Hold the Office guard only for
     // the synchronous native lease/write, never while loading that scope.
