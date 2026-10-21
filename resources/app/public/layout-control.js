@@ -19,11 +19,13 @@
   const identitySessions=new Map();
   let epoch=0;
   const commentDrafts=new Map();
+  const expandedChecks=new Set();
+  const expansionKey=rule=>String(currentReport&&currentReport.id||'')+'|'+rule;
 
   function ensureStyle(){
     if(document.querySelector('link[data-layout-control-style]')) return;
     const link=document.createElement('link');
-    link.rel='stylesheet'; link.href='layout-control.css'; link.dataset.layoutControlStyle='1';
+    link.rel='stylesheet'; link.href='layout-control.css?rev=2'; link.dataset.layoutControlStyle='1';
     document.head.appendChild(link);
   }
   function loadHistory(){
@@ -208,7 +210,7 @@
   }
   function locate(rule){
     const check=arr(currentReport&&currentReport.checks).find(c=>c.rule===rule);if(!check)return;
-    selectedRule=rule;if(check.page&&check.page<=pageCount)pageNumber=check.page;filter='all';paint();
+    selectedRule=rule;expandedChecks.add(expansionKey(rule));if(check.page&&check.page<=pageCount)pageNumber=check.page;filter='all';paint();
     const card=modal.querySelector('[data-layout-check="'+rule+'"]');if(card)card.scrollIntoView({block:'nearest'});
     if(check.standardType)showStandard(check);
   }
@@ -248,23 +250,27 @@
       '</div>',
       summaryHtml(s),
       extractionHtml(),
-      '<p class="layoutDecision">'+esc(L('Buyer layout kararı: ','Buyer layout decision: ')+(decision==='APPROVED'?L('ONAYLI','APPROVED'):decision==='REJECTED'?L('HATA / RED','ERROR / REJECTED'):L('ONAY BEKLİYOR','PENDING APPROVAL')))+'</p>',
       '<div class="layoutFilters" role="group" aria-label="'+esc(L('Sonuç filtresi','Result filter'))+'">',
       [['attention',L('Hata + İncele','Errors + Review')],['all',L('Tümü','All')],['errors',L('Hatalar','Errors')],['review',L('İncele','Review')],['notchecked',L('Kontrol edilmedi','Not checked')]].map(item=>'<button type="button" data-layout-filter="'+item[0]+'" class="'+(filter===item[0]?'is-active':'')+'">'+esc(item[1])+'</button>').join(''),
       '</div>',
       '<div class="layoutChecks">',
-      checks.length?checks.map(check=>[
-        '<article data-layout-check="'+esc(check.rule)+'" class="layoutCheck is-'+String(check.status||'').toLowerCase()+(check.rule===selectedRule?' is-selected':'')+'">',
-        (check.section?'<p class="layoutMuted">'+esc((check.section==='DOCUMENT'?L('Belge','Document'):docText(check.section))+(check.orderCode?' · '+check.orderCode:''))+'</p>':'')+'<div class="layoutCheckHead"><span class="layoutStatus">'+esc(statusText(check.status))+'</span><b title="'+esc(check.rule)+'">'+esc(ruleText(check.rule))+'</b>'+ (check.severity==='CRITICAL'?'<strong class="layoutCritical">'+esc(L('KRİTİK','CRITICAL'))+'</strong>':'')+'</div>',
+      checks.length?'<div class="layoutCheckColumns" aria-hidden="true"><span>'+esc(L('Kontrol / Karar','Check / Decision'))+'</span><span>'+esc(L('Bulunan','Found'))+'</span><span>'+esc(L('Olması gereken','Expected'))+'</span><span>'+esc(L('LCW AI yorumu','LCW AI comment'))+'</span></div>'+checks.map(check=>[
+        '<details data-layout-check="'+esc(check.rule)+'" class="layoutCheck is-'+String(check.status||'').toLowerCase()+(check.rule===selectedRule?' is-selected':'')+'" '+(expandedChecks.has(expansionKey(check.rule))?'open':'')+'>',
+        '<summary class="layoutCheckRow">',
+        '<span class="layoutRowIdentity"><span class="layoutCheckHead"><span class="layoutStatus">'+esc(statusText(check.status))+'</span>'+(check.severity==='CRITICAL'?'<strong class="layoutCritical">'+esc(L('KRİTİK','CRITICAL'))+'</strong>':'')+'</span><b>'+esc(ruleText(check.rule))+'</b><small>'+esc([check.section?(check.section==='DOCUMENT'?L('Belge','Document'):docText(check.section)):'',check.orderCode,check.page?L('s. ','p. ')+check.page:''].filter(Boolean).join(' · '))+'</small><small class="layoutBuyerDecision">'+esc(L('Buyer: ','Buyer: ')+({APPROVED:L('Onaylı','Approved'),REJECTED:L('Hata / Red','Error / Rejected'),NOT_APPLICABLE:L('Kapsam dışı','Not applicable')}[check.decision]||L('Onay bekliyor','Pending approval')))+'</small></span>',
+        '<span class="layoutRowCell" data-label="'+esc(L('Bulunan','Found'))+'"><span class="layoutRowPreview">'+valueHtml(check.actual)+'</span></span>',
+        '<span class="layoutRowCell" data-label="'+esc(L('Olması gereken','Expected'))+'"><span class="layoutRowPreview">'+valueHtml(expectedValues(check))+'</span></span>',
+        '<span class="layoutRowCell layoutRowComment" data-label="'+esc(L('LCW AI yorumu','LCW AI comment'))+'"><span class="layoutRowPreview">'+esc(check.detail||check.correction||'—')+'</span><span class="layoutRowExpand">'+esc(L('Ayrıntı / Onay / Yorum','Details / Approve / Comment'))+' <span aria-hidden="true">⌄</span></span></span>',
+        '</summary><div class="layoutCheckDetail">',
         check.page?'<button type="button" class="lcwaiBtn" data-layout-locate="'+esc(check.rule)+'">'+esc(L('Sayfada göster: ','Show on page: ')+check.page)+'</button>':'',
-        '<div class="layoutCompare"><div><small>'+esc(L('Olması gereken / Şablon','Expected / Template'))+'</small>'+valueHtml(expectedValues(check))+'</div><div><small>'+esc(L('Layout / Bulunan','Layout / Found'))+'</small>'+valueHtml(check.actual)+'</div></div>',
+        '<div class="layoutCompare"><div><small>'+esc(L('Layout / Bulunan','Layout / Found'))+'</small>'+valueHtml(check.actual)+'</div><div><small>'+esc(L('Olması gereken / Şablon','Expected / Template'))+'</small>'+valueHtml(expectedValues(check))+'</div></div>',
         check.detail?'<p>'+esc(check.detail)+'</p>':'',
         check.correction?'<p><b>'+esc(L('Düzeltme: ','Correction: '))+'</b>'+esc(check.correction)+'</p>':'',
         check.source==='LCW AI'&&['STANDARD','AI_REVIEW'].includes(check.category)?'<p class="layoutMuted">'+esc(L('AI önerisi: ','AI suggestion: ')+({MATCH:L('Eşleşiyor','Matches'),ERROR:L('Hata','Error'),REVIEW:L('Teyit gerekli','Needs confirmation'),NOT_VISIBLE:L('PDF’de görülemiyor','Not visible in PDF'),NOT_APPLICABLE:L('Kapsam dışı','Not applicable'),PASS:L('Uygun görünüyor','Appears compliant'),ISSUE:L('Sorun tespit edildi','Issue detected'),NA:L('Uygulanmıyor önerisi','Not applicable suggested'),UNCERTAIN:L('Kanıt yetersiz','Insufficient evidence')}[check.aiVerdict]||''))+'</p>':'',
         ['STANDARD','ANNOTATION','AI_REVIEW'].includes(check.category)?reviewHtml(check):'',
         standardLink(check),
         '<footer>'+esc(check.source||'CP ↔ Layout')+'</footer>',
-        '</article>'
+        '</div></details>'
       ].join('')).join(''):'<div class="layoutEmpty">'+esc(L('Bu filtrede sonuç yok.','No results in this filter.'))+'</div>',
       '</div>',
       '</div>'
@@ -459,13 +465,19 @@
       if(button.matches('[data-layout-history]')){openHistory(button.dataset.layoutHistory);return;}
       if(button.matches('[data-layout-history-clear]')){clearHistory();paint();return;}
     });
+    modal.addEventListener('toggle',event=>{
+      const row=event.target;
+      if(!row.isConnected||!row.matches('details[data-layout-check]'))return;
+      const key=expansionKey(row.dataset.layoutCheck);
+      if(row.open)expandedChecks.add(key);else expandedChecks.delete(key);
+    },true);
     modal.addEventListener('input',event=>{if(event.target.matches('[data-layout-comment]')&&currentReport)commentDrafts.set(currentReport.id+'|'+event.target.dataset.layoutComment,event.target.value);});
     modal.addEventListener('click',event=>{
       if(!annotationMode||!event.target.matches('.layoutMarkers')||busy||reviewSaving)return;
       const rect=event.target.getBoundingClientRect();
       const x=Math.max(0,Math.min(.94,(event.clientX-rect.left)/rect.width)),y=Math.max(0,Math.min(.96,(event.clientY-rect.top)/rect.height));
       const check={rule:'MANUAL_'+Date.now().toString(36),category:'ANNOTATION',status:'REVIEW',decision:'PENDING',severity:'COMMENT',page:pageNumber,bbox:[x,y,.06,.04],comment:'',expected:[],actual:[],source:'Buyer'};
-      annotationMode=false;selectedRule=check.rule;filter='all';persistReview(check);
+      annotationMode=false;selectedRule=check.rule;expandedChecks.add(expansionKey(check.rule));filter='all';persistReview(check);
     });
     modal.querySelector('[data-layout-queue]').addEventListener('change',event=>{if(!busy)run(queuedFiles[Number(event.target.value)]);});
     input.addEventListener('change',()=>{const files=Array.from(input.files||[]);input.value='';receiveFiles(files);});
@@ -527,7 +539,7 @@
     epoch++;renderToken++;
     if(activeAbort) activeAbort.abort();
     if(activeRequestId&&AI()) AI().cancel(activeRequestId);
-    new Set([...sessions.keys(),...identitySessions.keys(),...queuedFiles,currentFile].filter(Boolean)).forEach(file=>reader().release(file));sessions.clear();identitySessions.clear();commentDrafts.clear();queuedFiles=[];pdfDocument=null;renderedPage='';reviewSaving=false;
+    new Set([...sessions.keys(),...identitySessions.keys(),...queuedFiles,currentFile].filter(Boolean)).forEach(file=>reader().release(file));sessions.clear();identitySessions.clear();commentDrafts.clear();expandedChecks.clear();queuedFiles=[];pdfDocument=null;renderedPage='';reviewSaving=false;
     activeAbort=null;activeRequestId='';modal.remove();modal=null;currentFile=null;currentReport=null;busy=false;
     const callback=onCloseCallback;onCloseCallback=null;if(callback)Promise.resolve().then(callback);
   }
