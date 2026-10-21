@@ -6,6 +6,7 @@ const staging=require('./staging');
 const checklist=require('../checklist-supplier-store');
 const Engine=require('../../../public/test-report-engine');
 const Assessment=require('../../../public/test-report-assessment');
+const Checklist=require('../../../public/cp-checklist-engine');
 const crypto=require('crypto');
 const {redactSecrets,SECRET_KEY_RE}=require('../../../shared/secret-redaction');
 const digest=value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
@@ -55,15 +56,27 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
       const report=byTalep.get(text(raw?.talepNo,80));if(!report)throw fail('TEST_REPORT_UNKNOWN');
       const orderKey=text(raw.orderKey),authoritative=allowed.get(orderKey);if(!authoritative)throw fail('TEST_REPORT_ORDER_FORBIDDEN',403);
       const scopes=Engine.orderScopes(report),scope=scopes.find(s=>s.orderCode===Engine.normalizeOrderCode(authoritative.orderCode));
-      if(scopes.length&&!scope)throw fail('TEST_REPORT_ORDER_MISMATCH',409);
+      let manualMatch=null;
+      if(raw.manualMatch) {
+        const review=session.assessment;
+        const origin=review?.validated?.assessments.find(item=>item.reportId===report.talepNo&&item.orderKey===raw.manualMatch.fromOrderKey&&item.step===raw.manualMatch.fromItemId);
+        const part=Checklist.Components.parseItem(raw.itemId),baseItem=part?.baseId||raw.itemId;
+        if(!origin||raw.confirmMatch!==true||raw.confirmEvidence!==true||!review.packet.checklistStatuses.some(status=>status.id===raw.targetStatus)||!review.packet.checklistSteps.some(step=>step.id===raw.itemId||step.id===baseItem))throw fail('TEST_REPORT_MANUAL_MATCH_REQUIRED',409);
+        const target=review.packet.cp.rows.find(row=>row.key===orderKey),analysis={orderKey,sourceRow:target?.fields||{}};
+        const answers=Object.fromEntries((target?.checklist||[]).map(item=>[orderKey+'::'+item.itemId,item.answer]));
+        const parts=Checklist.componentsFor(analysis,{answers});
+        if(part&&!parts.some(p=>p.id===part.partId)||!part&&(parts.length||Checklist.Components.isSet(analysis.sourceRow,'cp')))throw fail('TEST_REPORT_MANUAL_MATCH_REQUIRED',409);
+        manualMatch={fromOrderKey:origin.orderKey,fromItemId:origin.step,targetStatus:raw.targetStatus};
+      }
+      if(scopes.length&&!scope&&!manualMatch)throw fail('TEST_REPORT_ORDER_MISMATCH',409);
       if(scope?.requiresReview&&raw.confirmMatch!==true)throw fail('TEST_REPORT_SCOPE_CONFIRMATION_REQUIRED',409);
       const key=[report.talepNo,orderKey].join('::');
       if(session.assessment) {
         const proposal=session.assessment.validated.assessments.find(item=>item.reportId===report.talepNo&&item.orderKey===orderKey&&(!item.step||item.step===raw.itemId));
-        if(!proposal||proposal.blocked&&raw.confirmEvidence!==true)throw fail('TEST_REPORT_REVIEW_REQUIRED',409);
+        if(!manualMatch&&(!proposal||proposal.blocked&&raw.confirmEvidence!==true))throw fail('TEST_REPORT_REVIEW_REQUIRED',409);
       }
       if(seen.has(key))throw fail('TEST_REPORT_DUPLICATE_TARGET',409);seen.add(key);
-      return {report,orderKey,itemId:text(raw.itemId,160),review:session.assessment?{snapshotId:session.assessment.packet.snapshotId,scopeConfirmed:raw.confirmEvidence===true}:null,context:{...(raw.context&&typeof raw.context==='object'?raw.context:{}),...authoritative}};
+      return {report,orderKey,itemId:text(raw.itemId,160),review:session.assessment?{snapshotId:session.assessment.packet.snapshotId,scopeConfirmed:raw.confirmEvidence===true,...(manualMatch?{matchSource:'buyer',manualMatch}:{matchSource:'ai'})}:null,context:{...(raw.context&&typeof raw.context==='object'?raw.context:{}),...authoritative}};
     });
     const saved=store.read();
     if(items.some(item=>Engine.reportLinks(saved.links[item.report.talepNo]).some(link=>!allowed.has(link.orderKey))))throw fail('TEST_REPORT_SHARED_SCOPE_FORBIDDEN',403);
