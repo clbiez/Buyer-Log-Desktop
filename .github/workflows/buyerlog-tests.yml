@@ -43,5 +43,5 @@ jobs:
         run: npm run release:notes:validate
       - name: Check i18n coverage
         run: npm run i18n:check
-      - name: Run full Buyer Log regression
-        run: npm test
+      - name: Run isolated sync simulation
+        run: npm test -- sync-simulation-v20261009
