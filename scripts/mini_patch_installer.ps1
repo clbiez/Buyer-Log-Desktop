@@ -89,7 +89,7 @@ function To-Lines([string] $Text) {
   foreach ($m in [regex]::Matches($Text, '[^\n]*(?:\n|$)')) {
     if ($m.Value.Length -gt 0) { $result.Add([string]$m.Value) }
   }
-  return $result
+  return ,$result
 }
 function Patch-Bytes([byte[]] $Source, $Record) {
   $utf8 = New-Object System.Text.UTF8Encoding($false, $true)
