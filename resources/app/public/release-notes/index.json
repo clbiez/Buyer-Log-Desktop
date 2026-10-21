@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.293",
+      "publishedAt": "2026-10-21",
+      "title": {
+        "tr": "Lisans Atlası: birleşik detaylar ve toplu Recovery",
+        "en": "License Atlas: unified details and bulk Recovery"
+      },
+      "stats": {
+        "features": 6,
+        "improvements": 6,
+        "fixes": 3
+      },
+      "file": "release-notes/7.0.293/release.json"
+    },
+    {
       "version": "7.0.288",
       "publishedAt": "2026-10-20",
       "title": {
