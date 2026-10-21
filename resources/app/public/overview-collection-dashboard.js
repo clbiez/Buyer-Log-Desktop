@@ -10,6 +10,15 @@
       return {k:key,label:text(column&&column.label)||key};
     }).filter(function(column){if(!column.k||seen.has(column.k))return false;seen.add(column.k);return true;});
   }
+  function scopeColumnLabel(ctx,column){
+    const original=text(column&&column.label||column&&column.k);
+    const resolved=typeof ctx.label==='function'?text(ctx.label(original)):original;
+    // Sistem başlığını dille eşleştir; kişisel/özel etiketleri değiştirme.
+    if(column&&column.k==='inStoreMonth'&&
+      (resolved==='Model Budget Month'||resolved==='Model Bütçe Ayı'))
+      return ctx.language==='en'?'Model Budget Month':'Model Bütçe Ayı';
+    return resolved;
+  }
   function scopeState(ctx){
     const saved=ctx.saved||{},columns=columnCatalog(ctx);
     const fallback=columns.find(function(column){return column.k==='inStoreMonth';})||columns[0]||{k:'inStoreMonth',label:'Model Budget Month'};
@@ -97,7 +106,7 @@
     const pop=document.getElementById('ovCollectionSummaryScopePopover'),trigger=document.getElementById('ovCollectionSummaryScopeTrigger');
     if(!pop||!trigger)return;
     if(!pop.hidden){closeValuePopover();return;}
-    const selected=new Set(scoped.selected),columnLabel=ctx.label(scoped.column.label||scoped.column.k);
+    const selected=new Set(scoped.selected),columnLabel=scopeColumnLabel(ctx,scoped.column);
     pop.innerHTML=
       '<div class="ovCollectionScopePopoverHead"><b>'+esc(columnLabel)+'</b><button type="button" data-scope-clear>'+(ctx.language==='en'?'Clear':'Temizle')+'</button></div>'+
       '<input type="search" class="ovCollectionScopeSearch" data-scope-search placeholder="'+esc(ctx.language==='en'?'Search values':'Değer ara')+'">'+
@@ -135,7 +144,7 @@
       '<aside class="ovCollectionScopeDrawer" role="dialog" aria-modal="true" aria-label="'+esc(ctx.language==='en'?'Collection summary filter column':'Koleksiyon özeti filtre sütunu')+'">'+
       '<div class="ovCollectionScopeDrawerHead"><div><b>'+esc(ctx.language==='en'?'Filter column':'Filtre sütunu')+'</b><span>'+esc(ctx.language==='en'?'Choose any Collection column.':'Koleksiyon sütunlarından birini seç.')+'</span></div><button type="button" data-scope-drawer-close aria-label="'+esc(ctx.language==='en'?'Close':'Kapat')+'">×</button></div>'+
       '<div class="ovCollectionScopeDrawerSearch"><input type="search" data-scope-column-search placeholder="'+esc(ctx.language==='en'?'Search columns':'Sütun ara')+'"></div>'+
-      '<div class="ovCollectionScopeColumnList">'+scoped.columns.map(function(column){const label=ctx.label(column.label||column.k);return '<button type="button" data-scope-column="'+esc(column.k)+'"'+(column.k===current?' class="isActive"':'')+'><span>'+esc(label)+'</span>'+(column.k===current?'<i>✓</i>':'')+'</button>';}).join('')+'</div>'+
+      '<div class="ovCollectionScopeColumnList">'+scoped.columns.map(function(column){const label=scopeColumnLabel(ctx,column);return '<button type="button" data-scope-column="'+esc(column.k)+'"'+(column.k===current?' class="isActive"':'')+'><span>'+esc(label)+'</span>'+(column.k===current?'<i>✓</i>':'')+'</button>';}).join('')+'</div>'+
       '</aside>';
     document.body.appendChild(overlay);
     const close=function(){overlay.remove();};overlay.addEventListener('click',function(event){if(event.target===overlay)close();});
@@ -153,7 +162,7 @@
     const scoped=scopeState(ctx),result=scoped.result,total=Number(result.kpi.total)||0,locale=ctx.language==='en'?'en-GB':'tr-TR';
     closeValuePopover();
     const scopeLabel=document.getElementById('ovCollectionSummaryScopeLabel'),scopeTrigger=document.getElementById('ovCollectionSummaryScopeTrigger');
-    const columnLabel=ctx.label(scoped.column.label||scoped.column.k);
+    const columnLabel=scopeColumnLabel(ctx,scoped.column);
     if(scopeLabel){
       const hint=ctx.language==='en'?'Double-click to change the Collection filter column':'Collection filtre sütununu değiştirmek için çift tıkla';
       scopeLabel.textContent=columnLabel;scopeLabel.title=hint;scopeLabel.setAttribute('aria-label',columnLabel+'. '+hint);
@@ -305,13 +314,9 @@
     const rowHeight=Math.max(32,parseFloat(getComputedStyle(host).getPropertyValue('--revolver-row'))||36);
     const state={host:host,track:track,rows:rows,count:rows.length,rowHeight:rowHeight,thumbStep:22+THUMB_GAP,pos:0,centerMonth:'',cleanup:[]};
     host.style.height=(rowHeight*Math.min(VISIBLE_ROWS,Math.max(1,rows.length)))+'px';
+    // İlk açılışta en yeni ay üstte; yeniden çizimde mevcut konum korunsun.
     let start=previous?buckets.findIndex(function(bucket){return bucket.month===previous;}):-1;
-    if(start<0){
-      const now=new Date(),current=now.getFullYear()*12+now.getMonth()+1;
-      let best=Number.POSITIVE_INFINITY;
-      buckets.forEach(function(bucket,index){if(!bucket.year)return;const distance=Math.abs(bucket.year*12+bucket.monthNumber-current);if(distance<best){best=distance;start=index;}});
-      if(start<0)start=0;
-    }
+    if(start<0)start=0;
     revolver=state;
     state.pos=revolverClamp(state,start);
     state.centerMonth=rows[state.pos]?rows[state.pos].dataset.month:'';
@@ -384,5 +389,6 @@
       host.removeEventListener('keydown',onKey);
     });
   }
-  return {render:render,openColumnDrawer:openColumnDrawer,scopeState:scopeState};
+  return {render:render,openColumnDrawer:openColumnDrawer,scopeState:scopeState,
+    monthLabel:monthLabel,scopeColumnLabel:scopeColumnLabel};
 });
