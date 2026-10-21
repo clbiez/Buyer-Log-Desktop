@@ -30,7 +30,10 @@ test('native select cells copy their current selected value before any delayed r
 
 test('explicit right-click Copy stays cell-scoped even when business rows are checked',()=>{
   const copy=between(SHEET,'function handleCopyShortcut','function selectedCoordinates');
-  assert.match(copy,/!options\.forceCellCopy&&\(bridge\(\)\?\.selectedCount\?\.\(\)\|\|0\)>0/);
+  // Klavye Ctrl+C işaretli modellere ancak hücre seçimi daha eski ise devreder
+  // ("en son seçim kazanır", v7.0.290); sağ tık Copy her zaman hücreye bağlıdır.
+  assert.match(copy,/const checkedModels=bridge\(\)\?\.selectedCount\?\.\(\)\|\|0;/);
+  assert.match(copy,/!options\.forceCellCopy&&checkedModels>0&&!cellSelectionWins\(\)/);
   const ctx=between(SHEET,'function cellContext','function bind()');
   assert.equal((ctx.match(/forceCellCopy:true/g)||[]).length,2);
 });

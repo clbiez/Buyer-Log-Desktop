@@ -4912,6 +4912,7 @@ td.formulaCell.isError{color:var(--muted);}
 .rowCtxItem{display:flex;align-items:center;gap:8px;width:100%;padding:6px 9px;border:0;border-radius:var(--r-xs);background:transparent;color:var(--ink);font-size:var(--fs-sm);text-align:left;cursor:pointer;}
 .rowCtxItem:hover{background:var(--acc-bg,var(--card));color:var(--acc-ink);}
 .rowCtxItem .ic{flex:0 0 16px;width:16px;height:16px;}
+.rowCtxItem .rowCtxKey{margin-left:auto;padding-left:12px;color:var(--muted);font-size:var(--fs-2xs);font-family:inherit;}
 .rowCtxDot{flex:0 0 16px;}
 .rowCtxSep{height:1px;margin:3px 4px;background:var(--line);}
 

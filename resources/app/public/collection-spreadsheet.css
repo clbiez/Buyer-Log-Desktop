@@ -30,6 +30,9 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow{height:18px}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{height:18px!important;min-height:18px!important;padding:0 4px!important;text-align:center!important;font:600 var(--fs-2xs)/18px var(--mono,monospace)!important;color:var(--muted)!important;background:var(--paper)!important;border-bottom:1px solid var(--line)!important;user-select:none}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.kolSpreadsheetLetterActive{color:var(--acc)!important;background:var(--card2)!important}
+/* Sütun harfine tık = sütunun tamamını seç; sürükleyerek aralık seçerken metin seçimi boyanmaz. */
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.kolSpreadsheetLetter{cursor:s-resize}
+#view-koleksiyon.kolSpreadsheetDragSelecting #kolTable{user-select:none;-webkit-user-select:none}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable .chkTh,
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:72px!important;min-width:72px!important}
 .kolSpreadsheetRowGutter{padding:0 3px!important;white-space:nowrap;text-align:center}

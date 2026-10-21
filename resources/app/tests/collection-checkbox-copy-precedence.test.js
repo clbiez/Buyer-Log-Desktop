@@ -28,8 +28,10 @@ test('Collection Copy resolves checked models over a stale cell/range selection'
   const fnStart = COLLECTION.indexOf('function handleCopyShortcut(');
   const fnEnd = COLLECTION.indexOf('\n  function selectedCoordinates', fnStart);
   const block = COLLECTION.slice(fnStart, fnEnd);
-  assert.match(block, /if\(!options\.forceCellCopy&&\(bridge\(\)\?\.selectedCount\?\.\(\)\|\|0\)>0\)return false;/,
-    'global/keyboard Copy must still yield to checked models unless the user explicitly chose cell Copy from the cell context menu');
+  assert.match(block, /if\(!options\.forceCellCopy&&checkedModels>0&&!cellSelectionWins\(\)\)return false;/,
+    'keyboard Copy must yield to checked models unless a cell/range was selected AFTER the last checkbox change (or the user chose cell Copy from the context menu)');
+  assert.match(COLLECTION, /function cellSelectionWins\(\)\{return Boolean\(state\.active\)&&state\.cellIntent>state\.rowIntent;\}/,
+    'last-selection-wins resolver is missing');
 
   const fnAppStart = APP.indexOf('function copyGridSelection(');
   const fnAppEnd = APP.indexOf('\nlet _gridClipboardOutsideHandler', fnAppStart);

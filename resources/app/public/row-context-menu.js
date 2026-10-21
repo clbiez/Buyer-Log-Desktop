@@ -32,6 +32,8 @@
     { sel: '#cpTable', module: 'cp', tools: 'cpToolsMenu' },
     { sel: '#ordersTable', module: 'orders', tools: 'ordersToolsMenu' },
     { sel: '#kolTable', module: 'collection', tools: 'kolToolsMenu' },
+    // Alt detay raporu çekmecesi (BLDetailDrawer): yalnız ortak kopyalama menüsü.
+    { sel: '#blDetailTable', module: 'detail', tools: '' },
   ];
 
   const en = () => typeof appLang !== 'undefined' && appLang === 'en';
@@ -96,14 +98,16 @@
       .filter(Boolean);
   }
 
-  function render(items, x, y, headline) {
+  function render(items, x, y, headline, options = {}) {
     close();
     menu = document.createElement('div');
     menu.className = 'rowCtxMenu';
     menu.setAttribute('role', 'menu');
     menu.innerHTML = `${headline ? `<div class="rowCtxHead">${esc(headline)}</div>` : ''}${items.map((item, index) => (item.separator
       ? '<div class="rowCtxSep"></div>'
-      : `<button type="button" class="rowCtxItem" role="menuitem" data-ctx="${index}">${item.icon ? `<svg class="ic"><use href="${esc(item.icon)}"/></svg>` : '<span class="rowCtxDot"></span>'}<span>${esc(item.label)}</span></button>`)).join('')}`;
+      : `<button type="button" class="rowCtxItem" role="menuitem" data-ctx="${index}">${item.icon ? `<svg class="ic"><use href="${esc(item.icon)}"/></svg>` : '<span class="rowCtxDot"></span>'}<span>${esc(item.label)}</span>${item.key ? `<kbd class="rowCtxKey">${esc(item.key)}</kbd>` : ''}</button>`)).join('')}`;
+    // Detay çekmecesi gibi üst katmanlarda menü katmanın altında kalmasın.
+    if (options.zIndex) menu.style.zIndex = String(options.zIndex);
     document.body.appendChild(menu);
 
     // Ekrandan taşmasın: menü imlecin yanına, sığmıyorsa içeri doğru açılır.
@@ -125,21 +129,30 @@
     setTimeout(() => document.addEventListener('pointerdown', onOutside, true), 0);
   }
 
+  /* Ctrl+C = "Kopyala" (başlıksız, Excel gibi). Başlıklı kopya menüden
+     bilerek seçilir. İşaretli satır varken menü iki hedefi de açıkça sunar:
+     seçili hücre/aralık ya da işaretli satırlar — kullanıcı tahmin etmez. */
   function managedClipboardEntries(config, table, cell) {
-    if (config.module !== 'cp' && config.module !== 'orders') return [];
+    if (config.module !== 'cp' && config.module !== 'orders' && config.module !== 'detail') return [];
     if (!window.BLGridClipboard?.prepareContextMenu?.(table.id, cell)) return [];
     const copyEvent = { preventDefault() {}, stopImmediatePropagation() {} };
-    return [
-      { label: T('Başlıklarla kopyala', 'Copy with headers'), key: 'Ctrl+C', run: () => void window.BLGridClipboard?.copyActive?.(copyEvent, { includeHeaders: true }) },
-      { label: T('Kopyala', 'Copy'), run: () => void window.BLGridClipboard?.copyActive?.(copyEvent, { includeHeaders: false }) },
+    const items = [
+      { label: T('Kopyala', 'Copy'), key: 'Ctrl+C', run: () => void window.BLGridClipboard?.copyActive?.(copyEvent, { includeHeaders: false }) },
+      { label: T('Başlıklarla kopyala', 'Copy with headers'), run: () => void window.BLGridClipboard?.copyActive?.(copyEvent, { includeHeaders: true }) },
     ];
+    const checked = selectionSetFor(config.module);
+    const navCopy = document.getElementById('navCopy');
+    if (checked && checked.size > 0 && navCopy && !navCopy.disabled) {
+      items.push({ label: T(`İşaretli ${checked.size} satırı kopyala`, `Copy ${checked.size} checked row(s)`), run: () => navCopy.click() });
+    }
+    return items;
   }
 
   function openManagedGridCopyMenu(config, table, cell, event) {
     const items = managedClipboardEntries(config, table, cell);
     if (!items.length) return false;
     event.preventDefault();
-    render(items, event.clientX, event.clientY, T('Kopyalama', 'Copy'));
+    render(items, event.clientX, event.clientY, T('Kopyalama', 'Copy'), config.module === 'detail' ? { zIndex: 53100 } : {});
     return true;
   }
 
@@ -217,6 +230,7 @@
       if (isModelCell) { openForCell(config, table, cell, event); return; }
       if (cell.dataset.ordercodeCell === '1') { openOrderCodeMenu(config, cell, event); return; }
       if (config.module === 'cp' || config.module === 'orders') { openManagedGridCopyMenu(config, table, cell, event); return; }
+      if (config.module === 'detail') { openManagedGridCopyMenu(config, table, cell, event); return; }
       return;
     }
   });

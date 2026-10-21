@@ -548,13 +548,56 @@ function renderReportStats(rows){
   }
   stats.innerHTML=cards.map(card=>'<div><b>'+escapeHtml(card.value.toLocaleString(isEn()?'en-GB':'tr-TR',{maximumFractionDigits:2}))+'</b><span>'+escapeHtml(card.label)+'</span></div>').join('');
 }
+/* Hücre seçimi ve Ctrl+C: CP/Orders ile aynı ortak motor (BLGridClipboard).
+   Satır kimliği render sırasından değil satır nesnesinden gelir; arama/filtre
+   sonrasında seçim başka bir kayda kaymaz. Kopya metni ekrandaki rapor
+   hücresinin düz metnidir (birleşik sütunlarda alanlar " · " ile ayrılır). */
+const CLIPBOARD_TABLE_ID='blDetailTable';
+let clipboardRegistered=false;
+function rowKey(row){
+  if(!active||!row||typeof row!=='object')return '';
+  let id=active.rowIds.get(row);
+  if(id==null){active.rowSeq+=1;id=String(active.rowSeq);active.rowIds.set(row,id);}
+  return id;
+}
+function reportCellText(col,row){
+  if(!col||!row)return '';
+  return (col.fields||[col]).map(field=>clean(textValue(field,row))).filter(text=>text&&text!=='—').join(' · ');
+}
+async function writeClipboard(html,plain){
+  if(typeof root.BLCopyRichToClipboard==='function')return root.BLCopyRichToClipboard(html,plain);
+  try{await root.navigator.clipboard.writeText(plain);return true;}catch(_){return false;}
+}
+function registerClipboard(){
+  const grid=root.BLGridClipboard;
+  if(clipboardRegistered||!grid?.register||!root.BLTableExport)return;
+  clipboardRegistered=true;
+  grid.register(CLIPBOARD_TABLE_ID,{
+    priority:10,
+    label:()=>L('Detay raporu veri tablosu','Detail report data grid'),
+    isActive:()=>Boolean(active&&document.getElementById(CLIPBOARD_TABLE_ID)),
+    rows:()=>active&&active.renderedRows||[],
+    columns:()=>active&&active.renderedColumns||[],
+    rowId:row=>rowKey(row),
+    columnId:col=>col&&col.key,
+    header:col=>col&&col.label||'',
+    value:(row,col)=>reportCellText(col,row),
+    exporter:root.BLTableExport,
+    copy:async(matrix,range,_state,options={})=>{
+      const payload=grid.serialize(matrix,root.BLTableExport,options),ok=await writeClipboard(payload.html,payload.plain),size=grid.selectionSize(range);
+      grid.diagnostics?.record?.({module:'detail',operation:'copy',selection:size,includeHeaders:payload.includeHeaders,transport:'rich',ok});
+      root.showToast?.(ok?(payload.includeHeaders?L(size.label+' hücre başlıklarıyla kopyalandı.',size.label+' cells copied with headers.'):L(size.label+' hücre kopyalandı.',size.label+' cells copied.')):L('Kopyalama başarısız.','Copy failed.'));
+      return ok;
+    },
+  });
+}
 function renderTable(){
   const host=document.getElementById('blSharedDetailDrawer');if(!host||!active)return;
   const table=host.querySelector('[data-bl-detail-table]'),summary=host.querySelector('[data-bl-detail-summary]');if(!table)return;
   const rows=filteredRows(),columns=reportColumns(),helper=root.BLDetailImages;
   const imageIndex=helper?.buildIndex?helper.buildIndex():null,showImages=active.images&&Boolean(helper);
   const shown=rows.slice(0,Math.max(RENDER_CHUNK,active.limit||RENDER_CHUNK)),rest=rows.length-shown.length,hasRowActions=active.rowActions.length>0,colspan=Math.max(1,columns.length+(showImages?1:0)+(hasRowActions?1:0));
-  active.renderedRows=shown;
+  active.renderedRows=shown;active.renderedColumns=columns;
   table.querySelector('colgroup').innerHTML=(hasRowActions?'<col style="width:120px">':'')+(showImages?'<col class="blDetailImageCol" style="width:74px">':'')+columns.map(col=>'<col style="width:'+columnWidth(col)+'px">').join('');
   applyTableWidth(table,columns,showImages);
   table.querySelector('thead').innerHTML=(active.flatColumns&&!hasRowActions?groupHeaderHtml(columns,showImages):'')+'<tr class="blDetailColumnRow">'+(hasRowActions?'<th>'+escapeHtml(L('İşlem','Action'))+'</th>':'')+(showImages?'<th class="blDetailImageHead">'+escapeHtml(L('Görsel','Image'))+'</th>':'')+columns.map(col=>{
@@ -564,11 +607,12 @@ function renderTable(){
       '<span class="colResizer" data-bl-detail-col-resize="'+escapeHtml(col.key)+'" title="'+escapeHtml(L('Sürükleyerek genişliği ayarla · çift tıklayarak sığdır','Drag to resize · double-click to fit'))+'"></span></th>';
   }).join('')+'</tr>';
   bindColumnResize(table);
-  table.querySelector('tbody').innerHTML=shown.length?shown.map((row,index)=>'<tr>'+(hasRowActions?'<td class="blDetailRowActions">'+active.rowActions.map((action,actionIndex)=>'<button type="button" class="blDetailTool" data-bl-detail-row-action="'+actionIndex+'" data-bl-detail-row="'+index+'"'+(action.disabled?.(row)?' disabled':'')+'>'+escapeHtml(action.label)+'</button>').join('')+'</td>':'')+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map(col=>'<td class="'+(col.reportRole==='number'?'blDetailNumeric':'')+'">'+reportCell(col,row)+'</td>').join('')+'</tr>').join('')+
+  table.querySelector('tbody').innerHTML=shown.length?shown.map((row,index)=>'<tr data-id="'+escapeHtml(rowKey(row))+'">'+(hasRowActions?'<td class="blDetailRowActions">'+active.rowActions.map((action,actionIndex)=>'<button type="button" class="blDetailTool" data-bl-detail-row-action="'+actionIndex+'" data-bl-detail-row="'+index+'"'+(action.disabled?.(row)?' disabled':'')+'>'+escapeHtml(action.label)+'</button>').join('')+'</td>':'')+(showImages?'<td class="blDetailImageCell">'+imageCell(row,imageIndex)+'</td>':'')+columns.map((col,colIndex)=>'<td class="'+(col.reportRole==='number'?'blDetailNumeric':'')+'" data-key="'+escapeHtml(col.key)+'" data-r="'+index+'" data-c="'+colIndex+'">'+reportCell(col,row)+'</td>').join('')+'</tr>').join('')+
     (rest>0?'<tr><td class="blDetailMore" colspan="'+colspan+'"><button type="button" class="blDetailTool" data-bl-detail-more>'+escapeHtml(L('Daha fazla göster','Show more'))+' · '+rest.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+escapeHtml(L('satır kaldı','rows left'))+'</button></td></tr>':''):
     '<tr><td class="blDetailEmpty" colspan="'+colspan+'">'+escapeHtml(L('Gösterilecek satır yok.','No rows to display.'))+'</td></tr>';
   if(summary)summary.textContent=(active.subtitle?active.subtitle+' · ':'')+rows.length.toLocaleString(isEn()?'en-GB':'tr-TR')+' '+L('satır','rows');
   renderReportStats(rows);syncFilterTools();registerAssetScope(host.querySelector('.blDetailDrawerPanel'),rows,imageIndex);
+  registerClipboard();root.BLGridClipboard?.afterRender?.(CLIPBOARD_TABLE_ID);
 }
 
 function downloadBuffer(buffer,name,mime){
@@ -666,7 +710,7 @@ function render(){
     '<div class="blDetailExtraActions" data-bl-detail-extra></div><div class="blDetailColumnPanel" data-bl-detail-column-panel hidden></div></div>'+
     '<div class="blDetailReportStats" data-bl-detail-stats></div><div class="blDetailReportAccent"></div>'+
     (active.note?'<div class="blDetailDrawerNote">'+escapeHtml(active.note)+'</div>':'')+
-    '<div class="blDetailTableWrap"><table class="blDetailTable" data-bl-detail-table><colgroup></colgroup><thead></thead><tbody></tbody></table></div></section>';
+    '<div class="blDetailTableWrap"><table class="blDetailTable" id="blDetailTable" data-bl-detail-table><colgroup></colgroup><thead></thead><tbody></tbody></table></div></section>';
   host.classList.add('is-open');host.setAttribute('aria-hidden','false');
   const panel=host.querySelector('.blDetailDrawerPanel');applyPanelWidth(panel);bindResize(panel);
   host.querySelectorAll('[data-bl-detail-close]').forEach(el=>el.addEventListener('click',close));
@@ -752,10 +796,13 @@ function open(options){
     rows,columns,visible,width:loadWidth(page)||Math.min(1600,root.innerWidth*0.96),
     tableSetup:null,viewPresets,contextKeys,preset,flatColumns:input.flatColumns===true,requiredVisible:new Set(requiredVisible),
     colWidths:loadColWidths(scope,page),autoWidths:null,filters:new Map(),filterVersion:0,
+    rowIds:new WeakMap(),rowSeq:0,renderedColumns:[],
     images:input.images!==false,search:'',limit:RENDER_CHUNK,searchIndex:null,filterCache:null,searchTimer:0,actions:Array.isArray(input.actions)?input.actions:[],
     rowActions:Array.isArray(input.rowActions)?input.rowActions:[],
     exporter:typeof input.exporter==='function'?input.exporter:null
   };
+  // Yeni rapor eski raporun hücre seçimini devralmaz (satır kimlikleri raporla sıfırlanır).
+  root.BLGridClipboard?.clear?.(CLIPBOARD_TABLE_ID);
   render();
   requestAnimationFrame(()=>ensureHost().querySelector('[data-bl-detail-search]')?.focus());
 }
