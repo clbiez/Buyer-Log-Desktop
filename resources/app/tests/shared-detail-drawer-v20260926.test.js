@@ -48,8 +48,8 @@ test('Ortak drawer boş hücrelerde canonical ve nested kaynak fallback uygular'
   const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');
   assert.ok(DRAWER.includes('BLCanonicalFields'));
   assert.ok(DRAWER.includes('canonical.canonicalValue'));
-  assert.ok(DRAWER.includes('row&&row.raw'));
-  assert.ok(DRAWER.includes('row&&row.row'));
+  assert.ok(DRAWER.includes('source.raw'));
+  assert.ok(DRAWER.includes('source.row'));
 });
 test('Ortak drawer sol kenardan yeniden boyutlandırılabilir',()=>{
   const DRAWER=fs.readFileSync(path.join(ROOT,'public','detail-drawer.js'),'utf8');

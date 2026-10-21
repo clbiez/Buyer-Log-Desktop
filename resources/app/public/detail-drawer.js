@@ -134,20 +134,19 @@ function ensureHost(){
 }
 function hasValue(value){return value!==undefined&&value!==null&&!(typeof value==='string'&&clean(value)==='');}
 function rowSources(row){
-  const sources=[row,row&&row.row,row&&row.raw,row&&row.source,row&&row.data].filter(item=>item&&typeof item==='object');
-  return [...new Set(sources)];
+  const sources=[],seen=new Set(),pending=[row];
+  for(let i=0;i<pending.length;i++){
+    const source=pending[i];
+    if(!source||typeof source!=='object'||Array.isArray(source)||seen.has(source))continue;
+    seen.add(source);sources.push(source);
+    pending.push(source.row,source.raw,source.source,source.data,source._source,source.sourceRow,source._detailSource);
+  }
+  return sources;
 }
 function fieldRefs(col){
-  const refs=[col&&col.key,col&&col.label].filter(Boolean),extra=[];
-  refs.forEach(ref=>{
-    const text=String(ref);
-    let match;
-    const rx=/\(([^)]+)\)/g;
-    while((match=rx.exec(text)))if(clean(match[1]))extra.push(clean(match[1]));
-    const without=clean(text.replace(/\([^)]+\)/g,' '));
-    if(without)extra.push(without);
-  });
-  return [...new Set(refs.concat(extra).map(clean).filter(Boolean))];
+  // Etiket çevirisi ve parantez içi açıklama veri anahtarı değildir.
+  // Örn. Fabric (PLM), PLM ID değerine dönüşmemeli.
+  return [...new Set([col&&col.key,col&&col.field].map(clean).filter(Boolean))];
 }
 function detailModule(){
   const known=['overview','cp','orders','backlog','collection','lfl','logistics','antrepo','openCosting'];
@@ -165,25 +164,21 @@ function detailModule(){
 }
 function lookupValue(col,row){
   const refs=fieldRefs(col),sources=rowSources(row);
+  const canonical=root.BLCanonicalFields,moduleId=detailModule();
+  const ids=[...new Set([col&&col.canonicalId,...refs.map(ref=>canonical?.canonicalId?.(moduleId,ref))].filter(Boolean))];
+  const token=canonical&&canonical.token?canonical.token:(value=>String(value==null?'':value).toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim());
+  const wanted=[...new Set(refs.map(token).filter(Boolean))];
+  // Dış satırın kanonik değeri, içteki eski ham anahtardan önce gelir.
   for(const source of sources){
     for(const ref of refs){
       if(Object.prototype.hasOwnProperty.call(source,ref)&&hasValue(source[ref]))return source[ref];
     }
-  }
-  const canonical=root.BLCanonicalFields,moduleId=detailModule();
-  if(canonical&&moduleId){
-    for(const ref of refs){
-      const id=canonical.canonicalId?.(moduleId,ref);
-      if(!id)continue;
-      for(const source of sources){
+    if(canonical&&moduleId){
+      for(const id of ids){
         const value=canonical.canonicalValue?.(source,moduleId,id);
         if(hasValue(value))return value;
       }
     }
-  }
-  const token=canonical&&canonical.token?canonical.token:(value=>String(value==null?'':value).toUpperCase().replace(/[^A-Z0-9]+/g,' ').trim());
-  const wanted=[...new Set(refs.map(token).filter(Boolean))];
-  for(const source of sources){
     const keys=Object.keys(source);
     for(const key of keys){
       if(wanted.includes(token(key))&&hasValue(source[key]))return source[key];
@@ -196,7 +191,9 @@ function rawValueOf(col,row){
     let value;
     if(typeof col.value==='function'){
       value=col.value(row);
-      if(!hasValue(value))value=lookupValue(col,row);
+      // undefined = bu erişimci alanı çözmedi. Boş/null ise gerçek sonuçtur;
+      // parsiyelin boş Handover'ı sipariş tarihinden doldurulmamalı.
+      if(value===undefined)value=lookupValue(col,row);
     }else value=lookupValue(col,row);
     return value;
   }catch(_){return undefined;}

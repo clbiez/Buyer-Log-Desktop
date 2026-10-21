@@ -980,7 +980,7 @@ async function backlogPartials(force){
   if(!force&&state.lastBacklogRows&&signature===state.lastBacklogSignature)return state.lastBacklogRows;
   if(typeof backlogExportQueryParams!=='function')return [];
   const params=backlogExportQueryParams()||{};
-  const [response]=await Promise.all([fetch('/api/backlog-export?'+new URLSearchParams(params).toString(),{credentials:'same-origin',cache:'no-store'}),ensureDecisionEngine()]);
+  const [response]=await Promise.all([fetch('/api/backlog-export?'+new URLSearchParams({...params,includeSourceDetails:'1'}).toString(),{credentials:'same-origin',cache:'no-store'}),ensureDecisionEngine()]);
   const data=await response.json().catch(()=>({}));
   if(!response.ok)throw new Error(data&&data.error?data.error:'HTTP '+response.status);
   const records=shipmentPartialsFromRows(Array.isArray(data.rows)?data.rows:[],'backlog');
@@ -1675,12 +1675,14 @@ function detailColumns(records){
 }
 function cpDetailRows(records){
   return (records||[]).map(rec=>{
-    const row={...rec};
+    // Backlog'un kendi hedef kapsamından gelen CP uyumlu alanlar kullanılır;
+    // açık CP/Orders ekranından başka sipariş veya renk ödünç alınmaz.
+    const row={...rec.raw?._detailSource,...rec.raw,...rec,_logisticSegments:[]};
     // Parsiyel seviyesinde değişen alanlar ham CP/Orders satırının üzerine yazılır.
     // Böylece detay tablosu CP sütun kataloğunu kullanırken yanlış sipariş-seviyesi
     // STATUS / Handover / Shipment Quantity göstermez.
     Object.assign(row,{
-      'Priority':rec.priority||rec.actionPriority||'',
+      'Priority':rec.actionPriority||actionPriorityCode(rec.priority)||'',
       'Season':rec.season||'',
       'Country':rec.country||'',
       'Buyer Grup (TR)':rec.buyingGroup||'',

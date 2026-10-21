@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Checklistleri tüm kullanıcılardan silme",
-    "en": "Delete checklists for all users"
+    "tr": "Alt detay raporları ve checklist düzeltmeleri",
+    "en": "Detail report and checklist fixes"
   },
   "summary": {
-    "tr": "Moderatör, checklist ve kuralları açık bir düğmeyle tüm kullanıcılardan kaldırabilir.",
-    "en": "Moderators can remove checklists and rules for all users with an explicit action."
+    "tr": "Kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi.",
+    "en": "Improved source fields, partial details, Collection inheritance and checklist management."
   },
   "changes": [
     {
@@ -37,6 +37,64 @@
         "caption": {
           "tr": "Checklistleri tüm kullanıcılardan kaldırma ve silmeyi geri alma",
           "en": "Remove checklists for all users and undo deletion"
+        }
+      }
+    },
+    {
+      "id": "detail-report-source-values",
+      "type": "fix",
+      "module": {
+        "tr": "Global Flow Map · Alt detay raporları",
+        "en": "Global Flow Map · Detail reports"
+      },
+      "title": {
+        "tr": "Alt detaylarda kaynak sütunları eksiksiz",
+        "en": "Source columns restored in detail reports"
+      },
+      "body": {
+        "tr": "Harita detayları FOB, alt üretici FOB, sipariş adedi, lisansör ve tarihleri kendi veri kapsamından okur; tamamlanmış Backlog siparişleri de korunur. Parsiyel statüsü ve boş tarihleri sipariş özetiyle ezilmez. Ortak raporlarda kanonik alan okuma, arama, filtre ve Excel aynı değerleri kullanır; boş fiyatlar sıfıra, açıklamalı başlıklar başka alanlara dönüşmez.",
+        "en": "Map details read FOB, supplier FOB, order quantity, licensor and dates from their own data scope, including completed Backlog orders. Partial status and empty dates are no longer overwritten by order summaries. Shared reports use the same canonical values for display, search, filters and Excel; empty prices stay empty and descriptive headings cannot resolve to unrelated fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "detail-source-values.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log harita detayında demo siparişlerin dolu FOB, adet ve tarih sütunları",
+          "en": "Populated FOB, quantity and date columns for demo orders in the real Buyer Log map detail"
+        },
+        "caption": {
+          "tr": "Backlog kaynağından doğru fiyat, adet ve tarihler",
+          "en": "Correct prices, quantities and dates from the Backlog source"
+        }
+      }
+    },
+    {
+      "id": "collection-detail-effective-values",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon Analizi",
+        "en": "Collection Analytics"
+      },
+      "title": {
+        "tr": "Detaylarda miras alınan model alanları",
+        "en": "Inherited model fields in details"
+      },
+      "body": {
+        "tr": "Analiz alt detayları model grubundan miras alınan Buyer, sezon ve diğer alanların ekranda geçerli değerlerini gösterir. Renge özel değerler korunur; kaynak kayıtlar değişmez.",
+        "en": "Analytics details show the effective Buyer, season and other fields inherited from the model group. Colour-specific overrides are preserved without changing source records."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-detail-inherited-values.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon analiz detayında demo renklerin miras alınan Buyer ve farklı sezon değerleri",
+          "en": "Inherited Buyer and distinct season values for demo colours in the real Buyer Log Collection analytics detail"
+        },
+        "caption": {
+          "tr": "Ortak Buyer değeri ve renge özel sezon korunur",
+          "en": "Shared Buyer and colour-specific season values are preserved"
         }
       }
     }

@@ -4578,9 +4578,11 @@ function detailTableViewSnapshot(tableKey='cp'){
       dataType:column.dataType,
       percentageScale:column.percentageScale,
       sourceMetadata:column.sourceMetadata||column.metadata,
-      format:(_value,row)=>{
+      value:row=>row&&Object.prototype.hasOwnProperty.call(row,key)?row[key]:undefined,
+      format:(value,row)=>{
+        if(value==null||value==='')return '';
         const raw=row&&row.raw&&typeof row.raw==='object'?row.raw:null;
-        const merged=raw?Object.assign({},raw,row):row;
+        const merged=Object.assign({},raw,row,{[key]:value});
         return cellPlainText(column,merged||{},null);
       }
     };
@@ -28029,7 +28031,7 @@ window.BLCollectionAnalyticsBridge={
   buildObservations(rows,type){return window.BLCollectionAnalyticsEngine.buildObservations(rows,type,{norm,kolParseMoneyNum,kolParseQuantityNum,kolEffectiveProjection,kolConfirmedPricing,kolBestPricing,kolLandedCalc});},
   openDrilldown(rows,title){
     if(window.BLDetailDrawer?.open){
-      const sharedRows=[...new Map((rows||[]).map((row,index)=>[row&&row.id!=null?row.id:index,row])).values()].filter(Boolean);
+      const sharedRows=[...new Map((rows||[]).map((row,index)=>[row&&row.id!=null?row.id:index,row])).values()].filter(Boolean).map(kolEffectiveProjection);
       const sharedTitle=title||(appLang==='en'?'Collection Detail':'Collection Detayı');
       window.BLDetailDrawer.open({storageKey:'collection.analytics.detail',source:'collection',title:sharedTitle,subtitle:sharedRows.length+' '+(appLang==='en'?'models':'model'),rows:sharedRows,images:true,fileName:sharedTitle,columns:[
         {key:'plmId',label:'PLM ID'},{key:'modelKod',label:'Model'},{key:'colourCode',label:appLang==='en'?'Colour Code':'Renk Kod'},{key:'colour',label:appLang==='en'?'Colour':'Renk'},
