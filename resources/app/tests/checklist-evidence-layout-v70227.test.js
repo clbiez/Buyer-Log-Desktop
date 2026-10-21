@@ -25,5 +25,7 @@ test('checklist evidence checkboxes are not stretched by generic rule input styl
 });
 
 test('checklist assistant stylesheet cache revision is bumped', () => {
-  assert.match(INDEX, /cp-overview-assistant\.css\?v=__BL_ASSET_VERSION__&rev=20261020/);
+  // Revizyon her stil değişikliğinde ilerler (v7.0.290: moderatör yayını / test raporu stilleri).
+  assert.match(INDEX, /cp-overview-assistant\.css\?v=__BL_ASSET_VERSION__&rev=(\d{8})/);
+  assert.ok(Number(INDEX.match(/cp-overview-assistant\.css\?v=__BL_ASSET_VERSION__&rev=(\d{8})/)[1]) >= 20261020);
 });

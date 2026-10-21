@@ -44,15 +44,17 @@ test('v9.62 Rules UI Priority Rule editöründe iki dilli reason alanlarını ve
 test('v9.62 matched custom priority rule stabil CUSTOM_RULE:<id> identity ve TR/EN metadata taşır', () => {
   assert.match(VIEW, /function customRuleReasonCode\(ruleId\)/);
   assert.ok(VIEW.includes('`CUSTOM_RULE:${id}`'), 'stabil custom rule reason code eksik');
-  assert.match(VIEW, /reasonCode: rule\.builtIn === true \? '' : customRuleReasonCode\(rule\.id\)/);
+  // v7.0.290: öncelik yalnız kurallardan gelir; yerleşik kural da kendi gerekçesini taşır.
+  assert.match(VIEW, /reasonCode: customRuleReasonCode\(rule\.id\)/);
   assert.match(VIEW, /reasonTr: String\(rule\.reasonTr \|\| ''\)/);
   assert.match(VIEW, /reasonEn: String\(rule\.reasonEn \|\| ''\)/);
   assert.match(VIEW, /custom: rule\.builtIn !== true/);
 });
 
-test('v9.62 Attention Reason canonical ve custom rule nedenlerini tek final listede birleştirir', () => {
+test('v9.62 Attention Reason eşleşen kuralların nedenlerini tek final listede toplar', () => {
   assert.match(VIEW, /function attentionReasonEntries\(item\)/);
-  assert.match(VIEW, /Array\.isArray\(item && item\.riskReasons\)/);
+  // v7.0.290: motorun bilgi amaçlı risk sebepleri artık öncelik gerekçesi değildir.
+  assert.doesNotMatch(VIEW.slice(VIEW.indexOf('function attentionReasonEntries(item)'), VIEW.indexOf('function ruleReasonCounts(model)')), /item\.riskReasons/);
   assert.match(VIEW, /Array\.isArray\(item && item\.matchedRules\)/);
   assert.match(VIEW, /attentionReasonEntries\(item\)\.slice\(0, 2\)\.map\(entry => entry\.text\)/);
   assert.match(VIEW, /const reasons = attentionReasonEntries\(item\)\.map\(entry => entry\.code\)/);

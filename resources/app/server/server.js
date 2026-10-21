@@ -851,7 +851,7 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
     const before = local[id], after = remote[id];
     if (!different(before, after)) continue;
     if (id === 'store:overrides.json') {
-      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs']) {
+      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','cpManagedRules']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
       }
       if (
@@ -2456,10 +2456,11 @@ async function agentPlatformHttpRequest(args) {
   } finally { clearTimeout(timer); }
 }
 
-const cpAgentPreferences=require('./lib/cp-agent-preferences').createCpRulePreferences(userPreferences,userAccess);
+function cpManagedRulesState(){try{return loadOverrides().cpManagedRules||null;}catch(_){return null;}}
+const cpAgentPreferences=require('./lib/cp-agent-preferences').createCpRulePreferences(userPreferences,userAccess,cpManagedRulesState);
 function cpAgentRevision(profile,{ignoreRefresh=false}={}){
   const stamp=file=>{try{const stat=fs.statSync(file);return [stat.mtimeMs,stat.size,stat.ino];}catch(err){if(err.code==='ENOENT')return null;throw err;}};
-  return crypto.createHash('sha256').update(JSON.stringify({loadedAt:ignoreRefresh?null:cacheForUser(profile.id).loadedAt,overrides:effectiveOverridesForUser(profile.id),preferences:userPreferences.load(profile.id),roleEntries:userAccess.roleWorkspaceEntries(profile),calendar:require('./lib/merch-calendar-store').publicProjection(),actor:userAccess.profileById(profile.id),plmSamples:stamp(require('./lib/plm-sample-requests-store').DEFAULT_FILE),checklist:stamp(require('./lib/checklist-supplier-store').FILE)})).digest('hex');
+  return crypto.createHash('sha256').update(JSON.stringify({loadedAt:ignoreRefresh?null:cacheForUser(profile.id).loadedAt,overrides:effectiveOverridesForUser(profile.id),preferences:userPreferences.load(profile.id),roleEntries:userAccess.roleWorkspaceEntries(profile),calendar:require('./lib/merch-calendar-store').publicProjection(),managedRules:cpManagedRulesState(),actor:userAccess.profileById(profile.id),plmSamples:stamp(require('./lib/plm-sample-requests-store').DEFAULT_FILE),checklist:stamp(require('./lib/checklist-supplier-store').FILE)})).digest('hex');
 }
 async function cpAgentData(profile) {
   const sourceRevision=cpAgentRevision(profile);
@@ -3046,9 +3047,19 @@ async function automationSourceRows(ownerId, profile, source, recipe) {
   if (source === 'cp') {
     const settings = (recipe && recipe.backlog) || {};
     const overrides = effectiveOverridesForUser(ownerId);
+    // v7.0.290 — Aksiyon Önceliği yalnız kurallardan gelir; sahibin çalışan
+    // kuralları ve checklist cevaplarıyla ekrandaki önceliğin aynısı üretilir.
+    let ruleContext = null;
+    try {
+      const owner = userAccess.profileById(ownerId) || profile;
+      const priority = cpAgentPreferences.ruleSnapshot(owner, 'priority'), checklist = cpAgentPreferences.ruleSnapshot(owner, 'checklist');
+      const context = cpAgentPreferences.context(owner);
+      ruleContext = { rules: [...priority.rules, ...checklist.rules], answers: context.answers || {}, checklistEnabled: context.checklistEnabled };
+    } catch (_) { ruleContext = null; }
     return cpAutomation.enrichRows(list, {
       transitRules: (overrides && overrides.transitRules) || [],
       settings: { targetType: settings.targetType || 'retail', requireTransitRule: settings.requireTransitRule !== false },
+      ...(ruleContext || {}),
     });
   }
   if (source !== 'backlog') return list;
@@ -5493,7 +5504,10 @@ async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
 }
 async function agentQualityReviewContext(profile) {
   const data=await cpAgentData(profile),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
-  const rules=[...data.personalRules,...data.checklist.definitions].filter(rule=>rule.kind==='checklist'&&rule.enabled!==false);
+  // v7.0.290 — Yalnız kullanıcının çalışan checklist listesi (kişisel + yerleşik +
+  // Moderatör yayını). Eski ortak tanımlar eklenmez: kullanıcının sildiği adım
+  // Test Raporu Aktarımı listesinde yeniden görünüyordu.
+  const rules=data.personalRules.filter(rule=>rule.kind==='checklist'&&rule.enabled!==false);
   const steps=new Map(rules.map(rule=>[rule.id,{id:rule.id,name:[rule.tr||rule.name||rule.id,rule.en||rule.nameEn||rule.id].join(' / ')}]));
   const baseSteps=[...steps.values()];
   for(const row of data.cpRows) {
@@ -5825,8 +5839,12 @@ async function agentOfficeOperationalData(profile, scope, areas) {
   result.transitRules=effectiveOverridesForUser(profile.id).transitRules || [];
   const entries=userPreferences.load(profile.id).entries || {}, readPreference=key=>{try {const value=entries[key]?.value;return value?JSON.parse(value):null;}catch(_){return null;}};
   const prefs=readPreference('lcw.cp.assistant.v1') || {}, priority=readPreference('lcw.cp.rules.priority.v1'), checklistRules=readPreference('lcw.cp.rules.checklist.v1');
-  result.personalRules=[...(priority?.rules || []),...(checklistRules?.rules || []),...(prefs.rules || []).filter(rule=>![...(priority?.rules || []),...(checklistRules?.rules || [])].some(item=>item.id===rule.id))];
-  result.deletedRuleIds=[...new Set([...(priority?.deletedRuleIds || []),...(checklistRules?.deletedRuleIds || []),...(prefs.deletedRuleIds || [])])];
+  const rawPersonalRules=[...(priority?.rules || []),...(checklistRules?.rules || []),...(prefs.rules || []).filter(rule=>![...(priority?.rules || []),...(checklistRules?.rules || [])].some(item=>item.id===rule.id))];
+  const managedRules=effectiveOverridesForUser(profile.id).cpManagedRules||null,hasRuleStore=Boolean(priority||checklistRules||Array.isArray(prefs.rules));
+  result.deletedRuleIds=[...new Set([...(priority?.deletedRuleIds || []),...(checklistRules?.deletedRuleIds || []),...(prefs.deletedRuleIds || []),...((managedRules||{}).deletedRuleIds||[])])];
+  // v7.0.290 — Çalışan liste ekrandaki katmanlarla aynıdır (kişisel + yerleşik + Moderatör).
+  result.personalRules=require('../public/cp-rules-engine').effectiveRules(rawPersonalRules,result.deletedRuleIds,managedRules);
+  result.hasRuleStore=hasRuleStore;
   result.checklistEnabled=prefs.checklistSettings?.enabled !== false;result.settings=prefs.settings || {};
   const personalAnswers=readPreference('lcw.cp.checklist.v1') || {};result.personalAnswers={};
 
@@ -5854,7 +5872,9 @@ async function agentOfficeOperationalData(profile, scope, areas) {
       .map(item=>({dimensions:item.dimensions,values:item.values,currency:'UNVERIFIED_SOURCE_UNIT',source:'CP FOB',sourceUpdatedAt:result.sourceUpdatedAt}));
   }
   if(result.cpAvailable||result.collectionAvailable){const models=new Set([...result.cpRows.map(r=>String(canonicalFields.value(r,'cp','plmId')||'')),...result.collectionRows.map(r=>String(canonicalFields.value(r,'collection','plmId')||''))]);const samples=sampleRequestStore.load(),bom=require('./lib/plm-bom-store').load();result.samples={models:Object.fromEntries(Object.entries(samples.models).filter(([key])=>models.has(key))),updatedAt:samples._updatedAt};result.bom={models:Object.fromEntries(Object.entries(bom.models).filter(([key])=>models.has(key))),updatedAt:bom._updatedAt};}
-  if(!result.personalRules.length && result.checklist?.definitions?.length)result.personalRules=result.checklist.definitions;
+  // Eski ortak checklist tanımları yalnız kullanıcı hiç kural kaydı oluşturmamışsa
+  // (ekran henüz tek seferlik devralmayı yapmamışsa) kullanılır; silinenler geri gelmez.
+  if(!result.hasRuleStore && result.checklist?.definitions?.length)result.personalRules=[...result.personalRules,...result.checklist.definitions.filter(def=>!result.personalRules.some(rule=>rule.id===def.id))];
   assertAuthority();return result;
 }
 async function agentOfficeEvidenceAttachments(profile,scope,areas){const data=await agentOfficeOperationalData(profile,scope,areas),found=new Map(),attachmentStore=require('./lib/checklist-supplier-store');
@@ -11302,6 +11322,29 @@ app.put('/api/transit-analysis', userAccess.requireArea('source'), userAccess.re
     res.set('ETag', `"${saved.revision}"`);
     res.json(saved);
   } catch (err) { apiError(res, err, 'Yol süresi analizi kaydedilemedi.'); }
+});
+
+/* v7.0.290 — Moderatörün tüm kullanıcılara uyguladığı CP kural / checklist
+   yayını. Okuma herkese açıktır (her kullanıcı kendi ekranında uygular);
+   yazma yalnız Moderatör. Değişiklik Master kural yayınıyla diğer cihazlara
+   gider; kullanıcıların kendi kurallarına dokunulmaz. */
+app.get('/api/cp-managed-rules', (_req, res) => {
+  try {
+    const ov = loadOverrides();
+    const revision = Number(ov._revisions && ov._revisions.cpManagedRules) || 0;
+    res.set('ETag', `"${revision}"`);
+    res.json({ ...require('./db').normalizeCpManagedRules(ov.cpManagedRules), revision });
+  } catch (err) { apiError(res, err, 'Moderatör kuralları okunamadı.'); }
+});
+app.put('/api/cp-managed-rules', userAccess.requireModerator, express.json({ limit: '2mb' }), (req, res) => {
+  try {
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const saved = require('./db').replaceCpManagedRules({ rules: body.rules, deletedRuleIds: body.deletedRuleIds }, requestRevision(req), req.currentUser);
+    userAccess.appendAudit(req.currentUser, 'CP_MANAGED_RULES_UPDATE', 'rules', { rules: saved.rules.length, deleted: saved.deletedRuleIds.length, revision: saved.revision });
+    publishSharedMasterChange('cpManagedRules', req);
+    res.set('ETag', `"${saved.revision}"`);
+    res.json(saved);
+  } catch (err) { apiError(res, err, 'Moderatör kuralları kaydedilemedi.'); }
 });
 
 app.get('/api/non-dtr-manufacturers', (_req, res) => {

@@ -36300,6 +36300,9 @@ function initLiveSync(){
     if(payload.originClientId&&payload.originClientId===window.BL_CLIENT_ID)return;
     if(['fx','endeksmatik','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings'].includes(payload.area)){
       void refreshSharedMasterClient(payload.area).catch(()=>{});
+    }else if(payload.area==='cpManagedRules'||payload.area==='master-rules'){
+      // v7.0.290 — Moderatörün tüm kullanıcılara yayımladığı CP kuralları.
+      window.dispatchEvent(new CustomEvent('bl:cp-managed-rules-changed'));
     }else if(payload.area==='licenseCards'){
       window.BLLicenseCardsPage?.invalidate?.();
     }else if(payload.area==='pricingRules'){
@@ -36387,6 +36390,7 @@ window.addEventListener('bl-shared-revision',event=>{
   // v7.21: canlı akış açıkken bu yol AYNI kayıt için ikinci bir yeniden
   // yükleme demekti. Yalnız canlı akış kopmuşsa yedek olarak çalışır.
   if(changed.has('collection')&&kolWorkspaceOwnerId&&!liveSyncConnected)void kolHandleRemoteChange(kolWorkspaceOwnerId);
+  if(changed.has('cpManagedRules')&&!liveSyncConnected)window.dispatchEvent(new CustomEvent('bl:cp-managed-rules-changed'));
   if(changed.has('quotation'))void window.BL_QUOTATIONS?.refresh?.();
   if(changed.has('licenseCards')&&!liveSyncConnected)window.BLLicenseCardsPage?.invalidate?.();
   if(changed.has('pricingRules'))window.BLLicenseCardsPage?.invalidate?.();

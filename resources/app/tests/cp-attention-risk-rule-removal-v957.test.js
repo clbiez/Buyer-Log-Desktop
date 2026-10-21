@@ -113,5 +113,7 @@ test('v9.57 gerçek gecikme kuralları korunur: EXPECTED_LATE yine aksiyon üret
   }));
   assert.equal(analysis.deliveryOutcome, 'EXPECTED_LATE');
   assert.ok(analysis.riskReasons.includes('EXPECTED_LATE_FOR_TARGET'));
-  assert.equal(analysis.priority, 'ACTION_TODAY');
+  // v7.0.290: öneri korunur, Aksiyon Önceliğini yalnız kullanıcı kuralı yükseltir.
+  assert.equal(analysis.systemPriority, 'ACTION_TODAY');
+  assert.equal(analysis.priority, 'ON_TRACK');
 });

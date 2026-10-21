@@ -2,7 +2,9 @@
 const Rules=require('../../public/cp-rules-engine');
 const CP=require('../../public/cp-readiness-engine');
 const {hash,error}=require('./agent-office-store');
-function createCpRulePreferences(preferences,userAccess) {
+// v7.0.290 — managedRules(): Moderatörün tüm kullanıcılara yayımladığı set.
+// Çalışan kural listesi ekrandakiyle aynı katmanlardan kurulur.
+function createCpRulePreferences(preferences,userAccess,managedRules=()=>null) {
   // Owner's additional checklist statuses (CP › Checklist › statuses); the
   // same validation as cp-checklist-engine customStatuses().
   function customStatuses(effective){
@@ -23,11 +25,12 @@ function createCpRulePreferences(preferences,userAccess) {
     let payload={version:kind==='checklist'?2:1,rules:[],deletedRuleIds:[]};
     if(entry?.value){try{payload=JSON.parse(entry.value);}catch(_){throw error('OFFICE_RULE_STORE_UNREADABLE',409);}}
     if(!payload||!Array.isArray(payload.rules))throw error('OFFICE_RULE_STORE_UNREADABLE',409);
-    return {key,own,payload,rules:Rules.mergeWithDefaults(payload.rules,payload.deletedRuleIds||[]).filter(r=>r.kind===kind),hash:hash(JSON.stringify({own,entry,deletion:personal.deletions[key]||null}))};
+    return {key,own,payload,rules:Rules.effectiveRules(payload.rules,payload.deletedRuleIds||[],managedRules()).filter(r=>r.kind===kind),hash:hash(JSON.stringify({own,entry,deletion:personal.deletions[key]||null}))};
   }
   function saveRule(profile,rule,before,options={}) {
     if(snapshot(profile,rule.kind).hash!==before.hash)throw error('OFFICE_PREVIEW_CHANGED',409);
-    const rules=before.rules.filter(r=>r.id!==rule.id).concat(rule);
+    if(before.rules.some(r=>r.id===rule.id&&r.managed===true))throw error('OFFICE_RULE_MANAGED',409);
+    const rules=before.rules.filter(r=>r.id!==rule.id&&r.managed!==true).concat(rule);
     if(rules.length>100)throw error('OFFICE_RULE_CAPACITY',413);
     const payload={...before.payload,version:rule.kind==='checklist'?2:1,rules,deletedRuleIds:(before.payload.deletedRuleIds||[]).filter(id=>id!==rule.id)};
     const saved=preferences.applyEntryChanges(profile.id,{[before.key]:JSON.stringify(payload)},[],{expectedEntries:{[before.key]:before.own},assertAuthority:options.assertAuthority});

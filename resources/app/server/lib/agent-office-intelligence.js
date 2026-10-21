@@ -81,7 +81,7 @@ function analyzeOperationalData(input = {}) {
     const sample = input.samples?.models?.[String(ident.plmId || '')], milestones = sample ? Samples.summarizeMilestones(sample.requests || []) : null;
     const ctx = { answers: checklist.answers || {}, customItems: checklist.definitions || [], plmEvidence: (_analysis, itemId) => Samples.evidenceFor(milestones, itemId) };
     const evaluated = Rules.evaluateOrder(base,{rules,preparedRules,answers:ctx.answers,plmEvidence:ctx.plmEvidence,checklistEnabled:input.checklistEnabled !== false,today:input.today});
-    base.calculatedPriority = base.priority; base.priority = evaluated.priority;
+    if (base.calculatedPriority == null) base.calculatedPriority = base.priority; base.priority = evaluated.priority;
     const priorPriority = local.find(item=>item.code === 'CP_PRIORITY');
     if(priorPriority){priorPriority.severity=base.priority;priorPriority.title=bilingual(CP.PRIORITY_LABELS.tr[base.priority] || base.priority,CP.PRIORITY_LABELS.en[base.priority] || base.priority);priorPriority.reasons.push(...evaluated.signals.map(signal=>({code:signal.code,title:bilingual(signal.textTr,signal.textEn)})));}
     else if(base.priority !== 'ON_TRACK')local.push(finding('CP_PRIORITY',key,base.priority,bilingual(CP.PRIORITY_LABELS.tr[base.priority] || base.priority,CP.PRIORITY_LABELS.en[base.priority] || base.priority),bilingual('Kişisel CP kuralı aksiyon gerektiriyor.','Your personal CP rule requires action.'),[source],{reasons:evaluated.signals.map(signal=>({code:signal.code,title:bilingual(signal.textTr,signal.textEn)}))}));

@@ -5,6 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { SERVER_DATA_ROOT, atomicWriteJson, atomicWriteBuffer } = require('../user-data');
 const { withFileLeaseSync } = require('./shared-file-transaction');
+const ElementParts = require('../../public/checklist-components-engine');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'checklist-supplier-sync.json');
 const RECOVERY_FILE = path.join(SERVER_DATA_ROOT, 'checklist-supplier-sync.last-good.json');
@@ -320,8 +321,18 @@ function applyEntries(entries, actor, options = {}) {
       const componentCount = Object.prototype.hasOwnProperty.call(raw, 'componentCount') ? raw.componentCount : previousEvidence && previousEvidence.componentCount;
       if (componentCount != null && (itemId !== '@set-components' || !Number.isInteger(componentCount) || componentCount < 2 || componentCount > 26)) throw Object.assign(new Error('Invalid set component count.'), { code:'CHECKLIST_COMPONENTS_INVALID', statusCode:400 });
       if (itemId === '@set-components' && previousEvidence && previousEvidence.componentCount > componentCount) throw Object.assign(new Error('Existing set parts must be preserved.'), { code:'CHECKLIST_COMPONENTS_INVALID', statusCode:409 });
+      // v7.0.290 — bileşen sonuçları (Main Fabric / Neck RIB …); gönderilmezse korunur.
+      if (Object.prototype.hasOwnProperty.call(raw, 'elements') && raw.elements != null && !Array.isArray(raw.elements)) throw Object.assign(new Error('Checklist components must be an array.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
+      let elements = ElementParts.normalizeElements(Object.prototype.hasOwnProperty.call(raw, 'elements') ? raw.elements : previousEvidence && previousEvidence.elements, value => normalizeState(value) || 'open');
+      // Bileşen listesi gönderilmeden tek durum yazılırsa (hücre / araç) durum
+      // bütün korunan bileşenlere uygulanır; genel durum ve bileşenler çelişmez.
+      if (!Object.prototype.hasOwnProperty.call(raw, 'elements') && elements.length
+        && ElementParts.elementsState(elements, value => value === 'approved' || value === 'notRequired') !== state) {
+        elements = elements.map(item => ({ ...item, state }));
+      }
       const common = {
         ...(componentCount != null ? {componentCount} : {}),
+        ...(elements.length ? {elements} : {}),
         key, orderKey, itemId, at, by: text(raw.by || who.name || who.id, 200),
         byId: who.id, source: text(raw.source || source, 80), loadDate: text(raw.loadDate, 40) || null,
         note: String(Object.prototype.hasOwnProperty.call(raw, 'note') ? raw.note || '' : previousEvidence && previousEvidence.note || '').slice(0, 2000),

@@ -120,7 +120,8 @@ test('v9.65 CP Loading Operations + canonical Handover pending artık UNKNOWN de
   assert.notEqual(analysis.deliveryOutcome, 'UNKNOWN');
   assert.equal(analysis.calculationStatus, 'KNOWN');
   assert.equal(analysis.handoverWarning, true);
-  assert.equal(analysis.priority, 'ACTION_THIS_WEEK');
+  assert.equal(analysis.systemPriority, 'ACTION_THIS_WEEK');
+  assert.equal(analysis.priority, 'ON_TRACK', 'v7.0.290: yalnız kurallar yükseltir');
   assert.ok(analysis.riskReasons.includes('HANDOVER_PENDING'));
 });
 

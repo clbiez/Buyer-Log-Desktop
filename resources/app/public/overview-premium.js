@@ -96,7 +96,12 @@
       return {...entry,label:labels[entry.key],value:fmt(loading?qty:entry.orders.length),unit:loading?L('adet','units'):L('satır','rows'),sub:loading?`${fmt(entry.orders.length)} ${L('planlı satır','planned rows')}`:`${fmt(qty)} ${L('adet','units')}`,
         visual:loading?`<div class="ovPulseMini" aria-hidden="true">${horizon.days.map(d=>`<i style="--ov-level:${Math.max(4,100*d.qty/Math.max(1,...horizon.days.map(x=>x.qty)))}%"></i>`).join('')}</div>`:priorityBand()};
     });
-    const changed=draw(node,records.length?`<div class="ovPulseGrid" style="--ov-pulse-count:${records.length}">${records.map(r=>`<button type="button" class="ovPulseKpi${r.key==='critical'?' isRisk':''}" data-ov-pulse="${r.key}" data-ov-focus="pulse-${r.key}"><span>${esc(r.label)}</span><strong><b data-ov-count>${esc(r.value)}</b><small>${esc(r.unit)}</small></strong><em>${esc(r.sub)}</em>${r.visual}</button>`).join('')}</div>`:empty(L('Bu kapsamda aktif sipariş yok.','No active orders in this scope.')));
+    // v7.0.290 — Öncelik yalnız kullanıcının kurallarından gelir: kural yoksa
+    // Kritik/Bugün/Bu Hafta kartları gizli kalmaz, nedenini ve çözümünü söyler.
+    const noRules=context.priorityRules===0&&records.length;
+    const rulesHint=noRules?`<button type="button" class="ovPulseKpi ovPulseHint" data-ov-rules data-ov-focus="pulse-rules"><span>${esc(L('Öncelik kuralı yok','No priority rules'))}</span><strong><b>0</b><small>${esc(L('kural','rules'))}</small></strong><em>${esc(L('Kritik / Bugün / Bu Hafta yalnız kurallarınızla hesaplanır · Kural ekle','Critical / Today / This Week come only from your rules · Add a rule'))}</em></button>`:'';
+    const count=records.length+(noRules?1:0);
+    const changed=draw(node,records.length?`<div class="ovPulseGrid" style="--ov-pulse-count:${count}">${records.map(r=>`<button type="button" class="ovPulseKpi${r.key==='critical'?' isRisk':''}" data-ov-pulse="${r.key}" data-ov-focus="pulse-${r.key}"><span>${esc(r.label)}</span><strong><b data-ov-count>${esc(r.value)}</b><small>${esc(r.unit)}</small></strong><em>${esc(r.sub)}</em>${r.visual}</button>`).join('')}${rulesHint}</div>`:empty(L('Bu kapsamda aktif sipariş yok.','No active orders in this scope.')));
     if(changed)animatePulse(node);
   }
   function renderHorizon(){
@@ -118,8 +123,18 @@
     const buckets=collectionBuckets();
     if(!buckets.length){draw(node,head(L('Koleksiyon Vitrini','Collection Showcase'))+empty(L('Bu kapsamda koleksiyon modeli yok.','No collection models in this scope.')));return;}
     let bucket=buckets.find(b=>b.month===selectedMonth);
-    if(!bucket){bucket=buckets.find(b=>b.month>=new Date().toISOString().slice(0,7))||buckets[0];selectedMonth=bucket.month;}
-    const options=buckets.map(b=>`<option value="${esc(b.month)}"${b.month===selectedMonth?' selected':''}>${esc(b.month||L('Ay yok','No month'))}</option>`).join('');
+    if(!bucket){
+      // ISO kodları ile Türkçe/İngilizce ay adlarını metin olarak kıyaslama.
+      // monthBuckets burada kronolojik artan sırada: en yakın gelecek ayı seç.
+      const now=new Date(),current=now.getFullYear()*12+now.getMonth()+1;
+      const dated=buckets.filter(b=>b.year&&b.monthNumber);
+      bucket=dated.find(b=>b.year*12+b.monthNumber>=current)||dated[dated.length-1]||buckets[0];
+      selectedMonth=bucket.month;
+    }
+    const monthLabel=b=>b.year&&b.monthNumber
+      ?new Date(b.year,b.monthNumber-1,1).toLocaleDateString(locale(),{month:'long',year:'numeric'})
+      :(b.month||L('Ay yok','No month'));
+    const options=buckets.map(b=>`<option value="${esc(b.month)}"${b.month===selectedMonth?' selected':''}>${esc(monthLabel(b))}</option>`).join('');
     const total=bucket.optionCount||1;
     draw(node,head(L('Koleksiyon Vitrini','Collection Showcase'),`<select data-ov-month data-ov-focus="collection-month" aria-label="${esc(L('Koleksiyon ayı','Collection month'))}">${options}</select>`)+
       `<div class="ovShowcaseProducts">${bucket.models.slice(0,6).map((m,i)=>`<button type="button" data-ov-model="${i}" data-ov-focus="model-${i}" title="${esc(m.label)}" aria-label="${esc(m.label)}">${m.image?`<img src="${esc(m.image)}" alt="${esc(m.label)}" loading="lazy" decoding="async">`:icon('hanger')}<span>${esc(m.label)}</span></button>`).join('')}</div>`+
@@ -165,6 +180,7 @@
       root.dispatchEvent(new CustomEvent('bl:overview-motion-changed'));
     });
     doc.addEventListener('click' ,event=>{
+      if(event.target.closest('[data-ov-rules]')){root.BLCpAssistant?.openRules?.();return;}
       const button=event.target.closest('[data-ov-pulse],[data-ov-days],[data-ov-day],[data-ov-horizon],[data-ov-model],[data-ov-status],[data-ov-collection],[data-ov-metric-table],[data-ov-metric-row]');if(!button)return;
       if(!model&&(button.hasAttribute('data-ov-pulse')||button.hasAttribute('data-ov-day')||button.hasAttribute('data-ov-horizon')))return;
       if(button.dataset.ovPulse){const entry=pulseScopes(model).find(item=>item.key===button.dataset.ovPulse);if(entry)openRows(entry.orders,button.querySelector('span').textContent);}

@@ -78,14 +78,19 @@ test('v9.60 UNKNOWN + canonical handoverWarning => minimum ACTION_THIS_WEEK ve H
   const analysis = analyze(input);
   assert.equal(analysis.deliveryOutcome, 'UNKNOWN', 'delivery outcome değiştirilmemeli');
   assert.equal(analysis.handoverWarning, true);
-  assert.equal(analysis.priority, 'ACTION_THIS_WEEK');
+  // v7.0.290: Aksiyon Önceliği yalnız kullanıcı kurallarından gelir; motorun
+  // önerisi systemPriority (kural koşulunda [@basePriority]) olarak korunur.
+  assert.equal(analysis.systemPriority, 'ACTION_THIS_WEEK');
+  assert.equal(analysis.priority, 'ON_TRACK');
   assert.ok(analysis.riskReasons.includes('HANDOVER_PENDING'));
   assert.equal(Engine.RISK_REASON_LABELS.tr.HANDOVER_PENDING, 'Yükleme onayı verildi, Handover bekleniyor');
   assert.equal(Engine.RISK_REASON_LABELS.en.HANDOVER_PENDING, 'Loading confirmed, Handover pending');
 
   const model = Engine.analyze([input], { today: TODAY, dateOrdinal: ord, transitRules: [], settings: { requireTransitRule: true } });
+  assert.equal(Engine.needsAttention(model).length, 0, 'kural yoksa Attention listesine kendiliğinden girmez');
+  for (const item of model.orders) item.priority = item.decision.action.priority = item.systemPriority;
   const attention = Engine.needsAttention(model);
-  assert.equal(attention.length, 1, 'ACTION_THIS_WEEK doğal olarak Attention listesine girmeli');
+  assert.equal(attention.length, 1, 'kural sistem önerisini uygularsa ACTION_THIS_WEEK Attention listesine girer');
   assert.equal(attention[0].priority, 'ACTION_THIS_WEEK');
 });
 
@@ -94,7 +99,7 @@ test('v9.60 CP Priority string Handover içermese bile canonical boolean kullan�
   const analysis = analyze(input);
   assert.equal(analysis.cpPriority, 'In Time');
   assert.equal(analysis.handoverWarning, true);
-  assert.equal(analysis.priority, 'ACTION_THIS_WEEK');
+  assert.equal(analysis.systemPriority, 'ACTION_THIS_WEEK');
 });
 
 test('v9.60 yükleme onayının üzerinden henüz 3 gün geçmediyse yeni escalation yok', () => {
@@ -157,6 +162,6 @@ test('v9.60 daha yüksek CRITICAL priority Handover nedeniyle düşürülmez', (
   const analysis = analyze(input, { requireTransitRule: false });
   assert.equal(analysis.handoverWarning, true);
   assert.equal(analysis.deliveryOutcome, 'ALREADY_LATE');
-  assert.equal(analysis.priority, 'CRITICAL');
+  assert.equal(analysis.systemPriority, 'CRITICAL');
   assert.ok(analysis.riskReasons.includes('HANDOVER_PENDING'));
 });
