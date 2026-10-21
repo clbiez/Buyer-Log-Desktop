@@ -43,6 +43,9 @@ const MODELS = Object.freeze([
 const DEFAULT_MODEL = MODELS[0].key;
 const REASONING_LEVELS = Object.freeze(['Low', 'Medium', 'High']);
 const DEFAULT_REASONING_LEVEL = 'Medium';
+const SOURCE_DEFAULTS = Object.freeze({
+  'test-report-assess': Object.freeze({ reasoningLevel: 'High' }),
+});
 
 const DEFAULTS = Object.freeze({
   modelKey: DEFAULT_MODEL,
@@ -116,7 +119,7 @@ function publicConfig() {
 
 module.exports = {
   WEB_ORIGIN, WEB_HOST, API_ORIGIN, API_HOST, API_BASE, ENDPOINTS, KEYCLOAK,
-  MODELS, DEFAULT_MODEL, REASONING_LEVELS, DEFAULT_REASONING_LEVEL, DEFAULTS,
+  MODELS, DEFAULT_MODEL, REASONING_LEVELS, DEFAULT_REASONING_LEVEL, SOURCE_DEFAULTS, DEFAULTS,
   LIMITS, ALLOWED_UPLOAD_TYPES, TIMEOUTS,
   modelInfo, resolveModelKey, resolveReasoningLevel, publicConfig,
 };

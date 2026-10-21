@@ -13,6 +13,14 @@ const files = require('../server/lib/lcwai/lcwai-files');
 const prompts = require('../server/lib/lcwai/lcwai-prompt');
 const { publicError, lcwAiError } = require('../server/lib/lcwai/lcwai-errors');
 
+test('test assessment uses the shared engine with high reasoning',async()=>{
+  let request;
+  const engine=createLcwAiEngine({auth:{},client:{sendMessage:async(_owner,input)=>{request=input;return {text:'{}',modelKey:config.DEFAULT_MODEL};}}});
+  await engine.ask('demo',{source:'test-report-assess',task:'Review complete sources',reasoningLevel:'Low'});
+  assert.equal(request.reasoningLevel,'High');
+  assert.equal(config.DEFAULT_MODEL,'gpt-6-sol');
+});
+
 function makeToken(claims = {}) {
   const enc = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   const payload = { iss: config.KEYCLOAK.issuer, azp: config.KEYCLOAK.clientId, typ: 'Bearer', exp: Math.floor(Date.now() / 1000) + 300, sub: 'user-1', ...claims };

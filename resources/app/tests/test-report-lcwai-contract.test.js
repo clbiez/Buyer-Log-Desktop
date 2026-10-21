@@ -32,3 +32,11 @@ test('cevap şekli denetlenir; dizi alanları kısaltılır', () => {
   assert.equal(missing.ok, false);
   assert.ok(missing.errors.includes('missing:talepNo'));
 });
+test('full-source assessment permits independent correction and requests short, clear answers', () => {
+  const built=prompts.buildPrompt({source:'test-report-assess',task:'Review',context:{caseId:'case'},lang:'en'});
+  assert.match(built.prompt,/independently correct wrong or missing facts/);
+  assert.match(built.prompt,/summary at most 2 short sentences \(240 characters\)/);
+  assert.match(built.prompt,/On Track is not a test approval/);
+  const invalid=prompts.parseStructured(JSON.stringify({protocol:'p',caseId:'c',snapshotId:'s',coveredSourceIds:'cut list',unresolvedSourceIds:[],assessments:[],explanation:'x'}),'test-report-assess');
+  assert.equal(invalid.ok,false,'a shortened/malformed source list cannot be accepted');
+});

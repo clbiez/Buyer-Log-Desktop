@@ -68,6 +68,8 @@ function publicPayload(allowedOrderKeys) {
   }));
   payload.reports = Object.fromEntries(Object.entries(payload.links).map(([id, link]) => [id, {
     ...store.reports[id],
+    ...(store.reports[id].aiAssessment ? {aiAssessment: allowedOrderKeys.has(store.reports[id].aiAssessment.orderKey) ? store.reports[id].aiAssessment : null} : {}),
+    ...(store.reports[id].aiAssessments ? {aiAssessments: store.reports[id].aiAssessments.filter(review=>allowedOrderKeys.has(review.orderKey))} : {}),
     dosyalar: [...new Map(Engine.reportLinks(link).flatMap(target => target.files || store.reports[id].dosyalar || []).map(file => [file.attachmentId || file.hash, file])).values()],
   }]));
   return payload;
@@ -118,7 +120,7 @@ function commit(items, typeMap, actor, attach, options = {}) {
     const results = [];
     for (const item of items) {
       const incoming = item.report;
-      const talepNo = Engine.normalizeTalepNo(incoming && incoming.talepNo);
+      const talepNo = Engine.normalizeTalepNo(incoming && incoming.talepNo) || (incoming && incoming.aiAssessment ? require('../../../public/test-report-assessment').identifier(incoming.talepNo) : '');
       const orderKey = text(item.orderKey, 300);
       const itemId = text(item.itemId, 160);
       if (!talepNo || !orderKey || !itemId) continue;
@@ -153,6 +155,7 @@ function commit(items, typeMap, actor, attach, options = {}) {
         sourceFiles: (incoming.dosyalar || []).map(f => text(f.ad, 300)),
         sources: (incoming.kaynaklar || []).slice(0, 10),
         newDecisions, newAttachments: attachments.map(a => a.id),
+        ...(item.review ? {review: item.review} : {}),
       });
       results.push({ talepNo, orderKey, itemId, report: merged, attachments, newDecisions, decisionsSkipped: (incoming.kararlar || []).length - newDecisions });
     }

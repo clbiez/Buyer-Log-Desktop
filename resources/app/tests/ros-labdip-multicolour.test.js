@@ -90,6 +90,6 @@ test('Lab Dip UI keeps detail inside existing checklist cell and no new columns'
   const menu = fs.readFileSync(path.join(__dirname,'../public/checklist-supplier-sync.js'),'utf8');
   assert.match(menu,/clRosStatusDetails/);
   assert.match(menu,/answer\.note/);
-  assert.match(ui,/source: 'test-report-review'/);
+  assert.match(ui,/source: 'test-report-assess'/);
   assert.doesNotMatch(ui,/Lab Dip Status\s+Column/);
 });

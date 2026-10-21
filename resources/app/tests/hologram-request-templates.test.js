@@ -62,6 +62,7 @@ test('saved hologram calculation is applied to exports, including legacy templat
   const entryKey='bl.excelTemplates.hologram.v1',captured=[],defaultConfig=H.template();
   const preference={version:1,name:'hologram.xlsx',config:{...defaultConfig,quantityRule:{multiplier:1.1,roundTo:25}},bytes:Buffer.from('template').toString('base64')};
   const root={
+    BLCanonicalFields:require('../public/canonical-fields'),
     BLHologramRequest:H,BLPerf:{ensureLibrary:async()=>{}},
     BLExcelTemplateEngine:{fill:async(_bytes,config,records)=>{captured.push({config,records});return 'output';}},
     BLExcelDates:{},JSZip:{}
