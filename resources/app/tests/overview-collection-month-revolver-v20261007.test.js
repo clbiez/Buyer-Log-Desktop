@@ -22,7 +22,7 @@ const opts={quantityFor:row=>Number(String(row.quantity||'').replace(/\D/g,''))|
 
 test('monthBuckets groups Collection rows chronologically with quantity, models and status mix',()=>{
   const buckets=summary.monthBuckets(rows,opts);
-  assert.deepEqual(buckets.map(b=>b.month),['2026-12','2027-03','2027-04','']);
+  assert.deepEqual(buckets.map(b=>b.month),['2027-04','2027-03','2026-12','']);
   const march=buckets[1];
   assert.equal(march.year,2027);assert.equal(march.monthNumber,3);
   assert.equal(march.quantity,2000);
@@ -71,3 +71,50 @@ test('Overview Collection summary renders a 3-row revolver of month rows',()=>{
   assert.match(CSS,/\.ovCollectionRevolver\{/);
   assert.match(CSS,/prefers-reduced-motion[^}]*\.ovCollectionMonthRow/);
 });
+
+test('Collection month names from Turkish and English inputs stay chronological, newest first',()=>{
+  const source=[
+    {modelKod:'May',inStoreMonth:'MAYIS 2027',durum:'X'},
+    {modelKod:'Jun',inStoreMonth:'HAZİRAN 2027',durum:'X'},
+    {modelKod:'Jul',inStoreMonth:'JULY 2027',durum:'X'},
+    {modelKod:'Jan',inStoreMonth:'2028-01',durum:'X'},
+    {modelKod:'Invalid',inStoreMonth:'Unknown 2027',durum:'X'},
+    {modelKod:'Empty',inStoreMonth:'',durum:'X'},
+  ];
+  const buckets=summary.monthBuckets(source,opts);
+  assert.deepEqual(buckets.map(b=>b.month),['2028-01','JULY 2027','HAZİRAN 2027','MAYIS 2027','Unknown 2027','']);
+  assert.deepEqual(buckets.slice(0,4).map(b=>[b.year,b.monthNumber]),[[2028,1],[2027,7],[2027,6],[2027,5]]);
+  const scope=summary.availableColumns(source,{columns:[{k:'inStoreMonth',label:'Model Budget Month'}]});
+  assert.deepEqual(scope[0].values,['2028-01','JULY 2027','HAZİRAN 2027','MAYIS 2027','Unknown 2027']);
+  const selected=summary.defaultFilters(source,{now:new Date('2027-06-15T12:00:00Z')});
+  assert.deepEqual(selected.months,['HAZİRAN 2027']);
+});
+
+test('Collection month parsing rejects invalid months and supports numerical and abbreviated formats',()=>{
+  const source=[
+    {modelKod:'A',inStoreMonth:'2027-13',durum:'X'},
+    {modelKod:'B',inStoreMonth:'2027-07-01',durum:'X'},
+    {modelKod:'C',inStoreMonth:'Ağustos 2027',durum:'X'},
+    {modelKod:'D',inStoreMonth:'Sep 2027',durum:'X'},
+    {modelKod:'E',inStoreMonth:'07/2027',durum:'X'},
+  ];
+  const buckets=summary.monthBuckets(source,opts);
+  assert.deepEqual(buckets.map(b=>b.month),['Sep 2027','Ağustos 2027','07/2027','2027-07-01','2027-13']);
+  assert.equal(buckets[4].year,null);
+});
+
+test('Overview localized Collection labels follow the chosen language without overwriting custom titles',()=>{
+  const vm=require('node:vm');
+  const sandbox={globalThis:{},Date,Intl};
+  vm.runInNewContext(DASH,sandbox,{filename:'overview-collection-dashboard.js'});
+  const ui=sandbox.globalThis.BLOverviewCollectionDashboard;
+  const bucket={month:'JULY 2027',year:2027,monthNumber:7};
+  assert.equal(ui.monthLabel(bucket,'tr-TR',false),'Temmuz 2027');
+  assert.equal(ui.monthLabel(bucket,'en-GB',true),'July 2027');
+  assert.equal(ui.scopeColumnLabel({language:'tr',label:value=>value},{k:'inStoreMonth',label:'Model Budget Month'}),'Model Bütçe Ayı');
+  assert.equal(ui.scopeColumnLabel({language:'en',label:value=>value},{k:'inStoreMonth',label:'Model Bütçe Ayı'}),'Model Budget Month');
+  assert.equal(ui.scopeColumnLabel({language:'tr',label:value=>value},{k:'inStoreMonth',label:'MB Özel'}),'MB Özel');
+  assert.match(DASH,/if\(start<0\)start=0/);
+  assert.doesNotMatch(DASH,/Math\.abs\(bucket\.year\*12\+bucket\.monthNumber-current\)/);
+});
+
