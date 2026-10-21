@@ -9,6 +9,7 @@ const { SERVER_DATA_ROOT: DATA_DIR, APP_DATA_ROOT: USER_DATA_ROOT, atomicWriteJs
 const BLBusinessRules = require('../public/business-rules');
 const BLFreight = require('../public/freight-calc');
 const BLTransitAnalysis = require('../public/transit-analysis');
+const BLOrderImportance = require('../public/order-importance');
 const modelHorizon = require('./lib/modelHorizon');
 const modelScopes = require('./lib/model-scopes');
 const modelFields = require('./lib/model-fields');
@@ -263,6 +264,11 @@ function defaultOverrides() {
     // Adet" olarak işaretleyebilir (bakiye yüklenmeyecek). { [satırAnahtarı]:
     // { markedAt, by, byName, qty } }. Kayıt yoksa normal kural uygulanır.
     shortagemap: {},
+    // Sipariş önem etiketi (BTS, Bayram …). { [satırAnahtarı]: etiketKimliği | 'regular' }.
+    // Kayıt yoksa Line/Sezon kuralı, o da yoksa Regular uygulanır.
+    importancemap: {},
+    // Önem etiketi kataloğu + Line/Sezon kuralları. null = ön tanımlı katalog.
+    importanceSettings: null,
     pricingRules: [], transitRules: [], nonDtrManufacturers: [],
     // Koleksiyon Landed hesaplarında satır bazlı değer girilmezse kullanılan ortak varsayılanlar.
     landedMultipliers: { tr: 1.05, overseas: 1.11 },
@@ -294,7 +300,7 @@ function defaultOverrides() {
     // kuralları / checklist soruları ve "tüm kullanıcılardan sil" kimlikleri.
     // Master kural yayınıyla dağılır; kullanıcıların kendi kurallarına dokunmaz.
     cpManagedRules: { version: 1, rules: [], deletedRuleIds: [] },
-    _revision: 0, _revisions: { cpManagedRules: 0, orders: 0, suppFob: 0, pricingRules: 0, transitRules: 0, nonDtrManufacturers: 0, landedMultipliers: 0, freightRates: 0, transitAnalysis: 0, antrepoMatchRule: 0, antrepoSourceMode: 0, asasSourceMode: 0, lflSourceMode: 0, noteColumnDefs: 0 },
+    _revision: 0, _revisions: { cpManagedRules: 0, orders: 0, suppFob: 0, pricingRules: 0, transitRules: 0, nonDtrManufacturers: 0, landedMultipliers: 0, freightRates: 0, transitAnalysis: 0, antrepoMatchRule: 0, antrepoSourceMode: 0, asasSourceMode: 0, lflSourceMode: 0, noteColumnDefs: 0, importanceSettings: 0 },
   };
 }
 /* ===================================================================
@@ -748,6 +754,7 @@ function applyOrderPatch(ov, orderCode, patch, options = null) {
     }
     if (Object.keys(bucket).length) ov.noteColumnValues[oc] = bucket; else delete ov.noteColumnValues[oc];
   }
+  if (Object.prototype.hasOwnProperty.call(patch, 'importance')) applyImportancePatch(ov, oc, patch.importance);
   if (patch.subManufacturer != null) ov.submap[oc] = patch.subManufacturer;
   if (Object.prototype.hasOwnProperty.call(patch, 'licensor')) ov.licensormap[oc] = patch.licensor == null ? '' : String(patch.licensor).trim();
   if (Object.prototype.hasOwnProperty.call(patch, 'suppFob')) {
@@ -781,6 +788,41 @@ function applyOrderPatch(ov, orderCode, patch, options = null) {
   }
   if (patch.dates && typeof patch.dates === 'object') applyDatePatch(ov, oc, patch.dates, orderCode);
   if (Object.prototype.hasOwnProperty.call(patch, 'shortage')) applyShortagePatch(ov, oc, patch.shortage, options);
+}
+
+// Önem etiketi: katalogdaki kimlik veya 'regular' (açık Regular seçimi) kaydedilir;
+// null/boş kayıt kaldırır (satır yeniden Line kuralına / Regular'a döner).
+// Bilinmeyen kimlik doğrulama hatasıdır: serbest metin etiket olarak yazılmaz.
+function applyImportancePatch(ov, oc, value) {
+  ov.importancemap = ov.importancemap && typeof ov.importancemap === 'object' ? ov.importancemap : {};
+  const id = BLOrderImportance.cleanId(value);
+  if (!id) { delete ov.importancemap[oc]; return; }
+  const settings = BLOrderImportance.normalizeSettings(ov.importanceSettings);
+  if (id !== BLOrderImportance.REGULAR_ID && !BLOrderImportance.tagById(settings, id)) {
+    const err = new Error('Önem etiketi katalogda yok.');
+    err.code = 'VALIDATION_ERROR';
+    err.statusCode = 400;
+    throw err;
+  }
+  ov.importancemap[oc] = id;
+}
+function replaceImportanceSettings(value, expectedRevision = null) {
+  const ov = loadOverrides();
+  const current = Number(ov._revisions.importanceSettings) || 0;
+  const wanted = expectedNumber(expectedRevision);
+  if (wanted != null && wanted !== current) throw new RevisionConflictError('Önem etiketleri', wanted, current, 'importanceSettings');
+  ov.importanceSettings = BLOrderImportance.normalizeSettings(value);
+  // Silinen etiketin sipariş atamaları da düşer; aynı kimlik yeniden
+  // eklendiğinde eski atamalar hayalet gibi geri gelmesin.
+  ov.importancemap = ov.importancemap && typeof ov.importancemap === 'object' ? ov.importancemap : {};
+  const before = { ...ov.importancemap };
+  const pruned = BLOrderImportance.pruneAssignments(ov.importancemap, ov.importanceSettings);
+  ov._revisions.importanceSettings = current + 1;
+  const saved = saveOverrides(ov, ov._revision);
+  if (pruned) for (const key of Object.keys(before)) {
+    if (!Object.prototype.hasOwnProperty.call(saved.importancemap || {}, key)) cpSharedStore.mirrorPatchDetached(key, { importance: null });
+  }
+  return { settings: BLOrderImportance.normalizeSettings(saved.importanceSettings), revision: saved._revisions.importanceSettings, pruned };
 }
 
 // "Eksik Adet" işareti: truthy → kaydet (yazar oturumdan), null/false → kaldır.
@@ -1913,7 +1955,7 @@ module.exports = {
   mutateSharedResource,mutateSettings,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
+  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,
   loadRefreshGroups, replaceRefreshGroups,
   loadViews: userId => loadProfileFile(scopedProfileFile(VIEWS_FILE, userId), userId, 'view'),

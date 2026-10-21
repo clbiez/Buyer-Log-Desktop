@@ -81,12 +81,13 @@ test('Backlog risk is reduced to the required VAR/YOK business values', () => {
 
 // Tarayıcı tarafı Backlog Excel dışa aktarım kodu index.html'den app-main.js'e taşındı;
 // saveWorkbookWithValidations çağrısı da rules.* nesnesi + {freezePanes} alan 6 argümana
-// genişledi. 'Üretici Tükleme Tipi Teyidi' FORMULA_HEADERS'a eklendi (version-history v-753).
+// genişledi. v20261021: Üretici yükleme teyidi sütunu kullanıcı kararıyla kaldırıldı;
+// yerine liste doğrulamalı ÖNEM ETİKETİ geldi (FORMULA_HEADERS'ta değildir, değerdir).
 test('browser and worker exports remove sheet protection for sorting while keeping strict validations and hidden helpers', () => {
   const appMain = fs.readFileSync(path.join(ROOT, 'public/app-main.js'), 'utf8');
   const worker = fs.readFileSync(path.join(ROOT, 'server/workers/excel-worker.js'), 'utf8');
   assert.deepEqual([...formulas.FORMULA_HEADERS], [
-    'Net Gelen Alım Sipariş Miktarı', 'ANTREPO GİRİŞ TARİHİ', 'ANTREPO-RETAIL', 'Üretici Tükleme Tipi Teyidi', 'RİSK\n(PRIORITY)',
+    'Net Gelen Alım Sipariş Miktarı', 'ANTREPO GİRİŞ TARİHİ', 'ANTREPO-RETAIL', 'RİSK\n(PRIORITY)',
   ]);
   assert.match(appMain, /values:\['VAR','YOK'\]/);
   assert.match(appMain, /allowBlank:false/);

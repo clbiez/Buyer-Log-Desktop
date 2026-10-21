@@ -158,7 +158,7 @@ async function execute(task, payload = {}) {
     ws['!autofilter'] = { ref: ws['!ref'] };
     const dateHeaders = new Set(['Sipariş Yerleştirme MerchTarih','Orijinal Exfactory Merch Tarih','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Tarih Yıl Ay Gün','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ']);
     const intHeaders = new Set(['Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','ANTREPO-RETAIL']);
-    const directTextHeaders = new Set(['Renk Kod','Colour Code','Color Code','Orijinal Exfactory Merch Ay','Retail Depo Merch Yil Ay','Model Bütçe Merch Yil Ay','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','RİSK\n(PRIORITY)','YÜKLEME TİPİ','Üretici Tükleme Tipi Teyidi']);
+    const directTextHeaders = new Set(['Renk Kod','Colour Code','Color Code','Orijinal Exfactory Merch Ay','Retail Depo Merch Yil Ay','Model Bütçe Merch Yil Ay','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','RİSK\n(PRIORITY)','YÜKLEME TİPİ','ÖNEM ETİKETİ\n(IMPORTANCE)']);
     const headerIndex = new Map(allHeaders.map((h, i) => [h, i]));
     for (let r = 1; r < last; r++) {
       dateHeaders.forEach(h => { const c = headerIndex.get(h); const ref = XLSX.utils.encode_cell({ r, c }); if (ws[ref]) ws[ref].z = 'dd.mm.yy'; });
@@ -196,6 +196,18 @@ async function execute(task, payload = {}) {
       prompt: 'Listeden VAR veya YOK seçin.',
       errorTitle: 'Geçersiz Risk Değeri',
       error: 'Yalnız VAR veya YOK seçilebilir.',
+    });
+    // Önem etiketi elle yazılamaz: yalnız Ayarlar'daki katalog (Regular dahil) seçilir.
+    const importanceIndex = headers.indexOf('ÖNEM ETİKETİ\n(IMPORTANCE)');
+    if (importanceIndex >= 0) validations.push({
+      sheetPath: 'xl/worksheets/sheet1.xml',
+      sqref: `${BLBacklogExcel.columnName(importanceIndex)}2:${BLBacklogExcel.columnName(importanceIndex)}${lastDataRow}`,
+      values: Array.isArray(payload.importanceValues) && payload.importanceValues.length ? payload.importanceValues : ['Regular'],
+      allowBlank: false,
+      promptTitle: 'Önem Etiketi',
+      prompt: 'Listeden bir önem etiketi seçin. Etiket yoksa Regular.',
+      errorTitle: 'Geçersiz Önem Etiketi',
+      error: 'Serbest metin girişi yapılamaz. Etiketler Buyer Log Ayarlar sayfasından düzenlenir.',
     });
     const statusIndex = headers.indexOf('GÜNCEL DURUM\n(STATUS)');
     if (statusIndex >= 0) validations.push({

@@ -151,6 +151,9 @@
     line:{label:{en:'Line',tr:'Line'},type:'text',role:'dimension',aliases:['Line','Product Line'],modules:{
       collection:binding(['line','Line'],'plmLine'),cp:binding(['Line','Product Line','line'],'asasLine'),orders:binding(['Line','Product Line','line'],'asasLine'),backlog:binding(['Line','Product Line','line'],'asasLine'),overview:binding(['Line','Product Line','line'],'asasLine'),lfl:binding(['line','Line'],'asasLine')
     }},
+    importance:{label:{en:'Importance Tag',tr:'Önem Etiketi'},type:'text',role:'dimension',aliases:['Importance','Importance Tag','Önem Etiketi','ÖNEM ETİKETİ\n(IMPORTANCE)'],modules:{
+      cp:binding(['Importance','importance'],'orderImportance'),orders:binding(['Importance','importance'],'orderImportance'),backlog:binding(['ÖNEM ETİKETİ\n(IMPORTANCE)','Importance','importance'],'orderImportance'),overview:binding(['Importance','ÖNEM ETİKETİ\n(IMPORTANCE)','importance'],'orderImportance')
+    }},
     brandDirectorate:{label:{en:'Brand Directorates',tr:'Marka Müdürlükleri'},type:'text',role:'dimension',aliases:['Brand Directorate','Brand Directorates','Marka Müdürlükleri','Marka Müdürlüğü'],modules:{
       cp:binding(['Marka Müdürlükleri','Brand Directorates','brandDirectorate'],'brandDirectorate'),orders:binding(['Marka Müdürlükleri','Brand Directorates','brandDirectorate'],'brandDirectorate'),backlog:binding(['Marka Müdürlükleri','Brand Directorates','brandDirectorate'],'brandDirectorate'),overview:binding(['Marka Müdürlükleri','Brand Directorates','brandDirectorate'],'brandDirectorate'),lfl:binding(['brandDirectorate','Marka Müdürlükleri'],'brandDirectorate'),logistics:binding(['brandDirectorate','Marka Müdürlükleri'],'brandDirectorate'),antrepo:binding(['brandDirectorate','Marka Müdürlükleri'],'brandDirectorate')
     }},

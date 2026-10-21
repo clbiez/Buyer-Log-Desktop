@@ -26,7 +26,7 @@ let baseItems=null,items=null,loading=false,error='',signature='',tips=new Map()
 let filterCatalog=null,filterCatalogPromise=null,filterCatalogError='',filterOpen=false,filterSource='cp',filterSearch='',filterEditorId='',filterValueSearch='';
 
 function loadState(){
-  const defaults={open:true,groupBy:'buyer',barScale:'pct',timeField:'exFactory',granularity:'week',timelineChart:'stacked',timelineDimension:'buyingGroup',showAll:false,exportPlanActual:true,exportLegacy:true,filters:[]};
+  const defaults={open:true,groupBy:'buyer',barScale:'pct',timeField:'exFactory',granularity:'week',timelineChart:'stacked',timelineDimension:'buyingGroup',showAll:false,exportPlanActual:true,exportLegacy:true,filters:[],importanceScope:'all'};
   try{
     const raw=JSON.parse((window.BLStorage||localStorage).getItem(STORAGE_KEY)||'null');
     if(raw&&typeof raw==='object'){
@@ -96,8 +96,13 @@ function distinctFilterValues(filter){
   return [...counts.entries()].map(([value,count])=>({value,count,label:value===''?L('(boş)','(blank)'):value}))
     .sort((a,b)=>a.label.localeCompare(b.label,lang()==='en'?'en':'tr',{numeric:true,sensitivity:'base'}));
 }
+/* Özel sipariş kapsamı: Tümü · yalnız özel (BTS, Bayram …) · yalnız Regular. */
+function importanceScope(){return ['special','regular'].includes(state.importanceScope)?state.importanceScope:'all'}
 function applyOverviewFilters(rows){
   let out=Array.isArray(rows)?rows.slice():[];
+  const scope=importanceScope();
+  if(scope==='special')out=out.filter(item=>item.special);
+  else if(scope==='regular')out=out.filter(item=>!item.special);
   for(const filter of overviewFilters()){
     if(!filterHasCriteria(filter))continue;
     const kind=filterKind(filter);
@@ -197,7 +202,8 @@ function hero(s){
       ${tile(n(st.IN_WAREHOUSE+st.AWAITING_RETAIL_TRANSFER),L('Depoda + Retail bekleyen','Warehouse + awaiting retail'),share(st.IN_WAREHOUSE+st.AWAITING_RETAIL_TRANSFER),'IN_WAREHOUSE',by(L('Depoda + Retail bekleyen','Warehouse + awaiting retail'),it=>it.stage==='IN_WAREHOUSE'||it.stage==='AWAITING_RETAIL_TRANSFER'))}
       ${tile(n(s.overdueQty),L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),L(`${n(s.overdueLines)} satır`,`${n(s.overdueLines)} lines`),'SHORTAGE',by(L('Ex-F geçti · yüklenmedi','Ex-F passed · not loaded'),it=>it.overdueNotLoaded))}
       ${tile(n(st.SHORTAGE),stageLabel('SHORTAGE'),share(st.SHORTAGE),st.SHORTAGE?'SHORTAGE':'',by(stageLabel('SHORTAGE'),it=>it.stage==='SHORTAGE'))}
-      ${tile(n(s.riskQty),L('Riskli adet','At-risk qty'),L(`Transit gecikmiş ${n(s.transitOverdueQty)}`,`Transit overdue ${n(s.transitOverdueQty)}`),s.riskQty?'SHORTAGE':'',by(L('Riskli adet','At-risk qty'),it=>it.risk||it.transitOverdue))}
+      ${tile(n(s.riskQty),L('Riskli adet','At-risk qty'),L(`${n(s.riskOrders)} sipariş · transit gecikmiş ${n(s.transitOverdueQty)}`,`${n(s.riskOrders)} orders · transit overdue ${n(s.transitOverdueQty)}`),s.riskQty?'SHORTAGE':'',by(L('Riskli adet','At-risk qty'),it=>it.risk||it.transitOverdue))}
+      ${tile(n(s.specialQty),L('Özel siparişler','Special orders'),L(`${n(s.specialOrders)} sipariş · ${n(s.specialRiskOrders)} riskli`,`${n(s.specialOrders)} orders · ${n(s.specialRiskOrders)} at risk`),s.specialRiskOrders?'SHORTAGE':'',by(L('Özel siparişler','Special orders'),it=>it.special))}
     </div>
   </div>`;
 }
@@ -210,6 +216,24 @@ function qualityStrip(){
     return `<button type="button" class="blvQualityChip" data-blv-open="${o}"><b>${n(issue.count)}</b> ${esc(L('satır','lines'))} · ${esc(lang()==='en'?issue.en:issue.tr)}</button>`;
   }).join('');
   return `<div class="blvQuality" role="status"><span class="blvQualityTitle">${esc(L('Veri kalitesi uyarısı','Data quality warning'))}</span>${chips}<span class="blvQualityHint">${esc(L('Satırlar Excel Backlog V3 › Veri Kalitesi sayfasında da listelenir.','Rows are also listed in Excel Backlog V3 › Data Quality.'))}</span></div>`;
+}
+/* Özel sipariş uyarısı: riskli siparişlerin içindeki özel siparişler ayrıca
+   gösterilir ("riskli 100 siparişin 30'u özel"). Etiket bazında çip tıklanınca
+   o etiketin riskli satırları sağdaki çekmecede açılır. */
+function specialStrip(total){
+  const groups=R().importanceSummary?R().importanceSummary(items):[];
+  const scope=importanceScope();
+  const seg=`<div class="bpaSeg2 blvImportanceScope" role="group" aria-label="${esc(L('Özel sipariş kapsamı','Special order scope'))}">${[['all',L('Tümü','All')],['special',L('Özel','Special')],['regular','Regular']].map(([key,label])=>`<button type="button" class="${scope===key?'is-active':''}" data-blv-importance="${key}">${esc(label)}</button>`).join('')}</div>`;
+  const risky=groups.filter(g=>g.riskItems.length);
+  const chips=risky.map(g=>{
+    const orders=new Set(g.riskItems.map(it=>it.orderCode||it.lineId)).size;
+    const o=opener({title:`${g.name} · ${L('riskli','at risk')}`,subtitle:L('Özel sipariş riski','Special order risk'),items:g.riskItems});
+    return `<button type="button" class="blvQualityChip blvSpecialChip" data-blv-open="${o}"><b>${n(orders)}</b> ${esc(L('sipariş','orders'))} · ${esc(g.name)} · ${n(g.riskItems.reduce((t,it)=>t+it.qty,0))} ${esc(L('adet','pcs'))}</button>`;
+  }).join('');
+  const message=total.specialRiskOrders
+    ? L(`Riskli ${n(total.riskOrders)} siparişin ${n(total.specialRiskOrders)} tanesi özel sipariş`,`${n(total.specialRiskOrders)} of ${n(total.riskOrders)} at-risk orders are special orders`)
+    : (total.specialOrders?L(`${n(total.specialOrders)} özel siparişte risk yok`,`No risk on ${n(total.specialOrders)} special orders`):L('Bu kapsamda önem etiketli sipariş yok','No tagged orders in this scope'));
+  return `<div class="blvQuality blvSpecial${total.specialRiskOrders?' is-alert':''}" role="status"><span class="blvQualityTitle">${esc(message)}</span>${chips}<span class="bpaSectionSpacer"></span>${seg}</div>`;
 }
 function legend(){return `<div class="bpaLegend">${R().STAGES.map(s=>`<span><i class="bpaDot" data-stage="${s.key}"></i>${esc(stageLabel(s.key))}</span>`).join('')}</div>`}
 function bar(name,g,scaleMax,subtitle){
@@ -500,7 +524,7 @@ function render(){
   if(!items||!R()){host.innerHTML=`<div class="bpaEmpty">${esc(L('Backlog yüklendiğinde genel bakış burada görünür.','The overview appears once Backlog loads.'))}</div>`;return;}
   if(!items.length){host.innerHTML=`<div class="bpaEmpty">${esc(L('Aktif filtrede Backlog satırı yok.','No Backlog rows for the active filter.'))}</div>`;return;}
   const total=R().summarize(items);
-  host.innerHTML=hero(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
+  host.innerHTML=hero(total)+specialStrip(total)+qualityStrip()+groupCard(total)+`<div class="blvGap"></div>`+flowCard();
   // Yeni DOM sıfır scrollLeft ile başlar; zaman eksenini mevcut döneme otomatik geri odakla.
   requestAnimationFrame(()=>scrollTimelineToToday('auto'));
 }
@@ -593,7 +617,7 @@ function openDrawer(spec){
     <td class="bpaDateCell">${esc(fmtDay(it.exFactory))}${it.overdueDays?`<small><span class="bpaDayDelta is-late">${n(it.overdueDays)} ${esc(L('gün geçti','days overdue'))}</span></small>`:''}</td>
     <td class="bpaDateCell">${esc(fmtDay(it.antrepo))}</td>
     <td class="bpaDateCell">${esc(fmtDay(it.retail))}</td>
-    <td>${it.risk?`<span class="bpaTag is-alert">${esc(L('risk','risk'))}</span>`:''}${it.transitOverdue?`<span class="bpaTag is-alert">${esc(L('transit gecikti','transit overdue'))}</span>`:''}</td>
+    <td>${it.special?`<span class="bpaTag">${esc(it.importance)}</span>`:''}${it.risk?`<span class="bpaTag is-alert">${esc(L('risk','risk'))}</span>`:''}${it.transitOverdue?`<span class="bpaTag is-alert">${esc(L('transit gecikti','transit overdue'))}</span>`:''}</td>
   </tr>`).join('');
   const plmSyncButton=window.BLDetailImages?.modelImagesButtonHtml?.('blvDrawerPlmSync')||'';
   aside.innerHTML=`<header class="bpaDrawerHead"><div><div class="bpaDrawerKicker">${spec.stage?`<i class="bpaDot" data-stage="${spec.stage}"></i>`:''}${esc(spec.subtitle||'')}</div><h3 id="blvDrawerTitle">${esc(spec.title||'')}</h3></div><div class="bpaActions">${plmSyncButton}<button type="button" class="tbtn bpaMoveBtn" data-blv-close title="${esc(L('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div></header>
@@ -625,8 +649,9 @@ function bind(){
   $('backlogOverviewFilter')?.addEventListener('click',e=>{e.stopPropagation();if(filterOpen)closeFilterPanel();else void openFilterPanel();});
   $('backlogOverviewRefresh')?.addEventListener('click',e=>{e.stopPropagation();void refresh(true);});
   host.addEventListener('click',e=>{
-    const t=e.target.closest('[data-blv-open],[data-blv-group],[data-blv-scale],[data-blv-time],[data-blv-chart],[data-blv-timeline-dim],[data-blv-gran],[data-blv-action]');
+    const t=e.target.closest('[data-blv-open],[data-blv-importance],[data-blv-group],[data-blv-scale],[data-blv-time],[data-blv-chart],[data-blv-timeline-dim],[data-blv-gran],[data-blv-action]');
     if(!t||!host.contains(t))return;
+    if(t.dataset.blvImportance){state.importanceScope=t.dataset.blvImportance;saveState();items=applyOverviewFilters(baseItems||[]);return render();}
     if(t.dataset.blvGroup){state.groupBy=t.dataset.blvGroup;state.showAll=false;saveState();return render();}
     if(t.dataset.blvScale){state.barScale=t.dataset.blvScale;saveState();return render();}
     if(t.dataset.blvTime){state.timeField=t.dataset.blvTime;saveState();return render();}

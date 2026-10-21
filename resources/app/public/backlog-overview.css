@@ -99,6 +99,12 @@
 .blvQualityChip{border:1px solid color-mix(in srgb,var(--red) 35%,var(--line));background:var(--card);color:var(--ink);padding:3px 9px;border-radius:var(--r-full);font:inherit;font-size:var(--fs-sm);cursor:pointer}
 .blvQualityChip:hover{border-color:var(--red)}
 .blvQualityChip b{color:var(--red)}
+/* Özel sipariş (önem etiketi) şeridi: risk yoksa sakin yüzey, varsa uyarı tonu. */
+.blvSpecial{border-color:var(--line);border-left-color:var(--acc);background:var(--card)}
+.blvSpecial .blvQualityTitle{color:var(--ink2)}
+.blvSpecial.is-alert{border-color:color-mix(in srgb,var(--red) 40%,var(--line));border-left-color:var(--red);background:var(--red-bg)}
+.blvSpecial.is-alert .blvQualityTitle{color:var(--red)}
+.blvSpecial .blvImportanceScope{margin-left:auto}
 .blvQualityHint{font-size:var(--fs-xs);color:var(--ink2);margin-left:auto}
 
 

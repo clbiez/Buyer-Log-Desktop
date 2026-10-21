@@ -9,13 +9,15 @@ const MASTER_OVERRIDE_FIELDS = new Set([
   'pricingRules', 'licenseCards', 'transitRules', 'nonDtrManufacturers', 'landedMultipliers',
   'freightRates', 'transitAnalysis', 'antrepoMatchRule', 'antrepoMatchConfig', 'antrepoSourceMode',
   'asasSourceMode', 'lflSourceMode', 'antrepoMatchConfigVersion', 'noteColumnDefs',
+  // Önem etiketi kataloğu + Line kuralları: Moderatör yayımıyla ekibe dağılır.
+  'importanceSettings',
   'storeRevisionMeta',
   // v7.0.290 — Moderatörün tüm kullanıcılara yayımladığı CP kural/checklist seti.
   'cpManagedRules',
 ]);
 const CP_OVERRIDE_FIELDS = new Set([
   'notesmap', 'submap', 'suppfobmap', 'suppfobmetamap', 'delmap', 'licensormap',
-  'noteColumnValues', 'datemap', 'shortagemap',
+  'noteColumnValues', 'datemap', 'shortagemap', 'importancemap',
 ]);
 const DEVICE_SETTING_FIELDS = new Set(['sourceFolder', 'sourceFolders']);
 

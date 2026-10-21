@@ -22,7 +22,7 @@ const REQUESTED_VISIBLE_HEADERS = [
   'Kalan Alım Sipariş Miktarı','Net Gelen Alım Sipariş Miktarı',
   'Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','GÜNCEL DURUM\n(STATUS)',
   'REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ',
-  'ANTREPO-RETAIL','Üretici Tükleme Tipi Teyidi','RİSK\n(PRIORITY)','buying note',
+  'ANTREPO-RETAIL','ÖNEM ETİKETİ\n(IMPORTANCE)','RİSK\n(PRIORITY)','buying note',
 ];
 
 test('Backlog default view keeps exactly the requested columns and groups other business columns', () => {

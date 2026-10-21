@@ -3554,6 +3554,9 @@ const CP_COLS = [
   {k:'Manufacturer', label:'Manufacturer', type:'ro', weight:15, group:'Sipariş Detayları'},
   {k:'Sub-Manufacturer', label:'Sub-Mfr', type:'submfr', weight:15, group:'Sipariş Detayları'},
   {k:'Order Code', label:'Order Code', type:'ordercode', weight:9, group:'Sipariş Detayları'},
+  /* Sipariş önem etiketi (BTS, Bayram …). Listeden seçilir; serbest metin yazılmaz.
+     Katalog ve Line kuralları Ayarlar › Sipariş Önem Etiketleri'ndedir. */
+  {k:'Importance', label:'Importance', type:'importance', weight:9, group:'Sipariş Detayları'},
   {k:'FOB ($)', label:'FOB ($)', type:'money', weight:7, group:'Sipariş Detayları'},
   {k:'Supp. FOB', label:'Supp. FOB', type:'moneyEdit', weight:7, group:'Sipariş Detayları'},
   {k:'Order Quantity', label:'Order Qty', type:'int', weight:8, group:'Sipariş Detayları'},
@@ -4691,7 +4694,7 @@ function defaultMinPx(c, tableKey){
   const byType = {
     priority:48, status:52, active:46, ordercode:58, money:46, moneyEdit:50, pct:36,
     int:42, plm:46, num:40, date:54, exfactory:56, retailEdit:56, instoreEdit:56, retail:56,
-    deltype:52, submfr:60, licensor:58, text:70, checklistStatus:70,
+    deltype:52, importance:62, submfr:60, licensor:58, text:70, checklistStatus:70,
     cpImage:tableImageSizeDimensions(tableKey,tableImageSizeBounds(tableKey).min).col
   };
   const label=tableColumnLabel(tableKey,c);
@@ -4999,6 +5002,7 @@ const CP_EN_HEADER_LABELS = {
   'Karışım':'Composition',
   'Ant. Arrival':'Ant. Arrival',
   'Del. Type':'Del. Type',
+  'Importance':'Importance',
   'Notes':'Notes',
   'Ek Not':'Notes 2'
 };
@@ -5028,6 +5032,7 @@ const CP_TR_HEADER_LABELS = {
   'C.Code':'Renk Kodu',
   'Colour':'Renk',
   'Order Code':'Sipariş',
+  'Importance':'Önem Etiketi',
   'FOB ($)':'FOB',
   'Supp. FOB':'Alt Üretici FOB',
   'Original Ex-factory':'Original Ex-F.',
@@ -5840,6 +5845,10 @@ function cellHtml(c,r,cf,tableKey='cp'){
       return `<td class="num">${v==null||v===''?'':v}</td>`;
     }
     case 'pct': return `<td class="num">${fmtPct(v)}</td>`;
+    case 'importance': {
+      if(window.BLOrderImportanceUI)return window.BLOrderImportanceUI.cellHtml(r,canEdit,tableKey);
+      return `<td>${escapeHtml(norm(v)||'Regular')}</td>`;
+    }
     case 'deltype': {
       const logisticCell=cpLogisticDelTypeCellHtml(r,canEdit);
       if(logisticCell) return logisticCell;
@@ -5901,6 +5910,7 @@ function cellPlainText(c,r,cf){
   if(cpLogisticHasDetails(r)&&c.k==='Ant. Arrival') return cpLogisticArrivalPlainText(r);
   if(cpLogisticHasDetails(r)&&(c.type==='deltype'||c.k==='Del. Type')) return cpLogisticDelTypePlainText(r);
   if(c.type==='priority') return priorityDisplay(v);
+  if(c.type==='importance') return window.BLOrderImportanceUI?window.BLOrderImportanceUI.plainText(r):(norm(v)||'Regular');
   if(c.type==='plmSample') return norm(v);
   if(c.type==='status') return statusDisplay(v);
   if(c.type==='deltype'||c.k==='Del. Type') return transitDelTypeDisplay(v);
@@ -14169,6 +14179,7 @@ async function waitForRefreshJob(expectedJob=null){
     if(Array.isArray(data.cpModelColumns))syncCpModelColumns(data.cpModelColumns);
     if(Array.isArray(data.noteColumns))syncCpNoteColumns(data.noteColumns);
     CP_NOTE_COLUMN_DEFS_REVISION=Number(data.storeRevisions&&data.storeRevisions.noteColumnDefs)||CP_NOTE_COLUMN_DEFS_REVISION;
+    if(data.importanceSettings)window.BLOrderImportanceUI?.setSettings(data.importanceSettings,data.storeRevisions&&data.storeRevisions.importanceSettings);
     state.modelScopes=(data.modelRefresh&&Array.isArray(data.modelRefresh.scopes))?data.modelRefresh.scopes:[];
     state.modelHorizons=(data.modelRefresh&&data.modelRefresh.appliedHorizons&&typeof data.modelRefresh.appliedHorizons==='object')?data.modelRefresh.appliedHorizons:{};
     renderHorizonBadges();
@@ -16436,7 +16447,7 @@ const BACKLOG_EXCEL_COLUMNS_KEY='bl.backlog.excelColumns.v4';
 const BACKLOG_EXCEL_COLUMNS_LEGACY_KEY='bl.backlog.excelColumns.v3';
 const BACKLOG_EXCEL_FORMULAS_KEY='bl.backlog.excelFormulas.v1';
 const BACKLOG_DEFAULT_EXPORT_HEADERS=[
-  'Sezon','Sipariş Yerleştirme MerchTarih','Siparişin Üretildiği Ülke','Buyer','Buyer Grup (TR)','Lisans','Üretici','Alt Üretici','Line','Ürün Klasman','Sipariş Kod','Özel Kod 1','Model Adı','Renk Kod','Renk','Orijinal Exfactory Merch Ay','Orijinal Exfactory Merch Tarih','Retail Depo Merch Yil Ay','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Merch Yil Ay','Model Bütçe Tarih Yıl Ay Gün','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','FOB Fiyatı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','ANTREPO-RETAIL','Üretici Tükleme Tipi Teyidi','RİSK\n(PRIORITY)','buying note'
+  'Sezon','Sipariş Yerleştirme MerchTarih','Siparişin Üretildiği Ülke','Buyer','Buyer Grup (TR)','Lisans','Üretici','Alt Üretici','Line','Ürün Klasman','Sipariş Kod','Özel Kod 1','Model Adı','Renk Kod','Renk','Orijinal Exfactory Merch Ay','Orijinal Exfactory Merch Tarih','Retail Depo Merch Yil Ay','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Merch Yil Ay','Model Bütçe Tarih Yıl Ay Gün','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','FOB Fiyatı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','ANTREPO-RETAIL','ÖNEM ETİKETİ\n(IMPORTANCE)','RİSK\n(PRIORITY)','buying note'
 ];
 const BACKLOG_LEGACY_DATE_DERIVED_HEADERS=new Set([
   'Orijinal Exfactory Merch Ay','Retail Depo Merch Yil Ay','Model Bütçe Merch Yil Ay','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta'
@@ -17511,12 +17522,13 @@ function backlogWorkbookGuardConfig(headers,rows){
     promptTitle:appLang==='en'?'Delivery Type':'Yükleme Tipi',prompt:appLang==='en'?'Select a delivery type from the list.':'Listeden bir yükleme tipi seçin.',
     errorTitle:appLang==='en'?'Invalid Delivery Type':'Geçersiz Yükleme Tipi',error:appLang==='en'?'Free-text entry is blocked. Select a value from the list.':'Serbest metin girişi engellendi. Listeden seçim yapın.'
   });
-  const manufacturerConfirmationIndex=list.indexOf('Üretici Tükleme Tipi Teyidi');
-  if(manufacturerConfirmationIndex>=0)validations.push({
-    sheetPath:'xl/worksheets/sheet1.xml',sqref:`${XLSX.utils.encode_col(manufacturerConfirmationIndex)}2:${XLSX.utils.encode_col(manufacturerConfirmationIndex)}${lastExcelRow}`,
-    values:['VAR','YOK'],allowBlank:false,
-    promptTitle:appLang==='en'?'Manufacturer Loading Type Confirmation':'Üretici Tükleme Tipi Teyidi',prompt:appLang==='en'?'Select VAR or YOK from the list.':'Listeden VAR veya YOK seçin.',
-    errorTitle:appLang==='en'?'Invalid Confirmation':'Geçersiz Teyit Değeri',error:appLang==='en'?'Only VAR or YOK is allowed.':'Yalnız VAR veya YOK seçilebilir.'
+  // Önem etiketi: yalnız Ayarlar'daki katalogdan (Regular dahil) seçilir, serbest metin engellenir.
+  const importanceIndex=list.indexOf(BLOrderImportance.BACKLOG_HEADER);
+  if(importanceIndex>=0)validations.push({
+    sheetPath:'xl/worksheets/sheet1.xml',sqref:`${XLSX.utils.encode_col(importanceIndex)}2:${XLSX.utils.encode_col(importanceIndex)}${lastExcelRow}`,
+    values:window.BLOrderImportanceUI?BLOrderImportanceUI.excelValues():BLOrderImportance.excelValues(null),allowBlank:false,
+    promptTitle:appLang==='en'?'Importance Tag':'Önem Etiketi',prompt:appLang==='en'?'Select an importance tag from the list. Untagged orders are Regular.':'Listeden bir önem etiketi seçin. Etiketsiz sipariş Regular\'dır.',
+    errorTitle:appLang==='en'?'Invalid Importance Tag':'Geçersiz Önem Etiketi',error:appLang==='en'?'Free-text entry is blocked. Tags are managed in Buyer Log Settings.':'Serbest metin girişi engellendi. Etiketler Buyer Log Ayarlar sayfasından yönetilir.'
   });
   const riskIndex=list.indexOf('RİSK\n(PRIORITY)');
   if(riskIndex>=0)validations.push({
@@ -18009,7 +18021,7 @@ function backlogDetailVisibleColumns(cols,compact){
    Tümü: bütün sütunlar. Excel'e Aktar seçimi bu görünümden bağımsızdır. */
 const BACKLOG_DETAIL_FOCUS_HEADERS=[
   'Sezon','Üretici','Sipariş Kod','Model Adı','Renk Kod','Renk','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Tarih Yıl Ay Gün',
-  'Adet','Kalan Alım Sipariş Miktarı','FOB Fiyatı','GÜNCEL DURUM\n(STATUS)','Orijinal Exfactory Merch Tarih','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','RİSK\n(PRIORITY)'
+  'Adet','Kalan Alım Sipariş Miktarı','FOB Fiyatı','GÜNCEL DURUM\n(STATUS)','Orijinal Exfactory Merch Tarih','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ',BLOrderImportance.BACKLOG_HEADER,'RİSK\n(PRIORITY)'
 ];
 function backlogDetailViewPresets(headers){
   const list=(Array.isArray(headers)?headers:[]).filter(Boolean);
@@ -18269,7 +18281,7 @@ function buildBacklogDetailSheet(headers, rows, transitPlan, options={}){
   const dateDimensionTextHeaders=new Set(dataHeaders.filter(header=>/\s\((?:Ay|Hafta|Month|Week)\)$/i.test(String(header||''))));
   const dateDimensionSources=options.dateDimensionSources||{};
   const intHeaders=new Set(['Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','ANTREPO-RETAIL']);
-  const directTextHeaders=new Set(['Renk Kod','Colour Code','Color Code','Orijinal Exfactory Merch Ay','Retail Depo Merch Yil Ay','Model Bütçe Merch Yil Ay','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','RİSK\n(PRIORITY)','YÜKLEME TİPİ','Üretici Tükleme Tipi Teyidi']);
+  const directTextHeaders=new Set(['Renk Kod','Colour Code','Color Code','Orijinal Exfactory Merch Ay','Retail Depo Merch Yil Ay','Model Bütçe Merch Yil Ay','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','RİSK\n(PRIORITY)','YÜKLEME TİPİ',BLOrderImportance.BACKLOG_HEADER]);
   const fobHeader='FOB Fiyatı',orderCodeHeader='Sipariş Kod';
   const dynamicSchemas=Object.fromEntries(dataHeaders.map(h=>[h,columnSchemaFor({k:h,label:h},rows)]));
   const ws={};const put=(r,c,cell)=>{ws[XLSX.utils.encode_cell({r,c})]=cell;};
@@ -36164,6 +36176,8 @@ function applyRemoteRowPatch(row,patch){
     // Aynı ref aynı görseldir: canlı yama her geldiğinde yüklü görsel düşürülmez.
     if(oldRef!==ref)BLImageRuntime.invalidate([oldUrl]);
   }
+  // Önem etiketi: başka pencerede/ekip arkadaşının seçtiği etiket aynı kuralla çözülür.
+  if(Object.prototype.hasOwnProperty.call(patch,'importance'))window.BLOrderImportanceUI?.applyRemote(row,patch.importance);
   if(patch.delType!=null||patch.dates){applyFormulas(row);invalidateUnifiedPriorityDecisions('remote-cp-decision-patch');scheduleOverviewRender('remote-cp-decision-patch');}
   return row;
 }
@@ -36250,7 +36264,7 @@ function refreshSharedMasterClient(area){
     return Promise.resolve();
   }
   if(area==='nonDtrManufacturers')return loadFromServer(false).then(()=>window.reloadLflFromCache?.());
-  if(['transitRules','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','systemSettings'].includes(area)){
+  if(['transitRules','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','systemSettings'].includes(area)){
     // Program davranışını belirleyen Master kuralları SYNC'ten yerel cache'e
     // uygulandığında çalışan ekran da aynı kanonik state'i yeniden okumalıdır.
     return typeof loadFromServer==='function' ? loadFromServer(false) : Promise.resolve();
@@ -36293,7 +36307,7 @@ function initLiveSync(){
     }
     // Kendi yazdığın değişiklik için kendine yenileme tetikleme; ekran zaten güncel.
     if(payload.originClientId&&payload.originClientId===window.BL_CLIENT_ID)return;
-    if(['fx','endeksmatik','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','modelConnections','systemSettings'].includes(payload.area)){
+    if(['fx','endeksmatik','transitRules','transitAnalysis','emailGroups','nonDtrManufacturers','landedMultipliers','freightRates','antrepoMatchRule','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','modelConnections','systemSettings'].includes(payload.area)){
       void refreshSharedMasterClient(payload.area).catch(()=>{});
     }else if(payload.area==='cpManagedRules'||payload.area==='master-rules'){
       // v7.0.290 — Moderatörün tüm kullanıcılara yayımladığı CP kuralları.

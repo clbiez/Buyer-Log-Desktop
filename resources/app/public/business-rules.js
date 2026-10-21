@@ -491,6 +491,74 @@
     };
   }
 
+  /* BACKLOG RİSK (PRIORITY) — kanonik kural. Excel'deki RİSK formülü
+     (backlog-excel-formulas.js) bunun birebir aynısını hücre formülüyle kurar.
+
+     Risk VAR, şu üç durumdan biri geçerliyse:
+       1) RETAIL'E YETİŞMEME: tahmini antrepo girişi Retail Depo tarihinden
+          sonra. Tahmin ortalama yol süresiyle (Yol Süreleri kuralı) yapılır:
+            · Üretimde   → MAX(Ex-Factory, bugün) + yol süresi
+            · Eksik Yük. → Ex-Factory + yol süresi (tamamı yüklenmiş sayılır)
+            · Parsiyel   → IAS antrepo tarihi; yoksa yükleme (Handover, yoksa
+              Ex-Factory) + yol süresi. Henüz depoya girmemiş bir parsiyelin
+              tarihi geçmişte kalmışsa en erken bugün varabilir.
+            · Retaile aktarım bekleyen → gerçekleşen antrepo tarihi.
+       2) HANDOVER BEKLİYOR: yükleme onayı verilmiş, ürün handover edilmemiş
+          ve onayın üzerinden 3 günden FAZLA geçmiş. Yalnız yükleme öncesi
+          aşamalar (Üretimde bakiyesi, Üretimde / Yükleme Operasyonları
+          statülü parsiyel) değerlendirilir: Yolda/Gümrük'teki ürün
+          handover tarihi boş olsa da teslim edilmiştir.
+       3) YOL SÜRESİ AŞILDI: yüklenmiş parsiyel, yükleme + ortalama yol süresi
+          dolduğu hâlde depoya ulaşmamış (çağıran transitOverdue verir).
+     Depoya girmiş satır risk taşımaz. In-Store (Model Bütçe) tamponu,
+     indirim ve ETA kayması bu kararın girdisi DEĞİLDİR; onlar CP Action
+     Priority sinyalleri olarak kalır. */
+  const BACKLOG_HANDOVER_GRACE_DAYS = 3;
+  function computeBacklogRisk(input, dateOrdinal = defaultDateOrdinal) {
+    const values = input || {};
+    const kind = values.segmentKind === 'production' || values.segmentKind === 'shortage' ? values.segmentKind : 'partial';
+    const today = dateOrdinal(values.today == null ? new Date() : values.today);
+    const exFactory = dateOrdinal(values.exFactory);
+    const loadDate = dateOrdinal(values.loadDate) ?? exFactory;
+    const antArrival = dateOrdinal(values.antArrival);
+    const retailDate = dateOrdinal(values.retailDate);
+    const shipConfirmation = dateOrdinal(values.shipConfirmationDate);
+    const handover = dateOrdinal(values.handoverDate);
+    const days = values.transitDays == null || values.transitDays === '' ? NaN : Number(values.transitDays);
+    const hasTransit = Number.isFinite(days) && days >= 0;
+    const inWarehouse = values.inWarehouse === true;
+    const retailWaiting = values.retailWaiting === true;
+    const stage = operationalStageOf(values.status);
+    const preLoad = kind === 'production' || stage === 'PRODUCTION' || stage === 'LOADING';
+
+    let estimatedAntrepo = null;
+    if (!inWarehouse) {
+      if (kind === 'production') {
+        if (exFactory != null && hasTransit) estimatedAntrepo = (today != null && exFactory < today ? today : exFactory) + days;
+      } else if (kind === 'shortage') {
+        if (exFactory != null && hasTransit) estimatedAntrepo = exFactory + days;
+      } else {
+        estimatedAntrepo = antArrival != null ? antArrival : (loadDate != null && hasTransit ? loadDate + days : null);
+        if (estimatedAntrepo != null && !retailWaiting && today != null && estimatedAntrepo < today) estimatedAntrepo = today;
+      }
+    }
+    const retailRisk = estimatedAntrepo != null && retailDate != null && estimatedAntrepo > retailDate;
+    const handoverPendingDays = shipConfirmation != null && handover == null && today != null ? today - shipConfirmation : null;
+    const handoverRisk = handoverPendingDays != null
+      && kind !== 'shortage' && preLoad && !inWarehouse && !retailWaiting
+      && handoverPendingDays > BACKLOG_HANDOVER_GRACE_DAYS;
+    const transitRisk = values.transitOverdue === true && !inWarehouse && !retailWaiting;
+    const reasons = [];
+    if (retailRisk) reasons.push('RETAIL_DATE_MISSED');
+    if (handoverRisk) reasons.push('HANDOVER_PENDING');
+    if (transitRisk) reasons.push('TRANSIT_OVERDUE');
+    return {
+      risk: reasons.length > 0, reasons, retailRisk, handoverRisk, transitRisk,
+      estimatedAntrepo, retailGap: estimatedAntrepo != null && retailDate != null ? retailDate - estimatedAntrepo : null,
+      handoverPendingDays,
+    };
+  }
+
   /* License Royalty v2: ülke artık kuralın eşleşme boyutu değil, aynı
      Licensor + License sözleşmesinin komisyon varyantıdır. TR/YD komisyonu
      Royalty'ye eklenir; hologram tutarı yüzde değildir. */
@@ -794,6 +862,8 @@
     resolveTransitDays,
     roundHalfUp,
     computePriorityFlags,
+    computeBacklogRisk,
+    BACKLOG_HANDOVER_GRACE_DAYS,
     pricingRuleCountryGroup,
     pricingRuleRate,
     pricingRuleCommissionForCountry,

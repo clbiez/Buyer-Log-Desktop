@@ -149,6 +149,7 @@
     'Line':asas('Line'),
     'Manufacturer':asas('Üretici'),
     'Sub-Manufacturer':buyerlog({tr:'Buyer Log alt üretici eşlemesi; Licensor DTR ise ASAS "Üretici"',en:'Buyer Log sub-manufacturer mapping; ASAS "Üretici" when Licensor is DTR'}),
+    'Importance':buyerlog({tr:'Buyer Log sipariş önem etiketi: siparişte seçilen etiket, yoksa Ayarlar\'daki Line kuralı, o da yoksa Regular',en:'Buyer Log order importance tag: the tag chosen on the order, else the Line rule in Settings, else Regular'}),
     'Licensor':buyerlog({tr:'Fiyat kurallarındaki License → Licensor eşlemesi veya elle giriş',en:'License → Licensor mapping in pricing rules, or manual entry'}),
     'License':asas('Lisans'),
     'Category':asas('Ürün Klasman'),

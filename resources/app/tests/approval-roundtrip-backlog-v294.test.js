@@ -66,10 +66,10 @@ test('month/week and revised Ex-Factory remain direct while Priority follows ANT
     assert.equal(plan.formulas[header], undefined);
   }
   assert.equal(plan.formulas['RİSK\n(PRIORITY)'].cached, 'YOK');
-  /* v9.53: RİSK artık tek eşikten değil operasyonel sinyallerden geliyor
-     (Delay, MB Delay, Handover, Ant. Delay, Discount, transit gecikmesi).
-     Eski ANTREPO-RETAIL riski bu bayrakların içinde korunuyor. */
-  assert.match(plan.formulas['RİSK\n(PRIORITY)'].formula, /^IF\(OR\((?:[A-Z]+2,){5}[A-Z]+2\),"VAR","YOK"\)$/);
+  /* v20261021: RİSK üç bayraktan gelir — Retail'e yetişmeme (ortalama yol
+     süresiyle tahmin), 3 günü aşan Handover bekleyişi, yol süresi aşımı.
+     Eski ANTREPO-RETAIL riski Retail bayrağının içinde korunuyor. */
+  assert.match(plan.formulas['RİSK\n(PRIORITY)'].formula, /^IF\(OR\((?:[A-Z]+2,){2}[A-Z]+2\),"VAR","YOK"\)$/);
   assert.ok(plan.formulas['Net Gelen Alım Sipariş Miktarı']);
   assert.ok(plan.formulas['ANTREPO GİRİŞ TARİHİ']);
   assert.ok(plan.formulas['ANTREPO-RETAIL']);

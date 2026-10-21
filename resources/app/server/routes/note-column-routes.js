@@ -12,9 +12,11 @@ module.exports = function registerNoteColumnRoutes(app, deps) {
     loadOverrides,
     publishSharedMasterChange,
     replaceNoteColumnDefs,
+    replaceImportanceSettings,
     requestRevision,
     userAccess,
   } = deps;
+  const BLOrderImportance = require('../../public/order-importance');
 
 
 // ---- Kullanıcı tanımlı boş not sütunları (CP/Orders "Add Column" — Packet 9) ----
@@ -34,6 +36,24 @@ app.put('/api/note-columns', userAccess.requireArea('cp'), express.json({limit:'
     res.set('ETag', `"${saved.revision}"`);
     res.json({ ok: true, ...saved });
   } catch (err) { apiError(res, err, 'Not sütunları kaydedilemedi.'); }
+});
+
+// ---- Sipariş önem etiketleri (BTS, Bayram …) — katalog + Line/Sezon kuralları ----
+// Sipariş atamaları ayrı değildir: patchOrderOverride { importance } ile yazılır.
+app.get('/api/order-importance', userAccess.requireAnyArea('cp', 'orders', 'backlog'), (req, res) => {
+  const ov = loadOverrides();
+  const revision = Number(ov._revisions && ov._revisions.importanceSettings) || 0;
+  res.set('ETag', `"${revision}"`);
+  res.json({ settings: BLOrderImportance.normalizeSettings(ov.importanceSettings), revision });
+});
+app.put('/api/order-importance', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '64kb' }), (req, res) => {
+  try {
+    const saved = replaceImportanceSettings((req.body || {}).settings, requestRevision(req));
+    userAccess.appendAudit(req.currentUser, 'ORDER_IMPORTANCE_UPDATE', 'cp', { tags: saved.settings.tags.length, rules: saved.settings.rules.length, pruned: saved.pruned, revision: saved.revision });
+    publishSharedMasterChange('importanceSettings', req);
+    res.set('ETag', `"${saved.revision}"`);
+    res.json({ ok: true, ...saved });
+  } catch (err) { apiError(res, err, 'Önem etiketleri kaydedilemedi.'); }
 });
 
 /* ---- Kullanıcı Excel'i içe aktarma — SINIRLI denetim kaydı ----
