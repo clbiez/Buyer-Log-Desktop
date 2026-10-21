@@ -53,3 +53,22 @@ test('native grouped effective values retain child overrides and calculation fin
 test('DTR royalty contracts and authorized CP licensor fallback preserve native FOB separately from landed costs',()=>{
  for(const mode of ['dtr-contract','cp-fallback']){const candidate={...row,licensor:mode==='dtr-contract'?'DTR':'',_sourceOrderCode:mode==='cp-fallback'?'123':''},overrides={pricingRules:[{...contract,licensor:mode==='dtr-contract'?'DTR':'DEMO'}]},cpRows=mode==='cp-fallback'?[{'Order Code':'123','Season':'W26','License':row.lisans,'Licensor':'DEMO','Country':'China'}]:[],ui=nativeUi(overrides,fx,cpRows),nativeRow={...candidate};ui.kolApplyRulePricing(nativeRow);const result=createPricingCalculation({rows:[candidate],overrides,fx,cpRows,cpContextAvailable:!!cpRows.length}).calculate(candidate);assert.equal(result.finalFob,5.06);assert.equal(result.finalFob,Groups.kolParseMoneyNum(nativeRow.fob));assert.equal(result.ydLanded,ui.kolLandedCalc(nativeRow).ydLanded);assert.notEqual(result.finalFob,result.ydCostedFob);assert.equal(result.contractFinalFob,5.06);assert.equal(result.contractSuppFob,4);}
 });
+
+test('fractional contract royalty keeps full precision and Collection FOB matches the exact CP Final FOB',()=>{
+ const fractional={...contract,royalty:12.125,ydCommission:0.2,hologramCost:0};
+ const overrides={pricingRules:[fractional],landedMultipliers:{tr:1.05,overseas:1.11}},ui=nativeUi(overrides,fx),nativeRow={...row,pricing:{SupplierA:'3.5'}};
+ ui.kolApplyRulePricing(nativeRow);
+ assert.equal(nativeRow.royalty,'12,325%');
+ assert.equal(Groups.kolParseMoneyNum(nativeRow.fob),Business.calculateFinalFobWithRule(3.5,fractional,'China'));
+ const server=createPricingCalculation({rows:[nativeRow],overrides,fx}).calculate({...row,pricing:{SupplierA:'3.5'}});
+ assert.equal(server.finalFob,Groups.kolParseMoneyNum(nativeRow.fob));
+ assert.equal(server.finalFob,server.contractFinalFob);
+ // Half-cent boundary: 3.99 / 0.95 = 4.2 exactly; 0.4975 / 0.995 = 0.5 → float toFixed could drift.
+ const helpers={kolParseMoneyNum:Groups.kolParseMoneyNum,kolFormatMoneyDisplay:v=>Number(v).toFixed(2).replace('.',',')};
+ assert.equal(Engine.computeFobFromConfirmed('1.005','0','0',helpers),'1,01');
+ assert.equal(Engine.computeFobFromConfirmed('24.925','0,3%','0',helpers),'25,00');
+ assert.equal(Engine.computeFobFromConfirmed('4','100','0',helpers),'');
+ assert.equal(Engine.formatRatePercent(21),'21,00%');
+ assert.equal(Engine.formatRatePercent(0.1+0.2),'0,30%');
+ assert.equal(Engine.formatRatePercent(''),'');
+});

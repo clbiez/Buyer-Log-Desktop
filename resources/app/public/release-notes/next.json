@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sipariş önem etiketleri, Backlog risk düzeltmesi ve detay iyileştirmeleri",
-    "en": "Order importance tags, Backlog risk fix and detail improvements"
+    "tr": "Sipariş önem etiketleri, Backlog risk düzeltmesi, royalty doğruluğu ve rapor iyileştirmeleri",
+    "en": "Order importance tags, Backlog risk fix, royalty accuracy and report improvements"
   },
   "summary": {
-    "tr": "Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi. Kaynak alanları, parsiyel detayları ve checklist yönetimi iyileştirildi.",
-    "en": "Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed. Source fields, partial details and checklist management were improved."
+    "tr": "Royalty hesapları kuruşu kuruşuna, Lisans kartları daha kompakt; kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi. Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi.",
+    "en": "Cent-accurate royalty calculations and more compact License cards; improved source fields, partial details, Collection inheritance and checklist management. Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed."
   },
   "changes": [
     {
@@ -124,6 +124,122 @@
         "caption": {
           "tr": "Üç tarih alanının revizyonları birlikte korunur",
           "en": "Revisions of all three date fields are preserved together"
+        }
+      }
+    },
+    {
+      "id": "royalty-exact-rounding",
+      "type": "fix",
+      "module": {
+        "tr": "License Royalty Calculations · CP · Koleksiyon",
+        "en": "License Royalty Calculations · CP · Collection"
+      },
+      "title": {
+        "tr": "Royalty hesapları kuruşu kuruşuna",
+        "en": "Cent-accurate royalty calculations"
+      },
+      "body": {
+        "tr": "Royalty ile TR/YD komisyonu artık kesin ondalık olarak toplanır; ör. %18,7 + %2,9 ile Final FOB yarım kuruş sınırında 1,92 yerine doğru 1,93 çıkar. CP Supp. FOB, Fiyat Kontrolü ve Koleksiyon FOB aynı kesin formülü kullanır; %12,125 gibi hassas oranlar Koleksiyon’da kırpılmaz. Sunucunun CP kayıt bilgisi ülke komisyonunu ve efektif oranı doğru taşır. Hesap penceresi kaydedilmemiş değişiklikleri Esc veya dışarı tıklamayla sessizce silmez ve eşleşen sipariş sayılarını her tuşta yeniden taramaz.",
+        "en": "Royalty and TR/international commission are now added as exact decimals; e.g. with 18.7% + 2.9% a half-cent Final FOB is correctly 1.93 instead of 1.92. CP Supp. FOB, Price Check and Collection FOB share the same exact formula, and precise rates such as 12.125% are no longer truncated in Collection. The server CP record carries the correct country commission and effective rate. The calculations window no longer drops unsaved changes on Esc or an outside click, and matching order counts are not rescanned on every keystroke."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "royalty-exact-rounding.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log License Royalty Hesapları: %18,7 + TR %2,9 kuralıyla Supp. FOB 1,47 için Final FOB TR 1,93, demo veriler",
+          "en": "Real Buyer Log License Royalty Calculations: Final FOB TR 1.93 for Supp. FOB 1.47 with an 18.7% + TR 2.9% rule, demo data"
+        },
+        "caption": {
+          "tr": "Yarım kuruş sınırında doğru yuvarlanan Final FOB",
+          "en": "Final FOB rounded correctly at the half-cent boundary"
+        }
+      }
+    },
+    {
+      "id": "license-cards-compact",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Daha kompakt Lisans kartları",
+        "en": "More compact License cards"
+      },
+      "body": {
+        "tr": "Lisans Atlası artık Buyer Log’un arayüz boyutunu izler: büyük karşılama alanı kaldırıldı, kart kapakları, başlıklar, araç çubuğu, süreç ağacı ve detay paneli sıklaştırıldı. Aynı ekranda daha çok lisans görünür; kartta bugün geçerli tüm sezon kapsamları kısa oran etiketleriyle listelenir. Dar ekranda ikincil düğmeler simgeye dönüşür.",
+        "en": "The License Atlas now follows Buyer Log’s interface size: the large welcome banner is removed and card covers, headings, toolbar, process tree and details drawer are denser. More licenses fit on one screen, and each card lists every season scope valid today with short rate labels. Secondary buttons collapse to icons on narrow screens."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-compact.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Lisans kartları ekranı, kompakt kart ızgarası, demo veriler",
+          "en": "Real Buyer Log License cards screen with the compact card grid, demo data"
+        },
+        "caption": {
+          "tr": "Kompakt Lisans Atlası kart ızgarası",
+          "en": "Compact License Atlas card grid"
+        }
+      }
+    },
+    {
+      "id": "license-cards-new-period",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Sözleşmeler",
+        "en": "License cards · Contracts"
+      },
+      "title": {
+        "tr": "Yeni sözleşme dönemi güvenli başlar",
+        "en": "New contract periods start safely"
+      },
+      "body": {
+        "tr": "“Yeni dönem ekle” artık sıfır royalty yerine en güncel sözleşmenin oranlarını ve sezon kapsamını kopyalar; aynı kapsamdaki açık önceki dönemi bir gün önce kapatır ve bunu bir notla gösterir. Böylece kayıt çakışma hatasına düşmez ve yanlışlıkla %0 royalty ile yeni siparişler fiyatlanmaz. Yeni dönemin başlangıç tarihi değiştirilirse önceki dönemin bitişi de otomatik izler; iki dönem arasında royalty’siz OPD boşluğu kalmaz. İlk sözleşmede royalty alanı boş gelir ve girilmesi zorunludur.",
+        "en": "“Add contract period” now copies the latest contract’s rates and season scope instead of zero royalty, ends the previous open period with the same scope one day earlier and explains this in a note. Saving no longer fails with an overlap and new orders are never priced at 0% royalty by accident. If the new start date is changed, the previous period’s end follows automatically, so no OPD gap is left without royalty. For a first contract the royalty field starts empty and is required."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-new-period.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans detayları: kopyalanan oranlarla yeni dönem ve 2026-10-20’de kapatılan önceki dönem, demo veriler",
+          "en": "Real Buyer Log license details: a new period with copied rates and the previous period ending 2026-10-20, demo data"
+        },
+        "caption": {
+          "tr": "Önceki dönemi otomatik kapatan yeni sözleşme dönemi",
+          "en": "New contract period that closes the previous one"
+        }
+      }
+    },
+    {
+      "id": "license-cards-cover-upload",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Kartlara görsel eklenebiliyor",
+        "en": "Card images can be added again"
+      },
+      "body": {
+        "tr": "“Görsel Ekle” ile seçilen PNG, JPEG veya WebP kart görseli artık “Görsel açılamadı” hatası vermeden eklenir; aynı düzeltme aşama görsellerinde de geçerlidir. Görsel eklendikten sonra bildirim, kalıcı olması için Atlası kaydetmeyi hatırlatır. Görselli kartlarda kapak alanı görseli gösterecek kadar büyür.",
+        "en": "PNG, JPEG or WebP card images chosen with “Add Image” are now added without the “Could not open image” error; stage images benefit from the same fix. After adding an image, the notice reminds you to save the atlas to keep it. Cards with an image get a cover area large enough to show it."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-cover-upload.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Lisans kartları: görsel eklenmiş NORTH STAR kartı ve kaydetme bildirimi, demo veriler",
+          "en": "Real Buyer Log License cards: the NORTH STAR card with an added image and the save notice, demo data"
+        },
+        "caption": {
+          "tr": "Görsel eklenmiş lisans kartı",
+          "en": "License card with an added image"
         }
       }
     },
