@@ -445,6 +445,122 @@
           "en": "Risk by the Retail and Handover rules"
         }
       }
+    },
+    {
+      "id": "license-atlas-export-picker",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Üretici atlasına girecek lisansları seçin",
+        "en": "Choose licenses for the supplier atlas"
+      },
+      "body": {
+        "tr": "“Tüm Lisansları Üreticiye Aktar” artık her şeyi aktarmaz: açılan pencerede lisans veya lisansör arayıp listeyi lisansöre göre süzerek yalnız istediğiniz lisansları işaretlersiniz. Hiçbir şey önceden seçili gelmez; üreticiye kapalı lisanslar işaretlenemez ve dosyaya yalnız seçilenler girer.",
+        "en": "“Export All Licenses for Suppliers” no longer exports everything: in the dialog you search by license or licensor, filter by licensor and tick only the licenses you want. Nothing is preselected, licenses not shared with suppliers cannot be ticked, and only the selected ones go into the file."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-export-picker.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üretici atlası seçim penceresi, iki lisans seçili, demo veriler",
+          "en": "Real Buyer Log supplier atlas picker with two licenses selected, demo data"
+        },
+        "caption": {
+          "tr": "Aktarılacak lisansları seçme",
+          "en": "Choosing licenses to export"
+        }
+      }
+    },
+    {
+      "id": "license-atlas-supplier-buyerlog",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Üretici atlası dosyası Buyer Log görünümünde",
+        "en": "Supplier atlas file in the Buyer Log look"
+      },
+      "body": {
+        "tr": "Üreticiye aktarılan HTML artık Buyer Log’daki kartlarla aynı görünür: Barlow yazı tipi, kompakt kartlar, Buyer Log renkleri (açık/koyu) ve büyük karşılama alanı olmadan. Kart görselleri küçük bir kutuda kalmaz, kapak alanını Buyer Log’daki gibi doldurur.",
+        "en": "The HTML exported for suppliers now looks like the Buyer Log cards: Barlow typeface, compact cards, Buyer Log light/dark colours and no large welcome banner. Card images no longer sit in a small box; they fill the cover like in Buyer Log."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-supplier-buyerlog.png",
+        "alt": {
+          "tr": "Dışa aktarılmış üretici atlası dosyası: kapakları dolduran görsellerle iki lisans kartı, demo veriler",
+          "en": "Exported supplier atlas file: two license cards with images filling the covers, demo data"
+        },
+        "caption": {
+          "tr": "Buyer Log görünümündeki üretici atlası",
+          "en": "Supplier atlas in the Buyer Log look"
+        }
+      }
+    },
+    {
+      "id": "license-library-licensor-filter",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisans kütüphanesinde Licensor filtresi",
+        "en": "Licensor filter in the License Library"
+      },
+      "body": {
+        "tr": "Lisans kütüphanesinde kategori filtresinin yanında Licensor seçimi var. Seçilen lisansörün lisansları listelenir; birden çok lisansörü olan lisansta kart, seçilen lisansörün sözleşmesiyle açılır. Arama ve kategori filtresiyle birlikte çalışır.",
+        "en": "The License Library has a Licensor selector next to the category filter. It lists that licensor’s licenses; for a license with several licensors the card opens with the selected licensor’s contract. It works together with search and the category filter."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-library-licensor-filter.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kütüphanesi Demo Studio lisansörüne göre süzülmüş, demo veriler",
+          "en": "Real Buyer Log License Library filtered by the Demo Studio licensor, demo data"
+        },
+        "caption": {
+          "tr": "Lisansöre göre süzülmüş lisans kütüphanesi",
+          "en": "License Library filtered by licensor"
+        }
+      }
+    },
+    {
+      "id": "license-cards-licensor-resolved",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisansörü görünmeyen lisanslar düzeldi",
+        "en": "Licenses without a licensor fixed"
+      },
+      "body": {
+        "tr": "Lisans kartları lisansörü yalnız ASAS satırından, royalty sözleşmesinden ve sabit katalogdan okuyordu; CP’de sipariş için elle seçilen Licensor dikkate alınmıyordu. Artık CP ile aynı öncelik kullanılır: CP’de elle seçilen Licensor → ASAS → License Royalty sözleşmesi → katalog. Ayrıca ilk aktarımdan kalan lisansörsüz yer tutucu kart, aynı lisansın lisansörlü kartı oluşunca gizlenir (üzerine not/atlas kaydedilmişse korunur). Değişikliği görmek için Lisans kartlarında “ASAS’tan yenile”ye bir kez basın.",
+        "en": "License cards read the licensor only from the ASAS row, royalty contracts and a fixed catalogue; a Licensor picked manually for the order in CP was ignored. They now use the same precedence as CP: manual CP Licensor → ASAS → License Royalty contract → catalogue. A licensor-less placeholder card from the first import is hidden once the license has a card with a licensor (kept if notes or an atlas were saved on it). Press “Refresh from ASAS” once in License cards to apply."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-licensor-resolved.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kütüphanesi: önceki lisansörsüz kart yerine lisansörlü kart, demo veriler",
+          "en": "Real Buyer Log License Library: the card with its licensor instead of the former licensor-less card, demo data"
+        },
+        "caption": {
+          "tr": "Lisansörü çözülmüş lisans kartı",
+          "en": "License card with its licensor resolved"
+        }
+      }
     }
   ]
 }

@@ -178,3 +178,54 @@ test('Lisans Atlası Buyer Log arayüz dilini kullanır: Barlow, 30px alanlar, t
   assert.match(css, /\.map-choice-bar button\.selected\{background:var\(--bl-t-acc-bg\)!important/);
   assert.doesNotMatch(css.slice(css.indexOf('Buyer Log skin')), /#427f94|#39758a|#dceeed/);
 });
+
+test('lisans keşfi CP’de elle seçilen Licensor’ı kullanır; lisansörsüz eski yer tutucu gizlenir', () => {
+  const cards = require('../server/lib/license-cards');
+  const orders = [
+    { ocode: 1001, model: 'M1', ccode: 'C1', license: 'Sanrio', licensor: '' },
+    { ocode: 1002, model: 'M2', ccode: 'C2', license: 'Bluey', licensor: '' },
+    { ocode: 1003, model: 'M3', ccode: 'C3', license: 'Marvel', licensor: '' },
+    { ocode: 1004, model: 'M4', ccode: 'C4', license: 'Capyfun', licensor: 'ASAS LIC' },
+  ];
+  const licensormap = { [parse.overrideKeyOf(orders[0])]: 'Demo Rights' };
+  const rows = cards.discoveryRowsFromOrders([orders], { licensormap, pricingRules: [{ license: 'Bluey', licensor: 'Demo Studio', royalty: 5, trCommission: 0, ydCommission: 0, hologramCost: 0, opdStart: '2026-01-01' }] }, parse);
+  const licensorOf = license => rows.filter(r => r.License === license).map(r => r.Licensor);
+  assert.deepEqual(licensorOf('Sanrio'), ['Demo Rights'], 'manual CP licensor');
+  assert.deepEqual(licensorOf('Bluey'), ['Demo Studio'], 'royalty contract');
+  assert.deepEqual(licensorOf('Marvel'), ['DTR'], 'catalogue');
+  assert.deepEqual(licensorOf('Capyfun'), ['ASAS LIC'], 'ASAS source');
+
+  // An empty-licensor card from an earlier import no longer shows once the license has a licensor.
+  let state = cards.appendDiscovered({ _revisions: {}, pricingRules: [] }, [{ license: 'Sanrio', licensor: '' }]).overrides;
+  state = { ...state, pricingRules: [{ id: 'r', license: 'Sanrio', licensor: 'Demo Rights', royalty: 5, trCommission: 0, ydCommission: 0, hologramCost: 0 }] };
+  assert.deepEqual(cards.responseOf(state, true).cards.map(c => [c.license, c.licensor]), [['Sanrio', 'Demo Rights']]);
+  // …unless someone stored data on it.
+  state.licenseCards.items[0].workingNotes = 'keep me';
+  assert.equal(cards.responseOf(state, true).cards.length, 2);
+  // A license with no licensor anywhere keeps its single card.
+  const lone = cards.appendDiscovered({ _revisions: {}, pricingRules: [] }, [{ license: 'Unknown', licensor: '' }]).overrides;
+  assert.equal(cards.responseOf(lone, true).cards.length, 1);
+  assert.match(read('server/server.js'), /discoveryRowsFromOrders\(sources,overrides,parseLib\)/);
+});
+
+test('üretici atlası seçilen lisanslarla aktarılır, Buyer Log görünümünü taşır; kütüphanede Licensor filtresi var', () => {
+  const bridge = read('public/license-atlas/integration.js');
+  const shell = read('public/license-atlas-shell.js');
+  // Export picker: nothing preselected, only chosen ids are sent.
+  assert.match(bridge, /supplierSelection=new Set\(\);supplierPicker\(\);return;/);
+  assert.match(bridge, /send\('export',\{ids\}\)/);
+  assert.match(bridge, /data-action="blPickExport" \$\{supplierSelection\.size\?'':'disabled'\}/);
+  assert.match(shell, /if\(!ids\.size\)\{ctx\.showError\(T\('Aktarmak için en az bir lisans seçin\.','Select at least one license to export\.'\)\);return;\}/);
+  assert.match(shell, /const selected=ctx\.data\.cards\.filter\(c=>ids\.has\(c\.id\)\)/);
+  assert.match(shell, /exportSupplier\(Array\.isArray\(m\.ids\)/);
+  // Supplier file: same fonts, skin, type scale and Buyer Log tokens; full-bleed card images.
+  assert.match(bridge, /const html=supplierSkin\(tpl\.replace\('__PUBLIC_DATA__',payload\)\)/);
+  assert.match(bridge, /<script>\(\$\{buyerLogTypeScale\.toString\(\)\}\)\(\);<\\\/script>/);
+  assert.match(bridge, /--blt-acc:#3f6488/);
+  assert.match(bridge, /\.license-card \.cover\.has-cover-image img\{position:absolute;inset:0;width:100%;height:100%;object-fit:cover!important/);
+  assert.ok(!bridge.includes('</script>'), 'integration.js is inlined into a <script>; it must not contain a closing tag');
+  // Licensor filter in the License Library.
+  assert.match(bridge, /id="blLicensorFilter"/);
+  assert.match(bridge, /original\.cards\(grouped\(licenses\.filter\(matchesLicensor\)\)\)/);
+  assert.match(bridge, /txt\('Tüm lisansörler','All licensors'\)/);
+});
