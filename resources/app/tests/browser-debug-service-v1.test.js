@@ -210,7 +210,7 @@ winTest('enable and launch uses one stable Chrome profile and only spawns after 
   assert.ok(!launches[0].args.some(arg => arg.startsWith('--remote-allow-origins')));
 });
 
-winTest('Settings exposes the central Browser & Remote Debugging flow', () => {
+test('Settings exposes the central Browser & Remote Debugging flow', () => {
   const index = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
   const app = fs.readFileSync(path.join(__dirname, '..', 'public', 'app-main.js'), 'utf8');
   const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
@@ -222,7 +222,8 @@ winTest('Settings exposes the central Browser & Remote Debugging flow', () => {
   assert.match(app, /openBrowserDebugSettingsModal/);
   assert.match(app, /Enable & Launch/);
   assert.match(server, /\/api\/browser-debug\/enable/);
-  assert.match(server, /requireAnyArea\('agents', 'automations'\)/);
+  assert.match(server, /const browserDebugAccess = userAccess\.requireArea\('automations'\);/);
+  assert.doesNotMatch(server, /requireAnyArea\('agents', 'automations'\)/);
 });
 
 /* ====================================================================
