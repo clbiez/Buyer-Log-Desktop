@@ -63,7 +63,7 @@ with tempfile.TemporaryDirectory() as td:
     for f in manifest["files"]:
         assert sha((core / f["path"]).read_bytes()) == f["after_sha256"], f["path"]
     out = run_ps(script, installation, "-Check")
-    assert "Patch" in out
+    assert "zaten guncel: 23" in out
     out = run_ps(script, installation, "-Rollback", user_input="E\n")
     assert "Geri alma tamamlandi" in out
     for f in manifest["files"]:
