@@ -16,12 +16,41 @@
   };
   const uniqueSorted=values=>[...new Set((values||[]).map(text).filter(Boolean))]
     .sort((a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'}));
+  // Collection ayları tarih kodu veya farklı dillerde ay adı içerebilir.
+  // Birimi geçerli takvim ayına çözüp hem sıralama hem dil bağımsız sunumda kullan.
+  const MONTH_NAMES=[
+    ['ocak','january','jan'],['subat','february','feb'],['mart','march','mar'],
+    ['nisan','april','apr'],['mayis','may'],['haziran','june','jun'],
+    ['temmuz','july','jul'],['agustos','august','aug'],['eylul','september','sep','sept'],
+    ['ekim','october','oct'],['kasim','november','nov'],['aralik','december','dec'],
+  ];
+  const monthNameKey=value=>text(value).toLocaleLowerCase('tr-TR').normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'').replace(/ı/g,'i').replace(/\.$/,'');
+  const MONTH_BY_NAME=new Map(MONTH_NAMES.flatMap((names,index)=>names.map(name=>[name,index+1])));
   const monthParts=value=>{
     const raw=text(value);
-    const match=raw.match(/(\d{4})[^\d]?(\d{1,2})/);
-    if(match)return {year:Number(match[1]),month:Number(match[2])};
-    const compact=raw.match(/^(\d{4})(\d{2})$/);
-    return compact?{year:Number(compact[1]),month:Number(compact[2])}:null;
+    const valid=(year,month)=>year>=1900&&year<=2199&&month>=1&&month<=12?{year,month}:null;
+    // YYYY-MM, YYYYMM, YYYY/M ve ayın ilk gününü taşıyan YYYY-MM-DD.
+    const yearFirst=raw.match(/^(\d{4})[-/.\s]?(\d{1,2})(?:[-/.\s]\d{1,2})?$/);
+    if(yearFirst)return valid(Number(yearFirst[1]),Number(yearFirst[2]));
+    const monthFirst=raw.match(/^(\d{1,2})[-/.\s](\d{4})$/);
+    if(monthFirst)return valid(Number(monthFirst[2]),Number(monthFirst[1]));
+    const named=raw.match(/^([\p{L}]+)\.?\s+(\d{4})$/u)||raw.match(/^(\d{4})\s+([\p{L}]+)\.?$/u);
+    if(!named)return null;
+    const nameFirst=/^[\p{L}]/u.test(named[1]);
+    const year=Number(nameFirst?named[2]:named[1]);
+    const month=MONTH_BY_NAME.get(monthNameKey(nameFirst?named[1]:named[2]));
+    return valid(year,month);
+  };
+  const compareMonthsNewestFirst=(a,b)=>{
+    const left=monthParts(a),right=monthParts(b);
+    if(left&&right)return (right.year*12+right.month)-(left.year*12+left.month)
+      ||a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'});
+    if(left)return -1;
+    if(right)return 1;
+    if(!a)return 1;
+    if(!b)return -1;
+    return a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'});
   };
   const monthDistance=(value,now)=>{
     const parts=monthParts(value);
@@ -61,6 +90,7 @@
   }
 
   function availableColumns(rows, options={}){
+    const fields={...DEFAULT_FIELDS,...(options.fields||{})};
     const allRows=Array.isArray(rows)?rows:[];
     const valueFor=typeof options.valueFor==='function'?options.valueFor:(row,key)=>row&&row[key];
     const seen=new Set();
@@ -69,7 +99,8 @@
       label:text(column&&column.label)||text(column&&column.k||column&&column.key),
     })).filter(column=>column.key&&!seen.has(column.key)&&seen.add(column.key)).map(column=>({
       ...column,
-      values:uniqueSorted(allRows.map(row=>text(valueFor(row,column.key))).filter(Boolean)),
+      values:uniqueSorted(allRows.map(row=>text(valueFor(row,column.key))).filter(Boolean))
+        .sort(column.key===fields.month?compareMonthsNewestFirst:(a,b)=>a.localeCompare(b,'tr-TR',{numeric:true,sensitivity:'base'})),
     }));
   }
 
@@ -201,8 +232,8 @@
       statusEntry.optionCount++;if(Number.isFinite(quantity)&&quantity>0)statusEntry.quantity+=quantity;statusEntry.models.add(model);group.statuses.set(status,statusEntry);
       groups.set(month,group);
     });
-    const order=group=>{const parts=monthParts(group.month);return parts?parts.year*12+parts.month:Number.POSITIVE_INFINITY;};
-    return [...groups.values()].sort((a,b)=>order(a)-order(b)||a.month.localeCompare(b.month,'tr-TR',{numeric:true})).map(group=>{
+    // Yeni ay en üstte; tanınmayan/boş değerler listenin en altında.
+    return [...groups.values()].sort((a,b)=>compareMonthsNewestFirst(a.month,b.month)).map(group=>{
       const parts=monthParts(group.month);
       const models=[...group.models.values()];
       return {
