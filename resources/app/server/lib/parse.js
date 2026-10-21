@@ -842,32 +842,45 @@ function normalizeSuppFobMeta(meta) {
   if (!meta || typeof meta !== 'object') return null;
   const out = { source: meta.source === 'rule' ? 'rule' : 'manual' };
   if (meta.ruleId != null) out.ruleId = String(meta.ruleId);
-  ['opdStart', 'opdEnd', 'countryGroup', 'manufacturer', 'license'].forEach(k => {
+  ['opdStart', 'opdEnd', 'countryGroup', 'commissionGroup', 'manufacturer', 'licensor', 'license'].forEach(k => {
     if (meta[k] != null) out[k] = String(meta[k]);
   });
   if (!out.manufacturer && meta.licensor != null) out.manufacturer = String(meta.licensor);
   const seasons = normalizePricingRuleSeasons(meta.seasons != null ? meta.seasons : meta.season);
   if (seasons.length) out.seasons = seasons;
-  const royalty = Number(meta.royalty);
-  const hologramCost = Number(meta.hologramCost);
-  if (Number.isFinite(royalty)) out.royalty = royalty;
-  if (Number.isFinite(hologramCost)) out.hologramCost = hologramCost;
+  ['royalty', 'trCommission', 'ydCommission', 'commission', 'effectiveRoyalty', 'hologramCost'].forEach(k => {
+    if (meta[k] == null || String(meta[k]).trim() === '') return;
+    const value = Number(meta[k]);
+    if (Number.isFinite(value)) out[k] = value;
+  });
   if (meta.applied === true) out.applied = true;
   return out;
 }
-function automaticRuleMeta(rule, applied) {
+// License Royalty v2: ülke kuralın boyutu değil, komisyon varyantıdır. Meta,
+// istemcideki automaticSuppFobRuleMeta ile aynı efektif oranı taşır.
+function automaticRuleMeta(rule, applied, country) {
   if (!rule) return null;
+  const group = BLBusinessRules.pricingRuleCountryGroup(country) || pricingCountryGroup(rule.countryGroup);
+  const commissionGroup = group === 'TR' ? 'TR' : 'YD';
+  const licensor = String(rule.manufacturer != null ? rule.manufacturer : (rule.licensor || ''));
+  const optional = value => value == null || String(value).trim() === '' || !Number.isFinite(Number(value)) ? null : Number(value);
   return {
     source: 'rule',
     ruleId: String(rule.id || ''),
     opdStart: pricingDateIso(rule.opdStart),
     opdEnd: pricingDateIso(rule.opdEnd),
     seasons: normalizePricingRuleSeasons(rule.seasons != null ? rule.seasons : rule.season),
-    countryGroup: pricingCountryGroup(rule.countryGroup) === 'TR' ? 'TR' : 'Non-TR',
-    manufacturer: String(rule.manufacturer != null ? rule.manufacturer : (rule.licensor || '')),
+    countryGroup: commissionGroup === 'TR' ? 'TR' : 'Non-TR',
+    commissionGroup,
+    manufacturer: licensor,
+    licensor,
     license: String(rule.license || ''),
     royalty: Number(rule.royalty),
-    hologramCost: Number(rule.hologramCost),
+    trCommission: optional(rule.trCommission),
+    ydCommission: optional(rule.ydCommission),
+    commission: BLBusinessRules.pricingRuleCommissionForCountry(rule, commissionGroup),
+    effectiveRoyalty: BLBusinessRules.pricingRuleEffectiveRoyalty(rule, commissionGroup),
+    hologramCost: BLBusinessRules.pricingRuleHologramForCountry(rule, commissionGroup),
     applied: applied === true,
   };
 }
@@ -2148,7 +2161,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       'FOB ($)': fobRounded, 'Supp. FOB': suppfob != null ? suppfob : null,
       _suppFobManual: hasSuppfobOverride && !isRuleOverride,
       _suppFobRule: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? priced.rule.id || true : null,
-      _suppFobMeta: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? automaticRuleMeta(priced.rule, isRuleOverride) : (isRuleOverride ? null : suppFobMeta),
+      _suppFobMeta: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? automaticRuleMeta(priced.rule, isRuleOverride, o.countryRaw) : (isRuleOverride ? null : suppFobMeta),
       _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _licensorSource:norm(o.licensor), _nonDtrManufacturerRule: false,
       OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex,
       // Revizyon oku ve Ex-Factory renklendirmesi için ASAS orijinalleri.
@@ -2318,7 +2331,7 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
       'Order Code': o.ocode, 'FOB ($)': fobRounded, 'Supp. FOB': suppfob != null ? suppfob : null,
       _suppFobManual: hasSuppfobOverride && !isRuleOverride,
       _suppFobRule: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? priced.rule.id || true : null,
-      _suppFobMeta: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? automaticRuleMeta(priced.rule, isRuleOverride) : (isRuleOverride ? null : suppFobMeta),
+      _suppFobMeta: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? automaticRuleMeta(priced.rule, isRuleOverride, o.countryRaw) : (isRuleOverride ? null : suppFobMeta),
       _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _licensorSource:norm(o.licensor), _nonDtrManufacturerRule: false,
       OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex, 'Retail Date': o.retail, 'Ex→Retail': exRetail, 'In-Store (Model Budget)': o.mb, 'Days to go': daysToGo,
       'Merch Marka Yaş Grup Kod': o.ageGroup, 'Buyer': o.buyer, 'Line': o.line,
@@ -3494,7 +3507,7 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
 }
 
 module.exports = {
-  pricingLicensorForLicense,
+  pricingLicensorForLicense, automaticRuleMeta,
   countryEN,
   parseASASWorkbook, parseASASRows, parseFabricWorkbook, applyFabricEntries, applyFabricEntriesToLflRows, parseAntrepoWorkbook, parseAntrepoRows, parseCPUpdateWorkbook,
   buildCPRowsFromASAS, buildOrdersRowsFromASAS, buildSharedOrderProjectionRowsFromASAS, buildOverviewSummaryRowsFromASAS, buildOrderSummaryRowsFromASAS, buildBacklogOperationalRows, buildBacklogGrouped, buildBacklogDetailRows, buildBacklogTemplateRows, backlogCustomDimensionContext, computeFlags, applyFormulas, deriveOperationalStatus, shouldWaitForRetail, isShortageStatus, isWarehouseShortageStatus, backlogRemainderStatus, findAntrepoHit, findAntrepoHits, backlogOrderQuantityFromAntrepo, backlogProductionRemainder, PRODUCTION_REMAINDER_TOLERANCE_RATE, SHORTAGE_REMAINDER_RATE, SHORTAGE_STATUS, WAREHOUSE_STATUS, WAREHOUSE_SHORTAGE_STATUS, BACKLOG_DIM_LABELS,

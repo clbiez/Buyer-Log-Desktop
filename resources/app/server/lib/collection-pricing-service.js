@@ -22,7 +22,7 @@ function createPricingCalculation({rows,overrides,fx,cpRows=[],cpContextAvailabl
  function calculate(sourceRow,scenario={}){
   const row={...project(sourceRow)},ctx=context(row),rule=findRule(row,ctx.country),total=Business.pricingRuleEffectiveRoyalty(rule,ctx.country),hologram=Business.pricingRuleHologramForCountry(rule,ctx.country);
   // Match kolApplyRulePricing's visible effective fields, not stale saved derivations.
-  row.royalty=total==null?'':Number(total).toFixed(2)+'%';row.hologramCost=hologram==null?'':String(hologram);
+  row.royalty=total==null?'':Engine.formatRatePercent(total);row.hologramCost=hologram==null?'':String(hologram);
   for(const key of ['trPrice','trFx','trLandedMult','ydLandedMult'])if(scenario[key]!=null)row[key]=scenario[key];
   const fxInfo=autoFx(row),helpers={kolParseMoneyNum:Groups.kolParseMoneyNum,kolDefaultLandedMultipliers:()=>defaults,kolAutoFx:()=>fxInfo.rate,kolFindPricingRuleForCountryGroup:findRule,kolTrLicenseRuleMissing:trRuleMissing,kolLandedPriceWithRule:(base,r,contract,group)=>!Number.isFinite(Number(base))||Number(base)<=0?null:!nonDtr(r)?Number(base):contract?Business.calculateFinalFobWithRule(base,contract,group):null,kolSuppFob:r=>scenario.suppFob!=null?{price:scenario.suppFob,source:'scenario',name:''}:supplierFob(r),kolLandedIsNonDtr:nonDtr,kolLicenseRuleMissing:ruleMissing,effectiveRoyalty:Business.pricingRuleEffectiveRoyalty,hologramFor:Business.pricingRuleHologramForCountry};
   helpers.kolLandedPriceWithCosts=(base,r)=>Engine.priceWithCosts(base,r,helpers);

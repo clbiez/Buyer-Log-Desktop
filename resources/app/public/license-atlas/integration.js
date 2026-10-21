@@ -30,7 +30,7 @@
  persist=function(){if(!canEdit||busy)return false;for(const l of all())defaultSharing(l);dirty=detailsDirty||JSON.stringify(db)!==baseline;send('dirty',{dirty});status();return true;};
  // Toasts in the reference describe local staging. Only Buyer Log confirms durable saving.
  notify=function(message,error=false){
-  const replacements={'Lisans manueli kaydedildi.':txt('Değişiklikler hazır. Atlası kaydedin.','Changes are ready. Save the atlas.'),'İşlem tamamlandı.':txt('Değişiklikler hazır.','Changes are ready.')};
+  const replacements={'Lisans manueli kaydedildi.':txt('Değişiklikler hazır. Atlası kaydedin.','Changes are ready. Save the atlas.'),'Lisans görseli kaydedildi.':txt('Görsel eklendi. Atlası kaydedin.','Image added. Save the atlas.'),'License image saved.':txt('Görsel eklendi. Atlası kaydedin.','Image added. Save the atlas.'),'İşlem tamamlandı.':txt('Değişiklikler hazır.','Changes are ready.')};
   original.notify(replacements[message]||message,error);
  };
  mapDeliveryEditor=function(l,s,sub,index){
@@ -38,15 +38,15 @@
   box.querySelector('.map-route-extras')?.insertAdjacentHTML('beforeend',`<label class="bl-route-instructions">${e(txt('Üretici gönderim talimatı','Supplier submission instructions'))}<textarea data-map-stage="${e(s.id)}" data-map-sub="${e(sub.id)}" data-map-sub-field="supplierInstructions" rows="2">${e(lx(sub,'supplierInstructions'))}</textarea></label><label class="bl-route-instructions">${e(txt('İç gönderim notu','Internal submission note'))}<textarea data-map-stage="${e(s.id)}" data-map-sub="${e(sub.id)}" data-map-sub-field="note" rows="2">${e(lx(sub,'note'))}</textarea><span><input type="checkbox" data-map-stage="${e(s.id)}" data-map-sub="${e(sub.id)}" data-map-sub-field="supplierShowNotes" ${sub.supplierShowNotes===true?'checked':''}> ${e(txt('Bu notu üreticiyle paylaş','Share this note with the supplier'))}</span></label>`);
   return box.innerHTML;
  };
- function ratesHTML(id){
+ function ratesHTML(id,compact=false){
   const c=commerce[id];if(!c)return '';
-  return c.contracts.map(r=>`<div class="bl-contract"><small>${e(r.scope)} · ${e(r.range)}</small><div class="bl-rates">${r.rates.map(x=>`<div><span>${e(x.label)}</span><b>${e(x.value)}</b></div>`).join('')}</div></div>`).join('')||`<p class="muted">${e(txt('Bugün geçerli sözleşme yok.','No contract is valid today.'))}</p>`;
+  return c.contracts.map(r=>`<div class="bl-contract"><small>${e(r.scope)} · ${e(r.range)}</small><div class="bl-rates">${r.rates.map(x=>`<div><span title="${e(x.label)}">${e(compact&&x.short||x.label)}</span><b>${e(x.value)}</b></div>`).join('')}</div></div>`).join('')||`<p class="muted">${e(txt('Bugün geçerli sözleşme yok.','No contract is valid today.'))}</p>`;
  }
  function grouped(licenses){
   const groups=new Map();for(const l of licenses){const k=licenseKey(l.name);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(l);}
   return [...groups.entries()].map(([k,ls])=>ls.find(l=>l.id===preferred.get(k))||ls.slice().sort((a,b)=>String(commerce[b.id]?.start||'').localeCompare(String(commerce[a.id]?.start||'')))[0]);
  }
- cards=function(licenses){const box=document.createElement('div');box.innerHTML=original.cards(grouped(licenses));box.querySelectorAll('[data-id]').forEach(el=>{const meta=el.querySelector('.card-meta');if(!meta)return;const options=variants(el.dataset.id);meta.querySelector('.card-agency').textContent=options.map(l=>l.agency||txt('Lisansör belirtilmedi','Licensor not specified')).join(' · ');meta.querySelector('.card-bottom').insertAdjacentHTML('beforebegin',ratesHTML(el.dataset.id));});return box.innerHTML;};
+ cards=function(licenses){const box=document.createElement('div');box.innerHTML=original.cards(grouped(licenses));box.querySelectorAll('[data-id]').forEach(el=>{const meta=el.querySelector('.card-meta');if(!meta)return;const options=variants(el.dataset.id);meta.querySelector('.card-agency').textContent=options.map(l=>l.agency||txt('Lisansör belirtilmedi','Licensor not specified')).join(' · ');meta.querySelector('.card-bottom').insertAdjacentHTML('beforebegin',ratesHTML(el.dataset.id,true));});return box.innerHTML;};
  function licensorSelect(id,inside=false){const ls=variants(id);return `<label class="bl-licensor"><span>${e(txt('Lisansör / sözleşme tarafı','Licensor / contracting party'))}</span><select data-bl-licensor="${inside?'editor':'view'}" aria-label="${e(txt('Lisansör seç','Select licensor'))}">${ls.map(l=>`<option value="${e(l.id)}" ${l.id===id?'selected':''}>${e(l.agency||txt('Lisansör belirtilmedi','Licensor not specified'))} · ${commerce[l.id]?.count||0} ${e(txt('kapsam','scopes'))}</option>`).join('')}</select></label>`;}
  function decorate(){
   document.querySelector('.footer').textContent=txt('Buyer Log · Atlas ve ticari bilgiler yetkili kullanıcılarla paylaşılır.','Buyer Log · Atlas and commercial details are shared with authorized users.');
@@ -148,6 +148,8 @@
   const t=env.tokens||{},aliases={'--bg':'--paper','--blue-soft':'--card2','--panel':'--card','--navy':'--acc','--blue':'--acc','--shadow':'--shadow-2','--radius':'--r-lg'};
   for(const k of ['--bg','--ink','--muted','--line'])if(t[k]){document.documentElement.style.setProperty(k,t[k]);document.body.style.setProperty(k,t[k]);}
   for(const [to,from] of Object.entries(aliases))if(t[from]){document.documentElement.style.setProperty(to,t[from]);document.body.style.setProperty(to,t[from]);}
+  // The Atlas is authored at 14px; scale it to Buyer Log's current base font (Arayüz setting).
+  const base=parseFloat(t['--fs-base']);if(Number.isFinite(base)&&base>0)document.documentElement.style.setProperty('--bl-density',String(Math.min(1.15,Math.max(.8,(base+.1)/14))));
   if(changed){chosen()?render():home();if(editor){renderEditor();send('businessRefresh');}}decorate();
  }
  document.addEventListener('change',event=>{const target=event.target;if(!target.matches('[data-bl-licensor]'))return;
@@ -170,7 +172,10 @@
    else{decorate();}
    applyEnvironment(message.environment);updateLanguageControls();if(message.error)status(message.error,true);
   }
-  if(message.action==='business'){businessHTML=message.html||'';if(editor&&editTab==='contracts')renderEditor(true);}
+  if(message.action==='business'){businessHTML=message.html||'';if(editor&&editTab==='contracts'){
+   // Linked contract dates re-render while editing; keep the user's field and scroll position.
+   const active=document.activeElement,key=active?.dataset?.lcRule!=null?`[data-lc-rule="${CSS.escape(active.dataset.lcRule)}"][data-lc-key="${CSS.escape(active.dataset.lcKey||'')}"]`:'',top=overlay.querySelector('#drawerBody')?.scrollTop||0;
+   renderEditor(true);const body=overlay.querySelector('#drawerBody');if(body)body.scrollTop=top;if(key)overlay.querySelector('.bl-business '+key)?.focus({preventScroll:true});}}
   if(message.action==='recoveryPlan')recoveryDialog(message);
   if(message.action==='environment')applyEnvironment(message.environment);
   if(message.action==='saved'){if(detailsSaving||message.recovery){editor=null;overlay.innerHTML='';detailsSaving=false;detailsDirty=false;recoveryItems=null;}busy=false;dirty=false;db=deep(message.db);baseline=JSON.stringify(db);commerce=message.commerce||commerce;send('dirty',{dirty:false});chosen()?render():home();notify(txt('Atlas Buyer Log’a kaydedildi.','Atlas saved to Buyer Log.'));}
