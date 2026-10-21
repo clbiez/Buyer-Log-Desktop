@@ -135,6 +135,8 @@ test('BLStorage ile okunan her ön ek ya kullanıcıya ayrılır ya da bilinçli
     // sessionStorage, tab-scoped one-shot marker of adopted Office preset steps (job/step ids), like bl.presetShare.notice.
     'bl.office.presetAdopted',
     'lcw.quotations.v1', 'lcw.quotations.serverMigrated.', 'lcw.quotations.dropDetached.', 'lcw.quotations.notebookDetached.',
+    // v7.0.290 — Moderatör kural yayınının (tüm kullanıcılar) yerel aynası.
+    'lcw.cp.managedRules.',
     'lcw.transitRules.', 'lcw.transitAnalysis.v1', 'lcw.suppFobPricingRules.', 'lcw.nonDtrManufacturers.',
     'lcw.emailGroups.centralMigration.', 'lcw.appr.dimFilters.',
     'buyerlog.lastSuccessfulUsername', 'buyerlog.bootRetry.',

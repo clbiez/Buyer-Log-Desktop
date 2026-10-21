@@ -388,9 +388,14 @@
     if (!info) return '';
     const stateClass = state => String(state || 'open').startsWith('custom:') ? 'custom' : String(state || 'open');
     const title = info.elements.map(function (entry) { return entry.name + ' · ' + statusLabel(entry.state); }).join('\n');
-    const chips = info.elements.map(function (entry) {
-      return '<span class="clElementChip"><span class="clStatusDot is-' + html(stateClass(entry.state)) + '" aria-hidden="true"></span><span class="clElementName">' + html(entry.name) + '</span></span>';
-    }).join('');
+    // Dar hücrede her bileşen kendi renkli noktasıyla görünür; ilk dikkat
+    // gerektiren bileşen adıyla yazılır, tamamı başlıkta ve durum menüsündedir.
+    const focus = info.elements.find(function (entry) { return entry.state === 'rejected'; })
+      || info.elements.find(function (entry) { return !isResolvedStatus(entry.state); }) || info.elements[0];
+    const chips = '<span class="clElementChip">' + info.elements.map(function (entry) {
+      return '<span class="clStatusDot is-' + html(stateClass(entry.state)) + '" aria-hidden="true"></span>';
+    }).join('') + '<span class="clElementName">' + html(focus.name + ' · ' + statusLabel(focus.state)) + '</span>'
+      + (info.elements.length > 1 ? '<small class="clElementMore">+' + (info.elements.length - 1) + '</small>' : '') + '</span>';
     if (!canEdit) return '<td class="clElementsCell" title="' + html(title) + '"><span class="clElementStack">' + chips + '</span></td>';
     return '<td class="editTd clElementsCell"><button type="button" class="clStatusTrigger is-' + html(info.state) + '" data-id="' + html(row._id) + '" data-item="' + html(itemId) + '" data-status="' + html(info.state) + '" aria-haspopup="listbox" aria-expanded="false" title="' + html(title) + '" aria-label="' + html(title.replace(/\n/g, ', ')) + '"><span class="clElementStack">' + chips + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>';
   }
@@ -597,6 +602,10 @@
         });
         Object.defineProperty(row, '_checklistTasks', { value: tasks, enumerable: false, configurable: true, writable: true });
       });
+      // Bileşenli sütun, adlar okunabilsin diye genişler (kullanıcı genişliği korunur).
+      const withElements = new Set();
+      rows.forEach(function (row) { Object.keys(row._checklistElements || {}).forEach(function (id) { withElements.add(id); }); });
+      dynamic.forEach(function (col) { col.weight = withElements.has(col.checklistItemId) ? 26 : 12; });
       state.appliedColumns = { rows: rows, decision: decision, items: itemsSignature, tasks: state.testTasks };
     }
     if (opts.render && typeof root.renderCP === 'function') root.renderCP();
