@@ -118,8 +118,18 @@
     const buckets=collectionBuckets();
     if(!buckets.length){draw(node,head(L('Koleksiyon Vitrini','Collection Showcase'))+empty(L('Bu kapsamda koleksiyon modeli yok.','No collection models in this scope.')));return;}
     let bucket=buckets.find(b=>b.month===selectedMonth);
-    if(!bucket){bucket=buckets.find(b=>b.month>=new Date().toISOString().slice(0,7))||buckets[0];selectedMonth=bucket.month;}
-    const options=buckets.map(b=>`<option value="${esc(b.month)}"${b.month===selectedMonth?' selected':''}>${esc(b.month||L('Ay yok','No month'))}</option>`).join('');
+    if(!bucket){
+      // ISO kodları ile Türkçe/İngilizce ay adlarını metin olarak kıyaslama.
+      // monthBuckets burada kronolojik artan sırada: en yakın gelecek ayı seç.
+      const now=new Date(),current=now.getFullYear()*12+now.getMonth()+1;
+      const dated=buckets.filter(b=>b.year&&b.monthNumber);
+      bucket=dated.find(b=>b.year*12+b.monthNumber>=current)||dated[dated.length-1]||buckets[0];
+      selectedMonth=bucket.month;
+    }
+    const monthLabel=b=>b.year&&b.monthNumber
+      ?new Date(b.year,b.monthNumber-1,1).toLocaleDateString(locale(),{month:'long',year:'numeric'})
+      :(b.month||L('Ay yok','No month'));
+    const options=buckets.map(b=>`<option value="${esc(b.month)}"${b.month===selectedMonth?' selected':''}>${esc(monthLabel(b))}</option>`).join('');
     const total=bucket.optionCount||1;
     draw(node,head(L('Koleksiyon Vitrini','Collection Showcase'),`<select data-ov-month data-ov-focus="collection-month" aria-label="${esc(L('Koleksiyon ayı','Collection month'))}">${options}</select>`)+
       `<div class="ovShowcaseProducts">${bucket.models.slice(0,6).map((m,i)=>`<button type="button" data-ov-model="${i}" data-ov-focus="model-${i}" title="${esc(m.label)}" aria-label="${esc(m.label)}">${m.image?`<img src="${esc(m.image)}" alt="${esc(m.label)}" loading="lazy" decoding="async">`:icon('hanger')}<span>${esc(m.label)}</span></button>`).join('')}</div>`+
