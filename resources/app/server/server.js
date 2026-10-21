@@ -13,6 +13,7 @@ const { once } = require('events');
 const BLBusinessRules = require('../public/business-rules');
 const BLFreight = require('../public/freight-calc');
 const BLTransitAnalysis = require('../public/transit-analysis');
+const BLOrderImportance = require('../public/order-importance');
 const transitAnalysisSource = require('./lib/transit-analysis-source');
 const canonicalFields = require('./lib/canonical-fields');
 // Excel tarih kancaları süreç açılışında kurulur: tembel getXLSX() çağrılarını
@@ -348,7 +349,7 @@ const backlogPlanActual = require('./lib/backlog-plan-actual');
 const modelImageRegistry = require('./lib/model-image-registry');
 const { scopedCpImageRegistry } = require('./lib/cp-image-startup-registry');
 const {
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
+  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, replaceImportanceSettings, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, getUserSourceFolder, setUserSourceFolder,
   loadViews, addView, updateView, deleteView, setFavoriteView, markUsedView,
   loadFilterProfiles, addFilterProfile, updateFilterProfile, deleteFilterProfile, setFavoriteFilterProfile, markUsedFilterProfile,
   loadShipping, addShippingRows, patchShippingRow, deleteShippingRows,
@@ -850,7 +851,7 @@ function changedMasterEntities(remoteRecords, localRecords, ids) {
     const before = local[id], after = remote[id];
     if (!different(before, after)) continue;
     if (id === 'store:overrides.json') {
-      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','cpManagedRules']) {
+      for (const field of ['pricingRules','licenseCards','transitRules','transitAnalysis','nonDtrManufacturers','landedMultipliers','freightRates','antrepoSourceMode','asasSourceMode','lflSourceMode','noteColumnDefs','importanceSettings','cpManagedRules']) {
         if (different(before && before[field], after && after[field])) changed.add(field);
       }
       if (
@@ -7727,6 +7728,8 @@ function pageProjectionContext(currentUser = null) {
       landedMultipliers:Number(shared._revisions && shared._revisions.landedMultipliers) || 0,
       freightRates:Number(shared._revisions && shared._revisions.freightRates) || 0,
       antrepoMatchRule:Number(shared._revisions && shared._revisions.antrepoMatchRule) || 0,
+      // Önem etiketi kataloğu / Line kuralı değişince CP/Orders etiketleri yeniden çözülür.
+      importanceSettings:Number(shared._revisions && shared._revisions.importanceSettings) || 0,
     },
     sourceModes: { asas: shared.asasSourceMode || 'excel', antrepo: shared.antrepoSourceMode || 'excel', lfl: shared.lflSourceMode || 'excel' },
     sourceFolder: sourceFolderForUser(id) || '',
@@ -8132,9 +8135,10 @@ async function buildResponse(currentUser = null, options = {}) {
     landedMultipliers: overrides.landedMultipliers || { tr: 1.05, overseas: 1.11 },
     freightRates: BLFreight.normalizeSettings(overrides.freightRates),
     noteColumns: Array.isArray(overrides.noteColumnDefs) ? overrides.noteColumnDefs : [],
+    importanceSettings: BLOrderImportance.normalizeSettings(overrides.importanceSettings),
     antrepoMatchRule: parseLib.normalizeAntrepoMatchRule(overrides.antrepoMatchRule),
     antrepoMatchConfig: parseLib.normalizeAntrepoMatchConfig(overrides.antrepoMatchConfig),
-    storeRevisions: { overrides: Number(overrides._revision)||0, orders: Number(overrides._revisions&&overrides._revisions.orders)||0, suppFob: Number(overrides._revisions&&overrides._revisions.suppFob)||0, pricingRules: Number(overrides._revisions&&overrides._revisions.pricingRules)||0, transitRules: Number(overrides._revisions&&overrides._revisions.transitRules)||0, nonDtrManufacturers: Number(overrides._revisions&&overrides._revisions.nonDtrManufacturers)||0, landedMultipliers: Number(overrides._revisions&&overrides._revisions.landedMultipliers)||0, freightRates: Number(overrides._revisions&&overrides._revisions.freightRates)||0, antrepoMatchRule: Number(overrides._revisions&&overrides._revisions.antrepoMatchRule)||0, antrepoSourceMode: Number(overrides._revisions&&overrides._revisions.antrepoSourceMode)||0, asasSourceMode: Number(overrides._revisions&&overrides._revisions.asasSourceMode)||0, lflSourceMode: Number(overrides._revisions&&overrides._revisions.lflSourceMode)||0, noteColumnDefs: Number(overrides._revisions&&overrides._revisions.noteColumnDefs)||0, refreshHistory: Number(loadRefreshHistory(id)._revision)||0 },
+    storeRevisions: { overrides: Number(overrides._revision)||0, orders: Number(overrides._revisions&&overrides._revisions.orders)||0, suppFob: Number(overrides._revisions&&overrides._revisions.suppFob)||0, pricingRules: Number(overrides._revisions&&overrides._revisions.pricingRules)||0, transitRules: Number(overrides._revisions&&overrides._revisions.transitRules)||0, nonDtrManufacturers: Number(overrides._revisions&&overrides._revisions.nonDtrManufacturers)||0, landedMultipliers: Number(overrides._revisions&&overrides._revisions.landedMultipliers)||0, freightRates: Number(overrides._revisions&&overrides._revisions.freightRates)||0, antrepoMatchRule: Number(overrides._revisions&&overrides._revisions.antrepoMatchRule)||0, antrepoSourceMode: Number(overrides._revisions&&overrides._revisions.antrepoSourceMode)||0, asasSourceMode: Number(overrides._revisions&&overrides._revisions.asasSourceMode)||0, lflSourceMode: Number(overrides._revisions&&overrides._revisions.lflSourceMode)||0, noteColumnDefs: Number(overrides._revisions&&overrides._revisions.noteColumnDefs)||0, importanceSettings: Number(overrides._revisions&&overrides._revisions.importanceSettings)||0, refreshHistory: Number(loadRefreshHistory(id)._revision)||0 },
     lflMeta: active.lflMeta || null,
     currentUser: currentUser ? userAccess.publicProfile(currentUser) : null,
     cp: startup ? null : (cpDataAllowed ? sharedAccessRows(cp, currentUser) : []),
@@ -8460,7 +8464,7 @@ app.get('/api/backlog', userAccess.requireArea('backlog'), async (req, res) => {
 
 
 const BACKLOG_TEMPLATE_HEADERS = [
-  'Sezon','Sipariş Yerleştirme MerchTarih','Siparişin Üretildiği Ülke','Buyer','Buyer Grup (TR)','Lisans','Üretici','Alt Üretici','Line','Ürün Klasman','Sipariş Kod','Özel Kod 1','Model Adı','Renk Kod','Renk','Orijinal Exfactory Merch Ay','Orijinal Exfactory Merch Tarih','Retail Depo Merch Yil Ay','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Merch Yil Ay','Model Bütçe Tarih Yıl Ay Gün','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','FOB Fiyatı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','ANTREPO-RETAIL','Üretici Tükleme Tipi Teyidi','RİSK\n(PRIORITY)','buying note'
+  'Sezon','Sipariş Yerleştirme MerchTarih','Siparişin Üretildiği Ülke','Buyer','Buyer Grup (TR)','Lisans','Üretici','Alt Üretici','Line','Ürün Klasman','Sipariş Kod','Özel Kod 1','Model Adı','Renk Kod','Renk','Orijinal Exfactory Merch Ay','Orijinal Exfactory Merch Tarih','Retail Depo Merch Yil Ay','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Merch Yil Ay','Model Bütçe Tarih Yıl Ay Gün','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','FOB Fiyatı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','ANTREPO-RETAIL','ÖNEM ETİKETİ\n(IMPORTANCE)','RİSK\n(PRIORITY)','buying note'
 ];
 
 // Backlog Excel Ayarları'ndaki "Sütun Ekle" kataloğu. Kaynak of truth AKTİF ASAS /
@@ -8548,7 +8552,7 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
       const rowsRevision=crypto.createHash('sha1').update(BACKLOG_ROWS_PROCESS_NONCE).update(detailRowsKey).digest('hex');
       return sendDateSafeJson(res, { headers: exportHeaders, rows: detailRows, totalRows:detailRows.totalRows||detailRows.length, sourceColumns, sourceCatalog, rowsRevision });
     }
-    const workerResult=await runExcelTask('writeBacklogWorkbook',{headers:exportHeaders,detailRows,templatePath:path.join(__dirname,'templates','BACKLOG.xlsx')},{timeoutMs:300000});
+    const workerResult=await runExcelTask('writeBacklogWorkbook',{headers:exportHeaders,detailRows,importanceValues:BLOrderImportance.excelValues(overrides.importanceSettings),templatePath:path.join(__dirname,'templates','BACKLOG.xlsx')},{timeoutMs:300000});
     const buffer=Buffer.from(workerResult.data);
     const d=new Date(),p=x=>String(x).padStart(2,'0');
     const name=`Backlog_Report_${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}_${p(d.getHours())}${p(d.getMinutes())}.xlsx`;
@@ -9511,7 +9515,7 @@ liveEvents.setPatchAuthorizer((entry, rowPatches, event) => {
 });
 
 const ROW_PATCH_IDENTITY_KEYS = new Set(['model','modelName','ccode','colourCode','colorCode','plmId','imagePlmId','imageColourCode']);
-const ROW_PATCH_INCREMENTAL_KEYS = new Set([...ROW_PATCH_IDENTITY_KEYS,'notes','suppFob','suppFobMeta','delType','dates','imageRef','noteColumns']);
+const ROW_PATCH_INCREMENTAL_KEYS = new Set([...ROW_PATCH_IDENTITY_KEYS,'notes','suppFob','suppFobMeta','delType','dates','importance','imageRef','noteColumns']);
 function rowPatchIncrementalSafe(patch) {
   if (!patch || typeof patch !== 'object') return false;
   if (Object.keys(patch).some(key => !ROW_PATCH_INCREMENTAL_KEYS.has(key))) return false;
@@ -9574,6 +9578,7 @@ function applyIncrementalProjectionPatch(row, patch, overrides, includePriority 
       row[id] = value == null ? '' : String(value);
     }
   }
+  if (Object.prototype.hasOwnProperty.call(patch,'importance')) parseLib.applyImportanceToRow(row, overrides);
   if (patch.delType != null || patch.dates) parseLib.applyFormulas(row, overrides.transitRules, includePriority);
   return row;
 }
@@ -10059,6 +10064,7 @@ require('./routes/note-column-routes')(app, {
   loadOverrides,
   publishSharedMasterChange,
   replaceNoteColumnDefs,
+  replaceImportanceSettings,
   requestRevision,
   userAccess,
 

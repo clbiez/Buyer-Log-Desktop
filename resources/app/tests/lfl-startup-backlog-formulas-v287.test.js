@@ -7,10 +7,11 @@ const path = require('node:path');
 const Module = require('node:module');
 const formulas = require('../public/backlog-excel-formulas');
 
-// 'Adet' (Net Alım Sipariş Miktarı'nın sağı) ve 'Üretici Tükleme Tipi Teyidi'
-// (ANTREPO-RETAIL'in sağı) sonradan eklenen üretim sütunları (version-history.js).
+// 'Adet' (Net Alım Sipariş Miktarı'nın sağı) ve ANTREPO-RETAIL'in sağındaki sütun
+// sonradan eklenen üretim sütunlarıdır. O sütun eskiden üretici yükleme teyidiydi;
+// v20261021'de aynı konumda ÖNEM ETİKETİ'ne dönüştü (sütun indeksleri değişmedi).
 const HEADERS = [
-  'Sezon','Sipariş Yerleştirme MerchTarih','Siparişin Üretildiği Ülke','Buyer','Buyer Grup (TR)','Lisans','Üretici','Alt Üretici','Line','Ürün Klasman','Sipariş Kod','Özel Kod 1','Model Adı','Renk Kod','Renk','Orijinal Exfactory Merch Ay','Orijinal Exfactory Merch Tarih','Retail Depo Merch Yil Ay','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Merch Yil Ay','Model Bütçe Tarih Yıl Ay Gün','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','FOB Fiyatı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','ANTREPO-RETAIL','Üretici Tükleme Tipi Teyidi','RİSK\n(PRIORITY)','buying note',
+  'Sezon','Sipariş Yerleştirme MerchTarih','Siparişin Üretildiği Ülke','Buyer','Buyer Grup (TR)','Lisans','Üretici','Alt Üretici','Line','Ürün Klasman','Sipariş Kod','Özel Kod 1','Model Adı','Renk Kod','Renk','Orijinal Exfactory Merch Ay','Orijinal Exfactory Merch Tarih','Retail Depo Merch Yil Ay','Retail Depo Tarih Yıl Ay Gün','Model Bütçe Merch Yil Ay','Model Bütçe Tarih Yıl Ay Gün','Model Bütçe Yil Hafta','Retail Depo Merch Yil Hafta','Net Alım Sipariş Miktarı','Adet','Gelen Alım Sipariş Miktarı Merkez Sevke Hazır Depo','Kalan Alım Sipariş Miktarı','FOB Fiyatı','Net Gelen Alım Sipariş Miktarı','Kalan Alım Sipariş Miktarı_Merkez Sevke Hazır Depo','GÜNCEL DURUM\n(STATUS)','REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)','ANTREPO GİRİŞ TARİHİ','YÜKLEME TİPİ','ANTREPO-RETAIL','ÖNEM ETİKETİ\n(IMPORTANCE)','RİSK\n(PRIORITY)','buying note',
 ];
 
 function loadParseWithoutXlsx() {
@@ -81,7 +82,7 @@ test('Backlog formula plan keeps month/week, revised Ex-Factory and Priority as 
     _backlogExcel: { transitDays: 70, actualAntrepoDate: null, handoverDate: null, shipConfirmationDate: '2026-07-11', originalDelType: 'Gemi' },
   };
   const plan = formulas.formulaPlan(HEADERS, row, 2);
-  // 'Adet' ve 'Üretici Tükleme Tipi Teyidi' sütunlarının eklenmesi sonraki hücre
+  // 'Adet' ve ANTREPO-RETAIL sağındaki sütunun eklenmesi sonraki hücre
   // referanslarını kaydırdı (AE/AF/AH -> AF/AG/AI). Risk artık yalnız ANTREPO-RETAIL
   // eşiğine değil canonical gecikme/hand-over/discount/transit-overdue helper bayraklarına bağlıdır.
   assert.equal(plan.refs['REVİZE YÜKLEME TARİHİ\n(EX-FACTORY)'], 'AF2');

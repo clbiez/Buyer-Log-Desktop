@@ -8,7 +8,6 @@
     'Net Gelen Alım Sipariş Miktarı',
     'ANTREPO GİRİŞ TARİHİ',
     'ANTREPO-RETAIL',
-    'Üretici Tükleme Tipi Teyidi',
     'RİSK\n(PRIORITY)',
   ]);
 
@@ -41,7 +40,7 @@
     'ANTREPO GİRİŞ TARİHİ',
     'YÜKLEME TİPİ',
     'ANTREPO-RETAIL',
-    'Üretici Tükleme Tipi Teyidi',
+    'ÖNEM ETİKETİ\n(IMPORTANCE)', // i18n-ignore — Backlog Excel sütun başlığı (veri anahtarı)
     'RİSK\n(PRIORITY)',
     'buying note',
   ]);
@@ -307,6 +306,14 @@
     const warehouseShortageExpr = `OR(${status}="Depoda - Eksik Yükleme",${status}="In Warehouse - Shortage")`;
     const shortageExpr = `OR(${status}="Eksik Yükleme",${status}="Shortage",${warehouseShortageExpr})`;
     const syntheticExpr = `OR(${productionExpr},${shortageExpr})`;
+    const inWarehouseExpr = `OR(${status}="Depoda",${status}="In Warehouse")`;
+    // Yükleme öncesi aşama: Üretimde (alt aşama ekli "Üretimde - Kesimde" dahil) / Yükleme Operasyonları.
+    const preLoadExpr = `OR(LEFT(${status},8)="Üretimde",LEFT(${status},10)="Production",${status}="Yükleme Operasyonları",${status}="Loading Operations")`;
+    const retailWaitingExpr = `OR(${status}="Retaile Aktarım Bekleniyor",${status}="Awaiting Retail Transfer")`;
+    // Parsiyelin gerçek yükleme tarihi: HANDOVER varsa o, yoksa geçerli Ex-Factory.
+    const loadExpr = `IF(${handoverDate}<>"",${handoverDate},${revisedEx})`;
+    // Parsiyel tahmini antrepo: IAS tarihi; yoksa yükleme + yol süresi; o da yoksa boş.
+    const partialEstimateExpr = `IF(${antDate}<>"",${antDate},IF(AND(${loadExpr}<>"",${transit}<>""),${loadExpr}+${transit},""))`;
     const airExpr = `OR(ISNUMBER(SEARCH("Uçak",${del})),ISNUMBER(SEARCH("Air",${del})))`;
     const mixedExpr = `OR(ISNUMBER(SEARCH("+",${del})),ISNUMBER(SEARCH("Gemi",${del})),ISNUMBER(SEARCH("Sea",${del})))`;
     // Ayarlar sayfasındaki yol süresi tablosu varsa süreler oradan okunur;
@@ -347,10 +354,12 @@
       },
       'RİSK\n(PRIORITY)': {
         kind: 'text',
-        // Hedef tarihe göre mevcut ANTREPO-RETAIL riski korunur. Buna ek olarak
-        // üretim sonrası yüklenmiş, planlanan transit süresi dolmuş ama hâlâ
-        // depoya girmemiş parsiyel doğrudan Risk Var'dır.
-        formula: `IF(OR(${delayFlag},${mbDelayFlag},${handoverFlag},${antDelayFlag},${discountFlag},${transitOverdueFlag}),"VAR","YOK")`,
+        // Kanonik kural: business-rules.js computeBacklogRisk. Risk VAR =
+        // Retail'e yetişmeme (ortalama yol süresiyle tahmin) VEYA 3 günü aşan
+        // Handover bekleyişi VEYA yükleme + yol süresi dolmuş ama depoya
+        // ulaşmamış parsiyel. Yardımcı bayraklar Ayarlar'daki yol süresine
+        // bağlıdır; tarih/yükleme tipi elle değişince Risk yeniden hesaplanır.
+        formula: `IF(OR(${delayFlag},${handoverFlag},${transitOverdueFlag}),"VAR","YOK")`,
         cached: String(row['RİSK\n(PRIORITY)'] || '').trim() || (meta.transitOverdue === true ? 'VAR' : 'YOK'),
       },
     };
@@ -367,10 +376,14 @@
       '_BL_ORIGINAL_DEL_TYPE': { kind: 'text', value: originalDelType },
       '_BL_DELAY': {
         kind: 'boolean',
-        // Üretimde satırında geçmiş Ex-Factory bugüne taşınır. Shortage satırında
-        // siparişin tamamı Ex-Factory tarihinde yüklenmiş kabul edilir; TODAY()
-        // düzeltmesi yapılmaz.
-        formula: `OR(AND(${productionExpr},${revisedEx}<>"",${retailDate}<>"",${transit}<>"",IF(${revisedEx}<TODAY(),TODAY(),${revisedEx})+${transit}>${retailDate}),AND(${shortageExpr},${revisedEx}<>"",${retailDate}<>"",${transit}<>"",${revisedEx}+${transit}>${retailDate}))`,
+        // RETAIL'E YETİŞMEME. Tahmini antrepo girişi Retail Depo tarihinden sonra mı?
+        //  · Üretimde: geçmiş Ex-Factory bugüne taşınır → MAX(Ex-F, bugün) + yol süresi.
+        //  · Eksik Yükleme: tamamı Ex-Factory'de yüklenmiş sayılır → Ex-F + yol süresi.
+        //  · Parsiyel: IAS antrepo tarihi; yoksa yükleme (Handover, yoksa Ex-F) +
+        //    yol süresi. Depoya girmemiş parsiyelin geçmiş tarihi en erken bugündür.
+        //  · Retaile aktarım bekleyen: gerçekleşen antrepo tarihi. Depoda: risk yok.
+        // Her dal IF ile korunur: boş tarih + sayı #DEĞER! üretip Risk'i bozmasın.
+        formula: `IF(OR(${inWarehouseExpr},${retailDate}=""),FALSE,IF(${productionExpr},IF(AND(${revisedEx}<>"",${transit}<>""),MAX(${revisedEx},TODAY())+${transit}>${retailDate},FALSE),IF(${shortageExpr},IF(AND(${revisedEx}<>"",${transit}<>""),${revisedEx}+${transit}>${retailDate},FALSE),IF(${partialEstimateExpr}="",FALSE,IF(${retailWaitingExpr},${partialEstimateExpr},MAX(${partialEstimateExpr},TODAY()))>${retailDate}))))`,
         cached: false,
       },
       '_BL_MB_DELAY': {
@@ -380,7 +393,11 @@
       },
       '_BL_HANDOVER': {
         kind: 'boolean',
-        formula: `AND(${shipConfirmation}<>"",${handoverDate}="",NOT(${syntheticExpr}),${status}<>"Depoda",TODAY()-${shipConfirmation}>=3)`,
+        // HANDOVER BEKLİYOR: yükleme onayı verilmiş, ürün handover edilmemiş ve
+        // onayın üzerinden 3 günden FAZLA geçmiş. Yalnız yükleme öncesi
+        // aşamalar değerlendirilir (Üretimde bakiyesi / Yükleme Operasyonları);
+        // Yolda-Gümrük'teki ürün handover tarihi boş olsa da teslim edilmiştir.
+        formula: `IF(AND(${shipConfirmation}<>"",${handoverDate}=""),AND(NOT(${shortageExpr}),${preLoadExpr},TODAY()-${shipConfirmation}>3),FALSE)`,
         cached: false,
       },
       '_BL_ANT_DELAY': {
@@ -390,11 +407,11 @@
       },
       '_BL_TRANSIT_OVERDUE': {
         kind: 'boolean',
-        // Non-synthetic (IAS) satırda revisedEx gerçek HANDOVER'a, handover
-        // yoksa geçerli Ex-Factory'ye düşer. Tahmini antrepo tarihi özellikle
-        // kullanılmaz: transit ETA'sı sonradan ileri alınsa bile yükleme + plan
-        // süresi aşıldıysa risk görünür kalmalıdır.
-        formula: `AND(NOT(${syntheticExpr}),${revisedEx}<>"",${transit}<>"",${status}<>"Depoda",${status}<>"In Warehouse",${status}<>"Retaile Aktarım Bekleniyor",${status}<>"Awaiting Retail Transfer",TODAY()>${revisedEx}+${transit})`,
+        // Yüklenmiş parsiyel: yükleme (Handover, yoksa geçerli Ex-Factory) +
+        // ortalama yol süresi dolduğu hâlde depoya ulaşmadıysa risklidir. Tahmini
+        // antrepo tarihi özellikle kullanılmaz: ETA sonradan ileri alınsa bile
+        // gecikme görünür kalmalıdır.
+        formula: `IF(AND(NOT(${syntheticExpr}),${loadExpr}<>"",${transit}<>""),AND(NOT(${inWarehouseExpr}),NOT(${retailWaitingExpr}),TODAY()>${loadExpr}+${transit}),FALSE)`,
         cached: meta.transitOverdue === true,
       },
       '_BL_DISCOUNT': {

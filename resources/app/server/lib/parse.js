@@ -9,6 +9,7 @@ let _xlsx = null;
 // Kanca idempotenttir; hangi modül önce çağırırsa orada bir kez takılır.
 function getXLSX() { if (!_xlsx) { _xlsx = require('xlsx'); try { require('../../public/excel-date-utils').installSheetJsHooks(_xlsx); } catch (_) {} } return _xlsx; }
 const BLBusinessRules = require('../../public/business-rules');
+const BLOrderImportance = require('../../public/order-importance');
 const BLCanonicalFields = require('./canonical-fields');
 const BLCpReadinessEngine = require('../../public/cp-readiness-engine');
 
@@ -2191,6 +2192,10 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       const noteColumnRec = overrideGet(ov.noteColumnValues || {}, o) || {};
       noteColumnDefs.forEach(def => { row[def.id] = noteColumnRec[def.id] || ''; });
     }
+    const importance = resolveOrderImportance(o, ov);
+    row[BLOrderImportance.ROW_KEY] = importance.label;
+    row._importanceId = importance.id;
+    row._importanceSource = importance.source;
     applyFormulas(row, ov.transitRules, options.includePriority!==false&&(!options.priorityForActiveOnly||row._isActive));
     if (!isActive && options.includePriority!==false) row.Priority = '';
     return attachSourceOrderRef(row, o);
@@ -3193,6 +3198,27 @@ function backlogYearWeek(d){
   const key=BLDateDimension.bucketKey(d,'week');
   return key ? key.replace('-W','-') : '';
 }
+// Önem etiketi (BTS, Bayram …): sipariş satırı ataması > Line/Sezon kuralı > Regular.
+function resolveOrderImportance(order, overrides) {
+  const ov = overrides || {};
+  return BLOrderImportance.resolve(
+    { line: order && order.line, season: order && order.season },
+    overrideGet(ov.importancemap || {}, order),
+    BLOrderImportance.normalizeSettings(ov.importanceSettings));
+}
+// CP/Orders satırına çözülen etiketi yazar. Artımlı yama (canlı olay / sayfa
+// önbelleği) yalnız değişen atamayı bilir; kural çözümü için satır boyutları kullanılır.
+function applyImportanceToRow(row, overrides, manual) {
+  if (!row) return row;
+  const ov = overrides || {};
+  const value = manual !== undefined ? manual : overrideGet(ov.importancemap || {}, { ocode: row['Order Code'], model: row['Model Name'], ccode: row['C.Code'] });
+  const resolved = BLOrderImportance.resolve({ line: row.Line, season: row.Season }, value, BLOrderImportance.normalizeSettings(ov.importanceSettings));
+  row[BLOrderImportance.ROW_KEY] = resolved.label;
+  row._importanceId = resolved.id;
+  row._importanceSource = resolved.source;
+  return row;
+}
+
 // Canonical Backlog risk consumes structured operational signals only.
 // Legacy CP Priority display text is not a business-logic input anywhere.
 function backlogRiskFromSignals(signals, transitOverdue){
@@ -3362,9 +3388,27 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
     };
     const priorityFlags = computeFlags(priorityInput, overrides && overrides.transitRules);
     const operationalSignals = Array.isArray(priorityFlags.signals) ? priorityFlags.signals : [];
-    // Risk artık display Priority metnini parse etmez. Aynı kanonik business
-    // flags/signal çıktısı hem CP hem Backlog kararına kaynak olur.
-    const riskValue = backlogRiskFromSignals(operationalSignals, transitOverdue.overdue);
+    // Backlog RİSK (PRIORITY) kanonik kuralı: Retail'e yetişmeme (ortalama yol
+    // süresiyle tahmin) · 3 günü aşan Handover bekleyişi · yol süresi aşımı.
+    // Excel'deki formül aynı kuralı hücrelerle kurar (backlog-excel-formulas.js).
+    // CP Action Priority sinyalleri (MB tamponu, indirim, ETA kayması) bu
+    // kararın girdisi değildir; Teslimat Analizi için meta'da taşınmaya devam eder.
+    const backlogRisk = BLBusinessRules.computeBacklogRisk({
+      segmentKind: isProduction ? 'production' : (isShortage ? 'shortage' : 'partial'),
+      status: segment._status,
+      inWarehouse: isInWarehouse,
+      retailWaiting: isRetailWaiting,
+      exFactory: revisedExFactoryDate,
+      loadDate: actualLoadDate,
+      antArrival: backlogAntrepoDate,
+      retailDate: backlogRetailDate,
+      shipConfirmationDate: order.shipConf || null,
+      handoverDate: ias ? (ias.handover || null) : null,
+      transitDays: transitInfo.days,
+      transitOverdue: transitOverdue.overdue,
+    }, dateOrdinal);
+    const riskValue = backlogRisk.risk ? 'VAR' : 'YOK';
+    const importance = resolveOrderImportance(order, overrides);
     const cpRow = cp.get(order) || {};
 
     const receivedQty = (isProduction || isShortage) ? 0 : segmentQty;
@@ -3420,7 +3464,8 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
       'ANTREPO GİRİŞ TARİHİ': backlogAntrepoDate || null,
       'YÜKLEME TİPİ': effectiveDelType,
       'ANTREPO-RETAIL': antRetail,
-      'Üretici Tükleme Tipi Teyidi': 'VAR',
+      // Önem etiketi: giriş yoksa Regular, varsa seçilen etiket (Excel'de liste).
+      [BLOrderImportance.BACKLOG_HEADER]: importance.label,
       'buying note': cpRow.Notes || '',
       // Alt detay tablolarının görseli ve PLM köprüsünü, açık CP filtresine
       // bağımlı kalmadan doğrudan kaynak siparişten çözebilmesi için görünmeyen
@@ -3474,6 +3519,10 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
         mag: order.merch || '',
         mmyg: order.ageGroup || '',
         signals: operationalSignals,
+        riskReasons: backlogRisk.reasons,
+        handoverPendingDays: backlogRisk.handoverPendingDays,
+        importanceId: importance.id,
+        importanceSource: importance.source,
       },
     };
     requestedColumns.forEach(column => {
@@ -3508,6 +3557,6 @@ module.exports = {
   antrepoMatchKey, exactMatchValue, exactOrderCodeKey, exactModelKey, exactCcodeKey,
   auditAntrepoMatching,
   applyDateOverrides, asasBaseline, backlogTemplateRowsFromSegments,
-  findTransitRule, resolveTransitDays, defaultTransitDays, normalizeTransitDelType, roundHalfUp, backlogRiskFromSignals,
+  findTransitRule, resolveTransitDays, defaultTransitDays, normalizeTransitDelType, roundHalfUp, backlogRiskFromSignals, resolveOrderImportance, applyImportanceToRow,
   parseDateOnly, antrepoStatusKey,
 };

@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Alt detay raporları ve checklist düzeltmeleri",
-    "en": "Detail report and checklist fixes"
+    "tr": "Sipariş önem etiketleri, Backlog risk düzeltmesi ve detay iyileştirmeleri",
+    "en": "Order importance tags, Backlog risk fix and detail improvements"
   },
   "summary": {
-    "tr": "Kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi.",
-    "en": "Improved source fields, partial details, Collection inheritance and checklist management."
+    "tr": "Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi. Kaynak alanları, parsiyel detayları ve checklist yönetimi iyileştirildi.",
+    "en": "Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed. Source fields, partial details and checklist management were improved."
   },
   "changes": [
     {
@@ -124,6 +124,151 @@
         "caption": {
           "tr": "Üç tarih alanının revizyonları birlikte korunur",
           "en": "Revisions of all three date fields are preserved together"
+        }
+      }
+    },
+    {
+      "id": "order-importance-tags",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler",
+        "en": "CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Sipariş önem etiketleri",
+        "en": "Order importance tags"
+      },
+      "body": {
+        "tr": "Siparişler BTS, Transition, Bayram, Ekvator, New Year gibi önem etiketleriyle ayırt edilir. Yeni Önem Etiketi sütununda etiket listeden seçilir, serbest metin yazılmaz; menüden yeni etiket de eklenebilir. Etiket sipariş + model + renk satırına bağlıdır, aynı modelin siparişleri farklı etiket taşıyabilir. Etiketi olmayan sipariş Regular sayılır.",
+        "en": "Orders are distinguished with importance tags such as BTS, Transition, Eid (Bayram), Equator (Ekvator) and New Year. In the new Importance Tag column the tag is picked from a list instead of typed; a new tag can be added from the menu. The tag belongs to the order + model + colour line, so orders of the same model can carry different tags. Untagged orders count as Regular."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "order-importance-cp-orders.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: Önem Etiketi sütunu ve açık etiket menüsü, demo veriler",
+          "en": "Real Buyer Log CP Tracker: Importance Tag column with the tag menu open, demo data"
+        },
+        "caption": {
+          "tr": "CP'de siparişe önem etiketi seçme",
+          "en": "Picking an importance tag for an order in CP"
+        }
+      }
+    },
+    {
+      "id": "order-importance-settings",
+      "type": "feature",
+      "module": {
+        "tr": "Ayarlar · Hesaplama kuralları",
+        "en": "Settings · Calculation rules"
+      },
+      "title": {
+        "tr": "Önem etiketi kataloğu ve Line kuralları",
+        "en": "Importance tag catalogue and Line rules"
+      },
+      "body": {
+        "tr": "Ayarlar'daki Sipariş Önem Etiketleri penceresinden etiketler eklenir, yeniden adlandırılır, renklendirilir veya silinir. Line kuralı bir Line grubunun (isteğe bağlı sezonla) tüm siparişlerini otomatik etiketler; siparişte seçilen etiket kuralı ezer. Silinen etiketin atamaları Regular'a döner. Katalog Moderatör yayımıyla ekibe dağılır.",
+        "en": "The Order Importance Tags window in Settings adds, renames, colours or deletes tags. A Line rule tags every order of a Line group automatically (optionally by season); a tag picked on the order overrides the rule. Assignments of a deleted tag revert to Regular. The catalogue is distributed to the team with the Moderator release."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "order-importance-settings.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Sipariş Önem Etiketleri penceresi: ön tanımlı etiketler ve Line kuralı, demo veriler",
+          "en": "Real Buyer Log Order Importance Tags window: default tags and a Line rule, demo data"
+        },
+        "caption": {
+          "tr": "Etiketleri ve Line kurallarını Ayarlar'dan yönetme",
+          "en": "Managing tags and Line rules in Settings"
+        }
+      }
+    },
+    {
+      "id": "backlog-special-orders-summary",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog · Genel Bakış",
+        "en": "Backlog · Overview"
+      },
+      "title": {
+        "tr": "Özel siparişler özetlerde ayrı değerlendirilir",
+        "en": "Special orders evaluated separately in summaries"
+      },
+      "body": {
+        "tr": "Backlog Genel Bakış riskli siparişlerin içindeki özel siparişleri ayrıca uyarır (ör. riskli 191 siparişin 46'sı özel) ve etiket bazında riskli satırları açar. Kapsam Tümü / Özel / Regular olarak değiştirilebilir, Operasyon dağılımı Önem Etiketi'ne göre gruplanabilir. Excel Backlog V3 özetinde de Özel siparişler tablosu ve etiket kırılımı bulunur.",
+        "en": "Backlog Overview separately warns about special orders among at-risk orders (e.g. 46 of 191 at-risk orders are special) and opens the at-risk lines per tag. The scope can be switched between All / Special / Regular and the operational distribution can be grouped by Importance Tag. The Excel Backlog V3 summary also has a Special orders table and a tag breakdown."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-special-orders-summary.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog Genel Bakış: özel sipariş uyarısı, kapsam seçimi ve Önem Etiketi kırılımı, demo veriler",
+          "en": "Real Buyer Log Backlog Overview: special-order warning, scope switch and Importance Tag breakdown, demo data"
+        },
+        "caption": {
+          "tr": "Riskli siparişlerin içindeki özel siparişler",
+          "en": "Special orders among at-risk orders"
+        }
+      }
+    },
+    {
+      "id": "backlog-legacy-importance-column",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog · Legacy BACKLOG raporu",
+        "en": "Backlog · Legacy BACKLOG report"
+      },
+      "title": {
+        "tr": "Önem Etiketi sütunu; üretici yükleme teyidi kaldırıldı",
+        "en": "Importance Tag column; supplier loading confirmation removed"
+      },
+      "body": {
+        "tr": "Legacy BACKLOG raporunda Üretici Yükleme Tipi Teyidi sütunu kaldırıldı; aynı konuma ÖNEM ETİKETİ (IMPORTANCE) geldi. Giriş yoksa Regular, varsa seçilen etiket yazılır. Excel hücresi serbest metin kabul etmez; liste Ayarlar'daki katalogdan gelir. Kayıtlı sütun seçimleri bozulmaz.",
+        "en": "The Supplier Loading Type Confirmation column was removed from the Legacy BACKLOG report; ÖNEM ETİKETİ (IMPORTANCE) takes its place. It shows Regular when nothing is entered, otherwise the selected tag. The Excel cell blocks free text; the list comes from the catalogue in Settings. Saved column selections keep working."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-legacy-importance-column.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog raporu: ANTREPO-RETAIL yanında ÖNEM ETİKETİ ve RİSK sütunları, demo veriler",
+          "en": "Real Buyer Log Backlog report: IMPORTANCE and RISK columns next to ANTREPO-RETAIL, demo data"
+        },
+        "caption": {
+          "tr": "Legacy raporda yeni Önem Etiketi sütunu",
+          "en": "New Importance Tag column in the legacy report"
+        }
+      }
+    },
+    {
+      "id": "backlog-risk-rule",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · Legacy BACKLOG raporu",
+        "en": "Backlog · Legacy BACKLOG report"
+      },
+      "title": {
+        "tr": "RİSK (PRIORITY) kuralı düzeltildi",
+        "en": "RISK (PRIORITY) rule fixed"
+      },
+      "body": {
+        "tr": "Risk artık yalnız iş kuralına göre VAR olur: tahmini antrepo girişi Retail tarihine yetişmiyorsa (Üretimde için MAX(Ex-Factory, bugün) + ortalama yol süresi, yoldaki parsiyel için IAS tarihi), yükleme onayı verilip ürün 3 günden fazla handover edilmemişse veya yükleme + yol süresi dolduğu hâlde ürün depoya ulaşmamışsa. Yoldaki parsiyelin Retail'e yetişmeme riski artık görünür; In-Store tamponu ve yoldaki ürünler için handover uyarısı sahte risk üretmez. Excel formülü aynı kuralı boş tarihlerde hata vermeden kurar.",
+        "en": "Risk is now YES only by the business rule: the estimated warehouse arrival misses the Retail date (MAX(Ex-Factory, today) + average transit time for production, the IAS date for partials in transit), loading was confirmed but the goods have not been handed over for more than 3 days, or loading + transit time has passed without warehouse arrival. Retail risk of partials in transit is now visible; the In-Store buffer and handover warnings for goods already in transit no longer create false risk. The Excel formula builds the same rule without errors on blank dates."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-risk-rule.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog raporu: statü, antrepo ve Retail farkına göre RİSK VAR/YOK, demo veriler",
+          "en": "Real Buyer Log Backlog report: RISK YES/NO by status, warehouse date and Retail gap, demo data"
+        },
+        "caption": {
+          "tr": "Retail ve Handover kuralına göre risk",
+          "en": "Risk by the Retail and Handover rules"
         }
       }
     }

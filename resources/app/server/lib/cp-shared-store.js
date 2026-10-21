@@ -23,6 +23,7 @@ const FIELDS = Object.freeze({
   delivery: 'delmap',
   dates: 'datemap',
   shortage: 'shortagemap',
+  importance: 'importancemap',
 });
 
 let deltaStore = null;
@@ -105,6 +106,7 @@ function patchFromOrderPatch(overrides, id, patch) {
   if (patch && Object.prototype.hasOwnProperty.call(patch, 'delType')) out.delivery = fieldValue(overrides, id, 'delivery') ?? null;
   if (patch && patch.dates && typeof patch.dates === 'object') out.dates = fieldValue(overrides, id, 'dates') ?? null;
   if (patch && Object.prototype.hasOwnProperty.call(patch, 'shortage')) out.shortage = fieldValue(overrides, id, 'shortage') ?? null;
+  if (patch && Object.prototype.hasOwnProperty.call(patch, 'importance')) out.importance = fieldValue(overrides, id, 'importance') ?? null;
   return out;
 }
 

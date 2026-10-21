@@ -9,7 +9,7 @@
    kapsam dışı siparişlerin notları böylece yetkisiz kullanıcıya ulaşıyordu.
    Ortak ayarlar (royalty, yol süreleri…) ve model görsel haritası kırpılmaz. */
 
-const ORDER_SCOPED_MAPS = Object.freeze(['notesmap', 'noteColumnValues', 'submap', 'suppfobmap', 'suppfobmetamap', 'delmap', 'licensormap', 'datemap', 'shortagemap']);
+const ORDER_SCOPED_MAPS = Object.freeze(['notesmap', 'noteColumnValues', 'submap', 'suppfobmap', 'suppfobmetamap', 'delmap', 'licensormap', 'datemap', 'shortagemap', 'importancemap']);
 
 function orderCodeOfKey(key) {
   const code = Number(String(key == null ? '' : key).split('|')[0].replace(/\./g, '').trim());

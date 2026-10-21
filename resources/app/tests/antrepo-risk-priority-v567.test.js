@@ -43,9 +43,12 @@ function row(value, risk){
 
 test('v9.53 Antrepo Excel RİSK(PRIORITY) formülü operasyonel sinyalleri OR\'luyor',()=>{
   const plan=formulas.formulaPlan(HEADERS,row(6,'VAR'),2).formulas['RİSK\n(PRIORITY)'];
-  // Altı bayrak da formülde olmalı; biri düşerse o risk türü Excel'de kaybolur.
-  assert.match(plan.formula,/^IF\(OR\((?:[A-Z]+2,){5}[A-Z]+2\),"VAR","YOK"\)$/,
-    'formül altı sinyal sütununu OR\'lamalı');
+  // v20261021: kullanıcı kuralı üç bayraktır — Retail'e yetişmeme (ortalama yol
+  // süresiyle tahmin), 3 günü aşan Handover bekleyişi ve yol süresi aşımı.
+  // Biri düşerse o risk türü Excel'de kaybolur. MB tamponu / indirim / ETA
+  // kayması CP Action Priority sinyalidir, Backlog RİSK'ine girmez.
+  assert.match(plan.formula,/^IF\(OR\((?:[A-Z]+2,){2}[A-Z]+2\),"VAR","YOK"\)$/,
+    'formül üç risk bayrağını OR\'lamalı');
   // Tek eşiğe geri dönülmemeli.
   assert.doesNotMatch(plan.formula,/>5/,'tek ANTREPO-RETAIL eşiğine geri dönülmemeli');
 });

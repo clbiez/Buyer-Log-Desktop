@@ -884,6 +884,36 @@ td.exf-next{background:var(--acc-bg);color:var(--acc-ink);}
 .delTypeOption{display:block;width:100%;text-align:left;border:none;background:none;padding:7px 10px;font-size:var(--fs-sm);color:var(--ink);cursor:pointer;border-radius:var(--r-xs);}
 .delTypeOption:hover,.delTypeOption[aria-selected="true"]{background:var(--acc-bg);color:var(--acc-ink);}
 
+/* ===================== SİPARİŞ ÖNEM ETİKETİ (order-importance-ui.js) =====================
+   Ton yalnız tema token'larından okunur; yeni keyfi renk üretilmez. */
+.impChip{--imp:var(--chart-1);display:inline-flex;align-items:center;gap:5px;max-width:100%;min-width:0;padding:1px 7px;border-radius:var(--r-full);border:1px solid color-mix(in srgb,var(--imp) 55%,transparent);background:color-mix(in srgb,var(--imp) 14%,transparent);color:var(--ink);font-size:var(--fs-xs);font-weight:650;line-height:18px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.impChip--regular{--imp:var(--muted);border-color:transparent;background:transparent;color:var(--muted);font-weight:500;padding-left:0;}
+/* Kategorik ton: grafiklerle aynı --chart-* paleti (tema token'ı; yeni renk yok). */
+.impChip[data-tone="red"]{--imp:var(--chart-8);} .impChip[data-tone="orange"]{--imp:var(--chart-2);} .impChip[data-tone="gold"]{--imp:var(--chart-4);}
+.impChip[data-tone="green"]{--imp:var(--chart-3);} .impChip[data-tone="teal"]{--imp:var(--chart-6);} .impChip[data-tone="blue"]{--imp:var(--chart-1);}
+.impChip[data-tone="purple"]{--imp:var(--chart-7);} .impChip[data-tone="pink"]{--imp:var(--chart-5);}
+.impDot{flex:0 0 auto;width:6px;height:6px;border-radius:var(--r-full);background:var(--imp);}
+.impChipRule{font-size:var(--fs-2xs);font-weight:500;opacity:.75;text-transform:lowercase;}
+.impTrigger{display:inline-flex;align-items:center;gap:4px;max-width:100%;border:1px solid transparent;background:transparent;border-radius:var(--r-xs);padding:3px 5px;cursor:pointer;}
+.impTrigger:hover{background:var(--table-editHover);border-color:var(--line);}
+.impTrigger:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.impTrigger[aria-expanded="true"] .delTypeChevron{transform:rotate(180deg);}
+.impMenu .impOption{display:flex;align-items:center;gap:8px;}
+.impMenu .impOptionAction{color:var(--acc-ink);font-size:var(--fs-xs);}
+.impMenuSep{height:1px;margin:4px 6px;background:var(--line);}
+.impSetCard{width:min(860px,calc(100vw - 32px));max-height:calc(100vh - 48px);display:flex;flex-direction:column;}
+.impSetBody{overflow:auto;padding:var(--sp-3) var(--sp-4);display:grid;gap:var(--sp-4);}
+.impSetSection{display:grid;gap:var(--sp-2);}
+.impSetSectionHead{display:flex;align-items:baseline;gap:var(--sp-2);flex-wrap:wrap;}
+.impSetSectionHead span{color:var(--muted);font-size:var(--fs-xs);}
+.impSetList{display:grid;gap:6px;}
+.impSetRow{display:grid;grid-template-columns:22px minmax(120px,1fr) minmax(120px,1fr) 120px 70px 30px;gap:6px;align-items:center;}
+.impSetRow.impRuleRow{grid-template-columns:minmax(120px,160px) minmax(160px,2fr) minmax(120px,1fr) 30px;}
+.impSetRow input,.impSetRow select{min-width:0;height:30px;padding:0 8px;border:1px solid var(--line2);border-radius:var(--r-xs);background:var(--card);color:var(--ink);font-size:var(--fs-sm);}
+.impSetCount{color:var(--muted);font-size:var(--fs-xs);text-align:right;}
+.impSetEmpty{color:var(--muted);font-size:var(--fs-sm);padding:6px 0;}
+@media (max-width:640px){.impSetRow,.impSetRow.impRuleRow{grid-template-columns:1fr 1fr;}}
+
 /* ===================== GENEL BAKIŞ KARTLARI ===================== */
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-3);}
 .cardBox{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--sp-3) var(--sp-4);box-shadow:var(--shadow-1);}

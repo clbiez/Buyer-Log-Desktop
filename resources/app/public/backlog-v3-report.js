@@ -47,7 +47,9 @@
   const STAGE_KEYS = STAGES.map(s => s.key);
   const PRE_LOAD = new Set(STAGES.filter(s => s.preLoad).map(s => s.key));
   /* Kırılım boyutları: kanonik alan kimlikleri. */
-  const DIMENSIONS = Object.freeze(['buyer', 'buyingGroup', 'manufacturer', 'subManufacturer', 'season', 'category', 'country', 'deliveryType', 'line']);
+  const DIMENSIONS = Object.freeze(['buyer', 'buyingGroup', 'manufacturer', 'subManufacturer', 'season', 'category', 'country', 'deliveryType', 'line', 'importance']);
+  /* Önem etiketi olmayan sipariş Regular'dır (public/order-importance.js). */
+  const REGULAR_IMPORTANCE = 'Regular';
   const TIMELINE_FIELDS = Object.freeze([
     { key:'exFactory', tr:'Ex-Factory (güncel)', en:'Ex-Factory (current)' },
     { key:'antrepo', tr:'Antrepo Giriş', en:'Warehouse Arrival' },
@@ -158,6 +160,9 @@
     };
     DIMENSIONS.forEach(id => { item[id] = canon(row, id); });
     item.season = canon(row, 'season');
+    // Özel sipariş: Regular dışında bir önem etiketi taşıyan satır (BTS, Bayram …).
+    if (!item.importance) item.importance = REGULAR_IMPORTANCE;
+    item.special = turk(item.importance) !== turk(REGULAR_IMPORTANCE);
     // Sunucu tarihleri gün metni olarak gönderir; saatli ham değer bir veri yolu hatasıdır.
     item.rawTimestampFields = Object.keys(row || {}).filter(key => key[0] !== '_' && isTimestampText(row[key]));
     item.lineId = [item.orderCode, item.modelName, item.colourCode].join('\u001f');
@@ -176,24 +181,38 @@
 
   function emptyStages() { const out = {}; STAGE_KEYS.forEach(k => { out[k] = 0; }); return out; }
   function summarize(items) {
-    const out = { qty:0, lines:0, orders:0, rows:0, stages:emptyStages(), stageLines:emptyStages(), riskQty:0, overdueQty:0, overdueLines:0, transitOverdueQty:0, loadedQty:0, preLoadQty:0 };
+    const out = { qty:0, lines:0, orders:0, rows:0, stages:emptyStages(), stageLines:emptyStages(), riskQty:0, overdueQty:0, overdueLines:0, transitOverdueQty:0, loadedQty:0, preLoadQty:0,
+      riskOrders:0, specialQty:0, specialOrders:0, specialLines:0, specialRiskQty:0, specialRiskOrders:0, specialOverdueQty:0 };
     const lines = new Set(), orders = new Set(), overdueLines = new Set(), stageLines = {};
+    const riskOrders = new Set(), specialOrders = new Set(), specialLines = new Set(), specialRiskOrders = new Set();
     STAGE_KEYS.forEach(k => { stageLines[k] = new Set(); });
     (items || []).forEach(item => {
       out.rows += 1; out.qty += item.qty;
       out.stages[item.stage] += item.qty;
       stageLines[item.stage].add(item.lineId);
       lines.add(item.lineId); if (item.orderCode) orders.add(item.orderCode);
-      if (item.risk) out.riskQty += item.qty;
+      if (item.risk) { out.riskQty += item.qty; riskOrders.add(item.orderCode || item.lineId); }
       if (item.transitOverdue) out.transitOverdueQty += item.qty;
+      if (item.special) {
+        out.specialQty += item.qty; specialLines.add(item.lineId); specialOrders.add(item.orderCode || item.lineId);
+        if (item.risk) { out.specialRiskQty += item.qty; specialRiskOrders.add(item.orderCode || item.lineId); }
+        if (item.overdueNotLoaded) out.specialOverdueQty += item.qty;
+      }
       if (item.overdueNotLoaded) { out.overdueQty += item.qty; overdueLines.add(item.lineId); }
       if (PRE_LOAD.has(item.stage)) out.preLoadQty += item.qty; else out.loadedQty += item.qty;
     });
     out.lines = lines.size; out.orders = orders.size; out.overdueLines = overdueLines.size;
+    out.riskOrders = riskOrders.size; out.specialOrders = specialOrders.size; out.specialLines = specialLines.size; out.specialRiskOrders = specialRiskOrders.size;
     STAGE_KEYS.forEach(k => { out.stages[k] = round(out.stages[k]); out.stageLines[k] = stageLines[k].size; });
-    ['qty', 'riskQty', 'overdueQty', 'transitOverdueQty', 'loadedQty', 'preLoadQty'].forEach(k => { out[k] = round(out[k]); });
+    ['qty', 'riskQty', 'overdueQty', 'transitOverdueQty', 'loadedQty', 'preLoadQty', 'specialQty', 'specialRiskQty', 'specialOverdueQty'].forEach(k => { out[k] = round(out[k]); });
     out.loadedPct = out.qty > 0 ? out.loadedQty / out.qty : null;
     return out;
+  }
+  /* Özel siparişlerin etiket bazında ayrı değerlendirmesi: "100 riskli siparişin
+     30'u özel" uyarısı ve Excel Özet bölümü bu listeyi okur. Regular dahil edilmez. */
+  function importanceSummary(items) {
+    const special = (items || []).filter(item => item.special);
+    return groupBy(special, 'importance', { blank:REGULAR_IMPORTANCE }).map(g => ({ ...g, riskItems:g.items.filter(it => it.risk) }));
   }
   function groupBy(items, key, options) {
     const opts = options || {}, blank = opts.blank || '(boş)', map = new Map();
@@ -319,7 +338,7 @@
       [L('Yolda + Gümrük', 'In transit + customs'), transitQty, '#,##0', 'FF6D53A8', ''],
       [L('Depoda + Retail bekleyen', 'Warehouse + awaiting retail'), arrivedQty, '#,##0', C.green, ''],
       [L('Ex-F geçti · yüklenmedi', 'Ex-F passed · not loaded'), total.overdueQty, '#,##0', C.red, L(total.overdueLines + ' satır', total.overdueLines + ' lines')],
-      [L('Riskli adet', 'At-risk qty'), total.riskQty, '#,##0', C.red, L('Transit gecikmiş: ', 'Transit overdue: ') + total.transitOverdueQty],
+      [L('Riskli adet', 'At-risk qty'), total.riskQty, '#,##0', C.red, L(`${total.riskOrders} sipariş · özel ${total.specialRiskOrders}`, `${total.riskOrders} orders · special ${total.specialRiskOrders}`)],
     ];
     tiles.forEach((tile, i) => {
       const c0 = 2 + i * 2, c1 = c0 + 1;
@@ -351,6 +370,24 @@
     K.styleBody(dash, 10, stageLast, 2, 6);
     STAGES.forEach((s, i) => { dash.getCell(10 + i, 2).border = { left:{ style:'thick', color:{ argb:'FF' + s.color } }, bottom:K.thin }; });
     K.dataBar(dash, 'E10:E' + stageLast, C.acc);
+    /* Özel siparişler (önem etiketi) — riskli siparişin içindeki özel pay ayrıca
+       görünür. Aşama tablosunun altındaki boş alana (B19:E25) yazılır. */
+    const specialGroups = importanceSummary(items).slice(0, 5);
+    K.sectionTitle(dash, 19, 2, 5, L('Özel siparişler', 'Special orders'));
+    const ih = dash.getRow(20);
+    dash.mergeCells(20, 2, 20, 3);
+    ih.getCell(2).value = L('Etiket', 'Tag'); ih.getCell(4).value = L('Adet', 'Qty'); ih.getCell(5).value = L('Riskli sipariş', 'At-risk orders');
+    K.styleHeader(ih, { height:22 });
+    const specialRows = specialGroups.length ? specialGroups : [{ name:L('Özel sipariş yok', 'No special orders'), qty:null, riskOrders:null }];
+    specialRows.forEach((g, i) => {
+      const r = 21 + i, row = dash.getRow(r);
+      dash.mergeCells(r, 2, r, 3);
+      row.getCell(2).value = g.name; row.getCell(2).font = { bold:true };
+      row.getCell(4).value = g.qty; row.getCell(4).numFmt = '#,##0';
+      row.getCell(5).value = g.riskOrders || null; row.getCell(5).numFmt = '#,##0';
+    });
+    K.styleBody(dash, 21, 20 + specialRows.length, 2, 5);
+    specialRows.forEach((g, i) => { if (g.riskOrders) dash.getCell(21 + i, 5).font = { name:FONT, size:9.5, bold:true, color:{ argb:C.red } }; });
     const dn = K.quoteSheet(dash.name);
     charts.push({ worksheet:dash, anchor:{ fromCol:6, fromRow:8, toCol:11, toRow:25 }, xml:PA.doughnutXml({ lang, title:L('Adetin operasyon aşamaları', 'Quantity by operational stage'), categoriesRef:dn + '!$B$10:$B$' + stageLast, valuesRef:dn + '!$D$10:$D$' + stageLast, colors:STAGES.map(s => s.color) }) });
 
@@ -414,7 +451,7 @@
     for (let c = 4; c <= 4 + STAGES.length + 4; c += 1) br.getColumn(c).width = 13;
     K.sheetTitle(br, L('Kırılım bazında operasyon durumu', 'Operational status by dimension'), subtitle, 3 + 5 + STAGES.length);
     let bc = 4;
-    ['buyer', 'buyingGroup', 'manufacturer', 'season', 'category', 'deliveryType', 'country'].forEach(id => {
+    ['importance', 'buyer', 'buyingGroup', 'manufacturer', 'season', 'category', 'deliveryType', 'country'].forEach(id => {
       K.sectionTitle(br, bc, 2, 3 + 5 + STAGES.length, dimLabel(id, lang));
       const res = writeStageTable(br, bc + 1, groupBy(items, id, { blank:L('(boş)', '(blank)') }), dimLabel(id, lang));
       bc = res.lastRow + 3;
@@ -428,6 +465,8 @@
         ...STAGES.map(s => [stageLabel(s.key, lang), g => g.stages[s.key] || null, '#,##0', s]),
         [L('Sipariş', 'Orders'), g => g.orders, '#,##0'],
         [L('Riskli adet', 'At-risk qty'), g => g.riskQty || null, '#,##0'],
+        [L('Riskli sipariş', 'At-risk orders'), g => g.riskOrders || null, '#,##0'],
+        [L('Özel sipariş riskli', 'Special orders at risk'), g => g.specialRiskOrders || null, '#,##0'],
       ];
       const head = ws.getRow(startRow);
       ws.mergeCells(startRow, 2, startRow, 3);
@@ -542,7 +581,7 @@
   return Object.freeze({
     STAGES, DIMENSIONS, TIMELINE_FIELDS, PRE_LOAD,
     stageOf, stageLabel, dimLabel, dayIso, normalizeRow, normalizeRows, summarize, groupBy, timeline, isoWeekNo,
-    QUALITY_CHECKS, dataQuality,
+    QUALITY_CHECKS, dataQuality, importanceSummary, REGULAR_IMPORTANCE,
     buildWorkbook, buildXlsx, fileName,
   });
 });

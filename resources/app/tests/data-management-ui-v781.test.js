@@ -498,7 +498,8 @@ test('v7.81 her araç NE YAPTIĞINI yazar — iki dilde', () => {
   // + Data Temizliği (kurulum/sync klasörü temizliği).
   // Merch Calendar da Calculation Rules altında satır içi açılır.
   // DTR / Non-DTR artık üretici kartında düzenlenir.
-  assert.equal(tools.length, 15, `15 araç beklenir, bulunan: ${tools.length}`);
+  // v20261021: + Sipariş Önem Etiketleri (BTS, Bayram … katalog ve Line kuralları).
+  assert.equal(tools.length, 16, `16 araç beklenir, bulunan: ${tools.length}`);
   assert.ok(!tools.some(tool => tool.id === 'nondtr'));
   assert.equal(groups.find(group => group.id === 'rules').tools.find(tool => tool.id === 'merch').inline, true);
 
