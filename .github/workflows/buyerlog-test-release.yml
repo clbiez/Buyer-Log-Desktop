@@ -20,7 +20,27 @@ concurrency:
   group: buyerlog-release-publish
   cancel-in-progress: false
 jobs:
+  release-access:
+    name: Verify release credentials before regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Verify release repository access and signing setup
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
+          SIGNING_KEY: ${{ secrets.BUYER_LOG_RELEASE_SIGNING_KEY }}
+        run: |
+          set -euo pipefail
+          [[ -n "$GH_TOKEN" ]] || { echo "::error::BUYER_LOG_RELEASE_TOKEN is missing"; exit 1; }
+          [[ -n "$SIGNING_KEY" ]] || { echo "::error::BUYER_LOG_RELEASE_SIGNING_KEY is missing"; exit 1; }
+          [[ "$RELEASE_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]] || { echo "::error::BUYER_LOG_RELEASE_REPO is invalid"; exit 1; }
+          ACCESS="$(gh api "repos/$RELEASE_REPO" --jq '.permissions.push == true and .private == false')"
+          [[ "$ACCESS" == "true" ]] || { echo "::error::Release token needs push access to the public release repository"; exit 1; }
+          echo "Release repository authentication verified."
   full-regression:
+    needs: release-access
     name: Full regression before TEST release
     runs-on: windows-latest
     timeout-minutes: 60
