@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Checklistleri tüm kullanıcılardan silme",
+    "en": "Delete checklists for all users"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Moderatör, checklist ve kuralları açık bir düğmeyle tüm kullanıcılardan kaldırabilir.",
+    "en": "Moderators can remove checklists and rules for all users with an explicit action."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "checklist-delete-all-users",
+      "type": "fix",
+      "module": {
+        "tr": "Kontrol Listesi ve Kurallar",
+        "en": "Checklist and Rules"
+      },
+      "title": {
+        "tr": "Tüm kullanıcılardan sil",
+        "en": "Delete for all users"
+      },
+      "body": {
+        "tr": "Moderatör için her checklist ve kuralın yanında ayrı bir “Tüm kullanıcılardan sil” düğmesi bulunur. Silme, onaylandıktan ve ortak kayıt başarıyla tamamlandıktan sonra Master kural yayınıyla dağıtılır; kullanıcıların diğer kişisel kuralları korunur. Çöp kutusu yalnız kişisel silme yapar. Bekleyen otomatik kayıt silinen checklisti yeniden yayımlamaz; geri alma için kişisel tanımlar korunur.",
+        "en": "Each checklist and rule has a separate “Delete for all users” button for the Moderator. After confirmation and a successful shared save, deletion is distributed with the Master rule release; users keep their other personal rules. The trash icon deletes only the personal copy. Pending autosave cannot republish a deleted checklist, and personal definitions are preserved for undo."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-delete-all-users.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log kontrol ayarları: tüm kullanıcılardan silme düğmeleri ve silinen Testler kontrolü, demo veriler",
+          "en": "Real Buyer Log checklist settings: delete-for-all buttons and the deleted Tests check, demo data"
+        },
+        "caption": {
+          "tr": "Checklistleri tüm kullanıcılardan kaldırma ve silmeyi geri alma",
+          "en": "Remove checklists for all users and undo deletion"
+        }
+      }
+    }
+  ]
 }

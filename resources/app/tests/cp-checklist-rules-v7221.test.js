@@ -318,7 +318,7 @@ test('Rules yalnız öncelik kurallarını, Checklist Settings yalnız checklist
   assert.match(view, /function openRules\(\) \{ openRuleManager\('priority'\); \}/);
   assert.match(view, /function openSettings\(\) \{ openRuleManager\('checklist'\); \}/);
   assert.match(view, /const visible = rulesFor\(activeTab\);/);
-  assert.match(view, /function confirmDelete\(rule\)/);
+  assert.match(view, /function confirmDelete\(rule, forAll = false\)/);
   assert.match(view, /Rules\.dependentsOf\(rule, state\.rules\)/);
   assert.match(view, /if \(!confirmDelete\(rule\)\) return;/);
   assert.match(view, /data-cpa-rule-approval-scope/, 'checklist editöründe PO / ürün opsiyonu seçimi olmalı');

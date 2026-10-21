@@ -284,7 +284,7 @@
     return [...state.rules.filter(rule => rule && rule.managed !== true), ...state.shadowedPersonal];
   }
   function applyRuleLayers(personalRules) {
-    const managedIds = new Set(state.managed.rules.map(rule => rule.id));
+    const managedIds = new Set([...state.managed.rules.map(rule => rule.id), ...state.managed.deletedRuleIds]);
     state.shadowedPersonal = (Array.isArray(personalRules) ? personalRules : [])
       .filter(rule => rule && rule.managed !== true && managedIds.has(rule.id));
     state.rules = Rules.effectiveRules(personalRules, state.deletedRuleIds, state.managed);
@@ -549,7 +549,9 @@
     if (JSON.stringify(edited) === JSON.stringify(state.managed.rules.map(managedCopy))) return;
     clearTimeout(managedSyncTimer);
     managedSyncTimer = setTimeout(() => {
-      saveManagedRules({ rules: edited, deletedRuleIds: state.managed.deletedRuleIds })
+      // Yayın/silme bekleme sırasında değişmiş olabilir; eski kopyayı geri yayımlama.
+      const current = state.rules.filter(rule => rule.managed === true).map(managedCopy);
+      saveManagedRules({ rules: current, deletedRuleIds: state.managed.deletedRuleIds })
         .catch(error => { if (typeof showToast === 'function') showToast(error.message); });
     }, 700);
   }
@@ -2396,6 +2398,7 @@
       ? (rule.managed === true
         ? `<button type="button" class="cpaBtn sm" data-cpa-rule-unpublish title="${esc(L('Yayını durdur; kullanıcıların kendi kopyaları korunur', 'Stop publishing; users keep their own copies'))}">${esc(L('Yayından kaldır', 'Unpublish'))}</button>`
         : `<button type="button" class="cpaBtn sm" data-cpa-rule-publish title="${esc(L('Bu kuralı tüm kullanıcılara uygula', 'Apply this rule to all users'))}">${esc(L('Tüm kullanıcılara uygula', 'Apply to all users'))}</button>`)
+        + `<button type="button" class="cpaBtn sm" data-cpa-rule-delete-all title="${esc(L('Bu kuralın aynı kimlikli kopyalarını tüm kullanıcılardan sil', 'Delete copies of this rule with the same ID for all users'))}">${esc(L('Tüm kullanıcılardan sil', 'Delete for all users'))}</button>`
       : '';
     return `<div class="cpaRule${isOpen ? ' is-open' : ''}${rule.enabled ? '' : ' is-disabled'}" data-cpa-rule="${esc(rule.id)}">
       <header class="cpaRuleBar">
@@ -2414,7 +2417,7 @@
           ${rule.builtIn ? `<span class="cpaBuiltIn">${esc(L('Yerleşik', 'Built-in'))}</span>` : ''}
           ${managedBadge}${moderatorActions}
           ${readOnly ? '' : `<button type="button" class="cpaIconBtn" data-cpa-rule-edit title="${esc(L('Kuralı düzenle', 'Edit rule'))}" aria-label="${esc(L('Kuralı düzenle', 'Edit rule'))}"><svg class="ic"><use href="#i-pencil"/></svg></button>
-          <button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Kuralı sil', 'Delete rule'))}" aria-label="${esc(L('Kuralı sil', 'Delete rule'))}"><svg class="ic"><use href="#i-trash"/></svg></button>`}
+          ${rule.managed === true ? '' : `<button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Yalnız benden sil', 'Delete only for me'))}" aria-label="${esc(L('Yalnız benden sil', 'Delete only for me'))}"><svg class="ic"><use href="#i-trash"/></svg></button>`}`}
           <button type="button" class="cpaRuleChevron" data-cpa-rule-toggle aria-label="${esc(isOpen ? L('Kuralı daralt', 'Collapse rule') : L('Kuralı genişlet', 'Expand rule'))}" aria-expanded="${isOpen ? 'true' : 'false'}"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
         </div>
       </header>
@@ -2868,11 +2871,14 @@
       };
     }
 
-    function confirmDelete(rule) {
+    function confirmDelete(rule, forAll = false) {
       const dependents = Rules.dependentsOf(rule, state.rules);
       const itemName = ruleName(rule);
-      if (!dependents.length) return confirm(L(`"${itemName}" silinsin mi?`, `Delete "${itemName}"?`));
-      return confirm(L(
+      const question = forAll
+        ? L(`"${itemName}" tüm kullanıcılardan silinsin mi? Aynı kimlikli kopyalar kaldırılır; kullanıcıların kendi oluşturduğu diğer checklist ve kurallar korunur. Değişiklik Master kural yayınıyla dağıtılır.`, `Delete "${itemName}" for all users? Copies with the same ID are removed; other checklists and rules users created are kept. The change is distributed with the Master rule release.`)
+        : L(`"${itemName}" yalnız sizden silinsin mi?`, `Delete "${itemName}" only for you?`);
+      if (!dependents.length) return confirm(question);
+      return confirm(question + '\n\n' + L(
         `"${itemName}" şu kuralların koşulunda kullanılıyor:\n\n${dependents.map(item => `• ${ruleName(item)} (${item.kind === 'checklist' ? 'Checklist' : priorityLabel(item.target)})`).join('\n')}\n\nSilerseniz bu koşullar hiçbir siparişte sağlanmaz. Yine de silinsin mi?`,
         `"${itemName}" is used as a condition in:\n\n${dependents.map(item => `• ${ruleName(item)} (${item.kind === 'checklist' ? 'Checklist' : priorityLabel(item.target)})`).join('\n')}\n\nIf you delete it, those conditions will never match. Delete anyway?`));
     }
@@ -2987,16 +2993,18 @@
       modal.querySelectorAll('[data-cpa-managed-restore]').forEach(el => el.onclick = () => {
         restoreRuleForAll(el.dataset.cpaManagedRestore).catch(error => { if (typeof showToast === 'function') showToast(error.message); });
       });
+      modal.querySelectorAll('[data-cpa-rule-delete-all]').forEach(el => el.onclick = async () => {
+        const rule = findRule(ruleIdOf(el));
+        if (!rule || !isModerator() || el.disabled || !confirmDelete(rule, true)) return;
+        el.disabled = true;
+        try { await deleteRuleForAll(rule.id); }
+        catch (error) { if (typeof showToast === 'function') showToast(error.message); }
+        finally { el.disabled = false; }
+      });
       modal.querySelectorAll('[data-cpa-rule-delete]').forEach(el => el.onclick = () => {
         const rule = findRule(ruleIdOf(el));
-        if (!rule) return;
+        if (!rule || rule.managed === true) return;
         if (!confirmDelete(rule)) return;
-        /* Moderatör: yayımlanmış kural ya da aynı kimlik başka kullanıcılarda
-           (yerleşik / paylaşılmış) varsa silme tüm kullanıcılara da uygulanabilir. */
-        if (isModerator() && (rule.managed === true || confirm(L('Bu kural tüm kullanıcılardan da silinsin mi? (Kullanıcıların kendi oluşturduğu kurallar etkilenmez.)', 'Also delete this rule for all users? (Rules that users created themselves are not affected.)')))) {
-          deleteRuleForAll(rule.id).catch(error => { if (typeof showToast === 'function') showToast(error.message); });
-          if (rule.managed === true) return;
-        }
         if (rule.builtIn && !state.deletedRuleIds.includes(rule.id)) state.deletedRuleIds.push(rule.id);
         state.rules = state.rules.filter(item => item.id !== rule.id);
         newPriorityRuleIds.delete(rule.id);
