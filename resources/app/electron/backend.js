@@ -165,6 +165,12 @@ class BackendProcess {
     this.origin = '';
     this.port = 0;
     this.logStream = null;
+    // The main process may receive an HTTP response only after expensive
+    // initial sync work. The backend reports its real listening and DB-ready
+    // milestones over its owned stdout before that HTTP response is handled.
+    this.onStartupReady = typeof options.onStartupReady === 'function' ? options.onStartupReady : () => {};
+    this.startupMilestones = { server: false, db: false, emitted: false };
+    this.startupOutputTail = '';
   }
 
   get pid() { return this.child ? this.child.pid : 0; }
@@ -183,7 +189,32 @@ class BackendProcess {
     this.logStream.write('\r\n===== ' + new Date().toISOString() + ' — Buyer Log masaüstü oturumu =====\r\n');
   }
 
+  observeStartupOutput(chunk) {
+    const milestones = this.startupMilestones;
+    if (milestones.emitted || this.exited || !this.running) return;
+    // stdout chunks can split a [PERF] line; only complete, bounded lines
+    // from this instance's watchdog are considered. Ignore untrusted content
+    // that is not an exact instrumentation marker.
+    const data = this.startupOutputTail + String(chunk || '');
+    const lines = data.split(/\r?\n/);
+    this.startupOutputTail = lines.pop().slice(-512);
+    for (const line of lines) {
+      if (/^\[PERF\] APP_BOOT_START \+\d+ms\s*$/.test(line)) {
+        milestones.server = false;
+        milestones.db = false;
+      }
+      if (/^\[PERF\] SERVER_READY \+\d+ms\s*$/.test(line)) milestones.server = true;
+      if (/^\[PERF\] LOCAL_DB_READY \+\d+ms\s*$/.test(line)) milestones.db = true;
+    }
+    if (!milestones.server || !milestones.db) return;
+    milestones.emitted = true;
+    try { this.onStartupReady({ serverReady: true, localDbReady: true }); }
+    catch (error) { this.log('Backend startup milestone callback failed: ' + (error && error.message || error)); }
+  }
+
   start() {
+    this.startupMilestones = { server: false, db: false, emitted: false };
+    this.startupOutputTail = '';
     const watchdog = path.join(this.appCoreRoot, 'server', 'watchdog.js');
     if (!fs.existsSync(watchdog)) {
       throw Object.assign(new Error('server\\watchdog.js bulunamadı: ' + watchdog), { code: 'BACKEND_MISSING' });
@@ -230,7 +261,11 @@ class BackendProcess {
       // Boru her kosulda tuketilir: yazamasak bile veriyi almazsak
       // backend kendi stdout'unda kilitlenir.
       stream.on('data', chunk => {
-        try { if (this.logStream) this.logStream.write(redactSecrets(chunk.toString())); } catch (_) {}
+        try {
+          const message = redactSecrets(chunk.toString());
+          if (this.logStream) this.logStream.write(message);
+          this.observeStartupOutput(message);
+        } catch (_) {}
       });
     };
     pipe(this.child.stdout);
