@@ -25,10 +25,29 @@
  async function mount(target){
   try{
    if(!componentPending)componentPending=Promise.all(['index.html','integration.css','integration.js'].map(async name=>{const response=await fetch(`license-atlas/${name}`,{credentials:'same-origin',cache:'no-store'});if(!response.ok)throw new Error('ATLAS_COMPONENT_LOAD');return response.text();})).catch(error=>{componentPending=null;throw error;});
-   const [html,css,js]=await componentPending;
+   const [html,css,js]=await componentPending,fonts=await buyerLogFonts();
    if(frame!==target)return;
-   target.srcdoc=html.replace('<link rel="stylesheet" href="integration.css">',()=>`<style>${css}</style>`).replace('<script src="integration.js"></script>',()=>`<script>${js}</script>`);
+   target.srcdoc=html.replace('<link rel="stylesheet" href="integration.css">',()=>`<style id="bl-fonts">${fonts}</style><style id="bl-integration">${css}</style>`).replace('<script src="integration.js"></script>',()=>`<script>${js}</script>`);
   }catch(error){host.querySelector('.lcAtlasCommerce').textContent=ctx.failMessage(error);}
+ }
+ // The sandbox has an opaque origin and font-src data: only, so Buyer Log's own
+ // Barlow faces (same files and unicode ranges as design.css) travel inline.
+ let fontsPending=null;
+ function buyerLogFonts(){
+  if(!fontsPending)fontsPending=(async()=>{
+   const faces=[];
+   for(const sheet of document.styleSheets){let rules;try{rules=sheet.cssRules;}catch(_){continue;}
+    for(const rule of rules||[])if(rule.type===CSSRule.FONT_FACE_RULE&&/Barlow/.test(rule.style.getPropertyValue('font-family')))faces.push(rule);}
+   const css=await Promise.all(faces.map(async rule=>{
+    const url=(rule.style.getPropertyValue('src').match(/url\(["']?([^"')]+)["']?\)/)||[])[1];if(!url)return '';
+    const response=await fetch(new URL(url,rule.parentStyleSheet.href||location.href),{credentials:'same-origin'});if(!response.ok)return '';
+    const blob=new Blob([await response.arrayBuffer()],{type:'font/woff2'}),data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob);});
+    const range=rule.style.getPropertyValue('unicode-range');
+    return `@font-face{font-family:${rule.style.getPropertyValue('font-family')};font-style:normal;font-weight:${rule.style.getPropertyValue('font-weight')||400};font-display:swap;src:url("${data}") format("woff2");${range?`unicode-range:${range};`:''}}`;
+   }));
+   return css.join('\n');
+  })().catch(()=>'');
+  return fontsPending;
  }
  async function ensureLibrary(){if(library)return;if(!libraryPending)libraryPending=ctx.api('/api/license-cards/atlas-library').then(v=>{library=v;}).catch(error=>{library={licenses:[]};throw error;}).finally(()=>libraryPending=null);await libraryPending;}
  async function sync(){
@@ -69,7 +88,7 @@
  }
  function environment(){
   const style=getComputedStyle(document.documentElement),tokens={};
-  for(const name of ['--bg','--paper','--card2','--card','--ink','--muted','--line','--acc','--shadow-1','--shadow-2','--r-md','--r-lg']){const value=style.getPropertyValue(name).trim();if(value)tokens[name]=value;}
+  for(const name of ['--bg','--paper','--card2','--card2-strong','--card','--ink','--ink2','--muted','--line','--line2','--hair','--acc','--acc-bg','--acc-ink','--acc-hover','--on-acc','--red','--red-bg','--green','--green-bg','--shadow-1','--shadow-2','--shadow-3','--r-md','--r-lg']){const value=style.getPropertyValue(name).trim();if(value)tokens[name]=value;}
   // Custom properties stay unresolved calc() strings; measure the effective UI base font.
   const probe=document.createElement('span');probe.style.cssText='position:absolute;visibility:hidden;font-size:var(--fs-base,12.5px)';document.body.append(probe);
   const base=parseFloat(getComputedStyle(probe).fontSize);probe.remove();if(Number.isFinite(base)&&base>0)tokens['--fs-base']=base+'px';

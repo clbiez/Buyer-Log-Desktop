@@ -26,59 +26,138 @@
 .bl-business input,.bl-business textarea{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--ink)}.bl-business details{margin-top:24px}.bl-business summary{cursor:pointer;font-weight:750;margin-bottom:14px}
 .bl-recovery ul{max-height:35vh;overflow:auto;padding-left:20px}.bl-recovery li{padding:6px 0;border-bottom:1px solid var(--line)}.bl-recovery-error{color:var(--ink)}
 @media(max-width:600px){.bl-licensor{align-items:stretch;flex-direction:column;gap:6px}.drawer>.bl-licensor{margin:12px 17px}.bl-business .lcFormGrid{grid-template-columns:1fr}.nav-actions [data-action="export"]{display:inline-flex}.nav-actions [data-action="export"] .hide-mobile{display:none}.nav-actions [data-action="blRecovery"]{padding:8px}.nav-actions{gap:5px}.brandname{display:none}}
-/* Buyer Log density: the Atlas follows the parent UI scale (Arayüz) instead of its
-   original marketing proportions. Zoom keeps the long tail (Studio, map editors,
-   dialogs) consistent; the rules below remove oversized decoration. */
-body{zoom:var(--bl-density,.9)}
+/* =====================================================================
+   Buyer Log skin. The uploaded Atlas keeps its tree/workflow markup, but its
+   interface (type, controls, buttons, colours, density) follows Buyer Log:
+   Barlow / Barlow Condensed, 30px controls, hairline borders, steel-blue
+   accent and the parent's live theme tokens (--blt-*). integration.js maps
+   every original font-size/weight onto the Buyer Log scale (#bl-type-scale).
+   ===================================================================== */
+:root{--bl-body-font:"Barlow","Segoe UI",Arial,sans-serif;--bl-head-font:"Barlow Condensed","Barlow","Segoe UI",sans-serif;
+ --bl-paper:var(--blt-paper,var(--bg));--bl-card:var(--blt-card,var(--panel));--bl-field:var(--blt-card,var(--panel));--bl-ctl:30px;
+ --bl-t-ink:var(--blt-ink,var(--ink));--bl-t-ink2:var(--blt-ink2,var(--muted));--bl-t-muted:var(--blt-muted,var(--muted));--bl-t-line:var(--blt-line,var(--line));
+ --bl-t-acc:var(--blt-acc,var(--blue));--bl-t-acc-bg:var(--blt-acc-bg,var(--blue-soft));--bl-t-acc-ink:var(--blt-acc-ink,var(--blue));--bl-t-on-acc:var(--blt-on-acc,#fff);
+ --bl-t-red:var(--blt-red,#b42318);--bl-t-green:var(--blt-green,#177a4c)}
+body{zoom:var(--bl-density,1)}
+:root body{font:400 12.5px/1.45 var(--bl-body-font);background:var(--bl-paper);color:var(--bl-t-ink);letter-spacing:0}
+:root body :is(button,input,select,textarea){font-family:var(--bl-body-font)}
+:root body :is(h1,h2,h3,h4,.brandname,.cover-name){font-family:var(--bl-head-font)!important;font-weight:600!important;letter-spacing:.01em}
+
+/* Buttons = Buyer Log .tbtn */
+:root body :is(.btn,.map-stage-copy,.map-paste-stage,.map-add-stage-btn,.map-add-address-top,.map-section-heading button,.map-inline-footer button,.map-choice-actions button,.map-address-save,.guide-library-head button,.guide-remove,.select-add-option,.map-choice-bar button){
+ min-height:28px!important;height:auto;padding:4px 10px!important;border:1px solid var(--bl-t-line)!important;border-radius:0!important;background:var(--bl-card)!important;color:var(--bl-t-ink2)!important;
+ font:500 12px/1.2 var(--bl-body-font)!important;letter-spacing:0!important;box-shadow:none!important;transform:none!important;gap:6px}
+:root body :is(.btn,.map-stage-copy,.map-paste-stage,.map-add-stage-btn,.map-add-address-top,.map-section-heading button,.map-inline-footer button,.map-choice-actions button,.guide-library-head button,.select-add-option,.map-choice-bar button):not(:disabled):hover{border-color:var(--bl-t-acc)!important;color:var(--bl-t-ink)!important;background:var(--blt-card2,var(--bl-card))!important}
+:root body :is(.btn.primary,.btn.blue,.map-choice-actions .map-choice-save,.map-address-save){background:var(--bl-t-acc)!important;border-color:var(--bl-t-acc)!important;color:var(--bl-t-on-acc)!important;font-weight:600!important}
+:root body :is(.btn.primary,.btn.blue,.map-choice-actions .map-choice-save,.map-address-save):not(:disabled):hover{background:var(--blt-acc-hover,var(--bl-t-acc))!important;color:var(--bl-t-on-acc)!important}
+:root body .map-choice-bar button.selected{background:var(--bl-t-acc-bg)!important;border-color:var(--bl-t-acc)!important;color:var(--bl-t-acc-ink)!important;font-weight:600!important}
+:root body .btn svg{width:14px;height:14px;flex-basis:14px}
+:root body .btn.square{width:28px;padding:0!important}
+:root body :is(.map-move-tools button:not(.map-stage-copy):not(.map-paste-stage),.map-add-choice,.map-route-remove,.iconbtn,.tree-delete-mini,.map-address-creator-head button){min-width:28px!important;width:auto;height:var(--bl-ctl)!important;padding:0 6px!important;border:1px solid var(--bl-t-line)!important;border-radius:0!important;background:var(--bl-card)!important;color:var(--bl-t-ink2)!important;font-size:14px!important;font-weight:500!important;box-shadow:none!important}
+:root body :is(.map-move-tools button,.map-add-choice,.map-route-remove,.iconbtn):not(:disabled):hover{border-color:var(--bl-t-acc)!important;color:var(--bl-t-ink)!important}
+:root body :is(.map-route-remove,.map-move-tools .map-remove-stage,.map-move-tools .map-remove-confirm){color:var(--bl-t-red)!important}
+:root body .map-move-tools .map-stage-copy{height:var(--bl-ctl)!important;min-height:0!important}
+
+/* Fields = Buyer Log inputs */
+:root body :is(#app,#overlayRoot) :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),select,textarea){
+ min-height:var(--bl-ctl)!important;padding:4px 8px!important;border:1px solid var(--bl-t-line)!important;border-radius:0!important;background:var(--bl-field)!important;color:var(--bl-t-ink)!important;
+ font:400 12.5px/1.35 var(--bl-body-font)!important;letter-spacing:0!important;box-shadow:none!important}
+:root body :is(#app,#overlayRoot) :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),select){height:var(--bl-ctl)!important}
+:root body :is(#app,#overlayRoot) textarea{min-height:48px!important;resize:vertical}
+:root body :is(#app,#overlayRoot) :is(input,select,textarea):focus{border-color:var(--bl-t-acc)!important;outline:0!important}
+:root body :is(#app,#overlayRoot) :is(input,textarea)::placeholder{color:var(--bl-t-muted)!important;opacity:1}
+:root body :is(#app,#overlayRoot) :is(input,select,textarea):disabled{background:transparent!important;color:var(--bl-t-ink2)!important}
+:root body .searchbox{min-height:var(--bl-ctl)!important;padding:0 8px!important;border:1px solid var(--bl-t-line)!important;background:var(--bl-field)!important;border-radius:0!important;box-shadow:none!important}
+:root body #app .searchbox input{border:0!important;height:28px!important;min-height:0!important;padding:0 4px!important;background:transparent!important}
+:root body :is(input[type=checkbox],input[type=radio]){accent-color:var(--bl-t-acc);width:14px!important;height:14px!important}
+
+/* Labels = Buyer Log field captions */
+:root body :is(.field label,.map-edit-focus label,.map-approve-group>span,.map-choice-create label,.map-address-creator-fields label,.bl-business .lcField>span,.tinycaps,.overline,.eyebrow,.mini-title){
+ font:500 10.5px/1.3 var(--bl-body-font)!important;letter-spacing:.06em!important;text-transform:uppercase;color:var(--bl-t-muted)!important}
+:root body .map-edit-focus label{gap:4px!important}
+:root body .bl-route-instructions>span{font:400 12px/1.3 var(--bl-body-font)!important;text-transform:none;letter-spacing:0;color:var(--bl-t-ink);display:flex;align-items:center;gap:6px}
+:root body :is(.map-checkbox,.map-test-toolbar .map-checkbox,.share-switch,.laCheck){font:400 12px/1.3 var(--bl-body-font)!important;text-transform:none!important;letter-spacing:0!important;color:var(--bl-t-ink)!important}
+:root body :is(.map-approve-group small,.hint,.muted-tip,.translation-help){font-size:11px!important;color:var(--bl-t-muted)!important;text-transform:none!important;letter-spacing:0!important;font-weight:400!important}
+
+/* Surfaces and accent colours from the parent theme (no teal/navy literals) */
+:root body :is(.surface,.license-card,.side-card,.tree-foot-card,.tree-focus,.map-edit-focus,.drawer,.modal-box,.studio-panel,.bl-commerce,.bl-licensor,.map-guide-picker,.tree-branch){background:var(--bl-card)!important;border-color:var(--blt-hair,var(--bl-t-line))!important;box-shadow:none!important;border-radius:0!important}
+:root body :is(.map-edit-route,.map-test-toolbar,.map-inline-empty,.edit-stage-heading,.sub-editor,.address-block,.no-data){background:var(--blt-card2,var(--bl-card))!important;border-color:var(--bl-t-line)!important;border-radius:0!important}
+:root body :is(.map-choice-create,.map-address-creator){background:var(--bl-card)!important;border-color:var(--bl-t-acc)!important}
+:root body .tree-node{border-color:var(--bl-t-line)!important;background:var(--bl-card)!important;box-shadow:none!important}
+:root body .tree-node:hover{border-color:var(--bl-t-acc)!important;transform:none!important}
+:root body .tree-node.active{border:1px solid var(--bl-t-acc)!important;background:var(--bl-t-acc-bg)!important;transform:none!important;box-shadow:none!important}
+:root body .tree-node-glyph{background:var(--bl-t-acc-bg)!important;border-color:var(--bl-t-line)!important;color:var(--bl-t-acc-ink)!important}
+:root body .tree-node.active .tree-node-glyph{background:var(--bl-t-acc)!important;color:var(--bl-t-on-acc)!important;border-color:var(--bl-t-acc)!important}
+:root body .tree-viewport{background:var(--bl-paper)!important}
+:root body .map-inline-footer{color:var(--bl-t-green)!important}
+:root body .map-checkbox input{accent-color:var(--bl-t-acc)}
+:root body .drawer-tabs button{font:500 12px/1.2 var(--bl-body-font)!important;color:var(--bl-t-ink2)!important;border-bottom-width:2px!important}
+:root body .drawer-tabs button.active{color:var(--bl-t-acc-ink)!important;border-bottom-color:var(--bl-t-acc)!important}
+:root body :is(.tag,.route-chip,.method-mini,.progresspill,.route-seq,.cover-category,.lcBadge){border-radius:0!important;font-weight:500!important}
+:root body .toast{border-radius:0!important;background:var(--blt-ink,#1d1f20)!important;color:var(--bl-paper)!important;font:500 12px/1.4 var(--bl-body-font)!important;padding:8px 12px!important;box-shadow:var(--blt-shadow-2,none)!important}
+:root body .toast.error{background:var(--bl-t-red)!important;color:#fff!important}
+
+/* Density */
 html body .hero{display:none}
-.shell{padding:0 18px}
-.topbar,body.dark .topbar{height:50px}
-.brandmark,body.dark .brandmark{height:28px;width:28px}.brandmark svg{width:16px;height:16px}
-.brandname{font-size:16px}.brandname small{margin-top:2px}
-.btn{min-height:30px;padding:5px 10px;gap:6px}.btn.square{width:30px}
-.bl-savebar{top:50px;padding:6px 18px}
-.section-head{margin:14px 0 10px}.section-head h2{font-size:18px}
-.toolbar{margin-bottom:10px}.searchbox{min-height:32px}.selectbox{height:32px}
-.license-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px;padding-bottom:16px}
-.cover{height:56px}html body .license-card .cover.has-cover-image{height:100px}html body .license-card .cover.has-cover-image img{padding:6px 8px}.cover-decor{width:56px;height:56px;right:10px;top:4px}.cover-symbol{font-size:34px;right:14px;top:10px}
-.cover-name{font-size:17px;bottom:8px;left:10px;right:10px}.cover-category{top:6px;left:8px}.cover-fallback{font-size:20px}
-html body .license-card .card-meta{min-height:0;padding:9px 10px 8px}
-.card-agency{margin-bottom:6px}.card-meta .bl-rates{margin:8px 0}.card-meta .bl-rates b{font-size:13px}
-.note-band{margin:6px 0 16px;padding:8px 11px}
-.crumbs{margin:12px 0 10px}
-.detail-head{margin-bottom:12px;gap:14px}.license-identity{gap:12px}
-.identity-art{width:48px;height:48px}.identity-art strong{font-size:22px;letter-spacing:-1px}
-html body .identity-desc h1{font-size:24px}.identity-desc p{margin-top:2px}.identity-desc .tagline{margin-bottom:3px}
-.bl-licensor{margin:0 0 10px;padding:6px 10px;gap:10px}.bl-licensor select{padding:5px 8px}
-.bl-commerce{margin:0 0 14px;padding:10px 14px;gap:14px}.bl-commerce-title h3{font-size:15px;margin:2px 0}
-.bl-rates{gap:10px}.bl-rates b{font-size:15px}
-.surface.map-panel,.map-panel{padding:16px 18px;margin-bottom:14px}
-html body .tree-section-heading{padding:14px 18px 12px}
-html body .tree-section-heading h2{font-size:20px;margin:3px 0 2px}
-.tree-canvas{padding:14px 18px 20px}
-.tree-row{padding:12px 0}
-html body .tree-node{min-height:64px!important;padding:10px 30px 10px 10px}
-.tree-node-glyph{width:32px;height:32px}
-html body .tree-branch{min-height:52px!important}
-.tree-focus{padding:16px;margin:10px auto 6px}
-.tree-foot-grid{margin:12px 0 18px;gap:12px}.tree-foot-card{padding:14px}
-.main-panel{padding:18px}.side-card{padding:16px}
-.footer{padding:10px 0 20px}
-.drawer-head{padding:14px 18px 10px}.drawer-head h2{font-size:20px}
-.drawer-tabs{padding:0 18px}.drawer-tabs button{padding:9px 10px}
-.drawer-body{padding:14px 18px 18px}.drawer-footer{padding:10px 18px}
-.drawer>.bl-licensor{margin:8px 18px}
-.field{margin-bottom:9px;gap:4px}.field input,.field select,.field textarea{min-height:32px;padding:6px 9px}
-.bl-business .lcContract{padding:12px;margin:10px 0}.bl-business .lcContractHead{margin-bottom:8px}
-.bl-business .lcFormGrid{gap:8px 10px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.shell{padding:0 16px}
+.topbar,body.dark .topbar{height:46px!important}
+.brandmark,body.dark .brandmark{height:26px;width:26px}.brandmark svg{width:15px;height:15px}
+.bl-savebar{top:46px;padding:6px 16px}
+.section-head{margin:12px 0 8px}.toolbar{margin-bottom:8px;gap:6px}
+.license-grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;padding-bottom:14px}
+.cover{height:52px}html body .license-card .cover.has-cover-image{height:96px}html body .license-card .cover.has-cover-image img{padding:6px 8px}.cover-decor{width:52px;height:52px;right:10px;top:2px}.cover-symbol{right:14px;top:10px}
+.cover-name{bottom:7px;left:10px;right:10px}.cover-category{top:6px;left:8px}
+html body .license-card .card-meta{min-height:0;padding:8px 10px 7px}
+.card-agency{margin-bottom:5px}.card-meta .bl-rates{margin:6px 0}.card-meta .bl-rates span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.note-band{margin:6px 0 14px;padding:7px 10px}
+.crumbs{margin:10px 0 8px}
+.detail-head{margin-bottom:10px;gap:12px}.license-identity{gap:10px}
+.identity-art{width:44px;height:44px}.identity-desc p{margin-top:2px}.identity-desc .tagline{margin-bottom:3px}
+.bl-licensor{margin:0 0 8px;padding:5px 10px;gap:10px}
+.bl-commerce{margin:0 0 12px;padding:9px 12px;gap:12px}.bl-commerce-title h3{margin:2px 0}
+.bl-rates{gap:10px}
+.surface.map-panel,.map-panel{padding:14px 16px;margin-bottom:12px}
+html body .tree-section-heading{padding:12px 16px 10px;gap:12px}
+html body .tree-section-heading h2{margin:2px 0}
+.tree-canvas{padding:12px 16px 18px}
+.tree-row{padding:10px 0}
+html body .tree-node{min-height:56px!important;padding:8px 28px 8px 8px}
+.tree-node-glyph{width:28px;height:28px}
+html body .tree-branch{min-height:46px!important;padding:8px 10px}
+.tree-focus{padding:14px;margin:8px auto 6px}
+.tree-foot-grid{margin:10px 0 16px;gap:10px}.tree-foot-card{padding:12px}
+.main-panel{padding:16px}.side-card{padding:14px}
+.footer{padding:8px 0 18px}
+/* Stage editor (map-edit-focus) */
+html body .map-edit-focus{padding:14px 16px!important}
+html body .map-edit-focus .tree-focus-head{padding-bottom:10px;gap:10px}
+.map-quick-meta{gap:12px;padding:10px 0}
+.map-inline-grid{gap:14px;padding-top:10px}
+.map-section-heading{margin-bottom:6px;gap:8px}
+.map-route-stack{gap:6px}
+html body .map-edit-route{padding:8px 8px 8px}
+html body .map-route-core{gap:6px;padding-top:12px}
+html body .map-route-extras{gap:6px;margin-top:6px}
+.map-approval-notes{margin-top:10px}
+.map-test-toolbar{margin-top:8px;padding:8px;gap:10px}
+.map-inline-footer{margin-top:12px;padding-top:8px}
+.map-choice-create{margin:6px 0;padding:8px;gap:6px}
+.map-address-creator{margin:8px 0 10px;padding:10px}
+.map-guide-picker>summary{padding:8px 10px}
+.compact-stage-heading{gap:8px;padding-bottom:8px}.compact-stage-icon{width:28px;height:28px}
+/* Drawer, fields, dialogs */
+.drawer-head{padding:12px 16px 8px}.drawer-tabs{padding:0 16px}.drawer-tabs button{padding:8px 10px}
+.drawer-body{padding:12px 16px 16px}.drawer-footer{padding:8px 16px}
+.drawer>.bl-licensor{margin:8px 16px}
+.field{margin-bottom:8px;gap:4px}.field-grid{gap:10px}
+.bl-business .lcContract{padding:10px;margin:8px 0;border-radius:0!important}.bl-business .lcContractHead{margin-bottom:6px}
+.bl-business .lcFormGrid{gap:6px 10px;grid-template-columns:repeat(4,minmax(0,1fr))}
 .bl-business .lcFormGrid .lcFull{grid-column:1/-1}
-.bl-business input,.bl-business textarea{padding:6px 9px}
-.bl-business details{margin-top:14px}
-.bl-business .lcNotice{border:1px solid var(--blue);background:var(--blue-soft);padding:8px 10px;margin:10px 0 0;font-size:12px}
-.modal-box{padding:20px}.modal-box h2{font-size:19px}
-.card-meta .bl-rates span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.map-move-tools .map-stage-copy{font-size:12px}
-html body .tree-focus-head h3,html body .map-edit-focus .tree-focus-head h3{font-size:20px}.compact-stage-copy h2{font-size:18px}
-@media(max-width:1500px){.nav-actions .hide-tablet{display:none}.nav-actions .btn{padding:5px 8px}}
+.bl-business details{margin-top:12px}
+.bl-business .lcNotice{border:1px solid var(--bl-t-acc);background:var(--bl-t-acc-bg);color:var(--bl-t-acc-ink);padding:7px 10px;margin:8px 0 0;font-size:12px}
+.bl-business .lcBadge{color:var(--bl-t-acc-ink)}
+.modal-box{padding:18px}
+.edit-stage-body{padding:12px}.sub-editor{padding:10px}
+@media(max-width:1500px){.nav-actions .hide-tablet{display:none}}
 @media(max-width:900px){.bl-business .lcFormGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:600px){.shell{padding:0 12px}.bl-business .lcFormGrid{grid-template-columns:1fr}.cover{height:56px}}
+@media(max-width:600px){.shell{padding:0 10px}.bl-business .lcFormGrid{grid-template-columns:1fr}}

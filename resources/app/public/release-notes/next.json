@@ -3,8 +3,8 @@
   "publishedAt": "2026-10-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Sipariş önem etiketleri, Backlog risk düzeltmesi, royalty doğruluğu ve rapor iyileştirmeleri",
-    "en": "Order importance tags, Backlog risk fix, royalty accuracy and report improvements"
+    "tr": "Royalty hesap doğruluğu, kompakt Lisans kartları ve rapor düzeltmeleri",
+    "en": "Royalty accuracy, compact License cards and report fixes"
   },
   "summary": {
     "tr": "Royalty hesapları kuruşu kuruşuna, Lisans kartları daha kompakt; kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi. Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi.",
@@ -240,6 +240,64 @@
         "caption": {
           "tr": "Görsel eklenmiş lisans kartı",
           "en": "License card with an added image"
+        }
+      }
+    },
+    {
+      "id": "collection-fabric-card-copy-paste",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kumaş kartı kopyala-yapıştırda korunur",
+        "en": "Fabric cards survive copy and paste"
+      },
+      "body": {
+        "tr": "Kumaş hücresi kopyalanıp Koleksiyon içinde yapıştırıldığında yalnız özet metin değil, kumaş kodu ve kartı da gelir. Excel'e yapıştırırken görünen kart özeti aynen kalır; Ctrl+D aşağı doldurma da kartı korur.",
+        "en": "Copying a Fabric cell and pasting it within Collection now brings the fabric code and its card, not just the summary text. Pasting into Excel still gives the visible card summary, and Ctrl+D fill-down keeps the card too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-card-copy-paste.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon tablosu: tek kumaş kartı kopyalanıp altı satıra yapıştırılmış, her satırda 3859 kartı görünüyor, demo veriler",
+          "en": "Real Buyer Log Collection table: one fabric card copied and pasted into six rows, each showing the 3859 card, demo data"
+        },
+        "caption": {
+          "tr": "Yapıştırılan kumaş hücreleri kartıyla birlikte gelir",
+          "en": "Pasted Fabric cells keep their card"
+        }
+      }
+    },
+    {
+      "id": "license-atlas-buyerlog-ui",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Süreç ağacı",
+        "en": "License cards · Process tree"
+      },
+      "title": {
+        "tr": "Lisans Atlası Buyer Log arayüzüyle",
+        "en": "License Atlas in the Buyer Log interface"
+      },
+      "body": {
+        "tr": "Lisans Atlası artık Buyer Log’un kendi yazı tipini (Barlow), 30 px alan ve düğme yüksekliklerini, büyük harfli alan etiketlerini, ince çerçeveleri ve açık/koyu tema renklerini kullanır. Aşama düzenleyici, gönderimler, çekmece, diyaloglar ve Süreç Stüdyosu dahil tüm yazı boyutları ve kalınlıkları Buyer Log ölçeğine indirildi; ayrı renkli düğmeler ve ağır başlıklar kaldırıldı. Arayüz boyutu ayarı Atlas’a da uygulanır.",
+        "en": "The License Atlas now uses Buyer Log’s own typeface (Barlow), 30 px field and button heights, uppercase field captions, hairline borders and the light/dark theme colours. All type sizes and weights — stage editor, routes, drawer, dialogs and Process Studio — follow the Buyer Log scale; separately coloured buttons and heavy headings are gone. The interface size setting also applies to the Atlas."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-buyerlog-ui.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log koyu tema: Buyer Log alanları ve düğmeleriyle aşama düzenleyici, demo veriler",
+          "en": "Real Buyer Log dark theme: stage editor with Buyer Log fields and buttons, demo data"
+        },
+        "caption": {
+          "tr": "Buyer Log arayüzüyle aşama düzenleyici",
+          "en": "Stage editor in the Buyer Log interface"
         }
       }
     },
