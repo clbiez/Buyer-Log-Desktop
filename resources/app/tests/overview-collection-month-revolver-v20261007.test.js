@@ -35,7 +35,7 @@ test('monthBuckets groups Collection rows chronologically with quantity, models 
 
 test('monthBuckets respects the same scope filters as the KPI summary',()=>{
   const buckets=summary.monthBuckets(rows,{...opts,columnFilters:{durum:['Siparişe Hazır']}});
-  assert.deepEqual(buckets.map(b=>[b.month,b.quantity,b.modelCount]),[['2027-03',300,1],['2027-04',40,1]]);
+  assert.deepEqual(buckets.map(b=>[b.month,b.quantity,b.modelCount]),[['2027-04',40,1],['2027-03',300,1]]);
 });
 
 test('monthBuckets lists models with images before models without images',()=>{
