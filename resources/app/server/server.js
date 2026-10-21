@@ -8537,8 +8537,9 @@ app.get('/api/backlog-export', userAccess.requireArea('backlog'), async (req,res
     const sourceById=new Map(sourceCatalog.map(column=>[column.id,column]));
     const sourceColumns=requestedIds.map(id=>sourceById.get(id)).filter(Boolean);
     const previewLimit=Math.min(500,Math.max(0,Number(req.query.previewLimit)||0));
-    const detailRowsKey=backlogRowsCacheKey(id,active,overrides,req.currentUser,[filterOpts,sourceColumns.map(column=>column.id),previewLimit]);
-    const detailRows=cachedBacklogTemplateRows(detailRowsKey,()=>buildBacklogTemplateRows(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,previewLimit?{limit:previewLimit}:{}));
+    const includeSourceDetails=req.query.includeSourceDetails==='1';
+    const detailRowsKey=backlogRowsCacheKey(id,active,overrides,req.currentUser,[filterOpts,sourceColumns.map(column=>column.id),previewLimit,includeSourceDetails]);
+    const detailRows=cachedBacklogTemplateRows(detailRowsKey,()=>buildBacklogTemplateRows(backlogOrders,backlogAntrepo,overrides,filterOpts,sourceColumns,{limit:previewLimit,includeSourceDetails}));
     const exportHeaders=[...BACKLOG_TEMPLATE_HEADERS,...sourceColumns.map(column=>column.label)];
     // format=json: satırlar istemciye gider, Excel istemcide CP ile AYNI stil motoruyla üretilir.
     if(req.query.format==='json'){

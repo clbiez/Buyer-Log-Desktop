@@ -3258,12 +3258,15 @@ function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOco
     if (order && !seenOrders.has(order)) { seenOrders.add(order); cpOrders.push(order); }
   });
   const cpMap = new Map();
-  buildCPRowsFromASAS(cpOrders, antrepoMap, overrides).forEach(row => {
+  const sourceRows=options.includeSourceDetails===true
+    ? buildOrdersRowsFromASAS(cpOrders, antrepoMap, overrides)
+    : buildCPRowsFromASAS(cpOrders, antrepoMap, overrides);
+  sourceRows.forEach(row => {
     const source = sourceOrderRef(row);
     if (source) cpMap.set(source, row);
   });
 
-  const rows = backlogTemplateRowsFromSegments(selectedSegments, overrides, cpMap, extraColumns);
+  const rows = backlogTemplateRowsFromSegments(selectedSegments, overrides, cpMap, extraColumns, options);
   Object.defineProperty(rows, 'totalRows', { value: sourceSegments.length, enumerable: false });
   return rows;
 }
@@ -3275,7 +3278,7 @@ function buildBacklogTemplateRows(asasOrders, antrepoMap, overrides, filterOrOco
    'GÜNCEL DURUM\n(STATUS)', 'Adet' ↔ 'Sipariş Adeti', 'Buyer Grup' ↔
    'Buyer Grup (TR)' …): parsiyel satırları çiziliyor ama hücrelerin çoğu boş
    kalıyordu. Artık ikisi de bu fonksiyondan geçiyor, ayrışamazlar. */
-function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extraColumns) {
+function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extraColumns, options = {}) {
   const cp = cpMap instanceof Map ? cpMap : new Map();
   const requestedColumns = (Array.isArray(extraColumns) ? extraColumns : []).filter(column =>
     column && (column.source === 'asas' || column.source === 'antrepo') && column.header && column.label
@@ -3480,6 +3483,12 @@ function backlogTemplateRowsFromSegments(sourceSegments, overrides, cpMap, extra
         ? fields[column.header]
         : '';
     });
+    // Harita detayları CP kataloğunu gösterir. Aynı Backlog hedefinden zaten
+    // hesaplanan salt-okunur sipariş alanlarını yalnız talep edildiğinde taşı.
+    // İç ASAS/IAS verisi ve sipariş-seviyesi lojistik özetleri payload'a girmez.
+    if(options.includeSourceDetails===true){
+      result._detailSource=Object.fromEntries(Object.entries(cpRow).filter(([key])=>!key.startsWith('_')));
+    }
     return result;
   });
 }
