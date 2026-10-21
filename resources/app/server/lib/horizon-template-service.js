@@ -1,5 +1,5 @@
 'use strict';
-const {error,hash}=require('./agent-office-store'),horizon=require('./modelHorizon'),{publicHorizon}=require('./source-workflow-service');
+const {error,hash}=require('./operation-utils'),horizon=require('./modelHorizon'),{publicHorizon}=require('./source-workflow-service');
 const ordered=value=>Array.isArray(value)?value.map(ordered):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,ordered(value[key])])):value;
 const stamp=store=>hash(JSON.stringify(ordered(store)));
 function normalizeDefinition(definition){

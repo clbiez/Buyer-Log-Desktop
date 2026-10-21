@@ -90,11 +90,9 @@ test('v5.88 bağlantı yokken tanılama başarısız ama ÇÖKMEDEN döner', asy
   assert.equal(report.checks.find(check => check.key === 'connection').ok, false);
 });
 
-test('v5.88 tanılama iki ekran için de uç noktaya bağlı', () => {
-  assert.match(SERVER, /\/api\/agent-platform\/browser\/diagnose/);
+test('v5.88 tanılama Otomasyonlar uç noktasına bağlı', () => {
   assert.match(SERVER, /\/api\/automations\/browser\/diagnose/);
   // Yetki alanları status ile aynı kalmalı.
-  assert.match(SERVER, /'\/api\/agent-platform\/browser\/diagnose', userAccess\.requireArea\('agents'\)/);
   assert.match(SERVER, /'\/api\/automations\/browser\/diagnose', userAccess\.requireArea\('automations'\)/);
 });
 

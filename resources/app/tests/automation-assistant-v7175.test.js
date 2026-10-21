@@ -27,7 +27,7 @@ const ROOT = path.join(__dirname, '..');
 const read = rel => fs.readFileSync(path.join(ROOT, rel), 'utf8');
 const A = require('../public/automation-assistant.js');
 const fieldCheck = require('../server/lib/automation-field-check.js');
-const { filterRows } = require('../server/lib/agent-tool-registry.js');
+const { filterRows } = require('../server/lib/dataset-filters.js');
 const language = require('../server/lib/automation-language.js');
 const registry = require('../server/lib/ai-capability-registry.js');
 const SERVER = read('server/server.js');

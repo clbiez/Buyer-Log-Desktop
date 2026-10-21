@@ -416,6 +416,35 @@
           "en": "Select and copy cells in detail reports"
         }
       }
+    },
+    {
+      "id": "lcwai-simplified",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "Tek asistanla daha sade Buyer Log",
+        "en": "A simpler Buyer Log with one assistant"
+      },
+      "body": {
+        "tr": "Agent Ofisi kaldırıldı. Özel arka plan izleme, bildirim, hafıza, senkronizasyon ve agent görevleri artık çalışmaz. LCW AI, normal otomasyonlar, PLM ve Test Raporları korunur; eski agent yetkisiyle kurulmuş zamanlamalar kapatılır.",
+        "en": "Agent Office has been removed. Its background monitoring, notifications, memory, synchronization and agent jobs no longer run. LCW AI, native automations, PLM and Test Reports remain available; schedules created with retired agent grants are disabled."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-simplified.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: menüde LCW AI, anonim demo kullanıcı",
+          "en": "Actual Buyer Log: LCW AI in the menu, anonymous demo user"
+        },
+        "caption": {
+          "tr": "LCW AI çalışma alanı ve sadeleşen menü",
+          "en": "The LCW AI workspace and simplified menu"
+        }
+      }
     }
   ]
 }

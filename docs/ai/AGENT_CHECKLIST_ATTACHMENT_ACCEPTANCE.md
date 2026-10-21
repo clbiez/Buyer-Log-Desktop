@@ -1,9 +1,0 @@
-# Agent checklist attachment lifecycle
-
-`cp.checklist.attachments.read` lists the evidence attachments on checklist answers of explicit, currently authorized order keys (same `authorizedOrders` scope and source-revision guard as `cp.checklist.answers.*`), with file existence.
-
-`cp.checklist.attachment.remove` (DELETE, approval, CP.EDIT) removes attachments from answers through the native answer write (`checklist-supplier-store.applyEntries`) — exactly what the CP checklist UI does: the answer keeps its state, note, report number, actual date, load date, supplier and label; only the attachment list changes. The stored file is not deleted: the answer history references it (the native orphan delete also refuses it), which is what lets the inverse restore the exact prior answer. The prior answer/tombstone entries are archived as an owner/job/step-bound artifact; undo uses `restoreEntries` CAS-bound to the effect revision (`CHECKLIST_REVISION_CONFLICT` if anything changed after), and the receipt hash proves the exact restore.
-
-Adding evidence remains in the existing test-report import tools (`addAttachmentBuffer`). Supplier XLSX exchange is not part of this packet: it is implemented only in the renderer (ExcelJS), and an agent path must reuse that engine server-side rather than duplicate it.
-
-Validation: `tests/agent-checklist-attachment-capability.test.js` (4 cases: scoped read, approved removal keeping evidence fields and file with exact inverse, unknown/out-of-scope/VIEW-only refusals, stale approval and post-effect peer edits), the existing answer capability tests, unified access matrix and i18n guard. Real anonymous HTTP/Chromium acceptance on an isolated demo server, TR and EN: attachment uploaded and attached through the native routes, Office read listed it, execution without approval 409, approved removal completed (0 attachments), undo restored it (1 attachment), zero page errors.

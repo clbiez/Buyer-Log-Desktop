@@ -1,7 +1,7 @@
 'use strict';
 
 const Freight = require('../../public/freight-calc');
-const { hash, error } = require('./agent-office-store');
+const { hash, error } = require('./operation-utils');
 const ordered = value => Array.isArray(value) ? value.map(ordered) : value && typeof value === 'object'
   ? Object.fromEntries(Object.keys(value).sort().map(key => [key, ordered(value[key])])) : value;
 const fingerprint = value => hash(JSON.stringify(ordered(value)));

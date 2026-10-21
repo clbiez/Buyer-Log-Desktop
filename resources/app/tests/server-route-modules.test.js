@@ -59,10 +59,7 @@ for (const name of modules) {
       global.setInterval = realSetInterval;
     }
     let declared = (source.match(/\bapp\.(?:get|post|put|delete|patch|use)\(/g) || []).length;
-    if (name === 'agent-office-routes.js') {
-      assert.match(source, /\[\['workbook',[\s\S]*\['merch-calendar',/);
-      declared += 1; // two artifact types share one registration statement
-    }
+
     if (name === 'view-profile-routes.js') {
       const expected = ['POST /api/choose-folder'];
       for (const route of ['views','filter-profiles']) expected.push(

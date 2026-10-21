@@ -1,6 +1,6 @@
 'use strict';
 const modelQueryDefault=require('./modelQuery'),fields=require('./model-fields'),adapter=require('./data-domain/legacy-adapter');
-const {hash,error}=require('./agent-office-store');
+const {hash,error}=require('./operation-utils');
 const safeEntry=entry=>{
  if(!entry||!['column','measure'].includes(entry.kind)||typeof entry.name!=='string'||!entry.name||entry.name.length>300||typeof entry.table!=='string'||entry.table.length>200)return null;
  const folder=entry.folder??'',dataType=entry.dataType==null?'':String(entry.dataType);

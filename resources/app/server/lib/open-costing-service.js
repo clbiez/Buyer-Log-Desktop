@@ -1,5 +1,5 @@
 'use strict';
-const Engine=require('../../public/open-costing-engine'),Fx=require('../../public/fx-calculation-engine'),{hash,error}=require('./agent-office-store');
+const Engine=require('../../public/open-costing-engine'),Fx=require('../../public/fx-calculation-engine'),{hash,error}=require('./operation-utils');
 const clone=value=>JSON.parse(JSON.stringify(value)),ordered=value=>Array.isArray(value)?value.map(ordered):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().map(key=>[key,ordered(value[key])])):value,stamp=value=>hash(JSON.stringify(ordered(value)));
 function createOpenCostingService({db}){
  const selected=(store,id)=>{const items=store.items.filter(item=>item.id===id);if(!items.length)throw error('NOT_FOUND',404);if(items.length!==1)throw error('OFFICE_RESOURCE_VERIFY_FAILED',409);return items[0];};

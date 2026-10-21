@@ -621,7 +621,7 @@ function quotationVisibleById(profile, id) {
   return quotationsVisibleTo(profile, { includeHidden: true }).requests.some(request => request.id === String(id || ''));
 }
 const emailGroupsStore = require('./lib/email-groups-store');
-const agentWorkflowStore = require('./lib/agent-workflow-store');
+
 const automationRecipeStore = require('./lib/automation-recipe-store');
 const aiCapabilityRegistry = require('./lib/ai-capability-registry');
 const automationLanguage = require('./lib/automation-language');
@@ -632,11 +632,10 @@ const aiAutomationCompatibility = require('./lib/ai-automation-compatibility');
 const backlogAutomation = require('./lib/backlog-automation');
 const cpAutomation = require('./lib/cp-automation');
 const automationEmail = require('./lib/automation-email');
-const { createToolRegistry, filterRows } = require('./lib/agent-tool-registry');
+
+const { filterRows } = require('./lib/dataset-filters');
 const automationFieldCheck = require('./lib/automation-field-check');
-const { createPolicyEngine } = require('./lib/agent-policy-engine');
-const { createAgentRuntime } = require('./lib/agent-runtime');
-const { architectureTemplate, validateWorkflow, nodeCatalog } = require('./lib/agent-graph');
+
 const agentBrowserSettings = require('./lib/agent-browser-settings');
 const agentBrowserConnector = require('./lib/agent-browser-connector');
 const browserDebugService = require('./lib/browser-debug-service');
@@ -2340,12 +2339,8 @@ app.post('/api/iam/users/:id/temporary-grants', userAccess.requireCapability('US
 app.delete('/api/iam/users/:id/temporary-grants/:grantId', userAccess.requireCapability('USER.GRANT'), express.json({ limit: '64kb' }), userAccess.temporaryGrantRevokeHandler);
 app.get('/api/iam/audit', userAccess.requireCapability('AUDIT.VIEW'), userAccess.auditListHandler);
 
-// ---- Agent Workflow Platform ------------------------------------------------
-// v5.46: Eski scheduler/web-recorder Agent sistemi tamamen kaldırıldı. Yeni
-// platform deklaratif workflow graph + deterministic policy/tool execution kullanır.
-// LLM yalnız plan üretebilir; execution hiçbir zaman LLM'in doğrudan kontrolünde değildir.
-const AGENT_ALLOWED_CONNECTOR_HOSTS = String(process.env.BUYER_LOG_AGENT_ALLOWED_HOSTS || '')
-  .split(/[\n,;]+/).map(value => value.trim().toLowerCase()).filter(Boolean);
+// ---- Shared operational data for native modules and automations ----
+
 
 function agentPlatformError(res, err, fallback) {
   res.status(Number(err && err.statusCode) || 500).json({ error: err && err.message || fallback, code: err && err.code || 'AGENT_PLATFORM_ERROR', details: err && err.details || undefined });
@@ -2396,75 +2391,24 @@ async function agentPlatformDataset(ownerId, profile, source) {
   if (normalized === 'backlog') return agentVisibleRows(profile, buildBacklogTemplateRows(ordersForTarget(active, 'backlog', overrides), antrepoForTarget(active, 'backlog'), overrides, {}));
   return agentVisibleRows(profile, buildCPRowsFromASAS(ordersForTarget(active, 'cp', overrides), antrepoForTarget(active, 'cp'), overrides));
 }
-function agentPlatformOrderPatchSnapshot(row, patch) {
-  const before = {};
-  if (Object.prototype.hasOwnProperty.call(patch || {}, 'subManufacturer')) before.subManufacturer = row && (row['Sub-Manufacturer'] ?? row.SubManufacturer ?? '');
-  if (Object.prototype.hasOwnProperty.call(patch || {}, 'licensor')) before.licensor = row && row.Licensor || '';
-  if (Object.prototype.hasOwnProperty.call(patch || {}, 'delType')) before.delType = row && (row['Del. Type'] ?? row.DelType ?? '');
-  if (patch && patch.notes && typeof patch.notes === 'object') {
-    before.notes = {};
-    if (Object.prototype.hasOwnProperty.call(patch.notes, 'Notes')) before.notes.Notes = row && row.Notes || '';
-    if (Object.prototype.hasOwnProperty.call(patch.notes, 'EkNot')) before.notes.EkNot = row && (row.EkNot ?? row['Ek Not'] ?? '');
-  }
-  if (patch && patch.dates && typeof patch.dates === 'object') {
-    before.dates = {};
-    if (Object.prototype.hasOwnProperty.call(patch.dates, 'exFactory')) before.dates.exFactory = row && row['Ex-factory'] || '';
-    if (Object.prototype.hasOwnProperty.call(patch.dates, 'retailDate')) before.dates.retailDate = row && row['Retail Date'] || '';
-    if (Object.prototype.hasOwnProperty.call(patch.dates, 'inStoreDate')) before.dates.inStoreDate = row && (row['In-Store'] ?? row['In-Store Date'] ?? '');
-  }
-  if (patch && patch.model) before.model = patch.model;
-  if (patch && patch.ccode) before.ccode = patch.ccode;
-  return before;
-}
-function agentIsoDateOnly(value) {
-  if (!value) return '';
-  // dateOnlyISO takvim gününü yerel bileşenlerden okur; toISOString() UTC'ye
-  // çevirdiği için UTC+X saat dilimlerinde bir gün geriye kayıyordu.
-  if (value instanceof Date && !Number.isNaN(value.getTime())) return dateOnlyISO(value) || '';
-  const text = String(value).trim(); if (/^\d{4}-\d{2}-\d{2}$/.test(text)) return text;
-  const date = new Date(value); return Number.isNaN(date.getTime()) ? '' : (dateOnlyISO(date) || '');
-}
-function agentNormalizeRestorePatch(before) {
-  const patch = { ...(before || {}) };
-  if (patch.dates) patch.dates = Object.fromEntries(Object.entries(patch.dates).map(([key,value]) => [key, agentIsoDateOnly(value)]));
-  return patch;
-}
-async function agentPlatformHttpRequest(args) {
-  const url = new URL(String(args && args.url || ''));
-  const method = String(args && args.method || 'GET').toUpperCase();
-  if (!['GET','POST','PUT','PATCH'].includes(method)) throw Object.assign(new Error('Connector method yalnız GET/POST/PUT/PATCH olabilir.'), { code:'CONNECTOR_METHOD_BLOCKED', statusCode:400 });
-  const headers = {};
-  for (const [key,value] of Object.entries(args && args.headers && typeof args.headers === 'object' ? args.headers : {})) {
-    const name = String(key || '').trim().toLowerCase();
-    if (!name || ['authorization','cookie','proxy-authorization','host','content-length'].includes(name)) continue;
-    headers[name] = String(value == null ? '' : value).slice(0,4000);
-  }
-  let body;
-  if (method !== 'GET' && args && Object.prototype.hasOwnProperty.call(args, 'body')) {
-    if (typeof args.body === 'string') body = args.body.slice(0, 128 * 1024);
-    else { body = JSON.stringify(args.body); headers['content-type'] = headers['content-type'] || 'application/json'; }
-  }
-  const controller = new AbortController(), timer = setTimeout(() => controller.abort(), 20000);
-  try {
-    const response = await fetch(url, { method, headers, body, signal: controller.signal, redirect:'manual' });
-    const buffer = Buffer.from(await response.arrayBuffer());
-    if (buffer.length > 2 * 1024 * 1024) throw Object.assign(new Error('Connector yanıtı 2 MB güvenlik sınırını aşıyor.'), { code:'CONNECTOR_RESPONSE_TOO_LARGE', statusCode:413 });
-    const contentType = String(response.headers.get('content-type') || '');
-    const raw = buffer.toString('utf8'); let data = raw;
-    if (/json/i.test(contentType)) { try { data = JSON.parse(raw); } catch (_) {} }
-    return { ok: response.ok, status: response.status, contentType, data };
-  } finally { clearTimeout(timer); }
-}
 
 function cpManagedRulesState(){try{return loadOverrides().cpManagedRules||null;}catch(_){return null;}}
-const cpAgentPreferences=require('./lib/cp-agent-preferences').createCpRulePreferences(userPreferences,userAccess,cpManagedRulesState);
+const cpAgentPreferences=require('./lib/cp-rule-preferences').createCpRulePreferences(userPreferences,userAccess,cpManagedRulesState);
 function cpAgentRevision(profile,{ignoreRefresh=false}={}){
   const stamp=file=>{try{const stat=fs.statSync(file);return [stat.mtimeMs,stat.size,stat.ino];}catch(err){if(err.code==='ENOENT')return null;throw err;}};
   return crypto.createHash('sha256').update(JSON.stringify({loadedAt:ignoreRefresh?null:cacheForUser(profile.id).loadedAt,overrides:effectiveOverridesForUser(profile.id),preferences:userPreferences.load(profile.id),roleEntries:userAccess.roleWorkspaceEntries(profile),calendar:require('./lib/merch-calendar-store').publicProjection(),managedRules:cpManagedRulesState(),actor:userAccess.profileById(profile.id),plmSamples:stamp(require('./lib/plm-sample-requests-store').DEFAULT_FILE),checklist:stamp(require('./lib/checklist-supplier-store').FILE)})).digest('hex');
 }
 async function cpAgentData(profile) {
+  profile=userAccess.profileById(profile.id);
+  if(!profile||profile.enabled===false||!userAccess.hasArea(profile,'cp'))throw Object.assign(new Error('CP access denied.'),{code:'AREA_FORBIDDEN',statusCode:403});
   const sourceRevision=cpAgentRevision(profile);
-  const data=await agentOfficeOperationalData(profile,{},['cp']);
+  const rows=await agentPlatformDataset(profile.id,profile,'cp');
+  const CPSource=require('../public/cp-readiness-engine'),ChecklistSource=require('../public/cp-checklist-engine');
+  const analysesSource=rows.map(row=>CPSource.analyzeOrder(row)),keysSource=new Set(analysesSource.map(order=>order.orderKey));
+  const optionKeysSource=new Set(analysesSource.map(order=>ChecklistSource.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
+  const payload=require('./lib/checklist-supplier-store').publicPayload();
+  const scopeEntries=entries=>Object.fromEntries(Object.entries(entries||{}).filter(([key])=>{const identity=key.slice(0,key.lastIndexOf('::'));return keysSource.has(identity)||optionKeysSource.has(identity);}));
+  const data={cpRows:rows,cpAvailable:true,checklist:{...payload,answers:scopeEntries(payload.answers),tombstones:scopeEntries(payload.tombstones)}};
   if(!data.cpAvailable)throw Object.assign(new Error('OFFICE_CP_UNAVAILABLE'),{code:'OFFICE_CP_UNAVAILABLE',statusCode:409});
   const priority=cpAgentPreferences.ruleSnapshot(profile,'priority'),checklist=cpAgentPreferences.ruleSnapshot(profile,'checklist');
   if(sourceRevision!==cpAgentRevision(profile))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
@@ -2474,251 +2418,28 @@ async function cpAgentData(profile) {
   const visibleAnswers=require('../public/checklist-answer-merge-engine').merge(visible(answers),{answers:visible(data.checklist.answers),tombstones:visible(data.checklist.tombstones)});
   return {...data,sourceRevision,settings,checklistEnabled,customStatuses,checklist:{...data.checklist,answers:visibleAnswers,tombstones:visible(data.checklist.tombstones)},personalRules:[...priority.rules,...checklist.rules],deletedRuleIds:[...(priority.payload.deletedRuleIds||[]),...(checklist.payload.deletedRuleIds||[])]};
 }
-function cpAgentMail(profile,args,rows,dryRun,expected=null) {
-  const recipe={email:{groupId:args.groupId,recipientField:'Manufacturer'}};
-  const split=args.recipientMode==='manufacturer'?automationSplitRecipients(rows,recipe,profile.id):{resolved:[{group:automationEmailGroup(recipe,profile.id),rows,value:''}],unresolved:[]};
-  const messages=split.resolved.map(part=>({groupId:part.group.id,groupName:part.group.name,to:part.group.to,cc:part.group.cc||[],bcc:part.group.bcc||[],subject:args.subject+(part.value?' · '+part.value:''),body:args.body,language:args.language,rows:part.rows.length}));
-  const preview={messages,unresolved:split.unresolved,sendAvailable:false};
-  if(!messages.length)throw Object.assign(new Error('OFFICE_RECIPIENTS_UNRESOLVED'),{code:'OFFICE_RECIPIENTS_UNRESOLVED',statusCode:409});
-  if(dryRun)return preview;
-  if(JSON.stringify(preview)!==JSON.stringify(expected))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
-  const canonicalIds=['orderCode','plmId','modelName','colourCode','manufacturer','subManufacturer','orderQuantity','exFactory'];
-  const fields=canonicalIds.map(id=>canonicalFields.label(id,args.language));
-  const emails=messages.map((message,i)=>{
-    const reportRows=split.resolved[i].rows.map(row=>Object.fromEntries(canonicalIds.map((id,index)=>[fields[index],canonicalFields.value(row,'cp',id)])));
-    const draft=automationEmail.createDraft({name:args.subject,...message,rows:reportRows,fields,language:args.language,ownerId:profile.id,open:false});
-    return {...message,filename:draft.filename};
-  });
-  return {emails,unresolved:split.unresolved,sendAvailable:false};
-}
+
 // Order override adapter shared by app.order.update (legacy Runtime) and the
 // Office cp.order.update capability; one native service, one rule set.
 /* Model image of a CP row for the Office supplier workbook: the same
    colour-then-model key order as the screen, read from the local image store.
    An empty colour entry is a deletion tombstone and hides the model image. */
-function imageSize(buffer){
-  if(buffer.length>24&&buffer.readUInt32BE(0)===0x89504e47)return {width:buffer.readUInt32BE(16),height:buffer.readUInt32BE(20)};
-  for(let i=2;i+9<buffer.length&&buffer[0]===0xff&&buffer[1]===0xd8;){
-    if(buffer[i]!==0xff){i++;continue;}const marker=buffer[i+1],length=buffer.readUInt16BE(i+2);
-    if(marker>=0xc0&&marker<=0xcf&&![0xc4,0xc8,0xcc].includes(marker))return {width:buffer.readUInt16BE(i+7),height:buffer.readUInt16BE(i+5)};
-    i+=2+length;
-  }
-  return {width:1,height:1};
-}
-const AGENT_SUPPLIER_IMAGE_MAX_BYTES=1024*1024;
-function agentSupplierRowImage(row){
-  const plm=String(row&&row['PLM ID']||'').trim();if(!plm)return null;
-  const map=loadOverrides().imagemap||{},keys=[parseLib.plmColourImageNameKey(plm,row['C.Code']||'',row['Colour']||''),parseLib.plmImageKey(plm)].filter(Boolean);
-  let ref=null;for(const key of keys)if(Object.hasOwn(map,key)){ref=map[key];break;}
-  if(!ref)return null;
-  const found=getCollectionImage(ref),mime=String(found&&found.item&&found.item.mimeType||'').toLowerCase();
-  if(!found||!/^image\/(png|jpe?g)$/.test(mime))return null;
-  // No server-side resizer exists; an oversized original stays out of the workbook.
-  try{if(fs.statSync(found.full).size>AGENT_SUPPLIER_IMAGE_MAX_BYTES)return null;}catch(_){return null;}
-  let buffer;try{buffer=fs.readFileSync(found.full);}catch(_){return null;}
-  return {dataUrl:'data:'+(mime==='image/jpg'?'image/jpeg':mime)+';base64,'+buffer.toString('base64'),...imageSize(buffer)};
-}
-const agentOrderAdapter = {
-  snapshotOrder: async (ownerId, profile, orderCode, patch, preloadedRows=null) => {
-    // A line is addressed by model AND colour; one alone would write the
-    // order-level override that every line of the order falls back to.
-    if(Boolean(String(patch&&patch.model||'').trim())!==Boolean(String(patch&&patch.ccode||'').trim()))throw Object.assign(new Error('OFFICE_ORDER_IDENTITY'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
-    const rows = preloadedRows || await agentPlatformDataset(ownerId, profile, 'cp');
-    const wantedModel = String(patch && patch.model || '').trim(), wantedColour = String(patch && patch.ccode || '').trim();
-    const candidates = rows.filter(item => Number(agentRowOrderCode(item)) === Number(orderCode)
-      && (!wantedModel || String(item && item['Model Name'] || '').trim() === wantedModel)
-      && (!wantedColour || String(item && item['C.Code'] || '').trim() === wantedColour));
-    if(candidates.length!==1)throw Object.assign(new Error('Order identity is missing or ambiguous.'),{code:'OFFICE_ORDER_IDENTITY',statusCode:409});
-    if(!canUserEditOrderCode(profile,orderCode))throw Object.assign(new Error('ORDER_FORBIDDEN'),{code:'ORDER_FORBIDDEN',statusCode:403});
-    assertAgentSharedOwner(profile,orderCode,patch);
-    // The native editor silently skips unknown note-column ids; an agent preview
-    // must refuse them instead of approving a write that changes nothing.
-    const columnIds=new Set((loadOverrides().noteColumnDefs||[]).map(def=>def.id));
-    if(Object.keys(patch&&patch.noteColumns||{}).some(id=>!columnIds.has(id)))throw Object.assign(new Error('OFFICE_NOTE_COLUMN_UNKNOWN'),{code:'OFFICE_NOTE_COLUMN_UNKNOWN',statusCode:422});
-    return require('./db').snapshotOrderOverride(orderCode,patch);
-  },
-  // Light read of the exact override maps for a line (no dataset load).
-  currentOrderMaps: (orderCode, selector) => require('./db').snapshotOrderOverride(orderCode, selector || {}).patch.maps,
-  updateOrder: async (_ownerId, profile, orderCode, patch,expectedRevision,options={}) => {
-    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-    assertAgentSharedOwner(profile,orderCode,patch);
-    const beforeContext=pageProjectionContext(profile);
-    const saved = patchOrderOverride(Number(orderCode), patch || {}, expectedRevision, null, { actor: noteActorOf(profile), expectedNoteColumnDefsRevision: options.noteColumnDefsRevision });
-    // Same incremental screen-cache rewrite as the HTTP editor: without it every
-    // agent edit invalidated the whole page cache and forced a cold rebuild.
-    try { await rewriteProjectionCacheForRowPatches(profile,beforeContext,[{orderCode,patch}]); }
-    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
-    userAccess.appendAudit(profile, 'AGENT_ORDER_UPDATE', String(orderCode), { fields:Object.keys(patch || {}) });
-    liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor([{orderCode,patch}])});
-    void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    return { ok:true, verified:require('./db').verifyOrderOverridePatch(orderCode,patch,saved.revision),updated:saved.updated || 1, revision:saved.revision };
-  },
-  // Multi-line edit: every line is checked like a single edit, then written in
-  // one native batch (one revision step) and verified line by line.
-  snapshotOrders: async (ownerId, profile, entries) => {
-    const rows = await agentPlatformDataset(ownerId, profile, 'cp');
-    const snapshots = [];
-    for (const entry of entries) snapshots.push(await agentOrderAdapter.snapshotOrder(ownerId, profile, entry.orderCode, entry.patch, rows));
-    return snapshots;
-  },
-  updateOrders: async (_ownerId, profile, items, expectedRevision, options={}) => {
-    for (const item of items) {
-      if (!canUserEditOrderCode(profile, item.orderCode)) throw Object.assign(new Error('Bu siparişi değiştirme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-      assertAgentSharedOwner(profile, item.orderCode, item.patch);
-    }
-    const beforeContext=pageProjectionContext(profile);
-    const saved = patchOrderOverrides(items, expectedRevision, null, { actor: noteActorOf(profile), expectedNoteColumnDefsRevision: options.noteColumnDefsRevision });
-    try { await rewriteProjectionCacheForRowPatches(profile,beforeContext,items); }
-    catch (cacheError) { logRuntimeFailure('rowProjectionCachePatch',cacheError); }
-    userAccess.appendAudit(profile, 'AGENT_ORDER_BATCH_UPDATE', 'orders', { orderCodes:items.map(item=>Number(item.orderCode)), count:items.length });
-    liveEvents.notifyChange('orders','agent-capability',{rowPatches:liveRowPatchesFor(items)});
-    void sharedRevisionStore.update('cpOverrides',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    const verified=saved.updated===items.length&&!(saved.skipped||[]).length&&items.every(item=>require('./db').verifyOrderOverridePatch(item.orderCode,item.patch,saved.revision));
-    return { ok:true, verified, updated:saved.updated, revision:saved.revision };
-  },
-  restoreOrders: async (_ownerId, profile, items, expectedRevision) => {
-    if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
-    for (const {orderCode,before,selector} of items) {
-      if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-      const currentMaps=require('./db').snapshotOrderOverride(orderCode,selector||{}).patch.maps;
-      if(['submap','datemap'].some(name=>Object.hasOwn(before&&before.maps||{},name)&&JSON.stringify(currentMaps[name])!==JSON.stringify(before.maps[name])))assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
-    }
-    const result=require('./db').restoreOrderOverrideReceipts(items.map(({orderCode,before,selector})=>({orderCode,receipt:before,selector})),expectedRevision,{actor:noteActorOf(profile)});
-    userAccess.appendAudit(profile, 'AGENT_ORDER_BATCH_ROLLBACK', 'orders', {orderCodes:items.map(item=>Number(item.orderCode)),revision:result.revision});
-    // Exact undo may remove overrides: peers reload each restored order, as for a single undo.
-    for (const {orderCode} of items) liveEvents.notifyChange('orders','agent-capability',{orderCode});
-    return result;
-  },
-  // Note-column definitions: the same shared list and native service as
-  // CP › Add Column (PUT /api/note-columns).
-  noteColumns: {
-    snapshot: ids => require('./db').noteColumnSnapshot(ids),
-    normalize: columns => require('./db').normalizeNoteColumnDefs(columns),
-    replace: (profile, columns, expectedRevision) => {
-      const saved = replaceNoteColumnDefs(columns, expectedRevision);
-      userAccess.appendAudit(profile, 'NOTE_COLUMNS_UPDATE', 'cp', { count: saved.columns.length, revision: saved.revision, origin:'agent' });
-      publishSharedMasterChange('noteColumnDefs', { currentUser: profile, headers: {} });
-      return saved;
-    },
-    restore: (profile, snapshot, expectedRevision) => {
-      const saved = require('./db').restoreNoteColumnDefs(snapshot, expectedRevision);
-      userAccess.appendAudit(profile, 'NOTE_COLUMNS_UPDATE', 'cp', { count: saved.columns.length, revision: saved.revision, origin:'agent-rollback' });
-      publishSharedMasterChange('noteColumnDefs', { currentUser: profile, headers: {} });
-      return saved;
-    },
-  },
-  restoreOrder: async (_ownerId, profile, orderCode, before,expectedRevision,selector) => {
-    if (!canUserEditOrderCode(profile, orderCode)) throw Object.assign(new Error('Bu siparişi rollback etme yetkiniz yok.'), { code:'ORDER_FORBIDDEN', statusCode:403 });
-    if(!Number.isSafeInteger(expectedRevision))throw Object.assign(new Error('OFFICE_ROLLBACK_INVALID'),{code:'OFFICE_ROLLBACK_INVALID',statusCode:409});
-    // Shared-owner fields are checked only when the inverse actually changes
-    // them; a non-owner may edit and undo notes, note columns or the shortage mark.
-    const currentMaps=require('./db').snapshotOrderOverride(orderCode,selector||{}).patch.maps;
-    if(['submap','datemap'].some(name=>Object.hasOwn(before&&before.maps||{},name)&&JSON.stringify(currentMaps[name])!==JSON.stringify(before.maps[name])))assertAgentSharedOwner(profile,orderCode,{...selector,dates:{},subManufacturer:''});
-    const result=require('./db').restoreOrderOverrideReceipt(orderCode,before,expectedRevision,selector,{actor:noteActorOf(profile)});
-    userAccess.appendAudit(profile, 'AGENT_ORDER_ROLLBACK', String(orderCode), {revision:result.revision});
-    liveEvents.notifyChange('orders','agent-capability',{orderCode});return result;
-  },
-};
-const agentToolRegistry = createToolRegistry({
-  authorizeCapability:(ctx,args)=>agentOfficeService.taskAuthorize(ctx,args),
-  authorizePendingCapability:(ctx,receipt)=>agentOfficeService.taskAuthorizePending(ctx,receipt),
-  cp:{...cpAgentPreferences,data:cpAgentData,calendar:()=>require('./lib/merch-calendar-store').publicProjection(),mail:cpAgentMail,
-    assertRevision:(profile,revision)=>{if(cpAgentRevision(profile)!==revision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});},
-    verifyMail:(result,profile)=>result.emails.length>0&&result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id))),
-    authorize:async(ctx,args)=>{
-      if(!ctx.input?.officeJobId)throw Object.assign(new Error('OFFICE_APPROVAL_REQUIRED'),{code:'OFFICE_APPROVAL_REQUIRED',statusCode:403});
-      const job=await agentOfficeStore.get(ctx.ownerId,'job',ctx.input.officeJobId);if(job.type==='capability-task')return agentOfficeService.taskAuthorize(ctx,args);const agent=await agentOfficeStore.get(ctx.ownerId,'profile',job.profileIds[0]);
-      if(job.status!=='running'||job.runtimeRunId!==ctx.runId||job.toolId!==ctx.toolId||JSON.stringify(job.args)!==JSON.stringify(args)||agent.revision!==job.agentRevision||agent.enabled===false||agent.deleted||!agent.areas.includes('cp'))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
-    },
-    withRollbackGuard:async(ctx,work)=>{
-      if(!ctx.input?.officeJobId)throw require('./lib/agent-office-store').error('OFFICE_APPROVAL_REQUIRED',403);
-      const job=await agentOfficeStore.get(ctx.ownerId,'job',ctx.input.officeJobId),agentId=ctx.input.officeAgentId||job.profileIds[0];
-      if(!job.profileIds.includes(agentId))throw require('./lib/agent-office-store').error('OFFICE_TOOL_FORBIDDEN',403);
-      const agent=await agentOfficeStore.get(ctx.ownerId,'profile',agentId),revision=ctx.input.officeAgentRevision||agent.revision;
-      return agentOfficeStore.withProfileGuard(ctx.ownerId,agentId,revision,current=>{ctx.assertAuthority();if(!current.areas.includes('cp'))throw require('./lib/agent-office-store').error('OFFICE_TOOL_FORBIDDEN',403);return work();});
-    },
-    withCommitGuard:async(ctx,work)=>{
-      if(ctx.input?.officeStepId)return agentOfficeService.taskNativeGuard(ctx,work);
-      if(!ctx.input?.officeJobId)throw require('./lib/agent-office-store').error('OFFICE_APPROVAL_REQUIRED',403);
-      const job=await agentOfficeStore.get(ctx.ownerId,'job',ctx.input.officeJobId);
-      if(job.type!=='cp-task'||job.status!=='running'||job.runtimeRunId!==ctx.runId||job.toolId!==ctx.toolId)throw require('./lib/agent-office-store').error('OFFICE_PREVIEW_CHANGED',409);
-      return agentOfficeStore.withProfileGuard(ctx.ownerId,job.profileIds[0],job.agentRevision,()=>{ctx.assertAuthority();return work();});
-    }
-  },
-  // Modul kesif araclari yetki suzmesini burada yapar: ajan erisemeyecegi bir
-  // modulu hic gormemeli, yoksa "yapabilirim" deyip 403 alir.
-  userAccess,
-  listDatasets: async (_ownerId, profile) => ['cp','orders','backlog','lfl','collection','asas','ias'].map(source => ({
-    id:source, area:agentDatasetArea(source), allowed:userAccess.hasArea(profile, agentDatasetArea(source)),
-  })),
-  getDataContext: async (ownerId, _profile, source) => {
-    const normalized=String(source||'').trim().toLowerCase();
-    if(normalized==='collection'){
-      const workspace=loadWorkspace(ownerId);
-      return {source:normalized,refreshedAt:workspace.updatedAt||null,rowCount:Array.isArray(workspace.rows)?workspace.rows.length:0};
-    }
-    const active=cacheForUser(ownerId);
-    return {source:normalized,refreshedAt:normalized==='lfl'?(active.lflLoadedAt||active.loadedAt||null):(active.loadedAt||null),dataSource:active.sources&&active.sources[normalized]||null};
-  },
-  getDataset: agentPlatformDataset,
-  refresh: async (ownerId, profile, targets) => performRefresh(ownerId, profile, targets),
-  ...agentOrderAdapter,
-  httpRequest: agentPlatformHttpRequest,
-  browserRun: async (args, ctx) => agentBrowserConnector.run(ctx.ownerId, args, ctx),
-});
-const agentPolicyEngine = createPolicyEngine({ userAccess, allowedConnectorHosts: AGENT_ALLOWED_CONNECTOR_HOSTS, getAllowedBrowserHosts: () => agentBrowserSettings.loadSettings().allowedHosts });
-const agentRuntime = createAgentRuntime({ store:agentWorkflowStore, toolRegistry:agentToolRegistry, policyEngine:agentPolicyEngine, auditFn:(profile,action,target,detail)=>userAccess.appendAudit(profile,action,target,detail) });
 
-function agentPlatformState(ownerId, profile = null) {
-  const state = agentWorkflowStore.stateForOwner(ownerId);
-  return {
-    ...state,
-    browser: { ...agentBrowserSettings.publicSettings(), canConfigure:Boolean(profile && String(profile.role || '').trim().toLowerCase() === 'moderator'), managedPort:agentBrowserConnector.managedCdpPort() },
-    connectors: { allowedHosts: agentPolicyEngine.allowedConnectorHosts, browserAllowedHosts:agentBrowserSettings.loadSettings().allowedHosts },
-    nodeCatalog: nodeCatalog(agentToolRegistry.catalog()),
-    toolCatalog: agentToolRegistry.catalog(),
-    architectureTemplate: architectureTemplate(),
-  };
-}
-app.get('/api/agent-platform', userAccess.requireArea('agents'), (req,res) => {
-  res.set('Cache-Control','no-store').json(agentPlatformState(req.currentUser.id, req.currentUser));
-});
-app.get('/api/agent-platform/browser/status', userAccess.requireArea('agents'), async (req,res) => {
-  try {
-    const status = await agentBrowserConnector.status(req.currentUser.id);
-    res.set('Cache-Control','no-store').json({ ok:true, status:{ ...status, canConfigure:String(req.currentUser.role || '').trim().toLowerCase() === 'moderator' } });
-  } catch (err) { agentPlatformError(res,err,'Browser Automation durumu okunamadı.'); }
-});
 // "Remote debugging açık ama bağlanmıyor" durumunda nerede takıldığını adım adım
 // raporlar (v5.88): Edge bulundu mu, hangi profil klasörlerine bakıldı,
 // DevToolsActivePort var mı, portta CDP cevap veriyor mu.
-app.get('/api/agent-platform/browser/diagnose', userAccess.requireArea('agents'), async (req,res) => {
-  try { res.set('Cache-Control','no-store').json({ ok:true, report: await agentBrowserConnector.diagnose() }); }
-  catch (err) { agentPlatformError(res,err,'Edge bağlantı tanılaması yapılamadı.'); }
-});
+
 app.get('/api/automations/browser/diagnose', userAccess.requireArea('automations'), async (req,res) => {
   try { res.set('Cache-Control','no-store').json({ ok:true, report: await agentBrowserConnector.diagnose() }); }
   catch (err) { automationError(res,err,'Edge bağlantı tanılaması yapılamadı.'); }
 });
-app.post('/api/agent-platform/browser/prepare-existing-edge', userAccess.requireArea('agents'), async (req,res) => {
-  try {
-    const result=agentBrowserConnector.openExistingEdgeDebugSetup();
-    userAccess.appendAudit(req.currentUser,'AGENT_BROWSER_EXISTING_EDGE_SETUP','edge',{userDataDir:result.userDataDir});
-    res.json({ok:true,result,status:await agentBrowserConnector.status(req.currentUser.id)});
-  } catch(err){ agentPlatformError(res,err,'Mevcut Edge profili bağlantı ekranı açılamadı.'); }
-});
-app.post('/api/agent-platform/browser/settings', userAccess.requireArea('agents'), userAccess.requireModerator, express.json({limit:'32kb'}), (req,res) => {
-  try {
-    const saved = agentBrowserSettings.saveSettings(req.body || {}, req.currentUser);
-    userAccess.appendAudit(req.currentUser, 'AGENT_BROWSER_SETTINGS_UPDATE', 'browser', { allowedHosts:saved.allowedHosts });
-    res.json({ ok:true, browser:{ ...saved, canConfigure:true, managedPort:agentBrowserConnector.managedCdpPort() }, state:agentPlatformState(req.currentUser.id, req.currentUser) });
-  } catch (err) { agentPlatformError(res,err,'Browser Automation ayarları kaydedilemedi.'); }
-});
+
+
 // Browser & Remote Debugging is device-local configuration. It uses the same
 // authenticated Buyer Log session/IAM boundary as the existing browser
 // automation routes, but is intentionally separate from the shared Agent
 // allowlist settings above.
-const browserDebugAccess = userAccess.requireAnyArea('agents', 'automations');
+const browserDebugAccess = userAccess.requireArea('automations');
 app.get('/api/browser-debug/status', browserDebugAccess, async (req, res) => {
   try { res.set('Cache-Control', 'no-store').json({ ok:true, status:await browserDebugService.getRuntimeStatus() }); }
   catch (err) { agentPlatformError(res, err, 'Browser ve Remote Debugging durumu okunamadı.'); }
@@ -2761,75 +2482,6 @@ app.post('/api/browser-debug/test', browserDebugAccess, async (req, res) => {
 app.post('/api/browser-debug/disable', browserDebugAccess, async (req, res) => {
   try { userAccess.appendAudit(req.currentUser, 'BROWSER_DEBUG_DISABLE', 'browser'); res.json(await browserDebugService.disable()); }
   catch (err) { agentPlatformError(res, err, 'Browser Remote Debugging devre dışı bırakılamadı.'); }
-});
-app.post('/api/agent-platform/browser/open', userAccess.requireArea('agents'), express.json({limit:'32kb'}), async (req,res) => {
-  try {
-    const result = await agentBrowserConnector.openConnection(req.currentUser.id, String(req.body && req.body.url || ''));
-    userAccess.appendAudit(req.currentUser, 'AGENT_BROWSER_OPEN', result.url, { openMode:result.openMode });
-    res.json({ ok:true, result });
-  } catch (err) { agentPlatformError(res,err,'Browser Automation sekmesi açılamadı.'); }
-});
-app.post('/api/agent-platform/browser/record/start', userAccess.requireArea('agents'), express.json({limit:'32kb'}), async (req,res) => {
-  try {
-    const recording = await agentBrowserConnector.startRecording(req.currentUser.id, String(req.body && req.body.url || ''));
-    userAccess.appendAudit(req.currentUser, 'AGENT_BROWSER_RECORD_START', recording.id, { url:recording.url });
-    res.json({ ok:true, recording });
-  } catch (err) { agentPlatformError(res,err,'Browser Automation kaydı başlatılamadı.'); }
-});
-app.get('/api/agent-platform/browser/record/:id', userAccess.requireArea('agents'), async (req,res) => {
-  try { res.set('Cache-Control','no-store').json({ ok:true, recording:await agentBrowserConnector.recordingState(req.currentUser.id, req.params.id) }); }
-  catch (err) { agentPlatformError(res,err,'Browser Automation kaydı okunamadı.'); }
-});
-app.post('/api/agent-platform/browser/record/:id/stop', userAccess.requireArea('agents'), async (req,res) => {
-  try {
-    const recording = await agentBrowserConnector.stopRecording(req.currentUser.id, req.params.id);
-    userAccess.appendAudit(req.currentUser, 'AGENT_BROWSER_RECORD_STOP', recording.id, { url:recording.url, steps:recording.steps.length });
-    res.json({ ok:true, recording });
-  } catch (err) { agentPlatformError(res,err,'Browser Automation kaydı durdurulamadı.'); }
-});
-app.post('/api/agent-platform/workflows', userAccess.requireArea('agents'), express.json({limit:'512kb'}), (req,res) => {
-  try {
-    const validation = validateWorkflow(req.body || {}, agentToolRegistry);
-    if (!validation.valid) return res.status(400).json({ error:'Workflow doğrulaması başarısız.', code:'WORKFLOW_INVALID', validation });
-    const saved = agentWorkflowStore.createWorkflow(req.currentUser.id, req.body || {});
-    userAccess.appendAudit(req.currentUser, 'AGENT_WORKFLOW_CREATE', saved.result.id, { name:saved.result.name, nodes:saved.result.nodes.length });
-    res.status(201).json({ ok:true, workflow:saved.result, state:agentPlatformState(req.currentUser.id, req.currentUser) });
-  } catch (err) { agentPlatformError(res,err,'Workflow oluşturulamadı.'); }
-});
-app.put('/api/agent-platform/workflows/:id', userAccess.requireArea('agents'), express.json({limit:'512kb'}), (req,res) => {
-  try {
-    const validation = validateWorkflow(req.body || {}, agentToolRegistry);
-    if (!validation.valid) return res.status(400).json({ error:'Workflow doğrulaması başarısız.', code:'WORKFLOW_INVALID', validation });
-    const saved = agentWorkflowStore.updateWorkflow(req.currentUser.id, req.params.id, req.body || {});
-    userAccess.appendAudit(req.currentUser, 'AGENT_WORKFLOW_UPDATE', saved.result.id, { name:saved.result.name, nodes:saved.result.nodes.length });
-    res.json({ ok:true, workflow:saved.result, state:agentPlatformState(req.currentUser.id, req.currentUser) });
-  } catch (err) { agentPlatformError(res,err,'Workflow güncellenemedi.'); }
-});
-app.delete('/api/agent-platform/workflows/:id', userAccess.requireArea('agents'), (req,res) => {
-  try {
-    const saved = agentWorkflowStore.deleteWorkflow(req.currentUser.id, req.params.id);
-    userAccess.appendAudit(req.currentUser, 'AGENT_WORKFLOW_DELETE', saved.result.id, { name:saved.result.name });
-    res.json({ ok:true, state:agentPlatformState(req.currentUser.id, req.currentUser) });
-  } catch (err) { agentPlatformError(res,err,'Workflow silinemedi.'); }
-});
-app.post('/api/agent-platform/workflows/:id/run', userAccess.requireArea('agents'), express.json({limit:'128kb'}), async (req,res) => {
-  try {
-    const workflow = agentWorkflowStore.workflowForOwner(req.currentUser.id, req.params.id);
-    if (!workflow) return res.status(404).json({ error:'Workflow bulunamadı.', code:'WORKFLOW_NOT_FOUND' });
-    const result = await agentRuntime.execute({ ownerId:req.currentUser.id, profile:req.currentUser, workflow, input:{ task:String(req.body && req.body.task || ''), variables:req.body && req.body.variables && typeof req.body.variables==='object'?req.body.variables:{} }, dryRun:Boolean(req.body && req.body.dryRun) });
-    res.json({ ok:true, result, state:agentPlatformState(req.currentUser.id, req.currentUser) });
-  } catch (err) { agentPlatformError(res,err,'Workflow çalıştırılamadı.'); }
-});
-app.post('/api/agent-platform/runs/:id/approval', userAccess.requireArea('agents'), express.json({limit:'32kb'}), async (req,res) => {
-  try {
-    const result = await agentRuntime.resumeApproval({ ownerId:req.currentUser.id, profile:req.currentUser, runId:req.params.id, approved:req.body && req.body.approved === true });
-    res.json({ ok:true, result, state:agentPlatformState(req.currentUser.id, req.currentUser) });
-  } catch (err) { agentPlatformError(res,err,'Workflow onayı işlenemedi.'); }
-});
-app.get('/api/agent-platform/runs/:id', userAccess.requireArea('agents'), (req,res) => {
-  const run = agentWorkflowStore.runForOwner(req.currentUser.id, req.params.id);
-  if (!run) return res.status(404).json({ error:'Agent çalışması bulunamadı.', code:'RUN_NOT_FOUND' });
-  res.set('Cache-Control','no-store').json({ run });
 });
 
 // ---- Buyer Log Automations --------------------------------------------------
@@ -3341,9 +2993,7 @@ app.post('/api/automations/recipes', userAccess.requireArea('automations'), expr
 app.put('/api/automations/recipes/:id', userAccess.requireArea('automations'), express.json({limit:'2mb'}), (req,res) => {try{const value=automationNormalizePayload(req.body||{},req.currentUser.id),saved=automationRecipeStore.updateRecipe(req.currentUser.id,req.params.id,value);userAccess.appendAudit(req.currentUser,'AUTOMATION_UPDATE',saved.result.id,{name:saved.result.name,purpose:saved.result.purpose,source:saved.result.source,steps:saved.result.steps.length});res.json({ok:true,recipe:saved.result,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon güncellenemedi.');}});
 app.delete('/api/automations/recipes/:id', userAccess.requireArea('automations'), (req,res) => {try{const saved=automationRecipeStore.deleteRecipe(req.currentUser.id,req.params.id);userAccess.appendAudit(req.currentUser,'AUTOMATION_DELETE',saved.result.id,{name:saved.result.name});res.json({ok:true,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon silinemedi.');}});
 app.post('/api/automations/email-groups', userAccess.requireArea('automations'), userAccess.requireModerator, express.json({limit:'512kb'}), (req,res) => {try{const saved=automationRecipeStore.replaceEmailGroups(req.body&&req.body.groups,req.currentUser);userAccess.appendAudit(req.currentUser,'AUTOMATION_EMAIL_GROUPS_UPDATE','email-groups',{groups:saved.result.length});res.json({ok:true,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'E-posta grupları kaydedilemedi.');}});
-app.get('/api/automations/runs/:id/drafts/:filename', userAccess.requireArea('automations'), async(req,res)=>{
-  try{const file=await require('./lib/agent-automation-schedule').ownedDraft(req.currentUser,req.params.id,req.params.filename,{store:automationRecipeStore,authorizeRecipe:agentAutomationDeps.authorizeRecipe,draftPath:automationEmail.draftPath,publicProfile:p=>userAccess.publicProfile(userAccess.profileById(p.id))});res.download(file,path.basename(file));}catch(err){automationError(res,err,'Otomasyon taslağı açılamadı.');}
-});
+
 app.get('/api/automations/mail-drafts/:filename', userAccess.requireArea('automations'), (req,res) => {const full=automationEmail.draftPath(req.params.filename);if(!full)return res.status(404).json({error:'E-posta taslağı bulunamadı.',code:'AUTOMATION_DRAFT_NOT_FOUND'});res.download(full,path.basename(full));});
 app.get('/api/automations/browser/status', userAccess.requireArea('automations'), async (req,res) => {try{res.set('Cache-Control','no-store').json({ok:true,status:await agentBrowserConnector.status(req.currentUser.id)});}catch(err){automationError(res,err,'Edge bağlantı durumu okunamadı.');}});
 app.post('/api/automations/browser/prepare-existing-edge', userAccess.requireArea('automations'), async (req,res) => {try{const result=agentBrowserConnector.openExistingEdgeDebugSetup();userAccess.appendAudit(req.currentUser,'AUTOMATION_BROWSER_EXISTING_EDGE_SETUP','edge',{userDataDir:result.userDataDir});res.json({ok:true,result,status:await agentBrowserConnector.status(req.currentUser.id)});}catch(err){automationError(res,err,'Mevcut Edge profili bağlantı ekranı açılamadı.');}});
@@ -3439,7 +3089,7 @@ app.post('/api/automations/pending-triggers/run', userAccess.requireArea('automa
 });
 
 const automationScheduleService=require('./lib/automation-schedule-service');
-function automationScheduleKey(recipe,now=new Date(),grant=automationRecipeStore.loadStore().agentScheduleGrants[recipe?.id]){return automationScheduleService.automationScheduleKey(recipe,now,grant);}
+function automationScheduleKey(recipe,now=new Date(),grant=null){return automationScheduleService.automationScheduleKey(recipe,now,grant);}
 /* ===================================================================
    v6.36 — KAÇIRILAN TETİKLER (zamanlama kararı "B+C")
    Sunucu son pencere kapanınca kendini kapattığı için (AUTO_EXIT), planlı bir
@@ -3457,7 +3107,7 @@ const AUTOMATION_MISSED_LOOKBACK_DAYS = 14;
 // Bir tarifin ŞU ANA KADAR gerçekleşmiş olması gereken EN SON tetiğini bulur.
 // Geriye doğru gün gün bakar; interval kipi kendi son çalışmasına göre işlediği
 // için burada kapsam dışıdır (kaçırma kavramı orada anlamsız).
-function automationDueOccurrence(recipe,now=new Date(),grant=automationRecipeStore.loadStore().agentScheduleGrants[recipe?.id]){return automationScheduleService.automationDueOccurrence(recipe,now,grant);}
+function automationDueOccurrence(recipe,now=new Date(),grant=null){return automationScheduleService.automationDueOccurrence(recipe,now,grant);}
 function automationIsWithinGrace(occurrence){return automationScheduleService.automationIsWithinGrace(occurrence);}
 // Sahibi için bekleyen (kaçırılmış) tetikleri listeler.
 function automationMissedTriggers(ownerId, now = new Date()) {
@@ -3465,7 +3115,7 @@ function automationMissedTriggers(ownerId, now = new Date()) {
   const state=automationRecipeStore.loadStore();
   for (const recipe of state.recipes) {
     if (String(recipe.ownerId || '') !== String(ownerId || '')) continue;
-    const occurrence = automationDueOccurrence(recipe, now,state.agentScheduleGrants[recipe.id]);
+    const occurrence = automationDueOccurrence(recipe, now,null);
     if (!occurrence) continue;
     if (recipe.schedule && recipe.schedule.lastKey === occurrence.key) continue;
     if (automationIsWithinGrace(occurrence)) continue; // birazdan normal akışta çalışacak
@@ -3483,7 +3133,7 @@ let automationSchedulerBusy=false;
 async function runScheduledAutomations(){
  if(automationSchedulerBusy)return;automationSchedulerBusy=true;
  try{automationRecipeStore.reconcileScheduleReservations();const now=new Date(),profiles=userAccess.allPublicProfiles(),state=automationRecipeStore.loadStore();
-  for(const recipe of state.recipes){const grant=state.agentScheduleGrants[recipe.id],key=automationScheduleKey(recipe,now,grant);if(!key||recipe.schedule.lastKey===key)continue;
+  for(const recipe of state.recipes){const grant=null,key=automationScheduleKey(recipe,now,grant);if(!key||recipe.schedule.lastKey===key)continue;
    const occurrence=automationDueOccurrence(recipe,now,grant);if(occurrence?.key===key&&!automationIsWithinGrace(occurrence))continue;
    const profile=profiles.find(p=>p.id===recipe.ownerId&&p.enabled!==false);if(!profile)continue;
    try{const result=await automationScheduledRunner(profile,recipe,key,{now});userAccess.appendAudit(profile,'AUTOMATION_SCHEDULE_RUN',recipe.id,{key,...result});}
@@ -5480,18 +5130,7 @@ const agentQualityService=require('./lib/test-reports/service').createService({
 });
 /* Paydaş belgesi eşlemesi: sahibin GÖREBİLDİĞİ siparişler ve kanonik CP tarihleri
    (planlanan yükleme, hedefi kaçırmadan en geç yükleme). Yalnız okunur. */
-async function agentDocumentOrders(profile) {
-    const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
-    await ensureDataLoaded(profile.id);
-    const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
-    const businessRows=userAccess.filterRowsByScope(profile, filterRowsByEffectiveHorizon(profile,source,ordersForTarget(active,source,overrides)));
-    const rows=buildOrdersRowsFromASAS(businessRows,antrepoForTarget(active,source),overrides);
-    // CP ekranıyla aynı bağlam: hedef türü ve yol süresi kuralları (yoksa en geç güvenli yükleme hesaplanamaz).
-    const CP=require('../public/cp-readiness-engine'),context={settings:{targetType:cpAgentPreferences.context(profile).settings?.targetType},transitRules:overrides.transitRules||[]};
-    return rows.map(row=>{const analysis=CP.analyzeOrder(row,context);return {orderKey:analysis.orderKey,orderCode:String(canonicalFields.value(row,source,'orderCode') || analysis.orderCode || ''),plmId:String(canonicalFields.value(row,source,'plmId') || ''),
-      modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || ''),colour:String(canonicalFields.value(row,source,'colour') || ''),
-      quantity:analysis.qty,plannedLoadDate:analysis.plannedLoadDate,latestSafeLoadDate:analysis.latestSafeLoadDate,targetType:analysis.targetType,targetDate:analysis.targetDate};});
-}
+
 async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
     const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
     await ensureDataLoaded(profile.id);
@@ -5525,30 +5164,6 @@ async function agentQualityReviewContext(profile) {
   };
 }
 require('./routes/test-report-routes')(app,{automationError,express,userAccess,service:agentQualityService,authorizedOrders:(...args)=>agentQualityAuthorizedOrders(...args)});
-const agentQualityTools=require('./lib/agent-quality-tools').registerQualityTools(agentToolRegistry,{service:agentQualityService,userAccess,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,guard:(ctx,work)=>agentOfficeService.taskNativeGuard(ctx,work),restoreGuard:(ctx,work)=>agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),dataset:profile=>agentPlatformDataset(profile.id,profile,'cp'),mail:cpAgentMail,verifyMail:(result,profile)=>result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id)))});
-require('./lib/agent-shared-checklist-tools').registerSharedChecklistTools(agentToolRegistry,{data:cpAgentData,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
-require('./lib/agent-checklist-answer-tools').registerChecklistAnswerTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
-require('./lib/agent-checklist-attachment-tools').registerChecklistAttachmentTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
-require('./lib/agent-checklist-supplier-tools').registerChecklistSupplierTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
-require('./lib/agent-checklist-supplier-tools').registerChecklistSupplierExport(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,outputService:()=>require('./lib/lcwai').getDefaultOutputService(),rowImage:agentSupplierRowImage});
-require('./lib/agent-checklist-option-tools').registerChecklistOptionTools(agentToolRegistry,{data:cpAgentData,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
-require('./lib/agent-analytics-tools').registerAnalyticsTools(agentToolRegistry,{dataset:agentPlatformDataset,outputService:()=>require('./lib/lcwai').getDefaultOutputService()});
-const agentCollectionSave=async(profile,ownerId,changes,expectedRevision,assertAuthority,guards={})=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);assertAuthority();if(!collectionWorkspaceEditAllowed(current,ownerId))throw Object.assign(new Error('OFFICE_TOOL_FORBIDDEN'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
-    const result=await collectionSaveWorker.runCollectionSave({ownerId,mode:'rows',body:Buffer.from(JSON.stringify(changes)),expectedRevision,authorization:{actorId:profile.id,stamp:JSON.stringify(userAccess.publicProfile(current)),centralIamEnabled:userAccess.publicProfile(current).centralIamEnabled,deltaStoreMode:deltaStore.mode,...guards},env:{BUYER_LOG_SERVER_DATA_ROOT:process.env.BUYER_LOG_SERVER_DATA_ROOT,BUYER_LOG_DATA_ROOT:process.env.BUYER_LOG_DATA_ROOT,BUYER_LOG_LOCAL_DATA_ROOT:process.env.BUYER_LOG_LOCAL_DATA_ROOT,BUYER_LOG_AUTH_DATA_ROOT:process.env.BUYER_LOG_AUTH_DATA_ROOT,BUYER_LOG_LOCAL_DB:process.env.BUYER_LOG_LOCAL_DB,BUYER_LOG_CONFIG_PATH:process.env.BUYER_LOG_CONFIG_PATH,BUYER_LOG_TEMP_ROOT:process.env.BUYER_LOG_TEMP_ROOT,BL_DATA_DIR:process.env.BL_DATA_DIR}});
-    if(deltaStore.isAuthoritative){const refreshed=await deltaStore.hydrate();if(!refreshed.ok)throw Object.assign(new Error('Collection source unavailable.'),{code:'DATA_INTEGRITY_ERROR'});}assertAuthority();if(result.conflicts?.length)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});
-    const replication=!(await afterSharedCollectionSave(ownerId))?await publishCollectionReplica(ownerId):{ok:true,published:false,reason:'shared-save'};
-    void sharedRevisionStore.update('collection',{actorId:profile.id,ownerId}).catch(error=>logRuntimeFailure('sharedRevision',error));
-    userAccess.appendAudit(profile,'COLLECTION_SAVE',ownerId,{rows:result.rowCount,revision:result.revision,origin:'agent'});liveEvents.notifyChange('collection','',{ownerId,rowPatches:result.rowPatches,revision:result.revision});return {...result,replication};};
-require('./lib/agent-quotation-tools').registerQuotationTools(agentToolRegistry,{withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),flush:async()=>{await deltaStore.flush();},saveCollection:agentCollectionSave,visible:profile=>quotationsVisibleTo(profile).requests,authorizeCollection:async(profile,owner,write=false)=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);require('./lib/agent-collection-authority').assertCollectionAccess(userAccess,current,owner,write);},changed:profile=>{void sharedRevisionStore.update('quotation',{actorId:profile.id}).catch(error=>logRuntimeFailure('sharedRevision',error));}});
-require('./lib/agent-collection-tools').registerCollectionTools(agentToolRegistry,{
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-  dataset:agentPlatformDataset,
-  pricingSource:ctx=>require('./lib/collection-pricing-service').createPricingSource({deltaStore,office:agentOfficeStore,userAccess,dataset:agentPlatformDataset,loadOverrides,loadFx})(ctx),
-  plmFetch:(profile,args,assertAuthority)=>agentPlmSyncService.fetch(profile,args,{assertAuthority,allowAi:false}),
-  authorize:async(profile,ownerId,write)=>{await refreshCollectionPermissionScope();const current=userAccess.profileById(profile.id);require('./lib/agent-collection-authority').assertCollectionAccess(userAccess,current,ownerId,write);},
-  save:agentCollectionSave,
-  registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService()),
-});
 
 /* ===================================================================
    OAB (Order-Assortment-Budget) — Overview modülü.
@@ -5778,138 +5393,9 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
    browser-debug-service) okunur, yalnız bellekte tutulur; AI istekleri
    doğrudan LCW AI HTTP API'sine gider. */
 require('./routes/lcwai-routes')(app, { express, userAccess, outputTemplates: { load: loadAiOutputTemplates, add: addAiOutputTemplate, update: updateAiOutputTemplate, remove: deleteAiOutputTemplate } });
-/* Agent Ofisi: aynı AI / canonical / deterministik motorlar. Özel arşiv,
-   generic peer sync'e eklenmez; sahip + Moderatör için şifreli kanal kullanır. */
-const { createAgentOfficeStore } = require('./lib/agent-office-store');
-const { createAgentOfficeSync } = require('./lib/agent-office-sync');
-const { createAgentOfficeService } = require('./lib/agent-office-service');
-const agentOfficeRoot = path.join(LOCAL_DATA_ROOT, 'agent-office');
-const agentOfficeStore = createAgentOfficeStore({ root:path.join(agentOfficeRoot, 'owners') });
-const agentAutomationTools=require('./lib/agent-automation-tools');
-function agentAutomationStamp(profile,recipe,ignoreRefresh=false){return require('./lib/agent-office-store').hash(JSON.stringify({cp:cpAgentRevision(profile,{ignoreRefresh}),lfl:ignoreRefresh?null:cacheForUser(profile.id).lflLoadedAt,collection:recipe.source==='collection'||recipe.join?.source==='collection'?loadWorkspace(profile.id)._revision:null,intake:recipe.source==='intake'||recipe.join?.source==='intake'?intakeStore.loadSnapshot(profile.id)?.savedAt:null}));}
-const agentAutomationDeps={
- withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
- normalize:automationNormalizePayload,dataset:automationDataset,execute:automationExecute,emailGroups:profile=>automationEmailGroupsForOwner(profile.id),
- publicProfile:profile=>userAccess.publicProfile(profile),timeZone:()=>Intl.DateTimeFormat().resolvedOptions().timeZone,
- runDraft:(ctx,recipe,check,work)=>agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,agent=>{require('./lib/agent-automation-authority').assertRecipeAuthorityNow(ctx,recipe,{userAccess,actualAgent:agent,sourceArea:source=>source==='intake'?'overview':agentDatasetArea(source)});return automationRecipeStore.withEffectGuard(check,work);}),
- draftExists:(owner,name)=>Boolean(automationEmail.draftPath(name,owner)),
- agent:ctx=>agentOfficeStore.get(ctx.ownerId,'profile',ctx.input?.officeAgentId),
- sourceStamp:(profile,recipe)=>agentAutomationStamp(profile,recipe),stableStamp:(profile,recipe)=>agentAutomationStamp(profile,recipe,true),
- authorizeRecipe:(ctx,recipe)=>require('./lib/agent-automation-authority').assertRecipeAuthority(ctx,recipe,{userAccess,agent:current=>agentOfficeStore.get(current.ownerId,'profile',current.input.officeAgentId),sourceArea:source=>source==='intake'?'overview':agentDatasetArea(source)}),changed:(profile,action,recipe)=>userAccess.appendAudit(profile,'AGENT_AUTOMATION_'+action.toUpperCase(),recipe?.id||'',{source:recipe?.source})
-};
-agentAutomationTools.registerAutomationTools(agentToolRegistry,agentAutomationDeps);
-const automationAgentScheduleOptions=require('./lib/agent-automation-schedule').createScheduleOptions({store:automationRecipeStore,office:agentOfficeStore,userAccess,sourceStamp:agentAutomationDeps.sourceStamp,authorizeRecipe:agentAutomationDeps.authorizeRecipe,emailGroups:profile=>agentAutomationDeps.emailGroups(profile).map(g=>({id:g.id,name:g.name,to:g.to,cc:g.cc,bcc:g.bcc}))});
-const automationScheduledRunner=require('./lib/automation-scheduled-runner').createScheduledRunner({store:automationRecipeStore,scheduleOptions:automationAgentScheduleOptions,dataset:automationDataset,execute:automationExecute,executor:{pid:process.pid,host:os.hostname(),instanceId:crypto.randomUUID()}});
 
-const agentOfficeSync = createAgentOfficeSync({ store:agentOfficeStore, localRoot:path.join(agentOfficeRoot, 'sync'),
-  getSharedRoot:async()=>{const settings=await syncSettings.read();return settings.sharedSyncRoot || null;},
-  profileById:id=>userAccess.profileById(id), deviceId:localDb.getDeviceId(),
-  audit:(profile,action,target,detail)=>userAccess.appendAudit(profile,action,target,detail) });
-async function agentOfficeOperationalData(profile, scope, areas) {
-  const currentActor=()=>typeof userAccess.profileById==='function'?userAccess.profileById(profile.id):profile;
-  const initial=currentActor();if(!initial||initial.enabled===false)throw Object.assign(new Error('Agent source authority unavailable.'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});profile=initial;
-  const authority=JSON.stringify(userAccess.publicProfile?.(profile)||profile),grantedAreas=areas.filter(area=>userAccess.hasArea(profile,area==='collection'?'koleksiyon':area));
-  const assertAuthority=()=>{const current=currentActor();if(!current||current.enabled===false||grantedAreas.some(area=>!userAccess.hasArea(current,area==='collection'?'koleksiyon':area)))throw Object.assign(new Error('Agent source authority changed.'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});if(JSON.stringify(userAccess.publicProfile?.(current)||current)!==authority)throw Object.assign(new Error('Agent source scope changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});};
-  const matches=(row,module)=>['orderCode','plmId','colourCode'].every(key=>{
-    if(!scope[key])return true;
-    const binding=canonicalFields.bindingFor(module,key);
-    if(!binding)return module==='collection'&&key==='orderCode';
-    return canonicalFields.normalizedValue(row,module,key)===canonicalFields.normalizedValue({[binding.keys[0]]:scope[key]},module,key);
-  });
-  const result={cpRows:[],collectionRows:[],cpAvailable:false,collectionAvailable:false,sourceErrors:[]};
-  const orderSource = areas.includes('cp') ? 'cp' : areas.includes('orders') ? 'orders' : areas.includes('backlog') ? 'backlog' : null;
-  result.operationalSource = orderSource;
-  for(const source of [...(orderSource?[orderSource]:[]),'collection']) {
-    if(!areas.includes(source) || !userAccess.hasArea(profile,source==='collection'?'koleksiyon':source))continue;
-    try {
-      const rows=await agentPlatformDataset(profile.id,profile,source);assertAuthority();
-      const filtered=rows.filter(row=>matches(row,source));
-      result[source!=='collection'?'cpRows':'collectionRows']=source==='collection' || source==='cp' ? filtered : filtered.map(row=>{const projected={};for(const [field,value] of Object.entries(canonicalFields.project(row,source))) {const binding=canonicalFields.bindingFor('cp',field);if(binding && value != null)projected[binding.keys[0]]=value;}return projected;});
-      result[source!=='collection'?'cpAvailable':'collectionAvailable']=true;
-    } catch(error) { result.sourceErrors.push({source,code:String(error.code || 'SOURCE_UNAVAILABLE')}); }
-  }
-  if(scope.orderCode && result.collectionAvailable) {
-    if(result.cpAvailable){const identities=new Set(result.cpRows.map(row=>canonicalFields.normalizedValue(row,'cp','plmId')+'|'+canonicalFields.normalizedValue(row,'cp','colourCode')));result.collectionRows=result.collectionRows.filter(row=>identities.has(canonicalFields.normalizedValue(row,'collection','plmId')+'|'+canonicalFields.normalizedValue(row,'collection','colourCode')));}
-    else{result.collectionRows=[];result.sourceErrors.push({source:'collection',code:'ORDER_SCOPE_NOT_RESOLVED'});}
-  }
-  assertAuthority();
-  const active=cacheForUser(profile.id);
-  result.sourceUpdatedAt=active.loadedAt || null;
-  result.collectionUpdatedAt=areas.includes('collection')?loadWorkspace(profile.id).updatedAt || null:null;
-  result.transitRules=effectiveOverridesForUser(profile.id).transitRules || [];
-  const entries=userPreferences.load(profile.id).entries || {}, readPreference=key=>{try {const value=entries[key]?.value;return value?JSON.parse(value):null;}catch(_){return null;}};
-  const prefs=readPreference('lcw.cp.assistant.v1') || {}, priority=readPreference('lcw.cp.rules.priority.v1'), checklistRules=readPreference('lcw.cp.rules.checklist.v1');
-  const rawPersonalRules=[...(priority?.rules || []),...(checklistRules?.rules || []),...(prefs.rules || []).filter(rule=>![...(priority?.rules || []),...(checklistRules?.rules || [])].some(item=>item.id===rule.id))];
-  const managedRules=effectiveOverridesForUser(profile.id).cpManagedRules||null,hasRuleStore=Boolean(priority||checklistRules||Array.isArray(prefs.rules));
-  result.deletedRuleIds=[...new Set([...(priority?.deletedRuleIds || []),...(checklistRules?.deletedRuleIds || []),...(prefs.deletedRuleIds || []),...((managedRules||{}).deletedRuleIds||[])])];
-  // v7.0.290 — Çalışan liste ekrandaki katmanlarla aynıdır (kişisel + yerleşik + Moderatör).
-  result.personalRules=require('../public/cp-rules-engine').effectiveRules(rawPersonalRules,result.deletedRuleIds,managedRules);
-  result.hasRuleStore=hasRuleStore;
-  result.checklistEnabled=prefs.checklistSettings?.enabled !== false;result.settings=prefs.settings || {};
-  const personalAnswers=readPreference('lcw.cp.checklist.v1') || {};result.personalAnswers={};
+const automationScheduledRunner=require('./lib/automation-scheduled-runner').createScheduledRunner({store:automationRecipeStore,scheduleOptions:async()=>({}),dataset:automationDataset,execute:automationExecute,executor:{pid:process.pid,host:os.hostname(),instanceId:crypto.randomUUID()}});
 
-  if(areas.includes('lfl') && userAccess.hasArea(profile,'lfl')) {try {const rows=await agentPlatformDataset(profile.id,profile,'lfl');result.lflRows=rows.filter(row=>matches(row,'lfl'));result.lflSummary={rows:result.lflRows.length,fields:rows.length?Object.keys(canonicalFields.project(rows[0],'lfl')):[],sourceUpdatedAt:active.loadedAt};}catch(error){result.sourceErrors.push({source:'lfl',code:'SOURCE_UNAVAILABLE'});}}
-  assertAuthority();
-  if(result.cpAvailable) {
-    const CP=require('../public/cp-readiness-engine'), analyses=result.cpRows.map(row=>CP.analyzeOrder(row)), keys=new Set(analyses.map(order=>order.orderKey));
-    const Checklist=require('../public/cp-checklist-engine'), optionKeys=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
-    const models=new Set(result.cpRows.map(row=>String(canonicalFields.value(row,'cp','plmId') || '')));
-    result.reports=require('./lib/test-reports/store').publicPayload(keys);
-    const checklist=require('./lib/checklist-supplier-store').publicPayload();
-    const visible=entries=>Object.fromEntries(Object.entries(entries||{}).filter(([key])=>keys.has(key.slice(0,key.lastIndexOf('::'))) || optionKeys.has(key.slice(0,key.lastIndexOf('::')))));
-    result.personalAnswers=visible(personalAnswers);
-    const scoped={answers:visible(checklist.answers),tombstones:visible(checklist.tombstones)};
-    result.checklist={...checklist,...scoped,answers:require('../public/checklist-answer-merge-engine').merge(result.personalAnswers,scoped)};
-
-    result.attachmentExists=id=>Boolean(require('./lib/checklist-supplier-store').getAttachmentPath(id));
-    const analytics=require('../public/collection-analytics-engine');
-    const observations=result.cpRows.map(row=>({row,price:Number(canonicalFields.value(row,'cp','supplierFob') || canonicalFields.value(row,'cp','fob')) || null,
-      manufacturer:canonicalFields.value(row,'cp','manufacturer'),country:canonicalFields.value(row,'cp','country'),classification:canonicalFields.value(row,'cp','category'),
-      quantity:canonicalFields.value(row,'cp','orderQuantity'),modelKey:canonicalFields.value(row,'cp','plmId'),rowId:CP.analyzeOrder(row).orderKey}));
-    // Native FOB values remain in separate country groups; no invented exchange
-    // rate or cross-currency comparison. Existing price screen handles that.
-    result.priceInsights=analytics.aggregateDimensions(observations,['manufacturer','country','classification'],['median','min','max','priceCount','modelCount'])
-      .map(item=>({dimensions:item.dimensions,values:item.values,currency:'UNVERIFIED_SOURCE_UNIT',source:'CP FOB',sourceUpdatedAt:result.sourceUpdatedAt}));
-  }
-  if(result.cpAvailable||result.collectionAvailable){const models=new Set([...result.cpRows.map(r=>String(canonicalFields.value(r,'cp','plmId')||'')),...result.collectionRows.map(r=>String(canonicalFields.value(r,'collection','plmId')||''))]);const samples=sampleRequestStore.load(),bom=require('./lib/plm-bom-store').load();result.samples={models:Object.fromEntries(Object.entries(samples.models).filter(([key])=>models.has(key))),updatedAt:samples._updatedAt};result.bom={models:Object.fromEntries(Object.entries(bom.models).filter(([key])=>models.has(key))),updatedAt:bom._updatedAt};}
-  // Eski ortak checklist tanımları yalnız kullanıcı hiç kural kaydı oluşturmamışsa
-  // (ekran henüz tek seferlik devralmayı yapmamışsa) kullanılır; silinenler geri gelmez.
-  if(!result.hasRuleStore && result.checklist?.definitions?.length)result.personalRules=[...result.personalRules,...result.checklist.definitions.filter(def=>!result.personalRules.some(rule=>rule.id===def.id))];
-  assertAuthority();return result;
-}
-async function agentOfficeEvidenceAttachments(profile,scope,areas){const data=await agentOfficeOperationalData(profile,scope,areas),found=new Map(),attachmentStore=require('./lib/checklist-supplier-store');
- const add=(id,name,size,source)=>{if(!id)return;const filePath=attachmentStore.getAttachmentPath(id);if(!filePath)return;const previous=found.get(id);if(previous){previous.sources.push(source);return;}const stats=fs.statSync(filePath);found.set(id,{id,name:String(name||path.basename(filePath)),size:stats.size,filePath,sources:[source]});};
- for(const [request,report]of Object.entries(data.reports?.reports||{}))for(const file of report.dosyalar||[])add(file.attachmentId,file.ad,file.boyut,{source:'Test report',id:request,updatedAt:data.reports.updatedAt});
- for(const [key,answer]of Object.entries(data.checklist?.answers||{}))for(const file of answer.attachments||[])add(file.id,file.originalName||file.filename,file.size,{source:'Checklist',id:key,updatedAt:answer.at||data.checklist.updatedAt});return[...found.values()];}
-async function agentOfficeAutomationPreview(profile,code) {
-  if(!userAccess.hasArea(profile,'automations') || !userAccess.hasCapability(profile,'AUTOMATIONS.CREATE'))throw Object.assign(new Error('OFFICE_AUTOMATION_FORBIDDEN'),{code:'OFFICE_AUTOMATION_FORBIDDEN',statusCode:403});
-  const {parsed,validation}=automationAiRequest(code);
-  if(parsed.actions.some(action=>!['OPEN_PAGE','SHOW_REPORT','REFRESH_SOURCE'].includes(action.type)))throw Object.assign(new Error('OFFICE_AUTOMATION_SCOPE'),{code:'OFFICE_AUTOMATION_SCOPE',statusCode:422});
-  const rows=await automationAiPreviewSourceRows(profile.id,profile,parsed.source);
-  return {...automationAiPreviewRows(rows,parsed,validation),name:parsed.name,trigger:parsed.trigger,conditions:parsed.conditions,actionDefinitions:parsed.actions};
-}
-const agentOfficeService=createAgentOfficeService({
-  canRunBackground:()=>uiReadySignaled,
-  outputService:()=>require('./lib/lcwai').getDefaultOutputService(),store:agentOfficeStore,sync:agentOfficeSync,userAccess,engine:()=>require('./lib/lcwai').getDefaultEngine(),
-  toolRegistry:agentToolRegistry,runtime:agentRuntime,runtimeStore:agentWorkflowStore,taskOwners:()=>userAccess.allPublicProfiles().map(profile=>profile.id),cpData:cpAgentData,cpDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),cpGroups:profile=>automationEmailGroupsForOwner(profile.id).map(({id,name})=>({id,name})),
-  getOperationalData:agentOfficeOperationalData,memoryDataset:agentPlatformDataset,
-  getEvidenceAttachments:agentOfficeEvidenceAttachments,
-  readEvidenceAttachment:async item=>({buffer:await fs.promises.readFile(item.filePath),fileName:item.name}),
-  automationGuide:async()=>{const model=aiCapabilityRegistry.getCapabilityModel();return aiGuideGenerator.generateGuide({...model,actions:model.actions.filter(action=>['OPEN_PAGE','SHOW_REPORT','REFRESH_SOURCE'].includes(action.id))});},
-  validateAutomation:agentOfficeAutomationPreview,
-  onBackgroundError:code=>logRuntimeFailure('agentOfficeBackground',Object.assign(new Error(code),{code})) });
-require('./routes/agent-office-routes')(app, {
-  automationDraftAccess:async(profile,job,step)=>{const check=()=>{if(step.result.data.agentScope?.actorFingerprint!==require('./lib/agent-office-store').hash(JSON.stringify(userAccess.publicProfile(userAccess.profileById(profile.id)))))throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});};check();await agentAutomationDeps.authorizeRecipe({ownerId:profile.id,profile,input:{officeAgentId:step.agentId}},step.preview.preview.recipe);check();},
-  documentOrders:agentDocumentOrders,
-  qualityService:agentQualityService,qualityTools:agentQualityTools,qualityDraftPath:(owner,filename)=>automationEmail.draftPath(filename,owner),
-  express,
-  userAccess,
-  service:agentOfficeService,
-  listOwners:async()=>{const store=require('./lib/user-access').readStore();return [store.moderator,...(store.users || [])].filter(Boolean).map(profile=>({id:profile.id,name:profile.displayName || profile.username || profile.id,enabled:profile.enabled!==false}));},
-  validateAutomation:agentOfficeAutomationPreview,
-  applyAutomation:async(profile,code)=>{await agentOfficeAutomationPreview(profile,code);const {parsed,validation}=automationAiRequest(code);const compiled=aiAutomationCompiler.compile(parsed,validation,{sourceCode:code});
-    const normalized=automationNormalizePayload({...compiled,enabled:false},profile.id);return automationRecipeStore.createRecipe(profile.id,normalized).result;}
-});
 const nativeOabBatchService = require('./lib/oab-batch-service').createOabBatchService({ensurePassConnected,fetchOabReportWithLoginRecovery,logRuntimeFailure,oabBatch,oabSessionStore,oabStaticMetadata,oabStore,redactSecrets,userAccess});
 require('./routes/oab-batch-routes')(app, {
   oabBatchService: nativeOabBatchService,
@@ -6262,10 +5748,7 @@ function rejectUnauthorizedOrders(req, res, orderCodes) {
   res.status(403).json({ error: 'Kapsamınız dışındaki siparişlerde değişiklik yapamazsınız.', code: 'ORDER_VIEW_ONLY', deniedOrderCodes: denied.slice(0,50) });
   return true;
 }
-function assertAgentSharedOwner(profile,orderCode,patch){
-  const response={status(){return this;},json(payload){throw Object.assign(new Error(payload.code),{code:payload.code,statusCode:403});}};
-  rejectSharedOwnerWrites({currentUser:profile},response,[{orderCode,patch}]);
-}
+
 function rejectSharedOwnerWrites(req, res, items) {
   const fields = ['dates', 'subManufacturer', 'suppFob', 'suppFobMeta'];
   const denied = (items || []).filter(item => {
@@ -9820,7 +9303,7 @@ app.get('/api/refresh-targets', userAccess.requireArea('source'), (_req, res) =>
 });
 
 /* Asenkron model yenilemesini başlatan tek native yol. HTTP /api/refresh ve
-   Agent Office yenileme grubu çalıştırması aynı fonksiyonu kullanır. */
+   Paylaşılan yenileme servisi aynı fonksiyonu kullanır. */
 function nativeRefreshPlan(currentUser, rawTargets) {
   const { requestedTargets } = nativeRefreshTargets(rawTargets), id = sourceUserId(currentUser), filterError = sourceFilterRequiredError(requestedTargets, currentUser);
   return { requestedTargets, filterReady: !filterError, running: refreshInFlight.has(id), activeJobId: refreshInFlight.has(id) ? (refreshJobs.get(id) || {}).jobId || null : null };
@@ -9832,7 +9315,7 @@ function nativeRefreshTargets(rawTargets) {
 }
 function startNativeRefresh(currentUser, rawTargets, options = {}) {
   const id = sourceUserId(currentUser), commandKey = String(options.commandKey || '').slice(0, 220);
-  // Aynı Office adımı yeniden oynatılırsa ikinci bir yenileme başlatılmaz.
+  // Aynı istek yeniden oynatılırsa ikinci bir yenileme başlatılmaz.
   const previous = refreshJobs.get(id);
   if (commandKey && previous && previous.commandKey === commandKey) return { started: false, replayed: true, job: refreshJobState(id) };
   if (refreshInFlight.has(id)) throw Object.assign(new Error('Bu kullanıcı için bir veri yenileme işlemi zaten devam ediyor.'), { code: 'OPERATION_IN_PROGRESS', statusCode: 409, job: refreshJobState(id) });
@@ -11078,101 +10561,24 @@ app.put('/api/transit-rules', userAccess.requireArea('source'), userAccess.requi
 // İthalat Yol Süresi Raporu analizi. Excel istemcide okunur; sunucu aynı
 // paylaşılan normalize kuralıyla doğrular ve tek merkezde saklar. Kural motoru
 // bunu okumaz: öneriler kullanıcı onayıyla /api/transit-rules'a yazılır.
-const agentResourceDeps={withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),flush:async()=>{await deltaStore.flush();},changed:async(profile,section,detail)=>{publishSharedMasterChange(section,{currentUser:profile},detail);userAccess.appendAudit(profile,'AGENT_RESOURCE_UPDATE',section,detail);liveEvents.notifyChange(section,null);},impact:require('./lib/agent-resource-impact').createResourceImpact({office:agentOfficeStore,userAccess,dataset:agentPlatformDataset})};
-require('./lib/agent-resource-tools').registerResourceTools(agentToolRegistry,agentResourceDeps);
-require('./lib/agent-landed-multiplier-tools').registerLandedMultiplierTools(agentToolRegistry,{...agentResourceDeps,service:landedMultiplierService,changed:(profile,receipt)=>agentResourceDeps.changed(profile,'landedMultipliers',{revision:receipt.revision,origin:'agent'})});
+
 const nativeRefreshGroupService=require('./lib/refresh-group-service').createRefreshGroupService({db:require('./db')});
-require('./lib/agent-order-tools').registerOrderTools(agentToolRegistry,{...agentResourceDeps,...agentOrderAdapter});
-require('./lib/agent-price-analysis-tools').registerPriceAnalysisTools(agentToolRegistry,{rows:profile=>priceAnalysisRowsFor(profile),collectionRows:(ownerId,profile)=>agentPlatformDataset(ownerId,profile,'collection')});
-require('./lib/agent-holiday-tools').registerHolidayTools(agentToolRegistry,{holidayService});
-require('./lib/agent-plm-asset-tools').registerPlmAssetTools(agentToolRegistry,{bomStore:require('./lib/plm-bom-store'),normalizePlmId,readModelFilesIndex:()=>readModelFilesIndex(),fileExists:item=>modelStoredFileExists(item),ownership:technicalSheetOwnership,technicalSheets:agentPlmSyncService.technicalSheets,routeRuns:require('./lib/agent-native-route-runs').createRouteRuns({jobs:plmJobs,root:path.join(SERVER_DATA_ROOT,'agent-native-runs')}),imageImport:runPlmImageImport,sampleSync:plmRequestService.runSampleRequestSync,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
-{
-  // Same active-user and display rules as /api/preset-share; target is always the owner.
-  const activePresetProfile=profile=>Boolean(profile)&&profile.enabled!==false&&profile.status!=='INACTIVE';
-  const presetDisplayName=profile=>profile.displayName||profile.username||profile.id;
-  require('./lib/agent-preset-tools').registerPresetTools(agentToolRegistry,{...agentResourceDeps,presetShare,
-    users:me=>userAccess.allPublicProfiles().filter(profile=>activePresetProfile(profile)&&profile.id!==me.id).map(profile=>({id:profile.id,name:presetDisplayName(profile),title:profile.title||'',role:profile.systemRoleLabel||profile.roleLabel||''})).sort((a,b)=>a.name.localeCompare(b.name,'tr',{sensitivity:'base'})),
-    sourceProfile:id=>{const profile=userAccess.profileById(id);return activePresetProfile(profile)?profile:null;},displayName:presetDisplayName,
-    loadProfiles:id=>({views:loadViews(id),filters:loadFilterProfiles(id)}),restoreProfiles:(id,stores)=>require('./db').restoreUserBackupStores(id,stores),
-    applyEntryChanges:(...args)=>userPreferences.applyEntryChanges(...args)});
-}
-require('./lib/agent-refresh-group-tools').registerRefreshGroupTools(agentToolRegistry,{...agentResourceDeps,service:nativeRefreshGroupService,refresh:{plan:(profile,moduleIds)=>nativeRefreshPlan(profile,moduleIds),start:(profile,moduleIds,options)=>startNativeRefresh(profile,moduleIds,options),state:profile=>refreshJobState(sourceUserId(profile))},changed:(profile,receipt)=>agentResourceDeps.changed(profile,'refreshGroups',{revision:receipt.revision,origin:'agent'})});
-require('./lib/agent-oab-intake-tools').registerOabIntakeTools(agentToolRegistry,{authStatus:ownerId=>oabBrowserAuthStatus(ownerId,OAB_DESKTOP_TRANSPORT)});
-require('./lib/agent-oab-plan-tools').registerOabPlanTools(agentToolRegistry,{service:nativeOabBatchService});
-require('./lib/agent-oab-job-tools').registerOabJobTools(agentToolRegistry,{service:nativeOabBatchService,transport:OAB_DESKTOP_TRANSPORT,office:agentOfficeStore});
-require('./lib/agent-oab-execution-tools').registerOabExecutionTools(agentToolRegistry,{native:nativeOabBatchService,transport:OAB_DESKTOP_TRANSPORT,guard:(ctx,work)=>agentOfficeService.taskNativeGuard(ctx,work),restoreGuard:(ctx,work)=>agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
-const manufacturerAsasSource=require('./lib/agent-manufacturer-asas-source').createManufacturerAsasSource({office:agentOfficeStore,userAccess,dataset:agentPlatformDataset,stamp:ctx=>{const profile=userAccess.profileById(ctx.ownerId),cache=cacheForUser(ctx.ownerId);return {loadedAt:cache.loadedAt,cpupdateOverrides:cache.cpupdateOverrides,overrides:loadOverrides({projectManufacturers:false}),preferences:userPreferences.load(ctx.ownerId),roleEntries:userAccess.roleWorkspaceEntries(profile),actor:profile};}});
-require('./lib/agent-manufacturer-tools').registerManufacturerTools(agentToolRegistry,{...agentResourceDeps,asasSource:manufacturerAsasSource});
-require('./lib/agent-endeksmatik-tools').registerEndeksmatikTools(agentToolRegistry,{...agentResourceDeps,withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();})});
+
 const sourceWorkflowService=require('./lib/source-workflow-service').createSourceWorkflowService({db:require('./db')});
 const personalHorizonService=require('./lib/personal-horizon-service').createPersonalHorizonService({db:require('./db'),preferences:userPreferences});
 const horizonTemplateService=require('./lib/horizon-template-service').createHorizonTemplateService({db:require('./db'),userAccess});
 const tableProfileService=require('./lib/table-profile-service').createTableProfileService({db:require('./db'),userAccess});
-require('./lib/agent-table-profile-tools').registerTableProfileTools(agentToolRegistry,{
-  service:tableProfileService,
-  changed:(profile,kind,page)=>userAccess.appendAudit(profile,'AGENT_TABLE_PROFILE_UPDATE',page,{kind}),
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-});
-require('./lib/agent-freight-rate-tools').registerFreightRateTools(agentToolRegistry,{
-  service:freightRateService,
-  changed:(profile,receipt)=>{publishSharedMasterChange('freightRates',{currentUser:profile},{revision:receipt.revision,origin:'agent'});userAccess.appendAudit(profile,'AGENT_FREIGHT_RATES_UPDATE','shipping',{revision:receipt.revision});},
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-});
+
+
 const openCostingService=require('./lib/open-costing-service').createOpenCostingService({db:require('./db')});
 const shippingWorkflowService=require('./lib/shipping-workflow-service').createShippingWorkflowService({
   db:require('./db'),orderCode:recordOrderCode,
-  canReadFx:async ctx=>{const current=userAccess.profileById(ctx.profile.id);if(!current||!['source','opencosting','koleksiyon'].some(area=>userAccess.hasArea(current,area)))return false;if(!ctx.input?.officeAgentId)return false;const agent=await agentOfficeStore.get(ctx.ownerId,'profile',ctx.input.officeAgentId);ctx.assertAuthority?.();if(agent.deleted||agent.enabled===false||agent.revision!==ctx.input.officeAgentRevision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return ['source','opencosting','collection'].some(area=>agent.areas.includes(area));},
+  canReadFx:async ctx=>{ctx.assertAuthority?.();const current=userAccess.profileById(ctx.profile.id);return Boolean(current&&current.enabled!==false&&['source','opencosting','koleksiyon'].some(area=>userAccess.hasArea(current,area)));},
   canEditRow:(ctx,row)=>{const current=userAccess.profileById(ctx.profile.id);return !!current&&(recordOrderCode(row)==null?(row._sourceModule==='collection'||userAccess.hasPermission(current,'manageAllOrders')):canUserEditOrderCode(current,recordOrderCode(row)));},
   authorizeRows:(ctx,rows)=>{const current=userAccess.profileById(ctx.profile.id);if(!current||current.enabled===false||!userAccess.hasArea(current,'shipping'))throw Object.assign(new Error('AREA_FORBIDDEN'),{code:'AREA_FORBIDDEN',statusCode:403});for(const row of rows){const code=recordOrderCode(row);if(code==null?row._sourceModule!=='collection'&&!userAccess.hasPermission(current,'manageAllOrders'):!canUserEditOrderCode(current,code))throw Object.assign(new Error('ORDER_VIEW_ONLY'),{code:'ORDER_VIEW_ONLY',statusCode:403});}},
   dataset:(ctx,source)=>agentPlatformDataset(ctx.ownerId,userAccess.profileById(ctx.profile.id),source),
-  sourceStamp:(ctx,source)=>source==='collection'?require('./lib/agent-office-store').hash(JSON.stringify(loadWorkspace(ctx.ownerId))):cpAgentRevision(userAccess.profileById(ctx.profile.id)),
+  sourceStamp:(ctx,source)=>source==='collection'?require('./lib/operation-utils').hash(JSON.stringify(loadWorkspace(ctx.ownerId))):cpAgentRevision(userAccess.profileById(ctx.profile.id)),
   sourceDocuments:(ctx,source)=>source==='collection'?[collectionWorkspaces.documentId(ctx.ownerId)]:[],
-});
-require('./lib/agent-shipping-tools').registerShippingTools(agentToolRegistry,{
-  service:shippingWorkflowService,
-  registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService()),
-  changed:profile=>{userAccess.appendAudit(profile,'AGENT_SHIPPING_UPDATE',profile.id);liveEvents.notifyChange('shipping',null,{ownerId:profile.id});},
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-});
-require('./lib/agent-open-costing-tools').registerOpenCostingTools(agentToolRegistry,{
-  service:openCostingService,
-  registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService()),
-  changed:profile=>{userAccess.appendAudit(profile,'AGENT_OPEN_COSTING_UPDATE','open-costing');liveEvents.notifyChange('openCosting',null);},
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-});
-require('./lib/agent-horizon-template-tools').registerHorizonTemplateTools(agentToolRegistry,{
-  source:sourceWorkflowService,service:horizonTemplateService,
-  changed:profile=>userAccess.appendAudit(profile,'AGENT_HORIZON_TEMPLATE_UPDATE',profile.id),
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-});
-require('./lib/agent-personal-horizon-tools').registerPersonalHorizonTools(agentToolRegistry,{
-  source:sourceWorkflowService,personal:personalHorizonService,
-  changed:profile=>userAccess.appendAudit(profile,'AGENT_PERSONAL_HORIZON_UPDATE',profile.id),
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-});
-require('./lib/agent-source-tools').registerSourceTools(agentToolRegistry,{
-  source:sourceWorkflowService,...agentResourceDeps,
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-});
-require('./lib/agent-source-tools').registerSourceLifecycleTools(agentToolRegistry,{
-  source:sourceWorkflowService,...agentResourceDeps,hasCredential:sourceId=>databaseCredentialStore.publicStatus(sourceId).hasCredential,
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-});
-const agentSourceMetadataService=require('./lib/source-metadata-service').createSourceMetadataService({source:sourceWorkflowService,assertAgentAuthority:ctx=>ctx.input?.officeAgentId?agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>ctx.assertAuthority()):ctx.assertAuthority(),
-  // Same providers as /api/database-sources/:id/query, but only the saved query and stored credential.
-  runSavedQuery:async(item,{maxRows,beforeQuery})=>{await beforeQuery();const credential=localDatabaseCredential(item,{});
-    if(item.connector.kind==='analysis-services')return modelQuery.runModelRows({server:item.connector.server,catalog:item.connector.database,query:item.query,generated:false,maxRows,timeoutMs:120000});
-    return databaseConnector.runRows(item.connector,item.query,{credentials:credential,maxRows,timeoutSeconds:120});}});
-require('./lib/agent-source-metadata-tools').registerSavedQueryTools(agentToolRegistry,{metadata:agentSourceMetadataService,registerReport:spec=>require('./lib/agent-analytics-tools').registerReportCapability(agentToolRegistry,spec,()=>require('./lib/lcwai').getDefaultOutputService())});
-require('./lib/agent-source-metadata-tools').registerSourceMetadataTools(agentToolRegistry,{
-  source:sourceWorkflowService,metadata:agentSourceMetadataService,...agentResourceDeps,
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
-});
-require('./lib/agent-supporting-resource-tools').registerSupportingResourceTools(agentToolRegistry,{
-  ...agentResourceDeps,license:licenseCardService,userAccess,
-  authorizeFabric:async ctx=>{await refreshCollectionPermissionScope();ctx.assertAuthority();},
-  canEditFabric:profile=>userAccess.effectiveCollectionAccess(profile).some(item=>item.level==='edit'),
-  withAgentMutation:(ctx,work)=>agentOfficeStore.withProfileMutation(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),
 });
 
 app.get('/api/transit-analysis', (req, res) => {

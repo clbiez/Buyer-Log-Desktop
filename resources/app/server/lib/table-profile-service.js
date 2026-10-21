@@ -1,5 +1,5 @@
 'use strict';
-const {error,hash}=require('./agent-office-store'),{pageOf}=require('./profile-store'),{validate}=require('./agent-tool-schema'),{viewSettings,filterSettings}=require('./table-profile-contract');
+const {error,hash}=require('./operation-utils'),{pageOf}=require('./profile-store'),{validate}=require('./schema-validation'),{viewSettings,filterSettings}=require('./table-profile-contract');
 const clone=v=>JSON.parse(JSON.stringify(v)),ordered=v=>Array.isArray(v)?v.map(ordered):v&&typeof v==='object'?Object.fromEntries(Object.keys(v).sort().map(k=>[k,ordered(v[k])])):v,stamp=v=>hash(JSON.stringify(ordered(v))),PAGE_AREAS={cp:'cp',orders:'orders',ship:'shipping',koleksiyon:'koleksiyon'};
 function nativeData(kind,page,settings,before={}){
  const next={...clone(before),__page:page},entry={...clone(before[page]||{})};

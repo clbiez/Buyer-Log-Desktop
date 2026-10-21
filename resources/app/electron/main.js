@@ -40,7 +40,7 @@
  *    kanalı açılır; keyfi çalıştırma yolu yoktur.
  */
 
-const { app, BrowserWindow, WebContentsView, Menu, dialog, shell, ipcMain, screen, session, nativeTheme, Tray, Notification } = require('electron');
+const { app, BrowserWindow, WebContentsView, Menu, dialog, shell, ipcMain, screen, session, nativeTheme } = require('electron');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -2341,18 +2341,7 @@ function trustedDesktopShellSender(event) {
   } catch (_) { return false; }
 }
 
-let agentBackground=null;
-function agentBackgroundRuntime(){if(!agentBackground)agentBackground=require('./agent-office-background').createAgentOfficeBackground({app,BrowserWindow,Tray,Menu,Notification,icon:APP_ICON_SOURCE,isQuitting:()=>quitting||restarting||updateRelaunchRequested,isAppWindow:w=>w===mainWindow||Boolean(workspace?.windowForShellContents(w.webContents))});return agentBackground;}
 function registerIpc() {
-  ipcMain.handle('buyerlog:agent-background', (event, options={})=>{
-    if(!trustedBuyerLogIpcSender(event))return{ok:false,code:'OFFICE_IPC_FORBIDDEN'};
-    return agentBackgroundRuntime().set(options.enabled===true,options.lang);
-  });
-  ipcMain.handle('buyerlog:agent-notification', (event, language)=>{
-    if(!trustedBuyerLogIpcSender(event))return{ok:false,code:'OFFICE_IPC_FORBIDDEN'};
-    return agentBackgroundRuntime().notify(language);
-  });
-
   ipcMain.handle('buyerlog:workspace-snapshot', event => {
     if (!workspace || !workspace.windowForShellContents(event.sender)) return null;
     return workspace.shellSnapshot(event);
@@ -2807,7 +2796,6 @@ function bootstrap() {
   app.on('before-quit', event => {
     if (quitting) return;
     quitting = true;
-    agentBackground?.dispose();
     closeSplash();
     event.preventDefault();
     /* Shutdown steps are individually bounded; this hard deadline guarantees the

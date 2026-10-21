@@ -43,15 +43,7 @@ test('CP fallback consumes only the passed authorized canonical snapshot and rec
  const allowed=createPricingCalculation({rows:[candidate],overrides,fx,cpRows,cpContextAvailable:true}).calculate(candidate);assert.equal(allowed.ruleId,'demo');assert.equal(allowed.ruleMissing,false);
 });
 
-test('CP pricing source requires both live user and actual agent scope, and rejects agent revisions changed during await',async t=>{
- const os=require('node:os'),{createAgentOfficeStore}=require('../server/lib/agent-office-store'),{createPricingSource}=require('../server/lib/collection-pricing-service'),root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-pricing-scope-')),office=createAgentOfficeStore({root});t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
- const profile={id:'buyer',enabled:true,areas:['koleksiyon','cp']},agent=await office.createProfile(profile.id,{name:'Collection',areas:['collection']}),input={officeAgentId:agent.id,officeAgentRevision:agent.revision};let reads=0,revoke=false;
- const source=createPricingSource({deltaStore:{flush:async()=>{},isAuthoritative:false},office,userAccess:{hasArea:(p,area)=>p.areas.includes(area)},loadOverrides:()=>({pricingRules:[contract]}),loadFx:()=>fx,dataset:async()=>{reads++;if(revoke)await office.updateProfile(profile.id,agent.id,{areas:['collection']});return [{'Order Code':'123','Season':'W26'}];}}),ctx={ownerId:profile.id,profile,input,assertAuthority:()=>{if(!profile.enabled)throw Object.assign(new Error('denied'),{code:'OFFICE_TOOL_FORBIDDEN'});}};
- assert.equal((await source(ctx)).cpContextAvailable,false);assert.equal(reads,0);
- const revised=await office.updateProfile(profile.id,agent.id,{areas:['collection','cp']});input.officeAgentRevision=revised.revision;assert.equal((await source(ctx)).cpContextAvailable,true);assert.equal(reads,1);
- profile.areas=['koleksiyon'];assert.equal((await source(ctx)).cpContextAvailable,false);assert.equal(reads,1);profile.areas=['koleksiyon','cp'];revoke=true;await assert.rejects(source(ctx),{code:'OFFICE_PREVIEW_CHANGED'});assert.equal(reads,2);
- profile.enabled=false;await assert.rejects(source(ctx),{code:'OFFICE_TOOL_FORBIDDEN'});
-});
+
 
 test('native grouped effective values retain child overrides and calculation fingerprint includes FX and royalty changes',()=>{
  const parent={...row,id:1,modelGroupId:'demo',modelGroupRole:'parent',modelSharedValues:{trPrice:400,trFx:40,pricing:{SupplierA:'4'},confirmedManufacturer:'SupplierA'}},child={...row,id:2,modelGroupId:'demo',modelGroupRole:'variant',variantOverrides:{trPrice:800}};

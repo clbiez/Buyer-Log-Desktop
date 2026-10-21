@@ -30,7 +30,6 @@ const RESOURCES = Object.freeze({
   ANALYSIS: { tr: 'Analizler', en: 'Analysis', actions: ['VIEW', 'EXPORT'], safe: true },
   OPEN_COSTING: { tr: 'Ön Maliyet', en: 'Open Costing', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'EXPORT'] },
   SHIPPING: { tr: 'Nakliye Kıyaslama', en: 'Shipping Comparison', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'EXPORT'] },
-  AGENTS: { tr: 'Agent Workflow Studio', en: 'Agent Workflow Studio', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'APPROVE', 'MANAGE'] },
   AUTOMATIONS: { tr: 'Otomasyonlar', en: 'Automations', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'APPROVE', 'MANAGE'] },
   SOURCE_DATA: { tr: 'Kaynak Veri', en: 'Source Data', actions: ['VIEW', 'CREATE', 'EDIT', 'DELETE', 'EXPORT', 'MANAGE'] },
   USER: { tr: 'Kullanıcı Yönetimi', en: 'User Management', actions: ['VIEW', 'CREATE', 'EDIT', 'MANAGE', 'GRANT', 'PROFILE_COPY'], security: true },
@@ -76,7 +75,7 @@ const ROLE_DEFAULT_MIGRATIONS = Object.freeze({
 });
 const LEGACY_AREA_RESOURCE = Object.freeze({
   overview: 'OVERVIEW', cp: 'CP', orders: 'ORDERS', koleksiyon: 'COLLECTIONS', lfl: 'ANALYSIS',
-  opencosting: 'OPEN_COSTING', backlog: 'BACKLOG', shipping: 'SHIPPING', agents: 'AGENTS',
+  opencosting: 'OPEN_COSTING', backlog: 'BACKLOG', shipping: 'SHIPPING',
   automations: 'AUTOMATIONS', source: 'SOURCE_DATA',
 });
 const LEGACY_PERMISSION_CODES = Object.freeze({
