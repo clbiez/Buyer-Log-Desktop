@@ -16,3 +16,13 @@
  .tree-actions{flex-wrap:wrap}.tree-actions button{white-space:normal}.bl-rates{min-width:0;gap:6px}.bl-rates span{overflow-wrap:anywhere}
 }
 @media(max-width:600px){.tree-section-heading{display:flex;flex-direction:column;align-items:stretch}.tree-actions{width:100%;min-width:0;justify-content:flex-start;flex-wrap:wrap}.tree-actions>*{max-width:100%;flex-shrink:1}}
+/* Details use the same Buyer Log palette delivered by the parent. */
+.topbar{background:var(--bg)}
+.bl-licensor{display:flex;align-items:center;gap:16px;margin:0 0 18px;padding:12px 16px;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+.bl-licensor span{font-size:12px;color:var(--muted);font-weight:750}.bl-licensor select{flex:1;min-width:0;padding:10px 12px;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:var(--radius)}
+.drawer>.bl-licensor{margin:12px 24px}.bl-business{animation:rise .25s var(--smooth) both}.bl-business .lcContract{padding:18px;margin:16px 0;border:1px solid var(--line);border-radius:var(--radius);background:var(--panel)}
+.bl-business .lcContractHead{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px;font-size:12px}.lcBadge{font-weight:750;color:var(--blue)}.lcMuted{color:var(--muted)}
+.bl-business .lcFormGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.bl-business .lcField{display:flex;flex-direction:column;gap:6px;min-width:0}.bl-business .lcField>span{font-size:12px;color:var(--muted);font-weight:650}.bl-business .lcFull{grid-column:1/-1}
+.bl-business input,.bl-business textarea{width:100%;min-width:0;padding:11px 12px;border:1px solid var(--line);border-radius:var(--radius);background:var(--bg);color:var(--ink)}.bl-business details{margin-top:24px}.bl-business summary{cursor:pointer;font-weight:750;margin-bottom:14px}
+.bl-recovery ul{max-height:35vh;overflow:auto;padding-left:20px}.bl-recovery li{padding:6px 0;border-bottom:1px solid var(--line)}.bl-recovery-error{color:var(--ink)}
+@media(max-width:600px){.bl-licensor{align-items:stretch;flex-direction:column;gap:6px}.drawer>.bl-licensor{margin:12px 17px}.bl-business .lcFormGrid{grid-template-columns:1fr}.nav-actions [data-action="export"]{display:inline-flex}.nav-actions [data-action="export"] .hide-mobile{display:none}.nav-actions [data-action="blRecovery"]{padding:8px}.nav-actions{gap:5px}.brandname{display:none}}

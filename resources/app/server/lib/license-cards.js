@@ -34,6 +34,18 @@ function stateOf(overrides) {
 }
 function cardId(license, licensor) { return 'license-' + crypto.createHash('sha256').update(pairKey(license, licensor)).digest('hex').slice(0, 24); }
 
+// Pricing rules are also a canonical source. Materialize virtual pairs only on write.
+function catalogue(overrides) {
+  const items = clone(stateOf(overrides).items), known = new Set(items.map(c => pairKey(c.license,c.licensor)));
+  for (const rule of overrides.pricingRules || []) {
+    const license=text(rule.license), licensor=text(rule.licensor), key=pairKey(license,licensor);
+    if (!license || !licensor || known.has(key)) continue;
+    known.add(key);items.push({id:cardId(license,licensor),license,licensor,
+      ...Object.fromEntries(Object.keys(PROFILE_LIMITS).map(field=>[field,''])),symbolDataUrl:''});
+  }
+  return items;
+}
+
 // Source rows must have an existing canonical module binding; header guesses are forbidden.
 function discoverPairs(input) {
   const envelope = Array.isArray(input) ? { rows: input, module: 'cp' } : input || {};
@@ -198,7 +210,9 @@ function editToken(card, rules) {
   return crypto.createHash('sha256').update(JSON.stringify(stable({ id: card.id, license: card.license, licensor: card.licensor, profile, contracts }))).digest('hex');
 }
 function updateCard(overrides, id, body, deps, now = new Date().toISOString()) {
-  const state = clone(stateOf(overrides)), index = state.items.findIndex(card => card.id === id);
+  const state = clone(stateOf(overrides));
+  if(!state.items.some(card=>card.id===id)){const virtual=catalogue(overrides).find(card=>card.id===id);if(virtual)state.items.push(virtual);}
+  const index = state.items.findIndex(card => card.id === id);
   if (index < 0) fail('LICENSE_CARD_NOT_FOUND', 'Lisans kartı bulunamadı. / License card not found.', 404);
   const scoped = Object.hasOwn(body, 'editToken');
   if (scoped) {
@@ -223,9 +237,9 @@ function responseOf(overrides, canEdit) {
   const state = stateOf(overrides), rules = Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [];
   const byPair = new Map();
   for (const rule of rules) { const key = pairKey(rule.license, rule.licensor); if (!byPair.has(key)) byPair.set(key, []); byPair.get(key).push(rule); }
-  return { cards: state.items.map(card => ({ ...card, editToken: editToken(card, rules), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
+  return { cards: catalogue(overrides).map(card => ({ ...card, editToken: editToken(card, rules), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
     pricingRules: rules, revision: revisionOf(overrides, 'licenseCards'), pricingRevision: revisionOf(overrides, 'pricingRules'), initialized: state.initialized,
     lastImportedAt: state.lastImportedAt, canEdit: Boolean(canEdit) };
 }
 
-module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };
+module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };

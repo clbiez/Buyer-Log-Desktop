@@ -11,7 +11,7 @@ function createLicenseCardService(deps){
  const mutate=work=>deps.mutate?deps.mutate('licenseCards',work):work({commit:async()=>{}});
  const read=()=>cards.responseOf(load(),false);
  async function published(profile,change){if(!deps.publish)return Object.keys(load().licenseCardOutbox||{}).length>0;try{const result=await deps.publish(profile,change);return Boolean(result?.pending||result?.ok===false);}catch(_){return true;}}
- async function notify(profile,change,saved,context){await deps.changed?.(profile,'licenseCards',{revision:cards.revisionOf(saved,'licenseCards'),cardId:change.card?.id,added:change.added},context);if(change.rulesChanged)await deps.changed?.(profile,'pricingRules',{revision:cards.revisionOf(saved,'pricingRules'),changedLicenses:[change.card.license]},context);}
+ async function notify(profile,change,saved,context){await deps.changed?.(profile,'licenseCards',{revision:cards.revisionOf(saved,'licenseCards'),cardId:change.card?.id,added:change.added},context);if(change.rulesChanged)await deps.changed?.(profile,'pricingRules',{revision:cards.revisionOf(saved,'pricingRules'),changedLicenses:[...new Set((change.cards||[change.card]).map(card=>card.license))]},context);}
  async function discovery(profile,{assertAuthority}={}){
    assertAuthority?.();const rows=await deps.getDiscoveryRows(profile);assertAuthority?.();
    const sourceStamp=rows?.sourceStamp??deps.discoveryStamp?.(profile)??'';if(deps.discoveryStamp&&deps.discoveryStamp(profile)!==sourceStamp)throw error('OFFICE_PREVIEW_CHANGED',409);
@@ -55,15 +55,16 @@ function createLicenseCardService(deps){
    if(!Array.isArray(entries)||!entries.length||entries.length>200||new Set(entries.map(e=>e?.id)).size!==entries.length)throw error('LICENSE_ATLAS_INVALID',400);
    let change;
    const saved=await mutate(async lease=>{
-     const guard=()=>{assertAuthority?.();};guard();const current=load();let next=current;const changed=[];
+     const guard=()=>{assertAuthority?.();};guard();const current=load();let next=current;const changed=[],contractsByCard={};let rulesChanged=false;
      for(const entry of entries){
        if(!entry||typeof entry.id!=='string'||typeof entry.editToken!=='string'||!entry.processAtlas)throw error('LICENSE_ATLAS_INVALID',400);
-       // The token scopes concurrent contract AND profile edits. Arbitrary profile/rule fields are excluded.
-       const result=cards.updateCard(next,entry.id,{editToken:entry.editToken,profile:{processAtlas:entry.processAtlas}},validators);
-       next=result.overrides;changed.push(result.card);
+       // Details and Atlas changes share one validated, optimistic transaction.
+       const result=cards.updateCard(next,entry.id,{editToken:entry.editToken,profile:{...(entry.profile||{}),processAtlas:entry.processAtlas},...(Object.hasOwn(entry,'rules')?{rules:entry.rules}:{})},validators);
+       next=result.overrides;changed.push(result.card);if(result.rulesChanged){rulesChanged=true;contractsByCard[entry.id]=cards.responseOf(next,true).cards.find(c=>c.id===entry.id).rules;}
      }
      next._revisions.licenseCards=cards.revisionOf(current,'licenseCards')+1;
-     change={cards:changed,rulesChanged:false,initialized:cards.stateOf(next).initialized,lastImportedAt:cards.stateOf(next).lastImportedAt,actorId:profile.id};
+     if(rulesChanged)next._revisions.pricingRules=cards.revisionOf(current,'pricingRules')+1;
+     change={cards:changed,rulesChanged,contractsByCard,initialized:cards.stateOf(next).initialized,lastImportedAt:cards.stateOf(next).lastImportedAt,actorId:profile.id};
      const staged=deps.publish?sync.stageChange(next,change):next;
      const actual=deps.saveOverrides(staged,Number(current._revision)||0,{...lease,assertAuthority:guard});await lease.commit();
      if(sectionSnapshot(load()).fingerprint!==sectionSnapshot(actual).fingerprint)throw error('OFFICE_RESOURCE_VERIFY_FAILED',409);return actual;
