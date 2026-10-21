@@ -36,6 +36,20 @@ function transportKey(event) {
 function isDelete(event) { return Boolean(event && (event.delete || event.tombstone || event.operation === 'delete')); }
 function isPatch(event) { return Boolean(event && !isDelete(event) && event.patch && typeof event.patch === 'object' && !Array.isArray(event.patch)); }
 
+/* Birleşen iki olayın alt alan bildirimi (v7.0.294): bileşik alanı yazan HER
+   olay alt alanlarını bildirmişse birleşim alt alanların birleşimidir. Biri
+   alanı bütün olarak yazdıysa (bildirim yok) birleşik olay da bütün yazar. */
+function mergeSubfields(previous, current) {
+  const out = {};
+  const fields = new Set([...Object.keys(previous.patch || {}), ...Object.keys(current.patch || {})]);
+  for (const field of fields) {
+    const writers = [previous, current].filter(event => Object.prototype.hasOwnProperty.call(event.patch || {}, field));
+    if (!writers.every(event => event.subfields && Array.isArray(event.subfields[field]))) continue;
+    out[field] = [...new Set(writers.flatMap(event => event.subfields[field]))].sort();
+  }
+  return Object.keys(out).length ? out : null;
+}
+
 /* Conservative coalescing only combines adjacent, unsent operations for the
    same record and actor. Cross-record ordering is never changed. create+delete
    stays explicit because deletion/conflict history can be business-significant. */
@@ -69,6 +83,10 @@ function coalescePendingEvents(items = []) {
         sourceFirstSeq: Math.min(sourceFirstSeq(previous), sourceFirstSeq(current)),
         sourceLastSeq: Math.max(sourceLastSeq(previous), sourceLastSeq(current)),
       };
+      if (previous.subfields || current.subfields) {
+        const subfields = mergeSubfields(previous, current);
+        if (subfields) merged.subfields = subfields; else delete merged.subfields;
+      }
       delete merged.sha256;
       merged.sha256 = eventChecksum(merged);
       out[out.length - 1] = merged;

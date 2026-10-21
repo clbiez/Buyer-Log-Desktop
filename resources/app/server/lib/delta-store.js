@@ -131,7 +131,7 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
 
   /* Aynayı günceller. Hiçbir koşulda fırlatmaz: çağıran kod eski JSON yazmasını
      bunun sonucuna bakmadan tamamlamalıdır. */
-  async function mirror(collection, entries, { userId = null, guardSource = false, guardCollection = false, assertAuthority, guardDocumentIds = [], guardCollections = [] } = {}) {
+  async function mirror(collection, entries, { userId = null, subfields = null, guardSource = false, guardCollection = false, assertAuthority, guardDocumentIds = [], guardCollections = [] } = {}) {
     /* v2 no-op suppression. A caller may hand us a full source map; that must
        not turn into one journal event per record. Compare only fields supplied
        by the caller against the hydrated working set and persist meaningful
@@ -173,6 +173,9 @@ function createDeltaStore({ localDb, mode = DEFAULT_MODE, onError = null, onTrac
     }
     const items = Object.entries(effectiveEntries).map(([id, patch]) => ({
       id: recordKey(collection, id), entityType: collection, userId, patch,
+      // Bileşik alanın gerçekten yazılan alt alanları; yerel DB yalnız patch'te
+      // kalan alanlar için geçerli sayar (no-op'la düşen alanın bildirimi düşer).
+      ...(subfields ? { subfields } : {}),
     }));
     if (!items.length) return { mirrored: 0, applied: 0, unchanged, ok: true };
     const invocationId = crypto.randomUUID();
