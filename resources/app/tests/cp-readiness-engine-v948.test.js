@@ -110,7 +110,10 @@ test('v9.48 Ex-Factory geçmiş ve sipariş hâlâ üretimdeyse öncelik CRITICA
   const analysis = model.orders[0];
   assert.equal(analysis.stage, 'PRODUCTION');
   assert.ok(analysis.daysToLoad < 0);
-  assert.equal(analysis.priority, 'CRITICAL');
+  // v7.0.290: Aksiyon Önceliği yalnız kullanıcı kurallarından gelir; motorun
+  // önerisi systemPriority (kural koşulunda [@basePriority]) olarak korunur.
+  assert.equal(analysis.systemPriority, 'CRITICAL');
+  assert.equal(analysis.priority, 'ON_TRACK');
   assert.ok(analysis.riskReasons.includes('EX_FACTORY_OVERDUE'));
 });
 
@@ -128,7 +131,8 @@ test('v9.48 yol süresi kuralı yoksa hesap yapılmaz: UNKNOWN kalır, zorla ris
   const analysis = model.orders[0];
   assert.equal(analysis.transitRuleMissing, true);
   assert.equal(analysis.deliveryOutcome, 'UNKNOWN');
-  assert.equal(analysis.priority, 'WATCH');
+  assert.equal(analysis.systemPriority, 'WATCH');
+  assert.equal(analysis.priority, 'ON_TRACK', 'kural yokken hiçbir şey kendiliğinden yükselmez');
   assert.equal(analysis.calculationStatus, 'UNKNOWN');
   assert.ok(analysis.riskReasons.includes('MISSING_TRANSIT_RULE'));
   assert.equal(model.dataQuality.missing.transitRule, 1);
@@ -227,6 +231,9 @@ test('v9.48 aksiyon listesi ON_TRACK siparişleri içermez ve sayım limitten et
   }
   orders.push(order({ ocode: 9999, opd: '2026-08-20', ex: '2026-12-01', retail: '2027-06-01' }));
   const model = analyze(orders);
+  assert.equal(Engine.needsAttention(model).length, 0, 'kural yoksa aksiyon listesi boş');
+  // Kullanıcı kuralı sistem önerisini uygulamış gibi ([@basePriority]).
+  for (const item of model.orders) item.priority = item.decision.action.priority = item.systemPriority;
   const list = Engine.needsAttention(model, { limit: 3 });
   assert.equal(list.length, 3, 'limit yalnız listeyi kısaltmalı');
   assert.equal(list.total, 12, 'toplam sayı TAM kümeden gelmeli');

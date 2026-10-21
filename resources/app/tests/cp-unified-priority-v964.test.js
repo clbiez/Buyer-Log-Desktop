@@ -43,8 +43,10 @@ test('v9.64 Handover is a reason/signal and CP action is ACTION_THIS_WEEK', () =
     [F.retail]:'2026-12-01',[F.inStore]:'2026-12-20',
   };
   const analysis = CP.analyzeOrder(row, { today: BR.defaultDateOrdinal('2026-09-07'), dateOrdinal: BR.defaultDateOrdinal, transitRules: [] });
-  assert.equal(analysis.priority, 'ACTION_THIS_WEEK');
-  assert.ok(analysis.actionReasons.some(item => item.code === 'HANDOVER_PENDING'));
+  // v7.0.290: sistem önerisi korunur; Aksiyon Önceliği yalnız kurallarla yükselir.
+  assert.equal(analysis.systemPriority, 'ACTION_THIS_WEEK');
+  assert.equal(analysis.priority, 'ON_TRACK');
+  assert.ok(analysis.riskReasons.includes('HANDOVER_PENDING'));
   assert.doesNotMatch(analysis.priority, LEGACY);
 });
 

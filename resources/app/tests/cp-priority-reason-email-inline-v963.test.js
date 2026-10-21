@@ -11,7 +11,7 @@ const VIEW = read('public/cp-overview-assistant.js');
 const CSS = read('public/cp-overview-assistant.css');
 
 test('priority reason mail action is rendered inline before the reason content', () => {
-  const blockStart = VIEW.indexOf('const reasons = model.riskReasons');
+  const blockStart = VIEW.indexOf('const reasons = ruleReasonCounts(model)');
   const blockEnd = VIEW.indexOf('/* Seçili öncelik için otomasyon', blockStart);
   assert.ok(blockStart >= 0 && blockEnd > blockStart, 'priorities reason renderer should exist');
   const block = VIEW.slice(blockStart, blockEnd);

@@ -293,6 +293,15 @@
       loadDate: hasLoadDate ? details.loadDate : (analysis ? analysis.plannedLoadDate : null),
     };
     if (Components.validCount(details.componentCount)) answer.componentCount = Number(details.componentCount);
+    // v7.0.290 — Bileşen sonuçları (Main Fabric · Rejected | Neck RIB · Approved).
+    // Bileşen varsa genel durum onlardan türetilir; tek doğruluk kaynağı budur.
+    if (Array.isArray(details.elements)) {
+      const elements = Components.normalizeElements(details.elements, normalizeStatus);
+      if (elements.length) {
+        answer.elements = elements;
+        answer.state = Components.elementsState(elements, isResolved) || answer.state;
+      }
+    }
     if (details.note != null) answer.note = String(details.note || '').slice(0, 2000);
     // Kaynak: 'test_report' kaydı rapor aktarımından gelir; elle seçim kaynaksızdır.
     if (details.source) answer.source = String(details.source).slice(0, 80);

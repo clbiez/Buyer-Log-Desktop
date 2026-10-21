@@ -69,14 +69,20 @@ test('v9.50 alanlar motorun ÇIKTISINI taşır, yeniden hesaplamaz', () => {
 /* Sunucu kontrol listesi cevaplarını GÖREMEZ (kullanıcının tarayıcısında,
    kişiye özel). Ekranda kontrol listesi bir siparişi yukarı taşıyabilir;
    otomasyon bunu göremediği için farkı GİZLEMEK yerine alanla söylemeli. */
-test('v9.50 sunucunun göremediği kontrol listesi farkı açıkça işaretleniyor', () => {
+/* v7.0.290 — Aksiyon Önceliği yalnız kullanıcı kurallarından gelir. Sunucu
+   sahibin çalışan kurallarını ve checklist cevaplarını verirse aynı kural motoru
+   uygulanır; verilmezse fark "Kural uygulanmadı" olarak açıkça yazılır. */
+test('v9.50 kural bağlamı yoksa fark açıkça işaretlenir; varsa ekrandaki kurallar uygulanır', () => {
   const rows = cpRows([order({ ocode: 6301, opd: '2026-06-01', ex: '2026-09-12', retail: '2027-03-01' })]);
-  const [enriched] = CpAuto.enrichRows(rows, { today: TODAY, transitRules: TRANSIT_RULES });
-  assert.match(String(enriched[CpAuto.FIELDS.prioritySource]), /kontrol listesi hariç/i);
-  // Katman kontrol listesi motorunu HİÇ çağırmamalı: cevaplar sunucuda yok.
-  const source = fs.readFileSync(path.join(__dirname, '..', 'server', 'lib', 'cp-automation.js'), 'utf8');
-  assert.doesNotMatch(source, /cp-checklist-engine|cp-rules-engine/,
-    'sunucu tarafı, cevaplarına erişemediği kontrol listesini uygulamamalı');
+  const [plain] = CpAuto.enrichRows(rows, { today: TODAY, transitRules: TRANSIT_RULES });
+  assert.equal(plain[CpAuto.FIELDS.prioritySource], 'Kural uygulanmadı');
+  assert.equal(plain[CpAuto.FIELDS.priorityCode], 'ON_TRACK');
+  const Rules = require('../public/cp-rules-engine.js');
+  const rule = Rules.normalizeRule({ id: 'auto-r', kind: 'priority', target: 'ACTION_TODAY', name: 'Üretimde', reasonTr: 'Üretim takibi', reasonEn: 'Production follow-up', conditions: [{ field: '@stage', operator: 'eq', value: 'PRODUCTION' }] });
+  const [ruled] = CpAuto.enrichRows(rows, { today: TODAY, transitRules: TRANSIT_RULES, rules: [rule], answers: {} });
+  assert.equal(ruled[CpAuto.FIELDS.prioritySource], 'Kullanıcı kuralları');
+  assert.equal(ruled[CpAuto.FIELDS.priorityCode], 'ACTION_TODAY');
+  assert.match(String(ruled[CpAuto.FIELDS.riskReasons]), /Üretim takibi/);
 });
 
 test('v9.50 kaynak satır DEĞİŞMEZ ve mevcut anahtarın üstüne yazılmaz', () => {
@@ -94,7 +100,7 @@ test('v9.50 yol süresi kuralı yoksa zorla sonuç üretilmez', () => {
   const [enriched] = CpAuto.enrichRows(rows, { today: TODAY, transitRules: [] });
   assert.equal(enriched[CpAuto.FIELDS.transitRuleMissing], 'Evet');
   assert.equal(enriched[CpAuto.FIELDS.outcomeCode], 'UNKNOWN');
-  assert.equal(enriched[CpAuto.FIELDS.priorityCode], 'WATCH');
+  assert.equal(enriched[CpAuto.FIELDS.priorityCode], 'ON_TRACK', 'kural yoksa kendiliğinden yükselmez');
   assert.equal(enriched[CpAuto.FIELDS.calculationStatus], 'UNKNOWN');
 });
 

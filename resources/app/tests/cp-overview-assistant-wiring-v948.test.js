@@ -65,7 +65,7 @@ test('v9.48 lazy yükleme listesi kanonik teslimat motorunu da içerir ve sıra 
   // order-decision-engine.js artık index.html'de eager. Aynı script'i lazy
   // listede yeniden beklemek geçmiş load event'inde deadlock oluşturuyordu.
   // PLM numune talepleri (kontrol listesi kanıtı) görünümden önce yüklenir.
-  assert.match(PERF, /cpAssistant:\['backlog-delivery-engine\.js','cp-readiness-engine\.js','cp-checklist-engine\.js','cp-rules-engine\.js','plm-sample-requests-engine\.js','plm-sample-requests\.js','cp-decision-runtime\.js','cp-overview-assistant\.js(?:\?[^']*)?'\]/);
+  assert.match(PERF, /cpAssistant:\['backlog-delivery-engine\.js','cp-readiness-engine\.js','cp-checklist-engine\.js','cp-rules-engine\.js','plm-sample-requests-engine\.js','plm-sample-requests\.js','cp-decision-runtime\.js','cp-managed-rules\.js(?:\?[^']*)?','cp-overview-assistant\.js(?:\?[^']*)?'\]/);
   assert.doesNotMatch(PERF, /cpAssistant:\[[^\]]*'order-decision-engine\.js'/);
   assert.match(PERF, /if\(name==='cpAssistant'&&global\.BLCpAssistant&&typeof global\.BLCpAssistant\.computeDecisionsForRows==='function'\)return;/);
   // Görünüm üç motoru da window'dan okur; biri eksikse hiç kurulmamalı
@@ -89,8 +89,10 @@ test('v9.49 kural düzenleyici arayüzü var ve yerleşik kurallar da düzenlene
   // (Ön Ayar Paylaşımı öncelik kurallarını ve checklist sorularını ayrı aktarır).
   assert.match(VIEW, /priority: 'lcw\.cp\.rules\.priority\.v1'/);
   assert.match(VIEW, /checklist: 'lcw\.cp\.rules\.checklist\.v1'/);
-  assert.match(VIEW, /rules: state\.rules\.filter\(rule => rule\.kind === kind\)/);
-  assert.match(VIEW, /Rules\.mergeWithDefaults\(stored\.rules, state\.deletedRuleIds\)/);
+  // v7.0.290: Moderatör yayını kişisel kayda yazılmaz; yerleşikler ve
+  // kullanıcının silme kayıtları aynı birleştirmeden geçer.
+  assert.match(VIEW, /rules: personalRuleList\(\)\.filter\(rule => rule\.kind === kind\)/);
+  assert.match(VIEW, /Rules\.effectiveRules\(personalRules, state\.deletedRuleIds, state\.managed\)/);
   // Eski PREF_KEY içindeki kurallar kaybolmadan yeni anahtarlara taşınır.
   assert.match(VIEW, /function loadRuleStores\(legacy\)/);
   assert.match(VIEW, /if \(migrateRuleStores && !unreadablePreferenceStores\.size\)/);
@@ -286,7 +288,7 @@ test('kural satırı built-in dahil düzenleme ve silme aksiyonlarını gösteri
   assert.match(VIEW, /data-cpa-rule-delete/);
   assert.match(VIEW, /class="cpaRuleChevron"/);
   assert.match(VIEW, /deletedRuleIds: state\.deletedRuleIds\.filter\(id => defaults\.has\(id\)\)/);
-  assert.match(VIEW, /Rules\.mergeWithDefaults\(stored\.rules, state\.deletedRuleIds\)/);
+  assert.match(VIEW, /Rules\.effectiveRules\(personalRules, state\.deletedRuleIds, state\.managed\)/);
   assert.match(CSS, /\.cpaRuleBar\{[^}]*min-height:48px/);
   assert.match(CSS, /\.cpaCondLabels,\.cpaCondRow\{[^}]*40fr[^}]*25fr[^}]*35fr/);
 });

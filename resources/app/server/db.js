@@ -290,7 +290,11 @@ function defaultOverrides() {
     // varsayılan üçlüye döndürmek için şema sürümü. Kullanıcı daha sonra
     // Matching Rule ekranından yeniden değiştirebilir.
     antrepoMatchConfigVersion: 3,
-    _revision: 0, _revisions: { orders: 0, suppFob: 0, pricingRules: 0, transitRules: 0, nonDtrManufacturers: 0, landedMultipliers: 0, freightRates: 0, transitAnalysis: 0, antrepoMatchRule: 0, antrepoSourceMode: 0, asasSourceMode: 0, lflSourceMode: 0, noteColumnDefs: 0 },
+    // v7.0.290 — Moderatörün tüm kullanıcılara yayımladığı CP öncelik
+    // kuralları / checklist soruları ve "tüm kullanıcılardan sil" kimlikleri.
+    // Master kural yayınıyla dağılır; kullanıcıların kendi kurallarına dokunmaz.
+    cpManagedRules: { version: 1, rules: [], deletedRuleIds: [] },
+    _revision: 0, _revisions: { cpManagedRules: 0, orders: 0, suppFob: 0, pricingRules: 0, transitRules: 0, nonDtrManufacturers: 0, landedMultipliers: 0, freightRates: 0, transitAnalysis: 0, antrepoMatchRule: 0, antrepoSourceMode: 0, asasSourceMode: 0, lflSourceMode: 0, noteColumnDefs: 0 },
   };
 }
 /* ===================================================================
@@ -382,6 +386,7 @@ function loadOverrides({ projectManufacturers = true } = {}) {
   merged.landedMultipliers = normalizeLandedMultipliers(parsed && parsed.landedMultipliers);
   merged.freightRates = BLFreight.normalizeSettings(parsed && parsed.freightRates);
   merged.transitAnalysis = BLTransitAnalysis.normalizeAnalysis(parsed && parsed.transitAnalysis);
+  merged.cpManagedRules = normalizeCpManagedRules(parsed && parsed.cpManagedRules);
   // License Royalty v2: eski TR / Non-TR kayıtları okunurken tek
   // sözleşme kaydına dönüştürülür. Efektif ülke oranları ve varsa eski farklı
   // hologram tutarları korunur.
@@ -560,6 +565,22 @@ function replaceFreightRates(value, expectedRevision = null, options = {}) {
   ov._revisions.freightRates = current + 1;
   const saved = saveOverrides(ov, ov._revision, options);
   return { freight: BLFreight.normalizeSettings(saved.freightRates), revision: saved._revisions.freightRates };
+}
+function normalizeCpManagedRules(value) {
+  const Rules = require('../public/cp-rules-engine');
+  const clean = Rules.normalizeManagedRules(value);
+  return { version: 1, rules: clean.rules, deletedRuleIds: clean.deletedRuleIds, updatedAt: clean.updatedAt, updatedBy: clean.updatedBy };
+}
+function replaceCpManagedRules(value, expectedRevision = null, actor = null) {
+  const ov = loadOverrides();
+  const current = Number(ov._revisions.cpManagedRules) || 0;
+  const wanted = expectedNumber(expectedRevision);
+  if (wanted != null && wanted !== current) throw new RevisionConflictError('Moderatör kuralları', wanted, current, 'cpManagedRules');
+  const next = normalizeCpManagedRules({ ...(value || {}), updatedAt: new Date().toISOString(), updatedBy: String(actor && (actor.displayName || actor.id) || '').slice(0, 160) });
+  ov.cpManagedRules = next;
+  ov._revisions.cpManagedRules = current + 1;
+  const saved = saveOverrides(ov, ov._revision);
+  return { ...normalizeCpManagedRules(saved.cpManagedRules), revision: saved._revisions.cpManagedRules };
 }
 function replaceTransitAnalysis(value, expectedRevision = null) {
   const ov = loadOverrides();
@@ -1892,7 +1913,7 @@ module.exports = {
   mutateSharedResource,mutateSettings,mutateModelConnections,attachDeltaStore, DELTA_STORE_COLLECTION, deltaStoreId, deltaSeedPayload, userBackupStoreSnapshot, restoreUserBackupStores, cpExFactoryRevisionSnapshot, restoreCpExFactoryRevisions,
   RevisionConflictError, revisionOf, expectedNumber, applyDatePatch, overrideWriteKey, normalizeLandedMultipliers,
   NOTE_AUTHOR_FIELDS, LEGACY_NOTE_AUTHOR_ID, LEGACY_NOTE_AUTHOR_NAME, backfillLegacyNoteAuthors,
-  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
+  loadOverrides, saveOverrides, replacePricingRules, replaceTransitRules, replaceNonDtrManufacturers, replaceLandedMultipliers, replaceFreightRates, replaceTransitAnalysis, replaceCpManagedRules, normalizeCpManagedRules, replaceAntrepoMatchRule, replaceAntrepoSourceMode, replaceAsasSourceMode, replaceLflSourceMode, replaceNoteColumnDefs, normalizeNoteColumnDefs, patchOrderOverride, patchOrderOverrides, patchPlmImageLinks, clearAllModelImageLinks, patchSuppFobOverrides, clearDeliveryOverrides, clearDeliveryOverridesForOrders, mergeCpUpdateOverrides, defaultOverrides, loadSettings, saveSettings,
   normalizeMapping, normalizeCustomFields, normalizeCpModelColumns, normalizeModelConnection, normalizeModelConnections, loadModelConnections, replaceModelConnections, recordModelConnectionRun, MODEL_CONNECTION_LIMIT, MODEL_CONNECTION_DEFAULT_SEASONS,
   loadRefreshGroups, replaceRefreshGroups,
   loadViews: userId => loadProfileFile(scopedProfileFile(VIEWS_FILE, userId), userId, 'view'),

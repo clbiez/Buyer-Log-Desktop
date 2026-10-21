@@ -71,6 +71,11 @@
   }
   function safeJson(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
   function answerKey(orderKey, itemId) { return text(orderKey) + '::' + text(itemId); }
+  function isResolvedStatus(state) {
+    const engine = root.BLCpChecklistEngine;
+    if (engine && typeof engine.isResolved === 'function') return engine.isResolved(state);
+    return state === 'approved' || state === 'notRequired';
+  }
   function splitAnswerKey(key) {
     const raw = String(key || ''), at = raw.lastIndexOf('::');
     return at > 0 ? { orderKey: raw.slice(0, at), itemId: raw.slice(at + 2) } : { orderKey: '', itemId: '' };
@@ -260,6 +265,7 @@
         loadDate: after.loadDate || null, source: after.source || 'buyer_log',
         note: after.note || '',
         ...(after.componentCount ? { componentCount: after.componentCount } : {}),
+        elements: Array.isArray(after.elements) ? after.elements : [],
         reportNumber: after.reportNumber || '',
         actualDate: after.actualDate || '',
         attachments: Array.isArray(after.attachments) ? after.attachments : [],
@@ -377,9 +383,20 @@
       return [...(whole || !parts.length ? [item] : []), ...parts.map(id => scopedItem(item, id))];
     });
   }
+  function elementCellHtml(row, itemId, canEdit) {
+    const info = row._checklistElements && row._checklistElements[itemId];
+    if (!info) return '';
+    const stateClass = state => String(state || 'open').startsWith('custom:') ? 'custom' : String(state || 'open');
+    const title = info.elements.map(function (entry) { return entry.name + ' · ' + statusLabel(entry.state); }).join('\n');
+    const chips = info.elements.map(function (entry) {
+      return '<span class="clElementChip"><span class="clStatusDot is-' + html(stateClass(entry.state)) + '" aria-hidden="true"></span><span class="clElementName">' + html(entry.name) + '</span></span>';
+    }).join('');
+    if (!canEdit) return '<td class="clElementsCell" title="' + html(title) + '"><span class="clElementStack">' + chips + '</span></td>';
+    return '<td class="editTd clElementsCell"><button type="button" class="clStatusTrigger is-' + html(info.state) + '" data-id="' + html(row._id) + '" data-item="' + html(itemId) + '" data-status="' + html(info.state) + '" aria-haspopup="listbox" aria-expanded="false" title="' + html(title) + '" aria-label="' + html(title.replace(/\n/g, ', ')) + '"><span class="clElementStack">' + chips + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>';
+  }
   function componentCellHtml(row, itemId, canEdit) {
     const info = row._checklistParts && row._checklistParts[itemId];
-    if (!info) return '';
+    if (!info) return elementCellHtml(row, itemId, canEdit);
     const disabled = canEdit ? '' : ' disabled aria-disabled="true"';
     const parts = info.parts.map(part => '<button type="button" class="clStatusTrigger is-' + html(part.state) + '" data-id="' + html(row._id) + '" data-item="' + html(Components.itemId(itemId, part.id)) + '" data-status="' + html(part.state) + '" title="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-label="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-haspopup="listbox" aria-expanded="false"' + disabled + '><b class="clPartLabel">' + html(part.label) + '</b><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">' + html(statusLabel(part.state)) + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>').join('');
     const summary = info.parts.length ? info.parts.filter(part => part.state === 'approved').length + '/' + info.parts.length : T('Parça sayısını belirleyin', 'Define the part count');
@@ -542,7 +559,7 @@
       const decision = opts.decision || analysesForRows(rows);
       rows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
-        const statuses = {}, partCells = {};
+        const statuses = {}, partCells = {}, elementCells = {};
         items.forEach(function (item) {
           const key = columnKey(item.id);
           // Soru henüz sorulmuyorsa hücre boştur; ancak test raporundan
@@ -562,10 +579,15 @@
             row[key] = states.length ? states.map(part => part.label + ': ' + statusLabel(part.state)).join(' / ') : T('Parça sayısını belirleyin', 'Define the part count');
           } else {
             statuses[item.id] = status;
-            row[key] = statusLabel(status);
+            // v7.0.290 — bileşen sonuçları tek hücrede: "Main Fabric · Rejected | Neck RIB · Approved".
+            const stored = answerFor(item, analysis);
+            const elements = stored && Array.isArray(stored.elements) && stored.elements.length ? stored.elements : null;
+            if (elements) elementCells[item.id] = { state: status, elements: elements };
+            row[key] = elements ? Components.elementsLabel(elements, statusLabel) : statusLabel(status);
           }
         });
         // Hücre çizimi ve durum menüsü için kanonik durum; görünür değer etiket.
+        Object.defineProperty(row, '_checklistElements', { value: elementCells, enumerable: false, configurable: true, writable: true });
         Object.defineProperty(row, '_checklistParts', { value: partCells, enumerable: false, configurable: true, writable: true });
         Object.defineProperty(row, '_checklistStatus', { value: statuses, enumerable: false, configurable: true, writable: true });
         const tasks = {};
@@ -653,6 +675,7 @@
           at: localAt || isoNow(), baseAt: remoteAt,
           loadDate: localAnswer.loadDate || null, note: localAnswer.note || '',
           ...(localAnswer.componentCount ? { componentCount: localAnswer.componentCount } : {}),
+          elements: Array.isArray(localAnswer.elements) ? localAnswer.elements : [],
           reportNumber: localAnswer.reportNumber || '',
           actualDate: localAnswer.actualDate || '',
           attachments: Array.isArray(localAnswer.attachments) ? localAnswer.attachments : [],
@@ -1380,6 +1403,24 @@
     });
     sheet.properties.defaultRowHeight = 18;
 
+    /* v7.0.290 — Bileşen sütunları: ana başlık (ör. Fabric Test) tek kalır;
+       satırlarda bileşen varsa her bileşen hemen yanında "Fabric Test › Main
+       Fabric" sütununda ayrı durum alır. Bileşenli satırda ana durum bileşenlerden
+       türetilir (kilitli); bileşeni olmayan satır eskisi gibi ana sütundan girilir. */
+    const MAX_EXCEL_ELEMENTS = 8;
+    const elementNames = items.map(function (item) {
+      const names = [], seen = new Set();
+      rows.forEach(function (row) {
+        const analysis = analysisFor(row);
+        if (!analysis || !applies(item, analysis)) return;
+        const answer = answerOf(item, analysis);
+        (answer && Array.isArray(answer.elements) ? answer.elements : []).forEach(function (entry) {
+          const key = Components.elementKey(entry.name);
+          if (key && !seen.has(key) && names.length < MAX_EXCEL_ELEMENTS) { seen.add(key); names.push(entry.name); }
+        });
+      });
+      return names;
+    });
     const selectedIds = Array.isArray(o.columnIds) ? o.columnIds : excelColumnIds();
     const infoDefinitions = excelColumnDefinitions().filter(function (item) { return selectedIds.includes(item.id); });
     const columns = infoDefinitions.map(function (item) {
@@ -1388,6 +1429,9 @@
     items.forEach(function (item, index) {
       const label = isEn() ? item.en : item.tr;
       columns.push({ header: label, key: 's' + index, width: 14, checklistStatus: true, checklistIndex: index });
+      elementNames[index].forEach(function (name, elementIndex) {
+        columns.push({ header: label + ' › ' + name, key: 'e' + index + '_' + elementIndex, width: 14, checklistElement: true, checklistIndex: index, elementName: name });
+      });
       columns.push({ header: label + ' - ' + T('Not', 'Note'), key: 'n' + index, width: 22, checklistNote: true, checklistIndex: index });
       if (item.evidenceFields && item.evidenceFields.reportNumber) {
         columns.push({ header: label + ' - ' + T('Rapor No', 'Report No'), key: 'r' + index, width: 18, checklistEvidence: 'reportNumber', checklistIndex: index });
@@ -1421,6 +1465,11 @@
     const attachmentColumns = items.map(function (_item, index) {
       return columns.findIndex(function (column) { return column.key === 'a' + index; }) + 1;
     });
+    const elementColumns = items.map(function (_item, index) {
+      return elementNames[index].map(function (name, elementIndex) {
+        return { name: name, column: columns.findIndex(function (column) { return column.key === 'e' + index + '_' + elementIndex; }) + 1 };
+      });
+    });
     const imageColumn = columns.findIndex(function (column) { return column.key === 'image'; }) + 1;
     // Validation choices belong on the hidden metadata sheet, NOT Checklist.
     // Populating rows 2..N on Checklist before addRow() pushed order data
@@ -1445,6 +1494,11 @@
         }
         const answer = answerOf(item, analysis);
         values['s' + index] = answer ? statusLabel(answer.state) : statusLabel('open');
+        const stored = answer && Array.isArray(answer.elements) ? answer.elements : [];
+        elementColumns[index].forEach(function (entry, elementIndex) {
+          const found = stored.find(function (candidate) { return Components.elementKey(candidate.name) === Components.elementKey(entry.name); });
+          values['e' + index + '_' + elementIndex] = found ? statusLabel(found.state) : '';
+        });
         values['n' + index] = answer && answer.note || '';
         if (reportColumns[index]) values['r' + index] = answer && answer.reportNumber || '';
         if (actualDateColumns[index]) values['d' + index] = answer && answer.actualDate ? excelDate(answer.actualDate) : '';
@@ -1476,6 +1530,27 @@
 
       items.forEach(function (item, index) {
         const applicable = Boolean(analysis && applies(item, analysis));
+        const rowAnswer = applicable ? answerOf(item, analysis) : null;
+        const derived = Boolean(rowAnswer && Array.isArray(rowAnswer.elements) && rowAnswer.elements.length && elementColumns[index].length);
+        elementColumns[index].forEach(function (entry) {
+          const cell = excelRow.getCell(entry.column);
+          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+          cell.protection = { locked: !applicable };
+          if (!applicable) {
+            cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: CHECKLIST_EXCEL_COLORS.grayBg } };
+            cell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
+            return;
+          }
+          const tone = checklistStatusTone(cell.value || statusLabel('open'));
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: cell.value ? tone.bg : CHECKLIST_EXCEL_COLORS.paper } };
+          cell.font = { name: 'Segoe UI', size: 9, bold: Boolean(cell.value), color: { argb: cell.value ? tone.fg : CHECKLIST_EXCEL_COLORS.muted } };
+          cell.dataValidation = {
+            type: 'list', allowBlank: true, formulae: [validationRange], showErrorMessage: true,
+            errorTitle: T('Geçersiz durum', 'Invalid status'), error: T('Listeden geçerli bir durum seçin.', 'Choose a valid status from the list.'),
+            showInputMessage: true, promptTitle: T('Bileşen Durumu', 'Component Status'),
+            prompt: T('Bu bileşenin durumunu seçin; ana durum bileşenlerden türetilir.', 'Choose this component’s status; the main status is derived from the components.'),
+          };
+        });
         const statusCell = excelRow.getCell(statusColumns[index]);
         const noteCell = excelRow.getCell(noteColumns[index]);
         const evidenceCells = [
@@ -1485,7 +1560,8 @@
         ].filter(Boolean);
         statusCell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
         noteCell.alignment = { vertical: 'middle', wrapText: true };
-        statusCell.protection = { locked: !applicable };
+        // Bileşenli satırda ana durum bileşenlerden türetilir; elle değiştirilmez.
+        statusCell.protection = { locked: !applicable || derived };
         noteCell.protection = { locked: !applicable };
         evidenceCells.forEach(function (entry) {
           entry.cell.alignment = { vertical: 'middle', horizontal: entry.kind === 'actualDate' ? 'center' : 'left', wrapText: true };
@@ -1514,7 +1590,7 @@
             cell.font = { name: 'Segoe UI', size: 9, color: { argb: CHECKLIST_EXCEL_COLORS.muted } };
           });
         }
-        if (applicable) {
+        if (applicable && !derived) {
           statusCell.dataValidation = {
             type: 'list', allowBlank: false,
             formulae: [validationRange],
@@ -1545,7 +1621,7 @@
     header.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
     columns.forEach(function (column, index) {
       const cell = header.getCell(index + 1);
-      const fill = column.checklistStatus ? CHECKLIST_EXCEL_COLORS.acc
+      const fill = column.checklistStatus || column.checklistElement ? CHECKLIST_EXCEL_COLORS.acc
         : column.checklistNote ? CHECKLIST_EXCEL_COLORS.gold
         : column.checklistEvidence ? (column.checklistEvidence === 'attachments' ? CHECKLIST_EXCEL_COLORS.muted : CHECKLIST_EXCEL_COLORS.green)
         : column.hidden ? CHECKLIST_EXCEL_COLORS.muted
@@ -1558,6 +1634,10 @@
       if (column.checklistStatus) cell.note = T(
         'Doldurulacak alan: açılır listeden Bekliyor / Onaylandı / Reddedildi / Gerekmiyor seçin.',
         'Editable field: choose Pending / Approved / Rejected / Not Required from the dropdown.'
+      );
+      else if (column.checklistElement) cell.note = T(
+        'Bileşen durumu (' + column.elementName + '): açılır listeden seçin. Bileşenli satırda ana durum bileşenlerden türetilir.',
+        'Component status (' + column.elementName + '): choose from the dropdown. On rows with components the main status is derived from them.'
       );
       else if (column.checklistNote) cell.note = T(
         'Doldurulacak alan: özellikle Reddedildi durumunda sebep ve beklenen aksiyonu yazın.',
@@ -1584,7 +1664,7 @@
       });
     });
     const lastDataRow = Math.max(2, sheet.rowCount);
-    applyChecklistConditionalFormatting(sheet, statusColumns, lastDataRow);
+    applyChecklistConditionalFormatting(sheet, statusColumns.concat(...elementColumns.map(function (list) { return list.map(function (entry) { return entry.column; }); })), lastDataRow);
     sheet.pageSetup = { orientation: 'landscape', fitToPage: true, fitToWidth: 1, fitToHeight: 0 };
 
     const technicalStart = columns.length - 1;
@@ -1650,6 +1730,18 @@
     // Named range allows Excel validation to refer to another (very hidden)
     // sheet without creating phantom supplier rows on Checklist.
     optionValues.forEach(function (name, index) { meta.getCell(index + 2, 12).value = name; });
+    // Bileşen sütunları N:P'de (sütun no, adım kimliği, bileşen adı); eski sürüm
+    // okuyucuları bu alanı yok sayar, şema sürümü değişmez.
+    meta.getCell(1, 14).value = 'elementColumn'; meta.getCell(1, 15).value = 'itemId'; meta.getCell(1, 16).value = 'elementName';
+    let elementMetaRow = 2;
+    items.forEach(function (item, index) {
+      elementColumns[index].forEach(function (entry) {
+        meta.getCell(elementMetaRow, 14).value = entry.column;
+        meta.getCell(elementMetaRow, 15).value = item.id;
+        meta.getCell(elementMetaRow, 16).value = entry.name;
+        elementMetaRow += 1;
+      });
+    });
     workbook.definedNames.add("'" + META_SHEET + "'!$L$2:$L$" + (optionValues.length + 1), STATUS_VALIDATION_NAME);
 
     const buffer = await workbook.xlsx.writeBuffer();
@@ -1732,7 +1824,16 @@
         en: text(row.getCell(5).text || row.getCell(5).value),
       });
     }
-    return { version: version, exportedAt: exportedAt, items: items };
+    const elementColumns = [];
+    if (text(meta.getCell(1, 14).text || meta.getCell(1, 14).value) === 'elementColumn') {
+      for (let rowNo = 2; rowNo <= meta.rowCount; rowNo += 1) {
+        const column = Number(meta.getCell(rowNo, 14).value) || 0;
+        const itemId = text(meta.getCell(rowNo, 15).text || meta.getCell(rowNo, 15).value);
+        const name = Components.elementName(meta.getCell(rowNo, 16).text || meta.getCell(rowNo, 16).value);
+        if (column && itemId && name) elementColumns.push({ column: column, itemId: itemId, name: name });
+      }
+    }
+    return { version: version, exportedAt: exportedAt, items: items, elementColumns: elementColumns };
   }
 
   function headerIndex(sheet, label) {
@@ -1795,10 +1896,26 @@
         if (cell.value && typeof cell.value === 'object' && Object.prototype.hasOwnProperty.call(cell.value, 'formula')) {
           formulaCells += 1; return;
         }
+        // v7.0.290 — bileşen sütunları: dolu her bileşen kendi durumunu taşır.
+        const storedAnswers = opts.answers || (assistantState() && assistantState().answers) || {};
+        const storedAnswer = storedAnswers[answerKey(orderKey, metaItem.id)] || null;
+        const storedElements = storedAnswer && Array.isArray(storedAnswer.elements) ? storedAnswer.elements : [];
+        let elements = null, elementInvalid = false;
+        (meta.elementColumns || []).filter(function (entry) { return entry.itemId === metaItem.id; }).forEach(function (entry) {
+          const elementCell = row.getCell(entry.column);
+          const value = text(elementCell.text || elementCell.value);
+          if (!value) return;
+          const state = normalizeState(value, opts.customStatuses);
+          if (!state) { elementInvalid = true; return; }
+          elements = Components.upsertElement(elements || storedElements, { name: entry.name, state: state }, function (v) { return normalizeState(v, opts.customStatuses) || 'open'; });
+        });
+        if (elementInvalid) { invalid += 1; return; }
         const raw = text(cell.text || cell.value);
-        if (!raw) { blank += 1; return; }
-        const nextState = normalizeState(raw, opts.customStatuses);
+        if (!raw && !elements) { blank += 1; return; }
+        let nextState = elements ? Components.elementsState(elements, function (state) { return state === 'approved' || state === 'notRequired' || isResolvedStatus(state); }) : normalizeState(raw, opts.customStatuses);
         if (!nextState) { invalid += 1; return; }
+        // Bileşenli kayıtta yalnız ana durum değiştiyse tüm bileşenlere uygulanır.
+        if (!elements && storedElements.length) elements = storedElements.map(function (entry) { return Object.assign({}, entry, { state: nextState }); });
         const scoped = Components.parseItem(metaItem.id);
         const baseItem = catalog.get(scoped ? scoped.baseId : metaItem.id);
         const item = scoped && baseItem ? scopedItem(baseItem, scoped.partId) : baseItem;
@@ -1831,6 +1948,7 @@
           baseAt: meta.exportedAt || '',
           loadDate: loadDate || null,
           note: note,
+          ...(elements ? { elements: elements } : {}),
           ...(metaItem.reportColumn ? { reportNumber: reportNumber } : {}),
           ...(metaItem.actualDateColumn ? { actualDate: actualDate } : {}),
           // Workbook attachment names are read-only; preserve authoritative
@@ -2140,9 +2258,11 @@
     });
   }
 
+  /* v7.0.290 — Detay penceresi her checklist adımında açılır: bileşen
+     sonuçları (Main Fabric / Neck RIB …) ve not her adımda düzenlenebilir;
+     rapor no / tarih / ek alanları adım ayarına bağlı kalır. */
   function evidenceEnabled(item, answer) {
-    const fields = evidenceFieldsFor(item, answer);
-    return Boolean(fields.reportNumber || fields.actualDate || fields.attachments);
+    return Boolean(item);
   }
   /* Test raporu aktarımı ekleri, adımda "Ekler" alanı kapalı olsa da kayda
      ekler. Kayıtta ek varsa ekler alanı her zaman görünür; aksi hâlde dosya
@@ -2200,6 +2320,16 @@
       sequence: sequence || 1,
     };
   }
+  function elementMenuHtml(answer) {
+    const elements = answer && Array.isArray(answer.elements) ? answer.elements : [];
+    if (!elements.length) return '';
+    return '<div class="clMenuElements"><small>' + T('Bileşenler · durum seçimi tümüne uygulanır', 'Components · a status choice applies to all') + '</small>'
+      + elements.map(function (entry) { return '<p><span class="clStatusDot is-' + html(String(entry.state || 'open').startsWith('custom:') ? 'custom' : entry.state || 'open') + '" aria-hidden="true"></span><span>' + html(entry.name) + ' · ' + html(statusLabel(entry.state)) + '</span></p>'; }).join('') + '</div>';
+  }
+  function elementSuggestionsHtml(id) {
+    const list = (Components && Components.ELEMENT_SUGGESTIONS || []).map(function (entry) { return isEn() ? entry.en : entry.tr; });
+    return '<datalist id="' + id + '">' + list.map(function (name) { return '<option value="' + html(name) + '"></option>'; }).join('') + '</datalist>';
+  }
   function openChecklistEvidenceDialog(trigger) {
     const row = cpRowById(trigger && trigger.dataset.id);
     const itemId = trigger && trigger.dataset.item;
@@ -2239,6 +2369,11 @@
           ${fields.reportNumber ? `<label class="cpaSettingRow"><span><b>${T('Rapor numarası', 'Report number')}</b></span><input type="text" maxlength="300" data-evidence-report value="${html(answer && answer.reportNumber || '')}"></label>` : ''}
           ${fields.actualDate ? `<label class="cpaSettingRow"><span><b>${T('Gerçekleşme tarihi', 'Actual date')}</b></span><input type="date" data-evidence-date value="${html(answer && answer.actualDate || '')}"></label>` : ''}
         </div>
+        <div class="cpaSettingGroup clElementEditor" data-element-editor>
+          <div class="cpaSettingRow"><span><b>${T('Bileşenler', 'Components')}</b><small>${T('Sonucu ürünün bileşenine göre ayrı girin (ör. Ana Kumaş · Reddedildi, Yaka Ribanası · Onaylandı). Bileşen yoksa kontrol tek bileşenlidir; hücrede tüm bileşenler birlikte görünür.', 'Enter the result per product component (e.g. Main Fabric · Rejected, Neck RIB · Approved). Without components the check is single-component; the cell shows all components together.')}</small></span>
+            <button type="button" class="cpaBtn" data-element-add>${T('+ Bileşen', '+ Component')}</button></div>
+          <div data-element-list></div>${elementSuggestionsHtml('_blElementSuggestions')}
+        </div>
         ${fields.attachments ? `<div class="cpaSettingGroup"><div class="cpaSettingRow"><span><b>${T('Rapor / e-mail ekleri', 'Report / e-mail attachments')}</b><small>${T('Dosyalar Buyer Log’da saklanır ve Üreticiye Checklist Exceli Hazırla akışında e-postaya otomatik eklenir.', 'Files are stored in Buyer Log and automatically attached by Prepare Supplier Checklist.')}</small></span>
           <label class="cpaBtn">${T('Dosya Ekle', 'Add File')}<input type="file" data-evidence-files multiple hidden></label></div>
           <div data-evidence-list>${attachmentRows()}</div>
@@ -2247,6 +2382,49 @@
       <footer><span role="status" aria-live="polite" data-evidence-save-state>${T('Değişiklikler anında kaydedilir.', 'Changes are saved immediately.')}</span><button type="button" class="cpaBtn" data-evidence-close>${T('Kapat', 'Close')}</button><button type="button" class="cpaBtn primary" data-evidence-save>${T('Kaydı Doğrula', 'Verify Save')}</button></footer>
     </div>`;
     root.document.body.appendChild(modal);
+    let elements = Array.isArray(answer && answer.elements) ? answer.elements.map(function (entry) { return Object.assign({}, entry); }) : [];
+    const statusChoices = availableStatuses();
+    const drawElements = function () {
+      const host = modal.querySelector('[data-element-list]');
+      if (!host) return;
+      host.innerHTML = elements.map(function (entry, index) {
+        const options = [...new Set(statusChoices.concat([entry.state || 'open']))].map(function (id) {
+          return '<option value="' + html(id) + '"' + (id === (entry.state || 'open') ? ' selected' : '') + (String(id).startsWith('custom:') ? ' data-no-i18n' : '') + '>' + html(statusLabel(id)) + '</option>';
+        }).join('');
+        return '<div class="clElementRow" data-element-index="' + index + '"><input type="text" maxlength="60" list="_blElementSuggestions" data-element-name value="' + html(entry.name || '') + '" aria-label="' + T('Bileşen adı', 'Component name') + '" placeholder="' + T('Bileşen adı', 'Component name') + '">'
+          + '<select data-element-state aria-label="' + T('Bileşen durumu', 'Component status') + '">' + options + '</select>'
+          + '<button type="button" class="cpaBtn" data-element-remove="' + index + '" aria-label="' + T('Bileşeni kaldır', 'Remove component') + '">×</button></div>';
+      }).join('') || '<small class="trMuted">' + T('Bileşen yok · tek sonuç', 'No components · single result') + '</small>';
+    };
+    drawElements();
+    const collectElements = function () {
+      modal.querySelectorAll('[data-element-index]').forEach(function (rowEl) {
+        const entry = elements[Number(rowEl.dataset.elementIndex)];
+        if (!entry) return;
+        entry.name = String(rowEl.querySelector('[data-element-name]').value || '');
+        entry.state = normalizeState(rowEl.querySelector('[data-element-state]').value) || 'open';
+      });
+      return elements.filter(function (entry) { return String(entry.name || '').trim(); });
+    };
+    modal.querySelector('[data-element-add]').onclick = function () {
+      collectElements();
+      if (elements.length >= ((Components && Components.MAX_ELEMENTS) || 12)) { toast(T('En fazla 12 bileşen eklenebilir.', 'Up to 12 components can be added.')); return; }
+      // İlk bileşen mevcut genel durumla başlar: tek bileşenli kayıt kaybolmaz.
+      const latest = answerFor(item, analysis) || {};
+      elements.push({ name: '', state: elements.length ? 'open' : (normalizeState(latest.state) || status) });
+      drawElements();
+      const inputs = modal.querySelectorAll('[data-element-name]');
+      if (inputs.length) inputs[inputs.length - 1].focus();
+    };
+    modal.querySelector('[data-element-list]').addEventListener('click', function (event) {
+      const remove = event.target.closest('[data-element-remove]');
+      if (!remove) return;
+      collectElements();
+      elements.splice(Number(remove.dataset.elementRemove), 1);
+      drawElements();
+      saveEvidence().catch(showSaveError);
+    });
+    modal.querySelector('[data-element-list]').addEventListener('change', function () { saveEvidence().catch(showSaveError); });
     const close = function () {
       if (pending.length || uploadPromise) {
         toast(T('Dosya kaydı tamamlanmadı. Pencereyi açık tutun ve Kaydı Doğrula ile yeniden deneyin.', 'File save is incomplete. Keep this window open and use Verify Save to retry.'));
@@ -2298,13 +2476,18 @@
       removed.forEach(id => attachments.delete(id));
       if (attachments.size > 40) throw new Error(T('Bir checklist kaydına en fazla 40 dosya eklenebilir; mevcut ekler korundu.', 'A checklist record can contain up to 40 files; existing attachments were preserved.'));
       saveState(T('Kaydediliyor…', 'Saving…'));
+      const named = collectElements();
       assistant.setChecklistAnswer(analysis, item.id, currentStatus, {
+        elements: named,
         note: String(modal.querySelector('[data-evidence-note]')?.value || ''),
         reportNumber: fields.reportNumber ? String(modal.querySelector('[data-evidence-report]')?.value || '') : (latest.reportNumber || ''),
         actualDate: fields.actualDate ? String(modal.querySelector('[data-evidence-date][type="date"]')?.value || '') : (latest.actualDate || ''),
         attachments: Array.from(attachments.values()),
       });
       await syncAnswerChanges();
+      const saved = answerFor(item, analysis) || {};
+      const subtitle = modal.querySelector('header small');
+      if (subtitle) subtitle.textContent = visibleValue(row, ['Order Code', 'ORDER CODE']) + ' · ' + statusLabel(normalizeState(saved.state) || currentStatus);
       saveState(T('Kaydedildi', 'Saved'));
       refreshColumns({ render: true });
     }
@@ -2403,7 +2586,8 @@
     const menuAnswer = menuAnalysis ? answerFor(evidenceItem, menuAnalysis) : null;
     menu.innerHTML = (evidenceEnabled(evidenceItem, menuAnswer)
       ? '<button type="button" class="delTypeOption clStatusOption" data-cl-evidence>'
-        + '<span aria-hidden="true">📎</span><span>' + T('Checklist Detayları / Ekler', 'Checklist Details / Attachments') + '</span></button>'
+        + '<span aria-hidden="true">📎</span><span>' + T('Checklist Detayları / Bileşenler / Ekler', 'Checklist Details / Components / Attachments') + '</span></button>'
+        + elementMenuHtml(menuAnswer)
         + '<div style="height:1px;background:var(--line);margin:5px 4px"></div>'
       : '') + statusOptions;
     // ROS/Lab Dip is a single CP checklist cell: on click, show all

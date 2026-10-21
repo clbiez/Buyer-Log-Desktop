@@ -100,7 +100,11 @@ test('LCW AI tek ortak yoldan çağrılır; öneri onaysız uygulanmaz', () => {
   assert.match(ui, /entry\.include = Boolean\(entry\.chosen\) && !entry\.fromAi/, 'tip eşlemesi AI satırını seçmez');
   assert.match(ui, /data-tr-ai-step/);
   assert.match(ui, /Review\.validate\(/, 'AI incelemesi kaynak ve kapsam doğrulayıcısından geçer');
-  assert.match(ui, /ui\.ai\.state !== 'done' \|\| !ui\.ai\.packet/, 'tamamlanmayan inceleme checklist yazamaz');
+  // v7.0.290: tamamlanmayan AI incelemesi öneri yazamaz; yazım yalnız buyer'ın
+  // açık kapsam doğrulaması + elle durum seçimiyle (buyer yolu) yapılır.
+  assert.match(ui, /function aiReady\(\) \{ return ui\.ai\.state === 'done' && Boolean\(ui\.ai\.packet\) && !ui\.ai\.cpChanged; \}/, 'tamamlanmayan inceleme öneri yazamaz');
+  assert.match(ui, /if \(buyer && !entry\.reviewVerified\)/, 'elle eşleşme açık kapsam doğrulaması ister');
+  assert.match(ui, /if \(\(buyer \|\| review\.blocked\) && !out\.manual\)/, 'elle eşleşmede durum buyer tarafından seçilir');
   assert.match(ui, /T\('LCW AI bağlı değil', 'LCW AI is not connected'\)/);
   const routes = read('server/routes/test-report-routes.js');
   assert.match(routes, /service\.acceptAi\(req\.currentUser/, 'UI aynı sunucu servisini kullanır');

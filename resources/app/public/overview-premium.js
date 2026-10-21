@@ -96,7 +96,12 @@
       return {...entry,label:labels[entry.key],value:fmt(loading?qty:entry.orders.length),unit:loading?L('adet','units'):L('satır','rows'),sub:loading?`${fmt(entry.orders.length)} ${L('planlı satır','planned rows')}`:`${fmt(qty)} ${L('adet','units')}`,
         visual:loading?`<div class="ovPulseMini" aria-hidden="true">${horizon.days.map(d=>`<i style="--ov-level:${Math.max(4,100*d.qty/Math.max(1,...horizon.days.map(x=>x.qty)))}%"></i>`).join('')}</div>`:priorityBand()};
     });
-    const changed=draw(node,records.length?`<div class="ovPulseGrid" style="--ov-pulse-count:${records.length}">${records.map(r=>`<button type="button" class="ovPulseKpi${r.key==='critical'?' isRisk':''}" data-ov-pulse="${r.key}" data-ov-focus="pulse-${r.key}"><span>${esc(r.label)}</span><strong><b data-ov-count>${esc(r.value)}</b><small>${esc(r.unit)}</small></strong><em>${esc(r.sub)}</em>${r.visual}</button>`).join('')}</div>`:empty(L('Bu kapsamda aktif sipariş yok.','No active orders in this scope.')));
+    // v7.0.290 — Öncelik yalnız kullanıcının kurallarından gelir: kural yoksa
+    // Kritik/Bugün/Bu Hafta kartları gizli kalmaz, nedenini ve çözümünü söyler.
+    const noRules=context.priorityRules===0&&records.length;
+    const rulesHint=noRules?`<button type="button" class="ovPulseKpi ovPulseHint" data-ov-rules data-ov-focus="pulse-rules"><span>${esc(L('Öncelik kuralı yok','No priority rules'))}</span><strong><b>0</b><small>${esc(L('kural','rules'))}</small></strong><em>${esc(L('Kritik / Bugün / Bu Hafta yalnız kurallarınızla hesaplanır · Kural ekle','Critical / Today / This Week come only from your rules · Add a rule'))}</em></button>`:'';
+    const count=records.length+(noRules?1:0);
+    const changed=draw(node,records.length?`<div class="ovPulseGrid" style="--ov-pulse-count:${count}">${records.map(r=>`<button type="button" class="ovPulseKpi${r.key==='critical'?' isRisk':''}" data-ov-pulse="${r.key}" data-ov-focus="pulse-${r.key}"><span>${esc(r.label)}</span><strong><b data-ov-count>${esc(r.value)}</b><small>${esc(r.unit)}</small></strong><em>${esc(r.sub)}</em>${r.visual}</button>`).join('')}${rulesHint}</div>`:empty(L('Bu kapsamda aktif sipariş yok.','No active orders in this scope.')));
     if(changed)animatePulse(node);
   }
   function renderHorizon(){
@@ -165,6 +170,7 @@
       root.dispatchEvent(new CustomEvent('bl:overview-motion-changed'));
     });
     doc.addEventListener('click' ,event=>{
+      if(event.target.closest('[data-ov-rules]')){root.BLCpAssistant?.openRules?.();return;}
       const button=event.target.closest('[data-ov-pulse],[data-ov-days],[data-ov-day],[data-ov-horizon],[data-ov-model],[data-ov-status],[data-ov-collection],[data-ov-metric-table],[data-ov-metric-row]');if(!button)return;
       if(!model&&(button.hasAttribute('data-ov-pulse')||button.hasAttribute('data-ov-day')||button.hasAttribute('data-ov-horizon')))return;
       if(button.dataset.ovPulse){const entry=pulseScopes(model).find(item=>item.key===button.dataset.ovPulse);if(entry)openRows(entry.orders,button.querySelector('span').textContent);}

@@ -155,6 +155,122 @@
           "en": "Atlas follows the Buyer Log theme and language"
         }
       }
+    },
+    {
+      "id": "cp-priority-rules-only",
+      "type": "fix",
+      "module": {
+        "tr": "Checklist ve Kurallar",
+        "en": "Checklist & Rules"
+      },
+      "title": {
+        "tr": "Öncelik yalnız sizin kurallarınızla",
+        "en": "Priority comes only from your rules"
+      },
+      "body": {
+        "tr": "Sildiğiniz öncelik kuralları artık gizli eşik olarak çalışmaz. Kritik, Bugün ve Bu Hafta Aksiyon yalnız etkin kurallarınızla (ve Moderatörün tüm kullanıcılara uyguladıklarıyla) hesaplanır; sebep listesi eşleşen kuralları gösterir. Kural yoksa Genel Bakış bunu açıkça söyler. Sistem önerisi kural koşulunda “Sistem önerisi öncelik” alanıyla kullanılabilir.",
+        "en": "Deleted priority rules no longer keep working as hidden thresholds. Critical, Action Today and Action This Week are calculated only from your active rules (and those the Moderator applies to all users); the reason list shows the matching rules. Without rules, the Overview says so. The engine suggestion can still be used in a rule condition through “System suggested priority”."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "overview-rules-only.png",
+        "alt": {
+          "tr": "Genel Bakış: öncelik kuralı olmadığında açıklayıcı kart — gerçek Buyer Log, demo veri",
+          "en": "Overview: explanatory card when there are no priority rules — real Buyer Log, demo data"
+        },
+        "caption": {
+          "tr": "Öncelik yalnız sizin kurallarınızla",
+          "en": "Priority comes only from your rules"
+        }
+      }
+    },
+    {
+      "id": "cp-moderator-rule-publication",
+      "type": "feature",
+      "module": {
+        "tr": "Checklist ve Kurallar",
+        "en": "Checklist & Rules"
+      },
+      "title": {
+        "tr": "Moderatör kuralları tüm kullanıcılara uygular",
+        "en": "Moderator applies rules to all users"
+      },
+      "body": {
+        "tr": "Moderatör bir öncelik kuralını ya da checklist sorusunu “Tüm kullanıcılara uygula” ile yayımlar, “Yayından kaldır” ile geri çeker ve sildiği kuralı isterse tüm kullanıcılardan da siler (geri alınabilir). Yayın Master kural sürümüyle dağılır; kullanıcıların kendi oluşturdukları kurallar değişmez, yayımlanan kurallar onlarda salt okunur görünür.",
+        "en": "The Moderator publishes a priority rule or checklist question with “Apply to all users”, withdraws it with “Unpublish” and can delete a rule for all users as well (undoable). The publication travels with the Master rule release; rules users created themselves are untouched, and published rules appear read-only to them."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-rules-moderator-publish.png",
+        "alt": {
+          "tr": "Öncelik Kuralları: Moderatör yayını ve tüm kullanıcılara uygulanan kural — gerçek Buyer Log, demo veri",
+          "en": "Priority Rules: Moderator publication and a rule applied to all users — real Buyer Log, demo data"
+        },
+        "caption": {
+          "tr": "Moderatör kuralları tüm kullanıcılara uygular",
+          "en": "Moderator applies rules to all users"
+        }
+      }
+    },
+    {
+      "id": "test-report-buyer-manual-match",
+      "type": "improvement",
+      "module": {
+        "tr": "Test raporu aktarımı",
+        "en": "Test report import"
+      },
+      "title": {
+        "tr": "LCW AI olmadan elle eşleşme, çoklu PO ve set parçası",
+        "en": "Manual matching without LCW AI, multiple POs and set parts"
+      },
+      "body": {
+        "tr": "Eşleşme bulunmasa ya da bulunsa da raporu bir ya da birden çok siparişe elle bağlayabilirsiniz; LCW AI incelemesi tamamlanmasa bile çalışır. Takım siparişlerinde birden çok set parçası seçilir, her parça kendi durumunu alır. Elle eşleşme kapsam doğrulaması ve elle seçilen durum ister; AI önerisinden ayrı kaydedilir.",
+        "en": "Whether or not a match is found, you can link the report to one or several orders manually; it works even when the LCW AI review does not complete. Set orders accept several set parts, each with its own status. A manual match requires scope verification and a manually chosen status and is stored separately from AI proposals."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-manual-nomatch.png",
+        "alt": {
+          "tr": "Test raporu aktarımı: eşleşmeyen raporu elle eşleştirme — gerçek Buyer Log, demo dosya",
+          "en": "Test report import: manually matching an unmatched report — real Buyer Log, demo file"
+        },
+        "caption": {
+          "tr": "LCW AI olmadan elle eşleşme, çoklu PO ve set parçası",
+          "en": "Manual matching without LCW AI, multiple POs and set parts"
+        }
+      }
+    },
+    {
+      "id": "checklist-component-results",
+      "type": "feature",
+      "module": {
+        "tr": "Checklist",
+        "en": "Checklist"
+      },
+      "title": {
+        "tr": "Bileşen bazlı checklist sonucu",
+        "en": "Component-level checklist results"
+      },
+      "body": {
+        "tr": "Bir test ürünün farklı bileşenleri için ayrı değerlendirilebilir (ör. Ana Kumaş · Reddedildi, Yaka Ribanası · Onaylandı). Bileşen adları düzenlenebilir; genel durum bileşenlerden türetilir ve hepsi CP’de tek hücrede görünür. Test raporu aktarımında bileşen seçilebilir; Checklist Excel’inde her bileşen ana başlığın yanında ayrı durum sütunu olarak düzenlenir.",
+        "en": "A test can be assessed separately for each product component (e.g. Main Fabric · Rejected, Neck RIB · Approved). Component names are editable; the overall status is derived from them and all of them show in one CP cell. The test report import lets you pick the component; in the Checklist Excel each component is edited in its own status column next to the main heading."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-components-details.png",
+        "alt": {
+          "tr": "Checklist Detayları: bileşen sonuçları — gerçek Buyer Log, demo veri",
+          "en": "Checklist Details: component results — real Buyer Log, demo data"
+        },
+        "caption": {
+          "tr": "Bileşen bazlı checklist sonucu",
+          "en": "Component-level checklist results"
+        }
+      }
     }
   ]
 }

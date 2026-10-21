@@ -44,7 +44,15 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
   }
   async function prepareCommit(profile,body) {
     const allowed=await authorizedOrders(profile,{write:true}),session=sessionFor(profile,body.sessionId);
-    if(session.assessment) {
+    /* v7.0.290 — Buyer'ın elle eşleşmesi LCW AI'dan bağımsızdır: AI incelemesi
+       tamamlanmasa da (ör. CP kapsamı farkı) buyer raporu bir ya da birden çok
+       siparişe, kendi doğruladığı kapsam ve seçtiği durumla bağlayabilir. Her
+       kalem açık kapsam onayı + kanıt doğrulaması + geçerli adım/durum ister;
+       AI önerisi gibi işaretlenmez (matchSource:'buyer'). */
+    const rawItems=Array.isArray(body.items)?body.items:[];
+    const buyerOnly=rawItems.length>0&&rawItems.every(raw=>raw?.manualMatch?.buyer===true);
+    const canonical=rawItems.some(raw=>raw?.manualMatch?.buyer===true)&&reviewContext?await reviewContext(profile):null;
+    if(session.assessment&&!(buyerOnly&&body.snapshotId!==session.assessment.packet.snapshotId)) {
       if(!session.assessment.validated||body.snapshotId!==session.assessment.packet.snapshotId)throw fail('TEST_REPORT_REVIEW_REQUIRED',409);
       const current=await authorizedOrders(profile,{write:false});
       if(digest([...current])!==session.assessment.authorityHash)throw fail('TEST_REPORT_REVIEW_STALE',409);
@@ -52,12 +60,22 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
     }
     const byTalep=new Map(session.reports.filter(r=>r.talepNo).map(r=>[r.talepNo,r]));
     const seen=new Set();
-    const items=(Array.isArray(body.items)?body.items:[]).map(raw=>{
+    const assessed=Boolean(session.assessment&&body.snapshotId===session.assessment.packet.snapshotId);
+    const items=rawItems.map(raw=>{
       const report=byTalep.get(text(raw?.talepNo,80));if(!report)throw fail('TEST_REPORT_UNKNOWN');
       const orderKey=text(raw.orderKey),authoritative=allowed.get(orderKey);if(!authoritative)throw fail('TEST_REPORT_ORDER_FORBIDDEN',403);
       const scopes=Engine.orderScopes(report),scope=scopes.find(s=>s.orderCode===Engine.normalizeOrderCode(authoritative.orderCode));
       let manualMatch=null;
-      if(raw.manualMatch) {
+      if(raw.manualMatch?.buyer===true) {
+        const part=Checklist.Components.parseItem(raw.itemId),baseItem=part?.baseId||raw.itemId;
+        const steps=canonical?canonical.checklistSteps:[],statuses=canonical?canonical.checklistStatuses:[];
+        if(raw.confirmMatch!==true||raw.confirmEvidence!==true||!statuses.some(status=>status.id===raw.targetStatus)||!steps.some(step=>step.id===raw.itemId||step.id===baseItem))throw fail('TEST_REPORT_MANUAL_MATCH_REQUIRED',409);
+        const target=canonical.cp.rows.find(row=>row.key===orderKey),analysis={orderKey,sourceRow:target?.fields||{}};
+        const answers=Object.fromEntries((target?.checklist||[]).map(item=>[orderKey+'::'+item.itemId,item.answer]));
+        const parts=Checklist.componentsFor(analysis,{answers});
+        if(part&&!parts.some(p=>p.id===part.partId)||!part&&(parts.length||Checklist.Components.isSet(analysis.sourceRow,'cp')))throw fail('TEST_REPORT_MANUAL_MATCH_REQUIRED',409);
+        manualMatch={buyer:true,fromOrderKey:text(raw.manualMatch.fromOrderKey),fromItemId:text(raw.manualMatch.fromItemId,160),targetStatus:raw.targetStatus};
+      } else if(raw.manualMatch) {
         const review=session.assessment;
         const origin=review?.validated?.assessments.find(item=>item.reportId===report.talepNo&&item.orderKey===raw.manualMatch.fromOrderKey&&item.step===raw.manualMatch.fromItemId);
         const part=Checklist.Components.parseItem(raw.itemId),baseItem=part?.baseId||raw.itemId;
@@ -70,20 +88,23 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
       }
       if(scopes.length&&!scope&&!manualMatch)throw fail('TEST_REPORT_ORDER_MISMATCH',409);
       if(scope?.requiresReview&&raw.confirmMatch!==true)throw fail('TEST_REPORT_SCOPE_CONFIRMATION_REQUIRED',409);
-      const key=[report.talepNo,orderKey].join('::');
-      if(session.assessment) {
+      // Takım parçaları aynı rapor + siparişte ayrı adımlardır (A, B …).
+      const key=[report.talepNo,orderKey,Checklist.Components.parseItem(raw.itemId)?raw.itemId:''].join('::');
+      if(assessed&&!manualMatch?.buyer) {
         const proposal=session.assessment.validated.assessments.find(item=>item.reportId===report.talepNo&&item.orderKey===orderKey&&(!item.step||item.step===raw.itemId));
         if(!manualMatch&&(!proposal||proposal.blocked&&raw.confirmEvidence!==true))throw fail('TEST_REPORT_REVIEW_REQUIRED',409);
       }
       if(seen.has(key))throw fail('TEST_REPORT_DUPLICATE_TARGET',409);seen.add(key);
-      return {report,orderKey,itemId:text(raw.itemId,160),review:session.assessment?{snapshotId:session.assessment.packet.snapshotId,scopeConfirmed:raw.confirmEvidence===true,...(manualMatch?{matchSource:'buyer',manualMatch}:{matchSource:'ai'})}:null,context:{...(raw.context&&typeof raw.context==='object'?raw.context:{}),...authoritative}};
+      const review=manualMatch?.buyer?{scopeConfirmed:true,matchSource:'buyer',manualMatch,...(assessed?{snapshotId:session.assessment.packet.snapshotId}:{})}
+        :session.assessment?{snapshotId:session.assessment.packet.snapshotId,scopeConfirmed:raw.confirmEvidence===true,...(manualMatch?{matchSource:'buyer',manualMatch}:{matchSource:'ai'})}:null;
+      return {report,orderKey,itemId:text(raw.itemId,160),review,context:{...(raw.context&&typeof raw.context==='object'?raw.context:{}),...authoritative}};
     });
     const saved=store.read();
     if(items.some(item=>Engine.reportLinks(saved.links[item.report.talepNo]).some(link=>!allowed.has(link.orderKey))))throw fail('TEST_REPORT_SHARED_SCOPE_FORBIDDEN',403);
-    return {session,items,authorizedOrderKeys:new Set(allowed.keys()),sessionFingerprint:sessionFingerprint(session)};
+    return {session,items,authorizedOrderKeys:new Set(allowed.keys()),sessionFingerprint:sessionFingerprint(session),assessed};
   }
   async function commit(profile,body,options={}) {
-    const {session,items,authorizedOrderKeys,sessionFingerprint:fingerprint}=await prepareCommit(profile,body);
+    const {session,items,authorizedOrderKeys,sessionFingerprint:fingerprint,assessed}=await prepareCommit(profile,body);
     if(options.expectedSessionFingerprint && options.expectedSessionFingerprint!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
     const attach=(file,report,item)=>{
       const staged=file.stagingId?session.files.get(file.stagingId):null;if(!staged)return null;
@@ -94,7 +115,7 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
     const apply=()=>staging.withSessionLease(body.sessionId,profile.id,()=>{
       const latest=sessionFor(profile,body.sessionId);
       if(sessionFingerprint(latest)!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
-      if(latest.assessment)assertReviewCurrent(profile,latest.assessment);
+      if(latest.assessment&&assessed)assertReviewCurrent(profile,latest.assessment);
       options.assertAuthority?.();return store.commit(items,body.typeMap||{},profile,attach,{...options,authorizedOrderKeys});
     });
     // Native preparation can await order scope. Hold the Office guard only for

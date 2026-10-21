@@ -112,7 +112,7 @@ test('wiring loads the bridge after app-main and registers shared checklist rout
   assert.match(bridge, /width: 14, checklistStatus: true/);
   assert.match(bridge, /width: 22, checklistNote: true/);
   assert.match(bridge, /protection = \{ locked: true \}/);
-  assert.match(bridge, /statusCell\.protection = \{ locked: !applicable \}/);
+  assert.match(bridge, /statusCell\.protection = \{ locked: !applicable \|\| derived \}/);
   assert.match(bridge, /noteCell\.protection = \{ locked: !applicable \}/);
   assert.match(bridge, /sheet\.protect\(EXCEL_PROTECTION_PASSWORD/);
 

@@ -92,6 +92,10 @@
     hidden: {},
     deletedRuleIds: [],
     rules: Rules.mergeWithDefaults(null),
+    // v7.0.290 — Moderatör yayını (tüm kullanıcılara uygulanan kurallar /
+    // silinen kimlikler) ve aynı kimlikte gölgede kalan kişisel kopyalar.
+    managed: Rules.normalizeManagedRules(null),
+    shadowedPersonal: [],
     // Eski ortak (sunucu) checklist başlıkları bir kez kişisel kayda alındı mı?
     sharedChecklistAdopted: false,
     fieldCatalog: null,
@@ -162,7 +166,7 @@
         const stored = loadRuleStores(raw);
         state.deletedRuleIds = stored.deletedRuleIds;
         state.sharedChecklistAdopted = stored.sharedChecklistAdopted;
-        state.rules = Rules.mergeWithDefaults(stored.rules, state.deletedRuleIds);
+        applyRuleLayers(stored.rules);
         raw.rules = stored.rules;
         if (stored.needsMigration) migrateRuleStores = true;
 
@@ -269,11 +273,28 @@
       needsMigration: legacyRules.length > 0 || legacyDeleted.length > 0 || checklistScopeMigration,
     };
   }
+  /* v7.0.290 — Kural katmanları: kişisel kayıt + yerleşikler + Moderatör
+     yayını. Moderatör kopyası kişisel kayda YAZILMAZ; aynı kimlikli kişisel
+     kopya gölgede korunur ve yayın kaldırılırsa geri gelir. */
+  // Okuma/yazma kanalı public/cp-managed-rules.js'tedir; bu görünüm kendi
+  // sunucu çağrısını açmaz.
+  const managedChannel = () => window.BLCpManagedRules || null;
+  state.managed = Rules.normalizeManagedRules(managedChannel()?.cached?.());
+  function personalRuleList() {
+    return [...state.rules.filter(rule => rule && rule.managed !== true), ...state.shadowedPersonal];
+  }
+  function applyRuleLayers(personalRules) {
+    const managedIds = new Set(state.managed.rules.map(rule => rule.id));
+    state.shadowedPersonal = (Array.isArray(personalRules) ? personalRules : [])
+      .filter(rule => rule && rule.managed !== true && managedIds.has(rule.id));
+    state.rules = Rules.effectiveRules(personalRules, state.deletedRuleIds, state.managed);
+  }
+  const isModerator = () => Boolean(window.BLIsModerator && window.BLIsModerator());
   function ruleStorePayload(kind) {
     const defaults = new Set(Rules.DEFAULT_RULES.filter(rule => rule.kind === kind).map(rule => rule.id));
     return {
       version: kind === 'checklist' ? CHECKLIST_RULE_STORE_VERSION : 1,
-      rules: state.rules.filter(rule => rule.kind === kind),
+      rules: personalRuleList().filter(rule => rule.kind === kind),
       deletedRuleIds: state.deletedRuleIds.filter(id => defaults.has(id)),
       ...(kind === 'checklist' ? { sharedChecklistAdopted: state.sharedChecklistAdopted === true } : {}),
     };
@@ -350,9 +371,16 @@
     // Kullanıcı ayrıntı penceresinde alanı açıkça boşaltırsa meta içindeki boş
     // değer eski değerin üzerine yazar.
     const preserved = {};
-    ['note', 'reportNumber', 'actualDate', 'attachments', 'componentCount'].forEach(field => {
+    ['note', 'reportNumber', 'actualDate', 'attachments', 'componentCount', 'elements'].forEach(field => {
       if (Object.prototype.hasOwnProperty.call(previous, field)) preserved[field] = previous[field];
     });
+    /* v7.0.290 — Bileşenli cevapta hücreden tek bir durum seçmek bütün
+       bileşenlere uygulanır ("tümünü onayla"); bileşen bazlı düzenleme Checklist
+       Detayları penceresindedir. Seçilen durum zaten genel durumsa dokunulmaz. */
+    if (!(meta && Object.prototype.hasOwnProperty.call(meta, 'elements')) && Array.isArray(preserved.elements) && preserved.elements.length
+      && Checklist.Components.elementsState(preserved.elements, Checklist.isResolved) !== next) {
+      preserved.elements = preserved.elements.map(item => ({ ...item, state: next }));
+    }
     const answerMeta = { ...preserved, ...(meta || {}), by };
     // Millisecond-equal rapid edits must still have a strictly ordered identity.
     const remoteAt = window.BLChecklistSupplierSync && typeof window.BLChecklistSupplierSync.latestAnswerAt === 'function'
@@ -459,6 +487,74 @@
     return incoming.length > 0;
   }
 
+  /* v7.0.290 — Moderatör yayınını okur ve uygular. Önbellek ilk çizimi
+     hızlandırır; sunucu cevabı (Master kural yayınıyla gelen) kesin kaynaktır. */
+  let managedRulesRedraw = null;
+  function applyManagedRules(payload) {
+    const next = Rules.normalizeManagedRules(payload);
+    const signature = value => JSON.stringify([value.rules, value.deletedRuleIds]);
+    const changed = signature(next) !== signature(state.managed);
+    const personal = personalRuleList();
+    state.managed = next;
+    if (!changed) return false;
+    applyRuleLayers(personal);
+    notifyDecisionContextChanged('preferences');
+    if (lastRows) { state.rowsSignature = ''; onOverviewRendered(lastRows, { dataRevision: window.BL_CP_DECISION_DATA_REVISION?.() || 0, filterRevision: 'managed-rules' }); }
+    if (typeof managedRulesRedraw === 'function') managedRulesRedraw();
+    return true;
+  }
+  function loadManagedRules() {
+    const channel = managedChannel();
+    if (!channel) return Promise.resolve(false);
+    return channel.load().then(payload => (payload ? applyManagedRules(payload) : false)).catch(() => false);
+  }
+  async function saveManagedRules(next, message) {
+    if (!isModerator()) throw new Error(L('Bu işlem yalnız Moderatör tarafından yapılabilir.', 'Only the Moderator can do this.'));
+    const channel = managedChannel();
+    if (!channel) throw new Error(L('Moderatör kural kanalı yüklenemedi.', 'The Moderator rule channel could not be loaded.'));
+    const clean = Rules.normalizeManagedRules(next);
+    let payload;
+    try { payload = await channel.save(clean, state.managed.revision); }
+    catch (error) { if (error && error.status === 409) void loadManagedRules(); throw error; }
+    applyManagedRules(payload);
+    if (message && typeof showToast === 'function') showToast(message);
+    return payload;
+  }
+  const managedCopy = rule => {
+    const clean = Rules.normalizeRule({ ...JSON.parse(JSON.stringify(rule)), managed: true }, rule.kind);
+    return JSON.parse(JSON.stringify(clean));
+  };
+  function publishRuleToAll(rule) {
+    const rules = state.managed.rules.filter(item => item.id !== rule.id).concat(managedCopy(rule));
+    return saveManagedRules({ rules, deletedRuleIds: state.managed.deletedRuleIds.filter(id => id !== rule.id) },
+      L('Tüm kullanıcılara uygulandı. Master kural yayınıyla dağıtılıyor.', 'Applied to all users. It is distributed with the Master rule release.'));
+  }
+  function unpublishRule(ruleId) {
+    return saveManagedRules({ rules: state.managed.rules.filter(item => item.id !== ruleId), deletedRuleIds: state.managed.deletedRuleIds },
+      L('Yayından kaldırıldı; kullanıcıların kendi kopyaları korunur.', 'Unpublished; users keep their own copies.'));
+  }
+  function deleteRuleForAll(ruleId) {
+    return saveManagedRules({ rules: state.managed.rules.filter(item => item.id !== ruleId), deletedRuleIds: [...new Set([...state.managed.deletedRuleIds, ruleId])] },
+      L('Tüm kullanıcılardan silindi.', 'Deleted for all users.'));
+  }
+  function restoreRuleForAll(ruleId) {
+    return saveManagedRules({ rules: state.managed.rules, deletedRuleIds: state.managed.deletedRuleIds.filter(id => id !== ruleId) },
+      L('Silme geri alındı; kural kullanıcılara yeniden açıldı.', 'Deletion undone; the rule is available to users again.'));
+  }
+  /* Moderatörün yayımlanmış bir kuralda yaptığı düzenleme yayına yazılır. */
+  let managedSyncTimer = 0;
+  function scheduleManagedSync() {
+    if (!isModerator()) return;
+    const edited = state.rules.filter(rule => rule.managed === true).map(managedCopy);
+    if (JSON.stringify(edited) === JSON.stringify(state.managed.rules.map(managedCopy))) return;
+    clearTimeout(managedSyncTimer);
+    managedSyncTimer = setTimeout(() => {
+      saveManagedRules({ rules: edited, deletedRuleIds: state.managed.deletedRuleIds })
+        .catch(error => { if (typeof showToast === 'function') showToast(error.message); });
+    }, 700);
+  }
+  window.addEventListener('bl:cp-managed-rules-changed', () => { void loadManagedRules(); });
+
   /* ------------------------------------------------------------- perspektif
      Perspektif YETKİYİ DEĞİŞTİRMEZ; yalnız varsayılan kart kapsamını/sırasını belirler. */
   const CARD_ORDER = {
@@ -552,8 +648,10 @@
       const share = Math.round(rows / totalRows * 1000) / 10;
       return `<button type="button" class="cpaMixSeg tone-${tone[key]}" style="flex:${rows} 0 0" data-cpa-priority="${key}" title="${esc(`${priorityLabel(key)} · ${int(rows)} · %${share}`)}" aria-label="${esc(`${priorityLabel(key)} ${int(rows)}`)}"></button>`;
     }).join('')}</div>` : '';
-    const reasons = model.riskReasons.slice(0, 6).map(item => {
-      const label = reasonLabel(item.name);
+    // v7.0.290 — Sebep listesi kullanıcının EŞLEŞEN kurallarından sayılır;
+    // motorun bilgi amaçlı risk sebepleri önceliği artık belirlemiyor.
+    const reasons = ruleReasonCounts(model).slice(0, 6).map(item => {
+      const label = item.label;
       const automateLabel = L('Bu konu için e-mail otomasyonu oluştur', 'Create an email automation for this issue');
       return `<li class="cpaReasonRow">
         <button type="button" class="cpaIconBtn cpaReasonEmailAction" data-cpa-automate-reason="${esc(item.name)}" title="${esc(automateLabel)}" aria-label="${esc(automateLabel)}">✉</button>
@@ -613,7 +711,7 @@
     if (state.activePriority === 'ALL') return list;
     if (state.activePriority.startsWith('REASON:')) {
       const reason = state.activePriority.slice(7);
-      return list.filter(item => item.riskReasons.includes(reason));
+      return list.filter(item => attentionReasonEntries(item).some(entry => entry.code === reason));
     }
     if (state.activePriority === 'UNKNOWN') return list.filter(item => item.calculationStatus === 'UNKNOWN');
     return list.filter(item => item.priority === state.activePriority);
@@ -645,17 +743,28 @@
       seenText.add(textKey);
       entries.push({ code: key, text: textValueClean, source });
     };
-    for (const reason of (Array.isArray(item && item.riskReasons) ? item.riskReasons : [])) {
-      const code = String(reason || '').trim();
-      if (code) push(code, reasonLabel(code), 'canonical');
-    }
+    // Öncelik yalnız kurallardan geldiği için gerekçe de yalnız eşleşen
+    // kurallardır (yerleşik kural dahil); ilgisiz motor sebebi gösterilmez.
     for (const rule of (Array.isArray(item && item.matchedRules) ? item.matchedRules : [])) {
-      if (!rule || rule.builtIn === true || rule.custom === false) continue;
+      if (!rule) continue;
       const code = String(rule.reasonCode || customRuleReasonCode(rule.id)).trim();
       const textValue = customRuleReasonText(rule);
       if (code && textValue) push(code, textValue, 'customRule');
     }
     return entries;
+  }
+
+  /* Kural bazında sayım: hangi kural kaç siparişi yükseltiyor. */
+  function ruleReasonCounts(model) {
+    const counts = new Map();
+    for (const item of (model && model.orders) || []) {
+      for (const entry of attentionReasonEntries(item)) {
+        const current = counts.get(entry.code) || { name: entry.code, label: entry.text, count: 0 };
+        current.count += 1;
+        counts.set(entry.code, current);
+      }
+    }
+    return [...counts.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
   }
 
   function attentionWarningKeys(item) {
@@ -900,7 +1009,8 @@
     }
     container.innerHTML = toolbarHtml() + `<div class="cpaChecklistOverview">${checklistCard()}</div>`;
     if (coverage) coverage.innerHTML = coverageCard();
-    window.BLOverviewPremium?.update?.({model:state.model,checklist:state.checklist});
+    // Öncelik yalnız kurallardan gelir; özet kural yoksa bunu açıkça söyler.
+    window.BLOverviewPremium?.update?.({model:state.model,checklist:state.checklist,priorityRules:state.rules.filter(rule=>rule.kind==='priority'&&rule.enabled!==false).length});
     bind(container);
     if (attention) bind(attention);
     if (coverage) bind(coverage);
@@ -1628,15 +1738,20 @@
 
   function automateFromReason(reason) {
     if (!reason) return;
+    const label = attentionWarningLabel(reason);
+    // Kural sebebi sunucu alanında kuralın TR sebep metniyle yazılır
+    // (server/lib/cp-automation.js); filtre aynı metni arar.
+    const rule = reason.startsWith('CUSTOM_RULE:') ? state.rules.find(item => item && item.id === reason.slice('CUSTOM_RULE:'.length)) : null;
+    const value = rule ? (String(rule.reasonTr || '').trim() || String(rule.name || '').trim() || label) : (Engine.RISK_REASON_LABELS.tr[reason] || reason);
     openAutomation({
       source: 'cp',
-      name: `CP · ${reasonLabel(reason)}`,
-      description: L(`CP Overview'daki "${reasonLabel(reason)}" risk sebebinden oluşturuldu.`,
-        `Created from the "${reasonLabel(reason)}" risk reason on the CP Overview.`),
+      name: `CP · ${label}`,
+      description: L(`CP Overview'daki "${label}" sebebinden oluşturuldu.`,
+        `Created from the "${label}" reason on the CP Overview.`),
       // Sebepler tek alanda " · " ile birleştiriliyor; bu yüzden "içerir".
-      filters: [{ field: AUTOMATION_FIELDS.riskReasons, operator: 'contains', value: Engine.RISK_REASON_LABELS.tr[reason] || reason }],
+      filters: [{ field: AUTOMATION_FIELDS.riskReasons, operator: 'contains', value }],
       recipientField: 'Manufacturer',
-      subject: reasonLabel(reason),
+      subject: label,
       reportFields: ['Order Code', 'Model Name', 'Ex-factory', 'Order Quantity', AUTOMATION_FIELDS.daysToLoad, AUTOMATION_FIELDS.riskReasons],
       backlog: { targetType: state.settings.targetType },
     });
@@ -2261,19 +2376,31 @@
       cycle.length ? `<p class="cpaRuleWarn">${esc(L(`Döngüsel bağlantı: ${ruleNames(cycle)} bu kurala geri bağlı. Döngüdeki koşul sağlanmaz sayılır.`, `Circular link: ${ruleNames(cycle)} points back to this rule. The looped condition is treated as not matching.`))}</p>` : '',
       dependents.length ? `<p class="cpaNote cpaRuleUsedBy">${esc(L(`Şu kuralların koşulunda kullanılıyor: ${ruleNames(dependents)}`, `Used as a condition in: ${ruleNames(dependents)}`))}</p>` : '',
     ].join('');
+    const readOnly = rule.managed === true && !isModerator();
     const body = isOpen ? `<div class="cpaRuleBody" id="cpa-rule-body-${esc(rule.id)}">
+        ${readOnly ? `<p class="cpaNote cpaRuleManagedNote">${esc(L('Bu kural Moderatör tarafından tüm kullanıcılara uygulanır; yalnız Moderatör değiştirebilir.', 'The Moderator applies this rule to all users; only the Moderator can change it.'))}</p>` : ''}
+        <fieldset class="cpaRuleFieldset"${readOnly ? ' disabled' : ''}>
         <div class="cpaRuleHead">${editorFields}</div>
         ${reasonFields}
         ${automaticStatusFields}
         ${modeEditor}
         <div class="cpaRuleModePanel" id="cpa-rule-mode-panel-${esc(rule.id)}" role="tabpanel" aria-labelledby="cpa-rule-mode-${uiMode}-${esc(rule.id)}" tabindex="0">${panel}</div>
+        </fieldset>
         <div class="cpaRulePreview" data-cpa-rule-preview aria-live="polite">${previewHtml(rule)}</div>
         ${warnings}
       </div>` : '';
+    const moderator = isModerator();
+    const managedBadge = rule.managed === true
+      ? `<span class="cpaBuiltIn cpaManagedBadge" title="${esc(L('Moderatör tüm kullanıcılara uyguluyor', 'Applied to all users by the Moderator'))}">${esc(L('Tüm kullanıcılar', 'All users'))}</span>` : '';
+    const moderatorActions = moderator
+      ? (rule.managed === true
+        ? `<button type="button" class="cpaBtn sm" data-cpa-rule-unpublish title="${esc(L('Yayını durdur; kullanıcıların kendi kopyaları korunur', 'Stop publishing; users keep their own copies'))}">${esc(L('Yayından kaldır', 'Unpublish'))}</button>`
+        : `<button type="button" class="cpaBtn sm" data-cpa-rule-publish title="${esc(L('Bu kuralı tüm kullanıcılara uygula', 'Apply this rule to all users'))}">${esc(L('Tüm kullanıcılara uygula', 'Apply to all users'))}</button>`)
+      : '';
     return `<div class="cpaRule${isOpen ? ' is-open' : ''}${rule.enabled ? '' : ' is-disabled'}" data-cpa-rule="${esc(rule.id)}">
       <header class="cpaRuleBar">
         <label class="cpaSwitch" title="${esc(L('Kuralı aç / kapat', 'Enable / disable rule'))}">
-          <input type="checkbox" data-cpa-rule-enabled ${rule.enabled ? 'checked' : ''} aria-label="${esc(L('Kuralı etkinleştir', 'Enable rule'))}">
+          <input type="checkbox" data-cpa-rule-enabled ${rule.enabled ? 'checked' : ''}${readOnly ? ' disabled' : ''} aria-label="${esc(L('Kuralı etkinleştir', 'Enable rule'))}">
           <span class="cpaSwitchTrack" aria-hidden="true"><span></span></span>
         </label>
         <button type="button" class="cpaRuleSummary" data-cpa-rule-toggle aria-expanded="${isOpen ? 'true' : 'false'}" aria-controls="cpa-rule-body-${esc(rule.id)}">
@@ -2285,8 +2412,9 @@
           ${dangling.length ? `<span class="cpaPill tone-red" title="${esc(L('Silinmiş bir başlığa bağlı koşul var', 'A condition refers to a deleted item'))}">⚠ ${esc(L('Eksik bağlantı', 'Missing link'))}</span>` : ''}
           ${dependents.length ? `<span class="cpaUsedBy" title="${esc(L(`Kullanan: ${ruleNames(dependents)}`, `Used by: ${ruleNames(dependents)}`))}">${esc(L(`${dependents.length} kuralda kullanılıyor`, `Used in ${dependents.length}`))}</span>` : ''}
           ${rule.builtIn ? `<span class="cpaBuiltIn">${esc(L('Yerleşik', 'Built-in'))}</span>` : ''}
-          <button type="button" class="cpaIconBtn" data-cpa-rule-edit title="${esc(L('Kuralı düzenle', 'Edit rule'))}" aria-label="${esc(L('Kuralı düzenle', 'Edit rule'))}"><svg class="ic"><use href="#i-pencil"/></svg></button>
-          <button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Kuralı sil', 'Delete rule'))}" aria-label="${esc(L('Kuralı sil', 'Delete rule'))}"><svg class="ic"><use href="#i-trash"/></svg></button>
+          ${managedBadge}${moderatorActions}
+          ${readOnly ? '' : `<button type="button" class="cpaIconBtn" data-cpa-rule-edit title="${esc(L('Kuralı düzenle', 'Edit rule'))}" aria-label="${esc(L('Kuralı düzenle', 'Edit rule'))}"><svg class="ic"><use href="#i-pencil"/></svg></button>
+          <button type="button" class="cpaIconBtn cpaDangerIcon" data-cpa-rule-delete title="${esc(L('Kuralı sil', 'Delete rule'))}" aria-label="${esc(L('Kuralı sil', 'Delete rule'))}"><svg class="ic"><use href="#i-trash"/></svg></button>`}
           <button type="button" class="cpaRuleChevron" data-cpa-rule-toggle aria-label="${esc(isOpen ? L('Kuralı daralt', 'Collapse rule') : L('Kuralı genişlet', 'Expand rule'))}" aria-expanded="${isOpen ? 'true' : 'false'}"><svg class="ic"><use href="#i-chevron-down"/></svg></button>
         </div>
       </header>
@@ -2430,6 +2558,22 @@
       if (focus && !focus.value) focus.focus();
     });
 
+    /* Moderatör: tüm kullanıcılardan silinen kimlikler ve geri alma. */
+    const managedStrip = ruleKind => {
+      if (!isModerator()) return '';
+      const known = new Map(Rules.DEFAULT_RULES.map(rule => [rule.id, rule]));
+      const removed = state.managed.deletedRuleIds.filter(id => {
+        const rule = known.get(id) || state.shadowedPersonal.find(item => item.id === id);
+        return !rule || rule.kind === ruleKind;
+      });
+      const published = state.rules.filter(rule => rule.kind === ruleKind && rule.managed === true).length;
+      return `<div class="cpaManagedStrip"><span class="cpaNote">${esc(L(`Moderatör yayını: ${published} kural tüm kullanıcılara uygulanıyor. Yayın Master kural sürümüyle dağılır; kullanıcıların kendi kurallarına dokunulmaz.`, `Moderator publication: ${published} rules apply to all users. It is distributed with the Master rule release; users' own rules are not touched.`))}</span>
+        ${removed.length ? `<div class="cpaManagedRemoved"><b>${esc(L('Tüm kullanıcılardan silinenler', 'Deleted for all users'))}</b>${removed.map(id => {
+          const rule = known.get(id);
+          const label = rule ? (isEn() ? rule.nameEn || rule.name : rule.name) : id;
+          return `<span class="cpaManagedRemovedItem"><span>${esc(label)}</span><button type="button" class="cpaBtn sm" data-cpa-managed-restore="${esc(id)}">${esc(L('Geri al', 'Undo'))}</button></span>`;
+        }).join('')}</div>` : ''}</div>`;
+    };
     const templateStrip = () => `<div class="cpaTemplateStrip" role="group" aria-label="${esc(L('Şablondan başla', 'Start from a template'))}">
         <span class="cpaTemplateTitle">${esc(L('Nereden başlayalım?', 'How do you want to start?'))}</span>
         ${ruleTemplates(activeTab).map(template => `<button type="button" class="cpaTemplate" data-cpa-template="${esc(template.id)}"><b>${esc(template.title)}</b><small>${esc(template.hint)}</small></button>`).join('')}
@@ -2472,11 +2616,17 @@
             </div>
           </div>
           ${showTemplates ? templateStrip() : ''}
+          ${managedStrip(activeTab)}
           <div class="cpaRuleList" id="cpaRulesPanel" tabindex="0">${visible.length ? visible.map(rule => ruleBlock(rule, view)).join('') : empty}</div>
         </div>
-        <footer><span class="cpaRulesCount">${esc(isChecklist
-          ? L(`${visible.length} checklist sorusu · kişisel; Ön Ayar Paylaşımı ile paylaşılabilir`, `${visible.length} checklist questions · personal; shareable with Preset Sharing`)
-          : L(`${visible.length} öncelik kuralı · kişisel; Ön Ayar Paylaşımı ile paylaşılabilir`, `${visible.length} priority rules · personal; shareable with Preset Sharing`))}</span><button type="button" class="cpaBtn" data-cpa-close>${esc(L('Kapat', 'Close'))}</button></footer></div>`;
+        <footer><span class="cpaRulesCount">${esc((() => {
+          const shared = visible.filter(rule => rule.managed === true).length, own = visible.length - shared;
+          const sharedText = shared ? L(` · ${shared} Moderatör tarafından tüm kullanıcılara`, ` · ${shared} applied to all users by the Moderator`) : '';
+          return (isChecklist
+            ? L(`${own} kişisel checklist sorusu`, `${own} personal checklist questions`)
+            : L(`${own} kişisel öncelik kuralı`, `${own} personal priority rules`))
+            + sharedText + L(' · Ön Ayar Paylaşımı ile paylaşılabilir', ' · shareable with Preset Sharing');
+        })())}</span><button type="button" class="cpaBtn" data-cpa-close>${esc(L('Kapat', 'Close'))}</button></footer></div>`;
       bindRules();
       const openRow = expandedRuleId && modal.querySelector(`[data-cpa-rule="${CSS.escape(expandedRuleId)}"]`);
       const openRule = expandedRuleId && findRule(expandedRuleId);
@@ -2500,6 +2650,7 @@
     const commit = () => {
       state.rules.forEach(syncBasicFormula);
       savePrefs(); recompute(); refreshFieldCatalog();
+      scheduleManagedSync();
       refreshPreview();
     };
     function createRule(template) {
@@ -2822,10 +2973,30 @@
         rule.evidenceFields = { ...(rule.evidenceFields || {}), [el.dataset.cpaRuleEvidence]: Boolean(el.checked) };
         commit();
       });
+      modal.querySelectorAll('[data-cpa-rule-publish]').forEach(el => el.onclick = () => {
+        const rule = findRule(ruleIdOf(el));
+        if (!rule) return;
+        if (!confirm(L(`"${ruleName(rule)}" tüm kullanıcılara uygulansın mı? Kullanıcıların kendi kuralları değişmez.`, `Apply "${ruleName(rule)}" to all users? Users' own rules stay unchanged.`))) return;
+        publishRuleToAll(rule).catch(error => { if (typeof showToast === 'function') showToast(error.message); });
+      });
+      modal.querySelectorAll('[data-cpa-rule-unpublish]').forEach(el => el.onclick = () => {
+        const rule = findRule(ruleIdOf(el));
+        if (!rule) return;
+        unpublishRule(rule.id).catch(error => { if (typeof showToast === 'function') showToast(error.message); });
+      });
+      modal.querySelectorAll('[data-cpa-managed-restore]').forEach(el => el.onclick = () => {
+        restoreRuleForAll(el.dataset.cpaManagedRestore).catch(error => { if (typeof showToast === 'function') showToast(error.message); });
+      });
       modal.querySelectorAll('[data-cpa-rule-delete]').forEach(el => el.onclick = () => {
         const rule = findRule(ruleIdOf(el));
         if (!rule) return;
         if (!confirmDelete(rule)) return;
+        /* Moderatör: yayımlanmış kural ya da aynı kimlik başka kullanıcılarda
+           (yerleşik / paylaşılmış) varsa silme tüm kullanıcılara da uygulanabilir. */
+        if (isModerator() && (rule.managed === true || confirm(L('Bu kural tüm kullanıcılardan da silinsin mi? (Kullanıcıların kendi oluşturduğu kurallar etkilenmez.)', 'Also delete this rule for all users? (Rules that users created themselves are not affected.)')))) {
+          deleteRuleForAll(rule.id).catch(error => { if (typeof showToast === 'function') showToast(error.message); });
+          if (rule.managed === true) return;
+        }
         if (rule.builtIn && !state.deletedRuleIds.includes(rule.id)) state.deletedRuleIds.push(rule.id);
         state.rules = state.rules.filter(item => item.id !== rule.id);
         newPriorityRuleIds.delete(rule.id);
@@ -3223,10 +3394,12 @@
       document.removeEventListener('keydown', onValueEscape, true);
       window.removeEventListener('resize', onValueViewportChange);
       modal.remove();
+      if (managedRulesRedraw === draw) managedRulesRedraw = null;
       recompute();
       render();
     }
     document.body.appendChild(modal);
+    managedRulesRedraw = draw;
     document.addEventListener('pointerdown', onValueOutsidePointer, true);
     document.addEventListener('scroll', onValueViewportChange, true);
     document.addEventListener('keydown', onValueEscape, true);
@@ -3291,7 +3464,7 @@
   }
   const decisionRuntime = window.BLCpDecisionRuntime.create({
     contextKey:decisionCacheKey, analyzeRow:Engine.analyzeOrder, summarize:Engine.summarizeAnalyses,
-    workerFactory:typeof window.Worker==='function' ? ()=>new window.Worker('/cp-decision-worker.js?rev=worker272') : null,
+    workerFactory:typeof window.Worker==='function' ? ()=>new window.Worker('/cp-decision-worker.js?rev=worker290') : null,
   });
   const personalEvaluations = new WeakMap();
   async function analyzeRowsWithPersonalRulesAsync(rows, options = {}) {
@@ -3415,7 +3588,8 @@
         target: rule.target,
         builtIn: rule.builtIn === true,
         custom: rule.builtIn !== true,
-        reasonCode: rule.builtIn === true ? '' : customRuleReasonCode(rule.id),
+        managed: rule.managed === true,
+        reasonCode: customRuleReasonCode(rule.id),
         reasonTr: String(rule.reasonTr || ''),
         reasonEn: String(rule.reasonEn || ''),
         reason: customRuleReasonText(rule),
@@ -3528,6 +3702,7 @@
   }
   if (unreadablePreferenceStores.size && typeof showToast === 'function') showToast(L('Checklist ayar/kural kaydı okunamadı. Mevcut kayıt korundu; kurtarılana kadar ayar değişikliği kaydedilemez.', 'A Checklist settings/rules record could not be read. It was preserved; recover it before saving settings changes.'));
   state.moduleLayout = normalizeModuleLayouts(state.moduleLayout);
+  void loadManagedRules();
   /* PLM numune verisi gelince karar bağlamı değişir: kontrol listesi ve
      CP öncelik hücreleri aynı olayla yeniden hesaplanır. */
   function onPlmSampleRequestsChanged() {

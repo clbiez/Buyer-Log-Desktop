@@ -189,16 +189,75 @@
     });
     return [...map.values()];
   }
+  /* Buyer yolu: elle değiştirilen/eklenen hedef ya da AI önerisi olmayan kayıt. */
+  function aiReady() { return ui.ai.state === 'done' && Boolean(ui.ai.packet) && !ui.ai.cpChanged; }
+  function isBuyerEntry(entry) { return Boolean(entry && (entry.manualMatch || !aiReady() || !reviewFor(entry))); }
+  function partsOf(entry) {
+    const analysis = entry && analysisFor(rowFor(entry)), s = assistantState();
+    return analysis ? Checklist().componentsFor(analysis, { answers: s && s.answers }) : [];
+  }
+  /* Takım siparişinde aynı rapor birden çok set parçasına yazılabilir: her
+     ek parça ayrı bir önizleme satırıdır (kendi durumu ve doğrulaması). */
+  function partPicker(entry) {
+    const C = Checklist().Components, parsed = C.parseItem(entry.itemId);
+    if (!parsed || entry.partOf || entry.ignored) return '';
+    const parts = partsOf(entry);
+    if (parts.length < 2) return '';
+    const siblings = ui.entries.filter(function (e) { return e.partOf === entry.id; });
+    const chosen = new Set([parsed.partId].concat(siblings.map(function (e) { return (C.parseItem(e.itemId) || {}).partId; })));
+    return '<div class="trParts"><small>' + html(T('Set parçaları (birden çok seçilebilir)', 'Set parts (select several)')) + '</small>'
+      + parts.map(function (part) {
+        return '<label class="trInline"><input type="checkbox" data-tr-part="' + entry.id + '" value="' + html(part.id) + '"' + (chosen.has(part.id) ? ' checked' : '') + (part.id === parsed.partId ? ' disabled' : '') + '> ' + html(part.label) + '</label>';
+      }).join('') + '</div>';
+  }
+  function togglePart(entry, partId, on) {
+    const C = Checklist().Components, parsed = C.parseItem(entry.itemId);
+    if (!parsed) return;
+    const itemId = C.itemId(parsed.baseId, partId);
+    const existing = ui.entries.find(function (e) { return e.partOf === entry.id && e.itemId === itemId; });
+    if (!on) { if (existing) ui.entries = ui.entries.filter(function (e) { return e !== existing; }); return; }
+    if (existing) return;
+    const p = plan(entry);
+    const extra = Object.assign({}, entry, {
+      id: 'r' + (ui.seq++), partOf: entry.id, itemId: itemId, manualAdded: true, include: false,
+      manualMatch: { buyer: true, fromOrderKey: entry.chosen, fromItemId: entry.itemId },
+      originReview: entry.originReview || (aiReady() ? reviewFor(entry) : null) || null,
+      reviewVerified: false, status: chosenStatus(entry) || p.next || '', override: false,
+    });
+    const siblings = ui.entries.filter(function (e) { return e === entry || e.partOf === entry.id; });
+    ui.entries.splice(ui.entries.indexOf(siblings[siblings.length - 1]) + 1, 0, extra);
+  }
+  function dropParts(entry) { ui.entries = ui.entries.filter(function (e) { return e.partOf !== entry.id; }); }
+  /* Bileşen (Main Fabric / Neck RIB …): boşsa sonuç tek bileşenli yazılır. */
+  function elementCell(entry) {
+    if (entry.ignored || !entry.itemId || !entry.chosen) return '';
+    const analysis = analysisFor(rowFor(entry)), s = assistantState();
+    const answer = analysis && s && s.answers ? s.answers[answerKey(analysis.orderKey, entry.itemId)] : null;
+    const names = new Set();
+    (answer && answer.elements || []).forEach(function (e) { names.add(e.name); });
+    const review = aiReady() ? reviewFor(entry) : null;
+    if (review && review.component) names.add(text(review.component).slice(0, 60));
+    (Checklist().Components.ELEMENT_SUGGESTIONS || []).forEach(function (e) { names.add(isEn() ? e.en : e.tr); });
+    const listId = '_trElements_' + entry.id;
+    return '<label class="trInline trElementPick"><span>' + html(T('Bileşen (isteğe bağlı)', 'Component (optional)')) + '</span>'
+      + '<input type="text" maxlength="60" list="' + listId + '" data-tr-element="' + entry.id + '" value="' + html(entry.element || '') + '" placeholder="' + html(T('Tek bileşen', 'Single component')) + '"></label>'
+      + '<datalist id="' + listId + '">' + [...names].filter(Boolean).map(function (n) { return '<option value="' + html(n) + '"></option>'; }).join('') + '</datalist>';
+  }
   function plan(entry) {
     const out = { ready: false, reason: '', current: 'open', next: '', suggested: null, manual: '', userOwned: false, notAsked: false, step: null, skippedDecisions: 0 };
     const existing = assistantState() && assistantState().answers && assistantState().answers[answerKey(entry.chosen, entry.itemId)];
     out.current = existing ? Checklist().normalizeStatus(existing.state) || 'open' : 'open';
-    if (ui.ai.state !== 'done' || !ui.ai.packet) { out.reason = T('LCW AI incelemesi tamamlanmalı.', 'LCW AI review must complete.'); return out; }
+    /* v7.0.290 — Elle eşleşme LCW AI'dan bağımsızdır. AI incelemesi yoksa,
+       tamamlanmadıysa ya da bu rapor/sipariş için öneri vermediyse buyer
+       kapsamı kendisi doğrular ve durumu kendisi seçer (buyer yolu). */
+    // Önceki bir AI incelemesinden sonra CP değiştiyse hiçbir yol eski bağlamla yazmaz.
     if (ui.ai.cpChanged) { out.reason = T('CP veya checklist değişti; yeniden analiz edin.', 'CP or checklist changed; analyse again.'); return out; }
-    const review = reviewFor(entry);
-    if (!review) { out.reason = T('Bu sipariş ve rapor için kanıtlı öneri yok.', 'No source-grounded proposal for this order and report.'); return out; }
-    if ((review.blocked || entry.manualMatch) && !entry.reviewVerified) { out.reason = T('Kaynağı ve bileşen/sipariş kapsamını doğrulayın.', 'Verify the source and component/order scope.'); return out; }
-    if (!entry.manualMatch && review.step && entry.itemId !== review.step) { out.reason = T('Checklist adımı incelemedeki kapsamla uyuşmuyor.', 'The checklist step differs from the reviewed scope.'); return out; }
+    const buyer = isBuyerEntry(entry);
+    const review = buyer ? (entry.originReview || null) : reviewFor(entry);
+    out.buyer = buyer;
+    if (buyer && !entry.reviewVerified) { out.reason = T('Kaynağı ve bu siparişin bileşen/test kapsamını doğrulayın (elle eşleşme).', 'Verify the source and this order’s component/test scope (manual match).'); return out; }
+    if (!buyer && review.blocked && !entry.reviewVerified) { out.reason = T('Kaynağı ve bileşen/sipariş kapsamını doğrulayın.', 'Verify the source and component/order scope.'); return out; }
+    if (!buyer && review.step && entry.itemId !== review.step && !entry.partOf) { out.reason = T('Checklist adımı incelemedeki kapsamla uyuşmuyor.', 'The checklist step differs from the reviewed scope.'); return out; }
     const store = ui.store || { reports: {} };
     const stored = entry.report.talepNo ? store.reports[entry.report.talepNo] : null;
     if (stored) {
@@ -212,7 +271,7 @@
     if (row._canEdit === false) { out.reason = T('Bu satır için düzenleme yetkiniz yok.', 'You do not have edit access to this row.'); return out; }
     if (!entry.itemId) { out.reason = T('Checklist adımı seçin.', 'Choose a checklist step.'); return out; }
     const baseItem = (Checklist().Components.parseItem(entry.itemId) || {}).baseId || entry.itemId;
-    if (!catalog().some(function (item) { return item.id === baseItem; }) || (review.status && !statusIdList().includes(review.status))) { out.reason = T('Checklist tanımları değişti; verileri yenileyip yeniden analiz edin.', 'Checklist definitions changed; refresh data and analyse again.'); return out; }
+    if (!catalog().some(function (item) { return item.id === baseItem; }) || (review && review.status && !statusIdList().includes(review.status))) { out.reason = T('Checklist tanımları değişti; verileri yenileyip yeniden analiz edin.', 'Checklist definitions changed; refresh data and analyse again.'); return out; }
     const analysis = analysisFor(row);
     if (!analysis) { out.reason = T('Sipariş checklist için okunamadı.', 'The order could not be read for the checklist.'); return out; }
     const s = assistantState();
@@ -231,9 +290,9 @@
     const reports = groupReports(entry.chosen, entry.itemId);
     out.step = E().deriveStepStatus(reports);
     // Analiz sonucu kullanıcı tanımlı duruma eşleşebilir (ör. Lack of Sample).
-    out.suggested = { status: entry.manualMatch ? '' : review.status || '' };
+    out.suggested = { status: buyer ? '' : review.status || '' };
     out.manual = chosenStatus(entry);
-    if ((review.blocked || entry.manualMatch) && !out.manual) { out.reason = T('Doğruladığınız kapsam için hedef durumu elle seçin.', 'Choose the target status for the scope you verified.'); out.ready = true; return out; }
+    if ((buyer || review.blocked) && !out.manual) { out.reason = T('Doğruladığınız kapsam için hedef durumu elle seçin.', 'Choose the target status for the scope you verified.'); out.ready = true; return out; }
     if (!out.manual && !out.suggested.status) { out.reason = T('Kanıt kesin bir durum önermiyor; hedef durumu seçin.', 'The evidence has no definite status proposal; choose a target status.'); out.ready = true; return out; }
     out.next = out.manual || (out.userOwned && !entry.override ? current : (out.suggested.status || current));
     out.notAsked = Array.isArray(analysis.checklistItemIds) && analysis.checklistItemIds.indexOf(part ? part.baseId : entry.itemId) < 0;
@@ -305,8 +364,8 @@
   }
   function rowCell(entry) {
     const row = rowFor(entry), label = row ? html(rowLabel(row)) : '<span class="trMuted">' + html(T('PO seçilmedi', 'No PO selected')) + '</span>';
-    if (ui.ai.state !== 'done') return label;
-    return label + '<details' + (entry.manualMatch || !entry.chosen ? ' open' : '') + '><summary>' + html(T('Eşleşmeyi değiştir', 'Change match')) + '</summary>'
+    if (entry.partOf) return label + '<small>' + html(T('Ek set parçası · ', 'Extra set part · ') + itemLabel(entry.itemId)) + '</small>';
+    return label + '<details' + (entry.manualMatch || !entry.chosen ? ' open' : '') + '><summary>' + html(entry.chosen ? T('Eşleşmeyi değiştir', 'Change match') : T('Elle eşleştir', 'Match manually')) + '</summary>'
       + '<label><small>' + html(T('CP’de PO / model ara', 'Search CP by PO / model')) + '</small><input type="search" data-tr-search="' + entry.id + '" value="' + html(entry.matchQuery || '') + '"></label>'
       + '<select data-tr-row="' + entry.id + '" aria-label="' + html(T('Hedef PO / CP satırı', 'Target PO / CP row')) + '">' + matchOptions(entry) + '</select></details>'
       + '<button type="button" class="cpaBtn sm" data-tr-add-po="' + entry.id + '">' + html(T('+ İlave PO', '+ Add PO')) + '</button>'
@@ -324,20 +383,23 @@
       + (matches.length > 100 ? '<option disabled>' + html(T('İlk 100 sonuç · PO yazarak daraltın', 'First 100 results · type a PO to narrow')) + '</option>' : '');
   }
   function changeMatch(entry, orderKey) {
-    const origin = reviewFor(entry);
-    if (!origin || ui.ai.state !== 'done') return;
-    entry.originReview = entry.originReview || origin;
+    const origin = entry.originReview || (aiReady() ? reviewFor(entry) : null);
+    entry.originReview = origin || null;
+    dropParts(entry);
+    const previousItem = entry.itemId;
     entry.chosen = orderKey;
-    entry.manualMatch = { fromOrderKey: entry.originReview.orderKey, fromItemId: entry.originReview.step };
-    entry.itemId = '';
+    // v7.0.290 — Buyer eşleşmesi: AI incelemesi olmasa da çalışır; köken (varsa) denetim izine yazılır.
+    entry.manualMatch = { buyer: true, fromOrderKey: origin ? origin.orderKey : '', fromItemId: origin ? origin.step : '' };
+    // Aynı adım yeni siparişte de geçerliyse korunur; set parçası ise yeniden seçilir.
+    entry.itemId = previousItem && !Checklist().Components.parseItem(previousItem) ? previousItem : '';
     entry.include = false; entry.reviewVerified = false; entry.status = ''; entry.override = false; entry.ignored = false;
   }
   function addPo(entry) {
-    const origin = reviewFor(entry);
-    if (!origin || ui.ai.state !== 'done') return;
-    const extra = Object.assign({}, entry, { id: 'r' + (ui.seq++), manualAdded: true, originReview: entry.originReview || origin, matchQuery: '' });
+    const origin = entry.originReview || (aiReady() ? reviewFor(entry) : null);
+    const extra = Object.assign({}, entry, { id: 'r' + (ui.seq++), manualAdded: true, partOf: '', originReview: origin || null, matchQuery: '' });
     changeMatch(extra, '');
-    ui.entries.splice(ui.entries.indexOf(entry) + 1, 0, extra);
+    const siblings = ui.entries.filter(function (e) { return e === entry || e.partOf === entry.id; });
+    ui.entries.splice(ui.entries.indexOf(siblings[siblings.length - 1]) + 1, 0, extra);
   }
   function itemOptions(selected, entry) {
     const analysis = entry && analysisFor(rowFor(entry)), s = assistantState();
@@ -347,13 +409,19 @@
       + items.map(function (item) { return '<option value="' + html(item.id) + '"' + (item.id === selected ? ' selected' : '') + '>' + html(isEn() ? item.en : item.tr) + '</option>'; }).join('')
       + '<option value="' + NEW_ITEM + '">' + html(T('+ Yeni checklist adımı oluştur…', '+ Create a new checklist step…')) + '</option>';
   }
+  function buyerVerifyHtml(entry) {
+    if (!isBuyerEntry(entry) || !entry.chosen || entry.ignored) return '';
+    return '<label class="trInline trVerify"><input type="checkbox" data-tr-verify="' + entry.id + '"' + (entry.reviewVerified ? ' checked' : '') + '> '
+      + html(T('Elle eşleşme: orijinal kaynağı ve bu siparişin bileşen/test kapsamını doğruladım', 'Manual match: I verified the original source and this order’s component/test scope')) + '</label>';
+  }
   function changeCell(entry, p) {
-    if (!p.ready) return (entry.itemId && entry.chosen ? '<small>' + html(T('Mevcut durum: ', 'Current status: ')) + statusHtml(p.current) + '</small>' : '') + '<span class="trMuted">' + html(p.reason) + '</span>';
-    let out = statusHtml(p.current) + ' → ' + statusHtml(p.next);
+    const extras = buyerVerifyHtml(entry) + elementCell(entry);
+    if (!p.ready) return (entry.itemId && entry.chosen ? '<small>' + html(T('Mevcut durum: ', 'Current status: ')) + statusHtml(p.current) + '</small>' : '') + '<span class="trMuted">' + html(p.reason) + '</span>' + extras;
+    let out = statusHtml(p.current) + ' → ' + statusHtml(p.next) + (entry.element ? '<small>' + html(T('Bileşen: ', 'Component: ') + entry.element) + '</small>' : '');
     // Hedef durum dinamik: otomatik (analiz) ya da kullanıcı tanımlı durumlar dâhil elle seçim.
     const auto = p.userOwned && !entry.override ? p.current : (p.suggested && p.suggested.status || p.current);
     out += '<label class="trInline trStatusPick"><span>' + html(T('Checklist durumu', 'Checklist status')) + '</span><select data-tr-status="' + entry.id + '">'
-      + '<option value="">' + html(entry.manualMatch ? T('Durum seçin…', 'Choose a status…') : T('Otomatik: ', 'Automatic: ') + statusText(auto)) + '</option>'
+      + '<option value="">' + html(p.buyer ? T('Durum seçin…', 'Choose a status…') : T('Otomatik: ', 'Automatic: ') + statusText(auto)) + '</option>'
       + statusIdList().map(function (id) { return '<option value="' + html(id) + '"' + (id === p.manual ? ' selected' : '') + (isCustom(id) ? ' data-no-i18n' : '') + '>' + html(statusText(id)) + '</option>'; }).join('')
       + '</select></label>';
     if (!p.manual && p.suggested && p.suggested.custom && !(p.userOwned && !entry.override)) {
@@ -367,7 +435,7 @@
     if (p.step && p.step.outcomes.length > 1) out += '<small>' + html(T('Satırdaki ' + p.step.outcomes.length + ' rapordan türetildi.', 'Derived from ' + p.step.outcomes.length + ' reports on the row.')) + '</small>';
     if (p.step && p.step.superseded.length) out += '<small>' + html(T('Tekrar testle geçersiz: ', 'Replaced by retest: ') + p.step.superseded.join(', ')) + '</small>';
     if (p.notAsked) out += '<small>' + html(T('Bu adım bu siparişte şu an sorulmuyor; durum saklanır ve soru geldiğinde görünür.', 'This step is not asked for this order yet; the status is stored and shows once it is asked.')) + '</small>';
-    return out;
+    return out + extras;
   }
   function warningsCell(entry, p) {
     const list = (entry.report.uyarilar || []).filter(function (w) { return !reviewFor(entry) || !['aiNote', 'aiExtracted'].includes(w.code); }).map(function (w) { return E().warningText(w, lang()); });
@@ -380,7 +448,7 @@
   }
   /* LCW AI yönlendirmesi: özet, yapılacak işler, riskler, önerilen adım. */
   function aiReviewHtml(entry) {
-    const review = entry.report.talepNo ? reviewFor(entry) : null;
+    const review = entry.report.talepNo ? (entry.manualMatch ? entry.originReview : (aiReady() ? reviewFor(entry) : null)) : null;
     if (!review) return '';
     let out = '<div class="trAi"><b>' + html(T('LCW AI önerisi', 'LCW AI suggestion')) + '</b>';
     if (entry.manualMatch) out += '<small><b>' + html(T('Elle seçilen PO · kapsam kullanıcı tarafından doğrulanmalı.', 'Manually selected PO · the buyer must verify scope.')) + '</b></small><small>' + html(T('Aşağıdaki AI incelemesinin asıl PO’su: ', 'Original PO of the AI review below: ') + (review.orderCode || '—')) + '</small>';
@@ -392,7 +460,7 @@
       const link = source && source.fileId ? '<a target="_blank" rel="noopener" href="' + API + '/staged/' + encodeURIComponent(ui.session) + '/' + encodeURIComponent(source.fileId) + '">' + html(T('Orijinali aç', 'Open original')) + '</a>' : '';
       return '<small><b>' + html((source && source.name || ref.sourceId) + ' · ' + T('Sayfa ', 'Page ') + ref.page) + '</b> · ' + html(ref.quote) + ' ' + link + '</small>';
     }).join('') + '</details>';
-    if (review.blocked || entry.manualMatch) out += '<label class="trInline"><input type="checkbox" data-tr-verify="' + entry.id + '"' + (entry.reviewVerified ? ' checked' : '') + '> ' + html(T('Orijinal kaynağı ve bu siparişin bileşen/test kapsamını doğruladım', 'I verified the original source and this order’s component/test scope')) + '</label>';
+    if (review.blocked && !isBuyerEntry(entry)) out += '<label class="trInline"><input type="checkbox" data-tr-verify="' + entry.id + '"' + (entry.reviewVerified ? ' checked' : '') + '> ' + html(T('Orijinal kaynağı ve bu siparişin bileşen/test kapsamını doğruladım', 'I verified the original source and this order’s component/test scope')) + '</label>';
     if (review.actions.length) out += '<small>' + html(T('Yapılacaklar', 'Next steps')) + '</small><ul class="trWarnings">' + review.actions.map(function (a) { return '<li>' + html(a) + '</li>'; }).join('') + '</ul>';
     if (review.risks.length) out += '<small>' + html(T('Riskler', 'Risks')) + '</small><ul class="trWarnings">' + review.risks.map(function (a) { return '<li>' + html(a) + '</li>'; }).join('') + '</ul>';
     if (!entry.manualMatch && review.step && review.step !== entry.itemId) {
@@ -460,15 +528,18 @@
     ];
     return '<div class="trChips">' + chips.map(function (c) { return '<span class="cpaChip is-static' + (c[2] ? ' tone-' + c[2] : '') + '"><span class="n">' + c[1] + '</span><span class="l">' + html(c[0]) + '</span></span>'; }).join('') + '</div>';
   }
+  function elementKeyOf(entry) { return Checklist().Components.elementKey(entry && entry.element || ''); }
   function selectionConflicts(plans) {
     const targets = new Map(), reports = new Set();
     let duplicate = false;
     ui.entries.forEach(function (entry, i) {
       if (!entry.include || !plans[i].ready || !plans[i].next) return;
-      const reportTarget = answerKey(entry.report.talepNo, entry.chosen);
+      const partTarget = Checklist().Components.parseItem(entry.itemId) ? entry.itemId : '';
+      const reportTarget = [entry.report.talepNo, entry.chosen, partTarget].join('::');
       if (reports.has(reportTarget)) duplicate = true;
       reports.add(reportTarget);
-      const key = answerKey(entry.chosen, entry.itemId);
+      // Aynı adımda farklı bileşenler farklı durum alabilir (Ana Kumaş / Yaka Ribanası).
+      const key = answerKey(entry.chosen, entry.itemId) + '::' + elementKeyOf(entry);
       if (!targets.has(key)) targets.set(key, new Set());
       targets.get(key).add(plans[i].next);
     });
@@ -526,7 +597,7 @@
         + '<td>' + resultBadge(r) + '</td>'
         + '<td>' + levelBadge(entry) + '</td>'
         + '<td>' + rowCell(entry) + '</td>'
-        + '<td>' + (entry.ignored ? '<span class="trMuted">—</span>' : '<select data-tr-item="' + entry.id + '">' + itemOptions(entry.itemId, entry) + '</select>') + '</td>'
+        + '<td>' + (entry.ignored ? '<span class="trMuted">—</span>' : (entry.partOf ? '<b>' + html(itemLabel(entry.itemId)) + '</b>' : '<select data-tr-item="' + entry.id + '">' + itemOptions(entry.itemId, entry) + '</select>') + partPicker(entry)) + '</td>'
         + '<td>' + changeCell(entry, p) + '</td>'
         + '<td>' + warningsCell(entry, p) + '<div class="trFiles">' + filesCell(r) + '</div></td></tr>';
     }).join('');
@@ -712,6 +783,11 @@
         entry.scope = { orderCode: review.orderCode, requiresReview: review.scope !== 'verified', confidence: review.scope === 'verified' ? 'labelled' : 'candidate' };
         return entry;
       });
+      // v7.0.290 — AI'ın öneri vermediği raporlar listeden düşmez: buyer onları
+      // elle bir ya da birden çok siparişe bağlayabilir.
+      bases.forEach(function (base) {
+        if (!ui.entries.some(function (entry) { return entry.report.talepNo === base.report.talepNo; })) ui.entries.push(Object.assign({}, base, { include: false }));
+      });
       ui.ai.reviews = Object.fromEntries(accepted.assessment.assessments.map(function (review) { return [Review.keyOf(review), review]; }));
       ui.ai.packet = packet; ui.ai.localSnapshot = localSnapshot;
       packet.sources.forEach(function (source) {
@@ -782,7 +858,7 @@
           talepNo: entry.report.talepNo, orderKey: entry.chosen, itemId: entry.itemId,
           confirmMatch: Boolean(entry.include),
           confirmEvidence: entry.reviewVerified === true,
-          ...(entry.manualMatch ? { manualMatch: entry.manualMatch, targetStatus: chosenStatus(entry) } : {}),
+          ...(isBuyerEntry(entry) ? { manualMatch: Object.assign({ fromOrderKey: entry.chosen, fromItemId: entry.itemId }, entry.manualMatch || {}, { buyer: true }), targetStatus: chosenStatus(entry) } : {}),
           context: {
             orderCode: value(row, ['Order Code']), plmId: value(row, ['PLM ID']), modelName: value(row, ['Model Name']),
             colourCode: value(row, ['C.Code']), checklistName: itemLabel(entry.itemId), checklistStatus: entry.report.talepNo,
@@ -791,13 +867,13 @@
       });
       const typeMap = {};
       chosen.forEach(function (entry) { if (entry.typeKey && ui.newTypeMap[entry.typeKey]) typeMap[entry.typeKey] = (Checklist().Components.parseItem(entry.itemId) || {}).baseId || entry.itemId; });
-      const result = await jsonFetch(API + '/commit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: ui.session, snapshotId: ui.ai.packet.snapshotId, items: items, typeMap: typeMap }) });
+      const result = await jsonFetch(API + '/commit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sessionId: ui.session, snapshotId: ui.ai.packet ? ui.ai.packet.snapshotId : '', items: items, typeMap: typeMap }) });
       ui.store = await jsonFetch(API);
       // Checklist cevabı: satır + adım başına BÜTÜN raporlardan türetilir.
       const groups = new Map();
       chosen.forEach(function (entry, index) {
-        const key = answerKey(entry.chosen, entry.itemId);
-        if (!groups.has(key)) groups.set(key, { entry: entry, plan: plans[ui.entries.indexOf(entry)], attachments: [], manual: '' });
+        const key = answerKey(entry.chosen, entry.itemId) + '::' + elementKeyOf(entry);
+        if (!groups.has(key)) groups.set(key, { entry: entry, plan: plans[ui.entries.indexOf(entry)], attachments: [], manual: '', answerKey: answerKey(entry.chosen, entry.itemId) });
         if (chosenStatus(entry)) groups.get(key).manual = chosenStatus(entry);
         const res = result.results.find(function (r) { return r.talepNo === items[index].talepNo && r.orderKey === items[index].orderKey && r.itemId === items[index].itemId; });
         if (res) groups.get(key).attachments.push.apply(groups.get(key).attachments, res.attachments.map(attachmentMeta));
@@ -813,7 +889,7 @@
           if (E().reportLinks(ui.store.links[talepNo]).some(function (link) { return link.orderKey === entry.chosen && link.itemId === entry.itemId; }) && ui.store.reports[talepNo]) reports.push(ui.store.reports[talepNo]);
         });
         const step = E().deriveStepStatus(reports);
-        const previous = (s && s.answers && s.answers[key]) || {};
+        const previous = (s && s.answers && s.answers[group.answerKey]) || {};
         const attachments = new Map((previous.attachments || []).map(function (a) { return [a.id, a]; }));
         group.attachments.forEach(function (a) { if (attachments.size < MAX_ATTACHMENTS) attachments.set(a.id, a); });
         files += group.attachments.length;
@@ -829,6 +905,12 @@
         // Öncelik: önizlemede elle seçilen durum → kullanıcı girişi → analizden
         // türetilen durum (kullanıcı tanımlı özel durum eşleşmesi dâhil).
         const suggested = { status: group.plan.next };
+        // v7.0.290 — Bileşen seçildiyse sonuç o bileşene yazılır; diğer bileşenler korunur.
+        const element = Checklist().Components.elementName(entry.element || '');
+        if (element) {
+          const elementStatus = group.manual || (userOwned ? group.plan.current : (suggested.status || group.plan.current || 'open'));
+          meta.elements = Checklist().Components.upsertElement(previous.elements, { name: element, state: elementStatus, reportNumber: entry.report.talepNo, at: new Date().toISOString() }, Checklist().normalizeStatus);
+        }
         let saved;
         if (group.manual) { saved = assistant().setChecklistAnswer(analysis, entry.itemId, group.manual, Object.assign(meta, { source: 'test_report' })); }
         else if (userOwned) { saved = assistant().setChecklistAnswer(analysis, entry.itemId, group.plan.current, meta); }
@@ -875,6 +957,8 @@
       if (t.matches('[data-tr-input]')) { handleFiles(t.files); t.value = ''; return; }
       const find = function (id) { return ui.entries.find(function (e) { return e.id === id; }); };
       if (t.dataset.trInclude) { find(t.dataset.trInclude).include = t.checked; render(); return; }
+      if (t.dataset.trPart) { togglePart(find(t.dataset.trPart), t.value, t.checked); render(); return; }
+      if (t.dataset.trElement) { const entry = find(t.dataset.trElement); entry.element = Checklist().Components.elementName(t.value); entry.include = false; render(); return; }
       if (t.dataset.trVerify) { const entry = find(t.dataset.trVerify); entry.reviewVerified = t.checked; entry.include = false; render(); return; }
       if (t.dataset.trOverride) { find(t.dataset.trOverride).override = t.checked; render(); return; }
       if (t.dataset.trStatus) { find(t.dataset.trStatus).status = t.value; render(); return; }
@@ -882,6 +966,7 @@
       if (t.dataset.trItem) {
         const e = find(t.dataset.trItem);
         if (e.manualMatch) { e.reviewVerified = false; e.include = false; e.status = ''; }
+        dropParts(e);
         if (t.value === NEW_ITEM) { e.itemId = ''; render(); const row = modal.querySelector('[data-tr-type="' + root.CSS.escape(e.typeKey) + '"]'); if (row) { row.querySelector('select').value = NEW_ITEM; row.querySelector('.trNewItem').hidden = false; } return; }
         e.itemId = t.value; render(); return;
       }
@@ -961,6 +1046,6 @@
     if (files && files.length) await handleFiles(files);
   }
 
-  root.BLTestReportImport = { open: open, runAi: runAi, extractWithAI: extractWithAI, _ui: ui, _plan: plan, _aiDone: aiDone, _changeMatch: changeMatch, _addPo: addPo, _selectionConflicts: selectionConflicts };
+  root.BLTestReportImport = { open: open, runAi: runAi, extractWithAI: extractWithAI, _ui: ui, _plan: plan, _aiDone: aiDone, _changeMatch: changeMatch, _addPo: addPo, _togglePart: togglePart, _selectionConflicts: selectionConflicts };
   if (root.MutationObserver && root.document) new root.MutationObserver(function () { if (ui.modal) render(); }).observe(root.document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -123,6 +123,8 @@ test('v9.49 Bu Hafta Aksiyon: gelecek hafta yükleme + teyit/numune/test işaret
 test('v9.49 kurallar önceliği YALNIZ yükseltir, asla düşürmez', () => {
   const model = analyze([order({ ocode: 7301, opd: '2026-05-01', ex: '2026-08-20', retail: '2026-10-01' })]);
   const analysis = model.orders[0];
+  // v7.0.290: başlangıç önceliği kurallardan gelir; önce bir kural CRITICAL'a taşır.
+  analysis.priority = Rules.applyPriorityRules(analysis, [Rules.normalizeRule({ kind: 'priority', target: 'CRITICAL', name: 'kritik', conditions: [{ field: '@basePriority', operator: 'eq', value: 'CRITICAL' }] })], {}).priority;
   assert.equal(analysis.priority, 'CRITICAL', 'ön koşul');
   const downgrade = [Rules.normalizeRule({ kind: 'priority', target: 'WATCH', name: 'düşür', conditions: [{ field: '@stage', operator: 'eq', value: 'PRODUCTION' }] })];
   const applied = Rules.applyPriorityRules(analysis, downgrade, {});
