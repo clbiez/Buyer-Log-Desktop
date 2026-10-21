@@ -2105,6 +2105,15 @@ async function startBuyerLog() {
     desktopOabRelayUrl,
     downloadsRoot: app.getPath('downloads'),
     log,
+    // A busy first-start sync can delay HTTP responses beyond the immutable
+    // launcher's 60s trial window even after the server and local DB are ready.
+    // The child process itself reports both milestones via stdout; confirm the
+    // same existing health token immediately, while retaining HTTP/renderer
+    // completion as fallbacks and launcher rollback for genuine failures.
+    onStartupReady: () => {
+      log('Backend server and local DB ready (startup milestones).');
+      confirmLauncherHealth();
+    },
     onUnexpectedExit: info => {
       if (quitting) return;
       log('Backend beklenmedik şekilde kapandı: ' + JSON.stringify(info));
