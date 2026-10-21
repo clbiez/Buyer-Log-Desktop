@@ -17,6 +17,13 @@
     const column=columns.find(function(item){return item.k===requested;})||fallback;
     const availableInfo=ctx.summary.availableColumns(ctx.rows,{columns:[column],valueFor:ctx.columnValue})[0]||{values:[]};
     const values=Array.isArray(availableInfo.values)?availableInfo.values.map(text).filter(Boolean):[];
+    if(column.k==='inStoreMonth'&&typeof ctx.summary.monthParts==='function'){
+      const rank=value=>{const parts=ctx.summary.monthParts(value);return parts?parts.year*12+parts.month:null;};
+      values.sort(function(a,b){
+        const am=rank(a),bm=rank(b);
+        return am==null?(bm==null?a.localeCompare(b,'tr-TR',{numeric:true}):1):bm==null?-1:bm-am||a.localeCompare(b,'tr-TR',{numeric:true});
+      });
+    }
     const requestedValues=Array.isArray(saved.scopeValues)?saved.scopeValues.map(text).filter(Boolean):[];
     const selected=requestedValues.filter(function(value){return values.includes(value);});
     const filters={};if(selected.length)filters[column.k]=selected;
@@ -28,10 +35,16 @@
     delete next.scopeSeason;
     ctx.savePrefs(next);
   }
+  function scopeValueLabel(ctx,column,value){
+    if(column.k!=='inStoreMonth'||typeof ctx.summary.monthParts!=='function')return value;
+    const parts=ctx.summary.monthParts(value);
+    return parts?monthLabel({month:value,year:parts.year,monthNumber:parts.month},ctx.language==='en'?'en-GB':'tr-TR',ctx.language==='en'):value;
+  }
   function valueSummary(ctx,scoped){
     if(!scoped.selected.length)return ctx.language==='en'?'All':'Tümü';
-    if(scoped.selected.length<=2)return scoped.selected.join(' + ');
-    return scoped.selected[0]+' +'+(scoped.selected.length-1);
+    const names=[...new Set(scoped.selected.map(function(value){return scopeValueLabel(ctx,scoped.column,value);}))];
+    if(names.length<=2)return names.join(' + ');
+    return names[0]+' +'+(names.length-1);
   }
   let outsideHandler=null,viewportHandler=null,popoverHome=null,popoverFrame=0;
   function resetPopoverInlineLayout(pop){
@@ -102,7 +115,7 @@
       '<div class="ovCollectionScopePopoverHead"><b>'+esc(columnLabel)+'</b><button type="button" data-scope-clear>'+(ctx.language==='en'?'Clear':'Temizle')+'</button></div>'+
       '<input type="search" class="ovCollectionScopeSearch" data-scope-search placeholder="'+esc(ctx.language==='en'?'Search values':'Değer ara')+'">'+
       '<div class="ovCollectionScopeValueList">'+
-      (scoped.values.length?scoped.values.map(function(value){return '<label data-scope-row><input type="checkbox" value="'+esc(value)+'"'+(selected.has(value)?' checked':'')+'><span>'+esc(value)+'</span></label>';}).join(''):'<div class="ovCollectionScopeEmpty">'+esc(ctx.language==='en'?'No values in this column.':'Bu sütunda değer yok.')+'</div>')+
+      (scoped.values.length?scoped.values.map(function(value){return '<label data-scope-row><input type="checkbox" value="'+esc(value)+'"'+(selected.has(value)?' checked':'')+'><span>'+esc(scopeValueLabel(ctx,scoped.column,value))+'</span></label>';}).join(''):'<div class="ovCollectionScopeEmpty">'+esc(ctx.language==='en'?'No values in this column.':'Bu sütunda değer yok.')+'</div>')+
       '</div>'+
       '<div class="ovCollectionScopePopoverFoot"><button type="button" class="tbtn" data-scope-cancel>'+(ctx.language==='en'?'Cancel':'Vazgeç')+'</button><button type="button" class="tbtn primary" data-scope-apply>'+(ctx.language==='en'?'Apply':'Uygula')+'</button></div>';
     if(!popoverHome)popoverHome={parent:pop.parentNode,next:pop.nextSibling};
@@ -184,7 +197,7 @@
     const host=document.getElementById('ovCollectionSummaryMonths');
     if(!host)return;
     const filters={};if(scoped.selected.length)filters[scoped.column.k]=scoped.selected;
-    const buckets=ctx.summary.monthBuckets?ctx.summary.monthBuckets(ctx.rows,{columnFilters:filters,columnValue:ctx.columnValue,isConfirmed:ctx.isConfirmed,quantityFor:ctx.quantityFor,imageFor:ctx.imageFor,fields:{month:'inStoreMonth',status:'durum',model:'modelKod'}}):[];
+    const buckets=ctx.summary.monthBuckets?ctx.summary.monthBuckets(ctx.rows,{columnFilters:filters,columnValue:ctx.columnValue,isConfirmed:ctx.isConfirmed,quantityFor:ctx.quantityFor,imageFor:ctx.imageFor,fields:{month:'inStoreMonth',status:'durum',model:'modelKod'},sort:'desc'}):[];
     const en=ctx.language==='en';
     host.setAttribute('aria-label',en?'Collection months':'Koleksiyon ayları');
     if(!buckets.length){
@@ -306,12 +319,9 @@
     const state={host:host,track:track,rows:rows,count:rows.length,rowHeight:rowHeight,thumbStep:22+THUMB_GAP,pos:0,centerMonth:'',cleanup:[]};
     host.style.height=(rowHeight*Math.min(VISIBLE_ROWS,Math.max(1,rows.length)))+'px';
     let start=previous?buckets.findIndex(function(bucket){return bucket.month===previous;}):-1;
-    if(start<0){
-      const now=new Date(),current=now.getFullYear()*12+now.getMonth()+1;
-      let best=Number.POSITIVE_INFINITY;
-      buckets.forEach(function(bucket,index){if(!bucket.year)return;const distance=Math.abs(bucket.year*12+bucket.monthNumber-current);if(distance<best){best=distance;start=index;}});
-      if(start<0)start=0;
-    }
+    // First render starts at the latest month (top visible row), not the
+    // nearest month to today. Preserve the focused month on later re-renders.
+    if(start<0)start=Math.min(Math.floor(VISIBLE_ROWS/2),buckets.length-1);
     revolver=state;
     state.pos=revolverClamp(state,start);
     state.centerMonth=rows[state.pos]?rows[state.pos].dataset.month:'';
@@ -384,5 +394,5 @@
       host.removeEventListener('keydown',onKey);
     });
   }
-  return {render:render,openColumnDrawer:openColumnDrawer,scopeState:scopeState};
+  return {render:render,openColumnDrawer:openColumnDrawer,scopeState:scopeState,monthLabel:monthLabel};
 });
