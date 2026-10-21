@@ -218,7 +218,7 @@ function Main {
       $temporary = $change.target + '.manualpatch-' + [guid]::NewGuid().ToString('N')
       try {
         [System.IO.File]::WriteAllBytes($temporary, [byte[]]$change.bytes)
-        [System.IO.File]::Replace($temporary, $change.target, $null)
+        [System.IO.File]::Replace($temporary, $change.target, (Join-Path $backupRoot ($change.path.Replace('/', '\'))))
         $applied.Add($change)
       } finally {
         if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
