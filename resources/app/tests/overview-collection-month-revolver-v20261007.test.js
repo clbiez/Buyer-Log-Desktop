@@ -9,6 +9,7 @@ const INDEX=fs.readFileSync(path.join(ROOT,'public','index.html'),'utf8');
 const DASH=fs.readFileSync(path.join(ROOT,'public','overview-collection-dashboard.js'),'utf8');
 const APP=fs.readFileSync(path.join(ROOT,'public','app-main.js'),'utf8');
 const CSS=fs.readFileSync(path.join(ROOT,'public','app.css'),'utf8');
+const PREMIUM=fs.readFileSync(path.join(ROOT,'public','overview-premium.js'),'utf8');
 
 const rows=[
   {modelKod:'M-1',inStoreMonth:'2027-03',durum:'Fiyatlamada',quantity:'1.200',img:'a.png'},
@@ -118,3 +119,10 @@ test('Overview localized Collection labels follow the chosen language without ov
   assert.doesNotMatch(DASH,/Math\.abs\(bucket\.year\*12\+bucket\.monthNumber-current\)/);
 });
 
+
+test('Collection Showcase keeps the nearest future period with the new descending month order',()=>{
+  assert.match(PREMIUM,/const future=buckets\.filter\(/);
+  assert.match(PREMIUM,/future\[future\.length-1\]/);
+  assert.match(PREMIUM,/toLocaleDateString\(locale\(\),\{month:'long',year:'numeric'\}\)/);
+  assert.doesNotMatch(PREMIUM,/b\.month>=new Date\(\)\.toISOString/);
+});
