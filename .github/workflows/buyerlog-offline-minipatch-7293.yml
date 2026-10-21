@@ -1,0 +1,33 @@
+name: Buyer Log Offline Mini Patch 7.0.293
+on:
+  push:
+    branches:
+      - tools/offline-minipatch-7-0-293-20261021
+    paths:
+      - .github/workflows/buyerlog-offline-minipatch-7293.yml
+      - scripts/mini_patch_builder.py
+      - scripts/mini_patch_installer.ps1
+      - scripts/mini_patch_ci.py
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout all history for pinned comparison
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Assemble offline-only application delta ZIP
+        run: python scripts/mini_patch_builder.py
+      - name: Validate installer, file hashes, apply and rollback on Windows
+        run: python scripts/mini_patch_ci.py
+      - name: Publish ZIP as workflow artifact, without releasing TEST or STABLE
+        uses: actions/upload-artifact@v4
+        with:
+          name: BuyerLog-7.0.293-Offline-MiniPatch-20261021
+          path: dist/BuyerLog-7.0.293-Sonrasi-MiniPatch-20261021.zip
+          if-no-files-found: error
+          retention-days: 7
