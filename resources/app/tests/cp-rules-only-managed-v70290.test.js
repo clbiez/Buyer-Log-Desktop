@@ -104,7 +104,7 @@ test('server: only the Moderator writes; every read path uses the same layered r
   // Test report steps no longer resurrect legacy shared definitions the user deleted.
   const quality = server.slice(server.indexOf('async function agentQualityReviewContext('), server.indexOf("require('./routes/test-report-routes')"));
   assert.doesNotMatch(quality, /data\.checklist\.definitions/);
-  assert.match(read('server/lib/cp-agent-preferences.js'), /Rules\.effectiveRules\(payload\.rules,payload\.deletedRuleIds\|\|\[\],managedRules\(\)\)/);
+  assert.match(read('server/lib/cp-rule-preferences.js'), /Rules\.effectiveRules\(payload\.rules,payload\.deletedRuleIds\|\|\[\],managedRules\(\)\)/);
   // The view uses the dedicated channel, and non-moderators see published rules read-only.
   const view = read('public/cp-overview-assistant.js');
   assert.match(view, /window\.BLCpManagedRules/);

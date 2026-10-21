@@ -1,19 +1,10 @@
 'use strict';
 const Engine=require('../../public/collection-pricing-engine'),Fx=require('../../public/fx-calculation-engine'),Business=require('../../public/business-rules'),Groups=require('../../public/collection-model-groups');
 const canonical=require('./canonical-fields'),parse=require('./parse');
-const {hash}=require('./agent-office-store');
+const {hash}=require('./operation-utils');
 const norm=value=>String(value??'').trim();
 
-function createPricingSource(deps){const refresh=async()=>{
- if(!deps.deltaStore||typeof deps.deltaStore.flush!=='function')throw Object.assign(new Error('OFFICE_SOURCE_UNAVAILABLE'),{code:'OFFICE_SOURCE_UNAVAILABLE',statusCode:409});
- const flushed=await deps.deltaStore.flush();if(flushed?.ok===false)throw Object.assign(new Error('OFFICE_SOURCE_UNAVAILABLE'),{code:'OFFICE_SOURCE_UNAVAILABLE',statusCode:409});if(deps.deltaStore.isAuthoritative){const result=await deps.deltaStore.hydrate();if(!result?.ok)throw Object.assign(new Error('OFFICE_SOURCE_UNAVAILABLE'),{code:'OFFICE_SOURCE_UNAVAILABLE',statusCode:409});}
-};return async ctx=>{
- await refresh();ctx.assertAuthority();
- const currentAgent=async()=>{if(!ctx.input?.officeAgentId)return null;const agent=await deps.office.get(ctx.ownerId,'profile',ctx.input.officeAgentId);if(agent.deleted||agent.enabled===false||agent.revision!==ctx.input.officeAgentRevision)throw Object.assign(new Error('OFFICE_PREVIEW_CHANGED'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return agent;};
- const agent=await currentAgent(),cpContextAvailable=Boolean(agent?.areas?.includes('cp')&&deps.userAccess.hasArea(ctx.profile,'cp'));
- const cpRows=cpContextAvailable?await deps.dataset(ctx.ownerId,ctx.profile,'cp'):[];await currentAgent();if(cpContextAvailable)await refresh();ctx.assertAuthority();
- return {overrides:deps.loadOverrides(),fx:deps.loadFx(),cpRows,cpContextAvailable};
-};}
+
 
 // Fixed native inputs only. This service calculates; it never persists a price.
 function createPricingCalculation({rows,overrides,fx,cpRows=[],cpContextAvailable=false,now=new Date()}){
@@ -42,4 +33,4 @@ function createPricingCalculation({rows,overrides,fx,cpRows=[],cpContextAvailabl
  }
  return {project,calculate,cpContextAvailable,fingerprint:hash(JSON.stringify({rules,landedMultipliers:defaults,nonDtrManufacturers:overrides.nonDtrManufacturers||[],fx,cpRows,month:now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')}))};
 }
-module.exports={createPricingCalculation,createPricingSource};
+module.exports={createPricingCalculation};

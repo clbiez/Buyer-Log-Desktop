@@ -1,5 +1,5 @@
 'use strict';
-const Rules=require('./data-domain/refresh-groups'),{error,hash}=require('./agent-office-store'),{isDeepStrictEqual}=require('node:util');
+const Rules=require('./data-domain/refresh-groups'),{error,hash}=require('./operation-utils'),{isDeepStrictEqual}=require('node:util');
 const fingerprint=items=>hash(JSON.stringify(items));
 function createRefreshGroupService({db}){
  const read=()=>{const settings=db.loadSettings(),store=db.loadRefreshGroups();return {...store,documentRevision:settings._revision,sectionRevision:settings._revisions?.refreshGroups??0,raw:settings.refreshGroups||[]};};

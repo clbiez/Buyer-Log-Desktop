@@ -1,5 +1,5 @@
 'use strict';
-const {hash,error}=require('./agent-office-store');
+const {hash,error}=require('./operation-utils');
 const fingerprint=value=>hash(JSON.stringify({tr:value.tr,overseas:value.overseas}));
 // The native PUT range is shared by HTTP and Office; no pricing engine is copied.
 function validateMultipliers(raw){

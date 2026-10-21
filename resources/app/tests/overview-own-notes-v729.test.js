@@ -222,8 +222,8 @@ test('sunucu yazarı oturumdan üretir ve tüm yazma uçlarına geçirir', () =>
   assert.match(SERVER, /function noteActorOf\(profile\)/);
   assert.match(SERVER, /profile\.displayName \|\| profile\.username/);
   const calls = SERVER.match(/patchOrderOverrides?\([^\n]*noteActorOf\(/g) || [];
-  assert.equal(calls.length, 4, 'ordinary single/batch writes and the agent single/multi-line adapters preserve session authorship');
-  for (const start of ['updateOrder: async', 'updateOrders: async', "app.post('/api/overrides/batch'", "app.patch('/api/overrides/:orderCode'"]) {
+  assert.equal(calls.length, 2, 'ordinary single/batch writes preserve session authorship');
+  for (const start of ["app.post('/api/overrides/batch'", "app.patch('/api/overrides/:orderCode'"]) {
     const offset = SERVER.indexOf(start);
     assert.ok(offset >= 0, start);
     assert.match(SERVER.slice(offset, offset + 3500), /patchOrderOverrides?\([^\n]*actor: noteActorOf\(/, start);

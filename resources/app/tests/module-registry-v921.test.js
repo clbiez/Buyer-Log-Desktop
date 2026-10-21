@@ -48,14 +48,13 @@ test('v9.21 her yetki alanının bir modülü, her ekranın bir kaydı var', () 
   assert.deepEqual(registeredRoutes, realRoutes, 'ekranlar birebir eşleşmeli');
 });
 
-test('v9.21 datasetler agent-tool-registry ile aynı listeden geliyor', () => {
+test('v9.21 datasetler native kaynak erişim alanlarıyla aynı listeden geliyor', () => {
   // Ajan dataset.query'yi bu adlarla çağıracak; ikisi ayrışırsa "modül var
   // ama verisi okunamıyor" gibi sessiz bir çukur oluşur.
-  const toolRegistrySource = fs.readFileSync(path.join(ROOT, 'server', 'lib', 'agent-tool-registry.js'), 'utf8');
-  const declared = toolRegistrySource.match(/const DATASET_SOURCES = Object\.freeze\(\[([^\]]+)\]\)/);
-  assert.ok(declared, 'DATASET_SOURCES bulunmalı');
-  const sources = declared[1].split(',').map(s => s.trim().replace(/^'|'$/g, '')).filter(Boolean).sort();
-  assert.deepEqual([...registry.DATASETS].sort(), sources, 'dataset listeleri ayrışmamalı');
+  const areaMap=SERVER.match(/function agentDatasetArea\(source\) \{\s*return \(?\{([^}]+)\}/);
+  assert.ok(areaMap, 'native dataset alan eşlemesi bulunmalı');
+  const sources=[...areaMap[1].matchAll(/([a-z]+):/g)].map(m=>m[1]).sort();
+  assert.deepEqual([...registry.DATASETS].sort(), sources);
   // Ve hiçbir modül kayıtlı olmayan bir dataset iddia etmemeli.
   for (const module of registry.list()) {
     for (const dataset of module.datasets) {
@@ -145,12 +144,7 @@ test('v9.21 describe karar için gerekeni verir, tam kaydı değil', () => {
   assert.equal(registry.describe('priceanalysis').tableKey, null, 'tablosu olmayan modül null taşır');
   assert.equal(cp.label, 'CP Tracker');
   assert.equal(cp.navigable, true);
-  /* Ekranı olmayan modül "gidilemez" demeli. v7.81'e kadar bu sözleşme
-     'source' ile gösteriliyordu; Kaynak Veri artık Veri Yönetimi ekranına
-     sahip olduğu için örnek gerçekten rotasız olan 'agents' ile verilir.
-     Sözleşme değişmedi, yalnız örnek değişti. */
-  assert.equal(registry.describe('agents').navigable, false);
-  assert.equal(registry.describe('agents').route, null);
+  assert.equal(registry.describe('agents'), null);
   // v7.81 — Kaynak Veri artık gidilebilir bir ekran.
   assert.equal(registry.describe('source').navigable, true);
   assert.equal(registry.describe('source').route, 'source');

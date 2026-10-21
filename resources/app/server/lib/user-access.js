@@ -81,12 +81,12 @@ const PERMISSION_KEYS = Object.freeze([
   'manageBackup', 'manageBusinessRules', 'manageModelConnections', 'manageAllOrders', 'manageCollections',
 ]);
 const ACCESS_AREA_KEYS = Object.freeze([
-  'overview', 'cp', 'orders', 'koleksiyon', 'lfl', 'priceanalysis', 'opencosting', 'backlog', 'shipping', 'agents', 'automations', 'source',
+  'overview', 'cp', 'orders', 'koleksiyon', 'lfl', 'priceanalysis', 'opencosting', 'backlog', 'shipping', 'automations', 'source',
 ]);
 const ACCESS_AREA_LABELS = Object.freeze({
   overview: 'Overview', cp: 'CP Tracker', orders: 'Siparişler', koleksiyon: 'Koleksiyon',
   lfl: 'LFL Analizi', priceanalysis: 'Price & Supplier Analysis', opencosting: 'Ön Maliyet', backlog: 'Backlog',
-  shipping: 'Nakliye Kıyaslama', agents: 'Agent Workflow Studio', automations: 'Otomasyonlar', source: 'Kaynak Veri',
+  shipping: 'Nakliye Kıyaslama', automations: 'Otomasyonlar', source: 'Kaynak Veri',
 });
 const PUBLIC_ACCESS_AREA_KEYS = Object.freeze(['priceanalysis']);
 
@@ -330,7 +330,7 @@ function normalizeAccessAreas(value, defaultEnabled = true) {
     if (PUBLIC_ACCESS_AREA_KEYS.includes(key)) out[key] = true;
     else if (!hasExplicit) out[key] = Boolean(defaultEnabled);
     else if (key === 'orders' && !Object.prototype.hasOwnProperty.call(value, 'orders')) out[key] = Boolean(value.cp);
-    else if ((key === 'agents' || key === 'automations') && !Object.prototype.hasOwnProperty.call(value, key)) out[key] = true;
+    else if ((key === 'automations') && !Object.prototype.hasOwnProperty.call(value, key)) out[key] = true;
     else out[key] = Boolean(value[key]);
   }
   return out;

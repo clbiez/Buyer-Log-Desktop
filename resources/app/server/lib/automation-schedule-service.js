@@ -1,6 +1,6 @@
 'use strict';
 const AUTOMATION_GRACE_MINUTES=90,AUTOMATION_MISSED_LOOKBACK_DAYS=14;
-function eligible(recipe,grant){return recipe?.purpose==='email'||!!grant&&['analysis','app','mixed'].includes(recipe?.purpose)&&!(recipe.steps||[]).length&&!String(recipe.terminalCode||'').trim()&&!(recipe.appActions||[]).some(a=>a.action==='refresh_source');}
+function eligible(recipe){return recipe?.purpose==='email';}
 function automationScheduleKey(recipe,now=new Date(),grant=null){
   const schedule=recipe&&recipe.schedule||{};if(!recipe||recipe.enabled===false||schedule.enabled!==true||!eligible(recipe,grant))return'';
   const hhmm=String(schedule.time||'09:00'),[hh,mm]=hhmm.split(':').map(Number);const today=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;

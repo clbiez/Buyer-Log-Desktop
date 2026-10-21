@@ -495,7 +495,7 @@ async function importWorkbookBuffer(buffer,sourceFile,options={}){
   const meta=await saveSet(snapshot,{...options,activate:true,actor});return {...publicStatus(),uploaded:meta};
 }
 
-function sourceFingerprint(){try{loadSnapshot();}catch(_){}return require('./agent-office-store').hash(JSON.stringify({active:readActiveSelection(),sets:listSets()}));}
+function sourceFingerprint(){try{loadSnapshot();}catch(_){}return require('./operation-utils').hash(JSON.stringify({active:readActiveSelection(),sets:listSets()}));}
 function normalizeLabel(label){return String(label||'').replace(/[\x00-\x1F]/g,'').trim().slice(0,80);}
 async function mutate(options,work){return require('./shared-file-transaction').withFileLeaseAsync(ACTIVE_FILE,async()=>{await documents.refresh();cached=null;setCache.clear();options.assertAuthority?.();if(options.expectedFingerprint&&sourceFingerprint()!==options.expectedFingerprint)throw Object.assign(new Error('Endeksmatik changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});await options.beforeMutation?.();await documents.refresh();cached=null;setCache.clear();options.assertAuthority?.();if(options.expectedFingerprint&&sourceFingerprint()!==options.expectedFingerprint)throw Object.assign(new Error('Endeksmatik changed.'),{code:'OFFICE_PREVIEW_CHANGED',statusCode:409});return work();});}
 async function restoreSet(snapshot,active,options={}){return mutate(options,async()=>{await saveSet(snapshot,{...options,actor:'',selectionActor:options.actor,activate:false,activeSelectionId:active});return publicStatus();});}

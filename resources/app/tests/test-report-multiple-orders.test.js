@@ -75,15 +75,3 @@ test('a page-ending Explanation stops at its footer before the next-page summary
  assert.equal(r.aciklama,'ORDER:1354555/1354546');
  assert.ok(!r.uyarilar.some(w=>w.code==='descriptionBoundary'));
 });
-
-test('operational intelligence reads secondary links without false primary-PO mismatch',()=>{
- const Intelligence=require('../server/lib/agent-office-intelligence'),CP=require('../public/cp-readiness-engine');
- const rows=['1354555','1354546'].map(po=>({'Order Code':po,'Model Name':'DEMO-YD','Colour':'NAVY','C.Code':'NVY','PLM ID':'2000011','STATUS':'ÜRETİM','Ex-factory':'2026-11-20'}));
- const targets=rows.map(row=>({orderKey:CP.analyzeOrder(row).orderKey,itemId:'tests'}));
- const result=Intelligence.analyzeOperationalData({today:'2026-11-10',cpRows:rows,personalRules:[{id:'tests',kind:'checklist',enabled:true,conditions:[{field:'Order Code',operator:'notEmpty'}]}],reports:{reports:{'363443':mail()},links:{'363443':{...targets[0],targets}}}});
- assert.equal(result.orders.length,2);
- for(const order of result.orders){
-  assert.ok(order.evidence.some(e=>e.itemId==='tests'&&e.sources.some(s=>s.source==='Test report'&&s.id==='363443')));
-  assert.ok(!order.findings.some(f=>f.code==='REPORT_MATCH_363443'));
- }
-});

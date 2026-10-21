@@ -6,8 +6,8 @@ const path=require('node:path');
 const root=path.join(__dirname,'..');
 const browser=require('../server/lib/agent-browser-connector');
 const browserSettings=require('../server/lib/agent-browser-settings');
-const {createPolicyEngine}=require('../server/lib/agent-policy-engine');
-const {createToolRegistry}=require('../server/lib/agent-tool-registry');
+
+
 const SERVER=fs.readFileSync(path.join(root,'server','server.js'),'utf8');
 /* v6.36: Agent Workflow Studio kaldırıldı, public/agent-workflows.js artık yok.
    Bu dosyanın asıl konusu TARAYICI MOTORU (portable-web-engine + connector) —
@@ -15,26 +15,13 @@ const SERVER=fs.readFileSync(path.join(root,'server','server.js'),'utf8');
    Automations arayüzüne taşındı. */
 const AUTO=fs.readFileSync(path.join(root,'public','automations.js'),'utf8');
 
-function registry(){return createToolRegistry({
-  getDataset:async()=>[],refresh:async()=>({ok:true}),snapshotOrder:async()=>({}),updateOrder:async()=>({}),restoreOrder:async()=>({}),httpRequest:async()=>({}),browserRun:async(args)=>({ok:true,args})
-});}
+
 function rec(){return{stopped:false,steps:[],updatedAt:''};}
 function target(selector='#save'){return{strategy:'css',selector,targets:[{strategy:'css',selector},{strategy:'role',selector:'Save',role:'button',name:'Save'}],description:'Save'};}
 
-test('v5.54 Browser Automation is a controlled external tool that always requires approval',()=>{
-  const tool=registry().get('connector.browser.run');
-  assert.ok(tool);assert.equal(tool.kind,'browser');assert.equal(tool.risk,'external');assert.equal(tool.approval,true);assert.equal(tool.rollbackable,false);
-  assert.match(JSON.stringify(tool.inputSchema),/items/);
-});
 
-test('v5.54 browser policy allows only allowlisted HTTPS hosts and their subdomains',()=>{
-  const policy=createPolicyEngine({userAccess:{hasArea:()=>true},getAllowedBrowserHosts:()=>['portal.example.com']});
-  const tool=registry().get('connector.browser.run');
-  assert.equal(policy.evaluate({},tool,{url:'http://portal.example.com'},{approvalGranted:true}).allowed,false);
-  assert.equal(policy.evaluate({},tool,{url:'https://evil.example.com'},{approvalGranted:true}).allowed,false);
-  assert.equal(policy.evaluate({},tool,{url:'https://portal.example.com/app'},{approvalGranted:true}).allowed,true);
-  assert.equal(policy.evaluate({},tool,{url:'https://sub.portal.example.com/app'},{approvalGranted:true}).allowed,true);
-});
+
+
 
 test('v5.54 browser allowlist settings normalize URLs, casing and duplicates',()=>{
   assert.deepEqual(browserSettings.normalizeHosts(['HTTPS://Portal.Example.com/login','portal.example.com','https://erp.example.com/path']),['portal.example.com','erp.example.com']);

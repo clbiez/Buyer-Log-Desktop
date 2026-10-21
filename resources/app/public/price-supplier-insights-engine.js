@@ -333,7 +333,7 @@
   }
 
   /* Canonical observation of one CP/Orders/Collection/LFL row. Moved here from
-     app-main so the browser bridge and the server (Agent Office) build the very
+     app-main so the browser bridge and the server build the very
      same observation; `fields` is the shared canonical field registry. */
   const toNumber=value=>{const n=Number(value);return isNaN(n)?null:n;};
   const isTurkeyCountry=value=>/^t[üu]rk/i.test(text(value));

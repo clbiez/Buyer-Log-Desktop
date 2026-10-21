@@ -19,7 +19,7 @@ function safeBusinessData(value) {
 const text=(value,max=300)=>String(value??'').replace(/\s+/g,' ').trim().slice(0,max);
 const fail=(code,statusCode=400)=>Object.assign(new Error(code),{code,statusCode});
 const MIME={pdf:'application/pdf',msg:'application/vnd.ms-outlook',eml:'message/rfc822'};
-const sessionFingerprint=session=>require('../agent-office-store').hash(JSON.stringify({reports:session.reports,assessment:session.assessment&&{snapshotId:session.assessment.packet.snapshotId,validated:session.assessment.validated},files:[...session.files].map(([id,file])=>({id,name:file.name,hash:file.hash,kind:file.kind}))}));
+const sessionFingerprint=session=>require('../operation-utils').hash(JSON.stringify({reports:session.reports,assessment:session.assessment&&{snapshotId:session.assessment.packet.snapshotId,validated:session.assessment.validated},files:[...session.files].map(([id,file])=>({id,name:file.name,hash:file.hash,kind:file.kind}))}));
 function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,reviewContext=null}) {
   function assertReviewCurrent(profile,review) {
     if(review.sourceRevision!==sourceRevision(profile)||review.storeRevision!==store.read().revision)throw fail('TEST_REPORT_REVIEW_STALE',409);

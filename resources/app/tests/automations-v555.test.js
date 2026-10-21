@@ -59,5 +59,5 @@ test('v5.55 Automation UI lets recorded values become row placeholders and share
   assert.match(UI,/\{\{item\.Sipariş Kod\}\}/);
   assert.match(UI,/\/api\/automations\/browser\/settings/);
   assert.match(SERVER,/agentBrowserSettings\.saveSettings/);
-  assert.match(SERVER,/agentBrowserConnector\.run/);
+  assert.match(fs.readFileSync(path.join(ROOT,'server/lib/automation-execution-service.js'),'utf8'),/agentBrowserConnector\.run/);
 });

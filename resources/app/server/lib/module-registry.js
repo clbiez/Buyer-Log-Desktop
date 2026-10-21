@@ -6,7 +6,7 @@
    Ajan için Buyer Log bir "black box" olmaktan çıkmalı: hangi modüller var,
    her biri hangi veriyi taşıyor, ne yapabiliyor, hangi yetki alanına ve hangi
    ekrana bağlı. Bunlar bugüne kadar üç ayrı yerde ÖRTÜK duruyordu —
-   userAccess alanları, index.html sekmeleri ve agent-tool-registry'nin dataset
+   userAccess alanları, index.html sekmeleri ve native veri kaynaklarının
    listesi — ve hiçbiri diğerini bilmiyordu.
 
    Burası o üçünü BİRLEŞTİREN tanım katmanı. Kendi doğrusunu uydurmaz:
@@ -104,14 +104,6 @@ const MODULES = Object.freeze([
     summary: { tr: 'AI asistanı.', en: 'General AI assistant.' },
   },
   {
-    // Like LCW AI, the private office has no new business permission area.
-    // Dataset access remains subject to the current owner's source permissions.
-    id: 'agentoffice', agentFilter: false, tableKey: null, label: { tr: 'Agent Ofisi', en: 'Agent Office' },
-    area: 'overview', route: 'agentoffice', datasets: [],
-    capabilities: ['analyze', 'compare', 'export'],
-    summary: { tr: 'Kalıcı agent hafızası, koordinasyon ve yetkili operasyon analizi.', en: 'Persistent agent memory, coordination and authorized operational analysis.' },
-  },
-  {
     // v7.0.229 — eski E-Mail Grupları. Siparişler verisini okuduğu için
     // ayrı bir yetki alanı açmaz; Siparişler alanını paylaşır.
     id: 'manufacturers', agentFilter: false, tableKey: null, label: { tr: 'Üreticiler', en: 'Manufacturers' },
@@ -174,15 +166,7 @@ const MODULES = Object.freeze([
     capabilities: ['read', 'refresh', 'import', 'analyze'],
     summary: { tr: 'Veritabanı, bağlantı, filtre ve yenileme.', en: 'Databases, module connections, filters and refresh in one screen.' },
   },
-  /* Ekranı olmayan ama ajanın bilmesi gereken kaynaklar. route=null olması
-     "bu modüle gidilemez" demektir; UI komut katmanı buna bakar. */
-  {
-    id: 'agents', agentFilter: false, tableKey: null, label: { tr: 'Agent Workflow Studio', en: 'Agent Workflow Studio' },
-    area: 'agents', route: null,
-    datasets: [],
-    capabilities: ['read', 'automate'],
-    summary: { tr: 'Ajan iş akışları ve tarayıcı otomasyonu.', en: 'Agent workflows and browser automation.' },
-  },
+
 ]);
 
 function clean(value) { return String(value == null ? '' : value).trim(); }

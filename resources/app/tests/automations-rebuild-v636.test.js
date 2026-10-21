@@ -158,7 +158,7 @@ test('v6.36 gecikmiş tetik tolerans penceresine göre sınıflanıyor', () => {
   // 2026-08-24 bir Pazartesi. Saatler YEREL kurulur; test saat dilimine bağlı olmamalı.
   const onTime = fn.automationDueOccurrence(recipe, new Date(2026, 7, 24, 9, 30));
   assert.equal(fn.automationDueOccurrence({...recipe,purpose:'analysis'}, new Date(2026, 7, 24, 9, 30)),null);
-  assert.ok(fn.automationDueOccurrence({...recipe,purpose:'analysis'}, new Date(2026, 7, 24, 9, 30),{}));
+  assert.equal(fn.automationDueOccurrence({...recipe,purpose:'analysis'}, new Date(2026, 7, 24, 9, 30),{}),null);
   assert.equal(fn.automationDueOccurrence({...recipe,purpose:'mixed',steps:[{action:'script'}]}, new Date(2026, 7, 24, 9, 30)),null);
   assert.equal(fn.automationIsWithinGrace(onTime), true, '30 dk gecikme tolerans içinde');
   const late = fn.automationDueOccurrence(recipe, new Date(2026, 7, 24, 14, 0));

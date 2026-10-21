@@ -1,5 +1,5 @@
 'use strict';
-const {hash,error}=require('./agent-office-store'),{publicHorizon}=require('./source-workflow-service'),adapter=require('./data-domain/legacy-adapter'),filter=require('./data-domain/filter-writer'),modules=require('./module-registry');
+const {hash,error}=require('./operation-utils'),{publicHorizon}=require('./source-workflow-service'),adapter=require('./data-domain/legacy-adapter'),filter=require('./data-domain/filter-writer'),modules=require('./module-registry');
 const clone=value=>JSON.parse(JSON.stringify(value)),fingerprint=snapshot=>hash(JSON.stringify(snapshot));
 const horizonTargets=()=>[...new Set([...modules.list().map(item=>item.id),...require('./model-scopes').SCOPE_TARGETS])];
 function createPersonalHorizonService({db,preferences:prefs}){

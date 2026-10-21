@@ -2,7 +2,7 @@
 // The normal License Cards screen and agent adapters share this transaction.
 // Profile/rate validation and discovery remain in the existing card engine.
 const cards=require('./license-cards'),sync=require('./license-card-sync'),pricing=require('./resource-rule-service');
-const {hash,error}=require('./agent-office-store');
+const {hash,error}=require('./operation-utils');
 const clone=value=>JSON.parse(JSON.stringify(value));
 function sectionSnapshot(overrides){return {revision:cards.revisionOf(overrides,'licenseCards'),pricingRevision:cards.revisionOf(overrides,'pricingRules'),fingerprint:hash(JSON.stringify({cards:cards.stateOf(overrides),rules:overrides.pricingRules||[]}))};}
 function assertSnapshot(overrides,expected){if(expected && JSON.stringify(sectionSnapshot(overrides))!==JSON.stringify(expected))throw error('OFFICE_PREVIEW_CHANGED',409);}
