@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.288",
+      "publishedAt": "2026-10-20",
+      "title": {
+        "tr": "Backlog sunum raporu zaman filtresi",
+        "en": "Backlog presentation report time filter"
+      },
+      "stats": {
+        "features": 4,
+        "improvements": 3,
+        "fixes": 4
+      },
+      "file": "release-notes/7.0.288/release.json"
+    },
+    {
       "version": "7.0.287",
       "publishedAt": "2026-10-20",
       "title": {
