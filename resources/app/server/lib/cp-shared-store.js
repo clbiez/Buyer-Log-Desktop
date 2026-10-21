@@ -108,11 +108,27 @@ function patchFromOrderPatch(overrides, id, patch) {
   return out;
 }
 
-async function mirrorPatch(id, patch, { actor = null } = {}) {
+/* Tarih revizyonunda yalnız kullanıcının gerçekten yazdığı tarihler
+   (ex/retail/mb) alt alan olarak bildirilir. Eşler aynı satırın farklı
+   tarihlerini eşzamanlı revize ettiğinde ikisi de korunur; biçimsiz (yok
+   sayılan) değer bildirilmez, yazarın eski değeri başkasının revizyonunu ezmez. */
+const DATE_SUBFIELDS = Object.freeze({ exFactory: 'ex', retailDate: 'retail', inStoreDate: 'mb' });
+function subfieldsFromOrderPatch(patch) {
+  const dates = patch && patch.dates;
+  if (!dates || typeof dates !== 'object') return null;
+  const list = Object.entries(DATE_SUBFIELDS).filter(([incoming]) => {
+    if (!own(dates, incoming)) return false;
+    const value = dates[incoming];
+    return value == null || value === '' || /^\d{4}-\d{2}-\d{2}$/.test(String(value).trim());
+  }).map(([, stored]) => stored);
+  return list.length ? { dates: list } : null;
+}
+
+async function mirrorPatch(id, patch, { actor = null, subfields = null } = {}) {
   const key = String(id == null ? '' : id).trim();
   const clean = patch && typeof patch === 'object' ? patch : {};
   if (!deltaStore || !key || !Object.keys(clean).length) return { mirrored: 0, ok: true, skipped: true };
-  return deltaStore.mirror(COLLECTION, { [key]: clean }, { userId: actorIdOf(actor) });
+  return deltaStore.mirror(COLLECTION, { [key]: clean }, { userId: actorIdOf(actor), ...(subfields ? { subfields } : {}) });
 }
 
 function mirrorPatchDetached(id, patch, options) {
@@ -161,7 +177,7 @@ function readAllSync() {
 
 module.exports = {
   COLLECTION, FIELDS, attachDeltaStore, attached, authoritative, legacyKeys,
-  recordFromOverrides, patchFromOrderPatch, mirrorPatch, mirrorPatchDetached,
+  recordFromOverrides, patchFromOrderPatch, subfieldsFromOrderPatch, mirrorPatch, mirrorPatchDetached,
   notesExplicitlyCleared, legacyNoteTombstoneProjection,
   seedFromOverrides, overlay, readAllSync,
 };

@@ -97,6 +97,35 @@
           "en": "Shared Buyer and colour-specific season values are preserved"
         }
       }
+    },
+    {
+      "id": "cp-date-revision-sync-merge",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · SYNC",
+        "en": "CP Tracker · SYNC"
+      },
+      "title": {
+        "tr": "Eşzamanlı tarih revizyonları kaybolmaz",
+        "en": "Concurrent date revisions are no longer lost"
+      },
+      "body": {
+        "tr": "Aynı sipariş satırında Ex-Factory, Retail Date ve MB Date farklı bilgisayarlarda aynı anda revize edildiğinde SYNC artık yalnız değiştirilen tarihi taşır ve birleştirir; diğer kullanıcının revizyonu ezilmez. Aynı tarih aynı anda iki kez değiştirilirse sahibin son kaydı kazanır, sahipliği belirsiz yarışlar sessizce ezilmek yerine çakışma olarak gösterilir. Birleşen tarihler CP, Siparişler, Backlog ve Excel çıktılarında aynen görünür; uygulamayı kapatıp açmak veya eski sürümle eşitlemek revizyonları geri almaz.",
+        "en": "When Ex-Factory, Retail Date and MB Date of the same order line are revised at the same time on different computers, SYNC now carries and merges only the changed date, so the other user's revision is no longer overwritten. If the same date is changed twice at once, the owner's latest save wins; races with unknown ownership are shown as a conflict instead of being silently overwritten. Merged dates appear the same in CP, Orders, Backlog and Excel exports; restarting the app or syncing with an older version does not undo revisions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-date-revision-sync-merge.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: Yükleme Termin, Retail Tarihi ve Model Bütçe revizyonları eski → yeni gösterimiyle, demo veriler",
+          "en": "Real Buyer Log CP Tracker: Ex-Factory, Retail Date and Model Budget revisions shown as old → new, demo data"
+        },
+        "caption": {
+          "tr": "Üç tarih alanının revizyonları birlikte korunur",
+          "en": "Revisions of all three date fields are preserved together"
+        }
+      }
     }
   ]
 }

@@ -29,6 +29,75 @@ function compareEventOrder(a, b) {
   return time || (String(a && a.deviceId || '') < String(b && b.deviceId || '') ? -1 : String(a && a.deviceId || '') > String(b && b.deviceId || '') ? 1 : 0);
 }
 
+/* BİLEŞİK PAYLAŞILAN ALAN (v7.0.294). CP tarih revizyonu tek `dates`
+   nesnesinde (ex / retail / mb) taşınır. Alan bütün olarak yarıştığında aynı
+   satırda bir cihaz Ex-Factory'yi, öteki Retail Date'i eşzamanlı revize
+   edince son yazan nesnenin tamamını yazıyor, diğer tarih SESSİZCE
+   kayboluyordu. Olay artık gerçekten yazdığı alt alanları `subfields` ile
+   bildirir; alıcı yalnız onları birleştirir ve alt alan başına son yazanı
+   (_subfieldWriters/_subfieldOrders) tutar. `subfields` taşımayan eski sürüm
+   olayı nesnenin tamamını yazar: eski davranış aynen korunur. */
+const COMPOSITE_FIELDS = Object.freeze({ dates: Object.freeze(['ex', 'retail', 'mb']) });
+function normalizeSubfields(patch, subfields) {
+  if (!subfields || typeof subfields !== 'object' || !patch || typeof patch !== 'object') return null;
+  const out = {};
+  for (const [field, allowed] of Object.entries(COMPOSITE_FIELDS)) {
+    if (!Object.prototype.hasOwnProperty.call(patch, field) || !Array.isArray(subfields[field])) continue;
+    const value = patch[field];
+    if (value != null && (typeof value !== 'object' || Array.isArray(value))) continue;
+    const list = [...new Set(subfields[field].map(String))].filter(sub => allowed.includes(sub)).sort();
+    if (list.length) out[field] = list;
+  }
+  return Object.keys(out).length ? out : null;
+}
+function subValue(value) { return value == null || String(value).trim() === '' ? undefined : value; }
+function mergeCompositeField({ current, value, subs, allowed, writer, seen, order, ownerAllowed, wholeWriter, wholeOrder, priorWriters, priorOrders }) {
+  const result = current && typeof current === 'object' && !Array.isArray(current) ? { ...current } : {};
+  const incoming = value && typeof value === 'object' ? value : {};
+  const subWriters = {}, subOrders = {};
+  // Alt alan saatleri henüz yoksa (eski kayıt) son bütün-nesne yazımı hepsini
+  // yazmıştır. Saatler bir kez tutulmaya başlandıysa bütün yazara düşülmez:
+  // o yazar yalnız başka bir alt alanı yazmış olabilir.
+  const legacy = !priorWriters || typeof priorWriters !== 'object';
+  for (const sub of allowed) {
+    const lastWriter = legacy ? wholeWriter : priorWriters[sub], lastOrder = legacy ? wholeOrder : priorOrders && priorOrders[sub];
+    if (lastWriter) subWriters[sub] = { ...lastWriter };
+    if (lastOrder) subOrders[sub] = { ...lastOrder };
+  }
+  const conflicting = {};
+  let applied = false;
+  for (const sub of subs) {
+    const nextValue = subValue(incoming[sub]);
+    const lastWriter = writer && seen && subWriters[sub] && subWriters[sub].d ? subWriters[sub] : null;
+    if (lastWriter) {
+      if (lastWriter.d === writer.d) {
+        if (writer.s < (Number(lastWriter.s) || 0)) continue;
+      } else if (!(Number(seen[lastWriter.d]) >= (Number(lastWriter.s) || 0)) && JSON.stringify(result[sub]) !== JSON.stringify(nextValue)) {
+        const lastOrder = subOrders[sub];
+        if (!(ownerAllowed && order && lastOrder && lastOrder.userId === order.userId)) { conflicting[sub] = nextValue; continue; }
+        if (compareEventOrder(order, lastOrder) < 0) continue;
+      }
+    }
+    if (nextValue === undefined) delete result[sub]; else result[sub] = nextValue;
+    if (writer) subWriters[sub] = { ...writer };
+    if (order && ownerAllowed) subOrders[sub] = { ...order }; else delete subOrders[sub];
+    applied = true;
+  }
+  // Yazarın bildiği ama bu olayda yazmadığı alt alan, burada hiç bilinmiyorsa doldurulur.
+  for (const sub of allowed) {
+    if (subs.includes(sub) || Object.prototype.hasOwnProperty.call(result, sub) || subWriters[sub]) continue;
+    const known = subValue(incoming[sub]);
+    if (known !== undefined) { result[sub] = known; applied = true; }
+  }
+  const merged = Object.keys(result).length ? result : null;
+  const conflict = Object.keys(conflicting).length ? { current: clone(merged), incoming: (() => {
+    const next = { ...result };
+    for (const [sub, item] of Object.entries(conflicting)) { if (item === undefined) delete next[sub]; else next[sub] = item; }
+    return Object.keys(next).length ? clone(next) : null;
+  })() } : null;
+  return { value: merged, applied, conflict, subWriters, subOrders };
+}
+
 function now() { return new Date().toISOString(); }
 function clone(value) { return JSON.parse(JSON.stringify(value)); }
 function eventId(value) { return String(value || '').trim().slice(0, 160); }
@@ -244,9 +313,26 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
   const writer = causal && causal.writer && causal.writer.d ? { d: String(causal.writer.d), s: Number(causal.writer.s) || 0 } : null;
   const seen = writer && causal.seen && typeof causal.seen === 'object' ? causal.seen : null;
   const conflicts = [];
+  const subWriters = { ...(base._subfieldWriters || {}) }, subOrders = { ...(base._subfieldOrders || {}) };
+  const compositeHandled = new Set();
   for (const [key, value] of Object.entries(incoming && typeof incoming === 'object' ? incoming : {})) {
-    if (key === '_fieldRevisions' || key === '_revision' || key === '_fieldWriters' || key === '_fieldOrders' || key === '_listOrders') continue;
+    if (key === '_fieldRevisions' || key === '_revision' || key === '_fieldWriters' || key === '_fieldOrders' || key === '_listOrders' || key === '_subfieldWriters' || key === '_subfieldOrders') continue;
     const previousRevision = Number(fields[key]) || 0;
+    const subs = causal && causal.subfields && COMPOSITE_FIELDS[key] && Array.isArray(causal.subfields[key]) ? causal.subfields[key] : null;
+    if (subs) {
+      compositeHandled.add(key);
+      const merged = mergeCompositeField({ current: next[key], value, subs, allowed: COMPOSITE_FIELDS[key], writer, seen, order,
+        ownerAllowed: Boolean(owner && owner.known && owner.allowed && SHARED_CP_FIELDS.has(key)),
+        wholeWriter: writers[key], wholeOrder: orders[key], priorWriters: subWriters[key], priorOrders: subOrders[key] });
+      subWriters[key] = merged.subWriters; subOrders[key] = merged.subOrders;
+      if (merged.applied) {
+        next[key] = merged.value; fields[key] = Math.max(previousRevision, revision);
+        if (writer) writers[key] = writer;
+        rememberOrder(key);
+      }
+      if (merged.conflict) conflicts.push({ field: key, current: merged.conflict.current, incoming: merged.conflict.incoming, currentRevision: previousRevision, baseRevision: Number(baseRevision) || 0 });
+      continue;
+    }
     if (key === DOCUMENT_REVISION_META_FIELD && next[key] && typeof next[key] === 'object') {
       next[key] = newerRevisionMeta(next[key], value);
       fields[key] = Math.max(previousRevision, revision);
@@ -315,6 +401,14 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
     fields[key] = revision;
     if (writer) writers[key] = writer;
   }
+  // Bütün nesne olarak yazılan (eski sürüm / çakışma çözümü) bileşik alanın
+  // alt alan saatleri geçersizdir; sonraki alt alan yazımı bütün yazarı esas alır.
+  for (const key of Object.keys(COMPOSITE_FIELDS)) {
+    if (compositeHandled.has(key) || !Object.prototype.hasOwnProperty.call(incoming || {}, key)) continue;
+    if (next[key] !== base[key] || writers[key] !== (base._fieldWriters || {})[key]) { delete subWriters[key]; delete subOrders[key]; }
+  }
+  if (Object.keys(subWriters).length) next._subfieldWriters = subWriters; else delete next._subfieldWriters;
+  if (Object.keys(subOrders).length) next._subfieldOrders = subOrders; else delete next._subfieldOrders;
   next._fieldRevisions = fields;
   if (Object.keys(orders).length) next._fieldOrders = orders; else delete next._fieldOrders;
   if (Object.keys(writers).length) next._fieldWriters = writers;
@@ -744,8 +838,9 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
   /* Tek bir patch'i AÇIK bir transaction state'i üzerine uygular. queuePatch ile
      queuePatches aynı gövdeyi paylaşır; böylece toplu yol tek kayıtlık yoldan
      ayrışıp farklı journal/merge davranışına kayamaz. */
-  function applyLocalPatch(state, { id, patch, eventId: eid, at, origin = 'local', baseRevision = null, entityType = 'record', userId = null, owner = { allowed:true, known:false }, hlc = null, listClocks = null }) {
+  function applyLocalPatch(state, { id, patch, eventId: eid, at, origin = 'local', baseRevision = null, entityType = 'record', userId = null, owner = { allowed:true, known:false }, hlc = null, listClocks = null, subfields: rawSubfields = null }) {
     const key = recordId(id);
+    const subfields = normalizeSubfields(patch, rawSubfields);
     if (state.events[eid] || state.syncLedger?.eventIds?.[eid]) return { duplicate: true, record: clone(state.records[key]), revision: state.revision, eventId: eid };
     restoreHlc(state, hlc);
     // A normal local edit is based on the record revision actually visible on
@@ -758,7 +853,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
     const revision = Math.max(Number(state.revision) || 0, effectiveBaseRevision) + 1;
     // Local writes are authoritative for this device; baseRevision is carried
     // in the journal for remote conflict detection, not used to reject the edit.
-    const merged = fieldMerge(state.records[key], patch, revision, null, '', { writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 }, owner, documentId:key, listClocks, order:{ userId:String(userId || ''), at, deviceId:state.deviceId, ...(hlc ? {hlc} : {}) } });
+    const merged = fieldMerge(state.records[key], patch, revision, null, '', { writer: { d: state.deviceId, s: (Number(state.localSequence) || 0) + 1 }, owner, documentId:key, listClocks, subfields, order:{ userId:String(userId || ''), at, deviceId:state.deviceId, ...(hlc ? {hlc} : {}) } });
     const operation = state.records[key] ? 'update' : 'create';
     state.revision = revision;
     state.localSequence = Number(state.localSequence) + 1;
@@ -769,7 +864,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
     for (const source of [state.syncCheckpoints || {}, state.causalKnowledge || {}]) {
       for (const [device, seq] of Object.entries(source)) if (Number(seq) > (seenVector[device] || 0)) seenVector[device] = Number(seq);
     }
-    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, seen: seenVector, localSequence: state.localSequence, at, origin, ...(hlc ? {hlc} : {}), ...(listClocks ? {listClocks} : {}), uploaded: false, acknowledged: false, synced: false };
+    const journalItem = { schemaVersion: SCHEMA_VERSION, eventId: eid, id: key, entityType: String(entityType || 'record'), userId: userId == null ? null : String(userId), deviceId: state.deviceId, operation, patch: clone(patch || {}), revision, baseRevision: effectiveBaseRevision, seen: seenVector, localSequence: state.localSequence, at, origin, ...(hlc ? {hlc} : {}), ...(listClocks ? {listClocks} : {}), ...(subfields ? {subfields} : {}), uploaded: false, acknowledged: false, synced: false };
     closeIfLocalOnly(journalItem);
     journalItem.sha256 = sha256(Buffer.from(JSON.stringify({ ...journalItem, sha256: undefined }), 'utf8'));
     state.events[eid] = { eventId: eid, revision, at, origin, deviceId: state.deviceId, localSequence: state.localSequence };
@@ -857,7 +952,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
       // kopyalanmış bir kardeş kurulumdan gelir: "aynı cihazın eski olayı"
       // kuralıyla sessizce atlanmamalı, ayrı yazar olarak değerlendirilmeli.
       const writerDevice = delta.deviceId && isRetiredDeviceId(state, delta.deviceId) ? `${delta.deviceId}${CLONE_WRITER_SUFFIX}` : String(delta.deviceId || '');
-      const causal = delta.deviceId ? { writer: { d: writerDevice, s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen, owner, listClocks:delta.listClocks, order:{ userId:String(delta.userId || ''), at:delta.at || '', deviceId:delta.deviceId, ...(delta.hlc ? {hlc:delta.hlc} : {}) } } : null;
+      const causal = delta.deviceId ? { writer: { d: writerDevice, s: Number(delta.sourceLastSeq) || Number(delta.localSequence) || 0 }, seen: delta.seen, owner, listClocks:delta.listClocks, subfields:normalizeSubfields(delta.patch || delta.value, delta.subfields), order:{ userId:String(delta.userId || ''), at:delta.at || '', deviceId:delta.deviceId, ...(delta.hlc ? {hlc:delta.hlc} : {}) } } : null;
       const merged = fieldMerge(state.records[key], delta.patch || delta.value || {}, revision, delta.baseRevision, key, causal);
       state.records[key] = { ...merged.value, _deleted: false };
       delete state.tombstones[key];

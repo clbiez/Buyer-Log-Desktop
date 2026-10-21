@@ -833,7 +833,7 @@ function patchOrderOverride(orderCode, patch, expectedRevision = null, expectedS
   if(touchesSuppFob)ov._revisions.suppFob=currentSuppFob+1;
   const saved = saveOverrides(ov, ov._revision);
   const cpKey = overrideWriteKey(orderCode, patch || {});
-  cpSharedStore.mirrorPatchDetached(cpKey, cpSharedStore.patchFromOrderPatch(saved, cpKey, patch || {}), { actor: options && options.actor });
+  cpSharedStore.mirrorPatchDetached(cpKey, cpSharedStore.patchFromOrderPatch(saved, cpKey, patch || {}), { actor: options && options.actor, subfields: cpSharedStore.subfieldsFromOrderPatch(patch) });
   return { overrides: saved, revision: saved._revisions.orders, revisions: { orders: saved._revisions.orders, suppFob: saved._revisions.suppFob }, updated: 1 };
 }
 // Receipts use the same override store and CAS as the ordinary editor. Restoring
@@ -891,7 +891,7 @@ function restoreOrderOverrideReceipts(items,expectedRevision,options){
     // mirroring an empty line value would shadow that fallback on peers.
     const lineFallsBack=name=>receipt.key!==String(orderCode)&&receipt.maps[name]===null&&Object.hasOwn(saved[name]||{},String(orderCode));
     const sharedPatch={...selector,...(lineFallsBack('notesmap')?{}:{notes:{}}),subManufacturer:saved.submap[receipt.key]??null,licensor:null,delType:null,dates:Object.fromEntries(Object.entries(DATE_OVERRIDE_FIELDS).map(([field,key])=>[field,saved.datemap[receipt.key]?.[key]??null])),...(kind.current?{...(lineFallsBack('noteColumnValues')?{}:{noteColumns:{}}),shortage:null}:{})};
-    cpSharedStore.mirrorPatchDetached(receipt.key,cpSharedStore.patchFromOrderPatch(saved,receipt.key,sharedPatch),{actor:options?.actor});
+    cpSharedStore.mirrorPatchDetached(receipt.key,cpSharedStore.patchFromOrderPatch(saved,receipt.key,sharedPatch),{actor:options?.actor,subfields:cpSharedStore.subfieldsFromOrderPatch(sharedPatch)});
   }
   const verified=list.every(({orderCode,receipt,selector})=>{const after=snapshotOrderOverride(orderCode,selector).patch.maps;return Object.keys(receipt.maps).every(name=>JSON.stringify(after[name])===JSON.stringify(receipt.maps[name]));});
   return {verified,restored:true,revision:saved._revisions.orders};
@@ -922,7 +922,7 @@ function patchOrderOverrides(items, expectedRevision = null, expectedSuppFobRevi
   ov._revisions.orders = current + 1;
   if(touchesSuppFob)ov._revisions.suppFob=currentSuppFob+1;
   const saved = saveOverrides(ov, ov._revision);
-  for (const item of cpTouched) cpSharedStore.mirrorPatchDetached(item.key, cpSharedStore.patchFromOrderPatch(saved, item.key, item.patch), { actor: options && options.actor });
+  for (const item of cpTouched) cpSharedStore.mirrorPatchDetached(item.key, cpSharedStore.patchFromOrderPatch(saved, item.key, item.patch), { actor: options && options.actor, subfields: cpSharedStore.subfieldsFromOrderPatch(item.patch) });
   return { overrides: saved, revision: saved._revisions.orders, revisions: { orders: saved._revisions.orders, suppFob: saved._revisions.suppFob }, updated, skipped };
 }
 
