@@ -5,11 +5,25 @@ const store=require('./store');
 const staging=require('./staging');
 const checklist=require('../checklist-supplier-store');
 const Engine=require('../../../public/test-report-engine');
+const Assessment=require('../../../public/test-report-assessment');
+const Checklist=require('../../../public/cp-checklist-engine');
+const crypto=require('crypto');
+const {redactSecrets,SECRET_KEY_RE}=require('../../../shared/secret-redaction');
+const digest=value=>crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
+function safeBusinessData(value) {
+  if(typeof value==='string')return redactSecrets(value);
+  if(Array.isArray(value))return value.map(safeBusinessData);
+  if(value&&typeof value==='object')return Object.fromEntries(Object.entries(value).filter(([key])=>!SECRET_KEY_RE.test(key)).map(([key,val])=>[key,safeBusinessData(val)]));
+  return value;
+}
 const text=(value,max=300)=>String(value??'').replace(/\s+/g,' ').trim().slice(0,max);
 const fail=(code,statusCode=400)=>Object.assign(new Error(code),{code,statusCode});
 const MIME={pdf:'application/pdf',msg:'application/vnd.ms-outlook',eml:'message/rfc822'};
-const sessionFingerprint=session=>require('../agent-office-store').hash(JSON.stringify({reports:session.reports,files:[...session.files].map(([id,file])=>({id,name:file.name,hash:file.hash,kind:file.kind}))}));
-function createService({authorizedOrders,audit=()=>{}}) {
+const sessionFingerprint=session=>require('../agent-office-store').hash(JSON.stringify({reports:session.reports,assessment:session.assessment&&{snapshotId:session.assessment.packet.snapshotId,validated:session.assessment.validated},files:[...session.files].map(([id,file])=>({id,name:file.name,hash:file.hash,kind:file.kind}))}));
+function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,reviewContext=null}) {
+  function assertReviewCurrent(profile,review) {
+    if(review.sourceRevision!==sourceRevision(profile)||review.storeRevision!==store.read().revision)throw fail('TEST_REPORT_REVIEW_STALE',409);
+  }
   function sessionFor(profile,id) {const session=staging.getSession(id,profile.id);if(!session)throw fail('TEST_REPORT_SESSION_EXPIRED',410);return session;}
   async function parse(profile,input,options={}) {
     if(!Array.isArray(input)||!input.length)throw fail('VALIDATION_ERROR');
@@ -24,22 +38,52 @@ function createService({authorizedOrders,audit=()=>{}}) {
     const session=staging.createSession(profile.id,options);
     try {
       const out=await extract.processFiles(files,{stage:session.stage});
-      session.setReports(out.reports);session.setAiCandidates(out.files);
+      session.setReports(out.reports);session.setSources(out.files.flatMap(file=>file.sources||[]));session.setAiCandidates(out.files);
       return {ok:true,sessionId:session.id,expiresAfterMs:staging.TTL_MS,files:out.files.map(f=>({name:f.name,kind:f.kind,status:f.status,format:f.format,warnings:f.warnings,talepNos:f.reports.map(r=>r.talepNo),ai:f.ai?.eligible?{uploadId:f.ai.uploadId,uploadName:f.ai.uploadName,mailText:f.ai.mailText,mailDate:f.ai.mailDate}:null})),reports:out.reports};
     }catch(err){staging.dropSession(session.id);throw err;}
   }
   async function prepareCommit(profile,body) {
     const allowed=await authorizedOrders(profile,{write:true}),session=sessionFor(profile,body.sessionId);
+    if(session.assessment) {
+      if(!session.assessment.validated||body.snapshotId!==session.assessment.packet.snapshotId)throw fail('TEST_REPORT_REVIEW_REQUIRED',409);
+      const current=await authorizedOrders(profile,{write:false});
+      if(digest([...current])!==session.assessment.authorityHash)throw fail('TEST_REPORT_REVIEW_STALE',409);
+      assertReviewCurrent(profile,session.assessment);
+    }
     const byTalep=new Map(session.reports.filter(r=>r.talepNo).map(r=>[r.talepNo,r]));
+    const seen=new Set();
     const items=(Array.isArray(body.items)?body.items:[]).map(raw=>{
-      const report=byTalep.get(text(raw?.talepNo,20));if(!report)throw fail('TEST_REPORT_UNKNOWN');
+      const report=byTalep.get(text(raw?.talepNo,80));if(!report)throw fail('TEST_REPORT_UNKNOWN');
       const orderKey=text(raw.orderKey),authoritative=allowed.get(orderKey);if(!authoritative)throw fail('TEST_REPORT_ORDER_FORBIDDEN',403);
-      return {report,orderKey,itemId:text(raw.itemId,160),context:{...(raw.context&&typeof raw.context==='object'?raw.context:{}),...authoritative}};
+      const scopes=Engine.orderScopes(report),scope=scopes.find(s=>s.orderCode===Engine.normalizeOrderCode(authoritative.orderCode));
+      let manualMatch=null;
+      if(raw.manualMatch) {
+        const review=session.assessment;
+        const origin=review?.validated?.assessments.find(item=>item.reportId===report.talepNo&&item.orderKey===raw.manualMatch.fromOrderKey&&item.step===raw.manualMatch.fromItemId);
+        const part=Checklist.Components.parseItem(raw.itemId),baseItem=part?.baseId||raw.itemId;
+        if(!origin||raw.confirmMatch!==true||raw.confirmEvidence!==true||!review.packet.checklistStatuses.some(status=>status.id===raw.targetStatus)||!review.packet.checklistSteps.some(step=>step.id===raw.itemId||step.id===baseItem))throw fail('TEST_REPORT_MANUAL_MATCH_REQUIRED',409);
+        const target=review.packet.cp.rows.find(row=>row.key===orderKey),analysis={orderKey,sourceRow:target?.fields||{}};
+        const answers=Object.fromEntries((target?.checklist||[]).map(item=>[orderKey+'::'+item.itemId,item.answer]));
+        const parts=Checklist.componentsFor(analysis,{answers});
+        if(part&&!parts.some(p=>p.id===part.partId)||!part&&(parts.length||Checklist.Components.isSet(analysis.sourceRow,'cp')))throw fail('TEST_REPORT_MANUAL_MATCH_REQUIRED',409);
+        manualMatch={fromOrderKey:origin.orderKey,fromItemId:origin.step,targetStatus:raw.targetStatus};
+      }
+      if(scopes.length&&!scope&&!manualMatch)throw fail('TEST_REPORT_ORDER_MISMATCH',409);
+      if(scope?.requiresReview&&raw.confirmMatch!==true)throw fail('TEST_REPORT_SCOPE_CONFIRMATION_REQUIRED',409);
+      const key=[report.talepNo,orderKey].join('::');
+      if(session.assessment) {
+        const proposal=session.assessment.validated.assessments.find(item=>item.reportId===report.talepNo&&item.orderKey===orderKey&&(!item.step||item.step===raw.itemId));
+        if(!manualMatch&&(!proposal||proposal.blocked&&raw.confirmEvidence!==true))throw fail('TEST_REPORT_REVIEW_REQUIRED',409);
+      }
+      if(seen.has(key))throw fail('TEST_REPORT_DUPLICATE_TARGET',409);seen.add(key);
+      return {report,orderKey,itemId:text(raw.itemId,160),review:session.assessment?{snapshotId:session.assessment.packet.snapshotId,scopeConfirmed:raw.confirmEvidence===true,...(manualMatch?{matchSource:'buyer',manualMatch}:{matchSource:'ai'})}:null,context:{...(raw.context&&typeof raw.context==='object'?raw.context:{}),...authoritative}};
     });
-    return {session,items,sessionFingerprint:sessionFingerprint(session)};
+    const saved=store.read();
+    if(items.some(item=>Engine.reportLinks(saved.links[item.report.talepNo]).some(link=>!allowed.has(link.orderKey))))throw fail('TEST_REPORT_SHARED_SCOPE_FORBIDDEN',403);
+    return {session,items,authorizedOrderKeys:new Set(allowed.keys()),sessionFingerprint:sessionFingerprint(session)};
   }
   async function commit(profile,body,options={}) {
-    const {session,items,sessionFingerprint:fingerprint}=await prepareCommit(profile,body);
+    const {session,items,authorizedOrderKeys,sessionFingerprint:fingerprint}=await prepareCommit(profile,body);
     if(options.expectedSessionFingerprint && options.expectedSessionFingerprint!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
     const attach=(file,report,item)=>{
       const staged=file.stagingId?session.files.get(file.stagingId):null;if(!staged)return null;
@@ -50,7 +94,8 @@ function createService({authorizedOrders,audit=()=>{}}) {
     const apply=()=>staging.withSessionLease(body.sessionId,profile.id,()=>{
       const latest=sessionFor(profile,body.sessionId);
       if(sessionFingerprint(latest)!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
-      options.assertAuthority?.();return store.commit(items,body.typeMap||{},profile,attach,options);
+      if(latest.assessment)assertReviewCurrent(profile,latest.assessment);
+      options.assertAuthority?.();return store.commit(items,body.typeMap||{},profile,attach,{...options,authorizedOrderKeys});
     });
     // Native preparation can await order scope. Hold the Office guard only for
     // the synchronous native lease/write, never while loading that scope.
@@ -67,6 +112,64 @@ function createService({authorizedOrders,audit=()=>{}}) {
     return {ok:true,report:report.talepNo?session.reports.find(r=>r.talepNo===report.talepNo):report};
     });
   }
+  async function prepareAssessment(profile,body) {
+    const allowed=await authorizedOrders(profile,{write:false}),session=sessionFor(profile,body.sessionId);
+    let cp=body.cp;
+    if(!cp||!Array.isArray(cp.rows)||!cp.rows.length||cp.rowCount!==cp.rows.length)throw fail('TEST_REPORT_CP_INCOMPLETE',409);
+    const keys=new Set(cp.rows.map(row=>row.key));
+    if(keys.size!==cp.rows.length||cp.rows.some(row=>!allowed.has(row.key)||String(allowed.get(row.key).orderCode)!==row.orderCode)||[...allowed.keys()].some(key=>!keys.has(key)))throw fail('TEST_REPORT_CP_INCOMPLETE',409);
+    const canonical=reviewContext?await reviewContext(profile):null;
+    if(canonical) {
+      const clientRows=new Map(cp.rows.map(row=>[row.key,row]));
+      const states=row=>Object.fromEntries((row.checklist||[]).map(item=>[item.itemId,{state:item.answer?.state,source:item.answer?.source}]).sort(([a],[b])=>a.localeCompare(b)));
+      if(canonical.cp.rows.length!==cp.rows.length||canonical.cp.rows.some(row=>{
+        const client=clientRows.get(row.key);
+        return !client||Object.entries(row.fields).some(([key,value])=>JSON.stringify(client.fields?.[key])!==JSON.stringify(value))||digest(states(client))!==digest(states(row));
+      }))throw fail('TEST_REPORT_CP_INCOMPLETE',409);
+      cp={...canonical.cp,clientDisplayTable:cp.displayTable};
+    }
+    const packet=safeBusinessData({protocol:Assessment.PROTOCOL,caseId:session.id,sources:session.sources||[],cp,
+      checklistSteps:canonical?.checklistSteps||body.checklistSteps||[],checklistStatuses:canonical?.checklistStatuses||body.checklistStatuses||[],
+      canonicalRules:canonical?.rules||null,
+      previousBuyerLogExtraction:session.reports,previousApprovedReports:store.publicPayload(keys)});
+    if(!packet.sources.length)throw fail('TEST_REPORT_EVIDENCE_MISSING',422);
+    packet.snapshotId=digest(packet);
+    const serialized=JSON.stringify(packet);
+    if(Buffer.byteLength(serialized)>19*1024*1024)throw fail('TEST_REPORT_CONTEXT_TOO_LARGE',413);
+    session.assessment={packet,authorityHash:digest([...allowed]),sourceRevision:sourceRevision(profile),storeRevision:packet.previousApprovedReports.revision,validated:null};
+    staging.persistSession(session);return {ok:true,packet};
+  }
+  async function acceptAssessment(profile,body) {
+    const allowed=await authorizedOrders(profile,{write:false});
+    return staging.withSessionLease(body.sessionId,profile.id,()=>{
+    const session=sessionFor(profile,body.sessionId),review=session.assessment;
+    if(!review||review.packet.snapshotId!==body.snapshotId)throw fail('TEST_REPORT_REVIEW_STALE',409);
+    if(digest([...allowed])!==review.authorityHash)throw fail('TEST_REPORT_REVIEW_STALE',409);
+    assertReviewCurrent(profile,review);
+    const validated=Assessment.validate(body.data,review.packet);
+    if(!validated.ok)throw Object.assign(fail('TEST_REPORT_AI_CONTRACT_INVALID',422),{validationErrors:validated.errors});
+    const reports=validated.assessments.map(item=>{
+      const data={...item.extraction,talepNo:/^\d{4,8}$/.test(item.reportId)?item.reportId:'',siparisKodu:item.orderCode,
+        genelSonuc:item.extraction.genelSonuc||item.labResult,confidence:'MEDIUM',explanation:item.summary};
+      const report=Engine.reportFromAiExtract(data);
+      // External laboratories may use a real alphanumeric report reference.
+      // Keep that exact reference; never manufacture a numeric request number.
+      report.talepNo=item.reportId;
+      report.uyarilar=report.uyarilar.filter(w=>w.code!=='missingTalepNo');
+      const ids=new Set(item.evidence.map(ref=>ref.sourceId));
+      report.dosyalar=(session.sources||[]).filter(source=>ids.has(source.id)).map(source=>{
+        const staged=session.files.get(source.fileId);return staged?{ad:source.name,tur:source.kind,boyut:staged.buffer.length,hash:source.hash,stagingId:source.fileId}:null;
+      }).filter(Boolean);
+      const evidence=item.evidence.map(ref=>{const source=review.packet.sources.find(source=>source.id===ref.sourceId);return {...ref,sourceName:source.name,sourceHash:source.hash};});
+      report.aiAssessment={snapshotId:review.packet.snapshotId,orderKey:item.orderKey,step:item.step,status:item.status,scope:item.scope,evidence,component:item.component,labResult:item.labResult,commercialDecision:item.commercialDecision,summary:item.summary,risks:item.risks};
+      return report;
+    });
+    session.reports=Engine.groupReports(reports);
+    review.validated=validated;staging.persistSession(session);
+    audit(profile,'TEST_REPORT_AI_REVIEW',session.id,{snapshotId:review.packet.snapshotId,sources:review.packet.sources.length,orders:review.packet.cp.rows.length,proposals:validated.assessments.length,unresolved:validated.unresolvedSourceIds.length});
+    return {ok:true,reports:session.reports,assessment:validated,snapshotId:review.packet.snapshotId};
+    });
+  }
   async function extractAi(profile,sessionId,{engine,lang='tr',assertAuthority=()=>{}}) {
     const session=sessionFor(profile,sessionId),candidates=[...session.aiCandidates];
     if(candidates.length>5)throw fail('TEST_REPORT_AI_BATCH_LIMIT',413);
@@ -81,6 +184,6 @@ function createService({authorizedOrders,audit=()=>{}}) {
     }
     return {sessionId,reports:sessionFor(profile,sessionId).reports,aiCalls:results.length};
   }
-  return {parse,prepareCommit,commit,acceptAi,extractAi,sessionFor};
+  return {parse,prepareCommit,commit,acceptAi,extractAi,prepareAssessment,acceptAssessment,sessionFor};
 }
 module.exports={createService,sessionFingerprint};

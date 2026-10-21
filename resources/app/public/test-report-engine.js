@@ -78,6 +78,71 @@
     const raw = text(value).replace(/\.0+$/, '').replace(/\s+/g, '');
     return /^\d+$/.test(raw) ? raw.replace(/^0+(?=\d)/, '') : fold(raw);
   }
+
+  // Scope is derived from preserved source text, never from an AI guess or
+  // a CP substring search. Every additional PO requires explicit selection.
+  function reportDescriptions(report) {
+    return [...new Set([report.aciklama].concat((report.aciklamalar || []).map(d => d.text)).map(text).filter(Boolean))];
+  }
+  function orderScopes(report) {
+    const scopes = new Map();
+    const add = (raw, source, evidence, confidence, requiresReview) => {
+      if (!/^\d{5,9}$/.test(raw)) return;
+      const orderCode = normalizeOrderCode(raw);
+      if (!scopes.has(orderCode)) scopes.set(orderCode, { orderCode, source, evidence, confidence, requiresReview });
+    };
+    const primary = text(report.siparisKodu);
+    if (/^\d{5,9}$/.test(primary)) add(primary, 'siparisKodu', primary, 'field', false);
+    const scan = (value, source) => {
+      const raw = String(value || '').normalize('NFKC');
+      const label = /\b(?:ORDERS?|PURCHASE\s+ORDERS?|P\s*\.?\s*O\s*\.?\s*S?|SIPARI[SŞ](?:LER|LERI)?)\b(?:\s*(?:NO\.?S?|NUMBER[SŞ]?|KODU|KODLARI|NUMARASI))?\s*[:#=.-]?\s*/gi;
+      const explicit = new Set();
+      let anchor;
+      const folded = fold(raw);
+      while ((anchor = label.exec(folded))) {
+        const tail = folded.slice(label.lastIndex);
+        const list = tail.match(/^\d{5,9}(?:(?:\s*[/,;|&+\-–—]\s*|\s+(?:(?:AND|VE)\s+)?)(?:\d{5,9}))*/);
+        if (!list) continue;
+        const range = /\d\s*[-–—]\s*\d/.test(list[0]);
+        for (const n of list[0].matchAll(/\d{5,9}/g)) {
+          const end = label.lastIndex + n.index + n[0].length;
+          if (/[A-Z0-9]/.test(folded.charAt(end))) continue;
+          explicit.add(n[0]);
+          add(n[0], source, text(raw), range ? 'candidate' : 'labelled', true);
+        }
+      }
+      // Unknown writing remains visible as an unverified candidate. Standard,
+      // measurement and embedded product IDs cannot silently become a PO.
+      for (const n of raw.matchAll(/(?<![\p{L}\p{N}])\d{5,9}(?![\p{L}\p{N}])/gu)) {
+        if (explicit.has(n[0])) continue;
+        const before = fold(raw.slice(Math.max(0, n.index - 24), n.index));
+        const after = fold(raw.slice(n.index + n[0].length, n.index + n[0].length + 16));
+        if (/(?:ISO|AATCC|GSM|MODEL|STYLE|TALEP|REQUEST)\s*[:#-]?\s*$/.test(before) || /^\s*(?:GSM|KG|G\/M|%|MM|CM)\b/.test(after)) continue;
+        add(n[0], source, text(raw), 'candidate', true);
+      }
+    };
+    if (primary && !/^\d{5,9}$/.test(primary)) scan(primary, 'siparisKodu');
+    for (const description of reportDescriptions(report)) scan(description, 'description');
+    for (const warning of report.uyarilar || []) {
+      if (warning.code === 'conflict' && warning.field === 'siparisKodu') {
+        for (const value of warning.values || []) scan('ORDER: ' + value.value, value.source || 'conflict');
+      }
+    }
+    return [...scopes.values()];
+  }
+  function matchReportScopes(report, rows, options) {
+    const scopes = orderScopes(report);
+    if (!scopes.length) return [{ scope: null, match: matchReport(report, rows, options) }];
+    return scopes.map(scope => ({ scope, match: matchReport({ ...report, siparisKodu: scope.orderCode }, rows, options) }));
+  }
+  function reportLinks(link) {
+    return (link && Array.isArray(link.targets) ? link.targets : link ? [link] : []).filter(l => l && l.orderKey && l.itemId);
+  }
+  function orderScopeNeedsReview(report) {
+    return orderScopes(report).some(s => s.requiresReview) ||
+      reportDescriptions(report).some(d => /\b(?:ORDERS?|PURCHASE\s+ORDERS?|P\s*\.?\s*O\s*\.?S?|SIPARIS(?:LER|LERI)?)\b/.test(fold(d))) ||
+      (report.uyarilar || []).some(w => w.code === 'descriptionBoundary' || (w.code === 'conflict' && w.field === 'siparisKodu'));
+  }
   /* MODEL ADI: "ŞRT,PLAYS10-YD" = "ŞRT,PLAYS-10-YD"; "KK.TSH,YUKI 2447911"
      sonundaki ek numara atılır; ayraçlar yok sayılır. */
   function modelKey(value) {
@@ -205,6 +270,7 @@
     'URUN KLASMAN': 'urunKlasman', 'PRODUCT CLASSIFICATION': 'urunKlasman',
     'TEDARIKCI': 'tedarikci', 'SUPPLIER': 'tedarikci', 'URETICI': 'uretici', 'MANUFACTURER': 'uretici',
     'RETEST REQUEST NO': 'retestOf', 'TEKRAR TEST TALEP NO': 'retestOf', 'RETEST TALEP NO': 'retestOf', 'TEKRAR TALEP NO': 'retestOf',
+    'ACIKLAMA': 'aciklama', 'DESCRIPTION': 'aciklama', 'EXPLANATION': 'aciklama',
   });
   function fieldForLabel(label) {
     const key = fold(firstPart(String(label || '').replace(/[:\s]+$/, ''))).replace(/\s*\?$/, '');
@@ -214,7 +280,7 @@
   function emptyReport() {
     return {
       talepNo: '', talepTipi: '', lab: '', retestOf: '', siparisKodu: '', modelAdi: '', modelKodu: '', renk: '',
-      genelSonuc: '', raporTarihi: '', raporTarihiIso: '',
+      genelSonuc: '', raporTarihi: '', raporTarihiIso: '', aciklama: '', aciklamalar: [],
       bilesenler: [], testler: [], kararlar: [], labDipColors: [], dosyalar: [],
       kaynak: '', kaynaklar: [], uyarilar: [],
     };
@@ -423,6 +489,24 @@
     else if (format === 'B') report = parseLabrightResultMail(mail);
     else if (format === 'C') report = parseDecisionMail(mail);
     if (!report) return { format: '', report: null };
+    // Capture the free-text cell, including wrapped lines; do not consume the
+    // next table cell or quoted conversation as description evidence.
+    const lines = bodyLines(mail.body);
+    for (let i = 0; i < lines.length; i++) {
+      const m = lines[i].match(/^\s*(?:Açıklama|Aciklama|Description|Explanation)(?:\s*\/\s*(?:Description|Explanation))?\s*(?:\t\s*:?\s*|:\s*)(.*)$/i);
+      if (!m) continue;
+      let value = m[1].split('\t')[0];
+      while (!/\t/.test(m[1]) && i + 1 < lines.length) {
+        const next = lines[i + 1], cells = next.split('\t');
+        if (!text(next) || fieldForLabel(cells[0]) || /^\s*(?:FROM|TO|SUBJECT|NOTE|NOT|DEAR|SAYIN)\b/i.test(next)) break;
+        if (cells.length > 1 && !/^\s*[\d/,;|&+]/.test(cells[0]) && !/^(?:ORDER|PURCHASE|P\s*\.?\s*O|SIPARI)/.test(fold(cells[0]))) break;
+        if (/^[^:]+:/.test(next) && !/^(?:ORDER|PURCHASE|P\s*\.?\s*O|SIPARI)/.test(fold(next))) break;
+        value += ' ' + lines[++i].split('\t')[0];
+        if (cells.length > 1) break;
+      }
+      if (text(value)) report.aciklama = text(value);
+      break;
+    }
     finalizeReport(report);
     return { format, report };
   }
@@ -455,7 +539,16 @@
       if (!fieldKey) continue;
       // Sadece ilk görülen değer: sonraki sayfa başlıkları tekrarlanır.
       if (report[fieldKey]) continue;
-      assignField(report, fieldKey, valueRightOf(items, item));
+      if (fieldKey === 'aciklama') {
+        // Description headers in the component table have no value on their
+        // right. Only consume a description cell in the report header area.
+        const first = items.filter(v => v.p === item.p && Math.abs(v.y - item.y) <= 3 && v.x > item.x && !isLabelItem(v)).sort((a, b) => a.x - b.x)[0];
+        if (!first || !valueRightOf(items, item)) continue;
+        const next = sorted.find(v => v.p === item.p && v.y < item.y - 3 && (isLabelItem(v) || v.x <= item.x + 8 || /^\d+\s*\/\s*\d+$/.test(v.s) || /^(DEGERLENDIRME|EVALUATION|TEST RESULTS|COMPONENT|BILESEN|UYGULANAN TEST|APPLIED TEST)/.test(fold(v.s))));
+        const bottom = next ? next.y + 3 : 0;
+        if (!next) report.uyarilar.push({ code: 'descriptionBoundary' });
+        assignField(report, fieldKey, linesFromItems(items.filter(v => v.p === item.p && v.x >= first.x && v.y <= item.y + 3 && v.y > bottom)));
+      } else assignField(report, fieldKey, valueRightOf(items, item));
     }
   }
   function findItem(items, pattern, from) {
@@ -632,6 +725,9 @@
     }
     if (!report.talepNo) report.uyarilar.push({ code: 'missingTalepNo' });
     if (report.kaynak && !report.kaynaklar.includes(report.kaynak)) report.kaynaklar.push(report.kaynak);
+    if (report.aciklama && !(report.aciklamalar || []).some(d => d.text === report.aciklama)) {
+      report.aciklamalar = (report.aciklamalar || []).concat([{ text: report.aciklama, source: report.kaynak }]);
+    }
     return report;
   }
 
@@ -659,6 +755,9 @@
     if (!incoming) return clone(base);
     const out = clone(base);
     const add = clone(incoming);
+    out.aiAssessments = [...new Map([out, add].flatMap(r => (r.aiAssessments || []).concat(r.aiAssessment ? [r.aiAssessment] : [])).map(review => [JSON.stringify(review), review])).values()];
+    out.aciklama = out.aciklama || add.aciklama || '';
+    out.aciklamalar = [...new Map([out, add].flatMap(r => (r.aciklamalar || []).concat(r.aciklama ? [{ text: r.aciklama, source: r.kaynak }] : [])).map(d => [d.text + '|' + d.source, d])).values()];
     out.alanKaynak = out.alanKaynak || {};
     for (const field of ['talepTipi', 'lab', 'retestOf', 'siparisKodu', 'modelAdi', 'modelKodu', 'renk', 'genelSonuc', 'raporTarihi', 'raporTarihiIso']) {
       const a = out[field], b = add[field];
@@ -966,6 +1065,7 @@
     }
     if (w.code === 'mailPdf') return en ? 'Read from a PDF printout of the e-mail.' : 'Mailin PDF çıktısından okundu.';
     if (w.code === 'missingTalepNo') return en ? 'No request number found.' : 'Talep no bulunamadı.';
+    if (w.code === 'descriptionBoundary') return en ? 'The PDF description boundary is uncertain; verify the complete order scope against the source.' : 'PDF açıklama sınırı belirsiz; tüm sipariş kapsamını kaynakla doğrulayın.';
     if (w.code === 'decisionTableEmpty') return en ? 'The decision table could not be read.' : 'Karar tablosu okunamadı.';
     if (w.code === 'noTextLayer') return en ? 'The PDF has no text layer (scanned); it is sent to LCW AI for reading.' : 'PDF metin katmanı yok (taranmış); okuma için LCW AI\'a gönderilir.';
     if (w.code === 'unrecognized') return en ? 'Unrecognised format; it is sent to LCW AI for reading.' : 'Tanınmayan format; okuma için LCW AI\'a gönderilir.';
@@ -994,7 +1094,7 @@
   function reportFromAiExtract(data, meta) {
     const d = data && typeof data === 'object' ? data : {};
     const report = emptyReport();
-    for (const field of ['talepNo', 'talepTipi', 'siparisKodu', 'modelAdi', 'modelKodu', 'renk', 'genelSonuc', 'raporTarihi', 'lab', 'retestOf']) {
+    for (const field of ['talepNo', 'talepTipi', 'siparisKodu', 'modelAdi', 'modelKodu', 'renk', 'genelSonuc', 'raporTarihi', 'lab', 'retestOf', 'aciklama']) {
       assignField(report, field === 'lab' ? '' : field, d[field]);
     }
     report.lab = text(d.lab).slice(0, 160);
@@ -1004,6 +1104,12 @@
       const parts = line.split(AI_SPLIT);
       return { ad: text(parts[0]).slice(0, 300), bilesen: text(parts[1]).slice(0, 60), sonuc: text(parts[2]).slice(0, 60) };
     }).filter(t => t.ad);
+    report.labDipColors = aiList(d.labDipColors, 200).map(line => {
+      const parts = line.split(AI_SPLIT), date = parseDate(parts[2]);
+      return { colour: text(parts[0]), model: text(parts[1]), date: text(parts[2]), dateIso: date.iso,
+        round: text(parts[3]), analyst: text(parts[4]), comment: text(parts[5]), result: text(parts[6]),
+        status: normalizeResult(parts[6]) || 'pending', submitNo: text(parts[7]), revised: /REVISED|REVIZE/.test(fold(parts[8])) };
+    }).filter(colour => colour.colour);
     report.kararlar = aiList(d.kararlar, 60).map(line => {
       const parts = line.split(AI_SPLIT);
       const date = parseDate(parts[4]);
@@ -1042,6 +1148,8 @@
           .filter(Boolean))].slice(0, 30);
         return {
           talepNo: r.talepNo, talepTipi: r.talepTipi, lab: r.lab, siparisKodu: r.siparisKodu, modelAdi: r.modelAdi, renk: r.renk,
+          descriptions: reportDescriptions(r), orderScopes: orderScopes(r),
+          orderMatches: (item.orderMatches || []).map(s => ({ orderCode: text(s.orderCode), matchLevel: text(s.matchLevel), reason: text(s.reason), ignored: s.ignored === true, currentStep: text(s.currentStep), currentStatus: text(s.currentStatus) })),
           genelSonuc: r.genelSonuc, buyerLogOutcome: outcome.code, testCount: testNames.length,
           testNames,
           notableTests: notable.slice(0, 15).map(t => t.ad + ' | ' + t.sonuc),
@@ -1095,6 +1203,7 @@
       en ? 'A) Supplier lab result mail (SupplierLabUser) + TestRequestResultReport PDF. B) Labright result mail [RESULT REPORT]/[SONUÇ RAPORU] + TestRequestResultForm Lang1 (TR) / Lang2 (EN) PDF. C) Labright commercial decision mail (table: test, decision, comment, decided by, date). D) Standalone Labright PDF (e.g. Gold Seal). R) ROS Lab Dip / colour evaluation email (one request can have several independent colour outcomes and revised submissions).'
         : 'A) Tedarikçi lab sonuç maili (SupplierLabUser) + TestRequestResultReport PDF. B) Labright sonuç maili [RESULT REPORT]/[SONUÇ RAPORU] + TestRequestResultForm Lang1 (TR) / Lang2 (EN) PDF. C) Labright ticari karar maili (tablo: test, karar, açıklama, karar veren, tarih). D) Tek başına Labright PDF (ör. Gold Seal). R) ROS Lab Dip renk değerlendirme maili (tek talepte çoklu bağımsız renk sonuçları ve revizyonlar olabilir).',
       (en ? 'Field labels: ' : 'Alan etiketleri: ') + labels,
+      en ? 'One report may cover several orders. Inspect descriptions and orderScopes, including unverified candidates and orders missing from CP. The primary Order No is not the complete scope. Extra orders always require user verification; do not infer missing numbers or expand ranges.' : 'Bir rapor birden fazla siparişi kapsayabilir. Açıklamaları ve orderScopes listesini, doğrulanmamış adayları ve CP’de olmayan siparişleri incele. Ana Sipariş No tüm kapsam değildir. Ek siparişler daima kullanıcı doğrulaması gerektirir; eksik numara uydurma ve aralıkları genişletme.',
       en ? 'Result dictionary (raw value is stored, never a binary pass/fail):' : 'Sonuç sözlüğü (ham değer saklanır, ikili geçer/kalır değildir):', ...dict,
       en ? 'Rules: request number is text (4–8 digits, including newer Labright 4-digit requests; preserve leading zeros). Variant colour is the colour description (e.g. MID GREEN); codes like "R9J EKRU" in the component list are component colours. A retest (Retest Request No) replaces the earlier result. Commercial Approval counts as pass. Retest, awaiting buying feedback, lack of sample and in progress keep the step pending. The step status is derived from ALL reports of the row; a user-defined checklist status whose name matches the result (e.g. Lack of Sample, In Progress) is written instead of Pending; a status entered by the user has priority.'
         : 'Kurallar: talep no metindir (yeni Labright 4 haneli talepler dâhil 4–8 hane; baştaki sıfır korunur). Varyant rengi renk tanımıdır (ör. MID GREEN); bileşen listesindeki "R9J EKRU" gibi değerler bileşen rengidir. Tekrar test (Retest Request No) eski sonucun yerine geçer. Ticari Onay geçer sayılır. Tekrar test, Buying dönüşü, numune yetersizliği ve işleme alındı adımı bekletir. Adım durumu satırın BÜTÜN raporlarından türetilir; adı sonuçla eşleşen kullanıcı tanımlı checklist durumu (ör. Lack of Sample, In Progress) Bekliyor yerine yazılır; kullanıcının girdiği durum önceliklidir.',
@@ -1111,6 +1220,6 @@
     classifyMail, parseMail, parsePdfItems, linesFromItems,
     emptyReport, mergeReports, groupReports, decisionKey, fileKey,
     reportOutcome, supersededSet, deriveStepStatus, stepSignals, suggestChecklistStatus, testsMatch, resolveLabDipColors, labDipSummary,
-    matchReport, warningText,
+    matchReport, matchReportScopes, orderScopes, orderScopeNeedsReview, reportDescriptions, reportLinks, warningText,
   };
 });

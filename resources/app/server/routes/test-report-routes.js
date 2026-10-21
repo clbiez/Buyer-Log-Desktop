@@ -34,9 +34,7 @@ module.exports = function registerTestReportRoutes(app, deps) {
 
 app.get('/api/test-reports', userAccess.requireAnyArea('cp', 'orders', 'overview'), async (req, res) => {
     try {
-      const allowed=await authorizedOrders(req),payload=store.publicPayload();
-      payload.links=Object.fromEntries(Object.entries(payload.links).filter(([,link])=>allowed.has(link?.orderKey)));
-      payload.reports=Object.fromEntries(Object.keys(payload.links).map(key=>[key,payload.reports[key]]));
+      const allowed=await authorizedOrders(req),payload=store.publicPayload(new Set(allowed.keys()));
       res.set('Cache-Control', 'no-store').json(payload);
     }
     catch (err) { automationError(res, err, 'Test raporları okunamadı.'); }
@@ -67,6 +65,15 @@ app.get('/api/test-reports/staged/:sessionId/:fileId', userAccess.requireAnyArea
 app.post('/api/test-reports/ai-report', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '512kb' }), (req, res) => {
   try {res.set('Cache-Control','no-store').json(service.acceptAi(req.currentUser,req.body||{}));}
   catch(err){automationError(res,err,'LCW AI okuması doğrulanamadı.');}
+});
+
+app.post('/api/test-reports/prepare-review', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '24mb' }), async (req, res) => {
+  try {res.set('Cache-Control','no-store').json(await service.prepareAssessment(req.currentUser,req.body||{}));}
+  catch(err){automationError(res,err,'İnceleme bağlamı hazırlanamadı.');}
+});
+app.post('/api/test-reports/ai-assessment', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '4mb' }), async (req, res) => {
+  try {res.set('Cache-Control','no-store').json(await service.acceptAssessment(req.currentUser,req.body||{}));}
+  catch(err){automationError(res,err,'LCW AI incelemesi doğrulanamadı.');}
 });
 
 app.post('/api/test-reports/commit', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '2mb' }), async (req, res) => {

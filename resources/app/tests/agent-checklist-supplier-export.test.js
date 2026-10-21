@@ -45,11 +45,12 @@ test('export builds the CP workbook for scoped orders only, with current answers
   const col=sheet.getRow(1).values.indexOf('EN demo-check');
   assert.ok(col>0);assert.equal(sheet.getRow(1).getCell(col+1).text,'EN demo-check - Note');assert.equal(sheet.getRow(1).getCell(col+2).text,'EN demo-check - Report No');
   assert.equal(Boolean(sheet.sheetProtection&&sheet.sheetProtection.sheet),true,'the sheet is protected like the CP export');
-  // Data rows follow the hidden status-choice rows, as in the CP export; find them by the identity column.
+  // Status dropdown values reside on the hidden meta sheet; orders begin directly at row 2.
   const keyCol=sheet.getRow(1).values.indexOf('__BL_ORDER_KEY'),dataRows=[];sheet.eachRow((r,n)=>{if(n>1&&r.getCell(keyCol).text)dataRows.push(r);});
   const statuses=dataRows.map(r=>r.getCell(col).text);
   assert.deepEqual(statuses,['Rejected','DEMO Bekleme'],'current answers, custom status names in the owner language');
   assert.equal(dataRows.length,2,'the order the owner may not read is not exported');
+  assert.deepEqual(dataRows.map(r=>r.number),[2,3], 'supplier data starts immediately beneath the headers');
 });
 
 test('a supplier-filled copy of the exported workbook imports back through Office',async()=>{

@@ -260,7 +260,8 @@ test('Koleksiyon Checklist: dört durum, ortak özel sütun bayrağı, madde yok
   assert.match(extractFunction(APP, 'tableViewGroupCatalog'), /groups\.get\(group\)\.keys\.push\(key\)/);
   const meta = extractFunction(APP, 'kolSpreadsheetColumnMeta');
   assert.match(meta, /if\(c\.checklist\)return \{[^}]*editable:false/);
-  assert.match(extractFunction(APP, 'kolSetChecklistStatus'), /kolWriteGroupedStorageValue\(row,key,status==='open'\?'':status\)/);
+  assert.match(extractFunction(APP, 'kolSetChecklistStatus'), /kolWriteGroupedStorageValue\(row,key,next\)/);
+  assert.match(extractFunction(APP, 'kolSetChecklistStatus'), /let next=status==='open'\?'':status/);
 });
 
 test('Alanlar çekmecesi: Tümü de tiklenir; hariç tutulanlar ayrı saklanır, yeni sütunlar Tümü\'ye girer', () => {

@@ -52,13 +52,14 @@ test('hücre Buying görevini TR/EN gösterir; düzenleme yetkisi korunur', () =
   assert.match(ui, /source: 'test_report'/);
 });
 
-test('CP\'de siparişi olmayan raporlar dikkate alınmaz ve LCW AI incelemesine gönderilmez', () => {
+test('CP dışında kalan sipariş yazılmaz; ham kaynakların tamamı LCW AI tarafından incelenir', () => {
   const ui = read('public/test-report-import.js');
   assert.match(ui, /const ignored = Boolean\(E\(\)\.normalizeOrderCode\(report\.siparisKodu\)\) && match\.level === 'none' && match\.reason === 'order'/);
   assert.match(ui, /include: !ignored && Boolean\(chosen\) && !fromAi/);
-  assert.match(ui, /function reviewableEntries\(\) \{ return ui\.entries\.filter\(function \(e\) \{ return e\.report\.talepNo && !e\.ignored; \}\); \}/);
+  assert.match(ui, /if \(entry\.ignored\) \{ out\.reason/, 'CP dışında kalan kapsamlar checklist yazımından elenir');
   assert.match(ui, /T\('Dikkate alınmadı', 'Ignored'\)/);
-  assert.match(ui, /LCW AI\\'a gönderilmedi/);
+  assert.match(ui, /Review\.batches\(packet\)/, 'kaynakların tamamı inceleme partilerine alınır');
+  assert.match(ui, /new File\(\[JSON\.stringify\(\{ \.\.\.packet, focusSourceIds: batch\.sourceIds \}\)\]/, 'her partide tam CP ve kaynak metin paketi korunur');
   assert.match(ui, /if \(!entry\.ignored && !entry\.itemId && entry\.typeKey/);
 });
 
@@ -93,12 +94,13 @@ test('LCW AI tek ortak yoldan çağrılır; öneri onaysız uygulanmaz', () => {
   const ui = read('public/test-report-import.js');
   assert.match(read('public/perf-runtime.js'), /testReportImport:\['lcwai-assistant\.js\?rev=1'/, 'ortak BuyerLogAI istemcisi önce yüklenir');
   assert.match(ui, /source: 'test-report-extract'/);
-  assert.match(ui, /source: 'test-report-review'/);
+  assert.match(ui, /source: 'test-report-assess'/);
   assert.doesNotMatch(ui, /\/lcw\/gpt\/api|Authorization|Bearer/, 'modül kendi AI entegrasyonunu yazmaz');
   assert.match(ui, /include: !ignored && Boolean\(chosen\) && !fromAi/, 'LCW AI okuduğu ve CP dışında kalan satır varsayılan seçilmez');
   assert.match(ui, /entry\.include = Boolean\(entry\.chosen\) && !entry\.fromAi/, 'tip eşlemesi AI satırını seçmez');
   assert.match(ui, /data-tr-ai-step/);
-  assert.match(ui, /E\(\)\.parseReviews\(/, 'AI incelemesi motorun doğrulayıcısından geçer');
+  assert.match(ui, /Review\.validate\(/, 'AI incelemesi kaynak ve kapsam doğrulayıcısından geçer');
+  assert.match(ui, /ui\.ai\.state !== 'done' \|\| !ui\.ai\.packet/, 'tamamlanmayan inceleme checklist yazamaz');
   assert.match(ui, /T\('LCW AI bağlı değil', 'LCW AI is not connected'\)/);
   const routes = read('server/routes/test-report-routes.js');
   assert.match(routes, /service\.acceptAi\(req\.currentUser/, 'UI aynı sunucu servisini kullanır');

@@ -37,10 +37,10 @@
  * SAF: DOM yok, fetch yok, AI yok.
  */
 (function (root, factory) {
-  const api = factory();
+  const api = factory(typeof module === 'object' && module.exports ? require('./checklist-components-engine') : root.BLChecklistComponents);
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) root.BLCpChecklistEngine = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (Components) {
   'use strict';
 
   /* Kontroller. `maxDaysToLoad`: yüklemeye bu kadar veya daha az gün kalınca
@@ -257,8 +257,9 @@
     return identity ? `@option:${identity}::${itemId}` : '';
   }
   function approvalScopeOf(context, itemId) {
-    const direct = context && context.item && context.item.id === itemId ? context.item.approvalScope : '';
-    const mapped = context && context.itemScopes ? context.itemScopes[itemId] : '';
+    const baseId = (Components.parseItem(itemId) || {}).baseId || itemId;
+    const direct = context && context.item && context.item.id === baseId ? context.item.approvalScope : '';
+    const mapped = context && context.itemScopes ? context.itemScopes[baseId] : '';
     return (direct || mapped) === 'option' ? 'option' : 'order';
   }
 
@@ -291,6 +292,7 @@
       by: details.by || '',
       loadDate: hasLoadDate ? details.loadDate : (analysis ? analysis.plannedLoadDate : null),
     };
+    if (Components.validCount(details.componentCount)) answer.componentCount = Number(details.componentCount);
     if (details.note != null) answer.note = String(details.note || '').slice(0, 2000);
     // Kaynak: 'test_report' kaydı rapor aktarımından gelir; elle seçim kaynaksızdır.
     if (details.source) answer.source = String(details.source).slice(0, 80);
@@ -321,6 +323,11 @@
   function statusOf(analysis, itemId, ctx) {
     const context = ctx || {};
     const answers = context.answers || {};
+    if (!Components.parseItem(itemId)) {
+      const parts = componentsFor(analysis, context);
+      if (parts.length) return Components.aggregate(parts.map(part => statusOf(analysis, Components.itemId(itemId, part.id), context)), isResolved);
+      if (Components.isSet(analysis.sourceRow || analysis, 'cp')) return 'open';
+    }
     const answer = answers[answerKey(analysis.orderKey, itemId)];
     // A date revision is context, never permission to undo a user's decision.
     const answerState = answer ? normalizeStatus(answer.state) : '';
@@ -334,9 +341,10 @@
       // yayılmaz; bunlar siparişe özel kararlardır.
       if (reusable && normalizeStatus(reusable.state) === 'approved') return 'approved';
     }
-    if (plmApproved(plmEvidenceOf(context, analysis, itemId))) return 'approved';
+    if (!Components.parseItem(itemId) && plmApproved(plmEvidenceOf(context, analysis, itemId))) return 'approved';
     return 'open';
   }
+  function componentsFor(analysis, context) { return Components.partsFor(analysis, context && context.answers); }
   function isResolved(status) {
     const id = normalizeStatus(status);
     return RESOLVED_STATES.includes(id) || Boolean(customStatuses().find(item => item.id === id && item.resolved));
@@ -470,7 +478,7 @@
         const reusableKey = approvalScopeOf(scopedContext, itemId) === 'option' ? optionAnswerKey(analysis, itemId) : '';
         const reusable = reusableKey ? answers[reusableKey] : null;
         const reusableApproved = reusable && normalizeStatus(reusable.state) === 'approved';
-        if (!direct && !reusableApproved) plmAnsweredTotal += 1;
+        if (!direct && !reusableApproved && !componentsFor(analysis, itemContext).length) plmAnsweredTotal += 1;
       };
       for (const item of customItems) countResolved(item);
       for (const item of ITEMS) {
@@ -499,9 +507,9 @@
   }
 
   return {
-    ITEMS, ITEM_BY_ID, GROUP_LABELS, ANSWER_STATES, ANSWER_LABELS, STATUS_IDS, STATUS_LABELS, RESOLVED_STATES,
+    Components, ITEMS, ITEM_BY_ID, GROUP_LABELS, ANSWER_STATES, ANSWER_LABELS, STATUS_IDS, STATUS_LABELS, RESOLVED_STATES,
     normalizeStatus, statusLabel, statusOf, isResolved, statusIds, customStatuses, addCustomStatus, deleteCustomStatus,
-    normalizeSettings, answerKey, optionIdentity, optionAnswerKey, approvalScopeOf, makeAnswer, answerIsStale, stateFor,
+    componentsFor, normalizeSettings, answerKey, optionIdentity, optionAnswerKey, approvalScopeOf, makeAnswer, answerIsStale, stateFor,
     itemApplies, openItems, summarize,
   };
 });

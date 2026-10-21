@@ -5464,6 +5464,8 @@ require('./routes/checklist-supplier-routes')(app, {
 const agentQualityService=require('./lib/test-reports/service').createService({
   audit:userAccess.appendAudit,
   authorizedOrders:agentQualityAuthorizedOrders,
+  sourceRevision:cpAgentRevision,
+  reviewContext:agentQualityReviewContext,
 });
 /* Paydaş belgesi eşlemesi: sahibin GÖREBİLDİĞİ siparişler ve kanonik CP tarihleri
    (planlanan yükleme, hedefi kaçırmadan en geç yükleme). Yalnız okunur. */
@@ -5488,6 +5490,25 @@ async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
     const CP=require('../public/cp-readiness-engine');
     return new Map(rows.map(row=>[CP.analyzeOrder(row).orderKey,{orderCode:String(canonicalFields.value(row,source,'orderCode') || ''),
       plmId:String(canonicalFields.value(row,source,'plmId') || ''),modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || ''),colour:String(canonicalFields.value(row,source,'colour')||'')}]));
+}
+async function agentQualityReviewContext(profile) {
+  const data=await cpAgentData(profile),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
+  const rules=[...data.personalRules,...data.checklist.definitions].filter(rule=>rule.kind==='checklist'&&rule.enabled!==false);
+  const steps=new Map(rules.map(rule=>[rule.id,{id:rule.id,name:[rule.tr||rule.name||rule.id,rule.en||rule.nameEn||rule.id].join(' / ')}]));
+  const baseSteps=[...steps.values()];
+  for(const row of data.cpRows) {
+    for(const part of Checklist.componentsFor(CP.analyzeOrder(row),{answers:data.checklist.answers})) {
+      for(const step of baseSteps){const id=Checklist.Components.itemId(step.id,part.id);steps.set(id,{id,name:step.name+' · '+part.label});}
+    }
+  }
+  const cp=require('../public/test-report-assessment').cpSnapshot(data.cpRows,{
+    keyOf:row=>CP.analyzeOrder(row).orderKey,orderCodeOf:row=>canonicalFields.value(row,'cp','orderCode'),
+    checklistOf:row=>{const prefix=CP.analyzeOrder(row).orderKey+'::';return Object.entries(data.checklist.answers).filter(([key])=>key.startsWith(prefix)).map(([key,answer])=>({itemId:key.slice(prefix.length),answer}));},
+  });
+  const custom=data.customStatuses||[];
+  return {cp,checklistSteps:[...steps.values()],rules:{personalRules:data.personalRules,settings:data.settings,checklistEnabled:data.checklistEnabled},
+    checklistStatuses:['open','approved','rejected','notRequired'].map(id=>({id,name:Checklist.statusLabel(id,'tr')+' / '+Checklist.statusLabel(id,'en'),resolved:id==='approved'||id==='notRequired'})).concat(custom.map(status=>({id:status.id,name:status.name||status.tr||status.label||status.id,resolved:status.resolved===true}))),
+  };
 }
 require('./routes/test-report-routes')(app,{automationError,express,userAccess,service:agentQualityService,authorizedOrders:(...args)=>agentQualityAuthorizedOrders(...args)});
 const agentQualityTools=require('./lib/agent-quality-tools').registerQualityTools(agentToolRegistry,{service:agentQualityService,userAccess,authorizedOrders:agentQualityAuthorizedOrders,sourceRevision:cpAgentRevision,guard:(ctx,work)=>agentOfficeService.taskNativeGuard(ctx,work),restoreGuard:(ctx,work)=>agentOfficeStore.withProfileGuard(ctx.ownerId,ctx.input.officeAgentId,ctx.input.officeAgentRevision,()=>{ctx.assertAuthority();return work();}),dataset:profile=>agentPlatformDataset(profile.id,profile,'cp'),mail:cpAgentMail,verifyMail:(result,profile)=>result.emails.every(mail=>Boolean(automationEmail.draftPath(mail.filename,profile.id)))});
@@ -5815,9 +5836,7 @@ async function agentOfficeOperationalData(profile, scope, areas) {
     const CP=require('../public/cp-readiness-engine'), analyses=result.cpRows.map(row=>CP.analyzeOrder(row)), keys=new Set(analyses.map(order=>order.orderKey));
     const Checklist=require('../public/cp-checklist-engine'), optionKeys=new Set(analyses.map(order=>Checklist.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
     const models=new Set(result.cpRows.map(row=>String(canonicalFields.value(row,'cp','plmId') || '')));
-    const reports=require('./lib/test-reports/store').publicPayload();
-    const links=Object.fromEntries(Object.entries(reports.links).filter(([,link])=>keys.has(link?.orderKey)));
-    result.reports={...reports,links,reports:Object.fromEntries(Object.keys(links).map(key=>[key,reports.reports[key]]))};
+    result.reports=require('./lib/test-reports/store').publicPayload(keys);
     const checklist=require('./lib/checklist-supplier-store').publicPayload();
     const visible=entries=>Object.fromEntries(Object.entries(entries||{}).filter(([key])=>keys.has(key.slice(0,key.lastIndexOf('::'))) || optionKeys.has(key.slice(0,key.lastIndexOf('::')))));
     result.personalAnswers=visible(personalAnswers);

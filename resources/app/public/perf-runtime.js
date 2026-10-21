@@ -121,8 +121,8 @@
     // Genel LCW AI çalışma alanı: ortak istemci + güvenli Markdown + görünüm.
     lcwaiChat:['lcwai-assistant.js?rev=1','lcwai-markdown.js?rev=1','lcwai-chat.js?rev=1'],
     agentOffice:['lcwai-assistant.js?rev=1','lcwai-markdown.js?rev=1','agent-office-scene.js?rev=1','agent-office.js?rev=2'],
-    layoutDocument:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=2','layout-control-engine.js?rev=3','layout-document-reader.js?rev=1'],
-    layoutControl:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=2','layout-control-engine.js?rev=3','layout-document-reader.js?rev=1','layout-control.js?rev=3'],
+    layoutDocument:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2'],
+    layoutControl:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2','layout-ai-review.js?rev=1','layout-control.js?rev=5'],
     // LCW AI Çıktı Düzenleyici + çıktı şablonları: yalnız "Düzenle"/"Şablonlar" ile yüklenir.
     lcwaiOutputEditor:['lcwai-output-layout.js?rev=1','lcwai-output-editor.js?rev=3'],
     lfl:['lfl-calculation-engine.js','lfl.js?rev=2'],
@@ -155,7 +155,7 @@
     cpAssistant:['backlog-delivery-engine.js','cp-readiness-engine.js','cp-checklist-engine.js','cp-rules-engine.js','plm-sample-requests-engine.js','plm-sample-requests.js','cp-decision-runtime.js','cp-overview-assistant.js?rev=20261019'],
     /* Test Raporu Aktarımı: yalnız menüden açılınca ya da CP'ye dosya
        bırakılınca yüklenir. Saf motor görünümden ÖNCE gelir. */
-    testReportImport:['lcwai-assistant.js?rev=1','test-report-engine.js?rev=2','test-report-import.js?rev=2'],
+    testReportImport:['lcwai-assistant.js?rev=1','test-report-engine.js?rev=3','test-report-assessment.js?rev=1','test-report-import.js?rev=4'],
     // Overview'un ilk çizimine gerekmeyen yardımcılar UI_READY sonrasında
     // ortak lazy-loader ile yüklenir. Sekmeye geçiş bunları aynı promise ile
     // bekler; böylece işlevler kaybolmaz, yalnız açılış kritik yolundan çıkar.

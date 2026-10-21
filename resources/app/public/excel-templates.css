@@ -11,3 +11,7 @@
 .excelTemplateMapping select{width:100%;}
 
 .excelTemplateCard .modalTitle{display:flex;align-items:center;justify-content:space-between;font-size:var(--fs-lg);}
+.excelTemplateQuantity{display:grid;gap:var(--sp-2);padding:var(--sp-3);border:1px solid var(--line);}
+.excelTemplateQuantity[hidden]{display:none;}
+.excelTemplateQuantity strong{font-size:var(--fs-sm);}
+.excelTemplateQuantity input[type=number]{width:120px;}

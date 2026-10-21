@@ -12,6 +12,7 @@
 }(typeof globalThis !== 'undefined' ? globalThis : this, function (root) {
   'use strict';
 
+  const Components = root.BLChecklistComponents || (root.BLCpChecklistEngine && root.BLCpChecklistEngine.Components) || (typeof require === 'function' ? require('./checklist-components-engine') : null);
   const API = '/api/checklist-supplier';
   const ANSWER_KEY = 'lcw.cp.checklist.v1';
   const PENDING_KEY = 'lcw.cp.checklist.pending.v1';
@@ -20,6 +21,8 @@
   const DATA_SHEET = 'Checklist';
   const SCHEMA_VERSION = 2;
   const EXCEL_COLUMNS_KEY = 'lcw.cp.checklist.excel.columns.v1';
+  const SUPPLIER_QUESTIONS_KEY = 'lcw.cp.checklist.supplier.questions.v1';
+  const STATUS_VALIDATION_NAME = 'BL_CHECKLIST_STATUSES';
   const EXCEL_DATE_FORMAT = 'dd.mm.yyyy';
   const EXCEL_PROTECTION_PASSWORD = 'BuyerLogChecklist';
   const DEFAULT_EXCEL_COLUMNS = Object.freeze(['image', 'order', 'plm', 'model', 'colour', 'supplier', 'exfactory']);
@@ -256,6 +259,7 @@
         at: after.at || now, baseAt: before && before.at || '',
         loadDate: after.loadDate || null, source: after.source || 'buyer_log',
         note: after.note || '',
+        ...(after.componentCount ? { componentCount: after.componentCount } : {}),
         reportNumber: after.reportNumber || '',
         actualDate: after.actualDate || '',
         attachments: Array.isArray(after.attachments) ? after.attachments : [],
@@ -352,6 +356,80 @@
     return list;
   }
 
+  function componentParts(analysis, answers) {
+    const s = assistantState();
+    return Components.partsFor(analysis, answers || (s && s.answers));
+  }
+  function scopedItem(item, partId) {
+    return { ...item, id: Components.itemId(item.id, partId), baseId: item.id, partId,
+      tr: item.tr + ' · ' + partId, en: item.en + ' · ' + partId };
+  }
+  function catalogItem(id) {
+    const part = Components.parseItem(id);
+    const item = itemCatalog().find(entry => entry.id === (part ? part.baseId : id));
+    return item && part ? scopedItem(item, part.partId) : item;
+  }
+  function expandedItems(items, analyses, answers) {
+    return items.flatMap(item => {
+      if (Components.parseItem(item.id)) return [item];
+      const parts = [...new Set(analyses.flatMap(analysis => componentParts(analysis, answers).map(part => part.id)))];
+      const whole = analyses.some(analysis => !componentParts(analysis, answers).length && !Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp'));
+      return [...(whole || !parts.length ? [item] : []), ...parts.map(id => scopedItem(item, id))];
+    });
+  }
+  function componentCellHtml(row, itemId, canEdit) {
+    const info = row._checklistParts && row._checklistParts[itemId];
+    if (!info) return '';
+    const disabled = canEdit ? '' : ' disabled aria-disabled="true"';
+    const parts = info.parts.map(part => '<button type="button" class="clStatusTrigger is-' + html(part.state) + '" data-id="' + html(row._id) + '" data-item="' + html(Components.itemId(itemId, part.id)) + '" data-status="' + html(part.state) + '" title="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-label="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-haspopup="listbox" aria-expanded="false"' + disabled + '><b class="clPartLabel">' + html(part.label) + '</b><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">' + html(statusLabel(part.state)) + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>').join('');
+    const summary = info.parts.length ? info.parts.filter(part => part.state === 'approved').length + '/' + info.parts.length : T('Parça sayısını belirleyin', 'Define the part count');
+    const legacyHtml = info.legacy ? '<button type="button" class="clPartsConfigure" data-cl-legacy data-id="' + html(row._id) + '" data-item="' + html(itemId) + '" title="' + T('Eski set kaydı', 'Legacy set record') + '" aria-label="' + T('Eski set kaydı', 'Legacy set record') + '">↶</button>' : '';
+    return '<td class="editTd clPartsCell"><div class="clPartsStack">' + parts + '<div class="clPartsFooter"><small>' + html(summary) + '</small>' + (canEdit ? '<button type="button" class="clPartsConfigure" data-cl-config-parts data-id="' + html(row._id) + '" aria-label="' + T('Set parçalarını tanımla', 'Define set parts') + '" title="' + T('Set parçalarını tanımla', 'Define set parts') + '">' + '<span aria-hidden="true">⋯</span></button>' : '') + '</div>' + legacyHtml + '</div></td>';
+  }
+  function openLegacyRecord(trigger) {
+    const row = cpRowById(trigger.dataset.id), legacy = row && row._checklistParts && row._checklistParts[trigger.dataset.item] && row._checklistParts[trigger.dataset.item].legacy;
+    if (!legacy) return;
+    const modal = root.document.createElement('div'); modal.className = 'cpaModalOverlay';
+    modal.innerHTML = '<div class="cpaModal" role="dialog" aria-modal="true"><header><b>' + T('Eski set kaydı', 'Legacy set record') + '</b><button type="button" data-legacy-close aria-label="' + T('Kapat', 'Close') + '">×</button></header><div class="cpaModalBody"><b>' + html(statusLabel(legacy.state)) + '</b><p class="clPartsLegacyNote">' + html(legacy.note || '') + '</p><p>' + html(legacy.reportNumber || '') + '</p><p>' + html(legacy.actualDate || '') + '</p>'
+      + (legacy.attachments || []).map(attachment => '<p><a class="cpaBtn" href="' + API + '/attachments/' + encodeURIComponent(attachment.id) + '" download="' + html(attachment.filename || 'attachment') + '">' + html(attachment.filename || attachment.originalName || T('Dosya', 'File')) + '</a></p>').join('')
+      + '</div><footer><button type="button" class="cpaBtn" data-legacy-close>' + T('Kapat', 'Close') + '</button></footer></div>';
+    root.document.body.appendChild(modal);
+    const close = () => modal.remove();
+    modal.querySelectorAll('[data-legacy-close]').forEach(button => {button.onclick = close;});
+    modal.onclick = event => {if(event.target === modal)close();};
+    modal.addEventListener('keydown', event => {if(event.key === 'Escape')close();});
+    modal.querySelector('[data-legacy-close]').focus();
+  }
+  function openComponentCountDialog(current, minimum, onSave) {
+    const modal = root.document.createElement('div'); modal.className = 'cpaModalOverlay';
+    modal.innerHTML = '<div class="cpaModal" role="dialog" aria-modal="true" aria-labelledby="clPartsTitle"><header><b id="clPartsTitle">' + T('Set / Takım parçaları', 'Set components') + '</b><button type="button" data-parts-close aria-label="' + T('Kapat', 'Close') + '">×</button></header><div class="cpaModalBody"><label class="cpaSettingRow"><span>' + T('Parça sayısı (2–26)', 'Part count (2–26)') + '</span><input data-parts-count type="number" min="' + minimum + '" max="26" step="1" value="' + (current || 2) + '"></label><p class="cpaNote">' + T('Parçalar A, B, C olarak etiketlenir. Mevcut parçalar ve eski set kaydı korunur; onaylar parçalara otomatik dağıtılmaz.', 'Parts are labelled A, B, C. Existing parts and the legacy set record are preserved; approvals are not automatically copied to parts.') + '</p><p data-parts-error role="alert"></p></div><footer><button type="button" class="cpaBtn" data-parts-close>' + T('Vazgeç', 'Cancel') + '</button><button type="button" class="cpaBtn primary" data-parts-save>' + T('Kaydet', 'Save') + '</button></footer></div>';
+    root.document.body.appendChild(modal);
+    const close = () => modal.remove();
+    modal.querySelectorAll('[data-parts-close]').forEach(button => {button.onclick = close;});
+    modal.onclick = event => {if(event.target === modal) close();};
+    modal.addEventListener('keydown', event => {if(event.key === 'Escape') close();});
+    const input = modal.querySelector('[data-parts-count]'); input.focus(); input.select();
+    modal.querySelector('[data-parts-save]').onclick = async function () {
+      if (!input.reportValidity()) return;
+      this.disabled = true;
+      try {if(await onSave(Number(input.value)) === false) throw new Error(T('Parçalar kaydedilemedi.', 'Parts could not be saved.'));close();}
+      catch(error) {modal.querySelector('[data-parts-error]').textContent = error.message;this.disabled = false;}
+    };
+    return modal;
+  }
+  async function configureComponents(trigger) {
+    const assistant = await ensureAssistant(), row = cpRowById(trigger.dataset.id);
+    if (!assistant || !row) return;
+    const decision = analysesForRows([row]), analysis = decision.byRow.get(row);
+    if (!analysis) return;
+    const saved = assistantState().answers[Components.configKey(analysis)];
+    openComponentCountDialog(componentParts(analysis).length, saved && saved.componentCount || 2, async count => {
+      if (!assistant.setChecklistComponents(analysis, count)) return false;
+      refreshColumns({ render: true });
+      await syncAnswerChanges(); return true;
+    });
+  }
+
   function currentRows() {
     try {
       if (root.BLFormulaRows && typeof root.BLFormulaRows.cp === 'function') {
@@ -371,6 +449,15 @@
 
   function itemApplies(item, analysis) {
     if (!analysis) return true;
+    const part = Components.parseItem(item.id);
+    const parts = componentParts(analysis);
+    if (part) {
+      if (!parts.some(entry => entry.id === part.partId)) return false;
+      item = { ...item, id: part.baseId };
+    } else if (parts.length || Components.isSet(analysis.sourceRow || analysis, 'cp')) {
+      // Base item is still applicable in the UI, but workbook callers explicitly
+      // expand it to part-specific columns below.
+    }
     // Karar katmanı her sipariş için geçerli checklist başlıklarını zaten
     // hesapladı; aynı sonucu yeniden değerlendirmeyiz.
     if (Array.isArray(analysis.checklistItemIds)) return analysis.checklistItemIds.indexOf(item.id) >= 0;
@@ -388,6 +475,7 @@
     if (!analysis) return null;
     const s = assistantState(), Checklist = root.BLCpChecklistEngine;
     if (!s || !Checklist) return null;
+    if (!Components.parseItem(item.id) && componentParts(analysis).length) return { state: Checklist.statusOf(analysis, item.id, { answers: s.answers, item }) };
     const key = Checklist.answerKey(analysis.orderKey, item.id);
     const answer = s.answers && s.answers[key];
     if (answer) return answer;
@@ -396,7 +484,7 @@
       const reusable = optionKey && s.answers && s.answers[optionKey];
       if (reusable && Checklist.normalizeStatus(reusable.state) === 'approved') return reusable;
     }
-    if (item.builtIn && root.BLPlmSampleRequests && typeof root.BLPlmSampleRequests.evidenceForAnalysis === 'function') {
+    if (!Components.parseItem(item.id) && item.builtIn && root.BLPlmSampleRequests && typeof root.BLPlmSampleRequests.evidenceForAnalysis === 'function') {
       try {
         const evidence = root.BLPlmSampleRequests.evidenceForAnalysis(analysis, item.id);
         if (evidence && evidence.state === 'approved') {
@@ -454,7 +542,7 @@
       const decision = opts.decision || analysesForRows(rows);
       rows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
-        const statuses = {};
+        const statuses = {}, partCells = {};
         items.forEach(function (item) {
           const key = columnKey(item.id);
           // Soru henüz sorulmuyorsa hücre boştur; ancak test raporundan
@@ -465,10 +553,20 @@
           const computed = analysis && analysis.checklistState && analysis.checklistState[item.id];
           const answer = computed ? null : answerFor(item, analysis);
           const status = (computed && computed !== 'notApplicable' ? computed : '') || normalizeState(answer && answer.state) || 'open';
-          statuses[item.id] = status;
-          row[key] = statusLabel(status);
+          const parts = componentParts(analysis);
+          if (parts.length || Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp')) {
+            const Checklist = root.BLCpChecklistEngine, s = assistantState();
+            const states = parts.map(part => ({ ...part, state: Checklist.statusOf(analysis, Components.itemId(item.id, part.id), { answers: s.answers, item }) }));
+            partCells[item.id] = { parts: states, legacy: s.answers[Checklist.answerKey(analysis.orderKey, item.id)] || null };
+            statuses[item.id] = Components.aggregate(states.map(part => part.state), Checklist.isResolved);
+            row[key] = states.length ? states.map(part => part.label + ': ' + statusLabel(part.state)).join(' / ') : T('Parça sayısını belirleyin', 'Define the part count');
+          } else {
+            statuses[item.id] = status;
+            row[key] = statusLabel(status);
+          }
         });
         // Hücre çizimi ve durum menüsü için kanonik durum; görünür değer etiket.
+        Object.defineProperty(row, '_checklistParts', { value: partCells, enumerable: false, configurable: true, writable: true });
         Object.defineProperty(row, '_checklistStatus', { value: statuses, enumerable: false, configurable: true, writable: true });
         const tasks = {};
         if (analysis && state.testTasks.size) items.forEach(function (item) {
@@ -554,6 +652,7 @@
           orderKey: parts.orderKey, itemId: parts.itemId, state: normalized,
           at: localAt || isoNow(), baseAt: remoteAt,
           loadDate: localAnswer.loadDate || null, note: localAnswer.note || '',
+          ...(localAnswer.componentCount ? { componentCount: localAnswer.componentCount } : {}),
           reportNumber: localAnswer.reportNumber || '',
           actualDate: localAnswer.actualDate || '',
           attachments: Array.isArray(localAnswer.attachments) ? localAnswer.attachments : [],
@@ -673,6 +772,112 @@
     storageSet(EXCEL_COLUMNS_KEY, JSON.stringify(clean));
     return clean;
   }
+  function readSupplierQuestionPreferences() {
+    let saved = null;
+    try { saved = JSON.parse(storageGet(SUPPLIER_QUESTIONS_KEY) || 'null'); } catch (_) {}
+    return saved && saved.version === 1 && saved.bySupplier && typeof saved.bySupplier === 'object' && !Array.isArray(saved.bySupplier)
+      ? { version: 1, defaultIds: Array.isArray(saved.defaultIds) ? saved.defaultIds : [], bySupplier: saved.bySupplier }
+      : { version: 1, defaultIds: [], bySupplier: {} };
+  }
+
+  function supplierQuestionScope(supplier) {
+    const value = text(supplier).toLocaleLowerCase('tr-TR');
+    return !value || value === 'karma' || value === 'mixed' ? '*' : value;
+  }
+
+  function supplierQuestionIdsFor(supplier) {
+    const prefs = readSupplierQuestionPreferences();
+    const scope = supplierQuestionScope(supplier);
+    const selected = scope !== '*' && Object.prototype.hasOwnProperty.call(prefs.bySupplier, scope)
+      ? prefs.bySupplier[scope] : prefs.defaultIds;
+    return Array.isArray(selected) ? selected.filter(id => typeof id === 'string') : [];
+  }
+
+  function saveSupplierQuestionIdsFor(supplier, ids) {
+    const prefs = readSupplierQuestionPreferences();
+    const clean = [...new Set((Array.isArray(ids) ? ids : []).filter(id => typeof id === 'string' && id.length <= 200))];
+    const scope = supplierQuestionScope(supplier);
+    if (scope === '*') prefs.defaultIds = clean;
+    else prefs.bySupplier[scope] = clean;
+    storageSet(SUPPLIER_QUESTIONS_KEY, JSON.stringify(prefs));
+  }
+
+  async function chooseSupplierQuestionIds(groups, catalog) {
+    if (!root.document) return null;
+    const prepared = groups.map(group => {
+      const decision = analysesForRows(group.rows);
+      const available = catalog.filter(item => group.rows.some(row => {
+        const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
+        return itemApplies(item, analysis);
+      }));
+      return { ...group, available, selected: new Set(supplierQuestionIdsFor(group.supplier)) };
+    });
+    if (prepared.some(group => !group.available.length)) {
+      toast(T('Seçili siparişler için uygulanabilir checklist sorusu yok.', 'There are no applicable checklist questions for the selected orders.'));
+      return null;
+    }
+    root.document.getElementById('_blSupplierQuestions')?.remove();
+    const modal = root.document.createElement('div');
+    modal.id = '_blSupplierQuestions';
+    modal.className = 'cpaModalOverlay';
+    modal.innerHTML = '<div class="cpaModal" role="dialog" aria-modal="true" aria-label="' + html(T('Üretici checklist soruları', 'Supplier checklist questions')) + '" style="max-width:680px">'
+      + '<header><div><b>' + html(T('Üreticiye gönderilecek soruları seçin', 'Choose questions to send to suppliers')) + '</b>'
+      + '<small>' + html(T('Yalnız seçili sorular Excel’e ve e-posta eklerine alınır. Seçimler üretici bazında sonraki işlemler için saklanır.', 'Only selected questions are included in workbooks and e-mail attachments. Your selections are remembered per supplier.')) + '</small></div>'
+      + '<button type="button" data-sq-cancel aria-label="' + html(T('Kapat', 'Close')) + '">×</button></header>'
+      + '<div class="cpaModalBody" style="max-height:65vh;overflow-y:auto">'
+      + prepared.map((group, groupIndex) => '<section class="cpaSettingGroup" data-sq-section="' + groupIndex + '">'
+        + '<div class="cpaSettingRow"><b>' + html(group.supplier) + '</b> <small data-sq-count aria-live="polite"></small>'
+        + '<button type="button" class="cpaBtn" data-sq-all="' + groupIndex + '">' + html(T('Tümünü seç', 'Select all')) + '</button>'
+        + '<button type="button" class="cpaBtn" data-sq-clear="' + groupIndex + '">' + html(T('Temizle', 'Clear')) + '</button></div>'
+        + group.available.map(item => '<div class="cpaSettingRow"><label class="cpaCheck">'
+          + '<input type="checkbox" data-sq-item="' + html(item.id) + '" data-sq-group="' + groupIndex + '"'
+          + (group.selected.has(item.id) ? ' checked' : '') + '>'
+          + '<span><b>' + html(isEn() ? item.en : item.tr) + '</b>'
+          + '<small>' + html(isEn() ? item.questionEn : item.questionTr) + '</small></span></label></div>').join('')
+        + '</section>').join('')
+      + '<p class="cpaNote">' + html(T('İlk kullanımda sorular varsayılan olarak işaretlenmez. Yanlışlıkla iç kontrol bilgisi gönderilmesini önlemek için seçim yapın.', 'Questions are unchecked on first use to avoid accidentally sending internal checks. Make your selection.')) + '</p></div>'
+      + '<footer><button type="button" class="cpaBtn" data-sq-cancel>' + html(T('Vazgeç', 'Cancel')) + '</button>'
+      + '<button type="button" class="cpaBtn primary" data-sq-confirm>' + html(T('Seçimi kaydet ve devam et', 'Save selection and continue')) + '</button></footer></div>';
+    root.document.body.appendChild(modal);
+    const updateCount = () => prepared.forEach((group, index) => {
+      const section = modal.querySelector('[data-sq-section="' + index + '"]');
+      const count = section.querySelectorAll('input[data-sq-item]:checked').length;
+      section.querySelector('[data-sq-count]').textContent = count + ' / ' + group.available.length;
+    });
+    updateCount();
+    return new Promise(resolve => {
+      const finish = value => { modal.remove(); resolve(value); };
+      modal.querySelectorAll('[data-sq-cancel]').forEach(button => { button.onclick = () => finish(null); });
+      modal.onclick = event => { if (event.target === modal) finish(null); };
+      modal.onkeydown = event => { if (event.key === 'Escape') { event.preventDefault(); finish(null); } };
+      modal.querySelectorAll('input[data-sq-item]').forEach(input => { input.onchange = updateCount; });
+      prepared.forEach((group, index) => {
+        const section = modal.querySelector('[data-sq-section="' + index + '"]');
+        section.querySelector('[data-sq-all]').onclick = () => { section.querySelectorAll('input[data-sq-item]').forEach(input => { input.checked = true; }); updateCount(); };
+        section.querySelector('[data-sq-clear]').onclick = () => { section.querySelectorAll('input[data-sq-item]').forEach(input => { input.checked = false; }); updateCount(); };
+      });
+      modal.querySelector('[data-sq-confirm]').onclick = () => {
+        const selections = new Map();
+        for (let i = 0; i < prepared.length; i += 1) {
+          const group = prepared[i], section = modal.querySelector('[data-sq-section="' + i + '"]');
+          const ids = [...section.querySelectorAll('input[data-sq-item]:checked')].map(input => input.dataset.sqItem);
+          if (!ids.length) {
+            toast(T('Her üretici için en az bir soru seçin.', 'Select at least one question for each supplier.'));
+            return;
+          }
+          // Preserve previously selected questions outside this order batch;
+          // a narrower export must not erase a supplier's wider preference.
+          const available = new Set(group.available.map(item => item.id));
+          const retained = supplierQuestionIdsFor(group.supplier).filter(id => !available.has(id));
+          saveSupplierQuestionIdsFor(group.supplier, retained.concat(ids));
+          selections.set(group.supplier, ids);
+        }
+        finish(selections);
+      };
+      modal.querySelector('[data-sq-confirm]').focus();
+    });
+  }
+
   function rawValue(row, candidates) {
     for (const key of (candidates || [])) {
       const value = row && row[key];
@@ -1142,9 +1347,16 @@
     const previousContext = buildContext;
     if (o.language || o.customStatuses) buildContext = { language: o.language || null, customStatuses: o.customStatuses || [] };
     try {
-    const ExcelJS = o.ExcelJS, rows = o.rows || [], items = o.items || [];
+    const ExcelJS = o.ExcelJS, rows = o.rows || [];
     const analysisFor = typeof o.analysisFor === 'function' ? o.analysisFor : function () { return null; };
-    const applies = typeof o.itemApplies === 'function' ? o.itemApplies : itemApplies;
+    const items = expandedItems(o.items || [], rows.map(analysisFor), o.answers);
+    const baseApplies = typeof o.itemApplies === 'function' ? o.itemApplies : itemApplies;
+    const applies = (item, analysis) => {
+      const part = Components.parseItem(item.id), parts = componentParts(analysis, o.answers);
+      if (part) return parts.some(entry => entry.id === part.partId) && baseApplies({ ...item, id: part.baseId }, analysis);
+      if (parts.length || Components.isSet(analysis && (analysis.sourceRow || analysis), 'cp')) return false;
+      return baseApplies(item, analysis);
+    };
     const answerOf = typeof o.answerFor === 'function' ? o.answerFor : answerFor;
     const prepareImage = typeof o.prepareImage === 'function' ? o.prepareImage : prepareRowModelImage;
     const exportedAt = o.exportedAt || isoNow();
@@ -1210,15 +1422,11 @@
       return columns.findIndex(function (column) { return column.key === 'a' + index; }) + 1;
     });
     const imageColumn = columns.findIndex(function (column) { return column.key === 'image'; }) + 1;
+    // Validation choices belong on the hidden metadata sheet, NOT Checklist.
+    // Populating rows 2..N on Checklist before addRow() pushed order data
+    // down to row 12 whenever ten statuses existed.
     const optionValues = statusOptions();
-    // Inline Excel validation lists are limited to 255 characters.
-    const validationColumn = columns.length + 1;
-    const choices = sheet.getColumn(validationColumn);
-    choices.header = '__BL_STATUS_CHOICES';
-    choices.hidden = true;
-    optionValues.forEach((name, index) => { sheet.getCell(index + 2, validationColumn).value = name; });
-    const validationRange = '$' + excelColumnName(validationColumn) + '$2:$'
-      + excelColumnName(validationColumn) + '$' + (optionValues.length + 1);
+    const validationRange = STATUS_VALIDATION_NAME;
 
     for (const row of rows) {
       const analysis = analysisFor(row);
@@ -1439,6 +1647,10 @@
         item.id, item.tr, item.en, item.questionTr, item.questionEn,
       ]);
     });
+    // Named range allows Excel validation to refer to another (very hidden)
+    // sheet without creating phantom supplier rows on Checklist.
+    optionValues.forEach(function (name, index) { meta.getCell(index + 2, 12).value = name; });
+    workbook.definedNames.add("'" + META_SHEET + "'!$L$2:$L$" + (optionValues.length + 1), STATUS_VALIDATION_NAME);
 
     const buffer = await workbook.xlsx.writeBuffer();
     const stamp = new Date().toISOString().slice(0, 10);
@@ -1455,9 +1667,22 @@
       toast(T('Önce CP tablosundan üreticiye göndereceğiniz sipariş satırlarını seçin.', 'Select the CP order rows you want to send to the supplier first.'));
       return false;
     }
-    const items = itemCatalog();
-    if (!items.length) {
+    const catalog = itemCatalog();
+    if (!catalog.length) {
       toast(T('Aktarılacak aktif checklist başlığı yok.', 'There are no active checklist headings to export.'));
+      return false;
+    }
+    let questionIds = Array.isArray(opts.questionIds) ? opts.questionIds : null;
+    if (!questionIds) {
+      const supplier = supplierNameFor(rows);
+      const choices = await chooseSupplierQuestionIds([{ supplier, rows }], catalog);
+      if (!choices) return false;
+      questionIds = choices.get(supplier);
+    }
+    const allowedIds = new Set(questionIds);
+    const items = catalog.filter(item => allowedIds.has(item.id));
+    if (!items.length) {
+      toast(T('Excel için en az bir checklist sorusu seçin.', 'Select at least one checklist question for the workbook.'));
       return false;
     }
 
@@ -1574,9 +1799,13 @@
         if (!raw) { blank += 1; return; }
         const nextState = normalizeState(raw, opts.customStatuses);
         if (!nextState) { invalid += 1; return; }
-        const item = catalog.get(metaItem.id);
+        const scoped = Components.parseItem(metaItem.id);
+        const baseItem = catalog.get(scoped ? scoped.baseId : metaItem.id);
+        const item = scoped && baseItem ? scopedItem(baseItem, scoped.partId) : baseItem;
         if (!item) { invalid += 1; return; }
-        if (analysis && !applies(item, analysis)) { notApplicable += 1; return; }
+        const parts = componentParts(analysis, opts.answers);
+        if ((!scoped && (parts.length || Components.isSet(analysis.sourceRow || analysis, 'cp'))) || (scoped && !parts.some(part => part.id === scoped.partId))) { notApplicable += 1; return; }
+        if (analysis && !applies(scoped ? { ...item, id: scoped.baseId } : item, analysis)) { notApplicable += 1; return; }
         const noteCell = metaItem.noteColumn ? row.getCell(metaItem.noteColumn) : null;
         const reportCell = metaItem.reportColumn ? row.getCell(metaItem.reportColumn) : null;
         const actualDateCell = metaItem.actualDateColumn ? row.getCell(metaItem.actualDateColumn) : null;
@@ -1611,6 +1840,15 @@
         });
       });
     }
+    const rosters = new Map();
+    for (const entry of entries) {
+      if (!Components.parseItem(entry.itemId) || rosters.has(entry.orderKey)) continue;
+      const analysis = analysisFor(entry.orderKey), answers = opts.answers || (assistantState() && assistantState().answers) || {};
+      if (answers[Components.configKey(analysis)]) continue;
+      const count = componentParts(analysis, answers).length;
+      if (count >= 2) rosters.set(entry.orderKey, { orderKey: entry.orderKey, itemId: Components.CONFIG_ITEM, state: 'open', componentCount: count, at: importedAt, baseAt: meta.exportedAt || '', source: 'supplier_excel' });
+    }
+    entries.push(...rosters.values());
     return {
       meta: meta, entries: entries,
       counts: { blank: blank, invalid: invalid, notApplicable: notApplicable, formulaCells: formulaCells, staleRows: staleRows },
@@ -1695,6 +1933,12 @@
     }
 
     const items = itemCatalog();
+    if (!items.length) {
+      toast(T('Aktarılacak aktif checklist başlığı yok.', 'There are no active checklist headings to export.'));
+      return false;
+    }
+    const selectedQuestions = await chooseSupplierQuestionIds(supplierGroups, items);
+    if (!selectedQuestions) return false;
     const initialFiles = [];
     const tempRows = [];
     const directory = typeof root.BLPrepareEmailManufacturers === 'function' ? root.BLPrepareEmailManufacturers() : null;
@@ -1702,7 +1946,9 @@
 
     for (const group of supplierGroups) {
       const supplier = group.supplier, supplierRows = group.rows;
-      const artifact = await exportWorkbook({ rows: supplierRows, download: false });
+      const questionIds = selectedQuestions.get(supplier) || [];
+      const selectedCatalog = items.filter(item => questionIds.includes(item.id));
+      const artifact = await exportWorkbook({ rows: supplierRows, questionIds: questionIds, download: false });
       if (!artifact || !artifact.buffer) {
         throw new Error(T('Checklist Excel hazırlanamadı: ', 'Checklist workbook could not be prepared: ') + supplier);
       }
@@ -1721,7 +1967,7 @@
       supplierRows.forEach(function (row) {
         const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
         if (!analysis) return;
-        items.forEach(function (item) {
+        expandedItems(selectedCatalog, [analysis]).forEach(function (item) {
           if (!itemApplies(item, analysis)) return;
           const answer = answerFor(item, analysis);
           (answer && Array.isArray(answer.attachments) ? answer.attachments : []).forEach(function (entry) {
@@ -1957,7 +2203,7 @@
   function openChecklistEvidenceDialog(trigger) {
     const row = cpRowById(trigger && trigger.dataset.id);
     const itemId = trigger && trigger.dataset.item;
-    const item = itemCatalog().find(function (entry) { return entry.id === itemId; });
+    const item = catalogItem(itemId);
     if (!row || !item) return;
     const decision = analysesForRows([row]);
     const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
@@ -2126,7 +2372,7 @@
     const decision = analysesForRows([row]);
     const analysis = decision.byRow && decision.byRow.get ? decision.byRow.get(row) : null;
     if (!analysis) { toast(T('Sipariş checklist için okunamadı.', 'The order could not be read for the checklist.')); return; }
-    assistant.setChecklistAnswer(analysis, itemId, status);
+    if (!assistant.setChecklistAnswer(analysis, itemId, status)) throw new Error(T('Checklist yerel kaydı başarısız.', 'Checklist local save failed.'));
     // Yerel seçim anında görünür; sunucu yazması da aynı işlem zincirinde
     // tetiklenir. syncAnswerChanges kuyruklu olduğu için hızlı ardışık seçimler
     // kaybolmaz.
@@ -2150,7 +2396,7 @@
     }).join('');
     // Ekler eylemi durum listesinin ÜSTÜNDE durur: özel durumlar eklendikçe
     // uzayan liste onu ekranın dışına itmez.
-    const evidenceItem = itemCatalog().find(function (item) { return item.id === trigger.dataset.item; });
+    const evidenceItem = catalogItem(trigger.dataset.item);
     const menuRow = evidenceItem ? cpRowById(trigger.dataset.id) : null;
     const menuDecision = menuRow ? analysesForRows([menuRow]) : null;
     const menuAnalysis = menuDecision && menuDecision.byRow && menuDecision.byRow.get ? menuDecision.byRow.get(menuRow) : null;
@@ -2221,6 +2467,10 @@
     if (state.statusCellsBound || !root.document) return;
     state.statusCellsBound = true;
     root.document.addEventListener('click', function (event) {
+      const legacy = event.target && event.target.closest && event.target.closest('[data-cl-legacy]');
+      if (legacy) {event.preventDefault();event.stopPropagation();openLegacyRecord(legacy);return;}
+      const configure = event.target && event.target.closest && event.target.closest('[data-cl-config-parts]');
+      if (configure) { event.preventDefault(); event.stopPropagation(); configureComponents(configure).catch(error => toast(error.message)); return; }
       const trigger = event.target && event.target.closest && event.target.closest('.clStatusTrigger[data-item]');
       if (trigger) {
         event.preventDefault();
@@ -2303,7 +2553,7 @@
         if(!/\.pdf$/i.test(file.name||'')){reports.push(file);continue;}
         try{
           const type=await root.BLLayoutReader.classify(file);
-          if(type==='PRICE_TAG'||type==='CARE_LABEL')layouts.push(file);
+          if(['PRICE_TAG','CARE_LABEL','INNER_BARCODE','MIXED'].includes(type))layouts.push(file);
           else {if(type==='TEST_REPORT')reports.push(file);else unknown.push(file.name);await root.BLLayoutReader.release(file);}
         }catch(_){unknown.push(file.name);await root.BLLayoutReader.release(file);}
       }
@@ -2483,6 +2733,7 @@
     statusLabel: statusLabel,
     statusOptions: statusOptions,
     openStatusMenu: openStatusMenu,
+    componentCellHtml, openComponentCountDialog, expandedItems,
     diffAnswers: diffAnswers,
     syncAnswerChanges: syncAnswerChanges,
     latestAnswerAt: latestAnswerAt,
@@ -2490,6 +2741,8 @@
     excelDate: excelDate,
     excelColumnIds: excelColumnIds,
     saveExcelColumnIds: saveExcelColumnIds,
+    supplierQuestionIdsFor: supplierQuestionIdsFor,
+    saveSupplierQuestionIdsFor: saveSupplierQuestionIdsFor,
     _state: state,
   };
 }));
