@@ -197,8 +197,8 @@
         "en": "LCW AI authors the review findings"
       },
       "body": {
-        "tr": "Buyer Log siparişleri CP ile eşleyip ilgili kayıtları, iki orijinal standart PDF’ini, layout PDF’ini ve okunabilir sayfa görsellerini LCW AI’a aktarır. Model, ülke, line, kompozisyon, fiyat ve diğer alanların bulgusu, doğru değeri, gerekçesi ve düzeltmesi LCW AI’dan gelir; Buyer Log kendi ek kontrol yorumlarını üretmez. AI değerlendirmesi ve buyer kararı geçmişte ayrı saklanır; sonuçlar CP’ye yazılmaz.",
-        "en": "Buyer Log links CP orders and supplies their records, both original standard PDFs, the layout PDF and readable page images to LCW AI. Findings, correct values, reasons and corrections for model, country, line, composition, price and other fields come from LCW AI; Buyer Log adds no label-control judgments. AI assessments and buyer decisions are stored separately in history without writing results to CP."
+        "tr": "Buyer Log siparişleri CP ile eşleyip ilgili kayıtları, iki orijinal standart PDF’ini, layout PDF’ini ve okunabilir sayfa görsellerini LCW AI’a aktarır. Model, ülke, line, kompozisyon, fiyat ve diğer alanların bulgusu, doğru değeri, gerekçesi ve düzeltmesi LCW AI’dan gelir; Buyer Log kendi ek kontrol yorumlarını üretmez. AI değerlendirmesi ve buyer kararı geçmişte ayrı saklanır; sonuçlar CP’ye yazılmaz. LCW AI’dan en fazla iki kısa cümlelik özet, tek cümlelik yorum ve doğrudan düzeltme istenir; ayrı hatalar ve belirsizlikler korunur.",
+        "en": "Buyer Log links CP orders and supplies their records, both original standard PDFs, the layout PDF and readable page images to LCW AI. Findings, correct values, reasons and corrections for model, country, line, composition, price and other fields come from LCW AI; Buyer Log adds no label-control judgments. AI assessments and buyer decisions are stored separately in history without writing results to CP. LCW AI is asked for a summary of at most two short sentences, single-sentence comments and direct fixes; distinct errors and uncertainties are retained."
       },
       "visual": {
         "kind": "screenshot",

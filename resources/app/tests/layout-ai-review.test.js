@@ -36,6 +36,15 @@ test('review parser rejects oversized findings instead of discarding a final err
  assert.equal(parsed.ok,false);assert.ok(parsed.errors.includes('invalid-array:findings'));
  const valid=prompts.parseStructured(JSON.stringify({documentType:'PRICE_TAG',summary:'AI review',inspectedPages:['1'],findings:[JSON.stringify(finding)]}),'layout-review');assert.equal(valid.ok,true);
 });
+test('LCW AI review requests concise wording without omitting errors or changing evidence',()=>{
+ const prompts=require('../server/lib/lcwai/lcwai-prompt');
+ for(const lang of ['tr','en']){
+  const built=prompts.buildPrompt({source:'layout-review',task:'Review labels',lang});
+  assert.equal(built.truncated,false);assert.match(built.prompt,/35/);assert.match(built.prompt,/25/);assert.match(built.prompt,/15/);
+  assert.match(built.prompt,lang==='tr'?/Her ayrı hata ve belirsizliği koru/:/Keep each distinct error and uncertainty/);
+ }
+ assert.equal(prompts.contractFor('layout-review').fields.summary.max,500);
+});
 test('AI judgments and buyer decisions persist independently without allowing comment edits to rewrite AI evidence',t=>{
  const {spawnSync}=require('node:child_process'),os=require('node:os'),path=require('node:path'),root=fs.mkdtempSync(path.join(os.tmpdir(),'lcwai-review-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
  const script=`const assert=require('node:assert/strict'),s=require('./server/lib/layout-control-store');const run=s.add('owner',{mode:'LCW_AI',documentType:'MIXED',aiSummary:'Original AI conclusion',reference:{status:'MULTIPLE',orderCodes:['1','2']},checks:[{rule:'AI_0',category:'AI_REVIEW',source:'LCW AI',status:'MISMATCH',aiVerdict:'ERROR',title:'Model',field:'modelName',section:'PRICE_TAG',orderCode:'1',actual:['WRONG'],expected:['RIGHT'],detail:'AI reason'}]}).run;assert.equal(run.reviewStatus,'PENDING');const updated=s.review('owner',run.id,{check:{rule:'AI_0',decision:'APPROVED',comment:'Buyer checked',expected:['INJECTED'],detail:'Changed'}}).run;assert.equal(updated.reviewStatus,'APPROVED');assert.equal(updated.checks[0].assessmentStatus,'MISMATCH');assert.equal(updated.checks[0].aiVerdict,'ERROR');assert.deepEqual(updated.checks[0].expected,['RIGHT']);assert.equal(updated.checks[0].detail,'AI reason');assert.equal(updated.aiSummary,'Original AI conclusion');assert.equal(updated.reference.status,'MULTIPLE');assert.throws(()=>s.review('other',run.id,{check:{rule:'AI_0',decision:'REJECTED'}}),/NOT_FOUND/);`;
