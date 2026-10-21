@@ -127,7 +127,13 @@ function commit(items, typeMap, actor, attach, options = {}) {
       const previous = store.reports[talepNo] || null;
       const knownDecisions = new Set((previous && previous.kararlar || []).map(d => Engine.decisionKey(d, talepNo)));
       const previousLinks = Engine.reportLinks(store.links[talepNo]);
-      const previousTarget = previousLinks.find(l => l.orderKey === orderKey);
+      // v7.0.290 — Takım (set) siparişinde aynı rapor aynı adımın birden çok
+      // parçasına (A, B …) bağlanabilir; bu hedefler yan yana durur. Diğer
+      // durumlarda sipariş başına tek hedef kuralı korunur (yeniden eşleme).
+      const partOf = id => /^(.*)~part~([A-Z])$/.exec(String(id || ''));
+      const coexists = link => { const a = partOf(link.itemId), b = partOf(itemId); return Boolean(a && b && a[1] === b[1] && a[2] !== b[2]); };
+      const replaces = link => link.orderKey === orderKey && !coexists(link);
+      const previousTarget = previousLinks.find(replaces);
       const knownFiles = new Map((previousTarget && (previousTarget.files || (previous && previous.dosyalar)) || []).map(f => [Engine.fileKey(f), f]));
       const newDecisions = (incoming.kararlar || []).filter(d => !knownDecisions.has(Engine.decisionKey(d, talepNo))).length;
       const attachments = [];
@@ -145,7 +151,11 @@ function commit(items, typeMap, actor, attach, options = {}) {
       merged.guncelleme = at;
       store.reports[talepNo] = merged;
       const target = { orderKey, itemId, at, by: who.name || who.id, byId: who.id, ...(item.review ? { review: item.review } : {}), files: [...new Map([...knownFiles.values(), ...files].map(f => [Engine.fileKey(f), f])).values()] };
-      const targets = previousLinks.map(l => l.orderKey === orderKey ? target : l);
+      const targets = [];
+      for (const link of previousLinks) {
+        if (!replaces(link)) targets.push(link);
+        else if (!targets.includes(target)) targets.push(target);
+      }
       if (!previousTarget) targets.push(target);
       // Keep the legacy primary fields while preserving all approved targets.
       store.links[talepNo] = { ...targets[0], targets };

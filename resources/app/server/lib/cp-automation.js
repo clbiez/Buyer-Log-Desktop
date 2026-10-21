@@ -18,12 +18,18 @@
  * ile açıkça "kontrol listesi hariç" olarak işaretlenir. Sessizce ekranla
  * farklı bir öncelik üretmek, bu zincirdeki en pahalı hata türüdür.
  *
+ * v7.0.290 — Aksiyon Önceliği artık YALNIZ kullanıcının kurallarından gelir
+ * (cp-readiness-engine.js). Çağıran sahibin etkin kurallarını ve checklist
+ * cevaplarını (`rules`, `answers`) verirse aynı kural motoru (cp-rules-engine)
+ * burada da uygulanır; ekran ile otomasyon aynı önceliği görür.
+ *
  * Yetki: bu dosya yetki uygulamaz; çağıran (agentPlatformDataset →
  * agentVisibleRows) satırları zaten kullanıcının yetkili olduğu kümeye
  * indirmiştir.
  */
 
 const Engine = require('../../public/cp-readiness-engine.js');
+const Rules = require('../../public/cp-rules-engine.js');
 
 /* Otomasyon satırına eklenen alan adları — kullanıcı bunları filtre kurarken
    ve e-posta raporu alanı seçerken görüyor. */
@@ -60,18 +66,17 @@ function ordinalToISO(value) {
   return isNaN(date) ? '' : date.toISOString().slice(0, 10);
 }
 
-function analysisFields(analysis) {
+function analysisFields(analysis, matched, rulesApplied) {
+  const ruleReasons = (matched || []).map(rule => String(rule.reasonTr || rule.name || '').trim()).filter(Boolean);
   return {
     [FIELDS.priorityCode]: analysis.priority,
     [FIELDS.priority]: PRIORITY_LABELS_TR[analysis.priority] || analysis.priority,
-    // Ekranda kontrol listesi bir siparişi yukarı taşıyabilir; sunucu bunu
-    // göremez. Fark gizlenmiyor, alan olarak yazılıyor.
-    [FIELDS.prioritySource]: 'Hesaplanan (kontrol listesi hariç)',
+    [FIELDS.prioritySource]: rulesApplied ? 'Kullanıcı kuralları' : 'Kural uygulanmadı',
     [FIELDS.calculationStatus]: analysis.calculationStatus || (analysis.deliveryOutcome === 'UNKNOWN' ? 'UNKNOWN' : 'KNOWN'),
     [FIELDS.outcomeCode]: analysis.deliveryOutcome,
     [FIELDS.outcome]: OUTCOME_LABELS_TR[analysis.deliveryOutcome] || analysis.deliveryOutcome,
     [FIELDS.stage]: Engine.PRIORITY_LABELS.tr[analysis.stage] || analysis.stage,
-    [FIELDS.riskReasons]: analysis.riskReasons.map(key => Engine.RISK_REASON_LABELS.tr[key] || key).join(' · '),
+    [FIELDS.riskReasons]: [...ruleReasons, ...analysis.riskReasons.map(key => Engine.RISK_REASON_LABELS.tr[key] || key)].join(' · '),
     [FIELDS.daysToLoad]: analysis.daysToLoad == null ? '' : analysis.daysToLoad,
     [FIELDS.loadWindow]: Engine.LOAD_WINDOW_LABELS.tr[analysis.loadWindow] || analysis.loadWindow,
     [FIELDS.orderAge]: analysis.orderAgeDays == null ? '' : analysis.orderAgeDays,
@@ -98,10 +103,19 @@ function enrichRows(rows, options) {
     transitRules: opts.transitRules || [],
     settings: opts.settings || {},
   };
+  const rules = Array.isArray(opts.rules) ? opts.rules : null;
+  const prepared = rules && Rules.prepareEvaluation ? Rules.prepareEvaluation(rules) : null;
   return list.map(row => {
     const analysis = Engine.analyzeOrder(row, ctx);
+    let matched = [];
+    if (rules) {
+      const evaluated = Rules.evaluateOrder(analysis, { rules, preparedRules: prepared, answers: opts.answers || {},
+        checklistEnabled: opts.checklistEnabled !== false, today: ctx.today });
+      analysis.priority = evaluated.priority;
+      matched = evaluated.matched || [];
+    }
     const merged = { ...row };
-    for (const [key, value] of Object.entries(analysisFields(analysis))) {
+    for (const [key, value] of Object.entries(analysisFields(analysis, matched, Boolean(rules)))) {
       if (Object.prototype.hasOwnProperty.call(merged, key)) continue;
       merged[key] = value;
     }

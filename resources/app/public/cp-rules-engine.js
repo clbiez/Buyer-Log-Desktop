@@ -80,8 +80,8 @@
       meaning: { tr: 'Siparişin operasyon aşaması. PRODUCTION dışındaki aşamalar Ex-Factory/yüklemenin gerçekleştiğini gösterir.', en: 'Operational stage of the order. Any stage other than PRODUCTION means ex-factory/loading has happened.' } },
     { id: '@deliveryOutcome', tr: 'Teslimat sonucu', en: 'Delivery outcome', values: OUTCOME_VALUES,
       meaning: { tr: 'Yükleme tarihi + yol süresi kuralıyla hesaplanan tahmini varışın HEDEF tarihe (ekranda seçili Retail Depo ya da In Store) yetişme sonucu: ON_TRACK yetişir, AT_RISK tampon dar, EXPECTED_LATE yetişmeyecek, ALREADY_LATE hedef tarih geçti ve teslim edilmedi, UNKNOWN hesaplanamadı.', en: 'Whether the estimated arrival (loading date + transit-time rule) makes the TARGET date (Retail warehouse or In Store, as selected on screen): ON_TRACK makes it, AT_RISK narrow buffer, EXPECTED_LATE will miss it, ALREADY_LATE target passed without delivery, UNKNOWN could not be calculated.' } },
-    { id: '@basePriority', tr: 'Hesaplanan öncelik', en: 'Calculated priority', values: SEVERITY,
-      meaning: { tr: 'Kurallar uygulanmadan önce motorun hesapladığı öncelik.', en: 'Priority calculated by the engine before rules are applied.' } },
+    { id: '@basePriority', tr: 'Sistem önerisi öncelik', en: 'System suggested priority', values: SEVERITY,
+      meaning: { tr: 'Teslimat ve yükleme tarihlerinden motorun önerdiği öncelik. Tek başına hiçbir siparişi yükseltmez; yalnız bir kuralın koşulunda kullanılırsa etkili olur.', en: 'Priority suggested by the engine from delivery and loading dates. It escalates nothing on its own; it only takes effect when used in a rule condition.' } },
     { id: '@scheduleBufferDays', tr: 'Hedefe tampon (gün)', en: 'Buffer to target (days)', numeric: true,
       meaning: { tr: 'Hedef tarih ile yol süresine göre tahmini varış arasındaki gün farkı; negatifse hedefe yetişmez.', en: 'Days between the target date and the estimated arrival by transit time; negative means it misses the target.' } },
     { id: '@transitRuleMissing', tr: 'Yol süresi kuralı eksik', en: 'Transit rule missing', values: Object.freeze(['true', 'false']),
@@ -632,6 +632,8 @@
       // Koşulların hepsi mi biri mi? Varsayılan "hepsi": daha dar, daha güvenli.
       match: text(item.match) === 'any' ? 'any' : 'all',
     };
+    // Moderatörün tüm kullanıcılara yayımladığı kural. Yalnız true iken yazılır.
+    if (item.managed === true) base.managed = true;
     if (ruleKind === 'priority') {
       base.target = SEVERITY.includes(text(item.target)) ? text(item.target) : 'ACTION_THIS_WEEK';
       base.reasonTr = text(item.reasonTr).slice(0, 200);
@@ -1428,6 +1430,38 @@
     return merged;
   }
 
+  /* v7.0.290 — MODERATÖR YAYINI. Moderatörün "tüm kullanıcılara uygula"
+     dediği kurallar/checklistler ve "tüm kullanıcılardan sil" dediği kimlikler
+     tek bir kayıtta durur ve Master kural yayınıyla her cihaza gider.
+     Kullanıcının KENDİ oluşturduğu kurallara dokunulmaz: silme listesi yalnız
+     aynı kimliği taşıyan (yerleşik / yayımlanmış / paylaşılmış) kopyaları
+     kaldırır; kullanıcı kurallarının kimliği kendine özgüdür. */
+  const MAX_MANAGED_DELETED = 500;
+  function normalizeManagedRules(raw) {
+    const source = raw && typeof raw === 'object' ? raw : {};
+    const rules = normalizeRules(source.rules).map(rule => ({ ...normalizeRule({ ...rule, managed: true }) }));
+    const ids = new Set(rules.map(rule => rule.id));
+    const deletedRuleIds = [...new Set((Array.isArray(source.deletedRuleIds) ? source.deletedRuleIds : []).map(text).filter(Boolean))]
+      .filter(id => !ids.has(id)).slice(0, MAX_MANAGED_DELETED);
+    return {
+      version: 1,
+      revision: Math.max(0, Math.floor(Number(source.revision) || 0)),
+      updatedAt: text(source.updatedAt).slice(0, 40),
+      updatedBy: text(source.updatedBy).slice(0, 160),
+      rules, deletedRuleIds,
+    };
+  }
+  /* Kişisel kayıt + yerleşikler + Moderatör yayını → çalışan kural listesi.
+     Aynı kimlikte Moderatör kopyası kazanır (Master kural sözleşmesi). */
+  function effectiveRules(personalRules, deletedRuleIds, managed) {
+    const shared = normalizeManagedRules(managed);
+    const managedIds = new Set(shared.rules.map(rule => rule.id));
+    const deleted = [...(Array.isArray(deletedRuleIds) ? deletedRuleIds : []), ...shared.deletedRuleIds];
+    const own = mergeWithDefaults((Array.isArray(personalRules) ? personalRules : []).filter(rule => !(rule && rule.managed === true)), deleted)
+      .filter(rule => !managedIds.has(rule.id));
+    return [...own, ...shared.rules];
+  }
+
   return {
     SEVERITY, severityRank, OPERATORS, OPERATOR_IDS, DERIVED_FIELDS, CHECKLIST_PREFIX, CHECKLIST_STATES,
     CHECKLIST_STATE_LABELS, STAGE_VALUES, OUTCOME_VALUES, RULE_PREFIX, RULE_STATES, RULE_STATE_LABELS, EXPRESSION_VERSION,
@@ -1435,6 +1469,7 @@
     mapFormulaFields, formulaToDisplay, formulaFromDisplay, buildAiGuide, extractFormula,
     DEFAULT_RULES, DEFAULT_PRIORITY_RULES, DEFAULT_CHECKLIST_RULES, DEFAULT_CHECKLIST_RULE_IDS,
     normalizeCondition, normalizeRule, normalizeRules, conditionsToFormula, formulaToConditions, validateRule, mergeWithDefaults,
+    normalizeManagedRules, effectiveRules,
     compileExpression, evaluateExpression, validateExpression,
     factsFor, readField, matchesCondition, matchesRule,
     applyPriorityRules, customChecklistItems, fieldCatalog,

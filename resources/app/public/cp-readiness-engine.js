@@ -366,9 +366,17 @@
       calculationStatus: deliveryOutcome === 'UNKNOWN' ? 'UNKNOWN' : 'KNOWN',
       reasons: reasons.map(code => ({ code })),
     };
-    const priority = decisionAction.priority;
+    /* v7.0.290 — "Sadece kullanıcının ayarladığı kural ve checklistler
+       çalışsın." Motorun tarih/sebep tabanlı önerisi (systemPriority) artık
+       Aksiyon Önceliğini KENDİLİĞİNDEN yükseltmez: silinen bir yerleşik kural
+       gizli eşik olarak yaşamaya devam ediyordu. Başlangıç Yolunda'dır; öncelik
+       yalnız kullanıcının (ve Moderatörün yayımladığı) kurallarla yükselir.
+       Öneri kaybolmaz: kural koşulunda [@basePriority] olarak seçilebilir.
+       Risk sebepleri bilgi amaçlı kalır (veri kalitesi / filtre). */
+    const systemPriority = decisionAction.priority;
+    const priority = 'ON_TRACK';
     const calculationStatus = decisionAction.calculationStatus;
-    const structuredReasons = decisionAction.reasons || [];
+    const structuredReasons = [];
 
 
     const result = {
@@ -394,7 +402,7 @@
       confidence: delivery ? delivery.confidence : 'LOW',
       handoverWarning,
       calculationStatus,
-      priority, riskReasons: reasons,
+      priority, systemPriority, calculatedPriority: systemPriority, riskReasons: reasons,
       signals: canonicalSignals,
       actionReasons: structuredReasons,
       decision: {

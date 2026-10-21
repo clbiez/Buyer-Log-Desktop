@@ -56,9 +56,11 @@ test('CP keeps UNKNOWN calculation status but action is never UNKNOWN', () => {
   const a = CP.analyzeOrder(row,{today:TODAY,dateOrdinal:ord,transitRules:[],settings:{requireTransitRule:true}});
   assert.equal(a.deliveryOutcome,'UNKNOWN');
   assert.equal(a.calculationStatus,'UNKNOWN');
-  assert.equal(a.priority,'ACTION_THIS_WEEK');
+  // v7.0.290: önceliği yalnız kullanıcı kuralları yükseltir; öneri systemPriority'dedir.
+  assert.equal(a.systemPriority,'ACTION_THIS_WEEK');
+  assert.equal(a.priority,'ON_TRACK');
   assert.notEqual(a.priority,'UNKNOWN');
-  assert.equal(a.decision.action.priority,'ACTION_THIS_WEEK');
+  assert.equal(a.decision.action.priority,'ON_TRACK');
 });
 
 test('DATE_SYNC_MISMATCH is action-visible through shared policy', () => {
@@ -71,7 +73,7 @@ test('DATE_SYNC_MISMATCH is action-visible through shared policy', () => {
   };
   const a = CP.analyzeOrder(row,{today:TODAY,dateOrdinal:ord,transitRules:[],settings:{requireTransitRule:false}});
   assert.ok(a.riskReasons.includes('DATE_SYNC_MISMATCH'));
-  assert.notEqual(a.priority,'ON_TRACK');
+  assert.notEqual(a.systemPriority,'ON_TRACK');
 });
 
 test('custom priority rule emits stable CUSTOM_RULE signal and only escalates', () => {

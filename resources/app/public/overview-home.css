@@ -490,3 +490,7 @@
   .ovShowcaseProducts img,.ovCollectionMonthThumb{transition:none;}
 }
 html[data-overview-motion="paused"] .ovHome *,html[data-overview-motion="paused"] .ovHome *:before,html[data-overview-motion="paused"] .ovHome *:after{animation:none;transition:none;}
+/* v7.0.290 — öncelik kuralı yokken açıklayıcı kart */
+.ovPulseKpi.ovPulseHint{background:var(--acc-bg);}
+.ovPulseKpi.ovPulseHint>span{color:var(--acc-ink);}
+.ovPulseKpi.ovPulseHint em{white-space:normal;}

@@ -5963,3 +5963,22 @@ button.ovNoteCount:hover{background:var(--acc-bg);border-color:var(--acc);}
 .clPartAnswerGroup{display:flex;align-items:center;gap:var(--sp-2);margin-block:var(--sp-1);}
 .clPartAnswerGroup>div{display:flex;flex-wrap:wrap;gap:var(--sp-1);}
 .clPartsLegacyNote{white-space:pre-wrap;}
+/* v7.0.290 — Checklist bileşen sonuçları tek hücrede (Main Fabric · Neck RIB …). */
+.clElementStack{display:flex;align-items:center;gap:var(--sp-1);min-width:0;overflow:hidden;}
+.clElementChip{display:inline-flex;align-items:center;gap:3px;flex:0 1 auto;min-width:0;padding:1px 4px;border:1px solid var(--line);border-radius:var(--r-xs);font-size:var(--fs-2xs);color:var(--ink);}
+.clElementName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.clElementEditor{display:grid;gap:var(--sp-1);}
+.clElementRow{display:grid;grid-template-columns:minmax(0,1fr) minmax(120px,auto) auto;gap:var(--sp-1);align-items:center;}
+.clElementRow input,.clElementRow select{min-width:0;}
+.clMenuElements{padding:4px 8px 6px;display:grid;gap:3px;font-size:var(--fs-xs);}
+.clMenuElements p{margin:0;display:flex;align-items:center;gap:6px;}
+/* Bileşen noktası kendi durumunun rengini taşır (hücrenin genel rengini değil). */
+.clElementsCell .clElementChip .clStatusDot.is-open,.clElementsCell .clElementChip .clStatusDot.is-custom{background:var(--acc);}
+.clElementsCell .clElementChip .clStatusDot.is-approved{background:var(--green);}
+.clElementsCell .clElementChip .clStatusDot.is-rejected{background:var(--red);}
+.clElementsCell .clElementChip .clStatusDot.is-notRequired{background:var(--muted);}
+.clElementsCell .clStatusTrigger{max-width:100%;}
+.clElementChip{flex:1 1 auto;min-width:0;max-width:100%;border:0;padding:0;}
+.clElementMore{flex:0 0 auto;color:var(--muted);font-size:var(--fs-2xs);}
+.clElementEditor .cpaSettingRow>span{display:flex;flex-direction:column;gap:2px;}
+.clElementEditor [data-element-add]{white-space:nowrap;flex:0 0 auto;}
