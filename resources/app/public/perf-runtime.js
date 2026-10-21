@@ -122,7 +122,7 @@
     lcwaiChat:['lcwai-assistant.js?rev=1','lcwai-markdown.js?rev=1','lcwai-chat.js?rev=1'],
     agentOffice:['lcwai-assistant.js?rev=1','lcwai-markdown.js?rev=1','agent-office-scene.js?rev=1','agent-office.js?rev=2'],
     layoutDocument:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2'],
-    layoutControl:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2','layout-ai-review.js?rev=1','layout-control.js?rev=4'],
+    layoutControl:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2','layout-ai-review.js?rev=1','layout-control.js?rev=5'],
     // LCW AI Çıktı Düzenleyici + çıktı şablonları: yalnız "Düzenle"/"Şablonlar" ile yüklenir.
     lcwaiOutputEditor:['lcwai-output-layout.js?rev=1','lcwai-output-editor.js?rev=3'],
     lfl:['lfl-calculation-engine.js','lfl.js?rev=2'],
