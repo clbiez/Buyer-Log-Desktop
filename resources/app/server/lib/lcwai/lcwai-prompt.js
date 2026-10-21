@@ -100,18 +100,20 @@ const CONTRACTS = Object.freeze({
   }),
   'cp-document-kind': Object.freeze({
     label:{tr:'CP Belge Türü',en:'CP Document Type'},
-    fields:Object.freeze({documentType:{type:'string',required:true,max:20,hint:{tr:'TEST_REPORT, PRICE_TAG, CARE_LABEL veya UNKNOWN',en:'TEST_REPORT, PRICE_TAG, CARE_LABEL or UNKNOWN'}},explanation:{type:'string',required:true,max:500}}),
+    fields:Object.freeze({documentType:{type:'string',required:true,max:20,hint:{tr:'TEST_REPORT, PRICE_TAG, CARE_LABEL, INNER_BARCODE, MIXED veya UNKNOWN',en:'TEST_REPORT, PRICE_TAG, CARE_LABEL, INNER_BARCODE, MIXED or UNKNOWN'}},explanation:{type:'string',required:true,max:500}}),
     example:{documentType:'PRICE_TAG',explanation:'Visible size, order number and cash price blocks.'}
   }),
   'layout-control': Object.freeze({
     label: { tr: 'Layout Kontrolü', en: 'Layout Control' },
     fields: Object.freeze({
-      documentType: { type: 'string', required: true, max: 20, hint: { tr: 'yalnız CARE_LABEL, PRICE_TAG veya UNKNOWN', en: 'CARE_LABEL, PRICE_TAG or UNKNOWN only' } },
+      documentType: { type: 'string', required: true, max: 20, hint: { tr: 'CARE_LABEL, INNER_BARCODE, PRICE_TAG, MIXED veya UNKNOWN', en: 'CARE_LABEL, INNER_BARCODE, PRICE_TAG, MIXED or UNKNOWN' } },
       modelCodes: { type: 'string[]', max: 120, items: 12 },
       specialCodes: { type: 'string[]', max: 120, items: 12 },
       colourCodes: { type: 'string[]', max: 80, items: 12 },
       colours: { type: 'string[]', max: 120, items: 12 },
       orderNumbers: { type: 'string[]', max: 80, items: 20 },
+      jobNumbers: { type:'string[]',max:180,items:80,hint:{tr:'Basılı iş numaraları; sipariş numarası değildir',en:'Printed job numbers, separate from order numbers'} },
+      pageEvidence:{type:'string[]',max:500,items:80,hint:{tr:'Her okunan sayfa için JSON: {page,section,text}; kimlik olmayan sayfada görünür bölümün kısa dökümü veya boş sayfa bilgisi',en:'JSON for each read page: {page,section,text}; short visible section transcription or blank-page observation when no identity is present'}},
       seasonCodes: { type: 'string[]', max: 80, items: 12 },
       magCodes: { type: 'string[]', max: 80, items: 12 },
       mmygCodes: { type: 'string[]', max: 80, items: 12 },
@@ -150,6 +152,16 @@ const CONTRACTS = Object.freeze({
       warnings: ['Keep away from fire'], sizes: [], barcodes: [], qrCodes: [], pageVariants: [], productClass: '', fit: '', identityText: '', prices: [],
       visualFindings: [], confidence: 'HIGH', explanation: 'Visible fields extracted from the attached PDF.'
     },
+  }),
+  'layout-review': Object.freeze({
+    label:{tr:'Layout · LCW AI İncelemesi',en:'Layout · LCW AI Review'},
+    fields:Object.freeze({
+      documentType:{type:'string',required:true,max:20,hint:{tr:'CARE_LABEL, INNER_BARCODE, PRICE_TAG, MIXED veya UNKNOWN',en:'CARE_LABEL, INNER_BARCODE, PRICE_TAG, MIXED or UNKNOWN'}},
+      summary:{type:'string',required:true,max:500,hint:{tr:'En fazla iki kısa cümle ve 35 kelime: yalnız sonuç ve öncelikli işlem; giriş/tekrar yok',en:'At most two short sentences and 35 words: only the conclusion and priority action; no introduction or repetition'}},
+      inspectedPages:{type:'string[]',required:true,max:8,items:80},
+      findings:{type:'string[]',required:true,max:5000,items:120,hint:{tr:'JSON metinleri: {section:CARE_LABEL|INNER_BARCODE|PRICE_TAG|DOCUMENT,field,title,verdict:MATCH|ERROR|REVIEW|NOT_VISIBLE|NOT_APPLICABLE,orderCode,actual,expected,comment,correction,page,bbox:[x,y,w,h],standardType,standardPage,severity}; bulgu, doğru değer ve gerekçeyi sen üret',en:'JSON strings: {section:CARE_LABEL|INNER_BARCODE|PRICE_TAG|DOCUMENT,field,title,verdict:MATCH|ERROR|REVIEW|NOT_VISIBLE|NOT_APPLICABLE,orderCode,actual,expected,comment,correction,page,bbox:[x,y,w,h],standardType,standardPage,severity}; author the finding, correct value and reason yourself'}},
+    }),
+    example:{documentType:'MIXED',summary:'A model typo was found; country and line match the CP order.',inspectedPages:['1'],findings:[JSON.stringify({section:'PRICE_TAG',field:'modelName',title:'Model name',verdict:'ERROR',orderCode:'9000001',actual:'DEMO-Y',expected:'DEMO-YD',comment:'The final D is missing.',correction:'Use DEMO-YD.',page:1})]}
   }),
   /* Test raporu aktarımı (CP › Checklist). İki sözleşme: okuma yedeği ve
      inceleme. İç içe nesne desteklenmediği için satırlar "a | b | c"
@@ -349,6 +361,8 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write "explanation" in English.'
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. "explanation" Türkçe olsun.');
+    } else if(key==='layout-review'){
+      lines.push(english?'Reply with ONE JSON object. Write very short, direct summary, finding titles, comments and corrections in English. Keep actual printed evidence in its original spelling.':'Yalnız TEK JSON nesnesiyle cevap ver. summary, bulgu başlıkları, yorum ve düzeltmeleri Türkçe, çok kısa ve net yaz. Basılı gerçek kanıtın özgün yazımını koru.');
     } else if (key === 'layout-control') {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Preserve all extracted label values in the language and spelling printed in the supplied page images; only "explanation" should be English.'
@@ -375,6 +389,8 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'Each CONTEXT.fabrics item is "<code> :: <PLM fabric text>". Write one "cards" line for every code, using exactly that code. "summary" is what a buyer sees in the Collection table: the full fabric type, yarn count, weight and composition in that order. Write it twice: "summary" in Turkish (e.g. "Süprem · 30/1 Ne Penye · 150 gsm · 100% Pamuk") and "summaryEn" in English with standard textile terms (e.g. "Single Jersey · 30/1 Ne Combed · 150 gsm · 100% Cotton"); both carry exactly the same numbers. Product naming convention: spell this fibre as "Polyester" in the Turkish "summary" and "Poliester" in the English "summaryEn" (even though standard English usually spells it "Polyester"). Fill the other fields only from the text; leave a field empty rather than guessing. Never invent, round or compute a number: Buyer Log discards every value whose numbers are not written in the PLM text. Do not use the "|" character inside a value.'
         : 'CONTEXT.fabrics içindeki her öğe "<kod> :: <PLM kumaş metni>" biçimindedir. Her kod için tam o kodu kullanarak bir "cards" satırı yaz. "summary" buyer\'ın Koleksiyon tablosunda gördüğü metindir: karakter sınırı olmadan; sırasıyla kumaş tipi, iplik numarası, gramaj ve karışım. İki kez yaz: "summary" Türkçe (ör. "Süprem · 30/1 Ne Penye · 150 gsm · 100% Pamuk"), "summaryEn" standart tekstil terimleriyle İngilizce (ör. "Single Jersey · 30/1 Ne Combed · 150 gsm · 100% Cotton"); ikisi de birebir aynı sayıları taşır. Ürün adlandırma kuralı: bu elyafı Türkçe "summary" içinde "Polyester", İngilizce "summaryEn" içinde "Poliester" olarak yaz (standart İngilizcede farklı olsa da). Diğer alanları yalnız metinden doldur; tahmin etmek yerine boş bırak. Sayı uydurma, yuvarlama ya da hesaplama: Buyer Log sayıları PLM metninde yazılı olmayan her değeri atar. Bir değerin içinde "|" karakterini kullanma.');
+    } else if(key==='layout-review'){
+      lines.push(english?'Be concise: summary at most two short sentences and 35 words; each comment one sentence and 25 words; each correction one action and 15 words. Do not repeat CP facts, introductions or conclusions. Combine compliant checks for the same order/section into one short finding naming those fields. Keep each distinct error and uncertainty; preserve exact identifiers and amounts.':'Kısa yaz: summary en fazla iki kısa cümle ve 35 kelime; her yorum tek cümle ve 25 kelime; her düzeltme tek işlem ve 15 kelime. CP verilerini, giriş veya sonuç paragraflarını tekrarlama. Aynı sipariş/bölümdeki uygun kontrolleri alan adlarını belirterek tek kısa bulguda birleştir. Her ayrı hata ve belirsizliği koru; kod ve tutarları aynen yaz.');
     } else if (key === 'layout-control') {
       lines.push(english
         ? 'Fill the schema only from values visibly supported by the attached layout page images. "warnings" means warnings printed on the product label, not your own cautions. "countries" means manufacturing/country-of-origin only: never treat importer, distributor, company-address or legal-contact countries (for example MAROC in an importer block) as production country. For PRICE_TAG, transcribe the whole visible upper identity/code band verbatim into "identityText" and extract modelCodes, orderNumbers, specialCodes, colourCodes, seasonCodes, magCodes, mmygCodes, lineCodes, productMainDefinitions and countries when their meaning is visually supportable. If an unlabeled slash-separated code cannot be assigned safely, keep it only in identityText rather than guessing its business meaning. Put uncertainty only in "explanation" and lower "confidence". Do not invent CP/reference values.'
@@ -436,7 +452,7 @@ function extractJsonObject(text) {
    fırlatmaz: modül kendi yedek ayıklayıcısıyla (ör. kod bloğundan formül)
    devam edebilir. Sözleşme dışı alanlar atılır. */
 function parseStructured(text, source) {
-  const contract = contractFor(normalizeSource(source));
+  const normalizedSource=normalizeSource(source),contract = contractFor(normalizedSource);
   if (!contract) return { ok: true, data: null, errors: [] };
   const raw = extractJsonObject(text);
   if (!raw) return { ok: false, data: null, errors: ['no-json'] };
@@ -444,6 +460,10 @@ function parseStructured(text, source) {
   for (const [name, spec] of Object.entries(contract.fields)) {
     const value = raw[name];
     if (spec.type === 'string[]') {
+      if(['layout-review','layout-control'].includes(normalizedSource)&&value!==undefined){
+        if(!Array.isArray(value)||value.length>spec.items||value.some(item=>!['string','number'].includes(typeof item)||String(item).length>spec.max))errors.push(`invalid-array:${name}`);
+        if(spec.required&&(!Array.isArray(value)||!value.length))errors.push(`missing:${name}`);
+      }
       const list = Array.isArray(value) ? value : (typeof value === 'string' && value.trim() ? [value] : []);
       // objects: true olan alanda model nesne gönderirse JSON metni olarak korunur (ör. e-posta taslağı).
       // Nesne metni kesilmez (kesik JSON okunamaz): sınırı aşan nesne bütünüyle atılır, içeriği alanın kendi denetleyicisi sınırlar.

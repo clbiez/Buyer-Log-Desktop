@@ -263,7 +263,7 @@
     };
   }
 
-  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','specialCodes','seasonCodes','magCodes','mmygCodes','lineCodes','productMainDefinitions','countries','composition','careInstructions','warnings','sizes','barcodes','qrCodes','pageVariants','prices','cashPrices','instalmentPrices','visualFindings','standardFindings','languageCodes','languageTexts','companyAddresses','websites','fieldEvidence'];
+  const ARRAY_FIELDS=['modelCodes','colourCodes','colours','orderNumbers','specialCodes','seasonCodes','magCodes','mmygCodes','lineCodes','productMainDefinitions','countries','composition','careInstructions','warnings','sizes','barcodes','qrCodes','pageVariants','prices','cashPrices','instalmentPrices','visualFindings','standardFindings','languageCodes','languageTexts','companyAddresses','websites','fieldEvidence','jobNumbers'];
   function mergeExtraction(localData, aiData) {
     const local=localData&&typeof localData==='object'?localData:{};
     const ai=aiData&&typeof aiData==='object'?aiData:{};

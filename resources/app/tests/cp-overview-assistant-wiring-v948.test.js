@@ -173,7 +173,9 @@ test('v9.48 perspektif YETKİYİ değiştirmez, yalnız kart sırasını değiş
 test('v9.48 kontrol cevabı sipariş verisine DEĞİL, kullanıcıya ÖZEL kayda yazılır', () => {
   assert.match(VIEW, /const key = Checklist\.answerKey\(analysis\.orderKey, itemId\)/);
   assert.match(VIEW, /state\.answers\[key\] = Checklist\.makeAnswer/);
-  assert.match(VIEW, /setChecklistAnswer\(analysis, itemId, status\);/);
+  // Set components now select a scoped target; the same personal answer writer remains mandatory.
+  assert.match(VIEW, /const targetId = el\.dataset\.cpaPart \? Checklist\.Components\.itemId\(itemId, el\.dataset\.cpaPart\) : itemId/);
+  assert.match(VIEW, /if \(!setChecklistAnswer\(analysis, targetId, status\)\)/);
   assert.match(VIEW, /store\.set\(ANSWER_KEY/);
   assert.match(VIEW, /store\.set\(PREF_KEY/);
   assert.match(VIEW, /window\.BLStorage\.setItem\(key, value\)/);
