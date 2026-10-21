@@ -63,6 +63,30 @@ function discoverPairs(input) {
   const pairs = [...found.values()], assignedLicenses = new Set(pairs.filter(pair => pair.licensor).map(pair => canonical.token(pair.license)));
   return pairs.filter(pair => pair.licensor || !assignedLicenses.has(canonical.token(pair.license)));
 }
+// Same Licensor precedence as the CP rows: a Licensor picked manually in CP for
+// the order line (licensormap) > ASAS Licensor > License Royalty contract /
+// catalogue. Ignoring the manual choice left such licenses without a licensor.
+function discoveryRowsFromOrders(sources, overrides, parse) {
+  const pairs = new Map(), licensormap = overrides && overrides.licensormap || {};
+  const add = (license, licensor) => { license = text(license); licensor = text(licensor); if (license) pairs.set(pairKey(license, licensor), { License: license, Licensor: licensor }); };
+  for (const rows of sources || []) for (const row of Array.isArray(rows) ? rows : []) {
+    const license = canonical.canonicalValue(row, 'cp', 'license');
+    if (!text(license)) continue;
+    const manual = parse.overrideHas(licensormap, row) ? text(parse.overrideGet(licensormap, row)) : '';
+    const sourceLicensor = text(canonical.canonicalValue(row, 'cp', 'licensor'));
+    add(license, manual || sourceLicensor || parse.pricingLicensorForLicense(license, overrides && overrides.pricingRules));
+  }
+  for (const rule of overrides && overrides.pricingRules || []) add(rule.license, rule.licensor);
+  return [...pairs.values()];
+}
+const hasCardData = card => Boolean(card.processAtlas || card.symbolDataUrl || Object.keys(PROFILE_LIMITS).some(field => text(card[field])));
+// A licensor-less placeholder from an earlier import is superseded once the same
+// license has a card with a real licensor; keep it only if someone stored data on it.
+function visibleCatalogue(overrides) {
+  const items = catalogue(overrides);
+  const assigned = new Set(items.filter(card => text(card.licensor)).map(card => canonical.token(card.license)));
+  return items.filter(card => text(card.licensor) || !assigned.has(canonical.token(card.license)) || hasCardData(card));
+}
 function appendDiscovered(overrides, pairs, now = new Date().toISOString()) {
   const state = clone(stateOf(overrides)), known = new Set(state.items.map(card => pairKey(card.license, card.licensor)));
   const assigned = new Map();
@@ -237,9 +261,9 @@ function responseOf(overrides, canEdit) {
   const state = stateOf(overrides), rules = Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [];
   const byPair = new Map();
   for (const rule of rules) { const key = pairKey(rule.license, rule.licensor); if (!byPair.has(key)) byPair.set(key, []); byPair.get(key).push(rule); }
-  return { cards: catalogue(overrides).map(card => ({ ...card, editToken: editToken(card, rules), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
+  return { cards: visibleCatalogue(overrides).map(card => ({ ...card, editToken: editToken(card, rules), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
     pricingRules: rules, revision: revisionOf(overrides, 'licenseCards'), pricingRevision: revisionOf(overrides, 'pricingRules'), initialized: state.initialized,
     lastImportedAt: state.lastImportedAt, canEdit: Boolean(canEdit) };
 }
 
-module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };
+module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };

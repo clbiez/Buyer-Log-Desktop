@@ -10085,19 +10085,11 @@ const licenseCardSync=require('./lib/license-card-sync').createLicenseCardSync({
 async function getLicenseDiscoveryRows(req){
   const id=req.currentUser.id;
   await ensureDataLoaded(id);
-  const runtime=cacheForUser(id),overrides=loadOverrides(),canonical=require('./lib/canonical-fields');
+  const runtime=cacheForUser(id),overrides=loadOverrides();
   const sources=runtime.asasOrdersByTarget?Object.values(runtime.asasOrdersByTarget).filter(Array.isArray):[];
   if(Array.isArray(runtime.asasOrders))sources.push(runtime.asasOrders);
   if(!runtime.loadedAt&&!sources.some(rows=>rows.length))throw Object.assign(new Error('ASAS verilerini önce yenileyin. / Refresh ASAS data first.'),{code:'LICENSE_SOURCE_UNAVAILABLE',statusCode:503});
-  const pairs=new Map();
-  const add=(license,licensor)=>{if(license)pairs.set(require('./lib/license-cards').pairKey(license,licensor),{License:license,Licensor:licensor});};
-  for(const rows of sources)for(const row of rows){
-    const license=canonical.canonicalValue(row,'cp','license'),sourceLicensor=canonical.canonicalValue(row,'cp','licensor');
-    if(sourceLicensor)add(license,sourceLicensor);
-    else add(license,parseLib.pricingLicensorForLicense(license,overrides.pricingRules));
-  }
-  for(const rule of overrides.pricingRules||[])add(rule.license,rule.licensor);
-  return {module:'cp',rows:[...pairs.values()],sourceStamp:String(runtime.loadedAt||'')};
+  return {module:'cp',rows:require('./lib/license-cards').discoveryRowsFromOrders(sources,overrides,parseLib),sourceStamp:String(runtime.loadedAt||'')};
 }
 const licenseCardService=require('./lib/license-card-service').createLicenseCardService({
   loadOverrides,saveOverrides,mutate:require('./db').mutateSharedResource,pricing:require('./lib/resource-rule-service'),

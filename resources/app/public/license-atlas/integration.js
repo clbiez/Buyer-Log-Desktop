@@ -3,6 +3,7 @@
  'use strict';
  const wire='buyer-log-license-atlas-v1';
  let connected=false,canEdit=false,busy=false,dirty=false,rendering=false,commerce={},baseline='',parentOrigin='',businessHTML='',detailsDirty=false,detailsSaving=false,recoveryItems=null;
+ let licensorFilter='',supplierSelection=new Set();const NO_LICENSOR='__none__';
  const preferred=new Map(),licenseKey=v=>String(v||'').trim().toUpperCase().replace(/[İŞÇÖÜĞ]/g,c=>({'İ':'I','Ş':'S','Ç':'C','Ö':'O','Ü':'U','Ğ':'G'}[c])).replace(/\s+/g,' ');
  const variants=id=>{const l=all().find(x=>x.id===id);return l?all().filter(x=>licenseKey(x.name)===licenseKey(l.name)):[];};
  const send=(action,payload={})=>{if(connected)parent.postMessage({wire,action,...payload},parentOrigin);};
@@ -46,8 +47,29 @@
   const groups=new Map();for(const l of licenses){const k=licenseKey(l.name);if(!groups.has(k))groups.set(k,[]);groups.get(k).push(l);}
   return [...groups.entries()].map(([k,ls])=>ls.find(l=>l.id===preferred.get(k))||ls.slice().sort((a,b)=>String(commerce[b.id]?.start||'').localeCompare(String(commerce[a.id]?.start||'')))[0]);
  }
- cards=function(licenses){const box=document.createElement('div');box.innerHTML=original.cards(grouped(licenses));box.querySelectorAll('[data-id]').forEach(el=>{const meta=el.querySelector('.card-meta');if(!meta)return;const options=variants(el.dataset.id);meta.querySelector('.card-agency').textContent=options.map(l=>l.agency||txt('Lisansör belirtilmedi','Licensor not specified')).join(' · ');meta.querySelector('.card-bottom').insertAdjacentHTML('beforebegin',ratesHTML(el.dataset.id,true));});return box.innerHTML;};
+ const licensorOf=l=>licenseKey(l.agency)||NO_LICENSOR;
+ const matchesLicensor=l=>!licensorFilter||licensorOf(l)===licensorFilter;
+ function licensorOptions(){const map=new Map();for(const l of all()){const k=licensorOf(l);if(!map.has(k))map.set(k,k===NO_LICENSOR?txt('Lisansörü belirtilmemiş','Licensor not specified'):String(l.agency).trim());}
+  return [...map.entries()].sort((a,b)=>(a[0]===NO_LICENSOR)-(b[0]===NO_LICENSOR)||a[1].localeCompare(b[1],locale==='en'?'en':'tr'));}
+ cards=function(licenses){const box=document.createElement('div');box.innerHTML=original.cards(grouped(licenses.filter(matchesLicensor)));box.querySelectorAll('[data-id]').forEach(el=>{const meta=el.querySelector('.card-meta');if(!meta)return;const options=variants(el.dataset.id);meta.querySelector('.card-agency').textContent=options.map(l=>l.agency||txt('Lisansör belirtilmedi','Licensor not specified')).join(' · ');meta.querySelector('.card-bottom').insertAdjacentHTML('beforebegin',ratesHTML(el.dataset.id,true));});return box.innerHTML;};
  function licensorSelect(id,inside=false){const ls=variants(id);return `<label class="bl-licensor"><span>${e(txt('Lisansör / sözleşme tarafı','Licensor / contracting party'))}</span><select data-bl-licensor="${inside?'editor':'view'}" aria-label="${e(txt('Lisansör seç','Select licensor'))}">${ls.map(l=>`<option value="${e(l.id)}" ${l.id===id?'selected':''}>${e(l.agency||txt('Lisansör belirtilmedi','Licensor not specified'))} · ${commerce[l.id]?.count||0} ${e(txt('kapsam','scopes'))}</option>`).join('')}</select></label>`;}
+ // Supplier export: the user chooses which licenses go into the file.
+ let pickerQuery='',pickerLicensor='';
+ function pickerLicenses(){const q=pickerQuery.toLocaleLowerCase(locale==='en'?'en':'tr');return all().filter(l=>(!pickerLicensor||licensorOf(l)===pickerLicensor)&&`${l.name} ${l.agency||''}`.toLocaleLowerCase(locale==='en'?'en':'tr').includes(q)).sort((a,b)=>String(a.name).localeCompare(String(b.name),locale==='en'?'en':'tr')||String(a.agency||'').localeCompare(String(b.agency||'')));}
+ function supplierPicker(keepFocus=false){
+  const focus=keepFocus&&document.activeElement?.id,list=pickerLicenses(),options=licensorOptions();
+  overlay.innerHTML=`<div class="modal"><section class="modal-box bl-picker" role="dialog" aria-modal="true" aria-label="${e(txt('Üretici atlası için lisans seç','Choose licenses for the supplier atlas'))}"><div class="overline">${e(txt('ÜRETİCİ ATLASI','SUPPLIER ATLAS'))}</div><h2>${e(txt('Aktarılacak lisansları seçin','Choose licenses to export'))}</h2><p>${e(txt('Yalnız seçtiğiniz ve üreticiye açık lisanslar dosyaya girer.','Only the licenses you select that are shared with suppliers are included.'))}</p>
+   <div class="bl-picker-tools"><input id="blPickSearch" type="search" value="${e(pickerQuery)}" placeholder="${e(txt('Lisans veya lisansör ara…','Search license or licensor…'))}" aria-label="${e(txt('Lisans ara','Search licenses'))}"><select id="blPickLicensor" aria-label="${e(txt('Lisansör filtresi','Licensor filter'))}"><option value="">${e(txt('Tüm lisansörler','All licensors'))}</option>${options.map(([k,label])=>`<option value="${e(k)}" ${k===pickerLicensor?'selected':''}>${e(label)}</option>`).join('')}</select><button class="btn" data-action="blPickAll">${e(txt('Listelenenleri seç','Select listed'))}</button><button class="btn" data-action="blPickNone">${e(txt('Seçimi kaldır','Clear listed'))}</button></div>
+   <ul class="bl-picker-list">${list.map(l=>{const closed=l.manufacturerVisible===false;return `<li><label class="${closed?'is-closed':''}"><input type="checkbox" data-bl-pick="${e(l.id)}" ${supplierSelection.has(l.id)?'checked':''} ${closed?'disabled':''}><b>${e(l.name)}</b><span>${e(l.agency||txt('Lisansör belirtilmedi','Licensor not specified'))}</span>${closed?`<small>${e(txt('Üreticiye kapalı','Not shared with suppliers'))}</small>`:''}</label></li>`;}).join('')||`<li class="muted">${e(txt('Eşleşen lisans yok.','No matching licenses.'))}</li>`}</ul>
+   <div class="modal-actions"><span class="bl-picker-count">${e(txt(`${supplierSelection.size} lisans seçildi`,`${supplierSelection.size} licenses selected`))}</span><button class="btn" data-action="blPickCancel">${e(txt('Vazgeç','Cancel'))}</button><button class="btn primary" data-action="blPickExport" ${supplierSelection.size?'':'disabled'}>${e(txt('Seçilenleri aktar','Export selected'))}</button></div></section></div>`;
+  if(focus){const el=document.getElementById(focus);el?.focus();if(el?.type==='search')el.setSelectionRange(el.value.length,el.value.length);}
+ }
+ document.addEventListener('change',event=>{const el=event.target;
+  if(el.matches?.('[data-bl-pick]')){event.stopImmediatePropagation();if(el.checked)supplierSelection.add(el.dataset.blPick);else supplierSelection.delete(el.dataset.blPick);const count=overlay.querySelector('.bl-picker-count');if(count)count.textContent=txt(`${supplierSelection.size} lisans seçildi`,`${supplierSelection.size} licenses selected`);const go=overlay.querySelector('[data-action="blPickExport"]');if(go)go.disabled=!supplierSelection.size;return;}
+  if(el.id==='blPickLicensor'){event.stopImmediatePropagation();pickerLicensor=el.value;supplierPicker(true);return;}
+  if(el.id==='blLicensorFilter'){event.stopImmediatePropagation();licensorFilter=el.value;const input=document.getElementById('licenseSearch'),position=input?.selectionStart;home();document.getElementById('licenseSearch')?.setSelectionRange(position||0,position||0);}
+ },true);
+ document.addEventListener('input',event=>{if(event.target.id!=='blPickSearch')return;event.stopImmediatePropagation();pickerQuery=event.target.value;supplierPicker(true);},true);
  function decorate(){
   document.querySelector('.footer').textContent=txt('Buyer Log · Atlas ve ticari bilgiler yetkili kullanıcılarla paylaşılır.','Buyer Log · Atlas and commercial details are shared with authorized users.');
   const note=document.querySelector('.note-band');if(!activeId&&note)note.textContent=txt('Atlası Buyer Log içinde düzenleyin. Değişiklikleri kaydedin; üreticiniz için aynı görsel arayüzle ayrı bir rehber oluşturun.','Edit the atlas inside Buyer Log. Save your changes and create a separate guide with the same visual interface for your supplier.');
@@ -55,6 +77,10 @@
   document.querySelectorAll('[data-action="theme"],[data-action="lang"]').forEach(el=>el.hidden=true);
   const backup=document.querySelector('.nav-actions [data-action="export"]');if(backup&&!document.querySelector('[data-action="blRecovery"]'))backup.insertAdjacentHTML('afterend',`<button class="btn" data-action="blRecovery">${ico('upload',15)} <span>Recovery</span></button>`);
   const recover=document.querySelector('[data-action="blRecovery"]');if(recover)recover.hidden=!canEdit;
+  const categoryFilter=document.getElementById('categoryFilter');
+  if(categoryFilter&&!document.getElementById('blLicensorFilter'))categoryFilter.insertAdjacentHTML('afterend','<select class="selectbox" id="blLicensorFilter"></select>');
+  const licensorSelectEl=document.getElementById('blLicensorFilter');
+  if(licensorSelectEl){const options=licensorOptions();if(licensorFilter&&!options.some(([k])=>k===licensorFilter))licensorFilter='';licensorSelectEl.setAttribute('aria-label',txt('Lisansör filtresi','Licensor filter'));licensorSelectEl.innerHTML=`<option value="">${e(txt('Tüm lisansörler','All licensors'))}</option>`+options.map(([k,label])=>`<option value="${e(k)}" ${k===licensorFilter?'selected':''}>${e(label)}</option>`).join('');}
   const badge=document.getElementById('resultsBadge');if(badge)badge.textContent=txt(`${document.querySelectorAll('.license-card').length} sonuç`,`${document.querySelectorAll('.license-card').length} results`);
   document.querySelectorAll('[data-action="import"]').forEach(el=>el.hidden=true);
   document.querySelectorAll('.nav-actions [data-action="studio"],.nav-actions [data-action="new"]').forEach(el=>el.hidden=!canEdit);
@@ -126,7 +152,10 @@
   }
   if(action==='blSave'){if(!dirty||busy)return;if(editor||processStudio)return notify(txt('Önce açık düzenlemeyi tamamlayın.','Complete the open editor first.'),true);busy=true;status();send('save',{db});return;}
   if(action==='blDiscard'){if(busy)return;if(!confirm(txt('Kaydedilmemiş atlas değişiklikleri bırakılsın mı?','Discard unsaved atlas changes?')))return;db=JSON.parse(baseline);dirty=false;send('discarded');overlay.innerHTML='';editor=null;processStudio=null;chosen()?render():home();return;}
-  if(action==='supplierAll'||action==='blExportOne'){if(dirty||busy)return notify(txt('Dışa aktarmadan önce atlası kaydedin.','Save the atlas before exporting.'),true);send('export',{id:action==='blExportOne'?activeId:''});return;}
+  if(action==='supplierAll'||action==='blExportOne'){if(dirty||busy)return notify(txt('Dışa aktarmadan önce atlası kaydedin.','Save the atlas before exporting.'),true);if(action==='blExportOne'){send('export',{ids:[activeId]});return;}supplierSelection=new Set();supplierPicker();return;}
+  if(action==='blPickAll'||action==='blPickNone'){for(const l of pickerLicenses())if(l.manufacturerVisible!==false){if(action==='blPickAll')supplierSelection.add(l.id);else supplierSelection.delete(l.id);}supplierPicker(true);return;}
+  if(action==='blPickCancel'){overlay.innerHTML='';return;}
+  if(action==='blPickExport'){if(!supplierSelection.size)return;const ids=[...supplierSelection];overlay.innerHTML='';send('export',{ids});return;}
   if(action==='new'){if(!dirty&&!busy)send('refresh');return;}
   if(['reset','deleteLicense','duplicate','import'].includes(action))return;
   if((busy||!canEdit)&&!readActions.has(action))return;
@@ -185,14 +214,14 @@
   if(message.action==='supplier'){
    const tpl=new TextDecoder().decode(Uint8Array.from(atob(document.getElementById('supplierTemplate').textContent.trim()),ch=>ch.charCodeAt(0)));
    const payload=JSON.stringify(message.payload).replace(/</g,'\\u003c').replace(/>/g,'\\u003e');
-   const html=tpl.replace('__PUBLIC_DATA__',payload),blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Buyer-Log-License-Atlas.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
+   const html=supplierSkin(tpl.replace('__PUBLIC_DATA__',payload)),blob=new Blob([html],{type:'text/html;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='Buyer-Log-License-Atlas.html';a.click();setTimeout(()=>URL.revokeObjectURL(url),30000);
   }
  });
  window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
  // Buyer Log type scale: the uploaded Atlas declares its own 14–78px sizes and
  // 750–900 weights in ~1100 rules. Rather than fork that CSS, derive one override
  // per rule at runtime so every view (tree, editors, Studio, dialogs) reads like Buyer Log.
- (function buyerLogTypeScale(){
+ function buyerLogTypeScale(){
   const size=px=>px<=10?10.5:px<=11?11:px<=12.5?12:px<=14?12.5:px<=17?13.5:px<=21?15:px<=26?17:px<=40?20:24;
   const px=value=>{const all=[...String(value||'').matchAll(/(-?[\d.]+)px/g)].map(m=>+m[1]);return all.length?Math.max(...all):null;};
   const out=[];
@@ -208,7 +237,20 @@
   for(const sheet of document.styleSheets){const node=sheet.ownerNode;if(!node||['bl-fonts','bl-integration'].includes(node.id))continue;try{walk(sheet.cssRules,'');}catch(_){}}
   const style=document.createElement('style');style.id='bl-type-scale';style.textContent=out.join('\n');
   const integration=document.getElementById('bl-integration');(integration?.parentNode||document.head).insertBefore(style,integration||null);
- })();
+ }
+ buyerLogTypeScale();
+ // The supplier file is standalone: carry the same fonts, skin, type scale and the
+ // Buyer Log light/dark tokens (design.css) so its cards look like the in-app library.
+ const SUPPLIER_TOKENS=':root body{--blt-paper:#f2f2f3;--blt-card:#f8f8f9;--blt-card2:#f5f5f8;--blt-ink:#1d1f20;--blt-ink2:#5d5d60;--blt-muted:#7a7a7d;--blt-line:#d4d4d7;--blt-line2:#b7b7ba;--blt-hair:rgba(29,31,32,.12);--blt-acc:#3f6488;--blt-acc-bg:#e6edf4;--blt-acc-ink:#2c455d;--blt-acc-hover:#2f4d6b;--blt-on-acc:#f2f2f3;--blt-red:#b42318;--blt-green:#177a4c}'
+  +':root body.dark{--blt-paper:#23262a;--blt-card:#292d32;--blt-card2:#31353b;--blt-ink:#e9eaec;--blt-ink2:#a9adb3;--blt-muted:#82868c;--blt-line:#3a3f46;--blt-line2:#4a4f56;--blt-hair:rgba(233,234,236,.13);--blt-acc:#8fb4d8;--blt-acc-bg:#2b3f53;--blt-acc-ink:#cfe2f4;--blt-acc-hover:#a9c8e6;--blt-on-acc:#1b1e21;--blt-red:#e39b94;--blt-green:#93c7a8}'
+  +':root body,:root body.dark{--bg:var(--blt-paper);--panel:var(--blt-card);--ink:var(--blt-ink);--muted:var(--blt-muted);--line:var(--blt-line);--navy:var(--blt-acc);--blue:var(--blt-acc);--blue-soft:var(--blt-card2);--radius:0px;--shadow:none;--bl-acc:var(--blt-acc);--bl-ink:var(--blt-acc-ink);--bl-sub:var(--blt-muted);--bl-card2:var(--blt-card2);--bl-hair:var(--blt-hair);--bl-on:var(--blt-on-acc)}'
+  +'.license-card .cover.has-cover-image img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover!important;object-position:center}';
+ function supplierSkin(html){
+  const fonts=document.getElementById('bl-fonts')?.textContent||'',skin=document.getElementById('bl-integration')?.textContent||'';
+  const head=`<style id="bl-fonts">${fonts}</style><style id="bl-integration">${skin}\n${SUPPLIER_TOKENS}</style>`;
+  const script=`<script>(${buyerLogTypeScale.toString()})();<\/script>`;
+  return html.replace('</head>',()=>head+'</head>').replace(/<\/body>(?![\s\S]*<\/body>)/,()=>script+'</body>');
+ }
  // Start without business data. Only the parent can populate the sandbox.
  db={version:2,licenses:[]};home();parent.postMessage({wire,action:'ready'},'*');
 })();

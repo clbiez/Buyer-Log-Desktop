@@ -68,7 +68,7 @@ body{zoom:var(--bl-density,1)}
 :root body :is(#app,#overlayRoot) :is(input,textarea)::placeholder{color:var(--bl-t-muted)!important;opacity:1}
 :root body :is(#app,#overlayRoot) :is(input,select,textarea):disabled{background:transparent!important;color:var(--bl-t-ink2)!important}
 :root body .searchbox{min-height:var(--bl-ctl)!important;padding:0 8px!important;border:1px solid var(--bl-t-line)!important;background:var(--bl-field)!important;border-radius:0!important;box-shadow:none!important}
-:root body #app .searchbox input{border:0!important;height:28px!important;min-height:0!important;padding:0 4px!important;background:transparent!important}
+:root body #app .searchbox input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]){border:0!important;height:28px!important;min-height:0!important;padding:0 4px!important;background:transparent!important}
 :root body :is(input[type=checkbox],input[type=radio]){accent-color:var(--bl-t-acc);width:14px!important;height:14px!important}
 
 /* Labels = Buyer Log field captions */
@@ -161,3 +161,18 @@ html body .map-route-extras{gap:6px;margin-top:6px}
 @media(max-width:1500px){.nav-actions .hide-tablet{display:none}}
 @media(max-width:900px){.bl-business .lcFormGrid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.shell{padding:0 10px}.bl-business .lcFormGrid{grid-template-columns:1fr}}
+/* Supplier export picker and licensor filter */
+.bl-picker{width:min(720px,calc(100vw - 32px));max-width:none!important;display:flex;flex-direction:column;max-height:calc(100vh - 48px)}
+.bl-picker h2{margin:2px 0 4px}.bl-picker>p{margin:0 0 10px}
+.bl-picker-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+.bl-picker-tools input{flex:1 1 220px;min-width:0}.bl-picker-tools select{flex:0 1 200px;width:auto}
+.bl-picker-list{list-style:none;margin:0;padding:0;overflow:auto;flex:1;min-height:120px;border:1px solid var(--bl-t-line)}
+.bl-picker-list li{border-bottom:1px solid var(--bl-t-line)}.bl-picker-list li:last-child{border-bottom:0}.bl-picker-list li.muted{padding:10px}
+.bl-picker-list label{display:grid;grid-template-columns:16px minmax(0,1fr) minmax(0,1fr) auto;gap:8px;align-items:center;padding:6px 10px;cursor:pointer;font-size:12.5px}
+.bl-picker-list label:hover{background:var(--blt-card2,var(--bl-card))}
+.bl-picker-list label span{color:var(--bl-t-ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bl-picker-list label small{color:var(--bl-t-muted);font-size:11px}
+.bl-picker-list label.is-closed{cursor:default;opacity:.6}
+.bl-picker .modal-actions{align-items:center;gap:6px;margin-top:10px}.bl-picker-count{margin-right:auto;color:var(--bl-t-ink2);font-size:12px}
+#blLicensorFilter{min-width:170px}
+@media(max-width:600px){.bl-picker-list label{grid-template-columns:16px minmax(0,1fr);}.bl-picker-list label span,.bl-picker-list label small{grid-column:2}}

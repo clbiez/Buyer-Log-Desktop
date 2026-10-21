@@ -74,9 +74,12 @@
   }catch(error){post('failed',{error:current.failMessage(error)});}
   finally{busy=false;}
  }
- function exportSupplier(id=''){
+ function exportSupplier(selection=''){
   if(dirty||busy)return;
-  const selected=ctx.data.cards.filter(c=>!id||c.id===id),licenses=selected.map(c=>A.project(c.processAtlas?{...c,processAtlas:{...c.processAtlas,license:prepareLicense(c.processAtlas.license),sharedAddresses:(c.processAtlas.sharedAddresses||[]).map(a=>({...a,manufacturerVisible:a.manufacturerVisible!==false}))}}:c,ctx.locale)).filter(Boolean);
+  // Only the chosen cards go into the supplier file; nothing selected exports nothing.
+  const ids=new Set((Array.isArray(selection)?selection:[selection]).filter(id=>typeof id==='string'&&id));
+  if(!ids.size){ctx.showError(T('Aktarmak için en az bir lisans seçin.','Select at least one license to export.'));return;}
+  const selected=ctx.data.cards.filter(c=>ids.has(c.id)),licenses=selected.map(c=>A.project(c.processAtlas?{...c,processAtlas:{...c.processAtlas,license:prepareLicense(c.processAtlas.license),sharedAddresses:(c.processAtlas.sharedAddresses||[]).map(a=>({...a,manufacturerVisible:a.manufacturerVisible!==false}))}}:c,ctx.locale)).filter(Boolean);
   if(!licenses.length){ctx.showError(T('Üreticiye açık kayıt yok. Lisans bilgileri → Üretici görünümü bölümünden paylaşımı açıp atlası kaydedin.','No supplier-visible records. Enable sharing in License details → Supplier view and save the atlas.'));return;}
   const publicCards=licenses.map(l=>{
    for(const st of l.stages){if(st.note)st.supplierInstructions=[st.supplierInstructions,st.note].filter(Boolean).join('\n\n');for(const r of st.submissions)r.note=[r.supplierInstructions,r.note].filter(Boolean).join('\n\n');}
@@ -129,7 +132,7 @@
   if(m.action==='recoveryCancel')recoveryPlan=null;
   if(m.action==='select'&&ctx.data?.cards.some(c=>c.id===m.id)){ctx.selected=m.id;ctx.selectOnly(m.id);}
   if(m.action==='refresh'&&!dirty&&!busy&&ctx.data?.canEdit){library=null;ctx.action('refresh');}
-  if(m.action==='export')exportSupplier(typeof m.id==='string'?m.id:'');
+  if(m.action==='export')exportSupplier(Array.isArray(m.ids)?m.ids.filter(id=>typeof id==='string').slice(0,500):typeof m.id==='string'?m.id:'');
 
  });
  window.addEventListener('beforeunload' ,event=>{if(dirty){event.preventDefault();event.returnValue='';}});
