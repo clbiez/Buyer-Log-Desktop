@@ -122,12 +122,12 @@ test('Lisans Atlası Buyer Log arayüz ölçeğini izler ve büyük karşılama 
   const css = read('public/license-atlas/integration.css');
   const shell = read('public/license-atlas-shell.js');
   const bridge = read('public/license-atlas/integration.js');
-  assert.match(css, /body\{zoom:var\(--bl-density,\.9\)\}/);
+  assert.match(css, /body\{zoom:var\(--bl-density,1\)\}/);
   assert.match(css, /html body \.hero\{display:none\}/);
-  assert.match(css, /\.cover\{height:56px\}/);
+  assert.match(css, /\.cover\{height:52px\}/);
   assert.match(shell, /font-size:var\(--fs-base,12\.5px\)/);
   assert.match(shell, /attributeFilter:\['data-theme','data-font-step','style','lang'\]/);
-  assert.match(bridge, /setProperty\('--bl-density'/);
+  assert.match(bridge, /setProperty\('--bl-density',String\(Math\.min\(1\.3,Math\.max\(\.85,base\/12\.5\)\)\)\)/);
   assert.match(read('public/perf-runtime.js'), /'license-cards-engine\.js\?rev=2'.*'license-atlas-shell\.js\?rev=2','license-cards\.js\?rev=4'/);
 });
 
@@ -146,11 +146,35 @@ test('yeni dönemin başlangıcı değişince otomatik kapatılan dönem onu izl
 test('kart görseli yüklenebilir: CSP blob önizlemesine izin verir, bildirim kaydetmeyi hatırlatır', () => {
   const html = read('public/license-atlas/index.html');
   const csp = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/)[1];
-  assert.match(csp, /img-src data: blob:;/);
+  assert.match(csp, /img-src data: blob:; font-src data:;/);
   assert.match(csp, /connect-src 'none'/);
   assert.match(csp, /default-src 'none'/);
   assert.match(html, /const objectURL=URL\.createObjectURL\(file\),img=new Image\(\);/);
   const bridge = read('public/license-atlas/integration.js');
   assert.match(bridge, /'Lisans görseli kaydedildi\.':txt\('Görsel eklendi\. Atlası kaydedin\.','Image added\. Save the atlas\.'\)/);
-  assert.match(read('public/license-atlas/integration.css'), /\.license-card \.cover\.has-cover-image\{height:100px\}/);
+  assert.match(read('public/license-atlas/integration.css'), /\.license-card \.cover\.has-cover-image\{height:96px\}/);
+});
+
+test('Lisans Atlası Buyer Log arayüz dilini kullanır: Barlow, 30px alanlar, tema token’ları, tip ölçeği', () => {
+  const css = read('public/license-atlas/integration.css');
+  const shell = read('public/license-atlas-shell.js');
+  const bridge = read('public/license-atlas/integration.js');
+  // Fonts: same Barlow files/ranges as design.css, inlined because the sandbox only allows font-src data:.
+  assert.match(shell, /function buyerLogFonts\(\)\{/);
+  assert.match(shell, /rule\.type===CSSRule\.FONT_FACE_RULE&&\/Barlow\//);
+  assert.match(shell, /<style id="bl-fonts">\$\{fonts\}<\/style><style id="bl-integration">\$\{css\}<\/style>/);
+  for (const token of ['--ink2', '--acc-bg', '--acc-ink', '--on-acc', '--hair', '--line2', '--red']) assert.ok(shell.includes(`'${token}'`), token);
+  assert.match(bridge, /setProperty\('--blt-'\+k\.slice\(2\),v\)/);
+  // Type scale derived from every original rule, inserted before the integration layer.
+  assert.match(bridge, /function buyerLogTypeScale\(\)\{/);
+  assert.match(bridge, /if\(fw>=650\)decl\.push\('font-weight:600!important'\)/);
+  assert.match(bridge, /\['bl-fonts','bl-integration'\]\.includes\(node\.id\)/);
+  // Controls, buttons and labels match Buyer Log primitives.
+  assert.match(css, /--bl-ctl:30px/);
+  assert.match(css, /--bl-body-font:"Barlow"/);
+  assert.match(css, /:root body :is\(#app,#overlayRoot\) :is\(input:not\(\[type=checkbox\]\)/);
+  assert.match(css, /font:500 12px\/1\.2 var\(--bl-body-font\)!important/);
+  assert.match(css, /font:500 10\.5px\/1\.3 var\(--bl-body-font\)!important;letter-spacing:\.06em!important;text-transform:uppercase/);
+  assert.match(css, /\.map-choice-bar button\.selected\{background:var\(--bl-t-acc-bg\)!important/);
+  assert.doesNotMatch(css.slice(css.indexOf('Buyer Log skin')), /#427f94|#39758a|#dceeed/);
 });
