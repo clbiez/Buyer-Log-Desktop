@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.289",
-  "commit_sha": "a3b4b00151c90d17d5d72fd4bf01b6934a706c3d",
-  "release_notes": "Buyer Log 7.0.289 TEST: Windows 60 saniyelik güncelleme doğrulama zaman aşımında, sunucu/yerel DB'nin gerçek readiness kayıtlarıyla erken ve kontrollü onay. Checklist üreticiye özel kalıcı soru seçimi ve Excel boş satır düzeltmesi (#621). Önceki geri alma ve imza doğrulama korumaları korunur. / Early signed health confirmation on server and local DB milestones, with rollback safeguards preserved; per-supplier checklist selections and compact Excel rows.",
-  "request_id": "7.0.289-test-updater-health-20261021"
+  "version": "7.0.290",
+  "commit_sha": "365342fe395c9b36edabd77523d0f71c8f06c43f",
+  "release_notes": "Buyer Log 7.0.290 TEST: Koleksiyon Ctrl+C/Ctrl+V klavye kısayolları, son seçim önceliği, aralık seçimi/yapıştırma, temizleme ve aşağı doldurma; CP/Orders başlıksız kopyalama ve alt detay raporu hücre kopyalama. Aynı sürümde CP checklist/kurallar ve görsel sürüm notu güncellemeleri. PR #631; tam Windows regresyonu 1063 dosya PASS. / Collection, CP/Orders and detail-report clipboard fixes; managed CP/checklist updates and bilingual visual release notes.",
+  "request_id": "7.0.290-test-copy-paste-pr631-20261021"
 }
