@@ -273,6 +273,35 @@
       }
     },
     {
+      "id": "layout-compact-review-rows",
+      "type": "improvement",
+      "module": {
+        "tr": "Layout Kontrolü",
+        "en": "Layout Control"
+      },
+      "title": {
+        "tr": "Layout yorumları kompakt satırlarda",
+        "en": "Layout findings in compact rows"
+      },
+      "body": {
+        "tr": "Bulgu, bulunan değer, olması gereken ve kısa LCW AI yorumu aynı satırda görünür. Ayrıntı, şablon, onay ve yorum alanları satıra tıklayınca açılır; PDF işaretleri ilgili satırı açar. Üst çubuklar küçültülerek aynı ekrana daha fazla kontrol sığdırıldı.",
+        "en": "The finding, printed value, expected value and concise LCW AI comment appear in one row. Details, templates, approval and comment controls expand on click; PDF markers open the corresponding row. Smaller header bars leave room for more checks on screen."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "layout-compact-review-rows.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında anonim demo PDF yanında kompakt LCW AI kontrol satırları",
+          "en": "Compact LCW AI review rows alongside an anonymous demo PDF in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Bulunan ve beklenen değerler kısa yorumlarla satır satır görünür; anonim demo ve kontrollü AI test yanıtı kullanıldı.",
+          "en": "Printed and expected values appear row by row with short comments, using an anonymous demo and a controlled AI test response."
+        }
+      }
+    },
+    {
       "id": "test-report-manual-po-matching",
       "type": "feature",
       "module": {
