@@ -35,12 +35,16 @@ if (!tests.length) {
 // Keep each child-process command conservatively below the Windows command-line limit.
 // Larger sequential batches avoid idle test workers at batch boundaries;
 // the same test files, test concurrency and failure gates are preserved.
+// The ten-device filesystem simulation keeps its own deadlines by running
+// without competing file workers. Every seed and assertion still runs.
+const isolatedTests = tests.filter(file => path.basename(file) === 'sync-simulation-v20261009.test.js');
+const parallelTests = tests.filter(file => !isolatedTests.includes(file));
 const batches = [];
 let batch = [];
 let commandChars = 0;
 const MAX_COMMAND_CHARS = 16000;
 const MAX_BATCH_FILES = 300;
-for (const file of tests) {
+for (const file of parallelTests) {
   const arg = rel(file);
   const cost = arg.length + 3;
   if (batch.length && (batch.length >= MAX_BATCH_FILES || commandChars + cost > MAX_COMMAND_CHARS)) {
@@ -52,6 +56,7 @@ for (const file of tests) {
   commandChars += cost;
 }
 if (batch.length) batches.push(batch);
+for (const file of isolatedTests) batches.push([rel(file)]);
 
 const requestedConcurrency = Number.parseInt(process.env.BUYER_LOG_TEST_CONCURRENCY || '4', 10);
 const testConcurrency = Number.isFinite(requestedConcurrency) && requestedConcurrency > 0 ? Math.min(requestedConcurrency, 16) : 4;
