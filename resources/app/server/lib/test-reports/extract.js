@@ -87,7 +87,8 @@ function readMsg(buffer) {
     to: (data.recipients || []).filter(r => r.recipType !== 2).map(r => r.smtpAddress || r.email || r.name || '').join('; '),
     cc: (data.recipients || []).filter(r => r.recipType === 2).map(r => r.smtpAddress || r.email || r.name || '').join('; '),
     date: data.messageDeliveryTime || data.clientSubmitTime || '',
-    body: data.body || '',
+    body: data.body || htmlToText(data.bodyHtml || ''),
+    alternativeBody: data.body && data.bodyHtml ? htmlToText(data.bodyHtml) : '',
     attachments,
     unreadAttachments,
   };
@@ -243,7 +244,7 @@ async function processFile(file, options) {
     if (kind === 'msg' || kind === 'eml') {
       const mail = kind === 'msg' ? readMsg(buffer) : readEml(buffer);
       const mailEntry = fileEntry(name, buffer, kind, opts.stage);
-      const mailSource = source(mailEntry, { pages: [{ page: 0, text: ['Subject: ' + mail.subject, 'From: ' + mail.from, 'To: ' + (mail.to || ''), 'Cc: ' + (mail.cc || ''), 'Date: ' + mail.date, 'Message-ID: ' + (mail.messageId || ''), '', mail.body, mail.alternativeBody ? '\n=== Alternative MIME body ===\n' + mail.alternativeBody : ''].join('\n') }], pageCount: 1, complete: Boolean(mail.body && mail.body.trim()) && !mail.incomplete,
+      const mailSource = source(mailEntry, { pages: [{ page: 0, text: ['Subject: ' + mail.subject, 'From: ' + mail.from, 'To: ' + (mail.to || ''), 'Cc: ' + (mail.cc || ''), 'Date: ' + mail.date, 'Message-ID: ' + (mail.messageId || ''), '', mail.body, mail.alternativeBody ? '\n=== Alternative MIME body ===\n' + mail.alternativeBody : ''].join('\n') }], pageCount: 1, complete: Boolean(mail.body && mail.body.trim()) && !mail.incomplete && !(mail.unreadAttachments || []).length,
         attachments: mail.attachments.map(attachment => ({ name: attachment.name, kind: detectKind(attachment.buffer, attachment.name), hash: sha256(attachment.buffer) })) });
       for (const missing of mail.unreadAttachments || []) {
         result.sources.push({ id: crypto.createHash('sha256').update(mailSource.id + missing).digest('hex').slice(0, 24), parentId: mailSource.id, name: missing, kind: 'unsupported', pages: [], pageCount: 0, complete: false });

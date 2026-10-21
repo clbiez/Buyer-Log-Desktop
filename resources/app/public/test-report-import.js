@@ -190,6 +190,8 @@
   }
   function plan(entry) {
     const out = { ready: false, reason: '', current: 'open', next: '', suggested: null, manual: '', userOwned: false, notAsked: false, step: null, skippedDecisions: 0 };
+    const existing = assistantState() && assistantState().answers && assistantState().answers[answerKey(entry.chosen, entry.itemId)];
+    out.current = existing ? Checklist().normalizeStatus(existing.state) || 'open' : 'open';
     if (ui.ai.state !== 'done' || !ui.ai.packet) { out.reason = T('LCW AI incelemesi tamamlanmalı.', 'LCW AI review must complete.'); return out; }
     if (ui.ai.cpChanged) { out.reason = T('CP veya checklist değişti; yeniden analiz edin.', 'CP or checklist changed; analyse again.'); return out; }
     const review = reviewFor(entry);
@@ -313,7 +315,7 @@
       + '<option value="' + NEW_ITEM + '">' + html(T('+ Yeni checklist adımı oluştur…', '+ Create a new checklist step…')) + '</option>';
   }
   function changeCell(entry, p) {
-    if (!p.ready) return '<span class="trMuted">' + html(p.reason) + '</span>';
+    if (!p.ready) return (entry.itemId && entry.chosen ? '<small>' + html(T('Mevcut durum: ', 'Current status: ')) + statusHtml(p.current) + '</small>' : '') + '<span class="trMuted">' + html(p.reason) + '</span>';
     let out = statusHtml(p.current) + ' → ' + statusHtml(p.next);
     // Hedef durum dinamik: otomatik (analiz) ya da kullanıcı tanımlı durumlar dâhil elle seçim.
     const auto = p.userOwned && !entry.override ? p.current : (p.suggested && p.suggested.status || p.current);
@@ -408,8 +410,8 @@
   }
   function summaryHtml(plans) {
     const count = function (fn) { return ui.entries.filter(fn).length; };
-    const warnings = ui.entries.reduce(function (n, e) { return n + (e.report.uyarilar || []).length; }, 0)
-      + ui.files.reduce(function (n, f) { return n + (f.warnings || []).length; }, 0);
+    const warnings = ui.entries.reduce(function (n, e) { const review = reviewFor(e); return n + (review ? Math.max(review.risks.length, review.blocked ? 1 : 0) : 0) + (e.report.uyarilar || []).filter(function (w) { return !review || !['aiNote', 'aiExtracted'].includes(w.code); }).length; }, 0)
+      + ui.files.reduce(function (n, f) { return n + (ui.ai.read && ui.ai.read[f.name] && ui.ai.read[f.name].ok ? 0 : (f.warnings || []).length); }, 0);
     const chips = [
       [T('Dosya', 'Files'), ui.files.length, ''],
       [T('Rapor', 'Reports'), new Set(ui.entries.map(function (e) { return e.report.talepNo || e.id; })).size, ''],
@@ -663,7 +665,7 @@
       ui.entries = accepted.assessment.assessments.map(function (review) {
         const base = bases.find(function (entry) { return entry.report.talepNo === review.reportId && (entry.scope && entry.scope.orderCode || entry.report.siparisKodu) === review.orderCode; })
           || bases.find(function (entry) { return entry.report.talepNo === review.reportId; });
-        const entry = Object.assign({}, base, { id: 'r' + (ui.seq++), include: false, itemId: review.step || base.itemId });
+        const entry = Object.assign({}, base, { id: 'r' + (ui.seq++), chosen: review.orderKey || '', include: false, itemId: review.step || base.itemId });
         if (review.orderKey) {
           const row = cpRows().find(function (row) { const a = analysisFor(row); return a && a.orderKey === review.orderKey; });
           if (row) { entry.chosen = review.orderKey; entry.candidates = [{ key: review.orderKey, row: row }]; entry.ignored = false; entry.match = { level: 'partial', reason: 'ai', candidates: entry.candidates }; }
@@ -694,7 +696,6 @@
   function cancelAi() {
     ui.aiRun += 1;
     if (ui.ai.controller) ui.ai.controller.abort();
-    if (root.BuyerLogAI) root.BuyerLogAI.cancel();
     ui.ai.state = 'error';
     ui.ai.message = T('İnceleme durduruldu. Devam etmek için yeniden analiz edin.', 'Review stopped. Analyse again to continue.');
     render();

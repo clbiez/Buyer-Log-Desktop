@@ -68,6 +68,8 @@ function publicPayload(allowedOrderKeys) {
   }));
   payload.reports = Object.fromEntries(Object.entries(payload.links).map(([id, link]) => [id, {
     ...store.reports[id],
+    ...(store.reports[id].aiAssessment ? {aiAssessment: allowedOrderKeys.has(store.reports[id].aiAssessment.orderKey) ? store.reports[id].aiAssessment : null} : {}),
+    ...(store.reports[id].aiAssessments ? {aiAssessments: store.reports[id].aiAssessments.filter(review=>allowedOrderKeys.has(review.orderKey))} : {}),
     dosyalar: [...new Map(Engine.reportLinks(link).flatMap(target => target.files || store.reports[id].dosyalar || []).map(file => [file.attachmentId || file.hash, file])).values()],
   }]));
   return payload;
@@ -153,6 +155,7 @@ function commit(items, typeMap, actor, attach, options = {}) {
         sourceFiles: (incoming.dosyalar || []).map(f => text(f.ad, 300)),
         sources: (incoming.kaynaklar || []).slice(0, 10),
         newDecisions, newAttachments: attachments.map(a => a.id),
+        ...(item.review ? {review: item.review} : {}),
       });
       results.push({ talepNo, orderKey, itemId, report: merged, attachments, newDecisions, decisionsSkipped: (incoming.kararlar || []).length - newDecisions });
     }

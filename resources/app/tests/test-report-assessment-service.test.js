@@ -54,6 +54,8 @@ test('real alphanumeric laboratory reference is preserved, only approval commits
   const committed=await service.commit(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,items:[{talepNo:'SGS-2026-001',orderKey:'po7',itemId:'fabric'}]});
   assert.equal(committed.results.length,1);
   assert.equal(store.read().reports['SGS-2026-001'].aiAssessment.component,'PATCH FABRIC');
+  assert.equal(store.read().reports['SGS-2026-001'].aiAssessment.evidence[0].sourceName,'result.eml');
+  assert.equal(store.read().events[0].review.snapshotId,packet.snapshotId);
 });
 test('CP changes after the response invalidate approval; another order cannot take the proposal',async()=>{
   const {parsed,packet,data}=await prepare('366956');
@@ -61,4 +63,20 @@ test('CP changes after the response invalidate approval; another order cannot ta
   await assert.rejects(service.commit(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,items:[{talepNo:'366956',orderKey:'po1',itemId:'fabric'}]}),{code:'TEST_REPORT_ORDER_MISMATCH'});
   revision='v2';
   await assert.rejects(service.commit(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,items:[{talepNo:'366956',orderKey:'po7',itemId:'fabric'}]}),{code:'TEST_REPORT_REVIEW_STALE'});
+});
+test('a late old response cannot replace the reports of a newer validated review',async()=>{
+  const {parsed,packet,data}=await prepare('366957');
+  let resume,started;
+  const waiting=new Promise(resolve=>{started=resolve;});
+  const slow=createService({sourceRevision:()=>revision,authorizedOrders:async()=>{started();await new Promise(resolve=>{resume=resolve;});return orders;}});
+  const old=slow.acceptAssessment(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,data});
+  await waiting;
+  const newer=await service.prepareAssessment(profile,{sessionId:parsed.sessionId,cp:{...cp,displayTable:{note:'new generation'}},checklistSteps:packet.checklistSteps,checklistStatuses:packet.checklistStatuses});
+  const latest={...data,snapshotId:newer.packet.snapshotId,assessments:data.assessments.map(item=>({...item,summary:'Newest reviewed source'}))};
+  await service.acceptAssessment(profile,{sessionId:parsed.sessionId,snapshotId:newer.packet.snapshotId,data:latest});
+  resume();
+  await assert.rejects(old,{code:'TEST_REPORT_REVIEW_STALE'});
+  const session=service.sessionFor(profile,parsed.sessionId);
+  assert.equal(session.reports[0].aiAssessment.snapshotId,newer.packet.snapshotId);
+  assert.equal(session.reports[0].aiAssessment.summary,'Newest reviewed source');
 });

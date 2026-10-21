@@ -65,7 +65,7 @@ function createLcwAiEngine(options = {}) {
       content: built.prompt,
       attachments,
       modelKey: input.modelKey,
-      reasoningLevel: built.source === 'test-report-assess' ? 'High' : input.reasoningLevel,
+      reasoningLevel: config.SOURCE_DEFAULTS[built.source]?.reasoningLevel || input.reasoningLevel,
       signal,
       onDelta: delta => { chars += delta.length; emit(input.onProgress, { phase: 'streaming', requestId, delta, chars }); },
     });

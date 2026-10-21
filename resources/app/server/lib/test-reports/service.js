@@ -63,7 +63,7 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
         if(!proposal||proposal.blocked&&raw.confirmEvidence!==true)throw fail('TEST_REPORT_REVIEW_REQUIRED',409);
       }
       if(seen.has(key))throw fail('TEST_REPORT_DUPLICATE_TARGET',409);seen.add(key);
-      return {report,orderKey,itemId:text(raw.itemId,160),context:{...(raw.context&&typeof raw.context==='object'?raw.context:{}),...authoritative}};
+      return {report,orderKey,itemId:text(raw.itemId,160),review:session.assessment?{snapshotId:session.assessment.packet.snapshotId,scopeConfirmed:raw.confirmEvidence===true}:null,context:{...(raw.context&&typeof raw.context==='object'?raw.context:{}),...authoritative}};
     });
     const saved=store.read();
     if(items.some(item=>Engine.reportLinks(saved.links[item.report.talepNo]).some(link=>!allowed.has(link.orderKey))))throw fail('TEST_REPORT_SHARED_SCOPE_FORBIDDEN',403);
@@ -127,9 +127,10 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
     staging.persistSession(session);return {ok:true,packet};
   }
   async function acceptAssessment(profile,body) {
+    const allowed=await authorizedOrders(profile,{write:false});
+    return staging.withSessionLease(body.sessionId,profile.id,()=>{
     const session=sessionFor(profile,body.sessionId),review=session.assessment;
     if(!review||review.packet.snapshotId!==body.snapshotId)throw fail('TEST_REPORT_REVIEW_STALE',409);
-    const allowed=await authorizedOrders(profile,{write:false});
     if(digest([...allowed])!==review.authorityHash)throw fail('TEST_REPORT_REVIEW_STALE',409);
     assertReviewCurrent(profile,review);
     const validated=Assessment.validate(body.data,review.packet);
@@ -146,13 +147,15 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
       report.dosyalar=(session.sources||[]).filter(source=>ids.has(source.id)).map(source=>{
         const staged=session.files.get(source.fileId);return staged?{ad:source.name,tur:source.kind,boyut:staged.buffer.length,hash:source.hash,stagingId:source.fileId}:null;
       }).filter(Boolean);
-      report.aiAssessment={snapshotId:review.packet.snapshotId,orderKey:item.orderKey,step:item.step,status:item.status,scope:item.scope,evidence:item.evidence,component:item.component,labResult:item.labResult,commercialDecision:item.commercialDecision,summary:item.summary,risks:item.risks};
+      const evidence=item.evidence.map(ref=>{const source=review.packet.sources.find(source=>source.id===ref.sourceId);return {...ref,sourceName:source.name,sourceHash:source.hash};});
+      report.aiAssessment={snapshotId:review.packet.snapshotId,orderKey:item.orderKey,step:item.step,status:item.status,scope:item.scope,evidence,component:item.component,labResult:item.labResult,commercialDecision:item.commercialDecision,summary:item.summary,risks:item.risks};
       return report;
     });
     session.reports=Engine.groupReports(reports);
     review.validated=validated;staging.persistSession(session);
     audit(profile,'TEST_REPORT_AI_REVIEW',session.id,{snapshotId:review.packet.snapshotId,sources:review.packet.sources.length,orders:review.packet.cp.rows.length,proposals:validated.assessments.length,unresolved:validated.unresolvedSourceIds.length});
     return {ok:true,reports:session.reports,assessment:validated,snapshotId:review.packet.snapshotId};
+    });
   }
   async function extractAi(profile,sessionId,{engine,lang='tr',assertAuthority=()=>{}}) {
     const session=sessionFor(profile,sessionId),candidates=[...session.aiCandidates];

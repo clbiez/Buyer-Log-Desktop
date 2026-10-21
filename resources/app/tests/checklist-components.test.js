@@ -181,6 +181,8 @@ test('test report preview requires an explicit valid set part before linking evi
   api._ui.store={links:{},reports:{}};
   const entry={report:{talepNo:'R-SET-1',kararlar:[]},candidates:[{key:analysis.orderKey,row}],chosen:analysis.orderKey,itemId:'tests',include:true};
   api._ui.entries=[entry];
+  const step=Components.itemId('tests','B');
+  api._ui.ai={state:'done',packet:{},reviews:{['R-SET-1::'+analysis.orderKey+'::'+step]:{reportId:'R-SET-1',orderKey:analysis.orderKey,step,status:'rejected',blocked:false}}};
   assert.equal(api._plan(entry).ready,false);
   entry.itemId=Components.itemId('tests','B');
   assert.equal(api._plan(entry).ready,true);
