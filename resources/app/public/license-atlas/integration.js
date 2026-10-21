@@ -145,11 +145,13 @@
  function applyEnvironment(env){if(!env)return;
   const next=env.locale==='en'?'en':'tr',changed=locale!==next;locale=next;document.documentElement.lang=next;
   document.documentElement.dataset.theme=env.theme;document.body.classList.toggle('dark',env.theme==='dark');document.documentElement.style.colorScheme=env.theme==='dark'?'dark':'light';
-  const t=env.tokens||{},aliases={'--bg':'--paper','--blue-soft':'--card2','--panel':'--card','--navy':'--acc','--blue':'--acc','--shadow':'--shadow-2','--radius':'--r-lg'};
+  const t=env.tokens||{},aliases={'--bg':'--paper','--blue-soft':'--card2','--panel':'--card','--navy':'--acc','--blue':'--acc','--shadow':'--shadow-2','--radius':'--r-lg','--bl-acc':'--acc','--bl-ink':'--acc-ink','--bl-sub':'--muted','--bl-card2':'--card2','--bl-hair':'--hair','--bl-on':'--on-acc','--line2':'--line2','--mint':'--green'};
+  // Every Buyer Log token is also available verbatim as --blt-<name> for the skin layer.
+  for(const [k,v] of Object.entries(t))document.documentElement.style.setProperty('--blt-'+k.slice(2),v);
   for(const k of ['--bg','--ink','--muted','--line'])if(t[k]){document.documentElement.style.setProperty(k,t[k]);document.body.style.setProperty(k,t[k]);}
   for(const [to,from] of Object.entries(aliases))if(t[from]){document.documentElement.style.setProperty(to,t[from]);document.body.style.setProperty(to,t[from]);}
-  // The Atlas is authored at 14px; scale it to Buyer Log's current base font (Arayüz setting).
-  const base=parseFloat(t['--fs-base']);if(Number.isFinite(base)&&base>0)document.documentElement.style.setProperty('--bl-density',String(Math.min(1.15,Math.max(.8,(base+.1)/14))));
+  // The skin is authored at Buyer Log's standard 12.5px; follow the Arayüz size setting.
+  const base=parseFloat(t['--fs-base']);if(Number.isFinite(base)&&base>0)document.documentElement.style.setProperty('--bl-density',String(Math.min(1.3,Math.max(.85,base/12.5))));
   if(changed){chosen()?render():home();if(editor){renderEditor();send('businessRefresh');}}decorate();
  }
  document.addEventListener('change',event=>{const target=event.target;if(!target.matches('[data-bl-licensor]'))return;
@@ -187,6 +189,26 @@
   }
  });
  window.addEventListener('beforeunload',event=>{if(dirty){event.preventDefault();event.returnValue='';}});
+ // Buyer Log type scale: the uploaded Atlas declares its own 14–78px sizes and
+ // 750–900 weights in ~1100 rules. Rather than fork that CSS, derive one override
+ // per rule at runtime so every view (tree, editors, Studio, dialogs) reads like Buyer Log.
+ (function buyerLogTypeScale(){
+  const size=px=>px<=10?10.5:px<=11?11:px<=12.5?12:px<=14?12.5:px<=17?13.5:px<=21?15:px<=26?17:px<=40?20:24;
+  const px=value=>{const all=[...String(value||'').matchAll(/(-?[\d.]+)px/g)].map(m=>+m[1]);return all.length?Math.max(...all):null;};
+  const out=[];
+  function walk(rules,wrap){for(const rule of rules){
+   if(rule.cssRules&&rule.media){walk(rule.cssRules,`@media ${rule.media.mediaText}`);continue;}
+   if(!rule.style||!rule.selectorText)continue;const st=rule.style,decl=[];
+   const fs=px(st.getPropertyValue('font-size'));if(fs!=null&&fs>0)decl.push(`font-size:${size(fs)}px!important`);
+   const fw=parseInt(st.getPropertyValue('font-weight'),10);if(fw>=650)decl.push('font-weight:600!important');else if(fw>=550)decl.push('font-weight:500!important');
+   const ls=parseFloat(st.getPropertyValue('letter-spacing'));if(ls<0)decl.push('letter-spacing:0!important');
+   if(st.getPropertyValue('font-family')&&!/mono|Cascadia|Consolas/i.test(st.getPropertyValue('font-family')))decl.push(`font-family:${/h[1-4]\b|head|title|brandname|cover-name|identity-desc/i.test(rule.selectorText)?'var(--bl-head-font)':'var(--bl-body-font)'}!important`);
+   if(decl.length)out.push(wrap?`${wrap}{${rule.selectorText}{${decl.join(';')}}}`:`${rule.selectorText}{${decl.join(';')}}`);
+  }}
+  for(const sheet of document.styleSheets){const node=sheet.ownerNode;if(!node||['bl-fonts','bl-integration'].includes(node.id))continue;try{walk(sheet.cssRules,'');}catch(_){}}
+  const style=document.createElement('style');style.id='bl-type-scale';style.textContent=out.join('\n');
+  const integration=document.getElementById('bl-integration');(integration?.parentNode||document.head).insertBefore(style,integration||null);
+ })();
  // Start without business data. Only the parent can populate the sandbox.
  db={version:2,licenses:[]};home();parent.postMessage({wire,action:'ready'},'*');
 })();

@@ -242,6 +242,35 @@
           "en": "License card with an added image"
         }
       }
+    },
+    {
+      "id": "license-atlas-buyerlog-ui",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Süreç ağacı",
+        "en": "License cards · Process tree"
+      },
+      "title": {
+        "tr": "Lisans Atlası Buyer Log arayüzüyle",
+        "en": "License Atlas in the Buyer Log interface"
+      },
+      "body": {
+        "tr": "Lisans Atlası artık Buyer Log’un kendi yazı tipini (Barlow), 30 px alan ve düğme yüksekliklerini, büyük harfli alan etiketlerini, ince çerçeveleri ve açık/koyu tema renklerini kullanır. Aşama düzenleyici, gönderimler, çekmece, diyaloglar ve Süreç Stüdyosu dahil tüm yazı boyutları ve kalınlıkları Buyer Log ölçeğine indirildi; ayrı renkli düğmeler ve ağır başlıklar kaldırıldı. Arayüz boyutu ayarı Atlas’a da uygulanır.",
+        "en": "The License Atlas now uses Buyer Log’s own typeface (Barlow), 30 px field and button heights, uppercase field captions, hairline borders and the light/dark theme colours. All type sizes and weights — stage editor, routes, drawer, dialogs and Process Studio — follow the Buyer Log scale; separately coloured buttons and heavy headings are gone. The interface size setting also applies to the Atlas."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-atlas-buyerlog-ui.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log koyu tema: Buyer Log alanları ve düğmeleriyle aşama düzenleyici, demo veriler",
+          "en": "Real Buyer Log dark theme: stage editor with Buyer Log fields and buttons, demo data"
+        },
+        "caption": {
+          "tr": "Buyer Log arayüzüyle aşama düzenleyici",
+          "en": "Stage editor in the Buyer Log interface"
+        }
+      }
     }
   ]
 }
