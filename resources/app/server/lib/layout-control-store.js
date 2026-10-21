@@ -24,7 +24,7 @@ function status(value,allowed,fallback){const v=clean(value,30).toUpperCase();re
 function normalizeCheck(raw){
   const item=raw&&typeof raw==='object'?raw:{};
   const decision=status(item.decision,['PENDING','APPROVED','REJECTED','NOT_APPLICABLE'],'PENDING');
-  const editable=item.category==='STANDARD'||item.category==='ANNOTATION';
+  const editable=['STANDARD','ANNOTATION','AI_REVIEW'].includes(item.category);
   const assessmentStatus=status(item.assessmentStatus||item.status,['MATCH','MISMATCH','REVIEW','NOT_CHECKED'],'REVIEW');
   const box=item.bbox;
   const page=Number.isInteger(item.page)&&item.page>0&&item.page<=80?item.page:null;
@@ -34,13 +34,13 @@ function normalizeCheck(raw){
     category:clean(item.category,80),
     status:editable?({APPROVED:'MATCH',REJECTED:'MISMATCH',NOT_APPLICABLE:'NOT_CHECKED'}[decision]||assessmentStatus):assessmentStatus,
     assessmentStatus,
-    expected:list(item.expected,20,500),
-    actual:list(item.actual,20,500),
+    expected:list(item.expected,20,item.category==='AI_REVIEW'?1200:500),
+    actual:list(item.actual,20,item.category==='AI_REVIEW'?1200:500),
     detail:clean(item.detail,1200),
     source:clean(item.source,120),
-    ruleId:clean(item.ruleId,80),page,bbox,decision,comment:clean(item.comment,1200),correction:clean(item.correction,1200),
+    ruleId:clean(item.ruleId,80),title:clean(item.title,180),field:clean(item.field,80),section:status(item.section,['CARE_LABEL','INNER_BARCODE','PRICE_TAG','DOCUMENT'],''),orderCode:clean(item.orderCode,80),page,bbox,decision,comment:clean(item.comment,1200),correction:clean(item.correction,1200),
     severity:status(item.severity,['CRITICAL','ERROR','COMMENT'],'COMMENT'),
-    aiVerdict:status(item.aiVerdict,['PASS','ISSUE','UNCERTAIN','NA'],'UNCERTAIN'),
+    aiVerdict:status(item.aiVerdict,['PASS','ISSUE','UNCERTAIN','NA','MATCH','ERROR','REVIEW','NOT_VISIBLE','NOT_APPLICABLE'],'UNCERTAIN'),
     standardType:status(item.standardType,['CARE_LABEL','PRICE_TAG','UNKNOWN'],'UNKNOWN'),standardPage:number(item.standardPage),
     reviewedAt:clean(item.reviewedAt,40),
   };
@@ -74,11 +74,12 @@ function normalizeRun(raw,nowFallback){
     at:clean(item.at,40)||nowFallback||new Date().toISOString(),
     referenceAt:clean(item.referenceAt,40)||clean(item.at,40)||nowFallback||new Date().toISOString(),
     fileName:path.basename(clean(item.fileName,220)||'layout.pdf'),
-    documentType:status(item.documentType,['CARE_LABEL','PRICE_TAG','UNKNOWN'],'UNKNOWN'),
+    documentType:status(item.documentType,['CARE_LABEL','INNER_BARCODE','PRICE_TAG','MIXED','UNKNOWN'],'UNKNOWN'),
+    mode:status(item.mode,['LCW_AI'],''),aiSummary:clean(item.aiSummary,210000),
     templateVersion:clean(item.templateVersion,80),
     fileHash:/^[a-f0-9]{64}$/.test(item.fileHash||'')?item.fileHash:'',
     extraction:Object.fromEntries(['modelCodes','specialCodes','colourCodes','colours','orderNumbers','countries','composition','cashPrices','instalmentPrices'].map(field=>[field,list(item.extraction&&item.extraction[field]||item[field],40,180)])),
-    reference:{status:status(item.reference&&item.reference.status,['MATCH','AMBIGUOUS','NONE'],'NONE'),orderCodes:list(item.reference&&item.reference.orderCodes,40,80)},
+    reference:{status:status(item.reference&&item.reference.status,['MATCH','MULTIPLE','PARTIAL','AMBIGUOUS','NONE'],'NONE'),orderCodes:list(item.reference&&item.reference.orderCodes,40,80),requestedOrderCodes:list(item.reference&&item.reference.requestedOrderCodes,40,80),unmatchedOrderCodes:list(item.reference&&item.reference.unmatchedOrderCodes,40,80)},
     reading:{totalPages:number(item.reading&&item.reading.totalPages),readPages:(Array.isArray(item.reading&&item.reading.readPages)?item.reading.readPages:[]).slice(0,80).map(number),failedPages:(Array.isArray(item.reading&&item.reading.failedPages)?item.reading.failedPages:[]).slice(0,80).map(number)},
     modelCodes:list(item.modelCodes,12,120),
     colourCodes:list(item.colourCodes,12,80),
@@ -147,7 +148,7 @@ function review(ownerId,id,payload){
     check=normalizeCheck({...change,category:'ANNOTATION',source:'Buyer',status:'REVIEW',decision:'PENDING',expected:[],actual:[]});
     run.checks.push(check);
   }
-  if(!['STANDARD','ANNOTATION'].includes(check.category))throw Object.assign(new Error('LAYOUT_CHECK_READ_ONLY'),{status:400});
+  if(!['STANDARD','ANNOTATION','AI_REVIEW'].includes(check.category))throw Object.assign(new Error('LAYOUT_CHECK_READ_ONLY'),{status:400});
   const next=normalizeCheck({...check,decision:change.decision===undefined?check.decision:change.decision,comment:change.comment===undefined?check.comment:change.comment,severity:change.severity||check.severity,reviewedAt:new Date().toISOString()});
   run.checks[run.checks.indexOf(check)]=next;
   run.summary=summaryFromChecks(run.checks);

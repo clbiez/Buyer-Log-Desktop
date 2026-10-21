@@ -26,6 +26,7 @@ function fixture() {
   const kolRows = [{ id: 1, modelKod: 'DEMO', cx_demo: 'Raw', variantOverrides: { cx_demo: 'Displayed' }, pricing: { Demo: 19.5 } }];
   const providers = new Map();
   const window = { appLang: 'tr', addEventListener() {}, BLCollectionModelGroups: modelGroups,
+    BLChecklistComponents: require('../public/checklist-components-engine'),
     BLFormulaColumns: { formatValue: value => value == null ? '' : Number(value).toFixed(2) },
     BuyerLogAI: { registerContextProvider: provider => providers.set(provider.id, provider) } };
   const env = {
@@ -55,6 +56,7 @@ function fixture() {
   };
   const context = vm.createContext(env);
   for (const [start, end] of [
+    ['function kolChecklistParts(', 'function kolConfigureChecklistParts('],
     ['function cellPlainText(', 'function escapeHtml('],
     ['function kolDescriptorCatalog(', 'function kolDescriptorDefaultWidth('],
     ['function kolEffectiveValue(', 'function kolWriteGroupedStorageValue('],

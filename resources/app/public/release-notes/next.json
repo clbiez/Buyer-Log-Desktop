@@ -186,6 +186,64 @@
       }
     },
     {
+      "id": "layout-lcwai-author-review",
+      "type": "improvement",
+      "module": {
+        "tr": "Layout Kontrolü",
+        "en": "Layout Control"
+      },
+      "title": {
+        "tr": "Kontrol yorumlarını LCW AI üretir",
+        "en": "LCW AI authors the review findings"
+      },
+      "body": {
+        "tr": "Buyer Log siparişleri CP ile eşleyip ilgili kayıtları, iki orijinal standart PDF’ini, layout PDF’ini ve okunabilir sayfa görsellerini LCW AI’a aktarır. Model, ülke, line, kompozisyon, fiyat ve diğer alanların bulgusu, doğru değeri, gerekçesi ve düzeltmesi LCW AI’dan gelir; Buyer Log kendi ek kontrol yorumlarını üretmez. AI değerlendirmesi ve buyer kararı geçmişte ayrı saklanır; sonuçlar CP’ye yazılmaz. LCW AI’dan en fazla iki kısa cümlelik özet, tek cümlelik yorum ve doğrudan düzeltme istenir; ayrı hatalar ve belirsizlikler korunur.",
+        "en": "Buyer Log links CP orders and supplies their records, both original standard PDFs, the layout PDF and readable page images to LCW AI. Findings, correct values, reasons and corrections for model, country, line, composition, price and other fields come from LCW AI; Buyer Log adds no label-control judgments. AI assessments and buyer decisions are stored separately in history without writing results to CP. LCW AI is asked for a summary of at most two short sentences, single-sentence comments and direct fixes; distinct errors and uncertainties are retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "layout-lcwai-author-review.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında demo layout üzerinde LCW AI model adı bulgusu, doğru değer ve yorum",
+          "en": "LCW AI model-name finding, correct value and comment on a demo layout in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Gerçek uygulama akışı anonim demo belgeler ve kontrollü AI test yanıtıyla gösterilir; nihai karar buyer’a aittir.",
+          "en": "The real application flow is shown with anonymous demo documents and a controlled AI test response; the final decision belongs to the buyer."
+        }
+      }
+    },
+    {
+      "id": "layout-lcwai-mixed-order-scope",
+      "type": "fix",
+      "module": {
+        "tr": "Layout Kontrolü · Belge kapsamı",
+        "en": "Layout Control · Document scope"
+      },
+      "title": {
+        "tr": "Bakım talimatı, iç barkod ve fiyat etiketi ayrı incelenir",
+        "en": "Care instructions, inner barcodes and price tags are reviewed separately"
+      },
+      "body": {
+        "tr": "LCW AI aynı PDF’deki etiket bölümlerini ve aynı modelin ayrı siparişlerini ayırır. Birlikte bırakılan dosyaların sipariş ve iş numarası kanıtları ilk incelemeden önce okunur. Yalnız iç barkod görünen bölüm, eksik bakım talimatı alanlarıyla doldurulmaz. Eksik kimlik okuması, kesilen yanıt veya tamamlanmayan sayfa incelemesi sessizce onaya dönüşmez.",
+        "en": "LCW AI separates label sections within one PDF and distinct orders for the same model. Order and print-job evidence from all dropped files is read before the first review. An inner-barcode-only section does not generate missing-care-field checklist items. Incomplete identity extraction, truncated responses and unfinished page reviews cannot silently become approvals."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "layout-lcwai-section-scope.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log ekranında iç barkod sayfası yanında LCW AI belge kapsamı ve iş numarası yorumu",
+          "en": "LCW AI document-scope and print-job comments beside an inner-barcode page in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Anonim demo iki dosyanın iş numarası bağlamını ve bakım talimatı yerine iç barkod sunulduğunda LCW AI’ın kapsam açıklamasını gösterir.",
+          "en": "The anonymous demo shows cross-file print-job context and LCW AI’s scope explanation when an inner barcode is supplied instead of full care instructions."
+        }
+      }
+    },
+    {
       "id": "test-report-source-grounded-assessment",
       "type": "feature",
       "module": {
