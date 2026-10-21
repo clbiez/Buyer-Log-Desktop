@@ -32,6 +32,7 @@ with tempfile.TemporaryDirectory() as td:
     assert manifest["base_version"] == "7.0.293"
     assert not any("electron/" in f["path"] or "update" in f["path"].lower() for f in manifest["files"])
     installation = tmp / "buyer-log-fixture"
+    installation.mkdir(parents=True, exist_ok=True)
     core = installation / "resources" / "app"
     (installation / "BuyerLog.exe").write_bytes(b"test only")
     (core / "package.json").parent.mkdir(parents=True, exist_ok=True)
