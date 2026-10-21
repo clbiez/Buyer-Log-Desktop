@@ -184,6 +184,35 @@
           "en": "Each part is edited independently; single products retain one status."
         }
       }
+    },
+    {
+      "id": "test-report-source-grounded-assessment",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Test raporu incelemesi",
+        "en": "CP · Test report assessment"
+      },
+      "title": {
+        "tr": "LCW AI ile kanıtlı test incelemesi",
+        "en": "Source-grounded test review with LCW AI"
+      },
+      "body": {
+        "tr": "PDF ve maillerin kaynak metinleri tüm CP satırları, sütunları ve checklist durumlarıyla metin paketinde değerlendirilir. GPT-6 Sol kısa sonuç, gerekçe ve aksiyon üretir; belge-sayfa alıntısı, sipariş kapsamı ve güncellik doğrulanır. Belirsiz veya eksik kanıt onay sayılmaz; değişiklikler seçilip onaylanmadan yazılmaz.",
+        "en": "Source text from PDFs and e-mails is reviewed in a text bundle with every CP row, column and checklist state. GPT-6 Sol returns a concise result, reason and action; source-page quotes, order scope and freshness are checked. Uncertain or missing evidence is not approval; changes are written only after selection and confirmation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-source-review.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log arayüzünde anonim kumaş ve etiket testleri için kısa LCW AI önerileri ve onay önizlemesi",
+          "en": "Concise LCW AI suggestions and approval preview for anonymous fabric and label tests in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Anonim PDF verisi ve kontrollü AI yanıtıyla gerçek uygulama doğrulandı; kaynak kanıtları ayrı açılır ve satırlar seçili başlamaz.",
+          "en": "The real app was verified with anonymous PDFs and a controlled AI response; source evidence opens separately and rows start unselected."
+        }
+      }
     }
   ]
 }

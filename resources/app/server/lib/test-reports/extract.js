@@ -46,11 +46,14 @@ async function pdfItems(buffer) {
     useSystemFonts: false, verbosity: 0, stopAtErrors: false,
   }).promise;
   const items = [];
+  items.pageCount = doc.numPages;
+  items.readPages = [];
   try {
     const pages = Math.min(doc.numPages, MAX_PDF_PAGES);
     for (let p = 1; p <= pages; p += 1) {
       const page = await doc.getPage(p);
       const content = await page.getTextContent();
+      items.readPages.push(p);
       for (const item of content.items) {
         if (!item || typeof item.str !== 'string' || !item.str.trim()) continue;
         items.push({ p, x: Math.round(item.transform[4]), y: Math.round(item.transform[5]), w: Math.round(item.width || 0), s: item.str });
@@ -70,19 +73,23 @@ function readMsg(buffer) {
   const data = reader.getFileData();
   if (!data || data.error) throw Object.assign(new Error('MSG file could not be read.'), { code: 'TEST_REPORT_MSG_INVALID' });
   const attachments = [];
+  const unreadAttachments = [];
   for (const meta of data.attachments || []) {
-    if (meta.innerMsgContent) continue;
+    if (meta.innerMsgContent) { unreadAttachments.push(meta.fileName || 'embedded-message.msg'); continue; }
     try {
       const file = reader.getAttachment(meta);
       if (file && file.content) attachments.push({ name: file.fileName || meta.fileName || 'attachment', buffer: Buffer.from(file.content) });
-    } catch (_) { /* okunamayan ek atlanır; dosya sonucu uyarı taşır */ }
+    } catch (_) { unreadAttachments.push(meta.fileName || 'unread-attachment'); }
   }
   return {
     subject: data.subject || '',
     from: [data.senderSmtpAddress, data.senderEmail, data.senderName].filter(Boolean).join(' '),
+    to: (data.recipients || []).filter(r => r.recipType !== 2).map(r => r.smtpAddress || r.email || r.name || '').join('; '),
+    cc: (data.recipients || []).filter(r => r.recipType === 2).map(r => r.smtpAddress || r.email || r.name || '').join('; '),
     date: data.messageDeliveryTime || data.clientSubmitTime || '',
     body: data.body || '',
     attachments,
+    unreadAttachments,
   };
 }
 
@@ -129,14 +136,14 @@ function htmlToText(html) {
     .replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
 }
 function walkMime(buffer, out, depth) {
-  if (depth > 8) return;
+  if (depth > 8) { out.incomplete = true; return; }
   const raw = buffer.toString('latin1');
   const { headers, bodyStart } = splitHeaders(raw);
   const type = String(headers['content-type'] || 'text/plain').toLowerCase();
   const body = buffer.subarray(Buffer.byteLength(raw.slice(0, bodyStart), 'latin1'));
   if (type.startsWith('multipart/')) {
     const boundary = param(headers['content-type'], 'boundary');
-    if (!boundary) return;
+    if (!boundary) { out.incomplete = true; return; }
     const parts = body.toString('latin1').split('--' + boundary);
     for (const part of parts.slice(1)) {
       if (part.startsWith('--')) break;
@@ -163,10 +170,13 @@ function readEml(buffer) {
   return {
     subject: decodeWords(headers.subject || ''),
     from: decodeWords(headers.from || ''),
+    to: decodeWords(headers.to || ''), cc: decodeWords(headers.cc || ''), messageId: headers['message-id'] || '',
     date: headers.date || '',
     // Tablolu mailler HTML gövdede sekmeli satır verir; düz metin yedektir.
     body: out.html && /\t/.test(out.html) ? out.html : (out.plain || out.html),
     attachments: out.attachments,
+    alternativeBody: out.plain && out.html && out.plain !== out.html ? (out.html && /\t/.test(out.html) ? out.plain : out.html) : '',
+    incomplete: out.incomplete === true,
   };
 }
 
@@ -185,10 +195,12 @@ function tag(report, fileName) {
 async function parsePdfBuffer(buffer, name, meta) {
   let items;
   try { items = await pdfItems(buffer); }
-  catch (error) { return { format: '', report: null, error: 'pdf-unreadable' }; }
+  catch (error) { return { format: '', report: null, error: 'pdf-unreadable', pages: [], complete: false }; }
   const parsed = Engine.parsePdfItems(items, meta);
   if (parsed.report) tag(parsed.report, name);
-  return parsed;
+  const pages = (items.readPages || []).map(page => ({ page, text: Engine.linesFromItems(items.filter(item => item.p === page)),
+    positions: items.filter(item => item.p === page).map(item => ({ x: item.x, y: item.y, w: item.w, text: item.s })) }));
+  return { ...parsed, pages, pageCount: items.pageCount, complete: items.pageCount === pages.length && pages.every(page => page.text.trim().length > 30) };
 }
 
 /* Bir bırakılan dosyayı okur. Dönüş: { name, kind, status, format, reports,
@@ -198,17 +210,24 @@ async function processFile(file, options) {
   const name = path.basename(String(file && file.name || 'file'));
   const buffer = Buffer.isBuffer(file && file.buffer) ? file.buffer : Buffer.from(file && file.buffer || []);
   const kind = detectKind(buffer, name);
-  const result = { name, kind, status: 'parsed', format: '', reports: [], warnings: [] };
+  const result = { name, kind, status: 'parsed', format: '', reports: [], warnings: [], sources: [] };
+  function source(entry, details) {
+    const id = crypto.createHash('sha256').update([entry.hash, entry.ad, details.parentId || ''].join('|')).digest('hex').slice(0, 24);
+    const value = { id, name: entry.ad, kind: entry.tur, hash: entry.hash, fileId: entry.stagingId || '', ...details };
+    result.sources.push(value); return value;
+  }
   try {
     if (kind === 'pdf') {
       const parsed = await parsePdfBuffer(buffer, name);
+      const evidence = fileEntry(name, buffer, 'pdf', opts.stage);
+      source(evidence, { pages: parsed.pages, pageCount: parsed.pageCount || 0, complete: parsed.complete === true });
       if (parsed.report) {
-        parsed.report.dosyalar = [fileEntry(name, buffer, 'pdf', opts.stage)];
+        parsed.report.dosyalar = [evidence];
         result.format = parsed.format;
         result.reports.push(parsed.report);
       } else {
         result.warnings.push({ code: parsed.noText ? 'noTextLayer' : 'unrecognized' });
-        const entry = fileEntry(name, buffer, 'pdf', opts.stage);
+        const entry = evidence;
         aiCandidate(result, { upload: entry, evidence: entry });
       }
       return result;
@@ -217,11 +236,18 @@ async function processFile(file, options) {
       // Fotoğraf/tarama rapor: deterministik okuma yok, LCW AI okur.
       result.warnings.push({ code: 'unrecognized' });
       const entry = fileEntry(name, buffer, 'image', opts.stage);
+      source(entry, { pages: [{ page: 1, text: '' }], pageCount: 1, complete: false });
       aiCandidate(result, { upload: entry, evidence: entry });
       return result;
     }
     if (kind === 'msg' || kind === 'eml') {
       const mail = kind === 'msg' ? readMsg(buffer) : readEml(buffer);
+      const mailEntry = fileEntry(name, buffer, kind, opts.stage);
+      const mailSource = source(mailEntry, { pages: [{ page: 0, text: ['Subject: ' + mail.subject, 'From: ' + mail.from, 'To: ' + (mail.to || ''), 'Cc: ' + (mail.cc || ''), 'Date: ' + mail.date, 'Message-ID: ' + (mail.messageId || ''), '', mail.body, mail.alternativeBody ? '\n=== Alternative MIME body ===\n' + mail.alternativeBody : ''].join('\n') }], pageCount: 1, complete: Boolean(mail.body && mail.body.trim()) && !mail.incomplete,
+        attachments: mail.attachments.map(attachment => ({ name: attachment.name, kind: detectKind(attachment.buffer, attachment.name), hash: sha256(attachment.buffer) })) });
+      for (const missing of mail.unreadAttachments || []) {
+        result.sources.push({ id: crypto.createHash('sha256').update(mailSource.id + missing).digest('hex').slice(0, 24), parentId: mailSource.id, name: missing, kind: 'unsupported', pages: [], pageCount: 0, complete: false });
+      }
       const parsed = Engine.parseMail(mail);
       let report = parsed.report ? tag(parsed.report, name) : null;
       result.format = parsed.format;
@@ -229,6 +255,7 @@ async function processFile(file, options) {
       for (const attachment of pdfs) {
         const sub = await parsePdfBuffer(attachment.buffer, attachment.name, { date: mail.date });
         const entry = fileEntry(attachment.name, attachment.buffer, 'pdf', opts.stage);
+        source(entry, { parentId: mailSource.id, pages: sub.pages, pageCount: sub.pageCount || 0, complete: sub.complete === true });
         if (sub.report && (!report || !sub.report.talepNo || !report.talepNo || sub.report.talepNo === report.talepNo)) {
           sub.report.dosyalar = [entry];
           report = report ? Engine.mergeReports(report, sub.report) : sub.report;
@@ -249,8 +276,13 @@ async function processFile(file, options) {
         result.warnings.push({ code: 'unrecognized' });
         const evidence = fileEntry(name, buffer, kind, opts.stage);
         const firstPdf = pdfs[0] ? fileEntry(pdfs[0].name, pdfs[0].buffer, 'pdf', opts.stage) : null;
-        const mailText = [mail.subject, mail.body].filter(Boolean).join('\n\n').slice(0, 12000);
+        const mailText = [mail.subject, mail.body].filter(Boolean).join('\n\n');
         aiCandidate(result, { upload: firstPdf, evidence, extra: firstPdf ? [firstPdf] : [], mailText, mailDate: mail.date });
+      }
+      for (const attachment of mail.attachments.filter(a => detectKind(a.buffer, a.name) !== 'pdf')) {
+        const attachmentKind = detectKind(attachment.buffer, attachment.name);
+        const entry = fileEntry(attachment.name, attachment.buffer, attachmentKind || 'unsupported', opts.stage);
+        source(entry, { parentId: mailSource.id, pages: [{ page: 1, text: '' }], pageCount: 1, complete: false });
       }
       return result;
     }
@@ -260,6 +292,7 @@ async function processFile(file, options) {
   } catch (error) {
     result.status = 'error';
     result.warnings.push({ code: 'readError', message: String(error && error.message || error).slice(0, 300) });
+    if (!result.sources.length && kind) source(fileEntry(name, buffer, kind, opts.stage), { pages: [], pageCount: 0, complete: false });
     return result;
   }
 }

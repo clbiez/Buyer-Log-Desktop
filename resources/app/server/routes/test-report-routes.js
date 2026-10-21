@@ -67,6 +67,15 @@ app.post('/api/test-reports/ai-report', userAccess.requireAnyArea('cp', 'orders'
   catch(err){automationError(res,err,'LCW AI okuması doğrulanamadı.');}
 });
 
+app.post('/api/test-reports/prepare-review', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '24mb' }), async (req, res) => {
+  try {res.set('Cache-Control','no-store').json(await service.prepareAssessment(req.currentUser,req.body||{}));}
+  catch(err){automationError(res,err,'İnceleme bağlamı hazırlanamadı.');}
+});
+app.post('/api/test-reports/ai-assessment', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '4mb' }), async (req, res) => {
+  try {res.set('Cache-Control','no-store').json(await service.acceptAssessment(req.currentUser,req.body||{}));}
+  catch(err){automationError(res,err,'LCW AI incelemesi doğrulanamadı.');}
+});
+
 app.post('/api/test-reports/commit', userAccess.requireAnyArea('cp', 'orders'), express.json({ limit: '2mb' }), async (req, res) => {
   try {res.json(await service.commit(req.currentUser,req.body||{}));}
   catch(err){automationError(res,err,'Test raporları kaydedilemedi.');}

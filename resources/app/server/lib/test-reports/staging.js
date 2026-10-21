@@ -78,6 +78,7 @@ function createSession(userId, options = {}) {
       return fileId;
     },
     setReports(reports) { session.reports = reports; },
+    setSources(sources) { session.sources = sources; },
     // LCW AI'a gönderilebilecek, deterministik okunamayan dosyalar (ada göre).
     setAiCandidates(files) { (files || []).forEach(f => { if (f && f.ai && f.ai.eligible) session.aiCandidates.set(f.name, f.ai); });purge(Date.now());persistSession(session); },
   };

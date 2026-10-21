@@ -755,6 +755,7 @@
     if (!incoming) return clone(base);
     const out = clone(base);
     const add = clone(incoming);
+    out.aiAssessments = [...new Map([out, add].flatMap(r => (r.aiAssessments || []).concat(r.aiAssessment ? [r.aiAssessment] : [])).map(review => [JSON.stringify(review), review])).values()];
     out.aciklama = out.aciklama || add.aciklama || '';
     out.aciklamalar = [...new Map([out, add].flatMap(r => (r.aciklamalar || []).concat(r.aciklama ? [{ text: r.aciklama, source: r.kaynak }] : [])).map(d => [d.text + '|' + d.source, d])).values()];
     out.alanKaynak = out.alanKaynak || {};
@@ -1103,6 +1104,12 @@
       const parts = line.split(AI_SPLIT);
       return { ad: text(parts[0]).slice(0, 300), bilesen: text(parts[1]).slice(0, 60), sonuc: text(parts[2]).slice(0, 60) };
     }).filter(t => t.ad);
+    report.labDipColors = aiList(d.labDipColors, 200).map(line => {
+      const parts = line.split(AI_SPLIT), date = parseDate(parts[2]);
+      return { colour: text(parts[0]), model: text(parts[1]), date: text(parts[2]), dateIso: date.iso,
+        round: text(parts[3]), analyst: text(parts[4]), comment: text(parts[5]), result: text(parts[6]),
+        status: normalizeResult(parts[6]) || 'pending', submitNo: text(parts[7]), revised: /REVISED|REVIZE/.test(fold(parts[8])) };
+    }).filter(colour => colour.colour);
     report.kararlar = aiList(d.kararlar, 60).map(line => {
       const parts = line.split(AI_SPLIT);
       const date = parseDate(parts[4]);
