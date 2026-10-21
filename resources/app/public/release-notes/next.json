@@ -242,6 +242,35 @@
           "en": "License card with an added image"
         }
       }
+    },
+    {
+      "id": "collection-fabric-card-copy-paste",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kumaş kartı kopyala-yapıştırda korunur",
+        "en": "Fabric cards survive copy and paste"
+      },
+      "body": {
+        "tr": "Kumaş hücresi kopyalanıp Koleksiyon içinde yapıştırıldığında yalnız özet metin değil, kumaş kodu ve kartı da gelir. Excel'e yapıştırırken görünen kart özeti aynen kalır; Ctrl+D aşağı doldurma da kartı korur.",
+        "en": "Copying a Fabric cell and pasting it within Collection now brings the fabric code and its card, not just the summary text. Pasting into Excel still gives the visible card summary, and Ctrl+D fill-down keeps the card too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-card-copy-paste.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon tablosu: tek kumaş kartı kopyalanıp altı satıra yapıştırılmış, her satırda 3859 kartı görünüyor, demo veriler",
+          "en": "Real Buyer Log Collection table: one fabric card copied and pasted into six rows, each showing the 3859 card, demo data"
+        },
+        "caption": {
+          "tr": "Yapıştırılan kumaş hücreleri kartıyla birlikte gelir",
+          "en": "Pasted Fabric cells keep their card"
+        }
+      }
     }
   ]
 }
