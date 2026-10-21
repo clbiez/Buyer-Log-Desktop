@@ -271,6 +271,151 @@
           "en": "Component-level checklist results"
         }
       }
+    },
+    {
+      "id": "collection-copy-reliability",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Hücre kopyalama her durumda çalışır",
+        "en": "Cell copy works in every situation"
+      },
+      "body": {
+        "tr": "Bir detay raporu açılıp kapandıktan sonra Ctrl+C/Ctrl+V'nin çalışmaması ve Escape'in seçimi silmesi düzeltildi. Model işaretliyken de sonradan seçtiğiniz hücre kopyalanır; sağ tık menüsü hücreleri mi işaretli modelleri mi kopyalayacağınızı ayrıca sunar. Ctrl+tık mevcut seçime ekler.",
+        "en": "Fixed Ctrl+C/Ctrl+V not working after a detail report was opened and closed, and Escape clearing the selection. When models are checked, the cell you select afterwards is copied; the context menu offers both the cells and the checked models. Ctrl+click adds to the current selection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-copy-context-menu.png",
+        "alt": {
+          "tr": "Hücre kopyalama her durumda çalışır — gerçek Buyer Log, demo kayıtlar",
+          "en": "Cell copy works in every situation — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Hücre kopyalama her durumda çalışır",
+          "en": "Cell copy works in every situation"
+        }
+      }
+    },
+    {
+      "id": "grid-copy-default-no-headers",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · CP · Siparişler",
+        "en": "Collection · CP · Orders"
+      },
+      "title": {
+        "tr": "Ctrl+C artık başlıksız Kopyala",
+        "en": "Ctrl+C now copies without headers"
+      },
+      "body": {
+        "tr": "Ctrl+C seçili hücreleri Excel gibi başlıksız kopyalar; başlıklı kopya sağ tık › Başlıklarla kopyala ile alınır. CP ve Siparişler'de bağlantı, sipariş kodu ve görsel içeren hücreler de seçilip kopyalanır; işaretli satır varken menü işaretli satırları kopyalamayı ayrıca sunar.",
+        "en": "Ctrl+C copies the selected cells without headers, like Excel; use right-click › Copy with headers for a header row. In CP and Orders, cells with links, order codes or images can also be selected and copied; when rows are checked, the menu also offers copying the checked rows."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-copy-default.png",
+        "alt": {
+          "tr": "Ctrl+C artık başlıksız Kopyala — gerçek Buyer Log, demo kayıtlar",
+          "en": "Ctrl+C now copies without headers — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Ctrl+C artık başlıksız Kopyala",
+          "en": "Ctrl+C now copies without headers"
+        }
+      }
+    },
+    {
+      "id": "collection-multi-paste",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Dilediğiniz hücrelere çoklu yapıştırma",
+        "en": "Multi-paste into any cells"
+      },
+      "body": {
+        "tr": "Düzenlenebilir bir hücreden sürükleyerek aralık seçebilir, tek değeri tüm aralığa yapıştırabilirsiniz. Kopyalanan boyut seçimle eşleşmediğinde yapıştırma reddedilmez; önizlemede belirtilerek sol üst hücreden uygulanır. Etkin hücre hesaplanan bir sütunda olsa da aralıktaki düzenlenebilir hücrelere yapıştırılır.",
+        "en": "Drag from an editable cell to select a range and paste one value into the whole range. When the copied size does not match the selection, the paste is no longer refused; the preview says so and it is applied from the top-left cell. Pasting works for the editable cells in the range even if the active cell is calculated."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-multi-paste-preview.png",
+        "alt": {
+          "tr": "Dilediğiniz hücrelere çoklu yapıştırma — gerçek Buyer Log, demo kayıtlar",
+          "en": "Multi-paste into any cells — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Dilediğiniz hücrelere çoklu yapıştırma",
+          "en": "Multi-paste into any cells"
+        }
+      }
+    },
+    {
+      "id": "collection-range-clear-fill",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Aralık temizleme, Aşağı Doldur ve hızlı seçim",
+        "en": "Range clear, Fill Down and quick selection"
+      },
+      "body": {
+        "tr": "Delete seçili aralığın tamamını, Ctrl+D ilk satırı aşağıdaki satırlara tek işlemde uygular (tek geri alma). Ctrl+A tüm görünen hücreleri, sütun harfine tıklamak o sütunun tamamını seçer.",
+        "en": "Delete clears the whole selected range and Ctrl+D fills the first row down in a single step (one undo). Ctrl+A selects all visible cells and clicking a column letter selects that whole column."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-range-clear-fill.png",
+        "alt": {
+          "tr": "Aralık temizleme, Aşağı Doldur ve hızlı seçim — gerçek Buyer Log, demo kayıtlar",
+          "en": "Range clear, Fill Down and quick selection — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Aralık temizleme, Aşağı Doldur ve hızlı seçim",
+          "en": "Range clear, Fill Down and quick selection"
+        }
+      }
+    },
+    {
+      "id": "detail-report-cell-copy",
+      "type": "feature",
+      "module": {
+        "tr": "Alt detay raporları",
+        "en": "Detail reports"
+      },
+      "title": {
+        "tr": "Detay raporlarında hücre seçip kopyalama",
+        "en": "Select and copy cells in detail reports"
+      },
+      "body": {
+        "tr": "Alt detay raporlarında hücreye tıklayıp Shift ile aralık seçebilir, Ctrl+C ile kopyalayabilir veya sağ tıkla başlıklarla kopyalayabilirsiniz. Rapor açıkken Ctrl+C arkadaki tablonun değil raporun seçimini kopyalar.",
+        "en": "In detail reports, click a cell and Shift-click to select a range, then copy with Ctrl+C or right-click to copy with headers. While a report is open, Ctrl+C copies the report selection, not the table behind it."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "detail-report-cell-copy.png",
+        "alt": {
+          "tr": "Detay raporlarında hücre seçip kopyalama — gerçek Buyer Log, demo kayıtlar",
+          "en": "Select and copy cells in detail reports — real Buyer Log, demo records"
+        },
+        "caption": {
+          "tr": "Detay raporlarında hücre seçip kopyalama",
+          "en": "Select and copy cells in detail reports"
+        }
+      }
     }
   ]
 }

@@ -76,6 +76,7 @@ for (let i = 0; i < batches.length; i += 1) {
   }
   if (result.status !== 0) {
     console.error(`[Buyer Log tests] Batch ${i + 1} başarısız. ZIP teslim edilmemeli.`);
+    console.error('[Buyer Log tests] Hatanın kaynağı için üstteki "not ok" kaydındaki location ve error alanlarını inceleyin.');
     process.exit(result.status || 1);
   }
 }

@@ -7655,9 +7655,11 @@ function renderFullTable(tableId, tableKey, rows, sortState, onSort, opts){
         const meta = tbody._chkMeta; if(!meta) return;
         const id = selectionActualId(meta.rows,meta.getId,chk.dataset.id);
         selectionSetId(meta.selSet,id,chk.checked);
-        // Kutuyla işaretleme, önceki hücre/aralık seçimini geçersiz kılar: satır
-        // seçimi daha güçlü ve daha güncel niyettir — Kopyala bunu esas almalı.
-        if(chk.checked && meta.selSet.size>0) window.BLGridClipboard?.clear?.(meta.tableId);
+        // Kutuyla işaretleme (veya işaretli kümeden kutu kaldırma), önceki
+        // hücre/aralık seçimini geçersiz kılar: son niyet satır seçimidir ve
+        // Kopyala bunu esas almalı. Sonradan hücreye tıklamak ise hücreyi
+        // yeniden kopyalama hedefi yapar (en son yapılan seçim kazanır).
+        if(meta.selSet.size>0) window.BLGridClipboard?.clear?.(meta.tableId);
         updateSelectionFooterCount(meta.table,meta.rows,meta.selSet,meta.getId);
         if(typeof meta.onSelectionChange==='function') meta.onSelectionChange(meta.selSet,meta.rows);
         else if((meta.tableKey==='cp'||meta.tableKey==='orders') && typeof updateShippingBtnVisibility==='function') updateShippingBtnVisibility();
@@ -13343,7 +13345,9 @@ function registerManagedGridClipboard(tableId,tableKey){
     label:()=>appLang==='en'
       ?(tableKey==='orders'?'Orders data grid':'CP Tracker data grid')
       :(tableKey==='orders'?'Siparişler veri tablosu':'CP Tracker veri tablosu'),
-    isActive:()=>String(document.body.dataset.activeTab||'')===tableKey&&!blOverlayOpen(),
+    // Alt detay raporu çekmecesi açıkken Ctrl+C arkadaki CP/Orders seçimini değil
+    // çekmecedeki seçimi kopyalar.
+    isActive:()=>String(document.body.dataset.activeTab||'')===tableKey&&!blOverlayOpen()&&!window.BLDetailDrawer?.isOpen?.(),
     rows:table=>table?._blRenderedRows||meta.rowsFn(),
     columns:table=>table?._blRenderedColumns||visibleCols(meta.tableKey),
     rowId:row=>row?._id,
@@ -13360,6 +13364,7 @@ function registerManagedGridClipboard(tableId,tableKey){
       window.BLGridClipboard.diagnostics.record({module:tableKey,operation:'copy',selection:window.BLGridClipboard.selectionSize(range),includeHeaders:payload.includeHeaders,transport:'rich',ok});
       window.BLTableToolbarActionCleanup?.finish?.('navCopy',ok);
       if(!ok)showToast(appLang==='en'?'Copy failed.':'Kopyalama başarısız.',{kind:'error'});
+      else{const size=window.BLGridClipboard.selectionSize(range);showToast(appLang==='en'?`${size.label} cells copied${payload.includeHeaders?' with headers':''}.`:`${size.label} hücre${payload.includeHeaders?' başlıklarıyla':''} kopyalandı.`);}
       return ok;
     },
   });

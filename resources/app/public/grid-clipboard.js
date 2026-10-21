@@ -140,9 +140,15 @@
     return typeof entry.config.isActive==='function'?Boolean(entry.config.isActive()):true;
   }
 
+  // Üstte açılan katman (ör. alt detay raporu çekmecesi) arkadaki CP/Orders
+  // seçiminden önce gelir: priority yüksek olan etkin tablo kazanır.
   function activeEntry(){
-    for(const entry of tables.values())if(entryIsActive(entry)&&entry.state.activeCell)return entry;
-    return null;
+    let best=null;
+    for(const entry of tables.values()){
+      if(!entryIsActive(entry)||!entry.state.activeCell)continue;
+      if(!best||(Number(entry.config.priority)||0)>(Number(best.config.priority)||0))best=entry;
+    }
+    return best;
   }
 
   // Sağ tık yeni bir seçim başlangıcı değildir. Yalnızca tıklanan hücre
@@ -195,13 +201,30 @@
     return setFocus(entry,cellAt(entry,row,column),{extend});
   }
 
+  // Tablonun görünen tüm hücreleri (Ctrl+A).
+  function selectAll(tableId){
+    const entry=tables.get(tableId);if(!entry||!entryIsActive(entry))return false;
+    const {rows,columns}=currentData(entry);if(!rows.length||!columns.length)return false;
+    const first=cellAt(entry,0,0),last=cellAt(entry,rows.length-1,columns.length-1);if(!first||!last)return false;
+    entry.state.selectionAnchor=first;entry.state.activeCell=first;entry.state.selectionFocus=last;
+    paint(entry);return true;
+  }
+
   function bind(){
     if(bound||!root.document?.addEventListener)return;bound=true;
     root.document.addEventListener('pointerdown',event=>{
-      if(event.button!==0||nativeEditingTarget(event.target)||event.target?.closest?.('button,a,img,label'))return;
+      if(event.button!==0||nativeEditingTarget(event.target))return;
       const td=event.target?.closest?.('tbody td[data-key]'),entry=tableEntryFromCell(td);
       if(!entry||!entryIsActive(entry))return;
       const cell=cellIdentity(td);if(!cell)return;
+      // Bağlantı/düğme/görsel taşıyan hücre de seçilebilir olmalı: eskiden bu
+      // hedefler hiç seçilmiyordu ve model adı, sipariş kodu, görsel gibi
+      // hücreler Ctrl+C ile kopyalanamıyordu. İç öğenin kendi tıklaması
+      // korunur (preventDefault yok); sürükleyerek aralık seçimi başlatılmaz.
+      if(event.target?.closest?.('button,a,img,label')){
+        setFocus(entry,cell,{extend:event.shiftKey,focus:false});
+        return;
+      }
       event.preventDefault();
       root.getSelection?.()?.removeAllRanges?.();
       setFocus(entry,cell,{extend:event.shiftKey});
@@ -219,11 +242,16 @@
       if(nativeSelection&&nativeSelection.rangeCount&&!nativeSelection.isCollapsed)return;
       const entry=activeEntry();if(!entry)return;
       const key=String(event.key||'').toLowerCase();
+      // Ctrl+C varsayılanı başlıksız "Kopyala"dır (Excel davranışı). Başlıklı
+      // kopya sağ tık › "Başlıklarla kopyala" ile bilerek seçilir.
       if((event.ctrlKey||event.metaKey)&&!event.altKey&&!event.shiftKey&&key==='c'){
-        void copyEntry(entry,event);return;
+        void copyEntry(entry,event,{includeHeaders:false});return;
       }
       const table=root.document.getElementById(entry.tableId);
       if(event.target!==table&&!table?.contains?.(event.target))return;
+      if((event.ctrlKey||event.metaKey)&&!event.altKey&&!event.shiftKey&&key==='a'){
+        if(selectAll(entry.tableId))event.preventDefault();return;
+      }
       if(event.key==='Escape'){event.preventDefault();clear(entry.tableId);return;}
       const arrows={ArrowDown:[1,0],ArrowUp:[-1,0],ArrowRight:[0,1],ArrowLeft:[0,-1]};
       if(arrows[event.key]){event.preventDefault();move(entry,...arrows[event.key],event.shiftKey);return;}
@@ -269,5 +297,5 @@
   function copyActive(event,options){const entry=activeEntry();return entry?copyEntry(entry,event,options):false;}
   function state(tableId){return tables.get(tableId)?.state||null;}
 
-  return {resolveRange,buildMatrix,selectionSize,serialize,createDiagnostics,diagnostics,nativeEditingTarget,register,afterRender,clear,copyActive,state,prepareContextMenu};
+  return {resolveRange,buildMatrix,selectionSize,serialize,createDiagnostics,diagnostics,nativeEditingTarget,register,afterRender,clear,copyActive,selectAll,state,prepareContextMenu};
 });

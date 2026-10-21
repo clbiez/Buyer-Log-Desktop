@@ -44,5 +44,9 @@ jobs:
           cache-dependency-path: resources/app/package-lock.json
       - name: Install dependencies
         run: npm ci --ignore-scripts
+      - name: Validate pending release notes
+        run: npm run release:notes:validate
+      - name: Check i18n coverage
+        run: npm run i18n:check
       - name: Run full Buyer Log regression
         run: npm test
