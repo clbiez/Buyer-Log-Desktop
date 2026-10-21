@@ -300,6 +300,35 @@
           "en": "Printed and expected values appear row by row with short comments, using an anonymous demo and a controlled AI test response."
         }
       }
+    },
+    {
+      "id": "test-report-manual-po-matching",
+      "type": "feature",
+      "module": {
+        "tr": "CP · Test raporu eşleştirme",
+        "en": "CP · Test report matching"
+      },
+      "title": {
+        "tr": "Eşleşmeyi değiştirin veya ilave PO ekleyin",
+        "en": "Change a match or add another PO"
+      },
+      "body": {
+        "tr": "Test raporu önizlemesinde CP’de PO veya model arayarak hedef siparişi değiştirebilir, aynı rapora ilave PO satırları ekleyip kaldırabilirsiniz. Elle eşleşmeler AI önerisinden ayrılır; her hedefte checklist adımı, kapsam doğrulaması ve durum yeniden seçilir. Son onaydan önce yazılmaz; kaynak rapor bilgisi ve önceki bağlantılar korunur.",
+        "en": "In the test report preview, search CP by PO or model to change the target order or add and remove extra PO rows for the same report. Manual matches are distinguished from AI suggestions; choose the checklist step, confirm scope and select the status for each target. Nothing is written before final approval; source report identity and previous links are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-manual-po.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log önizlemesinde anonim test raporuna elle seçilen iki PO, ayrı durumlar ve onaylar",
+          "en": "Two manually selected POs with independent statuses and confirmations for an anonymous test report in the real Buyer Log preview"
+        },
+        "caption": {
+          "tr": "Anonim PDF ve kontrollü AI yanıtıyla gerçek uygulama: PO arama, ilave PO, kapsam doğrulaması ve son onay.",
+          "en": "Real app with an anonymous PDF and controlled AI response: PO search, additional PO, scope confirmation and final approval."
+        }
+      }
     }
   ]
 }

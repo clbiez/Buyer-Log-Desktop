@@ -80,3 +80,56 @@ test('a late old response cannot replace the reports of a newer validated review
   assert.equal(session.reports[0].aiAssessment.snapshotId,newer.packet.snapshotId);
   assert.equal(session.reports[0].aiAssessment.summary,'Newest reviewed source');
 });
+test('buyer can explicitly add an authorised PO outside AI scope; source identity stays unchanged',async()=>{
+  const {parsed,packet,data}=await prepare('MANUAL-PO-01');
+  await service.acceptAssessment(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,data});
+  const origin={fromOrderKey:'po7',fromItemId:'fabric'};
+  const manual={talepNo:'MANUAL-PO-01',orderKey:'po1',itemId:'fabric',manualMatch:origin,confirmMatch:true,confirmEvidence:true,targetStatus:'rejected',context:{orderCode:'FAKE'}};
+  const body={sessionId:parsed.sessionId,snapshotId:packet.snapshotId,items:[{talepNo:'MANUAL-PO-01',orderKey:'po7',itemId:'fabric'},manual]};
+  const result=await service.commit(profile,body);
+  assert.equal(result.results.length,2);
+  const saved=store.read(),links=saved.links['MANUAL-PO-01'].targets;
+  assert.deepEqual(links.map(link=>link.orderKey),['po7','po1']);
+  assert.equal(saved.reports['MANUAL-PO-01'].siparisKodu,'1381207','manual PO never changes source extraction');
+  assert.equal(saved.reports['MANUAL-PO-01'].aiAssessment.orderKey,'po7','AI never claims verification of manual target');
+  assert.deepEqual(links[1].review.manualMatch,{fromOrderKey:'po7',fromItemId:'fabric',targetStatus:'rejected'});
+  assert.equal(saved.events.at(-1).review.matchSource,'buyer');
+  assert.equal(saved.events.at(-1).review.scopeConfirmed,true);
+});
+test('manual rematch requires source review, both confirmations, and a real checklist status',async()=>{
+  const {parsed,packet,data}=await prepare('MANUAL-PO-02');
+  await service.acceptAssessment(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,data});
+  const manual={talepNo:'MANUAL-PO-02',orderKey:'po1',itemId:'fabric',manualMatch:{fromOrderKey:'po7',fromItemId:'fabric'},confirmMatch:true,confirmEvidence:true,targetStatus:'rejected'};
+  const commit=item=>service.prepareCommit(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,items:[item]});
+  for(const change of [{confirmEvidence:false},{confirmMatch:false},{targetStatus:''},{targetStatus:'invented'},{itemId:'invented'},{manualMatch:{fromOrderKey:'po1',fromItemId:'fabric'}}]) {
+    await assert.rejects(commit({...manual,...change}),{code:'TEST_REPORT_MANUAL_MATCH_REQUIRED'});
+  }
+  await assert.rejects(commit({...manual,orderKey:'unauthorised'}),{code:'TEST_REPORT_ORDER_FORBIDDEN'});
+  const allowed=await commit(manual);assert.equal(allowed.items[0].context.orderCode,'1381201');
+  await assert.rejects(service.prepareCommit(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,items:[manual,manual]}),{code:'TEST_REPORT_DUPLICATE_TARGET'});
+});
+test('manual scope cannot bypass changed CP or current write authority',async()=>{
+  const {parsed,packet,data}=await prepare('MANUAL-PO-03');
+  await service.acceptAssessment(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,data});
+  const body={sessionId:parsed.sessionId,snapshotId:packet.snapshotId,items:[{talepNo:'MANUAL-PO-03',orderKey:'po1',itemId:'fabric',manualMatch:{fromOrderKey:'po7',fromItemId:'fabric'},confirmMatch:true,confirmEvidence:true,targetStatus:'approved'}]};
+  const restricted=createService({authorizedOrders:async(_p,{write})=>write?new Map([['po7',orders.get('po7')]]):orders,sourceRevision:()=>revision});
+  await assert.rejects(restricted.prepareCommit(profile,body),{code:'TEST_REPORT_ORDER_FORBIDDEN'});
+  revision+='-changed';
+  await assert.rejects(service.prepareCommit(profile,body),{code:'TEST_REPORT_REVIEW_STALE'});
+});
+test('manual target cannot inherit an invisible set part; real target parts remain selectable',async()=>{
+  cp.rows[1].fields.Category='T-shirt';
+  try {
+    const {parsed,packet,data}=await prepare('MANUAL-PART-01');
+    await service.acceptAssessment(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,data});
+    const item={talepNo:'MANUAL-PART-01',orderKey:'po1',itemId:'fabric~part~A',manualMatch:{fromOrderKey:'po7',fromItemId:'fabric'},confirmMatch:true,confirmEvidence:true,targetStatus:'approved'};
+    await assert.rejects(service.prepareCommit(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,items:[item]}),{code:'TEST_REPORT_MANUAL_MATCH_REQUIRED'});
+    cp.rows[1].fields.Category="2'li Takım";
+    const next=await prepare('MANUAL-PART-02');
+    await service.acceptAssessment(profile,{sessionId:next.parsed.sessionId,snapshotId:next.packet.snapshotId,data:next.data});
+    const check=itemId=>service.prepareCommit(profile,{sessionId:next.parsed.sessionId,snapshotId:next.packet.snapshotId,items:[{...item,talepNo:'MANUAL-PART-02',itemId}]});
+    await assert.rejects(check('fabric'),{code:'TEST_REPORT_MANUAL_MATCH_REQUIRED'});
+    await assert.rejects(check('fabric~part~Z'),{code:'TEST_REPORT_MANUAL_MATCH_REQUIRED'});
+    assert.equal((await check('fabric~part~B')).items[0].itemId,'fabric~part~B');
+  }finally{delete cp.rows[1].fields.Category;}
+});

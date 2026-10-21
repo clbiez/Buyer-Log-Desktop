@@ -144,7 +144,7 @@ function commit(items, typeMap, actor, attach, options = {}) {
       delete merged.kaynakDosya;
       merged.guncelleme = at;
       store.reports[talepNo] = merged;
-      const target = { orderKey, itemId, at, by: who.name || who.id, byId: who.id, files: [...new Map([...knownFiles.values(), ...files].map(f => [Engine.fileKey(f), f])).values()] };
+      const target = { orderKey, itemId, at, by: who.name || who.id, byId: who.id, ...(item.review ? { review: item.review } : {}), files: [...new Map([...knownFiles.values(), ...files].map(f => [Engine.fileKey(f), f])).values()] };
       const targets = previousLinks.map(l => l.orderKey === orderKey ? target : l);
       if (!previousTarget) targets.push(target);
       // Keep the legacy primary fields while preserving all approved targets.

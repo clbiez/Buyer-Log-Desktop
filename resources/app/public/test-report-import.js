@@ -68,6 +68,7 @@
         TEST_REPORT_SCOPE_CONFIRMATION_REQUIRED: T('Sipariş kapsamını doğrulayıp ilgili satırı işaretleyin.', 'Verify the order scope and tick the relevant row.'),
         TEST_REPORT_ORDER_MISMATCH: T('Seçilen sipariş rapor kapsamına ait değil.', 'The selected order is outside the report scope.'),
         TEST_REPORT_DUPLICATE_TARGET: T('Aynı rapor ve sipariş adımı iki kez seçildi.', 'The same report and order step was selected twice.'),
+        TEST_REPORT_MANUAL_MATCH_REQUIRED: T('Elle eşleşme için kapsamı doğrulayın ve checklist durumunu seçin.', 'Verify the scope and choose a checklist status for the manual match.'),
         TEST_REPORT_CP_INCOMPLETE: T('CP kapsamı tam değil veya değişti. CP verilerini yenileyip yeniden analiz edin.', 'CP coverage is incomplete or changed. Refresh CP data and analyse again.'),
         TEST_REPORT_REVIEW_REQUIRED: T('Geçerli LCW AI incelemesi ve onay önizlemesi gerekli.', 'A valid LCW AI review and approval preview are required.'),
         TEST_REPORT_REVIEW_STALE: T('Sipariş kapsamı değişti; yeniden analiz edin.', 'The order scope changed; analyse again.'),
@@ -169,7 +170,7 @@
   }
   function rowFor(entry) {
     const candidate = entry.candidates.find(function (c) { return c.key === entry.chosen; });
-    return candidate ? candidate.row : null;
+    return candidate ? candidate.row : cpRows().find(function (row) { const a = analysisFor(row); return a && a.orderKey === entry.chosen; }) || null;
   }
   function analysisFor(row) {
     const d = ui.decision;
@@ -196,8 +197,8 @@
     if (ui.ai.cpChanged) { out.reason = T('CP veya checklist değişti; yeniden analiz edin.', 'CP or checklist changed; analyse again.'); return out; }
     const review = reviewFor(entry);
     if (!review) { out.reason = T('Bu sipariş ve rapor için kanıtlı öneri yok.', 'No source-grounded proposal for this order and report.'); return out; }
-    if (review.blocked && !entry.reviewVerified) { out.reason = T('Kaynağı ve bileşen/sipariş kapsamını doğrulayın.', 'Verify the source and component/order scope.'); return out; }
-    if (review.step && entry.itemId !== review.step) { out.reason = T('Checklist adımı incelemedeki kapsamla uyuşmuyor.', 'The checklist step differs from the reviewed scope.'); return out; }
+    if ((review.blocked || entry.manualMatch) && !entry.reviewVerified) { out.reason = T('Kaynağı ve bileşen/sipariş kapsamını doğrulayın.', 'Verify the source and component/order scope.'); return out; }
+    if (!entry.manualMatch && review.step && entry.itemId !== review.step) { out.reason = T('Checklist adımı incelemedeki kapsamla uyuşmuyor.', 'The checklist step differs from the reviewed scope.'); return out; }
     const store = ui.store || { reports: {} };
     const stored = entry.report.talepNo ? store.reports[entry.report.talepNo] : null;
     if (stored) {
@@ -217,6 +218,7 @@
     const s = assistantState();
     const components = Checklist().Components, parts = Checklist().componentsFor(analysis, { answers: s && s.answers });
     const part = components.parseItem(entry.itemId);
+    if (part && !parts.some(p => p.id === part.partId)) { out.reason = T('Bu siparişe ait geçerli checklist adımını seçin.', 'Choose a valid checklist step for this order.'); return out; }
     if ((parts.length || components.isSet(analysis.sourceRow || analysis, 'cp')) && (!part || !parts.some(p => p.id === part.partId))) {
       out.reason = parts.length ? T('Checklist adımını ve set parçasını seçin.', 'Choose the checklist step and set part.') : T('Önce CP hücresinden set parçalarını tanımlayın.', 'Define the set parts from the CP cell first.');
       return out;
@@ -229,9 +231,9 @@
     const reports = groupReports(entry.chosen, entry.itemId);
     out.step = E().deriveStepStatus(reports);
     // Analiz sonucu kullanıcı tanımlı duruma eşleşebilir (ör. Lack of Sample).
-    out.suggested = { status: review.status || '' };
+    out.suggested = { status: entry.manualMatch ? '' : review.status || '' };
     out.manual = chosenStatus(entry);
-    if (review.blocked && !out.manual) { out.reason = T('Doğruladığınız kapsam için hedef durumu elle seçin.', 'Choose the target status for the scope you verified.'); out.ready = true; return out; }
+    if ((review.blocked || entry.manualMatch) && !out.manual) { out.reason = T('Doğruladığınız kapsam için hedef durumu elle seçin.', 'Choose the target status for the scope you verified.'); out.ready = true; return out; }
     if (!out.manual && !out.suggested.status) { out.reason = T('Kanıt kesin bir durum önermiyor; hedef durumu seçin.', 'The evidence has no definite status proposal; choose a target status.'); out.ready = true; return out; }
     out.next = out.manual || (out.userOwned && !entry.override ? current : (out.suggested.status || current));
     out.notAsked = Array.isArray(analysis.checklistItemIds) && analysis.checklistItemIds.indexOf(part ? part.baseId : entry.itemId) < 0;
@@ -241,6 +243,7 @@
 
   /* -------------------------------------------------------- çizim */
   function levelBadge(entry) {
+    if (entry.manualMatch) return '<span class="trBadge tone-orange">' + html(T('Elle eşleşme', 'Manual match')) + '</span><small>' + html(T('LCW AI bu hedefi doğrulamadı.', 'LCW AI has not verified this target.')) + '</small>';
     const map = {
       exact: { tone: 'green', tr: 'Tam eşleşme', en: 'Exact match' },
       partial: { tone: 'orange', tr: 'Kısmi eşleşme', en: 'Partial match' },
@@ -301,10 +304,40 @@
     return names;
   }
   function rowCell(entry) {
-    if (!entry.candidates.length) return '<span class="trMuted">—</span>';
-    if (entry.candidates.length === 1 && entry.chosen) return html(rowLabel(entry.candidates[0].row));
-    return '<select data-tr-row="' + entry.id + '"><option value="">' + html(T('Satır seçin…', 'Choose a row…')) + '</option>'
-      + entry.candidates.map(function (c) { return '<option value="' + html(c.key) + '"' + (c.key === entry.chosen ? ' selected' : '') + '>' + html(rowLabel(c.row)) + '</option>'; }).join('') + '</select>';
+    const row = rowFor(entry), label = row ? html(rowLabel(row)) : '<span class="trMuted">' + html(T('PO seçilmedi', 'No PO selected')) + '</span>';
+    if (ui.ai.state !== 'done') return label;
+    return label + '<details' + (entry.manualMatch || !entry.chosen ? ' open' : '') + '><summary>' + html(T('Eşleşmeyi değiştir', 'Change match')) + '</summary>'
+      + '<label><small>' + html(T('CP’de PO / model ara', 'Search CP by PO / model')) + '</small><input type="search" data-tr-search="' + entry.id + '" value="' + html(entry.matchQuery || '') + '"></label>'
+      + '<select data-tr-row="' + entry.id + '" aria-label="' + html(T('Hedef PO / CP satırı', 'Target PO / CP row')) + '">' + matchOptions(entry) + '</select></details>'
+      + '<button type="button" class="cpaBtn sm" data-tr-add-po="' + entry.id + '">' + html(T('+ İlave PO', '+ Add PO')) + '</button>'
+      + (entry.manualAdded ? '<button type="button" class="cpaBtn sm" data-tr-remove-po="' + entry.id + '">' + html(T('Bu PO satırını kaldır', 'Remove this PO row')) + '</button>' : '');
+  }
+  function matchOptions(entry) {
+    const query = text(entry.matchQuery).toLocaleLowerCase(lang());
+    const choices = cpRows().flatMap(function (row) { const a = analysisFor(row); return a && row._canEdit !== false ? [{ key: a.orderKey, row: row }] : []; });
+    const matches = choices.filter(function (c) { return !query || rowLabel(c.row).toLocaleLowerCase(lang()).includes(query); });
+    const visible = matches.slice(0, 100);
+    const selected = choices.find(function (c) { return c.key === entry.chosen; });
+    if (selected && !visible.some(function (c) { return c.key === selected.key; })) visible.unshift(selected);
+    return '<option value="">' + html(matches.length ? T('CP satırı seçin…', 'Choose a CP row…') : T('CP’de bulunamadı', 'Not found in CP')) + '</option>'
+      + visible.map(function (c) { return '<option value="' + html(c.key) + '"' + (c.key === entry.chosen ? ' selected' : '') + '>' + html(rowLabel(c.row)) + '</option>'; }).join('')
+      + (matches.length > 100 ? '<option disabled>' + html(T('İlk 100 sonuç · PO yazarak daraltın', 'First 100 results · type a PO to narrow')) + '</option>' : '');
+  }
+  function changeMatch(entry, orderKey) {
+    const origin = reviewFor(entry);
+    if (!origin || ui.ai.state !== 'done') return;
+    entry.originReview = entry.originReview || origin;
+    entry.chosen = orderKey;
+    entry.manualMatch = { fromOrderKey: entry.originReview.orderKey, fromItemId: entry.originReview.step };
+    entry.itemId = '';
+    entry.include = false; entry.reviewVerified = false; entry.status = ''; entry.override = false; entry.ignored = false;
+  }
+  function addPo(entry) {
+    const origin = reviewFor(entry);
+    if (!origin || ui.ai.state !== 'done') return;
+    const extra = Object.assign({}, entry, { id: 'r' + (ui.seq++), manualAdded: true, originReview: entry.originReview || origin, matchQuery: '' });
+    changeMatch(extra, '');
+    ui.entries.splice(ui.entries.indexOf(entry) + 1, 0, extra);
   }
   function itemOptions(selected, entry) {
     const analysis = entry && analysisFor(rowFor(entry)), s = assistantState();
@@ -320,7 +353,7 @@
     // Hedef durum dinamik: otomatik (analiz) ya da kullanıcı tanımlı durumlar dâhil elle seçim.
     const auto = p.userOwned && !entry.override ? p.current : (p.suggested && p.suggested.status || p.current);
     out += '<label class="trInline trStatusPick"><span>' + html(T('Checklist durumu', 'Checklist status')) + '</span><select data-tr-status="' + entry.id + '">'
-      + '<option value="">' + html(T('Otomatik: ', 'Automatic: ') + statusText(auto)) + '</option>'
+      + '<option value="">' + html(entry.manualMatch ? T('Durum seçin…', 'Choose a status…') : T('Otomatik: ', 'Automatic: ') + statusText(auto)) + '</option>'
       + statusIdList().map(function (id) { return '<option value="' + html(id) + '"' + (id === p.manual ? ' selected' : '') + (isCustom(id) ? ' data-no-i18n' : '') + '>' + html(statusText(id)) + '</option>'; }).join('')
       + '</select></label>';
     if (!p.manual && p.suggested && p.suggested.custom && !(p.userOwned && !entry.override)) {
@@ -350,6 +383,7 @@
     const review = entry.report.talepNo ? reviewFor(entry) : null;
     if (!review) return '';
     let out = '<div class="trAi"><b>' + html(T('LCW AI önerisi', 'LCW AI suggestion')) + '</b>';
+    if (entry.manualMatch) out += '<small><b>' + html(T('Elle seçilen PO · kapsam kullanıcı tarafından doğrulanmalı.', 'Manually selected PO · the buyer must verify scope.')) + '</b></small><small>' + html(T('Aşağıdaki AI incelemesinin asıl PO’su: ', 'Original PO of the AI review below: ') + (review.orderCode || '—')) + '</small>';
     out += '<small>' + html(T('Bileşen: ', 'Component: ') + (review.component || '—') + ' · ' + T('Laboratuvar: ', 'Laboratory: ') + (review.labResult || '—')) + '</small>';
     if (review.commercialDecision) out += '<small>' + html(T('Ticari karar: ', 'Commercial decision: ') + review.commercialDecision) + '</small>';
     if (review.summary) out += '<p>' + html(review.summary) + '</p>';
@@ -358,13 +392,13 @@
       const link = source && source.fileId ? '<a target="_blank" rel="noopener" href="' + API + '/staged/' + encodeURIComponent(ui.session) + '/' + encodeURIComponent(source.fileId) + '">' + html(T('Orijinali aç', 'Open original')) + '</a>' : '';
       return '<small><b>' + html((source && source.name || ref.sourceId) + ' · ' + T('Sayfa ', 'Page ') + ref.page) + '</b> · ' + html(ref.quote) + ' ' + link + '</small>';
     }).join('') + '</details>';
-    if (review.blocked) out += '<label class="trInline"><input type="checkbox" data-tr-verify="' + entry.id + '"' + (entry.reviewVerified ? ' checked' : '') + '> ' + html(T('Orijinal kaynağı ve bu siparişin bileşen/test kapsamını doğruladım', 'I verified the original source and this order’s component/test scope')) + '</label>';
+    if (review.blocked || entry.manualMatch) out += '<label class="trInline"><input type="checkbox" data-tr-verify="' + entry.id + '"' + (entry.reviewVerified ? ' checked' : '') + '> ' + html(T('Orijinal kaynağı ve bu siparişin bileşen/test kapsamını doğruladım', 'I verified the original source and this order’s component/test scope')) + '</label>';
     if (review.actions.length) out += '<small>' + html(T('Yapılacaklar', 'Next steps')) + '</small><ul class="trWarnings">' + review.actions.map(function (a) { return '<li>' + html(a) + '</li>'; }).join('') + '</ul>';
     if (review.risks.length) out += '<small>' + html(T('Riskler', 'Risks')) + '</small><ul class="trWarnings">' + review.risks.map(function (a) { return '<li>' + html(a) + '</li>'; }).join('') + '</ul>';
-    if (review.step && review.step !== entry.itemId) {
+    if (!entry.manualMatch && review.step && review.step !== entry.itemId) {
       out += '<button type="button" class="cpaBtn sm" data-tr-ai-step="' + entry.id + '">' + html(T('Adım önerisi: ', 'Suggested step: ') + itemLabel(review.step) + T(' · Uygula', ' · Apply')) + '</button>';
     }
-    if (review.status && chosenStatus(entry) && review.status !== chosenStatus(entry) && statusIdList().indexOf(review.status) >= 0) {
+    if (!entry.manualMatch && review.status && chosenStatus(entry) && review.status !== chosenStatus(entry) && statusIdList().indexOf(review.status) >= 0) {
       out += '<button type="button" class="cpaBtn sm" data-tr-ai-status="' + entry.id + '">' + html(T('Durum önerisi: ', 'Suggested status: ') + statusText(review.status) + T(' · Uygula', ' · Apply')) + '</button>';
     }
     return out + '</div>';
@@ -427,14 +461,18 @@
     return '<div class="trChips">' + chips.map(function (c) { return '<span class="cpaChip is-static' + (c[2] ? ' tone-' + c[2] : '') + '"><span class="n">' + c[1] + '</span><span class="l">' + html(c[0]) + '</span></span>'; }).join('') + '</div>';
   }
   function selectionConflicts(plans) {
-    const targets = new Map();
+    const targets = new Map(), reports = new Set();
+    let duplicate = false;
     ui.entries.forEach(function (entry, i) {
       if (!entry.include || !plans[i].ready || !plans[i].next) return;
+      const reportTarget = answerKey(entry.report.talepNo, entry.chosen);
+      if (reports.has(reportTarget)) duplicate = true;
+      reports.add(reportTarget);
       const key = answerKey(entry.chosen, entry.itemId);
       if (!targets.has(key)) targets.set(key, new Set());
       targets.get(key).add(plans[i].next);
     });
-    return [...targets.values()].some(function (states) { return states.size > 1; });
+    return duplicate || [...targets.values()].some(function (states) { return states.size > 1; });
   }
   function fileIssuesHtml() {
     const issues = ui.files.filter(function (f) { return !(ui.ai.read && ui.ai.read[f.name] && ui.ai.read[f.name].ok) && (f.status !== 'parsed' || (f.warnings || []).length); });
@@ -493,7 +531,7 @@
         + '<td>' + warningsCell(entry, p) + '<div class="trFiles">' + filesCell(r) + '</div></td></tr>';
     }).join('');
     const conflict = selectionConflicts(plans);
-    const notice = conflict ? '<p role="alert">' + html(T('Aynı checklist hedefinde farklı durumlar seçildi. Onaydan önce tek bir hedef durum belirleyin.', 'Different statuses were selected for the same checklist target. Choose one target status before approval.')) + '</p>' : '';
+    const notice = conflict ? '<p role="alert">' + html(T('Aynı rapor/PO iki kez veya aynı checklist için farklı durumlar seçildi. Tekrarlanan seçimi kaldırın.', 'The same report/PO was selected twice or checklist statuses conflict. Remove the duplicate selection.')) + '</p>' : '';
     const unresolved = (ui.ai.unresolved || []).map(function (id) { return ui.ai.packet.sources.find(function (s) { return s.id === id; }); }).filter(Boolean);
     const missing = unresolved.length ? '<section class="trIssues"><b>' + html(T('Çözümlenemeyen kaynaklar', 'Unresolved sources')) + '</b><ul class="trWarnings">' + unresolved.map(function (source) { return '<li>' + html(source.name) + '</li>'; }).join('') + '</ul></section>' : '';
     body.innerHTML = drop + summaryHtml(plans) + aiStatusHtml() + notice + missing + fileIssuesHtml() + typeMappingHtml()
@@ -573,6 +611,7 @@
   }
   function reviewFor(entry) {
     if (!entry) return null;
+    if (entry.manualMatch) return entry.originReview || null;
     return ui.ai.reviews[[entry.report.talepNo, entry.chosen, entry.itemId].join('::')]
       || Object.values(ui.ai.reviews).find(function (review) { return review.reportId === entry.report.talepNo && review.orderKey === entry.chosen; }) || null;
   }
@@ -729,12 +768,13 @@
   async function commit() {
     ui.ai.cpChanged = Boolean(ui.ai.packet && ui.ai.localSnapshot !== localReviewSnapshot());
     const plans = ui.entries.map(plan);
-    if (selectionConflicts(plans)) { toast(T('Aynı checklist hedefi için farklı durumlar seçilemez.', 'Conflicting statuses cannot be selected for the same checklist target.')); return; }
+    if (selectionConflicts(plans)) { toast(T('Tekrarlanan rapor/PO seçimini veya çelişen checklist durumlarını düzeltin.', 'Resolve duplicate report/PO selections or conflicting checklist statuses.')); return; }
     const chosen = ui.entries.filter(function (entry, i) { return entry.include && plans[i].ready && plans[i].next; });
     if (!chosen.length || ui.busy) return;
     ui.busy = true;
     const button = ui.modal.querySelector('[data-tr-commit]');
     button.disabled = true;
+    ui.modal.querySelectorAll('[data-tr-body] input, [data-tr-body] select, [data-tr-body] button').forEach(function (control) { control.disabled = true; });
     try {
       const items = chosen.map(function (entry) {
         const row = rowFor(entry);
@@ -742,6 +782,7 @@
           talepNo: entry.report.talepNo, orderKey: entry.chosen, itemId: entry.itemId,
           confirmMatch: Boolean(entry.include),
           confirmEvidence: entry.reviewVerified === true,
+          ...(entry.manualMatch ? { manualMatch: entry.manualMatch, targetStatus: chosenStatus(entry) } : {}),
           context: {
             orderCode: value(row, ['Order Code']), plmId: value(row, ['PLM ID']), modelName: value(row, ['Model Name']),
             colourCode: value(row, ['C.Code']), checklistName: itemLabel(entry.itemId), checklistStatus: entry.report.talepNo,
@@ -820,7 +861,16 @@
     const close = function () { if (ui.busy) return; if (ui.ai.state === 'running') cancelAi(); modal.remove(); ui.modal = null; };
     modal.querySelectorAll('[data-tr-close]').forEach(function (b) { b.onclick = close; });
     modal.addEventListener('keydown', function (event) { if (event.key === 'Escape') close(); });
+    modal.addEventListener('input', function (event) {
+      if (ui.busy) return;
+      const input = event.target;
+      if (!input.dataset.trSearch) return;
+      const entry = ui.entries.find(function (e) { return e.id === input.dataset.trSearch; });
+      entry.matchQuery = input.value;
+      input.closest('details').querySelector('[data-tr-row]').innerHTML = matchOptions(entry);
+    });
     modal.addEventListener('change', function (event) {
+      if (ui.busy) return;
       const t = event.target;
       if (t.matches('[data-tr-input]')) { handleFiles(t.files); t.value = ''; return; }
       const find = function (id) { return ui.entries.find(function (e) { return e.id === id; }); };
@@ -828,9 +878,10 @@
       if (t.dataset.trVerify) { const entry = find(t.dataset.trVerify); entry.reviewVerified = t.checked; entry.include = false; render(); return; }
       if (t.dataset.trOverride) { find(t.dataset.trOverride).override = t.checked; render(); return; }
       if (t.dataset.trStatus) { find(t.dataset.trStatus).status = t.value; render(); return; }
-      if (t.dataset.trRow != null && t.dataset.trRow !== '') { const e = find(t.dataset.trRow); e.chosen = t.value; e.include = Boolean(t.value); render(); return; }
+      if (t.dataset.trRow != null && t.dataset.trRow !== '') { changeMatch(find(t.dataset.trRow), t.value); render(); return; }
       if (t.dataset.trItem) {
         const e = find(t.dataset.trItem);
+        if (e.manualMatch) { e.reviewVerified = false; e.include = false; e.status = ''; }
         if (t.value === NEW_ITEM) { e.itemId = ''; render(); const row = modal.querySelector('[data-tr-type="' + root.CSS.escape(e.typeKey) + '"]'); if (row) { row.querySelector('select').value = NEW_ITEM; row.querySelector('.trNewItem').hidden = false; } return; }
         e.itemId = t.value; render(); return;
       }
@@ -841,6 +892,11 @@
       }
     });
     modal.addEventListener('click', function (event) {
+      if (ui.busy) return;
+      const add = event.target.closest('[data-tr-add-po]');
+      if (add) { addPo(ui.entries.find(function (e) { return e.id === add.dataset.trAddPo; })); render(); return; }
+      const remove = event.target.closest('[data-tr-remove-po]');
+      if (remove) { ui.entries = ui.entries.filter(function (e) { return e.id !== remove.dataset.trRemovePo || !e.manualAdded; }); render(); return; }
       const create = event.target.closest('[data-tr-create]');
       if (create) createItem(create.dataset.trCreate, create.closest('[data-tr-type]'));
       if (event.target.closest('[data-tr-ai-connect]')) runAi({ interactive: true });
@@ -905,6 +961,6 @@
     if (files && files.length) await handleFiles(files);
   }
 
-  root.BLTestReportImport = { open: open, runAi: runAi, extractWithAI: extractWithAI, _ui: ui, _plan: plan, _aiDone: aiDone };
+  root.BLTestReportImport = { open: open, runAi: runAi, extractWithAI: extractWithAI, _ui: ui, _plan: plan, _aiDone: aiDone, _changeMatch: changeMatch, _addPo: addPo, _selectionConflicts: selectionConflicts };
   if (root.MutationObserver && root.document) new root.MutationObserver(function () { if (ui.modal) render(); }).observe(root.document.documentElement, { attributes: true, attributeFilter: ['lang'] });
 })(typeof window !== 'undefined' ? window : globalThis);
