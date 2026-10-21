@@ -27,6 +27,38 @@
     const groups=contracts(rules,day),byStart=(a,b)=>String(b.opdStart||'').localeCompare(String(a.opdStart||''))||String(a.id||'').localeCompare(String(b.id||''));
     return groups.active.sort(byStart)[0]||groups.history.filter(x=>x.status==='future').map(x=>x.rule).sort((a,b)=>String(a.opdStart).localeCompare(String(b.opdStart)))[0]||groups.history.filter(x=>x.status==='expired').map(x=>x.rule).sort(byStart)[0]||null;
   }
+  // Kartta bugün geçerli TÜM sezon kapsamları görünür; yoksa en yakın sözleşme.
+  function currentContracts(rules,day=today()){
+    const active=contracts(rules,day).active.sort((a,b)=>String(b.opdStart||'').localeCompare(String(a.opdStart||''))||String(a.id||'').localeCompare(String(b.id||'')));
+    if(active.length)return active;
+    const latest=latestContract(rules,day);return latest?[latest]:[];
+  }
+  function previousDay(day){
+    const d=date(day);if(!d)return '';
+    const t=new Date(Date.UTC(+d.slice(0,4),+d.slice(5,7)-1,+d.slice(8,10))-86400000);
+    return `${t.getUTCFullYear()}-${String(t.getUTCMonth()+1).padStart(2,'0')}-${String(t.getUTCDate()).padStart(2,'0')}`;
+  }
+  const seasonsOf=rule=>(Array.isArray(rule&&rule.seasons)?rule.seasons:(rule&&rule.season?[rule.season]:[])).map(key).filter(Boolean);
+  const sides=rule=>[rule&&rule.trCommission!=null&&text(rule.trCommission)!==''?'TR':'',rule&&rule.ydCommission!=null&&text(rule.ydCommission)!==''?'YD':''].filter(Boolean);
+  // Yeni dönem: oranlar en güncel sözleşmeden kopyalanır (0 royalty ile
+  // yanlışlıkla kaydedilmez) ve aynı kapsamdaki açık önceki dönem bir gün
+  // önce kapatılır; aksi hâlde sunucu çakışma nedeniyle kaydı reddeder.
+  function nextContractPeriod(rules,card,day=today(),id=`license-rule-${Date.now()}-${Math.random().toString(36).slice(2,9)}`){
+    const list=(Array.isArray(rules)?rules:[]).map(rule=>({...rule}));
+    const base=latestContract(list,day),start=date(day)||today(),end=previousDay(start);
+    const next={id,license:card.license,licensor:card.licensor,opdStart:start,opdEnd:'',seasons:base?[...(Array.isArray(base.seasons)?base.seasons:(base.season?[base.season]:[]))]:[],
+      royalty:base?base.royalty:null,trCommission:base?base.trCommission??null:0,ydCommission:base?base.ydCommission??null:0,hologramCost:base?base.hologramCost??0:0};
+    if(next.trCommission==null&&next.ydCommission==null){next.trCommission=0;next.ydCommission=0;}
+    const nextSeasons=seasonsOf(next),nextSides=sides(next),closed=[];
+    for(const rule of list){
+      const from=date(rule.opdStart),to=date(rule.opdEnd),ruleSeasons=seasonsOf(rule);
+      if(from===null||to===null||(from&&from>=start)||(to&&to<start))continue;
+      if(nextSeasons.length&&ruleSeasons.length&&!ruleSeasons.some(s=>nextSeasons.includes(s)))continue;
+      if(!sides(rule).some(side=>nextSides.includes(side)))continue;
+      rule.opdEnd=end;closed.push(rule.id);
+    }
+    return {rules:[next,...list],rule:next,closed};
+  }
   function quantity(v){
     if(v==null||text(v)==='')return null;
     let s=text(v).replace(/\s/g,'');
@@ -53,5 +85,5 @@
   }
   function portalHref(value){try{const u=new URL(text(value));return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:'';}catch(_){return '';}}
   function symbolUrl(value){const s=text(value);return /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(s)&&s.length<=350000?s:'';}
-  return Object.freeze({latestContract,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
+  return Object.freeze({latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
 });

@@ -32,15 +32,35 @@ function priceWithCosts(basePrice,row,helpers){
   if(denom<=0)return null;
   return base/denom+hologram;
 }
+function businessRules(){
+  if(typeof module==='object'&&module.exports)return require('./business-rules');
+  return typeof globalThis!=='undefined'?globalThis.BLBusinessRules:null;
+}
+// Collection FOB, CP Final FOB ile aynı kesin ondalık hesabı kullanır:
+// (Confirmed ÷ (1 − Royalty%)) + Hologram, yarım kuruş yukarı yuvarlanır.
+// Kayan nokta + toFixed yarım kuruş sınırında bir kuruş aşağı kayabiliyordu.
 function computeFobFromConfirmed(confFob,royaltyPct,hologram,helpers){
   const {kolParseMoneyNum,kolFormatMoneyDisplay}=helpers;
   const confirmed = kolParseMoneyNum(confFob);
   if(!Number.isFinite(confirmed)) return '';
-  const r = kolParseMoneyNum(royaltyPct); const rFrac = Number.isFinite(r) ? r/100 : 0;
+  const r = kolParseMoneyNum(royaltyPct); const rPct = Number.isFinite(r) ? r : 0;
   const h = kolParseMoneyNum(hologram); const hNum = Number.isFinite(h) ? h : 0;
-  const denom = 1 - rFrac;
+  const rules = businessRules();
+  if(rules&&rPct>=0&&hNum>=0){
+    const exact = rules.calculateFinalFobWithRule(confirmed,{royalty:rPct,hologramCost:hNum},'');
+    return exact==null?'':kolFormatMoneyDisplay(String(exact));
+  }
+  const denom = 1 - rPct/100;
   if(Math.abs(denom) < 1e-9) return '';
   return kolFormatMoneyDisplay(String(confirmed/denom + hNum));
+}
+// Sözleşme oranı 2 ondalıktan hassas olabilir (ör. %12,125). Görünen Royalty
+// alanı Landed hesabına da girdiği için hassasiyet kırpılmaz; en az 2 basamak.
+function formatRatePercent(value){
+  const n=Number(value);
+  if(value==null||value===''||!Number.isFinite(n))return '';
+  const [whole,fraction='']=String(Number(n.toFixed(4))).split('.');
+  return whole+','+fraction.padEnd(2,'0')+'%';
 }
 function calculateLanded(row,helpers){
     const {kolParseMoneyNum,kolDefaultLandedMultipliers,kolAutoFx,kolFindPricingRuleForCountryGroup,kolTrLicenseRuleMissing,kolLandedPriceWithRule,kolSuppFob,kolLandedPriceWithCosts,kolLandedIsNonDtr,kolLicenseRuleMissing,effectiveRoyalty,hologramFor}=helpers;
@@ -56,5 +76,5 @@ function calculateLanded(row,helpers){
     const profitPct=(trLanded!=null&&ydLanded!=null&&trLanded>0)?((trLanded-ydLanded)/trLanded)*100:null;
     return {trPrice,trMult,trMultIsManual,defaultTrMult:defaults.tr,fx,fxAuto,fxIsManual:Number.isFinite(fxManual)&&fxManual>0,trBaseUsd,trRule,trRuleMissing,trCostedUsd,trLanded,trRoyaltyPct,trHologramCost,supp,ydBaseFob,ydCostedFob,ydMult,ydMultIsManual,defaultYdMult:defaults.overseas,ydLanded,nonDtr,royaltyPct,hologramCost,profitPct,ruleMissing};
   }
-return {normalizeLandedMultipliers,findRule,priceWithCosts,computeFobFromConfirmed,calculateLanded};
+return {normalizeLandedMultipliers,findRule,priceWithCosts,computeFobFromConfirmed,formatRatePercent,calculateLanded};
 });

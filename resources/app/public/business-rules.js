@@ -510,6 +510,14 @@
     return Number.isFinite(number) ? number : null;
   }
 
+  // Oranlar ondalık girilir (ör. %0,1 + %0,2). İkili kayan nokta toplamı
+  // 0.30000000000000004 üretir ve kesin kesirli fiyat hesabında yarım kuruş
+  // sınırındaki satırları bir kuruş aşağı yuvarlar. Oran toplamı/farkı bu
+  // yüzden girilen ondalık değere geri sabitlenir.
+  function pricingRuleRate(value) {
+    return Number.isFinite(value) ? Number(value.toFixed(10)) : value;
+  }
+
   function pricingRuleCommissionForCountry(rule, countryOrGroup) {
     if (!rule || typeof rule !== 'object') return null;
     const group = pricingRuleCountryGroup(countryOrGroup);
@@ -533,7 +541,7 @@
     if (countryOrGroup == null || String(countryOrGroup).trim() === '') return royalty;
     const commission = pricingRuleCommissionForCountry(rule, countryOrGroup);
     if (commission == null) return null;
-    const total = royalty + commission;
+    const total = pricingRuleRate(royalty + commission);
     return Number.isFinite(total) && total >= 0 && total <= 100 ? total : null;
   }
 
@@ -609,8 +617,8 @@
       const merged = { ...primary };
       delete merged.countryGroup;
       merged.royalty = baseRoyalty;
-      merged.trCommission = tr && Number.isFinite(Number(tr.source.royalty)) ? Number(tr.source.royalty) - baseRoyalty : null;
-      merged.ydCommission = yd && Number.isFinite(Number(yd.source.royalty)) ? Number(yd.source.royalty) - baseRoyalty : null;
+      merged.trCommission = tr && Number.isFinite(Number(tr.source.royalty)) ? pricingRuleRate(Number(tr.source.royalty) - baseRoyalty) : null;
+      merged.ydCommission = yd && Number.isFinite(Number(yd.source.royalty)) ? pricingRuleRate(Number(yd.source.royalty) - baseRoyalty) : null;
       const trHologram = tr ? Number(tr.source.hologramCost) : null;
       const ydHologram = yd ? Number(yd.source.hologramCost) : null;
       const validTrHologram = Number.isFinite(trHologram) && trHologram >= 0;
@@ -787,6 +795,7 @@
     roundHalfUp,
     computePriorityFlags,
     pricingRuleCountryGroup,
+    pricingRuleRate,
     pricingRuleCommissionForCountry,
     pricingRuleEffectiveRoyalty,
     pricingRuleHologramForCountry,

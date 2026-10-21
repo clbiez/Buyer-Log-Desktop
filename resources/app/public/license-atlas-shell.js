@@ -9,7 +9,7 @@
  const metaKeys=['sharedAddresses','visualLibrary','customSelectOptions','processTemplates','stageClipboard'];
  function post(action,payload={}){if(ready)frame.contentWindow.postMessage({wire,action,...payload},'*');}
  function commerce(cards){const percent=v=>v==null||v===''?'—':`${Number(v).toLocaleString(ctx.locale==='en'?'en-US':'tr-TR')}%`,cost=v=>v==null||v===''?'—':`$${Number(v).toLocaleString(ctx.locale==='en'?'en-US':'tr-TR',{maximumFractionDigits:4})}`;
-  return Object.fromEntries(cards.map(c=>[c.id,{count:(c.rules||[]).length,start:E.latestContract(c.rules)?.opdStart||'',contracts:[E.latestContract(c.rules)].filter(Boolean).map(r=>({scope:(r.seasons?.length?r.seasons.join(', '):r.season||T('Tüm sezonlar','All seasons'))+(r.countryGroup?` · ${r.countryGroup}`:''),range:`${r.opdStart||'−∞'} → ${r.opdEnd||'+∞'}`,rates:[{label:'Royalty',value:percent(r.royalty)},{label:T('TR komisyon','TR commission'),value:percent(r.trCommission)},{label:T('YD komisyon','International commission'),value:percent(r.ydCommission)},{label:T('Hologram / adet','Hologram / unit'),value:cost(r.hologramCost)}]}))}]));
+  return Object.fromEntries(cards.map(c=>[c.id,{count:(c.rules||[]).length,start:E.latestContract(c.rules)?.opdStart||'',contracts:E.currentContracts(c.rules).map(r=>({scope:(r.seasons?.length?r.seasons.join(', '):r.season||T('Tüm sezonlar','All seasons'))+(r.countryGroup?` · ${r.countryGroup}`:''),range:`${r.opdStart||'−∞'} → ${r.opdEnd||'+∞'}`,rates:[{label:'Royalty',short:'Royalty',value:percent(r.royalty)},{label:T('TR komisyon','TR commission'),short:T('TR kom.','TR comm.'),value:percent(r.trCommission)},{label:T('YD komisyon','International commission'),short:T('YD kom.','Intl comm.'),value:percent(r.ydCommission)},{label:T('Hologram / adet','Hologram / unit'),short:'Hologram',value:cost(r.hologramCost)}]}))}]));
  }
  function prepareLicense(value){
   const l=copy(value);l.manufacturerVisible=l.manufacturerVisible!==false;l.supplierShowRequirements=l.supplierShowRequirements!==false;
@@ -70,9 +70,12 @@
  function environment(){
   const style=getComputedStyle(document.documentElement),tokens={};
   for(const name of ['--bg','--paper','--card2','--card','--ink','--muted','--line','--acc','--shadow-1','--shadow-2','--r-md','--r-lg']){const value=style.getPropertyValue(name).trim();if(value)tokens[name]=value;}
+  // Custom properties stay unresolved calc() strings; measure the effective UI base font.
+  const probe=document.createElement('span');probe.style.cssText='position:absolute;visibility:hidden;font-size:var(--fs-base,12.5px)';document.body.append(probe);
+  const base=parseFloat(getComputedStyle(probe).fontSize);probe.remove();if(Number.isFinite(base)&&base>0)tokens['--fs-base']=base+'px';
   return {theme:document.documentElement.dataset.theme||'light',locale:document.documentElement.lang==='en'?'en':'tr',tokens};
  }
- new MutationObserver(()=>post('environment',{environment:environment()})).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','style','lang']});
+ new MutationObserver(()=>post('environment',{environment:environment()})).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','data-font-step','style','lang']});
  function previewRecovery(backup){
   recoveryPlan=null;
   if(dirty||busy||!ctx.data?.canEdit)return;
@@ -98,7 +101,7 @@
   if(m.action==='discarded'){dirty=false;ctx.reload();}
   if(m.action==='save')saveAtlas(m.db,m.details===true);
   if(m.action==='businessBegin')post('business',{html:ctx.businessBegin(m.id)});
-  if(m.action==='businessInput')ctx.businessInput(m);
+  if(m.action==='businessInput'){const html=ctx.businessInput(m);if(html)post('business',{html});}
   if(m.action==='businessRefresh')post('business',{html:ctx.businessView()});
   if(m.action==='businessAdd')post('business',{html:ctx.businessAdd()});
   if(m.action==='businessCancel')ctx.businessCancel();
