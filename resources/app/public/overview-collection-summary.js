@@ -24,7 +24,7 @@
     ['subat','sub','february','feb'],
     ['mart','mar','march'],
     ['nisan','nis','april','apr'],
-    ['mayis','may','mayis','mayis','may'],
+    ['mayis','may'],
     ['haziran','haz','june','jun'],
     ['temmuz','tem','july','jul'],
     ['agustos','agu','august','aug'],
