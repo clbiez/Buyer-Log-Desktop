@@ -60,7 +60,8 @@ test('the early readiness bridge preserves the existing signed trial confirmatio
   assert.match(backend, /observeStartupOutput\(message\)/);
   assert.match(main, /process\.env\.BUYER_LOG_UPDATE_HEALTH_TOKEN/);
   assert.match(main, /localDbReady: Boolean\(paths && paths\.localDbPath && fs\.existsSync\(paths\.localDbPath\)\)/);
-  assert.match(launcher, /trial\.token !== expectedToken/);
+  // Whitespace must not affect the signed trial token mismatch guard.
+  assert.match(launcher, /trial\.token\s*!==\s*expectedToken/);
   assert.match(launcher, /info\.backendReady!==true\|\|info\.rendererReady!==true\|\|info\.localDbReady!==true/);
   assert.match(launcher, /restoreLocalDb\(activation\.dbSnapshot\)/);
 });
