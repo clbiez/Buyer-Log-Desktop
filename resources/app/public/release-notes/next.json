@@ -677,6 +677,35 @@
           "en": "Aligned route columns"
         }
       }
+    },
+    {
+      "id": "license-map-manual-labels",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Zaman ve adres için elle etiket",
+        "en": "Manual labels for timing and address"
+      },
+      "body": {
+        "tr": "Onay haritasında bir gönderimin Zaman ve Adres listelerine “＋ Yeni etiket…” ve “＋ Yeni adres…” eklendi. Yazdığınız etiket haritaya kaydedilir ve listede seçilebilir; yeni adres adıyla (ve isteğe bağlı adres metniyle) oluşturulur. Kullanılan etiket ve adres üretici atlasında görünür, kullanılmayanlar paylaşılmaz.",
+        "en": "In the approval map, a route’s Timing and Address lists now offer “＋ New label…” and “＋ New address…”. The label you type is saved with the map and can be picked from the list; a new address is created with its name (and optional address text). Labels and addresses in use appear in the supplier atlas; unused ones are not shared."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-map-manual-labels.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log onay haritası: Zaman listesinde elle eklenen etiket ve “Yeni etiket” seçeneği, demo veriler",
+          "en": "Real Buyer Log approval map: a manually added timing label and the “New label” option, demo data"
+        },
+        "caption": {
+          "tr": "Elle eklenen zaman etiketi ve adres",
+          "en": "Manually added timing label and address"
+        }
+      }
     }
   ]
 }
