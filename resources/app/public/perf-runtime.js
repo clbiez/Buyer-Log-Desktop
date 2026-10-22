@@ -128,7 +128,7 @@
     // v7.0.229 — Üreticiler sayfası: saf motor ve ortak rehber görünümden ÖNCE.
     // email-groups.js deferredUi ile AYNI adla listelenir; loadScript tek kez yükler.
     manufacturers:['manufacturer-cards-engine.js?rev=1','email-groups.js?rev=2','manufacturers.js?rev=1'],
-    licensecards:['license-cards-engine.js?rev=4','license-atlas-engine.js?rev=2','license-supplier-atlas.js?rev=1','license-map-editor.js?rev=1','license-cards.js?rev=6'],
+    licensecards:['license-cards-engine.js?rev=4','license-atlas-engine.js?rev=2','license-supplier-atlas.js?rev=2','license-map-editor.js?rev=1','license-cards.js?rev=6'],
     collectionTools:['pricing-workspace-engine.js?rev=2','quotations.js?rev=4','collection-analytics-engine.js','price-supplier-insights-engine.js','price-supplier-analysis.js'],
     // v9.46 — Backlog teslimat riski analizi. Sıra önemli: iki saf motor
     // görünüm katmanından ÖNCE yüklenir (görünüm ikisini de window'dan okur).
