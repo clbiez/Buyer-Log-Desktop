@@ -132,10 +132,21 @@
   function licensorList(){return `<datalist id="lcLicensorList">${E.licensorOptions(S.data?.cards||[]).filter(o=>o.value).map(o=>`<option value="${esc(o.label)}"></option>`).join('')}</datalist>`;}
   // An empty licensor is filled in place; a licensor that is set never changes (peers key
   // a card by license × licensor) — another licensor gets its own row from the details.
+  const mergeOpts=()=>({merges:S.data?.licensorMerges||{split:[]},mergeKey:window.BLBusinessRules?.licensorMergeKey||null});
   function licensorCell(row){
+    if(row.licensor&&row.merged?.length){
+      const names=row.merged.map(c=>c.licensor).join(', ');
+      return `<span class="lcLicensor lcMergedCell" title="${esc(T(`Birleştirildi: ${row.licensor} + ${names}`,`Merged: ${row.licensor} + ${names}`))}"><span>${esc(row.licensor)}</span><button type="button" class="lcMergeChip" data-lc-act="merges" data-key="${esc(row.mergeKey)}" aria-label="${esc(T('Lisansör birleştirmelerini göster','Show licensor merges'))}"><svg class="ic"><use href="#i-hierarchy"/></svg>+${row.merged.length}</button></span>`;
+    }
     if(row.licensor)return `<span class="lcLicensor" title="${esc(row.licensor)}">${esc(row.licensor)}</span>`;
     if(!canEdit()||!row.card||S.drafts.get(row.id)?.conflict)return `<span class="lcLicensor"><span class="lcWarn">${esc(T('Lisansör yok','No licensor'))}</span></span>`;
     return `<label class="lcLicensor lcLicensorEdit${S.assigning===row.id?' isBusy':''}"><input class="lcLicensorInput" data-lc-licensor="${esc(row.id)}" list="lcLicensorList" maxlength="200" placeholder="${esc(T('Lisansör yazın…','Type licensor…'))}" aria-label="${esc(row.license)} ${esc(T('lisansör','licensor'))}" ${S.assigning?'disabled':''}></label>`;
+  }
+  // Copy a row's approval map and paste it onto other rows without opening the editor.
+  function mapClipTools(row){
+    const copyBtn=row.map.length?`<button type="button" class="lcIconBtn lcClipCopy${S.clip?.id===row.id?' isOn':''}" data-lc-act="copyMap" data-id="${esc(row.id)}" title="${esc(T('Haritayı kopyala','Copy map'))}" aria-label="${esc(T('Haritayı kopyala','Copy map'))}"><svg class="ic"><use href="#i-copy"/></svg></button>`:'';
+    const pasteBtn=S.clip&&S.clip.id!==row.id&&canEdit()?`<button type="button" class="lcIconBtn lcClipPaste" data-lc-act="pasteMap" data-id="${esc(row.id)}" title="${esc(T(`“${S.clip.license}” haritasını yapıştır`,`Paste the “${S.clip.license}” map`))}" aria-label="${esc(T('Haritayı yapıştır','Paste map'))}" ${S.pasting?'disabled':''}><svg class="ic"><use href="#i-copy-plus"/></svg></button>`:'';
+    return copyBtn||pasteBtn?`<span class="lcClip">${copyBtn}${pasteBtn}</span>`:'';
   }
   function rowHtml(row,i){
     const d=S.drafts.get(row.id),dirty=isDirty(d),rule=d?ruleOf(d,d.primaryId):row.primary.rule,status=rule?E.ruleStatus(rule,E.today()):'none';
@@ -147,7 +158,7 @@
       ${licensorCell(row)}
       ${rateCell(row,d,'royalty','%')}${rateCell(row,d,'trCommission','%')}${rateCell(row,d,'ydCommission','%')}${rateCell(row,d,'hologramCost','$')}
       <span class="lcPeriod">${rule?`${statusBadge(status)}<small>${esc(range(rule))}${row.primary.extraActive?` · +${row.primary.extraActive} ${esc(T('kapsam','scopes'))}`:''}</small>`:(canEdit()&&row.licensor?`<button type="button" class="lcBtn sm" data-lc-act="addContract" data-id="${esc(row.id)}"><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Sözleşme ekle','Add contract'))}</button>`:statusBadge('none'))}</span>
-      <button type="button" class="lcMapCell" data-lc-act="map" data-id="${esc(row.id)}" title="${esc(T('Onay haritasını aç','Open approval map'))}">${miniMap(row)}</button>
+      <span class="lcMapWrap${S.clip?' hasClip':''}"><button type="button" class="lcMapCell" data-lc-act="map" data-id="${esc(row.id)}" title="${esc(T('Onay haritasını aç','Open approval map'))}">${miniMap(row)}</button>${mapClipTools(row)}</span>
       <span class="lcRowTools">
         <span class="lcRowSave"><button type="button" class="lcIconBtn isPrimary" data-lc-act="save" data-id="${esc(row.id)}" title="${esc(T('Kaydet (Enter)','Save (Enter)'))}" ${d?.saving||d?.conflict?'disabled':''}><svg class="ic"><use href="#i-check"/></svg></button><button type="button" class="lcIconBtn" data-lc-act="discard" data-id="${esc(row.id)}" title="${esc(T('Geri al (Esc)','Revert (Esc)'))}"><svg class="ic"><use href="#i-arrow-back-up"/></svg></button></span>
         <button type="button" class="lcIconBtn" data-lc-act="map" data-id="${esc(row.id)}" title="${esc(T('Haritayı düzenle','Edit map'))}"><svg class="ic"><use href="#i-binary-tree-2"/></svg></button>
@@ -182,9 +193,10 @@
       <section class="lcPane lcPaneWide"><header><b>${esc(T('Sözleşmeler','Contracts'))}</b><small>${esc(T('OPD tarihi ve sezona göre uygulanır; Royalty Calculations ile aynı kayıt.','Applied by OPD date and season; the same records as Royalty Calculations.'))}</small>${canEdit()&&card.licensor?`<button type="button" class="lcBtn sm" data-lc-act="addPeriod" data-id="${esc(card.id)}" ${dis}><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Yeni dönem','New period'))}</button>`:''}</header>
         ${d?.note?`<p class="lcNote" role="status">${esc(d.note)}</p>`:''}
         <div class="lcContractHead"><span></span><span>${esc(T('OPD başlangıç','OPD start'))}</span><span>${esc(T('OPD bitiş','OPD end'))}</span><span>${esc(T('Sezonlar','Seasons'))}</span><span lang="en">Royalty</span><span>${esc(T('TR kom.','TR comm.'))}</span><span>${esc(T('YD kom.','Intl comm.'))}</span><span lang="en">Hologram</span></div>
-        ${sorted.map(r=>contractRow(card,d,r)).join('')||`<p class="lcMuted">${esc(card.licensor?T('Henüz sözleşme yok.','No contracts yet.'):T('Sözleşme eklemek için lisansör gerekli (CP’de seçin veya ASAS’tan yenileyin).','A licensor is required to add a contract (pick it in CP or refresh from ASAS).'))}</p>`}
+        ${sorted.map(r=>contractRow(card,d,r)).join('')}${(row.merged||[]).map(m=>(m.rules||[]).length?`<p class="lcMergedHead">${esc(T(`Birleşik ad “${m.licensor}” sözleşmeleri (yalnız görüntüleme; bu adla gelen siparişlerde önce bunlar uygulanır)`,`Contracts of merged name “${m.licensor}” (view only; orders with this name use these first)`))}</p>${[...m.rules].sort((a,b)=>String(b.opdStart||'').localeCompare(String(a.opdStart||''))).map(r=>contractRow(m,{conflict:true},r)).join('')}`:'').join('')}${sorted.length?'':`<p class="lcMuted">${esc(card.licensor?T('Henüz sözleşme yok.','No contracts yet.'):T('Sözleşme eklemek için lisansör gerekli (CP’de seçin veya ASAS’tan yenileyin).','A licensor is required to add a contract (pick it in CP or refresh from ASAS).'))}</p>`}
       </section>
       <section class="lcPane"><header><b>${esc(T('Lisansör ve portal','Licensor and portal'))}</b></header>
+        ${(row.merged||[]).length?`<div class="lcMergedInfo"><span class="lcFieldLabel">${esc(T('Bu satırda birleşen lisansör adları','Licensor names merged in this row'))}</span><span class="lcMergeNames"><span class="lcMergeName">${esc(card.licensor)}</span>${row.merged.map(m=>`<i>≡</i><span class="lcMergeName">${esc(m.licensor)}</span>`).join('')}</span>${canEdit()?`<button type="button" class="lcBtn sm" data-lc-act="mergeSplit" data-key="${esc(row.mergeKey)}" ${S.merging?'disabled':''}>${esc(T('Ayır','Split'))}</button>`:''}</div>`:''}
         ${canEdit()&&card.licensor?`<div class="lcAddLicensor"><span class="lcFieldLabel">${esc(T('Başka lisansör için satır ekle','Add a row for another licensor'))}</span><div class="lcInline"><input data-lc-new-licensor="${esc(card.id)}" list="lcLicensorList" maxlength="200" placeholder="${esc(T('Lisansör adı','Licensor name'))}" aria-label="${esc(T('Yeni lisansör','New licensor'))}" ${S.assigning?'disabled':''}><button type="button" class="lcBtn sm" data-lc-act="addLicensor" data-id="${esc(card.id)}" ${S.assigning?'disabled':''}><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Satır ekle','Add row'))}</button></div><label class="lcCopy"><input type="checkbox" data-lc-copy="${esc(card.id)}" checked>${esc(T('İletişim, görsel ve onay haritasını kopyala','Copy contact, image and approval map'))}</label></div>`:''}
         <div class="lcFields">
         ${input('contactName',T('İlgili kişi','Contact person'))}${input('contactEmail',T('E-posta','Email'),'email',320)}${input('portalUrl',T('Portal','Portal'),'url',2048)}${input('portalUsername',T('Portal kullanıcı adı','Portal username'))}${input('accessReference',T('Şifre yöneticisi kaydı','Password manager record'),'text',1000)}
@@ -200,13 +212,13 @@
     </div></div>`;
   }
   function currentRows(){
-    const cards=S.data?.cards||[],rows=E.rows(cards,{query:S.query,licensor:S.licensor,status:S.status,sort:S.sort});
+    const cards=S.data?.cards||[],rows=E.rows(cards,{query:S.query,licensor:S.licensor,status:S.status,sort:S.sort,...mergeOpts()});
     // A draft whose card disappeared stays visible (blocked) until the user discards it.
     for(const [id,d] of S.drafts)if(!cards.some(c=>c.id===id))rows.unshift({...E.rows([d.snapshot])[0],card:d.snapshot});
     return rows;
   }
   function counts(){
-    const cards=S.data?.cards||[],all=E.rows(cards,{query:S.query,licensor:S.licensor});
+    const cards=S.data?.cards||[],all=E.rows(cards,{query:S.query,licensor:S.licensor,...mergeOpts()});
     return {all:all.length,active:all.filter(r=>r.primary.status==='active').length,missing:all.filter(r=>r.primary.status!=='active').length,noLicensor:all.filter(r=>!r.licensor).length,noMap:all.filter(r=>!r.map.length).length};
   }
   function render(){
@@ -230,9 +242,11 @@
         <div class="lcChips" role="group" aria-label="${esc(T('Durum','Status'))}">${chip('all','Tümü','All',n.all)}${chip('active','Güncel sözleşme','Current contract',n.active)}${chip('missing','Sözleşmesi olmayan','No current contract',n.missing)}${chip('noLicensor','Lisansörsüz','No licensor',n.noLicensor)}${chip('noMap','Haritasız','No map',n.noMap)}</div>
         <span class="lcSpacer"></span>
         ${S.data.lastImportedAt?`<small class="lcMuted">${esc(T('ASAS:','ASAS:'))} ${esc(new Date(S.data.lastImportedAt).toLocaleDateString(locale()))}</small>`:''}
+        ${(()=>{const n=E.mergeSummary(S.data.cards,mergeOpts()).filter(m=>!m.split).length;return `<button type="button" class="lcBtn${S.mergesOpen?' isOn':''}" data-lc-act="merges" aria-expanded="${Boolean(S.mergesOpen)}"><svg class="ic"><use href="#i-hierarchy"/></svg>${esc(T('Lisansör birleştirmeleri','Licensor merges'))}<small class="lcCount">${n}</small></button>`;})()}
         <button type="button" class="lcBtn" data-lc-act="templates"><svg class="ic"><use href="#i-copy-plus"/></svg>${esc(T('Aşama taslakları','Stage templates'))}<small class="lcCount">${(S.data.stageTemplates||[]).length}</small></button>
         ${canEdit()?`<button type="button" class="lcBtn" data-lc-act="refresh" ${S.refreshing?'disabled aria-busy="true"':''}><svg class="ic${S.refreshing?' isSpinning':''}"><use href="#i-refresh"/></svg>${esc(S.refreshing?T('Yenileniyor…','Refreshing…'):T('ASAS’tan yenile','Refresh from ASAS'))}</button>`:''}
-      </div>${licensorList()}
+      </div>${licensorList()}${S.mergesOpen?mergePanel():''}
+      ${S.clip?`<div class="lcClipBar" role="status"><svg class="ic"><use href="#i-copy"/></svg><span>${esc(T(`Kopyalanan harita: ${S.clip.license} · ${S.clip.licensor||'—'} (${S.clip.steps} adım). Hedef satırda yapıştır simgesine basın veya satırları seçip toplu yapıştırın.`,`Copied map: ${S.clip.license} · ${S.clip.licensor||'—'} (${S.clip.steps} steps). Press the paste icon on a row, or select rows and paste to all.`))}</span><button type="button" class="lcBtn sm" data-lc-act="clearClip">${esc(T('Bırak','Clear'))}</button></div>`:''}
       ${S.error?`<div class="lcNotice" role="alert">${esc(S.error)}</div>`:''}${S.data.syncPending?`<div class="lcNotice" role="status">${esc(T('Kaydedildi; diğer kullanıcılara aktarım bekliyor ve otomatik yeniden denenir.','Saved; sharing with other users is pending and retried automatically.'))}</div>`:''}
       <div class="lcTable${S.animate?' isEntering':''}" role="table" aria-label="${esc(T('Lisans kartları','License cards'))}">
         <div class="lcHead" role="row">
@@ -243,6 +257,7 @@
       </div>
       <div class="lcSelectionBar${S.selected.size?' isOn':''}" aria-hidden="${!S.selected.size}">
         <button type="button" class="lcBtn primary" data-lc-act="export" ${S.exporting||!S.selected.size?'disabled':''}><svg class="ic"><use href="#i-file-export"/></svg>${esc(S.exporting?T('Hazırlanıyor…','Preparing…'):T('Üretici atlası oluştur','Create supplier atlas'))}</button>
+        ${S.clip&&canEdit()?`<button type="button" class="lcBtn" data-lc-act="pasteSelected" ${S.pasting?'disabled':''}><svg class="ic"><use href="#i-copy-plus"/></svg>${esc(T('Haritayı seçilenlere yapıştır','Paste map to selected'))}</button>`:''}
         <button type="button" class="lcBtn" data-lc-act="clearSelection">${esc(T('Seçimi temizle','Clear selection'))}</button>
         <b>${S.selected.size} ${esc(T('lisans seçildi','licenses selected'))}</b><small>${esc(T('Seçtiğiniz satırlar üretici atlasına girer.','The selected rows go into the supplier atlas.'))}</small>
       </div>
@@ -347,6 +362,43 @@
     }catch(e){toast(failMessage(e),'warning');if(e.status===409&&e.code==='REVISION_CONFLICT')load();}
     finally{S.assigning='';render();}
   }
+  function mergePanel(){
+    const list=E.mergeSummary(S.data.cards,mergeOpts());
+    return `<div class="lcMergePanel" role="region" aria-label="${esc(T('Lisansör birleştirmeleri','Licensor merges'))}">
+      <header><b>${esc(T('Lisansör birleştirmeleri','Licensor merges'))}</b><small>${esc(T('Şirket türü/ülke eki dışında aynı olan lisansör adları tek satırda gösterilir. Royalty önce siparişteki adın kendi sözleşmesini, yoksa birleşik adın sözleşmesini kullanır. Yanlış birleştirmeyi “Ayır” ile geri alın.','Licensor names that differ only by company type or country suffix are shown as one row. Royalty uses the order’s own licensor contract first, otherwise the merged name’s contract. Undo a wrong merge with “Split”.'))}</small></header>
+      ${list.length?`<ul>${list.map(m=>`<li class="${m.split?'isSplit':''}${S.mergeFocus===m.key?' isFocus':''}"><span class="lcMergeNames">${m.names.map(n=>`<span class="lcMergeName">${esc(n)}</span>`).join('<i>≡</i>')}</span><small>${m.licenses.length} ${esc(T('lisans','licenses'))}: ${esc(m.licenses.slice(0,6).join(', '))}${m.licenses.length>6?'…':''}</small>${statusBadgeMerge(m.split)}${canEdit()?`<button type="button" class="lcBtn sm" data-lc-act="${m.split?'mergeJoin':'mergeSplit'}" data-key="${esc(m.key)}" ${S.merging?'disabled':''}>${esc(m.split?T('Yeniden birleştir','Merge again'):T('Ayır','Split'))}</button>`:''}</li>`).join('')}</ul>`:`<p class="lcMuted">${esc(T('Ad nüansından çoklanan lisansör yok.','No licensors are duplicated by a name nuance.'))}</p>`}
+    </div>`;
+  }
+  const statusBadgeMerge=split=>`<span class="lcBadge ${split?'isMuted':'isOk'}">${esc(split?T('Ayrı','Separate'):T('Birleşik','Merged'))}</span>`;
+  async function setMerge(key,split){
+    if(!key||S.merging||!canEdit())return;
+    S.merging=true;render();
+    try{
+      const result=await api('/api/license-cards/licensor-merges',{method:'PUT',body:JSON.stringify({key,split})});
+      if(result.cards)S.data=result;S.animate=true;
+      toast(split?T('Lisansör adları ayrıldı; her ad kendi satırında ve kendi sözleşmesiyle hesaplanır.','Licensor names split; each name has its own row and contract.'):T('Lisansör adları yeniden birleştirildi.','Licensor names merged again.'),'success');
+      await window.BLLicenseDataBridge?.rulesChanged?.(result);
+    }catch(e){toast(failMessage(e),'warning');}
+    finally{S.merging=false;render();}
+  }
+  async function pasteMaps(ids){
+    const clip=S.clip;if(!clip||S.pasting||!canEdit())return;
+    const targets=ids.map(cardOf).filter(c=>c&&c.id!==clip.id);if(!targets.length)return;
+    const replacing=targets.filter(c=>(c.processAtlas?.license?.stages||[]).length);
+    if(replacing.length&&!confirm(T(`${replacing.length} lisansın mevcut onay haritası “${clip.license}” haritasıyla değiştirilecek. Görsel, portal ve notlar korunur. Devam edilsin mi?`,`The approval map of ${replacing.length} licenses will be replaced with the “${clip.license}” map. Image, portal and notes are kept. Continue?`)))return;
+    S.pasting=true;render();let done=0,failed=0;
+    for(const target of targets){
+      const current=cardOf(target.id);if(!current){failed++;continue;}
+      try{
+        const result=await api(`/api/license-cards/${encodeURIComponent(current.id)}`,{method:'PUT',body:JSON.stringify({editToken:current.editToken,profile:{processAtlas:E.pasteMap(clip.atlas,current)}})});
+        const d=S.drafts.get(current.id),fresh=result.cards?.find(x=>x.id===current.id);
+        if(d&&!d.conflict&&fresh&&d.editToken===current.editToken){d.editToken=fresh.editToken;d.snapshot.processAtlas=fresh.processAtlas;}
+        if(result.cards)S.data=result;S.flash.add(current.id);done++;
+      }catch(_){failed++;}
+    }
+    S.pasting=false;render();
+    toast(failed?T(`${done} lisansa yapıştırıldı, ${failed} lisansta kaydedilemedi.`,`Pasted to ${done} licenses; ${failed} could not be saved.`):T(`“${clip.license}” haritası ${done} lisansa yapıştırıldı.`,`The “${clip.license}” map was pasted to ${done} licenses.`),failed?'warning':'success');
+  }
   function openMap(id){
     const c=cardOf(id);if(!c||!window.BLLicenseMapEditor)return;
     window.BLLicenseMapEditor.open({card:c,cards:S.data.cards,canEdit:canEdit(),templates:S.data.stageTemplates||[],onSaveTemplate:canEdit()?saveTemplate:null,onSave:async atlas=>{
@@ -368,6 +420,12 @@
     if(a==='expand'){S.expanded=S.expanded===id?'':id;return render();}
     if(a==='map')return openMap(id);
     if(a==='templates')return openTemplates();
+    if(a==='merges'){S.mergesOpen=!S.mergesOpen||Boolean(el.dataset.key&&!el.classList.contains('lcBtn'));S.mergeFocus=el.dataset.key||'';return render();}
+    if(a==='mergeSplit'||a==='mergeJoin')return setMerge(el.dataset.key,a==='mergeSplit');
+    if(a==='copyMap'){const c=cardOf(id);if(!c?.processAtlas)return;S.clip={id,license:c.license,licensor:c.licensor,steps:(c.processAtlas.license?.stages||[]).length,atlas:copy(c.processAtlas)};toast(T(`${c.license} haritası kopyalandı.`,`${c.license} map copied.`),'info');return render();}
+    if(a==='clearClip'){S.clip=null;return render();}
+    if(a==='pasteMap')return pasteMaps([id]);
+    if(a==='pasteSelected')return pasteMaps([...S.selected]);
     if(a==='addLicensor'){const input=S.host.querySelector(`[data-lc-new-licensor="${CSS.escape(id)}"]`),copyBox=S.host.querySelector(`[data-lc-copy="${CSS.escape(id)}"]`);return setLicensor(id,input?.value,'add',copyBox?.checked);}
     if(a==='save')return save(id);
     if(a==='discard'||a==='reopen'){dropDraft(id);return a==='reopen'?load():render();}

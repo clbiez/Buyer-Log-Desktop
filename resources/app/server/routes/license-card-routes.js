@@ -46,6 +46,13 @@ app.put('/api/license-cards/:id/licensor', area, permission, async (req, res) =>
       send(req,res,result.saved,{syncPending:result.syncPending,cardId:result.cards[0]?.id||''});
     } catch(err){error(res,err);}
   });
+app.put('/api/license-cards/licensor-merges', area, permission, async (req, res) => {
+    try {
+      const result=await service.setLicensorMerge(req.currentUser,req.body||{},{assertAuthority:authority(req,true),originClientId:clientId(req)});
+      userAccess.appendAudit(req.currentUser,'LICENSE_LICENSOR_MERGE','licenseCards',{key:String(req.body?.key||'').slice(0,200),split:req.body?.split===true});
+      send(req,res,result.saved,{syncPending:result.syncPending});
+    } catch(err){error(res,err);}
+  });
 app.post('/api/license-cards/stage-templates', area, permission, async (req, res) => {
     try {
       const result=await service.saveTemplate(req.currentUser,req.body||{},{assertAuthority:authority(req,true),originClientId:clientId(req)});

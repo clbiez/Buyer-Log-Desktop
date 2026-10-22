@@ -818,24 +818,24 @@ function pricingRuleSeasonMatches(rule, season) {
   const key = pricingKeyPart(season);
   return !!key && seasons.some(v => pricingKeyPart(v) === key);
 }
-function findSuppFobRule(rules, opd, country, season, manufacturer, license) {
+// Exact licensor first; a merged licensor name ("ERMODA UK LTD" → "ERMODA") is the fallback.
+function findSuppFobRule(rules, opd, country, season, manufacturer, license, merges) {
   const day = dateOrdinal(opd);
   const countryGroup = pricingCountryGroup(country);
-  const mk = pricingKeyPart(manufacturer), ck = pricingKeyPart(license);
-  return (Array.isArray(rules) ? rules : []).find(r => {
+  const ck = pricingKeyPart(license);
+  return BLBusinessRules.findRuleByLicensor(rules, manufacturer, r => {
     const start = dateOrdinal(r && r.opdStart), end = dateOrdinal(r && r.opdEnd);
     const dateMatches = (start == null && end == null) || (day != null && (start == null || day >= start) && (end == null || day <= end));
     return dateMatches && pricingRuleSeasonMatches(r, season) &&
       BLBusinessRules.pricingRuleCommissionForCountry(r, countryGroup) != null &&
-      pricingKeyPart(r && (r.manufacturer != null ? r.manufacturer : r.licensor)) === mk &&
       pricingKeyPart(r && r.license) === ck;
-  }) || null;
+  }, merges, r => r && (r.manufacturer != null ? r.manufacturer : r.licensor));
 }
 const decimalFraction = BLBusinessRules.decimalFraction;
 const roundFractionHalfUp = BLBusinessRules.roundFractionHalfUp;
 const calculateSuppFobWithRule = BLBusinessRules.calculateSuppFobWithRule;
-function calculateSuppFobByRule(fob, opd, country, season, manufacturer, license, rules) {
-  const rule = findSuppFobRule(rules, opd, country, season, manufacturer, license);
+function calculateSuppFobByRule(fob, opd, country, season, manufacturer, license, rules, merges) {
+  const rule = findSuppFobRule(rules, opd, country, season, manufacturer, license, merges);
   if (!rule) return { value: null, rule: null };
   return { value: calculateSuppFobWithRule(fob, rule, country), rule };
 }
@@ -843,6 +843,7 @@ function normalizeSuppFobMeta(meta) {
   if (!meta || typeof meta !== 'object') return null;
   const out = { source: meta.source === 'rule' ? 'rule' : 'manual' };
   if (meta.ruleId != null) out.ruleId = String(meta.ruleId);
+  if (meta.origin) out.origin = String(meta.origin).slice(0, 40);
   ['opdStart', 'opdEnd', 'countryGroup', 'commissionGroup', 'manufacturer', 'licensor', 'license'].forEach(k => {
     if (meta[k] != null) out[k] = String(meta[k]);
   });
@@ -2144,8 +2145,11 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     const hasSuppfobOverride = overrideHas(ov.suppfobmap, o);
     const suppfobOverride = overrideGet(ov.suppfobmap, o);
     const suppFobMeta = normalizeSuppFobMeta(overrideGet(ov.suppfobmetamap || {}, o));
-    const isRuleOverride = !!(hasSuppfobOverride && suppFobMeta && suppFobMeta.source === 'rule');
-    const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules);
+    const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules, ov.licensorMerges);
+    // A value imported from a CP update file (or stored without a source) is not a deliberate
+    // manual price: the current License Royalty contract wins over it automatically.
+    const isImportedSuppFob = hasSuppfobOverride && (!suppFobMeta || suppFobMeta.origin === 'cpupdate');
+    const isRuleOverride = !!(hasSuppfobOverride && ((suppFobMeta && suppFobMeta.source === 'rule') || (isImportedSuppFob && priced.value != null)));
     // Öncelik: siparişe uygulanmış değer > OPD aralığı+ülke grubu+Licensor+License kuralı > DTR için FOB > boş.
     const suppfob = hasSuppfobOverride && !isRuleOverride ? suppfobOverride : (priced.value != null ? priced.value : (licensor === 'DTR' ? fobRounded : null));
     const notesRec = overrideGet(ov.notesmap, o) || {};
@@ -2315,8 +2319,11 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
     const fobRounded = isFinite(o.fob) ? roundHalfUp(o.fob, 2) : null;
     const hasSuppfobOverride = overrideHas(ov.suppfobmap, o);
     const suppFobMeta = normalizeSuppFobMeta(overrideGet(ov.suppfobmetamap || {}, o));
-    const isRuleOverride = !!(hasSuppfobOverride && suppFobMeta && suppFobMeta.source === 'rule');
-    const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules);
+    const priced = calculateSuppFobByRule(fobRounded, o.opd, o.countryRaw, o.season, licensor, o.license, ov.pricingRules, ov.licensorMerges);
+    // A value imported from a CP update file (or stored without a source) is not a deliberate
+    // manual price: the current License Royalty contract wins over it automatically.
+    const isImportedSuppFob = hasSuppfobOverride && (!suppFobMeta || suppFobMeta.origin === 'cpupdate');
+    const isRuleOverride = !!(hasSuppfobOverride && ((suppFobMeta && suppFobMeta.source === 'rule') || (isImportedSuppFob && priced.value != null)));
     const suppfob = hasSuppfobOverride && !isRuleOverride ? overrideGet(ov.suppfobmap, o) : (priced.value != null ? priced.value : (licensor === 'DTR' ? fobRounded : null));
     let risk;
     if (!isActive) risk = '5-Closed';

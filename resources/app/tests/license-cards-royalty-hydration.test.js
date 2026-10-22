@@ -36,7 +36,7 @@ test('deferred CP load applies royalty before constructing filters and rendering
 test('identical royalty revisions do not trigger another whole-view recalculation', async () => {
   let recalculations=0;
   const context = {window:{SERVER_BACKED:true},state:{storeRevisions:{pricingRules:9}},
-    fetch:async()=>({ok:true,json:async()=>({revision:9,rules:[]})}),applyIncomingPricingRules:()=>false,
+    fetch:async()=>({ok:true,json:async()=>({revision:9,rules:[]})}),applyLicensorMerges:()=>false,applyIncomingPricingRules:()=>false,
     syncPricingRulesToAllLoadedViews:()=>{recalculations++;return {};}};
   vm.createContext(context);
   vm.runInContext(block('async function refreshPricingRulesFromServer', 'function pricingRuleMatchCount'),context);
@@ -61,7 +61,7 @@ test('server CP and Orders projections apply temporal TR/YD commissions and refr
 });
 
 test('a complete card response hydrates the same canonical royalty rules even when a revision hint is already known', async () => {
-  const context={window:{},state:{storeRevisions:{pricingRules:9}},applyIncomingPricingRules:(rules,revision)=>{context.rules=rules;context.revision=revision;return true;},syncPricingRulesToAllLoadedViews:()=>{context.synced=true;},refreshPricingRulesFromServer:async()=>{throw new Error('Canonical response must not refetch');}};
+  const context={window:{},state:{storeRevisions:{pricingRules:9}},applyLicensorMerges:()=>false,applyIncomingPricingRules:(rules,revision)=>{context.rules=rules;context.revision=revision;return true;},syncPricingRulesToAllLoadedViews:()=>{context.synced=true;},refreshPricingRulesFromServer:async()=>{throw new Error('Canonical response must not refetch');}};
   vm.createContext(context);
   vm.runInContext(block('window.BLLicenseDataBridge={', 'window.BLPriceSupplierAnalysisBridge='),context);
   await context.window.BLLicenseDataBridge.rulesChanged({pricingRevision:9,pricingRules:[{id:'one',royalty:16}]});
@@ -70,7 +70,7 @@ test('a complete card response hydrates the same canonical royalty rules even wh
 
 test('royalty saves use the editor revision and notify card caches only after a successful commit', async () => {
   const requests=[],invalidations=[];
-  const context={window:{SERVER_BACKED:true,BL_CLIENT_ID:'royalty-tab',BLLicenseCardsPage:{invalidate:()=>invalidations.push('saved')}},state:{storeRevisions:{pricingRules:9},overrides:{pricingRules:[{royalty:16}]}},normalizePricingRules:r=>r,saveLocalPricingRules:()=>{},syncPricingRulesToAllLoadedViews:()=>({}),fetch:async(url,options)=>{requests.push(options);return {ok:false,status:409,json:async()=>({code:'REVISION_CONFLICT'})};},appLang:'en',applyIncomingPricingRules:(rules,revision)=>{context.state.overrides.pricingRules=rules;context.state.storeRevisions.pricingRules=revision;}};
+  const context={window:{SERVER_BACKED:true,BL_CLIENT_ID:'royalty-tab',BLLicenseCardsPage:{invalidate:()=>invalidations.push('saved')}},state:{storeRevisions:{pricingRules:9},overrides:{pricingRules:[{royalty:16}]}},normalizePricingRules:r=>r,saveLocalPricingRules:()=>{},syncPricingRulesToAllLoadedViews:()=>({}),fetch:async(url,options)=>{requests.push(options);return {ok:false,status:409,json:async()=>({code:'REVISION_CONFLICT'})};},appLang:'en',applyLicensorMerges:()=>false,applyIncomingPricingRules:(rules,revision)=>{context.state.overrides.pricingRules=rules;context.state.storeRevisions.pricingRules=revision;}};
   vm.createContext(context);vm.runInContext(block('async function persistPricingRules(', '/* v10.24'),context);
   await assert.rejects(context.persistPricingRules([{royalty:13}],{expectedRevision:8}));
   assert.equal(requests[0].headers['If-Match'],'8');assert.equal(requests[0].headers['X-Client-Id'],'royalty-tab');

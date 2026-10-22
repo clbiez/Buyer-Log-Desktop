@@ -404,13 +404,29 @@ function deleteTemplate(overrides, id, body, now = new Date().toISOString()) {
     _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
   return { overrides: next, cards: changed };
 }
+/* ---- Licensor name merges ("ERMODA" ≡ "ERMODA UK LTD"): automatic by name key; the
+   user can split a wrong merge. Entries are per key with a timestamp (newest wins). ---- */
+function licensorMergesOf(overrides) {
+  const raw = overrides && overrides.licensorMerges, entries = raw && raw.entries && typeof raw.entries === 'object' && !Array.isArray(raw.entries) ? raw.entries : {};
+  return { entries, updatedAt: (raw && raw.updatedAt) || '', split: Object.keys(entries).filter(key => entries[key] && entries[key].split === true).sort() };
+}
+function setLicensorMerge(overrides, body, now = new Date().toISOString()) {
+  const key = businessRules.licensorMergeKey(body && body.key);
+  if (!key || key.length > 200 || typeof body.split !== 'boolean') fail('LICENSE_MERGE_INVALID', 'Geçerli bir lisansör birleştirmesi gerekli. / A valid licensor merge is required.');
+  const current = licensorMergesOf(overrides);
+  const entries = Object.fromEntries(Object.entries({ ...current.entries, [key]: { split: body.split, at: now } }).sort((a, b) => String(b[1].at).localeCompare(String(a[1].at))).slice(0, 500));
+  const revisions = overrides._revisions || {};
+  // Royalty matching depends on merges: pricing consumers recalculate like a rule change.
+  const next = { ...overrides, licensorMerges: { entries, updatedAt: now }, _revisions: { ...revisions, licenseCards: revisionOf(overrides, 'licenseCards') + 1, pricingRules: revisionOf(overrides, 'pricingRules') + 1 } };
+  return { overrides: next, licensorMerges: licensorMergesOf(next) };
+}
 function responseOf(overrides, canEdit) {
   const state = stateOf(overrides), rules = Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [];
   const byPair = new Map();
   for (const rule of rules) { const key = pairKey(rule.license, rule.licensor); if (!byPair.has(key)) byPair.set(key, []); byPair.get(key).push(rule); }
   return { cards: visibleCatalogue(overrides).map(card => ({ ...card, editToken: editToken(card, rules), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
     pricingRules: rules, revision: revisionOf(overrides, 'licenseCards'), pricingRevision: revisionOf(overrides, 'pricingRules'), initialized: state.initialized,
-    lastImportedAt: state.lastImportedAt, stageTemplates: templatesOf(overrides).items, canEdit: Boolean(canEdit) };
+    lastImportedAt: state.lastImportedAt, stageTemplates: templatesOf(overrides).items, licensorMerges: { split: licensorMergesOf(overrides).split }, canEdit: Boolean(canEdit) };
 }
 
-module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, setLicensor, templatesOf, normalizeTemplate, applyTemplate, linkTemplates, propagateTemplate, saveTemplate, deleteTemplate, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };
+module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, setLicensor, templatesOf, licensorMergesOf, setLicensorMerge, normalizeTemplate, applyTemplate, linkTemplates, propagateTemplate, saveTemplate, deleteTemplate, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };

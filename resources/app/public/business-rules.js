@@ -26,6 +26,37 @@
       .trim();
   }
 
+  /* Lisansör ad nüansları ("ERMODA" / "ERMODA UK LTD"): şirket türü ve ülke ekleri
+     atılınca aynı kalan adlar tek lisansör sayılır. Kullanıcı yanlış bir birleştirmeyi
+     ayırabilir (split listesi). Royalty eşleşmesi önce birebir adı, yoksa birleşik adı
+     kullanır; böylece iki adın ayrı sözleşmeleri varsa her biri kendi sözleşmesini alır. */
+  const LICENSOR_SUFFIX_TOKENS = new Set(['LTD', 'LIMITED', 'LTDSTI', 'STI', 'SIRKETI', 'AS', 'INC', 'INCORPORATED', 'LLC', 'LLP', 'PLC', 'CO', 'COMPANY', 'CORP', 'CORPORATION', 'GMBH', 'AG', 'SA', 'SAS', 'SARL', 'SRL', 'SPA', 'BV', 'NV', 'PTY', 'KG', 'OY', 'AB', 'TIC', 'SAN', 'VE', 'UK', 'US', 'USA', 'EU', 'TR']);
+  function licensorMergeKey(value) {
+    const full = turkNorm(value).replace(/[.'’]/g, '').replace(/[^A-Z0-9]+/g, ' ').trim();
+    const kept = full.split(' ').filter(token => token && !LICENSOR_SUFFIX_TOKENS.has(token));
+    return kept.length ? kept.join(' ') : full;
+  }
+  function licensorMergeSplit(merges) {
+    // Accepts the API shape {split:[keys]} or the stored shape {entries:{key:{split}}}.
+    const entries = merges && merges.entries && typeof merges.entries === 'object' ? merges.entries : null;
+    const list = entries ? Object.keys(entries).filter(key => entries[key] && entries[key].split === true) : (merges && Array.isArray(merges.split) ? merges.split : []);
+    return new Set(list.map(key => licensorMergeKey(key)).filter(Boolean));
+  }
+  function licensorsMerged(a, b, merges) {
+    const left = turkNorm(a), right = turkNorm(b);
+    if (!left || !right) return false;
+    if (left === right) return true;
+    const key = licensorMergeKey(a);
+    return Boolean(key) && key === licensorMergeKey(b) && !licensorMergeSplit(merges).has(key);
+  }
+  // Exact licensor first, then a merged licensor name; other dimensions via `matches`.
+  function findRuleByLicensor(rules, licensor, matches, merges, licensorOf = rule => rule && rule.licensor) {
+    const list = Array.isArray(rules) ? rules : [];
+    const exact = list.find(rule => matches(rule) && turkNorm(licensorOf(rule)) === turkNorm(licensor));
+    if (exact || !turkNorm(licensor)) return exact || null;
+    return list.find(rule => matches(rule) && licensorsMerged(licensor, licensorOf(rule), merges)) || null;
+  }
+
   /* CP/Backlog status hücreleri yalnız yalın enum değildir. Gerçek veride
      "Loading Operations 5.003" gibi miktar suffix'leri ve
      "Loading Operations 773 | In Transit 1.390" gibi birden fazla aşamanın
@@ -864,6 +895,9 @@
     computePriorityFlags,
     computeBacklogRisk,
     BACKLOG_HANDOVER_GRACE_DAYS,
+    licensorMergeKey,
+    licensorsMerged,
+    findRuleByLicensor,
     pricingRuleCountryGroup,
     pricingRuleRate,
     pricingRuleCommissionForCountry,

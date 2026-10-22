@@ -735,6 +735,93 @@
           "en": "Manually added timing label and address"
         }
       }
+    },
+    {
+      "id": "license-licensor-merges",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisansör ad nüansları tek satırda",
+        "en": "Licensor name variants in one row"
+      },
+      "body": {
+        "tr": "Yalnız şirket türü veya ülke ekiyle ayrılan lisansör adları (ör. ERMODA / ERMODA UK LTD) aynı lisans için tek satırda gösterilir; satırdaki “+1” rozeti ve “Lisansör birleştirmeleri” paneli hangi adların birleştiğini gösterir. Royalty hesabında siparişteki adın kendi sözleşmesi önce kullanılır, yoksa birleşik adın sözleşmesi uygulanır; CP, Siparişler ve Koleksiyon her iki adla da çalışır. Yanlış bir birleştirme “Ayır” ile geri alınır ve diğer kullanıcılara da yansır.",
+        "en": "Licensor names that differ only by a company type or country suffix (e.g. ERMODA / ERMODA UK LTD) are shown in one row per license; the “+1” badge and the “Licensor merges” panel show which names were merged. Royalty uses the order’s own licensor contract first, otherwise the merged name’s contract; CP, Orders and Collection work with both names. A wrong merge is undone with “Split”, which also reaches other users."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-licensor-merges.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları: lisansör birleştirmeleri paneli ve birleşik satır rozeti, demo veriler",
+          "en": "Real Buyer Log license cards: licensor merges panel and merged-row badge, demo data"
+        },
+        "caption": {
+          "tr": "Birleşen lisansör adları görünür ve ayrılabilir",
+          "en": "Merged licensor names are visible and can be split"
+        }
+      }
+    },
+    {
+      "id": "license-map-copy-paste",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Onay haritasını listede kopyala / yapıştır",
+        "en": "Copy / paste approval maps in the list"
+      },
+      "body": {
+        "tr": "Harita sütunundaki kopyala simgesiyle bir lisansın onay haritası kopyalanır; diğer satırlarda beliren yapıştır simgesiyle ya da satırları seçip “Haritayı seçilenlere yapıştır” ile ayrıntıya girmeden uygulanır. Adımlar, adresleri, görsel kılavuzları ve etiketleri taşınır; hedef lisansın görseli, portalı ve notları korunur. Mevcut haritanın değişeceği önceden sorulur.",
+        "en": "The copy icon in the map column copies a license’s approval map; the paste icon on other rows, or selecting rows and “Paste map to selected”, applies it without opening the details. Steps, their addresses, visual guides and labels travel; the target’s image, portal and notes are kept. You are asked before an existing map is replaced."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-map-copy-paste.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları: kopyalanan harita bilgisi ve satırlardaki yapıştır simgeleri, demo veriler",
+          "en": "Real Buyer Log license cards: copied map notice and paste icons on rows, demo data"
+        },
+        "caption": {
+          "tr": "Harita panosu ve yapıştır simgeleri",
+          "en": "Map clipboard and paste icons"
+        }
+      }
+    },
+    {
+      "id": "license-royalty-auto-apply",
+      "type": "fix",
+      "module": {
+        "tr": "License Royalty",
+        "en": "License Royalty"
+      },
+      "title": {
+        "tr": "Güncel lisans kuralları siparişlere otomatik yansır",
+        "en": "Current license rules apply to orders automatically"
+      },
+      "body": {
+        "tr": "CP güncelleme dosyasından gelen (veya kaynağı belli olmayan) Supp. FOB değerleri elle girilmiş sayılıyor ve yalnız “Tümüne Uygula” ile güncelleniyordu. Artık sipariş için geçerli bir License Royalty sözleşmesi varsa değer otomatik olarak güncel sözleşmeden hesaplanır; Lisans kartlarında veya kurallarda yapılan değişiklik CP, Siparişler, Backlog ve Koleksiyon’a hemen yansır. Kullanıcının bilerek elle girdiği Supp. FOB korunur; sözleşmesi olmayan siparişte içe aktarılan değer kalır.",
+        "en": "Supp. FOB values imported from a CP update file (or stored without a source) counted as manual and were only updated by “Apply to All”. Now, when an order has a valid License Royalty contract, the value is calculated from the current contract automatically; changes in License cards or the rules reach CP, Orders, Backlog and Collection at once. A Supp. FOB the user deliberately typed is kept; without a contract the imported value stays."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-royalty-auto-apply.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: lisans kartında royalty değişince Alt Üretici FOB değerleri otomatik güncellenmiş, demo veriler",
+          "en": "Real Buyer Log CP Tracker: Supp. FOB values updated automatically after a royalty change in License cards, demo data"
+        },
+        "caption": {
+          "tr": "Royalty değişikliği CP’ye kendiliğinden yansır",
+          "en": "A royalty change reaches CP by itself"
+        }
+      }
     }
   ]
 }

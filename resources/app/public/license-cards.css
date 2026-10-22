@@ -242,3 +242,28 @@
 .lmDrawer .lmNewTag input[data-lm-new="text"]{order:3;flex-basis:100%}
 .lmNewTag .lcIconBtn{width:var(--ctl-h-sm);height:var(--ctl-h-sm);flex:none}
 @media (prefers-reduced-motion:reduce){.lmNewTagRow{animation:none}}
+/* Licensor merges */
+.lcMergedCell{display:flex;align-items:center;gap:6px}.lcMergedCell>span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+.lcMergeChip{display:inline-flex;align-items:center;gap:2px;flex:none;height:18px;padding:0 5px;border:1px solid var(--acc);background:var(--acc-bg);color:var(--acc-ink);font:600 var(--fs-2xs) var(--sans);cursor:pointer;transition:background-color var(--bl-motion-fast) var(--bl-ease)}
+.lcMergeChip .ic{width:11px;height:11px}.lcMergeChip:hover{background:var(--card)}
+.lcBtn.isOn{border-color:var(--acc);color:var(--acc-ink);background:var(--acc-bg)}
+.lcMergePanel{margin:0 0 var(--sp-2);border:1px solid var(--line);background:var(--card);animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both}
+.lcMergePanel>header{display:flex;flex-direction:column;gap:2px;padding:6px 10px;border-bottom:1px solid var(--line)}.lcMergePanel>header b{font:600 var(--fs-sm) var(--head)}.lcMergePanel>header small{color:var(--muted);font-size:var(--fs-2xs)}
+.lcMergePanel ul{list-style:none;margin:0;padding:0}
+.lcMergePanel li{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.4fr) 72px auto;gap:10px;align-items:center;padding:5px 10px;border-top:1px solid var(--line);transition:background-color var(--bl-motion-fast) var(--bl-ease)}
+.lcMergePanel li:first-child{border-top:0}.lcMergePanel li:hover{background:var(--table-hover)}
+.lcMergePanel li.isFocus{background:var(--acc-bg)}.lcMergePanel li.isSplit .lcMergeName{opacity:.7}
+.lcMergePanel li small{color:var(--muted);font-size:var(--fs-2xs);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lcMergePanel .lcMuted{padding:8px 10px;margin:0}
+.lcMergeNames{display:flex;flex-wrap:wrap;align-items:center;gap:4px}.lcMergeNames i{font-style:normal;color:var(--muted)}
+.lcMergeName{padding:0 5px;border:1px solid var(--line);background:var(--card2);font-size:var(--fs-xs);white-space:nowrap}
+.lcMergedInfo{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--acc);background:var(--acc-bg)}
+.lcMergedHead{margin:6px 0 2px;color:var(--muted);font-size:var(--fs-2xs)}
+/* Map copy / paste in the list */
+.lcMapWrap{display:flex;align-items:center;gap:2px;min-width:0}.lcMapWrap .lcMapCell{flex:1}
+.lcClip{display:flex;gap:1px;flex:none}.lcClip .lcIconBtn{width:var(--ctl-h-sm);height:var(--ctl-h-sm)}
+.lcClipCopy{opacity:0;transition:opacity var(--bl-motion-fast) var(--bl-ease)}
+.lcRow:hover .lcClipCopy,.lcClipCopy:focus-visible,.lcClipCopy.isOn{opacity:1}.lcClipCopy.isOn{color:var(--acc)}
+.lcClipPaste{color:var(--acc);animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both}
+.lcClipBar{display:flex;align-items:center;gap:8px;margin:0 0 var(--sp-2);padding:5px 10px;border:1px dashed var(--acc);background:var(--acc-bg);color:var(--acc-ink);font-size:var(--fs-xs);animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both}.lcClipBar span{flex:1}
+@media (prefers-reduced-motion:reduce){.lcMergePanel,.lcClipPaste,.lcClipBar{animation:none}.lcClipCopy{transition:none}}

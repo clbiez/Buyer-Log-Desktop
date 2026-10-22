@@ -9,6 +9,7 @@ const clone = value => JSON.parse(JSON.stringify(value));
 const digest = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const validId = id => /^license-[a-f0-9]{24}$/.test(String(id));
 const TEMPLATES_ID = 'stage-templates';
+const MERGES_ID = 'licensor-merges';
 
 function profileSnapshot(card) {
   if (!card || !validId(card.id) || !card.license || String(card.license).length > 200 || String(card.licensor || '').length > 200) throw new Error('LICENSE_CARD_SYNC_INVALID');
@@ -28,6 +29,7 @@ function stageChange(overrides, change) {
   if(change.initialized)stage('state',{initialized:true,lastImportedAt:change.lastImportedAt||null});
   // Stage templates travel as one record; clients without template support skip unknown ids.
   if(change.stageTemplates)stage(TEMPLATES_ID,{templates:clone(change.stageTemplates)});
+  if(change.licensorMerges)stage(MERGES_ID,{merges:{entries:clone(change.licensorMerges.entries||{}),updatedAt:change.licensorMerges.updatedAt||''}});
   return {...overrides,licenseCardOutbox:outbox};
 }
 
@@ -52,6 +54,21 @@ function applyRecords(overrides, records, deps) {
     if (id === 'state') {
       if (record.initialized === true && !state.initialized) { state.initialized = true; profilesChanged = true; }
       if (record.lastImportedAt && (!state.lastImportedAt || record.lastImportedAt > state.lastImportedAt)) { state.lastImportedAt = record.lastImportedAt; profilesChanged = true; }
+      continue;
+    }
+    if (id === MERGES_ID) {
+      // Per licensor key, the newest decision (merged / split) wins.
+      const incoming = record && record.merges && record.merges.entries, local = cards.licensorMergesOf(next);
+      if (!incoming || typeof incoming !== 'object' || Array.isArray(incoming)) continue;
+      const entries = { ...local.entries };
+      for (const [key, entry] of Object.entries(incoming).slice(0, 500)) {
+        if (!key || key.length > 200 || !entry || typeof entry.split !== 'boolean' || typeof entry.at !== 'string') continue;
+        if (!entries[key] || entry.at > String(entries[key].at || '')) entries[key] = { split: entry.split, at: entry.at };
+      }
+      if (JSON.stringify(entries) !== JSON.stringify(local.entries)) {
+        next.licensorMerges = { entries, updatedAt: [local.updatedAt, String(record.merges.updatedAt || '')].sort().pop() };
+        metadataChanged = true; profilesChanged = true; rulesChanged = true;
+      }
       continue;
     }
     if (id === TEMPLATES_ID) {
@@ -154,4 +171,4 @@ function createLicenseCardSync({ deltaStore, loadOverrides, saveOverrides, ...de
   }
   return { publish, reconcile, flushOutbox };
 }
-module.exports = { COLLECTION, TEMPLATES_ID, validId, profileSnapshot, stageChange, replaceContracts, applyRecords, createLicenseCardSync };
+module.exports = { COLLECTION, TEMPLATES_ID, MERGES_ID, validId, profileSnapshot, stageChange, replaceContracts, applyRecords, createLicenseCardSync };

@@ -102,14 +102,43 @@
     return [...seen.entries()].sort((a,b)=>(a[0]==='')-(b[0]==='')||a[1].localeCompare(b[1],'tr')).map(([value,label])=>({value,label}));
   }
   // One row per card (license × licensor); several licensors are never merged.
-  function rows(cards,{query='',licensor=null,status='all',sort={key:'license',dir:'asc'},day=today()}={}){
+  /* Licensor name nuances ("ERMODA" / "ERMODA UK LTD") of one license are shown as one row.
+     mergeKey is BLBusinessRules.licensorMergeKey; split lists the keys the user separated.
+     The row's card is the richest one (map, contracts); the others stay as `merged`. */
+  function richness(card,day){return [(card.processAtlas&&card.processAtlas.license&&(card.processAtlas.license.stages||[]).length)?1:0,primaryContract(card.rules,day).status==='active'?1:0,(card.rules||[]).length,-text(card.licensor).length];}
+  function groupCards(cards,{merges=null,mergeKey=null,day=today()}={}){
+    const split=new Set((merges&&Array.isArray(merges.split)?merges.split:[]).map(k=>mergeKey?mergeKey(k):k)),groups=new Map();
+    for(const card of Array.isArray(cards)?cards:[]){
+      const mk=mergeKey&&text(card.licensor)?mergeKey(card.licensor):'';
+      const g=mk&&!split.has(mk)?`${key(card.license)}|${mk}`:`id|${card.id}`;
+      if(!groups.has(g))groups.set(g,{mergeKey:mk,members:[]});
+      groups.get(g).members.push(card);
+    }
+    return [...groups.values()].map(g=>{
+      const sorted=[...g.members].sort((a,b)=>{const x=richness(a,day),y=richness(b,day);for(let i=0;i<x.length;i++)if(x[i]!==y[i])return y[i]-x[i];return text(a.licensor).localeCompare(text(b.licensor),'tr');});
+      return {card:sorted[0],merged:sorted.slice(1),mergeKey:g.mergeKey};
+    });
+  }
+  // Every licensor key that has several spellings: shown so a wrong merge can be split.
+  function mergeSummary(cards,{merges=null,mergeKey=null}={}){
+    if(!mergeKey)return [];
+    const split=new Set((merges&&Array.isArray(merges.split)?merges.split:[]).map(k=>mergeKey(k))),byKey=new Map();
+    for(const card of Array.isArray(cards)?cards:[]){
+      if(!text(card.licensor))continue;
+      const mk=mergeKey(card.licensor);if(!byKey.has(mk))byKey.set(mk,{key:mk,names:new Map(),licenses:new Set()});
+      const e=byKey.get(mk);e.names.set(key(card.licensor),text(card.licensor));e.licenses.add(text(card.license));
+    }
+    return [...byKey.values()].filter(e=>e.names.size>1).map(e=>({key:e.key,names:[...e.names.values()].sort((a,b)=>a.length-b.length||a.localeCompare(b,'tr')),licenses:[...e.licenses].sort((a,b)=>a.localeCompare(b,'tr')),split:split.has(e.key)})).sort((a,b)=>a.key.localeCompare(b.key,'tr'));
+  }
+  function rows(cards,{query='',licensor=null,status='all',sort={key:'license',dir:'asc'},day=today(),merges=null,mergeKey=null}={}){
     const q=key(query);
-    const list=(Array.isArray(cards)?cards:[]).map(card=>{
+    const list=groupCards(cards,{merges,mergeKey,day}).map(({card,merged,mergeKey:mk})=>{
       const primary=primaryContract(card.rules,day),map=mapSummary(card);
-      return {card,id:card.id,license:text(card.license),licensor:text(card.licensor),image:cardImage(card),primary,map,hasAtlas:Boolean(card.processAtlas)};
+      return {card,id:card.id,license:text(card.license),licensor:text(card.licensor),image:cardImage(card)||merged.map(cardImage).find(Boolean)||'',primary,map,hasAtlas:Boolean(card.processAtlas),merged,mergeKey:mk};
     }).filter(row=>{
-      if(q&&!key(`${row.license} ${row.licensor}`).includes(q))return false;
-      if(licensor!=null&&key(row.licensor)!==licensor)return false;
+      const names=[row.licensor,...row.merged.map(c=>text(c.licensor))];
+      if(q&&!key(`${row.license} ${names.join(' ')}`).includes(q))return false;
+      if(licensor!=null&&!names.some(n=>key(n)===licensor))return false;
       if(status==='active')return row.primary.status==='active';
       if(status==='missing')return row.primary.status!=='active';
       if(status==='noLicensor')return !row.licensor;
@@ -151,5 +180,27 @@
   }
   function portalHref(value){try{const u=new URL(text(value));return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:'';}catch(_){return '';}}
   function symbolUrl(value){const s=text(value);return /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(s)&&s.length<=350000?s:'';}
-  return Object.freeze({RATE_FIELDS,APPROVERS,cardImage,primaryContract,parseRate,rateError,mapSummary,licensorOptions,rows,latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
+  /* Map copy/paste from the list: the steps, their addresses, guide images and custom
+     labels come from the source; the target keeps its own identity, image, portal,
+     requirements and internal notes. */
+  function pasteMap(sourceAtlas,target){
+    const src=JSON.parse(JSON.stringify(sourceAtlas||{})),own=target&&target.processAtlas?JSON.parse(JSON.stringify(target.processAtlas)):null;
+    const sl=src.license||{},tl=own&&own.license||{};
+    const used=new Set((sl.stages||[]).flatMap(s=>(s.submissions||[]).map(r=>r.addressId)).filter(Boolean));
+    const guides=new Set((sl.stages||[]).map(s=>s.visualGuideId).filter(Boolean));
+    const keepAddresses=(tl.addresses||[]).filter(a=>!(sl.addresses||[]).some(b=>b.id===a.id));
+    return {...(own||{}),version:1,
+      license:{...tl,id:target.id,name:text(target.license),agency:text(target.licensor),stages:sl.stages||[],
+        addresses:[...keepAddresses,...(sl.addresses||[]).filter(a=>used.has(a.id))],
+        portal:tl.portal||{url:'',notes:''},cover:tl.cover||'',manufacturerVisible:tl.manufacturerVisible!==false},
+      sharedAddresses:own&&own.sharedAddresses||[],
+      visualLibrary:[...((own&&own.visualLibrary)||[]).filter(v=>!guides.has(v.id)),...(src.visualLibrary||[]).filter(v=>guides.has(v.id))],
+      customSelectOptions:unionOptions((own&&own.customSelectOptions)||{},src.customSelectOptions||{})};
+  }
+  function unionOptions(a,b){
+    const out={};
+    for(const k of new Set([...Object.keys(a),...Object.keys(b)])){const seen=new Set();out[k]=[...(a[k]||[]),...(b[k]||[])].filter(o=>o&&!seen.has(o.value)&&seen.add(o.value));}
+    return out;
+  }
+  return Object.freeze({RATE_FIELDS,APPROVERS,cardImage,primaryContract,parseRate,rateError,mapSummary,licensorOptions,groupCards,mergeSummary,pasteMap,rows,latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
 });

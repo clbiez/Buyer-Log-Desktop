@@ -12,7 +12,7 @@ const env={...process.env,BUYER_LOG_DATA_ROOT:path.join(root,'app'),BUYER_LOG_SE
 for(const key of ['BUYER_LOG_DATA_ROOT','BUYER_LOG_SERVER_DATA_ROOT','BUYER_LOG_LOCAL_DATA_ROOT','BUYER_LOG_TEMP_ROOT'])fs.mkdirSync(env[key],{recursive:true});
 fs.writeFileSync(env.BUYER_LOG_CONFIG_PATH,JSON.stringify({port,sourceFolder:path.join(root,'source')}));
 const cards=appRequire('./server/lib/license-cards');
-const names=[['NORTH STAR','Demo Licensing'],['ORBIT CLUB','Demo Studio'],['STUDIO ONE','Demo Agency'],['BLUE HARBOR','Demo Rights'],['SUN VALLEY','']];
+const names=[['NORTH STAR','Demo Licensing'],['ORBIT CLUB','Demo Studio'],['STUDIO ONE','Demo Agency'],['BLUE HARBOR','Demo Rights'],['SUN VALLEY',''],['REAL MADRID','ERMODA'],['REAL MADRID','ERMODA UK LTD']];
 const state=cards.appendDiscovered({_revision:0,_revisions:{pricingRules:1},pricingRules:[]},names.map(([license,licensor])=>({license,licensor}))).overrides;
 state.licenseCards.items.filter(c=>c.licensor).forEach((c,i)=>state.pricingRules.push({id:c.id+'-rule',license:c.license,licensor:c.licensor,royalty:10+i,trCommission:2,ydCommission:3,hologramCost:.15,opdStart:'2026-01-01',opdEnd:'',seasons:[]}));
 state.pricingRules.push({id:'dtr-rule',license:'NORTH STAR',licensor:'DTR',royalty:8,trCommission:1,ydCommission:2,hologramCost:.2,opdStart:'2025-01-01',opdEnd:'',seasons:[]});
@@ -40,7 +40,7 @@ let browser;
   await page.evaluate(()=>{const show=window.showToast;window.showToast=(m,...r)=>{window.__toasts.push(String(m));return show(m,...r);};});
   const toast=re=>page.waitForFunction(src=>window.__toasts.some(t=>new RegExp(src).test(t)),re.source,{timeout:15000});
 
-  assert.equal(await rows.count(),6);assert.equal(await rows.filter({hasText:'NORTH STAR'}).count(),2,'two licensors → two rows');
+  assert.equal(await rows.count(),7,'ERMODA / ERMODA UK LTD show as one row');assert.equal(await rows.filter({hasText:'NORTH STAR'}).count(),2,'two licensors → two rows');
   assert.equal(await page.locator('iframe').count(),0,'no legacy iframe');
   await page.screenshot({path:path.join(root,'list.png')});console.log('PASS list: one row per license × licensor');
 
@@ -139,6 +139,23 @@ let browser;
   console.log('PASS supplier atlas holds only selected rows and supplier-visible content');
 
   await page.locator('#lcLicensor').selectOption({label:'DTR'});assert.equal(await rows.count(),1);await page.screenshot({path:path.join(root,'filter.png')});await page.locator('#lcLicensor').selectOption('');console.log('PASS licensor filter');
+  // Licensor merges: one row, visible merge, split and merge again.
+  const madrid=rows.filter({hasText:'REAL MADRID'});assert.equal(await madrid.count(),1);
+  await madrid.locator('.lcMergeChip').click();await page.locator('.lcMergePanel').waitFor();await page.screenshot({path:path.join(root,'merges.png')});
+  await page.locator('.lcMergePanel [data-lc-act="mergeSplit"]').click();await page.waitForFunction(()=>[...document.querySelectorAll('.lcRow[data-row]')].filter(r=>r.textContent.includes('REAL MADRID')).length===2);
+  assert.deepEqual((await api()).licensorMerges.split,['ERMODA']);
+  await page.locator('.lcMergePanel [data-lc-act="mergeJoin"]').click();await page.waitForFunction(()=>[...document.querySelectorAll('.lcRow[data-row]')].filter(r=>r.textContent.includes('REAL MADRID')).length===1);
+  await page.locator('[data-lc-act="merges"].lcBtn').click();console.log('PASS licensor spellings merged into one row; split and merge again');
+
+  // Approval map copy/paste straight from the list.
+  if(await page.locator('.lcSelectionBar.isOn').count())await page.locator('[data-lc-act="clearSelection"]').click();
+  const north=row('NORTH STAR','Demo Licensing');await north.hover();await north.locator('[data-lc-act="copyMap"]').click();await page.locator('.lcClipBar').waitFor();
+  await madrid.hover();await page.screenshot({path:path.join(root,'clip.png')});
+  await madrid.locator('[data-lc-act="pasteMap"]').click();await toast(/REAL MADRID|NORTH STAR/);await page.waitForTimeout(300);
+  const all=(await api()).cards,src=all.find(c=>c.license==='NORTH STAR'&&c.licensor==='Demo Licensing'),dst=all.find(c=>c.license==='REAL MADRID'&&c.processAtlas);
+  assert.deepEqual(dst.processAtlas.license.stages.map(st=>st.title),src.processAtlas.license.stages.map(st=>st.title));assert.equal(dst.processAtlas.license.name,'REAL MADRID');
+  await page.screenshot({path:path.join(root,'pasted.png')});await page.locator('[data-lc-act="clearClip"]').click();console.log('PASS approval map copied and pasted from the list');
+
   await page.evaluate(()=>applyLanguage('en'));await page.getByText('Create supplier atlas',{exact:false}).first().waitFor();
   await page.evaluate(()=>{applyLanguage('tr');document.documentElement.dataset.theme='dark';});await page.waitForTimeout(300);await page.screenshot({path:path.join(root,'dark.png')});
   await page.setViewportSize({width:390,height:844});await page.waitForTimeout(300);
