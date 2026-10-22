@@ -66,6 +66,8 @@
 .psaMultiSearch:focus-visible{outline:none;box-shadow:var(--focus-ring)}
 .psaMultiList{max-height:250px;margin-top:7px;overflow:auto}
 .psaMultiOption{display:flex;align-items:center;gap:8px;min-height:30px;padding:3px 6px;color:var(--ink2);font-size:var(--fs-base);cursor:pointer}
+/* The display:flex rule must not override the search's hidden attribute. */
+.psaMultiOption[hidden]{display:none}
 .psaMultiOption:hover{background:var(--hover)}
 .psaMultiOption input{margin:0;accent-color:var(--acc)}
 .psaMultiAll{border-bottom:1px solid var(--line);font-weight:600}

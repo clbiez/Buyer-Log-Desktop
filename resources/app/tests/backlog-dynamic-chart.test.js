@@ -61,6 +61,13 @@ test('Backlog chart filters series inside the chart before applying the series l
   assert.deepEqual(sanitized.seriesFilter,['A','B']);
 });
 
+test('Backlog grafik seri araması gizlenen sonuçları CSS ile tekrar görünür yapmaz', () => {
+  assert.match(CSS,/\.backlogChartFilterList label\[hidden\]\s*\{\s*display\s*:\s*none\b/);
+  const source=fs.readFileSync(path.join(ROOT,'public','backlog-chart.js'),'utf8');
+  assert.match(source,/data-backlog-chart-filter-search/);
+  assert.match(source,/label\.hidden=q&&/,'arama olayı eşleşmeyen seri satırına hidden atar');
+});
+
 test('Backlog chart TradingView-style ranges open at a readable window and support presets', () => {
   const categories=Array.from({length:60},(_,i)=>{
     const d=new Date(2026,0,5+i*7);
