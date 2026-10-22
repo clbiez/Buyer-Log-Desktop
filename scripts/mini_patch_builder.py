@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
-"""Offline-only Buyer Log 7.0.293 -> pinned-main application hotfix packager."""
+"""Build a version-preserving, offline-only Buyer Log 7.0.293 mini patch.
+
+Supported input files: exact 7.0.293 STABLE runtime, or a partial/complete
+application of the earlier 2026-10-21 mini patch. Never touches the updater.
+"""
 from __future__ import annotations
+import base64
 import datetime as dt
 import difflib
 import hashlib
@@ -10,9 +15,10 @@ import subprocess
 import zipfile
 
 BASE = "6501210b7faf051e4d8f2997dd0d48f0c9b64647"
-HEAD = "d6149bcb440530a20c30adecf201d1d989afd507"
+PREVIOUS_PATCH = "d6149bcb440530a20c30adecf201d1d989afd507"
+HEAD = "e54ba4eb8dfcc677907ed023955c7490de15fcd8"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "dist" / "BuyerLog-7.0.293-Sonrasi-MiniPatch-20261021.zip"
+OUTPUT = ROOT / "dist" / "BuyerLog-7.0.293-Sonrasi-MiniPatch-Guncel-20261022.zip"
 
 def git(*args: str) -> bytes:
     return subprocess.check_output(["git", *args], cwd=ROOT)
@@ -23,88 +29,108 @@ def blob(ref: str, path: str) -> bytes:
 def digest(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()
 
-def apply(lines: list[str], edits: list[list]) -> list[str]:
-    lines = list(lines)
-    for at, count, insert in reversed(edits):
-        lines[at:at + count] = insert
-    return lines
+def create_edits(before: bytes, after: bytes, name: str) -> list:
+    original = before.decode("utf-8").splitlines(keepends=True)
+    updated = after.decode("utf-8").splitlines(keepends=True)
+    changes = [
+        [i1, i2 - i1, updated[j1:j2]]
+        for tag, i1, i2, j1, j2
+        in difflib.SequenceMatcher(a=original, b=updated, autojunk=True).get_opcodes()
+        if tag != "equal"
+    ]
+    result = list(original)
+    for at, count, insert in reversed(changes):
+        result[at:at + count] = insert
+    if "".join(result).encode("utf-8") != after:
+        raise RuntimeError(f"round-trip diff validation failed: {name}")
+    return changes
 
-assert json.loads(blob(BASE, "resources/app/package.json"))["version"] == "7.0.293"
-assert json.loads(blob(HEAD, "resources/app/package.json"))["version"] == "7.0.293"
-names = git("diff", "--name-only", "--diff-filter=AM", BASE, HEAD, "--",
-            "resources/app/public", "resources/app/server").decode().splitlines()
+for ref in (BASE, PREVIOUS_PATCH, HEAD):
+    assert json.loads(blob(ref, "resources/app/package.json"))["version"] == "7.0.293", ref
+status_rows = git("diff", "--name-status", "--diff-filter=AM", BASE, HEAD,
+                  "--", "resources/app/public", "resources/app/server").decode().splitlines()
 entries = []
-for name in names:
+for row in status_rows:
+    status, name = row.split("\t", 1)
     if name.startswith("resources/app/public/release-notes/"):
         continue
     if name.lower().endswith((".png", ".jpg", ".webp", ".gif", ".svg", ".map")):
         continue
     if not name.startswith(("resources/app/public/", "resources/app/server/")):
         raise RuntimeError(f"unexpected patch path: {name}")
-    before, after = blob(BASE, name), blob(HEAD, name)
-    original = before.decode("utf-8").splitlines(keepends=True)
-    updated = after.decode("utf-8").splitlines(keepends=True)
-    edits = [
-        [i1, i2 - i1, updated[j1:j2]]
-        for tag, i1, i2, j1, j2
-        in difflib.SequenceMatcher(a=original, b=updated, autojunk=True).get_opcodes()
-        if tag != "equal"
-    ]
-    if "".join(apply(original, edits)).encode("utf-8") != after:
-        raise RuntimeError(f"round-trip validation failed: {name}")
-    entries.append({
-        "path": name.removeprefix("resources/app/"),
-        "before_sha256": digest(before),
-        "after_sha256": digest(after),
-        "edits": edits,
-    })
-if len(entries) != 23:
-    raise RuntimeError(f"expected 23 runtime file changes, got {len(entries)}")
-for e in entries:
-    if e["path"].startswith(("electron/", "scripts/")) or "update" in e["path"].lower():
-        raise RuntimeError(f"updater-safety violation: {e['path']}")
+    relative = name.removeprefix("resources/app/")
+    if ("update" in relative.lower() or relative.startswith(("electron/", "scripts/"))
+            or "package.json" in relative or "config.json" in relative):
+        raise RuntimeError(f"updater protection blocked: {name}")
+    after = blob(HEAD, name)
+    record = {"path": relative, "after_sha256": digest(after)}
+    if status == "A":
+        record.update(kind="added", payload_b64=base64.b64encode(after).decode("ascii"))
+    elif status == "M":
+        original = blob(BASE, name)
+        record.update(kind="modified", variants=[{
+            "before_sha256": digest(original),
+            "edits": create_edits(original, after, name)
+        }])
+        older = blob(PREVIOUS_PATCH, name)
+        if digest(older) not in (digest(original), digest(after)):
+            record["variants"].append({
+                "before_sha256": digest(older),
+                "edits": create_edits(older, after, name)
+            })
+    else:
+        raise RuntimeError(f"unsupported change: {status} {name}")
+    entries.append(record)
+if len(entries) != 44:
+    raise RuntimeError(f"expected 44 application files, got {len(entries)}")
+
 manifest = {
-    "schema": 1,
+    "schema": 2,
     "product": "Buyer Log Desktop",
     "base_version": "7.0.293",
     "base_commit": BASE,
+    "previous_patch_commit": PREVIOUS_PATCH,
     "target_commit": HEAD,
-    "updated_at_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
-    "mode": "app-runtime-only-no-version-change",
-    "note": "Not an official signed STABLE release. Only verified 7.0.293 app-core files are edited.",
+    "created_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
+    "mode": "offline-app-runtime-only-no-version-change",
+    "note": "Unofficial manually-applied hotfix, not a signed STABLE release. Update mechanism is not changed.",
     "files": entries,
 }
 payload = json.dumps(manifest, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-guide = """BUYER LOG 7.0.293 SONRASI MINI PATCH - 21.10.2026
+guide = """BUYER LOG 7.0.293 SONRASI MINI PATCH - GUNCEL 22.10.2026
+HEDEF COMMIT: e54ba4eb8dfcc677907ed023955c7490de15fcd8
 
-Bu ZIP internetsiz calisir; GitHub, Python veya Git kurulumu istemez.
-7.0.293 kurulumunun uzerine, sadece uygulama kodundaki 23 dosyanin
-7.0.293 -> belirtilen kaynak commit degisikliklerini uygular.
+Bu ZIP internetsiz calisir. GitHub, Python, Node.js veya Git istemez.
+7.0.293 STABLE veya onceki 21.10.2026 mini patch'li 7.0.293
+uzerine en guncel runtime degisikliklerini uygular.
+44 uygulama dosyasi (40 degisen dosya + 4 yeni JS dosyasi).
+Kod/yayin kanali/surum/updater/launcher/konfigurasyon bozulmaz.
 
-KULLANIM:
-1. ZIP'i yerel bir klasore cikarin.
-2. BuyerLog.exe'yi tamamen kapatin.
-3. UYGULA.cmd dosyasina cift tiklayin.
-4. BuyerLog.exe'nin bulundugu klasorun TAM YOLUNU girin.
-5. On kontrol temizse E yazarak onaylayin.
+1) ZIP'i bir klasore cikarin, BuyerLog.exe'yi tamamen kapatin.
+2) KONTROL.cmd ile uyumlulugu ve SHA256 denetimini test edin.
+3) UYGULA.cmd dosyasini calistirin.
+4) BuyerLog.exe'nin yer aldigi kurulum klasorunu girin.
+5) Once dosyalar denetlenir, sonra E ile onay verirseniz uygulanir.
+6) Sorun olursa GERI_AL.cmd ile onceki dosyalara donebilirsiniz.
 
-GUVELIK:
-- Ilk once surum ve her dosyanin SHA256 kimligi dogrulanir.
-- Dosyalar yazilmadan yeni hallerinin SHA256 kimligi de test edilir.
-- Tum dosyalarin yedegi alinir, islem hatasinda geri alma denenir.
-- Resmi updater, launcher, version, config, veritabani, veri, log ve
-  STABLE / TEST kaynagi dosyalari degistirilmez.
-- Resmi sonraki surum geldiğinde normal updater kullanilabilir.
-- Kontrol hatasinda zorlamayin: bu paket sadece eslesen 7.0.293 icindir.
-- Bu paket resmi, imzali STABLE surumu degildir; manuel hotfix'tir.
+- Paket hicbir harici dosya indirmez.
+- Uygulama dosyalari degismeden tum dosyalarin SHA256 kontrolu yapilir.
+- Her dosyanin sonucu SHA256 ile dogrulanir.
+- Degisen dosyalar yedeklenir; yeni eklenen dosyalar geri almada silinir.
+- Veritabani, profil, kullanici verileri, updater ve STABLE kanali korunur.
+- Paket temel dosyayi tanimazsa durur; zorlayarak degistirmez.
+- Resmi STABLE yayin degildir. Bazi runtime degisiklikleri test ediliyor
+  olabilir. Once pilot bilgisayarda dogrulayin.
+- Resmi yeni surum geldiginde normal otomatik guncelleme devam eder.
 
-KONTROL: KONTROL.cmd
-GERI AL: GERI_AL.cmd
+KONTROL.cmd = Yalnizca denetim
+UYGULA.cmd = Uygulama
+GERI_AL.cmd = Son uygulamayi geri alma
 """
 cmds = {
-    "UYGULA.cmd": "@echo off\r\nchcp 65001 >nul\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%~dp0Apply-MiniPatch.ps1\"\r\npause\r\n",
-    "KONTROL.cmd": "@echo off\r\nchcp 65001 >nul\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%~dp0Apply-MiniPatch.ps1\" -Check\r\npause\r\n",
-    "GERI_AL.cmd": "@echo off\r\nchcp 65001 >nul\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File \"%~dp0Apply-MiniPatch.ps1\" -Rollback\r\npause\r\n",
+    "UYGULA.cmd": '@echo off\r\nchcp 65001 >nul\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Apply-MiniPatch.ps1"\r\npause\r\n',
+    "KONTROL.cmd": '@echo off\r\nchcp 65001 >nul\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Apply-MiniPatch.ps1" -Check\r\npause\r\n',
+    "GERI_AL.cmd": '@echo off\r\nchcp 65001 >nul\r\npowershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0Apply-MiniPatch.ps1" -Rollback\r\npause\r\n',
 }
 OUTPUT.parent.mkdir(parents=True, exist_ok=True)
 with zipfile.ZipFile(OUTPUT, "w", compression=zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
@@ -114,5 +140,6 @@ with zipfile.ZipFile(OUTPUT, "w", compression=zipfile.ZIP_DEFLATED, compressleve
     for name, content in cmds.items():
         archive.writestr(name, content)
 print(f"created: {OUTPUT}")
-print(f"files: {len(entries)}; payload: {len(payload)} bytes; ZIP: {OUTPUT.stat().st_size} bytes")
+print(f"files: {len(entries)}, modified: {sum(e['kind'] == 'modified' for e in entries)}, added: {sum(e['kind'] == 'added' for e in entries)}")
+print(f"manifest: {len(payload)} bytes, ZIP: {OUTPUT.stat().st_size} bytes")
 print(f"sha256: {digest(OUTPUT.read_bytes())}")
