@@ -124,10 +124,10 @@ function Safe-Target([string] $Core, [string] $Relative, [bool] $AllowMissing = 
 function Main {
   $manifest = Read-Json (Join-Path $PatchFolder 'patch-manifest.json')
   if ([int]$manifest.schema -ne 2 -or [string]$manifest.base_version -ne $ExpectedVersion -or
-      [string]$manifest.target_commit -ne 'e54ba4eb8dfcc677907ed023955c7490de15fcd8') {
+      [string]$manifest.target_commit -ne '920082a0c970a5c31d95627dc5cdb5e82c15ef71') {
     throw 'Patch manifesti surum veya sema acisindan uyumsuz.'
   }
-  if (@($manifest.files).Count -ne 44) { throw 'Patch manifesti eksik / bozuk (44 dosya bekleniyor).' }
+  if (@($manifest.files).Count -ne 50) { throw 'Patch manifesti eksik / bozuk (50 dosya bekleniyor).' }
   $root = Find-Install
   $core = Active-Core $root
   Write-Host ''
@@ -195,9 +195,6 @@ function Main {
       $already++
       continue
     }
-    if ($kind -eq 'added') {
-      throw "PATCH DURDURULDU: yeni dosya zaten farkli icerikle var: $relative"
-    }
     $variant = @($record.variants) | Where-Object { [string]$_.before_sha256 -eq $current } | Select-Object -First 1
     if (-not $variant) {
       throw "PATCH DURDURULDU: '$relative' eski veya onceki patch dosyasiyla eslesmiyor. Hicbir dosya degistirilmedi."
@@ -206,7 +203,10 @@ function Main {
     if ((Hash-Hex $updated) -ne [string]$record.after_sha256) {
       throw "PATCH DURDURULDU: '$relative' sonuc kimligi dogrulanamadi."
     }
-    $changes.Add(@{kind=$kind;path=$relative;target=$target;bytes=$updated;record=$record;before_sha256=$current})
+    # A new upstream file may already exist from an earlier manual patch.
+    # Update and back it up as an existing file to make rollback lossless.
+    $effectiveKind = 'modified'
+    $changes.Add(@{kind=$effectiveKind;path=$relative;target=$target;bytes=$updated;record=$record;before_sha256=$current})
   }
   Write-Host "Yazilacak dosya: $($changes.Count); zaten guncel: $already"
   Write-Host 'Updater / launcher / version / data / veritabani: DOKUNULMUYOR'
