@@ -170,6 +170,13 @@ function templateInstruction(definition, { name = '', lang = 'tr' } = {}) {
     lines.push(english
       ? `Layout: model cards are placed ${grid} (${BLOutputLayout.perPage(def.layout)} per ${def.format === 'pptx' ? 'slide' : 'page'}) by Buyer Log. Put model visuals in ${def.format === 'pptx' ? 'ONE "gallery" slide per group (all items; Buyer Log continues on extra slides)' : 'one <div class="bl-gallery"> per group'}; do not split them yourself.`
       : `Yerleşim: model kartlarını Buyer Log ${grid} ızgarasına (${def.format === 'pptx' ? 'slayt' : 'sayfa'} başına ${BLOutputLayout.perPage(def.layout)}) dizer. Model görsellerini ${def.format === 'pptx' ? 'grup başına TEK "gallery" slaytına (tüm öğeler; devam slaytlarını Buyer Log açar)' : 'grup başına tek <div class="bl-gallery"> içine'} koy; kendin bölme.`);
+    // Kullanıcının Yerleşim'de seçtiği kart bilgileri: her kartta bu alanlar (bu sırayla).
+    const fields = Array.isArray(def.layout.cardFields) ? def.layout.cardFields : [];
+    if (fields.length) {
+      lines.push(english
+        ? `Model card details: give every card these fields in this order, values copied exactly from the source row (leave a field out if the source has no value): ${fields.join(', ')}.`
+        : `Model kartı bilgileri: her karta şu alanları bu sırayla ver, değerleri kaynak satırdan birebir al (kaynakta değer yoksa alanı yazma): ${fields.join(', ')}.`);
+    }
   }
   if (def.instructions) lines.push(`${english ? 'Additional instructions from the user' : 'Kullanıcının ek talimatı'}:\n${def.instructions}`);
   return lines.join('\n');

@@ -164,8 +164,8 @@ test('arayüz: İçerik/Yerleşim geçişi, kaydırıcılar, ızgara seçici, ha
   assert.match(editor, /data-lay="\$\{key\}"/);
   assert.match(editor, /data-gp="\$\{c\},\$\{r\}"/);
   assert.match(editor, /data-lay-preset="\$\{key\}"/);
-  assert.match(editor, /LAY\(\)\.galleryCells\(l,/, 'önizleme sunucuyla aynı hücre hesabı');
-  assert.match(editor, /LAY\(\)\.paginateGallery\(ed\.data\.body/);
+  assert.match(editor, /LAY\(\)\.expandGalleries\(slides, l,/, 'önizleme sunucuyla aynı hücre/paketleme hesabı');
+  assert.match(editor, /LAY\(\)\.prepareReport\(ed\.data\.body/, 'rapor önizlemesi sunucuyla aynı hazırlık (kart bilgisi, grup, sayfa)');
   assert.match(editor, /layout: ed\.data\.layout \|\| null/, 'rapor yerleşimi oluşturmaya gider');
   for (const text of ["L('Yerleşim', 'Layout')", "L('Başlık bandı yüksekliği', 'Title band height')", "L('Model ızgarası', 'Model grid')", "L('Yerleşimi de kaydet', 'Save the layout too')"]) assert.ok(editor.includes(text), text);
   const shared = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-layout.js'), 'utf8');

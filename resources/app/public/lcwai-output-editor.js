@@ -31,7 +31,7 @@
   const FORMAT_NAME = { pdf: 'PDF', pptx: 'PowerPoint', xlsx: 'Excel', html: 'HTML' };
   const FORMAT_ICON = { pdf: 'PDF', pptx: 'PPT', xlsx: 'XLSX', html: 'HTML' };
   // Sunucu sınırlarıyla aynı (output-contracts LIMITS); aşan kısım istemcide engellenir.
-  const LIMITS = { slides: 40, bullets: 8, kpis: 6, tableCols: 8, tableRows: 60, chartCategories: 12, chartSeries: 3, gallery: 6, sheets: 10, sheetCols: 40, sheetRows: 5000, sheetKpis: 20 };
+  const LIMITS = { slides: 40, bullets: 8, kpis: 6, tableCols: 8, tableRows: 60, chartCategories: 12, chartSeries: 3, gallery: 60, cardFields: 12, sheets: 10, sheetCols: 40, sheetRows: 5000, sheetKpis: 20 };
   const PAGE_ROWS = 100;
 
   const LAYOUTS = () => [
@@ -84,6 +84,8 @@
     const kind = el.dataset.kind || '';
     if (el.type === 'checkbox') return el.checked;
     if (kind === 'lines') return String(el.value || '').split('\n').map(line => line.trim()).filter(Boolean);
+    // Kart bilgisi: her satır "Alan: değer".
+    if (kind === 'fields') return String(el.value || '').split('\n').map(line => /^([^:]{1,40}):\s*(.+)$/.exec(line.trim())).filter(Boolean).map(match => ({ label: match[1].trim(), value: match[2].trim(), tone: '' })).slice(0, LIMITS.cardFields);
     if (kind === 'number') { const number = Number(String(el.value || '').replace(',', '.')); return Number.isFinite(number) ? number : 0; }
     if (kind === 'cell') { const text = String(el.value == null ? '' : el.value); return text.startsWith('=') && text.length > 1 ? { f: text.slice(1) } : text; }
     return String(el.value == null ? '' : el.value);
@@ -339,14 +341,25 @@
       <button type="button" class="lcwaiBtn" data-list-add="${esc(path)}" data-template="kpi" data-max="${max}"${kpis.length >= max ? ' disabled' : ''}>＋ ${esc(L('KPI ekle', 'Add KPI'))}</button></div>`;
   }
 
+  const fieldsText = fields => (Array.isArray(fields) ? fields : []).map(item => `${item.label}: ${item.value}`).join('\n');
+  /* Model kartı: görsel, model adı, grup, ton; altında alt başlık, not ve
+     kart bilgileri ("Alan: değer" satırları). Kartta hangi bilgilerin
+     görüneceği Yerleşim adımında seçilir. */
   function galleryEditor(base, items) {
-    const rows = items.map((item, index) => `<div class="lcwaiEdKpi is-gallery">
-        ${input(`${base}.items.${index}.image`, item.image, { placeholder: L('Görsel (ör. KOL-3)', 'Image (e.g. KOL-3)') })}
-        ${input(`${base}.items.${index}.title`, item.title, { placeholder: L('Model / başlık', 'Model / title') })}
-        ${input(`${base}.items.${index}.subtitle`, item.subtitle, { placeholder: L('Alt başlık', 'Subtitle') })}
-        ${input(`${base}.items.${index}.note`, item.note, { placeholder: L('Not', 'Note') })}
-        ${select(`${base}.items.${index}.tone`, TONES(), item.tone || 'info')}
-        <button type="button" class="lcwaiEdIconBtn" data-list-del="${esc(base)}.items" data-index="${index}" aria-label="${esc(L('Sil', 'Delete'))}" title="${esc(L('Sil', 'Delete'))}">×</button></div>`).join('');
+    const rows = items.map((item, index) => {
+      const path = `${base}.items.${index}`;
+      const count = (item.fields || []).length;
+      return `<div class="lcwaiEdGalleryItem"><div class="lcwaiEdKpi is-gallery">
+        ${input(`${path}.image`, item.image, { placeholder: L('Görsel (ör. KOL-3)', 'Image (e.g. KOL-3)') })}
+        ${input(`${path}.title`, item.title, { placeholder: L('Model / başlık', 'Model / title') })}
+        ${input(`${path}.group`, item.group, { placeholder: L('Grup (isteğe bağlı)', 'Group (optional)') })}
+        ${select(`${path}.tone`, TONES(), item.tone || 'info')}
+        <button type="button" class="lcwaiEdIconBtn" data-list-del="${esc(base)}.items" data-index="${index}" aria-label="${esc(L('Sil', 'Delete'))}" title="${esc(L('Sil', 'Delete'))}">×</button></div>
+        <details class="lcwaiEdMore lcwaiEdCardMore"><summary>${esc(L(`Kart bilgileri (${count})`, `Card details (${count})`))}</summary>
+          <div class="lcwaiEdRow">${field(L('Alt başlık', 'Subtitle'), input(`${path}.subtitle`, item.subtitle, { placeholder: L('İsteğe bağlı', 'Optional') }))}${field(L('Not', 'Note'), input(`${path}.note`, item.note, { placeholder: L('İsteğe bağlı', 'Optional') }))}</div>
+          ${field(L('Bilgiler', 'Details'), area(`${path}.fields`, fieldsText(item.fields), { kind: 'fields', rows: 4, placeholder: L('Renk kodu: 19-1724 TCX\nFit: Regular\nAdet: 1.200\nHedef fiyat: 4,20 USD', 'Colour code: 19-1724 TCX\nFit: Regular\nQuantity: 1,200\nTarget price: USD 4.20') }), L(`Her satır “Alan: değer” · en fazla ${LIMITS.cardFields}`, `One “Field: value” per line · up to ${LIMITS.cardFields}`))}
+        </details></div>`;
+    }).join('');
     return `<div class="lcwaiEdBlock"><div class="lcwaiEdBlockHead"><b>${esc(L('Galeri kartları', 'Gallery cards'))}</b><small>${esc(`${items.length}/${LIMITS.gallery}`)}</small></div>${rows}
       <button type="button" class="lcwaiBtn" data-list-add="${esc(base)}.items" data-template="gallery" data-max="${LIMITS.gallery}"${items.length >= LIMITS.gallery ? ' disabled' : ''}>＋ ${esc(L('Kart ekle', 'Add card'))}</button><small class="lcwaiNote">${esc(imageKeysHint())}</small></div>`;
   }
@@ -611,7 +624,42 @@
     const cells = Array.from({ length: Math.min(24, sample.columns * sample.rows) }, () => '<i></i>').join('');
     return `<span class="lcwaiLayThumb" style="grid-template-columns:repeat(${sample.columns},1fr)">${cells}</span>`;
   }
-  const hasGallery = () => (ed.format === 'pptx' ? (ed.data.slides || []).some(slide => slide.layout === 'gallery') : ed.format === 'xlsx' ? false : /class="[^"]*\bbl-gallery\b/.test(ed.data.body || ''));
+  const hasGallery = () => (ed.format === 'pptx' ? (ed.data.slides || []).some(slide => slide.layout === 'gallery') : ed.format === 'xlsx' ? false : /class="[^"]*\bbl-(gallery|groups)\b/.test(ed.data.body || ''));
+
+  /* ---- Kart bilgileri: hangi alanlar, hangi sırayla ----
+     Seçenekler: LCW AI'ın kartlara yazdığı alanlar + kaynak kayıttaki diğer
+     sütunlar (draft.records; değer Buyer Log verisinden gelir). */
+  function cardSourceItems() {
+    if (ed.format === 'pptx') return (ed.data.slides || []).filter(slide => slide.layout === 'gallery').flatMap(slide => slide.items || []);
+    const body = ed.data.body || '';
+    const labels = [...body.matchAll(/<dt\b[^>]*>([\s\S]*?)<\/dt>/gi)].map(match => match[1].replace(/<[^>]*>/g, '').replace(/&amp;/g, '&').trim()).filter(Boolean);
+    const tokens = [...new Set([...body.matchAll(/data-bl-image="([^"]+)"/g)].map(match => match[1].toUpperCase()))];
+    return [{ fields: labels.map(label => ({ label, value: '·' })) }, ...tokens.map(image => ({ image }))];
+  }
+  function cardFieldState() {
+    const options = LAY().availableCardFields(cardSourceItems(), ed.draft.records || {});
+    // Seçim yapılmadıysa varsayılan önemli bilgiler: renk kodu, fit, adet, hedef fiyat.
+    const chosen = Array.isArray(ed.data.layout.cardFields) ? ed.data.layout.cardFields : options.defaults;
+    const key = LAY().fieldKey;
+    const chosenKeys = new Set(chosen.map(key));
+    const rest = [...options.ai, ...options.source].filter(label => !chosenKeys.has(key(label)));
+    const sourceKeys = new Set(options.source.map(key));
+    return { chosen, rest, isSource: label => sourceKeys.has(key(label)) && !options.ai.some(item => key(item) === key(label)) };
+  }
+  function setCardFields(list) { setLayout({ ...ed.data.layout, cardFields: list }, { history: true }); renderLayoutPanel($('[data-ed-main]')); }
+  function cardFieldsPanel() {
+    const state = cardFieldState();
+    const tag = label => (state.isSource(label) ? `<small class="lcwaiLayFieldSrc" title="${esc(L('Değer Buyer Log kaynak verisinden yazılır', 'The value is written from Buyer Log source data'))}">${esc(L('Kaynak', 'Source'))}</small>` : '');
+    const chosen = state.chosen.map((label, index) => `<li class="lcwaiLayField is-on"><label><input type="checkbox" checked data-lay-field="${esc(label)}"> <span>${esc(label)}</span>${tag(label)}</label>
+        <button type="button" class="lcwaiEdIconBtn" data-lay-field-move="${index},-1"${index ? '' : ' disabled'} aria-label="${esc(L('Yukarı', 'Up'))}" title="${esc(L('Yukarı', 'Up'))}">↑</button><button type="button" class="lcwaiEdIconBtn" data-lay-field-move="${index},1"${index < state.chosen.length - 1 ? '' : ' disabled'} aria-label="${esc(L('Aşağı', 'Down'))}" title="${esc(L('Aşağı', 'Down'))}">↓</button></li>`).join('');
+    const rest = state.rest.map(label => `<li class="lcwaiLayField"><label><input type="checkbox" data-lay-field="${esc(label)}"> <span>${esc(label)}</span>${tag(label)}</label></li>`).join('');
+    const empty = !state.chosen.length && !state.rest.length ? `<p class="lcwaiNote">${esc(L('Kartlarda henüz bilgi alanı yok. İçerik adımında kartlara “Alan: değer” satırları ekleyebilirsiniz.', 'The cards have no detail fields yet. Add “Field: value” lines to the cards in the Content step.'))}</p>` : '';
+    return `<section class="lcwaiLayGroup"><h4>${esc(L('Kart bilgileri', 'Card details'))}</h4>
+      <p class="lcwaiNote">${esc(L('Görselin altında yazacak bilgileri işaretleyin, oklarla sıralayın. Varsayılan: model adı, renk kodu, fit, adet, hedef fiyat. “Kaynak” alanların değeri Buyer Log verisinden gelir.', 'Tick the details printed under the picture and order them with the arrows. Default: model name, colour code, fit, quantity, target price. “Source” fields take their value from Buyer Log data.'))}</p>
+      ${empty}<ul class="lcwaiLayFields" role="group" aria-label="${esc(L('Kart bilgileri', 'Card details'))}">${chosen}${rest}</ul>
+      <div class="lcwaiLayFlags"><span>${esc(L('Kartta göster:', 'Show on card:'))}</span>${flag('showTitle', L('Model adı', 'Model name'))}${flag('showFieldLabels', L('Alan adları', 'Field names'))}${flag('showSubtitle', L('Alt bilgi', 'Subtitle'))}${flag('showNote', L('Not', 'Note'))}</div>
+      ${Array.isArray(ed.data.layout.cardFields) ? `<button type="button" class="lcwaiBtn is-link" data-lay-fields-reset>${esc(L('Varsayılan bilgilere dön', 'Back to the default details'))}</button>` : ''}</section>`;
+  }
 
   function renderLayoutPanel(main) {
     if (!main || !LAY()) return;
@@ -623,7 +671,8 @@
       ? slider('titleSize', L('Başlık yazı boyutu', 'Title text size')) + slider('bodySize', L('Hücre yazı boyutu', 'Cell text size')) + slider('imageSize', L('Model görseli boyutu', 'Model image size'))
       : slider('titleSize', L('Başlık yazı boyutu', 'Title text size')) + slider('bodySize', L('Metin boyutu', 'Text size'));
     const grid = isSheet ? '' : gallery
-      ? `<section class="lcwaiLayGroup"><h4>${esc(ed.format === 'pptx' ? L('Slayt başına model', 'Models per slide') : L('Sayfa başına model', 'Models per page'))}</h4>${gridPicker()}</section>`
+      ? `<section class="lcwaiLayGroup"><h4>${esc(ed.format === 'pptx' ? L('Slayt başına model', 'Models per slide') : L('Sayfa başına model', 'Models per page'))}</h4>${gridPicker()}
+        <div class="lcwaiLayFlags is-stack">${flag('packGroups', ed.format === 'pptx' ? L('Küçük grupları aynı slayta yan yana diz', 'Put small groups side by side on one slide') : L('Küçük grupları aynı sayfaya yan yana diz', 'Put small groups side by side on one page'))}${flag('autoFit', L('Az model varsa kartları büyüt', 'Enlarge cards when there are few models'))}</div></section>${cardFieldsPanel()}`
       : `<section class="lcwaiLayGroup"><h4>${esc(L('Model ızgarası', 'Model grid'))}</h4><p class="lcwaiNote">${esc(ed.format === 'pptx' ? L('Bu sunumda model galerisi yok. İçerik adımında “Model galerisi” slaytı ekleyince burada kaça kaç model yerleşeceğini seçebilirsiniz.', 'This deck has no model gallery. Add a “Model gallery” slide in the Content step to choose how many models fit here.') : L('Bu raporda model galerisi yok; ızgara galeri olan raporlarda görünür.', 'This report has no model gallery; the grid appears for reports with a gallery.'))}</p></section>`;
     const orientation = isReport ? `<section class="lcwaiLayGroup"><h4>${esc(L('Sayfa yönü', 'Page orientation'))}</h4><div class="lcwaiSeg" role="radiogroup">${[['portrait', L('Dikey', 'Portrait')], ['landscape', L('Yatay', 'Landscape')]].map(([key, label]) => `<button type="button" role="radio" data-ed-orient="${key}" class="${ed.orientation === key ? 'is-active' : ''}" aria-checked="${ed.orientation === key}">${esc(label)}</button>`).join('')}</div></section>` : '';
     const fine = isSheet
@@ -631,8 +680,7 @@
       : slider('headerHeight', ed.format === 'pptx' ? L('Başlık bandı yüksekliği', 'Title band height') : L('Rapor başlığı yüksekliği', 'Report header height'))
         + slider('tableSize', L('Tablo yazı boyutu', 'Table text size'))
         + slider('margin', L('Kenar boşluğu', 'Margin'))
-        + (gallery ? slider('gap', L('Kartlar arası boşluk', 'Gap between cards')) + slider('imageShare', L('Kartta görselin payı', 'Image share of the card')) + slider('cardTextSize', L('Kart yazı boyutu', 'Card text size'))
-          + `<div class="lcwaiLayFlags"><span>${esc(L('Kartta göster:', 'Show on card:'))}</span>${flag('showTitle', L('Model adı', 'Model name'))}${flag('showSubtitle', L('Alt bilgi', 'Subtitle'))}${flag('showNote', L('Not', 'Note'))}</div>` : '');
+        + (gallery ? slider('gap', L('Kartlar arası boşluk', 'Gap between cards')) + slider('imageShare', L('Kartta görselin payı', 'Image share of the card')) + slider('cardTextSize', L('Kart yazı boyutu', 'Card text size')) : '');
     main.innerHTML = `<div class="lcwaiLay">
       <aside class="lcwaiLayControls">
         <section class="lcwaiLayGroup is-first"><h4>${esc(L('Hazır yerleşimler', 'Ready-made layouts'))}</h4>
@@ -672,40 +720,58 @@
     stage.innerHTML = ed.format === 'pptx' ? pptxPreview(stage) : xlsxPreview();
   }
 
-  /* --- PowerPoint önizlemesi: 960 × 540 pt slayt, ölçekli --- */
+  /* --- PowerPoint önizlemesi: 960 × 540 pt slayt, ölçekli ---
+     Dosyadaki slaytlar gösterilir: galeri grupları sunucuyla aynı hesapla
+     (BLOutputLayout.expandGalleries) paketlenir, kart bilgileri aynı
+     seçimden (cardDetails) gelir. */
   const imageOf = token => (token && ed.draft.images && ed.draft.images[String(token).toUpperCase()]) || '';
+  function previewCard(cell, page, l, px, box, text) {
+    const item = cell.item || {};
+    const content = LAY().cardContent(cell, l, item, (ed.draft.records || {})[String(item.image || '').toUpperCase()], page.scale);
+    const k = content.box;
+    const src = imageOf(item.image);
+    const img = `<div class="lcwaiLayImg" style="height:${px(k.imgH)};margin:${px(k.pad)} ${px(k.pad)} 0">${src ? `<img src="${esc(src)}" alt="">` : `<span>${esc(L('Görsel', 'Image'))}</span>`}</div>`;
+    const lines = content.lines.map(line => `<div class="lcwaiLayText is-detail" style="font-size:${px(k.detail)}">${line.map(row => `<span${row.tone ? ` class="is-${row.tone}"` : ''}>${l.showFieldLabels ? `<i>${esc(row.label)}</i> ` : ''}${esc(row.value)}</span>`).join('<em> · </em>')}</div>`).join('');
+    const body = `<div class="lcwaiLayCardText" style="padding:${px(3)} ${px(k.pad)} 0">${content.title ? text(k.size, `<b>${esc(content.title)}</b>`) : ''}${content.meta ? text(k.detail, esc(content.meta), 'is-muted') : ''}${lines}</div>`;
+    return box(cell.x, cell.y, cell.w, cell.h, `is-card${item.tone && item.tone !== 'info' ? ` is-${item.tone}` : ''}`, img + body);
+  }
   function pptxPreview(stage) {
     const slides = ed.data.slides || [];
-    const index = Math.max(0, Math.min(Number(ed.selected) || 0, slides.length - 1));
-    const slide = slides[index];
-    const g = LAY().pptxGeometry(ed.data.layout);
-    const l = g.layout;
+    const l = LAY().normalizeLayout('pptx', ed.data.layout);
+    const g = LAY().pptxGeometry(l);
+    const pages = LAY().expandGalleries(slides, l, { english: isEn() });
+    ed.previewPages = pages;
+    const selected = Math.max(0, Math.min(Number(ed.selected) || 0, slides.length - 1));
+    let current = Number(ed.previewPage);
+    if (!(pages[current] && pages[current].sources.includes(selected))) current = Math.max(0, pages.findIndex(entry => entry.sources.includes(selected)));
+    ed.previewPage = current;
+    const entry = pages[current];
+    const slide = entry && (entry.slide || { layout: 'gallery', title: entry.page.title, subtitle: entry.page.subtitle });
     const s = Math.max(0.3, Math.min(1.1, (stage.clientWidth - 40) / LAY().SLIDE.width));
     const px = value => `${(value * s).toFixed(1)}px`;
     const box = (x, y, w, h, extra = '', html = '') => `<div class="lcwaiLayBox ${extra}" style="left:${px(x)};top:${px(y)};width:${px(w)};height:${px(h)}">${html}</div>`;
     const text = (size, html, extra = '') => `<div class="lcwaiLayText ${extra}" style="font-size:${px(size)}">${html}</div>`;
     let body = '';
-    const galleries = slides.map((item, i) => ({ item, i })).filter(entry => entry.item.layout === 'gallery');
     if (!slide) body = '';
     else if (slide.layout === 'title' || slide.layout === 'section') {
       body = box(80, 160, 800, 200, 'is-plain', text(slide.layout === 'title' ? 46 : 40, `<b>${esc(slide.title)}</b>`) + (slide.subtitle ? text(20, esc(slide.subtitle), 'is-muted') : ''));
     } else {
+      const dark = slide.layout === 'gallery';
       const titleSize = slide.title.length > 60 ? Math.round(l.titleSize * 0.8) : l.titleSize;
-      body += box(0, 0, 960, g.band, 'is-band');
-      body += box(g.margin, g.band * 0.12, g.width, g.band - g.band * 0.12 - 16, 'is-title', text(titleSize, `<b>${esc(slide.title)}</b>`));
-      body += box(g.margin, g.band - 12, 64, 3, 'is-rule');
+      const sub = slide.subtitle && g.band >= 56 ? Math.max(9, Math.round(titleSize * 0.45)) : 0;
+      body += box(0, 0, 960, g.band, `is-band${dark ? ' is-dark' : ''}`);
+      body += box(g.margin, g.band * 0.08, g.width, g.band - g.band * 0.08 - 16 - (sub ? sub * 1.35 : 0), `is-title${dark ? ' is-dark' : ''}`, text(titleSize, `<b>${esc(slide.title)}</b>`));
+      if (sub) body += box(g.margin, g.band - 14 - sub * 1.35, g.width, sub * 1.35, `is-plain${dark ? ' is-dark' : ''}`, text(sub, esc(slide.subtitle), 'is-muted'));
+      body += box(g.margin, g.band - 10, 64, 3, `is-rule${dark ? ' is-dark' : ''}`);
       body += box(g.margin, 540 - 30, 480, 18, 'is-plain', text(9, esc(`Buyer Log · LCW AI · ${ed.title}`), 'is-muted'));
       const top = g.contentTop + 8;
-      if (slide.layout === 'gallery') {
-        const per = LAY().perPage(l);
-        const cells = LAY().galleryCells(l, Math.min(slide.items.length, per));
-        cells.forEach((cell, i) => {
-          const item = slide.items[i];
-          const src = imageOf(item.image);
-          const img = `<div class="lcwaiLayImg" style="height:${px(cell.imgH)}">${src ? `<img src="${esc(src)}" alt="">` : `<span>${esc(L('Görsel', 'Image'))}</span>`}</div>`;
-          const meta = [l.showSubtitle ? item.subtitle : '', l.showNote ? item.note : ''].filter(Boolean).join(' · ');
-          body += box(cell.x, cell.y, cell.w, cell.h, 'is-card', `${img}${l.showTitle && item.title ? text(l.cardTextSize, `<b>${esc(item.title)}</b>`) : ''}${meta ? text(Math.max(7, l.cardTextSize - 2.5), esc(meta), 'is-muted') : ''}`);
-        });
+      if (entry.page) {
+        const page = entry.page;
+        body += box(g.margin - 10, g.contentTop - 4, g.width + 20, 540 - 40 - g.contentTop + 4, 'is-frame');
+        page.dividers.forEach(item => { body += box(item.x - 0.4, item.y, 0.8, item.h, 'is-divider'); });
+        page.rules.forEach(item => { body += box(item.x, item.y, item.w, 1.6, 'is-rule'); });
+        page.labels.forEach(item => { body += box(item.x, item.y, item.w, item.h, 'is-title', text(Math.max(8, l.cardTextSize), `<b>${esc(item.text)}${item.cont ? esc(L(' (devam)', ' (cont.)')) : ''}</b>`)); });
+        page.cells.forEach(cell => { body += previewCard(cell, page, l, px, box, text); });
       } else if (slide.layout === 'table') {
         const size = l.tableSize || (slide.table.columns.length > 6 || slide.table.rows.length > 9 ? 10 : 12);
         const table = `<table style="font-size:${px(size)}"><thead><tr>${slide.table.columns.map(column => `<th>${esc(column)}</th>`).join('')}</tr></thead><tbody>${slide.table.rows.slice(0, 40).map(row => `<tr>${slide.table.columns.map((_, c) => `<td>${esc(row[c])}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
@@ -727,13 +793,15 @@
         body += box(g.margin, top, g.width, g.contentH - 8, 'is-plain is-clip', `<${list} style="font-size:${px(l.bodySize)}">${(slide.bullets || []).map(item => `<li>${esc(item)}</li>`).join('')}</${list}>`);
       }
     }
-    const per = LAY().perPage(l);
-    const summary = galleries.length
-      ? galleries.map(({ item, i }) => L(`${i + 1}. slayt “${item.title}”: ${item.items.length} model → ${Math.max(1, Math.ceil(item.items.length / per))} slayt`, `Slide ${i + 1} “${item.title}”: ${item.items.length} models → ${Math.max(1, Math.ceil(item.items.length / per))} slides`)).join(' · ')
+    const galleryPages = pages.filter(item => item.page);
+    const packed = galleryPages.filter(item => item.page.groups.length > 1).length;
+    const models = galleryPages.reduce((sum, item) => sum + item.page.cells.length, 0);
+    const summary = galleryPages.length
+      ? L(`Dosyada ${pages.length} slayt · ${models} model ${galleryPages.length} galeri slaytına yerleşiyor${packed ? ` (${packed} slaytta gruplar yan yana)` : ''}.`, `${pages.length} slides in the file · ${models} models fill ${galleryPages.length} gallery slide(s)${packed ? ` (groups side by side on ${packed})` : ''}.`)
       : L('Sunumda model galerisi yok; ızgara ayarı galeri slaytı eklendiğinde uygulanır.', 'The deck has no model gallery; the grid applies once a gallery slide is added.');
-    return `<div class="lcwaiLayStageHead"><label>${esc(L('Önizlenen slayt', 'Previewed slide'))} <select data-lay-slide>${slides.map((item, i) => `<option value="${i}"${i === index ? ' selected' : ''}>${i + 1}. ${esc(item.title)}</option>`).join('')}</select></label><small>${esc(summary)}</small></div>
-      <div class="lcwaiLaySlide" style="width:${px(960)};height:${px(540)}">${body}</div>
-      ${slide && slide.layout === 'gallery' && slide.items.length > per ? `<p class="lcwaiNote">${esc(L(`İlk ${per} model gösteriliyor; kalan ${slide.items.length - per} model devam slaytlarına yerleşir.`, `Showing the first ${per} models; the remaining ${slide.items.length - per} continue on extra slides.`))}</p>` : ''}`;
+    const optionText = (item, i) => `${i + 1}. ${item.slide ? item.slide.title : item.page.title}${item.page && item.page.groups.length > 1 ? ` · ${item.page.subtitle}` : ''}`;
+    return `<div class="lcwaiLayStageHead"><label>${esc(L('Önizlenen slayt', 'Previewed slide'))} <select data-lay-slide>${pages.map((item, i) => `<option value="${i}"${i === current ? ' selected' : ''}>${esc(optionText(item, i))}</option>`).join('')}</select></label><small>${esc(summary)}</small></div>
+      <div class="lcwaiLaySlide" style="width:${px(960)};height:${px(540)}">${body}</div>`;
   }
 
   /* --- Excel önizlemesi: ilk sayfanın ilk satırları --- */
@@ -761,7 +829,8 @@
       stage.innerHTML = `<div class="lcwaiLayStageHead"><b>${esc(L('Baskı önizlemesi', 'Print preview'))}</b><small data-lay-pages></small></div><iframe class="lcwaiEdFrame${ed.orientation === 'landscape' ? ' is-landscape' : ''}" data-lay-frame sandbox="allow-same-origin" title="${esc(L('Yerleşim önizlemesi', 'Layout preview'))}"></iframe>`;
       iframe = stage.querySelector('[data-lay-frame]');
     }
-    const body = LAY().paginateGallery(ed.data.body || '', ed.data.layout, { pages: ed.format === 'pdf' });
+    // Sunucuyla aynı hazırlık: kart bilgileri (kaynak satırlarla), gruplar, sayfalar.
+    const body = LAY().prepareReport(ed.data.body || '', ed.data.layout, { pages: ed.format === 'pdf', records: ed.draft.records || {} });
     const pages = (body.match(/bl-gallery-page/g) || []).length;
     const label = stage.querySelector('[data-lay-pages]');
     if (label) label.textContent = ed.format !== 'pdf' ? L('HTML dosyasında model ızgarası sütun sayısını izler (sayfa yoktur).', 'In the HTML file the model grid follows the column count (there are no pages).') : pages ? L(`Model galerisi ${pages} sayfaya yerleşiyor (kesik çizgi = yeni sayfa).`, `The model gallery fills ${pages} page(s) (dashed line = new page).`) : L('Raporda model galerisi yok; ızgara galeri eklendiğinde uygulanır.', 'The report has no model gallery; the grid applies once a gallery is added.');
@@ -842,13 +911,13 @@
     if (slide.layout === 'table' && !(slide.table && slide.table.columns && slide.table.columns.length)) slide.table = { columns: [L('Sütun 1', 'Column 1'), L('Sütun 2', 'Column 2')], rows: [['', '']], omitted: 0 };
     if (slide.layout === 'chart' && !(slide.chart && slide.chart.categories && slide.chart.categories.length)) slide.chart = { categories: ['A', 'B'], series: [{ name: L('Seri 1', 'Series 1'), values: [0, 0] }], unit: '' };
     if (slide.layout === 'comparison') { slide.left = slide.left || { title: 'A', bullets: [] }; slide.right = slide.right || { title: 'B', bullets: [] }; }
-    if (slide.layout === 'gallery' && !(slide.items || []).length) slide.items = [{ title: '', subtitle: '', note: '', image: '', tone: 'info' }];
+    if (slide.layout === 'gallery' && !(slide.items || []).length) slide.items = [NEW_ITEM.gallery()];
     if ((slide.layout === 'bullets' || slide.layout === 'summary') && !(slide.bullets || []).length) slide.bullets = [L('Yeni madde', 'New item')];
     return slide;
   }
   const NEW_ITEM = {
     kpi: () => ({ label: '', value: '', note: '', tone: 'info' }),
-    gallery: () => ({ title: '', subtitle: '', note: '', image: '', tone: 'info' }),
+    gallery: () => ({ title: '', subtitle: '', note: '', image: '', tone: 'info', badge: '', group: '', fields: [] }),
   };
 
   function listFor(kind) {
@@ -902,6 +971,8 @@
     if (target.matches('[data-lay-preset]')) { setLayout(LAY().applyPreset(ed.format, target.dataset.layPreset, ed.data.layout), { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
     if (target.matches('[data-lay-reset]')) { setLayout(LAY().defaults(ed.format), { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
     if (target.matches('[data-gp]')) { const [columns, rows] = target.dataset.gp.split(',').map(Number); setLayout({ ...ed.data.layout, columns, rows }, { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
+    if (target.matches('[data-lay-field-move]')) { const [index, step] = target.dataset.layFieldMove.split(',').map(Number); const list = [...cardFieldState().chosen]; if (move(list, index, index + step)) setCardFields(list); return; }
+    if (target.matches('[data-lay-fields-reset]')) { setCardFields(null); return; }
     if (target.matches('[data-ed-save-template]')) { openSaveTemplate(); return; }
     if (target.matches('[data-ed-open], [data-ed-reveal]')) {
       const api = AI();
@@ -991,7 +1062,10 @@
     if (el.matches('textarea[data-autosize]')) autoSize(el.parentElement);
     if (!el.dataset.path || el.tagName === 'SELECT') return;
     historyOnTyping();
-    setPath(ed.data, el.dataset.path, readValue(el));
+    const value = readValue(el);
+    // Kart bilgisi yeniden yazılırken aynı alanın tonu (ör. risk) korunur.
+    if (el.dataset.kind === 'fields') { const previous = getPath(ed.data, el.dataset.path) || []; value.forEach(item => { const old = previous.find(entry => entry && entry.label === item.label); if (old && old.tone) item.tone = old.tone; }); }
+    setPath(ed.data, el.dataset.path, value);
     markDirty();
     // Başlık / ad değişince sol listedeki metin güncellenir (odak kaybolmaz).
     if (/^(slides\.\d+\.title|sheets\.\d+\.name)$/.test(el.dataset.path)) {
@@ -1005,7 +1079,21 @@
     if (!ed) return;
     const el = event.target;
     if (el.matches('[data-lay-flag]')) { setLayout({ ...ed.data.layout, [el.dataset.layFlag]: el.checked }, { history: true }); return; }
-    if (el.matches('[data-lay-slide]')) { ed.selected = Number(el.value) || 0; renderRail(); updateLayoutPreview(); return; }
+    if (el.matches('[data-lay-field]')) {
+      const key = LAY().fieldKey;
+      const list = cardFieldState().chosen.filter(label => key(label) !== key(el.dataset.layField));
+      if (el.checked) list.push(el.dataset.layField);
+      setCardFields(list);
+      return;
+    }
+    if (el.matches('[data-lay-slide]')) {
+      // Önizleme dosyadaki slaytı gösterir; soldaki listede ilk kaynak slayt seçilir.
+      const page = (ed.previewPages || [])[Number(el.value) || 0];
+      ed.previewPage = Number(el.value) || 0;
+      if (page) ed.selected = page.sources[0];
+      renderRail(); updateLayoutPreview();
+      return;
+    }
     if (el.matches('[data-ed-orientation]')) {
       if (ed.format === 'pdf' || ed.format === 'html') ed.data.body = reportBody();
       ed.orientation = el.value === 'landscape' ? 'landscape' : 'portrait';
@@ -1104,7 +1192,8 @@
     if (format === 'xlsx') return L(`Başlık ${layout.titleSize} pt · hücre ${layout.bodySize} pt · başlık satırı ${layout.headerHeight} pt · görsel ${layout.imageSize} pt`, `Title ${layout.titleSize} pt · cells ${layout.bodySize} pt · header row ${layout.headerHeight} pt · image ${layout.imageSize} pt`);
     const unit = format === 'pptx' ? 'pt' : 'px';
     const per = format === 'pptx' ? L('slayt', 'slide') : L('sayfa', 'page');
-    return L(`Model ızgarası ${layout.columns} × ${layout.rows} (${per} başına ${layout.columns * layout.rows}) · başlık ${layout.headerHeight} ${unit} / ${layout.titleSize} ${unit} · metin ${layout.bodySize} ${unit}`, `Model grid ${layout.columns} × ${layout.rows} (${layout.columns * layout.rows} per ${per}) · title ${layout.headerHeight} ${unit} / ${layout.titleSize} ${unit} · text ${layout.bodySize} ${unit}`);
+    const fields = Array.isArray(layout.cardFields) && layout.cardFields.length ? L(` · kart bilgileri: ${layout.cardFields.join(', ')}`, ` · card details: ${layout.cardFields.join(', ')}`) : '';
+    return L(`Model ızgarası ${layout.columns} × ${layout.rows} (${per} başına ${layout.columns * layout.rows}) · başlık ${layout.headerHeight} ${unit} / ${layout.titleSize} ${unit} · metin ${layout.bodySize} ${unit}`, `Model grid ${layout.columns} × ${layout.rows} (${layout.columns * layout.rows} per ${per}) · title ${layout.headerHeight} ${unit} / ${layout.titleSize} ${unit} · text ${layout.bodySize} ${unit}`) + fields;
   }
   let dialog = null;
   function closeDialog() { const el = document.querySelector('.lcwaiEdDialog'); if (el) el.remove(); dialog = null; }

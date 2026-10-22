@@ -26,7 +26,7 @@ const { reportCss } = require('./output-theme');
 const { renderWorkbook } = require('./output-xlsx');
 const { renderPresentation } = require('./output-pptx');
 const { createOutputStore } = require('./output-store');
-const { collectTokens, normalizeImages, fillHtmlImages } = require('./output-images');
+const { collectTokens, normalizeImages, normalizeRecords, fillHtmlImages } = require('./output-images');
 const { createDraftStore } = require('./output-drafts');
 const userTemplates = require('./output-user-templates');
 const BLOutputLayout = require('../../../public/lcwai-output-layout');
@@ -122,22 +122,25 @@ function createOutputService(options = {}) {
   /* İş + (varsa) görseller → dosya. PDF son adımı masaüstü kabuğunda. */
   function render(ownerId, job, images) {
     const { format, data, title, lang, orientation, day } = job;
+    const records = job.records || {};
     const date = new Date(job.date);
     const saveMeta = { title, format, template: job.template, templateLabel: job.templateLabel, attempts: job.attempts, requestId: job.requestId, draftId: job.draftId, edited: Boolean(job.edited) };
     try {
       if (format === 'pdf' || format === 'html') {
-        // Yerleşim varsa model galerisi PDF'te sütun × satır sayfalarına bölünür.
+        // Model kartı/galeri varsa: kart bilgileri (kaynak satırdan), gruplar
+        // yan yana, PDF'te sütun × satır sayfaları. Yerleşim yoksa varsayılan.
         const filled = fillHtmlImages(data.body, images, lang);
-        const body = data.layout ? BLOutputLayout.paginateGallery(filled, data.layout, { pages: format === 'pdf' }) : filled;
+        const layout = data.layout || (/\bbl-(gallery|groups|specs)\b/.test(filled) ? BLOutputLayout.defaults('pdf') : null);
+        const body = layout ? BLOutputLayout.prepareReport(filled, layout, { pages: format === 'pdf', records }) : filled;
         if (format === 'pdf') {
-          const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout: data.layout });
+          const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout });
           const pendingId = store.putPending(ownerId, { stage: 'pdf', html, ...saveMeta, lang, orientation, officeCapability:job.durablePending===true }, {durable:job.durablePending===true});
           return { pending: 'pdf', pendingId, html, title, landscape: orientation === 'landscape', format: 'pdf', templateLabel: job.templateLabel, attempts: job.attempts, draftId: job.draftId };
         }
-        const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel }, layout: data.layout }), 'utf8');
+        const buffer = Buffer.from(buildDocument({ body, styles: data.styles, title, lang, orientation, meta: { date: day, template: job.templateLabel }, layout }), 'utf8');
         return store.save(ownerId, { buffer, ...saveMeta });
       }
-      const buffer = format === 'xlsx' ? renderWorkbook(data, { lang, date, images }) : renderPresentation(data, { lang, date, images });
+      const buffer = format === 'xlsx' ? renderWorkbook(data, { lang, date, images }) : renderPresentation(data, { lang, date, images, records });
       return store.save(ownerId, { buffer, ...saveMeta });
     } catch (error) {
       if (isLcwAiError(error)) throw error;
@@ -147,15 +150,17 @@ function createOutputService(options = {}) {
 
   /* Renderer'ın çözdüğü görseller ({ anahtar: dataURL }) → dosya. Eksik
      görsel dosyayı durdurmaz; yerine "görsel yok" kutusu konur. */
-  function completeImages(ownerId, pendingId, rawImages) {
+  function completeImages(ownerId, pendingId, rawImages, rawRecords) {
     const entry = store.takePending(ownerId, pendingId);
     if (!entry || entry.stage !== 'images') throw lcwAiError('OUTPUT_NOT_FOUND');
     const images = normalizeImages(rawImages, entry.tokens);
-    // Yeniden oluşturmada görseller tekrar istenmesin: taslağın yanında kalır.
+    // Kart bilgisi kaynak satırları (yalnız istenen anahtarlar).
+    const records = normalizeRecords(rawRecords, entry.tokens);
+    // Yeniden oluşturmada görseller/satırlar tekrar istenmesin: taslağın yanında kalır.
     if (entry.job.draftId) {
-      try { drafts.update(ownerId, entry.job.draftId, { images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])) }); } catch (_) {}
+      try { drafts.update(ownerId, entry.job.draftId, { images: Object.fromEntries(Object.entries(images).map(([token, image]) => [token, image.dataUrl])), records }); } catch (_) {}
     }
-    const output = render(ownerId, entry.job, images);
+    const output = render(ownerId, { ...entry.job, records }, images);
     return { ...output, imagesUsed: Object.keys(images).length, imagesRequested: entry.tokens.length };
   }
 
@@ -201,6 +206,8 @@ function createOutputService(options = {}) {
       template: draft.template, templateLabel: draft.templateLabel, revision: draft.revision, updatedAt: draft.updatedAt,
       // Görseller önizlemede (rapor, Yerleşim aracındaki model kartları) kullanılır.
       data: draft.data, imageKeys: Object.keys(draft.images || {}), images: draft.images || {},
+      // Kart bilgisi seçicisi kaynak satırlardaki sütunları da sunar.
+      records: draft.records || {},
     };
     if (draft.format === 'pdf' || draft.format === 'html') out.previewCss = reportCss({ orientation: draft.orientation, print: false });
     return out;
@@ -226,6 +233,7 @@ function createOutputService(options = {}) {
     const job = {
       format: draft.format, data: parsed.data, title, template: draft.template, templateLabel: draft.templateLabel,
       attempts: 1, lang, orientation, day: draft.day, date: date.toISOString(), requestId: '', draftId: draft.id, edited: true,
+      records: draft.records || {},
     };
     const images = normalizeImages(draft.images || {}, collectTokens(draft.format, parsed.data));
     const output = render(ownerId, job, images);

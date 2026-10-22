@@ -10,7 +10,13 @@
  * çizilir; grafik XML'i (chart parts) gerekmez.
  *
  * Desteklenen düzenler: title, section, bullets, kpis, table, chart,
- * comparison, summary. Girdi normalizePresentation() çıktısıdır.
+ * comparison, summary, gallery. Girdi normalizePresentation() çıktısıdır.
+ *
+ * Galeri (model kartları, line sheet): koyu başlık bandı + çerçeveli
+ * içerik, beyaz kart; görsel önde ve büyük, altında küçük yazıyla model adı
+ * ve kullanıcının Yerleşim'de seçtiği bilgiler (varsayılan: renk kodu, fit,
+ * adet, hedef fiyat). Ardışık küçük galeri grupları aynı slayta yan yana,
+ * adları ve ayraçlarıyla dizilir (BLOutputLayout.galleryPages).
  */
 const { createZip, xmlText } = require('./output-zip');
 const { theme, ooxml } = require('./output-theme');
@@ -67,6 +73,11 @@ function paragraph(text, style, p, lang, { align = 'l', bullet = false, spaceAft
   return `<a:p>${ppr}${text === '' ? '' : run(text, style, p, lang)}<a:endParaRPr lang="${lang}" sz="${Math.round((style.size || 18) * 100)}" dirty="0"/></a:p>`;
 }
 
+/* Karışık biçimli paragraf (ör. kart bilgisi: soluk alan adı + koyu değer). */
+function richParagraph(runs, p, lang, { align = 'l', spaceAfter = 0, size = 10 } = {}) {
+  return `<a:p><a:pPr algn="${align}"><a:spcAft><a:spcPts val="${Math.round(spaceAfter * 100)}"/></a:spcAft><a:buNone/></a:pPr>${runs.filter(item => item && item.text !== '').map(item => run(item.text, item, p, lang)).join('')}<a:endParaRPr lang="${lang}" sz="${Math.round(size * 100)}" dirty="0"/></a:p>`;
+}
+
 /* media: { token → { name, width, height } } (deste genelinde paylaşılır).
    Slayt kendi ilişki listesini (rels) tutar; rId1 düzen şablonudur. */
 function createSlideBuilder(p, lang, media = {}) {
@@ -76,10 +87,10 @@ function createSlideBuilder(p, lang, media = {}) {
   const next = () => ++id;
   /* Gerçek model görseli (en-boy korunarak kutuya sığdırılır); yoksa
      "görsel yok" kutusu. */
-  function picture({ x, y, w, h, token, label = '' }) {
+  function picture({ x, y, w, h, token, label = '', frame = true }) {
     const item = token && media[token];
     if (!item) {
-      box({ x, y, w, h, fill: p.card, line: { color: p.line }, anchor: 'ctr', name: 'NoImage', paragraphs: [paragraph(lang.startsWith('en') ? 'No image' : 'Görsel yok', { size: 10, color: p.muted }, p, lang, { align: 'ctr', spaceAfter: 0 })] });
+      box({ x, y, w, h, fill: p.card, line: frame ? { color: p.line } : null, anchor: 'ctr', name: 'NoImage', paragraphs: [paragraph(lang.startsWith('en') ? 'No image' : 'Görsel yok', { size: Math.min(10, Math.max(7, h / EMU / 8)), color: p.muted }, p, lang, { align: 'ctr', spaceAfter: 0 })] });
       return;
     }
     let rel = rels.find(entry => entry.target === item.name);
@@ -88,18 +99,20 @@ function createSlideBuilder(p, lang, media = {}) {
     let pw = w, ph = w / ratio;
     if (ph > h) { ph = h; pw = h * ratio; }
     const shapeId = next();
-    box({ x, y, w, h, fill: 'FFFFFF', line: { color: p.line }, name: 'ImageFrame' });
+    if (frame) box({ x, y, w, h, fill: 'FFFFFF', line: { color: p.line }, name: 'ImageFrame' });
     shapes.push(`<p:pic><p:nvPicPr><p:cNvPr id="${shapeId}" name="Picture ${shapeId}" descr="${xmlText(label || token)}"/><p:cNvPicPr><a:picLocks noChangeAspect="1"/></p:cNvPicPr><p:nvPr/></p:nvPicPr><p:blipFill><a:blip r:embed="${rel.id}"/><a:stretch><a:fillRect/></a:stretch></p:blipFill><p:spPr><a:xfrm><a:off x="${Math.round(x + (w - pw) / 2)}" y="${Math.round(y + (h - ph) / 2)}"/><a:ext cx="${Math.round(pw)}" cy="${Math.round(ph)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></p:spPr></p:pic>`);
   }
-  function box({ x, y, w, h, fill, line, paragraphs = [], anchor = 't', inset = 6, name = 'Shape', geometry = 'rect' }) {
+  function box({ x, y, w, h, fill, line, paragraphs = [], anchor = 't', inset = 6, name = 'Shape', geometry = 'rect', shadow = false, radius = null }) {
     const shapeId = next();
     // fill: 'RRGGBB' | { color, alpha (0–100) }
     const fillXml = !fill ? '<a:noFill/>' : typeof fill === 'object'
       ? `<a:solidFill><a:srgbClr val="${fill.color}"><a:alpha val="${Math.round((fill.alpha == null ? 100 : fill.alpha) * 1000)}"/></a:srgbClr></a:solidFill>`
       : `<a:solidFill><a:srgbClr val="${fill}"/></a:solidFill>`;
-    const lineXml = line ? `<a:ln w="${pt(line.width || 1)}"><a:solidFill><a:srgbClr val="${line.color}"/></a:solidFill></a:ln>` : '<a:ln><a:noFill/></a:ln>';
+    const lineXml = (line ? `<a:ln w="${pt(line.width || 1)}"><a:solidFill><a:srgbClr val="${line.color}"/></a:solidFill></a:ln>` : '<a:ln><a:noFill/></a:ln>')
+      // Yumuşak gölge (kartlar): PowerPoint ve PDF'e dönüştürmede kalır.
+      + (shadow ? '<a:effectLst><a:outerShdw blurRad="50800" dist="12700" dir="5400000" algn="t" rotWithShape="0"><a:srgbClr val="000000"><a:alpha val="13000"/></a:srgbClr></a:outerShdw></a:effectLst>' : '');
     const body = paragraphs.length ? paragraphs.join('') : `<a:p><a:endParaRPr lang="${lang}" dirty="0"/></a:p>`;
-    shapes.push(`<p:sp><p:nvSpPr><p:cNvPr id="${shapeId}" name="${xmlText(name)} ${shapeId}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${Math.round(x)}" y="${Math.round(y)}"/><a:ext cx="${Math.max(1, Math.round(w))}" cy="${Math.max(1, Math.round(h))}"/></a:xfrm><a:prstGeom prst="${geometry}"><a:avLst/></a:prstGeom>${fillXml}${lineXml}</p:spPr><p:txBody><a:bodyPr wrap="square" lIns="${pt(inset)}" tIns="${pt(inset)}" rIns="${pt(inset)}" bIns="${pt(inset)}" anchor="${anchor}" rtlCol="0"><a:noAutofit/></a:bodyPr><a:lstStyle/>${body}</p:txBody></p:sp>`);
+    shapes.push(`<p:sp><p:nvSpPr><p:cNvPr id="${shapeId}" name="${xmlText(name)} ${shapeId}"/><p:cNvSpPr/><p:nvPr/></p:nvSpPr><p:spPr><a:xfrm><a:off x="${Math.round(x)}" y="${Math.round(y)}"/><a:ext cx="${Math.max(1, Math.round(w))}" cy="${Math.max(1, Math.round(h))}"/></a:xfrm><a:prstGeom prst="${geometry}">${radius == null ? '<a:avLst/>' : `<a:avLst><a:gd name="adj" fmla="val ${Math.round(radius)}"/></a:avLst>`}</a:prstGeom>${fillXml}${lineXml}</p:spPr><p:txBody><a:bodyPr wrap="square" lIns="${pt(inset)}" tIns="${pt(inset)}" rIns="${pt(inset)}" bIns="${pt(inset)}" anchor="${anchor}" rtlCol="0"><a:noAutofit/></a:bodyPr><a:lstStyle/>${body}</p:txBody></p:sp>`);
   }
   function text(x, y, w, h, value, style, opts = {}) {
     box({ x, y, w, h, paragraphs: [paragraph(value, style, p, lang, opts)], anchor: opts.anchor || 't', inset: opts.inset == null ? 2 : opts.inset, name: 'Text' });
@@ -143,13 +156,20 @@ function fitSize(lines, base, min, capacity) {
 }
 
 function chrome(s, slide, index, total, deck, p, lang) {
-  // Başlık bandı: tablo başlığı grisi; başlık metni logo siyahı.
-  s.box({ x: 0, y: 0, w: W, h: BAND, fill: p.headBg, name: 'HeadBand' });
-  s.box({ x: W - pt(150), y: -pt(110), w: pt(240), h: pt(240), fill: { color: p.logo, alpha: 4 }, geometry: 'ellipse', name: 'Orb' });
-  s.box({ x: 0, y: BAND, w: W, h: pt(1), fill: p.headLine, name: 'HeadLine' });
+  // Başlık bandı: tablo başlığı grisi; başlık metni logo siyahı. Model
+  // galerisi (line sheet) A3 sunum formatındaki gibi koyu banttır.
+  const dark = slide.layout === 'gallery';
+  const ink = dark ? 'FFFFFF' : p.logo;
+  s.box({ x: 0, y: 0, w: W, h: BAND, fill: dark ? p.logo : p.headBg, name: 'HeadBand' });
+  s.box({ x: W - pt(150), y: -pt(110), w: pt(240), h: pt(240), fill: { color: dark ? 'FFFFFF' : p.logo, alpha: 4 }, geometry: 'ellipse', name: 'Orb' });
+  s.box({ x: 0, y: BAND, w: W, h: pt(1), fill: dark ? p.logo : p.headLine, name: 'HeadLine' });
   const titleSize = slide.title.length > 60 ? Math.round(LAYOUT.titleSize * 0.8) : LAYOUT.titleSize;
-  s.text(MARGIN, Math.round(BAND * 0.12), W - MARGIN * 2, BAND - Math.round(BAND * 0.12) - pt(16), slide.title, { size: titleSize, bold: true, color: p.logo }, { anchor: 'b' });
-  s.box({ x: MARGIN, y: BAND - pt(12), w: pt(64), h: pt(3), fill: p.logo, name: 'Rule' });
+  // Alt başlık (ör. "36-41 HFT · KK1-2-3" ya da "3 grup · 11 model") başlığın altında.
+  const sub = slide.subtitle && BAND >= pt(56) ? Math.max(9, Math.round(titleSize * 0.45)) : 0;
+  const subH = sub ? pt(sub * 1.35) : 0;
+  s.text(MARGIN, Math.round(BAND * 0.08), W - MARGIN * 2, BAND - Math.round(BAND * 0.08) - pt(16) - subH, slide.title, { size: titleSize, bold: true, color: ink }, { anchor: 'b' });
+  if (sub) s.text(MARGIN, BAND - pt(14) - subH, W - MARGIN * 2, subH, slide.subtitle, { size: sub, color: dark ? 'C9CDD2' : p.headInk }, { anchor: 't' });
+  s.box({ x: MARGIN, y: BAND - pt(10), w: pt(64), h: pt(3), fill: dark ? 'FFFFFF' : p.logo, name: 'Rule' });
   s.text(MARGIN, H - pt(30), W / 2, pt(18), `Buyer Log · LCW AI${deck.title ? ` · ${deck.title}` : ''}`.slice(0, 110), { size: 9, color: p.muted });
   s.text(W - MARGIN - pt(120), H - pt(30), pt(120), pt(18), `${index + 1} / ${total}`, { size: 9, color: p.muted }, { align: 'r' });
 }
@@ -196,25 +216,61 @@ function paginateTableSlide(slide) {
   });
 }
 /* Galeri: Yerleşim'deki sütun × satır kadar model bir slayta; fazlası
-   aynı başlıklı devam slaytlarına. */
-function paginateGallerySlide(slide) {
-  const size = BLOutputLayout.perPage(LAYOUT);
-  if (!slide.items || slide.items.length <= size) return [slide];
-  const pages = Math.ceil(slide.items.length / size);
-  return Array.from({ length: pages }, (_, index) => ({ ...slide, title: `${slide.title} (${index + 1}/${pages})`, items: slide.items.slice(index * size, (index + 1) * size) }));
-}
-function expandSlides(slides, layout) {
+   aynı başlıklı devam slaytlarına. Ardışık küçük galeri grupları (ya da
+   öğelerdeki "group") aynı slayta yan yana paketlenir; az dolu slaytta
+   kartlar büyür. Hesap tarayıcı önizlemesiyle ortaktır. */
+function expandSlides(slides, layout, { lang = 'tr' } = {}) {
   if (layout !== undefined) applyGeometry(layout);
-  return slides.flatMap(slide => (slide.layout === 'table' ? paginateTableSlide(slide) : slide.layout === 'gallery' ? paginateGallerySlide(slide) : [slide]));
+  return BLOutputLayout.expandGalleries(slides, LAYOUT, { english: String(lang).startsWith('en') }).flatMap(entry => {
+    if (entry.page) return [{ layout: 'gallery', title: entry.page.title, subtitle: entry.page.subtitle, bullets: [], callout: null, items: entry.page.cells.map(cell => cell.item), page: entry.page }];
+    return entry.slide.layout === 'table' ? paginateTableSlide(entry.slide) : [entry.slide];
+  });
 }
 
-function renderSlide(slide, index, total, deck, p, lang, media) {
+function renderSlide(slide, index, total, deck, p, lang, media, records) {
   const s = createSlideBuilder(p, lang, media);
-  const xml = renderSlideBody(s, slide, index, total, deck, p, lang);
+  const xml = renderSlideBody(s, slide, index, total, deck, p, lang, records || {});
   return { xml, rels: s.rels };
 }
 
-function renderSlideBody(s, slide, index, total, deck, p, lang) {
+/* Tek model kartı: görsel önde ve büyük; altında ikinci planda küçük yazıyla
+   model adı ve kullanıcının seçtiği bilgiler (varsayılan: renk kodu, fit,
+   adet, hedef fiyat). İçerik hesabı önizlemeyle ortaktır (cardContent). */
+function renderCard(s, cell, item, page, p, lang, records) {
+  const x = pt(cell.x), y = pt(cell.y), w = pt(cell.w), h = pt(cell.h);
+  const content = BLOutputLayout.cardContent(cell, LAYOUT, item, records[String(item.image || '').toUpperCase()], page.scale);
+  const box = content.box;
+  const pad = pt(box.pad);
+  s.box({ x, y, w, h, fill: 'FFFFFF', line: { color: p.line, width: 0.75 }, name: 'Card', shadow: true });
+  // Durum tonu (ok/uyarı/risk) yalnız ince üst çizgidir; nötr kartta çizgi yok.
+  if (item.tone && item.tone !== 'info') s.box({ x, y, w, h: pt(2), fill: toneColor(item.tone, p), name: 'Tone' });
+  const imgH = pt(box.imgH);
+  s.picture({ x: x + pad, y: y + pad, w: w - pad * 2, h: imgH, token: item.image, label: item.title, frame: false });
+  let ty = y + pad + imgH + pt(3);
+  const bottom = y + h - pad + pt(2);
+  const innerW = w - pad * 2;
+  if (content.badge && ty + pt(box.size * 1.1) < bottom) {
+    const chipW = Math.min(innerW, pt(content.badge.length * box.size * 0.6 + 6));
+    s.box({ x: x + pad, y: ty, w: chipW, h: pt(box.size * 1.1), fill: p.accBg, anchor: 'ctr', inset: 1, name: 'Badge', paragraphs: [paragraph(content.badge, { size: Math.max(5.5, box.size - 2), bold: true, color: p.accInk }, p, lang, { align: 'ctr', spaceAfter: 0 })] });
+    ty += pt(box.size * 1.1 + 3);
+  }
+  const lines = [];
+  if (content.title) lines.push(richParagraph([{ text: content.title, size: box.size, bold: true, color: p.ink }], p, lang, { size: box.size, spaceAfter: 1 }));
+  if (content.meta) lines.push(richParagraph([{ text: content.meta, size: box.detail, color: p.ink2 }], p, lang, { size: box.detail }));
+  const toneOf = tone => (tone === 'risk' ? p.risk : tone === 'ok' ? p.ok : tone === 'warn' ? p.warn : p.ink2);
+  for (const line of content.lines) {
+    const runs = [];
+    line.forEach((field, i) => {
+      if (i) runs.push({ text: '  ·  ', size: box.detail, color: p.line });
+      if (LAYOUT.showFieldLabels) runs.push({ text: `${field.label} `, size: box.detail, color: p.muted });
+      runs.push({ text: field.value, size: box.detail, bold: Boolean(field.tone), color: toneOf(field.tone) });
+    });
+    lines.push(richParagraph(runs, p, lang, { size: box.detail }));
+  }
+  if (lines.length && ty < bottom - pt(4)) s.box({ x: x + pad, y: ty, w: innerW, h: bottom - ty, paragraphs: lines, inset: 0, name: 'CardText' });
+}
+
+function renderSlideBody(s, slide, index, total, deck, p, lang, records = {}) {
   const english = lang.startsWith('en');
   if (slide.layout === 'title') {
     // Renk geçişli kapak + yarı saydam dekoratif daireler.
@@ -319,9 +375,18 @@ function renderSlideBody(s, slide, index, total, deck, p, lang) {
     });
     return s.xml();
   }
+  if (slide.layout === 'gallery' && slide.page) {
+    // Model kartları Yerleşim ızgarasına (sütun × satır) yerleşir; konumlar
+    // tarayıcıdaki önizlemeyle aynı hesaptan gelir (galleryPages).
+    const page = slide.page;
+    s.box({ x: MARGIN - pt(10), y: CONTENT_TOP - pt(4), w: width + pt(20), h: H - pt(40) - CONTENT_TOP + pt(4), fill: { color: p.headBg, alpha: 55 }, line: { color: p.headLine, width: 0.75 }, geometry: 'roundRect', radius: 1800, name: 'Frame' });
+    page.dividers.forEach(item => s.box({ x: pt(item.x) - pt(0.4), y: pt(item.y), w: pt(0.8), h: pt(item.h), fill: p.headLine, name: 'GroupDivider' }));
+    page.rules.forEach(item => s.box({ x: pt(item.x), y: pt(item.y), w: pt(item.w), h: pt(1.6), fill: p.logo, name: 'GroupRule' }));
+    page.labels.forEach(item => s.text(pt(item.x), pt(item.y), pt(item.w), pt(item.h), `${item.text}${item.cont ? (english ? ' (cont.)' : ' (devam)') : ''}`, { size: Math.max(8, LAYOUT.cardTextSize), bold: true, color: p.logo }, { anchor: 'b', inset: 0 }));
+    page.cells.forEach(cell => renderCard(s, cell, cell.item, page, p, lang, records));
+    return s.xml();
+  }
   if (slide.layout === 'gallery') {
-    // Model kartları Yerleşim ızgarasına (sütun × satır) yerleşir; boyutlar
-    // tarayıcıdaki önizlemeyle aynı hesaptan gelir (galleryCells).
     const cells = BLOutputLayout.galleryCells(LAYOUT, slide.items.length);
     const textSize = LAYOUT.cardTextSize;
     slide.items.slice(0, cells.length).forEach((item, i) => {
@@ -388,7 +453,8 @@ const EMPTY_TREE = '<p:spTree><p:nvGrpSpPr><p:cNvPr id="1" name=""/><p:cNvGrpSpP
 const REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
 
 /* deck: normalizePresentation() çıktısı. Döner: Buffer (.pptx). */
-function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {} } = {}) {
+/* records: { görsel anahtarı → [[sütun, değer], …] } — kart bilgisi kaynak veriden. */
+function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {}, records = {} } = {}) {
   const p = palette();
   const langTag = lang === 'en' ? 'en-US' : 'tr-TR';
   // PowerPoint yalnız PNG/JPEG/GIF'i güvenle açar (WEBP → "görsel yok").
@@ -400,8 +466,8 @@ function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {} 
     media[token] = { name, width: image.width, height: image.height };
     mediaFiles.push({ name: `ppt/media/${name}`, data: image.buffer });
   }
-  const expanded = expandSlides(deck.slides, deck.layout || null);
-  const rendered = expanded.map((slide, index) => renderSlide(slide, index, expanded.length, deck, p, langTag, media));
+  const expanded = expandSlides(deck.slides, deck.layout || null, { lang });
+  const rendered = expanded.map((slide, index) => renderSlide(slide, index, expanded.length, deck, p, langTag, media, records));
   const slides = rendered.map(item => item.xml);
   const created = (date instanceof Date ? date : new Date()).toISOString().replace(/\.\d{3}Z$/, 'Z');
   const entries = [

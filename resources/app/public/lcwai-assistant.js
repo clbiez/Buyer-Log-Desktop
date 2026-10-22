@@ -599,7 +599,10 @@
         const pending = finalResult.output;
         let images = {};
         try { images = typeof options.resolveImages === 'function' ? (await options.resolveImages(pending.tokens || [])) || {} : {}; } catch (_) { images = {}; }
-        const data = await api(`/api/lcwai/outputs/${encodeURIComponent(String(pending.pendingId || ''))}/images`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images }) });
+        // Kart bilgisi: aynı anahtarların kaynak satırları (yerel sunucuya; LCW AI'a gitmez).
+        let records = {};
+        try { records = typeof options.resolveRecords === 'function' ? (await options.resolveRecords(pending.tokens || [])) || {} : {}; } catch (_) { records = {}; }
+        const data = await api(`/api/lcwai/outputs/${encodeURIComponent(String(pending.pendingId || ''))}/images`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ images, records }) });
         finalResult = { ...finalResult, output: data.output };
       }
       return finalResult.output && finalResult.output.pending === 'pdf' ? await finalizePdf(finalResult, onProgress) : finalResult;
