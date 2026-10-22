@@ -91,18 +91,18 @@ function To-Lines([string] $Text) {
   }
   return ,$result
 }
-function Patch-Bytes([byte[]] $Source, $Record) {
+function Patch-Bytes([byte[]] $Source, $Variant, [string] $Relative) {
   $utf8 = New-Object System.Text.UTF8Encoding($false, $true)
   $text = $utf8.GetString($Source)
   $lines = To-Lines $text
-  $edits = @($Record.edits)
+  $edits = @($Variant.edits)
   for ($i = $edits.Count - 1; $i -ge 0; $i--) {
     $edit = $edits[$i]
     $start = [int]$edit[0]
     $count = [int]$edit[1]
     $insert = [string[]]@($edit[2])
     if ($start -lt 0 -or $count -lt 0 -or $start + $count -gt $lines.Count) {
-      throw "Patch satir siniri disinda: $($Record.path), $start/$count"
+      throw "Patch satir siniri disinda: $Relative, $start/$count"
     }
     if ($count -gt 0) { $lines.RemoveRange($start, $count) }
     if ($insert.Count -gt 0) { $lines.InsertRange($start, $insert) }
@@ -110,7 +110,7 @@ function Patch-Bytes([byte[]] $Source, $Record) {
   $updatedText = [string]::Concat([string[]]$lines.ToArray())
   return $utf8.GetBytes($updatedText)
 }
-function Safe-Target([string] $Core, [string] $Relative) {
+function Safe-Target([string] $Core, [string] $Relative, [bool] $AllowMissing = $false) {
   if ($Relative -notmatch '^(public|server)/' -or
       $Relative -match '(^|/)\.\.?(/|$)' -or $Relative -match '(?i)(electron|updater|update|package\.json|config\.json)' -or
       [System.IO.Path]::IsPathRooted($Relative)) {
@@ -118,15 +118,16 @@ function Safe-Target([string] $Core, [string] $Relative) {
   }
   $target = Join-Path $Core ($Relative.Replace('/', '\'))
   if (-not (Under-Root $target $Core)) { throw "Patch yolu kurulum disinda: $Relative" }
-  if (-not (Test-Path -LiteralPath $target -PathType Leaf)) { throw "Eksik dosya: $target" }
+  if ((-not $AllowMissing) -and (-not (Test-Path -LiteralPath $target -PathType Leaf))) { throw "Eksik dosya: $target" }
   return $target
 }
 function Main {
   $manifest = Read-Json (Join-Path $PatchFolder 'patch-manifest.json')
-  if ([int]$manifest.schema -ne 1 -or [string]$manifest.base_version -ne $ExpectedVersion) {
+  if ([int]$manifest.schema -ne 2 -or [string]$manifest.base_version -ne $ExpectedVersion -or
+      [string]$manifest.target_commit -ne 'e54ba4eb8dfcc677907ed023955c7490de15fcd8') {
     throw 'Patch manifesti surum veya sema acisindan uyumsuz.'
   }
-  if (@($manifest.files).Count -ne 23) { throw 'Patch manifesti eksik / bozuk (23 dosya bekleniyor).' }
+  if (@($manifest.files).Count -ne 44) { throw 'Patch manifesti eksik / bozuk (44 dosya bekleniyor).' }
   $root = Find-Install
   $core = Active-Core $root
   Write-Host ''
@@ -150,16 +151,23 @@ function Main {
       if ($currentHash -ne [string]$item.after_sha256) {
         throw "Geri alma durduruldu; dosya sonradan degismis: $($item.path)"
       }
+      if ([string]$item.kind -eq 'added') {
+        $restoreItems.Add(@{kind='added'; target=$target; saved='' })
+        continue
+      }
       $saved = Join-Path $last.FullName ([string]$item.path).Replace('/', '\')
       if (-not (Test-Path -LiteralPath $saved -PathType Leaf)) { throw "Yedek eksik: $saved" }
       if ((Hash-Hex ([System.IO.File]::ReadAllBytes($saved))) -ne [string]$item.before_sha256) {
         throw "Yedegin kimligi hatali: $($item.path)"
       }
-      $restoreItems.Add(@{target=$target; saved=$saved})
+      $restoreItems.Add(@{kind='modified'; target=$target; saved=$saved})
     }
     $answer = Read-Host "Son yedek geri yuklenecek ($($restoreItems.Count) dosya). Devam E/H?"
     if ($answer -notmatch '^[eEyY]') { Write-Host 'Iptal edildi.'; return }
-    foreach ($i in $restoreItems) { [System.IO.File]::Copy($i.saved, $i.target, $true) }
+    foreach ($i in $restoreItems) {
+      if ($i.kind -eq 'added') { Remove-Item -LiteralPath $i.target -Force }
+      else { [System.IO.File]::Copy($i.saved, $i.target, $true) }
+    }
     Rename-Item -LiteralPath (Join-Path $last.FullName 'backup.json') -NewName 'backup.restored.json'
     Write-Host 'Geri alma tamamlandi.'
     return
@@ -168,21 +176,37 @@ function Main {
   $already = 0
   foreach ($record in @($manifest.files)) {
     $relative = [string]$record.path
-    $target = Safe-Target $core $relative
+    $kind = [string]$record.kind
+    if ($kind -notin @('added','modified')) {
+      throw "Taninmayan patch tipi: $relative"
+    }
+    $target = Safe-Target $core $relative ($kind -eq 'added')
+    if ($kind -eq 'added' -and -not (Test-Path -LiteralPath $target -PathType Leaf)) {
+      $updated = [System.Convert]::FromBase64String([string]$record.payload_b64)
+      if ((Hash-Hex $updated) -ne [string]$record.after_sha256) {
+        throw "PATCH DURDURULDU: yeni dosya SHA256 hatasi: $relative"
+      }
+      $changes.Add(@{kind=$kind;path=$relative;target=$target;bytes=$updated;record=$record;before_sha256='' })
+      continue
+    }
     $bytes = [System.IO.File]::ReadAllBytes($target)
     $current = Hash-Hex $bytes
     if ($current -eq [string]$record.after_sha256) {
       $already++
       continue
     }
-    if ($current -ne [string]$record.before_sha256) {
-      throw "PATCH DURDURULDU: '$relative' 7.0.293 temel dosyasiyla eslesmiyor. Hicbir dosya degistirilmedi."
+    if ($kind -eq 'added') {
+      throw "PATCH DURDURULDU: yeni dosya zaten farkli icerikle var: $relative"
     }
-    $updated = Patch-Bytes $bytes $record
+    $variant = @($record.variants) | Where-Object { [string]$_.before_sha256 -eq $current } | Select-Object -First 1
+    if (-not $variant) {
+      throw "PATCH DURDURULDU: '$relative' eski veya onceki patch dosyasiyla eslesmiyor. Hicbir dosya degistirilmedi."
+    }
+    $updated = Patch-Bytes $bytes $variant $relative
     if ((Hash-Hex $updated) -ne [string]$record.after_sha256) {
       throw "PATCH DURDURULDU: '$relative' sonuc kimligi dogrulanamadi."
     }
-    $changes.Add(@{path=$relative; target=$target; bytes=$updated; record=$record})
+    $changes.Add(@{kind=$kind;path=$relative;target=$target;bytes=$updated;record=$record;before_sha256=$current})
   }
   Write-Host "Yazilacak dosya: $($changes.Count); zaten guncel: $already"
   Write-Host 'Updater / launcher / version / data / veritabani: DOKUNULMUYOR'
@@ -193,17 +217,20 @@ function Main {
   if ($answer -notmatch '^[eEyY]') { Write-Host 'Iptal edildi.'; return }
 
   $history = Join-Path $root 'data\local\manual-patch-backups'
-  $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss')
+  $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss-fffffff')
   $backupRoot = Join-Path $history ("patch-7.0.293-" + $stamp)
   [System.IO.Directory]::CreateDirectory($backupRoot) | Out-Null
   $backupItems = New-Object 'System.Collections.Generic.List[object]'
   foreach ($change in $changes) {
     $backupPath = Join-Path $backupRoot ($change.path.Replace('/', '\'))
     [System.IO.Directory]::CreateDirectory((Split-Path -Parent $backupPath)) | Out-Null
-    [System.IO.File]::Copy($change.target, $backupPath, $false)
+    if ($change.kind -eq 'modified') {
+      [System.IO.File]::Copy($change.target, $backupPath, $false)
+    }
     $backupItems.Add(@{
+      kind=$change.kind
       path=$change.path
-      before_sha256=[string]$change.record.before_sha256
+      before_sha256=[string]$change.before_sha256
       after_sha256=[string]$change.record.after_sha256
     })
   }
@@ -218,7 +245,11 @@ function Main {
       $temporary = $change.target + '.manualpatch-' + [guid]::NewGuid().ToString('N')
       try {
         [System.IO.File]::WriteAllBytes($temporary, [byte[]]$change.bytes)
-        [System.IO.File]::Replace($temporary, $change.target, (Join-Path $backupRoot ($change.path.Replace('/', '\'))))
+        if ($change.kind -eq 'added') {
+          [System.IO.File]::Move($temporary, $change.target)
+        } else {
+          [System.IO.File]::Replace($temporary, $change.target, (Join-Path $backupRoot ($change.path.Replace('/', '\'))))
+        }
         $applied.Add($change)
       } finally {
         if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
@@ -229,8 +260,12 @@ function Main {
     $revertFailures = @()
     foreach ($change in $applied) {
       try {
-        $saved = Join-Path $backupRoot ($change.path.Replace('/', '\'))
-        [System.IO.File]::Copy($saved, $change.target, $true)
+        if ($change.kind -eq 'added') {
+          Remove-Item -LiteralPath $change.target -Force
+        } else {
+          $saved = Join-Path $backupRoot ($change.path.Replace('/', '\'))
+          [System.IO.File]::Copy($saved, $change.target, $true)
+        }
       } catch { $revertFailures += [string]$change.path }
     }
     if ($revertFailures.Count -gt 0) {
