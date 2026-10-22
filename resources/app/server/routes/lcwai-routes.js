@@ -342,9 +342,10 @@ app.get('/api/lcwai/outputs', (req, res) => {
 
   // Çıktının kullandığı model görselleri: renderer yerel depodan çözer
   // ({ anahtar: dataURL }); sunucu doğrular ve dosyayı görsellerle oluşturur.
+  // records: aynı anahtarların bağlam satırı (kart bilgisi kaynak değerleri).
 app.post('/api/lcwai/outputs/:pendingId/images', express.json({ limit: '48mb' }), (req, res) => {
     try {
-      const output = outputsOf().completeImages(ownerOf(req), req.params.pendingId, req.body && req.body.images);
+      const output = outputsOf().completeImages(ownerOf(req), req.params.pendingId, req.body && req.body.images, req.body && req.body.records);
       audit(req, 'LCWAI_OUTPUT_IMAGES', { requested: output.imagesRequested, used: output.imagesUsed });
       res.set('Cache-Control', 'no-store').json({ ok: true, output });
     } catch (error) {

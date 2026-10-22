@@ -45,19 +45,24 @@
     if (!imageKeys.has(id)) imageKeys.set(id, `${IMAGE_PREFIX[tab]}-${imageKeys.size + 1}`);
     return imageKeys.get(id);
   }
+  /* records: anahtar → kaynak satır ([[sütun, değer], …]). Model kartına
+     kullanıcının Yerleşim'de seçtiği bilgiler buradan, birebir yazılır
+     (LCW AI'ın yeniden yazdığı değer değil). Yalnız bellekte tutulur. */
   function withImageKeys(tab, rows, columns, values) {
     const screenData = window.BLAIScreenData;
-    if (!screenData || typeof screenData.rowImage !== 'function' || !IMAGE_PREFIX[tab]) return { columns, values, images: null };
+    if (!screenData || typeof screenData.rowImage !== 'function' || !IMAGE_PREFIX[tab]) return { columns, values, images: null, records: null };
     const images = {};
-    const keys = rows.map(row => {
+    const records = {};
+    const keys = rows.map((row, index) => {
       const identity = screenData.rowImage(tab, row);
       if (!identity) return '';
       const key = imageKeyFor(tab, identity);
       images[key] = identity;
+      records[key] = columns.map((label, c) => [label, values[index][c]]).filter(pair => String(pair[1] == null ? '' : pair[1]).trim());
       return key;
     });
-    if (!Object.keys(images).length) return { columns, values, images: null };
-    return { columns: [IMAGE_COLUMN, ...columns], values: values.map((row, index) => [keys[index], ...row]), images };
+    if (!Object.keys(images).length) return { columns, values, images: null, records: null };
+    return { columns: [IMAGE_COLUMN, ...columns], values: values.map((row, index) => [keys[index], ...row]), images, records };
   }
   function tableContext(tab, mode) {
     const data = window.BLAIScreenData && window.BLAIScreenData.table(tab, { all: mode === 'all' });
@@ -72,6 +77,7 @@
     const keyed = mode === 'filters' ? null : withImageKeys(tab, source, columns.map(col => col.label), source.map(row => columns.map(col => contextCellValue(row, col))));
     return {
       images: keyed && keyed.images,
+      records: keyed && keyed.records,
       label: mode === 'all' ? L(`${title} — tüm kayıtlar`, `${title} — all records`) : mode === 'selected' ? L(`${title} — seçili kayıtlar`, `${title} — selected records`) : mode === 'filters' ? L(`${title} — filtreler ve özet`, `${title} — filters and summary`) : L(`${title} — görünen kayıtlar`, `${title} — visible records`),
       screen: tab,
       summary: mode === 'all' ? L(`${source.length} kayıt (sayfa filtreleri uygulanmadan, tüm sütunlarla).`, `${source.length} records (without page filters, all columns).`) : L(`${source.length} kayıt (tablodaki filtreler uygulanmış).`, `${source.length} records (table filters applied).`),
@@ -97,8 +103,9 @@
     if (!context || !Array.isArray(context.columns) || !context.columns.length || !Array.isArray(context.rows) || !context.rows.length) return { context, file: null };
     const name = contextFileName(context);
     const file = new File([contextCsv(context)], name, { type: 'text/csv' });
-    const { rows, columns, images, ...rest } = context;
+    const { rows, columns, images, records, ...rest } = context;
     return {
+      records: records || null,
       file,
       context: { ...rest, text: L(`Tablonun tamamı ekli “${name}” dosyasında: ${rows.length} satır, ${columns.length} sütun (${columns.join(', ')}).`, `The full table is in the attached “${name}” file: ${rows.length} rows, ${columns.length} columns (${columns.join(', ')}).`) + (images ? L(` “${IMAGE_COLUMN}” sütunu kaydın Buyer Log’daki gerçek model görselinin anahtarıdır.`, ` The “${IMAGE_COLUMN}” column is the key of the record’s real model image in Buyer Log.`) : '') },
       images: images || null,
@@ -528,6 +535,12 @@
       return canvas.toDataURL('image/jpeg', 0.84);
     } catch (_) { return ''; }
   }
+  function resolveRecords(conv, tokens) {
+    const map = conv.recordMap || {};
+    const out = {};
+    for (const token of tokens || []) if (Array.isArray(map[token])) out[token] = map[token];
+    return out;
+  }
   async function resolveImages(conv, tokens, answer) {
     const map = conv.imageMap || {};
     const screenData = window.BLAIScreenData;
@@ -731,6 +744,10 @@
           const prepared = contextAsFile(await api.buildContext(id));
           if (prepared.images) conv.imageMap = { ...(conv.imageMap || {}), ...prepared.images };
           else if (prepared.context && prepared.context.images) { conv.imageMap = { ...(conv.imageMap || {}), ...prepared.context.images }; delete prepared.context.images; }
+          // Kart bilgisi kaynak satırları: yalnız bellekte, LCW AI'a giden bağlama girmez.
+          const records = prepared.records || (prepared.context && prepared.context.records);
+          if (prepared.context) delete prepared.context.records;
+          if (records) conv.recordMap = { ...(conv.recordMap || {}), ...records };
           if (prepared.file) {
             const limit = state.config && state.config.limits ? state.config.limits.maxFileBytes : 20 * 1048576;
             if (prepared.file.size > limit) throw Object.assign(new Error('too-large'), { code: 'LCWAI_FILE_TOO_LARGE' });
@@ -753,6 +770,7 @@
         attachments: userMessage.attachments,
         output,
         resolveImages: tokens => resolveImages(conv, tokens, answer),
+        resolveRecords: tokens => resolveRecords(conv, tokens),
         onProgress: event => {
           // Dosya modunda ham HTML/JSON akışı gösterilmez; yalnız aşama ve
           // üretilen karakter sayısı görünür.
@@ -974,5 +992,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, addFiles, persistConversations, restoreConversations };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, addFiles, persistConversations, restoreConversations };
 })();

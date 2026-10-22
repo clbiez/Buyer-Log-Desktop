@@ -851,6 +851,93 @@
           "en": "Edit the pricing draft, Excel and table below the message in the same window."
         }
       }
+    },
+    {
+      "id": "lcwai-model-card-details",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Sunum ve rapor çıktıları",
+        "en": "LCW AI · Presentation and report outputs"
+      },
+      "title": {
+        "tr": "Model kartlarında görsel önde, bilgileri siz seçin",
+        "en": "Picture-first model cards with details you choose"
+      },
+      "body": {
+        "tr": "PowerPoint, PDF ve HTML model kartlarında görsel büyük ve öndedir; altında küçük yazıyla varsayılan olarak model adı, renk kodu, fit, adet ve hedef fiyat yazar. Yerleşim adımındaki “Kart bilgileri” listesinden alan ekleyip çıkarabilir ve sıralayabilirsiniz; “Kaynak” işaretli alanların değeri LCW AI’dan değil Buyer Log verisinden birebir alınır. Sığmayan bilgiler aynı satırda yan yana dizilir, görsel küçülmez. Seçim şablona kaydedilir.",
+        "en": "PowerPoint, PDF and HTML model cards put a large picture first; below it, in small text, the model name, colour code, fit, quantity and target price are shown by default. In the Layout step you can add, remove and reorder fields in the “Card details” list; fields marked “Source” take their value directly from Buyer Log data, not from LCW AI. Details that do not fit are placed side by side on one line, so the picture never shrinks. The choice is saved with the template."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-model-card-details.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI çıktı düzenleyicisi: Yerleşim adımında kart bilgileri seçicisi ve görseli büyük model kartları, demo veriler",
+          "en": "Real Buyer Log LCW AI output editor: card details picker in the Layout step and picture-first model cards, demo data"
+        },
+        "caption": {
+          "tr": "Kart bilgilerini işaretleyin, sıralayın; önizleme dosyayla aynı",
+          "en": "Tick and order the card details; the preview matches the file"
+        }
+      }
+    },
+    {
+      "id": "lcwai-gallery-group-packing",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Sunum ve rapor çıktıları",
+        "en": "LCW AI · Presentation and report outputs"
+      },
+      "title": {
+        "tr": "Küçük model grupları aynı slayta yan yana",
+        "en": "Small model groups share one slide side by side"
+      },
+      "body": {
+        "tr": "Bir ya da iki modellik gruplar artık ayrı ve büyük kısmı boş slaytlara dağılmaz: yer olduğu sürece aynı slayta (PDF’te aynı sayfaya) yan yana, grup adı ve ayraçla dizilir; satırda kalan boşluğu sonraki küçük grup doldurur, tek sayfaya sığan grup bölünmez. Az model varsa kartlar oranı korunarak büyür. Galeri slaytları line sheet gibi koyu başlık bandı ve çerçeveyle çizilir. İki seçenek de Yerleşim adımından kapatılabilir.",
+        "en": "Groups with one or two models no longer spread over separate, mostly empty slides: while there is room they share one slide (one page in PDF) side by side with a group name and divider; a later small group fills a row gap, and a group that fits on one page is not split. With few models the cards grow while keeping their proportions. Gallery slides use a dark title band and frame like a line sheet. Both options can be turned off in the Layout step."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-gallery-group-packing.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log PowerPoint çıktısı: dört model grubu tek slaytta yan yana, demo veriler",
+          "en": "Real Buyer Log PowerPoint output: four model groups side by side on one slide, demo data"
+        },
+        "caption": {
+          "tr": "4 galeri slaytı → 1 dolu slayt",
+          "en": "4 gallery slides → 1 full slide"
+        }
+      }
+    },
+    {
+      "id": "lcwai-html-motion",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Sunum ve rapor çıktıları",
+        "en": "LCW AI · Presentation and report outputs"
+      },
+      "title": {
+        "tr": "Hareketli ve efektli HTML raporları",
+        "en": "Animated HTML reports with effects"
+      },
+      "body": {
+        "tr": "LCW AI HTML raporları tarayıcıda kaydırma ilerleme çubuğu, süzülen renk ışıkları, başlıkta parıltı ve perde açılışı, kaydırdıkça beliren kartlar ve gruplar, üzerine gelince eğilip parlayan model kartlarıyla açılır. Animasyonlar yalnız CSS’tir (betik yok); “hareketi azalt” tercihinde ve PDF baskısında kapanır.",
+        "en": "LCW AI HTML reports open in the browser with a scroll progress bar, drifting colour lights, a shine and curtain reveal on the title, cards and groups that appear as you scroll, and model cards that tilt and shine on hover. The animations are CSS only (no scripts) and are off with “reduce motion” and in PDF printing."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-html-motion.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI HTML raporu tarayıcıda: gruplu model kartları ve üzerine gelinen kart efekti, demo veriler",
+          "en": "Real Buyer Log LCW AI HTML report in the browser: grouped model cards and a hovered card effect, demo data"
+        },
+        "caption": {
+          "tr": "Kaydırdıkça beliren gruplar ve kart efektleri",
+          "en": "Groups appearing on scroll and card effects"
+        }
+      }
     }
   ]
 }

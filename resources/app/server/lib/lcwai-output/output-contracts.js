@@ -42,11 +42,16 @@ function imageInstruction(format, english) {
     ? 'MODEL IMAGES: if the Buyer Log context (CSV) has a "BL Image" column, each value (e.g. KOL-3) is the key of that record\'s real product image held by Buyer Log. You cannot see the images; never write "image not available" for a record that has a key. '
     : 'MODEL GÖRSELLERİ: Buyer Log bağlamında (CSV) "BL Image" sütunu varsa her değer (ör. KOL-3) o kaydın Buyer Log’daki gerçek ürün görselinin anahtarıdır. Görselleri göremezsin; anahtarı olan kayıt için asla "görsel yok" yazma. ';
   const how = {
-    html: english ? 'Place it with <img class="bl-model-img" data-bl-image="KOL-3" alt="model name"> (no src); Buyer Log inserts the real picture. Model cards: <div class="bl-gallery"><div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>…</h3>…</div></div>.' : 'Görseli <img class="bl-model-img" data-bl-image="KOL-3" alt="model adı"> ile koy (src yazma); gerçek resmi Buyer Log ekler. Model kartları: <div class="bl-gallery"><div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>…</h3>…</div></div>.',
-    pptx: english ? 'For model visuals use the "gallery" layout: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (put all models of a group in ONE gallery slide, up to 60 items; Buyer Log places them on the user’s layout grid and continues on extra slides). A "bullets" slide may also take "image":"KOL-3".' : 'Model görselleri için "gallery" düzenini kullan: {"layout":"gallery","title":"…","items":[{"title":"model","subtitle":"…","note":"…","image":"KOL-3","tone":"ok|warn|risk|info"}]} (bir grubun tüm modellerini TEK gallery slaytına koy, en fazla 60 öğe; Buyer Log onları kullanıcının yerleşim ızgarasına dizer ve devam slaytlarına böler). "bullets" slaytı da "image":"KOL-3" alabilir.',
+    html: english ? 'Place it with <img class="bl-model-img" data-bl-image="KOL-3" alt="model name"> (no src); Buyer Log inserts the real picture. Model card: <div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>model name</h3><dl class="bl-specs"><div><dt>Colour code</dt><dd>…</dd></div><div><dt>Fit</dt><dd>…</dd></div>…</dl></div>. Grouped models: <div class="bl-groups"><section class="bl-group"><h3 class="bl-group-title">group name</h3><div class="bl-gallery">cards…</div></section>…</div> — one bl-group per group, all groups of a topic in ONE bl-groups; Buyer Log puts small groups side by side on the same page. Ungrouped: <div class="bl-gallery">cards…</div>.' : 'Görseli <img class="bl-model-img" data-bl-image="KOL-3" alt="model adı"> ile koy (src yazma); gerçek resmi Buyer Log ekler. Model kartı: <div class="bl-card"><img class="bl-model-img" data-bl-image="…" alt="…"><h3>model adı</h3><dl class="bl-specs"><div><dt>Renk kodu</dt><dd>…</dd></div><div><dt>Fit</dt><dd>…</dd></div>…</dl></div>. Gruplu modeller: <div class="bl-groups"><section class="bl-group"><h3 class="bl-group-title">grup adı</h3><div class="bl-gallery">kartlar…</div></section>…</div> — her grup için bir bl-group, bir konunun tüm grupları TEK bl-groups içinde; Buyer Log küçük grupları aynı sayfada yan yana dizer. Grupsuz: <div class="bl-gallery">kartlar…</div>.',
+    pptx: english ? 'For model visuals use the "gallery" layout: {"layout":"gallery","title":"…","subtitle":"…","items":[{"title":"model name","group":"group name (optional)","image":"KOL-3","fields":[{"label":"Colour code","value":"…"},{"label":"Fit","value":"…"},{"label":"Quantity","value":"…"},{"label":"Target price","value":"…"}]}]} (put all models of a group in ONE gallery slide, up to 60 items; Buyer Log places them on the user’s layout grid, puts small consecutive groups side by side on the same slide and continues on extra slides). A "bullets" slide may also take "image":"KOL-3".' : 'Model görselleri için "gallery" düzenini kullan: {"layout":"gallery","title":"…","subtitle":"…","items":[{"title":"model adı","group":"grup adı (isteğe bağlı)","image":"KOL-3","fields":[{"label":"Renk kodu","value":"…"},{"label":"Fit","value":"…"},{"label":"Adet","value":"…"},{"label":"Hedef fiyat","value":"…"}]}]} (bir grubun tüm modellerini TEK gallery slaytına koy, en fazla 60 öğe; Buyer Log onları kullanıcının yerleşim ızgarasına dizer, ardışık küçük grupları aynı slayta yan yana koyar ve devam slaytlarına böler). "bullets" slaytı da "image":"KOL-3" alabilir.',
     xlsx: english ? 'To show pictures add a column {"header":"Image","type":"image"} whose cells hold the key (e.g. "KOL-3"); Buyer Log embeds the picture in the cell.' : 'Resim göstermek için {"header":"Görsel","type":"image"} sütunu ekle; hücrelerine anahtarı (ör. "KOL-3") yaz, Buyer Log resmi hücreye gömer.',
   };
-  return head + (format === 'pptx' ? how.pptx : format === 'xlsx' ? how.xlsx : how.html);
+  // Kart bilgisi: karar için gereken alanlar, kaynaktan birebir. Kullanıcı
+  // Yerleşim'de alan ekleyip çıkarabilir; değerleri Buyer Log kaynaktan alır.
+  const fields = format === 'xlsx' ? '' : english
+    ? ' MODEL CARD DETAILS: the picture is the main element; the text under it is short. Card title = model name. Fields: colour code, fit, quantity and target price (when the source has them), then at most 2 other decision-relevant fields; copy values exactly from the source row. Do not repeat a value that is already in the slide/group title. The user chooses in Buyer Log which fields are printed.'
+    : ' MODEL KARTI BİLGİSİ: kartta görsel öndedir; altındaki yazı kısadır. Kart başlığı = model adı. Alanlar: renk kodu, fit, adet ve hedef fiyat (kaynakta varsa), sonra en çok 2 başka karar alanı; değerleri kaynak satırdan birebir al. Slayt/grup başlığında yazan değeri kartta tekrarlama. Kartta hangi alanların yazacağını kullanıcı Buyer Log’da seçer.';
+  return head + (format === 'pptx' ? how.pptx : format === 'xlsx' ? how.xlsx : how.html) + fields;
 }
 const TONES = ['ok', 'warn', 'risk', 'info'];
 
@@ -265,6 +270,14 @@ function bulletsOf(value) {
   return asArray(value).map(item => clean(isObject(item) ? (item.text || item.title || '') : item, LIMITS.bulletChars)).filter(Boolean).slice(0, LIMITS.bullets);
 }
 const tone = value => (TONES.includes(String(value || '').toLowerCase()) ? String(value).toLowerCase() : 'info');
+/* Kart bilgisi alanları: [{label,value,tone}] | {Etiket: değer} | ["Etiket: değer"]. */
+const CARD_FIELDS = 12;
+function cardFieldsOf(value) {
+  const list = isObject(value) ? Object.entries(value).map(([label, item]) => ({ label, value: item }))
+    : asArray(value).map(item => { if (typeof item !== 'string') return item; const match = /^([^:]{1,40}):\s*(.+)$/.exec(item); return match ? { label: match[1], value: match[2] } : null; });
+  return list.filter(isObject).map(item => ({ label: clean(item.label || item.name || item.key, 40), value: clean(typeof item.value === 'number' ? String(item.value) : item.value, 200), tone: TONES.includes(String(item.tone || '').toLowerCase()) ? String(item.tone).toLowerCase() : '' }))
+    .filter(item => item.label && item.value).slice(0, CARD_FIELDS);
+}
 
 function normalizeSlide(slide, index, english, warnings) {
   const title = clean(slide.title, LIMITS.titleChars);
@@ -306,6 +319,7 @@ function normalizeSlide(slide, index, english, warnings) {
     base.bullets = [];
     base.items = asArray(slide.items || slide.cards || slide.models).filter(isObject).slice(0, GALLERY_ITEMS).map(item => ({
       title: clean(item.title || item.name || item.model, 60), subtitle: clean(item.subtitle, 80), note: clean(item.note || item.text, 140), image: imageToken(item.image), tone: tone(item.tone),
+      badge: clean(item.badge || item.tag, 24), group: clean(item.group, 80), fields: cardFieldsOf(item.fields || item.details || item.specs),
     })).filter(item => item.title || item.image);
     if (!base.items.length) return { error: english ? `Slide ${index + 1} (gallery) has no items.` : `${index + 1}. slayt (gallery) öğe içermiyor.` };
     return { slide: base };
