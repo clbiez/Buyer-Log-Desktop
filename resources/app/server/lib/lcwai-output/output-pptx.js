@@ -219,9 +219,10 @@ function paginateTableSlide(slide) {
    aynı başlıklı devam slaytlarına. Ardışık küçük galeri grupları (ya da
    öğelerdeki "group") aynı slayta yan yana paketlenir; az dolu slaytta
    kartlar büyür. Hesap tarayıcı önizlemesiyle ortaktır. */
-function expandSlides(slides, layout, { lang = 'tr' } = {}) {
+function expandSlides(slides, layout, { lang = 'tr', records = null } = {}) {
   if (layout !== undefined) applyGeometry(layout);
-  return BLOutputLayout.expandGalleries(slides, LAYOUT, { english: String(lang).startsWith('en') }).flatMap(entry => {
+  // records: kullanıcı gruplaması (Kategori › Kumaş › Baskı) ve sayfa başlığı değerleri için.
+  return BLOutputLayout.expandGalleries(slides, LAYOUT, { english: String(lang).startsWith('en'), records }).flatMap(entry => {
     if (entry.page) return [{ layout: 'gallery', title: entry.page.title, subtitle: entry.page.subtitle, bullets: [], callout: null, items: entry.page.cells.map(cell => cell.item), page: entry.page }];
     return entry.slide.layout === 'table' ? paginateTableSlide(entry.slide) : [entry.slide];
   });
@@ -466,7 +467,7 @@ function renderPresentation(deck, { lang = 'tr', date = new Date(), images = {},
     media[token] = { name, width: image.width, height: image.height };
     mediaFiles.push({ name: `ppt/media/${name}`, data: image.buffer });
   }
-  const expanded = expandSlides(deck.slides, deck.layout || null, { lang });
+  const expanded = expandSlides(deck.slides, deck.layout || null, { lang, records });
   const rendered = expanded.map((slide, index) => renderSlide(slide, index, expanded.length, deck, p, langTag, media, records));
   const slides = rendered.map(item => item.xml);
   const created = (date instanceof Date ? date : new Date()).toISOString().replace(/\.\d{3}Z$/, 'Z');

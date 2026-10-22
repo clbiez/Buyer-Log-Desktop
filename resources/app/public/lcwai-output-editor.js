@@ -661,6 +661,63 @@
       ${Array.isArray(ed.data.layout.cardFields) ? `<button type="button" class="lcwaiBtn is-link" data-lay-fields-reset>${esc(L('Varsayılan bilgilere dön', 'Back to the default details'))}</button>` : ''}</section>`;
   }
 
+  /* ---- Gruplama (1./2./3. grup) ve sayfa başlığı ----
+     Gruplama: modeller seçilen alanların değerine göre yeniden gruplanır
+     (ör. Kategori › Kumaş › Baskı). Son seviye sayfada yan yana gruplar,
+     öncekiler yeni slayt/bölüm başlatır. Başlık: otomatik, alanlardan ya da
+     elle ({Alan} yer tutucusuyla). Hesap sunucuyla ortaktır (BLOutputLayout). */
+  const allCardFields = () => { const options = LAY().availableCardFields(cardSourceItems(), ed.draft.records || {}); return [...options.ai, ...options.source]; };
+  const isPptx = () => ed.format === 'pptx';
+  function groupingPanel() {
+    const key = LAY().fieldKey;
+    const all = allCardFields();
+    const levels = ed.data.layout.groupBy || [];
+    const names = [L('1. grup', '1st group'), L('2. grup', '2nd group'), L('3. grup', '3rd group')];
+    const selects = names.map((name, i) => {
+      const current = levels[i] || '';
+      const extra = current && !all.some(label => key(label) === key(current)) ? [current] : [];
+      const options = `<option value="">${esc(i ? L('— Yok —', '— None —') : L('LCW AI’ın gruplaması', 'LCW AI’s grouping'))}</option>${[...all, ...extra].map(label => `<option value="${esc(label)}"${current && key(label) === key(current) ? ' selected' : ''}>${esc(label)}</option>`).join('')}`;
+      return `<label class="lcwaiLayPick"><span>${esc(name)}</span><select data-lay-group="${i}"${i > levels.length ? ' disabled' : ''}>${options}</select></label>`;
+    }).join('');
+    const last = levels[levels.length - 1];
+    const hint = !levels.length
+      ? L('Seçim yoksa LCW AI’ın grupları kullanılır. Örnek: Kategori › Kumaş › Baskı.', 'Without a choice LCW AI’s groups are used. Example: Category › Fabric › Print.')
+      : levels.length === 1
+        ? L(`“${last}” grupları ${isPptx() ? 'slaytta' : 'sayfada'} yan yana dizilir.`, `“${last}” groups are placed side by side on the ${isPptx() ? 'slide' : 'page'}.`)
+        : L(`${levels.slice(0, -1).join(' › ')} her değer için yeni ${isPptx() ? 'slayt' : 'bölüm'} başlatır; “${last}” grupları yan yana dizilir.`, `${levels.slice(0, -1).join(' › ')} start a new ${isPptx() ? 'slide' : 'section'} for each value; “${last}” groups sit side by side.`);
+    return `<section class="lcwaiLayGroup"><h4>${esc(L('Gruplama', 'Grouping'))}</h4><div class="lcwaiLayPicks">${selects}</div><p class="lcwaiNote">${esc(hint)}</p></section>`;
+  }
+  function titleFieldState() {
+    const key = LAY().fieldKey;
+    const spec = ed.data.layout.pageTitle;
+    const chosen = spec && spec.mode === 'fields' ? spec.fields : [];
+    const keys = new Set(chosen.map(key));
+    return { chosen, rest: allCardFields().filter(label => !keys.has(key(label))) };
+  }
+  function setPageTitle(value, { render = true } = {}) {
+    setLayout({ ...ed.data.layout, pageTitle: value }, { history: true });
+    if (render) renderLayoutPanel($('[data-ed-main]'));
+  }
+  function pageTitlePanel() {
+    const spec = ed.data.layout.pageTitle;
+    const mode = spec ? spec.mode : 'auto';
+    const modes = [['auto', L('Otomatik', 'Automatic')], ['fields', L('Alanlardan', 'From fields')], ['manual', L('Elle yaz', 'Type it')]];
+    const seg = `<div class="lcwaiSeg" role="radiogroup">${modes.map(([value, label]) => `<button type="button" role="radio" data-lay-title-mode="${value}" class="${mode === value ? 'is-active' : ''}" aria-checked="${mode === value}">${esc(label)}</button>`).join('')}</div>`;
+    let body = `<p class="lcwaiNote">${esc(L('LCW AI’ın ve grupların ortak adından oluşur.', 'Built from LCW AI’s and the groups’ common name.'))}</p>`;
+    if (mode === 'fields') {
+      const state = titleFieldState();
+      const chosen = state.chosen.map((label, index) => `<li class="lcwaiLayField is-on"><label><input type="checkbox" checked data-lay-tfield="${esc(label)}"> <span>${esc(label)}</span></label>
+        <button type="button" class="lcwaiEdIconBtn" data-lay-tfield-move="${index},-1"${index ? '' : ' disabled'} aria-label="${esc(L('Yukarı', 'Up'))}" title="${esc(L('Yukarı', 'Up'))}">↑</button><button type="button" class="lcwaiEdIconBtn" data-lay-tfield-move="${index},1"${index < state.chosen.length - 1 ? '' : ' disabled'} aria-label="${esc(L('Aşağı', 'Down'))}" title="${esc(L('Aşağı', 'Down'))}">↓</button></li>`).join('');
+      const rest = state.rest.map(label => `<li class="lcwaiLayField"><label><input type="checkbox" data-lay-tfield="${esc(label)}"> <span>${esc(label)}</span></label></li>`).join('');
+      body = `<ul class="lcwaiLayFields" role="group" aria-label="${esc(L('Başlık alanları', 'Title fields'))}">${chosen}${rest}</ul><p class="lcwaiNote">${esc(L('Seçilen alanların o sayfadaki değerleri “·” ile yazılır; birden çok değer “A / B” olur.', 'The page’s values of the chosen fields are joined with “·”; several values become “A / B”.'))}</p>`;
+    } else if (mode === 'manual') {
+      const chips = allCardFields().map(label => `<button type="button" class="lcwaiLayChip" data-lay-title-insert="${esc(label)}">{${esc(label)}}</button>`).join('');
+      body = `<input class="lcwaiLayTitleInput" data-lay-title-text value="${esc(spec.text || '')}" maxlength="140" placeholder="${esc(L('Ör. {Kategori} · {Kumaş} – Yaz 2027', 'E.g. {Category} · {Fabric} – Summer 2027'))}" aria-label="${esc(L('Başlık metni', 'Title text'))}">
+        <div class="lcwaiLayChips">${chips}</div><p class="lcwaiNote">${esc(L('{Alan} yerine o sayfadaki değer yazılır; değer yoksa otomatik başlık kalır. Alan eklemek için tıklayın.', '{Field} is replaced by the page’s value; without a value the automatic title stays. Click to add a field.'))}</p>`;
+    }
+    return `<section class="lcwaiLayGroup"><h4>${esc(isPptx() ? L('Slayt başlığı', 'Slide title') : L('Bölüm başlığı', 'Section title'))}</h4>${seg}${body}</section>`;
+  }
+
   function renderLayoutPanel(main) {
     if (!main || !LAY()) return;
     const isSheet = ed.format === 'xlsx';
@@ -672,7 +729,7 @@
       : slider('titleSize', L('Başlık yazı boyutu', 'Title text size')) + slider('bodySize', L('Metin boyutu', 'Text size'));
     const grid = isSheet ? '' : gallery
       ? `<section class="lcwaiLayGroup"><h4>${esc(ed.format === 'pptx' ? L('Slayt başına model', 'Models per slide') : L('Sayfa başına model', 'Models per page'))}</h4>${gridPicker()}
-        <div class="lcwaiLayFlags is-stack">${flag('packGroups', ed.format === 'pptx' ? L('Küçük grupları aynı slayta yan yana diz', 'Put small groups side by side on one slide') : L('Küçük grupları aynı sayfaya yan yana diz', 'Put small groups side by side on one page'))}${flag('autoFit', L('Az model varsa kartları büyüt', 'Enlarge cards when there are few models'))}</div></section>${cardFieldsPanel()}`
+        <div class="lcwaiLayFlags is-stack">${flag('packGroups', ed.format === 'pptx' ? L('Küçük grupları aynı slayta yan yana diz', 'Put small groups side by side on one slide') : L('Küçük grupları aynı sayfaya yan yana diz', 'Put small groups side by side on one page'))}${flag('autoFit', L('Az model varsa kartları büyüt', 'Enlarge cards when there are few models'))}</div></section>${groupingPanel()}${pageTitlePanel()}${cardFieldsPanel()}`
       : `<section class="lcwaiLayGroup"><h4>${esc(L('Model ızgarası', 'Model grid'))}</h4><p class="lcwaiNote">${esc(ed.format === 'pptx' ? L('Bu sunumda model galerisi yok. İçerik adımında “Model galerisi” slaytı ekleyince burada kaça kaç model yerleşeceğini seçebilirsiniz.', 'This deck has no model gallery. Add a “Model gallery” slide in the Content step to choose how many models fit here.') : L('Bu raporda model galerisi yok; ızgara galeri olan raporlarda görünür.', 'This report has no model gallery; the grid appears for reports with a gallery.'))}</p></section>`;
     const orientation = isReport ? `<section class="lcwaiLayGroup"><h4>${esc(L('Sayfa yönü', 'Page orientation'))}</h4><div class="lcwaiSeg" role="radiogroup">${[['portrait', L('Dikey', 'Portrait')], ['landscape', L('Yatay', 'Landscape')]].map(([key, label]) => `<button type="button" role="radio" data-ed-orient="${key}" class="${ed.orientation === key ? 'is-active' : ''}" aria-checked="${ed.orientation === key}">${esc(label)}</button>`).join('')}</div></section>` : '';
     const fine = isSheet
@@ -739,7 +796,7 @@
     const slides = ed.data.slides || [];
     const l = LAY().normalizeLayout('pptx', ed.data.layout);
     const g = LAY().pptxGeometry(l);
-    const pages = LAY().expandGalleries(slides, l, { english: isEn() });
+    const pages = LAY().expandGalleries(slides, l, { english: isEn(), records: ed.draft.records || {} });
     ed.previewPages = pages;
     const selected = Math.max(0, Math.min(Number(ed.selected) || 0, slides.length - 1));
     let current = Number(ed.previewPage);
@@ -830,7 +887,7 @@
       iframe = stage.querySelector('[data-lay-frame]');
     }
     // Sunucuyla aynı hazırlık: kart bilgileri (kaynak satırlarla), gruplar, sayfalar.
-    const body = LAY().prepareReport(ed.data.body || '', ed.data.layout, { pages: ed.format === 'pdf', records: ed.draft.records || {} });
+    const body = LAY().prepareReport(ed.data.body || '', ed.data.layout, { pages: ed.format === 'pdf', records: ed.draft.records || {}, english: isEn() });
     const pages = (body.match(/bl-gallery-page/g) || []).length;
     const label = stage.querySelector('[data-lay-pages]');
     if (label) label.textContent = ed.format !== 'pdf' ? L('HTML dosyasında model ızgarası sütun sayısını izler (sayfa yoktur).', 'In the HTML file the model grid follows the column count (there are no pages).') : pages ? L(`Model galerisi ${pages} sayfaya yerleşiyor (kesik çizgi = yeni sayfa).`, `The model gallery fills ${pages} page(s) (dashed line = new page).`) : L('Raporda model galerisi yok; ızgara galeri eklendiğinde uygulanır.', 'The report has no model gallery; the grid applies once a gallery is added.');
@@ -973,6 +1030,24 @@
     if (target.matches('[data-gp]')) { const [columns, rows] = target.dataset.gp.split(',').map(Number); setLayout({ ...ed.data.layout, columns, rows }, { history: true }); renderLayoutPanel($('[data-ed-main]')); return; }
     if (target.matches('[data-lay-field-move]')) { const [index, step] = target.dataset.layFieldMove.split(',').map(Number); const list = [...cardFieldState().chosen]; if (move(list, index, index + step)) setCardFields(list); return; }
     if (target.matches('[data-lay-fields-reset]')) { setCardFields(null); return; }
+    if (target.matches('[data-lay-title-mode]')) {
+      const mode = target.dataset.layTitleMode;
+      const spec = ed.data.layout.pageTitle || {};
+      const levels = ed.data.layout.groupBy || [];
+      if (mode === 'auto') setPageTitle(null);
+      else if (mode === 'fields') setPageTitle({ mode, fields: spec.fields && spec.fields.length ? spec.fields : levels.slice(0, 2), text: spec.text || '' });
+      else setPageTitle({ mode, fields: spec.fields || [], text: spec.text || levels.map(label => `{${label}}`).join(' · ') });
+      return;
+    }
+    if (target.matches('[data-lay-tfield-move]')) { const [index, step] = target.dataset.layTfieldMove.split(',').map(Number); const list = [...titleFieldState().chosen]; if (move(list, index, index + step)) setPageTitle({ ...ed.data.layout.pageTitle, fields: list }); return; }
+    if (target.matches('[data-lay-title-insert]')) {
+      const spec = ed.data.layout.pageTitle || { mode: 'manual', fields: [], text: '' };
+      const text = `${spec.text ? `${spec.text} · ` : ''}{${target.dataset.layTitleInsert}}`.slice(0, 140);
+      setPageTitle({ ...spec, mode: 'manual', text });
+      const field = $('[data-lay-title-text]');
+      if (field) { field.focus(); field.setSelectionRange(field.value.length, field.value.length); }
+      return;
+    }
     if (target.matches('[data-ed-save-template]')) { openSaveTemplate(); return; }
     if (target.matches('[data-ed-open], [data-ed-reveal]')) {
       const api = AI();
@@ -1058,6 +1133,13 @@
     const el = event.target;
     if (el.matches('[data-ed-title]')) { ed.title = el.value; markDirty(); return; }
     if (el.matches('[data-lay]')) { onLayoutInput(el); return; }
+    if (el.matches('[data-lay-title-text]')) {
+      // Yazarken panel yeniden çizilmez (odak kaybolmaz); önizleme güncellenir.
+      historyOnTyping();
+      ed.data.layout = LAY().normalizeLayout(ed.format, { ...ed.data.layout, pageTitle: { ...(ed.data.layout.pageTitle || {}), mode: 'manual', text: el.value } });
+      markDirty(); updateLayoutPreview();
+      return;
+    }
     if (el.matches('[data-source]')) { markDirty(); return; }
     if (el.matches('textarea[data-autosize]')) autoSize(el.parentElement);
     if (!el.dataset.path || el.tagName === 'SELECT') return;
@@ -1079,6 +1161,23 @@
     if (!ed) return;
     const el = event.target;
     if (el.matches('[data-lay-flag]')) { setLayout({ ...ed.data.layout, [el.dataset.layFlag]: el.checked }, { history: true }); return; }
+    if (el.matches('[data-lay-group]')) {
+      const key = LAY().fieldKey;
+      const index = Number(el.dataset.layGroup);
+      let levels = [...(ed.data.layout.groupBy || [])];
+      if (!el.value) levels = levels.slice(0, index);
+      else { levels[index] = el.value; levels = levels.filter((label, i) => label && levels.findIndex(other => other && key(other) === key(label)) === i); }
+      setLayout({ ...ed.data.layout, groupBy: levels.length ? levels : null }, { history: true });
+      renderLayoutPanel($('[data-ed-main]'));
+      return;
+    }
+    if (el.matches('[data-lay-tfield]')) {
+      const key = LAY().fieldKey;
+      const list = titleFieldState().chosen.filter(label => key(label) !== key(el.dataset.layTfield));
+      if (el.checked) list.push(el.dataset.layTfield);
+      setPageTitle({ ...ed.data.layout.pageTitle, mode: 'fields', fields: list });
+      return;
+    }
     if (el.matches('[data-lay-field]')) {
       const key = LAY().fieldKey;
       const list = cardFieldState().chosen.filter(label => key(label) !== key(el.dataset.layField));

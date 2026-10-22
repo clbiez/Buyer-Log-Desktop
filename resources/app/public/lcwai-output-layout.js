@@ -50,7 +50,7 @@
     for (const flag of FLAGS[key]) out[flag] = !FLAG_OFF.has(flag);
     // Kartta gösterilecek bilgiler (sıralı alan adları); null = varsayılan önemli
     // bilgiler (renk kodu, fit, adet, hedef fiyat — DEFAULT_CARD_ROLES).
-    if (key !== 'xlsx') out.cardFields = null;
+    if (key !== 'xlsx') { out.cardFields = null; out.groupBy = null; out.pageTitle = null; }
     return out;
   }
 
@@ -58,6 +58,23 @@
      gözetmez ("RENK" = "Renk", "Tedarikçi" = "TEDARIKCI"). */
   const fieldKey = value => String(value == null ? '' : value).replace(/[İIı]/g, 'i').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9%]+/g, ' ').trim();
   const cleanText = (value, max) => String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max);
+  /* Gruplama: en çok 3 seviye alan adı (1. grup / 2. grup / 3. grup);
+     null = LCW AI'ın gruplaması. Son seviye sayfada yan yana gruplardır,
+     önceki seviyeler yeni slayt/bölüm başlatır. */
+  const GROUP_LEVELS = 3;
+  function normalizeGroupBy(value) {
+    const list = normalizeCardFields(value);
+    return list && list.length ? list.slice(0, GROUP_LEVELS) : null;
+  }
+  /* Sayfa (galeri slaytı / bölüm) başlığı:
+     null = otomatik · { mode:'fields', fields:[…] } = seçilen alanların
+     değerleri · { mode:'manual', text } = elle; {Alan} yer tutucusu o
+     sayfadaki değerle dolar (ör. "{Kategori} · {Kumaş}"). */
+  const TITLE_MODES = ['fields', 'manual'];
+  function normalizePageTitle(value) {
+    if (!value || typeof value !== 'object' || !TITLE_MODES.includes(value.mode)) return null;
+    return { mode: value.mode, fields: (normalizeCardFields(value.fields) || []).slice(0, 6), text: cleanText(value.text, 140) };
+  }
   function normalizeCardFields(value) {
     if (!Array.isArray(value)) return null;
     const seen = new Set();
@@ -86,7 +103,11 @@
       out[name] = Math.min(max, Math.max(min, Number(stepped.toFixed(2))));
     }
     for (const flag of FLAGS[key]) if (typeof source[flag] === 'boolean') out[flag] = source[flag];
-    if (key !== 'xlsx') out.cardFields = normalizeCardFields(source.cardFields);
+    if (key !== 'xlsx') {
+      out.cardFields = normalizeCardFields(source.cardFields);
+      out.groupBy = normalizeGroupBy(source.groupBy);
+      out.pageTitle = normalizePageTitle(source.pageTitle);
+    }
     return out;
   }
   const isDefault = (format, layout) => JSON.stringify(normalizeLayout(format, layout)) === JSON.stringify(defaults(format));
@@ -111,15 +132,19 @@
       xlsx: { headerHeight: 18, bodySize: 9, imageSize: 80 },
     },
   });
-  /* Hazır yerleşim görünümü değiştirir; kartta hangi bilgilerin yazacağı
-     (cardFields) içerik seçimidir, korunur. */
+  /* Hazır yerleşim görünümü değiştirir; kart bilgileri, gruplama ve sayfa
+     başlığı içerik seçimidir, korunur. */
   function applyPreset(format, name, current) {
     const key = specKey(format);
     const preset = PRESETS[name] && PRESETS[name][key];
     if (!preset) return normalizeLayout(format, current);
     if (name !== 'standard') return normalizeLayout(format, { ...(current || {}), ...preset });
     const out = defaults(format);
-    if (key !== 'xlsx') out.cardFields = normalizeCardFields(current && current.cardFields);
+    if (key !== 'xlsx') {
+      out.cardFields = normalizeCardFields(current && current.cardFields);
+      out.groupBy = normalizeGroupBy(current && current.groupBy);
+      out.pageTitle = normalizePageTitle(current && current.pageTitle);
+    }
     return out;
   }
 
@@ -321,7 +346,36 @@
   /* groups: [{ title, subtitle, items, sources }] → sayfalar (pt, 960 × 540):
      { title, subtitle, cells:[{x,y,w,h,item,group}], labels:[{x,y,w,text,cont}],
        rules:[{x,y,w}], dividers:[{x,y,h}], scale, groups:[gi], sources }. */
-  function galleryPages(raw, groups, { english = false, fallbackTitle = '' } = {}) {
+  /* Bir modelin alan değeri: önce LCW AI'ın kart alanı, yoksa kaynak satır. */
+  function fieldValue(item, label, records) {
+    const key = fieldKey(label);
+    if (!key || !item) return '';
+    const own = (Array.isArray(item.fields) ? item.fields : []).find(field => field && fieldKey(field.label) === key && cleanText(field.value, 300));
+    if (own) return cleanText(own.value, 300);
+    return recordValue(records && item.image ? records[String(item.image).toUpperCase()] : null, key);
+  }
+  /* Sayfadaki modellerin bir alandaki değerleri: tekse kendisi, birkaçsa
+     "A / B", çoksa "A / B +3". */
+  function pageValue(items, label, records) {
+    const values = [];
+    for (const item of items) { const value = fieldValue(item, label, records); if (value && !values.includes(value)) values.push(value); }
+    return values.length <= 2 ? values.join(' / ') : `${values.slice(0, 2).join(' / ')} +${values.length - 2}`;
+  }
+  /* layout.pageTitle → başlık (boş = otomatik başlık kalır). */
+  function customTitle(l, items, records) {
+    const spec = l && l.pageTitle;
+    if (!spec) return '';
+    if (spec.mode === 'fields') return cleanText(spec.fields.map(label => pageValue(items, label, records)).filter(Boolean).join(' · '), 140);
+    if (spec.mode === 'manual') {
+      // {Alan} yer tutucuları dolar; hiçbiri dolmadıysa otomatik başlık kalır.
+      let filled = 0, slots = 0;
+      const text = spec.text.replace(/\{([^{}]{1,60})\}/g, (_, label) => { slots++; const value = pageValue(items, label, records); if (value) filled++; return value; });
+      if (slots && !filled) return '';
+      return cleanText(text.replace(/(\s*·\s*){2,}/g, ' · ').replace(/^[\s·\-–—/|:,]+|[\s·\-–—/|:,]+$/g, ''), 140);
+    }
+    return '';
+  }
+  function galleryPages(raw, groups, { english = false, fallbackTitle = '', records = null } = {}) {
     const g = pptxGeometry(raw);
     const l = g.layout;
     const C = l.columns, R = l.rows, gap = l.gap;
@@ -377,7 +431,9 @@
         const xOf = col => left + col * (cellW + gap);
         const yOf = row => top + offsetY + row * (cellH + gap + strip) + strip;
         const titles = ids.map(gi => run[gi].title);
-        const named = commonLabels(titles);
+        // Kullanıcının gruplamasında grup adı ve sayfa başlığı açıktır; yoksa ortak önekten çıkar.
+        const explicit = ids.every(gi => run[gi].label != null);
+        const named = explicit ? { common: run[ids[0]].heading || '', labels: ids.map(gi => run[gi].label) } : commonLabels(titles);
         const cells = items.map(p => ({ x: xOf(p.col), y: yOf(p.row), w: cellW, h: cellH, item: run[p.group].items[p.index], group: p.group }));
         const labels = [], rules = [], dividers = [];
         if (labelled) {
@@ -403,9 +459,11 @@
         }
         const one = ids.length === 1 ? run[ids[0]] : null;
         const parts = one ? groupPages[ids[0]].length : 0;
-        const title = one
-          ? (parts > 1 ? `${one.title} (${groupPages[ids[0]].indexOf(pi) + 1}/${parts})` : one.title)
-          : named.common || fallbackTitle || (english ? 'Model gallery' : 'Model galerisi');
+        const part = parts > 1 ? ` (${groupPages[ids[0]].indexOf(pi) + 1}/${parts})` : '';
+        const custom = customTitle(l, cells.map(cell => cell.item), records);
+        const title = custom ? `${custom}${part}`
+          : one ? `${one.title}${part}`
+            : named.common || fallbackTitle || (english ? 'Model gallery' : 'Model galerisi');
         const count = items.length;
         const subtitle = one ? (one.subtitle || '') : (english ? `${ids.length} groups · ${count} models` : `${ids.length} grup · ${count} model`);
         pages.push({ title, subtitle, cells, labels, rules, dividers, scale: cellW / baseW, groups: ids.map(gi => run[gi]), sources: [...new Set(ids.flatMap(gi => run[gi].sources || []))], labelH: strip });
@@ -413,18 +471,64 @@
     }
     return pages;
   }
+  /* Kullanıcı gruplaması (layout.groupBy): tüm galeri modelleri seçilen
+     alanların değerine göre yeniden gruplanır. Son seviye sayfada yan yana
+     gruplardır; önceki seviyeler (ör. Kategori › Kumaş) yeni slayt başlatır.
+     Grup sırası modellerin ilk görünüş sırasıdır; değeri olmayan model
+     "Belirtilmemiş" grubuna girer. Döner: [{ heading, groups:[{ label, title, items, sources }] }]. */
+  function regroupItems(entries, levels, records, english) {
+    const blank = english ? 'Not specified' : 'Belirtilmemiş';
+    const pages = new Map();
+    for (const { item, source } of entries) {
+      const values = levels.map(label => fieldValue(item, label, records) || blank);
+      const pageKey = values.slice(0, -1).join('\u0001');
+      if (!pages.has(pageKey)) pages.set(pageKey, { heading: values.slice(0, -1).join(' · '), groups: new Map() });
+      const page = pages.get(pageKey);
+      const label = values[values.length - 1];
+      if (!page.groups.has(label)) page.groups.set(label, { label, heading: page.heading, title: [page.heading, label].filter(Boolean).join(' · '), subtitle: '', items: [], sources: [] });
+      const group = page.groups.get(label);
+      group.items.push(item);
+      if (!group.sources.includes(source)) group.sources.push(source);
+    }
+    return [...pages.values()].map(page => ({ heading: page.heading, groups: [...page.groups.values()] }));
+  }
   /* Slayt listesindeki galerileri gruplara çevirip paketler. Döner:
-     [{ slide } | { page, sources }] — PowerPoint ve önizleme aynı sonucu kullanır. */
-  function expandGalleries(slides, raw, { english = false } = {}) {
+     [{ slide } | { page, sources }] — PowerPoint ve önizleme aynı sonucu kullanır.
+     records: görsel anahtarı → kaynak satır (gruplama ve başlık değerleri için). */
+  function expandGalleries(slides, raw, { english = false, records = null } = {}) {
+    const l = normalizeLayout('pptx', raw);
+    const list = slides || [];
     const out = [];
+    if (l.groupBy) {
+      const galleries = list.map((slide, index) => (slide && slide.layout === 'gallery' ? index : -1)).filter(index => index >= 0);
+      if (galleries.length) {
+        // Galeri bloğu: ilk galeriden (önündeki bölüm ayraçlarıyla) son galeriye kadar.
+        // LCW AI'ın gruplamasına ait galeri ve bölüm ayracı slaytları yeni gruplamayla değişir;
+        // bloktaki diğer slaytlar (tablo, madde…) blokun ardına geçer.
+        let start = galleries[0];
+        while (start > 0 && list[start - 1] && list[start - 1].layout === 'section') start--;
+        const end = galleries[galleries.length - 1];
+        let lastSection = '';
+        for (let i = 0; i < start; i++) if (list[i] && list[i].layout === 'section') lastSection = list[i].title;
+        list.slice(0, start).forEach((slide, index) => out.push({ slide, sources: [index] }));
+        const entries = [];
+        galleries.forEach(index => (list[index].items || []).forEach(item => entries.push({ item, source: index })));
+        for (const page of regroupItems(entries, l.groupBy, records, english)) {
+          for (const result of galleryPages(l, page.groups, { english, fallbackTitle: page.heading || lastSection, records })) out.push({ page: result, sources: result.sources });
+        }
+        list.forEach((slide, index) => { if (index >= start && index <= end && slide && slide.layout !== 'gallery' && slide.layout !== 'section') out.push({ slide, sources: [index] }); });
+        list.slice(end + 1).forEach((slide, offset) => out.push({ slide, sources: [end + 1 + offset] }));
+        return out;
+      }
+    }
     let run = [];
     let lastSection = '';
     const flush = () => {
       if (!run.length) return;
-      for (const page of galleryPages(raw, run, { english, fallbackTitle: lastSection })) out.push({ page, sources: page.sources });
+      for (const page of galleryPages(l, run, { english, fallbackTitle: lastSection, records })) out.push({ page, sources: page.sources });
       run = [];
     };
-    (slides || []).forEach((slide, index) => {
+    list.forEach((slide, index) => {
       if (!slide || slide.layout !== 'gallery') {
         flush();
         if (slide && (slide.layout === 'section' || slide.layout === 'title')) lastSection = slide.layout === 'section' ? slide.title : lastSection;
@@ -614,9 +718,113 @@
   }
   /* Rapor gövdesi → dosyaya/önizlemeye giden hâl: kart bilgileri, gruplar,
      (PDF'te) sütun × satır sayfaları. */
-  function prepareReport(html, raw, { pages = true, records = null } = {}) {
+  /* ---- PDF/HTML: kullanıcı gruplaması ve sayfa (bölüm) başlığı ----
+     Kök = .bl-groups ya da grup dışındaki .bl-gallery. Gruplamada tüm
+     model kartları köklerden toplanır; yalnız başlık + kök taşıyan bölümler
+     (ve kökün hemen önündeki başlık) kaldırılır, ilk kökün yerine yeni
+     bölümler yazılır: her sayfa seviyesi bir <section> + <h2>, son seviye
+     .bl-groups içinde yan yana .bl-group. Kart HTML'i olduğu gibi taşınır. */
+  function elementsByTag(html, tag) {
+    const re = new RegExp(`<${tag}\\b([^>]*)>`, 'gi');
+    const out = [];
+    let match;
+    while ((match = re.exec(html))) {
+      const end = elementEnd(html, tag, re.lastIndex);
+      if (end > 0) out.push({ start: match.index, openEnd: re.lastIndex, end, tag, attrs: match[1], classes: classesOf(match[1]) });
+    }
+    return out;
+  }
+  const inside = (inner, outer) => inner.start > outer.start && inner.end <= outer.end;
+  function reportRoots(source) {
+    const boxes = elementsWith(source, 'bl-groups');
+    const galleries = elementsWith(source, 'bl-gallery');
+    const roots = [...boxes, ...galleries.filter(gallery => !boxes.some(box => inside(gallery, box)))].sort((a, b) => a.start - b.start);
+    const cards = elementsWith(source, 'bl-card').filter(card => galleries.some(gallery => inside(card, gallery)));
+    return { roots, cards };
+  }
+  function cardItem(source, card) {
+    const inner = source.slice(card.openEnd, card.end);
+    const image = (/data-bl-image="([^"]+)"/.exec(inner) || [])[1] || '';
+    const title = textOf((/<h3\b[^>]*>([\s\S]*?)<\/h3>/i.exec(inner) || [])[1] || '');
+    const fields = [];
+    const pair = /<dt\b[^>]*>([\s\S]*?)<\/dt>\s*<dd\b[^>]*>([\s\S]*?)<\/dd>/gi;
+    let match;
+    while ((match = pair.exec(inner))) fields.push({ label: textOf(match[1]), value: textOf(match[2]) });
+    return { image, title, fields, html: source.slice(card.start, card.end) };
+  }
+  const HEADING = /^\s*<(h[1-4])\b[^>]*>[\s\S]*?<\/\1>\s*$/i;
+  function regroupReport(html, l, records, english) {
+    const source = String(html || '');
+    if (!l.groupBy) return source;
+    const { roots, cards } = reportRoots(source);
+    if (!roots.length || !cards.length) return source;
+    const sections = elementsByTag(source, 'section').filter(section => !section.classes.includes('bl-group'));
+    const removals = [];
+    let firstHeading = '';
+    for (const root of roots) {
+      const owner = sections.filter(section => inside(root, section)).pop();
+      if (owner) {
+        // Bölüm yalnız başlık(lar) + kök(ler)den oluşuyorsa bölümün tamamı kalkar.
+        let rest = source.slice(owner.openEnd, owner.end - `</${owner.tag}>`.length);
+        for (const other of roots.filter(item => inside(item, owner)).sort((a, b) => b.start - a.start)) rest = rest.slice(0, other.start - owner.openEnd) + rest.slice(other.end - owner.openEnd);
+        const headings = rest.replace(/<(h[1-4])\b[^>]*>[\s\S]*?<\/\1>/gi, '');
+        if (!textOf(headings)) {
+          if (!firstHeading) firstHeading = textOf((/<h2\b[^>]*>([\s\S]*?)<\/h2>/i.exec(rest) || [])[1] || '');
+          removals.push({ start: owner.start, end: owner.end });
+          continue;
+        }
+      }
+      // Kökün hemen önündeki başlık da kalkar (yetim başlık kalmasın).
+      const before = source.slice(0, root.start);
+      const heading = /<(h[2-4])\b[^>]*>([\s\S]*?)<\/\1>\s*$/i.exec(before);
+      if (heading && !firstHeading && heading[1].toLowerCase() === 'h2') firstHeading = textOf(heading[2]);
+      removals.push({ start: heading ? heading.index : root.start, end: root.end });
+    }
+    removals.sort((a, b) => a.start - b.start);
+    const merged = [];
+    for (const range of removals) {
+      const last = merged[merged.length - 1];
+      if (last && range.start < last.end) last.end = Math.max(last.end, range.end); else merged.push({ ...range });
+    }
+    const entries = cards.map((card, index) => ({ item: { ...cardItem(source, card), index }, source: index }));
+    const fallback = firstHeading || (english ? 'Models' : 'Modeller');
+    const block = regroupItems(entries, l.groupBy, records, english).map(page => {
+      const items = page.groups.flatMap(group => group.items);
+      const title = customTitle(l, items, records) || page.heading || fallback;
+      const groups = page.groups.map(group => `<section class="bl-group"><h3 class="bl-group-title">${escHtml(group.label)}</h3><div class="bl-gallery">${group.items.map(item => item.html).join('')}</div></section>`).join('');
+      return `<section class="bl-section bl-regrouped"><h2>${escHtml(title)}</h2><div class="bl-groups">${groups}</div></section>`;
+    }).join('');
+    let out = '', cursor = 0;
+    merged.forEach((range, index) => { out += source.slice(cursor, range.start) + (index ? '' : block); cursor = range.end; });
+    return out + source.slice(cursor);
+  }
+  /* Gruplama yokken seçilen sayfa başlığı: her kökün önündeki <h2> o
+     kökteki modellerin değerleriyle yeniden yazılır (yoksa eklenir). */
+  function reportTitles(html, l, records) {
+    const source = String(html || '');
+    if (!l.pageTitle || l.groupBy) return source;
+    const { roots, cards } = reportRoots(source);
+    const edits = [];
+    let previous = 0;
+    for (const root of roots) {
+      const items = cards.filter(card => inside(card, root)).map(card => cardItem(source, card));
+      const title = customTitle(l, items, records);
+      if (title) {
+        const span = source.slice(previous, root.start);
+        let found = null, match;
+        const re = /<h2\b([^>]*)>([\s\S]*?)<\/h2>/gi;
+        while ((match = re.exec(span))) found = match;
+        if (found) edits.push({ start: previous + found.index, end: previous + found.index + found[0].length, text: `<h2${found[1]}>${escHtml(title)}</h2>` });
+        else edits.push({ start: root.start, end: root.start, text: `<h2>${escHtml(title)}</h2>` });
+      }
+      previous = root.end;
+    }
+    return edits.length ? applyEdits(source, edits) : source;
+  }
+  function prepareReport(html, raw, { pages = true, records = null, english = false } = {}) {
     const l = normalizeLayout('pdf', raw);
-    return paginateGallery(decorateGroups(applyCardFields(html, l, records), l), l, { pages });
+    const grouped = reportTitles(regroupReport(html, l, records, english), l, records);
+    return paginateGallery(decorateGroups(applyCardFields(grouped, l, records), l), l, { pages });
   }
 
   /* ---------------- Galeriyi sayfalara bölme (HTML dizesi) ----------------
@@ -698,7 +906,7 @@
 
   return {
     SPEC, FLAGS, PRESETS, SLIDE, PAGE, specKey, defaults, normalizeLayout, isDefault, perPage, applyPreset, pptxGeometry, galleryCells, pageBox, layoutCss, paginateGallery, xlsxMetrics,
-    fieldKey, normalizeCardFields, autoTone, DEFAULT_CARD_ROLES, defaultCardFields, cardDetails, availableCardFields, packDetailLines, cardContent, cardLayout, commonLabels, packGroups, galleryPages, expandGalleries,
-    applyCardFields, decorateGroups, prepareReport,
+    fieldKey, normalizeCardFields, normalizeGroupBy, normalizePageTitle, fieldValue, pageValue, customTitle, regroupItems, autoTone, DEFAULT_CARD_ROLES, defaultCardFields, cardDetails, availableCardFields, packDetailLines, cardContent, cardLayout, commonLabels, packGroups, galleryPages, expandGalleries,
+    applyCardFields, decorateGroups, regroupReport, reportTitles, prepareReport,
   };
 });
