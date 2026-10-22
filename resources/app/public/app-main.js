@@ -9576,7 +9576,10 @@ function refreshRowEverywhere(id){
 // ================= GERİ AL / İLERİ AL (undo/redo) =================
 let undoStack = [];
 let redoStack = [];
+// CP çoklu yapıştırma sırasında hücre kayıtları tek bir geri alma adımında toplanır.
+let _cpPasteUndoBatch = null;
 function pushUndo(action){
+  if(_cpPasteUndoBatch){ _cpPasteUndoBatch.push(action); return; }
   const last=undoStack[undoStack.length-1];
   if(action&&action.mergeKey&&last&&last.mergeKey===action.mergeKey&&last.kind===action.kind&&last.id===action.id&&last.shipId===action.shipId){
     const byKey=new Map((last.fields||[]).map(f=>[f.key,{...f}]));
@@ -9587,6 +9590,11 @@ function pushUndo(action){
   redoStack.length=0;updateUndoRedoButtons();
 }
 function applyHistoryAction(action, direction){
+  if(action.kind==='batch'){
+    const list = direction==='undo' ? [...action.actions].reverse() : action.actions;
+    list.forEach(item=>applyHistoryAction(item, direction));
+    return;
+  }
   if(action.kind==='ship'){
     const row = shipRows.find(r=>r._shipId===action.shipId);
     if(!row) return;
@@ -13343,6 +13351,112 @@ const TABLE_META = {
     },
   },
 };
+/* CP hücreler arası çoklu yapıştırma (Ctrl+V). Yalnız elle girilebilen hücreler
+   yazılır ve her hücre, tek hücre düzenlemesiyle AYNI commitCpEditor yolundan
+   geçer (override, yetki, revizyon ve formül davranışı aynı kalır). Hesaplanan,
+   salt-okunur, yetkisiz veya modal ile düzenlenen (Notes / Ek Not) hücreler atlanır. */
+function cpPasteTarget(row,column){
+  if(!row||!column||row._canEdit===false) return null;
+  const shared=['exfactory','retailEdit','instoreEdit','submfr'].includes(column.type)||(column.type==='moneyEdit'&&column.k==='Supp. FOB');
+  if(shared&&row._canEditShared===false) return null;
+  switch(column.type){
+    case 'moneyEdit': return 'suppfob';
+    case 'exfactory': return 'exfactory';
+    case 'retailEdit': return 'retail';
+    case 'instoreEdit': return 'instore';
+    case 'deltype': return 'deltype';
+    case 'text': return (column.k==='Notes'||column.k==='Ek Not') ? null : 'text';
+    case 'submfr': return turknorm(row.Licensor)==='DTR' ? null : 'submfr';
+    case 'licensor': {
+      const resolution=licenseLicensorStateForRow(row);
+      return resolution.hasLicense&&norm(row.License)&&resolution.status!=='missing-rule' ? 'licensor' : null;
+    }
+    case 'importance': return window.BLOrderImportanceUI?.pasteResolve ? 'importance' : null;
+    default: return null;
+  }
+}
+function cpPasteValue(raw,kind){
+  const text=String(raw==null?'':raw).trim();
+  if(kind==='suppfob'){
+    if(!text) return {ok:true,value:''};
+    let value=text.replace(/[$₺€\s]/g,'');
+    // "1.234,50" / "1,234.50": son ayraç ondalıktır, diğeri binlik.
+    if(value.includes('.')&&value.includes(',')) value=value.lastIndexOf(',')>value.lastIndexOf('.')?value.replace(/\./g,''):value.replace(/,/g,'');
+    const n=Number(value.replace(',','.'));
+    return Number.isFinite(n)&&n>=0 ? {ok:true,value:String(n)} : {ok:false};
+  }
+  if(kind==='exfactory'||kind==='retail'||kind==='instore'){
+    // Boş değer elle düzenlemedeki gibi revizyonu kaldırır; okunamayan tarih atlanır.
+    if(!text) return {ok:true,value:''};
+    const iso=parseKeyboardDateToISO(text);
+    return iso ? {ok:true,value:iso} : {ok:false};
+  }
+  if(kind==='deltype'){
+    if(!text) return {ok:false};
+    // İngilizce görünümden kopyalanan etiketler (Sea / Air / Sea+Air / Sea+Truck) kanonik değere döner.
+    const english={'sea':DELTYPE_OPTS[0],'air':DELTYPE_OPTS[1],'sea+air':DELTYPE_OPTS[2],'sea+truck':DELTYPE_OPTS[3]}[text.toLowerCase().replace(/\s+/g,'')];
+    const canonical=english||normalizeTransitDelType(text);
+    return DELTYPE_OPTS.includes(canonical) ? {ok:true,value:canonical} : {ok:false};
+  }
+  if(kind==='importance') return window.BLOrderImportanceUI.pasteResolve(text);
+  return {ok:true,value:text};
+}
+const CP_PASTE_ROW_REFRESH_LIMIT=40;
+function applyCpGridPaste(plan,range){
+  const source=plan.source||{rows:0,columns:0};
+  const record=ok=>window.BLGridClipboard?.diagnostics?.record({module:'cp',operation:'paste',selection:window.BLGridClipboard.selectionSize(range),clipboard:source,transport:'text',ok});
+  if(isAreaFrozen('cp')){
+    showToast(appLang==='en'?'CP is refreshing; paste again when it finishes.':'CP yenileniyor; bitince yeniden yapıştırın.');
+    record(false);return {ok:false};
+  }
+  const skippedCount=plan.readonly+plan.skipped;
+  const skippedText=()=>[
+    skippedCount?(appLang==='en'?`${skippedCount} read-only/calculated skipped`:`${skippedCount} salt-okunur/hesaplanan atlandı`):'',
+    plan.invalid?(appLang==='en'?`${plan.invalid} invalid value(s) skipped`:`${plan.invalid} geçersiz değer atlandı`):'',
+  ].filter(Boolean).join(' · ');
+  if(!plan.ops.length){
+    const reason=skippedText();
+    showToast((appLang==='en'?'Nothing editable to paste.':'Yapıştırılabilecek düzenlenebilir hücre yok.')+(reason?` (${reason})`:''));
+    record(false);return {ok:false};
+  }
+  const actions=[],touched=new Set(),seen=new Set();let changed=0;
+  // Odaktaki hücre düzenleyicisi önce kendi değerini kaydeder, sonra kimliğini
+  // bırakır: odak kaybı güvenlik ağı (focusout) yapıştırılan değeri düzenleyicideki
+  // eski metinle ezmesin. Satırı yeniden çizilince düzenleyici yenilenir.
+  const editorSnap=managedEditorSnapshot(document.activeElement);
+  if(editorSnap?.route==='cp'){
+    commitManagedEditorSnapshot(editorSnap,{refresh:false});
+    const editorId=Number((editorSnap.display||editorSnap.editor).dataset.id);
+    if(Number.isFinite(editorId)) touched.add(editorId);
+    [editorSnap.display,editorSnap.editor].forEach(node=>{ if(node?.dataset) delete node.dataset.id; });
+    (editorSnap.display||editorSnap.editor).blur?.();
+  }
+  _cpPasteUndoBatch=actions;
+  try{
+    plan.ops.forEach(op=>{
+      const id=Number(op.row._partialViewSourceId??op.row._id),cellKey=`${id}\u0000${op.column.k}`;
+      if(!Number.isFinite(id)||seen.has(cellKey)) return;
+      seen.add(cellKey);
+      if(op.target==='importance'){
+        const row=state.cp.rows.find(item=>item._id===id);
+        if(window.BLOrderImportanceUI.pasteAssign(row,op.value)) changed++;
+        return;
+      }
+      if(commitCpEditor({dataset:{id:String(id),key:op.column.k,kind:op.target},value:op.value},{refresh:false})){changed++;touched.add(id);}
+    });
+  }finally{ _cpPasteUndoBatch=null; }
+  if(actions.length) pushUndo(actions.length===1?actions[0]:{kind:'batch',actions});
+  if(touched.size>CP_PASTE_ROW_REFRESH_LIMIT){ invalidateCoreFacetCaches(); renderCP(); scheduleOverviewRender('cp-paste'); }
+  else touched.forEach(id=>refreshRowEverywhere(id));
+  if(actions.some(action=>action.refreshSubmfrList)) refreshSubmfrList();
+  if(actions.some(action=>action.refreshLicensorList)) refreshLicensorList();
+  const rows=new Set(plan.ops.map(op=>op.row._partialViewSourceId??op.row._id)).size,extra=skippedText();
+  showToast((appLang==='en'
+    ?`${changed} cell(s) pasted across ${rows} row(s); one undo reverts the paste.`
+    :`${changed} hücre ${rows} satıra yapıştırıldı; tek geri alma yapıştırmayı geri alır.`)+(extra?` · ${extra}`:''));
+  record(true);
+  return {ok:true,changed};
+}
 function registerManagedGridClipboard(tableId,tableKey){
   if(!window.BLGridClipboard)return;
   const meta=TABLE_META[tableId];
@@ -13363,6 +13477,10 @@ function registerManagedGridClipboard(tableId,tableKey){
       : cellPlainText(column,row,meta.computeFn?meta.computeFn(row):null),
     exporter:BLTableExport,
     selectionChanged:size=>updateGridSelectionStatus(tableKey,size),
+    // Çoklu yapıştırma yalnız CP'de; Orders salt kopyalama kalır.
+    pasteTarget:tableKey==='cp'?cpPasteTarget:undefined,
+    pasteValue:tableKey==='cp'?cpPasteValue:undefined,
+    applyPaste:tableKey==='cp'?applyCpGridPaste:undefined,
     copy:async (matrix,range,selectionState,options={})=>{
       const payload=window.BLGridClipboard.serialize(matrix,BLTableExport,options),plain=payload.plain,html=payload.html;
       const ok=await copyRichToClipboard(html,plain);

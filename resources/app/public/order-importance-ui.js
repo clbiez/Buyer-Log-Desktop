@@ -117,6 +117,22 @@
     }
   }
 
+  /* CP çoklu yapıştırma: görünen etiket (TR/EN) veya "Regular" katalog
+     kimliğine çözülür; boş değer elle seçimi kaldırır. Serbest metin kabul edilmez. */
+  function pasteResolve(text) {
+    const raw = String(text == null ? '' : text).trim();
+    if (!raw) return { ok: true, value: '' };
+    const id = OI.idForLabel(settings, raw);
+    return id ? { ok: true, value: id } : { ok: false };
+  }
+  function pasteAssign(row, id) {
+    if (!row || row._canEdit === false) return false;
+    const res = rowResolution(row);
+    if (id ? res.id === id : res.source !== 'manual') return false;
+    void assign(row, id || '');
+    return true;
+  }
+
   /* ---------------------------------------------------------- katalog kaydı */
   async function saveSettings(next) {
     const body = JSON.stringify({ settings: OI.normalizeSettings(next) });
@@ -372,7 +388,7 @@
   function applyRemote(row, value) { if (row) applyToRow(row, value || undefined); }
 
   window.BLOrderImportanceUI = Object.freeze({
-    setSettings, getSettings, excelValues, plainText, cellHtml, openSettings, reloadSettings, recomputeAllRows, applyRemote,
+    setSettings, getSettings, excelValues, plainText, cellHtml, openSettings, reloadSettings, recomputeAllRows, applyRemote, pasteResolve, pasteAssign,
     revision: () => revision,
   });
 })();
