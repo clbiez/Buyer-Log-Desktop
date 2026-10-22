@@ -313,7 +313,8 @@
 .lcwaiLayBox.is-card{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line2);box-shadow:inset 0 3px 0 var(--acc);padding:0 3%;}
 /* Model galerisi (line sheet): koyu bant, çerçeve, beyaz kart, etiket, kart bilgileri. */
 .lcwaiLayBox.is-band.is-dark{background:var(--ink);border-bottom-color:var(--ink);}
-.lcwaiLayBox.is-title.is-dark,.lcwaiLayBox.is-plain.is-dark .lcwaiLayText{color:var(--paper);}
+.lcwaiLayBox.is-title.is-dark,.lcwaiLayBox.is-dark .lcwaiLayText{color:var(--paper);}
+.lcwaiLayBox.is-dark .lcwaiLayText.is-muted{color:var(--line2);}
 .lcwaiLayBox.is-rule.is-dark{background:var(--paper);}
 .lcwaiLayBox.is-frame{background:var(--card2);border:1px solid var(--line);border-radius:6px;}
 .lcwaiLayBox.is-divider{background:var(--line2);}

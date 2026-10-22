@@ -209,7 +209,7 @@ a{color:var(--acc-ink);}
 .bl-noimg{display:grid;place-items:center;align-content:center;gap:2px;width:100%;aspect-ratio:1/1;border:1px dashed var(--line2);background:var(--card2);color:var(--muted);font-size:12px;margin:0 0 8px;text-align:center;}
 .bl-noimg small{font-size:11px;color:var(--muted);}
 /* Model kartı: görsel önde ve büyük; altında ikinci planda küçük yazıyla
-   model adı ve seçilen bilgiler, genişlik yettikçe aynı satırda "·" ile. */
+   model adı ve seçilen bilgiler, genişlik yettikçe aynı satırda yan yana. */
 .bl-gallery>.bl-card{position:relative;overflow:hidden;background:#fff;border:1px solid var(--line);padding:6px 7px 7px;gap:2px;box-shadow:0 1px 2px color-mix(in srgb,var(--navy-deep) 8%,transparent);}
 .bl-gallery>.bl-card.ok{box-shadow:inset 0 2px 0 var(--green);}.bl-gallery>.bl-card.warn{box-shadow:inset 0 2px 0 var(--orange);}.bl-gallery>.bl-card.risk{box-shadow:inset 0 2px 0 var(--red);}
 .bl-gallery>.bl-card .bl-model-img,.bl-gallery>.bl-card .bl-noimg{border:0;margin:0 0 4px;}
@@ -217,9 +217,8 @@ a{color:var(--acc-ink);}
 .bl-gallery>.bl-card small{color:var(--ink2);font-size:.8em;}
 .bl-gallery>.bl-card p{margin:0;font-size:.8em;color:var(--ink2);}
 .bl-gallery .bl-card .bl-badge{align-self:flex-start;font-size:.7em;padding:0 5px;}
-.bl-specs{margin:0;display:flex;flex-wrap:wrap;gap:0 6px;font-size:.78em;line-height:1.35;color:var(--ink2);}
+.bl-specs{margin:0;display:flex;flex-wrap:wrap;gap:0 10px;font-size:.78em;line-height:1.35;color:var(--ink2);}
 .bl-specs>div{display:inline-flex;gap:3px;align-items:baseline;min-width:0;max-width:100%;}
-.bl-specs>div+div::before{content:"·";color:var(--line2);margin-right:3px;}
 .bl-specs dt{color:var(--muted);white-space:nowrap;}
 .bl-specs dd{margin:0;min-width:0;color:var(--ink2);overflow-wrap:anywhere;}
 .bl-specs .risk dd{color:var(--red);font-weight:600;}.bl-specs .ok dd{color:var(--green);font-weight:600;}.bl-specs .warn dd{color:var(--orange);font-weight:600;}
