@@ -56,12 +56,20 @@ function applyRecords(overrides, records, deps) {
     }
     if (id === TEMPLATES_ID) {
       const incoming = record && record.templates, local = cards.templatesOf(next);
-      if (incoming && Array.isArray(incoming.items) && String(incoming.updatedAt || '') > String(local.updatedAt || '')) {
-        // Templates replace as a whole (newest wins); the linked stages arrive as card profiles.
-        const items = [];for (const item of incoming.items.slice(0, 60)) { try { items.push(cards.normalizeTemplate(item, String(item.updatedAt || incoming.updatedAt))); } catch (_) { /* skip an invalid peer template */ } }
-        next.licenseStageTemplates = { items, updatedAt: String(incoming.updatedAt) };
-        metadataChanged = true; profilesChanged = true;
+      if (!incoming || !Array.isArray(incoming.items)) continue;
+      // Merged per template (newest updatedAt wins) with deletion tombstones, so templates
+      // created or deleted on two devices at the same time are all kept.
+      const deleted = { ...local.deleted };
+      for (const [tid, at] of Object.entries(incoming.deleted && typeof incoming.deleted === 'object' ? incoming.deleted : {})) if (typeof at === 'string' && (!deleted[tid] || at > deleted[tid])) deleted[tid] = at;
+      const byId = new Map(local.items.map(item => [item.id, item]));
+      for (const item of incoming.items.slice(0, 120)) {
+        let normalized; try { normalized = cards.normalizeTemplate(item, String(item.updatedAt || incoming.updatedAt || '')); } catch (_) { continue; }
+        const current = byId.get(normalized.id);
+        if (!current || String(normalized.updatedAt) > String(current.updatedAt || '')) byId.set(normalized.id, normalized);
       }
+      const items = [...byId.values()].filter(item => !(deleted[item.id] && deleted[item.id] >= String(item.updatedAt || ''))).slice(0, 60);
+      const merged = { items, updatedAt: [local.updatedAt, String(incoming.updatedAt || '')].sort().pop(), deleted };
+      if (JSON.stringify(merged) !== JSON.stringify(local)) { next.licenseStageTemplates = merged; metadataChanged = true; profilesChanged = true; }
       continue;
     }
     if (!validId(id) || !record || record._deleted) continue;

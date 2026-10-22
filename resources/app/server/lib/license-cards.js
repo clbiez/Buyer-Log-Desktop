@@ -89,6 +89,9 @@ function visibleCatalogue(overrides) {
 }
 function appendDiscovered(overrides, pairs, now = new Date().toISOString()) {
   const state = clone(stateOf(overrides)), known = new Set(state.items.map(card => pairKey(card.license, card.licensor)));
+  // A licensor typed manually keeps the card's licensor-less id; ASAS still reporting the
+  // license without a licensor must not recreate a second card with that id.
+  const ids = new Set(state.items.map(card => card.id));
   const assigned = new Map();
   for (const pair of pairs.filter(pair => pair.licensor)) {
     const key = canonical.token(pair.license); if (!assigned.has(key)) assigned.set(key, []);
@@ -106,8 +109,8 @@ function appendDiscovered(overrides, pairs, now = new Date().toISOString()) {
   let added = 0;
   for (const pair of pairs) {
     const key = pairKey(pair.license, pair.licensor);
-    if (known.has(key)) continue;
-    known.add(key); added++;
+    if (known.has(key) || ids.has(cardId(pair.license, pair.licensor))) continue;
+    known.add(key); ids.add(cardId(pair.license, pair.licensor)); added++;
     state.items.push({ id: cardId(pair.license, pair.licensor), license: pair.license, licensor: pair.licensor,
       ...Object.fromEntries(Object.keys(PROFILE_LIMITS).map(field => [field, ''])), symbolDataUrl: '', createdAt: now, updatedAt: now });
   }
@@ -245,7 +248,9 @@ function updateCard(overrides, id, body, deps, now = new Date().toISOString()) {
     }
   } else assertRevision(body.revision != null ? body.revision : body.expectedRevision, revisionOf(overrides, 'licenseCards'), 'licenseCards');
   const profile = body.profile == null ? Object.fromEntries(Object.entries(body).filter(([key]) => !['revision','expectedRevision','pricingRevision','expectedPricingRevision','rules','editToken'].includes(key))) : body.profile;
-  state.items[index] = { ...state.items[index], ...normalizeProfile(profile), updatedAt: now };
+  const normalized = normalizeProfile(profile);
+  if (normalized.processAtlas) normalized.processAtlas = linkTemplates(normalized.processAtlas, templatesOf(overrides).items);
+  state.items[index] = { ...state.items[index], ...normalized, updatedAt: now };
   const next = { ...overrides, licenseCards: state, _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
   let rulesChanged = false;
   if (Object.hasOwn(body, 'rules')) {
@@ -292,9 +297,11 @@ function setLicensor(overrides, id, body, now = new Date().toISOString()) {
 /* ---- Stage templates: one shared definition, applied to every linked stage. ---- */
 const MAX_TEMPLATES = 60;
 const TEMPLATE_VISUAL = id => 'tpl-' + id;
+const TEMPLATE_ADDRESS = templateId => id => `tpl-${templateId}-${id}`;
 function templatesOf(overrides) {
   const t = overrides && overrides.licenseStageTemplates;
-  return t && Array.isArray(t.items) ? { items: t.items, updatedAt: t.updatedAt || '' } : { items: [], updatedAt: '' };
+  const deleted = t && t.deleted && typeof t.deleted === 'object' && !Array.isArray(t.deleted) ? t.deleted : {};
+  return t && Array.isArray(t.items) ? { items: t.items, updatedAt: t.updatedAt || '', deleted } : { items: [], updatedAt: '', deleted };
 }
 function normalizeTemplate(raw, now) {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) fail('LICENSE_TEMPLATE_INVALID', 'Geçerli bir aşama taslağı gerekli. / A valid stage template is required.');
@@ -314,12 +321,15 @@ function normalizeTemplate(raw, now) {
 }
 // Template content replaces the stage; its id, on/off state and link stay.
 function applyTemplate(stage, template, processAtlas) {
-  const license = processAtlas.license;
+  const license = processAtlas.license, own = TEMPLATE_ADDRESS(template.id);
   const next = { ...clone(template.stage), id: stage.id, enabled: stage.enabled !== false, templateId: template.id };
+  // Template addresses live under their own ids, so a template save never overwrites an
+  // address the license edits for its other steps.
+  next.submissions = (next.submissions || []).map(route => ({ ...route, addressId: route.addressId ? own(route.addressId) : '' }));
   license.addresses = Array.isArray(license.addresses) ? license.addresses : [];
   for (const address of template.addresses || []) {
-    const at = license.addresses.findIndex(item => item.id === address.id);
-    if (at < 0) license.addresses.push(clone(address)); else license.addresses[at] = clone(address);
+    const copy = { ...clone(address), id: own(address.id) }, at = license.addresses.findIndex(item => item.id === copy.id);
+    if (at < 0) license.addresses.push(copy); else license.addresses[at] = copy;
   }
   processAtlas.visualLibrary = Array.isArray(processAtlas.visualLibrary) ? processAtlas.visualLibrary : [];
   const visualId = TEMPLATE_VISUAL(template.id), at = processAtlas.visualLibrary.findIndex(item => item.id === visualId);
@@ -333,6 +343,23 @@ function applyTemplate(stage, template, processAtlas) {
 function pruneTemplateVisuals(processAtlas) {
   const used = new Set((processAtlas.license.stages || []).map(stage => stage.visualGuideId).filter(Boolean));
   processAtlas.visualLibrary = (processAtlas.visualLibrary || []).filter(item => !item.id.startsWith('tpl-') || used.has(item.id));
+  const routed = new Set((processAtlas.license.stages || []).flatMap(stage => (stage.submissions || []).map(route => route.addressId)).filter(Boolean));
+  processAtlas.license.addresses = (processAtlas.license.addresses || []).filter(item => !String(item.id).startsWith('tpl-') || routed.has(item.id));
+}
+// A linked stage always carries its template's current content, whatever the client sent.
+function linkTemplates(processAtlas, templates) {
+  const stages = processAtlas?.license?.stages;
+  if (!Array.isArray(stages) || !stages.some(stage => stage.templateId)) return processAtlas;
+  const next = clone(processAtlas), byId = new Map(templates.map(item => [item.id, item]));
+  next.license.stages = next.license.stages.map(stage => {
+    if (!stage.templateId) return stage;
+    const template = byId.get(stage.templateId);
+    if (template) return applyTemplate(stage, template, next);
+    const local = { ...stage }; delete local.templateId; return local;
+  });
+  pruneTemplateVisuals(next);
+  try { return atlas.normalize(next); }
+  catch (_) { fail('LICENSE_ATLAS_INVALID', 'Harita taslaklarla 2 MB sınırını aşıyor. / The map exceeds 2 MB with its templates.'); }
 }
 // Re-applies (or, for a removed template, unlinks) every stage that uses templateId.
 function propagateTemplate(state, templateId, template, now) {
@@ -362,7 +389,8 @@ function saveTemplate(overrides, body, now = new Date().toISOString()) {
   if (current.items.some(item => item.id !== template.id && text(item.name).toLocaleLowerCase('tr') === template.name.toLocaleLowerCase('tr'))) fail('LICENSE_TEMPLATE_NAME', 'Bu adla bir taslak zaten var. / A template with this name already exists.', 409);
   const items = existing ? current.items.map(item => item.id === template.id ? template : item) : [...current.items, template];
   const state = clone(stateOf(overrides)), changed = propagateTemplate(state, template.id, template, now);
-  const next = { ...overrides, licenseCards: state, licenseStageTemplates: { items, updatedAt: now },
+  const deleted = { ...current.deleted }; delete deleted[template.id];
+  const next = { ...overrides, licenseCards: state, licenseStageTemplates: { items, updatedAt: now, deleted },
     _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
   return { overrides: next, template, cards: changed };
 }
@@ -371,7 +399,8 @@ function deleteTemplate(overrides, id, body, now = new Date().toISOString()) {
   if (!existing) fail('LICENSE_TEMPLATE_NOT_FOUND', 'Aşama taslağı bulunamadı. / Stage template not found.', 404);
   if (body?.expectedUpdatedAt !== existing.updatedAt) fail('REVISION_CONFLICT', 'Taslak başka biri tarafından değiştirildi; yeniden açın. / The template changed elsewhere; reopen it.', 409);
   const state = clone(stateOf(overrides)), changed = propagateTemplate(state, id, null, now);
-  const next = { ...overrides, licenseCards: state, licenseStageTemplates: { items: current.items.filter(item => item.id !== id), updatedAt: now },
+  const deleted = Object.fromEntries(Object.entries({ ...current.deleted, [id]: now }).sort((a, b) => String(b[1]).localeCompare(String(a[1]))).slice(0, 200));
+  const next = { ...overrides, licenseCards: state, licenseStageTemplates: { items: current.items.filter(item => item.id !== id), updatedAt: now, deleted },
     _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
   return { overrides: next, cards: changed };
 }
@@ -384,4 +413,4 @@ function responseOf(overrides, canEdit) {
     lastImportedAt: state.lastImportedAt, stageTemplates: templatesOf(overrides).items, canEdit: Boolean(canEdit) };
 }
 
-module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, setLicensor, templatesOf, normalizeTemplate, applyTemplate, propagateTemplate, saveTemplate, deleteTemplate, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };
+module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, setLicensor, templatesOf, normalizeTemplate, applyTemplate, linkTemplates, propagateTemplate, saveTemplate, deleteTemplate, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };

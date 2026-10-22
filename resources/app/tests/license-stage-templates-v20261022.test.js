@@ -49,7 +49,10 @@ test('saving a stage template updates every linked stage and leaves the others a
   assert.deepEqual(r.cards.map(c=>c.license),['NORTH STAR'],'only the linked license changes');
   const stages=byLicense(ov,'NORTH STAR').processAtlas.license.stages;
   assert.deepEqual(stages.map(s=>[s.id,s.title,s.approver,s.enabled!==false]),[['own','Konsept','licensor',true],['n-pps','PPS v2','mixed',false]],'content follows the template; id and on/off stay');
-  assert.equal(byLicense(ov,'NORTH STAR').processAtlas.license.addresses.find(a=>a.id==='adr1').text,'Yeni Cad. 2');
+  const adr=byLicense(ov,'NORTH STAR').processAtlas.license.addresses;
+  assert.equal(adr.find(a=>a.id==='tpl-tpl-pps-adr1').text,'Yeni Cad. 2','the template address travels under its own id');
+  assert.equal(adr.find(a=>a.id==='adr1').text,'Demo Cad. 1','the license’s own address with the same id is never overwritten');
+  assert.equal(stages[1].submissions[0].addressId,'tpl-tpl-pps-adr1');
   assert.equal(byLicense(ov,'ORBIT CLUB').processAtlas.license.stages[0].title,'PPS','unlinked stages keep their own content');
   const del=cards.deleteTemplate(ov,'tpl-pps',{expectedUpdatedAt:cards.templatesOf(ov).items[0].updatedAt},NOW);
   const after=byLicense(del.overrides,'NORTH STAR').processAtlas.license.stages[1];
@@ -98,4 +101,34 @@ test('client: ASAS refresh is queued with feedback; licensor and templates are e
   assert.match(map,/const lockedStage=s=>S\.mode==='map'&&Boolean\(templateOf\(s\)\)/,'a linked step is edited only through its template');
   assert.match(routes,/app\.put\('\/api\/license-cards\/:id\/licensor'/);assert.match(routes,/app\.post\('\/api\/license-cards\/stage-templates'/);
   assert.ok(routes.indexOf("'/api/license-cards/stage-templates'")<routes.indexOf("app.put('/api/license-cards/:id'"),'template routes precede the :id route');
+});
+
+test('an assigned licensor survives ASAS still reporting the license without one (no duplicate id)', () => {
+  let ov=base();const blue=byLicense(ov,'BLUE HARBOR');
+  ov=cards.setLicensor(ov,blue.id,{editToken:tokenOf(ov,blue.id),licensor:'Demo Rights'},NOW).overrides;
+  const again=cards.appendDiscovered(ov,[{license:'BLUE HARBOR',licensor:''}],NOW);
+  const ids=cards.stateOf(again.overrides).items.map(c=>c.id);
+  assert.equal(new Set(ids).size,ids.length);assert.equal(again.added,0);
+  assert.equal(byLicense(again.overrides,'BLUE HARBOR').licensor,'Demo Rights');
+});
+
+test('a linked stage always carries its template content, whatever the client sends', () => {
+  let ov=base();const north=byLicense(ov,'NORTH STAR');
+  ov=cards.saveTemplate(ov,{template:{id:'tpl-x',name:'X',stage:{title:'Template title',approver:'LCW',submissions:[]}}},NOW).overrides;
+  const drifted=atlasWith(north,[{id:'s1',title:'Edited by hand',approver:'licensor',templateId:'tpl-x',submissions:[]},{id:'s2',title:'Gone',templateId:'tpl-missing',submissions:[]}]);
+  const r=cards.updateCard(ov,north.id,{editToken:tokenOf(ov,north.id),profile:{processAtlas:drifted}},{});
+  const stages=r.card.processAtlas.license.stages;
+  assert.deepEqual([stages[0].title,stages[0].approver,stages[0].templateId],['Template title','LCW','tpl-x']);
+  assert.equal(stages[1].title,'Gone');assert.equal(stages[1].templateId,undefined,'a link to a missing template is dropped');
+});
+
+test('templates created or deleted on two devices at once are merged, not overwritten', () => {
+  const ov=base(),t1={id:'t1',name:'T1',stage:{title:'A',approver:'LCW',submissions:[]}},t2={id:'t2',name:'T2',stage:{title:'B',approver:'LCW',submissions:[]}};
+  const a=cards.saveTemplate(ov,{template:t1},'2026-10-22T10:00:00.000Z').overrides;
+  const b=cards.saveTemplate(ov,{template:t2},'2026-10-22T10:01:00.000Z').overrides;
+  const merged=sync.applyRecords(a,{[sync.TEMPLATES_ID]:{templates:cards.templatesOf(b)}},{}).overrides;
+  assert.deepEqual(cards.templatesOf(merged).items.map(t=>t.id).sort(),['t1','t2']);
+  const removed=cards.deleteTemplate(b,'t2',{expectedUpdatedAt:'2026-10-22T10:01:00.000Z'},'2026-10-22T10:05:00.000Z').overrides;
+  const after=sync.applyRecords(merged,{[sync.TEMPLATES_ID]:{templates:cards.templatesOf(removed)}},{}).overrides;
+  assert.deepEqual(cards.templatesOf(after).items.map(t=>t.id),['t1'],'a deletion reaches the peer through its tombstone');
 });

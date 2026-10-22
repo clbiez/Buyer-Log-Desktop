@@ -278,7 +278,7 @@
       if(result.cards)S.data=result;else S.stale=true;
       await window.BLLicenseDataBridge?.rulesChanged?.(result);
     }catch(e){d.error=failMessage(e);if(e.status===409)d.conflict=true;}
-    finally{d.saving=false;if(S.stale)await load();render();}
+    finally{d.saving=false;if(S.stale||S.refreshNext)await load();render();}
   }
   function exportName(){return `Buyer-Log-Supplier-Atlas-${new Date().toISOString().slice(0,10)}.html`;}
   async function exportAtlas(){
@@ -311,15 +311,20 @@
       adopt(result,before);render();
       if(result.propagated)toast(T(`“${template.name}” ${result.propagated} lisansta güncellendi.`,`“${template.name}” updated in ${result.propagated} licenses.`),'success');
       return {templates:result.stageTemplates||[],cards:S.data.cards,propagated:result.propagated||0};
-    }catch(e){if(e.status===409||e.code==='LICENSE_TEMPLATE_NOT_FOUND')load();throw new Error(failMessage(e));}
+    }catch(e){throw await templateError(e);}
     finally{S.templateWrite=false;}
+  }
+  async function templateError(e){
+    const out=new Error(failMessage(e));
+    if(e.status===409||e.code==='LICENSE_TEMPLATE_NOT_FOUND'){await load();out.templates=S.data?.stageTemplates||[];out.cards=S.data?.cards;}
+    return out;
   }
   async function deleteTemplate(t){
     const before=S.data.cards;S.templateWrite=true;
     try{
       const result=await api(`/api/license-cards/stage-templates/${encodeURIComponent(t.id)}`,{method:'DELETE',body:JSON.stringify({expectedUpdatedAt:t.updatedAt})});
       adopt(result,before);render();return {templates:result.stageTemplates||[],cards:S.data.cards};
-    }catch(e){if(e.status===409||e.code==='LICENSE_TEMPLATE_NOT_FOUND')load();throw new Error(failMessage(e));}
+    }catch(e){throw await templateError(e);}
     finally{S.templateWrite=false;}
   }
   function openTemplates(){
@@ -332,8 +337,10 @@
     S.assigning=id;render();
     try{
       const result=await api(`/api/license-cards/${encodeURIComponent(id)}/licensor`,{method:'PUT',body:JSON.stringify({editToken:c.editToken,licensor,mode,copy:Boolean(copyProfile)})});
+      // Our own assign changes only the licensor: an open draft follows the new token.
+      const d=S.drafts.get(id),fresh=result.cards?.find(x=>x.id===id);
+      if(mode!=='add'&&d&&!d.conflict&&fresh&&d.editToken===c.editToken){d.editToken=fresh.editToken;d.snapshot.licensor=fresh.licensor;}
       if(result.cards)S.data=result;
-      if(mode!=='add'&&S.drafts.has(id))S.drafts.get(id).conflict=true;
       if(result.cardId){S.flash.add(result.cardId);if(S.expanded===id&&mode!=='add')S.expanded=result.cardId;}
       toast(mode==='add'?T(`${c.license} için ${licensor} satırı eklendi.`,`Added a ${licensor} row for ${c.license}.`):T(`${c.license} lisansörü: ${licensor}`,`${c.license} licensor: ${licensor}`),'success');
       await window.BLLicenseDataBridge?.rulesChanged?.(result);

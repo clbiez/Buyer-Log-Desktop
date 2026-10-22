@@ -232,9 +232,10 @@
   // Same rules as the server (license-cards.js applyTemplate): content from the template,
   // the stage keeps its id and on/off state; addresses and the guide image come along.
   function applyTemplate(base,t){
-    const l=L(),st={...copy(t.stage),id:base.id,enabled:base.enabled!==false,templateId:t.id};
+    const l=L(),own=id=>`tpl-${t.id}-${id}`,st={...copy(t.stage),id:base.id,enabled:base.enabled!==false,templateId:t.id};
+    st.submissions=(st.submissions||[]).map(r=>({...r,addressId:r.addressId?own(r.addressId):''}));
     l.addresses=l.addresses||[];
-    for(const a of t.addresses||[]){const i=l.addresses.findIndex(x=>x.id===a.id);if(i<0)l.addresses.push(copy(a));else l.addresses[i]=copy(a);}
+    for(const a of t.addresses||[]){const c={...copy(a),id:own(a.id)},i=l.addresses.findIndex(x=>x.id===c.id);if(i<0)l.addresses.push(c);else l.addresses[i]=c;}
     S.draft.visualLibrary=S.draft.visualLibrary||[];
     const vid='tpl-'+t.id,vi=S.draft.visualLibrary.findIndex(v=>v.id===vid);
     if(t.visual){const entry={id:vid,name:t.visual.name,data:t.visual.data};if(vi<0)S.draft.visualLibrary.push(entry);else S.draft.visualLibrary[vi]=entry;st.visualGuideId=vid;}
@@ -255,7 +256,7 @@
       const result=await S.onSaveTemplate({template});S.templates=copy(result.templates||[]);
       const saved=S.templates.find(t=>t.id===template.id);if(saved)L().stages[si]=applyTemplate(s,saved);
       S.saving=false;S.naming='';S.error='';render();
-    }catch(error){S.saving=false;S.error=error?.message||T('Taslak kaydedilemedi.','The template could not be saved.');render();}
+    }catch(error){fresh(error);S.saving=false;S.error=error?.message||T('Taslak kaydedilemedi.','The template could not be saved.');render();}
   }
   const usage=t=>S.cards.filter(c=>(c.processAtlas?.license?.stages||[]).some(s=>s.templateId===t.id));
   function renderTemplates(){
@@ -302,7 +303,7 @@
       const t=S.templates.find(x=>x.id===el.dataset.id),used=usage(t);if(!t)return;
       if(!confirm(used.length?T(`“${t.name}” silinsin mi? ${used.length} lisanstaki adım kalır, yalnız taslak bağlantısı kaldırılır.`,`Delete “${t.name}”? The step stays in ${used.length} licenses; only the template link is removed.`):T(`“${t.name}” silinsin mi?`,`Delete “${t.name}”?`)))return;
       try{const result=await S.onDeleteTemplate(t);S.templates=copy(result.templates||[]);S.cards=result.cards||S.cards;S.notice=T('Taslak silindi.','Template deleted.');S.error='';}
-      catch(error){S.error=error?.message||T('Taslak silinemedi.','The template could not be deleted.');}
+      catch(error){fresh(error);S.error=error?.message||T('Taslak silinemedi.','The template could not be deleted.');}
       return render();
     }
     if(a==='tplSave'&&S.canEdit&&!S.saving){
@@ -313,9 +314,11 @@
         const result=await S.onSave({template,expectedUpdatedAt:S.tpl.isNew?undefined:S.tpl.updatedAt});
         S.templates=copy(result.templates||[]);S.cards=result.cards||S.cards;S.saving=false;showTemplateList();
         S.notice=result.propagated?T(`Taslak kaydedildi; ${result.propagated} lisans güncellendi.`,`Template saved; ${result.propagated} licenses updated.`):T('Taslak kaydedildi.','Template saved.');render();
-      }catch(error){S.saving=false;S.error=error?.message||T('Taslak kaydedilemedi.','The template could not be saved.');render();}
+      }catch(error){fresh(error);S.saving=false;S.error=error?.message||T('Taslak kaydedilemedi.','The template could not be saved.');render();}
     }
   }
+  // A conflict hands back the current templates; the list shows them at once.
+  function fresh(error){if(Array.isArray(error?.templates)){S.templates=copy(error.templates);if(error.cards)S.cards=error.cards;}}
   function openTemplates({templates=[],cards=[],canEdit=false,onSave,onDelete}){
     if(S.root)close(true);
     Object.assign(S,{mode:'templates',card:null,cards,canEdit:Boolean(canEdit),templates:copy(templates),onSave,onDeleteTemplate:onDelete,onSaveTemplate:null,tpl:null,draft:null,naming:'',notice:'',saving:false,error:'',open:new Set()});
