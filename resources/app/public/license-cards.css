@@ -259,6 +259,12 @@
 .lcMergeName{padding:0 5px;border:1px solid var(--line);background:var(--card2);font-size:var(--fs-xs);white-space:nowrap}
 .lcMergedInfo{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 8px;border:1px solid var(--acc);background:var(--acc-bg)}
 .lcMergedHead{margin:6px 0 2px;color:var(--muted);font-size:var(--fs-2xs)}
+.lcManualMerge{display:flex;align-items:end;flex-wrap:wrap;gap:8px;padding:9px 10px;border-bottom:1px solid var(--line);background:var(--card2)}
+.lcManualMerge label{display:flex;flex:1 1 170px;flex-direction:column;min-width:145px;gap:4px;font:600 var(--fs-2xs) var(--sans);color:var(--muted)}
+.lcManualMerge select.lcSelect{width:100%;min-width:0;max-width:none;color:var(--ink)}
+.lcManualMerge>span{align-self:center;color:var(--muted)}
+.lcManualMerge button{flex:none}
+@media(max-width:680px){.lcManualMerge>span{display:none}.lcManualMerge button{width:100%;justify-content:center}}
 /* Map copy / paste in the list */
 .lcMapWrap{display:flex;align-items:center;gap:2px;min-width:0}.lcMapWrap .lcMapCell{flex:1}
 .lcClip{display:flex;gap:1px;flex:none}.lcClip .lcIconBtn{width:var(--ctl-h-sm);height:var(--ctl-h-sm)}

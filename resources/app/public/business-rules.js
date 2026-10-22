@@ -41,15 +41,49 @@
   function licensorMergeSplit(merges) {
     // Accepts the API shape {split:[keys]} or the stored shape {entries:{key:{split}}}.
     const entries = merges && merges.entries && typeof merges.entries === 'object' ? merges.entries : null;
-    const list = entries ? Object.keys(entries).filter(key => entries[key] && entries[key].split === true) : (merges && Array.isArray(merges.split) ? merges.split : []);
+    const list = entries ? Object.keys(entries).filter(key => entries[key] && entries[key].split === true && !entries[key].source) : (merges && Array.isArray(merges.split) ? merges.split : []);
     return new Set(list.map(key => licensorMergeKey(key)).filter(Boolean));
   }
+  // The automatic suffix group remains the default. Explicit manual links connect
+  // two whole groups; split automatic names stay separate unless linked explicitly.
+  // Compute the same undirected component on browser and server, independent of order.
+  const LICENSOR_GROUP_CACHE=new WeakMap();
+  function licensorGroupKey(value, merges) {
+    if(!licensorMergeKey(value))return '';
+    // Pricing can project thousands of orders: construct the relation graph only
+    // once per immutable merge snapshot, then memoize the component per alias.
+    const stored=merges&&typeof merges==='object',cache=stored?LICENSOR_GROUP_CACHE.get(merges):null;
+    let graph=cache;
+    if(!graph){
+      const split=licensorMergeSplit(merges),edges=new Map();
+      const node=name=>{
+        const raw=turkNorm(name),key=licensorMergeKey(raw);
+        return split.has(key)?'EXACT:'+raw:'AUTO:'+key;
+      };
+      for(const entry of Object.values(merges?.entries||{})){
+        if(!entry||!entry.source||!entry.target||entry.split===true)continue;
+        const left=node(entry.source),right=node(entry.target);
+        if(left===right)continue;
+        if(!edges.has(left))edges.set(left,new Set());
+        if(!edges.has(right))edges.set(right,new Set());
+        edges.get(left).add(right);edges.get(right).add(left);
+      }
+      graph={node,edges,components:new Map()};
+      if(stored)LICENSOR_GROUP_CACHE.set(merges,graph);
+    }
+    const initial=graph.node(value);
+    if(graph.components.has(initial))return graph.components.get(initial);
+    const seen=new Set([initial]),queue=[initial];
+    for(let i=0;i<queue.length;i++)for(const next of graph.edges.get(queue[i])||[]){
+      if(!seen.has(next)){seen.add(next);queue.push(next);}
+    }
+    const representative=[...seen].sort()[0];
+    for(const item of seen)graph.components.set(item,representative);
+    return representative;
+  }
   function licensorsMerged(a, b, merges) {
-    const left = turkNorm(a), right = turkNorm(b);
-    if (!left || !right) return false;
-    if (left === right) return true;
-    const key = licensorMergeKey(a);
-    return Boolean(key) && key === licensorMergeKey(b) && !licensorMergeSplit(merges).has(key);
+    const left=turkNorm(a),right=turkNorm(b);
+    return Boolean(left&&right)&&(left===right||licensorGroupKey(a,merges)===licensorGroupKey(b,merges));
   }
   // True when the licensor has any contract of its own for the license (any date/season).
   function licensorHasOwnRules(rules, licensor, license, licensorOf = rule => rule && rule.licensor) {
@@ -904,6 +938,7 @@
     computeBacklogRisk,
     BACKLOG_HANDOVER_GRACE_DAYS,
     licensorMergeKey,
+    licensorGroupKey,
     licensorsMerged,
     findRuleByLicensor,
     licensorHasOwnRules,
