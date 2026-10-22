@@ -32,7 +32,35 @@
     const control=area?`<textarea rows="2" data-lm="${esc(path)}" placeholder="${esc(placeholder)}" ${dis()}>${esc(value)}</textarea>`:`<input data-lm="${esc(path)}" value="${esc(value)}" placeholder="${esc(placeholder)}" ${dis()}>`;
     return `<label class="lmField ${cls}"><span>${esc(labelText)}</span>${control}</label>`;
   }
-  function select(path,kind,value,labelText){return `<label class="lmField"><span>${esc(labelText)}</span><select data-lm="${esc(path)}" ${dis()}>${options(kind,value)}</select></label>`;}
+  function select(path,kind,value,labelText,{custom=false}={}){
+    if(custom&&S.adding?.path===path)return newTagHtml(path,labelText,false);
+    return `<label class="lmField"><span>${esc(labelText)}</span><select data-lm="${esc(path)}" ${dis()}>${options(kind,value)}${custom&&!dis()?`<option value="__new__">${esc(T('＋ Yeni etiket…','＋ New label…'))}</option>`:''}</select></label>`;
+  }
+  // Inline "new label" / "new address" entry that replaces the select until added or cancelled.
+  function newTagHtml(path,labelText,address){
+    return `<div class="lmField lmNewTag${address?' isAddress':''}"><span>${esc(labelText)}</span><span class="lmNewTagRow">
+      <input data-lm-new="label" maxlength="120" placeholder="${esc(address?T('Adres adı','Address name'):T('Etiket','Label'))}" aria-label="${esc(address?T('Adres adı','Address name'):T('Yeni etiket','New label'))}">
+      ${address?`<input data-lm-new="text" maxlength="1000" placeholder="${esc(T('Adres (isteğe bağlı)','Address (optional)'))}" aria-label="${esc(T('Adres','Address'))}">`:''}
+      <button type="button" class="lcIconBtn isPrimary" data-lm-act="addTag" title="${esc(T('Ekle (Enter)','Add (Enter)'))}"><svg class="ic"><use href="#i-check"/></svg></button><button type="button" class="lcIconBtn" data-lm-act="cancelTag" title="${esc(T('Vazgeç (Esc)','Cancel (Esc)'))}"><svg class="ic"><use href="#i-x"/></svg></button></span></div>`;
+  }
+  function addTag(){
+    const {path,kind}=S.adding||{};if(!path||ro())return;
+    const label=(S.root.querySelector('[data-lm-new="label"]')?.value||'').trim(),text=(S.root.querySelector('[data-lm-new="text"]')?.value||'').trim();
+    if(!label){S.root.querySelector('[data-lm-new="label"]')?.focus();return;}
+    const [obj,key]=target(path);if(!obj)return;
+    if(kind==='address'){
+      const same=addresses().find(a=>String(lx(a,'label')).toLocaleLowerCase('tr')===label.toLocaleLowerCase('tr'));
+      if(same)obj[key]=same.id;
+      else{const id=uid('address');(L().addresses=L().addresses||[]).push({id,label,text,manufacturerVisible:true});obj[key]=id;}
+    }else{
+      // The value is the label itself, so a step copied or templated elsewhere still reads right.
+      const all=[...Object.keys(labels(kind)),...(S.draft.customSelectOptions?.[kind]||[]).map(o=>o.value)];
+      const same=all.find(v=>[v,optionLabel(kind,v)].some(x=>String(x).toLocaleLowerCase('tr')===label.toLocaleLowerCase('tr')));
+      if(same)obj[key]=same;
+      else{S.draft.customSelectOptions=S.draft.customSelectOptions||{};(S.draft.customSelectOptions[kind]=S.draft.customSelectOptions[kind]||[]).push({value:label,label});obj[key]=label;}
+    }
+    S.adding=null;S.error='';render();
+  }
   function addresses(){const seen=new Map();for(const a of [...(L().addresses||[]),...(S.draft.sharedAddresses||[])])if(!seen.has(a.id))seen.set(a.id,a);return [...seen.values()];}
 
   function routeHtml(si,r,ri){
@@ -42,8 +70,8 @@
       ${select(p+'.recipientType','recipientType',r.recipientType||'unknown',T('Kime','Recipient'))}
       ${field(p+'.recipient',r.recipient||'',T('Alıcı / kişi','Contact'))}
       ${field(p+'.qty',r.qty||'',T('Adet','Qty'),{placeholder:T('ör. 2','e.g. 2')})}
-      ${select(p+'.timing','timing',r.timing||'approval',T('Zaman','Timing'))}
-      <label class="lmField"><span>${esc(T('Adres','Address'))}</span><select data-lm="${p}.addressId" ${dis()}><option value="">—</option>${addresses().map(a=>`<option value="${esc(a.id)}" ${a.id===r.addressId?'selected':''}>${esc(lx(a,'label')||String(a.text||'').slice(0,40))}</option>`).join('')}</select></label>
+      ${select(p+'.timing','timing',r.timing||'approval',T('Zaman','Timing'),{custom:true})}
+      ${S.adding?.path===p+'.addressId'?newTagHtml(p+'.addressId',T('Adres','Address'),true):`<label class="lmField"><span>${esc(T('Adres','Address'))}</span><select data-lm="${p}.addressId" ${dis()}><option value="">—</option>${addresses().map(a=>`<option value="${esc(a.id)}" ${a.id===r.addressId?'selected':''}>${esc(lx(a,'label')||String(a.text||'').slice(0,40))}</option>`).join('')}${dis()?'':`<option value="__new__">${esc(T('＋ Yeni adres…','＋ New address…'))}</option>`}</select></label>`}
       <button type="button" class="lcIconBtn lmDanger" data-lm-act="removeRoute" data-s="${si}" data-r="${ri}" title="${esc(T('Gönderimi sil','Remove route'))}" ${dis()}><svg class="ic"><use href="#i-trash"/></svg></button>
       ${field(p+'.supplierInstructions',lx(r,'supplierInstructions'),T('Üretici talimatı','Supplier instruction'),{area:true,cls:'lmWide'})}
       <div class="lmWide lmFlags">${toggle(p+'.manufacturerVisible',r.manufacturerVisible!==false,T('Üreticiyle paylaş','Share with supplier'))}</div>
@@ -138,6 +166,7 @@
     if(!el.dataset.lm||ro())return;
     const parts=el.dataset.lm.split('.');if(parts[0]==='s'&&lockedStage(L().stages[Number(parts[1])])&&parts[2]!=='enabled')return;
     const [obj,key]=target(el.dataset.lm);if(!obj)return;
+    if(el.tagName==='SELECT'&&el.value==='__new__'){S.adding={path:el.dataset.lm,kind:key==='addressId'?'address':key};render();S.root.querySelector('[data-lm-new="label"]')?.focus();return;}
     if(el.type==='checkbox')obj[key]=el.checked;else if(el.tagName==='SELECT')obj[key]=el.value;else setLx(obj,key,el.value);
     if(key==='title'){const flow=S.root.querySelectorAll('.lmFlowStep span')[Number(el.dataset.lm.split('.')[1])];if(flow)flow.textContent=el.value||'—';}
     S.error='';if(el.type==='checkbox'||el.tagName==='SELECT')render();else status();
@@ -182,6 +211,8 @@
     if(a==='save')return save();
     if(a==='expand'){const li=el.closest('.lmStage'),open=!li.classList.contains('isOpen');li.classList.toggle('isOpen',open);el.setAttribute('aria-expanded',open);if(open)S.open.add(el.dataset.id);else S.open.delete(el.dataset.id);return;}
     if(a.startsWith('tpl'))return templateAct(a,el);
+    if(a==='addTag')return addTag();
+    if(a==='cancelTag'){S.adding=null;return render();}
     if(ro())return;
     if(['approver','flag','addRoute','removeRoute','removeGuide'].includes(a)&&lockedStage(l.stages[si]))return;
     if(a==='detach'){delete l.stages[si].templateId;}
@@ -203,7 +234,14 @@
     S.error='';render();
     if(a==='addStage')S.root.querySelector('.lmStage:last-child .lmTitle')?.select();
   }
-  function onKey(event){if(event.key==='Escape'&&S.root){event.preventDefault();close();}}
+  function onKey(event){
+    if(!S.root)return;
+    if(S.adding&&event.target?.dataset?.lmNew!=null){
+      if(event.key==='Enter'){event.preventDefault();return addTag();}
+      if(event.key==='Escape'){event.preventDefault();event.stopPropagation();S.adding=null;return render();}
+    }
+    if(event.key==='Escape'){event.preventDefault();close();}
+  }
   function close(saved=false){
     if(!S.root)return;
     if(S.mode==='template'&&!saved){if(dirty()&&!confirm(T('Kaydedilmemiş taslak değişiklikleri bırakılsın mı?','Discard unsaved template changes?')))return;showTemplateList();return;}
@@ -214,7 +252,7 @@
   function blank(card){return {version:1,license:{id:card.id,name:card.license,agency:card.licensor||'',category:'',symbol:'✦',stages:[],addresses:[],portal:{url:'',notes:'',manufacturerVisible:false},manufacturerVisible:true,supplierShowRequirements:true},sharedAddresses:[],visualLibrary:[],customSelectOptions:{},processTemplates:[],stageClipboard:null};}
   function open({card,cards=[],canEdit=false,onSave,templates=[],onSaveTemplate=null}){
     if(S.root)close(true);
-    Object.assign(S,{mode:'map',card,cards,canEdit:Boolean(canEdit),onSave,templates:copy(templates),onSaveTemplate,tpl:null,naming:'',notice:'',saving:false,error:'',open:new Set()});
+    Object.assign(S,{adding:null,mode:'map',card,cards,canEdit:Boolean(canEdit),onSave,templates:copy(templates),onSaveTemplate,tpl:null,naming:'',notice:'',saving:false,error:'',open:new Set()});
     S.draft=card.processAtlas?window.BLLicenseSupplierAtlas.prepare(card.processAtlas):blank(card);
     S.draft.license.stages=S.draft.license.stages||[];S.draft.license.addresses=S.draft.license.addresses||[];
     S.base=snapshot();
@@ -293,7 +331,7 @@
     const stage={...copy(t?t.stage:{title:T('Yeni adım','New step'),approver:'unknown',submissions:[],manufacturerVisible:true,supplierShowApprovalNotes:true,supplierShowSourceNote:false,testRequired:false}),id:'tpl-stage',enabled:true};
     S.draft={version:1,license:{stages:[stage],addresses:copy(t?.addresses||[])},sharedAddresses:[],visualLibrary:t?.visual?[{id:'tpl-visual',name:t.visual.name,data:t.visual.data}]:[],customSelectOptions:{}};
     if(t?.visual)stage.visualGuideId='tpl-visual';
-    S.tpl={id:t?.id||uid('stage-template'),name:t?.name||'',updatedAt:t?.updatedAt,isNew:!t};S.mode='template';S.open=new Set(['tpl-stage']);S.error='';S.notice='';S.base=snapshot();render();
+    S.adding=null;S.tpl={id:t?.id||uid('stage-template'),name:t?.name||'',updatedAt:t?.updatedAt,isNew:!t};S.mode='template';S.open=new Set(['tpl-stage']);S.error='';S.notice='';S.base=snapshot();render();
     S.root.querySelector('#lmTemplateNameEdit')?.focus();
   }
   async function templateAct(a,el){
@@ -321,7 +359,7 @@
   function fresh(error){if(Array.isArray(error?.templates)){S.templates=copy(error.templates);if(error.cards)S.cards=error.cards;}}
   function openTemplates({templates=[],cards=[],canEdit=false,onSave,onDelete}){
     if(S.root)close(true);
-    Object.assign(S,{mode:'templates',card:null,cards,canEdit:Boolean(canEdit),templates:copy(templates),onSave,onDeleteTemplate:onDelete,onSaveTemplate:null,tpl:null,draft:null,naming:'',notice:'',saving:false,error:'',open:new Set()});
+    Object.assign(S,{adding:null,mode:'templates',card:null,cards,canEdit:Boolean(canEdit),templates:copy(templates),onSave,onDeleteTemplate:onDelete,onSaveTemplate:null,tpl:null,draft:null,naming:'',notice:'',saving:false,error:'',open:new Set()});
     S.base=snapshot();mount();
   }
   window.BLLicenseMapEditor={open,openTemplates,close:()=>close(),isOpen:()=>Boolean(S.root)};

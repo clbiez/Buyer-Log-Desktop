@@ -132,3 +132,15 @@ test('templates created or deleted on two devices at once are merged, not overwr
   const after=sync.applyRecords(merged,{[sync.TEMPLATES_ID]:{templates:cards.templatesOf(removed)}},{}).overrides;
   assert.deepEqual(cards.templatesOf(after).items.map(t=>t.id),['t1'],'a deletion reaches the peer through its tombstone');
 });
+
+test('route timing and address accept manual labels that reach the supplier file', () => {
+  const map=read('public/license-map-editor.js');
+  assert.match(map,/<option value="__new__">\$\{esc\(T\('＋ Yeni etiket…','＋ New label…'\)\)\}/);
+  assert.match(map,/<option value="__new__">\$\{esc\(T\('＋ Yeni adres…','＋ New address…'\)\)\}/);
+  assert.match(map,/select\(p\+'\.timing','timing',r\.timing\|\|'approval',T\('Zaman','Timing'\),\{custom:true\}\)/);
+  const atlas={version:1,license:{id:'c',name:'L',stages:[{id:'s',title:'S',approver:'LCW',submissions:[{id:'r',method:'physical',recipientType:'LCW',timing:'Kargo sonrası',addressId:'a1'}]}],addresses:[{id:'a1',label:'Somerbond UK',text:'Demo Street 1'}],portal:{url:'',notes:''}},sharedAddresses:[],visualLibrary:[],customSelectOptions:{timing:[{value:'Kargo sonrası',label:'Kargo sonrası'},{value:'Unused',label:'Unused'}]}};
+  const normalized=A.normalize(atlas);assert.equal(normalized.customSelectOptions.timing.length,2);
+  const html=S.buildHTML(S.project([{id:'c',license:'L',licensor:'X',processAtlas:normalized}]).licenses,{lang:'tr'});
+  assert.ok(html.includes('Kargo sonrası')&&html.includes('Somerbond UK')&&html.includes('Demo Street 1'));
+  assert.ok(!html.includes('Unused'),'unused custom labels stay private');
+});
