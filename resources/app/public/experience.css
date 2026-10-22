@@ -703,38 +703,38 @@ html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um
    ===================================================================== */
 
 /* Düğme L — ana eylem: --ctl-h, --fs-xs, 600. */
-:root :is(.psaGhostBtn,.mfpBtn,.cpaBtn:not(.sm),.aoButton,.dmViewBtn){
+:root :is(.psaGhostBtn,.mfpBtn,.cpaBtn:not(.sm),.aoButton,.dmViewBtn,.lcBtn:not(.sm)){
   height:var(--ctl-h);min-height:var(--ctl-h);padding-inline:12px;
   font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;
 }
 /* Düğme S — kart içi eylem: --ctl-h-sm. */
-:root :is(.cpaBtn.sm,.ovClockManageBtn,.bpaTodayBtn,.lflCpTableTool,.ovBreakdownViewBtn,.ovNotesSortBtn,.lflTrialBannerOff,.quotationWorkspaceTopBar .quotationStatusTabs button){
+:root :is(.cpaBtn.sm,.ovClockManageBtn,.bpaTodayBtn,.lflCpTableTool,.ovBreakdownViewBtn,.ovNotesSortBtn,.lflTrialBannerOff,.quotationWorkspaceTopBar .quotationStatusTabs button,.lcBtn.sm){
   height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);padding-block:0;padding-inline:10px;
   font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;border-radius:var(--r-sm);
 }
 /* İkon düğmesi S — kare. */
-:root :is(.cpaIconBtn,.lflScenarioIconBtn,.blWorkspaceIconBtn){width:var(--ctl-h-sm);height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);border-radius:var(--r-sm);}
+:root :is(.cpaIconBtn,.lflScenarioIconBtn,.blWorkspaceIconBtn,.lcIconBtn){width:var(--ctl-h-sm);height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);border-radius:var(--r-sm);}
 
 /* Segment — tek seçim: saç teli kap, S yükseklik, aktif = dolu vurgu. */
-:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle){
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg){
   display:inline-flex;height:auto;gap:0;padding:0;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);overflow:hidden;
 }
-:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle)>button{
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button{
   height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);min-width:0;padding:0 11px;margin:0;border:0;border-radius:0;border-left:1px solid var(--line2);
   background:transparent;box-shadow:none;color:var(--ink2);font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;line-height:1;white-space:nowrap;
 }
-:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle)>button:first-child{border-left:0;}
-:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle)>button:hover{background:var(--card2);color:var(--ink);}
-:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle)>button:is(.is-active,.is-on,.active,.isActive,[aria-pressed="true"],[aria-selected="true"]){
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button:first-child{border-left:0;}
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button:hover{background:var(--card2);color:var(--ink);}
+:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button:is(.is-active,.is-on,.active,.isActive,[aria-pressed="true"],[aria-selected="true"]){
   background:var(--acc);color:var(--on-acc);box-shadow:none;
 }
 
 /* Filtre çipi — çoklu seçim / süzgeç: aktif = açık vurgu zemini. */
-:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn){
+:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip){
   height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);padding:0 10px;border:1px solid var(--line);border-radius:var(--r-sm);
   background:var(--card);color:var(--ink2);font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;
 }
-:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn):is(.isActive,.is-active,[aria-pressed="true"]){
+:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip):is(.isActive,.is-active,[aria-pressed="true"]){
   border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);
 }
 :root .sourceModeGroup{min-height:0;padding:0;gap:4px;border:0;border-radius:0;background:transparent;}

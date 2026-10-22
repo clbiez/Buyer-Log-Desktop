@@ -104,7 +104,6 @@ test('kart özeti bugün geçerli tüm sezon kapsamlarını gösterir', () => {
   assert.deepEqual(E.currentContracts(list, '2026-10-21').map(r => r.id), ['aw', 'ss']);
   assert.deepEqual(E.currentContracts([list[2]], '2026-10-21').map(r => r.id), ['old']);
   assert.deepEqual(E.currentContracts([], '2026-10-21'), []);
-  assert.match(read('public/license-atlas-shell.js'), /contracts:E\.currentContracts\(c\.rules\)/);
 });
 
 test('License Royalty Calculations kaydedilmemiş değişikliği sessizce atmaz ve eşleşme sayısını önbellekler', () => {
@@ -116,67 +115,6 @@ test('License Royalty Calculations kaydedilmemiş değişikliği sessizce atmaz 
   assert.match(ui, /const counts=new Map\(working\.map\(r=>\[r\.id,matchCount\(r\)\]\)\)/);
   assert.match(ui, /countCache=new WeakMap\(\)/);
   assert.match(read('public/index.html'), /license-royalty-commissions\.js\?v=__BL_ASSET_VERSION__&rev=2/);
-});
-
-test('Lisans Atlası Buyer Log arayüz ölçeğini izler ve büyük karşılama alanını göstermez', () => {
-  const css = read('public/license-atlas/integration.css');
-  const shell = read('public/license-atlas-shell.js');
-  const bridge = read('public/license-atlas/integration.js');
-  assert.match(css, /body\{zoom:var\(--bl-density,1\)\}/);
-  assert.match(css, /html body \.hero\{display:none\}/);
-  assert.match(css, /\.cover\{height:52px\}/);
-  assert.match(shell, /font-size:var\(--fs-base,12\.5px\)/);
-  assert.match(shell, /attributeFilter:\['data-theme','data-font-step','style','lang'\]/);
-  assert.match(bridge, /setProperty\('--bl-density',String\(Math\.min\(1\.3,Math\.max\(\.85,base\/12\.5\)\)\)\)/);
-  assert.match(read('public/perf-runtime.js'), /'license-cards-engine\.js\?rev=2'.*'license-atlas-shell\.js\?rev=2','license-cards\.js\?rev=4'/);
-});
-
-test('yeni dönemin başlangıcı değişince otomatik kapatılan dönem onu izler (royalty boşluğu kalmaz)', () => {
-  const cards = read('public/license-cards.js');
-  const shell = read('public/license-atlas-shell.js');
-  const bridge = read('public/license-atlas/integration.js');
-  assert.match(cards, /S\.periodLink=next\.closed\.length\?\{id:next\.rule\.id,closed:next\.closed\}:null/);
-  assert.match(cards, /function syncPeriod\(rule\)\{/);
-  assert.match(cards, /previous\.opdEnd=end/);
-  assert.match(cards, /return k==='opdStart'&&syncPeriod\(r\)\?businessHtml\(\):'';/);
-  assert.match(shell, /if\(m\.action==='businessInput'\)\{const html=ctx\.businessInput\(m\);if\(html\)post\('business',\{html\}\);\}/);
-  assert.match(bridge, /renderEditor\(true\);const body=overlay\.querySelector\('#drawerBody'\);if\(body\)body\.scrollTop=top;/);
-});
-
-test('kart görseli yüklenebilir: CSP blob önizlemesine izin verir, bildirim kaydetmeyi hatırlatır', () => {
-  const html = read('public/license-atlas/index.html');
-  const csp = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/)[1];
-  assert.match(csp, /img-src data: blob:; font-src data:;/);
-  assert.match(csp, /connect-src 'none'/);
-  assert.match(csp, /default-src 'none'/);
-  assert.match(html, /const objectURL=URL\.createObjectURL\(file\),img=new Image\(\);/);
-  const bridge = read('public/license-atlas/integration.js');
-  assert.match(bridge, /'Lisans görseli kaydedildi\.':txt\('Görsel eklendi\. Atlası kaydedin\.','Image added\. Save the atlas\.'\)/);
-  assert.match(read('public/license-atlas/integration.css'), /\.license-card \.cover\.has-cover-image\{height:96px\}/);
-});
-
-test('Lisans Atlası Buyer Log arayüz dilini kullanır: Barlow, 30px alanlar, tema token’ları, tip ölçeği', () => {
-  const css = read('public/license-atlas/integration.css');
-  const shell = read('public/license-atlas-shell.js');
-  const bridge = read('public/license-atlas/integration.js');
-  // Fonts: same Barlow files/ranges as design.css, inlined because the sandbox only allows font-src data:.
-  assert.match(shell, /function buyerLogFonts\(\)\{/);
-  assert.match(shell, /rule\.type===CSSRule\.FONT_FACE_RULE&&\/Barlow\//);
-  assert.match(shell, /<style id="bl-fonts">\$\{fonts\}<\/style><style id="bl-integration">\$\{css\}<\/style>/);
-  for (const token of ['--ink2', '--acc-bg', '--acc-ink', '--on-acc', '--hair', '--line2', '--red']) assert.ok(shell.includes(`'${token}'`), token);
-  assert.match(bridge, /setProperty\('--blt-'\+k\.slice\(2\),v\)/);
-  // Type scale derived from every original rule, inserted before the integration layer.
-  assert.match(bridge, /function buyerLogTypeScale\(\)\{/);
-  assert.match(bridge, /if\(fw>=650\)decl\.push\('font-weight:600!important'\)/);
-  assert.match(bridge, /\['bl-fonts','bl-integration'\]\.includes\(node\.id\)/);
-  // Controls, buttons and labels match Buyer Log primitives.
-  assert.match(css, /--bl-ctl:30px/);
-  assert.match(css, /--bl-body-font:"Barlow"/);
-  assert.match(css, /:root body :is\(#app,#overlayRoot\) :is\(input:not\(\[type=checkbox\]\)/);
-  assert.match(css, /font:500 12px\/1\.2 var\(--bl-body-font\)!important/);
-  assert.match(css, /font:500 10\.5px\/1\.3 var\(--bl-body-font\)!important;letter-spacing:\.06em!important;text-transform:uppercase/);
-  assert.match(css, /\.map-choice-bar button\.selected\{background:var\(--bl-t-acc-bg\)!important/);
-  assert.doesNotMatch(css.slice(css.indexOf('Buyer Log skin')), /#427f94|#39758a|#dceeed/);
 });
 
 test('lisans keşfi CP’de elle seçilen Licensor’ı kullanır; lisansörsüz eski yer tutucu gizlenir', () => {
@@ -208,24 +146,10 @@ test('lisans keşfi CP’de elle seçilen Licensor’ı kullanır; lisansörsüz
   assert.match(read('server/server.js'), /discoveryRowsFromOrders\(sources,overrides,parseLib\)/);
 });
 
-test('üretici atlası seçilen lisanslarla aktarılır, Buyer Log görünümünü taşır; kütüphanede Licensor filtresi var', () => {
-  const bridge = read('public/license-atlas/integration.js');
-  const shell = read('public/license-atlas-shell.js');
-  // Export picker: nothing preselected, only chosen ids are sent.
-  assert.match(bridge, /supplierSelection=new Set\(\);supplierPicker\(\);return;/);
-  assert.match(bridge, /send\('export',\{ids\}\)/);
-  assert.match(bridge, /data-action="blPickExport" \$\{supplierSelection\.size\?'':'disabled'\}/);
-  assert.match(shell, /if\(!ids\.size\)\{ctx\.showError\(T\('Aktarmak için en az bir lisans seçin\.','Select at least one license to export\.'\)\);return;\}/);
-  assert.match(shell, /const selected=ctx\.data\.cards\.filter\(c=>ids\.has\(c\.id\)\)/);
-  assert.match(shell, /exportSupplier\(Array\.isArray\(m\.ids\)/);
-  // Supplier file: same fonts, skin, type scale and Buyer Log tokens; full-bleed card images.
-  assert.match(bridge, /const html=supplierSkin\(tpl\.replace\('__PUBLIC_DATA__',payload\)\)/);
-  assert.match(bridge, /<script>\(\$\{buyerLogTypeScale\.toString\(\)\}\)\(\);<\\\/script>/);
-  assert.match(bridge, /--blt-acc:#3f6488/);
-  assert.match(bridge, /\.license-card \.cover\.has-cover-image img\{position:absolute;inset:0;width:100%;height:100%;object-fit:cover!important/);
-  assert.ok(!bridge.includes('</script>'), 'integration.js is inlined into a <script>; it must not contain a closing tag');
-  // Licensor filter in the License Library.
-  assert.match(bridge, /id="blLicensorFilter"/);
-  assert.match(bridge, /original\.cards\(grouped\(licenses\.filter\(matchesLicensor\)\)\)/);
-  assert.match(bridge, /txt\('Tüm lisansörler','All licensors'\)/);
+
+test('liste görünümünde yeni dönemin başlangıcı değişince otomatik kapatılan dönem onu izler', () => {
+  const ui = read('public/license-cards.js');
+  assert.match(ui, /d\.period=next\.closed\.length\?\{id:next\.rule\.id,closed:next\.closed\}:null/);
+  assert.match(ui, /if\(k==='opdStart'&&d\.period\?\.id===r\.id\)\{const end=E\.previousDay\(el\.value\)/);
+  assert.match(ui, /prev\.opdEnd=end/);
 });

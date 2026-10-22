@@ -1,23 +1,32 @@
-# Original License Atlas integration
+# License cards and approval maps (native list, 2026-10-22)
 
-The License Cards module uses the uploaded Atlas presentation, including its complete CSS cascade, three-lane tree, animations, covers and Process Studio. `public/license-atlas/PROVENANCE.md` records the reference hash. The reference script and CSS bodies have a pinned fidelity check; additive adapters integrate Buyer Log without rewriting the tree.
+The License cards page is a native Buyer Log module; the uploaded iframe Atlas
+(`public/license-atlas/`, `license-atlas-shell.js`, `license-atlas.js`,
+`license-atlas-workspace.js`) is **no longer loaded** (`perf-runtime.js` › `licensecards`).
+Those files remain only until a separate cleanup removes them with their tests.
 
-The presentation runs in an opaque sandbox. Buyer Log fetches its component files into `srcdoc` because the server forbids framing HTTP pages. The child has no cookie, local-storage or API access. The parent validates message source identity and owns authorization, API calls, commercial forms and conflict handling. TR/EN and reduced-motion behavior remain available.
+| File | Role |
+| --- | --- |
+| `public/license-cards-engine.js` | Pure: rows (one per license × licensor), primary contract, rate parsing/validation (server limits), compact map summary, licensor options, new-period helper |
+| `public/license-cards.js` | List view: inline Royalty / TR / YD / Hologram edits (Enter saves, Esc reverts), expanded row (all contracts, contact/portal, image), selection → supplier atlas |
+| `public/license-map-editor.js` | Compact approval map drawer: ordered steps, approver, test, routes, sharing, guides, addresses, portal; copy steps from another license |
+| `public/license-supplier-atlas.js` | Pure supplier file builder: `BLLicenseAtlasEngine.project()` privacy allowlist, Buyer Log palette, inline Barlow, strict CSP, no script |
+| `public/license-cards.css` | Layout only; components join the `experience.css` contracts (`.lcBtn`, `.lcIconBtn`, `.lcSeg`, `.lcChip`) |
 
-Atlas edits are staged until **Save atlas**. Manual-editor changes first use **Apply changes**; Process Studio changes are saved after closing its window. Commercial edits retain the existing card save, contract validation, scoped edit token and rate-cache updates. Atlas batches validate every card before one durable write and publish through the existing outbox. A failed save retains the draft; discard reloads current server data.
+Saving uses the existing `PUT /api/license-cards/:id` with the card's `editToken`: only
+changed contracts are sent (the server merges by rule id), profile fields are partial, and the
+map is sent as `profile.processAtlas`. Drafts are per card; background refreshes never discard
+them and never rebuild the list under the cursor; only a verified token change marks a conflict.
+A new period copies the latest rates and closes the previous open period of the same scope; if
+its start date is edited, the closed period's end follows so no OPD range is left without royalty.
 
-Legacy card-scoped asset/address/option libraries are merged with collision remapping. Ownership and references determine each saved card's metadata so independent image libraries do not consume every other card's existing 2 MB budget. Original-library presets remain available in Process Studio without being copied into each saved profile. Internal notes and translations survive normalization.
-
-Supplier export projects each card through the existing explicit-sharing allowlist, merges only those public projections, then uses the uploaded interactive supplier template. Source-note opt-out overrides legacy flags. Route instructions are adapted to the original supplier renderer. Financial rules, access fields and unshared notes never enter its payload.
+Supplier export contains only the selected rows. Cards without a map export as a plain entry;
+licenses switched off in the map (“Include in supplier atlas”) are skipped and reported.
 
 ## Verification
 
-- All 1,042 test files were covered locally across the canonical batches. Eight files affected by the restricted local-network environment passed their targeted reruns with networking enabled. The design-token guard passed after the parent drawer was adjusted to Buyer Log tokens.
-- Final focused run: nine test files, 68 assertions passed.
-- The bilingual coverage check has zero new or baseline omissions.
-- Real-app Chromium acceptance verifies original tree DOM, save failure and retry, unchanged contracts on atlas save, immediate export after saving, contract editing, visible supplier instructions, export privacy, complete-tree copying, TR/EN, mobile resize and read-only expansion.
-- Release-note PNGs use only demo fixtures and the real Buyer Log UI. The existing Overview pending entry is retained.
-
-To reproduce the browser checks, install Playwright in the development environment and run `node scripts/license-atlas-ui-acceptance.js` from `resources/app`. Use `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` if Chromium is not in Playwright's default installation, `BUYER_LOG_ATLAS_ARTIFACT_ROOT` to retain screenshots, and `BUYER_LOG_ATLAS_TEST_PORT` to choose an unused local port (default 6452). The script starts its own server and uses isolated demo data.
-
-The server must restart to load the batch endpoint; the desktop release workflow packages these changes normally.
+Run `node scripts/license-cards-ui-acceptance.js` from `resources/app` (Playwright + Chromium;
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `BUYER_LOG_ATLAS_ARTIFACT_ROOT`, `BUYER_LOG_ATLAS_TEST_PORT`).
+It starts its own server on isolated demo data and checks: one row per licensor, inline save and
+validation, new period without gap, map save preserving existing fields, supplier file privacy,
+licensor filter, TR/EN, dark theme and mobile.

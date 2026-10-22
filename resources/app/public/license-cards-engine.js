@@ -59,6 +59,72 @@
     }
     return {rules:[next,...list],rule:next,closed};
   }
+  /* ---- License list (rows, inline rates, compact approval map) ---- */
+  const RATE_FIELDS=Object.freeze(['royalty','trCommission','ydCommission','hologramCost']);
+  // Card image: the atlas cover wins, the legacy symbol is the fallback.
+  function cardImage(card){
+    const cover=text(card&&card.processAtlas&&card.processAtlas.license&&card.processAtlas.license.cover);
+    if(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(cover))return cover;
+    return symbolUrl(card&&card.symbolDataUrl);
+  }
+  // The contract a row edits: newest active one; else the nearest upcoming; else the latest past one.
+  function primaryContract(rules,day=today()){
+    const groups=contracts(rules,day),rule=latestContract(rules,day);
+    return {rule,status:rule?ruleStatus(rule,day):'none',extraActive:Math.max(0,groups.active.length-1)};
+  }
+  // '' clears an optional rate; comma decimals are accepted; anything else is NaN.
+  function parseRate(value){
+    if(value==null||text(value)==='')return null;
+    const n=Number(text(value).replace(/\s/g,'').replace(',','.'));
+    return Number.isFinite(n)?n:NaN;
+  }
+  const exact=n=>Number(n.toFixed(10));
+  // Same limits as the server (server/lib/license-cards.js normalizeRules).
+  function rateError(rule){
+    const r=rule||{},royalty=r.royalty,commissions=[r.trCommission,r.ydCommission].filter(v=>v!=null);
+    if(royalty==null||!Number.isFinite(royalty)||royalty<0||royalty>100)return 'royalty';
+    if(!commissions.length)return 'commission-missing';
+    if(commissions.some(v=>!Number.isFinite(v)||v<0||exact(v+royalty)>100))return 'commission';
+    if(r.hologramCost==null||!Number.isFinite(r.hologramCost)||r.hologramCost<0)return 'hologram';
+    const a=date(r.opdStart),b=date(r.opdEnd);
+    if(a===null||b===null||(a&&b&&a>b))return 'date';
+    return '';
+  }
+  const APPROVERS=Object.freeze(['LCW','licensor','mixed','agency','unknown']);
+  // Minimal map: enabled steps in order with who approves, test and route count.
+  function mapSummary(card){
+    const stages=(card&&card.processAtlas&&card.processAtlas.license&&Array.isArray(card.processAtlas.license.stages)?card.processAtlas.license.stages:[]).filter(s=>s&&s.enabled!==false);
+    return stages.map((s,i)=>({id:s.id,index:i+1,title:text(s.title),approver:APPROVERS.includes(s.approver)?s.approver:'unknown',test:s.testRequired===true,routes:Array.isArray(s.submissions)?s.submissions.length:0,shared:s.manufacturerVisible!==false}));
+  }
+  function licensorOptions(cards){
+    const seen=new Map();
+    for(const c of Array.isArray(cards)?cards:[]){const k=key(c.licensor);if(!seen.has(k))seen.set(k,text(c.licensor));}
+    return [...seen.entries()].sort((a,b)=>(a[0]==='')-(b[0]==='')||a[1].localeCompare(b[1],'tr')).map(([value,label])=>({value,label}));
+  }
+  // One row per card (license × licensor); several licensors are never merged.
+  function rows(cards,{query='',licensor=null,status='all',sort={key:'license',dir:'asc'},day=today()}={}){
+    const q=key(query);
+    const list=(Array.isArray(cards)?cards:[]).map(card=>{
+      const primary=primaryContract(card.rules,day),map=mapSummary(card);
+      return {card,id:card.id,license:text(card.license),licensor:text(card.licensor),image:cardImage(card),primary,map,hasAtlas:Boolean(card.processAtlas)};
+    }).filter(row=>{
+      if(q&&!key(`${row.license} ${row.licensor}`).includes(q))return false;
+      if(licensor!=null&&key(row.licensor)!==licensor)return false;
+      if(status==='active')return row.primary.status==='active';
+      if(status==='missing')return row.primary.status!=='active';
+      if(status==='noLicensor')return !row.licensor;
+      if(status==='noMap')return !row.map.length;
+      return true;
+    });
+    const dir=sort&&sort.dir==='desc'?-1:1,k=sort&&sort.key||'license';
+    const val=row=>RATE_FIELDS.includes(k)?(row.primary.rule&&Number.isFinite(Number(row.primary.rule[k]))&&row.primary.rule[k]!==null?Number(row.primary.rule[k]):null):k==='licensor'?row.licensor:k==='map'?row.map.length:row.license;
+    return list.sort((a,b)=>{
+      const x=val(a),y=val(b);
+      if(x===y)return a.license.localeCompare(b.license,'tr')||a.licensor.localeCompare(b.licensor,'tr');
+      if(x==null)return 1;if(y==null)return -1;
+      return (typeof x==='number'?x-y:String(x).localeCompare(String(y),'tr'))*dir;
+    });
+  }
   function quantity(v){
     if(v==null||text(v)==='')return null;
     let s=text(v).replace(/\s/g,'');
@@ -85,5 +151,5 @@
   }
   function portalHref(value){try{const u=new URL(text(value));return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:'';}catch(_){return '';}}
   function symbolUrl(value){const s=text(value);return /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(s)&&s.length<=350000?s:'';}
-  return Object.freeze({latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
+  return Object.freeze({RATE_FIELDS,APPROVERS,cardImage,primaryContract,parseRate,rateError,mapSummary,licensorOptions,rows,latestContract,currentContracts,nextContractPeriod,previousDay,contracts,ruleStatus,statistics,portalHref,symbolUrl,today});
 });
