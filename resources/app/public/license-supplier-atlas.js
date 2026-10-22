@@ -221,7 +221,7 @@ footer{color:var(--muted);font-size:11.5px;margin-top:20px}
     ];
     for(const [maxEdge,quality] of passes){
       const compact=await shrinkImages(licenses,{maxEdge,quality,encodeImage});
-      if(!compact.compressedImages)break;
+      // A larger pass may have no savings; smaller dimensions still can.
       const full=measure(compact.licenses,fonts);
       if(full.bytes<=limit)return finish(full,compact.compressedImages,false);
       smallest=Math.min(smallest,full.bytes);
