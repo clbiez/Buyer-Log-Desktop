@@ -87,8 +87,6 @@ for row in status_rows:
                 "edits": create_edits(older, after, name)
             })
             seen.add(digest(older))
-    else:
-        raise RuntimeError(f"unsupported change: {status} {name}")
     entries.append(record)
 if len(entries) != 50:
     raise RuntimeError(f"expected 50 application files, got {len(entries)}")
