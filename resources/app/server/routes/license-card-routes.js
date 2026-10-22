@@ -49,7 +49,7 @@ app.put('/api/license-cards/:id/licensor', area, permission, async (req, res) =>
 app.put('/api/license-cards/licensor-merges', area, permission, async (req, res) => {
     try {
       const result=await service.setLicensorMerge(req.currentUser,req.body||{},{assertAuthority:authority(req,true),originClientId:clientId(req)});
-      userAccess.appendAudit(req.currentUser,'LICENSE_LICENSOR_MERGE','licenseCards',{key:String(req.body?.key||'').slice(0,200),split:req.body?.split===true});
+      userAccess.appendAudit(req.currentUser,'LICENSE_LICENSOR_MERGE','licenseCards',{key:String(req.body?.key||'').slice(0,200),source:String(req.body?.source||'').slice(0,200),target:String(req.body?.target||'').slice(0,200),split:req.body?.split===true});
       send(req,res,result.saved,{syncPending:result.syncPending});
     } catch(err){error(res,err);}
   });
