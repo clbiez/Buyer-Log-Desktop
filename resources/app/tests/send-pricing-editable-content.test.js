@@ -70,7 +70,7 @@ test('prepared e-mail Fabric Card summaries match Collection exports in preview,
   const fabricCards=require('../public/fabric-cards-engine.js');
   const jersey='3859-Örme,Süprem,30/1 Ne,Pamuk,150 gsm,100% Pamuk,Enzim';
   const terry='361819-Örme,İki İplik,30/20,Pamuk,220 gsm,%80 Pamuk, %20 Poliester,Dispers';
-  const raw='A - '+jersey+'\\nB - '+terry;
+  const raw='A - '+jersey+'\nB - '+terry;
   const cards=new Map([
     ['3859',{code:'3859',summary:'Süprem · 30/1 Ne · 150 gsm · 100% Pamuk',summaryEn:'Single Jersey · 30/1 Ne · 150 gsm · 100% Cotton'}],
     ['361819',{code:'361819',summary:'İki İplik · 220 gsm · 80% Pamuk 20% Polyester',summaryEn:'Two Thread Terry · 220 gsm · 80% Cotton 20% Poliester'}],
@@ -80,7 +80,7 @@ test('prepared e-mail Fabric Card summaries match Collection exports in preview,
     prepareEmailColumnIsPicture:()=>false,kolEffectiveValue:(row,key)=>row[key],
     kolFabricDisplay:value=>fabricCards.displayText(value,cards,ctx.appLang),
     escapeHtml:value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),
-    L:value=>value,
+    L:value=>value,tableColumnLabel:(kind,column)=>column.label,
   };
   vm.createContext(ctx);
   vm.runInContext(between('function prepareEmailTopicCell(', 'function prepareEmailSubjectSegment('),ctx);
@@ -116,7 +116,7 @@ test('prepared e-mail Fabric Card summaries match Collection exports in preview,
   assert.equal(ctx.prepareEmailTopicCell(row,{k:'modelKod',sourceKind:'collection'}).display,'DEMO');
 
   const workbook=between('async function prepareEmailBuildTopicTableWorkbook(', 'function prepareEmailWorkbookFileEntry(');
-  assert.match(workbook,/const out=prepareEmailTopicCell\\(row,column\\)/);
+  assert.match(workbook,/const out=prepareEmailTopicCell\(row,column\)/);
   assert.match(workbook,/cell.value=out.value/);
 });
 
