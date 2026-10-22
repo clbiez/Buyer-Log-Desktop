@@ -57,7 +57,7 @@ test('supplier atlas contains only selected, supplier-visible content and never 
   assert.match(html,/prefers-color-scheme:dark/);
 });
 
-test('supplier atlas keeps route addresses in steps only and opens collapsible visual guides by default', () => {
+test('supplier atlas keeps route addresses only in steps and opens collapsible guides inside initially closed steps', () => {
   const license={
     name:'Demo',agency:'Licensor',cover:'',requirements:'',
     stages:[{id:'step-1',title:'Fit sample',approver:'LCW',testRequired:false,
@@ -72,10 +72,33 @@ test('supplier atlas keeps route addresses in steps only and opens collapsible v
     assert.equal(html.split('42 Sample Lane').length-1,1,'address should appear once in its route');
     assert.match(html,/<small>LCW HQ · 42 Sample Lane<\/small>/);
     assert.doesNotMatch(html,/Shipping addresses|Gönderim adresleri/);
-    assert.match(html,/<details class="vg" open><summary>(?:Visual guide|Görsel kılavuz)<\/summary><img class="guide"/);
+    assert.match(html,/<li class="step"><details class="step-fold"><summary class="step-head"><span class="dot">1<\/span>/,
+      'stage should start closed, with an accessible native toggle at its number');
+    assert.match(html,/<span class="step-title">Fit sample/,
+      'clicking the title should also toggle the stage');
+    assert.match(html,/<div class="step-body">[\s\S]*?<div class="routes">/,
+      'route details should be inside the collapsible body');
+    assert.match(html,/<details class="vg" open><summary>(?:Visual guide|Görsel kılavuz)<\/summary><img class="guide"/,
+      'guide should be open when its parent step is expanded, and independently collapsible');
+    assert.doesNotMatch(html,/<details class="step-fold" open>/);
+    assert.match(html, /\.step-fold::details-content[\s\S]*?content-visibility:visible/,
+      'printing must show stage details even when folded on screen');
     assert.match(html,/<details class="lic" id="l0"/,'license drawer must remain user-toggleable');
     assert.doesNotMatch(html,/<script/i,'supplier export must stay script-free');
   }
+});
+
+test('all atlas stages are independently collapsible by their 1/2/3/4 number, with no embedded scripts',()=>{
+  const stages=Array.from({length:4},(_,i)=>({id:'s'+i,title:'Stage '+(i+1),approver:'LCW',
+    submissions:[],testRequired:false,visualGuideId:''}));
+  const html=S.buildHTML([{name:'Four steps',agency:'LCW',cover:'',requirements:'',stages,addresses:[],
+    visualLibrary:[],portal:{url:'',notes:''},customSelectOptions:{}}],{lang:'en'});
+  assert.equal((html.match(/<details class="step-fold">/g)||[]).length,4);
+  assert.deepEqual([...html.matchAll(/<summary class="step-head"><span class="dot">(\d+)<\/span>/g)].map(m=>m[1]),
+    ['1','2','3','4']);
+  assert.equal((html.match(/<div class="step-body">/g)||[]).length,4);
+  assert.equal((html.match(/<details class="step-fold" open>/g)||[]).length,0);
+  assert.doesNotMatch(html,/<script/i);
 });
 
 test('list module: inline edits, selection export, map button and Buyer Log contracts', () => {
