@@ -106,11 +106,11 @@
      mergeKey is BLBusinessRules.licensorMergeKey; split lists the keys the user separated.
      The row's card is the richest one (map, contracts); the others stay as `merged`. */
   function richness(card,day){return [(card.processAtlas&&card.processAtlas.license&&(card.processAtlas.license.stages||[]).length)?1:0,primaryContract(card.rules,day).status==='active'?1:0,(card.rules||[]).length,-text(card.licensor).length];}
-  function groupCards(cards,{merges=null,mergeKey=null,day=today()}={}){
+  function groupCards(cards,{merges=null,mergeKey=null,groupKey=null,day=today()}={}){
     const split=new Set((merges&&Array.isArray(merges.split)?merges.split:[]).map(k=>mergeKey?mergeKey(k):k)),groups=new Map();
     for(const card of Array.isArray(cards)?cards:[]){
-      const mk=mergeKey&&text(card.licensor)?mergeKey(card.licensor):'';
-      const g=mk&&!split.has(mk)?`${key(card.license)}|${mk}`:`id|${card.id}`;
+      const mk=text(card.licensor)?(groupKey?groupKey(card.licensor,merges):mergeKey?mergeKey(card.licensor):''):'';
+      const g=mk&&(groupKey||!split.has(mk))?`${key(card.license)}|${mk}`:`id|${card.id}`;
       if(!groups.has(g))groups.set(g,{mergeKey:mk,members:[]});
       groups.get(g).members.push(card);
     }
@@ -128,11 +128,16 @@
       const mk=mergeKey(card.licensor);if(!byKey.has(mk))byKey.set(mk,{key:mk,names:new Map(),licenses:new Set()});
       const e=byKey.get(mk);e.names.set(key(card.licensor),text(card.licensor));e.licenses.add(text(card.license));
     }
-    return [...byKey.values()].filter(e=>e.names.size>1).map(e=>({key:e.key,names:[...e.names.values()].sort((a,b)=>a.length-b.length||a.localeCompare(b,'tr')),licenses:[...e.licenses].sort((a,b)=>a.localeCompare(b,'tr')),split:split.has(e.key)})).sort((a,b)=>a.key.localeCompare(b.key,'tr'));
+    const automatic=[...byKey.values()].filter(e=>e.names.size>1).map(e=>({key:e.key,names:[...e.names.values()].sort((a,b)=>a.length-b.length||a.localeCompare(b,'tr')),licenses:[...e.licenses].sort((a,b)=>a.localeCompare(b,'tr')),split:split.has(e.key)}));
+    const manual=Object.entries(merges?.entries||{}).filter(([id,e])=>id.startsWith('m:')&&e?.source&&e?.target).map(([id,e])=>({
+      key:id,source:e.source,target:e.target,manual:true,split:e.split===true,names:[e.source,e.target],
+      licenses:[...new Set((cards||[]).filter(c=>[key(e.source),key(e.target)].includes(key(c.licensor))).map(c=>text(c.license)))].sort((a,b)=>a.localeCompare(b,'tr'))
+    }));
+    return [...automatic,...manual].sort((a,b)=>a.names[0].localeCompare(b.names[0],'tr'));
   }
-  function rows(cards,{query='',licensor=null,status='all',sort={key:'license',dir:'asc'},day=today(),merges=null,mergeKey=null}={}){
+  function rows(cards,{query='',licensor=null,status='all',sort={key:'license',dir:'asc'},day=today(),merges=null,mergeKey=null,groupKey=null}={}){
     const q=key(query);
-    const list=groupCards(cards,{merges,mergeKey,day}).map(({card,merged,mergeKey:mk})=>{
+    const list=groupCards(cards,{merges,mergeKey,groupKey,day}).map(({card,merged,mergeKey:mk})=>{
       const primary=primaryContract(card.rules,day),map=mapSummary(card);
       return {card,id:card.id,license:text(card.license),licensor:text(card.licensor),image:cardImage(card)||merged.map(cardImage).find(Boolean)||'',primary,map,hasAtlas:Boolean(card.processAtlas),merged,mergeKey:mk};
     }).filter(row=>{
