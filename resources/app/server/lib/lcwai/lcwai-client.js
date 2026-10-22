@@ -66,11 +66,11 @@ function createLcwAiClient(options = {}) {
   function safeLog(event, details = {}) {
     // Yalnız sayısal/kod alanları: metin, başlık, token geçmez.
     const out = { event };
-    for (const key of ['status', 'code', 'ms', 'attempt', 'chunks', 'bytes', 'types']) if (details[key] != null) out[key] = details[key];
+    for (const key of ['status', 'code', 'ms', 'attempt', 'chunks', 'bytes', 'types', 'reasoningLevel', 'reasoningChunks']) if (details[key] != null) out[key] = details[key];
     try { log(out); } catch (_) {}
   }
 
-  async function send(ownerId, url, buildInit, { signal, upload = false } = {}) {
+  async function send(ownerId, url, buildInit, { signal, upload = false, reasoningLevel } = {}) {
     const endpoint = assertAllowedUrl(url);
     let authorization = await auth.getAuthorization(ownerId);
     for (let attempt = 1; attempt <= 2; attempt++) {
@@ -90,7 +90,7 @@ function createLcwAiClient(options = {}) {
       } catch (error) {
         throw errorForTransport(error, { reason: signal && signal.aborted ? 'cancelled' : '' });
       }
-      safeLog(upload ? 'LCWAI_UPLOAD_HTTP' : 'LCWAI_MESSAGE_HTTP', { status: response.status, ms: Date.now() - started, attempt });
+      safeLog(upload ? 'LCWAI_UPLOAD_HTTP' : 'LCWAI_MESSAGE_HTTP', { status: response.status, ms: Date.now() - started, attempt, reasoningLevel });
       if (response.status === 401 && attempt === 1) {
         try { await response.body?.cancel?.(); } catch (_) {}
         const rejected = auth.invalidate(ownerId, authorization);
@@ -139,13 +139,13 @@ function createLcwAiClient(options = {}) {
       const response = await send(ownerId, config.ENDPOINTS.messages, () => ({
         headers: { 'Content-Type': 'application/json', Accept: 'text/event-stream' },
         body: JSON.stringify(payload),
-      }), { signal: deadline.signal });
+      }), { signal: deadline.signal, reasoningLevel: payload.reasoningLevel });
       const result = await readSseResponse(response.body, {
         maxChars: config.LIMITS.maxResponseChars,
         onActivity: () => deadline.activity(),
         onDelta: (delta, state) => { if (typeof input.onDelta === 'function') { try { input.onDelta(delta, { chars: state.text.length }); } catch (_) {} } },
       });
-      safeLog('LCWAI_MESSAGE_DONE', { ms: Date.now() - started, chunks: result.chunks, types: result.types });
+      safeLog('LCWAI_MESSAGE_DONE', { ms: Date.now() - started, chunks: result.chunks, types: result.types, reasoningLevel: payload.reasoningLevel, reasoningChunks: result.reasoningChunks });
       return { ...result, modelKey: (result.metadata && result.metadata.modelKey) || payload.modelKey };
     } catch (error) {
       const failure = failureFor(error, deadline.reason());

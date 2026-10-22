@@ -15,7 +15,7 @@ function createDefaultEngine(options = {}) {
   const logger = typeof options.logger === 'function'
     ? options.logger
     // Yalnız olay adı + kod/durum/süre; metin ve başlık asla.
-    : event => { try { console.info(`[LCWAI] ${event.event}${event.status != null ? ` status=${event.status}` : ''}${event.code ? ` code=${event.code}` : ''}${event.ms != null ? ` ms=${event.ms}` : ''}${event.types ? ` types=${event.types}` : ''}`); } catch (_) {} };
+    : event => { try { console.info(`[LCWAI] ${event.event}${event.status != null ? ` status=${event.status}` : ''}${event.code ? ` code=${event.code}` : ''}${event.ms != null ? ` ms=${event.ms}` : ''}${event.types ? ` types=${event.types}` : ''}${event.reasoningLevel ? ` reasoning=${event.reasoningLevel}` : ''}${event.reasoningChunks != null ? ` reasoningChunks=${event.reasoningChunks}` : ''}`); } catch (_) {} };
   // Masaüstü kabuğu (Electron gizli oturum) token verdiyse o kullanılır;
   // yoksa mevcut Edge/CDP yolu (tarayıcı kipi, eski kabuk).
   const provider = options.provider || createDesktopAwareProvider({ holder: getDesktopTokenHolder(), fallback: createLcwAiBrowserSession({ connector: options.connector }) });
