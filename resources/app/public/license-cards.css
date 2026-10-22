@@ -59,6 +59,16 @@
 .lcName:hover b{color:var(--acc-ink)}
 .lcLicensor{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink2)}
 .lcWarn{color:var(--orange);font-weight:600;font-size:var(--fs-xs)}
+.lcPage .lcLicensorEdit input.lcLicensorInput{width:100%;min-width:0;height:var(--ctl-h-sm);padding:0 6px;border:1px dashed var(--orange);background:var(--orange-bg);color:var(--ink);font:400 var(--fs-xs) var(--sans);transition:border-color var(--bl-motion-fast) var(--bl-ease),background-color var(--bl-motion-fast) var(--bl-ease)}
+.lcPage .lcLicensorEdit input.lcLicensorInput::placeholder{color:var(--orange)}
+.lcPage .lcLicensorEdit input.lcLicensorInput:focus{outline:0;border-style:solid;border-color:var(--acc);background:var(--card);box-shadow:var(--focus-ring)}
+.lcLicensorEdit.isBusy{opacity:.6;pointer-events:none}
+.lcCount{margin-left:4px;padding:0 5px;border:1px solid var(--line);color:var(--muted);font:600 var(--fs-2xs) var(--sans)}
+.lcAddLicensor{display:flex;flex-direction:column;gap:4px;padding:6px 8px;border:1px solid var(--line);background:var(--card2)}
+.lcFieldLabel{font:600 var(--fs-2xs) var(--sans);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.lcPage .lcAddLicensor input:not([type=checkbox]){flex:1;min-width:140px;height:var(--ctl-h-sm);padding:0 6px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:400 var(--fs-xs) var(--sans)}
+.lcPage .lcAddLicensor input:not([type=checkbox]):focus{outline:0;border-color:var(--acc);box-shadow:var(--focus-ring)}
+.lcCopy{display:inline-flex;align-items:center;gap:6px;font-size:var(--fs-xs);color:var(--ink2);cursor:pointer}.lcCopy input{width:14px;height:14px;accent-color:var(--acc)}
 .lcRateCell{display:flex;align-items:center;justify-content:flex-end;gap:2px;min-width:0}
 .lcRateCell span{color:var(--muted);font-size:var(--fs-2xs);width:9px}
 .lcPage .lcRateCell input.lcRate{width:100%;min-width:0;height:var(--ctl-h-sm);padding:0 6px;border:1px solid transparent;background:transparent;color:var(--ink);text-align:right;font:600 var(--fs-sm) var(--sans);font-variant-numeric:tabular-nums;
@@ -200,8 +210,27 @@
 .lmAddress{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,2fr) auto;gap:6px;align-items:end;padding:4px 0;border-top:1px solid var(--line)}
 .lmFoot{display:flex;align-items:center;gap:6px;padding:var(--sp-2) var(--sp-4);border-top:1px solid var(--line);background:var(--card)}
 .lmStatus{flex:1;color:var(--muted);font-size:var(--fs-xs)}
+/* Stage templates */
+.lmTitleBox{display:flex;align-items:center;gap:6px;min-width:0}.lmTitleBox input.lmTitle{flex:1}
+.lmTpl{display:inline-flex;align-items:center;gap:3px;max-width:160px;height:20px;padding:0 6px;border:1px solid var(--acc);background:var(--acc-bg);color:var(--acc-ink);font:600 var(--fs-2xs) var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:none;animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both}
+.lmTpl .ic{width:12px;height:12px;flex:none}
+.lmLinked{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0;padding:5px 8px;border:1px solid var(--acc);background:var(--acc-bg);color:var(--acc-ink);font-size:var(--fs-xs)}
+.lmNaming{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px;border:1px solid var(--acc);background:var(--acc-bg);animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both}
+.lmDrawer .lmNaming input{flex:1;min-width:180px;height:var(--ctl-h-sm);padding:0 6px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:400 var(--fs-xs) var(--sans)}
+.lmDrawer .lmNaming input:focus,.lmDrawer input.lmNameEdit:focus{outline:0;border-color:var(--acc);box-shadow:var(--focus-ring)}
+.lmGrow{flex:1;min-width:0}
+.lmDrawer input.lmNameEdit{display:block;width:100%;max-width:520px;height:var(--ctl-h);margin:2px 0;padding:0 6px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 var(--fs-lg) var(--head)}
+.lmNotice{margin:0;padding:5px 8px;border:1px solid var(--green);background:var(--green-bg);color:var(--green);font-size:var(--fs-xs);animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both}
+.lmNotice.isError{border-color:var(--red);background:var(--red-bg);color:var(--red)}
+.lmTemplates{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border:1px solid var(--line)}
+.lmTemplate{display:grid;grid-template-columns:10px minmax(0,1fr) 110px auto;gap:10px;align-items:center;padding:6px 8px;border-top:1px solid var(--line);animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both;transition:background-color var(--bl-motion-fast) var(--bl-ease)}
+.lmTemplate:first-child{border-top:0}.lmTemplate:hover{background:var(--card2)}
+.lmTemplate>i{width:10px;height:10px;background:var(--ap,var(--line2))}
+.lmTemplate b{display:block;font:600 var(--fs-sm) var(--head)}.lmTemplate small{color:var(--muted);font-size:var(--fs-2xs)}
+.lmUsage{justify-self:end;font-size:var(--fs-xs);color:var(--ink2);white-space:nowrap}
+.lmTemplates .lmMuted{padding:10px}
 .lmScrim.isError .lmStatus{color:var(--red)}
 
 @media (max-width:1100px){.lcDetailIn{padding-left:var(--sp-3)}}
 @media (max-width:720px){.lcPage{padding:var(--sp-2)}.lcSearch{flex-basis:100%}.lcDetailIn{grid-template-columns:1fr}.lmStageRow{grid-template-columns:24px 1fr auto;}.lmStageRow .lcSeg,.lmStageRow .lcChip,.lmCount{grid-column:2/-1}.lmRoute{grid-template-columns:1fr 1fr}.lmAddress{grid-template-columns:1fr}.lcSelectionBar small{display:none}}
-@media (prefers-reduced-motion:reduce){.lcTable.isEntering .lcRow,.lcRow.isSaved,.lcDetail,.lmScrim,.lmDrawer,.lmStage,.lmRoute,.lmFlowStep,.lcNote,.lcNotice,.lcRowSave,.lcDetailFoot,.lcRowMsg,.lcCover img,.lmGuide,.lcSkeleton i{animation:none}.lcSelectionBar,.lmMore,.lcRow,.lcThumb img,.lcExpand .ic,.lmExpand .ic{transition:none}.lcRow:hover .lcThumb img{transform:none}}
+@media (prefers-reduced-motion:reduce){.lcTable.isEntering .lcRow,.lcRow.isSaved,.lcDetail,.lmScrim,.lmDrawer,.lmStage,.lmRoute,.lmFlowStep,.lcNote,.lcNotice,.lcRowSave,.lcDetailFoot,.lcRowMsg,.lcCover img,.lmGuide,.lcSkeleton i,.lmTpl,.lmNaming,.lmNotice,.lmTemplate{animation:none}.lcSelectionBar,.lmMore,.lcRow,.lcThumb img,.lcExpand .ic,.lmExpand .ic{transition:none}.lcRow:hover .lcThumb img{transform:none}}

@@ -36,7 +36,29 @@ app.get('/api/license-cards/atlas-library', area, (req, res) => {
     res.json(require('../lib/license-atlas-library.json'));
   });
 app.post('/api/license-cards/refresh', area, permission, async (req, res) => {
-    try { const result = await importCards(req, true); send(req, res, result.saved, { added: result.added, syncPending: result.syncPending }); } catch (err) { error(res, err); }
+    try { const result = await importCards(req, true); send(req, res, result.saved, { added: result.added, resolved: result.resolved || 0, discovered: result.discovered || 0, sourceStamp: result.sourceStamp || '', syncPending: result.syncPending }); } catch (err) { error(res, err); }
+  });
+const clientId=req=>String(req.headers?.['x-client-id']||'').slice(0,80);
+app.put('/api/license-cards/:id/licensor', area, permission, async (req, res) => {
+    try {
+      const result=await service.setLicensor(req.currentUser,req.params.id,req.body||{},{assertAuthority:authority(req,true),originClientId:clientId(req)});
+      userAccess.appendAudit(req.currentUser,'LICENSE_CARD_LICENSOR',req.params.id,{mode:req.body?.mode==='add'?'add':'assign',card:result.cards[0]?.id,revision:cards.revisionOf(result.saved,'licenseCards')});
+      send(req,res,result.saved,{syncPending:result.syncPending,cardId:result.cards[0]?.id||''});
+    } catch(err){error(res,err);}
+  });
+app.post('/api/license-cards/stage-templates', area, permission, async (req, res) => {
+    try {
+      const result=await service.saveTemplate(req.currentUser,req.body||{},{assertAuthority:authority(req,true),originClientId:clientId(req)});
+      userAccess.appendAudit(req.currentUser,'LICENSE_STAGE_TEMPLATE_SAVE','licenseCards',{template:req.body?.template?.id||'',propagated:result.cards.length});
+      send(req,res,result.saved,{syncPending:result.syncPending,propagated:result.cards.length});
+    } catch(err){error(res,err);}
+  });
+app.delete('/api/license-cards/stage-templates/:templateId', area, permission, async (req, res) => {
+    try {
+      const result=await service.deleteTemplate(req.currentUser,req.params.templateId,req.body||{},{assertAuthority:authority(req,true),originClientId:clientId(req)});
+      userAccess.appendAudit(req.currentUser,'LICENSE_STAGE_TEMPLATE_DELETE','licenseCards',{template:req.params.templateId,unlinked:result.cards.length});
+      send(req,res,result.saved,{syncPending:result.syncPending,unlinked:result.cards.length});
+    } catch(err){error(res,err);}
   });
 app.put('/api/license-cards/atlas-batch', area, permission, async (req, res) => {
     try {

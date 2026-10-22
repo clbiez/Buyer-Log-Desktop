@@ -33,7 +33,7 @@ function createLicenseCardService(deps){
      return {saved,added:imported.added};
    });
    if(result.noEffect)return {...result,syncPending:Object.keys(load().licenseCardOutbox||{}).length>0};
-   const syncPending=await published(profile,change);await notify(profile,change,result.saved,{originClientId});return {...result,syncPending};
+   const syncPending=await published(profile,change);await notify(profile,change,result.saved,{originClientId});return {...result,syncPending,resolved:preview.resolved?.length||0,discovered:preview.pairs?.length||0,sourceStamp:preview.sourceStamp||''};
  }
  function updatePreview(id,body){
    const current=load(),snapshot=sectionSnapshot(current),before=cards.stateOf(current).items.find(card=>card.id===id);
@@ -87,6 +87,20 @@ function createLicenseCardService(deps){
    });
    const syncPending=await published(profile,change);await notify(profile,change,saved);return {saved,syncPending};
  }
- return {read,discovery,discover,updatePreview,update,updateAtlasBatch,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
+ // Licensor assignment and stage templates: one validated write, peers get every changed card.
+ async function writeCards(profile,compute,{assertAuthority,originClientId=''}={}){
+   let change;
+   const saved=await mutate(async lease=>{
+     const guard=()=>{assertAuthority?.();};guard();const current=load(),result=compute(current);
+     change={cards:result.cards,rulesChanged:false,initialized:cards.stateOf(result.overrides).initialized,lastImportedAt:cards.stateOf(result.overrides).lastImportedAt,actorId:profile.id,...(result.stageTemplates?{stageTemplates:result.stageTemplates}:{})};
+     const staged=deps.publish?sync.stageChange(result.overrides,change):result.overrides,actual=deps.saveOverrides(staged,Number(current._revision)||0,{...lease,assertAuthority:guard});await lease.commit();
+     if(sectionSnapshot(load()).fingerprint!==sectionSnapshot(actual).fingerprint)throw error('OFFICE_RESOURCE_VERIFY_FAILED',409);return actual;
+   });
+   const syncPending=await published(profile,change);await notify(profile,change,saved,{originClientId});return {saved,syncPending,cards:change.cards};
+ }
+ const setLicensor=(profile,id,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensor(current,id,body);return {overrides:r.overrides,cards:[r.card]};},opts);
+ const saveTemplate=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.saveTemplate(current,body);return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
+ const deleteTemplate=(profile,id,body,opts)=>writeCards(profile,current=>{const r=cards.deleteTemplate(current,id,body);return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
+ return {read,discovery,discover,updatePreview,update,updateAtlasBatch,setLicensor,saveTemplate,deleteTemplate,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
 }
 module.exports={createLicenseCardService,sectionSnapshot};

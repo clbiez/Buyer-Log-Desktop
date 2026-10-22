@@ -78,7 +78,7 @@ function sanitizeOverridesBusiness(record) {
 }
 function classifyRecordId(id) {
   const key = String(id || '');
-  if (/^license-card:(?:state|license-[a-f0-9]{24})$/.test(key)) return 'SHARED_BUSINESS';
+  if (/^license-card:(?:state|stage-templates|license-[a-f0-9]{24})$/.test(key)) return 'SHARED_BUSINESS';
   if (/^store:settings\.json$/.test(key)) return 'GLOBAL_MASTER';
   if (/^store:overrides\.json$/.test(key)) return 'MIXED_OVERRIDE';
   if (/^store:(email-groups|fx-rates)\.json$/.test(key)) return 'GLOBAL_MASTER';
@@ -97,7 +97,7 @@ function isCpOrderId(id) { return /^cp-order:/.test(String(id || '')); }
 /* Kayıt eşler arası delta kanalında taşınabilir mi? */
 function peerChannelAllows(id) {
   const key = String(id || '');
-  return isCpOrderId(key) || PEER_DOCUMENTS.has(key) || /^license-card:(?:state|license-[a-f0-9]{24})$/.test(key);
+  return isCpOrderId(key) || PEER_DOCUMENTS.has(key) || /^license-card:(?:state|stage-templates|license-[a-f0-9]{24})$/.test(key);
 }
 /* cp-order kaydından yalnız paylaşılan alanları (ve motor metasını) bırakır.
    Meta alanlarının alan bazlı haritaları da aynı kapsama indirilir. */
@@ -136,7 +136,7 @@ function sanitizeDelta(delta, direction = 'outgoing') {
   const next = clone(delta), patch = next.patch || next.value;
   if(String(delta.id).startsWith('license-card:')){
     if(delta.delete||delta.tombstone||!patch||typeof patch!=='object')return null;
-    const allowed=delta.id==='license-card:state'?['initialized','lastImportedAt']:['profile','contracts'];
+    const allowed=delta.id==='license-card:state'?['initialized','lastImportedAt']:delta.id==='license-card:stage-templates'?['templates']:['profile','contracts'];
     next.patch=Object.fromEntries(allowed.filter(key=>Object.hasOwn(patch,key)).map(key=>[key,scrubSecrets(patch[key])]));
     if(!Object.keys(next.patch).length)return null;
     delete next.value;next.syncClass='SHARED_BUSINESS';return next;
