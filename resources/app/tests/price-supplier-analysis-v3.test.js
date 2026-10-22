@@ -219,12 +219,12 @@ test('filtre menüsü arama ve çoklu seçim sunar; eski tekli kayıtlar diziye 
   assert.match(root.innerHTML,/2 seçim/);
 });
 
-test('kumaş/klasman filtre araması sadece eşleşen seçenekleri gösterir; gizlenen satırlar CSS ile geri açılmaz',async()=>{
+test('KumaşTipi filtre araması sadece eşleşen seçenekleri gösterir; gizlenen satırlar CSS ile geri açılmaz',async()=>{
   const rows=[
-    obs('26Y','A','Örme Basic',10,100),
-    obs('26Y','B','Dokuma',12,100),
+    obs('26Y','A','Kazak',10,100,{row:{KumaşTipi:'Örme Basic'}}),
+    obs('26Y','B','Kazak',12,100,{row:{KumaşTipi:'Dokuma'}}),
   ];
-  const {root,context}=await mountScreen(rows,'tr',JSON.stringify({filterLayout:['classification']}));
+  const {root,context}=await mountScreen(rows,'tr',JSON.stringify({filterLayout:['col:KumaşTipi']}));
   const items=[
     {dataset:{search:E.keyOf('Örme Basic')},hidden:false},
     {dataset:{search:E.keyOf('Dokuma')},hidden:false},
@@ -235,7 +235,7 @@ test('kumaş/klasman filtre araması sadece eşleşen seçenekleri gösterir; gi
     querySelector(selector){assert.equal(selector,'[data-ps-filter-empty]');return empty;},
   };
   const search=value=>root.listeners.input({target:{
-    dataset:{psFilterSearch:'classification'},value,
+    dataset:{psFilterSearch:'col:KumaşTipi'},value,
     closest(selector){assert.equal(selector,'.psaMultiPanel');return panel;},
   }});
 
