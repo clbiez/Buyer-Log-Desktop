@@ -83,6 +83,50 @@ test('merge decisions: stored per key, bump pricing revision, sync newest-wins o
   assert.equal(older.changed,false,'an older decision never wins');
 });
 
+test('manual aliases: different licensor names share a display row, but each keeps its own contract', () => {
+  const a='FASHION UK',b='BM Fashions UK Ltd';
+  const merged={entries:{'m:alias':{source:a,target:b,split:false,at:'2026-10-22T10:00:00Z'}}};
+  assert.notEqual(B.licensorMergeKey(a),B.licensorMergeKey(b));
+  assert.equal(B.licensorsMerged(a,b,merged),true);
+  assert.equal(B.licensorsMerged(a,b,{entries:{'m:alias':{source:a,target:b,split:true}}}),false);
+  assert.equal(B.licensorsMerged(a,'UNRELATED',merged),false);
+  const own={id:'own',license:'Minecraft',licensor:a,royalty:23},other={id:'other',license:'Minecraft',licensor:b,royalty:15};
+  assert.equal(B.findRuleByLicensor([own,other],a,()=>true,merged).id,'own');
+  assert.equal(B.findRuleByLicensor([other],a,()=>true,merged).id,'other');
+  const list=[{id:'a',license:'Minecraft',licensor:a,rules:[own]},{id:'b',license:'Minecraft',licensor:b,rules:[other]},{id:'c',license:'Another',licensor:b,rules:[]}];
+  const opts={merges:merged,mergeKey:B.licensorMergeKey,groupKey:B.licensorGroupKey};
+  assert.equal(E.rows(list,opts).length,2);
+  assert.equal(E.rows(list,{...opts,licensor:a}).length,1,'alias filter finds the grouped Minecraft row');
+  assert.equal(E.mergeSummary(list,opts).filter(x=>x.manual).length,1);
+  assert.equal(E.rows(list,{...opts,merges:{entries:{'m:alias':{source:a,target:b,split:true}}}}).length,3);
+});
+
+test('manual alias operations: validate, persist, replicate, split and rejoin without touching contracts', () => {
+  const source='FASHION UK',target='BM Fashions UK Ltd';
+  const base={_revisions:{licenseCards:2,pricingRules:3},licenseCards:{initialized:true,items:[
+    {id:cards.cardId('Minecraft',source),license:'Minecraft',licensor:source},
+    {id:cards.cardId('Minecraft',target),license:'Minecraft',licensor:target}
+  ]},pricingRules:[{id:'rule',license:'Minecraft',licensor:source,royalty:25}]};
+  const joined=cards.setLicensorMerge(base,{source,target,split:false},'2026-10-22T10:00:00Z');
+  const entry=Object.entries(joined.licensorMerges.entries).find(([id])=>id.startsWith('m:'));
+  assert.ok(entry);assert.equal(entry[1].target,target);
+  assert.equal(cards.responseOf(joined.overrides,true).licensorMerges.entries[entry[0]].source,source);
+  assert.deepEqual(joined.overrides.pricingRules,base.pricingRules,'merging is a link, not a contract rewrite');
+  assert.equal(joined.overrides._revisions.pricingRules,4);
+  assert.throws(()=>cards.setLicensorMerge(base,{source,target:'UNKNOWN',split:false}),{code:'LICENSE_MERGE_INVALID'});
+  assert.throws(()=>cards.setLicensorMerge(base,{source,target:source,split:false}),{code:'LICENSE_MERGE_INVALID'});
+  const staged=sync.stageChange(joined.overrides,{cards:[],licensorMerges:joined.licensorMerges});
+  const peer=sync.applyRecords(base,{[sync.MERGES_ID]:staged.licenseCardOutbox[sync.MERGES_ID].fields},{});
+  assert.equal(peer.overrides.licensorMerges.entries[entry[0]].source,source);
+  assert.equal(B.licensorsMerged(source,target,peer.overrides.licensorMerges),true);
+  const split=cards.setLicensorMerge(joined.overrides,{source,target,split:true},'2026-10-22T11:00:00Z');
+  assert.equal(B.licensorsMerged(source,target,split.overrides.licensorMerges),false);
+  assert.throws(()=>cards.setLicensorMerge(joined.overrides,{source,target:'WRONG',split:true}),{code:'LICENSE_MERGE_INVALID'});
+  const rejoined=cards.setLicensorMerge(split.overrides,{source,target,split:false},'2026-10-22T12:00:00Z');
+  assert.equal(B.licensorsMerged(source,target,rejoined.overrides.licensorMerges),true);
+  assert.equal(B.licensorsMerged('ERMODA','ERMODA UK LTD',{entries:{ERMODA:{split:true},...rejoined.licensorMerges.entries}}),false,'unrelated automatic split stays in force');
+});
+
 test('map paste from the list: steps travel, the target keeps its identity, image, portal and notes', () => {
   const source={version:1,license:{id:'s',name:'Real Madrid',stages:[{id:'st',title:'PPS',submissions:[{id:'r',addressId:'a1',timing:'Kargo'}],visualGuideId:'g'}],addresses:[{id:'a1',label:'UK',text:'x'},{id:'unused',label:'U',text:'y'}],portal:{url:'https://src',notes:''},cover:'data:src',internalNotes:'SRC'},visualLibrary:[{id:'g',name:'g',data:'data:g'},{id:'other',name:'o',data:'data:o'}],customSelectOptions:{timing:[{value:'Kargo',label:'Kargo'}]}};
   const target={id:'t',license:'Naruto',licensor:'ERMODA',processAtlas:{version:1,license:{id:'t',name:'Naruto',stages:[{id:'old'}],addresses:[{id:'mine',label:'M',text:'z'}],portal:{url:'https://own',notes:''},cover:'data:own',internalNotes:'OWN'},visualLibrary:[],customSelectOptions:{timing:[{value:'Mine',label:'Mine'}]}}};
@@ -96,7 +140,7 @@ test('map paste from the list: steps travel, the target keeps its identity, imag
 
 test('client wiring: list copy/paste, merge panel and split route', () => {
   const src=read('public/license-cards.js'),routes=read('server/routes/license-card-routes.js');
-  for(const act of ['copyMap','pasteMap','pasteSelected','mergeSplit','mergeJoin','merges'])assert.ok(src.includes(`a==='${act}'`),act);
+  for(const act of ['copyMap','pasteMap','pasteSelected','mergeSplit','mergeJoin','mergeManualAdd','mergeManualSplit','mergeManualJoin','merges'])assert.ok(src.includes(`a==='${act}'`),act);
   assert.match(src,/E\.pasteMap\(clip\.atlas,current\)/);assert.match(src,/'\/api\/license-cards\/licensor-merges',\{method:'PUT'/);
   assert.match(routes,/app\.put\('\/api\/license-cards\/licensor-merges'/);
   assert.ok(routes.indexOf("'/api/license-cards/licensor-merges'")<routes.indexOf("app.put('/api/license-cards/:id'"));
