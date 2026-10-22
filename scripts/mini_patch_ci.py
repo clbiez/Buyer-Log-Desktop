@@ -109,13 +109,17 @@ with tempfile.TemporaryDirectory() as td:
         out = run_ps(script, installation, user_input="E\n")
         already = sum(source is not None and sha(source) == f["after_sha256"]
                       for f in files for source in [initial_files[f["path"]]])
-        assert f"BASARILI: {len(files) - already} dosya guncellendi." in out, out
+        if already == len(files):
+            assert "Patch zaten uygulanmis." in out, out
+        else:
+            assert f"BASARILI: {len(files) - already} dosya guncellendi." in out, out
         for f in files:
             assert sha((core / f["path"]).read_bytes()) == f["after_sha256"], (stage, f["path"])
         out = run_ps(script, installation, "-Check")
         assert f"Yazilacak dosya: 0; zaten guncel: {len(files)}" in out, out
-        out = run_ps(script, installation, "-Rollback", user_input="E\n")
-        assert "Geri alma tamamlandi" in out, out
+        if already != len(files):
+            out = run_ps(script, installation, "-Rollback", user_input="E\n")
+            assert "Geri alma tamamlandi" in out, out
         for f in files:
             target = core / f["path"]
             expected = initial_files[f["path"]]
