@@ -1,0 +1,34 @@
+name: Buyer Log Offline Mini Patch 7.0.293 R3
+on:
+  push:
+    branches:
+      - tools/offline-minipatch-7-0-293-20261022-r3
+    paths:
+      - .github/workflows/buyerlog-offline-minipatch-7293-r3.yml
+      - scripts/mini_patch_builder.py
+      - scripts/mini_patch_installer.ps1
+      - scripts/mini_patch_ci.py
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout pinned source and previous patch history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Build cumulative self-contained offline patch
+        run: python scripts/mini_patch_builder.py
+      - name: Verify clean STABLE and all previous manual patches on Windows
+        run: python scripts/mini_patch_ci.py
+      - name: Upload mini patch without publishing STABLE
+        uses: actions/upload-artifact@v4
+        with:
+          name: BuyerLog-7.0.293-MiniPatch-20261022-R3
+          path: dist/BuyerLog-7.0.293-MiniPatch-Guncel-20261022-R3.zip
+          if-no-files-found: error
+          retention-days: 7
