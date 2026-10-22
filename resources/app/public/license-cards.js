@@ -307,11 +307,19 @@
     try{
       const {licenses,skipped}=A.project(cards,isEn()?'en':'tr');
       if(!licenses.length){toast(T('Seçilen lisansların hiçbiri üretici atlasına dahil değil. Haritada “Üretici atlasına dahil”i açın.','None of the selected licenses is included in the supplier atlas. Turn on “Include in supplier atlas” in the map.'));return;}
-      const html=A.buildHTML(licenses,{lang:isEn()?'en':'tr',fonts:await A.loadFonts()});
-      const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})),a=document.createElement('a');
+      const result=await A.buildEmailSafeHTML(licenses,{lang:isEn()?'en':'tr',fonts:await A.loadFonts()});
+      // Defensive final guard: an oversized file must never be offered for download.
+      if(result.blob.size>A.MAX_EMAIL_BYTES)throw Object.assign(new Error('Atlas oversized'),{code:'ATLAS_EMAIL_SIZE_LIMIT'});
+      const url=URL.createObjectURL(result.blob),a=document.createElement('a');
       a.href=url;a.download=exportName();document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-      toast(skipped.length?T(`${licenses.length} lisans aktarıldı. Üreticiye kapalı: ${skipped.join(', ')}`,`${licenses.length} licenses exported. Not shared with suppliers: ${skipped.join(', ')}`):T(`${licenses.length} lisans üretici atlasına aktarıldı.`,`${licenses.length} licenses exported to the supplier atlas.`));
-    }catch(_){toast(T('Üretici atlası oluşturulamadı.','The supplier atlas could not be created.'));}
+      const mb=(result.bytes/1000000).toFixed(2);
+      const detail=result.optimized?T(' · E-posta boyutuna göre optimize edildi.',' · Optimized for email.'):'';
+      toast(T(`${licenses.length} lisans aktarıldı (${mb} MB).`,`${licenses.length} licenses exported (${mb} MB).`)+detail+
+        (skipped.length?T(` Üreticiye kapalı: ${skipped.join(', ')}`,` Not shared with suppliers: ${skipped.join(', ')}`):''),'success');
+    }catch(error){
+      if(error?.code==='ATLAS_EMAIL_SIZE_LIMIT')toast(T('Atlas 9 MB sınırına sığdırılamadı. İçerik eksiltilmedi; daha az lisans seçin veya büyük görselleri küçültün.','The atlas cannot fit under 9 MB without removing content. Select fewer licenses or reduce large images.'));
+      else toast(T('Üretici atlası oluşturulamadı.','The supplier atlas could not be created.'));
+    }
     finally{S.exporting=false;render();}
   }
   // Our own map/template writes change only processAtlas: open rate drafts on those cards

@@ -136,6 +136,107 @@ footer{color:var(--muted);font-size:11.5px;margin-top:20px}
     return `<!doctype html><html lang="${en?'en':'tr'}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; font-src data:; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"><title>${esc(T('Lisans Atlası · Üretici Rehberi','License Atlas · Supplier Guide'))}</title><style>${fonts}${STYLE}</style></head><body><div class="wrap"><header><div><div class="eyebrow">Buyer Log · ${esc(T('Üretici süreç rehberi','Supplier process guide'))}</div><h1>${esc(T('Lisans onay haritaları','License approval maps'))}</h1><p>${esc(T('Onay adımları, gönderim yöntemleri ve üretim talimatları.','Approval steps, submission methods and production instructions.'))}</p></div><div class="meta">${esc(day)}<br>${licenses.length} ${esc(T('lisans','licenses'))} · ${esc(T('salt okunur','read only'))}</div></header><p class="hint">${esc(T('Haritayı açmak için lisansa, aşama ayrıntıları için numarasına veya başlığına tıklayın.','Click a license to see its map, then a step number or title to toggle its details.'))}</p><div class="list">${items}</div><footer>${esc(T('Salt okunur üretici kopyası. Tarayıcıdan yazdırabilir veya PDF olarak kaydedebilirsiniz.','Read-only supplier copy. Print it or save it as PDF from your browser.'))}</footer></div></body></html>`;
   }
 
+
+  // 9 MB (decimal) is the hard email attachment limit; all bytes count.
+  const MAX_EMAIL_BYTES=9000000;
+  const RASTER_DATA=/^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;
+
+  // Local, non-destructive Canvas/WebP conversion. Never drop an unreadable image.
+  function reencodeImage(source,maxEdge,quality){
+    if(typeof Image==='undefined'||typeof document==='undefined')return Promise.resolve(source);
+    return new Promise(resolve=>{
+      const image=new Image();
+      image.onerror=()=>resolve(source);
+      image.onload=()=>{
+        let result=source,canvas;
+        try{
+          const side=Math.max(image.naturalWidth,image.naturalHeight);
+          if(side>0){
+            const scale=Math.min(1,maxEdge/side);
+            canvas=document.createElement('canvas');
+            canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));
+            canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+            const ctx=canvas.getContext('2d');
+            if(ctx){
+              ctx.drawImage(image,0,0,canvas.width,canvas.height);
+              const encoded=canvas.toDataURL('image/webp',quality);
+              if(RASTER_DATA.test(encoded)&&encoded.length<source.length)result=encoded;
+            }
+          }
+        }catch(_){ /* Preserve the original image when conversion is unavailable. */ }
+        finally{if(canvas){canvas.width=0;canvas.height=0;}}
+        resolve(result);
+      };
+      image.src=source;
+    });
+  }
+
+  async function shrinkImages(licenses,{maxEdge,quality,encodeImage}){
+    const sources=new Set();
+    for(const license of licenses){
+      if(RASTER_DATA.test(license.cover||''))sources.add(license.cover);
+      const ids=new Set((license.stages||[]).map(stage=>stage.visualGuideId).filter(Boolean));
+      for(const visual of license.visualLibrary||[])if(ids.has(visual.id)&&RASTER_DATA.test(visual.data||''))sources.add(visual.data);
+    }
+    const substitutions=new Map(),sorted=[...sources].sort((a,b)=>b.length-a.length);
+    for(const source of sorted){
+      let candidate=source;
+      try{candidate=await encodeImage(source,maxEdge,quality);}catch(_){ /* Preserve unreadable images. */ }
+      if(typeof candidate!=='string'||!RASTER_DATA.test(candidate)||candidate.length>=source.length)candidate=source;
+      substitutions.set(source,candidate);
+    }
+    const compact=licenses.map(license=>({
+      ...license,
+      cover:substitutions.get(license.cover)||license.cover,
+      visualLibrary:(license.visualLibrary||[]).map(v=>({...v,data:substitutions.get(v.data)||v.data}))
+    }));
+    return {licenses:compact,compressedImages:[...substitutions].filter(([before,after])=>before!==after).length};
+  }
+
+  async function buildEmailSafeHTML(licenses,{lang='tr',fonts='',generatedAt=new Date(),
+    maxBytes=MAX_EMAIL_BYTES,encodeImage=reencodeImage}={}){
+    // A lower cap can be used in tests. Production callers cannot raise 9 MB.
+    const limit=Number.isFinite(maxBytes)?Math.min(MAX_EMAIL_BYTES,Math.floor(maxBytes)):MAX_EMAIL_BYTES;
+    if(limit<1)throw new RangeError('Invalid supplier atlas size limit');
+    const measure=(items,fontCss)=>{
+      const html=buildHTML(items,{lang,fonts:fontCss,generatedAt});
+      const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+      return {blob,bytes:blob.size};
+    };
+    const original=measure(licenses,fonts);
+    const finish=(result,compressedImages,fontsRemoved)=>({
+      ...result,limit,originalBytes:original.bytes,compressedImages,
+      fontsRemoved,optimized:compressedImages>0||fontsRemoved
+    });
+    if(original.bytes<=limit)return finish(original,0,false);
+
+    // System font fallback is preferable to losing readable image detail.
+    const withoutFonts=fonts?measure(licenses,''):original;
+    if(withoutFonts.bytes<=limit)return finish(withoutFonts,0,Boolean(fonts));
+
+    let smallest=Math.min(original.bytes,withoutFonts.bytes);
+    const passes=[
+      [1800,.88],[1440,.85],[1200,.82],[960,.79],
+      [800,.76],[680,.72],[560,.70],[480,.68]
+    ];
+    for(const [maxEdge,quality] of passes){
+      const compact=await shrinkImages(licenses,{maxEdge,quality,encodeImage});
+      // A larger pass may have no savings; smaller dimensions still can.
+      const full=measure(compact.licenses,fonts);
+      if(full.bytes<=limit)return finish(full,compact.compressedImages,false);
+      smallest=Math.min(smallest,full.bytes);
+      if(fonts){
+        const fontless=measure(compact.licenses,'');
+        if(fontless.bytes<=limit)return finish(fontless,compact.compressedImages,true);
+        smallest=Math.min(smallest,fontless.bytes);
+      }
+    }
+    // No oversized or silently incomplete file is ever downloaded.
+    const error=new Error('Supplier atlas cannot fit within the email size limit');
+    error.code='ATLAS_EMAIL_SIZE_LIMIT';error.bytes=smallest;error.limit=limit;
+    throw error;
+  }
+
   // Browser only: Buyer Log's own Barlow faces (design.css) inlined as data: URLs.
   let fontsPending=null;
   function loadFonts(){
@@ -155,5 +256,5 @@ footer{color:var(--muted);font-size:11.5px;margin-top:20px}
     })().catch(()=>{fontsPending=null;return '';});
     return fontsPending;
   }
-  return Object.freeze({prepare,project,buildHTML,loadFonts,LABELS,label});
+  return Object.freeze({prepare,project,buildHTML,buildEmailSafeHTML,loadFonts,MAX_EMAIL_BYTES,LABELS,label});
 });

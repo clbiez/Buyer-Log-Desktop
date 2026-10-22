@@ -101,6 +101,63 @@ test('all atlas stages are independently collapsible by their 1/2/3/4 number, wi
   assert.doesNotMatch(html,/<script/i);
 });
 
+test('supplier HTML for email has a hard decimal 9MB limit, unchanged for small exports',async()=>{
+  assert.equal(S.MAX_EMAIL_BYTES,9000000);
+  const item={name:'LCW',agency:'Licensor',cover:'',requirements:'Gönderim / approval',
+    stages:[],addresses:[],portal:{url:'',notes:''},visualLibrary:[],customSelectOptions:{}};
+  const fonts='@font-face{font-family:"Barlow";}';
+  const date=new Date('2026-10-23T00:00:00Z');
+  const original=S.buildHTML([item],{lang:'tr',fonts,generatedAt:date});
+  const file=await S.buildEmailSafeHTML([item],{lang:'tr',fonts,generatedAt:date});
+  assert.equal(file.blob.size,new Blob([original]).size);
+  assert.equal(file.bytes,file.blob.size);
+  assert.equal(file.optimized,false);
+  assert.ok(file.bytes<=S.MAX_EMAIL_BYTES);
+});
+
+test('oversized supplier visuals are compressed in browser without omitting approved steps',async()=>{
+  const image='data:image/png;base64,'+'A'.repeat(12000);
+  const item={name:'LCW',agency:'Licensor',cover:image,requirements:'',
+    stages:[{id:'s',title:'Accessory',approver:'LCW',visualGuideId:'g',testRequired:false,
+      submissions:[{method:'physical',recipientType:'LCW',recipient:'Office',addressId:'a'}]}],
+    addresses:[{id:'a',label:'LCW',text:'Delivery address'}],
+    visualLibrary:[{id:'g',name:'Visual',data:image}],portal:{url:'',notes:''},customSelectOptions:{}};
+  const replacement='data:image/webp;base64,'+'B'.repeat(360),encodes=[];
+  const file=await S.buildEmailSafeHTML([item],{lang:'en',maxBytes:12500,
+    encodeImage:async (value,edge,quality)=>{encodes.push({value,edge,quality});return replacement;}});
+  assert.equal(encodes.length,1,'same source is encoded once per pass');
+  assert.equal(file.compressedImages,1);
+  assert.ok(file.blob.size<=12500&&file.bytes<=S.MAX_EMAIL_BYTES);
+  const html=await file.blob.text();
+  assert.ok(html.includes('Delivery address'));
+  assert.match(html,/<details class="step-fold">/);
+  assert.match(html,/<details class="vg" open>/);
+  assert.equal(html.split(replacement).length-1,3,'cover twice and visual once');
+  assert.ok(!html.includes(image));
+});
+
+test('atlas may drop embedded font CSS but never drop required content to reach size',async()=>{
+  const item={name:'LCW',agency:'Licensor',cover:'',requirements:'X'.repeat(10000),
+    stages:[],addresses:[],portal:{url:'',notes:''},visualLibrary:[],customSelectOptions:{}};
+  await assert.rejects(S.buildEmailSafeHTML([item],{maxBytes:4000}),e=>
+    e.code==='ATLAS_EMAIL_SIZE_LIMIT'&&e.limit===4000&&e.bytes>4000);
+  const small={...item,requirements:'Approval'};
+  const fonts='/* '+('F'.repeat(8000))+' */';
+  const file=await S.buildEmailSafeHTML([small],{fonts,maxBytes:12500});
+  assert.equal(file.fontsRemoved,true);
+  assert.equal(file.compressedImages,0);
+  assert.ok(file.blob.size<=12500);
+  assert.match(await file.blob.text(),/Approval/);
+});
+
+test('supplier download is guarded by final Blob size and transparent error handling',()=>{
+  const ui=read('public/license-cards.js');
+  assert.match(ui,/await A\.buildEmailSafeHTML\(licenses/);
+  assert.match(ui,/result\.blob\.size>A\.MAX_EMAIL_BYTES/);
+  assert.match(ui,/URL\.createObjectURL\(result\.blob\)/);
+  assert.match(ui,/ATLAS_EMAIL_SIZE_LIMIT/);
+});
+
 test('list module: inline edits, selection export, map button and Buyer Log contracts', () => {
   const ui=read('public/license-cards.js'),map=read('public/license-map-editor.js'),css=read('public/license-cards.css'),perf=read('public/perf-runtime.js');
   assert.match(ui,/data-lc-rate="\$\{key\}"/);
@@ -110,7 +167,7 @@ test('list module: inline edits, selection export, map button and Buyer Log cont
   assert.match(ui,/body\.rules=rules/);
   assert.match(map,/window\.BLLicenseMapEditor=\{open/);
   assert.match(map,/BLLicenseAtlasEngine\.normalize\(atlas\)/);
-  assert.match(perf,/licensecards:\['license-cards-engine\.js\?rev=4','license-atlas-engine\.js\?rev=2','license-supplier-atlas\.js\?rev=2','license-map-editor\.js\?rev=1','license-cards\.js\?rev=6'\]/);
+  assert.match(perf,/licensecards:\['license-cards-engine\.js\?rev=4','license-atlas-engine\.js\?rev=2','license-supplier-atlas\.js\?rev=3','license-map-editor\.js\?rev=1','license-cards\.js\?rev=7'\]/);
   assert.doesNotMatch(perf,/license-atlas-shell/,'the legacy iframe atlas is no longer loaded');
   assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
   assert.match(read('public/experience.css'),/\.lcwaiSeg,\.dmViewToggle,\.lcSeg\)>button:is\(/);
