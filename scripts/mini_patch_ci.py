@@ -8,16 +8,22 @@ import tempfile
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-ARCHIVE = ROOT / "dist" / "BuyerLog-7.0.293-Sonrasi-MiniPatch-Guncel-20261022.zip"
+ARCHIVE = ROOT / "dist" / "BuyerLog-7.0.293-MiniPatch-Son-Guncel-20261022-R2.zip"
 BASE = "6501210b7faf051e4d8f2997dd0d48f0c9b64647"
 PREVIOUS = "d6149bcb440530a20c30adecf201d1d989afd507"
-HEAD = "e54ba4eb8dfcc677907ed023955c7490de15fcd8"
+PREVIOUS2 = "e54ba4eb8dfcc677907ed023955c7490de15fcd8"
+HEAD = "920082a0c970a5c31d95627dc5cdb5e82c15ef71"
 
 def sha(b):
     return hashlib.sha256(b).hexdigest()
 
 def git_file(ref, path):
     return subprocess.check_output(["git", "show", f"{ref}:resources/app/{path}"], cwd=ROOT)
+
+def git_file_or_none(ref, path):
+    result = subprocess.run(["git", "show", f"{ref}:resources/app/{path}"], cwd=ROOT,
+                            stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+    return result.stdout if result.returncode == 0 else None
 
 def run_ps(script, root, *extra, user_input="", expect_success=True):
     c = subprocess.run(["powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
@@ -33,14 +39,15 @@ with tempfile.TemporaryDirectory() as td:
         z.extractall(tmp / "patch")
         manifest = json.loads(z.read("patch-manifest.json"))
     files = manifest["files"]
-    assert manifest["schema"] == 2 and len(files) == 44
-    assert sum(f["kind"] == "modified" for f in files) == 40
+    assert manifest["schema"] == 2 and len(files) == 50
+    assert sum(f["kind"] == "modified" for f in files) == 46
     assert sum(f["kind"] == "added" for f in files) == 4
     assert manifest["target_commit"] == HEAD
     assert not any("electron/" in f["path"] or "update" in f["path"].lower() for f in files)
     script = tmp / "patch" / "Apply-MiniPatch.ps1"
 
-    for stage, ref in [("clean-7293", BASE), ("previous-mini-patch", PREVIOUS)]:
+    for stage, ref in [("clean-7293", BASE), ("previous-mini-patch", PREVIOUS),
+                       ("latest-prior-patch", PREVIOUS2)]:
         installation = tmp / stage
         installation.mkdir(parents=True, exist_ok=True)
         core = installation / "resources" / "app"
@@ -62,14 +69,18 @@ with tempfile.TemporaryDirectory() as td:
         reserved_hashes = {str(p.relative_to(installation)): sha(p.read_bytes()) for p in
             [*state.iterdir(), cfg, db, core / "package.json", installation / "BuyerLog.exe"]}
 
+        initial_files = {}
         for f in files:
             target = core / f["path"]
             target.parent.mkdir(parents=True, exist_ok=True)
-            if f["kind"] == "modified":
-                source = git_file(ref, f["path"])
+            source = git_file_or_none(ref, f["path"])
+            initial_files[f["path"]] = source
+            if source is not None:
                 assert sha(source) in ([v["before_sha256"] for v in f["variants"]] +
                                        [f["after_sha256"]]), f["path"]
                 target.write_bytes(source)
+            else:
+                assert f["kind"] == "added", f["path"]
 
         out = run_ps(script, installation, "-Check")
         assert "Kontrol basarili" in out, out
@@ -81,25 +92,27 @@ with tempfile.TemporaryDirectory() as td:
         target.write_bytes(b"WRONG_RUNTIME_FILE")
         out = run_ps(script, installation, "-Check", expect_success=False)
         assert "PATCH DURDURULDU" in out, out
-        assert not (core / next(f["path"] for f in files if f["kind"] == "added")).exists()
+        assert all((core / f["path"]).exists() == (initial_files[f["path"]] is not None)
+                   for f in files if f["kind"] == "added")
         target.write_bytes(before)
 
         out = run_ps(script, installation, user_input="E\n")
-        already = sum(f["kind"] == "modified" and
-                      sha(git_file(ref, f["path"])) == f["after_sha256"] for f in files)
-        assert f"BASARILI: {44 - already} dosya guncellendi." in out, out
+        already = sum(source is not None and sha(source) == f["after_sha256"]
+                      for f in files for source in [initial_files[f["path"]]])
+        assert f"BASARILI: {50 - already} dosya guncellendi." in out, out
         for f in files:
             assert sha((core / f["path"]).read_bytes()) == f["after_sha256"], (stage, f["path"])
         out = run_ps(script, installation, "-Check")
-        assert "Yazilacak dosya: 0; zaten guncel: 44" in out, out
+        assert "Yazilacak dosya: 0; zaten guncel: 50" in out, out
         out = run_ps(script, installation, "-Rollback", user_input="E\n")
         assert "Geri alma tamamlandi" in out, out
         for f in files:
             target = core / f["path"]
-            if f["kind"] == "added":
+            expected = initial_files[f["path"]]
+            if expected is None:
                 assert not target.exists(), (stage, f["path"])
             else:
-                assert target.read_bytes() == git_file(ref, f["path"]), (stage, f["path"])
+                assert target.read_bytes() == expected, (stage, f["path"])
         assert {str(p.relative_to(installation)): sha(p.read_bytes()) for p in
             [*state.iterdir(), cfg, db, core / "package.json", installation / "BuyerLog.exe"]} == reserved_hashes
         print("PASS", stage, "- check, tamper protection, apply, idempotence, rollback, updater/data preserved")
