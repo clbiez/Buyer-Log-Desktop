@@ -219,6 +219,42 @@ test('filtre menüsü arama ve çoklu seçim sunar; eski tekli kayıtlar diziye 
   assert.match(root.innerHTML,/2 seçim/);
 });
 
+test('kumaş/klasman filtre araması sadece eşleşen seçenekleri gösterir; gizlenen satırlar CSS ile geri açılmaz',async()=>{
+  const rows=[
+    obs('26Y','A','Örme Basic',10,100),
+    obs('26Y','B','Dokuma',12,100),
+  ];
+  const {root,context}=await mountScreen(rows,'tr',JSON.stringify({filterLayout:['classification']}));
+  const items=[
+    {dataset:{search:E.keyOf('Örme Basic')},hidden:false},
+    {dataset:{search:E.keyOf('Dokuma')},hidden:false},
+  ];
+  const empty={hidden:true};
+  const panel={
+    querySelectorAll(selector){assert.equal(selector,'[data-ps-filter-option]');return items;},
+    querySelector(selector){assert.equal(selector,'[data-ps-filter-empty]');return empty;},
+  };
+  const search=value=>root.listeners.input({target:{
+    dataset:{psFilterSearch:'classification'},value,
+    closest(selector){assert.equal(selector,'.psaMultiPanel');return panel;},
+  }});
+
+  search('örme');
+  assert.deepEqual(items.map(item=>item.hidden),[false,true]);
+  assert.equal(empty.hidden,true);
+  context.renderPriceSupplierAnalysisLanguage();
+  assert.ok(root.innerHTML.includes('data-search="DOKUMA" hidden'),'yeniden çizimde filtre korunur');
+
+  search('eşleşmeyen');
+  assert.deepEqual(items.map(item=>item.hidden),[true,true]);
+  assert.equal(empty.hidden,false,'eşleşmeyen aramada boş mesajı gösterilir');
+
+  search('');
+  assert.deepEqual(items.map(item=>item.hidden),[false,false]);
+  assert.equal(empty.hidden,true,'arama temizlenince bütün seçenekler görünür');
+  assert.match(read('public/price-supplier-analysis.css'),/\.psaMultiOption\[hidden\]\s*\{\s*display\s*:\s*none\b/,'flex görünümü hidden özniteliğini ezmemeli');
+});
+
 test('beş sekmenin tamamı gerçek veriyle hatasız çizilir ve tıklama detay açar',async()=>{
   const rows=[
     obs('25Y','A','Kazak',10,100),obs('25Y','A','Kazak',10,100),obs('25Y','GONE','Hırka',9,40),obs('25Y','GONE','Hırka',9,40),
