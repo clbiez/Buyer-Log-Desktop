@@ -33063,11 +33063,12 @@ function mailTopicFieldGroupCatalog(columns,sourceKind){
 }
 function mailTopicDefaultColumnKeys(kind,sourceKind){
   if(sourceKind==='cp'){
-    return ['Order Code','PLM ID','Model Name','Colour','Season','Order Quantity','OPD','Ex-factory','STATUS'];
+    const picture=kind==='pricing'?CP_COLS.find(c=>prepareEmailColumnIsPicture(c))?.k:null;
+    return [...(picture?[picture]:[]),'Order Code','PLM ID','Model Name','Colour','Season','Order Quantity','OPD','Ex-factory','STATUS'];
   }
   if(kind==='pricing'){
     const saved=normalizeKolPricingExcelColKeys(kolPricingExcelColKeys);
-    return saved.length?saved:normalizeKolPricingExcelColKeys(KOL_PRICING_EXCEL_DEFAULT_KEYS);
+    return ['__picture',...(saved.length?saved:normalizeKolPricingExcelColKeys(KOL_PRICING_EXCEL_DEFAULT_KEYS))];
   }
   return ['plmId','modelKod','colour','season','quantity','exFactory','durum','not'];
 }
@@ -33079,7 +33080,8 @@ function mailTopicColumnKeys(kind,id,sourceKind){
   // An explicit saved order always wins, including an intentional empty selection.
   const screenOrder=sourceKind==='cp'?visibleCols('cp').map(c=>c.k):kolAllOrderedCols().map(c=>c.k);
   const initial=[...screenOrder.filter(key=>defaults.includes(key)),...defaults.filter(key=>!screenOrder.includes(key))];
-  const stored=hasStored&&Array.isArray(item.tableColumns[sourceKind])?item.tableColumns[sourceKind]:initial;
+  const legacyEmptyPricing=kind==='pricing'&&item?.contentOptions?.[sourceKind]?.pricingLayoutVersion!==2&&Array.isArray(item?.tableColumns?.[sourceKind])&&!item.tableColumns[sourceKind].length;
+  const stored=hasStored&&!legacyEmptyPricing&&Array.isArray(item.tableColumns[sourceKind])?item.tableColumns[sourceKind]:initial;
   const clean=[];
   stored.forEach(key=>{key=String(key||'');if(valid.has(key)&&!clean.includes(key))clean.push(key);});
   return clean;
@@ -33096,16 +33098,20 @@ function mailTopicSelectedColumns(kind,id,sourceKind){
   return mailTopicColumnKeys(kind,id,sourceKind).map(key=>byKey.get(key)).filter(Boolean).map(c=>({...c,sourceKind}));
 }
 function mailTopicDefaultContentOptions(kind){
-  // Send to Pricing has its own mandatory Quotation Excel. The optional selected-order
-  // Excel/table stay off by default, while stored model TPs remain on for compatibility.
-  return kind==='pricing'?{excel:false,table:false,tps:true}:{excel:true,table:true,tps:false};
+  // The existing pricing workbook and its former image preview now use the same
+  // editable Excel/body-table controls as the other topics. TPs stay on by default.
+  return kind==='pricing'?{excel:true,table:true,tps:true}:{excel:true,table:true,tps:false};
 }
 function mailTopicContentOptions(kind,id,sourceKind){
   const item=mailTopicFindItem(kind,id),defaults=mailTopicDefaultContentOptions(kind);
   const stored=item?.contentOptions?.[sourceKind];
+  // Legacy Excel/table flags controlled EXTRA content, not the always-attached
+  // quotation workbook and image. Keep those effective defaults until the user
+  // saves the unified controls; retain the stored TP preference and column order.
+  const legacyPricing=kind==='pricing'&&stored?.pricingLayoutVersion!==2;
   return {
-    excel:typeof stored?.excel==='boolean'?stored.excel:defaults.excel,
-    table:typeof stored?.table==='boolean'?stored.table:defaults.table,
+    excel:!legacyPricing&&typeof stored?.excel==='boolean'?stored.excel:defaults.excel,
+    table:!legacyPricing&&typeof stored?.table==='boolean'?stored.table:defaults.table,
     tps:typeof stored?.tps==='boolean'?stored.tps:defaults.tps
   };
 }
@@ -33113,6 +33119,7 @@ function mailTopicSetContentOptions(kind,id,sourceKind,{excel,table,tps}={}){
   const item=mailTopicFindItem(kind,id);if(!item)return false;
   if(!item.contentOptions||typeof item.contentOptions!=='object')item.contentOptions={};
   item.contentOptions[sourceKind]={excel:Boolean(excel),table:Boolean(table),tps:Boolean(tps)};
+  if(kind==='pricing')item.contentOptions[sourceKind].pricingLayoutVersion=2;
   mailTplSave();return true;
 }
 function mailTopicDefaultSubjectColumnKeys(kind,sourceKind){
@@ -33199,7 +33206,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   const colLabel=c=>sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label);
   const subjectButton=(attrs,active)=>`<button type="button" class="mailTopicSubjectToggle${active?' isActive':''}" ${attrs} aria-pressed="${active?'true':'false'}">${escapeHtml(en?'Add to Subject':'Konu Başlığına Ekle')}</button>`;
   const pricingHint=kind==='pricing'
-    ?(en?'The mandatory Quotation Excel is handled separately. Add TPs controls whether stored files of the selected models are attached.':'Zorunlu Quotation Excel ayrı olarak hazırlanır. Add TPs, seçili modellerin kayıtlı dosyalarının e-postaya eklenip eklenmeyeceğini belirler.')
+    ?(en?'The Quotation Excel attachment and the table below the message use the columns selected here. You can switch each option off independently. Add TPs includes the stored model files.':'Quotation Excel eki ve mesajın altındaki tablo burada seçilen sütunları kullanır. Her seçeneği ayrı ayrı kapatabilirsiniz. TP’leri ekle, kayıtlı model dosyalarını dahil eder.')
     :'';
   modal.id='mailTopicEditorModal';modal.className='warnOverlay';
   modal.innerHTML=`<div class="modalCard mailTopicColumnsCard mailTopicEditorCard">
@@ -33971,12 +33978,8 @@ async function pricingPrepareAttachmentPlans(workbook,fileEntries,rows){
   }
 }
 
-function kolPricingMailHtml(previews,attachmentCount=0,body,tableHtml=''){
-  const images=(previews||[]).map((p,i)=>`<div style="margin:14px 0 0 0;"><img src="cid:${p.cid}" alt="Quotation request table${previews.length>1?' - '+(i+1):''}" style="display:block;max-width:100%;height:auto;border:1px solid #d0d5dd;"></div>`).join('');
-  // Gövde metni kullanıcı şablonundan gelir (düzenlenebilir/kaydedilebilir).
-  const bodyHtml = mailTplToHtml(body==null?mailTplBody('pricing'):body);
-  const note=attachmentCount>1?'The editable Excel files and selected attachments are included with this email.':'The editable Excel file is also attached to this email.';
-  return `<!doctype html><html><body style="margin:0;padding:0;background:#ffffff;color:#101828;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:1.55;"><div style="max-width:1100px;margin:0;padding:8px 4px;">${bodyHtml}${tableHtml||''}${images}<p style="margin-top:14px;color:#667085;font-size:12px;">${note}</p></div></body></html>`;
+function kolPricingMailHtml(body,tableHtml=''){
+  return prepareEmailGenericHtml(body==null?mailTplBody('pricing'):body,tableHtml);
 }
 function kolPricingMailPlain(body,tablePlain=''){
   return mailTplToPlain(body==null?mailTplBody('pricing'):body)+(tablePlain?'\r\n\r\n'+tablePlain:'');
@@ -34150,13 +34153,12 @@ function kolBase64ObjectUrl(base64,mimeType='application/octet-stream'){
 function kolRevokeTransientUrls(urls){
   (urls||[]).forEach(url=>{ try{ URL.revokeObjectURL(url); }catch(_){} });
 }
-async function kolCreatePricingEmailDraft({email,subject,workbook,previews,attachmentPlan,body,tableHtml,tablePlain,inlineImages}){
+async function kolCreatePricingEmailDraft({email,subject,workbook,attachmentPlan,body,tableHtml,tablePlain,inlineImages}){
   const plan=attachmentPlan||await pricingPrepareAttachmentPlan(workbook,[],[]);
-  const attachmentCount=Math.max(0,(plan.attachments||[]).length);
   const resp=await fetch('/api/email-drafts/pricing',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({
-    to:email||'',subject,text:kolPricingMailPlain(body,tablePlain),html:kolPricingMailHtml(previews||[],attachmentCount,body,tableHtml),
+    to:email||'',subject,text:kolPricingMailPlain(body,tablePlain),html:kolPricingMailHtml(body,tableHtml),
     attachments:(plan.attachments||[]).map(a=>({filename:a.filename,mimeType:a.mimeType,base64:a.base64})),
-    inlineImages:[...(previews||[]),...(inlineImages||[])].map(p=>({filename:p.filename,mimeType:p.mimeType,cid:p.cid,base64:p.base64}))
+    inlineImages:(inlineImages||[]).map(p=>({filename:p.filename,mimeType:p.mimeType,cid:p.cid,base64:p.base64}))
   })});
   const data=await resp.json().catch(()=>({}));
   if(!resp.ok) throw new Error(data.error||'E-posta taslağı oluşturulamadı.');
@@ -34242,10 +34244,11 @@ async function prepareEmailTopicTableContent(rows,columns){
 function prepareEmailTopicCell(row,column){
   const sourceKind=column.sourceKind||'collection';
   if(prepareEmailColumnIsPicture(column))return {value:'',display:prepareEmailImageSource(row,sourceKind)?(appLang==='en'?'Image':'Görsel'):'',numeric:false,date:false,numFmt:''};
-  let raw=sourceKind==='collection'?(column.exToRetail?kolExToRetailDays(row):row[column.k]):row[column.k];
+  let raw=sourceKind==='collection'?(column.exToRetail?kolExToRetailDays(row):kolEffectiveValue(row,column.k)):row[column.k];
   let value=raw==null?'':raw,numeric=false,date=false,numFmt='';
   if(sourceKind==='collection'){
-    if(column.k==='colourCode'){value=String(raw==null?'':raw);numFmt='@';}
+    if(column.k==='plmId'){value=String(raw==null?'':raw).replace(/\.(?=\d{3}(?:\D|$))/g,'');numFmt='@';}
+    else if(column.k==='colourCode'){value=String(raw==null?'':raw);numFmt='@';}
     else if(column.date&&raw){value=fmtDate(raw);date=true;}
     else if(column.exToRetail&&raw!==''){const n=kolParseQuantityNum(raw);value=Number.isFinite(n)?n:raw;numeric=Number.isFinite(n);numFmt='#,##0" g."';}
     else if(column.qty&&raw!==''&&Number.isFinite(kolParseQuantityNum(raw))){value=kolParseQuantityNum(raw);numeric=true;numFmt='#,##0';}
@@ -34323,10 +34326,10 @@ function prepareEmailTopicTablePlain(rows,columns){
   const lines=(rows||[]).map(row=>columns.map(c=>prepareEmailTopicCell(row,c).display.replace(/[\t\r\n]+/g,' ')).join('\t'));
   return [labels.join('\t'),...lines].join('\r\n');
 }
-async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufacturerName){
+async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufacturerName,options={}){
   if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');
   if(typeof ExcelJS==='undefined')throw new Error(appLang==='en'?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
-  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet(appLang==='en'?'Selected Orders':'Seçili Siparişler');
+  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet(options.pricing?'Quotation Request':(appLang==='en'?'Selected Orders':'Seçili Siparişler'));
   ws.columns=columns.map(c=>{
     if(prepareEmailColumnIsPicture(c)){const dims=prepareEmailImageDims(c.sourceKind||'collection');return {header:c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label),width:Math.max(3,(dims.col-5)/7)};}
     return {header:c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label),width:Math.max(12,Math.min(34,Math.round(((c.w||((c.weight||10)*12))/7))))};
@@ -34344,7 +34347,7 @@ async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufa
         if(src)imageJobs.push({src,rowNum,columnIndex:ci+1,column});return;
       }
       const out=prepareEmailTopicCell(row,column);
-      if(out.date){const d=coerceDateLoose(row[column.k]);if(d){cell.value=d;cell.numFmt='dd.mm.yy';}else cell.value=out.display;}
+      if(out.date){const d=coerceDateLoose(column.sourceKind==='cp'?row[column.k]:kolEffectiveValue(row,column.k));if(d){cell.value=d;cell.numFmt='dd.mm.yy';}else cell.value=out.display;}
       else{cell.value=out.value;if(out.numFmt)cell.numFmt=out.numFmt;}
       cell.alignment={horizontal:out.numeric?'right':'left',vertical:'middle',wrapText:true};
     });
@@ -34358,7 +34361,8 @@ async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufa
   if(window.BLExcelDates)BLExcelDates.normalizeExcelJsWorkbookDateColumns(wb);
   const buffer=await wb.xlsx.writeBuffer(),d=new Date(),pad=x=>String(x).padStart(2,'0');
   const topic=kolSafePricingFileName(topicName||'Email'),mfr=kolSafePricingFileName(manufacturerName||'Orders');
-  return {name:`Email_Table_${topic}_${mfr}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.xlsx`,buffer};
+  const prefix=options.pricing?`Quotation_Request_${mfr}`:`Email_Table_${topic}_${mfr}`;
+  return {name:`${prefix}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.xlsx`,buffer};
 }
 
 function prepareEmailWorkbookFileEntry(workbook){
@@ -35520,7 +35524,7 @@ function renderKolMfrModal(ctx){
     const topics=mailTopicCatalog().filter(topic=>!pricingTaskV2||topic.kind==='pricing');
     if(pricingTaskV2){
       const topic=topics.find(t=>t.kind===selectedTopic.kind&&t.id===selectedTopic.id)||topics[0]||selectedTopic;
-      return `<section class="sendPricingRequestSection"><div class="sendPricingSectionHead"><div><span>${escapeHtml(appLang==='en'?'Template':'Şablon')}</span><strong>${escapeHtml(topic?.name||selectedTopic.name)}</strong></div><span class="sendPricingTemplateManaged">${escapeHtml(appLang==='en'?'Pricing template':'Fiyatlama şablonu')}</span></div><div class="sendPricingSubjectPreview"><label>${escapeHtml(appLang==='en'?'Subject':'Konu')}</label><strong>${escapeHtml(mailTopicSubjectTitle(topic?.kind||selectedTopic.kind,topic?.id||selectedTopic.id))}</strong></div><div class="sendPricingMessagePreview"><label>${escapeHtml(appLang==='en'?'Message preview':'Mesaj önizleme')}</label><p>${escapeHtml(String(topic?.body||selectedTopic.body||'').slice(0,360))}</p></div></section>`;
+      return `<section class="sendPricingRequestSection"><div class="sendPricingSectionHead"><div><span>${escapeHtml(appLang==='en'?'Template':'Şablon')}</span><strong>${escapeHtml(topic?.name||selectedTopic.name)}</strong></div><button type="button" class="tbtn" data-mail-topic-edit="${escapeHtml(topic.id)}" data-mail-topic-kind="${escapeHtml(topic.kind)}"><svg class="ic"><use href="#i-pencil"/></svg>${escapeHtml(appLang==='en'?'Edit subject settings':'Başlık ayarlarını düzenle')}</button></div><div class="sendPricingSubjectPreview"><label>${escapeHtml(appLang==='en'?'Subject':'Konu')}</label><strong>${escapeHtml(mailTopicSubjectTitle(topic?.kind||selectedTopic.kind,topic?.id||selectedTopic.id))}</strong></div><div class="sendPricingMessagePreview"><label>${escapeHtml(appLang==='en'?'Message preview':'Mesaj önizleme')}</label><p>${escapeHtml(String(topic?.body||selectedTopic.body||'').slice(0,360))}</p></div></section>`;
     }
     const head=`<div class="mailTopicListHead"><span>${escapeHtml(appLang==='en'?'E-mail Subjects':'E-posta Başlıkları')}</span><button type="button" class="tbtn mailTopicNewBtn" data-mail-topic-new><svg class="ic"><use href="#i-copy-plus"/></svg>${escapeHtml(appLang==='en'?'New subject':'Yeni başlık')}</button></div>`;
     const rows=topics.map(topic=>{
@@ -35951,24 +35955,16 @@ function renderKolMfrModal(ctx){
     // dahi takip ekranında ve Not Defteri'nde görünür kalır.
     const quotationRequest=window.BL_QUOTATIONS?.recordRequest?await window.BL_QUOTATIONS.recordRequest(SRC.persist?'collection':'cp',selRows,checked):null;
     const quotationRequestId=String(quotationRequest?.id||'');
-    const results=[]; let previews=[], previewWarning=''; let changed=false;
+    const results=[]; let changed=false;
     let downloadDelay=0; // v6.43 — art arda indirmeler arasına gecikme
     try{
-      prepareProgress.setStage(appLang==='en'?'Preparing preview images…':'Ön izleme görselleri hazırlanıyor…');
-      try{ previews=await kolBuildPricingPreviewImages(selRows); }
-      catch(err){ previewWarning=err?.message||String(err); previews=[]; }
       for(const m of checked){
         let workbook=null;
         try{
           prepareProgress.setStage(appLang==='en'?'Preparing pricing Excel…':'Fiyatlama Excel’i hazırlanıyor…');
-          workbook=await kolBuildPricingRequestWorkbook(selRows,m.name);
-          const topicTableEntries=[];
-          if(topicContent.excel){
-            const topicTableWorkbook=await prepareEmailBuildTopicTableWorkbook(selRows,topicColumns,topicForDraft.name,m.name);
-            topicTableEntries.push(prepareEmailWorkbookFileEntry(topicTableWorkbook));
-          }
+          workbook=topicContent.excel?await prepareEmailBuildTopicTableWorkbook(selRows,topicColumns,topicForDraft.name,m.name,{pricing:true}):null;
           prepareProgress.setStage(appLang==='en'?'Arranging attachments under the 9.5 MB limit…':'Ekler 9,5 MB sınırına göre düzenleniyor…');
-          const attachmentPlans=await pricingPrepareAttachmentPlans(workbook,[...topicTableEntries,...pricingFilesForDraft],selRows);
+          const attachmentPlans=await pricingPrepareAttachmentPlans(workbook,pricingFilesForDraft,selRows);
           prepareProgress.setStage(appLang==='en'?'Preparing e-mail images and table…':'E-posta görselleri ve tablosu hazırlanıyor…');
           const tableContent=topicContent.table?await prepareEmailTopicTableContent(selRows,topicColumns):{html:'',plain:'',inlineImages:[]};
           const tableHtml=tableContent.html,tablePlain=tableContent.plain;
@@ -35977,7 +35973,7 @@ function renderKolMfrModal(ctx){
             const attachmentPlan=attachmentPlans[pi];
             const subject=attachmentPlans.length>1?`${baseSubject} (${pi+1}/${attachmentPlans.length})`:baseSubject;
             prepareProgress.setStage(appLang==='en'?'Creating draft e-mail…':'Taslak e-posta oluşturuluyor…');
-            const data=await kolCreatePricingEmailDraft({email:m.email,subject,workbook:pi===0?workbook:null,previews:pi===0?previews:[],attachmentPlan,body:topicForDraft.body,tableHtml,tablePlain,inlineImages:tableContent.inlineImages});
+            const data=await kolCreatePricingEmailDraft({email:m.email,subject,workbook:pi===0?workbook:null,attachmentPlan,body:topicForDraft.body,tableHtml,tablePlain,inlineImages:tableContent.inlineImages});
             const resultManufacturer=attachmentPlans.length>1?`${m.name} (${pi+1}/${attachmentPlans.length})`:m.name;
             const draftRef=data.draftId?{draftId:data.draftId,manufacturer:resultManufacturer,filename:data.filename,reopenUntil:data.reopenUntil}:null;
             if(quotationRequestId&&draftRef)prepareEmailRememberPricingDraft(quotationRequestId,draftRef);
@@ -36000,9 +35996,9 @@ function renderKolMfrModal(ctx){
         }
       }
       if(changed && SRC.persist){ saveKolRows(); renderKol(); }
-      kolShowPricingDraftResults(results,previewWarning,pricingTaskV2?(appLang==='en'?'Send to Pricing Result':'Fiyat Talebi Sonucu'):(appLang==='en'?'Prepaire E-Mail Result':'E-Posta Hazırlama Sonucu'));
+      kolShowPricingDraftResults(results,'',pricingTaskV2?(appLang==='en'?'Send to Pricing Result':'Fiyat Talebi Sonucu'):(appLang==='en'?'Prepaire E-Mail Result':'E-Posta Hazırlama Sonucu'));
       const okCount=results.filter(r=>r.ok).length;
-      if(okCount) showToast(appLang==='en'?`Email draft and Excel attachment prepared for ${okCount} manufacturer(s).`:`${okCount} üretici için e-posta taslağı ve Excel eki hazırlandı.`);
+      if(okCount) showToast(appLang==='en'?`${okCount} draft email(s) created.`:`${okCount} taslak e-posta oluşturuldu.`);
       else showToast(appLang==='en'?'Send to Pricing could not be completed. Check the error details in the result window.':'Send to Pricing tamamlanamadı. Sonuç penceresindeki hata açıklamasını kontrol et.');
     }catch(err){
       showToast('Send to Pricing hatası: '+(err?.message||String(err)));

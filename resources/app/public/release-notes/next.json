@@ -822,6 +822,35 @@
           "en": "A royalty change reaches CP by itself"
         }
       }
+    },
+    {
+      "id": "send-pricing-editable-content",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyatlamaya Gönder · E-Posta Hazırla",
+        "en": "Send to Pricing · Prepare E-Mail"
+      },
+      "title": {
+        "tr": "Fiyatlama e-postasında düzenlenebilir taslak ve tablo",
+        "en": "Editable pricing email template and table"
+      },
+      "body": {
+        "tr": "Send to Pricing sırasında başlık ayarlarını açarak konu ve mesaj metnini, Excel ekini, mesaj altındaki tabloyu, TP eklerini ve sütun sırasını diğer e-posta başlıkları gibi düzenleyebilirsiniz. Excel ve tablo aynı seçili sütunları kullanır; Excel’in ekran görüntüsü artık e-postaya eklenmez. Başlangıçta mevcut Excel eki ve TP tercihi korunur, eski görselin yerine gerçek tablo açılır. Kaydedilen yeni seçimler sonraki işlemlerde hatırlanır; teklif kaydı ve ekleri bölme akışı devam eder.",
+        "en": "During Send to Pricing, open subject settings to edit the subject and message, Excel attachment, table below the message, TPs and column order just like other email subjects. The Excel and table use the same selected columns; the Excel screenshot is no longer embedded in the email. Initially the existing Excel attachment and TP preference are preserved, with a real table replacing the old image. New saved choices are remembered for future requests; quotation history and attachment splitting continue to work."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "send-pricing-editable-content.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Send to Pricing ekranında ortak başlık düzenleyicisi, Excel ve tablo seçenekleri; demo veriler",
+          "en": "Shared subject editor in the real Buyer Log Send to Pricing workflow, with Excel and table options; demo data"
+        },
+        "caption": {
+          "tr": "Fiyatlama taslağı, Excel ve mesaj altındaki tablo aynı pencereden düzenlenir.",
+          "en": "Edit the pricing draft, Excel and table below the message in the same window."
+        }
+      }
     }
   ]
 }
