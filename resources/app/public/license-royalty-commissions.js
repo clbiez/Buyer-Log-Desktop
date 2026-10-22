@@ -58,8 +58,8 @@
   pricingRuleMatchesRow=function(rule,row){return !!row&&pricingRuleMatchesValues(rule,row.OPD,row.Country,row.Season,row.Licensor,row.License);};
   // Exact licensor first; a merged licensor name (ERMODA UK LTD → ERMODA) is the fallback.
   const merges=()=>state.licensorMerges||{split:[]};
-  const findByLicensor=(rules,licensor,matches)=>api.findRuleByLicensor(rules,licensor,matches,merges());
-  findSuppFobRule=function(opd,country,season,licensor,license){return findByLicensor(state.overrides.pricingRules||[],licensor,r=>pricingRuleMatchesValues(r,opd,country,season,r&&r.licensor,license));};
+  const findByLicensor=(rules,licensor,matches,license)=>api.findRuleByLicensor(rules,licensor,matches,merges(),undefined,license);
+  findSuppFobRule=function(opd,country,season,licensor,license){return findByLicensor(state.overrides.pricingRules||[],licensor,r=>pricingRuleMatchesValues(r,opd,country,season,r&&r.licensor,license),license);};
   pricingRulesOverlap=function(a,b){
     if(turknorm(a&&a.licensor)!==turknorm(b&&b.licensor)||turknorm(a&&a.license)!==turknorm(b&&b.license)||!pricingRuleSeasonSetsOverlap(a,b))return false;
     if(!((hasSide(a,'TR')&&hasSide(b,'TR'))||(hasSide(a,'YD')&&hasSide(b,'YD'))))return false;
@@ -139,7 +139,7 @@
     const clean=normalizePricingRules(rules),updates=[],seen=new Set();
     (state.cp&&state.cp.rows||[]).forEach(r=>{
       const oc=r['Order Code'],lineKey=lineKeyOfRow(r)||String(oc);if(oc==null||seen.has(lineKey))return;
-      const rule=findByLicensor(clean,r.Licensor,x=>pricingRuleMatchesValues(x,r.OPD,r.Country,r.Season,x&&x.licensor,r.License));if(!rule)return;
+      const rule=findByLicensor(clean,r.Licensor,x=>pricingRuleMatchesValues(x,r.OPD,r.Country,r.Season,x&&x.licensor,r.License),r.License);if(!rule)return;
       const value=calculateSuppFobWithRule(r['FOB ($)'],rule,r.Country);if(value==null||!Number.isFinite(value))return;
       seen.add(lineKey);updates.push({orderCode:oc,...lineIdentity(r),lineKey,suppFob:value,suppFobMeta:automaticSuppFobRuleMeta(rule,true,r.Country)});
     });
@@ -159,7 +159,7 @@
   };
   kolFindPricingRuleForCountryGroup=function(row,countryGroup){
     const ctx=kolPricingRuleContext(row),find=matches=>window.BLCollectionPricingEngine.findRule(ctx,countryGroup,{api,rules:state.overrides.pricingRules||[],matches,freshness:kolPricingRuleFreshness});
-    return find(kolPricingRuleDimensionMatches)||find((rule,c)=>pricingRuleSeasonMatches(rule,c.season)&&api.licensorsMerged(c.licensor,rule&&rule.licensor,state.licensorMerges||{split:[]})&&turknorm(c.license)===turknorm(rule&&rule.license));
+    return find(kolPricingRuleDimensionMatches)||(api.licensorHasOwnRules(state.overrides.pricingRules||[],ctx.licensor,ctx.license)?null:find((rule,c)=>pricingRuleSeasonMatches(rule,c.season)&&api.licensorsMerged(c.licensor,rule&&rule.licensor,state.licensorMerges||{split:[]})&&turknorm(c.license)===turknorm(rule&&rule.license)));
   };
   kolFindPricingRule=function(row){
     const ctx=kolPricingRuleContext(row);if(!ctx.country||!ctx.licensor||!ctx.license)return null;

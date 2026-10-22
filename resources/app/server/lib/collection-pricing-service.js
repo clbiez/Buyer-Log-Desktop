@@ -15,7 +15,7 @@ function createPricingCalculation({rows,overrides,fx,cpRows=[],cpContextAvailabl
  // Exact licensor first; a merged licensor name (ERMODA UK LTD → ERMODA) is the fallback.
  const ruleMatcher=licensorMatches=>(rule,ctx)=>Business.transitRuleSeasonMatches({...rule,seasons:rule.seasons??(rule.season==null?[]:[rule.season])},ctx.season)&&licensorMatches(ctx.licensor,rule.licensor)&&Business.turkNorm(ctx.license)===Business.turkNorm(rule.license);
  const freshness=rule=>({start:parse.dateOrdinal(rule.opdStart)??-Infinity,end:parse.dateOrdinal(rule.opdEnd)??-Infinity});
- const findRule=(row,group)=>Engine.findRule(context(row),group,{api:Business,rules,matches:ruleMatcher((a,b)=>Business.turkNorm(a)===Business.turkNorm(b)),freshness})||Engine.findRule(context(row),group,{api:Business,rules,matches:ruleMatcher((a,b)=>Business.licensorsMerged(a,b,overrides.licensorMerges)),freshness});
+ const findRule=(row,group)=>Engine.findRule(context(row),group,{api:Business,rules,matches:ruleMatcher((a,b)=>Business.turkNorm(a)===Business.turkNorm(b)),freshness})||(Business.licensorHasOwnRules(rules,context(row).licensor,context(row).license)?null:Engine.findRule(context(row),group,{api:Business,rules,matches:ruleMatcher((a,b)=>Business.licensorsMerged(a,b,overrides.licensorMerges)),freshness}));
  const nonDtr=row=>Boolean(Business.turkNorm(row?.licensor)&&Business.turkNorm(row.licensor)!=='DTR');
  const unresolved=row=>!norm(row?.licensor)&&Business.isUnresolvedLicensorStatus(Business.resolveAutoLicensor(norm(row?.lisans),rules,{manufacturer:norm(row?.confirmedManufacturer),nonDtrManufacturers:overrides.nonDtrManufacturers}).status);
  const ruleMissing=row=>unresolved(row)||(nonDtr(row)&&!findRule(row,context(row).country));

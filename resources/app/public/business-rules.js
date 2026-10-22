@@ -33,8 +33,10 @@
   const LICENSOR_SUFFIX_TOKENS = new Set(['LTD', 'LIMITED', 'LTDSTI', 'STI', 'SIRKETI', 'AS', 'INC', 'INCORPORATED', 'LLC', 'LLP', 'PLC', 'CO', 'COMPANY', 'CORP', 'CORPORATION', 'GMBH', 'AG', 'SA', 'SAS', 'SARL', 'SRL', 'SPA', 'BV', 'NV', 'PTY', 'KG', 'OY', 'AB', 'TIC', 'SAN', 'VE', 'UK', 'US', 'USA', 'EU', 'TR']);
   function licensorMergeKey(value) {
     const full = turkNorm(value).replace(/[.'’]/g, '').replace(/[^A-Z0-9]+/g, ' ').trim();
-    const kept = full.split(' ').filter(token => token && !LICENSOR_SUFFIX_TOKENS.has(token));
-    return kept.length ? kept.join(' ') : full;
+    // Only trailing tokens are suffixes: "AS ROMA" stays itself, "ERMODA UK LTD" → "ERMODA".
+    const tokens = full.split(' ').filter(Boolean);
+    while (tokens.length > 1 && LICENSOR_SUFFIX_TOKENS.has(tokens[tokens.length - 1])) tokens.pop();
+    return tokens.join(' ');
   }
   function licensorMergeSplit(merges) {
     // Accepts the API shape {split:[keys]} or the stored shape {entries:{key:{split}}}.
@@ -49,11 +51,17 @@
     const key = licensorMergeKey(a);
     return Boolean(key) && key === licensorMergeKey(b) && !licensorMergeSplit(merges).has(key);
   }
-  // Exact licensor first, then a merged licensor name; other dimensions via `matches`.
-  function findRuleByLicensor(rules, licensor, matches, merges, licensorOf = rule => rule && rule.licensor) {
+  // True when the licensor has any contract of its own for the license (any date/season).
+  function licensorHasOwnRules(rules, licensor, license, licensorOf = rule => rule && rule.licensor) {
+    return (Array.isArray(rules) ? rules : []).some(rule => turkNorm(licensorOf(rule)) === turkNorm(licensor) && turkNorm(rule && rule.license) === turkNorm(license));
+  }
+  // Exact licensor first. A merged licensor name is used only when the order's own name has
+  // no contract at all for the license: its own expired/other-season contract stays "missing".
+  function findRuleByLicensor(rules, licensor, matches, merges, licensorOf = rule => rule && rule.licensor, license = null) {
     const list = Array.isArray(rules) ? rules : [];
     const exact = list.find(rule => matches(rule) && turkNorm(licensorOf(rule)) === turkNorm(licensor));
     if (exact || !turkNorm(licensor)) return exact || null;
+    if (license != null && licensorHasOwnRules(list, licensor, license, licensorOf)) return null;
     return list.find(rule => matches(rule) && licensorsMerged(licensor, licensorOf(rule), merges)) || null;
   }
 
@@ -898,6 +906,7 @@
     licensorMergeKey,
     licensorsMerged,
     findRuleByLicensor,
+    licensorHasOwnRules,
     pricingRuleCountryGroup,
     pricingRuleRate,
     pricingRuleCommissionForCountry,

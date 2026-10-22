@@ -829,7 +829,7 @@ function findSuppFobRule(rules, opd, country, season, manufacturer, license, mer
     return dateMatches && pricingRuleSeasonMatches(r, season) &&
       BLBusinessRules.pricingRuleCommissionForCountry(r, countryGroup) != null &&
       pricingKeyPart(r && r.license) === ck;
-  }, merges, r => r && (r.manufacturer != null ? r.manufacturer : r.licensor));
+  }, merges, r => r && (r.manufacturer != null ? r.manufacturer : r.licensor), license);
 }
 const decimalFraction = BLBusinessRules.decimalFraction;
 const roundFractionHalfUp = BLBusinessRules.roundFractionHalfUp;
@@ -2167,6 +2167,7 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
       _suppFobManual: hasSuppfobOverride && !isRuleOverride,
       _suppFobRule: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? priced.rule.id || true : null,
       _suppFobMeta: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? automaticRuleMeta(priced.rule, isRuleOverride, o.countryRaw) : (isRuleOverride ? null : suppFobMeta),
+      _suppFobImported: isImportedSuppFob ? { value: overrideGet(ov.suppfobmap, o), meta: suppFobMeta || { source: 'manual', origin: 'cpupdate' } } : null,
       _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _licensorSource:norm(o.licensor), _nonDtrManufacturerRule: false,
       OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex,
       // Revizyon oku ve Ex-Factory renklendirmesi için ASAS orijinalleri.
@@ -2344,6 +2345,7 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
       _suppFobManual: hasSuppfobOverride && !isRuleOverride,
       _suppFobRule: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? priced.rule.id || true : null,
       _suppFobMeta: ((!hasSuppfobOverride || isRuleOverride) && priced.rule) ? automaticRuleMeta(priced.rule, isRuleOverride, o.countryRaw) : (isRuleOverride ? null : suppFobMeta),
+      _suppFobImported: isImportedSuppFob ? { value: overrideGet(ov.suppfobmap, o), meta: suppFobMeta || { source: 'manual', origin: 'cpupdate' } } : null,
       _suppFobOverride: hasSuppfobOverride, _licensorManual: hasLicensorOverride, _licensorSource:norm(o.licensor), _nonDtrManufacturerRule: false,
       OPD: o.opd, 'Original Ex-factory': o.originalExFactoryDate || null, 'Ex-factory': o.ex, 'Retail Date': o.retail, 'Ex→Retail': exRetail, 'In-Store (Model Budget)': o.mb, 'Days to go': daysToGo,
       'Merch Marka Yaş Grup Kod': o.ageGroup, 'Buyer': o.buyer, 'Line': o.line,

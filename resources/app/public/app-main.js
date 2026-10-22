@@ -11225,6 +11225,9 @@ function importedSuppFob(row){
   if(!row)return null;
   const own=normalizeSuppFobMeta(row._suppFobMeta);
   if(own&&own.source==='manual'&&own.origin!=='cpupdate')return null;
+  // Server rows carry the imported value; a row loaded with cpupdate meta is its own source.
+  if(row._suppFobImported&&typeof row._suppFobImported==='object')return row._suppFobImported;
+  if(own&&own.origin==='cpupdate'){row._suppFobImported={value:row['Supp. FOB'],meta:own};return row._suppFobImported;}
   const oc=row['Order Code'],key=lineKeyOfRow(row)||oc,map=state.overrides.suppfobmap||{},metas=state.overrides.suppfobmetamap||{};
   const at=Object.prototype.hasOwnProperty.call(map,key)?key:(oc!=null&&Object.prototype.hasOwnProperty.call(map,oc)?oc:null);
   if(at==null)return null;
@@ -12532,7 +12535,7 @@ function syncOverridesFromRow(row){
     state.overrides.submap[key]=norm(row['Sub-Manufacturer']);
   }
   if(row._licensorManual===true)state.overrides.licensormap[key]=norm(row.Licensor);
-  if(row._suppFobManual===true){
+  if(row._suppFobManual===true&&!importedSuppFob(row)){
     state.overrides.suppfobmap[key]=(row['Supp. FOB']==null||row['Supp. FOB']==='')?null:Number(row['Supp. FOB']);
     state.overrides.suppfobmetamap=state.overrides.suppfobmetamap||{};
     state.overrides.suppfobmetamap[key]={source:'manual'};
@@ -12623,7 +12626,8 @@ function syncOverrideToServer(orderCode,notes,row){
         const body={...lineIdentity(row),notes,delType:row['Del. Type']||undefined};
         if(turknorm(row.Licensor)!=='DTR')body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true)body.licensor=norm(row.Licensor);
-        if(row._suppFobManual===true){
+        // An imported (CP update) value is not re-sent as a manual price with a note save.
+        if(row._suppFobManual===true&&!importedSuppFob(row)){
           body.suppFob=(row['Supp. FOB']!=null&&row['Supp. FOB']!=='')?Number(row['Supp. FOB']):null;
           body.suppFobMeta={source:'manual'};
         }

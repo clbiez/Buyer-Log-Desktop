@@ -214,7 +214,11 @@
   function currentRows(){
     const cards=S.data?.cards||[],rows=E.rows(cards,{query:S.query,licensor:S.licensor,status:S.status,sort:S.sort,...mergeOpts()});
     // A draft whose card disappeared stays visible (blocked) until the user discards it.
-    for(const [id,d] of S.drafts)if(!cards.some(c=>c.id===id))rows.unshift({...E.rows([d.snapshot])[0],card:d.snapshot});
+    for(const [id,d] of S.drafts){
+      if(!cards.some(c=>c.id===id))rows.unshift({...E.rows([d.snapshot])[0],card:d.snapshot});
+      // A draft on a card that is now merged into another row keeps its own row until saved/discarded.
+      else if(!rows.some(r=>r.id===id)){const own=E.rows([cards.find(c=>c.id===id)])[0];if(own)rows.unshift(own);}
+    }
     return rows;
   }
   function counts(){

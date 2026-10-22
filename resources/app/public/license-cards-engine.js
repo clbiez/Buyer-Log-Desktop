@@ -188,10 +188,12 @@
     const sl=src.license||{},tl=own&&own.license||{};
     const used=new Set((sl.stages||[]).flatMap(s=>(s.submissions||[]).map(r=>r.addressId)).filter(Boolean));
     const guides=new Set((sl.stages||[]).map(s=>s.visualGuideId).filter(Boolean));
-    const keepAddresses=(tl.addresses||[]).filter(a=>!(sl.addresses||[]).some(b=>b.id===a.id));
+    // Routes may point to the source's shared addresses; those travel as the target's own.
+    const srcAddresses=[...(sl.addresses||[]),...(src.sharedAddresses||[]).filter(a=>!(sl.addresses||[]).some(b=>b.id===a.id))];
+    const keepAddresses=(tl.addresses||[]).filter(a=>!srcAddresses.some(b=>b.id===a.id));
     return {...(own||{}),version:1,
       license:{...tl,id:target.id,name:text(target.license),agency:text(target.licensor),stages:sl.stages||[],
-        addresses:[...keepAddresses,...(sl.addresses||[]).filter(a=>used.has(a.id))],
+        addresses:[...keepAddresses,...srcAddresses.filter(a=>used.has(a.id))],
         portal:tl.portal||{url:'',notes:''},cover:tl.cover||'',manufacturerVisible:tl.manufacturerVisible!==false},
       sharedAddresses:own&&own.sharedAddresses||[],
       visualLibrary:[...((own&&own.visualLibrary)||[]).filter(v=>!guides.has(v.id)),...(src.visualLibrary||[]).filter(v=>guides.has(v.id))],

@@ -101,3 +101,19 @@ test('client wiring: list copy/paste, merge panel and split route', () => {
   assert.match(routes,/app\.put\('\/api\/license-cards\/licensor-merges'/);
   assert.ok(routes.indexOf("'/api/license-cards/licensor-merges'")<routes.indexOf("app.put('/api/license-cards/:id'"));
 });
+
+test('review fixes: suffix-only key, own contract blocks the merged fallback, imported values are not re-sent as manual', () => {
+  assert.equal(B.licensorMergeKey('AS ROMA'),'AS ROMA','a leading token is not a suffix');
+  const own2025={id:'own',license:'Naruto',licensor:'ERMODA UK LTD',opdStart:'2025-01-01',opdEnd:'2025-12-31',seasons:[],royalty:12,trCommission:5,ydCommission:9},merged2026={...rule,id:'m'};
+  for(const build of [parse.buildCPRowsFromASAS,parse.buildOrdersRowsFromASAS]){
+    const rows=build([order(1,'ERMODA UK LTD')],{},{pricingRules:[own2025,merged2026]});
+    assert.equal(rows[0]['Supp. FOB'],null,'its own (expired) contract exists → no silent fallback, the gap stays visible');
+    const imported=build([order(1,'ERMODA')],{},{pricingRules:[],suppfobmap:{'1':7},suppfobmetamap:{'1':{source:'manual',origin:'cpupdate'}}});
+    assert.deepEqual(imported[0]._suppFobImported,{value:7,meta:{source:'manual',origin:'cpupdate'}});
+  }
+  const src=read('public/app-main.js');
+  assert.match(src,/if\(row\._suppFobManual===true&&!importedSuppFob\(row\)\)\{\n\s*body\.suppFob=/);
+  assert.match(src,/if\(row\._suppFobManual===true&&!importedSuppFob\(row\)\)\{\n\s*state\.overrides\.suppfobmap\[key\]=/);
+  const shared={version:1,license:{stages:[{id:'s',submissions:[{id:'r',addressId:'sh'}]}],addresses:[]},sharedAddresses:[{id:'sh',label:'Shared',text:'t'}],visualLibrary:[]};
+  assert.deepEqual(E.pasteMap(shared,{id:'t',license:'L',licensor:'X'}).license.addresses.map(a=>a.id),['sh'],'routed shared addresses travel');
+});
