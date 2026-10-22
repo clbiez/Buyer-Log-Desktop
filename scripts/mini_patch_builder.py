@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Build a version-preserving, offline-only Buyer Log 7.0.293 mini patch.
 
-Supported input files: exact 7.0.293 STABLE runtime, or a partial/complete
-application of the earlier 2026-10-21 mini patch. Never touches the updater.
+Supported input files: original 7.0.293 STABLE and compatible earlier mini patches.
+Detects file identity by SHA256; never touches the updater.
 """
 from __future__ import annotations
 import base64
@@ -15,10 +15,11 @@ import subprocess
 import zipfile
 
 BASE = "6501210b7faf051e4d8f2997dd0d48f0c9b64647"
-PREVIOUS_PATCH = "d6149bcb440530a20c30adecf201d1d989afd507"
-HEAD = "e54ba4eb8dfcc677907ed023955c7490de15fcd8"
+PREVIOUS_PATCHES = ("d6149bcb440530a20c30adecf201d1d989afd507",
+                    "e54ba4eb8dfcc677907ed023955c7490de15fcd8")
+HEAD = "920082a0c970a5c31d95627dc5cdb5e82c15ef71"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "dist" / "BuyerLog-7.0.293-Sonrasi-MiniPatch-Guncel-20261022.zip"
+OUTPUT = ROOT / "dist" / "BuyerLog-7.0.293-MiniPatch-Son-Guncel-20261022-R2.zip"
 
 def git(*args: str) -> bytes:
     return subprocess.check_output(["git", *args], cwd=ROOT)
@@ -45,7 +46,7 @@ def create_edits(before: bytes, after: bytes, name: str) -> list:
         raise RuntimeError(f"round-trip diff validation failed: {name}")
     return changes
 
-for ref in (BASE, PREVIOUS_PATCH, HEAD):
+for ref in (BASE, *PREVIOUS_PATCHES, HEAD):
     assert json.loads(blob(ref, "resources/app/package.json"))["version"] == "7.0.293", ref
 status_rows = git("diff", "--name-status", "--diff-filter=AM", BASE, HEAD,
                   "--", "resources/app/public", "resources/app/server").decode().splitlines()
@@ -65,31 +66,39 @@ for row in status_rows:
     after = blob(HEAD, name)
     record = {"path": relative, "after_sha256": digest(after)}
     if status == "A":
-        record.update(kind="added", payload_b64=base64.b64encode(after).decode("ascii"))
+        record.update(kind="added", payload_b64=base64.b64encode(after).decode("ascii"), variants=[])
     elif status == "M":
         original = blob(BASE, name)
         record.update(kind="modified", variants=[{
             "before_sha256": digest(original),
             "edits": create_edits(original, after, name)
         }])
-        older = blob(PREVIOUS_PATCH, name)
-        if digest(older) not in (digest(original), digest(after)):
+    else:
+        raise RuntimeError(f"unsupported change: {status} {name}")
+    seen = {v["before_sha256"] for v in record["variants"]}
+    for ref in PREVIOUS_PATCHES:
+        if subprocess.run(["git", "cat-file", "-e", f"{ref}:{name}"], cwd=ROOT,
+                          stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
+            continue
+        older = blob(ref, name)
+        if digest(older) not in ({digest(after)} | seen):
             record["variants"].append({
                 "before_sha256": digest(older),
                 "edits": create_edits(older, after, name)
             })
+            seen.add(digest(older))
     else:
         raise RuntimeError(f"unsupported change: {status} {name}")
     entries.append(record)
-if len(entries) != 44:
-    raise RuntimeError(f"expected 44 application files, got {len(entries)}")
+if len(entries) != 50:
+    raise RuntimeError(f"expected 50 application files, got {len(entries)}")
 
 manifest = {
     "schema": 2,
     "product": "Buyer Log Desktop",
     "base_version": "7.0.293",
     "base_commit": BASE,
-    "previous_patch_commit": PREVIOUS_PATCH,
+    "previous_patch_commits": list(PREVIOUS_PATCHES),
     "target_commit": HEAD,
     "created_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
     "mode": "offline-app-runtime-only-no-version-change",
@@ -98,12 +107,12 @@ manifest = {
 }
 payload = json.dumps(manifest, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 guide = """BUYER LOG 7.0.293 SONRASI MINI PATCH - GUNCEL 22.10.2026
-HEDEF COMMIT: e54ba4eb8dfcc677907ed023955c7490de15fcd8
+HEDEF COMMIT: 920082a0c970a5c31d95627dc5cdb5e82c15ef71
 
 Bu ZIP internetsiz calisir. GitHub, Python, Node.js veya Git istemez.
-7.0.293 STABLE veya onceki 21.10.2026 mini patch'li 7.0.293
-uzerine en guncel runtime degisikliklerini uygular.
-44 uygulama dosyasi (40 degisen dosya + 4 yeni JS dosyasi).
+7.0.293 STABLE veya onceki 21.10.2026 ve 22.10.2026 mini patch'li
+7.0.293 uzerine en guncel runtime degisikliklerini uygular.
+50 uygulama dosyasi (46 degisen dosya + 4 yeni JS dosyasi).
 Kod/yayin kanali/surum/updater/launcher/konfigurasyon bozulmaz.
 
 1) ZIP'i bir klasore cikarin, BuyerLog.exe'yi tamamen kapatin.
