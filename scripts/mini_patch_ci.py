@@ -85,7 +85,9 @@ with tempfile.TemporaryDirectory() as td:
         target.write_bytes(before)
 
         out = run_ps(script, installation, user_input="E\n")
-        assert "BASARILI: 44 dosya guncellendi." in out, out
+        already = sum(f["kind"] == "modified" and
+                      sha(git_file(ref, f["path"])) == f["after_sha256"] for f in files)
+        assert f"BASARILI: {44 - already} dosya guncellendi." in out, out
         for f in files:
             assert sha((core / f["path"]).read_bytes()) == f["after_sha256"], (stage, f["path"])
         out = run_ps(script, installation, "-Check")
