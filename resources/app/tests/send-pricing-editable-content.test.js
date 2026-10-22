@@ -1,0 +1,103 @@
+'use strict';
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const vm=require('node:vm');
+const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
+const between=(start,end)=>app.slice(app.indexOf(start),app.indexOf(end,app.indexOf(start)));
+
+function contentApi(item){
+  const ctx={mailTopicFindItem:()=>item,mailTplSave(){}};
+  vm.createContext(ctx);
+  vm.runInContext(between('function mailTopicDefaultContentOptions(', 'function mailTopicDefaultSubjectColumnKeys('),ctx);
+  return ctx;
+}
+
+test('legacy pricing retains its workbook and replaces its mandatory preview with a body table, preserving TPs',()=>{
+  const item={contentOptions:{cp:{excel:false,table:false,tps:false}}};
+  const ctx=contentApi(item);
+  const read=source=>JSON.parse(JSON.stringify(ctx.mailTopicContentOptions('pricing','pricing-default',source)));
+  assert.deepEqual(read('cp'),{excel:true,table:true,tps:false});
+  assert.deepEqual(read('collection'),{excel:true,table:true,tps:true});
+  assert.deepEqual(item.contentOptions.cp,{excel:false,table:false,tps:false},'reading must not overwrite saved legacy settings');
+  ctx.mailTopicSetContentOptions('pricing','pricing-default','cp',{excel:false,table:false,tps:false});
+  assert.deepEqual(read('cp'),{excel:false,table:false,tps:false},'newly saved opt-outs must survive reopening');
+  assert.deepEqual(read('collection'),{excel:true,table:true,tps:true},'CP changes must not affect Collection');
+});
+
+test('general topics keep their explicit Excel, table and TP choices',()=>{
+  const ctx=contentApi({contentOptions:{cp:{excel:false,table:true,tps:true}}});
+  assert.deepEqual(JSON.parse(JSON.stringify(ctx.mailTopicContentOptions('general','custom','cp'))),{excel:false,table:true,tps:true});
+});
+
+test('empty legacy optional columns fall back to pricing defaults, while new empty choices and saved orders survive',()=>{
+  const item={tableColumns:{collection:[]},contentOptions:{collection:{excel:false,table:false}}};
+  const ctx={mailTopicFindItem:()=>item,mailTopicSourceColumns:()=>[{k:'__picture'},{k:'fabric'},{k:'targetPrice'}],
+    mailTopicDefaultColumnKeys:()=>['__picture','fabric','targetPrice'],kolAllOrderedCols:()=>[{k:'fabric'},{k:'targetPrice'}]};
+  vm.createContext(ctx);
+  vm.runInContext(between('function mailTopicColumnKeys(', 'function mailTopicSetColumnKeys('),ctx);
+  const read=()=>Array.from(ctx.mailTopicColumnKeys('pricing','pricing-default','collection'));
+  assert.deepEqual(read(),['fabric','targetPrice','__picture']);
+  item.tableColumns.collection=['targetPrice','fabric'];
+  assert.deepEqual(read(),['targetPrice','fabric']);
+  item.tableColumns.collection=[];item.contentOptions.collection.pricingLayoutVersion=2;
+  assert.deepEqual(read(),[]);
+});
+
+test('pricing cells preserve inherited Collection values, dates, overrides and textual PLM IDs',()=>{
+  const groups=require('../public/collection-model-groups.js');
+  const rows=groups.normalizeRows([
+    {id:1,plmId:'2105001',modelKod:'DEMO',inStoreMonth:'JUNE 2027',colourCode:'WHITE',fabric:'Jersey',targetPrice:'3.85',exFactory:'2027-04-01'},
+    {id:2,plmId:'2105001',modelKod:'DEMO',inStoreMonth:'JUNE 2027',colourCode:'BLUE',fabric:'Old',targetPrice:'1.00',exFactory:'2027-03-01'}
+  ]).rows;
+  const ctx={appLang:'en',prepareEmailColumnIsPicture:()=>false,kolEffectiveValue:(row,key)=>groups.effectiveValue(row,key,rows),
+    kolParseMoneyNum:Number,fmtDate:v=>v};
+  vm.createContext(ctx);
+  vm.runInContext(between('function prepareEmailTopicCell(', 'function prepareEmailSubjectSegment('),ctx);
+  assert.equal(ctx.prepareEmailTopicCell(rows[1],{k:'fabric'}).value,'Jersey');
+  assert.equal(ctx.prepareEmailTopicCell(rows[1],{k:'targetPrice',money:true}).value,3.85);
+  assert.equal(ctx.prepareEmailTopicCell(rows[1],{k:'exFactory',date:true}).value,'2027-04-01');
+  assert.equal(ctx.prepareEmailTopicCell(rows[1],{k:'plmId'}).value,'2105001');
+  assert.equal(ctx.prepareEmailTopicCell(rows[1],{k:'plmId'}).numFmt,'@');
+  const overridden=groups.setVariantOverride(rows,2,'fabric','Interlock');
+  ctx.kolEffectiveValue=(row,key)=>groups.effectiveValue(row,key,overridden);
+  assert.equal(ctx.prepareEmailTopicCell(overridden[1],{k:'fabric'}).value,'Interlock');
+  assert.match(between('async function prepareEmailBuildTopicTableWorkbook(', 'function prepareEmailWorkbookFileEntry('),/coerceDateLoose\(column.sourceKind==='cp'\?row\[column.k\]:kolEffectiveValue\(row,column.k\)\)/);
+});
+
+test('task-specific pricing opens the shared editor and uses its selections for exactly one optional workbook and table',()=>{
+  const taskPreview=between('if(pricingTaskV2){','const head=`<div class="mailTopicListHead">');
+  assert.match(taskPreview,/data-mail-topic-edit=/);
+  const flow=between('mailTopicSelect(topicForDraft.kind,topicForDraft.id);','/* Pricing Workspace V2 — quotation reminder.');
+  assert.match(flow,/workbook=topicContent.excel\?await prepareEmailBuildTopicTableWorkbook\(selRows,topicColumns,topicForDraft.name,m.name,\{pricing:true\}\):null/);
+  assert.match(flow,/topicContent.table\?await prepareEmailTopicTableContent\(selRows,topicColumns\)/);
+  assert.doesNotMatch(flow,/kolBuildPricingPreviewImages|previews:|topicTableEntries|kolBuildPricingRequestWorkbook/);
+  assert.match(flow,/recordRequest\(SRC.persist\?'collection':'cp',selRows,checked\)/,'quotation history is preserved');
+});
+
+test('pricing draft sends the actual table below edited text and only embeds selected model images',async()=>{
+  let payload;
+  const ctx={
+    mailTplBody:()=>'Default',mailTplToHtml:s=>'<p>'+s+'</p>',mailTplToPlain:s=>s,
+    fetch:async(url,options)=>{payload=JSON.parse(options.body);return {ok:true,json:async()=>({opened:false})};}
+  };
+  vm.createContext(ctx);
+  vm.runInContext(between('function kolPricingMailHtml(', 'const KOL_IMAGE_EXCEL_PADDING_PX'),ctx);
+  vm.runInContext(between('function prepareEmailGenericHtml(', 'async function kolCreatePreparedEmailDraft('),ctx);
+  vm.runInContext(between('async function kolCreatePricingEmailDraft(', 'function prepareEmailRowManufacturer('),ctx);
+  const asset={filename:'model.png',mimeType:'image/png',cid:'selected-model',base64:'aW1hZ2U='};
+  await ctx.kolCreatePricingEmailDraft({email:'demo@example.test',subject:'Edited subject',body:'Edited message',
+    tableHtml:'<table><tr><td>STYLE-A</td></tr></table>',tablePlain:'STYLE-A',inlineImages:[asset],
+    previews:[{...asset,cid:'obsolete-preview'}],attachmentPlan:{attachments:[{filename:'Quotation.xlsx',base64:'ZXhjZWw='}]}});
+  assert.equal(payload.subject,'Edited subject');
+  assert.match(payload.html,/<p>Edited message<\/p><table>/);
+  assert.match(payload.text,/Edited message\r\n\r\nSTYLE-A/);
+  assert.doesNotMatch(payload.html,/Quotation request table|obsolete-preview|Excel file is also attached/);
+  assert.deepEqual(payload.inlineImages,[asset]);
+  assert.equal(payload.attachments.length,1);
+  await ctx.kolCreatePricingEmailDraft({email:'demo@example.test',body:'Only text',attachmentPlan:{attachments:[]}});
+  assert.deepEqual(payload.attachments,[]);
+  assert.deepEqual(payload.inlineImages,[]);
+  assert.doesNotMatch(payload.html,/<table|<img|attached/);
+});

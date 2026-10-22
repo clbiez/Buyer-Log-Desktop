@@ -25,7 +25,7 @@ test('e-posta başlığı düzenleyicisinde Add TPs seçeneği vardır ve kalıc
 });
 
 test('Send to Pricing eski davranışı korur, genel başlıklarda TPs varsayılan kapalıdır', () => {
-  assert.match(INDEX, /kind==='pricing'\?\{excel:false,table:false,tps:true\}:\{excel:true,table:true,tps:false\}/);
+  assert.match(INDEX, /kind==='pricing'\?\{excel:true,table:true,tps:true\}:\{excel:true,table:true,tps:false\}/);
   assert.match(INDEX, /contentOptions:\{cp:\{excel:false,table:false,tps:false\},collection:\{excel:false,table:false,tps:false\}\}/);
 });
 
