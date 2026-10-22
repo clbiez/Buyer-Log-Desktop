@@ -41,15 +41,36 @@
   function licensorMergeSplit(merges) {
     // Accepts the API shape {split:[keys]} or the stored shape {entries:{key:{split}}}.
     const entries = merges && merges.entries && typeof merges.entries === 'object' ? merges.entries : null;
-    const list = entries ? Object.keys(entries).filter(key => entries[key] && entries[key].split === true) : (merges && Array.isArray(merges.split) ? merges.split : []);
+    const list = entries ? Object.keys(entries).filter(key => entries[key] && entries[key].split === true && !entries[key].source) : (merges && Array.isArray(merges.split) ? merges.split : []);
     return new Set(list.map(key => licensorMergeKey(key)).filter(Boolean));
   }
+  // The automatic suffix group remains the default. Explicit manual links connect
+  // two whole groups; split automatic names stay separate unless linked explicitly.
+  // Compute the same undirected component on browser and server, independent of order.
+  function licensorGroupKey(value, merges) {
+    const initial=licensorMergeKey(value);
+    if(!initial)return '';
+    const split=licensorMergeSplit(merges);
+    const node=name=>{
+      const raw=turkNorm(name), k=licensorMergeKey(raw);
+      return split.has(k)?'EXACT:'+raw:'AUTO:'+k;
+    };
+    const edges=new Map(),entries=merges&&merges.entries||{};
+    for(const entry of Object.values(entries)){
+      if(!entry||!entry.source||!entry.target||entry.split===true)continue;
+      const a=node(entry.source),b=node(entry.target);
+      if(a===b)continue;
+      if(!edges.has(a))edges.set(a,new Set());
+      if(!edges.has(b))edges.set(b,new Set());
+      edges.get(a).add(b);edges.get(b).add(a);
+    }
+    const seen=new Set([node(value)]),queue=[...seen];
+    for(let i=0;i<queue.length;i++)for(const next of edges.get(queue[i])||[]){if(!seen.has(next)){seen.add(next);queue.push(next);}}
+    return [...seen].sort()[0];
+  }
   function licensorsMerged(a, b, merges) {
-    const left = turkNorm(a), right = turkNorm(b);
-    if (!left || !right) return false;
-    if (left === right) return true;
-    const key = licensorMergeKey(a);
-    return Boolean(key) && key === licensorMergeKey(b) && !licensorMergeSplit(merges).has(key);
+    const left=turkNorm(a),right=turkNorm(b);
+    return Boolean(left&&right)&&(left===right||licensorGroupKey(a,merges)===licensorGroupKey(b,merges));
   }
   // True when the licensor has any contract of its own for the license (any date/season).
   function licensorHasOwnRules(rules, licensor, license, licensorOf = rule => rule && rule.licensor) {
@@ -904,6 +925,7 @@
     computeBacklogRisk,
     BACKLOG_HANDOVER_GRACE_DAYS,
     licensorMergeKey,
+    licensorGroupKey,
     licensorsMerged,
     findRuleByLicensor,
     licensorHasOwnRules,
