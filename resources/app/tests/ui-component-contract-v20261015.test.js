@@ -27,7 +27,7 @@ test('Küçük kontrol yüksekliği ana ölçekten türetilir ve arayüz boyutuy
 });
 
 test('Düğme L ve S tek yükseklik, tek yazı ölçüsü kullanır', () => {
-  const large = ruleFor(':root :is(.psaGhostBtn,.mfpBtn,.cpaBtn:not(.sm),.aoButton,.dmViewBtn){');
+  const large = ruleFor(':root :is(.psaGhostBtn,.mfpBtn,.cpaBtn:not(.sm),.aoButton,.dmViewBtn,.lcBtn:not(.sm)){');
   assert.match(large, /height:var\(--ctl-h\)/);
   assert.match(large, /font-size:var\(--fs-xs\);font-weight:600/);
   const small = ruleFor(':root :is(.cpaBtn.sm,.ovClockManageBtn,.bpaTodayBtn,.lflCpTableTool');
@@ -36,13 +36,13 @@ test('Düğme L ve S tek yükseklik, tek yazı ölçüsü kullanır', () => {
 });
 
 test('Segment bileşenleri tek görünüm ve tek aktif durum paylaşır', () => {
-  const group = '.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle';
+  const group = '.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg';
   assert.match(ruleFor(`:root :is(${group})>button{`), /height:var\(--ctl-h-sm\)/);
   assert.match(ruleFor(`:root :is(${group})>button:is(.is-active,.is-on,.active,.isActive`), /background:var\(--acc\);color:var\(--on-acc\)/);
 });
 
 test('Filtre çipi ve sayfa sekmesi ayrı, tutarlı iki dil kullanır', () => {
-  assert.match(ruleFor(':root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn):is('), /background:var\(--acc-bg\);color:var\(--acc-ink\)/);
+  assert.match(ruleFor(':root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip):is('), /background:var\(--acc-bg\);color:var\(--acc-ink\)/);
   const tab = ruleFor(':root :is(.ovHomePager>.ovHomePageTab,.psaTabs>[role="tab"],.dmLabTabs>.dmLabTab):is(');
   assert.match(tab, /border-bottom-color:var\(--acc\);background:transparent/);
 });

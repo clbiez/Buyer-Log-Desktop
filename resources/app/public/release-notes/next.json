@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Royalty hesap doğruluğu, kompakt Lisans kartları ve rapor düzeltmeleri",
-    "en": "Royalty accuracy, compact License cards and report fixes"
+    "tr": "Yeni lisans kartları listesi, royalty doğruluğu ve rapor düzeltmeleri",
+    "en": "New license card list, royalty accuracy and report fixes"
   },
   "summary": {
-    "tr": "Royalty hesapları kuruşu kuruşuna, Lisans kartları daha kompakt; kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi. Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi.",
-    "en": "Cent-accurate royalty calculations and more compact License cards; improved source fields, partial details, Collection inheritance and checklist management. Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed."
+    "tr": "Lisans kartları satırda düzenlenebilir bir listeye dönüştü; onay haritası sadeleşti, üretici atlası seçilen satırlardan oluşuyor. Royalty hesapları kuruşu kuruşuna; kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi. Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi.",
+    "en": "License cards became an in-row editable list; the approval map is simpler and the supplier atlas is built from selected rows. Cent-accurate royalty calculations; improved source fields, partial details, Collection inheritance and checklist management. Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed."
   },
   "changes": [
     {
@@ -157,31 +157,31 @@
       }
     },
     {
-      "id": "license-cards-compact",
-      "type": "improvement",
+      "id": "license-cards-list-view",
+      "type": "feature",
       "module": {
         "tr": "Lisans kartları",
         "en": "License cards"
       },
       "title": {
-        "tr": "Daha kompakt Lisans kartları",
-        "en": "More compact License cards"
+        "tr": "Lisans kartları liste görünümünde",
+        "en": "License cards as a list"
       },
       "body": {
-        "tr": "Lisans Atlası artık Buyer Log’un arayüz boyutunu izler: büyük karşılama alanı kaldırıldı, kart kapakları, başlıklar, araç çubuğu, süreç ağacı ve detay paneli sıklaştırıldı. Aynı ekranda daha çok lisans görünür; kartta bugün geçerli tüm sezon kapsamları kısa oran etiketleriyle listelenir. Dar ekranda ikincil düğmeler simgeye dönüşür.",
-        "en": "The License Atlas now follows Buyer Log’s interface size: the large welcome banner is removed and card covers, headings, toolbar, process tree and details drawer are denser. More licenses fit on one screen, and each card lists every season scope valid today with short rate labels. Secondary buttons collapse to icons on narrow screens."
+        "tr": "Lisans kartları baştan Buyer Log liste görünümü olarak yeniden yapıldı. Her satırda en solda lisans görseli, lisansör, Royalty, TR ve YD komisyonu, hologram, geçerlilik ve kısa onay haritası görünür. Oranlar doğrudan satırda düzenlenir: Enter kaydeder, Esc geri alır; hatalı oran sunucuya gitmeden işaretlenir. Bir lisansın birden çok lisansörü varsa her biri ayrı satırdır. Satır açıldığında tüm sözleşmeler, ilgili kişi/portal bilgileri ve görsel yükleme aynı yerdedir. Arama, Licensor ve durum filtreleri, sıralama ve yumuşak geçiş animasyonları vardır.",
+        "en": "License cards were rebuilt as a Buyer Log list. Each row shows the license image on the left, licensor, royalty, TR and international commission, hologram, validity and a compact approval map. Rates are edited directly in the row: Enter saves, Esc reverts; invalid rates are flagged before reaching the server. A license with several licensors gets one row per licensor. Expanding a row shows every contract, contact/portal details and image upload in one place. Search, licensor and status filters, sorting and smooth transitions are included."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "license-cards-compact.png",
+        "src": "license-cards-list-view.png",
         "alt": {
-          "tr": "Gerçek Buyer Log Lisans kartları ekranı, kompakt kart ızgarası, demo veriler",
-          "en": "Real Buyer Log License cards screen with the compact card grid, demo data"
+          "tr": "Gerçek Buyer Log lisans kartları listesi: görseller, lisansörler ve düzenlenebilir oranlar, demo veriler",
+          "en": "Real Buyer Log license card list with images, licensors and editable rates, demo data"
         },
         "caption": {
-          "tr": "Kompakt Lisans Atlası kart ızgarası",
-          "en": "Compact License Atlas card grid"
+          "tr": "Satırda düzenlenebilir lisans listesi",
+          "en": "License list with in-row editing"
         }
       }
     },
@@ -197,49 +197,20 @@
         "en": "New contract periods start safely"
       },
       "body": {
-        "tr": "“Yeni dönem ekle” artık sıfır royalty yerine en güncel sözleşmenin oranlarını ve sezon kapsamını kopyalar; aynı kapsamdaki açık önceki dönemi bir gün önce kapatır ve bunu bir notla gösterir. Böylece kayıt çakışma hatasına düşmez ve yanlışlıkla %0 royalty ile yeni siparişler fiyatlanmaz. Yeni dönemin başlangıç tarihi değiştirilirse önceki dönemin bitişi de otomatik izler; iki dönem arasında royalty’siz OPD boşluğu kalmaz. İlk sözleşmede royalty alanı boş gelir ve girilmesi zorunludur.",
-        "en": "“Add contract period” now copies the latest contract’s rates and season scope instead of zero royalty, ends the previous open period with the same scope one day earlier and explains this in a note. Saving no longer fails with an overlap and new orders are never priced at 0% royalty by accident. If the new start date is changed, the previous period’s end follows automatically, so no OPD gap is left without royalty. For a first contract the royalty field starts empty and is required."
+        "tr": "Satır ayrıntılarındaki “Yeni dönem” artık sıfır royalty yerine en güncel sözleşmenin oranlarını ve sezon kapsamını kopyalar; aynı kapsamdaki açık önceki dönemi bir gün önce kapatır ve bunu bir notla gösterir. Böylece kayıt çakışma hatasına düşmez ve yanlışlıkla %0 royalty ile yeni siparişler fiyatlanmaz. Yeni dönemin başlangıç tarihi değiştirilirse önceki dönemin bitişi de otomatik izler; iki dönem arasında royalty’siz OPD boşluğu kalmaz. İlk sözleşmede royalty alanı boş gelir ve girilmesi zorunludur.",
+        "en": "“New period” in the row details now copies the latest contract’s rates and season scope instead of zero royalty, ends the previous open period with the same scope one day earlier and explains this in a note. Saving no longer fails with an overlap and new orders are never priced at 0% royalty by accident. If the new start date is changed, the previous period’s end follows automatically, so no OPD gap is left without royalty. For a first contract the royalty field starts empty and is required."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "license-cards-new-period.png",
         "alt": {
-          "tr": "Gerçek Buyer Log lisans detayları: kopyalanan oranlarla yeni dönem ve 2026-10-20’de kapatılan önceki dönem, demo veriler",
-          "en": "Real Buyer Log license details: a new period with copied rates and the previous period ending 2026-10-20, demo data"
+          "tr": "Gerçek Buyer Log lisans satırı ayrıntısı: planlanan yeni dönem ve 2026-10-31’de kapanan önceki dönem, demo veriler",
+          "en": "Real Buyer Log license row details: an upcoming new period and the previous period ending 2026-10-31, demo data"
         },
         "caption": {
           "tr": "Önceki dönemi otomatik kapatan yeni sözleşme dönemi",
           "en": "New contract period that closes the previous one"
-        }
-      }
-    },
-    {
-      "id": "license-cards-cover-upload",
-      "type": "fix",
-      "module": {
-        "tr": "Lisans kartları",
-        "en": "License cards"
-      },
-      "title": {
-        "tr": "Kartlara görsel eklenebiliyor",
-        "en": "Card images can be added again"
-      },
-      "body": {
-        "tr": "“Görsel Ekle” ile seçilen PNG, JPEG veya WebP kart görseli artık “Görsel açılamadı” hatası vermeden eklenir; aynı düzeltme aşama görsellerinde de geçerlidir. Görsel eklendikten sonra bildirim, kalıcı olması için Atlası kaydetmeyi hatırlatır. Görselli kartlarda kapak alanı görseli gösterecek kadar büyür.",
-        "en": "PNG, JPEG or WebP card images chosen with “Add Image” are now added without the “Could not open image” error; stage images benefit from the same fix. After adding an image, the notice reminds you to save the atlas to keep it. Cards with an image get a cover area large enough to show it."
-      },
-      "visual": {
-        "kind": "screenshot",
-        "capture": "post-change",
-        "src": "license-cards-cover-upload.png",
-        "alt": {
-          "tr": "Gerçek Buyer Log Lisans kartları: görsel eklenmiş NORTH STAR kartı ve kaydetme bildirimi, demo veriler",
-          "en": "Real Buyer Log License cards: the NORTH STAR card with an added image and the save notice, demo data"
-        },
-        "caption": {
-          "tr": "Görsel eklenmiş lisans kartı",
-          "en": "License card with an added image"
         }
       }
     },
@@ -273,31 +244,31 @@
       }
     },
     {
-      "id": "license-atlas-buyerlog-ui",
-      "type": "improvement",
+      "id": "license-cards-approval-map",
+      "type": "feature",
       "module": {
-        "tr": "Lisans kartları · Süreç ağacı",
-        "en": "License cards · Process tree"
+        "tr": "Lisans kartları · Onay haritası",
+        "en": "License cards · Approval map"
       },
       "title": {
-        "tr": "Lisans Atlası Buyer Log arayüzüyle",
-        "en": "License Atlas in the Buyer Log interface"
+        "tr": "Sade onay haritası",
+        "en": "Simplified approval map"
       },
       "body": {
-        "tr": "Lisans Atlası artık Buyer Log’un kendi yazı tipini (Barlow), 30 px alan ve düğme yüksekliklerini, büyük harfli alan etiketlerini, ince çerçeveleri ve açık/koyu tema renklerini kullanır. Aşama düzenleyici, gönderimler, çekmece, diyaloglar ve Süreç Stüdyosu dahil tüm yazı boyutları ve kalınlıkları Buyer Log ölçeğine indirildi; ayrı renkli düğmeler ve ağır başlıklar kaldırıldı. Arayüz boyutu ayarı Atlas’a da uygulanır.",
-        "en": "The License Atlas now uses Buyer Log’s own typeface (Barlow), 30 px field and button heights, uppercase field captions, hairline borders and the light/dark theme colours. All type sizes and weights — stage editor, routes, drawer, dialogs and Process Studio — follow the Buyer Log scale; separately coloured buttons and heavy headings are gone. The interface size setting also applies to the Atlas."
+        "tr": "Onay haritası satırdaki küçük adım şeridiyle özetlenir; satırdaki harita düğmesi kompakt düzenleyiciyi yan panelde açar. Her adım tek satırdır: ad, kimin onaylayacağı, test ve üreticiyle paylaşım; ayrıntılar açılınca gönderimler, talimatlar ve görsel kılavuz görünür. Adımlar sıralanır, başka bir lisanstan kopyalanabilir; adresler, portal ve genel gereksinimler aynı panelde.",
+        "en": "The approval map is summarised by a small step strip in each row; the row's map button opens a compact editor in a side panel. Each step is one line: name, who approves, test and supplier sharing; expanding it shows routes, instructions and the visual guide. Steps can be reordered or copied from another license; addresses, portal and general requirements are in the same panel."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "license-atlas-buyerlog-ui.png",
+        "src": "license-cards-approval-map.png",
         "alt": {
-          "tr": "Gerçek Buyer Log koyu tema: Buyer Log alanları ve düğmeleriyle aşama düzenleyici, demo veriler",
-          "en": "Real Buyer Log dark theme: stage editor with Buyer Log fields and buttons, demo data"
+          "tr": "Gerçek Buyer Log onay haritası düzenleyicisi: üç adım ve onaylayan seçimi, demo veriler",
+          "en": "Real Buyer Log approval map editor with three steps and approver choice, demo data"
         },
         "caption": {
-          "tr": "Buyer Log arayüzüyle aşama düzenleyici",
-          "en": "Stage editor in the Buyer Log interface"
+          "tr": "Kompakt onay haritası düzenleyicisi",
+          "en": "Compact approval map editor"
         }
       }
     },
@@ -447,60 +418,60 @@
       }
     },
     {
-      "id": "license-atlas-export-picker",
+      "id": "license-cards-supplier-selection",
       "type": "feature",
       "module": {
         "tr": "Lisans kartları",
         "en": "License cards"
       },
       "title": {
-        "tr": "Üretici atlasına girecek lisansları seçin",
-        "en": "Choose licenses for the supplier atlas"
+        "tr": "Üretici atlası listeden seçilir",
+        "en": "Supplier atlas from selected rows"
       },
       "body": {
-        "tr": "“Tüm Lisansları Üreticiye Aktar” artık her şeyi aktarmaz: açılan pencerede lisans veya lisansör arayıp listeyi lisansöre göre süzerek yalnız istediğiniz lisansları işaretlersiniz. Hiçbir şey önceden seçili gelmez; üreticiye kapalı lisanslar işaretlenemez ve dosyaya yalnız seçilenler girer.",
-        "en": "“Export All Licenses for Suppliers” no longer exports everything: in the dialog you search by license or licensor, filter by licensor and tick only the licenses you want. Nothing is preselected, licenses not shared with suppliers cannot be ticked, and only the selected ones go into the file."
+        "tr": "Üretici atlasına yalnız listede işaretlediğiniz satırlar girer. Seçim yapınca altta beliren çubuktan “Üretici atlası oluştur” ile dosya hazırlanır; üreticiye kapalı lisanslar atlanır ve bildirilir.",
+        "en": "Only the rows you tick in the list go into the supplier atlas. When rows are selected, a bar appears at the bottom; “Create supplier atlas” builds the file, and licenses not shared with suppliers are skipped and reported."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "license-atlas-export-picker.png",
+        "src": "license-cards-supplier-selection.png",
         "alt": {
-          "tr": "Gerçek Buyer Log üretici atlası seçim penceresi, iki lisans seçili, demo veriler",
-          "en": "Real Buyer Log supplier atlas picker with two licenses selected, demo data"
+          "tr": "Gerçek Buyer Log koyu tema: iki satır seçili ve üretici atlası çubuğu, demo veriler",
+          "en": "Real Buyer Log dark theme: two rows selected and the supplier atlas bar, demo data"
         },
         "caption": {
-          "tr": "Aktarılacak lisansları seçme",
-          "en": "Choosing licenses to export"
+          "tr": "Seçili satırlarla üretici atlası",
+          "en": "Supplier atlas from selected rows"
         }
       }
     },
     {
-      "id": "license-atlas-supplier-buyerlog",
-      "type": "fix",
+      "id": "license-supplier-atlas-file",
+      "type": "improvement",
       "module": {
         "tr": "Lisans kartları",
         "en": "License cards"
       },
       "title": {
-        "tr": "Üretici atlası dosyası Buyer Log görünümünde",
-        "en": "Supplier atlas file in the Buyer Log look"
+        "tr": "Yeni üretici atlası dosyası",
+        "en": "New supplier atlas file"
       },
       "body": {
-        "tr": "Üreticiye aktarılan HTML artık Buyer Log’daki kartlarla aynı görünür: Barlow yazı tipi, kompakt kartlar, Buyer Log renkleri (açık/koyu) ve büyük karşılama alanı olmadan. Kart görselleri küçük bir kutuda kalmaz, kapak alanını Buyer Log’daki gibi doldurur.",
-        "en": "The HTML exported for suppliers now looks like the Buyer Log cards: Barlow typeface, compact cards, Buyer Log light/dark colours and no large welcome banner. Card images no longer sit in a small box; they fill the cover like in Buyer Log."
+        "tr": "Üreticiye giden HTML artık Buyer Log görünümünde, sade bir rehberdir: en üstte görselli lisans listesi, altında her lisansın adım adım onay haritası, gönderimler, adresler ve paylaşılan portal. Açık/koyu temaya uyar, yazdırılabilir, betik çalıştırmaz; sözleşme oranları ve iç notlar asla girmez.",
+        "en": "The HTML sent to suppliers is now a simple guide in the Buyer Log look: a license list with images on top, then each license's step-by-step approval map, routes, addresses and the shared portal. It follows light/dark mode, prints well and runs no script; contract rates and internal notes never go in."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
-        "src": "license-atlas-supplier-buyerlog.png",
+        "src": "license-supplier-atlas-file.png",
         "alt": {
-          "tr": "Dışa aktarılmış üretici atlası dosyası: kapakları dolduran görsellerle iki lisans kartı, demo veriler",
-          "en": "Exported supplier atlas file: two license cards with images filling the covers, demo data"
+          "tr": "Dışa aktarılmış üretici atlası: lisans listesi ve adım adım onay haritası, demo veriler",
+          "en": "Exported supplier atlas: license list and step-by-step approval map, demo data"
         },
         "caption": {
-          "tr": "Buyer Log görünümündeki üretici atlası",
-          "en": "Supplier atlas in the Buyer Log look"
+          "tr": "Üretici atlası dosyası",
+          "en": "Supplier atlas file"
         }
       }
     },
@@ -512,20 +483,20 @@
         "en": "License cards"
       },
       "title": {
-        "tr": "Lisans kütüphanesinde Licensor filtresi",
-        "en": "Licensor filter in the License Library"
+        "tr": "Lisans listesinde Licensor filtresi",
+        "en": "Licensor filter in the license list"
       },
       "body": {
-        "tr": "Lisans kütüphanesinde kategori filtresinin yanında Licensor seçimi var. Seçilen lisansörün lisansları listelenir; birden çok lisansörü olan lisansta kart, seçilen lisansörün sözleşmesiyle açılır. Arama ve kategori filtresiyle birlikte çalışır.",
-        "en": "The License Library has a Licensor selector next to the category filter. It lists that licensor’s licenses; for a license with several licensors the card opens with the selected licensor’s contract. It works together with search and the category filter."
+        "tr": "Lisans listesinin araç çubuğunda Licensor seçimi var; “Lisansörü olmayanlar” seçeneği eksik lisansörleri bulmayı kolaylaştırır. Arama ve durum filtreleriyle birlikte çalışır.",
+        "en": "The license list toolbar has a licensor selector; the “Without licensor” option helps find missing licensors. It works together with search and the status filters."
       },
       "visual": {
         "kind": "screenshot",
         "capture": "post-change",
         "src": "license-library-licensor-filter.png",
         "alt": {
-          "tr": "Gerçek Buyer Log lisans kütüphanesi Demo Studio lisansörüne göre süzülmüş, demo veriler",
-          "en": "Real Buyer Log License Library filtered by the Demo Studio licensor, demo data"
+          "tr": "Gerçek Buyer Log lisans listesi DTR lisansörüne göre süzülmüş, demo veriler",
+          "en": "Real Buyer Log license list filtered by the DTR licensor, demo data"
         },
         "caption": {
           "tr": "Lisansöre göre süzülmüş lisans kütüphanesi",
