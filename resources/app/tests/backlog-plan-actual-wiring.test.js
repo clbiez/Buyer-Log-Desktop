@@ -80,3 +80,14 @@ test('plan realisation view: plan window, grouped bars with tooltip + drawer, Ex
   assert.match(CSS,/\.bpaDrawer\{/);
   assert.doesNotMatch(CSS,/var\(--bad\)|var\(--ok\)|var\(--warn\)/,'undefined tone tokens must not be used');
 });
+
+test('ring percentage is centered inside its SVG in Backlog Overview and Plan Actual',()=>{
+  const OVERVIEW=read('public/backlog-overview.js');
+  assert.match(OVERVIEW,/class="bpaRing">/);
+  assert.match(UI,/class="bpaRing">/);
+  assert.match(CSS,/\.bpaRing\{[^}]*display:grid/);
+  assert.match(CSS,/\.bpaRing svg\{[^}]*grid-area:1\/1/);
+  assert.match(CSS,/\.bpaRingText\{[^}]*grid-area:1\/1[^}]*align-self:stretch[^}]*justify-self:stretch/);
+  assert.match(CSS,/\.bpaRingSub\{[^}]*grid-area:2\/1/);
+  assert.doesNotMatch(CSS,/\.bpaRingText\{[^}]*position:absolute/);
+});

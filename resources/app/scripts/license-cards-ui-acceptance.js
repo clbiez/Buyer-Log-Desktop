@@ -71,6 +71,20 @@ let browser;
   assert.deepEqual(stages.map(s=>[s.title,s.approver]),[['Konsept onayı','licensor'],['PPS onayı','LCW'],['Final kontrol','mixed']]);
   assert.equal(stages[0].note,'PRIVATE NOTE','untouched fields survive');console.log('PASS map editor saves steps and preserves existing fields');
 
+  // Manual labels: a new timing label and a new address straight from the route selects.
+  await row('NORTH STAR','Demo Licensing').locator('[data-lc-act="map"]').last().click();await page.locator('.lmDrawer').waitFor();
+  await page.locator('.lmStage').first().locator('[data-lm-act="expand"]').click();
+  await page.locator('[data-lm="s.0.r.0.timing"]').selectOption('__new__');await page.locator('[data-lm-new="label"]').fill('Kargo sonrası');await page.locator('[data-lm-new="label"]').press('Enter');
+  await page.locator('[data-lm="s.0.r.0.addressId"]').selectOption('__new__');await page.locator('[data-lm-new="label"]').fill('Somerbond UK');await page.locator('[data-lm-new="text"]').fill('Demo Street 1, Leeds');
+  await page.screenshot({path:path.join(root,'labels-entry.png')});await page.locator('[data-lm-act="addTag"]').click();
+  assert.equal(await page.locator('[data-lm="s.0.r.0.timing"] option:checked').innerText(),'Kargo sonrası');
+  assert.equal(await page.locator('[data-lm="s.0.r.0.addressId"] option:checked').innerText(),'Somerbond UK');
+  await page.locator('[data-lm="s.0.r.0.timing"]').click();await page.screenshot({path:path.join(root,'labels.png')});await page.keyboard.press('Escape').catch(()=>{});
+  await page.locator('[data-lm-act="save"]').click();await page.locator('.lmScrim').waitFor({state:'detached'});
+  const labelled=(await api()).cards.find(c=>c.license==='NORTH STAR'&&c.licensor==='Demo Licensing').processAtlas,route=labelled.license.stages[0].submissions[0];
+  assert.equal(route.timing,'Kargo sonrası');assert.deepEqual(labelled.customSelectOptions.timing.map(o=>o.label),['Kargo sonrası']);
+  assert.equal(labelled.license.addresses.find(a=>a.id===route.addressId).text,'Demo Street 1, Leeds');console.log('PASS manual timing label and address added from the route');
+
   // Manual licensor: an empty licensor is typed in place; another licensor gets its own row.
   const sun=rows.filter({hasText:'SUN VALLEY'});await page.locator('.lcRow.isOpen .lcName').click();await page.evaluate(()=>window.scrollTo(0,0));await sun.locator('.lcLicensorInput').fill('Demo Ri');await page.screenshot({path:path.join(root,'licensor-input.png')});await sun.locator('.lcLicensorInput').fill('Demo Rights');await sun.locator('.lcLicensorInput').press('Enter');
   await page.waitForFunction(()=>!document.querySelector('.lcLicensorInput[data-lc-licensor]')||![...document.querySelectorAll('.lcRow')].some(r=>r.textContent.includes('SUN VALLEY')&&r.querySelector('.lcLicensorInput')));
@@ -112,7 +126,7 @@ let browser;
   await page.locator('.lcSelectionBar.isOn').waitFor();
   const download=page.waitForEvent('download');await page.locator('[data-lc-act="export"]').click();const file=path.join(root,'supplier.html');await (await download).saveAs(file);
   const html=fs.readFileSync(file,'utf8');
-  for(const included of ['NORTH STAR','ORBIT CLUB','Final kontrol','Tasarımı portal üzerinden gönderin.','Numune v2'])assert.ok(html.includes(included),included);
+  for(const included of ['NORTH STAR','ORBIT CLUB','Final kontrol','Tasarımı portal üzerinden gönderin.','Numune v2','Kargo sonrası','Somerbond UK'])assert.ok(html.includes(included),included);
   for(const excluded of ['STUDIO ONE','BLUE HARBOR','PRIVATE NOTE','PRIVATE INTERNAL','example.com/portal','13.5'])assert.ok(!html.includes(excluded),excluded);
   const supplier=await context.newPage();await supplier.goto('file://'+file);
   const drawers=supplier.locator('details.lic');assert.equal(await drawers.count(),2);assert.equal(await supplier.locator('details.lic[open]').count(),0,'all maps start closed');

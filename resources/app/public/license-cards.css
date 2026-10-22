@@ -234,3 +234,11 @@
 @media (max-width:1100px){.lcDetailIn{padding-left:var(--sp-3)}}
 @media (max-width:720px){.lcPage{padding:var(--sp-2)}.lcSearch{flex-basis:100%}.lcDetailIn{grid-template-columns:1fr}.lmStageRow{grid-template-columns:24px 1fr auto;}.lmStageRow .lcSeg,.lmStageRow .lcChip,.lmCount{grid-column:2/-1}.lmRoute{grid-template-columns:1fr 1fr}.lmAddress{grid-template-columns:1fr}.lcSelectionBar small{display:none}}
 @media (prefers-reduced-motion:reduce){.lcTable.isEntering .lcRow,.lcRow.isSaved,.lcDetail,.lmScrim,.lmDrawer,.lmStage,.lmRoute,.lmFlowStep,.lcNote,.lcNotice,.lcRowSave,.lcDetailFoot,.lcRowMsg,.lcCover img,.lmGuide,.lcSkeleton i,.lmTpl,.lmNaming,.lmNotice,.lmTemplate{animation:none}.lcSelectionBar,.lmMore,.lcRow,.lcThumb img,.lcExpand .ic,.lmExpand .ic{transition:none}.lcRow:hover .lcThumb img{transform:none}}
+/* Inline new label / address in a route */
+.lmNewTag{min-width:0}
+.lmNewTagRow{display:flex;flex-wrap:wrap;gap:2px;align-items:center;animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both}
+.lmDrawer .lmNewTag input{flex:1;min-width:0;height:var(--ctl-h-sm);padding:0 6px;border:1px solid var(--acc);background:var(--card);color:var(--ink);font:400 var(--fs-xs) var(--sans)}
+.lmDrawer .lmNewTag input:focus{outline:0;box-shadow:var(--focus-ring)}
+.lmDrawer .lmNewTag input[data-lm-new="text"]{order:3;flex-basis:100%}
+.lmNewTag .lcIconBtn{width:var(--ctl-h-sm);height:var(--ctl-h-sm);flex:none}
+@media (prefers-reduced-motion:reduce){.lmNewTagRow{animation:none}}
