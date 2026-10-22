@@ -18,10 +18,11 @@ BASE = "6501210b7faf051e4d8f2997dd0d48f0c9b64647"
 PREVIOUS_PATCHES = ("d6149bcb440530a20c30adecf201d1d989afd507",
                     "e54ba4eb8dfcc677907ed023955c7490de15fcd8",
                     "920082a0c970a5c31d95627dc5cdb5e82c15ef71",
-                    "de123d59d39464e296ea9b535d652920173217a5")
-HEAD = "ae0e375ed577ff3d47d796dbd60f5575afd260e7"
+                    "de123d59d39464e296ea9b535d652920173217a5",
+                    "ae0e375ed577ff3d47d796dbd60f5575afd260e7")
+HEAD = "9c9f369140a27456e5b0ac97ae98ee541304f213"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "dist" / "BuyerLog-7.0.293-MiniPatch-Guncel-20261022-R4.zip"
+OUTPUT = ROOT / "dist" / "BuyerLog-7.0.293-MiniPatch-Guncel-20261022-R5.zip"
 
 def git(*args: str) -> bytes:
     return subprocess.check_output(["git", *args], cwd=ROOT)
@@ -107,7 +108,7 @@ manifest = {
 }
 payload = json.dumps(manifest, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 guide = """BUYER LOG 7.0.293 SONRASI MINI PATCH - GUNCEL 22.10.2026
-HEDEF COMMIT: ae0e375ed577ff3d47d796dbd60f5575afd260e7
+HEDEF COMMIT: 9c9f369140a27456e5b0ac97ae98ee541304f213
 
 Bu ZIP internetsiz calisir. GitHub, Python, Node.js veya Git istemez.
 7.0.293 STABLE veya onceki 21.10.2026 ve 22.10.2026 mini patch'li
