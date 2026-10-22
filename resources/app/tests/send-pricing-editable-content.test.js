@@ -52,7 +52,7 @@ test('pricing cells preserve inherited Collection values, dates, overrides and t
     {id:2,plmId:'2105001',modelKod:'DEMO',inStoreMonth:'JUNE 2027',colourCode:'BLUE',fabric:'Old',targetPrice:'1.00',exFactory:'2027-03-01'}
   ]).rows;
   const ctx={appLang:'en',prepareEmailColumnIsPicture:()=>false,kolEffectiveValue:(row,key)=>groups.effectiveValue(row,key,rows),
-    kolParseMoneyNum:Number,fmtDate:v=>v};
+    kolFabricDisplay:v=>v,kolParseMoneyNum:Number,fmtDate:v=>v};
   vm.createContext(ctx);
   vm.runInContext(between('function prepareEmailTopicCell(', 'function prepareEmailSubjectSegment('),ctx);
   assert.equal(ctx.prepareEmailTopicCell(rows[1],{k:'fabric'}).value,'Jersey');
@@ -64,6 +64,60 @@ test('pricing cells preserve inherited Collection values, dates, overrides and t
   ctx.kolEffectiveValue=(row,key)=>groups.effectiveValue(row,key,overridden);
   assert.equal(ctx.prepareEmailTopicCell(overridden[1],{k:'fabric'}).value,'Interlock');
   assert.match(between('async function prepareEmailBuildTopicTableWorkbook(', 'function prepareEmailWorkbookFileEntry('),/coerceDateLoose\(column.sourceKind==='cp'\?row\[column.k\]:kolEffectiveValue\(row,column.k\)\)/);
+});
+
+test('prepared e-mail Fabric Card summaries match Collection exports in preview, body, TSV and Excel',async()=>{
+  const fabricCards=require('../public/fabric-cards-engine.js');
+  const jersey='3859-Örme,Süprem,30/1 Ne,Pamuk,150 gsm,100% Pamuk,Enzim';
+  const terry='361819-Örme,İki İplik,30/20,Pamuk,220 gsm,%80 Pamuk, %20 Poliester,Dispers';
+  const raw='A - '+jersey+'\\nB - '+terry;
+  const cards=new Map([
+    ['3859',{code:'3859',summary:'Süprem · 30/1 Ne · 150 gsm · 100% Pamuk',summaryEn:'Single Jersey · 30/1 Ne · 150 gsm · 100% Cotton'}],
+    ['361819',{code:'361819',summary:'İki İplik · 220 gsm · 80% Pamuk 20% Polyester',summaryEn:'Two Thread Terry · 220 gsm · 80% Cotton 20% Poliester'}],
+  ]);
+  const ctx={
+    appLang:'en',CP_FABRIC_PLM_KEY:'Fabric (PLM)',
+    prepareEmailColumnIsPicture:()=>false,kolEffectiveValue:(row,key)=>row[key],
+    kolFabricDisplay:value=>fabricCards.displayText(value,cards,ctx.appLang),
+    escapeHtml:value=>String(value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'),
+    L:value=>value,
+  };
+  vm.createContext(ctx);
+  vm.runInContext(between('function prepareEmailTopicCell(', 'function prepareEmailSubjectSegment('),ctx);
+  vm.runInContext(between('function prepareEmailTopicTablePlain(', 'async function prepareEmailBuildTopicTableWorkbook('),ctx);
+  vm.runInContext(between('function mailTopicTablePreviewHtml(', 'function openMailTopicEditor('),ctx);
+  vm.runInContext(between('async function prepareEmailTopicTableContent(', 'function prepareEmailTopicCell('),ctx);
+
+  const collectionColumn={k:'fabric',label:'Fabric',sourceKind:'collection'};
+  const cpColumn={k:'Fabric (PLM)',label:'Fabric',sourceKind:'cp'};
+  const row={fabric:raw,'Fabric (PLM)':raw,modelKod:'DEMO'};
+  const enSummary=fabricCards.displayText(raw,cards,'en');
+  assert.match(enSummary,/A · 3859 · Single Jersey/);
+  assert.match(enSummary,/B · 361819 · Two Thread Terry/);
+  for(const column of [collectionColumn,cpColumn]){
+    const out=ctx.prepareEmailTopicCell(row,column);
+    assert.equal(out.value,enSummary,'Excel cell must contain summary, not raw PLM description');
+    assert.equal(out.display,enSummary,'mail body and preview must contain the same summary');
+    assert.equal(out.numeric,false);
+    const plain=ctx.prepareEmailTopicTablePlain([row],[column]);
+    assert.ok(plain.includes(enSummary));
+    const preview=ctx.mailTopicTablePreviewHtml([row],[column]);
+    assert.ok(preview.includes(enSummary));
+    const body=await ctx.prepareEmailTopicTableContent([row],[column]);
+    assert.ok(body.html.includes(enSummary));
+    assert.ok(body.plain.includes(enSummary));
+    assert.doesNotMatch(body.html,/Enzim|Dispers/);
+  }
+  assert.equal(row.fabric,raw,'raw PLM fabric must remain unchanged');
+  assert.equal(row['Fabric (PLM)'],raw,'CP raw PLM fabric must remain unchanged');
+  ctx.appLang='tr';
+  assert.equal(ctx.prepareEmailTopicCell(row,collectionColumn).value,fabricCards.displayText(raw,cards,'tr'));
+  assert.equal(ctx.prepareEmailTopicCell({fabric:'Unmapped fabric'},collectionColumn).value,'Unmapped fabric');
+  assert.equal(ctx.prepareEmailTopicCell(row,{k:'modelKod',sourceKind:'collection'}).display,'DEMO');
+
+  const workbook=between('async function prepareEmailBuildTopicTableWorkbook(', 'function prepareEmailWorkbookFileEntry(');
+  assert.match(workbook,/const out=prepareEmailTopicCell\\(row,column\\)/);
+  assert.match(workbook,/cell.value=out.value/);
 });
 
 test('task-specific pricing opens the shared editor and uses its selections for exactly one optional workbook and table',()=>{
