@@ -8,12 +8,13 @@ import tempfile
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-ARCHIVE = ROOT / "dist" / "BuyerLog-7.0.293-MiniPatch-Guncel-20261022-R3.zip"
+ARCHIVE = ROOT / "dist" / "BuyerLog-7.0.293-MiniPatch-Guncel-20261022-R4.zip"
 BASE = "6501210b7faf051e4d8f2997dd0d48f0c9b64647"
 PREVIOUS = "d6149bcb440530a20c30adecf201d1d989afd507"
 PREVIOUS2 = "e54ba4eb8dfcc677907ed023955c7490de15fcd8"
 PREVIOUS3 = "920082a0c970a5c31d95627dc5cdb5e82c15ef71"
-HEAD = "de123d59d39464e296ea9b535d652920173217a5"
+PREVIOUS4 = "de123d59d39464e296ea9b535d652920173217a5"
+HEAD = "ae0e375ed577ff3d47d796dbd60f5575afd260e7"
 
 def sha(b):
     return hashlib.sha256(b).hexdigest()
@@ -49,7 +50,8 @@ with tempfile.TemporaryDirectory() as td:
 
     for stage, ref in [("clean-7293", BASE), ("previous-mini-patch", PREVIOUS),
                        ("22-oct-R2-prior-patch", PREVIOUS2),
-                       ("latest-prior-R2", PREVIOUS3)]:
+                       ("r2-prior", PREVIOUS3),
+                       ("r3-prior", PREVIOUS4)]:
         installation = tmp / stage
         installation.mkdir(parents=True, exist_ok=True)
         core = installation / "resources" / "app"
