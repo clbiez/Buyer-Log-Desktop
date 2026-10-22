@@ -81,7 +81,13 @@ for row in status_rows:
     else:
         raise RuntimeError(f"unsupported change: {status} {name}")
     seen = {v["before_sha256"] for v in record["variants"]}
-    for ref in PREVIOUS_PATCHES:
+    # Every prior published main commit is supported: path history includes
+    # only commits where this file actually changed, avoiding O(commits*files)
+    # expensive diffs and keeping future hotfix upgrades maintenance-free.
+    history = git("log", "--first-parent", "--format=%H",
+                  f"{BASE}..{HEAD}", "--", name).decode().splitlines()
+    candidate_refs = list(dict.fromkeys([*PREVIOUS_PATCHES, *history]))
+    for ref in candidate_refs:
         if subprocess.run(["git", "cat-file", "-e", f"{ref}:{name}"], cwd=ROOT,
                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
             continue
