@@ -45,13 +45,13 @@
 .bpaPlanPill{padding:2px 8px;background:var(--acc-bg);color:var(--acc-ink);font-weight:650}
 .bpaHero{display:grid;grid-template-columns:230px 1fr;gap:12px;margin-bottom:12px}
 .bpaRing{position:relative;display:grid;justify-items:center;align-content:center;gap:6px;padding:14px;border:1px solid var(--line);background:linear-gradient(160deg,var(--acc-bg),var(--card) 70%)}
-.bpaRing svg{width:132px;height:132px}
+.bpaRing svg{grid-area:1/1;width:132px;height:132px}
 .bpaRingTrack{fill:none;stroke:var(--line);stroke-width:9}
 .bpaRingValue{fill:none;stroke:var(--green);stroke-width:9;stroke-linecap:butt;transition:stroke-dasharray .6s var(--ease)}
-.bpaRingText{position:absolute;top:14px;height:132px;display:grid;place-content:center;text-align:center}
+.bpaRingText{grid-area:1/1;align-self:stretch;justify-self:stretch;display:grid;place-content:center;text-align:center;pointer-events:none}
 .bpaRingText b{font:700 var(--fs-2xl)/1 var(--head);letter-spacing:-.01em;color:var(--ink)}
 .bpaRingText span{font-size:var(--fs-xs);color:var(--ink2);margin-top:3px}
-.bpaRingSub{font-size:var(--fs-sm);color:var(--ink2);display:flex;align-items:center;gap:5px}
+.bpaRingSub{grid-area:2/1;font-size:var(--fs-sm);color:var(--ink2);display:flex;align-items:center;gap:5px}
 .bpaTiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .bpaTile{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:11px 12px 10px;border:1px solid var(--line);border-top:3px solid var(--tile,var(--line2));background:var(--card);color:var(--ink);text-align:left;font:inherit;cursor:pointer;transition:transform .15s var(--ease),box-shadow .15s var(--ease)}
 .bpaTile:hover{transform:translateY(-1px);box-shadow:var(--shadow-2)}
