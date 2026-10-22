@@ -1,0 +1,104 @@
+name: Buyer Log AUTO Manual Patch Publisher
+on:
+  push:
+    branches: [main, tools/auto-offline-hotfix-7293-20261022]
+    paths:
+      - 'resources/app/public/**'
+      - 'resources/app/server/**'
+      - 'scripts/mini_patch_builder.py'
+      - 'scripts/mini_patch_installer.ps1'
+      - 'scripts/mini_patch_ci.py'
+      - 'scripts/BuyerLog-OtoPatch.ps1'
+      - 'scripts/BuyerLog-OtoPatch.cmd'
+      - '.github/workflows/buyerlog-auto-manual-patch.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: buyerlog-auto-manual-patch
+  cancel-in-progress: true
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Build mini patch from pinned 7.0.293 source
+        shell: pwsh
+        run: python scripts/mini_patch_builder.py
+      - name: Test apply, compatibility and rollback on Windows
+        shell: pwsh
+        run: python scripts/mini_patch_ci.py
+      - name: Save verified ZIP and index
+        uses: actions/upload-artifact@v4
+        with:
+          name: buyerlog-auto-manual-patch-7293
+          path: |
+            dist/BuyerLog-7.0.293-MiniPatch-*.zip
+            dist/mini-patch-latest.json
+          if-no-files-found: error
+          retention-days: 7
+  publish-public-download:
+    if: github.ref == 'refs/heads/main'
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Download Windows-verified ZIP and index
+        uses: actions/download-artifact@v4
+        with:
+          name: buyerlog-auto-manual-patch-7293
+          path: dist
+      - name: Verify ZIP and commit identity
+        shell: bash
+        env:
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 - <<'PY'
+          import hashlib,json,os,pathlib
+          index=json.loads(pathlib.Path('dist/mini-patch-latest.json').read_text())
+          file=pathlib.Path('dist')/index['asset']
+          assert index['target_commit']==os.environ['HEAD_SHA']
+          assert index['base_version']=='7.0.293'
+          assert file.exists() and file.stat().st_size==index['size']
+          assert hashlib.sha256(file.read_bytes()).hexdigest()==index['sha256']
+          print('SHA256/commit verified:',file)
+          PY
+      - name: Publish to public non-STABLE prerelease channel
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          RELEASE_REPO: clbiez/Buyer-Log-Releases
+        run: |
+          set -euo pipefail
+          TAG="minipatch-v7.0.293"
+          ASSET="$(python3 -c "import json;print(json.load(open('dist/mini-patch-latest.json'))['asset'])")"
+          if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
+            gh release create "$TAG" --repo "$RELEASE_REPO" --title "Buyer Log 7.0.293 unofficial mini patches" --notes "Manual cumulative hotfix channel. This is not a signed STABLE update. Official updater, version and user data are unchanged." --prerelease --latest=false
+          fi
+          gh release upload "$TAG" "dist/$ASSET" --repo "$RELEASE_REPO" --clobber
+          echo "RELEASE_ASSET=$ASSET" >> "$GITHUB_ENV"
+      - name: Checkout public release repository
+        uses: actions/checkout@v4
+        with:
+          repository: clbiez/Buyer-Log-Releases
+          ref: main
+          token: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+          path: release-repo
+      - name: Publish index only AFTER package was uploaded
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-repo/mini-patch
+          cp dist/mini-patch-latest.json release-repo/mini-patch/latest.json
+          git -C release-repo config user.name "Buyer Log Patch Publisher"
+          git -C release-repo config user.email "buyer-log-patch-bot@users.noreply.github.com"
+          git -C release-repo add mini-patch/latest.json
+          if ! git -C release-repo diff --cached --quiet; then
+            git -C release-repo commit -m "Publish verified Buyer Log patch $RELEASE_ASSET"
+            git -C release-repo push origin HEAD:main
+          fi
