@@ -94,7 +94,7 @@ async function consultAi(ownerId, analysis, options) {
       ambiguousPrintComponents: ambiguous,
     },
     lang: options.language === 'en' ? 'en' : 'tr',
-    reasoningLevel: 'Medium',
+    reasoningLevel: 'High',
   });
   const parsed = extractJsonObject(result && result.text);
   if (!parsed) throw Object.assign(new Error('LCW AI BOM analizi geçerli JSON döndürmedi.'), { code: 'PLM_BOM_AI_INVALID_JSON' });

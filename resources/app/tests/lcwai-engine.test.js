@@ -21,6 +21,18 @@ test('test assessment uses the shared engine with high reasoning',async()=>{
   assert.equal(config.DEFAULT_MODEL,'gpt-6-sol');
 });
 
+test('varsayılan reasoning seviyesi High; seviye verilmeyen çağrı High gider',async()=>{
+  assert.equal(config.DEFAULT_REASONING_LEVEL,'High');
+  assert.equal(config.DEFAULTS.reasoningLevel,'High');
+  assert.equal(config.resolveReasoningLevel(undefined),'High');
+  assert.equal(config.resolveReasoningLevel('bilinmeyen'),'High');
+  assert.equal(config.publicConfig().reasoningLevel,'High');
+  let request;
+  const engine=createLcwAiEngine({auth:{},client:{sendMessage:async(_owner,input)=>{request=input;return {text:'{}',modelKey:config.DEFAULT_MODEL};}}});
+  await engine.ask('demo',{source:'plm-bom',task:'Classify placements'});
+  assert.equal(config.resolveReasoningLevel(request.reasoningLevel),'High');
+});
+
 function makeToken(claims = {}) {
   const enc = value => Buffer.from(JSON.stringify(value)).toString('base64url');
   const payload = { iss: config.KEYCLOAK.issuer, azp: config.KEYCLOAK.clientId, typ: 'Bearer', exp: Math.floor(Date.now() / 1000) + 300, sub: 'user-1', ...claims };

@@ -42,7 +42,7 @@ const MODELS = Object.freeze([
 ]);
 const DEFAULT_MODEL = MODELS[0].key;
 const REASONING_LEVELS = Object.freeze(['Low', 'Medium', 'High']);
-const DEFAULT_REASONING_LEVEL = 'Medium';
+const DEFAULT_REASONING_LEVEL = 'High';
 const SOURCE_DEFAULTS = Object.freeze({
   'test-report-assess': Object.freeze({ reasoningLevel: 'High' }),
 });
