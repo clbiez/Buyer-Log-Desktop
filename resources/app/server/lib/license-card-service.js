@@ -92,7 +92,7 @@ function createLicenseCardService(deps){
    let change;
    const saved=await mutate(async lease=>{
      const guard=()=>{assertAuthority?.();};guard();const current=load(),result=compute(current);
-     change={cards:result.cards,rulesChanged:false,initialized:cards.stateOf(result.overrides).initialized,lastImportedAt:cards.stateOf(result.overrides).lastImportedAt,actorId:profile.id,...(result.stageTemplates?{stageTemplates:result.stageTemplates}:{})};
+     change={cards:result.cards,rulesChanged:Boolean(result.rulesChanged),...(result.licensorMerges?{licensorMerges:result.licensorMerges}:{}),initialized:cards.stateOf(result.overrides).initialized,lastImportedAt:cards.stateOf(result.overrides).lastImportedAt,actorId:profile.id,...(result.stageTemplates?{stageTemplates:result.stageTemplates}:{})};
      const staged=deps.publish?sync.stageChange(result.overrides,change):result.overrides,actual=deps.saveOverrides(staged,Number(current._revision)||0,{...lease,assertAuthority:guard});await lease.commit();
      if(sectionSnapshot(load()).fingerprint!==sectionSnapshot(actual).fingerprint)throw error('OFFICE_RESOURCE_VERIFY_FAILED',409);return actual;
    });
@@ -100,7 +100,8 @@ function createLicenseCardService(deps){
  }
  const setLicensor=(profile,id,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensor(current,id,body);return {overrides:r.overrides,cards:[r.card]};},opts);
  const saveTemplate=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.saveTemplate(current,body);return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
+ const setLicensorMerge=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensorMerge(current,body);return {overrides:r.overrides,cards:[],rulesChanged:true,licensorMerges:cards.licensorMergesOf(r.overrides)};},opts);
  const deleteTemplate=(profile,id,body,opts)=>writeCards(profile,current=>{const r=cards.deleteTemplate(current,id,body);return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
- return {read,discovery,discover,updatePreview,update,updateAtlasBatch,setLicensor,saveTemplate,deleteTemplate,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
+ return {read,discovery,discover,updatePreview,update,updateAtlasBatch,setLicensor,setLicensorMerge,saveTemplate,deleteTemplate,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
 }
 module.exports={createLicenseCardService,sectionSnapshot};

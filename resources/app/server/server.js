@@ -8130,6 +8130,7 @@ async function buildResponse(currentUser = null, options = {}) {
     modelRefresh: sourceFilterRequired ? null : (active.modelRefresh || null),
     lastRefreshResult: active.lastRefreshResult || null,
     pricingRules: Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [],
+    licensorMerges: { split: require('./lib/license-cards').licensorMergesOf(overrides).split },
     transitRules: Array.isArray(overrides.transitRules) ? overrides.transitRules : [],
     nonDtrManufacturers: BLBusinessRules.normalizeManufacturerList(overrides.nonDtrManufacturers),
     landedMultipliers: overrides.landedMultipliers || { tr: 1.05, overseas: 1.11 },
@@ -10108,7 +10109,7 @@ app.get('/api/pricing-rules', (req, res) => {
   const ov = loadOverrides();
   const revision = Number(ov._revisions && ov._revisions.pricingRules) || 0;
   res.set('ETag', `"${revision}"`);
-  res.json({ rules: Array.isArray(ov.pricingRules) ? ov.pricingRules : [], revision });
+  res.json({ rules: Array.isArray(ov.pricingRules) ? ov.pricingRules : [], revision, licensorMerges: { split: require('./lib/license-cards').licensorMergesOf(ov).split } });
 });
 app.put('/api/pricing-rules', userAccess.requireArea('source'), userAccess.requirePermission('manageBusinessRules'), async (req, res) => {
   try {

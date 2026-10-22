@@ -11125,6 +11125,7 @@ function normalizeSuppFobMeta(meta){
   const source = meta.source==='rule' ? 'rule' : 'manual';
   const out={source};
   if(meta.ruleId!=null) out.ruleId=String(meta.ruleId);
+  if(meta.origin) out.origin=String(meta.origin).slice(0,40);
   ['opdStart','opdEnd','countryGroup','licensor','license'].forEach(k=>{ if(meta[k]!=null && norm(meta[k])) out[k]=norm(meta[k]); });
   if(!out.licensor&&meta.manufacturer!=null&&norm(meta.manufacturer))out.licensor=norm(meta.manufacturer);
   const seasons=normalizePricingRuleSeasons(meta.seasons!=null?meta.seasons:meta.season); if(seasons.length) out.seasons=seasons;
@@ -11217,10 +11218,33 @@ function propagateOrderPricingFields(sourceRow, changes={}){
     });
   });
 }
+/* Supp. FOB imported from a CP update file (or stored without a source) is not a
+   deliberate manual price: the current License Royalty contract replaces it
+   automatically, everywhere; without a matching contract the imported value stays. */
+function importedSuppFob(row){
+  if(!row)return null;
+  const own=normalizeSuppFobMeta(row._suppFobMeta);
+  if(own&&own.source==='manual'&&own.origin!=='cpupdate')return null;
+  // Server rows carry the imported value; a row loaded with cpupdate meta is its own source.
+  if(row._suppFobImported&&typeof row._suppFobImported==='object')return row._suppFobImported;
+  if(own&&own.origin==='cpupdate'){row._suppFobImported={value:row['Supp. FOB'],meta:own};return row._suppFobImported;}
+  const oc=row['Order Code'],key=lineKeyOfRow(row)||oc,map=state.overrides.suppfobmap||{},metas=state.overrides.suppfobmetamap||{};
+  const at=Object.prototype.hasOwnProperty.call(map,key)?key:(oc!=null&&Object.prototype.hasOwnProperty.call(map,oc)?oc:null);
+  if(at==null)return null;
+  const meta=normalizeSuppFobMeta(metas[at]);
+  if(meta&&!(meta.source==='manual'&&meta.origin==='cpupdate'))return null;
+  return {value:map[at],meta:meta||{source:'manual',origin:'cpupdate'}};
+}
 function recalcSuppFobForRow(row){
-  if(!row||hasManualSuppFob(row)) return false;
+  if(!row) return false;
+  const imported=importedSuppFob(row);
+  if(!imported&&hasManualSuppFob(row)) return false;
   const prev=row['Supp. FOB'];
   const priced=calculateSuppFobFromRule(row['FOB ($)'],row.OPD,row.Country,row.Season,row.Licensor,row.License);
+  if(imported&&priced.value==null){
+    row['Supp. FOB']=imported.value;row._suppFobRule=null;row._suppFobMeta=imported.meta;row._suppFobOverride=true;row._suppFobManual=true;
+    return !editableValuesEqual(prev,imported.value);
+  }
   const next=priced.value!=null?priced.value:(turknorm(row.Licensor)==='DTR'?(toNum(row['FOB ($)'])??null):null);
   row['Supp. FOB']=next; row._suppFobRule=priced.rule?(priced.rule.id||true):null;
   row._suppFobMeta=automaticSuppFobRuleMeta(priced.rule,false);
@@ -11319,6 +11343,13 @@ async function persistPricingRules(rules,{expectedRevision=state.storeRevisions.
    değiştirilir; bayat/boş yanıt sessizce yok sayılır ve bilinen revizyon
    korunur. Kullanıcının kendi kaydı (persistPricingRules) revizyonu artırdığı
    için create/edit/delete davranışı değişmez. */
+// Licensor name merges (ERMODA ≡ ERMODA UK LTD) decide the royalty fallback match.
+function applyLicensorMerges(value){
+  if(!value||!Array.isArray(value.split))return false;
+  const next={split:value.split.map(String).sort()};
+  if(JSON.stringify(next)===JSON.stringify(state.licensorMerges||{split:[]}))return false;
+  state.licensorMerges=next;return true;
+}
 function applyIncomingPricingRules(rules,revision,{knownRevision=null}={}){
   const current=Number(knownRevision!=null?knownRevision:state.storeRevisions.pricingRules)||0;
   const incomingRevision=Number(revision);
@@ -11342,8 +11373,9 @@ async function refreshPricingRulesFromServer(){
     const res=await fetch(`/api/pricing-rules?_=${Date.now()}`,{cache:'no-store'});
     const data=await res.json().catch(()=>({}));
     if(!res.ok)throw new Error(data.error||res.statusText);
-    const changed=applyIncomingPricingRules(data.rules||[],data.revision);
-    if(!changed)return null;
+    const mergesChanged=applyLicensorMerges(data.licensorMerges);
+    const rulesChanged=applyIncomingPricingRules(data.rules||[],data.revision);
+    if(!rulesChanged&&!mergesChanged)return null;
     return syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
   })().finally(()=>{refreshPricingRulesFromServer.pending=null;});
   return refreshPricingRulesFromServer.pending;
@@ -12503,7 +12535,7 @@ function syncOverridesFromRow(row){
     state.overrides.submap[key]=norm(row['Sub-Manufacturer']);
   }
   if(row._licensorManual===true)state.overrides.licensormap[key]=norm(row.Licensor);
-  if(row._suppFobManual===true){
+  if(row._suppFobManual===true&&!importedSuppFob(row)){
     state.overrides.suppfobmap[key]=(row['Supp. FOB']==null||row['Supp. FOB']==='')?null:Number(row['Supp. FOB']);
     state.overrides.suppfobmetamap=state.overrides.suppfobmetamap||{};
     state.overrides.suppfobmetamap[key]={source:'manual'};
@@ -12594,7 +12626,8 @@ function syncOverrideToServer(orderCode,notes,row){
         const body={...lineIdentity(row),notes,delType:row['Del. Type']||undefined};
         if(turknorm(row.Licensor)!=='DTR')body.subManufacturer=norm(row['Sub-Manufacturer']);
         if(row._licensorManual===true)body.licensor=norm(row.Licensor);
-        if(row._suppFobManual===true){
+        // An imported (CP update) value is not re-sent as a manual price with a note save.
+        if(row._suppFobManual===true&&!importedSuppFob(row)){
           body.suppFob=(row['Supp. FOB']!=null&&row['Supp. FOB']!=='')?Number(row['Supp. FOB']):null;
           body.suppFobMeta={source:'manual'};
         }
@@ -14281,6 +14314,7 @@ async function waitForRefreshJob(expectedJob=null){
     renderAntrepoSourceControl(data);
     renderAsasSourceControl(data);
     renderLflSourceControl(data);
+    applyLicensorMerges(data.licensorMerges);
     const incomingPricingRules=data.pricingRules || state.overrides.pricingRules || [];
     applyIncomingPricingRules(incomingPricingRules,data.storeRevisions&&data.storeRevisions.pricingRules,{knownRevision:knownPricingRulesRevision});
     const incomingTransitRules=data.transitRules || state.overrides.transitRules || [];
@@ -28233,7 +28267,8 @@ window.BLLicenseDataBridge={
   },
   async rulesChanged(data){
     if(Array.isArray(data?.pricingRules)){
-      if(applyIncomingPricingRules(data.pricingRules,data.pricingRevision))syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
+      const mergesChanged=applyLicensorMerges(data.licensorMerges);
+      if(applyIncomingPricingRules(data.pricingRules,data.pricingRevision)||mergesChanged)syncPricingRulesToAllLoadedViews({saveCollection:true,renderCollection:true});
     }else if(Number(data&&data.pricingRevision)!==Number(state.storeRevisions.pricingRules||0))await refreshPricingRulesFromServer();
   },
 };
