@@ -16,10 +16,11 @@ import zipfile
 
 BASE = "6501210b7faf051e4d8f2997dd0d48f0c9b64647"
 PREVIOUS_PATCHES = ("d6149bcb440530a20c30adecf201d1d989afd507",
-                    "e54ba4eb8dfcc677907ed023955c7490de15fcd8")
-HEAD = "920082a0c970a5c31d95627dc5cdb5e82c15ef71"
+                    "e54ba4eb8dfcc677907ed023955c7490de15fcd8",
+                    "920082a0c970a5c31d95627dc5cdb5e82c15ef71")
+HEAD = "de123d59d39464e296ea9b535d652920173217a5"
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "dist" / "BuyerLog-7.0.293-MiniPatch-Son-Guncel-20261022-R2.zip"
+OUTPUT = ROOT / "dist" / "BuyerLog-7.0.293-MiniPatch-Guncel-20261022-R3.zip"
 
 def git(*args: str) -> bytes:
     return subprocess.check_output(["git", *args], cwd=ROOT)
@@ -88,8 +89,8 @@ for row in status_rows:
             })
             seen.add(digest(older))
     entries.append(record)
-if len(entries) != 50:
-    raise RuntimeError(f"expected 50 application files, got {len(entries)}")
+if len(entries) != 52:
+    raise RuntimeError(f"expected 52 application files, got {len(entries)}")
 
 manifest = {
     "schema": 2,
@@ -105,12 +106,12 @@ manifest = {
 }
 payload = json.dumps(manifest, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
 guide = """BUYER LOG 7.0.293 SONRASI MINI PATCH - GUNCEL 22.10.2026
-HEDEF COMMIT: 920082a0c970a5c31d95627dc5cdb5e82c15ef71
+HEDEF COMMIT: de123d59d39464e296ea9b535d652920173217a5
 
 Bu ZIP internetsiz calisir. GitHub, Python, Node.js veya Git istemez.
 7.0.293 STABLE veya onceki 21.10.2026 ve 22.10.2026 mini patch'li
 7.0.293 uzerine en guncel runtime degisikliklerini uygular.
-50 uygulama dosyasi (46 degisen dosya + 4 yeni JS dosyasi).
+52 uygulama dosyasi (48 degisen dosya + 4 yeni JS dosyasi).
 Kod/yayin kanali/surum/updater/launcher/konfigurasyon bozulmaz.
 
 1) ZIP'i bir klasore cikarin, BuyerLog.exe'yi tamamen kapatin.
