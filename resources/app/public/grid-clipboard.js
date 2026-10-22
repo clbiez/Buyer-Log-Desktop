@@ -179,6 +179,86 @@
     return result!==false;
   }
 
+  function parseClipboardText(text){
+    const lines=identity(text).replace(/\r\n?/g,'\n').split('\n');
+    if(lines.length>1&&lines[lines.length-1]==='')lines.pop();
+    return lines.map(line=>line.split('\t'));
+  }
+  function isMultiCellText(text){
+    const matrix=parseClipboardText(text);
+    return matrix.length>1||(matrix[0]||[]).length>1;
+  }
+
+  // Kopyalanan matrisi seçili aralığa yerleştirir (Excel): tek değer seçimin
+  // tamamını doldurur, seçim kopyanın tam katıysa desen tekrarlanır; aksi
+  // hâlde sol üst hücreden kopya boyutunca yapıştırılır. Düzenlenemeyen veya
+  // değeri geçersiz hücre atlanır, tablo dışına taşan kısım sayılır.
+  function planPaste(options){
+    const rows=Array.isArray(options?.rows)?options.rows:[];
+    const columns=Array.isArray(options?.columns)?options.columns:[];
+    const range=options?.range;
+    const matrix=parseClipboardText(options?.text);
+    const height=matrix.length,width=matrix.reduce((max,line)=>Math.max(max,line.length),0);
+    const plan={ops:[],readonly:0,invalid:0,skipped:0,mode:'',source:{rows:height,columns:width},target:null};
+    if(!range||!height||!width)return plan;
+    const selectionRows=range.endRow-range.startRow+1,selectionColumns=range.endColumn-range.startColumn+1;
+    let outRows=height,outColumns=width,mode='anchor';
+    if(selectionRows*selectionColumns>1){
+      if(height===1&&width===1){outRows=selectionRows;outColumns=selectionColumns;mode='fill';}
+      else if(selectionRows%height===0&&selectionColumns%width===0){outRows=selectionRows;outColumns=selectionColumns;mode=selectionRows===height&&selectionColumns===width?'exact':'tile';}
+    }
+    plan.mode=mode;
+    for(let r=0;r<outRows;r++){
+      for(let c=0;c<outColumns;c++){
+        const rowIndex=range.startRow+r,columnIndex=range.startColumn+c;
+        const row=rows[rowIndex],column=columns[columnIndex];
+        if(!row||!column){plan.skipped++;continue;}
+        const target=typeof options.target==='function'?options.target(row,column):null;
+        if(!target){plan.readonly++;continue;}
+        const raw=matrix[r%height][c%width]??'';
+        const parsed=typeof options.parse==='function'?options.parse(raw,target,row,column):{ok:true,value:raw};
+        if(!parsed||parsed.ok===false){plan.invalid++;continue;}
+        plan.ops.push({row,column,rowIndex,columnIndex,target,value:parsed.value});
+      }
+    }
+    plan.target={
+      startRow:range.startRow,endRow:Math.min(rows.length-1,range.startRow+outRows-1),
+      startColumn:range.startColumn,endColumn:Math.min(columns.length-1,range.startColumn+outColumns-1),
+    };
+    return plan;
+  }
+
+  async function pasteEntry(entry,event,text){
+    if(typeof entry.config.applyPaste!=='function')return false;
+    const data=currentRange(entry);
+    if(!data.range)return false;
+    const plan=planPaste({
+      text,rows:data.rows,columns:data.columns,range:data.range,
+      target:entry.config.pasteTarget,parse:entry.config.pasteValue,
+    });
+    // Düzenlenecek hücre yoksa panodaki görsel, görsel hücresine yapıştırma
+    // akışına (ör. CP görsel sütunu) bırakılır.
+    if(!plan.ops.length&&clipboardHasImage(event))return false;
+    event?.preventDefault?.();
+    event?.stopImmediatePropagation?.();
+    const result=await entry.config.applyPaste(plan,data.range,entry.state);
+    // Excel gibi: yapıştırılan alan seçili kalır.
+    const target=plan.target;
+    const first=target&&cellAt(entry,target.startRow,target.startColumn);
+    const last=target&&cellAt(entry,target.endRow,target.endColumn);
+    if(first&&last){entry.state.selectionAnchor=entry.state.activeCell=first;entry.state.selectionFocus=last;}
+    afterRender(entry.tableId);
+    root.document?.getElementById?.(entry.tableId)?.focus?.({preventScroll:true});
+    return result!==false&&result?.ok!==false;
+  }
+
+  function clipboardText(event){
+    try{return identity(event?.clipboardData?.getData?.('text/plain'));}catch{return '';}
+  }
+  function clipboardHasImage(event){
+    try{return Array.from(event?.clipboardData?.items||[]).some(item=>String(item?.type||'').startsWith('image/'));}catch{return false;}
+  }
+
   function cellAt(entry,rowIndex,columnIndex){
     const {table,rows,columns}=currentData(entry);
     if(!table||!rows[rowIndex]||!columns[columnIndex])return null;
@@ -236,6 +316,26 @@
       if(td)setFocus(dragging.entry,cellIdentity(td),{extend:true,focus:false});
     },true);
     root.document.addEventListener('pointerup',()=>{dragging=null;},true);
+    // Ctrl+V: yalnız applyPaste tanımlayan tablolar (ör. CP) yapıştırma alır.
+    root.document.addEventListener('paste',event=>{
+      const text=clipboardText(event);if(!text)return;
+      const target=event.target;
+      if(nativeEditingTarget(target)){
+        // Hücre düzenleyicisinde tek değer yerel olarak yapıştırılır; sekme veya
+        // satır sonu içeren (Excel'den çoklu hücre) metin bu hücreden başlayarak dağıtılır.
+        if(!isMultiCellText(text))return;
+        const td=target.closest?.('tbody td[data-key]'),entry=tableEntryFromCell(td);
+        if(!entry||!entryIsActive(entry)||typeof entry.config.applyPaste!=='function')return;
+        const cell=cellIdentity(td);if(!cell)return;
+        setFocus(entry,cell,{focus:false});
+        void pasteEntry(entry,event,text);return;
+      }
+      const entry=activeEntry();
+      if(!entry||typeof entry.config.applyPaste!=='function')return;
+      const table=root.document.getElementById(entry.tableId);
+      if(target!==table&&!table?.contains?.(target)&&target!==root.document.body)return;
+      void pasteEntry(entry,event,text);
+    },true);
     root.document.addEventListener('keydown',event=>{
       if(nativeEditingTarget(event.target))return;
       const nativeSelection=root.getSelection?.();
@@ -297,5 +397,5 @@
   function copyActive(event,options){const entry=activeEntry();return entry?copyEntry(entry,event,options):false;}
   function state(tableId){return tables.get(tableId)?.state||null;}
 
-  return {resolveRange,buildMatrix,selectionSize,serialize,createDiagnostics,diagnostics,nativeEditingTarget,register,afterRender,clear,copyActive,selectAll,state,prepareContextMenu};
+  return {resolveRange,buildMatrix,selectionSize,serialize,createDiagnostics,diagnostics,nativeEditingTarget,parseClipboardText,isMultiCellText,planPaste,register,afterRender,clear,copyActive,selectAll,state,prepareContextMenu};
 });

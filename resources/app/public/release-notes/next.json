@@ -677,6 +677,35 @@
           "en": "Aligned route columns"
         }
       }
+    },
+    {
+      "id": "cp-multi-cell-paste",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Hücreler arası çoklu yapıştırma",
+        "en": "Multi-cell paste"
+      },
+      "body": {
+        "tr": "Elle girilen CP alanlarına (Supp. FOB, Sub-MFR, Licensor, Ex-Factory/Retail/In-Store tarihleri, Del. Type, Importance ve eklenen not sütunları) Excel veya CP'den kopyalanan hücreler Ctrl+V ile topluca yapıştırılır. Tek değer seçili aralığı doldurur, kopyalanan sütun seçili hücreden aşağı dağılır. Hesaplanan, salt-okunur ve yetkiniz olmayan hücreler atlanır; tüm yapıştırma tek geri alma ile geri döner.",
+        "en": "Cells copied from Excel or CP can be pasted in bulk with Ctrl+V into manually entered CP fields (Supp. FOB, Sub-MFR, Licensor, Ex-Factory/Retail/In-Store dates, Del. Type, Importance and custom note columns). A single value fills the selected range and a copied column spreads down from the selected cell. Calculated, read-only and restricted cells are skipped; one undo reverts the whole paste."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-multi-cell-paste.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: Excel'den yapıştırılan altı Supp. FOB değeri seçili aralıkta, demo veriler",
+          "en": "Real Buyer Log CP Tracker: six Supp. FOB values pasted from Excel in the selected range, demo data"
+        },
+        "caption": {
+          "tr": "Excel sütununu Supp. FOB hücresinden aşağı tek seferde yapıştırma",
+          "en": "Paste an Excel column down from a Supp. FOB cell in one go"
+        }
+      }
     }
   ]
 }
