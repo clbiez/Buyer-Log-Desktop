@@ -124,10 +124,10 @@ function Safe-Target([string] $Core, [string] $Relative, [bool] $AllowMissing = 
 function Main {
   $manifest = Read-Json (Join-Path $PatchFolder 'patch-manifest.json')
   if ([int]$manifest.schema -ne 2 -or [string]$manifest.base_version -ne $ExpectedVersion -or
-      [string]$manifest.target_commit -ne '920082a0c970a5c31d95627dc5cdb5e82c15ef71') {
+      [string]$manifest.target_commit -ne 'de123d59d39464e296ea9b535d652920173217a5') {
     throw 'Patch manifesti surum veya sema acisindan uyumsuz.'
   }
-  if (@($manifest.files).Count -ne 50) { throw 'Patch manifesti eksik / bozuk (50 dosya bekleniyor).' }
+  if (@($manifest.files).Count -ne 52) { throw 'Patch manifesti eksik / bozuk (52 dosya bekleniyor).' }
   $root = Find-Install
   $core = Active-Core $root
   Write-Host ''
