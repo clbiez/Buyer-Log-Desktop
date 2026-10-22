@@ -23,10 +23,31 @@ its start date is edited, the closed period's end follows so no OPD range is lef
 Supplier export contains only the selected rows. Cards without a map export as a plain entry;
 licenses switched off in the map (“Include in supplier atlas”) are skipped and reported.
 
+Supplier file: each license is a native `<details class="lic">` drawer (map opens in place, no
+jump links; animated with `::details-content`, printed open). Route rows use fixed columns
+(method 180px · recipient · tags 200px right-aligned) so every step lines up.
+
+## Licensor and stage templates
+
+- `PUT /api/license-cards/:id/licensor` `{editToken, licensor, mode, copy}` — default mode fills an
+  **empty** licensor in place (same card id); `mode:"add"` creates a separate license × licensor
+  row (optionally copying profile, image and map). A set licensor is never renamed: peers identify
+  a card by its pair and reject a changed one (`license-card-sync`).
+- `POST /api/license-cards/stage-templates` `{template, expectedUpdatedAt}` and
+  `DELETE /api/license-cards/stage-templates/:templateId` `{expectedUpdatedAt}` — templates live in
+  `overrides.licenseStageTemplates`; a stage links via `templateId`. Saving re-applies the template
+  to every linked stage (id and on/off stay; used addresses and the `tpl-<id>` guide image travel);
+  deleting unlinks and keeps the step. Linked steps are read-only in the map editor.
+- Peers receive templates as the single record `license-card:stage-templates` (allowed in
+  `shared-sync-policy.js`, newest `updatedAt` wins); linked stage content arrives as card profiles.
+- `POST /api/license-cards/refresh` returns `added`, `resolved`, `discovered`; the page reports them.
+
 ## Verification
 
 Run `node scripts/license-cards-ui-acceptance.js` from `resources/app` (Playwright + Chromium;
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH`, `BUYER_LOG_ATLAS_ARTIFACT_ROOT`, `BUYER_LOG_ATLAS_TEST_PORT`).
 It starts its own server on isolated demo data and checks: one row per licensor, inline save and
 validation, new period without gap, map save preserving existing fields, supplier file privacy,
-licensor filter, TR/EN, dark theme and mobile.
+manual licensor (assign + another row), ASAS refresh feedback, stage template propagation to
+two licenses, supplier drawer toggling and route alignment, licensor filter, TR/EN, dark theme
+and mobile.

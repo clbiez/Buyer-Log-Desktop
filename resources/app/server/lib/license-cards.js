@@ -89,6 +89,9 @@ function visibleCatalogue(overrides) {
 }
 function appendDiscovered(overrides, pairs, now = new Date().toISOString()) {
   const state = clone(stateOf(overrides)), known = new Set(state.items.map(card => pairKey(card.license, card.licensor)));
+  // A licensor typed manually keeps the card's licensor-less id; ASAS still reporting the
+  // license without a licensor must not recreate a second card with that id.
+  const ids = new Set(state.items.map(card => card.id));
   const assigned = new Map();
   for (const pair of pairs.filter(pair => pair.licensor)) {
     const key = canonical.token(pair.license); if (!assigned.has(key)) assigned.set(key, []);
@@ -106,8 +109,8 @@ function appendDiscovered(overrides, pairs, now = new Date().toISOString()) {
   let added = 0;
   for (const pair of pairs) {
     const key = pairKey(pair.license, pair.licensor);
-    if (known.has(key)) continue;
-    known.add(key); added++;
+    if (known.has(key) || ids.has(cardId(pair.license, pair.licensor))) continue;
+    known.add(key); ids.add(cardId(pair.license, pair.licensor)); added++;
     state.items.push({ id: cardId(pair.license, pair.licensor), license: pair.license, licensor: pair.licensor,
       ...Object.fromEntries(Object.keys(PROFILE_LIMITS).map(field => [field, ''])), symbolDataUrl: '', createdAt: now, updatedAt: now });
   }
@@ -245,7 +248,9 @@ function updateCard(overrides, id, body, deps, now = new Date().toISOString()) {
     }
   } else assertRevision(body.revision != null ? body.revision : body.expectedRevision, revisionOf(overrides, 'licenseCards'), 'licenseCards');
   const profile = body.profile == null ? Object.fromEntries(Object.entries(body).filter(([key]) => !['revision','expectedRevision','pricingRevision','expectedPricingRevision','rules','editToken'].includes(key))) : body.profile;
-  state.items[index] = { ...state.items[index], ...normalizeProfile(profile), updatedAt: now };
+  const normalized = normalizeProfile(profile);
+  if (normalized.processAtlas) normalized.processAtlas = linkTemplates(normalized.processAtlas, templatesOf(overrides).items);
+  state.items[index] = { ...state.items[index], ...normalized, updatedAt: now };
   const next = { ...overrides, licenseCards: state, _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
   let rulesChanged = false;
   if (Object.hasOwn(body, 'rules')) {
@@ -257,13 +262,155 @@ function updateCard(overrides, id, body, deps, now = new Date().toISOString()) {
   }
   return { overrides: next, card: state.items[index], rulesChanged };
 }
+// Manual licensor. A licensor-less card may be assigned one (its stable id is kept);
+// any card may get a sibling row for another licensor, optionally copying its details
+// and map. Renaming an existing licensor is not offered: peers identify a card by its
+// license × licensor pair and reject a changed pair (license-card-sync).
+function setLicensor(overrides, id, body, now = new Date().toISOString()) {
+  const state = clone(stateOf(overrides));
+  if (!state.items.some(card => card.id === id)) { const virtual = catalogue(overrides).find(card => card.id === id); if (virtual) state.items.push(virtual); }
+  const index = state.items.findIndex(card => card.id === id);
+  if (index < 0) fail('LICENSE_CARD_NOT_FOUND', 'Lisans kartı bulunamadı. / License card not found.', 404);
+  const card = state.items[index];
+  if (typeof body?.editToken !== 'string' || body.editToken !== editToken(card, overrides.pricingRules || [])) fail('REVISION_CONFLICT', 'Açılan kart değişti; güncel kaydı açın. / The opened card changed; open the current record.', 409);
+  const licensor = text(body.licensor);
+  if (!licensor || licensor.length > 200) fail('LICENSE_LICENSOR_INVALID', 'Geçerli bir lisansör girin. / Enter a valid licensor.');
+  if (state.items.some(item => pairKey(item.license, item.licensor) === pairKey(card.license, licensor))) fail('LICENSE_LICENSOR_EXISTS', 'Bu lisans için bu lisansörün satırı zaten var. / This license already has a row for this licensor.', 409);
+  let result;
+  if (body.mode === 'add') {
+    result = { id: cardId(card.license, licensor), license: card.license, licensor, ...Object.fromEntries(Object.keys(PROFILE_LIMITS).map(field => [field, ''])), symbolDataUrl: '', createdAt: now, updatedAt: now };
+    if (body.copy === true) {
+      for (const field of [...Object.keys(PROFILE_LIMITS), 'symbolDataUrl']) result[field] = card[field] || '';
+      if (card.processAtlas) { result.processAtlas = clone(card.processAtlas); result.processAtlas.license.agency = licensor; result.processAtlas = atlas.normalize(result.processAtlas); }
+    }
+    state.items.push(result);
+  } else {
+    if (text(card.licensor)) fail('LICENSE_LICENSOR_LOCKED', 'Lisansörü olan satır değiştirilemez; başka lisansör için satır ekleyin. / A row with a licensor cannot be renamed; add a row for the other licensor.');
+    card.licensor = licensor; card.updatedAt = now;
+    if (card.processAtlas?.license) card.processAtlas = atlas.normalize({ ...clone(card.processAtlas), license: { ...card.processAtlas.license, agency: licensor } });
+    result = card;
+  }
+  const next = { ...overrides, licenseCards: state, _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
+  return { overrides: next, card: result };
+}
+
+/* ---- Stage templates: one shared definition, applied to every linked stage. ---- */
+const MAX_TEMPLATES = 60;
+const TEMPLATE_VISUAL = id => 'tpl-' + id;
+const TEMPLATE_ADDRESS = templateId => id => `tpl-${templateId}-${id}`;
+function templatesOf(overrides) {
+  const t = overrides && overrides.licenseStageTemplates;
+  const deleted = t && t.deleted && typeof t.deleted === 'object' && !Array.isArray(t.deleted) ? t.deleted : {};
+  return t && Array.isArray(t.items) ? { items: t.items, updatedAt: t.updatedAt || '', deleted } : { items: [], updatedAt: '', deleted };
+}
+function normalizeTemplate(raw, now) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) fail('LICENSE_TEMPLATE_INVALID', 'Geçerli bir aşama taslağı gerekli. / A valid stage template is required.');
+  const id = text(raw.id) || 'stage-template-' + crypto.randomUUID(), name = text(raw.name);
+  if (id.length > 200 || !name || name.length > 120) fail('LICENSE_TEMPLATE_INVALID', 'Taslak adı 1–120 karakter olmalı. / Template name must be 1–120 characters.');
+  let normalized;
+  try { normalized = atlas.normalizeStage(raw.stage || {}, Array.isArray(raw.addresses) ? raw.addresses : []); }
+  catch (_) { fail('LICENSE_TEMPLATE_INVALID', 'Taslak aşaması geçersiz. / The template stage is invalid.'); }
+  const stage = normalized.stage; delete stage.templateId; delete stage.visualGuideId;
+  const used = new Set((stage.submissions || []).map(route => route.addressId).filter(Boolean));
+  let visual = null;
+  if (raw.visual && raw.visual.data) {
+    const checked = atlas.normalize({ license: { stages: [] }, visualLibrary: [{ id: 'v', name: text(raw.visual.name).slice(0, 200), data: raw.visual.data }] }).visualLibrary[0];
+    visual = { name: checked.name, data: checked.data };
+  }
+  return { id, name, stage, addresses: normalized.addresses.filter(address => used.has(address.id)), visual, updatedAt: now };
+}
+// Template content replaces the stage; its id, on/off state and link stay.
+function applyTemplate(stage, template, processAtlas) {
+  const license = processAtlas.license, own = TEMPLATE_ADDRESS(template.id);
+  const next = { ...clone(template.stage), id: stage.id, enabled: stage.enabled !== false, templateId: template.id };
+  // Template addresses live under their own ids, so a template save never overwrites an
+  // address the license edits for its other steps.
+  next.submissions = (next.submissions || []).map(route => ({ ...route, addressId: route.addressId ? own(route.addressId) : '' }));
+  license.addresses = Array.isArray(license.addresses) ? license.addresses : [];
+  for (const address of template.addresses || []) {
+    const copy = { ...clone(address), id: own(address.id) }, at = license.addresses.findIndex(item => item.id === copy.id);
+    if (at < 0) license.addresses.push(copy); else license.addresses[at] = copy;
+  }
+  processAtlas.visualLibrary = Array.isArray(processAtlas.visualLibrary) ? processAtlas.visualLibrary : [];
+  const visualId = TEMPLATE_VISUAL(template.id), at = processAtlas.visualLibrary.findIndex(item => item.id === visualId);
+  if (template.visual) {
+    const entry = { id: visualId, name: template.visual.name, data: template.visual.data };
+    if (at < 0) processAtlas.visualLibrary.push(entry); else processAtlas.visualLibrary[at] = entry;
+    next.visualGuideId = visualId;
+  } else next.visualGuideId = '';
+  return next;
+}
+function pruneTemplateVisuals(processAtlas) {
+  const used = new Set((processAtlas.license.stages || []).map(stage => stage.visualGuideId).filter(Boolean));
+  processAtlas.visualLibrary = (processAtlas.visualLibrary || []).filter(item => !item.id.startsWith('tpl-') || used.has(item.id));
+  const routed = new Set((processAtlas.license.stages || []).flatMap(stage => (stage.submissions || []).map(route => route.addressId)).filter(Boolean));
+  processAtlas.license.addresses = (processAtlas.license.addresses || []).filter(item => !String(item.id).startsWith('tpl-') || routed.has(item.id));
+}
+// A linked stage always carries its template's current content, whatever the client sent.
+function linkTemplates(processAtlas, templates) {
+  const stages = processAtlas?.license?.stages;
+  if (!Array.isArray(stages) || !stages.some(stage => stage.templateId)) return processAtlas;
+  const next = clone(processAtlas), byId = new Map(templates.map(item => [item.id, item]));
+  next.license.stages = next.license.stages.map(stage => {
+    if (!stage.templateId) return stage;
+    const template = byId.get(stage.templateId);
+    if (template) return applyTemplate(stage, template, next);
+    const local = { ...stage }; delete local.templateId; return local;
+  });
+  pruneTemplateVisuals(next);
+  try { return atlas.normalize(next); }
+  catch (_) { fail('LICENSE_ATLAS_INVALID', 'Harita taslaklarla 2 MB sınırını aşıyor. / The map exceeds 2 MB with its templates.'); }
+}
+// Re-applies (or, for a removed template, unlinks) every stage that uses templateId.
+function propagateTemplate(state, templateId, template, now) {
+  const changed = [];
+  for (const card of state.items) {
+    const stages = card.processAtlas?.license?.stages;
+    if (!Array.isArray(stages) || !stages.some(stage => stage.templateId === templateId)) continue;
+    const next = clone(card.processAtlas);
+    next.license.stages = next.license.stages.map(stage => {
+      if (stage.templateId !== templateId) return stage;
+      if (template) return applyTemplate(stage, template, next);
+      const local = { ...stage }; delete local.templateId; return local;
+    });
+    pruneTemplateVisuals(next);
+    let normalized;
+    try { normalized = atlas.normalize(next); }
+    catch (_) { fail('LICENSE_ATLAS_INVALID', `Taslak ${card.license} haritasını 2 MB sınırının üzerine çıkarıyor. / The template pushes the ${card.license} map over 2 MB.`); }
+    if (JSON.stringify(normalized) !== JSON.stringify(card.processAtlas)) { card.processAtlas = normalized; card.updatedAt = now; changed.push(card); }
+  }
+  return changed;
+}
+function saveTemplate(overrides, body, now = new Date().toISOString()) {
+  const current = templatesOf(overrides), template = normalizeTemplate(body?.template, now);
+  const existing = current.items.find(item => item.id === template.id);
+  if (existing && body.expectedUpdatedAt !== existing.updatedAt) fail('REVISION_CONFLICT', 'Taslak başka biri tarafından değiştirildi; yeniden açın. / The template changed elsewhere; reopen it.', 409);
+  if (!existing && current.items.length >= MAX_TEMPLATES) fail('LICENSE_TEMPLATE_LIMIT', 'En fazla 60 aşama taslağı tutulabilir. / Up to 60 stage templates are kept.');
+  if (current.items.some(item => item.id !== template.id && text(item.name).toLocaleLowerCase('tr') === template.name.toLocaleLowerCase('tr'))) fail('LICENSE_TEMPLATE_NAME', 'Bu adla bir taslak zaten var. / A template with this name already exists.', 409);
+  const items = existing ? current.items.map(item => item.id === template.id ? template : item) : [...current.items, template];
+  const state = clone(stateOf(overrides)), changed = propagateTemplate(state, template.id, template, now);
+  const deleted = { ...current.deleted }; delete deleted[template.id];
+  const next = { ...overrides, licenseCards: state, licenseStageTemplates: { items, updatedAt: now, deleted },
+    _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
+  return { overrides: next, template, cards: changed };
+}
+function deleteTemplate(overrides, id, body, now = new Date().toISOString()) {
+  const current = templatesOf(overrides), existing = current.items.find(item => item.id === id);
+  if (!existing) fail('LICENSE_TEMPLATE_NOT_FOUND', 'Aşama taslağı bulunamadı. / Stage template not found.', 404);
+  if (body?.expectedUpdatedAt !== existing.updatedAt) fail('REVISION_CONFLICT', 'Taslak başka biri tarafından değiştirildi; yeniden açın. / The template changed elsewhere; reopen it.', 409);
+  const state = clone(stateOf(overrides)), changed = propagateTemplate(state, id, null, now);
+  const deleted = Object.fromEntries(Object.entries({ ...current.deleted, [id]: now }).sort((a, b) => String(b[1]).localeCompare(String(a[1]))).slice(0, 200));
+  const next = { ...overrides, licenseCards: state, licenseStageTemplates: { items: current.items.filter(item => item.id !== id), updatedAt: now, deleted },
+    _revisions: { ...(overrides._revisions || {}), licenseCards: revisionOf(overrides, 'licenseCards') + 1 } };
+  return { overrides: next, cards: changed };
+}
 function responseOf(overrides, canEdit) {
   const state = stateOf(overrides), rules = Array.isArray(overrides.pricingRules) ? overrides.pricingRules : [];
   const byPair = new Map();
   for (const rule of rules) { const key = pairKey(rule.license, rule.licensor); if (!byPair.has(key)) byPair.set(key, []); byPair.get(key).push(rule); }
   return { cards: visibleCatalogue(overrides).map(card => ({ ...card, editToken: editToken(card, rules), rules: byPair.get(pairKey(card.license, card.licensor)) || [] })),
     pricingRules: rules, revision: revisionOf(overrides, 'licenseCards'), pricingRevision: revisionOf(overrides, 'pricingRules'), initialized: state.initialized,
-    lastImportedAt: state.lastImportedAt, canEdit: Boolean(canEdit) };
+    lastImportedAt: state.lastImportedAt, stageTemplates: templatesOf(overrides).items, canEdit: Boolean(canEdit) };
 }
 
-module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };
+module.exports = { PROFILE_LIMITS, MAX_SYMBOL_BYTES, pairKey, cardId, stateOf, catalogue, visibleCatalogue, discoveryRowsFromOrders, setLicensor, templatesOf, normalizeTemplate, applyTemplate, linkTemplates, propagateTemplate, saveTemplate, deleteTemplate, revisionOf, assertRevision, discoverPairs, appendDiscovered, validateSymbol, normalizeProfile, normalizeRules, mergeRules, updateCard, responseOf };

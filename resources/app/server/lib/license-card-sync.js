@@ -8,6 +8,7 @@ const COLLECTION = 'license-card';
 const clone = value => JSON.parse(JSON.stringify(value));
 const digest = value => crypto.createHash('sha256').update(JSON.stringify(value)).digest('hex');
 const validId = id => /^license-[a-f0-9]{24}$/.test(String(id));
+const TEMPLATES_ID = 'stage-templates';
 
 function profileSnapshot(card) {
   if (!card || !validId(card.id) || !card.license || String(card.license).length > 200 || String(card.licensor || '').length > 200) throw new Error('LICENSE_CARD_SYNC_INVALID');
@@ -25,6 +26,8 @@ function stageChange(overrides, change) {
     stage(card.id,fields);
   }
   if(change.initialized)stage('state',{initialized:true,lastImportedAt:change.lastImportedAt||null});
+  // Stage templates travel as one record; clients without template support skip unknown ids.
+  if(change.stageTemplates)stage(TEMPLATES_ID,{templates:clone(change.stageTemplates)});
   return {...overrides,licenseCardOutbox:outbox};
 }
 
@@ -49,6 +52,24 @@ function applyRecords(overrides, records, deps) {
     if (id === 'state') {
       if (record.initialized === true && !state.initialized) { state.initialized = true; profilesChanged = true; }
       if (record.lastImportedAt && (!state.lastImportedAt || record.lastImportedAt > state.lastImportedAt)) { state.lastImportedAt = record.lastImportedAt; profilesChanged = true; }
+      continue;
+    }
+    if (id === TEMPLATES_ID) {
+      const incoming = record && record.templates, local = cards.templatesOf(next);
+      if (!incoming || !Array.isArray(incoming.items)) continue;
+      // Merged per template (newest updatedAt wins) with deletion tombstones, so templates
+      // created or deleted on two devices at the same time are all kept.
+      const deleted = { ...local.deleted };
+      for (const [tid, at] of Object.entries(incoming.deleted && typeof incoming.deleted === 'object' ? incoming.deleted : {})) if (typeof at === 'string' && (!deleted[tid] || at > deleted[tid])) deleted[tid] = at;
+      const byId = new Map(local.items.map(item => [item.id, item]));
+      for (const item of incoming.items.slice(0, 120)) {
+        let normalized; try { normalized = cards.normalizeTemplate(item, String(item.updatedAt || incoming.updatedAt || '')); } catch (_) { continue; }
+        const current = byId.get(normalized.id);
+        if (!current || String(normalized.updatedAt) > String(current.updatedAt || '')) byId.set(normalized.id, normalized);
+      }
+      const items = [...byId.values()].filter(item => !(deleted[item.id] && deleted[item.id] >= String(item.updatedAt || ''))).slice(0, 60);
+      const merged = { items, updatedAt: [local.updatedAt, String(incoming.updatedAt || '')].sort().pop(), deleted };
+      if (JSON.stringify(merged) !== JSON.stringify(local)) { next.licenseStageTemplates = merged; metadataChanged = true; profilesChanged = true; }
       continue;
     }
     if (!validId(id) || !record || record._deleted) continue;
@@ -133,4 +154,4 @@ function createLicenseCardSync({ deltaStore, loadOverrides, saveOverrides, ...de
   }
   return { publish, reconcile, flushOutbox };
 }
-module.exports = { COLLECTION, validId, profileSnapshot, stageChange, replaceContracts, applyRecords, createLicenseCardSync };
+module.exports = { COLLECTION, TEMPLATES_ID, validId, profileSnapshot, stageChange, replaceContracts, applyRecords, createLicenseCardSync };

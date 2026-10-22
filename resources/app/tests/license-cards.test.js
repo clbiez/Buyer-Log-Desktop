@@ -122,7 +122,7 @@ function routeHarness(initial, publication = {}) {
     },
     userAccess: { requireAnyArea: () => guard(req => req.currentUser.area), requirePermission: () => guard(req => req.currentUser.edit), hasPermission: user => user.edit, appendAudit: (...args) => audits.push(args) },
   };
-  const app = Object.fromEntries(['get', 'post', 'put'].map(method => [method, (url, ...handlers) => routes.set(method + ' ' + url, handlers)]));
+  const app = Object.fromEntries(['get', 'post', 'put', 'delete'].map(method => [method, (url, ...handlers) => routes.set(method + ' ' + url, handlers)]));
   registerRoutes(app, deps);
   return {
     state: () => ({ store, reads, commits, sourceCalls, events, mirrored, audits }),
@@ -217,4 +217,21 @@ test('HTTP request client identity reaches both profile and pricing notification
   assert.equal(response.status, 200);
   assert.equal(harness.state().events.length, 2);
   for(const event of harness.state().events)assert.equal(event[1].headers['x-client-id'], 'editing-tab');
+});
+
+test('licensor and stage-template routes are guarded, commit once and report what changed', async () => {
+  const harness = routeHarness(fixture()), edit = { area: true, edit: true }, id = harness.state().store.licenseCards.items[0].id;
+  const token = () => cards.responseOf(harness.state().store, true).cards.find(card => card.id === id).editToken;
+  const add = { editToken: token(), licensor: 'Second Owner', mode: 'add', copy: true };
+  assert.equal((await harness.request('put', '/api/license-cards/:id/licensor', { id, body: add })).status, 403);
+  const added = await harness.request('put', '/api/license-cards/:id/licensor', { id, body: add, user: edit });
+  assert.equal(added.status, 200); assert.ok(added.body.cardId && added.body.cardId !== id);
+  assert.equal(harness.state().audits.at(-1)[1], 'LICENSE_CARD_LICENSOR');
+  const locked = await harness.request('put', '/api/license-cards/:id/licensor', { id, body: { editToken: token(), licensor: 'Other' }, user: edit });
+  assert.equal(locked.status, 400); assert.equal(locked.body.code, 'LICENSE_LICENSOR_LOCKED');
+  const template = { id: 'tpl-route', name: 'Route template', stage: { title: 'PPS', approver: 'LCW', submissions: [] } };
+  assert.equal((await harness.request('post', '/api/license-cards/stage-templates', { body: { template } })).status, 403);
+  const saved = await harness.request('post', '/api/license-cards/stage-templates', { body: { template }, user: edit });
+  assert.equal(saved.status, 200); assert.equal(saved.body.propagated, 0); assert.equal(saved.body.stageTemplates[0].name, 'Route template');
+  assert.ok(harness.state().mirrored.some(call => call[1] && call[1].stageTemplates), 'templates are published to peers');
 });

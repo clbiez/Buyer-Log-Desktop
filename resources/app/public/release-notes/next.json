@@ -7,8 +7,8 @@
     "en": "New license card list, royalty accuracy and report fixes"
   },
   "summary": {
-    "tr": "Lisans kartları satırda düzenlenebilir bir listeye dönüştü; onay haritası sadeleşti, üretici atlası seçilen satırlardan oluşuyor. Royalty hesapları kuruşu kuruşuna; kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi. Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi.",
-    "en": "License cards became an in-row editable list; the approval map is simpler and the supplier atlas is built from selected rows. Cent-accurate royalty calculations; improved source fields, partial details, Collection inheritance and checklist management. Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed."
+    "tr": "Lisans kartları satırda düzenlenebilir bir listeye dönüştü; onay haritası sadeleşti, üretici atlası seçilen satırlardan oluşuyor. Royalty hesapları kuruşu kuruşuna; kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi. Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi. Lisansör satırda elle girilir, ASAS yenileme sonucu bildirir, aşama taslakları tek güncellemeyle tüm lisanslara yayılır; üretici atlasında harita çekmece gibi açılır ve hizalıdır.",
+    "en": "License cards became an in-row editable list; the approval map is simpler and the supplier atlas is built from selected rows. Cent-accurate royalty calculations; improved source fields, partial details, Collection inheritance and checklist management. Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed. Licensors are entered in the row, ASAS refresh reports its result, stage templates update every license at once; in the supplier atlas the map opens like a drawer and is aligned."
   },
   "changes": [
     {
@@ -530,6 +530,151 @@
         "caption": {
           "tr": "Lisansörü çözülmüş lisans kartı",
           "en": "License card with its licensor resolved"
+        }
+      }
+    },
+    {
+      "id": "license-cards-licensor-edit",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisansör elle girilebilir",
+        "en": "Licensor can be entered manually"
+      },
+      "body": {
+        "tr": "Lisansörü olmayan satırda Lisansör sütunu yazılabilir bir alana dönüşür; mevcut lisansörlerden seçin veya yeni ad yazıp Enter’a basın. Aynı lisansın başka bir lisansörü için satır ayrıntısındaki “Başka lisansör için satır ekle” ile ayrı satır açılır; isterseniz iletişim, görsel ve onay haritası kopyalanır. Dolu bir lisansör değiştirilmez, çünkü diğer kullanıcılar kartı lisans × lisansör çiftiyle tanır.",
+        "en": "On a row without a licensor, the Licensor column becomes an input: pick an existing licensor or type a new name and press Enter. For another licensor of the same license, “Add a row for another licensor” in the row details opens a separate row, optionally copying contact, image and approval map. A licensor that is already set is not renamed, because other users identify a card by its license × licensor pair."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-licensor-edit.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları listesi: lisansörsüz satırda yazılabilir lisansör alanı, demo veriler",
+          "en": "Real Buyer Log license card list: editable licensor field on a row without a licensor, demo data"
+        },
+        "caption": {
+          "tr": "Lisansör satırda yazılır",
+          "en": "The licensor is typed in the row"
+        }
+      }
+    },
+    {
+      "id": "license-cards-asas-refresh-feedback",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "“ASAS’tan yenile” artık sonuç bildirir",
+        "en": "“Refresh from ASAS” now reports its result"
+      },
+      "body": {
+        "tr": "Yenileme sırasında buton “Yenileniyor…” olur ve sonunda kaç yeni satır eklendiği, kaç lisansörün tamamlandığı veya yeni kayıt olmadığı bildirilir. ASAS verisi yüklenmemişse ne yapılacağı söylenir. Liste yüklenirken basılan yenileme artık kaybolmaz; sıraya alınıp çalıştırılır.",
+        "en": "While refreshing, the button shows “Refreshing…” and afterwards reports how many rows were added, how many licensors were completed, or that nothing changed. If ASAS data is not loaded, it says what to do. A refresh pressed while the list is loading is no longer lost; it is queued and run."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-asas-refresh-feedback.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları: ASAS yenileme sonrası uyarı bildirimi, demo veriler",
+          "en": "Real Buyer Log license cards: notice after an ASAS refresh, demo data"
+        },
+        "caption": {
+          "tr": "Yenileme sonucu bildirimi",
+          "en": "Refresh result notice"
+        }
+      }
+    },
+    {
+      "id": "license-stage-templates",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Aşama taslakları",
+        "en": "Stage templates"
+      },
+      "body": {
+        "tr": "Araç çubuğundaki “Aşama taslakları” ile ortak onay adımları (onaylayan, test, gönderimler, talimatlar, adresler, görsel kılavuz) bir kez tanımlanır. Haritada “Taslaktan adım ekle” ile eklenir veya mevcut bir adım “Taslak olarak kaydet” ile taslağa dönüştürülür. Taslak güncellenince onu kullanan tüm lisanslardaki adım tek seferde güncellenir; bağlı adım haritada kilitli görünür ve istenirse “Taslaktan ayır” ile bağımsızlaşır. Taslaklar diğer kullanıcılarla paylaşılır.",
+        "en": "“Stage templates” in the toolbar defines shared approval steps once (approver, test, routes, instructions, addresses, visual guide). In a map, add one with “Add step from template” or turn an existing step into a template with “Save as template”. Updating a template updates the step in every license that uses it at once; a linked step is locked in the map and can be made independent with “Detach from template”. Templates are shared with other users."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-stage-templates.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log aşama taslağı düzenleyicisi: kaydedince 2 lisanstaki adım güncellenir, demo veriler",
+          "en": "Real Buyer Log stage template editor: saving updates the step in 2 licenses, demo data"
+        },
+        "caption": {
+          "tr": "Bir taslak, tüm bağlı lisanslar",
+          "en": "One template, every linked license"
+        }
+      }
+    },
+    {
+      "id": "license-supplier-atlas-drawer",
+      "type": "improvement",
+      "module": {
+        "tr": "Üretici atlası",
+        "en": "Supplier atlas"
+      },
+      "title": {
+        "tr": "Lisans haritası çekmece gibi açılır",
+        "en": "License map opens like a drawer"
+      },
+      "body": {
+        "tr": "Üretici dosyasında bir lisansa tıklamak artık sayfanın aşağısındaki ayrı bölüme atlamaz; haritası satırın hemen altında animasyonla açılır, ikinci tıklamada kapanır. Açık haritada lisans görseli büyük gösterilir. Yazdırırken tüm haritalar açık basılır.",
+        "en": "Clicking a license in the supplier file no longer jumps to a separate section further down; its map opens with an animation right below the row and closes on a second click. The open map shows the license image large. When printing, every map is printed open."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-supplier-atlas-drawer.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üretici atlası dosyası: açık lisans haritası ve kapalı ikinci lisans, demo veriler",
+          "en": "Real Buyer Log supplier atlas file: one open license map and a closed second license, demo data"
+        },
+        "caption": {
+          "tr": "Göster/gizle lisans haritası",
+          "en": "Show/hide license map"
+        }
+      }
+    },
+    {
+      "id": "license-supplier-atlas-aligned-routes",
+      "type": "fix",
+      "module": {
+        "tr": "Üretici atlası",
+        "en": "Supplier atlas"
+      },
+      "title": {
+        "tr": "Haritadaki yazılar hizalı",
+        "en": "Map text is aligned"
+      },
+      "body": {
+        "tr": "Gönderim satırlarında yöntem, alıcı ve adet/zamanlama sütunları içeriğe göre sağa sola kayıyordu. Sütunlar artık sabit genişlikte; tüm adımlarda alıcı aynı hizadan başlar, adet ve zamanlama sağa hizalanır.",
+        "en": "In route rows the method, recipient and quantity/timing columns shifted left and right with their content. Columns now have fixed widths: the recipient starts at the same position in every step, and quantity and timing are right-aligned."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-supplier-atlas-aligned-routes.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üretici atlası: hizalı gönderim sütunları, demo veriler",
+          "en": "Real Buyer Log supplier atlas: aligned route columns, demo data"
+        },
+        "caption": {
+          "tr": "Hizalı gönderim sütunları",
+          "en": "Aligned route columns"
         }
       }
     }

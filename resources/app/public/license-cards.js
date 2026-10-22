@@ -23,10 +23,20 @@
   const canEdit=()=>Boolean(S.data?.canEdit);
 
   function failMessage(error){
-    if(error?.status===409)return T('Bu kart siz düzenlerken değişti. Değişiklikleriniz korunuyor; güncel kaydı açıp yeniden uygulayın.','This card changed while you were editing. Your edits are kept; open the current record and reapply them.');
+    if(error?.code==='REVISION_CONFLICT'&&S.templateWrite)return T('Taslak başka yerde değişti. Taslaklar yenilendi; yeniden açıp uygulayın.','The template changed elsewhere. Templates were refreshed; reopen it and reapply.');
+    if(error?.status===409&&!/^LICENSE_(LICENSOR|TEMPLATE)_/.test(error?.code||''))return T('Bu kart siz düzenlerken değişti. Değişiklikleriniz korunuyor; güncel kaydı açıp yeniden uygulayın.','This card changed while you were editing. Your edits are kept; open the current record and reapply them.');
     if(error?.status===403)return T('Bu kartı değiştirme yetkiniz yok.','You do not have permission to edit this card.');
     if(error?.code==='LICENSE_RULE_OVERLAP')return T('Sözleşmeler aynı OPD aralığı ve sezonda çakışıyor. Önceki dönemi yeni dönemden önce bitirin.','Contracts overlap for the same OPD range and season. End the previous period before the next one starts.');
     if(error?.code==='LICENSE_RULE_DATE'||error?.code==='LICENSE_RULES_INVALID')return T('Sözleşme tarihlerini ve oranlarını kontrol edin. Royalty ile komisyon toplamı %100’ü aşamaz.','Check contract dates and rates. Royalty plus commission cannot exceed 100%.');
+    if(error?.code==='LICENSE_SOURCE_UNAVAILABLE')return T('ASAS verisi hazır değil. Önce CP veya Orders verisini yükleyin, sonra yeniden deneyin.','ASAS data is not ready. Load CP or Orders data first, then retry.');
+    if(error?.code==='OFFICE_PREVIEW_CHANGED')return T('ASAS verisi yenileme sırasında değişti; yeniden deneyin.','ASAS data changed during the refresh; retry.');
+    if(error?.code==='LICENSE_LICENSOR_EXISTS')return T('Bu lisans için bu lisansörün satırı zaten var.','This license already has a row for this licensor.');
+    if(error?.code==='LICENSE_LICENSOR_LOCKED')return T('Lisansörü olan satır değiştirilemez; diğer lisansör için yeni satır ekleyin.','A row that has a licensor cannot be renamed; add a row for the other licensor.');
+    if(error?.code==='LICENSE_LICENSOR_INVALID')return T('Geçerli bir lisansör adı girin (en fazla 200 karakter).','Enter a valid licensor name (max 200 characters).');
+    if(error?.code==='LICENSE_TEMPLATE_NAME')return T('Bu adla bir aşama taslağı zaten var.','A stage template with this name already exists.');
+    if(error?.code==='LICENSE_TEMPLATE_LIMIT')return T('En fazla 60 aşama taslağı tutulabilir.','Up to 60 stage templates are kept.');
+    if(error?.code==='LICENSE_TEMPLATE_INVALID')return T('Taslak geçersiz veya 2 MB sınırını aşıyor.','The template is invalid or exceeds 2 MB.');
+    if(error?.code==='LICENSE_TEMPLATE_NOT_FOUND')return T('Aşama taslağı bulunamadı; liste yenilendi.','Stage template not found; the list was refreshed.');
     if(error?.code==='LICENSE_PORTAL_INVALID')return T('Portal adresi http:// veya https:// ile başlamalı ve parola içermemeli.','The portal URL must start with http:// or https:// and contain no credentials.');
     if(error?.code==='LICENSE_ATLAS_INVALID')return T('Harita veya görsel geçersiz ya da 2 MB sınırını aşıyor.','The map or image is invalid or exceeds 2 MB.');
     if(error?.code==='LICENSE_PROFILE_INVALID')return T('Bir kart alanı çok uzun veya geçersiz.','A card field is too long or invalid.');
@@ -39,7 +49,7 @@
     if(!r.ok){const e=new Error(data.error||r.statusText);e.status=r.status;e.code=data.code;throw e;}
     return data;
   }
-  function toast(message){if(typeof showToast==='function')showToast(message);else{S.error=message;render();}}
+  function toast(message,kind){if(typeof showToast==='function')showToast(message,kind?{kind}:undefined);else{S.error=message;render();}}
 
   /* ---------- drafts ---------- */
   function profileOf(card){return Object.fromEntries(PROFILE.map(k=>[k,card[k]||'']));}
@@ -59,14 +69,19 @@
   function ruleOf(d,id){return d.rules.find(r=>r.id===id);}
 
   /* ---------- loading ---------- */
+  // A refresh asked for while another load runs is queued, never dropped.
   async function load(refresh=false){
+    if(refresh)S.refreshNext=true;
     if(S.pending)return S.pending;
-    S.loading=true;if(!S.data)render();
+    S.loading=true;S.refreshing=S.refreshNext;render();
     S.pending=(async()=>{
       try{
         do{
-          S.stale=false;
-          const data=await api(refresh?'/api/license-cards/refresh':'/api/license-cards',refresh?{method:'POST'}:{});refresh=false;
+          S.stale=false;refresh=S.refreshNext;S.refreshNext=false;S.refreshing=refresh;
+          let data;
+          try{data=await api(refresh?'/api/license-cards/refresh':'/api/license-cards',refresh?{method:'POST'}:{});}
+          catch(e){if(refresh){toast(failMessage(e),'warning');if(S.data)continue;}throw e;}
+          if(refresh)toast(...refreshMessage(data));
           for(const [id,d] of S.drafts){
             const current=data.cards?.find(c=>c.id===id);
             // Notifications (polling, reconnect, our own echo) are hints; only the card's
@@ -75,11 +90,18 @@
           }
           S.data=data;S.error='';S.stats.clear();
           await window.BLLicenseDataBridge?.rulesChanged?.(data);
-        }while(S.stale&&![...S.drafts.values()].some(d=>d.saving));
+        }while((S.stale||S.refreshNext)&&![...S.drafts.values()].some(d=>d.saving));
       }catch(e){S.stale=true;S.error=failMessage(e);}
-      finally{S.loading=false;S.pending=null;render();}
+      finally{S.loading=false;S.refreshing=false;S.pending=null;render();}
     })();
     return S.pending;
+  }
+
+  function refreshMessage(data){
+    const added=Number(data.added)||0,resolved=Number(data.resolved)||0,found=Number(data.discovered)||0;
+    if(added||resolved)return [T(`ASAS’tan yenilendi: ${added} yeni satır, ${resolved} lisansör tamamlandı.`,`Refreshed from ASAS: ${added} new rows, ${resolved} licensors completed.`),'success'];
+    if(!found)return [T('ASAS verisinde lisans bulunamadı. CP veya Orders verisini yükleyip yeniden deneyin.','No licenses were found in the ASAS data. Load CP or Orders data and retry.'),'warning'];
+    return [T(`ASAS’tan yenilendi; ${found} lisans × lisansör tarandı, yeni kayıt yok.`,`Refreshed from ASAS; ${found} license × licensor pairs checked, nothing new.`),'info'];
   }
 
   /* ---------- rendering ---------- */
@@ -107,6 +129,14 @@
     const disabled=!rule||!canEdit()||d?.saving||d?.conflict;
     return `<label class="lcRateCell"><input class="lcRate" data-lc-rate="${key}" data-id="${esc(row.id)}" inputmode="decimal" value="${esc(value)}" placeholder="${rule?'—':''}" aria-label="${esc(row.license)} ${esc(key)}" ${disabled?'disabled':''}><span>${suffix}</span></label>`;
   }
+  function licensorList(){return `<datalist id="lcLicensorList">${E.licensorOptions(S.data?.cards||[]).filter(o=>o.value).map(o=>`<option value="${esc(o.label)}"></option>`).join('')}</datalist>`;}
+  // An empty licensor is filled in place; a licensor that is set never changes (peers key
+  // a card by license × licensor) — another licensor gets its own row from the details.
+  function licensorCell(row){
+    if(row.licensor)return `<span class="lcLicensor" title="${esc(row.licensor)}">${esc(row.licensor)}</span>`;
+    if(!canEdit()||!row.card||S.drafts.get(row.id)?.conflict)return `<span class="lcLicensor"><span class="lcWarn">${esc(T('Lisansör yok','No licensor'))}</span></span>`;
+    return `<label class="lcLicensor lcLicensorEdit${S.assigning===row.id?' isBusy':''}"><input class="lcLicensorInput" data-lc-licensor="${esc(row.id)}" list="lcLicensorList" maxlength="200" placeholder="${esc(T('Lisansör yazın…','Type licensor…'))}" aria-label="${esc(row.license)} ${esc(T('lisansör','licensor'))}" ${S.assigning?'disabled':''}></label>`;
+  }
   function rowHtml(row,i){
     const d=S.drafts.get(row.id),dirty=isDirty(d),rule=d?ruleOf(d,d.primaryId):row.primary.rule,status=rule?E.ruleStatus(rule,E.today()):'none';
     const open=S.expanded===row.id,cls=['lcRow',open?'isOpen':'',dirty?'isDirty':'',d?.conflict?'isConflict':'',S.flash.has(row.id)?'isSaved':'',S.selected.has(row.id)?'isSelected':''].filter(Boolean).join(' ');
@@ -114,7 +144,7 @@
       <label class="lcCheck"><input type="checkbox" data-lc-select="${esc(row.id)}" ${S.selected.has(row.id)?'checked':''} aria-label="${esc(T('Üretici atlası için seç','Select for supplier atlas'))}"></label>
       ${thumb(row,d)}
       <button type="button" class="lcName" data-lc-act="expand" data-id="${esc(row.id)}" aria-expanded="${open}"><b>${esc(row.license)}</b><small>${esc(seasons(rule))}</small></button>
-      <span class="lcLicensor">${row.licensor?esc(row.licensor):`<span class="lcWarn">${esc(T('Lisansör yok','No licensor'))}</span>`}</span>
+      ${licensorCell(row)}
       ${rateCell(row,d,'royalty','%')}${rateCell(row,d,'trCommission','%')}${rateCell(row,d,'ydCommission','%')}${rateCell(row,d,'hologramCost','$')}
       <span class="lcPeriod">${rule?`${statusBadge(status)}<small>${esc(range(rule))}${row.primary.extraActive?` · +${row.primary.extraActive} ${esc(T('kapsam','scopes'))}`:''}</small>`:(canEdit()&&row.licensor?`<button type="button" class="lcBtn sm" data-lc-act="addContract" data-id="${esc(row.id)}"><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Sözleşme ekle','Add contract'))}</button>`:statusBadge('none'))}</span>
       <button type="button" class="lcMapCell" data-lc-act="map" data-id="${esc(row.id)}" title="${esc(T('Onay haritasını aç','Open approval map'))}">${miniMap(row)}</button>
@@ -154,7 +184,9 @@
         <div class="lcContractHead"><span></span><span>${esc(T('OPD başlangıç','OPD start'))}</span><span>${esc(T('OPD bitiş','OPD end'))}</span><span>${esc(T('Sezonlar','Seasons'))}</span><span lang="en">Royalty</span><span>${esc(T('TR kom.','TR comm.'))}</span><span>${esc(T('YD kom.','Intl comm.'))}</span><span lang="en">Hologram</span></div>
         ${sorted.map(r=>contractRow(card,d,r)).join('')||`<p class="lcMuted">${esc(card.licensor?T('Henüz sözleşme yok.','No contracts yet.'):T('Sözleşme eklemek için lisansör gerekli (CP’de seçin veya ASAS’tan yenileyin).','A licensor is required to add a contract (pick it in CP or refresh from ASAS).'))}</p>`}
       </section>
-      <section class="lcPane"><header><b>${esc(T('Lisansör ve portal','Licensor and portal'))}</b></header><div class="lcFields">
+      <section class="lcPane"><header><b>${esc(T('Lisansör ve portal','Licensor and portal'))}</b></header>
+        ${canEdit()&&card.licensor?`<div class="lcAddLicensor"><span class="lcFieldLabel">${esc(T('Başka lisansör için satır ekle','Add a row for another licensor'))}</span><div class="lcInline"><input data-lc-new-licensor="${esc(card.id)}" list="lcLicensorList" maxlength="200" placeholder="${esc(T('Lisansör adı','Licensor name'))}" aria-label="${esc(T('Yeni lisansör','New licensor'))}" ${S.assigning?'disabled':''}><button type="button" class="lcBtn sm" data-lc-act="addLicensor" data-id="${esc(card.id)}" ${S.assigning?'disabled':''}><svg class="ic"><use href="#i-plus"/></svg>${esc(T('Satır ekle','Add row'))}</button></div><label class="lcCopy"><input type="checkbox" data-lc-copy="${esc(card.id)}" checked>${esc(T('İletişim, görsel ve onay haritasını kopyala','Copy contact, image and approval map'))}</label></div>`:''}
+        <div class="lcFields">
         ${input('contactName',T('İlgili kişi','Contact person'))}${input('contactEmail',T('E-posta','Email'),'email',320)}${input('portalUrl',T('Portal','Portal'),'url',2048)}${input('portalUsername',T('Portal kullanıcı adı','Portal username'))}${input('accessReference',T('Şifre yöneticisi kaydı','Password manager record'),'text',1000)}
         ${area('workingNotes',T('Çalışma notları','Working notes'),12000)}${area('artworkBrief',T('Artwork brief','Artwork brief'),6000)}</div>
         ${portal?`<a class="lcLink" href="${esc(portal)}" target="_blank" rel="noopener noreferrer">${esc(T('Portalı aç','Open portal'))} ↗</a>`:''}<small class="lcMuted">${esc(T('Parolayı burada saklamayın; şifre yöneticisi kayıt adını yazın.','Do not store passwords here; enter the password manager record name.'))}</small></section>
@@ -198,8 +230,9 @@
         <div class="lcChips" role="group" aria-label="${esc(T('Durum','Status'))}">${chip('all','Tümü','All',n.all)}${chip('active','Güncel sözleşme','Current contract',n.active)}${chip('missing','Sözleşmesi olmayan','No current contract',n.missing)}${chip('noLicensor','Lisansörsüz','No licensor',n.noLicensor)}${chip('noMap','Haritasız','No map',n.noMap)}</div>
         <span class="lcSpacer"></span>
         ${S.data.lastImportedAt?`<small class="lcMuted">${esc(T('ASAS:','ASAS:'))} ${esc(new Date(S.data.lastImportedAt).toLocaleDateString(locale()))}</small>`:''}
-        ${canEdit()?`<button type="button" class="lcBtn" data-lc-act="refresh" ${S.loading?'disabled':''}><svg class="ic${S.loading?' isSpinning':''}"><use href="#i-refresh"/></svg>${esc(T('ASAS’tan yenile','Refresh from ASAS'))}</button>`:''}
-      </div>
+        <button type="button" class="lcBtn" data-lc-act="templates"><svg class="ic"><use href="#i-copy-plus"/></svg>${esc(T('Aşama taslakları','Stage templates'))}<small class="lcCount">${(S.data.stageTemplates||[]).length}</small></button>
+        ${canEdit()?`<button type="button" class="lcBtn" data-lc-act="refresh" ${S.refreshing?'disabled aria-busy="true"':''}><svg class="ic${S.refreshing?' isSpinning':''}"><use href="#i-refresh"/></svg>${esc(S.refreshing?T('Yenileniyor…','Refreshing…'):T('ASAS’tan yenile','Refresh from ASAS'))}</button>`:''}
+      </div>${licensorList()}
       ${S.error?`<div class="lcNotice" role="alert">${esc(S.error)}</div>`:''}${S.data.syncPending?`<div class="lcNotice" role="status">${esc(T('Kaydedildi; diğer kullanıcılara aktarım bekliyor ve otomatik yeniden denenir.','Saved; sharing with other users is pending and retried automatically.'))}</div>`:''}
       <div class="lcTable${S.animate?' isEntering':''}" role="table" aria-label="${esc(T('Lisans kartları','License cards'))}">
         <div class="lcHead" role="row">
@@ -245,7 +278,7 @@
       if(result.cards)S.data=result;else S.stale=true;
       await window.BLLicenseDataBridge?.rulesChanged?.(result);
     }catch(e){d.error=failMessage(e);if(e.status===409)d.conflict=true;}
-    finally{d.saving=false;if(S.stale)await load();render();}
+    finally{d.saving=false;if(S.stale||S.refreshNext)await load();render();}
   }
   function exportName(){return `Buyer-Log-Supplier-Atlas-${new Date().toISOString().slice(0,10)}.html`;}
   async function exportAtlas(){
@@ -262,9 +295,61 @@
     }catch(_){toast(T('Üretici atlası oluşturulamadı.','The supplier atlas could not be created.'));}
     finally{S.exporting=false;render();}
   }
+  // Our own map/template writes change only processAtlas: open rate drafts on those cards
+  // take the new token instead of turning into conflicts.
+  function adopt(result,before){
+    for(const [id,d] of S.drafts){
+      const old=before.find(c=>c.id===id),fresh=result.cards?.find(c=>c.id===id);
+      if(!d.conflict&&old&&fresh&&d.editToken===old.editToken&&old.editToken!==fresh.editToken&&JSON.stringify(old.rules)===JSON.stringify(fresh.rules)){d.editToken=fresh.editToken;d.snapshot.processAtlas=fresh.processAtlas;}
+    }
+    if(result.cards)S.data=result;
+  }
+  async function saveTemplate({template,expectedUpdatedAt}){
+    const before=S.data.cards;S.templateWrite=true;
+    try{
+      const result=await api('/api/license-cards/stage-templates',{method:'POST',body:JSON.stringify({template,expectedUpdatedAt})});
+      adopt(result,before);render();
+      if(result.propagated)toast(T(`“${template.name}” ${result.propagated} lisansta güncellendi.`,`“${template.name}” updated in ${result.propagated} licenses.`),'success');
+      return {templates:result.stageTemplates||[],cards:S.data.cards,propagated:result.propagated||0};
+    }catch(e){throw await templateError(e);}
+    finally{S.templateWrite=false;}
+  }
+  async function templateError(e){
+    const out=new Error(failMessage(e));
+    if(e.status===409||e.code==='LICENSE_TEMPLATE_NOT_FOUND'){await load();out.templates=S.data?.stageTemplates||[];out.cards=S.data?.cards;}
+    return out;
+  }
+  async function deleteTemplate(t){
+    const before=S.data.cards;S.templateWrite=true;
+    try{
+      const result=await api(`/api/license-cards/stage-templates/${encodeURIComponent(t.id)}`,{method:'DELETE',body:JSON.stringify({expectedUpdatedAt:t.updatedAt})});
+      adopt(result,before);render();return {templates:result.stageTemplates||[],cards:S.data.cards};
+    }catch(e){throw await templateError(e);}
+    finally{S.templateWrite=false;}
+  }
+  function openTemplates(){
+    if(!window.BLLicenseMapEditor||!S.data)return;
+    window.BLLicenseMapEditor.openTemplates({templates:S.data.stageTemplates||[],cards:S.data.cards,canEdit:canEdit(),onSave:saveTemplate,onDelete:deleteTemplate});
+  }
+  async function setLicensor(id,licensor,mode,copyProfile){
+    const c=cardOf(id);licensor=String(licensor||'').trim();if(!c||!licensor||S.assigning||!canEdit())return;
+    const known=E.licensorOptions(S.data.cards).find(o=>o.value&&o.label.toLocaleLowerCase('tr')===licensor.toLocaleLowerCase('tr'));if(known)licensor=known.label;
+    S.assigning=id;render();
+    try{
+      const result=await api(`/api/license-cards/${encodeURIComponent(id)}/licensor`,{method:'PUT',body:JSON.stringify({editToken:c.editToken,licensor,mode,copy:Boolean(copyProfile)})});
+      // Our own assign changes only the licensor: an open draft follows the new token.
+      const d=S.drafts.get(id),fresh=result.cards?.find(x=>x.id===id);
+      if(mode!=='add'&&d&&!d.conflict&&fresh&&d.editToken===c.editToken){d.editToken=fresh.editToken;d.snapshot.licensor=fresh.licensor;}
+      if(result.cards)S.data=result;
+      if(result.cardId){S.flash.add(result.cardId);if(S.expanded===id&&mode!=='add')S.expanded=result.cardId;}
+      toast(mode==='add'?T(`${c.license} için ${licensor} satırı eklendi.`,`Added a ${licensor} row for ${c.license}.`):T(`${c.license} lisansörü: ${licensor}`,`${c.license} licensor: ${licensor}`),'success');
+      await window.BLLicenseDataBridge?.rulesChanged?.(result);
+    }catch(e){toast(failMessage(e),'warning');if(e.status===409&&e.code==='REVISION_CONFLICT')load();}
+    finally{S.assigning='';render();}
+  }
   function openMap(id){
     const c=cardOf(id);if(!c||!window.BLLicenseMapEditor)return;
-    window.BLLicenseMapEditor.open({card:c,cards:S.data.cards,canEdit:canEdit(),onSave:async atlas=>{
+    window.BLLicenseMapEditor.open({card:c,cards:S.data.cards,canEdit:canEdit(),templates:S.data.stageTemplates||[],onSaveTemplate:canEdit()?saveTemplate:null,onSave:async atlas=>{
       const current=cardOf(id);if(!current)throw new Error(failMessage({status:409}));
       try{
         const result=await api(`/api/license-cards/${encodeURIComponent(id)}`,{method:'PUT',body:JSON.stringify({editToken:current.editToken,profile:{processAtlas:atlas}})});
@@ -282,6 +367,8 @@
     if(a==='refresh'&&canEdit())return load(true);
     if(a==='expand'){S.expanded=S.expanded===id?'':id;return render();}
     if(a==='map')return openMap(id);
+    if(a==='templates')return openTemplates();
+    if(a==='addLicensor'){const input=S.host.querySelector(`[data-lc-new-licensor="${CSS.escape(id)}"]`),copyBox=S.host.querySelector(`[data-lc-copy="${CSS.escape(id)}"]`);return setLicensor(id,input?.value,'add',copyBox?.checked);}
     if(a==='save')return save(id);
     if(a==='discard'||a==='reopen'){dropDraft(id);return a==='reopen'?load():render();}
     if(a==='export')return exportAtlas();
@@ -353,8 +440,11 @@
       if(el.dataset.lcSelect!=null){if(el.checked)S.selected.add(el.dataset.lcSelect);else S.selected.delete(el.dataset.lcSelect);return render();}
       if(el.dataset.lcSelectAll!=null){const rows=currentRows();for(const r of rows){if(el.checked)S.selected.add(r.id);else S.selected.delete(r.id);}return render();}
       if(el.dataset.lcCover!=null)uploadCover(el);
+      if(el.dataset.lcLicensor!=null&&el.value.trim())setLicensor(el.dataset.lcLicensor,el.value,'assign');
     });
     S.host.addEventListener('keydown',e=>{
+      if(e.key==='Enter'&&e.target.dataset?.lcNewLicensor!=null){e.preventDefault();return S.host.querySelector(`[data-lc-act="addLicensor"][data-id="${CSS.escape(e.target.dataset.lcNewLicensor)}"]`)?.click();}
+      if(e.key==='Enter'&&e.target.dataset?.lcLicensor!=null){e.preventDefault();return e.target.blur();}
       const el=e.target,id=el.dataset?.id;if(!id||!(el.dataset.lcRate!=null||el.dataset.lcRule!=null||el.dataset.lcProfile))return;
       if(e.key==='Enter'&&el.tagName!=='TEXTAREA'){e.preventDefault();el.blur();save(id);}
       if(e.key==='Escape'){e.preventDefault();dropDraft(id);el.blur();render();}
