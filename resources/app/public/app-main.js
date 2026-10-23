@@ -15924,14 +15924,16 @@ document.getElementById('sourceFxFile')?.addEventListener('change', async e=>{
   const btn=document.getElementById('btnSourceFx');
   const label=btn?.querySelector('span:not(.dot)');
   const prev=label?label.textContent:'';
-  if(label) label.textContent='Okunuyor…';
+  if(label) label.textContent=appLang==='en'?'Reading…':'Okunuyor…';
   try{
+    // fx.js deferredUi zincirinin sonundadır; zincir bitmeden/düşmüşken de yükle.
+    if(!window.BLFX&&window.BLPerf?.ensureFeature) await window.BLPerf.ensureFeature('fx');
     if(!window.BLFX) throw new Error(appLang==='en'?'The FX module is not loaded.':'Kur modülü yüklenmedi.');
     const parsed=await BLFX.importFile(file);
     await BLFX.save({...parsed.data,sourceType:'UPLOAD',sourceModifiedAt:file.lastModified?new Date(file.lastModified).toISOString():null});
     const st=parsed.stats;
     btn?.classList.add('loaded');
-    showToast(`Kurlar güncellendi: ${st.currencyCount} döviz, ${st.monthCount} ay (${st.sheetCount} sayfa okundu).`);
+    showToast(appLang==='en'?`FX rates updated: ${st.currencyCount} currencies, ${st.monthCount} months (${st.sheetCount} sheets read).`:`Kurlar güncellendi: ${st.currencyCount} döviz, ${st.monthCount} ay (${st.sheetCount} sayfa okundu).`);
     // Ön Maliyet ekranı açıksa rozetleri tazele.
     try{ if(typeof window.renderOpenCostingLanguage==='function' && document.body.dataset.activeTab==='opencosting') window.renderOpenCostingLanguage(); }catch(_){}
     renderSourceFxFreshness(BLFX.store);

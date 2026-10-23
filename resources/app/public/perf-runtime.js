@@ -114,7 +114,11 @@
 
   const features={
     versionHistory:['version-history.js'],
-    openCosting:['fx-calculation-engine.js','open-costing-engine.js','open-costing.js'],
+    // fx.js deferredUi'nin SONUNDA da listelidir; o zincir yavaşlar ya da bir
+    // dosyası düşerse Ön Maliyet kur penceresi BLFX'siz kalmasın diye burada da var.
+    openCosting:['fx-calculation-engine.js','fx.js','open-costing-engine.js','open-costing.js'],
+    // Kur Excel'i yükleme (Veri Yönetimi › Kur) BLFX'i bağımsız ister.
+    fx:['fx-calculation-engine.js','fx.js'],
     // v7.175 — otomasyon asistanı (şablonlar, "Hazır mı?", AI yönergesi) saf
     // yardımcıdır; iki görünüm dosyası da onu window'dan okur, bu yüzden önce.
     automations:['automation-assistant.js','automations.js','ai-automation-import.js'],
@@ -182,7 +186,8 @@
   async function ensureFeature(name){
     const files=features[name];if(!files)throw new Error((uiEn()?'Unknown feature module: ':'Bilinmeyen özellik modülü: ')+name);
     if(name==='versionHistory'&&Array.isArray(global.BL_VERSION_HISTORY))return;
-    if(name==='openCosting'&&typeof global.initOpenCosting==='function')return;
+    if(name==='openCosting'&&typeof global.initOpenCosting==='function'&&global.BLFX)return;
+    if(name==='fx'&&global.BLFX)return;
     if(name==='automations'&&typeof global.initAutomationStudio==='function'&&typeof global.initAiAutomationImport==='function')return;
     if(name==='lfl'&&typeof global.initLFL==='function')return;
     if(name==='lcwaiChat'&&typeof global.initLcwAiChat==='function'&&global.BLMarkdown)return;

@@ -126,6 +126,35 @@
           "en": "For a message with demo CP data, model images are attached for LCW AI as a contact sheet."
         }
       }
+    },
+    {
+      "id": "fx-kur-upload-reliable",
+      "type": "fix",
+      "module": {
+        "tr": "Döviz Kurları",
+        "en": "FX Rates"
+      },
+      "title": {
+        "tr": "Kur Excel'i artık her zaman okunuyor",
+        "en": "The FX Excel is now always read"
+      },
+      "body": {
+        "tr": "Kur Tahmin Raporu yüklenirken kur modülü ve Excel okuyucusu arka planda henüz hazır değilse yükleme \"BLFX is not defined\" / \"Kur modülü yüklenmedi\" hatasıyla düşüyordu. İkisi artık yükleme anında hazırlanır. Okuyucu, döviz kodunun A/B/C sütununda olmasını ve metin ay başlıklarını (ör. 2026-10) da kabul eder.",
+        "en": "When the FX forecast report was uploaded before the FX module and Excel reader had finished loading in the background, the upload failed with \"BLFX is not defined\" / \"FX module is not loaded\". Both are now prepared at upload time. The reader also accepts the currency code in column A/B/C and text month headers (e.g. 2026-10)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fx-kur-upload-reliable.png",
+        "alt": {
+          "tr": "Ön Maliyet › Döviz Kurları penceresinde yüklenen demo kur raporu",
+          "en": "Demo FX report loaded in Open Costing › FX Rates"
+        },
+        "caption": {
+          "tr": "Demo KUR dosyası, uygulama açılır açılmaz yüklendiğinde de 24 ay ve 11 döviz okunur.",
+          "en": "A demo KUR file uploaded right after start-up is read: 24 months and 11 currencies."
+        }
+      }
     }
   ]
 }
