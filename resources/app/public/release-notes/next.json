@@ -1,14 +1,44 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "",
+  "publishedAt": "2026-10-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "",
-    "en": ""
+    "tr": "Test raporu CP kapsamı düzeltmesi",
+    "en": "Test report CP scope fix"
   },
   "summary": {
-    "tr": "",
-    "en": ""
+    "tr": "Test raporları aktif CP kapsamıyla güvenilir biçimde incelenir.",
+    "en": "Test reports are reliably reviewed against the active CP scope."
   },
-  "changes": []
+  "changes": [
+    {
+      "id": "test-report-active-cp-review",
+      "type": "fix",
+      "module": {
+        "tr": "Test Raporu Aktarımı",
+        "en": "Test Report Import"
+      },
+      "title": {
+        "tr": "Eksiksiz CP kapsamı artık hatalı reddedilmiyor",
+        "en": "Complete CP coverage is no longer incorrectly rejected"
+      },
+      "body": {
+        "tr": "Kapanmış siparişlerin aktif CP içinde bulunması beklenmez. İnceleme, ekrandaki kullanıcı kapsamını ve Horizon filtrelerini kullanır; eksik, değişmiş veya yetkisiz veriler engellenmeye devam eder.",
+        "en": "Closed orders are no longer required in active CP. Review uses the same user scope and Horizon filters as the screen; incomplete, changed or unauthorized data remains blocked."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-active-cp-review.png",
+        "alt": {
+          "tr": "Anonim raporun aktif CP satırıyla tamamlanan incelemesi",
+          "en": "Completed review of an anonymous report against an active CP row"
+        },
+        "caption": {
+          "tr": "Demo veride, kapanmış sipariş de bulunmasına rağmen aktif CP incelemesi tamamlanır; öneriler onay bekler.",
+          "en": "With demo data including a closed order, active CP review completes and proposals await approval."
+        }
+      }
+    }
+  ]
 }

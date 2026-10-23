@@ -2399,11 +2399,11 @@ function cpAgentRevision(profile,{ignoreRefresh=false}={}){
   const stamp=file=>{try{const stat=fs.statSync(file);return [stat.mtimeMs,stat.size,stat.ino];}catch(err){if(err.code==='ENOENT')return null;throw err;}};
   return crypto.createHash('sha256').update(JSON.stringify({loadedAt:ignoreRefresh?null:cacheForUser(profile.id).loadedAt,overrides:effectiveOverridesForUser(profile.id),preferences:userPreferences.load(profile.id),roleEntries:userAccess.roleWorkspaceEntries(profile),calendar:require('./lib/merch-calendar-store').publicProjection(),managedRules:cpManagedRulesState(),actor:userAccess.profileById(profile.id),plmSamples:stamp(require('./lib/plm-sample-requests-store').DEFAULT_FILE),checklist:stamp(require('./lib/checklist-supplier-store').FILE)})).digest('hex');
 }
-async function cpAgentData(profile) {
+async function cpAgentData(profile,{loadCpRows=null}={}) {
   profile=userAccess.profileById(profile.id);
   if(!profile||profile.enabled===false||!userAccess.hasArea(profile,'cp'))throw Object.assign(new Error('CP access denied.'),{code:'AREA_FORBIDDEN',statusCode:403});
   const sourceRevision=cpAgentRevision(profile);
-  const rows=await agentPlatformDataset(profile.id,profile,'cp');
+  const rows=loadCpRows?await loadCpRows(profile):await agentPlatformDataset(profile.id,profile,'cp');
   const CPSource=require('../public/cp-readiness-engine'),ChecklistSource=require('../public/cp-checklist-engine');
   const analysesSource=rows.map(row=>CPSource.analyzeOrder(row)),keysSource=new Set(analysesSource.map(order=>order.orderKey));
   const optionKeysSource=new Set(analysesSource.map(order=>ChecklistSource.optionIdentity(order)).filter(Boolean).map(key=>'@option:'+key));
@@ -5160,18 +5160,24 @@ const agentQualityService=require('./lib/test-reports/service').createService({
 /* Paydaş belgesi eşlemesi: sahibin GÖREBİLDİĞİ siparişler ve kanonik CP tarihleri
    (planlanan yükleme, hedefi kaçırmadan en geç yükleme). Yalnız okunur. */
 
-async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
-    const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
+async function agentQualityOrderRows(profile,{source='cp',includeInactive=false}={}) {
     await ensureDataLoaded(profile.id);
     const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
+    // Use the same source scope and Horizon as the page projection. Read-only
+    // visible rows belong in the review; write authority is checked separately.
     const businessRows=userAccess.filterRowsByScope(profile, filterRowsByEffectiveHorizon(profile,source,ordersForTarget(active,source,overrides)));
-    const rows=buildOrdersRowsFromASAS(businessRows,antrepoForTarget(active,source),overrides).filter(row=>!write || canUserEditOrderCode(profile,canonicalFields.value(row,'cp','orderCode')));
+    const build=includeInactive?buildOrdersRowsFromASAS:buildCPRowsFromASAS;
+    return build(businessRows,antrepoForTarget(active,source),overrides);
+}
+async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
+    const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
+    const rows=(await agentQualityOrderRows(profile,{source,includeInactive:true})).filter(row=>!write || canUserEditOrderCode(profile,canonicalFields.value(row,'cp','orderCode')));
     const CP=require('../public/cp-readiness-engine');
     return new Map(rows.map(row=>[CP.analyzeOrder(row).orderKey,{orderCode:String(canonicalFields.value(row,source,'orderCode') || ''),
       plmId:String(canonicalFields.value(row,source,'plmId') || ''),modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || ''),colour:String(canonicalFields.value(row,source,'colour')||'')}]));
 }
 async function agentQualityReviewContext(profile) {
-  const data=await cpAgentData(profile),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
+  const data=await cpAgentData(profile,{loadCpRows:agentQualityOrderRows}),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
   // v7.0.290 — Yalnız kullanıcının çalışan checklist listesi (kişisel + yerleşik +
   // Moderatör yayını). Eski ortak tanımlar eklenmez: kullanıcının sildiği adım
   // Test Raporu Aktarımı listesinde yeniden görünüyordu.

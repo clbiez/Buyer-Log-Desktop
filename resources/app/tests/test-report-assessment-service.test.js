@@ -45,6 +45,22 @@ test('already stale client fields cannot acquire a new server revision',async()=
   const ready=await authoritative.prepareAssessment(profile,{sessionId:parsed.sessionId,cp:canonical});
   assert.equal(ready.packet.cp.rows[0].fields.Last,1000);
 });
+test('complete active CP can be reviewed when order authority also includes closed orders',async()=>{
+  const {parsed}=await prepare();
+  const allowed=new Map([...orders,['closed',{orderCode:'1381000'}]]);
+  const canonical={cp:structuredClone(cp),checklistSteps:[{id:'fabric'}],checklistStatuses:[{id:'rejected'}]};
+  const authoritative=createService({authorizedOrders:async()=>allowed,reviewContext:async()=>canonical});
+  const ready=await authoritative.prepareAssessment(profile,{sessionId:parsed.sessionId,cp});
+  assert.equal(ready.packet.cp.rowCount,2);
+  assert.deepEqual(ready.packet.cp.rows.map(row=>row.key),['po7','po1']);
+  const review=client=>authoritative.prepareAssessment(profile,{sessionId:parsed.sessionId,cp:client});
+  await assert.rejects(review({...cp,rowCount:1,rows:cp.rows.slice(0,1)}),{code:'TEST_REPORT_CP_INCOMPLETE'});
+  await assert.rejects(review({...cp,rowCount:3,rows:cp.rows.concat({key:'closed',orderCode:'1381000',fields:{}})}),{code:'TEST_REPORT_CP_INCOMPLETE'});
+  await assert.rejects(review({...cp,rows:[cp.rows[0],cp.rows[0]]}),{code:'TEST_REPORT_CP_INCOMPLETE'});
+  await assert.rejects(review({...cp,rows:[{...cp.rows[0],orderCode:'forged'},cp.rows[1]]}),{code:'TEST_REPORT_CP_INCOMPLETE'});
+  const denied=createService({authorizedOrders:async()=>new Map([['po7',orders.get('po7')]]),reviewContext:async()=>canonical});
+  await assert.rejects(denied.prepareAssessment(profile,{sessionId:parsed.sessionId,cp}),{code:'TEST_REPORT_CP_INCOMPLETE'});
+});
 test('real alphanumeric laboratory reference is preserved, only approval commits it',async()=>{
   const {parsed,packet,data}=await prepare();
   const accepted=await service.acceptAssessment(profile,{sessionId:parsed.sessionId,snapshotId:packet.snapshotId,data});
