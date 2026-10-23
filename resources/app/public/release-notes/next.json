@@ -155,6 +155,64 @@
           "en": "A demo KUR file uploaded right after start-up is read: 24 months and 11 currencies."
         }
       }
+    },
+    {
+      "id": "fabric-paste-smart-card",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · Kumaş kartları",
+        "en": "Collection · Fabric cards"
+      },
+      "title": {
+        "tr": "Yapıştırılan kumaş metni kart görünümüne geçer",
+        "en": "Pasted fabric text switches to the card view"
+      },
+      "body": {
+        "tr": "CP/Orders'tan kopyalanan kart özeti (ör. \"A - 161238 · Three Thread Terry · … / B - 2832 · …\"), kodsuz özet ya da PLM kumaş ayrıntısı Koleksiyon'a yapıştırıldığında Buyer Log kumaş kodunu tanır ve hücreyi kanonik PLM metnine çevirir. Kodun kartı varsa hücre doğrudan kart önizlemesini gösterir; yalnız tek bir karta birebir uyan kodsuz metin bağlanır, tahmin yapılmaz.",
+        "en": "When a card summary copied from CP/Orders (e.g. \"A - 161238 · Three Thread Terry · … / B - 2832 · …\"), a summary without a code or PLM fabric details is pasted into the Collection, Buyer Log recognises the fabric code and converts the cell to the canonical PLM text. If the code has a card, the cell shows the card preview directly; text without a code is linked only when it matches exactly one card, nothing is guessed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fabric-paste-smart-card.png",
+        "alt": {
+          "tr": "Yapıştırılan kumaş metinleri kart görünümünde gösteren Koleksiyon tablosu",
+          "en": "Collection table showing pasted fabric texts as fabric cards"
+        },
+        "caption": {
+          "tr": "Demo veride CP'den kopyalanan takım ve özet metinleri kartlara bağlandı; tanınmayan metin düz kaldı.",
+          "en": "With demo data, set and summary texts copied from CP are linked to cards; unrecognised text stays plain."
+        }
+      }
+    },
+    {
+      "id": "fabric-text-card-editor",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · Kumaş kartları",
+        "en": "Collection · Fabric cards"
+      },
+      "title": {
+        "tr": "Düz metin kumaş hücresi çift tıkla karta dönüşür",
+        "en": "Double-click turns a plain-text fabric cell into a card"
+      },
+      "body": {
+        "tr": "Metin olarak kalmış kumaş hücresine çift tıklayınca Kumaş Kartı editörü açılır. Metinde kod varsa o kodun kartı gösterilir; yoksa kumaş kodu girilir. Kartı kaydet hem kartı kaydeder hem hücreyi karta bağlar; tek geri alma işlemiyle geri alınabilir.",
+        "en": "Double-clicking a fabric cell that stayed as text opens the Fabric Card editor. If the text contains a code, that code's card is shown; otherwise you enter the fabric code. Save card stores the card and links the cell to it; a single undo reverts the cell."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fabric-text-card-editor.png",
+        "alt": {
+          "tr": "Kumaş kodu alanı olan yeni Kumaş Kartı editörü",
+          "en": "New Fabric Card editor with the fabric code field"
+        },
+        "caption": {
+          "tr": "Kodsuz metin için kod girilip kart kaydedilir; hücre kart görünümüne geçer.",
+          "en": "For text without a code, enter the code and save the card; the cell switches to the card view."
+        }
+      }
     }
   ]
 }

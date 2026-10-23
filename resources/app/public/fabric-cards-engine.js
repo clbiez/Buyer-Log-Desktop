@@ -60,7 +60,8 @@
     var out = [];
     segments.forEach(function (segment) {
       var lead = LEAD_RX.exec(segment.text);
-      if (lead) out.push({ label: segment.label, code: lead[1], raw: clean(segment.text) });
+      // "A - 3859-… / B - 2832-…" yazımında ayırıcı bir önceki kumaşa ait değildir.
+      if (lead) out.push({ label: segment.label, code: lead[1], raw: clean(segment.text).replace(/\s*[\/;,|]$/, '') });
     });
     return out;
   }
@@ -303,6 +304,64 @@
     }).join(' / ');
   }
 
+  /* Yapıştırılan/yazılan kumaş metnini kanonik PLM biçimine çevirir
+     ("3859-…", takımda "A - 3859-… / B - 2832-…"); böylece hücre kart
+     görünümüne geçer. Tanınanlar:
+     - PLM metni → olduğu gibi.
+     - CP/Orders/Koleksiyon panosundaki görünen biçim: "3859 · özet",
+       "A · 3859 · özet / B - 2832 · özet". Kodun kartı varsa kartın PLM
+       metni, yoksa "kod-özet" yazılır (çift tıkla kart oluşturulur).
+     - Kodsuz özet ya da PLM ayrıntısı: yalnız TEK bir kartın özetine/PLM
+       metnine birebir uyuyorsa o karta bağlanır; tahmin yapılmaz.
+     Tanınmayan metin değişmeden kalır. */
+  var DISPLAY_SEG_RX = /^\s*(?:([A-Z])\s*[-–:·]\s*)?(\d{3,12})\s*([·|:\-–]|\s)\s*(\S[\s\S]*)$/;
+  function eachCard(cards, fn) {
+    if (!cards) return;
+    if (typeof cards.forEach === 'function' && typeof cards.get === 'function') cards.forEach(function (card) { fn(card); });
+    else Object.keys(cards).forEach(function (key) { fn(cards[key]); });
+  }
+  function rawForCode(code, fallback, cards) {
+    var raw = clean(cardOf(cards, code) && cardOf(cards, code).raw).replace(/\s*[\/;,|]\s*$/, '');
+    var lead = LEAD_RX.exec(raw);
+    return lead && lead[1] === code ? raw : code + '-' + clean(fallback).replace(/\s*·\s*/g, ', ');
+  }
+  function displaySegment(text, cards) {
+    var match = DISPLAY_SEG_RX.exec(text);
+    if (!match) return null;
+    var code = match[2], rest = clean(match[4]);
+    // "150 gsm …" gibi boşlukla ayrılmış sayı yalnız kartı olan bir kodsa kumaş kodudur.
+    if (!rest || (/\s/.test(match[3]) && !cardOf(cards, code))) return null;
+    return { label: match[1] || '', raw: rawForCode(code, rest, cards) };
+  }
+  function matchKey(value) { return normalizeComposition(clean(value)).toLocaleLowerCase('tr-TR').replace(/[\s·,;]+/g, ' ').trim(); }
+  function matchCard(text, cards) {
+    var key = matchKey(text), found = null, ambiguous = false;
+    if (!key) return null;
+    eachCard(cards, function (card) {
+      var code = normalizeCode(card && card.code);
+      if (!code || ambiguous) return;
+      var raw = clean(card.raw);
+      var keys = [card.summary, card.summaryEn, summaryFor(card, 'tr'), summaryFor(card, 'en'), raw, bodyOf(raw)].map(matchKey);
+      if (keys.indexOf(key) < 0) return;
+      if (found && found !== code) ambiguous = true;
+      else found = code;
+    });
+    return ambiguous ? null : found;
+  }
+  function resolveInput(value, cards) {
+    var original = String(value == null ? '' : value), text = original.replace(/\r/g, '').trim();
+    if (!text || parts(text).length) return original;
+    var pieces = text.split(/\s+\/\s+|\n+/).map(clean).filter(Boolean);
+    var segments = pieces.map(function (piece) { return displaySegment(piece, cards); });
+    if (segments.length && segments.every(Boolean)) {
+      if (segments.length === 1) return (segments[0].label ? segments[0].label + ' - ' : '') + segments[0].raw;
+      // Tek satır: yapıştırma/yazma editörü (input) satır sonunu siler.
+      return segments.map(function (segment, index) { return (segment.label || String.fromCharCode(65 + index)) + ' - ' + segment.raw; }).join(' / ');
+    }
+    var code = matchCard(text, cards);
+    return code ? rawForCode(code, bodyOf(text), cards) : original;
+  }
+
   /* Satırlardan kartı olmayan kodları toplar (kod başına ilk PLM metni). */
   function missingCodes(rows, cards) {
     var out = [], seen = new Set();
@@ -337,5 +396,7 @@
     summaryFor: summaryFor,
     displayText: displayText,
     missingCodes: missingCodes,
+    resolveInput: resolveInput,
+    rawForCode: rawForCode,
   });
 }));
