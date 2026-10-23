@@ -1497,8 +1497,8 @@ const APP_PAGE_META=Object.freeze({
   backlog:{tr:'Backlog',en:'Backlog',group:'plan'},
   shipping:{tr:'Nakliye kıyaslama',en:'Shipping Comparison',group:'plan'},
   koleksiyon:{tr:'Koleksiyon',en:'Collection',group:'commercial'},
-  quotations:{tr:'Quotations',en:'Quotations',group:'commercial'},
-  pricinghistory:{tr:'Fiyat Geçmişi',en:'Pricing History',group:'commercial'},
+  quotations:{tr:'Fiyat Masası',en:'Pricing Desk',group:'commercial'},
+  pricinghistory:{tr:'Fiyat Masası',en:'Pricing Desk',group:'commercial'},
   priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis',group:'commercial'},
   manufacturers:{tr:'Üreticiler',en:'Manufacturers',group:'commercial'},
   licensecards:{tr:'Lisans kartları',en:'License cards',group:'commercial'},
@@ -2192,8 +2192,10 @@ function switchTab(tab){
   if(tab==='koleksiyon'||tab==='priceanalysis'||tab==='quotations'||tab==='pricinghistory'){
     void window.BLPerf.ensureFeature('collectionTools').then(()=>{
       if(tab==='priceanalysis')return window.initPriceSupplierAnalysis?.();
-      if(tab==='quotations')return window.BL_QUOTATIONS?.mountWorkspace?.(document.getElementById('quotationWorkspacePage'),{source:'collection',preserveContext:true});
-      if(tab==='pricinghistory')return window.BL_QUOTATIONS?.mountPricingHistory?.(document.getElementById('pricingHistoryWorkspacePage'),{preserveContext:true});
+      // Fiyat Masası: Quotations + Fiyat Geçmişi tek çalışma alanında (Masa · Turlar · Geçmiş · Analiz).
+      // Eski "pricinghistory" adresi aynı masayı Geçmiş sekmesinde açar.
+      if(tab==='quotations')return window.BLPricingDesk?.mount?.(document.getElementById('quotationWorkspacePage'))||window.BL_QUOTATIONS?.mountWorkspace?.(document.getElementById('quotationWorkspacePage'),{source:'collection',preserveContext:true});
+      if(tab==='pricinghistory')return window.BLPricingDesk?.mount?.(document.getElementById('pricingHistoryWorkspacePage'),{tab:'history'})||window.BL_QUOTATIONS?.mountPricingHistory?.(document.getElementById('pricingHistoryWorkspacePage'),{preserveContext:true});
       if(tab==='koleksiyon')window.BL_QUOTATIONS?.syncCollectionPricingUI?.();
     }).catch(err=>showToast(err.message));
   }
@@ -34330,10 +34332,16 @@ async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufa
   if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');
   if(typeof ExcelJS==='undefined')throw new Error(appLang==='en'?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
   const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet(options.pricing?'Quotation Request':(appLang==='en'?'Selected Orders':'Seçili Siparişler'));
-  ws.columns=columns.map(c=>{
+  /* Fiyat Masası dönüş Excel'i: Koleksiyon fiyat talebinde üreticinin dolduracağı
+     fiyat sütunu ve gizli satır anahtarı (BL Key = Koleksiyon satır kimliği)
+     eklenir. Üretici dosyayı geri gönderdiğinde Fiyat Masası satırları bu
+     anahtarla kesin eşler; model adı değişse bile fiyat doğru modele yazılır. */
+  const pricingReturnColumns=Boolean(options.pricing)&&columns.every(c=>c.sourceKind!=='cp');
+  ws.columns=[...columns.map(c=>{
     if(prepareEmailColumnIsPicture(c)){const dims=prepareEmailImageDims(c.sourceKind||'collection');return {header:c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label),width:Math.max(3,(dims.col-5)/7)};}
     return {header:c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label),width:Math.max(12,Math.min(34,Math.round(((c.w||((c.weight||10)*12))/7))))};
-  });
+  }),...(pricingReturnColumns?[{header:'Quotation Price (USD)',width:20},{header:'BL Key',width:10}]:[])];
+  if(pricingReturnColumns)ws.getColumn(columns.length+2).hidden=true;
   const header=ws.getRow(1);header.height=22;const thin={style:'thin',color:{argb:'FFD0D5DD'}},border={top:thin,bottom:thin,left:thin,right:thin};
   header.eachCell(cell=>{cell.font={bold:true,size:10,color:{argb:'FF475467'}};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F4F7'}};cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};cell.border=border;});
   const imageJobs=[];
@@ -34351,6 +34359,11 @@ async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufa
       else{cell.value=out.value;if(out.numFmt)cell.numFmt=out.numFmt;}
       cell.alignment={horizontal:out.numeric?'right':'left',vertical:'middle',wrapText:true};
     });
+    if(pricingReturnColumns){
+      const priceCell=excelRow.getCell(columns.length+1),keyCell=excelRow.getCell(columns.length+2);
+      priceCell.border=border;priceCell.numFmt='"$"#,##0.00';priceCell.alignment={horizontal:'right',vertical:'middle'};priceCell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF8DF'}};
+      keyCell.value=String(row&&(row._collectionSourceId??row.id)||'');keyCell.numFmt='@';
+    }
   });
   const prepared=await Promise.all(imageJobs.map(job=>kolPrepareExcelImage(job.src)));
   imageJobs.forEach((job,index)=>{const image=prepared[index];if(!image)return;try{
