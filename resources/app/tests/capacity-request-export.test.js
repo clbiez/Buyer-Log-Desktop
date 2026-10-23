@@ -142,6 +142,13 @@ test('Collection disinda PO Issuing Date canonical OPD / Order Placement Date de
   assert.strictEqual(row.poIssuingDate.getDate(), 15);
 });
 
+test('Orders gercek ASAS Siparis Yerleştirme MerchTarih alanini kullanir', () => {
+  const row = cpRow({OPD:'', 'Order Placement Date':'', 'Sipariş Yerleştirme MerchTarih':'2026-09-28'});
+  const mapped = CR.buildExport([row], 'orders', {today:TODAY}).rows[0];
+  assert.strictEqual(mapped.poIssuingDate.getDate(), 28);
+  assert.strictEqual(mapped.poIssueToExFactory, 21);
+});
+
 test('Collection disinda gecmis/ileri OPD aynen korunur; bos OPD bugune dusmez', () => {
   const past = CR.buildExport([cpRow({ OPD: '2026-08-01' })], 'cp', { today: TODAY }).rows[0];
   const future = CR.buildExport([cpRow({ OPD: '2027-01-05' })], 'cp', { today: TODAY }).rows[0];
@@ -176,10 +183,10 @@ test('14-16 · uc sutun her zaman bostur', () => {
 });
 
 test('17-18 · gun farki alanlari', () => {
-  // PO Issuing = 2026-09-17, Ex-Factory = 2026-10-19 -> 32 gun
+  // PO Issuing = 2026-09-30, Ex-Factory = 2026-10-19 -> 19 gun
   // Ex-Factory = 2026-10-19, Retail = 2026-12-01 -> 43 gun
   const row = CR.buildExport([cpRow()], 'cp', { today: TODAY }).rows[0];
-  assert.strictEqual(row.poIssueToExFactory, 32);
+  assert.strictEqual(row.poIssueToExFactory, 19);
   assert.strictEqual(row.exFactoryToRetail, 43);
 });
 
