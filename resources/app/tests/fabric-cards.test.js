@@ -4,7 +4,7 @@
    - Saf motor (public/fabric-cards-engine.js) canlı test edilir.
    - Sunucu sözlüğü (server/lib/fabric-cards.js) geçici veri kökünde canlı test edilir.
    - app-main.js entegrasyonu kaynak sözleşmesiyle denetlenir: PLM metni satırda
-     kalır, hücre kart özetini gösterir, içe aktarımlar eksik kartları önerir. */
+     kalır, hücre kart özetini gösterir, içe aktarımlar eksik kartları otomatik üretir. */
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -135,9 +135,13 @@ test('Koleksiyon tablosu PLM metnini korur, kart özetini gösterir ve içe akta
   assert.match(APP, /\}else if\(c\.k==='fabric'&&kolFabricParts\(val\)\.length\)\{\n\s*kolFabricCardsEnsureLoaded\(\);\n\s*html\+=kolFabricCellHtml\(r,val,rc\);/);
   assert.match(APP, /\.kolFabricTd\[data-fabric-id\]'\)\.forEach\(cell=>cell\.addEventListener\('dblclick'/);
   assert.match(APP, /if\(key==='fabric'\)return kolFabricDisplay\(effective\);/);
-  assert.equal((APP.match(/kolFabricCardsAfterImport\(/g) || []).length, 5, 'tanım + dört PLM içe aktarma akışı');
-  // Kart kaydı yalnız kullanıcı onayından sonra; otomatik akış mevcut kartı ezmez.
-  assert.match(APP, /const cards=await showKolFabricBatchPreview\(still,analysis\);[\s\S]{0,400}kolFabricCardsSave\(cards,\{onlyMissing:true\}\)/);
+  assert.equal((APP.match(/kolFabricCardsAfterImport\(/g) || []).length, 6, 'tanım + dört PLM içe aktarma akışı + kuyruk devamı');
+  // PLM Sync: AI/rule kartları onay penceresi olmadan yalnız eksik kodlara kaydedilir.
+  assert.match(APP, /if\(auto\)\{[\s\S]{0,250}const cards=still\.map\([\s\S]{0,200}kolFabricCardsSave\(cards,\{onlyMissing:true\}\)/);
+  assert.match(APP, /context:api\.aiContext\(batch,approvedStyles\)/);
+  assert.match(APP, /api\.applyLearnedStyle\(card,raw,approvedStyles\)/);
+  assert.match(APP, /kolFabricAutoQueue\.push\(\.\.\.list\)/);
+  assert.match(APP, /if\(!result\.ok\|\|!result\.hasMore\|\|!result\.created\)break/);
   // Satırdaki PLM kumaş metni kart işlemlerinde yazılmaz.
   const block = APP.slice(APP.indexOf('// ================= KOLEKSİYON KUMAŞ KARTLARI'), APP.indexOf('function kolPlmListStatusOptions('));
   assert.doesNotMatch(block, /\.fabric\s*=(?!=)/);
@@ -256,4 +260,44 @@ test('Collection copy, range clipboard, and both Excel exporters use visible Fab
   assert.match(APP,/if\(c\.k==='fabric'\)\{put\(ri\+1,ci\+imgOff/);
   assert.match(APP,/if\(c\.k==='fabric'\)\{cell\.value=kolExportSingleLineText\(kolFabricDisplay\(raw\)\)/);
   assert.match(APP,/function kolStyleExportValue\(field,row\)[\s\S]*?if\(field\.k==='fabric'\)return kolFabricDisplay\(raw\)/);
+});
+
+
+test('previously edited cards become bounded, family-matched LCW AI style examples',()=>{
+  const raw='18942-Örme,Şardonlu Üç İplik,30/1 Pamuk,70 D Poliester,20/1 Pamuk,280 gsm,%70 Pamuk,%30 Poliester'; // i18n-ignore
+  const next='18943-Örme,Şardonlu Üç İplik,24/1 Pamuk,50 D Poliester,18/1 Pamuk,260 gsm,%80 Pamuk,%20 Poliester'; // i18n-ignore
+  const saved={code:'18942',raw,summarySource:'manual',updatedAt:'2026-10-23T18:00:00Z',
+    summary:'Üç İplik Şardonlu · 30/70/20 · 280 gsm · 70% Pamuk 30% Polyester',
+    summaryEn:'Three Thread Terry · 30/70/20 · 280 gsm · 70% Cotton 30% Poliester'};
+  const unrelated={...saved,code:'18888',raw:'18888-Dokuma,Gabardin,180 gsm',summary:'Gabardin · 180 gsm',summaryEn:'Gabardine · 180 gsm'};
+  const automatic={...saved,code:'18889',summarySource:'ai'};
+  const cards=new Map([['18942',saved],['18888',unrelated],['18889',automatic]]);
+  const context=engine.aiContext([{code:'18943',raw:next}],cards);
+  assert.equal(context.fabrics.length,1);
+  assert.equal(context.learnedExamples.length,1);
+  assert.equal(context.learnedExamples[0].summary,'Üç İplik Şardonlu · 30/70/20 · 280 gsm · 70% Pamuk 30% Polyester');
+  assert.equal(context.learnedExamples[0].plm,raw);
+  assert.equal(engine.aiContext([{code:'3859',raw:SUPREM}],cards).learnedExamples,undefined,
+    'different fabric family must not leak into prompts');
+});
+
+test('human-edited bilingual style transfers without copying another fabric measurements',()=>{
+  const original='18942-Örme,Şardonlu Üç İplik,30/1 Pamuk,70 D Poliester,20/1 Pamuk,280 gsm,%70 Pamuk,%30 Poliester'; // i18n-ignore
+  const next='18943-Örme,Şardonlu Üç İplik,24/1 Pamuk,50 D Poliester,18/1 Pamuk,260 gsm,%80 Pamuk,%20 Poliester'; // i18n-ignore
+  const saved={code:'18942',raw:original,summarySource:'manual',
+    summary:'Üç İplik Şardonlu · 30/70/20 · 280 gsm · 70% Pamuk 30% Polyester',
+    summaryEn:'Three Thread Terry · 30/70/20 · 280 gsm · 70% Cotton 30% Poliester'};
+  const base=engine.ruleCard(next);
+  const edited=engine.applyLearnedStyle(base,next,new Map([['18942',saved]]));
+  assert.match(edited.summary,/^Üç İplik Şardonlu · /);
+  assert.match(edited.summaryEn,/^Three Thread Terry · /);
+  assert.match(edited.summary,/260 gsm/);
+  assert.match(edited.summary,/24\/50\/18/,'learned compact-yarn format uses current source counts');
+  assert.doesNotMatch(edited.summary,/30\/70\/20/);
+  assert.match(edited.summaryEn,/80% Cotton 20% Poliester/);
+  assert.doesNotMatch(edited.summary,/280 gsm|70% Pamuk/);
+  assert.equal(edited.details.weight,base.details.weight);
+  const noBrush=next.replace('Şardonlu ','');
+  assert.deepEqual(engine.applyLearnedStyle(base,noBrush,new Map([['18942',saved]])),base,
+    'brushed user preference must not spread to non-brushed fabric');
 });
