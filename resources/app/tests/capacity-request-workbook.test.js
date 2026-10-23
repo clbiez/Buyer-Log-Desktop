@@ -110,10 +110,18 @@ test('uretilen workbook geri okundugunda sozlesmeye uyar', async () => {
       });
     });
 
+    // Excel formulleri: kullanici inputu degistirdiginde kendiliginden hesaplanir.
+    assert.strictEqual(sheet.G2.f, 'IF(F2="","",F2*1)');
+    assert.strictEqual(sheet.G4.f, 'IF(F4="","",F4*2)');
+    assert.strictEqual(sheet.S2.f, 'IF(OR(L2="",M2=""),"",M2-L2)');
+    assert.strictEqual(sheet.T2.f, 'IF(OR(M2="",Q2=""),"",Q2-M2)');
+    assert.strictEqual(sheet.S3.f, 'IF(OR(L3="",M3=""),"",M3-L3)', 'OPD eksikse de manuel giriste hesaplamaya hazir');
+    assert.ok(r2[idx('PO Issue to Ex-Factory')] == null, 'tarihi eksik satirda sahte sonuc yok');
+
     // Gun farklari
-    assert.strictEqual(r1[idx('PO Issue to Ex-Factory')], 32);
+    assert.strictEqual(r1[idx('PO Issue to Ex-Factory')], 19);
     assert.strictEqual(r1[idx('Ex-Factory to Retail Stock Date')], 43);
-    assert.strictEqual(r3[idx('PO Issue to Ex-Factory')], 46);  // 09-17 -> 11-02
+    assert.strictEqual(r3[idx('PO Issue to Ex-Factory')], 33);  // 09-30 -> 11-02
     assert.strictEqual(r3[idx('Ex-Factory to Retail Stock Date')], 48); // 11-02 -> 12-20
   } finally {
     fs.rmSync(path.dirname(file), { recursive: true, force: true });
