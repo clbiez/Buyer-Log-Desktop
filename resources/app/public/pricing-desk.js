@@ -436,7 +436,8 @@
     }
     throw new Error(L('Excel okuyucu hazır değil.','Excel reader is not available.'));
   }
-  const headerKey=value=>clean(value).toLocaleLowerCase('tr-TR').replace(/\s+/g,' ');
+  // TR yerelinde "ID" → "ıd" olur; başlık eşlemesi noktasız ı'yı i'ye indirger.
+  const headerKey=value=>clean(value).toLocaleLowerCase('tr-TR').replace(/ı/g,'i').replace(/\s+/g,' ');
   // Dosya adı karşılaştırması: Türkçe harfler ASCII'ye, alt çizgi/tire boşluğa indirgenir.
   const foldName=value=>clean(value).toLocaleLowerCase('tr-TR').replace(/ı/g,'i').replace(/ş/g,'s').replace(/ğ/g,'g').replace(/ü/g,'u').replace(/ö/g,'o').replace(/ç/g,'c').replace(/[^a-z0-9]+/g,' ').trim();
   function findColumn(header,patterns){return header.findIndex(cell=>patterns.some(pattern=>pattern.test(headerKey(cell))));}
@@ -444,8 +445,8 @@
     const headerIndex=rows.findIndex(row=>row.some(cell=>/(model|plm|bl key)/i.test(clean(cell))));
     if(headerIndex<0)return {error:L('Excel’de model başlığı bulunamadı.','No model header was found in the Excel file.')};
     const header=rows[headerIndex];
-    const keyCol=findColumn(header,[/^bl key$/,/^bl row$/]),plmCol=findColumn(header,[/^plm id$/,/^plm$/]),modelCol=findColumn(header,[/^model name$/,/^model$/,/^model adı$/,/^model kodu$/]);
-    let priceCol=findColumn(header,[/^(fob|quotation|offer|teklif|fiyat|price)( price| fiyatı| fiyat)?( \(usd\)| usd| \$)?$/,/^supplier (fob|price)$/,/^üretici fiyatı$/,/quotation price/]);
+    const keyCol=findColumn(header,[/^bl key$/,/^bl row$/]),plmCol=findColumn(header,[/^plm id$/,/^plm$/]),modelCol=findColumn(header,[/^model name$/,/^model$/,/^model adi$/,/^model kodu$/]);
+    let priceCol=findColumn(header,[/^(fob|quotation|offer|teklif|fiyat|price)( price| fiyati| fiyat)?( \(usd\)| usd| \$)?$/,/^supplier (fob|price)$/,/^üretici fiyati$/,/quotation price/]);
     if(priceCol<0)priceCol=header.findIndex(cell=>/price|fiyat|fob/i.test(clean(cell))&&!/target|hedef/i.test(clean(cell)));
     if(priceCol<0)return {error:L('Excel’de fiyat sütunu bulunamadı (ör. “Quotation Price”, “FOB”, “Fiyat”).','No price column was found (e.g. “Quotation Price”, “FOB”, “Price”).')};
     const manufacturers=[...new Set((req.items||[]).map(item=>clean(item.manufacturer)).filter(Boolean))];

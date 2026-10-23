@@ -42,7 +42,7 @@ test('Segment bileşenleri tek görünüm ve tek aktif durum paylaşır', () => 
 });
 
 test('Filtre çipi ve sayfa sekmesi ayrı, tutarlı iki dil kullanır', () => {
-  assert.match(ruleFor(':root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip):is('), /background:var\(--acc-bg\);color:var\(--acc-ink\)/);
+  assert.match(ruleFor(':root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip,.kolHealthChip):is('), /background:var\(--acc-bg\);color:var\(--acc-ink\)/);
   const tab = ruleFor(':root :is(.ovHomePager>.ovHomePageTab,.psaTabs>[role="tab"],.dmLabTabs>.dmLabTab):is(');
   assert.match(tab, /border-bottom-color:var\(--acc\);background:transparent/);
 });

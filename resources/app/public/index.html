@@ -998,12 +998,19 @@
           <button type="button" class="tableViewPreset tableFieldsBtn" data-table-fields="koleksiyon" aria-haspopup="dialog" aria-expanded="false" title="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-tr="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-en="Show / hide column headings (does not change the view preset)"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span data-i18n-tr="Alanlar" data-i18n-en="Fields">Alanlar</span><span class="tableFieldsBadge" hidden></span></button>
           <button type="button" class="tableViewPreset kolAllVariantsToggle" id="kolAllVariantsToggle" aria-pressed="true" title="Tüm alt renkleri gizle" aria-label="Tüm alt renkleri gizle"><svg class="ic" aria-hidden="true"><use href="#i-arrows-down-up"/></svg></button>
         </div>
+        <div class="tableViewActions kolPriceViewActions" id="kolPriceViewActions" role="group" aria-label="Fiyat görünümü" data-i18n-aria-label-tr="Fiyat görünümü" data-i18n-aria-label-en="Price view">
+          <span class="tableViewLabel" data-i18n-tr="FİYAT" data-i18n-en="PRICE">FİYAT</span>
+          <button type="button" class="tableViewPreset" data-kol-price-view="compact" aria-pressed="true" title="Teklif & Onay şeridi ve Landed Özeti" data-i18n-title-tr="Teklif & Onay şeridi ve Landed Özeti" data-i18n-title-en="Quotes & Approval strip and Landed Summary"><span data-i18n-tr="Kompakt" data-i18n-en="Compact">Kompakt</span></button>
+          <button type="button" class="tableViewPreset" data-kol-price-view="detail" aria-pressed="false" title="Best Price, onaylı üretici/fiyat, FOB ve landed ayrı sütunlarda" data-i18n-title-tr="Best Price, onaylı üretici/fiyat, FOB ve landed ayrı sütunlarda" data-i18n-title-en="Best Price, approved manufacturer/price, FOB and landed in separate columns"><span data-i18n-tr="Detay" data-i18n-en="Detail">Detay</span></button>
+          <button type="button" class="tableViewPreset" data-kol-price-view="cost" aria-pressed="false" title="Teklif şeridi + FOB, Royalty, Hologram ve landed maliyet sütunları" data-i18n-title-tr="Teklif şeridi + FOB, Royalty, Hologram ve landed maliyet sütunları" data-i18n-title-en="Quote strip + FOB, Royalty, Hologram and landed cost columns"><span data-i18n-tr="Maliyet" data-i18n-en="Cost">Maliyet</span></button>
+        </div>
       </div>
       <div class="activeFilterBar" id="kolActiveFilters" role="region" aria-label="Active table filters" data-i18n-aria-label-tr="Aktif tablo filtreleri" data-i18n-aria-label-en="Active table filters">
         <span class="activeFilterLabel" data-i18n-tr="TABLO FİLTRELERİ" data-i18n-en="TABLE FILTERS">TABLO FİLTRELERİ</span>
         <div class="activeFilterTokens" id="kolActiveFilterTokens" aria-live="polite"></div>
         <button type="button" class="activeFilterClear" data-active-filter-clear="koleksiyon" hidden><svg class="ic"><use href="#i-eraser"/></svg><span data-i18n-tr="Tablo filtrelerini temizle" data-i18n-en="Clear table filters">Tablo filtrelerini temizle</span></button>
       </div>
+      <div class="kolHealthBar" id="kolHealthBar" role="group" aria-label="Veri sağlığı" data-i18n-aria-label-tr="Veri sağlığı" data-i18n-aria-label-en="Data health" hidden></div>
       <div class="toolbar tableActionToolbar" id="kolTableToolbar" data-responsive-toolbar="collection" data-overflow-menu="kolMoreMenu" data-overflow-trigger="kolMoreWrap">
         <input type="search" id="kolSearch" placeholder="Model adı, lisans, kategori, licensor ara…" aria-label="Koleksiyonda ara" data-i18n-aria-label-tr="Koleksiyonda ara" data-i18n-aria-label-en="Search Collection">
         <div class="tableToolbarActions" id="kolTableActions" aria-label="Collection table actions">
@@ -1524,6 +1531,7 @@
 </script>
 <script src="collection-pricing-engine.js?v=__BL_ASSET_VERSION__"></script>
 <script src="license-royalty-commissions.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="collection-price-drawer.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=3"></script>
 <script src="backlog-plan-actual-report.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="backlog-plan-actual.js?v=__BL_ASSET_VERSION__&rev=3"></script>

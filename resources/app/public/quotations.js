@@ -216,11 +216,22 @@
       qState.requests.forEach(req=>{qRememberServerState(req);qReapplyPendingLines(req);});
       qHydrated=true;qPersistLocal();
       qProjectForeignLineEdits();
+      qNotifyCollectionQuotes();
     }catch(err){
       qHydrated=true;
       if(typeof showToast==='function')showToast(qLang('Ortak quotation kayıtları yüklenemedi; yerel önbellek gösteriliyor. ','Shared quotations could not be loaded; showing the local cache. ')+(err?.message||''));
     }
     return qLoad();
+  }
+  /* Koleksiyon'daki Teklif & Onay şeridi / Veri Sağlığı açık teklif sayısını
+     quotation verisinden okur. Ortak veri değiştiyse (talep kimliği/güncelleme
+     zamanı imzası) ve Koleksiyon açıksa tablo bir kez tazelenir. */
+  let qCollectionQuoteSignature='';
+  function qNotifyCollectionQuotes(){
+    const signature=qLoad().requests.map(req=>`${req.id}:${req.updatedAt||''}:${req.status||''}`).join('|');
+    if(signature===qCollectionQuoteSignature)return;
+    qCollectionQuoteSignature=signature;
+    if(typeof renderKol==='function'&&document.body?.dataset?.activeTab==='koleksiyon')renderKol();
   }
   function qQueue(task){
     qSaveQueue=qSaveQueue.then(task,task);
@@ -356,6 +367,36 @@
     }
     if(found)qRowCollections.set(found,scope.all||rows);
     return found;
+  }
+
+  /* Koleksiyon Veri Sağlığı / Teklif & Onay şeridi için satır başına açık
+     teklif durumu. Her sahip kapsamı için bir kimlik dizini kurulur; satır
+     başına tarama yapılmaz. Kapalı talepler ve drop edilen satırlar sayılmaz.
+     Dönen WeakMap Koleksiyon satır nesnesiyle anahtarlanır. */
+  function collectionQuoteIndex(){
+    const out=new WeakMap(),scopes=new Map();
+    const loaded=typeof kolRows!=='undefined'&&Array.isArray(kolRows)?new Set(kolRows):null;
+    if(!loaded)return out;
+    qLoad().requests.forEach(req=>{
+      if(req.status==='closed')return;
+      (req.items||[]).forEach(line=>{
+        if(line.dropped)return;
+        const owner=qLineOwnerId(line);
+        if(!scopes.has(owner)){
+          const scope=qRowsForOwner(owner),byId=new Map();
+          if(scope)scope.rows.forEach(row=>{if(loaded.has(row))byId.set(Number(scope.idOf(row)),row);});
+          scopes.set(owner,byId);
+        }
+        const row=scopes.get(owner).get(Number(line.rowId));
+        if(!row)return;
+        const entry=out.get(row)||{waiting:0,offers:0,approved:0,requestIds:new Set()};
+        if(qValidPrice(line.price))entry.offers++;else entry.waiting++;
+        if(line.approved===true)entry.approved++;
+        entry.requestIds.add(req.id);
+        out.set(row,entry);
+      });
+    });
+    return out;
   }
 
   function qCollectionEffectiveValue(row,key){
@@ -2765,5 +2806,5 @@
     mountWorkspace:(host,options)=>mountWorkspace(host,options),mountHistoryTable:(host,options)=>mountPricingHistory(host,options),
     isWorkspaceMounted:()=>qWorkspaceMounted,
   };
-  window.BL_QUOTATIONS={openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},desk:qDeskApi,exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
+  window.BL_QUOTATIONS={collectionQuoteIndex,openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},desk:qDeskApi,exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
 })();
