@@ -9611,8 +9611,9 @@ function applyIncrementalProjectionPatch(row, patch, overrides, includePriority 
   }
   if (Object.prototype.hasOwnProperty.call(patch,'suppFob')) {
     row['Supp. FOB']=patch.suppFob==null?null:Number(patch.suppFob);
-    row._suppFobManual=true;row._suppFobOverride=true;row._suppFobRule=null;
     row._suppFobMeta=patch.suppFobMeta&&typeof patch.suppFobMeta==='object'?patch.suppFobMeta:{source:'manual'};
+    row._suppFobManual=row._suppFobMeta.source!=='rule';row._suppFobOverride=true;
+    row._suppFobRule=row._suppFobManual?null:(row._suppFobMeta.ruleId||true);
   }
   if (patch.delType != null) row['Del. Type']=String(patch.delType);
   if (patch.dates && typeof patch.dates === 'object') {

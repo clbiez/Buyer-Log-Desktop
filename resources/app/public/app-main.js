@@ -2070,7 +2070,7 @@ function setOrdersLoadingState(loading,message){
   }
 }
 async function ensureOrdersLoaded(options={}){
-  if(state.orders)return true;
+  if(!options.force&&state.orders)return true;
   if(ordersLoadPromise)return ordersLoadPromise;
   setOrdersLoadingState(true);
   ordersLoadPromise=(async()=>{
@@ -5645,6 +5645,7 @@ async function cpSetShortageMark(row,marked,qty){
     if(marked)state.overrides.shortagemap[key]={markedAt:new Date().toISOString(),qty};else delete state.overrides.shortagemap[key];
     // Statü sunucuda hesaplanır: CP yeniden yüklenir, Backlog bir sonraki çizimde günceldir.
     await ensureCpLoaded({force:true});
+    if(state.orders)await ensureOrdersLoaded({force:true});
     if(typeof lastBacklogData!=='undefined'&&lastBacklogData)void fetchBacklog(buildBacklogParams());
     showToast(marked?(en?'Balance marked as shortage.':'Bakiye eksik adet olarak işaretlendi.'):(en?'Shortage mark removed.':'Eksik adet işareti kaldırıldı.'));
   }catch(err){
@@ -9596,6 +9597,46 @@ function refreshOverviewNotesLive(){
     renderOverviewPriorityReminder(rows);
   });
 }
+function syncOrderLinePeersFromCpRow(sourceRow, options={}){
+  if(!sourceRow||typeof sameOrderLine!=='function')return 0;
+  const keys=Array.isArray(options.keys)?options.keys:[];
+  const keySet=new Set(keys);
+  const hasDateOrDelType=options.recalcLogistics===true||['Ex-factory','Retail Date','In-Store (Model Budget)','Del. Type'].some(k=>keySet.has(k));
+  const copyFields=[
+    'Ex-factory','Retail Date','In-Store (Model Budget)','Del. Type',
+    'Licensor','_licensorManual','_licensorAuto','_licensorAutoLicense',
+    'Sub-Manufacturer',
+    'Supp. FOB','_suppFobMeta','_suppFobOverride','_suppFobManual','_suppFobRule',
+    'Notes','_notesAt','_notesBy','_notesByName',
+    'Ek Not','_ekNotAt','_ekNotBy','_ekNotByName',
+  ];
+  const customIds=typeof CP_NOTE_COLUMN_DEFS!=='undefined'&&Array.isArray(CP_NOTE_COLUMN_DEFS)?CP_NOTE_COLUMN_DEFS.map(def=>def.id):[];
+  const extraKeys=keys.filter(k=>k&&!copyFields.includes(k)&&!customIds.includes(k));
+  let count=0;
+  [state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
+    (rows||[]).forEach(peer=>{
+      if(!peer||peer===sourceRow||!sameOrderLine(peer,sourceRow))return;
+      copyFields.forEach(field=>{
+        if(Object.prototype.hasOwnProperty.call(sourceRow,field)||peer[field]!==undefined)peer[field]=sourceRow[field];
+      });
+      customIds.forEach(id=>{
+        if(Object.prototype.hasOwnProperty.call(sourceRow,id)||peer[id]!==undefined)peer[id]=sourceRow[id];
+      });
+      extraKeys.forEach(field=>{
+        if(Object.prototype.hasOwnProperty.call(sourceRow,field)||peer[field]!==undefined)peer[field]=sourceRow[field];
+      });
+      if(hasDateOrDelType){
+        if(typeof syncCpProductionLogisticSegment==='function'){
+          if(keySet.has('Del. Type'))syncCpProductionLogisticSegment(peer,peer['Del. Type']);
+          else syncCpProductionLogisticSegment(peer);
+        }
+        if(typeof applyFormulas==='function')applyFormulas(peer);
+      }
+      count++;
+    });
+  });
+  return count;
+}
 function refreshRowEverywhere(id){
   invalidateCoreFacetCaches();
   // Priority hücresi artık türetilmiş legacy warning metni değildir. Kararı
@@ -9603,6 +9644,7 @@ function refreshRowEverywhere(id){
   // decision context'i senkronla; aksi halde hücre bir render boyunca stale kalır.
   if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
   refreshCpRowOnly(id);
+  if(state.orders&&typeof renderOrders==='function')renderOrders();
   refreshOverviewNotesLive();
   scheduleOverviewRender('cp-row-updated');
 }
@@ -9645,7 +9687,10 @@ function applyHistoryAction(action, direction){
   if(historyKeys.has('Del. Type'))syncCpProductionLogisticSegment(row,row['Del. Type']);
   else if(historyKeys.has('Ex-factory'))syncCpProductionLogisticSegment(row);
   applyFormulas(row);
+  const dateHistoryKeys=[...historyKeys].filter(key=>['Ex-factory','Retail Date','In-Store (Model Budget)'].includes(key));
+  if(dateHistoryKeys.length&&typeof saveDateOverrides==='function')saveDateOverrides(row,dateHistoryKeys);
   if([...historyKeys].some(key=>['Ex-factory','Retail Date','In-Store (Model Budget)','Del. Type'].includes(key)))invalidateUnifiedPriorityDecisions('cp-history-edit');
+  if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,{keys:[...historyKeys]});
   markDirty(action.id);
   refreshRowEverywhere(action.id);
   if(action.refreshSubmfrList) refreshSubmfrList();
@@ -9868,6 +9913,9 @@ function clearRowNote(id,key='Notes'){
   const prev=row[key]==null?'':String(row[key]);
   if(!prev) return;
   row[key]='';
+  if(key==='Notes'){row._notesAt='';row._notesBy='';row._notesByName='';}
+  else if(key==='Ek Not'){row._ekNotAt='';row._ekNotBy='';row._ekNotByName='';}
+  if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,{keys:[key]});
   markDirty(Number(id));
   pushUndo({id:Number(id),fields:[{key,prev,next:''}]});
   refreshRowEverywhere(Number(id));
@@ -9905,9 +9953,11 @@ function commitCpEditor(t, options={}){
     if(editableValuesEqual(prev,next)) return false;
     row[key] = next;
     if(kind==='exfactory')syncCpProductionLogisticSegment(row);
-    applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-exfactory-edit'); markDirty(id);
+    applyFormulas(row);
+    if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,{keys:[key]});
+    invalidateUnifiedPriorityDecisions('cp-exfactory-edit'); markDirty(id);
     pushUndo({id,mergeKey:t.dataset.historySession||null,fields:[{key, prev, next}]});
-    saveDateOverrides(row);
+    saveDateOverrides(row,[key]);
     if(refresh) refreshRowEverywhere(id);
     return true;
   }
@@ -9928,9 +9978,11 @@ function commitCpEditor(t, options={}){
     if(editableValuesEqual(prevMain,d) && editableValuesEqual(prevOther,nextOther)) return false;
     row[key] = d; fields.push({key, prev:prevMain, next:d});
     row[other]=nextOther; fields.push({key:other, prev:prevOther, next:nextOther});
-    applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-target-date-edit'); markDirty(id);
+    applyFormulas(row);
+    if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,{keys:[key,other]});
+    invalidateUnifiedPriorityDecisions('cp-target-date-edit'); markDirty(id);
     pushUndo({id,mergeKey:t.dataset.historySession||null,fields});
-    saveDateOverrides(row);
+    saveDateOverrides(row,[key,other]);
     if(refresh) refreshRowEverywhere(id);
     return true;
   }
@@ -9965,7 +10017,9 @@ function commitCpEditor(t, options={}){
   row[key] = t.value;
   if(kind==='deltype'){
     syncCpProductionLogisticSegment(row,t.value);
-    applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-delivery-type-edit'); markDirty(id); pushUndo({id, fields:[{key,prev,next:t.value}]});
+    applyFormulas(row);
+    if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,{keys:[key]});
+    invalidateUnifiedPriorityDecisions('cp-delivery-type-edit'); markDirty(id); pushUndo({id, fields:[{key,prev,next:t.value}]});
     if(refresh) refreshRowEverywhere(id);
     return true;
   }
@@ -9978,6 +10032,7 @@ function commitCpEditor(t, options={}){
     const prevSub=norm(row['Sub-Manufacturer']);
     const nextSub=turknorm(next)==='DTR'?norm(row.Manufacturer):norm(state.overrides.submap?.[lineKeyOfRow(row)]??state.overrides.submap?.[row['Order Code']]??'');
     row['Sub-Manufacturer']=nextSub;
+    if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,{keys:[key,'Sub-Manufacturer','Supp. FOB']});
     if(!editableValuesEqual(prevSub,nextSub))fields.push({key:'Sub-Manufacturer',prev:prevSub,next:nextSub});
     if(!editableValuesEqual(prevSupp,row['Supp. FOB'])) fields.push({key:'Supp. FOB',prev:prevSupp,next:row['Supp. FOB']});
     markDirty(id); pushUndo({id,fields,refreshLicensorList:true});
@@ -9989,12 +10044,15 @@ function commitCpEditor(t, options={}){
       row[key]=norm(row.Manufacturer);t.value=row[key];return false;
     }
     const next=norm(t.value);row[key]=next;t.value=next;
+    if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,{keys:[key]});
     markDirty(id); pushUndo({id, fields:[{key,prev,next}], refreshSubmfrList:true});
     if(refresh){ refreshRowEverywhere(id); refreshSubmfrList(); }
     return true;
   }
+  if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,{keys:[key]});
   markDirty(id);
   pushUndo({id, fields:[{key,prev,next:t.value}]});
+  if(refresh) refreshRowEverywhere(id);
   return true;
 }
 
@@ -11239,10 +11297,13 @@ function sameOrderCode(a,b){
 // Fiyat alanları artık sipariş koduna değil, SATIRA (sipariş + model + renk kodu)
 // yayılır: aynı siparişteki farklı modeller farklı Supp. FOB alabilir.
 function propagateOrderPricingFields(sourceRow, changes={}){
-  [state.cp&&state.cp.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
+  [state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
     (rows||[]).forEach(r=>{
       if(!sameOrderLine(r,sourceRow)) return;
-      if(Object.prototype.hasOwnProperty.call(changes,'licensor')){ r.Licensor=norm(changes.licensor); r._licensorManual=true; }
+      if(Object.prototype.hasOwnProperty.call(changes,'licensor')){
+        r.Licensor=norm(changes.licensor); r._licensorManual=true;
+        r['Sub-Manufacturer']=turknorm(r.Licensor)==='DTR'?norm(r.Manufacturer):norm(state.overrides?.submap?.[lineKeyOfRow(r)]??state.overrides?.submap?.[r['Order Code']]??'');
+      }
       if(Object.prototype.hasOwnProperty.call(changes,'suppFob')){
         const meta=normalizeSuppFobMeta(changes.suppFobMeta)||{source:'manual'};
         r['Supp. FOB']=changes.suppFob; r._suppFobMeta=meta; r._suppFobOverride=true;
@@ -11439,7 +11500,7 @@ async function applySuppFobRuleToMatchingOrders(rule){
     state.overrides.suppfobmap[key]=suppFob;
     state.overrides.suppfobmetamap=state.overrides.suppfobmetamap||{};
     state.overrides.suppfobmetamap[key]=meta;
-    [state.cp&&state.cp.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
+    [state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
       (rows||[]).forEach(r=>{
         if((lineKeyOfRow(r)||String(r['Order Code']))!==key) return;
         r['Supp. FOB']=suppFob; r._suppFobMeta=meta; r._suppFobOverride=true; r._suppFobManual=false; r._suppFobRule=meta.ruleId||true;
@@ -11447,6 +11508,7 @@ async function applySuppFobRuleToMatchingOrders(rule){
     });
   });
   if(!window.SERVER_BACKED) matches.forEach(r=>markDirty(r._id));
+  if(state.orders) renderOrders();
   if(state.cp){ renderCP(); }
   if(state.orderSummary) renderOverview();
   return updates.length;
@@ -11476,7 +11538,7 @@ async function applyAllSuppFobRules(rules){
     state.overrides.suppfobmap[key]=suppFob;
     state.overrides.suppfobmetamap=state.overrides.suppfobmetamap||{};
     state.overrides.suppfobmetamap[key]=meta;
-    [state.cp&&state.cp.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
+    [state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
       (rows||[]).forEach(r=>{
         if((lineKeyOfRow(r)||String(r['Order Code']))!==key) return;
         r['Supp. FOB']=suppFob; r._suppFobMeta=meta; r._suppFobOverride=true; r._suppFobManual=false; r._suppFobRule=meta.ruleId||true;
@@ -11484,6 +11546,7 @@ async function applyAllSuppFobRules(rules){
     });
   });
   if(!window.SERVER_BACKED) (state.cp&&state.cp.rows||[]).forEach(r=>{if(seen.has(String(r['Order Code'])))markDirty(r._id);});
+  if(state.orders)renderOrders();
   if(state.cp){renderCP();}
   if(state.orderSummary)renderOverview();
   return updates.length;
@@ -12076,8 +12139,8 @@ async function persistTransitRules(rules){
     invalidateUnifiedPriorityDecisions('transit-rules-server');
     await loadFromServer(false);
   }else{
-    [state.cp&&state.cp.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>(rows||[]).forEach(applyFormulas));
-    if(state.cp){renderCP();} if(state.orderSummary)renderOverview();
+    [state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>(rows||[]).forEach(row=>{if(typeof syncCpProductionLogisticSegment==='function')syncCpProductionLogisticSegment(row);applyFormulas(row);}));
+    if(state.cp){renderCP();} if(state.orders)renderOrders(); if(state.orderSummary)renderOverview();
     if(typeof fetchCurrentBacklog==='function')fetchCurrentBacklog();
   }
   if(typeof renderKol==='function')renderKol();
@@ -12581,6 +12644,7 @@ function syncOverridesFromRow(row){
     CP_NOTE_COLUMN_DEFS.forEach(def=>{ bucket[def.id]=row[def.id] instanceof Date?toISODate(row[def.id]):norm(row[def.id]); });
     state.overrides.noteColumnValues[key]=bucket;
   }
+  if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row);
   syncOverrideToServer(oc,notes,row);
 }
 // Kullanıcı düzenlemesini sunucudaki kalıcı depoya gönderir (best-effort, sessiz başarısız olur —
@@ -12629,17 +12693,45 @@ async function settleOverrideWrites(){
   flushPendingOverrideWrites();
   try{ await overrideMutationsSettled(); }catch(_){ }
 }
-function saveDateOverrides(row){
+const _pendingDateOverrideKeys = new Map();
+function saveDateOverrides(row, touchedKeys=null){
   if(!window.SERVER_BACKED || !row) return;
   const orderCode = row['Order Code'];
   if(orderCode==null) return;
+  const syncKey = overrideSyncKey(row, orderCode);
   const revised = new Set(BLRevision.revisedDateKeys(row));
   const payloadKeys = {'Ex-factory':'exFactory','Retail Date':'retailDate','In-Store (Model Budget)':'inStoreDate'};
-  const dates = {};
-  for(const [key,field] of Object.entries(payloadKeys)){
-    dates[field] = revised.has(key) ? (toISODate(row[key])||null) : null;
+  const storeKeys = {'Ex-factory':'ex','Retail Date':'retail','In-Store (Model Budget)':'mb'};
+  const targetKeys = Array.isArray(touchedKeys) && touchedKeys.length
+    ? touchedKeys.filter(key => Object.prototype.hasOwnProperty.call(payloadKeys, key))
+    : Object.keys(payloadKeys);
+  const pendingSet = _pendingDateOverrideKeys.get(syncKey) || new Set();
+  targetKeys.forEach(key => pendingSet.add(key));
+  _pendingDateOverrideKeys.set(syncKey, pendingSet);
+  if(state && state.overrides){
+    state.overrides.datemap = state.overrides.datemap || {};
+    const rec = { ...(state.overrides.datemap[syncKey] || {}) };
+    for(const [key, shortKey] of Object.entries(storeKeys)){
+      if(revised.has(key)){
+        const iso = toISODate(row[key]);
+        if(iso) rec[shortKey] = iso; else delete rec[shortKey];
+      } else {
+        delete rec[shortKey];
+      }
+    }
+    if(Object.keys(rec).length) state.overrides.datemap[syncKey] = rec;
+    else delete state.overrides.datemap[syncKey];
   }
   schedulePendingOverrideWrite(`date:${overrideSyncKey(row, orderCode)}`, 400, ()=>{
+    const keysToSend = [...(_pendingDateOverrideKeys.get(syncKey) || Object.keys(payloadKeys))];
+    _pendingDateOverrideKeys.delete(syncKey);
+    const currentRevised = new Set(BLRevision.revisedDateKeys(row));
+    const dates = {};
+    for(const key of keysToSend){
+      const field = payloadKeys[key];
+      if(!field) continue;
+      dates[field] = currentRevised.has(key) ? (toISODate(row[key])||null) : null;
+    }
     enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`, {
       method:'PATCH', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({...lineIdentity(row), dates}),
@@ -13512,7 +13604,7 @@ function applyCpGridPaste(plan,range){
     });
   }finally{ _cpPasteUndoBatch=null; }
   if(actions.length) pushUndo(actions.length===1?actions[0]:{kind:'batch',actions});
-  if(touched.size>CP_PASTE_ROW_REFRESH_LIMIT){ invalidateCoreFacetCaches(); renderCP(); scheduleOverviewRender('cp-paste'); }
+  if(touched.size>CP_PASTE_ROW_REFRESH_LIMIT){ invalidateCoreFacetCaches(); renderCP(); if(state.orders)renderOrders(); scheduleOverviewRender('cp-paste'); }
   else touched.forEach(id=>refreshRowEverywhere(id));
   if(actions.some(action=>action.refreshSubmfrList)) refreshSubmfrList();
   if(actions.some(action=>action.refreshLicensorList)) refreshLicensorList();
@@ -24738,8 +24830,8 @@ function kolCanonicalFilterSelection(key,values){
 const KOL_CONFIRMED_NAME_FILTER_KEY = '__confirmedName__';
 const KOL_CONFIRMATION_FILTER_KEY = '__confirmation__';
 function kolFilterValue(row,key){
-  if(key===KOL_CONFIRMATION_FILTER_KEY)return kolConfirmedPricing(row)?'confirmed':'notConfirmed';
-  if(key===KOL_CONFIRMED_NAME_FILTER_KEY){
+  if(typeof KOL_CONFIRMATION_FILTER_KEY!=='undefined'&&key===KOL_CONFIRMATION_FILTER_KEY)return kolConfirmedPricing(row)?'confirmed':'notConfirmed';
+  if(typeof KOL_CONFIRMED_NAME_FILTER_KEY!=='undefined'&&key===KOL_CONFIRMED_NAME_FILTER_KEY){
     const display=kolConfirmedDisplay(row);
     return display?norm(display.name):'';
   }
@@ -36897,9 +36989,22 @@ function applyRemoteRowPatch(row,patch){
     // Aynı ref aynı görseldir: canlı yama her geldiğinde yüklü görsel düşürülmez.
     if(oldRef!==ref)BLImageRuntime.invalidate([oldUrl]);
   }
+  if(patch.noteColumns&&typeof patch.noteColumns==='object'){
+    const validIds=typeof CP_NOTE_COLUMN_DEFS!=='undefined'&&Array.isArray(CP_NOTE_COLUMN_DEFS)?new Set(CP_NOTE_COLUMN_DEFS.map(def=>def.id)):null;
+    for(const [id,value] of Object.entries(patch.noteColumns)){
+      if(validIds&&!validIds.has(id))continue;
+      row[id]=value==null?'':String(value);
+    }
+  }
   // Önem etiketi: başka pencerede/ekip arkadaşının seçtiği etiket aynı kuralla çözülür.
   if(Object.prototype.hasOwnProperty.call(patch,'importance'))window.BLOrderImportanceUI?.applyRemote(row,patch.importance);
-  if(patch.delType!=null||patch.dates){applyFormulas(row);invalidateUnifiedPriorityDecisions('remote-cp-decision-patch');scheduleOverviewRender('remote-cp-decision-patch');}
+  if(patch.delType!=null||patch.dates){
+    if(typeof syncCpProductionLogisticSegment==='function'){
+      if(patch.delType!=null)syncCpProductionLogisticSegment(row,row['Del. Type']);
+      else if(patch.dates&&Object.prototype.hasOwnProperty.call(patch.dates,'exFactory'))syncCpProductionLogisticSegment(row);
+    }
+    applyFormulas(row);invalidateUnifiedPriorityDecisions('remote-cp-decision-patch');scheduleOverviewRender('remote-cp-decision-patch');
+  }
   return row;
 }
 // Kullanıcı şu an hangi satırı düzenliyor? O satır uzaktan EZİLMEZ.
@@ -37587,18 +37692,24 @@ function ocMetaFromCpRow(r){
   };
 }
 function ocMetaFromKolRow(r){
+  const eff=(typeof kolEffectiveProjection==='function'&&r)?kolEffectiveProjection(r):(r||{});
+  const confirmed=(typeof kolConfirmedPricing==='function'&&eff)?kolConfirmedPricing(eff):null;
+  const mfr=norm(confirmed&&confirmed.name)||norm(eff.confirmedManufacturer)||norm(eff.buyingSampleManufacturer)||norm(eff.manufacturer||eff.uretici);
+  const target=(eff.targetPrice!=null&&eff.targetPrice!=='')
+    ? String(eff.targetPrice)
+    : (confirmed&&confirmed.price!=null&&confirmed.price!==''?String(confirmed.price):'');
   return {
-    title: [String(r.modelKod||''), String(r.colour||'')].filter(Boolean).join(' · ') || String(r.modelKod||'') || 'Koleksiyon',
-    modelCode: String(r.modelKod||''),
-    plmId: String(r.plmId||''),
-    manufacturer: String(r.manufacturer||r.uretici||''),
-    country: String(r.country||r.ulke||''),
-    season: String(r.season||r.sezonHft||''),
-    license: String(r.lisans||''),
-    category: String(r.urunTipi||''),
-    quantity: r.quantity!=null ? String(r.quantity) : '',
-    targetFob: r.targetPrice!=null && r.targetPrice!=='' ? String(r.targetPrice) : '',
-    image: r.img || '',
+    title: [String(eff.modelKod||''), String(eff.colour||'')].filter(Boolean).join(' · ') || String(eff.modelKod||'') || 'Koleksiyon',
+    modelCode: String(eff.modelKod||''),
+    plmId: String(eff.plmId||''),
+    manufacturer: String(mfr||''),
+    country: String(eff.country||eff.ulke||''),
+    season: String(eff.season||eff.sezonHft||''),
+    license: String(eff.lisans||''),
+    category: String(eff.urunTipi||''),
+    quantity: eff.quantity!=null ? String(eff.quantity) : '',
+    targetFob: target,
+    image: eff.img || r?.img || '',
   };
 }
 async function runCreateOc(btn, metas, sourceLabel){

@@ -58,6 +58,7 @@
   /* ---------------------------------------------------------- satır güncelleme */
   function sourceRows(tableKey) {
     const st = appState();
+    if (tableKey === 'orderSummary') return st.orderSummary && st.orderSummary.rows || [];
     return tableKey === 'orders' ? (st.orders && st.orders.rows || []) : (st.cp && st.cp.rows || []);
   }
   const keyOf = row => (typeof lineKeyOfRow === 'function' ? lineKeyOfRow(row) : '') || String(row && row['Order Code'] || '');
@@ -70,7 +71,7 @@
   function manualOf(row) { return row && row._importanceSource === 'manual' ? row._importanceId : undefined; }
   function sameLineRows(row) {
     const key = keyOf(row);
-    const all = [...sourceRows('cp'), ...sourceRows('orders')];
+    const all = [...sourceRows('cp'), ...sourceRows('orders'), ...sourceRows('orderSummary')];
     return key ? all.filter(item => keyOf(item) === key) : [row];
   }
   function repaint(rows) {
@@ -78,11 +79,11 @@
     const cpRow = rows.find(item => (st.cp && st.cp.rows || []).includes(item));
     if (typeof invalidateCoreFacetCaches === 'function') invalidateCoreFacetCaches();
     if (cpRow && typeof refreshRowEverywhere === 'function') refreshRowEverywhere(cpRow._id);
-    if (st.orders && typeof renderOrders === 'function' && document.body.dataset.activeTab === 'orders') renderOrders();
+    if (st.orders && typeof renderOrders === 'function') renderOrders();
   }
   // Katalog/kural değişince elle seçilmemiş satırlar kurala göre yeniden çözülür.
   function recomputeAllRows() {
-    [...sourceRows('cp'), ...sourceRows('orders')].forEach(row => applyToRow(row, manualOf(row)));
+    [...sourceRows('cp'), ...sourceRows('orders'), ...sourceRows('orderSummary')].forEach(row => applyToRow(row, manualOf(row)));
     if (typeof invalidateCoreFacetCaches === 'function') invalidateCoreFacetCaches();
     const st = appState();
     if (st.cp && typeof renderCP === 'function') renderCP();

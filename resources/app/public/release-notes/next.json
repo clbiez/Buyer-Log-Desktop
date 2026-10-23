@@ -3,14 +3,43 @@
   "publishedAt": "2026-10-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Test raporu CP kapsamı düzeltmesi",
-    "en": "Test report CP scope fix"
+    "tr": "Koleksiyon, CP ve Siparişler veri tutarlılığı",
+    "en": "Collection, CP and Orders data consistency"
   },
   "summary": {
-    "tr": "Test raporları aktif CP kapsamıyla güvenilir biçimde incelenir.",
-    "en": "Test reports are reliably reviewed against the active CP scope."
+    "tr": "CP, Siparişler ve Koleksiyon arasındaki tarih, fiyat, üretici ve not düzenlemeleri sayfa yenilemeye gerek kalmadan anında eşitlenir.",
+    "en": "Date, pricing, supplier and note edits across CP, Orders and Collection stay in sync immediately without reloading."
   },
   "changes": [
+    {
+      "id": "collection-cp-orders-live-sync",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · CP Tracker · Siparişler",
+        "en": "Collection · CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "CP, Siparişler ve Koleksiyon düzenlemeleri anında senkron kalır",
+        "en": "CP, Orders and Collection edits stay in sync immediately"
+      },
+      "body": {
+        "tr": "CP tablosunda düzenlenen tarih (Ex-factory, Retail Date, In-Store), sevkiyat tipi, lisansör, alt üretici, Supp. FOB, önem derecesi ve not sütunları açık olan Siparişler ve Genel Bakış görünümlerine anında yansır. Tek tarih düzenlemeleri yalnızca değişen tarih alt alanını kaydeder; eşzamanlı diğer tarih revizyonları korunur. Koleksiyondan Ön Maliyet oluşturulurken onaylı üretici, hedef fiyat ve model grubu ortak alanları eksiksiz aktarılır.",
+        "en": "Dates (Ex-factory, Retail Date, In-Store), delivery type, licensor, sub-manufacturer, Supp. FOB, importance and note columns edited in CP immediately update loaded Orders and Overview projections. Single-date edits persist only the touched date subfield so concurrent date revisions stay intact. Creating Open Costing from Collection preserves confirmed supplier, target price and model-group shared fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cp-orders-live-sync.png",
+        "alt": {
+          "tr": "CP düzenlemesi sonrasında Siparişler tablosunda anında güncellenen sevkiyat tipi ve not bilgileri, demo veri",
+          "en": "Orders table immediately showing updated delivery type and notes after a CP edit, demo data"
+        },
+        "caption": {
+          "tr": "Demo veride CP'de güncellenen sevkiyat tipi ve not bilgisi sekme değiştirildiğinde Siparişler tablosunda anında görünür.",
+          "en": "With demo data, delivery type and note updates made in CP appear immediately when switching to Orders."
+        }
+      }
+    },
     {
       "id": "test-report-active-cp-review",
       "type": "fix",
