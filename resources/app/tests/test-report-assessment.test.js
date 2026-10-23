@@ -73,3 +73,13 @@ test('different order findings never overwrite each other and conflicting duplic
   r.assessments.push({ ...finding(), status: 'approved' });
   assert.equal(R.validate(r, p).ok, false);
 });
+test('covering mail without a report ID needs a cited PDF, matching attachment hash and the same printed PO',()=>{
+  const p=packet();p.sources[0]={...p.sources[0],kind:'pdf',hash:'pdf-hash',parentId:'mail'};
+  p.sources.push({id:'mail',kind:'msg',complete:true,pages:[{page:0,text:'Order 1381207 request approval'}],attachments:[{kind:'pdf',hash:'pdf-hash'}]});
+  const r=reply();r.coveredSourceIds.push('mail');r.assessments[0].evidence.push({sourceId:'mail',page:0,quote:'Order 1381207 request approval'});
+  assert.equal(R.validate(r,p).ok,true);
+  const detached=structuredClone(p);detached.sources[1].attachments[0].hash='other';assert.equal(R.validate(r,detached).ok,false);
+  const wrongPo=structuredClone(p);wrongPo.sources[1].pages[0].text='Order 1381201 request approval';
+  const other=structuredClone(r);other.assessments[0].evidence.at(-1).quote=wrongPo.sources[1].pages[0].text;assert.equal(R.validate(other,wrongPo).ok,false);
+  const withoutPdf=structuredClone(r);withoutPdf.assessments[0].evidence=withoutPdf.assessments[0].evidence.filter(e=>e.sourceId==='mail');assert.equal(R.validate(withoutPdf,p).ok,false);
+});

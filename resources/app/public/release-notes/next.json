@@ -358,6 +358,93 @@
           "en": "The demo PDF is enlarged in the left panel; markers stay on the document and findings remain on the right."
         }
       }
+    },
+    {
+      "id": "test-report-external-laboratories",
+      "type": "feature",
+      "module": {
+        "tr": "Test Raporu Aktarımı",
+        "en": "Test Report Import"
+      },
+      "title": {
+        "tr": "SGS ve harici laboratuvar PDF biçimleri",
+        "en": "SGS and external laboratory PDF formats"
+      },
+      "body": {
+        "tr": "Harf harf saklanan başlıklar, harfli rapor numaraları ve sonuç özetleri okunur. Mail içindeki PDF ile orijinal mail birlikte korunur; eksik sayfa ve çelişen kapsam otomatik onaylanmaz.",
+        "en": "Glyph-split headers, alphanumeric report references and conclusion tables are read. Attached PDFs and covering e-mails are preserved together; missing pages and conflicting scope cannot imply approval."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-external-lab.png",
+        "alt": {
+          "tr": "Demo harici laboratuvar raporu ve korunmuş PDF/mail kanıtları",
+          "en": "Demo external laboratory report with preserved PDF/e-mail evidence"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log önizlemesi, anonim PDF ve maili LCW AI bağlantısı olmadan okur.",
+          "en": "The real Buyer Log preview reads an anonymous PDF and covering e-mail without an LCW AI connection."
+        }
+      }
+    },
+    {
+      "id": "test-report-reading-details",
+      "type": "improvement",
+      "module": {
+        "tr": "Test Raporu Aktarımı",
+        "en": "Test Report Import"
+      },
+      "title": {
+        "tr": "Belge okuma özeti ve test ayrıntıları",
+        "en": "Document reading summary and test details"
+      },
+      "body": {
+        "tr": "Her dosyanın okunan sayfaları, ekleri, rapor ve test sayısı görünür. Test sonuçları kaynak sayfasıyla açılır; okunmuş metin ile tanınmayan şablon ayrı bildirilir.",
+        "en": "Each file shows pages read, attachments, reports and tests. Test conclusions can be expanded with their source page; readable text is distinguished from an unrecognised template."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-external-lab.png",
+        "alt": {
+          "tr": "Okuma özeti ve kaynak sayfasını gösteren test ayrıntıları",
+          "en": "Reading summary and test details showing source pages"
+        },
+        "caption": {
+          "tr": "Özet ve ayrıntılar TR/EN olarak önizlemede incelenir; kayıt için kullanıcı onayı gerekir.",
+          "en": "The summary and details can be reviewed in Turkish or English; saving requires user confirmation."
+        }
+      }
+    },
+    {
+      "id": "test-report-reload-cp-context",
+      "type": "fix",
+      "module": {
+        "tr": "Test Raporu Aktarımı",
+        "en": "Test Report Import"
+      },
+      "title": {
+        "tr": "CP hatasında dosyaları koruyarak yeniden inceleme",
+        "en": "Review again after a CP error while preserving files"
+      },
+      "body": {
+        "tr": "CP kapsamı veya güncellik hatası belge okuma hatasından ayrılır. Yeni düğme güncel CP ve checklist verilerini yükleyip aynı dosyalarla yeniden analiz eder. LCW AI harici rapor numaralarını ve doğrulanmış mail/ek bağını korur.",
+        "en": "CP scope and freshness errors are distinguished from file-reading failures. A new button reloads current CP and checklist data and reviews the same files. LCW AI preserves external report references and verified e-mail/attachment links."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-cp-reload.png",
+        "alt": {
+          "tr": "CP bağlamı hatası ve yeniden yükleme düğmesi",
+          "en": "CP context error and reload action"
+        },
+        "caption": {
+          "tr": "Anonim veriyle gerçek CP güncellik hatası gösterilir; dosyalar önizlemede korunur.",
+          "en": "A real CP freshness error is shown with anonymous data; files remain in the preview."
+        }
+      }
     }
   ]
 }

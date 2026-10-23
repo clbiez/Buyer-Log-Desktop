@@ -120,7 +120,7 @@ function commit(items, typeMap, actor, attach, options = {}) {
     const results = [];
     for (const item of items) {
       const incoming = item.report;
-      const talepNo = Engine.normalizeTalepNo(incoming && incoming.talepNo) || (incoming && incoming.aiAssessment ? require('../../../public/test-report-assessment').identifier(incoming.talepNo) : '');
+      const talepNo = Engine.normalizeReportId(incoming && incoming.talepNo) || (incoming && incoming.aiAssessment ? require('../../../public/test-report-assessment').identifier(incoming.talepNo) : '');
       const orderKey = text(item.orderKey, 300);
       const itemId = text(item.itemId, 160);
       if (!talepNo || !orderKey || !itemId) continue;

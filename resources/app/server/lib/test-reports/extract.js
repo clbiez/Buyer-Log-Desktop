@@ -201,7 +201,9 @@ async function parsePdfBuffer(buffer, name, meta) {
   if (parsed.report) tag(parsed.report, name);
   const pages = (items.readPages || []).map(page => ({ page, text: Engine.linesFromItems(items.filter(item => item.p === page)),
     positions: items.filter(item => item.p === page).map(item => ({ x: item.x, y: item.y, w: item.w, text: item.s })) }));
-  return { ...parsed, pages, pageCount: items.pageCount, complete: items.pageCount === pages.length && pages.every(page => page.text.trim().length > 30) };
+  const complete = items.pageCount === pages.length && pages.every(page => page.text.trim().length > 30);
+  if (parsed.report && !complete) parsed.report.uyarilar.push({ code: 'incompleteDocument' });
+  return { ...parsed, pages, pageCount: items.pageCount, complete };
 }
 
 /* Bir bırakılan dosyayı okur. Dönüş: { name, kind, status, format, reports,
@@ -270,7 +272,7 @@ async function processFile(file, options) {
       }
       if (report) {
         // Ekli PDF yoksa (karar maili) kanıt olarak mailin kendisi eklenir.
-        if (!pdfs.length) report.dosyalar.push(fileEntry(name, buffer, kind, opts.stage));
+        if (!pdfs.length || (!parsed.report && report.kaynak === 'parser:external-lab')) report.dosyalar.push(mailEntry);
         result.reports.unshift(report);
         if (!result.format) result.format = 'pdf-in-mail';
       } else {
@@ -316,7 +318,19 @@ function aiCandidate(result, parts) {
 
 async function processFiles(files, options) {
   const fileResults = [];
-  for (const file of files || []) fileResults.push(await processFile(file, options));
+  for (const file of files || []) {
+    const result = await processFile(file, options);
+    const pdfs = result.sources.filter(source => source.kind === 'pdf');
+    const readable = result.sources.filter(source => source.complete);
+    result.reading = {
+      status: !result.sources.length ? 'unsupported' : readable.length === result.sources.length ? 'text' : readable.length ? 'partial' : 'visual',
+      pdfPages: pdfs.reduce((sum, source) => sum + source.pageCount, 0),
+      textPages: pdfs.reduce((sum, source) => sum + source.pages.filter(page => page.text.trim().length > 30).length, 0),
+      attachments: result.sources.filter(source => source.parentId).length,
+      reports: result.reports.length, tests: result.reports.reduce((sum, report) => sum + report.testler.length, 0),
+    };
+    fileResults.push(result);
+  }
   const reports = Engine.groupReports(fileResults.reduce((all, r) => all.concat(r.reports), []));
   return { files: fileResults, reports };
 }

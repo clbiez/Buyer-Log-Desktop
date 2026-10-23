@@ -76,7 +76,7 @@
         TEST_REPORT_CONTEXT_TOO_LARGE: T('Bağlam sınırı aşıldı; hiçbir kaynak veya CP satırı kesilmedi. Dosyaları daha küçük gruplarla inceleyin.', 'The context limit was exceeded; no source or CP row was cut. Review smaller document groups.'),
         TEST_REPORT_EVIDENCE_MISSING: T('Kaynak metin bulunamadı; dosyaları yeniden bırakın.', 'Source text is missing; drop the files again.'),
       };
-      throw new Error(known[code] || (payload && payload.error) || (T('İstek başarısız: ', 'Request failed: ') + response.status));
+      throw Object.assign(new Error(known[code] || (payload && payload.error) || (T('İstek başarısız: ', 'Request failed: ') + response.status)), { code: code });
     }
     return payload;
   }
@@ -485,7 +485,10 @@
     if (ai.state === 'idle') return '';
     if (ai.state === 'running') return '<section class="trAiBar is-running" role="status"><b>' + html(T('LCW AI analiz ediyor…', 'LCW AI is analysing…')) + '</b><small>' + html(ai.progress) + '</small><button type="button" class="cpaBtn sm" data-tr-ai-cancel>' + html(T('Durdur', 'Stop')) + '</button></section>';
     if (ai.state === 'offline') return '<section class="trAiBar"><b>' + html(T('LCW AI bağlı değil', 'LCW AI is not connected')) + '</b><small>' + html(T('Bağlanırsanız LCW AI raporları inceleyip yapılacakları ve uygun checklist adımını önerir, okunamayan dosyaları okur. Öneriler yalnız sizin onayınızla uygulanır.', 'Once connected, LCW AI reviews the reports, suggests next steps and a fitting checklist step, and reads files Buyer Log could not. Suggestions are applied only with your approval.')) + '</small><button type="button" class="cpaBtn sm primary" data-tr-ai-connect>' + html(T('LCW AI\'a bağlan ve analiz et', 'Connect to LCW AI and analyse')) + '</button></section>';
-    if (ai.state === 'error') return '<section class="trAiBar is-error"><b>' + html(T('LCW AI analizi tamamlanamadı', 'LCW AI analysis did not complete')) + '</b><small>' + html(ai.message) + '</small><button type="button" class="cpaBtn sm" data-tr-ai-retry>' + html(T('Tekrar dene', 'Try again')) + '</button></section>';
+    if (ai.state === 'error') {
+      const cpError = ai.code === 'TEST_REPORT_CP_INCOMPLETE' || ai.code === 'TEST_REPORT_REVIEW_STALE' || ai.code === 'OFFICE_PREVIEW_CHANGED';
+      return '<section class="trAiBar is-error"><b>' + html(cpError ? T('CP bağlamı hazırlanamadı', 'CP context could not be prepared') : T('LCW AI analizi tamamlanamadı', 'LCW AI analysis did not complete')) + '</b><small>' + html(cpError ? T('Dosyalar önizlemede korunuyor. Güncel CP ve checklist verilerini yükleyip yeniden analiz edin.', 'Files are preserved in the preview. Reload current CP and checklist data and analyse again.') : ai.message) + '</small><button type="button" class="cpaBtn sm" ' + (cpError ? 'data-tr-cp-retry' : 'data-tr-ai-retry') + '>' + html(cpError ? T('CP verilerini yükle ve yeniden dene', 'Reload CP data and try again') : T('Tekrar dene', 'Try again')) + '</button></section>';
+    }
     return '<section class="trAiBar is-done"><b>' + html(T('LCW AI analizi hazır', 'LCW AI analysis ready')) + (ai.model ? ' · ' + html(ai.model) : '') + '</b><small>' + html(ai.message || T('Öneriler her raporun satırında; hiçbiri siz uygulamadan seçilmez.', 'Suggestions are shown on each report row; none is applied until you do.')) + '</small><button type="button" class="cpaBtn sm" data-tr-ai-retry>' + html(T('Yeniden analiz et', 'Analyse again')) + '</button></section>';
   }
   function filesCell(report) {
@@ -545,12 +548,33 @@
     });
     return duplicate || [...targets.values()].some(function (states) { return states.size > 1; });
   }
+  function testDetailsHtml(report) {
+    const tests = report.testler || [];
+    if (!tests.length) return '';
+    return '<details><summary>' + html(T('Test ayrıntıları', 'Test details') + ' (' + tests.length + ')') + '</summary><ul class="trWarnings">' + tests.map(function (test) {
+      const result = E().resultLabel(test.sonuc, lang()) || T('Değerlendirilmedi', 'Not assessed');
+      return '<li>' + html(test.ad + ' — ' + result + (test.sourcePage ? T(' · sayfa ', ' · page ') + test.sourcePage : '')) + '</li>';
+    }).join('') + '</ul></details>';
+  }
+  function fileReadingHtml() {
+    const files = ui.files.filter(function (file) { return file.reading; });
+    if (!files.length) return '';
+    return '<section class="trIssues"><b>' + html(T('Belge okuma özeti', 'Document reading summary')) + '</b><ul class="trWarnings">' + files.map(function (file) {
+      const read = file.reading;
+      const status = read.status === 'text' ? T('Metin okundu', 'Text read') : read.status === 'partial' ? T('Kısmen okundu; eksik kaynakları inceleyin', 'Partly read; review missing sources') : read.status === 'visual' ? T('Görsel okuma gerekiyor', 'Visual reading required') : T('Desteklenmeyen tür', 'Unsupported type');
+      const counts = [read.reports + T(' rapor', ' report(s)'), read.tests + T(' test', ' test(s)')];
+      if (read.pdfPages) counts.push(read.textPages + '/' + read.pdfPages + T(' PDF sayfası', ' PDF pages'));
+      if (read.attachments) counts.push(read.attachments + T(' ek', ' attachment(s)'));
+      return '<li><b>' + html(file.name) + '</b> — ' + html(status + ' · ' + counts.join(' · ')) + '</li>';
+    }).join('') + '</ul></section>';
+  }
   function fileIssuesHtml() {
     const issues = ui.files.filter(function (f) { return !(ui.ai.read && ui.ai.read[f.name] && ui.ai.read[f.name].ok) && (f.status !== 'parsed' || (f.warnings || []).length); });
     if (!issues.length) return '';
     return '<section class="trIssues"><b>' + html(T('Okunamayan / tanınmayan dosyalar', 'Unread / unrecognised files')) + '</b><ul class="trWarnings">'
       + issues.map(function (f) {
         const reasons = (f.warnings || []).map(function (w) {
+          if (w.code === 'unrecognized' && f.reading && f.reading.status === 'text') return T('Metin okundu; rapor şablonu tanınmadı. LCW AI incelemesi gerekiyor.', 'Text was read; the report template was not recognised. LCW AI review is required.');
           if (w.code === 'unsupported') return T('Desteklenmeyen dosya türü.', 'Unsupported file type.');
           if (w.code === 'readError') return T('Dosya okunamadı.', 'The file could not be read.');
           return E().warningText(w, lang());
@@ -589,12 +613,12 @@
       const canSelect = p.ready && Boolean(p.next);
       return '<tr class="' + (canSelect ? '' : 'is-blocked') + '">'
         + '<td><input type="checkbox" data-tr-include="' + entry.id + '"' + (entry.include && canSelect ? ' checked' : '') + (canSelect ? '' : ' disabled') + ' aria-label="' + html(T('Bu raporu yaz', 'Write this report')) + '"></td>'
-        + '<td><b>' + html(r.talepNo || '—') + '</b>' + (entry.fromAi ? ' <span class="trBadge tone-blue">' + html(T('LCW AI okudu', 'Read by LCW AI')) + '</span>' : '') + '<small>' + html(r.talepTipi || '') + '</small><small>' + html([entry.scope ? entry.scope.orderCode : r.siparisKodu, r.modelAdi, r.renk].filter(Boolean).join(' · ')) + '</small>'
+        + '<td><b>' + html(r.talepNo || '—') + '</b>' + (entry.fromAi ? ' <span class="trBadge tone-blue">' + html(T('LCW AI okudu', 'Read by LCW AI')) + '</span>' : '') + '<small>' + html(r.talepTipi || '') + '</small>' + (r.lab || r.raporTarihiIso ? '<small>' + html([r.lab, (r.raporTarihiIso || '').slice(0, 10)].filter(Boolean).join(' · ')) + '</small>' : '') + '<small>' + html([entry.scope ? entry.scope.orderCode : r.siparisKodu, r.modelAdi, r.renk].filter(Boolean).join(' · ')) + '</small>'
         + (E().orderScopeNeedsReview(r) ? '<small><b>' + html(T('Rapor kapsamını doğrulayın: ', 'Verify report scope: ')) + '</b>' + html(E().orderScopes(r).map(function (s) { return s.orderCode; }).join(', ')) + '</small>' : '')
         + (entry.scope && entry.scope.requiresReview ? '<small class="trBadge tone-orange">' + html(entry.scope.confidence === 'candidate' ? T('Doğrulanmamış numara · sipariş olduğunu doğrulayın', 'Unverified number · verify it is an order') : T('Ek sipariş · kapsamı doğrulayıp işaretleyin', 'Additional order · verify scope and tick')) + '</small>' : '')
         + (E().reportDescriptions(r).length ? '<details><summary>' + html(T('Açıklama / kaynak kanıtı', 'Description / source evidence')) + '</summary>' + E().reportDescriptions(r).map(function (d) { return '<small>' + html(d) + '</small>'; }).join('') + '</details>' : '')
         + (tests.length ? '<small><b>' + html(T('Test adı: ', 'Test name: ')) + '</b>' + html(tests.join(', ')) + '</small>' : '') + '</td>'
-        + '<td>' + resultBadge(r) + '</td>'
+        + '<td>' + resultBadge(r) + testDetailsHtml(r) + '</td>'
         + '<td>' + levelBadge(entry) + '</td>'
         + '<td>' + rowCell(entry) + '</td>'
         + '<td>' + (entry.ignored ? '<span class="trMuted">—</span>' : (entry.partOf ? '<b>' + html(itemLabel(entry.itemId)) + '</b>' : '<select data-tr-item="' + entry.id + '">' + itemOptions(entry.itemId, entry) + '</select>') + partPicker(entry)) + '</td>'
@@ -605,7 +629,7 @@
     const notice = conflict ? '<p role="alert">' + html(T('Aynı rapor/PO iki kez veya aynı checklist için farklı durumlar seçildi. Tekrarlanan seçimi kaldırın.', 'The same report/PO was selected twice or checklist statuses conflict. Remove the duplicate selection.')) + '</p>' : '';
     const unresolved = (ui.ai.unresolved || []).map(function (id) { return ui.ai.packet.sources.find(function (s) { return s.id === id; }); }).filter(Boolean);
     const missing = unresolved.length ? '<section class="trIssues"><b>' + html(T('Çözümlenemeyen kaynaklar', 'Unresolved sources')) + '</b><ul class="trWarnings">' + unresolved.map(function (source) { return '<li>' + html(source.name) + '</li>'; }).join('') + '</ul></section>' : '';
-    body.innerHTML = drop + summaryHtml(plans) + aiStatusHtml() + notice + missing + fileIssuesHtml() + typeMappingHtml()
+    body.innerHTML = drop + summaryHtml(plans) + aiStatusHtml() + fileReadingHtml() + notice + missing + fileIssuesHtml() + typeMappingHtml()
       + (ui.entries.length ? '<div class="trTableWrap"><table class="cpaTable trTable"><thead><tr><th></th><th>' + html(T('Talep', 'Request')) + '</th><th>' + html(T('Sonuç', 'Result')) + '</th><th>' + html(T('Eşleşme', 'Match')) + '</th><th>' + html(T('Satır', 'Row')) + '</th><th>' + html(T('Checklist adımı', 'Checklist step')) + '</th><th>' + html(T('Değişiklik', 'Change')) + '</th><th>' + html(T('Uyarılar ve eklenecek dosyalar', 'Warnings and files to attach')) + '</th></tr></thead><tbody>' + rowsHtml + '</tbody></table></div>' : '');
     const ready = plans.filter(function (p, i) { return p.ready && p.next && ui.entries[i].include; }).length;
     footer.disabled = !ready || conflict;
@@ -719,10 +743,25 @@
     const set = function (patch) { if (active()) { Object.assign(ui.ai, patch); render(); } };
     render();
     try {
+      if (options && options.refreshCp) {
+        set({ progress: T('Güncel CP ve checklist yükleniyor…', 'Loading current CP and checklist…') });
+        if (typeof root.ensureCpLoaded !== 'function' || !await root.ensureCpLoaded({ force: true })) throw new Error(T('CP yüklenemedi; CP ekranını yenileyip tekrar deneyin.', 'CP could not be loaded; refresh the CP screen and try again.'));
+        if (root.BLChecklistSupplierSync && typeof root.BLChecklistSupplierSync.loadShared === 'function') await root.BLChecklistSupplierSync.loadShared();
+        if (!active()) return;
+        ui.entries = buildEntries([...new Map(ui.entries.map(function (entry) { return [entry.report.talepNo, entry.report]; })).values()]);
+        ui.entries.forEach(function (entry) { entry.include = false; });
+      }
       let status = await AI.getStatus();
       if (status && !status.connected && options && options.interactive) status = await AI.connect();
       if (!active()) return;
       if (!status || !status.connected) { set({ state: 'offline', progress: '' }); return; }
+      if (root.BLStorage && typeof root.BLStorage.flushPending === 'function') {
+        let timeout;
+        try { await Promise.race([root.BLStorage.flushPending(), new Promise(function (_, reject) { timeout = root.setTimeout(function () { reject(new Error('PREFERENCE_SAVE_TIMEOUT')); }, 8000); })]); }
+        catch (_) { throw Object.assign(new Error(T('Bekleyen ayarlar kaydedilemedi; CP verilerini yükleyip yeniden deneyin.', 'Pending preferences could not be saved; reload CP data and try again.')), { code: 'TEST_REPORT_REVIEW_STALE' }); }
+        finally { root.clearTimeout(timeout); }
+        if (!active()) return;
+      }
       const localSnapshot = localReviewSnapshot();
       const steps = catalog().map(function (item) { return { id: item.id, name: isEn() ? item.en : item.tr }; });
       // Include existing set-component step IDs; no synthetic checklist IDs.
@@ -805,7 +844,7 @@
     } catch (error) {
       if (!active()) return;
       const message = typeof AI.errorText === 'function' && error.code && String(error.code).startsWith('LCWAI_') ? AI.errorText(error) : error.message || String(error);
-      set({ state: 'error', progress: '', message: message });
+      set({ state: 'error', progress: '', message: message, code: error.code || '' });
     }
   }
   function cancelAi() {
@@ -985,6 +1024,7 @@
       const create = event.target.closest('[data-tr-create]');
       if (create) createItem(create.dataset.trCreate, create.closest('[data-tr-type]'));
       if (event.target.closest('[data-tr-ai-connect]')) runAi({ interactive: true });
+      if (event.target.closest('[data-tr-cp-retry]')) runAi({ interactive: true, refreshCp: true });
       if (event.target.closest('[data-tr-ai-retry]')) runAi({ interactive: true });
       if (event.target.closest('[data-tr-ai-cancel]')) cancelAi();
       const applyType = event.target.closest('[data-tr-ai-type]');

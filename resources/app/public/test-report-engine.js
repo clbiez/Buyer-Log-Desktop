@@ -74,6 +74,12 @@
     const raw = text(value).replace(/\.0+$/, '');
     return /^\d{4,8}$/.test(raw) ? raw : '';
   }
+  // External lab references are copied only from explicit report fields.
+  // Keep normalizeTalepNo numeric for legacy LCW request parsing.
+  function normalizeReportId(value) {
+    const raw = text(value);
+    return normalizeTalepNo(raw) || (/^[A-Za-z0-9][A-Za-z0-9._/-]{3,79}$/.test(raw) && /[A-Za-z]/.test(raw) && /\d/.test(raw) ? raw : '');
+  }
   function normalizeOrderCode(value) {
     const raw = text(value).replace(/\.0+$/, '').replace(/\s+/g, '');
     return /^\d+$/.test(raw) ? raw.replace(/^0+(?=\d)/, '') : fold(raw);
@@ -288,7 +294,7 @@
   function assignField(report, field, value) {
     const v = text(value);
     if (!field || !v) return;
-    if (field === 'talepNo' || field === 'retestOf') { const t = normalizeTalepNo(v); if (t) report[field] = t; return; }
+    if (field === 'talepNo' || field === 'retestOf') { const t = normalizeReportId(v); if (t) report[field] = t; return; }
     if (field === 'urunKlasman' || field === 'tedarikci' || field === 'uretici') { report.ekBilgi = report.ekBilgi || {}; report.ekBilgi[field] = v; return; }
     if (!report[field]) report[field] = v;
   }
@@ -685,14 +691,103 @@
   }
   /* Mailin PDF çıktısı: satırlar sekmeyle birleştirilip mail ayrıştırıcısına
      verilir. */
-  function linesFromItems(items) {
+  function pdfRows(items) {
     const rows = [];
     for (const item of items.slice().sort(readingOrder)) {
       const row = rows.length ? rows[rows.length - 1] : null;
       if (row && row.p === item.p && Math.abs(row.y - item.y) <= 2) row.items.push(item);
       else rows.push({ p: item.p, y: item.y, items: [item] });
     }
-    return rows.map(row => row.items.sort((a, b) => a.x - b.x).map(item => item.s).join('\t')).join('\n');
+    return rows.map(row => {
+      const cells = [];
+      for (const item of row.items.sort((a, b) => a.x - b.x)) {
+        const previous = cells[cells.length - 1], glyph = item.s.length === 1;
+        const gap = previous ? item.x - previous.end : Infinity;
+        if (glyph && previous && previous.glyph && gap >= -1 && gap <= 4) {
+          previous.s += (gap > 1 ? ' ' : '') + item.s; previous.end = item.x + (item.w || 0);
+        } else if (!glyph && previous && previous.glyph && gap >= -1 && gap <= 1 && /^[A-Za-z]/.test(item.s)) {
+          previous.s += item.s; previous.end = item.x + (item.w || 0); previous.glyph = false;
+        } else cells.push({ ...item, glyph, end: item.x + (item.w || 0) });
+      }
+      return { ...row, cells, text: cells.map(cell => cell.s).join('\t') };
+    });
+  }
+  function linesFromItems(items) {
+    return pdfRows(items).map(row => row.text).join('\n');
+  }
+
+  /* Label/table adapter for external laboratories (SGS, Intertek, etc.).
+     Numbers in filenames, measurements and legal boilerplate never identify
+     reports or establish PASS. Only explicit headers and conclusion cells do. */
+  function externalLabReport(items) {
+    const rows = pdfRows(items), report = emptyReport(), references = [];
+    for (const row of rows) {
+      for (const match of row.text.matchAll(/(?:TEST\s+)?REPORT\s*(?:NO\.?|NUMBER|#)\s*:?\s*([A-Z0-9][A-Z0-9._/-]{3,79})/gi)) {
+        const id = normalizeReportId(match[1]);
+        if (id && !references.includes(id)) references.push(id);
+      }
+    }
+    if (!references.length) return null;
+    // A/B accreditation appendices are one family. Unrelated combined reports
+    // stay with source-grounded AI review instead of being silently merged.
+    if (new Set(references.map(id => id.replace(/-[A-Z]$/, ''))).size !== 1) return null;
+    const values = label => rows.map(row => {
+      const first = row.cells[0];
+      if (!first) return '';
+      const inline = first.s.match(new RegExp('^(?:' + label + ')\\s*:\\s*(.+)$', 'i'));
+      if (inline) return text(inline[1]);
+      if (!new RegExp('^(?:' + label + ')\\s*:?$', 'i').test(first.s)) return '';
+      return text(row.cells.slice(1).map(cell => cell.s).join(' ')).replace(/^:\s*/, '');
+    }).filter(Boolean);
+    const orders = [...new Set(values('ORDER\\s*(?:NUMBER|NO\\.?)|P\\.?O\\.?\\s*(?:NUMBER|NO\\.?)').map(normalizeOrderCode))];
+    if (orders.length > 1 || orders.some(code => !/^\d{5,9}$/.test(code))) return null;
+    const descriptions = values('SAMPLE\\s+DESCRIPTION|DESCRIPTION\\s+OF\\s+(?:SAMPLE|GOODS)'), colours = values('COLOU?R');
+    if (new Set(descriptions.map(fold)).size > 1 || new Set(colours.map(colourKey)).size > 1) return null;
+    const description = descriptions[0] || '';
+    report.talepNo = references[0]; report.siparisKodu = orders[0] || '';
+    report.renk = colours[0] || '';
+    const model = description.match(/^[^(]*\(\s*(.*?)\s*\((?:GOLD\s*SEAL|GS|PRE[- ]?PRODUCTION|PPS)\)/i);
+    report.modelAdi = model ? text(model[1]) : '';
+    report.talepTipi = /\bGOLD\s*SEAL\b/i.test(description) ? 'Gold Seal' : '';
+    report.aciklama = description;
+    const date = rows.map(row => row.text.match(/ISSUE\s+DATE\s*:?\s*(\d{1,2}[-/ ][A-Za-z]{3,9}[-/ ]\d{4}|\d{4}-\d{2}-\d{2})/i)).find(Boolean);
+    report.raporTarihi = date ? date[1] : '';
+    if (date && /\d[-/ ][A-Za-z]/.test(date[1])) {
+      const parts = date[1].split(/[-/ ]/); report.raporTarihiIso = parseDate(parts[1] + ' ' + parts[0] + ' ' + parts[2]).iso;
+    }
+    const all = rows.map(row => row.text).join('\n');
+    const lab = all.match(/\b(SGS|INTERTEK|BUREAU VERITAS|T[ÜU]V)\b/i);
+    report.lab = lab ? lab[1] : '';
+    report.ekBilgi = { reportNumbers: references, sampleDescription: description };
+    let table = null;
+    for (const row of rows) {
+      const name = row.cells.find(cell => /^(TEST PARAMETERS?|TEST NAME|TEST DESCRIPTION)$/i.test(cell.s));
+      const verdict = row.cells.find(cell => /^(CONCLUSIONS?|RESULTS?|ASSESSMENT)$/i.test(cell.s));
+      const number = row.cells.find(cell => /^(ITEM|NO\.?|S\.?NO\.?)$/i.test(cell.s));
+      if (name && verdict && number) { table = { page: row.p, name: name.x, verdict: verdict.x, number: number.x }; continue; }
+      if (!table) continue;
+      const index = row.cells.find(cell => cell.x >= table.number - 5 && cell.x < table.name && /^\d+[.)]?$/.test(cell.s));
+      if (!index) continue;
+      const title = row.cells.filter(cell => cell.x >= table.name - 3 && cell.x < table.verdict - 5).map(cell => cell.s).join(' ');
+      const result = row.cells.find(cell => cell.x >= table.verdict - 5);
+      // A continued summary can omit its headings on the next page. Only
+      // conclusion-shaped rows inherit the columns across page boundaries;
+      // numeric measurement cells must never be reinterpreted as verdicts.
+      if (row.p !== table.page && result && !normalizeResult(result.s)) continue;
+      if (title) report.testler.push({ ad: title, bilesen: '', sonuc: result ? result.s : '', sourcePage: row.p });
+    }
+    // Detailed FAIL conclusions can contradict the summary; never discard them.
+    const detailFailure = rows.find(row => /^CONCLUSIONS?\b/i.test(row.text)
+      && (row.cells.slice(1).some(cell => normalizeResult(cell.s) === 'fail')
+        || /^CONCLUSIONS?\s*:?\s+(?:FAIL|FAILED|REJECTED)\b/i.test(row.text)));
+    if (detailFailure && !report.testler.some(test => normalizeResult(test.sonuc) === 'fail')) {
+      report.testler.push({ ad: 'Conclusion', bilesen: '', sonuc: 'Fail', sourcePage: detailFailure.p });
+    }
+    if (report.testler.some(test => normalizeResult(test.sonuc) === 'fail')) report.genelSonuc = 'Fail';
+    else if (report.testler.length && report.testler.every(test => normalizeResult(test.sonuc) === 'pass')) report.genelSonuc = 'Pass';
+    if (!report.testler.length || report.testler.some(test => !normalizeResult(test.sonuc))) report.uyarilar.push({ code: 'incompleteEvaluation' });
+    report.kaynak = 'parser:external-lab';
+    return finalizeReport(report);
   }
 
   function parsePdfItems(rawItems, meta) {
@@ -705,7 +800,7 @@
       if (parsed.report) parsed.report.uyarilar.push({ code: 'mailPdf' });
       return { format: parsed.format ? 'mail:' + parsed.format : '', report: parsed.report };
     }
-    if (!format) return { format: '', report: null };
+    if (!format) { const report = externalLabReport(items); return { format: report ? 'external-lab' : '', report }; }
     const report = emptyReport();
     headerFields(items, report);
     report.lab = labName(items);
@@ -718,7 +813,7 @@
   }
 
   function finalizeReport(report, offsetMinutes) {
-    report.talepNo = normalizeTalepNo(report.talepNo);
+    report.talepNo = normalizeReportId(report.talepNo);
     if (report.raporTarihi && !report.raporTarihiIso) {
       const offset = offsetMinutes != null ? offsetMinutes : regionOffset(report.lab);
       report.raporTarihiIso = parseDate(report.raporTarihi, { offsetMinutes: offset }).iso;
@@ -744,7 +839,7 @@
     return fold(a) === fold(b);
   }
   function decisionKey(decision, talepNo) {
-    return [normalizeTalepNo(decision.talepNo) || talepNo, fold(decision.test), normalizeResult(decision.karar) || fold(decision.karar), decision.tarihIso || fold(decision.tarih)].join('|');
+    return [normalizeReportId(decision.talepNo) || talepNo, fold(decision.test), normalizeResult(decision.karar) || fold(decision.karar), decision.tarihIso || fold(decision.tarih)].join('|');
   }
   function fileKey(file) { return file.hash ? 'h:' + file.hash : 'n:' + fold(file.ad) + ':' + (Number(file.boyut) || 0); }
 
@@ -872,7 +967,8 @@
     const tests = Array.isArray(report.testler) ? report.testler : [];
     const decisions = latestDecisions(report);
     const tasks = [];
-    let pending = base === 'lackOfSample' || base === 'retest' || base === 'awaitingBuying' || base === 'inProgress';
+    let pending = base === 'lackOfSample' || base === 'retest' || base === 'awaitingBuying' || base === 'inProgress'
+      || (report.uyarilar || []).some(warning => warning.code === 'incompleteDocument');
     let commercial = false;
     if (tests.some(t => ['lackOfSample', 'inProgress'].includes(normalizeResult(t.sonuc)))) pending = true;
     let failing = tests.filter(t => normalizeResult(t.sonuc) === 'fail').map(t => t.ad);
@@ -1064,6 +1160,8 @@
       return (en ? field + ' differs between sources: ' : field + ' kaynaklar arasında farklı: ') + values;
     }
     if (w.code === 'mailPdf') return en ? 'Read from a PDF printout of the e-mail.' : 'Mailin PDF çıktısından okundu.';
+    if (w.code === 'incompleteEvaluation') return en ? 'Some test conclusions are missing or unrecognised; review the original before deciding.' : 'Bazı test kararları eksik veya tanınmıyor; karar vermeden önce orijinali inceleyin.';
+    if (w.code === 'incompleteDocument') return en ? 'Some PDF pages could not be read. Review the original; automatic approval is blocked.' : 'Bazı PDF sayfaları okunamadı. Orijinali inceleyin; otomatik onay engellendi.';
     if (w.code === 'missingTalepNo') return en ? 'No request number found.' : 'Talep no bulunamadı.';
     if (w.code === 'descriptionBoundary') return en ? 'The PDF description boundary is uncertain; verify the complete order scope against the source.' : 'PDF açıklama sınırı belirsiz; tüm sipariş kapsamını kaynakla doğrulayın.';
     if (w.code === 'decisionTableEmpty') return en ? 'The decision table could not be read.' : 'Karar tablosu okunamadı.';
@@ -1175,7 +1273,7 @@
         const at = part.indexOf('=');
         if (at > 0) fields[text(part.slice(0, at)).toLowerCase()] = text(part.slice(at + 1));
       });
-      const talepNo = normalizeTalepNo(fields.talepno || fields.talep || fields.request);
+      const talepNo = normalizeReportId(fields.talepno || fields.talep || fields.request);
       if (!talepNo || (talepSet.size && !talepSet.has(talepNo))) continue;
       const split = value => String(value || '').split(';').map(text).filter(Boolean).slice(0, 6).map(v => v.slice(0, 240));
       const step = text(fields.step);
@@ -1202,6 +1300,7 @@
       en ? 'Test report import (CP Tracker › Checklist). Formats Buyer Log reads itself:' : 'Test raporu aktarımı (CP Tracker › Checklist). Buyer Log\'un kendisinin okuduğu formatlar:',
       en ? 'A) Supplier lab result mail (SupplierLabUser) + TestRequestResultReport PDF. B) Labright result mail [RESULT REPORT]/[SONUÇ RAPORU] + TestRequestResultForm Lang1 (TR) / Lang2 (EN) PDF. C) Labright commercial decision mail (table: test, decision, comment, decided by, date). D) Standalone Labright PDF (e.g. Gold Seal). R) ROS Lab Dip / colour evaluation email (one request can have several independent colour outcomes and revised submissions).'
         : 'A) Tedarikçi lab sonuç maili (SupplierLabUser) + TestRequestResultReport PDF. B) Labright sonuç maili [RESULT REPORT]/[SONUÇ RAPORU] + TestRequestResultForm Lang1 (TR) / Lang2 (EN) PDF. C) Labright ticari karar maili (tablo: test, karar, açıklama, karar veren, tarih). D) Tek başına Labright PDF (ör. Gold Seal). R) ROS Lab Dip renk değerlendirme maili (tek talepte çoklu bağımsız renk sonuçları ve revizyonlar olabilir).',
+      en ? 'E) External laboratory PDFs (e.g. SGS) with explicit Report No, order/colour labels and conclusion tables, including PDF attachments in MSG/EML. Preserve alphanumeric references exactly. Split-letter PDF headers are reconstructed. Missing pages or uncertain scope block automatic approval; unrecognised templates require source-grounded review.' : 'E) Açık Report No, sipariş/renk etiketleri ve sonuç tablosu olan harici laboratuvar PDF raporları (ör. SGS), MSG/EML içindeki PDF ekleri dâhil. Harfli rapor referansını aynen koru. Harf harf PDF başlıkları birleştirilir. Eksik sayfa veya belirsiz kapsam otomatik onayı engeller; tanınmayan şablonlar kanıta dayalı inceleme ister.',
       (en ? 'Field labels: ' : 'Alan etiketleri: ') + labels,
       en ? 'One report may cover several orders. Inspect descriptions and orderScopes, including unverified candidates and orders missing from CP. The primary Order No is not the complete scope. Extra orders always require user verification; do not infer missing numbers or expand ranges.' : 'Bir rapor birden fazla siparişi kapsayabilir. Açıklamaları ve orderScopes listesini, doğrulanmamış adayları ve CP’de olmayan siparişleri incele. Ana Sipariş No tüm kapsam değildir. Ek siparişler daima kullanıcı doğrulaması gerektirir; eksik numara uydurma ve aralıkları genişletme.',
       en ? 'Result dictionary (raw value is stored, never a binary pass/fail):' : 'Sonuç sözlüğü (ham değer saklanır, ikili geçer/kalır değildir):', ...dict,
@@ -1214,7 +1313,7 @@
   return {
     RESULT_CODES, RESULT_LABELS, FIELD_LABELS,
     reportFromAiExtract, reviewContext, parseReviews, aiKnowledge,
-    fold, normalizeResult, resultLabel, normalizeTalepNo, normalizeOrderCode,
+    fold, normalizeResult, resultLabel, normalizeTalepNo, normalizeReportId, normalizeOrderCode,
     modelKey, modelMatch, modelCodeMatch, colourParts, colourKey, colourMatch, talepTipiKey,
     parseDate, inferOffsetMinutes, regionOffset,
     classifyMail, parseMail, parsePdfItems, linesFromItems,
