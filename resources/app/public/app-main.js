@@ -22960,6 +22960,7 @@ function endeksmatikSetTitle(set){
   if(!set)return '—';
   const en=appLang==='en';
   if(set.id==='legacy')return en?'Legacy Endeksmatik (TRY template)':'Eski Endeksmatik (TL şablonu)';
+  if(set.model==='legacy-tl')return [set.label||set.sourceFile||set.id,set.season].filter(Boolean).join(' · ');
   return [set.label,set.region,set.season].filter(Boolean).join(' · ')||set.sourceFile||set.id;
 }
 function endeksmatikSetOptionsHtml(selectedId){
@@ -23427,29 +23428,96 @@ async function openEndeksmatikModal({mode='collection',row}={}){
     applyOrderDirection();
   }
 }
-function endeksmatikFileBase64(file){
-  return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||'').split(',').pop()||'');reader.onerror=()=>reject(reader.error||new Error('FileReader error'));reader.readAsDataURL(file);});
+function endeksmatikFileBase64(file,onProgress){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(String(reader.result||'').split(',').pop()||'');
+    reader.onerror=()=>reject(reader.error||new Error('FileReader error'));
+    if(typeof onProgress==='function')reader.onprogress=event=>{
+      if(event.lengthComputable&&event.total>0)onProgress(Math.round(100*event.loaded/event.total));
+    };
+    reader.readAsDataURL(file);
+  });
 }
+function createEndeksmatikUploadProgress(file){
+  document.getElementById('_endeksmatikUploadProgress')?.remove();
+  const en=appLang==='en';
+  const overlay=document.createElement('div');
+  overlay.id='_endeksmatikUploadProgress';
+  overlay.className='endeksmatikImportOverlay';
+  overlay.setAttribute('role','status');
+  overlay.setAttribute('aria-live','polite');
+  overlay.setAttribute('aria-busy','true');
+  overlay.innerHTML=`<div class="endeksmatikImportCard">
+    <div class="endeksmatikImportHeader"><span class="endeksmatikImportSpinner" aria-hidden="true"></span><div>
+      <strong>${en?'Importing Endeksmatik workbook':'Endeksmatik Excel yükleniyor'}</strong>
+      <small data-em-progress-file></small>
+    </div></div>
+    <ol class="endeksmatikImportSteps">
+      <li data-em-phase="read"><span>01</span><div><strong>${en?'Reading workbook':'Excel okunuyor'}</strong><small data-em-progress-read>${en?'Preparing file…':'Dosya hazırlanıyor…'}</small></div></li>
+      <li data-em-phase="verify"><span>02</span><div><strong>${en?'Validating and saving':'Doğrulanıyor ve kaydediliyor'}</strong><small>${en?'Checking model and storing as an independent set…':'Model kontrol ediliyor, bağımsız set olarak kaydediliyor…'}</small></div></li>
+      <li data-em-phase="finish"><span>03</span><div><strong>${en?'Completed':'Tamamlandı'}</strong><small>${en?'Your set is available for selection.':'Setiniz seçim listesine eklendi.'}</small></div></li>
+    </ol>
+    <p class="endeksmatikImportFootnote">${en?'Large workbooks can take some time. Do not close the application.':'Büyük Excel dosyalarında işlem uzayabilir. Uygulamayı kapatmayın.'}</p>
+  </div>`;
+  overlay.querySelector('[data-em-progress-file]').textContent=file.name||'';
+  document.body.appendChild(overlay);
+  const setStage=(stage,percentage)=>{
+    const order=['read','verify','finish'];
+    const index=order.indexOf(stage);
+    overlay.querySelectorAll('[data-em-phase]').forEach(item=>{
+      const position=order.indexOf(item.dataset.emPhase);
+      item.dataset.state=position<index?'done':(position===index?'current':'pending');
+    });
+    overlay.classList.toggle('isComplete',stage==='finish');
+    const detail=overlay.querySelector('[data-em-progress-read]');
+    if(stage==='read')detail.textContent=Number.isFinite(percentage)&&percentage>0?(en?`${percentage}% read`:`%${percentage} okundu`):(en?'Preparing file…':'Dosya hazırlanıyor…');
+    else detail.textContent=en?'Workbook read':'Excel okundu';
+    overlay.setAttribute('aria-busy',stage!=='finish'?'true':'false');
+  };
+  setStage('read',0);
+  return {setStage,remove:()=>overlay.remove()};
+}
+let endeksmatikImportBusy=false;
 async function importEndeksmatikWorkbook(file){
-  if(!file)return;const label=document.getElementById('endeksmatikUploadBtn'),input=document.getElementById('endeksmatikUploadFile'),span=label&&label.querySelector('span'),old=span&&span.textContent||'';
+  if(!file||endeksmatikImportBusy)return;
+  endeksmatikImportBusy=true;
+  const label=document.getElementById('endeksmatikUploadBtn'),input=document.getElementById('endeksmatikUploadFile');
+  const span=label&&label.querySelector('span'),old=span&&span.textContent||'';
+  const progress=createEndeksmatikUploadProgress(file);
   try{
-    if(label){label.style.pointerEvents='none';label.setAttribute('aria-busy','true');}if(span)span.textContent=appLang==='en'?'Validating Endeksmatik…':'Endeksmatik doğrulanıyor…';
-    const dataBase64=await endeksmatikFileBase64(file),res=await fetch('/api/endeksmatik/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file.name,dataBase64})}),data=await res.json().catch(()=>({}));
-    if(!res.ok)throw Object.assign(new Error(data.error||res.statusText),{code:data.code||'',details:data.details||null});endeksmatikStatus=data;renderKol();
+    if(label){label.style.pointerEvents='none';label.setAttribute('aria-busy','true');}
+    if(span)span.textContent=appLang==='en'?'Importing Endeksmatik…':'Endeksmatik yükleniyor…';
+    const dataBase64=await endeksmatikFileBase64(file,percent=>progress.setStage('read',percent));
+    progress.setStage('verify');
+    const res=await fetch('/api/endeksmatik/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file.name,dataBase64})});
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok)throw Object.assign(new Error(data.error||res.statusText),{code:data.code||'',details:data.details||null});
+    endeksmatikStatus=data;
+    progress.setStage('finish');
+    renderKol();
     const uploaded=data.uploaded;
-    showToast(uploaded
-      ?(appLang==='en'?`Endeksmatik set loaded · ${endeksmatikSetTitle(uploaded)} · ${uploaded.recordCount||0} classes · signature and ${uploaded.validation&&uploaded.validation.checks||0} Excel results verified`:`Endeksmatik seti yüklendi · ${endeksmatikSetTitle(uploaded)} · ${uploaded.recordCount||0} klasman · imza ve ${uploaded.validation&&uploaded.validation.checks||0} Excel sonucu doğrulandı`)
-      :(appLang==='en'?`Endeksmatik updated · ${data.recordCount||0} classes · source ${data.sourceUpdatedAt||'—'}`:`Endeksmatik güncellendi · ${data.recordCount||0} klasman · kaynak ${data.sourceUpdatedAt||'—'}`),{icon:false});
+    const en=appLang==='en';
+    showToast(!uploaded
+      ?(en?'Endeksmatik updated.':'Endeksmatik güncellendi.')
+      :data.alreadyPresent
+        ?(en?`Existing set selected · ${endeksmatikSetTitle(uploaded)}`:`Mevcut set seçildi · ${endeksmatikSetTitle(uploaded)}`)
+        :endeksmatikIsUsdModel(uploaded)
+          ?(en?`Endeksmatik set created · ${endeksmatikSetTitle(uploaded)} · ${uploaded.recordCount||0} classes · ${uploaded.validation&&uploaded.validation.checks||0} Excel results verified`:`Endeksmatik seti oluşturuldu · ${endeksmatikSetTitle(uploaded)} · ${uploaded.recordCount||0} klasman · ${uploaded.validation&&uploaded.validation.checks||0} Excel sonucu doğrulandı`)
+          :(en?`Independent TRY set created · ${endeksmatikSetTitle(uploaded)} · ${uploaded.recordCount||0} classes`:`Bağımsız TL seti oluşturuldu · ${endeksmatikSetTitle(uploaded)} · ${uploaded.recordCount||0} klasman`),{icon:false});
     if(document.getElementById('_endeksmatikSetsModal'))void openEndeksmatikSetManager();
   }catch(err){
-    // Model/uzlaştırma reddinde ayrıntı kullanıcıya gösterilir: yerel kabul
-    // testinde hangi hücrenin tutmadığı buradan okunur.
     const lines=err&&err.details&&(Array.isArray(err.details.failures)?err.details.failures:Array.isArray(err.details.checks)?err.details.checks.filter(c=>!c.ok).map(c=>`${c.label} (${c.cell}): Excel ${c.excel} ≠ Buyer Log ${c.buyerLog}`):null);
     if(lines&&lines.length)console.warn('[Endeksmatik] yükleme reddedildi',err.code,lines);
     if(err&&err.details&&err.details.diagnostics)console.warn('[Endeksmatik] anahtar tanısı',err.details.diagnostics);
     showToast((appLang==='en'?'Endeksmatik workbook could not be loaded: ':'Endeksmatik Excel yüklenemedi: ')+(err?.message||String(err))+(appLang==='en'?' — Collection › Tools › Endeksmatik Sets › Structure report creates a small, masked report you can share.':' — Koleksiyon › Araçlar › Endeksmatik Setleri › Yapı raporu ile paylaşılabilir, maskeli bir rapor üretebilirsiniz.'));
+  }finally{
+    progress.remove();
+    endeksmatikImportBusy=false;
+    if(input)input.value='';
+    if(label){label.style.pointerEvents='';label.removeAttribute('aria-busy');}
+    if(span)span.textContent=old;
   }
-  finally{if(input)input.value='';if(label){label.style.pointerEvents='';label.removeAttribute('aria-busy');}if(span)span.textContent=old;}
 }
 document.getElementById('endeksmatikUploadFile')?.addEventListener('change',event=>void importEndeksmatikWorkbook(event.target.files&&event.target.files[0]));
 /* Endeksmatik güncelleme için ikinci ve üçüncü giriş noktaları (v6.00).
@@ -23501,13 +23569,13 @@ async function openEndeksmatikSetManager(){
       <td>${escapeHtml(String(set.uploadedAt||'').slice(0,16).replace('T',' ')||'—')}${set.uploadedBy?`<small>${escapeHtml(set.uploadedBy)}</small>`:''}</td>
       <td class="num">${escapeHtml(String(set.recordCount||0))}<small>${escapeHtml(`${kolMonthDisplay(set.firstMonth)||set.firstMonth||''} → ${kolMonthDisplay(set.lastMonth)||set.lastMonth||''}`)}</small></td>
       <td>${usd?`<span class="endeksmatikBadge ${v.reconciliationOk?'isGood':'isWarn'}">${escapeHtml(v.reconciliationOk?(en?`Verified · ${v.checks} checks`:`Doğrulandı · ${v.checks} kontrol`):(en?'Not verified':'Doğrulanmadı'))}</span><small>${escapeHtml(`${set.model} · parser v${set.parserVersion||1}`)}</small>${Array.isArray(v.warnings)&&v.warnings.length?`<small title="${escapeHtml(v.warnings.join('\n'))}">${escapeHtml(en?`${v.warnings.length} warning(s) — hover for details`:`${v.warnings.length} uyarı — ayrıntı için üzerine gelin`)}</small>`:''}`:`<span class="endeksmatikBadge">${escapeHtml(en?'Legacy TRY model':'Eski TL modeli')}</span>`}</td>
-      <td class="endeksmatikSetActions">${active?`<span class="endeksmatikBadge isGood">${escapeHtml(en?'Default':'Varsayılan')}</span>`:`<button type="button" class="tbtn" data-em-set-activate${canManage?'':' disabled'}>${escapeHtml(en?'Make default':'Varsayılan yap')}</button>`}${usd?`<button type="button" class="tbtn" data-em-set-rename${canManage?'':' disabled'}>${escapeHtml(en?'Rename':'Adlandır')}</button><button type="button" class="tbtn danger" data-em-set-delete${canManage?'':' disabled'}>${escapeHtml(en?'Delete':'Sil')}</button>`:''}</td>
+      <td class="endeksmatikSetActions">${active?`<span class="endeksmatikBadge isGood">${escapeHtml(en?'Default':'Varsayılan')}</span>`:`<button type="button" class="tbtn" data-em-set-activate${canManage?'':' disabled'}>${escapeHtml(en?'Make default':'Varsayılan yap')}</button>`}${set.id!=='legacy'?`<button type="button" class="tbtn" data-em-set-rename${canManage?'':' disabled'}>${escapeHtml(en?'Rename':'Adlandır')}</button><button type="button" class="tbtn danger" data-em-set-delete${canManage?'':' disabled'}>${escapeHtml(en?'Delete':'Sil')}</button>`:''}</td>
     </tr>`;
   };
   overlay.innerHTML=`<div class="endeksmatikModalCard">
     <div class="endeksmatikModalHead"><div><strong>${escapeHtml(en?'Endeksmatik Sets':'Endeksmatik Setleri')}</strong><span>${escapeHtml(en?'Country/region workbooks. The default set is used unless a calculation chooses another one.':'Ülke/bölge dosyaları. Hesapta başka set seçilmedikçe varsayılan set kullanılır.')}</span></div><button type="button" class="verHistClose" data-em-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div>
     <div class="endeksmatikModalBody">
-      <div class="endeksmatikNotice">${escapeHtml(en?'Each upload is checked against the ENDEKSMATIK screen: its formula logic (signature) and its cached results must match Buyer Log’s recalculation, otherwise the workbook is rejected as a changed model.':'Her yükleme ENDEKSMATİK ekranıyla kontrol edilir: formül mantığı (imza) ve önbellekli sonuçlar Buyer Log’un yeniden hesabıyla tutmalıdır; tutmazsa dosya “model değişti” diye reddedilir.')}</div>
+      <div class="endeksmatikNotice">${escapeHtml(en?'USD model workbooks are checked against the ENDEKSMATIK screen (formula signature and cached-result reconciliation). Older TRY workbooks use structural validation and are saved as separate sets; the original Legacy set is never overwritten.':'USD dosyalarında formül imzası ve Excel sonuçları karşılaştırılır. Eski TL şablonları yapısal olarak doğrulanıp ayrı set halinde saklanır; orijinal Legacy kaydı korunur.')}</div>
       <div class="endeksmatikComponentWrap"><table class="endeksmatikSetTable"><thead><tr><th>${escapeHtml(en?'Set':'Endeksmatik seti')}</th><th>${escapeHtml(en?'Region':'Bölge')}</th><th>${escapeHtml(en?'Season':'Sezon')}</th><th>${escapeHtml(en?'Workbook date':'Dosya tarihi')}</th><th>${escapeHtml(en?'Uploaded':'Yüklendi')}</th><th>${escapeHtml(en?'Classes':'Klasman')}</th><th>${escapeHtml(en?'Validation':'Doğrulama')}</th><th></th></tr></thead><tbody>${sets.map(rowHtml).join('')||`<tr><td colspan="8">${escapeHtml(en?'No Endeksmatik data yet.':'Henüz Endeksmatik verisi yok.')}</td></tr>`}</tbody></table></div>
     </div>
     <div class="endeksmatikModalFoot"><button type="button" class="tbtn" data-em-close>${escapeHtml(en?'Close':'Kapat')}</button><button type="button" class="tbtn" data-em-structure-report${canManage?'':' disabled'} title="${escapeHtml(en?'Reads a workbook on this computer and downloads a small report with masked values (headers, formulas, key overlap). Nothing is saved.':'Dosyayı bu bilgisayarda okur; değerleri maskeli küçük bir rapor indirir (başlıklar, formüller, anahtar örtüşmesi). Hiçbir şey kaydedilmez.')}">${escapeHtml(en?'Structure report':'Yapı raporu')}</button><button type="button" class="tbtn primary" data-em-set-upload${canManage?'':' disabled'}>${escapeHtml(en?'Upload new workbook':'Yeni dosya yükle')}</button></div>
