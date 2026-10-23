@@ -170,8 +170,11 @@ function templateInstruction(definition, { name = '', lang = 'tr' } = {}) {
     lines.push(english
       ? `Layout: model cards are placed ${grid} (${BLOutputLayout.perPage(def.layout)} per ${def.format === 'pptx' ? 'slide' : 'page'}) by Buyer Log. Put model visuals in ${def.format === 'pptx' ? 'ONE "gallery" slide per group (all items; Buyer Log continues on extra slides)' : 'one <div class="bl-gallery"> per group'}; do not split them yourself.`
       : `Yerleşim: model kartlarını Buyer Log ${grid} ızgarasına (${def.format === 'pptx' ? 'slayt' : 'sayfa'} başına ${BLOutputLayout.perPage(def.layout)}) dizer. Model görsellerini ${def.format === 'pptx' ? 'grup başına TEK "gallery" slaytına (tüm öğeler; devam slaytlarını Buyer Log açar)' : 'grup başına tek <div class="bl-gallery"> içine'} koy; kendin bölme.`);
-    // Kullanıcının Yerleşim'de seçtiği kart bilgileri: her kartta bu alanlar (bu sırayla).
-    const fields = Array.isArray(def.layout.cardFields) ? def.layout.cardFields : [];
+    // Kullanıcının Yerleşim'de seçtiği kart bilgileri, gruplama ve sayfa başlığı alanları:
+    // Buyer Log bu değerlerle gruplar ve başlık yazar, bu yüzden her kartta bulunmalıdır.
+    const title = def.layout.pageTitle || null;
+    const placeholders = title && title.mode === 'manual' ? [...title.text.matchAll(/\{([^{}]{1,60})\}/g)].map(match => match[1].trim()) : [];
+    const fields = [...new Set([...(def.layout.cardFields || []), ...(def.layout.groupBy || []), ...(title && title.mode === 'fields' ? title.fields : []), ...placeholders])];
     if (fields.length) {
       lines.push(english
         ? `Model card details: give every card these fields in this order, values copied exactly from the source row (leave a field out if the source has no value): ${fields.join(', ')}.`
