@@ -188,6 +188,17 @@ test('mesaj payload: doğrulanmış biçim, model merkezi config\'ten, başlık 
   assert.equal(headers['Content-Type'], 'application/json');
 });
 
+test('teşhis: gönderilen reasoning seviyesi ve düşünme parçası sayısı log\'a yazılır', async () => {
+  const auth = createLcwAiAuth({ provider: fakeProvider([makeToken()]) });
+  const events = [];
+  const client = createLcwAiClient({ auth, logger: event => events.push(event), fetch: async () => sseResponse([chunk({ content: 'düşün', chunkType: 'reasoning' }), chunk({ content: 'x', chunkType: 'content' }), COMPLETE]) });
+  await client.sendMessage('u1', { content: 'Merhaba' });
+  const done = events.find(event => event.event === 'LCWAI_MESSAGE_DONE');
+  assert.equal(done.reasoningLevel, 'High');
+  assert.equal(done.reasoningChunks, 1);
+  assert.equal(events.find(event => event.event === 'LCWAI_MESSAGE_HTTP').reasoningLevel, 'High');
+});
+
 test('dosya yükleme: multipart file alanı, Türkçe ad korunur, ek eşlemesi yalnız izinli alanlar', async () => {
   const auth = createLcwAiAuth({ provider: fakeProvider([makeToken()]) });
   let form = null, target = '';

@@ -181,6 +181,7 @@ async function readSseResponse(body, { onDelta, maxChars, onActivity } = {}) {
     finishReason: state.finishReason || (state.done ? 'stop' : ''),
     metadata: state.metadata,
     chunks: state.chunks,
+    reasoningChunks: state.reasoningChunks,
     types: typeSummary(state.types),
     truncated: state.truncated,
   };
