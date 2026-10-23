@@ -2670,15 +2670,19 @@
       });
       const values = [...valueMap.entries()].sort((a, b) => oabSmartCompare(a[1], b[1]));
       const current = drillFilters.get(field);
+      const orderedValues=values.slice().sort((a,b)=>Number(Boolean(current?.has(b[0])))-Number(Boolean(current?.has(a[0]))));
       const panel = document.createElement('div');
       panel.className = 'colFilterPanel colFilterPanelModal oabDrillFilterPanel';
       panel.innerHTML = `<div class="cfpSortBar"><button type="button" class="cfpSortBtn" data-oab-drill-dir="1">${oabEsc(oabT('A→Z Sırala', 'Sort A→Z'))}</button><button type="button" class="cfpSortBtn" data-oab-drill-dir="-1">${oabEsc(oabT('Z→A Sırala', 'Sort Z→A'))}</button><button type="button" class="cfpClearCol" data-oab-drill-filter-clear>${oabEsc(oabT('Filtreyi Temizle', 'Clear Filter'))}</button></div>
         <input type="text" class="cfpSearch" placeholder="${oabEsc(oabT('Ara…', 'Search…'))}">
         <div class="cfpHeader"><button type="button" class="cfpAll" data-v="all">${oabEsc(oabT('Tümü', 'All'))}</button><button type="button" class="cfpAll" data-v="none">${oabEsc(oabT('Temizle', 'Clear'))}</button></div>
-        <div class="cfpList">${values.map(([key, value]) => { const display = value == null || value === '' ? oabT('(boş)', '(blank)') : oabDrillCellText(field, value); const checked = !current || current.has(key); return `<label class="cfpItem" data-txt="${oabEsc(String(display).toLocaleLowerCase('tr-TR'))}"><input type="checkbox" value="${oabEsc(key)}" ${checked ? 'checked' : ''}> ${oabEsc(display)}</label>`; }).join('')}</div>
+        <div class="cfpList">${orderedValues.map(([key, value],index) => { const display = value == null || value === '' ? oabT('(boş)', '(blank)') : oabDrillCellText(field, value); const checked = !current || current.has(key); return `<label class="cfpItem" data-filter-order="${values.findIndex(item=>item[0]===key)}" data-txt="${oabEsc(String(display).toLocaleLowerCase('tr-TR'))}"><input type="checkbox" value="${oabEsc(key)}" ${checked ? 'checked' : ''}> ${oabEsc(display)}</label>`; }).join('')}</div>
         <div class="cfpApplyRow"><button type="button" class="cfpApplySelection">${oabEsc(oabT('Uygula', 'Apply'))}</button><button type="button" class="numFilterClear" data-oab-drill-filter-remove>${oabEsc(oabT('Filtreyi Kaldır', 'Remove Filter'))}</button></div>`;
       document.body.appendChild(panel);
       drillFilterPanel = panel;
+      const pin=()=>{if(typeof pinCheckedFilterChoices==='function')pinCheckedFilterChoices(panel);};
+      panel.querySelector('.cfpList')?.addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))pin();});
+      pin();
       const rect = anchor.getBoundingClientRect();
       const panelWidth = Math.min(380, Math.max(250, panel.offsetWidth || 280));
       panel.style.left = `${Math.max(8, Math.min(window.innerWidth - panelWidth - 8, rect.right - panelWidth))}px`;
@@ -2687,8 +2691,8 @@
 
       const listItems = () => [...panel.querySelectorAll('.cfpItem')];
       const visibleChecks = () => listItems().filter(item => item.style.display !== 'none').map(item => item.querySelector('input')).filter(Boolean);
-      panel.querySelector('[data-v="all"]')?.addEventListener('click', () => visibleChecks().forEach(input => { input.checked = true; }));
-      panel.querySelector('[data-v="none"]')?.addEventListener('click', () => visibleChecks().forEach(input => { input.checked = false; }));
+      panel.querySelector('[data-v="all"]')?.addEventListener('click', () => { visibleChecks().forEach(input => { input.checked = true; }); pin(); });
+      panel.querySelector('[data-v="none"]')?.addEventListener('click', () => { visibleChecks().forEach(input => { input.checked = false; }); pin(); });
       const filterSearch = panel.querySelector('.cfpSearch');
       filterSearch?.addEventListener('input', () => {
         const terms = parseTableSearchTerms(filterSearch.value || '');
