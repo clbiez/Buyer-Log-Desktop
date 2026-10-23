@@ -31,6 +31,15 @@ module.exports = function registerLicenseCardRoutes(app, deps) {
 app.get('/api/license-cards', area, async (req, res) => {
     try { const result = await importCards(req, false); send(req, res, result.saved, { syncPending: result.syncPending }); } catch (err) { error(res, err); }
   });
+// Content-addressed card images: immutable, cached by the browser for good.
+app.get('/api/license-cards/assets/:name', area, async (req, res) => {
+    try {
+      const asset=await require('../lib/license-card-assets').read(String(req.params.name||''));
+      if(!asset)return res.status(404).json({error:'Görsel bulunamadı. / Image not found.',code:'LICENSE_ASSET_NOT_FOUND'});
+      res.set('Content-Type',asset.type);res.set('Cache-Control','private, max-age=31536000, immutable');res.set('X-Content-Type-Options','nosniff');
+      res.end(asset.bytes);
+    } catch(err){error(res,err);}
+  });
 app.get('/api/license-cards/atlas-library', area, (req, res) => {
     res.set('Cache-Control', 'no-store');
     res.json(require('../lib/license-atlas-library.json'));

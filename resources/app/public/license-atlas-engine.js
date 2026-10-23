@@ -7,7 +7,8 @@
  function object(v){if(!v||typeof v!=='object'||Array.isArray(v))invalid();return v;}
  function str(v,max=12000){if(v==null)return '';if(typeof v!=='string'||v.length>max)invalid();return v;}
  function url(v){v=str(v,2048).trim();if(!v)return '';let u;try{u=new URL(v);}catch(_){invalid();}if(!['https:','http:'].includes(u.protocol)||u.username||u.password)invalid();return u.href;}
- function image(v){v=str(v,720000);if(!v)return '';if(!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(v))invalid();return v;}
+ // Inline data URL (before saving) or a stored license-card asset URL (server-side store).
+ function image(v){v=str(v,720000);if(!v)return '';if(!/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(v)&&!/^\/api\/license-cards\/assets\/[a-f0-9]{64}\.(?:png|jpg|webp)$/.test(v))invalid();return v;}
  function list(v,max){if(v==null)return [];if(!Array.isArray(v)||v.length>max)invalid();return v;}
  function unique(items){const ids=new Set();for(const item of items){if(!item.id||ids.has(item.id))invalid();ids.add(item.id);}return items;}
  function fields(value,texts=[],flags=[]){object(value);const out={};for(const k of texts)if(Object.hasOwn(value,k))out[k]=str(value[k]);for(const k of flags)if(Object.hasOwn(value,k)){if(typeof value[k]!=='boolean')invalid();out[k]=value[k];}

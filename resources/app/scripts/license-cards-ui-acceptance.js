@@ -63,6 +63,15 @@ let browser;
   assert.deepEqual(blueRules,[['2026-01-01','2026-10-31'],['2026-11-01','']]);console.log('PASS new period copies rates and keeps the previous end in sync (no gap)');
   await page.screenshot({path:path.join(root,'detail.png')});
 
+  // Card image: stored as a content-addressed asset URL (not base64 in the shared store), shown in the list.
+  const png=path.join(root,'cover.png');fs.writeFileSync(png,Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAgAAAAICAIAAABLbSncAAAAEklEQVR4nGP4z8CAFWEXHbQSACj/P8Fu7N9hAAAAAElFTkSuQmCC','base64'));
+  await page.locator('.lcDetail [data-lc-cover]').setInputFiles(png);await page.waitForFunction(()=>document.querySelector('.lcRow.isDirty'));
+  await page.locator('.lcDetail [data-lc-act="save"]').click();await page.waitForFunction(()=>!document.querySelector('.lcRow.isDirty'));
+  const coverUrl=(await api()).cards.find(c=>c.license==='BLUE HARBOR').processAtlas.license.cover;
+  assert.match(coverUrl,/^\/api\/license-cards\/assets\/[a-f0-9]{64}\.(png|jpg|webp)$/,'cover stored as an asset URL');
+  await page.waitForFunction(u=>[...document.querySelectorAll('.lcThumb img')].some(i=>i.getAttribute('src')===u&&i.complete&&i.naturalWidth>0),coverUrl);
+  console.log('PASS card image stored outside the shared store and shown from its asset URL');
+
   await row('NORTH STAR','Demo Licensing').locator('[data-lc-act="map"]').last().click();await page.locator('.lmDrawer').waitFor();
   await page.locator('[data-lm-act="addStage"]').click();await page.locator('.lmStage:last-child .lmTitle').fill('Final kontrol');
   await page.locator('.lmStage:last-child [data-lm-act="approver"][data-v="mixed"]').click();await page.screenshot({path:path.join(root,'map.png')});
@@ -123,19 +132,21 @@ let browser;
   console.log('PASS stage template update reaches every linked license');
 
   for(const [l,o] of [['NORTH STAR','Demo Licensing'],['ORBIT CLUB','Demo Studio']])await row(l,o).locator('[data-lc-select]').check();
+  await row('BLUE HARBOR','Demo Rights').locator('[data-lc-select]').check();
   await page.locator('.lcSelectionBar.isOn').waitFor();
   const download=page.waitForEvent('download');await page.locator('[data-lc-act="export"]').click();const file=path.join(root,'supplier.html');await (await download).saveAs(file);
   const html=fs.readFileSync(file,'utf8');
   for(const included of ['NORTH STAR','ORBIT CLUB','Final kontrol','Tasarımı portal üzerinden gönderin.','Numune v2','Kargo sonrası','Somerbond UK'])assert.ok(html.includes(included),included);
-  for(const excluded of ['STUDIO ONE','BLUE HARBOR','PRIVATE NOTE','PRIVATE INTERNAL','example.com/portal','13.5'])assert.ok(!html.includes(excluded),excluded);
+  assert.ok(html.includes('BLUE HARBOR')&&/<img[^>]+src="data:image\/(png|jpeg|webp);base64,/.test(html)&&!html.includes('/api/license-cards/assets/'),'asset images are embedded in the supplier file');
+  for(const excluded of ['STUDIO ONE','PRIVATE NOTE','PRIVATE INTERNAL','example.com/portal','13.5'])assert.ok(!html.includes(excluded),excluded);
   const supplier=await context.newPage();await supplier.goto('file://'+file);
-  const drawers=supplier.locator('details.lic');assert.equal(await drawers.count(),2);assert.equal(await supplier.locator('details.lic[open]').count(),0,'all maps start closed');
-  await drawers.first().locator('summary').click();assert.equal(await drawers.first().evaluate(d=>d.open),true);
+  const drawers=supplier.locator('details.lic');assert.equal(await drawers.count(),3);assert.equal(await supplier.locator('details.lic[open]').count(),0,'all maps start closed');
+  await drawers.first().locator(':scope > summary').click();assert.equal(await drawers.first().evaluate(d=>d.open),true);
   const lefts=await supplier.locator('details.lic[open] .route').evaluateAll(rs=>rs.map(r=>[...r.children].slice(0,3).map(c=>Math.round(c.getBoundingClientRect().left))));
   assert.ok(lefts.length>=3);for(const l of lefts)assert.deepEqual(l,lefts[0],'route columns line up');
   await supplier.screenshot({path:path.join(root,'supplier.png'),fullPage:true});
-  await drawers.first().locator('summary').click();assert.equal(await drawers.first().evaluate(d=>d.open),false,'second click hides the map');
-  await drawers.first().locator('summary').click();
+  await drawers.first().locator(':scope > summary').click();assert.equal(await drawers.first().evaluate(d=>d.open),false,'second click hides the map');
+  await drawers.first().locator(':scope > summary').click();
   console.log('PASS supplier atlas holds only selected rows and supplier-visible content');
 
   await page.locator('#lcLicensor').selectOption({label:'DTR'});assert.equal(await rows.count(),1);await page.screenshot({path:path.join(root,'filter.png')});await page.locator('#lcLicensor').selectOption('');console.log('PASS licensor filter');

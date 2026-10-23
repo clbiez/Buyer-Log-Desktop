@@ -300,6 +300,22 @@
     finally{d.saving=false;if(S.stale||S.refreshNext)await load();render();}
   }
   function exportName(){return `Buyer-Log-Supplier-Atlas-${new Date().toISOString().slice(0,10)}.html`;}
+  // Card images are stored as /api/license-cards/assets/… URLs; the standalone supplier file
+  // (img-src data: only) embeds their bytes.
+  const ASSET_PREFIX='/api/license-cards/assets/';
+  async function inlineAssets(licenses){
+    const cache=new Map();
+    const toData=url=>{
+      if(!cache.has(url))cache.set(url,fetch(url,{credentials:'same-origin'}).then(r=>{if(!r.ok)throw new Error('LICENSE_ASSET_NOT_FOUND');return r.blob();})
+        .then(blob=>new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(blob);})));
+      return cache.get(url);
+    };
+    const inline=async value=>typeof value==='string'&&value.startsWith(ASSET_PREFIX)?toData(value):value;
+    for(const l of licenses){
+      l.cover=await inline(l.cover);
+      for(const v of l.visualLibrary||[])v.data=await inline(v.data);
+    }
+  }
   async function exportAtlas(){
     const A=window.BLLicenseSupplierAtlas;if(!A||S.exporting)return;
     const cards=(S.data?.cards||[]).filter(c=>S.selected.has(c.id));if(!cards.length)return;
@@ -307,6 +323,7 @@
     try{
       const {licenses,skipped}=A.project(cards,isEn()?'en':'tr');
       if(!licenses.length){toast(T('Seçilen lisansların hiçbiri üretici atlasına dahil değil. Haritada “Üretici atlasına dahil”i açın.','None of the selected licenses is included in the supplier atlas. Turn on “Include in supplier atlas” in the map.'));return;}
+      await inlineAssets(licenses);
       const result=await A.buildEmailSafeHTML(licenses,{lang:isEn()?'en':'tr',fonts:await A.loadFonts()});
       // Defensive final guard: an oversized file must never be offered for download.
       if(result.blob.size>A.MAX_EMAIL_BYTES)throw Object.assign(new Error('Atlas oversized'),{code:'ATLAS_EMAIL_SIZE_LIMIT'});

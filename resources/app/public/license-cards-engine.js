@@ -64,7 +64,7 @@
   // Card image: the atlas cover wins, the legacy symbol is the fallback.
   function cardImage(card){
     const cover=text(card&&card.processAtlas&&card.processAtlas.license&&card.processAtlas.license.cover);
-    if(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(cover))return cover;
+    if(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/.test(cover)||/^\/api\/license-cards\/assets\/[a-f0-9]{64}\.(?:png|jpg|webp)$/.test(cover))return cover;
     return symbolUrl(card&&card.symbolDataUrl);
   }
   // The contract a row edits: newest active one; else the nearest upcoming; else the latest past one.
@@ -184,7 +184,7 @@
     result.orders=orders.size;return result;
   }
   function portalHref(value){try{const u=new URL(text(value));return ['https:','http:'].includes(u.protocol)&&!u.username&&!u.password?u.href:'';}catch(_){return '';}}
-  function symbolUrl(value){const s=text(value);return /^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(s)&&s.length<=350000?s:'';}
+  function symbolUrl(value){const s=text(value);return (/^data:image\/(png|jpeg|webp);base64,[a-zA-Z0-9+/=]+$/.test(s)&&s.length<=350000)||/^\/api\/license-cards\/assets\/[a-f0-9]{64}\.(?:png|jpg|webp)$/.test(s)?s:'';}
   /* Map copy/paste from the list: the steps, their addresses, guide images and custom
      labels come from the source; the target keeps its own identity, image, portal,
      requirements and internal notes. */
