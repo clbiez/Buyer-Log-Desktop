@@ -9645,7 +9645,9 @@ function applyHistoryAction(action, direction){
   if(historyKeys.has('Del. Type'))syncCpProductionLogisticSegment(row,row['Del. Type']);
   else if(historyKeys.has('Ex-factory'))syncCpProductionLogisticSegment(row);
   applyFormulas(row);
-  if([...historyKeys].some(key=>['Ex-factory','Retail Date','In-Store (Model Budget)','Del. Type'].includes(key)))invalidateUnifiedPriorityDecisions('cp-history-edit');
+  const dateHistoryKeys=['Ex-factory','Retail Date','In-Store (Model Budget)'].filter(key=>historyKeys.has(key));
+  if(dateHistoryKeys.length)saveDateOverrides(row,dateHistoryKeys);
+  if(dateHistoryKeys.length||historyKeys.has('Del. Type'))invalidateUnifiedPriorityDecisions('cp-history-edit');
   markDirty(action.id);
   refreshRowEverywhere(action.id);
   if(action.refreshSubmfrList) refreshSubmfrList();
@@ -9907,7 +9909,7 @@ function commitCpEditor(t, options={}){
     if(kind==='exfactory')syncCpProductionLogisticSegment(row);
     applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-exfactory-edit'); markDirty(id);
     pushUndo({id,mergeKey:t.dataset.historySession||null,fields:[{key, prev, next}]});
-    saveDateOverrides(row);
+    saveDateOverrides(row, ['Ex-factory']);
     if(refresh) refreshRowEverywhere(id);
     return true;
   }
@@ -9930,7 +9932,7 @@ function commitCpEditor(t, options={}){
     row[other]=nextOther; fields.push({key:other, prev:prevOther, next:nextOther});
     applyFormulas(row); invalidateUnifiedPriorityDecisions('cp-target-date-edit'); markDirty(id);
     pushUndo({id,mergeKey:t.dataset.historySession||null,fields});
-    saveDateOverrides(row);
+    saveDateOverrides(row, ['Retail Date', 'In-Store (Model Budget)']);
     if(refresh) refreshRowEverywhere(id);
     return true;
   }
@@ -12629,17 +12631,49 @@ async function settleOverrideWrites(){
   flushPendingOverrideWrites();
   try{ await overrideMutationsSettled(); }catch(_){ }
 }
-function saveDateOverrides(row){
+const _pendingDateOverrideKeys = new Map();
+function saveDateOverrides(row, touchedKeys){
   if(!window.SERVER_BACKED || !row) return;
   const orderCode = row['Order Code'];
   if(orderCode==null) return;
-  const revised = new Set(BLRevision.revisedDateKeys(row));
   const payloadKeys = {'Ex-factory':'exFactory','Retail Date':'retailDate','In-Store (Model Budget)':'inStoreDate'};
-  const dates = {};
-  for(const [key,field] of Object.entries(payloadKeys)){
-    dates[field] = revised.has(key) ? (toISODate(row[key])||null) : null;
-  }
+  const datemapKeys = {'Ex-factory':'ex','Retail Date':'retail','In-Store (Model Budget)':'mb'};
+  const allKeys = Object.keys(payloadKeys);
+  const nextKeys = (Array.isArray(touchedKeys) || touchedKeys instanceof Set)
+    ? [...touchedKeys].filter(key => Object.prototype.hasOwnProperty.call(payloadKeys, key))
+    : allKeys;
+  if(!nextKeys.length) return;
+  const syncKey = overrideSyncKey(row, orderCode);
+  const bucket = _pendingDateOverrideKeys.get(syncKey) || new Set();
+  nextKeys.forEach(key => bucket.add(key));
+  _pendingDateOverrideKeys.set(syncKey, bucket);
+  const computeDates = keysToSend => {
+    const revised = new Set(BLRevision.revisedDateKeys(row));
+    const dates = {};
+    for(const key of keysToSend){
+      const field = payloadKeys[key];
+      if(!field) continue;
+      dates[field] = revised.has(key) ? (toISODate(row[key])||null) : null;
+    }
+    if(state.overrides && state.overrides.datemap && typeof state.overrides.datemap==='object'){
+      const rec = {...(state.overrides.datemap[syncKey]||{})};
+      for(const key of keysToSend){
+        const field = payloadKeys[key], stored = datemapKeys[key];
+        if(!field || !stored || !Object.prototype.hasOwnProperty.call(dates, field)) continue;
+        if(dates[field]==null || dates[field]==='') delete rec[stored];
+        else rec[stored] = dates[field];
+      }
+      if(Object.keys(rec).length) state.overrides.datemap[syncKey] = rec;
+      else delete state.overrides.datemap[syncKey];
+    }
+    return dates;
+  };
+  computeDates(bucket);
   schedulePendingOverrideWrite(`date:${overrideSyncKey(row, orderCode)}`, 400, ()=>{
+    const keysToSend = [...(_pendingDateOverrideKeys.get(syncKey) || nextKeys)];
+    _pendingDateOverrideKeys.delete(syncKey);
+    const dates = computeDates(keysToSend);
+    if(!Object.keys(dates).length) return;
     enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`, {
       method:'PATCH', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({...lineIdentity(row), dates}),
@@ -36897,8 +36931,17 @@ function applyRemoteRowPatch(row,patch){
     // Aynı ref aynı görseldir: canlı yama her geldiğinde yüklü görsel düşürülmez.
     if(oldRef!==ref)BLImageRuntime.invalidate([oldUrl]);
   }
+  if(patch.noteColumns&&typeof patch.noteColumns==='object'){
+    const validIds=new Set((CP_NOTE_COLUMN_DEFS||[]).map(def=>def.id));
+    for(const [id,value] of Object.entries(patch.noteColumns)){
+      if(!validIds.has(id))continue;
+      row[id]=value==null?'':String(value);
+    }
+  }
   // Önem etiketi: başka pencerede/ekip arkadaşının seçtiği etiket aynı kuralla çözülür.
   if(Object.prototype.hasOwnProperty.call(patch,'importance'))window.BLOrderImportanceUI?.applyRemote(row,patch.importance);
+  if(patch.delType!=null)syncCpProductionLogisticSegment(row,patch.delType);
+  else if(patch.dates&&typeof patch.dates==='object'&&Object.prototype.hasOwnProperty.call(patch.dates,'exFactory'))syncCpProductionLogisticSegment(row);
   if(patch.delType!=null||patch.dates){applyFormulas(row);invalidateUnifiedPriorityDecisions('remote-cp-decision-patch');scheduleOverviewRender('remote-cp-decision-patch');}
   return row;
 }
