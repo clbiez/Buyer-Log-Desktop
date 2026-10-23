@@ -7902,6 +7902,8 @@ pairs:[
 ["Noktalı virgül + boşluk = VE. Aynı kayıtta iki koşul da bulunmalıdır.","Semicolon + space = AND. Both conditions must match the same row."],
 ["! = bu değeri içermesin.","! = must not contain the value."],
 ["Excel’den yapıştırma","Paste from Excel"],
+["Ekran görüntüsü yapıştırma","Paste a screenshot"],
+["Bir ekran görüntüsünü (e-posta, pivot, PLM listesi) arama kutusuna yapıştırın. LCW AI aramak istediğiniz değerleri okur; yalnız bu tabloda bulunan değerler önerilir ve onayınızdan sonra arama kutusuna yazılır.","Paste a screenshot (an e-mail, a pivot or a PLM list) into the search box. LCW AI reads the values you are probably looking for; only values found in this table are offered, and they are written to the search box after you approve."],
 ["Excel’de bir veya birden fazla hücreyi kopyalayıp doğrudan arama kutusuna yapıştırın. Satır ve sütunlar tek listeye çevrilir; boş hücreler atılır, tekrar edenler tekilleştirilir ve değerler otomatik olarak VEYA şeklinde aranır.","Copy one or more Excel cells and paste them directly into the search box. Rows and columns are flattened, empty cells are ignored, duplicates are removed, and the values are searched as OR automatically."],
 ["İpucu: Ayraçlardan sonra boşluk kullanılır. Böylece 13,50 gibi ondalık değerler tek arama değeri olarak kalır.","Tip: separators intentionally include a following space. This keeps decimal values such as 13,50 as one search value."],
 ["İşleniyor","In progress"],

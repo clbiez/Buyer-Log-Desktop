@@ -42,6 +42,9 @@
 .lcwaiManual>summary{cursor:pointer;font-size:var(--fs-xs);color:var(--ink2);}
 .lcwaiPanelCard{max-width:720px;}
 .lcwaiPanelBody{padding:14px 16px;}
+/* Görselden arama: yapıştırılan ekran görüntüsünün önizlemesi (image-search.js). */
+.lcwaiImagePreview{display:flex;flex-direction:column;gap:6px;margin:14px 16px 0;}
+.lcwaiImagePreview img{display:block;max-width:100%;max-height:220px;object-fit:contain;align-self:flex-start;border:1px solid var(--line);background:var(--card);}
 .lcwaiConnCard{max-width:620px;}
 .lcwaiConnBody{padding:16px 18px;display:grid;gap:10px;}
 .lcwaiConnBody p{margin:0;font-size:var(--fs-sm);line-height:1.5;}

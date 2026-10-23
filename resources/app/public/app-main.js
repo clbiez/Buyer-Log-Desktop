@@ -24852,6 +24852,23 @@ function kolSearchHaystack(row){
   _kolSearchCache.set(row,{signature,value});
   return value;
 }
+/* Görselden arama (public/image-search.js) için tablonun arama uzayı: ekrandaki
+   aramayla AYNI alanlar ve aynı haystack; sayfa filtreleri uygulanmaz ki
+   doğrulayıcı "tabloda var mı?" sorusunu tüm kayıtlar için cevaplasın. */
+function tableSearchSpace(tab){
+  if(tab==='cp'||tab==='orders'){
+    const rows=(tab==='cp'?state.cp?.rows:state.orders?.rows)||[];
+    const haystacks=rows.map(r=>CP_SEARCH_KEYS.map(k=>norm(r[k]).toLowerCase()).join(' '));
+    return {tab,rows,haystacks,fields:CP_SEARCH_KEYS.map(k=>({key:k,label:k})),valueOf:(row,key)=>row?.[key]};
+  }
+  if(tab==='koleksiyon'){
+    const rows=Array.isArray(kolRows)?kolRows:[];
+    const cols=new Map(kolColDefs().map(c=>[c.k,c]));
+    return {tab,rows,haystacks:rows.map(kolSearchHaystack),fields:KOL_SEARCH_KEYS.map(k=>({key:k,label:cols.has(k)?kolColumnLabel(cols.get(k)):k})),valueOf:(row,key)=>kolEffectiveValue(row,key)};
+  }
+  return null;
+}
+window.BLTableSearch.searchSpace=tableSearchSpace;
 /* v6.34 — Koleksiyon'da da üç durumlu işaret filtresi. CP/Siparişler ile aynı
    kip metni kullanılır ('' | 'checked' | 'unchecked'), böylece davranış ve
    kayıtlı değerlerin normalleştirilmesi tek yerden yönetilir. */

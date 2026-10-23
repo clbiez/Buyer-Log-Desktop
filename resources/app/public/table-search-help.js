@@ -25,6 +25,8 @@
           ['(A; 1), (B; 2)','Parentheses = independent row groups. A + 1 OR B + 2 may match.'],
           ['Disney; !Bangladesh','! = must not contain the value.'],
         ],
+        imageTitle:'Paste a screenshot',
+        image:'Paste a screenshot (an e-mail, a pivot or a PLM list) into the search box. LCW AI reads the values you are probably looking for; only values found in this table are offered, and they are written to the search box after you approve.',
         excelTitle:'Paste from Excel',
         excel:'Paste an Excel block directly into the search box. A single column stays an OR list. With multiple columns, each Excel row becomes its own parenthesized group, for example (A; 1), (B; 2), so values from different source rows never mix.',
         note:'Tip: separators intentionally include a following space. This keeps decimal values such as 13,50 as one search value.'
@@ -41,6 +43,8 @@
         ['(A; 1), (B; 2)','Parantez = bağımsız satır grubu. A + 1 VEYA B + 2 eşleşebilir.'],
         ['Disney; !Bangladesh','! = bu değeri içermesin.'],
       ],
+      imageTitle:'Ekran görüntüsü yapıştırma',
+      image:'Bir ekran görüntüsünü (e-posta, pivot, PLM listesi) arama kutusuna yapıştırın. LCW AI aramak istediğiniz değerleri okur; yalnız bu tabloda bulunan değerler önerilir ve onayınızdan sonra arama kutusuna yazılır.',
       excelTitle:'Excel’den yapıştırma',
       excel:'Excel’de bir bloğu doğrudan arama kutusuna yapıştırın. Tek sütun eski VEYA listesi olarak kalır. Birden fazla sütunda ise her Excel satırı kendi parantez grubuna dönüşür; örneğin (A; 1), (B; 2). Böylece farklı kaynak satırlarındaki değerler birbirine karışmaz.',
       note:'İpucu: Ayraçlardan sonra boşluk kullanılır. Böylece 13,50 gibi ondalık değerler tek arama değeri olarak kalır.'
@@ -159,6 +163,7 @@
         '<div class="tableSearchHelpExample"><code>'+esc(row[0])+'</code><span>'+esc(row[1])+'</span></div>'
       ).join('')+'</div>'+
       '<div class="tableSearchHelpExcel"><strong>'+esc(text.excelTitle)+'</strong><span>'+esc(text.excel)+'</span></div>'+
+      '<div class="tableSearchHelpExcel"><strong>'+esc(text.imageTitle)+'</strong><span>'+esc(text.image)+'</span></div>'+
       '<div class="tableSearchHelpNote">'+esc(text.note)+'</div>';
     document.body.appendChild(popover);
     activeButton=button;
