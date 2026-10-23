@@ -6019,6 +6019,16 @@ function dateBucketLabel(key, gran){
 --------------------------------------------------------------------------- */
 const GRAN_LABELS_FP = {year:'Yıl', month:'Ay', week:'Hafta', day:'Gün'};
 
+// Shared CP / Orders / Backlog option policy: pinned choices, stable scroll and focus.
+function pinCheckedFilterChoices(bodyEl){
+  const list=bodyEl?.querySelector('.cfpList');if(!list)return;
+  const top=list.scrollTop,focused=document.activeElement;
+  const rows=[...list.querySelectorAll('.cfpItem')];
+  rows.sort((a,b)=>Number(Boolean(b.querySelector('input')?.checked))-Number(Boolean(a.querySelector('input')?.checked))||Number(a.dataset.filterOrder||0)-Number(b.dataset.filterOrder||0));
+  rows.forEach(row=>list.appendChild(row));
+  list.scrollTop=top;
+  if(focused&&list.contains(focused))focused.focus?.({preventScroll:true});
+}
 function openValueFilterPanel(opts){
   closeHeaderFilter();
   const tr = appLang!=='en';
@@ -6048,11 +6058,11 @@ function openValueFilterPanel(opts){
     const active = activeFor(gran);
     return `<input type="text" class="cfpSearch" placeholder="${tr?'Ara…':'Search…'}">
       <div class="cfpHeader"><button type="button" class="cfpAll" data-v="all">${tr?'Tümü':'All'}</button><button type="button" class="cfpAll" data-v="none">${tr?'Temizle':'Clear'}</button></div>
-      <div class="cfpList">${vals.map(v=>{
+      <div class="cfpList">${vals.map((v,index)=>{
         const disp = String(labelFor(v, gran));
         const checked = single ? selected.has(v) : (selected.size===0 || selected.has(v));
         const faded = active && !active.has(v);
-        return `<label class="cfpItem${faded?' cfpFaded':''}" data-txt="${escapeHtml(disp.toLowerCase())}"><input type="checkbox" value="${escapeHtml(v)}" ${checked?'checked':''}> ${escapeHtml(disp)||'(boş)'}</label>`;
+        return `<label class="cfpItem${faded?' cfpFaded':''}" data-filter-order="${index}" data-txt="${escapeHtml(disp.toLowerCase())}"><input type="checkbox" value="${escapeHtml(v)}" ${checked?'checked':''}> ${escapeHtml(disp)||'(boş)'}</label>`;
       }).join('')}</div>
       <div class="cfpApplyRow">
         <button type="button" class="cfpApplySelection">${tr?'Uygula':'Apply'}</button>
@@ -6080,6 +6090,8 @@ function openValueFilterPanel(opts){
 
   function wireList(bodyEl, gran){
     const visibleCbs = ()=>[...bodyEl.querySelectorAll('.cfpItem')].filter(it=>it.style.display!=='none').map(it=>it.querySelector('input'));
+    bodyEl.querySelector('.cfpList')?.addEventListener('change',e=>{if(e.target.matches('input[type="checkbox"]'))pinCheckedFilterChoices(bodyEl);});
+    pinCheckedFilterChoices(bodyEl);
     bodyEl.querySelector('[data-v="all"]')?.addEventListener('click', ()=>visibleCbs().forEach(c=>c.checked=true));
     bodyEl.querySelector('[data-v="none"]')?.addEventListener('click', ()=>visibleCbs().forEach(c=>c.checked=false));
     const searchInp = bodyEl.querySelector('.cfpSearch');
@@ -6590,7 +6602,7 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
     const current = (ex && (!isDate || ex.granularity===gran)) ? ex.values : null;
     return `<input type="text" class="cfpSearch" placeholder="${appLang==='en'?'Search…':'Ara…'}">
       <div class="cfpHeader"><button type="button" class="cfpAll" data-v="all">${appLang==='en'?'All':'Tümü'}</button><button type="button" class="cfpAll" data-v="none">${appLang==='en'?'Clear':'Temizle'}</button></div>
-      <div class="cfpList">${allVals.map(v=>{
+      <div class="cfpList">${allVals.map((v,index)=>{
         const checked = !current || (key==='Del. Type'
           ? [...current].some(cv=>comparableColumnFilterValue(key,cv)===comparableColumnFilterValue(key,v))
           : current.has(v));
@@ -6599,7 +6611,7 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
         const disp = (!isDate && v!=='')
           ? (key==='Priority' ? priorityDisplay(v) : (key==='Del. Type' ? transitDelTypeDisplay(v) : (key==='STATUS' ? statusDisplay(v) : rawDisp)))
           : rawDisp;
-        return `<label class="cfpItem" data-txt="${escapeHtml(disp.toLowerCase())}"><input type="checkbox" value="${escapeHtml(v)}" ${checked?'checked':''}> ${v===''?`<i>${disp}</i>`:escapeHtml(disp)}</label>`;
+        return `<label class="cfpItem" data-filter-order="${index}" data-txt="${escapeHtml(disp.toLowerCase())}"><input type="checkbox" value="${escapeHtml(v)}" ${checked?'checked':''}> ${v===''?`<i>${disp}</i>`:escapeHtml(disp)}</label>`;
       }).join('')}</div>
       <div class="cfpApplyRow"><button type="button" class="cfpApplySelection">${appLang==='en'?'Apply':'Uygula'}</button><button type="button" class="cfpAddSelection">${appLang==='en'?'Add to Current':'Geçerli Seçime Ekle'}</button><button type="button" class="numFilterClear cfpRemoveSelection">${appLang==='en'?'Remove Filter':'Filtreyi Kaldır'}</button></div>`;
   }
@@ -6607,6 +6619,8 @@ function openHeaderFilter(tableKey, key, anchorEl, rerenderOuter){
     const allBtn = bodyEl.querySelector('[data-v="all"]'), noneBtn = bodyEl.querySelector('[data-v="none"]');
     function visibleItems(){ return [...bodyEl.querySelectorAll('.cfpItem')].filter(it=>it.style.display!=='none'); }
     function visibleCbs(){ return visibleItems().map(it=>it.querySelector('input')); }
+    bodyEl.querySelector('.cfpList')?.addEventListener('change',e=>{if(e.target.matches('input[type="checkbox"]'))pinCheckedFilterChoices(bodyEl);});
+    pinCheckedFilterChoices(bodyEl);
     if(allBtn) allBtn.addEventListener('click', ()=>{ visibleCbs().forEach(c=>c.checked=true); });
     if(noneBtn) noneBtn.addEventListener('click', ()=>{ visibleCbs().forEach(c=>c.checked=false); });
     const searchInp = bodyEl.querySelector('.cfpSearch');

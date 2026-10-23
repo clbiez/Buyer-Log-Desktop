@@ -1812,7 +1812,7 @@
     const list=panel.querySelector('.numericValueList');
     const vals=[...new Set(nums)].sort((x,y)=>x-y);
     const existingValues=state.colFilters[tableKey][key]?.values;
-    list.innerHTML=`<input class="cfpSearch" placeholder="Ara…"><div class="cfpHeader"><button type="button" class="cfpAll" data-v="all">Tümü</button><button type="button" class="cfpAll" data-v="none">Temizle</button></div><div class="cfpList">${vals.map(v=>{const k=numericValueKey(v,col);const checked=!existingValues||existingValues.has(k);const display=v.toLocaleString('tr-TR',{maximumFractionDigits:6});return `<label class="cfpItem" data-txt="${escapeHtml(display.toLowerCase())}"><input type="checkbox" value="${escapeHtml(k)}" ${checked?'checked':''}> ${escapeHtml(display)}</label>`}).join('')}</div>`;
+    list.innerHTML=`<input class="cfpSearch" placeholder="Ara…"><div class="cfpHeader"><button type="button" class="cfpAll" data-v="all">Tümü</button><button type="button" class="cfpAll" data-v="none">Temizle</button></div><div class="cfpList">${vals.map((v,index)=>{const k=numericValueKey(v,col);const checked=!existingValues||existingValues.has(k);const display=v.toLocaleString('tr-TR',{maximumFractionDigits:6});return `<label class="cfpItem" data-filter-order="${index}" data-txt="${escapeHtml(display.toLowerCase())}"><input type="checkbox" value="${escapeHtml(k)}" ${checked?'checked':''}> ${escapeHtml(display)}</label>`}).join('')}</div>`;
     const boxes=[...list.querySelectorAll('input[type=checkbox]')];
     const applyVals=()=>{
       const checked=boxes.filter(x=>x.checked).map(x=>x.value);
@@ -1824,9 +1824,10 @@
       else state.colFilters[tableKey][key]={values:next};
       rerenderOuter?.();
     };
-    boxes.forEach(x=>x.onchange=applyVals);
-    list.querySelector('[data-v=all]').onclick=()=>{boxes.forEach(x=>x.checked=true);applyVals()};
-    list.querySelector('[data-v=none]').onclick=()=>{boxes.forEach(x=>x.checked=false);applyVals()};
+    boxes.forEach(x=>x.onchange=()=>{pinCheckedFilterChoices(list);applyVals();});
+    pinCheckedFilterChoices(list);
+    list.querySelector('[data-v=all]').onclick=()=>{boxes.forEach(x=>x.checked=true);pinCheckedFilterChoices(list);applyVals()};
+    list.querySelector('[data-v=none]').onclick=()=>{boxes.forEach(x=>x.checked=false);pinCheckedFilterChoices(list);applyVals()};
     list.querySelector('.cfpSearch').oninput=e=>{const q=e.target.value.trim().toLocaleLowerCase('tr-TR');list.querySelectorAll('.cfpItem').forEach(x=>x.style.display=!q||x.dataset.txt.includes(q)?'':'none')};
   };
   const originalCheck=openCheckFilter;

@@ -1112,8 +1112,9 @@ function filterOptions(key,label){
   const values=uniqueValues(state.records,key),selected=new Set(state.filters[key]);
   state.filters[key].forEach(value=>{if(!values.includes(value))values.push(value);});
   const search=values.length>8?'<input type="search" class="gfMultiSearch" data-gf-multi-search placeholder="'+esc(L('Ara…','Search…'))+'">':'';
+  const ordered=values.slice().sort((a,b)=>Number(selected.has(b))-Number(selected.has(a)));
   return '<div class="gfFilterField"><span>'+esc(label)+'</span><details class="gfMulti'+(selected.size?' hasValue':'')+'" data-gf-multi="'+esc(key)+'"><summary><b data-gf-multi-summary>'+esc(filterSummary(key))+'</b></summary>'+
-    '<div class="gfMultiPanel">'+search+'<div class="gfMultiList">'+(values.length?values.map(value=>'<label><input type="checkbox" value="'+esc(value)+'"'+(selected.has(value)?' checked':'')+'><span>'+esc(key==='mode'?modeLabel(value):value)+'</span></label>').join(''):'<small>'+esc(L('Değer yok','No values'))+'</small>')+'</div>'+
+    '<div class="gfMultiPanel">'+search+'<div class="gfMultiList">'+(ordered.length?ordered.map((value,index)=>'<label data-gf-order="'+values.indexOf(value)+'"><input type="checkbox" value="'+esc(value)+'"'+(selected.has(value)?' checked':'')+'><span>'+esc(key==='mode'?modeLabel(value):value)+'</span></label>').join(''):'<small>'+esc(L('Değer yok','No values'))+'</small>')+'</div>'+
     '<button type="button" class="gfMultiClear" data-gf-multi-clear>'+esc(L('Temizle','Clear'))+'</button></div></details></div>';
 }
 function renderFilters(){
@@ -1150,6 +1151,14 @@ function bindFilters(){
     const input=event.target;if(!input.matches('.gfMultiList input[type="checkbox"]'))return;
     const details=input.closest('[data-gf-multi]'),key=details&&details.dataset.gfMulti;if(!key)return;
     // Seçim sırası seçenek sırasıyla aynı tutulur; kalıcı durum deterministiktir.
+    const list=details.querySelector('.gfMultiList'),position=list?.scrollTop||0;
+    if(list){
+      const labels=[...list.querySelectorAll('label')];
+      labels.sort((a,b)=>Number(b.querySelector('input')?.checked)-Number(a.querySelector('input')?.checked)||Number(a.dataset.gfOrder)-Number(b.dataset.gfOrder));
+      labels.forEach(label=>list.appendChild(label));
+      list.scrollTop=position;
+      input.focus({preventScroll:true});
+    }
     state.filters[key]=[...details.querySelectorAll('.gfMultiList input[type="checkbox"]:checked')].map(x=>x.value);
     savePrefs();applyFilters(false);
   });
