@@ -200,8 +200,61 @@
     return { code: lead ? lead[1] : '', summary: languageSummary(summary, 'tr'), summaryEn: languageSummary(summary, 'en'), details: details, summarySource: 'rule' };
   }
 
-  /* LCW AI bağlamı: her kod için kaynak PLM metni (boyut sınırlı). */
-  function aiContext(items) {
+  /* A user's edited cards are durable, shared examples of terminology and layout.
+     Reuse only same-family examples: never transfer a different fabric's measurements. */
+  function fabricFamily(raw) {
+    var text = bodyOf(raw).toLocaleLowerCase('tr-TR');
+    var family = /(?:üç|uc)\s*iplik|three\s*thread/i.test(text) ? 'three-thread'
+      : /(?:iki|iki)\s*iplik|two\s*thread/i.test(text) ? 'two-thread'
+      : /s[üu]prem|single\s*jersey/i.test(text) ? 'single-jersey'
+      : /interlok|interlock/i.test(text) ? 'interlock' : '';
+    return family ? family + (/şardon|sardon|brushed/i.test(text) ? ':brushed' : ':plain') : '';
+  }
+  function manualExamples(items, cards) {
+    if (!cards) return [];
+    var familySet = new Set((Array.isArray(items) ? items : []).map(function (item) { return fabricFamily(item.raw); }).filter(Boolean));
+    if (!familySet.size) return [];
+    var candidates = [];
+    function consider(card) {
+      if (!card || card.summarySource !== 'manual' || !card.raw || !card.summary || !card.summaryEn) return;
+      var family = fabricFamily(card.raw);
+      if (!family || !familySet.has(family)) return;
+      candidates.push(card);
+    }
+    if (typeof cards.forEach === 'function') cards.forEach(consider);
+    else Object.keys(cards).forEach(function (code) { consider(cards[code]); });
+    candidates.sort(function (a, b) { return String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')); });
+    return candidates.slice(0, 6).map(function (card) {
+      return { plm: clean(card.raw).slice(0, 400), summary: clean(card.summary).slice(0, 220), summaryEn: clean(card.summaryEn).slice(0, 220) };
+    });
+  }
+  function applyLearnedStyle(card, raw, cards) {
+    if (!card || !cards || !fabricFamily(raw)) return card;
+    var examples = [];
+    if (typeof cards.forEach === 'function') cards.forEach(function (item) { examples.push(item); });
+    else examples = Object.keys(cards).map(function (key) { return cards[key]; });
+    var family = fabricFamily(raw);
+    var matches = examples.filter(function (item) {
+      return item && item.summarySource === 'manual' && fabricFamily(item.raw) === family && item.summary && item.summaryEn;
+    }).sort(function (a, b) { return String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')); });
+    if (!matches.length) return card;
+    var example = matches[0];
+    function adoptTitle(value, exemplar) {
+      var parts = clean(value).split(/\s*·\s*/);
+      var title = clean(exemplar).split(/\s*·\s*/)[0];
+      if (parts.length < 2 || !title || /\d/.test(title) || title.length > 65) return value;
+      parts[0] = title;
+      return parts.join(' · ');
+    }
+    return Object.assign({}, card, {
+      summary: languageSummary(adoptTitle(card.summary, example.summary), 'tr'),
+      summaryEn: languageSummary(adoptTitle(card.summaryEn, example.summaryEn), 'en')
+    });
+  }
+
+  /* LCW AI receives the original PLM records plus bounded, relevant examples
+     of prior manual corrections (not a separate mutable AI memory). */
+  function aiContext(items, existingCards) {
     var seen = new Set(), list = [];
     (Array.isArray(items) ? items : []).forEach(function (item) {
       var code = normalizeCode(item && item.code), text = clean(item && item.raw);
@@ -209,7 +262,10 @@
       seen.add(code);
       list.push(code + ' :: ' + text.slice(0, RAW_CONTEXT_MAX));
     });
-    return { fabrics: list };
+    var context = { fabrics: list };
+    var examples = manualExamples(items, existingCards);
+    if (examples.length) context.learnedExamples = examples;
+    return context;
   }
   function chunk(items, size) {
     var list = Array.isArray(items) ? items : [], out = [], step = Math.max(1, Number(size) || AI_BATCH_SIZE);
@@ -386,6 +442,8 @@
     normalizeCode: normalizeCode,
     ruleCard: ruleCard,
     aiContext: aiContext,
+    manualExamples: manualExamples,
+    applyLearnedStyle: applyLearnedStyle,
     chunk: chunk,
     parseLine: parseLine,
     validateAiCards: validateAiCards,
