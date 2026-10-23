@@ -308,6 +308,7 @@
 <link rel="stylesheet" href="manufacturers.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="license-cards.css?v=__BL_ASSET_VERSION__&rev=5">
 <link rel="stylesheet" href="pricing-workspace.css?v=__BL_ASSET_VERSION__&rev=4">
+<link rel="stylesheet" href="pricing-desk.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="data-maintenance.css?v=__BL_ASSET_VERSION__&rev=3">
 <link rel="stylesheet" href="data-management.css?v=__BL_ASSET_VERSION__&rev=2">
 <link rel="stylesheet" href="dual-week-datepicker.css?v=__BL_ASSET_VERSION__&rev=1">
@@ -460,8 +461,7 @@
 
     <span class="railGroupLabel" data-i18n-tr="Ticari" data-i18n-en="Commercial">Ticari</span>
     <button data-tab="koleksiyon" title="Koleksiyon" data-i18n-title-tr="Koleksiyon" data-i18n-title-en="Collection"><svg class="ic"><use href="#i-bl-n11"/></svg><span data-i18n-tr="Koleksiyon" data-i18n-en="Collection">Koleksiyon</span></button>
-    <button data-tab="quotations" title="Quotations"><svg class="ic"><use href="#i-bl-n13"/></svg><span data-i18n-tr="Quotations" data-i18n-en="Quotations">Quotations</span></button>
-    <button data-tab="pricinghistory" title="Fiyat Geçmişi" data-i18n-title-tr="Fiyat Geçmişi" data-i18n-title-en="Pricing History"><svg class="ic"><use href="#i-bl-n15"/></svg><span data-i18n-tr="Fiyat Geçmişi" data-i18n-en="Pricing History">Fiyat Geçmişi</span></button>
+    <button data-tab="quotations" title="Fiyat Masası" data-i18n-title-tr="Fiyat Masası" data-i18n-title-en="Pricing Desk"><svg class="ic"><use href="#i-bl-n13"/></svg><span data-i18n-tr="Fiyat Masası" data-i18n-en="Pricing Desk">Fiyat Masası</span></button>
     <button data-tab="priceanalysis" title="Fiyat &amp; Üretici Analizi" data-i18n-title-tr="Fiyat &amp; Üretici Analizi" data-i18n-title-en="Price &amp; Supplier Analysis"><svg class="ic"><use href="#i-bl-n17"/></svg><span data-i18n-tr="Fiyat &amp; Üretici Analizi" data-i18n-en="Price &amp; Supplier Analysis">Fiyat &amp; Üretici Analizi</span></button>
     <button data-tab="manufacturers" title="Üreticiler" data-i18n-title-tr="Üreticiler" data-i18n-title-en="Manufacturers"><svg class="ic"><use href="#i-bl-n18"/></svg><span data-i18n-tr="Üreticiler" data-i18n-en="Manufacturers">Üreticiler</span></button>
     <button data-tab="licensecards" title="Lisans kartları" data-i18n-title-tr="Lisans kartları" data-i18n-title-en="License cards"><svg class="ic"><use href="#i-license-cards"/></svg><span data-i18n-tr="Lisans kartları" data-i18n-en="License cards">Lisans kartları</span></button>
@@ -998,12 +998,19 @@
           <button type="button" class="tableViewPreset tableFieldsBtn" data-table-fields="koleksiyon" aria-haspopup="dialog" aria-expanded="false" title="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-tr="Ana başlıkları aç / kapat (görünüm ayarını değiştirmez)" data-i18n-title-en="Show / hide column headings (does not change the view preset)"><svg class="ic" aria-hidden="true"><use href="#i-table"/></svg><span data-i18n-tr="Alanlar" data-i18n-en="Fields">Alanlar</span><span class="tableFieldsBadge" hidden></span></button>
           <button type="button" class="tableViewPreset kolAllVariantsToggle" id="kolAllVariantsToggle" aria-pressed="true" title="Tüm alt renkleri gizle" aria-label="Tüm alt renkleri gizle"><svg class="ic" aria-hidden="true"><use href="#i-arrows-down-up"/></svg></button>
         </div>
+        <div class="tableViewActions kolPriceViewActions" id="kolPriceViewActions" role="group" aria-label="Fiyat görünümü" data-i18n-aria-label-tr="Fiyat görünümü" data-i18n-aria-label-en="Price view">
+          <span class="tableViewLabel" data-i18n-tr="FİYAT" data-i18n-en="PRICE">FİYAT</span>
+          <button type="button" class="tableViewPreset" data-kol-price-view="compact" aria-pressed="true" title="Teklif & Onay şeridi ve Landed Özeti" data-i18n-title-tr="Teklif & Onay şeridi ve Landed Özeti" data-i18n-title-en="Quotes & Approval strip and Landed Summary"><span data-i18n-tr="Kompakt" data-i18n-en="Compact">Kompakt</span></button>
+          <button type="button" class="tableViewPreset" data-kol-price-view="detail" aria-pressed="false" title="Best Price, onaylı üretici/fiyat, FOB ve landed ayrı sütunlarda" data-i18n-title-tr="Best Price, onaylı üretici/fiyat, FOB ve landed ayrı sütunlarda" data-i18n-title-en="Best Price, approved manufacturer/price, FOB and landed in separate columns"><span data-i18n-tr="Detay" data-i18n-en="Detail">Detay</span></button>
+          <button type="button" class="tableViewPreset" data-kol-price-view="cost" aria-pressed="false" title="Teklif şeridi + FOB, Royalty, Hologram ve landed maliyet sütunları" data-i18n-title-tr="Teklif şeridi + FOB, Royalty, Hologram ve landed maliyet sütunları" data-i18n-title-en="Quote strip + FOB, Royalty, Hologram and landed cost columns"><span data-i18n-tr="Maliyet" data-i18n-en="Cost">Maliyet</span></button>
+        </div>
       </div>
       <div class="activeFilterBar" id="kolActiveFilters" role="region" aria-label="Active table filters" data-i18n-aria-label-tr="Aktif tablo filtreleri" data-i18n-aria-label-en="Active table filters">
         <span class="activeFilterLabel" data-i18n-tr="TABLO FİLTRELERİ" data-i18n-en="TABLE FILTERS">TABLO FİLTRELERİ</span>
         <div class="activeFilterTokens" id="kolActiveFilterTokens" aria-live="polite"></div>
         <button type="button" class="activeFilterClear" data-active-filter-clear="koleksiyon" hidden><svg class="ic"><use href="#i-eraser"/></svg><span data-i18n-tr="Tablo filtrelerini temizle" data-i18n-en="Clear table filters">Tablo filtrelerini temizle</span></button>
       </div>
+      <div class="kolHealthBar" id="kolHealthBar" role="group" aria-label="Veri sağlığı" data-i18n-aria-label-tr="Veri sağlığı" data-i18n-aria-label-en="Data health" hidden></div>
       <div class="toolbar tableActionToolbar" id="kolTableToolbar" data-responsive-toolbar="collection" data-overflow-menu="kolMoreMenu" data-overflow-trigger="kolMoreWrap">
         <input type="search" id="kolSearch" placeholder="Model adı, lisans, kategori, licensor ara…" aria-label="Koleksiyonda ara" data-i18n-aria-label-tr="Koleksiyonda ara" data-i18n-aria-label-en="Search Collection">
         <div class="tableToolbarActions" id="kolTableActions" aria-label="Collection table actions">
@@ -1524,6 +1531,7 @@
 </script>
 <script src="collection-pricing-engine.js?v=__BL_ASSET_VERSION__"></script>
 <script src="license-royalty-commissions.js?v=__BL_ASSET_VERSION__&rev=2"></script>
+<script src="collection-price-drawer.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-chart.js?v=__BL_ASSET_VERSION__&rev=3"></script>
 <script src="backlog-plan-actual-report.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="backlog-plan-actual.js?v=__BL_ASSET_VERSION__&rev=3"></script>
@@ -1552,7 +1560,7 @@
 
 /* ============ Kabuk davranışları (ray + üst bar) ============ */
 (function shell(){
-  const TITLES={overview:{tr:'Genel Bakış',en:'Overview'},cp:{tr:'CP Tracker',en:'CP Tracker'},orders:{tr:'Siparişler',en:'Orders'},koleksiyon:{tr:'Koleksiyon',en:'Collection'},quotations:{tr:'Quotations',en:'Quotations'},pricinghistory:{tr:'Fiyat Geçmişi',en:'Pricing History'},priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis'},manufacturers:{tr:'Üreticiler',en:'Manufacturers'},licensecards:{tr:'Lisans kartları',en:'License cards'},lcwai:{tr:'LCW AI',en:'LCW AI'},lfl:{tr:'LFL analizi',en:'LFL Analysis'},opencosting:{tr:'Ön Maliyet',en:'Open Costing'},backlog:{tr:'Backlog',en:'Backlog'},shipping:{tr:'Nakliye kıyaslama',en:'Shipping Comparison'},automations:{tr:'Otomasyonlar',en:'Automations'},source:{tr:'Veri Yönetimi',en:'Data Management'}};
+  const TITLES={overview:{tr:'Genel Bakış',en:'Overview'},cp:{tr:'CP Tracker',en:'CP Tracker'},orders:{tr:'Siparişler',en:'Orders'},koleksiyon:{tr:'Koleksiyon',en:'Collection'},quotations:{tr:'Fiyat Masası',en:'Pricing Desk'},pricinghistory:{tr:'Fiyat Masası',en:'Pricing Desk'},priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis'},manufacturers:{tr:'Üreticiler',en:'Manufacturers'},licensecards:{tr:'Lisans kartları',en:'License cards'},lcwai:{tr:'LCW AI',en:'LCW AI'},lfl:{tr:'LFL analizi',en:'LFL Analysis'},opencosting:{tr:'Ön Maliyet',en:'Open Costing'},backlog:{tr:'Backlog',en:'Backlog'},shipping:{tr:'Nakliye kıyaslama',en:'Shipping Comparison'},automations:{tr:'Otomasyonlar',en:'Automations'},source:{tr:'Veri Yönetimi',en:'Data Management'}};
   const titleEl=document.getElementById('pageTitle');
   function syncTitle(){
     if(typeof syncActivePageTitle==='function'){syncActivePageTitle();return;}

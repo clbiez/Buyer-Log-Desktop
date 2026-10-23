@@ -34,7 +34,9 @@ test('v4.66 collection synthetic pricing columns join persistent move and resize
   assert.match(HTML,/if\(!kolColOrder\)kolColOrder=kolDefaultDisplayOrder\(\)/);
   assert.match(HTML,/descriptors\.map\(d=>`<col data-kcol="\$\{d\.k\}"/);
   assert.match(HTML,/thead\.querySelectorAll\('th\[data-kcol\]'\)\.forEach/);
-  assert.match(HTML,/attachKolColDrag\(th,key\);attachKolColResize\(th,key,table,colgroup\)/);
+  // v2026-10-22: Kompakt görünümün özet sütunları kalıcı sıraya ait değildir ve sürüklenmez;
+  // gerçek sütunlar sürüklenir, hepsi yeniden boyutlanır.
+  assert.match(HTML,/if\(!viewColumn\)attachKolColDrag\(th,key\);\n    attachKolColResize\(th,key,table,colgroup\)/);
   assert.match(HTML,/const saved=Number\(kolColWidths\[d\.k\]\)/);
 });
 

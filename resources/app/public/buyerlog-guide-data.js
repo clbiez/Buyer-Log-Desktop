@@ -53,16 +53,16 @@
     {
       "id": "quotations",
       "label": {
-        "tr": "Quotations",
-        "en": "Quotations"
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
       },
       "area": "quotations"
     },
     {
       "id": "pricinghistory",
       "label": {
-        "tr": "Fiyat Geçmişi",
-        "en": "Pricing History"
+        "tr": "Fiyat Masası › Geçmiş",
+        "en": "Pricing Desk › History"
       },
       "area": "pricinghistory"
     },
@@ -1760,27 +1760,27 @@
       "visual": "table",
       "selector": "[data-quote-approve]",
       "title": {
-        "tr": "Teklifleri karşılaştırın ve onaylayın",
-        "en": "Compare and approve quotations"
+        "tr": "Teklif matrisinde karşılaştırın ve onaylayın",
+        "en": "Compare and approve in the quotation matrix"
       },
       "summary": {
-        "tr": "Quotation içinde üretici, fiyat ve onay durumları aynı çalışmada tutulur. Onay düğmesi ilgili üretici ve fiyat için çalışır.",
-        "en": "A quotation groups manufacturer, price and approval status in one study. Approval applies to the specific manufacturer and price."
+        "tr": "Fiyat Masası › Masa, talebi model görselleriyle model × üretici matrisi olarak gösterir. En iyi teklif, hedef farkı ve olağan dışı fiyat uyarısı hücrededir; onay ilgili üretici ve fiyat için çalışır.",
+        "en": "Pricing Desk › Desk shows a request as a model × manufacturer matrix with model images. Best offer, target difference and outlier warnings are in the cell; approval applies to that manufacturer and price."
       },
       "path": {
-        "tr": "Quotations → çalışma → teklif satırı",
-        "en": "Quotations → study → quote row"
+        "tr": "Fiyat Masası → Masa → teklif matrisi",
+        "en": "Pricing Desk → Desk → quotation matrix"
       },
       "steps": {
         "tr": [
-          "İlgili fiyat çalışmasını açın.",
-          "Üretici tekliflerini ve satır bilgilerini karşılaştırın.",
-          "Yetkiniz varsa doğru teklifi onaylayın."
+          "Soldaki listeden fiyat talebini seçin.",
+          "Matris hücresine fiyatı yazın veya Excel’den yapıştırın, Ctrl+Z son girişi geri alır.",
+          "Doğru teklifi ✓ ile onaylayın ya da hedefin altındaki teklifleri toplu onaylayın."
         ],
         "en": [
-          "Open the relevant study.",
-          "Compare manufacturer quotes and row details.",
-          "Approve the correct quote if authorised."
+          "Select the pricing request on the left.",
+          "Type a price in the matrix cell or paste from Excel, Ctrl+Z undoes the last entry.",
+          "Approve the right offer with ✓ or bulk-approve offers below target."
         ]
       },
       "note": {
@@ -1809,8 +1809,8 @@
         "en": "Add notes to a price study and manage editing access when authorised."
       },
       "path": {
-        "tr": "Quotations → Quotation Notu / Düzenleme Yetkisi",
-        "en": "Quotations → Quotation Note / Editing Permission"
+        "tr": "Fiyat Masası → Masa → Quotation Notu / Düzenleme Yetkisi",
+        "en": "Pricing Desk → Desk → Quotation Note / Editing Permission"
       },
       "steps": {
         "tr": [
@@ -1850,8 +1850,8 @@
         "en": "Send Reminder is available when manufacturers are awaiting prices. Review recipients and content before sending."
       },
       "path": {
-        "tr": "Quotations → Hatırlatma Gönder",
-        "en": "Quotations → Send Reminder"
+        "tr": "Fiyat Masası → Masa → Hatırlatma Gönder",
+        "en": "Pricing Desk → Desk → Send Reminder"
       },
       "steps": {
         "tr": [
@@ -1887,12 +1887,12 @@
         "en": "Benchmarks from price history"
       },
       "summary": {
-        "tr": "Fiyat Geçmişi eski teklifleri listeler, fiyat trendini ve seçili fiyat karşılaştırmasını gösterir. Benchmark Olarak Uygula ayrı bir işlemdir.",
-        "en": "Pricing History lists past quotes with trends and selected-price comparisons. Apply as Benchmark is a separate action."
+        "tr": "Fiyat Masası › Geçmiş, her model için teklif trendini (Fiyat Defteri olayları: tarih, kişi, tur) ve kayıt tablosunu gösterir. Benchmark Olarak Uygula ayrı bir işlemdir.",
+        "en": "Pricing Desk › History shows each model’s offer trend (Price Ledger events: date, person, round) and the record table. Apply as Benchmark is a separate action."
       },
       "path": {
-        "tr": "Fiyat Geçmişi → fiyat kaydı",
-        "en": "Pricing History → price record"
+        "tr": "Fiyat Masası → Geçmiş → model",
+        "en": "Pricing Desk → History → model"
       },
       "steps": {
         "tr": [
@@ -1915,6 +1915,129 @@
       "area": "pricinghistory",
       "areas": [
         "pricinghistory"
+      ],
+      "level": "module"
+    },
+    {
+      "id": "pricing-desk-rounds",
+      "module": "quotations",
+      "visual": "view",
+      "selector": "[data-pd-round]",
+      "title": {
+        "tr": "Pazarlık turlarını izleyin",
+        "en": "Track negotiation rounds"
+      },
+      "summary": {
+        "tr": "Yeni Tur, mevcut fiyatların üstüne yazmadan yeni bir pazarlık turu açar. Turlar sekmesi her üreticinin tur tur fiyatını ve kazancı gösterir.",
+        "en": "New Round opens a negotiation round without overwriting current prices. The Rounds tab shows every manufacturer’s price per round and the gain."
+      },
+      "path": {
+        "tr": "Fiyat Masası → Turlar",
+        "en": "Pricing Desk → Rounds"
+      },
+      "steps": {
+        "tr": [
+          "Masada talebi açın ve Yeni Tur ile karşı teklif notunu yazın.",
+          "Yeni fiyatları matrise girin; önceki tur fiyatı üstü çizili kalır.",
+          "Turlar sekmesinde ilk tur → güncel fiyat kazancını okuyun."
+        ],
+        "en": [
+          "Open the request on the Desk and write the counter-offer note with New Round.",
+          "Enter new prices in the matrix; the previous round price stays struck through.",
+          "Read the first-round → current gain on the Rounds tab."
+        ]
+      },
+      "note": {
+        "tr": "",
+        "en": ""
+      },
+      "example": "Round 1 $9.40 → Round 3 $8.90",
+      "evidence": "public/pricing-desk.js",
+      "area": "quotations",
+      "areas": [
+        "quotations"
+      ],
+      "level": "module"
+    },
+    {
+      "id": "pricing-desk-analysis",
+      "module": "quotations",
+      "visual": "table",
+      "selector": "[data-pd-tab=\"analysis\"]",
+      "title": {
+        "tr": "Klasman bazında kim ne fiyat veriyor",
+        "en": "Who quotes what, by classification"
+      },
+      "summary": {
+        "tr": "Analiz sekmesi klasman, MAG, MMYG veya buyer × üretici ısı matrisini, üretici karnesini ve buyer karşılaştırmasını gösterir. Yetkiniz varsa Buyer kapsamından bir veya birden çok buyer seçilebilir.",
+        "en": "The Analysis tab shows a classification, MAG, MMYG or buyer × manufacturer heat matrix, a supplier scorecard and a buyer comparison. With permission you can select one or more buyers from Buyer scope."
+      },
+      "path": {
+        "tr": "Fiyat Masası → Analiz",
+        "en": "Pricing Desk → Analysis"
+      },
+      "steps": {
+        "tr": [
+          "Üst çubuktaki Buyer kapsamından kendinizi veya yetkili olduğunuz buyer’ları seçin.",
+          "Gruplama ve filtreleri (sezon, MAG, üretici) ayarlayın.",
+          "Hücreye tıklayarak o grup × üreticinin model ve tekliflerini görselleriyle açın."
+        ],
+        "en": [
+          "Choose yourself or the buyers you are authorised for in Buyer scope on the top bar.",
+          "Set grouping and filters (season, MAG, manufacturer).",
+          "Click a cell to open that group × manufacturer’s models and offers with images."
+        ]
+      },
+      "note": {
+        "tr": "",
+        "en": ""
+      },
+      "example": "Kazak × Supplier B −4.2%",
+      "evidence": "public/pricing-desk.js",
+      "area": "quotations",
+      "areas": [
+        "quotations"
+      ],
+      "level": "module"
+    },
+    {
+      "id": "collection-price-view",
+      "module": "koleksiyon",
+      "visual": "view",
+      "selector": "#kolPriceViewActions",
+      "title": {
+        "tr": "Koleksiyon’da Kompakt fiyat görünümü",
+        "en": "Compact price view in Collection"
+      },
+      "summary": {
+        "tr": "Kompakt görünüm teklif, onay, hedef farkı ve FOB’u tek Teklif & Onay şeridinde, landed değerlerini Landed Özeti’nde toplar. Detay ayrı sütunları, Maliyet royalty/hologram ve landed sütunlarını gösterir. Çift tık Fiyat Çekmecesi’ni açar.",
+        "en": "Compact view combines quotes, approval, target difference and FOB into one Quotes & Approval strip and landed values into Landed Summary. Detail shows the separate columns; Cost shows royalty/hologram and landed columns. Double-click opens the Price Drawer."
+      },
+      "path": {
+        "tr": "Koleksiyon → FİYAT: Kompakt · Detay · Maliyet",
+        "en": "Collection → PRICE: Compact · Detail · Cost"
+      },
+      "steps": {
+        "tr": [
+          "Görünüm çubuğundaki FİYAT grubundan Kompakt, Detay veya Maliyet’i seçin.",
+          "Teklif & Onay hücresine çift tıklayarak Fiyat Çekmecesi’nde teklifleri, onayı ve maliyet şelalesini görün.",
+          "Veri Sağlığı çipleriyle eksik kuralı, kuru, hedefi veya bekleyen teklifi olan modelleri süzün."
+        ],
+        "en": [
+          "Choose Compact, Detail or Cost in the PRICE group of the view bar.",
+          "Double-click a Quotes & Approval cell to see offers, approval and the cost waterfall in the Price Drawer.",
+          "Use Data Health chips to filter models missing a rule, FX, target or awaiting quotations."
+        ]
+      },
+      "note": {
+        "tr": "",
+        "en": ""
+      },
+      "example": "$8.90 −3.3% ✓ Supplier B",
+      "evidence": "public/collection-price-drawer.js",
+      "area": "koleksiyon",
+      "areas": [
+        "koleksiyon"
       ],
       "level": "module"
     },

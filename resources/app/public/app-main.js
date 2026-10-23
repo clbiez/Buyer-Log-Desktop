@@ -1497,8 +1497,8 @@ const APP_PAGE_META=Object.freeze({
   backlog:{tr:'Backlog',en:'Backlog',group:'plan'},
   shipping:{tr:'Nakliye kıyaslama',en:'Shipping Comparison',group:'plan'},
   koleksiyon:{tr:'Koleksiyon',en:'Collection',group:'commercial'},
-  quotations:{tr:'Quotations',en:'Quotations',group:'commercial'},
-  pricinghistory:{tr:'Fiyat Geçmişi',en:'Pricing History',group:'commercial'},
+  quotations:{tr:'Fiyat Masası',en:'Pricing Desk',group:'commercial'},
+  pricinghistory:{tr:'Fiyat Masası',en:'Pricing Desk',group:'commercial'},
   priceanalysis:{tr:'Fiyat & Üretici Analizi',en:'Price & Supplier Analysis',group:'commercial'},
   manufacturers:{tr:'Üreticiler',en:'Manufacturers',group:'commercial'},
   licensecards:{tr:'Lisans kartları',en:'License cards',group:'commercial'},
@@ -2192,9 +2192,16 @@ function switchTab(tab){
   if(tab==='koleksiyon'||tab==='priceanalysis'||tab==='quotations'||tab==='pricinghistory'){
     void window.BLPerf.ensureFeature('collectionTools').then(()=>{
       if(tab==='priceanalysis')return window.initPriceSupplierAnalysis?.();
-      if(tab==='quotations')return window.BL_QUOTATIONS?.mountWorkspace?.(document.getElementById('quotationWorkspacePage'),{source:'collection',preserveContext:true});
-      if(tab==='pricinghistory')return window.BL_QUOTATIONS?.mountPricingHistory?.(document.getElementById('pricingHistoryWorkspacePage'),{preserveContext:true});
-      if(tab==='koleksiyon')window.BL_QUOTATIONS?.syncCollectionPricingUI?.();
+      // Fiyat Masası: Quotations + Fiyat Geçmişi tek çalışma alanında (Masa · Turlar · Geçmiş · Analiz).
+      // Eski "pricinghistory" adresi aynı masayı Geçmiş sekmesinde açar.
+      if(tab==='quotations')return window.BLPricingDesk?.mount?.(document.getElementById('quotationWorkspacePage'))||window.BL_QUOTATIONS?.mountWorkspace?.(document.getElementById('quotationWorkspacePage'),{source:'collection',preserveContext:true});
+      if(tab==='pricinghistory')return window.BLPricingDesk?.mount?.(document.getElementById('pricingHistoryWorkspacePage'),{tab:'history'})||window.BL_QUOTATIONS?.mountPricingHistory?.(document.getElementById('pricingHistoryWorkspacePage'),{preserveContext:true});
+      if(tab==='koleksiyon'){
+        window.BL_QUOTATIONS?.syncCollectionPricingUI?.();
+        // Teklif & Onay şeridindeki "bekliyor" sayısı quotation verisine bağlıdır;
+        // araçlar ilk kez yüklendiğinde tablo bir kez tazelenir.
+        if(!kolQuoteIndexCache&&window.BL_QUOTATIONS?.collectionQuoteIndex&&currentActiveTab()==='koleksiyon'&&typeof renderKol==='function')renderKol();
+      }
     }).catch(err=>showToast(err.message));
   }
   /* v7.0.229 — Üreticiler: lazy; motor, rehber ve görünüm ilk geçişte yüklenir.
@@ -2330,6 +2337,8 @@ function fitActiveTableColumns(){
       {kind:'best',k:'__bestPrice__',label:L('Best Price')},
       {kind:'confirmedName',k:'__confirmedName__',label:L('Conf. Manufacturer')},
       {kind:'confirmedPrice',k:'__confirmedPrice__',label:L('Approved Mfr. Price')},
+      kolPriceViewDescriptor('__priceStrip__'),
+      kolPriceViewDescriptor('__landedSummary__'),
     ].forEach(descriptor=>{kolColWidths[descriptor.k]=kolDescriptorMinWidth(descriptor);});
     saveKolColState();
     renderKol();
@@ -2353,6 +2362,10 @@ function activeFilterEntrySummary(entry){
   if(entry?.granularity)return appLang==='en'?'Date rule':'Tarih kuralı';
   return appLang==='en'?'Active':'Aktif';
 }
+/* Koleksiyon Veri Sağlığı filtresi (v2026-10-22). Satır kümesini tek bir
+   sağlık koşuluna daraltan geçici filtre; sütun filtreleriyle birlikte çalışır,
+   kalıcı görünüm durumuna yazılmaz. Koşullar kolHealthChecks'tedir. */
+const kolHealthState={filter:'',counts:null,timer:0};
 function activeTableFilterTokens(tableKey){
   const tokens=[];
   const searchId=tableKey==='koleksiyon'?'kolSearch':`${tableKey}Search`;
@@ -2369,6 +2382,7 @@ function activeTableFilterTokens(tableKey){
     });
     const checked=normalizeCheckFilterMode(kolCheckFilter);
     if(checked)tokens.push({kind:'check',key:'',label:appLang==='en'?'Rows':'Satırlar',detail:checked==='checked'?(appLang==='en'?'Checked':'İşaretli'):(appLang==='en'?'Unchecked':'İşaretsiz')});
+    if(kolHealthState.filter)tokens.push({kind:'health',key:kolHealthState.filter,label:appLang==='en'?'Data health':'Veri sağlığı',detail:kolHealthLabel(kolHealthState.filter)});
     return tokens;
   }
   const selectLabels={
@@ -2410,7 +2424,8 @@ function removeActiveFilterToken(tableKey,kind,key){
   }else if(kind==='check'){
     if(tableKey==='koleksiyon'){kolCheckFilter='';saveKolColState();}
     else state.checkFilter[tableKey]='';
-  }else if(tableKey==='orders'&&kind==='quickActive')state.ordersQuickActive.clear();
+  }else if(kind==='health'&&tableKey==='koleksiyon')kolHealthState.filter='';
+  else if(tableKey==='orders'&&kind==='quickActive')state.ordersQuickActive.clear();
   else if(tableKey==='orders'&&kind==='quickExf')state.ordersQuickExf='';
   saveCoreAutoFilterState();
   if(tableKey==='cp')renderCP();else if(tableKey==='orders')renderOrders();else if(tableKey==='koleksiyon')renderKol();
@@ -2423,7 +2438,7 @@ function clearTableFilters(tableKey,{announce=true}={}){
   }[tableKey]||[];
   filterIds.forEach(id=>{const control=document.getElementById(id);if(control)control.value='';});
   if(tableKey==='koleksiyon'){
-    kolColFilters={};kolFabricDetailFilters={};kolCheckFilter='';saveKolColState();
+    kolColFilters={};kolFabricDetailFilters={};kolCheckFilter='';kolHealthState.filter='';saveKolColState();
   }else if(tableKey==='cp'||tableKey==='orders'){
     state.colFilters[tableKey]={};state.checkFilter[tableKey]='';
     if(tableKey==='cp')state.cpQuickExf='';
@@ -12814,7 +12829,7 @@ window.BLAIScreenData = {
         cols = visibleCols(info.tableKey);
         // Tüm veri: gizli sütunlar da dahil (görünür + tanımlı tüm sütunlar).
         if (all) { const seen = new Set(cols.map(col => col && col.k)); cols = cols.concat((info.cols() || []).filter(col => col && !seen.has(col.k))); }
-      } else if (info.tableKey === 'koleksiyon') cols = kolDisplayDescriptors({ all });
+      } else if (info.tableKey === 'koleksiyon') cols = kolDisplayDescriptors({ all, detail: true }); // LCW AI ayrıntılı sütunları okur (Kompakt özet değil)
       else cols = info.cols() || [];
     } catch (_) { cols = []; }
     // Resolve Collection inheritance once per build. The projected rows are
@@ -23987,6 +24002,127 @@ const KOL_SYNTHETIC_COL_META = Object.freeze({
   __confirmedPrice__:{kind:'confirmedPrice',label:'Approved Mfr. Price',group:'Fiyatlandırma'}, // i18n-ignore — başlık kimliği
 });
 function kolIsSyntheticColKey(key){ return KOL_SYNTHETIC_COL_KEYS.indexOf(key)>=0; }
+/* v2026-10-22 — FİYAT GÖRÜNÜMÜ (Kompakt · Detay · Maliyet).
+   Görünüm yalnız ÇİZİM katmanıdır: sütun sırası, gizli sütunlar ve Odak /
+   Genişletilmiş / Tümü presetleri olduğu gibi kalır. Kompakt görünümde görünür
+   Best Price · Conf. Manufacturer · Approved Mfr. Price · FOB sütunları tek bir
+   "Teklif & Onay" şeridinde, Overseas/TR Landed sütunları tek bir "Landed
+   Özeti" hücresinde toplanır. Detay bugünkü ayrıntılı sütunları gösterir.
+   Maliyet, teklifleri şeritte toplar ve FOB · Royalty · Hologram · Landed
+   maliyet sütunlarını gizli olsalar bile açar. Excel'e aktarma ve "Tüm veri"
+   kopyası her zaman ayrıntılı sütunları kullanır. */
+const KOL_PRICE_VIEW_KEY='lcw.koleksiyon.priceView.v1';
+const KOL_PRICE_VIEWS=Object.freeze(['compact','detail','cost']);
+const KOL_PRICE_VIEW_COLS=Object.freeze({
+  __priceStrip__:Object.freeze({kind:'priceStrip',tr:'Teklif & Onay',en:'Quotes & Approval',group:'Fiyatlandırma'}), // i18n-ignore — sütun kimliği/grup anahtarı
+  __landedSummary__:Object.freeze({kind:'landedSummary',tr:'Landed Özeti',en:'Landed Summary',group:'Endeksmatik & Avantaj'}), // i18n-ignore — sütun kimliği/grup anahtarı
+});
+const KOL_PRICE_STRIP_SOURCES=Object.freeze({compact:Object.freeze(['__bestPrice__','__confirmedName__','__confirmedPrice__','fob']),cost:Object.freeze(['__bestPrice__','__confirmedName__','__confirmedPrice__'])});
+const KOL_LANDED_SUMMARY_SOURCES=Object.freeze({compact:Object.freeze(['ydLanded','trLanded'])});
+const KOL_COST_VIEW_KEYS=Object.freeze(['fob','royalty','hologramCost','ydLanded','trLanded']);
+let kolPriceView=null;
+function kolPriceViewMode(){
+  if(kolPriceView)return kolPriceView;
+  let stored='';try{stored=String(BLStorage.getItem(KOL_PRICE_VIEW_KEY)||'');}catch(_){}
+  kolPriceView=KOL_PRICE_VIEWS.includes(stored)?stored:'compact';
+  return kolPriceView;
+}
+function setKolPriceView(mode){
+  if(!KOL_PRICE_VIEWS.includes(mode)||mode===kolPriceViewMode())return false;
+  kolPriceView=mode;
+  try{BLStorage.setItem(KOL_PRICE_VIEW_KEY,mode);}catch(_){}
+  renderKol();
+  return true;
+}
+function syncKolPriceViewToggle(){
+  const group=document.getElementById('kolPriceViewActions');if(!group)return;
+  const mode=kolPriceViewMode();
+  group.querySelectorAll('[data-kol-price-view]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.kolPriceView===mode)));
+  if(group.__kolBound)return;group.__kolBound=true;
+  group.addEventListener('click',event=>{
+    const button=event.target.closest('[data-kol-price-view]');if(!button)return;
+    commitActiveTableEditor({refresh:false});
+    setKolPriceView(button.dataset.kolPriceView);
+  });
+}
+/* VERİ SAĞLIĞI — fiyatlamada eksik/bekleyen işi tek bakışta gösteren çipler.
+   Her koşul kanonik hesaplardan okunur (kural eksikliği, landed kuru, hedef,
+   açık teklif dizini, onay). Sayım render'ı yavaşlatmasın diye kısa bir
+   gecikmeyle ve yalnız Koleksiyon görünürken yapılır. */
+const KOL_HEALTH_KEYS=Object.freeze(['ruleMissing','fxMissing','noTarget','waiting','pendingApproval']);
+function kolHealthLabel(key){
+  const en=appLang==='en';
+  return ({
+    ruleMissing:en?'Royalty rule missing':'Royalty kuralı eksik',
+    fxMissing:en?'TR price without FX':'Kuru olmayan TR fiyatı',
+    noTarget:en?'No target price':'Hedef fiyat yok',
+    waiting:en?'Awaiting quotations':'Cevap bekleyen teklif',
+    pendingApproval:en?'Awaiting approval':'Onay bekleyen',
+  })[key]||key;
+}
+function kolHealthMatches(row,key){
+  if(!row)return false;
+  if(key==='ruleMissing')return Boolean(kolLicenseRuleMissing(row));
+  if(key==='fxMissing'){
+    const tr=kolParseMoneyNum(kolEffectiveValue(row,'trPrice'));if(!Number.isFinite(tr)||tr<=0)return false;
+    const manual=kolParseMoneyNum(kolEffectiveValue(row,'trFx'));if(Number.isFinite(manual)&&manual>0)return false;
+    return kolAutoFx(row)==null;
+  }
+  if(key==='noTarget'){const target=kolParseMoneyNum(kolEffectiveValue(row,'targetPrice'));return !(Number.isFinite(target)&&target>0);}
+  if(key==='waiting'){
+    if(!kolQuoteIndexCache){try{kolQuoteIndexCache=window.BL_QUOTATIONS?.collectionQuoteIndex?.()||null;}catch(_){}}
+    return Boolean(kolRowQuoteStatus(row)?.waiting);
+  }
+  if(key==='pendingApproval')return Boolean(kolBestPricing(row))&&!kolConfirmedPricing(row);
+  return true;
+}
+function setKolHealthFilter(key){
+  kolHealthState.filter=kolHealthState.filter===key||!KOL_HEALTH_KEYS.includes(key)?'':key;
+  releaseKolTransientTopRow();renderKol();
+}
+function renderKolHealthBar(){
+  const bar=document.getElementById('kolHealthBar');if(!bar)return;
+  const counts=kolHealthState.counts,active=kolHealthState.filter,en=appLang==='en';
+  const chips=KOL_HEALTH_KEYS.filter(key=>(counts&&counts[key])||key===active).map(key=>{
+    const count=counts?counts[key]||0:0,tone=key==='ruleMissing'||key==='fxMissing'?'warn':(key==='noTarget'?'muted':'info');
+    return `<button type="button" class="kolHealthChip is-${tone}" data-kol-health="${key}" aria-pressed="${key===active?'true':'false'}" title="${escapeHtml(key===active?(en?'Clear this filter':'Bu filtreyi kaldır'):(en?'Show only these models':'Yalnız bu modelleri göster'))}"><span>${escapeHtml(kolHealthLabel(key))}</span><b>${count.toLocaleString(en?'en-GB':'tr-TR')}</b></button>`;
+  });
+  bar.hidden=!chips.length;
+  bar.innerHTML=chips.length?`<span class="kolHealthLabel">${escapeHtml(en?'DATA HEALTH':'VERİ SAĞLIĞI')}</span>${chips.join('')}`:'';
+  if(bar.__kolBound)return;bar.__kolBound=true;
+  bar.addEventListener('click',event=>{const chip=event.target.closest('[data-kol-health]');if(chip)setKolHealthFilter(chip.dataset.kolHealth);});
+}
+function scheduleKolHealthCount(){
+  clearTimeout(kolHealthState.timer);
+  kolHealthState.timer=setTimeout(()=>{
+    const counts=Object.fromEntries(KOL_HEALTH_KEYS.map(key=>[key,0]));
+    (kolRows||[]).forEach(row=>{KOL_HEALTH_KEYS.forEach(key=>{if(kolHealthMatches(row,key))counts[key]++;});});
+    kolHealthState.counts=counts;renderKolHealthBar();
+  },160);
+}
+function kolPriceViewDescriptor(key){
+  const meta=KOL_PRICE_VIEW_COLS[key];
+  return meta?{kind:meta.kind,k:key,label:appLang==='en'?meta.en:meta.tr,folds:[]}:null;
+}
+// Görünür tanımlayıcı listesine fiyat görünümünü uygular. Kaynak sütunların
+// hiçbiri görünür değilse ilgili özet sütunu da çizilmez.
+function kolApplyPriceView(list,mode=kolPriceViewMode()){
+  const stripSources=new Set(KOL_PRICE_STRIP_SOURCES[mode]||[]),landedSources=new Set(KOL_LANDED_SUMMARY_SOURCES[mode]||[]);
+  if(!stripSources.size&&!landedSources.size)return list;
+  const out=[];let strip=null,landed=null;
+  list.forEach(d=>{
+    if(stripSources.has(d.k)){
+      if(!strip){strip=kolPriceViewDescriptor('__priceStrip__');out.push(strip);}
+      strip.folds.push(d.k);return;
+    }
+    if(landedSources.has(d.k)){
+      if(!landed){landed=kolPriceViewDescriptor('__landedSummary__');out.push(landed);}
+      landed.folds.push(d.k);return;
+    }
+    out.push(d);
+  });
+  return out;
+}
 function kolPlaceLandedAtEnd(order){
   const out=(Array.isArray(order)?order:[]).filter(k=>k!=='endeksmatik'&&k!=='ydLanded'&&k!=='trLanded');
   out.push('endeksmatik');
@@ -24026,6 +24162,7 @@ function kolResetDisplayOrderKeepingCustom(previousOrder){
 function kolColumnGroupFor(key,orderKeys){
   if(key==='__picture__')return 'Model Detayları';
   if(KOL_SYNTHETIC_COL_META[key])return KOL_SYNTHETIC_COL_META[key].group;
+  if(KOL_PRICE_VIEW_COLS[key])return KOL_PRICE_VIEW_COLS[key].group;
   const def=kolColDefs().find(c=>c.k===key);
   if(def&&def.checklist)return 'Checklist';
   if(def&&def.group)return def.group;
@@ -24702,6 +24839,7 @@ function filteredKol(){
     if(checkMode==='checked' && !selectionHasId(kolSelected,r.id)) return false;
     if(checkMode==='unchecked' && selectionHasId(kolSelected,r.id)) return false;
     if(!passesKolColFilters(r)||!kolFabricDetailMatches(r)) return false;
+    if(kolHealthState.filter&&!kolHealthMatches(r,kolHealthState.filter)) return false;
     if(q.length){
       if(!tableSearchMatches(kolSearchHaystack(r),q,{plainMode:'contains'})) return false;
     }
@@ -25123,6 +25261,7 @@ function kolCollectionRawCellText(col,row){
   if(col.kind==='best'){ const c=kolBestPricing(row); return c?('$'+kolFormatMoneyDisplay(String(c.price))):''; }
   if(col.kind==='confirmedName'){ const c=kolConfirmedDisplay(row); return c?c.name:''; }
   if(col.kind==='confirmedPrice'){ const c=kolConfirmedDisplay(row); return c?('$'+kolFormatMoneyDisplay(String(c.price))):''; }
+  if(col.kind==='priceStrip'||col.kind==='landedSummary')return kolPriceViewCellText(col,row);
   const c=col.col;if(!c)return '';
   const v=c.exToRetail?kolExToRetailDays(row):kolEffectiveValue(row,c.k);
   if(c.k==='fabric')return kolFabricDisplay(v);
@@ -25912,6 +26051,73 @@ function kolConfirmedDisplay(row){
 function kolConfirmedPriceTargetDelta(row,confirmed=kolConfirmedPricing(row)){
   return confirmed?kolPriceTargetDelta(row,confirmed.price):null;
 }
+/* Teklif & Onay şeridi (Kompakt fiyat görünümü). Onaylı fiyat (yoksa en iyi
+   teklif referans olarak), hedef farkı, üretici ve satırdaki TÜM geçerli
+   tekliflerin hedefe göre konumu tek hücrede okunur. Değerler Best Price /
+   Approved Mfr. Price / FOB sütunlarıyla aynı kanonik yardımcılardan gelir. */
+let kolQuoteIndexCache=null;
+function kolRowQuoteStatus(row){
+  try{return kolQuoteIndexCache&&row?kolQuoteIndexCache.get(row)||null:null;}catch(_){return null;}
+}
+function kolPriceStripModel(row){
+  const pricing=kolEffectivePricing(row)||{};
+  const offers=Object.entries(pricing).map(([name,value])=>({name,price:kolParseMoneyNum(value)})).filter(o=>Number.isFinite(o.price)&&o.price>0).sort((a,b)=>a.price-b.price);
+  const targetRaw=kolParseMoneyNum(kolEffectiveValue(row,'targetPrice')),target=Number.isFinite(targetRaw)&&targetRaw>0?targetRaw:null;
+  const confirmed=kolConfirmedPricing(row),best=kolBestPricing(row),main=confirmed||best||null;
+  const fobRaw=kolParseMoneyNum(row&&row.fob),fob=Number.isFinite(fobRaw)&&fobRaw>0?fobRaw:null;
+  const values=offers.map(o=>o.price).concat(target==null?[]:[target]);
+  let lo=values.length?Math.min(...values):0,hi=values.length?Math.max(...values):0;
+  if(hi-lo<1e-9){lo=lo*0.95;hi=hi*1.05||1;}
+  const pos=value=>Math.max(0,Math.min(100,((value-lo)/(hi-lo))*100));
+  return {offers,target,confirmed,best,main,delta:main?kolPriceTargetDelta(row,main.price):null,fob,pos,status:kolRowQuoteStatus(row)};
+}
+function kolPriceViewCellText(d,row){
+  if(!row)return '';
+  if(d&&d.kind==='landedSummary'){
+    const k=kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)),parts=[];
+    if(k.ydLanded!=null)parts.push(`${appLang==='en'?'Overseas':'YD'} $${kolMoney2(k.ydLanded)}`);
+    if(k.trLanded!=null)parts.push(`TR $${kolMoney2(k.trLanded)}`);
+    if(k.profitPct!=null)parts.push(`${k.profitPct>0?'+':''}${(Math.round(k.profitPct*10)/10).toLocaleString(appLang==='en'?'en-GB':'tr-TR',{maximumFractionDigits:1})}%`);
+    return parts.join(' · ');
+  }
+  const m=kolPriceStripModel(row),parts=[];
+  if(m.main)parts.push(`$${kolFormatMoneyDisplay(String(m.main.price))}`,m.main.name+(m.confirmed?' ✓':''));
+  if(m.delta)parts.push(m.delta.text);
+  if(kolPriceViewMode()==='compact'&&m.fob!=null)parts.push(`FOB $${kolFormatMoneyDisplay(String(m.fob))}`);
+  return parts.join(' · ');
+}
+function kolPriceStripCellHtml(row,rc,{showFob=true}={}){
+  const m=kolPriceStripModel(row),en=appLang==='en';
+  const money=value=>`$${kolFormatMoneyDisplay(String(value))}`;
+  const tipLines=m.offers.map(o=>`${o.name}: ${money(o.price)}${m.confirmed&&norm(m.confirmed.name)===norm(o.name)?(en?' · approved':' · onaylı'):''}`);
+  if(m.target!=null)tipLines.push(`Target Price: ${money(m.target)}`);
+  if(m.delta)tipLines.push(`${en?'Difference':'Fark'}: ${m.delta.text}`);
+  if(m.fob!=null)tipLines.push(`FOB: ${money(m.fob)}`);
+  if(m.status&&m.status.waiting)tipLines.push(en?`${m.status.waiting} quotation(s) awaiting a reply`:`${m.status.waiting} teklif cevap bekliyor`);
+  tipLines.push(en?'Double-click: open the price drawer':'Çift tık: fiyat çekmecesini aç');
+  const deltaHtml=m.delta?`<span class="kolBestDelta ${m.delta.meetsTarget?'isAtOrBelowTarget':'isAboveTarget'}">${escapeHtml(m.delta.text)}</span>`:'';
+  const who=m.main?`<span class="kolPsMfr${m.confirmed?' isConfirmed':''}">${m.confirmed?'✓ ':''}${escapeHtml(m.main.name)}</span>`:`<span class="kolPsEmpty">${escapeHtml(en?'No quotation':'Teklif yok')}</span>`;
+  const mainNorm=m.main?norm(m.main.name):'';
+  const track=(m.offers.length||m.target!=null)?`<span class="kolPsTrack" aria-hidden="true">${m.target!=null?`<i class="kolPsTarget" style="--at:${m.pos(m.target).toFixed(1)}%"></i>`:''}${m.offers.map(o=>`<i class="kolPsDot${norm(o.name)===mainNorm?(m.confirmed?' isConfirmed':' isBest'):''}" style="--at:${m.pos(o.price).toFixed(1)}%"></i>`).join('')}</span>`:'';
+  const meta=[];
+  if(m.offers.length)meta.push(en?`${m.offers.length} quote${m.offers.length===1?'':'s'}`:`${m.offers.length} teklif`);
+  if(m.status&&m.status.waiting)meta.push(`<span class="kolPsWaiting">${escapeHtml(en?`${m.status.waiting} waiting`:`${m.status.waiting} bekliyor`)}</span>`);
+  if(showFob&&m.fob!=null)meta.push(`FOB ${escapeHtml(money(m.fob))}`);
+  const metaHtml=meta.length?`<span class="kolPsMeta">${meta.map(item=>item.startsWith('<span')?item:escapeHtml(item)).join(' · ')}</span>`:'';
+  return `<td class="kolPriceStripTd${m.confirmed?' isConfirmed':''}" data-kol-drawer="${row.id}"${rc} title="${escapeHtml(tipLines.join('\n'))}"><div class="kolPs"><div class="kolPsLine">${m.main?`<b class="kolPsPrice">${escapeHtml(money(m.main.price))}</b>`:''}${deltaHtml}${who}</div>${track||metaHtml?`<div class="kolPsLine kolPsSub">${track}${metaHtml}</div>`:''}</div><button type="button" class="kolManualBtn kolPsOpenBtn" data-kol-drawer-open="${row.id}" title="${escapeHtml(en?'Open price drawer':'Fiyat çekmecesini aç')}" aria-label="${escapeHtml(en?'Open price drawer':'Fiyat çekmecesini aç')}">⤢</button></td>`;
+}
+function kolLandedSummaryCellHtml(row,rc){
+  const k=kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)),en=appLang==='en';
+  const profit=k.profitPct==null?null:Math.round(k.profitPct*10)/10;
+  const profitCls=profit==null?'':(profit>0?'isGood':(profit<0?'isBad':''));
+  const missing=k.ruleMissing||k.trRuleMissing;
+  const yd=k.ruleMissing?'⚠':(k.ydLanded==null?'—':`$${kolMoney2(k.ydLanded)}`);
+  const tr=k.trRuleMissing?'⚠':(k.trLanded==null?'—':`$${kolMoney2(k.trLanded)}`);
+  const tip=[k.ruleMissing?kolLicenseRuleMissingText(row):`${en?'Overseas Landed':'Overseas Landed'}: ${yd}`,k.trRuleMissing?kolTrLicenseRuleMissingText(row):`TR Landed: ${tr}`];
+  if(profit!=null)tip.push(en?`Overseas advantage: ${profit}%`:`Overseas avantajı: %${profit}`);
+  tip.push(en?'Double-click: open the price drawer to edit TR price, multipliers and FX':'Çift tık: TR fiyatı, çarpanlar ve kur için fiyat çekmecesini aç');
+  return `<td class="kolLandedSumTd${missing?' kolRuleMissing':''}" data-kol-drawer="${row.id}"${rc}${kolLandedCopyAttrs(k.ydLanded,profit)} title="${escapeHtml(tip.join('\n'))}"><div class="kolLs"><span class="kolLsRow"><i>${escapeHtml(en?'OS':'YD')}</i><b>${escapeHtml(yd)}</b></span><span class="kolLsRow"><i>TR</i><b>${escapeHtml(tr)}</b>${profit==null?'':`<em class="kolProfit ${profitCls}">${(profit>0?'+':'')+profit.toLocaleString(en?'en-GB':'tr-TR',{maximumFractionDigits:1})}%</em>`}</span></div></td>`;
+}
 function kolSourceCpRow(row){
   if(!row || !row._sourceOrderCode || !state.cp || !Array.isArray(state.cp.rows)) return null;
   return state.cp.rows.find(r=>sameOrderCode(r['Order Code'],row._sourceOrderCode))||null;
@@ -26152,8 +26358,9 @@ function kolSyncRulePricing(options={}){
 // sütunları artık ana tabloda yer almaz; tüm teklif girişi Fiyat Çalışmaları'nda yapılır.
 function kolDescriptorCatalog(opts={}){
   const map=new Map();
+  const costView=!opts.all&&!opts.detail&&typeof kolPriceViewMode==='function'&&kolPriceViewMode()==='cost';
   kolAllOrderedCols().forEach(c=>{
-    if(opts.all||!kolHiddenCols.has(c.k))map.set(c.k,{kind:'base',k:c.k,label:kolColumnLabel(c),col:c});
+    if(opts.all||!kolHiddenCols.has(c.k)||(costView&&KOL_COST_VIEW_KEYS.includes(c.k)))map.set(c.k,{kind:'base',k:c.k,label:kolColumnLabel(c),col:c});
   });
   /* v6.34 — Best Price, Conf. Manufacturer ve Conf. FOB eskiden TEK bir koşulun
      içindeydi: !kolHiddenCols.has('targetPrice'). Yani sütun seçicide Target
@@ -26169,19 +26376,24 @@ function kolDescriptorCatalog(opts={}){
 function kolDisplayDescriptors(opts={}){
   const catalog=kolDescriptorCatalog(opts);
   const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
-  return order.map(key=>catalog.get(key)).filter(Boolean);
+  const list=order.map(key=>catalog.get(key)).filter(Boolean);
+  return opts.all||opts.detail?list:kolApplyPriceView(list);
 }
 function kolDescriptorDefaultWidth(d){
   if(d.kind==='base')return d.col.w;
   if(d.kind==='best')return 112;
   if(d.kind==='confirmedName')return 150;
   if(d.kind==='confirmedPrice')return 110;
+  if(d.kind==='priceStrip')return 236;
+  if(d.kind==='landedSummary')return 150;
   return 138;
 }
 function kolDescriptorMinWidth(d){
   const readableHeaderPx=tableHeaderTextWidth(d.label||d.k)+54;
   if(d.kind==='confirmedName')return Math.max(120,readableHeaderPx);
   if(d.kind==='best'||d.kind==='confirmedPrice')return Math.max(92,readableHeaderPx);
+  if(d.kind==='priceStrip')return Math.max(190,readableHeaderPx);
+  if(d.kind==='landedSummary')return Math.max(128,readableHeaderPx);
   return d.kind==='base'?kolColMinWidth(d.col):Math.max(64,readableHeaderPx);
 }
 function kolDescriptorWidth(d){
@@ -26189,6 +26401,7 @@ function kolDescriptorWidth(d){
   return Math.max(kolDescriptorMinWidth(d),Number.isFinite(saved)&&saved>0?saved:fallback);
 }
 function kolDescriptorByKey(key){
+  if(KOL_PRICE_VIEW_COLS[key])return kolPriceViewDescriptor(key);
   return kolDescriptorCatalog().get(key)||{kind:'synthetic',k:key,label:key};
 }
 // Görünüm (gizli/görünür sütun) yalnız ÇİZİMİ belirler. Yazma kuralları, düzenlenebilirlik,
@@ -27021,6 +27234,9 @@ function renderKol(){
   descriptors.forEach(descriptor=>{
     if(descriptor.kind==='base')descriptor.col._blSchema=columnSchemaFor(descriptor.col,logicalRows);
   });
+  // Açık teklif durumu render başına BİR kez kurulur (Teklif & Onay şeridi + Veri Sağlığı).
+  try{kolQuoteIndexCache=window.BL_QUOTATIONS?.collectionQuoteIndex?.()||null;}catch(_){kolQuoteIndexCache=null;}
+  syncKolPriceViewToggle();renderKolHealthBar();scheduleKolHealthCount();
   const pictureVisible=!kolPictureHidden;
   const fixedColCount=pictureVisible?2:1;
   const _imgDim=kolImgDims();
@@ -27044,6 +27260,11 @@ function renderKol(){
       return `<th data-kcol="${d.k}" data-kol-filter="${key}" class="${isFiltered?'columnFilterActive':''}" title="${escapeHtml(confirmedPriceFilterHint)}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span><button type="button" class="thFilterBtn kolSyntheticFilterBtn${active}" data-kol-filter="${key}" title="${escapeHtml(appLang==='en'?'Filter':'Filtrele')}" aria-label="${escapeHtml(appLang==='en'?`Filter: ${d.label}`:`Filtrele: ${d.label}`)}">▾</button></div></th>`;
     }
     if(d.kind==='confirmedPrice') return `<th data-kcol="${d.k}" title="${escapeHtml(confirmedPriceFilterHint)}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
+    if(d.kind==='priceStrip'||d.kind==='landedSummary'){
+      const foldLabels=(d.folds||[]).map(key=>key.startsWith('__')?L(KOL_SYNTHETIC_COL_META[key]?.label||key):kolColumnLabel(kolColDefs().find(c=>c.k===key)||{k:key,label:key})).join(' · ');
+      const tip=(appLang==='en'?'Compact price view: ':'Kompakt fiyat görünümü: ')+foldLabels+(appLang==='en'?' · switch to Detail above to see separate columns':' · ayrı sütunlar için yukarıdan Detay görünümüne geç');
+      return `<th data-kcol="${d.k}" class="kolComputedHeader kolPriceViewHeader" title="${escapeHtml(tip)}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
+    }
     return `<th data-kcol="${d.k}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
   }).join('');
   const kolCheckActive=!!normalizeCheckFilterMode(kolCheckFilter);
@@ -27060,14 +27281,16 @@ function renderKol(){
   thead.classList.add('kolHasGroups');
   thead.innerHTML=kolGroupRowHtml+`<tr class="colRow"><th class="chkTh${kolCheckActive?' columnFilterActive':''}"><input type="checkbox" id="kolSelAll"><button type="button" class="thFilterBtn kolChkFilterBtn${kolCheckActive?' filterActive':''}" title="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}" aria-label="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}">▾</button></th>${pictureVisible?`<th id="kolPicTh" class="kolPicTh" title="${escapeHtml(L('Görsel boyutunu değiştir'))}">${L('Picture')}</th>`:''}${headers}</tr>`;
   thead.querySelectorAll('th[data-kcol]').forEach(th=>{
-    const key=th.dataset.kcol,descriptor=descriptors.find(d=>d.k===key);
-    attachKolColDrag(th,key);attachKolColResize(th,key,table,colgroup);
+    const key=th.dataset.kcol,descriptor=descriptors.find(d=>d.k===key),viewColumn=Boolean(KOL_PRICE_VIEW_COLS[key]);
+    // Görünüm sütunları kalıcı sıraya ait değildir; sürüklenmez, kaynak sütunların yerinde durur.
+    if(!viewColumn)attachKolColDrag(th,key);
+    attachKolColResize(th,key,table,colgroup);
     th.addEventListener('contextmenu',event=>{
       const allKeys=kolDefaultDisplayOrder();
       const columns=allKeys.map(k=>{const d=kolDescriptorByKey(k);return {key:k,label:d.label||k};});
       if(kolPictureHidden)columns.unshift({key:'__picture__',label:L('Picture')});
       openColumnVisibilityMenu(event,{
-        currentKey:key,columns,hiddenKeys:[...kolHiddenCols,...(kolPictureHidden?['__picture__']:[])],
+        currentKey:viewColumn?'':key,columns,hiddenKeys:[...kolHiddenCols,...(kolPictureHidden?['__picture__']:[])],
         onHide:k=>{if(k==='__picture__')kolPictureHidden=true;else kolHiddenCols.add(k);saveKolColState();renderKol();},
         onShow:k=>{if(k==='__picture__')kolPictureHidden=false;else kolHiddenCols.delete(k);saveKolColState();renderKol();},
         onShowAll:()=>{kolHiddenCols.clear();kolPictureHidden=false;saveKolColState();renderKol();},
@@ -27152,6 +27375,8 @@ function renderKol(){
        const summaryEntry=collapsed?groupSummary?.get(d.k):null;
        const summaryAttrs=summaryEntry?` data-kol-group-summary="1" data-kol-summary-display="${escapeHtml(summaryEntry.display)}" data-kol-summary-title="${escapeHtml(summaryEntry.title)}"`:'';
        const rc=` data-r="${ri}" data-c="${di+fixedColCount}" data-key="${escapeHtml(d.k)}"${inherited?' data-kol-inherited="1"':''}${overridden?' data-kol-override="1"':''}${summaryAttrs}`;
+      if(d.kind==='priceStrip'){html+=kolPriceStripCellHtml(r,rc,{showFob:(d.folds||[]).includes('fob')});return;}
+      if(d.kind==='landedSummary'){html+=kolLandedSummaryCellHtml(r,rc);return;}
       if(d.kind==='best'){
         const best=kolBestPricing(r),delta=kolBestPriceTargetDelta(r,best),meetsTarget=Boolean(delta&&delta.meetsTarget);
         const bestMfr=best?kolManufacturers.find(m=>norm(m&&m.name)===norm(best.name)):null;
@@ -27375,20 +27600,9 @@ function renderKol(){
     });
   });
   tbody.querySelectorAll('.kolPriceApprove').forEach(btn=>btn.addEventListener('pointerdown',e=>{
-    e.preventDefault();e.stopPropagation();const id=Number(btn.dataset.id),m=btn.dataset.mfr;let row=kolRows.find(r=>r.id===id);if(!row)return;
-    if(kolCellLinkedToModel(row,`pricing:${m}`)){
-      showToast(appLang==='en'
-        ?'This field is linked to the model. Use right-click › Make this field colour-specific first.'
-        :'Bu alan modele bağlı. Önce sağ tık › Bu alanı renk özelinde yap.');
-      return;
-    }
-    const effectivePricing=kolEffectivePricing(row);const priceInput=btn.closest('td')?.querySelector('.kolPriceCell');let raw=priceInput?priceInput.value:effectivePricing[m],n=kolParseMoneyNum(raw);
-    if(raw!==''&&Number.isFinite(n))raw=kolFormatMoneyDisplay(raw);
-    if(!Number.isFinite(n)||n<=0){showToast(appLang==='en'?'Enter a valid price for this manufacturer before confirming.':'Onaylamak için önce bu üreticiye geçerli bir fiyat gir.');if(priceInput){priceInput.focus();priceInput.select();}return;}
-    kolPushUndo();
-    row=kolWriteGroupedStorageValue(row,'pricing',{...effectivePricing,[m]:raw});
-    row.confirmedManufacturer=norm(row.confirmedManufacturer)===norm(m)?'':m;
-    kolApplyRulePricing(row);saveKolRows();renderKol();showToast(row.confirmedManufacturer?(appLang==='en'?`${m} confirmed as the final manufacturer.`:`${m} nihai üretici olarak onaylandı.`):(appLang==='en'?'Manufacturer confirmation removed.':'Üretici onayı kaldırıldı.'));
+    e.preventDefault();e.stopPropagation();const id=Number(btn.dataset.id),m=btn.dataset.mfr;const row=kolRows.find(r=>r.id===id);if(!row)return;
+    const priceInput=btn.closest('td')?.querySelector('.kolPriceCell');
+    if(kolToggleConfirmedManufacturer(row,m,priceInput?priceInput.value:undefined)===null&&priceInput){priceInput.focus();priceInput.select();}
   }));
   tbody.querySelectorAll('.kolPriceCell').forEach(el=>el.addEventListener('change',()=>kolApplyCollectionCellChange({rowId:Number(el.dataset.id),key:`pricing:${el.dataset.mfr}`,editor:el,source:'manual'},{rerender:true})));
   // Elle giriş düğmeleri (v6.01). Tek dinleyici; satırlar yeniden çizildiğinde
@@ -27404,6 +27618,19 @@ function renderKol(){
     const row=kolRows.find(item=>String(item.id)===String(btn.dataset.kolManual));
     if(row)openKolManualPriceModal(row,{confirm:btn.dataset.kolManualConfirm==='1'});
   });}
+  /* Fiyat Çekmecesi: Teklif & Onay / Landed Özeti hücresinde çift tık veya
+     hücredeki ⤢ düğmesi. tbody kalıcı olduğundan dinleyici bir kez bağlanır. */
+  if(!tbody.__kolDrawerDelegated){tbody.__kolDrawerDelegated=true;
+    const openDrawer=id=>{const row=kolRows.find(item=>String(item.id)===String(id));if(row)window.BLCollectionPriceDrawer?.open?.(row);};
+    tbody.addEventListener('click',event=>{
+      const btn=event.target.closest('[data-kol-drawer-open]');if(!btn)return;
+      event.preventDefault();event.stopPropagation();openDrawer(btn.dataset.kolDrawerOpen);
+    });
+    tbody.addEventListener('dblclick',event=>{
+      const cell=event.target.closest('td[data-kol-drawer]');if(!cell||event.target.closest('button,input,select'))return;
+      event.preventDefault();event.stopPropagation();openDrawer(cell.dataset.kolDrawer);
+    });
+  }
   tbody.querySelectorAll('.kolBestHistoryCell[data-kol-price-history-id]').forEach(cell=>cell.addEventListener('dblclick',event=>{
     event.preventDefault();
     event.stopPropagation();
@@ -27412,7 +27639,7 @@ function renderKol(){
     if(!row)return;
     window.BL_QUOTATIONS?.openPriceHistory([row]);
   }));
-  if(!kolWorkspaceCanEdit){tbody.querySelectorAll('.editCell,select,button').forEach(el=>{if(!el.classList.contains('rowChk')&&!el.classList.contains('kolModelGroupToggle'))el.disabled=true;});}
+  if(!kolWorkspaceCanEdit){tbody.querySelectorAll('.editCell,select,button').forEach(el=>{if(!el.classList.contains('rowChk')&&!el.classList.contains('kolModelGroupToggle')&&!el.classList.contains('kolPsOpenBtn'))el.disabled=true;});}
   /* v7.81 — Modele bağlı varyant hücreleri görünür biçimde kapalı. Yalnız
      yazmayı reddetmek yetmez: kullanıcı yazabildiğini sanıp sonra uyarı
      alırdı. Düzenleyici devre dışı + hücreye işaret sınıfı. */
@@ -27463,6 +27690,7 @@ function renderKol(){
   if(_freezePick?.tableId==='kolTable') freezeHighlight();
   if(typeof fitTableHeights==='function')setTimeout(fitTableHeights,0);
   try{window.BL_QUOTATIONS?.syncCollectionPricingUI?.();}catch(_){}
+  try{window.BLCollectionPriceDrawer?.refresh?.();}catch(_){}
   try{window.BLCollectionSpreadsheet?.afterRender?.({rows:visibleRows,descriptors,pictureVisible});}catch(err){console.warn('Collection spreadsheet afterRender failed',err);}
 }
 // Görsel boyutu Picture başlığındaki ortak slider'dan değiştirilir.
@@ -27471,6 +27699,8 @@ function kolSpreadsheetFormulaInfo(key){
   if(key==='__bestPrice__')return 'Calculated from current valid quotations';
   if(key==='__confirmedName__')return 'Approved quotation manufacturer';
   if(key==='__confirmedPrice__')return 'Approved quotation price';
+  if(key==='__priceStrip__')return 'Approved or best quotation, target difference and FOB';
+  if(key==='__landedSummary__')return 'Overseas Landed, TR Landed and price advantage';
   const d=kolFieldDescriptorByKey(key),c=d?.col;if(!c)return '';
   if(c.k==='royalty'||c.k==='hologramCost')return 'Resolved from current pricing rule';
   if(c.k==='fob')return 'Confirmed / Best / Target price ÷ (1 − Royalty %) + Hologram Cost';
@@ -27486,6 +27716,7 @@ function kolSpreadsheetColumnMeta(key){
   const landedInput=KOL_LANDED_INPUT_COLS[key];
   if(landedInput)return {key,label:kolStyleFieldLabel(landedInput),type:key==='trPrice'?'money':'number',access:'editable',editable:true,formula:'',col:landedInput};
   const d=kolFieldDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
+  if(d.kind==='priceStrip'||d.kind==='landedSummary')return {key,label:d.label,type:'text',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
   if(d.kind!=='base')return {key,label:d.label,type:d.kind==='confirmedName'?'text':'money',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
   const c=d.col;
   // Checklist hücresi yalnız durum menüsünden yazılır; yapıştırma/yazma ile serbest metin girmez.
@@ -27505,7 +27736,8 @@ function kolSpreadsheetRawValue(row,key){
   if(d.kind==='best')return kolBestPricing(row)?.price??'';
   if(d.kind==='confirmedName')return kolConfirmedDisplay(row)?.name??'';
   if(d.kind==='confirmedPrice')return kolConfirmedDisplay(row)?.price??'';
-  const c=d.col;if(c.exToRetail)return kolExToRetailDays(row);
+  if(d.kind==='priceStrip'||d.kind==='landedSummary')return kolPriceViewCellText(d,row);
+  const c=d.col;if(!c)return '';if(c.exToRetail)return kolExToRetailDays(row);
   if(c.checklist)return kolChecklistDisplay(kolEffectiveValue(row,c.k),row);
   if(c.endeksmatik)return endeksmatikExcelText(kolEffectiveEndeksmatikRow(row));
   if(c.ydLanded)return kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).ydLanded??'';
@@ -27590,6 +27822,26 @@ function kolSpreadsheetMakeEditor(rowId,key,value){
   if(c?.hologram)el.classList.add('kolHologramCell');
   if(c?.suggest)el.dataset.kind=c.suggest;
   return el;
+}
+/* Koleksiyon satırında üreticiyi onaylar / onayı kaldırır. Tablodaki ✓ ve
+   Fiyat Çekmecesi aynı yolu kullanır. Dönüş: true onaylandı, false onay
+   kaldırıldı, null yazılmadı (bağlı alan veya geçersiz fiyat). */
+function kolToggleConfirmedManufacturer(row,m,rawPrice){
+  if(!row||!m||!kolWorkspaceCanEdit)return null;
+  if(kolCellLinkedToModel(row,`pricing:${m}`)){
+    showToast(appLang==='en'
+      ?'This field is linked to the model. Use right-click › Make this field colour-specific first.'
+      :'Bu alan modele bağlı. Önce sağ tık › Bu alanı renk özelinde yap.');
+    return null;
+  }
+  const effectivePricing=kolEffectivePricing(row);let raw=rawPrice!==undefined?rawPrice:effectivePricing[m],n=kolParseMoneyNum(raw);
+  if(raw!==''&&Number.isFinite(n))raw=kolFormatMoneyDisplay(raw);
+  if(!Number.isFinite(n)||n<=0){showToast(appLang==='en'?'Enter a valid price for this manufacturer before confirming.':'Onaylamak için önce bu üreticiye geçerli bir fiyat gir.');return null;}
+  kolPushUndo();
+  row=kolWriteGroupedStorageValue(row,'pricing',{...effectivePricing,[m]:raw});
+  row.confirmedManufacturer=norm(row.confirmedManufacturer)===norm(m)?'':m;
+  kolApplyRulePricing(row);saveKolRows();renderKol();showToast(row.confirmedManufacturer?(appLang==='en'?`${m} confirmed as the final manufacturer.`:`${m} nihai üretici olarak onaylandı.`):(appLang==='en'?'Manufacturer confirmation removed.':'Üretici onayı kaldırıldı.'));
+  return Boolean(row.confirmedManufacturer);
 }
 function kolApplyCollectionCellChange(change,options={}){
   const editor=change?.editor||null;
@@ -34338,10 +34590,16 @@ async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufa
   if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');
   if(typeof ExcelJS==='undefined')throw new Error(appLang==='en'?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
   const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet(options.pricing?'Quotation Request':(appLang==='en'?'Selected Orders':'Seçili Siparişler'));
-  ws.columns=columns.map(c=>{
+  /* Fiyat Masası dönüş Excel'i: Koleksiyon fiyat talebinde üreticinin dolduracağı
+     fiyat sütunu ve gizli satır anahtarı (BL Key = Koleksiyon satır kimliği)
+     eklenir. Üretici dosyayı geri gönderdiğinde Fiyat Masası satırları bu
+     anahtarla kesin eşler; model adı değişse bile fiyat doğru modele yazılır. */
+  const pricingReturnColumns=Boolean(options.pricing)&&columns.every(c=>c.sourceKind!=='cp');
+  ws.columns=[...columns.map(c=>{
     if(prepareEmailColumnIsPicture(c)){const dims=prepareEmailImageDims(c.sourceKind||'collection');return {header:c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label),width:Math.max(3,(dims.col-5)/7)};}
     return {header:c.sourceKind==='cp'?tableColumnLabel('cp',c):L(c.label),width:Math.max(12,Math.min(34,Math.round(((c.w||((c.weight||10)*12))/7))))};
-  });
+  }),...(pricingReturnColumns?[{header:'Quotation Price (USD)',width:20},{header:'BL Key',width:10}]:[])];
+  if(pricingReturnColumns)ws.getColumn(columns.length+2).hidden=true;
   const header=ws.getRow(1);header.height=22;const thin={style:'thin',color:{argb:'FFD0D5DD'}},border={top:thin,bottom:thin,left:thin,right:thin};
   header.eachCell(cell=>{cell.font={bold:true,size:10,color:{argb:'FF475467'}};cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF2F4F7'}};cell.alignment={horizontal:'center',vertical:'middle',wrapText:true};cell.border=border;});
   const imageJobs=[];
@@ -34359,6 +34617,11 @@ async function prepareEmailBuildTopicTableWorkbook(rows,columns,topicName,manufa
       else{cell.value=out.value;if(out.numFmt)cell.numFmt=out.numFmt;}
       cell.alignment={horizontal:out.numeric?'right':'left',vertical:'middle',wrapText:true};
     });
+    if(pricingReturnColumns){
+      const priceCell=excelRow.getCell(columns.length+1),keyCell=excelRow.getCell(columns.length+2);
+      priceCell.border=border;priceCell.numFmt='"$"#,##0.00';priceCell.alignment={horizontal:'right',vertical:'middle'};priceCell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFF8DF'}};
+      keyCell.value=String(row&&(row._collectionSourceId??row.id)||'');keyCell.numFmt='@';
+    }
   });
   const prepared=await Promise.all(imageJobs.map(job=>kolPrepareExcelImage(job.src)));
   imageJobs.forEach((job,index)=>{const image=prepared[index];if(!image)return;try{
@@ -34533,7 +34796,7 @@ async function kolExportWithImages(rows,fileBase){
   if(window.BLPerf) await window.BLPerf.ensureLibrary('exceljs');
   if(typeof ExcelJS==='undefined'){showToast('Görsel gömme kütüphanesi yüklenemedi — internet/dosya erişimini kontrol et.');return null;}
   kolSyncRulePricing({save:true});
-  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Koleksiyon'),descriptors=kolDisplayDescriptors();
+  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Koleksiyon'),descriptors=kolDisplayDescriptors({detail:true});
   const statusValidationFormula=kolEnsureExcelStatusList(wb);
   const sourceRows=(rows||[]).map(kolCollectionProjectionSource);
   const headers=['Görsel',...descriptors.map(d=>d.label)];

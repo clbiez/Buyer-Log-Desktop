@@ -3316,6 +3316,34 @@ app.patch('/api/quotations/:id/status', userAccess.requireCapability('QUOTATIONS
     res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'QUOTATION_STATUS_FAILED' });
   }
 });
+/* Fiyat Defteri — tek satır olayı. Fiyat/onay/drop bütün talebi yeniden
+   göndermez; yalnız bu satırın değişikliği deftere yazılır (bkz.
+   quotation-ledger.js). Onayın kaldırdığı diğer satırlar `affected` ile döner. */
+app.patch('/api/quotations/:id/lines/:lineId', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '64kb' }), (req, res) => {
+  try {
+    const body = req.body && typeof req.body === 'object' ? req.body : {};
+    const result = quotationStore.patchLine(req.currentUser, req.params.id, req.params.lineId, body);
+    if (!result) return res.status(404).json({ error: 'Quotation satırı bulunamadı.', code: 'QUOTATION_LINE_NOT_FOUND' });
+    if (result.changed) {
+      void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
+      userAccess.appendAudit(req.currentUser, 'QUOTATION_LINE', result.request.id, { lineId: result.line && result.line.id, fields: Object.keys(body).filter(key => ['price', 'approved', 'dropped'].includes(key)), affected: result.affected.map(item => item.id) });
+    }
+    res.json({ ok: true, request: result.request, affected: result.affected, changed: result.changed, conflict: result.conflict });
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'QUOTATION_LINE_FAILED' });
+  }
+});
+app.post('/api/quotations/:id/rounds', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '16kb' }), (req, res) => {
+  try {
+    const request = quotationStore.startRound(req.currentUser, req.params.id, req.body && req.body.note);
+    if (!request) return res.status(404).json({ error: 'Quotation kaydı bulunamadı.', code: 'QUOTATION_NOT_FOUND' });
+    void sharedRevisionStore.update('quotation',{actorId:req.currentUser.id}).catch(error=>logRuntimeFailure('sharedRevision',error));
+    userAccess.appendAudit(req.currentUser, 'QUOTATION_ROUND', request.id, { round: request.round });
+    res.json({ ok: true, request });
+  } catch (err) {
+    res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'QUOTATION_ROUND_FAILED' });
+  }
+});
 app.patch('/api/quotations/:id/editors', userAccess.requireCapability('QUOTATIONS.EDIT'), express.json({ limit: '256kb' }), (req, res) => {
   try {
     const validUserIds = userAccess.allPublicProfiles().filter(profile => profile.enabled !== false).map(profile => profile.id);

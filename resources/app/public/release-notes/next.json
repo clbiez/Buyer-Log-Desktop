@@ -3,14 +3,246 @@
   "publishedAt": "2026-10-21",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Yeni lisans kartları listesi, royalty doğruluğu ve rapor düzeltmeleri",
-    "en": "New license card list, royalty accuracy and report fixes"
+    "tr": "Fiyat Masası, Kompakt Koleksiyon fiyat görünümü ve lisans kartları",
+    "en": "Pricing Desk, compact Collection price view and license cards"
   },
   "summary": {
-    "tr": "Lisans kartları satırda düzenlenebilir bir listeye dönüştü; onay haritası sadeleşti, üretici atlası seçilen satırlardan oluşuyor. Royalty hesapları kuruşu kuruşuna; kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi. Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi. Lisansör satırda elle girilir, ASAS yenileme sonucu bildirir, aşama taslakları tek güncellemeyle tüm lisanslara yayılır; üretici atlasında harita çekmece gibi açılır ve hizalıdır.",
-    "en": "License cards became an in-row editable list; the approval map is simpler and the supplier atlas is built from selected rows. Cent-accurate royalty calculations; improved source fields, partial details, Collection inheritance and checklist management. Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed. Licensors are entered in the row, ASAS refresh reports its result, stage templates update every license at once; in the supplier atlas the map opens like a drawer and is aligned."
+    "tr": "Quotations ve Fiyat Geçmişi görselli teklif matrisi, pazarlık turları, Fiyat Defteri ve klasman analiziyle tek Fiyat Masası’nda birleşti; yetkili kullanıcılar birden çok buyer’ı aynı ekranda görür. Koleksiyon’da Kompakt fiyat görünümü, Fiyat Çekmecesi ve Veri Sağlığı geldi. Lisans kartları satırda düzenlenebilir bir listeye dönüştü; onay haritası sadeleşti, üretici atlası seçilen satırlardan oluşuyor. Royalty hesapları kuruşu kuruşuna; kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi. Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi. Lisansör satırda elle girilir, ASAS yenileme sonucu bildirir, aşama taslakları tek güncellemeyle tüm lisanslara yayılır; üretici atlasında harita çekmece gibi açılır ve hizalıdır.",
+    "en": "Quotations and Pricing History merged into one Pricing Desk with an image-based quotation matrix, negotiation rounds, a Price Ledger and classification analysis; authorised users see several buyers on one screen. Collection gains a Compact price view, the Price Drawer and Data Health. License cards became an in-row editable list; the approval map is simpler and the supplier atlas is built from selected rows. Cent-accurate royalty calculations; improved source fields, partial details, Collection inheritance and checklist management. Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed. Licensors are entered in the row, ASAS refresh reports its result, stage templates update every license at once; in the supplier atlas the map opens like a drawer and is aligned."
   },
   "changes": [
+    {
+      "id": "pricing-desk-matrix",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Quotations ve Fiyat Geçmişi tek Fiyat Masası’nda",
+        "en": "Quotations and Pricing History in one Pricing Desk"
+      },
+      "body": {
+        "tr": "Sol menüdeki Fiyat Masası; Masa, Turlar, Geçmiş ve Analiz sekmelerini bir arada sunar. Masa, talebi model görselleriyle model × üretici matrisi olarak gösterir: en iyi teklif, hedef farkı ve olağan dışı fiyat uyarısı hücrededir. Fiyatlar doğrudan yazılır veya Excel’den yapıştırılır; Ctrl+Z son girişi geri alır, hedefin altındaki en iyi teklifler önizlemeyle toplu onaylanır.",
+        "en": "The Pricing Desk in the left menu brings Desk, Rounds, History and Analysis together. The Desk shows a request as a model × manufacturer matrix with model images; best offer, target difference and outlier warnings are in the cell. Prices are typed or pasted from Excel, Ctrl+Z undoes the last entry, and best offers below target can be bulk-approved after a preview."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-matrix.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası: görselli model × üretici teklif matrisi, demo veriler",
+          "en": "Real Buyer Log Pricing Desk: model × manufacturer quotation matrix with images, demo data"
+        },
+        "caption": {
+          "tr": "Görselli teklif matrisi",
+          "en": "Quotation matrix with images"
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-rounds",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Pazarlık turları ve Fiyat Defteri",
+        "en": "Negotiation rounds and Price Ledger"
+      },
+      "body": {
+        "tr": "Yeni Tur, mevcut fiyatların üstüne yazmadan yeni bir pazarlık turu açar. Her fiyat, onay ve drop değişikliği satırın Fiyat Defteri’ne tarih, kişi ve tur bilgisiyle eklenir. Turlar sekmesi talepleri durum şeritlerinde ve her üreticinin tur tur fiyatını (önceki fiyat üstü çizili) gösterir.",
+        "en": "New Round opens a negotiation round without overwriting current prices. Every price, approval and drop change is added to the line’s Price Ledger with date, person and round. The Rounds tab shows requests in status lanes and each manufacturer’s price per round (previous price struck through)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-rounds.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası Turlar sekmesi: durum şeritleri ve tur zaman çizelgesi, demo veriler",
+          "en": "Real Buyer Log Pricing Desk Rounds tab: status lanes and round timeline, demo data"
+        },
+        "caption": {
+          "tr": "Turlar: durum panosu ve pazarlık zaman çizelgesi",
+          "en": "Rounds: status board and negotiation timeline"
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-analysis",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Klasman bazında kim ne fiyat veriyor + ortak buyer görünümü",
+        "en": "Who quotes what by classification + shared buyer view"
+      },
+      "body": {
+        "tr": "Analiz sekmesi klasman, MAG, MMYG veya buyer × üretici ısı matrisi, üretici karnesi ve buyer karşılaştırması sunar; hücre o grubun model ve tekliflerini görselleriyle açar. Görüntüleme yetkisi olan kullanıcı, üst çubuktaki Buyer kapsamından bir veya birden çok buyer’ın verisini aynı ekranda görür; yetki sunucuda denetlenir.",
+        "en": "The Analysis tab offers a classification, MAG, MMYG or buyer × manufacturer heat matrix, a supplier scorecard and a buyer comparison; a cell opens that group’s models and offers with images. Users with view permission can see one or more buyers’ data on the same screen via Buyer scope on the top bar; permission is enforced on the server."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-analysis.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası Analiz sekmesi: klasman × üretici ısı matrisi, iki demo buyer",
+          "en": "Real Buyer Log Pricing Desk Analysis tab: classification × manufacturer heat matrix, two demo buyers"
+        },
+        "caption": {
+          "tr": "Klasman × üretici analizi (çoklu buyer)",
+          "en": "Classification × manufacturer analysis (multi-buyer)"
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-history",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Geçmiş: model başına fiyat trendi",
+        "en": "History: price trend per model"
+      },
+      "body": {
+        "tr": "Geçmiş sekmesi her modeli görseliyle ve üretici bazında fiyat trendiyle gösterir; noktalar Fiyat Defteri olaylarından gelir. Kayıt tablosu ve Benchmark Olarak Uygula aynı sekmede kalır. Eski Fiyat Geçmişi adresi bu sekmeyi açar.",
+        "en": "The History tab shows each model with its image and a per-manufacturer price trend; points come from Price Ledger events. The record table and Apply as Benchmark stay on the same tab. The old Pricing History address opens this tab."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-history.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası Geçmiş sekmesi: görselli model kartları ve fiyat trendleri, demo veriler",
+          "en": "Real Buyer Log Pricing Desk History tab: model cards with images and price trends, demo data"
+        },
+        "caption": {
+          "tr": "Model başına fiyat trendi",
+          "en": "Price trend per model"
+        }
+      }
+    },
+    {
+      "id": "pricing-ledger-safe-merge",
+      "type": "fix",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Aynı talepte birlikte çalışırken fiyat kaybolmaz",
+        "en": "Prices are no longer lost when working together on a request"
+      },
+      "body": {
+        "tr": "Fiyat, onay ve drop artık satır bazında kaydedilir; iki kişi aynı talepte farklı satırları düzenlediğinde ya da iki cihaz eşitlendiğinde biri diğerinin girdiğini ezmez. Başka bir buyer’ın sayfası açıkken kendi teklifinizin fiyatı yanlış satıra yazılmaz; düzenleme yetkisiyle girilen fiyat sahibin Koleksiyon’una yansır.",
+        "en": "Price, approval and drop are now saved per line; when two people edit different lines of the same request or two devices sync, neither overwrites the other. With another buyer’s page open, your own quotation price is no longer written to the wrong row; prices entered with edit permission reach the owner’s Collection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-ledger-safe-merge.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası: model geçmişinde tarih, kişi ve tur bilgisiyle teklifler, demo veriler",
+          "en": "Real Buyer Log Pricing Desk: offers with date, person and round in model history, demo data"
+        },
+        "caption": {
+          "tr": "Satır bazlı kayıt ve kişi/tur izi",
+          "en": "Per-line saving with person/round trail"
+        }
+      }
+    },
+    {
+      "id": "collection-compact-price-view",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kompakt fiyat görünümü ve Veri Sağlığı",
+        "en": "Compact price view and Data Health"
+      },
+      "body": {
+        "tr": "Koleksiyon’da varsayılan Kompakt görünüm teklif, onaylı üretici, hedef farkı ve FOB’u tek Teklif & Onay şeridinde; Overseas/TR Landed ve avantajı Landed Özeti’nde gösterir. Detay ayrı sütunlara, Maliyet royalty, hologram ve landed sütunlarına döner; sütun düzeniniz değişmez, Excel ayrıntılı aktarılır. Veri Sağlığı çipleri kuralı, kuru veya hedefi eksik, teklif ya da onay bekleyen modelleri tek tıkla süzer.",
+        "en": "In Collection the default Compact view shows quotes, approved manufacturer, target difference and FOB in one Quotes & Approval strip, and Overseas/TR Landed with the advantage in Landed Summary. Detail returns to separate columns and Cost shows royalty, hologram and landed columns; your column layout is unchanged and Excel exports the detail. Data Health chips filter models missing a rule, FX or target, or awaiting quotations or approval, with one click."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-compact-price-view.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon: Teklif & Onay şeridi, Fiyat görünümü düğmeleri ve Veri Sağlığı çipleri, demo veriler",
+          "en": "Real Buyer Log Collection: Quotes & Approval strip, Price view buttons and Data Health chips, demo data"
+        },
+        "caption": {
+          "tr": "Teklif & Onay şeridi ve Veri Sağlığı",
+          "en": "Quotes & Approval strip and Data Health"
+        }
+      }
+    },
+    {
+      "id": "collection-price-drawer",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Fiyat Çekmecesi",
+        "en": "Price Drawer"
+      },
+      "body": {
+        "tr": "Teklif & Onay veya Landed Özeti hücresine çift tıklamak modelin görseliyle Fiyat Çekmecesi’ni açar: teklifler ve pazarlık izi, tek tıkla onay, hedef fiyat, Supp. FOB → Royalty/Hologram → Landed maliyet şelalesi ve TR fiyatı/kur/çarpan girişleri. Yazımlar tablo hücreleriyle aynı yoldan geçer; geri alma ve model/renk bağı korunur.",
+        "en": "Double-clicking a Quotes & Approval or Landed Summary cell opens the Price Drawer with the model image: offers and negotiation trail, one-click approval, target price, the Supp. FOB → Royalty/Hologram → Landed cost waterfall and TR price/FX/multiplier inputs. Writes use the same path as table cells, so undo and model/colour links are kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-price-drawer.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon Fiyat Çekmecesi: teklifler, onay ve maliyet şelalesi, demo veriler",
+          "en": "Real Buyer Log Collection Price Drawer: offers, approval and cost waterfall, demo data"
+        },
+        "caption": {
+          "tr": "Model başına tüm fiyat resmi",
+          "en": "The full price picture per model"
+        }
+      }
+    },
+    {
+      "id": "pricing-supplier-excel-import",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Üretici dönüş Excel’i içe aktarma",
+        "en": "Supplier return Excel import"
+      },
+      "body": {
+        "tr": "Fiyat talebi Excel’i gizli satır anahtarı ve Quotation Price sütunu taşır. Üreticinin doldurduğu dosya Masa’ya bırakıldığında satırlar anahtar, PLM ID veya model koduyla eşlenir, üretici dosya adından bulunur; değişiklikler görselli önizlemede gösterilir ve onayla uygulanır. Türkçe başlıklar (Model Adı, Teklif Fiyatı, PLM ID) de tanınır.",
+        "en": "The pricing request Excel carries a hidden row key and a Quotation Price column. When the supplier’s file is dropped on the Desk, rows are matched by key, PLM ID or model code and the manufacturer is detected from the file name; changes are shown in a preview with images and applied on confirmation. Turkish headers (Model Adı, Teklif Fiyatı, PLM ID) are recognised too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-supplier-excel-import.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası: üretici dönüş Excel’i önizlemesi, demo veriler",
+          "en": "Real Buyer Log Pricing Desk: supplier return Excel preview, demo data"
+        },
+        "caption": {
+          "tr": "Dönüş Excel’i önizlemesi",
+          "en": "Supplier Excel preview"
+        }
+      }
+    },
     {
       "id": "checklist-delete-all-users",
       "type": "fix",

@@ -19,6 +19,7 @@ const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, DIRECT_PARSE_MAX
 
 const hybridClock = require('./hlc');
 const emailClockLists = require('./hlc-email-list');
+const quotationLedger = require('./quotation-ledger');
 
 const SCHEMA_VERSION = 3;
 const DEFAULT_DB_NAME = 'BuyerLogLocal.db';
@@ -261,7 +262,10 @@ function newerRevisionMeta(current, incoming) {
    silindi işaretiyle birleşimden düşer. Birleşim değişmeli ve tekrarlanabilir
    olduğu için cihazlar yeniden yayına gerek kalmadan aynı sonuca yakınsar. */
 const DOCUMENT_LIST_MERGE = Object.freeze({
-  'store:quotations.json': { requests: { tombstones: 'deletedRequests' }, deletedRequests: { tombstoneMap: true } },
+  /* Fiyat talebi kayıtları satır bazında birleşir: aynı talebin iki kopyasında
+     ortak satırların durumu satırın kendi updatedAt'ine göre seçilir ve Fiyat
+     Defteri olayları birleşir (bkz. quotation-ledger.js mergeRequestCopies). */
+  'store:quotations.json': { requests: { tombstones: 'deletedRequests', itemMerge: 'quotationRequest' }, deletedRequests: { tombstoneMap: true } },
   'store:email-groups.json': { records: { tombstones: 'deletedRecords' }, deletedRecords: { tombstoneMap: true }, migratedNonDtrNames: { stringSet: true } },
 });
 function mergeTombstoneMaps(a, b) {
@@ -274,12 +278,14 @@ function newerListItem(a, b) {
   if (at !== bt) return at > bt ? a : b;
   return JSON.stringify(a) >= JSON.stringify(b) ? a : b;
 }
-function mergeListById(current, incoming, tombstones = {}) {
+const LIST_ITEM_MERGES = Object.freeze({ quotationRequest: quotationLedger.mergeRequestCopies });
+function mergeListById(current, incoming, tombstones = {}, itemMerge = '') {
   const out = new Map(), extra = [];
+  const merge = LIST_ITEM_MERGES[itemMerge] || newerListItem;
   for (const item of [...(Array.isArray(current) ? current : []), ...(Array.isArray(incoming) ? incoming : [])]) {
     const id = item && typeof item === 'object' ? String(item.id || '') : '';
     if (!id) { extra.push(item); continue; }
-    out.set(id, out.has(id) ? newerListItem(out.get(id), item) : item);
+    out.set(id, out.has(id) ? merge(out.get(id), item) : item);
   }
   return [...out.values()].filter(item => !(tombstones[item.id] && String(tombstones[item.id]) >= String(item.updatedAt || ''))).concat(extra);
 }
@@ -352,7 +358,7 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
     if (listRule && next[key] !== undefined) {
       if (listRule.stringSet) next[key] = [...new Set([...(Array.isArray(next[key]) ? next[key] : []), ...(Array.isArray(value) ? value : [])])].sort();
       else if (listRule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
-      else next[key] = mergeListById(next[key], value, listRule.tombstones ? mergeTombstoneMaps(next[listRule.tombstones], incoming[listRule.tombstones]) : {});
+      else next[key] = mergeListById(next[key], value, listRule.tombstones ? mergeTombstoneMaps(next[listRule.tombstones], incoming[listRule.tombstones]) : {}, listRule.itemMerge);
       fields[key] = Math.max(previousRevision, revision);
       if (writer) writers[key] = writer;
       continue;
@@ -388,7 +394,7 @@ function fieldMerge(current, incoming, revision, baseRevision = null, recordKey 
         if (rule.tombstoneMap) next[key] = mergeTombstoneMaps(next[key], value);
         else {
           const tombstones = rule.tombstones ? mergeTombstoneMaps(next[rule.tombstones], incoming[rule.tombstones]) : {};
-          next[key] = mergeListById(next[key], value, tombstones);
+          next[key] = mergeListById(next[key], value, tombstones, rule.itemMerge);
         }
         fields[key] = Math.max(previousRevision, revision);
         continue;

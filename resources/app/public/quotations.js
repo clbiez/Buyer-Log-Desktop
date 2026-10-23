@@ -62,9 +62,25 @@
         category:qNorm(item.category),colour:qNorm(item.colour),fabric:qNorm(item.fabric),season:qNorm(item.season),
         picture:qNorm(item.picture),inStoreMonth:qNorm(item.inStoreMonth),quantity:qNumOrNull(item.quantity),targetPrice:qNorm(item.targetPrice),
         manufacturer:qNorm(item.manufacturer),manufacturerEmail:qNorm(item.manufacturerEmail),price:qNorm(item.price),approved:!!item.approved,dropped:!!item.dropped,
+        // Fiyat Defteri alanları sunucu tarafından yazılır; istemci yalnız taşır.
+        rev:Number.isFinite(Number(item.rev))&&Number(item.rev)>0?Math.floor(Number(item.rev)):0,updatedAt:qNorm(item.updatedAt),updatedBy:qNorm(item.updatedBy),
+        history:Array.isArray(item.history)?item.history.filter(event=>event&&typeof event==='object'&&event.type).slice(-200):[],
       })).filter(item=>item.modelKey&&item.manufacturer):[],
       sortOrder:Number.isFinite(Number(req?.sortOrder))?Number(req.sortOrder):0,
+      round:Number.isFinite(Number(req?.round))&&Number(req.round)>=1?Math.floor(Number(req.round)):1,
+      rounds:Array.isArray(req?.rounds)?req.rounds.filter(round=>round&&typeof round==='object').slice(-50):[],
     };
+  }
+  /* Satır → talep sahibi. Koleksiyon satır kimlikleri kullanıcı başına 1'den
+     başlar; başka bir buyer'ın talebindeki rowId 5, bakan kişinin kendi 5
+     numaralı satırı DEĞİLDİR. Eşleme bu yüzden daima sahip üzerinden yapılır. */
+  const qItemOwners=new WeakMap();
+  function qTrackOwners(req){(req?.items||[]).forEach(item=>{if(item&&typeof item==='object')qItemOwners.set(item,qNorm(req.ownerId));});return req;}
+  function qLineOwnerId(line){
+    if(!line||typeof line!=='object')return '';
+    if(qItemOwners.has(line))return qItemOwners.get(line);
+    const owner=(qState?.requests||[]).find(req=>(req.items||[]).includes(line));
+    return owner?qNorm(owner.ownerId):'';
   }
 
   function qLoad(){
@@ -72,7 +88,7 @@
     let parsed=null;
     try{parsed=JSON.parse(BLStorage.getItem(STORAGE_KEY)||'null');}catch(e){}
     if(!parsed||!Array.isArray(parsed.requests))parsed={version:2,requests:[]};
-    qState={version:2,requests:parsed.requests.filter(Boolean).map(qNormalizeRequest)};
+    qState={version:2,requests:parsed.requests.filter(Boolean).map(qNormalizeRequest).map(qTrackOwners)};
     return qState;
   }
   function qPersistLocal(){
@@ -104,14 +120,78 @@
    */
   function qReplaceRequest(request){
     const normalized=qNormalizeRequest(request),st=qLoad(),index=st.requests.findIndex(item=>item.id===normalized.id);
-    if(index<0){st.requests.unshift(normalized);qPersistLocal();return normalized;}
+    // Fiyat Defteri kancası (sunucu hâli + bekleyen satır değişiklikleri); bkz. qAfterServerRequest.
+    const after=typeof qAfterServerRequest==='function'?qAfterServerRequest:null;
+    if(index<0){st.requests.unshift(normalized);if(after)after(normalized,normalized);qPersistLocal();return normalized;}
     const existing=st.requests[index];
-    if(existing===normalized){qPersistLocal();return existing;}
+    if(existing===normalized){if(after)after(existing,normalized);qPersistLocal();return existing;}
     // Sunucuda artık bulunmayan alanlar temizlenir, kalanlar üzerine yazılır.
     Object.keys(existing).forEach(key=>{ if(!Object.prototype.hasOwnProperty.call(normalized,key)) delete existing[key]; });
     Object.assign(existing,normalized);
+    if(after)after(existing,normalized);
     qPersistLocal();return existing;
   }
+  function qAfterServerRequest(target,serverCopy){qTrackOwners(target);qRememberServerState(serverCopy);qReapplyPendingLines(target);}
+  /* FİYAT DEFTERİ — satır bazlı kaydetme.
+     qServerState: sunucunun son bildirdiği hâl (satır rev'leri dahil).
+     qExpectedState: sunucu hâli + kuyruktaki değişiklikler; qSave farkı buna
+     göre çıkarır, aynı değişiklik iki kez gönderilmez.
+     qPendingLines: henüz gönderilmemiş satır değişiklikleri. Bir yanıt talebi
+     sunucu hâliyle değiştirdiğinde bu değişiklikler yeniden uygulanır; böylece
+     bir yanıt beklenirken girilen ikinci fiyat ekrandan ve kuyruktan düşmez. */
+  const qServerState=new Map(),qExpectedState=new Map(),qPendingLines=new Map();
+  const qLineStateKeys=['price','approved','dropped'];
+  const qClonePlain=value=>JSON.parse(JSON.stringify(value));
+  function qRememberServerState(req){if(req?.id){qServerState.set(req.id,qClonePlain(req));qExpectedState.set(req.id,qClonePlain(req));}}
+  function qReapplyPendingLines(req){
+    let touched=false;
+    (req?.items||[]).forEach(item=>{const pending=qPendingLines.get(`${req.id}\u0000${item.id}`);if(pending){Object.assign(item,pending.patch);touched=true;}});
+    if(touched)qExpectedState.set(req.id,qClonePlain(req));
+    return req;
+  }
+  const qSamePriceText=(a,b)=>{const x=qMoneyNumber(a),y=qMoneyNumber(b);if(Number.isFinite(x)||Number.isFinite(y))return Number.isFinite(x)&&Number.isFinite(y)&&Math.round(x*10000)===Math.round(y*10000);return qNorm(a)===qNorm(b);};
+  const qRequestShape=req=>JSON.stringify({note:req.note,capacityConfirmed:!!req.capacityConfirmed,manufacturers:req.manufacturers,sortOrder:req.sortOrder,items:(req.items||[]).map(item=>{const copy={...item};['price','approved','dropped','rev','updatedAt','updatedBy','history'].forEach(key=>delete copy[key]);return copy;})});
+  function qPlanSave(req){
+    const base=qExpectedState.get(req.id);
+    if(!base)return {known:false,ops:[],structural:true};
+    const baseItems=new Map((base.items||[]).map(item=>[item.id,item])),ops=[];
+    (req.items||[]).forEach(item=>{
+      const prior=baseItems.get(item.id);if(!prior)return;
+      const patch={};
+      if(!qSamePriceText(prior.price,item.price))patch.price=qNorm(item.price);
+      if(!!prior.dropped!==!!item.dropped)patch.dropped=!!item.dropped;
+      if(!!prior.approved!==!!item.approved)patch.approved=!!item.approved;
+      if(Object.keys(patch).length)ops.push({lineId:item.id,patch});
+    });
+    const structural=qRequestShape(req)!==qRequestShape(base);
+    qExpectedState.set(req.id,qClonePlain(req));
+    return {known:true,ops,structural};
+  }
+  let qConflictNoticeAt=0;
+  function qQueueLineOp(req,op,source){
+    const key=`${req.id}\u0000${op.lineId}`,pending=qPendingLines.get(key);
+    qPendingLines.set(key,{requestId:req.id,lineId:op.lineId,patch:{...(pending?.patch||{}),...op.patch},source:source||pending?.source||'manual'});
+    return qQueue(async()=>{
+      const next=qPendingLines.get(key);if(!next)return;
+      qPendingLines.delete(key);
+      const baseRev=qServerState.get(req.id)?.items?.find(item=>item.id===op.lineId)?.rev;
+      try{
+        const data=await qApi(`/api/quotations/${encodeURIComponent(req.id)}/lines/${encodeURIComponent(op.lineId)}`,{method:'PATCH',body:JSON.stringify({...next.patch,baseRev:baseRev??null,source:next.source})});
+        if(data.request)qReplaceRequest(data.request);
+        (Array.isArray(data.affected)?data.affected:[]).forEach(item=>qReplaceRequest(item));
+        if(data.conflict&&Date.now()-qConflictNoticeAt>4000&&typeof showToast==='function'){
+          qConflictNoticeAt=Date.now();
+          showToast(qLang('Bu satır başka bir kullanıcı tarafından da değiştirilmişti; önceki değer Fiyat Geçmişi’nde saklandı.','This line had also been changed by another user; the previous value is kept in Pricing History.'));
+        }
+      }catch(err){
+        if(typeof showToast==='function')showToast(err?.message||qLang('Fiyat kaydedilemedi.','Price could not be saved.'));
+        if(err?.status===403||err?.status===404||err?.status===422)await qHydrateShared(true);
+      }
+    });
+  }
+  // Kaynak etiketi (matris, yapıştırma, Excel dönüşü…) bir sonraki qSave'deki satır olaylarına geçer.
+  let qNextLineSource='';
+  function qWithLineSource(source,work){const previous=qNextLineSource;qNextLineSource=source;try{return work();}finally{qNextLineSource=previous;}}
   async function qHydrateShared(force=false){
     if(qHydrated&&!force)return qLoad();
     const legacy=qLoad().requests.slice();
@@ -131,13 +211,27 @@
         }
         BLStorage.setItem(MIGRATION_KEY,'1');
       }
-      qState={version:2,requests:(Array.isArray(data.requests)?data.requests:[]).map(qNormalizeRequest)};
+      qState={version:2,requests:(Array.isArray(data.requests)?data.requests:[]).map(qNormalizeRequest).map(qTrackOwners)};
+      qServerState.clear();qExpectedState.clear();
+      qState.requests.forEach(req=>{qRememberServerState(req);qReapplyPendingLines(req);});
       qHydrated=true;qPersistLocal();
+      qProjectForeignLineEdits();
+      qNotifyCollectionQuotes();
     }catch(err){
       qHydrated=true;
       if(typeof showToast==='function')showToast(qLang('Ortak quotation kayıtları yüklenemedi; yerel önbellek gösteriliyor. ','Shared quotations could not be loaded; showing the local cache. ')+(err?.message||''));
     }
     return qLoad();
+  }
+  /* Koleksiyon'daki Teklif & Onay şeridi / Veri Sağlığı açık teklif sayısını
+     quotation verisinden okur. Ortak veri değiştiyse (talep kimliği/güncelleme
+     zamanı imzası) ve Koleksiyon açıksa tablo bir kez tazelenir. */
+  let qCollectionQuoteSignature='';
+  function qNotifyCollectionQuotes(){
+    const signature=qLoad().requests.map(req=>`${req.id}:${req.updatedAt||''}:${req.status||''}`).join('|');
+    if(signature===qCollectionQuoteSignature)return;
+    qCollectionQuoteSignature=signature;
+    if(typeof renderKol==='function'&&document.body?.dataset?.activeTab==='koleksiyon')renderKol();
   }
   function qQueue(task){
     qSaveQueue=qSaveQueue.then(task,task);
@@ -147,9 +241,24 @@
     qPersistLocal();
     const list=(Array.isArray(requests)?requests:[requests]).filter(Boolean);
     if(!list.length)return true;
+    const structural=[];
+    // Fiyat/onay/drop değişiklikleri satır olayı olarak gider (PATCH); yalnız
+    // talep alanı (not, kapasite, üretici, satır kümesi) değiştiyse tam kayıt
+    // yapılır. Fark çağrı anında çıkarılır: sonradan gelen bir yanıt bu
+    // değişikliği ezemez.
+    list.forEach(req=>{
+      const plan=qPlanSave(req);
+      plan.ops.forEach(op=>qQueueLineOp(req,op,qNextLineSource));
+      if(plan.structural)structural.push(req);
+    });
+    if(!structural.length)return true;
     qQueue(async()=>{
-      for(const req of list){
-        try{const data=await qApi(`/api/quotations/${encodeURIComponent(req.id)}`,{method:'PUT',body:JSON.stringify(req)});if(data.request)qReplaceRequest(data.request);}
+      for(const req of structural){
+        // Her satır, bilinen son sunucu revizyonuyla gönderilir: başka bir
+        // kullanıcının bu arada girdiği fiyat bu kayıtla ezilmez.
+        const known=new Map((qServerState.get(req.id)?.items||[]).map(item=>[item.id,item.rev||0]));
+        const body={...req,items:(req.items||[]).map(item=>known.has(item.id)?{...item,rev:known.get(item.id)}:item)};
+        try{const data=await qApi(`/api/quotations/${encodeURIComponent(req.id)}`,{method:'PUT',body:JSON.stringify(body)});if(data.request)qReplaceRequest(data.request);}
         catch(err){if(typeof showToast==='function')showToast((err?.message||qLang('Quotation kaydedilemedi.','Quotation could not be saved.')));if(err?.status===403)await qHydrateShared(true);}
       }
     });
@@ -227,24 +336,90 @@
     }catch(e){}
   }
 
+  /* Talep sahibinin Koleksiyon satırları. Yüklü Koleksiyon sayfası o sahibin
+     sayfasıysa (veya ortak sayfa / çoklu görünüm) kolRows kullanılır; değilse
+     Fiyat Masası'nın salt okunur sahip önbelleğine bakılır. Hiçbiri yoksa
+     null döner: başka bir sahibin satırı ASLA eşlenmez. Bağlam bilinmiyorsa
+     (eski kurulum / test) eski davranış korunur. */
+  const qRowCollections=new WeakMap();
+  function qLoadedWorkspaceOwner(){return typeof kolWorkspaceOwnerId!=='undefined'?qNorm(kolWorkspaceOwnerId):'';}
+  function qLoadedWorkspaceMode(){return typeof kolWorkspaceMode!=='undefined'?String(kolWorkspaceMode||''):'';}
+  function qSharedWorkspaceMode(){return typeof kolWorkspaceSharedMode!=='undefined'&&Boolean(kolWorkspaceSharedMode);}
+  function qRowsForOwner(ownerId){
+    const loaded=typeof kolRows!=='undefined'&&Array.isArray(kolRows)?kolRows:null;
+    const owner=qNorm(ownerId),loadedOwner=qLoadedWorkspaceOwner();
+    if(!owner||!loadedOwner)return loaded?{rows:loaded,idOf:row=>row.id}:null;
+    if(loaded&&qLoadedWorkspaceMode()==='multi')return {rows:loaded.filter(row=>qNorm(row._collectionOwnerId)===owner),idOf:row=>row._collectionSourceId??row.id,all:loaded};
+    if(loaded&&(loadedOwner===owner||qSharedWorkspaceMode()))return {rows:loaded,idOf:row=>row.id};
+    const cached=window.BLPricingDesk?.ownerRows?.(owner);
+    return Array.isArray(cached)?{rows:cached,idOf:row=>row.id}:null;
+  }
   function qFindCollectionRow(line){
-    if(typeof kolRows==='undefined' || !Array.isArray(kolRows)) return null;
+    const scope=qRowsForOwner(qLineOwnerId(line));
+    if(!scope) return null;
+    const rows=scope.rows,idOf=scope.idOf;
+    let found=null;
     if(Number.isFinite(Number(line.rowId))){
-      const byId=kolRows.find(r=>Number(r.id)===Number(line.rowId)); if(byId) return byId;
+      found=rows.find(r=>Number(idOf(r))===Number(line.rowId))||null;
     }
-    if(line.orderCode){
-      const byCode=kolRows.find(r=>qNorm(r._sourceOrderCode).toLocaleLowerCase('tr-TR')===line.orderCode.toLocaleLowerCase('tr-TR'));
-      if(byCode) return byCode;
+    if(!found&&line.orderCode){
+      found=rows.find(r=>qNorm(r._sourceOrderCode).toLocaleLowerCase('tr-TR')===line.orderCode.toLocaleLowerCase('tr-TR'))||null;
     }
-    return null;
+    if(found)qRowCollections.set(found,scope.all||rows);
+    return found;
+  }
+
+  /* Koleksiyon Veri Sağlığı / Teklif & Onay şeridi için satır başına açık
+     teklif durumu. Her sahip kapsamı için bir kimlik dizini kurulur; satır
+     başına tarama yapılmaz. Kapalı talepler ve drop edilen satırlar sayılmaz.
+     Dönen WeakMap Koleksiyon satır nesnesiyle anahtarlanır. */
+  function collectionQuoteIndex(){
+    const out=new WeakMap(),scopes=new Map();
+    const loaded=typeof kolRows!=='undefined'&&Array.isArray(kolRows)?new Set(kolRows):null;
+    if(!loaded)return out;
+    qLoad().requests.forEach(req=>{
+      if(req.status==='closed')return;
+      (req.items||[]).forEach(line=>{
+        if(line.dropped)return;
+        const owner=qLineOwnerId(line);
+        if(!scopes.has(owner)){
+          const scope=qRowsForOwner(owner),byId=new Map();
+          if(scope)scope.rows.forEach(row=>{if(loaded.has(row))byId.set(Number(scope.idOf(row)),row);});
+          scopes.set(owner,byId);
+        }
+        const row=scopes.get(owner).get(Number(line.rowId));
+        if(!row)return;
+        const entry=out.get(row)||{waiting:0,offers:0,approved:0,requestIds:new Set()};
+        if(qValidPrice(line.price))entry.offers++;else entry.waiting++;
+        if(line.approved===true)entry.approved++;
+        entry.requestIds.add(req.id);
+        out.set(row,entry);
+      });
+    });
+    return out;
   }
 
   function qCollectionEffectiveValue(row,key){
     try{
       const api=window.BLCollectionModelGroups;
-      if(api?.effectiveValue&&typeof kolRows!=='undefined'&&Array.isArray(kolRows))return api.effectiveValue(row,key,kolRows);
+      const rows=row&&qRowCollections.get(row)||(typeof kolRows!=='undefined'&&Array.isArray(kolRows)?kolRows:null);
+      if(api?.effectiveValue&&rows)return api.effectiveValue(row,key,rows);
     }catch(_){ }
     return row?.[key];
+  }
+  /* Quotation satırı Koleksiyon'a ancak satırı taşıyan sayfa talep sahibinin
+     yüklü ve düzenlenebilir sayfasıysa yazılır. Böylece (1) sahibin Koleksiyon
+     sayfasını düzenleme yetkisiyle açmış editörün girdiği fiyat da sahibin
+     Koleksiyon'una yansır; (2) başka bir buyer'ın sayfası açıkken kendi
+     teklifimin fiyatı aynı numaralı yabancı satıra yazılmaz. */
+  function qCanProjectToCollection(req){
+    if(!req)return false;
+    const loadedOwner=qLoadedWorkspaceOwner();
+    if(!loadedOwner)return req.ownerId===qCurrentUserId();
+    if(typeof kolWorkspaceCanEdit!=='undefined'&&!kolWorkspaceCanEdit)return false;
+    if(qLoadedWorkspaceMode()==='multi')return false;
+    if(qSharedWorkspaceMode())return req.ownerId===qCurrentUserId();
+    return loadedOwner===qNorm(req.ownerId);
   }
 
   function qCollectionImageSrc(row,item=null){
@@ -511,7 +686,7 @@
   }
 
   function qWritePriceToCollection(req,line,{save=true}={}){
-    if(!req||req.ownerId!==qCurrentUserId())return false;
+    if(!req||!qCanProjectToCollection(req))return false;
     let row=qFindCollectionRow(line); if(!row) return false;
     const manufacturer=qNorm(line.manufacturer); if(!manufacturer)return false;
     const pricing=qCollectionPricingMap(row);
@@ -596,6 +771,50 @@
       changed++;
     });
     if(changed&&typeof saveKolRows==='function')saveKolRows();
+    return changed;
+  }
+
+  /* Sahibin istemcisinde uzlaştırma: editör (veya başka cihaz) sahibin talep
+     satırında fiyat/onay/drop değiştirdiyse, sahip Koleksiyon'unu açtığında bu
+     değişiklik Koleksiyon'a bir kez yansıtılır. Her satırın yansıtılan son
+     değişiklik zamanı saklanır; sahibin Koleksiyon'da sonradan yaptığı elle
+     düzeltme her açılışta geri alınmaz. Yalnız sunucu defterinde değişikliği
+     başka bir kullanıcıya ait görünen satırlar işlenir. */
+  const PROJECTED_KEY='lcw.quotations.projectedLineEdits.v1';
+  function qProjectForeignLineEdits(){
+    if(typeof kolRows==='undefined'||!Array.isArray(kolRows)||!kolRows.length)return 0;
+    let raw=null;try{raw=BLStorage.getItem(PROJECTED_KEY);}catch(_){raw=null;}
+    let stamps={};try{stamps=JSON.parse(raw||'{}')||{};}catch(_){stamps={};}
+    /* Yalnız talep SAHİBİNİN istemcisi yansıtır: düzenleyicinin kendi girdiği
+       fiyat sahibin Koleksiyon'una zaten qWritePriceToCollection ile yazılır;
+       düzenleyici istemcisinin sahibin eski kayıtlarını yeniden yazması, sahibin
+       Koleksiyon'da elle yaptığı düzeltmeyi ezerdi. Bu cihazdaki ilk çalışmada
+       mevcut kayıtlar yalnız işaretlenir (yeni cihaz eski değerleri geri yazmaz). */
+    const me=qCurrentUserId(),firstRun=raw==null;let changed=0,dirty=false;
+    const pending=new Map();
+    qLoad().requests.forEach(req=>{
+      if(req.source!=='collection'||qNorm(req.ownerId)!==me||!qCanProjectToCollection(req))return;
+      (req.items||[]).forEach(item=>{
+        const at=qNorm(item.updatedAt),by=qNorm(item.updatedBy);
+        if(!at||!by||by===me)return;
+        if(String(stamps[item.id]||'')>=at)return;
+        stamps[item.id]=at;dirty=true;
+        if(firstRun)return;
+        /* Aynı model × üretici için birden çok talep olabilir (yeniden teklif).
+           Yalnız en yeni satır yansıtılır; eşit zamanda onaylı olan kazanır.
+           Böylece eski talepteki satır yeni onayı ve fiyatı geri almaz. */
+        const key=`${qNorm(item.rowId)}|${qNorm(item.manufacturer).toLocaleLowerCase('tr-TR')}`;
+        const prev=pending.get(key);
+        const newer=!prev||at>prev.at||(at===prev.at&&item.approved===true&&prev.item.approved!==true);
+        if(newer)pending.set(key,{req,item,at});
+      });
+    });
+    [...pending.values()].sort((a,b)=>a.at.localeCompare(b.at)).forEach(({req,item})=>{if(qWritePriceToCollection(req,item,{save:false}))changed++;});
+    if(dirty){
+      const entries=Object.entries(stamps).sort((a,b)=>String(b[1]).localeCompare(String(a[1]))).slice(0,5000);
+      try{BLStorage.setItem(PROJECTED_KEY,JSON.stringify(Object.fromEntries(entries)));}catch(_){}
+    }else if(firstRun){try{BLStorage.setItem(PROJECTED_KEY,'{}');}catch(_){}}
+    if(changed){if(typeof saveKolRows==='function')saveKolRows();qRefreshCollection();}
     return changed;
   }
 
@@ -855,7 +1074,9 @@
 
   function qVisibleRequests(source,query=''){
     const terms=parseTableSearchTerms(query);
-    return qLoad().requests.filter(req=>req.source===source).filter(req=>qRequestMatchesStatus(req)).filter(req=>{
+    // Fiyat Masası buyer kapsamı (Ben / seçili buyer'lar / tümü). Masa yüklü değilse herkes görünür (eski davranış).
+    const scope=window.BLPricingDesk?.scopeAllows;
+    return qLoad().requests.filter(req=>req.source===source).filter(req=>qRequestMatchesStatus(req)).filter(req=>typeof scope!=='function'||scope(req)).filter(req=>{
       if(!terms.length)return true;
       const hay=[qRequestTitle(req),qDate(req.createdAt),qOwnerLabel(req),qStatusLabel(req.status),...req.items.flatMap(i=>[i.modelCode,i.plmId,i.orderCode,i.manufacturer,i.license,qItemCategory(req,i)])].join(' ').toLocaleLowerCase('tr-TR');
       return tableSearchMatches(hay,terms,{plainMode:'contains'});
@@ -1157,6 +1378,9 @@
     if(!req){delete host.dataset.quotationRequestId;host.innerHTML=`<div class="quotationEmpty">${qEsc(qLang('Sol panelden bir fiyat çalışması seç.','Select a quotation request from the left panel.'))}</div>`;return;}
     host.dataset.quotationRequestId=req.id;
     const tableState=qTableState(req), visibleItems=qVisibleTableItems(req);
+    // Fiyat Masası: Koleksiyon talepleri varsayılan olarak model × üretici matrisinde açılır.
+    const desk=window.BLPricingDesk,matrixMode=Boolean(qWorkspaceMounted&&desk?.renderMatrix&&desk.detailView?.(req)==='matrix');
+    const viewToggle=qWorkspaceMounted&&desk?.renderMatrix?`<div class="pdViewToggle" role="group" aria-label="${qEsc(qLang('Görünüm','View'))}"><button type="button" data-pd-view="matrix" aria-pressed="${matrixMode?'true':'false'}" class="${matrixMode?'isActive':''}">${qEsc(qLang('Matris','Matrix'))}</button><button type="button" data-pd-view="list" aria-pressed="${matrixMode?'false':'true'}" class="${matrixMode?'':'isActive'}">${qEsc(qLang('Liste','List'))}</button></div>`:'';
     const supplierCount=new Set(req.items.map(item=>item.manufacturer)).size;
     const approvedCount=new Set(req.items.filter(item=>item.approved).map(item=>item.modelKey)).size;
     const requestCanEdit=qCanEditRequest(req),contentCanEdit=requestCanEdit,canManageAccess=qCanManageAccess(req),canDelete=qCanDeleteRequest(req);
@@ -1204,7 +1428,7 @@
     const workspaceActions=qWorkspaceMounted&&req.source==='collection'?`<button type="button" class="tbtn quotationReminderBtn" data-q-send-reminder ${reminderDisabled?'disabled':''} title="${qEsc(reminderManufacturers?qLang(`${reminderManufacturers} üreticiden fiyat bekleniyor`,`${reminderManufacturers} manufacturer(s) are awaiting quotation`):qLang('Fiyatı beklenen üretici yok','No manufacturer is awaiting quotation'))}"><svg class="ic"><use href="#i-mail"/></svg>${qEsc(qLang('Hatırlatma Gönder','Send Reminder'))}${reminderManufacturers?` <span class="quotationActionCount">${reminderManufacturers}</span>`:''}</button><button type="button" class="tbtn" data-q-open-collection><svg class="ic"><use href="#i-hanger"/></svg>${qEsc(qLang('Koleksiyonda Aç','Open in Collection'))}</button><button type="button" class="tbtn" data-q-open-history><svg class="ic"><use href="#i-chart-histogram"/></svg>${qEsc(qLang('Fiyat Geçmişi','Pricing History'))}</button>`:'';
     host.innerHTML=`<div class="quotationDetailHead">
         <div class="quotationDetailIdentity"><div class="quotationTitleLine"><h3>${qEsc(qRequestTitle(req))}</h3>${statusControl}</div><p>${qEsc(qDate(req.createdAt))} · ${qEsc(req.manufacturers.map(m=>m.name).join(', '))}</p><p class="quotationOwnership"><strong>${qEsc(qLang('Kayıt sahibi','Owner'))}:</strong> ${qEsc(qOwnerLabel(req))} · ${qEsc(permissionText)}</p></div>
-        <div class="quotationHeadActions"><div class="quotationSummary"><span class="quotationSummaryChip">${qEsc(qLang(`${qModelCount(req)} model`,`${qModelCount(req)} models`))}</span><span class="quotationSummaryChip">${qEsc(qLang(`${supplierCount} üretici`,`${supplierCount} manufacturers`))}</span><span class="quotationSummaryChip">${qEsc(qLang(`${approvedCount} onay`,`${approvedCount} approvals`))}</span>${visibleItems.length!==req.items.length?`<span class="quotationSummaryChip">${qEsc(qLang(`${visibleItems.length}/${req.items.length} satır`,`${visibleItems.length}/${req.items.length} rows`))}</span>`:''}</div>${reopenDraftAction}${plmSyncAction}${workspaceActions}${canManageAccess?`<button type="button" class="tbtn quotationAccessBtn" data-manage-quotation-access title="${qEsc(qLang('Bu quotation için düzenleme yetkisi ver','Grant editing permission for this quotation'))}"><svg class="ic"><use href="#i-users-group"/></svg>${qEsc(qLang('Düzenleme Yetkisi','Editing Permission'))}</button>`:''}<button type="button" class="tbtn quotationExportBtn" data-export-quotation="${qEsc(req.id)}" title="${qEsc(qLang('Bu fiyat çalışmasını Excel’e aktar','Export this quotation request to Excel'))}"><svg class="ic"><use href="#i-file-export"/></svg>${qEsc(qLang('Excel’e Aktar','Export to Excel'))}</button>${activeFilterCount?`<button type="button" class="tbtn quotationClearFilters" title="${qEsc(qLang('Tüm tablo filtrelerini kaldır','Remove all table filters'))}">${qEsc(qLang('Filtreleri Temizle','Clear Filters'))}</button>`:''}<button type="button" class="todoDeleteBtn quotationDeleteBtn" data-delete-quotation="${qEsc(req.id)}" ${canDelete?'':'disabled'} title="${qEsc(canDelete?qLang('Fiyat çalışmasını sil','Delete quotation request'):qLang('Yalnız kayıt sahibi silebilir','Only the owner can delete'))}" aria-label="${qEsc(qLang('Fiyat çalışmasını sil','Delete quotation request'))}"><svg class="ic"><use href="#i-trash"/></svg></button></div>
+        <div class="quotationHeadActions">${viewToggle}<div class="quotationSummary"><span class="quotationSummaryChip">${qEsc(qLang(`${qModelCount(req)} model`,`${qModelCount(req)} models`))}</span><span class="quotationSummaryChip">${qEsc(qLang(`${supplierCount} üretici`,`${supplierCount} manufacturers`))}</span><span class="quotationSummaryChip">${qEsc(qLang(`${approvedCount} onay`,`${approvedCount} approvals`))}</span>${visibleItems.length!==req.items.length?`<span class="quotationSummaryChip">${qEsc(qLang(`${visibleItems.length}/${req.items.length} satır`,`${visibleItems.length}/${req.items.length} rows`))}</span>`:''}</div>${reopenDraftAction}${plmSyncAction}${workspaceActions}${canManageAccess?`<button type="button" class="tbtn quotationAccessBtn" data-manage-quotation-access title="${qEsc(qLang('Bu quotation için düzenleme yetkisi ver','Grant editing permission for this quotation'))}"><svg class="ic"><use href="#i-users-group"/></svg>${qEsc(qLang('Düzenleme Yetkisi','Editing Permission'))}</button>`:''}<button type="button" class="tbtn quotationExportBtn" data-export-quotation="${qEsc(req.id)}" title="${qEsc(qLang('Bu fiyat çalışmasını Excel’e aktar','Export this quotation request to Excel'))}"><svg class="ic"><use href="#i-file-export"/></svg>${qEsc(qLang('Excel’e Aktar','Export to Excel'))}</button>${activeFilterCount?`<button type="button" class="tbtn quotationClearFilters" title="${qEsc(qLang('Tüm tablo filtrelerini kaldır','Remove all table filters'))}">${qEsc(qLang('Filtreleri Temizle','Clear Filters'))}</button>`:''}<button type="button" class="todoDeleteBtn quotationDeleteBtn" data-delete-quotation="${qEsc(req.id)}" ${canDelete?'':'disabled'} title="${qEsc(canDelete?qLang('Fiyat çalışmasını sil','Delete quotation request'):qLang('Yalnız kayıt sahibi silebilir','Only the owner can delete'))}" aria-label="${qEsc(qLang('Fiyat çalışmasını sil','Delete quotation request'))}"><svg class="ic"><use href="#i-trash"/></svg></button></div>
       </div>
       <div class="quotationMetaStrip">
         <button type="button" class="quotationNoteTrigger${noteValue?' hasValue':''}" data-quotation-note title="${qEsc(qLang('Quotation notunu aç','Open quotation note'))}">
@@ -1215,9 +1439,11 @@
           <span aria-hidden="true">✓</span><b>Capacity Confirmed</b>
         </label>
       </div>
-      <div class="quotationTableWrap"><table class="quotationTable" style="width:${tableWidth}px;min-width:${tableWidth}px"><colgroup>${columnGroup}</colgroup><thead><tr>${headers}</tr></thead><tbody>${rows||`<tr><td colspan="${qTableCols.length}"><div class="quotationFilteredEmpty">${qEsc(qLang('Seçili filtrelere uyan satır yok.','No rows match the selected filters.'))}</div></td></tr>`}</tbody></table></div>
+      ${matrixMode?`<div class="quotationTableWrap pdMatrixWrap" data-pd-matrix></div>`:`<div class="quotationTableWrap"><table class="quotationTable" style="width:${tableWidth}px;min-width:${tableWidth}px"><colgroup>${columnGroup}</colgroup><thead><tr>${headers}</tr></thead><tbody>${rows||`<tr><td colspan="${qTableCols.length}"><div class="quotationFilteredEmpty">${qEsc(qLang('Seçili filtrelere uyan satır yok.','No rows match the selected filters.'))}</div></td></tr>`}</tbody></table></div>`}
       ${(!requestCanEdit?`<div class="quotationCpNotice">${qEsc(qLang(`Bu kayıt ${qOwnerLabel(req)} tarafından oluşturuldu. Görüntüleyebilirsiniz; düzenleme için kayıt sahibinin yetki vermesi gerekir.`,`This record was created by ${qOwnerLabel(req)}. You can view it; the owner must grant editing permission.`))}</div>`:(req.source==='cp'?`<div class="quotationCpNotice">${qEsc(qLang('CP quotation kayıtları takip amaçlıdır. Buradaki fiyat ve onay değişiklikleri CP tablosuna geri aktarılmaz.','CP quotations are for tracking. Price and approval changes here are not written back to the CP table.'))}</div>`:''))}`;
     qBindDetail(req);
+    host.querySelectorAll('[data-pd-view]').forEach(button=>button.addEventListener('click',()=>{qCommitActivePriceInput(req,host);window.BLPricingDesk?.setDetailView?.(req,button.dataset.pdView);qRenderDetail();}));
+    if(matrixMode)desk.renderMatrix(host.querySelector('[data-pd-matrix]'),req);
     if(req.source==='collection'){
       window.BLDetailImages?.bindModelImagesButton?.('quotationDetailPlmSync');
       window.BLDetailImages?.registerScope?.(host,{contextType:'quotations-detail',label:qLang('Quotation Detayı','Quotation Detail'),identities:visibleItems.map((item,index)=>{const row=qFindCollectionRow(item);return {plmId:item.plmId||row?.plmId||'',styleName:item.modelCode||row?.modelKod||'',colourCode:row?.colourCode||'',colour:row?.colour||'',rowId:item.id||String(index),hasImage:null};}),repaint:qRenderDetail});
@@ -1283,7 +1509,7 @@
     if(!qCanEditLine(req,line)){qViewOnlyNotice(req);return;}
     if(!qValidPrice(line.price)){if(typeof showToast==='function')showToast(qLang('Onaylamak için önce geçerli bir teklif fiyatı gir.','Enter a valid quotation price before approval.'));return;}
     const affected=new Set(window.BLPricingWorkspaceEngine.approveQuotationLine(qLoad().requests,req,line,!line.approved,qCanEditRequest));affected.forEach(request=>request.updatedAt=qNow());
-    if(req.source==='collection'&&req.ownerId===qCurrentUserId()){
+    if(req.source==='collection'&&qCanProjectToCollection(req)){
       const row=qFindCollectionRow(line);
       if(row){
         window.BLPricingWorkspaceEngine.applyApprovedPrice(row,line,qMoneyDisplay,qNorm);
@@ -2546,7 +2772,7 @@
     host.querySelector('[data-ph-export]')?.addEventListener('click',async event=>{const btn=event.currentTarget;btn.disabled=true;try{const data=qHistoryFilters(qhCollect(qHistoryRowsFromContext(qPricingHistoryRows)),host),pivot=qhPivot(data);await qhExportExcel(pivot.models,pivot.manufacturers,'ranked');}finally{btn.disabled=false;}});
     qRenderPricingHistory(host);return true;
   }
-  async function openPricingHistoryWorkspace(rows=null,context={}){if(Array.isArray(rows)&&rows.length)qPricingHistoryRows=rows;qPricingHistorySelected=context.requestId&&context.itemId?`${context.requestId}:${context.itemId}`:null;if(typeof switchTab==='function')switchTab('pricinghistory');return true;}
+  async function openPricingHistoryWorkspace(rows=null,context={}){if(Array.isArray(rows)&&rows.length){qPricingHistoryRows=rows;window.BLPricingDesk?.setHistoryContext?.(rows);}qPricingHistorySelected=context.requestId&&context.itemId?`${context.requestId}:${context.itemId}`:null;if(typeof switchTab==='function')switchTab('pricinghistory');return true;}
 
   function syncCollectionPricingUI(){
     // Collection V3 is intentionally spreadsheet-first. Pricing Workspace V2
@@ -2567,5 +2793,33 @@
     return true;
   }
 
-  window.BL_QUOTATIONS={openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
+  /* Fiyat Masası iç API'si (pricing-desk.js). Masa, Turlar, Geçmiş ve Analiz
+     ekranları quotation verisine ve işlemlerine yalnız bu yüzeyden erişir;
+     fiyat/onay/drop yazımı aynı kanonik yoldan (qApplyPrice/qToggleApproval/
+     qToggleDrop → Fiyat Defteri satır olayı) geçer. */
+  const qDeskApi={
+    ready:()=>qReady,hydrate:(force=true)=>qHydrateShared(force),flush:()=>qFlushSaves(),
+    requests:()=>qLoad().requests,profiles:()=>qProfiles,currentUserId:qCurrentUserId,isModerator:qIsModerator,
+    canEdit:qCanEditRequest,canManage:qCanManageAccess,findRow:qFindCollectionRow,rowValue:qCollectionEffectiveValue,
+    imageSrc:qCollectionImageSrc,thumb:qCachedModelThumb,itemCategory:qItemCategory,itemTarget:qItemTargetPrice,itemFabric:qItemFabric,
+    targetDelta:qTargetDelta,ownerLabel:qOwnerLabel,profileName:qProfileName,requestTitle:qRequestTitle,workspaceTitle:qWorkspaceRequestTitle,
+    moneyDisplay:qMoneyDisplay,moneyNumber:qMoneyNumber,validPrice:qValidPrice,date:qDate,lineOwnerId:qLineOwnerId,
+    applyPrice(req,line,value,source='matrix'){if(!req||!line||!qCanEditLine(req,line)){qViewOnlyNotice(req);return null;}return qWithLineSource(source,()=>qApplyPrice(req,line,value));},
+    setApproval(req,line,approved,source='matrix'){if(!req||!line||(line.approved===true)===Boolean(approved))return false;qWithLineSource(source,()=>qToggleApproval(req,line));return true;},
+    toggleDrop(req,line,source='matrix'){return qWithLineSource(source,()=>qToggleDrop(req,line));},
+    async startRound(req,note=''){
+      if(!req||!qCanEditRequest(req)){qViewOnlyNotice(req);return null;}
+      await qFlushSaves();
+      try{const data=await qApi(`/api/quotations/${encodeURIComponent(req.id)}/rounds`,{method:'POST',body:JSON.stringify({note:qNorm(note).slice(0,1000)})});return qReplaceRequest(data.request||req);}
+      catch(err){if(typeof showToast==='function')showToast(err?.message||qLang('Yeni tur başlatılamadı.','New round could not be started.'));return null;}
+    },
+    selectRequest(id){qActiveId=id||null;qWorkspaceSelectedLineId='';},activeRequestId:()=>qActiveId,activeRequest:()=>qActiveRequest(),
+    setStatusFilter(key){qStatusFilter=key||'active';},
+    renderDetail:()=>qRenderDetail(),renderAll:()=>qRenderWorkspaceAll(document.getElementById('quotationSearch')?.value||''),
+    reminder:req=>qOpenReminder(req),applyBenchmark:record=>qApplyHistoryBenchmark(record),
+    commitActive:host=>qCommitActivePriceInput(qActiveRequest(),host),
+    mountWorkspace:(host,options)=>mountWorkspace(host,options),mountHistoryTable:(host,options)=>mountPricingHistory(host,options),
+    isWorkspaceMounted:()=>qWorkspaceMounted,
+  };
+  window.BL_QUOTATIONS={collectionQuoteIndex,openPriceHistory,openPricingHistoryWorkspace,mountPricingHistory,mountWorkspace,openWorkspaceFromCollection,openSendToPricing,syncCollectionPricingUI,recordRequest,recordManualCollectionPrice,open:openModal,save:qSave,refresh:()=>qHydrateShared(true),renameManufacturer,syncModelFields,setPrice,toggleApproval,findCollectionLine,updateCollectionLine,sendReminder(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qOpenReminder(req):false;},toggleDrop(requestId,lineId){const req=qLoad().requests.find(r=>r.id===requestId),line=req?.items.find(x=>x.id===lineId);return req&&line?qToggleDrop(req,line):false;},desk:qDeskApi,exportRequest(requestId){const req=qLoad().requests.find(r=>r.id===requestId);return req?qExportRequest(req):false;},moveRequest:qMoveRequest,deleteRequest:qDeleteRequest};
 })();

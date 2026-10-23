@@ -122,7 +122,10 @@ test('dependent In Store -> Retail writes respect linked/override ownership',()=
 });
 
 test('manufacturer price approve cannot bypass pricing override storage',()=>{
-  const render=between(APP,"tbody.querySelectorAll('.kolPriceApprove')","tbody.querySelectorAll('.kolPriceCell')");
+  // v2026-10-22: tablo ✓ ve Fiyat Çekmecesi aynı onay yardımcısını kullanır.
+  const binding=between(APP,"tbody.querySelectorAll('.kolPriceApprove')","tbody.querySelectorAll('.kolPriceCell')");
+  assert.match(binding,/kolToggleConfirmedManufacturer\(row,m,/,'table approval must use the shared approval helper');
+  const render=between(APP,'function kolToggleConfirmedManufacturer(','function kolApplyCollectionCellChange(');
   assert.match(render,/kolCellLinkedToModel\(row,`pricing:\$\{m\}`\)/,'linked child price approval must not silently write raw row pricing');
   assert.match(render,/const effectivePricing=kolEffectivePricing\(row\)/);
   assert.match(render,/row=kolWriteGroupedStorageValue\(row,'pricing',\{\.\.\.effectivePricing,\[m\]:raw\}\)/,'approval must update the same canonical pricing override/shared value');

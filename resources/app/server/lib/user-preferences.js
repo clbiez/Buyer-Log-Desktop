@@ -49,6 +49,9 @@ const WORKSPACE_CATEGORY_PREFIXES = Object.freeze({
   columns: Object.freeze([
     'lcw.table.columnState.', 'lcw.freeze.', 'lcw.backlog.columnWidths.',
     'lcw.quotations.columnWidths.', 'lcw.koleksiyon.colState.',
+    // v2026-10-22 — Koleksiyon fiyat görünümü (Kompakt/Detay/Maliyet) ve Fiyat Masası
+    // sekme/kapsam/görünüm tercihleri; istemcinin SYNCED listesiyle aynı.
+    'lcw.koleksiyon.priceView.', 'lcw.pricingDesk.',
     'lcw.koleksiyon.pricingExcelColumns.', 'bl.backlog.excelColumns.',
     'bl.detailTables.showImages.', 'lcw.cp.imageSize.',
     // v7.28 — hesaplanan (formül) sütun tanımları. "columns" kategorisinde

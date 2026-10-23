@@ -129,7 +129,7 @@
     // email-groups.js deferredUi ile AYNI adla listelenir; loadScript tek kez yükler.
     manufacturers:['manufacturer-cards-engine.js?rev=1','email-groups.js?rev=2','manufacturers.js?rev=1'],
     licensecards:['license-cards-engine.js?rev=4','license-atlas-engine.js?rev=2','license-supplier-atlas.js?rev=3','license-map-editor.js?rev=1','license-cards.js?rev=7'],
-    collectionTools:['pricing-workspace-engine.js?rev=2','quotations.js?rev=4','collection-analytics-engine.js','price-supplier-insights-engine.js','price-supplier-analysis.js'],
+    collectionTools:['pricing-workspace-engine.js?rev=2','quotations.js?rev=5','pricing-desk-engine.js?rev=1','pricing-desk.js?rev=1','collection-analytics-engine.js','price-supplier-insights-engine.js','price-supplier-analysis.js'],
     // v9.46 — Backlog teslimat riski analizi. Sıra önemli: iki saf motor
     // görünüm katmanından ÖNCE yüklenir (görünüm ikisini de window'dan okur).
     // order-decision-engine.js index.html'de eager yüklenir; burada yeniden

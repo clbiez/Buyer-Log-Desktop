@@ -19,7 +19,7 @@ test('Send to Pricing is the first Tools action and Quotations/Pricing History s
   assert.ok(menu.indexOf('id="kolSendPricingBtn"')<menu.indexOf('id="kolLicenseRoyaltyBtn"'));
   assert.match(menu,/kolSendPricingBtn[\s\S]*toolbarMoreDivider[\s\S]*kolLicenseRoyaltyBtn/);
   assert.doesNotMatch(menu,/kolQuotationsBtn|kolPriceHistoryBtn/);
-  assert.match(html,/data-tab="quotations"/);assert.match(html,/data-tab="pricinghistory"/);
+  assert.match(html,/data-tab="quotations"/); // v2026-10-22: Fiyat Geçmişi, Fiyat Masası içinde (ayrı menü yok)
   assert.match(app,/kolSendPricingBtn'\)\?\.addEventListener\('click'/);
   assert.match(app,/openSendToPricing/);
 });

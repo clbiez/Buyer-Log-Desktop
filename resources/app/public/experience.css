@@ -730,11 +730,11 @@ html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um
 }
 
 /* Filtre çipi — çoklu seçim / süzgeç: aktif = açık vurgu zemini. */
-:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip){
+:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip,.kolHealthChip){
   height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);padding:0 10px;border:1px solid var(--line);border-radius:var(--r-sm);
   background:var(--card);color:var(--ink2);font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;
 }
-:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip):is(.isActive,.is-active,[aria-pressed="true"]){
+:root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip,.kolHealthChip):is(.isActive,.is-active,[aria-pressed="true"]){
   border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);
 }
 :root .sourceModeGroup{min-height:0;padding:0;gap:4px;border:0;border-radius:0;background:transparent;}
