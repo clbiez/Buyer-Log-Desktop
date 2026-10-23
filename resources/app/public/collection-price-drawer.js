@@ -156,9 +156,23 @@
     render();
   }
 
+  // A release outside the drawer can produce a synthesized click on the backdrop
+  // even when the press began INSIDE the drawer. Only a genuine backdrop tap closes it.
+  function isBackdropTap(start,end,backdrop){
+    return Boolean(start&&end
+      &&start.target===backdrop&&end.target===backdrop
+      &&start.pointerId===end.pointerId
+      &&start.button===0&&start.isPrimary!==false
+      &&Math.abs(start.clientX-end.clientX)<=6
+      &&Math.abs(start.clientY-end.clientY)<=6);
+  }
+
   function onClick(event){
     if(!state)return;
-    if(event.target===state.overlay||event.target.closest('[data-cpd-close]')){close();return;}
+    const backdropTap=state.backdropTap;
+    state.backdropTap=false;
+    if(event.target===state.overlay){if(backdropTap)close();return;}
+    if(event.target.closest('[data-cpd-close]')){close();return;}
     const row=findRow(state.rowId);if(!row)return;
     const approve=event.target.closest('[data-cpd-approve]');
     if(approve){kolToggleConfirmedManufacturer(row,approve.dataset.cpdApprove);render();return;}
@@ -173,7 +187,19 @@
     const overlay=document.createElement('div');overlay.className='kolPeriodDrawerBackdrop cpdBackdrop';
     const panel=document.createElement('aside');panel.className='kolPeriodDrawer cpdDrawer';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',T('Fiyat çekmecesi','Price drawer'));
     overlay.appendChild(panel);document.body.appendChild(overlay);
-    state={rowId:row.id,overlay,panel,body:null};
+    state={rowId:row.id,overlay,panel,body:null,backdropDown:null,backdropTap:false};
+    overlay.addEventListener('pointerdown',event=>{
+      state.backdropDown=event;
+      state.backdropTap=false;
+    });
+    overlay.addEventListener('pointerup',event=>{
+      state.backdropTap=isBackdropTap(state.backdropDown,event,overlay);
+      state.backdropDown=null;
+    });
+    overlay.addEventListener('pointercancel',()=>{
+      state.backdropDown=null;
+      state.backdropTap=false;
+    });
     overlay.addEventListener('click',onClick);
     panel.addEventListener('change',event=>{const input=event.target.closest('[data-cpd-field]');if(input)commitField(input);});
     panel.addEventListener('keydown',event=>{const input=event.target.closest('[data-cpd-field]');if(input&&event.key==='Enter'){event.preventDefault();commitField(input);}});
