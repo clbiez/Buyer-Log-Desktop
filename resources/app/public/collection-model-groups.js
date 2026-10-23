@@ -1,13 +1,19 @@
 (function (root, factory) {
-  const api = factory();
+  const api = factory(typeof module==='object' && module.exports ? require('./overview-collection-summary.js') : root.BLOverviewCollectionSummary);
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.BLCollectionModelGroups = api;
-})(typeof globalThis !== 'undefined' ? globalThis : this, function () {
+})(typeof globalThis !== 'undefined' ? globalThis : this, function (collectionSummary) {
   'use strict';
 
   const text = value => String(value == null ? '' : value).trim();
   const normal = value => text(value).replace(/\s+/g, ' ').toLocaleUpperCase('tr-TR');
-  const identityOf = row => [text(row && row.plmId), normal(row && row.modelKod), text(row && row.inStoreMonth)].join('\u0000');
+  // An MB month is a period, not a localized string: mixed legacy labels must
+  // not divide colour variants into separate model identities.
+  const monthIdentity = value => {
+    const parts=collectionSummary?.monthParts?.(value);
+    return parts?`${parts.year}${String(parts.month).padStart(2,'0')}`:text(value);
+  };
+  const identityOf = row => [text(row && row.plmId), normal(row && row.modelKod), monthIdentity(row && row.inStoreMonth)].join('\u0000');
   const colourIdentity = row => normal(row && row.colourCode) || normal(row && row.colour);
   const hash = value => {
     let h = 2166136261;

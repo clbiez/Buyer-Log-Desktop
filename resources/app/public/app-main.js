@@ -2373,7 +2373,7 @@ function activeTableFilterTokens(tableKey){
   if(search)tokens.push({kind:'search',key:searchId,label:appLang==='en'?'Search':'Arama',detail:search});
   if(tableKey==='koleksiyon'){
     Object.entries(kolColFilters||{}).forEach(([key,entry])=>{
-      if(entry&&entry.size)tokens.push({kind:'column',key,label:activeFilterColumnLabel(tableKey,key),detail:activeFilterEntrySummary({values:entry})});
+      if(entry&&entry.size)tokens.push({kind:'column',key,label:activeFilterColumnLabel(tableKey,key),detail:activeFilterEntrySummary({values:key==='inStoreMonth'?new Set([...entry].map(value=>kolMonthDisplay(value)||value)):entry})});
     });
     Object.entries(kolFabricDetailFilters).forEach(([key,entry])=>{
       if(!entry?.size)return;
@@ -16259,7 +16259,7 @@ function applyFilterState(data){
     const search=document.getElementById('kolSearch'); if(search) search.value=f.search||'';
     kolColFilters={};
     Object.entries(f.colFilters||{}).forEach(([k,vals])=>{
-      if(kolColDefs().some(c=>c.k===k) && Array.isArray(vals) && vals.length) kolColFilters[k]=new Set(vals.map(String));
+      if(kolColDefs().some(c=>c.k===k) && Array.isArray(vals) && vals.length) kolColFilters[k]=kolCanonicalFilterSelection(k,vals);
     });
     kolCheckFilter=normalizeCheckFilterMode(f.checkFilter);
     saveKolColState();
@@ -24290,7 +24290,7 @@ function loadKolColState(options={}){
     kolPictureHidden = !!obj.pictureHidden;
     if(obj.imgSize) kolImgSize = kolNormalizeImgSize(obj.imgSize);
     if(obj.widths) kolColWidths = obj.widths;
-    if(obj.filters) Object.entries(obj.filters).forEach(([k,vals])=>{ if(Array.isArray(vals)&&vals.length) kolColFilters[k]=new Set(vals); });
+    if(obj.filters) Object.entries(obj.filters).forEach(([k,vals])=>{ if(Array.isArray(vals)&&vals.length) kolColFilters[k]=kolCanonicalFilterSelection(k,vals); });
     kolFabricDetailFilters={};
     Object.entries(obj.fabricDetails||{}).forEach(([key,vals])=>{ if(KOL_FABRIC_DETAIL_KEYS.includes(key)&&Array.isArray(vals)&&vals.length)kolFabricDetailFilters[key]=new Set(vals.map(String)); });
     if(Number(obj.layoutVersion||0)<KOL_COL_LAYOUT_VERSION){
@@ -24699,6 +24699,12 @@ function saveKolRows(){
     return false;
   }
 }
+// Locale-specific month labels are never filter identities. Keep old saved
+// TR/EN filter selections usable without rewriting Collection model records.
+function kolCanonicalFilterSelection(key,values){
+  return new Set((Array.isArray(values)?values:[]).map(value=>
+    key==='inStoreMonth'?(kolMonthCode(value)||norm(value)):String(value)));
+}
 const KOL_CONFIRMED_NAME_FILTER_KEY = '__confirmedName__';
 const KOL_CONFIRMATION_FILTER_KEY = '__confirmation__';
 function kolFilterValue(row,key){
@@ -24712,6 +24718,7 @@ function kolFilterValue(row,key){
   if(col?.checklist)return kolChecklistDisplay(effective,row);
   if(col?.custom&&schema){ const value=schema.filterValue(effective); return value==null?'':String(value); }
   if(key==='fabric')return kolFabricDisplay(effective);
+  if(key==='inStoreMonth')return kolMonthCode(effective)||norm(effective);
   return norm(effective);
 }
 function kolFilterMeta(key){
@@ -24836,6 +24843,7 @@ function kolCompareRowsForActiveSort(a,b,rowsForSchema){
   let x=kolSort.key==='exToRetail'?kolExToRetailDays(a):kolEffectiveValue(a,kolSort.key);
   let y=kolSort.key==='exToRetail'?kolExToRetailDays(b):kolEffectiveValue(b,kolSort.key);
   if(kolSort.key==='season') return compareSeasonValues(x,y)*kolSort.dir;
+  if(kolSort.key==='inStoreMonth'){x=kolMonthCode(x)||norm(x);y=kolMonthCode(y)||norm(y);}
   if(col?.checklist) return (KOL_CHECKLIST_STATUSES.indexOf(kolChecklistStatus(x))-KOL_CHECKLIST_STATUSES.indexOf(kolChecklistStatus(y)))*kolSort.dir;
   const schema=columnSchemaFor(col,rowsForSchema||[]);
   if(schema&&(schema.sortType==='number'||schema.sortType==='date')){ x=schema.sortValue(x); y=schema.sortValue(y); }
@@ -26748,14 +26756,20 @@ function openKolHeaderFilter(key, anchorEl){
   // kalanındaki çapraz filtre ipucu mantığıyla tutarlı.
   const otherEntries = Object.keys(kolColFilters).filter(k=>k!==key).map(k=>[kolColFilters[k], k]);
   const baseRows = kolRows.filter(r=>otherEntries.every(([set,k])=> !set || !set.size || set.has(kolFilterValue(r,k))));
-  const allVals = [...new Set(baseRows.map(r=>{ const raw=kolFilterValue(r,key); return meta.select ? L(raw) : raw; }))].sort((a,b)=>String(a).localeCompare(String(b),'tr'));
-  const rawByDisplay = {}; baseRows.forEach(r=>{ const raw=kolFilterValue(r,key); const disp = meta.select ? L(raw) : raw; rawByDisplay[disp] = raw; });
+  // Store and compare canonical YYYYMM keys; render labels using the active UI language.
+  // "TEMMUZ 2027" and "JULY 2027" must share one facet, count and selection.
+  const monthFacet=key==='inStoreMonth';
+  const allEntries=[...new Set(baseRows.map(r=>kolFilterValue(r,key)))].map(raw=>({
+    raw,display:monthFacet?(kolMonthDisplay(raw)||raw):(meta.select?L(raw):raw)
+  })).sort((a,b)=>monthFacet?String(a.raw).localeCompare(String(b.raw)):String(a.display).localeCompare(String(b.display),'tr'));
+  const allVals=allEntries.map(entry=>entry.display);
+  const rawByDisplay=new Map(allEntries.map(entry=>[entry.display,entry.raw]));
   const current = kolColFilters[key];
   function renderList(query){
     const terms=parseTableSearchTerms(query);
     const filtered = terms.length ? allVals.filter(v=>tableSearchMatches(v,terms,{plainMode:'contains'})) : allVals;
     return filtered.map(v=>{
-      const raw = rawByDisplay[v] ?? v;
+      const raw = rawByDisplay.get(v) ?? v;
       const checked = !current || current.has(raw);
       return `<label class="cfpItem"><input type="checkbox" value="${escapeHtml(raw)}" ${checked?'checked':''}> ${v===''?'<i>(boş)</i>':escapeHtml(v)}</label>`;
     }).join('');
@@ -26861,13 +26875,13 @@ function renderKolQuickFilters(){
   loadKolQuickDims().forEach(dim=>{
     const scoped = kolQuickScoped(dim.key);
     const counts = {};
-    scoped.forEach(r=>{ const v = norm(r[dim.key]) || '—'; counts[v] = (counts[v]||0)+1; });
+    scoped.forEach(r=>{ const v = (dim.key==='inStoreMonth'?kolFilterValue(r,dim.key):norm(r[dim.key])) || '—'; counts[v] = (counts[v]||0)+1; });
     const entries = Object.entries(counts).sort((a,b)=>b[1]-a[1]);
     if(!entries.length) return;
     html += `<span class="kpiGroupLabel">${escapeHtml(L(dim.label))}</span>`;
     entries.forEach(([val,n])=>{
       const active = kolColFilters[dim.key] && kolColFilters[dim.key].has(val==='—'?'':val);
-      const dispVal = (dim.key==='durum') ? L(val) : val;
+      const dispVal = dim.key==='inStoreMonth'?(kolMonthDisplay(val)||val):(dim.key==='durum'?L(val):val);
       const quickFilterLabel=appLang==='en'?`Filter ${L(dim.label)}: ${dispVal} (${n})`:`${L(dim.label)} filtresi: ${dispVal} (${n})`;
       html += `<button type="button" class="kpi tone-blue${active?' active':''}" aria-pressed="${active?'true':'false'}" aria-label="${escapeHtml(quickFilterLabel)}" title="${escapeHtml(quickFilterLabel)}" data-kolq-key="${dim.key}" data-kolq-val="${escapeHtml(val==='—'?'':val)}"><span class="n">${n}</span><span class="l">${escapeHtml(dispVal)}</span></button>`;
     });
