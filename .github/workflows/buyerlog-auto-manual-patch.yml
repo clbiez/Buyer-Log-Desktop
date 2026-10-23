@@ -1,7 +1,7 @@
 name: Buyer Log AUTO Manual Patch Publisher
 on:
   push:
-    branches: [main, fix/autopatch-stable-version-20261023]
+    branches: [main, fix/auto-patch-skip-ci-pr-coverage-20261023]
     paths:
       - 'resources/app/public/**'
       - 'resources/app/server/**'
@@ -42,6 +42,11 @@ jobs:
         run: |
           set -euo pipefail
           SOURCE_SHA="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
+          # A diagnostic feature branch validates its own workflow before merge;
+          # no feature-branch job is permitted to publish the public feed.
+          if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF" != "refs/heads/main" ]]; then
+            SOURCE_SHA="$GITHUB_SHA"
+          fi
           printf 'source_sha=%s\n' "$SOURCE_SHA" >> "$GITHUB_OUTPUT"
           export SOURCE_SHA
           curl --fail --location --silent --show-error --retry 2 --max-time 30 \
@@ -108,7 +113,7 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   publish-public-download:
-    if: needs.check-patch.outputs.required == 'true'
+    if: needs.check-patch.outputs.required == 'true' && (github.ref == 'refs/heads/main' || (github.event_name == 'pull_request_target' && github.event.pull_request.merged == true))
     needs: [check-patch, build-and-test]
     runs-on: ubuntu-latest
     timeout-minutes: 15
