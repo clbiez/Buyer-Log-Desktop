@@ -138,8 +138,8 @@ test('Koleksiyon tablosu PLM metnini korur, kart özetini gösterir ve içe akta
   assert.equal((APP.match(/kolFabricCardsAfterImport\(/g) || []).length, 5, 'tanım + dört PLM içe aktarma akışı');
   // PLM Sync: AI/rule kartları onay penceresi olmadan yalnız eksik kodlara kaydedilir.
   assert.match(APP, /if\(auto\)\{[\s\S]{0,250}const cards=still\.map\([\s\S]{0,200}kolFabricCardsSave\(cards,\{onlyMissing:true\}\)/);
-  assert.match(APP, /context:api\.aiContext\(batch,kolFabricCards\)/);
-  assert.match(APP, /api\.applyLearnedStyle\(card,raw,kolFabricCards\)/);
+  assert.match(APP, /context:api\.aiContext\(batch,approvedStyles\)/);
+  assert.match(APP, /api\.applyLearnedStyle\(card,raw,approvedStyles\)/);
   assert.match(APP, /kolFabricAutoQueue\.push\(\.\.\.list\)/);
   assert.match(APP, /if\(!result\.ok\|\|!result\.hasMore\|\|!result\.created\)break/);
   // Satırdaki PLM kumaş metni kart işlemlerinde yazılmaz.
@@ -292,6 +292,8 @@ test('human-edited bilingual style transfers without copying another fabric meas
   assert.match(edited.summary,/^Üç İplik Şardonlu · /);
   assert.match(edited.summaryEn,/^Three Thread Terry · /);
   assert.match(edited.summary,/260 gsm/);
+  assert.match(edited.summary,/24\/50\/18/,'learned compact-yarn format uses current source counts');
+  assert.doesNotMatch(edited.summary,/30\/70\/20/);
   assert.match(edited.summaryEn,/80% Cotton 20% Poliester/);
   assert.doesNotMatch(edited.summary,/280 gsm|70% Pamuk/);
   assert.equal(edited.details.weight,base.details.weight);
