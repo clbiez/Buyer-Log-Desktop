@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const canonical = require('./canonical-fields');
 const businessRules = require('../../public/business-rules');
 const atlas = require('../../public/license-atlas-engine');
+const assets = require('./license-card-assets');
 
 const PROFILE_LIMITS = Object.freeze({ workingNotes: 12000, contactName: 200, contactEmail: 320,
   portalUrl: 2048, portalUsername: 200, accessReference: 1000, artworkBrief: 6000 });
@@ -152,6 +153,7 @@ function rasterDimensions(bytes, mime) {
 }
 function validateSymbol(value) {
   if (!value) return '';
+  if (assets.isAssetUrl(value)) return value;
   if (typeof value !== 'string' || value.length > Math.ceil(MAX_SYMBOL_BYTES / 3) * 4 + 40) fail('LICENSE_SYMBOL_INVALID', 'Sembol en fazla 512 KB olabilir. / Symbol must be at most 512 KB.');
   const match = value.match(/^data:image\/(png|jpeg|webp);base64,([A-Za-z0-9+/]+={0,2})$/);
   if (!match || match[2].length % 4) fail('LICENSE_SYMBOL_INVALID', 'PNG, JPEG veya WebP sembol yükleyin. / Upload a PNG, JPEG or WebP symbol.');
@@ -159,13 +161,13 @@ function validateSymbol(value) {
   if (bytes.length > MAX_SYMBOL_BYTES || bytes.toString('base64') !== match[2] || !dimensions || dimensions.some(side => side < 1 || side > 2048)) {
     fail('LICENSE_SYMBOL_INVALID', 'Geçersiz sembol; en fazla 2048×2048 piksel. / Invalid symbol; maximum 2048×2048 pixels.');
   }
-  return value;
+  return assets.externalizeImage(value);
 }
 function normalizeProfile(profile) {
   if (!profile || typeof profile !== 'object' || Array.isArray(profile)) fail('LICENSE_PROFILE_INVALID', 'Kart bilgileri zorunlu. / Card profile is required.');
   const out = {};
   for (const [field, value] of Object.entries(profile)) {
-    if (field === 'processAtlas') { out[field] = atlas.normalize(value); continue; }
+    if (field === 'processAtlas') { out[field] = assets.externalizeAtlas(atlas.normalize(value)); continue; }
     if (field === 'symbolDataUrl') { out[field] = validateSymbol(value); continue; }
     if (!Object.hasOwn(PROFILE_LIMITS, field)) fail('LICENSE_PROFILE_FIELD', 'Desteklenmeyen kart alanı. / Unsupported card field.');
     if (value != null && typeof value !== 'string') fail('LICENSE_PROFILE_INVALID', 'Kart alanı metin olmalı. / Card field must be text.');
@@ -315,7 +317,7 @@ function normalizeTemplate(raw, now) {
   let visual = null;
   if (raw.visual && raw.visual.data) {
     const checked = atlas.normalize({ license: { stages: [] }, visualLibrary: [{ id: 'v', name: text(raw.visual.name).slice(0, 200), data: raw.visual.data }] }).visualLibrary[0];
-    visual = { name: checked.name, data: checked.data };
+    visual = { name: checked.name, data: assets.externalizeImage(checked.data) };
   }
   return { id, name, stage, addresses: normalized.addresses.filter(address => used.has(address.id)), visual, updatedAt: now };
 }

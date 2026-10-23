@@ -1,7 +1,7 @@
 'use strict';
 // The normal License Cards screen and agent adapters share this transaction.
 // Profile/rate validation and discovery remain in the existing card engine.
-const cards=require('./license-cards'),sync=require('./license-card-sync'),pricing=require('./resource-rule-service');
+const cards=require('./license-cards'),sync=require('./license-card-sync'),pricing=require('./resource-rule-service'),assetStore=require('./license-card-assets');
 const {hash,error}=require('./operation-utils');
 const clone=value=>JSON.parse(JSON.stringify(value));
 function sectionSnapshot(overrides){return {revision:cards.revisionOf(overrides,'licenseCards'),pricingRevision:cards.revisionOf(overrides,'pricingRules'),fingerprint:hash(JSON.stringify({cards:cards.stateOf(overrides),rules:overrides.pricingRules||[]}))};}
@@ -101,7 +101,15 @@ function createLicenseCardService(deps){
  const setLicensor=(profile,id,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensor(current,id,body);return {overrides:r.overrides,cards:[r.card]};},opts);
  const saveTemplate=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.saveTemplate(current,body);return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
  const setLicensorMerge=(profile,body,opts)=>writeCards(profile,current=>{const r=cards.setLicensorMerge(current,body);return {overrides:r.overrides,cards:[],rulesChanged:true,licensorMerges:cards.licensorMergesOf(r.overrides)};},opts);
+ // One-time move of inline images out of the overrides store (see license-card-assets).
+ // Changed cards are re-published so peer records shrink too; same bytes → same URL everywhere.
+ async function migrateAssets(profile={id:'system'},opts={}){
+   if(!assetStore.externalizeOverrides(load()).changed)return {migrated:0};
+   let migrated=0;
+   const result=await writeCards(profile,current=>{const r=assetStore.externalizeOverrides(current);migrated=r.cards.length;return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
+   return {migrated,syncPending:result.syncPending};
+ }
  const deleteTemplate=(profile,id,body,opts)=>writeCards(profile,current=>{const r=cards.deleteTemplate(current,id,body);return {overrides:r.overrides,cards:r.cards,stageTemplates:cards.templatesOf(r.overrides)};},opts);
- return {read,discovery,discover,updatePreview,update,updateAtlasBatch,setLicensor,setLicensorMerge,saveTemplate,deleteTemplate,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
+ return {read,discovery,discover,updatePreview,update,updateAtlasBatch,setLicensor,setLicensorMerge,migrateAssets,saveTemplate,deleteTemplate,inverseSnapshot,restore,snapshot:()=>sectionSnapshot(load())};
 }
 module.exports={createLicenseCardService,sectionSnapshot};

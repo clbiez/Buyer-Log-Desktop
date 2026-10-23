@@ -39,6 +39,35 @@
           "en": "With demo data including a closed order, active CP review completes and proposals await approval."
         }
       }
+    },
+    {
+      "id": "license-cards-performance",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisans kartları ve kaydetme çok daha hızlı",
+        "en": "License cards and saving are much faster"
+      },
+      "body": {
+        "tr": "Kart görselleri (kapak, görsel kılavuzlar, sembol) ortak veri deposunun içinde tutuluyordu; bu yüzden her okuma ve kaydetmede onlarca MB kopyalanıp yeniden yazılıyor, bütün Buyer Log yavaşlıyordu. Görseller artık ayrı, içerik adresli dosyalarda saklanır ve paylaşılan klasör üzerinden diğer kullanıcılara ulaşır. 120 kartlık örnek veride listeyi açmak ~10 sn’den 0,1 sn’ye, bir oranı kaydetmek ~51 sn’den 0,3 sn’ye indi. Mevcut görseller ilk açılışta otomatik taşınır; üretici atlası görselleri yine dosyanın içine gömer.",
+        "en": "Card images (cover, visual guides, symbol) were stored inside the shared data store, so every read and save copied and rewrote tens of MB and slowed down all of Buyer Log. Images now live in separate content-addressed files and reach other users through the shared folder. On a 120-card sample, opening the list went from ~10 s to 0.1 s and saving a rate from ~51 s to 0.3 s. Existing images move automatically on first start; the supplier atlas still embeds its images in the file."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-performance.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları listesi: kapak görseli ayrı görsel deposundan yükleniyor, demo veriler",
+          "en": "Real Buyer Log license card list: the cover image loads from the separate image store, demo data"
+        },
+        "caption": {
+          "tr": "Görseller ayrı depoda, liste anında açılır",
+          "en": "Images in a separate store, the list opens instantly"
+        }
+      }
     }
   ]
 }

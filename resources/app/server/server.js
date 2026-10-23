@@ -10126,12 +10126,16 @@ async function getLicenseDiscoveryRows(req){
   if(!runtime.loadedAt&&!sources.some(rows=>rows.length))throw Object.assign(new Error('ASAS verilerini önce yenileyin. / Refresh ASAS data first.'),{code:'LICENSE_SOURCE_UNAVAILABLE',statusCode:503});
   return {module:'cp',rows:require('./lib/license-cards').discoveryRowsFromOrders(sources,overrides,parseLib),sourceStamp:String(runtime.loadedAt||'')};
 }
+// License card images live in a content-addressed file store, not in overrides.json.
+require('./lib/license-card-assets').configure({dir:path.join(require('./user-data').SERVER_DATA_ROOT,'license-card-assets'),getSharedSyncRoot:async()=>(await syncSettings.read()).sharedSyncRoot});
 const licenseCardService=require('./lib/license-card-service').createLicenseCardService({
   loadOverrides,saveOverrides,mutate:require('./db').mutateSharedResource,pricing:require('./lib/resource-rule-service'),
   getDiscoveryRows:profile=>getLicenseDiscoveryRows({currentUser:profile}),discoveryStamp:profile=>String(cacheForUser(profile.id).loadedAt||''),
   publish:(profile,change)=>licenseCardSync.publish({currentUser:profile},change),
   changed:(profile,section,detail,context)=>publishSharedMasterChange(section,{currentUser:profile,headers:{'x-client-id':context?.originClientId||''}},detail),
 });
+// Existing inline images move out once, after startup, without blocking the first request.
+setTimeout(()=>{licenseCardService.migrateAssets({id:'system'}).then(r=>{if(r.migrated)markStartup('LICENSE_CARD_ASSETS_MIGRATED',{cards:r.migrated});}).catch(error=>markStartup('LICENSE_CARD_ASSETS_MIGRATION_FAILED',{code:error?.code||'',message:String(error?.message||error).slice(0,200)}));},4000).unref?.();
 require('./routes/license-card-routes')(app, {
   service:licenseCardService,
   loadOverrides,saveOverrides,userAccess,getLicenseDiscoveryRows,publishSharedMasterChange,

@@ -42,6 +42,20 @@ jump links; animated with `::details-content`, printed open). Route rows use fix
   `shared-sync-policy.js`, newest `updatedAt` wins); linked stage content arrives as card profiles.
 - `POST /api/license-cards/refresh` returns `added`, `resolved`, `discovered`; the page reports them.
 
+## Card images (asset store)
+
+Covers, visual guides, symbols and template guides are **not** stored in `overrides.json`.
+`server/lib/license-card-assets.js` writes them content-addressed to
+`<server data>/license-card-assets/<sha256>.<ext>` and copies them to
+`<shared sync root>/BUYER_LOG_SYNC/license-card-assets/` for other users; records keep only
+`/api/license-cards/assets/<sha256>.<ext>` (served by `GET /api/license-cards/assets/:name`,
+immutable cache, fetched once from the shared folder when missing locally and hash-verified).
+`normalizeProfile`/`normalizeTemplate` externalize incoming data URLs (own uploads and peer
+records); `migrateAssets()` moves existing inline images once after startup and re-publishes
+the changed cards. The supplier export inlines asset bytes (`inlineAssets`) because the file
+allows only `img-src data:`. Inline base64 inside the shared store made every read deep-copy
+and every write rewrite tens of MB (120 cards: GET ~10 s, one rate save ~51 s → 0.1 s / 0.3 s).
+
 ## Verification
 
 Run `node scripts/license-cards-ui-acceptance.js` from `resources/app` (Playwright + Chromium;
