@@ -161,6 +161,24 @@ test('fabric blends use numeric descending order and suffix percent signs in bot
 });
 
 
+test('existing mixed-language summaries are fully localized without altering source details',()=>{
+  const raw='357459-Örme,Üç İplik,30/1 Pamuk,70 D Poliester,280 gsm,%65 Pamuk,%35 Poliester'; // i18n-ignore
+  const mixed={
+    code:'357459',raw,
+    summary:'Üç İplik Sardonsuz · 280 gsm · 65% Cotton 35% Poliester',
+    summaryEn:'Three Thread Terry · 280 gsm · 65% Pamuk 35% Polyester',
+    details:{composition:'65% Pamuk 35% Poliester'}
+  }; // i18n-ignore
+  assert.equal(engine.summaryFor(mixed,'tr'),'Üç İplik Sardonsuz · 280 gsm · 65% Pamuk 35% Polyester');
+  assert.equal(engine.summaryFor(mixed,'en'),'Three Thread Terry · 280 gsm · 65% Cotton 35% Poliester');
+  const saved=engine.normalizeCard(mixed);
+  assert.equal(saved.summary,engine.summaryFor(mixed,'tr'));
+  assert.equal(saved.summaryEn,engine.summaryFor(mixed,'en'));
+  assert.equal(saved.details.composition,'65% Pamuk 35% Poliester','source detail is never translated in storage');
+  assert.equal(engine.translateTerms('Three Thread Terry','tr',{translateTypes:true}),'Üç İplik Havlu');
+  assert.equal(engine.translateTerms('Three Thread Terry','tr'),'Three Thread Terry','original type preservation remains the default');
+});
+
 test('Polyester spelling is consistent in TR/EN rule, AI, manual and legacy saved cards',()=>{
   const raw='364632-Örme,Üç İplik,70 D,240 gsm,65% Pamuk,35% Poliester'; // i18n-ignore
   const rule=engine.ruleCard(raw);
