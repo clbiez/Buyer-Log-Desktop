@@ -135,7 +135,7 @@ test('Koleksiyon tablosu PLM metnini korur, kart özetini gösterir ve içe akta
   assert.match(APP, /\}else if\(c\.k==='fabric'&&kolFabricParts\(val\)\.length\)\{\n\s*kolFabricCardsEnsureLoaded\(\);\n\s*html\+=kolFabricCellHtml\(r,val,rc\);/);
   assert.match(APP, /\.kolFabricTd\[data-fabric-id\]'\)\.forEach\(cell=>cell\.addEventListener\('dblclick'/);
   assert.match(APP, /if\(key==='fabric'\)return kolFabricDisplay\(effective\);/);
-  assert.equal((APP.match(/kolFabricCardsAfterImport\(/g) || []).length, 5, 'tanım + dört PLM içe aktarma akışı');
+  assert.equal((APP.match(/kolFabricCardsAfterImport\(/g) || []).length, 6, 'tanım + dört PLM içe aktarma akışı + kuyruk devamı');
   // PLM Sync: AI/rule kartları onay penceresi olmadan yalnız eksik kodlara kaydedilir.
   assert.match(APP, /if\(auto\)\{[\s\S]{0,250}const cards=still\.map\([\s\S]{0,200}kolFabricCardsSave\(cards,\{onlyMissing:true\}\)/);
   assert.match(APP, /context:api\.aiContext\(batch,approvedStyles\)/);
@@ -269,7 +269,7 @@ test('previously edited cards become bounded, family-matched LCW AI style exampl
   const saved={code:'18942',raw,summarySource:'manual',updatedAt:'2026-10-23T18:00:00Z',
     summary:'Üç İplik Şardonlu · 30/70/20 · 280 gsm · 70% Pamuk 30% Polyester',
     summaryEn:'Three Thread Terry · 30/70/20 · 280 gsm · 70% Cotton 30% Poliester'};
-  const unrelated={...saved,code:'18888',raw:'18888-Örme,Süprem,180 gsm',summary:'Süprem · 180 gsm'};
+  const unrelated={...saved,code:'18888',raw:'18888-Dokuma,Gabardin,180 gsm',summary:'Gabardin · 180 gsm',summaryEn:'Gabardine · 180 gsm'};
   const automatic={...saved,code:'18889',summarySource:'ai'};
   const cards=new Map([['18942',saved],['18888',unrelated],['18889',automatic]]);
   const context=engine.aiContext([{code:'18943',raw:next}],cards);
