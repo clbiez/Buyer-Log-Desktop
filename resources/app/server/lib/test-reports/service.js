@@ -138,8 +138,11 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
     let cp=body.cp;
     if(!cp||!Array.isArray(cp.rows)||!cp.rows.length||cp.rowCount!==cp.rows.length)throw fail('TEST_REPORT_CP_INCOMPLETE',409);
     const keys=new Set(cp.rows.map(row=>row.key));
-    if(keys.size!==cp.rows.length||cp.rows.some(row=>!allowed.has(row.key)||String(allowed.get(row.key).orderCode)!==row.orderCode)||[...allowed.keys()].some(key=>!keys.has(key)))throw fail('TEST_REPORT_CP_INCOMPLETE',409);
+    if(keys.size!==cp.rows.length||cp.rows.some(row=>!allowed.has(row.key)||String(allowed.get(row.key).orderCode)!==row.orderCode))throw fail('TEST_REPORT_CP_INCOMPLETE',409);
     const canonical=reviewContext?await reviewContext(profile):null;
+    // Authority includes closed Orders too. Completeness belongs to the active,
+    // scoped CP projection; every submitted row must still be authorized above.
+    if(!canonical&&[...allowed.keys()].some(key=>!keys.has(key)))throw fail('TEST_REPORT_CP_INCOMPLETE',409);
     if(canonical) {
       const clientRows=new Map(cp.rows.map(row=>[row.key,row]));
       const states=row=>Object.fromEntries((row.checklist||[]).map(item=>[item.itemId,{state:item.answer?.state,source:item.answer?.source}]).sort(([a],[b])=>a.localeCompare(b)));
