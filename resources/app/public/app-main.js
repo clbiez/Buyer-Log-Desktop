@@ -15889,6 +15889,7 @@ function sourceFxDateText(date){
 }
 function renderSourceFxFreshness(data){
   const btn=document.getElementById('btnSourceFx'),badge=document.getElementById('sourceFxWarning');
+  window.BLFX?.renderFolderSync(document.querySelector('[data-fx-folder-sync]'));
   if(!btn||!badge)return sourceFxFreshnessState(data);
   const state=sourceFxFreshnessState(data),en=appLang==='en';
   btn.classList.toggle('isStale',state.stale);
@@ -15906,14 +15907,17 @@ function renderSourceFxFreshness(data){
       :`Son kur Excel'i: ${sourceFxDateText(state.loadedAt)} · uyarı tarihi: ${sourceFxDateText(state.warnAt)}`;
   }
   btn.setAttribute('aria-label',btn.title);
+  let folderWarning=document.getElementById('sourceFxFolderSync');
+  if(!folderWarning){folderWarning=document.createElement('div');folderWarning.id='sourceFxFolderSync';folderWarning.className='ocFxHint';btn.parentElement.append(folderWarning);}
+  window.BLFX?.renderFolderSync(folderWarning);
   if(sourceFxFreshnessTimer){clearTimeout(sourceFxFreshnessTimer);sourceFxFreshnessTimer=0;}
   const nextCheck=state.available&&!state.stale?Math.max(1000,state.warnAt.getTime()-Date.now()+1000):24*60*60*1000;
   sourceFxFreshnessTimer=setTimeout(()=>refreshSourceFxFreshnessWarning(),Math.min(nextCheck,24*60*60*1000));
   return state;
 }
-async function refreshSourceFxFreshnessWarning(){
+async function refreshSourceFxFreshnessWarning(force=false){
   if(!window.BLFX)return null;
-  try{await BLFX.load();}catch(_){}
+  try{await BLFX.load(force);}catch(_){}
   return renderSourceFxFreshness(BLFX.store);
 }
 
@@ -15930,6 +15934,7 @@ document.getElementById('sourceFxFile')?.addEventListener('change', async e=>{
     if(!window.BLFX&&window.BLPerf?.ensureFeature) await window.BLPerf.ensureFeature('fx');
     if(!window.BLFX) throw new Error(appLang==='en'?'The FX module is not loaded.':'Kur modülü yüklenmedi.');
     const parsed=await BLFX.importFile(file);
+    if(!BLFX.confirmOlderReport(parsed.data))return;
     await BLFX.save({...parsed.data,sourceType:'UPLOAD',sourceModifiedAt:file.lastModified?new Date(file.lastModified).toISOString():null});
     const st=parsed.stats;
     btn?.classList.add('loaded');
@@ -15959,7 +15964,7 @@ async function loadInitialBuyerLogData(){
 function signalStartupReady(){
   if(startupReadySignaled)return;startupReadySignaled=true;
   void fetch('/api/startup/ready',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({marks:window.BLPerf?.timeline?.()||[]})})
-    .then(()=>setTimeout(()=>void refreshSyncStatusBadge(),3500)).catch(()=>{});
+    .then(()=>{setTimeout(()=>void refreshSyncStatusBadge(),3500);setTimeout(()=>void refreshSourceFxFreshnessWarning(true),8000);}).catch(()=>{});
 }
 let authHydrationPromise=null;
 function hydrateUserPreferencesAfterUi(){

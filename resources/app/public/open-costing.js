@@ -800,7 +800,7 @@ function fxEditorBadgeHtml(calc){
 }
 /* ---- "Kur Güncelle" dialogu ---- */
 let fxPendingImport=null; // {data, stats}
-function fxOpen(){const ov=$('ocFxOverlay');if(ov)ov.hidden=false;fxPendingImport=null;renderFxDialog();}
+async function fxOpen(){const ov=$('ocFxOverlay');if(ov)ov.hidden=false;fxPendingImport=null;await BLFX.load(true);renderFxDialog();}
 function fxCloseDialog(){const ov=$('ocFxOverlay');if(ov)ov.hidden=true;fxPendingImport=null;}
 function fxStatusHtml(){
   const st=BLFX.store;const months=Object.keys(st.months||{}).sort();
@@ -833,7 +833,8 @@ function renderFxDialog(){
       <span class="ocFxHint">${tx('Dosya ve sayfa adındaki ay bilgisi kullanılmaz; her sayfadaki tüm tarih sütunları belleğe alınır.','Month text in file and sheet names is ignored; every dated column on every sheet is stored.')}</span>
     </div>`;
   }
-  host.innerHTML=fxStatusHtml()+importHtml;
+  host.innerHTML='<div id="ocFxFolderSync" class="ocFxHint"></div>'+fxStatusHtml()+importHtml;
+  BLFX.renderFolderSync($('ocFxFolderSync'));
   const saveBtn=$('ocFxSave');if(saveBtn)saveBtn.disabled=!fxPendingImport;
   const status=$('ocFxStatus');if(status&&!fxPendingImport)status.textContent='';
 }
@@ -851,6 +852,7 @@ async function fxSaveImport(){
   if(!fxPendingImport)return;
   const btn=$('ocFxSave');if(btn)btn.disabled=true;
   try{
+    if(!BLFX.confirmOlderReport(fxPendingImport.data)){if(btn)btn.disabled=false;return;}
     await BLFX.save(fxPendingImport.data);
     fxPendingImport=null;
     show(tx('Döviz kurları güncellendi.','FX rates updated.'));

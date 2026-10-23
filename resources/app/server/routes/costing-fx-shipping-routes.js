@@ -41,9 +41,21 @@ app.put('/api/open-costing/:id', userAccess.requireArea('opencosting'), async(re
 app.delete('/api/open-costing/:id', userAccess.requireArea('opencosting'), async(req,res)=>{try{const saved=await openCostingService.execute('delete',{id:req.params.id},costingExpected(req),costingGuard(req),{native:true});res.json({items:saved.store.items,_revision:saved.revision});}catch(err){apiError(res,err,'Ön maliyet silinemedi.');}});
 
 // ---- Aylık Döviz Kurları (FX) ----
-app.get('/api/fx',userAccess.requireAnyArea('source','opencosting','koleksiyon'),(_req,res)=>{res.set('Cache-Control','no-store, no-cache, must-revalidate');res.json(loadFx());});
+app.get('/api/fx',userAccess.requireAnyArea('source','opencosting','koleksiyon'),(_req,res)=>{res.set('Cache-Control','no-store, no-cache, must-revalidate');res.json({...loadFx(),folderSync:deps.getFolderFxSyncStatus?.()||null});});
 app.put('/api/fx', userAccess.requireAnyArea('source','opencosting','koleksiyon'), userAccess.requirePermission('manageBusinessRules'), (req, res) => { try { const saved=saveFx(req.body || {}, requestRevision(req)); publishSharedMasterChange('fx', req); userAccess.appendAudit(req.currentUser,'FX_UPDATE','rates',{revision:saved._revision}); res.json(saved); } catch (err) { apiError(res, err, 'Döviz kurları kaydedilemedi.'); } });
 app.get('/api/fx/resolve/:month', userAccess.requireAnyArea('source','opencosting','koleksiyon'), (req, res) => { const store = loadFx(); const r = fxMonthResolved(store, req.params.month); res.json({ base: store.base, month: r.month, requestedMonth: req.params.month, exact: r.exact, rates: r.rates, _revision: store._revision }); });
+
+app.post('/api/fx/apply-source-kur', userAccess.requireAnyArea('source','opencosting','koleksiyon'), userAccess.requirePermission('manageBusinessRules'), async (req, res) => {
+  try {
+    const { fingerprint, expectedRevision } = req.body || {};
+    if (typeof fingerprint !== 'string' || !/^[a-f0-9]{64}$/.test(fingerprint) || !Number.isInteger(expectedRevision) || expectedRevision < 0) {
+      return res.status(400).json({code:'INVALID_SOURCE_CONFIRMATION'});
+    }
+    const result = await deps.syncFxFromKurWorkbook(req, true, { fingerprint, expectedRevision });
+    if (result.updated) userAccess.appendAudit(req.currentUser, 'FX_UPDATE', 'rates', {source:'folder', reason:result.reason, parser:result.data.parser});
+    res.json({...result.data,folderSync:deps.getFolderFxSyncStatus?.()||null,updated:result.updated,reason:result.reason});
+  } catch (err) { apiError(res, err, 'Klasör kuru uygulanamadı.'); }
+});
 
 // ---- Nakliye Tipine Göre Maliyet Kıyaslaması ----
 const shippingGuard=req=>({ownerId:sourceUserId(req),profile:req.currentUser,assertAuthority:()=>{const current=userAccess.profileById(req.currentUser.id);if(!current||current.enabled===false||!userAccess.hasArea(current,'shipping'))throw Object.assign(new Error('AREA_FORBIDDEN'),{code:'AREA_FORBIDDEN',statusCode:403});req.currentUser=current;return current;}});

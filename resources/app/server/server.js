@@ -397,7 +397,7 @@ function scheduleBackgroundServices() {
       // Uzak delta uygulandıysa bellekteki çalışan küme bayatlamıştır.
       .then(() => deltaStore.hydrate())
       .catch(error => logRuntimeFailure('backgroundSync', error));
-    void syncFxFromKurWorkbook('moderator', true).catch(error => logRuntimeFailure('backgroundFxSync', error));
+    void syncFxFromKurWorkbook('moderator').catch(error => logRuntimeFailure('backgroundFxSync', error));
   }, BACKGROUND_SYNC_DELAY_MS);
   backgroundServicesTimer.unref?.();
 }
@@ -6674,29 +6674,46 @@ async function ensureDataLoaded(value){
 
 // KUR.xlsx seçili kaynak klasöründen içe alınır; normalleştirilmiş sonuç ortak
 // FX store'a yazılır. Diğer cihazların fiziksel Excel dosyasına erişmesi gerekmez.
-async function syncFxFromKurWorkbook(value, force = false) {
+let folderFxSyncStatus = null;
+async function syncFxFromKurWorkbook(value, force = false, explicit = null) {
+  const { decideFolderKurApply, mergeFolderKur } = require('./lib/fxWorkbook');
   const id = sourceUserId(value), appRoot = path.join(__dirname, '..');
   const sourceFolder = sourceFolderForUser(id);
-  const current = loadFx();
+  let current = loadFx();
+  const remember = (candidate, reason) => {
+    folderFxSyncStatus = { file: candidate.file || 'KUR.xlsx', modifiedAt: candidate.modifiedAt || null,
+      reportMonth: candidate.reportMonth || null, fingerprint: candidate.fingerprint || null, reason };
+  };
   try {
     const parsed = await runExcelTask('loadFxWorkbookFromDirectories', {
       directories: [sourceFolder, ...(id === 'moderator' ? [appRoot] : [])].filter(Boolean),
       current, force,
     }, { timeoutMs: 5000, serializationKey: 'shared-fx' });
-    if (!parsed.found || !parsed.updated) return parsed;
-    const saved = saveFx({
-      ...parsed.data,
-      sourceFile: parsed.file,
-      sourceType: 'KUR',
-      sourceModifiedAt: parsed.modifiedAt,
-      updatedAt: new Date().toISOString(),
-    }, null);
-    publishSharedMasterChange('fx', typeof value === 'object' ? value : null);
-    console.log(`[${id}] KUR Excel arka planda okundu: ${parsed.file} (${parsed.stats.monthCount} ay, ${parsed.stats.currencyCount} döviz)`);
-    return { found: true, updated: true, file: parsed.file, stats: parsed.stats, data: saved };
+    if (explicit && (!parsed.found || !parsed.fingerprint || parsed.fingerprint !== explicit.fingerprint)) {
+      throw Object.assign(new Error('SOURCE_KUR_CHANGED'), { statusCode: 409, code: 'SOURCE_KUR_CHANGED' });
+    }
+    if (!parsed.found) { folderFxSyncStatus = null; return parsed; }
+    if (!parsed.updated && parsed.reason !== 'parse-failed') return parsed;
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      let decision = decideFolderKurApply(current, parsed);
+      const reason = decision.reason || 'apply';
+      if (explicit && ['older-report', 'current-newer'].includes(reason)) decision = { apply: true };
+      if (!decision.apply) { remember(parsed, reason); return { ...parsed, updated: false, reason }; }
+      try {
+        const saved = saveFx(mergeFolderKur(current, parsed), explicit ? explicit.expectedRevision : current._revision);
+        folderFxSyncStatus = null;
+        publishSharedMasterChange('fx', typeof value === 'object' ? value : null);
+        return { found: true, updated: true, file: parsed.file, stats: parsed.stats, reason, data: saved };
+      } catch (err) {
+        if (err.code !== 'REVISION_CONFLICT' || attempt || explicit) throw err;
+        current = loadFx();
+      }
+    }
   } catch (err) {
+    if (explicit || err.code === 'REVISION_CONFLICT') throw err;
+    remember({}, 'parse-failed');
     logRuntimeFailure('fxWorkbookRead', err);
-    return { found: false, updated: false, error: 'KUR Excel dosyası arka planda okunamadı.' };
+    return { found: false, updated: false, reason: 'parse-failed' };
   }
 }
 
@@ -12371,6 +12388,8 @@ require('./routes/holiday-routes')(app, {
 
 // ---- Ön Maliyet, Aylık Döviz Kurları ve Nakliye Kıyaslaması route'ları → server/routes/costing-fx-shipping-routes.js ----
 require('./routes/costing-fx-shipping-routes')(app, {
+  getFolderFxSyncStatus: () => folderFxSyncStatus,
+  syncFxFromKurWorkbook,
   openCostingService,
   shippingWorkflowService,
   addShippingRows,

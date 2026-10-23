@@ -43,6 +43,7 @@ function fxContext() {
   const loaded = [];
   const context = {
     console,
+    crypto: require('node:crypto').webcrypto,
     window: null,
     BLStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
     addEventListener() {},

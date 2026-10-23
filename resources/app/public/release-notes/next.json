@@ -271,6 +271,35 @@
           "en": "For text without a code, enter the code and save the card; the cell switches to the card view."
         }
       }
+    },
+    {
+      "id": "fx-folder-newer-report-guard",
+      "type": "fix",
+      "module": {
+        "tr": "Döviz kurları",
+        "en": "FX rates"
+      },
+      "title": {
+        "tr": "Eski klasör raporu yeni kurları ezmez",
+        "en": "Older folder reports cannot overwrite newer rates"
+      },
+      "body": {
+        "tr": "Açılış ve klasör senkronu rapor ayını, dosya içeriğini ve revizyonu denetler. Kapsanmayan geçmiş hücreler korunur; engellenen dosya yalnız açık onayla uygulanabilir.",
+        "en": "Startup and folder sync check report month, file content and revision. Uncovered historical cells are preserved; a blocked file requires explicit confirmation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fx-folder-newer-report-guard.png",
+        "alt": {
+          "tr": "Demo Kasım kurları korunurken Ekim klasör dosyası uyarısı",
+          "en": "October folder warning while demo November rates are preserved"
+        },
+        "caption": {
+          "tr": "Sunucu yeniden başlatıldıktan sonra eski KUR.xlsx uygulanmaz.",
+          "en": "After server restart, the older KUR.xlsx is not applied."
+        }
+      }
     }
   ]
 }

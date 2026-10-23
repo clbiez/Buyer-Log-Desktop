@@ -61,7 +61,7 @@ function fxPendingWrite(data){try{BLStorage.setItem(FX_PENDING_KEY,JSON.stringif
 function fxPendingClear(){try{BLStorage.removeItem(FX_PENDING_KEY);}catch(e){}}
 function fxStamp(data){const t=Date.parse(data&&data.updatedAt||'');return Number.isFinite(t)?t:0;}
 function serverHasValues(data){return Boolean(data&&Object.values(data.months||{}).some(rates=>rates&&Object.keys(rates).length));}
-function fxShape(data){return {base:data&&data.base||'USD',currencies:Array.isArray(data&&data.currencies)?data.currencies:[],months:data&&data.months&&typeof data.months==='object'?data.months:{},updatedAt:data&&data.updatedAt||null,sourceFile:data&&data.sourceFile||null,sourceType:data&&data.sourceType||null,sourceModifiedAt:data&&data.sourceModifiedAt||null,_revision:Number(data&&data._revision)||0};}
+function fxShape(data){return {base:data&&data.base||'USD',currencies:Array.isArray(data&&data.currencies)?data.currencies:[],months:data&&data.months&&typeof data.months==='object'?data.months:{},updatedAt:data&&data.updatedAt||null,sourceFile:data&&data.sourceFile||null,sourceType:data&&data.sourceType||null,sourceModifiedAt:data&&data.sourceModifiedAt||null,reportMonth:data&&data.reportMonth||null,sourceFingerprint:data&&data.sourceFingerprint||null,parser:data&&data.parser||null,folderSync:data&&data.folderSync||null,_revision:Number(data&&data._revision)||0};}
 async function requestSave(data,expectedRevision){
   let res;
   try{res=await fetch('/api/fx',{method:'PUT',headers:{'Content-Type':'application/json','If-Match':String(expectedRevision||0),...(window.BL_CLIENT_ID?{'X-Client-Id':window.BL_CLIENT_ID}:{})},body:JSON.stringify(data)});}
@@ -102,12 +102,12 @@ async function load(force){
 async function save(data){
   const expectedRevision=Number(store._revision)||0;
   const shaped=fxShape({...data,_revision:expectedRevision,updatedAt:data.updatedAt||new Date().toISOString()});
-  fxLocalWrite(shaped);Object.assign(store,shaped);
   try{
     const out=await requestSave(shaped,expectedRevision);
     Object.assign(store,out);fxLocalWrite(store);return store;
   }catch(error){
     if(!error.network)throw error;
+    fxLocalWrite(shaped);Object.assign(store,shaped);
     fxPendingWrite({data:shaped,expectedRevision});
     return store;
   }
@@ -191,7 +191,7 @@ function importWorkbook(wb,fileName){
   });
   const mkList=Object.keys(months).filter(m=>months[m]&&Object.keys(months[m]).length).sort();
   return {
-    data:{base:'USD',currencies:[...currencies],months,updatedAt:new Date().toISOString(),sourceFile:fileName||null},
+    data:{base:'USD',currencies:[...currencies],months,updatedAt:new Date().toISOString(),sourceFile:fileName||null,sourceType:'UPLOAD',parser:'deterministic',reportMonth:[...new Set(sheets.flatMap(sh=>sh.monthKeys))].sort()[0]},
     stats:{sheetCount:sheets.length,latestSheet:sheets[sheets.length-1].name,
            currencyCount:currencies.size,monthCount:mkList.length,valueCount,
            firstMonth:mkList[0]||null,lastMonth:mkList[mkList.length-1]||null}
@@ -205,9 +205,41 @@ async function importFile(file){
   if(typeof XLSX==='undefined')throw new Error(typeof appLang!=='undefined'&&appLang==='en'?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
   const buf=await file.arrayBuffer();
   const wb=XLSX.read(buf,{type:'array',cellDates:true});
-  return importWorkbook(wb,file.name);
+  const parsed=importWorkbook(wb,file.name);
+  parsed.data.sourceFingerprint=[...new Uint8Array(await crypto.subtle.digest('SHA-256',buf))].map(b=>b.toString(16).padStart(2,'0')).join('');
+  parsed.data.sourceModifiedAt=file.lastModified?new Date(file.lastModified).toISOString():null;
+  return parsed;
 }
 
+const L=(tr,en)=>typeof appLang!=='undefined'&&appLang==='en'?en:tr;
+function confirmOlderReport(data){
+  return !store.reportMonth||!data.reportMonth||data.reportMonth>=store.reportMonth||window.confirm(L(
+    `Bu dosya mevcut kurlardan daha eski bir rapor (${monthLabel(data.reportMonth)} < ${monthLabel(store.reportMonth)}). Yine de uygula?`,
+    `This file is an older report than the current rates (${monthLabel(data.reportMonth,true)} < ${monthLabel(store.reportMonth,true)}). Apply anyway?`));
+}
+function folderSyncText(){
+  const sync=store.folderSync;if(!sync)return '';
+  const file=sync.file||'KUR.xlsx',month=sync.reportMonth?` (${monthLabel(sync.reportMonth,typeof appLang!=='undefined'&&appLang==='en')})`:'';
+  if(sync.reason==='older-report')return L(`Klasördeki ${file}${month} mevcut kurlardan eski; uygulanmadı.`,`Folder ${file}${month} is older than the current rates; not applied.`);
+  if(sync.reason==='current-newer')return L(`Mevcut kurlar klasördeki ${file}${month} dosyasından daha yeni; uygulanmadı.`,`Current rates are newer than folder ${file}${month}; not applied.`);
+  if(sync.reason==='parse-failed')return L(`Klasördeki ${file} okunamadı; mevcut kurlar korundu.`,`Folder ${file} could not be read; current rates were preserved.`);
+  return '';
+}
+async function applySourceKur(){
+  const sync=store.folderSync;if(!sync?.fingerprint)return false;
+  if(!window.confirm(L('Klasördeki dosya mevcut kurların üzerine uygulanacak. Onaylıyor musunuz?','The folder file will replace covered current rates. Apply?')))return false;
+  const res=await fetch('/api/fx/apply-source-kur',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({fingerprint:sync.fingerprint,expectedRevision:store._revision})});
+  if(!res.ok)throw new Error(L('Dosya veya kurlar değişti. Yenileyip tekrar deneyin.','The file or rates changed. Refresh and try again.'));
+  await load(true);return true;
+}
+function renderFolderSync(host){
+  if(!host)return;host.replaceChildren();const text=folderSyncText();host.hidden=!text;if(!text)return;
+  const label=document.createElement('span');label.textContent=text;host.append(label);
+  if(['older-report','current-newer'].includes(store.folderSync.reason)){
+    const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=L('Yine de uygula','Apply anyway');
+    button.onclick=async()=>{try{await applySourceKur();renderFolderSync(host);}catch(error){window.showToast?.(error.message);}};host.append(' ',button);
+  }
+}
 window.BLFX={store,load,save,monthKey,monthLabel,resolveMonth,snapshotFor,snapshotForMonth,convert,rateText,
-             displayCurrencies,allCurrencies,importFile,importWorkbook,FAVORITES};
+             displayCurrencies,allCurrencies,importFile,importWorkbook,FAVORITES,confirmOlderReport,folderSyncText,renderFolderSync,applySourceKur};
 })();

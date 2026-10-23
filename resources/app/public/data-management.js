@@ -873,6 +873,7 @@
                   ? `<span class="dmToolValue" title="${esc(tool.value())}">${esc(tool.value())}</span>` : ''}
               </span>
             </button>
+            ${tool.id === 'fx' ? '<div data-fx-folder-sync class="dmsHint" hidden></div>' : ''}
             ${tool.inline ? `<div class="dmToolSlot" data-tool-slot="${esc(tool.id)}">${openTool === 'merch' && tool.id === 'merch' ? merchCalendarPanel() : ''}</div>` : ''}
           </li>`).join('')}
         </ul>
@@ -1434,6 +1435,7 @@
        uygula. Bu çağrı olmadan düğmeler doğru yerde ama HEPSİ pasif görünürdü —
        kullanıcı hangi modun seçili olduğunu göremezdi. */
     syncSourceModes();
+    void feature('fx').then(()=>window.BLFX.load(true)).then(()=>window.BLFX.renderFolderSync(root.querySelector('[data-fx-folder-sync]'))).catch(()=>{});
   }
 
   /* ---------------------------------------------------------------- */

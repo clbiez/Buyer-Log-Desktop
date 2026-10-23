@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { createHash } = require('crypto');
 let _xlsx = null;
 // Saat dilimi kaymasına karşı okuma/yazma kancaları ilk kullanımda kurulur.
 // Kanca idempotenttir; hangi modül önce çağırırsa orada bir kez takılır.
@@ -132,6 +133,8 @@ function parseFxWorkbook(workbook, sourceFile) {
       updatedAt: new Date().toISOString(),
       sourceFile: sourceFile || 'KUR.xlsx',
       sourceType: 'KUR',
+      reportMonth: monthKeys[0],
+      parser: 'deterministic',
     },
     stats: {
       sheetCount,
@@ -145,8 +148,11 @@ function parseFxWorkbook(workbook, sourceFile) {
 }
 
 function readFxWorkbook(fullPath) {
-  const workbook = getXLSX().read(fs.readFileSync(fullPath), { type: 'buffer', cellDates: true });
-  return parseFxWorkbook(workbook, path.basename(fullPath));
+  const buffer = fs.readFileSync(fullPath);
+  const workbook = getXLSX().read(buffer, { type: 'buffer', cellDates: true });
+  const parsed = parseFxWorkbook(workbook, path.basename(fullPath));
+  parsed.data.sourceFingerprint = createHash('sha256').update(buffer).digest('hex');
+  return parsed;
 }
 
 function findKurWorkbook(directories) {
@@ -172,4 +178,22 @@ function findKurWorkbook(directories) {
   return candidates[0] || null;
 }
 
-module.exports = { numberValue, monthKey, parseFxSheet, parseFxWorkbook, readFxWorkbook, findKurWorkbook };
+// force controls disk reads only. Every automatic trigger uses this policy.
+function decideFolderKurApply(current = {}, candidate) {
+  if (!candidate || !candidate.data || candidate.reason === 'parse-failed') return { apply: false, reason: 'parse-failed' };
+  if (candidate.fingerprint && candidate.fingerprint === current.sourceFingerprint) return { apply: false, reason: 'unchanged' };
+  if (current.reportMonth && candidate.reportMonth < current.reportMonth) return { apply: false, reason: 'older-report' };
+  if ((!current.reportMonth || candidate.reportMonth === current.reportMonth) &&
+      ['UPLOAD', 'LCWAI'].includes(current.sourceType) && Date.parse(current.updatedAt) > Date.parse(candidate.modifiedAt)) {
+    return { apply: false, reason: 'current-newer' };
+  }
+  return { apply: true };
+}
+function mergeFolderKur(current, candidate) {
+  const months = Object.fromEntries(Object.entries(current.months || {}).map(([month, rates]) => [month, { ...rates }]));
+  for (const [month, rates] of Object.entries(candidate.data.months || {})) months[month] = { ...months[month], ...rates };
+  return { ...candidate.data, months, currencies: [...new Set(Object.values(months).flatMap(rates => Object.keys(rates)))].sort(),
+    reportMonth: candidate.reportMonth, sourceFingerprint: candidate.fingerprint, parser: candidate.data.parser || 'deterministic',
+    sourceFile: candidate.file, sourceType: 'KUR', sourceModifiedAt: candidate.modifiedAt, updatedAt: new Date().toISOString() };
+}
+module.exports = { decideFolderKurApply, mergeFolderKur, numberValue, monthKey, parseFxSheet, parseFxWorkbook, readFxWorkbook, findKurWorkbook };

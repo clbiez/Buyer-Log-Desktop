@@ -61,8 +61,12 @@ async function execute(task, payload = {}) {
     if (!payload.force && current.sourceType === 'KUR' && current.sourceFile === found.name && current.sourceModifiedAt === modifiedAt) {
       return { found: true, updated: false, file: found.name, modifiedAt };
     }
-    const parsed = readFxWorkbook(found.full);
-    return { found: true, updated: true, file: found.name, modifiedAt, data: parsed.data, stats: parsed.stats };
+    try {
+      const parsed = readFxWorkbook(found.full);
+      return { found: true, updated: true, file: found.name, modifiedAt, fingerprint: parsed.data.sourceFingerprint, reportMonth: parsed.data.reportMonth, data: parsed.data, stats: parsed.stats };
+    } catch (_) {
+      return { found: true, updated: false, file: found.name, modifiedAt, reason: 'parse-failed' };
+    }
   }
   const { XLSX, parseASASWorkbook, parseAntrepoWorkbook, parseCPUpdateWorkbook, parseLFLWorkbook } = requireExcelModules();
   if (task === 'loadSources') {
