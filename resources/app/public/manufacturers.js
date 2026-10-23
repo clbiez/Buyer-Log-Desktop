@@ -119,7 +119,7 @@
     const cards = (S.result && S.result.cards) || [];
     const query = E.nameKey(S.search);
     const list = cards.filter(card => {
-      if (S.status === 'missing_email' ? !(card.record && !card.recipients.length) : (S.status && card.status !== S.status)) return false;
+      if (S.status === 'source_only' ? !card.sourceOnly : S.status === 'missing_email' ? !(card.record && !card.recipients.length) : (S.status && card.status !== S.status)) return false;
       if (S.country && cardCountry(card) !== S.country) return false;
       if (S.area && (card.record ? card.record.typeId : '') !== S.area) return false;
       if (!query) return true;
@@ -179,6 +179,7 @@
     set('status', optionList([
       { value: 'linked', label: STATUS_TEXT.linked() }, { value: 'missing_card', label: STATUS_TEXT.missing_card() },
       { value: 'not_in_asas', label: STATUS_TEXT.not_in_asas() }, { value: 'missing_email', label: T('E-postası yok', 'No e-mail') },
+      { value: 'source_only', label: T('Yalnız kaynakta görünen', 'Source references only') },
     ], S.status, T('Tümü', 'All')));
     set('country', optionList(countries, S.country, T('Tüm ülkeler', 'All countries')));
     set('area', optionList(S.directory.types.map(item => ({ value: item.id, label: item.name })), S.area, T('Tüm alanlar', 'All areas')));
@@ -194,7 +195,7 @@
     if (!stats) { host.innerHTML = ''; return; }
     const chip = (status, value, label, warn) => `<button type="button" class="mfpStat${warn && value ? ' isWarn' : ''}${S.status === status ? ' isActive' : ''}" data-mfp-status="${esc(status)}"><b>${nf(value)}</b><span>${esc(label)}</span></button>`;
     host.innerHTML = [
-      chip('', stats.asasManufacturers, T('ASAS üreticisi', 'ASAS manufacturers')),
+      chip('', stats.asasManufacturers, T('ASAS / Orders adı', 'ASAS / Orders names')),
       chip('linked', stats.linked, T('kartı eşli', 'linked cards')),
       chip('missing_card', stats.missingCard, T('kartı yok', 'without a card'), true),
       chip('not_in_asas', stats.notInAsas, T('ASAS’ta karşılığı yok', 'not found in ASAS'), true),
@@ -292,7 +293,7 @@
       `Bu ad ASAS / Orders Manufacturer alanında ${nf(card.sourceRows)} satırda bulunuyor, ancak bu satırlarda sorumlu üretici değil. Lisanslı Non-DTR siparişlerde sorumluluk Alt Üreticiye aittir; bu kaynak adı için sipariş hacmi, termin performansı ve otomatik e-posta alıcısı atanmaz.`,
       `This name appears in ${nf(card.sourceRows)} ASAS / Orders Manufacturer rows, but is not the responsible manufacturer on those rows. Licensed non-DTR orders belong to the Sub-Manufacturer; order volumes, delivery performance and automatic e-mail routing are not assigned to this source name.`
     ))}</div>`);
-    if (card.status === 'missing_card') warnings.push(`<div class="mfpAlert">${esc(T('Bu ASAS üreticisinin kartı yok: e-posta adresi olmadığı için kurallar ve otomasyonlar bu üreticiye e-posta oluşturamaz.', 'This ASAS manufacturer has no card: without an e-mail address, rules and automations cannot create e-mails for it.'))}</div>`);
+    if (card.status === 'missing_card' && !card.sourceOnly) warnings.push(`<div class="mfpAlert">${esc(T('Bu ASAS üreticisinin kartı yok: e-posta adresi olmadığı için kurallar ve otomasyonlar bu üreticiye e-posta oluşturamaz.', 'This ASAS manufacturer has no card: without an e-mail address, rules and automations cannot create e-mails for it.'))}</div>`);
     if (card.status === 'not_in_asas') {
       const links = (card.suggestions || []).map(item => manage
         ? `<button type="button" class="mfpBtn isSmall" data-mfp-link="${esc(record.id)}" data-mfp-link-name="${esc(item.name)}">${esc(T(`“${item.name}” ile eşle`, `Link to “${item.name}”`))}</button>`
