@@ -174,6 +174,7 @@
     const values=dataset?E.dimensionValues(dataset,dim):[];
     if(!values.length)return `<div class="psaMultiFilter psaField isEmpty" title="${esc(t('noSourceData'))}"><span class="psaMultiCaption">${esc(dimLabel(dim))}</span><span class="psaMultiTrigger" aria-disabled="true"><span class="psaMultiLabel">${esc(t('noSourceData'))}</span><span class="psaMultiChevron" aria-hidden="true">▾</span></span></div>`;
     const selected=filterValues(dim),selectedKeys=new Set(selected.map(value=>E.keyOf(value))),query=ui.filterSearch[dim]||'',queryKey=E.keyOf(query);
+    const ordered=values.slice().sort((a,b)=>Number(selectedKeys.has(E.keyOf(b)))-Number(selectedKeys.has(E.keyOf(a))));
     const shown=values.filter(value=>!queryKey||E.keyOf(value).includes(queryKey)),summary=selected.length>1?`${selected.length} ${t('selected')}`:selected[0]||t('all');
     return `<details class="psaMultiFilter psaField${selected.length?' isActive':''}" data-ps-filter-menu="${dim}"${ui.openFilter===dim?' open':''}>
       <summary><span class="psaMultiCaption">${esc(dimLabel(dim))}</span><span class="psaMultiTrigger"><span class="psaMultiLabel">${esc(summary)}</span><span class="psaMultiChevron" aria-hidden="true">▾</span></span></summary>
@@ -181,7 +182,7 @@
         <input type="search" class="psaMultiSearch" data-ps-filter-search="${dim}" value="${esc(query)}" placeholder="${esc(t('filterSearch'))}" autocomplete="off">
         <div class="psaMultiList" role="listbox" aria-multiselectable="true">
           <label class="psaMultiOption psaMultiAll"><input type="checkbox" data-ps-filter-all="${dim}"${selected.length?'':' checked'}><span>${esc(t('all'))}</span></label>
-          ${values.map(value=>{const key=E.keyOf(value),hidden=queryKey&&!key.includes(queryKey);return `<label class="psaMultiOption" data-ps-filter-option data-search="${esc(key)}"${hidden?' hidden':''}><input type="checkbox" data-ps-filter-value="${dim}" value="${esc(value)}"${selectedKeys.has(key)?' checked':''}><span>${esc(value)}</span></label>`;}).join('')}
+          ${ordered.map(value=>{const key=E.keyOf(value),hidden=queryKey&&!key.includes(queryKey);return `<label class="psaMultiOption" data-ps-filter-option data-search="${esc(key)}"${hidden?' hidden':''}><input type="checkbox" data-ps-filter-value="${dim}" value="${esc(value)}"${selectedKeys.has(key)?' checked':''}><span>${esc(value)}</span></label>`;}).join('')}
           <p class="psaMultiEmpty" data-ps-filter-empty${shown.length?' hidden':''}>${esc(t('noFilterMatch'))}</p>
         </div>
       </div>
@@ -222,6 +223,17 @@
   }
   function render(){
     if(!root)return;
+    // A filter change updates analysis, but must not reset its open list viewport.
+    const scrollByDim=new Map();
+    root.querySelectorAll?.('[data-ps-filter-menu]')?.forEach(menu=>{
+      const list=menu.querySelector('.psaMultiList');
+      if(list)scrollByDim.set(menu.dataset.psFilterMenu,list.scrollTop);
+    });
+    const configTop=root.querySelector('.psaFilterConfigPanel')?.scrollTop||0;
+    const columnsTop=root.querySelector('.psaFilterConfigColumns')?.scrollTop||0;
+    const focused=document.activeElement;
+    const focusedFilter=focused?.dataset?.psFilterSearch;
+    const focusedColumns=focused?.dataset?.psColumnSearch!=null;
     const head=`<div class="psaHead"><div class="psaTitle"><p>${esc(t('subtitle'))}</p></div>
       <div class="psaHeadActions"><label class="psaField psaSource"><span>${esc(t('source'))}</span><select data-ps="source">${sourceOptions()}</select></label>
       <button type="button" class="psaGhostBtn" data-ps="export"${model&&model.totals.records>0?'':' disabled'}>${icon('file-export')}<span>${esc(t('excel'))}</span></button></div></div>`;
@@ -231,6 +243,16 @@
     else if(!model||!(model.totals.records>0))body=stateBox({kind:'empty',icon:'chart-histogram',title:t('noData'),detail:t('noDataHint')});
     else body=`${tabs()}<div class="psaPanel" id="psaPanel" role="tabpanel" aria-labelledby="psaTab-${state.tab}" tabindex="0"><p class="psaHint">${esc(t('hint_'+state.tab))}</p><div data-ps-tools>${tools()}</div><div data-ps-list>${content()}</div></div>`;
     root.innerHTML=`<div class="psa">${head}${loading||error?'':controls()}${body}</div>`;
+    root.querySelectorAll?.('[data-ps-filter-menu]')?.forEach(menu=>{
+      const oldTop=scrollByDim.get(menu.dataset.psFilterMenu);
+      if(oldTop!=null){const list=menu.querySelector('.psaMultiList');if(list)list.scrollTop=oldTop;}
+      if(menu.dataset.psFilterMenu===focusedFilter)menu.querySelector('[data-ps-filter-search]')?.focus({preventScroll:true});
+    });
+    const config=root.querySelector('.psaFilterConfigPanel');
+    if(config)config.scrollTop=configTop;
+    const columns=root.querySelector('.psaFilterConfigColumns');
+    if(columns)columns.scrollTop=columnsTop;
+    if(focusedColumns)root.querySelector('[data-ps-column-search]')?.focus({preventScroll:true});
   }
   function renderList(){const target=root?.querySelector('[data-ps-list]');if(target)target.innerHTML=content();}
   function tools(){
