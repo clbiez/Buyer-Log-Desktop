@@ -63,7 +63,13 @@ function applyRecords(overrides, records, deps) {
       const entries = { ...local.entries };
       for (const [key, entry] of Object.entries(incoming).slice(0, 500)) {
         if (!key || key.length > 200 || !entry || typeof entry.split !== 'boolean' || typeof entry.at !== 'string') continue;
-        if (!entries[key] || entry.at > String(entries[key].at || '')) entries[key] = { split: entry.split, at: entry.at };
+        // Manual links share the same per-key last-write-wins envelope as split decisions.
+        const manual=key.startsWith('m:');
+        if(manual && (typeof entry.source!=='string'||!entry.source.trim()||entry.source.length>200
+          ||typeof entry.target!=='string'||!entry.target.trim()||entry.target.length>200))continue;
+        if (!entries[key] || entry.at > String(entries[key].at || '')) entries[key] = manual
+          ? {source:entry.source,target:entry.target,split:entry.split,at:entry.at}
+          : {split:entry.split,at:entry.at};
       }
       if (JSON.stringify(entries) !== JSON.stringify(local.entries)) {
         next.licensorMerges = { entries, updatedAt: [local.updatedAt, String(record.merges.updatedAt || '')].sort().pop() };

@@ -132,7 +132,7 @@
   function licensorList(){return `<datalist id="lcLicensorList">${E.licensorOptions(S.data?.cards||[]).filter(o=>o.value).map(o=>`<option value="${esc(o.label)}"></option>`).join('')}</datalist>`;}
   // An empty licensor is filled in place; a licensor that is set never changes (peers key
   // a card by license × licensor) — another licensor gets its own row from the details.
-  const mergeOpts=()=>({merges:S.data?.licensorMerges||{split:[]},mergeKey:window.BLBusinessRules?.licensorMergeKey||null});
+  const mergeOpts=()=>({merges:S.data?.licensorMerges||{split:[]},mergeKey:window.BLBusinessRules?.licensorMergeKey||null,groupKey:window.BLBusinessRules?.licensorGroupKey||null});
   function licensorCell(row){
     if(row.licensor&&row.merged?.length){
       const names=row.merged.map(c=>c.licensor).join(', ');
@@ -307,11 +307,19 @@
     try{
       const {licenses,skipped}=A.project(cards,isEn()?'en':'tr');
       if(!licenses.length){toast(T('Seçilen lisansların hiçbiri üretici atlasına dahil değil. Haritada “Üretici atlasına dahil”i açın.','None of the selected licenses is included in the supplier atlas. Turn on “Include in supplier atlas” in the map.'));return;}
-      const html=A.buildHTML(licenses,{lang:isEn()?'en':'tr',fonts:await A.loadFonts()});
-      const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'})),a=document.createElement('a');
+      const result=await A.buildEmailSafeHTML(licenses,{lang:isEn()?'en':'tr',fonts:await A.loadFonts()});
+      // Defensive final guard: an oversized file must never be offered for download.
+      if(result.blob.size>A.MAX_EMAIL_BYTES)throw Object.assign(new Error('Atlas oversized'),{code:'ATLAS_EMAIL_SIZE_LIMIT'});
+      const url=URL.createObjectURL(result.blob),a=document.createElement('a');
       a.href=url;a.download=exportName();document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
-      toast(skipped.length?T(`${licenses.length} lisans aktarıldı. Üreticiye kapalı: ${skipped.join(', ')}`,`${licenses.length} licenses exported. Not shared with suppliers: ${skipped.join(', ')}`):T(`${licenses.length} lisans üretici atlasına aktarıldı.`,`${licenses.length} licenses exported to the supplier atlas.`));
-    }catch(_){toast(T('Üretici atlası oluşturulamadı.','The supplier atlas could not be created.'));}
+      const mb=(result.bytes/1000000).toFixed(2);
+      const detail=result.optimized?T(' · E-posta boyutuna göre optimize edildi.',' · Optimized for email.'):'';
+      toast(T(`${licenses.length} lisans aktarıldı (${mb} MB).`,`${licenses.length} licenses exported (${mb} MB).`)+detail+
+        (skipped.length?T(` Üreticiye kapalı: ${skipped.join(', ')}`,` Not shared with suppliers: ${skipped.join(', ')}`):''),'success');
+    }catch(error){
+      if(error?.code==='ATLAS_EMAIL_SIZE_LIMIT')toast(T('Atlas 9 MB sınırına sığdırılamadı. İçerik eksiltilmedi; daha az lisans seçin veya büyük görselleri küçültün.','The atlas cannot fit under 9 MB without removing content. Select fewer licenses or reduce large images.'));
+      else toast(T('Üretici atlası oluşturulamadı.','The supplier atlas could not be created.'));
+    }
     finally{S.exporting=false;render();}
   }
   // Our own map/template writes change only processAtlas: open rate drafts on those cards
@@ -368,21 +376,28 @@
   }
   function mergePanel(){
     const list=E.mergeSummary(S.data.cards,mergeOpts());
+    const options=E.licensorOptions(S.data.cards).filter(o=>o.value);
+    const picker=(id,selected,placeholder)=>`<select id="${id}" class="lcSelect" aria-label="${esc(placeholder)}"><option value="">${esc(placeholder)}</option>${options.map(o=>`<option value="${esc(o.label)}" ${selected===o.label?'selected':''}>${esc(o.label)}</option>`).join('')}</select>`;
     return `<div class="lcMergePanel" role="region" aria-label="${esc(T('Lisansör birleştirmeleri','Licensor merges'))}">
-      <header><b>${esc(T('Lisansör birleştirmeleri','Licensor merges'))}</b><small>${esc(T('Şirket türü/ülke eki dışında aynı olan lisansör adları tek satırda gösterilir. Royalty önce siparişteki adın kendi sözleşmesini, yoksa birleşik adın sözleşmesini kullanır. Yanlış birleştirmeyi “Ayır” ile geri alın.','Licensor names that differ only by company type or country suffix are shown as one row. Royalty uses the order’s own licensor contract first, otherwise the merged name’s contract. Undo a wrong merge with “Split”.'))}</small></header>
-      ${list.length?`<ul>${list.map(m=>`<li class="${m.split?'isSplit':''}${S.mergeFocus===m.key?' isFocus':''}"><span class="lcMergeNames">${m.names.map(n=>`<span class="lcMergeName">${esc(n)}</span>`).join('<i>≡</i>')}</span><small>${m.licenses.length} ${esc(T('lisans','licenses'))}: ${esc(m.licenses.slice(0,6).join(', '))}${m.licenses.length>6?'…':''}</small>${statusBadgeMerge(m.split)}${canEdit()?`<button type="button" class="lcBtn sm" data-lc-act="${m.split?'mergeJoin':'mergeSplit'}" data-key="${esc(m.key)}" ${S.merging?'disabled':''}>${esc(m.split?T('Yeniden birleştir','Merge again'):T('Ayır','Split'))}</button>`:''}</li>`).join('')}</ul>`:`<p class="lcMuted">${esc(T('Ad nüansından çoklanan lisansör yok.','No licensors are duplicated by a name nuance.'))}</p>`}
+      <header><b>${esc(T('Lisansör birleştirmeleri','Licensor merges'))}</b><small>${esc(T('Benzer lisansör adları otomatik birleşir; farklı adları aşağıdan manuel eşleştirebilirsiniz. Her lisansörün sözleşmesi korunur ve royalty önce siparişteki adın sözleşmesini kullanır. Birleştirmeleri buradan geri alabilirsiniz.','Similar names merge automatically; you can also link different names below. Each licensor keeps its contracts and royalty uses the order’s own contract first. You can undo merges here.'))}</small></header>
+      ${canEdit()?`<div class="lcManualMerge"><label><span>${esc(T('Lisansör','Licensor'))}</span>${picker('lcMergeSource',S.manualSource||'',T('Lisansör seçin','Choose licensor'))}</label><span aria-hidden="true">→</span><label><span>${esc(T('Birleştirilecek lisansör','Merge with'))}</span>${picker('lcMergeTarget',S.manualTarget||'',T('Hedef lisansör','Target licensor'))}</label><button type="button" class="lcBtn primary sm" data-lc-act="mergeManualAdd" ${S.merging?'disabled':''}>${esc(T('Manuel birleştir','Merge manually'))}</button></div>`:''}
+      ${list.length?`<ul>${list.map(m=>`<li class="${m.split?'isSplit':''}${S.mergeFocus===m.key?' isFocus':''}"><span class="lcMergeNames">${m.names.map(n=>`<span class="lcMergeName">${esc(n)}</span>`).join('<i>≡</i>')}${m.manual?`<small>${esc(T('Manuel','Manual'))}</small>`:''}</span><small>${m.licenses.length} ${esc(T('lisans','licenses'))}: ${esc(m.licenses.slice(0,6).join(', '))}${m.licenses.length>6?'…':''}</small>${statusBadgeMerge(m.split)}${canEdit()?`<button type="button" class="lcBtn sm" data-lc-act="${m.manual?(m.split?'mergeManualJoin':'mergeManualSplit'):(m.split?'mergeJoin':'mergeSplit')}" data-key="${esc(m.key)}" ${m.manual?`data-source="${esc(m.source)}" data-target="${esc(m.target)}"`:''} ${S.merging?'disabled':''}>${esc(m.split?T('Yeniden birleştir','Merge again'):T('Ayır','Split'))}</button>`:''}</li>`).join('')}</ul>`:`<p class="lcMuted">${esc(T('Henüz birleştirilmiş lisansör yok.','No licensor merges yet.'))}</p>`}
     </div>`;
   }
   const statusBadgeMerge=split=>`<span class="lcBadge ${split?'isMuted':'isOk'}">${esc(split?T('Ayrı','Separate'):T('Birleşik','Merged'))}</span>`;
-  async function setMerge(key,split){
-    if(!key||S.merging||!canEdit())return;
+  async function setMerge(key,split,manual=null){
+    if(S.merging||!canEdit()||(!manual&&!key))return;
+    if(manual&&(!manual.source||!manual.target||manual.source===manual.target)){
+      toast(T('İki farklı lisansör seçin.','Choose two different licensors.'),'warning');return;
+    }
     S.merging=true;render();
     try{
-      const result=await api('/api/license-cards/licensor-merges',{method:'PUT',body:JSON.stringify({key,split})});
+      const result=await api('/api/license-cards/licensor-merges',{method:'PUT',body:JSON.stringify(manual?{...manual,split}:{key,split})});
       if(result.cards)S.data=result;S.animate=true;
-      toast(split?T('Lisansör adları ayrıldı; her ad kendi satırında ve kendi sözleşmesiyle hesaplanır.','Licensor names split; each name has its own row and contract.'):T('Lisansör adları yeniden birleştirildi.','Licensor names merged again.'),'success');
+      if(manual&&!split){S.manualSource='';S.manualTarget='';}
+      toast(split?T('Lisansörler ayrıldı; özgün sözleşmeler korundu.','Licensors split; original contracts were retained.'):T('Lisansörler birleştirildi; özgün sözleşmeler korundu.','Licensors merged; original contracts were retained.'),'success');
       await window.BLLicenseDataBridge?.rulesChanged?.(result);
-    }catch(e){toast(failMessage(e),'warning');}
+    }catch(e){toast(e.code==='LICENSE_MERGE_INVALID'?T('Geçerli iki lisansör seçin ve tekrar deneyin.','Select two valid licensors and try again.'):failMessage(e),'warning');}
     finally{S.merging=false;render();}
   }
   async function pasteMaps(ids){
@@ -426,6 +441,8 @@
     if(a==='templates')return openTemplates();
     if(a==='merges'){S.mergesOpen=!S.mergesOpen||Boolean(el.dataset.key&&!el.classList.contains('lcBtn'));S.mergeFocus=el.dataset.key||'';return render();}
     if(a==='mergeSplit'||a==='mergeJoin')return setMerge(el.dataset.key,a==='mergeSplit');
+    if(a==='mergeManualSplit'||a==='mergeManualJoin')return setMerge('',a==='mergeManualSplit',{source:el.dataset.source,target:el.dataset.target});
+    if(a==='mergeManualAdd')return setMerge('',false,{source:S.host.querySelector('#lcMergeSource')?.value||'',target:S.host.querySelector('#lcMergeTarget')?.value||''});
     if(a==='copyMap'){const c=cardOf(id);if(!c?.processAtlas)return;S.clip={id,license:c.license,licensor:c.licensor,steps:(c.processAtlas.license?.stages||[]).length,atlas:copy(c.processAtlas)};toast(T(`${c.license} haritası kopyalandı.`,`${c.license} map copied.`),'info');return render();}
     if(a==='clearClip'){S.clip=null;return render();}
     if(a==='pasteMap')return pasteMaps([id]);
@@ -499,6 +516,8 @@
     S.host.addEventListener('change',e=>{
       const el=e.target;
       if(el.id==='lcLicensor'){S.licensor=el.value===''?null:el.value==='__none__'?'':el.value;S.animate=true;return render();}
+       if(el.id==='lcMergeSource'){S.manualSource=el.value;return;}
+       if(el.id==='lcMergeTarget'){S.manualTarget=el.value;return;}
       if(el.dataset.lcSelect!=null){if(el.checked)S.selected.add(el.dataset.lcSelect);else S.selected.delete(el.dataset.lcSelect);return render();}
       if(el.dataset.lcSelectAll!=null){const rows=currentRows();for(const r of rows){if(el.checked)S.selected.add(r.id);else S.selected.delete(r.id);}return render();}
       if(el.dataset.lcCover!=null)uploadCover(el);

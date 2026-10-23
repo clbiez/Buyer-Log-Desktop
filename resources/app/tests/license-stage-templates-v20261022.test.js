@@ -87,7 +87,8 @@ test('supplier atlas: each license is an in-place drawer with fixed, aligned rou
   assert.match(html,/\.route\{display:grid;grid-template-columns:180px minmax\(0,1fr\) 200px/);
   assert.match(html,/\.route \.tags\{display:flex;flex-wrap:wrap;justify-content:flex-end/);
   assert.ok(!html.includes('style="grid-column'),'no ad-hoc inline column overrides');
-  assert.match(html,/Click a license to show its map; click again to hide it\./);
+  // #654: aşamalar katlanabilir oldu; ipucu lisans + aşama tıklamasını birlikte anlatır.
+  assert.match(html,/Click a license to see its map, then a step number or title to toggle its details\./);
   assert.match(html,/<meta http-equiv="Content-Security-Policy" content="default-src 'none';/);assert.ok(!/<script/i.test(html));
 });
 

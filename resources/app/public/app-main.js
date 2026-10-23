@@ -34497,6 +34497,14 @@ function prepareEmailTopicCell(row,column){
   const sourceKind=column.sourceKind||'collection';
   if(prepareEmailColumnIsPicture(column))return {value:'',display:prepareEmailImageSource(row,sourceKind)?(appLang==='en'?'Image':'Görsel'):'',numeric:false,date:false,numFmt:''};
   let raw=sourceKind==='collection'?(column.exToRetail?kolExToRetailDays(row):kolEffectiveValue(row,column.k)):row[column.k];
+  // E-mail HTML/plain tables, previews and attached Excel share this cell value.
+  // Match Collection/CP exports and clipboard: use the active Fabric Card summary
+  // without changing the original PLM fabric text stored on the model/order.
+  if((sourceKind==='collection'&&column.k==='fabric')||
+     (sourceKind==='cp'&&column.k===CP_FABRIC_PLM_KEY)){
+    const display=kolFabricDisplay(raw);
+    return {value:display,display,numeric:false,date:false,numFmt:''};
+  }
   let value=raw==null?'':raw,numeric=false,date=false,numFmt='';
   if(sourceKind==='collection'){
     if(column.k==='plmId'){value=String(raw==null?'':raw).replace(/\.(?=\d{3}(?:\D|$))/g,'');numFmt='@';}

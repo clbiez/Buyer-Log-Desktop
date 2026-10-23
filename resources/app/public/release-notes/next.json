@@ -1170,6 +1170,35 @@
           "en": "Groups appearing on scroll and card effects"
         }
       }
+    },
+    {
+      "id": "lcwai-gallery-grouping-title",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Sunum ve rapor çıktıları",
+        "en": "LCW AI · Presentation and report outputs"
+      },
+      "title": {
+        "tr": "Modelleri 3 seviyede gruplayın, sayfa başlığını seçin",
+        "en": "Group models on 3 levels and choose the page title"
+      },
+      "body": {
+        "tr": "Yerleşim adımında modelleri 1., 2. ve 3. grup olarak (ör. Kategori › Kumaş › Baskı) yeniden gruplayabilirsiniz: son seviye aynı slaytta yan yana durur, önceki seviyeler yeni slayt ya da bölüm başlatır. Değerler kart bilgisinden, yoksa Buyer Log verisinden alınır. Slayt/bölüm başlığı otomatik kalabilir, seçtiğiniz alanların değerlerinden oluşabilir ya da elle yazılabilir; {Kategori} gibi bir alan yazdığınız yere o sayfadaki değer gelir. Seçimler şablona kaydedilir.",
+        "en": "In the Layout step you can regroup models into a 1st, 2nd and 3rd group (e.g. Category › Fabric › Print): the last level sits side by side on one slide, earlier levels start a new slide or section. Values come from the card details, otherwise from Buyer Log data. The slide/section title can stay automatic, be built from the fields you choose, or be typed; a field such as {Category} is replaced by that page’s value. The choices are saved with the template."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-gallery-grouping-title.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI çıktı düzenleyicisi: Yerleşim adımında gruplama seçimleri, elle yazılan slayt başlığı ve yeniden gruplanmış model slaytı, demo veriler",
+          "en": "Real Buyer Log LCW AI output editor: grouping choices, a typed slide title and a regrouped model slide in the Layout step, demo data"
+        },
+        "caption": {
+          "tr": "Kategori › Fit gruplaması ve {Kategori} başlığı",
+          "en": "Category › Fit grouping and a {Category} title"
+        }
+      }
     }
   ]
 }

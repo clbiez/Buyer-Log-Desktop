@@ -131,7 +131,7 @@ function createOutputService(options = {}) {
         // yan yana, PDF'te sütun × satır sayfaları. Yerleşim yoksa varsayılan.
         const filled = fillHtmlImages(data.body, images, lang);
         const layout = data.layout || (/\bbl-(gallery|groups|specs)\b/.test(filled) ? BLOutputLayout.defaults('pdf') : null);
-        const body = layout ? BLOutputLayout.prepareReport(filled, layout, { pages: format === 'pdf', records }) : filled;
+        const body = layout ? BLOutputLayout.prepareReport(filled, layout, { pages: format === 'pdf', records, english: lang === 'en' }) : filled;
         if (format === 'pdf') {
           const html = buildDocument({ body, styles: data.styles, title, lang, orientation, print: true, meta: { date: day, template: job.templateLabel }, layout });
           const pendingId = store.putPending(ownerId, { stage: 'pdf', html, ...saveMeta, lang, orientation, officeCapability:job.durablePending===true }, {durable:job.durablePending===true});
