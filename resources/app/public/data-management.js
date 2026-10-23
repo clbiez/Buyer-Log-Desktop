@@ -1434,8 +1434,8 @@
     /* DOM baştan kuruldu: kaynak modu ve otomatik yenileme durumunu yeniden
        uygula. Bu çağrı olmadan düğmeler doğru yerde ama HEPSİ pasif görünürdü —
        kullanıcı hangi modun seçili olduğunu göremezdi. */
-    syncSourceModes();
     void feature('fx').then(()=>window.BLFX.load(true)).then(()=>window.BLFX.renderFolderSync(root.querySelector('[data-fx-folder-sync]'))).catch(()=>{});
+    syncSourceModes();
   }
 
   /* ---------------------------------------------------------------- */

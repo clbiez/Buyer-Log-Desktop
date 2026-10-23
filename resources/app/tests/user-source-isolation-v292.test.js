@@ -106,7 +106,8 @@ test('requested source operations are available to Buyer sessions and use per-us
   assert.match(server, /effectiveOverridesForUser\(id\)/);
   assert.doesNotMatch(server, /mergeCpUpdateOverrides\(result\)/);
   assert.match(server, /loadRefreshHistory\(id\)/);
-  assert.match(server, /res\.json\(loadFx\(\)\)/);
+  // FX remains shared; only the last folder-sync status is added to the response.
+  assert.match(server, /res\.json\(\{\.\.\.loadFx\(\),folderSync:deps\.getFolderFxSyncStatus\?\.\(\)\|\|null\}\)/);
   assert.match(server, /saveFx\(req\.body \|\| \{\}, requestRevision\(req\)\)/);
   assert.match(server, /deleteRefreshHistory\(req\.params\.id, requestRevision\(req\), sourceUserId\(req\)\)/);
   assert.match(server, /userAccess\.authoritativeOrderRows\(code\)/);

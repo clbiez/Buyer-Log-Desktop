@@ -300,6 +300,35 @@
           "en": "After server restart, the older KUR.xlsx is not applied."
         }
       }
+    },
+    {
+      "id": "fx-lcwai-layout-preview",
+      "type": "feature",
+      "module": {
+        "tr": "Döviz kurları",
+        "en": "FX rates"
+      },
+      "title": {
+        "tr": "Fark önizlemeli LCW AI yedek okuyucu",
+        "en": "LCW AI fallback reader with difference preview"
+      },
+      "body": {
+        "tr": "Kurallı okuma başarısızsa LCW AI yalnız tablo düzenini önerir. Buyer Log özgün hücreleri okur, yön ve değerleri doğrular; fark tablosu ve açık onay sonrası kaydeder. Tarayıcı ve sunucu aynı okuma motorunu kullanır.",
+        "en": "When deterministic reading fails, LCW AI suggests only the table layout. Buyer Log reads original cells, validates direction and values, and saves after a difference preview and explicit confirmation. Browser and server share one import engine."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "fx-lcwai-layout-preview.png",
+        "alt": {
+          "tr": "Demo kur tablosunun kaynak aralığı ve eski yeni fark önizlemesi",
+          "en": "Source range and old-to-new difference preview for a demo FX table"
+        },
+        "caption": {
+          "tr": "Dosyadan okunan kurlar, AI güveni ve işaretli farklar kayıttan önce incelenir.",
+          "en": "Rates read from the file, AI confidence and flagged changes are reviewed before saving."
+        }
+      }
     }
   ]
 }

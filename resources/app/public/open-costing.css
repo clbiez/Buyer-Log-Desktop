@@ -598,3 +598,8 @@
   #view-opencosting .ocStyleInfoLayout,
   #view-opencosting .ocMetaGrid{grid-template-columns:minmax(0,1fr);}
 }
+
+/* Shared FX preview uses the existing costing dialog and status palette. */
+#fxImportRecovery{z-index:1400;}
+.ocFxDiffFlag td{background:var(--orange-bg);color:var(--ink);}
+#fxImportRecovery h3{font-size:var(--fs-sm);color:var(--ink);}

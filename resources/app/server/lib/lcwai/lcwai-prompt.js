@@ -31,6 +31,22 @@ const ROW_DATA_KEYS = /^(rows|samplerows|records)$/i;
 const MAX_SAMPLE_ROWS = 20;
 
 const CONTRACTS = Object.freeze({
+  'fx-kur-layout': Object.freeze({
+    label:{tr:'KUR tablosu düzeni',en:'KUR table layout'},
+    fields:Object.freeze({
+      sheetName:{type:'string',required:true,max:200,hint:{tr:'Önizlemedeki sayfa adı',en:'Sheet name from the preview'}},
+      headerRow:{type:'string',required:true,max:8,hint:{tr:'1 tabanlı başlık satırı',en:'One-based header row'}},
+      monthColumns:{type:'string',required:true,max:16000,hint:{tr:'JSON dizisi: [{col:"C",month:"YYYY-MM"}]; kur değeri içermez',en:'JSON array: [{col:"C",month:"YYYY-MM"}]; no exchange-rate values'}},
+      codeColumn:{type:'string',required:true,max:3,hint:{tr:'Döviz kodu sütununun harfi',en:'Currency-code column letter'}},
+      firstDataRow:{type:'string',required:true,max:8,hint:{tr:'1 tabanlı ilk veri satırı',en:'One-based first data row'}},
+      lastDataRow:{type:'string',required:true,max:8,hint:{tr:'1 tabanlı son veri satırı',en:'One-based last data row'}},
+      direction:{type:'string',required:true,max:20,hint:{tr:'per_usd veya usd_per_unit',en:'per_usd or usd_per_unit'}},
+      scale:{type:'string',required:true,max:4,hint:{tr:'1, 100 veya 1000 birimlik kotasyon',en:'Quote per 1, 100 or 1000 units'}},
+      confidence:{type:'string',required:true,max:10,hint:{tr:'0 ile 1 arası güven',en:'Confidence between 0 and 1'}},
+      warnings:{type:'string[]',max:500,items:30,hint:{tr:'Düzen belirsizlikleri; kur tablosu üretme',en:'Layout uncertainties; never generate a rate table'}},
+    }),
+    example:{sheetName:'Demo',headerRow:3,monthColumns:'[{"col":"C","month":"2026-10"}]',codeColumn:'B',firstDataRow:4,lastDataRow:12,direction:'per_usd',scale:1,confidence:0.9,warnings:[]},
+  }),
 
 
 
@@ -444,6 +460,10 @@ function parseStructured(text, source) {
   if (!contract) return { ok: true, data: null, errors: [] };
   const raw = extractJsonObject(text);
   if (!raw) return { ok: false, data: null, errors: ['no-json'] };
+  if (normalizedSource === 'fx-kur-layout') {
+    try { return {ok:true,data:require('../../../public/fx-import-engine').normalizeLayout(raw),errors:[]}; }
+    catch (_) { return {ok:false,data:null,errors:['invalid-fx-layout']}; }
+  }
   const data = {}, errors = [];
   for (const [name, spec] of Object.entries(contract.fields)) {
     const value = raw[name];

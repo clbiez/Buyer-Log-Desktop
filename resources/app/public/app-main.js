@@ -15921,6 +15921,8 @@ async function refreshSourceFxFreshnessWarning(force=false){
   return renderSourceFxFreshness(BLFX.store);
 }
 
+window.addEventListener('bl-fx-imported',()=>renderSourceFxFreshness(window.BLFX?.store));
+
 document.getElementById('sourceFxFile')?.addEventListener('change', async e=>{
   const file=e.target.files?.[0];
   e.target.value='';
@@ -15933,9 +15935,10 @@ document.getElementById('sourceFxFile')?.addEventListener('change', async e=>{
     // fx.js deferredUi zincirinin sonundadır; zincir bitmeden/düşmüşken de yükle.
     if(!window.BLFX&&window.BLPerf?.ensureFeature) await window.BLPerf.ensureFeature('fx');
     if(!window.BLFX) throw new Error(appLang==='en'?'The FX module is not loaded.':'Kur modülü yüklenmedi.');
+    await BLFX.load(true);
     const parsed=await BLFX.importFile(file);
     if(!BLFX.confirmOlderReport(parsed.data))return;
-    await BLFX.save({...parsed.data,sourceType:'UPLOAD',sourceModifiedAt:file.lastModified?new Date(file.lastModified).toISOString():null});
+    await BLFX.save({...parsed.data,sourceType:'UPLOAD',sourceModifiedAt:file.lastModified?new Date(file.lastModified).toISOString():null},{expectedRevision:parsed.revision});
     const st=parsed.stats;
     btn?.classList.add('loaded');
     showToast(appLang==='en'?`FX rates updated: ${st.currencyCount} currencies, ${st.monthCount} months (${st.sheetCount} sheets read).`:`Kurlar güncellendi: ${st.currencyCount} döviz, ${st.monthCount} ay (${st.sheetCount} sayfa okundu).`);
@@ -15944,6 +15947,7 @@ document.getElementById('sourceFxFile')?.addEventListener('change', async e=>{
     renderSourceFxFreshness(BLFX.store);
   }catch(err){
     showToast((appLang==='en'?'Could not read the FX file: ':'Kur dosyası okunamadı: ')+err.message);
+    window.BLFX?.showImportRecovery(err);
   }finally{
     if(label) label.textContent=prev;
   }

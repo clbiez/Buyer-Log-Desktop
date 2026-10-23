@@ -12389,6 +12389,10 @@ require('./routes/holiday-routes')(app, {
 // ---- Ön Maliyet, Aylık Döviz Kurları ve Nakliye Kıyaslaması route'ları → server/routes/costing-fx-shipping-routes.js ----
 require('./routes/costing-fx-shipping-routes')(app, {
   getFolderFxSyncStatus: () => folderFxSyncStatus,
+  getSourceKurPreview: value => {
+    const id=sourceUserId(value);
+    return runExcelTask('previewFxWorkbookFromDirectories',{directories:[sourceFolderForUser(id),...(id==='moderator'?[path.join(__dirname,'..')]:[])].filter(Boolean)},{timeoutMs:5000,serializationKey:'shared-fx'});
+  },
   syncFxFromKurWorkbook,
   openCostingService,
   shippingWorkflowService,

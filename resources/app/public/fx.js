@@ -99,8 +99,8 @@ async function load(force){
   }).catch(()=>{const local=fxLocalRead();if(local)Object.assign(store,fxShape(local));return store;});
   return loadedPromise;
 }
-async function save(data){
-  const expectedRevision=Number(store._revision)||0;
+async function save(data,options={}){
+  const expectedRevision=options.expectedRevision??(Number(store._revision)||0);
   const shaped=fxShape({...data,_revision:expectedRevision,updatedAt:data.updatedAt||new Date().toISOString()});
   try{
     const out=await requestSave(shaped,expectedRevision);
@@ -117,98 +117,46 @@ window.addEventListener('online',()=>{load(true).catch(()=>{});});
 /* ---- Kur Tahmin Raporu Excel içe aktarma ----
    Dosya adı ve sayfa adındaki ay bilgisi bilinçli olarak dikkate alınmaz.
    Her sayfada bulunan B sütunu döviz kodları ile TÜM tarih sütunları okunur.
-   Aynı yıl/ay+döviz birden fazla sayfada varsa çalışma kitabındaki son geçerli
-   değer kullanılır. Böylece rapordaki tüm geçmiş ve gelecek aylar belleğe alınır. */
-// Excel hücresindeki sayı: 49,35 / 1.234,56 / 1,234.56 biçimlerini kabul eder.
-function cellNum(v){
-  if(typeof v==='number')return Number.isFinite(v)?v:null;
-  const t=String(v??'').trim().replace(/\s+/g,'');if(!t)return null;
-  let n=t;
-  if(t.includes(',')&&t.includes('.'))n=t.lastIndexOf(',')>t.lastIndexOf('.')?t.replace(/\./g,'').replace(',','.'):t.replace(/,/g,'');
-  else if(t.includes(','))n=t.replace(',','.');
-  const out=Number(n);return Number.isFinite(out)?out:null;
-}
-// Başlık hücresi tarih değilse metin ay/tarih kalıpları (2026-10, 31.10.2026, 10.2026) denenir.
-function cellDate(x){
-  if(!x)return null;
-  if(x.t==='d'&&x.v instanceof Date)return isNaN(x.v)?null:x.v;
-  if(x.t==='n'&&x.v>25000&&x.v<80000){const p=XLSX.SSF&&XLSX.SSF.parse_date_code?XLSX.SSF.parse_date_code(x.v):null;return p?new Date(p.y,p.m-1,p.d||1):null;}
-  if(x.t!=='s')return null;
-  const t=String(x.v||'').trim();let m=t.match(/^(\d{4})[-/.](\d{1,2})(?:[-/.](\d{1,2}))?$/);
-  if(m)return new Date(+m[1],+m[2]-1,+(m[3]||1));
-  m=t.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);
-  m=t.match(/^(\d{1,2})[-/.](\d{4})$/);if(m)return new Date(+m[2],+m[1]-1,1);
-  return null;
-}
-function parseSheet(ws){
-  if(!ws||!ws['!ref'])return null;
+   Ay/döviz çakışmaları ortak motor tarafından doğrulanır; geçersiz rapor
+   kaydedilmez. Kapsanmayan geçmiş aylar birleştirme sırasında korunur. */
+function sheetToGrid(ws,sheetName){
+  const engine=window.BLFxImportEngine;if(!ws||!ws['!ref'])return {sheetName,rows:[]};
   const range=XLSX.utils.decode_range(ws['!ref']);
-  const cell=(r,c)=>ws[XLSX.utils.encode_cell({r,c})];
-  // Tarih başlık satırını bul (en az 1 tarih hücresi yeterlidir). Sunucu
-  // okuyucusu (server/lib/fxWorkbook.js) ile aynı 20 satırlık pencere.
-  let headRow=-1;const monthCols=[]; // [{col, mk}]
-  for(let r=range.s.r;r<=Math.min(range.e.r,range.s.r+20);r++){
-    const found=[];
-    for(let c=Math.max(range.s.c+2,2);c<=range.e.c;c++){
-      const d=cellDate(cell(r,c));
-      if(d&&!isNaN(d))found.push({col:c,mk:monthKey(d)});
-    }
-    if(found.length>=1){headRow=r;monthCols.push(...found);break;}
-  }
-  if(headRow<0)return null;
-  // Aynı ay birden fazla sütuna denk gelirse ilkini tut
-  const seen=new Set();const cols=monthCols.filter(m=>{if(seen.has(m.mk))return false;seen.add(m.mk);return true;});
-  const rows=[]; // {code, values:{mk:num}}
-  for(let r=headRow+1;r<=range.e.r;r++){
-    // Döviz kodu KUR şablonunda B sütunundadır; B boşsa A ve C de denenir.
-    let code='';
-    for(const c of [1,0,2]){const x=cell(r,c);const v=String(x&&x.v!=null?x.v:'').trim().toUpperCase();if(/^[A-Z]{3,4}$/.test(v)){code=v;break;}}
-    if(!code)continue;
-    const values={};let any=false;
-    cols.forEach(({col,mk})=>{const x=cell(r,col);const v=x?cellNum(x.v!=null?x.v:x.w):null;if(v!=null&&v>0){values[mk]=v;any=true;}});
-    if(any)rows.push({code,values});
-  }
-  if(!rows.length)return null;
-  return {reportMonth:cols[0].mk,monthKeys:cols.map(c=>c.mk),rows};
+  if((range.e.r+1)*(range.e.c+1)>engine.MAX_GRID_CELLS)throw new Error(L('Kur tablosu çok büyük.','FX table is too large.'));
+  const rows=Array.from({length:range.e.r+1},(_,r)=>Array.from({length:range.e.c+1},(_,c)=>{
+    const cell=ws[XLSX.utils.encode_cell({r,c})],value=cell&&(cell.v!=null?cell.v:cell.w);
+    if(value instanceof Date)return `${value.getFullYear()}-${String(value.getMonth()+1).padStart(2,'0')}-${String(value.getDate()).padStart(2,'0')}`;
+    return typeof value==='number'||typeof value==='string'?value:null;
+  }));return {sheetName,rows,startRow:range.s.r,startColumn:range.s.c};
 }
-// workbook → yeni store önerisi. mevcut store üzerine birleştirir.
+function parseSheet(ws,sheetName='Sheet1'){
+  const grid=sheetToGrid(ws,sheetName),layout=window.BLFxImportEngine.detectLayout(grid);
+  return layout?window.BLFxImportEngine.extractWithLayout(grid,layout):null;
+}
+function importResult(parsed,fileName,metadata={},current=store){
+  const engine=window.BLFxImportEngine,validation=engine.validateFxImport(parsed,current);
+  const months=engine.mergeMonths(current.months,parsed.months);
+  return {data:{base:'USD',currencies:[...new Set(Object.values(months).flatMap(Object.keys))].sort(),months,updatedAt:new Date().toISOString(),sourceFile:fileName||null,sourceType:'UPLOAD',parser:'deterministic',reportMonth:parsed.reportMonth,...metadata},stats:parsed.stats,parsed,validation,revision:current._revision};
+}
 function importWorkbook(wb,fileName){
-  const sheets=[];
-  wb.SheetNames.forEach(name=>{const p=parseSheet(wb.Sheets[name]);if(p)sheets.push({name,...p});});
-  if(!sheets.length)throw new Error('Excel içinde kur tablosu bulunamadı. Döviz kodu ve en az bir tarih sütunu bekleniyor.');
-  const months=JSON.parse(JSON.stringify(store.months||{}));
-  const currencies=new Set(store.currencies||[]);
-  let valueCount=0;
-  // Sayfa adları veya rapor ayı yerine, her sayfanın tüm tarih hücrelerini birleştir.
-  sheets.forEach(sh=>{
-    sh.rows.forEach(row=>{
-      Object.entries(row.values).forEach(([mk,v])=>{
-        if(v==null||v<=0)return;
-        if(!months[mk])months[mk]={};
-        months[mk][row.code]=v;currencies.add(row.code);valueCount++;
-      });
-    });
-  });
-  const mkList=Object.keys(months).filter(m=>months[m]&&Object.keys(months[m]).length).sort();
-  return {
-    data:{base:'USD',currencies:[...currencies],months,updatedAt:new Date().toISOString(),sourceFile:fileName||null,sourceType:'UPLOAD',parser:'deterministic',reportMonth:[...new Set(sheets.flatMap(sh=>sh.monthKeys))].sort()[0]},
-    stats:{sheetCount:sheets.length,latestSheet:sheets[sheets.length-1].name,
-           currencyCount:currencies.size,monthCount:mkList.length,valueCount,
-           firstMonth:mkList[0]||null,lastMonth:mkList[mkList.length-1]||null}
-  };
+  const engine=window.BLFxImportEngine,grids=wb.SheetNames.map(name=>sheetToGrid(wb.Sheets[name],name));
+  const parts=grids.flatMap(grid=>{const layout=engine.detectLayout(grid);return layout?[engine.extractWithLayout(grid,layout)]:[];});
+  const result=importResult(engine.combineParsed(parts),fileName);
+  if(!parts.length||result.validation.errors.length){
+    const error=new Error(L('Excel içinde geçerli kur tablosu bulunamadı. LCW AI ile düzeni okuyabilirsiniz.','No valid FX table was found. You can read the layout with LCW AI.'));
+    error.fxRecovery={grids,fileName,validation:result.validation};throw error;
+  }
+  return result;
 }
-
 async function importFile(file){
-  // XLSX perf-runtime ile tembel yüklenir; oturumda başka Excel akışı açılmamış
-  // olabilir. Kütüphane yüklenmeden okumak "XLSX is not defined" ile düşüyordu.
   if(typeof XLSX==='undefined'&&window.BLPerf&&typeof window.BLPerf.ensureLibrary==='function')await window.BLPerf.ensureLibrary('xlsx');
-  if(typeof XLSX==='undefined')throw new Error(typeof appLang!=='undefined'&&appLang==='en'?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
-  const buf=await file.arrayBuffer();
-  const wb=XLSX.read(buf,{type:'array',cellDates:true});
-  const parsed=importWorkbook(wb,file.name);
-  parsed.data.sourceFingerprint=[...new Uint8Array(await crypto.subtle.digest('SHA-256',buf))].map(b=>b.toString(16).padStart(2,'0')).join('');
-  parsed.data.sourceModifiedAt=file.lastModified?new Date(file.lastModified).toISOString():null;
-  return parsed;
+  if(typeof XLSX==='undefined')throw new Error(L('Excel kütüphanesi yüklenemedi.','Excel library could not be loaded.'));
+  window.BLExcelDates?.installSheetJsHooks(XLSX);
+  const buf=await file.arrayBuffer(),wb=XLSX.read(buf,{type:'array',cellDates:true});
+  const sourceFingerprint=[...new Uint8Array(await crypto.subtle.digest('SHA-256',buf))].map(b=>b.toString(16).padStart(2,'0')).join('');
+  const metadata={sourceFingerprint,sourceModifiedAt:file.lastModified?new Date(file.lastModified).toISOString():null};
+  try{const parsed=importWorkbook(wb,file.name);Object.assign(parsed.data,metadata);return parsed;}
+  catch(error){if(error.fxRecovery)Object.assign(error.fxRecovery,metadata);throw error;}
 }
 
 const L=(tr,en)=>typeof appLang!=='undefined'&&appLang==='en'?en:tr;
@@ -235,11 +183,99 @@ async function applySourceKur(){
 function renderFolderSync(host){
   if(!host)return;host.replaceChildren();const text=folderSyncText();host.hidden=!text;if(!text)return;
   const label=document.createElement('span');label.textContent=text;host.append(label);
+  if(store.folderSync.reason==='parse-failed'){
+    const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=L('LCW AI ile oku','Read with LCW AI');
+    button.onclick=()=>openFolderRecovery().catch(error=>window.showToast?.(error.message));host.append(' ',button);
+  }
   if(['older-report','current-newer'].includes(store.folderSync.reason)){
     const button=document.createElement('button');button.type='button';button.className='btn';button.textContent=L('Yine de uygula','Apply anyway');
     button.onclick=async()=>{try{await applySourceKur();renderFolderSync(host);}catch(error){window.showToast?.(error.message);}};host.append(' ',button);
   }
 }
+const html=value=>String(value==null?'':value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let recoverySession=null;
+function issueText(item){return [L(item.tr,item.en),item.currency,item.month,item.address].filter(Boolean).join(' · ');}
+async function readWithAiLayout(recovery,signal){
+  if(!window.BuyerLogAI)await window.BLPerf?.ensureFeature('fxAi');
+  if(!window.BuyerLogAI)throw new Error(L('LCW AI istemcisi yüklenemedi.','LCW AI client could not be loaded.'));
+  const status=await window.BuyerLogAI.getStatus({refresh:false});
+  if(!status?.connected){window.BuyerLogAI.openConnectionDialog();return null;}
+  await load(true);
+  const current=JSON.parse(JSON.stringify(store)),engine=window.BLFxImportEngine;
+  const sheetPreviews=engine.previewGrids(recovery.grids).map(sheet=>({sheetName:sheet.sheetName,totalRows:sheet.totalRows,totalColumns:sheet.totalColumns,
+    previewLines:sheet.cells.map(row=>row.map(cell=>cell.address+'='+cell.value).join(' | '))}));
+  const result=await window.BuyerLogAI.ask({source:'fx-kur-layout',signal,task:L(
+    'Yalnız KUR tablosunun düzenini tarif et. Kur sayısı üretme. Yönü ve kotasyon ölçeğini başlıktan belirle.',
+    'Describe only the KUR table layout. Never generate rate values. Identify direction and quote scale from the heading.'),context:{sheetPreviews}});
+  if(!result.structured?.ok||!result.data)throw new Error(L('LCW AI geçerli bir tablo düzeni döndürmedi.','LCW AI did not return a valid table layout.'));
+  let layout,parsed;
+  try{
+    layout=engine.normalizeLayout(result.data);
+    const grid=recovery.grids.find(item=>item.sheetName===layout.sheetName);
+    // No model-provided rate values reach extraction: only the original normalized grid.
+    parsed=engine.extractWithLayout(grid,layout);
+  }catch(_){throw new Error(L('Önerilen tablo düzeni veya hücre aralığı geçersiz. LCW AI ile yeniden okuyun.','The proposed table layout or cell range is invalid. Read again with LCW AI.'));}
+  const proposed=importResult(parsed,recovery.fileName,{sourceType:'LCWAI',parser:'lcwai-layout',reportMonth:parsed.reportMonth,
+    sourceFingerprint:recovery.sourceFingerprint,sourceModifiedAt:recovery.sourceModifiedAt},current);
+  return {...proposed,layout,revision:current._revision,differences:engine.diffCells(parsed,current)};
+}
+function closeImportRecovery(){
+  const session=recoverySession;if(!session)return;
+  session.controller?.abort();session.host.remove();document.removeEventListener('keydown',session.onKey);document.removeEventListener('bl:language-changed',session.onLanguage);
+  recoverySession=null;session.focus?.focus?.();
+}
+function renderRecovery(){
+  const session=recoverySession;if(!session)return;
+  const result=session.result,validation=result?.validation||session.recovery.validation||{errors:[],warnings:[]};
+  let content=`<p class="ocFxHint">${html(L('Kurallı okuma tamamlanamadı. LCW AI yalnız düzeni belirler; kurlar dosyadaki hücrelerden okunur.','Deterministic reading failed. LCW AI identifies only the layout; rates are read from file cells.'))}</p>`;
+  if(result){
+    const layout=result.layout,stats=result.stats;
+    content=`<div class="ocFxImportSummary"><strong>${html(L('Kur önizlemesi — henüz kaydedilmedi','FX preview — not saved yet'))}</strong>
+      <span>${html(L('Kaynak','Source'))}: ${html(layout.sheetName)} · ${html(layout.codeColumn+layout.firstDataRow)}:${html(layout.monthColumns.at(-1).col+layout.lastDataRow)} · ${html(L('Başlık satırı','Header row'))}: ${layout.headerRow}</span>
+      <span>${html(L('Kapsam','Coverage'))}: ${html(stats.firstMonth)} → ${html(stats.lastMonth)} · ${stats.currencyCount} ${html(L('döviz','currencies'))} · ${stats.monthCount} ${html(L('ay','months'))}</span>
+      <span>${html(L('AI güveni','AI confidence'))}: ${(layout.confidence*100).toFixed(0)}% · ${html(layout.direction==='per_usd'?L('1 USD = X döviz','1 USD = X currency'):L('1 birim = X USD','1 unit = X USD'))} · ${html(L('Ölçek','Scale'))}: ${layout.scale}</span>
+      <span>${html(L('AI yalnız düzeni önerdi. Aşağıdaki tüm sayılar özgün dosyadan okundu.','AI suggested only the layout. Every number below was read from the original file.'))}</span></div>`;
+    if(layout.warnings.length)content+=`<div class="ocFxImportSummary">${layout.warnings.map(w=>`<span>${html(w)}</span>`).join('')}</div>`;
+    content+=`<h3>${html(L('Mevcut kurlarla farklar','Differences from current rates'))}</h3><div class="ocCompareTableWrap"><table class="ocCompareTable" data-fx-differences><thead><tr>
+      <th>${html(L('Döviz','Currency'))}</th><th>${html(L('Ay','Month'))}</th><th>${html(L('Eski → Yeni','Old → New'))}</th><th>${html(L('% Fark','% Change'))}</th></tr></thead><tbody>${result.differences.map(cell=>`<tr${cell.flagged?' class="ocFxDiffFlag"':''}><td>${cell.flagged?'⚠ ':''}${html(cell.currency)}</td><td>${html(cell.month)}</td><td>${cell.old==null?'—':html(cell.old)} → ${html(cell.value)}</td><td>${cell.percent==null?'—':cell.percent.toFixed(2)+'%'}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+  if(validation.errors.length)content+=`<div class="ocFxImportSummary" role="status"><strong>${html(L('Kaydı engelleyen hatalar','Errors blocking save'))}</strong>${validation.errors.map(item=>`<span>${html(issueText(item))}</span>`).join('')}</div>`;
+  if(result&&validation.warnings.length)content+=`<div class="ocFxImportSummary"><strong>${html(L('Uyarılar','Warnings'))}</strong>${validation.warnings.map(item=>`<span>${html(issueText(item))}</span>`).join('')}</div>`;
+  if(session.message)content+=`<p class="ocFxHint" role="status">${html(session.message)}</p>`;
+  session.host.innerHTML=`<div class="ocCompareCard ocFxCard" role="dialog" aria-modal="true" aria-labelledby="fxRecoveryTitle" tabindex="-1"><div class="ocCompareHead"><div class="ocCompareHeadText"><h2 id="fxRecoveryTitle">${html(L('LCW AI ile kur tablosunu oku','Read FX table with LCW AI'))}</h2><p class="ocCompareSub">${html(session.recovery.fileName||'KUR.xlsx')}</p></div><button type="button" class="ocIconButton" data-fx-recovery-close aria-label="${html(L('Kapat','Close'))}">×</button></div>
+    <div class="ocFxResult">${content}</div><div class="ocFxFooter"><button type="button" class="ocButton" data-fx-read-ai ${session.busy?'disabled':''}>${html(session.busy?L('Düzen okunuyor…','Reading layout…'):L('LCW AI ile oku','Read with LCW AI'))}</button><span class="ocSpacer"></span><button type="button" class="ocButton" data-fx-recovery-close>${html(L('Kapat','Close'))}</button><button type="button" class="ocButton ocButton--primary" data-fx-recovery-save ${!result||validation.errors.length||session.busy?'disabled':''}>${html(L('Onayla ve kurları kaydet','Confirm and save rates'))}</button></div></div>`;
+  session.host.querySelectorAll('[data-fx-recovery-close]').forEach(button=>button.onclick=closeImportRecovery);
+  session.host.querySelector('[data-fx-read-ai]').onclick=async()=>{
+    session.busy=true;session.result=null;session.message='';session.controller=new AbortController();renderRecovery();
+    try{const result=await readWithAiLayout(session.recovery,session.controller.signal);if(recoverySession!==session)return;session.result=result;
+      if(!result)session.message=L('LCW AI bağlantısını tamamladıktan sonra tekrar oku düğmesine basın.','Complete the LCW AI connection, then press Read again.');
+    }catch(error){if(recoverySession!==session)return;session.message=error.message||L('Düzen okunamadı.','Could not read the layout.');}
+    finally{session.busy=false;if(recoverySession===session)renderRecovery();}
+  };
+  session.host.querySelector('[data-fx-recovery-save]').onclick=async()=>{
+    if(!session.result||session.result.validation.errors.length||session.busy)return;
+    if(!confirmOlderReport(session.result.data)||!window.confirm(L('Önizlemedeki doğrulanmış kurları kaydetmek istiyor musunuz?','Save the validated rates shown in the preview?')))return;
+    session.busy=true;renderRecovery();
+    try{await window.BLFX.save(session.result.data,{expectedRevision:session.result.revision});
+      closeImportRecovery();window.dispatchEvent(new CustomEvent('bl-fx-imported'));window.showToast?.(L('Döviz kurları güncellendi.','FX rates updated.'));
+    }catch(error){session.message=error.code==='REVISION_CONFLICT'?L('Kurlar önizleme sırasında değişti. Düzeni yeniden okuyup farkları inceleyin.','Rates changed during the preview. Read the layout again and review the differences.'):error.message;session.busy=false;session.result=null;renderRecovery();}
+  };
+}
+function showImportRecovery(error){
+  if(!error?.fxRecovery)return false;closeImportRecovery();
+  const host=document.createElement('div');host.className='ocCompareOverlay';host.id='fxImportRecovery';
+  const session={host,recovery:error.fxRecovery,result:null,busy:false,message:'',focus:document.activeElement};
+  session.onKey=e=>{if(e.key==='Escape'){e.stopImmediatePropagation();closeImportRecovery();}
+    if(e.key==='Tab'){const nodes=[...host.querySelectorAll('button:not([disabled])')];const first=nodes[0],last=nodes.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}}};
+  session.onLanguage=renderRecovery;recoverySession=session;document.body.append(host);document.addEventListener('keydown',session.onKey);document.addEventListener('bl:language-changed',session.onLanguage);
+  renderRecovery();host.querySelector('[role=dialog]').focus();return true;
+}
+async function openFolderRecovery(){
+  const response=await fetch('/api/fx/source-kur-preview',{cache:'no-store'});
+  if(!response.ok)throw new Error(L('Klasör dosyası okunamadı.','Could not read the folder file.'));
+  showImportRecovery({fxRecovery:await response.json()});
+}
+
 window.BLFX={store,load,save,monthKey,monthLabel,resolveMonth,snapshotFor,snapshotForMonth,convert,rateText,
-             displayCurrencies,allCurrencies,importFile,importWorkbook,FAVORITES,confirmOlderReport,folderSyncText,renderFolderSync,applySourceKur};
+             displayCurrencies,allCurrencies,importFile,importWorkbook,FAVORITES,confirmOlderReport,folderSyncText,renderFolderSync,applySourceKur,showImportRecovery,openFolderRecovery};
 })();

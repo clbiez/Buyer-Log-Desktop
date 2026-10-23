@@ -42,9 +42,13 @@ app.delete('/api/open-costing/:id', userAccess.requireArea('opencosting'), async
 
 // ---- Aylık Döviz Kurları (FX) ----
 app.get('/api/fx',userAccess.requireAnyArea('source','opencosting','koleksiyon'),(_req,res)=>{res.set('Cache-Control','no-store, no-cache, must-revalidate');res.json({...loadFx(),folderSync:deps.getFolderFxSyncStatus?.()||null});});
-app.put('/api/fx', userAccess.requireAnyArea('source','opencosting','koleksiyon'), userAccess.requirePermission('manageBusinessRules'), (req, res) => { try { const saved=saveFx(req.body || {}, requestRevision(req)); publishSharedMasterChange('fx', req); userAccess.appendAudit(req.currentUser,'FX_UPDATE','rates',{revision:saved._revision}); res.json(saved); } catch (err) { apiError(res, err, 'Döviz kurları kaydedilemedi.'); } });
+app.put('/api/fx', userAccess.requireAnyArea('source','opencosting','koleksiyon'), userAccess.requirePermission('manageBusinessRules'), (req, res) => { try { const saved=saveFx(req.body || {}, requestRevision(req)); publishSharedMasterChange('fx', req); userAccess.appendAudit(req.currentUser,'FX_UPDATE','rates',{revision:saved._revision,source:req.body?.sourceType==='LCWAI'?'lcwai-layout':'upload',parser:saved.parser,reportMonth:saved.reportMonth}); res.json(saved); } catch (err) { apiError(res, err, 'Döviz kurları kaydedilemedi.'); } });
 app.get('/api/fx/resolve/:month', userAccess.requireAnyArea('source','opencosting','koleksiyon'), (req, res) => { const store = loadFx(); const r = fxMonthResolved(store, req.params.month); res.json({ base: store.base, month: r.month, requestedMonth: req.params.month, exact: r.exact, rates: r.rates, _revision: store._revision }); });
 
+app.get('/api/fx/source-kur-preview', userAccess.requireAnyArea('source','opencosting','koleksiyon'), userAccess.requirePermission('manageBusinessRules'), async (req,res)=>{
+  try { res.set('Cache-Control','no-store');res.json(await deps.getSourceKurPreview(req)); }
+  catch (err) { apiError(res,err,'Klasör dosyası okunamadı.'); }
+});
 app.post('/api/fx/apply-source-kur', userAccess.requireAnyArea('source','opencosting','koleksiyon'), userAccess.requirePermission('manageBusinessRules'), async (req, res) => {
   try {
     const { fingerprint, expectedRevision } = req.body || {};
