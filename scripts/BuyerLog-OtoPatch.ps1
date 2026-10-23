@@ -7,7 +7,7 @@ $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 $scriptRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $indexUrl = 'https://raw.githubusercontent.com/clbiez/Buyer-Log-Releases/main/mini-patch/latest.json'
-$releaseRoot = 'https://github.com/clbiez/Buyer-Log-Releases/releases/download/minipatch-v7.0.293/'
+$releaseRoot = 'https://github.com/clbiez/Buyer-Log-Releases/releases/download/'
 $settingsFile = Join-Path $scriptRoot 'BuyerLog-OtoPatch-settings.json'
 $latestManifestFile = Join-Path $scriptRoot 'patch-manifest.json'
 $installerFile = Join-Path $scriptRoot 'Apply-MiniPatch.ps1'
@@ -55,6 +55,20 @@ function Find-Installation {
   Save-Text $settingsFile ((@{installPath=$p} | ConvertTo-Json -Compress))
   return $p
 }
+function Get-ActiveVersion([string]$root) {
+  $pointerFile = Join-Path $root 'data\local\updater\current.json'
+  if (Test-Path -LiteralPath $pointerFile -PathType Leaf) {
+    $pointer=Read-Json $pointerFile
+    if ([string]$pointer.version -match '^[0-9]+\.[0-9]+\.[0-9]+$') {
+      return [string]$pointer.version
+    }
+  }
+  $pkg = Read-Json (Join-Path $root 'resources\app\package.json')
+  if ([string]$pkg.version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') {
+    throw 'Kurulum surumu belirlenemedi.'
+  }
+  return [string]$pkg.version
+}
 function Download([string]$url,[string]$dest) {
   $err = ''
   for ($i=1;$i -le 3;$i++) {
@@ -77,10 +91,10 @@ function Get-Index {
   Download ($indexUrl + '?refresh=' + [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()) $temp
   $obj = Read-Json $temp
   if ([int]$obj.schema -ne 1 -or [string]$obj.kind -ne 'buyerlog-manual-hotfix' -or
-      [string]$obj.base_version -ne '7.0.293' -or
+      [string]$obj.base_version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$' -or
       [string]$obj.target_commit -notmatch '^[0-9a-f]{40}$' -or
       [string]$obj.sha256 -notmatch '^[0-9a-f]{64}$' -or
-      [string]$obj.asset -notmatch '^BuyerLog-7\.0\.293-MiniPatch-[0-9a-f]{12}\.zip$' -or
+      [string]$obj.asset -ne ("BuyerLog-" + [string]$obj.base_version + "-MiniPatch-" + ([string]$obj.target_commit).Substring(0,12) + ".zip") -or
       [long]$obj.size -lt 1024 -or [long]$obj.size -gt 50000000) {
     throw 'Kaynak index bilgisi beklenen semaya uymuyor. Islem durduruldu.'
   }
@@ -117,7 +131,9 @@ try {
   Write-Host ' BUYER LOG - OTOMATIK MINI PATCH / GERI ALMA'
   Write-Host '=============================================================='
   $install = Find-Installation
+  $activeVersion = Get-ActiveVersion $install
   Write-Host "Kurulum: $install"
+  Write-Host "Etkin STABLE surum: $activeVersion"
   if ($Action -eq 'Rollback') {
     if (-not (Test-Path -LiteralPath $latestManifestFile)) {
       throw 'Geri alma manifesti bulunamadi. Once bu aracla bir patch uygulanmis olmali.'
@@ -137,6 +153,12 @@ try {
     exit 0
   }
   $idx = Get-Index
+  if ([string]$idx.base_version -ne $activeVersion) {
+    throw ("Yayindaki mini patch $($idx.base_version) icin; etkin surum $activeVersion. " +
+      "Farkli STABLE surumlerinin dosyalari karistirilmaz. " +
+      "Buyer Log'un resmi updater'i ile STABLE surumunu guncelleyin; " +
+      "yeni surum icin patch yayimlanana kadar manuel dosya degisikligi yapilmaz.")
+  }
   Write-Host "Yayindaki hedef commit: $($idx.target_commit)"
   Write-Host "Yayin zamani (UTC): $($idx.published_at_utc)"
   $zipFile = Join-Path $cacheRoot ([string]$idx.asset)
@@ -146,7 +168,7 @@ try {
   if (-not $valid) {
     Write-Host 'Guncel patch indiriliyor ve dogrulaniyor...'
     $temp=$zipFile + '.partial'
-    Download ($releaseRoot + [string]$idx.asset) $temp
+    Download ($releaseRoot + "minipatch-v" + [string]$idx.base_version + "/" + [string]$idx.asset) $temp
     if ((Get-Item -LiteralPath $temp).Length -ne [long]$idx.size -or
         (Hex-File $temp) -ne [string]$idx.sha256) {
       Remove-Item -LiteralPath $temp -Force -ErrorAction SilentlyContinue
