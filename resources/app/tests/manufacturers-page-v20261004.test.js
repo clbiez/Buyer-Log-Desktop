@@ -108,3 +108,12 @@ test('existing ASAS connections pick up Initial Inspection Geçme Tarih once, wi
   assert.equal(soft.repaired, false);
   assert.equal(offline.mappingEnhancementScanVersion, 4);
 });
+
+
+test('source-only ASAS names stay searchable and never masquerade as responsible orders', () => {
+  assert.match(PAGE, /card\.sourceOnly/);
+  assert.match(PAGE, /card\.inAsas && !card\.sourceOnly/);
+  assert.match(PAGE, /data-mfp-source-orders/);
+  assert.match(PAGE, /E\.KEYS\.manufacturer/);
+  assert.match(PAGE, /!card\.sourceOnly/);
+});
