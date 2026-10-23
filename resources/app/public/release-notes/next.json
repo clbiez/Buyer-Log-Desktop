@@ -3,14 +3,72 @@
   "publishedAt": "2026-10-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Test raporu CP kapsamı düzeltmesi",
-    "en": "Test report CP scope fix"
+    "tr": "CP fiyat kuralı ve tarih Geri Al bütünlüğü",
+    "en": "CP pricing rule and date Undo integrity"
   },
   "summary": {
-    "tr": "Test raporları aktif CP kapsamıyla güvenilir biçimde incelenir.",
-    "en": "Test reports are reliably reviewed against the active CP scope."
+    "tr": "Kural kaynaklı Supp. FOB değerleri not kayıtlarında korunur; CP tarih Geri Al/İleri Al işlemleri sunucuya kaydedilir.",
+    "en": "Rule-derived Supp. FOB values stay rule-backed when saving notes, and CP date Undo/Redo changes persist to the server."
   },
   "changes": [
+    {
+      "id": "suppfob-rule-preserved-on-note",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Fiyat Masası",
+        "en": "CP Tracker · Pricing Desk"
+      },
+      "title": {
+        "tr": "Kural kaynaklı Supp. FOB not kaydedildiğinde kural olarak kalır",
+        "en": "Rule-derived Supp. FOB remains rule-backed when saving notes"
+      },
+      "body": {
+        "tr": "Sunucu projeksiyon önbelleği kural kaynaklı Supp. FOB değerini (source: rule) manuel fiyat yerine kural olarak saklar; aynı satıra not veya özel not sütunu kaydedildiğinde kural bağlantısı bozulmaz ve canlı yamalarda özel not sütunları ile lojistik segmenti eksiksiz güncellenir.",
+        "en": "The server projection cache preserves rule-derived Supp. FOB values (source: rule) as rule-backed rather than manual, so saving a note or custom note column on the same row keeps its rule link intact while live patches update custom note columns and logistics segments."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "suppfob-rule-preserved-on-note.png",
+        "alt": {
+          "tr": "CP Tracker tablosunda not kaydı sonrasında korunan kural kaynaklı Supp. FOB değeri, demo veri",
+          "en": "Rule-derived Supp. FOB value preserved after saving a note in CP Tracker, demo data"
+        },
+        "caption": {
+          "tr": "Demo veride kural uygulanan siparişe not kaydedildiğinde Supp. FOB değeri kural kaynağını korur.",
+          "en": "With demo data, saving a note on a rule-priced order keeps its Supp. FOB value linked to the rule."
+        }
+      }
+    },
+    {
+      "id": "cp-date-undo-persisted",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Tarih Geri Al/İleri Al işlemleri sunucuya kaydedilir",
+        "en": "Date Undo/Redo actions are saved to the server"
+      },
+      "body": {
+        "tr": "CP tablosunda düzenlenen Ex-factory, Retail Date veya In-Store tarihi Geri Al/İleri Al ile değiştirildiğinde yalnız dokunulan tarih alanları sunucuya gönderilir; sayfa yenilendiğinde geri alınan tarih kalıcı olarak korunur.",
+        "en": "Undoing or redoing an Ex-factory, Retail Date or In-Store edit in CP sends only the touched date fields to the server so the reverted date stays persisted after reloading."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-date-undo-persisted.png",
+        "alt": {
+          "tr": "CP Tracker tablosunda geri alınan Ex-factory tarih düzenlemesinin sunucuya kaydedilmesi, demo veri",
+          "en": "Reverted Ex-factory date edit persisted to the server in CP Tracker, demo data"
+        },
+        "caption": {
+          "tr": "Demo veride Ex-factory tarihi geri alındığında değişiklik sunucuya kaydedilir ve yenileme sonrasında korunur.",
+          "en": "With demo data, undoing an Ex-factory date edit persists to the server and remains intact after reload."
+        }
+      }
+    },
     {
       "id": "test-report-active-cp-review",
       "type": "fix",
