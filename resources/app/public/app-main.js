@@ -2373,7 +2373,7 @@ function activeTableFilterTokens(tableKey){
   if(search)tokens.push({kind:'search',key:searchId,label:appLang==='en'?'Search':'Arama',detail:search});
   if(tableKey==='koleksiyon'){
     Object.entries(kolColFilters||{}).forEach(([key,entry])=>{
-      if(entry&&entry.size)tokens.push({kind:'column',key,label:activeFilterColumnLabel(tableKey,key),detail:activeFilterEntrySummary({values:entry})});
+      if(entry&&entry.size)tokens.push({kind:'column',key,label:activeFilterColumnLabel(tableKey,key),detail:activeFilterEntrySummary({values:key==='inStoreMonth'?new Set([...entry].map(value=>kolMonthDisplay(value)||value)):entry})});
     });
     Object.entries(kolFabricDetailFilters).forEach(([key,entry])=>{
       if(!entry?.size)return;
