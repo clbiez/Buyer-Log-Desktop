@@ -9,6 +9,9 @@
     'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
     'lcw.orders.dimFilters.','lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.dateRange.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
     'lcw.koleksiyon.rows.','lcw.koleksiyon.manufacturers.','lcw.koleksiyon.pricingExcelColumns.','lcw.koleksiyon.colState.','lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.prodstatus.mails.','lcw.mailTemplates.',
+    // v2026-10-22 — Koleksiyon fiyat görünümü, Fiyat Masası tercihleri ve kullanıcının
+    // Koleksiyon'a henüz yansımamış teklif düzenlemeleri kişiseldir.
+    'lcw.koleksiyon.priceView.','lcw.pricingDesk.','lcw.quotations.projectedLineEdits.',
     'lcw.todo.','lcw.notifications.','lcw.masterReleaseNotice.','lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.','lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.',
     'lcw_view_favorite_','lcw_filter_favorite_','buyerlog.fx.persist.v1','buyerlog.workspace.','buyerlog.dashboard.','buyerlog.favorites.','buyerlog.presetCache.v2.',
     'bl.backlog.excelColumns.','bl.detailTables.showImages.','bl.modelImages.','bl.tableRange.','bl.refreshHistory.','bl.autoRefresh.','bl.lcwai.history.','buyerlog.overview.notesReminderCollapsed','buyerlog.overview.collectionSummary.','buyerlog.overview.layout.','buyerlog.overview.breakdown.','buyerlog.overview.globalFlow.'
@@ -110,6 +113,7 @@
     'lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
     'lcw.lfl.filters.','lcw.lfl.readyFilters.','lcw.lfl.customCompare.','lcw.lfl.analysisSplit.',
     'lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.koleksiyon.colState.','lcw.koleksiyon.pricingExcelColumns.',
+    'lcw.koleksiyon.priceView.','lcw.pricingDesk.', // v2026-10-22 — görünüm tercihleri hesapla taşınır
     'lcw.quotations.columnWidths.','lcw.oab.','lcw.intake.','lcw_view_favorite_','lcw_filter_favorite_',
     'buyerlog.workspace.horizon.','buyerlog.workspace.applied-horizon.','buyerlog.dashboard.','lcw.dashboard.','buyerlog.favorites.','lcw.favorites.','bl.backlog.excelColumns.','bl.detailTables.showImages.',
     'bl.formulaColumns.', // v7.28 — hesaplanan sütun tanımları kullanıcıyla birlikte taşınır

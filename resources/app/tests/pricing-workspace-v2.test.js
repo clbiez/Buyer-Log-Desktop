@@ -7,8 +7,10 @@ const ROOT=path.join(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(ROOT,p),'utf8');
 const html=read('public/index.html'), app=read('public/app-main.js'), q=read('public/quotations.js'), perf=read('public/perf-runtime.js'), access=read('public/user-access-ui.js'), css=read('public/pricing-workspace.css');
 
-test('Pricing Workspace V2 exposes Quotations and Pricing History as first-class navigation pages',()=>{
-  assert.match(html,/data-tab="quotations"/);assert.match(html,/data-tab="pricinghistory"/);
+test('Pricing Desk is one navigation page; the legacy Pricing History route opens its History tab',()=>{
+  // v2026-10-22: Quotations ve Fiyat Geçmişi "Fiyat Masası" menüsünde birleşti.
+  assert.match(html,/data-tab="quotations"[^>]*data-i18n-title-en="Pricing Desk"/);assert.doesNotMatch(html,/data-tab="pricinghistory"/);
+  assert.match(app,/tab==='pricinghistory'\)return window\.BLPricingDesk\?\.mount\?\.\(document\.getElementById\('pricingHistoryWorkspacePage'\),\{tab:'history'\}\)/);
   assert.match(html,/id="quotationWorkspacePage"/);assert.match(html,/id="pricingHistoryWorkspacePage"/);
   assert.match(app,/tab==='quotations'.*mountWorkspace/s);assert.match(app,/tab==='pricinghistory'.*mountPricingHistory/s);
 });

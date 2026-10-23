@@ -15,7 +15,7 @@ const mapping={
   shipping:'BL-N09',
   koleksiyon:'BL-N11',
   quotations:'BL-N13',
-  pricinghistory:'BL-N15',
+  // v2026-10-22: Fiyat Geçmişi ayrı menü değil, Fiyat Masası › Geçmiş sekmesi.
   priceanalysis:'BL-N17',
   lfl:'BL-N19',
   opencosting:'BL-N21',

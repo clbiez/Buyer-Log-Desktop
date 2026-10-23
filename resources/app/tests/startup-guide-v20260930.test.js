@@ -82,7 +82,7 @@ test('recovery response cannot reload an already-ready app',async()=>{
 });
 test('each guide card has bilingual instructions, a unique ID, a module, an illustration and source evidence',()=>{
   const ids=new Set(),visuals=new Set(['map','formula','partial','column','menu','search','filter','view','grid','table']);
-  assert.equal(DATA.lessons.length,65);assert.equal(DATA.modules.length,16);
+  assert.equal(DATA.lessons.length,68); // v2026-10-22: Fiyat Masası Turlar/Analiz + Koleksiyon Kompakt fiyat görünümüassert.equal(DATA.modules.length,16);
   for(const c of DATA.lessons){assert.ok(!ids.has(c.id),c.id);ids.add(c.id);assert.ok(DATA.modules.some(m=>m.id===c.module));assert.ok(visuals.has(c.visual));assert.ok(c.evidence.startsWith('public/'));for(const l of ['tr','en']){for(const k of ['title','summary','path'])assert.ok(c[k][l],c.id+' '+k);assert.equal(c.steps[l].length,3);assert.ok(c.steps[l].every(Boolean));}}
 });
 test('module and capability access filters match real Orders and quotation area aliases',()=>{

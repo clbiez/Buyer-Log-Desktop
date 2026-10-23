@@ -29,7 +29,7 @@ function lower(value) { return clean(value).toLocaleLowerCase('tr-TR'); }
 const GLOBAL_KNOWLEDGE = Object.freeze({
   tr: [
     'Buyer Log, LC Waikiki lisanslı triko siparişlerini tedarikçiden mağazaya kadar izleyen, yerel çalışan bir masaüstü uygulamasıdır (Node + Express sunucu, tarayıcı arayüzü).',
-    'Modüller: Overview (günün öncelikleri, CP kuralları ve checklist), CP Tracker (üretim/yükleme takibi), Siparişler, Backlog (teslimat riski ve plan-gerçekleşen), Nakliye Kıyaslama, Koleksiyon (ürün geliştirme, görseller), Quotations ve Fiyat Geçmişi, Fiyat & Üretici Analizi, Üreticiler, LFL Analizi, Ön Maliyet, Otomasyonlar, Veri Yönetimi.',
+    'Modüller: Overview (günün öncelikleri, CP kuralları ve checklist), CP Tracker (üretim/yükleme takibi), Siparişler, Backlog (teslimat riski ve plan-gerçekleşen), Nakliye Kıyaslama, Koleksiyon (ürün geliştirme, görseller, Kompakt fiyat görünümü ve Fiyat Çekmecesi), Fiyat Masası (fiyat talepleri, teklif matrisi, pazarlık turları, fiyat geçmişi ve klasman × üretici analizi), Fiyat & Üretici Analizi, Üreticiler, LFL Analizi, Ön Maliyet, Otomasyonlar, Veri Yönetimi.',
     'Veri kaynakları: ASAS (sipariş/model), CoreNectum PLM (stil, görsel, numune talepleri), PASS/OAB (bütçe raporu), IAS/Antrepo, kullanıcı Excel dosyaları. Ortak alanlar kanonik alan kimlikleriyle okunur.',
     'Kavramlar: MB / Ex-Factory = tedarikçinin yükleme tarihi. Yol süresi kuralı = ülke + sevkiyat tipine göre yüklemeden depoya gün. Tahmini varış = yükleme + yol süresi. Hedef tarih = Retail Depo ya da In Store (mağaza giriş) tarihi. Öncelikler: CRITICAL (Kritik, kırmızı) > ACTION_TODAY > ACTION_THIS_WEEK > WATCH.',
     'Çalışma ilkeleri: AI yalnız öneri üretir; Buyer Log önerileri kendi deterministik motoruyla doğrular ve kullanıcı onaylamadan hiçbir şey kaydedilmez. AI veriyi değiştiremez, e-posta gönderemez, sisteme yazamaz.',
@@ -37,7 +37,7 @@ const GLOBAL_KNOWLEDGE = Object.freeze({
   ].join('\n'),
   en: [
     'Buyer Log is a locally running desktop app tracking LC Waikiki licensed knitwear orders from supplier to store (Node + Express server, browser UI).',
-    'Modules: Overview (today\'s priorities, CP rules and checklist), CP Tracker (production/loading follow-up), Orders, Backlog (delivery risk and plan vs actual), Shipping Comparison, Collection (product development, images), Quotations and Pricing History, Price & Supplier Analysis, Manufacturers, LFL Analysis, Open Costing, Automations, Data Management.',
+    'Modules: Overview (today\'s priorities, CP rules and checklist), CP Tracker (production/loading follow-up), Orders, Backlog (delivery risk and plan vs actual), Shipping Comparison, Collection (product development, images, Compact price view and Price Drawer), Pricing Desk (pricing requests, quotation matrix, negotiation rounds, price history and classification × supplier analysis), Price & Supplier Analysis, Manufacturers, LFL Analysis, Open Costing, Automations, Data Management.',
     'Data sources: ASAS (orders/models), CoreNectum PLM (styles, images, sample requests), PASS/OAB (budget report), IAS/bonded warehouse, user Excel files. Shared fields are read through canonical field ids.',
     'Concepts: MB / Ex-Factory = supplier loading date. Transit-time rule = days from loading to warehouse by country + shipment type. Estimated arrival = loading + transit time. Target date = Retail warehouse or In Store (store entry) date. Priorities: CRITICAL (red) > ACTION_TODAY > ACTION_THIS_WEEK > WATCH.',
     'Principles: AI only suggests; Buyer Log validates suggestions with its own deterministic engines and nothing is saved without the user\'s approval. AI cannot change data, send e-mail or write to the system.',
@@ -98,7 +98,7 @@ function testReportKnowledge(lang) {
 
 const STATIC_MODULES = Object.freeze({
   orders: { tr: 'Siparişler: ASAS sipariş satırları (PO, model, renk, tedarikçi, adet, FOB, tarihler). CP Tracker aynı siparişlerin üretim/yükleme takibidir; kontrol listesi (PPS, S/Off, test, artwork onayları) CP satırlarına bağlıdır.', en: 'Orders: ASAS order lines (PO, model, colour, supplier, quantity, FOB, dates). CP Tracker follows the production/loading of the same orders; the checklist (PPS, S/Off, test, artwork approvals) is attached to CP rows.' },
-  collection: { tr: 'Koleksiyon: sezon geliştirme çalışma alanı; ürün/model satırları, PLM bağlantıları, görseller, durum kataloğu ve fiyat teklifleri (Quotations).', en: 'Collection: season development workspace; product/model rows, PLM links, images, status catalogue and quotations.' },
+  collection: { tr: 'Koleksiyon: sezon geliştirme çalışma alanı; ürün/model satırları, PLM bağlantıları, görseller, durum kataloğu ve fiyat teklifleri. Fiyat Masası teklifleri Fiyat Defteri olaylarıyla (tarih, kişi, tur) saklar; onay ve fiyat Koleksiyon’a yansır.', en: 'Collection: season development workspace; product/model rows, PLM links, images, status catalogue and quotations. The Pricing Desk keeps offers as Price Ledger events (date, person, round); approvals and prices flow back to Collection.' },
 });
 
 const MODULES = Object.freeze({
@@ -108,7 +108,7 @@ const MODULES = Object.freeze({
   backlog: { title: { tr: 'Backlog ve teslimat riski', en: 'Backlog and delivery risk' }, keywords: ['backlog', 'gecikme', 'delay', 'teslimat', 'delivery', 'yetiş', 'in store', 'retail'], build: backlogKnowledge },
   orders: { title: { tr: 'Siparişler ve CP', en: 'Orders and CP' }, keywords: ['sipariş', 'siparis', 'order', 'po ', 'cp ', 'cp tracker', 'tedarikçi', 'supplier'], build: lang => pick(lang, STATIC_MODULES.orders) },
   'test-reports': { title: { tr: 'Test raporu aktarımı', en: 'Test report import' }, keywords: ['test raporu', 'test report', 'talep no', 'request no', 'labright', 'ticari onay', 'commercial approval', 'gold seal', 'tekrar test', 'retest'], build: testReportKnowledge },
-  collection: { title: { tr: 'Koleksiyon', en: 'Collection' }, keywords: ['koleksiyon', 'collection', 'model geliştirme', 'quotation', 'teklif'], build: lang => pick(lang, STATIC_MODULES.collection) },
+  collection: { title: { tr: 'Koleksiyon', en: 'Collection' }, keywords: ['koleksiyon', 'collection', 'model geliştirme', 'quotation', 'teklif', 'fiyat masası', 'pricing desk', 'pazarlık', 'tur'], build: lang => pick(lang, STATIC_MODULES.collection) },
 });
 
 // Bağlam sağlayıcısının ekranı → ilgili modül bilgisi.

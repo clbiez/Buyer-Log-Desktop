@@ -71,17 +71,19 @@ const MODULES = Object.freeze([
     summary: { tr: 'Sezon koleksiyonu: PLM, görsel, fiyat.', en: 'Season collection; PLM data, images and price fields live here.' },
   },
   {
-    id: 'quotations', agentFilter: false, tableKey: null, label: { tr: 'Quotations', en: 'Quotations' },
-    // Quotations/Pricing History are first-class screens but intentionally share
-    // Collection authorization. They do not invent a second permission domain.
+    id: 'quotations', agentFilter: false, tableKey: null, label: { tr: 'Fiyat Masası', en: 'Pricing Desk' },
+    // Fiyat Masası (v2026-10-22): Quotations ve Fiyat Geçmişi tek menüde
+    // (Masa · Turlar · Geçmiş · Analiz). Koleksiyon yetkisini paylaşır; ikinci
+    // bir yetki alanı icat etmez.
     area: 'koleksiyon', route: 'quotations',
     datasets: ['collection'],
-    capabilities: ['read', 'filter', 'select', 'sort', 'patch-row', 'export', 'compare', 'analyze'],
-    summary: { tr: 'Fiyat talepleri, teklifler, onay/Drop.', en: 'Pricing requests, quotations and approval/drop decisions.' },
+    capabilities: ['read', 'filter', 'select', 'sort', 'patch-row', 'export', 'import', 'compare', 'analyze'],
+    summary: { tr: 'Fiyat talepleri, teklif matrisi, pazarlık turları, onay/Drop ve klasman × üretici analizi.', en: 'Pricing requests, quotation matrix, negotiation rounds, approval/drop and classification × supplier analysis.' },
   },
   {
     id: 'pricinghistory', agentFilter: false, tableKey: null, label: { tr: 'Fiyat Geçmişi', en: 'Pricing History' },
-    area: 'koleksiyon', route: 'pricinghistory',
+    // Ayrı menü değil: Fiyat Masası › Geçmiş sekmesi. Eski adres aynı masayı açar.
+    area: 'koleksiyon', route: null,
     datasets: ['collection'],
     capabilities: ['read', 'filter', 'sort', 'export', 'compare', 'analyze'],
     summary: { tr: 'Fiyat geçmişi, benchmark, trend.', en: 'Historical prices, benchmarks and trends from quotations.' },

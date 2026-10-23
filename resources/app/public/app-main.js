@@ -12829,7 +12829,7 @@ window.BLAIScreenData = {
         cols = visibleCols(info.tableKey);
         // Tüm veri: gizli sütunlar da dahil (görünür + tanımlı tüm sütunlar).
         if (all) { const seen = new Set(cols.map(col => col && col.k)); cols = cols.concat((info.cols() || []).filter(col => col && !seen.has(col.k))); }
-      } else if (info.tableKey === 'koleksiyon') cols = kolDisplayDescriptors({ all });
+      } else if (info.tableKey === 'koleksiyon') cols = kolDisplayDescriptors({ all, detail: true }); // LCW AI ayrıntılı sütunları okur (Kompakt özet değil)
       else cols = info.cols() || [];
     } catch (_) { cols = []; }
     // Resolve Collection inheritance once per build. The projected rows are
@@ -26358,7 +26358,7 @@ function kolSyncRulePricing(options={}){
 // sütunları artık ana tabloda yer almaz; tüm teklif girişi Fiyat Çalışmaları'nda yapılır.
 function kolDescriptorCatalog(opts={}){
   const map=new Map();
-  const costView=!opts.all&&!opts.detail&&kolPriceViewMode()==='cost';
+  const costView=!opts.all&&!opts.detail&&typeof kolPriceViewMode==='function'&&kolPriceViewMode()==='cost';
   kolAllOrderedCols().forEach(c=>{
     if(opts.all||!kolHiddenCols.has(c.k)||(costView&&KOL_COST_VIEW_KEYS.includes(c.k)))map.set(c.k,{kind:'base',k:c.k,label:kolColumnLabel(c),col:c});
   });

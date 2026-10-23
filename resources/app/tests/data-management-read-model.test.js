@@ -99,9 +99,11 @@ test('P2 matris "kapalı" ile "imkânsız"ı asla aynı duruma düşürmez', () 
 test('P2 kaynak beslemeyen modüller gizlenmez, sebebiyle listelenir', () => {
   const model = view();
   const ids = model.localModules.map(entry => entry.id);
-  for (const moduleId of ['koleksiyon', 'quotations', 'pricinghistory', 'opencosting', 'shipping']) {
+  for (const moduleId of ['koleksiyon', 'quotations', 'opencosting', 'shipping']) {
     assert.ok(ids.includes(moduleId), `${moduleId} listede yok — kullanıcı onu matriste arar`);
   }
+  // v2026-10-22: Fiyat Geçmişi ayrı ekran değil (Fiyat Masası › Geçmiş); ayrı satır olarak listelenmez.
+  assert.ok(!ids.includes('pricinghistory'));
   const byId = new Map(model.localModules.map(entry => [entry.id, entry]));
   assert.equal(byId.get('koleksiyon').reason, 'local');
   assert.equal(byId.get('shipping').reason, 'derived');
