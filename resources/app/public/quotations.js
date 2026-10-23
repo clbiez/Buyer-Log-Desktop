@@ -783,22 +783,37 @@
   const PROJECTED_KEY='lcw.quotations.projectedLineEdits.v1';
   function qProjectForeignLineEdits(){
     if(typeof kolRows==='undefined'||!Array.isArray(kolRows)||!kolRows.length)return 0;
-    let stamps={};try{stamps=JSON.parse(BLStorage.getItem(PROJECTED_KEY)||'{}')||{};}catch(_){stamps={};}
-    const me=qCurrentUserId();let changed=0,dirty=false;
+    let raw=null;try{raw=BLStorage.getItem(PROJECTED_KEY);}catch(_){raw=null;}
+    let stamps={};try{stamps=JSON.parse(raw||'{}')||{};}catch(_){stamps={};}
+    /* Yalnız talep SAHİBİNİN istemcisi yansıtır: düzenleyicinin kendi girdiği
+       fiyat sahibin Koleksiyon'una zaten qWritePriceToCollection ile yazılır;
+       düzenleyici istemcisinin sahibin eski kayıtlarını yeniden yazması, sahibin
+       Koleksiyon'da elle yaptığı düzeltmeyi ezerdi. Bu cihazdaki ilk çalışmada
+       mevcut kayıtlar yalnız işaretlenir (yeni cihaz eski değerleri geri yazmaz). */
+    const me=qCurrentUserId(),firstRun=raw==null;let changed=0,dirty=false;
+    const pending=new Map();
     qLoad().requests.forEach(req=>{
-      if(req.source!=='collection'||!qCanProjectToCollection(req))return;
+      if(req.source!=='collection'||qNorm(req.ownerId)!==me||!qCanProjectToCollection(req))return;
       (req.items||[]).forEach(item=>{
         const at=qNorm(item.updatedAt),by=qNorm(item.updatedBy);
         if(!at||!by||by===me)return;
         if(String(stamps[item.id]||'')>=at)return;
         stamps[item.id]=at;dirty=true;
-        if(qWritePriceToCollection(req,item,{save:false}))changed++;
+        if(firstRun)return;
+        /* Aynı model × üretici için birden çok talep olabilir (yeniden teklif).
+           Yalnız en yeni satır yansıtılır; eşit zamanda onaylı olan kazanır.
+           Böylece eski talepteki satır yeni onayı ve fiyatı geri almaz. */
+        const key=`${qNorm(item.rowId)}|${qNorm(item.manufacturer).toLocaleLowerCase('tr-TR')}`;
+        const prev=pending.get(key);
+        const newer=!prev||at>prev.at||(at===prev.at&&item.approved===true&&prev.item.approved!==true);
+        if(newer)pending.set(key,{req,item,at});
       });
     });
+    [...pending.values()].sort((a,b)=>a.at.localeCompare(b.at)).forEach(({req,item})=>{if(qWritePriceToCollection(req,item,{save:false}))changed++;});
     if(dirty){
       const entries=Object.entries(stamps).sort((a,b)=>String(b[1]).localeCompare(String(a[1]))).slice(0,5000);
       try{BLStorage.setItem(PROJECTED_KEY,JSON.stringify(Object.fromEntries(entries)));}catch(_){}
-    }
+    }else if(firstRun){try{BLStorage.setItem(PROJECTED_KEY,'{}');}catch(_){}}
     if(changed){if(typeof saveKolRows==='function')saveKolRows();qRefreshCollection();}
     return changed;
   }

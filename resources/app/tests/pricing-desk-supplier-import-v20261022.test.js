@@ -88,3 +88,16 @@ test('Türkçe başlıklar (Model Adı, Teklif Fiyatı, PLM ID) TR yerelinde de 
   const plan = supplierWorkbookPlan(request(), rows, 'Nova Knit dönüş.xlsx');
   assert.deepEqual(plain(plan.changes.map(change => [change.line.id, change.value])), [['a3', 7.7]]);
 });
+
+test('aynı modelin renk satırlarında BL Key önceliklidir; belirsiz PLM/model eşleşmesi yazılmaz', () => {
+  const { supplierWorkbookPlan } = loadDesk();
+  const req = { items: [
+    { id: 'red', rowId: 1, plmId: 'P1', modelCode: 'KOL-1', manufacturer: 'Nova Knit', price: '' },
+    { id: 'blue', rowId: 5, plmId: 'P1', modelCode: 'KOL-1', manufacturer: 'Nova Knit', price: '' },
+  ] };
+  const keyed = supplierWorkbookPlan(req, [['Model Name', 'PLM ID', 'Quotation Price (USD)', 'BL Key'], ['KOL-1', 'P1', '9,00', '1'], ['KOL-1', 'P1', '11,00', '5']], 'Nova Knit');
+  assert.deepEqual(plain(keyed.changes.map(change => [change.line.id, change.value])), [['red', 9], ['blue', 11]]);
+  const ambiguous = supplierWorkbookPlan(req, [['Model Name', 'PLM ID', 'Quotation Price (USD)'], ['KOL-1', 'P1', '9,00']], 'Nova Knit');
+  assert.deepEqual(plain(ambiguous.changes), [], 'iki renk satırı varken PLM eşleşmesi tahmin edilmez');
+  assert.deepEqual(plain(ambiguous.unmatched), ['KOL-1']);
+});

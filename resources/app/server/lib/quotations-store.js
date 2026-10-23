@@ -498,6 +498,10 @@ function importLegacy(profile, requests) {
     request.editorIds = [];
     request.status = raw && raw.status === 'closed' ? 'closed' : 'active';
     request.closedAt = request.status === 'closed' ? (clean(raw.closedAt, 80) || now()) : '';
+    // Defter sunucu tarafından yazılır: istemcinin getirdiği geçmiş/tur kabul edilmez.
+    // Eski kayıt defterle gelmez; okuyan taraf talep tarihinde "legacy" teklif türetir.
+    request.round = 1; request.rounds = [];
+    request.items = request.items.map(item => ({ ...item, history: [], rev: 0, updatedAt: '', updatedBy: '' }));
     store.requests.push(request); existing.add(request.id); imported += 1;
   }
   if (imported) saveStore(store);

@@ -199,3 +199,18 @@ test('yerel veritabanı senkronu quotation satırlarını kaybetmeden birleştir
     assert.equal(request.items.find(entry => entry.id === 'i2').price, '11,40', `${name}: B'nin satırı korunur`);
   }
 });
+
+test('eski yerel kayıt içe aktarımı istemcinin defter geçmişini kabul etmez', () => {
+  const src = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'server', 'lib', 'quotations-store.js'), 'utf8');
+  const body = src.slice(src.indexOf('function importLegacy('), src.indexOf('function approveLine('));
+  assert.match(body, /request\.items\.map\(item => \(\{ \.\.\.item, history: \[\], rev: 0, updatedAt: '', updatedBy: '' \}\)\)/);
+  assert.match(body, /request\.round = 1; request\.rounds = \[\];/);
+});
+
+test('Koleksiyon yansıtması yalnız sahipte ve model × üretici başına en yeni satırla yapılır', () => {
+  const q = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'public', 'quotations.js'), 'utf8');
+  const body = q.slice(q.indexOf('function qProjectForeignLineEdits('), q.indexOf('function qRefreshCollection('));
+  assert.match(body, /qNorm\(req\.ownerId\)!==me/, 'düzenleyici istemcisi sahibin eski kayıtlarını yeniden yazmaz');
+  assert.match(body, /if\(firstRun\)return;/, 'yeni cihaz eski değerleri geri yazmaz');
+  assert.match(body, /at===prev\.at&&item\.approved===true/, 'eşit zamanda onaylı satır kazanır');
+});

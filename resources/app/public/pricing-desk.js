@@ -453,15 +453,23 @@
     const hint=` ${foldName(manufacturerHint)} `;
     let manufacturer=manufacturers.find(name=>foldName(name)&&hint.includes(` ${foldName(name)} `))||'';
     if(!manufacturer&&manufacturers.length===1)manufacturer=manufacturers[0];
-    const changes=[],unmatched=[];let same=0;
+    const changes=[],unmatched=[],used=new Set();let same=0;
+    const lower=value=>clean(value).toLocaleLowerCase('tr-TR');
+    const own=(req.items||[]).filter(item=>clean(item.manufacturer)===manufacturer);
     rows.slice(headerIndex+1).forEach(row=>{
       const raw=clean(row[priceCol]);if(!raw)return;
       const value=E.price(raw);if(value==null)return;
       const key=keyCol>=0?clean(row[keyCol]):'',plm=plmCol>=0?clean(row[plmCol]):'',model=modelCol>=0?clean(row[modelCol]):'';
-      const candidates=(req.items||[]).filter(item=>clean(item.manufacturer)===manufacturer&&(
-        (key&&String(item.rowId)===key)||(plm&&clean(item.plmId).toLocaleLowerCase('tr-TR')===plm.toLocaleLowerCase('tr-TR'))||(model&&clean(item.modelCode).toLocaleLowerCase('tr-TR')===model.toLocaleLowerCase('tr-TR'))));
-      const line=candidates[0];
+      /* Eşleme önceliği: satır anahtarı (BL Key) varsa YALNIZ ona bakılır; yoksa
+         PLM ID, sonra model kodu. Aynı modelin birden çok renk satırı varsa PLM /
+         model kodu belirsizdir: tek aday yoksa satır eşleşmemiş sayılır, bir
+         talep satırına iki kez fiyat yazılmaz. */
+      let candidates=key?own.filter(item=>String(item.rowId)===key):[];
+      if(!key&&plm)candidates=own.filter(item=>lower(item.plmId)===lower(plm));
+      if(!key&&!candidates.length&&model)candidates=own.filter(item=>lower(item.modelCode)===lower(model));
+      const line=candidates.length===1&&!used.has(candidates[0].id)?candidates[0]:null;
       if(!line){unmatched.push(model||plm||key||'—');return;}
+      used.add(line.id);
       const before=E.price(line.price);
       if(before!=null&&Math.abs(before-value)<0.00005){same++;return;}
       changes.push({line,before,value});
