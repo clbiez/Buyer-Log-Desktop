@@ -5,7 +5,7 @@ cd /d "%~dp0"
 :MENU
 cls
 echo ==========================================================
-echo    BUYER LOG - OTOMATIK MINI PATCH (7.0.293)
+echo    BUYER LOG - OTOMATIK MINI PATCH (SURUM UYUMLU)
 echo ==========================================================
 echo.
 echo  [G] En yeni patch'i indir ve uygula
