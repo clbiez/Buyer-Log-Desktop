@@ -1219,6 +1219,7 @@
     const tableState=qTableState(req), universe=qRowsPassingFilters(req,key);
     const values=[...new Set(universe.map(item=>qFilterValue(req,item,key)))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
     const current=tableState.filters[key];
+    const orderedValues=values.slice().sort((a,b)=>Number(Boolean(current?.has(b)))-Number(Boolean(current?.has(a))));
     const panel=document.createElement('div'); panel.className='colFilterPanel quotationColFilterPanel';
     const rect=anchor.getBoundingClientRect();
     panel.style.left=Math.max(6,Math.min(window.innerWidth-306,rect.right-286))+'px';
@@ -1226,12 +1227,15 @@
     panel.innerHTML=`<div class="cfpSortBar"><button type="button" class="cfpSortBtn" data-qdir="1">${qEsc(qLang('A→Z Sırala','Sort A→Z'))}</button><button type="button" class="cfpSortBtn" data-qdir="-1">${qEsc(qLang('Z→A Sırala','Sort Z→A'))}</button></div>
       <input type="text" class="cfpSearch" placeholder="${qEsc(qLang('Ara…','Search…'))}">
       <div class="cfpHeader"><button type="button" class="cfpAll" data-v="all">${qEsc(qLang('Tümü','All'))}</button><button type="button" class="cfpAll" data-v="none">${qEsc(qLang('Temizle','Clear'))}</button></div>
-      <div class="cfpList">${values.map(value=>{const checked=!current||current.has(value),display=value||qLang('(boş)','(blank)');return `<label class="cfpItem" data-txt="${qEsc(display.toLocaleLowerCase('tr-TR'))}"><input type="checkbox" value="${qEsc(value)}" ${checked?'checked':''}> ${value?qEsc(value):`<i>${qEsc(display)}</i>`}</label>`;}).join('')}</div>
+      <div class="cfpList">${orderedValues.map((value,index)=>{const checked=!current||current.has(value),display=value||qLang('(boş)','(blank)');return `<label class="cfpItem" data-filter-order="${values.indexOf(value)}" data-txt="${qEsc(display.toLocaleLowerCase('tr-TR'))}"><input type="checkbox" value="${qEsc(value)}" ${checked?'checked':''}> ${value?qEsc(value):`<i>${qEsc(display)}</i>`}</label>`;}).join('')}</div>
       <div class="cfpApplyRow"><button type="button" class="cfpApplySelection">${qEsc(qLang('Uygula','Apply'))}</button><button type="button" class="cfpAddSelection">${qEsc(qLang('Geçerli Seçime Ekle','Add to Current'))}</button><button type="button" class="numFilterClear cfpRemoveSelection">${qEsc(qLang('Filtreyi Kaldır','Remove Filter'))}</button></div>`;
     document.body.appendChild(panel); qTableFilterPanel=panel;
+    const pin=()=>{if(typeof pinCheckedFilterChoices==='function')pinCheckedFilterChoices(panel);};
+    panel.querySelector('.cfpList')?.addEventListener('change',event=>{if(event.target.matches('input[type="checkbox"]'))pin();});
+    pin();
     const visibleBoxes=()=>[...panel.querySelectorAll('.cfpItem')].filter(item=>item.style.display!=='none').map(item=>item.querySelector('input'));
     panel.querySelectorAll('.cfpSortBtn').forEach(btn=>btn.addEventListener('click',()=>qSortTable(req,key,Number(btn.dataset.qdir)||1)));
-    panel.querySelectorAll('.cfpAll').forEach(btn=>btn.addEventListener('click',()=>visibleBoxes().forEach(box=>box.checked=btn.dataset.v==='all')));
+    panel.querySelectorAll('.cfpAll').forEach(btn=>btn.addEventListener('click',()=>{visibleBoxes().forEach(box=>box.checked=btn.dataset.v==='all');pin();}));
     const search=panel.querySelector('.cfpSearch');
     search.addEventListener('input',()=>{const terms=parseTableSearchTerms(search.value);panel.querySelectorAll('.cfpItem').forEach(item=>item.style.display=tableSearchMatches(item.dataset.txt,terms,{plainMode:'contains'})?'':'none');});
     const apply=add=>{
