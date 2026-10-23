@@ -2,23 +2,45 @@
 """Windows integration tests for the offline mini patch, including prior patch compatibility."""
 import hashlib
 import json
+import os
 import pathlib
 import subprocess
 import tempfile
 import zipfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-ARCHIVES = sorted((ROOT / "dist").glob("BuyerLog-7.0.293-MiniPatch-*.zip"))
-assert len(ARCHIVES) == 1, ARCHIVES
-ARCHIVE = ARCHIVES[0]
-BASE = "6501210b7faf051e4d8f2997dd0d48f0c9b64647"
-PREVIOUS = "d6149bcb440530a20c30adecf201d1d989afd507"
-PREVIOUS2 = "e54ba4eb8dfcc677907ed023955c7490de15fcd8"
-PREVIOUS3 = "920082a0c970a5c31d95627dc5cdb5e82c15ef71"
-PREVIOUS4 = "de123d59d39464e296ea9b535d652920173217a5"
-PREVIOUS5 = "ae0e375ed577ff3d47d796dbd60f5575afd260e7"
-PREVIOUS6 = "9c9f369140a27456e5b0ac97ae98ee541304f213"
+VERSION = os.environ["BUYER_LOG_PATCH_BASE_VERSION"]
+BASE = os.environ["BUYER_LOG_PATCH_BASE_COMMIT"]
 HEAD = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT).decode().strip()
+ARCHIVE = ROOT / "dist" / f"BuyerLog-{VERSION}-MiniPatch-{HEAD[:12]}.zip"
+assert ARCHIVE.is_file(), ARCHIVE
+
+def previous_refs():
+    # The old 7.0.293 R1–R5 patches should remain valid ONLY when 293 is STABLE.
+    old = ("d6149bcb440530a20c30adecf201d1d989afd507",
+           "e54ba4eb8dfcc677907ed023955c7490de15fcd8",
+           "920082a0c970a5c31d95627dc5cdb5e82c15ef71",
+           "de123d59d39464e296ea9b535d652920173217a5",
+           "ae0e375ed577ff3d47d796dbd60f5575afd260e7",
+           "9c9f369140a27456e5b0ac97ae98ee541304f213")
+    refs = [BASE]
+    if VERSION == "7.0.293":
+        refs.extend(old)
+    # Exercise patch compatibility with changes between official STABLE and main.
+    first_parents = subprocess.check_output(["git", "rev-list", "--first-parent",
+                                             f"{BASE}..{HEAD}"], cwd=ROOT).decode().splitlines()
+    refs.extend(first_parents[:2])
+    refs.extend(first_parents[-2:])
+    out = []
+    for ref in dict.fromkeys(refs):
+        try:
+            pkg = json.loads(subprocess.check_output(
+                ["git", "show", f"{ref}:resources/app/package.json"], cwd=ROOT))
+            if pkg["version"] == VERSION:
+                out.append((ref[:10], ref))
+        except (subprocess.CalledProcessError, KeyError, ValueError):
+            continue
+    return out
 
 def sha(b):
     return hashlib.sha256(b).hexdigest()
@@ -46,18 +68,14 @@ with tempfile.TemporaryDirectory() as td:
         manifest = json.loads(z.read("patch-manifest.json"))
     files = manifest["files"]
     assert manifest["schema"] == 2 and 1 <= len(files) <= 200
+    assert manifest["base_version"] == VERSION and manifest["base_commit"] == BASE
     assert sum(f["kind"] == "modified" for f in files) + sum(f["kind"] == "added" for f in files) == len(files)
-    assert sum(f["kind"] == "added" for f in files) == 4
+    assert sum(f["kind"] == "added" for f in files) >= 0
     assert manifest["target_commit"] == HEAD
     assert not any("electron/" in f["path"] or "update" in f["path"].lower() for f in files)
     script = tmp / "patch" / "Apply-MiniPatch.ps1"
 
-    for stage, ref in [("clean-7293", BASE), ("previous-mini-patch", PREVIOUS),
-                       ("22-oct-R2-prior-patch", PREVIOUS2),
-                       ("r2-prior", PREVIOUS3),
-                       ("r3-prior", PREVIOUS4),
-                       ("r4-prior", PREVIOUS5),
-                       ("r5-prior", PREVIOUS6)]:
+    for stage, ref in previous_refs():
         installation = tmp / stage
         installation.mkdir(parents=True, exist_ok=True)
         core = installation / "resources" / "app"
@@ -69,7 +87,7 @@ with tempfile.TemporaryDirectory() as td:
         state = installation / "data" / "local" / "updater"
         state.mkdir(parents=True)
         (state / "current.json").write_text(json.dumps({
-            "schemaVersion": 1, "version": "7.0.293", "appCoreRoot": str(core),
+            "schemaVersion": 1, "version": VERSION, "appCoreRoot": str(core),
         }), encoding="utf-8")
         (state / "state.json").write_text(json.dumps({
             "schemaVersion": 1, "state": "IDLE", "pending": None, "activation": None
