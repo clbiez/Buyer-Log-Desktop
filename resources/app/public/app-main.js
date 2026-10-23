@@ -30473,7 +30473,14 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
   document.getElementById('_kolFabricCardModal')?.remove();
   const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';
   const dis=canEdit?'':' disabled';
-  const detailInputs=api.DETAIL_FIELDS.map(key=>`<label><span>${escapeHtml(en?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)}</span><input type="text" data-fabric-detail="${key}" value="${escapeHtml(api.translateTerms(draft.details&&draft.details[key]||'',en?'en':'tr',{translateTypes:true}))}"${dis}></label>`).join('');
+  const detailSnapshots={};
+  const displayDetail=(key,card)=>{
+    const original=String(card.details&&card.details[key]||'');
+    const displayed=api.translateTerms(original,en?'en':'tr',{translateTypes:true});
+    detailSnapshots[key]={original,displayed};
+    return displayed;
+  };
+  const detailInputs=api.DETAIL_FIELDS.map(key=>`<label><span>${escapeHtml(en?api.DETAIL_LABELS[key].en:api.DETAIL_LABELS[key].tr)}</span><input type="text" data-fabric-detail="${key}" value="${escapeHtml(displayDetail(key,draft))}"${dis}></label>`).join('');
   const missingCount=collection&&!freeText?api.missingCodes(kolRows,kolFabricCards).filter(item=>item.code!==code).length:0;
   const meta=freeText
     ?(en?'No fabric code was found in this cell. Enter the fabric code; saving creates the card and links the cell text to it.':'Bu hücrede kumaş kodu bulunamadı. Kumaş kodunu girin; kaydettiğinizde kart oluşturulur ve hücre metni bu karta bağlanır.')
@@ -30512,7 +30519,7 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
   const setSource=next=>{source=next;const badge=modal.querySelector('[data-fabric-source]');if(badge){badge.textContent=kolFabricSourceLabel(next);badge.className=`kolFabricSource is-${next}`;}};
   const fill=card=>{
     summaryInput.value=api.summaryFor(card,'tr');summaryEnInput.value=api.summaryFor(card,'en');
-    api.DETAIL_FIELDS.forEach(key=>{const input=modal.querySelector(`[data-fabric-detail="${key}"]`);if(input)input.value=api.translateTerms(card.details&&card.details[key]||'',en?'en':'tr',{translateTypes:true});});
+    api.DETAIL_FIELDS.forEach(key=>{const input=modal.querySelector(`[data-fabric-detail="${key}"]`);if(input)input.value=displayDetail(key,card);});
     setSource(card.summarySource);
   };
   const close=()=>{window.BLLayerSystem?.closeDialog?.(modal,{trigger});modal.remove();};
@@ -30561,7 +30568,12 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
       if(!saveCode){status.textContent=en?'Enter a valid fabric code (3–12 digits).':'Geçerli bir kumaş kodu girin (3–12 hane).';modal.querySelector('#_kolFabricCode')?.focus();return;}
       const saveExisting=freeText?kolFabricCards.get(saveCode)||null:existing;
       const rowRaw=freeText?api.rawForCode(saveCode,freeText,kolFabricCards):String(rawText??'');
-      const details={};api.DETAIL_FIELDS.forEach(key=>{details[key]=modal.querySelector(`[data-fabric-detail="${key}"]`)?.value||'';});
+      const details={};api.DETAIL_FIELDS.forEach(key=>{
+        const value=modal.querySelector(`[data-fabric-detail="${key}"]`)?.value||'';
+        const snapshot=detailSnapshots[key];
+        // Viewing a translated detail must not overwrite its original stored value.
+        details[key]=snapshot&&value===snapshot.displayed?snapshot.original:value;
+      });
       const card=api.normalizeCard({code:saveCode,summary:summaryInput.value,summaryEn:summaryEnInput.value,details,summarySource:source,raw:saveExisting&&saveExisting.raw||(freeText?rowRaw:raw)});
       if(!card){status.textContent=en?'Enter a Turkish summary first.':'Önce Türkçe özeti girin.';summaryInput.focus();return;}
       action.disabled=true;
