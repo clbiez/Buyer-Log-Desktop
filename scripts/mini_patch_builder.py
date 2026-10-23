@@ -109,7 +109,7 @@ for row in status_rows:
             })
             seen.add(digest(older))
     entries.append(record)
-if not (0 <= len(entries) <= 200):
+if not (1 <= len(entries) <= 200):
     raise RuntimeError(f"unexpected number of runtime changes: {len(entries)}")
 
 manifest = {
@@ -175,7 +175,7 @@ print(f"manifest: {len(payload)} bytes, ZIP: {OUTPUT.stat().st_size} bytes")
 print(f"sha256: {digest(OUTPUT.read_bytes())}")
 index = {
     "schema": 1, "kind": "buyerlog-manual-hotfix",
-    "base_version": "7.0.293",
+    "base_version": VERSION,
     "base_commit": BASE,
     "target_commit": HEAD,
     "asset": OUTPUT.name,
