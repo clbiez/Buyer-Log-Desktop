@@ -144,6 +144,18 @@ test('Collection effective zero/false values, checklist labels and image identit
   assert.deepEqual(plain(converted.images), plain(data.images));
   assert.equal(chat.tableContext('koleksiyon', 'filters').rows.length, 0);
 });
+test('Collection card-detail records carry hidden and empty columns while the LCW AI CSV keeps visible columns', () => {
+  const { window, chat, kolRows } = fixture();
+  kolRows[0].modelKod = '';
+  window.BLAIScreenData.rowImage = () => ({ source: '/api/demo-image', modelId: 'DEMO', colourCode: 'BLUE' });
+  const data = chat.tableContext('koleksiyon', 'visible');
+  assert.deepEqual(plain(data.columns), ['BL Image', 'Model Code', 'Best Price', 'Conf. Manufacturer'], 'CSV columns stay visible-only');
+  const record = plain(Object.values(data.records)[0]);
+  assert.deepEqual(record.map(pair => pair[0]), ['Model Code', 'Renk takibi', 'Best Price', 'Conf. Manufacturer', 'Approved Mfr. Price'], 'hidden columns are offered on cards');
+  assert.deepEqual(record[0], ['Model Code', ''], 'an empty column keeps its header');
+  assert.equal(record[1][1], 'Displayed');
+  assert.ok(!('records' in chat.contextAsFile(data).context), 'records never enter the LCW AI context');
+});
 test('grouped Collection derived cells use inherited and overridden calculation inputs', () => {
   const { env, chat, kolCols, kolRows } = fixture();
   kolCols.push({ k: 'endeksmatik', label: 'Benchmark', endeksmatik: true }, { k: 'trLanded', label: 'TR Landed', trLanded: true });

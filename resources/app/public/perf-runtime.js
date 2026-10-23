@@ -127,7 +127,7 @@
     layoutDocument:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2'],
     layoutControl:['lcwai-assistant.js?rev=1','layout-control-template.js?rev=3','layout-control-engine.js?rev=4','layout-document-reader.js?rev=2','layout-ai-review.js?rev=1','layout-control.js?rev=5'],
     // LCW AI Çıktı Düzenleyici + çıktı şablonları: yalnız "Düzenle"/"Şablonlar" ile yüklenir.
-    lcwaiOutputEditor:['lcwai-output-layout.js?rev=3','lcwai-output-editor.js?rev=5'],
+    lcwaiOutputEditor:['lcwai-output-layout.js?rev=4','lcwai-output-editor.js?rev=6'],
     lfl:['lfl-calculation-engine.js','lfl.js?rev=2'],
     // v7.0.229 — Üreticiler sayfası: saf motor ve ortak rehber görünümden ÖNCE.
     // email-groups.js deferredUi ile AYNI adla listelenir; loadScript tek kez yükler.
