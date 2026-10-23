@@ -43,13 +43,33 @@
       out[id]=definition.type==='date'?root.BLCapacityRequest.toDate(value)||'':definition.type==='number'?root.BLCapacityRequest.toNumber(value):value;
     });return Object.assign(out,extras&&extras[index]);
   });}
+  // Saved Capacity templates may rearrange columns. Resolve all formula
+  // references from their actual mapped positions, not the default A:T layout.
+  function capacityFormulaRecords(data,config){
+    const mapped=new Map(config.columns.filter(c=>c.field).map(c=>[c.field,c.column]));
+    const column=(field,rowNo)=>mapped.has('capacity:'+field)?root.BLExcelTemplateEngine.columnName(mapped.get('capacity:'+field))+rowNo:null;
+    const raw=(record,field)=>record['capacity:'+field]!==undefined?record['capacity:'+field]:record[field];
+    return data.map((record,i)=>{
+      const rowNo=config.dataRow+i,copy={...record};
+      const units=column('units',rowNo),po=column('poIssuingDate',rowNo),ex=column('exFactoryDate',rowNo),retail=column('retailStockDate',rowNo);
+      const add=(field,formula)=>{if(mapped.has('capacity:'+field)&&formula)copy['capacity:'+field]={__blFormula:formula,result:raw(record,field)};};
+      const quantity=Number(raw(record,'units')),garments=Number(raw(record,'garmentQty'));
+      const multiplier=Number(record.garmentMultiplier||record['capacity:garmentMultiplier'])||
+        (Number.isFinite(quantity)&&quantity!==0&&Number.isFinite(garments)?garments/quantity:1);
+      if(units&&[1,2].includes(multiplier))add('garmentQty','IF('+units+'="","",'+units+'*'+multiplier+')');
+      if(po&&ex)add('poIssueToExFactory','IF(OR('+po+'="",'+ex+'=""),"",'+ex+'-'+po+')');
+      if(ex&&retail)add('exFactoryToRetail','IF(OR('+ex+'="",'+retail+'=""),"",'+retail+'-'+ex+')');
+      return copy;
+    });
+  }
   async function build(type,data,fallback){
     const item=await saved(type);
     if(!item&&type!=='hologram')return fallback;
     await libraries();const config=item?item.config:root.BLHologramRequest.template(),bytes=item?decode(item.bytes):await defaultBytes(type);
     // Recalculate using the saved per-template rule; do not reuse the default
     // quantity produced before the user's template preferences were loaded.
-    const recordsForExport=type==='hologram'?data.map(record=>({...record,hologramQuantity:root.BLHologramRequest.quantity(record.orderQuantity,config.quantityRule)})):data;
+    const recordsForExport=type==='hologram'?data.map(record=>({...record,hologramQuantity:root.BLHologramRequest.quantity(record.orderQuantity,config.quantityRule)}))
+      :type==='capacity'?capacityFormulaRecords(data,config):data;
     try{return await root.BLExcelTemplateEngine.fill(bytes,config,recordsForExport,root.JSZip,root.BLExcelDates);}catch(_){throw error();}
   }
   async function open(){

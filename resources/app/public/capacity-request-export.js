@@ -53,7 +53,8 @@
 
   const MODULES=Object.freeze({
     collection:{moduleId:'collection',quantityField:'collectionQuantity'},
-    cp:{moduleId:'cp',quantityField:'orderQuantity'}
+    cp:{moduleId:'cp',quantityField:'orderQuantity'},
+    orders:{moduleId:'orders',quantityField:'orderQuantity'}
   });
 
   function fields(){
@@ -194,6 +195,7 @@
     // Missing OPD intentionally stays null; it must never fall back to today.
     const poIssuingDate=source==='collection'?today:toDate(api.value(row,moduleId,'orderPlacementDate'));
     const units=toNumber(api.value(row,moduleId,cfg.quantityField));
+    const multiplier=garmentMultiplier(row,source);
     const exFactoryDate=toDate(api.value(row,moduleId,'exFactory'));
     const retailStockDate=toDate(api.value(row,moduleId,'retailDate'));
     return {
@@ -203,7 +205,8 @@
       style:text(api.value(row,moduleId,'modelName')),
       color:text(api.value(row,moduleId,'colour')),
       units:units,
-      garmentQty:units==null?null:units*garmentMultiplier(row,source),
+      garmentQty:units==null?null:units*multiplier,
+      garmentMultiplier:multiplier,
       merchBrandAgeGroup:text(api.value(row,moduleId,'mmyg')),
       merchAltGroup:text(api.value(row,moduleId,'mag')),
       buyerGroup:text(api.value(row,moduleId,'buyingGroup')),
@@ -215,7 +218,7 @@
       supplierConfirmationMail:'',
       retailStockDate:retailStockDate,
       fobPrice:toNumber(api.value(row,moduleId,'fob')),
-      poIssueToExFactory:dayDiff(today,exFactoryDate),
+      poIssueToExFactory:dayDiff(poIssuingDate,exFactoryDate),
       exFactoryToRetail:dayDiff(exFactoryDate,retailStockDate)
     };
   }
@@ -276,6 +279,7 @@
     const format=dateFormat||(dates&&dates.DATE_FORMAT)||'dd.mm.yy';
     const wb=new ExcelJSCtor.Workbook();
     wb.creator='Buyer Log';wb.created=new Date();
+    wb.calcProperties.fullCalcOnLoad=true;
     const ws=wb.addWorksheet('Jersey',{views:[{state:'frozen',ySplit:1}]});
     ws.columns=HEADERS.map(function(header,i){return {header:header,width:COLUMN_WIDTHS[i]||18};});
     ws.autoFilter={from:{row:1,column:1},to:{row:Math.max(1,result.rows.length+1),column:HEADERS.length}};
@@ -290,7 +294,14 @@
       const row=ws.getRow(rowIndex+2);
       ORDER.forEach(function(key,colIndex){
         const value=item[key],cell=row.getCell(colIndex+1);
-        cell.value=(value==null||value==='')?null:value;
+        const r=rowIndex+2;
+        if(key==='garmentQty'){
+          cell.value={formula:'IF(F'+r+'="","",F'+r+'*'+(item.garmentMultiplier===2?2:1)+')',result:value==null?'':value};
+        }else if(key==='poIssueToExFactory'){
+          cell.value={formula:'IF(OR(L'+r+'="",M'+r+'=""),"",M'+r+'-L'+r+')',result:value==null?'':value};
+        }else if(key==='exFactoryToRetail'){
+          cell.value={formula:'IF(OR(M'+r+'="",Q'+r+'=""),"",Q'+r+'-M'+r+')',result:value==null?'':value};
+        }else cell.value=(value==null||value==='')?null:value;
         cell.alignment={vertical:'middle'};
         /* Tarih hucreleri ham JS Date olarak birakilamaz: ExcelJS bunlari UTC
            uzerinden serilestirir ve UTC+N saat diliminde gun bir geri kayar.
