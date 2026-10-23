@@ -6,7 +6,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$ExpectedVersion = '7.0.293'
+$ExpectedVersion = ''
 $PatchFolder = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 function Hash-Hex([byte[]] $Bytes) {
@@ -49,7 +49,7 @@ function Active-Core([string] $Root) {
   if (Test-Path -LiteralPath $pointerPath -PathType Leaf) {
     $pointer = Read-Json $pointerPath
     if ($pointer.version -and ([string]$pointer.version -ne $ExpectedVersion)) {
-      throw "Etkin surum $($pointer.version); mini patch yalniz 7.0.293 icindir."
+      throw "Etkin surum $($pointer.version); indirilen patch $ExpectedVersion surumu icindir. Once uygun surume ait paket yayinini secin."
     }
     if ($pointer.appCoreRoot) {
       $proposed = [string] $pointer.appCoreRoot
@@ -57,7 +57,7 @@ function Active-Core([string] $Root) {
           (Test-Path -LiteralPath (Join-Path $proposed 'package.json') -PathType Leaf)) {
         $core = (Resolve-Path -LiteralPath $proposed).ProviderPath
       } else {
-        $fallback = Join-Path $Root '.buyerlog-versions\7.0.293\app'
+        $fallback = Join-Path $Root ('.buyerlog-versions\' + $ExpectedVersion + '\app')
         if ((Test-Path -LiteralPath (Join-Path $fallback 'package.json') -PathType Leaf)) {
           $core = (Resolve-Path -LiteralPath $fallback).ProviderPath
         }
@@ -66,7 +66,7 @@ function Active-Core([string] $Root) {
   }
   $pkg = Read-Json (Join-Path $core 'package.json')
   if ([string]$pkg.version -ne $ExpectedVersion) {
-    throw "Gecerli olmayan uygulama surumu: $($pkg.version). Beklenen: 7.0.293"
+    throw "Aktif uygulama surumu $($pkg.version); indirilen patch $ExpectedVersion. Bu paket bu kurulumda uygulanamaz."
   }
   $statePath = Join-Path $Root 'data\local\updater\state.json'
   if (Test-Path -LiteralPath $statePath -PathType Leaf) {
@@ -124,15 +124,16 @@ function Safe-Target([string] $Core, [string] $Relative, [bool] $AllowMissing = 
 }
 function Main {
   $manifest = Read-Json (Join-Path $PatchFolder 'patch-manifest.json')
-  if ([int]$manifest.schema -ne 2 -or [string]$manifest.base_version -ne $ExpectedVersion -or
+  if ([int]$manifest.schema -ne 2 -or [string]$manifest.base_version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$' -or
       [string]$manifest.target_commit -notmatch '^[0-9a-f]{40}$') {
     throw 'Patch manifesti surum veya sema acisindan uyumsuz.'
   }
   if (@($manifest.files).Count -lt 1 -or @($manifest.files).Count -gt 200) { throw 'Patch manifesti dosya sayisi gecersiz.' }
+  $script:ExpectedVersion = [string]$manifest.base_version
   $root = Find-Install
   $core = Active-Core $root
   Write-Host ''
-  Write-Host 'Buyer Log 7.0.293 MINI PATCH'
+  Write-Host "Buyer Log $ExpectedVersion MINI PATCH"
   Write-Host "Kurulum: $root"
   Write-Host "Aktif cekirdek: $core"
   Write-Host "Kaynak: $($manifest.base_commit.Substring(0,8)) -> $($manifest.target_commit.Substring(0,8))"
@@ -140,7 +141,15 @@ function Main {
     Assert-Closed
     $history = Join-Path $root 'data\local\manual-patch-backups'
     $last = Get-ChildItem -LiteralPath $history -Directory -ErrorAction SilentlyContinue |
-      Where-Object { Test-Path -LiteralPath (Join-Path $_.FullName 'backup.json') } |
+      Where-Object {
+        $file = Join-Path $_.FullName 'backup.json'
+        if (-not (Test-Path -LiteralPath $file)) { return $false }
+        try {
+          $info = Read-Json $file
+          return ([string]$info.core -eq [string]$core -and
+                  [string]$info.base_version -eq $ExpectedVersion)
+        } catch { return $false }
+      } |
       Sort-Object Name -Descending | Select-Object -First 1
     if (-not $last) { throw 'Geri alinacak mini patch yedegi bulunamadi.' }
     $backup = Read-Json (Join-Path $last.FullName 'backup.json')
@@ -219,7 +228,7 @@ function Main {
 
   $history = Join-Path $root 'data\local\manual-patch-backups'
   $stamp = (Get-Date).ToString('yyyyMMdd-HHmmss-fffffff')
-  $backupRoot = Join-Path $history ("patch-7.0.293-" + $stamp)
+  $backupRoot = Join-Path $history ("patch-" + $ExpectedVersion + "-" + $stamp)
   [System.IO.Directory]::CreateDirectory($backupRoot) | Out-Null
   $backupItems = New-Object 'System.Collections.Generic.List[object]'
   foreach ($change in $changes) {

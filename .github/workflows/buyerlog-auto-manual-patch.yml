@@ -1,7 +1,7 @@
 name: Buyer Log AUTO Manual Patch Publisher
 on:
   push:
-    branches: [main, tools/auto-offline-hotfix-7293-20261022]
+    branches: [main, fix/autopatch-stable-version-20261023]
     paths:
       - 'resources/app/public/**'
       - 'resources/app/server/**'
@@ -26,7 +26,23 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Build mini patch from pinned 7.0.293 source
+      - name: Resolve official STABLE version and its immutable source commit
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          $release = Invoke-RestMethod -Uri 'https://raw.githubusercontent.com/clbiez/Buyer-Log-Releases/main/stable/latest.json' -TimeoutSec 30
+          $version = [string]$release.version
+          if ($version -notmatch '^[0-9]+\.[0-9]+\.[0-9]+$') { throw 'Invalid STABLE metadata.' }
+          $sha = (& gh api "repos/$env:REPO/branches/updates/v$version" --jq '.commit.sha').Trim()
+          if ($LASTEXITCODE -ne 0 -or $sha -notmatch '^[0-9a-f]{40}$') { throw 'STABLE source branch not found.' }
+          $pkg = (& git show ($sha + ':resources/app/package.json') | Out-String | ConvertFrom-Json)
+          if ([string]$pkg.version -ne $version) { throw 'STABLE source version differs from published STABLE.' }
+          "BUYER_LOG_PATCH_BASE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          "BUYER_LOG_PATCH_BASE_COMMIT=$sha" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+          Write-Host "PATCH BASE: $version / $sha"
+      - name: Build mini patch from resolved STABLE source
         shell: pwsh
         run: python scripts/mini_patch_builder.py
       - name: Test apply, compatibility and rollback on Windows
@@ -35,9 +51,9 @@ jobs:
       - name: Save verified ZIP and index
         uses: actions/upload-artifact@v4
         with:
-          name: buyerlog-auto-manual-patch-7293
+          name: buyerlog-auto-manual-patch-latest
           path: |
-            dist/BuyerLog-7.0.293-MiniPatch-*.zip
+            dist/BuyerLog-*-MiniPatch-*.zip
             dist/mini-patch-latest.json
           if-no-files-found: error
           retention-days: 7
@@ -50,7 +66,7 @@ jobs:
       - name: Download Windows-verified ZIP and index
         uses: actions/download-artifact@v4
         with:
-          name: buyerlog-auto-manual-patch-7293
+          name: buyerlog-auto-manual-patch-latest
           path: dist
       - name: Verify ZIP and commit identity
         shell: bash
@@ -63,7 +79,7 @@ jobs:
           index=json.loads(pathlib.Path('dist/mini-patch-latest.json').read_text())
           file=pathlib.Path('dist')/index['asset']
           assert index['target_commit']==os.environ['HEAD_SHA']
-          assert index['base_version']=='7.0.293'
+          assert index['base_version'].count('.')==2
           assert file.exists() and file.stat().st_size==index['size']
           assert hashlib.sha256(file.read_bytes()).hexdigest()==index['sha256']
           print('SHA256/commit verified:',file)
@@ -75,10 +91,11 @@ jobs:
           RELEASE_REPO: clbiez/Buyer-Log-Releases
         run: |
           set -euo pipefail
-          TAG="minipatch-v7.0.293"
+          VERSION="$(python3 -c "import json;print(json.load(open('dist/mini-patch-latest.json'))['base_version'])")"
+          TAG="minipatch-v$VERSION"
           ASSET="$(python3 -c "import json;print(json.load(open('dist/mini-patch-latest.json'))['asset'])")"
           if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
-            gh release create "$TAG" --repo "$RELEASE_REPO" --title "Buyer Log 7.0.293 unofficial mini patches" --notes "Manual cumulative hotfix channel. This is not a signed STABLE update. Official updater, version and user data are unchanged." --prerelease --latest=false
+            gh release create "$TAG" --repo "$RELEASE_REPO" --title "Buyer Log $VERSION unofficial mini patches" --notes "Manual cumulative hotfix channel. This is not a signed STABLE update. Official updater, version and user data are unchanged." --prerelease --latest=false
           fi
           gh release upload "$TAG" "dist/$ASSET" --repo "$RELEASE_REPO" --clobber
           echo "RELEASE_ASSET=$ASSET" >> "$GITHUB_ENV"
