@@ -101,7 +101,15 @@ const STATIC_MODULES = Object.freeze({
   collection: { tr: 'Koleksiyon: sezon geliştirme çalışma alanı; ürün/model satırları, PLM bağlantıları, görseller, durum kataloğu ve fiyat teklifleri. Fiyat Masası teklifleri Fiyat Defteri olaylarıyla (tarih, kişi, tur) saklar; onay ve fiyat Koleksiyon’a yansır.', en: 'Collection: season development workspace; product/model rows, PLM links, images, status catalogue and quotations. The Pricing Desk keeps offers as Price Ledger events (date, person, round); approvals and prices flow back to Collection.' },
 });
 
+function fxLayoutKnowledge(lang) {
+  const engine=require('../../../public/fx-import-engine');
+  return [lang==='en'
+    ? 'Return only a table layout. Never return exchange-rate values. Read the unit direction from visible headings. Buyer Log reads the original cells, validates, previews differences, and requires user confirmation before saving.'
+    : 'Yalnız tablo düzeni döndür. Asla kur değerleri üretme. Birim yönünü görünür başlıklardan oku. Buyer Log özgün hücreleri okur, doğrular, farkları önizler ve kaydetmeden önce kullanıcı onayı ister.',
+    JSON.stringify(engine.FX_LAYOUT_GUIDE),JSON.stringify({monthJumpThreshold:engine.MONTH_JUMP_THRESHOLD,currentDifferenceThreshold:engine.CURRENT_DIFFERENCE_THRESHOLD,expectedCurrencies:engine.EXPECTED_CURRENCIES})].join('\n');
+}
 const MODULES = Object.freeze({
+  'fx-kur-layout': {title:{tr:'Döviz tablosu düzeni',en:'FX table layout'},keywords:['kur tahmin','fx layout','exchange rate'],build:fxLayoutKnowledge},
   'calculated-column': { title: { tr: 'Hesaplanan Sütun formül dili', en: 'Calculated Column formula language' }, keywords: ['formül', 'formul', 'formula', 'hesaplanan sütun', 'calculated column', 'kolon', 'sütun', 'column'], build: formulaKnowledge },
   rules: { title: { tr: 'CP öncelik/checklist kural dili', en: 'CP priority/checklist rule language' }, keywords: ['kural', 'rule', 'öncelik', 'priority', 'kritik', 'critical', 'checklist', 'kontrol listesi'], build: rulesKnowledge },
   automations: { title: { tr: 'Automation Code', en: 'Automation Code' }, keywords: ['otomasyon', 'automation', 'tetik', 'trigger', 'e-posta', 'email', 'mail at', 'bildirim'], build: automationKnowledge },

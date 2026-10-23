@@ -43,6 +43,7 @@ function fxContext() {
   const loaded = [];
   const context = {
     console,
+    crypto: require('node:crypto').webcrypto,
     window: null,
     BLStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
     addEventListener() {},
@@ -61,6 +62,7 @@ function fxContext() {
   vm.createContext(context);
   vm.runInContext(datesSource, context);
   vm.runInContext(engineSource, context);
+  vm.runInContext(fs.readFileSync(path.join(ROOT, 'public/fx-import-engine.js'), 'utf8'), context);
   vm.runInContext(fxSource, context);
   return { context, loaded };
 }
@@ -91,6 +93,8 @@ test('KUR upload accepts a currency code moved to column A and text month header
   const ws = XLSX.utils.aoa_to_sheet([
     ['Kur', null, '2026-10', '2026-11'],
     ['TRY', 'Türkiye', '49,35', '50,24'], // i18n-ignore
+    ['EUR', 'Euro zone', .9, .91],
+    ['GBP', 'Pound', .8, .81],
   ]);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
@@ -115,8 +119,31 @@ test('FX upload paths load fx.js on demand instead of waiting for deferredUi', (
   const app = fs.readFileSync(path.join(ROOT, 'public/app-main.js'), 'utf8');
   const openCosting = perf.match(/openCosting:\[([^\]]*)\]/)[1];
   assert.ok(openCosting.indexOf("'fx.js'") >= 0 && openCosting.indexOf("'fx.js'") < openCosting.indexOf("'open-costing.js'"));
-  assert.match(perf, /\bfx:\['fx-calculation-engine\.js','fx\.js'\]/);
+  assert.match(perf, /\bfx:\['fx-calculation-engine\.js','fx-import-engine\.js','fx\.js'\]/);
   assert.match(perf, /name==='openCosting'&&typeof global\.initOpenCosting==='function'&&global\.BLFX\)return;/);
   const handler = app.slice(app.indexOf("getElementById('sourceFxFile')?.addEventListener"));
   assert.ok(handler.indexOf("ensureFeature('fx')") > 0 && handler.indexOf("ensureFeature('fx')") < handler.indexOf('BLFX.importFile'));
+});
+
+test('browser and server read the same synthetic merged-header workbook with identical months', async () => {
+  const buffer = kurWorkbookBuffer();
+  const { context } = fxContext();
+  const browser = await context.BLFX.importFile(fileFrom(context, buffer, 'KUR.xlsx'));
+  const server = require('../server/lib/fxWorkbook').parseFxWorkbook(XLSX.read(buffer, { type: 'buffer', cellDates: true }), 'KUR.xlsx');
+  assert.deepEqual(JSON.parse(JSON.stringify(browser.data.months)), server.data.months);
+  assert.equal(browser.data.reportMonth, server.data.reportMonth);
+  assert.equal(browser.data.parser, 'deterministic');
+  assert.match(browser.data.sourceFingerprint, /^[a-f0-9]{64}$/);
+});
+
+test('a preview saves with its captured revision even if the live store has advanced', async () => {
+  const { context } = fxContext();
+  let ifMatch;
+  context.fetch = async (_url, options) => {
+    ifMatch = options.headers['If-Match'];
+    return { ok: true, json: async () => ({ ...JSON.parse(options.body), _revision: 4 }) };
+  };
+  context.BLFX.store._revision = 3;
+  await context.BLFX.save({ months: { '2026-11': { TRY: 50 } } }, { expectedRevision: 2 });
+  assert.equal(ifMatch, '2');
 });

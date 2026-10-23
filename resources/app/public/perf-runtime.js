@@ -116,9 +116,10 @@
     versionHistory:['version-history.js'],
     // fx.js deferredUi'nin SONUNDA da listelidir; o zincir yavaşlar ya da bir
     // dosyası düşerse Ön Maliyet kur penceresi BLFX'siz kalmasın diye burada da var.
-    openCosting:['fx-calculation-engine.js','fx.js','open-costing-engine.js','open-costing.js'],
+    openCosting:['fx-calculation-engine.js','fx-import-engine.js','fx.js','open-costing-engine.js','open-costing.js'],
     // Kur Excel'i yükleme (Veri Yönetimi › Kur) BLFX'i bağımsız ister.
-    fx:['fx-calculation-engine.js','fx.js'],
+    fx:['fx-calculation-engine.js','fx-import-engine.js','fx.js'],
+    fxAi:['lcwai-assistant.js?rev=1'],
     // v7.175 — otomasyon asistanı (şablonlar, "Hazır mı?", AI yönergesi) saf
     // yardımcıdır; iki görünüm dosyası da onu window'dan okur, bu yüzden önce.
     automations:['automation-assistant.js','automations.js','ai-automation-import.js'],
@@ -172,7 +173,7 @@
       'lcwai-assistant.js?rev=1','update-test-ui.js?rev=5','user-access-ui.js?rev=APP-UPDATE-V3','formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','plm-bom.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
       'quick-filter-groups.js','kpi-groups.js','user-management.js',
       /* v7.81 — horizon-editor.js kaldırıldı: kişisel ufuk düzenleyicisi
-         artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */'override-sync.js','backup-manager.js','fx-calculation-engine.js','fx.js',
+         artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */'override-sync.js','backup-manager.js','fx-calculation-engine.js','fx-import-engine.js','fx.js',
     ],
     /* v7.81 — Veri Yönetimi ekranı açılış kritik yolunda DEĞİLDİR: günlük
        kullanımda hiç açılmayan bir kurulum ekranıdır. Sekmeye ilk geçişte

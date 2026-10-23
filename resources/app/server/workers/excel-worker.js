@@ -53,6 +53,12 @@ function readWorkbook(XLSX, fullPath) {
 async function execute(task, payload = {}) {
   if (task === 'health') return { ok: true, thread: 'excel-worker' };
   if (task === 'diagnosticSpin') { const ms = Math.max(0, Math.min(2000, Number(payload.ms) || 0)); const end = Date.now() + ms; let checksum = 0; while (Date.now() < end) checksum = (checksum + 1) % 1000003; return { ok: true, ms, checksum }; }
+  if (task === 'previewFxWorkbookFromDirectories') {
+    const {findKurWorkbook,previewFxWorkbook}=require('../lib/fxWorkbook');
+    const found=findKurWorkbook(payload.directories||[]);
+    if(!found)throw new Error('SOURCE_KUR_NOT_FOUND');
+    return {...previewFxWorkbook(found.full),fileName:found.name,sourceModifiedAt:new Date(found.modifiedMs).toISOString()};
+  }
   if (task === 'loadFxWorkbookFromDirectories') {
     const { findKurWorkbook, readFxWorkbook } = require('../lib/fxWorkbook');
     const found = findKurWorkbook(Array.isArray(payload.directories) ? payload.directories : []);
@@ -61,8 +67,12 @@ async function execute(task, payload = {}) {
     if (!payload.force && current.sourceType === 'KUR' && current.sourceFile === found.name && current.sourceModifiedAt === modifiedAt) {
       return { found: true, updated: false, file: found.name, modifiedAt };
     }
-    const parsed = readFxWorkbook(found.full);
-    return { found: true, updated: true, file: found.name, modifiedAt, data: parsed.data, stats: parsed.stats };
+    try {
+      const parsed = readFxWorkbook(found.full);
+      return { found: true, updated: true, file: found.name, modifiedAt, fingerprint: parsed.data.sourceFingerprint, reportMonth: parsed.data.reportMonth, data: parsed.data, stats: parsed.stats };
+    } catch (_) {
+      return { found: true, updated: false, file: found.name, modifiedAt, reason: 'parse-failed' };
+    }
   }
   const { XLSX, parseASASWorkbook, parseAntrepoWorkbook, parseCPUpdateWorkbook, parseLFLWorkbook } = requireExcelModules();
   if (task === 'loadSources') {
