@@ -25,10 +25,13 @@ test('motor: aday değer arama dilini bozamaz; tekrar ve boş atılır', () => {
   assert.equal(engine.cleanValue('!W7J403Z4'), 'W7J403Z4', 'başta ! "içermez" ölçütüne dönmez');
   assert.equal(engine.cleanValue('(BOST)'), 'BOST');
   assert.equal(engine.cleanValue('x'.repeat(121)), '');
+  assert.equal(engine.cleanValue('W6'), '', 'çok kısa değer tablonun çoğuna uyar; aday sayılmaz');
   assert.deepEqual(engine.cleanValues(['Beşiktaş', 'BEŞİKTAŞ', '', null, 'Fenerbahçe']), ['Beşiktaş', 'Fenerbahçe']);
   assert.deepEqual(engine.variantsFor('PNT,LUCAS-YD'), ['PNT,LUCAS-YD', 'LUCAS-YD']);
   assert.deepEqual(engine.variantsFor('UK.TSH,FT-AKISO'), ['UK.TSH,FT-AKISO', 'FT-AKISO']);
   assert.deepEqual(engine.variantsFor('1288035'), ['1288035']);
+  assert.deepEqual(engine.variantsFor('12,50'), ['12,50'], 'ondalık sayı kısa parçaya düşmez');
+  assert.deepEqual(engine.variantsFor('Disney,Bangladesh,Egypt'), ['Disney,Bangladesh,Egypt'], 'virgülle birleşmiş liste parçalanıp tek kuyruğa düşmez');
   assert.equal(engine.tabForInput('cpSearch'), 'cp');
   assert.equal(engine.tabForInput('ordersSearch'), 'orders');
   assert.equal(engine.tabForInput('kolSearch'), 'koleksiyon');
@@ -234,8 +237,9 @@ test('sohbet: model görselleri anahtar etiketli paftalarla LCW AI’a eklenir',
 
   const source = read('public/lcwai-chat.js');
   assert.match(source, /const sheets = await uploadModelImageSheets\(contextImages, maxFiles - userMessage\.attachments\.length,/, 'sohbet mesajı bağlamdaki görselleri ek olarak gönderir');
-  assert.match(source, /userMessage\.attachments\.push\(\.\.\.sheets\.attachments\);[^]*if \(sheets\.context\) userMessage\.contexts\.push\(sheets\.context\);/);
+  assert.match(source, /userMessage\.attachments\.push\(\.\.\.sheets\.attachments\);[^]*if \(sheets\.context\) userMessage\.contexts\.unshift\(sheets\.context\);/, 'sunucunun bağlam sınırında pafta açıklaması kaybolmaz');
   assert.match(source, /ctx\.fillText\(key,/, 'her karenin altında anahtar yazılıdır');
+  assert.match(source, /try \{ attachments\.push\(await api\.uploadFile\(new File\(\[blob\], sheet\.fileName[^]*catch \(error\) \{ if \(error && error\.code === 'LCWAI_CANCELLED'\) throw error; continue; \}/, 'pafta yüklenemezse mesaj yine gider (iptal hariç)');
   assert.doesNotMatch(source, /görselin kendisi LCW AI'a GİTMEZ/);
 });
 

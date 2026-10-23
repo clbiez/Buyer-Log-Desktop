@@ -25,6 +25,10 @@
   const SEARCH_INPUTS = Object.freeze({ cpSearch: 'cp', ordersSearch: 'orders', kolSearch: 'koleksiyon' });
   const MAX_VALUES = 200;
   const MAX_VALUE_CHARS = 120;
+  // Tek-iki karakterlik değer ("içerir" eşleşmesiyle) tablonun çoğuna uyar.
+  const MIN_VALUE_CHARS = 3;
+  // Ürün sınıfı öneki: PNT, SWT, UK.TSH, KK.BDY…
+  const CLASS_PREFIX = /^[A-Za-zÇĞİÖŞÜçğıöşü]{2,6}(\.[A-Za-zÇĞİÖŞÜçğıöşü]{2,6})?$/;
   const MAX_EXAMPLES = 4;
   const EXAMPLE_SCAN_ROWS = 3000;
 
@@ -43,7 +47,7 @@
       .replace(/^[([{]+|[)\]}]+$/g, '')
       .replace(/[,;]+$/, '');
     text = clean(text);
-    return text.length <= MAX_VALUE_CHARS ? text : '';
+    return text.length >= MIN_VALUE_CHARS && text.length <= MAX_VALUE_CHARS ? text : '';
   }
 
   function cleanValues(list) {
@@ -60,13 +64,14 @@
     return out;
   }
 
-  /* "PNT,LUCAS-YD" → ["PNT,LUCAS-YD", "LUCAS-YD"]. */
+  /* "PNT,LUCAS-YD" → ["PNT,LUCAS-YD", "LUCAS-YD"]. Yalnız ürün sınıfı
+     önekinden sonrası denenir: "12,50" ya da "A,B" kısa parçaya düşmez. */
   function variantsFor(value) {
     const variants = [value];
-    const comma = value.lastIndexOf(',');
-    if (comma > 0 && comma < value.length - 1) {
+    const comma = value.indexOf(',');
+    if (comma > 0 && CLASS_PREFIX.test(value.slice(0, comma))) {
       const tail = clean(value.slice(comma + 1));
-      if (tail.length >= 2 && foldKey(tail) !== foldKey(value)) variants.push(tail);
+      if (tail.length >= MIN_VALUE_CHARS && /[A-Za-z]/.test(tail) && !tail.includes(',')) variants.push(tail);
     }
     return variants;
   }

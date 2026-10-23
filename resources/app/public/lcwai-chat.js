@@ -610,7 +610,9 @@
       onPhase(L(`Model görselleri LCW AI’a ekleniyor (${index + 1}/${plan.sheets.length})…`, `Attaching model images for LCW AI (${index + 1}/${plan.sheets.length})…`));
       const { blob, drawn } = await drawModelImageSheet(sheet.keys, images);
       if (!blob) continue;
-      attachments.push(await api.uploadFile(new File([blob], sheet.fileName, { type: 'image/jpeg' })));
+      // Görsel ek yardımcıdır: yüklenemezse mesaj yine gider, görseller "eklenmedi" sayılır.
+      try { attachments.push(await api.uploadFile(new File([blob], sheet.fileName, { type: 'image/jpeg' }))); }
+      catch (error) { if (error && error.code === 'LCWAI_CANCELLED') throw error; continue; }
       fileNames.push(sheet.fileName);
       sent += drawn.length;
     }
@@ -844,7 +846,8 @@
           const maxFiles = state.config && state.config.limits ? state.config.limits.maxFilesPerRequest : 5;
           const sheets = await uploadModelImageSheets(contextImages, maxFiles - userMessage.attachments.length, phase => { answer.phase = phase; renderMessages(); });
           userMessage.attachments.push(...sheets.attachments);
-          if (sheets.context) userMessage.contexts.push(sheets.context);
+          // Sunucu ilk bağlamları tutar; görsel açıklaması paftalarla birlikte kalsın diye başa eklenir.
+          if (sheets.context) userMessage.contexts.unshift(sheets.context);
         }
       }
       answer.phase = output ? outputPhase({ step: 'generating' }, output) : L('LCW AI düşünüyor…', 'LCW AI is thinking…');
