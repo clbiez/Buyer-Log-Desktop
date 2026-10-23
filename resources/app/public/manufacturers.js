@@ -205,7 +205,7 @@
 
   function renderActions() {
     const host = S.host && S.host.querySelector('[data-mfp-actions]'); if (!host) return;
-    const missing = S.result ? S.result.cards.filter(card => card.status === 'missing_card').length : 0;
+    const missing = S.result ? S.result.cards.filter(card => card.status === 'missing_card' && !card.sourceOnly).length : 0;
     host.innerHTML = `
       ${canManage() && missing ? `<button type="button" class="mfpBtn isPrimary" data-mfp-create-all><svg class="ic"><use href="#i-copy-plus"/></svg>${esc(T(`Eksik kartları ASAS’tan oluştur (${nf(missing)})`, `Create missing cards from ASAS (${nf(missing)})`))}</button>` : ''}
       <button type="button" class="mfpBtn" data-mfp-directory><svg class="ic"><use href="#i-mail-send"/></svg>${esc(T('İletişim rehberi', 'Contact directory'))}</button>
@@ -217,7 +217,7 @@
     return `<button type="button" class="mfpRow${S.selectedKey === card.key ? ' isSelected' : ''}" data-mfp-select="${esc(card.key)}">
       <span class="mfpRowMain"><strong>${esc(card.name || T('(adsız üretici)', '(unnamed manufacturer)'))}</strong>
         <small>${esc([country, area].filter(Boolean).join(' · ') || T('Sınıflandırılmadı', 'Unclassified'))}</small></span>
-      <span class="mfpRowMeta"><b>${card.quantity ? nf(card.quantity) : '—'}</b><small>${esc(T('adet', 'units'))}</small></span>
+      <span class="mfpRowMeta"><b>${card.sourceOnly ? nf(card.sourceRows) : (card.quantity ? nf(card.quantity) : '—')}</b><small>${esc(card.sourceOnly ? T('kaynak satırı', 'source rows') : T('adet', 'units'))}</small></span>
       ${gradeBadge(card.performance)}
       ${card.status === 'linked' ? '' : statusBadge(card)}
     </button>`;
@@ -285,8 +285,13 @@
       record && manage ? `<button type="button" class="mfpBtn isPrimary" data-mfp-edit="${esc(record.id)}"><svg class="ic"><use href="#i-pencil"/></svg>${esc(T('Kartı düzenle', 'Edit card'))}</button>` : '',
       !record && manage ? `<button type="button" class="mfpBtn isPrimary" data-mfp-create="${esc(card.key)}"><svg class="ic"><use href="#i-copy-plus"/></svg>${esc(T('Kart oluştur', 'Create card'))}</button>` : '',
       card.orders ? `<button type="button" class="mfpBtn" data-mfp-orders="${esc(card.key)}"><svg class="ic"><use href="#i-search"/></svg>${esc(T('Siparişleri aç', 'Open orders'))}</button>` : '',
+      card.sourceOnly ? `<button type="button" class="mfpBtn" data-mfp-source-orders="${esc(card.key)}"><svg class="ic"><use href="#i-search"/></svg>${esc(T('Kaynak siparişleri aç', 'Open source orders'))}</button>` : '',
     ].join('');
     const warnings = [];
+    if (card.sourceOnly) warnings.push(`<div class="mfpAlert isSoft">${esc(T(
+      `Bu ad ASAS / Orders Manufacturer alanında ${nf(card.sourceRows)} satırda bulunuyor, ancak bu satırlarda sorumlu üretici değil. Lisanslı Non-DTR siparişlerde sorumluluk Alt Üreticiye aittir; bu kaynak adı için sipariş hacmi, termin performansı ve otomatik e-posta alıcısı atanmaz.`,
+      `This name appears in ${nf(card.sourceRows)} ASAS / Orders Manufacturer rows, but is not the responsible manufacturer on those rows. Licensed non-DTR orders belong to the Sub-Manufacturer; order volumes, delivery performance and automatic e-mail routing are not assigned to this source name.`
+    ))}</div>`);
     if (card.status === 'missing_card') warnings.push(`<div class="mfpAlert">${esc(T('Bu ASAS üreticisinin kartı yok: e-posta adresi olmadığı için kurallar ve otomasyonlar bu üreticiye e-posta oluşturamaz.', 'This ASAS manufacturer has no card: without an e-mail address, rules and automations cannot create e-mails for it.'))}</div>`);
     if (card.status === 'not_in_asas') {
       const links = (card.suggestions || []).map(item => manage
@@ -305,10 +310,10 @@
     };
     return `<article class="mfpCard">
       <header class="mfpCardHead"><div><span class="mfpEyebrow">${esc(T('Üretici kartı', 'Manufacturer card'))}</span><h3>${esc(card.name)}</h3>
-        <div class="mfpCardBadges">${statusBadge(card)}<span class="mfpBadge">${esc(record?.dtrStatus || 'DTR')}</span>${record && record.origin === 'manual' ? `<span class="mfpBadge">${esc(T('Elle eklendi', 'Added manually'))}</span>` : ''}</div></div>
+        <div class="mfpCardBadges">${statusBadge(card)}<span class="mfpBadge">${esc(record?.dtrStatus || 'DTR')}</span>${record && record.origin === 'manual' ? `<span class="mfpBadge">${esc(T('Elle eklendi', 'Added manually'))}</span>` : ''}${card.sourceOnly ? `<span class="mfpBadge">${esc(T('Kaynak kaydı', 'Source reference'))}</span>` : ''}</div></div>
         <div class="mfpCardActions">${actions}</div></header>
       ${warnings.join('')}
-      ${card.inAsas ? `<div class="mfpTiles">
+      ${card.inAsas && !card.sourceOnly ? `<div class="mfpTiles">
         ${tile(T('Ülke', 'Country'), esc(country || '—'), card.countries.length > 1 ? card.countries.slice(1).map(item => item.name).join(', ') : '')}
         ${tile(T('Üretim alanı', 'Production area'), esc(area || '—'), fabric ? T(`ASAS kumaş kategorisi: ${fabric}`, `ASAS fabric category: ${fabric}`) : '')}
         ${tile(T('Toplam sipariş hacmi', 'Total order volume'), `${esc(nf(card.quantity))} <small>${esc(T('adet', 'units'))}</small>`, T(`${nf(card.orders)} sipariş · ${nf(card.activeOrders)} açık`, `${nf(card.orders)} orders · ${nf(card.activeOrders)} open`), 'all')}
@@ -520,7 +525,7 @@
       if (target.closest('[data-mfp-unassigned]')) { openOrders(null, rowsMissingSub(), T('Alt Üreticisi eksik Non-DTR lisans siparişleri', 'Non-DTR license orders missing a Sub-Manufacturer')); return; }
       if (target.closest('[data-mfp-refresh]')) { await refresh({force:true}); return; }
       if (target.closest('[data-mfp-directory]')) { window.BLEmailGroups?.open?.(); return; }
-      if (target.closest('[data-mfp-create-all]')) { await createCards(S.result.cards.filter(card => card.status === 'missing_card')); return; }
+      if (target.closest('[data-mfp-create-all]')) { await createCards(S.result.cards.filter(card => card.status === 'missing_card' && !card.sourceOnly)); return; }
       const create = target.closest('[data-mfp-create]');
       if (create) { const card = cardByKey(create.dataset.mfpCreate); if (card) await createCards([card]); return; }
       const edit = target.closest('[data-mfp-edit]');
@@ -531,6 +536,15 @@
       if (drill) {
         const card = cardByKey(S.selectedKey);
         if (card) openDrill(card, drill.dataset.mfpDrill, drill.dataset.mfpDrillValue || '', drill.dataset.mfpDrillLabel || '');
+        return;
+      }
+      const sourceOrders = target.closest('[data-mfp-source-orders]');
+      if (sourceOrders) {
+        const card = cardByKey(sourceOrders.dataset.mfpSourceOrders);
+        if (card && card.sourceOnly) {
+          const rows = S.rows.filter(row => E.nameKey(rowPick(row, E.KEYS.manufacturer)) === card.key);
+          openOrders(card, rows, T('ASAS Manufacturer alanındaki siparişler (sorumlu üretici değil)', 'Orders with this ASAS Manufacturer label (not responsible manufacturer)'));
+        }
         return;
       }
       const orders = target.closest('[data-mfp-orders]');
