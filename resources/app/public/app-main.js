@@ -30414,7 +30414,7 @@ async function kolFabricAiAnalyze(items,{onProgress}={}){
         const result=await ai.ask({
           source:'fabric-card',
           lang:appLang==='en'?'en':'tr',
-          context:api.aiContext(batch),
+          context:api.aiContext(batch,kolFabricCards),
           task:appLang==='en'?'Write a short fabric card summary and details for every fabric code in the context.':'Bağlamdaki her kumaş kodu için kısa kumaş kartı özeti ve ayrıntılarını yaz.',
         });
         const data=result&&(result.data||(result.structured&&result.structured.partial))||{};
@@ -30423,7 +30423,11 @@ async function kolFabricAiAnalyze(items,{onProgress}={}){
     }else if(!errorText)errorText=appLang==='en'?'LCW AI is not available.':'LCW AI kullanılamıyor.';
     const checked=api.validateAiCards(lines,batch);
     failures.push(...checked.rejected);
-    Object.values(checked.cards).forEach(card=>{cards[card.code]=card;if(card.summarySource==='ai')aiCount++;});
+    Object.values(checked.cards).forEach(card=>{
+      const raw=batch.find(item=>item.code===card.code)?.raw||card.raw;
+      cards[card.code]=api.applyLearnedStyle(card,raw,kolFabricCards);
+      if(card.summarySource==='ai')aiCount++;
+    });
   }
   return {cards,aiCount,errorText,failures};
 }
@@ -30492,18 +30496,32 @@ function showKolFabricBatchPreview(items,analysis){
 async function kolFabricCardsCreateForRows(rows,{auto=false}={}){
   const api=kolFabricApi(),en=appLang==='en';
   if(!api||!kolWorkspaceCanEdit||kolFabricBatchRunning)return {ok:false,created:0};
-  if(kolFabricCardsState!=='ready'){
-    try{await kolFabricCardsRequest('/api/fabric-cards',{cache:'no-store'});}catch(err){console.warn('Fabric cards could not be loaded:',err);if(auto)return {ok:false,created:0};}
+  if(auto||kolFabricCardsState!=='ready'){
+    try{await kolFabricCardsRequest('/api/fabric-cards',{cache:'no-store'});}catch(err){console.warn('Fabric cards could not be loaded:',err);return {ok:false,created:0};}
   }
   const missing=api.missingCodes(rows,kolFabricCards).filter(item=>!auto||!kolFabricDismissed.has(item.code)).slice(0,KOL_FABRIC_AUTO_LIMIT);
   if(!missing.length){if(!auto)showToast(en?'Every fabric code in the Collection already has a card.':'Koleksiyondaki her kumaş kodunun zaten bir kartı var.');return {ok:true,created:0};}
   kolFabricBatchRunning=true;
   try{
     showToast(en?`LCW AI is analysing ${missing.length} new fabric code(s)…`:`LCW AI ${missing.length} yeni kumaş kodunu analiz ediyor…`,{icon:false});
-    const analysis=await kolFabricAiAnalyze(missing);
-    if(auto&&!await kolFabricWaitForIdleUi())return {ok:false,created:0};
+    const analysis=await kolFabricAiAnalyze(missing,{onProgress:(index,total)=>{
+      if(index>0&&(index%5===0||index===total-1))showToast((en?'Fabric card analysis: batch ':'Kumaş kartı analizi: parti ')+(index+1)+'/'+total,{icon:false});
+    }});
     const still=missing.filter(item=>!kolFabricCards.has(item.code));
     if(!still.length)return {ok:true,created:0};
+    if(auto){
+      // Verified AI result or deterministic fallback; never overwrite manual cards.
+      const cards=still.map(item=>analysis.cards[item.code]).filter(Boolean);
+      if(!cards.length)return {ok:false,created:0};
+      const saved=await kolFabricCardsSave(cards,{onlyMissing:true});
+      fabricCardsRepaintTables();
+      const created=Number(saved.updated)||0;
+      if(analysis.errorText||analysis.aiCount<still.length){
+        showToast((en?'Created ':'Oluşturulan kart: ')+created+(en?'; rule-based fallbacks need review.':' · kural tabanlı yedek kartları kontrol edebilirsiniz.'));
+      }else showToast((en?'LCW AI automatically created ':'LCW AI otomatik kart oluşturdu: ')+created,{icon:false});
+      return {ok:true,created,hasMore:missing.length===KOL_FABRIC_AUTO_LIMIT};
+    }
+    if(!await kolFabricWaitForIdleUi())return {ok:false,created:0};
     const cards=await showKolFabricBatchPreview(still,analysis);
     if(!cards||!cards.length){if(auto)still.forEach(item=>kolFabricDismissed.add(item.code));return {ok:true,created:0,cancelled:true};}
     const saved=await kolFabricCardsSave(cards,{onlyMissing:true});
@@ -30515,10 +30533,25 @@ async function kolFabricCardsCreateForRows(rows,{auto=false}={}){
     return {ok:false,created:0};
   }finally{kolFabricBatchRunning=false;}
 }
+let kolFabricAutoQueue=[],kolFabricAutoWorker=null;
 function kolFabricCardsAfterImport(rows){
   const list=(Array.isArray(rows)?rows:[]).filter(Boolean);
-  if(!list.length)return;
-  void kolFabricCardsCreateForRows(list,{auto:true}).catch(err=>console.warn('Fabric card auto-create failed:',err));
+  if(list.length)kolFabricAutoQueue.push(...list);
+  if(kolFabricAutoWorker||!kolFabricAutoQueue.length)return;
+  // Drain overlapping syncs; every page is limited to KOL_FABRIC_AUTO_LIMIT.
+  kolFabricAutoWorker=(async()=>{
+    while(kolFabricAutoQueue.length){
+      const batch=kolFabricAutoQueue.splice(0);
+      while(kolFabricBatchRunning)await new Promise(resolve=>setTimeout(resolve,300));
+      for(let page=0;page<100;page++){
+        const result=await kolFabricCardsCreateForRows(batch,{auto:true});
+        if(!result.ok||!result.hasMore||!result.created)break;
+      }
+    }
+  })().catch(err=>console.warn('Fabric card import queue failed:',err)).finally(()=>{
+    kolFabricAutoWorker=null;
+    if(kolFabricAutoQueue.length)kolFabricCardsAfterImport([]);
+  });
 }
 /* Ayrıntı penceresi (tablo hücresine çift tık). */
 function openKolFabricCardDialog(rowId,{trigger=null,code=''}={}){
