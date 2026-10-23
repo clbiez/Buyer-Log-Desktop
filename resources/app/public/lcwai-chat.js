@@ -48,8 +48,11 @@
   }
   /* records: anahtar → kaynak satır ([[sütun, değer], …]). Model kartına
      kullanıcının Yerleşim'de seçtiği bilgiler buradan, birebir yazılır
-     (LCW AI'ın yeniden yazdığı değer değil). Yalnız bellekte tutulur. */
-  function withImageKeys(tab, rows, columns, values) {
+     (LCW AI'ın yeniden yazdığı değer değil). Yalnız bellekte tutulur.
+     full: { columns, row(index) } — kayıt satırı tablodaki gizli sütunları da
+     taşır; değeri boş sütun da kalır ki Yerleşim'deki kart bilgisi seçicisi
+     tüm başlıkları (ör. Target Price) sunsun. LCW AI'a giden CSV değişmez. */
+  function withImageKeys(tab, rows, columns, values, full = null) {
     const screenData = window.BLAIScreenData;
     if (!screenData || typeof screenData.rowImage !== 'function' || !IMAGE_PREFIX[tab]) return { columns, values, images: null, records: null };
     const images = {};
@@ -59,7 +62,9 @@
       if (!identity) return '';
       const key = imageKeyFor(tab, identity);
       images[key] = identity;
-      records[key] = columns.map((label, c) => [label, values[index][c]]).filter(pair => String(pair[1] == null ? '' : pair[1]).trim());
+      const labels = full ? full.columns : columns;
+      const cells = full ? full.row(index) : values[index];
+      records[key] = labels.map((label, c) => [label, cells[c] == null ? '' : cells[c]]);
       return key;
     });
     if (!Object.keys(images).length) return { columns, values, images: null, records: null };
@@ -75,7 +80,12 @@
       return id != null && selected.has(String(id));
     }) : data.rows;
     const title = window.BLAIScreenData.pageTitle(tab);
-    const keyed = mode === 'filters' ? null : withImageKeys(tab, source, columns.map(col => col.label), source.map(row => columns.map(col => contextCellValue(row, col))));
+    // Kart bilgisi kaynağı: görünür sütunlarla sınırlı değil, tablonun tüm sütunları.
+    const every = mode === 'filters' || mode === 'all' ? null : window.BLAIScreenData.table(tab, { all: true, columnsOnly: true });
+    const recordCols = every && Array.isArray(every.columns) && every.columns.length > columns.length ? every.columns : null;
+    // Değerler yalnız görseli olan (karta girecek) satır için okunur.
+    const full = recordCols ? { columns: recordCols.map(col => col.label), row: index => recordCols.map(col => contextCellValue(source[index], col)) } : null;
+    const keyed = mode === 'filters' ? null : withImageKeys(tab, source, columns.map(col => col.label), source.map(row => columns.map(col => contextCellValue(row, col))), full);
     return {
       images: keyed && keyed.images,
       records: keyed && keyed.records,

@@ -679,13 +679,17 @@
       const options = `<option value="">${esc(i ? L('— Yok —', '— None —') : L('LCW AI’ın gruplaması', 'LCW AI’s grouping'))}</option>${[...all, ...extra].map(label => `<option value="${esc(label)}"${current && key(label) === key(current) ? ' selected' : ''}>${esc(label)}</option>`).join('')}`;
       return `<label class="lcwaiLayPick"><span>${esc(name)}</span><select data-lay-group="${i}"${i > levels.length ? ' disabled' : ''}>${options}</select></label>`;
     }).join('');
-    const last = levels[levels.length - 1];
+    // Kaç seviye yeni slayt/bölüm başlatır (varsayılan: yalnız 1. grup); kalan seviyeler aynı sayfada yan yana alt gruplardır.
+    const depth = LAY().pageDepth(ed.data.layout);
+    const side = levels.slice(depth).join(' · ');
+    const breakOptions = levels.slice(0, -1).map((_, i) => i + 1);
+    const breakPick = levels.length > 1 ? `<label class="lcwaiLayPick"><span>${esc(isPptx() ? L('Yeni slayt', 'New slide') : L('Yeni bölüm', 'New section'))}</span><select data-lay-group-break>${[0, ...breakOptions].map(d => `<option value="${d}"${d === depth ? ' selected' : ''}>${esc(d ? L(`Her ${levels.slice(0, d).join(' › ')} değeri için`, `For each ${levels.slice(0, d).join(' › ')} value`) : L('Yok — tüm gruplar yan yana', 'None — all groups side by side'))}</option>`).join('')}</select></label>` : '';
     const hint = !levels.length
       ? L('Seçim yoksa LCW AI’ın grupları kullanılır. Örnek: Kategori › Kumaş › Baskı.', 'Without a choice LCW AI’s groups are used. Example: Category › Fabric › Print.')
-      : levels.length === 1
-        ? L(`“${last}” grupları ${isPptx() ? 'slaytta' : 'sayfada'} yan yana dizilir.`, `“${last}” groups are placed side by side on the ${isPptx() ? 'slide' : 'page'}.`)
-        : L(`${levels.slice(0, -1).join(' › ')} her değer için yeni ${isPptx() ? 'slayt' : 'bölüm'} başlatır; “${last}” grupları yan yana dizilir.`, `${levels.slice(0, -1).join(' › ')} start a new ${isPptx() ? 'slide' : 'section'} for each value; “${last}” groups sit side by side.`);
-    return `<section class="lcwaiLayGroup"><h4>${esc(L('Gruplama', 'Grouping'))}</h4><div class="lcwaiLayPicks">${selects}</div><p class="lcwaiNote">${esc(hint)}</p></section>`;
+      : !depth
+        ? L(`“${side}” grupları ${isPptx() ? 'slaytta' : 'sayfada'} adlarıyla yan yana dizilir.`, `“${side}” groups are placed side by side on the ${isPptx() ? 'slide' : 'page'} with their names.`)
+        : L(`Her ${levels.slice(0, depth).join(' › ')} değeri yeni ${isPptx() ? 'slayt' : 'bölüm'} başlatır; içindeki “${side}” alt grupları aynı ${isPptx() ? 'slaytta' : 'bölümde'} adlarıyla yan yana dizilir.`, `Each ${levels.slice(0, depth).join(' › ')} value starts a new ${isPptx() ? 'slide' : 'section'}; its “${side}” sub-groups sit side by side on the same ${isPptx() ? 'slide' : 'section'} with their names.`);
+    return `<section class="lcwaiLayGroup"><h4>${esc(L('Gruplama', 'Grouping'))}</h4><div class="lcwaiLayPicks">${selects}${breakPick}</div><p class="lcwaiNote">${esc(hint)}</p></section>`;
   }
   function titleFieldState() {
     const key = LAY().fieldKey;
@@ -827,7 +831,7 @@
         body += box(g.margin - 10, g.contentTop - 4, g.width + 20, 540 - 40 - g.contentTop + 4, 'is-frame');
         page.dividers.forEach(item => { body += box(item.x - 0.4, item.y, 0.8, item.h, 'is-divider'); });
         page.rules.forEach(item => { body += box(item.x, item.y, item.w, 1.6, 'is-rule'); });
-        page.labels.forEach(item => { body += box(item.x, item.y, item.w, item.h, 'is-title', text(Math.max(8, l.cardTextSize), `<b>${esc(item.text)}${item.cont ? esc(L(' (devam)', ' (cont.)')) : ''}</b>`)); });
+        page.labels.forEach(item => { body += box(item.x, item.y, item.w, item.h, 'is-title', text(item.size || Math.max(8, l.cardTextSize), `<b style="white-space:nowrap">${esc(item.text)}${item.cont ? esc(L(' (devam)', ' (cont.)')) : ''}</b>`)); });
         page.cells.forEach(cell => { body += previewCard(cell, page, l, px, box, text); });
       } else if (slide.layout === 'table') {
         const size = l.tableSize || (slide.table.columns.length > 6 || slide.table.rows.length > 9 ? 10 : 12);
@@ -1168,6 +1172,11 @@
       if (!el.value) levels = levels.slice(0, index);
       else { levels[index] = el.value; levels = levels.filter((label, i) => label && levels.findIndex(other => other && key(other) === key(label)) === i); }
       setLayout({ ...ed.data.layout, groupBy: levels.length ? levels : null }, { history: true });
+      renderLayoutPanel($('[data-ed-main]'));
+      return;
+    }
+    if (el.matches('[data-lay-group-break]')) {
+      setLayout({ ...ed.data.layout, groupBreak: Number(el.value) }, { history: true });
       renderLayoutPanel($('[data-ed-main]'));
       return;
     }

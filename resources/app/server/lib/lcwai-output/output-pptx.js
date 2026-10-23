@@ -383,7 +383,7 @@ function renderSlideBody(s, slide, index, total, deck, p, lang, records = {}) {
     s.box({ x: MARGIN - pt(10), y: CONTENT_TOP - pt(4), w: width + pt(20), h: H - pt(40) - CONTENT_TOP + pt(4), fill: { color: p.headBg, alpha: 55 }, line: { color: p.headLine, width: 0.75 }, name: 'Frame' });
     page.dividers.forEach(item => s.box({ x: pt(item.x) - pt(0.4), y: pt(item.y), w: pt(0.8), h: pt(item.h), fill: p.headLine, name: 'GroupDivider' }));
     page.rules.forEach(item => s.box({ x: pt(item.x), y: pt(item.y), w: pt(item.w), h: pt(1.6), fill: p.logo, name: 'GroupRule' }));
-    page.labels.forEach(item => s.text(pt(item.x), pt(item.y), pt(item.w), pt(item.h), `${item.text}${item.cont ? (english ? ' (cont.)' : ' (devam)') : ''}`, { size: Math.max(8, LAYOUT.cardTextSize), bold: true, color: p.logo }, { anchor: 'b', inset: 0 }));
+    page.labels.forEach(item => s.text(pt(item.x), pt(item.y), pt(item.w), pt(item.h), `${item.text}${item.cont ? (english ? ' (cont.)' : ' (devam)') : ''}`, { size: item.size || Math.max(8, LAYOUT.cardTextSize), bold: true, color: p.logo }, { anchor: 'b', inset: 0 }));
     page.cells.forEach(cell => renderCard(s, cell, cell.item, page, p, lang, records));
     return s.xml();
   }

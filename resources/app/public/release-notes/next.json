@@ -157,6 +157,64 @@
       }
     },
     {
+      "id": "lcwai-gallery-subgroups-one-slide",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · PowerPoint/PDF düzenleyici",
+        "en": "LCW AI · PowerPoint/PDF editor"
+      },
+      "title": {
+        "tr": "Farklı alt gruplar aynı slaytta yan yana",
+        "en": "Different sub-groups side by side on one slide"
+      },
+      "body": {
+        "tr": "Model galerisini 2 veya 3 seviyeyle grupladığınızda artık yalnız 1. grup (ör. Buying Group) yeni slayt başlatır; içindeki alt gruplar (ör. Ürün Tanımı · Kumaş) aynı slaytta adlarıyla yan yana dizilir, az modelli her alt grup ayrı slayta bölünmez. Gruplama altındaki “Yeni slayt” seçimiyle bunu 1. ve 2. gruba çıkarabilir ya da tüm grupları yan yana dizebilirsiniz. Uzun grup adları tek satıra sığacak şekilde küçülür.",
+        "en": "When you group the model gallery by 2 or 3 levels, only the 1st group (e.g. Buying Group) now starts a new slide; its sub-groups (e.g. Product Definition · Fabric) sit side by side with their names on the same slide instead of splitting every small sub-group onto its own slide. Use “New slide” under Grouping to break on the 1st and 2nd group or to place all groups side by side. Long group names shrink to fit on one line."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-gallery-subgroups-one-slide.png",
+        "alt": {
+          "tr": "PowerPoint düzenleyicisinde Buying Group slaytında üç alt grup yan yana, demo modeller",
+          "en": "PowerPoint editor showing three sub-groups side by side on one Buying Group slide, demo models"
+        },
+        "caption": {
+          "tr": "Demo veride Buying Group › Product Main Definition › Fabric gruplaması: üç alt grup tek slaytta.",
+          "en": "Demo data grouped by Buying Group › Product Main Definition › Fabric: three sub-groups on one slide."
+        }
+      }
+    },
+    {
+      "id": "lcwai-card-details-all-columns",
+      "type": "fix",
+      "module": {
+        "tr": "LCW AI · PowerPoint/PDF düzenleyici",
+        "en": "LCW AI · PowerPoint/PDF editor"
+      },
+      "title": {
+        "tr": "Kart bilgilerinde koleksiyonun tüm başlıkları",
+        "en": "All collection headers in card details"
+      },
+      "body": {
+        "tr": "Yerleşim › Kart bilgileri listesi yalnız tabloda görünen ve değeri dolu sütunları sunuyordu; bu yüzden ör. Target Price eklenemiyordu. Artık gizli sütunlar ve bu modellerde boş olan başlıklar da listede; seçilen alan dolu olduğu kartlarda yazılır. LCW AI’a giden veri değişmedi.",
+        "en": "Layout › Card details only offered columns that were visible in the table and had a value, so e.g. Target Price could not be added. Hidden columns and headers that are empty for these models are now listed too; a chosen field is printed on the cards where it has a value. The data sent to LCW AI is unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-card-details-all-columns.png",
+        "alt": {
+          "tr": "Kart bilgileri listesinde seçili Target Price ve diğer koleksiyon başlıkları, demo veri",
+          "en": "Card details list with Target Price ticked and other collection headers, demo data"
+        },
+        "caption": {
+          "tr": "Demo veride Target Price kart bilgisi olarak seçildi; Buying Group, Fabric, Season gibi başlıklar da listede.",
+          "en": "With demo data Target Price is chosen as a card detail; headers such as Buying Group, Fabric and Season are listed too."
+        }
+      }
+    },
+    {
       "id": "fabric-paste-smart-card",
       "type": "fix",
       "module": {

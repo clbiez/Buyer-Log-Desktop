@@ -50,7 +50,7 @@
     for (const flag of FLAGS[key]) out[flag] = !FLAG_OFF.has(flag);
     // Kartta gösterilecek bilgiler (sıralı alan adları); null = varsayılan önemli
     // bilgiler (renk kodu, fit, adet, hedef fiyat — DEFAULT_CARD_ROLES).
-    if (key !== 'xlsx') { out.cardFields = null; out.groupBy = null; out.pageTitle = null; }
+    if (key !== 'xlsx') { out.cardFields = null; out.groupBy = null; out.groupBreak = 1; out.pageTitle = null; }
     return out;
   }
 
@@ -59,13 +59,21 @@
   const fieldKey = value => String(value == null ? '' : value).replace(/[İIı]/g, 'i').normalize('NFKD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/[^a-z0-9%]+/g, ' ').trim();
   const cleanText = (value, max) => String(value == null ? '' : value).replace(/\s+/g, ' ').trim().slice(0, max);
   /* Gruplama: en çok 3 seviye alan adı (1. grup / 2. grup / 3. grup);
-     null = LCW AI'ın gruplaması. Son seviye sayfada yan yana gruplardır,
-     önceki seviyeler yeni slayt/bölüm başlatır. */
+     null = LCW AI'ın gruplaması. groupBreak: ilk kaç seviye yeni slayt/bölüm
+     başlatır (varsayılan 1: yalnız 1. grup; 0: hiçbiri). Kalan seviyeler
+     sayfada adlarıyla yan yana gruplardır (ör. LİSANS slaytında Tişört ·
+     SJ 30/1 ve Sweatshirt · 3 İP grupları birlikte). */
   const GROUP_LEVELS = 3;
   function normalizeGroupBy(value) {
     const list = normalizeCardFields(value);
     return list && list.length ? list.slice(0, GROUP_LEVELS) : null;
   }
+  function normalizeGroupBreak(value) {
+    const n = Number(value);
+    return Number.isInteger(n) && n >= 0 && n < GROUP_LEVELS ? n : 1;
+  }
+  /* Etkin sayfa seviyesi sayısı: en az bir seviye yan yana grup kalır. */
+  const pageDepth = l => Math.min(normalizeGroupBreak(l && l.groupBreak), Math.max(0, ((l && l.groupBy) || []).length - 1));
   /* Sayfa (galeri slaytı / bölüm) başlığı:
      null = otomatik · { mode:'fields', fields:[…] } = seçilen alanların
      değerleri · { mode:'manual', text } = elle; {Alan} yer tutucusu o
@@ -106,6 +114,7 @@
     if (key !== 'xlsx') {
       out.cardFields = normalizeCardFields(source.cardFields);
       out.groupBy = normalizeGroupBy(source.groupBy);
+      out.groupBreak = normalizeGroupBreak(source.groupBreak);
       out.pageTitle = normalizePageTitle(source.pageTitle);
     }
     return out;
@@ -143,6 +152,7 @@
     if (key !== 'xlsx') {
       out.cardFields = normalizeCardFields(current && current.cardFields);
       out.groupBy = normalizeGroupBy(current && current.groupBy);
+      out.groupBreak = normalizeGroupBreak(current && current.groupBreak);
       out.pageTitle = normalizePageTitle(current && current.pageTitle);
     }
     return out;
@@ -231,18 +241,25 @@
   }
   /* Yerleşim aracındaki alan seçicisi: kartlarda kullanılabilecek tüm alanlar
      (önce LCW AI'ın yazdıkları, sonra kaynak kayıttaki diğer sütunlar) ve
-     seçim yapılmadıysa gösterilen varsayılanlar. */
+     seçim yapılmadıysa gösterilen varsayılanlar. Kaynak sütun, bu modellerde
+     değeri boş olsa da listelenir (koleksiyonun tüm başlıkları seçilebilir;
+     boş değer kartta yazılmaz); varsayılanlar yalnız dolu alanlardan seçilir. */
   function availableCardFields(items, records) {
     const seen = new Set();
     const ai = [];
     const source = [];
+    const filled = new Set();
     const add = (list, label) => { const text = cleanText(label, 60); const key = fieldKey(text); if (key && !seen.has(key)) { seen.add(key); list.push(text); } };
     for (const item of items || []) for (const field of (item && item.fields) || []) if (field && cleanText(field.value, 300)) add(ai, field.label);
     for (const item of items || []) {
       const record = records && item && item.image ? records[String(item.image).toUpperCase()] : null;
-      for (const pair of Array.isArray(record) ? record : []) if (Array.isArray(pair) && cleanText(pair[1], 300)) add(source, pair[0]);
+      for (const pair of Array.isArray(record) ? record : []) {
+        if (!Array.isArray(pair)) continue;
+        add(source, pair[0]);
+        if (cleanText(pair[1], 300)) filled.add(fieldKey(pair[0]));
+      }
     }
-    const defaults = defaultCardFields([...ai, ...source]);
+    const defaults = defaultCardFields([...ai, ...source.filter(label => filled.has(fieldKey(label)))]);
     return { ai, source, defaults: defaults.length ? defaults : ai.slice(0, 4) };
   }
 
@@ -375,6 +392,16 @@
     }
     return '';
   }
+  /* Grup adı tek satırda kalır (alt grup adları "Ürün · Kumaş" gibi uzayabilir):
+     önce yazı küçülür (en az 6.5), yine sığmazsa sonu "…" ile kısalır. */
+  function fitLabel(text, width, size, reserve = 0) {
+    const charW = value => value * 0.58;
+    const value = String(text == null ? '' : text);
+    const room = Math.max(1, width - reserve * charW(size));
+    const fit = value.length * charW(size) > room ? Math.max(6.5, room / (value.length * 0.58)) : size;
+    const max = Math.max(4, Math.floor(room / charW(fit)));
+    return { text: value.length > max ? `${value.slice(0, max - 1).trimEnd()}…` : value, size: Number(fit.toFixed(2)) };
+  }
   function galleryPages(raw, groups, { english = false, fallbackTitle = '', records = null } = {}) {
     const g = pptxGeometry(raw);
     const l = g.layout;
@@ -452,7 +479,8 @@
             if (!seen.has(seg.group)) {
               seen.add(seg.group);
               const cont = groupPages[seg.group][0] !== pi;
-              labels.push({ x, y, w, h: strip - 4, text: named.labels[ids.indexOf(seg.group)], cont, group: seg.group });
+              const fitted = fitLabel(named.labels[ids.indexOf(seg.group)], w, Math.max(8, l.cardTextSize), cont ? 9 : 0);
+              labels.push({ x, y, w, h: strip - 4, text: fitted.text, size: fitted.size, cont, group: seg.group });
             }
             if (seg.from > 0 && segments.some(other => other !== seg && other.row === seg.row && other.to === seg.from - 1)) dividers.push({ x: x - gap / 2, y, h: strip + cellH });
           }
@@ -472,19 +500,20 @@
     return pages;
   }
   /* Kullanıcı gruplaması (layout.groupBy): tüm galeri modelleri seçilen
-     alanların değerine göre yeniden gruplanır. Son seviye sayfada yan yana
-     gruplardır; önceki seviyeler (ör. Kategori › Kumaş) yeni slayt başlatır.
+     alanların değerine göre yeniden gruplanır. İlk `depth` seviye (groupBreak,
+     ör. Kategori) yeni slayt başlatır; kalan seviyeler (ör. Kumaş › Baskı)
+     sayfada "Kumaş · Baskı" adıyla yan yana gruplardır.
      Grup sırası modellerin ilk görünüş sırasıdır; değeri olmayan model
      "Belirtilmemiş" grubuna girer. Döner: [{ heading, groups:[{ label, title, items, sources }] }]. */
-  function regroupItems(entries, levels, records, english) {
+  function regroupItems(entries, levels, records, english, depth = levels.length - 1) {
     const blank = english ? 'Not specified' : 'Belirtilmemiş';
     const pages = new Map();
     for (const { item, source } of entries) {
       const values = levels.map(label => fieldValue(item, label, records) || blank);
-      const pageKey = values.slice(0, -1).join('\u0001');
-      if (!pages.has(pageKey)) pages.set(pageKey, { heading: values.slice(0, -1).join(' · '), groups: new Map() });
+      const pageKey = values.slice(0, depth).join('\u0001');
+      if (!pages.has(pageKey)) pages.set(pageKey, { heading: values.slice(0, depth).join(' · '), groups: new Map() });
       const page = pages.get(pageKey);
-      const label = values[values.length - 1];
+      const label = values.slice(depth).join(' · ');
       if (!page.groups.has(label)) page.groups.set(label, { label, heading: page.heading, title: [page.heading, label].filter(Boolean).join(' · '), subtitle: '', items: [], sources: [] });
       const group = page.groups.get(label);
       group.items.push(item);
@@ -513,7 +542,7 @@
         list.slice(0, start).forEach((slide, index) => out.push({ slide, sources: [index] }));
         const entries = [];
         galleries.forEach(index => (list[index].items || []).forEach(item => entries.push({ item, source: index })));
-        for (const page of regroupItems(entries, l.groupBy, records, english)) {
+        for (const page of regroupItems(entries, l.groupBy, records, english, pageDepth(l))) {
           for (const result of galleryPages(l, page.groups, { english, fallbackTitle: page.heading || lastSection, records })) out.push({ page: result, sources: result.sources });
         }
         list.forEach((slide, index) => { if (index >= start && index <= end && slide && slide.layout !== 'gallery' && slide.layout !== 'section') out.push({ slide, sources: [index] }); });
@@ -788,7 +817,7 @@
     }
     const entries = cards.map((card, index) => ({ item: { ...cardItem(source, card), index }, source: index }));
     const fallback = firstHeading || (english ? 'Models' : 'Modeller');
-    const block = regroupItems(entries, l.groupBy, records, english).map(page => {
+    const block = regroupItems(entries, l.groupBy, records, english, pageDepth(l)).map(page => {
       const items = page.groups.flatMap(group => group.items);
       const title = customTitle(l, items, records) || page.heading || fallback;
       const groups = page.groups.map(group => `<section class="bl-group"><h3 class="bl-group-title">${escHtml(group.label)}</h3><div class="bl-gallery">${group.items.map(item => item.html).join('')}</div></section>`).join('');
@@ -906,7 +935,7 @@
 
   return {
     SPEC, FLAGS, PRESETS, SLIDE, PAGE, specKey, defaults, normalizeLayout, isDefault, perPage, applyPreset, pptxGeometry, galleryCells, pageBox, layoutCss, paginateGallery, xlsxMetrics,
-    fieldKey, normalizeCardFields, normalizeGroupBy, normalizePageTitle, fieldValue, pageValue, customTitle, regroupItems, autoTone, DEFAULT_CARD_ROLES, defaultCardFields, cardDetails, availableCardFields, packDetailLines, cardContent, cardLayout, commonLabels, packGroups, galleryPages, expandGalleries,
+    fieldKey, normalizeCardFields, normalizeGroupBy, normalizeGroupBreak, pageDepth, normalizePageTitle, fieldValue, pageValue, customTitle, regroupItems, autoTone, DEFAULT_CARD_ROLES, defaultCardFields, cardDetails, availableCardFields, packDetailLines, cardContent, cardLayout, commonLabels, fitLabel, packGroups, galleryPages, expandGalleries,
     applyCardFields, decorateGroups, regroupReport, reportTitles, prepareReport,
   };
 });
