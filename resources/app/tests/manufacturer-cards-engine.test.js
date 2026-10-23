@@ -131,3 +131,52 @@ test('a date pulled forward is not a revision and does not lower the grade', () 
   assert.equal(perf.revisionRate, 0);
   assert.equal(perf.grade, 'A');
 });
+
+
+test('all Orders Manufacturer labels appear even when licensed Non-DTR rows belong to Sub-Manufacturer', () => {
+  const raw = 'ŞAHİNLER TEKSTİL TİCARET A.Ş.';
+  const rows = [
+    row({ Manufacturer: raw, License: 'Licensed', Licensor: 'Brand', 'Sub-Manufacturer': '', 'Order Code': 'A' }),
+    row({ Manufacturer: 'LICENSOR INC', License: 'Licensed', Licensor: 'Brand', 'Sub-Manufacturer': 'XYZ ÖRME', 'Order Code': 'B', 'Order Quantity': 200 }),
+    row({ Manufacturer: 'licensor inc', License: 'Licensed', Licensor: 'Brand', 'Sub-Manufacturer': 'xyz örme', 'Order Code': 'C', 'Order Quantity': 300 }),
+    row({ Manufacturer: 'DIRECT LTD', License: '', 'Order Code': 'D', 'Order Quantity': 400 }),
+  ];
+  const book = engine.buildCards(rows, [], { today: '2026-10-23' });
+  const get = name => book.cards.find(item => item.key === engine.nameKey(name));
+  assert.equal(book.stats.asasManufacturers, 4);
+  assert.equal(get(raw).sourceOnly, true);
+  assert.equal(get(raw).sourceRows, 1);
+  assert.equal(get(raw).orders, 0);
+  assert.ok(book.asasNames.includes(raw));
+  assert.equal(get('LICENSOR INC').sourceRows, 2);
+  assert.equal(get('LICENSOR INC').sourceOnly, true);
+  assert.equal(get('LICENSOR INC').quantity, 0, 'source-name card cannot inherit sub-manufacturer volume');
+  assert.equal(get('XYZ ÖRME').orders, 2);
+  assert.equal(get('XYZ ÖRME').quantity, 500);
+  assert.equal(get('DIRECT LTD').sourceOnly, false);
+  assert.equal(get('DIRECT LTD').orders, 1);
+  assert.equal(book.unassigned.rows, 1, 'missing sub-manufacturer remains unassigned');
+  const split = engine.splitRowsByResponsibleManufacturer(rows, [
+    { name: 'LICENSOR INC', to: ['wrong@example.test'] },
+    { name: 'XYZ ÖRME', to: ['right@example.test'] },
+  ]);
+  assert.equal(split.resolved.length, 1);
+  assert.equal(split.resolved[0].value, 'XYZ ÖRME');
+  assert.equal(split.resolved[0].rows.length, 2);
+  assert.ok(split.unresolved.some(item => item.reason === 'sub_manufacturer_missing'));
+});
+
+test('a manufacturer present in both responsible and source roles appears once with responsible-only stats', () => {
+  const name = 'ŞAHİNLER TEKSTİL TİCARET A.Ş.';
+  const rows = [
+    row({ Manufacturer: name, License: 'License', Licensor: 'Licensor', 'Order Code': 'A', 'Sub-Manufacturer': '' }),
+    row({ Manufacturer: name, License: '', 'Order Code': 'B', 'Order Quantity': 600 }),
+  ];
+  const book = engine.buildCards(rows, [], { today: '2026-10-23' });
+  const found = book.cards.filter(item => item.key === engine.nameKey(name));
+  assert.equal(found.length, 1);
+  assert.equal(found[0].sourceOnly, false);
+  assert.equal(found[0].sourceRows, 2);
+  assert.equal(found[0].orders, 1);
+  assert.equal(found[0].quantity, 600);
+});

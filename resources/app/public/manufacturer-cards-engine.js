@@ -300,12 +300,16 @@
     const months = monthWindow(today);
     const currentMonth = monthKey(today);
     const cards = new Map();
+    // Inventory every Orders Manufacturer label independently of routing:
+    // licensed Non-DTR orders are still owned by Sub-Manufacturer.
+    const sourceNames = new Map();
     const unassigned = { rows: 0, quantity: 0, orders: [], licensors: new Map() };
     let totalRows = 0;
     const cardFor = (name, key) => {
       if (!cards.has(key)) {
         cards.set(key, {
           key, name, spellings: new Map(), record: null, status: 'missing_card', inAsas: true,
+          sourceOnly: false, sourceRows: 0,
           orders: 0, activeOrders: 0, quantity: 0, activeQuantity: 0, remaining: 0, shipped: 0, fobValue: 0,
           countries: new Map(), mags: new Map(), fabric: new Map(), seasons: new Set(), licensors: new Map(),
           monthly: new Map(months.map(month => [month, { month, planned: 0, loaded: 0 }])), loadedByMonth: new Map(),
@@ -317,6 +321,17 @@
     for (const row of Array.isArray(rows) ? rows : []) {
       if (!row || typeof row !== 'object') continue;
       totalRows += 1;
+      const sourceName = text(row, KEYS.manufacturer);
+      const sourceKey = nameKey(sourceName);
+      if (sourceKey) {
+        let source = sourceNames.get(sourceKey);
+        if (!source) {
+          source = { rows: 0, spellings: new Map() };
+          sourceNames.set(sourceKey, source);
+        }
+        source.rows += 1;
+        source.spellings.set(sourceName, (source.spellings.get(sourceName) || 0) + 1);
+      }
       const responsible = responsibleManufacturer(row);
       const qty = number(pick(row, KEYS.orderQuantity));
       if (!responsible.name) {
@@ -359,6 +374,22 @@
       }
     }
 
+    // Orders Manufacturer labels must be searchable even when they only occur
+    // on Non-DTR rows. Their reference-only cards have zero responsible orders:
+    // delivery statistics and email recipients remain assigned to the actual
+    // Sub-Manufacturer, not to the source label (which can be a licensor).
+    for (const [key, source] of sourceNames) {
+      let card = cards.get(key);
+      if (!card) {
+        const name = [...source.spellings.entries()]
+          .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'tr'))[0][0];
+        card = cardFor(name, key);
+        card.sourceOnly = true;
+        card.spellings = new Map(source.spellings);
+      }
+      card.sourceRows = source.rows;
+    }
+
     const asasNames = [];
     const out = [];
     for (const card of cards.values()) {
@@ -381,6 +412,7 @@
       const name = clean(record.manufacturer);
       out.push({
         key: nameKey(name) || `record:${record.id}`, name, record, status: 'not_in_asas', inAsas: false,
+        sourceOnly: false, sourceRows: 0,
         orders: 0, activeOrders: 0, quantity: 0, activeQuantity: 0, remaining: 0, shipped: 0, fobValue: 0,
         countries: [], mags: [], fabric: [], seasons: [], licensors: [], licensedOrders: 0,
         monthly: months.map(month => ({ month, planned: 0, loaded: 0 })), avgMonthlyLoaded: 0,
@@ -407,6 +439,7 @@
   function finishCard(card, extra) {
     return {
       key: card.key, name: card.name, record: card.record, status: card.status, inAsas: true,
+      sourceOnly: card.sourceOnly, sourceRows: card.sourceRows,
       spellings: [...card.spellings.keys()],
       orders: card.orders, activeOrders: card.activeOrders, quantity: card.quantity, activeQuantity: card.activeQuantity,
       remaining: card.remaining, shipped: card.shipped, fobValue: Math.round(card.fobValue),
