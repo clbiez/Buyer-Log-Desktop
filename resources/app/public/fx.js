@@ -11,7 +11,6 @@ const FX_LOCAL_KEY='buyerlog.fx.persist.v1';
 const FX_PENDING_KEY='buyerlog.fx.pending.v1';
 let loadedPromise=null;
 
-function num(v){const n=typeof v==='number'?v:parseFloat(String(v??'').replace(',','.'));return Number.isFinite(n)?n:null;}
 function monthKey(d){const dt=d?new Date(d):new Date();if(isNaN(dt))return monthKey(null);return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0');}
 function monthLabel(mk,en){
   if(!mk)return '—';
@@ -120,19 +119,38 @@ window.addEventListener('online',()=>{load(true).catch(()=>{});});
    Her sayfada bulunan B sütunu döviz kodları ile TÜM tarih sütunları okunur.
    Aynı yıl/ay+döviz birden fazla sayfada varsa çalışma kitabındaki son geçerli
    değer kullanılır. Böylece rapordaki tüm geçmiş ve gelecek aylar belleğe alınır. */
+// Excel hücresindeki sayı: 49,35 / 1.234,56 / 1,234.56 biçimlerini kabul eder.
+function cellNum(v){
+  if(typeof v==='number')return Number.isFinite(v)?v:null;
+  const t=String(v??'').trim().replace(/\s+/g,'');if(!t)return null;
+  let n=t;
+  if(t.includes(',')&&t.includes('.'))n=t.lastIndexOf(',')>t.lastIndexOf('.')?t.replace(/\./g,'').replace(',','.'):t.replace(/,/g,'');
+  else if(t.includes(','))n=t.replace(',','.');
+  const out=Number(n);return Number.isFinite(out)?out:null;
+}
+// Başlık hücresi tarih değilse metin ay/tarih kalıpları (2026-10, 31.10.2026, 10.2026) denenir.
+function cellDate(x){
+  if(!x)return null;
+  if(x.t==='d'&&x.v instanceof Date)return isNaN(x.v)?null:x.v;
+  if(x.t==='n'&&x.v>25000&&x.v<80000){const p=XLSX.SSF&&XLSX.SSF.parse_date_code?XLSX.SSF.parse_date_code(x.v):null;return p?new Date(p.y,p.m-1,p.d||1):null;}
+  if(x.t!=='s')return null;
+  const t=String(x.v||'').trim();let m=t.match(/^(\d{4})[-/.](\d{1,2})(?:[-/.](\d{1,2}))?$/);
+  if(m)return new Date(+m[1],+m[2]-1,+(m[3]||1));
+  m=t.match(/^(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})$/);if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+  m=t.match(/^(\d{1,2})[-/.](\d{4})$/);if(m)return new Date(+m[2],+m[1]-1,1);
+  return null;
+}
 function parseSheet(ws){
   if(!ws||!ws['!ref'])return null;
   const range=XLSX.utils.decode_range(ws['!ref']);
   const cell=(r,c)=>ws[XLSX.utils.encode_cell({r,c})];
-  // Tarih başlık satırını bul (en az 1 tarih hücresi yeterlidir)
+  // Tarih başlık satırını bul (en az 1 tarih hücresi yeterlidir). Sunucu
+  // okuyucusu (server/lib/fxWorkbook.js) ile aynı 20 satırlık pencere.
   let headRow=-1;const monthCols=[]; // [{col, mk}]
-  for(let r=0;r<=Math.min(range.e.r,12);r++){
+  for(let r=range.s.r;r<=Math.min(range.e.r,range.s.r+20);r++){
     const found=[];
-    for(let c=2;c<=range.e.c;c++){
-      const x=cell(r,c);if(!x)continue;
-      let d=null;
-      if(x.t==='d'&&x.v instanceof Date)d=x.v;
-      else if(x.t==='n'&&x.v>25000&&x.v<80000){const p=XLSX.SSF&&XLSX.SSF.parse_date_code?XLSX.SSF.parse_date_code(x.v):null;if(p)d=new Date(p.y,p.m-1,p.d);}
+    for(let c=Math.max(range.s.c+2,2);c<=range.e.c;c++){
+      const d=cellDate(cell(r,c));
       if(d&&!isNaN(d))found.push({col:c,mk:monthKey(d)});
     }
     if(found.length>=1){headRow=r;monthCols.push(...found);break;}
@@ -142,11 +160,12 @@ function parseSheet(ws){
   const seen=new Set();const cols=monthCols.filter(m=>{if(seen.has(m.mk))return false;seen.add(m.mk);return true;});
   const rows=[]; // {code, values:{mk:num}}
   for(let r=headRow+1;r<=range.e.r;r++){
-    const codeCell=cell(r,1);
-    const code=String(codeCell&&codeCell.v||'').trim().toUpperCase();
-    if(!/^[A-Z]{3,4}$/.test(code))continue;
+    // Döviz kodu KUR şablonunda B sütunundadır; B boşsa A ve C de denenir.
+    let code='';
+    for(const c of [1,0,2]){const x=cell(r,c);const v=String(x&&x.v!=null?x.v:'').trim().toUpperCase();if(/^[A-Z]{3,4}$/.test(v)){code=v;break;}}
+    if(!code)continue;
     const values={};let any=false;
-    cols.forEach(({col,mk})=>{const x=cell(r,col);const v=x?num(x.v):null;if(v!=null&&v>0){values[mk]=v;any=true;}});
+    cols.forEach(({col,mk})=>{const x=cell(r,col);const v=x?cellNum(x.v!=null?x.v:x.w):null;if(v!=null&&v>0){values[mk]=v;any=true;}});
     if(any)rows.push({code,values});
   }
   if(!rows.length)return null;
@@ -180,6 +199,10 @@ function importWorkbook(wb,fileName){
 }
 
 async function importFile(file){
+  // XLSX perf-runtime ile tembel yüklenir; oturumda başka Excel akışı açılmamış
+  // olabilir. Kütüphane yüklenmeden okumak "XLSX is not defined" ile düşüyordu.
+  if(typeof XLSX==='undefined'&&window.BLPerf&&typeof window.BLPerf.ensureLibrary==='function')await window.BLPerf.ensureLibrary('xlsx');
+  if(typeof XLSX==='undefined')throw new Error(typeof appLang!=='undefined'&&appLang==='en'?'Excel library could not be loaded.':'Excel kütüphanesi yüklenemedi.');
   const buf=await file.arrayBuffer();
   const wb=XLSX.read(buf,{type:'array',cellDates:true});
   return importWorkbook(wb,file.name);
