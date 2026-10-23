@@ -118,7 +118,7 @@
       return lead + replacement;
     });
   }
-  function translateTerms(text, lang) {
+  function translateTerms(text, lang, options) {
     var from = lang === 'en' ? 0 : 1, to = lang === 'en' ? 1 : 0;
     var pairs = TERMS.slice().sort(function (a, b) { return b[from].length - a[from].length; });
     var out = String(text == null ? '' : text);
@@ -126,7 +126,7 @@
     pairs.forEach(function (pair) {
       if (pair[0] === pair[1]) return;
       // Türkçe özette kumaş tipi adı PLM'de yazıldığı gibi kalır (Scuba ≠ Dalgıç).
-      if (lang !== 'en' && pair[2] === 'type') return;
+      if (lang !== 'en' && pair[2] === 'type' && !(options && options.translateTypes)) return;
       var rx = new RegExp('(^|[^A-Za-zÇĞİÖŞÜçğıöşü])(' + escapeRx(pair[from]) + ')(?![A-Za-zÇĞİÖŞÜçğıöşü])', 'gi'); // i18n-ignore
       out = out.replace(rx, function (all, lead) { marks.push(pair[to]); return lead + '\u0001' + (marks.length - 1) + '\u0002'; });
     });
@@ -270,9 +270,9 @@
     if (!code) return null;
     var details = {};
     DETAIL_FIELDS.forEach(function (key) { var value=limit(source.details && source.details[key], DETAIL_MAX); details[key]=key==='composition'?normalizeComposition(value):value; });
-    var summary = normalizeSummaryPolyester(normalizeComposition(limit(source.summary, SUMMARY_MAX)), 'tr');
+    var summary = languageSummary(limit(source.summary, SUMMARY_MAX), 'tr');
     if (!summary) return null;
-    var summaryEn = normalizeSummaryPolyester(normalizeComposition(limit(source.summaryEn, SUMMARY_MAX)), 'en') || languageSummary(summary, 'en');
+    var summaryEn = clean(source.summaryEn) ? languageSummary(limit(source.summaryEn, SUMMARY_MAX), 'en') : languageSummary(summary, 'en');
     var origin = clean(source.summarySource);
     return {
       code: code,
@@ -288,7 +288,7 @@
   function summaryFor(card, lang) {
     if (!card) return '';
     // Eski (yalnız TR özetli) kartta EN görünüm sözlük çevirisine düşer.
-    return normalizeSummaryPolyester(normalizeComposition(lang === 'en' ? clean(card.summaryEn) || (card.summary ? languageSummary(card.summary, 'en') : '') : clean(card.summary) || clean(card.summaryEn)), lang);
+    return languageSummary(lang === 'en' ? clean(card.summaryEn) || clean(card.summary) : clean(card.summary) || clean(card.summaryEn), lang);
   }
   /* Tabloda görünen metin: kart varsa aktif dildeki özet, yoksa PLM metni. */
   function cardOf(cards, code) {

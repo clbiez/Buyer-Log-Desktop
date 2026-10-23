@@ -301,17 +301,37 @@
 
 /* Fabric Card: structured facets inside the existing Fabric column filter.
    Uses Buyer Log's shared theme tokens in both light and dark modes. */
-.kolColFilterPanel:has(.kolFabricFacetPanel),.colFilterPanel:has(.kolFabricFacetPanel){width:min(460px,calc(100vw - 16px));max-width:calc(100vw - 16px);max-height:min(82vh,760px);overflow:auto;overscroll-behavior:contain}
-.kolFabricFacetPanel{display:grid;gap:6px;margin:9px 0;padding:10px 0;border-block:1px solid var(--line);color:var(--ink)}
-.kolFabricFacetPanel>strong{font-size:var(--fs-sm);font-weight:700;padding:0 3px}
+.kolColFilterPanel:has(.kolFabricFacetPanel),.colFilterPanel:has(.kolFabricFacetPanel){
+  box-sizing:border-box;display:flex;flex-direction:column;gap:0;
+  width:min(760px,calc(100vw - 16px));max-width:calc(100vw - 16px);
+  max-height:min(82dvh,760px);overflow:hidden;overscroll-behavior:contain
+}
+.kolFabricFilterScroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable}
+.colFilterPanel:has(.kolFabricFacetPanel)>.cfpApplyRow{
+  position:relative;z-index:1;flex:0 0 auto;
+  margin-top:6px;padding-top:9px;border-top:1px solid var(--line);
+  background:var(--card,var(--bl-surface-raised))
+}
+.colFilterPanel:has(.kolFabricFacetPanel)>.kolSpreadsheetFilterSort,
+.colFilterPanel:has(.kolFabricFacetPanel)>.cfpSearch,
+.colFilterPanel:has(.kolFabricFacetPanel)>.cfpHeader{flex:0 0 auto}
+.kolFabricFacetPanel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:7px 10px;margin:9px 0;padding:10px 2px;border-block:1px solid var(--line);color:var(--ink)}
+.kolFabricFacetPanel>strong{grid-column:1/-1;font-size:var(--fs-sm);font-weight:700;padding:0 3px}
 .kolFabricFacetField{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2,var(--card));min-width:0}
 .kolFabricFacetField>summary{cursor:pointer;padding:8px 10px;font-weight:600;font-size:var(--fs-sm);list-style-position:inside}
 .kolFabricFacetField[open]>summary{border-bottom:1px solid var(--line)}
 .kolFabricFacetSearch{box-sizing:border-box;margin:7px 7px 3px;width:calc(100% - 14px);min-height:30px;border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 8px;color:var(--ink);background:var(--card,var(--card))}
-.kolFabricFacetOptions{max-height:150px;overflow:auto;padding:5px 7px 7px;display:grid;gap:2px}
+.kolFabricFacetOptions{max-height:112px;overflow:auto;padding:5px 7px 7px;display:grid;gap:2px}
 .kolFabricFacetOption{display:flex;align-items:flex-start;gap:8px;padding:4px 5px;border-radius:var(--r-sm);font-size:var(--fs-sm);line-height:1.45;cursor:pointer;overflow-wrap:anywhere}
 .kolFabricFacetOption:hover{background:var(--acc-bg,var(--card2))}
 .kolFabricFacetOption[hidden]{display:none}
 .kolFabricFacetOption input{margin-top:2px;accent-color:var(--acc)}
 .kolFabricFacetOption span{min-width:0;flex:1}
 .kolFabricSummaries input,.kolFabricDetails input{min-width:0;width:100%;box-sizing:border-box}
+
+/* Compact single column on narrow windows; action buttons remain visible. */
+@media (max-width:650px){
+  .kolFabricFacetPanel{grid-template-columns:minmax(0,1fr)}
+  .kolFabricFacetPanel>strong{grid-column:1}
+  .colFilterPanel:has(.kolFabricFacetPanel)>.cfpApplyRow{display:flex;flex-wrap:wrap;gap:5px}
+}

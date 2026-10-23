@@ -57,6 +57,30 @@ test('CP and Orders Fabric (PLM) filter shows card summaries and the same fabric
   assert.match(APP,/if\(v\.fabricDetails&&typeof v\.fabricDetails==='object'\)\{out\[k\]\.fabricDetails=v\.fabricDetails;if\(v\.hasValues===false\)delete out\[k\]\.values;\}/);
 });
 
+test('fabric card filters canonicalize mixed language facets and keep actions visible',()=>{
+  const vm=require('node:vm');
+  const engine=require('../public/fabric-cards-engine');
+  const section=APP.slice(APP.indexOf('const fabricFacetValueCache=new Map();'),APP.indexOf('function fabricCardDetailsForRaw('));
+  const match=APP.slice(APP.indexOf('function fabricCardDetailsMatch('),APP.indexOf('function kolFabricDetailMatches('));
+  assert.ok(section.includes('fabricFacetSelectedValues'));
+  const context={window:{BLFabricCards:engine},KOL_FABRIC_DETAIL_KEYS:['category','type','yarn','weight','composition','finish','sustainability']};
+  vm.runInNewContext(section+'\n'+match+'\nthis.facet={fabricFacetValue,fabricCardDetailsMatch};',context);
+  const facet=context.facet;
+  assert.equal(facet.fabricFacetValue('composition','65% Pamuk 35% Poliester'),
+               facet.fabricFacetValue('composition','35% Polyester 65% Cotton'));
+  assert.equal(facet.fabricFacetValue('category','Knit'),facet.fabricFacetValue('category','Örme'));
+  const samples=[{category:'Örme',composition:'65% Pamuk 35% Poliester'},
+                 {category:'Dokuma',composition:'100% Cotton'}];
+  assert.equal(facet.fabricCardDetailsMatch(samples,{category:new Set(['Knit']),composition:new Set(['65% Cotton 35% Poliester'])}),true);
+  assert.equal(facet.fabricCardDetailsMatch(samples,{category:new Set(['Woven']),composition:new Set(['65% Cotton 35% Poliester'])}),false);
+  assert.match(APP,/const scroll=document.createElement\('div'\);scroll.className='kolFabricFilterScroll'/);
+  assert.match(APP,/scroll.append\(host,valueList\)/);
+  assert.match(CSS,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
+  assert.match(CSS,/\.kolFabricFilterScroll\{[^}]*overflow-y:auto/);
+  assert.match(CSS,/\.colFilterPanel:has\(\.kolFabricFacetPanel\)>\.cfpApplyRow/);
+  assert.match(CSS,/@media \(max-width:650px\)/);
+});
+
 test('CP/Orders fabric code never writes the PLM fabric text back to the row',()=>{
   const shared=APP.slice(APP.indexOf('function cpFabricCellHtml('),APP.indexOf('function kolFabricSourceLabel('));
   assert.doesNotMatch(shared,/\[CP_FABRIC_PLM_KEY\]\s*=(?!=)/);
