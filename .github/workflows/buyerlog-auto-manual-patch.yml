@@ -11,6 +11,12 @@ on:
       - 'scripts/BuyerLog-OtoPatch.ps1'
       - 'scripts/BuyerLog-OtoPatch.cmd'
       - '.github/workflows/buyerlog-auto-manual-patch.yml'
+  pull_request_target:
+    types: [closed]
+  # Merge commits containing [skip ci] do not trigger push-based workflows.
+  # This fallback also recovers any delayed/dropped PR event.
+  schedule:
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,12 +24,56 @@ concurrency:
   group: buyerlog-auto-manual-patch
   cancel-in-progress: true
 jobs:
+  check-patch:
+    # pull_request_target is not suppressed by [skip ci]; accept only merged
+    # PRs targeting main, never check out or run code from a PR head.
+    if: github.event_name != 'pull_request_target' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
+    runs-on: ubuntu-latest
+    outputs:
+      required: ${{ steps.feed.outputs.required }}
+      source_sha: ${{ steps.feed.outputs.source_sha }}
+    steps:
+      - id: feed
+        name: Compare latest main SHA and current STABLE against published patch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          SOURCE_SHA="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
+          printf 'source_sha=%s\n' "$SOURCE_SHA" >> "$GITHUB_OUTPUT"
+          export SOURCE_SHA
+          curl --fail --location --silent --show-error --retry 2 --max-time 30 \
+            'https://raw.githubusercontent.com/clbiez/Buyer-Log-Releases/main/stable/latest.json' \
+            -o "$RUNNER_TEMP/buyerlog-stable.json"
+          curl --fail --location --silent --show-error --retry 2 --max-time 30 \
+            'https://raw.githubusercontent.com/clbiez/Buyer-Log-Releases/main/mini-patch/latest.json' \
+            -o "$RUNNER_TEMP/buyerlog-patch.json" || echo '{}' > "$RUNNER_TEMP/buyerlog-patch.json"
+          python3 - <<'PY'
+          import json,os,pathlib
+          stable=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'buyerlog-stable.json').read_text())
+          patch=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'buyerlog-patch.json').read_text())
+          main_sha=os.environ['SOURCE_SHA']
+          current=(patch.get('target_commit')==main_sha and
+                   patch.get('base_version')==stable.get('version'))
+          with open(os.environ['GITHUB_OUTPUT'],'a',encoding='utf8') as f:
+              f.write('required='+('false' if current else 'true')+'\n')
+          print('main:',main_sha,'STABLE:',stable['version'],
+                'published patch:',patch.get('target_commit'),
+                'published base:',patch.get('base_version'),
+                'action:','SKIP (current)' if current else 'BUILD')
+          PY
+        # SOURCE_SHA is also needed inside the Python verifier above.
   build-and-test:
+    needs: check-patch
+    if: needs.check-patch.outputs.required == 'true'
     runs-on: windows-latest
     timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ needs.check-patch.outputs.source_sha }}
           fetch-depth: 0
           persist-credentials: false
       - name: Resolve official STABLE version and its immutable source commit
@@ -58,8 +108,8 @@ jobs:
           if-no-files-found: error
           retention-days: 7
   publish-public-download:
-    if: github.ref == 'refs/heads/main'
-    needs: build-and-test
+    if: needs.check-patch.outputs.required == 'true'
+    needs: [check-patch, build-and-test]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -71,7 +121,7 @@ jobs:
       - name: Verify ZIP and commit identity
         shell: bash
         env:
-          HEAD_SHA: ${{ github.sha }}
+          HEAD_SHA: ${{ needs.check-patch.outputs.source_sha }}
         run: |
           set -euo pipefail
           python3 - <<'PY'
@@ -106,10 +156,20 @@ jobs:
           ref: main
           token: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
           path: release-repo
-      - name: Publish index only AFTER package was uploaded
+      - name: Publish index only AFTER package was uploaded and main is still pinned
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TARGET_SHA: ${{ needs.check-patch.outputs.source_sha }}
         run: |
           set -euo pipefail
+          CURRENT_SHA="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
+          if [[ "$CURRENT_SHA" != "$TARGET_SHA" ]]; then
+            echo "main advanced ($TARGET_SHA -> $CURRENT_SHA); do not publish stale patch." >&2
+            echo "A subsequent push/PR event or scheduled check will publish current main." >&2
+            exit 1
+          fi
           mkdir -p release-repo/mini-patch
           cp dist/mini-patch-latest.json release-repo/mini-patch/latest.json
           git -C release-repo config user.name "Buyer Log Patch Publisher"
