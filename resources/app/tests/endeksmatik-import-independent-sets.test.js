@@ -44,7 +44,8 @@ const input={
 
 test('new TL uploads create distinct selectable sets and preserve original legacy',async()=>{
   const before=engine.listSets().find(s=>s.id==='legacy');
-  const first=await engine.importWorkbookBuffer(workbook('S1'),'legacy-a.xlsx',{actor:'qa'});
+  const firstBytes=workbook('S1');
+  const first=await engine.importWorkbookBuffer(firstBytes,'legacy-a.xlsx',{actor:'qa'});
   assert.equal(first.uploaded.model,'legacy-tl');
   assert.match(first.uploaded.id,/^em-[0-9a-f]{16}$/);
   assert.equal(first.uploaded.recordCount,1);
@@ -65,7 +66,7 @@ test('new TL uploads create distinct selectable sets and preserve original legac
 
   const renamed=await engine.renameSet(first.uploaded.id,'First TL workbook');
   assert.equal(renamed.label,'First TL workbook');
-  const again=await engine.importWorkbookBuffer(workbook('S1'),'same.xlsx');
+  const again=await engine.importWorkbookBuffer(firstBytes,'same.xlsx');
   assert.equal(again.alreadyPresent,true);
   assert.equal(again.uploaded.id,first.uploaded.id);
   assert.equal(again.uploaded.label,'First TL workbook');
@@ -86,11 +87,12 @@ test('rejected upload leaves every existing set untouched',async()=>{
 });
 
 test('USD files still receive strict signature and Excel reconciliation checks',async()=>{
-  const result=await engine.importWorkbookBuffer(fixture.buildEndeksmatikWorkbook(),'bd.xlsx');
+  const usdBytes=fixture.buildEndeksmatikWorkbook();
+  const result=await engine.importWorkbookBuffer(usdBytes,'bd.xlsx');
   assert.equal(result.uploaded.model,model.MODEL_ID);
   assert.ok(result.uploaded.validation.signatureOk);
   assert.ok(result.uploaded.validation.reconciliationOk);
-  const again=await engine.importWorkbookBuffer(fixture.buildEndeksmatikWorkbook(),'bd.xlsx');
+  const again=await engine.importWorkbookBuffer(usdBytes,'bd.xlsx');
   assert.equal(again.alreadyPresent,true);
   assert.equal(again.uploaded.id,result.uploaded.id);
 });
