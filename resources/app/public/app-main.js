@@ -24866,11 +24866,17 @@ function kolFilterMeta(key){
 const kolFabricDetailCache=new Map();
 /* Facet values are stored as language-independent Turkish canonical keys.
    Translate only for display, so legacy TR/EN mixtures and new cards group together. */
+const fabricFacetValueCache=new Map();
 function fabricFacetValue(key,value){
   const text=String(value??'').trim(),api=window.BLFabricCards;
   if(!api||!text)return text;
-  const canonical=api.translateTerms(text,'tr',{translateTypes:true});
-  return key==='composition'?api.normalizeComposition(canonical):canonical.replace(/\s+/g,' ').trim();
+  const cacheKey=key+'\\u0000'+text;
+  if(fabricFacetValueCache.has(cacheKey))return fabricFacetValueCache.get(cacheKey);
+  const localized=api.translateTerms(text,'tr',{translateTypes:true});
+  const canonical=key==='composition'?api.normalizeComposition(localized):localized.replace(/\s+/g,' ').trim();
+  if(fabricFacetValueCache.size>5000)fabricFacetValueCache.clear();
+  fabricFacetValueCache.set(cacheKey,canonical);
+  return canonical;
 }
 const fabricFacetSelectionCache=new WeakMap();
 function fabricFacetSelectedValues(key,set){
