@@ -901,6 +901,7 @@
     popover.setAttribute('role', 'dialog');
     const selected = new Set(Array.isArray(query().filterValues && query().filterValues[field.id]) ? query().filterValues[field.id] : []);
     const localValues = valuesFromRows(field);
+    let availableValues = localValues;
     popover.innerHTML = `<div class="intakeFilterPopoverTitle">${esc(fieldLabel(field))}</div><input type="search" class="intakeFilterSearch" placeholder="${esc(text('Değerlerde ara…', 'Search values…'))}"><div class="intakeFilterValues"><div class="intakeConfigEmpty">${esc(text('Değerler yükleniyor…', 'Loading values…'))}</div></div><div class="intakeFilterActions"><button type="button" class="tbtn" data-intake-clear>${esc(text('Temizle', 'Clear'))}</button><button type="button" class="tbtn primary" data-intake-apply>${esc(text('Uygula', 'Apply'))}</button></div>`;
     document.body.appendChild(popover);
     state.popover = popover;
@@ -912,15 +913,18 @@
     const list = popover.querySelector('.intakeFilterValues');
     const search = popover.querySelector('.intakeFilterSearch');
 
-    const draw = values => {
+    const draw = () => {
+      const top = list.scrollTop;
       const filter = clean(search.value).toLocaleLowerCase(isEnglish() ? 'en' : 'tr');
-      const visible = values.filter(value => !filter || value.toLocaleLowerCase(isEnglish() ? 'en' : 'tr').includes(filter));
+      const visible = availableValues.filter(value => !filter || value.toLocaleLowerCase(isEnglish() ? 'en' : 'tr').includes(filter))
+        .sort((a,b)=>Number(selected.has(b))-Number(selected.has(a)));
       list.innerHTML = visible.length ? visible.map(value => `<label class="intakeFilterOption"><input type="checkbox" value="${esc(value)}"${selected.has(value) ? ' checked' : ''}><span>${esc(value)}</span></label>`).join('') : `<div class="intakeConfigEmpty">${esc(text('Eşleşen değer yok.', 'No matching value.'))}</div>`;
+      list.scrollTop = top;
     };
-    draw(localValues);
-    search.addEventListener('input', () => draw(localValues));
-    popover.addEventListener('change', event => { if (event.target.matches('input[type="checkbox"]')) event.target.checked ? selected.add(event.target.value) : selected.delete(event.target.value); });
-    popover.querySelector('[data-intake-clear]').addEventListener('click', () => { selected.clear(); draw(localValues); });
+    draw();
+    search.addEventListener('input', draw);
+    popover.addEventListener('change', event => { if (event.target.matches('input[type="checkbox"]')) { event.target.checked ? selected.add(event.target.value) : selected.delete(event.target.value); draw(); } });
+    popover.querySelector('[data-intake-clear]').addEventListener('click', () => { selected.clear(); draw(); });
     popover.querySelector('[data-intake-apply]').addEventListener('click', async () => {
       const next = clone(state.viewConfig);
       next.query.filterValues = { ...(next.query.filterValues || {}) };
@@ -931,7 +935,7 @@
       void saveView(next);
     });
     void requestJson('/api/intake/distinct', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ fieldId: field.id, sourceUniqueName: field.sourceUniqueName, limit: 500 }) })
-      .then(result => { const values = Array.isArray(result.values) ? result.values : localValues; draw([...new Set([...values, ...selected])].sort((a, b) => a.localeCompare(b, isEnglish() ? 'en' : 'tr', { numeric: true }))); })
+      .then(result => { const values = Array.isArray(result.values) ? result.values : localValues; availableValues=[...new Set([...values, ...selected])].sort((a, b) => a.localeCompare(b, isEnglish() ? 'en' : 'tr', { numeric: true })); draw(); })
       .catch(error => {
         if (localValues.length) return;
         // Yalnız gerçek kaynak kesintisi "canlı kaynak yok" olarak anlatılır;
