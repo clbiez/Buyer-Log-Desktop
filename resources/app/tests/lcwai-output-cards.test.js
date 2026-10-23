@@ -94,7 +94,10 @@ test('kart bilgisi: varsayılan renk kodu/fit/adet/hedef fiyat; seçilen alanlar
   assert.equal(layout.cardDetails({ fields: [{ label: 'Onay', value: 'Onaylandı' }] }, { cardFields: ['Onay'] }, null)[0].tone, 'ok');
   assert.equal(layout.cardDetails({ fields: [{ label: 'Not', value: 'bekliyor' }] }, { cardFields: ['Not'] }, null)[0].tone, '', 'durum dışı alan renklenmez');
   const options = layout.availableCardFields([item], { 'KOL-1': record });
-  assert.deepEqual(options.source, ['TEDARİKÇİ', 'Sezon']);
+  assert.deepEqual(options.source, ['TEDARİKÇİ', 'Shopping No', 'Sezon'], 'değeri boş kaynak sütun da seçilebilir (tüm başlıklar)');
+  const empty = layout.availableCardFields([{ image: 'KOL-2', fields: [] }], { 'KOL-2': [['Colour Code', ''], ['Colour', 'Navy'], ['Target Price', '']] });
+  assert.deepEqual(empty.source, ['Colour Code', 'Colour', 'Target Price'], 'Target Price boş olsa da listede');
+  assert.deepEqual(empty.defaults, ['Colour'], 'varsayılan yalnız dolu alanlardan');
   assert.deepEqual(options.defaults, ['Renk Kodu', 'Kalıp', 'Sipariş Adedi', 'Hedef Fiyat']);
   const l = layout.normalizeLayout('pptx', { cardFields: ['Renk', 'RENK', ' Kumaş ', ...Array.from({ length: 40 }, (_, i) => `F${i}`)] });
   assert.equal(l.cardFields[0], 'Renk');
@@ -219,12 +222,14 @@ test('servis: kaynak satırları yalnız istenen anahtarlar için alınır, tasl
   const done = service.completeImages('u1', first.output.pendingId, { 'KOL-1': pngUrl }, { 'KOL-1': [['Tedarikçi', 'Eureko'], ['BL Image', 'KOL-1'], ['Boş', '']], 'KOL-77': [['Gizli', 'x']] });
   assert.ok(done.id);
   const draft = service.getDraft('u1', first.output.draftId);
-  assert.deepEqual(draft.records, { 'KOL-1': [['Tedarikçi', 'Eureko']] }, 'istenmeyen anahtar, boş değer ve anahtar sütunu atılır');
+  assert.deepEqual(draft.records, { 'KOL-1': [['Tedarikçi', 'Eureko'], ['Boş', '']] }, 'istenmeyen anahtar ve anahtar sütunu atılır; boş değerli başlık seçici için kalır');
   const data = { ...draft.data, layout: { cardFields: ['Tedarikçi', 'Renk'] } };
   const rendered = service.renderDraft('u1', draft.id, { data });
   const files = unzip(fs.readFileSync(rendered.output.path));
   assert.match(files['ppt/slides/slide2.xml'], /<a:t>Eureko<\/a:t>[\s\S]*<a:t>Siyah<\/a:t>/, 'seçim sırası: önce Tedarikçi (kaynak), sonra Renk');
-  assert.deepEqual(outputImages.normalizeRecords({ 'kol-1': [['A', { x: 1 }], ['B', 2]], 'KOL-2': 'x' }, ['KOL-1', 'KOL-2']), { 'KOL-1': [['B', '2']] });
+  assert.deepEqual(outputImages.normalizeRecords({ 'kol-1': [['A', { x: 1 }], ['B', 2]], 'KOL-2': 'x' }, ['KOL-1', 'KOL-2']), { 'KOL-1': [['A', ''], ['B', '2']] }, 'boş değerli sütun başlığı korunur');
+  assert.deepEqual(outputImages.normalizeRecords({ 'KOL-1': [['A', ''], ['B', ' ']] }, ['KOL-1']), {}, 'tamamen boş satır atılır');
+  assert.equal(outputImages.RECORD_LIMITS.fields >= 120, true, 'koleksiyonun tüm sütunları sığar');
 });
 
 test('şablon: seçilen kart bilgileri LCW AI talimatına girer (TR/EN)', () => {

@@ -90,7 +90,7 @@ function imageSize(type, buffer) {
    görsel anahtarıyla verir ({ KOL-3: [[sütun, değer], …] }). Yalnız
    istenen anahtarlar, yalnız düz metin, sınırlı boyutta. Bu veri LCW AI'a
    gitmez; yalnız Buyer Log'un ürettiği dosyada kart bilgisi olarak yazılır. */
-const RECORD_LIMITS = Object.freeze({ fields: 60, label: 60, value: 300 });
+const RECORD_LIMITS = Object.freeze({ fields: 160, label: 60, value: 300 });
 function normalizeRecords(input, allowedTokens) {
   const allowed = new Set(allowedTokens || []);
   const out = {};
@@ -99,8 +99,9 @@ function normalizeRecords(input, allowedTokens) {
     const token = String(key).toUpperCase();
     if (!allowed.has(token) || !Array.isArray(value)) continue;
     const pairs = value.filter(Array.isArray).map(pair => [text(pair[0], RECORD_LIMITS.label), text(typeof pair[1] === 'object' ? '' : pair[1], RECORD_LIMITS.value)])
-      .filter(([label, cell]) => label && cell && label !== 'BL Image').slice(0, RECORD_LIMITS.fields);
-    if (pairs.length) out[token] = pairs;
+      .filter(([label]) => label && label !== 'BL Image').slice(0, RECORD_LIMITS.fields);
+    // Boş değerli sütun da kalır: kart bilgisi seçicisi tüm başlıkları sunar; kart boş değeri yazmaz.
+    if (pairs.some(([, cell]) => cell)) out[token] = pairs;
   }
   return out;
 }

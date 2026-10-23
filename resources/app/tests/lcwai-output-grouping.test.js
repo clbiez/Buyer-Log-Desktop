@@ -5,8 +5,10 @@
  *
  * Korunan davranışlar:
  *  - layout.groupBy (en çok 3 alan) tüm galeri modellerini alan değerine göre
- *    yeniden gruplar (ör. Kategori › Kumaş › Baskı). Son seviye sayfada yan
- *    yana gruplardır; önceki seviyeler yeni slayt/bölüm başlatır. Değer önce
+ *    yeniden gruplar (ör. Kategori › Kumaş › Baskı). layout.groupBreak kaç
+ *    seviyenin yeni slayt/bölüm başlattığını belirler (varsayılan 1: yalnız
+ *    1. grup); kalan seviyeler aynı sayfada "Kumaş · Baskı" adıyla yan yana
+ *    alt gruplardır — farklı alt gruplar tek sayfada birlikte. Değer önce
  *    kart alanından, yoksa Buyer Log kaynak satırından gelir; yoksa
  *    "Belirtilmemiş". LCW AI'ın galeri ve bölüm ayracı slaytları yerine geçer;
  *    bloktaki diğer slaytlar korunur.
@@ -60,20 +62,40 @@ test('normalize: gruplama en çok 3 seviye, tekrar yok; başlık kipi; hazır ye
   assert.deepEqual(layout.applyPreset('pptx', 'catalog', l).groupBy, l.groupBy);
 });
 
-test('PowerPoint: Kategori › Kumaş › Baskı — sayfa seviyeleri yeni slayt, son seviye yan yana; LCW AI galeri/bölüm slaytları değişir', () => {
+test('PowerPoint: Kategori › Kumaş › Baskı — 1. grup yeni slayt, alt gruplar aynı slaytta yan yana; LCW AI galeri/bölüm slaytları değişir', () => {
   const l = layout.normalizeLayout('pptx', { ...layout.applyPreset('pptx', 'catalog', null), groupBy: ['Kategori', 'Kumaş', 'Baskı'] });
+  assert.equal(l.groupBreak, 1, 'varsayılan: yalnız 1. grup yeni slayt');
   const records = { 'KOL-9': [['Kategori', 'Şort'], ['KUMAŞ', 'SJ 20/1'], ['Baskı', 'Artwork']] };
   const out = layout.expandGalleries(deckSlides(), l, { records });
   const summary = out.map(entry => (entry.page ? `P:${entry.page.title}|${entry.page.labels.map(label => label.text).join(',')}` : `S:${entry.slide.title}`));
   assert.deepEqual(summary, [
     'S:Koleksiyon',
-    'P:Tişört · SJ 30/1|Pigment,Pigment 2x',
-    'P:Şort · SJ 20/1|Pigment,Artwork',
-    'P:Tişört · SJ 20/1 · No Print|',
+    'P:Tişört|SJ 30/1 · Pigment,SJ 30/1 · Pigment 2x,SJ 20/1 · No Print',
+    'P:Şort|SJ 20/1 · Pigment,SJ 20/1 · Artwork',
     'S:Fiyat tablosu',
     'S:Aksiyonlar',
-  ], 'bölüm ayraçları kalkar, tablo blok ardında korunur; kaynak satırdan değer (KOL-9)');
+  ], 'farklı Kumaş alt grupları tek slaytta; bölüm ayraçları kalkar, tablo blok ardında korunur; kaynak satırdan değer (KOL-9)');
   assert.deepEqual(out[1].sources, [2, 5], 'önizleme için kaynak slaytlar');
+  const deep = layout.expandGalleries(deckSlides(), { ...l, groupBreak: 2 }, { records });
+  assert.deepEqual(deep.filter(entry => entry.page).map(entry => `${entry.page.title}|${entry.page.labels.map(label => label.text).join(',')}`), [
+    'Tişört · SJ 30/1|Pigment,Pigment 2x',
+    'Şort · SJ 20/1|Pigment,Artwork',
+    'Tişört · SJ 20/1 · No Print|',
+  ], 'groupBreak=2: 1. ve 2. grup yeni slayt (eski düzen)');
+  const flat = layout.expandGalleries(deckSlides(), { ...l, groupBreak: 0 }, { records });
+  assert.equal(flat.filter(entry => entry.page).length, 1, 'groupBreak=0: tüm gruplar aynı slaytta (sığdıkça)');
+  assert.equal(layout.normalizeLayout('pptx', { groupBreak: 7 }).groupBreak, 1, 'sınır dışı → varsayılan');
+  assert.equal(layout.applyPreset('pptx', 'standard', { groupBy: ['Kategori', 'Kumaş'], groupBreak: 0 }).groupBreak, 0, 'hazır yerleşim korur');
+  // 3 × 1 ızgarada 1 + 3 + 2 modellik alt gruplar: 1 ve 2 aynı slayta sığar, 3'lü grup sonraki slayta (her grup ayrı slayt değil).
+  const lic = (n, pmd) => ({ title: `L-${n}`, image: `KOL-${n}`, fields: [{ label: 'Buying Group', value: 'LİSANS' }, { label: 'Product Main Definition', value: pmd }] });
+  const three = layout.expandGalleries([{ layout: 'gallery', title: 'G', items: [lic(1, 'Uzun Kollu Tshirt'), lic(2, 'T-Shirt'), lic(3, 'T-Shirt'), lic(4, 'T-Shirt'), lic(5, 'Takım'), lic(6, 'Takım')] }],
+    layout.normalizeLayout('pptx', { columns: 3, rows: 1, groupBy: ['Buying Group', 'Product Main Definition'] }), {});
+  assert.deepEqual(three.map(entry => entry.page.labels.map(label => label.text).join(',') || entry.page.title), ['Uzun Kollu Tshirt,Takım', 'LİSANS · T-Shirt']);
+  // Uzun alt grup adı tek kart genişliğinde tek satırda kalır: önce küçülür, sonra "…".
+  const fit = layout.fitLabel('Uzun Kollu Tshirt · Single Jersey · 20/1 · 200 gsm · 100% Cotton', 150, 12);
+  assert.ok(fit.size >= 6.5 && fit.size < 12, 'yazı küçülür');
+  assert.ok(fit.text.endsWith('…') && fit.text.length * fit.size * 0.58 <= 150 + fit.size, 'sığmayan kısım kısalır');
+  assert.deepEqual(layout.fitLabel('Takım', 150, 12), { text: 'Takım', size: 12 }, 'kısa ad aynen');
   const blank = layout.expandGalleries(deckSlides(), { ...l, groupBy: ['Kategori'] }, { english: true });
   assert.ok(blank.some(entry => entry.page && entry.page.labels.some(label => label.text === 'Not specified')), 'değeri olmayan model "Not specified"');
   const none = layout.expandGalleries(deckSlides(), layout.applyPreset('pptx', 'catalog', null), {});
@@ -129,9 +151,11 @@ test('şablon ve arayüz: gruplama/başlık alanları LCW AI talimatına girer; 
   assert.match(userTemplates.templateInstruction(def, { name: 'X', lang: 'tr' }), /Model kartı bilgileri: .*Fit, Kategori, Kumaş, Sezon/);
   const editor = fs.readFileSync(path.join(ROOT, 'public', 'lcwai-output-editor.js'), 'utf8');
   assert.match(editor, /data-lay-group="\$\{i\}"/);
+  assert.match(editor, /data-lay-group-break/);
+  assert.match(editor, /groupBreak: Number\(el\.value\)/);
   assert.match(editor, /data-lay-title-mode="\$\{value\}"/);
   assert.match(editor, /data-lay-title-text/);
   assert.match(editor, /data-lay-title-insert=/);
   assert.match(editor, /LAY\(\)\.expandGalleries\(slides, l, \{ english: isEn\(\), records:/, 'önizleme gruplamada kaynak satırları kullanır');
-  for (const text of ["L('Gruplama', 'Grouping')", "L('1. grup', '1st group')", "L('3. grup', '3rd group')", "L('Elle yaz', 'Type it')", "L('Alanlardan', 'From fields')", "L('Slayt başlığı', 'Slide title')", "L('Bölüm başlığı', 'Section title')"]) assert.ok(editor.includes(text), text);
+  for (const text of ["L('Gruplama', 'Grouping')", "L('1. grup', '1st group')", "L('3. grup', '3rd group')", "L('Elle yaz', 'Type it')", "L('Alanlardan', 'From fields')", "L('Slayt başlığı', 'Slide title')", "L('Bölüm başlığı', 'Section title')", "L('Yeni slayt', 'New slide')", "L('Yok — tüm gruplar yan yana', 'None — all groups side by side')"]) assert.ok(editor.includes(text), text);
 });
