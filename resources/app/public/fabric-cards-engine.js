@@ -228,6 +228,20 @@
       return { plm: clean(card.raw).slice(0, 400), summary: clean(card.summary).slice(0, 220), summaryEn: clean(card.summaryEn).slice(0, 220) };
     });
   }
+  /* A compact yarn display is a presentation change, never a fabricated
+     measurement. Extract each yarn lead only before weight/composition. */
+  function compactYarnFromPlm(raw) {
+    var tokens = bodyOf(raw).split(','), counts = [];
+    for (var i = 0; i < tokens.length; i++) {
+      var part = clean(tokens[i]);
+      if (/%|\b(?:gsm|g\s*\/\s*m2)\b/i.test(part)) break;
+      var found = /^(\d{1,3})\s*\/\s*\d{1,2}(?=\s|$)/.exec(part)
+        || /^(\d{1,3})\s*(?:D|Denier|Denye|dtex)\b/i.exec(part);
+      if (found) counts.push(found[1]);
+    }
+    var compact = counts.length >= 2 && counts.length <= 4 ? counts.join('/') : '';
+    return compact && numbersSupported(compact, numberSet(raw)) ? compact : '';
+  }
   function applyLearnedStyle(card, raw, cards) {
     if (!card || !cards || !fabricFamily(raw)) return card;
     var examples = [];
@@ -239,11 +253,19 @@
     }).sort(function (a, b) { return String(b.updatedAt || '').localeCompare(String(a.updatedAt || '')); });
     if (!matches.length) return card;
     var example = matches[0];
+    var compactYarn = compactYarnFromPlm(raw);
     function adoptTitle(value, exemplar) {
       var parts = clean(value).split(/\s*·\s*/);
-      var title = clean(exemplar).split(/\s*·\s*/)[0];
+      var preferred = clean(exemplar).split(/\s*·\s*/);
+      var title = preferred[0];
       if (parts.length < 2 || !title || /\d/.test(title) || title.length > 65) return value;
       parts[0] = title;
+      // Use the abbreviated slash style only if a previously edited card
+      // explicitly chose it AND the current PLM independently has all counts.
+      if (compactYarn && /^\d{1,3}(?:\/\d{1,3}){1,3}$/.test(preferred[1] || '')) {
+        if (/^\d{2,4}(?:[.,]\d+)?\s*(?:gsm|g\s*\/\s*m2)/i.test(parts[1])) parts.splice(1, 0, compactYarn);
+        else parts[1] = compactYarn;
+      }
       return parts.join(' · ');
     }
     return Object.assign({}, card, {
