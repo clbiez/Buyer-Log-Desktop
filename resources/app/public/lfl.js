@@ -711,8 +711,23 @@
   }
   function renderFacetPanel(dim){
     const panel=$(`lflDimPanel_${dim}`);if(!panel)return;const values=facetValues(dim),selected=state.filters[dim],rows=rowsForFacet(dim),key=FILTER_META[dim].rowKey,counts=new Map();
+    const scroll=panel.querySelector('.lflDimList')?.scrollTop||0;
+    const previousSearch=panel.querySelector('.lflDimSearch');
+    const search=previousSearch?.value||'',restoreFocus=document.activeElement===previousSearch;
+    const ordered=values.slice().sort((a,b)=>Number(selected.has(b))-Number(selected.has(a)));
     rows.forEach(r=>{const value=MONTH_DIMS.includes(dim)?rowPeriodMonth(r,dateFieldForDim(dim)):r[key];if(isUsableValue(value))counts.set(value,(counts.get(value)||0)+1);});
-    panel.innerHTML=`<div class="lflDimPanelHead"><div><strong>${esc(filterMetaLabel(dim))}</strong><span>${selected.size?selected.size+' '+(isEn()?'selected':'seçim'):(isEn()?'All':'Tümü')}</span></div><button type="button" class="lflPanelClear"${selected.size?'':' disabled'}>${isEn()?'Clear':'Temizle'}</button></div><div class="lflDimSearchWrap"><input type="search" class="lflDimSearch" placeholder="${isEn()?'Search…':'Ara…'}" autocomplete="off"></div><div class="lflDimList"><label class="lflDimOption lflDimAll${selected.size?'':' isSelected'}"><input type="checkbox" class="lflDimAllCheck"${selected.size?'':' checked'}><span>${isEn()?'All':'Hepsi'}</span><em>${integer(rows.length)}</em></label>${values.map(value=>`<label class="lflDimOption${selected.has(value)?' isSelected':''}" data-search="${esc(displayFilterValue(dim,value))}"><input type="checkbox" class="lflDimCheck" value="${esc(value)}"${selected.has(value)?' checked':''}><span>${esc(displayFilterValue(dim,value))}</span><em>${integer(counts.get(value)||0)}</em></label>`).join('')||`<div class="lflDimNoResult">${isEn()?'No selectable values.':'Seçilebilir değer bulunamadı.'}</div>`}</div>`;
+    panel.innerHTML=`<div class="lflDimPanelHead"><div><strong>${esc(filterMetaLabel(dim))}</strong><span>${selected.size?selected.size+' '+(isEn()?'selected':'seçim'):(isEn()?'All':'Tümü')}</span></div><button type="button" class="lflPanelClear"${selected.size?'':' disabled'}>${isEn()?'Clear':'Temizle'}</button></div><div class="lflDimSearchWrap"><input type="search" class="lflDimSearch" placeholder="${isEn()?'Search…':'Ara…'}" autocomplete="off"></div><div class="lflDimList"><label class="lflDimOption lflDimAll${selected.size?'':' isSelected'}"><input type="checkbox" class="lflDimAllCheck"${selected.size?'':' checked'}><span>${isEn()?'All':'Hepsi'}</span><em>${integer(rows.length)}</em></label>${ordered.map(value=>`<label class="lflDimOption${selected.has(value)?' isSelected':''}" data-search="${esc(displayFilterValue(dim,value))}"><input type="checkbox" class="lflDimCheck" value="${esc(value)}"${selected.has(value)?' checked':''}><span>${esc(displayFilterValue(dim,value))}</span><em>${integer(counts.get(value)||0)}</em></label>`).join('')||`<div class="lflDimNoResult">${isEn()?'No selectable values.':'Seçilebilir değer bulunamadı.'}</div>`}</div>`;
+    const searchInput=panel.querySelector('.lflDimSearch'),list=panel.querySelector('.lflDimList');
+    if(searchInput&&search){
+      searchInput.value=search;
+      const terms=normalizeSearchTerms(search);let shown=0;
+      list?.querySelectorAll('.lflDimOption[data-search]').forEach(row=>{
+        const match=matchesSearch(row.dataset.search,terms);row.hidden=!match;if(match)shown++;
+      });
+      if(!shown){const empty=document.createElement('div');empty.className='lflDimNoResult lflDimSearchEmpty';empty.textContent=isEn()?'No option matches this search.':'Aramayla eşleşen seçenek yok.';list?.appendChild(empty);}
+    }
+    if(list)list.scrollTop=scroll;
+    if(restoreFocus)searchInput?.focus({preventScroll:true});
     const rerender=()=>{updateFilterButton(dim);saveFilters();render();renderFacetPanel(dim);};
     panel.querySelector('.lflPanelClear')?.addEventListener('click',()=>{state.filters[dim].clear();rerender();});
     panel.querySelector('.lflDimAllCheck')?.addEventListener('change',()=>{state.filters[dim].clear();rerender();});
