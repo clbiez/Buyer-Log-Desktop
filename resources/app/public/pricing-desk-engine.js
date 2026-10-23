@@ -109,6 +109,28 @@
     const approved=(lines||[]).find(line=>line&&line.approved&&!line.dropped)||null;
     return {priced:priced.length,median:med,best:best?{lineId:best.line.id,manufacturer:clean(best.line.manufacturer),price:best.value}:null,outliers,approved:approved?{lineId:approved.id,manufacturer:clean(approved.manufacturer),price:price(approved.price)}:null};
   }
+  // Kapsam puan değildir: aynı modellerde rekabet, sonra kapsama bakılır.
+  function compareSuppliers(a,b){
+    const wins=s=>s.modelWins??s.wins??0;
+    const index=s=>Number.isFinite(s.modelIndex)?s.modelIndex:Infinity;
+    return wins(b)-wins(a)||(index(a)-index(b)||0)||(b.models||0)-(a.models||0)||a.name.localeCompare(b.name,'tr',{numeric:true});
+  }
+  function modelWinCounts(observations){
+    const models=new Map(),wins=new Map();
+    (observations||[]).forEach(o=>{if(!Number.isFinite(o.value)||o.value<=0)return;const id=clean(o.identityKey||o.modelKey);if(!id)return;if(!models.has(id))models.set(id,new Map());const bySupplier=models.get(id),key=keyOf(o.manufacturer);if(!bySupplier.has(key))bySupplier.set(key,[]);bySupplier.get(key).push(o.value);});
+    models.forEach(suppliers=>{const averages=[...suppliers].map(([key,values])=>({key,value:mean(values)})),best=Math.min(...averages.map(o=>o.value));averages.filter(o=>Math.abs(o.value-best)<1e-9).forEach(o=>wins.set(o.key,(wins.get(o.key)||0)+1));});
+    return wins;
+  }
+  function supplierScorecards(request){
+    const matrix=requestMatrix(request),observations=matrix.models.flatMap(model=>model.lines.filter(line=>!line.dropped&&price(line.price)!=null).map(line=>({identityKey:model.modelKey,manufacturer:line.manufacturer,value:price(line.price),approved:!!line.approved})));
+    const analyzed=new Map(analyze(observations).suppliers.map(s=>[s.key,s]));
+    return matrix.manufacturers.map(name=>{const s=analyzed.get(keyOf(name));return {key:keyOf(name),name,total:matrix.models.length,models:s?.models||0,wins:s?.modelWins||0,approved:s?.approved||0,modelIndex:s?.modelIndex??null};}).sort(compareSuppliers);
+  }
+  function supplierLayout(cards,expanded=false,limit=8){
+    const sorted=cards.slice().sort(compareSuppliers),visible=[],other=[];
+    sorted.forEach((card,i)=>{(expanded||sorted.length<=limit||i<limit||(card.modelWins??card.wins)>0||card.approved>0?visible:other).push(card);});
+    return {visible,other};
+  }
   function outlierRatio(value,lines){
     const stats=rowStats(lines),n=price(value);
     if(n==null||!stats.median||stats.priced<2)return null;
@@ -250,7 +272,7 @@
     const groupBy=GROUP_DIMENSIONS.includes(options.groupBy)?options.groupBy:'classification';
     const minSample=Math.max(1,Math.round(Number(options.minSample)||1));
     const list=filterObservations(observations,options.filters).filter(observation=>observation&&observation.value!=null);
-    const modelIndex=modelIndexMap(list);
+    const modelIndex=modelIndexMap(list),modelWins=modelWinCounts(list);
     const groups=new Map(),suppliers=new Map();
     list.forEach(observation=>{
       const label=observationValue(observation,groupBy),gKey=keyOf(label),sLabel=clean(observation.manufacturer)||'—',sKey=keyOf(sLabel);
@@ -282,11 +304,11 @@
     groupList.forEach(group=>group.cells.forEach(cell=>{if(cell.index!=null&&suppliers.has(cell.key))suppliers.get(cell.key).groupIndexes.push({value:cell.index,weight:cell.count});}));
     const weighted=parts=>{let sum=0,weight=0;parts.forEach(part=>{if(Number.isFinite(part.value)&&part.weight>0){sum+=part.value*part.weight;weight+=part.weight;}});return weight?sum/weight:null;};
     const supplierList=[...suppliers.values()].map(supplier=>({key:supplier.key,name:supplier.name,avg:mean(supplier.values),count:supplier.values.length,models:supplier.models.size,approved:supplier.approved,wins:supplier.wins,groups:supplier.groups.size,buyers:[...supplier.buyers].sort((a,b)=>a.localeCompare(b,'tr')),
-      groupIndex:weighted(supplier.groupIndexes),modelIndex:mean(supplier.modelIndexes),modelIndexSample:supplier.modelIndexes.length,approvalRate:supplier.values.length?supplier.approved/supplier.values.length*100:0,items:supplier.items}))
+      groupIndex:weighted(supplier.groupIndexes),modelWins:modelWins.get(supplier.key)||0,modelIndex:mean(supplier.modelIndexes),modelIndexSample:supplier.modelIndexes.length,approvalRate:supplier.values.length?supplier.approved/supplier.values.length*100:0,items:supplier.items}))
       .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'tr'));
     const totalAvg=mean(list.map(observation=>observation.value));
     return {groupBy,minSample,count:list.length,models:new Set(list.map(observation=>clean(observation.identityKey||observation.modelKey))).size,avg:totalAvg,groups:groupList,suppliers:supplierList,observations:list,
-      columns:supplierList.map(supplier=>({key:supplier.key,name:supplier.name}))};
+      columns:supplierList.slice().sort(compareSuppliers).map(supplier=>({key:supplier.key,name:supplier.name}))};
   }
   /* Buyer karşılaştırması (çok buyer'lı görünüm): her buyer'ın aynı
      gruplardaki fiyatı grup ortalamasına göre nerede? */
@@ -310,5 +332,5 @@
       .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'tr'));
   }
 
-  return {OUTLIER_RATIO,GROUP_DIMENSIONS,price,mean,median,pct,keyOf,effectiveHistory,offers,negotiation,requestMatrix,rowStats,outlierRatio,bulkApproveCandidates,rounds,requestGain,lane,responseRates,historySeries,filterObservations,dimensionValues,analyze,buyerComparison};
+  return {compareSuppliers,supplierScorecards,supplierLayout,OUTLIER_RATIO,GROUP_DIMENSIONS,price,mean,median,pct,keyOf,effectiveHistory,offers,negotiation,requestMatrix,rowStats,outlierRatio,bulkApproveCandidates,rounds,requestGain,lane,responseRates,historySeries,filterObservations,dimensionValues,analyze,buyerComparison};
 });

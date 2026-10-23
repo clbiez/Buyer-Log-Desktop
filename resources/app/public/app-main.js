@@ -8234,7 +8234,7 @@ async function buildCollectionStyledCopy(selSet){
     : all;
   if(!records.length) return null;
 
-  const descriptors=meta.colsFn();
+  const descriptors=kolExportDescriptors();
   const pictureVisible=!kolPictureHidden;
   const matrix=BLTableExport.buildMatrix({
     records, columns:descriptors,
@@ -8261,6 +8261,7 @@ async function buildCollectionStyledCopy(selSet){
   const clipboardStyleFor=descriptor=>{
     if(!descriptor)return cellStyle;
     if(['best','confirmedPrice','price'].includes(descriptor.kind))return cellStyle+"text-align:right;mso-number-format:'\\$#,##0.00';";
+    if(descriptor.kind==='priceDetail'&&descriptor.field.type!=='text')return cellStyle+"text-align:right;mso-number-format:'"+KOL_PRICE_DETAIL_NUMFMT[descriptor.field.type]+"';";
     const column=descriptor.col;if(!column)return cellStyle;
     let format='',align='';
     if(column.date){format='dd.mm.yy';align='right';}
@@ -24104,6 +24105,83 @@ function kolPriceViewDescriptor(key){
   const meta=KOL_PRICE_VIEW_COLS[key];
   return meta?{kind:meta.kind,k:key,label:appLang==='en'?meta.en:meta.tr,folds:[]}:null;
 }
+/* FİYAT AYRINTI SÜTUNLARI (v2026-10-23). Tek kaynak: Maliyet görünümünde
+   tablo sütunu, Excel'e aktarmada ve satır kopyasında ayrı sütun olarak
+   kullanılır. Her alan bir "çapa" sütununun hemen sağına yerleşir; çapa
+   görünür değilse ayrıntısı da çıkmaz. Değerler kanonik hesaplardan
+   (kolLandedCalc, kolBestPricing, Endeksmatik sonucu) okunur; ayrıntı hiçbir
+   veriyi kopyalamaz. input:true alanlar (TR fiyatı, kur, çarpanlar) tablodaki
+   TR/YD Landed hücresinin girdileriyle aynı alandır ve düzenlenebilir. */
+const KOL_PRICE_DETAIL_FIELDS=Object.freeze([
+  {k:'__bestMfr__',anchor:'__bestPrice__',tr:'En İyi Üretici',en:'Best Manufacturer',type:'text',value:v=>v.best?.name||''},
+  {k:'__offerCount__',anchor:'__bestPrice__',tr:'Teklif Sayısı',en:'Quotations',type:'int',value:v=>v.offerCount},
+  {k:'__targetDiff__',anchor:'__confirmedPrice__',tr:'Hedefe Fark %',en:'Diff. to Target %',type:'pct',value:v=>v.delta?v.delta.percent/100:null},
+  {k:'__suppFobSource__',anchor:'ydLanded',tr:'Supp. FOB Kaynağı',en:'Supp. FOB Source',type:'text',value:v=>v.suppSource},
+  {k:'__suppFob__',anchor:'ydLanded',tr:'Supp. FOB',en:'Supp. FOB',type:'money',value:v=>v.k.ydBaseFob},
+  {k:'__ydCosted__',anchor:'ydLanded',tr:'FOB + Royalty/Hologram',en:'FOB + Royalty/Hologram',type:'money',value:v=>v.k.ydCostedFob},
+  {k:'ydLandedMult',anchor:'ydLanded',input:true,tr:'YD Çarpanı',en:'Overseas Multiplier',type:'num',value:v=>v.k.ydMult},
+  {k:'trPrice',anchor:'trLanded',input:true,tr:'TR Fiyatı (TL)',en:'TR Price (TRY)',type:'tl',value:v=>Number.isFinite(v.k.trPrice)&&v.k.trPrice>0?v.k.trPrice:null},
+  {k:'trFx',anchor:'trLanded',input:true,tr:'Kur (USD/TL)',en:'FX (USD/TRY)',type:'num',value:v=>v.k.fx},
+  {k:'__trUsd__',anchor:'trLanded',tr:'TR Fiyatı (USD)',en:'TR Price (USD)',type:'money',value:v=>v.k.trBaseUsd},
+  {k:'trLandedMult',anchor:'trLanded',input:true,tr:'TR Çarpanı',en:'TR Multiplier',type:'num',value:v=>v.k.trMult},
+  {k:'__advantage__',anchor:'trLanded',tr:'Avantaj %',en:'Advantage %',type:'pct',value:v=>v.k.profitPct==null?null:v.k.profitPct/100},
+  {k:'__ekPrevUsd__',anchor:'endeksmatik',tr:'Endeksmatik Eski Fiyat (USD)',en:'Endeksmatik Previous Price (USD)',type:'money',value:v=>v.ek?.previousPrices?.usd},
+  {k:'__ekPrevTl__',anchor:'endeksmatik',tr:'Endeksmatik Eski Fiyat (TL)',en:'Endeksmatik Previous Price (TRY)',type:'tl',value:v=>v.ek?.previousPrices?.try},
+  {k:'__ekIdxUsd__',anchor:'endeksmatik',tr:'Endeks YD %',en:'Overseas Index %',type:'pct',value:v=>v.ek?.indexes?.usd},
+  {k:'__ekTgtUsd__',anchor:'endeksmatik',tr:'Hedef Endeks YD %',en:'Overseas Target Index %',type:'pct',value:v=>v.ek?.indexes?.targetUsd},
+  {k:'__ekIdxTl__',anchor:'endeksmatik',tr:'Endeks TR %',en:'TR Index %',type:'pct',value:v=>v.ek?.indexes?.tl},
+  {k:'__ekTgtTl__',anchor:'endeksmatik',tr:'Hedef Endeks TR %',en:'TR Target Index %',type:'pct',value:v=>v.ek?.indexes?.targetTl},
+  {k:'__ekAdj__',anchor:'endeksmatik',tr:'Endeksmatik Düzeltme %',en:'Endeksmatik Adjustment %',type:'pct',value:v=>{const n=Number(v.ek?.indexes?.adjustmentPct);return Number.isFinite(n)?n/100:null;}},
+  {k:'__ekNewUsd__',anchor:'endeksmatik',tr:'Endeksmatik Yeni Fiyat (USD)',en:'Endeksmatik New Price (USD)',type:'money',value:v=>v.ek?.prices?.usd},
+  {k:'__ekNewTl__',anchor:'endeksmatik',tr:'Endeksmatik Yeni Fiyat (TL)',en:'Endeksmatik New Price (TRY)',type:'tl',value:v=>v.ek?.prices?.try},
+  {k:'__ekPeriod__',anchor:'endeksmatik',tr:'Endeksmatik Dönem',en:'Endeksmatik Period',type:'text',value:v=>{const m=v.ek?.months;if(!m)return '';const f=x=>kolMonthDisplay(x)||x||'—';return `${f(m.previousOrderMonth)} → ${f(m.newOrderMonth)}`;}},
+].map(field=>Object.freeze({...field,group:field.anchor==='endeksmatik'||field.anchor==='ydLanded'||field.anchor==='trLanded'?'Endeksmatik & Avantaj':'Fiyatlandırma'}))); // i18n-ignore — grup anahtarı
+const KOL_PRICE_DETAIL_BY_KEY=Object.freeze(Object.fromEntries(KOL_PRICE_DETAIL_FIELDS.map(field=>[field.k,field])));
+let kolPriceDetailCache=new WeakMap();
+function kolPriceDetailValues(row){
+  if(!row)return null;
+  const hit=kolPriceDetailCache.get(row);if(hit)return hit;
+  const pricing=kolEffectivePricing(row)||{};
+  const offerCount=Object.values(pricing).filter(value=>{const n=kolParseMoneyNum(value);return Number.isFinite(n)&&n>0;}).length;
+  const k=kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)),best=kolBestPricing(row),conf=kolConfirmedDisplay(row);
+  const sourceLabel=k.supp?({confirmed:appLang==='en'?'Confirmed':'Onaylı',best:'Best Price',target:'Target Price'}[k.supp.source]||''):'';
+  let ek=null;try{ek=kolEffectiveEndeksmatikRow(row)?.endeksmatikData?.result||null;}catch(_){ek=null;}
+  const values={k,best,offerCount,delta:conf?kolPriceTargetDelta(row,conf.price):null,suppSource:sourceLabel?`${sourceLabel}${k.supp?.name?` · ${k.supp.name}`:''}`:'',ek};
+  kolPriceDetailCache.set(row,values);
+  return values;
+}
+function kolPriceDetailDescriptor(field){return {kind:'priceDetail',k:field.k,label:appLang==='en'?field.en:field.tr,field};}
+function kolPriceDetailRaw(field,row){
+  const v=kolPriceDetailValues(row);if(!v)return null;
+  let value=null;try{value=field.value(v);}catch(_){value=null;}
+  if(field.type==='text')return value==null?'':String(value);
+  const n=Number(value);return value==null||value===''||!Number.isFinite(n)?null:n;
+}
+function kolPriceDetailText(field,row){
+  const value=kolPriceDetailRaw(field,row);
+  if(field.type==='text')return value||'';
+  if(value==null)return '';
+  if(field.type==='pct')return `${(Math.round(value*1000)/10).toFixed(1).replace('.',',')}%`;
+  if(field.type==='int')return String(Math.round(value));
+  if(field.type==='num')return String(Math.round(value*10000)/10000).replace('.',',');
+  return kolCopyMoney(value);
+}
+const KOL_PRICE_DETAIL_NUMFMT=Object.freeze({money:'"$"#,##0.00',tl:'"₺"#,##0.00',pct:'0.0%',num:'0.00##',int:'0'});
+// Ayrıntı alanlarını çapa sütunlarının hemen sağına yerleştirir (Maliyet görünümü ve dışa aktarımlar).
+function kolExpandPriceDetails(list){
+  const present=new Set(list.map(d=>d.k)),out=[];
+  list.forEach(d=>{
+    out.push(d);
+    const anchors=d.kind==='priceStrip'?(d.folds||[]):[d.k];
+    KOL_PRICE_DETAIL_FIELDS.filter(field=>anchors.includes(field.anchor)&&!present.has(field.k)).forEach(field=>{present.add(field.k);out.push(kolPriceDetailDescriptor(field));});
+  });
+  return out;
+}
+// Dışa aktarım sütunları: ekrandaki fiyat görünümünden bağımsız ayrıntılı liste.
+function kolExportDescriptors(){
+  kolPriceDetailCache=new WeakMap();
+  return kolExpandPriceDetails(kolDisplayDescriptors({detail:true}));
+}
 // Görünür tanımlayıcı listesine fiyat görünümünü uygular. Kaynak sütunların
 // hiçbiri görünür değilse ilgili özet sütunu da çizilmez.
 function kolApplyPriceView(list,mode=kolPriceViewMode()){
@@ -24163,6 +24241,7 @@ function kolColumnGroupFor(key,orderKeys){
   if(key==='__picture__')return 'Model Detayları';
   if(KOL_SYNTHETIC_COL_META[key])return KOL_SYNTHETIC_COL_META[key].group;
   if(KOL_PRICE_VIEW_COLS[key])return KOL_PRICE_VIEW_COLS[key].group;
+  if(KOL_PRICE_DETAIL_BY_KEY[key])return KOL_PRICE_DETAIL_BY_KEY[key].group;
   const def=kolColDefs().find(c=>c.k===key);
   if(def&&def.checklist)return 'Checklist';
   if(def&&def.group)return def.group;
@@ -25262,6 +25341,7 @@ function kolCollectionRawCellText(col,row){
   if(col.kind==='confirmedName'){ const c=kolConfirmedDisplay(row); return c?c.name:''; }
   if(col.kind==='confirmedPrice'){ const c=kolConfirmedDisplay(row); return c?('$'+kolFormatMoneyDisplay(String(c.price))):''; }
   if(col.kind==='priceStrip'||col.kind==='landedSummary')return kolPriceViewCellText(col,row);
+  if(col.kind==='priceDetail')return kolPriceDetailText(col.field,row);
   const c=col.col;if(!c)return '';
   const v=c.exToRetail?kolExToRetailDays(row):kolEffectiveValue(row,c.k);
   if(c.k==='fabric')return kolFabricDisplay(v);
@@ -26097,14 +26177,33 @@ function kolPriceStripCellHtml(row,rc,{showFob=true}={}){
   tipLines.push(en?'Double-click: open the price drawer':'Çift tık: fiyat çekmecesini aç');
   const deltaHtml=m.delta?`<span class="kolBestDelta ${m.delta.meetsTarget?'isAtOrBelowTarget':'isAboveTarget'}">${escapeHtml(m.delta.text)}</span>`:'';
   const who=m.main?`<span class="kolPsMfr${m.confirmed?' isConfirmed':''}">${m.confirmed?'✓ ':''}${escapeHtml(m.main.name)}</span>`:`<span class="kolPsEmpty">${escapeHtml(en?'No quotation':'Teklif yok')}</span>`;
-  const mainNorm=m.main?norm(m.main.name):'';
-  const track=(m.offers.length||m.target!=null)?`<span class="kolPsTrack" aria-hidden="true">${m.target!=null?`<i class="kolPsTarget" style="--at:${m.pos(m.target).toFixed(1)}%"></i>`:''}${m.offers.map(o=>`<i class="kolPsDot${norm(o.name)===mainNorm?(m.confirmed?' isConfirmed':' isBest'):''}" style="--at:${m.pos(o.price).toFixed(1)}%"></i>`).join('')}</span>`:'';
+  const prices=m.offers.map(o=>o.price).sort((a,b)=>a-b),mid=Math.floor(prices.length/2),median=prices.length?(prices.length%2?prices[mid]:(prices[mid-1]+prices[mid])/2):null;
+  const marker=(value,cls)=>value!=null?`<i class="${cls}" style="--at:${m.pos(value).toFixed(1)}%"></i>`:'';
+  const track=(prices.length||m.target!=null)?`<span class="kolPsTrack" aria-hidden="true">${prices.length?`<i class="kolPsBand" style="--start:${m.pos(prices[0]).toFixed(1)}%;--end:${m.pos(prices[prices.length-1]).toFixed(1)}%"></i>`:''}${marker(median,'kolPsMedian')}${marker(m.target,'kolPsTarget')}${marker(m.best?.price,'kolPsDot isBest')}${marker(m.confirmed?.price,'kolPsDot isConfirmed')}</span>`:'';
   const meta=[];
   if(m.offers.length)meta.push(en?`${m.offers.length} quote${m.offers.length===1?'':'s'}`:`${m.offers.length} teklif`);
   if(m.status&&m.status.waiting)meta.push(`<span class="kolPsWaiting">${escapeHtml(en?`${m.status.waiting} waiting`:`${m.status.waiting} bekliyor`)}</span>`);
   if(showFob&&m.fob!=null)meta.push(`FOB ${escapeHtml(money(m.fob))}`);
   const metaHtml=meta.length?`<span class="kolPsMeta">${meta.map(item=>item.startsWith('<span')?item:escapeHtml(item)).join(' · ')}</span>`:'';
   return `<td class="kolPriceStripTd${m.confirmed?' isConfirmed':''}" data-kol-drawer="${row.id}"${rc} title="${escapeHtml(tipLines.join('\n'))}"><div class="kolPs"><div class="kolPsLine">${m.main?`<b class="kolPsPrice">${escapeHtml(money(m.main.price))}</b>`:''}${deltaHtml}${who}</div>${track||metaHtml?`<div class="kolPsLine kolPsSub">${track}${metaHtml}</div>`:''}</div><button type="button" class="kolManualBtn kolPsOpenBtn" data-kol-drawer-open="${row.id}" title="${escapeHtml(en?'Open price drawer':'Fiyat çekmecesini aç')}" aria-label="${escapeHtml(en?'Open price drawer':'Fiyat çekmecesini aç')}">⤢</button></td>`;
+}
+function kolPriceDetailCellHtml(d,row,rc){
+  const field=d.field,en=appLang==='en';
+  if(field.input){
+    const stored=String(kolEffectiveValue(row,field.k)??''),effective=kolPriceDetailText(field,row);
+    return `<td class="editTd kolPriceDetailTd isInput"${rc}><input type="text" inputmode="decimal" class="editCell kolLandedInput kolPriceDetailInput${stored?' isManual':''}" data-id="${row.id}" data-k="${escapeHtml(field.k)}" value="${escapeHtml(stored)}" placeholder="${escapeHtml(effective||'—')}" title="${escapeHtml(stored?(en?'Manual value':'Elle girilen değer'):(en?'Empty = automatic / default':'Boş = otomatik / varsayılan'))}"></td>`;
+  }
+  const raw=kolPriceDetailRaw(field,row),text=kolPriceDetailText(field,row);
+  let tone='';
+  if(field.k==='__advantage__'&&raw!=null)tone=raw>0?' isGood':(raw<0?' isBad':'');
+  if(field.k==='__targetDiff__'&&raw!=null)tone=raw<=0?' isGood':' isBad';
+  return `<td class="${field.type==='text'?'':'num '}kolPriceDetailTd${tone}"${rc}>${text?escapeHtml(text):'<span class="kolPdEmpty">—</span>'}</td>`;
+}
+function kolPlainLandedCellHtml(key,row,rc){
+  const k=kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)),tr=key==='trLanded';
+  const missing=tr?k.trRuleMissing:k.ruleMissing,value=tr?k.trLanded:k.ydLanded;
+  const title=missing?(tr?kolTrLicenseRuleMissingText(row):kolLicenseRuleMissingText(row)):'';
+  return `<td class="num kolPriceDetailTd kolPlainLanded${missing?' kolRuleMissing':''}"${rc}${kolLandedCopyAttrs(value)}${title?` title="${escapeHtml(title)}"`:''}>${missing?'⚠':(value==null?'<span class="kolPdEmpty">—</span>':`$${kolMoney2(value)}`)}</td>`;
 }
 function kolLandedSummaryCellHtml(row,rc){
   const k=kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)),en=appLang==='en';
@@ -26377,7 +26476,9 @@ function kolDisplayDescriptors(opts={}){
   const catalog=kolDescriptorCatalog(opts);
   const order=kolNormalizeDisplayOrder(kolColOrder||kolDefaultDisplayOrder());
   const list=order.map(key=>catalog.get(key)).filter(Boolean);
-  return opts.all||opts.detail?list:kolApplyPriceView(list);
+  if(opts.all||opts.detail)return list;
+  const viewed=kolApplyPriceView(list);
+  return kolPriceViewMode()==='cost'?kolExpandPriceDetails(viewed):viewed;
 }
 function kolDescriptorDefaultWidth(d){
   if(d.kind==='base')return d.col.w;
@@ -26386,6 +26487,7 @@ function kolDescriptorDefaultWidth(d){
   if(d.kind==='confirmedPrice')return 110;
   if(d.kind==='priceStrip')return 236;
   if(d.kind==='landedSummary')return 150;
+  if(d.kind==='priceDetail')return d.field.type==='text'?160:118;
   return 138;
 }
 function kolDescriptorMinWidth(d){
@@ -26402,6 +26504,7 @@ function kolDescriptorWidth(d){
 }
 function kolDescriptorByKey(key){
   if(KOL_PRICE_VIEW_COLS[key])return kolPriceViewDescriptor(key);
+  if(KOL_PRICE_DETAIL_BY_KEY[key]&&!KOL_LANDED_INPUT_COLS[key])return kolPriceDetailDescriptor(KOL_PRICE_DETAIL_BY_KEY[key]);
   return kolDescriptorCatalog().get(key)||{kind:'synthetic',k:key,label:key};
 }
 // Görünüm (gizli/görünür sütun) yalnız ÇİZİMİ belirler. Yazma kuralları, düzenlenebilirlik,
@@ -27236,6 +27339,7 @@ function renderKol(){
   });
   // Açık teklif durumu render başına BİR kez kurulur (Teklif & Onay şeridi + Veri Sağlığı).
   try{kolQuoteIndexCache=window.BL_QUOTATIONS?.collectionQuoteIndex?.()||null;}catch(_){kolQuoteIndexCache=null;}
+  kolPriceDetailCache=new WeakMap();
   syncKolPriceViewToggle();renderKolHealthBar();scheduleKolHealthCount();
   const pictureVisible=!kolPictureHidden;
   const fixedColCount=pictureVisible?2:1;
@@ -27260,6 +27364,10 @@ function renderKol(){
       return `<th data-kcol="${d.k}" data-kol-filter="${key}" class="${isFiltered?'columnFilterActive':''}" title="${escapeHtml(confirmedPriceFilterHint)}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span><button type="button" class="thFilterBtn kolSyntheticFilterBtn${active}" data-kol-filter="${key}" title="${escapeHtml(appLang==='en'?'Filter':'Filtrele')}" aria-label="${escapeHtml(appLang==='en'?`Filter: ${d.label}`:`Filtrele: ${d.label}`)}">▾</button></div></th>`;
     }
     if(d.kind==='confirmedPrice') return `<th data-kcol="${d.k}" title="${escapeHtml(confirmedPriceFilterHint)}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
+    if(d.kind==='priceDetail'){
+      const tip=d.field.input?(appLang==='en'?'Editable input of the landed calculation':'Landed hesabının düzenlenebilir girdisi'):(appLang==='en'?'Calculated detail':'Hesaplanan ayrıntı');
+      return `<th data-kcol="${d.k}" class="kolComputedHeader kolPriceDetailHeader${d.field.input?' isInput':''}" title="${escapeHtml(tip)}"><div class="thInner"><span class="thLabel">${escapeHtml(d.label)}</span></div></th>`;
+    }
     if(d.kind==='priceStrip'||d.kind==='landedSummary'){
       const foldLabels=(d.folds||[]).map(key=>key.startsWith('__')?L(KOL_SYNTHETIC_COL_META[key]?.label||key):kolColumnLabel(kolColDefs().find(c=>c.k===key)||{k:key,label:key})).join(' · ');
       const tip=(appLang==='en'?'Compact price view: ':'Kompakt fiyat görünümü: ')+foldLabels+(appLang==='en'?' · switch to Detail above to see separate columns':' · ayrı sütunlar için yukarıdan Detay görünümüne geç');
@@ -27281,7 +27389,7 @@ function renderKol(){
   thead.classList.add('kolHasGroups');
   thead.innerHTML=kolGroupRowHtml+`<tr class="colRow"><th class="chkTh${kolCheckActive?' columnFilterActive':''}"><input type="checkbox" id="kolSelAll"><button type="button" class="thFilterBtn kolChkFilterBtn${kolCheckActive?' filterActive':''}" title="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}" aria-label="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}">▾</button></th>${pictureVisible?`<th id="kolPicTh" class="kolPicTh" title="${escapeHtml(L('Görsel boyutunu değiştir'))}">${L('Picture')}</th>`:''}${headers}</tr>`;
   thead.querySelectorAll('th[data-kcol]').forEach(th=>{
-    const key=th.dataset.kcol,descriptor=descriptors.find(d=>d.k===key),viewColumn=Boolean(KOL_PRICE_VIEW_COLS[key]);
+    const key=th.dataset.kcol,descriptor=descriptors.find(d=>d.k===key),viewColumn=Boolean(KOL_PRICE_VIEW_COLS[key]||descriptor?.kind==='priceDetail');
     // Görünüm sütunları kalıcı sıraya ait değildir; sürüklenmez, kaynak sütunların yerinde durur.
     if(!viewColumn)attachKolColDrag(th,key);
     attachKolColResize(th,key,table,colgroup);
@@ -27375,6 +27483,9 @@ function renderKol(){
        const summaryEntry=collapsed?groupSummary?.get(d.k):null;
        const summaryAttrs=summaryEntry?` data-kol-group-summary="1" data-kol-summary-display="${escapeHtml(summaryEntry.display)}" data-kol-summary-title="${escapeHtml(summaryEntry.title)}"`:'';
        const rc=` data-r="${ri}" data-c="${di+fixedColCount}" data-key="${escapeHtml(d.k)}"${inherited?' data-kol-inherited="1"':''}${overridden?' data-kol-override="1"':''}${summaryAttrs}`;
+      if(d.kind==='priceDetail'){html+=kolPriceDetailCellHtml(d,r,rc);return;}
+      // Maliyet görünümünde TR/YD girdileri ayrı sütunlardadır; landed hücresi yalnız sonucu gösterir.
+      if(d.kind==='base'&&(d.k==='trLanded'||d.k==='ydLanded')&&kolPriceViewMode()==='cost'){html+=kolPlainLandedCellHtml(d.k,r,rc);return;}
       if(d.kind==='priceStrip'){html+=kolPriceStripCellHtml(r,rc,{showFob:(d.folds||[]).includes('fob')});return;}
       if(d.kind==='landedSummary'){html+=kolLandedSummaryCellHtml(r,rc);return;}
       if(d.kind==='best'){
@@ -27717,6 +27828,7 @@ function kolSpreadsheetColumnMeta(key){
   if(landedInput)return {key,label:kolStyleFieldLabel(landedInput),type:key==='trPrice'?'money':'number',access:'editable',editable:true,formula:'',col:landedInput};
   const d=kolFieldDescriptorByKey(key);if(!d)return {key,label:key,type:'text',access:'system',editable:false,formula:''};
   if(d.kind==='priceStrip'||d.kind==='landedSummary')return {key,label:d.label,type:'text',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
+  if(d.kind==='priceDetail')return {key,label:d.label,type:d.field.type==='text'?'text':'number',access:'derived',editable:false,formula:'Calculated from canonical pricing, landed and Endeksmatik results'};
   if(d.kind!=='base')return {key,label:d.label,type:d.kind==='confirmedName'?'text':'money',access:'derived',editable:false,formula:kolSpreadsheetFormulaInfo(key)};
   const c=d.col;
   // Checklist hücresi yalnız durum menüsünden yazılır; yapıştırma/yazma ile serbest metin girmez.
@@ -27728,23 +27840,29 @@ function kolSpreadsheetColumnMeta(key){
   const inheritance=kolFieldMetadata(c.k).inheritance;
   return {key,label:d.label,type,access,editable:!calculated,calculated,inheritance,overrideable:!calculated&&inheritance==='model',formula:calculated?kolSpreadsheetFormulaInfo(key):'',options:c.select||null,col:c};
 }
+function kolCopyMoney(value){const n=Number(value);return value==null||value===''||!Number.isFinite(n)?'':n.toFixed(2).replace('.',',');}
 function kolSpreadsheetRawValue(row,key){
   if(!row)return '';
+  if(KOL_LANDED_INPUT_COLS[key])return String(kolEffectiveValue(row,key)??''); // Maliyet görünümündeki TR/YD girdi sütunları
   if(key==='__picture__')return row.img||'';
   if(String(key||'').startsWith('pricing:'))return kolEffectivePricing(row)[String(key).slice(8)]??'';
   const d=kolDescriptorByKey(key);if(!d)return '';
-  if(d.kind==='best')return kolBestPricing(row)?.price??'';
+  // Hesaplanan para değerleri hücreye yazılan fiyatlarla aynı biçimde (9,20)
+  // kopyalanır; ham kayan nokta (9.801300000000001) panoya taşınmaz.
+  if(d.kind==='best')return kolCopyMoney(kolBestPricing(row)?.price);
   if(d.kind==='confirmedName')return kolConfirmedDisplay(row)?.name??'';
-  if(d.kind==='confirmedPrice')return kolConfirmedDisplay(row)?.price??'';
+  if(d.kind==='confirmedPrice')return kolCopyMoney(kolConfirmedDisplay(row)?.price);
   if(d.kind==='priceStrip'||d.kind==='landedSummary')return kolPriceViewCellText(d,row);
+  if(d.kind==='priceDetail')return kolPriceDetailText(d.field,row);
   const c=d.col;if(!c)return '';if(c.exToRetail)return kolExToRetailDays(row);
   if(c.checklist)return kolChecklistDisplay(kolEffectiveValue(row,c.k),row);
   if(c.endeksmatik)return endeksmatikExcelText(kolEffectiveEndeksmatikRow(row));
-  if(c.ydLanded)return kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).ydLanded??'';
-  if(c.trLanded)return kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).trLanded??'';
+  if(c.ydLanded)return kolCopyMoney(kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).ydLanded);
+  if(c.trLanded)return kolCopyMoney(kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)).trLanded);
   const groups=window.BLCollectionModelGroups;
   return groups?.effectiveValue ? (groups.effectiveValue(row,c.k,kolRows)??'') : (row[c.k]??'');
 }
+const KOL_TR_LANDED_COPY_PREFIX='BL-TR-LANDED:'; // i18n-ignore — ızgara içi ham kopya işareti
 function kolSpreadsheetValidateValue(rowId,key,value){
   if(!kolWorkspaceCanEdit)return {ok:false,reason:'readonly'};
   const row=kolRows.find(r=>String(r.id)===String(rowId));
@@ -27782,6 +27900,19 @@ function kolSpreadsheetValidateValue(rowId,key,value){
     if(!source)return {ok:false,reason:'invalid'};
     return {ok:true,value:{__endeksmatikSourceId:source.id}};
   }
+  /* v2026-10-23 — Izgaranın KENDİ TR Landed kopyası (ve aşağı doldurma)
+     görünen landed USD değerini değil, kaynak satırı taşır: hedefe kaynağın
+     TR girdileri (TL fiyatı, kur, çarpan) kopyalanır. Eskiden landed USD
+     değeri TL fiyatına yazılıyor, landed hesaplanamadığında boş kopya TL
+     fiyatlarını siliyordu. Dışarıdan gelen tek değer v7.81 kararıyla trPrice'a
+     yazılmaya devam eder. */
+  if(key==='trLanded'&&(String(value??'').startsWith(KOL_TR_LANDED_COPY_PREFIX)||value&&typeof value==='object'&&value.__trLandedSourceId!=null)){
+    if(['trPrice','trFx','trLandedMult'].some(inputKey=>kolCellLinkedToModel(row,inputKey)))return {ok:false,reason:'linked'};
+    const sourceId=value&&typeof value==='object'?String(value.__trLandedSourceId):String(value).slice(KOL_TR_LANDED_COPY_PREFIX.length);
+    const source=kolRows.find(r=>String(r.id)===sourceId);
+    if(!source)return {ok:false,reason:'invalid'};
+    return {ok:true,value:{__trLandedSourceId:source.id}};
+  }
   /* v7.81 — TR Landed hücresi kendisi hesaplanan bir görüntüleme; içindeki
      tek zorunlu girdi TL fiyatıdır (trPrice), diğer ikisi (çarpan, kur)
      opsiyonel/varsayılanlı. Tek değerli yapıştırma trPrice'a yazılır. */
@@ -27796,6 +27927,7 @@ function kolSpreadsheetValidateValue(rowId,key,value){
   if(c?.inStorePeriod==='week'&&raw){const schedule=kolScheduleFromWeekCode(raw);if(!schedule)return {ok:false,reason:'invalid-period'};value=schedule.inStoreWeek;}
   if(c?.date&&raw&&!parseKeyboardDateToISO(raw))return {ok:false,reason:'invalid-date'};
   if(c?.qty&&raw&&!Number.isFinite(kolParseQuantityNum(raw)))return {ok:false,reason:'invalid-number'};
+  if(meta.type==='number'&&raw&&!Number.isFinite(kolParseMoneyNum(raw)))return {ok:false,reason:'invalid-number'};
   /* v7.81 — trPrice'ın col nesnesi (KOL_STYLE_EXTRA_FIELDS) money:true
      DEĞİL moneyLocal:true taşıyor; c?.money burada hep false kalır ve
      TR Landed'e yapıştırılan sayısal olmayan metin (örn. 'abc')
@@ -27995,6 +28127,9 @@ function kolSpreadsheetBatchEdit(operations,summary={}){
       periodByRow.set(rowId,info);
     }
   });
+  // Kaynak da hedef aralıkta olabilir: bütün TR girdilerini yazımdan önce al.
+  const landedSources=new Map();
+  validated.forEach(op=>{const id=op.value?.__trLandedSourceId;if(op.key!=='trLanded'||id==null||landedSources.has(String(id)))return;const source=kolRows.find(r=>String(r.id)===String(id));if(source)landedSources.set(String(id),Object.fromEntries(['trPrice','trFx','trLandedMult'].map(key=>[key,String(kolEffectiveValue(source,key)??'')])));});
   const before=kolSnapshot(),previousUndo=kolUndoStack.slice(),previousUndoSummaries=kolUndoSummaryStack.slice(),previousRedo=kolRedoStack.slice(),previousRedoSummaries=kolRedoSummaryStack.slice();
   kolPushUndo();
   const quoteSync=[];let changed=0,dependentChanged=0;
@@ -28004,6 +28139,19 @@ function kolSpreadsheetBatchEdit(operations,summary={}){
         const row=kolRows.find(r=>String(r.id)===String(op.rowId));
         const source=op.value&&op.value.__pictureSourceId!=null?kolRows.find(r=>String(r.id)===String(op.value.__pictureSourceId)):null;
         if(row&&source){row.img=source.img||'';row.imgRef=source.imgRef||'';changed++;}
+        continue;
+      }
+      if(op.key==='trLanded'&&op.value&&op.value.__trLandedSourceId!=null){
+        const source=kolRows.find(r=>String(r.id)===String(op.value.__trLandedSourceId));
+        if(!source)continue;
+        let wrote=false;
+        ['trPrice','trFx','trLandedMult'].forEach(inputKey=>{
+          const next=landedSources.get(String(source.id))[inputKey];
+          const row=kolRows.find(r=>String(r.id)===String(op.rowId));
+          if(!row||String(kolEffectiveValue(row,inputKey)??'')===next)return;
+          if(kolApplyCollectionCellChange({rowId:op.rowId,key:inputKey,value:next,source:mutationSource},{rerender:false,pushUndo:false,save:false,syncQuotations:false,deferDependencies:true}))wrote=true;
+        });
+        if(wrote)changed++;
         continue;
       }
       if(op.key==='endeksmatik'){
@@ -28076,7 +28224,7 @@ function kolCollectionPlmUrl(row){
 }
 window.BLCollectionSpreadsheetBridge={
   canEdit:()=>Boolean(kolWorkspaceCanEdit),rows:()=>kolRows,filteredRows:()=>kolPresentationRows(filteredKol()),descriptors:()=>kolDisplayDescriptors(),descriptorByKey:kolDescriptorByKey,
-  selectedCount:()=>kolValidSelectedRows().length,columnMeta:kolSpreadsheetColumnMeta,rawValue:kolSpreadsheetRawValue,validateValue:kolSpreadsheetValidateValue,batchEdit:kolSpreadsheetBatchEdit,
+  selectedCount:()=>kolValidSelectedRows().length,columnMeta:kolSpreadsheetColumnMeta,rawValue:kolSpreadsheetRawValue,landedCopyToken:rowId=>`${KOL_TR_LANDED_COPY_PREFIX}${rowId}`,validateValue:kolSpreadsheetValidateValue,batchEdit:kolSpreadsheetBatchEdit,
   parseNumber:kolParseMoneyNum,enterDateEdit:enterKolDateEdit,render:renderKol,saveColumnState:saveKolColState,setColumnWidth:kolSpreadsheetSetColumnWidth,autoFitColumn:kolSpreadsheetAutoFitColumn,modelGroupActions:kolModelGroupActions,
   autoFitAll:()=>{kolDisplayDescriptors().forEach(d=>kolSpreadsheetAutoFitColumn(d.k));renderKol();},resetWidths:()=>{kolColWidths={};saveKolColState();renderKol();},
   hideColumn:key=>{if(key==='__picture__')kolPictureHidden=true;else kolHiddenCols.add(key);saveKolColState();renderKol();},freezeToKey:kolSpreadsheetFreezeToKey,unfreeze:()=>{setFreeze('koleksiyon',0);applyFreeze('kolTable','koleksiyon',true);},
@@ -34792,14 +34940,44 @@ function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
   const close=()=>{ kolRevokeTransientUrls(modal._transientUrls||[]); modal._transientUrls=[]; modal.remove(); }; modal.querySelectorAll('[data-close-pricing-result]').forEach(b=>b.addEventListener('click',close)); modal.querySelector('[data-open-pricing-quotations]')?.addEventListener('click',()=>{close();if(typeof switchTab==='function')switchTab('quotations');}); modal.addEventListener('click',e=>{if(e.target===modal) close();});
 }
 
+// Teklifler sayfası tüm üreticileri kapsar, görünümdeki katlama dışa aktarımı etkilemez.
+function kolAddQuotationWorksheet(wb,rows){
+  const en=appLang==='en',sheet=wb.addWorksheet(en?'Quotations':'Teklifler',{views:[{state:'frozen',xSplit:3,ySplit:1}]});
+  const data=rows.map(row=>({row,pricing:kolEffectivePricing(row)||{},best:kolBestPricing(row),approved:kolConfirmedPricing(row)}));
+  const manufacturers=new Map();
+  kolManufacturers.forEach(m=>manufacturers.set(m.name,{name:m.name,coverage:0,wins:0}));
+  data.forEach(item=>Object.keys(item.pricing).forEach(name=>{if(!manufacturers.has(name))manufacturers.set(name,{name,coverage:0,wins:0});}));
+  data.forEach(item=>manufacturers.forEach(m=>{const n=kolParseMoneyNum(item.pricing[m.name]);if(Number.isFinite(n)&&n>0)m.coverage++;if(item.best&&norm(item.best.name)===norm(m.name))m.wins++;}));
+  const suppliers=[...manufacturers.values()].sort((a,b)=>b.coverage-a.coverage||b.wins-a.wins||a.name.localeCompare(b.name,'tr'));
+  const headers=en?['Model','PLM ID','Colour','Target','Best','Best Manufacturer','Approved Manufacturer','Approved Price']:['Model','PLM ID','Renk','Hedef','En iyi','En iyi üretici','Onaylı üretici','Onaylı fiyat'];
+  sheet.columns=[...headers,...suppliers.map(m=>m.name)].map((header,i)=>({header,width:i===0?24:18}));
+  sheet.getRow(1).eachCell(cell=>{cell.font={bold:true};cell.alignment={vertical:'middle',wrapText:true};});
+  data.forEach(({row,pricing,best,approved},i)=>{
+    const target=kolParseMoneyNum(kolEffectiveValue(row,'targetPrice'));
+    const values=[kolEffectiveValue(row,'modelKod'),String(kolEffectiveValue(row,'plmId')||''),kolEffectiveValue(row,'colour')||kolEffectiveValue(row,'colourCode'),Number.isFinite(target)?target:null,best?.price??null,best?.name||'',approved?.name||'',approved?.price??null];
+    suppliers.forEach(m=>{const n=kolParseMoneyNum(pricing[m.name]);values.push(Number.isFinite(n)&&n>0?n:null);});
+    const excelRow=sheet.getRow(i+2);
+    values.forEach((value,ci)=>{
+      const cell=excelRow.getCell(ci+1);cell.value=typeof value==='string'?kolExportSingleLineText(value):value;
+      if([3,4,7].includes(ci)||ci>=8){cell.numFmt=KOL_PRICE_DETAIL_NUMFMT.money;cell.alignment={horizontal:'right'};}
+      if(ci===1)cell.numFmt='@';
+      if(ci>=8){const name=suppliers[ci-8].name;
+        if(best&&norm(name)===norm(best.name))cell.fill={type:'pattern',pattern:'solid',fgColor:{argb:'FFE4F3EB'}};
+        if(approved&&norm(name)===norm(approved.name))cell.font={bold:true};
+      }
+    });
+  });
+  sheet.autoFilter={from:{row:1,column:1},to:{row:data.length+1,column:headers.length+suppliers.length}};
+  return sheet;
+}
 async function kolExportWithImages(rows,fileBase){
   if(window.BLPerf) await window.BLPerf.ensureLibrary('exceljs');
   if(typeof ExcelJS==='undefined'){showToast('Görsel gömme kütüphanesi yüklenemedi — internet/dosya erişimini kontrol et.');return null;}
   kolSyncRulePricing({save:true});
-  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Koleksiyon'),descriptors=kolDisplayDescriptors({detail:true});
+  const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet(appLang==='en'?'Collection':'Koleksiyon'),descriptors=kolExportDescriptors();
   const statusValidationFormula=kolEnsureExcelStatusList(wb);
   const sourceRows=(rows||[]).map(kolCollectionProjectionSource);
-  const headers=['Görsel',...descriptors.map(d=>d.label)];
+  const headers=[appLang==='en'?'Picture':'Görsel',...descriptors.map(d=>d.label)];
   ws.columns=headers.map((h,i)=>({header:h,width:i===0?kolExcelImageMetrics().colChars:Math.max(11,Math.round(kolDescriptorWidth(descriptors[i-1])/7))}));
   const preparedImages=await Promise.all((rows||[]).map(record=>kolPrepareExcelImage(kolCollectionProjectionSource(record)?.img)));
   const headerRow=ws.getRow(1);headerRow.height=22;
@@ -34843,6 +35021,13 @@ async function kolExportWithImages(rows,fileBase){
         else if(v!==''&&v!=null){cell.value=kolExportSingleLineText(v);cell.font={italic:true,size:10};cell.alignment={vertical:'middle'};}
         return;
       }
+      if(d.kind==='priceDetail'){
+        const value=kolPriceDetailRaw(d.field,r),numeric=d.field.type!=='text';
+        cell.value=numeric?value:kolExportSingleLineText(value);
+        if(numeric)cell.numFmt=KOL_PRICE_DETAIL_NUMFMT[d.field.type];
+        cell.alignment={horizontal:numeric?'right':'left',vertical:'middle'};
+        return;
+      }
       const c=d.col,raw=c.exToRetail?kolExToRetailDays(r):kolEffectiveValue(r,c.k),schema=columnSchemaFor(c,sourceRows);
       if(c.k==='fabric'){cell.value=kolExportSingleLineText(kolFabricDisplay(raw));cell.alignment={vertical:'middle',wrapText:true};return;}
       if(c.endeksmatik){
@@ -34876,6 +35061,7 @@ async function kolExportWithImages(rows,fileBase){
     // Diğer workbook/export yolları mevcut one-cell/aspect-lock davranışını korur.
     kolAddCellBoundExcelImage(ws,wb,preparedImages[ri],rowNum,1,null,{moveAndSizeWithCells:true});
   }
+  kolAddQuotationWorksheet(wb,sourceRows);
   const statusDescriptorIndex=descriptors.findIndex(d=>d.kind==='base'&&(d.col?.status||d.col?.k==='durum'));
   if(statusValidationFormula&&statusDescriptorIndex>=0){
     const statusColumn=statusDescriptorIndex+2,validationEnd=Math.max((rows||[]).length+250,500);
@@ -37933,6 +38119,7 @@ function applyLanguage(lang){
     else if(tab==='priceanalysis' && typeof window.renderPriceSupplierAnalysisLanguage==='function') window.renderPriceSupplierAnalysisLanguage();
     else if(tab==='manufacturers' && typeof window.renderManufacturersLanguage==='function') window.renderManufacturersLanguage();
     else if(tab==='licensecards') window.BLLicenseCardsPage?.renderLanguage?.();
+    else if(tab==='quotations'||tab==='pricinghistory') window.BLPricingDesk?.renderLanguage?.();
     if(typeof renderKolScopeFilters==='function' && document.getElementById('kolScopeFilters')) renderKolScopeFilters();
   }catch(e){}
   // Ufuk rozeti sunucu verisinden değil, o anki dilden metin üretir; dil

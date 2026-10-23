@@ -48,10 +48,11 @@ test('kolSpreadsheetRawValue: Picture artık boş dönmüyor — img URL kopyala
 
 test('kolSpreadsheetRawValue: Best/Conf/Endeksmatik/TR Landed dalları duruyor (regresyon kilidi)', () => {
   const start = APP.indexOf('function kolSpreadsheetRawValue(row,key){');
-  const block = APP.slice(start, start + 800);
-  assert.match(block, /d\.kind==='best'.*kolBestPricing\(row\)/);
+  const block = APP.slice(start, APP.indexOf('const KOL_TR_LANDED_COPY_PREFIX=', start));
+  assert.match(block, /d\.kind==='best'.*kolCopyMoney\(kolBestPricing\(row\)\?\.price\)/);
   assert.match(block, /d\.kind==='confirmedName'.*kolConfirmedDisplay\(row\)/);
-  assert.match(block, /d\.kind==='confirmedPrice'.*kolConfirmedDisplay\(row\)/);
+  assert.match(block, /d\.kind==='confirmedPrice'.*kolCopyMoney\(kolConfirmedDisplay\(row\)\?\.price\)/);
+  assert.match(block, /c\.trLanded.*kolCopyMoney\(kolLandedCalc\(kolGroupSummaryEffectiveLandedRow\(row\)\)\.trLanded\)/);
   assert.match(block, /c\.endeksmatik.*endeksmatikExcelText\(kolEffectiveEndeksmatikRow\(row\)\)/);
 });
 

@@ -60,8 +60,9 @@ test('Maliyet teklifleri şeritte toplar, FOB ve landed sütunlarını ayrı bı
 
 test('görünüm kalıcı sütun durumunu değiştirmez; Excel ayrıntılı sütunlarla aktarır', () => {
   const descriptors = between(APP, 'function kolDisplayDescriptors(', 'function kolDescriptorDefaultWidth(');
-  assert.match(descriptors, /opts\.all\|\|opts\.detail\?list:kolApplyPriceView\(list\)/);
-  assert.match(APP, /ws=wb\.addWorksheet\('Koleksiyon'\),descriptors=kolDisplayDescriptors\(\{detail:true\}\)/);
+  assert.match(descriptors, /if\(opts\.all\|\|opts\.detail\)return list;/);
+  assert.match(descriptors, /kolPriceViewMode\(\)==='cost'\?kolExpandPriceDetails\(viewed\):viewed/);
+  assert.match(APP, /descriptors=kolExportDescriptors\(\)/);
   const save = between(APP, 'function saveKolColState(', 'function loadKolColState(');
   assert.doesNotMatch(save, /priceView|__priceStrip__/, 'fiyat görünümü sütun durumuna yazılmaz');
   assert.match(HTML, /data-kol-price-view="compact"[^>]*aria-pressed="true"/);
