@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const zlib = require('zlib');
+const crypto = require('crypto');
 const { SERVER_DATA_ROOT, atomicWriteBuffer } = require('../user-data');
 const { createDocumentApi, toDocumentRecord } = require('./delta-store');
 const model = require('./endeksmatik-model');
@@ -13,10 +14,9 @@ const DEFAULT_FILE = path.join(__dirname, '..', 'templates', 'endeksmatik-defaul
 const COLLECTION = 'endeksmatik';
 const DOCUMENT_ID = 'snapshot';
 const COMPONENTS = Object.freeze(['fabric', 'cmt', 'accessory', 'extra']);
-/* Çoklu Endeksmatik setleri (v7.0.172). Her yüklenen USD-model çalışma kitabı
-   ayrı bir set olur (ülke/bölge, sezon, kaynak dosya, sürüm hash'i); kullanıcı
-   varsayılan seti seçer, hesapta istenirse başka set seçer. Eski TL şablonu
-   (DOCUMENT_ID='snapshot') 'legacy' seti olarak aynen yaşamaya devam eder. */
+/* Her yeni USD veya TL çalışma kitabı bağımsız, dosya içeriğiyle kimliklenen
+   bir set olur. Orijinal TL snapshot (DOCUMENT_ID='snapshot') 'legacy' altında
+   korunur; yeni TL yüklemeleri artık onun üzerine yazılmaz. */
 const LEGACY_SET_ID = 'legacy';
 const SET_PREFIX = 'set:';
 const ACTIVE_DOCUMENT_ID = 'sets-active';
@@ -335,7 +335,7 @@ async function seedMissing(deltaStore){
   const records={};
   if(fs.existsSync(PERSISTED_FILE)){const snapshot=readSnapshotFile(PERSISTED_FILE); buildRuntime(snapshot); records[DOCUMENT_ID]=toDocumentRecord(toSharedDocument(snapshot));}
   // Yerel diskteki çoklu setler de (delta öncesi yüklenmişse) ortak günlüğe taşınır.
-  try{fs.readdirSync(SETS_DIR).forEach(name=>{const m=/^(em-[0-9a-f]+)\.json\.gz$/.exec(name);if(!m)return;try{const set=readSnapshotFile(setFile(m[1]));model.buildIndex(set);records[setDocumentId(m[1])]=toDocumentRecord({set,label:set.label||'',deleted:false,deletedAt:null});}catch(_){}});}catch(_){}
+  try{fs.readdirSync(SETS_DIR).forEach(name=>{const m=/^(em-[0-9a-f]+)\.json\.gz$/.exec(name);if(!m)return;try{const set=readSnapshotFile(setFile(m[1]));buildSetRuntime(set);records[setDocumentId(m[1])]=toDocumentRecord({set,label:set.label||'',deleted:false,deletedAt:null});}catch(_){}});}catch(_){}
   try{if(fs.existsSync(ACTIVE_FILE))records[ACTIVE_DOCUMENT_ID]=toDocumentRecord(JSON.parse(fs.readFileSync(ACTIVE_FILE,'utf8')));}catch(_){}
   if(!Object.keys(records).length)return {seeded:0,ids:[]};
   return deltaStore.seedMissing(COLLECTION,records);
@@ -346,6 +346,24 @@ async function importLegacyWorkbookBuffer(buffer,sourceFile,options={}){return s
 function setDocumentId(id){ return `${SET_PREFIX}${id}`; }
 function safeSetId(id){ const v=String(id||'').trim(); return /^em-[0-9a-f]{8,64}$/.test(v)?v:''; }
 function setFile(id){ return path.join(SETS_DIR,`${id}.json.gz`); }
+// TL-format workbooks have the old 5-dimension record layout rather than the
+// USD model's level-prefixed rows. Never attempt to index them as USD sets.
+function buildSetRuntime(snapshot){
+  return snapshot&&snapshot.model==='legacy-tl'?buildRuntime(snapshot):model.buildIndex(snapshot);
+}
+function publicSetMeta(snapshot){
+  if(snapshot.model!=='legacy-tl')return model.publicMeta(snapshot);
+  const status=publicStatusForSnapshot(snapshot);
+  return {...status,id:snapshot.id,model:'legacy-tl',version:snapshot.hash,
+    label:snapshot.label||'',region:snapshot.region||'',currency:'TRY',
+    uploadedAt:snapshot.uploadedAt||'',uploadedBy:snapshot.uploadedBy||'',
+    validation:null};
+}
+function versionedLegacySet(snapshot,buffer){
+  const hash=crypto.createHash('sha256').update(buffer).digest('hex');
+  return {...snapshot,model:'legacy-tl',id:`em-${hash.slice(0,16)}`,hash,
+    label:'',region:'',currency:'TRY',uploadedAt:new Date().toISOString()};
+}
 function readSetDocument(id){
   const shared=documents.read(setDocumentId(id));
   if(shared)return shared.deleted||!shared.set?{deleted:true,stamp:`delta-del:${shared.deletedAt||''}`}:{set:shared.set,stamp:`delta:${shared.set.generatedAt||''}:${shared.label||''}`,label:shared.label};
@@ -366,7 +384,7 @@ function loadSet(id){
   const doc=readSetDocument(safe);if(!doc||doc.deleted){setCache.delete(safe);return null;}
   const hit=setCache.get(safe);if(hit&&hit.stamp===doc.stamp)return hit;
   const snapshot=doc.label!==undefined?{...doc.set,label:doc.label}:doc.set;
-  const entry={stamp:doc.stamp,snapshot,runtime:model.buildIndex(snapshot)};setCache.set(safe,entry);return entry;
+  const entry={stamp:doc.stamp,snapshot,runtime:buildSetRuntime(snapshot)};setCache.set(safe,entry);return entry;
 }
 function readActiveSelection(){
   const shared=documents.read(ACTIVE_DOCUMENT_ID);
@@ -380,7 +398,7 @@ function legacyMeta(){
   }catch(_){return null;}
 }
 function listSets(){
-  const sets=setIds().map(id=>{try{const e=loadSet(id);return e?model.publicMeta(e.snapshot):null;}catch(_){return null;}}).filter(Boolean)
+  const sets=setIds().map(id=>{try{const e=loadSet(id);return e?publicSetMeta(e.snapshot):null;}catch(_){return null;}}).filter(Boolean)
     .sort((a,b)=>String(b.uploadedAt).localeCompare(String(a.uploadedAt)));
   const legacy=legacyMeta();
   return legacy?[...sets,legacy]:sets;
@@ -415,11 +433,18 @@ function calculate(input,runtime){
   if(runtime)return calculateLegacy(input,runtime);
   const entry=resolveSetForCalculation(input&&input.setId);
   if(!entry){const out=calculateLegacy(input);out.model='legacy-tl';out.source={...out.source,setId:LEGACY_SET_ID,setVersion:legacyMeta()?.version||'',model:'legacy-tl'};return out;}
+  if(entry.snapshot.model==='legacy-tl'){
+    const out=calculateLegacy(input||{},entry.runtime);
+    out.model='legacy-tl';
+    out.source={...out.source,setId:entry.snapshot.id,setVersion:entry.snapshot.hash,model:'legacy-tl'};
+    return out;
+  }
   return model.calculate(entry.snapshot,input||{},entry.runtime);
 }
 function lookup(input){
   const entry=resolveSetForCalculation(input&&input.setId);
   if(!entry)return {ok:true,setId:LEGACY_SET_ID,levels:[],supplyGroups:[]};
+  if(entry.snapshot.model==='legacy-tl')return {ok:true,setId:entry.snapshot.id,levels:[],supplyGroups:[]};
   return model.lookup(entry.snapshot,input||{},entry.runtime);
 }
 async function writeActiveSelection(id,actor='',options={}){
@@ -436,7 +461,7 @@ async function setActiveSet(id,actor='',options={}){
 }
 async function saveSet(snapshot,options={}){
   const {activate=true,actor=''}=options;
-  model.buildIndex(snapshot); // doğrulanmadan yazılmaz
+  buildSetRuntime(snapshot); // USD ve TL modelleri doğrulanmadan yazılmaz
   const id=safeSetId(snapshot.id);if(!id)throw Object.assign(new Error('Endeksmatik set kimliği geçersiz.'),{code:'SET_INVALID',statusCode:500});
   if(actor)snapshot.uploadedBy=String(actor);
   const active=options.activeSelectionId||activate?activeSelectionValue(options.activeSelectionId||id,options.selectionActor||actor):null;
@@ -445,7 +470,7 @@ async function saveSet(snapshot,options={}){
   if(documents.writesLegacy){fs.mkdirSync(SETS_DIR,{recursive:true});atomicWriteBuffer(setFile(id),zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9}));}
   setCache.delete(id);
   if(active)writeActiveLegacy(active);
-  return model.publicMeta(snapshot);
+  return publicSetMeta(snapshot);
 }
 async function renameSet(id,label,options={}){
   const safe=safeSetId(id),entry=safe&&loadSet(safe);
@@ -457,7 +482,7 @@ async function renameSet(id,label,options={}){
   if(documents.attached&&!mirrored.ok)throw Object.assign(new Error('Endeksmatik set adı ortak senkron günlüğüne yazılamadı.'),{code:'SHARED_SYNC_WRITE_FAILED',statusCode:503});
   if(documents.writesLegacy)atomicWriteBuffer(setFile(safe),zlib.gzipSync(Buffer.from(JSON.stringify(snapshot),'utf8'),{level:9}));
   setCache.delete(safe);
-  return model.publicMeta(snapshot);
+  return publicSetMeta(snapshot);
 }
 async function deleteSet(id,options={}){
   const safe=safeSetId(id);
@@ -477,12 +502,12 @@ async function deleteSet(id,options={}){
 function parseImportWorkbook(buffer,sourceFile){
   let names=[];
   try{names=getXLSX().read(buffer,{type:'buffer',bookSheets:true}).SheetNames||[];}catch(err){throw Object.assign(new Error('Excel dosyası okunamadı.'),{code:'WORKBOOK_INVALID',statusCode:422});}
-  if(!model.looksLikeModel(names))return {snapshot:parseWorkbookBuffer(buffer,sourceFile),model:'legacy-tl',setId:LEGACY_SET_ID};
+  if(!model.looksLikeModel(names)){const snapshot=versionedLegacySet(parseWorkbookBuffer(buffer,sourceFile),buffer);return {snapshot,model:'legacy-tl',setId:snapshot.id};}
   let snapshot;
   try{snapshot=model.parseWorkbookBuffer(buffer,sourceFile);}
   catch(err){
     // Eski TL şablonu da aynı sayfa adlarını taşır; kitap eski şablonsa onu kabul et.
-    if(err&&err.code==='MODEL_SIGNATURE_MISMATCH'){try{return {snapshot:parseWorkbookBuffer(buffer,sourceFile),model:'legacy-tl',setId:LEGACY_SET_ID};}catch(_){}}
+    if(err&&err.code==='MODEL_SIGNATURE_MISMATCH'){try{const legacy=versionedLegacySet(parseWorkbookBuffer(buffer,sourceFile),buffer);return {snapshot:legacy,model:'legacy-tl',setId:legacy.id};}catch(_){}}
     throw err;
   }
   return {snapshot,model:snapshot.model,setId:snapshot.id};
@@ -490,9 +515,17 @@ function parseImportWorkbook(buffer,sourceFile){
 async function importWorkbookBuffer(buffer,sourceFile,options={}){
   const {label='',actor=''}=options;
   const parsed=parseImportWorkbook(buffer,sourceFile);
-  if(parsed.model==='legacy-tl')return {...await saveSnapshot(parsed.snapshot,options),model:'legacy-tl',setId:LEGACY_SET_ID};
-  const snapshot=parsed.snapshot;if(label)snapshot.label=normalizeLabel(label);
-  const meta=await saveSet(snapshot,{...options,activate:true,actor});return {...publicStatus(),uploaded:meta};
+  const snapshot=parsed.snapshot;
+  if(label)snapshot.label=normalizeLabel(label);
+  // Idempotent upload: the same workbook content selects its existing set
+  // without changing its original upload metadata or user-assigned label.
+  const existing=loadSet(snapshot.id);
+  if(existing){
+    await setActiveSet(snapshot.id,actor,options);
+    return {...publicStatus(),uploaded:publicSetMeta(existing.snapshot),alreadyPresent:true};
+  }
+  const meta=await saveSet(snapshot,{...options,activate:true,actor});
+  return {...publicStatus(),uploaded:meta,alreadyPresent:false};
 }
 
 function sourceFingerprint(){try{loadSnapshot();}catch(_){}return require('./operation-utils').hash(JSON.stringify({active:readActiveSelection(),sets:listSets()}));}
