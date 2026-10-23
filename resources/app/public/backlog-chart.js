@@ -694,6 +694,7 @@
     hideTimelineTip();
     const total=model.categories.length,range=ensureChartView(model),visible=sliceModel(model,range),span=range.end-range.start,timelineMode=model.state.chartType==='bar';
     const selected=filterSelection(model),available=model.availableSeriesNames||[],first=visible.categories[0],last=visible.categories[visible.categories.length-1];
+    const chartFilterOrder=available.map((name,index)=>({name,index})).sort((a,b)=>Number(selected.includes(b.name))-Number(selected.includes(a.name)));
     const rangeText=(first&&last?first.label+(first.key===last.key?'':' – '+last.label):'')+' · '+span+'/'+total;
     const fullTodayPos=todayPosition(model.categories,todayKeyFor(model.state.granularity,new Date()));
     const filterButton=available.length>1?'<button type="button" class="tbtn" data-backlog-chart-filter aria-expanded="false">'+esc(tr('Filtre','Filter')+' '+selected.length+'/'+available.length)+'</button>':'';
@@ -703,7 +704,7 @@
       const key=item[0],label=item[1],active=rangesEqual(range,rangeForPreset(model,key,new Date()));
       return '<button type="button" class="backlogChartRangeBtn'+(active?' is-active':'')+'" data-backlog-chart-range="'+key+'">'+esc(label)+'</button>';
     }).join('');
-    const filterPanel=available.length>1?'<div class="backlogChartFilterPanel" data-backlog-chart-filter-panel hidden><div class="backlogChartFilterHead"><input type="search" data-backlog-chart-filter-search placeholder="'+esc(tr('Seri ara…','Search series…'))+'" aria-label="'+esc(tr('Grafik serilerinde ara','Search chart series'))+'"><div><button type="button" class="tbtn" data-backlog-chart-filter-all>'+esc(tr('Tümünü göster','Show all'))+'</button><button type="button" class="tbtn primary" data-backlog-chart-filter-apply>'+esc(tr('Uygula','Apply'))+'</button></div></div><div class="backlogChartFilterList">'+available.map((name,index)=>'<label data-backlog-chart-filter-item><input type="checkbox" data-backlog-chart-series-index="'+index+'"'+(selected.includes(name)?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+'</div></div>':'';
+    const filterPanel=available.length>1?'<div class="backlogChartFilterPanel" data-backlog-chart-filter-panel hidden><div class="backlogChartFilterHead"><input type="search" data-backlog-chart-filter-search placeholder="'+esc(tr('Seri ara…','Search series…'))+'" aria-label="'+esc(tr('Grafik serilerinde ara','Search chart series'))+'"><div><button type="button" class="tbtn" data-backlog-chart-filter-all>'+esc(tr('Tümünü göster','Show all'))+'</button><button type="button" class="tbtn primary" data-backlog-chart-filter-apply>'+esc(tr('Uygula','Apply'))+'</button></div></div><div class="backlogChartFilterList">'+chartFilterOrder.map(({name,index})=>'<label data-backlog-chart-filter-item><input type="checkbox" data-backlog-chart-series-index="'+index+'"'+(selected.includes(name)?' checked':'')+'><span>'+esc(name)+'</span></label>').join('')+'</div></div>':'';
     const subtotalButton=timelineMode?'':'<button type="button" class="tbtn'+(model.state.showSubtotal?' is-active':'')+'" data-backlog-chart-subtotal>'+esc(tr('Alt Toplam','Subtotal'))+'</button>';
     const layoutToggle=timelineMode?'<div class="bpaSeg2 backlogTimelineLayout" role="group" aria-label="'+esc(tr('Sütun düzeni','Column layout'))+'"><button type="button" class="'+(model.state.barLayout==='stacked'?'is-active':'')+'" data-backlog-chart-layout="stacked">'+esc(tr('Yığılmış','Stacked'))+'</button><button type="button" class="'+(model.state.barLayout!=='stacked'?'is-active':'')+'" data-backlog-chart-layout="grouped">'+esc(tr('Yan yana','Side by side'))+'</button></div>':'';
     const chartBody=timelineMode
@@ -738,6 +739,17 @@
       });
       const filterToggle=target.querySelector('[data-backlog-chart-filter]'),filterPanelEl=target.querySelector('[data-backlog-chart-filter-panel]');
       filterToggle?.addEventListener('click',()=>{const opening=!!filterPanelEl?.hidden;if(filterPanelEl)filterPanelEl.hidden=!opening;filterToggle.setAttribute('aria-expanded',opening?'true':'false');if(opening)target.querySelector('[data-backlog-chart-filter-search]')?.focus();});
+      const seriesList=target.querySelector('.backlogChartFilterList');
+      seriesList?.addEventListener('change',event=>{
+        if(!event.target.matches('[data-backlog-chart-series-index]'))return;
+        const scroll=seriesList.scrollTop;
+        const labels=[...seriesList.querySelectorAll('[data-backlog-chart-filter-item]')];
+        const originalIndex=label=>Number(label.querySelector('[data-backlog-chart-series-index]')?.getAttribute('data-backlog-chart-series-index'))||0;
+        labels.sort((a,b)=>Number(b.querySelector('input')?.checked)-Number(a.querySelector('input')?.checked)||originalIndex(a)-originalIndex(b));
+        labels.forEach(label=>seriesList.appendChild(label));
+        seriesList.scrollTop=scroll;
+        event.target.focus?.({preventScroll:true});
+      });
       target.querySelector('[data-backlog-chart-filter-search]')?.addEventListener('input',event=>{
         const q=String(event.target.value||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR');
         target.querySelectorAll('[data-backlog-chart-filter-item]').forEach(label=>{label.hidden=q&&!String(label.textContent||'').toLocaleLowerCase(lang()==='en'?'en-US':'tr-TR').includes(q);});
