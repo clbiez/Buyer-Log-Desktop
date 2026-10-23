@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Build a version-preserving, offline-only Buyer Log 7.0.293 mini patch.
+"""Build version-preserving offline mini patches for the current official STABLE.
 
-Supported input files: original 7.0.293 STABLE and compatible earlier mini patches.
+Supported input files: exact STABLE and compatible patches for the same base version.
 Detects file identity by SHA256; never touches the updater.
 """
 from __future__ import annotations
@@ -10,21 +10,28 @@ import datetime as dt
 import difflib
 import hashlib
 import json
+import os
+import re
 import pathlib
 import subprocess
 import zipfile
 
-BASE = "6501210b7faf051e4d8f2997dd0d48f0c9b64647"
+BASE = os.environ.get("BUYER_LOG_PATCH_BASE_COMMIT", "").strip()
 PREVIOUS_PATCHES = ("d6149bcb440530a20c30adecf201d1d989afd507",
                     "e54ba4eb8dfcc677907ed023955c7490de15fcd8",
                     "920082a0c970a5c31d95627dc5cdb5e82c15ef71",
                     "de123d59d39464e296ea9b535d652920173217a5",
                     "ae0e375ed577ff3d47d796dbd60f5575afd260e7",
                     "9c9f369140a27456e5b0ac97ae98ee541304f213")
+VERSION = os.environ.get("BUYER_LOG_PATCH_BASE_VERSION", "").strip()
 HEAD = subprocess.check_output(["git", "rev-parse", "HEAD"],
                               cwd=pathlib.Path(__file__).resolve().parents[1]).decode().strip()
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "dist" / f"BuyerLog-7.0.293-MiniPatch-{HEAD[:12]}.zip"
+if not re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+", VERSION):
+    raise RuntimeError("BUYER_LOG_PATCH_BASE_VERSION must be the official STABLE version.")
+if not re.fullmatch(r"[0-9a-f]{40}", BASE):
+    raise RuntimeError("BUYER_LOG_PATCH_BASE_COMMIT must be the pinned official STABLE source commit.")
+OUTPUT = ROOT / "dist" / f"BuyerLog-{VERSION}-MiniPatch-{HEAD[:12]}.zip"
 
 def git(*args: str) -> bytes:
     return subprocess.check_output(["git", *args], cwd=ROOT)
@@ -51,9 +58,12 @@ def create_edits(before: bytes, after: bytes, name: str) -> list:
         raise RuntimeError(f"round-trip diff validation failed: {name}")
     return changes
 
-for ref in (BASE, *PREVIOUS_PATCHES, HEAD):
-    assert json.loads(blob(ref, "resources/app/package.json"))["version"] == "7.0.293", ref
-status_rows = git("diff", "--name-status", "--diff-filter=AM", BASE, HEAD,
+assert json.loads(blob(BASE, "resources/app/package.json"))["version"] == VERSION, BASE
+assert json.loads(blob(HEAD, "resources/app/package.json"))["version"] == VERSION, HEAD
+# Never accept patched files from an older official STABLE version.
+PREVIOUS_PATCHES = tuple(ref for ref in PREVIOUS_PATCHES
+    if json.loads(blob(ref, "resources/app/package.json"))["version"] == VERSION)
+status_rows = git("diff", "--no-renames", "--name-status", "--diff-filter=AMDR", BASE, HEAD,
                   "--", "resources/app/public", "resources/app/server").decode().splitlines()
 entries = []
 for row in status_rows:
@@ -99,13 +109,13 @@ for row in status_rows:
             })
             seen.add(digest(older))
     entries.append(record)
-if not (1 <= len(entries) <= 200):
+if not (0 <= len(entries) <= 200):
     raise RuntimeError(f"unexpected number of runtime changes: {len(entries)}")
 
 manifest = {
     "schema": 2,
     "product": "Buyer Log Desktop",
-    "base_version": "7.0.293",
+    "base_version": VERSION,
     "base_commit": BASE,
     "previous_patch_commits": list(PREVIOUS_PATCHES),
     "target_commit": HEAD,
@@ -115,12 +125,12 @@ manifest = {
     "files": entries,
 }
 payload = json.dumps(manifest, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
-guide = f"""BUYER LOG 7.0.293 SONRASI MINI PATCH - GUNCEL 22.10.2026
+guide = f"""BUYER LOG {VERSION} SONRASI OTOMATIK MINI PATCH
 HEDEF COMMIT: {HEAD}
 
 Bu ZIP internetsiz calisir. GitHub, Python, Node.js veya Git istemez.
-7.0.293 STABLE veya onceki 21.10.2026 ve 22.10.2026 mini patch'li
-7.0.293 uzerine en guncel runtime degisikliklerini uygular.
+{VERSION} STABLE veya bu STABLE temeline ait onceki mini patch'li
+kurulumlara en guncel runtime degisikliklerini uygular.
 Uygulama dosyalarinin SHA256 dogrulamali kümülatif degisiklikleri.
 Kod/yayin kanali/surum/updater/launcher/konfigurasyon bozulmaz.
 
