@@ -42,10 +42,15 @@
 
 .layoutControlModal *{border-radius:0!important}
 .layoutWorkspace{display:grid;grid-template-columns:minmax(280px,2fr) minmax(0,3fr);gap:10px;align-items:start}
-.layoutDocument{position:sticky;top:0;border:1px solid var(--line);padding:8px;background:var(--card2);max-height:72vh;overflow:auto}
+.layoutDocument{position:sticky;top:0;border:1px solid var(--line);padding:8px;background:var(--card2);max-height:72vh;overflow:auto;min-width:0}
 .layoutResult{max-height:72vh;overflow:auto;min-width:0}
 .layoutPageTools{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.layoutPageTools span{flex:1;overflow-wrap:anywhere;font-size:var(--fs-xs)}
-.layoutPage{position:relative;line-height:0;max-width:100%;background:var(--card)}
+.layoutZoomTools{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.layoutZoomTools output{min-width:5ch;text-align:center;font-size:var(--fs-xs);font-variant-numeric:tabular-nums}
+.layoutZoomTools small{color:var(--muted);font-size:var(--fs-2xs)}
+.layoutPageViewport{max-height:54vh;overflow:auto;overscroll-behavior:contain;position:relative}
+.layoutPageViewport:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.layoutPage{position:relative;line-height:0;width:100%;background:var(--card)}
 .layoutPage canvas,[data-layout-reference] canvas{display:block;width:100%;height:auto}
 .layoutMarkers{position:absolute;inset:0;pointer-events:none}.layoutMarkers.is-annotating{pointer-events:auto;cursor:crosshair}
 .layoutMarker{position:absolute;border:2px solid var(--orange);background:color-mix(in srgb,var(--orange) 10%,transparent);padding:0;cursor:pointer;pointer-events:auto;min-width:8px;min-height:8px;color:var(--orange)}

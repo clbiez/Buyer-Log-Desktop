@@ -16,6 +16,8 @@
   let modal=null, currentFile=null, currentReport=null, busy=false, filter='attention', activeAbort=null, activeRequestId='', historyCache=[], historyLoaded=false;
   let pdfDocument=null,pageNumber=1,pageCount=0,selectedRule='',renderToken=0,renderedPage='',annotationMode=false,reviewSaving=false,queuedFiles=[],sessions=new Map();
   let onCloseCallback=null;
+  const ZOOM_MIN=.5,ZOOM_MAX=4,ZOOM_STEP=.25;
+  let documentZoom=1,zoomFile=null,zoomTimer=null;
   const identitySessions=new Map();
   let epoch=0;
   const commentDrafts=new Map();
@@ -25,7 +27,7 @@
   function ensureStyle(){
     if(document.querySelector('link[data-layout-control-style]')) return;
     const link=document.createElement('link');
-    link.rel='stylesheet'; link.href='layout-control.css?rev=2'; link.dataset.layoutControlStyle='1';
+    link.rel='stylesheet'; link.href='layout-control.css?rev=3'; link.dataset.layoutControlStyle='1';
     document.head.appendChild(link);
   }
   function loadHistory(){
@@ -167,10 +169,17 @@
     const host=modal.querySelector('[data-layout-document]');
     if(!host)return;
     if(!pdfDocument){host.innerHTML='<div class="layoutEmpty">'+esc(currentFile?L('PDF önizlemesi hazırlanıyor…','Preparing PDF preview…'):L('Belgeyi yükleyin. İşaretler belge üzerinde, yorumlar yanında görünür.','Upload a document. Markers appear on the document, comments alongside.'))+'</div>';renderedPage='';return;}
+    if(zoomFile!==currentFile){documentZoom=1;zoomFile=currentFile;}
     const key=currentFile.name+'|'+currentFile.lastModified+'|'+pageNumber;
     if(renderedPage!==key){
       renderedPage=key;
       host.innerHTML='<div class="layoutPageTools"><button type="button" class="lcwaiBtn" data-layout-prev '+(pageNumber<=1?'disabled':'')+'>←</button><span>'+esc(currentFile.name)+' · '+pageNumber+'/'+pageCount+'</span><button type="button" class="lcwaiBtn" data-layout-next '+(pageNumber>=pageCount?'disabled':'')+'>→</button><button type="button" class="lcwaiBtn" data-layout-annotate>'+esc(L('Belgeye işaret ekle','Add marker'))+'</button></div><p class="layoutMuted">'+esc(L('AI kutuları yaklaşık konum önerileridir. İşarete tıklayın; yorumu ve şablonu yanında görün.','AI boxes suggest approximate locations. Click a marker to see its comment and template alongside.'))+'</p><div class="layoutPage"><canvas aria-label="'+esc(L('Layout sayfası','Layout page'))+'"></canvas><div class="layoutMarkers"></div></div>';
+      const page=host.querySelector('.layoutPage');
+      page.insertAdjacentHTML('beforebegin','<div class="layoutZoomTools" role="group" aria-label="'+esc(L('Belge yakınlaştırma','Document zoom'))+'"><button type="button" class="lcwaiBtn" data-layout-zoom-out aria-label="'+esc(L('Uzaklaştır','Zoom out'))+'">−</button><output data-layout-zoom-level aria-live="polite"></output><button type="button" class="lcwaiBtn" data-layout-zoom-in aria-label="'+esc(L('Yakınlaştır','Zoom in'))+'">+</button><button type="button" class="lcwaiBtn" data-layout-zoom-fit>'+esc(L('Genişliğe sığdır','Fit width'))+'</button><small>'+esc(L('Ctrl / ⌘ + tekerlek ile yakınlaştır','Ctrl / ⌘ + wheel to zoom'))+'</small></div>');
+      const viewport=document.createElement('div');viewport.className='layoutPageViewport';
+      viewport.tabIndex=0;viewport.setAttribute('role','region');viewport.setAttribute('aria-label',L('Kaydırılabilir layout önizlemesi','Scrollable layout preview'));
+      page.before(viewport);viewport.appendChild(page);
+      updateZoomControls();
       renderPage(pdfDocument,pageNumber,host.querySelector('canvas'));
     }
     const button=host.querySelector('[data-layout-annotate]');
@@ -184,15 +193,44 @@
       }).join('');
     }
   }
+  function updateZoomControls(){
+    if(!modal)return;
+    const host=modal.querySelector('[data-layout-document]'),page=host.querySelector('.layoutPage');
+    if(!page)return;
+    page.style.width=(documentZoom*100)+'%';
+    host.querySelector('[data-layout-zoom-level]').textContent=Math.round(documentZoom*100)+'%';
+    host.querySelector('[data-layout-zoom-out]').disabled=documentZoom<=ZOOM_MIN;
+    host.querySelector('[data-layout-zoom-in]').disabled=documentZoom>=ZOOM_MAX;
+  }
+  function zoomDocument(value,point){
+    const viewport=modal&&modal.querySelector('.layoutPageViewport'),page=viewport&&viewport.querySelector('.layoutPage');
+    if(!page)return;
+    const next=Math.max(ZOOM_MIN,Math.min(ZOOM_MAX,Math.round(value*100)/100));
+    if(next===documentZoom&&!point?.fit)return;
+    const rect=viewport.getBoundingClientRect(),pageRect=page.getBoundingClientRect();
+    const x=point&&!point.fit?point.x-rect.left:viewport.clientWidth/2,y=point&&!point.fit?point.y-rect.top:viewport.clientHeight/2;
+    const ratio=next/documentZoom,offsetX=rect.left+viewport.clientLeft+x-pageRect.left,offsetY=rect.top+viewport.clientTop+y-pageRect.top;
+    documentZoom=next;updateZoomControls();
+    viewport.scrollLeft=point?.fit?0:offsetX*ratio-x;
+    viewport.scrollTop=point?.fit?0:offsetY*ratio-y;
+    clearTimeout(zoomTimer);
+    renderToken++;
+    const pdf=pdfDocument,number=pageNumber,canvas=page.querySelector('canvas');
+    zoomTimer=setTimeout(()=>{if(pdf===pdfDocument&&canvas.isConnected)renderPage(pdf,number,canvas);},120);
+  }
   async function renderPage(pdf,page,canvas){
     const token=++renderToken;
     try{
       const p=await pdf.getPage(page),base=p.getViewport({scale:1});
-      const viewport=p.getViewport({scale:Math.min(2,1400/base.width,2200/base.height)});
+      const width=canvas.parentElement.clientWidth*Math.min(2,root.devicePixelRatio||1);
+      const viewport=p.getViewport({scale:Math.min(6,Math.max(1,width/base.width),4096/base.width,6144/base.height)});
       if(token!==renderToken||!canvas.isConnected)return;
-      canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);
-      await p.render({canvasContext:canvas.getContext('2d'),viewport}).promise;
-    }catch(_){setStage(L('Sayfa önizlemesi açılamadı.','Page preview could not be opened.'),'review');}
+      if(!canvas.width||!canvas.dataset.layoutRendered){canvas.width=Math.ceil(base.width);canvas.height=Math.ceil(base.height);}
+      const buffer=document.createElement('canvas');buffer.width=Math.ceil(viewport.width);buffer.height=Math.ceil(viewport.height);
+      await p.render({canvasContext:buffer.getContext('2d'),viewport}).promise;
+      if(token!==renderToken||!canvas.isConnected)return;
+      canvas.width=buffer.width;canvas.height=buffer.height;canvas.getContext('2d').drawImage(buffer,0,0);canvas.dataset.layoutRendered='1';
+    }catch(_){if(token===renderToken&&canvas.isConnected)setStage(L('Sayfa önizlemesi açılamadı.','Page preview could not be opened.'),'review');}
   }
   async function showStandard(check){
     const source=template().SOURCES[check.standardType],host=modal&&Array.from(modal.querySelectorAll('[data-layout-reference]')).find(el=>el.dataset.layoutReference===check.rule);
@@ -453,6 +491,7 @@
       const button=event.target.closest('button');
       if(!button) return;
       if(button.matches('[data-layout-close]')){close();return;}
+      if(button.matches('[data-layout-zoom-in],[data-layout-zoom-out],[data-layout-zoom-fit]')){zoomDocument(button.hasAttribute('data-layout-zoom-fit')?1:documentZoom+(button.hasAttribute('data-layout-zoom-in')?ZOOM_STEP:-ZOOM_STEP),button.hasAttribute('data-layout-zoom-fit')?{fit:true}:null);return;}
       if(button.matches('[data-layout-prev],[data-layout-next]')){pageNumber+=button.hasAttribute('data-layout-prev')?-1:1;pageNumber=Math.max(1,Math.min(pageCount,pageNumber));paintDocument();return;}
       if(button.matches('[data-layout-annotate]')){annotationMode=!annotationMode;paintDocument();return;}
       if(button.matches('[data-layout-locate]')){locate(button.dataset.layoutLocate);return;}
@@ -465,6 +504,10 @@
       if(button.matches('[data-layout-history]')){openHistory(button.dataset.layoutHistory);return;}
       if(button.matches('[data-layout-history-clear]')){clearHistory();paint();return;}
     });
+    modal.addEventListener('wheel',event=>{
+      if(!(event.ctrlKey||event.metaKey)||!event.target.closest('.layoutPageViewport')||!event.deltaY)return;
+      event.preventDefault();zoomDocument(documentZoom+(event.deltaY<0?ZOOM_STEP:-ZOOM_STEP),{x:event.clientX,y:event.clientY});
+    },{passive:false});
     modal.addEventListener('toggle',event=>{
       const row=event.target;
       if(!row.isConnected||!row.matches('details[data-layout-check]'))return;
@@ -537,6 +580,7 @@
   function close(){
     if(!modal) return;
     epoch++;renderToken++;
+    clearTimeout(zoomTimer);zoomTimer=null;documentZoom=1;zoomFile=null;
     if(activeAbort) activeAbort.abort();
     if(activeRequestId&&AI()) AI().cancel(activeRequestId);
     new Set([...sessions.keys(),...identitySessions.keys(),...queuedFiles,currentFile].filter(Boolean)).forEach(file=>reader().release(file));sessions.clear();identitySessions.clear();commentDrafts.clear();expandedChecks.clear();queuedFiles=[];pdfDocument=null;renderedPage='';reviewSaving=false;
