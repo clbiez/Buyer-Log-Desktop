@@ -70,7 +70,7 @@
 .pdBulkPanel,.pdRoundPanel,.pdImportPanel{display:flex;flex-direction:column;gap:8px;margin:8px 10px 0;padding:10px 12px;border:1px solid var(--line2);background:var(--card);box-shadow:var(--shadow-2);animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both}
 .pdBulkPanel[hidden],.pdRoundPanel[hidden],.pdImportPanel[hidden]{display:none}
 .pdMatrixScroll{flex:1 1 auto;min-height:0;overflow:auto}
-.pdMatrix{border-collapse:separate;border-spacing:0;min-width:100%;font-size:var(--fs-sm)}
+.pdMatrix{border-collapse:separate;border-spacing:0;table-layout:fixed;width:calc(504px + var(--pd-columns)*96px);font-size:var(--fs-sm)}
 .pdMatrix thead th{position:sticky;top:0;z-index:3;background:var(--thead-bg);color:var(--thead-ink);border-bottom:1px solid var(--thead-line);padding:6px 8px;font:600 var(--fs-xs)/1.2 var(--sans);text-align:left;white-space:nowrap}
 .pdMatrix thead th.pdNum{text-align:right}
 .pdMatrix .pdModelHead,.pdMatrix .pdModelCell{position:sticky;left:0;z-index:2;background:var(--card);border-right:1px solid var(--line)}
@@ -78,28 +78,44 @@
 .pdMatrix tbody td,.pdMatrix tbody th{border-bottom:1px solid var(--line);padding:4px 8px;vertical-align:middle;background:var(--card)}
 .pdMatrix tbody tr:hover>td,.pdMatrix tbody tr:hover>th{background:var(--table-hover)}
 .pdMatrix tbody tr.pdFocusRow>th{box-shadow:inset 3px 0 0 var(--acc)}
-.pdMfrHead>div{display:flex;align-items:center;gap:7px;min-width:132px}
-.pdMfrHead b{display:block;max-width:150px;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.pdModelWidth{width:200px}
+.pdTargetWidth{width:80px}
+.pdBestWidth{width:144px}
+.pdDeltaWidth{width:80px}
+.pdSupplierWidth{width:96px}
+.pdMatrix .pdTarget,.pdMatrix .pdStickyBest,.pdMatrix .pdStickyDelta{position:sticky;z-index:2;background:var(--card)}
+.pdMatrix .pdTarget{left:200px}
+.pdMatrix .pdStickyBest{left:280px}
+.pdMatrix .pdStickyDelta{left:424px;border-right:1px solid var(--line)}
+.pdMatrix thead .pdTarget,.pdMatrix thead .pdStickyBest,.pdMatrix thead .pdStickyDelta{z-index:4;background:var(--thead-bg)}
+.pdMatrix tbody tr{height:36px}
+.pdMfrHead{overflow:hidden}
+.pdMfrHead .linkBtn{white-space:normal;text-align:left}
+.pdMfrHead small{overflow:hidden;text-overflow:ellipsis}
+.pdMfrHead b{display:block;max-width:80px;overflow:hidden;text-overflow:ellipsis;color:var(--thead-ink)}
 .pdMfrHead small{display:block;font-size:var(--fs-2xs);color:var(--muted);font-weight:500}
-.pdModel{display:flex;align-items:center;gap:8px;min-width:220px;max-width:300px}
+.pdModel{display:flex;align-items:center;gap:6px;min-width:0;max-width:184px}
+.pdModel .pdThumb{width:24px;height:28px;flex:0 0 24px}
+.pdModelText small{display:none}
 .pdModelText{display:flex;flex-direction:column;gap:1px;min-width:0}
 .pdModelText b{font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pdModelText span,.pdModelText small{font-size:var(--fs-2xs);color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pdModelText small{color:var(--muted)}
 .pdTarget{color:var(--ink2)}
-.pdCell{min-width:150px;transition:background var(--bl-motion-standard) var(--bl-ease),box-shadow var(--bl-motion-standard) var(--bl-ease)}
+.pdCell{position:relative;min-width:96px;transition:background var(--bl-motion-standard) var(--bl-ease),box-shadow var(--bl-motion-standard) var(--bl-ease)}
 .pdMatrix tbody td.pdCell.isBest{background:color-mix(in srgb,var(--green) 9%,var(--card))}
 .pdMatrix tbody td.pdCell.isApproved{box-shadow:inset 0 0 0 2px var(--green)}
 .pdMatrix tbody td.pdCell.isOutlier{background:var(--orange-bg);box-shadow:inset 0 0 0 1px var(--orange)}
 .pdMatrix tbody td.pdCell.isDropped{background:var(--card2)}
 .pdCell.isDropped .pdCellInput{text-decoration:line-through;color:var(--muted)}
 .pdCell.isEmpty{text-align:center;color:var(--muted)}
-.pdCellTop{display:flex;align-items:center;justify-content:flex-end;gap:5px;min-height:15px}
+.pdCellTop{position:absolute;right:8px;bottom:100%;z-index:5;display:none;background:var(--card);padding:2px 4px;border:1px solid var(--line)}
+.pdCell:hover .pdCellTop:not(:empty),.pdCell:focus-within .pdCellTop:not(:empty){display:flex;gap:4px}
 .pdPrev{font-size:var(--fs-2xs);color:var(--muted);font-variant-numeric:tabular-nums}
 .pdBestTag{display:inline-flex;align-items:center;padding:1px 5px;background:var(--green);color:var(--on-acc);font:800 var(--fs-2xs)/1.2 var(--sans);letter-spacing:.04em;animation:pdPop var(--bl-motion-enter) var(--bl-ease) both}
 .pdBestTag.isMoved{animation:pdSlideIn 320ms var(--bl-ease) both}
-.pdCellMain{display:flex;align-items:center;gap:4px}
-.pdCellInput{width:82px;height:var(--ctl-h-sm);border:1px solid var(--line2);background:var(--card);color:var(--ink);padding:0 7px;text-align:right;font:600 var(--fs-sm) var(--mono);font-variant-numeric:tabular-nums}
+.pdCellMain{position:relative;display:flex;align-items:center;min-height:28px}
+.pdCellInput{width:100%;height:var(--ctl-h-sm);border:1px solid var(--line2);background:var(--card);color:var(--ink);padding:0 4px;text-align:right;font:600 var(--fs-sm) var(--mono);font-variant-numeric:tabular-nums}
 .pdCellInput:focus{outline:none;border-color:var(--acc);box-shadow:var(--focus-ring)}
 .pdCellInput:disabled{background:transparent;border-color:transparent;color:var(--ink2)}
 .pdApprove,.pdDrop{display:inline-grid;place-items:center;width:26px;height:26px;padding:0;border:1px solid var(--line2);background:var(--card);color:var(--muted);cursor:pointer;transition:background var(--bl-motion-standard) var(--bl-ease),color var(--bl-motion-standard) var(--bl-ease),border-color var(--bl-motion-standard) var(--bl-ease),transform var(--bl-motion-fast) var(--bl-ease)}
@@ -110,10 +126,18 @@
 .pdDrop.isOn{background:var(--red-bg);border-color:var(--red);color:var(--red)}
 .pdApprove:disabled,.pdDrop:disabled{opacity:.45;cursor:default}
 .pdApprove:active:not(:disabled),.pdDrop:active:not(:disabled){transform:scale(.92)}
-.pdCellNote{min-height:13px;font-size:var(--fs-2xs);color:var(--ink2);text-align:right;white-space:nowrap}
-.pdCell.isOutlier .pdCellNote{color:var(--orange);font-weight:700}
+.pdCellNote{display:none;position:absolute;bottom:100%;right:0;z-index:5;background:var(--card);padding:3px;font-size:var(--fs-2xs);color:var(--ink2);text-align:right;white-space:nowrap}
+.pdCell.isOutlier:hover .pdCellNote,.pdCell.isOutlier:focus-within .pdCellNote{display:block;color:var(--orange);font-weight:700}
+.pdCell .pdApprove,.pdCell .pdDrop{position:absolute;right:20px;width:20px;height:24px;opacity:0;pointer-events:none}
+.pdCell .pdDrop{right:0}
+.pdCell:hover .pdApprove,.pdCell:hover .pdDrop,.pdCell:focus-within .pdApprove,.pdCell:focus-within .pdDrop{opacity:1;pointer-events:auto}
+.pdCell:hover .pdCellInput,.pdCell:focus-within .pdCellInput{padding-right:42px}
+@media (hover:none){.pdCell:focus-within .pdCellTop{display:flex}}
+.pdOther button{display:block;width:100%;border:0;background:transparent;color:var(--ink);cursor:pointer;text-align:right;font:inherit}
+.pdOther button:focus-visible{box-shadow:var(--focus-ring)}
+.pdOther small{display:block;max-width:80px;overflow:hidden;text-overflow:ellipsis;font-size:var(--fs-2xs);color:var(--ink2)}
 .pdBestCol b{display:block;font-variant-numeric:tabular-nums}
-.pdBestCol span{display:block;font-size:var(--fs-2xs);color:var(--ink2);max-width:150px;overflow:hidden;text-overflow:ellipsis;margin-left:auto}
+.pdBestCol span{display:block;font-size:var(--fs-2xs);color:var(--ink2);max-width:128px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-left:auto}
 .pdHints{display:flex;flex-wrap:wrap;gap:4px 14px;padding:6px 10px;border-top:1px solid var(--line);background:var(--card2);font-size:var(--fs-2xs);color:var(--ink2)}
 .pdHints kbd{display:inline-block;padding:0 4px;border:1px solid var(--line2);background:var(--card);font:600 var(--fs-2xs) var(--mono)}
 .pdFlash{animation:pdFlash 900ms var(--bl-ease)}
@@ -386,3 +410,17 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .cpdTarget{max-width:160px;margin-top:6px}
 @media (max-width:560px){.cpdHead{grid-template-columns:72px 1fr auto}.cpdImage{width:72px;height:72px}.cpdWaterfall,.cpdInputs{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.kolPsTrack>i,.kolHealthChip,.cpdOffer{transition:none}.kolHealthBar,.cpdSection{animation:none}}
+
+/* Tur başına bir model grubu, üreticiler satır içi tekliflerdir. */
+.pdRoundModelGroup{padding:8px 0;border-bottom:1px solid var(--line)}
+.pdRoundModelHead{display:flex;align-items:center;gap:6px;font-size:var(--fs-sm)}
+.pdRoundModelHead>span{margin-left:auto;font-variant-numeric:tabular-nums;color:var(--ink2)}
+.pdRoundChips{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.pdRoundQuote{display:inline-flex;align-items:center;gap:5px;padding:3px 5px;border:1px solid var(--line);background:var(--card2);font-size:var(--fs-2xs);font-variant-numeric:tabular-nums}
+.pdRoundQuote.isBest{border-color:var(--green);background:var(--green-bg)}
+.pdRoundQuote s{color:var(--muted)}
+.kolPsTrack>.kolPsBand{left:var(--start);width:calc(var(--end) - var(--start));min-width:2px;height:5px;background:var(--acc-lite);transform:translateY(-50%)}
+.kolPsMedian{width:1px;height:10px;background:var(--ink2)}
+
+.pdMfrHead small.isGood{color:var(--green)}
+.pdMfrHead small.isBad{color:var(--red)}

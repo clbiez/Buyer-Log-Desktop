@@ -42,10 +42,20 @@ test('uygulama içi yapıştırma kart özeti yerine kopyalanan ham kumaş metni
 test('kopyalama ham kumaş matrisini hatırlar; yapıştırma ve Ctrl+D ham değeri kullanır', () => {
   // Panoya giden metin Excel için görünen kart özeti olarak kalır.
   assert.match(SHEET, /return coord\.key==='fabric'&&typeof global\.kolFabricDisplay==='function'\?global\.kolFabricDisplay\(raw\):raw;/);
-  assert.match(SHEET, /rawLine\.push\(included&&coord\.key==='fabric'\?rawFabricValueForCoord\(coord,liveRows\):value\)/);
+  assert.match(SHEET, /rawLine\.push\(included&&coord\.key==='fabric'\?rawFabricValueForCoord\(coord,liveRows\):/);
   assert.match(SHEET, /const keepRaw=!sameMatrix\(matrix,rawMatrix\)/);
   assert.match(SHEET, /async function pasteText\(text\)\{if\(!state\.active\|\|!bridge\(\)\?\.canEdit\?\.\(\)\)return false;text=restoreCopiedRaw\(text\);/);
   assert.match(SHEET, /if\(!payload\)return false;rememberCopiedRaw\(payload\);/);
   assert.match(SHEET, /state\.lastCopyHeaderLine='';rememberCopiedRaw\(payload\);/);
   assert.match(SHEET, /function fillDown\(\)\{[^\n]*const \{bounds,rawMatrix:matrix\}=selectedMatrix\(liveRowSnapshot\(\)\)/);
+});
+
+// TR Landed artık aynı ham matrisin diğer dalını kullanır. Kumaş kartının
+// ham PLM metni ve kullanıcıya görünen özeti yine birbirinden ayrılmalıdır.
+test('selectedMatrix keeps raw fabric cards alongside TR Landed source tokens',()=>{
+  const cells=[{key:'fabric',rowId:'1'},{key:'trLanded',rowId:'1'}];
+  const selected=new Function('state','visibleCells','coordForCell','valueForCoord','rawFabricValueForCoord','bridge','Engine',extract('selectedMatrix')+'return selectedMatrix();');
+  const result=selected({multiCells:new Set(),active:{r:0,c:0}},()=>[cells],td=>td,coord=>coord.key==='fabric'?'Single Jersey · 30/1 Ne':'10,50',()=> '3859-Süprem 30/1 Ne',()=>({landedCopyToken:id=>'BL-TR-LANDED:'+id}),{rangeBounds:()=>({r1:0,r2:0,c1:0,c2:1})});
+  assert.deepEqual(result.matrix,[['Single Jersey · 30/1 Ne','10,50']]);
+  assert.deepEqual(result.rawMatrix,[['3859-Süprem 30/1 Ne','BL-TR-LANDED:1']]);
 });

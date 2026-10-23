@@ -29,13 +29,14 @@
   const reducedMotion=()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   const store={get(key,fallback){try{const raw=BLStorage.getItem(key);return raw?JSON.parse(raw):fallback;}catch(_){return fallback;}},set(key,value){try{BLStorage.setItem(key,JSON.stringify(value));}catch(_){}}};
 
-  const TAB_KEY='lcw.pricingDesk.tab.v1',SCOPE_KEY='lcw.pricingDesk.scope.v1',VIEW_KEY='lcw.pricingDesk.detailView.v1',ANALYSIS_KEY='lcw.pricingDesk.analysis.v1',HISTORY_KEY='lcw.pricingDesk.history.v1';
+  const TAB_KEY='lcw.pricingDesk.tab.v1',SCOPE_KEY='lcw.pricingDesk.scope.v1',VIEW_KEY='lcw.pricingDesk.detailView.v1',ANALYSIS_KEY='lcw.pricingDesk.analysis.v1',HISTORY_KEY='lcw.pricingDesk.history.v1',SUPPLIERS_KEY='lcw.pricingDesk.suppliers.v1';
   const TABS=['desk','rounds','history','analysis'];
   const state={
     tab:TABS.includes(store.get(TAB_KEY,'desk'))?store.get(TAB_KEY,'desk'):'desk',
     scope:normalizeScope(store.get(SCOPE_KEY,null)),
     detailViews:store.get(VIEW_KEY,{})||{},
-    analysis:{groupBy:'classification',basis:'latest',view:'matrix',filters:{},...(store.get(ANALYSIS_KEY,{})||{})},
+    expandedSuppliers:store.get(SUPPLIERS_KEY,{})||{},
+    analysis:{groupBy:'classification',basis:'latest',view:'matrix',filters:{},allSuppliers:false,...(store.get(ANALYSIS_KEY,{})||{})},
     history:{view:'models',query:'',filters:{},selected:'',limit:48,...(store.get(HISTORY_KEY,{})||{})},
     hosts:new Set(),ownerRows:new Map(),ownerRowsLoading:null,ownerRowsFailed:new Set(),
     roundsSelected:'',lastBest:new Map(),flash:new Set(),focus:null,undo:[],drill:null,
@@ -185,7 +186,7 @@
 
   function cellHtml(req,model,name,stats,ctx){
     const line=model.cell(name);
-    if(!line)return `<td class="pdCell isEmpty"><span class="pdNoLine" aria-label="${esc(L('Bu üreticiye sorulmadı','Not requested from this manufacturer'))}">·</span></td>`;
+    if(!line)return `<td class="pdCell isEmpty"><span class="pdNoLine" aria-label="${esc(L('Teklif yok','No offer'))}">—</span></td>`;
     const info=lineInfo(req,model.first),value=E.price(line.price),dropped=!!line.dropped;
     const isBest=!dropped&&stats.best&&stats.best.lineId===line.id&&stats.priced>1,isAppr=!!line.approved&&!dropped,outlier=stats.outliers.has(line.id);
     const neg=E.negotiation(line,req),prev=neg&&neg.previous!=null&&Math.abs(neg.previous-(value||0))>0.0001?neg.previous:null;
@@ -210,31 +211,37 @@
       const shown=stats.approved&&stats.approved.price!=null?stats.approved:stats.best;
       const delta=shown&&info.target?E.pct(shown.price,info.target):null;
       const cells=matrix.manufacturers.map((name,ci)=>cellHtml(req,model,name,stats,{mi,ci,canEdit:ctx.canEdit,moved:moved&&bestId===model.cell(name)?.id}));
+      if(ctx.other.length){const offers=ctx.other.map(s=>model.cell(s.name)).filter(line=>line&&!line.dropped&&E.price(line.price)!=null).sort((a,b)=>E.price(a.price)-E.price(b.price));const best=offers[0];cells.push(`<td class="pdCell pdOther"><button type="button" data-pd-expand aria-label="${esc(L('Diğer üreticileri aç','Expand other manufacturers'))}">${best?`<b>${esc(money(E.price(best.price)))}</b><small>${esc(best.manufacturer)}</small>`:'—'}</button></td>`);}
       const meta=[info.classification!=='—'?info.classification:'',info.colour].filter(Boolean).join(' · ');
       return `<tr data-pd-model="${esc(model.modelKey)}">
         <th scope="row" class="pdModelCell"><div class="pdModel">${thumbHtml(req,model.first)}<div class="pdModelText"><b title="${esc(info.model)}">${esc(info.model)}</b><span title="${esc(meta)}">${esc(meta||'—')}</span>${info.fabric?`<small title="${esc(info.fabric)}">${esc(info.fabric)}</small>`:''}</div></div></th>
         <td class="pdNum pdTarget">${info.target!=null?esc(money(info.target)):'—'}</td>
+        <td class="pdNum pdBestCol pdStickyBest" data-pd-best>${shown?`<b>${esc(money(shown.price))}</b><span>${esc(shown.manufacturer)}${stats.approved?` · ${esc(L('onaylı','approved'))}`:''}</span>`:'<span>—</span>'}</td>
+        <td class="pdNum pdStickyDelta" data-pd-delta><span class="pdChip ${toneOf(delta)}">${esc(pctText(delta))}</span></td>
         ${cells.join('')}
-        <td class="pdNum pdBestCol" data-pd-best>${shown?`<b>${esc(money(shown.price))}</b><span>${esc(shown.manufacturer)}${stats.approved?` · ${esc(L('onaylı','approved'))}`:''}</span>`:'<span>—</span>'}</td>
-        <td class="pdNum" data-pd-delta><span class="pdChip ${toneOf(delta)}">${esc(pctText(delta))}</span></td>
       </tr>`;
     }).join('');
     state.lastBest.set(req.id,nextBest);
     return html;
   }
+  function supplierHeadHtml(card){
+    const coverage=L(`${card.models}/${card.total} model, ${card.wins} kazanma`,`${card.models}/${card.total} models, ${card.wins} wins`);
+    return `<b title="${esc(card.name)}">${esc(card.name)}</b><small title="${esc(coverage)}" aria-label="${esc(coverage)}">${card.models}/${card.total} · ${card.wins} 🏆</small><small class="${toneOf(card.modelIndex)}" title="${esc(L('Aynı modelin teklif ortalamasına göre fark','Difference to the same model’s average offer'))}">${esc(pctText(card.modelIndex))}</small>`;
+  }
   function renderMatrix(host,req){
     const api=Q();if(!host||!req||!api)return;
     infoCache=new WeakMap();
-    const canEdit=api.canEdit(req),matrix=E.requestMatrix(req);
-    const rates=new Map(E.responseRates(req).map(rate=>[E.keyOf(rate.name),rate]));
+    const canEdit=api.canEdit(req),layout=E.supplierLayout(E.supplierScorecards(req),Boolean(state.expandedSuppliers[req.id])),matrix={...E.requestMatrix(req),manufacturers:layout.visible.map(s=>s.name)};
     const candidates=canEdit?E.bulkApproveCandidates(req,item=>api.itemTarget(req,item)):[];
     const gain=E.requestGain(req),round=Math.max(1,Number(req.round)||1);
-    const heads=matrix.manufacturers.map(name=>{const rate=rates.get(E.keyOf(name))||{priced:0,total:0,rate:0};return `<th scope="col" class="pdMfrHead"><div><span class="pdRing" style="--pd-rate:${Math.round(rate.rate*100)}%" aria-hidden="true"></span><span><b title="${esc(name)}">${esc(name)}</b><small>${esc(L(`${rate.priced}/${rate.total} fiyat`,`${rate.priced}/${rate.total} priced`))}</small></span></div></th>`;}).join('');
+    const heads=layout.visible.map(card=>`<th scope="col" class="pdMfrHead" data-pd-supplier="${esc(card.key)}">${supplierHeadHtml(card)}</th>`).join('');
+    const otherHead=layout.other.length?`<th scope="col" class="pdMfrHead"><button type="button" class="linkBtn" data-pd-expand aria-expanded="false">${esc(L(`Diğer (${layout.other.length})`,`Other (${layout.other.length})`))}</button></th>`:'';
     host.innerHTML=`<div class="pdMatrixBar">
         <span class="pdLegend"><i class="pdLegendBest"></i>${esc(L('En iyi','Best'))}<i class="pdLegendAppr"></i>${esc(L('Onaylı','Approved'))}<i class="pdLegendOut"></i>${esc(L('Olağan dışı','Unusual'))}</span>
         <span class="pdRoundBadge" title="${esc(L('Bu talepteki pazarlık turu','Negotiation round of this request'))}">${esc(L(`Tur ${round}`,`Round ${round}`))}</span>
         ${gain&&Number.isFinite(gain.gainPct)&&Math.abs(gain.gainPct)>=0.05?`<span class="pdChip ${toneOf(gain.gainPct)}" title="${esc(L('İlk tur en iyi tekliflerine göre güncel fiyat','Current price versus first-round best offers'))}">${esc(L('Pazarlık','Negotiation'))} ${esc(pctText(gain.gainPct))}</span>`:''}
         <span class="pdBarSpacer"></span>
+        ${state.expandedSuppliers[req.id]&&matrix.manufacturers.length>8?`<button type="button" class="tbtn" data-pd-collapse aria-expanded="true">${esc(L('Üreticileri katla','Collapse manufacturers'))}</button>`:''}
         ${canEdit&&candidates.length?`<button type="button" class="tbtn" data-pd-bulk><svg class="ic"><use href="#i-check"/></svg>${esc(L(`Hedefin altındakileri onayla (${candidates.length})`,`Approve below target (${candidates.length})`))}</button>`:''}
         ${canEdit?`<button type="button" class="tbtn" data-pd-import title="${esc(L('Üreticinin doldurduğu fiyat talep Excel’ini seç ya da tabloya sürükle','Choose the pricing request Excel returned by the manufacturer, or drag it onto the table'))}"><svg class="ic"><use href="#i-file-import"/></svg>${esc(L('Dönüş Excel’i','Supplier Excel'))}</button><input type="file" accept=".xlsx,.xls" data-pd-import-file hidden>`:''}
         ${canEdit?`<button type="button" class="tbtn" data-pd-round><svg class="ic"><use href="#i-refresh"/></svg>${esc(L('Yeni tur','New round'))}</button>`:''}
@@ -243,11 +250,26 @@
       <div class="pdBulkPanel" data-pd-bulk-panel hidden></div>
       <div class="pdRoundPanel" data-pd-round-panel hidden></div>
       <div class="pdImportPanel" data-pd-import-panel hidden></div>
-      <div class="pdMatrixScroll"><table class="pdMatrix" aria-label="${esc(L('Model × üretici teklif matrisi','Model × manufacturer quotation matrix'))}">
-        <thead><tr><th scope="col" class="pdModelHead">${esc(L('Model','Model'))}</th><th scope="col" class="pdNum">${esc(L('Hedef','Target'))}</th>${heads}<th scope="col" class="pdNum">${esc(L('En iyi / Onaylı','Best / Approved'))}</th><th scope="col" class="pdNum">Δ ${esc(L('Hedef','Target'))}</th></tr></thead>
-        <tbody>${matrix.models.length?matrixRowsHtml(req,matrix,{canEdit}):`<tr><td colspan="${matrix.manufacturers.length+4}"><div class="pricingEmptyState">${esc(L('Bu talepte model yok.','There are no models in this request.'))}</div></td></tr>`}</tbody>
+      <div class="pdMatrixScroll"><table class="pdMatrix" style="--pd-columns:${matrix.manufacturers.length+(layout.other.length?1:0)}" aria-label="${esc(L('Model × üretici teklif matrisi','Model × manufacturer quotation matrix'))}">
+        <colgroup><col class="pdModelWidth"><col class="pdTargetWidth"><col class="pdBestWidth"><col class="pdDeltaWidth">${Array.from({length:matrix.manufacturers.length+(layout.other.length?1:0)},()=>'<col class="pdSupplierWidth">').join('')}</colgroup>
+        <thead><tr><th scope="col" class="pdModelHead">${esc(L('Model','Model'))}</th><th scope="col" class="pdNum pdTarget">${esc(L('Hedef','Target'))}</th><th scope="col" class="pdNum pdStickyBest">${esc(L('En iyi / Onaylı','Best / Approved'))}</th><th scope="col" class="pdNum pdStickyDelta">Δ ${esc(L('Hedef','Target'))}</th>${heads}${otherHead}</tr></thead>
+        <tbody>${matrix.models.length?matrixRowsHtml(req,matrix,{canEdit,other:layout.other}):`<tr><td colspan="${matrix.manufacturers.length+4+(layout.other.length?1:0)}"><div class="pricingEmptyState">${esc(L('Bu talepte model yok.','There are no models in this request.'))}</div></td></tr>`}</tbody>
       </table></div>
       <div class="pdHints" aria-hidden="true"><span><kbd>Enter</kbd> ${esc(L('alt satır','next row'))}</span><span><kbd>Tab</kbd> ${esc(L('sonraki üretici','next manufacturer'))}</span><span><kbd>A</kbd> ${esc(L('onayla','approve'))}</span><span><kbd>D</kbd> Drop</span><span><kbd>Ctrl+V</kbd> ${esc(L('Excel’den blok yapıştır','paste a block from Excel'))}</span><span><kbd>Ctrl+Z</kbd> ${esc(L('geri al','undo'))}</span><span><kbd>Esc</kbd> ${esc(L('vazgeç','cancel'))}</span></div>`;
+    host.querySelectorAll('[data-pd-expand],[data-pd-collapse]').forEach(button=>button.addEventListener('click',()=>{
+      const scroll=host.querySelector('.pdMatrixScroll'),left=scroll?.scrollLeft||0;
+      if(button.hasAttribute('data-pd-expand'))state.expandedSuppliers[req.id]=true;else delete state.expandedSuppliers[req.id];
+      store.set(SUPPLIERS_KEY,state.expandedSuppliers);renderMatrix(host,req);
+      const next=host.querySelector('.pdMatrixScroll');if(next)next.scrollLeft=left;
+      host.querySelector('[data-pd-collapse],[data-pd-expand]')?.focus({preventScroll:true});
+    }));
+    // Yazarken ve hücreler arasında ilerlerken sütunları yerinden oynatma.
+    host.onfocusout=()=>setTimeout(()=>{
+      if(host.dataset.pdOrderDirty!=='1'||host.contains(document.activeElement))return;
+      delete host.dataset.pdOrderDirty;
+      const left=host.querySelector('.pdMatrixScroll')?.scrollLeft||0;
+      renderMatrix(host,req);const scroll=host.querySelector('.pdMatrixScroll');if(scroll)scroll.scrollLeft=left;
+    },0);
     state.flash.clear();
     bindMatrix(host,req,matrix,candidates);
     bindThumbs(host);
@@ -290,6 +312,8 @@
     const delta=shown&&info.target?E.pct(shown.price,info.target):null;
     const best=tr.querySelector('[data-pd-best]');if(best)best.innerHTML=shown?`<b>${esc(money(shown.price))}</b><span>${esc(shown.manufacturer)}${stats.approved?` · ${esc(L('onaylı','approved'))}`:''}</span>`:'<span>—</span>';
     const deltaCell=tr.querySelector('[data-pd-delta]');if(deltaCell)deltaCell.innerHTML=`<span class="pdChip ${toneOf(delta)}">${esc(pctText(delta))}</span>`;
+    E.supplierScorecards(req).forEach(card=>{const head=host.querySelector(`[data-pd-supplier="${CSS.escape(card.key)}"]`);if(head)head.innerHTML=supplierHeadHtml(card);});
+    host.dataset.pdOrderDirty='1';
     const undo=host.querySelector('[data-pd-undo]');if(undo)undo.disabled=!state.undo.some(group=>group.requestId===req.id);
   }
   function flashCell(host,lineId){
@@ -610,12 +634,19 @@
       <div class="pdCardFoot">${gain&&Number.isFinite(gain.gainPct)&&Math.abs(gain.gainPct)>=0.05?`<span class="pdChip ${toneOf(gain.gainPct)}">${esc(L('Pazarlık','Negotiation'))} ${esc(pctText(gain.gainPct))}</span>`:'<span></span>'}${canEdit&&waiting&&req.status!=='closed'?`<button type="button" class="tbtn sm" data-pd-remind="${esc(req.id)}"><svg class="ic" aria-hidden="true"><use href="#i-bell"/></svg>${esc(L(`Hatırlat (${waiting})`,`Remind (${waiting})`))}</button>`:''}</div>
     </div>`;
   }
+  function roundOffersHtml(req,round,byLine){
+    const groups=new Map();
+    round.offers.forEach(offer=>{const line=byLine.get(offer.lineId),key=line?.modelKey||offer.lineId;if(!groups.has(key))groups.set(key,{line,offers:[]});groups.get(key).offers.push(offer);});
+    return [...groups.values()].map(({line,offers})=>{const info=line?lineInfo(req,line):{model:'—'},prices=offers.map(o=>o.price).filter(Number.isFinite),best=prices.length?Math.min(...prices):null;
+      return `<div class="pdRoundModelGroup"><div class="pdRoundModelHead">${line?thumbHtml(req,line,'pdThumb isSmall'):''}<b>${esc(info.model)}</b><span>${esc(L('En iyi','Best'))} ${esc(money(best))}</span></div><div class="pdRoundChips">${offers.map(offer=>{const change=offer.previous!=null&&offer.price!=null?E.pct(offer.price,offer.previous):null;return `<span class="pdRoundQuote${offer.price===best?' isBest':''}" title="${esc(change==null?'':pctText(change))}"><b>${esc(offer.manufacturer)}</b>${offer.previous!=null?`<s>${esc(moneyPlain(offer.previous))}</s>`:''}<strong>${offer.price!=null?esc(money(offer.price)):esc(L('geri çekildi','withdrawn'))}</strong>${change!=null?`<small class="${toneOf(change)}">${esc(pctText(change))}</small>`:''}</span>`;}).join('')}</div></div>`;
+    }).join('')||`<div class="pdLaneEmpty">${esc(L('Bu turda henüz teklif yok.','No offers in this round yet.'))}</div>`;
+  }
   function roundsPanelHtml(req){
     const api=Q(),rounds=E.rounds(req),gain=E.requestGain(req),byLine=new Map((req.items||[]).map(item=>[item.id,item]));
     const list=rounds.slice().reverse().map(round=>`<div class="pdRound">
       <div class="pdRoundHead"><i class="pdRoundDot${round.n===Math.max(1,Number(req.round)||1)?' isCurrent':''}" aria-hidden="true"></i><b>${esc(L(`Tur ${round.n}`,`Round ${round.n}`))}</b><span>${esc(round.at?dateText(round.at):'')}${round.byName?` · ${esc(round.byName)}`:''}</span></div>
       ${round.note?`<div class="pdRoundNote">${esc(round.note)}</div>`:''}
-      <div class="pdRoundOffers">${round.offers.length?round.offers.map(offer=>{const line=byLine.get(offer.lineId);const info=line?lineInfo(req,line):{model:'—'};const change=offer.previous!=null&&offer.price!=null?E.pct(offer.price,offer.previous):null;return `<div class="pdRoundOffer">${line?thumbHtml(req,line,'pdThumb isSmall'):''}<span class="pdRoundModel"><b>${esc(info.model)}</b><small>${esc(offer.manufacturer)}</small></span>${offer.previous!=null?`<s class="pdNum">${esc(moneyPlain(offer.previous))}</s>`:'<span></span>'}<b class="pdNum">${offer.price!=null?esc(money(offer.price)):esc(L('geri çekildi','withdrawn'))}</b><span class="pdChip ${toneOf(change)}">${esc(change==null?(offer.source==='legacy'?L('ilk kayıt','first record'):'—'):pctText(change))}</span></div>`;}).join(''):`<div class="pdLaneEmpty">${esc(L('Bu turda henüz teklif yok.','No offers in this round yet.'))}</div>`}</div>
+      <div class="pdRoundOffers">${roundOffersHtml(req,round,byLine)}</div>
     </div>`).join('');
     return `<div class="pdPanelHead"><b>${esc(api.workspaceTitle(req))}</b><span>${esc(api.ownerLabel(req))} · ${esc(api.date(req.createdAt,false))}</span></div>
       ${gain?`<div class="pdGain"><div><span>${esc(L('İlk tur ort. en iyi','First-round avg best'))}</span><b>${esc(money(gain.firstAvg))}</b></div><div><span>${esc(L('Güncel ort.','Current avg'))}</span><b>${esc(money(gain.currentAvg))}</b></div><div><span>${esc(L('Kazanım','Gain'))}</span><b class="${toneOf(gain.gainPct)}">${esc(pctText(gain.gainPct))}</b></div></div>`:''}
@@ -735,7 +766,7 @@
     }));
     return out;
   }
-  function analysisPrefs(){return {groupBy:state.analysis.groupBy,basis:state.analysis.basis,view:state.analysis.view,filters:state.analysis.filters};}
+  function analysisPrefs(){return {groupBy:state.analysis.groupBy,basis:state.analysis.basis,view:state.analysis.view,filters:state.analysis.filters,allSuppliers:state.analysis.allSuppliers};}
   function heatClass(index){if(!Number.isFinite(index))return '';if(index<=-8)return 'isHeat-3';if(index<=-3)return 'isHeat-2';if(index<0)return 'isHeat-1';if(index>=8)return 'isHeat3';if(index>=3)return 'isHeat2';if(index>0)return 'isHeat1';return '';}
   function renderAnalysis(body){
     const observations=analysisObservations(),a=state.analysis;
@@ -776,13 +807,14 @@
       const open=dim;renderAnalysis(body);body.querySelector(`[data-pd-afilter="${open}"]`)?.closest('details')?.setAttribute('open','');
     }));
     body.querySelectorAll('[data-pd-acell]').forEach(cell=>cell.addEventListener('click',()=>{const group=cell.dataset.pdAcellGroup,supplier=cell.dataset.pdAcell;state.drill={type:'cell',group,supplier};renderDrill(body.querySelector('[data-pd-drill]'),result);body.querySelectorAll('.isDrill').forEach(el=>el.classList.remove('isDrill'));cell.classList.add('isDrill');}));
+    body.querySelector('[data-pd-all-suppliers]')?.addEventListener('click',()=>{a.allSuppliers=!a.allSuppliers;store.set(ANALYSIS_KEY,analysisPrefs());renderAnalysis(body);});
     body.querySelectorAll('[data-pd-asupplier]').forEach(row=>row.addEventListener('click',()=>{state.drill={type:'supplier',supplier:row.dataset.pdAsupplier};renderDrill(body.querySelector('[data-pd-drill]'),result);}));
   }
   function matrixAnalysisHtml(result){
     if(!result.groups.length)return `<div class="pricingEmptyState">${esc(L('Bu kapsamda analiz edilecek teklif yok. Buyer kapsamını veya filtreleri genişletin.','No offers to analyse in this scope. Widen the buyer scope or the filters.'))}</div>`;
-    const columns=result.columns.slice(0,24);
+    const columns=state.analysis.allSuppliers?result.columns:result.columns.slice(0,12);
     const groupLabel=L(...(GROUP_LABELS[result.groupBy]||['Grup','Group']));
-    return `<div class="pdAnalysisNote">${esc(L('Hücre: üreticinin bu gruptaki ortalama teklifi; çip: grup ortalamasına göre fark (yeşil = daha ucuz). Çerçeveli hücre grubun en avantajlı üreticisidir. Ayrıntı için hücreye tıklayın.','Cell: the manufacturer’s average offer in this group; chip: difference to the group average (green = cheaper). The framed cell is the group’s most advantageous manufacturer. Click a cell for details.'))}</div>
+    return `${result.columns.length>12?`<div class="pdSubBar"><button type="button" class="tbtn" data-pd-all-suppliers aria-pressed="${Boolean(state.analysis.allSuppliers)}">${esc(state.analysis.allSuppliers?L('İlk 12','Top 12'):L(`Tümü (${result.columns.length})`,`All (${result.columns.length})`))}</button></div>`:''}<div class="pdAnalysisNote">${esc(L('Hücre: üreticinin bu gruptaki ortalama teklifi; çip: grup ortalamasına göre fark (yeşil = daha ucuz). Çerçeveli hücre grubun en avantajlı üreticisidir. Ayrıntı için hücreye tıklayın.','Cell: the manufacturer’s average offer in this group; chip: difference to the group average (green = cheaper). The framed cell is the group’s most advantageous manufacturer. Click a cell for details.'))}</div>
       <div class="pdHeatScroll"><table class="pdHeat"><thead><tr><th scope="col" class="pdHeatGroup">${esc(groupLabel)}</th><th scope="col" class="pdNum">${esc(L('Ort.','Avg'))}</th>${columns.map(col=>`<th scope="col" title="${esc(col.name)}">${esc(col.name)}</th>`).join('')}</tr></thead>
       <tbody>${result.groups.map(group=>`<tr><th scope="row" class="pdHeatGroup"><b>${esc(group.label)}</b><small>${esc(L(`${group.models} model · ${group.count} teklif`,`${group.models} models · ${group.count} offers`))}</small></th><td class="pdNum"><b>${esc(money(group.avg))}</b></td>${columns.map(col=>{const cell=group.cell(col.key);if(!cell)return '<td class="pdHeatCell isEmpty">·</td>';const best=group.best&&group.best.key===cell.key;return `<td class="pdHeatCell ${heatClass(cell.index)}${best?' isBest':''}${cell.eligible?'':' isLowSample'}" data-pd-acell-group="${esc(group.key)}" data-pd-acell="${esc(cell.key)}" tabindex="0" title="${esc(`${cell.name} · ${money(cell.avg)} · ${L('min','min')} ${money(cell.min)} · ${L('maks','max')} ${money(cell.max)} · ${cell.models} ${L('model','models')}`)}"><b>${esc(moneyPlain(cell.avg))}</b><span>${esc(pctText(cell.index))}</span><small>${cell.models}</small></td>`;}).join('')}</tr>`).join('')}</tbody></table></div>`;
   }
@@ -815,5 +847,5 @@
     bindThumbs(host);
   }
 
-  window.BLPricingDesk={mount,openTab,setHistoryContext,renderMatrix,detailView,setDetailView,scopeAllows,ownerRows,setScope,undo:undoLast,_test:{supplierWorkbookPlan,state}};
+  window.BLPricingDesk={renderLanguage(){state.hosts.forEach(host=>{if(host.isConnected&&host.getClientRects().length)renderHost(host);});},mount,openTab,setHistoryContext,renderMatrix,detailView,setDetailView,scopeAllows,ownerRows,setScope,undo:undoLast,_test:{supplierWorkbookPlan,state}};
 })();

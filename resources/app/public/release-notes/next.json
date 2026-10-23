@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-21",
+  "publishedAt": "2026-10-23",
   "bootstrapVisual": false,
   "title": {
     "tr": "Fiyat Masası, Kompakt Koleksiyon fiyat görünümü ve lisans kartları",
@@ -1197,6 +1197,209 @@
         "caption": {
           "tr": "Kategori › Fit gruplaması ve {Kategori} başlığı",
           "en": "Category › Fit grouping and a {Category} title"
+        }
+      }
+    },
+    {
+      "id": "collection-tr-landed-safe-copy",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "TR Landed kopyası TL fiyatını korur",
+        "en": "TR Landed copies preserve the TRY price"
+      },
+      "body": {
+        "tr": "Izgara içinde TR Landed kopyalama ve aşağı doldurma, hesaplanan USD sonucunun yerine TL fiyatını, kuru ve çarpanı birlikte taşır. Çakışan aralıklarda kaynak girdiler korunur. Dışarıdan yapıştırılan tek değer TL fiyatına uygulanmaya devam eder.",
+        "en": "Copying TR Landed inside the grid and filling down carries the TRY price, FX and multiplier together. Source inputs are preserved in overlapping ranges. A single value pasted from outside still updates the TRY price."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "tr-landed-input-copy.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: demo satırlarda TR Landed kopyalama, aşağı doldurma ve dış TL değeri yapıştırma sonuçları",
+          "en": "Real Buyer Log: demo rows after TR Landed copy, fill down and external TRY value paste"
+        },
+        "caption": {
+          "tr": "TR Landed kopyası TL fiyatını korur",
+          "en": "TR Landed copies preserve the TRY price"
+        }
+      }
+    },
+    {
+      "id": "collection-detailed-price-exports",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Dışa aktarım",
+        "en": "Collection · Exports"
+      },
+      "title": {
+        "tr": "Fiyat ayrıntıları ayrı sütunlarda, tüm teklifler ikinci sayfada",
+        "en": "Separate price detail columns and a second sheet for every offer"
+      },
+      "body": {
+        "tr": "Excel ve satır kopyası landed girdilerini, avantajı ve Endeksmatik hesabını ayrı sütunlarda verir. Excel’de sayılar hesaplanabilir biçimde saklanır. Yeni Teklifler sayfasında her model için hedef, en iyi ve onaylı fiyat ile tüm üreticiler yer alır; en iyi teklif yeşil, onaylı teklif kalındır.",
+        "en": "Excel and row copies include landed inputs, advantage and Endeksmatik calculations in separate columns. Excel keeps numeric values usable in calculations. The new Quotations sheet shows each model’s target, best and approved price alongside every manufacturer; best offers are green and approved offers are bold."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cost-details.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: dışa aktarmalarda da ayrı sütunlara yazılan TR/YD girdileri ve avantaj, demo veriler",
+          "en": "Real Buyer Log: overseas/TR inputs and advantage also exported in separate columns, demo data"
+        },
+        "caption": {
+          "tr": "Fiyat ayrıntıları ayrı sütunlarda, tüm teklifler ikinci sayfada",
+          "en": "Separate price detail columns and a second sheet for every offer"
+        }
+      }
+    },
+    {
+      "id": "collection-cost-detail-columns",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · Maliyet",
+        "en": "Collection · Cost"
+      },
+      "title": {
+        "tr": "Maliyet görünümünde hesap girdileri ve sonuçları yan yana",
+        "en": "Calculation inputs and results side by side in Cost view"
+      },
+      "body": {
+        "tr": "Maliyet görünümü kaynak FOB, TL fiyatı, kur, çarpan, avantaj ve Endeksmatik ayrıntılarını ayrı sütunlarda gösterir. TL fiyatı, kur ve çarpanlar doğrudan düzenlenir; sayısal olmayan kur ve çarpan yapıştırmaları reddedilir. Görünüm seçimi kalıcı sütun sıranızı değiştirmez.",
+        "en": "Cost view shows source FOB, TRY price, FX, multipliers, advantage and Endeksmatik details in separate columns. Edit the TRY price, FX and multipliers directly; nonnumeric FX and multiplier pastes are rejected. Changing the view preserves your saved column order."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cost-details.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Maliyet görünümü: düzenlenebilir TL fiyatı, kur ve çarpanlar ile ayrı sonuç sütunları, demo veriler",
+          "en": "Real Buyer Log Cost view: editable TRY price, FX and multipliers alongside result columns, demo data"
+        },
+        "caption": {
+          "tr": "Maliyet görünümünde hesap girdileri ve sonuçları yan yana",
+          "en": "Calculation inputs and results side by side in Cost view"
+        }
+      }
+    },
+    {
+      "id": "pricing-crowded-competitive-desk",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası · Masa",
+        "en": "Pricing Desk · Desk"
+      },
+      "title": {
+        "tr": "Kalabalık taleplerde rekabetçi üreticiler önde",
+        "en": "Competitive manufacturers lead crowded requests"
+      },
+      "body": {
+        "tr": "Üretici başlıklarında kapsam, kazanılan model sayısı ve aynı-model fiyat endeksi görünür. Sıra kazanma, endeks ve kapsamla belirlenir. İlk sekize ek olarak kazanan ve onaylı üreticiler görünür kalır; kalanlar Diğer sütununda toplanır. Açma tercihi talep bazında hatırlanır. Model, hedef, en iyi/onaylı ve hedef farkı kaydırırken sabit kalır.",
+        "en": "Manufacturer headers show coverage, model wins and the same-model price index. Columns rank by wins, index and coverage. Winners and approved manufacturers remain visible alongside the top eight; the rest share an Other column. Expansion is remembered per request. Model, target, best/approved and target difference stay fixed while scrolling."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-folded-other.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: 30 model × 20 üretici, solda sabit özetler ve Diğer (11) teklif sütunu",
+          "en": "Real Buyer Log: 30 models × 20 manufacturers, fixed summaries and the Other (11) offer column"
+        },
+        "caption": {
+          "tr": "Kalabalık taleplerde rekabetçi üreticiler önde",
+          "en": "Competitive manufacturers lead crowded requests"
+        }
+      }
+    },
+    {
+      "id": "collection-quotation-distribution-band",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Teklif şeridi",
+        "en": "Collection · Quote strip"
+      },
+      "title": {
+        "tr": "Teklif dağılımı okunur bir bantta",
+        "en": "Offer distribution in a readable band"
+      },
+      "body": {
+        "tr": "Üst üste binen üretici noktaları yerine en düşük–en yüksek teklif bandı, ortanca çizgisi, hedef ve en iyi/onaylı işaretleri gösterilir. Üretici tekliflerinin ayrıntıları ipucunda ve fiyat çekmecesinde kalır.",
+        "en": "Overlapping manufacturer dots are replaced by a minimum–maximum offer band, a median line, and target and best/approved markers. Individual offers remain available in the tooltip and price drawer."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-offer-band.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon: 20 üreticili demo modellerin teklif bandı ve hedef işaretleri",
+          "en": "Real Buyer Log Collection: offer bands and target markers for demo models with 20 manufacturers"
+        },
+        "caption": {
+          "tr": "Teklif dağılımı okunur bir bantta",
+          "en": "Offer distribution in a readable band"
+        }
+      }
+    },
+    {
+      "id": "pricing-rounds-model-groups",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası · Turlar",
+        "en": "Pricing Desk · Rounds"
+      },
+      "title": {
+        "tr": "Tur teklifleri model başlıkları altında",
+        "en": "Round offers under model headings"
+      },
+      "body": {
+        "tr": "Tur zaman çizelgesinde her model görseli ve o turdaki en iyi fiyatıyla tek başlıkta toplanır. Üreticilerin teklifleri, önceki fiyatları ve değişimleri satır içi çiplerde görünür.",
+        "en": "The round timeline groups each model under one heading with its picture and best price for that round. Manufacturer offers, previous prices and changes appear in inline chips."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-model-rounds.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Turlar: model başlıkları altında 20 üreticinin teklif çipleri, demo veriler",
+          "en": "Real Buyer Log Rounds: offer chips from 20 manufacturers under model headings, demo data"
+        },
+        "caption": {
+          "tr": "Tur teklifleri model başlıkları altında",
+          "en": "Round offers under model headings"
+        }
+      }
+    },
+    {
+      "id": "pricing-analysis-competitive-columns",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası · Analiz",
+        "en": "Pricing Desk · Analysis"
+      },
+      "title": {
+        "tr": "Analizde aynı rekabet sırası, İlk 12 veya Tümü",
+        "en": "The same competitive order in Analysis, with Top 12 or All"
+      },
+      "body": {
+        "tr": "Isı matrisindeki üretici sütunları kazanılan model sayısı, aynı-model endeksi ve kapsam sırasını kullanır. On ikiden fazla üreticide İlk 12/Tümü anahtarıyla kapsam genişletilir; seçim hesabınızda hatırlanır.",
+        "en": "Heat matrix manufacturer columns rank by model wins, same-model index and coverage. With more than twelve manufacturers, switch between Top 12 and All; the preference is remembered for your account."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-competitive-analysis.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Analiz: rekabet sırasındaki 20 üretici ve İlk 12/Tümü seçimi, demo veriler",
+          "en": "Real Buyer Log Analysis: 20 manufacturers in competitive order and the Top 12/All switch, demo data"
+        },
+        "caption": {
+          "tr": "Analizde aynı rekabet sırası, İlk 12 veya Tümü",
+          "en": "The same competitive order in Analysis, with Top 12 or All"
         }
       }
     }
