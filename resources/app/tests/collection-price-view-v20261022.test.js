@@ -93,3 +93,27 @@ test('Fiyat Çekmecesi yalnız kanonik yazım yollarını kullanır', () => {
   assert.doesNotMatch(DRAWER, /<section/, 'global section kuralı çekmece içeriğini gizler');
   assert.match(HTML, /<script src="collection-price-drawer\.js\?v=__BL_ASSET_VERSION__&rev=1"><\/script>/);
 });
+
+test('Fiyat Çekmecesi drag-release ile kapanmaz, gerçek dış tıklamayla kapanır', () => {
+  const from=DRAWER.indexOf('function isBackdropTap(');
+  const to=DRAWER.indexOf('\n\n  function onClick(',from);
+  assert.ok(from>=0&&to>from,'backdrop guard exists');
+  const isBackdropTap=vm.runInNewContext(DRAWER.slice(from,to)+'\nisBackdropTap');
+  const backdrop={},panel={};
+  const pointer=(target,overrides={})=>({target,pointerId:1,button:0,isPrimary:true,clientX:60,clientY:90,...overrides});
+
+  assert.equal(isBackdropTap(pointer(backdrop),pointer(backdrop),backdrop),true,'normal outside click closes');
+  assert.equal(isBackdropTap(pointer(panel),pointer(backdrop),backdrop),false,'drag from drawer to outside stays open');
+  assert.equal(isBackdropTap(pointer(backdrop),pointer(panel),backdrop),false,'drag from outside into drawer stays open');
+  assert.equal(isBackdropTap(pointer(backdrop),pointer(backdrop,{clientX:100}),backdrop),false,'backdrop dragging stays open');
+  assert.equal(isBackdropTap(pointer(backdrop),pointer(backdrop,{pointerId:2}),backdrop),false,'mismatched pointer stays open');
+  assert.equal(isBackdropTap(pointer(backdrop,{button:2}),pointer(backdrop),backdrop),false,'right click does not close');
+  assert.equal(isBackdropTap(pointer(backdrop,{isPrimary:false}),pointer(backdrop),backdrop),false,'secondary pointer does not close');
+  assert.equal(isBackdropTap(null,pointer(backdrop),backdrop),false,'release with no press does not close');
+
+  assert.match(DRAWER,/overlay\.addEventListener\('pointerdown',event=>\{/);
+  assert.match(DRAWER,/state\.backdropTap=isBackdropTap\(state\.backdropDown,event,overlay\)/);
+  assert.match(DRAWER,/overlay\.addEventListener\('pointercancel'/);
+  assert.match(DRAWER,/if\(event\.target===state\.overlay\)\{if\(backdropTap\)close\(\);return;\}/);
+  assert.match(DRAWER,/if\(event\.target\.closest\('\[data-cpd-close\]'\)\)\{close\(\);return;\}/,'close button still works');
+});
