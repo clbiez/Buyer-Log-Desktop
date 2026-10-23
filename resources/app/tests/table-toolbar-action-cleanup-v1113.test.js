@@ -19,11 +19,9 @@ test('CP Orders Collection ortak toolbar cleanup katmanı yüklenir', () => {
   ]) assert.ok(UI.includes(marker), `page map missing: ${marker}`);
 });
 
-test('CP ve Orders Koleksiyona Kopyala eylemini Araçlar menüsünde tutar', () => {
-  assert.ok(UI.includes("el('cpCopyToKolBtn')"));
-  assert.match(UI, /page !== 'cp' && page !== 'orders'/);
-  assert.ok(UI.includes("PAGE_MAP[page].tools"));
-  assert.ok(UI.includes("button.classList.add('toolbarMenuNativeItem')"));
+test('CP ve Orders Koleksiyona Kopyala eylemi Araçlar menüsüne taşınmaz', () => {
+  assert.doesNotMatch(UI, /placeCopyToCollection|el\('cpCopyToKolBtn'\)/);
+  assert.match(INDEX, /id="cpCopyToKolBtn"[^>]*hidden/);
 });
 
 test('Kopyala ve Excel export CP Orders Collection üzerinde ikon-only olur', () => {
@@ -155,7 +153,7 @@ for (const page of ['cp', 'orders', 'koleksiyon']) {
     dom.viewActions.appendChild(dom.wrap);
     dom.flushFrames(3);
     assert.equal(dom.more.firstElementChild, dom.wrap, 'Sütunlar ⋯ menüsünün başında olmalı');
-    if (page !== 'koleksiyon') assert.equal(dom.tools.firstElementChild, dom.copy);
+    assert.notEqual(dom.tools.firstElementChild, dom.copy, 'Copy to Collection is no longer a Tools item');
     const before = dom.inserts();
     const frames = dom.flushFrames(20);
     assert.ok(frames < 20, 'enforce kendi DOM değişikliğiyle sonsuz rAF döngüsüne girmemeli');

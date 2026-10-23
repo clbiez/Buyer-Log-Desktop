@@ -533,7 +533,7 @@
   <span id="vfSharedActionsStart" class="vfSharedActionAnchor" aria-hidden="true"></span>
   <button class="navActionBtn" id="undoBtn" title="Geri al (Ctrl+Z)" data-i18n-title-tr="Geri al (Ctrl+Z)" data-i18n-title-en="Undo (Ctrl+Z)" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-arrow-back-up"/></svg> <span data-i18n-tr="Geri" data-i18n-en="Undo">Geri</span></button>
   <button class="navActionBtn" id="redoBtn" title="İleri al (Ctrl+Y)" data-i18n-title-tr="İleri al (Ctrl+Y)" data-i18n-title-en="Redo (Ctrl+Y)" disabled data-tb-priority="selection" data-tb-compact="icon"><svg class="ic"><use href="#i-arrow-forward-up"/></svg> <span data-i18n-tr="İleri" data-i18n-en="Redo">İleri</span></button>
-  <button class="navActionBtn" id="cpCopyToKolBtn" title="Seçili CP satırlarını Koleksiyon sayfasına kopyala" disabled data-tb-priority="secondary"><svg class="ic"><use href="#i-copy-plus"/></svg> <span data-i18n-tr="Koleksiyona Kopyala" data-i18n-en="Copy to Collection">Koleksiyona Kopyala</span></button>
+  <button type="button" class="navActionBtn" id="cpCopyToKolBtn" title="Seçili CP / Orders siparişlerini Koleksiyona kopyala" disabled hidden style="display:none" data-tb-priority="secondary"><svg class="ic"><use href="#i-copy-plus"/></svg> <span data-i18n-tr="Koleksiyona Kopyala" data-i18n-en="Copy to Collection">Koleksiyona Kopyala</span></button>
   <button class="navActionBtn" id="navCopy" title="Kopyala (başlıklarla) — Ctrl+C" data-i18n-title-tr="Kopyala (başlıklarla) — Ctrl+C" data-i18n-title-en="Copy with headers — Ctrl+C" data-tb-priority="secondary" data-tb-compact="icon"><svg class="ic"><use href="#i-copy"/></svg> <span data-i18n-tr="Kopyala" data-i18n-en="Copy">Kopyala</span></button>
   <button class="navActionBtn gridClipboardMenuBtn" id="navCopyMenuBtn" type="button" title="Kopyalama seçenekleri" data-i18n-title-tr="Kopyalama seçenekleri" data-i18n-title-en="Copy options" aria-haspopup="menu" aria-expanded="false" data-tb-priority="secondary">▾</button>
   <span id="gridSelectionStatus" class="gridSelectionStatus" aria-live="polite" data-tb-overflow="never"></span>
@@ -1496,7 +1496,7 @@
 <script src="column-display-names.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-date-range.js?v=__BL_ASSET_VERSION__"></script>
 <script src="theme-transition.js?v=__BL_ASSET_VERSION__&rev=1"></script>
-<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=20261022-cp-paste"></script>
+<script src="app-main.js?v=__BL_ASSET_VERSION__&rev=20261023-copy-collection"></script>
 <script src="collection-artwork-detail.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="checklist-answer-merge-engine.js?v=__BL_ASSET_VERSION__"></script>
 <script src="cp-plm-details.js?v=__BL_ASSET_VERSION__&rev=1"></script>
@@ -1542,7 +1542,7 @@
 <script src="backlog-radar-layout.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="collection-plm-drag-import.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="table-search-help.js?v=__BL_ASSET_VERSION__&rev=SEARCH-HELP-V1"></script>
-<script src="table-toolbar-action-cleanup.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="table-toolbar-action-cleanup.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-status-ui.js?v=__BL_ASSET_VERSION__"></script>
 <script src="collection-spreadsheet-engine.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="collection-spreadsheet.js?v=__BL_ASSET_VERSION__&rev=10"></script>

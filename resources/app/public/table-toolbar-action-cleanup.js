@@ -90,16 +90,6 @@
     return true;
   }
 
-  function placeCopyToCollection(page) {
-    const button = el('cpCopyToKolBtn');
-    if (!button) return false;
-    if (page !== 'cp' && page !== 'orders') return false;
-    const menu = el(PAGE_MAP[page].tools);
-    if (!menu) return false;
-    button.classList.add('toolbarMenuNativeItem');
-    return moveNode(button, menu, menu.firstElementChild);
-  }
-
   function placeColumns(page) {
     const config = PAGE_MAP[page];
     if (!config) return false;
@@ -115,7 +105,6 @@
     for (const id of ICON_ONLY_IDS) makeIconOnly(el(id));
     const page = activePage();
     let moved = false;
-    moved = placeCopyToCollection(page) || moved;
     moved = placeColumns(page) || moved;
     if (moved) {
       requestAnimationFrame(() => {
@@ -152,10 +141,9 @@
         const nodes = [...mutation.addedNodes, ...mutation.removedNodes];
         return nodes.some(node => {
           if (!node || node.nodeType !== 1) return false;
-          return node.id === 'cpCopyToKolBtn'
-            || node.id === 'navColsBtn'
+          return node.id === 'navColsBtn'
             || node.classList?.contains('navColsRight')
-            || node.querySelector?.('#cpCopyToKolBtn,#navColsBtn');
+            || node.querySelector?.('#navColsBtn');
         });
       });
       if (relevant) queueEnforce();
