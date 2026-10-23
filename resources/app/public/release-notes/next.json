@@ -12,6 +12,64 @@
   },
   "changes": [
     {
+      "id": "cp-orders-overview-live-sync",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Genel Bakış",
+        "en": "CP Tracker · Orders · Overview"
+      },
+      "title": {
+        "tr": "CP düzenlemeleri Siparişler ve Genel Bakış ekranlarına anında yansır",
+        "en": "CP edits sync immediately to Orders and Overview in the same session"
+      },
+      "body": {
+        "tr": "CP’de yapılan tarih, yükleme tipi, licensor, alt üretici, Supp. FOB, önem etiketi, eksik yükleme işareti ve not düzenlemeleri (Geri Al/İleri Al ve çoklu yapıştırma dahil) aynı oturumda yüklü Siparişler ve Genel Bakış satırlarıyla anında eşitlenir.",
+        "en": "Date, delivery type, licensor, sub-manufacturer, Supp. FOB, importance tag, shortage mark, and note edits in CP (including Undo/Redo and multi-cell paste) immediately sync to loaded Orders and Overview rows in the same session."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-orders-overview-live-sync.png",
+        "alt": {
+          "tr": "CP düzenlemesi sonrasında Siparişler tablosunda anında görünen güncel sipariş notu ve tarih, demo veri",
+          "en": "Updated order note and date immediately visible in the Orders table after a CP edit, demo data"
+        },
+        "caption": {
+          "tr": "Demo veride CP’de düzenlenen tarih ve sipariş notu, Siparişler sekmesine geçildiğinde yenileme gerekmeden güncel görünür.",
+          "en": "With demo data, a date and order note edited in CP appear up to date immediately when switching to the Orders tab."
+        }
+      }
+    },
+    {
+      "id": "collection-open-costing-meta",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · Ön Maliyet",
+        "en": "Collection · Open Costing"
+      },
+      "title": {
+        "tr": "Koleksiyon’dan oluşturulan Ön Maliyet onaylı üreticiyi, hedef fiyatı ve model mirasını taşır",
+        "en": "Open Costing created from Collection carries confirmed manufacturer, target price, and model-inherited fields"
+      },
+      "body": {
+        "tr": "Koleksiyon model grubundaki bir satırdan Ön Maliyet oluşturulduğunda onaylı üretici (yoksa numune üreticisi), hedef fiyat (Target Price) ve model grubundan miras alınan ülke, sezon, lisans, ürün tipi ve adet bilgileri eksiksiz aktarılır.",
+        "en": "Creating an Open Costing from a model-grouped Collection row now carries the confirmed manufacturer (or buying-sample manufacturer fallback), target price, and model-inherited country, season, license, product type, and quantity fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-open-costing-meta.png",
+        "alt": {
+          "tr": "Koleksiyon model grubundan oluşturulan Ön Maliyet ekranında dolu gelen üretici, hedef FOB ve ülke alanları, demo veri",
+          "en": "Open Costing screen populated with manufacturer, target FOB, and country from a Collection model group, demo data"
+        },
+        "caption": {
+          "tr": "Demo veride model grubundaki Koleksiyon satırından oluşturulan Ön Maliyet kaydında onaylı üretici, hedef FOB ve ülke alanları dolu gelir.",
+          "en": "With demo data, an Open Costing created from a model-grouped Collection row populates confirmed manufacturer, target FOB, and country."
+        }
+      }
+    },
+    {
       "id": "suppfob-rule-preserved-on-note",
       "type": "fix",
       "module": {
