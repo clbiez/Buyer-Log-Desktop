@@ -75,3 +75,22 @@ test('Overview and numeric filters pin choices in-place without resetting scroll
   assert.match(html, /boxes\.forEach\(x=>x\.onchange=\(\)=>\{pinCheckedFilterChoices\(list\);applyVals\(\);\}\)/);
   assert.match(html, /data-filter-order="\$\{index\}"/);
 });
+
+test('INTAKE and Quotation selectors keep selected items first in a stable viewport', () => {
+  const intake=read('intake.js'),quotes=read('quotations.js');
+  assert.match(intake, /\.sort\(\(a,b\)=>Number\(selected\.has\(b\)\)-Number\(selected\.has\(a\)\)\)/);
+  assert.match(intake, /list\.scrollTop = top/);
+  assert.match(intake, /let availableValues = localValues/);
+  assert.match(quotes, /orderedValues=values\.slice\(\)\.sort/);
+  assert.match(quotes, /data-filter-order=/);
+  assert.match(quotes, /pinCheckedFilterChoices\(panel\)/);
+});
+
+test('OAB drill and Backlog chart filters preserve selection order and scroll', () => {
+  const oab=read('oab.js'),charts=read('backlog-chart.js');
+  assert.match(oab, /orderedValues=values\.slice\(\)\.sort/);
+  assert.match(oab, /pinCheckedFilterChoices\(panel\)/);
+  assert.match(charts, /chartFilterOrder=available\.map/);
+  assert.match(charts, /seriesList\.scrollTop=scroll/);
+  assert.match(charts, /event\.target\.focus\?\.\(\{preventScroll:true\}\)/);
+});
