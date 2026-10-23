@@ -60,10 +60,10 @@ test('CP and Orders Fabric (PLM) filter shows card summaries and the same fabric
 test('fabric card filters canonicalize mixed language facets and keep actions visible',()=>{
   const vm=require('node:vm');
   const engine=require('../public/fabric-cards-engine');
-  const section=APP.slice(APP.indexOf('function fabricFacetValue('),APP.indexOf('function fabricCardDetailsForRaw('));
+  const section=APP.slice(APP.indexOf('const fabricFacetValueCache=new Map();'),APP.indexOf('function fabricCardDetailsForRaw('));
   const match=APP.slice(APP.indexOf('function fabricCardDetailsMatch('),APP.indexOf('function kolFabricDetailMatches('));
   assert.ok(section.includes('fabricFacetSelectedValues'));
-  const context={window:{BLFabricCards:engine}};
+  const context={window:{BLFabricCards:engine},KOL_FABRIC_DETAIL_KEYS:['category','type','yarn','weight','composition','finish','sustainability']};
   vm.runInNewContext(section+'\n'+match+'\nthis.facet={fabricFacetValue,fabricCardDetailsMatch};',context);
   const facet=context.facet;
   assert.equal(facet.fabricFacetValue('composition','65% Pamuk 35% Poliester'),
