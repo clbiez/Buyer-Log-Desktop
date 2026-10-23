@@ -30405,6 +30405,7 @@ async function kolFabricAiAnalyze(items,{onProgress}={}){
   }catch(_){}
   const ai=window.BuyerLogAI;
   const batches=api.chunk(items,api.AI_BATCH_SIZE);
+  const approvedStyles=[...kolFabricCards.values()].filter(card=>card.summarySource==='manual'&&card.raw);
   for(let index=0;index<batches.length;index++){
     const batch=batches[index];
     if(typeof onProgress==='function')onProgress(index,batches.length);
@@ -30414,7 +30415,7 @@ async function kolFabricAiAnalyze(items,{onProgress}={}){
         const result=await ai.ask({
           source:'fabric-card',
           lang:appLang==='en'?'en':'tr',
-          context:api.aiContext(batch,kolFabricCards),
+          context:api.aiContext(batch,approvedStyles),
           task:appLang==='en'?'Write a short fabric card summary and details for every fabric code in the context.':'Bağlamdaki her kumaş kodu için kısa kumaş kartı özeti ve ayrıntılarını yaz.',
         });
         const data=result&&(result.data||(result.structured&&result.structured.partial))||{};
@@ -30425,7 +30426,7 @@ async function kolFabricAiAnalyze(items,{onProgress}={}){
     failures.push(...checked.rejected);
     Object.values(checked.cards).forEach(card=>{
       const raw=batch.find(item=>item.code===card.code)?.raw||card.raw;
-      cards[card.code]=api.applyLearnedStyle(card,raw,kolFabricCards);
+      cards[card.code]=api.applyLearnedStyle(card,raw,approvedStyles);
       if(card.summarySource==='ai')aiCount++;
     });
   }
