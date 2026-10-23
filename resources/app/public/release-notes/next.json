@@ -329,6 +329,35 @@
           "en": "Rates read from the file, AI confidence and flagged changes are reviewed before saving."
         }
       }
+    },
+    {
+      "id": "layout-control-document-zoom",
+      "type": "feature",
+      "module": {
+        "tr": "Layout Kontrolü",
+        "en": "Layout Control"
+      },
+      "title": {
+        "tr": "Layout görselini yakınlaştırıp uzaklaştırın",
+        "en": "Zoom in and out on layout previews"
+      },
+      "body": {
+        "tr": "Sol belge panelindeki − / + düğmeleri veya Ctrl/⌘ + fare tekerleği ile %50–%400 yakınlaştırın. Genişliğe sığdır düğmesi başlangıç görünümüne döner; büyütülen belge panel içinde kaydırılır. Hata işaretleri görselle birlikte ölçeklenir, sağdaki inceleme paneli sabit kalır.",
+        "en": "Use − / + in the left document panel or Ctrl/⌘ + mouse wheel to zoom from 50% to 400%. Fit width restores the initial view; scroll within the panel to inspect the enlarged document. Finding markers scale with the page while the review panel stays unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "layout-control-zoom.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log arayüzünde anonim layout belgesi ve yüzde 150 yakınlaştırma kontrolleri",
+          "en": "Anonymous layout document and 150% zoom controls in the real Buyer Log UI"
+        },
+        "caption": {
+          "tr": "Demo PDF sol panelde büyütülür; işaretler belge üzerinde, inceleme sağ panelde kalır.",
+          "en": "The demo PDF is enlarged in the left panel; markers stay on the document and findings remain on the right."
+        }
+      }
     }
   ]
 }
