@@ -219,7 +219,7 @@
       <span class="mfpRowMain"><strong>${esc(card.name || T('(adsız üretici)', '(unnamed manufacturer)'))}</strong>
         <small>${esc([country, area].filter(Boolean).join(' · ') || T('Sınıflandırılmadı', 'Unclassified'))}</small></span>
       <span class="mfpRowMeta"><b>${card.sourceOnly ? nf(card.sourceRows) : (card.quantity ? nf(card.quantity) : '—')}</b><small>${esc(card.sourceOnly ? T('kaynak satırı', 'source rows') : T('adet', 'units'))}</small></span>
-      ${gradeBadge(card.performance)}
+      ${card.sourceOnly ? `<span class="mfpBadge">${esc(T('Kaynak adı', 'Source name'))}</span>` : gradeBadge(card.performance)}
       ${card.status === 'linked' ? '' : statusBadge(card)}
     </button>`;
   }
@@ -311,7 +311,7 @@
     };
     return `<article class="mfpCard">
       <header class="mfpCardHead"><div><span class="mfpEyebrow">${esc(T('Üretici kartı', 'Manufacturer card'))}</span><h3>${esc(card.name)}</h3>
-        <div class="mfpCardBadges">${statusBadge(card)}<span class="mfpBadge">${esc(record?.dtrStatus || 'DTR')}</span>${record && record.origin === 'manual' ? `<span class="mfpBadge">${esc(T('Elle eklendi', 'Added manually'))}</span>` : ''}${card.sourceOnly ? `<span class="mfpBadge">${esc(T('Kaynak kaydı', 'Source reference'))}</span>` : ''}</div></div>
+        <div class="mfpCardBadges">${statusBadge(card)}${card.sourceOnly ? '' : `<span class="mfpBadge">${esc(record?.dtrStatus || 'DTR')}</span>`}${record && record.origin === 'manual' ? `<span class="mfpBadge">${esc(T('Elle eklendi', 'Added manually'))}</span>` : ''}${card.sourceOnly ? `<span class="mfpBadge">${esc(T('Kaynak kaydı', 'Source reference'))}</span>` : ''}</div></div>
         <div class="mfpCardActions">${actions}</div></header>
       ${warnings.join('')}
       ${card.inAsas && !card.sourceOnly ? `<div class="mfpTiles">
