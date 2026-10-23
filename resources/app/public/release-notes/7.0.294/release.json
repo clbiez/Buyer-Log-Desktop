@@ -1,0 +1,1413 @@
+{
+  "schemaVersion": 1,
+  "version": "7.0.294",
+  "channel": "stable",
+  "publishedAt": "2026-10-23",
+  "title": {
+    "tr": "Fiyat Masası, Kompakt Koleksiyon fiyat görünümü ve lisans kartları",
+    "en": "Pricing Desk, compact Collection price view and license cards"
+  },
+  "summary": {
+    "tr": "Quotations ve Fiyat Geçmişi görselli teklif matrisi, pazarlık turları, Fiyat Defteri ve klasman analiziyle tek Fiyat Masası’nda birleşti; yetkili kullanıcılar birden çok buyer’ı aynı ekranda görür. Koleksiyon’da Kompakt fiyat görünümü, Fiyat Çekmecesi ve Veri Sağlığı geldi. Lisans kartları satırda düzenlenebilir bir listeye dönüştü; onay haritası sadeleşti, üretici atlası seçilen satırlardan oluşuyor. Royalty hesapları kuruşu kuruşuna; kaynak alanları, parsiyel detayları, Koleksiyon mirası ve checklist yönetimi iyileştirildi. Özel siparişler (BTS, Bayram …) etiketlenir ve Backlog'da ayrı değerlendirilir; Legacy BACKLOG RİSK kuralı düzeltildi. Lisansör satırda elle girilir, ASAS yenileme sonucu bildirir, aşama taslakları tek güncellemeyle tüm lisanslara yayılır; üretici atlasında harita çekmece gibi açılır ve hizalıdır.",
+    "en": "Quotations and Pricing History merged into one Pricing Desk with an image-based quotation matrix, negotiation rounds, a Price Ledger and classification analysis; authorised users see several buyers on one screen. Collection gains a Compact price view, the Price Drawer and Data Health. License cards became an in-row editable list; the approval map is simpler and the supplier atlas is built from selected rows. Cent-accurate royalty calculations; improved source fields, partial details, Collection inheritance and checklist management. Special orders (BTS, Eid …) are tagged and evaluated separately in Backlog; the Legacy BACKLOG RISK rule was fixed. Licensors are entered in the row, ASAS refresh reports its result, stage templates update every license at once; in the supplier atlas the map opens like a drawer and is aligned."
+  },
+  "stats": {
+    "features": 22,
+    "improvements": 13,
+    "fixes": 13
+  },
+  "changes": [
+    {
+      "id": "pricing-desk-matrix",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Quotations ve Fiyat Geçmişi tek Fiyat Masası’nda",
+        "en": "Quotations and Pricing History in one Pricing Desk"
+      },
+      "body": {
+        "tr": "Sol menüdeki Fiyat Masası; Masa, Turlar, Geçmiş ve Analiz sekmelerini bir arada sunar. Masa, talebi model görselleriyle model × üretici matrisi olarak gösterir: en iyi teklif, hedef farkı ve olağan dışı fiyat uyarısı hücrededir. Fiyatlar doğrudan yazılır veya Excel’den yapıştırılır; Ctrl+Z son girişi geri alır, hedefin altındaki en iyi teklifler önizlemeyle toplu onaylanır.",
+        "en": "The Pricing Desk in the left menu brings Desk, Rounds, History and Analysis together. The Desk shows a request as a model × manufacturer matrix with model images; best offer, target difference and outlier warnings are in the cell. Prices are typed or pasted from Excel, Ctrl+Z undoes the last entry, and best offers below target can be bulk-approved after a preview."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-matrix.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası: görselli model × üretici teklif matrisi, demo veriler",
+          "en": "Real Buyer Log Pricing Desk: model × manufacturer quotation matrix with images, demo data"
+        },
+        "caption": {
+          "tr": "Görselli teklif matrisi",
+          "en": "Quotation matrix with images"
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-rounds",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Pazarlık turları ve Fiyat Defteri",
+        "en": "Negotiation rounds and Price Ledger"
+      },
+      "body": {
+        "tr": "Yeni Tur, mevcut fiyatların üstüne yazmadan yeni bir pazarlık turu açar. Her fiyat, onay ve drop değişikliği satırın Fiyat Defteri’ne tarih, kişi ve tur bilgisiyle eklenir. Turlar sekmesi talepleri durum şeritlerinde ve her üreticinin tur tur fiyatını (önceki fiyat üstü çizili) gösterir.",
+        "en": "New Round opens a negotiation round without overwriting current prices. Every price, approval and drop change is added to the line’s Price Ledger with date, person and round. The Rounds tab shows requests in status lanes and each manufacturer’s price per round (previous price struck through)."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-rounds.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası Turlar sekmesi: durum şeritleri ve tur zaman çizelgesi, demo veriler",
+          "en": "Real Buyer Log Pricing Desk Rounds tab: status lanes and round timeline, demo data"
+        },
+        "caption": {
+          "tr": "Turlar: durum panosu ve pazarlık zaman çizelgesi",
+          "en": "Rounds: status board and negotiation timeline"
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-analysis",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Klasman bazında kim ne fiyat veriyor + ortak buyer görünümü",
+        "en": "Who quotes what by classification + shared buyer view"
+      },
+      "body": {
+        "tr": "Analiz sekmesi klasman, MAG, MMYG veya buyer × üretici ısı matrisi, üretici karnesi ve buyer karşılaştırması sunar; hücre o grubun model ve tekliflerini görselleriyle açar. Görüntüleme yetkisi olan kullanıcı, üst çubuktaki Buyer kapsamından bir veya birden çok buyer’ın verisini aynı ekranda görür; yetki sunucuda denetlenir.",
+        "en": "The Analysis tab offers a classification, MAG, MMYG or buyer × manufacturer heat matrix, a supplier scorecard and a buyer comparison; a cell opens that group’s models and offers with images. Users with view permission can see one or more buyers’ data on the same screen via Buyer scope on the top bar; permission is enforced on the server."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-analysis.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası Analiz sekmesi: klasman × üretici ısı matrisi, iki demo buyer",
+          "en": "Real Buyer Log Pricing Desk Analysis tab: classification × manufacturer heat matrix, two demo buyers"
+        },
+        "caption": {
+          "tr": "Klasman × üretici analizi (çoklu buyer)",
+          "en": "Classification × manufacturer analysis (multi-buyer)"
+        }
+      }
+    },
+    {
+      "id": "pricing-desk-history",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Geçmiş: model başına fiyat trendi",
+        "en": "History: price trend per model"
+      },
+      "body": {
+        "tr": "Geçmiş sekmesi her modeli görseliyle ve üretici bazında fiyat trendiyle gösterir; noktalar Fiyat Defteri olaylarından gelir. Kayıt tablosu ve Benchmark Olarak Uygula aynı sekmede kalır. Eski Fiyat Geçmişi adresi bu sekmeyi açar.",
+        "en": "The History tab shows each model with its image and a per-manufacturer price trend; points come from Price Ledger events. The record table and Apply as Benchmark stay on the same tab. The old Pricing History address opens this tab."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-desk-history.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası Geçmiş sekmesi: görselli model kartları ve fiyat trendleri, demo veriler",
+          "en": "Real Buyer Log Pricing Desk History tab: model cards with images and price trends, demo data"
+        },
+        "caption": {
+          "tr": "Model başına fiyat trendi",
+          "en": "Price trend per model"
+        }
+      }
+    },
+    {
+      "id": "pricing-ledger-safe-merge",
+      "type": "fix",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Aynı talepte birlikte çalışırken fiyat kaybolmaz",
+        "en": "Prices are no longer lost when working together on a request"
+      },
+      "body": {
+        "tr": "Fiyat, onay ve drop artık satır bazında kaydedilir; iki kişi aynı talepte farklı satırları düzenlediğinde ya da iki cihaz eşitlendiğinde biri diğerinin girdiğini ezmez. Başka bir buyer’ın sayfası açıkken kendi teklifinizin fiyatı yanlış satıra yazılmaz; düzenleme yetkisiyle girilen fiyat sahibin Koleksiyon’una yansır.",
+        "en": "Price, approval and drop are now saved per line; when two people edit different lines of the same request or two devices sync, neither overwrites the other. With another buyer’s page open, your own quotation price is no longer written to the wrong row; prices entered with edit permission reach the owner’s Collection."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-ledger-safe-merge.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası: model geçmişinde tarih, kişi ve tur bilgisiyle teklifler, demo veriler",
+          "en": "Real Buyer Log Pricing Desk: offers with date, person and round in model history, demo data"
+        },
+        "caption": {
+          "tr": "Satır bazlı kayıt ve kişi/tur izi",
+          "en": "Per-line saving with person/round trail"
+        }
+      }
+    },
+    {
+      "id": "collection-compact-price-view",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kompakt fiyat görünümü ve Veri Sağlığı",
+        "en": "Compact price view and Data Health"
+      },
+      "body": {
+        "tr": "Koleksiyon’da varsayılan Kompakt görünüm teklif, onaylı üretici, hedef farkı ve FOB’u tek Teklif & Onay şeridinde; Overseas/TR Landed ve avantajı Landed Özeti’nde gösterir. Detay ayrı sütunlara, Maliyet royalty, hologram ve landed sütunlarına döner; sütun düzeniniz değişmez, Excel ayrıntılı aktarılır. Veri Sağlığı çipleri kuralı, kuru veya hedefi eksik, teklif ya da onay bekleyen modelleri tek tıkla süzer.",
+        "en": "In Collection the default Compact view shows quotes, approved manufacturer, target difference and FOB in one Quotes & Approval strip, and Overseas/TR Landed with the advantage in Landed Summary. Detail returns to separate columns and Cost shows royalty, hologram and landed columns; your column layout is unchanged and Excel exports the detail. Data Health chips filter models missing a rule, FX or target, or awaiting quotations or approval, with one click."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-compact-price-view.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon: Teklif & Onay şeridi, Fiyat görünümü düğmeleri ve Veri Sağlığı çipleri, demo veriler",
+          "en": "Real Buyer Log Collection: Quotes & Approval strip, Price view buttons and Data Health chips, demo data"
+        },
+        "caption": {
+          "tr": "Teklif & Onay şeridi ve Veri Sağlığı",
+          "en": "Quotes & Approval strip and Data Health"
+        }
+      }
+    },
+    {
+      "id": "collection-price-drawer",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Fiyat Çekmecesi",
+        "en": "Price Drawer"
+      },
+      "body": {
+        "tr": "Teklif & Onay veya Landed Özeti hücresine çift tıklamak modelin görseliyle Fiyat Çekmecesi’ni açar: teklifler ve pazarlık izi, tek tıkla onay, hedef fiyat, Supp. FOB → Royalty/Hologram → Landed maliyet şelalesi ve TR fiyatı/kur/çarpan girişleri. Yazımlar tablo hücreleriyle aynı yoldan geçer; geri alma ve model/renk bağı korunur.",
+        "en": "Double-clicking a Quotes & Approval or Landed Summary cell opens the Price Drawer with the model image: offers and negotiation trail, one-click approval, target price, the Supp. FOB → Royalty/Hologram → Landed cost waterfall and TR price/FX/multiplier inputs. Writes use the same path as table cells, so undo and model/colour links are kept."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-price-drawer.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon Fiyat Çekmecesi: teklifler, onay ve maliyet şelalesi, demo veriler",
+          "en": "Real Buyer Log Collection Price Drawer: offers, approval and cost waterfall, demo data"
+        },
+        "caption": {
+          "tr": "Model başına tüm fiyat resmi",
+          "en": "The full price picture per model"
+        }
+      }
+    },
+    {
+      "id": "pricing-supplier-excel-import",
+      "type": "feature",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Üretici dönüş Excel’i içe aktarma",
+        "en": "Supplier return Excel import"
+      },
+      "body": {
+        "tr": "Fiyat talebi Excel’i gizli satır anahtarı ve Quotation Price sütunu taşır. Üreticinin doldurduğu dosya Masa’ya bırakıldığında satırlar anahtar, PLM ID veya model koduyla eşlenir, üretici dosya adından bulunur; değişiklikler görselli önizlemede gösterilir ve onayla uygulanır. Türkçe başlıklar (Model Adı, Teklif Fiyatı, PLM ID) de tanınır.",
+        "en": "The pricing request Excel carries a hidden row key and a Quotation Price column. When the supplier’s file is dropped on the Desk, rows are matched by key, PLM ID or model code and the manufacturer is detected from the file name; changes are shown in a preview with images and applied on confirmation. Turkish headers (Model Adı, Teklif Fiyatı, PLM ID) are recognised too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-supplier-excel-import.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Fiyat Masası: üretici dönüş Excel’i önizlemesi, demo veriler",
+          "en": "Real Buyer Log Pricing Desk: supplier return Excel preview, demo data"
+        },
+        "caption": {
+          "tr": "Dönüş Excel’i önizlemesi",
+          "en": "Supplier Excel preview"
+        }
+      }
+    },
+    {
+      "id": "checklist-delete-all-users",
+      "type": "fix",
+      "module": {
+        "tr": "Kontrol Listesi ve Kurallar",
+        "en": "Checklist and Rules"
+      },
+      "title": {
+        "tr": "Tüm kullanıcılardan sil",
+        "en": "Delete for all users"
+      },
+      "body": {
+        "tr": "Moderatör için her checklist ve kuralın yanında ayrı bir “Tüm kullanıcılardan sil” düğmesi bulunur. Silme, onaylandıktan ve ortak kayıt başarıyla tamamlandıktan sonra Master kural yayınıyla dağıtılır; kullanıcıların diğer kişisel kuralları korunur. Çöp kutusu yalnız kişisel silme yapar. Bekleyen otomatik kayıt silinen checklisti yeniden yayımlamaz; geri alma için kişisel tanımlar korunur.",
+        "en": "Each checklist and rule has a separate “Delete for all users” button for the Moderator. After confirmation and a successful shared save, deletion is distributed with the Master rule release; users keep their other personal rules. The trash icon deletes only the personal copy. Pending autosave cannot republish a deleted checklist, and personal definitions are preserved for undo."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-delete-all-users.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log kontrol ayarları: tüm kullanıcılardan silme düğmeleri ve silinen Testler kontrolü, demo veriler",
+          "en": "Real Buyer Log checklist settings: delete-for-all buttons and the deleted Tests check, demo data"
+        },
+        "caption": {
+          "tr": "Checklistleri tüm kullanıcılardan kaldırma ve silmeyi geri alma",
+          "en": "Remove checklists for all users and undo deletion"
+        }
+      }
+    },
+    {
+      "id": "detail-report-source-values",
+      "type": "fix",
+      "module": {
+        "tr": "Global Flow Map · Alt detay raporları",
+        "en": "Global Flow Map · Detail reports"
+      },
+      "title": {
+        "tr": "Alt detaylarda kaynak sütunları eksiksiz",
+        "en": "Source columns restored in detail reports"
+      },
+      "body": {
+        "tr": "Harita detayları FOB, alt üretici FOB, sipariş adedi, lisansör ve tarihleri kendi veri kapsamından okur; tamamlanmış Backlog siparişleri de korunur. Parsiyel statüsü ve boş tarihleri sipariş özetiyle ezilmez. Ortak raporlarda kanonik alan okuma, arama, filtre ve Excel aynı değerleri kullanır; boş fiyatlar sıfıra, açıklamalı başlıklar başka alanlara dönüşmez.",
+        "en": "Map details read FOB, supplier FOB, order quantity, licensor and dates from their own data scope, including completed Backlog orders. Partial status and empty dates are no longer overwritten by order summaries. Shared reports use the same canonical values for display, search, filters and Excel; empty prices stay empty and descriptive headings cannot resolve to unrelated fields."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "detail-source-values.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log harita detayında demo siparişlerin dolu FOB, adet ve tarih sütunları",
+          "en": "Populated FOB, quantity and date columns for demo orders in the real Buyer Log map detail"
+        },
+        "caption": {
+          "tr": "Backlog kaynağından doğru fiyat, adet ve tarihler",
+          "en": "Correct prices, quantities and dates from the Backlog source"
+        }
+      }
+    },
+    {
+      "id": "collection-detail-effective-values",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon Analizi",
+        "en": "Collection Analytics"
+      },
+      "title": {
+        "tr": "Detaylarda miras alınan model alanları",
+        "en": "Inherited model fields in details"
+      },
+      "body": {
+        "tr": "Analiz alt detayları model grubundan miras alınan Buyer, sezon ve diğer alanların ekranda geçerli değerlerini gösterir. Renge özel değerler korunur; kaynak kayıtlar değişmez.",
+        "en": "Analytics details show the effective Buyer, season and other fields inherited from the model group. Colour-specific overrides are preserved without changing source records."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-detail-inherited-values.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon analiz detayında demo renklerin miras alınan Buyer ve farklı sezon değerleri",
+          "en": "Inherited Buyer and distinct season values for demo colours in the real Buyer Log Collection analytics detail"
+        },
+        "caption": {
+          "tr": "Ortak Buyer değeri ve renge özel sezon korunur",
+          "en": "Shared Buyer and colour-specific season values are preserved"
+        }
+      }
+    },
+    {
+      "id": "cp-date-revision-sync-merge",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · SYNC",
+        "en": "CP Tracker · SYNC"
+      },
+      "title": {
+        "tr": "Eşzamanlı tarih revizyonları kaybolmaz",
+        "en": "Concurrent date revisions are no longer lost"
+      },
+      "body": {
+        "tr": "Aynı sipariş satırında Ex-Factory, Retail Date ve MB Date farklı bilgisayarlarda aynı anda revize edildiğinde SYNC artık yalnız değiştirilen tarihi taşır ve birleştirir; diğer kullanıcının revizyonu ezilmez. Aynı tarih aynı anda iki kez değiştirilirse sahibin son kaydı kazanır, sahipliği belirsiz yarışlar sessizce ezilmek yerine çakışma olarak gösterilir. Birleşen tarihler CP, Siparişler, Backlog ve Excel çıktılarında aynen görünür; uygulamayı kapatıp açmak veya eski sürümle eşitlemek revizyonları geri almaz.",
+        "en": "When Ex-Factory, Retail Date and MB Date of the same order line are revised at the same time on different computers, SYNC now carries and merges only the changed date, so the other user's revision is no longer overwritten. If the same date is changed twice at once, the owner's latest save wins; races with unknown ownership are shown as a conflict instead of being silently overwritten. Merged dates appear the same in CP, Orders, Backlog and Excel exports; restarting the app or syncing with an older version does not undo revisions."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-date-revision-sync-merge.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: Yükleme Termin, Retail Tarihi ve Model Bütçe revizyonları eski → yeni gösterimiyle, demo veriler",
+          "en": "Real Buyer Log CP Tracker: Ex-Factory, Retail Date and Model Budget revisions shown as old → new, demo data"
+        },
+        "caption": {
+          "tr": "Üç tarih alanının revizyonları birlikte korunur",
+          "en": "Revisions of all three date fields are preserved together"
+        }
+      }
+    },
+    {
+      "id": "royalty-exact-rounding",
+      "type": "fix",
+      "module": {
+        "tr": "License Royalty Calculations · CP · Koleksiyon",
+        "en": "License Royalty Calculations · CP · Collection"
+      },
+      "title": {
+        "tr": "Royalty hesapları kuruşu kuruşuna",
+        "en": "Cent-accurate royalty calculations"
+      },
+      "body": {
+        "tr": "Royalty ile TR/YD komisyonu artık kesin ondalık olarak toplanır; ör. %18,7 + %2,9 ile Final FOB yarım kuruş sınırında 1,92 yerine doğru 1,93 çıkar. CP Supp. FOB, Fiyat Kontrolü ve Koleksiyon FOB aynı kesin formülü kullanır; %12,125 gibi hassas oranlar Koleksiyon’da kırpılmaz. Sunucunun CP kayıt bilgisi ülke komisyonunu ve efektif oranı doğru taşır. Hesap penceresi kaydedilmemiş değişiklikleri Esc veya dışarı tıklamayla sessizce silmez ve eşleşen sipariş sayılarını her tuşta yeniden taramaz.",
+        "en": "Royalty and TR/international commission are now added as exact decimals; e.g. with 18.7% + 2.9% a half-cent Final FOB is correctly 1.93 instead of 1.92. CP Supp. FOB, Price Check and Collection FOB share the same exact formula, and precise rates such as 12.125% are no longer truncated in Collection. The server CP record carries the correct country commission and effective rate. The calculations window no longer drops unsaved changes on Esc or an outside click, and matching order counts are not rescanned on every keystroke."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "royalty-exact-rounding.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log License Royalty Hesapları: %18,7 + TR %2,9 kuralıyla Supp. FOB 1,47 için Final FOB TR 1,93, demo veriler",
+          "en": "Real Buyer Log License Royalty Calculations: Final FOB TR 1.93 for Supp. FOB 1.47 with an 18.7% + TR 2.9% rule, demo data"
+        },
+        "caption": {
+          "tr": "Yarım kuruş sınırında doğru yuvarlanan Final FOB",
+          "en": "Final FOB rounded correctly at the half-cent boundary"
+        }
+      }
+    },
+    {
+      "id": "license-cards-list-view",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisans kartları liste görünümünde",
+        "en": "License cards as a list"
+      },
+      "body": {
+        "tr": "Lisans kartları baştan Buyer Log liste görünümü olarak yeniden yapıldı. Her satırda en solda lisans görseli, lisansör, Royalty, TR ve YD komisyonu, hologram, geçerlilik ve kısa onay haritası görünür. Oranlar doğrudan satırda düzenlenir: Enter kaydeder, Esc geri alır; hatalı oran sunucuya gitmeden işaretlenir. Bir lisansın birden çok lisansörü varsa her biri ayrı satırdır. Satır açıldığında tüm sözleşmeler, ilgili kişi/portal bilgileri ve görsel yükleme aynı yerdedir. Arama, Licensor ve durum filtreleri, sıralama ve yumuşak geçiş animasyonları vardır.",
+        "en": "License cards were rebuilt as a Buyer Log list. Each row shows the license image on the left, licensor, royalty, TR and international commission, hologram, validity and a compact approval map. Rates are edited directly in the row: Enter saves, Esc reverts; invalid rates are flagged before reaching the server. A license with several licensors gets one row per licensor. Expanding a row shows every contract, contact/portal details and image upload in one place. Search, licensor and status filters, sorting and smooth transitions are included."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-list-view.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları listesi: görseller, lisansörler ve düzenlenebilir oranlar, demo veriler",
+          "en": "Real Buyer Log license card list with images, licensors and editable rates, demo data"
+        },
+        "caption": {
+          "tr": "Satırda düzenlenebilir lisans listesi",
+          "en": "License list with in-row editing"
+        }
+      }
+    },
+    {
+      "id": "license-cards-new-period",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları · Sözleşmeler",
+        "en": "License cards · Contracts"
+      },
+      "title": {
+        "tr": "Yeni sözleşme dönemi güvenli başlar",
+        "en": "New contract periods start safely"
+      },
+      "body": {
+        "tr": "Satır ayrıntılarındaki “Yeni dönem” artık sıfır royalty yerine en güncel sözleşmenin oranlarını ve sezon kapsamını kopyalar; aynı kapsamdaki açık önceki dönemi bir gün önce kapatır ve bunu bir notla gösterir. Böylece kayıt çakışma hatasına düşmez ve yanlışlıkla %0 royalty ile yeni siparişler fiyatlanmaz. Yeni dönemin başlangıç tarihi değiştirilirse önceki dönemin bitişi de otomatik izler; iki dönem arasında royalty’siz OPD boşluğu kalmaz. İlk sözleşmede royalty alanı boş gelir ve girilmesi zorunludur.",
+        "en": "“New period” in the row details now copies the latest contract’s rates and season scope instead of zero royalty, ends the previous open period with the same scope one day earlier and explains this in a note. Saving no longer fails with an overlap and new orders are never priced at 0% royalty by accident. If the new start date is changed, the previous period’s end follows automatically, so no OPD gap is left without royalty. For a first contract the royalty field starts empty and is required."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-new-period.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans satırı ayrıntısı: planlanan yeni dönem ve 2026-10-31’de kapanan önceki dönem, demo veriler",
+          "en": "Real Buyer Log license row details: an upcoming new period and the previous period ending 2026-10-31, demo data"
+        },
+        "caption": {
+          "tr": "Önceki dönemi otomatik kapatan yeni sözleşme dönemi",
+          "en": "New contract period that closes the previous one"
+        }
+      }
+    },
+    {
+      "id": "collection-fabric-card-copy-paste",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kumaş kartı kopyala-yapıştırda korunur",
+        "en": "Fabric cards survive copy and paste"
+      },
+      "body": {
+        "tr": "Kumaş hücresi kopyalanıp Koleksiyon içinde yapıştırıldığında yalnız özet metin değil, kumaş kodu ve kartı da gelir. Excel'e yapıştırırken görünen kart özeti aynen kalır; Ctrl+D aşağı doldurma da kartı korur.",
+        "en": "Copying a Fabric cell and pasting it within Collection now brings the fabric code and its card, not just the summary text. Pasting into Excel still gives the visible card summary, and Ctrl+D fill-down keeps the card too."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-fabric-card-copy-paste.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon tablosu: tek kumaş kartı kopyalanıp altı satıra yapıştırılmış, her satırda 3859 kartı görünüyor, demo veriler",
+          "en": "Real Buyer Log Collection table: one fabric card copied and pasted into six rows, each showing the 3859 card, demo data"
+        },
+        "caption": {
+          "tr": "Yapıştırılan kumaş hücreleri kartıyla birlikte gelir",
+          "en": "Pasted Fabric cells keep their card"
+        }
+      }
+    },
+    {
+      "id": "license-cards-approval-map",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları · Onay haritası",
+        "en": "License cards · Approval map"
+      },
+      "title": {
+        "tr": "Sade onay haritası",
+        "en": "Simplified approval map"
+      },
+      "body": {
+        "tr": "Onay haritası satırdaki küçük adım şeridiyle özetlenir; satırdaki harita düğmesi kompakt düzenleyiciyi yan panelde açar. Her adım tek satırdır: ad, kimin onaylayacağı, test ve üreticiyle paylaşım; ayrıntılar açılınca gönderimler, talimatlar ve görsel kılavuz görünür. Adımlar sıralanır, başka bir lisanstan kopyalanabilir; adresler, portal ve genel gereksinimler aynı panelde.",
+        "en": "The approval map is summarised by a small step strip in each row; the row's map button opens a compact editor in a side panel. Each step is one line: name, who approves, test and supplier sharing; expanding it shows routes, instructions and the visual guide. Steps can be reordered or copied from another license; addresses, portal and general requirements are in the same panel."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-approval-map.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log onay haritası düzenleyicisi: üç adım ve onaylayan seçimi, demo veriler",
+          "en": "Real Buyer Log approval map editor with three steps and approver choice, demo data"
+        },
+        "caption": {
+          "tr": "Kompakt onay haritası düzenleyicisi",
+          "en": "Compact approval map editor"
+        }
+      }
+    },
+    {
+      "id": "order-importance-tags",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler",
+        "en": "CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Sipariş önem etiketleri",
+        "en": "Order importance tags"
+      },
+      "body": {
+        "tr": "Siparişler BTS, Transition, Bayram, Ekvator, New Year gibi önem etiketleriyle ayırt edilir. Yeni Önem Etiketi sütununda etiket listeden seçilir, serbest metin yazılmaz; menüden yeni etiket de eklenebilir. Etiket sipariş + model + renk satırına bağlıdır, aynı modelin siparişleri farklı etiket taşıyabilir. Etiketi olmayan sipariş Regular sayılır.",
+        "en": "Orders are distinguished with importance tags such as BTS, Transition, Eid (Bayram), Equator (Ekvator) and New Year. In the new Importance Tag column the tag is picked from a list instead of typed; a new tag can be added from the menu. The tag belongs to the order + model + colour line, so orders of the same model can carry different tags. Untagged orders count as Regular."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "order-importance-cp-orders.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: Önem Etiketi sütunu ve açık etiket menüsü, demo veriler",
+          "en": "Real Buyer Log CP Tracker: Importance Tag column with the tag menu open, demo data"
+        },
+        "caption": {
+          "tr": "CP'de siparişe önem etiketi seçme",
+          "en": "Picking an importance tag for an order in CP"
+        }
+      }
+    },
+    {
+      "id": "order-importance-settings",
+      "type": "feature",
+      "module": {
+        "tr": "Ayarlar · Hesaplama kuralları",
+        "en": "Settings · Calculation rules"
+      },
+      "title": {
+        "tr": "Önem etiketi kataloğu ve Line kuralları",
+        "en": "Importance tag catalogue and Line rules"
+      },
+      "body": {
+        "tr": "Ayarlar'daki Sipariş Önem Etiketleri penceresinden etiketler eklenir, yeniden adlandırılır, renklendirilir veya silinir. Line kuralı bir Line grubunun (isteğe bağlı sezonla) tüm siparişlerini otomatik etiketler; siparişte seçilen etiket kuralı ezer. Silinen etiketin atamaları Regular'a döner. Katalog Moderatör yayımıyla ekibe dağılır.",
+        "en": "The Order Importance Tags window in Settings adds, renames, colours or deletes tags. A Line rule tags every order of a Line group automatically (optionally by season); a tag picked on the order overrides the rule. Assignments of a deleted tag revert to Regular. The catalogue is distributed to the team with the Moderator release."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "order-importance-settings.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Sipariş Önem Etiketleri penceresi: ön tanımlı etiketler ve Line kuralı, demo veriler",
+          "en": "Real Buyer Log Order Importance Tags window: default tags and a Line rule, demo data"
+        },
+        "caption": {
+          "tr": "Etiketleri ve Line kurallarını Ayarlar'dan yönetme",
+          "en": "Managing tags and Line rules in Settings"
+        }
+      }
+    },
+    {
+      "id": "backlog-special-orders-summary",
+      "type": "feature",
+      "module": {
+        "tr": "Backlog · Genel Bakış",
+        "en": "Backlog · Overview"
+      },
+      "title": {
+        "tr": "Özel siparişler özetlerde ayrı değerlendirilir",
+        "en": "Special orders evaluated separately in summaries"
+      },
+      "body": {
+        "tr": "Backlog Genel Bakış riskli siparişlerin içindeki özel siparişleri ayrıca uyarır (ör. riskli 191 siparişin 46'sı özel) ve etiket bazında riskli satırları açar. Kapsam Tümü / Özel / Regular olarak değiştirilebilir, Operasyon dağılımı Önem Etiketi'ne göre gruplanabilir. Excel Backlog V3 özetinde de Özel siparişler tablosu ve etiket kırılımı bulunur.",
+        "en": "Backlog Overview separately warns about special orders among at-risk orders (e.g. 46 of 191 at-risk orders are special) and opens the at-risk lines per tag. The scope can be switched between All / Special / Regular and the operational distribution can be grouped by Importance Tag. The Excel Backlog V3 summary also has a Special orders table and a tag breakdown."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-special-orders-summary.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog Genel Bakış: özel sipariş uyarısı, kapsam seçimi ve Önem Etiketi kırılımı, demo veriler",
+          "en": "Real Buyer Log Backlog Overview: special-order warning, scope switch and Importance Tag breakdown, demo data"
+        },
+        "caption": {
+          "tr": "Riskli siparişlerin içindeki özel siparişler",
+          "en": "Special orders among at-risk orders"
+        }
+      }
+    },
+    {
+      "id": "backlog-legacy-importance-column",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog · Legacy BACKLOG raporu",
+        "en": "Backlog · Legacy BACKLOG report"
+      },
+      "title": {
+        "tr": "Önem Etiketi sütunu; üretici yükleme teyidi kaldırıldı",
+        "en": "Importance Tag column; supplier loading confirmation removed"
+      },
+      "body": {
+        "tr": "Legacy BACKLOG raporunda Üretici Yükleme Tipi Teyidi sütunu kaldırıldı; aynı konuma ÖNEM ETİKETİ (IMPORTANCE) geldi. Giriş yoksa Regular, varsa seçilen etiket yazılır. Excel hücresi serbest metin kabul etmez; liste Ayarlar'daki katalogdan gelir. Kayıtlı sütun seçimleri bozulmaz.",
+        "en": "The Supplier Loading Type Confirmation column was removed from the Legacy BACKLOG report; ÖNEM ETİKETİ (IMPORTANCE) takes its place. It shows Regular when nothing is entered, otherwise the selected tag. The Excel cell blocks free text; the list comes from the catalogue in Settings. Saved column selections keep working."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-legacy-importance-column.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog raporu: ANTREPO-RETAIL yanında ÖNEM ETİKETİ ve RİSK sütunları, demo veriler",
+          "en": "Real Buyer Log Backlog report: IMPORTANCE and RISK columns next to ANTREPO-RETAIL, demo data"
+        },
+        "caption": {
+          "tr": "Legacy raporda yeni Önem Etiketi sütunu",
+          "en": "New Importance Tag column in the legacy report"
+        }
+      }
+    },
+    {
+      "id": "backlog-risk-rule",
+      "type": "fix",
+      "module": {
+        "tr": "Backlog · Legacy BACKLOG raporu",
+        "en": "Backlog · Legacy BACKLOG report"
+      },
+      "title": {
+        "tr": "RİSK (PRIORITY) kuralı düzeltildi",
+        "en": "RISK (PRIORITY) rule fixed"
+      },
+      "body": {
+        "tr": "Risk artık yalnız iş kuralına göre VAR olur: tahmini antrepo girişi Retail tarihine yetişmiyorsa (Üretimde için MAX(Ex-Factory, bugün) + ortalama yol süresi, yoldaki parsiyel için IAS tarihi), yükleme onayı verilip ürün 3 günden fazla handover edilmemişse veya yükleme + yol süresi dolduğu hâlde ürün depoya ulaşmamışsa. Yoldaki parsiyelin Retail'e yetişmeme riski artık görünür; In-Store tamponu ve yoldaki ürünler için handover uyarısı sahte risk üretmez. Excel formülü aynı kuralı boş tarihlerde hata vermeden kurar.",
+        "en": "Risk is now YES only by the business rule: the estimated warehouse arrival misses the Retail date (MAX(Ex-Factory, today) + average transit time for production, the IAS date for partials in transit), loading was confirmed but the goods have not been handed over for more than 3 days, or loading + transit time has passed without warehouse arrival. Retail risk of partials in transit is now visible; the In-Store buffer and handover warnings for goods already in transit no longer create false risk. The Excel formula builds the same rule without errors on blank dates."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "backlog-risk-rule.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Backlog raporu: statü, antrepo ve Retail farkına göre RİSK VAR/YOK, demo veriler",
+          "en": "Real Buyer Log Backlog report: RISK YES/NO by status, warehouse date and Retail gap, demo data"
+        },
+        "caption": {
+          "tr": "Retail ve Handover kuralına göre risk",
+          "en": "Risk by the Retail and Handover rules"
+        }
+      }
+    },
+    {
+      "id": "license-cards-supplier-selection",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Üretici atlası listeden seçilir",
+        "en": "Supplier atlas from selected rows"
+      },
+      "body": {
+        "tr": "Üretici atlasına yalnız listede işaretlediğiniz satırlar girer. Seçim yapınca altta beliren çubuktan “Üretici atlası oluştur” ile dosya hazırlanır; üreticiye kapalı lisanslar atlanır ve bildirilir.",
+        "en": "Only the rows you tick in the list go into the supplier atlas. When rows are selected, a bar appears at the bottom; “Create supplier atlas” builds the file, and licenses not shared with suppliers are skipped and reported."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-supplier-selection.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log koyu tema: iki satır seçili ve üretici atlası çubuğu, demo veriler",
+          "en": "Real Buyer Log dark theme: two rows selected and the supplier atlas bar, demo data"
+        },
+        "caption": {
+          "tr": "Seçili satırlarla üretici atlası",
+          "en": "Supplier atlas from selected rows"
+        }
+      }
+    },
+    {
+      "id": "license-supplier-atlas-file",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Yeni üretici atlası dosyası",
+        "en": "New supplier atlas file"
+      },
+      "body": {
+        "tr": "Üreticiye giden HTML artık Buyer Log görünümünde, sade bir rehberdir: en üstte görselli lisans listesi, altında her lisansın adım adım onay haritası, gönderimler, adresler ve paylaşılan portal. Açık/koyu temaya uyar, yazdırılabilir, betik çalıştırmaz; sözleşme oranları ve iç notlar asla girmez.",
+        "en": "The HTML sent to suppliers is now a simple guide in the Buyer Log look: a license list with images on top, then each license's step-by-step approval map, routes, addresses and the shared portal. It follows light/dark mode, prints well and runs no script; contract rates and internal notes never go in."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-supplier-atlas-file.png",
+        "alt": {
+          "tr": "Dışa aktarılmış üretici atlası: lisans listesi ve adım adım onay haritası, demo veriler",
+          "en": "Exported supplier atlas: license list and step-by-step approval map, demo data"
+        },
+        "caption": {
+          "tr": "Üretici atlası dosyası",
+          "en": "Supplier atlas file"
+        }
+      }
+    },
+    {
+      "id": "license-library-licensor-filter",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisans listesinde Licensor filtresi",
+        "en": "Licensor filter in the license list"
+      },
+      "body": {
+        "tr": "Lisans listesinin araç çubuğunda Licensor seçimi var; “Lisansörü olmayanlar” seçeneği eksik lisansörleri bulmayı kolaylaştırır. Arama ve durum filtreleriyle birlikte çalışır.",
+        "en": "The license list toolbar has a licensor selector; the “Without licensor” option helps find missing licensors. It works together with search and the status filters."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-library-licensor-filter.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans listesi DTR lisansörüne göre süzülmüş, demo veriler",
+          "en": "Real Buyer Log license list filtered by the DTR licensor, demo data"
+        },
+        "caption": {
+          "tr": "Lisansöre göre süzülmüş lisans kütüphanesi",
+          "en": "License Library filtered by licensor"
+        }
+      }
+    },
+    {
+      "id": "license-cards-licensor-resolved",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisansörü görünmeyen lisanslar düzeldi",
+        "en": "Licenses without a licensor fixed"
+      },
+      "body": {
+        "tr": "Lisans kartları lisansörü yalnız ASAS satırından, royalty sözleşmesinden ve sabit katalogdan okuyordu; CP’de sipariş için elle seçilen Licensor dikkate alınmıyordu. Artık CP ile aynı öncelik kullanılır: CP’de elle seçilen Licensor → ASAS → License Royalty sözleşmesi → katalog. Ayrıca ilk aktarımdan kalan lisansörsüz yer tutucu kart, aynı lisansın lisansörlü kartı oluşunca gizlenir (üzerine not/atlas kaydedilmişse korunur). Değişikliği görmek için Lisans kartlarında “ASAS’tan yenile”ye bir kez basın.",
+        "en": "License cards read the licensor only from the ASAS row, royalty contracts and a fixed catalogue; a Licensor picked manually for the order in CP was ignored. They now use the same precedence as CP: manual CP Licensor → ASAS → License Royalty contract → catalogue. A licensor-less placeholder card from the first import is hidden once the license has a card with a licensor (kept if notes or an atlas were saved on it). Press “Refresh from ASAS” once in License cards to apply."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-licensor-resolved.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kütüphanesi: önceki lisansörsüz kart yerine lisansörlü kart, demo veriler",
+          "en": "Real Buyer Log License Library: the card with its licensor instead of the former licensor-less card, demo data"
+        },
+        "caption": {
+          "tr": "Lisansörü çözülmüş lisans kartı",
+          "en": "License card with its licensor resolved"
+        }
+      }
+    },
+    {
+      "id": "license-cards-licensor-edit",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisansör elle girilebilir",
+        "en": "Licensor can be entered manually"
+      },
+      "body": {
+        "tr": "Lisansörü olmayan satırda Lisansör sütunu yazılabilir bir alana dönüşür; mevcut lisansörlerden seçin veya yeni ad yazıp Enter’a basın. Aynı lisansın başka bir lisansörü için satır ayrıntısındaki “Başka lisansör için satır ekle” ile ayrı satır açılır; isterseniz iletişim, görsel ve onay haritası kopyalanır. Dolu bir lisansör değiştirilmez, çünkü diğer kullanıcılar kartı lisans × lisansör çiftiyle tanır.",
+        "en": "On a row without a licensor, the Licensor column becomes an input: pick an existing licensor or type a new name and press Enter. For another licensor of the same license, “Add a row for another licensor” in the row details opens a separate row, optionally copying contact, image and approval map. A licensor that is already set is not renamed, because other users identify a card by its license × licensor pair."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-licensor-edit.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları listesi: lisansörsüz satırda yazılabilir lisansör alanı, demo veriler",
+          "en": "Real Buyer Log license card list: editable licensor field on a row without a licensor, demo data"
+        },
+        "caption": {
+          "tr": "Lisansör satırda yazılır",
+          "en": "The licensor is typed in the row"
+        }
+      }
+    },
+    {
+      "id": "license-cards-asas-refresh-feedback",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "“ASAS’tan yenile” artık sonuç bildirir",
+        "en": "“Refresh from ASAS” now reports its result"
+      },
+      "body": {
+        "tr": "Yenileme sırasında buton “Yenileniyor…” olur ve sonunda kaç yeni satır eklendiği, kaç lisansörün tamamlandığı veya yeni kayıt olmadığı bildirilir. ASAS verisi yüklenmemişse ne yapılacağı söylenir. Liste yüklenirken basılan yenileme artık kaybolmaz; sıraya alınıp çalıştırılır.",
+        "en": "While refreshing, the button shows “Refreshing…” and afterwards reports how many rows were added, how many licensors were completed, or that nothing changed. If ASAS data is not loaded, it says what to do. A refresh pressed while the list is loading is no longer lost; it is queued and run."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-asas-refresh-feedback.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları: ASAS yenileme sonrası uyarı bildirimi, demo veriler",
+          "en": "Real Buyer Log license cards: notice after an ASAS refresh, demo data"
+        },
+        "caption": {
+          "tr": "Yenileme sonucu bildirimi",
+          "en": "Refresh result notice"
+        }
+      }
+    },
+    {
+      "id": "license-stage-templates",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Aşama taslakları",
+        "en": "Stage templates"
+      },
+      "body": {
+        "tr": "Araç çubuğundaki “Aşama taslakları” ile ortak onay adımları (onaylayan, test, gönderimler, talimatlar, adresler, görsel kılavuz) bir kez tanımlanır. Haritada “Taslaktan adım ekle” ile eklenir veya mevcut bir adım “Taslak olarak kaydet” ile taslağa dönüştürülür. Taslak güncellenince onu kullanan tüm lisanslardaki adım tek seferde güncellenir; bağlı adım haritada kilitli görünür ve istenirse “Taslaktan ayır” ile bağımsızlaşır. Taslaklar diğer kullanıcılarla paylaşılır.",
+        "en": "“Stage templates” in the toolbar defines shared approval steps once (approver, test, routes, instructions, addresses, visual guide). In a map, add one with “Add step from template” or turn an existing step into a template with “Save as template”. Updating a template updates the step in every license that uses it at once; a linked step is locked in the map and can be made independent with “Detach from template”. Templates are shared with other users."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-stage-templates.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log aşama taslağı düzenleyicisi: kaydedince 2 lisanstaki adım güncellenir, demo veriler",
+          "en": "Real Buyer Log stage template editor: saving updates the step in 2 licenses, demo data"
+        },
+        "caption": {
+          "tr": "Bir taslak, tüm bağlı lisanslar",
+          "en": "One template, every linked license"
+        }
+      }
+    },
+    {
+      "id": "license-supplier-atlas-drawer",
+      "type": "improvement",
+      "module": {
+        "tr": "Üretici atlası",
+        "en": "Supplier atlas"
+      },
+      "title": {
+        "tr": "Lisans haritası çekmece gibi açılır",
+        "en": "License map opens like a drawer"
+      },
+      "body": {
+        "tr": "Üretici dosyasında bir lisansa tıklamak artık sayfanın aşağısındaki ayrı bölüme atlamaz; haritası satırın hemen altında animasyonla açılır, ikinci tıklamada kapanır. Açık haritada lisans görseli büyük gösterilir. Yazdırırken tüm haritalar açık basılır.",
+        "en": "Clicking a license in the supplier file no longer jumps to a separate section further down; its map opens with an animation right below the row and closes on a second click. The open map shows the license image large. When printing, every map is printed open."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-supplier-atlas-drawer.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üretici atlası dosyası: açık lisans haritası ve kapalı ikinci lisans, demo veriler",
+          "en": "Real Buyer Log supplier atlas file: one open license map and a closed second license, demo data"
+        },
+        "caption": {
+          "tr": "Göster/gizle lisans haritası",
+          "en": "Show/hide license map"
+        }
+      }
+    },
+    {
+      "id": "license-supplier-atlas-aligned-routes",
+      "type": "fix",
+      "module": {
+        "tr": "Üretici atlası",
+        "en": "Supplier atlas"
+      },
+      "title": {
+        "tr": "Haritadaki yazılar hizalı",
+        "en": "Map text is aligned"
+      },
+      "body": {
+        "tr": "Gönderim satırlarında yöntem, alıcı ve adet/zamanlama sütunları içeriğe göre sağa sola kayıyordu. Sütunlar artık sabit genişlikte; tüm adımlarda alıcı aynı hizadan başlar, adet ve zamanlama sağa hizalanır.",
+        "en": "In route rows the method, recipient and quantity/timing columns shifted left and right with their content. Columns now have fixed widths: the recipient starts at the same position in every step, and quantity and timing are right-aligned."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-supplier-atlas-aligned-routes.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log üretici atlası: hizalı gönderim sütunları, demo veriler",
+          "en": "Real Buyer Log supplier atlas: aligned route columns, demo data"
+        },
+        "caption": {
+          "tr": "Hizalı gönderim sütunları",
+          "en": "Aligned route columns"
+        }
+      }
+    },
+    {
+      "id": "cp-multi-cell-paste",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Hücreler arası çoklu yapıştırma",
+        "en": "Multi-cell paste"
+      },
+      "body": {
+        "tr": "Elle girilen CP alanlarına (Supp. FOB, Sub-MFR, Licensor, Ex-Factory/Retail/In-Store tarihleri, Del. Type, Importance ve eklenen not sütunları) Excel veya CP'den kopyalanan hücreler Ctrl+V ile topluca yapıştırılır. Tek değer seçili aralığı doldurur, kopyalanan sütun seçili hücreden aşağı dağılır. Hesaplanan, salt-okunur ve yetkiniz olmayan hücreler atlanır; tüm yapıştırma tek geri alma ile geri döner.",
+        "en": "Cells copied from Excel or CP can be pasted in bulk with Ctrl+V into manually entered CP fields (Supp. FOB, Sub-MFR, Licensor, Ex-Factory/Retail/In-Store dates, Del. Type, Importance and custom note columns). A single value fills the selected range and a copied column spreads down from the selected cell. Calculated, read-only and restricted cells are skipped; one undo reverts the whole paste."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cp-multi-cell-paste.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: Excel'den yapıştırılan altı Supp. FOB değeri seçili aralıkta, demo veriler",
+          "en": "Real Buyer Log CP Tracker: six Supp. FOB values pasted from Excel in the selected range, demo data"
+        },
+        "caption": {
+          "tr": "Excel sütununu Supp. FOB hücresinden aşağı tek seferde yapıştırma",
+          "en": "Paste an Excel column down from a Supp. FOB cell in one go"
+        }
+      }
+    },
+    {
+      "id": "license-map-manual-labels",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Zaman ve adres için elle etiket",
+        "en": "Manual labels for timing and address"
+      },
+      "body": {
+        "tr": "Onay haritasında bir gönderimin Zaman ve Adres listelerine “＋ Yeni etiket…” ve “＋ Yeni adres…” eklendi. Yazdığınız etiket haritaya kaydedilir ve listede seçilebilir; yeni adres adıyla (ve isteğe bağlı adres metniyle) oluşturulur. Kullanılan etiket ve adres üretici atlasında görünür, kullanılmayanlar paylaşılmaz.",
+        "en": "In the approval map, a route’s Timing and Address lists now offer “＋ New label…” and “＋ New address…”. The label you type is saved with the map and can be picked from the list; a new address is created with its name (and optional address text). Labels and addresses in use appear in the supplier atlas; unused ones are not shared."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-map-manual-labels.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log onay haritası: Zaman listesinde elle eklenen etiket ve “Yeni etiket” seçeneği, demo veriler",
+          "en": "Real Buyer Log approval map: a manually added timing label and the “New label” option, demo data"
+        },
+        "caption": {
+          "tr": "Elle eklenen zaman etiketi ve adres",
+          "en": "Manually added timing label and address"
+        }
+      }
+    },
+    {
+      "id": "license-licensor-merges",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisansör ad nüansları tek satırda",
+        "en": "Licensor name variants in one row"
+      },
+      "body": {
+        "tr": "Yalnız şirket türü veya ülke ekiyle ayrılan lisansör adları (ör. ERMODA / ERMODA UK LTD) aynı lisans için tek satırda gösterilir; satırdaki “+1” rozeti ve “Lisansör birleştirmeleri” paneli hangi adların birleştiğini gösterir. Royalty hesabında siparişteki adın kendi sözleşmesi önce kullanılır, yoksa birleşik adın sözleşmesi uygulanır; CP, Siparişler ve Koleksiyon her iki adla da çalışır. Yanlış bir birleştirme “Ayır” ile geri alınır ve diğer kullanıcılara da yansır.",
+        "en": "Licensor names that differ only by a company type or country suffix (e.g. ERMODA / ERMODA UK LTD) are shown in one row per license; the “+1” badge and the “Licensor merges” panel show which names were merged. Royalty uses the order’s own licensor contract first, otherwise the merged name’s contract; CP, Orders and Collection work with both names. A wrong merge is undone with “Split”, which also reaches other users."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-licensor-merges.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları: lisansör birleştirmeleri paneli ve birleşik satır rozeti, demo veriler",
+          "en": "Real Buyer Log license cards: licensor merges panel and merged-row badge, demo data"
+        },
+        "caption": {
+          "tr": "Birleşen lisansör adları görünür ve ayrılabilir",
+          "en": "Merged licensor names are visible and can be split"
+        }
+      }
+    },
+    {
+      "id": "license-map-copy-paste",
+      "type": "feature",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Onay haritasını listede kopyala / yapıştır",
+        "en": "Copy / paste approval maps in the list"
+      },
+      "body": {
+        "tr": "Harita sütunundaki kopyala simgesiyle bir lisansın onay haritası kopyalanır; diğer satırlarda beliren yapıştır simgesiyle ya da satırları seçip “Haritayı seçilenlere yapıştır” ile ayrıntıya girmeden uygulanır. Adımlar, adresleri, görsel kılavuzları ve etiketleri taşınır; hedef lisansın görseli, portalı ve notları korunur. Mevcut haritanın değişeceği önceden sorulur.",
+        "en": "The copy icon in the map column copies a license’s approval map; the paste icon on other rows, or selecting rows and “Paste map to selected”, applies it without opening the details. Steps, their addresses, visual guides and labels travel; the target’s image, portal and notes are kept. You are asked before an existing map is replaced."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-map-copy-paste.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log lisans kartları: kopyalanan harita bilgisi ve satırlardaki yapıştır simgeleri, demo veriler",
+          "en": "Real Buyer Log license cards: copied map notice and paste icons on rows, demo data"
+        },
+        "caption": {
+          "tr": "Harita panosu ve yapıştır simgeleri",
+          "en": "Map clipboard and paste icons"
+        }
+      }
+    },
+    {
+      "id": "license-royalty-auto-apply",
+      "type": "fix",
+      "module": {
+        "tr": "License Royalty",
+        "en": "License Royalty"
+      },
+      "title": {
+        "tr": "Güncel lisans kuralları siparişlere otomatik yansır",
+        "en": "Current license rules apply to orders automatically"
+      },
+      "body": {
+        "tr": "CP güncelleme dosyasından gelen (veya kaynağı belli olmayan) Supp. FOB değerleri elle girilmiş sayılıyor ve yalnız “Tümüne Uygula” ile güncelleniyordu. Artık sipariş için geçerli bir License Royalty sözleşmesi varsa değer otomatik olarak güncel sözleşmeden hesaplanır; Lisans kartlarında veya kurallarda yapılan değişiklik CP, Siparişler, Backlog ve Koleksiyon’a hemen yansır. Kullanıcının bilerek elle girdiği Supp. FOB korunur; sözleşmesi olmayan siparişte içe aktarılan değer kalır.",
+        "en": "Supp. FOB values imported from a CP update file (or stored without a source) counted as manual and were only updated by “Apply to All”. Now, when an order has a valid License Royalty contract, the value is calculated from the current contract automatically; changes in License cards or the rules reach CP, Orders, Backlog and Collection at once. A Supp. FOB the user deliberately typed is kept; without a contract the imported value stays."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-royalty-auto-apply.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP Tracker: lisans kartında royalty değişince Alt Üretici FOB değerleri otomatik güncellenmiş, demo veriler",
+          "en": "Real Buyer Log CP Tracker: Supp. FOB values updated automatically after a royalty change in License cards, demo data"
+        },
+        "caption": {
+          "tr": "Royalty değişikliği CP’ye kendiliğinden yansır",
+          "en": "A royalty change reaches CP by itself"
+        }
+      }
+    },
+    {
+      "id": "send-pricing-editable-content",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyatlamaya Gönder · E-Posta Hazırla",
+        "en": "Send to Pricing · Prepare E-Mail"
+      },
+      "title": {
+        "tr": "Fiyatlama e-postasında düzenlenebilir taslak ve tablo",
+        "en": "Editable pricing email template and table"
+      },
+      "body": {
+        "tr": "Send to Pricing sırasında başlık ayarlarını açarak konu ve mesaj metnini, Excel ekini, mesaj altındaki tabloyu, TP eklerini ve sütun sırasını diğer e-posta başlıkları gibi düzenleyebilirsiniz. Excel ve tablo aynı seçili sütunları kullanır; Excel’in ekran görüntüsü artık e-postaya eklenmez. Başlangıçta mevcut Excel eki ve TP tercihi korunur, eski görselin yerine gerçek tablo açılır. Kaydedilen yeni seçimler sonraki işlemlerde hatırlanır; teklif kaydı ve ekleri bölme akışı devam eder.",
+        "en": "During Send to Pricing, open subject settings to edit the subject and message, Excel attachment, table below the message, TPs and column order just like other email subjects. The Excel and table use the same selected columns; the Excel screenshot is no longer embedded in the email. Initially the existing Excel attachment and TP preference are preserved, with a real table replacing the old image. New saved choices are remembered for future requests; quotation history and attachment splitting continue to work."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "send-pricing-editable-content.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Send to Pricing ekranında ortak başlık düzenleyicisi, Excel ve tablo seçenekleri; demo veriler",
+          "en": "Shared subject editor in the real Buyer Log Send to Pricing workflow, with Excel and table options; demo data"
+        },
+        "caption": {
+          "tr": "Fiyatlama taslağı, Excel ve mesaj altındaki tablo aynı pencereden düzenlenir.",
+          "en": "Edit the pricing draft, Excel and table below the message in the same window."
+        }
+      }
+    },
+    {
+      "id": "lcwai-model-card-details",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Sunum ve rapor çıktıları",
+        "en": "LCW AI · Presentation and report outputs"
+      },
+      "title": {
+        "tr": "Model kartlarında görsel önde, bilgileri siz seçin",
+        "en": "Picture-first model cards with details you choose"
+      },
+      "body": {
+        "tr": "PowerPoint, PDF ve HTML model kartlarında görsel büyük ve öndedir; altında küçük yazıyla varsayılan olarak model adı, renk kodu, fit, adet ve hedef fiyat yazar. Yerleşim adımındaki “Kart bilgileri” listesinden alan ekleyip çıkarabilir ve sıralayabilirsiniz; “Kaynak” işaretli alanların değeri LCW AI’dan değil Buyer Log verisinden birebir alınır. Sığmayan bilgiler aynı satırda yan yana dizilir, görsel küçülmez. Seçim şablona kaydedilir.",
+        "en": "PowerPoint, PDF and HTML model cards put a large picture first; below it, in small text, the model name, colour code, fit, quantity and target price are shown by default. In the Layout step you can add, remove and reorder fields in the “Card details” list; fields marked “Source” take their value directly from Buyer Log data, not from LCW AI. Details that do not fit are placed side by side on one line, so the picture never shrinks. The choice is saved with the template."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-model-card-details.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI çıktı düzenleyicisi: Yerleşim adımında kart bilgileri seçicisi ve görseli büyük model kartları, demo veriler",
+          "en": "Real Buyer Log LCW AI output editor: card details picker in the Layout step and picture-first model cards, demo data"
+        },
+        "caption": {
+          "tr": "Kart bilgilerini işaretleyin, sıralayın; önizleme dosyayla aynı",
+          "en": "Tick and order the card details; the preview matches the file"
+        }
+      }
+    },
+    {
+      "id": "lcwai-gallery-group-packing",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Sunum ve rapor çıktıları",
+        "en": "LCW AI · Presentation and report outputs"
+      },
+      "title": {
+        "tr": "Küçük model grupları aynı slayta yan yana",
+        "en": "Small model groups share one slide side by side"
+      },
+      "body": {
+        "tr": "Bir ya da iki modellik gruplar artık ayrı ve büyük kısmı boş slaytlara dağılmaz: yer olduğu sürece aynı slayta (PDF’te aynı sayfaya) yan yana, grup adı ve ayraçla dizilir; satırda kalan boşluğu sonraki küçük grup doldurur, tek sayfaya sığan grup bölünmez. Az model varsa kartlar oranı korunarak büyür. Galeri slaytları line sheet gibi koyu başlık bandı ve çerçeveyle çizilir. İki seçenek de Yerleşim adımından kapatılabilir.",
+        "en": "Groups with one or two models no longer spread over separate, mostly empty slides: while there is room they share one slide (one page in PDF) side by side with a group name and divider; a later small group fills a row gap, and a group that fits on one page is not split. With few models the cards grow while keeping their proportions. Gallery slides use a dark title band and frame like a line sheet. Both options can be turned off in the Layout step."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-gallery-group-packing.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log PowerPoint çıktısı: dört model grubu tek slaytta yan yana, demo veriler",
+          "en": "Real Buyer Log PowerPoint output: four model groups side by side on one slide, demo data"
+        },
+        "caption": {
+          "tr": "4 galeri slaytı → 1 dolu slayt",
+          "en": "4 gallery slides → 1 full slide"
+        }
+      }
+    },
+    {
+      "id": "lcwai-html-motion",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI · Sunum ve rapor çıktıları",
+        "en": "LCW AI · Presentation and report outputs"
+      },
+      "title": {
+        "tr": "Hareketli ve efektli HTML raporları",
+        "en": "Animated HTML reports with effects"
+      },
+      "body": {
+        "tr": "LCW AI HTML raporları tarayıcıda kaydırma ilerleme çubuğu, süzülen renk ışıkları, başlıkta parıltı ve perde açılışı, kaydırdıkça beliren kartlar ve gruplar, üzerine gelince eğilip parlayan model kartlarıyla açılır. Animasyonlar yalnız CSS’tir (betik yok); “hareketi azalt” tercihinde ve PDF baskısında kapanır.",
+        "en": "LCW AI HTML reports open in the browser with a scroll progress bar, drifting colour lights, a shine and curtain reveal on the title, cards and groups that appear as you scroll, and model cards that tilt and shine on hover. The animations are CSS only (no scripts) and are off with “reduce motion” and in PDF printing."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-html-motion.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI HTML raporu tarayıcıda: gruplu model kartları ve üzerine gelinen kart efekti, demo veriler",
+          "en": "Real Buyer Log LCW AI HTML report in the browser: grouped model cards and a hovered card effect, demo data"
+        },
+        "caption": {
+          "tr": "Kaydırdıkça beliren gruplar ve kart efektleri",
+          "en": "Groups appearing on scroll and card effects"
+        }
+      }
+    },
+    {
+      "id": "lcwai-gallery-grouping-title",
+      "type": "feature",
+      "module": {
+        "tr": "LCW AI · Sunum ve rapor çıktıları",
+        "en": "LCW AI · Presentation and report outputs"
+      },
+      "title": {
+        "tr": "Modelleri 3 seviyede gruplayın, sayfa başlığını seçin",
+        "en": "Group models on 3 levels and choose the page title"
+      },
+      "body": {
+        "tr": "Yerleşim adımında modelleri 1., 2. ve 3. grup olarak (ör. Kategori › Kumaş › Baskı) yeniden gruplayabilirsiniz: son seviye aynı slaytta yan yana durur, önceki seviyeler yeni slayt ya da bölüm başlatır. Değerler kart bilgisinden, yoksa Buyer Log verisinden alınır. Slayt/bölüm başlığı otomatik kalabilir, seçtiğiniz alanların değerlerinden oluşabilir ya da elle yazılabilir; {Kategori} gibi bir alan yazdığınız yere o sayfadaki değer gelir. Seçimler şablona kaydedilir.",
+        "en": "In the Layout step you can regroup models into a 1st, 2nd and 3rd group (e.g. Category › Fabric › Print): the last level sits side by side on one slide, earlier levels start a new slide or section. Values come from the card details, otherwise from Buyer Log data. The slide/section title can stay automatic, be built from the fields you choose, or be typed; a field such as {Category} is replaced by that page’s value. The choices are saved with the template."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-gallery-grouping-title.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log LCW AI çıktı düzenleyicisi: Yerleşim adımında gruplama seçimleri, elle yazılan slayt başlığı ve yeniden gruplanmış model slaytı, demo veriler",
+          "en": "Real Buyer Log LCW AI output editor: grouping choices, a typed slide title and a regrouped model slide in the Layout step, demo data"
+        },
+        "caption": {
+          "tr": "Kategori › Fit gruplaması ve {Kategori} başlığı",
+          "en": "Category › Fit grouping and a {Category} title"
+        }
+      }
+    },
+    {
+      "id": "collection-tr-landed-safe-copy",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "TR Landed kopyası TL fiyatını korur",
+        "en": "TR Landed copies preserve the TRY price"
+      },
+      "body": {
+        "tr": "Izgara içinde TR Landed kopyalama ve aşağı doldurma, hesaplanan USD sonucunun yerine TL fiyatını, kuru ve çarpanı birlikte taşır. Çakışan aralıklarda kaynak girdiler korunur. Dışarıdan yapıştırılan tek değer TL fiyatına uygulanmaya devam eder.",
+        "en": "Copying TR Landed inside the grid and filling down carries the TRY price, FX and multiplier together. Source inputs are preserved in overlapping ranges. A single value pasted from outside still updates the TRY price."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "tr-landed-input-copy.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: demo satırlarda TR Landed kopyalama, aşağı doldurma ve dış TL değeri yapıştırma sonuçları",
+          "en": "Real Buyer Log: demo rows after TR Landed copy, fill down and external TRY value paste"
+        },
+        "caption": {
+          "tr": "TR Landed kopyası TL fiyatını korur",
+          "en": "TR Landed copies preserve the TRY price"
+        }
+      }
+    },
+    {
+      "id": "collection-detailed-price-exports",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Dışa aktarım",
+        "en": "Collection · Exports"
+      },
+      "title": {
+        "tr": "Fiyat ayrıntıları ayrı sütunlarda, tüm teklifler ikinci sayfada",
+        "en": "Separate price detail columns and a second sheet for every offer"
+      },
+      "body": {
+        "tr": "Excel ve satır kopyası landed girdilerini, avantajı ve Endeksmatik hesabını ayrı sütunlarda verir. Excel’de sayılar hesaplanabilir biçimde saklanır. Yeni Teklifler sayfasında her model için hedef, en iyi ve onaylı fiyat ile tüm üreticiler yer alır; en iyi teklif yeşil, onaylı teklif kalındır.",
+        "en": "Excel and row copies include landed inputs, advantage and Endeksmatik calculations in separate columns. Excel keeps numeric values usable in calculations. The new Quotations sheet shows each model’s target, best and approved price alongside every manufacturer; best offers are green and approved offers are bold."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cost-details.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: dışa aktarmalarda da ayrı sütunlara yazılan TR/YD girdileri ve avantaj, demo veriler",
+          "en": "Real Buyer Log: overseas/TR inputs and advantage also exported in separate columns, demo data"
+        },
+        "caption": {
+          "tr": "Fiyat ayrıntıları ayrı sütunlarda, tüm teklifler ikinci sayfada",
+          "en": "Separate price detail columns and a second sheet for every offer"
+        }
+      }
+    },
+    {
+      "id": "collection-cost-detail-columns",
+      "type": "feature",
+      "module": {
+        "tr": "Koleksiyon · Maliyet",
+        "en": "Collection · Cost"
+      },
+      "title": {
+        "tr": "Maliyet görünümünde hesap girdileri ve sonuçları yan yana",
+        "en": "Calculation inputs and results side by side in Cost view"
+      },
+      "body": {
+        "tr": "Maliyet görünümü kaynak FOB, TL fiyatı, kur, çarpan, avantaj ve Endeksmatik ayrıntılarını ayrı sütunlarda gösterir. TL fiyatı, kur ve çarpanlar doğrudan düzenlenir; sayısal olmayan kur ve çarpan yapıştırmaları reddedilir. Görünüm seçimi kalıcı sütun sıranızı değiştirmez.",
+        "en": "Cost view shows source FOB, TRY price, FX, multipliers, advantage and Endeksmatik details in separate columns. Edit the TRY price, FX and multipliers directly; nonnumeric FX and multiplier pastes are rejected. Changing the view preserves your saved column order."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-cost-details.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Maliyet görünümü: düzenlenebilir TL fiyatı, kur ve çarpanlar ile ayrı sonuç sütunları, demo veriler",
+          "en": "Real Buyer Log Cost view: editable TRY price, FX and multipliers alongside result columns, demo data"
+        },
+        "caption": {
+          "tr": "Maliyet görünümünde hesap girdileri ve sonuçları yan yana",
+          "en": "Calculation inputs and results side by side in Cost view"
+        }
+      }
+    },
+    {
+      "id": "pricing-crowded-competitive-desk",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası · Masa",
+        "en": "Pricing Desk · Desk"
+      },
+      "title": {
+        "tr": "Kalabalık taleplerde rekabetçi üreticiler önde",
+        "en": "Competitive manufacturers lead crowded requests"
+      },
+      "body": {
+        "tr": "Üretici başlıklarında kapsam, kazanılan model sayısı ve aynı-model fiyat endeksi görünür. Sıra kazanma, endeks ve kapsamla belirlenir. İlk sekize ek olarak kazanan ve onaylı üreticiler görünür kalır; kalanlar Diğer sütununda toplanır. Açma tercihi talep bazında hatırlanır. Model, hedef, en iyi/onaylı ve hedef farkı kaydırırken sabit kalır.",
+        "en": "Manufacturer headers show coverage, model wins and the same-model price index. Columns rank by wins, index and coverage. Winners and approved manufacturers remain visible alongside the top eight; the rest share an Other column. Expansion is remembered per request. Model, target, best/approved and target difference stay fixed while scrolling."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-folded-other.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log: 30 model × 20 üretici, solda sabit özetler ve Diğer (11) teklif sütunu",
+          "en": "Real Buyer Log: 30 models × 20 manufacturers, fixed summaries and the Other (11) offer column"
+        },
+        "caption": {
+          "tr": "Kalabalık taleplerde rekabetçi üreticiler önde",
+          "en": "Competitive manufacturers lead crowded requests"
+        }
+      }
+    },
+    {
+      "id": "collection-quotation-distribution-band",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Teklif şeridi",
+        "en": "Collection · Quote strip"
+      },
+      "title": {
+        "tr": "Teklif dağılımı okunur bir bantta",
+        "en": "Offer distribution in a readable band"
+      },
+      "body": {
+        "tr": "Üst üste binen üretici noktaları yerine en düşük–en yüksek teklif bandı, ortanca çizgisi, hedef ve en iyi/onaylı işaretleri gösterilir. Üretici tekliflerinin ayrıntıları ipucunda ve fiyat çekmecesinde kalır.",
+        "en": "Overlapping manufacturer dots are replaced by a minimum–maximum offer band, a median line, and target and best/approved markers. Individual offers remain available in the tooltip and price drawer."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-offer-band.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Koleksiyon: 20 üreticili demo modellerin teklif bandı ve hedef işaretleri",
+          "en": "Real Buyer Log Collection: offer bands and target markers for demo models with 20 manufacturers"
+        },
+        "caption": {
+          "tr": "Teklif dağılımı okunur bir bantta",
+          "en": "Offer distribution in a readable band"
+        }
+      }
+    },
+    {
+      "id": "pricing-rounds-model-groups",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası · Turlar",
+        "en": "Pricing Desk · Rounds"
+      },
+      "title": {
+        "tr": "Tur teklifleri model başlıkları altında",
+        "en": "Round offers under model headings"
+      },
+      "body": {
+        "tr": "Tur zaman çizelgesinde her model görseli ve o turdaki en iyi fiyatıyla tek başlıkta toplanır. Üreticilerin teklifleri, önceki fiyatları ve değişimleri satır içi çiplerde görünür.",
+        "en": "The round timeline groups each model under one heading with its picture and best price for that round. Manufacturer offers, previous prices and changes appear in inline chips."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-model-rounds.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Turlar: model başlıkları altında 20 üreticinin teklif çipleri, demo veriler",
+          "en": "Real Buyer Log Rounds: offer chips from 20 manufacturers under model headings, demo data"
+        },
+        "caption": {
+          "tr": "Tur teklifleri model başlıkları altında",
+          "en": "Round offers under model headings"
+        }
+      }
+    },
+    {
+      "id": "pricing-analysis-competitive-columns",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası · Analiz",
+        "en": "Pricing Desk · Analysis"
+      },
+      "title": {
+        "tr": "Analizde aynı rekabet sırası, İlk 12 veya Tümü",
+        "en": "The same competitive order in Analysis, with Top 12 or All"
+      },
+      "body": {
+        "tr": "Isı matrisindeki üretici sütunları kazanılan model sayısı, aynı-model endeksi ve kapsam sırasını kullanır. On ikiden fazla üreticide İlk 12/Tümü anahtarıyla kapsam genişletilir; seçim hesabınızda hatırlanır.",
+        "en": "Heat matrix manufacturer columns rank by model wins, same-model index and coverage. With more than twelve manufacturers, switch between Top 12 and All; the preference is remembered for your account."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-competitive-analysis.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log Analiz: rekabet sırasındaki 20 üretici ve İlk 12/Tümü seçimi, demo veriler",
+          "en": "Real Buyer Log Analysis: 20 manufacturers in competitive order and the Top 12/All switch, demo data"
+        },
+        "caption": {
+          "tr": "Analizde aynı rekabet sırası, İlk 12 veya Tümü",
+          "en": "The same competitive order in Analysis, with Top 12 or All"
+        }
+      }
+    }
+  ]
+}

@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.294",
+      "publishedAt": "2026-10-23",
+      "title": {
+        "tr": "Fiyat Masası, Kompakt Koleksiyon fiyat görünümü ve lisans kartları",
+        "en": "Pricing Desk, compact Collection price view and license cards"
+      },
+      "stats": {
+        "features": 22,
+        "improvements": 13,
+        "fixes": 13
+      },
+      "file": "release-notes/7.0.294/release.json"
+    },
+    {
       "version": "7.0.293",
       "publishedAt": "2026-10-21",
       "title": {
