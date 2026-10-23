@@ -38,7 +38,37 @@ function normalizeColumns(columns,rows){
     return {...col,key,label:clean(col&&col.label)||key};
   }).filter(Boolean);
 }
-if(!root||!root.document)return {inferColumns,normalizeColumns,safeFilePart};
+
+function hasValue(value){return value!==undefined&&value!==null&&!(typeof value==='string'&&clean(value)==='');}
+function rowSources(row){
+  const sources=[],seen=new Set(),pending=[row];
+  for(let i=0;i<pending.length;i++){
+    const source=pending[i];
+    if(!source||typeof source!=='object'||Array.isArray(source)||seen.has(source))continue;
+    seen.add(source);sources.push(source);
+    pending.push(source.row,source.raw,source.source,source.data,source._source,source.sourceRow,source._detailSource);
+  }
+  return sources;
+}
+/* Detail reports are often supplied a curated column catalog while their ASAS
+   rows still contain MAG. Add that source field only when data exists; never
+   infer a value, duplicate an alias, or alter flat OAB/pivot column catalogs. */
+function includeMagColumn(rows,columns,moduleId,canonical){
+  if(!Array.isArray(rows)||!rows.length||columns.some(col=>col.canonicalId==='mag'||col.key==='MAG'||canonical?.canonicalId?.(moduleId,col.key)==='mag'))return columns;
+  const sourceKeys=['MAG','mag','Merch Alt Grup Kod','Merch Alt Grup','merch'];
+  const sample=rows.length<=160?rows:rows.slice(0,120).concat(rows.slice(-40));
+  for(const row of sample){
+    for(const source of rowSources(row)){
+      if(hasValue(canonical?.canonicalValue?.(source,moduleId,'mag'))||
+         sourceKeys.some(key=>hasValue(source[key]))){
+        return [...columns,{key:'MAG',label:'MAG',canonicalId:'mag',type:'text'}];
+      }
+    }
+  }
+  return columns;
+}
+
+if(!root||!root.document)return {inferColumns,normalizeColumns,safeFilePart,includeMagColumn};
 
 const document=root.document;
 const isEn=()=>String(document.documentElement.lang||'tr').toLowerCase().startsWith('en');
@@ -131,17 +161,6 @@ function ensureHost(){
   host.setAttribute('aria-hidden','true');
   document.body.appendChild(host);
   return host;
-}
-function hasValue(value){return value!==undefined&&value!==null&&!(typeof value==='string'&&clean(value)==='');}
-function rowSources(row){
-  const sources=[],seen=new Set(),pending=[row];
-  for(let i=0;i<pending.length;i++){
-    const source=pending[i];
-    if(!source||typeof source!=='object'||Array.isArray(source)||seen.has(source))continue;
-    seen.add(source);sources.push(source);
-    pending.push(source.row,source.raw,source.source,source.data,source._source,source.sourceRow,source._detailSource);
-  }
-  return sources;
 }
 function fieldRefs(col){
   // Etiket çevirisi ve parantez içi açıklama veri anahtarı değildir.
@@ -525,7 +544,7 @@ function reportCell(col,row){
   }).filter(Boolean);
   if(!parts.length)return '—';
   const primary=parts[0],secondary=parts.slice(1);
-  const span=part=>'<span title="'+escapeHtml(part.field.label+': '+part.text)+'">'+part.html+'</span>';
+  const span=part=>'<span title="'+escapeHtml(part.field.label+': '+part.text)+'">'+(col.reportRole==='buyer'&&root.BLDetailReportLayout?.fieldId(part.field,detailModule(),root.BLCanonicalFields)==='mag'?'MAG: ':'')+part.html+'</span>';
   return '<div class="blDetailReportPrimary">'+(col.reportRole==='status'?'<span class="blDetailReportBadge">'+primary.html+'</span>':span(primary))+'</div>'+
     (secondary.length?'<div class="blDetailReportSub">'+secondary.map(span).join(' · ')+'</div>':'');
 }
@@ -767,8 +786,9 @@ function open(options){
   const contextColumns=normalizeColumns(input.columns,rows);
   const setupColumns=setup?normalizeColumns(setup.columns,rows):[];
   const contextKeys=setup?contextColumns.map(col=>col.key).filter(key=>!setupColumns.some(col=>col.key===key)):[];
-  const columns=setup?normalizeColumns([...setupColumns,...contextColumns.filter(col=>!setupColumns.some(base=>base.key===col.key))],rows):contextColumns;
   const scope=input.storageKey||input.scope||input.source||'generic',page=pageScope(input);
+  const suppliedColumns=setup?normalizeColumns([...setupColumns,...contextColumns.filter(col=>!setupColumns.some(base=>base.key===col.key))],rows):contextColumns;
+  const columns=input.flatColumns===true?suppliedColumns:includeMagColumn(rows,suppliedColumns,input.moduleId||input.source||page,root.BLCanonicalFields);
   const canonical=root.BLCanonicalFields,moduleId=input.moduleId||input.source||page;
   const requestedDefaults=Array.isArray(input.defaultVisible||input.initialVisible)?(input.defaultVisible||input.initialVisible):[];
   const exactDefault=input.exactDefaultVisible===true?requestedDefaults.filter(key=>columns.some(col=>col.key===key)):[];
