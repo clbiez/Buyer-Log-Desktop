@@ -39,7 +39,7 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
     try {
       const out=await extract.processFiles(files,{stage:session.stage});
       session.setReports(out.reports);session.setSources(out.files.flatMap(file=>file.sources||[]));session.setAiCandidates(out.files);
-      return {ok:true,sessionId:session.id,expiresAfterMs:staging.TTL_MS,files:out.files.map(f=>({name:f.name,kind:f.kind,status:f.status,format:f.format,warnings:f.warnings,talepNos:f.reports.map(r=>r.talepNo),ai:f.ai?.eligible?{uploadId:f.ai.uploadId,uploadName:f.ai.uploadName,mailText:f.ai.mailText,mailDate:f.ai.mailDate}:null})),reports:out.reports};
+      return {ok:true,sessionId:session.id,expiresAfterMs:staging.TTL_MS,files:out.files.map(f=>({name:f.name,kind:f.kind,status:f.status,format:f.format,reading:f.reading,warnings:f.warnings,talepNos:f.reports.map(r=>r.talepNo),ai:f.ai?.eligible?{uploadId:f.ai.uploadId,uploadName:f.ai.uploadName,mailText:f.ai.mailText,mailDate:f.ai.mailDate}:null})),reports:out.reports};
     }catch(err){staging.dropSession(session.id);throw err;}
   }
   async function prepareCommit(profile,body) {

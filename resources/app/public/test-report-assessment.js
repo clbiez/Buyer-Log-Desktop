@@ -84,9 +84,22 @@
         const source = sources.get(id), refs = evidence.filter(ref => ref.sourceId === id);
         return [id, refs.some(ref => ref.visual) ? refs.map(ref => ref.quote).join('\n') : source.pages.map(page => page.text).join('\n')];
       }));
+      // A covering mail may omit the attached laboratory reference. Permit it
+      // only through the extractor's parent/hash link, with the same printed PO
+      // and a separately cited PDF that contains BOTH report and order identity.
+      const linkedCover = (id, value) => {
+        const parent = sources.get(id);
+        return parent && ['msg', 'eml'].includes(parent.kind) && orderCode && hasId(value, orderCode)
+          && [...sourceFacts].some(([childId, childText]) => {
+            const child = sources.get(childId);
+            return child && child.kind === 'pdf' && child.parentId === id && child.hash
+              && list(parent.attachments).some(file => file.kind === 'pdf' && file.hash === child.hash)
+              && hasId(childText, reportId) && hasId(childText, orderCode);
+          });
+      };
       // Report, PO and verdict cannot be assembled from unrelated documents.
       if (![...sourceFacts.values()].some(value => hasId(value, reportId) && (!orderCode || hasId(value, orderCode))) ||
-          [...sourceFacts.values()].some(value => !hasId(value, reportId))) { errors.push('source-linkage'); continue; }
+          [...sourceFacts].some(([id, value]) => !hasId(value, reportId) && !linkedCover(id, value))) { errors.push('source-linkage'); continue; }
       const component = flat(item.component), labResult = flat(item.labResult), commercialDecision = flat(item.commercialDecision);
       if ((component && !flat(quotes).includes(component)) || (labResult && !flat(quotes).includes(labResult)) || (commercialDecision && !flat(quotes).includes(commercialDecision))) { errors.push('result-evidence'); continue; }
       const risks = list(item.risks).map(text).filter(Boolean);

@@ -127,7 +127,7 @@
   try{roleDefaults=JSON.parse(native.getItem(ROLE_DEFAULTS_KEY)||'{}')||{};}catch(_){roleDefaults={};}
   function readMeta(){try{return JSON.parse(native.getItem(META_KEY)||'{}')||{}}catch(_){return{}}}
   function writeMeta(meta){try{native.setItem(META_KEY,JSON.stringify(meta))}catch(_){}}
-  var pending={},pushTimer=null;
+  var pending={},pushTimer=null,activePushes=[];
   // Sunucuda başka bir akışla (Ön Ayar Paylaşımı) yazılmış ve sayfa yenilenene
   // kadar yerelde KİLİTLİ tutulan anahtarlar. Kapanış sırasındaki otomatik
   // kaydetmeler bellekteki eski değeri yeni damgayla geri itemez.
@@ -139,14 +139,25 @@
     if(typeof global.setTimeout==='function')pushTimer=global.setTimeout(flushPush,1200);
     else{pushTimer='immediate';flushPush();}
   }
+  function waitForPushes(){
+    var result=Promise.all(activePushes.slice());
+    result.catch(function(){/* çevrimdışı olabilir: yerel kopya zaten yazıldı */});
+    return result;
+  }
   function flushPush(){
+    if(pushTimer&&typeof global.clearTimeout==='function')global.clearTimeout(pushTimer);
     pushTimer=null;
     var entries=pending;pending={};
-    if(!Object.keys(entries).length)return;
+    if(!Object.keys(entries).length)return waitForPushes();
+    var task;
     try{
-      fetch('/api/user-preferences',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({entries:entries})})
-        .catch(function(){/* çevrimdışı olabilir: yerel kopya zaten yazıldı */});
-    }catch(_){ }
+      task=Promise.resolve(fetch('/api/user-preferences',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({entries:entries})}))
+        .then(function(response){if(response&&response.ok===false)throw new Error('PREFERENCE_SAVE_FAILED');});
+    }catch(error){task=Promise.reject(error);}
+    activePushes.push(task);
+    var done=function(){var index=activePushes.indexOf(task);if(index>=0)activePushes.splice(index,1);};
+    task.then(done,done);
+    return waitForPushes();
   }
   // Sekme kapanırken bekleyen yazma kaybolmasın. (Tarayıcı dışı ortamlarda —
   // testler gibi — addEventListener bulunmayabilir; bu dosyanın yüklenmesi
@@ -156,6 +167,7 @@
   }
 
   var api={
+    flushPending:flushPush,
     getItem:function(key){var personal=native.getItem(actual(key));if(personal!=null)return personal;var inherited=roleDefaults[String(key)];return inherited&&inherited.value!=null?String(inherited.value):null;},
     setItem:function(key,value){
       if(adopted[String(key)])return;
