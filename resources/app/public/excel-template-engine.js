@@ -18,6 +18,7 @@
     const zip=await JSZip.loadAsync(bytes),read=async name=>{const file=zip.file(name);if(!file)throw new Error('INVALID_XLSX');return file.async('string');};
     const workbook=await read('xl/workbook.xml'),rels=await read('xl/_rels/workbook.xml.rels');
     const date1904=/\bdate1904=["'](?:1|true)["']/.test(workbook);
+    let generatedFormulas=false;
     const sheet=(workbook.match(/<sheet\b[^>]*\/?\s*>/g)||[]).find(s=>attr(s,'name')===escapeXml(config.sheetName));
     if(!sheet)throw new Error('SHEET_NOT_FOUND');
     const rel=(rels.match(/<Relationship\b[^>]*\/?\s*>/g)||[]).find(s=>attr(s,'Id')===attr(sheet,'r:id'));
@@ -51,7 +52,12 @@
       for(let col=1;col<=maxCol;col++){
         const mapping=config.columns.find(c=>c.column===col),value=record&&mapping&&mapping.field?record[mapping.field]:null;
         let style=cellStyles.get(col)||'0',type='',body='';
-        if(value instanceof Date&&!isNaN(value)){
+        if(value&&typeof value==='object'&&typeof value.__blFormula==='string'){
+          const formula=value.__blFormula;
+          if(!/^[A-Z0-9$()+\-*/=," ]+$/.test(formula)||formula.length>250)throw new Error('INVALID_FORMULA');
+          generatedFormulas=true;
+          body='<f>'+escapeXml(formula)+'</f><v>'+(typeof value.result==='number'&&Number.isFinite(value.result)?value.result:'')+'</v>';
+        }else if(value instanceof Date&&!isNaN(value)){
           style=dateStyle(style);body='<v>'+(dates.excelSerial(value)-(date1904?1462:0))+'</v>';
         }else if(typeof value==='number'&&Number.isFinite(value))body='<v>'+value+'</v>';
         else if(value!=null&&value!==''){type=' t="inlineStr"';body='<is><t xml:space="preserve">'+escapeXml(value)+'</t></is>';}
@@ -64,6 +70,13 @@
     xml=xml.replace(/<dimension\b[^>]*\/>/,'<dimension ref="A1:'+columnName(maxCol)+end+'"/>');
     xml=xml.replace(/<autoFilter\b([^>]*)ref="[^"]*"/,'<autoFilter$1ref="A'+config.headerRow+':'+columnName(maxCol)+(config.dataRow+records.length-1)+'"');
     zip.file(sheetPath,xml);zip.file('xl/styles.xml',styles);
+    if(generatedFormulas){
+      const calc=/<calcPr\b[^>]*\/?\s*>/;
+      const updated=calc.test(workbook)
+        ?workbook.replace(calc,tag=>tag.replace(/\sfullCalcOnLoad="[^"]*"/,'').replace('<calcPr','<calcPr fullCalcOnLoad="1"'))
+        :workbook.replace('</workbook>','<calcPr calcId="0" fullCalcOnLoad="1"/></workbook>');
+      zip.file('xl/workbook.xml',updated);
+    }
     return zip.generateAsync({type:'uint8array',compression:'DEFLATE'});
   }
   return {escapeXml,columnName,columnNumber,validate,fill};
