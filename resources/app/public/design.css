@@ -641,3 +641,25 @@ body.blDialogOpen{overflow:hidden;}
 .uiFeedbackActions .navActionBtn{padding-inline:var(--sp-3);}
 @media(max-width:620px){.uiFeedbackRegion--edge{top:auto;right:var(--sp-3);bottom:var(--sp-3);left:var(--sp-3);width:auto;}.uiFeedbackRegion--center{width:calc(100vw - (2 * var(--sp-3)));}.uiFeedback{padding:var(--sp-3);}}
 @media(prefers-reduced-motion:reduce){.uiFeedback{transition:none;transform:none;}.uiFeedbackSpinner{animation-duration:1.8s;}}
+
+/* Endeksmatik import: clear, non-speculative progress for large workbooks.
+   Native theme tokens, keyboard/screen-reader status and reduced motion. */
+.endeksmatikImportOverlay{position:fixed;inset:0;z-index:52000;display:grid;place-items:center;padding:20px;background:rgba(16,29,43,.48);backdrop-filter:blur(2px);}
+.endeksmatikImportCard{width:min(460px,100%);padding:24px;background:var(--card,#fff);border:1px solid var(--hair-2,#c7d2dd);box-shadow:var(--shadow-3,0 14px 45px rgba(0,0,0,.18));color:var(--ink,#202b36);}
+.endeksmatikImportHeader{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--hair-2,#d5dee6);}
+.endeksmatikImportHeader strong{display:block;font:700 20px/1.2 var(--head,inherit);}
+.endeksmatikImportHeader small{display:block;margin-top:4px;color:var(--muted,#687888);overflow-wrap:anywhere;font-size:12px;}
+.endeksmatikImportSpinner{flex:none;width:30px;height:30px;border:3px solid var(--hair-2,#d5dee6);border-top-color:var(--acc,#5980a6);border-radius:50%;animation:endeksmatikImportSpin .8s linear infinite;}
+.endeksmatikImportOverlay.isComplete .endeksmatikImportSpinner{animation:none;border-color:var(--green,#2d8064);}
+.endeksmatikImportSteps{list-style:none;padding:12px 0 0;margin:0;display:grid;gap:4px;}
+.endeksmatikImportSteps li{display:flex;gap:12px;padding:10px;border:1px solid transparent;opacity:.52;}
+.endeksmatikImportSteps li>span{display:grid;place-items:center;flex:0 0 32px;height:32px;font:700 12px/1 var(--head,inherit);border:1px solid var(--hair-2,#d5dee6);}
+.endeksmatikImportSteps li strong{font-size:14px;line-height:1.2;}
+.endeksmatikImportSteps li small{display:block;margin-top:4px;font-size:12px;color:var(--muted,#687888);line-height:1.3;}
+.endeksmatikImportSteps li[data-state="current"]{opacity:1;background:var(--acc-bg,#ebf2f9);border-color:var(--acc,#5980a6);}
+.endeksmatikImportSteps li[data-state="current"]>span{background:var(--acc,#5980a6);border-color:var(--acc,#5980a6);color:#fff;}
+.endeksmatikImportSteps li[data-state="done"]{opacity:.85;}
+.endeksmatikImportSteps li[data-state="done"]>span{border-color:var(--green,#2d8064);color:var(--green,#2d8064);}
+.endeksmatikImportFootnote{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--hair-2,#d5dee6);font-size:12px;color:var(--muted,#687888);}
+@keyframes endeksmatikImportSpin{to{transform:rotate(360deg);}}
+@media(prefers-reduced-motion:reduce){.endeksmatikImportSpinner{animation:none;border-top-width:5px;}}
