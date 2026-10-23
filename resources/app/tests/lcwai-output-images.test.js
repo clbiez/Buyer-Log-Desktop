@@ -119,7 +119,7 @@ test('servis: anahtar kullanan çıktı önce görsel ister; görsellerle dosya 
   assert.equal(noImages.output.format, 'html', 'görsel istenmezse doğrudan dosya');
 });
 
-test('istemci: bağlam CSV’sine görsel anahtarı sütunu eklenir; görsel LCW AI’a gitmez; aynı görsel aynı anahtar', () => {
+test('istemci: bağlam CSV’sine görsel anahtarı sütunu eklenir; yerel görsel kimliği LCW AI’a gitmez; aynı görsel aynı anahtar', () => {
   const vm = require('node:vm');
   const rows = [{ _id: 'a', 'Model Name': 'A' }, { _id: 'b', 'Model Name': 'B' }, { _id: 'c', 'Model Name': 'C' }];
   const window = {

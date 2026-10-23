@@ -3,12 +3,13 @@
 /*
  * AI çıktılarında GERÇEK model görselleri.
  *
- * LCW AI görselleri görmez: bağlam CSV'sinde yalnız kısa bir görsel anahtarı
- * (ör. KOL-3, CP-12) bulunur. LCW AI çıktıda bu anahtarı yer tutucu olarak
+ * Bağlam CSV'sinde her kaydın kısa görsel anahtarı (ör. KOL-3, CP-12)
+ * bulunur; sohbet görselleri bu anahtarlarla etiketli paftalar hâlinde LCW
+ * AI'a da ekler (public/lcwai-chat.js). LCW AI çıktıda anahtarı yer tutucu olarak
  * kullanır (HTML: <img data-bl-image="KOL-3">, PPTX: slide.items[].image,
  * XLSX: "image" tipli sütun). Buyer Log yalnız kullanılan anahtarların
  * görsellerini kendi yerel deposundan alıp (renderer, kanonik çözümleyici)
- * küçültür ve dosyaya gömer. Görseller LCW AI'a ya da şirket dışına gitmez.
+ * küçültür ve dosyaya gömer. Görseller şirket dışına gitmez.
  */
 const TOKEN_RE = /^[A-Z]{2,4}-\d{1,6}$/;
 const LIMITS = Object.freeze({ count: 200, bytes: 1.5 * 1024 * 1024, total: 40 * 1024 * 1024 });

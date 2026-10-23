@@ -68,6 +68,64 @@
           "en": "Images in a separate store, the list opens instantly"
         }
       }
+    },
+    {
+      "id": "table-search-from-image",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Arama kutusuna ekran görüntüsü yapıştırarak arama",
+        "en": "Search by pasting a screenshot into the search box"
+      },
+      "body": {
+        "tr": "E-posta tablosu, pivot ya da PLM listesi gibi bir ekran görüntüsünü arama kutusuna yapıştırın. LCW AI aramak istediğiniz değerleri okur; Buyer Log her değeri tabloda doğrular, bulunanları ve bulunamayanları ayrı gösterir. Görsel yalnız siz istediğinizde LCW AI’a gider, arama yalnız “Aramaya Uygula” ile yazılır. Excel’den metin yapıştırma eskisi gibi çalışır.",
+        "en": "Paste a screenshot such as an e-mail table, a pivot or a PLM list into the search box. LCW AI reads the values you want to look up; Buyer Log checks each value against the table and shows found and not-found values separately. The image goes to LCW AI only when you ask, and the search is written only with “Apply to Search”. Pasting text from Excel works as before."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "table-search-from-image.png",
+        "alt": {
+          "tr": "CP Tracker’da yapıştırılan demo e-posta tablosu ve doğrulanmış arama önerisi",
+          "en": "Demo e-mail table pasted into CP Tracker with a validated search suggestion"
+        },
+        "caption": {
+          "tr": "Demo veride üç sipariş kodu tabloda bulundu ve aramaya önerildi; tabloda olmayan kod aramaya eklenmedi.",
+          "en": "With demo data, three order codes were found and suggested; the code missing from the table was not added."
+        }
+      }
+    },
+    {
+      "id": "lcwai-chat-model-images",
+      "type": "improvement",
+      "module": {
+        "tr": "LCW AI",
+        "en": "LCW AI"
+      },
+      "title": {
+        "tr": "LCW AI artık model görsellerini de görüyor",
+        "en": "LCW AI now sees model images too"
+      },
+      "body": {
+        "tr": "CP, Siparişler veya Koleksiyon verisini sohbete eklediğinizde kayıtların model görselleri, her karenin altında “BL Image” anahtarı yazılı paftalar hâlinde LCW AI’a eklenir. Böylece LCW AI tasarımları anlatabilir, kıyaslayabilir ve gruplayabilir; dosya çıktılarında görseller yine Buyer Log’un yerel deposundan gömülür.",
+        "en": "When you add CP, Orders or Collection data to the chat, the records’ model images are attached for LCW AI as contact sheets, each tile labelled with its “BL Image” key. LCW AI can now describe, compare and group the designs; file outputs still embed images from Buyer Log’s local store."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "lcwai-chat-model-images.png",
+        "alt": {
+          "tr": "LCW AI sohbetinde model görsellerinin eklendiği adım",
+          "en": "LCW AI chat step attaching model images"
+        },
+        "caption": {
+          "tr": "Demo CP verisiyle gönderilen mesajda model görselleri paftayla LCW AI’a ekleniyor.",
+          "en": "For a message with demo CP data, model images are attached for LCW AI as a contact sheet."
+        }
+      }
     }
   ]
 }

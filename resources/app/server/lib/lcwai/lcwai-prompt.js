@@ -193,6 +193,20 @@ const CONTRACTS = Object.freeze({
     }),
     example: { plmIds: ['1234567', '7654321'], explanation: '…' },
   }),
+  /* CP / Siparişler / Koleksiyon arama kutusuna yapıştırılan ekran görüntüsü:
+     LCW AI kullanıcının neyi aradığını okur ve aday değerleri önerir.
+     public/image-search-engine.js her adayı tablonun gerçek arama alanlarında
+     doğrular; hiçbir kayda uymayan değer sorguya girmez. Sorgu arama kutusuna
+     yalnız kullanıcı önizleyip onayladıktan sonra yazılır. */
+  'image-search': Object.freeze({
+    label: { tr: 'Görselden Arama', en: 'Search from Image' },
+    fields: Object.freeze({
+      values: { type: 'string[]', required: true, max: 120, items: 200, hint: { tr: 'ekli görselde okunan, tabloda aranacak değerler; her öğe tek değer, yukarıdan aşağı sırayla', en: 'values read in the attached image to search the table for; one value per item, top to bottom' } },
+      field: { type: 'string', max: 80, hint: { tr: 'değerlerin karşılık geldiği CONTEXT.searchableFields etiketi', en: 'the CONTEXT.searchableFields label the values belong to' } },
+      explanation: { type: 'string', required: true, max: 600 },
+    }),
+    example: { values: ['1288035', '1343645'], field: 'Order Code', explanation: '…' },
+  }),
   /* Koleksiyon › Kumaş Kartı: PLM "Main Fabric Information" metninden kumaş
      kodu başına kısa özet + ayrıntı. AI yalnız ÖNERİR; public/fabric-cards-engine.js
      validateAiCards istenmeyen kodu reddeder, kaynak metinde geçmeyen sayıları
@@ -325,7 +339,7 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Copy every value exactly as printed in the attached report or e-mail (original language and spelling); only "explanation" should be English.'
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. Her değeri ekli rapor ya da mailde basıldığı gibi (özgün dil ve yazım) kopyala; yalnız "explanation" Türkçe olsun.');
-    } else if (key === 'plm-id-extract' || key === 'fabric-card') {
+    } else if (key === 'plm-id-extract' || key === 'fabric-card' || key === 'image-search') {
       lines.push(english
         ? 'Reply with ONE JSON object only: no code fence, no text before or after it. Write "explanation" in English.'
         : 'Yalnız TEK bir JSON nesnesiyle cevap ver: kod bloğu yok, öncesinde/sonrasında metin yok. "explanation" Türkçe olsun.');
@@ -355,6 +369,10 @@ function buildPrompt({ source, task, context, guide, lang } = {}) {
       lines.push(english
         ? 'List in "plmIds" only the LC Waikiki PLM Codes (PLM ID; a positive whole number, usually 6–8 digits, sometimes written with a leading underscore or dot separators) that are written in CONTEXT.text. Copy each one exactly as written; never invent, complete, reorder or compute a number. Ignore order numbers, prices, quantities, dates, phone numbers, barcodes and colour codes unless the text clearly labels the value as a PLM Code/PLM ID or it sits in a plain list of such codes. Buyer Log checks every value against the text; anything not found there is discarded. Note any uncertainty in "explanation".'
         : '"plmIds" içine yalnız CONTEXT.text içinde yazılı LC Waikiki PLM Code değerlerini (PLM ID; pozitif tam sayı, genelde 6–8 hane, bazen başta alt çizgi ya da nokta ayırıcıyla yazılır) koy. Her birini yazıldığı gibi kopyala; sayı uydurma, tamamlama, sıralama ya da hesaplama. Metin bir değeri açıkça PLM Code/PLM ID olarak işaretlemedikçe ya da değer böyle kodların düz bir listesinde durmadıkça sipariş numarası, fiyat, adet, tarih, telefon, barkod ve renk kodlarını alma. Buyer Log her değeri metinle karşılaştırır; metinde olmayan atılır. Belirsizliği "explanation" içinde belirt.');
+    } else if (key === 'image-search') {
+      lines.push(english
+        ? 'The attached image is a screenshot the user pasted into the search box of the CONTEXT.screen table. Work out what the user wants to look up there: find the column(s) in the image whose values correspond to one of CONTEXT.searchableFields (compare with its examples) and list those values in "values", one per item, top to bottom. Prefer the most specific identifier shown (order code, PLM ID, special code, then model name, licence, supplier). Ignore quantities, sizes, dates, prices, totals, headers and subtotal rows. Write each value the way Buyer Log stores it (match the examples’ format, e.g. drop product-class prefixes such as "PNT," or "UK.TSH," when the examples show bare model names). Copy characters exactly; never invent or complete a value you cannot read. If the USER REQUEST says what to look for, follow it. Set "field" to the matching searchableFields label.'
+        : 'Ekli görsel, kullanıcının CONTEXT.screen tablosunun arama kutusuna yapıştırdığı ekran görüntüsüdür. Kullanıcının orada neyi aramak istediğini çıkar: görselde değerleri CONTEXT.searchableFields alanlarından birine karşılık gelen sütun(lar)ı bul (alanın örnekleriyle kıyasla) ve bu değerleri "values" içine, her öğede bir değer olacak şekilde yukarıdan aşağı yaz. Görseldeki en belirleyici kimliği tercih et (sipariş kodu, PLM ID, özel kod; sonra model adı, lisans, tedarikçi). Adet, beden, tarih, fiyat, toplam, başlık ve ara toplam satırlarını yok say. Her değeri Buyer Log’un sakladığı biçimde yaz (örneklerin biçimine uy; ör. örnekler yalın model adıysa "PNT," ya da "UK.TSH," gibi ürün sınıfı öneklerini at). Karakterleri birebir kopyala; okuyamadığın değeri uydurma veya tamamlama. KULLANICI İSTEĞİ neyin aranacağını söylüyorsa ona uy. "field" alanına eşleşen searchableFields etiketini yaz.');
     } else if (key === 'fabric-card') {
       lines.push(english
         ? 'Each CONTEXT.fabrics item is "<code> :: <PLM fabric text>". Write one "cards" line for every code, using exactly that code. "summary" is what a buyer sees in the Collection table: the full fabric type, yarn count, weight and composition in that order. Write it twice: "summary" in Turkish (e.g. "Süprem · 30/1 Ne Penye · 150 gsm · 100% Pamuk") and "summaryEn" in English with standard textile terms (e.g. "Single Jersey · 30/1 Ne Combed · 150 gsm · 100% Cotton"); both carry exactly the same numbers. Product naming convention: spell this fibre as "Polyester" in the Turkish "summary" and "Poliester" in the English "summaryEn" (even though standard English usually spells it "Polyester"). Fill the other fields only from the text; leave a field empty rather than guessing. Never invent, round or compute a number: Buyer Log discards every value whose numbers are not written in the PLM text. Do not use the "|" character inside a value.'

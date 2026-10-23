@@ -32,9 +32,10 @@
   /* ---------------- Varsayılan bağlam sağlayıcıları ---------------- */
   const cellValue = value => (value == null ? '' : (typeof value === 'object' ? (value instanceof Date ? value.toISOString().slice(0, 10) : JSON.stringify(value)) : String(value)));
   const contextCellValue = (row, col) => cellValue(typeof col.readValue === 'function' ? col.readValue(row) : row && row[col.key]);
-  /* Model görseli anahtarları: görselin kendisi LCW AI'a GİTMEZ; CSV'ye
-     yalnız kısa anahtar (ör. KOL-3) yazılır. Çıktı bu anahtarı kullanırsa
-     Buyer Log görseli yerel depodan alıp dosyaya gömer. */
+  /* Model görseli anahtarları: CSV'ye kısa anahtar (ör. KOL-3) yazılır;
+     görsellerin kendisi bu anahtarlarla etiketli paftalar hâlinde LCW AI'a
+     eklenir (uploadModelImageSheets). Çıktı anahtarı kullanırsa Buyer Log
+     görseli yerel depodan alıp dosyaya gömer. */
   const IMAGE_PREFIX = { cp: 'CP', orders: 'ORD', koleksiyon: 'KOL', overview: 'OV', shipping: 'SHP' };
   const IMAGE_COLUMN = 'BL Image';
   // Aynı görsel → oturum boyunca aynı anahtar; farklı görsel → farklı anahtar
@@ -535,6 +536,86 @@
       return canvas.toDataURL('image/jpeg', 0.84);
     } catch (_) { return ''; }
   }
+  /* Model görselleri LCW AI'a PAFTA olarak gider: her karenin altında kaydın
+     BL Image anahtarı yazılıdır, böylece LCW AI görseli CSV satırıyla eşler.
+     İstek başına ek sayısı sınırlı (maxFilesPerRequest) olduğundan görseller
+     tek tek değil, pafta başına SHEET_COLUMNS × SHEET_ROWS kare yüklenir. */
+  const SHEET_COLUMNS = 4, SHEET_ROWS = 4, SHEET_TILE = 280, SHEET_LABEL = 30, MAX_SHEETS = 3;
+  function modelImageSheetPlan(keys, slots) {
+    const list = [...new Set((keys || []).filter(Boolean))];
+    const perSheet = SHEET_COLUMNS * SHEET_ROWS;
+    const count = Math.max(0, Math.min(MAX_SHEETS, Math.floor(Number(slots) || 0), Math.ceil(list.length / perSheet)));
+    const sheets = [];
+    for (let index = 0; index < count; index++) sheets.push({ fileName: `BuyerLog-model-images-${index + 1}.jpg`, keys: list.slice(index * perSheet, (index + 1) * perSheet) });
+    return { sheets, omitted: list.slice(count * perSheet) };
+  }
+  function modelImageSheetsContext(fileNames, sentCount, skippedCount) {
+    const names = fileNames.map(name => `“${name}”`).join(', ');
+    const sent = sentCount ? L(`Ekli ${names} paftalarında ${sentCount} model görseli var; her karenin altında kaydın “${IMAGE_COLUMN}” anahtarı yazılı. Tasarımları anlatmak, kıyaslamak veya gruplamak için görsellere bakabilirsin.`, `The attached ${names} contact sheets hold ${sentCount} model images; each tile is labelled with the record’s “${IMAGE_COLUMN}” key. Look at the images to describe, compare or group the designs.`) : '';
+    const skipped = skippedCount ? L(`${skippedCount} model görseli ek sınırı nedeniyle ya da okunamadığı için eklenmedi.`, `${skippedCount} model images were not attached (attachment limit or unreadable image).`) : '';
+    const text = [sent, skipped].filter(Boolean).join(' ');
+    return text ? { label: L('Model görselleri', 'Model images'), text } : null;
+  }
+  async function drawModelImageSheet(keys, map) {
+    const screenData = window.BLAIScreenData;
+    const canvas = document.createElement('canvas');
+    canvas.width = SHEET_COLUMNS * SHEET_TILE;
+    canvas.height = Math.ceil(keys.length / SHEET_COLUMNS) * (SHEET_TILE + SHEET_LABEL);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const drawn = [];
+    for (let index = 0; index < keys.length; index++) {
+      const key = keys[index];
+      let bitmap = null;
+      try {
+        const raw = screenData && typeof screenData.imageDataUrl === 'function' ? await screenData.imageDataUrl(map[key]) : '';
+        if (raw) { bitmap = new Image(); bitmap.src = raw; await bitmap.decode(); }
+      } catch (_) { bitmap = null; }
+      if (!bitmap || !bitmap.naturalWidth) continue;
+      const x = (drawn.length % SHEET_COLUMNS) * SHEET_TILE;
+      const y = Math.floor(drawn.length / SHEET_COLUMNS) * (SHEET_TILE + SHEET_LABEL);
+      const scale = Math.min((SHEET_TILE - 12) / bitmap.naturalWidth, (SHEET_TILE - 12) / bitmap.naturalHeight);
+      const w = Math.max(1, Math.round(bitmap.naturalWidth * scale));
+      const h = Math.max(1, Math.round(bitmap.naturalHeight * scale));
+      ctx.drawImage(bitmap, x + Math.round((SHEET_TILE - w) / 2), y + Math.round((SHEET_TILE - h) / 2), w, h);
+      ctx.fillStyle = '#111111';
+      ctx.font = '600 20px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(key, x + SHEET_TILE / 2, y + SHEET_TILE + SHEET_LABEL / 2);
+      ctx.strokeStyle = '#cccccc';
+      ctx.strokeRect(x + 0.5, y + 0.5, SHEET_TILE - 1, SHEET_TILE + SHEET_LABEL - 1);
+      drawn.push(key);
+    }
+    if (!drawn.length) return { blob: null, drawn };
+    // Okunamayan görsel atlandıysa boş kalan alt satırlar kırpılır.
+    const used = document.createElement('canvas');
+    used.width = canvas.width;
+    used.height = Math.ceil(drawn.length / SHEET_COLUMNS) * (SHEET_TILE + SHEET_LABEL);
+    used.getContext('2d').drawImage(canvas, 0, 0);
+    const blob = await new Promise(resolve => used.toBlob(resolve, 'image/jpeg', 0.86));
+    return { blob, drawn };
+  }
+  /* images: { anahtar: görsel kimliği } → { attachments, context }. */
+  async function uploadModelImageSheets(images, slots, onPhase) {
+    const api = AI();
+    const keys = Object.keys(images || {});
+    const plan = modelImageSheetPlan(keys, slots);
+    const attachments = [];
+    const fileNames = [];
+    let sent = 0;
+    for (let index = 0; index < plan.sheets.length; index++) {
+      const sheet = plan.sheets[index];
+      onPhase(L(`Model görselleri LCW AI’a ekleniyor (${index + 1}/${plan.sheets.length})…`, `Attaching model images for LCW AI (${index + 1}/${plan.sheets.length})…`));
+      const { blob, drawn } = await drawModelImageSheet(sheet.keys, images);
+      if (!blob) continue;
+      attachments.push(await api.uploadFile(new File([blob], sheet.fileName, { type: 'image/jpeg' })));
+      fileNames.push(sheet.fileName);
+      sent += drawn.length;
+    }
+    return { attachments, context: modelImageSheetsContext(fileNames, sent, keys.length - sent) };
+  }
   function resolveRecords(conv, tokens) {
     const map = conv.recordMap || {};
     const out = {};
@@ -738,10 +819,12 @@
       }
       if (!userMessage.contexts) {
         userMessage.contexts = [];
+        const contextImages = {};
         for (const id of contextIds) {
           answer.phase = L('Buyer Log bağlamı hazırlanıyor…', 'Preparing Buyer Log context…');
           renderMessages();
           const prepared = contextAsFile(await api.buildContext(id));
+          Object.assign(contextImages, prepared.images || (prepared.context && prepared.context.images) || {});
           if (prepared.images) conv.imageMap = { ...(conv.imageMap || {}), ...prepared.images };
           else if (prepared.context && prepared.context.images) { conv.imageMap = { ...(conv.imageMap || {}), ...prepared.context.images }; delete prepared.context.images; }
           // Kart bilgisi kaynak satırları: yalnız bellekte, LCW AI'a giden bağlama girmez.
@@ -756,6 +839,12 @@
             userMessage.attachments.push(await api.uploadFile(prepared.file));
           }
           userMessage.contexts.push(prepared.context);
+        }
+        if (Object.keys(contextImages).length) {
+          const maxFiles = state.config && state.config.limits ? state.config.limits.maxFilesPerRequest : 5;
+          const sheets = await uploadModelImageSheets(contextImages, maxFiles - userMessage.attachments.length, phase => { answer.phase = phase; renderMessages(); });
+          userMessage.attachments.push(...sheets.attachments);
+          if (sheets.context) userMessage.contexts.push(sheets.context);
         }
       }
       answer.phase = output ? outputPhase({ step: 'generating' }, output) : L('LCW AI düşünüyor…', 'LCW AI is thinking…');
@@ -992,5 +1081,5 @@
   }
 
   window.initLcwAiChat = initLcwAiChat;
-  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, addFiles, persistConversations, restoreConversations };
+  window.BLLcwAiChat = { init: initLcwAiChat, _state: state, send, openEditor, openTemplateManager, loadTemplates, tableContext, contextCsv, contextAsFile, detectScreens, autoContextsFor, emptyStateHtml, resolveImages, resolveRecords, modelImageSheetPlan, modelImageSheetsContext, uploadModelImageSheets, addFiles, persistConversations, restoreConversations };
 })();
