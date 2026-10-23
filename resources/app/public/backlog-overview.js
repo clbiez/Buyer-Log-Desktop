@@ -431,11 +431,11 @@ function filterRoot(){
   root.addEventListener('input',e=>{
     if(e.target.matches('[data-blvf-search]')){
       filterSearch=e.target.value||'';const pos=e.target.selectionStart;renderFilterPanel();
-      requestAnimationFrame(()=>{const input=root.querySelector('[data-blvf-search]');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}});return;
+      requestAnimationFrame(()=>{const input=root.querySelector('[data-blvf-search]');if(input){input.focus({preventScroll:true});try{input.setSelectionRange(pos,pos)}catch(_){}}});return;
     }
     if(e.target.matches('[data-blvf-value-search]')){
       filterValueSearch=e.target.value||'';const pos=e.target.selectionStart;renderFilterPanel();
-      requestAnimationFrame(()=>{const input=root.querySelector('[data-blvf-value-search]');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}});return;
+      requestAnimationFrame(()=>{const input=root.querySelector('[data-blvf-value-search]');if(input){input.focus({preventScroll:true});try{input.setSelectionRange(pos,pos)}catch(_){}}});return;
     }
   });
   root.addEventListener('change',e=>{
@@ -485,7 +485,7 @@ function renderFilterEditor(filter){
       <div class="blvFilterRangeHint">${esc(min&&max?L(`Veri aralığı: ${fmtDay(min)} – ${fmtDay(max)}`,`Data range: ${fmtDay(min)} – ${fmtDay(max)}`):L('Bu sütunda tarih değeri bulunamadı.','No date values found in this column.'))}</div>`;
   }else{
     const q=filterValueSearch.trim().toLocaleLowerCase(lang()==='en'?'en':'tr'),all=distinctFilterValues(filter);
-    const matched=all.filter(entry=>!q||entry.label.toLocaleLowerCase(lang()==='en'?'en':'tr').includes(q)),visible=matched.slice(0,300),selected=new Set(filter.values||[]);
+    const selected=new Set(filter.values||[]),matched=all.filter(entry=>!q||entry.label.toLocaleLowerCase(lang()==='en'?'en':'tr').includes(q)).sort((a,b)=>Number(selected.has(b.value))-Number(selected.has(a.value))),visible=matched.slice(0,300);
     controls=`<div class="blvFilterValueTools"><input type="search" data-blvf-value-search value="${esc(filterValueSearch)}" placeholder="${esc(L('Değer ara…','Search values…'))}"><button type="button" data-blvf-all-visible>${esc(L('Görünenleri seç','Select visible'))}</button><button type="button" data-blvf-none>${esc(L('Seçimi kaldır','Clear selection'))}</button></div>
       <div class="blvFilterValues">${visible.map(entry=>`<label class="blvFilterValue"><input type="checkbox" data-blvf-value="${esc(encodeURIComponent(entry.value))}"${selected.has(entry.value)?' checked':''}><span title="${esc(entry.label)}">${esc(entry.label)}</span><b>${n(entry.count)}</b></label>`).join('')||`<div class="blvFilterNoValue">${esc(L('Eşleşen değer yok.','No matching values.'))}</div>`}</div>
       ${matched.length>visible.length?`<div class="blvFilterRangeHint">${esc(L(`${matched.length} değerin ilk 300'ü gösteriliyor. Aramayı daraltın.`,`Showing the first 300 of ${matched.length} values. Refine the search.`))}</div>`:''}`;
@@ -501,7 +501,7 @@ function renderFilterPanel(){
     return;
   }
   const q=filterSearch.trim().toLocaleLowerCase(lang()==='en'?'en':'tr'),activeIds=new Set(overviewFilters().map(f=>f.id));
-  const sourceItems=filterCatalog.filter(field=>field.source===filterSource).filter(field=>!q||field.label.toLocaleLowerCase(lang()==='en'?'en':'tr').includes(q)||field.header.toLocaleLowerCase(lang()==='en'?'en':'tr').includes(q));
+  const sourceItems=filterCatalog.filter(field=>field.source===filterSource).filter(field=>!q||field.label.toLocaleLowerCase(lang()==='en'?'en':'tr').includes(q)||field.header.toLocaleLowerCase(lang()==='en'?'en':'tr').includes(q)).sort((a,b)=>Number(activeIds.has(b.id))-Number(activeIds.has(a.id)));
   const visibleFields=sourceItems.slice(0,300),editor=overviewFilters().find(f=>f.id===filterEditorId)||null;
   const sourceCount=source=>filterCatalog.filter(field=>field.source===source).length;
   const active=overviewFilters();
