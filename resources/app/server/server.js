@@ -11577,12 +11577,16 @@ async function testDiscoveredDatabase(candidate, credential = {}) {
   return { ok:true, provider:tested.provider || connector.provider || connector.driver || connector.kind, elapsedMs:tested.elapsedMs || 0, tableCount:0 };
 }
 
-app.post('/api/data-management/database-discovery/excel', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit:'32kb' }), (req, res) => {
+app.post('/api/data-management/database-discovery/excel', userAccess.requireArea('source'), userAccess.requirePermission('manageModelConnections'), express.json({ limit:'32kb' }), async (req, res) => {
   try {
     const filePath = String(req.body && req.body.path || '');
     const proof = String(req.body && req.body.proof || '');
     if (!validWorkbookPathProof(filePath, proof)) return res.status(403).json({ ok:false, code:'WORKBOOK_SELECTION_NOT_VERIFIED', error:'Excel dosyası yalnız Buyer Log dosya seçicisinden seçilebilir.' });
-    const result = excelConnectionDiscovery.discoverFile(filePath);
+    const parser=require('./lib/parser-process-client'),buffer=await parser.readFileBounded(filePath);
+    const result = await parser.run('connection-discovery',{buffer,name:path.basename(filePath)});
+    const current=userAccess.sessionProfile(req);
+    if(!current||current.id!==req.currentUser.id||!userAccess.hasArea(current,'source')||!userAccess.hasPermission(current,'manageModelConnections'))throw Object.assign(new Error('Bağlantı keşfi yetkisi değişti. / Connection discovery permission changed.'),{code:'OFFICE_TOOL_FORBIDDEN',statusCode:403});
+    req.currentUser=current;
     const id = `xdd_${crypto.randomBytes(16).toString('hex')}`;
     databaseDiscoverySessions.set(id, { createdAt:Date.now(), result });
     const candidates = (result.connections || []).map(excelConnectionDiscovery.publicCandidate);

@@ -1,0 +1,148 @@
+[
+  {
+    "name": "exceljs",
+    "version": "4.4.0",
+    "source": "https://registry.npmjs.org/exceljs/-/exceljs-4.4.0.tgz",
+    "integrity": "sha512-XctvKaEMaj1Ii9oDOqbW/6e1gXknSY4g/aLCDicOXqBE4M0nRWkUu0PTp++UPNzoFY12BNHMfs/VadKIS6llvg==",
+    "license": "MIT",
+    "files": [
+      {
+        "file": "exceljs.min.js",
+        "upstreamEntry": "package/dist/exceljs.min.js",
+        "upstreamFound": true,
+        "sha256": "7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9",
+        "upstreamSha256": "7e49da68588e250dbb8bba190d2caa8ab3787cc0284bda1d8b2f805c4df742c9",
+        "equal": true,
+        "lfEqual": true,
+        "exactMatches": [
+          "package/dist/exceljs.min.js"
+        ],
+        "upstreamBytes": 947702,
+        "localBytes": 947702
+      }
+    ],
+    "licenseFile": "public/vendor/licenses/exceljs-4.4.0.txt"
+  },
+  {
+    "name": "jspdf",
+    "version": "2.5.2",
+    "source": "https://registry.npmjs.org/jspdf/-/jspdf-2.5.2.tgz",
+    "integrity": "sha512-myeX9c+p7znDWPk0eTrujCzNjT+CXdXyk7YmJq5nD5V7uLLKmSXnlQ/Jn/kuo3X09Op70Apm0rQSnFWyGK8uEQ==",
+    "license": "MIT",
+    "files": [
+      {
+        "file": "jspdf.umd.min.js",
+        "upstreamEntry": "package/dist/jspdf.umd.min.js",
+        "upstreamFound": true,
+        "sha256": "85ba2cc3ff858a20fa49fe6e457bec863ea40b55a9f3725e58a940e62f6f61a4",
+        "upstreamSha256": "85ba2cc3ff858a20fa49fe6e457bec863ea40b55a9f3725e58a940e62f6f61a4",
+        "equal": true,
+        "lfEqual": true,
+        "exactMatches": [
+          "package/dist/jspdf.umd.min.js"
+        ],
+        "upstreamBytes": 365730,
+        "localBytes": 365730
+      }
+    ],
+    "licenseFile": "public/vendor/licenses/jspdf-2.5.2.txt"
+  },
+  {
+    "name": "jszip",
+    "version": "3.10.1",
+    "source": "https://registry.npmjs.org/jszip/-/jszip-3.10.1.tgz",
+    "integrity": "sha512-xXDvecyTpGLrqFrvkrUSoxxfJI5AH7U8zxxtVclpsUtMCq4JQ290LY8AW5c7Ggnr/Y/oK+bQMbqK2qmtk3pN4g==",
+    "license": "(MIT OR GPL-3.0-or-later)",
+    "files": [
+      {
+        "file": "jszip.min.js",
+        "upstreamEntry": "package/dist/jszip.min.js",
+        "upstreamFound": true,
+        "sha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e",
+        "upstreamSha256": "acc7e41455a80765b5fd9c7ee1b8078a6d160bbbca455aeae854de65c947d59e",
+        "equal": true,
+        "lfEqual": true,
+        "exactMatches": [
+          "package/dist/jszip.min.js"
+        ],
+        "upstreamBytes": 97630,
+        "localBytes": 97630
+      }
+    ],
+    "licenseFile": "public/vendor/licenses/jszip-3.10.1.txt"
+  },
+  {
+    "name": "pdfjs-dist",
+    "version": "3.11.174",
+    "source": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-3.11.174.tgz",
+    "integrity": "sha512-TdTZPf1trZ8/UFu5Cx/GXB7GZM30LT+wWUNfsi6Bq8ePLnb+woNKtDymI2mxZYBpMbonNFqKmiz684DIfnd8dA==",
+    "license": "Apache-2.0",
+    "files": [
+      {
+        "file": "pdf.min.js",
+        "upstreamEntry": "package/build/pdf.min.js",
+        "upstreamFound": true,
+        "sha256": "978fd1b2d134a98e98966186a97777bebf87d8e770dadab1ece3687e21a5aa6c",
+        "upstreamSha256": "5b5799e6f8c680663207ac5b42ee14eed2a406fa7af48f50c154f0c0b1566946",
+        "equal": false,
+        "lfEqual": false,
+        "exactMatches": [
+          "package/legacy/build/pdf.min.js"
+        ],
+        "upstreamBytes": 320004,
+        "localBytes": 377116
+      },
+      {
+        "file": "pdf.worker.min.js",
+        "upstreamEntry": "package/build/pdf.worker.min.js",
+        "upstreamFound": true,
+        "sha256": "38cde5311957b86bc3669f93e7d2566de333a90055ed6635bef60d9bf00e96f2",
+        "upstreamSha256": "feabdf309770ed24bba31a5467836cdc8cf639c705af27d52b585b041bb8527b",
+        "equal": false,
+        "lfEqual": false,
+        "exactMatches": [
+          "package/legacy/build/pdf.worker.min.js"
+        ],
+        "upstreamBytes": 1087212,
+        "localBytes": 1133660
+      }
+    ],
+    "licenseFile": "public/vendor/licenses/pdfjs-dist-3.11.174.txt"
+  },
+  {
+    "name": "xlsx-js-style",
+    "version": "1.2.0",
+    "source": "https://registry.npmjs.org/xlsx-js-style/-/xlsx-js-style-1.2.0.tgz",
+    "integrity": "sha512-DDT4FXFSWfT4DXMSok/m3TvmP1gvO3dn0Eu/c+eXHW5Kzmp7IczNkxg/iEPnImbG9X0Vb8QhROda5eatSR/97Q==",
+    "license": "Apache-2.0",
+    "files": [
+      {
+        "file": "xlsx-style.js",
+        "upstreamEntry": "package/dist/xlsx.min.js",
+        "upstreamFound": true,
+        "sha256": "1c7abf2993ff2cd61e508f9268e9acda0098c9796f3925d2ba0d2579072653e2",
+        "upstreamSha256": "af16b32bf790003c0a6bc912c70706396ec495cf64dfa144c607e7b705bd12c0",
+        "equal": false,
+        "lfEqual": false,
+        "exactMatches": [
+          "package/dist/xlsx.bundle.js"
+        ],
+        "upstreamBytes": 425017,
+        "localBytes": 425020
+      },
+      {
+        "file": "exceljs-shim.js",
+        "upstreamEntry": "package/dist/shim.min.js",
+        "upstreamFound": true,
+        "sha256": "b819d6804bd29b0cff8f2f24b678952f1900571a4708cb2c3db8842904f1b7af",
+        "upstreamSha256": "0c16091947c28ec153e281cd303d8b3867bd1d964607af6ad4f264ccd9e512e7",
+        "equal": false,
+        "lfEqual": false,
+        "exactMatches": [],
+        "upstreamBytes": 5651,
+        "localBytes": 3215
+      }
+    ],
+    "licenseFile": "public/vendor/licenses/xlsx-js-style-1.2.0.txt"
+  }
+]

@@ -1257,6 +1257,35 @@
           "en": "Actual UI with synthetic users; file and authority boundaries were also verified against the production server."
         }
       }
+    },
+    {
+      "id": "isolated-bounded-file-readers",
+      "type": "improvement",
+      "module": {
+        "tr": "Dosya içe aktarma · Excel ve raporlar",
+        "en": "File import · Excel and reports"
+      },
+      "title": {
+        "tr": "Dosya okuma arayüzü bekletmeden ve sınırlı kaynakla çalışır",
+        "en": "File reading runs with bounded resources while the UI stays responsive"
+      },
+      "body": {
+        "tr": "Excel içe aktarmaları güncel ve ayrı bir okuyucuda hazırlanır; tarih, formül metni ve biçimler korunur. Sunucu rapor ve Endeksmatik okumaları süre/bellek sınırlı süreçlerde çalışır. Bozuk veya sınırı aşan dosya mevcut veriyi değiştirmeden reddedilir; geçerli büyük Endeksmatik şablonları için ayrı güvenli sınır korunur.",
+        "en": "Excel imports are prepared by a current, isolated reader while preserving dates, formula text and formats. Server report and Endeksmatik reading runs in processes with lifetime and heap limits. Malformed or oversized files are rejected before existing data changes; valid large Endeksmatik templates use a separate bounded profile."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "bounded-workbook-import.png",
+        "alt": {
+          "tr": "Gerçek CP Excel içe aktarma önizlemesinde ayrı okuyucuyla yüklenen sentetik çalışma kitabı",
+          "en": "Synthetic workbook loaded by the isolated reader in the actual CP Excel import preview"
+        },
+        "caption": {
+          "tr": "TR/EN önizleme, 10 bin satır okurken arayüz yanıtı ve formül/tarih koruması gerçek Edge üzerinde doğrulandı.",
+          "en": "TR/EN preview, UI response during 10k-row reading and formula/date preservation were verified in actual Edge."
+        }
+      }
     }
   ]
 }

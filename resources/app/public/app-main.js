@@ -1117,15 +1117,9 @@ window.addEventListener('bl:cp-decision-context-changed',()=>{
 });
 
 // ---------- FILE HANDLING ----------
-function readFile(file, cb){
-  const reader = new FileReader();
-  reader.onload = e => {
-    // Tarih hücrelerini JS Date'e otomatik çevirmeyip ham Excel seri değerlerini
-    // okuyoruz; aksi halde bilgisayarın saat dilimine göre tarih bir gün kayabiliyor.
-    const wb = XLSX.read(e.target.result, {type:'array', cellDates:false});
-    cb(wb, file.name);
-  };
-  reader.readAsArrayBuffer(file);
+async function readFile(file, cb){
+  try { const wb=await window.BLFileParser.readWorkbook(file,{cellDates:false});cb(wb,file.name); }
+  catch(error){showToast(error.message);}
 }
 let _submfrValsCache = [];
 function overviewSummaryRows(){
@@ -30228,7 +30222,7 @@ function kolPlmListApplyNewRowValues(row,defaults,valuesById){
 }
 async function kolPlmListReadFile(file){
   const api=kolPlmListApi();
-  const workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:true});
+  const workbook=await window.BLFileParser.readWorkbook(file,{type:'array',cellDates:true});
   const sheet=workbook.Sheets[workbook.SheetNames[0]];
   if(!sheet)throw new Error(appLang==='en'?'The file has no worksheet.':'Dosyada çalışma sayfası bulunamadı.');
   const matrix=XLSX.utils.sheet_to_json(sheet,{header:1,raw:true,defval:''});
@@ -31353,7 +31347,7 @@ async function importKolPlmExcelFile(file){
   const input=document.getElementById('kolPlmImportFile'),label=document.getElementById('kolPlmImportBtn'),labelText=label?.querySelector('span'),oldText=labelText?.textContent||'';
   if(label){label.style.pointerEvents='none';label.setAttribute('aria-busy','true');}if(labelText)labelText.textContent=appLang==='en'?'Reading PLM…':'PLM okunuyor…';
   try{
-    const buffer=await file.arrayBuffer(),wb=XLSX.read(buffer,{type:'array',cellDates:true,cellNF:true,cellStyles:true});
+    const buffer=await file.arrayBuffer(),wb=await window.BLFileParser.readWorkbook(buffer,{type:'array',cellDates:true,cellNF:true,cellStyles:true});
     const sheetName=wb.SheetNames[0],ws=wb.Sheets[sheetName],matrix=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
     if(!matrix.length)throw new Error(appLang==='en'?'PLM Excel is empty.':'PLM Excel boş.');
     const aliases=kolPlmHeaderAliases();let imageCol=-1;
@@ -31425,7 +31419,7 @@ async function importPlmStyleLinksFile(file){
   try{
     if(text)text.textContent=appLang==='en'?'Reading PLM links…':'PLM linkleri okunuyor…';
     if(label)label.style.pointerEvents='none';
-    const workbook=XLSX.read(await file.arrayBuffer(),{type:'array',cellDates:false});
+    const workbook=await window.BLFileParser.readWorkbook(file,{type:'array',cellDates:false});
     const sheet=workbook.Sheets[workbook.SheetNames[0]];
     if(!sheet)throw new Error(appLang==='en'?'The file has no worksheet.':'Dosyada çalışma sayfası bulunamadı.');
     const rows=XLSX.utils.sheet_to_json(sheet,{defval:'',raw:false});
@@ -33018,7 +33012,7 @@ async function importKolExcelFile(file){
   try{
     await ensureCollectionMasterCatalogLoaded();
     const buffer=await file.arrayBuffer();
-    const wb=XLSX.read(buffer,{type:'array',cellDates:true,cellNF:true,cellComments:true});
+    const wb=await window.BLFileParser.readWorkbook(buffer,{type:'array',cellDates:true,cellNF:true,cellComments:true});
     const sheetName=wb.SheetNames.find(n=>/koleksiyon|collection/i.test(n))||wb.SheetNames[0];
     const ws=wb.Sheets[sheetName];
     const matrix=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''});
@@ -34396,11 +34390,11 @@ async function pricingRenderPdfToBlob(pdf,scale,quality){
 async function pricingCompressPdfFile(file,maxBytes){
   if(window.BLPerf) await window.BLPerf.ensureLibrary('pdf');
   if(!file || typeof pdfjsLib==='undefined' || !(window.jspdf&&window.jspdf.jsPDF)) return null;
-  if(!pricingIsPdf(file) || maxBytes<20*1024) return null;
+  if(!pricingIsPdf(file) || maxBytes<20*1024 || file.size>40*1024*1024) return null;
   let pdf=null;
   try{
     const data=new Uint8Array(await file.arrayBuffer());
-    pdf=await pdfjsLib.getDocument({data,disableAutoFetch:true}).promise;
+    pdf=await pdfjsLib.getDocument({data,disableAutoFetch:true,isEvalSupported:false,maxImageSize:16777216}).promise;if(pdf.numPages>80){await pdf.destroy();return null;}
     // Çözünürlük (ölçek) ve JPEG kalitesi hedefe sığana kadar birlikte düşürülür.
     const ladder=[
       {s:1.6,q:0.72},{s:1.35,q:0.66},{s:1.15,q:0.6},{s:0.95,q:0.54},
@@ -34471,7 +34465,7 @@ async function pricingBuildCompressor(item){
     try{
       if(window.BLPerf) await window.BLPerf.ensureLibrary('pdf');
       if(typeof pdfjsLib==='undefined' || !(window.jspdf&&window.jspdf.jsPDF)) throw new Error('pdf-engine-unavailable');
-      const data=new Uint8Array(await item.file.arrayBuffer()); pdf=await pdfjsLib.getDocument({data,disableAutoFetch:true}).promise;
+      if(item.file.size>40*1024*1024)return null;const data=new Uint8Array(await item.file.arrayBuffer()); pdf=await pdfjsLib.getDocument({data,disableAutoFetch:true,isEvalSupported:false,maxImageSize:16777216}).promise;if(pdf.numPages>80){await pdf.destroy();return null;}
     }
     catch(e){ pdf=null; }
     return {

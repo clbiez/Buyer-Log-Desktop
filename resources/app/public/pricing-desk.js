@@ -448,7 +448,7 @@
   async function readWorkbookRows(file){
     const buffer=await file.arrayBuffer();
     if(window.XLSX?.read){
-      const wb=window.XLSX.read(buffer,{type:'array'});
+      const wb=await window.BLFileParser.readWorkbook(buffer,{type:'array'});
       const sheet=wb.Sheets[wb.SheetNames[0]];
       return window.XLSX.utils.sheet_to_json(sheet,{header:1,raw:false,defval:''});
     }

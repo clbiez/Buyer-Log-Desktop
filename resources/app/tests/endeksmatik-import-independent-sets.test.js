@@ -23,8 +23,16 @@ const input={
   newOrderMonth:'202502',newInStoreMonth:'202502',previousUsdPrice:2.75,
 };
 
-test('legacy TL fixed columns do not shift when the workbook used range starts after A',()=>{
-  const decoded=XLSX.read(workbook('OFFSET'),{type:'buffer'});
+test('legacy TL fixed columns do not shift when the workbook used range starts after A',async()=>{
+  // SheetJS 0.20.x writes dimensions starting at A1. Set the actual OOXML
+  // dimension so this remains a real offset-input regression, independent of
+  // the fixture writer's normalization policy.
+  async function declaredRanges(bytes,ranges){
+    const zip=await require('../public/vendor/jszip.min.js').loadAsync(bytes),names=XLSX.read(bytes,{type:'buffer',bookSheets:true}).SheetNames;
+    for(const [name,range] of Object.entries(ranges)){const file='xl/worksheets/sheet'+(names.indexOf(name)+1)+'.xml';zip.file(file,(await zip.file(file).async('string')).replace(/<dimension ref="[^"]*"\/>/,'<dimension ref="'+range+'"/>'));}
+    return zip.generateAsync({type:'nodebuffer'});
+  }
+  const decoded=XLSX.read(await declaredRanges(workbook('OFFSET'),{'Değişimler':'V3:W4'}),{type:'buffer'});
   assert.match(decoded.Sheets['Değişimler']['!ref'],/^V/);
   // The existing fixture already reproduces the V:W currency table offset.
   // Also exercise legitimate sheets whose unused column A is excluded from
@@ -32,7 +40,8 @@ test('legacy TL fixed columns do not shift when the workbook used range starts a
   for(const name of ['KLASMAN LİSTESİ ÖZET','KLASMAN KUMAŞ PİVOT','KLASMAN CMT PİVOT','KLASMAN AKSESUAR PİVOT','KLASMAN EK İŞLEM PİVOT']){
     const sheet=decoded.Sheets[name],range=XLSX.utils.decode_range(sheet['!ref']);range.s.c=1;sheet['!ref']=XLSX.utils.encode_range(range);
   }
-  const bytes=XLSX.write(decoded,{type:'buffer',bookType:'xlsx'});
+  const ranges=Object.fromEntries(Object.entries(decoded.Sheets).map(([name,sheet])=>[name,sheet['!ref']]));
+  const bytes=await declaredRanges(XLSX.write(decoded,{type:'buffer',bookType:'xlsx'}),ranges);
   assert.match(XLSX.read(bytes,{type:'buffer'}).Sheets['KLASMAN LİSTESİ ÖZET']['!ref'],/^B/);
   const snapshot=engine.parseWorkbookBuffer(bytes,'offset.xlsx');
   assert.deepEqual(snapshot.months,['202501','202502']);

@@ -351,7 +351,7 @@ async function seedMissing(deltaStore){
   if(!Object.keys(records).length)return {seeded:0,ids:[]};
   return deltaStore.seedMissing(COLLECTION,records);
 }
-async function importLegacyWorkbookBuffer(buffer,sourceFile,options={}){return saveSnapshot(parseWorkbookBuffer(buffer,sourceFile),options);}
+async function importLegacyWorkbookBuffer(buffer,sourceFile,options={}){const snapshot=await require('./parser-process-client').run('endeksmatik-legacy',{buffer,name:sourceFile},{signal:options.signal});options.assertAuthority?.();return saveSnapshot(snapshot,options);}
 
 /* ------------------------------------------------------------ çoklu set deposu */
 function setDocumentId(id){ return `${SET_PREFIX}${id}`; }
@@ -533,7 +533,8 @@ function parseImportWorkbook(buffer,sourceFile){
 }
 async function importWorkbookBuffer(buffer,sourceFile,options={}){
   const {label='',actor=''}=options;
-  const parsed=parseImportWorkbook(buffer,sourceFile);
+  const parsed=await require('./parser-process-client').run('endeksmatik',{buffer,name:sourceFile},{signal:options.signal});
+  options.assertAuthority?.();
   const snapshot=parsed.snapshot;
   if(label)snapshot.label=normalizeLabel(label);
   // Idempotent upload: the same workbook content selects its existing set

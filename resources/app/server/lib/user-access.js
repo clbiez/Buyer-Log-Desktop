@@ -2210,10 +2210,19 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'IAM_EXPORT_FAILED' }); }
   }
   const IMPORT_ORG_LEVEL = { buyer: 'job_title', manager: 'mmyg', senior_manager: 'mag', moderator: 'manager' };
-  function importPlan(store, body) {
-    const data = clean(body.fileBase64);
-    if (!data) throw hierarchyError('İçe aktarılacak Excel dosyasını seçin.', 'IAM_IMPORT_FILE_REQUIRED');
-    const rows = iamExcel.readUserRows(Buffer.from(data, 'base64'));
+  function prepareIamImport(handler) {
+    return async(req,res)=>{
+      try{
+        const assertAuthority=()=>{const actor=sessionProfile(req),store=readStore();if(!actor||!iam.canAdminUsers(actor,store))throw Object.assign(new Error('Kullanıcı içe aktarma yetkisi değişti. / User import permission changed.'),{code:'CAPABILITY_REQUIRED',statusCode:403});req.currentUser=actor;};
+        assertAuthority();const data=clean(req.body?.fileBase64);if(!data)throw hierarchyError('İçe aktarılacak Excel dosyasını seçin.', 'IAM_IMPORT_FILE_REQUIRED');
+        if(data.length>Math.ceil(40*1024*1024/3)*4)throw require('../../public/file-parser-policy').fail();
+        req.iamParsedRows=await require('./parser-process-client').run('iam',{buffer:Buffer.from(data,'base64')});
+        assertAuthority();return await handler(req,res);
+      }catch(err){return res.status(err.statusCode||500).json({error:err.message,code:err.code||'IAM_IMPORT_FAILED'});}
+    };
+  }
+  function importPlan(store, body, rows) {
+    if(!Array.isArray(rows))throw hierarchyError('Excel dosyası doğrulanamadı. / The Excel file could not be verified.','IAM_IMPORT_FILE_REQUIRED');
     const byName = new Map(allProfiles(store).filter(profile => clean(profile.username)).map(profile => [usernameKey(profile.username), profile]));
     const plan = iamExcel.planImport(rows, { usernameKey, findByUsername: name => byName.get(usernameKey(name)) || null });
     for (const item of plan) if (item.action === 'create') item.patch.status = 'INACTIVE';
@@ -2226,7 +2235,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
   function iamImportPreviewHandler(req, res) {
     try {
       const store = readStore(), actor = req.currentUser || sessionProfile(req);
-      const plan = importPlan(store, req.body || {});
+      const plan = importPlan(store, req.body || {}, req.iamParsedRows);
       for (const item of plan) if (item.userId && !canManageTarget(actor, profileById(store, item.userId), store)) Object.assign(item, { action: 'error', errors: ['USER_NOT_MANAGEABLE'] });
       res.json({ ok: true, plan, summary: importSummary(plan) });
     } catch (err) { res.status(err.statusCode || 500).json({ error: err.message, code: err.code || 'IAM_IMPORT_PREVIEW_FAILED' }); }
@@ -2235,7 +2244,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     try {
       const store = loadStore(), actor = req.currentUser || sessionProfile(req), body = req.body || {};
       if (!clean(body.reason) || body.confirmCritical !== true) throw hierarchyError('İçe aktarma için onay ve gerekçe zorunludur.', 'CRITICAL_CONFIRMATION_REQUIRED');
-      const plan = importPlan(store, body), summary = importSummary(plan);
+      const plan = importPlan(store, body, req.iamParsedRows), summary = importSummary(plan);
       if (summary.error) return res.status(400).json({ error: 'Dosyada hatalı satırlar var; hiçbir değişiklik yapılmadı.', code: 'IAM_IMPORT_INVALID', plan, summary });
       const changed = [];
       for (const item of plan) {
@@ -2482,7 +2491,7 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
     horizonDefaultsHandler: centralMutation(horizonDefaultsHandler, 'USER.ADMIN'),
     roleHorizonDefaultsHandler: centralMutation(roleHorizonDefaultsHandler, 'ROLE.MANAGE'),
     roleBundleHandler: centralMutation(roleBundleHandler, 'ROLE.MANAGE'),
-    iamExportHandler, iamImportPreviewHandler, iamImportHandler: centralMutation(iamImportHandler, 'USER.ADMIN'),
+    iamExportHandler, iamImportPreviewHandler:prepareIamImport(iamImportPreviewHandler), iamImportHandler:prepareIamImport(centralMutation(iamImportHandler, 'USER.ADMIN')),
     temporaryGrantHandler: centralMutation(temporaryGrantHandler, 'USER.GRANT'), temporaryGrantRevokeHandler: centralMutation(temporaryGrantRevokeHandler, 'USER.GRANT'), auditListHandler,
     iamHealthHandler, iamRefreshHandler, iamDryRunHandler, iamInitializeHandler, iamAdoptHandler,
     refreshIam: options => restoreActive ? Promise.resolve(null) : centralConfigured
