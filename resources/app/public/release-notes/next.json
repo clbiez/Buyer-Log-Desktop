@@ -619,6 +619,35 @@
           "en": "Demo note with colored and formatted text, a list and an embedded actual Buyer Log screenshot."
         }
       }
+    },
+    {
+      "id": "checklist-record-authorization",
+      "type": "fix",
+      "module": {
+        "tr": "Checklist",
+        "en": "Checklist"
+      },
+      "title": {
+        "tr": "Checklist kanıtları güncel sipariş yetkisiyle korunur",
+        "en": "Checklist evidence follows current order permissions"
+      },
+      "body": {
+        "tr": "Yanıtlar ve ekler yalnız yetkili siparişlerde okunur ve değiştirilir. Karma yetkili toplu kayıtlar bütünüyle reddedilir; yetkisiz değişiklikler bekleyen yerel kayıtta korunur. Ortak tanımları değiştirmek iş kuralı yönetim yetkisi gerektirir.",
+        "en": "Answers and attachments can be read and changed only within authorized orders. Mixed unauthorized batches are rejected in full; rejected edits remain in the local pending journal. Changing shared definitions requires business-rule management permission."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-record-authorization.png",
+        "alt": {
+          "tr": "Demo Buyer Log ekranında yetkisiz checklist kaydının reddedildiğini ve beklediğini bildiren mesaj",
+          "en": "Demo Buyer Log displays a rejected unauthorized checklist save retained as pending"
+        },
+        "caption": {
+          "tr": "Sentetik kullanıcıda yetkisiz kayıt sunucu tarafından reddedilir; yerel değişiklik korunur.",
+          "en": "The server rejects an unauthorized save for a synthetic user and preserves the local edit."
+        }
+      }
     }
   ]
 }

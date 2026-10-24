@@ -71,17 +71,17 @@ function cleanAttachmentMeta(raw) {
     addedAt: text(raw.addedAt, 80),
   };
 }
-function addAttachment(raw, actor) {
+function addAttachment(raw, actor, options = {}) {
   const item = raw && typeof raw === 'object' ? raw : {};
   const encoded = String(item.base64 || '').replace(/^data:[^;,]+;base64,/i, '').replace(/\s+/g, '');
   if (!encoded) {
     const error = new Error('Attachment payload is empty.'); error.code = 'CHECKLIST_ATTACHMENT_EMPTY'; throw error;
   }
-  return addAttachmentBuffer(Buffer.from(encoded, 'base64'), item, actor);
+  return addAttachmentBuffer(Buffer.from(encoded, 'base64'), item, actor, options);
 }
 /* Test raporu aktarımı ekleri sunucuda zaten tampondadır; aynı depoya aynı
    adlandırma ve sınırlarla yazılır. */
-function addAttachmentBuffer(buffer, raw, actor) {
+function addAttachmentBuffer(buffer, raw, actor, options = {}) {
   const item = raw && typeof raw === 'object' ? raw : {};
   if (!Buffer.isBuffer(buffer) || !buffer.length || buffer.length > MAX_ATTACHMENT_BYTES) {
     const error = new Error('Checklist attachment exceeds the 40 MB storage limit.'); error.code = 'CHECKLIST_ATTACHMENT_TOO_LARGE'; throw error;
@@ -90,6 +90,8 @@ function addAttachmentBuffer(buffer, raw, actor) {
   const addedAt = new Date().toISOString();
   const filename = attachmentDisplayName({ ...(item.context || {}), addedAt }, item.filename);
   fs.mkdirSync(ATTACHMENT_ROOT, { recursive: true });
+  options.assertAuthority?.();
+  atomicWriteJson(path.join(ATTACHMENT_ROOT, id + '.json'), { ownerId: actorInfo(actor).id, orderKey: options.orderKey || '', addedAt });
   atomicWriteBuffer(attachmentDiskPath(id), buffer);
   return {
     id, filename,
@@ -103,15 +105,56 @@ function getAttachmentPath(id) {
   const fullPath = attachmentDiskPath(id);
   return fullPath && fs.existsSync(fullPath) ? fullPath : '';
 }
-function deleteAttachment(id) {
-  const fullPath = attachmentDiskPath(id);
-  if (!fullPath || !fs.existsSync(fullPath)) return false;
-  const store = read();
-  const referenced = Object.values(store.answers).concat(Object.values(store.tombstones), store.events)
-    .some(record => (record.attachments || []).some(item => item.id === id));
-  if (referenced) return false;
-  fs.unlinkSync(fullPath);
-  return true;
+// Historical files have no staging owner. They remain readable only through
+// an authorized durable answer/tombstone/event or test-report reference.
+function attachmentOrders(id, store = read()) {
+  const keys = new Set();
+  for (const record of Object.values(store.answers).concat(Object.values(store.tombstones), store.events)) {
+    if ((record.attachments || []).some(item => item.id === id)) keys.add(record.orderKey);
+  }
+  const reports = require('./test-reports/store').read();
+  const Engine = require('../../public/test-report-engine');
+  for (const [reportId, link] of Object.entries(reports.links)) {
+    for (const target of Engine.reportLinks(link)) {
+      if ((target.files || reports.reports[reportId]?.dosyalar || []).some(file => file.attachmentId === id)) keys.add(target.orderKey);
+    }
+  }
+  return keys;
+}
+function attachmentAccess(actor, allowedOrderKeys) {
+  const allowedIds = new Set(), checklist = read();
+  for (const record of Object.values(checklist.answers).concat(Object.values(checklist.tombstones), checklist.events)) {
+    if (allowedOrderKeys.has(record.orderKey)) for (const item of record.attachments || []) allowedIds.add(item.id);
+  }
+  const reports = require('./test-reports/store').read(), Engine = require('../../public/test-report-engine');
+  for (const [reportId, link] of Object.entries(reports.links)) {
+    for (const target of Engine.reportLinks(link)) {
+      if (allowedOrderKeys.has(target.orderKey)) for (const file of target.files || reports.reports[reportId]?.dosyalar || []) allowedIds.add(file.attachmentId);
+    }
+  }
+  return id => {
+    if (!getAttachmentPath(id)) return false;
+    if (allowedIds.has(id)) return true;
+    try {
+      const meta = JSON.parse(fs.readFileSync(path.join(ATTACHMENT_ROOT, String(id).toLowerCase() + '.json'), 'utf8'));
+      return Boolean(meta.ownerId && meta.ownerId === actorInfo(actor).id && allowedOrderKeys.has(meta.orderKey));
+    } catch (err) { if (err.code === 'ENOENT' || err instanceof SyntaxError) return false; throw err; }
+  };
+}
+function canAccessAttachment(id, actor, allowedOrderKeys) {
+  return allowedOrderKeys instanceof Set && attachmentAccess(actor, allowedOrderKeys)(id);
+}
+function deleteAttachment(id, options = {}) {
+  return withFileLeaseSync(FILE, () => {
+    options.assertAuthority?.();
+    const fullPath = attachmentDiskPath(id);
+    if (!fullPath || !fs.existsSync(fullPath)) return false;
+    if (attachmentOrders(id).size) return false;
+    options.assertAuthority?.();
+    fs.unlinkSync(fullPath);
+    fs.rmSync(path.join(ATTACHMENT_ROOT, String(id).toLowerCase() + '.json'), { force: true });
+    return true;
+  });
 }
 function emptyStore() {
   return { schemaVersion: SCHEMA_VERSION, revision: 0, updatedAt: '', definitions: [], answers: {}, tombstones: {}, events: [] };
@@ -217,11 +260,14 @@ function normalizeDefinition(raw) {
   };
 }
 
-function publicPayload() {
+function publicPayload(allowedOrderKeys) {
   const store = read();
   return {
     ok: true, schemaVersion: SCHEMA_VERSION, revision: store.revision, updatedAt: store.updatedAt,
-    definitions: clone(store.definitions), answers: clone(store.answers), tombstones: clone(store.tombstones),
+    definitions: clone(store.definitions),
+    ...Object.fromEntries(['answers', 'tombstones'].map(kind => [kind, clone(allowedOrderKeys
+      ? Object.fromEntries(Object.entries(store[kind]).filter(([, record]) => allowedOrderKeys.has(record.orderKey)))
+      : store[kind])])),
   };
 }
 
@@ -333,8 +379,8 @@ function applyEntries(entries, actor, options = {}) {
       const common = {
         ...(componentCount != null ? {componentCount} : {}),
         ...(elements.length ? {elements} : {}),
-        key, orderKey, itemId, at, by: text(raw.by || who.name || who.id, 200),
-        byId: who.id, source: text(raw.source || source, 80), loadDate: text(raw.loadDate, 40) || null,
+        key, orderKey, itemId, at, by: text(options.serverIdentity ? who.name || who.id : raw.by || who.name || who.id, 200),
+        byId: who.id, source: text(options.serverIdentity ? source : raw.source || source, 80), loadDate: text(raw.loadDate, 40) || null,
         note: String(Object.prototype.hasOwnProperty.call(raw, 'note') ? raw.note || '' : previousEvidence && previousEvidence.note || '').slice(0, 2000),
         supplier: text(raw.supplier, 300), itemLabel: text(raw.itemLabel, 200),
         reportNumber: Object.prototype.hasOwnProperty.call(raw, 'reportNumber') ? text(raw.reportNumber, 300) : text(previousEvidence && previousEvidence.reportNumber, 300),
@@ -380,6 +426,6 @@ function restoreEntries(receipt, actor, options = {}) {
 module.exports = {
   FILE, ATTACHMENT_ROOT, SCHEMA_VERSION, MAX_ATTACHMENT_BYTES,
   normalizeState, answerKey, normalizeDefinition, publicPayload, replaceDefinitions, restoreDefinitionsSnapshot, applyEntries, restoreEntries,
-  addAttachment, addAttachmentBuffer, getAttachmentPath, deleteAttachment, cleanAttachmentMeta, attachmentDisplayName,
+  addAttachment, addAttachmentBuffer, getAttachmentPath, deleteAttachment, canAccessAttachment, attachmentAccess, cleanAttachmentMeta, attachmentDisplayName,
   _read: read,
 };

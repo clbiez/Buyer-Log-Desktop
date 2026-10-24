@@ -2,7 +2,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const {createRequire}=require('node:module');
 const server=path.join(__dirname,'../server/server.js'),source=fs.readFileSync(server,'utf8'),serverRequire=createRequire(server);
-function fn(name){const at=source.indexOf(`async function ${name}(`);assert.ok(at>=0);return source.slice(at,source.indexOf('\n}',at)+2);}
+function fn(name){const at=source.search(new RegExp('(?:async )?function '+name+'\\('));assert.ok(at>=0);return source.slice(at,source.indexOf('\n}',at)+2);}
 const profile={id:'demo'};
 const order=(ocode,extra={})=>({ocode,model:'DEMO',ccode:'01',colour:'BLUE',qty:100,kalan:100,...extra});
 test('review uses active page CP with Horizon and user scope; closed orders remain in authority',async()=>{
@@ -12,15 +12,17 @@ test('review uses active page CP with Horizon and user scope; closed orders rema
     ensureDataLoaded:async()=>{},cacheForUser:()=>({asasOrders:rows}),effectiveOverridesForUser:()=>({}),
     ordersForTarget:(cache,target)=>{assert.equal(target,'cp');return cache.asasOrders;},antrepoForTarget:()=>({}),
     filterRowsByEffectiveHorizon:(_p,target,input)=>{assert.equal(target,'cp');return input.filter(r=>!r.outsideHorizon);},
-    userAccess:{hasArea:()=>true,filterRowsByScope:(_p,input)=>input.filter(r=>!r.outsideScope)},
+    userAccess:{hasArea:()=>true,hasPermission:()=>false,authoritativeOrderRows:code=>[{ocode:code,outsideScope:String(code)==='4100005'}],filterRowsByScope:(_p,input)=>input.filter(r=>!r.outsideScope)},
     canUserEditOrderCode:(_p,code)=>String(code)!=='4100005',
     buildCPRowsFromASAS:parse.buildCPRowsFromASAS,buildOrdersRowsFromASAS:parse.buildOrdersRowsFromASAS,
     cpAgentData:async(p,{loadCpRows})=>({cpRows:await loadCpRows(p),checklist:{answers:{}},personalRules:[],settings:{},checklistEnabled:{},customStatuses:[]})};
-  vm.createContext(c);vm.runInContext([fn('agentQualityOrderRows'),fn('agentQualityAuthorizedOrders'),fn('agentQualityReviewContext')].join('\n'),c);
+  vm.createContext(c);vm.runInContext([fn('agentQualityOrderRowsNow'),fn('agentQualityOrderRows'),fn('checklistAuthorizedOrdersNow'),fn('agentQualityAuthorizedOrders'),fn('agentQualityReviewContext')].join('\n'),c);
   const context=await c.agentQualityReviewContext(profile),allowed=await c.agentQualityAuthorizedOrders(profile),write=await c.agentQualityAuthorizedOrders(profile,{write:true});
   assert.deepEqual(Array.from(context.cp.rows,r=>r.orderCode),['4100001','4100005']);
   assert.deepEqual(Array.from(allowed.values(),r=>r.orderCode),['4100001','4100002','4100005']);
   assert.deepEqual(Array.from(write.values(),r=>r.orderCode),['4100001','4100002']);
+  assert.deepEqual(Array.from(c.checklistAuthorizedOrdersNow(profile,{write:true}).values(),r=>r.orderCode),['4100001','4100002']);
+  assert.deepEqual(Array.from(c.checklistAuthorizedOrdersNow(profile).values(),r=>r.orderCode),['4100001','4100002'], 'a self-scoped source row cannot grant visibility over official foreign ownership');
 });
 test('page CP injection preserves read-only checklist answers in the canonical review',async()=>{
   const CP=require('../public/cp-readiness-engine'),row={'Order Code':'4100005','Model Name':'DEMO','Colour Code':'01'},key=CP.analyzeOrder(row).orderKey;
