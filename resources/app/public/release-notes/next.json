@@ -735,6 +735,35 @@
           "en": "Real Buyer Log with synthetic data only: with the compatibility JSON removed, the reopened native DB supplies the price record saved after the torn tail."
         }
       }
+    },
+    {
+      "id": "login-throttle-trusted-peer",
+      "type": "fix",
+      "module": {
+        "tr": "Kullanıcı Girişi",
+        "en": "Sign In"
+      },
+      "title": {
+        "tr": "Hatalı giriş sınırı sahte ağ başlıklarıyla aşılamaz",
+        "en": "Forged network headers cannot bypass failed sign-in limits"
+      },
+      "body": {
+        "tr": "Hatalı denemeler gerçek bağlantı adresi ve kullanıcı hesabıyla izlenir. Geçici sınır kullanıcı adı biçimi veya ağ başlığı değiştirilse de korunur; süre dolunca yeniden giriş yapılabilir.",
+        "en": "Failed attempts use the actual connection address and account identity. Temporary limits persist across username variants and forged headers; sign-in recovers after expiration."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "login-throttle-trusted-peer.png",
+        "alt": {
+          "tr": "Sentetik hesapta art arda hatalı girişlerden sonra görünen geçici sınır mesajı",
+          "en": "Temporary sign-in limit displayed after repeated failures on a synthetic account"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log giriş ekranında beş hatalı denemeden sonra yeniden deneme süresi gösterilir.",
+          "en": "The actual Buyer Log sign-in screen shows the retry delay after five failed attempts."
+        }
+      }
     }
   ]
 }
