@@ -51,112 +51,48 @@ yerel-öncelikli sipariş/koleksiyon yönetimi. Arayüz ve yorumlar Türkçe.
   teknik kusur gibi geçersiz sayma. Geniş kapsamlı veya geri dönüşü zor
   kararlarda somut etkiyi belirterek kullanıcı kararı iste.
 
+
 ## 2 · Minimum bağlamla keşif
 
-- İndeksli projede birincil navigasyon katmanı `codebase-memory-mcp`'dir.
-- Proje: `C-Users-clbiez-Desktop-Buyer-Log-Desktop`; kök:
-  `C:/Users/clbiez/Desktop/Buyer Log Desktop`.
-- `list_projects` / `index_status` yalnız oturum başında proje veya indeks durumu
-  henüz doğrulanmadıysa çalıştır. Aynı görevde tekrar etme.
-- Başlangıç sırası:
-  1. Talimatta verilen dosya/sembol adaylarını hedefli doğrula.
-  2. Konum için `search_graph`.
-  3. Çağrı zinciri gerekiyorsa `trace_path`.
-  4. Kaynak doğrulama için `get_code_snippet` ve ilgili gerçek source dosyası.
-  5. Değişiklik etkisi gerekiyorsa `detect_changes`.
-- `get_architecture` yalnız görev gerçekten mimari/geniş kapsamlıysa veya hedefli
-  graph sorguları yetersiz kaldıysa kullan. Varsayılan başlangıç adımı değildir.
-- Aday yollar belli olduktan sonra yalnız dokunulacak/kritik dosyalar için tek
-  `check_index_coverage` çağrısı yap. Eksik, stale veya partial aralıkları hedefli
-  read/grep ile doğrula.
-- Bütün repository'yi tarama. Grep'i yalnız sabit metin/CSS/HTML, kesin patch
-  ankrajı, canlı davranış veya graph coverage boşluğu için kullan.
-- Yeterli uygulama kanıtı oluştuğunda keşfi **durdur**. “Daha fazla emin olmak için”
-  genel tarama yapma.
-- `docs/ai/BUYER_LOG_CODEBASE_MAP.md` ve
-  `BUYER_LOG_CODEBASE_MEMORY_FULL_V4.md` MCP erişimi olmayan dış prompt hazırlama,
-  audit veya fallback içindir. MCP erişimi olan agent bunları varsayılan olarak
-  baştan sona okumaz.
+- Önce görevde adı verilen dosya/sembol/çağrı zincirini gerçek kaynakta doğrula; aday yoksa dar kapsamlı aramayla başla.
+- `codebase-memory-mcp` **mevcut ve güncelse** indeksli navigasyonda önceliklidir. Araç veya indeks yoksa bloke olma: repository içi dosya okuma, hedefli `rg`/`grep`, test ve runtime bulgularıyla devam et. MCP graph çıktısı kaynak kodun yerine geçmez.
+- MCP mevcutken uygun sıra: `search_graph` (konum) → gerektiğinde `trace_path` (bağımlılık) → `get_code_snippet` + gerçek source (doğrulama) → gerektiğinde `detect_changes` (etki). `list_projects` / `index_status` yalnız proje veya indeks belirsizse; `check_index_coverage` yalnız kritik ve dokunulacak dosyalar için.
+- `get_architecture`, tam repo grep veya full map okuması varsayılan başlangıç değildir. Geniş tarama ancak hedefli kanıt yetersizse, kapsam gerçekten repo çapındaysa veya regresyonun sınırları bilinmiyorsa yapılır.
+- Yerel kullanıcı yolu ve indeks proje kimliği **konfigürasyon bilgisidir**, evrensel önkoşul değildir; bunları sabit varsayma. Farklı makine, Work/cloud veya GitHub connector ortamında bulunan araçları kullan.
+- `docs/ai` altındaki geçmiş handoff/audit dosyaları canlı source of truth değildir; yalnız ilgili görevde aç. Yeterli kanıt toplandığında keşfi durdur; belirsizliği dürüstçe bildir.
+
 
 ## 3 · Uygulama akışı
 
-1. Mevcut davranışı ve gerçek source of truth'u hedefli doğrula.
-2. En küçük güvenli değişikliği belirle; görev dışı refactor, rename, cleanup veya
-   mimari yeniden tasarım yapma.
-3. Bug/özellik/refactor işinde ilgili regression testini mümkünse önce RED yap,
-   minimal fix ile GREEN yap. Mevcut test deseni uygunsa onu kullan.
-4. Önce yalnız ilgili test(ler)i çalıştır. Tam `npm test` paketini final/commit
-   öncesi gerektiğinde en fazla bir kez çalıştır.
-5. Flake'i yalnız ilgili testi tekrar ederek ayır; tüm suite'i tekrar tekrar koşma.
-6. Anlamlı/non-trivial diff'i önce tek ajanla hedefli ve eleştirel diff
-   incelemesinden geçir. İkinci model yalnız §3.1 risk eşiğinde; gereksiz
-   explorer → reviewer → reviewer zinciri kurma.
-7. Subagent yalnız gerçekten paralel ve ayrık iş önemli zaman kazandırıyorsa kullan.
-8. Gerçek UI değişikliğini mümkünse gerçek tarayıcıda doğrula. `server/*.js`
-   değiştiyse restart gereksinimini bildir; istemci dosyalarında yenileme yeter.
+1. Kullanıcının hedef davranışını, mevcut davranışı ve gerçek source of truth'u ayır; gerektiğinde çoğaltılabilir hata senaryosu çıkar.
+2. Risk sınıfını (§3.1), etki alanını ve bağımlılıkları belirle; en küçük güvenli değişikliği yap. Görev dışı refactor/rename/cleanup ekleme.
+3. Uygun test altyapısı varsa yeni davranışı önce başarısız testle (RED) sabitle, değişikliği yapıp geçmesini sağla (GREEN). Altyapı yoksa bunu açıkça belirt ve uygulanabilir doğrulamayı seç.
+4. Önce ilgili testleri çalıştır. Tam `npm test` paketini gerektiren durumda final/merge öncesi çalıştır; **testten sonra sonuçları etkileyen kod değişirse yeniden çalıştır**. Maliyet gerekçesiyle geçersiz eski sonucu başarılı sayma. Flake için yalnız ilgili testi kontrollü tekrar et.
+5. Non-trivial diff'i güvenlik, veri kaybı, davranış uyumu ve performans açısından **eleştirel** incele. İkinci agent/model yalnız §3.1'deki gerçek risk eşiğinde.
+6. UI değişikliğini mümkünse gerçek Buyer Log'da demo veriyle doğrula. `server/*.js` değişiklikleri restart gerektirebilir; istemci tarafında yenileme yeterli olabilir. Doğrulamadığın runtime davranışını doğrulandı diye yazma.
+7. Test/CI hata verirse başarısız kontrolü gizleme veya otomatik gevşetme. Kök nedeni, önceki testin neden kaçırdığını ve en küçük kalıcı regression önlemini incele; ilgili teste ihtiyaç varsa ekle. Aynı başarısız çözümü kanıtsız tekrar etme.
 
-Test runner: `npm test` → `tests/run-tests.js` (batch'lenmiş Node testleri).
-Dosya-adı filtresi: `npm test -- collection` gibi; filtreler OR mantığındadır.
+Test runner: `resources/app` içinden `npm test` → `tests/run-tests.js` (batch Node testleri). `npm test -- collection` gibi filtreler OR mantığındadır. Saf `server/lib/*.js` için canlı unit test; DOM'a sıkı bağlı `public/app-main.js` için mevcut kaynak-sözleşme test desenini uygun olduğunda kullan. Koruduğu regression bilinmeden test silme/gevşetme.
 
-- Saf `server/lib/*.js` kodunda canlı unit test tercih et.
-- DOM'a sıkı bağlı büyük `public/app-main.js` için mevcut
-  kaynak-sözleşme test desenini kullan.
-- Bir testi silmeden/gevşetmeden önce koruduğu regression gerekçesini oku.
 
-## 3.1 · Kota dostu GitHub / release iş akışı (zorunlu)
+## 3.1 · Risk temelli GitHub / release iş akışı (zorunlu)
 
-- İşi önce riskine göre ayır: **P0** veri kaybı/güvenlik/bozuk hesaplama,
-  **P1** güvenilirlik/perf/CI, **P2** özellik, **P3** görsel kozmetik.
-  Aktif P0'ı çözmeden ilgisiz P2/P3 işi yayınlama.
-- **Tek model varsayılandır:** P2/P3 ve yerel etkili P1 işlerinde aynı model
-  hedefli keşif → uygulama → ilgili test → eleştirel diff kontrolü yapar.
-  Ayrı Claude+Codex turları, tam repo tekrar taraması veya ikinci reviewer
-  sırf alışkanlık diye başlatılmaz.
-- **İkinci model istisnadır:** P0 değişikliği veya geniş etkili P1 içinde
-  veri migrasyonu/silme, kimlik-yetki, çok kullanıcılı veri tutarlılığı,
-  PLM/ASAS senkronu, FX/fiyat/royalty hesabı, updater/rollback gibi kritik
-  sınırları değiştiren non-trivial diff varsa bağımsız model incelemesini
-  değerlendir. Bu alanların yalnız görünüm/metin düzeltmeleri otomatik olarak
-  yüksek risk sayılmaz.
-- İkinci model gerekiyorsa bütün repo yerine yalnız değişen diff'i, ilgili
-  sözleşmeleri, testleri ve bilinen riskleri aktar; en fazla bir çapraz inceleme
-  turu yap. Araç/izin/bütçe yoksa denetimi yapılmış gibi gösterme:
-  hedefli testleri güçlendir, kalan riski bildir ve gerektiğinde merge'i durdur.
-  **İkinci model, test ve CI'ın yerine geçmez.**
-- Aynı modüldeki birbiriyle ilişkili istekleri aynı görev/PR'da topla;
-  bağımsız yüksek riskli değişiklikleri tek PR'a yığma. Aynı modülde
-  çakışan paralel agent/PR çalışması başlatma.
-- Normal teslim: yerelde hedefli test (gerekirse tam `npm test`) → PR →
-  merge. **PR'larda GitHub Actions testi otomatik koşmaz** (kota); PR'ın
-  doğrulaması agent'ın yerel test çıktısıdır ve PR açıklamasına yazılır.
-  `Buyer Log Tests` workflow'u yalnız elle (`workflow_dispatch`) ve yalnız
-  gerçekten riskli bir değişiklikte çalıştırılır.
-  **Merge, TEST üretimi ve STABLE terfisi ayrı kararlardır.** Kullanıcı
-  özellikle yayın istemedikçe PR/merge sonrasında otomatik TEST/STABLE
-  tetikleme; varsayılan olarak değişiklikleri sonraki TEST'te biriktir.
-- GitHub'ı boşa kullanma: CI'ı tetiklemek için boş commit/yeniden push,
-  aynı başarısız işi tekrar çalıştırma veya gereksiz ara PR açma yok.
-  Birden çok küçük işi mümkünse tek PR'da topla.
-- Her TEST yayını öncesinde **tam regresyon** ve release kabul kontrolleri
-  zorunludur. STABLE yalnız doğrulanmış TEST'in **aynı imzalı baytlarını**
-  yeniden derlemeden terfi ettirir. Fail, skip veya hiç koşmamış zorunlu
-  kontrolü başarılı sayma; PR'ı zorla merge etme.
-- TEST/STABLE için yalnız yayın isteği açılacaksa ayrı PR açma:
-  mevcut `workflow_dispatch` kullan. Release isteği için yeni versiyon
-  geliştirme PR'ından bağımsız commit gerekmiyor.
-- Kurulum ZIP'i ve TEST ZIP'i GitHub Actions artifact deposuna yüklenmez;
-  doğrulanmış dosyalar doğrudan release deposuna gider. Kota sorunu varsa
-  aynı başarısız upload'ı tekrarlama. Var olan workflow artifact'lerini
-  silmeden önce gerçekten gereken arşivleri koru; silme için kullanıcı
-  yetkisi/erişimi gereklidir.
-- `updates/vVERSION` immutable sürüm dalı yalnız versiyon değişiminde
-  kaydedilir. Aynı sürüm zaten kaydedilmişse üzerine yazılmaz; farklı
-  kaynak için yeni SemVer gerekir. Normal kod commit'i sürüm dalı yaratmaz.
-- `main` branch protection / required CI kullanıcı veya repo yöneticisi
-  tarafından etkinleştirilmeden "zorunlu koruma kuruldu" deme.
-- Finalde PR bağlantısını, CI sonucunu, merge durumunu ve TEST/STABLE
-  yayın durumu (yayınlanmadıysa açıkça) ayrı ayrı bildir; başarısız veya
-  atlanan aşamaya başarı deme.
+- Riski yalnız modül adına değil **gerçek değişen davranış, etki alanı, veri doğruluğu, geri alınabilirlik ve test kanıtına** göre sınıflandır:
+  - **P0:** aktif veri kaybı, yetki/güvenlik ihlali veya kritik hesaplamayı bozan hata.
+  - **P1:** çok kullanıcılı veri tutarlılığı, senkronizasyon, updater/rollback, doğruluk veya geniş kapsamlı performans ve güvenilirlik riski.
+  - **P2:** normal özellik veya yerel etkili düzeltme.
+  - **P3:** davranışı değiştirmeyen kozmetik/metin düzeni.
+  Kritik modüldeki yalnız etiket/CSS değişikliği kendiliğinden P1 değildir. Aktif P0'ı çözmeden ilgisiz iş yayınlama.
+- **Tek model varsayılan.** Hedefli keşif → uygulama → ilgili test → eleştirel diff kontrolünü aynı agent yapabilir. P0 veya çok kullanıcılı veri/senkron/FX/fiyat/royalty/yetki/migrasyon/updater sınırını değiştiren non-trivial P1 için bağımsız ikinci model incelemesini değerlendir.
+- İkinci modele yalnız ilgili diff, sözleşme, test ve riskleri aktar; **en fazla bir çapraz tur** yap. Yetkili geliştirme aracı/sağlayıcısı ve paylaşım izni yoksa özel repo kodunu/iş verisini dışarı aktarma; reviewer yapılmadıysa yapılmış gibi gösterme. İkinci model testin yerine geçmez. Gerekli denetim veya doğrulama sağlanamıyorsa merge'i durdur ve kalan riski bildir.
+- Bağımlı küçük işleri tek PR'a topla; ilgisiz yüksek riskli işleri ayır. Aynı dosyalarda çakışan paralel agent/PR başlatma.
+- Normal akış: **yerel ilgili testler → PR → düşük maliyetli PR checks → sonuç değerlendirmesi → merge**. `.github/workflows/buyerlog-pr-fast-checks.yml` hızlı sözleşme/i18n/release-note denetimi yapar; **kapsamlı regresyon yerine geçmez**. P0/P1 için etkiye uygun ek hedefli/entegrasyon kontrolleri gerekir.
+- `Buyer Log Tests` tam regresyon workflow'u maliyet nedeniyle yalnız elle (`workflow_dispatch`) koşar; TEST yayınında zaten zorunlu tam regresyon vardır. PR checks veya testler atlandı/başarısızsa yeşil rapor verme ve zorla merge etme.
+- **Dal koruması bir talimatla aktif olmaz.** Required checks/branch protection gerçekten etkin değilse bunu açıkça bildir; kritik değişikliği yalnız bir agent'ın yerel test beyanıyla güvenli kabul etme.
+- **Merge ≠ TEST ≠ STABLE.** Kullanıcı yayın istemedikçe TEST/STABLE tetikleme. TEST öncesinde tam regresyon ve release kabul kontrolleri zorunludur; STABLE yalnız doğrulanmış TEST'in aynı imzalı baytlarını yeniden derlemeden terfi ettirir. Başarısız, skip veya çalışmamış zorunlu adımı başarılı sayma.
+- GitHub Actions kotası için boş commit/yeniden push, başarısız işi kanıtsız yeniden çalıştırma, gereksiz ara PR ve yinelenen full-suite yok. TEST/STABLE dosyaları Actions ZIP artifact deposuna yüklenmez; yayın deposuna gider. Silme işlemi ve credential/izin değişikliği için gerekli kullanıcı yetkisi aranır.
+- `updates/vVERSION` immutable dalı yalnız sürüm artışında oluşturulur; aynı sürümü başka kaynağa taşımak için yeni sürüm gerekir.
+- PR, kontroller, merge ve TEST/STABLE durumlarını finalde ayrı ve **gerçek** durumlarıyla bildir. İşlem tamamlanmadıysa tamamlandı deme.
 
 ## 4 · Değişmez mimari kurallar
 
@@ -220,94 +156,55 @@ dilde metin içeren iş bitmiş sayılmaz.
   **boştur ve boş kalır**. Baseline'a kayıt/dosya eklemek, test sınırlarını
   (`MAX_ENTRIES = 0`, `FROZEN_FILES`) yükseltmek veya testi gevşetmek yasaktır.
 
+
 ### 4.2 · Görsel stable sürüm notları
 
-Kullanıcıya görünen **her yeni özellik, davranış değişikliği, iyileştirme ve hata
-düzeltmesi**, işi hangi agent yaparsa yapsın, aynı PR/commit serisinde
-`resources/app/public/release-notes/next.json` içine eklenir.
+Kullanıcıya görünen özellik, davranış değişikliği, iyileştirme ve hata düzeltmesinde aynı PR/commit serisinde `resources/app/public/release-notes/next.json` kaydı oluştur. Başlık, açıklama ve modül `feature | improvement | fix` tipiyle **TR + EN** olmalı; bağımsız görünür değişiklikleri release özetinde kaybetme.
 
-- Her kayıt `feature | improvement | fix` tipi, modül adı, başlık ve kısa açıklama
-  için **TR + EN** içerir.
-- Her kayıt bir görsel taşır. Normal akışta
-  `visual.kind="screenshot"` ve `visual.capture="post-change"` zorunludur.
-  Dosya `public/release-notes/next-assets/` altında **değişiklik uygulandıktan
-  sonra çekilmiş gerçek Buyer Log ekran görüntüsü** olmalıdır.
-- Release-note ekran görüntüsü yalnız **kayıpsız PNG** kabul edilir. En az
-  **900×360 px** olmalı ve en-boy oranı **1.2–3.2** aralığında kalmalıdır.
-  Aşırı ince crop, bozuk/truncated dosya, JPG/WEBP, mockup, component preview,
-  stock/generatif görsel, başka uygulama ekranı veya değişiklikten önceki
-  ("before/eski/önceki") ekran kullanma. Görsel ilgili değişikliğin sonucunu
-  doğrudan göstermelidir; yalnız aynı modülden alakasız bir ekran yeterli değildir.
-- Ekran görüntüsünde şirket/supplier/order/fiyat/kullanıcı gibi hassas gerçek
-  verileri göstermeyin; gerçek Buyer Log UI'sını anonim/demo veriyle çekin.
-- Bir görev birden fazla kullanıcı-visible değişiklik yapıyorsa her değişikliği
-  ayrı kayıt olarak ekle; release özetinde kaybolmasına izin verme.
-- `npm run release:notes:validate` pending paketi denetler. TEST release workflow'u
-  pending paketi canonical sürüme mühürler; eksik TR/EN, görsel veya dosya release'i
-  durdurur.
-- Stable promotion başarılı olduğunda sürüm paketi
-  `public/release-notes/<version>/` altına immutable arşivlenir ve pending paket
-  otomatik sıfırlanır. Arşivlenmiş stable paketi sonradan değiştirme.
-- Yalnız bu altyapıyı ilk kez kuran bootstrap sürümü, gerçek ekran henüz
-  üretilemediği için `bootstrapVisual=true` ile component preview kullanabilir;
-  sonraki sürümlerde bu istisnayı kullanma.
+- **Mevcut runtime/validator sözleşmesi** her kayıt için `visual.kind="screenshot"`, `visual.capture="post-change"` ve `public/release-notes/next-assets/` altında değişiklik sonrası **gerçek Buyer Log kayıpsız PNG ekran görüntüsü** ister. En az 900×360 px, en-boy 1.2–3.2; before, mockup, başka uygulama, aşırı crop, bozuk görsel veya gerçek hassas iş verisi kullanma. Demo/anonim veri kullan.
+- Görüntünün ilgili sonucu gösterdiğini **insan/agent incelemesiyle** doğrula. PNG validator'ının biçim/boyut kontrolleri, görselin gerçekten yeni davranışı kanıtladığı anlamına gelmez.
+- Yalnız arka plan veya görsel olmayan düzeltmelerde ekran görüntüsü zorunluluğu maliyetli olabilir. Ancak bu kuralı **yalnız talimatla esnetme**: önce release-note şeması, renderer, doğrulayıcı ve testler birlikte destekleyecek şekilde ayrı değişiklik yapılmalıdır. O zamana kadar mevcut validator ile uyumlu kal.
+- `npm run release:notes:validate` dolu pending paketini denetler. TEST süreci sürüm notlarını mühürler; STABLE arşivini ve eski sürümleri elle değiştirme. İlk bootstrap için tanımlanmış `bootstrapVisual` istisnasını yeni sürümlere yayma.
+
 
 ## 5 · Token, süre ve iletişim disiplini
 
-- Aynı dosyayı, aynı talimatı veya aynı Codebase Memory sonucunu aynı mantıksal
-  görevde tekrar okuma.
-- Execution packet'teki problem tanımını kendi cevabında tekrar tekrar özetleme.
-  İçsel çalışma kontratı olarak kullan.
-- Uzun “şimdi şunu araştırıyorum” ilerleme anlatıları üretme. Yalnız:
-  - gerçek blocker,
-  - kullanıcı kararı gerektiren çelişki,
-  - veya final sonuç için mesaj ver.
-- Yeni bağımsız iş için yeni thread kullan; `devam` mesajını yeni görev sayma.
-- Skill yalnız görev gerçekten eşleşiyorsa yüklenir; ilgisiz skill, plugin, MCP
-  veya browser çağırma.
-- Aynı kanıtı farklı araçlarla tekrar doğrulama; birincil kanıt yeterliyse devam et.
-- Full browser matrisi ve tam test paketi yalnız acceptance/final aşamasında;
-  geliştirme sırasında hedefli doğrulama yap.
-- Agent'ın amacı repository'yi “tam anlamak” değil, verilen görevi doğru ve güvenli
-  biçimde tamamlamak için **yeterli kanıtı** toplamaktır.
+- `CLAUDE.md` sözleşmesini başlangıçta veya context reset/değişiklik sonrası bir kez oku; aynı mantıksal görevde aynı dosya/indeks sonucunu gereksiz yere yeniden okuma.
+- Kullanıcının problem tanımını veya aracın çıktısını uzun uzun yineleme. Gereksiz explorer → reviewer → reviewer zinciri, ilgisiz skill/MCP ve genel repo taramasından kaçın.
+- Kullanıcıya **anlamlı bulgu, risk, blocker veya karar noktası** olduğunda kısa güncelleme ver; uzun işlem günlüğü yazma ama uzun görevde sessiz kalma.
+- Yalnız gereken araçları aç; hedefli kanıt yeterliyse başka araçla aynı kontrolü alışkanlık gereği tekrarlama.
+- Yeni bağımsız görevde kapsamı yeniden belirle; `devam` mesajını otomatik yeni görev sayma.
 
-## 6 · Source-of-truth sırası
 
-Bir çelişki olduğunda aşağıdaki sırayı kullan:
+## 6 · Kanıt ile hedefin önceliği
 
-1. Gerçek güncel source code / runtime davranışı
-2. Güncel kullanıcı isteği ve execution packet'in hedef davranışı
-3. Codebase Memory'nin hedefli graph kanıtı
-4. İlgili kanonik mimari/dokümantasyon
-5. Eski snapshot/map dosyaları
+- **Mevcut durumun kanıtı:** canlı runtime ve güvenilir test/log → gerçek güncel source → hedefli indeks/graph → güncel doküman → eski snapshot. İndeks ile source çelişirse source'u hedefli doğrula.
+- **Hedef davranış:** güncel kullanıcı isteği ve açık kabul kriterleri belirler. Execution packet yöntemi yalnız hipotezdir; doğrulanmış bug'ı mevcut source öyle çalışıyor diye koruma.
+- **Değişmez sınırlar:** veri güvenliği, gizlilik, yetki ve mimari değişmezler ihlal edilemez. Kullanıcı hedefi bunlarla çelişirse farkı açıkla; ürüne ilişkin kapsam/UX kararını sessizce değiştirme.
+- Belirsiz veya güncelliği şüpheli kaynakta [Doğrulandı], [Muhtemel], [Hipotez], [Bilinmiyor] ayrımını (§1.1) kullan; geçmiş handoff'u canlı sistem kanıtı gibi sunma.
 
-Snapshot veya doküman source ile çelişirse source'u esas al; fakat kullanıcı hedefiyle
-çelişen mevcut davranışı “doğru” kabul ederek görevi iptal etme.
 
 ## 7 · Final cevap standardı
 
-Finali kısa tut. Normalde yalnız şunları bildir:
+Kısa, denetlenebilir teslim yaz:
+- **Değişti:** gerçek davranış ve ilgili dosyalar.
+- **Doğrulama:** çalıştırılan test/PR checks/CI sonuçları; çalıştırılamayan kontroller.
+- **GitHub:** varsa PR bağlantısı ve gerçek merge durumu.
+- **Yayın:** TEST ve STABLE ayrı ayrı; istenmediyse yayınlanmadığını belirt.
+- **Karar/risk:** önemli alternatif, bilinçli ödünleşim, doğrulanmamış nokta veya kullanıcı aksiyonu varsa; yoksa uzatma.
 
-- **Değişti:** uygulanan davranış/fix
-- **Dosyalar:** gerçekten değişen ana dosyalar
-- **Doğrulama:** çalıştırılan hedefli testler ve sonucu
-- **Karar/risk:** öneriden anlamlı sapma, itiraz veya kalan yüksek risk varsa
-  gerekçe ve daha iyi alternatifi kısaca belirt; yoksa bu satırı atla
-- **Not:** varsa restart, kalan risk veya kullanıcı aksiyonu
+İnceleme günlüğünü veya tüm okunan dosyaları rapora yığma. Başarıyı yalnız gözlenen kanıta bağla.
 
-Araştırma günlüğünü, tüm okunan dosyaları veya gereksiz mimari özeti finalde dökme.
 
 ## 8 · On-demand referanslar
 
-Yalnız ilgili görevde aç:
+Yalnız ilgili görevde ve **repo içinde mevcutsa** aç:
+- `DESIGN_SYSTEM.md` — tasarım tokenları ve UI bileşenleri
+- `docs/GITHUB_RELEASE_DISTRIBUTION.md` — dağıtım / TEST–STABLE
+- `SELF_UPDATE_README.md`, `resources/app/SELF_UPDATE_README.md` — updater / portable
+- `docs/ai/SHARED_FOLDER_WRITERS.md` — ortak klasör / çok kullanıcılı yazma
+- `docs/ai/SYNC_PROFESYONEL_PAKETLER.md`, `docs/ai/SYNC_SIMULATION.md` — senkron
+- `docs/ai/LICENSE_ATLAS_INTEGRATION.md` — lisans atlası
 
-- `docs/ai/BUYER_LOG_AGENT_REFERENCE.md` — CRLF, `<section>`, cache ve UI
-  doğrulama tuzakları
-- `DESIGN_SYSTEM.md` — görsel sistem
-- `DATA_ARCHITECTURE.md` — veri/persistence
-- `DESKTOP_PORTABLE.md` — Electron/portable
-- `PLM_SYNC_V2.md`, `SYNC_PROTOCOL_V2.md` — PLM/senkron
+Daha eski handoff, snapshot veya repo dışında tutulan belgelere zorunlu bağımlılık kurma. Mimari sınırlar veya hotspot'lar değiştiğinde codebase indeksini **araç varsa** yenile; `npm run generate-codebase-map` komutunun mevcut ve çalışır olduğunu doğrulamadan varsayma.
 
-Mimari sınırlar, route namespace'leri veya hotspot dosyalar değiştiğinde ve
-Codebase Memory indeksi yenilendiğinde `npm run generate-codebase-map` çalıştır.
-Her küçük editte çalıştırma; aynı indeks zamanı için komut no-op'tur.
