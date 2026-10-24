@@ -561,6 +561,64 @@
           "en": "A real CP freshness error is shown with anonymous data; files remain in the preview."
         }
       }
+    },
+    {
+      "id": "notebook-rich-text",
+      "type": "feature",
+      "module": {
+        "tr": "Not Defteri",
+        "en": "Notebook"
+      },
+      "title": {
+        "tr": "Notlarda yazı biçimi, renk ve vurgu",
+        "en": "Fonts, colors and highlights in notes"
+      },
+      "body": {
+        "tr": "Kalın, italik, altı ve üstü çizili metin; yazı tipi, boyut, renk ve vurgu araçlarıyla notları düzenleyin. Listeler, geri al ve ileri al desteğiyle çalışın; eski notlarınız korunur.",
+        "en": "Format notes with bold, italic, underline, strikethrough, font, size, color and highlight tools. Use lists, undo and redo while preserving existing notes."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "notebook-rich-editor.png",
+        "alt": {
+          "tr": "Demo verili gerçek Not Defteri ekranında biçimlendirme araçları ve eklenmiş Buyer Log ekran görüntüsü",
+          "en": "Actual Notebook with demo content, formatting tools and an embedded Buyer Log screenshot"
+        },
+        "caption": {
+          "tr": "Demo notta renkli ve biçimlendirilmiş metin, liste ve eklenmiş gerçek Buyer Log ekran görüntüsü.",
+          "en": "Demo note with colored and formatted text, a list and an embedded actual Buyer Log screenshot."
+        }
+      }
+    },
+    {
+      "id": "notebook-screenshots",
+      "type": "feature",
+      "module": {
+        "tr": "Not Defteri",
+        "en": "Notebook"
+      },
+      "title": {
+        "tr": "Ekran görüntülerini notlara ekleyin",
+        "en": "Add screenshots to notes"
+      },
+      "body": {
+        "tr": "Ekran görüntülerini Ctrl+V ile yapıştırın; PNG, JPEG, WebP veya GIF dosyalarını yükleyin ya da sürükleyin. Görseller ve biçimler otomatik kaydedilir. Görsel başına 1 MB, not defteri için 1,8 MB ekleme sınırı uygulanır.",
+        "en": "Paste screenshots with Ctrl+V, upload or drop PNG, JPEG, WebP or GIF files. Images and formatting save automatically. Insertions are limited to 1 MB per image and 1.8 MB for the notebook."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "notebook-rich-editor.png",
+        "alt": {
+          "tr": "Demo verili gerçek Not Defteri ekranında biçimlendirme araçları ve eklenmiş Buyer Log ekran görüntüsü",
+          "en": "Actual Notebook with demo content, formatting tools and an embedded Buyer Log screenshot"
+        },
+        "caption": {
+          "tr": "Demo notta renkli ve biçimlendirilmiş metin, liste ve eklenmiş gerçek Buyer Log ekran görüntüsü.",
+          "en": "Demo note with colored and formatted text, a list and an embedded actual Buyer Log screenshot."
+        }
+      }
     }
   ]
 }

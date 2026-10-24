@@ -37424,6 +37424,28 @@ let _todoDragMoved = false;
 function todoText(){
   const en = appLang==='en';
   return {
+    format: en ? 'Formatting' : 'Biçimlendirme',
+    bold: en ? 'Bold (Ctrl+B)' : 'Kalın (Ctrl+B)',
+    italic: en ? 'Italic (Ctrl+I)' : 'İtalik (Ctrl+I)',
+    underline: en ? 'Underline (Ctrl+U)' : 'Altı çizili (Ctrl+U)',
+    strike: en ? 'Strikethrough' : 'Üstü çizili',
+    bullets: en ? 'Bullet list' : 'Madde listesi',
+    numbered: en ? 'Numbered list' : 'Numaralı liste',
+    undo: en ? 'Undo' : 'Geri al',
+    redo: en ? 'Redo' : 'İleri al',
+    clear: en ? 'Clear text formatting' : 'Metin biçimini temizle',
+    font: en ? 'Font' : 'Yazı tipi',
+    mono: en ? 'Monospace' : 'Eş aralıklı',
+    size: en ? 'Font size' : 'Yazı boyutu',
+    normal: en ? 'Normal' : 'Normal',
+    small: en ? 'Small' : 'Küçük',
+    large: en ? 'Large' : 'Büyük',
+    heading: en ? 'Heading' : 'Başlık',
+    color: en ? 'Text color' : 'Yazı rengi',
+    highlight: en ? 'Highlight' : 'Vurgula',
+    image: en ? 'Add image' : 'Görsel ekle',
+    imageError: en ? 'Use a PNG, JPEG, WebP or GIF under 1 MB; keep the notebook under 1.8 MB.' : '1 MB altında PNG, JPEG, WebP veya GIF kullanın; not defterini 1,8 MB altında tutun.',
+    hint: en ? 'Paste screenshots with Ctrl+V or add an image file.' : 'Ekran görüntülerini Ctrl+V ile yapıştırın veya görsel dosyası ekleyin.',
     title:    en ? 'Notebook' : 'Not Defteri',
     sub:      en ? 'Your note pages' : 'Not sayfaların',
     newPage:  en ? 'New note' : 'Yeni not',
@@ -37444,6 +37466,58 @@ function todoText(){
     count:    n => en ? `${n} notes` : `${n} not`,
     chars:    n => en ? `${n} characters` : `${n} karakter`,
   };
+}
+// Rich content is untrusted, including saved notes and clipboard HTML.
+function todoSanitize(html){
+  const template=document.createElement('template');
+  template.innerHTML=String(html||'');
+  const allowed = new Set(['DIV','P','BR','SPAN','B','STRONG','I','EM','U','S','STRIKE','UL','OL','LI','H2','H3','BLOCKQUOTE','PRE','CODE','FONT','IMG']);
+  const clean = node=>{
+    for(const child of [...node.children]){
+      if(['SCRIPT','STYLE','IFRAME','OBJECT','SVG','MATH','TEMPLATE'].includes(child.tagName)){child.remove();continue;}
+      clean(child);
+      if(!allowed.has(child.tagName)){child.replaceWith(...child.childNodes);continue;}
+      const style = child.style;
+      const kept = {};
+      for(const key of ['color','backgroundColor','fontWeight','fontStyle','textDecoration','fontFamily','fontSize','textAlign']){
+        const value=style[key];
+        if(value && !/url|expression|[<>]/i.test(value)) kept[key]=value;
+      }
+      const src=child.getAttribute('src')||'';
+      if(child.tagName==='FONT'){
+        if(child.getAttribute('color')) kept.color=child.getAttribute('color');
+        if(child.getAttribute('face')) kept.fontFamily=child.getAttribute('face');
+        const size=child.getAttribute('size');
+        if(/^[1-7]$/.test(size||'')) kept.fontSize=['','x-small','small','medium','large','x-large','xx-large','xxx-large'][Number(size)];
+      }
+      for(const attr of [...child.attributes]) child.removeAttribute(attr.name);
+      for(const [key,value] of Object.entries(kept)) child.style[key]=value;
+      if(child.tagName==='IMG'){
+        if(!/^data:image\/(png|jpeg|webp|gif);base64,[a-z0-9+/=\s]+$/i.test(src) || src.length>1500000){child.remove();continue;}
+        child.setAttribute('src',src);
+        child.setAttribute('alt',todoText().image);
+      }
+    }
+  };
+  clean(template.content);
+  return template.innerHTML;
+}
+function todoReadEditor(editor,page){
+  page.html=todoSanitize(editor.innerHTML);
+  page.text=editor.innerText||'';
+  page.updatedAt=new Date().toISOString();
+}
+function todoToolbar(){
+  const t=todoText();
+  const commands=[['bold','B',t.bold],['italic','I',t.italic],['underline','U',t.underline],['strikeThrough','S',t.strike],['insertUnorderedList','•',t.bullets],['insertOrderedList','1.',t.numbered],['undo','↶',t.undo],['redo','↷',t.redo],['removeFormat','Tx',t.clear]];
+  const buttons=commands.map(([cmd,label,title])=>`<button type="button" class="tbtn" data-todo-command="${cmd}" title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}">${label}</button>`).join('');
+  return `<div class="todoToolbar" role="toolbar" aria-label="${escapeHtml(t.format)}">${buttons}
+    <select data-todo-format="fontName" aria-label="${escapeHtml(t.font)}"><option value="var(--sans)">${escapeHtml(t.font)}</option><option value="var(--mono)">${escapeHtml(t.mono)}</option><option value="serif">Serif</option></select>
+    <select data-todo-format="fontSize" aria-label="${escapeHtml(t.size)}"><option value="3">${escapeHtml(t.normal)}</option><option value="2">${escapeHtml(t.small)}</option><option value="5">${escapeHtml(t.large)}</option><option value="6">${escapeHtml(t.heading)}</option></select>
+    <label title="${escapeHtml(t.color)}">${escapeHtml(t.color)} <input type="color" data-todo-format="foreColor" aria-label="${escapeHtml(t.color)}"></label>
+    <label title="${escapeHtml(t.highlight)}">${escapeHtml(t.highlight)} <input type="color" data-todo-format="hiliteColor" aria-label="${escapeHtml(t.highlight)}"></label>
+    <button type="button" class="tbtn" id="todoAddImage">${escapeHtml(t.image)}</button><input type="file" id="todoImageFile" accept="image/png,image/jpeg,image/webp,image/gif" hidden>
+  </div>`;
 }
 function todoLoad(){
   if(_todoState) return _todoState;
@@ -37467,7 +37541,9 @@ function todoLoad(){
 function todoSave(status){
   const st = todoLoad();
   try{
-    BLStorage.setItem(TODO_PAGES_KEY, JSON.stringify(st));
+    const serialized=JSON.stringify(st);
+    if(new TextEncoder().encode(serialized).length>2*1024*1024) throw new Error('NOTEBOOK_SIZE_LIMIT');
+    BLStorage.setItem(TODO_PAGES_KEY, serialized);
     // Eski anahtar da güncel kalsın (başka yerlerde okunuyor olabilir).
     const active = st.pages.find(p=>p.id===st.activeId);
     if(active) BLStorage.setItem(TODO_KEY, active.text||'');
@@ -37572,7 +37648,9 @@ function renderTodoDetail(){
       <input type="text" id="todoPageTitle" class="todoTitleInput" value="${escapeHtml(page.title||'')}" placeholder="${escapeHtml(t.titlePh)}" autocomplete="off">
       <button type="button" class="todoDeleteBtn" id="todoDeletePage" title="${escapeHtml(t.remove)}" aria-label="${escapeHtml(t.remove)}"><svg class="ic"><use href="#i-trash"/></svg></button>
     </div>
-    <textarea id="todoTextarea" class="todoTextarea" placeholder="${escapeHtml(t.placeholder)}">${escapeHtml(page.text||'')}</textarea>
+    ${todoToolbar()}
+    <div id="todoTextarea" class="todoTextarea todoRichEditor" contenteditable="true" role="textbox" aria-multiline="true" aria-label="${escapeHtml(t.placeholder)}" data-placeholder="${escapeHtml(t.placeholder)}">${page.html!=null?todoSanitize(page.html):escapeHtml(page.text||'').replace(/\n/g,'<br>')}</div>
+    <div class="todoHint">${escapeHtml(t.hint)}</div>
     <div class="todoMeta"><span id="todoChars">${escapeHtml(t.chars(String(page.text||'').length))}</span></div>`;
   bindTodoEditor();
 }
@@ -37590,9 +37668,79 @@ function bindTodoEditor(){
   if(ta){
     ta.addEventListener('input', ()=>{
       const page = todoActive(); if(!page) return;
-      page.text = ta.value; page.updatedAt = new Date().toISOString();
-      if(chars) chars.textContent = t.chars(ta.value.length);
+      todoReadEditor(ta,page);
+      if(chars) chars.textContent = t.chars(page.text.length);
       queue();
+    });
+  }
+  if(ta){
+    let savedRange=null;
+    const remember=()=>{
+      const selection=window.getSelection();
+      if(selection.rangeCount && ta.contains(selection.anchorNode) && ta.contains(selection.focusNode)) savedRange=selection.getRangeAt(0).cloneRange();
+      document.querySelectorAll('#todoDetail [data-todo-command]').forEach(button=>{
+        if(['bold','italic','underline','strikeThrough','insertUnorderedList','insertOrderedList'].includes(button.dataset.todoCommand))button.setAttribute('aria-pressed',String(document.queryCommandState(button.dataset.todoCommand)));
+      });
+    };
+    const restore=()=>{
+      ta.focus();
+      const selection=window.getSelection();
+      if(savedRange && ta.contains(savedRange.commonAncestorContainer)){selection.removeAllRanges();selection.addRange(savedRange);}
+    };
+    const command=(name,value=null)=>{
+      restore(); document.execCommand(name,false,value);
+      ta.dispatchEvent(new Event('input',{bubbles:true})); remember();
+    };
+    for(const event of ['keyup','mouseup','input','focusout']) ta.addEventListener(event,remember);
+    const toolbar=document.querySelector('#todoDetail .todoToolbar');
+    toolbar.addEventListener('mousedown',e=>{remember();if(e.target.closest('button'))e.preventDefault();});
+    toolbar.addEventListener('click',e=>{const button=e.target.closest('[data-todo-command]');if(button)command(button.dataset.todoCommand);});
+    toolbar.querySelectorAll('[data-todo-format]').forEach(control=>{
+      if(control.type==='color'){
+        const probe=document.createElement('span');probe.style.color=control.dataset.todoFormat==='hiliteColor'?'var(--yellow)':'var(--ink)';toolbar.appendChild(probe);
+        const rgb=getComputedStyle(probe).color.match(/\d+/g);probe.remove();
+        if(rgb?.length>=3)control.value='#'+rgb.slice(0,3).map(n=>Number(n).toString(16).padStart(2,'0')).join('');
+      }
+      control.addEventListener('change',()=>command(control.dataset.todoFormat,control.value));
+    });
+    const insertHtml=html=>{
+      const clean=todoSanitize(html);
+      const st=todoLoad(),page=todoActive();
+      const candidate={...st,pages:st.pages.map(p=>p===page?{...p,html:ta.innerHTML+clean,text:(ta.innerText||'')+new DOMParser().parseFromString(clean,'text/html').body.textContent}:p)};
+      if(new TextEncoder().encode(JSON.stringify(candidate)).length>1800000){showToast(t.imageError);return;}
+      command('insertHTML',clean);
+    };
+    const addImages=async (files,dropRange=null)=>{
+      const pageId=todoActive()?.id;
+      if(!dropRange)remember();
+      let insertionRange=dropRange||savedRange?.cloneRange();
+      for(const file of files){
+        if(!/^image\/(png|jpeg|webp|gif)$/.test(file.type)||file.size>1000000){showToast(t.imageError);continue;}
+        try{
+          const data=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(reader.result);reader.onerror=reject;reader.readAsDataURL(file);});
+          if(!ta.isConnected||todoActive()?.id!==pageId)return;
+          if(insertionRange && ta.contains(insertionRange.commonAncestorContainer))savedRange=insertionRange;
+          insertHtml(`<img src="${data}"><br>`);
+          insertionRange=savedRange?.cloneRange();
+        }catch(_){showToast(t.imageError);}
+      }
+    };
+    const fileInput=document.getElementById('todoImageFile');
+    document.getElementById('todoAddImage').addEventListener('click',()=>{remember();fileInput.click();});
+    fileInput.addEventListener('change',()=>{addImages([...fileInput.files]);fileInput.value='';});
+    ta.addEventListener('paste',e=>{
+      e.preventDefault();remember();
+      const files=[...(e.clipboardData?.files||[])];
+      if(files.length){addImages(files);return;}
+      const html=e.clipboardData?.getData('text/html');
+      insertHtml(html||escapeHtml(e.clipboardData?.getData('text/plain')||'').replace(/\n/g,'<br>'));
+    });
+    ta.addEventListener('dragover',e=>e.preventDefault());
+    ta.addEventListener('drop',e=>{
+      e.preventDefault();
+      const range=document.caretRangeFromPoint?.(e.clientX,e.clientY);
+      if(range&&ta.contains(range.commonAncestorContainer))savedRange=range;
+      if(e.dataTransfer?.files.length)addImages([...e.dataTransfer.files],range&&ta.contains(range.commonAncestorContainer)?range:null);
     });
   }
   if(titleEl){
@@ -37635,7 +37783,7 @@ function todoNewPage(){
 function renderTodoModal(){
   const t = todoText();
   let modal = document.getElementById('todoModal');
-  if(modal) modal.remove();
+  if(modal){modal.__todoDispose?.();modal.remove();}
   todoLoad();
   modal = document.createElement('div');
   modal.id = 'todoModal'; modal.className = 'warnOverlay';
@@ -37669,12 +37817,13 @@ function renderTodoModal(){
   renderTodoDetail();
   const close = ()=>{
     clearTimeout(_todoSaveTimer);
-    todoSave(null);
+    if(!todoSave(document.getElementById('todoSaveStatus'))){showToast(t.failed);return;}
     modal.remove();
     document.removeEventListener('keydown', onKey);
   };
-  const onKey = e=>{ if(e.key==='Escape' && !e.target.closest('#todoModal input,#todoModal textarea')) close(); };
+  const onKey = e=>{ if(e.key==='Escape' && !e.target.closest('#todoModal input,#todoModal textarea,#todoModal [contenteditable]')) close(); };
   document.addEventListener('keydown', onKey);
+  modal.__todoDispose=()=>{clearTimeout(_todoSaveTimer);todoSave(null);document.removeEventListener('keydown',onKey);};
   modal.addEventListener('click', e=>{ if(e.target===modal) close(); });
   modal.querySelector('#todoCloseX').addEventListener('click', close);
   modal.querySelector('#todoCloseBtn').addEventListener('click', close);
@@ -37720,7 +37869,7 @@ function saveEverythingNow(){
     if(ta || titleEl){
       const page=(typeof todoActive==='function') ? todoActive() : null;
       if(page){
-        if(ta) page.text=ta.value;
+        if(ta) todoReadEditor(ta,page);
         if(titleEl) page.title=titleEl.value;
         page.updatedAt=new Date().toISOString();
       }
@@ -38549,6 +38698,7 @@ function syncVfMenuLanguage(){
 function applyLanguage(lang){
   appLang = (lang==='en') ? 'en' : 'tr';
   window.BLGuide?.refreshLanguage();
+  if(document.getElementById('todoModal')) renderTodoModal();
   // CSS text-transform:uppercase follows the document language. Keep English
   // headers (e.g. LICENSE) from receiving Turkish dotted İ casing.
   if(document.documentElement) document.documentElement.lang = appLang;
