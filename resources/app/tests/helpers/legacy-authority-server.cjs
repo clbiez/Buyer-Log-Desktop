@@ -31,6 +31,14 @@ process.on('message',async message=>{try{
  else if(message.command==='identity'){const raw=JSON.parse(fs.readFileSync(path.join(process.env.BUYER_LOG_AUTH_DATA_ROOT,'user-access.json'),'utf8'));process.send({id:message.id,result:{revision:raw._revision,users:raw.users.map(user=>({id:user.id,status:user.status,enabled:user.enabled,credentialRevision:user.credentialRevision}))}});}
  else if(message.command==='deleteForeignOrder'){official=official.filter(row=>row.ocode!==4100002);access.syncProfiles(official,{authoritative:true});process.send({id:message.id,result:true});}
  else if(message.command==='transferOwnOrder'){official=official.map(row=>row.ocode===4100001?{...row,buyer:message.restore?'Buyer A':'Buyer B'}:row);access.syncProfiles(official,{authoritative:true});process.send({id:message.id,result:true});}
+ else if(message.command==='seedScale'){
+  const count=Math.max(1,Math.min(30000,Number(message.count)||2000)),owner=access.allPublicProfiles().find(user=>user.username==='fixture-a');
+  official=[...official.slice(0,2),...Array.from({length:count},(_,i)=>({...official[0],ocode:4200000+i,model:'DEMO-SCALE-'+i,buyer:'Buyer A'}))];
+  for(const id of ['moderator',owner.id])global.__blSeedAsas(official,id,['cp','orders']);access.syncProfiles(official,{authoritative:true});
+  const collectionCount=message.collectionCount===0?0:12;
+  const workspaces=require('../../server/lib/collection-workspaces');for(const id of [owner.id,'moderator','shared-collection']){const workspace=workspaces.loadWorkspace(id);await workspaces.saveWorkspace(id,{rows:Array.from({length:collectionCount},(_,i)=>({id:i+1,modelKod:'DEMO-COLLECTION-'+(i+1),season:'W26',country:'China',qty:25})),manufacturers:[]},workspace._revision);}
+  process.send({id:message.id,result:{count:official.length}});
+ }
 }catch(error){process.send({id:message.id,error:error.message});}});
 async function main(){
  const probe=net.createServer();await new Promise(resolve=>probe.listen(0,'127.0.0.1',resolve));const port=probe.address().port;await new Promise(resolve=>probe.close(resolve));base='http://127.0.0.1:'+port;fs.writeFileSync(process.env.BUYER_LOG_CONFIG_PATH,JSON.stringify({host:'127.0.0.1',port,sourceFolder:path.join(root,'empty-source'),centralIamEnabled:false,refreshWithExcel:false,updates:{enabled:false}}));require('../../server/server');

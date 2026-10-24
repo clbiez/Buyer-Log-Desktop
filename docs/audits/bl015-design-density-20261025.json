@@ -1,0 +1,142 @@
+{
+  "package": "BL015",
+  "date": "2026-10-25",
+  "scope": "Existing design system adoption; independent per-user/table density and empty Collection action",
+  "risk": "P2 local presentation; existing guarded model-creation path reused",
+  "focused": {
+    "files": 13,
+    "pass": 81,
+    "fail": 0,
+    "skip": 0,
+    "log": "work/bl015-final-target.log",
+    "sha256Lf": "c2a175f4c3298e8f9e0235f75a8baeb882aa0420c70eb86569184d581e42264d",
+    "timing": "Before final input→editCell focus selector correction; that correction verified in actual Edge and final integrated full still pending"
+  },
+  "native": {
+    "density": {
+      "ok": true,
+      "states": 57,
+      "phases": [
+        {
+          "name": "native-control-ready",
+          "key": "cp",
+          "mode": "default",
+          "row": 47,
+          "virtual": 46,
+          "control": {
+            "x": 1326.875,
+            "right": 1408.65625,
+            "width": 81.78125,
+            "height": 26,
+            "visible": true
+          },
+          "width": 1440,
+          "font": "12.5px",
+          "headerBackground": "rgb(242, 244, 247)",
+          "scrollContainer": 1188,
+          "bodyWidth": 1440
+        },
+        {
+          "name": "native-control-ready",
+          "key": "orders",
+          "mode": "default",
+          "row": 46,
+          "virtual": 46,
+          "control": {
+            "x": 1326.875,
+            "right": 1408.65625,
+            "width": 81.78125,
+            "height": 26,
+            "visible": true
+          },
+          "width": 1440,
+          "font": "12.5px",
+          "headerBackground": "rgb(242, 244, 247)",
+          "scrollContainer": 1188,
+          "bodyWidth": 1440
+        },
+        {
+          "name": "native-control-ready",
+          "key": "koleksiyon",
+          "mode": "default",
+          "row": 45,
+          "virtual": null,
+          "control": {
+            "x": 995.03125,
+            "right": 1076.8125,
+            "width": 81.78125,
+            "height": 26,
+            "visible": true
+          },
+          "width": 1440,
+          "font": "12.5px",
+          "headerBackground": "rgb(245, 247, 249)",
+          "scrollContainer": 1188,
+          "bodyWidth": 1440
+        },
+        {
+          "name": "native-virtual-anchor",
+          "before": {
+            "ratio": 95.23809523809524
+          },
+          "after": {
+            "ratio": 95.24074074074075,
+            "height": 54
+          }
+        },
+        {
+          "name": "native-three-themes-and-language",
+          "states": 57,
+          "TR_EN": true,
+          "reflowWidths": [
+            512,
+            1024,
+            1440,
+            1920
+          ]
+        },
+        {
+          "name": "native-scoped-density-reload",
+          "cp": "compact",
+          "orders": "comfortable"
+        }
+      ],
+      "errors": []
+    },
+    "emptyAndTitles": {
+      "scope": "Actual production server and Edge with disposable synthetic workspace; no original user data.",
+      "phases": [
+        {
+          "name": "actual-empty-add-model",
+          "TR_EN": true,
+          "rows": 1,
+          "modelNameEditorFocused": true
+        },
+        {
+          "name": "single-page-title",
+          "key": "manufacturers",
+          "title": "Manufacturers"
+        },
+        {
+          "name": "single-page-title",
+          "key": "automations",
+          "title": "Automations"
+        }
+      ],
+      "pageErrors": [],
+      "ok": true
+    }
+  },
+  "compatibility": {
+    "default": "Original geometry until an explicit density is selected",
+    "images": "Dimensions unchanged",
+    "virtual": "Scroll anchor preserved; CP existing one-pixel border difference retained",
+    "preferences": "lcw.table.density.v1.<table>, actual BLStorage per-user isolation",
+    "tableHeaders": "No thead or export colors changed"
+  },
+  "limits": [
+    "Actual Electron 200% zoom remains in BL019 acceptance; 512 CSS-pixel browser reflow is not desktop zoom certification.",
+    "Full integrated regression and GitHub merge remain pending."
+  ],
+  "rollback": "Revert the BL015 commit; absent/new preference values use legacy default. No business-data migration."
+}

@@ -1402,6 +1402,93 @@
           "en": "Demo prices remain identical to the previous calculation; source and rule changes were also verified in actual Edge."
         }
       }
+    },
+    {
+      "id": "independent-table-density",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Tablo satır sıklığı ayrı seçilebilir",
+        "en": "Choose table row spacing independently"
+      },
+      "body": {
+        "tr": "Her tablonun Satırlar kontrolünden kompakt, standart veya rahat aralık seçin. Varsayılan mevcut görünümü korur. Tercih kullanıcı ve tablo bazında saklanır; görsel boyutu değişmez ve büyük sanal tablolarda kaydırma konumu korunur.",
+        "en": "Choose compact, standard or comfortable spacing from each table’s Rows control. Default retains the existing layout. Preferences are stored per user and table; image size stays the same and large virtual tables retain the visible row position."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "independent-table-density.png",
+        "alt": {
+          "tr": "Demo CP tablosunda yazı boyutundan bağımsız Satırlar seçimi.",
+          "en": "Independent Rows control on the actual demo CP table."
+        },
+        "caption": {
+          "tr": "Demo CP tablosunda yazı boyutundan bağımsız Satırlar seçimi.",
+          "en": "Independent Rows control on the actual demo CP table."
+        }
+      }
+    },
+    {
+      "id": "collection-empty-add-model",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Boş Koleksiyon’dan ilk modele doğrudan başlayın",
+        "en": "Start the first model directly from an empty Collection"
+      },
+      "body": {
+        "tr": "Düzenlenebilir boş Koleksiyon’daki İlk modeli ekle düğmesi yeni satırı açar ve Model Adı alanına odaklanır. Filtre sonucu boşsa filtre temizleme eylemi, salt okunur görünümde ise uygun açıklama gösterilir.",
+        "en": "The Add first model button in an editable empty Collection creates a row and focuses Model Name. An empty filtered result offers filter clearing, while a read-only Collection explains its access."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-empty-add-model.png",
+        "alt": {
+          "tr": "Boş demo Koleksiyon’da doğrudan ilk model eylemi.",
+          "en": "Direct first-model action in an empty demo Collection."
+        },
+        "caption": {
+          "tr": "Boş demo Koleksiyon’da doğrudan ilk model eylemi.",
+          "en": "Direct first-model action in an empty demo Collection."
+        }
+      }
+    },
+    {
+      "id": "single-module-page-titles",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler · Otomasyonlar",
+        "en": "Manufacturers · Automations"
+      },
+      "title": {
+        "tr": "Sayfa başlıkları üst çubukta bir kez görünür",
+        "en": "Page titles appear once in the top bar"
+      },
+      "body": {
+        "tr": "Üreticiler ve Otomasyonlar ekranlarındaki yinelenen içerik başlıkları kaldırıldı. Açıklama, arama ve mevcut işlemler aynı yerde kullanılabilir.",
+        "en": "Removed the repeated body titles from Manufacturers and Automations. Descriptions, search and existing actions remain available in their usual places."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "single-page-title-automations.png",
+        "alt": {
+          "tr": "Gerçek Otomasyonlar ekranında tek sayfa başlığı.",
+          "en": "One page title on the actual Automations screen."
+        },
+        "caption": {
+          "tr": "Gerçek Otomasyonlar ekranında tek sayfa başlığı.",
+          "en": "One page title on the actual Automations screen."
+        }
+      }
     }
   ]
 }

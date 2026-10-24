@@ -2797,10 +2797,12 @@ function tableImageSizeDimensions(tableKey,value){
   const w=Math.max(bounds.min,Math.min(bounds.max,Math.round(Number(value)||cfg.max.w)));
   if(w<=cfg.max.w){
     const t=(w-cfg.min.w)/Math.max(1,cfg.max.w-cfg.min.w);
-    return {value:w,min:bounds.min,max:bounds.max,w,h:Math.round(cfg.min.h+t*(cfg.max.h-cfg.min.h)),col:Math.round(cfg.min.col+t*(cfg.max.col-cfg.min.col)),row:Math.round(cfg.min.row+t*(cfg.max.row-cfg.min.row))};
+    const dims={value:w,min:bounds.min,max:bounds.max,w,h:Math.round(cfg.min.h+t*(cfg.max.h-cfg.min.h)),col:Math.round(cfg.min.col+t*(cfg.max.col-cfg.min.col)),row:Math.round(cfg.min.row+t*(cfg.max.row-cfg.min.row))};
+    return typeof BLTableDensity!=='undefined'?BLTableDensity.dimensions(tableKey,dims):dims;
   }
   const scale=w/cfg.max.w;
-  return {value:w,min:bounds.min,max:bounds.max,w,h:Math.round(cfg.max.h*scale),col:Math.round(cfg.max.col+(w-cfg.max.w)),row:Math.round(cfg.max.row+(cfg.max.h*(scale-1)))};
+  const dims={value:w,min:bounds.min,max:bounds.max,w,h:Math.round(cfg.max.h*scale),col:Math.round(cfg.max.col+(w-cfg.max.w)),row:Math.round(cfg.max.row+(cfg.max.h*(scale-1)))};
+  return typeof BLTableDensity!=='undefined'?BLTableDensity.dimensions(tableKey,dims):dims;
 }
 function normalizeTableImageSizeValue(tableKey,value){
   const cfg=TABLE_IMAGE_SIZE_CONFIG[tableKey]||TABLE_IMAGE_SIZE_CONFIG.cp;
@@ -2909,16 +2911,29 @@ function scheduleTableImageSizeDom(tableKey){
     pending.forEach(applyTableImageSizeDom);
   });
 }
-function syncVirtualizedTableRowHeight(tableKey,rowHeight){
+function syncVirtualizedTableRowHeight(tableKey,rowHeight,{preserveAnchor=false}={}){
   if(tableKey!=='cp'&&tableKey!=='orders')return;
   const table=tableImageSizeTable(tableKey),tbody=table&&table.tBodies&&table.tBodies[0],virtualState=tbody&&tbody._virtualState;
   const next=Math.max(1,Math.round(Number(rowHeight)||0));
   if(!virtualState||!next)return;
   if(virtualState.rowHeight===next)return;
+  const host=table.closest('.tablewrap'),oldHeight=virtualState.rowHeight;
+  if(preserveAnchor&&host&&oldHeight>0)host.scrollTop=host.scrollTop/oldHeight*next;
   virtualState.rowHeight=next;
   virtualState.renderedStart=-1;virtualState.renderedEnd=-1;
   if(typeof virtualState.paint==='function')virtualState.paint();
 }
+function applyTableDensityDom(tableKey){
+  if(typeof BLTableDensity==='undefined'||!['cp','orders','koleksiyon'].includes(tableKey))return;
+  const table=tableImageSizeTable(tableKey);if(!table)return;
+  table.dataset.tableDensity=BLTableDensity.get(tableKey);
+  if(tableKey==='cp'||tableKey==='orders')cpApplyImageSizeVars();
+  applyTableImageSizeDom(tableKey);
+  const dims=tableImageSizeDimensions(tableKey,tableImageSizeCurrentValue(tableKey));
+  syncVirtualizedTableRowHeight(tableKey,dims.row,{preserveAnchor:true});
+  renderTableViewContext(tableKey);
+}
+window.addEventListener('buyerlog:table-density-change',event=>applyTableDensityDom(event.detail?.tableKey));
 function setTableImageSize(tableKey,value,{persist=false}={}){
   const next=normalizeTableImageSizeValue(tableKey,value);
   if(tableKey==='cp')cpImageSize=next;
@@ -4285,6 +4300,10 @@ function renderTableViewContext(tableKey){
   const prefix=tableKey==='koleksiyon'?'kol':tableKey;
   const root=document.getElementById(`${prefix}TableViewActions`);
   if(!root)return;
+  if(typeof BLTableDensity!=='undefined'){
+    BLTableDensity.mount(root,tableKey,appLang);
+    const table=tableImageSizeTable(tableKey);if(table)table.dataset.tableDensity=BLTableDensity.get(tableKey);
+  }
   const preset=tableViewPresetState(tableKey);
   root.setAttribute('aria-label',appLang==='en'?'Table view':'Tablo görünümü');
   root.querySelectorAll('[data-table-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.tableViewPreset===preset)));
@@ -21382,12 +21401,13 @@ function applyUiFontStep(value,{persist=true}={}){
   const step=normalizeUiFontStep(value),preset=UI_SCALE_PRESETS[step];
   document.documentElement.dataset.fontStep=String(step);
   document.documentElement.dataset.uiScale=preset.key;
+  if(typeof BLTableDensity!=='undefined'){BLTableDensity.setTextScale(preset.key);cpApplyImageSizeVars();}
   const btn=document.getElementById('railFontSizeBtn'),label=document.getElementById('railFontSizeLabel');
   const text=appLang==='en'?`Interface: ${preset.en}`:`Arayüz: ${preset.tr}`;
   if(label)label.textContent=text;
   if(btn)btn.title=appLang==='en'?`Interface size: ${preset.en} · click for next size`:`Arayüz boyutu: ${preset.tr} · sonraki boyut için tıkla`;
   if(persist)try{BLStorage.setItem('lcw_font_step',String(step));}catch(_){}
-  requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
+  requestAnimationFrame(()=>{window.dispatchEvent(new Event('resize'));const info=activeTableInfo();if(info)applyTableDensityDom(info.tableKey);});
   return step;
 }
 function cycleUiFontStep(){const cur=normalizeUiFontStep(document.documentElement.dataset.fontStep);applyUiFontStep((cur+1)%4);}
@@ -27706,17 +27726,19 @@ function renderKolEmptyState(rows){
     :(appLang==='en'?'The Collection has no models yet.':'Koleksiyon henüz model içermiyor.');
   const detail=filtered
     ?(appLang==='en'?'Clear the table filters to see all Collection models.':'Tüm Koleksiyon modellerini görmek için tablo filtrelerini temizleyin.')
-    :(appLang==='en'?'Add a model when you are ready to start building the Collection.':'Koleksiyonu oluşturmaya hazır olduğunuzda yeni bir model ekleyin.');
-  const actionLabel=filtered?(appLang==='en'?'Clear table filters':'Tablo filtrelerini temizle'):'';
-  const onAction=()=>clearTableFilters('koleksiyon');
+    :kolWorkspaceCanEdit
+      ?(appLang==='en'?'Add a model when you are ready to start building the Collection.':'Koleksiyonu oluşturmaya hazır olduğunuzda yeni bir model ekleyin.')
+      :(appLang==='en'?'This Collection is read-only. Its owner can add models.':'Bu Koleksiyon salt okunur. Sahibi model ekleyebilir.');
+  const actionLabel=filtered?(appLang==='en'?'Clear table filters':'Tablo filtrelerini temizle'):kolWorkspaceCanEdit?(appLang==='en'?'Add first model':'İlk modeli ekle'):'';
+  const onAction=()=>filtered?clearTableFilters('koleksiyon'):addBlankKolRow();
   target.hidden=false;
   target.setAttribute('aria-live','polite');
   if(window.BLUI?.renderState){
     window.BLUI.renderState(target,{kind:'empty',title,detail,actionLabel,onAction});
     return;
   }
-  target.innerHTML=`<div class="uiState uiState--empty" role="status" aria-live="polite" aria-atomic="true"><div class="uiStateBody"><b>${escapeHtml(title)}</b><span>${escapeHtml(detail)}</span>${actionLabel?`<button type="button" class="navActionBtn uiStateAction" data-kol-empty-clear>${escapeHtml(actionLabel)}</button>`:''}</div></div>`;
-  target.querySelector('[data-kol-empty-clear]')?.addEventListener('click',onAction,{once:true});
+  target.innerHTML=`<div class="uiState uiState--empty" role="status" aria-live="polite" aria-atomic="true"><div class="uiStateBody"><b>${escapeHtml(title)}</b><span>${escapeHtml(detail)}</span>${actionLabel?`<button type="button" class="navActionBtn uiStateAction" data-kol-empty-action>${escapeHtml(actionLabel)}</button>`:''}</div></div>`;
+  target.querySelector('[data-kol-empty-action]')?.addEventListener('click',onAction,{once:true});
 }
 function renderKol(){
   if(!document.getElementById('kolTable')) return;
@@ -33267,7 +33289,7 @@ function addBlankKolRow(){
   renderKol();
   // Yeni satır doğrudan tabloda açılır; model adı hücresi hemen düzenlemeye hazırdır.
   setTimeout(()=>{
-    const input=document.querySelector(`#kolTable input[data-id="${row.id}"][data-k="modelKod"]`);
+    const input=document.querySelector(`#kolTable .editCell[data-id="${row.id}"][data-k="modelKod"]`);
     if(input){input.focus();input.select?.();}
   },0);
 
