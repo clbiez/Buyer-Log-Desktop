@@ -1,0 +1,20 @@
+'use strict';
+// No downloads, installer execution, production keys or filesystem mutation.
+const assert=require('node:assert/strict'),crypto=require('node:crypto');
+const signature=require('../../resources/app/electron/update/signature');
+const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+const original=Buffer.from('synthetic harmless payload'),replacement=Buffer.from('synthetic changed payload');
+const originalIndex={sha256:sha(original),size:original.length};
+const replacedIndex={sha256:sha(replacement),size:replacement.length};
+const consistency=(payload,index)=>payload.length===index.size&&sha(payload)===index.sha256;
+assert.equal(consistency(original,originalIndex),true);
+assert.equal(consistency(replacement,originalIndex),false);
+assert.equal(consistency(replacement,replacedIndex),true);
+const {privateKey,publicKey}=crypto.generateKeyPairSync('ed25519');
+const trusted=signature.normalizeKeys({keys:[{publicKey:publicKey.export({type:'spki',format:'pem'})}]});
+const manifest={version:'0.0.1',artifact:'fixture.zip',sha256:originalIndex.sha256,size:originalIndex.size,minimumUpdaterVersion:'1.0.0'};
+assert.throws(()=>signature.verifyManifestSignature(manifest,trusted),{code:'UPDATE_SIGNATURE_MISSING'});
+manifest.signature=signature.signManifest(manifest,privateKey.export({type:'pkcs8',format:'pem'}));
+assert.equal(signature.verifyManifestSignature(manifest,trusted).verified,true);
+assert.throws(()=>signature.verifyManifestSignature({...manifest,...replacedIndex},trusted),{code:'UPDATE_SIGNATURE_INVALID'});
+console.log(JSON.stringify({environment:{node:process.version,platform:process.platform},diagnosticHashModel:{originalAccepted:true,payloadOnlyRejected:true,payloadAndIndexReplacementAccepted:true},actualOfficialVerifier:{unsignedRejected:true,syntheticTrustedSignatureAccepted:true,coherentPayloadAndHashTamperRejected:true},notExecuted:['PowerShell manual installer','Windows compatibility','production publisher or credentials'],limitation:'Hash predicate is a diagnostic model of inspected PowerShell checks; this is not an executed manual-installer exploit.'},null,2));

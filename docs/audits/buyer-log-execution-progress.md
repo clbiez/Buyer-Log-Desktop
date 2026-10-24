@@ -1,5 +1,11 @@
 # Buyer Log engineering execution progress
 
+> Historical checkpoint below. On 2026-10-24 the user authorized continued work
+> and merge. Ready fixes merged through #707; BL-003/005/011 merged in #688
+> (`991135c6`). See `bl-003-005-011-windows-acceptance-20261024.json` and
+> `../SIGNED_MANUAL_PATCH.md`. No publication was performed; the backlog is not
+> complete. Old open/blocked rows describe the original checkpoint only.
+
 Checkpoint: 2026-10-24 (continuation). No merges or releases authorized or performed.
 
 ## Baseline and isolation
