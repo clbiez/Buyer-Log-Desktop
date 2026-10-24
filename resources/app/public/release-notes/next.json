@@ -619,6 +619,35 @@
           "en": "Demo note with colored and formatted text, a list and an embedded actual Buyer Log screenshot."
         }
       }
+    },
+    {
+      "id": "license-cards-terminal-load-states",
+      "type": "fix",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Yükleme hatası ve boş sonuç birbirinden ayrılır",
+        "en": "Load failures and empty results have distinct states"
+      },
+      "body": {
+        "tr": "İlk yükleme başarısız olduğunda iskelet animasyonu durur ve yeniden deneme gösterilir. Yenileme hatasında mevcut kartlar korunur, güncellik uyarısı ve doğru işlemi yeniden deneme seçeneği sunulur.",
+        "en": "An initial load failure stops skeleton animation and shows Retry. A refresh failure preserves loaded cards with a freshness notice and a retry of the correct operation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "license-cards-load-error.png",
+        "alt": {
+          "tr": "ASAS kaynağı olmayan gerçek demo sunucuda Lisans kartları hata ve yeniden deneme ekranı",
+          "en": "License Cards error and Retry on a real demo server without an ASAS source"
+        },
+        "caption": {
+          "tr": "Gerçek 503 yanıtından sonra yükleme iskeleti gösterilmez; kaynak bilgisi ve yeniden deneme görünür.",
+          "en": "After an actual 503 response, loading skeletons are gone and source guidance with Retry is visible."
+        }
+      }
     }
   ]
 }
