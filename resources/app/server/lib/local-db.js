@@ -12,7 +12,7 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
-const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-transaction');
+const { withFileLeaseAsync, replaceFileWithRetry, assertHeldFileLeases } = require('./shared-file-transaction');
 const { resolveLocalDbFolder } = require('./local-path-policy');
 const { createDurableFileRecovery } = require('./durable-file-recovery');
 const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, DIRECT_PARSE_MAX_BYTES } = require('./large-json');
@@ -638,6 +638,10 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
     return `${await fileTag(dbFile)}|${await fileTag(walFile())}|${await fileTag(`${walFile()}.bak`)}`;
   }
   function invalidateCache() { cachedState = null; cachedTags = null; }
+  async function withDbLease(operation) {
+    try { return await withFileLeaseAsync(dbFile, operation); }
+    catch (error) { invalidateCache(); throw error; }
+  }
 
   async function loadState() {
     const tags = await currentTags();
@@ -735,7 +739,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
       if (operation.op === 'delta') validateTransportClocks(operation.payload.delta);
       else if (operation.op === 'package') for (const delta of operation.payload.events || []) validateTransportClocks(delta);
     }
-    return withFileLeaseAsync(dbFile, async () => {
+    return withDbLease(async () => {
       recoverPendingWrites();
       await fsp.mkdir(path.dirname(dbFile), { recursive: true });
       /* WAL'ın altında her zaman bir temel anlık görüntü bulunmalı. Yoksa
@@ -750,7 +754,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
         const lines = operations.map(item => walLine(item.op, item.payload)).join('');
         const handle = await fsp.open(walFile(), 'a');
         // fsync ÖNCE, dönüş SONRA: çağırana "kaydedildi" dendiğinde satır diskte.
-        try { await handle.writeFile(lines, 'utf8'); await handle.sync(); } finally { await handle.close(); }
+        try { assertHeldFileLeases(); await handle.writeFile(lines, 'utf8'); await handle.sync(); assertHeldFileLeases(); } finally { await handle.close(); }
 
         let size = 0;
         try { size = (await fsp.stat(walFile())).size; } catch (_) {}
@@ -790,7 +794,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
   }
 
   async function transaction(mutator) {
-    return withFileLeaseAsync(dbFile, async () => {
+    return withDbLease(async () => {
       recoverPendingWrites();
       const state = await loadState();
       const result = await mutator(state);
@@ -1321,7 +1325,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
 
   async function compact(options = {}) {
     const keepUploadedTail = Math.max(100, Number(options.keepUploadedTail) || 1000);
-    return withFileLeaseAsync(dbFile, async () => {
+    return withDbLease(async () => {
       recoverPendingWrites();
       const state = await loadState();
       const beforeHash = businessStateHashFromState(state);
@@ -1456,7 +1460,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
      ACK borcu kapatılır; sıra alanı yeni kimlikle sıfırdan başlar.
      İş kaydı (records) değişmez. */
   async function rotateDeviceId({ reason = 'manual', fingerprint = '' } = {}) {
-    return withFileLeaseAsync(dbFile, async () => {
+    return withDbLease(async () => {
       recoverPendingWrites();
       await fsp.mkdir(path.dirname(dbFile), { recursive: true });
       if (!fs.existsSync(dbFile) && !fs.existsSync(`${dbFile}.bak`)) await writeState(dbFile, emptyState(loadDeviceId()));

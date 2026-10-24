@@ -677,6 +677,35 @@
           "en": "The server rejects an unauthorized save for a synthetic user and preserves the local edit."
         }
       }
+    },
+    {
+      "id": "file-lease-active-writer-integrity",
+      "type": "fix",
+      "module": {
+        "tr": "Veri bütünlüğü",
+        "en": "Data integrity"
+      },
+      "title": {
+        "tr": "Etkin yazıcıların dosya kilitleri korunur",
+        "en": "Active writer file leases stay protected"
+      },
+      "body": {
+        "tr": "Uzun süren veya askıya alınan yerel yazıcının kilidi yalnız süresi dolduğu için devralınmaz. Sonlandırılan kayıt iş parçacıkları güvenle kurtarılır; meşgul dosyaya kayıt bekletilir ve yeniden denenebilir.",
+        "en": "Long-running or suspended local writers no longer lose their leases solely because of elapsed time. Terminated writing threads can recover safely; busy-file saves stay pending and can be retried."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "file-lease-active-writer.png",
+        "alt": {
+          "tr": "Demo Koleksiyon kaydında etkin yazıcı korunurken görünen kayıt meşgul bildirimi",
+          "en": "Native busy-save notification while an active writer is protected in a demo Collection"
+        },
+        "caption": {
+          "tr": "Sentetik veride ayrı bir süreç kilidi tutarken kayıt engellenir. Yazıcı bırakınca aynı bekleyen kayıt başarıyla kaydedilir.",
+          "en": "With synthetic data, saving is blocked while another process holds the lease. The same pending edit saves successfully after the writer releases it."
+        }
+      }
     }
   ]
 }

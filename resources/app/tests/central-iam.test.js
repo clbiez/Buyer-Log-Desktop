@@ -124,21 +124,27 @@ test('crash before commit leaves old canonical; crash after commit is explicitly
   assert.equal(writer.readLocal()._revision, 1); await writer.refresh(); assert.equal(writer.readLocal()._revision, 2);
   assert.equal((await writer.readAudit()).length, 2);
 });
-test('expired lease cannot let a paused stale writer replace the winning revision', async t => {
+test('elapsed lease age cannot evict a paused active IAM writer or bypass revision checks', async t => {
   const { a, b, sharedRoot, root } = await environment(t); await a.initialize(fixture(), { id: 'moderator' }); await b.refresh();
   let release, entered;
   const gate = new Promise(resolve => { release = resolve; });
   const started = new Promise(resolve => { entered = resolve; });
   const paused = central.createCentralIam({ sharedRoot, cacheFile: path.join(root, 'paused', 'user-access.json'), fault: async point => { if (point === 'beforeCommit') { entered(); await gate; } } });
   await paused.refresh();
-  const attempted = paused.commit(paused.readLocal(), 1, { id: 'moderator' });
+  const next=paused.readLocal();next.users[0].displayName='Active Writer';
+  const attempted = paused.commit(next, 1, { id: 'moderator' });
   await started;
   const ownerFile = path.join(sharedRoot, 'iam', 'locks', 'mutation.write-lock', 'owner.json');
   const owner = JSON.parse(fs.readFileSync(ownerFile)); owner.createdAt = new Date(Date.now() - 120000).toISOString(); fs.writeFileSync(ownerFile, JSON.stringify(owner));
   const child = require('node:child_process').fork(path.join(__dirname, 'helpers', 'iam-commit.js'), [sharedRoot, b.cacheFile], { stdio: ['ignore','ignore','pipe','ipc'] });
-  const [result] = await require('node:events').once(child, 'message');
-  release(); await assert.rejects(attempted, { code: 'IAM_REVISION_CONFLICT' }); assert.equal(result.ok, true, JSON.stringify(result));
-  await a.refresh(); assert.equal(a.readLocal().users[0].displayName, 'Winner');
+  try{
+    const [result] = await require('node:events').once(child, 'message');
+    assert.equal(result.code,'IAM_WRITE_FAILED','competing child cannot acquire the still-active lease');
+    assert.equal(JSON.parse(fs.readFileSync(ownerFile)).token,owner.token,'original writer retains its lease');
+  }finally{release();}
+  await attempted;
+  await a.refresh(); assert.equal(a.readLocal().users[0].displayName, 'Active Writer');
+  await assert.rejects(b.commit(b.readLocal(),1,{id:'moderator'}),{code:'IAM_REVISION_CONFLICT'});
 });
 test('initialization requires admin and never republishes missing authority from central cache', async t => {
   const { a, sharedRoot } = await environment(t);
