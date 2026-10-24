@@ -619,6 +619,35 @@
           "en": "Demo note with colored and formatted text, a list and an embedded actual Buyer Log screenshot."
         }
       }
+    },
+    {
+      "id": "owned-temp-backup-inventory",
+      "type": "fix",
+      "module": {
+        "tr": "Yedekleme ve Geri Yükleme",
+        "en": "Backup and Restore"
+      },
+      "title": {
+        "tr": "Yedekleme ilgisiz geçici klasörleri taramaz",
+        "en": "Backups avoid unrelated temporary folders"
+      },
+      "body": {
+        "tr": "Geçici çalışma dosyaları Buyer Log’a ait alanda oluşturulur. Yedek dışı tanılama izin hataları uyarı olarak kaydedilir; kalıcı veri veya yapılandırma okunamıyorsa yedekleme boş içerikle devam etmek yerine durur.",
+        "en": "Temporary working files use Buyer Log’s own storage area. Excluded diagnostic permission errors are recorded as warnings; unreadable persistent data or configuration stops backup instead of silently continuing with empty content."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "owned-temp-restore-preflight.png",
+        "alt": {
+          "tr": "Geçici depolama düzeltmesinden sonra sentetik verilerle tamamlanan gerçek Buyer Log geri yükleme önkontrolü",
+          "en": "Actual Buyer Log restore preflight completed with synthetic data after the temporary storage correction"
+        },
+        "caption": {
+          "tr": "Değişiklik sonrası sentetik yedeğin önkontrolü tamamlandı; geri yükleme başlatılmadı.",
+          "en": "Post-change preflight of a synthetic backup completed; restoration was not started."
+        }
+      }
     }
   ]
 }
