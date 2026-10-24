@@ -648,6 +648,35 @@
           "en": "Real Buyer Log with synthetic data only: with the compatibility JSON removed, the reopened native DB supplies the price record saved after the torn tail."
         }
       }
+    },
+    {
+      "id": "bl012-wal-validated-metadata",
+      "type": "improvement",
+      "module": {
+        "tr": "Yerel Veri · Kaydetme",
+        "en": "Local Data · Saving"
+      },
+      "title": {
+        "tr": "Küçük kayıtlar biriken günlüğü tekrar okumaz",
+        "en": "Small saves no longer reread the accumulated journal"
+      },
+      "body": {
+        "tr": "Doğrulanmış günlük sayacı dosya kimliğiyle izlenir ve yalnız kalıcı yazma sonrasında ilerler. Başka bir yazıcı, dosya değişimi veya hata olduğunda yeniden doğrulanır; checksum, yarım günlük kurtarması ve sıkıştırma sınırları korunur.",
+        "en": "Validated journal counters follow file identity and advance only after durable writes. External writes, file replacement or failure invalidate the metadata; checksums, torn-tail recovery and checkpoint limits remain enforced."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "bl012-wal-validated-metadata.png",
+        "alt": {
+          "tr": "Optimize edilmiş günlük koduyla kaydedildikten ve sunucu yeniden açıldıktan sonra gerçek Buyer Log içinde görünen BL012-SAVED demo fiyat kaydı",
+          "en": "BL012-SAVED demo price record visible in real Buyer Log after saving with optimized journal code and restarting the server"
+        },
+        "caption": {
+          "tr": "Demo kayıt gerçek yeniden açılışta korunur. Okuma maliyeti ekran görüntüsünden değil, ayrı 120 yazmalık ölçüm ve 2.100 kayıt sınır testiyle doğrulanmıştır.",
+          "en": "The synthetic record survives a real reopen. Read cost is established by separate 120-write measurements and the 2,100-save boundary test, not by this screenshot."
+        }
+      }
     }
   ]
 }

@@ -642,14 +642,16 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
      (pending/listConflicts kendi kopyalarını üretir). */
   let cachedState = null;
   let cachedTags = null;
+  let walMetadata = null;
+  function statTag(stat) { return `${stat.ino}-${stat.size}-${stat.mtimeMs}-${stat.ctimeMs}`; }
   async function fileTag(target) {
-    try { const stat = await fsp.stat(target); return `${stat.size}-${stat.mtimeMs}`; }
-    catch (_) { return ''; }
+    try { return statTag(await fsp.stat(target)); }
+    catch (error) { if (error.code === 'ENOENT') return ''; throw error; }
   }
   async function currentTags() {
     return `${await fileTag(dbFile)}|${await fileTag(walFile())}|${await fileTag(`${walFile()}.bak`)}`;
   }
-  function invalidateCache() { cachedState = null; cachedTags = null; }
+  function invalidateCache() { cachedState = null; cachedTags = null; walMetadata = null; }
 
   async function loadState() {
     const tags = await currentTags();
@@ -684,10 +686,22 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
     await writeState(dbFile, state);
     try { await replaceFileWithRetry(walFile(), `${walFile()}.bak`); }
     catch (error) { if (error && error.code !== 'ENOENT') throw error; }
+    walMetadata = null;
   }
 
   async function inspectWalForWrite(preserveTorn = false) {
-    const current = await readWalEntries(walFile());
+    const tag = await fileTag(walFile());
+    let current = walMetadata && walMetadata.tag === tag ? walMetadata : null;
+    if (!current) {
+      const parsed = await readWalEntries(walFile());
+      current = {
+        tag, entryCount: parsed.entries.length, byteLength: parsed.bytes?.length || 0,
+        truncated: parsed.truncated, tornTail: parsed.tornTail || false,
+        endsWithNewline: parsed.endsWithNewline || false,
+        ...(parsed.tornTail ? { bytes: parsed.bytes } : {}),
+      };
+      walMetadata = current;
+    }
     if (current.truncated && !current.tornTail) {
       invalidateCache();
       throw dataIntegrityError(dbFile, [{ file: walFile(), error: new Error('WAL integrity check failed / WAL bütünlük denetimi başarısız') }]);
@@ -779,16 +793,23 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
 
         // A valid checksummed final record may lack its newline. Keep the next
         // record separate so both remain replayable after a restart.
-        const separator = !currentWal.tornTail && currentWal.bytes?.length && !currentWal.endsWithNewline ? '\n' : '';
+        // Backup recovery/rotation clears metadata. Otherwise the held lease
+        // keeps the already validated WAL identity stable during preparation.
+        const appendWal = walMetadata || await inspectWalForWrite();
+        const separator = appendWal.byteLength && !appendWal.endsWithNewline ? '\n' : '';
         const lines = separator + operations.map(item => walLine(item.op, item.payload)).join('');
         const handle = await fsp.open(walFile(), 'a');
         // fsync ÖNCE, dönüş SONRA: çağırana "kaydedildi" dendiğinde satır diskte.
         try { await handle.writeFile(lines, 'utf8'); await handle.sync(); } finally { await handle.close(); }
 
-        let size = 0;
-        try { size = (await fsp.stat(walFile())).size; } catch (_) {}
-        const { entries } = size ? await readWalEntries(walFile()) : { entries: [] };
-        if (size > walMaxBytes || entries.length > WAL_MAX_ENTRIES) await writeSnapshot(state);
+        const walStat = await fsp.stat(walFile());
+        walMetadata = {
+          tag: statTag(walStat), byteLength: walStat.size,
+          entryCount: appendWal.entryCount + operations.length,
+          endsWithNewline: lines ? lines.endsWith('\n') : appendWal.endsWithNewline,
+          truncated: false, tornTail: false,
+        };
+        if (walStat.size > walMaxBytes || walMetadata.entryCount > WAL_MAX_ENTRIES) await writeSnapshot(state);
         // Durum yerinde değişti ve dosyalar yeniden yazıldı: imzayı tazele ki
         // sıradaki okuma diski boşuna baştan okumasın.
         cachedState = state; cachedTags = await currentTags();
