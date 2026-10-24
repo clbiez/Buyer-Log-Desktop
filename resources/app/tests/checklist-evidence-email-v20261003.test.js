@@ -1,4 +1,5 @@
 'use strict';
+const asyncChildScript=require('./helpers/async-child-script');
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -50,12 +51,12 @@ test('checklist attachment is renamed from order/model/checklist identity and ev
       "const store=require(" + JSON.stringify(storePath) + ");",
       "const actor={id:'buyer-1',displayName:'Buyer One'};",
       "const attachment=store.addAttachment({filename:'lab report.PDF',mimeType:'application/pdf',base64:Buffer.from('REPORT').toString('base64'),context:{orderCode:'1356389',plmId:'9001',modelName:'KB.BOY.STUMBLE-2-YD',colourCode:'001',checklistName:'Fabric Test',checklistStatus:'Reddedildi',sequence:1}},actor);",
-      "const first=store.applyEntries([{orderKey:'O1',itemId:'fabric',state:'rejected',at:'2026-10-03T10:00:00.000Z',reportNumber:'RPT-42',actualDate:'2026-10-03',attachments:[attachment]}],actor,{source:'buyer_log'});",
-      "const second=store.applyEntries([{orderKey:'O1',itemId:'fabric',state:'approved',at:'2026-10-03T11:00:00.000Z'}],actor,{source:'buyer_log'});",
+      "const first=await store.applyEntries([{orderKey:'O1',itemId:'fabric',state:'rejected',at:'2026-10-03T10:00:00.000Z',reportNumber:'RPT-42',actualDate:'2026-10-03',attachments:[attachment]}],actor,{source:'buyer_log'});",
+      "const second=await store.applyEntries([{orderKey:'O1',itemId:'fabric',state:'approved',at:'2026-10-03T11:00:00.000Z'}],actor,{source:'buyer_log'});",
       "const answer=store.publicPayload().answers['O1::fabric'];",
       "process.stdout.write(JSON.stringify({attachment,first,second,answer,fileExists:fs.existsSync(store.getAttachmentPath(attachment.id))}));",
     ].join('');
-    const raw = childProcess.execFileSync(process.execPath, ['-e', script], {
+    const raw = childProcess.execFileSync(process.execPath, ['-e',asyncChildScript(script)], {
       encoding: 'utf8',
       env: {
         ...process.env,

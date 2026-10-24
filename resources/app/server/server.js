@@ -3724,23 +3724,33 @@ app.put('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
    kimliğine bağlı olarak sunucuda da tutulur ve her açılışta birleştirilir.
    Kimlik doğrulaması dışında ek alan yetkisi aranmaz: veri kullanıcının kendi
    verisidir ve yalnız kendi kaydına erişir. */
-app.get('/api/user-preferences', (req, res) => {
-  const store = userPreferences.load(req.currentUser.id);
+app.get('/api/user-preferences', async (req, res) => {
+  try {
+  const ownerId=req.currentUser.id;
   const roleDefaults = userAccess.roleWorkspaceEntries(req.currentUser);
+  const store = await userPreferences.loadAsync(ownerId);
+  assertPreferenceOwner(req,ownerId);
   /* deletions: AÇIKÇA SİLİNMİŞ anahtarlar ve silinme zamanı. Tarayıcı bunu
      görmeden, kendi yerel kopyasını "sunucuda eksik" sanıp geri gönderiyor ve
      silinen kişisel Horizon diriliyordu. */
   res.set('Cache-Control', 'no-store').json({ ok: true, entries: store.entries, deletions: store.deletions || {}, roleDefaults, roleDefaultRole: req.currentUser.systemRole, updatedAt: store._updatedAt, syncedPrefixes: userPreferences.SYNCED_PREFIXES });
+  } catch (err) { apiError(res, err, 'Kişisel veriler okunamadı.'); }
 });
-app.put('/api/user-preferences', express.json({ limit: '12mb' }), (req, res) => {
+function assertPreferenceOwner(req, ownerId) {
+  const profile = userAccess.sessionProfile(req);
+  if (!profile || profile.id !== ownerId) throw Object.assign(new Error('Kişisel veri oturumu değişti. / The personal-data session changed.'), {code:'USER_PREFS_FORBIDDEN',statusCode:403});
+}
+app.put('/api/user-preferences', express.json({ limit: '12mb' }), async (req, res) => {
   try {
-    const saved = userPreferences.merge(req.currentUser.id, req.body && req.body.entries);
+    const ownerId=req.currentUser.id;
+    const saved = await userPreferences.mergeAsync(ownerId, req.body && req.body.entries,{assertAuthority:()=>assertPreferenceOwner(req,ownerId)});
     res.json({ ok: true, entries: saved.entries, updatedAt: saved._updatedAt, rejected: saved.rejected });
   } catch (err) { apiError(res, err, 'Kişisel veriler kaydedilemedi.'); }
 });
-app.post('/api/user-preferences/delete', express.json({ limit: '256kb' }), (req, res) => {
+app.post('/api/user-preferences/delete', express.json({ limit: '256kb' }), async (req, res) => {
   try {
-    const saved = userPreferences.removeKeys(req.currentUser.id, req.body && req.body.keys);
+    const ownerId=req.currentUser.id;
+    const saved = await userPreferences.removeKeysAsync(ownerId, req.body && req.body.keys,{assertAuthority:()=>assertPreferenceOwner(req,ownerId)});
     res.json({ ok: true, entries: saved.entries, updatedAt: saved._updatedAt });
   } catch (err) { apiError(res, err, 'Kişisel veriler silinemedi.'); }
 });

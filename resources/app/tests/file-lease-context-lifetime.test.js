@@ -15,6 +15,17 @@ async function fixture(t) {
   return { parent, child, staged };
 }
 
+test('a synchronous caller returns busy without blocking the async owner on the same event loop', async t => {
+  const box=await fixture(t);let release,entered;
+  const ready=new Promise(resolve=>{entered=resolve;}),gate=new Promise(resolve=>{release=resolve;});
+  const owner=withFileLeaseAsync(box.parent,async lease=>{entered();await gate;lease.assertOwned();});
+  await ready;const wait=Atomics.wait;
+  Atomics.wait=()=>{throw Object.assign(new Error('A synchronous wait would prevent the local async owner from completing.'),{code:'UNEXPECTED_BLOCKING_WAIT'});};
+  try { assert.throws(()=>withFileLeaseSync(box.parent,()=>assert.fail('contender must not enter')),{code:'SHARED_WRITE_BUSY'}); }
+  finally { Atomics.wait=wait;release();await owner; }
+  assert.equal(withFileLeaseSync(box.parent,()=>true),true,'a retry after the async owner completes must work');
+});
+
 for (const kind of ['sync', 'async']) {
   test(`a separately leased write after a completed ${kind} scope ignores the completed parent`, async t => {
     const box = await fixture(t);

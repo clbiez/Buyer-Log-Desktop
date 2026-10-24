@@ -1,0 +1,144 @@
+{
+  "date": "2026-10-24T19:33:20.440Z",
+  "base": "0a5d9fbbb0f1d6db59ea6062a1f779505c8f67d7",
+  "scope": "BL008 first wave only; incomplete package, not ready for final merge",
+  "verificationPolicy": "Explicit user instruction: targeted checks during implementation; one full regression after the final integrated remaining backlog, then batch merge. No full suite run for this first wave.",
+  "focused": [
+    {
+      "files": 16,
+      "pass": 116,
+      "fail": 0,
+      "log": "bl008-checklist-target.log",
+      "scope": "Checklist core and direct authority before the final same-event-loop primitive guard"
+    },
+    {
+      "files": 11,
+      "pass": 126,
+      "fail": 0,
+      "log": "bl008-primary-authority.log",
+      "scope": "Preferences/workspace/primary HTTP/authority after session changes, before final same-event-loop guard"
+    },
+    {
+      "files": 4,
+      "pass": 31,
+      "fail": 0,
+      "log": "bl008-lease-target.log",
+      "scope": "Final primitive plus fabric/prefs async persistence and authority"
+    }
+  ],
+  "before": {
+    "source": "unchanged main0a5d9fbb in separate worktree",
+    "sameFixture": true,
+    "store": "fabric",
+    "healthRttMs": 2959,
+    "writeStatus": 409,
+    "expectedRegressionFailure": true,
+    "log": "bl008-fabric-before.log"
+  },
+  "after": {
+    "scope": "Actual Windows Edge and unmodified full server, isolated synthetic IAM/data, no mocked HTTP; primary paths only, not all BL008 stores",
+    "phases": [
+      {
+        "name": "fabric-ui-save-held-lease",
+        "unrelatedPreferenceRead": {
+          "status": 200,
+          "milliseconds": 4.799999997019768
+        },
+        "noAcknowledgementBeforeRelease": true
+      },
+      {
+        "name": "tr-saved-card-ui"
+      },
+      {
+        "name": "en-saved-card-ui"
+      },
+      {
+        "name": "real-session-preference-write-held-lease",
+        "unrelatedFabricRead": {
+          "status": 200,
+          "milliseconds": 4.200000002980232
+        },
+        "noAcknowledgementBeforeRelease": true
+      },
+      {
+        "name": "real-session-checklist-write-held-lease",
+        "unrelatedPreferenceRead": {
+          "status": 200,
+          "milliseconds": 10.399999991059303
+        },
+        "noAcknowledgementBeforeRelease": true
+      }
+    ],
+    "mockedHTTP": false,
+    "productionUsersOrData": false,
+    "sourceMatches": [
+      {
+        "file": "server/lib/fabric-cards.js",
+        "sha256Lf": "aadc93f535a6e440058e4ec35624fd1f8082e831eb0ce6cb545726429f02f5e1"
+      },
+      {
+        "file": "server/lib/checklist-supplier-store.js",
+        "sha256Lf": "e65ab62873d173aef2007bc9a136867a16fd93fde8f109c65c2a9eeb7d0ba974"
+      },
+      {
+        "file": "server/lib/user-preferences.js",
+        "sha256Lf": "99ae2cf6ffe2e9fc781ee466994842e8b1bf9d77472a35b181f9e7edaa34b50e"
+      },
+      {
+        "file": "server/lib/shared-file-transaction.js",
+        "sha256Lf": "1716786b9cea38eafec56a7a58700f04f5bb04272caaf2d770e7483cfe1132ce"
+      },
+      {
+        "file": "server/lib/safe-json-read.js",
+        "sha256Lf": "5a598007ac7faaac1fc2a9e4a7512e0b2041cab493f1225c1125891b26d7e01e"
+      },
+      {
+        "file": "server/routes/fabric-card-routes.js",
+        "sha256Lf": "e5a6128969a2e234abc51305e1451f2bbcf53048f1a8a2a5f6d370c8c9496172"
+      },
+      {
+        "file": "server/routes/checklist-supplier-routes.js",
+        "sha256Lf": "70d8e4195ac6dfd7103fa5293551b49befd6a89cab137dd4584660c9f8af2611"
+      },
+      {
+        "file": "server/server.js",
+        "sha256Lf": "fa34b158b83446f040c894e36ae0916543e303e7eff4eafe469c51bd7e2c1fde"
+      }
+    ]
+  },
+  "review": {
+    "rounds": 1,
+    "agent": "review_wal_recovery",
+    "result": "No concrete new P0/P1 findings in the bounded first-wave diff",
+    "testsExecutedByReviewer": false,
+    "graph": "Transport closed; actual source fallback"
+  },
+  "images": [
+    {
+      "name": "async-primary-store-writes.png",
+      "width": 1600,
+      "height": 973,
+      "sha256": "adc863386fb08bf194a43bfdbb6bfb42798dbeae0a1b73f04592b39741ebeada",
+      "reviewed": true
+    },
+    {
+      "name": "async-primary-store-writes-en.png",
+      "width": 1600,
+      "height": 973,
+      "sha256": "73cf9afe6b795474d92c989c558acb86c953b91ad4b5843762c2e8bc4922da98",
+      "reviewed": true
+    }
+  ],
+  "remaining": [
+    "Legacy preference horizon/copy/restore/default migration request paths",
+    "Checklist attachment and test-report native paths",
+    "Other synchronous lease candidates in db, calendar, OAB, quotations, email groups, output and recipe stores; distinguish existing guarded async entry points from true sync request callers",
+    "withFileLeaseAsync metadata acquisition/retry internals still use synchronous filesystem calls",
+    "Representative populated desktop, corporate SMB/Excel/Outlook and final integrated full regression"
+  ],
+  "publication": {
+    "TEST": false,
+    "STABLE": false,
+    "manualPatch": false
+  }
+}

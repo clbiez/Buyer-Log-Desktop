@@ -189,18 +189,22 @@ function assertHeldFileLeases(){for(const lease of leaseRuntime.context.getStore
 // only completed scopes on entry to a NEW lease; keep active parents fenced,
 // and keep direct detached writes (without a new lease) fenced as before.
 function inheritedFileLeases(){return (leaseRuntime.context.getStore()||[]).filter(lease=>!leaseRuntime.completedScopes.has(lease));}
-function contention(target,options,started){
+function contention(target,options,started,synchronous=false){
   const lockDir=target+'.write-lock';let observed;
   try{observed=inspect(lockDir,options);if(observed.recoverable&&recover(lockDir,observed,options,target))return;}
   catch(error){if(error.code==='ENOENT')return;throw error;}
-  if(Date.now()-started>=options.timeoutMs){
+  // A synchronous wait cannot let this thread's active async owner progress.
+  // Fail closed immediately, retaining its token/generation and allowing the
+  // existing busy/retry path instead of blocking the process for three seconds.
+  const sameEventLoop=synchronous&&observed.owner&&String(observed.owner.machine).toLowerCase()===machine&&Number(observed.owner.pid)===process.pid&&observed.owner.threadId===threadId&&observed.owner.instanceId===leaseRuntime.instanceId&&leaseRuntime.activeTokens.has(observed.owner.token);
+  if(sameEventLoop||Date.now()-started>=options.timeoutMs){
     const remote=observed.owner&&String(observed.owner.machine).toLowerCase()!==machine;
     throw Object.assign(new Error(remote?'Başka cihazdaki yazıcının kapandığı doğrulanmadan kilit devralınamaz. / Verify that the writer on the other device has stopped before recovering its lease.':'Veri başka bir Buyer Log sürecinde kullanılıyor; yeniden deneyin. / Shared data is in use by another Buyer Log process; please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409,owner:observed.owner,resource:target,recoveryRequired:Boolean(remote)});
   }
 }
 function withFileLeaseSync(file,operation,settings={}){
   const target=path.resolve(file),options=leaseOptions(settings),started=Date.now();fs.mkdirSync(path.dirname(target),{recursive:true});let lease;
-  while(!(lease=acquire(target,options))){contention(target,options,started);pause(15);}
+  while(!(lease=acquire(target,options))){contention(target,options,started,true);pause(15);}
   try{return leaseRuntime.context.run([...inheritedFileLeases(),lease],()=>{lease.assertOwned();const result=operation(lease);if(result&&typeof result.then==='function')throw Object.assign(new Error('Synchronous file lease callback must not return a Promise.'),{code:'SHARED_SYNC_LEASE_ASYNC'});lease.assertOwned();return result;});}
   finally{release(lease,options);}
 }

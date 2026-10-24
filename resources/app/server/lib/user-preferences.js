@@ -18,8 +18,9 @@
 
 const fs = require('fs');
 const path = require('path');
-const { SERVER_DATA_ROOT, atomicWriteJson } = require('../user-data');
-const { readJsonWithValidatedBackup } = require('./safe-json-read');
+const { SERVER_DATA_ROOT, atomicWriteJson, atomicWriteJsonAsync } = require('../user-data');
+const { readJsonWithValidatedBackup, readJsonWithValidatedBackupAsync } = require('./safe-json-read');
+const { withFileLeaseAsync } = require('./shared-file-transaction');
 const modelScopes = require('./model-scopes');
 
 const ROOT = path.join(SERVER_DATA_ROOT, 'user-preferences');
@@ -159,9 +160,8 @@ function capDeletions(deletions) {
   return Object.fromEntries(kept.map(key => [key, deletions[key]]));
 }
 
-function load(userId) {
-  const file = prefsFile(userId);
-  return readJsonWithValidatedBackup(file, {
+function preferenceReadOptions(userId) {
+  return {
     fallback: () => ({ userId: String(userId || ''), entries: {}, deletions: {}, _updatedAt: '' }),
     normalize: raw => {
       const entries = raw && typeof raw.entries === 'object' && raw.entries ? raw.entries : {};
@@ -179,16 +179,24 @@ function load(userId) {
       const _horizonRevisions=Object.fromEntries(Object.entries(raw?._horizonRevisions||{}).filter(([key,value])=>key.startsWith(WORKSPACE_HORIZON_PREFIX)&&Number.isSafeInteger(value)&&value>=0));
       return { userId: String(userId || ''), entries: clean, deletions, _updatedAt: String(raw && raw._updatedAt || ''), _horizonRevisions };
     },
-    restore: value => atomicWriteJson(file, value),
-  });
+  };
+}
+function load(userId) {
+  const file=prefsFile(userId);
+  return readJsonWithValidatedBackup(file,{...preferenceReadOptions(userId),restore:value=>atomicWriteJson(file,value)});
+}
+async function loadAsync(userId,{recover=false,assertAuthority}={}) {
+  const file=prefsFile(userId);
+  return readJsonWithValidatedBackupAsync(file,{...preferenceReadOptions(userId),...(recover?{beforeRestore:assertAuthority,restore:value=>atomicWriteJsonAsync(file,value)}:{})});
 }
 // Horizon generations are server-owned and survive removal and workspace restore.
 // Every native preference writer includes them in its existing single atomic save.
-function persistPreferences(userId,saved,current){
+function prepareSavedPreferences(saved,current){
   const versions={...(current._horizonRevisions||{})},keys=new Set([...Object.keys(current.entries),...Object.keys(current.deletions),...Object.keys(saved.entries),...Object.keys(saved.deletions)]);
   for(const key of keys)if(key.startsWith(WORKSPACE_HORIZON_PREFIX)&&JSON.stringify([current.entries[key]||null,current.deletions[key]||null])!==JSON.stringify([saved.entries[key]||null,saved.deletions[key]||null]))versions[key]=(versions[key]||0)+1;
-  saved._horizonRevisions=versions;atomicWriteJson(prefsFile(userId),saved);
+  saved._horizonRevisions=versions;
 }
+function persistPreferences(userId,saved,current){prepareSavedPreferences(saved,current);atomicWriteJson(prefsFile(userId),saved);}
 
 function totalBytes(entries) {
   return Object.values(entries).reduce((sum, entry) => sum + Buffer.byteLength(entry.value || '', 'utf8'), 0);
@@ -198,8 +206,7 @@ function totalBytes(entries) {
  * Gelen anahtarları birleştirir. Aynı anahtarda GELEN daha eskiyse yazılmaz —
  * böylece geç açılan bir tarayıcının bayat kopyası yenisini ezmez.
  */
-function merge(userId, incoming) {
-  const current = load(userId);
+function planMerge(userId, incoming, current) {
   const entries = { ...current.entries };
   const deletions = { ...current.deletions };
   const now = new Date().toISOString();
@@ -225,17 +232,21 @@ function merge(userId, incoming) {
     error.statusCode = 413; error.code = 'USER_PREFS_TOO_LARGE';
     throw error;
   }
-  fs.mkdirSync(ROOT, { recursive: true });
   const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
-  persistPreferences(userId,saved,current);
-  return { ...saved, rejected };
+  return { saved, rejected };
+}
+function merge(userId,incoming){const current=load(userId),plan=planMerge(userId,incoming,current);persistPreferences(userId,plan.saved,current);return {...plan.saved,rejected:plan.rejected};}
+function mergeAsync(userId,incoming,options={}){
+  return withFileLeaseAsync(prefsFile(userId),async()=>{
+    options.assertAuthority?.();const current=await loadAsync(userId,{recover:true,assertAuthority:options.assertAuthority}),plan=planMerge(userId,incoming,current);
+    options.assertAuthority?.();prepareSavedPreferences(plan.saved,current);await atomicWriteJsonAsync(prefsFile(userId),plan.saved);return {...plan.saved,rejected:plan.rejected};
+  });
 }
 
 /* Anahtarı siler ve silmeyi KAYIT ALTINA ALIR (bkz. mezar taşı notu).
    `options.tombstone === false` yalnız bakım/taşıma amaçlı sessiz temizlik
    içindir; kullanıcının açık silme eylemleri her zaman iz bırakır. */
-function removeKeys(userId, keys, options = {}) {
-  const current = load(userId);
+function planRemoveKeys(userId, keys, current, options = {}) {
   const entries = { ...current.entries };
   const deletions = { ...current.deletions };
   const now = new Date().toISOString();
@@ -245,10 +256,15 @@ function removeKeys(userId, keys, options = {}) {
     delete entries[name];
     if (tombstone && isSyncedKey(name)) deletions[name] = now;
   });
-  fs.mkdirSync(ROOT, { recursive: true });
   const saved = { userId: String(userId || ''), entries, deletions: capDeletions(deletions), _updatedAt: now };
-  persistPreferences(userId,saved,current);
   return saved;
+}
+function removeKeys(userId,keys,options={}){const current=load(userId),saved=planRemoveKeys(userId,keys,current,options);persistPreferences(userId,saved,current);return saved;}
+function removeKeysAsync(userId,keys,options={}){
+  return withFileLeaseAsync(prefsFile(userId),async()=>{
+    options.assertAuthority?.();const current=await loadAsync(userId,{recover:true,assertAuthority:options.assertAuthority}),saved=planRemoveKeys(userId,keys,current,options);
+    options.assertAuthority?.();prepareSavedPreferences(saved,current);await atomicWriteJsonAsync(prefsFile(userId),saved);return saved;
+  });
 }
 
 
@@ -682,7 +698,7 @@ function applyHorizonOverrides(items, userId, requestedTargets, roleEntries = nu
 }
 
 module.exports = {
-  load, merge, removeKeys, restoreSnapshot, applyEntryChanges, isSyncedKey, SYNCED_PREFIXES, MAX_VALUE_BYTES, MAX_TOTAL_BYTES, safeId,
+  load, loadAsync, merge, mergeAsync, removeKeys, removeKeysAsync, restoreSnapshot, applyEntryChanges, isSyncedKey, SYNCED_PREFIXES, MAX_VALUE_BYTES, MAX_TOTAL_BYTES, safeId,
   WORKSPACE_HORIZON_PREFIX, APPLIED_HORIZON_PREFIX, WORKSPACE_CATEGORY_PREFIXES, WORKSPACE_CATEGORIES,
   categoryForKey, normalizeCategories, workspaceEntries, replaceWorkspaceEntries,
   normalizeWorkspaceEntryMap, effectiveWorkspaceEntries, copyWorkspaceSnapshot, copyWorkspaceEntrySnapshot,

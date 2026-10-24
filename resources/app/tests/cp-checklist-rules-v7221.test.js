@@ -1,4 +1,5 @@
 'use strict';
+const asyncChildScript=require('./helpers/async-child-script');
 
 /* v7.221 — Checklist ve Rules uçtan uca.
    Kullanıcı talebi (özet):
@@ -270,10 +271,10 @@ test('sunucu deposu dört durumu kanonik saklar', () => {
     const script = [
       `const store=require(${JSON.stringify(storePath)});`,
       "const out=['Completed','Approved','Reddedildi','Not Required','Pending','x'].map(store.normalizeState);",
-      "const r=store.applyEntries([{orderKey:'O1',itemId:'gs',state:'rejected',at:'2026-10-03T10:00:00.000Z'}],{id:'u'},{});",
+      "const r=await store.applyEntries([{orderKey:'O1',itemId:'gs',state:'rejected',at:'2026-10-03T10:00:00.000Z'}],{id:'u'},{});",
       "process.stdout.write(JSON.stringify({out,state:store.publicPayload().answers['O1::gs'].state,updated:r.updated}));",
     ].join('');
-    const result = JSON.parse(childProcess.execFileSync(process.execPath, ['-e', script], {
+    const result = JSON.parse(childProcess.execFileSync(process.execPath, ['-e',asyncChildScript(script)], {
       encoding: 'utf8',
       env: { ...process.env, BUYER_LOG_SERVER_DATA_ROOT: dataRoot, BUYER_LOG_LOCAL_DATA_ROOT: path.join(dataRoot, 'local') },
     }));
@@ -283,10 +284,10 @@ test('sunucu deposu dört durumu kanonik saklar', () => {
 
     const definitionScript = [
       `const store=require(${JSON.stringify(storePath)});`,
-      "store.replaceDefinitions([{id:'fabric',kind:'checklist',builtIn:false,name:'Fabric'}],{id:'u'});",
+      "await store.replaceDefinitions([{id:'fabric',kind:'checklist',builtIn:false,name:'Fabric'}],{id:'u'});",
       "process.stdout.write(JSON.stringify(store.publicPayload().definitions[0]));",
     ].join('');
-    const definition = JSON.parse(childProcess.execFileSync(process.execPath, ['-e', definitionScript], {
+    const definition = JSON.parse(childProcess.execFileSync(process.execPath, ['-e',asyncChildScript(definitionScript)], {
       encoding: 'utf8',
       env: { ...process.env, BUYER_LOG_SERVER_DATA_ROOT: dataRoot, BUYER_LOG_LOCAL_DATA_ROOT: path.join(dataRoot, 'local') },
     }));

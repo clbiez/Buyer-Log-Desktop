@@ -1112,6 +1112,35 @@
           "en": "With synthetic data, W6 passes 24 comparisons; its invalid source date and the unavailable S7 sample result remain explicit. No company workbook or business data is displayed."
         }
       }
+    },
+    {
+      "id": "async-primary-store-writes",
+      "type": "improvement",
+      "module": {
+        "tr": "Kayıt performansı",
+        "en": "Save performance"
+      },
+      "title": {
+        "tr": "Temel kayıtlar kilit beklerken diğer istekler yanıtlanır",
+        "en": "Other requests stay responsive while primary saves wait for a lock"
+      },
+      "body": {
+        "tr": "Kumaş kartı, checklist yanıtı/tanımı ve temel kişisel tercih kayıtları dosya kirasını ve kalıcı yazmayı asenkron bekler. Başarı diske yazmadan sonra döner; bekleme sonrası güncel oturum, yetki ve revizyon yeniden denetlenir.",
+        "en": "Fabric cards, checklist answers/definitions and primary personal-preference saves await the file lease and durable write asynchronously. Success follows persistence, with current session, authority and revision checked after waiting."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "async-primary-store-writes.png",
+        "alt": {
+          "tr": "Gerçek Windows Buyer Log uygulamasında asenkron kayıt tamamlandıktan sonra yeniden açılan sentetik kumaş kartı",
+          "en": "Synthetic fabric card reopened in the real Windows Buyer Log application after its asynchronous save completes"
+        },
+        "caption": {
+          "tr": "Demo kumaş kartı gerçek arayüzle kaydedildi ve yeniden açıldı. Üç kontrollü kayıt sırasında ayrı API istekleri yanıtlandı; başarı kilit bırakıldıktan sonra döndü.",
+          "en": "The demo fabric card was saved and reopened through the actual interface. Separate API requests remained responsive during three controlled saves, and success followed lock release."
+        }
+      }
     }
   ]
 }
