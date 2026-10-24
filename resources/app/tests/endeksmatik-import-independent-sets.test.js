@@ -15,26 +15,7 @@ const model=require('../server/lib/endeksmatik-model');
 const fixture=require('./helpers/endeksmatik-fixture');
 
 function workbook(season='S1'){
-  const wb=XLSX.utils.book_new();
-  const dims=['CUW4','CU4E','KNIT','LICENSE','TOP'];
-  const header=[];
-  ['Merch Marka Yaş Grup','Merch Alt Grup','Tedarik Grup','Buyer Grup','Klasman'].forEach((h,i)=>{header[i+1]=h;});
-  const screen=XLSX.utils.aoa_to_sheet([]);
-  screen['!ref']='B1:C22';
-  screen.C1={t:'s',v:season};
-  screen.C2={t:'n',v:46000};
-  screen.B22={t:'n',v:0.03};
-  XLSX.utils.book_append_sheet(wb,screen,'ENDEKSMATİK');
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([header,[null,...dims,.4,.3,.2,.1]]),'KLASMAN LİSTESİ ÖZET');
-  const pivotHeader=[...header];pivotHeader[6]='Toplam 202501';pivotHeader[7]='Toplam 202502';
-  for(const name of ['KLASMAN KUMAŞ PİVOT','KLASMAN CMT PİVOT','KLASMAN AKSESUAR PİVOT','KLASMAN EK İŞLEM PİVOT']){
-    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([pivotHeader,[null,...dims,100,110]]),name);
-  }
-  const rate1=[],rate2=[];
-  rate1[21]='202501';rate1[22]=30;
-  rate2[21]='202502';rate2[22]=31;
-  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([rate1,rate2]),'Değişimler');
-  return XLSX.write(wb,{type:'buffer',bookType:'xlsx'});
+  return require('./helpers/endeksmatik-tl-fixture').buildLegacyTlWorkbook({season});
 }
 const input={
   mmyg:'CUW4',mag:'CU4E',supplyGroup:'KNIT',buyingGroup:'LICENSE',category:'TOP',
@@ -125,10 +106,7 @@ test('a broken USD signature cannot downgrade through a second legacy FX table o
 });
 
 test('a positively identified legacy TL layout still imports through the shared-sheet fallback',()=>{
-  const wb=XLSX.read(workbook('VALID LEGACY'),{type:'buffer'}),fx=wb.Sheets['Değişimler'];
-  // Keep this fixture independent of the separate V:W range-origin defect.
-  fx.A1={t:'s',v:'Synthetic reference'};fx['!ref']='A1:W2';
-  const result=engine.parseImportWorkbook(XLSX.write(wb,{type:'buffer',bookType:'xlsx'}),'valid-legacy.xlsx');
+  const result=engine.parseImportWorkbook(workbook('VALID LEGACY'),'valid-legacy.xlsx');
   assert.equal(result.model,'legacy-tl');assert.equal(result.snapshot.records.length,1);
   assert.deepEqual(result.snapshot.fx,{'202501':30,'202502':31});
 });

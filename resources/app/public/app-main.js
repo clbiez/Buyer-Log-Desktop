@@ -22960,7 +22960,10 @@ function endeksmatikSetOptionsHtml(selectedId){
 }
 function endeksmatikSourceBarHtml(set){
   const en=appLang==='en';if(!set)return '';
-  return `<span>${escapeHtml(`${set.season||''} · ${set.sourceFile||''}`)}</span><b>${escapeHtml((en?'Updated: ':'Güncelleme: ')+(set.sourceUpdatedAt||'—'))}</b><small>${escapeHtml((en?'Component range: ':'Endeks aralığı: ')+(kolMonthDisplay(set.firstMonth)||set.firstMonth||'')+' → '+(kolMonthDisplay(set.lastMonth)||set.lastMonth||''))}</small>${endeksmatikIsUsdModel(set)?`<small>${escapeHtml((en?'Uploaded: ':'Yüklendi: ')+String(set.uploadedAt||'').slice(0,16).replace('T',' ')+(set.validation&&set.validation.reconciliationOk?(en?' · reconciled with Excel':' · Excel ile uzlaştı'):''))}</small>`:''}`;
+  const knownTl=set.calculationContract==='endeksmatik-tl-workbook/v1';
+  const contract=knownTl?`<small>${escapeHtml(en?'TL workbook · adjustment applies to all four components':'TL çalışma kitabı · düzeltme dört bileşene uygulanır')}</small>`:'';
+  const warnings=knownTl?(set.validation?.warnings||[]).map(warning=>{const pair=String(warning).split(' / ');return `<small>${escapeHtml(en?(pair[1]||pair[0]):pair[0])}</small>`;}).join(''):'';
+  return `<span>${escapeHtml(`${set.season||''} · ${set.sourceFile||''}`)}</span><b>${escapeHtml((en?'Updated: ':'Güncelleme: ')+(set.sourceUpdatedAt||'—'))}</b><small>${escapeHtml((en?'Component range: ':'Endeks aralığı: ')+(kolMonthDisplay(set.firstMonth)||set.firstMonth||'')+' → '+(kolMonthDisplay(set.lastMonth)||set.lastMonth||''))}</small>${endeksmatikIsUsdModel(set)||knownTl?`<small>${escapeHtml((en?'Uploaded: ':'Yüklendi: ')+String(set.uploadedAt||'').slice(0,16).replace('T',' ')+(set.validation&&set.validation.reconciliationOk?(en?' · reconciled with Excel':' · Excel ile uzlaştı'):''))}</small>`:''}${contract}${warnings}`;
 }
 /* Endeksmatik'te kullanılacak Royalty/Hologram kuralı, ekranda ayrıca seçilmez:
    modelin MEVCUT kural eşleşmesinden alınır (v5.94). Koleksiyon tarafında
@@ -23484,7 +23487,7 @@ async function importEndeksmatikWorkbook(file){
     progress.setStage('verify');
     const res=await fetch('/api/endeksmatik/upload',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:file.name,dataBase64})});
     const data=await res.json().catch(()=>({}));
-    if(!res.ok)throw Object.assign(new Error(data.error||res.statusText),{code:data.code||'',details:data.details||null});
+    if(!res.ok)throw Object.assign(new Error(data.details?.messages?.[appLang]||data.error||res.statusText),{code:data.code||'',details:data.details||null});
     endeksmatikStatus=data;
     progress.setStage('finish');
     renderKol();
@@ -23552,7 +23555,8 @@ async function openEndeksmatikSetManager(){
   const overlay=document.createElement('div');overlay.id='_endeksmatikSetsModal';overlay.className='warnOverlay endeksmatikOverlay';
   const sets=endeksmatikSets();
   const rowHtml=set=>{
-    const active=set.id===status.activeSetId,usd=endeksmatikIsUsdModel(set),v=set.validation||{};
+    const active=set.id===status.activeSetId,usd=endeksmatikIsUsdModel(set),knownTl=set.calculationContract==='endeksmatik-tl-workbook/v1',v=set.validation||{};
+    const warningText=Array.isArray(v.warnings)?v.warnings.map(value=>{const pair=String(value).split(' / ');return en?(pair[1]||pair[0]):pair[0];}):[];
     return `<tr data-em-set="${escapeHtml(set.id)}"${active?' class="isActive"':''}>
       <td><strong>${escapeHtml(endeksmatikSetTitle(set))}</strong><small>${escapeHtml(set.sourceFile||'')}</small></td>
       <td>${escapeHtml(set.region||'—')}${set.currency?`<small>${escapeHtml(set.currency)}</small>`:''}</td>
@@ -23560,14 +23564,14 @@ async function openEndeksmatikSetManager(){
       <td>${escapeHtml(set.sourceUpdatedAt||'—')}${set.pivotRefreshedAt?`<small>${escapeHtml((en?'pivot ':'pivot ')+String(set.pivotRefreshedAt).slice(0,10))}</small>`:''}</td>
       <td>${escapeHtml(String(set.uploadedAt||'').slice(0,16).replace('T',' ')||'—')}${set.uploadedBy?`<small>${escapeHtml(set.uploadedBy)}</small>`:''}</td>
       <td class="num">${escapeHtml(String(set.recordCount||0))}<small>${escapeHtml(`${kolMonthDisplay(set.firstMonth)||set.firstMonth||''} → ${kolMonthDisplay(set.lastMonth)||set.lastMonth||''}`)}</small></td>
-      <td>${usd?`<span class="endeksmatikBadge ${v.reconciliationOk?'isGood':'isWarn'}">${escapeHtml(v.reconciliationOk?(en?`Verified · ${v.checks} checks`:`Doğrulandı · ${v.checks} kontrol`):(en?'Not verified':'Doğrulanmadı'))}</span><small>${escapeHtml(`${set.model} · parser v${set.parserVersion||1}`)}</small>${Array.isArray(v.warnings)&&v.warnings.length?`<small title="${escapeHtml(v.warnings.join('\n'))}">${escapeHtml(en?`${v.warnings.length} warning(s) — hover for details`:`${v.warnings.length} uyarı — ayrıntı için üzerine gelin`)}</small>`:''}`:`<span class="endeksmatikBadge">${escapeHtml(en?'Legacy TRY model':'Eski TL modeli')}</span>`}</td>
+      <td class="endeksmatikSetValidation">${usd||knownTl?`<span class="endeksmatikBadge ${v.reconciliationOk?'isGood':'isWarn'}">${escapeHtml(v.reconciliationOk?(en?`Verified · ${v.checks} checks`:`Doğrulandı · ${v.checks} kontrol`):knownTl?(en?'Formula verified · sample result unavailable':'Formül doğrulandı · örnek sonuç doğrulanamadı'):(en?'Not verified':'Doğrulanmadı'))}</span><small>${escapeHtml(knownTl?(en?'TL workbook · all four components':'TL çalışma kitabı · dört bileşen'):`${set.model} · parser v${set.parserVersion||1}`)}</small>${warningText.length?`<small title="${escapeHtml(warningText.join('\n'))}">${escapeHtml(knownTl?warningText.join(' '):en?`${warningText.length} warning(s) — hover for details`:`${warningText.length} uyarı — ayrıntı için üzerine gelin`)}</small>`:''}`:`<span class="endeksmatikBadge">${escapeHtml(en?'Legacy TRY model':'Eski TL modeli')}</span>`}</td>
       <td class="endeksmatikSetActions">${active?`<span class="endeksmatikBadge isGood">${escapeHtml(en?'Default':'Varsayılan')}</span>`:`<button type="button" class="tbtn" data-em-set-activate${canManage?'':' disabled'}>${escapeHtml(en?'Make default':'Varsayılan yap')}</button>`}${set.id!=='legacy'?`<button type="button" class="tbtn" data-em-set-rename${canManage?'':' disabled'}>${escapeHtml(en?'Rename':'Adlandır')}</button><button type="button" class="tbtn danger" data-em-set-delete${canManage?'':' disabled'}>${escapeHtml(en?'Delete':'Sil')}</button>`:''}</td>
     </tr>`;
   };
-  overlay.innerHTML=`<div class="endeksmatikModalCard">
+  overlay.innerHTML=`<div class="endeksmatikModalCard endeksmatikSetManagerCard">
     <div class="endeksmatikModalHead"><div><strong>${escapeHtml(en?'Endeksmatik Sets':'Endeksmatik Setleri')}</strong><span>${escapeHtml(en?'Country/region workbooks. The default set is used unless a calculation chooses another one.':'Ülke/bölge dosyaları. Hesapta başka set seçilmedikçe varsayılan set kullanılır.')}</span></div><button type="button" class="verHistClose" data-em-close aria-label="${escapeHtml(en?'Close':'Kapat')}">×</button></div>
     <div class="endeksmatikModalBody">
-      <div class="endeksmatikNotice">${escapeHtml(en?'USD model workbooks are checked against the ENDEKSMATIK screen (formula signature and cached-result reconciliation). Older TRY workbooks use structural validation and are saved as separate sets; the original Legacy set is never overwritten.':'USD dosyalarında formül imzası ve Excel sonuçları karşılaştırılır. Eski TL şablonları yapısal olarak doğrulanıp ayrı set halinde saklanır; orijinal Legacy kaydı korunur.')}</div>
+      <div class="endeksmatikNotice">${escapeHtml(en?'USD and supported S7/W6 TRY workbooks require their own formula contract. Available numeric Excel results are compared separately; missing results or invalid source dates remain visible as unverified. Each upload creates a separate set and preserves the original Legacy data.':'USD ve desteklenen S7/W6 TL dosyalarında kendi formül sözleşmesi aranır. Sayısal Excel sonuçları ayrıca karşılaştırılır; eksik sonuç veya geçersiz kaynak tarihi doğrulanmış sayılmaz. Her yükleme ayrı set oluşturur ve orijinal Legacy verisi korunur.')}</div>
       <div class="endeksmatikComponentWrap"><table class="endeksmatikSetTable"><thead><tr><th>${escapeHtml(en?'Set':'Endeksmatik seti')}</th><th>${escapeHtml(en?'Region':'Bölge')}</th><th>${escapeHtml(en?'Season':'Sezon')}</th><th>${escapeHtml(en?'Workbook date':'Dosya tarihi')}</th><th>${escapeHtml(en?'Uploaded':'Yüklendi')}</th><th>${escapeHtml(en?'Classes':'Klasman')}</th><th>${escapeHtml(en?'Validation':'Doğrulama')}</th><th></th></tr></thead><tbody>${sets.map(rowHtml).join('')||`<tr><td colspan="8">${escapeHtml(en?'No Endeksmatik data yet.':'Henüz Endeksmatik verisi yok.')}</td></tr>`}</tbody></table></div>
     </div>
     <div class="endeksmatikModalFoot"><button type="button" class="tbtn" data-em-close>${escapeHtml(en?'Close':'Kapat')}</button><button type="button" class="tbtn" data-em-structure-report${canManage?'':' disabled'} title="${escapeHtml(en?'Reads a workbook on this computer and downloads a small report with masked values (headers, formulas, key overlap). Nothing is saved.':'Dosyayı bu bilgisayarda okur; değerleri maskeli küçük bir rapor indirir (başlıklar, formüller, anahtar örtüşmesi). Hiçbir şey kaydedilmez.')}">${escapeHtml(en?'Structure report':'Yapı raporu')}</button><button type="button" class="tbtn primary" data-em-set-upload${canManage?'':' disabled'}>${escapeHtml(en?'Upload new workbook':'Yeni dosya yükle')}</button></div>

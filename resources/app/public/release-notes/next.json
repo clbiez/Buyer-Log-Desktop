@@ -1067,8 +1067,8 @@
         "en": "Invalid USD formulas cannot downgrade to the legacy TL model"
       },
       "body": {
-        "tr": "USD formül imzası başarısız olduğunda ikinci bir kur tablosu dosyayı geçerli TL modeli yapmaz. Karışık veya belirsiz şablonlar reddedilir; mevcut setler korunur.",
-        "en": "When the USD formula signature fails, an extra FX table cannot turn the file into an accepted TL model. Mixed or ambiguous layouts are rejected and existing sets remain intact."
+        "tr": "Hatalı veya formülleri silinmiş USD dosyası, ikinci bir kur tablosu ya da değiştirilmiş başlıklarla TL modeline düşürülemez. Kabul için USD veya desteklenen S7/W6 TL formül sözleşmesi gerekir; reddedilen dosya mevcut setleri değiştirmez.",
+        "en": "An invalid USD workbook or one with erased formulas cannot downgrade to TRY through an extra FX table or edited headers. Acceptance requires the USD or supported S7/W6 TRY formula contract; a rejected file leaves existing sets intact."
       },
       "visual": {
         "kind": "screenshot",
@@ -1079,8 +1079,37 @@
           "en": "Native formula-signature rejection of a mixed-model workbook on a real demo server"
         },
         "caption": {
-          "tr": "Sentetik karışık dosya HTTP422 / MODEL_SIGNATURE_MISMATCH ile reddedildi; yeni set oluşmadı.",
-          "en": "The synthetic mixed-model workbook was rejected with HTTP422 / MODEL_SIGNATURE_MISMATCH; no new set was created."
+          "tr": "Gerçek Windows Buyer Log sunucusunda sentetik USD dosyası HTTP 422 ile reddedilir; mevcut TL/USD setleri ve Legacy verisi korunur.",
+          "en": "The real Windows Buyer Log server rejects a synthetic USD workbook with HTTP 422 while preserving existing TRY/USD sets and Legacy data."
+        }
+      }
+    },
+    {
+      "id": "endeksmatik-tl-workbook-contracts",
+      "type": "fix",
+      "module": {
+        "tr": "Endeksmatik",
+        "en": "Endeksmatik"
+      },
+      "title": {
+        "tr": "S7 ve W6 TL dosyaları kendi formülleriyle doğrulanır",
+        "en": "S7 and W6 TRY workbooks are verified against their own formulas"
+      },
+      "body": {
+        "tr": "Yeni TL yüklemeleri doğru hücrelerden tarih ve düzeltme oranını alır; dört bileşene uygulanan düzeltmeyi kendi sürümlü sözleşmesinde hesaplar. Eski kayıtların hesabı korunur. Eksik örnek sonuç ve geçersiz kaynak tarihi açıkça belirtilir; doğrulama açıklamaları satıra sığar.",
+        "en": "New TRY uploads read dates and adjustment from the correct cells and use a versioned contract that applies the adjustment to all four components. Historical calculations remain intact. Unavailable sample results and invalid source dates stay explicit, and validation details wrap within the table."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "endeksmatik-tl-contracts.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log set yöneticisinde 24 kontrolü geçen W6, örnek sonucu doğrulanamayan S7 ve ayrı USD doğrulaması",
+          "en": "Actual Buyer Log set manager showing W6 with 24 checks, S7 with an unavailable sample result and separate USD validation"
+        },
+        "caption": {
+          "tr": "Sentetik veride W6 için 24 karşılaştırma geçti; geçersiz kaynak tarihi ve S7 örnek sonucu ayrıca belirtiliyor. Şirket çalışma kitabı veya iş verisi görüntülenmiyor.",
+          "en": "With synthetic data, W6 passes 24 comparisons; its invalid source date and the unavailable S7 sample result remain explicit. No company workbook or business data is displayed."
         }
       }
     }
