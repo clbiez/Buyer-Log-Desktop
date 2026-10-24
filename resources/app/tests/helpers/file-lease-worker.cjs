@@ -17,4 +17,4 @@ const [mode,target,countRaw]=process.argv.slice(2);
   }
   process.send({generations});
  }
-})().then(()=>process.disconnect()).catch(error=>{process.send({error:error.message,code:error.code});process.exitCode=1;process.disconnect();});
+})().then(()=>process.disconnect()).catch(error=>{process.send({error:error.message,code:error.code,stack:error.stack});process.exitCode=1;process.disconnect();});

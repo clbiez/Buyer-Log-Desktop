@@ -80,3 +80,15 @@ test('persistent metadata rename denial never enters the callback and preserves 
   assert.equal(entered, false);
   assert.equal(await fs.readFile(box.staged, 'utf8'), 'durable');
 });
+
+test('transient owner metadata open and read denials preserve lease verification', async t => {
+  const box = await fixture(t), open = fsSync.openSync, read = fsSync.readFileSync;
+  let openDenied=false, readDenied=false;
+  const owner=path.join(box.parent+'.write-lock','owner.json');
+  fsSync.openSync=(file,...args)=>{if(file===owner&&!openDenied){openDenied=true;throw Object.assign(new Error('synthetic sharing violation'),{code:'EPERM'});}return open(file,...args);};
+  fsSync.readFileSync=(file,...args)=>{if(file===owner&&!readDenied){readDenied=true;throw Object.assign(new Error('synthetic read sharing violation'),{code:'EPERM'});}return read(file,...args);};
+  let entered=false;
+  try{await withFileLeaseAsync(box.parent,lease=>{lease.assertOwned();entered=true;});}
+  finally{fsSync.openSync=open;fsSync.readFileSync=read;}
+  assert.equal(openDenied,true);assert.equal(readDenied,true);assert.equal(entered,true);
+});

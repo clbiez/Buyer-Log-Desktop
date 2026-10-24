@@ -48,7 +48,7 @@ const pinPattern=/^\.(init|maint)-([a-f0-9]{16})-(\d+)-(\d+)-(\d+)-([a-f0-9-]{36
 function lost(resource){return Object.assign(new Error('Dosya yazma sahipliği değişti; kayıt durduruldu. / File lease ownership changed; the write was stopped.'),{code:'SHARED_LEASE_LOST',statusCode:409,resource});}
 function readOwner(lockDir){
   let raw=null;
-  try{raw=fs.readFileSync(path.join(lockDir,'owner.json'),'utf8');}catch(error){if(error.code!=='ENOENT')throw error;}
+  for(let attempt=0;;attempt++)try{raw=fs.readFileSync(path.join(lockDir,'owner.json'),'utf8');break;}catch(error){if(error.code==='ENOENT')break;if(!['EACCES','EPERM','EBUSY'].includes(error.code)||attempt>=5)throw error;pause(Math.min(120,15*(2**attempt)));}
   let owner=null;try{owner=JSON.parse(raw);}catch(_){}
   if(!owner||typeof owner!=='object'||Array.isArray(owner)||!(/^[A-Za-z0-9-]{1,160}$/.test(owner.token||''))||!owner.machine||!Number.isInteger(Number(owner.pid))||Number(owner.pid)<=0)owner=null;
   return {raw,owner};
@@ -141,7 +141,8 @@ function acquire(target,options){
     // Exclusive owner creation is also the final initialization claim: an old
     // initializer resuming after an empty-directory recovery cannot overwrite
     // the successor's metadata, even if its earlier mkdir had succeeded.
-    fd=fs.openSync(path.join(lockDir,'owner.json'),'wx');claimed=true;
+    for(let attempt=0;;attempt++)try{fd=fs.openSync(path.join(lockDir,'owner.json'),'wx');break;}catch(error){if(!['EACCES','EPERM','EBUSY'].includes(error.code)||attempt>=5)throw error;pause(Math.min(120,15*(2**attempt)));}
+    claimed=true;
     const now=new Date().toISOString();
     owner={protocolVersion:2,...workerIdentity(),token,instanceId:leaseRuntime.instanceId,machine:os.hostname(),pid:process.pid,createdAt:now,startedAt:now,expiresAt:new Date(Date.now()+options.staleMs).toISOString(),resource:target};
     leaseRuntime.activeTokens.add(token);
