@@ -63,4 +63,18 @@ function retiredThread(owner){
     const value=saved.states[owner.threadSlot];return Number.isInteger(value)&&value!==0&&value!==expected;
   }catch(_){return false;}
 }
-module.exports={registerLeaseWorker,workerIdentity,retiredThread};
+async function retiredThreadAsync(owner){
+  if(!owner||!Number.isInteger(owner.threadId)||owner.threadId<=0||!Number.isInteger(owner.threadSlot)||owner.threadSlot<0||owner.threadSlot>=SLOTS)return false;
+  if(Number(owner.pid)===process.pid&&registry)return retiredThread(owner);
+  try{
+    const fsp=require('node:fs/promises'),file=String(owner.leaseWorkerRegistry||''),folder=path.dirname(file);
+    if(!/^[a-f0-9-]{36}$/.test(owner.processLeaseId||'')||path.basename(file)!==owner.pid+'-'+owner.processLeaseId+'.json'||path.basename(folder)!=='BuyerLog-lease-workers-'+userKey)return false;
+    const parent=await fsp.lstat(folder);
+    if(!parent.isDirectory()||parent.isSymbolicLink()||typeof process.getuid==='function'&&parent.uid!==process.getuid())return false;
+    const stat=await fsp.lstat(file);if(!stat.isFile()||stat.isSymbolicLink()||stat.size>65536)return false;
+    const saved=JSON.parse(await fsp.readFile(file,'utf8'));
+    if(saved.schemaVersion!==1||saved.pid!==Number(owner.pid)||saved.id!==owner.processLeaseId||!Array.isArray(saved.states)||saved.states.length!==SLOTS)return false;
+    const value=saved.states[owner.threadSlot];return Number.isInteger(value)&&value!==0&&value!==owner.threadId+1;
+  }catch(_){return false;}
+}
+module.exports={registerLeaseWorker,workerIdentity,retiredThread,retiredThreadAsync};

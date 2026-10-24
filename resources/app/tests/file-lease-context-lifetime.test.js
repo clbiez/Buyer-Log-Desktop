@@ -5,7 +5,6 @@ const fs = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');
 const { withFileLeaseSync, withFileLeaseAsync, replaceFileWithRetry } = require('../server/lib/shared-file-transaction');
-const fsSync = require('node:fs');
 
 async function fixture(t) {
   const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'buyerlog-lease-context-'));
@@ -63,9 +62,9 @@ test('a detached write without a new lease stays fenced after its original scope
 });
 
 test('a transient Windows metadata rename denial retries before entering the callback', async t => {
-  const box = await fixture(t), rename = fsSync.renameSync;
+  const box = await fixture(t), rename = fs.rename;
   let injected = false, entered = false;
-  fsSync.renameSync = (source, target) => {
+  fs.rename = (source, target) => {
     if (!injected && target === path.join(box.parent + '.write-lock', 'owner.json')) {
       injected = true;
       throw Object.assign(new Error('synthetic Windows sharing violation'), { code: 'EPERM' });
@@ -73,33 +72,33 @@ test('a transient Windows metadata rename denial retries before entering the cal
     return rename(source, target);
   };
   try { await withFileLeaseAsync(box.parent, lease => { entered = true; lease.assertOwned(); }); }
-  finally { fsSync.renameSync = rename; }
+  finally { fs.rename = rename; }
   assert.equal(injected, true);
   assert.equal(entered, true);
   await assert.rejects(fs.access(box.parent + '.write-lock'), { code: 'ENOENT' });
 });
 
 test('persistent metadata rename denial never enters the callback and preserves source bytes', async t => {
-  const box = await fixture(t), rename = fsSync.renameSync;
+  const box = await fixture(t), rename = fs.rename;
   let entered = false;
-  fsSync.renameSync = (source, target) => {
+  fs.rename = (source, target) => {
     if (target === path.join(box.parent + '.write-lock', 'owner.json')) throw Object.assign(new Error('synthetic access denial'), { code: 'EACCES' });
     return rename(source, target);
   };
   try { await assert.rejects(withFileLeaseAsync(box.parent, () => { entered = true; }), { code: 'EACCES' }); }
-  finally { fsSync.renameSync = rename; }
+  finally { fs.rename = rename; }
   assert.equal(entered, false);
   assert.equal(await fs.readFile(box.staged, 'utf8'), 'durable');
 });
 
 test('transient owner metadata open and read denials preserve lease verification', async t => {
-  const box = await fixture(t), open = fsSync.openSync, read = fsSync.readFileSync;
+  const box = await fixture(t), open = fs.open, read = fs.readFile;
   let openDenied=false, readDenied=false;
   const owner=path.join(box.parent+'.write-lock','owner.json');
-  fsSync.openSync=(file,...args)=>{if(file===owner&&!openDenied){openDenied=true;throw Object.assign(new Error('synthetic sharing violation'),{code:'EPERM'});}return open(file,...args);};
-  fsSync.readFileSync=(file,...args)=>{if(file===owner&&!readDenied){readDenied=true;throw Object.assign(new Error('synthetic read sharing violation'),{code:'EPERM'});}return read(file,...args);};
+  fs.open=(file,...args)=>{if(file===owner&&!openDenied){openDenied=true;throw Object.assign(new Error('synthetic sharing violation'),{code:'EPERM'});}return open(file,...args);};
+  fs.readFile=(file,...args)=>{if(file===owner&&!readDenied){readDenied=true;throw Object.assign(new Error('synthetic read sharing violation'),{code:'EPERM'});}return read(file,...args);};
   let entered=false;
   try{await withFileLeaseAsync(box.parent,lease=>{lease.assertOwned();entered=true;});}
-  finally{fsSync.openSync=open;fsSync.readFileSync=read;}
+  finally{fs.open=open;fs.readFile=read;}
   assert.equal(openDenied,true);assert.equal(readDenied,true);assert.equal(entered,true);
 });

@@ -1,5 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),os=require('node:os'),path=require('node:path'),{fork}=require('node:child_process');
+const metadataFs=require('node:fs/promises');
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-lease-integrity-'));
 Object.assign(process.env,{BUYER_LOG_SERVER_DATA_ROOT:root,BUYER_LOG_LOCAL_DATA_ROOT:path.join(root,'local'),BUYER_LOG_DATA_ROOT:path.join(root,'app'),BUYER_LOG_CONFIG_PATH:path.join(root,'config.json')});
 const lease=require('../server/lib/shared-file-transaction');
@@ -65,9 +66,9 @@ test('crash during metadata publication leaves no debris that can permanently bl
 });
 
 test('a transient maintenance-pin unlink failure does not strand the live process',async()=>{
- const file=target(),original=fs.unlinkSync;let injected=false;
- fs.unlinkSync=function(candidate,...args){if(!injected&&String(candidate).startsWith(file+'.write-lock')&&path.basename(candidate).startsWith('.maint-')){injected=true;throw Object.assign(Error('synthetic AV lock'),{code:'EACCES'});}return original.call(this,candidate,...args);};
- try{await lease.withFileLeaseAsync(file,()=>{}, {logger:()=>{}});}finally{fs.unlinkSync=original;}
+ const file=target(),original=metadataFs.unlink;let injected=false;
+ metadataFs.unlink=function(candidate,...args){if(!injected&&String(candidate).startsWith(file+'.write-lock')&&path.basename(candidate).startsWith('.maint-')){injected=true;throw Object.assign(Error('synthetic AV lock'),{code:'EACCES'});}return original.call(this,candidate,...args);};
+ try{await lease.withFileLeaseAsync(file,()=>{}, {logger:()=>{}});}finally{metadataFs.unlink=original;}
  assert.equal(injected,true);await lease.withFileLeaseAsync(file,()=>{}, {timeoutMs:200,logger:()=>{}});assert.equal(fs.existsSync(file+'.write-lock'),false);
 });
 test('terminated worker-thread ownership is recovered while its parent PID remains alive, also by another process',async()=>{
@@ -82,16 +83,16 @@ test('terminated worker-thread ownership is recovered while its parent PID remai
 });
 
 test('abandoned initialization marker after persistent unlink failure is recoverable once access returns',async()=>{
- const file=target(),original=fs.unlinkSync;let deny=true;
- fs.unlinkSync=function(candidate,...args){if(deny&&String(candidate).startsWith(file+'.write-lock')&&path.basename(candidate).startsWith('.init-')&&!String(candidate).endsWith('.released'))throw Object.assign(Error('synthetic AV denial'),{code:'EACCES'});return original.call(this,candidate,...args);};
+ const file=target(),original=metadataFs.unlink;let deny=true;
+ metadataFs.unlink=function(candidate,...args){if(deny&&String(candidate).startsWith(file+'.write-lock')&&path.basename(candidate).startsWith('.init-')&&!String(candidate).endsWith('.released'))throw Object.assign(Error('synthetic AV denial'),{code:'EACCES'});return original.call(this,candidate,...args);};
  try{await assert.rejects(lease.withFileLeaseAsync(file,()=>assert.fail('initialization did not finish'),{logger:()=>{}}),{code:'EACCES'});}
- finally{deny=false;fs.unlinkSync=original;}
+ finally{deny=false;metadataFs.unlink=original;}
  await lease.withFileLeaseAsync(file,()=>{}, {timeoutMs:500,ownerGraceMs:100,logger:()=>{}});assert.equal(fs.existsSync(file+'.write-lock'),false);
 });
 test('a live sibling worker initialization pin stays protected and is reclaimed after thread exit',async()=>{
  const {Worker}=require('node:worker_threads'),{registerLeaseWorker}=require('../server/lib/lease-worker-registry');
  const file=target(),moduleFile=require.resolve('../server/lib/shared-file-transaction');
- const thread=registerLeaseWorker(new Worker(`const fs=require('node:fs'),path=require('node:path'),{parentPort,workerData}=require('node:worker_threads');const rename=fs.renameSync;fs.renameSync=(source,destination)=>{if(destination===path.join(workerData.file+'.write-lock','owner.json')){parentPort.postMessage('initializing');Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,60000);}return rename(source,destination);};require(workerData.moduleFile).withFileLeaseAsync(workerData.file,()=>{});`,{eval:true,workerData:{file,moduleFile}}));
+ const thread=registerLeaseWorker(new Worker(`const fs=require('node:fs/promises'),path=require('node:path'),{parentPort,workerData}=require('node:worker_threads');const rename=fs.rename;fs.rename=(source,destination)=>{if(destination===path.join(workerData.file+'.write-lock','owner.json')){parentPort.postMessage('initializing');Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,60000);}return rename(source,destination);};require(workerData.moduleFile).withFileLeaseAsync(workerData.file,()=>{});`,{eval:true,workerData:{file,moduleFile}}));
  await new Promise((resolve,reject)=>{thread.once('message',resolve);thread.once('error',reject);});
  try{
   const initialPins=fs.readdirSync(file+'.write-lock').filter(name=>name.startsWith('.init-'));assert.equal(initialPins.length,1);
