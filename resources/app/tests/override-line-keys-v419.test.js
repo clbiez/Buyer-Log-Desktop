@@ -33,6 +33,8 @@ function asasOrder(line, extra) {
 function overrides(extra) {
   return Object.assign({
     notesmap: {}, submap: {}, suppfobmap: {}, suppfobmetamap: {},
+    // These fixtures exercise editable Non-DTR sub-manufacturers, not the DTR default.
+    nonDtrManufacturers: ['X'],
     delmap: {}, licensormap: {}, datemap: {}, pricingRules: [], transitRules: [],
   }, extra || {});
 }
@@ -44,6 +46,7 @@ function overrides(extra) {
 test('üçlü anahtarla kaydedilen değer yalnız kendi satırına uygulanır', () => {
   const ov = overrides({ submap: { [parse.orderLineKey(1234567, 'KAZAK A', 'BLK')]: 'ALT ÜRETİCİ A' } });
   const [a, b] = parse.buildCPRowsFromASAS([asasOrder(LINE_A), asasOrder(LINE_B)], {}, ov);
+  assert.notStrictEqual(a.Licensor, 'DTR');
   assert.strictEqual(a['Sub-Manufacturer'], 'ALT ÜRETİCİ A');
   assert.strictEqual(b['Sub-Manufacturer'], '', 'diğer model etkilenmemeli');
 });
