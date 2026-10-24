@@ -1,0 +1,55 @@
+{
+  "environment": {
+    "platform": "Linux x86_64",
+    "node": "v24.19.0",
+    "baseline": "6f8eb33e820c231cb4f7189c728224ad1b58dd57",
+    "testFiles": 1026
+  },
+  "standardCommand": "TMPDIR=<isolated>/tmp BUYER_LOG_TEMP_ROOT=<same> APPDATA=<isolated>/appdata LOCALAPPDATA=<isolated>/localappdata npm test",
+  "standardRunner": "Stopped after failing batch 2/5; batches 3,4,5 scheduled separately once with the same file ordering, 300-file/16000-character batching and concurrency=4; sync simulation isolated.",
+  "batches": [
+    {
+      "log": "bl006-full-suite.log",
+      "tests": 2146,
+      "pass": 2086,
+      "fail": 0,
+      "skipped": 60
+    },
+    {
+      "log": "bl006-full-suite.log",
+      "tests": 2155,
+      "pass": 2146,
+      "fail": 6,
+      "skipped": 3
+    },
+    {
+      "log": "bl006-remaining-3.log",
+      "tests": 2233,
+      "pass": 2231,
+      "fail": 1,
+      "skipped": 1
+    },
+    {
+      "log": "bl006-remaining-4.log",
+      "tests": 827,
+      "pass": 826,
+      "fail": 1,
+      "skipped": 0
+    },
+    {
+      "log": "bl006-remaining-5.log",
+      "tests": 13,
+      "pass": 12,
+      "fail": 0,
+      "skipped": 1
+    }
+  ],
+  "observedAggregate": {
+    "tests": 7374,
+    "pass": 7301,
+    "fail": 8,
+    "skipped": 65
+  },
+  "afterward": "One additional double-escaped Endeksmatik UI-regex test repaired and independently passed afterward. The TL import test still fails; no subsequent full green run is claimed.",
+  "remaining": "Six design-contract test failures share new hardcoded styles in the Endeksmatik import section of design.css. One TL import fixture is rejected by the strict USD model-signature check and requires classification before altering validation."
+}

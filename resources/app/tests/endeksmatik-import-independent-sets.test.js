@@ -99,16 +99,16 @@ test('USD files still receive strict signature and Excel reconciliation checks',
 test('UI uses readable, bilingual import stages and removes busy state after failure',()=>{
   const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'../public/design.css'),'utf8');
-  assert.match(app,/function createEndeksmatikUploadProgress\\(file\\)/);
-  assert.match(app,/reader\\.onprogress=/);
-  assert.match(app,/progress\\.setStage\\('verify'\\)/);
-  assert.match(app,/progress\\.remove\\(\\)/);
+  assert.match(app,/function createEndeksmatikUploadProgress\(file\)/);
+  assert.match(app,/reader\.onprogress=/);
+  assert.match(app,/progress\.setStage\('verify'\)/);
+  assert.match(app,/progress\.remove\(\)/);
   assert.match(app,/endeksmatikImportBusy=false/);
   assert.match(app,/data-em-phase="read"/);
   assert.match(app,/data-em-phase="verify"/);
   assert.match(app,/data-em-phase="finish"/);
   assert.match(app,/Bağımsız TL seti oluşturuldu/);
-  assert.match(css,/\\.endeksmatikImportOverlay/);
+  assert.match(css,/\.endeksmatikImportOverlay/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 test.after(()=>{fs.rmSync(root,{recursive:true,force:true});});
