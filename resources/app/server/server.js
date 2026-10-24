@@ -5147,6 +5147,8 @@ const plmRequestService=require('./routes/plm-request-routes')(app, {
 require('./routes/checklist-supplier-routes')(app, {
   automationError,
   checklistSupplierStore: require('./lib/checklist-supplier-store'),
+  authorizedOrders: async (profile, options) => { await ensureDataLoaded(profile.id); return checklistAuthorizedOrdersNow(profile, options); },
+  authorizedOrdersNow: checklistAuthorizedOrdersNow,
   express,
   userAccess,
 });
@@ -5162,12 +5164,34 @@ const agentQualityService=require('./lib/test-reports/service').createService({
 
 async function agentQualityOrderRows(profile,{source='cp',includeInactive=false}={}) {
     await ensureDataLoaded(profile.id);
+    return agentQualityOrderRowsNow(profile,{source,includeInactive});
+}
+function agentQualityOrderRowsNow(profile,{source='cp',includeInactive=false}={}) {
     const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
     // Use the same source scope and Horizon as the page projection. Read-only
     // visible rows belong in the review; write authority is checked separately.
     const businessRows=userAccess.filterRowsByScope(profile, filterRowsByEffectiveHorizon(profile,source,ordersForTarget(active,source,overrides)));
     const build=includeInactive?buildOrdersRowsFromASAS:buildCPRowsFromASAS;
     return build(businessRows,antrepoForTarget(active,source),overrides);
+}
+function checklistAuthorizedOrdersNow(profile,{write=false}={}) {
+  const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
+  const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true});
+  const CP=require('../public/cp-readiness-engine'), Checklist=require('../public/cp-checklist-engine'), allowed=new Map();
+  for(const row of rows) {
+    const code=canonicalFields.value(row,source,'orderCode');
+    // Source folders are user-managed. Visibility must also be supported by
+    // the Moderator's authoritative ownership snapshot, never a claimed buyer.
+    if(!userAccess.hasPermission(profile,'manageAllOrders') && !userAccess.filterRowsByScope(profile,userAccess.authoritativeOrderRows(code)).length)continue;
+    if(write && !canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode')))continue;
+    const analysis=CP.analyzeOrder(row), identity={orderCode:String(analysis.orderCode||canonicalFields.value(row,source,'orderCode')||''),modelName:String(analysis.modelName||''),colourCode:String(analysis.colourCode||'')};
+    allowed.set(analysis.orderKey,identity);
+    // Option approvals are deliberately reusable across POs for the same
+    // PLM/model/colour. An authorized matching PO grants that option scope.
+    const option=Checklist.optionIdentity(analysis);
+    if(option)allowed.set('@option:'+option,identity);
+  }
+  return allowed;
 }
 async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
     const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
