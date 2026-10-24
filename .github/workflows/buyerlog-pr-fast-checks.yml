@@ -1,0 +1,30 @@
+name: Buyer Log PR fast checks
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: buyerlog-pr-fast-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  fast-checks:
+    name: Agent contract, i18n and visual notes
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: resources/app
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Core Node-only checks; no npm ci or full regression on ordinary PRs.
+      - name: Agent instructions, i18n and release-note contract
+        run: node --test tests/agent-instructions.test.js tests/i18n-coverage-guard.test.js tests/visual-release-notes-v70211.test.js
+      - name: Validate nonempty pending release notes
+        run: |
+          node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"
