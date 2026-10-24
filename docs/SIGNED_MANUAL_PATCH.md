@@ -35,6 +35,15 @@ SHA-pinned Electron runtime before using v3 patches. The 1.0 launcher cannot
 securely replace its own trust boundary through an app-core patch. Future app
 artifacts require updater 1.1.0. Legacy clients report that requirement.
 
+Geçişten önce eski başlatıcının devam eden denemesi tamamlanmalı veya kendi
+doğru kurtarma koduyla kurtarılmalıdır. Yazıcı kimliği doğrulanamayan eski
+denemeler ve eksik/çakışan checkpointler yeni başlatıcıda kapalı kalır; durum
+dosyalarını veya yedekleri silerek bu koruma atlanmamalıdır.
+
+Complete or recover any in-flight legacy trial with its matching recovery
+code before migration. Unverified legacy writers and incomplete/conflicting
+checkpoints fail closed in the new launcher; preserve their state and backups.
+
 Eski yayımlanmış dosya ve feed'ler bu değişiklikle değiştirilmez. İmzasız eski
 yama yayıncısı doğrulama kipinde kalır. Yeni kurulumda dışarıdan eski betikle
 değiştirilen uygulama dosyaları bir sonraki açılışta bütünlük kontrolünden geçmez;
