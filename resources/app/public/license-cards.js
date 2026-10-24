@@ -16,7 +16,7 @@
   const locale=()=>isEn()?'en-US':'tr-TR';
   const nf=(n,d=2)=>new Intl.NumberFormat(locale(),{maximumFractionDigits:d}).format(n);
   const PROFILE=['contactName','contactEmail','portalUrl','portalUsername','accessReference','workingNotes','artworkBrief'];
-  const S={host:null,data:null,pending:null,loading:false,stale:false,error:'',query:'',licensor:null,status:'all',sort:{key:'license',dir:'asc'},
+  const S={host:null,data:null,pending:null,loading:false,stale:false,error:'',loadError:null,query:'',licensor:null,status:'all',sort:{key:'license',dir:'asc'},
     selected:new Set(),expanded:'',drafts:new Map(),renderQueued:false,animate:true,flash:new Set(),exporting:false,stats:new Map()};
   const visible=()=>S.host&&S.host.getClientRects().length>0;
   const cardOf=id=>S.data?.cards?.find(c=>c.id===id)||null;
@@ -73,14 +73,14 @@
   async function load(refresh=false){
     if(refresh)S.refreshNext=true;
     if(S.pending)return S.pending;
-    S.loading=true;S.refreshing=S.refreshNext;render();
+    S.loading=true;S.loadError=null;S.refreshing=S.refreshNext;render();
     S.pending=(async()=>{
       try{
         do{
           S.stale=false;refresh=S.refreshNext;S.refreshNext=false;S.refreshing=refresh;
           let data;
           try{data=await api(refresh?'/api/license-cards/refresh':'/api/license-cards',refresh?{method:'POST'}:{});}
-          catch(e){if(refresh){toast(failMessage(e),'warning');if(S.data)continue;}throw e;}
+          catch(e){if(refresh)toast(failMessage(e),'warning');throw e;}
           if(refresh)toast(...refreshMessage(data));
           for(const [id,d] of S.drafts){
             const current=data.cards?.find(c=>c.id===id);
@@ -88,10 +88,10 @@
             // verified token decides whether its draft is stale.
             if(!current||current.editToken!==d.editToken)d.conflict=true;
           }
-          S.data=data;S.error='';S.stats.clear();
+          S.data=data;S.error='';S.loadError=null;S.loadErrorRefresh=false;S.stats.clear();
           await window.BLLicenseDataBridge?.rulesChanged?.(data);
         }while((S.stale||S.refreshNext)&&![...S.drafts.values()].some(d=>d.saving));
-      }catch(e){S.stale=true;S.error=failMessage(e);}
+      }catch(e){S.stale=true;S.loadError=e;S.loadErrorRefresh=Boolean(refresh);}
       finally{S.loading=false;S.refreshing=false;S.pending=null;render();}
     })();
     return S.pending;
@@ -233,7 +233,15 @@
     S.renderQueued=false;
     const searchFocus=active?.id==='lcSearch',caret=searchFocus?active.selectionStart:null;
     if(!S.data){
-      S.host.innerHTML=`<div class="lcPage"><div class="lcTable">${Array.from({length:6},(_,i)=>`<div class="lcRow lcSkeleton" style="--i:${i}"><i></i><i></i><i></i><i></i></div>`).join('')}</div>${S.error?`<div class="lcNotice" role="alert">${esc(S.error)} <button type="button" class="lcBtn sm" data-lc-act="retry">${esc(T('Yeniden dene','Retry'))}</button></div>`:''}</div>`;
+      if(S.loading){
+        S.host.innerHTML=`<div class="lcPage" role="status" aria-busy="true" aria-label="${esc(T('Lisans kartları yükleniyor…','Loading license cards…'))}"><div class="lcTable" aria-hidden="true">${Array.from({length:6},(_,i)=>`<div class="lcRow lcSkeleton" style="--i:${i}"><i></i><i></i><i></i><i></i></div>`).join('')}</div></div>`;
+      }else{
+        const error=S.loadError,title=error?T('Lisans kartları yüklenemedi','License cards could not be loaded'):T('Henüz lisans kartı yok','No license cards yet');
+        const detail=error?failMessage(error):T('ASAS kaynağını kontrol edip yenileyin.','Check the ASAS source and refresh.'),actionLabel=T('Yeniden dene','Retry');
+        const state=window.BLUI?.stateView?.({kind:error?'error':'empty',title,detail,actionLabel})||`<div class="lcEmpty" role="${error?'alert':'status'}"><b>${esc(title)}</b><span>${esc(detail)}</span><button type="button" class="lcBtn" data-lc-act="retry">${esc(actionLabel)}</button></div>`;
+        S.host.innerHTML=`<div class="lcPage">${state}</div>`;
+        const action=S.host.querySelector('[data-ui-state-action]');if(action)action.dataset.lcAct='retry';
+      }
       return;
     }
     const rows=currentRows(),n=counts(),opts=E.licensorOptions(S.data.cards),selectedVisible=rows.filter(r=>S.selected.has(r.id)).length;
@@ -251,6 +259,7 @@
         ${canEdit()?`<button type="button" class="lcBtn" data-lc-act="refresh" ${S.refreshing?'disabled aria-busy="true"':''}><svg class="ic${S.refreshing?' isSpinning':''}"><use href="#i-refresh"/></svg>${esc(S.refreshing?T('Yenileniyor…','Refreshing…'):T('ASAS’tan yenile','Refresh from ASAS'))}</button>`:''}
       </div>${licensorList()}${S.mergesOpen?mergePanel():''}
       ${S.clip?`<div class="lcClipBar" role="status"><svg class="ic"><use href="#i-copy"/></svg><span>${esc(T(`Kopyalanan harita: ${S.clip.license} · ${S.clip.licensor||'—'} (${S.clip.steps} adım). Hedef satırda yapıştır simgesine basın veya satırları seçip toplu yapıştırın.`,`Copied map: ${S.clip.license} · ${S.clip.licensor||'—'} (${S.clip.steps} steps). Press the paste icon on a row, or select rows and paste to all.`))}</span><button type="button" class="lcBtn sm" data-lc-act="clearClip">${esc(T('Bırak','Clear'))}</button></div>`:''}
+      ${S.loadError?`<div class="lcNotice" role="alert"><span>${esc(T('Önceki yüklenen kartlar gösteriliyor; güncelleme tamamlanamadı.','Showing previously loaded cards; the update did not complete.'))} ${esc(failMessage(S.loadError))}</span><button type="button" class="lcBtn sm" data-lc-act="retry">${esc(T('Yeniden dene','Retry'))}</button></div>`:''}
       ${S.error?`<div class="lcNotice" role="alert">${esc(S.error)}</div>`:''}${S.data.syncPending?`<div class="lcNotice" role="status">${esc(T('Kaydedildi; diğer kullanıcılara aktarım bekliyor ve otomatik yeniden denenir.','Saved; sharing with other users is pending and retried automatically.'))}</div>`:''}
       <div class="lcTable${S.animate?' isEntering':''}" role="table" aria-label="${esc(T('Lisans kartları','License cards'))}">
         <div class="lcHead" role="row">
@@ -451,7 +460,7 @@
   }
   function act(el){
     const a=el.dataset.lcAct,id=el.dataset.id;
-    if(a==='retry')return load();
+    if(a==='retry')return load(Boolean(S.loadErrorRefresh));
     if(a==='refresh'&&canEdit())return load(true);
     if(a==='expand'){S.expanded=S.expanded===id?'':id;return render();}
     if(a==='map')return openMap(id);
