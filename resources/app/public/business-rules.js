@@ -368,6 +368,21 @@
     return { ...state, displayValue: '', status: 'manufacturer-conflict' };
   }
 
+  // Orders use the manufacturer card's DTR classification before royalty rules.
+  // Collection models keep their separate license-based selection policy.
+  // Explicit source values and manual overrides are preserved by callers.
+  function resolveOrderLicensor(license, rules, options) {
+    const opts = options || {};
+    if (norm(license) && manufacturerKey(opts.manufacturer)
+      && classifyDtrByManufacturer(opts.manufacturer, opts.nonDtrManufacturers) === 'DTR') {
+      return {
+        license: norm(license), latestDate: '', licensors: ['DTR'], ambiguous: false,
+        licensorsLabel: 'DTR', displayValue: 'DTR', hasLicense: true, hasRule: false, status: 'resolved',
+      };
+    }
+    return resolveAutoLicensor(license, rules, opts);
+  }
+
   // Otomatik çözümün değer üretemediği, fakat kuralın da eksik olmadığı
   // durumlar. Bu satırlarda royalty/FOB hesaplanmaz.
   function isUnresolvedLicensorStatus(status) {
@@ -925,6 +940,7 @@
     resolveLatestLicensorsForLicense,
     resolveLicenseLicensor,
     resolveAutoLicensor,
+    resolveOrderLicensor,
     isUnresolvedLicensorStatus,
     transitRuleSeasonMatches,
     transitRuleCountryMatches,

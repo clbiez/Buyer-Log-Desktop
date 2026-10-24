@@ -12,6 +12,35 @@
   },
   "changes": [
     {
+      "id": "dtr-manufacturer-auto-licensor",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Genel Bakış",
+        "en": "CP Tracker · Orders · Overview"
+      },
+      "title": {
+        "tr": "DTR üreticili siparişlerde Licensor otomatik dolar",
+        "en": "DTR manufacturers automatically set order Licensor"
+      },
+      "body": {
+        "tr": "Üretici kartında DTR olarak sınıflandırılan üreticilerin lisanslı siparişlerinde Licensor otomatik DTR olur. Royalty kuralı eksik veya birden çok lisansör içeriyor olsa da manuel seçim gerekmez. Manuel ve kaynak dosyadan gelen açık seçimler korunur; Non-DTR siparişler mevcut seçim kurallarını kullanır.",
+        "en": "Licensed orders from manufacturers classified as DTR on their manufacturer card automatically receive DTR as Licensor. No manual selection is needed when royalty rules are missing or contain multiple licensors. Explicit manual and source-file selections are preserved; Non-DTR orders retain their existing selection rules."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "dtr-manufacturer-licensor.png",
+        "alt": {
+          "tr": "Demo DTR üreticili siparişlerde otomatik DTR Licensor ve Non-DTR siparişte boş Licensor",
+          "en": "Automatically populated DTR Licensor for demo DTR manufacturer orders and an unresolved Non-DTR order"
+        },
+        "caption": {
+          "tr": "Gerçek ASAS içe aktarması sonrası CP Tracker: DTR üreticili dört sipariş otomatik dolar; Non-DTR sipariş açık seçim bekler.",
+          "en": "CP Tracker after a real ASAS import: four DTR manufacturer orders are filled automatically; the Non-DTR order awaits an explicit selection."
+        }
+      }
+    },
+    {
       "id": "cp-orders-overview-live-sync",
       "type": "fix",
       "module": {
