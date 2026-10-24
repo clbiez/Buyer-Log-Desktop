@@ -37,6 +37,14 @@ Environment: Linux, Node v24.19.0, Chromium; synthetic local files/accounts only
   failures, successor-token replacement, dirty DB cache fencing, terminated
   worker recovery by a different process, and live/terminated worker initializer
   pins. The real expiry case waits 5.2 seconds; no age-only mock is used there.
+- The combined wave integration exposed one outdated Central IAM test: it
+  expected a child to evict the live paused writer by elapsed age. The invariant
+  is now stronger: the child fails, the original token and committed directory
+  survive, and a later stale revision is still rejected. No IAM authority or
+  financial assertion was removed. `npm --prefix resources/app test -- central-iam`
+  passed 29 tests across four files, zero failures/skips. The initial combined
+  result was 603 pass/1 fail; that failed expectation is explicitly recorded,
+  not represented as a green integration run.
 - Passed: actual Buyer Log Collection Add Model through normal HTTP. A distinct
   process held the actual workspace lease and was suspended with SIGSTOP; its
   timestamp was explicitly aged 120 seconds for the server's default threshold.
