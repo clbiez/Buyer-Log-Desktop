@@ -54,7 +54,9 @@ test('both current and historical warning lists drill on a single click, includi
   assert.match(warning,/if\(detail\)\{close\(\);showWarningDetailTable\(detail\);\}/);
   const history=APP.slice(APP.indexOf('function renderNotificationHistoryList('),APP.indexOf('notificationHistoryUpdateBadge();\n\n// Ekranin'));
   assert.match(history,/data-notification-open/);
-  assert.match(history,/showWarnDetails\(Array\.isArray\(item\.warnings\)/);
+  assert.match(history,/const legacyWarning=/);
+  assert.ok(history.includes("const entries=Array.isArray(item.warnings)"));
+  assert.ok(history.includes("showWarnDetails(entries)"));
   assert.match(CSS,/\.notificationHistoryOpen:focus-visible/);
   assert.match(CSS,/\.warningListOpen:focus-visible/);
 });

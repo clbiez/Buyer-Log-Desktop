@@ -13404,7 +13404,7 @@ function notificationHistoryAdd(message,kind='toast',options={}){
   if(!text)return false;
   const warnings=Array.isArray(o.warnings)?[...new Set(o.warnings.map(w=>String(w||'').trim().slice(0,1000)).filter(Boolean))].slice(0,30):[];
   const scope=String(o.scope||'').slice(0,70);
-  const fingerprint=scope?JSON.stringify({text,warnings,severity}):'';
+  const fingerprint=scope?JSON.stringify({text:warnings.length?'':text,warnings,severity}):'';
   const state=notificationHistoryLoad();
   if(scope&&state.items.some(item=>item.scope===scope&&item.fingerprint===fingerprint))return false;
   state.items.unshift({id:`notification-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,7)}`,message:text,
@@ -13422,8 +13422,9 @@ function renderNotificationHistoryList(query=''){
   if(countEl)countEl.textContent=t.count(items.length);
   if(!items.length){host.innerHTML=`<div class="verHistEmpty">${escapeHtml(all.length?t.noMatch:t.empty)}</div>`;return;}
   host.innerHTML=items.map(item=>{
-    const canOpen=item.severity==='warning'||Array.isArray(item.warnings)&&item.warnings.length>0;
-    const label=item.severity==='error'?t.error:item.severity==='warning'?t.warning:item.kind==='center'?t.center:t.toast;
+    const legacyWarning=/^\s*\d+\s+(?:warnings?|uyarı)/i.test(item.message);
+    const canOpen=item.severity==='warning'||legacyWarning||Array.isArray(item.warnings)&&item.warnings.length>0;
+    const label=item.severity==='error'?t.error:(item.severity==='warning'||legacyWarning)?t.warning:item.kind==='center'?t.center:t.toast;
     const body=canOpen
       ? `<button type="button" class="notificationHistoryOpen" data-notification-open="${escapeHtml(item.id)}">${escapeHtml(item.message)}<small>${escapeHtml(t.details)}</small></button>`
       : `<p>${escapeHtml(item.message)}</p>`;
@@ -13434,7 +13435,12 @@ function notificationHistoryMarkAllRead(){const state=notificationHistoryLoad();
 function openNotificationHistory(){const t=notificationHistoryText();document.getElementById('notificationHistoryModal')?.remove();notificationHistoryMarkAllRead();const modal=document.createElement('div');modal.id='notificationHistoryModal';modal.className='warnOverlay';modal.innerHTML=`<div class="modalCard verHistCard notificationHistoryCard" role="dialog" aria-modal="true" aria-labelledby="notificationHistoryTitle"><div class="verHistTop"><div><h2 id="notificationHistoryTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div><button type="button" class="verHistClose" data-notification-close title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="verHistTools"><input type="search" id="notificationHistorySearch" placeholder="${escapeHtml(t.search)}" autocomplete="off"><span class="verHistCount" id="notificationHistoryCount"></span><button type="button" class="tbtn" id="notificationUpdateHistoryBtn"><svg class="ic"><use href="#i-reload"/></svg>${escapeHtml(appLang==='en'?'Update history':'Güncelleme geçmişi')}</button><button type="button" class="notificationHistoryClear" id="notificationHistoryClear"><svg class="ic"><use href="#i-trash"/></svg>${escapeHtml(t.clear)}</button></div><div class="notificationHistoryList" id="notificationHistoryList"></div><div class="verHistFoot"><button type="button" class="tbtn" data-notification-close>${escapeHtml(t.close)}</button></div></div>`;document.body.appendChild(modal);renderNotificationHistoryList('');const close=()=>{modal.remove();document.removeEventListener('keydown',onKey);},onKey=event=>{if(event.key==='Escape')close();};document.addEventListener('keydown',onKey);modal.addEventListener('click',event=>{if(event.target===modal){close();return;}if(event.target.closest('[data-notification-close]')){close();return;}const remove=event.target.closest('[data-notification-remove]');
   if(remove){const state=notificationHistoryLoad();state.items=state.items.filter(item=>item.id!==remove.dataset.notificationRemove);notificationHistorySave();renderNotificationHistoryList(modal.querySelector('#notificationHistorySearch')?.value||'');notificationHistoryUpdateBadge();return;}
   const open=event.target.closest('[data-notification-open]');
-  if(open){const item=notificationHistoryLoad().items.find(item=>item.id===open.dataset.notificationOpen);if(item){close();showWarnDetails(Array.isArray(item.warnings)&&item.warnings.length?item.warnings:[item.message]);}}
+  if(open){const item=notificationHistoryLoad().items.find(item=>item.id===open.dataset.notificationOpen);if(item){
+      close();
+      const legacyWarning=/^\s*\d+\s+(?:warnings?|uyarı)/i.test(item.message);
+      const entries=Array.isArray(item.warnings)&&item.warnings.length?item.warnings:legacyWarning&&appWarnings.length?appWarnings:[item.message];
+      showWarnDetails(entries);
+    }}
 });// v7.26 — "Güncelleme geçmişi" artık Kaynak Veri şeridinde değil, bildirim
 // penceresinin içinde: iki ayrı yerde iki ayrı geçmiş aramak yerine tek yer.
 modal.querySelector('#notificationUpdateHistoryBtn')?.addEventListener('click',()=>{close();openSourceRefreshHistory();});
