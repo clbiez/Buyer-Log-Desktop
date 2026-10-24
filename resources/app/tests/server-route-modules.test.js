@@ -60,6 +60,12 @@ for (const name of modules) {
     }
     let declared = (source.match(/\bapp\.(?:get|post|put|delete|patch|use)\(/g) || []).length;
 
+    if (name === 'checklist-supplier-routes.js') {
+      const expected = ['GET /api/checklist-supplier','POST /api/checklist-supplier/answers','POST /api/checklist-supplier/definitions','POST /api/checklist-supplier/attachments','GET /api/checklist-supplier/attachments/:id','DELETE /api/checklist-supplier/attachments/:id'];
+      assert.deepEqual([...routes].sort(), expected.sort());
+      declared = expected.length;
+    }
+
     if (name === 'view-profile-routes.js') {
       const expected = ['POST /api/choose-folder'];
       for (const route of ['views','filter-profiles']) expected.push(
