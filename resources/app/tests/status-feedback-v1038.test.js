@@ -70,7 +70,7 @@ test('v10.38 bildirim yığını mesaj kaybetmez, büyümeyi sınırlar ve okuma
   assert.doesNotMatch(UI_SOURCE, /MutationObserver/);
 });
 
-test('v10.38 mevcut toast çağrıları ortak bildirime gider ve geçmiş kaydı korunur', () => {
+test('v10.38 toast notifications are transient unless warning/error/explicitly important', () => {
   const toast = APP.slice(APP.indexOf('function showToast'), APP.indexOf('const TABLE_META'));
   assert.match(toast, /notificationHistoryAdd\(msg,'toast'\)/);
   assert.match(toast, /window\.BLUI\?\.notify/);
@@ -79,7 +79,7 @@ test('v10.38 mevcut toast çağrıları ortak bildirime gider ve geçmiş kaydı
   assert.match(toast, /language:appLang/);
 });
 
-test('v10.38 merkez bildirimi ortak sözleşmeye gider, geçmiş ve kapatma işlevini korur', () => {
+test('v10.38 centre notices preserve UI behavior but routine success stays out of history', () => {
   const center = APP.slice(APP.indexOf('function showCenterNotice'), APP.indexOf('function showToast'));
   assert.match(center, /notificationHistoryAdd\(msg,'center'\)/);
   assert.match(center, /window\.BLUI\?\.notify/);
