@@ -9,7 +9,7 @@ const { resolvePortableRoot,desktopPaths }=require('./portable-paths');
 
 const UPDATER_VERSION='1.1.0';
 const BOOTSTRAP_CORE=path.resolve(__dirname,'..');
-const PORTABLE_ROOT=app.isPackaged?path.dirname(process.execPath):path.resolve(BOOTSTRAP_CORE,'.desktop-dev');
+const PORTABLE_ROOT=resolvePortableRoot({packaged:app.isPackaged,execPath:process.execPath,appPath:BOOTSTRAP_CORE});
 const LOG_FILE=path.join(PORTABLE_ROOT,'data','local','updater','updater.log');
 const HEALTH_TIMEOUT_MS=60000;
 function log(event,meta={}){try{fs.mkdirSync(path.dirname(LOG_FILE),{recursive:true});fs.appendFileSync(LOG_FILE,JSON.stringify({at:new Date().toISOString(),event,...meta})+'\n','utf8');}catch(_){} }
@@ -64,6 +64,7 @@ process.env.BUYER_LOG_ACTIVE_APP_CORE=selected.appCoreRoot;
 process.env.BUYER_LOG_ACTIVE_VERSION=selected.version;
 process.env.BUYER_LOG_UPDATER_VERSION=UPDATER_VERSION;
 if(activation)process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN=activation.token;
+else delete process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN;
 if(patchManager)global.__buyerLogPrepareSignedPatch=options=>require('./manual-patch/desktop').prepareFromPicker({...options,manager:patchManager,dialog});
 
 global.__buyerLogLauncherHealthReady=(info={})=>{

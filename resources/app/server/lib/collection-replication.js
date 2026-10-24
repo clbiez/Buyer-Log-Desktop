@@ -249,7 +249,7 @@ function mergeCollectionWorkspaces(base, local, remote) {
   return { workspace, conflicts };
 }
 
-function createCollectionReplication({ workspaces, permissions, getSharedSyncRoot = async () => '', stateFile = '', onTrace = null } = {}) {
+function createCollectionReplication({ workspaces, permissions, getSharedSyncRoot = async () => '', stateFile = '', onTrace = null, trialPolicy = require('./update-trial-backend').createTrialWritePolicy() } = {}) {
   if (!workspaces || typeof workspaces.loadWorkspace !== 'function' || typeof workspaces.replaceWorkspaceReplica !== 'function') throw new Error('Collection workspace store is required.');
   if (!permissions || typeof permissions.accessLevel !== 'function') throw new Error('Collection permission store is required.');
   const trace = (event, detail) => { try { if (typeof onTrace === 'function') onTrace(event, detail); } catch (_) {} };
@@ -362,6 +362,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
      yazılır; yazmayı çağıran yapar (yetki + satır revizyonu sunucuda denetlenir).
      'current': korunmuş değer kalır. */
   async function resolveMergeConflict(conflictId, choice, apply) {
+    trialPolicy.assertConfirmed();
     const id = clean(conflictId);
     const state = await readState();
     const entry = Object.values(state.owners).find(value => openMergeConflicts(value).some(item => item.conflictId === id));
@@ -412,6 +413,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     };
   }
   async function publishOwner(ownerId) {
+    trialPolicy.assertConfirmed();
     try { return await publishOwnerCas(ownerId); }
     catch (error) {
       if (Number(error && error.statusCode) !== 409) throw error;
@@ -481,6 +483,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
     const level = permissions.accessLevel(user, owner);
     const readOnly = user !== owner && level !== 'edit';
     if (!level) throw Object.assign(new Error('Bu Koleksiyon sayfasına erişim yetkiniz bulunmuyor.'), { code: 'COLLECTION_ACCESS_DENIED', statusCode: 403 });
+    if(!trialPolicy.isConfirmed())return {synced:false,paused:true,ownerId:owner,reason:'UPDATE_TRIAL_VERIFYING'};
     const sharedRoot = await root();
     if (!sharedRoot) return { synced: false, reason: 'not-configured' };
     const source = remoteWorkspaceFile(sharedRoot, owner);
@@ -545,6 +548,7 @@ function createCollectionReplication({ workspaces, permissions, getSharedSyncRoo
   /* Canlı görünürlük: uzak kopya dosyası değişmediyse (mtime+boyut) okunmaz;
      değiştiyse eşitlenir. Uygulanan/birleşen sahipler döner. */
   async function pollOwners(userId, ownerIds) {
+    if(!trialPolicy.isConfirmed())return [];
     const sharedRoot = await root();
     if (!sharedRoot) return [];
     const changed = [];

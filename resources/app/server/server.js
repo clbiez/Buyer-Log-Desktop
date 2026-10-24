@@ -96,9 +96,11 @@ function sharedHubDeltaFilter(direction) {
 // Ortak klasöre hiç gitmeyecek yerel yazım "bekleyen değişiklik" sayılmaz;
 // yazıldığı anda yerel olarak kapanır (bkz. shared-sync-policy izin listesi).
 localDb.setTransportFilter(item => sharedHubDeltaFilter('outgoing')([item]).length === 1);
+const trialWritePolicy=require('./lib/update-trial-backend').createTrialWritePolicy();
 const syncSettings = createSyncSettings({
   localDataRoot: LOCAL_DATA_ROOT,
   localDb,
+  allowSync:trialWritePolicy.isConfirmed,
   trace: markStartup,
   filterIncomingDeltas: sharedHubDeltaFilter('incoming'),
   filterOutgoingDeltas: sharedHubDeltaFilter('outgoing'),
@@ -182,6 +184,7 @@ let localDbMaintenancePromise = null;
 function ensureLocalDbMaintenanceReady() {
   if (!localDbMaintenancePromise) {
     localDbMaintenancePromise = localDbReadyPromise
+      .then(()=>new Promise(resolve=>trialWritePolicy.whenConfirmed(resolve)))
       .then(() => runLocalDbMaintenance())
       .catch(error => {
         localDbMaintenancePromise = null;
@@ -439,6 +442,7 @@ setInterval(() => {
 
 const app = express();
 app.disable('x-powered-by');
+app.use(trialWritePolicy.middleware);
 app.use((_req, res, next) => {
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('X-Frame-Options', 'DENY');
@@ -714,6 +718,7 @@ const userAccess = buildUserAccess({
 });
 localDb.setSharedOwnerResolver((id, userId) => userAccess.sharedOwnerOf(id, userId));
 const collectionPermissions = createCollectionPermissionsStore({
+  trialPolicy:trialWritePolicy,
   file: path.join(LOCAL_DATA_ROOT, 'collection-permissions.json'),
   getProfiles: () => userAccess.collectionAccessMigrationProfiles(),
   getSharedSyncRoot: async () => (await syncSettings.read()).sharedSyncRoot,
@@ -723,19 +728,20 @@ const collectionPermissions = createCollectionPermissionsStore({
 // deposundan yapılır; rol/hiyerarşi hiçbir kayıt açmaz.
 userAccess.setCollectionAccessResolver(profile => collectionPermissions.isReady() ? collectionPermissions.effectiveOwners(profile.id) : null);
 const collectionReplication = createCollectionReplication({
+  trialPolicy:trialWritePolicy,
   workspaces: require('./lib/collection-workspaces'),
   permissions: collectionPermissions,
   getSharedSyncRoot: async () => (await syncSettings.read()).sharedSyncRoot,
   stateFile: path.join(LOCAL_DATA_ROOT, 'collection-replication-state.json'),
   onTrace: markStartup,
 });
-const collectionPermissionsReady = (async () => {
+const collectionPermissionsReady = new Promise(resolve=>trialWritePolicy.whenConfirmed(resolve)).then(async () => {
   await collectionPermissions.ensure();
   try { await collectionPermissions.sync(); } catch (error) { markStartup('COLLECTION_PERMISSION_SYNC_DEFERRED', { error: error && error.code || error && error.message || String(error) }); }
   const migrated = await collectionPermissions.migrateLegacyInboundAccess(userAccess.collectionAccessMigrationProfiles());
   markStartup('COLLECTION_PERMISSION_MIGRATION', migrated);
   return migrated;
-})().catch(error => { logRuntimeFailure('collectionPermissionMigration', error); return null; });
+}).catch(error => { logRuntimeFailure('collectionPermissionMigration', error); return null; });
 
 const SHARED_COLLECTION_OWNER = collectionWorkspaces.SHARED_COLLECTION_OWNER;
 let sharedHubBootstrapInFlight = null;
@@ -9305,8 +9311,7 @@ app.post('/api/startup/ready', express.json({ limit: '32kb' }), (req, res) => {
     markStartup(name, { ...sourceDetail, source: 'client', clientElapsedMs: Number(clientMark.atMs) || 0, durationMs: Number(sourceDetail.durationMs) || 0 });
   }
   markStartup('STARTUP_CLIENT_REPORT_RECEIVED', { source: 'server', clientMarkCount: emitted.size });
-  uiReadySignaled = true;
-  scheduleBackgroundServices();
+  trialWritePolicy.whenConfirmed(()=>{uiReadySignaled=true;scheduleBackgroundServices();});
   res.status(202).json({ ok: true, backgroundSyncDelayMs: BACKGROUND_SYNC_DELAY_MS });
 });
 // Koleksiyon birleşim çakışmaları (collection:*) aynı listede, yalnız erişilebilir sahipler için.

@@ -40,10 +40,10 @@ function installMain(f){
  const code="require('node:fs').writeFileSync(process.env.TEST_MARKER,'main loaded'); if(process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN)global.__buyerLogLauncherHealthReady({version:'7.0.294',backendReady:true,rendererReady:true,localDbReady:true});\n";
  for(const root of [f.base,f.source]){f.write(root,'electron/main.js',code);f.write(root,'electron/app-integrity.json',F.integrityBytes(F.inventory(root),'7.0.294'));}
 }
-function launch(f){
+function launch(f,envOverrides={}){
  const marker=path.join(f.root,'main-was-loaded'),script=path.join(f.root,'launch.cjs');
  fs.writeFileSync(script,`const Module=require('node:module'),load=Module._load;Module._load=function(id){if(id==='electron')return {app:{isPackaged:true,setPath(){},requestSingleInstanceLock(){return true;},exit(){},quit(){},relaunch(){}}};return load.apply(this,arguments)};Object.defineProperty(process,'execPath',{value:${JSON.stringify(path.join(f.portable,'BuyerLog.exe'))}});try{require(${JSON.stringify(path.join(f.base,'electron/launcher.js'))})}catch(e){console.error(e.code||e.message);process.exitCode=1}`);
- const result=child.spawnSync(process.execPath,[script],{encoding:'utf8',env:{...process.env,TEST_MARKER:marker},timeout:20000});
+ const result=child.spawnSync(process.execPath,[script],{encoding:'utf8',env:{...process.env,...envOverrides,TEST_MARKER:marker},timeout:20000});
  return {...result,loaded:fs.existsSync(marker)};
 }
 
@@ -80,4 +80,13 @@ test('automatic update polling preserves the signed-patch rollback explanation a
  const lastError={code:'UPDATE_HEALTH_FAILED',manualPatch:{sequence:2}},watermarks={['7.0.294:'+ 'a'.repeat(40)]:2};
  u.saveState({state:'ROLLBACK',lastError,manualPatchWatermarks:watermarks});
  assert.equal((await u.checkAndStage({})).manualPatchRollback,true);assert.deepEqual(u.state().lastError,lastError);assert.deepEqual(u.state().manualPatchWatermarks,watermarks);
+});
+
+test('a normal launcher clears inherited trial credentials and keeps control state aligned with the supported portable override',t=>{
+ const f=fixture(t),override=path.join(f.root,'relocated-data');
+ const code="require('node:fs').writeFileSync(process.env.TEST_MARKER,JSON.stringify({token:process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN||'',core:process.env.BUYER_LOG_ACTIVE_APP_CORE}));\n";
+ for(const root of [f.base,f.source]){f.write(root,'electron/main.js',code);f.write(root,'electron/app-integrity.json',F.integrityBytes(F.inventory(root),'7.0.294'));}
+ const result=launch(f,{BUYER_LOG_UPDATE_HEALTH_TOKEN:'stale-inherited-trial',BUYER_LOG_PORTABLE_ROOT:override});
+ assert.equal(result.status,0,result.stderr);assert.equal(JSON.parse(fs.readFileSync(path.join(f.root,'main-was-loaded'),'utf8')).token,'');
+ assert.equal(fs.existsSync(path.join(override,'data/local/updater/db-backups')),true);
 });

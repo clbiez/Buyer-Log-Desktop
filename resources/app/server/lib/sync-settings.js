@@ -11,6 +11,7 @@ const gunzipAsync = promisify(zlib.gunzip);
 const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-transaction');
 const { isNetworkPath } = require('./local-path-policy');
 const { installationFingerprint: defaultInstallationFingerprint } = require('./installation-fingerprint');
+const { createTrialWritePolicy } = require('./update-trial-backend');
 const {
   SYNC_PACKAGE_VERSION, SYNC_PACKAGE_MAX_EVENTS, SYNC_PACKAGE_MAX_BYTES, SYNC_PACKAGE_DIR,
   buildSyncPackages, validateSyncPackage, bundleFileName, gzipBundleFileName, sequenceFromBundleFile, packageIdFromBundleFile, receiptFirstSeq, isBundleFile, SYNC_GZIP_SUFFIX,
@@ -135,7 +136,7 @@ async function readSyncJson(file) {
   return { payload: JSON.parse(raw), bytes: Buffer.byteLength(raw, 'utf8'), compressed: false };
 }
 
-function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChange = null, onSyncCompleted = null, networkTimeoutMs = 15000, filterIncomingDeltas = null, filterOutgoingDeltas = null, installationFingerprint = defaultInstallationFingerprint }) {
+function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChange = null, onSyncCompleted = null, networkTimeoutMs = 15000, filterIncomingDeltas = null, filterOutgoingDeltas = null, installationFingerprint = defaultInstallationFingerprint, allowSync = createTrialWritePolicy().isConfirmed }) {
   const file = path.join(localDataRoot, 'sync-settings.json');
   const resolveInstallation = () => { try { return String((typeof installationFingerprint === 'function' ? installationFingerprint() : installationFingerprint) || '').trim(); } catch (_) { return ''; } };
   let syncInFlight = null;
@@ -749,6 +750,7 @@ function createSyncSettings({ localDataRoot, localDb, trace = null, onStateChang
     }
   }
   async function syncOnce() {
+    if(!allowSync())return {...await read(),paused:true,pauseReason:'update-trial-verifying'};
     if (paused) return read();
     if (syncInFlight) return syncInFlight;
     syncInFlight = runSyncOnce();

@@ -67,6 +67,19 @@ The launcher validates again and requires backend, DB and renderer health.
 Failure restores the previous core and all four DB generation members only
 after registered backend writers have exited.
 
+Sağlık onayı tamamlanmadan iş verisi yazan HTTP istekleri 503 ile, kayıt
+onaylanmadan geri döner. Giriş ve salt okuma hazır olma denetimi için kullanılabilir.
+Yerel sync transportu ve UI sonrası arka plan işleri bekletilir. Başlatıcı ancak
+tam sağlık onayını aynı token/sürüm/çekirdek kimliğiyle atomik kaydettikten sonra
+bu denemenin yazmaları serbest bırakılır. Böylece geri dönebilecek bir denemede
+kullanıcıya başarılı kayıt veya paylaşılmış sync onayı verilmez.
+
+Before health confirmation, business HTTP mutations return 503 without saving.
+Login and reads remain available for readiness. Sync transport and post-UI
+background work wait. Writes resume only after the launcher durably confirms
+the exact trial token, version and core. A rollback-eligible trial therefore
+cannot acknowledge a user save or shared sync operation.
+
 Kabul edilen en yüksek sıra, bekleyen yama ile tek atomik durum yazmasında
 kaydedilir. Yerel rollback bu kaydı düşürmez. İş yedeği geri yüklemesi,
 eski arşivler dahil, kurulumun `updater/` kontrol dizinini geri yazamaz veya

@@ -40,4 +40,31 @@ function waitForTrialBackend({ env = process.env, pid = process.pid, parentPid =
   } while (performance.now() < deadline);
   throw fenceError();
 }
-module.exports = { ledgerFile, readTrialBackend, registerTrialBackend, waitForTrialBackend };
+function createTrialWritePolicy({env=process.env}={}){
+  const token=String(env.BUYER_LOG_UPDATE_HEALTH_TOKEN||'');let confirmed=!token;
+  function isConfirmed(){
+    if(confirmed)return true;
+    try{
+      const file=path.join(env.BUYER_LOG_LOCAL_DATA_ROOT,'updater/state.json'),stat=fs.lstatSync(file);
+      if(!stat.isFile()||stat.isSymbolicLink()||stat.size>16*1024*1024)return false;
+      const state=JSON.parse(fs.readFileSync(file,'utf8').replace(/^\uFEFF/,'')),completion=state.lastConfirmedTrial;
+      confirmed=state.schemaVersion===1&&state.activation===null&&completion?.token===token&&completion.version===env.BUYER_LOG_ACTIVE_VERSION
+        &&typeof completion.appCoreRoot==='string'&&Boolean(env.BUYER_LOG_ACTIVE_APP_CORE)&&path.resolve(completion.appCoreRoot)===path.resolve(env.BUYER_LOG_ACTIVE_APP_CORE);
+    }catch(_){return false;}
+    return confirmed;
+  }
+  function whenConfirmed(callback){
+    let timer=null,cancelled=false;
+    const poll=()=>{if(cancelled)return;if(isConfirmed()){callback();return;}timer=setTimeout(poll,100);timer.unref?.();};poll();
+    return ()=>{cancelled=true;if(timer)clearTimeout(timer);};
+  }
+  const safePosts=new Set(['/api/auth/login','/api/auth/logout','/api/user-login','/api/user-logout','/api/startup/ready','/api/internal/desktop/update-authority']);
+  function middleware(req,res,next){
+    const route=String(req.path||String(req.url||'').split('?')[0]).toLowerCase().replace(/\/+$/,'');
+    if(!/^\/api(?:\/|$)/.test(route)||['GET','HEAD','OPTIONS'].includes(String(req.method).toUpperCase())||safePosts.has(route)||isConfirmed())return next();
+    return res.status(503).set('Retry-After','1').set('Cache-Control','no-store').json({ok:false,code:'UPDATE_TRIAL_VERIFYING',error:'Güncelleme açılışı doğrulanıyor; henüz kayıt yapılmadı. Kısa süre sonra yeniden deneyin. / Update startup is being verified; nothing has been saved yet. Try again shortly.'});
+  }
+  function assertConfirmed(){if(!isConfirmed())throw Object.assign(new Error('Güncelleme doğrulanıyor; iş verisi henüz yazılamaz. / Update verification is pending; business data cannot be written yet.'),{code:'UPDATE_TRIAL_VERIFYING',statusCode:503});}
+  return {isConfirmed,whenConfirmed,middleware,assertConfirmed};
+}
+module.exports = { ledgerFile, readTrialBackend, registerTrialBackend, waitForTrialBackend, createTrialWritePolicy };

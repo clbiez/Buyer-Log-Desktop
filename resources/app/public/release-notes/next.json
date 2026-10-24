@@ -1038,8 +1038,8 @@
         "en": "Failed patches restore the previous application and data together"
       },
       "body": {
-        "tr": "Yeni yamanın açılışı doğrulanamazsa, yazıcı süreçleri kapandıktan sonra önceki uygulama ile yerel verinin bütün kuşağı geri yüklenir. Başarısız denemenin günlük yedeği geri gelen veriye karışmaz. Kabul edilen yama sırası, yerel geri dönüşte ve eski iş yedeği geri yüklemesinde korunur; sonuç güncelleme penceresinde açıklanır.",
-        "en": "If a new patch cannot complete startup verification, the previous application and complete local data generation are restored after writer processes exit. A failed trial’s journal backup cannot leak into restored data. The accepted patch sequence survives local rollback and old business-backup restores, and the update window explains the result."
+        "tr": "Yeni yamanın açılışı doğrulanamazsa, yazıcı süreçleri kapandıktan sonra önceki uygulama ile yerel verinin bütün kuşağı geri yüklenir. Başarısız denemenin günlük yedeği geri gelen veriye karışmaz. Kabul edilen yama sırası, yerel geri dönüşte ve eski iş yedeği geri yüklemesinde korunur; sonuç güncelleme penceresinde açıklanır. Sağlık onayı tamamlanana kadar yeni kayıt ve senkron işleri bekletilir.",
+        "en": "If a new patch cannot complete startup verification, the previous application and complete local data generation are restored after writer processes exit. A failed trial’s journal backup cannot leak into restored data. The accepted patch sequence survives local rollback and old business-backup restores, and the update window explains the result. New saves and sync operations wait until health confirmation completes."
       },
       "visual": {
         "kind": "screenshot",

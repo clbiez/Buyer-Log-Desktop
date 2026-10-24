@@ -132,10 +132,11 @@ function applyRecords(overrides, records, deps) {
   return { changed:true, profilesChanged, rulesChanged, overrides:next };
 }
 
-function createLicenseCardSync({ deltaStore, loadOverrides, saveOverrides, ...deps }) {
+function createLicenseCardSync({ deltaStore, loadOverrides, saveOverrides, trialPolicy = require('./update-trial-backend').createTrialWritePolicy(), ...deps }) {
   let flushing=null,retryTimer=null,recovering=false;
   function retry(){recovering=true;if(retryTimer)return;retryTimer=setTimeout(()=>{retryTimer=null;void flushOutbox().catch(()=>retry());},3000);retryTimer.unref?.();}
   function flushOutbox(){
+    if(!trialPolicy.isConfirmed()){retry();return Promise.resolve({ok:false,pending:true,paused:true});}
     if(flushing)return flushing;
     flushing=(async()=>{
       const pending=clone(loadOverrides().licenseCardOutbox||{}),completed={};
@@ -161,11 +162,13 @@ function createLicenseCardSync({ deltaStore, loadOverrides, saveOverrides, ...de
     return flushing;
   }
   async function publish(req, change) {
+    trialPolicy.assertConfirmed();
     const current=loadOverrides(),staged=stageChange(current,{...change,actorId:req?.currentUser?.id||change.actorId||''});
     if(JSON.stringify(staged.licenseCardOutbox)!==JSON.stringify(current.licenseCardOutbox||{}))saveOverrides(staged,Number(current._revision)||0);
     try{return await flushOutbox();}catch(error){retry();return {ok:false,pending:true};}
   }
   async function reconcile() {
+    if(!trialPolicy.isConfirmed())return {changed:false,paused:true};
     const records = deltaStore.readAllSync(COLLECTION);
     if (!records) return { changed:false };
     for (let attempt = 0; attempt < 2; attempt++) {
