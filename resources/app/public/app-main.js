@@ -26596,20 +26596,25 @@ function kolPriceDetailCellHtml(d,row,rc){
   if(field.k==='__targetDiff__'&&raw!=null)tone=raw<=0?' isGood':' isBad';
   return `<td class="${field.type==='text'?'':'num '}kolPriceDetailTd${tone}"${rc}>${text?escapeHtml(text):'<span class="kolPdEmpty">—</span>'}</td>`;
 }
+function kolPricingRuleInvalidText(tr=false){
+  return appLang==='en'
+    ? `${tr?'TR':'Overseas'} price cannot be calculated: the effective royalty must be at least 0% and below 100%, and hologram cost must be a valid nonnegative number. Review the License Royalty calculation.`
+    : `${tr?'TR':'Yurtdışı'} fiyatı hesaplanamadı: efektif royalty en az %0 ve %100'den küçük, hologram maliyeti geçerli ve negatif olmayan bir sayı olmalıdır. License Royalty hesabını kontrol edin.`;
+}
 function kolPlainLandedCellHtml(key,row,rc){
   const k=kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)),tr=key==='trLanded';
-  const missing=tr?k.trRuleMissing:k.ruleMissing,value=tr?k.trLanded:k.ydLanded;
-  const title=missing?(tr?kolTrLicenseRuleMissingText(row):kolLicenseRuleMissingText(row)):'';
-  return `<td class="num kolPriceDetailTd kolPlainLanded${missing?' kolRuleMissing':''}"${rc}${kolLandedCopyAttrs(value)}${title?` title="${escapeHtml(title)}"`:''}>${missing?'⚠':(value==null?'<span class="kolPdEmpty">—</span>':`$${kolMoney2(value)}`)}</td>`;
+  const invalid=tr?k.trRuleInvalid:k.ruleInvalid,missing=invalid||(tr?k.trRuleMissing:k.ruleMissing),value=tr?k.trLanded:k.ydLanded;
+  const title=invalid?kolPricingRuleInvalidText(tr):missing?(tr?kolTrLicenseRuleMissingText(row):kolLicenseRuleMissingText(row)):'';
+  return `<td class="num kolPriceDetailTd kolPlainLanded${missing?' kolRuleMissing':''}"${rc}${kolLandedCopyAttrs(value)}${title?` title="${escapeHtml(title)}" aria-label="${escapeHtml(title)}"`:''}>${missing?'⚠':(value==null?'<span class="kolPdEmpty">—</span>':`$${kolMoney2(value)}`)}</td>`;
 }
 function kolLandedSummaryCellHtml(row,rc){
   const k=kolLandedCalc(kolGroupSummaryEffectiveLandedRow(row)),en=appLang==='en';
   const profit=k.profitPct==null?null:Math.round(k.profitPct*10)/10;
   const profitCls=profit==null?'':(profit>0?'isGood':(profit<0?'isBad':''));
-  const missing=k.ruleMissing||k.trRuleMissing;
-  const yd=k.ruleMissing?'⚠':(k.ydLanded==null?'—':`$${kolMoney2(k.ydLanded)}`);
-  const tr=k.trRuleMissing?'⚠':(k.trLanded==null?'—':`$${kolMoney2(k.trLanded)}`);
-  const tip=[k.ruleMissing?kolLicenseRuleMissingText(row):`${en?'Overseas Landed':'Overseas Landed'}: ${yd}`,k.trRuleMissing?kolTrLicenseRuleMissingText(row):`TR Landed: ${tr}`];
+  const missing=k.ruleMissing||k.trRuleMissing||k.ruleInvalid||k.trRuleInvalid;
+  const yd=k.ruleMissing||k.ruleInvalid?'⚠':(k.ydLanded==null?'—':`$${kolMoney2(k.ydLanded)}`);
+  const tr=k.trRuleMissing||k.trRuleInvalid?'⚠':(k.trLanded==null?'—':`$${kolMoney2(k.trLanded)}`);
+  const tip=[k.ruleInvalid?kolPricingRuleInvalidText():k.ruleMissing?kolLicenseRuleMissingText(row):`Overseas Landed: ${yd}`,k.trRuleInvalid?kolPricingRuleInvalidText(true):k.trRuleMissing?kolTrLicenseRuleMissingText(row):`TR Landed: ${tr}`];
   if(profit!=null)tip.push(en?`Overseas advantage: ${profit}%`:`Overseas avantajı: %${profit}`);
   tip.push(en?'Double-click: open the price drawer to edit TR price, multipliers and FX':'Çift tık: TR fiyatı, çarpanlar ve kur için fiyat çekmecesini aç');
   return `<td class="kolLandedSumTd${missing?' kolRuleMissing':''}" data-kol-drawer="${row.id}"${rc}${kolLandedCopyAttrs(k.ydLanded,profit)} title="${escapeHtml(tip.join('\n'))}"><div class="kolLs"><span class="kolLsRow"><i>${escapeHtml(en?'OS':'YD')}</i><b>${escapeHtml(yd)}</b></span><span class="kolLsRow"><i>TR</i><b>${escapeHtml(tr)}</b>${profit==null?'':`<em class="kolProfit ${profitCls}">${(profit>0?'+':'')+profit.toLocaleString(en?'en-GB':'tr-TR',{maximumFractionDigits:1})}%</em>`}</span></div></td>`;

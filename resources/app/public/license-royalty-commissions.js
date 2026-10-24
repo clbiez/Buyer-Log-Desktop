@@ -183,7 +183,7 @@
     if(!row)return false;
     const rule=kolFindPricingRule(row),country=kolPricingRuleContext(row).country,total=rule?effectiveRoyalty(rule,country):null,hologram=rule?hologramFor(rule,country):null;
     const royalty=total!=null?window.BLCollectionPricingEngine.formatRatePercent(total):'',hologramDisplay=hologram!=null?kolFormatHologramDisplay(String(hologram)):'',fobSource=kolSuppFob(row);
-    const ruleMissing=kolLicensorUnresolvedState(row)!=null||(kolLandedIsNonDtr(row)&&!rule),fob=(fobSource&&!ruleMissing)?kolComputeFobFromConfirmed(fobSource.price,royalty,hologramDisplay):'';
+    const ruleMissing=kolLicensorUnresolvedState(row)!=null||(kolLandedIsNonDtr(row)&&!rule),ruleInvalid=!!rule&&(total==null||total<0||total>=100||hologram==null||hologram<0),fob=(fobSource&&!ruleMissing&&!ruleInvalid)?kolComputeFobFromConfirmed(fobSource.price,royalty,hologramDisplay):'';
     let changed=false;
     if(!editableValuesEqual(row.royalty,royalty)){row.royalty=royalty;changed=true;}
     if(!editableValuesEqual(row.hologramCost,hologramDisplay)){row.hologramCost=hologramDisplay;changed=true;}

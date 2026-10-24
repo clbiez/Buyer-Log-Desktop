@@ -26,6 +26,7 @@ function priceWithCosts(basePrice,row,helpers){
   if(!kolLandedIsNonDtr(row))return base;
   const royaltyRaw=kolParseMoneyNum(row&&row.royalty);
   const hologramRaw=kolParseMoneyNum(row&&row.hologramCost);
+  if(!Number.isFinite(royaltyRaw)||royaltyRaw<0||royaltyRaw>=100||!Number.isFinite(hologramRaw)||hologramRaw<0)return null;
   const royalty=Number.isFinite(royaltyRaw)&&royaltyRaw>0?royaltyRaw/100:0;
   const hologram=Number.isFinite(hologramRaw)&&hologramRaw>0?hologramRaw:0;
   const denom=1-royalty;
@@ -45,6 +46,9 @@ function computeFobFromConfirmed(confFob,royaltyPct,hologram,helpers){
   if(!Number.isFinite(confirmed)) return '';
   const r = kolParseMoneyNum(royaltyPct); const rPct = Number.isFinite(r) ? r : 0;
   const h = kolParseMoneyNum(hologram); const hNum = Number.isFinite(h) ? h : 0;
+  if(rPct<0||rPct>=100||hNum<0)return '';
+  if(String(royaltyPct??'').trim()&&!Number.isFinite(r))return '';
+  if(String(hologram??'').trim()&&!Number.isFinite(h))return '';
   const rules = businessRules();
   if(rules&&rPct>=0&&hNum>=0){
     const exact = rules.calculateFinalFobWithRule(confirmed,{royalty:rPct,hologramCost:hNum},'');
@@ -73,8 +77,10 @@ function calculateLanded(row,helpers){
     const nonDtr=kolLandedIsNonDtr(row),ruleMissing=kolLicenseRuleMissing(row),royaltyRaw=kolParseMoneyNum(row&&row.royalty),hologramRaw=kolParseMoneyNum(row&&row.hologramCost);
     const royaltyPct=Number.isFinite(royaltyRaw)&&royaltyRaw>0?royaltyRaw:0,hologramCost=Number.isFinite(hologramRaw)&&hologramRaw>0?hologramRaw:0;
     const trRoyaltyRaw=effectiveRoyalty(trRule,'TR'),trHologramRaw=hologramFor(trRule,'TR'),trRoyaltyPct=Number.isFinite(trRoyaltyRaw)&&trRoyaltyRaw>0?trRoyaltyRaw:0,trHologramCost=Number.isFinite(trHologramRaw)&&trHologramRaw>0?trHologramRaw:0;
+    const ruleInvalid=nonDtr&&!ruleMissing&&(!Number.isFinite(royaltyRaw)||royaltyRaw<0||royaltyRaw>=100||!Number.isFinite(hologramRaw)||hologramRaw<0);
+    const trRuleInvalid=nonDtr&&!trRuleMissing&&(!Number.isFinite(trRoyaltyRaw)||trRoyaltyRaw<0||trRoyaltyRaw>=100||!Number.isFinite(trHologramRaw)||trHologramRaw<0);
     const profitPct=(trLanded!=null&&ydLanded!=null&&trLanded>0)?((trLanded-ydLanded)/trLanded)*100:null;
-    return {trPrice,trMult,trMultIsManual,defaultTrMult:defaults.tr,fx,fxAuto,fxIsManual:Number.isFinite(fxManual)&&fxManual>0,trBaseUsd,trRule,trRuleMissing,trCostedUsd,trLanded,trRoyaltyPct,trHologramCost,supp,ydBaseFob,ydCostedFob,ydMult,ydMultIsManual,defaultYdMult:defaults.overseas,ydLanded,nonDtr,royaltyPct,hologramCost,profitPct,ruleMissing};
+    return {trPrice,trMult,trMultIsManual,defaultTrMult:defaults.tr,fx,fxAuto,fxIsManual:Number.isFinite(fxManual)&&fxManual>0,trBaseUsd,trRule,trRuleMissing,trRuleInvalid,trCostedUsd,trLanded,trRoyaltyPct,trHologramCost,supp,ydBaseFob,ydCostedFob,ydMult,ydMultIsManual,defaultYdMult:defaults.overseas,ydLanded,nonDtr,royaltyPct,hologramCost,profitPct,ruleMissing,ruleInvalid};
   }
 return {normalizeLandedMultipliers,findRule,priceWithCosts,computeFobFromConfirmed,formatRatePercent,calculateLanded};
 });

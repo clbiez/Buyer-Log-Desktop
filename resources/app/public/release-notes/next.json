@@ -1170,6 +1170,35 @@
           "en": "The demo contract produces 4.00; 12.50 was saved through the real cell and Undo returned to the rule price. The manual entry was removed and verified from a real server projection."
         }
       }
+    },
+    {
+      "id": "financial-contract-validation",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · Fiyat hesapları",
+        "en": "Collection · Pricing calculations"
+      },
+      "title": {
+        "tr": "Geçersiz maliyet kuralı fiyat üretmez",
+        "en": "Invalid cost rules no longer produce a price"
+      },
+      "body": {
+        "tr": "Geçersiz royalty veya hologram maliyeti sıfır kabul edilmez; fiyat çekmecesi hesaplamayı durduran nedeni açıklar. TR/EN binlik ve ondalık ayırıcılı geçerli tutarlar okunur; bozuk biçimler reddedilir.",
+        "en": "Invalid royalty or hologram cost is no longer treated as zero; the price drawer explains the calculation blocker. Valid amounts with TR/EN grouping and decimal separators are accepted, while malformed grouping stays invalid."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "financial-contract-warnings.png",
+        "alt": {
+          "tr": "Gerçek Koleksiyon fiyat çekmecesinde sentetik geçersiz maliyet kuralının TR/YD uyarıları",
+          "en": "TR/overseas invalid cost-rule warnings in the actual Collection price drawer"
+        },
+        "caption": {
+          "tr": "Demo veride geçersiz hesap girdisi için sayısal fiyat yerine neden gösterilir. Geçerli tutar ve kural ayrı pozitif kontrolle doğrulandı.",
+          "en": "For an invalid demo calculation input, the drawer shows the reason instead of a numeric price. A valid amount and rule were verified separately as a positive control."
+        }
+      }
     }
   ]
 }

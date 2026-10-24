@@ -88,7 +88,7 @@
     const sourceLabel=k.supp?({confirmed:T('Onaylı','Confirmed'),best:'Best Price',target:'Target Price'}[k.supp.source]||''):'';
     const step=(label,value,cls='')=>`<li class="cpdStep${cls?' '+cls:''}"><span>${label}</span><b>${esc(value)}</b></li>`;
     const yd=[];
-    if(k.ruleMissing)yd.push(`<li class="cpdStep isWarn"><span>⚠ ${esc(kolLicenseRuleMissingText(row))}</span></li>`);
+    if(k.ruleMissing||k.ruleInvalid)yd.push(`<li class="cpdStep isWarn" role="status"><span>⚠ ${esc(k.ruleInvalid?kolPricingRuleInvalidText():kolLicenseRuleMissingText(row))}</span></li>`);
     else{
       yd.push(step(`${esc('Supp. FOB')}${sourceLabel?` <em class="cpdBadge">${esc(sourceLabel)}${k.supp?.name?` · ${esc(k.supp.name)}`:''}</em>`:''}`,money2(k.ydBaseFob)));
       if(k.nonDtr){
@@ -98,7 +98,7 @@
       yd.push(step(esc(`× ${T('YD çarpanı','Overseas multiplier')} ${pct(k.ydMult)}`),money2(k.ydLanded),'isTotal'));
     }
     const tr=[];
-    if(k.trRuleMissing)tr.push(`<li class="cpdStep isWarn"><span>⚠ ${esc(kolTrLicenseRuleMissingText(row))}</span></li>`);
+    if(k.trRuleMissing||k.trRuleInvalid)tr.push(`<li class="cpdStep isWarn" role="status"><span>⚠ ${esc(k.trRuleInvalid?kolPricingRuleInvalidText(true):kolTrLicenseRuleMissingText(row))}</span></li>`);
     else{
       tr.push(step(esc(T('TR fiyatı (TL)','TR price (TRY)')),Number.isFinite(k.trPrice)&&k.trPrice>0?`₺${kolMoney2(k.trPrice)}`:'—'));
       tr.push(step(esc(`÷ ${T('Kur','FX')} ${k.fx==null?'—':kolMoney2(k.fx)}${k.fx!=null&&!k.fxIsManual?` (${T('Ex-Factory ayı','Ex-Factory month')})`:''}`),money2(k.trBaseUsd)));
