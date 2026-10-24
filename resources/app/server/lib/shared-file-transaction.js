@@ -40,6 +40,7 @@ function serializeLocalWrite(resource,operation){
 const waitArray=new Int32Array(new SharedArrayBuffer(4));
 function pause(ms){Atomics.wait(waitArray,0,0,ms);}
 leaseRuntime.context ||= new AsyncLocalStorage();
+leaseRuntime.completedScopes ||= new WeakSet();
 leaseRuntime.activePins ||= new Set();
 const machine=String(os.hostname()).toLowerCase();
 const machineKey=crypto.createHash('sha256').update(machine).digest('hex').slice(0,16);
@@ -118,7 +119,8 @@ function syncMetadata(fd){try{fs.fsyncSync(fd);}catch(error){if(!optionalSyncCod
 function writeMetadata(file,value){
   const folder=path.basename(file)==='owner.json'?path.dirname(path.dirname(file)):path.dirname(file);
   const temporary=path.join(folder,'.buyerlog-lease-metadata-'+process.pid+'-'+crypto.randomUUID()+'.tmp');let fd;
-  try{fd=fs.openSync(temporary,'wx');fs.writeFileSync(fd,JSON.stringify(value));syncMetadata(fd);fs.closeSync(fd);fd=null;fs.renameSync(temporary,file);
+  try{fd=fs.openSync(temporary,'wx');fs.writeFileSync(fd,JSON.stringify(value));syncMetadata(fd);fs.closeSync(fd);fd=null;
+    for(let attempt=0;;attempt++)try{fs.renameSync(temporary,file);break;}catch(error){if(!['EACCES','EPERM','EBUSY'].includes(error.code)||attempt>=5)throw error;pause(Math.min(120,15*(2**attempt)));}
     let directory;try{directory=fs.openSync(path.dirname(file),'r');syncMetadata(directory);}catch(error){if(!optionalSyncCodes.has(error.code)&&!['EISDIR','EBADF'].includes(error.code))throw error;}finally{if(directory!=null)fs.closeSync(directory);}
   }
   finally{if(fd!=null)fs.closeSync(fd);try{fs.unlinkSync(temporary);}catch(error){if(error.code!=='ENOENT')throw error;}}
@@ -167,6 +169,7 @@ function acquire(target,options){
   }
 }
 function release(lease,options){
+  leaseRuntime.completedScopes.add(lease);
   const lockDir=lease.resource+'.write-lock';let marker;
   try{marker=pin(lockDir,'maint');if(readOwner(lockDir).owner?.token===lease.token)unlinkWithRetry(path.join(lockDir,'owner.json'));}
   catch(error){if(error.code!=='ENOENT'){
@@ -180,6 +183,11 @@ function release(lease,options){
   }
 }
 function assertHeldFileLeases(){for(const lease of leaseRuntime.context.getStore()||[])lease.assertOwned();}
+// Deferred mirrors acquire their own lease after the source callback finishes.
+// AsyncLocalStorage still carries that completed callback's old context. Drop
+// only completed scopes on entry to a NEW lease; keep active parents fenced,
+// and keep direct detached writes (without a new lease) fenced as before.
+function inheritedFileLeases(){return (leaseRuntime.context.getStore()||[]).filter(lease=>!leaseRuntime.completedScopes.has(lease));}
 function contention(target,options,started){
   const lockDir=target+'.write-lock';let observed;
   try{observed=inspect(lockDir,options);if(observed.recoverable&&recover(lockDir,observed,options,target))return;}
@@ -192,7 +200,7 @@ function contention(target,options,started){
 function withFileLeaseSync(file,operation,settings={}){
   const target=path.resolve(file),options=leaseOptions(settings),started=Date.now();fs.mkdirSync(path.dirname(target),{recursive:true});let lease;
   while(!(lease=acquire(target,options))){contention(target,options,started);pause(15);}
-  try{return leaseRuntime.context.run([...(leaseRuntime.context.getStore()||[]),lease],()=>{lease.assertOwned();const result=operation(lease);if(result&&typeof result.then==='function')throw Object.assign(new Error('Synchronous file lease callback must not return a Promise.'),{code:'SHARED_SYNC_LEASE_ASYNC'});lease.assertOwned();return result;});}
+  try{return leaseRuntime.context.run([...inheritedFileLeases(),lease],()=>{lease.assertOwned();const result=operation(lease);if(result&&typeof result.then==='function')throw Object.assign(new Error('Synchronous file lease callback must not return a Promise.'),{code:'SHARED_SYNC_LEASE_ASYNC'});lease.assertOwned();return result;});}
   finally{release(lease,options);}
 }
 
@@ -221,7 +229,7 @@ async function withFileLeaseAsync(file,operation,settings={}){
     const started=Date.now();fs.mkdirSync(path.dirname(target),{recursive:true});let lease;
     while(!(lease=acquire(target,options))){contention(target,options,started);await sleep(15);}
     const timer=setInterval(()=>{try{lease.renew();}catch(error){leaseLog('renew:failed',{resource:target,error:error.code||error.message},options,true);}},Math.max(1000,Math.floor(options.staleMs/3)));timer.unref();
-    try{return await leaseRuntime.context.run([...(leaseRuntime.context.getStore()||[]),lease],async()=>{lease.assertOwned();const result=await operation(lease);lease.assertOwned();return result;});}
+    try{return await leaseRuntime.context.run([...inheritedFileLeases(),lease],async()=>{lease.assertOwned();const result=await operation(lease);lease.assertOwned();return result;});}
     finally{clearInterval(timer);release(lease,options);}
   });
 }

@@ -11,7 +11,7 @@ function seed(file,extra={}){
  const owner={token:'fixture-token',instanceId:'fixture-instance',machine:os.hostname(),pid:process.pid,createdAt:new Date(Date.now()-120000).toISOString(),...extra};
  fs.writeFileSync(path.join(lock,'owner.json'),JSON.stringify(owner));const old=new Date(Date.now()-120000);fs.utimesSync(lock,old,old);return owner;
 }
-function worker(mode,file,count=1){const child=fork(path.join(__dirname,'helpers/file-lease-worker.cjs'),[mode,file,String(count)],{stdio:['ignore','ignore','inherit','ipc']});const exited=new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error('worker exit '+code)))});exited.catch(()=>{});return {child,exited,message:()=>new Promise((resolve,reject)=>{child.once('message',resolve);child.once('error',reject)})};}
+function worker(mode,file,count=1){const child=fork(path.join(__dirname,'helpers/file-lease-worker.cjs'),[mode,file,String(count)],{stdio:['ignore','ignore','inherit','ipc']});let detail;child.on('message',value=>{detail=value});const exited=new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error('worker exit '+code+' '+JSON.stringify(detail))))});exited.catch(()=>{});return {child,exited,message:()=>new Promise((resolve,reject)=>{child.once('message',resolve);child.once('error',reject)})};}
 test.after(()=>fs.rmSync(root,{recursive:true,force:true}));
 for(const kind of ['Sync','Async'])test(kind+' refuses age-only takeover of a live owner',async()=>{
  const file=target();seed(file);let entered=false;
@@ -91,7 +91,7 @@ test('abandoned initialization marker after persistent unlink failure is recover
 test('a live sibling worker initialization pin stays protected and is reclaimed after thread exit',async()=>{
  const {Worker}=require('node:worker_threads'),{registerLeaseWorker}=require('../server/lib/lease-worker-registry');
  const file=target(),moduleFile=require.resolve('../server/lib/shared-file-transaction');
- const thread=registerLeaseWorker(new Worker(`const fs=require('node:fs'),{parentPort,workerData}=require('node:worker_threads');const rename=fs.renameSync;fs.renameSync=(source,destination)=>{if(destination===workerData.file+'.write-lock/owner.json'){parentPort.postMessage('initializing');Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,60000);}return rename(source,destination);};require(workerData.moduleFile).withFileLeaseAsync(workerData.file,()=>{});`,{eval:true,workerData:{file,moduleFile}}));
+ const thread=registerLeaseWorker(new Worker(`const fs=require('node:fs'),path=require('node:path'),{parentPort,workerData}=require('node:worker_threads');const rename=fs.renameSync;fs.renameSync=(source,destination)=>{if(destination===path.join(workerData.file+'.write-lock','owner.json')){parentPort.postMessage('initializing');Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,60000);}return rename(source,destination);};require(workerData.moduleFile).withFileLeaseAsync(workerData.file,()=>{});`,{eval:true,workerData:{file,moduleFile}}));
  await new Promise((resolve,reject)=>{thread.once('message',resolve);thread.once('error',reject);});
  try{
   const initialPins=fs.readdirSync(file+'.write-lock').filter(name=>name.startsWith('.init-'));assert.equal(initialPins.length,1);
