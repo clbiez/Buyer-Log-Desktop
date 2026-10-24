@@ -4,6 +4,9 @@ const fs=require('fs');
 const path=require('path');
 const os=require('os');
 const crypto=require('crypto');
+const {AsyncLocalStorage}=require('node:async_hooks');
+const {threadId}=require('node:worker_threads');
+const {workerIdentity,retiredThread}=require('./lease-worker-registry');
 
 const LEASE_RUNTIME_KEY=Symbol.for('buyerlog.sharedFileTransaction.runtime');
 const leaseRuntime=globalThis[LEASE_RUNTIME_KEY]||(globalThis[LEASE_RUNTIME_KEY]={
@@ -36,44 +39,163 @@ function serializeLocalWrite(resource,operation){
 
 const waitArray=new Int32Array(new SharedArrayBuffer(4));
 function pause(ms){Atomics.wait(waitArray,0,0,ms);}
-function withFileLeaseSync(file,operation,options={}){
-  const target=path.resolve(file),lockDir=`${target}.write-lock`,timeoutMs=Math.max(100,Number(options.timeoutMs)||3000),staleMs=Math.max(5000,Number(options.staleMs)||60000),started=Date.now(),token=crypto.randomUUID();
-  fs.mkdirSync(path.dirname(target),{recursive:true});
-  for(;;){
-    try{
-      fs.mkdirSync(lockDir);
-      fs.writeFileSync(path.join(lockDir,'owner.json'),JSON.stringify({token,instanceId:leaseRuntime.instanceId,machine:os.hostname(),pid:process.pid,createdAt:new Date().toISOString(),startedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+staleMs).toISOString(),resource:target}));
-      leaseRuntime.activeTokens.add(token);
-      break;
-    }catch(error){
-      if(error.code!=='EEXIST')throw error;
-      let stale=false;try{const stat=fs.statSync(lockDir);stale=Date.now()-stat.mtimeMs>staleMs;}catch(readError){if(readError.code==='ENOENT')continue;throw readError;}
-      if(stale){try{fs.rmSync(lockDir,{recursive:true,force:true});continue;}catch(_){} }
-      if(Date.now()-started>=timeoutMs)throw Object.assign(new Error('Shared data is being updated by another Buyer Log instance. Please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409});
-      pause(15);
-    }
-  }
-  try{return operation();}
-  finally{
-    leaseRuntime.activeTokens.delete(token);
-    try{const owner=JSON.parse(fs.readFileSync(path.join(lockDir,'owner.json'),'utf8'));if(owner.token===token)fs.rmSync(lockDir,{recursive:true,force:true});}catch(_){}
+leaseRuntime.context ||= new AsyncLocalStorage();
+leaseRuntime.activePins ||= new Set();
+const machine=String(os.hostname()).toLowerCase();
+const machineKey=crypto.createHash('sha256').update(machine).digest('hex').slice(0,16);
+const pinPattern=/^\.(init|maint)-([a-f0-9]{16})-(\d+)-(\d+)-(\d+)-([a-f0-9-]{36})-([a-f0-9-]{36})$/;
+function lost(resource){return Object.assign(new Error('Dosya yazma sahipliği değişti; kayıt durduruldu. / File lease ownership changed; the write was stopped.'),{code:'SHARED_LEASE_LOST',statusCode:409,resource});}
+function readOwner(lockDir){
+  let raw=null;
+  try{raw=fs.readFileSync(path.join(lockDir,'owner.json'),'utf8');}catch(error){if(error.code!=='ENOENT')throw error;}
+  let owner=null;try{owner=JSON.parse(raw);}catch(_){}
+  if(!owner||typeof owner!=='object'||Array.isArray(owner)||!(/^[A-Za-z0-9-]{1,160}$/.test(owner.token||''))||!owner.machine||!Number.isInteger(Number(owner.pid))||Number(owner.pid)<=0)owner=null;
+  return {raw,owner};
+}
+function pin(lockDir,kind){
+  const identity=workerIdentity();
+  const file=path.join(lockDir,`.${kind}-${machineKey}-${process.pid}-${identity.threadId}-${identity.threadSlot||0}-${identity.processLeaseId}-${crypto.randomUUID()}`);
+  const fd=fs.openSync(file,'wx');
+  try{fs.writeFileSync(fd,JSON.stringify(identity));}finally{fs.closeSync(fd);}
+  leaseRuntime.activePins.add(file);return file;
+}
+function unlinkWithRetry(file){
+  for(let attempt=0;;attempt++)try{fs.unlinkSync(file);return;}catch(error){if(error.code==='ENOENT')return;if(!['EACCES','EPERM','EBUSY'].includes(error.code)||attempt>=3)throw error;pause(15*(attempt+1));}
+}
+function unpin(file){
+  leaseRuntime.activePins.delete(file);
+  try{unlinkWithRetry(file);}
+  catch(error){
+    // A persistent unlink denial must not make this completed marker look live
+    // forever to another process once access recovers. Names are unique, so a
+    // retirement marker can never authorize deletion of a later owner's pin.
+    try{fs.closeSync(fs.openSync(file+'.released','wx'));}catch(markError){if(markError.code!=='EEXIST')leaseLog('pin-retirement-failed',{error:markError.code}, {}, true);}
+    throw error;
   }
 }
+function removeEmpty(lockDir){try{fs.rmdirSync(lockDir);return true;}catch(error){if(['ENOENT','ENOTEMPTY','EEXIST'].includes(error.code))return error.code==='ENOENT';throw error;}}
+function pinsProtectInitialization(lockDir){
+  let protect=false;
+  for(const name of fs.readdirSync(lockDir)){
+    const base=name.endsWith('.released')?name.slice(0,-9):name;
+    const match=pinPattern.exec(base);if(!match)continue;
+    const file=path.join(lockDir,base),local=match[2]===machineKey,alive=local&&processAlive(match[3]);
+    let identity={pid:Number(match[3]),threadId:Number(match[4]),threadSlot:Number(match[5]),processLeaseId:match[6]};
+    try{const saved=JSON.parse(fs.readFileSync(file,'utf8'));identity.leaseWorkerRegistry=saved.leaseWorkerRegistry;}catch(error){if(!['ENOENT'].includes(error.code)&&!(error instanceof SyntaxError))throw error;}
+    const retired=fs.existsSync(file+'.released')||(local&&Number(match[3])===process.pid&&Number(match[4])===threadId&&!leaseRuntime.activePins.has(file))||(local&&retiredThread(identity));
+    if(retired||(local&&!alive)){unlinkWithRetry(file);unlinkWithRetry(file+'.released');}
+    else if(match[1]==='init')protect=true;
+  }
+  return protect;
+}
+function inspect(lockDir,options){
+  const stat=fs.statSync(lockDir),snapshot=readOwner(lockDir),owner=snapshot.owner;
+  const ageMs=Math.max(0,Date.now()-(Date.parse(owner&&(owner.createdAt||owner.startedAt)||'')||stat.mtimeMs));
+  const local=owner&&String(owner.machine).toLowerCase()===machine;
+  const orphan=owner&&local&&Number(owner.pid)===process.pid&&owner.threadId===threadId&&owner.instanceId===leaseRuntime.instanceId&&!leaseRuntime.activeTokens.has(owner.token);
+  const retired=owner&&fs.existsSync(path.join(lockDir,'.retired-owner-'+owner.token));
+  const recoverable=owner?Boolean(retired||local&&(!processAlive(owner.pid)||orphan||retiredThread(owner))):ageMs>options.ownerGraceMs;
+  return {...snapshot,ageMs,recoverable,reason:owner?(retired?'released-owner':orphan?'same-instance-orphan':retiredThread(owner)?'retired-worker':'dead-pid'):'missing-owner'};
+}
+function recover(lockDir,observed,options,target){
+  let marker;
+  try{
+    marker=pin(lockDir,'maint');
+    // The marker pins this exact nonempty directory. Every upgraded releaser
+    // and reclaimer uses rmdir, never recursive rm, so it cannot disappear and
+    // be replaced beneath this ownership comparison.
+    const current=readOwner(lockDir);
+    if(current.raw!==observed.raw||pinsProtectInitialization(lockDir))return false;
+    if(current.raw!=null)unlinkWithRetry(path.join(lockDir,'owner.json'));
+    for(const name of fs.readdirSync(lockDir))if(/^\.retired-owner-[A-Za-z0-9-]{1,160}$/.test(name))unlinkWithRetry(path.join(lockDir,name));
+    leaseLog('stale:recovered',{resource:target,currentOwner:observed.owner?.instanceId||'unknown',leaseAgeMs:Math.round(observed.ageMs),reason:observed.reason},options,true);
+    return true;
+  }catch(error){if(error.code==='ENOENT')return false;throw error;}
+  finally{if(marker){unpin(marker);removeEmpty(lockDir);}}
+}
+const optionalSyncCodes=new Set(['EPERM','EINVAL','ENOSYS','ENOTSUP','EOPNOTSUPP']);
+function syncMetadata(fd){try{fs.fsyncSync(fd);}catch(error){if(!optionalSyncCodes.has(error.code))throw error;}}
+function writeMetadata(file,value){
+  const folder=path.basename(file)==='owner.json'?path.dirname(path.dirname(file)):path.dirname(file);
+  const temporary=path.join(folder,'.buyerlog-lease-metadata-'+process.pid+'-'+crypto.randomUUID()+'.tmp');let fd;
+  try{fd=fs.openSync(temporary,'wx');fs.writeFileSync(fd,JSON.stringify(value));syncMetadata(fd);fs.closeSync(fd);fd=null;fs.renameSync(temporary,file);
+    let directory;try{directory=fs.openSync(path.dirname(file),'r');syncMetadata(directory);}catch(error){if(!optionalSyncCodes.has(error.code)&&!['EISDIR','EBADF'].includes(error.code))throw error;}finally{if(directory!=null)fs.closeSync(directory);}
+  }
+  finally{if(fd!=null)fs.closeSync(fd);try{fs.unlinkSync(temporary);}catch(error){if(error.code!=='ENOENT')throw error;}}
+}
+function nextGeneration(target){
+  const file=target+'.write-fence.json';let previous=0;
+  try{const raw=JSON.parse(fs.readFileSync(file,'utf8'));previous=raw.generation;if(raw.schemaVersion!==1||!Number.isSafeInteger(previous)||previous<0||previous>=Number.MAX_SAFE_INTEGER)throw Error('invalid generation');}
+  catch(error){if(error.code!=='ENOENT')throw Object.assign(new Error('Dosya kilidi kuşağı okunamadı; mevcut veri korundu. / File lease generation is unreadable; existing data was preserved.'),{code:'SHARED_LEASE_GENERATION_INVALID',statusCode:503,cause:error});}
+  writeMetadata(file,{schemaVersion:1,generation:previous+1});return previous+1;
+}
+function leaseOptions(options){return {...options,timeoutMs:Math.max(100,Number(options.timeoutMs)||3000),staleMs:Math.max(5000,Number(options.staleMs)||60000),ownerGraceMs:Math.max(100,Number(options.ownerGraceMs)||1000)};}
+function acquire(target,options){
+  const lockDir=target+'.write-lock';
+  try{fs.mkdirSync(lockDir);}catch(error){if(error.code==='EEXIST')return null;throw error;}
+  const token=crypto.randomUUID();let initialization,claimed=false,fd,owner;
+  try{
+    initialization=pin(lockDir,'init');
+    // Exclusive owner creation is also the final initialization claim: an old
+    // initializer resuming after an empty-directory recovery cannot overwrite
+    // the successor's metadata, even if its earlier mkdir had succeeded.
+    fd=fs.openSync(path.join(lockDir,'owner.json'),'wx');claimed=true;
+    const now=new Date().toISOString();
+    owner={protocolVersion:2,...workerIdentity(),token,instanceId:leaseRuntime.instanceId,machine:os.hostname(),pid:process.pid,createdAt:now,startedAt:now,expiresAt:new Date(Date.now()+options.staleMs).toISOString(),resource:target};
+    leaseRuntime.activeTokens.add(token);
+    fs.writeFileSync(fd,JSON.stringify(owner));syncMetadata(fd);fs.closeSync(fd);fd=null;
+    owner.generation=nextGeneration(target);writeMetadata(path.join(lockDir,'owner.json'),owner);
+    const lease={token,generation:owner.generation,resource:target,assertOwned(){
+      let current;try{current=readOwner(lockDir).owner;}catch(_){throw lost(target);}
+      if(!leaseRuntime.activeTokens.has(token)||current?.token!==token||current?.generation!==lease.generation)throw lost(target);
+    },renew(){
+      lease.assertOwned();const marker=pin(lockDir,'maint');
+      try{lease.assertOwned();owner={...owner,renewedAt:new Date().toISOString(),expiresAt:new Date(Date.now()+options.staleMs).toISOString()};writeMetadata(path.join(lockDir,'owner.json'),owner);}
+      finally{unpin(marker);removeEmpty(lockDir);}
+    }};
+    return lease;
+  }catch(error){
+    if(fd!=null){fs.closeSync(fd);fd=null;}
+    if(claimed){const current=readOwner(lockDir);if(!current.owner||current.owner.token===token)try{fs.unlinkSync(path.join(lockDir,'owner.json'));}catch(cleanError){if(cleanError.code!=='ENOENT')throw cleanError;}}
+    leaseRuntime.activeTokens.delete(token);
+    if(error.code==='EEXIST'||error.code==='ENOENT')return null;
+    throw error;
+  }finally{
+    try{if(initialization)unpin(initialization);}
+    catch(error){if(claimed)release({token,resource:target},options);leaseRuntime.activeTokens.delete(token);throw error;}
+    finally{removeEmpty(lockDir);}
+  }
+}
+function release(lease,options){
+  const lockDir=lease.resource+'.write-lock';let marker;
+  try{marker=pin(lockDir,'maint');if(readOwner(lockDir).owner?.token===lease.token)unlinkWithRetry(path.join(lockDir,'owner.json'));}
+  catch(error){if(error.code!=='ENOENT'){
+    leaseLog('release:failed',{resource:lease.resource,error:error.message},options,true);
+    try{if(readOwner(lockDir).owner?.token===lease.token)fs.closeSync(fs.openSync(path.join(lockDir,'.retired-owner-'+lease.token),'wx'));}catch(markError){if(!['ENOENT','EEXIST'].includes(markError.code))leaseLog('release:retirement-failed',{resource:lease.resource,error:markError.code},options,true);}
+  }}
+  finally{
+    try{if(marker)unpin(marker);removeEmpty(lockDir);}
+    catch(error){leaseLog('release:cleanup-failed',{resource:lease.resource,error:error.code||error.message},options,true);}
+    finally{leaseRuntime.activeTokens.delete(lease.token);}
+  }
+}
+function assertHeldFileLeases(){for(const lease of leaseRuntime.context.getStore()||[])lease.assertOwned();}
+function contention(target,options,started){
+  const lockDir=target+'.write-lock';let observed;
+  try{observed=inspect(lockDir,options);if(observed.recoverable&&recover(lockDir,observed,options,target))return;}
+  catch(error){if(error.code==='ENOENT')return;throw error;}
+  if(Date.now()-started>=options.timeoutMs){
+    const remote=observed.owner&&String(observed.owner.machine).toLowerCase()!==machine;
+    throw Object.assign(new Error(remote?'Başka cihazdaki yazıcının kapandığı doğrulanmadan kilit devralınamaz. / Verify that the writer on the other device has stopped before recovering its lease.':'Veri başka bir Buyer Log sürecinde kullanılıyor; yeniden deneyin. / Shared data is in use by another Buyer Log process; please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409,owner:observed.owner,resource:target,recoveryRequired:Boolean(remote)});
+  }
+}
+function withFileLeaseSync(file,operation,settings={}){
+  const target=path.resolve(file),options=leaseOptions(settings),started=Date.now();fs.mkdirSync(path.dirname(target),{recursive:true});let lease;
+  while(!(lease=acquire(target,options))){contention(target,options,started);pause(15);}
+  try{return leaseRuntime.context.run([...(leaseRuntime.context.getStore()||[]),lease],()=>{lease.assertOwned();const result=operation(lease);if(result&&typeof result.then==='function')throw Object.assign(new Error('Synchronous file lease callback must not return a Promise.'),{code:'SHARED_SYNC_LEASE_ASYNC'});lease.assertOwned();return result;});}
+  finally{release(lease,options);}
+}
 
-/* ===================================================================
-   v7.21 — ASENKRON DOSYA KİRASI
-
-   withFileLeaseSync iki ayrı yerde olay döngüsünü bloke ediyor: kilit
-   beklerken (Atomics.wait) ve operasyonun kendisi süresince. Ölçüldü:
-   50.000 satırlık bir Koleksiyon kaydı sırasında sunucu 237 ms boyunca
-   hiçbir isteğe yanıt vermiyordu; kilit meşgulse buna 3 saniyeye kadar
-   bekleme ekleniyordu. Yani bir kullanıcının kaydı bütün ekibi durduruyordu.
-
-   Asenkron sürüm AYNI kilit protokolünü kullanır — aynı lockDir, aynı
-   owner.json, aynı bayatlama kuralı — bu yüzden eşzamanlı sürümle aynı
-   dosya üzerinde güvenle bir arada çalışır. Fark yalnız beklemenin
-   setTimeout ile yapılması ve operasyonun await edilebilmesi.
-   =================================================================== */
 const fsp=require('fs/promises');
 function sleep(ms){return new Promise(resolve=>setTimeout(resolve,ms));}
 const TRANSIENT_RENAME_CODES=new Set(['EPERM','EACCES','EBUSY']);
@@ -84,7 +206,7 @@ const TRANSIENT_RENAME_CODES=new Set(['EPERM','EACCES','EBUSY']);
 async function replaceFileWithRetry(source,target,options={}){
   const attempts=Math.max(1,Number(options.attempts)||6),baseDelayMs=Math.max(1,Number(options.baseDelayMs)||15);
   for(let attempt=1;;attempt+=1){
-    try{return await fsp.rename(source,target);}
+    try{assertHeldFileLeases();return await fsp.rename(source,target);}
     catch(error){
       if(!TRANSIENT_RENAME_CODES.has(error&&error.code)||attempt>=attempts)throw error;
       const delayMs=Math.min(240,baseDelayMs*(2**(attempt-1)));
@@ -93,80 +215,15 @@ async function replaceFileWithRetry(source,target,options={}){
     }
   }
 }
-async function withFileLeaseAsync(file,operation,options={}){
-  const target=path.resolve(file);
+async function withFileLeaseAsync(file,operation,settings={}){
+  const target=path.resolve(file),options=leaseOptions(settings);
   return serializeLocalWrite(target,async()=>{
-    const lockDir=`${target}.write-lock`,timeoutMs=Math.max(100,Number(options.timeoutMs)||3000),staleMs=Math.max(5000,Number(options.staleMs)||60000),ownerGraceMs=Math.max(100,Number(options.ownerGraceMs)||1000),started=Date.now(),token=crypto.randomUUID();
-    let waited=false;
-    await fsp.mkdir(path.dirname(target),{recursive:true});
-    leaseLog('acquire:start',{resource:target,token},options);
-    for(;;){
-      try{
-        await fsp.mkdir(lockDir);
-        const now=new Date().toISOString();
-        try{await fsp.writeFile(path.join(lockDir,'owner.json'),JSON.stringify({token,instanceId:leaseRuntime.instanceId,machine:os.hostname(),pid:process.pid,createdAt:now,startedAt:now,expiresAt:new Date(Date.now()+staleMs).toISOString(),resource:target}));}
-        catch(ownerError){try{await fsp.rm(lockDir,{recursive:true,force:true});}catch(_){}throw ownerError;}
-        leaseRuntime.activeTokens.add(token);
-        leaseLog('acquire:success',{resource:target,token,waitMs:Date.now()-started},options,waited);
-        break;
-      }catch(error){
-        if(error.code!=='EEXIST')throw error;
-        waited=true;
-        /* ownerRaw: owner.json exactly as read (null = file missing). An empty or
-           truncated owner.json (writer killed mid-write, OneDrive partial sync)
-           used to make the "unchanged" re-check below impossible, so a stale lock
-           blocked every write forever (field log: 41-47 h, 1188 rejected
-           checkpoints, user edits lost on restart). The re-check now compares the
-           raw content, which also works when it is not valid JSON. */
-        let stat=null,owner=null,ownerRaw=null;
-        try{
-          stat=await fsp.stat(lockDir);
-          try{ownerRaw=await fsp.readFile(path.join(lockDir,'owner.json'),'utf8');}catch(readOwnerError){if(readOwnerError.code!=='ENOENT')throw readOwnerError;}
-          if(ownerRaw!=null){try{owner=JSON.parse(ownerRaw);}catch(_){owner=null;}}
-          if(owner&&typeof owner!=='object')owner=null;
-        }catch(readError){if(readError.code==='ENOENT')continue;throw readError;}
-        const createdMs=Date.parse(owner&&(owner.createdAt||owner.startedAt)||'')||stat.mtimeMs;
-        const ageMs=Math.max(0,Date.now()-createdMs);
-        const sameMachine=Boolean(owner&&String(owner.machine||'').toLowerCase()===os.hostname().toLowerCase());
-        const ownerDead=Boolean(owner&&sameMachine&&owner.pid&&!processAlive(owner.pid));
-        const sameOwner=Boolean(owner&&owner.instanceId===leaseRuntime.instanceId&&Number(owner.pid)===process.pid);
-        const orphanedSameOwner=Boolean(sameOwner&&!leaseRuntime.activeTokens.has(owner.token));
-        const expired=ageMs>staleMs;
-        const ownerMissingTooLong=!owner&&ageMs>ownerGraceMs;
-        if(ownerDead||orphanedSameOwner||expired||ownerMissingTooLong){
-          let unchanged=false;
-          try{
-            const currentRaw=await fsp.readFile(path.join(lockDir,'owner.json'),'utf8');
-            if(owner){
-              let current=null;try{current=JSON.parse(currentRaw);}catch(_){current=null;}
-              unchanged=Boolean(current&&current.token===owner.token);
-            }else unchanged=currentRaw===ownerRaw;
-          }catch(readOwnerError){unchanged=!owner&&ownerRaw==null&&readOwnerError.code==='ENOENT';}
-          if(unchanged){
-            try{
-              await fsp.rm(lockDir,{recursive:true,force:true});
-              leaseLog('stale:recovered',{resource:target,currentOwner:owner&&owner.instanceId||'unknown',ownerPid:owner&&owner.pid||'unknown',leaseAgeMs:Math.round(ageMs),reason:ownerDead?'dead-pid':orphanedSameOwner?'same-instance-orphan':expired?'expired':'missing-owner'},options,true);
-              continue;
-            }catch(removeError){leaseLog('stale:remove-failed',{resource:target,error:removeError.message||removeError},options,true);}
-          }
-        }
-        leaseLog('retry',{resource:target,currentOwner:owner&&owner.instanceId||'unknown',ownerPid:owner&&owner.pid||'unknown',leaseAgeMs:Math.round(ageMs)},options);
-        if(Date.now()-started>=timeoutMs){
-          leaseLog('conflict',{resource:target,currentOwner:owner&&owner.instanceId||'unknown',ownerPid:owner&&owner.pid||'unknown',leaseAgeMs:Math.round(ageMs)},options,true);
-          throw Object.assign(new Error('Shared data is being updated by another Buyer Log instance. Please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409,owner,resource:target});
-        }
-        await sleep(15);
-      }
-    }
-    try{return await operation();}
-    finally{
-      leaseRuntime.activeTokens.delete(token);
-      try{
-        const owner=JSON.parse(await fsp.readFile(path.join(lockDir,'owner.json'),'utf8'));
-        if(owner.token===token){await fsp.rm(lockDir,{recursive:true,force:true});leaseLog('release',{resource:target,token},options,waited);}
-      }catch(error){if(error.code!=='ENOENT')leaseLog('release:failed',{resource:target,token,error:error.message||error},options,true);}
-    }
+    const started=Date.now();fs.mkdirSync(path.dirname(target),{recursive:true});let lease;
+    while(!(lease=acquire(target,options))){contention(target,options,started);await sleep(15);}
+    const timer=setInterval(()=>{try{lease.renew();}catch(error){leaseLog('renew:failed',{resource:target,error:error.code||error.message},options,true);}},Math.max(1000,Math.floor(options.staleMs/3)));timer.unref();
+    try{return await leaseRuntime.context.run([...(leaseRuntime.context.getStore()||[]),lease],async()=>{lease.assertOwned();const result=await operation(lease);lease.assertOwned();return result;});}
+    finally{clearInterval(timer);release(lease,options);}
   });
 }
 
-module.exports={withFileLeaseSync,withFileLeaseAsync,replaceFileWithRetry,getBuyerLogInstanceId};
+module.exports={withFileLeaseSync,withFileLeaseAsync,replaceFileWithRetry,getBuyerLogInstanceId,assertHeldFileLeases};

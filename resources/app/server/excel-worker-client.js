@@ -1,4 +1,5 @@
 'use strict';
+const {registerLeaseWorker}=require('./lib/lease-worker-registry');
 
 const path = require('path');
 const fs = require('fs');
@@ -97,6 +98,7 @@ function createExcelWorkerClient(options = {}) {
     };
     try {
       worker = new WorkerClass(WORKER_FILE);
+      registerLeaseWorker(worker);
       timer = setTimeout(() => finish(Object.assign(new Error(`Excel işlemi zaman aşımına uğradı: ${job.task} / Excel operation timed out.`), {
         code: 'EXCEL_WORKER_TIMEOUT', statusCode: 504,
       })), job.timeoutMs);

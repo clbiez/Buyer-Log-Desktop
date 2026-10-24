@@ -1,0 +1,14 @@
+{
+  "environment": "Linux Node 24.19 Chromium, disposable synthetic data",
+  "status": 409,
+  "code": "SHARED_WRITE_BUSY",
+  "activeOwnerPreserved": true,
+  "fixture": "real SIGSTOP process; owner timestamp aged 120s for default server threshold",
+  "pendingBrowserKeys": [
+    "bl.collection.pending.moderator.v1"
+  ],
+  "retry": {
+    "ok": true,
+    "durable": true
+  }
+}
