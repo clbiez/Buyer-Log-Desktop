@@ -18,7 +18,7 @@ const { createLauncherState }=require('../electron/update/launcher-state');
 const { atomicWriteJson }=require('../electron/update/json-store');
 
 function tmp(){return fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-copied-install-'));}
-function core(root,version){const app=path.join(root,'app');for(const d of ['electron','server','public'])fs.mkdirSync(path.join(app,d),{recursive:true});fs.writeFileSync(path.join(app,'package.json'),JSON.stringify({name:'buyer-log-desktop',version,main:'electron/launcher.js'}));fs.writeFileSync(path.join(app,'electron','main.js'),'module.exports=true;');fs.writeFileSync(path.join(app,'server','server.js'),'module.exports=true;');fs.writeFileSync(path.join(app,'public','index.html'),'<html>Buyer Log</html>');return app;}
+function core(root,version){const app=path.join(root,'app');for(const d of ['electron','server','public'])fs.mkdirSync(path.join(app,d),{recursive:true});fs.writeFileSync(path.join(app,'package.json'),JSON.stringify({name:'buyer-log-desktop',version,main:'electron/launcher.js'}));fs.writeFileSync(path.join(app,'electron','main.js'),'module.exports=true;');require('./helpers/update-trial-core')(app);fs.writeFileSync(path.join(app,'public','index.html'),'<html>Buyer Log</html>');return app;}
 const FOREIGN_WIN='C:\\Users\\kaynak\\Desktop\\Buyer Log Desktop\\.buyerlog-versions\\7.0.177\\app';
 
 test('kopyalanmış current.json yabancı mutlak yolu bu kurulumdaki aynı sürüme yeniden bağlanır',t=>{

@@ -8,6 +8,7 @@ const {
   inspectBackupArchive, readBackupJsonEntry, extractBackupArchive, BACKUP_VERSION, BACKUP_SCHEMA_VERSION,
 } = require('./backup-archive');
 const { skipBackupFile } = require('./backup-service');
+const { isUpdaterControlPath } = require('./backup-sensitivity');
 const { createLocalDb, SCHEMA_VERSION: LOCAL_DB_SCHEMA_VERSION } = require('./local-db');
 const { isNetworkPath } = require('./local-path-policy');
 const prewipeMasterRecovery = require('./prewipe-master-recovery');
@@ -209,6 +210,7 @@ async function restoreRollback(txRoot, scopes) {
   for (const scope of scopes) {
     const files = Array.isArray(manifest.scopes && manifest.scopes[scope.id]) ? manifest.scopes[scope.id] : [];
     for (const rel of files) {
+      if (isUpdaterControlPath(rel)) continue;
       const source = path.join(rollbackRoot, 'scopes', scope.id, ...String(rel).split('/'));
       const target = path.join(scope.root, ...String(rel).split('/'));
       if (fs.existsSync(source)) await copyFileDurable(source, target);
@@ -274,6 +276,7 @@ function restoreRollbackSync(txRoot, scopes) {
   for (const scope of scopes) {
     const files = Array.isArray(manifest.scopes && manifest.scopes[scope.id]) ? manifest.scopes[scope.id] : [];
     for (const rel of files) {
+      if (isUpdaterControlPath(rel)) continue;
       const source = path.join(rollbackRoot, 'scopes', scope.id, ...String(rel).split('/'));
       const target = path.join(scope.root, ...String(rel).split('/'));
       if (!fs.existsSync(source)) continue;
@@ -401,6 +404,7 @@ function createFullRestoreService({ appVersion, roots, localDb, syncSettings, us
       let scope = findScope(scopes, archivePath), rel = scope && relativeForScope(scope, archivePath);
       if (!scope && archivePath === 'system/local/BuyerLogLocal.db') { scope = scopes.find(item => item.id === 'localData'); rel = 'BuyerLogLocal.db'; }
       if (!scope || !rel) throw restoreError('RESTORE_UNHANDLED_CONTENT', `Restore kapsamı tanımlı olmayan içerik: ${archivePath}`, 409, { paths: [archivePath] });
+      if (isUpdaterControlPath(rel)) continue;
       const source = stagePath(stageRoot, archivePath), target = path.join(scope.root, ...rel.split('/'));
       if (!ensureInside(scope.root, target)) throw restoreError('RESTORE_UNSAFE_PATH', `Restore hedefi veri alanı dışına çıkıyor: ${archivePath}`);
       await copyFileDurable(source, target); applied += 1;

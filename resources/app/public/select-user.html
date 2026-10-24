@@ -127,6 +127,7 @@
   let searchPending = false;
   let showSearchLoading = false;
   let loginBusy = false;
+  let loginFailureData = null;
   let hubBusy = false;
   let hubStatus = null;
   let hubDetailsOpen = false;
@@ -258,7 +259,8 @@
       : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2.8 12s3.3-6 9.2-6 9.2 6 9.2 6-3.3 6-9.2 6-9.2-6-9.2-6Z"></path><circle cx="12" cy="12" r="2.7"></circle></svg>';
   }
 
-  function setError(message = '') {
+  function setError(message = '', data = null) {
+    loginFailureData = data;
     const box = $('error');
     box.textContent = message;
     box.hidden = !message;
@@ -609,7 +611,10 @@
     const code = data && data.code;
     if (code === 'USER_INACTIVE') return tr('Bu kullanıcı hesabı pasif durumda.', 'This user account is inactive.');
     if (code === 'BAD_PASSWORD' || code === 'BAD_CREDENTIALS' || code === 'USER_NOT_FOUND') return tr('Kullanıcı adı veya şifre hatalı.', 'Incorrect username or password.');
-    if (code === 'LOGIN_TEMPORARILY_LOCKED') return data.error || tr('Çok fazla hatalı giriş denemesi. Lütfen biraz sonra tekrar deneyin.', 'Too many failed sign-in attempts. Please try again later.');
+    if (code === 'LOGIN_TEMPORARILY_LOCKED') {
+      const seconds = Math.max(1, Math.ceil(Number(data.retryAfter) || 1));
+      return tr('Çok fazla hatalı deneme. {0} saniye sonra tekrar deneyin.', 'Too many failed attempts. Try again in {0} seconds.').replace('{0}', String(seconds));
+    }
     if (code === 'PASSWORD_ADMIN_SETUP_REQUIRED') return tr('Bu kullanıcı için bir yönetici tarafından şifre atanmalıdır.', 'An administrator must assign a password for this user.');
     if (code === 'PASSWORD_TOO_SHORT') return tr('Şifre en az 6 karakter olmalı.', 'Password must be at least 6 characters.');
     if (code === 'BOOTSTRAP_IN_PROGRESS' || code === 'BOOTSTRAP_NOT_READY') {
@@ -677,6 +682,7 @@
   $('lang').addEventListener('click', () => {
     lang = lang === 'tr' ? 'en' : 'tr';
     translate();
+    if (loginFailureData) setError(loginErrorMessage(loginFailureData), loginFailureData);
     if (lastUpdateStatus) renderStartupUpdate(lastUpdateStatus);
   });
 
@@ -798,6 +804,7 @@
       if (!response.ok) {
         const error = new Error(loginErrorMessage(data));
         error.code = data && data.code;
+        error.loginData = data;
         throw error;
       }
       try { localStorage.setItem(LAST_USER_KEY, username); } catch (_) {}
@@ -815,7 +822,7 @@
       const timeoutError = error && error.name === 'AbortError';
       setError(timeoutError
         ? tr('Sunucu giriş isteğine zamanında yanıt vermedi. Tekrar deneyin.', 'The server did not respond to the sign-in request in time. Please try again.')
-        : (error && error.message) || tr('Sunucuya ulaşılamadı.', 'The server could not be reached.'));
+        : (error && error.message) || tr('Sunucuya ulaşılamadı.', 'The server could not be reached.'), error && error.loginData || null);
       if (!timeoutError) $('password').value = '';
       $('password').focus();
     } finally {

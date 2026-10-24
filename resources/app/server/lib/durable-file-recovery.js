@@ -4,6 +4,7 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
+const { assertHeldFileLeases } = require('./shared-file-transaction');
 
 const VERSION = 1;
 const RETRYABLE = new Set(['EPERM', 'EACCES', 'EBUSY']);
@@ -84,7 +85,7 @@ async function writeNew(file, buffer) {
 }
 function renameWithRetrySync(source, target, attempts = 8) {
   for (let attempt = 1;; attempt += 1) {
-    try { fs.renameSync(source, target); return; }
+    try { assertHeldFileLeases(); fs.renameSync(source, target); return; }
     catch (error) {
       if (!RETRYABLE.has(error && error.code) || attempt >= attempts) throw error;
       pause(Math.min(250, 15 * (2 ** (attempt - 1))));
@@ -93,7 +94,7 @@ function renameWithRetrySync(source, target, attempts = 8) {
 }
 async function renameWithRetry(source, target, attempts = 8) {
   for (let attempt = 1;; attempt += 1) {
-    try { await fsp.rename(source, target); return; }
+    try { assertHeldFileLeases(); await fsp.rename(source, target); return; }
     catch (error) {
       if (!RETRYABLE.has(error && error.code) || attempt >= attempts) throw error;
       await sleep(Math.min(250, 15 * (2 ** (attempt - 1))));
@@ -221,6 +222,7 @@ function createDurableFileRecovery({ recoveryRoot, allowedRoots = [] } = {}) {
     fs.appendFileSync(path.join(folder, 'conflicts.jsonl'), `${JSON.stringify({ at: new Date().toISOString(), mutationId: null, target: null, reason: 'invalid-intent', error: error && error.message || String(error) })}\n`);
   }
   function prepareSync(target, buffer, options = {}) {
+    assertHeldFileLeases();
     const resolved = path.resolve(target); ensureAllowed(resolved, roots);
     const data = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
     fs.mkdirSync(root, { recursive: true });
@@ -243,6 +245,7 @@ function createDurableFileRecovery({ recoveryRoot, allowedRoots = [] } = {}) {
     return intent;
   }
   async function prepare(target, buffer, options = {}) {
+    assertHeldFileLeases();
     const resolved = path.resolve(target); ensureAllowed(resolved, roots);
     const data = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
     await fsp.mkdir(root, { recursive: true });

@@ -26,7 +26,7 @@ function collectionContext(){
   };
   const ctx=vm.createContext(sandbox);
   const helpers=between('const KOL_MONTHS_TR=', '// ===================== Collection In-Store period picker');
-  const selections=between('function kolCanonicalFilterSelection(', 'const KOL_CONFIRMED_NAME_FILTER_KEY');
+  const selections=between('function kolCanonicalFilterSelection(', 'function kolFilterValue(');
   const filterValue=between('function kolFilterValue(', 'function kolFilterMeta(');
   const compare=between('function kolCompareRowsForActiveSort(', 'function kolGroupMembersIndex(');
   vm.runInContext(helpers+selections+filterValue+compare,ctx);

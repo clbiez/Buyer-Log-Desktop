@@ -11,6 +11,7 @@
   let busy = false;
   let statusPollTimer = null;
   let statusPollBusy = false;
+  let patchFailure = '';
 
   const stateLabel = code => ({
     IDLE: tr('Hazır','Ready'),
@@ -22,7 +23,7 @@
     INSTALLING: tr('Kuruluyor','Installing'),
     SUCCESS: tr('Güncel','Up to date'),
     FAILED: tr('Hata','Failed'),
-    ROLLBACK: tr('Geri alınıyor','Rolling back'),
+    ROLLBACK: tr('Önceki sürüme dönüldü','Previous version restored'),
   })[String(code || '').toUpperCase()] || String(code || '—');
 
   function profile() {
@@ -49,9 +50,11 @@
   function messageFor(status) {
     if (!status) return tr('Güncelleme durumu okunamadı.','Update status could not be read.');
     if (status.pendingReady && status.pendingVersion) {
+      if(status.pendingManualPatchSequence)return tr('İmzalı yama ','Signed patch ')+status.pendingManualPatchSequence+tr(' doğrulandı. İşinizi kaydettikten sonra yeniden başlatın.',' verified. Restart after saving your work.');
       return String(status.pendingVersion) + ' ' + tr('indirildi ve doğrulandı. Yeniden başlatınca kurulacak.','was downloaded and verified. Restart to install it.');
     }
     const code = String(status.lastError && status.lastError.code || '');
+    if(status.lastError?.manualPatch)return tr('İmzalı yamanın açılışı doğrulanamadı. Önceki uygulama ve veri geri yüklendi. Daha yeni onaylı bir yama veya imzalı tam kurulum seçin.','The signed patch could not start successfully. The previous application and data were restored. Select a newer approved patch or a signed full installation.');
     if (code === 'UPDATE_ADMIN_REQUIRED') return tr('Bu güncelleme işlemi için güncel moderatör yetkisi gerekiyor.','Current moderator authority is required for this update operation.');
     if (code === 'UPDATE_RETRY_TARGET_CHANGED') return tr('Yeniden denenecek sürüm veya kanal değişti. Güncellemeyi kontrol edip paketi yeniden seçin.','The version or channel to retry changed. Check for updates and select the package again.');
     if (code === 'UPDATE_FAILED_VERSION_BLOCKED' || code === 'UPDATE_HEALTH_FAILED') {
@@ -99,6 +102,7 @@
     if (overlay) overlay.remove();
     overlay = null;
     busy = false;
+    patchFailure = '';
   }
 
   function setValue(name,value) {
@@ -141,12 +145,14 @@
     if (channel && !busy) channel.value = String(status.configuredChannel || status.channel || 'stable').toLowerCase() === 'test' ? 'test' : 'stable';
     const message = overlay.querySelector('[data-update-message]');
     if (message) {
-      message.textContent = messageFor(status);
+      message.textContent = patchFailure || messageFor(status);
       message.classList.toggle('isReady',Boolean(status.pendingReady));
-      message.classList.toggle('isError',status.state === 'FAILED' || Boolean(status.lastError));
+      message.classList.toggle('isError',Boolean(patchFailure) || status.state === 'FAILED' || Boolean(status.lastError));
     }
     const restart = overlay.querySelector('[data-update-restart]');
     if (restart) restart.hidden = !status.pendingReady;
+    const signed = overlay.querySelector('[data-update-signed-patch]');
+    if (signed) signed.hidden = !(status.moderator && status.manualPatchSupported);
     // Health check'te geri alınan sürüm aynı paketle tekrar indirilmez; yalnız
     // moderatör bu engeli kaldırıp sürümü yeniden deneyebilir.
     const retry = overlay.querySelector('[data-update-retry]');
@@ -154,7 +160,7 @@
   }
 
   function canRetry(status) {
-    if (!isModerator() || !status || status.pendingReady || !status.latestVersion) return false;
+    if (!isModerator() || !status || status.pendingReady || !status.latestVersion || status.lastError?.manualPatch) return false;
     const code = String(status.lastError && status.lastError.code || '');
     return code === 'UPDATE_FAILED_VERSION_BLOCKED' || code === 'UPDATE_HEALTH_FAILED';
   }
@@ -201,6 +207,7 @@
       '<span class="updateTestProgressStep" data-update-step="ready">' + esc(tr('Hazır','Ready')) + '</span>',
       '</div></div>',
       '<div class="updateTestActions">',
+      '<button type="button" class="navActionBtn" data-update-signed-patch hidden>' + esc(tr('İmzalı Yama Yükle…','Install Signed Patch…')) + '</button>',
       '<button type="button" class="navActionBtn" data-update-retry hidden>' + esc(tr('Tekrar Dene','Retry')) + '</button>',
       '<button type="button" class="navActionBtn primary" data-update-check>' + esc(tr('Güncellemeyi Kontrol Et','Check for Update')) + '</button>',
       '<button type="button" class="navActionBtn primary" data-update-restart hidden>' + esc(tr('Yeniden Başlat ve Kur','Restart and Install')) + '</button>',
@@ -212,6 +219,7 @@
     const check = overlay.querySelector('[data-update-check]');
     const restart = overlay.querySelector('[data-update-restart]');
     const retry = overlay.querySelector('[data-update-retry]');
+    const signed = overlay.querySelector('[data-update-signed-patch]');
     overlay.querySelector('[data-update-close]').addEventListener('click',close);
     overlay.addEventListener('mousedown',event => { if (event.target === overlay) close(); });
 
@@ -228,8 +236,10 @@
     };
     const setBusy = value => {
       busy = Boolean(value);
+      if(busy)patchFailure='';
       if (check) check.disabled = busy;
       if (retry) retry.disabled = busy;
+      if (signed) signed.disabled = busy;
       if (channel) channel.disabled = busy;
     };
 
@@ -287,6 +297,21 @@
         setBusy(false);
         await refresh().catch(()=>{});
       }
+    });
+
+    signed.addEventListener('click',async()=>{
+      if(typeof api.prepareSignedPatch!=='function')return;
+      setBusy(true);
+      try{
+        const result=await api.prepareSignedPatch({userId:userId(),language:tr('tr','en')});
+        if(result?.cancelled)return;
+        if(!result?.ok)throw Error(result?.error||tr('İmzalı yama hazırlanamadı.','The signed patch could not be prepared.'));
+        render(result);restart.focus();
+      }catch(error){
+        patchFailure=error.message;
+        const message=overlay?.querySelector('[data-update-message]');
+        if(message){message.textContent=error.message;message.classList.add('isError');}
+      }finally{setBusy(false);}
     });
 
     restart.addEventListener('click',async() => {

@@ -1,0 +1,11 @@
+{
+  "environment": "Linux Node24.19 Chromium, normal server, disposable synthetic workbook/account, reduced motion",
+  "mockedRequests": false,
+  "status": 200,
+  "code": null,
+  "uploadedModel": "legacy-tl",
+  "recordCount": 1,
+  "originalLegacyPreserved": true,
+  "setCountBefore": 1,
+  "setCountAfter": 2
+}

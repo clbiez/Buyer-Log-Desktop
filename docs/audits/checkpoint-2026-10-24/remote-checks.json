@@ -1,0 +1,15 @@
+{
+  "note": "Fast PR checks only, not full regression. Recheck any new head; PR685 will receive a documentation-only handoff commit.",
+  "observedSuccessful": {
+    "685": "65fad3b102446e1cf29a93c44c157ec55a197eb7",
+    "692": "8525951b4d59f8ad1a0958a25b0ba4afd9c8a546",
+    "691": "8ddae4cdef98302dfa090c0eba326c40f5f399a4",
+    "695": "01dd915ae877583f8341d5781e4f834fad8dea38",
+    "696": "25badecceef2cf405c869ad74ca87139ce62a213",
+    "697": "176136b4ac2bfbaccbd6b6f14c1dd72287ff5c8d",
+    "698": "5cecb247ba5ad849cce45999b91008aea9f44ca4",
+    "699": "336f38f6e39bfc687ef460ae388173ce14b27c4a",
+    "700": "c64cfa7c8e48e87c92235c8b942587ae7e57c1b7"
+  },
+  "remainingPRChecks": "Not rechecked in final handoff; read current GitHub state."
+}

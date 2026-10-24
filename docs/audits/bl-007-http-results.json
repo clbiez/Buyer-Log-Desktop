@@ -1,0 +1,69 @@
+{
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux",
+    "uid": 1000
+  },
+  "foreignTempInventoryStatus": 200,
+  "defaultRootOwned": true,
+  "initialExportStatus": 200,
+  "initialBytes": 862,
+  "unavailableDiagnosticInventoryStatus": 200,
+  "warnings": [
+    {
+      "code": "DIAGNOSTIC_INVENTORY_UNAVAILABLE",
+      "scope": "logs",
+      "errorCode": "EACCES",
+      "message": {
+        "tr": "Yedek dışı tanılama envanteri okunamadı.",
+        "en": "Excluded diagnostic inventory could not be read."
+      }
+    },
+    {
+      "code": "DIAGNOSTIC_INVENTORY_UNAVAILABLE",
+      "scope": "temp",
+      "errorCode": "EACCES",
+      "message": {
+        "tr": "Yedek dışı tanılama envanteri okunamadı.",
+        "en": "Excluded diagnostic inventory could not be read."
+      }
+    },
+    {
+      "code": "DIAGNOSTIC_INVENTORY_UNAVAILABLE",
+      "scope": "emailDraftTemp",
+      "errorCode": "EACCES",
+      "message": {
+        "tr": "Yedek dışı tanılama envanteri okunamadı.",
+        "en": "Excluded diagnostic inventory could not be read."
+      }
+    }
+  ],
+  "diagnosticRoots": [
+    {
+      "id": "logs",
+      "available": false,
+      "fileCount": null,
+      "bytes": null
+    },
+    {
+      "id": "temp",
+      "available": false,
+      "fileCount": null,
+      "bytes": null
+    },
+    {
+      "id": "emailDraftTemp",
+      "available": false,
+      "fileCount": null,
+      "bytes": null
+    }
+  ],
+  "warnedExportStatus": 200,
+  "warningBytes": 1022,
+  "actualPermissionDenials": [
+    "EACCES",
+    "EACCES",
+    "EACCES",
+    "EACCES"
+  ]
+}

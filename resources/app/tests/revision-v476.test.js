@@ -4,6 +4,8 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const vm = require('node:vm');
+const { extractFunction } = require('./helpers/app-main-functions');
 
 const ROOT = path.join(__dirname, '..');
 const INDEX = (fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8'));
@@ -39,8 +41,41 @@ test('v4.76 Collection has Special Code and Line as persistent editable columns'
   assert.match(cols, /\{k:'line', label:'Line'/);
   assert.ok(cols.indexOf("k:'specialCode'") < cols.indexOf("k:'line'"));
   assert.match(INDEX, /\['plmId','productMainDefinition','specialCode','line'[\s\S]*?'fabric'/);
-  assert.match(INDEX, /specialCode:\s*norm\(r\['Special Code'\]\)/);
-  assert.match(INDEX, /line:\s*norm\(r\['Line'\]\)/);
+  // Exercise the actual transfer, migration and local save instead of requiring
+  // one spelling of an assignment. Both editable fields must survive serialized-data restoration.
+  const source = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
+  const productionFunction = name => extractFunction(source, name);
+  const saved = new Map();
+  const context = {
+    appLang: 'en', norm: value => String(value == null ? '' : value).trim(), kolNextId: 1,
+    toISODate: () => '', kolParseMoneyNum: Number, normalizeTransitDelType: value => value,
+    kolStatusDefaultName: () => 'Pending',
+    kolWorkspaceCanEdit: true, kolRows: [], kolWorkspaceOwnerId: 'synthetic',
+    kolNormalizeModelGroups: rows => require('../public/collection-model-groups').normalizeRows(rows).rows,
+    BLStorage: { setItem: (key, value) => saved.set(key, value) },
+    localStorage: { setItem: (key, value) => saved.set(key, value) },
+    KOL_STORAGE_KEY: 'test.collection', kolManufacturersForPersistence: () => [],
+    kolCustomCols: [], kolStatusEntries: () => [], kolWorkspaceRevision: 0,
+    kolWorkspaceSaving: false, kolPersistPendingWorkspace: () => {},
+    kolQueueWorkspaceSave: () => {}, scheduleOverviewCollectionSummaryRender: () => {},
+    showToast: message => assert.fail(message),
+  };
+  vm.createContext(context);
+  vm.runInContext(['migrateKolRow', 'cpRowToKolRow', 'kolWorkspaceLocalKey', 'saveKolRows'].map(productionFunction).join('\n'), context);
+  const original = { 'Order Code': '4100001', 'Model Name': 'SYNTHETIC', 'Special Code': '  SC-123  ', Line: '  LINE-A  ' };
+  const transferred = context.cpRowToKolRow(original);
+  assert.equal(transferred.specialCode, 'SC-123');
+  assert.equal(transferred.line, 'LINE-A');
+  assert.equal(original['Special Code'], '  SC-123  ', 'transfer must preserve the source row');
+  transferred.specialCode = 'SC-EDITED'; transferred.line = 'LINE-EDITED';
+  context.kolRows = [transferred];
+  assert.equal(context.saveKolRows(), true);
+  for (const snapshot of [JSON.parse(saved.get('test.collection')),
+    JSON.parse(saved.get(context.kolWorkspaceLocalKey('synthetic'))).rows]) {
+    const restarted = context.migrateKolRow(snapshot[0]);
+    assert.equal(restarted.specialCode, 'SC-EDITED');
+    assert.equal(restarted.line, 'LINE-EDITED');
+  }
   assert.match(INDEX, /add\('specialCode','SPECIAL CODE'/);
   assert.match(INDEX, /add\('line','LINE','HAT'\)/);
 });

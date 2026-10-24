@@ -116,7 +116,9 @@ test('uretilen workbook geri okundugunda sozlesmeye uyar', async () => {
     assert.strictEqual(sheet.S2.f, 'IF(OR(L2="",M2=""),"",M2-L2)');
     assert.strictEqual(sheet.T2.f, 'IF(OR(M2="",Q2=""),"",Q2-M2)');
     assert.strictEqual(sheet.S3.f, 'IF(OR(L3="",M3=""),"",M3-L3)', 'OPD eksikse de manuel giriste hesaplamaya hazir');
-    assert.ok(r2[idx('PO Issue to Ex-Factory')] == null, 'tarihi eksik satirda sahte sonuc yok');
+    const missingDuration = r2[idx('PO Issue to Ex-Factory')];
+    assert.ok(missingDuration === null || missingDuration === undefined || missingDuration === '',
+      'missing date must remain semantically blank; zero/false would imply a fabricated duration');
 
     // Gun farklari
     assert.strictEqual(r1[idx('PO Issue to Ex-Factory')], 19);

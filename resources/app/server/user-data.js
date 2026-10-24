@@ -10,7 +10,7 @@ const readline = require('readline');
 const { once } = require('events');
 const { pipeline } = require('stream/promises');
 const { createDurableFileRecovery } = require('./lib/durable-file-recovery');
-const { SENSITIVE_KEY, isSensitiveBackupPath, sanitizeSensitiveValue } = require('./lib/backup-sensitivity');
+const { SENSITIVE_KEY, isSensitiveBackupPath, isUpdaterControlPath, sanitizeSensitiveValue } = require('./lib/backup-sensitivity');
 
 const PROJECT_ROOT = path.join(__dirname, '..');
 const SERVER_DATA_ROOT = process.env.BUYER_LOG_SERVER_DATA_ROOT || path.join(__dirname, 'data');
@@ -29,11 +29,31 @@ const COLLECTION_IMAGES_ROOT = path.join(LOCAL_DATA_ROOT, 'collection-images');
 // hangi Colour Code'un kayıtlı olduğunu ve dosya adını tutar.
 const QTX_FILES_ROOT = path.join(LOCAL_DATA_ROOT, 'qtx-files');
 const LOGS_ROOT = path.join(LOCAL_DATA_ROOT, 'logs');
-// Packaged backend'de portable-paths TEMP/TMP'yi data\temp'e yönlendirir.
-// Değişken doğrudan kullanıldığında da aynı kökü koru; test/legacy kipinde
-// os.tmpdir() fallback'i geriye dönük kalsın.
-const TEMP_ROOT = process.env.BUYER_LOG_TEMP_ROOT || os.tmpdir();
+// Portable overrides keep their established location. Without one, temp output
+// and diagnostics use a private per-user subtree instead of system temp itself.
+// The old temporary-write allowance remains separate for synthetic tools/recovery.
+const TEMPORARY_WRITE_ROOT = process.env.BUYER_LOG_TEMP_ROOT || os.tmpdir();
+const DEFAULT_TEMP_NAME = 'BuyerLog' + (typeof process.getuid === 'function' ? '-' + process.getuid() : '');
+const TEMP_ROOT = process.env.BUYER_LOG_TEMP_ROOT || path.join(TEMPORARY_WRITE_ROOT, DEFAULT_TEMP_NAME);
 const EMAIL_DRAFT_ROOT = path.join(TEMP_ROOT, 'BuyerLog-email-drafts');
+function ensureOwnedTempRoot() {
+  if (process.env.BUYER_LOG_TEMP_ROOT) {
+    // Explicit portable overrides may intentionally use a user-configured junction.
+    fs.mkdirSync(TEMP_ROOT, { recursive: true });
+    return;
+  }
+  fs.mkdirSync(TEMP_ROOT, { recursive: true, mode: 0o700 });
+  const stat = fs.lstatSync(TEMP_ROOT);
+  if (!stat.isDirectory() || stat.isSymbolicLink()
+    || typeof process.getuid === 'function' && stat.uid !== process.getuid()) {
+    throw Object.assign(new Error('Buyer Log geçici klasörü güvenli değil. / Buyer Log temporary directory is unsafe.'), { code: 'UNSAFE_TEMP_ROOT' });
+  }
+}
+function createTempFolder(prefix) {
+  ensureOwnedTempRoot();
+  return fs.mkdtempSync(path.join(TEMP_ROOT, prefix));
+}
+ensureOwnedTempRoot();
 const CONFIG_PATH = process.env.BUYER_LOG_CONFIG_PATH || path.join(PROJECT_ROOT, 'config.json');
 
 const BACKUP_FORMAT = 'buyer-log-backup';
@@ -60,7 +80,7 @@ function isInside(root, target) {
 // verir. O durumda kurtarma kaydını gerçek kullanıcının LocalAppData alanına
 // koymak, test silinince geçersiz hedefli bir intent bırakır. Geçici kök de
 // geçicidir; günlük onun yanında kalır ve test temizliğiyle birlikte gider.
-const WRITE_RECOVERY_ROOT = !process.env.BUYER_LOG_LOCAL_DATA_ROOT && isInside(TEMP_ROOT, SERVER_DATA_ROOT)
+const WRITE_RECOVERY_ROOT = !process.env.BUYER_LOG_LOCAL_DATA_ROOT && isInside(TEMPORARY_WRITE_ROOT, SERVER_DATA_ROOT)
   ? path.join(SERVER_DATA_ROOT, '.buyerlog-write-recovery')
   : path.join(LOCAL_DATA_ROOT, 'write-recovery');
 const durableRoots = [PROJECT_ROOT, SERVER_DATA_ROOT, APP_DATA_ROOT, LOCAL_DATA_ROOT, EMAIL_DRAFT_ROOT];
@@ -78,7 +98,7 @@ const temporaryRecoveryWriters = new Map();
 function durableWriterFor(file) {
   const target = path.resolve(file);
   if (durableRoots.some(root => isInside(root, target))) return durableFileRecovery;
-  if (!isInside(TEMP_ROOT, target)) throw Object.assign(new Error(`Kalıcı yazma hedefi izin verilen veri alanlarının dışında: ${target}`), { code: 'DATA_INTEGRITY_ERROR' });
+  if (!isInside(TEMPORARY_WRITE_ROOT, target)) throw Object.assign(new Error(`Kalıcı yazma hedefi izin verilen veri alanlarının dışında: ${target}`), { code: 'DATA_INTEGRITY_ERROR' });
   const folder = path.dirname(target);
   if (!temporaryRecoveryWriters.has(folder)) {
     const writer = createDurableFileRecovery({ recoveryRoot: path.join(folder, '.buyerlog-write-recovery'), allowedRoots: [folder] });
@@ -224,7 +244,7 @@ function walkFiles(root, options = {}) {
       const full = path.join(dir, entry.name);
       const rel = path.join(relBase, entry.name).replace(/\\/g, '/');
       if (entry.isSymbolicLink()) continue;
-      if (options.skipSensitive && isSensitiveBackupPath(rel)) continue;
+      if (options.skipSensitive && (isSensitiveBackupPath(rel) || isUpdaterControlPath(rel))) continue;
       if (entry.isDirectory()) {
         visit(full, rel);
         continue;
@@ -256,13 +276,13 @@ function isProtectedRestorePath(scope, rel) {
   if (scope === 'config') return false;
   const def = scopeDefinitions()[scope];
   const normalized = String(rel || '').replace(/\\/g, '/');
-  return Boolean(def && (def.excludeTop.includes(normalized.split('/')[0]) || isSensitiveBackupPath(normalized)));
+  return Boolean(def && (def.excludeTop.includes(normalized.split('/')[0]) || isSensitiveBackupPath(normalized) || isUpdaterControlPath(normalized)));
 }
 // config.json dış parola hash'i ve oturum imza sırrını taşır; yedeğe sırsız girer.
 function sanitizedConfigBuffer() {
-  let parsed;
-  try { parsed = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8')); }
-  catch (_) { return Buffer.from('{}', 'utf8'); }
+  // This is an authoritative backup member. An unreadable/corrupt config must
+  // stop the backup rather than silently substituting an empty object.
+  const parsed = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
   return Buffer.from(JSON.stringify(sanitizeSensitiveValue(parsed), null, 2), 'utf8');
 }
 // Restore sırasında mevcut kurulumun sır alanları korunur; yedekteki (eski ya da
@@ -304,12 +324,26 @@ function getUserDataInventory() {
   });
   const configExists = fs.existsSync(CONFIG_PATH);
   result.push({ id: 'config', root: CONFIG_PATH, exists: configExists, fileCount: configExists ? 1 : 0, bytes: configExists ? fs.statSync(CONFIG_PATH).size : 0 });
-  const logFiles = walkFiles(LOGS_ROOT), draftFiles = walkFiles(EMAIL_DRAFT_ROOT), tempFiles = walkFiles(TEMP_ROOT, { tolerateMissing: true });
-  result.push({ id: 'logs', root: LOGS_ROOT, exists: fs.existsSync(LOGS_ROOT), fileCount: logFiles.length, bytes: logFiles.reduce((s, f) => s + f.stat.size, 0), backupIncluded: false });
-  result.push({ id: 'temp', root: TEMP_ROOT, exists: fs.existsSync(TEMP_ROOT), fileCount: tempFiles.length, bytes: tempFiles.reduce((s, f) => s + f.stat.size, 0), backupIncluded: false });
-  result.push({ id: 'emailDraftTemp', root: EMAIL_DRAFT_ROOT, exists: fs.existsSync(EMAIL_DRAFT_ROOT), fileCount: draftFiles.length, bytes: draftFiles.reduce((s, f) => s + f.stat.size, 0), backupIncluded: false });
+  const warnings = [];
+  for (const [id, root] of [['logs', LOGS_ROOT], ['temp', TEMP_ROOT], ['emailDraftTemp', EMAIL_DRAFT_ROOT]]) {
+    try {
+      if (!process.env.BUYER_LOG_TEMP_ROOT && (id === 'temp' || id === 'emailDraftTemp')) {
+        ensureOwnedTempRoot();
+        if (fs.existsSync(root) && fs.lstatSync(root).isSymbolicLink()) throw Object.assign(new Error('Unsafe diagnostic root.'), { code: 'UNSAFE_TEMP_ROOT' });
+      }
+      const files = walkFiles(root, { tolerateMissing: true });
+      result.push({ id, root, exists: fs.existsSync(root), available: true, fileCount: files.length,
+        bytes: files.reduce((sum, file) => sum + file.stat.size, 0), backupIncluded: false });
+    } catch (error) {
+      // These scopes are diagnostic only, never authoritative backup members.
+      // Preserve the failure as an explicit warning and unknown totals.
+      warnings.push({ code: 'DIAGNOSTIC_INVENTORY_UNAVAILABLE', scope: id, errorCode: String(error.code || 'UNKNOWN'),
+        message: { tr: 'Yedek dışı tanılama envanteri okunamadı.', en: 'Excluded diagnostic inventory could not be read.' } });
+      result.push({ id, root, exists: fs.existsSync(root), available: false, fileCount: null, bytes: null, backupIncluded: false });
+    }
+  }
   result.push({ id: 'browserLocalStorage', root: 'browser://localStorage', exists: true, fileCount: null, bytes: null, serverReadable: false });
-  return { roots: result, totalBackupBytes: result.filter(x => x.backupIncluded !== false && Number.isFinite(x.bytes)).reduce((s, x) => s + x.bytes, 0) };
+  return { roots: result, warnings, totalBackupBytes: result.filter(x => x.backupIncluded !== false && Number.isFinite(x.bytes)).reduce((s, x) => s + x.bytes, 0) };
 }
 function exportBackup({ appVersion = '', browserStorage = {} } = {}) {
   const files = [];
@@ -376,7 +410,7 @@ function restoreBackup(buffer) {
     if (isProtectedRestorePath(item.scope, item.path)) continue;
     decoded.push({ ...item, data: item.scope === 'config' ? mergeProtectedConfig(data) : data, target });
   }
-  const txRoot = fs.mkdtempSync(path.join(TEMP_ROOT, 'buyerlog-restore-'));
+  const txRoot = createTempFolder('buyerlog-restore-');
   const stageRoot = path.join(txRoot, 'stage');
   const rollbackRoot = path.join(txRoot, 'rollback');
   ensureDir(stageRoot); ensureDir(rollbackRoot);
@@ -448,7 +482,7 @@ async function writeBackupLine(stream, value) {
   if (!stream.write(line + '\n')) await once(stream, 'drain');
 }
 function tempBackupPath() {
-  const root = fs.mkdtempSync(path.join(TEMP_ROOT, 'buyerlog-backup-'));
+  const root = createTempFolder('buyerlog-backup-');
   return { root, file: path.join(root, 'BuyerLog.blgbackup') };
 }
 async function exportBackupToFile({ appVersion = '', browserStorage = {}, onProgress = null } = {}) {
@@ -585,7 +619,7 @@ function applyStagedRestore(manifest, stagedItems, total, browserStorage, txRoot
   }
 }
 async function restoreBackupV2FromFile(file) {
-  const txRoot = fs.mkdtempSync(path.join(TEMP_ROOT, 'buyerlog-restore-v2-'));
+  const txRoot = createTempFolder('buyerlog-restore-v2-');
   const stageRoot = path.join(txRoot, 'stage'); ensureDir(stageRoot);
   const input = fs.createReadStream(file).pipe(zlib.createGunzip());
   const lines = readline.createInterface({ input, crlfDelay: Infinity });

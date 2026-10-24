@@ -154,7 +154,7 @@ test('Pricing source update CP projectionındaki auto Licensor değerini latest 
     { id: 'disney-old', license: 'Marvel', licensor: 'Disney', opdStart: '2026-08-20', opdEnd: '2026-12-31', countryGroup: 'TR', royalty: 10, hologramCost: 0 },
     { id: 'disney-old-2', license: 'Marvel', licensor: 'Disney', opdStart: '2026-08-20', opdEnd: '2026-12-31', countryGroup: 'NON-TR', royalty: 10, hologramCost: 0 },
   ];
-  const options = {...db.defaultOverrides(), pricingRules: base};
+  const options = {...db.defaultOverrides(), nonDtrManufacturers: ['Factory A'], pricingRules: base};
   // Ayni Licensor icin birden cok kural tek gecerli degeri bozmaz.
   assert.equal(parse.buildCPRowsFromASAS([order], {}, options)[0].Licensor, 'Disney');
   assert.equal(parse.buildOrdersRowsFromASAS([order], {}, options)[0].Licensor, 'Disney');

@@ -50,7 +50,7 @@ test('server CP and Orders projections apply temporal TR/YD commissions and refr
   const current={...old,id:'current',opdStart:'2026-01-01',opdEnd:'2026-12-31',trCommission:4,ydCommission:6};
   const orders=[{ocode:100,model:'Model',ccode:'RED',license:'Example',manufacturer:'Factory',countryRaw:'TURKIYE',season:'AW26',qty:100,kalan:100,fob:10,opd:new Date(2026,5,1),ex:new Date(2026,11,1),mb:new Date(2027,0,1)},
     {ocode:101,model:'Model',ccode:'RED',license:'Example',manufacturer:'Factory',countryRaw:'BANGLADES',season:'AW26',qty:100,kalan:100,fob:10,opd:new Date(2025,5,1),ex:new Date(2026,11,1),mb:new Date(2027,0,1)}];
-  const ov={pricingRules:[old,current],suppfobmap:{'100':1},suppfobmetamap:{'100':{source:'rule',ruleId:'stale'}}};
+  const ov={pricingRules:[old,current],nonDtrManufacturers:['Factory'],suppfobmap:{'100':1},suppfobmetamap:{'100':{source:'rule',ruleId:'stale'}}};
   for(const build of [parse.buildCPRowsFromASAS,parse.buildOrdersRowsFromASAS]){
     const rows=build(orders,{},ov);
     assert.equal(rows[0]['Supp. FOB'],business.calculateSuppFobWithRule(10,current,'TR'));
