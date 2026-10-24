@@ -14,6 +14,7 @@
 .blCmdItem small{margin-left:auto;flex:none;font-size:var(--fs-2xs);color:var(--muted);}
 .blCmdItem.isActive{background:var(--acc-bg);color:var(--acc-ink);box-shadow:inset 2px 0 0 var(--acc);}
 .blCmdItem.isActive small{color:var(--acc-ink);}
+.blCmdItem.isDisabled{color:var(--muted);cursor:default}.blCmdItem.isDisabled small{max-width:56%;white-space:normal;line-height:1.35;padding-block:6px}
 .blCmdEmpty{padding:24px 12px;text-align:center;color:var(--muted);font-size:var(--fs-sm);}
 .blCmdFoot{padding:8px 14px;border-top:1px solid var(--line);font-size:var(--fs-2xs);color:var(--muted);background:var(--card2);}
 @media(prefers-reduced-motion:reduce){.blCmdCard{animation:none;}}

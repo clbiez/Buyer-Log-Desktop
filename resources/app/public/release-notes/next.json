@@ -1605,6 +1605,35 @@
           "en": "The actual first-use release summary with at most six highlights."
         }
       }
+    },
+    {
+      "id": "contextual-command-palette",
+      "type": "feature",
+      "module": {
+        "tr": "CP Tracker · Siparişler · Koleksiyon",
+        "en": "CP Tracker · Orders · Collection"
+      },
+      "title": {
+        "tr": "Seçili kayıt işlemlerini komut paletinden açın",
+        "en": "Open selected-record actions from the command palette"
+      },
+      "body": {
+        "tr": "Tablodaki İşlemler düğmesi veya Ctrl+Shift+K ile bağlı kayıtları, eşleşen fiyat kuralını, maliyet oluşturmayı ve mevcut raporu bulun. Eksik seçim ve yetki koşulları açıklanır; seçim veya yetki değişirse eski komut çalışmaz. Birden çok bağlı Koleksiyon modeli birlikte gösterilir. Palet yalnız yetkili modülleri ve son açılan hedefleri listeler; Ctrl+K CP aramasını korur.",
+        "en": "Use the table Actions button or Ctrl+Shift+K to find linked records, the matching pricing rule, create costing and existing reports. Missing selection and permission prerequisites are explained; a stale command cannot run after selection or access changes. Multiple linked Collection models are shown together. The palette lists authorized modules and recent destinations; Ctrl+K keeps CP search."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "contextual-command-palette.png",
+        "alt": {
+          "tr": "Gerçek demo CP kaydı için bağlamsal palet eylemleri ve eksik fiyat kuralı açıklaması.",
+          "en": "Contextual palette actions and the missing-rule prerequisite for an actual demo CP record."
+        },
+        "caption": {
+          "tr": "Seçili kaydın mevcut işlemleri paletin başında görünür; modüller palet açıldığı için yüklenmez.",
+          "en": "Existing actions for the selected record appear first; opening the palette does not load modules."
+        }
+      }
     }
   ]
 }

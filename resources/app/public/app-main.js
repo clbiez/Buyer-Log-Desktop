@@ -4304,6 +4304,11 @@ function renderTableViewContext(tableKey){
     BLTableDensity.mount(root,tableKey,appLang);
     const table=tableImageSizeTable(tableKey);if(table)table.dataset.tableDensity=BLTableDensity.get(tableKey);
   }
+  if(['cp','orders','koleksiyon'].includes(tableKey)){
+    let commandsButton=root.querySelector('[data-table-command-palette]');
+    if(!commandsButton){commandsButton=document.createElement('button');commandsButton.type='button';commandsButton.className='tableViewPreset';commandsButton.dataset.tableCommandPalette=tableKey;commandsButton.addEventListener('click',()=>window.BLCommandPalette?.open());root.appendChild(commandsButton);}
+    commandsButton.textContent=appLang==='en'?'Actions':'İşlemler';commandsButton.title=appLang==='en'?'Selected record actions · Ctrl+Shift+K':'Seçili kayıt işlemleri · Ctrl+Shift+K';
+  }
   const preset=tableViewPresetState(tableKey);
   root.setAttribute('aria-label',appLang==='en'?'Table view':'Tablo görünümü');
   root.querySelectorAll('[data-table-view-preset]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.tableViewPreset===preset)));
@@ -28694,6 +28699,46 @@ window.BLCollectionSpreadsheetBridge={
   sort:(key,dir)=>{releaseKolTransientTopRow();kolSort={key,dir};renderKol();},filter:(key,anchor)=>openKolHeaderFilter(key,anchor),
   openPricingHistory:row=>window.BL_QUOTATIONS?.openPricingHistoryWorkspace?.([row]),openQuotations:row=>window.BL_QUOTATIONS?.openWorkspaceFromCollection?.([row]),canOpenPlm:row=>Boolean(kolCollectionPlmUrl(row)),openPlm:row=>{const url=kolCollectionPlmUrl(row);if(url)window.open(url,'_blank','noopener,noreferrer');return Boolean(url);},reapplyFreeze:()=>applyFreeze('kolTable','koleksiyon',true),
 };
+
+// The palette adapts existing native actions; it owns no business mutation path.
+function contextualCommandSnapshot(){
+  const module=currentActiveTab();if(!['cp','orders','koleksiyon'].includes(module)||!window.BLCanAccessArea?.(module))return null;
+  const rows=module==='koleksiyon'?filteredKol().filter(row=>selectionHasId(kolSelected,row.id)):(state[module]?(module==='orders'?filteredOrders():filteredCP()):[]).filter(row=>(module==='orders'?state.ordersSelected:state.cpSelected)?.has(row._id));
+  const identity=row=>module==='koleksiyon'?[row._collectionOwnerId||kolWorkspaceOwnerId,row._collectionSourceId??row.id,row.plmId,row.modelKod,row.colourCode,row._rev]:lineKeyOfRow(row);
+  return {module,rows,token:JSON.stringify([orderLinePeerOwner(),module,module==='koleksiyon'?kolWorkspaceOwnerId:'',rows.map(identity)]),label:rows.length===1?String(window.BLCanonicalFields.canonicalValue(rows[0],module==='koleksiyon'?'collection':module,'modelName')||''):appLang==='en'?`${rows.length} selected`:`${rows.length} seçili`,group:appLang==='en'?'Selected record':'Seçili kayıt'};
+}
+function contextualCommandModelKey(row,module){
+  if(module==='koleksiyon')return window.BLCollection.keyOf(row);
+  return window.BLCollection.keyOf({plmId:window.BLCanonicalFields.canonicalValue(row,module,'plmId'),modelKod:window.BLCanonicalFields.canonicalValue(row,module,'modelName')});
+}
+function contextualCommandRule(ctx){
+  const row=ctx.rows[0];if(!row)return null;
+  return ctx.module==='koleksiyon'?kolFindPricingRule(row):findSuppFobRule(...['orderPlacementDate','country','season','licensor','license'].map(id=>window.BLCanonicalFields.canonicalValue(row,ctx.module,id)));
+}
+function contextualCommandButton(id){const button=document.getElementById(id);return button&&!button.disabled&&!button.hidden&&button.style.display!=='none'&&button.getAttribute('aria-disabled')!=='true'?button:null;}
+function contextualCommandLabel(tr,en){return appLang==='en'?en:tr;}
+const contextOne=ctx=>ctx.rows.length===1?'':contextualCommandLabel('Önce görünür tek bir kayıt seçin.','Select exactly one visible record first.');
+const contextModel=ctx=>contextOne(ctx)||(contextualCommandModelKey(ctx.rows[0],ctx.module)==='\u0000'?contextualCommandLabel('Önce PLM ID veya model adını girin.','Enter a PLM ID or model name first.'):'');
+const contextArea=area=>window.BLCanAccessArea?.(area)?'':contextualCommandLabel('Bu alana erişim yetkisi gerekli.','Access to this area is required.');
+const contextOrderTarget=ctx=>ctx.module==='orders'?'cp':'orders';
+window.BLContextCommands=window.BLContextualCommands.create({snapshot:contextualCommandSnapshot,onUnavailable:message=>showToast(message),changedLabel:()=>contextualCommandLabel('Seçim veya oturum değişti. Paleti yeniden açın.','Selection or session changed. Reopen the palette.'),actions:[
+  {id:'linked-order',label:ctx=>ctx.module==='orders'?contextualCommandLabel('Bağlı CP kaydını aç','Open linked CP record'):contextualCommandLabel('Bağlı siparişleri aç','Open linked orders'),guard:ctx=>(ctx.module==='koleksiyon'?contextModel(ctx):contextOne(ctx))||contextArea(contextOrderTarget(ctx)),prepare:ctx=>ctx.module==='orders'?ensureCpLoaded():ensureOrdersLoaded(),run:ctx=>{
+    const target=contextOrderTarget(ctx),row=ctx.rows[0],rows=ctx.module==='koleksiyon'?(state[target]?.rows||[]).filter(item=>contextualCommandModelKey(item,target)===contextualCommandModelKey(row,ctx.module)):orderLinePeerRows(target,row);
+    if(!rows.length){showToast(contextualCommandLabel('Güncel yetkili veride bağlı sipariş bulunamadı.','No linked order was found in the current authorized data.'));return false;}
+    window.BLDetailDrawer.open({storageKey:'commands.linked-orders',moduleId:target,source:target,tableSetup:target,title:contextualCommandLabel('Bağlı siparişler','Linked orders'),rows,columns:[],images:true});return true;
+  }},
+  {id:'linked-collection',when:ctx=>ctx.module!=='koleksiyon',label:()=>contextualCommandLabel('Bağlı Koleksiyon modellerini aç','Open linked Collection models'),guard:ctx=>contextModel(ctx)||contextArea('koleksiyon')||(!kolWorkspaceList.length?contextualCommandLabel('Koleksiyon çalışma alanı henüz hazır değil.','The Collection workspace is not ready yet.'):''),run:ctx=>{
+    const key=contextualCommandModelKey(ctx.rows[0],ctx.module),rows=kolRows.filter(row=>contextualCommandModelKey(row,'koleksiyon')===key);
+    if(!rows.length){showToast(contextualCommandLabel('Geçerli Koleksiyon görünümünde eşleşen model yok.','No matching model in the current Collection view.'));return false;}
+    window.BLCollectionAnalyticsBridge.openDrilldown(rows,contextualCommandLabel('Bağlı Koleksiyon modelleri','Linked Collection models'));return true;
+  }},
+  {id:'price-detail',when:ctx=>ctx.module==='koleksiyon',label:()=>contextualCommandLabel('Fiyat ayrıntısını aç','Open price details'),guard:contextOne,run:ctx=>window.BLCollectionPriceDrawer?.open(ctx.rows[0])},
+  {id:'pricing-rule',label:()=>contextualCommandLabel('İlgili fiyat kuralını incele','Inspect the matching pricing rule'),guard:ctx=>contextOne(ctx)||(!window.BLHasPermission?.('manageBusinessRules')?contextualCommandLabel('İş kuralı yönetim yetkisi gerekli.','Business-rule management permission is required.'):'')||(!contextualCommandRule(ctx)?contextualCommandLabel('Bu kayıt için eşleşen fiyat kuralı yok.','No pricing rule matches this record.'):''),run:ctx=>{
+    const rule=contextualCommandRule(ctx);openSuppFobRulesModal();const select=document.getElementById('_ruleCheckRule');if(select&&rule){select.value=rule.id;select.dispatchEvent(new Event('change',{bubbles:true}));}return true;
+  }},
+  {id:'create-costing',label:()=>contextualCommandLabel('Seçili kayıttan maliyet oluştur','Create costing from the selected record'),guard:ctx=>contextOne(ctx)||contextArea('opencosting')||(ctx.module==='koleksiyon'&&!kolWorkspaceCanEdit||ctx.module==='cp'&&ctx.rows[0]?._canEdit===false?contextualCommandLabel('Bu kayıt salt okunur.','This record is read-only.'):'')||(!contextualCommandButton(ctx.module==='koleksiyon'?'kolCreateOcBtn':'cpCreateOcBtn')?contextualCommandLabel('Maliyet oluşturma işlemi şu an kullanılamıyor.','Create costing is not available right now.'):''),run:ctx=>{contextualCommandButton(ctx.module==='koleksiyon'?'kolCreateOcBtn':'cpCreateOcBtn')?.click();return true;}},
+  {id:'existing-report',label:ctx=>ctx.module==='koleksiyon'?contextualCommandLabel('Mevcut fiyat raporunu aç','Open the existing price report'):contextualCommandLabel('Seçili siparişin Backlog raporunu aç','Open Backlog report for the selected order'),guard:ctx=>contextOne(ctx)||contextArea(ctx.module==='koleksiyon'?'koleksiyon':'backlog')||(!contextualCommandButton(ctx.module==='koleksiyon'?'kolPriceHistoryBtn':'selectedBacklogBtn')?contextualCommandLabel('Rapor işlemi şu an kullanılamıyor.','The report action is not available right now.'):''),prepare:ctx=>ctx.module==='koleksiyon'?window.BLPerf.ensureFeature('collectionTools'):Promise.resolve(),run:ctx=>{contextualCommandButton(ctx.module==='koleksiyon'?'kolPriceHistoryBtn':'selectedBacklogBtn')?.click();return true;}}
+]});
 
 /* ===================================================================
    KULLANICI EXCEL'İ İÇERİ AKTARMA — MODÜL KÖPRÜSÜ
