@@ -1,4 +1,5 @@
 'use strict';
+const {registerLeaseWorker}=require('./lease-worker-registry');
 
 const path = require('node:path');
 const { Worker } = require('node:worker_threads');
@@ -10,6 +11,7 @@ let restoreTail = Promise.resolve();
 function runOne(file, env, timeoutMs) {
   return new Promise((resolve, reject) => {
     const worker = new Worker(WORKER_FILE, { workerData:{ file:String(file || ''), env:env || {} } });
+    registerLeaseWorker(worker);
     let settled = false;
     const finish = (error, value) => {
       if (settled) return;

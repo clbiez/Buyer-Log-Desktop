@@ -8,6 +8,10 @@ const parse = require('../server/lib/parse');
 const names = require('../public/column-display-names');
 const target = 'Initial Inspection Geçme Tarih Gün Ay Yıl';
 const merch = 'Orijinal Exfactory Merch Tarih';
+const calendarDay = value => {
+  assert.ok(value instanceof Date && !Number.isNaN(value.getTime()));
+  return [value.getFullYear(),String(value.getMonth()+1).padStart(2,'0'),String(value.getDate()).padStart(2,'0')].join('-');
+};
 
 test('Original Ex-F. auto-maps exact date in Dates, while Ex-factory retains its merch date', () => {
   const schema = { columns: [
@@ -34,11 +38,11 @@ test('ASAS date parses separately and does not alter Ex-factory', () => {
   }]);
   assert.equal(result.orders.length,1);
   const order = result.orders[0];
-  assert.equal(order.ex.toISOString().slice(0,10),'2026-09-11');
-  assert.equal(order.originalExFactoryDate.toISOString().slice(0,10),'2026-09-03');
+  assert.equal(calendarDay(order.ex),'2026-09-11');
+  assert.equal(calendarDay(order.originalExFactoryDate),'2026-09-03');
   const rows = parse.buildOrdersRowsFromASAS(result.orders,{}, {});
-  assert.equal(rows[0]['Original Ex-factory'].toISOString().slice(0,10),'2026-09-03');
-  assert.equal(rows[0]['Ex-factory'].toISOString().slice(0,10),'2026-09-11');
+  assert.equal(calendarDay(rows[0]['Original Ex-factory']),'2026-09-03');
+  assert.equal(calendarDay(rows[0]['Ex-factory']),'2026-09-11');
 });
 
 test('missing full date remains null instead of matching month/week or merch date',()=>{
@@ -47,7 +51,7 @@ test('missing full date remains null instead of matching month/week or merch dat
     'Net Alım Sipariş Miktarı':10, [merch]:'2026-09-11','Initial Inspection Geçme Merch Ay':'2026-09'
   }]);
   assert.equal(orders[0].originalExFactoryDate,null);
-  assert.equal(orders[0].ex.toISOString().slice(0,10),'2026-09-11');
+  assert.equal(calendarDay(orders[0].ex),'2026-09-11');
 });
 
 test('offline CP/Orders row builders and source parser use separate source date',()=>{

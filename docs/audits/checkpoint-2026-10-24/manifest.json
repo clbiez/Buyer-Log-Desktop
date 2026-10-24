@@ -1,0 +1,178 @@
+{
+  "repository": "clbiez/Buyer-Log-Desktop",
+  "target": "main",
+  "baseline": "5a5c3bcafd4de929019b3bba522ef5771670b171",
+  "auditCommit": "a9183b319dd4927642bf153defc653bf67b74ccd",
+  "approval": "Signed v3 patch migration + explicit approval per publication + no Actions ZIP storage. IMPLEMENTATION ONLY; no merge or release permission.",
+  "prs": [
+    {
+      "number": 685,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/685",
+      "package": "BL-001",
+      "branch": "fix/bl-001-checklist-authority",
+      "sourceHeadBeforeHandoffDocs": "65fad3b102446e1cf29a93c44c157ec55a197eb7",
+      "implementation": "7c32ec542eefab3e3747dba3a1361b0b811c9c4f",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 692,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/692",
+      "package": "BL-002",
+      "branch": "fix/bl-002-file-lease-integrity",
+      "sourceHeadBeforeHandoffDocs": "8525951b4d59f8ad1a0958a25b0ba4afd9c8a546",
+      "implementation": "e913a09e613cdfa6d4e39ebe5c9c36e2acd8b846",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 688,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/688",
+      "package": "BL-003",
+      "branch": "fix/bl-003-rollback-recovery",
+      "sourceHeadBeforeHandoffDocs": "575498a8321badbf5fc925048d385cac87ef468e",
+      "implementation": "575498a8321badbf5fc925048d385cac87ef468e",
+      "open": true,
+      "merged": false,
+      "draft": true
+    },
+    {
+      "number": 686,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/686",
+      "package": "BL-004",
+      "branch": "fix/bl-004-login-throttling",
+      "sourceHeadBeforeHandoffDocs": "8c6f7db3a4c42dce567e0b895a527e90e8b5ff58",
+      "implementation": "d5b0b04ffdfcc3aaa499b9b9459e668f79105ce9",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 693,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/693",
+      "package": "BL-005/011 proposal",
+      "branch": "docs/bl-005-011-trust-proposal",
+      "sourceHeadBeforeHandoffDocs": "8c0bfd830ac995bda2f80a36ab4c56341694f444",
+      "implementation": "8c0bfd830ac995bda2f80a36ab4c56341694f444",
+      "open": true,
+      "merged": false,
+      "draft": true
+    },
+    {
+      "number": 687,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/687",
+      "package": "BL-006 harness",
+      "branch": "test/bl-006-regression-baseline",
+      "sourceHeadBeforeHandoffDocs": "ad5a4ba6e1a02b3872c4e67751327d520f95310f",
+      "implementation": "73a890fe3bb1dd2caf399a5ea4e8fde43a321e5e",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 691,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/691",
+      "package": "BL-007",
+      "branch": "fix/bl-007-owned-temp-inventory",
+      "sourceHeadBeforeHandoffDocs": "8ddae4cdef98302dfa090c0eba326c40f5f399a4",
+      "implementation": "89ba6970c2a2c830b7a66d696d5f833b7a9ada1c",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 696,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/696",
+      "package": "BL-009",
+      "branch": "fix/bl-009-dialog-focus",
+      "sourceHeadBeforeHandoffDocs": "25badecceef2cf405c869ad74ca87139ce62a213",
+      "implementation": "25badecceef2cf405c869ad74ca87139ce62a213",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 697,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/697",
+      "package": "BL-010",
+      "branch": "fix/bl-010-license-load-states",
+      "sourceHeadBeforeHandoffDocs": "176136b4ac2bfbaccbd6b6f14c1dd72287ff5c8d",
+      "implementation": "176136b4ac2bfbaccbd6b6f14c1dd72287ff5c8d",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 695,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/695",
+      "package": "BL-011 gate",
+      "branch": "fix/bl-011-manual-publication-gate",
+      "sourceHeadBeforeHandoffDocs": "01dd915ae877583f8341d5781e4f834fad8dea38",
+      "implementation": "01dd915ae877583f8341d5781e4f834fad8dea38",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 698,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/698",
+      "package": "BL-015 partial",
+      "branch": "fix/bl-015-endeksmatik-tokens",
+      "sourceHeadBeforeHandoffDocs": "5cecb247ba5ad849cce45999b91008aea9f44ca4",
+      "implementation": "5cecb247ba5ad849cce45999b91008aea9f44ca4",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 699,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/699",
+      "package": "ND-001 / BL-006",
+      "branch": "fix/bl-006-legacy-sheet-origin",
+      "sourceHeadBeforeHandoffDocs": "336f38f6e39bfc687ef460ae388173ce14b27c4a",
+      "implementation": "336f38f6e39bfc687ef460ae388173ce14b27c4a",
+      "open": true,
+      "merged": false,
+      "draft": false
+    },
+    {
+      "number": 700,
+      "url": "https://github.com/clbiez/Buyer-Log-Desktop/pull/700",
+      "package": "ND-002",
+      "branch": "fix/endeksmatik-model-downgrade",
+      "sourceHeadBeforeHandoffDocs": "c64cfa7c8e48e87c92235c8b942587ae7e57c1b7",
+      "implementation": "c64cfa7c8e48e87c92235c8b942587ae7e57c1b7",
+      "open": true,
+      "merged": false,
+      "draft": true
+    }
+  ],
+  "validationBranches": [
+    "fix/bl-001-checklist-authority",
+    "fix/bl-002-file-lease-integrity",
+    "fix/bl-003-rollback-recovery",
+    "fix/bl-004-login-throttling",
+    "test/bl-006-regression-baseline",
+    "fix/bl-007-owned-temp-inventory",
+    "fix/bl-009-dialog-focus",
+    "fix/bl-010-license-load-states",
+    "fix/bl-011-manual-publication-gate",
+    "fix/bl-015-endeksmatik-tokens",
+    "fix/bl-006-legacy-sheet-origin",
+    "fix/endeksmatik-model-downgrade"
+  ],
+  "validationPatch": {
+    "name": "validation-combined.patch",
+    "sha256": "cdb92a514264ab09701e5ee89454eb01c2e77effa0f568868c435deee515bed7",
+    "notes": 30
+  },
+  "inputs": {
+    "buyer-log-master-audit.md": "0ea169b621487f7d93939a648dad5bb98b81e491a48c4393510032691a378201",
+    "buyer-log-master-audit.zip": "bacb20d562fd39c66f6e8b6131d2b3bf4a4fd18f5bd455c16ef0b38f6aa534e7"
+  },
+  "noMergedPRs": true,
+  "noPublishedReleases": true,
+  "noLiveUserData": true
+}

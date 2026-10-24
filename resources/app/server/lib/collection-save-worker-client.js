@@ -1,4 +1,5 @@
 'use strict';
+const {registerLeaseWorker}=require('./lease-worker-registry');
 
 /* ===================================================================
    v7.21 — KOLEKSİYON KAYDETME WORKER İSTEMCİSİ (KALICI İŞ PARÇACIĞI)
@@ -45,6 +46,7 @@ function ensureWorker(env) {
   if (worker) { const old = worker; worker = null; old.terminate().catch(() => {}); }
   workerEnvKey = envKeyOf(env);
   const created = new Worker(WORKER_FILE, { workerData: { env } });
+  registerLeaseWorker(created);
   created.on('message', message => {
     if (!message || message.ready) return;
     const entry = pending.get(message.id);

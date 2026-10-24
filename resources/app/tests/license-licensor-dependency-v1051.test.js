@@ -80,7 +80,7 @@ test('CP/Siparişler Licensor üretimi kural yokken yalnız bilinen License kata
     merkezSevkeHazirKalan: 0, opd: new Date(2026, 0, 1), ex: new Date(2026, 6, 1),
     retail: new Date(2026, 7, 1), mb: new Date(2026, 7, 15), plm: 101,
   };
-  const options = { ...db.defaultOverrides(), pricingRules: [] };
+  const options = { ...db.defaultOverrides(), nonDtrManufacturers: ['Factory A'], pricingRules: [] };
   assert.equal(parse.buildCPRowsFromASAS([order], {}, options)[0].Licensor, '');
   assert.equal(parse.buildOrdersRowsFromASAS([order], {}, options)[0].Licensor, '');
   order.license = 'Marvel';

@@ -21,12 +21,33 @@
   }
 
   function isAvailable(item){
-    return Boolean(item&&!item.disabled&&item.getAttribute?.('aria-disabled')!=='true'&&!item.hidden&&!item.closest?.('[hidden],[aria-hidden="true"]'));
+    if(!item||item.isConnected===false||item.disabled||item.matches?.(':disabled')||item.getAttribute?.('aria-disabled')==='true')return false;
+    const view=item.ownerDocument?.defaultView;
+    for(let node=item;node;node=node.parentElement||node.getRootNode?.().host){
+      if(node.hidden||node.inert||node.getAttribute?.('aria-hidden')==='true')return false;
+      const style=view?.getComputedStyle?.(node);
+      if(style&&(style.display==='none'||style.visibility==='hidden'||style.visibility==='collapse'||style.contentVisibility==='hidden'))return false;
+    }
+    return !item.getClientRects||item.getClientRects().length>0;
   }
 
   function focusableElements(container){
     if(!container?.querySelectorAll)return [];
-    return [...container.querySelectorAll(focusableSelector)].filter(isAvailable);
+    return [...container.querySelectorAll(focusableSelector)].filter(item=>isAvailable(item)&&item.tabIndex>=0)
+      .sort((a,b)=>(a.tabIndex||Infinity)-(b.tabIndex||Infinity));
+  }
+
+  function topDialog(doc){
+    return [...openDialogs].reverse().find(overlay=>overlay.ownerDocument===doc&&isAvailable(overlay));
+  }
+
+  function isTopDialog(overlay){
+    const doc=overlay.ownerDocument;
+    if(topDialog(doc)!==overlay)return false;
+    // Native top-layer dialogs can be opened by consumers outside this helper.
+    // Their own browser focus/cancel behavior must win over a background layer.
+    const native=[...doc.querySelectorAll('dialog[open]')].filter(node=>node.matches(':modal')).pop();
+    return !native||native===dialogState.get(overlay)?.dialog||native.contains(overlay);
   }
 
   function syncBodyLock(doc){
@@ -78,28 +99,29 @@
   }
 
   function resolveInitialFocus(dialog,requested){
-    if(requested?.focus&&isAvailable(requested))return requested;
+    if(requested?.focus&&dialog.contains(requested)&&isAvailable(requested))return requested;
     if(typeof requested==='string'){
       const match=dialog.querySelector(requested);
       if(isAvailable(match))return match;
     }
-    return dialog.querySelector('[autofocus]')
-      ||dialog.querySelector('input:not([disabled]):not([type="hidden"]),select:not([disabled]),textarea:not([disabled])')
-      ||dialog.querySelector('[data-bl-dialog-fallback]')
-      ||focusableElements(dialog)[0]
-      ||dialog;
+    for(const selector of ['[autofocus]','input:not([type="hidden"]),select,textarea','[data-bl-dialog-fallback]']){
+      const candidate=[...dialog.querySelectorAll(selector)].find(isAvailable);
+      if(candidate)return candidate;
+    }
+    return focusableElements(dialog)[0]||dialog;
   }
 
   function openDialog(overlay,options={}){
     if(!overlay?.querySelector)return null;
     if(dialogState.has(overlay))return dialogState.get(overlay).dialog;
-    const dialog=overlay.matches?.('[role="dialog"]')?overlay:overlay.querySelector('[role="dialog"]');
+    const dialog=overlay.matches?.('dialog,[role="dialog"]')?overlay:overlay.querySelector('dialog,[role="dialog"]');
     if(!dialog)return null;
     const doc=overlay.ownerDocument||dialog.ownerDocument;
     const active=doc?.activeElement;
     const returnTarget=options.trigger?.focus?options.trigger:(active&&active!==doc?.body?active:null);
     const state={dialog,returnTarget,onClose:typeof options.onClose==='function'?options.onClose:null,onKeydown:null};
     state.onKeydown=event=>{
+      if(!isTopDialog(overlay))return;
       if(event.key==='Escape'){
         event.preventDefault();event.stopPropagation();
         state.onClose?.();
@@ -111,6 +133,15 @@
         const current=items.indexOf(doc.activeElement);
         if(event.shiftKey&&current<=0){event.preventDefault();items[items.length-1].focus();}
         else if(!event.shiftKey&&(current<0||current===items.length-1)){event.preventDefault();items[0].focus();}
+        else{
+          // aria-hidden/aria-disabled controls remain in native Tab order.
+          // Intercept only when such an excluded control lies on this step;
+          // otherwise keep the browser's radio/shadow/control navigation.
+          const all=[...dialog.querySelectorAll(focusableSelector)].filter(item=>item.tabIndex>=0)
+            .sort((a,b)=>(a.tabIndex||Infinity)-(b.tabIndex||Infinity));
+          const nativeNext=all[all.indexOf(doc.activeElement)+(event.shiftKey?-1:1)];
+          if(nativeNext&&!isAvailable(nativeNext)){event.preventDefault();items[current+(event.shiftKey?-1:1)].focus();}
+        }
       }
     };
     dialog.setAttribute('aria-modal','true');
@@ -119,8 +150,7 @@
     overlay.addEventListener('keydown',state.onKeydown);
     state.elevated=options.elevate!==false&&elevateOverlay(overlay);
     dialogState.set(overlay,state);openDialogs.add(overlay);syncBodyLock(doc);
-    const target=resolveInitialFocus(dialog,options.initialFocus);
-    defer(()=>{if(overlay.isConnected!==false)target?.focus?.();});
+    defer(()=>{if(dialogState.get(overlay)===state&&isTopDialog(overlay))resolveInitialFocus(dialog,options.initialFocus)?.focus?.();});
     return dialog;
   }
 
@@ -130,7 +160,7 @@
     if(state.elevated)overlay.style.zIndex='';
     dialogState.delete(overlay);openDialogs.delete(overlay);syncBodyLock(overlay.ownerDocument||state.dialog.ownerDocument);
     const shouldRestore=options.restoreFocus!==false;
-    defer(()=>{if(shouldRestore&&state.returnTarget&&state.returnTarget.isConnected!==false)state.returnTarget.focus?.();});
+    defer(()=>{const top=topDialog(state.dialog.ownerDocument);if(shouldRestore&&isAvailable(state.returnTarget)&&(!top||dialogState.get(top).dialog.contains(state.returnTarget)))state.returnTarget.focus?.();});
   }
 
   function menuItems(menu){

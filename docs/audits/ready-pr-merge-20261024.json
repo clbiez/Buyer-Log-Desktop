@@ -1,0 +1,157 @@
+{
+  "capturedAtUTC": "2026-10-24T15:52:51.133Z",
+  "repository": "clbiez/Buyer-Log-Desktop",
+  "authorization": "User explicitly requested completing the remaining packages and merging the project changes in this chat on 24 October 2026. Publication is still a separate action.",
+  "base": "d91100fe62ba57074280657af30b266c0f7959ff",
+  "codeHead": "a3e5c3474166863219e7a6741c3c7058cae44cd8",
+  "integratedPRs": [
+    {
+      "number": 685,
+      "head": "8c7429948c243777cba61ff0f9c143569d32f4da"
+    },
+    {
+      "number": 692,
+      "head": "9b56bc2bea830f4d817e4b479671df21b6bed389"
+    },
+    {
+      "number": 701,
+      "head": "60b3921b6efb31ecd90f8a6ff608b78999c33380"
+    },
+    {
+      "number": 686,
+      "head": "8c6f7db3a4c42dce567e0b895a527e90e8b5ff58"
+    },
+    {
+      "number": 687,
+      "head": "9e99b9db7bdc3bc0d034484081aac13ba5b7f610"
+    },
+    {
+      "number": 691,
+      "head": "8ddae4cdef98302dfa090c0eba326c40f5f399a4"
+    },
+    {
+      "number": 696,
+      "head": "25badecceef2cf405c869ad74ca87139ce62a213"
+    },
+    {
+      "number": 697,
+      "head": "176136b4ac2bfbaccbd6b6f14c1dd72287ff5c8d"
+    },
+    {
+      "number": 698,
+      "head": "5cecb247ba5ad849cce45999b91008aea9f44ca4"
+    },
+    {
+      "number": 699,
+      "head": "336f38f6e39bfc687ef460ae388173ce14b27c4a"
+    },
+    {
+      "number": 703,
+      "head": "a78f14363e93a24d5ec4c94c635ad726fc606e2c"
+    },
+    {
+      "number": 704,
+      "head": "92acd070db480d5d16cf552c252915a3e55dbba0"
+    },
+    {
+      "number": 706,
+      "head": "5cfc299abd5496c65db98bf99020f4671e8429a0"
+    },
+    {
+      "number": 705,
+      "head": "873d2e8081474b1ced05899a49c6436c061d78f3"
+    }
+  ],
+  "alreadyMerged": {
+    "number": 695,
+    "head": "01dd915ae877583f8341d5781e4f834fad8dea38",
+    "merge": "d91100fe62ba57074280657af30b266c0f7959ff"
+  },
+  "unmergedDrafts": [
+    {
+      "number": 688,
+      "remaining": "Signed full-bootstrap migration and actual installed Windows trial rollback acceptance"
+    },
+    {
+      "number": 700,
+      "remaining": "Legacy TL compatibility and financial-boundary acceptance"
+    },
+    {
+      "number": 693,
+      "remaining": "Approved signed-v3 trust design; implementation remains outstanding"
+    }
+  ],
+  "fullRegression": {
+    "command": "node resources/app/tests/run-tests.js",
+    "files": 1041,
+    "durationSeconds": 196.5,
+    "totals": {
+      "tests": 7472,
+      "pass": 7467,
+      "fail": 0,
+      "skipped": 5
+    },
+    "batches": [
+      {
+        "batch": 1,
+        "tests": 2130,
+        "pass": 2130,
+        "fail": 0,
+        "skip": 0
+      },
+      {
+        "batch": 2,
+        "tests": 2165,
+        "pass": 2163,
+        "fail": 0,
+        "skip": 2
+      },
+      {
+        "batch": 3,
+        "tests": 2241,
+        "pass": 2239,
+        "fail": 0,
+        "skip": 2
+      },
+      {
+        "batch": 4,
+        "tests": 923,
+        "pass": 923,
+        "fail": 0,
+        "skip": 0
+      },
+      {
+        "batch": 5,
+        "tests": 13,
+        "pass": 12,
+        "fail": 0,
+        "skip": 1
+      }
+    ],
+    "scope": "Exact ready-PR merge candidate; BL-003 updater and ND-002 draft code is excluded",
+    "skips": [
+      "﹣ IAM head accepts OneDrive reparse-point revision folders (reported as symlinks) # SKIP",
+      "﹣ OneDrive simulation soak: 10 devices, 20,000 operations # SKIP"
+    ]
+  },
+  "coreChecks": {
+    "pass": 17,
+    "fail": 0
+  },
+  "releaseNotes": {
+    "changes": 34,
+    "validation": "PASS"
+  },
+  "resolution": "Preserved both BL-002 lease-error cache invalidation and BL-012 WAL metadata invalidation. Compared the resulting local-db.js to the earlier passing integration; only explanatory comments differ. Release-note conflicts retain every unique change and actual PNG.",
+  "branchProtection": {
+    "mainProtected": false,
+    "verifiedUsing": "GitHub branch API; no repository security settings changed"
+  },
+  "priorReview": "Package-specific independent reviews are recorded in the existing BL-001, BL-002, ND-003, BL-012 and BL-016 PRs. This merge adds no new persistence/authorization policy.",
+  "publication": {
+    "TEST": false,
+    "STABLE": false,
+    "manualPatch": false
+  },
+  "completion": "This merge batch does not complete the remaining 18 packages. The other implementation and real deployment acceptance work remains active."
+}

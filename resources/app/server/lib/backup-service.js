@@ -133,7 +133,8 @@ async function fullEntries({ accessSnapshot, syncSettings, localDbFile }) {
   await collectRoot(entries, QTX_FILES_ROOT, 'system/qtx-files');
   if (localDbFile && fs.existsSync(localDbFile) && !entries.some(item => path.resolve(item.sourcePath || '') === path.resolve(localDbFile))) entries.push({ name: 'system/local/BuyerLogLocal.db', sourcePath: localDbFile, stage: 'data' });
   let config = {};
-  try { config = JSON.parse(await fsp.readFile(CONFIG_PATH, 'utf8')); } catch (_) {}
+  try { config = JSON.parse(await fsp.readFile(CONFIG_PATH, 'utf8')); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
   entries.push(jsonEntry('system/config/config.json', config));
   entries.push(jsonEntry('system/security/users-roles-permissions.json', accessSnapshot, 'settings'));
   entries.push(jsonEntry('system/sync/metadata.json', syncSettings || {}, 'settings'));

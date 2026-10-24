@@ -45,10 +45,20 @@ test('Backlog opt-in details carry their own source projection through JSON, wit
   const [detail]=detailRows([rec]);
   const keys=['FOB ($)','Supp. FOB','Order Quantity','Licensor','OPD','Retail Date','In-Store (Model Budget)','PLM ID'];
   const columns=snapshot(keys).columns,reader=drawer();
-  const expected=[12.5,12.5,1000,'DTR','2026-07-01T00:00:00.000Z','2026-12-01T00:00:00.000Z','2026-12-15T00:00:00.000Z','700001'];
+  // The fixture starts at local midnight. Assert its exact JSON instant rather
+  // than assuming the test host runs in UTC, then verify calendar-day fidelity.
+  const dates={OPD:'2026-07-01','Retail Date':'2026-12-01','In-Store (Model Budget)':'2026-12-15'};
+  const expected=[12.5,12.5,1000,'DTR',d(dates.OPD).toISOString(),d(dates['Retail Date']).toISOString(),d(dates['In-Store (Model Budget)']).toISOString(),'700001'];
   columns.forEach((col,i)=>{
     assert.equal(String(reader.valueOf(col,detail)),String(expected[i]),col.key+' screen');
     assert.equal(String(reader.excelValueOf(col,detail)),String(expected[i]),col.key+' Excel');
+    if(dates[col.key]) {
+      const restored=parse.parseDateOnly(reader.excelValueOf(col,detail));
+      assert.ok(restored instanceof Date);
+      assert.equal(restored.getFullYear(),Number(dates[col.key].slice(0,4)),col.key+' calendar year');
+      assert.equal(restored.getMonth()+1,Number(dates[col.key].slice(5,7)),col.key+' calendar month');
+      assert.equal(restored.getDate(),Number(dates[col.key].slice(8,10)),col.key+' calendar day');
+    }
   });
 });
 

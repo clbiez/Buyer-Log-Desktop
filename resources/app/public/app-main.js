@@ -11381,13 +11381,7 @@ function applyLicensorRulesToLoadedRows(){
         if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;changed++;}
         return;
       }
-      // Otomatik değer yalnız tek geçerli Licensor varken yazılır; belirsizlik ve
-      // NON-DTR üretici çelişkisi hücreyi boş bırakıp açık seçim bekler.
-      const api=window.BLBusinessRules;
-      const rules=Array.isArray(state.overrides&&state.overrides.pricingRules)?state.overrides.pricingRules:[];
-      const auto=api&&typeof api.resolveAutoLicensor==='function'
-        ? api.resolveAutoLicensor(license,rules,{manufacturer:norm(row.Manufacturer),nonDtrManufacturers:state.overrides&&state.overrides.nonDtrManufacturers})
-        : kolResolveLicensorsForLicense(license);
+      const auto=licenseLicensorStateForRow(row);
       const next=norm(auto.displayValue)||'';
       if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;changed++;}
     });
@@ -12513,7 +12507,7 @@ function buildCPRowsFromASAS(){
     if(legacyRef)imageByIdentity.set(key,legacyRef);
   });
   return filtered.map((o,i)=>{
-    const derivedLicensor = kolResolveLicensorsForLicense(o.license).displayValue || '';
+    const derivedLicensor = norm(o.licensor) || licenseLicensorStateForRow({License:o.license,Manufacturer:o.manufacturer}).displayValue || '';
     const hasLicensorOverride = Object.prototype.hasOwnProperty.call(ov.licensormap||{},o.ocode);
     const licensor = o.license && hasLicensorOverride ? norm(ov.licensormap[o.ocode]) : derivedLicensor;
     const key = `${o.ocode}|${turknorm(o.colour)}`;
@@ -12564,7 +12558,7 @@ function buildOrderSummaryRowsFromASAS(){
   const T = toDateOnly(new Date());
   const filtered = orders;
   const built = filtered.map(o=>{
-    const derivedLicensor = kolResolveLicensorsForLicense(o.license).displayValue || '';
+    const derivedLicensor = norm(o.licensor) || licenseLicensorStateForRow({License:o.license,Manufacturer:o.manufacturer}).displayValue || '';
     const hasLicensorOverride = Object.prototype.hasOwnProperty.call(ov.licensormap||{},o.ocode);
     const licensor = o.license && hasLicensorOverride ? norm(ov.licensormap[o.ocode]) : derivedLicensor;
     const key = `${o.ocode}|${turknorm(o.colour)}`;
@@ -26648,8 +26642,8 @@ function kolLicensorUnresolvedState(row){
 function licenseLicensorStateForRow(row){
   const license=norm(row&&row.License);
   const rules=Array.isArray(state.overrides&&state.overrides.pricingRules)?state.overrides.pricingRules:[];
-  const resolver=window.BLBusinessRules&&window.BLBusinessRules.resolveLicenseLicensor;
-  if(typeof resolver==='function')return resolver(license,rules);
+  const resolver=window.BLBusinessRules&&window.BLBusinessRules.resolveOrderLicensor;
+  if(typeof resolver==='function')return resolver(license,rules,{manufacturer:norm(row&&row.Manufacturer),nonDtrManufacturers:state.overrides&&state.overrides.nonDtrManufacturers});
   const resolved=license?kolResolveLicensorsForLicense(license):{license:'',latestDate:'',licensors:[],displayValue:''};
   return {...resolved,hasLicense:Boolean(license),hasRule:Boolean(resolved.displayValue),status:license?(resolved.displayValue?'resolved':'missing-rule'):'empty'};
 }

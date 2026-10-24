@@ -20,7 +20,7 @@ const text=(value,max=300)=>String(value??'').replace(/\s+/g,' ').trim().slice(0
 const fail=(code,statusCode=400)=>Object.assign(new Error(code),{code,statusCode});
 const MIME={pdf:'application/pdf',msg:'application/vnd.ms-outlook',eml:'message/rfc822'};
 const sessionFingerprint=session=>require('../operation-utils').hash(JSON.stringify({reports:session.reports,assessment:session.assessment&&{snapshotId:session.assessment.packet.snapshotId,validated:session.assessment.validated},files:[...session.files].map(([id,file])=>({id,name:file.name,hash:file.hash,kind:file.kind}))}));
-function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,reviewContext=null}) {
+function createService({authorizedOrders,authorizedOrdersNow=null,audit=()=>{},sourceRevision=()=>null,reviewContext=null}) {
   function assertReviewCurrent(profile,review) {
     if(review.sourceRevision!==sourceRevision(profile)||review.storeRevision!==store.read().revision)throw fail('TEST_REPORT_REVIEW_STALE',409);
   }
@@ -106,21 +106,53 @@ function createService({authorizedOrders,audit=()=>{},sourceRevision=()=>null,re
   async function commit(profile,body,options={}) {
     const {session,items,authorizedOrderKeys,sessionFingerprint:fingerprint,assessed}=await prepareCommit(profile,body);
     if(options.expectedSessionFingerprint && options.expectedSessionFingerprint!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
+    const assertAuthority=()=>{
+      options.assertAuthority?.();
+      if(typeof authorizedOrdersNow!=='function')return;
+      const current=authorizedOrdersNow(profile,{write:true});
+      if(!(current instanceof Map))throw fail('TEST_REPORT_AUTH_UNAVAILABLE',503);
+      for(const item of items){
+        const identity=current.get(item.orderKey);
+        if(!identity)throw fail('TEST_REPORT_ORDER_FORBIDDEN',403);
+        for(const field of ['orderCode','plmId','modelName','colourCode','colour']) {
+          if(text(identity[field])!==text(item.context[field]))throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
+        }
+      }
+      const saved=store.read();
+      if(items.some(item=>Engine.reportLinks(saved.links[item.report.talepNo]).some(link=>!current.has(link.orderKey))))throw fail('TEST_REPORT_SHARED_SCOPE_FORBIDDEN',403);
+      // The store checks all existing links to a report under its own lease.
+      // Supply the CURRENT set, not the set captured before async preparation.
+      authorizedOrderKeys.clear();for(const key of current.keys())authorizedOrderKeys.add(key);
+    };
+    const createdAttachments=[];
     const attach=(file,report,item)=>{
       const staged=file.stagingId?session.files.get(file.stagingId):null;if(!staged)return null;
       const c=item.context;
-      return checklist.addAttachmentBuffer(staged.buffer,{filename:staged.name,mimeType:MIME[staged.kind]||'application/octet-stream',context:{orderCode:text(c.orderCode,60),plmId:text(c.plmId,60),modelName:text(c.modelName,120),colourCode:text(c.colourCode,60),checklistName:text(c.checklistName,120)||'Test',checklistStatus:text(c.checklistStatus,60)||report.talepNo}},profile);
+      const meta=checklist.addAttachmentBuffer(staged.buffer,{filename:staged.name,mimeType:MIME[staged.kind]||'application/octet-stream',context:{orderCode:text(c.orderCode,60),plmId:text(c.plmId,60),modelName:text(c.modelName,120),colourCode:text(c.colourCode,60),checklistName:text(c.checklistName,120)||'Test',checklistStatus:text(c.checklistStatus,60)||report.talepNo}},profile,{orderKey:item.orderKey,assertAuthority});
+      createdAttachments.push(meta.id);return meta;
     };
-    options.assertAuthority?.();
+    assertAuthority();
+    let nativeCommitCompleted=false;
     const apply=()=>staging.withSessionLease(body.sessionId,profile.id,()=>{
       const latest=sessionFor(profile,body.sessionId);
       if(sessionFingerprint(latest)!==fingerprint)throw fail('TEST_REPORT_PREVIEW_CHANGED',409);
       if(latest.assessment&&assessed)assertReviewCurrent(profile,latest.assessment);
-      options.assertAuthority?.();return store.commit(items,body.typeMap||{},profile,attach,{...options,authorizedOrderKeys});
+      assertAuthority();const committed=store.commit(items,body.typeMap||{},profile,attach,{...options,authorizedOrderKeys,assertAuthority});
+      nativeCommitCompleted=true;return committed;
     });
     // Native preparation can await order scope. Hold the Office guard only for
     // the synchronous native lease/write, never while loading that scope.
-    const result=options.withCommitGuard?await options.withCommitGuard(apply):apply();
+    let result;
+    try{result=options.withCommitGuard?await options.withCommitGuard(apply):apply();}
+    catch(error){
+      const knownPreCommit=new Set(['TEST_REPORT_ORDER_FORBIDDEN','TEST_REPORT_SHARED_SCOPE_FORBIDDEN','TEST_REPORT_FORBIDDEN','TEST_REPORT_AUTH_UNAVAILABLE','TEST_REPORT_PREVIEW_CHANGED','TEST_REPORT_REVIEW_STALE']);
+      for(const id of !nativeCommitCompleted&&knownPreCommit.has(error.code)?createdAttachments:[]){
+        // Only a proven pre-write rejection permits cleanup. I/O failures may
+        // already have published last-good recovery, even if primary is old.
+        try{checklist.deleteAttachment(id);}catch(cleanup){error.attachmentCleanupIncomplete=true;console.warn('[TEST_REPORT] Unlinked attachment cleanup failed',{id,code:cleanup.code||'UNKNOWN'});}
+      }
+      throw error;
+    }
     for(const item of result.results)audit(profile,'TEST_REPORT_IMPORT',item.talepNo,{orderKey:item.orderKey,itemId:item.itemId,attachments:item.attachments.length,newDecisions:item.newDecisions,sources:(item.report.kaynaklar||[]).slice(0,6)});
     staging.dropSession(body.sessionId);return result;
   }
