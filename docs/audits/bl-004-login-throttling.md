@@ -1,6 +1,6 @@
 # BL-004 — trusted login throttling
 
-Status: Verified locally; PR delivery pending. Baseline: main `6f8eb33e820c231cb4f7189c728224ad1b58dd57`, Linux x86_64, Node v24.19.0, Chromium. No merge or release.
+Status: PR Open — [#686](https://github.com/clbiez/Buyer-Log-Desktop/pull/686); behavior verified locally. Baseline: main `6f8eb33e820c231cb4f7189c728224ad1b58dd57`, Linux x86_64, Node v24.19.0, Chromium. No merge or release.
 
 ## Reproduction and root cause
 
@@ -33,3 +33,5 @@ One independent reviewer found no header/alias/concurrency bypass and identified
 ## Deployment and rollback
 
 Restart the backend to activate new in-memory throttling; refresh the sign-in page for localized feedback. No database conversion, migrations, dependencies, credential resets, or release publication. Revert this PR and restart to roll back; that also restores the forwarding-header vulnerability. In-memory limits reset on process restart as before. A distributed cross-process or persistent limiter is outside the current direct-loopback architecture.
+
+Combined local validation with BL-001 and BL-006 implementation diffs: 45 files, 310 passed, zero failed/skipped; 23-entry combined release notes validated. No PR merged or release published. This focused integration result does not certify the full baseline or Windows.
