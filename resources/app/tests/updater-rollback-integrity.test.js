@@ -42,7 +42,17 @@ for (const mode of ['same-size-corruption', 'truncation', 'directory', 'symlink'
     if (mode === 'same-size-corruption') fs.writeFileSync(file, 'x'.repeat(fs.statSync(file).size));
     if (mode === 'truncation') fs.writeFileSync(file, 'short');
     if (mode === 'directory') { fs.unlinkSync(file); fs.mkdirSync(file); }
-    if (mode === 'symlink') { fs.unlinkSync(file); fs.symlinkSync(path.join(f.life.localDataRoot, names[0]), file); }
+    if (mode === 'symlink') {
+      fs.unlinkSync(file);
+      try { fs.symlinkSync(path.join(f.life.localDataRoot, names[0]), file); }
+      catch (error) {
+        if (process.platform === 'win32' && error.code === 'EPERM') {
+          t.skip('Windows file symlink privilege is unavailable; rollback symlink validation is not verified on this host.');
+          return;
+        }
+        throw error;
+      }
+    }
     assert.throws(() => f.life.rollbackNow(activation, 'synthetic'), error => error.code === 'UPDATE_DB_ROLLBACK_INVALID');
     assert.deepEqual(contents(f.life), before); assert.equal(f.life.currentPointer().version, '1.1.0');
   });
