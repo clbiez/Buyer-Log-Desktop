@@ -6015,3 +6015,17 @@ button.ovNoteCount:hover{background:var(--acc-bg);border-color:var(--acc);}
 .clElementMore{flex:0 0 auto;color:var(--muted);font-size:var(--fs-2xs);}
 .clElementEditor .cpaSettingRow>span{display:flex;flex-direction:column;gap:2px;}
 .clElementEditor [data-element-add]{white-space:nowrap;flex:0 0 auto;}
+
+/* Notebook rich text uses the shared theme and editor primitives. */
+.todoToolbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding-bottom:8px;}
+.todoToolbar select{max-width:130px;min-width:0;font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);height:var(--ctl-h-sm);}
+.todoToolbar label{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-xs);color:var(--ink2);}
+.todoToolbar input[type=color]{width:28px;height:var(--ctl-h-sm);padding:2px;border:1px solid var(--line);background:var(--card);cursor:pointer;}
+.todoRichEditor{overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;}
+.todoRichEditor:empty::before{content:attr(data-placeholder);color:var(--muted);pointer-events:none;}
+.todoRichEditor img{max-width:100%;height:auto;vertical-align:middle;}
+.todoRichEditor ul,.todoRichEditor ol{padding-inline-start:24px;}
+.todoHint{font-size:var(--fs-xs);color:var(--muted);padding-top:6px;}
+.todoToolbar [hidden]{display:none;}
+
+.todoToolbar button[aria-pressed=true]{color:var(--acc);background:var(--acc-bg);border-color:var(--acc);}
