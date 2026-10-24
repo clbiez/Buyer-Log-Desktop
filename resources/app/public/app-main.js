@@ -9720,6 +9720,43 @@ function syncOrderLinePeersFromCpRow(sourceRow, keys, options={}){
   }
   return matched;
 }
+function captureCpPricingHistory(row,licensor=false){
+  const clone=value=>value===undefined?undefined:JSON.parse(JSON.stringify(value));
+  const key=lineKeyOfRow(row)||row['Order Code'];
+  const rowKeys=['_suppFobMeta','_suppFobManual','_suppFobRule','_suppFobOverride','_suppFobImported'];
+  if(licensor)rowKeys.push('_licensorManual','_licensorAuto','_licensorAutoLicense');
+  const maps=['suppfobmap','suppfobmetamap',...(licensor?['licensormap']:[])];
+  return {licensor,row:Object.fromEntries(rowKeys.map(name=>[name,{present:Object.hasOwn(row,name),value:clone(row[name])}])),maps:Object.fromEntries(maps.map(name=>[name,{present:Object.hasOwn(state.overrides[name]||{},key),value:clone(state.overrides[name]?.[key])}]))};
+}
+function cancelCpPricingHistoryRestore(row,field){
+  if(!row._pricingHistoryRestore)return;
+  const next={...row._pricingHistoryRestore};delete next[field];
+  if(Object.keys(next).length)row._pricingHistoryRestore=next;else delete row._pricingHistoryRestore;
+}
+function restoreCpPricingHistory(row,snapshot){
+  if(!snapshot)return;
+  const clone=value=>value===undefined?undefined:JSON.parse(JSON.stringify(value));
+  const key=lineKeyOfRow(row)||row['Order Code'];
+  for(const [name,entry] of Object.entries(snapshot.row)){
+    if(entry.present)row[name]=clone(entry.value);else delete row[name];
+  }
+  for(const [name,entry] of Object.entries(snapshot.maps)){
+    state.overrides[name]=state.overrides[name]||{};
+    if(entry.present)state.overrides[name][key]=clone(entry.value);else delete state.overrides[name][key];
+  }
+  // Restore the pricing intent. Automatic values use today's loaded rule rather
+  // than freezing an obsolete calculation from the history snapshot.
+  if(row._suppFobManual!==true||importedSuppFob(row)){
+    recalcSuppFobForRow(row);
+    if(snapshot.maps.suppfobmap.present&&snapshot.maps.suppfobmetamap.value?.source==='rule'&&row._suppFobMeta){
+      row._suppFobOverride=true;row._suppFobMeta.applied=snapshot.maps.suppfobmetamap.value.applied===true;
+    }
+  }
+  const pending={...row._pricingHistoryRestore};
+  if(snapshot.licensor)pending.licensor=clone(snapshot.maps.licensormap);
+  else {pending.suppFob={...clone(snapshot.maps.suppfobmap),meta:clone(snapshot.maps.suppfobmetamap)};delete row._pricingManualWrite;}
+  row._pricingHistoryRestore=pending;
+}
 function applyHistoryAction(action, direction, options={}){
   if(action.kind==='batch'){
     const batch=options.batch||{ids:new Set(),peers:false,scheduleChanged:false};
@@ -9745,8 +9782,16 @@ function applyHistoryAction(action, direction, options={}){
   if(action.ownerId!=null&&action.ownerId!==orderLinePeerOwner())return;
   const row = action.lineKey?orderLinePeerRows('cp',null,action.lineKey)[0]:state.cp.rows.find(r=>r._id===action.id);
   if(!row||row._canEdit===false) return;
+  const sharedHistory=action.pricing?!action.pricing.prev.licensor:(action.fields||[]).some(field=>['Ex-factory','Retail Date','In-Store (Model Budget)','Sub-Manufacturer','Supp. FOB'].includes(field.key));
+  if(row._canEditShared===false&&sharedHistory)return;
   action.fields.forEach(f=>{ row[f.key] = direction==='undo' ? f.prev : f.next; });
   const historyKeys=new Set((action.fields||[]).map(field=>field.key));
+  if(action.pricing){
+    const snapshot=direction==='undo'?action.pricing.prev:action.pricing.next;
+    restoreCpPricingHistory(row,snapshot);historyKeys.add('Supp. FOB');
+    if(snapshot.licensor)historyKeys.add('Licensor');
+  }
+  if(historyKeys.has('Sub-Manufacturer')&&!action.pricing)row._subManufacturerWrite={};
   if(historyKeys.has('Del. Type'))syncCpProductionLogisticSegment(row,row['Del. Type']);
   else if(historyKeys.has('Ex-factory'))syncCpProductionLogisticSegment(row);
   applyFormulas(row);
@@ -10065,6 +10110,9 @@ function commitCpEditor(t, options={}){
       t.value = fmt(next);
       return false;
     }
+    const previousPricing=captureCpPricingHistory(row);
+    cancelCpPricingHistoryRestore(row,'suppFob');
+    row._pricingManualWrite={};
     row[key] = next;
     const manualMeta={source:'manual'};
     row._suppFobMeta=manualMeta;
@@ -10079,12 +10127,13 @@ function commitCpEditor(t, options={}){
     t.value = fmt(next);
     markDirty(id);
     syncOrderLinePeersFromCpRow(row, ['Supp. FOB'], {render:refresh});
-    pushUndo({id, fields:[{key, prev, next}]});
+    pushUndo({id, fields:[{key, prev, next}],pricing:{prev:previousPricing,next:captureCpPricingHistory(row)}});
     if(refresh) refreshRowEverywhere(id);
     return true;
   }
   const prev = row[key];
   if(editableValuesEqual(prev,t.value)) return false;
+  const previousPricing=kind==='licensor'?captureCpPricingHistory(row,true):null;
   row[key] = t.value;
   if(kind==='deltype'){
     syncCpProductionLogisticSegment(row,t.value);
@@ -10094,6 +10143,7 @@ function commitCpEditor(t, options={}){
     return true;
   }
   if(kind==='licensor'){
+    cancelCpPricingHistoryRestore(row,'licensor');
     const next=norm(t.value); row[key]=next; t.value=next;
     const prevSupp=row['Supp. FOB'];
     state.overrides.licensormap[lineKeyOfRow(row)||row['Order Code']]=next; row._licensorManual=true;
@@ -10104,7 +10154,7 @@ function commitCpEditor(t, options={}){
     row['Sub-Manufacturer']=nextSub;
     if(!editableValuesEqual(prevSub,nextSub))fields.push({key:'Sub-Manufacturer',prev:prevSub,next:nextSub});
     if(!editableValuesEqual(prevSupp,row['Supp. FOB'])) fields.push({key:'Supp. FOB',prev:prevSupp,next:row['Supp. FOB']});
-    markDirty(id); pushUndo({id,fields,refreshLicensorList:true});
+    markDirty(id); pushUndo({id,fields,refreshLicensorList:true,pricing:{prev:previousPricing,next:captureCpPricingHistory(row,true)}});
     syncOrderLinePeersFromCpRow(row, ['Licensor', 'Sub-Manufacturer', 'Supp. FOB'], {render:refresh});
     if(refresh){ refreshRowEverywhere(id); refreshLicensorList(); }
     return true;
@@ -10114,6 +10164,7 @@ function commitCpEditor(t, options={}){
       row[key]=norm(row.Manufacturer);t.value=row[key];return false;
     }
     const next=norm(t.value);row[key]=next;t.value=next;
+    row._subManufacturerWrite={};
     markDirty(id); pushUndo({id, fields:[{key,prev,next}], refreshSubmfrList:true});
     syncOrderLinePeersFromCpRow(row, ['Sub-Manufacturer'], {render:refresh});
     if(refresh){ refreshRowEverywhere(id); refreshSubmfrList(); }
@@ -12694,8 +12745,8 @@ function syncOverridesFromRow(row){
     state.overrides.submap=state.overrides.submap||{};
     state.overrides.submap[key]=norm(row['Sub-Manufacturer']);
   }
-  if(row._licensorManual===true)state.overrides.licensormap[key]=norm(row.Licensor);
-  if(row._suppFobManual===true&&!importedSuppFob(row)){
+  if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},key))state.overrides.licensormap[key]=norm(row.Licensor);
+  if(row._suppFobManual===true&&!importedSuppFob(row)&&Object.hasOwn(state.overrides.suppfobmap||{},key)&&!row._pricingHistoryRestore?.suppFob){
     state.overrides.suppfobmap[key]=(row['Supp. FOB']==null||row['Supp. FOB']==='')?null:Number(row['Supp. FOB']);
     state.overrides.suppfobmetamap=state.overrides.suppfobmetamap||{};
     state.overrides.suppfobmetamap[key]={source:'manual'};
@@ -12812,16 +12863,26 @@ function saveDateOverrides(row, touchedKeys){
 function syncOverrideToServer(orderCode,notes,row){
   if(!window.SERVER_BACKED)return;
   schedulePendingOverrideWrite(`notes:${overrideSyncKey(row, orderCode)}`, 500, ()=>{
+    const restore=row._pricingHistoryRestore,manualWrite=row._pricingManualWrite,subWrite=row._subManufacturerWrite;
     enqueueOverrideMutation('orders',`/api/overrides/${orderCode}`,{
       method:'PATCH',headers:{'Content-Type':'application/json'},
       body:JSON.stringify((()=>{
         const body={...lineIdentity(row),notes,delType:row['Del. Type']||undefined};
-        if(turknorm(row.Licensor)!=='DTR')body.subManufacturer=norm(row['Sub-Manufacturer']);
-        if(row._licensorManual===true)body.licensor=norm(row.Licensor);
+        if(turknorm(row.Licensor)!=='DTR'&&(!restore?.licensor||subWrite))body.subManufacturer=norm(row['Sub-Manufacturer']);
+        if(row._licensorManual===true&&Object.hasOwn(state.overrides.licensormap||{},overrideSyncKey(row,orderCode)))body.licensor=norm(row.Licensor);
         // An imported (CP update) value is not re-sent as a manual price with a note save.
-        if(row._suppFobManual===true&&!importedSuppFob(row)){
+        if(row._suppFobManual===true&&!importedSuppFob(row)&&Object.hasOwn(state.overrides.suppfobmap||{},overrideSyncKey(row,orderCode))&&(!restore?.licensor||manualWrite)){
           body.suppFob=(row['Supp. FOB']!=null&&row['Supp. FOB']!=='')?Number(row['Supp. FOB']):null;
           body.suppFobMeta={source:'manual'};
+        }
+        if(restore&&Object.keys(restore).length){
+          body.pricingRestore={};
+          if(restore.licensor){body.licensor=restore.licensor.present?restore.licensor.value:null;body.pricingRestore.licensor={present:restore.licensor.present};}
+          if(restore.suppFob){
+            body.suppFob=restore.suppFob.present?restore.suppFob.value:null;
+            body.suppFobMeta=restore.suppFob.meta.present?restore.suppFob.meta.value:null;
+            body.pricingRestore.suppFob={present:restore.suppFob.present,metaPresent:restore.suppFob.meta.present};
+          }
         }
         if(CP_NOTE_COLUMN_DEFS.length){
           const noteBucket=state.overrides.noteColumnValues&&state.overrides.noteColumnValues[overrideSyncKey(row,orderCode)];
@@ -12829,6 +12890,10 @@ function syncOverrideToServer(orderCode,notes,row){
         }
         return body;
       })())
+    }).then(()=>{
+      if(restore&&row._pricingHistoryRestore===restore)delete row._pricingHistoryRestore;
+      if(manualWrite&&row._pricingManualWrite===manualWrite)delete row._pricingManualWrite;
+      if(subWrite&&row._subManufacturerWrite===subWrite)delete row._subManufacturerWrite;
     }).catch(err=>{console.warn('Sunucuya kaydedilemedi:',err.message);if(err.code!=='REVISION_CONFLICT')notifyOverrideSaveError(appLang==='en'?'The change could not be saved to the server.':'Değişiklik sunucuya kaydedilemedi.');});
   });
 }

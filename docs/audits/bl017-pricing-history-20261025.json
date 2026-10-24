@@ -1,0 +1,151 @@
+{
+  "package": "BL-017",
+  "slice": "CP pricing history provenance",
+  "status": "Implemented first correctness slice; broader BL-017 remains open; full/merge deferred",
+  "base": "3048cc34fa055fe06c1fb516e436a8d4ad250546",
+  "focused": {
+    "files": 19,
+    "pass": 144,
+    "fail": 0,
+    "skip": 0,
+    "log": "work/bl017-focused-final.log",
+    "sha256Lf": "fb0ade2db79c10601b5e836c095afac9e78a464dec8222237a5e57b03ea71118"
+  },
+  "red": [
+    "bl017-history-red.log",
+    "bl017-durable-restore-red.log",
+    "bl017-review-findings-red.log"
+  ],
+  "native": {
+    "ok": true,
+    "report": "work/bl017-native-acceptance.json",
+    "scope": "Real full server, Windows Edge, isolated synthetic Non-DTR contract and IAM; real UI edit, production Undo/Redo, durable JSON and unmocked server projections; no company data",
+    "phases": [
+      {
+        "name": "real-automatic-baseline",
+        "id": 0,
+        "key": "4100001|DEMO-OWN|01",
+        "price": 4,
+        "manual": false,
+        "meta": {
+          "source": "rule",
+          "ruleId": "bl017-demo",
+          "opdStart": "2026-01-01",
+          "opdEnd": "2026-12-31",
+          "seasons": [
+            "W26"
+          ],
+          "licensor": "DEMO",
+          "license": "DEMO-LICENSE",
+          "royalty": 20,
+          "trCommission": 0,
+          "ydCommission": 0,
+          "commissionGroup": "YD",
+          "commission": 0,
+          "effectiveRoyalty": 20,
+          "hologramCost": 0,
+          "applied": false
+        },
+        "licensor": "DEMO",
+        "license": "DEMO-LICENSE",
+        "season": "W26"
+      },
+      {
+        "name": "actual-price-ui-manual-save",
+        "value": 12.5
+      },
+      {
+        "name": "undo-restores-source-and-durable-absence",
+        "price": 4,
+        "manual": false,
+        "meta": {
+          "source": "rule",
+          "ruleId": "bl017-demo",
+          "opdStart": "2026-01-01",
+          "opdEnd": "2026-12-31",
+          "seasons": [
+            "W26"
+          ],
+          "licensor": "DEMO",
+          "license": "DEMO-LICENSE",
+          "royalty": 20,
+          "trCommission": 0,
+          "ydCommission": 0,
+          "commissionGroup": "YD",
+          "commission": 0,
+          "effectiveRoyalty": 20,
+          "hologramCost": 0,
+          "applied": false
+        }
+      },
+      {
+        "name": "real-server-projection-keeps-auto-after-undo",
+        "status": 200,
+        "price": 4,
+        "manual": false,
+        "meta": {
+          "source": "rule",
+          "ruleId": "bl017-demo",
+          "opdStart": "2026-01-01",
+          "opdEnd": "2026-12-31",
+          "seasons": [
+            "W26"
+          ],
+          "countryGroup": "Non-TR",
+          "commissionGroup": "YD",
+          "manufacturer": "DEMO",
+          "licensor": "DEMO",
+          "license": "DEMO-LICENSE",
+          "royalty": 20,
+          "trCommission": 0,
+          "ydCommission": 0,
+          "commission": 0,
+          "effectiveRoyalty": 20,
+          "hologramCost": 0,
+          "applied": false
+        }
+      },
+      {
+        "name": "redo-and-second-undo-durable",
+        "ok": true
+      },
+      {
+        "name": "tr-en-real-restored-auto-price-ui"
+      }
+    ]
+  },
+  "review": {
+    "agent": "review_wal_recovery",
+    "rounds": 1,
+    "findings": 3,
+    "status": "All reproduced and corrected; no second round; reviewer did not run tests"
+  },
+  "source": [
+    {
+      "file": "public/app-main.js",
+      "sha256Lf": "75626a3a8ec97fbefbb0f5bf018b17034a5121b5b2bfbf949b3524e1891928bd"
+    },
+    {
+      "file": "server/db.js",
+      "sha256Lf": "195b224f8ef98a0613555cdfef080467ac5bb9e587742fc3892bf4c46a5e3473"
+    },
+    {
+      "file": "tests/cp-pricing-history.test.js",
+      "sha256Lf": "9c9b901b0f9baaba2b4741f552bcc321d1bc94e457940bee1f1497b085891a8d"
+    },
+    {
+      "file": "tests/pricing-override-restore.test.js",
+      "sha256Lf": "b11f4155a7b6e7ed1ce515144045ab9dd78fe47919dd2e5e71855249035f3337"
+    }
+  ],
+  "limitations": [
+    "No final full regression or merge yet",
+    "No real company/SMB/OneDrive/Office validation",
+    "Broader financial decision matrix and cross-surface/date-only golden vectors remain"
+  ],
+  "publication": {
+    "workflowDispatched": false,
+    "TEST": false,
+    "STABLE": false
+  }
+}

@@ -1141,6 +1141,35 @@
           "en": "The demo note was saved through the actual UI and verified from the server in Orders. Price/date edits, Undo/Redo, batch operations and checklist flows were checked with the same synthetic records."
         }
       }
+    },
+    {
+      "id": "pricing-source-history",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Fiyat ve lisansör",
+        "en": "CP Tracker · Price and licensor"
+      },
+      "title": {
+        "tr": "Fiyat Geri Al işlemi kaynağıyla birlikte geri döner",
+        "en": "Price Undo restores its source as well as its value"
+      },
+      "body": {
+        "tr": "Elle değiştirilen otomatik fiyat geri alındığında kural kaynağı ve kalıcı kayıt durumu da geri yüklenir. Lisansör geçmişi, eski sipariş bazlı değerler ve başarısız kayıt sonrası yeniden deneme doğru korunur.",
+        "en": "Undoing a manual change to an automatic price restores rule provenance and durable override presence too. Licensor history, legacy order-level values and retry after a failed save remain intact."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-source-history.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP ekranında Geri Al sonrası 4,00 otomatik fiyatlı sentetik siparişler",
+          "en": "Synthetic orders with automatic 4.00 prices after Undo in the actual Buyer Log CP screen"
+        },
+        "caption": {
+          "tr": "Demo sözleşme 4,00 üretir; gerçek hücrede 12,50 kaydedilip Geri Al ile kural fiyatına dönüldü. Sunucuda manuel kayıt kaldırıldı ve gerçek veri yanıtından doğrulandı.",
+          "en": "The demo contract produces 4.00; 12.50 was saved through the real cell and Undo returned to the rule price. The manual entry was removed and verified from a real server projection."
+        }
+      }
     }
   ]
 }
