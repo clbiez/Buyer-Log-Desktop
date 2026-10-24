@@ -45,7 +45,7 @@ function orderFixture(extra) {
   };
 }
 function cpRow(pricingRules, extraOverrides) {
-  const options = { ...db.defaultOverrides(), pricingRules, ...(extraOverrides || {}) };
+  const options = { ...db.defaultOverrides(), nonDtrManufacturers: ['Factory A'], pricingRules, ...(extraOverrides || {}) };
   return parse.buildCPRowsFromASAS([orderFixture()], {}, options)[0];
 }
 
@@ -91,7 +91,7 @@ test('NON-DTR MANUFACTURERS listesindeki uretici otomatik DTR almaz', () => {
 });
 
 test('Belirsiz Licensor server projeksiyonunda DTR benzeri komisyonsuz FOB uretmez', () => {
-  const resolved = cpRow([DTR_RULE]);
+  const resolved = cpRow([DTR_RULE], { nonDtrManufacturers: [] });
   assert.equal(resolved.Licensor, 'DTR');
   assert.equal(resolved['Supp. FOB'], 5);
 

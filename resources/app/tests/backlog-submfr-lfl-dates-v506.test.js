@@ -23,7 +23,7 @@ function order(extra = {}) {
 }
 
 function overrides(extra = {}) {
-  return { notesmap:{}, submap:{}, suppfobmap:{}, suppfobmetamap:{}, delmap:{}, licensormap:{}, datemap:{}, pricingRules:[], transitRules:[], ...extra };
+  return { notesmap:{}, submap:{}, suppfobmap:{}, suppfobmetamap:{}, delmap:{}, licensormap:{}, datemap:{}, pricingRules:[], transitRules:[], nonDtrManufacturers:['MAIN FACTORY'], ...extra };
 }
 
 test('v5.06 Backlog exposes Sub Mfr as a filter/group dimension', () => {

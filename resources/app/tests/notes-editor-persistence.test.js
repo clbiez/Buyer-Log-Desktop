@@ -7,7 +7,7 @@ function harness(rows,server=true){
   const calls=[],elements=new Map();
   const element=()=>({value:'',disabled:false,hidden:false,textContent:'',events:{},addEventListener(event,fn){this.events[event]=fn;},focus(){},setSelectionRange(){}});
   const modal=element();modal.querySelector=selector=>{if(!elements.has(selector))elements.set(selector,element());return elements.get(selector);};modal.remove=()=>{modal.removed=true;};
-  const context={state:{cp:{rows},orders:{rows:rows.map(r=>({...r}))},overrides:{notesmap:{}},cpDirty:new Set()},window:{SERVER_BACKED:server},document:{activeElement:null,getElementById:()=>null,createElement:()=>modal,body:{appendChild(){}}},appLang:'en',norm:v=>String(v??'').trim(),L:s=>s,fmtOC:s=>s,escapeHtml:s=>s,setTimeout:()=>{},editableValuesEqual:(a,b)=>a===b,isAreaFrozen:()=>false,noteAuthoredByCurrentUser:id=>id==='me',overviewNoteCanonical:s=>s.trim(),showToast:msg=>calls.push(['toast',msg]),settleOverrideWrites:async()=>{},enqueueOverrideMutation:async(kind,url,opts)=>{calls.push(['write',JSON.parse(opts.body)]);return {ok:true,updated:JSON.parse(opts.body).items.length};},pushUndo:a=>calls.push(['undo',a]),_origMarkDirty:id=>calls.push(['dirty',id]),refreshRowEverywhere:id=>calls.push(['refresh',id]),markDirty:id=>calls.push(['local',id]),noteAuthorIdentity:()=>({id:'me',name:'Demo User'}),remoteRowLists(){return [this.state.cp.rows,this.state.orders.rows];}};
+  const context={state:{cp:{rows},orders:{rows:rows.map(r=>({...r}))},overrides:{notesmap:{}},cpDirty:new Set()},window:{SERVER_BACKED:server},document:{activeElement:null,getElementById:()=>null,createElement:()=>modal,body:{appendChild(){}}},appLang:'en',norm:v=>String(v??'').trim(),L:s=>s,fmtOC:s=>s,escapeHtml:s=>s,setTimeout:()=>{},editableValuesEqual:(a,b)=>a===b,isAreaFrozen:()=>false,noteAuthoredByCurrentUser:id=>id==='me',overviewNoteCanonical:s=>s.trim(),showToast:msg=>calls.push(['toast',msg]),renderOrders:()=>calls.push(['renderOrders']),settleOverrideWrites:async()=>{},enqueueOverrideMutation:async(kind,url,opts)=>{calls.push(['write',JSON.parse(opts.body)]);return {ok:true,updated:JSON.parse(opts.body).items.length};},pushUndo:a=>calls.push(['undo',a]),_origMarkDirty:id=>calls.push(['dirty',id]),refreshRowEverywhere:id=>calls.push(['refresh',id]),markDirty:id=>calls.push(['local',id]),noteAuthorIdentity:()=>({id:'me',name:'Demo User'}),remoteRowLists(){return [this.state.cp.rows,this.state.orders.rows];}};
   vm.createContext(context);
   vm.runInContext(block('function turknorm(','// ================= LICENSE ROYALTY'),context);
   vm.runInContext(block('function openNotesEditor(','function clearRowNote('),context);
@@ -21,6 +21,8 @@ test('Overview edits all matching own note fields in the clicked group; unrelate
   assert.equal(one.Notes,'revised');assert.equal(two['Ek Not'],'revised');assert.equal(one['Ek Not'],'private');assert.equal(other.Notes,'old');
   const items=h.calls.find(c=>c[0]==='write')[1].items;assert.equal(items.length,2);assert.deepEqual(items.map(i=>i.patch.notes),[{Notes:'revised'},{EkNot:'revised'}]);
   assert.equal(h.context.state.orders.rows[0].Notes,'revised','preview projections update too');
+  assert.equal(h.calls.filter(c=>c[0]==='renderOrders').length,1,'successful save refreshes Orders once');
+  assert.ok(h.modal.removed,'successful save closes the editor');
 });
 test('save resolves the canonical order again after a refresh reuses display ids',async()=>{
   const original=row(1,'100'),h=harness([original]);h.open();
@@ -36,6 +38,7 @@ test('save waits for acknowledgement, prevents duplicate submits and keeps the d
   await h.save('draft');reject(new Error('offline'));await saving;
   assert.equal(one.Notes,'old');assert.ok(!h.modal.removed);assert.equal(h.elements.get('.noteEditorArea').value,'draft');assert.equal(h.elements.get('.notesEditorSave').disabled,false);
   assert.ok(h.calls.some(c=>c[0]==='toast'));
+  assert.equal(h.calls.filter(c=>c[0]==='renderOrders').length,0,'failed save cannot render an acknowledged state');
 });
 test('changed, missing and view-only targets cannot be silently overwritten',async()=>{
   for(const change of [r=>r.Notes='remote edit',r=>r._canEdit=false,(_r,h)=>h.context.state.cp.rows=[]]){

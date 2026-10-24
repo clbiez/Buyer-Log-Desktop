@@ -778,8 +778,8 @@ function defaultTransitDays(delType) { return BLBusinessRules.defaultTransitDays
 function resolveTransitDays(options) { return BLBusinessRules.resolveTransitDays(options, dateOrdinal); }
 function roundHalfUp(value, decimals = 2) { return BLBusinessRules.roundHalfUp(value, decimals); }
 function licensorOf(license) { return LICMAP[String(license || '').trim()] || ''; }
-function pricingLicensorForLicense(license, rules, fallback) {
-  const resolved = BLBusinessRules.resolveLicenseLicensor(license, rules);
+function pricingLicensorForLicense(license, rules, fallback, options) {
+  const resolved = BLBusinessRules.resolveOrderLicensor(license, rules, options);
   // Ambiguity is NOT a missing result: when more than one distinct Licensor is
   // applicable, falling back to the catalogue would silently collapse the choice
   // into a single value (often DTR) and then produce a commission-free Supp. FOB.
@@ -2113,10 +2113,9 @@ function buildOrderRowsFromASAS(asasOrders, antrepoMap, overrides, options = {})
     logisticByOrder.get(source).push(segment);
   });
   return filtered.map((o, i) => {
-    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules);
+    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules, '', {manufacturer:o.manufacturer,nonDtrManufacturers:ov.nonDtrManufacturers});
     const hasLicensorOverride = overrideHas(ov.licensormap || {}, o);
-    // Non-DTR manufacturer maintenance is an LFL classification rule. It must not
-    // overwrite or lock the CP/Genel Bakış Licensor field.
+    // Explicit order edits take precedence over manufacturer-based defaults.
     const licensor = o.license && hasLicensorOverride ? norm(overrideGet(ov.licensormap, o)) : derivedLicensor;
     const isActive = Number(o && o.kalan) > 0;
     // Pasif bir siparişte IAS kaydı bulunmasa bile sentetik bir Üretimde satırı
@@ -2266,7 +2265,7 @@ function buildSharedOrderProjectionRowsFromASAS(asasOrders, antrepoMap, override
 function buildOverviewSummaryRowsFromASAS(asasOrders, overrides) {
   const ov = overrides || {};
   return (Array.isArray(asasOrders) ? asasOrders : []).map((o, i) => {
-    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules);
+    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules, '', {manufacturer:o.manufacturer,nonDtrManufacturers:ov.nonDtrManufacturers});
     const licensor = o.license && overrideHas(ov.licensormap || {}, o)
       ? norm(overrideGet(ov.licensormap, o))
       : derivedLicensor;
@@ -2303,7 +2302,7 @@ function buildOrderSummaryRowsFromASAS(asasOrders, antrepoMap, overrides) {
   const matchRule = matchRuleOf(ov);
   const T = toDateOnly(new Date());
   const built = asasOrders.map(o => {
-    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules);
+    const derivedLicensor = norm(o.licensor) || pricingLicensorForLicense(o.license, ov.pricingRules, '', {manufacturer:o.manufacturer,nonDtrManufacturers:ov.nonDtrManufacturers});
     const hasLicensorOverride = overrideHas(ov.licensormap || {}, o);
     const licensor = o.license && hasLicensorOverride ? norm(overrideGet(ov.licensormap, o)) : derivedLicensor;
     const hit = findAntrepoHit(antrepoMap, o, { rule: matchRule });
@@ -3115,7 +3114,7 @@ function buildBacklogGrouped(asasOrders, antrepoMap, overrides, opts) {
 // (path) ile ve pivotla AYNI filtre seçenekleriyle sunucuda yeniden çözülür.
 function backlogSubManufacturer(order, overrides) {
   if (!order) return '';
-  const derivedLicensor = pricingLicensorForLicense(order.license, overrides && overrides.pricingRules);
+  const derivedLicensor = norm(order.licensor) || pricingLicensorForLicense(order.license, overrides && overrides.pricingRules, '', {manufacturer:order.manufacturer,nonDtrManufacturers:overrides && overrides.nonDtrManufacturers});
   const hasLicensorOverride = overrideHas((overrides && overrides.licensormap) || {}, order);
   const licensor = order.license && hasLicensorOverride ? norm(overrideGet(overrides.licensormap, order)) : derivedLicensor;
   if (licensor === 'DTR') return norm(order.manufacturer);

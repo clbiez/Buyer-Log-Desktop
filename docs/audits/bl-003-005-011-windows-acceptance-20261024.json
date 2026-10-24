@@ -1,0 +1,308 @@
+{
+  "capturedAtUTC": "2026-10-24T18:12:45.027Z",
+  "repository": "clbiez/Buyer-Log-Desktop",
+  "codeHead": "2c6cdcb520ad462eca6c62163e781955f9cb6498",
+  "baseMain": "00cf47d05896f979f9fe2506d76a6021a866a3f9",
+  "packages": [
+    "BL-003",
+    "BL-005",
+    "BL-011"
+  ],
+  "fullRegression": {
+    "files": 1052,
+    "seconds": 137.4,
+    "totals": {
+      "tests": 7556,
+      "pass": 7550,
+      "fail": 0,
+      "skipped": 6
+    },
+    "batches": [
+      {
+        "batch": 1,
+        "tests": 2130,
+        "pass": 2130,
+        "fail": 0,
+        "skip": 0
+      },
+      {
+        "batch": 2,
+        "tests": 2190,
+        "pass": 2188,
+        "fail": 0,
+        "skip": 2
+      },
+      {
+        "batch": 3,
+        "tests": 2230,
+        "pass": 2228,
+        "fail": 0,
+        "skip": 2
+      },
+      {
+        "batch": 4,
+        "tests": 993,
+        "pass": 992,
+        "fail": 0,
+        "skip": 1
+      },
+      {
+        "batch": 5,
+        "tests": 13,
+        "pass": 12,
+        "fail": 0,
+        "skip": 1
+      }
+    ],
+    "skips": [
+      "﹣ IAM head accepts OneDrive reparse-point revision folders (reported as symlinks) (0.3964ms) # SKIP",
+      "﹣ OneDrive simulation soak: 10 devices, 20,000 operations (0.6393ms) # SKIP"
+    ]
+  },
+  "native": {
+    "ok": true,
+    "runtime": "Electron44.3.0 / bundledNode24.20.0",
+    "runtimeSha256": "63843580a999d8024ffa402583fc3d74125b334c8681ab9075dac5ce9e32a3b4",
+    "scope": "Synthetic isolated full application, real pinned Electron runtime; Playwright and fixture-only health-delay instrumentation; ephemeral fixture signing authority; not a published or production-data acceptance",
+    "phases": [
+      {
+        "name": "runtime-pin-verified",
+        "at": "2026-10-24T18:02:36.134Z",
+        "sha256": "63843580a999d8024ffa402583fc3d74125b334c8681ab9075dac5ce9e32a3b4"
+      },
+      {
+        "name": "full-installer-built",
+        "at": "2026-10-24T18:02:46.568Z",
+        "sha256": "57934be797cb24032ff50181c308f3d2b2d44501934f87b6856eea7bc7b37665",
+        "bytes": 542892062
+      },
+      {
+        "name": "fixture-prepared",
+        "at": "2026-10-24T18:03:06.043Z",
+        "appFiles": 2513,
+        "productionPrivateKeysAccessed": false
+      },
+      {
+        "name": "native-full-app-started",
+        "at": "2026-10-24T18:03:11.906Z",
+        "url": "http://127.0.0.1:6303/select-user.html"
+      },
+      {
+        "name": "native-login-complete",
+        "at": "2026-10-24T18:03:15.409Z",
+        "url": "http://127.0.0.1:6303/"
+      },
+      {
+        "name": "native-buyer-session-cannot-forge-moderator",
+        "at": "2026-10-24T18:03:15.583Z",
+        "code": "UPDATE_ADMIN_REQUIRED"
+      },
+      {
+        "name": "native-signed-ipc-prepared",
+        "at": "2026-10-24T18:03:20.547Z",
+        "sequence": 1
+      },
+      {
+        "name": "native-update-ui-tr-en-verified",
+        "at": "2026-10-24T18:03:21.084Z"
+      },
+      {
+        "name": "native-first-process-closed",
+        "at": "2026-10-24T18:03:21.793Z"
+      },
+      {
+        "name": "native-unconfirmed-trial-rejects-business-and-sync",
+        "at": "2026-10-24T18:03:27.483Z",
+        "acknowledgedWrites": 0,
+        "backgroundSyncStarted": false
+      },
+      {
+        "name": "native-trial-health-confirmed",
+        "at": "2026-10-24T18:03:28.237Z",
+        "state": "SUCCESS",
+        "sequence": 1
+      },
+      {
+        "name": "failing-trial-prepared",
+        "at": "2026-10-24T18:03:54.311Z"
+      },
+      {
+        "name": "native-trial-writer-registered-and-failed",
+        "at": "2026-10-24T18:04:00.774Z"
+      },
+      {
+        "name": "native-rollback-restored-acknowledged-data",
+        "at": "2026-10-24T18:04:03.940Z",
+        "state": "ROLLBACK",
+        "highestAcceptedSequence": 2,
+        "previousCoreRestored": true,
+        "networkReplayRejected": true
+      },
+      {
+        "name": "native-rollback-feedback-verified",
+        "at": "2026-10-24T18:04:07.569Z"
+      },
+      {
+        "name": "acceptance-complete",
+        "at": "2026-10-24T18:04:08.273Z"
+      }
+    ],
+    "sourceVerification": {
+      "commit": "2c6cdcb520ad462eca6c62163e781955f9cb6498",
+      "comparedFiles": 29,
+      "normalization": "CRLF to LF; only fixture launcher health-delay conditional removed. Fixture signing-key JSON and generated bootstrap/integrity files are intentionally synthetic; PNGs/notes were refreshed after capture.",
+      "files": [
+        {
+          "path": "resources/app/electron/install-repair.js",
+          "sha256Normalized": "d70d66237debf0bf554eb569a4aad5d28c514938a7e6cf9c246897f37854c3e1"
+        },
+        {
+          "path": "resources/app/electron/launcher.js",
+          "sha256Normalized": "18c4c0ce09212ef5c24d69e6a7bf1bb698101f6c1d522d0e2adea4ef2b9b8a85"
+        },
+        {
+          "path": "resources/app/electron/main.js",
+          "sha256Normalized": "20f3651e8ec8f0fcbd40b722cf0831c7daafd462cdc5e973a868769900aacf0c"
+        },
+        {
+          "path": "resources/app/electron/manual-patch/core-verification.js",
+          "sha256Normalized": "e44f25a5869a687b6f436483f384e673310566a2c199759f6bf6f5568d7f4164"
+        },
+        {
+          "path": "resources/app/electron/manual-patch/desktop.js",
+          "sha256Normalized": "fcfe43a0022f362926acb98dd225c8ca41a93556eb7a7168ac70e5dd4f931d7a"
+        },
+        {
+          "path": "resources/app/electron/manual-patch/files.js",
+          "sha256Normalized": "d39d86882caca7fac249cd83adb5c3a3aba905173966aebbc6e93bf29975d22b"
+        },
+        {
+          "path": "resources/app/electron/manual-patch/manager.js",
+          "sha256Normalized": "a6630a021c68b5370800190d4a8896489e4a4fd5204b45743d095930532e2a24"
+        },
+        {
+          "path": "resources/app/electron/manual-patch/signature.js",
+          "sha256Normalized": "e0865c11fb6ea9596c2d5ca82a9dbf2c99c87c54e3cbdef6325fffdbaf730814"
+        },
+        {
+          "path": "resources/app/electron/preload.js",
+          "sha256Normalized": "c1d0b6229ef568df5e92b2c5b1ad2fcaa4bb54fb6e0e2cbcffd513e001194d90"
+        },
+        {
+          "path": "resources/app/electron/update/json-store.js",
+          "sha256Normalized": "918843f3a36a44c63c37c7fd1a5ed05b3594f96f0c3ecc0ab4125b3d9b0e122a"
+        },
+        {
+          "path": "resources/app/electron/update/launcher-state.js",
+          "sha256Normalized": "a152af4ff7394d0e7a210f5b98e50c9a96bf4f32623ad050fead2e5e772b0bab"
+        },
+        {
+          "path": "resources/app/electron/update/trial-backend.js",
+          "sha256Normalized": "d4ec3c18142e6635567520bf83c7b05cb0394787cc728a93209b763f7d2115fc"
+        },
+        {
+          "path": "resources/app/electron/update/updater.js",
+          "sha256Normalized": "9101a961d73dc3ea150730bc4a42941116c97161a02e9be450fa68ba3f7a65b8"
+        },
+        {
+          "path": "resources/app/public/app-main.js",
+          "sha256Normalized": "857b9b85a88a72c702d0f918db1fdb6898df7818199d944df067ddd8fac7afd3"
+        },
+        {
+          "path": "resources/app/public/perf-runtime.js",
+          "sha256Normalized": "09cd608acdba3bd92c08ed54629bcfb01aa235f85c1f5855079728393f3c4f35"
+        },
+        {
+          "path": "resources/app/public/update-test-ui.js",
+          "sha256Normalized": "122757f83f7192e36a0c06ef5f72fcf7f66080b18ab254f570757d4e072b8a75"
+        },
+        {
+          "path": "resources/app/scripts/release-common.js",
+          "sha256Normalized": "329cfac1e78d8abcaacf3aa7e8553c88678f92a3f5e27fd9f46470e1201d5f01"
+        },
+        {
+          "path": "resources/app/scripts/signed-manual-patch.js",
+          "sha256Normalized": "960e930a9d98bfd13ed065db13b409016d24c4eed1bb158803c9aecf13c88b10"
+        },
+        {
+          "path": "resources/app/server/lib/backup-sensitivity.js",
+          "sha256Normalized": "1bf0f94dc7758e2b0b3a069aabe63e3bda096f9140039df7b7e8ddc5f8143b66"
+        },
+        {
+          "path": "resources/app/server/lib/backup-service.js",
+          "sha256Normalized": "8c721b8c7f58c2aad98126435eb6e8a440034910835ea512a3c793cc62178d7f"
+        },
+        {
+          "path": "resources/app/server/lib/collection-permissions-store.js",
+          "sha256Normalized": "5f67d5d4d5e430c5f72696b9882a065659c02067198eb243fdf91fcb4b39e19e"
+        },
+        {
+          "path": "resources/app/server/lib/collection-replication.js",
+          "sha256Normalized": "1d5f92b943c523f304364064c2c99da7f67f8cce23c5cd7d7671d56c0d33c726"
+        },
+        {
+          "path": "resources/app/server/lib/full-restore-service.js",
+          "sha256Normalized": "1e41c878ff0f3eef2a22df9cd42915917f57ae283b2b48461dab4561cd38c023"
+        },
+        {
+          "path": "resources/app/server/lib/license-card-sync.js",
+          "sha256Normalized": "8bd1b1f51393fd3deb251b8f77eae1cac8ad92c26fc4cb40c2f371bcad690a40"
+        },
+        {
+          "path": "resources/app/server/lib/sync-settings.js",
+          "sha256Normalized": "a94c615cfb6a222b165deece3f0c8d3184d3d25100fd3561c592920520277ad5"
+        },
+        {
+          "path": "resources/app/server/lib/update-trial-backend.js",
+          "sha256Normalized": "f3c6056129e15eee866d3d34cd902b981b5f75941fc0fa7bf3432a39ea796763"
+        },
+        {
+          "path": "resources/app/server/server.js",
+          "sha256Normalized": "d48cd30b3e1a225370f72a044254370d36f858293e4e1e17b1877b36e8b8e7da"
+        },
+        {
+          "path": "resources/app/server/user-data.js",
+          "sha256Normalized": "568828212ea6976cc72743fe8f528be549ec2cb3f2e4a24e2e2c7d14125242d5"
+        },
+        {
+          "path": "resources/app/server/watchdog.js",
+          "sha256Normalized": "2b4001fd904ceb20c971a2831275792495ca19c9829320c3c65bb5f04845d088"
+        }
+      ]
+    }
+  },
+  "independentReviews": [
+    {
+      "boundary": "signed patch / rollback / desktop authority",
+      "findings": [
+        "Missing .wal.bak could replay a failed trial after restoring the snapshot.",
+        "Renderer-claimed moderator ID was not bound to the actual cookie session."
+      ],
+      "resolution": "Both reproduced RED and fixed; actual DB cold reopen and real native buyer-session forgery rejection passed."
+    },
+    {
+      "boundary": "trial business-write and shared-transport policy",
+      "findings": [
+        "Collection GET could publish a newer local revision; ACL migration and license outbox were outside the first gate."
+      ],
+      "resolution": "Guarded direct transport entry points and deferred startup work; real HTTP + actual Collection ancestry/shared FS, peer sync and durable outbox regressions pass. Native instrumented health hold confirms no business/sync ACK or post-UI background start before health."
+    }
+  ],
+  "additionalNativeRegression": "Normal updater retention deleted same-version manual core folders; protected pending/running/rollback roots by actual paths. Startup repair preserves manual trial/error identities.",
+  "publication": {
+    "authorization": "The user explicitly authorized adding the manual signed publisher workflow after auto-review initially rejected that capability. Adding/merging code is the only extra authorization; dispatch/publishing is not authorized.",
+    "workflowDispatched": false,
+    "TEST": false,
+    "STABLE": false,
+    "manualPatch": false,
+    "legacyFeedChanged": false,
+    "productionPrivateKeysAccessed": false
+  },
+  "limits": [
+    "Six skipped platform/opt-in cases are not certified passed.",
+    "Synthetic local shared folders are not an actual SMB/OneDrive multi-user rollout.",
+    "Full-app native fixture uses an ephemeral signer and a documented fixture-only health delay; production signing secrets and live GitHub publication were not executed.",
+    "Representative populated corporate Excel/Outlook/SMB and hardware power-loss/antivirus acceptance remains separate BL-019 work.",
+    "The rest of the project backlog remains active; this is not whole-project completion."
+  ]
+}

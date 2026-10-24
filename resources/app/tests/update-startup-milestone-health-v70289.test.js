@@ -52,7 +52,7 @@ test('watchdog restarting the server invalidates previous partial milestones', (
   assert.equal(calls.length, 1);
 });
 
-test('the early readiness bridge preserves the existing signed trial confirmation and rollback requirements', () => {
+test('the early readiness bridge preserves the existing signed trial confirmation and rollback requirements', t => {
   const main = fs.readFileSync(path.join(root, 'electron', 'main.js'), 'utf8');
   const backend = fs.readFileSync(path.join(root, 'electron', 'backend.js'), 'utf8');
   const launcher = fs.readFileSync(path.join(root, 'electron', 'update', 'launcher-state.js'), 'utf8');
@@ -63,5 +63,28 @@ test('the early readiness bridge preserves the existing signed trial confirmatio
   // Whitespace must not affect the signed trial token mismatch guard.
   assert.match(launcher, /trial\.token\s*!==\s*expectedToken/);
   assert.match(launcher, /info\.backendReady!==true\|\|info\.rendererReady!==true\|\|info\.localDbReady!==true/);
-  assert.match(launcher, /restoreLocalDb\(activation\.dbSnapshot\)/);
+  // Verify the public recovery contract rather than an obsolete internal call.
+  const fixture = fs.mkdtempSync(path.join(require('node:os').tmpdir(), 'buyerlog-health-rollback-'));
+  t.after(() => fs.rmSync(fixture, { recursive:true, force:true }));
+  const core = (dir,version) => {
+    fs.mkdirSync(path.join(dir,'electron'),{recursive:true});
+    fs.writeFileSync(path.join(dir,'electron/main.js'),'');
+    fs.writeFileSync(path.join(dir,'package.json'),JSON.stringify({version}));
+    return dir;
+  };
+  const bootstrap = core(path.join(fixture,'bootstrap'),'1.0.0');
+  const life = require('../electron/update/launcher-state').createLauncherState({bootstrapCore:bootstrap,portableRoot:fixture});
+  const candidate = core(path.join(life.versionsRoot,'1.1.0/app'),'1.1.0');
+  const file = path.join(life.localDataRoot,'BuyerLogLocal.db');
+  fs.writeFileSync(file,'BEFORE');
+  life.writeState({pending:{version:'1.1.0',appCoreRoot:candidate,ready:true,sha256:'synthetic'}});
+  const trial = life.activatePending();
+  assert.ok(trial);
+  const health={version:'1.1.0',backendReady:true,rendererReady:true,localDbReady:true};
+  assert.equal(life.confirmHealth('wrong-token',health),false);
+  for(const milestone of ['backendReady','rendererReady','localDbReady']) assert.equal(life.confirmHealth(trial.activation.token,{...health,[milestone]:false}),false);
+  fs.writeFileSync(file,'TRIAL');
+  life.rollbackNow(trial.activation,'synthetic-failed-health');
+  assert.equal(fs.readFileSync(file,'utf8'),'BEFORE');
+  assert.equal(life.currentPointer().version,'1.0.0');
 });

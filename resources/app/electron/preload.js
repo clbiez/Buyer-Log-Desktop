@@ -63,6 +63,7 @@ contextBridge.exposeInMainWorld('buyerLogDesktop', {
     chooseSource: (userId) => ipcRenderer.invoke('buyerlog:update-choose-source', { userId: String(userId || '') }),
     restart: () => ipcRenderer.invoke('buyerlog:update-restart'),
     retry: (options) => ipcRenderer.invoke('buyerlog:update-retry', options || {}),
+    prepareSignedPatch: (options) => ipcRenderer.invoke('buyerlog:update-signed-patch', {userId:String(options?.userId||''),language:options?.language==='en'?'en':'tr'}),
     onStatus: (callback) => {
       if (typeof callback !== 'function') return () => {};
       const listener = (_event, payload) => callback(payload);

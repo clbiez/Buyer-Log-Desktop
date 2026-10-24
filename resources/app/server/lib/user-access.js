@@ -13,6 +13,7 @@ const iam = require('./iam-core');
 const iamExcel = require('./iam-excel');
 const userPreferences = require('./user-preferences');
 const { createPersonalLoginCache } = require('./personal-login-cache');
+const { createLoginThrottle } = require('./login-throttle');
 
 // Kullanıcı kimlik bilgileri sürüm klasörünün server/data alanında tutulursa yeni
 // Buyer Log ZIP'i ayrı bir klasöre açıldığında eski şifre hash'leri kaybolabiliyor.
@@ -1262,26 +1263,17 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
   const inheritedSecret = String(process.env.BUYER_LOG_USER_SESSION_SECRET || '');
   delete process.env.BUYER_LOG_USER_SESSION_SECRET;
   const runtimeSecret = /^[a-f0-9]{64,}$/i.test(inheritedSecret) ? Buffer.from(inheritedSecret, 'hex') : crypto.randomBytes(32);
-  const ttlMs = SESSION_HOURS * 3600 * 1000, loginAttempts = new Map();
-  function loginAttemptKey(req, username) {
-    const forwarded = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim();
-    return `${forwarded || req.socket && req.socket.remoteAddress || 'local'}|${usernameKey(username)}`;
+  const ttlMs = SESSION_HOURS * 3600 * 1000;
+  const loginThrottle = createLoginThrottle({ limit: LOGIN_FAILURE_LIMIT, lockMs: LOGIN_LOCK_MS, windowMs: LOGIN_FAILURE_WINDOW_MS });
+  function loginIdentity(req, username, profile) {
+    return {
+      account: profile ? 'id:' + profile.id : 'name:' + usernameKey(username),
+      known: Boolean(profile),
+      // The desktop service listens directly on loopback. Forwarded headers
+      // are caller-controlled and are never a source of network authority.
+      peer: String(req.socket && req.socket.remoteAddress || 'local').replace(/^::ffff:/, ''),
+    };
   }
-  function loginLock(req, username) {
-    const key = loginAttemptKey(req, username), now = Date.now(), state = loginAttempts.get(key);
-    if (!state) return null;
-    if (now - state.lastAt > LOGIN_FAILURE_WINDOW_MS) { loginAttempts.delete(key); return null; }
-    if (state.lockedUntil > now) return { key, retryAfter: Math.max(1, Math.ceil((state.lockedUntil - now) / 1000)) };
-    return { key, retryAfter: 0 };
-  }
-  function recordLoginFailure(req, username) {
-    const key = loginAttemptKey(req, username), now = Date.now(), previous = loginAttempts.get(key);
-    const fresh = !previous || now - previous.lastAt > LOGIN_FAILURE_WINDOW_MS;
-    const failures = fresh ? 1 : previous.failures + 1;
-    loginAttempts.set(key, { failures, lastAt: now, lockedUntil: failures >= LOGIN_FAILURE_LIMIT ? now + LOGIN_LOCK_MS : 0 });
-    return failures;
-  }
-  function clearLoginFailures(req, username) { loginAttempts.delete(loginAttemptKey(req, username)); }
   function sessionProfile(req) {
     const token = parseCookies(req.headers.cookie)[COOKIE_NAME], payload = verify(runtimeSecret, token);
     if (!payload) return null;
@@ -1423,12 +1415,13 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       const fallbackId = clean(req.body && req.body.userId);
       const profile = username ? profileByUsername(store, username) : findProfile(store, fallbackId);
       const attemptName = username || profile && profile.username || fallbackId;
-      const lock = loginLock(req, attemptName);
+      const identity = loginIdentity(req, attemptName, profile);
+      const lock = loginThrottle.check(identity);
       if (lock && lock.retryAfter) {
         res.set('Retry-After', String(lock.retryAfter));
-        return res.status(429).json({ error: `Çok fazla hatalı deneme. ${lock.retryAfter} saniye sonra tekrar deneyin.`, code: 'LOGIN_TEMPORARILY_LOCKED', retryAfter: lock.retryAfter });
+        return res.status(429).json({ error: `Çok fazla hatalı deneme. ${lock.retryAfter} saniye sonra tekrar deneyin. / Too many failed attempts. Try again in ${lock.retryAfter} seconds.`, code: 'LOGIN_TEMPORARILY_LOCKED', retryAfter: lock.retryAfter });
       }
-      if (!profile) return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.', code: 'BAD_CREDENTIALS' });
+      if (!profile) { loginThrottle.failure(identity); return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı. / Incorrect username or password.', code: 'BAD_CREDENTIALS' }); }
       if (profile.enabled === false) return res.status(403).json({ error: 'Bu kullanıcı hesabı pasif durumda.', code: 'USER_INACTIVE' });
       let stored = credentialHash(profile);
       if (!stored) {
@@ -1442,10 +1435,10 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       }
       const password = req.body && (req.body.password != null ? req.body.password : req.body.pin);
       if (!verifyPin(password, stored)) {
-        const failures = recordLoginFailure(req, attemptName); appendAudit(profile, 'LOGIN_FAILED', 'session', { failures });
+        const failures = loginThrottle.failure(identity); appendAudit(profile, 'LOGIN_FAILED', 'session', { failures });
         return res.status(401).json({ error: 'Kullanıcı adı veya şifre hatalı.', code: 'BAD_PASSWORD' });
       }
-      clearLoginFailures(req, attemptName); setCookie(req, res, profile.id); appendAudit(profile, 'LOGIN', 'session');
+      loginThrottle.clear(identity); setCookie(req, res, profile.id); appendAudit(profile, 'LOGIN', 'session');
       // Giriş bilgisi yalnız bu kişi için yerelde de saklanır; merkezi dizin ve
       // önbellek kaybolsa bile bu cihazda kendi hesabıyla girebilir.
       try { personalLogin.remember(profile, store); } catch (_) {}

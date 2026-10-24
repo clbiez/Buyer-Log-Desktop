@@ -122,3 +122,12 @@ test('release build embeds the integrity manifest and startup runs the repair be
   const ui = fs.readFileSync(path.join(APP, 'public', 'app-main.js'), 'utf8');
   assert.match(ui, /\$\{buyerLogRepairLine\(status\.repair\)\}/);
 });
+
+test('same-version signed patch trial, pending identity and rollback failure are preserved by startup repair',()=>{
+ const {cleanUpdaterState}=require('../electron/install-repair'),manualPatch={sequence:2};
+ for(const state of [
+  {schemaVersion:1,state:'INSTALLING',activation:{status:'trial',manualPatch},pending:{version:'7.0.294',manualPatch}},
+  {schemaVersion:1,state:'READY_TO_INSTALL',pending:{version:'7.0.294',manualPatch}},
+  {schemaVersion:1,state:'ROLLBACK',failedVersions:{'7.0.294':{manualPatch}},lastError:{code:'UPDATE_HEALTH_FAILED',manualPatch}},
+ ])assert.deepEqual(cleanUpdaterState(state,'7.0.294').actions,[]);
+});

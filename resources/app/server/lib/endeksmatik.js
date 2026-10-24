@@ -260,8 +260,17 @@ function findHeaderRow(rows){
   }
   return -1;
 }
+function legacyRowsFromColumnA(ws){
+  if(!ws||!ws['!ref'])return [];
+  const XLSX=getXLSX(),range=XLSX.utils.decode_range(ws['!ref']);
+  // Fixed legacy column identities (B:F, G:J, V:W) are absolute. SheetJS
+  // otherwise makes array index zero the first populated column in !ref.
+  // Preserve the original used-row range; only normalize the column origin.
+  range.s.c=0;
+  return XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null,range});
+}
 function parsePivotSheet(ws){
-  const XLSX=getXLSX(),rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null}); const hr=findHeaderRow(rows); if(hr<0)throw new Error('Endeksmatik pivot başlığı bulunamadı.');
+  const rows=legacyRowsFromColumnA(ws); const hr=findHeaderRow(rows); if(hr<0)throw new Error('Endeksmatik pivot başlığı bulunamadı.');
   const headers=rows[hr]||[]; const monthCols=[];
   headers.forEach((value,col)=>{const m=/^Toplam\s+(\d{6})$/i.exec(text(value));if(m)monthCols.push({col,month:m[1]});});
   if(!monthCols.length)throw new Error('Endeksmatik pivot ay sütunları bulunamadı.');
@@ -274,7 +283,7 @@ function parsePivotSheet(ws){
   return {months:monthCols.map(x=>x.month),data};
 }
 function parseSummarySheet(ws){
-  const XLSX=getXLSX(),rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null}); const hr=findHeaderRow(rows); if(hr<0)throw new Error('Endeksmatik klasman özet başlığı bulunamadı.');
+  const rows=legacyRowsFromColumnA(ws); const hr=findHeaderRow(rows); if(hr<0)throw new Error('Endeksmatik klasman özet başlığı bulunamadı.');
   const data=new Map();
   for(let r=hr+1;r<rows.length;r++){
     const row=rows[r]||[],dims=[row[1],row[2],row[3],row[4],row[5]].map(stripTotal); if(!dims.every(Boolean))continue;
@@ -284,7 +293,7 @@ function parseSummarySheet(ws){
   return data;
 }
 function parseFxSheet(ws){
-  const XLSX=getXLSX(),rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:null}),out={};
+  const rows=legacyRowsFromColumnA(ws),out={};
   rows.forEach(row=>{const month=monthCode(row&&row[21]),rate=numberValue(row&&row[22]);if(month&&Number.isFinite(rate)&&rate>0&&!out[month])out[month]=rate;});
   return out;
 }

@@ -1,0 +1,102 @@
+{
+  "snapshotBase": "5a5c3bcafd4de929019b3bba522ef5771670b171",
+  "environment": "Linux x86_64 Node v24.19.0; matching isolated TMPDIR/BUYER_LOG_TEMP_ROOT plus APPDATA/LOCALAPPDATA",
+  "command": "npm --prefix resources/app test",
+  "testFilesScheduledByRunner": 1038,
+  "result": "Failed; runner stopped after batch2 of5",
+  "executedBatches": [
+    {
+      "batch": 1,
+      "tests": 2133,
+      "pass": 2073,
+      "fail": 0,
+      "skipped": 60
+    },
+    {
+      "batch": 2,
+      "tests": 2152,
+      "pass": 2136,
+      "fail": 13,
+      "skipped": 3
+    }
+  ],
+  "observedTotals": {
+    "tests": 4285,
+    "pass": 4209,
+    "fail": 13,
+    "skipped": 63
+  },
+  "notExecuted": "Batches3/4/5 on this combined snapshot; Windows/supported desktop integrations",
+  "failures": [
+    {
+      "location": "tests/delta-store-overrides-v806.test.js:102:1",
+      "name": "shadow: eski dosya yetkili kalır, delta yalnız ayna alır (230.412498ms)",
+      "detail": "  AssertionError [ERR_ASSERTION]: ayna kaydı oluşmalı\n      at TestContext.<anonymous> (<validation>/resources/app/tests/delta-store-overrides-v806.test.js:112:10)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: null,\n    expected: true,\n    operator: '==',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "location": "tests/delta-store-overrides-v806.test.js:117:1",
+      "name": "delta: okuma delta’dan gelir, eski dosya geri dönüş için yazılmaya devam eder (118.709344ms)",
+      "detail": "  AssertionError [ERR_ASSERTION]: delta fazında yetkili kaynak delta olmalı\n  + actual - expected\n  \n  + 'ESKİ DOSYADAN'\n  - 'delta yazdı'\n  \n      at TestContext.<anonymous> (<validation>/resources/app/tests/delta-store-overrides-v806.test.js:130:10)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 'ESKİ DOSYADAN',\n    expected: 'delta yazdı',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "location": "tests/delta-store-overrides-v806.test.js:134:1",
+      "name": "delta-only: taşınmış store’un eski dosyası artık yazılmaz (150.652272ms)",
+      "detail": "  TypeError: Cannot read properties of undefined (reading 'note')\n      at TestContext.<anonymous> (<validation>/resources/app/tests/delta-store-overrides-v806.test.js:141:56)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)\n"
+    },
+    {
+      "location": "tests/delta-store-overrides-v806.test.js:144:1",
+      "name": "saveRevisioned ailesinin tamamı taşındı: ayarlar da delta’dan okunur (136.010687ms)",
+      "detail": "  AssertionError [ERR_ASSERTION]: ayar delta’dan okunmalı\n  + actual - expected\n  \n  + undefined\n  - 'C:/kaynak'\n  \n      at TestContext.<anonymous> (<validation>/resources/app/tests/delta-store-overrides-v806.test.js:153:10)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: undefined,\n    expected: 'C:/kaynak',\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "location": "tests/delta-store-overrides-v806.test.js:156:1",
+      "name": "revizyon üstverisi delta-only fazında da korunur (195.525086ms)",
+      "detail": "  AssertionError [ERR_ASSERTION]: revizyon korunmalı\n  \n  0 !== 1\n  \n      at TestContext.<anonymous> (<validation>/resources/app/tests/delta-store-overrides-v806.test.js:163:10)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 0,\n    expected: 1,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "location": "tests/delta-store-overrides-v806.test.js:221:1",
+      "name": "bölüm bazlı merge: iki ayrı bölüme yazmak birbirini ezmez (232.691741ms)",
+      "detail": "  TypeError: Cannot read properties of null (reading 'overrides.json')\n      at TestContext.<anonymous> (<validation>/resources/app/tests/delta-store-overrides-v806.test.js:233:70)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)\n"
+    },
+    {
+      "location": "tests/delta-store-overrides-v806.test.js:273:1",
+      "name": "e-posta grupları delta-only fazında eski dosyasız okunur (102.659104ms)",
+      "detail": "  AssertionError [ERR_ASSERTION]: revizyon korunmalı\n  \n  0 !== 1\n  \n      at TestContext.<anonymous> (<validation>/resources/app/tests/delta-store-overrides-v806.test.js:281:10)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: 0,\n    expected: 1,\n    operator: 'strictEqual',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "location": "tests/delta-store-overrides-v806.test.js:284:1",
+      "name": "koleksiyon çalışma alanları sahip başına ayrı kayıt olur (5166.340703ms)",
+      "detail": "  AssertionError [ERR_ASSERTION]: iki çalışma alanı da aynaya yazılmalı\n      at TestContext.<anonymous> (<validation>/resources/app/tests/delta-store-overrides-v806.test.js:293:10)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {\n    generatedMessage: false,\n    code: 'ERR_ASSERTION',\n    actual: false,\n    expected: true,\n    operator: '==',\n    diff: 'simple'\n  }\n"
+    },
+    {
+      "location": "tests/delta-store-overrides-v806.test.js:302:1",
+      "name": "eski dosya silinse bile delta fazında veri okunmaya devam eder (99.426601ms)",
+      "detail": "  TypeError: Cannot read properties of undefined (reading 'model')\n      at TestContext.<anonymous> (<validation>/resources/app/tests/delta-store-overrides-v806.test.js:323:65)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)\n"
+    },
+    {
+      "location": "tests/github-release-provider-v7084.test.js:42:1",
+      "name": "GitHub bridge stages through original updater; stable never reads TEST; activation and data survive (50.392296ms)",
+      "detail": "  TypeError: Cannot read properties of null (reading 'selected')\n      at TestContext.<anonymous> (<validation>/resources/app/tests/github-release-provider-v7084.test.js:59:59)\n      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)\n"
+    },
+    {
+      "location": "tests/github-release-provider-v7084.test.js:78:1",
+      "name": "old folder client receives bridge, restarts, then uses public GitHub provider (103.12027ms)",
+      "detail": "  TypeError: Cannot read properties of null (reading 'activation')\n      at TestContext.<anonymous> (<validation>/resources/app/tests/github-release-provider-v7084.test.js:93:41)\n      at process.processTicksAndRejections (node:internal/process/task_queues:104:5)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)\n"
+    },
+    {
+      "location": "tests/horizon-template-native-service.test.js:23:42",
+      "name": "delta-only native shared deletion rechecks its separate moderator permission at journal append (21.34039ms)",
+      "detail": "  TypeError: Cannot read properties of undefined (reading 'id')\n      at TestContext.<anonymous> (<validation>/resources/app/tests/horizon-template-native-service.test.js:24:542)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7)\n"
+    },
+    {
+      "location": "tests/master-releases-v20261009.test.js:139:1",
+      "name": "concurrent exact publication has one archive and no temporary or lock leftovers (40.258111ms)",
+      "detail": "  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:\n  + actual - expected\n  \n    [\n      '1.json.gz',\n  +   'archive.write-fence.json'\n    ]\n  \n      at TestContext.<anonymous> (<validation>/resources/app/tests/master-releases-v20261009.test.js:143:10)\n      at async Test.run (node:internal/test_runner/test:1389:7)\n      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {\n    generatedMessage: true,\n    code: 'ERR_ASSERTION',\n    actual: [ '1.json.gz', 'archive.write-fence.json' ],\n    expected: [ '1.json.gz' ],\n    operator: 'deepStrictEqual',\n    diff: 'simple'\n  }\n[Buyer Log tests] Batch 2/5 süresi: 37.0s.\n[Buyer Log tests] Batch 2 başarısız. ZIP teslim edilmemeli.\n[Buyer Log tests] Hatanın kaynağı için üstteki \"not ok\" kaydındaki location ve error alanlarını inceleyin.\n"
+    }
+  ],
+  "classification": {
+    "deltaIntegration": "9 failures in delta-store-overrides-v806 plus1 in horizon-template-native-service. Suspected interaction with inherited AsyncLocalStorage lease context in BL-002 and detached mirror work; NOT root-cause verified. Investigate before changing assertions.",
+    "updateBridge": "2 github-release-provider-v7084 failures returning null selected/activation; inspect BL-003 legacy protocol fencing/fixtures and full-bootstrap migration. Do not disable live-writer gates to make tests green.",
+    "archive": "1 master-releases-v20261009 directory assertion now includes archive.write-fence.json from BL-002. Verify intended sidecar contract and actual archive readers before revising the assertion."
+  }
+}

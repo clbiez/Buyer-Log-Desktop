@@ -8,6 +8,7 @@ const db = require('../db');
 const userPreferences = require('./user-preferences');
 const collectionWorkspaces = require('./collection-workspaces');
 const { createBackupArchive } = require('./backup-archive');
+const { isUpdaterControlPath } = require('./backup-sensitivity');
 const {
   SERVER_DATA_ROOT, APP_DATA_ROOT, LOCAL_DATA_ROOT, LOCAL_DB_FILE, MODEL_FILES_ROOT,
   COLLECTION_IMAGES_ROOT, QTX_FILES_ROOT, CONFIG_PATH,
@@ -72,7 +73,7 @@ function sanitizeBrowserStorage(storage, userId) {
 }
 function skipBackupFile(rel, topExcludes) {
   const normalized = String(rel || '').replace(/\\/g, '/'), parts = normalized.split('/');
-  if (!normalized || topExcludes.has(parts[0])) return true;
+  if (!normalized || topExcludes.has(parts[0]) || isUpdaterControlPath(normalized)) return true;
   if (parts.some(part => /^(?:auth|cache|caches|temp|tmp|logs?|sessions?)$/i.test(part))) return true;
   if (/(?:^|\/)\.env(?:\.|$)/i.test(normalized) || /\.(?:pem|key|pfx|p12|tmp|lock|write-lock)$/i.test(normalized) || /(?:^|\/)user-access\.json$/i.test(normalized) || SENSITIVE_FILE.test(normalized)) return true;
   return false;
@@ -133,7 +134,8 @@ async function fullEntries({ accessSnapshot, syncSettings, localDbFile }) {
   await collectRoot(entries, QTX_FILES_ROOT, 'system/qtx-files');
   if (localDbFile && fs.existsSync(localDbFile) && !entries.some(item => path.resolve(item.sourcePath || '') === path.resolve(localDbFile))) entries.push({ name: 'system/local/BuyerLogLocal.db', sourcePath: localDbFile, stage: 'data' });
   let config = {};
-  try { config = JSON.parse(await fsp.readFile(CONFIG_PATH, 'utf8')); } catch (_) {}
+  try { config = JSON.parse(await fsp.readFile(CONFIG_PATH, 'utf8')); }
+  catch (error) { if (error.code !== 'ENOENT') throw error; }
   entries.push(jsonEntry('system/config/config.json', config));
   entries.push(jsonEntry('system/security/users-roles-permissions.json', accessSnapshot, 'settings'));
   entries.push(jsonEntry('system/sync/metadata.json', syncSettings || {}, 'settings'));

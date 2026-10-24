@@ -50,6 +50,7 @@ function seed() {
   }
   write(path.join(userData.SERVER_DATA_ROOT, 'orders-overrides.json'), JSON.stringify({ order: 1001, note: 'business' }));
   write(path.join(userData.APP_DATA_ROOT, 'user-source-data', 'u1', 'asas.json'), JSON.stringify({ rows: [1, 2, 3] }));
+  write(path.join(userData.APP_DATA_ROOT, 'updater/state.json'), 'CURRENT-UPDATE-SEQUENCE-42');
   write(userData.CONFIG_PATH, JSON.stringify({
     port: 6194, host: '127.0.0.1', aiModel: 'gemma4:12b',
     auth: { passwordHash: `scrypt$${SECRET_MARKER}`, sessionSecret: `${SECRET_MARKER}-session`, sessionHours: 12 },
@@ -77,6 +78,7 @@ test('legacy v2 export carries business data but no secret/auth/AI key material;
     assert.ok(paths.includes('serverData:orders-overrides.json'), 'business data must still be exported');
     assert.ok(paths.includes('appData:user-source-data/u1/asas.json'));
     assert.ok(paths.includes('config:config.json'));
+    assert.equal(paths.some(p=>p.includes(':updater/')),false,'installed updater control is not business backup data');
     for (const p of paths) assert.equal(isSensitiveBackupPath(p.split(':')[1]) && !p.startsWith('config:'), false, `secret path exported: ${p}`);
     const decoded = Buffer.concat(records.filter(r => r.record === 'fileChunk' || r.record === 'browserChunk').map(r => Buffer.from(r.base64, 'base64'))).toString('utf8');
     assert.equal(decoded.includes(SECRET_MARKER), false, 'no secret content may appear in the backup payload');
@@ -102,6 +104,7 @@ test('legacy restore brings business data back and never overwrites or deletes c
     assert.equal(JSON.parse(fs.readFileSync(path.join(userData.SERVER_DATA_ROOT, 'orders-overrides.json'), 'utf8')).note, 'business');
     assert.equal(fs.readFileSync(path.join(userData.SERVER_DATA_ROOT, 'user-access.json'), 'utf8'), 'CURRENT-USERS', 'restore must not delete/replace the account store');
     assert.equal(fs.readFileSync(path.join(userData.SERVER_DATA_ROOT, '.agent-ai-secret'), 'utf8'), 'CURRENT-AI-SECRET');
+    assert.equal(fs.readFileSync(path.join(userData.APP_DATA_ROOT, 'updater/state.json'), 'utf8'), 'CURRENT-UPDATE-SEQUENCE-42');
     assert.equal(fs.readFileSync(path.join(userData.APP_DATA_ROOT, '.database-credential-key'), 'utf8').startsWith(SECRET_MARKER), true);
     const config = JSON.parse(fs.readFileSync(userData.CONFIG_PATH, 'utf8'));
     assert.equal(config.port, 6194, 'non-secret config comes from the backup');
@@ -118,16 +121,18 @@ test('crafted legacy v1 backup cannot inject accounts, keys or config secrets', 
   const manifest = {
     format: 'buyer-log-backup', schemaVersion: 1, appVersion: '2.70', createdAt: new Date().toISOString(),
     browserStorage: { theme: 'light', sessionToken: 'stolen' },
-    managedScopes: ['serverData', 'config'],
+    managedScopes: ['serverData', 'appData', 'config'],
     files: [
       file('serverData', 'user-access.json', '{"moderator":{"username":"attacker"}}'),
       file('serverData', '.agent-ai-secret', 'ATTACKER-KEY'),
       file('serverData', 'orders-overrides.json', '{"order":1}'),
+      file('appData', 'updater/state.json', '{}'),
       file('config', 'config.json', JSON.stringify({ host: '127.0.0.1', auth: { passwordHash: 'scrypt$ATTACKER', sessionSecret: 'ATTACKER' } })),
     ],
   };
   const result = userData.restoreBackup(zlib.gzipSync(Buffer.from(JSON.stringify(manifest))));
   assert.equal(result.ok, true);
+  assert.equal(fs.readFileSync(path.join(userData.APP_DATA_ROOT, 'updater/state.json'), 'utf8'), 'CURRENT-UPDATE-SEQUENCE-42');
   assert.equal(result.browserStorage.sessionToken, undefined);
   assert.equal(fs.readFileSync(path.join(userData.SERVER_DATA_ROOT, 'user-access.json'), 'utf8'), 'CURRENT-USERS');
   assert.equal(fs.existsSync(path.join(userData.SERVER_DATA_ROOT, '.agent-ai-secret')), true);

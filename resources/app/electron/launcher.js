@@ -3,13 +3,13 @@
  * immutable app-core folders; activation is an atomic current-pointer change. */
 const fs=require('fs');
 const path=require('path');
-const { app }=require('electron');
+const { app,dialog }=require('electron');
 const { createLauncherState }=require('./update/launcher-state');
 const { resolvePortableRoot,desktopPaths }=require('./portable-paths');
 
-const UPDATER_VERSION='1.0.0';
+const UPDATER_VERSION='1.1.0';
 const BOOTSTRAP_CORE=path.resolve(__dirname,'..');
-const PORTABLE_ROOT=app.isPackaged?path.dirname(process.execPath):path.resolve(BOOTSTRAP_CORE,'.desktop-dev');
+const PORTABLE_ROOT=resolvePortableRoot({packaged:app.isPackaged,execPath:process.execPath,appPath:BOOTSTRAP_CORE});
 const LOG_FILE=path.join(PORTABLE_ROOT,'data','local','updater','updater.log');
 const HEALTH_TIMEOUT_MS=60000;
 function log(event,meta={}){try{fs.mkdirSync(path.dirname(LOG_FILE),{recursive:true});fs.appendFileSync(LOG_FILE,JSON.stringify({at:new Date().toISOString(),event,...meta})+'\n','utf8');}catch(_){} }
@@ -39,15 +39,33 @@ if(!primaryInstance){
 const lifecycle=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT});
 const recovered=app.isPackaged?lifecycle.rollbackExistingTrial():null;
 if(recovered)log('rollback-on-next-launch',{failedVersion:recovered.failed.version,restoredVersion:recovered.restored.version});
+const patchManager=app.isPackaged?require('./manual-patch/manager').createInstalledManager({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT}):null;
+function verifySelected(selected){
+  if(!app.isPackaged)return;
+  const relative=path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),selected.appCoreRoot);
+  if(relative.split(path.sep)[0].startsWith('manual-'))patchManager.verifyInstalled(selected);
+  else require('./manual-patch/core-verification').verifyPackagedCore(selected.appCoreRoot,selected.version);
+}
+if(app.isPackaged){
+  const pending=lifecycle.readState().pending;
+  if(pending?.ready){
+    if(pending.manualPatch)patchManager.verifyStaged(pending);
+    else require('./manual-patch/core-verification').verifyPackagedCore(pending.appCoreRoot,pending.version);
+  }
+  verifySelected(lifecycle.currentPointer());
+}
 const activationResult=app.isPackaged?lifecycle.activatePending():null;
 const activation=activationResult&&activationResult.activation||null;
 const selected=app.isPackaged?lifecycle.currentPointer():lifecycle.bootstrapPointer();
+verifySelected(selected);
 if(activation)log('activation-started',{version:activation.version,previousVersion:activation.previous&&activation.previous.version||''});
 process.env.BUYER_LOG_BOOTSTRAP_APP_CORE=BOOTSTRAP_CORE;
 process.env.BUYER_LOG_ACTIVE_APP_CORE=selected.appCoreRoot;
 process.env.BUYER_LOG_ACTIVE_VERSION=selected.version;
 process.env.BUYER_LOG_UPDATER_VERSION=UPDATER_VERSION;
 if(activation)process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN=activation.token;
+else delete process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN;
+if(patchManager)global.__buyerLogPrepareSignedPatch=options=>require('./manual-patch/desktop').prepareFromPicker({...options,manager:patchManager,dialog});
 
 global.__buyerLogLauncherHealthReady=(info={})=>{
   if(!activation)return false;
@@ -60,15 +78,16 @@ let healthTimer=null;
 if(activation){
   healthTimer=setTimeout(()=>{
     const state=lifecycle.readState();if(!state.activation||state.activation.token!==activation.token)return;
-    const restored=lifecycle.rollbackNow(activation,'health-timeout');log('rollback',{failedVersion:activation.version,restoredVersion:restored.version,reason:'health-timeout'});
-    try{app.relaunch();}catch(_){};try{app.exit(31);}catch(_){process.exit(31);}
+    lifecycle.requestRollback(activation,'health-timeout');log('rollback-requested',{failedVersion:activation.version,reason:'health-timeout'});
+    // Restore only on the next launcher run, after normal backend shutdown.
+    try{app.relaunch();}catch(_){};app.quit();
   },HEALTH_TIMEOUT_MS);if(healthTimer.unref)healthTimer.unref();
 }
 try{
   require(path.join(selected.appCoreRoot,'electron','main.js'));
 }catch(error){
   log('active-core-load-failed',{version:selected.version,code:error&&error.code||'',message:String(error&&error.message||error).slice(0,500)});
-  if(activation){const restored=lifecycle.rollbackNow(activation,'main-load-failed');log('rollback',{failedVersion:activation.version,restoredVersion:restored.version,reason:'main-load-failed'});try{app.relaunch();}catch(_){};try{app.exit(32);}catch(_){process.exit(32);}}
+  if(activation){lifecycle.requestRollback(activation,'main-load-failed');log('rollback-requested',{failedVersion:activation.version,reason:'main-load-failed'});try{app.relaunch();}catch(_){};app.quit();}
   else throw error;
 }
 }

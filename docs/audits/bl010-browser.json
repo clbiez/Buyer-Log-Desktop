@@ -1,0 +1,24 @@
+{
+  "environment": "Linux Node24.19 Chromium; reduced motion; synthetic accounts",
+  "initialFailure": {
+    "source": "actual normal server without ASAS configuration",
+    "status": 503,
+    "sharedError": true,
+    "terminalSkeleton": false,
+    "languageSwitch": true,
+    "screenshot": "actual unmocked failure UI"
+  },
+  "followupFixture": {
+    "source": "explicit Playwright synthetic API routes",
+    "retryEmptySuccess": true,
+    "loadedCardRetainedOnRefreshFailure": true,
+    "retryRepeatsPOST": true,
+    "noticeClearedAfterSuccess": true,
+    "methods": [
+      "GET",
+      "GET",
+      "POST",
+      "POST"
+    ]
+  }
+}

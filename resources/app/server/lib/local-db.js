@@ -12,7 +12,7 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
-const { withFileLeaseAsync, replaceFileWithRetry } = require('./shared-file-transaction');
+const { withFileLeaseAsync, replaceFileWithRetry, assertHeldFileLeases } = require('./shared-file-transaction');
 const { resolveLocalDbFolder } = require('./local-path-policy');
 const { createDurableFileRecovery } = require('./durable-file-recovery');
 const { jsonToBuffer, jsonSha256, jsonPreview, parseJsonBuffer, DIRECT_PARSE_MAX_BYTES } = require('./large-json');
@@ -489,17 +489,26 @@ function walLines(input) {
 }
 function parseWal(text) {
   const entries = [];
-  let truncated = false;
-  for (const line of walLines(text)) {
+  let truncated = false, tornTail = false;
+  const lines = walLines(text);
+  const endsWithNewline = Buffer.isBuffer(text) ? text.at(-1) === 0x0a : String(text || '').endsWith('\n');
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
     if (!line.trim()) continue;
     let entry = null;
-    try { entry = JSON.parse(line); } catch (_) { truncated = true; break; }
+    try { entry = JSON.parse(line); } catch (_) {
+      truncated = true;
+      // Only a final unterminated JSON fragment can be a torn append. A bad
+      // checksum/schema or corruption before later lines needs explicit repair.
+      tornTail = index === lines.length - 1 && !endsWithNewline;
+      break;
+    }
     if (!entry || entry.v !== WAL_VERSION || !entry.op) { truncated = true; break; }
     const expected = sha256(Buffer.from(JSON.stringify({ v: entry.v, op: entry.op, payload: entry.payload }), 'utf8'));
     if (expected !== entry.sha256) { truncated = true; break; }
     entries.push(entry);
   }
-  return { entries, truncated };
+  return { entries, truncated, tornTail, endsWithNewline };
 }
 
 /* Kimlik için bütün DB'yi senkron okuyup parse etmek hem olay döngüsünü
@@ -601,7 +610,10 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
   }
 
   async function readWalEntries(target) {
-    try { return parseWal(await fsp.readFile(target)); }
+    try {
+      const bytes = await fsp.readFile(target);
+      return { ...parseWal(bytes), bytes };
+    }
     catch (error) {
       if (error && error.code === 'ENOENT') return { entries: [], truncated: false };
       throw error;
@@ -630,14 +642,20 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
      (pending/listConflicts kendi kopyalarını üretir). */
   let cachedState = null;
   let cachedTags = null;
+  let walMetadata = null;
+  function statTag(stat) { return `${stat.ino}-${stat.size}-${stat.mtimeMs}-${stat.ctimeMs}`; }
   async function fileTag(target) {
-    try { const stat = await fsp.stat(target); return `${stat.size}-${stat.mtimeMs}`; }
-    catch (_) { return ''; }
+    try { return statTag(await fsp.stat(target)); }
+    catch (error) { if (error.code === 'ENOENT') return ''; throw error; }
   }
   async function currentTags() {
     return `${await fileTag(dbFile)}|${await fileTag(walFile())}|${await fileTag(`${walFile()}.bak`)}`;
   }
-  function invalidateCache() { cachedState = null; cachedTags = null; }
+  function invalidateCache() { cachedState = null; cachedTags = null; walMetadata = null; }
+  async function withDbLease(operation) {
+    try { return await withFileLeaseAsync(dbFile, operation); }
+    catch (error) { invalidateCache(); throw error; }
+  }
 
   async function loadState() {
     const tags = await currentTags();
@@ -668,9 +686,37 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
      writeState hedefi yazdıktan sonra sha256 ile doğruluyor, yani buraya
      dönülmüşse görüntü gerçekten diskte. */
   async function writeSnapshot(state) {
+    await inspectWalForWrite(true);
     await writeState(dbFile, state);
     try { await replaceFileWithRetry(walFile(), `${walFile()}.bak`); }
     catch (error) { if (error && error.code !== 'ENOENT') throw error; }
+    walMetadata = null;
+  }
+
+  async function inspectWalForWrite(preserveTorn = false) {
+    const tag = await fileTag(walFile());
+    let current = walMetadata && walMetadata.tag === tag ? walMetadata : null;
+    if (!current) {
+      const parsed = await readWalEntries(walFile());
+      current = {
+        tag, entryCount: parsed.entries.length, byteLength: parsed.bytes?.length || 0,
+        truncated: parsed.truncated, tornTail: parsed.tornTail || false,
+        endsWithNewline: parsed.endsWithNewline || false,
+        ...(parsed.tornTail ? { bytes: parsed.bytes } : {}),
+      };
+      walMetadata = current;
+    }
+    if (current.truncated && !current.tornTail) {
+      invalidateCache();
+      throw dataIntegrityError(dbFile, [{ file: walFile(), error: new Error('WAL integrity check failed / WAL bütünlük denetimi başarısız') }]);
+    }
+    if (preserveTorn && current.tornTail) {
+      // Preserve every original byte before any snapshot/rotation can touch it.
+      const folder = path.dirname(dbFile);
+      const recovery = createDurableFileRecovery({ recoveryRoot: path.join(folder, '.buyerlog-db-recovery'), allowedRoots: [folder] });
+      await recovery.replace(`${walFile()}.corrupt-${crypto.randomUUID()}`, current.bytes);
+    }
+    return current;
   }
 
   function validateTransportClocks(delta) {
@@ -735,27 +781,39 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
       if (operation.op === 'delta') validateTransportClocks(operation.payload.delta);
       else if (operation.op === 'package') for (const delta of operation.payload.events || []) validateTransportClocks(delta);
     }
-    return withFileLeaseAsync(dbFile, async () => {
+    return withDbLease(async () => {
       recoverPendingWrites();
       await fsp.mkdir(path.dirname(dbFile), { recursive: true });
       /* WAL'ın altında her zaman bir temel anlık görüntü bulunmalı. Yoksa
          dosya hiç oluşmaz; yedekleme, taşıma ve .bak kurtarma yolu dayanacak
          bir taban bulamaz. Yalnız ilk yazmada bir kez ödenir. */
       if (!fs.existsSync(dbFile) && !fs.existsSync(`${dbFile}.bak`)) await writeState(dbFile, emptyState(loadDeviceId()));
+      const currentWal = await inspectWalForWrite();
       const state = await loadState();
+      if (currentWal.tornTail) await writeSnapshot(state);
       if (typeof operations === 'function') operations = await operations(state);
       try {
         const results = operations.map(item => { stampOperation(state, item); return item.apply(state); });
 
-        const lines = operations.map(item => walLine(item.op, item.payload)).join('');
+        // A valid checksummed final record may lack its newline. Keep the next
+        // record separate so both remain replayable after a restart.
+        // Backup recovery/rotation clears metadata. Otherwise the held lease
+        // keeps the already validated WAL identity stable during preparation.
+        const appendWal = walMetadata || await inspectWalForWrite();
+        const separator = appendWal.byteLength && !appendWal.endsWithNewline ? '\n' : '';
+        const lines = separator + operations.map(item => walLine(item.op, item.payload)).join('');
         const handle = await fsp.open(walFile(), 'a');
         // fsync ÖNCE, dönüş SONRA: çağırana "kaydedildi" dendiğinde satır diskte.
-        try { await handle.writeFile(lines, 'utf8'); await handle.sync(); } finally { await handle.close(); }
+        try { assertHeldFileLeases(); await handle.writeFile(lines, 'utf8'); await handle.sync(); assertHeldFileLeases(); } finally { await handle.close(); }
 
-        let size = 0;
-        try { size = (await fsp.stat(walFile())).size; } catch (_) {}
-        const { entries } = size ? await readWalEntries(walFile()) : { entries: [] };
-        if (size > walMaxBytes || entries.length > WAL_MAX_ENTRIES) await writeSnapshot(state);
+        const walStat = await fsp.stat(walFile());
+        walMetadata = {
+          tag: statTag(walStat), byteLength: walStat.size,
+          entryCount: appendWal.entryCount + operations.length,
+          endsWithNewline: lines ? lines.endsWith('\n') : appendWal.endsWithNewline,
+          truncated: false, tornTail: false,
+        };
+        if (walStat.size > walMaxBytes || walMetadata.entryCount > WAL_MAX_ENTRIES) await writeSnapshot(state);
         // Durum yerinde değişti ve dosyalar yeniden yazıldı: imzayı tazele ki
         // sıradaki okuma diski boşuna baştan okumasın.
         cachedState = state; cachedTags = await currentTags();
@@ -790,7 +848,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
   }
 
   async function transaction(mutator) {
-    return withFileLeaseAsync(dbFile, async () => {
+    return withDbLease(async () => {
       recoverPendingWrites();
       const state = await loadState();
       const result = await mutator(state);
@@ -1321,8 +1379,9 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
 
   async function compact(options = {}) {
     const keepUploadedTail = Math.max(100, Number(options.keepUploadedTail) || 1000);
-    return withFileLeaseAsync(dbFile, async () => {
+    return withDbLease(async () => {
       recoverPendingWrites();
+      await inspectWalForWrite(true);
       const state = await loadState();
       const beforeHash = businessStateHashFromState(state);
       const before = await stats();
@@ -1456,7 +1515,7 @@ function createLocalDb(file, { clock = Date.now, trace = null, walMaxBytes = WAL
      ACK borcu kapatılır; sıra alanı yeni kimlikle sıfırdan başlar.
      İş kaydı (records) değişmez. */
   async function rotateDeviceId({ reason = 'manual', fingerprint = '' } = {}) {
-    return withFileLeaseAsync(dbFile, async () => {
+    return withDbLease(async () => {
       recoverPendingWrites();
       await fsp.mkdir(path.dirname(dbFile), { recursive: true });
       if (!fs.existsSync(dbFile) && !fs.existsSync(`${dbFile}.bak`)) await writeState(dbFile, emptyState(loadDeviceId()));

@@ -1841,8 +1841,6 @@ function showSourceFilterRequiredNotice(status,message){
     <div class="sourceFilterRequiredActions"><button type="button" class="tbtn" data-source-filter-close>${escapeHtml(text.close)}</button><button type="button" class="navActionBtn" data-source-filter-open>${escapeHtml(text.action)}</button></div>
   </div>`;
   document.body.appendChild(modal);
-  bindBuyerLogUpdatePanel(modal);
-  void refreshBuyerLogUpdatePanel();
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const reopen=event.target.closest('[data-reopen-pricing-draft]');if(reopen){event.preventDefault();const row=results[Number(reopen.dataset.reopenPricingDraft)];if(row?.draftId)void prepareEmailReopenSingleDraft({draftId:row.draftId,manufacturer:row.manufacturer,filename:row.emlFilename,reopenUntil:row.reopenUntil},row.quotationRequestId||'',reopen);return;}const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const close=()=>modal.remove();
@@ -11381,13 +11379,7 @@ function applyLicensorRulesToLoadedRows(){
         if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;changed++;}
         return;
       }
-      // Otomatik değer yalnız tek geçerli Licensor varken yazılır; belirsizlik ve
-      // NON-DTR üretici çelişkisi hücreyi boş bırakıp açık seçim bekler.
-      const api=window.BLBusinessRules;
-      const rules=Array.isArray(state.overrides&&state.overrides.pricingRules)?state.overrides.pricingRules:[];
-      const auto=api&&typeof api.resolveAutoLicensor==='function'
-        ? api.resolveAutoLicensor(license,rules,{manufacturer:norm(row.Manufacturer),nonDtrManufacturers:state.overrides&&state.overrides.nonDtrManufacturers})
-        : kolResolveLicensorsForLicense(license);
+      const auto=licenseLicensorStateForRow(row);
       const next=norm(auto.displayValue)||'';
       if(!editableValuesEqual(row.Licensor,next)){row.Licensor=next;changed++;}
     });
@@ -12513,7 +12505,7 @@ function buildCPRowsFromASAS(){
     if(legacyRef)imageByIdentity.set(key,legacyRef);
   });
   return filtered.map((o,i)=>{
-    const derivedLicensor = kolResolveLicensorsForLicense(o.license).displayValue || '';
+    const derivedLicensor = norm(o.licensor) || licenseLicensorStateForRow({License:o.license,Manufacturer:o.manufacturer}).displayValue || '';
     const hasLicensorOverride = Object.prototype.hasOwnProperty.call(ov.licensormap||{},o.ocode);
     const licensor = o.license && hasLicensorOverride ? norm(ov.licensormap[o.ocode]) : derivedLicensor;
     const key = `${o.ocode}|${turknorm(o.colour)}`;
@@ -12564,7 +12556,7 @@ function buildOrderSummaryRowsFromASAS(){
   const T = toDateOnly(new Date());
   const filtered = orders;
   const built = filtered.map(o=>{
-    const derivedLicensor = kolResolveLicensorsForLicense(o.license).displayValue || '';
+    const derivedLicensor = norm(o.licensor) || licenseLicensorStateForRow({License:o.license,Manufacturer:o.manufacturer}).displayValue || '';
     const hasLicensorOverride = Object.prototype.hasOwnProperty.call(ov.licensormap||{},o.ocode);
     const licensor = o.license && hasLicensorOverride ? norm(ov.licensormap[o.ocode]) : derivedLicensor;
     const key = `${o.ocode}|${turknorm(o.colour)}`;
@@ -26648,8 +26640,8 @@ function kolLicensorUnresolvedState(row){
 function licenseLicensorStateForRow(row){
   const license=norm(row&&row.License);
   const rules=Array.isArray(state.overrides&&state.overrides.pricingRules)?state.overrides.pricingRules:[];
-  const resolver=window.BLBusinessRules&&window.BLBusinessRules.resolveLicenseLicensor;
-  if(typeof resolver==='function')return resolver(license,rules);
+  const resolver=window.BLBusinessRules&&window.BLBusinessRules.resolveOrderLicensor;
+  if(typeof resolver==='function')return resolver(license,rules,{manufacturer:norm(row&&row.Manufacturer),nonDtrManufacturers:state.overrides&&state.overrides.nonDtrManufacturers});
   const resolved=license?kolResolveLicensorsForLicense(license):{license:'',latestDate:'',licensors:[],displayValue:''};
   return {...resolved,hasLicense:Boolean(license),hasRule:Boolean(resolved.displayValue),status:license?(resolved.displayValue?'resolved':'missing-rule'):'empty'};
 }
@@ -38590,6 +38582,7 @@ async function refreshBuyerLogUpdatePanel(statusArg){
     ${buyerLogRepairLine(status.repair)}
     <div class="verHistUpdateActions">
       <button type="button" class="tbtn" data-update-check>${escapeHtml(en?'Check for Updates':'Güncellemeleri Kontrol Et')}</button>
+      ${moderator&&status.manualPatchSupported?`<button type="button" class="tbtn" data-update-signed-patch>${escapeHtml(en?'Install Signed Patch…':'İmzalı Yama Yükle…')}</button>`:''}
       ${status.pendingReady?`<button type="button" class="tbtn primary" data-update-restart>${escapeHtml(en?'Restart and Update Now':'Şimdi Yeniden Başlat')}</button>`:''}
       ${moderator?`<label class="verHistUpdateChannel">${escapeHtml(en?'Channel':'Kanal')}<select data-update-channel><option value="stable"${channel==='stable'?' selected':''}>Stable</option><option value="test"${channel==='test'?' selected':''}>Test</option></select></label><button type="button" class="tbtn" data-update-source>${escapeHtml(en?'Release Source':'Release Kaynağı')}</button>`:''}
       ${moderator&&status.lastError&&status.latestVersion?`<button type="button" class="tbtn" data-update-retry>${escapeHtml(en?'Retry':'Tekrar Dene')}</button>`:''}
@@ -38603,6 +38596,19 @@ function bindBuyerLogUpdatePanel(modal){
     const restart=event.target.closest('[data-update-restart]');
     const source=event.target.closest('[data-update-source]');
     const retry=event.target.closest('[data-update-retry]');
+    const signed=event.target.closest('[data-update-signed-patch]');
+    if(signed){
+      signed.disabled=true;
+      try{
+        const r=await bridge.prepareSignedPatch({userId,language:appLang});
+        if(r.ok)showToast(appLang==='en'?'Signed patch verified and ready. Restart after saving your work.':'İmzalı yama doğrulandı ve hazır. İşinizi kaydettikten sonra yeniden başlatın.');
+        else if(!r.cancelled)showToast(r.error||(appLang==='en'?'The signed patch could not be prepared.':'İmzalı yama hazırlanamadı.'));
+        await refreshBuyerLogUpdatePanel();
+        modal.querySelector(r.ok?'[data-update-restart]':'[data-update-signed-patch]')?.focus();
+      }catch(_){showToast(appLang==='en'?'The signed patch could not be prepared.':'İmzalı yama hazırlanamadı.');}
+      finally{signed.disabled=false;}
+      return;
+    }
     if(check){check.disabled=true;const r=await bridge.check({userId,manual:true}).catch(()=>({ok:false,error:'Güncelleme kontrolü başarısız oldu.'}));if(!r.ok&&r.error)showToast(r.error);await refreshBuyerLogUpdatePanel(r);return;}
     if(restart){restart.disabled=true;const r=await bridge.restart().catch(()=>({ok:false}));if(!r.ok){restart.disabled=false;showToast(appLang==='en'?'Update is not ready.':'Güncelleme henüz hazır değil.');}return;}
     if(source){const picked=await bridge.chooseSource(userId).catch(()=>null);if(picked&&picked.ok&&picked.path){const r=await bridge.configure({userId,releaseSource:picked.path});if(r&&r.ok){await refreshBuyerLogUpdatePanel(r);void bridge.check({userId,manual:true}).then(refreshBuyerLogUpdatePanel).catch(()=>{});}else if(r&&r.error)showToast(r.error);}return;}
@@ -38643,6 +38649,8 @@ function renderVersionHistoryModal(){
     </div>
   </div>`;
   document.body.appendChild(modal);
+  bindBuyerLogUpdatePanel(modal);
+  void refreshBuyerLogUpdatePanel();
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   _verHistSelected = null; _verHistQuery = '';

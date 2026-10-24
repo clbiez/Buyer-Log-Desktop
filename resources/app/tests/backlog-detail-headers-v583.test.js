@@ -40,7 +40,7 @@ const HEADERS = [
 ];
 
 const d = s => new Date(s + 'T00:00:00');
-const overrides = { submap: {}, delmap: {}, suppfobmap: {}, notesmap: {}, licensormap: {}, transitRules: [], pricingRules: [] };
+const overrides = { submap: {}, delmap: {}, suppfobmap: {}, notesmap: {}, licensormap: {}, transitRules: [], pricingRules: [], nonDtrManufacturers: ['M'] };
 
 const base = {
   season: '26SS', countryRaw: 'MISIR', buyer: 'B', buyerGrup: 'BG', manufacturer: 'M', line: 'L',

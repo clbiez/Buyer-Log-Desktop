@@ -42,6 +42,32 @@ const input={
   newOrderMonth:'202502',newInStoreMonth:'202502',previousUsdPrice:2.75,
 };
 
+test('legacy TL fixed columns do not shift when the workbook used range starts after A',()=>{
+  const decoded=XLSX.read(workbook('OFFSET'),{type:'buffer'});
+  assert.match(decoded.Sheets['Değişimler']['!ref'],/^V/);
+  // The existing fixture already reproduces the V:W currency table offset.
+  // Also exercise legitimate sheets whose unused column A is excluded from
+  // the declared range instead of relying on the writer's A1 default.
+  for(const name of ['KLASMAN LİSTESİ ÖZET','KLASMAN KUMAŞ PİVOT','KLASMAN CMT PİVOT','KLASMAN AKSESUAR PİVOT','KLASMAN EK İŞLEM PİVOT']){
+    const sheet=decoded.Sheets[name],range=XLSX.utils.decode_range(sheet['!ref']);range.s.c=1;sheet['!ref']=XLSX.utils.encode_range(range);
+  }
+  const bytes=XLSX.write(decoded,{type:'buffer',bookType:'xlsx'});
+  assert.match(XLSX.read(bytes,{type:'buffer'}).Sheets['KLASMAN LİSTESİ ÖZET']['!ref'],/^B/);
+  const snapshot=engine.parseWorkbookBuffer(bytes,'offset.xlsx');
+  assert.deepEqual(snapshot.months,['202501','202502']);
+  assert.deepEqual(snapshot.fx,{'202501':30,'202502':31});
+  assert.deepEqual(snapshot.records[0].slice(0,9),['CUW4','CU4E','KNIT','LICENSE','TOP',.4,.3,.2,.1]);
+  assert.deepEqual(snapshot.records[0].slice(9),[[100,110],[100,110],[100,110],[100,110]]);
+  // A previously populated identifier column must produce exactly the same
+  // domain values; no financial formula is changed by origin normalization.
+  for(const sheet of Object.values(decoded.Sheets)){
+    sheet.A1={t:'s',v:'Synthetic reference'};
+    const range=XLSX.utils.decode_range(sheet['!ref']);range.s.c=0;sheet['!ref']=XLSX.utils.encode_range(range);
+  }
+  const withA=engine.parseWorkbookBuffer(XLSX.write(decoded,{type:'buffer',bookType:'xlsx'}),'with-a.xlsx');
+  assert.deepEqual(withA.records,snapshot.records);assert.deepEqual(withA.fx,snapshot.fx);
+});
+
 test('new TL uploads create distinct selectable sets and preserve original legacy',async()=>{
   const before=engine.listSets().find(s=>s.id==='legacy');
   const firstBytes=workbook('S1');
@@ -120,16 +146,16 @@ test('USD files still receive strict signature and Excel reconciliation checks',
 test('UI uses readable, bilingual import stages and removes busy state after failure',()=>{
   const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'../public/design.css'),'utf8');
-  assert.match(app,/function createEndeksmatikUploadProgress\\(file\\)/);
-  assert.match(app,/reader\\.onprogress=/);
-  assert.match(app,/progress\\.setStage\\('verify'\\)/);
-  assert.match(app,/progress\\.remove\\(\\)/);
+  assert.match(app,/function createEndeksmatikUploadProgress\(file\)/);
+  assert.match(app,/reader\.onprogress=/);
+  assert.match(app,/progress\.setStage\('verify'\)/);
+  assert.match(app,/progress\.remove\(\)/);
   assert.match(app,/endeksmatikImportBusy=false/);
   assert.match(app,/data-em-phase="read"/);
   assert.match(app,/data-em-phase="verify"/);
   assert.match(app,/data-em-phase="finish"/);
   assert.match(app,/Bağımsız TL seti oluşturuldu/);
-  assert.match(css,/\\.endeksmatikImportOverlay/);
+  assert.match(css,/\.endeksmatikImportOverlay/);
   assert.match(css,/prefers-reduced-motion:reduce/);
 });
 test.after(()=>{fs.rmSync(root,{recursive:true,force:true});});

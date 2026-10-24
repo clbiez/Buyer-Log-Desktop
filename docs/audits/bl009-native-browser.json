@@ -1,0 +1,11 @@
+{
+  "environment": "Linux Node24.19 Chromium, synthetic normal server",
+  "nativeDialogs": "Image Size Limit -> PLM Image Package",
+  "reverseWrap": true,
+  "forwardWrap": true,
+  "disabledImportSkipped": true,
+  "escapeClosesOnlyChild": true,
+  "parentTriggerRestored": true,
+  "filesImported": false,
+  "settingsSaved": false
+}

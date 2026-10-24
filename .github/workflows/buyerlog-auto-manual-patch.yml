@@ -1,87 +1,53 @@
-name: Buyer Log AUTO Manual Patch Publisher
+name: Buyer Log Manual Patch Validation (signed publisher migration)
 on:
-  push:
-    branches: [main, fix/auto-patch-skip-ci-pr-coverage-20261023]
-    paths:
-      - 'resources/app/public/**'
-      - 'resources/app/server/**'
-      - 'scripts/mini_patch_builder.py'
-      - 'scripts/mini_patch_installer.ps1'
-      - 'scripts/mini_patch_ci.py'
-      - 'scripts/BuyerLog-OtoPatch.ps1'
-      - 'scripts/BuyerLog-OtoPatch.cmd'
-      - '.github/workflows/buyerlog-auto-manual-patch.yml'
-  pull_request_target:
-    types: [closed]
-  # Merge commits containing [skip ci] do not trigger push-based workflows.
-  # This fallback also recovers any delayed/dropped PR event.
-  schedule:
-    - cron: '*/15 * * * *'
   workflow_dispatch:
+    inputs:
+      commit_sha:
+        description: Exact reviewed main commit; validation only, no publication
+        required: true
+        type: string
 permissions:
   contents: read
 concurrency:
-  group: buyerlog-auto-manual-patch
-  cancel-in-progress: true
+  group: buyerlog-manual-patch-validation
+  cancel-in-progress: false
 jobs:
-  check-patch:
-    # pull_request_target is not suppressed by [skip ci]; accept only merged
-    # PRs targeting main, never check out or run code from a PR head.
-    if: github.event_name != 'pull_request_target' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
-    runs-on: ubuntu-latest
-    outputs:
-      required: ${{ steps.feed.outputs.required }}
-      source_sha: ${{ steps.feed.outputs.source_sha }}
-    steps:
-      - id: feed
-        name: Compare latest main SHA and current STABLE against published patch
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          SOURCE_SHA="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
-          # A diagnostic feature branch validates its own workflow before merge;
-          # no feature-branch job is permitted to publish the public feed.
-          if [[ "$GITHUB_EVENT_NAME" == "push" && "$GITHUB_REF" != "refs/heads/main" ]]; then
-            SOURCE_SHA="$GITHUB_SHA"
-          fi
-          printf 'source_sha=%s\n' "$SOURCE_SHA" >> "$GITHUB_OUTPUT"
-          export SOURCE_SHA
-          curl --fail --location --silent --show-error --retry 2 --max-time 30 \
-            'https://raw.githubusercontent.com/clbiez/Buyer-Log-Releases/main/stable/latest.json' \
-            -o "$RUNNER_TEMP/buyerlog-stable.json"
-          curl --fail --location --silent --show-error --retry 2 --max-time 30 \
-            'https://raw.githubusercontent.com/clbiez/Buyer-Log-Releases/main/mini-patch/latest.json' \
-            -o "$RUNNER_TEMP/buyerlog-patch.json" || echo '{}' > "$RUNNER_TEMP/buyerlog-patch.json"
-          python3 - <<'PY'
-          import json,os,pathlib
-          stable=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'buyerlog-stable.json').read_text())
-          patch=json.loads((pathlib.Path(os.environ['RUNNER_TEMP'])/'buyerlog-patch.json').read_text())
-          main_sha=os.environ['SOURCE_SHA']
-          current=(patch.get('target_commit')==main_sha and
-                   patch.get('base_version')==stable.get('version'))
-          with open(os.environ['GITHUB_OUTPUT'],'a',encoding='utf8') as f:
-              f.write('required='+('false' if current else 'true')+'\n')
-          print('main:',main_sha,'STABLE:',stable['version'],
-                'published patch:',patch.get('target_commit'),
-                'published base:',patch.get('base_version'),
-                'action:','SKIP (current)' if current else 'BUILD')
-          PY
-        # SOURCE_SHA is also needed inside the Python verifier above.
-  build-and-test:
-    needs: check-patch
-    if: needs.check-patch.outputs.required == 'true'
+  validate-patch:
+    # Legacy unsigned publication is deliberately frozen during the approved
+    # signed-bootstrap migration. Existing installs/downloads are not modified.
+    # A future signed publisher needs a separate explicit approval workflow.
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.check-patch.outputs.source_sha }}
+          ref: main
           fetch-depth: 0
           persist-credentials: false
-      - name: Resolve official STABLE version and its immutable source commit
+      - name: Pin reviewed source from main before running application code
+        shell: pwsh
+        env:
+          REVIEWED_SHA: ${{ inputs.commit_sha }}
+        run: |
+          if ($env:REVIEWED_SHA -notmatch '^[0-9a-f]{40}$') { throw 'Exact reviewed source SHA is required.' }
+          $main = (& git rev-parse HEAD).Trim()
+          if ($LASTEXITCODE -ne 0 -or $main -ne $env:REVIEWED_SHA) { throw 'Reviewed source is not current main. Review the new source before validation.' }
+          Write-Host "VALIDATION ONLY: $main. No patch publication is enabled."
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: resources/app/package-lock.json
+      - name: Install application dependencies
+        working-directory: resources/app
+        run: npm ci
+      - name: Full application regression is required before patch packaging
+        working-directory: resources/app
+        shell: pwsh
+        run: |
+          npm test
+          if ($LASTEXITCODE -ne 0) { throw 'Application regression failed; no patch will be built or published.' }
+      - name: Resolve STABLE compatibility base
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
@@ -96,91 +62,18 @@ jobs:
           if ([string]$pkg.version -ne $version) { throw 'STABLE source version differs from published STABLE.' }
           "BUYER_LOG_PATCH_BASE_VERSION=$version" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
           "BUYER_LOG_PATCH_BASE_COMMIT=$sha" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
-          Write-Host "PATCH BASE: $version / $sha"
-      - name: Build mini patch from resolved STABLE source
+      - name: Build isolated compatibility fixture (never published)
         shell: pwsh
-        run: python scripts/mini_patch_builder.py
-      - name: Test apply, compatibility and rollback on Windows
+        run: |
+          python scripts/mini_patch_builder.py
+          if ($LASTEXITCODE -ne 0) { throw 'Patch build failed.' }
+      - name: Retain Windows apply, compatibility and rollback validation
         shell: pwsh
-        run: python scripts/mini_patch_ci.py
-      - name: Save verified ZIP and index
-        uses: actions/upload-artifact@v4
-        with:
-          name: buyerlog-auto-manual-patch-latest
-          path: |
-            dist/BuyerLog-*-MiniPatch-*.zip
-            dist/mini-patch-latest.json
-          if-no-files-found: error
-          retention-days: 7
-  publish-public-download:
-    if: needs.check-patch.outputs.required == 'true' && (github.ref == 'refs/heads/main' || (github.event_name == 'pull_request_target' && github.event.pull_request.merged == true))
-    needs: [check-patch, build-and-test]
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    steps:
-      - name: Download Windows-verified ZIP and index
-        uses: actions/download-artifact@v4
-        with:
-          name: buyerlog-auto-manual-patch-latest
-          path: dist
-      - name: Verify ZIP and commit identity
-        shell: bash
-        env:
-          HEAD_SHA: ${{ needs.check-patch.outputs.source_sha }}
         run: |
-          set -euo pipefail
-          python3 - <<'PY'
-          import hashlib,json,os,pathlib
-          index=json.loads(pathlib.Path('dist/mini-patch-latest.json').read_text())
-          file=pathlib.Path('dist')/index['asset']
-          assert index['target_commit']==os.environ['HEAD_SHA']
-          assert index['base_version'].count('.')==2
-          assert file.exists() and file.stat().st_size==index['size']
-          assert hashlib.sha256(file.read_bytes()).hexdigest()==index['sha256']
-          print('SHA256/commit verified:',file)
-          PY
-      - name: Publish to public non-STABLE prerelease channel
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
-          RELEASE_REPO: clbiez/Buyer-Log-Releases
+          python scripts/mini_patch_ci.py
+          if ($LASTEXITCODE -ne 0) { throw 'Patch compatibility or rollback failed.' }
+      - name: Report migration boundary
+        shell: pwsh
         run: |
-          set -euo pipefail
-          VERSION="$(python3 -c "import json;print(json.load(open('dist/mini-patch-latest.json'))['base_version'])")"
-          TAG="minipatch-v$VERSION"
-          ASSET="$(python3 -c "import json;print(json.load(open('dist/mini-patch-latest.json'))['asset'])")"
-          if ! gh release view "$TAG" --repo "$RELEASE_REPO" >/dev/null 2>&1; then
-            gh release create "$TAG" --repo "$RELEASE_REPO" --title "Buyer Log $VERSION unofficial mini patches" --notes "Manual cumulative hotfix channel. This is not a signed STABLE update. Official updater, version and user data are unchanged." --prerelease --latest=false
-          fi
-          gh release upload "$TAG" "dist/$ASSET" --repo "$RELEASE_REPO" --clobber
-          echo "RELEASE_ASSET=$ASSET" >> "$GITHUB_ENV"
-      - name: Checkout public release repository
-        uses: actions/checkout@v4
-        with:
-          repository: clbiez/Buyer-Log-Releases
-          ref: main
-          token: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
-          path: release-repo
-      - name: Publish index only AFTER package was uploaded and main is still pinned
-        shell: bash
-        env:
-          GH_TOKEN: ${{ github.token }}
-          REPO: ${{ github.repository }}
-          TARGET_SHA: ${{ needs.check-patch.outputs.source_sha }}
-        run: |
-          set -euo pipefail
-          CURRENT_SHA="$(gh api "repos/$REPO/branches/main" --jq '.commit.sha')"
-          if [[ "$CURRENT_SHA" != "$TARGET_SHA" ]]; then
-            echo "main advanced ($TARGET_SHA -> $CURRENT_SHA); do not publish stale patch." >&2
-            echo "A subsequent push/PR event or scheduled check will publish current main." >&2
-            exit 1
-          fi
-          mkdir -p release-repo/mini-patch
-          cp dist/mini-patch-latest.json release-repo/mini-patch/latest.json
-          git -C release-repo config user.name "Buyer Log Patch Publisher"
-          git -C release-repo config user.email "buyer-log-patch-bot@users.noreply.github.com"
-          git -C release-repo add mini-patch/latest.json
-          if ! git -C release-repo diff --cached --quiet; then
-            git -C release-repo commit -m "Publish verified Buyer Log patch $RELEASE_ASSET"
-            git -C release-repo push origin HEAD:main
-          fi
+          Write-Host 'Validation complete. No release, feed update or Actions ZIP artifact was created.'
+          Write-Host 'Publishing remains disabled until the trusted signed bootstrap is implemented and its v3 acceptance gates pass.'

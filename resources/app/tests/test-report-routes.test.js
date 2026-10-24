@@ -16,24 +16,26 @@ const register = require('../server/routes/test-report-routes');
 
 const FIX = path.join(__dirname, 'fixtures', 'test-reports');
 const audits = [];
-function app() {
+function authorizedOrderMap(){return new Map([
+  ['1374537|KK.TSH,FT-UKRAYNA|Q6K',{orderCode:'1374537'}],
+  ['1360191|KK.BDY,BARCHA-4-YD|XYZ',{orderCode:'1360191'}],
+  ['1380959|PNT,TASTE-YD|NNV',{orderCode:'1380959'}],
+  ['1000009|KK.BDY,DEMO-9-YD|K5L',{orderCode:'1000009'}],
+]);}
+function app({omitLiveAuthority=false}={}) {
   const a = express();
   a.use((req, _res, next) => { req.currentUser = { id: 'u1', displayName: 'Demo User' }; next(); });
   register(a, {
     express,
     automationError: (res, err) => res.status(err.statusCode || 500).json({ error: err.message, code: err.code }),
     userAccess: { requireAnyArea: () => (_req, _res, next) => next(), appendAudit: (...args) => audits.push(args) },
-    authorizedOrders: async () => new Map([
-      ['1374537|KK.TSH,FT-UKRAYNA|Q6K',{orderCode:'1374537'}],
-      ['1360191|KK.BDY,BARCHA-4-YD|XYZ',{orderCode:'1360191'}],
-      ['1380959|PNT,TASTE-YD|NNV',{orderCode:'1380959'}],
-      ['1000009|KK.BDY,DEMO-9-YD|K5L',{orderCode:'1000009'}],
-    ]),
+    authorizedOrders: async () => authorizedOrderMap(),
+    authorizedOrdersNow: omitLiveAuthority?undefined:authorizedOrderMap,
   });
   return a;
 }
-async function withServer(fn) {
-  const server = app().listen(0);
+async function withServer(fn,options) {
+  const server = app(options).listen(0);
   await new Promise(resolve => server.once('listening', resolve));
   const base = 'http://127.0.0.1:' + server.address().port;
   try { return await fn(base); } finally { server.close(); }
@@ -45,6 +47,17 @@ async function post(base, url, body) {
 function file(name) { return { name, base64: fs.readFileSync(path.join(FIX, name)).toString('base64') }; }
 
 test.after(() => fs.rmSync(DATA, { recursive: true, force: true }));
+
+test('HTTP fallback without a synchronous live authority provider rejects commit without mutation',async()=>{
+  await withServer(async base=>{
+    const parsed=await post(base,'/api/test-reports/parse',{files:[file('B-labright-result-364790.msg')]});
+    assert.equal(parsed.status,200);
+    const before=fs.existsSync(store.FILE)?fs.readFileSync(store.FILE,'utf8'):null;
+    const denied=await post(base,'/api/test-reports/commit',{sessionId:parsed.body.sessionId,items:[{talepNo:parsed.body.reports[0].talepNo,orderKey:'1374537|KK.TSH,FT-UKRAYNA|Q6K',itemId:'tests'}]});
+    assert.equal(denied.status,503);assert.equal(denied.body.code,'TEST_REPORT_AUTH_UNAVAILABLE');
+    assert.equal(fs.existsSync(store.FILE)?fs.readFileSync(store.FILE,'utf8'):null,before);
+  },{omitLiveAuthority:true});
+});
 
 test('parse önizleme yazmaz; commit rapor, ek ve iz yazar; karar iki kez işlenmez', async () => {
   await withServer(async base => {

@@ -1,0 +1,123 @@
+{
+  "capturedAtUTC": "2026-10-24T15:31:17.040Z",
+  "repository": "clbiez/Buyer-Log-Desktop",
+  "branchBase": {
+    "pr": 704,
+    "head": "92acd070db480d5d16cf552c252915a3e55dbba0"
+  },
+  "currentGitHubMain": "8f38e202d4dce8362e227bf9cd7fab86cfbcf051",
+  "change": "Hook the actual deferred native CP renderer, retaining the older direct-render fallback",
+  "runtimeFileSha256": "127ae4171d47c9ab46927f5bdf10e32ee1c229260751f7b0522cdb62427bb7b1",
+  "environment": {
+    "platform": "win32",
+    "node": "v24.18.0",
+    "timezone": "Europe/Istanbul",
+    "data": "isolated synthetic roots; actual IAM accounts; corporate services disabled"
+  },
+  "red": {
+    "regressions": 3,
+    "failed": 3,
+    "reason": "Captured/deferred native rendering bypassed the caller wrapper and read unapplied checklist fields"
+  },
+  "green": {
+    "regressions": 4,
+    "passed": 4,
+    "failed": 0,
+    "includes": "first visible render, hidden/deferred flush, receiver/arguments/idempotence, legacy host"
+  },
+  "focused": {
+    "files": 17,
+    "passed": 121,
+    "failed": 0,
+    "skipped": 0,
+    "scope": "Before adding the final legacy-host test; the final four-case test passes separately"
+  },
+  "coreChecks": {
+    "passed": 17,
+    "failed": 0
+  },
+  "realEdge": {
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "manualRefresh": false,
+    "before": {
+      "decisionReady": true,
+      "appliedRowsMatch": false
+    },
+    "after": {
+      "decisionReady": true,
+      "appliedRowsMatch": true,
+      "authorizedTaskReport": "510001",
+      "foreignTaskReportAbsent": "510002",
+      "assertions": "Exactly one authorized Buying task; no foreign task"
+    },
+    "image": "checklist-first-render.png"
+  },
+  "fullIntegration": {
+    "command": "node resources/app/tests/run-tests.js",
+    "files": 1044,
+    "seconds": 133.7,
+    "totals": {
+      "tests": 7511,
+      "pass": 7505,
+      "fail": 0,
+      "skipped": 6
+    },
+    "batches": [
+      {
+        "batch": 1,
+        "tests": 2130,
+        "pass": 2130,
+        "fail": 0,
+        "skip": 0
+      },
+      {
+        "batch": 2,
+        "tests": 2168,
+        "pass": 2166,
+        "fail": 0,
+        "skip": 2
+      },
+      {
+        "batch": 3,
+        "tests": 2241,
+        "pass": 2239,
+        "fail": 0,
+        "skip": 2
+      },
+      {
+        "batch": 4,
+        "tests": 959,
+        "pass": 958,
+        "fail": 0,
+        "skip": 1
+      },
+      {
+        "batch": 5,
+        "tests": 13,
+        "pass": 12,
+        "fail": 0,
+        "skip": 1
+      }
+    ],
+    "scope": "Current main including merged #702 + checkpoint PRs + ND-003 + BL-012 + BL-016 + ND-004 + #705 legacy fixture classification; not each isolated branch full-suite certification",
+    "skips": [
+      "Three unavailable Windows symlink scenarios",
+      "Two POSIX pre-receive hook tests",
+      "Opt-in 20k-operation soak (passed separately on the previous storage checkpoint; not rerun for report/render changes)"
+    ]
+  },
+  "releaseNotes": {
+    "branch": 24,
+    "combined": 35,
+    "postChangePngReviewed": true
+  },
+  "publication": {
+    "merged": false,
+    "test": false,
+    "stable": false
+  },
+  "remaining": "Broader audit backlog and representative populated Windows/SMB/Excel/Outlook acceptance remain open; no complete-project claim"
+}
