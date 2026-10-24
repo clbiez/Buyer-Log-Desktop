@@ -619,6 +619,35 @@
           "en": "Demo note with colored and formatted text, a list and an embedded actual Buyer Log screenshot."
         }
       }
+    },
+    {
+      "id": "dialog-rendered-keyboard-focus",
+      "type": "fix",
+      "module": {
+        "tr": "Ortak pencereler",
+        "en": "Shared dialogs"
+      },
+      "title": {
+        "tr": "Klavye odağı görünür pencere kontrollerinde kalır",
+        "en": "Keyboard focus stays on visible dialog controls"
+      },
+      "body": {
+        "tr": "Gizli, etkisiz ve kullanılamayan kontroller odak sırasından çıkarılır. Yalnız en üst pencere klavyeyi yönetir; kapanışta odak uygun tetikleyiciye döner.",
+        "en": "Hidden, inert and unavailable controls are excluded from focus order. Only the top dialog handles keyboard navigation; closing returns focus to an available trigger."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "dialog-keyboard-focus.png",
+        "alt": {
+          "tr": "Gerçek iç içe PLM görsel penceresinde klavye odağı klasör alanında, demo veri",
+          "en": "Keyboard focus on the folder field in a real nested PLM image dialog, demo data"
+        },
+        "caption": {
+          "tr": "Gerçek pencerede Tab ve Shift+Tab kullanılabilir kontrollerde döner. Escape yalnız üst pencereyi kapatır ve odağı ana pencereye döndürür.",
+          "en": "Tab and Shift+Tab cycle through available native dialog controls. Escape closes only the top dialog and returns focus to its parent."
+        }
+      }
     }
   ]
 }
