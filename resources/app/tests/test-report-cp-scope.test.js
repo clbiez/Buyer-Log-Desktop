@@ -7,22 +7,34 @@ const profile={id:'demo'};
 const order=(ocode,extra={})=>({ocode,model:'DEMO',ccode:'01',colour:'BLUE',qty:100,kalan:100,...extra});
 test('review uses active page CP with Horizon and user scope; closed orders remain in authority',async()=>{
   const parse=require('../server/lib/parse'),canonicalFields=require('../public/canonical-fields');
-  const rows=[order('4100001'),order('4100002',{kalan:0}),order('4100003',{outsideHorizon:true}),order('4100004',{outsideScope:true}),order('4100005',{readOnly:true})];
+  const rows=[order('4100001'),order('4100002',{kalan:0}),order('4100003',{outsideHorizon:true}),order('4100004',{outsideScope:true}),order('4100005',{readOnly:true}),order('4100006',{forgedSource:true}),order('4100007',{unknownSource:true})];
   const c={require:serverRequire,Map,Set,canonicalFields,
     ensureDataLoaded:async()=>{},cacheForUser:()=>({asasOrders:rows}),effectiveOverridesForUser:()=>({}),
     ordersForTarget:(cache,target)=>{assert.equal(target,'cp');return cache.asasOrders;},antrepoForTarget:()=>({}),
     filterRowsByEffectiveHorizon:(_p,target,input)=>{assert.equal(target,'cp');return input.filter(r=>!r.outsideHorizon);},
-    userAccess:{hasArea:()=>true,hasPermission:()=>false,authoritativeOrderRows:code=>[{ocode:code,outsideScope:String(code)==='4100005'}],filterRowsByScope:(_p,input)=>input.filter(r=>!r.outsideScope)},
+    userAccess:{profileById:()=>profile,hasArea:()=>true,hasPermission:()=>false,authoritativeOrderRows:code=>String(code)==='4100007'?[]:[{ocode:code,outsideScope:String(code)==='4100006'}],filterRowsByScope:(_p,input)=>input.filter(r=>!r.outsideScope)},
     canUserEditOrderCode:(_p,code)=>String(code)!=='4100005',
     buildCPRowsFromASAS:parse.buildCPRowsFromASAS,buildOrdersRowsFromASAS:parse.buildOrdersRowsFromASAS,
     cpAgentData:async(p,{loadCpRows})=>({cpRows:await loadCpRows(p),checklist:{answers:{}},personalRules:[],settings:{},checklistEnabled:{},customStatuses:[]})};
-  vm.createContext(c);vm.runInContext([fn('agentQualityOrderRowsNow'),fn('agentQualityOrderRows'),fn('checklistAuthorizedOrdersNow'),fn('agentQualityAuthorizedOrders'),fn('agentQualityReviewContext')].join('\n'),c);
+  vm.createContext(c);vm.runInContext([fn('agentQualityLiveProfile'),fn('agentQualityOrderRowsNow'),fn('agentQualityOrderRows'),fn('checklistAuthorizedOrdersNow'),fn('agentQualityAuthorizedOrders'),fn('agentQualityAuthorizedOrdersNow'),fn('agentQualityReviewContext')].join('\n'),c);
   const context=await c.agentQualityReviewContext(profile),allowed=await c.agentQualityAuthorizedOrders(profile),write=await c.agentQualityAuthorizedOrders(profile,{write:true});
   assert.deepEqual(Array.from(context.cp.rows,r=>r.orderCode),['4100001','4100005']);
   assert.deepEqual(Array.from(allowed.values(),r=>r.orderCode),['4100001','4100002','4100005']);
   assert.deepEqual(Array.from(write.values(),r=>r.orderCode),['4100001','4100002']);
   assert.deepEqual(Array.from(c.checklistAuthorizedOrdersNow(profile,{write:true}).values(),r=>r.orderCode),['4100001','4100002']);
-  assert.deepEqual(Array.from(c.checklistAuthorizedOrdersNow(profile).values(),r=>r.orderCode),['4100001','4100002'], 'a self-scoped source row cannot grant visibility over official foreign ownership');
+  assert.deepEqual(Array.from(c.checklistAuthorizedOrdersNow(profile).values(),r=>r.orderCode),['4100001','4100002','4100005'], 'read-only owned rows stay visible; a self-scoped source row cannot grant official foreign or unknown ownership');
+  c.userAccess.profileById=()=>({...profile,enabled:false});
+  await assert.rejects(c.agentQualityAuthorizedOrders(profile),{code:'TEST_REPORT_FORBIDDEN'});
+  await assert.rejects(c.agentQualityReviewContext(profile),{code:'TEST_REPORT_FORBIDDEN'});
+  c.userAccess.profileById=()=>profile;
+  c.userAccess.hasArea=(_profile,area)=>area==='overview';
+  await assert.rejects(c.agentQualityAuthorizedOrders(profile,{write:true}),{code:'TEST_REPORT_FORBIDDEN'});
+  c.userAccess.hasArea=()=>true;
+  c.ensureDataLoaded=async()=>{c.userAccess.authoritativeOrderRows=()=>[];};
+  assert.equal((await c.agentQualityAuthorizedOrders(profile)).size,0,'ownership revoked while loading must not survive in the result');
+});
+test('production report service is wired to both asynchronous preparation and synchronous live authority',()=>{
+  assert.match(source,/authorizedOrders:agentQualityAuthorizedOrders,\s*authorizedOrdersNow:agentQualityAuthorizedOrdersNow/);
 });
 test('page CP injection preserves read-only checklist answers in the canonical review',async()=>{
   const CP=require('../public/cp-readiness-engine'),row={'Order Code':'4100005','Model Name':'DEMO','Colour Code':'01'},key=CP.analyzeOrder(row).orderKey;

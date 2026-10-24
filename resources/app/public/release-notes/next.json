@@ -938,6 +938,35 @@
           "en": "The synthetic record survives a real reopen. Read cost is established by separate 120-write measurements and the 2,100-save boundary test, not by this screenshot."
         }
       }
+    },
+    {
+      "id": "test-report-live-authority",
+      "type": "fix",
+      "module": {
+        "tr": "Test Raporları",
+        "en": "Test Reports"
+      },
+      "title": {
+        "tr": "Test raporları güncel sipariş yetkisiyle korunur",
+        "en": "Test reports follow current order permissions"
+      },
+      "body": {
+        "tr": "Raporlar ve bekleyen işler resmî sipariş sahipliğiyle sınırlandırılır. Kaynak dosyasındaki sahiplik alanını değiştirmek rapora erişim vermez. Kayıt ve ek yazımı sırasında güncel yetki yeniden doğrulanır; yetki değişirse işlem reddedilir.",
+        "en": "Reports and pending tasks are limited by official order ownership. Changing ownership fields in a source file does not grant report access. Current permissions are checked again while saving reports and attachments; permission changes reject the operation."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "test-report-live-authority.png",
+        "alt": {
+          "tr": "Sentetik Buyer Log CP ekranında yetkili satırda tek Buying rapor görevi, diğer satırda kilitli checklist",
+          "en": "Synthetic Buyer Log CP screen with one Buying report task on the authorized row and a locked checklist on the other row"
+        },
+        "caption": {
+          "tr": "Demo CP görünümünde yenileme sonrası yetkili rapor görevi görünür. Yetki sınırı ayrıca gerçek HTTP ve kayıt testleriyle doğrulanmıştır.",
+          "en": "The authorized report task appears after refreshing the demo CP view. Separate real HTTP and commit tests verify the permission boundary."
+        }
+      }
     }
   ]
 }
