@@ -619,6 +619,35 @@
           "en": "Demo note with colored and formatted text, a list and an embedded actual Buyer Log screenshot."
         }
       }
+    },
+    {
+      "id": "nd003-wal-tail-recovery",
+      "type": "fix",
+      "module": {
+        "tr": "Yerel Veri · Kurtarma",
+        "en": "Local Data · Recovery"
+      },
+      "title": {
+        "tr": "Yarım günlük sonrasında kaydedilen veriler yeniden açılışta korunur",
+        "en": "Saves after an incomplete journal tail survive reopening"
+      },
+      "body": {
+        "tr": "Yarım kalan son günlük satırı özgün haliyle korunur; doğrulanmış kayıtlar güvenle yeni günlüğe aktarılır. Kaydedildi onayı verilen sonraki değişiklikler yeniden açılışta kaybolmaz. Checksum veya ara satır bozulması varsa yeni yazma açık hatayla durdurulur.",
+        "en": "An incomplete final journal line is preserved in its original form and validated records are safely checkpointed into a fresh journal. Subsequent acknowledged saves survive reopening. Checksum failures or corruption before later lines stop new writes with an explicit error."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "nd003-wal-tail-recovery.png",
+        "alt": {
+          "tr": "Yarım WAL sonrasında kaydedilip sunucu yeniden açıldığında Fiyat Masasında görünen ND003-SAVED demo kaydı",
+          "en": "ND003-SAVED demo record visible in Pricing Desk after saving past a torn WAL tail and restarting the server"
+        },
+        "caption": {
+          "tr": "Gerçek Buyer Log, yalnız demo veri: uyumluluk JSON dosyası kaldırılmışken yeniden açılan yerel DB, bozuk kuyruk sonrasındaki fiyat kaydını gösteriyor.",
+          "en": "Real Buyer Log with synthetic data only: with the compatibility JSON removed, the reopened native DB supplies the price record saved after the torn tail."
+        }
+      }
     }
   ]
 }
