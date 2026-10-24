@@ -5605,7 +5605,7 @@ function cpLogisticDelTypeCellHtml(row,canEdit){
   const countMore=Math.max(0,unique.length-1);
   if(production&&canEdit){
     const cur=normalizeTransitDelType(production.delType)||norm(production.delType)||norm(row['Del. Type']);
-    return `<td class="editTd cpLogisticDelTypeTd"><div class="cpLogisticDelTypeWrap"><button type="button" class="editCell delTypeTrigger" data-id="${row._id}" data-key="Del. Type" data-kind="deltype" data-value="${escapeHtml(cur)}" aria-haspopup="listbox" aria-expanded="false"><span>${escapeHtml(cur?transitDelTypeDisplay(cur):'—')}</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>${countMore?`<span class="cpLogisticMore">+${countMore}</span>`:''}</div></td>`;
+    return `<td class="editTd cpLogisticDelTypeTd"><div class="cpLogisticDelTypeWrap"><button type="button" class="editCell delTypeTrigger" data-id="${row._id}"${cpEditorIdentityAttributes(row)} data-key="Del. Type" data-kind="deltype" data-value="${escapeHtml(cur)}" aria-haspopup="listbox" aria-expanded="false"><span>${escapeHtml(cur?transitDelTypeDisplay(cur):'—')}</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>${countMore?`<span class="cpLogisticMore">+${countMore}</span>`:''}</div></td>`;
   }
   return `<td class="cpLogisticDelTypeTd"><div class="cpLogisticReadOnlyTypes">${unique.length?unique.map(v=>`<span>${escapeHtml(transitDelTypeDisplay(v))}</span>`).join(''):'—'}</div></td>`;
 }
@@ -5743,6 +5743,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
   const v = r[c.k];
   const oc = r['Order Code'];
   const id = r._id;
+  const editorIdentity=tableKey==='cp'?cpEditorIdentityAttributes(r):'';
   const sharedField = ['exfactory','retailEdit','instoreEdit','submfr'].includes(c.type) || (c.type==='moneyEdit' && c.k==='Supp. FOB');
   const canEdit = r._canEdit !== false && (!sharedField || r._canEditShared !== false);
   const schema = columnSchemaFor(c);
@@ -5797,7 +5798,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const clTaskTitle=clTasks.map(t=>(appLang==='en'?'Awaiting buying feedback':'Buying dönüşü bekleniyor')+` · ${t.talepNo} · ${t.test||''}${t.aciklama?' — '+t.aciklama:''}`).join('\n');
       const clTaskFlag=clTasks.length?`<span class="clTaskFlag" title="${escapeHtml(clTaskTitle)}">Buying ${clTasks.length}</span>`:'';
       if(!canEdit) return clTasks.length?`<td title="${escapeHtml(clTaskTitle)}">${escapeHtml(label)} ${clTaskFlag}</td>`:viewOnly(label);
-      return `<td class="editTd"><button type="button" class="clStatusTrigger is-${escapeHtml(status)}${clTasks.length?' has-task':''}" data-id="${id}" data-item="${escapeHtml(c.checklistItemId||'')}" data-status="${escapeHtml(status)}" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(clTaskTitle||(appLang==='en'?'Choose a status':'Durum seçin'))}"><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(label)}</span>${clTaskFlag}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
+      return `<td class="editTd"><button type="button" class="clStatusTrigger is-${escapeHtml(status)}${clTasks.length?' has-task':''}" data-id="${id}"${editorIdentity} data-item="${escapeHtml(c.checklistItemId||'')}" data-status="${escapeHtml(status)}" aria-haspopup="listbox" aria-expanded="false" title="${escapeHtml(clTaskTitle||(appLang==='en'?'Choose a status':'Durum seçin'))}"><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">${escapeHtml(label)}</span>${clTaskFlag}<span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
     }
     case 'plmSample': return plmSampleCellHtml(r,tableKey);
     case 'priority': {
@@ -5819,15 +5820,15 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const st = cf ? cf.exfState : null;
       const cls = st==='past'?'exf-past':st==='this'?'exf-this':st==='next'?'exf-next':'';
       const tt = st==='past'?'Üretimde · Ex-Factory tarihi geçmiş':st==='this'?'Üretimde · Ex-Factory tarihi bu hafta':st==='next'?'Üretimde · Ex-Factory tarihi gelecek hafta':'';
-      return `<td class="${cls}"${tt?` title="${tt}"`:''}><span class="exfDisplay" tabindex="0" data-id="${id}" data-key="${c.k}" data-kind="exfactory">${body}</span></td>`;
+      return `<td class="${cls}"${tt?` title="${tt}"`:''}><span class="exfDisplay" tabindex="0" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="exfactory">${body}</span></td>`;
     }
     case 'retailEdit': {
       const body = rev ? revisionHtml(c.k, rev) : (fmtDate(v)||'—');
-      return canEdit ? `<td><span class="exfDisplay" tabindex="0" data-id="${id}" data-key="${c.k}" data-kind="retail">${body}</span></td>` : viewOnly(fmtDate(v), body);
+      return canEdit ? `<td><span class="exfDisplay" tabindex="0" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="retail">${body}</span></td>` : viewOnly(fmtDate(v), body);
     }
     case 'instoreEdit': {
       const body = rev ? revisionHtml(c.k, rev) : (fmtDate(v)||'—');
-      return canEdit ? `<td><span class="exfDisplay" tabindex="0" data-id="${id}" data-key="${c.k}" data-kind="instore">${body}</span></td>` : viewOnly(fmtDate(v), body);
+      return canEdit ? `<td><span class="exfDisplay" tabindex="0" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="instore">${body}</span></td>` : viewOnly(fmtDate(v), body);
     }
     case 'money': {
       const cls = '';
@@ -5849,7 +5850,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
       const tt = hoverText ? ` title="${escapeHtml(hoverText)}"` : '';
       const autoSource = isSuppFobAutoCalculated(r);
       const unit = isTurkeyCountry(r.Country) ? '₺' : '$';
-      return `<td class="editTd money${autoSource?' suppFobAuto':''}${ruleMissing?' suppFobRuleMissing':''}"${tt}><div style="display:flex;align-items:center;gap:3px;"><span style="color:${ruleMissing?'var(--orange)':'var(--muted)'};font-size:10.5px;flex-shrink:0;">${ruleMissing?'⚠':unit}</span><input class="editCell money" type="text" inputmode="decimal" value="${cur}" data-id="${id}" data-key="${c.k}" data-kind="suppfob" placeholder="—" style="flex:1;min-width:0;"></div></td>`;
+      return `<td class="editTd money${autoSource?' suppFobAuto':''}${ruleMissing?' suppFobRuleMissing':''}"${tt}><div style="display:flex;align-items:center;gap:3px;"><span style="color:${ruleMissing?'var(--orange)':'var(--muted)'};font-size:10.5px;flex-shrink:0;">${ruleMissing?'⚠':unit}</span><input class="editCell money" type="text" inputmode="decimal" value="${cur}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="suppfob" placeholder="—" style="flex:1;min-width:0;"></div></td>`;
     }
     case 'int': return `<td class="num">${fmtInt(v)}</td>`;
     case 'plm': return `<td class="num">${escapeHtml(fmtOC(v))}</td>`;
@@ -5885,23 +5886,23 @@ function cellHtml(c,r,cf,tableKey='cp'){
       if(logisticCell) return logisticCell;
       const cur = norm(v);
       if(!canEdit) return viewOnly(cur?transitDelTypeDisplay(cur):'');
-      return `<td class="editTd"><button type="button" class="editCell delTypeTrigger" data-id="${id}" data-key="${c.k}" data-kind="deltype" data-value="${escapeHtml(cur)}" aria-haspopup="listbox" aria-expanded="false"><span>${escapeHtml(cur?transitDelTypeDisplay(cur):'—')}</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
+      return `<td class="editTd"><button type="button" class="editCell delTypeTrigger" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="deltype" data-value="${escapeHtml(cur)}" aria-haspopup="listbox" aria-expanded="false"><span>${escapeHtml(cur?transitDelTypeDisplay(cur):'—')}</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>`;
     }
     case 'text': {
       const cur = (v instanceof Date) ? fmtDate(v) : norm(v);
       if(!canEdit) return viewOnly(cur);
       if(c.k==='Notes' || c.k==='Ek Not') {
         const preview = cur || L('Not ekle…');
-        return `<td class="editTd"><div class="noteCellWrap"><button type="button" class="noteCellTrigger${cur?'':' empty'}" data-id="${id}" data-key="${c.k}" title="${escapeHtml(cur || L('Not ekle…'))}"><svg class="ic noteCellIcon"><use href="#i-pencil"/></svg><span class="noteCellText">${escapeHtml(preview)}</span></button><button type="button" class="noteCellDelete" data-id="${id}" data-key="${c.k}" title="${escapeHtml(L('Notu sil'))}" aria-label="${escapeHtml(L('Notu sil'))}" ${cur?'':'disabled'}><svg class="ic"><use href="#i-trash"/></svg></button></div></td>`;
+        return `<td class="editTd"><div class="noteCellWrap"><button type="button" class="noteCellTrigger${cur?'':' empty'}" data-id="${id}"${editorIdentity} data-key="${c.k}" title="${escapeHtml(cur || L('Not ekle…'))}"><svg class="ic noteCellIcon"><use href="#i-pencil"/></svg><span class="noteCellText">${escapeHtml(preview)}</span></button><button type="button" class="noteCellDelete" data-id="${id}"${editorIdentity} data-key="${c.k}" title="${escapeHtml(L('Notu sil'))}" aria-label="${escapeHtml(L('Notu sil'))}" ${cur?'':'disabled'}><svg class="ic"><use href="#i-trash"/></svg></button></div></td>`;
       }
-      return `<td class="editTd"><input class="editCell" type="text" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}" data-key="${c.k}" data-kind="text"></td>`;
+      return `<td class="editTd"><input class="editCell" type="text" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="text"></td>`;
     }
     case 'submfr': {
       const cur=cpSubManufacturerValue(r);
       if(turknorm(r.Licensor)==='DTR')return `<td class="submfr-fill"><span class="submfrAuto" title="${escapeHtml(appLang==='en'?'Automatically copied from Manufacturer for DTR orders':'DTR siparişlerde Manufacturer bilgisinden otomatik gelir')}">${escapeHtml(cur)}</span></td>`;
       if(!canEdit)return viewOnly(cur);
       const cls=cur?'submfr-fill':'';
-      return `<td class="editTd ${cls}"><input class="editCell" type="text" autocomplete="off" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}" data-key="${c.k}" data-kind="submfr" placeholder="Yaz veya seç…"></td>`;
+      return `<td class="editTd ${cls}"><input class="editCell" type="text" autocomplete="off" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="submfr" placeholder="Yaz veya seç…"></td>`;
     }
     case 'licensor': {
       const resolution=licenseLicensorStateForRow(r);
@@ -5916,7 +5917,7 @@ function cellHtml(c,r,cf,tableKey='cp'){
         : (warn?licenseLicensorWarningText(resolution):'');
       const disabled=!license||missing;
       const cls = cur ? 'submfr-fill' : '';
-      return `<td class="editTd ${cls}${warn?' kolRuleMissing':''}"${title?` title="${escapeHtml(title)}"`:''}><div class="licensorDependencyCell">${warn?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}<input class="editCell" type="text" autocomplete="off" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}" data-key="${c.k}" data-kind="licensor" placeholder="${disabled?'':L('Yaz veya seç…')}"${disabled?' disabled aria-disabled="true"':''}></div></td>`;
+      return `<td class="editTd ${cls}${warn?' kolRuleMissing':''}"${title?` title="${escapeHtml(title)}"`:''}><div class="licensorDependencyCell">${warn?'<span class="kolRuleMissingMark" aria-hidden="true">⚠</span> ':''}<input class="editCell" type="text" autocomplete="off" value="${cur.replace(/"/g,'&quot;')}" data-id="${id}"${editorIdentity} data-key="${c.k}" data-kind="licensor" placeholder="${disabled?'':L('Yaz veya seç…')}"${disabled?' disabled aria-disabled="true"':''}></div></td>`;
     }
     default: {
       const cls = (c.k==='Sub-Manufacturer' && norm(v)) ? 'submfr-fill' : '';
@@ -9610,12 +9611,15 @@ function refreshOverviewNotesLive(){
   });
 }
 function refreshRowEverywhere(id){
+  refreshRowsEverywhere([id]);
+}
+function refreshRowsEverywhere(ids){
   invalidateCoreFacetCaches();
   // Priority hücresi artık türetilmiş legacy warning metni değildir. Kararı
   // değiştirebilen bir edit sonrası tek satırı çizmeden önce aynı unified
   // decision context'i senkronla; aksi halde hücre bir render boyunca stale kalır.
   if(state.cp&&window.BLCpAssistant&&typeof window.BLCpAssistant.computeDecisionsForRows==='function')syncUnifiedPrioritiesForTable('cp');
-  refreshCpRowOnly(id);
+  new Set(ids).forEach(id=>refreshCpRowOnly(id));
   refreshOverviewNotesLive();
   scheduleOverviewRender('cp-row-updated');
 }
@@ -9625,15 +9629,49 @@ let redoStack = [];
 // CP çoklu yapıştırma sırasında hücre kayıtları tek bir geri alma adımında toplanır.
 let _cpPasteUndoBatch = null;
 function pushUndo(action){
+  bindCpHistoryIdentity(action);
   if(_cpPasteUndoBatch){ _cpPasteUndoBatch.push(action); return; }
   const last=undoStack[undoStack.length-1];
-  if(action&&action.mergeKey&&last&&last.mergeKey===action.mergeKey&&last.kind===action.kind&&last.id===action.id&&last.shipId===action.shipId){
+  if(action&&action.mergeKey&&last&&last.mergeKey===action.mergeKey&&last.kind===action.kind&&last.id===action.id&&last.shipId===action.shipId&&last.lineKey===action.lineKey&&last.ownerId===action.ownerId){
     const byKey=new Map((last.fields||[]).map(f=>[f.key,{...f}]));
     (action.fields||[]).forEach(f=>{const prev=byKey.get(f.key);byKey.set(f.key,prev?{...prev,next:f.next}:{...f});});
     last.fields=[...byKey.values()].filter(f=>!editableValuesEqual(f.prev,f.next));
     if(!last.fields.length)undoStack.pop();
   }else undoStack.push(action);
   redoStack.length=0;updateUndoRedoButtons();
+}
+function orderLinePeerOwner(){return String(state.currentUser?.id??window.BL_USER_CONTEXT?.id??'');}
+function orderLinePeerRows(tableKey,sourceRow,key=lineKeyOfRow(sourceRow)){
+  const rows=state[tableKey]?.rows;
+  if(!Array.isArray(rows)||!key)return [];
+  const index=orderLinePeerRows.index||(orderLinePeerRows.index=window.BLOrderLinePeerIndex.create(lineKeyOfRow));
+  return index.peers(rows,key,orderLinePeerOwner());
+}
+function updateOrderLinePeerIdentity(row){
+  const index=orderLinePeerRows.index;if(!index)return;
+  for(const tableKey of ['cp','orders','orderSummary'])if(Array.isArray(state[tableKey]?.rows))index.updateIdentity(state[tableKey].rows,row,orderLinePeerOwner());
+}
+function bindCpHistoryIdentity(action){
+  if(!action||action.kind==='ship')return;
+  if(action.kind==='batch'){(action.actions||[]).forEach(bindCpHistoryIdentity);return;}
+  if(action.ownerId==null)action.ownerId=orderLinePeerOwner();
+  if(!action.lineKey){const row=state.cp?.rows?.find(row=>row._id===action.id);if(row)action.lineKey=lineKeyOfRow(row);}
+}
+function cpEditorIdentityAttributes(row){
+  const owner=orderLinePeerOwner(),code=row['Order Code'],model=row['Model Name'],colour=row['C.Code'];
+  const cache=cpEditorIdentityAttributes.cache||(cpEditorIdentityAttributes.cache=new WeakMap());let saved=cache.get(row);
+  if(!saved||saved.owner!==owner||saved.code!==code||saved.model!==model||saved.colour!==colour){
+    saved={owner,code,model,colour,html:` data-line-key="${escapeHtml(lineKeyOfRow(row))}" data-edit-owner="${escapeHtml(owner)}"`};cache.set(row,saved);
+  }
+  return saved.html;
+}
+function staleCpEditorNotice(){showToast(appLang==='en'?'The row or session changed. Reopen the current row before editing.':'Satır veya oturum değişti. Düzenlemeden önce güncel satırı yeniden açın.');}
+function resolveCpEditorRow(editor){
+  const data=editor?.dataset;if(!data)return null;
+  const row=state.cp?.rows?.find(row=>row._id===Number(data.id));
+  if(!row)return null;
+  if((data.lineKey!=null&&data.lineKey!==lineKeyOfRow(row))||(data.editOwner!=null&&data.editOwner!==orderLinePeerOwner())){staleCpEditorNotice();return null;}
+  return row;
 }
 function syncOrderLinePeersFromCpRow(sourceRow, keys, options={}){
   if(!sourceRow) return 0;
@@ -9646,9 +9684,9 @@ function syncOrderLinePeersFromCpRow(sourceRow, keys, options={}){
   if(!keySet.size) return 0;
   const scheduleChanged = keySet.has('Ex-factory') || keySet.has('Retail Date') || keySet.has('In-Store (Model Budget)') || keySet.has('Del. Type');
   let matched = 0;
-  [state.orders&&state.orders.rows, state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
-    (rows||[]).forEach(peer=>{
-      if(!peer || peer===sourceRow || !sameOrderLine(peer, sourceRow)) return;
+  ['orders','orderSummary'].forEach(tableKey=>{
+    orderLinePeerRows(tableKey,sourceRow).forEach(peer=>{
+      if(peer===sourceRow) return;
       matched++;
       keySet.forEach(k=>{ peer[k] = sourceRow[k]; });
       if(keySet.has('Licensor')) peer._licensorManual = sourceRow._licensorManual;
@@ -9675,16 +9713,23 @@ function syncOrderLinePeersFromCpRow(sourceRow, keys, options={}){
       }
     });
   });
-  if(options.render !== false){
+  if(options.batch){options.batch.peers=true;if(scheduleChanged)options.batch.scheduleChanged=true;}
+  else if(options.render !== false){
     if(scheduleChanged) invalidateUnifiedPriorityDecisions('cp-peer-sync', ['orders']);
     if(state.orders) renderOrders();
   }
   return matched;
 }
-function applyHistoryAction(action, direction){
+function applyHistoryAction(action, direction, options={}){
   if(action.kind==='batch'){
+    const batch=options.batch||{ids:new Set(),peers:false,scheduleChanged:false};
     const list = direction==='undo' ? [...action.actions].reverse() : action.actions;
-    list.forEach(item=>applyHistoryAction(item, direction));
+    list.forEach(item=>applyHistoryAction(item, direction,{batch}));
+    if(!options.batch){
+      if(batch.scheduleChanged)invalidateUnifiedPriorityDecisions('cp-history-batch',['orders']);
+      if(batch.peers&&state.orders)renderOrders();
+      if(batch.ids.size)refreshRowsEverywhere([...batch.ids]);
+    }
     return;
   }
   if(action.kind==='ship'){
@@ -9697,8 +9742,9 @@ function applyHistoryAction(action, direction){
     patchShipRow(row._shipId, patch);
     return;
   }
-  const row = state.cp.rows.find(r=>r._id===action.id);
-  if(!row) return;
+  if(action.ownerId!=null&&action.ownerId!==orderLinePeerOwner())return;
+  const row = action.lineKey?orderLinePeerRows('cp',null,action.lineKey)[0]:state.cp.rows.find(r=>r._id===action.id);
+  if(!row||row._canEdit===false) return;
   action.fields.forEach(f=>{ row[f.key] = direction==='undo' ? f.prev : f.next; });
   const historyKeys=new Set((action.fields||[]).map(field=>field.key));
   if(historyKeys.has('Del. Type'))syncCpProductionLogisticSegment(row,row['Del. Type']);
@@ -9707,9 +9753,10 @@ function applyHistoryAction(action, direction){
   const dateHistoryKeys=['Ex-factory','Retail Date','In-Store (Model Budget)'].filter(key=>historyKeys.has(key));
   if(dateHistoryKeys.length)saveDateOverrides(row,dateHistoryKeys);
   if(dateHistoryKeys.length||historyKeys.has('Del. Type'))invalidateUnifiedPriorityDecisions('cp-history-edit');
-  markDirty(action.id);
-  if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,[...historyKeys]);
-  refreshRowEverywhere(action.id);
+  updateOrderLinePeerIdentity(row);
+  markDirty(row._id);
+  if(typeof syncOrderLinePeersFromCpRow==='function')syncOrderLinePeersFromCpRow(row,[...historyKeys],{batch:options.batch});
+  if(options.batch)options.batch.ids.add(row._id);else refreshRowEverywhere(row._id);
   if(action.refreshSubmfrList) refreshSubmfrList();
   if(action.refreshLicensorList) refreshLicensorList();
 }
@@ -9806,7 +9853,7 @@ function openNotesEditor(id, key, options={}){
   if(!row || !['Notes','Ek Not'].includes(key)) return;
   if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return;}
   // Display indices can change while the editor is open; retain canonical identities.
-  const targets=(options.targets||[{row,key}]).map(target=>({row:{...target.row},key:target.key,prev:String(target.row[target.key]??''),clear:Boolean(target.clear)}));
+  const targets=(options.targets||[{row,key}]).map(target=>({row:{...target.row},key:target.key,prev:String(target.row[target.key]??''),clear:Boolean(target.clear),ownerId:orderLinePeerOwner()}));
   const initialValue=options.value??norm(row[key]);
   const orderCount=new Set(targets.map(target=>lineKeyOfRow(target.row))).size;
   document.getElementById('_notesEditorModal')?.remove();
@@ -9867,8 +9914,11 @@ function openNotesEditor(id, key, options={}){
 // acknowledged save through markDirty's delayed full-row write a second time.
 async function saveNotesEditorTargets(targets,next,ownNotes=false){
   const desired=targets.map(target=>({...target,next:target.clear?'':next}));
+  const assertOwner=()=>{if(desired.some(target=>target.ownerId!=null&&target.ownerId!==orderLinePeerOwner()))throw new Error(appLang==='en'?'The session changed. Reopen the current note before saving.':'Oturum değişti. Kaydetmeden önce güncel notu yeniden açın.');};
+  assertOwner();
   const resolve=()=>desired.map(target=>{
-    const row=state.cp?.rows?.find(item=>sameOrderLine(item,target.row));
+    assertOwner();
+    const row=orderLinePeerRows('cp',target.row)[0];
     const by=target.key==='Notes'?'_notesBy':'_ekNotBy',byName=target.key==='Notes'?'_notesByName':'_ekNotByName';
     if(!row||row._canEdit===false||isAreaFrozen('cp')||!editableValuesEqual(String(row[target.key]??''),target.prev)||
       (ownNotes&&(!noteAuthoredByCurrentUser(row[by],row[byName])||overviewNoteCanonical(overviewOrderNoteText(row))!==overviewNoteCanonical(overviewOrderNoteText(target.row)))))throw new Error(appLang==='en'
@@ -9894,6 +9944,7 @@ async function saveNotesEditorTargets(targets,next,ownNotes=false){
       ?'The note save was not confirmed. Your draft is still open; please try again.'
       :'Not kaydı doğrulanamadı. Taslağınız açık; lütfen yeniden deneyin.');
   }
+  assertOwner();
   const author=noteAuthorIdentity(),now=new Date().toISOString(),actions=new Map();
   state.overrides.notesmap=state.overrides.notesmap||{};
   current.forEach(target=>{
@@ -9909,19 +9960,21 @@ async function saveNotesEditorTargets(targets,next,ownNotes=false){
     };
     state.overrides.notesmap[identity]=record;
     // Update each current projection, including rows replaced during the request.
-    for(const rows of [state.cp?.rows,state.orders?.rows,state.orderSummary?.rows].filter(Array.isArray)){
-      rows.filter(row=>sameOrderLine(row,target.row)).forEach(row=>{
+    for(const tableKey of ['cp','orders','orderSummary']){
+      orderLinePeerRows(tableKey,target.row).forEach(row=>{
         row[target.key]=record[field]??target.next;
         row[prefix+'At']=record[field+'At']||'';
         row[prefix+'By']=record[field+'By']||'';row[prefix+'ByName']=record[field+'ByName']||'';
       });
     }
-    const row=state.cp?.rows?.find(row=>sameOrderLine(row,target.row));
+    const row=orderLinePeerRows('cp',target.row)[0];
     if(!row)return;
     if(!actions.has(identity))actions.set(identity,{id:row._id,fields:[]});
     actions.get(identity).fields.push({key:target.key,prev:target.prev,next:record[field]??target.next});
   });
-  actions.forEach(action=>{_origMarkDirty(action.id);pushUndo(action);refreshRowEverywhere(action.id);});
+  const history=[...actions.values()];
+  history.forEach(action=>_origMarkDirty(action.id));
+  if(history.length){pushUndo(history.length===1?history[0]:{kind:'batch',actions:history});refreshRowsEverywhere(history.map(action=>action.id));}
   if(state.orders)renderOrders();
 }
 function clearRowNote(id,key='Notes'){
@@ -9954,9 +10007,12 @@ function commitCpEditor(t, options={}){
   if(isAreaFrozen('cp')) return false;
   const id = Number(t.dataset.id), key = t.dataset.key, kind = t.dataset.kind;
   if(!Number.isFinite(id) || !key || !kind || !state.cp || !Array.isArray(state.cp.rows)) return false;
-  const row = state.cp.rows.find(r=>r._id===id);
+  const row = resolveCpEditorRow(t);
   if(!row) return false;
   if(row._canEdit===false){ showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.')); return false; }
+  if(row._canEditShared===false&&['exfactory','retail','instore','submfr','suppfob'].includes(kind)){
+    showToast(appLang==='en'?'Shared fields for this order are view only.':'Bu siparişin ortak alanları için yalnız görüntüleme yetkiniz var.');return false;
+  }
   if(kind==='exfactory'){
     const prev = row[key];
     let next = null;
@@ -10107,9 +10163,9 @@ function bindEditHandlers(tableId){
   }, true);
   el.addEventListener('click', e=>{
     const noteDelete=e.target.closest('.noteCellDelete');
-    if(noteDelete){ clearRowNote(Number(noteDelete.dataset.id),noteDelete.dataset.key||'Notes'); return; }
+    if(noteDelete){ if(resolveCpEditorRow(noteDelete))clearRowNote(Number(noteDelete.dataset.id),noteDelete.dataset.key||'Notes'); return; }
     const note = e.target.closest('.noteCellTrigger');
-    if(note){ openNotesEditor(Number(note.dataset.id), note.dataset.key || 'Notes'); return; }
+    if(note){ if(resolveCpEditorRow(note))openNotesEditor(Number(note.dataset.id), note.dataset.key || 'Notes'); return; }
     const span = e.target.closest('.exfDisplay');
     if(span) enterDateEdit(span);
   });
@@ -10196,12 +10252,13 @@ document.addEventListener('mousedown', e=>{
 function enterDateEdit(span){
   const id = span.dataset.id, key = span.dataset.key, kind = span.dataset.kind;
   const rows=state.cp&&Array.isArray(state.cp.rows)?state.cp.rows:null;
-  const row = rows?rows.find(r=>r._id===Number(id)):null;
+  const row = rows?resolveCpEditorRow(span):null;
   if(!row) return;
   if(row._canEdit===false){showToast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.'));return;}
   const input = document.createElement('input');
   input.type='date'; input.className='editCell';
   input.dataset.id=id; input.dataset.key=key; input.dataset.kind=kind;
+  input.dataset.lineKey=lineKeyOfRow(row);input.dataset.editOwner=orderLinePeerOwner();
   input.dataset.historySession=`date:${id}:${key}:${Date.now()}:${Math.random().toString(36).slice(2)}`;
   input.value = toISODate(row ? row[key] : null);
   span.replaceWith(input);
@@ -11310,9 +11367,8 @@ function sameOrderCode(a,b){
 // Fiyat alanları artık sipariş koduna değil, SATIRA (sipariş + model + renk kodu)
 // yayılır: aynı siparişteki farklı modeller farklı Supp. FOB alabilir.
 function propagateOrderPricingFields(sourceRow, changes={}){
-  [state.cp&&state.cp.rows,state.orders&&state.orders.rows,state.orderSummary&&state.orderSummary.rows].forEach(rows=>{
-    (rows||[]).forEach(r=>{
-      if(!sameOrderLine(r,sourceRow)) return;
+  ['cp','orders','orderSummary'].forEach(tableKey=>{
+    orderLinePeerRows(tableKey,sourceRow).forEach(r=>{
       if(Object.prototype.hasOwnProperty.call(changes,'licensor')){
         const nextLic=norm(changes.licensor);
         r.Licensor=nextLic; r._licensorManual=true;
@@ -13588,6 +13644,10 @@ function applyCpGridPaste(plan,range){
     showToast((appLang==='en'?'Nothing editable to paste.':'Yapıştırılabilecek düzenlenebilir hücre yok.')+(reason?` (${reason})`:''));
     record(false);return {ok:false};
   }
+  if((plan.ownerId!=null&&plan.ownerId!==orderLinePeerOwner())||plan.ops.some(op=>{
+    const id=Number(op.row._partialViewSourceId??op.row._id),current=state.cp?.rows?.find(row=>row._id===id);
+    return !current||!sameOrderLine(current,op.row);
+  })){staleCpEditorNotice();record(false);return {ok:false,code:'CP_PASTE_STALE'};}
   const actions=[],touched=new Set(),seen=new Set();let changed=0;
   // Odaktaki hücre düzenleyicisi önce kendi değerini kaydeder, sonra kimliğini
   // bırakır: odak kaybı güvenlik ağı (focusout) yapıştırılan değeri düzenleyicideki
@@ -13611,12 +13671,12 @@ function applyCpGridPaste(plan,range){
         if(window.BLOrderImportanceUI.pasteAssign(row,op.value)) changed++;
         return;
       }
-      if(commitCpEditor({dataset:{id:String(id),key:op.column.k,kind:op.target},value:op.value},{refresh:false})){changed++;touched.add(id);}
+      if(commitCpEditor({dataset:{id:String(id),key:op.column.k,kind:op.target,lineKey:lineKeyOfRow(op.row),editOwner:orderLinePeerOwner()},value:op.value},{refresh:false})){changed++;touched.add(id);}
     });
   }finally{ _cpPasteUndoBatch=null; }
   if(actions.length) pushUndo(actions.length===1?actions[0]:{kind:'batch',actions});
   if(touched.size>CP_PASTE_ROW_REFRESH_LIMIT){ invalidateCoreFacetCaches(); renderCP(); scheduleOverviewRender('cp-paste'); }
-  else touched.forEach(id=>refreshRowEverywhere(id));
+  else if(touched.size)refreshRowsEverywhere([...touched]);
   if(touched.size&&state.orders){
     const pastedKeys=actions.flatMap(action=>(action.fields||[]).map(field=>field.key));
     if(pastedKeys.some(key=>key==='Del. Type'||key==='Ex-factory'||key==='Retail Date'||key==='In-Store (Model Budget)'))invalidateUnifiedPriorityDecisions('cp-paste',['orders']);

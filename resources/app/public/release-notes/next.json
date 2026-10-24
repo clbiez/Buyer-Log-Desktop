@@ -1112,6 +1112,35 @@
           "en": "With synthetic data, W6 passes 24 comparisons; its invalid source date and the unavailable S7 sample result remain explicit. No company workbook or business data is displayed."
         }
       }
+    },
+    {
+      "id": "canonical-cp-order-peers",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Bağlı sipariş satırları daha hızlı ve güvenli eşitlenir",
+        "en": "Linked order lines synchronize faster and more safely"
+      },
+      "body": {
+        "tr": "Not, fiyat ve tarih değişiklikleri sipariş, model ve renk kimliğiyle yalnız eşleşen satırlara yayılır; toplu işlemler bağlı görünümleri tek kez yeniler. Yenilemede tekrar kullanılan ekran numarası başka siparişi düzenleyemez. Editörler, Geri Al ve checklist menüleri satır veya kullanıcı değişirse eski işlemi durdurur; not taslağı korunur.",
+        "en": "Notes, prices and dates propagate only to matching order/model/colour lines, with linked views refreshed once for a batch. Reused display numbers after a refresh cannot retarget edits to another order. Editors, Undo and checklist menus stop stale actions when the row or user changes, retaining note drafts."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "canonical-cp-order-peers.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP ekranında kaydedilmiş sentetik sipariş notunun yeniden açılması",
+          "en": "A saved synthetic order note reopened in the actual Buyer Log CP screen"
+        },
+        "caption": {
+          "tr": "Demo not gerçek arayüzle kaydedildi ve Siparişler ekranında sunucudan doğrulandı. Fiyat/tarih, Undo/Redo, toplu işlem ve checklist akışları aynı sentetik kayıtlarla kontrol edildi.",
+          "en": "The demo note was saved through the actual UI and verified from the server in Orders. Price/date edits, Undo/Redo, batch operations and checklist flows were checked with the same synthetic records."
+        }
+      }
     }
   ]
 }
