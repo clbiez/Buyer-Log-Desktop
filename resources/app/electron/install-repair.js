@@ -36,13 +36,14 @@ function readRepairReport(localDataRoot){const r=readJson(reportFile(localDataRo
 /* Adım 2 — saf durum temizliği; test edilebilir olsun diye ayrı. */
 function cleanUpdaterState(state,currentVersion){
   const next={...state},actions=[];
+  if(state.activation?.status==='trial')return {state:next,actions};
   const failed={...(state.failedVersions||{})};
-  for(const version of Object.keys(failed))if(notNewer(version,currentVersion)){delete failed[version];actions.push('failed-record-cleared:'+version);}
+  for(const version of Object.keys(failed))if(notNewer(version,currentVersion)&&!failed[version]?.manualPatch){delete failed[version];actions.push('failed-record-cleared:'+version);}
   next.failedVersions=failed;
-  if(state.pending&&notNewer(state.pending.version,currentVersion)){next.pending=null;actions.push('stale-pending-cleared:'+state.pending.version);}
+  if(state.pending&&!state.pending.manualPatch&&notNewer(state.pending.version,currentVersion)){next.pending=null;actions.push('stale-pending-cleared:'+state.pending.version);}
   const stuck=['FAILED','ROLLBACK','INSTALLING'].includes(String(state.state||''));
   const latestIsCurrent=!state.latestVersion||notNewer(state.latestVersion,currentVersion);
-  if(stuck&&latestIsCurrent&&!next.pending){next.state='IDLE';next.lastError=null;actions.push('stale-error-cleared');}
+  if(stuck&&latestIsCurrent&&!next.pending&&!state.lastError?.manualPatch){next.state='IDLE';next.lastError=null;actions.push('stale-error-cleared');}
   if(state.lastKnownGoodVersion&&compareSemverSafe(state.lastKnownGoodVersion,currentVersion)>0){next.lastKnownGoodVersion=currentVersion;actions.push('last-known-good-corrected');}
   return {state:next,actions};
 }

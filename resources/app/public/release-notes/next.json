@@ -996,6 +996,64 @@
           "en": "CP was opened for the first time in Edge; statuses and the authorized report task appeared without an extra refresh call."
         }
       }
+    },
+    {
+      "id": "signed-offline-patch-desktop",
+      "type": "feature",
+      "module": {
+        "tr": "Masaüstü · Güncellemeler",
+        "en": "Desktop · Updates"
+      },
+      "title": {
+        "tr": "İmzalı yamayı masaüstünden güvenle hazırlayın",
+        "en": "Prepare signed patches safely from the desktop"
+      },
+      "body": {
+        "tr": "Güncel masaüstü kurulumunda moderatör, kullanıcı menüsündeki Güncellemeleri Kontrol Et penceresinden imzalı yama seçebilir. Yayıncı imzası, kurulum uyumu ve dosyalar doğrulanır; yetki gerçek giriş oturumundan denetlenir. Yama ayrı bir çekirdekte hazırlanır ve işinizi kaydettikten sonra yeniden başlatılarak uygulanır.",
+        "en": "In the current desktop installation, moderators can select a signed patch from Check for Updates in the user menu. Publisher signature, installation compatibility and files are verified; authority comes from the authenticated session. The patch is prepared in a separate core and applied after saving your work and restarting."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "signed-patch-desktop-ready.png",
+        "alt": {
+          "tr": "Gerçek Windows Buyer Log: imzalı yama doğrulandı ve yeniden başlatmaya hazır.",
+          "en": "Real Windows Buyer Log: a signed patch is verified and ready for restart."
+        },
+        "caption": {
+          "tr": "Gerçek Windows Buyer Log: imzalı yama doğrulandı ve yeniden başlatmaya hazır.",
+          "en": "Real Windows Buyer Log: a signed patch is verified and ready for restart."
+        }
+      }
+    },
+    {
+      "id": "complete-generation-patch-rollback",
+      "type": "fix",
+      "module": {
+        "tr": "Masaüstü · Veri kurtarma",
+        "en": "Desktop · Data recovery"
+      },
+      "title": {
+        "tr": "Başarısız yama önceki uygulama ve veriye birlikte döner",
+        "en": "Failed patches restore the previous application and data together"
+      },
+      "body": {
+        "tr": "Yeni yamanın açılışı doğrulanamazsa, yazıcı süreçleri kapandıktan sonra önceki uygulama ile yerel verinin bütün kuşağı geri yüklenir. Başarısız denemenin günlük yedeği geri gelen veriye karışmaz. Kabul edilen yama sırası, yerel geri dönüşte ve eski iş yedeği geri yüklemesinde korunur; sonuç güncelleme penceresinde açıklanır.",
+        "en": "If a new patch cannot complete startup verification, the previous application and complete local data generation are restored after writer processes exit. A failed trial’s journal backup cannot leak into restored data. The accepted patch sequence survives local rollback and old business-backup restores, and the update window explains the result."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "signed-patch-desktop-rollback.png",
+        "alt": {
+          "tr": "Gerçek Windows Buyer Log: önceki uygulama ve veri geri yüklendi; daha yeni onaylı paket seçilebilir.",
+          "en": "Real Windows Buyer Log: the previous application and data were restored; a newer approved package can be selected."
+        },
+        "caption": {
+          "tr": "Gerçek Windows Buyer Log: önceki uygulama ve veri geri yüklendi; daha yeni onaylı paket seçilebilir.",
+          "en": "Real Windows Buyer Log: the previous application and data were restored; a newer approved package can be selected."
+        }
+      }
     }
   ]
 }

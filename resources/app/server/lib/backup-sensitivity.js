@@ -19,6 +19,10 @@ const SENSITIVE_EXT = /\.(?:pem|key|pfx|p12)$/i;
 
 function normalizeRel(rel) { return String(rel || '').replace(/\\/g, '/'); }
 
+// Kurulumun etkin çekirdeği ve tekrar oynatma kaydı iş verisi değildir.
+// Eski yedekler de bu makinenin güncelleme denemesini/sırasını değiştiremez.
+function isUpdaterControlPath(rel) { return /^updater(?:\/|$)/i.test(normalizeRel(rel)); }
+
 // Kimlik/sır materyali mi? (önbellek/geçici dosya ayıklaması burada YAPILMAZ.)
 function isSensitiveBackupPath(rel) {
   const normalized = normalizeRel(rel);
@@ -38,4 +42,4 @@ function sanitizeSensitiveValue(value) {
   return out;
 }
 
-module.exports = { SENSITIVE_KEY, SENSITIVE_FILE, isSensitiveBackupPath, sanitizeSensitiveValue };
+module.exports = { SENSITIVE_KEY, SENSITIVE_FILE, isSensitiveBackupPath, isUpdaterControlPath, sanitizeSensitiveValue };

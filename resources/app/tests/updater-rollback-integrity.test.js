@@ -5,7 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { createLauncherState } = require('../electron/update/launcher-state');
-const names = ['BuyerLogLocal.db', 'BuyerLogLocal.db.bak', 'BuyerLogLocal.db.wal'];
+const names = ['BuyerLogLocal.db', 'BuyerLogLocal.db.bak', 'BuyerLogLocal.db.wal', 'BuyerLogLocal.db.wal.bak'];
 function fixture(t, options = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-update-rollback-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
@@ -58,9 +58,9 @@ for (const mode of ['same-size-corruption', 'truncation', 'directory', 'symlink'
   });
 }
 test('absent checkpoint members are explicit tombstones, not accidentally retained trial files', t => {
-  const f = fixture(t, { absent: [names[1], names[2]] }), activation = f.activate();
+  const f = fixture(t, { absent: names.slice(1) }), activation = f.activate();
   f.life.rollbackNow(activation, 'synthetic');
-  assert.deepEqual(contents(f.life), { [names[0]]: 'before:' + names[0], [names[1]]: null, [names[2]]: null });
+  assert.deepEqual(contents(f.life), { [names[0]]: 'before:' + names[0], ...Object.fromEntries(names.slice(1).map(name=>[name,null])) });
   assert.equal(f.life.currentPointer().version, '1.0.0');
 });
 for (const member of [...names, 'current.json', 'state.json']) {
@@ -219,4 +219,15 @@ test('malformed manifest or recovery intent reports a structured integrity error
   fs.writeFileSync(path.join(second.life.localUpdaterRoot, 'rollback-intent.json'), 'null');
   assert.throws(() => second.factory().rollbackExistingTrial(), { code: 'UPDATE_DB_ROLLBACK_INVALID' });
   assert.deepEqual(contents(second.life), otherBefore);
+});
+
+test('rollback restores the complete real DB generation including rotated trial WAL backup',async t=>{
+  const f=fixture(t,{absent:names}),{createLocalDb}=require('../server/lib/local-db'),file=path.join(f.life.localDataRoot,'BuyerLogLocal.db');
+  const db=createLocalDb(file);await db.ensure();await db.queuePatch({id:'before',patch:{value:'acknowledged'}});await db.transaction(s=>{s.migrations.before=true;});
+  const trial=f.life.activatePending();assert.ok(trial);
+  await db.queuePatch({id:'trial',patch:{value:'must disappear'}});await db.transaction(s=>{s.migrations.trial=true;});
+  assert.ok(fs.existsSync(file+'.wal.bak'));
+  f.life.rollbackNow(trial.activation,'synthetic trial failed');
+  const reopened=await createLocalDb(file).read();
+  assert.equal(reopened.records.before.value,'acknowledged');assert.equal(reopened.records.trial,undefined);
 });

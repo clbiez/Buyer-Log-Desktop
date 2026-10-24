@@ -3,11 +3,11 @@
  * immutable app-core folders; activation is an atomic current-pointer change. */
 const fs=require('fs');
 const path=require('path');
-const { app }=require('electron');
+const { app,dialog }=require('electron');
 const { createLauncherState }=require('./update/launcher-state');
 const { resolvePortableRoot,desktopPaths }=require('./portable-paths');
 
-const UPDATER_VERSION='1.0.0';
+const UPDATER_VERSION='1.1.0';
 const BOOTSTRAP_CORE=path.resolve(__dirname,'..');
 const PORTABLE_ROOT=app.isPackaged?path.dirname(process.execPath):path.resolve(BOOTSTRAP_CORE,'.desktop-dev');
 const LOG_FILE=path.join(PORTABLE_ROOT,'data','local','updater','updater.log');
@@ -39,15 +39,32 @@ if(!primaryInstance){
 const lifecycle=createLauncherState({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT});
 const recovered=app.isPackaged?lifecycle.rollbackExistingTrial():null;
 if(recovered)log('rollback-on-next-launch',{failedVersion:recovered.failed.version,restoredVersion:recovered.restored.version});
+const patchManager=app.isPackaged?require('./manual-patch/manager').createInstalledManager({bootstrapCore:BOOTSTRAP_CORE,portableRoot:PORTABLE_ROOT}):null;
+function verifySelected(selected){
+  if(!app.isPackaged)return;
+  const relative=path.relative(path.join(PORTABLE_ROOT,'.buyerlog-versions'),selected.appCoreRoot);
+  if(relative.split(path.sep)[0].startsWith('manual-'))patchManager.verifyInstalled(selected);
+  else require('./manual-patch/core-verification').verifyPackagedCore(selected.appCoreRoot,selected.version);
+}
+if(app.isPackaged){
+  const pending=lifecycle.readState().pending;
+  if(pending?.ready){
+    if(pending.manualPatch)patchManager.verifyStaged(pending);
+    else require('./manual-patch/core-verification').verifyPackagedCore(pending.appCoreRoot,pending.version);
+  }
+  verifySelected(lifecycle.currentPointer());
+}
 const activationResult=app.isPackaged?lifecycle.activatePending():null;
 const activation=activationResult&&activationResult.activation||null;
 const selected=app.isPackaged?lifecycle.currentPointer():lifecycle.bootstrapPointer();
+verifySelected(selected);
 if(activation)log('activation-started',{version:activation.version,previousVersion:activation.previous&&activation.previous.version||''});
 process.env.BUYER_LOG_BOOTSTRAP_APP_CORE=BOOTSTRAP_CORE;
 process.env.BUYER_LOG_ACTIVE_APP_CORE=selected.appCoreRoot;
 process.env.BUYER_LOG_ACTIVE_VERSION=selected.version;
 process.env.BUYER_LOG_UPDATER_VERSION=UPDATER_VERSION;
 if(activation)process.env.BUYER_LOG_UPDATE_HEALTH_TOKEN=activation.token;
+if(patchManager)global.__buyerLogPrepareSignedPatch=options=>require('./manual-patch/desktop').prepareFromPicker({...options,manager:patchManager,dialog});
 
 global.__buyerLogLauncherHealthReady=(info={})=>{
   if(!activation)return false;

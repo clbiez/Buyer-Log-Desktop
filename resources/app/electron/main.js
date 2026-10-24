@@ -518,13 +518,16 @@ function updaterBaseConfig() {
   return config && typeof config.updates === 'object' && config.updates ? config.updates : {};
 }
 
-async function verifyUpdateModerator(userId) {
+async function verifyUpdateModerator(userId, contents=activeBuyerLogContents()) {
   const id=String(userId||'').trim();
   if(!id||!backend||!backend.running||!backend.origin)return false;
   try{
+    if(!contents||contents.isDestroyed?.()||!contents.session?.cookies)return false;
+    const cookie=(await contents.session.cookies.get({url:backend.origin})).find(item=>item.name==='bl_user_session');
+    if(!cookie)return false;
     const response=await fetch(backend.origin+'/api/internal/desktop/update-authority',{
       method:'POST',cache:'no-store',redirect:'error',
-      headers:{'Content-Type':'application/json','X-BuyerLog-Desktop-Bridge':desktopBridgeSecret},
+      headers:{'Content-Type':'application/json','X-BuyerLog-Desktop-Bridge':desktopBridgeSecret,'Cookie':'bl_user_session='+cookie.value},
       body:JSON.stringify({userId:id}),
     });
     const data=await response.json().catch(()=>({}));
@@ -574,7 +577,7 @@ async function updateStatusFor(userId='') {
   const moderator=await verifyUpdateModerator(userId);
   const configured=updater.config(updaterBaseConfig());
   const channel=(configured.channel==='test'&&moderator)?'test':'stable';
-  return {...updater.status(updaterBaseConfig(),channel),moderator,configuredChannel:configured.channel,repair:repairSummary()};
+  return {...updater.status(updaterBaseConfig(),channel),moderator,manualPatchSupported:typeof global.__buyerLogPrepareSignedPatch==='function',configuredChannel:configured.channel,repair:repairSummary()};
 }
 
 async function runUpdateCheck(options={}) {
@@ -2529,6 +2532,17 @@ function registerIpc() {
     else app.quit();
     setTimeout(()=>{if(workspace&&workspace.hasWindows())updateRelaunchRequested=false;},1500).unref?.();
     return {ok:true};
+  });
+
+  ipcMain.handle('buyerlog:update-signed-patch', async (event,options={})=>{
+    if(!trustedBuyerLogIpcSender(event))return {ok:false,code:'IPC_FORBIDDEN'};
+    const userId=String(options.userId||''),authorize=()=>verifyUpdateModerator(userId,event.sender);
+    if(!await authorize())return {ok:false,code:'UPDATE_ADMIN_REQUIRED'};
+    if(!updater||typeof global.__buyerLogPrepareSignedPatch!=='function')return {ok:false,code:'PATCH_BOOTSTRAP_REQUIRED',error:'Güncel imzalı tam kurulum gerekli. / A current signed full installation is required.'};
+    try{
+      const result=await updater.prepareSignedPatch(()=>global.__buyerLogPrepareSignedPatch({window:activeBuyerLogWindow(event.sender),language:options.language==='en'?'en':'tr',authorize}));
+      const status=await updateStatusFor(userId);emitUpdateStatus(status);return {...result,...status};
+    }catch(error){return {ok:false,code:error.code||'PATCH_FAILED',error:String(error.message||error)};}
   });
 
   ipcMain.handle('buyerlog:choose-shared-hub-folder', async event => {

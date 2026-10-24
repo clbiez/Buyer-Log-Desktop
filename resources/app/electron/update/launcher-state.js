@@ -4,10 +4,27 @@ const path=require('path');
 const crypto=require('crypto');
 const { readJson,atomicWriteJson,atomicWriteBuffer,ensureDir,syncDirectory }=require('./json-store');
 const { compareSemver }=require('./semver');
-const { ledgerFile,readTrialBackend }=require('../../server/lib/update-trial-backend');
+const { ledgerFile,readTrialBackend }=require('./trial-backend');
 
 function versionKey(version){return String(version||'').replace(/[^0-9A-Za-z._-]/g,'_');}
 function isNewerVersion(a,b){try{return compareSemver(a,b)>0;}catch(_){return false;}}
+
+function readStateFile(file,missing=null){
+  try{
+    const stat=fs.lstatSync(file);
+    if(!stat.isFile()||stat.isSymbolicLink()||stat.size>16*1024*1024)throw Error('Invalid state file');
+    const s=JSON.parse(fs.readFileSync(file,'utf8').replace(/^\uFEFF/,''));
+    if(!s||typeof s!=='object'||Array.isArray(s)||s.schemaVersion!==1)throw Error('Invalid state schema');
+    if(Object.hasOwn(s,'manualPatchWatermarks')){
+      const values=s.manualPatchWatermarks;
+      if(!values||typeof values!=='object'||Array.isArray(values)||Object.entries(values).some(([key,n])=>!/^\d+\.\d+\.\d+:[a-f0-9]{40}$/.test(key)||!Number.isSafeInteger(n)||n<0))throw Error('Invalid watermark');
+    }
+    return s;
+  }catch(error){
+    if(error.code==='ENOENT')return missing;
+    throw Object.assign(new Error('Güncelleme durumu bozuk; dosya korundu. / Update state is corrupt; the file was preserved.'),{code:'UPDATE_STATE_INVALID',cause:error});
+  }
+}
 
 function createLauncherState(options={}){
   const bootstrapCore=path.resolve(options.bootstrapCore||'');
@@ -51,10 +68,10 @@ function createLauncherState(options={}){
   }
   function writePointer(pointer){const next={schemaVersion:1,version:String(pointer.version||''),appCoreRoot:path.resolve(pointer.appCoreRoot),source:pointer.source||'managed',updatedAt:now()};if(!validManagedCore(next.appCoreRoot,next.version))throw Object.assign(new Error('Active app core doğrulanamadı.'),{code:'UPDATE_ACTIVE_CORE_INVALID'});atomicWriteJson(currentFile,next);return next;}
   function defaultState(){const v=packageVersion(bootstrapCore);return {schemaVersion:1,state:'IDLE',currentVersion:v,lastKnownGoodVersion:v,pending:null,activation:null,failedVersions:{}};}
-  function readState(){const s=readJson(stateFile,null);return s&&s.schemaVersion===1?s:defaultState();}
+  function readState(){return readStateFile(stateFile,defaultState());}
   function writeState(patch){const next={...readState(),...patch,schemaVersion:1};atomicWriteJson(stateFile,next);return next;}
-  function failedRecord(activation,reason){const state=readState(),failed={...(state.failedVersions||{})};if(activation&&activation.version)failed[activation.version]={sha256:activation.sha256||'',failedAt:now(),reason:String(reason||'health-check-failed').slice(0,200)};return failed;}
-  const DB_ROLLBACK_FILES=['BuyerLogLocal.db','BuyerLogLocal.db.bak','BuyerLogLocal.db.wal'];
+  function failedRecord(activation,reason){const state=readState(),failed={...(state.failedVersions||{})};if(activation&&activation.version)failed[activation.version]={sha256:activation.sha256||'',failedAt:now(),reason:String(reason||'health-check-failed').slice(0,200),...(activation.manualPatch?{manualPatch:activation.manualPatch}:{})};return failed;}
+  const DB_ROLLBACK_FILES=['BuyerLogLocal.db','BuyerLogLocal.db.bak','BuyerLogLocal.db.wal','BuyerLogLocal.db.wal.bak'];
   const RECOVERY_MEMBERS=[...DB_ROLLBACK_FILES,'current.json','state.json'];
   const recoveryFile=path.join(localUpdaterRoot,'rollback-intent.json');
   const transition=(event,detail={})=>{if(typeof options.onTransition==='function')options.onTransition(event,detail);};
@@ -68,7 +85,7 @@ function createLauncherState(options={}){
   }
   const same=(a,b)=>Boolean(a&&b&&a.exists===b.exists&&a.size===b.size&&a.sha256===b.sha256);
   function strictJson(file,code='UPDATE_DB_ROLLBACK_INVALID'){
-    try{return JSON.parse(fs.readFileSync(file,'utf8'));}
+    try{return JSON.parse(fs.readFileSync(file,'utf8').replace(/^\uFEFF/,''));}
     catch(error){throw Object.assign(failure(code,'Güncelleme kurtarma kaydı okunamadı. / Update recovery record could not be read.'),{cause:error});}
   }
   function checkpointRoot(snapshot){
@@ -94,14 +111,14 @@ function createLauncherState(options={}){
       if(before.exists){fs.copyFileSync(source,destination);const fd=fs.openSync(destination,'r+');try{fs.fsyncSync(fd);}finally{fs.closeSync(fd);}if(!same(before,fingerprint(destination)))throw failure('UPDATE_DB_ROLLBACK_INVALID','DB checkpoint kopyası doğrulanamadı. / DB checkpoint copy could not be verified.');}
       files.push({name,...before});
     }
-    atomicWriteJson(path.join(root,'manifest.json'),{schemaVersion:2,createdAt:now(),files});syncDirectory(root);
-    return {root,formatVersion:2,files};
+    atomicWriteJson(path.join(root,'manifest.json'),{schemaVersion:3,createdAt:now(),files});syncDirectory(root);
+    return {root,formatVersion:3,files};
   }
   function validateSnapshot(snapshot){
     const root=checkpointRoot(snapshot),files=memberList(snapshot.files),manifest=strictJson(path.join(root,'manifest.json'));
-    if(!manifest||typeof manifest!=='object'||Array.isArray(manifest)||![1,2].includes(manifest.schemaVersion))throw failure('UPDATE_DB_ROLLBACK_INVALID','DB checkpoint sürümü geçersiz. / Invalid DB checkpoint version.');
+    if(!manifest||typeof manifest!=='object'||Array.isArray(manifest)||![1,3].includes(manifest.schemaVersion))throw failure('UPDATE_DB_ROLLBACK_INVALID','DB checkpoint sürümü geçersiz. / Invalid DB checkpoint version.');
     const saved=memberList(manifest.files),legacy=manifest.schemaVersion===1&&snapshot.formatVersion==null;
-    if(!legacy&&manifest.schemaVersion!==2)throw failure('UPDATE_DB_ROLLBACK_INVALID','DB checkpoint kimliği uyuşmuyor. / DB checkpoint identity does not match.');
+    if(!legacy&&(manifest.schemaVersion!==3||snapshot.formatVersion!==3))throw failure('UPDATE_DB_ROLLBACK_INVALID','DB checkpoint kimliği uyuşmuyor. / DB checkpoint identity does not match.');
     return {root,legacy,files:files.map((item,index)=>{
       const recorded=saved[index],actual=fingerprint(path.join(root,item.name));
       if(item.exists!==recorded.exists)throw failure('UPDATE_DB_ROLLBACK_INVALID','DB checkpoint üyeleri uyuşmuyor. / DB checkpoint members do not match.');
@@ -189,7 +206,7 @@ function createLauncherState(options={}){
       members.push({name:item.name,before:fingerprint(targetFor(item.name)),after:{exists:item.exists,size:item.size,sha256:item.sha256}});
     }
     const finalState={...state,schemaVersion:1,state:'ROLLBACK',activation:null,pending:null,currentVersion:previous.version,lastKnownGoodVersion:previous.version,
-      failedVersions:failedRecord(activation,reason),lastError:{code:'UPDATE_HEALTH_FAILED',message:'Yeni sürüm başlatılamadı; önceki sürüme ve veri checkpointine dönüldü. / The new version failed; the previous version and data checkpoint were restored.'},
+      failedVersions:failedRecord(activation,reason),lastError:{code:'UPDATE_HEALTH_FAILED',message:'Yeni sürüm başlatılamadı; önceki sürüme ve veri checkpointine dönüldü. / The new version failed; the previous version and data checkpoint were restored.',...(activation.manualPatch?{manualPatch:activation.manualPatch}:{})},
       ...(checkpoint.legacy?{rollbackLegacyCheckpoint:true}:{})};
     for(const [name,value]of [['current.json',previous],['state.json',finalState]]){
       const staged=path.join(stageRoot,name);atomicWriteJson(staged,value);members.push({name,before:fingerprint(targetFor(name)),after:fingerprint(staged)});
@@ -218,7 +235,7 @@ function createLauncherState(options={}){
     if(fs.existsSync(serverEntry)&&!fs.readFileSync(serverEntry,'utf8').startsWith("require('./lib/update-trial-backend').waitForTrialBackend();")){writeState({state:'FAILED',lastError:{code:'UPDATE_RECOVERY_PROTOCOL_REQUIRED',message:'Bu paket güvenli geri alma protokolünü desteklemiyor; güncel imzalı paketi seçin. / This package lacks the safe rollback protocol; select a current signed package.'}});return null;}
     const previous=currentPointer(),token=makeToken();
     let dbSnapshot=null;try{dbSnapshot=snapshotLocalDb(token);}catch(error){writeState({state:'FAILED',lastError:{code:'UPDATE_DB_CHECKPOINT_FAILED',message:'Yerel veri rollback checkpointi alınamadı; update uygulanmadı.'}});return null;}
-    const activation={status:'trial',backendFenceVersion:1,token,version:pending.version,sha256:pending.sha256||'',previous,dbSnapshot,startedAt:now(),pid:process.pid};
+    const activation={status:'trial',backendFenceVersion:1,token,version:pending.version,sha256:pending.sha256||'',previous,dbSnapshot,startedAt:now(),pid:process.pid,...(pending.manualPatch?{manualPatch:pending.manualPatch}:{})};
     // Journal the trial before selecting its app core. A restart can always
     // recover an interrupted pointer transition from this durable checkpoint.
     writeState({state:'INSTALLING',activation,currentVersion:pending.version});
@@ -237,4 +254,4 @@ function createLauncherState(options={}){
   }
   return {bootstrapCore,portableRoot,localDataRoot,localUpdaterRoot,versionsRoot,currentFile,stateFile,packageVersion,validManagedCore,bootstrapPointer,currentPointer,writePointer,readState,writeState,rollbackExistingTrial,activatePending,rollbackNow:rollbackTo,requestRollback,confirmHealth};
 }
-module.exports={createLauncherState};
+module.exports={createLauncherState,readStateFile};

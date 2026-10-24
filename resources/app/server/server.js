@@ -560,17 +560,14 @@ app.delete('/api/internal/desktop/oab-authorization', (req, res) => {
   const status = oabAuthState.clear();
   return res.set('Cache-Control','no-store').json({ ok:true, status });
 });
-// Desktop-only updater authority check. The renderer supplies only its selected
-// Buyer Log user id; backend resolves the canonical local IAM profile. This keeps
-// TEST-channel permission outside renderer trust while exposing no credential data.
+// The desktop forwards the sender session cookie, never a renderer-selected role.
+// The canonical live session also rejects disabled/revoked credentials.
 app.post('/api/internal/desktop/update-authority', express.json({ limit:'8kb' }), (req, res) => {
   if (!desktopBridgeAuthorized(req)) return res.status(403).json({ ok:false, code:'DESKTOP_BRIDGE_FORBIDDEN' });
   try {
     const userId = String(req.body && req.body.userId || '').trim();
-    const access = require('./lib/user-access');
-    const store = access.readStore();
-    const profiles = [store && store.moderator, ...(store && Array.isArray(store.users) ? store.users : [])].filter(Boolean);
-    const profile = profiles.find(item => String(item && item.id || '') === userId) || null;
+    const profile = userAccess.sessionProfile(req);
+    if (!profile || String(profile.id) !== userId) return res.status(403).set('Cache-Control','no-store').json({ ok:false, moderator:false, code:'UPDATE_AUTHORITY_SESSION_REQUIRED' });
     const moderator = Boolean(profile && (String(profile.systemRole || '').toLowerCase() === 'moderator' || String(profile.role || '').toLowerCase() === 'moderator'));
     return res.set('Cache-Control','no-store').json({ ok:true, userId, moderator });
   } catch (error) {

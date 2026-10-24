@@ -8,6 +8,7 @@ const db = require('../db');
 const userPreferences = require('./user-preferences');
 const collectionWorkspaces = require('./collection-workspaces');
 const { createBackupArchive } = require('./backup-archive');
+const { isUpdaterControlPath } = require('./backup-sensitivity');
 const {
   SERVER_DATA_ROOT, APP_DATA_ROOT, LOCAL_DATA_ROOT, LOCAL_DB_FILE, MODEL_FILES_ROOT,
   COLLECTION_IMAGES_ROOT, QTX_FILES_ROOT, CONFIG_PATH,
@@ -72,7 +73,7 @@ function sanitizeBrowserStorage(storage, userId) {
 }
 function skipBackupFile(rel, topExcludes) {
   const normalized = String(rel || '').replace(/\\/g, '/'), parts = normalized.split('/');
-  if (!normalized || topExcludes.has(parts[0])) return true;
+  if (!normalized || topExcludes.has(parts[0]) || isUpdaterControlPath(normalized)) return true;
   if (parts.some(part => /^(?:auth|cache|caches|temp|tmp|logs?|sessions?)$/i.test(part))) return true;
   if (/(?:^|\/)\.env(?:\.|$)/i.test(normalized) || /\.(?:pem|key|pfx|p12|tmp|lock|write-lock)$/i.test(normalized) || /(?:^|\/)user-access\.json$/i.test(normalized) || SENSITIVE_FILE.test(normalized)) return true;
   return false;

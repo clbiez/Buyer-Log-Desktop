@@ -1,0 +1,90 @@
+name: Buyer Log explicitly approved signed patch
+on:
+  workflow_dispatch:
+    inputs:
+      approved_source_sha:
+        description: Exact reviewed current-main source SHA to publish
+        required: true
+        type: string
+      publish_approved:
+        description: I explicitly approve publishing this source as a signed patch
+        required: true
+        default: false
+        type: boolean
+      base_version:
+        description: Previously accepted signed full-bootstrap STABLE version
+        required: true
+        type: string
+      sequence:
+        description: Next immutable sequence (first patch is 1)
+        required: true
+        type: string
+      notes_tr:
+        description: Turkish release description
+        required: true
+        type: string
+      notes_en:
+        description: English release description
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: buyerlog-signed-patch-publication
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: inputs.publish_approved == true && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      APPROVED_SOURCE_SHA: ${{ inputs.approved_source_sha }}
+      PUBLISH_APPROVED: ${{ inputs.publish_approved }}
+      BASE_VERSION: ${{ inputs.base_version }}
+      PATCH_SEQUENCE: ${{ inputs.sequence }}
+      PATCH_NOTES_TR: ${{ inputs.notes_tr }}
+      PATCH_NOTES_EN: ${{ inputs.notes_en }}
+      RELEASE_REPO: ${{ vars.BUYER_LOG_RELEASE_REPO }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Pin explicit approval before executing application code
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$APPROVED_SOURCE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          [[ "$(git rev-parse HEAD)" == "$APPROVED_SOURCE_SHA" ]]
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: resources/app/package-lock.json
+      - name: Install locked dependencies without lifecycle scripts
+        working-directory: resources/app
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Require full application regression
+        working-directory: resources/app
+        run: npm test
+      - name: Verify existing signed full bootstrap and signed predecessor
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/buyerlog-signed-patch-publish.js prepare
+      - name: Build once and sign with the existing pinned publisher authority
+        env:
+          BUYER_LOG_RELEASE_SIGNING_KEY: ${{ secrets.BUYER_LOG_RELEASE_SIGNING_KEY }}
+        run: node .github/scripts/buyerlog-signed-patch-publish.js build
+      - name: Recheck approval against current main before publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_REPO: ${{ github.repository }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(gh api "repos/$SOURCE_REPO/branches/main" --jq '.commit.sha')" == "$APPROVED_SOURCE_SHA" ]]
+      - name: Publish immutable signed bytes and verify remote download
+        env:
+          GH_TOKEN: ${{ secrets.BUYER_LOG_RELEASE_TOKEN }}
+        run: node .github/scripts/buyerlog-signed-patch-publish.js publish
+      # No Actions ZIP artifact storage; no legacy, TEST or STABLE feed writes.
