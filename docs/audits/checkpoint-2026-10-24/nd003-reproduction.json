@@ -1,0 +1,9 @@
+{
+  "classification": "Confirmed defect, NOT FIXED",
+  "acknowledged": true,
+  "warm": 2,
+  "cold": null,
+  "expectedAfterFix": 2,
+  "platform": "linux",
+  "node": "v24.19.0"
+}

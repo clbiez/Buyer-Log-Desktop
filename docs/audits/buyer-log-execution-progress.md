@@ -17,20 +17,20 @@ Pending means not independently verified in this execution. The audit remains ev
 | ID | Priority | Status | Package / next action | Verification / dependencies / risk | PR |
 |---|---|---|---|---|---|
 | BL-001 | P0 | PR Open | Review PR #685; retain record/option contracts and backend restart requirement | Verified negative HTTP + real IAM + Chromium; 224 focused pass; no Windows certification | [#685](https://github.com/clbiez/Buyer-Log-Desktop/pull/685) |
-| BL-002 | P0 | PR Open | Review active writer, thread retirement and commit fencing; coordinated upgrade required | 92 focused pass; actual native busy save409 + preserved pending edit + durable retry. Remote unknown liveness fails closed; Windows/SMB not executed | [#692](https://github.com/clbiez/Buyer-Log-Desktop/pull/692) |
+| BL-002 | P0 | PR Open | PAUSED: resolve full combined delta/mirror integration failures before merge | 92 +29 focused pass and native409/retry; latest full snapshot has9 delta +1 horizon failures, lease-context interaction suspected, not proven. Windows/mixed-client/remote limits remain | [#692](https://github.com/clbiez/Buyer-Log-Desktop/pull/692) |
 | BL-003 | P0 | Blocked | Draft implementation; finish signed full-bootstrap migration and native evidence/Windows acceptance | 91 pass across11 files. Complete set validation + durable restore intent + trial writer fencing. Cannot deploy this through app-core-only patch; no native rollback PNG yet | [#688 draft](https://github.com/clbiez/Buyer-Log-Desktop/pull/688) |
 | BL-004 | P0 | PR Open | Review PR #686; restart backend and refresh sign-in page after approved deployment | Canonical-account/trusted-peer limiter verified: 63 pass, real Chromium TR/EN. Bounded known-pool saturation tradeoff documented; Windows corporate IAM not certified | [#686](https://github.com/clbiez/Buyer-Log-Desktop/pull/686) |
 | BL-005 | P0 | In Progress | User approved signed-v3 bootstrap bridge + explicit publication + no Actions ZIP storage; implement installed trust boundary | Diagnostic model + actual official verifier synthetic tamper probe passed; manual Windows installer not executed. No compromise asserted. Trusted bootstrap/manager/producer still outstanding | [#693 proposal](https://github.com/clbiez/Buyer-Log-Desktop/pull/693) |
-| BL-006 | P1 | PR Open | Review focused repairs in #687; then resolve residual failures before claiming green baseline | Five audit-listed failures + one later-main UI-regex harness failure repaired. 23 core tests pass; TL file still 3 pass/1 fail. All-file scheduling observed 8 failures, one subsequently repaired; seven remain | [#687](https://github.com/clbiez/Buyer-Log-Desktop/pull/687) |
+| BL-006 | P1 | PR Open | PAUSED: original harness repairs delivered; full baseline is not green | Old seven residuals pass in combined124-test selection after #698/#699. Latest full runner stops batch2 with13 different integration failures; batches3–5 not executed | [#687](https://github.com/clbiez/Buyer-Log-Desktop/pull/687), [#699](https://github.com/clbiez/Buyer-Log-Desktop/pull/699) |
 | BL-007 | P1 | PR Open | Review owned temp boundary and authoritative backup error correction | 79 relevant tests pass; actual EACCES HTTP probe; native restore preflight200 under owned temp root, no restore applied. Windows not executed | [#691](https://github.com/clbiez/Buyer-Log-Desktop/pull/691) |
 | BL-008 | P1 | Confirmed | After BL-002, convert one request-facing writer to awaited leases and benchmark identically | Synchronous held lease reproduced: 10 ms timer delayed to 305.36 ms with 300 ms timeout. No optimization or improvement claimed | — |
 | BL-009 | P1 | PR Open | Review rendered/top dialog focus helper; refresh client after approved deployment | 10 real Chromium tests pass; native nested dialog Tab/Escape/restore pass. Related Node14 pass/1 known Endek CSS guard fail. Windows screen reader not executed | [#696](https://github.com/clbiez/Buyer-Log-Desktop/pull/696) |
 | BL-010 | P1 | PR Open | Review License first-load/stale/error/empty correction | 59 tests pass; native unmocked503 shows error without skeleton; labeled synthetic retry/empty/stale POST fixtures pass. Windows not executed | [#697](https://github.com/clbiez/Buyer-Log-Desktop/pull/697) |
 | BL-011 | P1 | PR Open | Approved transitional gate freezes unsigned auto-publication; validation only until signed bridge is ready | 6 local contract tests pass + YAML syntax. No release/signing credentials, publish commands or ZIP artifacts; full Windows app checks precede installer tests. Workflow not dispatched | [#695](https://github.com/clbiez/Buyer-Log-Desktop/pull/695) |
-| BL-012 | P1 | Pending | Avoid full WAL parsing after every append | Not executed in this session; verify audit evidence before changing code | — |
+| BL-012 | P1 | Pending | PAUSED: first fix new ND-003 acknowledged-write loss after corrupt WAL; then benchmark counters | Full WAL parse confirmed; no optimization implemented. ND-003 reproduced warm2/cold missing; not fixed | — |
 | BL-013 | P1 | Pending | Index cross-screen order peers by canonical identity | Not executed in this session; verify audit evidence before changing code | — |
 | BL-014 | P1 | Pending | Cache pricing context and remove avoidable repeated rule work | Not executed in this session; verify audit evidence before changing code | — |
-| BL-015 | P1 | Confirmed | Replace added Endeksmatik hardcoded styles with existing tokens in separate small UI PR and capture actual three-theme evidence | Six design-contract failures share fixed font sizes/raw colours added after audit. Do not raise frozen baselines. Broad design/readability work remains pending; BL-009 precedes dialog extensions | — |
+| BL-015 | P1 | PR Open | PAUSED: scoped Endeksmatik token correction ready; broad design/table density still pending | 53 tests pass, all six old design guards fixed; real3-theme TR/EN Standard/XL screenshots. Windows/200%/whole-app matrix not executed | [#698](https://github.com/clbiez/Buyer-Log-Desktop/pull/698) |
 | BL-016 | P1 | Pending | Verify attachment and legacy-route authorization systematically | Not executed in this session; verify audit evidence before changing code | — |
 | BL-017 | P1 | Pending | Specify pricing, FX and indexation provenance contracts | Not executed in this session; verify audit evidence before changing code | — |
 | BL-018 | P1 | Pending | Inventory packaged and vendored runtime dependencies | Not executed in this session; verify audit evidence before changing code | — |
@@ -130,7 +130,7 @@ compatible main; BL-001 incorporates it with a normal merge, never force-push.
 
 | Package | Implementation commit | Head / PR |
 |---|---|---|
-| BL-002 | `e913a09e613cdfa6d4e39ebe5c9c36e2acd8b846` | `f7c2480236dbca70f8d4dcdc2fe857eb442614a6`, [#692](https://github.com/clbiez/Buyer-Log-Desktop/pull/692) |
+| BL-002 | P0 | PR Open | PAUSED: resolve full combined delta/mirror integration failures before merge | 92 +29 focused pass and native409/retry; latest full snapshot has9 delta +1 horizon failures, lease-context interaction suspected, not proven. Windows/mixed-client/remote limits remain | [#692](https://github.com/clbiez/Buyer-Log-Desktop/pull/692) |
 | BL-003 draft | `575498a8321badbf5fc925048d385cac87ef468e` | [#688](https://github.com/clbiez/Buyer-Log-Desktop/pull/688) |
 | BL-007 | `89ba6970c2a2c830b7a66d696d5f833b7a9ada1c` | `8ddae4cdef98302dfa090c0eba326c40f5f399a4`, [#691](https://github.com/clbiez/Buyer-Log-Desktop/pull/691) |
 | BL-005/011 approved proposal, runtime incomplete | `8c0bfd830ac995bda2f80a36ab4c56341694f444` | [#693 draft](https://github.com/clbiez/Buyer-Log-Desktop/pull/693) |
@@ -173,3 +173,49 @@ Diagnostics remain in `/workspace/buyer-log-execution-evidence`. Browser screens
 are real post-change native UI; follow-up mocked API routes are labeled explicitly.
 No real databases or company integrations were used. There is no scheduled
 background continuation; work occurs only during active execution.
+
+## STOP / account handoff checkpoint — 24 October 2026
+
+The user explicitly requested a safe stop and continuation with another Codex
+account. Engineering execution is paused. No demo/test/subagent process or
+scheduled continuation remains. No PR merged and no release dispatched. Original
+checkout remains clean; all product changes are committed/pushed in13 open PRs.
+Three PRs are draft:688 rollback,693 trust proposal,700 model-downgrade guard.
+Main was fetched again and remains5a5c3bcafd4de929019b3bba522ef5771670b171.
+
+**Start with [the portable handoff](buyer-log-next-codex-handoff.md).** It supersedes
+older continuation instructions above. Full branch/commit/PR identities and the
+exact combined snapshot are in [manifest](checkpoint-2026-10-24/manifest.json).
+The downloadable transfer bundle also preserves the original audit inputs and
+an exact binary patch for the synthetic combined validation tree. No live DB,
+production credential files, node_modules or .git directory was copied.
+
+Additional deliveries: scoped BL-015 [#698](https://github.com/clbiez/Buyer-Log-Desktop/pull/698),
+ND-001 legacy absolute column parsing [#699](https://github.com/clbiez/Buyer-Log-Desktop/pull/699),
+ND-002 USD-to-TL downgrade guard [#700 draft](https://github.com/clbiez/Buyer-Log-Desktop/pull/700).
+ND-001 is a confirmed parser defect, not an invalid financial fixture. Original
+FX range V1:W2 shifted array indices; fixed before/after native import verified.
+ND-002 exists on original main too: a broken USD formula with a second legacy FX
+table is accepted as TL. Negative tests/native422 pass after guard; legitimate
+TL variant and independent financial review remain required before merge.
+
+**New highest-priority ND-003, Confirmed defect / P0, NOT FIXED:** after a partial
+WAL tail, a new queuePatch acknowledges success and appears in warm cache but
+is absent after reopen. Safe synthetic reproduction: [result](checkpoint-2026-10-24/nd003-reproduction.json)
+and [inspect-first diagnostic](nd-003-wal-tail-repro.cjs). No implementation was
+started before the stop request. Fix survival/recovery before BL-012 performance.
+
+Combined verification:86 files604 pass/0 fail/0 skip; Endek/design15 files124 pass;
+Chromium dialog10 pass;30 release-note entries valid. Latest full npm test then
+scheduled1038 files in5 batches, passed batch1 and failed batch2: **4285 observed
+tests,4209 pass,13 fail,63 skip**. Batches3/4/5 on this snapshot are NOT EXECUTED.
+[Exact failures](checkpoint-2026-10-24/combined-full-results.json):9 delta-store
+mirroring,1 native horizon,2 GitHub updater bridge,1 archive metadata assertion.
+Lease-context interaction is a hypothesis, not an established root cause.
+The previous full baseline's totals must not be added to this newer snapshot.
+No full green supported-runtime or Windows claim is justified.
+
+All remaining BL-008/012–014/016–026 and incomplete BL-003/005/015 scope is listed
+in the handoff. The signed-v3 bridge/explicit publication/no ZIP artifact policy
+is already approved for implementation only. Do not request the same policy
+approval again; do not infer permission to merge, publish or alter production.
