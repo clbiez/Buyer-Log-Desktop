@@ -1842,7 +1842,7 @@ function showSourceFilterRequiredNotice(status,message){
   </div>`;
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
-  modal.addEventListener('click',event=>{const reopen=event.target.closest('[data-reopen-pricing-draft]');if(reopen){event.preventDefault();const row=results[Number(reopen.dataset.reopenPricingDraft)];if(row?.draftId)void prepareEmailReopenSingleDraft({draftId:row.draftId,manufacturer:row.manufacturer,filename:row.emlFilename,reopenUntil:row.reopenUntil},row.quotationRequestId||'',reopen);return;}const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
+  modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const close=()=>modal.remove();
   modal.querySelectorAll('[data-source-filter-close]').forEach(btn=>btn.addEventListener('click',close));
   modal.querySelector('[data-source-filter-open]')?.addEventListener('click',()=>{close();openDataSourceAndFilters({target:preferredTarget});});
@@ -35314,7 +35314,7 @@ function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
   modal._transientUrls=results.flatMap(r=>r.cleanupUrls||[]);
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
-  modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
+  modal.addEventListener('click',event=>{const reopen=event.target.closest('[data-reopen-pricing-draft]');if(reopen){event.preventDefault();const row=results[Number(reopen.dataset.reopenPricingDraft)];if(row?.draftId)void prepareEmailReopenSingleDraft({draftId:row.draftId,manufacturer:row.manufacturer,filename:row.emlFilename,reopenUntil:row.reopenUntil},row.quotationRequestId||'',reopen);return;}const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
   const close=()=>{ kolRevokeTransientUrls(modal._transientUrls||[]); modal._transientUrls=[]; modal.remove(); }; modal.querySelectorAll('[data-close-pricing-result]').forEach(b=>b.addEventListener('click',close)); modal.querySelector('[data-open-pricing-quotations]')?.addEventListener('click',()=>{close();if(typeof switchTab==='function')switchTab('quotations');}); modal.addEventListener('click',e=>{if(e.target===modal) close();});
 }
 

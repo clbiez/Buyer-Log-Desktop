@@ -6,6 +6,7 @@
    Bağımlılıklar kayıt anında enjekte edilir; çalışma sırasında yeniden atanan
    değerler (yok) canlı okuyucu fonksiyonla okunur. */
 module.exports = function registerCpImageRoutes(app, deps) {
+  const imageAuthority=require('../lib/collection-image-authority');
   const {
     apiError,
     assertModelImageMutable,
@@ -32,9 +33,10 @@ app.get('/api/cp-images/:id', userAccess.requireAnyArea('cp','orders','backlog',
   try {
     const found = getCollectionImage(req.params.id);
     if (!found) return res.status(404).json({ error: 'CP görseli bulunamadı.' });
+    const privateOwner=imageAuthority.assertAccess(userAccess,req.currentUser,found);
     res.setHeader('Content-Type', found.item.mimeType || 'application/octet-stream');
     res.setHeader('Content-Length', String(fs.statSync(found.full).size));
-    res.setHeader('Cache-Control', 'private, max-age=31536000, immutable');
+    res.setHeader('Cache-Control', privateOwner?'private, no-store':'private, max-age=31536000, immutable');
     /* /api katmanı her yanıta Pragma: no-cache + Expires: 0 ekler. Chromium
        yanıttaki Pragma: no-cache'i Cache-Control: no-cache gibi yorumlar:
        immutable YOK SAYILIR ve her görsel her render'da sunucuya yeniden
@@ -46,7 +48,7 @@ app.get('/api/cp-images/:id', userAccess.requireAnyArea('cp','orders','backlog',
   } catch (err) { apiError(res, err, 'CP görseli okunamadı.'); }
 });
 app.delete('/api/cp-images/:id', userAccess.requireArea('cp'), (req, res) => {
-  try { res.json({ ok: true, deleted: deleteCollectionImage(req.params.id) }); }
+  try { imageAuthority.assertAccess(userAccess,req.currentUser,getCollectionImage(req.params.id),{write:true});res.json({ ok: true, deleted: deleteCollectionImage(req.params.id) }); }
   catch (err) { apiError(res, err, 'CP görseli silinemedi.'); }
 });
 

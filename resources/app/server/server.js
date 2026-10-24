@@ -2659,10 +2659,12 @@ function automationJoinRows(primaryRows,joinRows,recipe){
    Alan seçici (`/dataset-fields`) ile çalıştırma AYNI fonksiyondan geçmeli;
    ayrışırlarsa kullanıcı filtre kurabildiği ama çalışmada var olmayan bir
    alan görürdü. */
-async function automationIntakeRows(ownerId) {
+async function automationIntakeRows(ownerId, assertAuthority=()=>{}) {
+  assertAuthority();
   const snapshot = intakeStore.loadSnapshot(ownerId);
   try {
     const found = await intakeLiveFields();
+    assertAuthority();
     const saved = intakeStoredView(ownerId);
     const viewConfig = intakeReport.reconcileViewConfig(saved || (snapshot && snapshot.viewConfig) || null, found.fields);
     const horizon = intakeHorizon();
@@ -2675,6 +2677,7 @@ async function automationIntakeRows(ownerId) {
       query: built.query, headerMap: built.headerMap, generated: true,
       maxRows: built.maxRows, timeoutMs: 180000,
     });
+    assertAuthority();
     const rows = intakeReport.normalizeRows(result.rows, built.viewConfig);
     const fetchedAt = new Date().toISOString();
     intakeStore.set(queryKey, { rows, fields: found.fields, viewConfig: built.viewConfig, fetchedAt });
@@ -2682,20 +2685,24 @@ async function automationIntakeRows(ownerId) {
     intakeStore.saveSnapshot(ownerId, { queryKey, rows, fields: found.fields, viewConfig: built.viewConfig, fetchedAt });
     return rows;
   } catch (error) {
+    assertAuthority();
     if (snapshot && Array.isArray(snapshot.rows)) return snapshot.rows;
     throw Object.assign(new Error(intakeSafeSourceMessage()), { code: 'INTAKE_SOURCE_UNAVAILABLE', statusCode: 503, cause: error });
   }
 }
 
-async function automationSourceRows(ownerId, profile, source, recipe) {
+async function automationSourceRows(ownerId, profile, source, recipe, assertAuthority=null) {
+  assertAuthority ||= createAutomationAuthority(ownerId,profile,recipe,{allowDisabled:true});
+  profile=assertAuthority()||profile;
   const normalized = String(source || '').trim().toLowerCase();
   if (normalized === 'intake') {
     if (!userAccess.hasArea(profile, 'overview') || !userAccess.hasCapability(profile, 'OAB.VIEW')) {
       throw Object.assign(new Error('INTAKE verisine erişim yetkiniz bulunmuyor.'), { code: 'AREA_FORBIDDEN', statusCode: 403 });
     }
-    return automationIntakeRows(ownerId);
+    return automationIntakeRows(ownerId,assertAuthority);
   }
   const rows = await agentPlatformDataset(ownerId, profile, source);
+  profile=assertAuthority()||profile;
   const list = Array.isArray(rows) ? rows : [];
   /* v9.50 — CP otomasyonu da ekrandaki analizi görür. Aynı ilke: hesap
      public/cp-readiness-engine.js'te, burada yalnız düz alana çevriliyor.
@@ -2729,15 +2736,17 @@ async function automationSourceRows(ownerId, profile, source, recipe) {
     routing,
   });
 }
-async function automationDataset(ownerId, profile, recipe) {
+async function automationDataset(ownerId, profile, recipe, assertAuthority=null) {
+  assertAuthority ||= createAutomationAuthority(ownerId,profile,recipe,{allowDisabled:true});
+  profile=assertAuthority()||profile;
   if (!recipe || recipe.source === 'manual') return { total:1, matched:1, items:null, sample:[], change:{configured:false,baselineReady:false,fields:[]}, changeBaseline:null };
-  let rows = await automationSourceRows(ownerId, profile, recipe.source, recipe);
+  let rows = await automationSourceRows(ownerId, profile, recipe.source, recipe, assertAuthority);
   let joinMeta = null;
   const joinSource = recipe.join && recipe.join.source;
   if (joinSource) {
     // Zincirlenen kaynak da aynı yetki kontrolünden geçer; birleştirme,
     // kullanıcının göremediği bir alana arka kapı olmamalı.
-    const joinRows = await automationSourceRows(ownerId, profile, joinSource, recipe);
+    const joinRows = await automationSourceRows(ownerId, profile, joinSource, recipe, assertAuthority);
     const joined = automationJoinRows(rows, joinRows, recipe);
     rows = joined.rows;
     joinMeta = joined.meta;
@@ -2821,14 +2830,36 @@ function automationEmailGroupsForOwner(ownerId){
   return persisted;
 }
 const automationPreviewCache=new Map();
-function automationPreviewCachePut(ownerId,recipe,data){
+function automationAuthorityStamp(profile){
+  if(!profile)return '';
+  const user=userAccess.publicProfile(profile);
+  return JSON.stringify([user.id,user.enabled,user.status,user.role,user.systemRole,user.orgLevel,user.supervisorId,user.dataScope,user.scopes,user.permissions,user.accessAreas,user.collectionAccess,[...(user.capabilities||[])].sort(),[...(user.delegatedUserIds||[])].sort()]);
+}
+function createAutomationAuthority(ownerId,profile,recipe,{request=null,allowDisabled=false}={}){
+  const stamp=automationAuthorityStamp(profile),orderAuthority=userAccess.orderAuthorityToken?.(),storedAtStart=recipe?.id?automationRecipeStore.recipeForOwner(ownerId,recipe.id):null;
+  const assertAuthority=()=>{
+    const live=request?userAccess.sessionProfile(request):userAccess.profileById(ownerId);
+    const current=storedAtStart?automationRecipeStore.recipeForOwner(ownerId,recipe.id):null;
+    if(!live||live.id!==ownerId||live.enabled===false||live.status!=='ACTIVE'||!userAccess.hasArea(live,'automations')||automationAuthorityStamp(live)!==stamp||userAccess.orderAuthorityToken?.()!==orderAuthority||(storedAtStart&&(!current||!allowDisabled&&current.enabled===false))){
+      throw Object.assign(new Error('Yetki veya çalışma kapsamı değişti. Yeniden deneyin. / Access or source scope changed. Please retry.'),{code:'AUTOMATION_AUTHORITY_CHANGED',statusCode:403});
+    }
+    if(request)request.currentUser=live;
+    return live;
+  };
+  assertAuthority.stamp=stamp;return assertAuthority;
+}
+function automationScheduleOptions(profile,recipe){
+  const assertAuthority=createAutomationAuthority(profile.id,profile,recipe);
+  assertAuthority();return {assertAuthority};
+}
+function automationPreviewCachePut(ownerId,recipe,data,authorityStamp=automationAuthorityStamp(userAccess.profileById(ownerId))){
   const now=Date.now();for(const [token,item] of automationPreviewCache){if(!item||item.expiresAt<=now)automationPreviewCache.delete(token);}
   while(automationPreviewCache.size>=60)automationPreviewCache.delete(automationPreviewCache.keys().next().value);
-  const token=crypto.randomBytes(16).toString('hex');automationPreviewCache.set(token,{ownerId:String(ownerId||''),recipeId:String(recipe&&recipe.id||''),revision:Number(recipe&&recipe.revision)||0,data,expiresAt:now+120000});return token;
+  const token=crypto.randomBytes(16).toString('hex');automationPreviewCache.set(token,{ownerId:String(ownerId||''),recipeId:String(recipe&&recipe.id||''),revision:Number(recipe&&recipe.revision)||0,recipeStamp:crypto.createHash('sha256').update(JSON.stringify(recipe)).digest('hex'),authorityStamp,orderAuthority:userAccess.orderAuthorityToken?.(),data,expiresAt:now+120000});return token;
 }
 function automationPreviewCacheTake(token,ownerId,recipe){
-  const key=String(token||'').trim(),item=automationPreviewCache.get(key);if(!key||!item)return null;automationPreviewCache.delete(key);
-  if(item.expiresAt<=Date.now()||item.ownerId!==String(ownerId||'')||item.recipeId!==String(recipe&&recipe.id||'')||item.revision!==(Number(recipe&&recipe.revision)||0))return null;
+  const key=String(token||'').trim(),item=automationPreviewCache.get(key);if(!key||!item||item.ownerId!==String(ownerId||''))return null;automationPreviewCache.delete(key);
+  if(item.expiresAt<=Date.now()||item.recipeId!==String(recipe&&recipe.id||'')||item.revision!==(Number(recipe&&recipe.revision)||0)||item.recipeStamp!==crypto.createHash('sha256').update(JSON.stringify(recipe)).digest('hex')||item.authorityStamp!==automationAuthorityStamp(userAccess.profileById(ownerId))||item.orderAuthority!==userAccess.orderAuthorityToken?.())return null;
   return item.data;
 }
 function automationState(ownerId, profile=null) {
@@ -2907,7 +2938,7 @@ async function automationRunAppActions(ownerId,profile,recipe,dryRun,assertAutho
   }
   return {results,uiActions};
 }
-const automationExecutor=require('./lib/automation-execution-service').createAutomationExecutor({automationDataset,automationAnalyze,automationRunAppActions,automationSteps,agentBrowserConnector,automationSplitRecipients,automationEmailGroup,automationEmail,backlogAutomation});
+const automationExecutor=require('./lib/automation-execution-service').createAutomationExecutor({automationDataset,automationAnalyze,automationRunAppActions,automationSteps,agentBrowserConnector,automationSplitRecipients,automationEmailGroup,automationEmail,backlogAutomation,createAuthorityGuard:createAutomationAuthority});
 async function automationExecute(ownerId,profile,recipe,options={}) { return automationExecutor(ownerId,profile,recipe,options); }
 function automationAiRequest(code) {
   const raw = String(code == null ? '' : code);
@@ -3000,7 +3031,7 @@ app.put('/api/automations/recipes/:id', userAccess.requireArea('automations'), e
 app.delete('/api/automations/recipes/:id', userAccess.requireArea('automations'), (req,res) => {try{const saved=automationRecipeStore.deleteRecipe(req.currentUser.id,req.params.id);userAccess.appendAudit(req.currentUser,'AUTOMATION_DELETE',saved.result.id,{name:saved.result.name});res.json({ok:true,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon silinemedi.');}});
 app.post('/api/automations/email-groups', userAccess.requireArea('automations'), userAccess.requireModerator, express.json({limit:'512kb'}), (req,res) => {try{const saved=automationRecipeStore.replaceEmailGroups(req.body&&req.body.groups,req.currentUser);userAccess.appendAudit(req.currentUser,'AUTOMATION_EMAIL_GROUPS_UPDATE','email-groups',{groups:saved.result.length});res.json({ok:true,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'E-posta grupları kaydedilemedi.');}});
 
-app.get('/api/automations/mail-drafts/:filename', userAccess.requireArea('automations'), (req,res) => {const full=automationEmail.draftPath(req.params.filename);if(!full)return res.status(404).json({error:'E-posta taslağı bulunamadı.',code:'AUTOMATION_DRAFT_NOT_FOUND'});res.download(full,path.basename(full));});
+app.get('/api/automations/mail-drafts/:filename', userAccess.requireArea('automations'), (req,res) => {const full=automationEmail.draftPath(req.params.filename,req.currentUser.id,'automation');if(!full)return res.status(404).json({error:'E-posta taslağı bulunamadı.',code:'AUTOMATION_DRAFT_NOT_FOUND'});res.download(full,path.basename(full));});
 app.get('/api/automations/browser/status', userAccess.requireArea('automations'), async (req,res) => {try{res.set('Cache-Control','no-store').json({ok:true,status:await agentBrowserConnector.status(req.currentUser.id)});}catch(err){automationError(res,err,'Edge bağlantı durumu okunamadı.');}});
 app.post('/api/automations/browser/prepare-existing-edge', userAccess.requireArea('automations'), async (req,res) => {try{const result=agentBrowserConnector.openExistingEdgeDebugSetup();userAccess.appendAudit(req.currentUser,'AUTOMATION_BROWSER_EXISTING_EDGE_SETUP','edge',{userDataDir:result.userDataDir});res.json({ok:true,result,status:await agentBrowserConnector.status(req.currentUser.id)});}catch(err){automationError(res,err,'Mevcut Edge profili bağlantı ekranı açılamadı.');}});
 app.post('/api/automations/browser/open', userAccess.requireArea('automations'), express.json({limit:'32kb'}), async (req,res) => {try{const result=await agentBrowserConnector.openConnection(req.currentUser.id,String(req.body&&req.body.url||''));userAccess.appendAudit(req.currentUser,'AUTOMATION_BROWSER_OPEN',result.url,{openMode:result.openMode});res.json({ok:true,result});}catch(err){automationError(res,err,'Web sekmesi açılamadı.');}});
@@ -3009,10 +3040,10 @@ app.get('/api/automations/browser/record/:id', userAccess.requireArea('automatio
 app.post('/api/automations/browser/record/:id/stop', userAccess.requireArea('automations'), async (req,res) => {try{const recording=await agentBrowserConnector.stopRecording(req.currentUser.id,req.params.id);userAccess.appendAudit(req.currentUser,'AUTOMATION_RECORD_STOP',recording.id,{url:recording.url,steps:recording.steps.length});res.json({ok:true,recording});}catch(err){automationError(res,err,'Otomasyon kaydı durdurulamadı.');}});
 app.post('/api/automations/browser/settings', userAccess.requireArea('automations'), userAccess.requireModerator, express.json({limit:'32kb'}), (req,res) => {try{const saved=agentBrowserSettings.saveSettings(req.body||{},req.currentUser);userAccess.appendAudit(req.currentUser,'AUTOMATION_BROWSER_SETTINGS_UPDATE','browser',{allowedHosts:saved.allowedHosts});res.json({ok:true,browser:{...saved,canConfigure:true,managedPort:agentBrowserConnector.managedCdpPort()},state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Browser ayarları kaydedilemedi.');}});
 app.post('/api/automations/recipes/:id/preview', userAccess.requireArea('automations'), async (req,res) => {
-  try{const recipe=automationRecipeStore.recipeForOwner(req.currentUser.id,req.params.id);if(!recipe)return res.status(404).json({error:'Otomasyon bulunamadı.',code:'AUTOMATION_NOT_FOUND'});const data=await automationDataset(req.currentUser.id,req.currentUser,recipe);if(recipe.source!=='manual'&&!data.matched&&!(data.change&&data.change.configured))throw Object.assign(new Error('Filtrelere uyan kayıt bulunamadı.'),{code:'AUTOMATION_NO_MATCH',statusCode:409});const run=automationRecipeStore.createRun(req.currentUser.id,recipe,{dryRun:true,source:recipe.source,matched:data.matched}).result;const result=await automationExecute(req.currentUser.id,req.currentUser,recipe,{dryRun:true,trigger:'manual',dataset:data});if(data.fieldCheck)result.fieldCheck=data.fieldCheck;automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:'dry_run',processed:result.willProcess||0,failed:0,result,message:'Dry Run başarılı.',finishedAt:new Date().toISOString()});userAccess.appendAudit(req.currentUser,'AUTOMATION_DRY_RUN',recipe.id,{name:recipe.name,purpose:recipe.purpose,source:recipe.source,matched:data.matched});const previewToken=automationPreviewCachePut(req.currentUser.id,recipe,data);res.json({ok:true,preview:result,previewToken,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon ön izlemesi oluşturulamadı.');}
+  try{const recipe=automationRecipeStore.recipeForOwner(req.currentUser.id,req.params.id);if(!recipe)return res.status(404).json({error:'Otomasyon bulunamadı.',code:'AUTOMATION_NOT_FOUND'});const assertAuthority=createAutomationAuthority(req.currentUser.id,req.currentUser,recipe,{request:req,allowDisabled:true});assertAuthority();const data=await automationDataset(req.currentUser.id,req.currentUser,recipe,assertAuthority);assertAuthority();if(recipe.source!=='manual'&&!data.matched&&!(data.change&&data.change.configured))throw Object.assign(new Error('Filtrelere uyan kayıt bulunamadı.'),{code:'AUTOMATION_NO_MATCH',statusCode:409});const run=automationRecipeStore.createRun(req.currentUser.id,recipe,{dryRun:true,source:recipe.source,matched:data.matched}).result;const result=await automationExecute(req.currentUser.id,req.currentUser,recipe,{dryRun:true,trigger:'manual',dataset:data,assertAuthority});if(data.fieldCheck)result.fieldCheck=data.fieldCheck;automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:'dry_run',processed:result.willProcess||0,failed:0,result,message:'Dry Run başarılı.',finishedAt:new Date().toISOString()});userAccess.appendAudit(req.currentUser,'AUTOMATION_DRY_RUN',recipe.id,{name:recipe.name,purpose:recipe.purpose,source:recipe.source,matched:data.matched});const previewToken=automationPreviewCachePut(req.currentUser.id,recipe,data,assertAuthority.stamp);res.json({ok:true,preview:result,previewToken,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){automationError(res,err,'Otomasyon ön izlemesi oluşturulamadı.');}
 });
 app.post('/api/automations/recipes/:id/run', userAccess.requireArea('automations'), express.json({limit:'16kb'}), async (req,res) => {
-  let run=null,recipe=null;try{recipe=automationRecipeStore.recipeForOwner(req.currentUser.id,req.params.id);if(!recipe)return res.status(404).json({error:'Otomasyon bulunamadı.',code:'AUTOMATION_NOT_FOUND'});if(recipe.enabled===false)throw Object.assign(new Error('Otomasyon devre dışı.'),{code:'AUTOMATION_DISABLED',statusCode:409});const cached=automationPreviewCacheTake(req.body&&req.body.previewToken,req.currentUser.id,recipe),data=cached||await automationDataset(req.currentUser.id,req.currentUser,recipe);if(recipe.source!=='manual'&&!data.matched&&!(data.change&&data.change.configured))throw Object.assign(new Error('Filtrelere uyan kayıt bulunamadı.'),{code:'AUTOMATION_NO_MATCH',statusCode:409});run=automationRecipeStore.createRun(req.currentUser.id,recipe,{dryRun:false,source:recipe.source,matched:data.matched,trigger:'manual'}).result;userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_START',recipe.id,{name:recipe.name,purpose:recipe.purpose,source:recipe.source,matched:data.matched});const result=await automationExecute(req.currentUser.id,req.currentUser,recipe,{dryRun:false,trigger:'manual',dataset:data});if(result.changeBaseline&&!result.failed&&result.outcome!=='partial')automationRecipeStore.setChangeBaseline(req.currentUser.id,recipe.id,result.changeBaseline);const finished=automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:result.outcome==='partial'?'partial':result.failed?'failed':'completed',processed:Number(result.processed)||0,failed:Number(result.failed)||0,result,message:result.failed?`${result.failed} kayıt başarısız.`:'Otomasyon tamamlandı.',finishedAt:new Date().toISOString()}).result;userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_FINISH',recipe.id,{runId:run.id,processed:finished.processed,failed:finished.failed,status:finished.status});res.json({ok:!result.failed,result,run:finished,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){if(run){try{automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:'failed',message:err.message,failed:1,finishedAt:new Date().toISOString(),result:err.details||null});}catch(err2){logRuntimeFailure('automationUpdateRunFailed',err2);}userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_FAIL',recipe&&recipe.id||'',{runId:run.id,error:err.message,code:err.code||'AUTOMATION_FAILED'});}automationError(res,err,'Otomasyon çalıştırılamadı.');}
+  let run=null,recipe=null;try{recipe=automationRecipeStore.recipeForOwner(req.currentUser.id,req.params.id);if(!recipe)return res.status(404).json({error:'Otomasyon bulunamadı.',code:'AUTOMATION_NOT_FOUND'});if(recipe.enabled===false)throw Object.assign(new Error('Otomasyon devre dışı.'),{code:'AUTOMATION_DISABLED',statusCode:409});const assertAuthority=createAutomationAuthority(req.currentUser.id,req.currentUser,recipe,{request:req});assertAuthority();const cached=automationPreviewCacheTake(req.body&&req.body.previewToken,req.currentUser.id,recipe),data=cached||await automationDataset(req.currentUser.id,req.currentUser,recipe,assertAuthority);assertAuthority();if(recipe.source!=='manual'&&!data.matched&&!(data.change&&data.change.configured))throw Object.assign(new Error('Filtrelere uyan kayıt bulunamadı.'),{code:'AUTOMATION_NO_MATCH',statusCode:409});run=automationRecipeStore.createRun(req.currentUser.id,recipe,{dryRun:false,source:recipe.source,matched:data.matched,trigger:'manual'}).result;userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_START',recipe.id,{name:recipe.name,purpose:recipe.purpose,source:recipe.source,matched:data.matched});const result=await automationExecute(req.currentUser.id,req.currentUser,recipe,{dryRun:false,trigger:'manual',dataset:data,assertAuthority});if(result.changeBaseline&&!result.failed&&result.outcome!=='partial')automationRecipeStore.setChangeBaseline(req.currentUser.id,recipe.id,result.changeBaseline);const finished=automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:result.outcome==='partial'?'partial':result.failed?'failed':'completed',processed:Number(result.processed)||0,failed:Number(result.failed)||0,result,message:result.failed?`${result.failed} kayıt başarısız.`:'Otomasyon tamamlandı.',finishedAt:new Date().toISOString()}).result;userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_FINISH',recipe.id,{runId:run.id,processed:finished.processed,failed:finished.failed,status:finished.status});res.json({ok:!result.failed,result,run:finished,state:automationState(req.currentUser.id,req.currentUser)});}catch(err){if(run){try{automationRecipeStore.updateRun(req.currentUser.id,run.id,{status:'failed',message:err.message,failed:1,finishedAt:new Date().toISOString(),result:err.details||null});}catch(err2){logRuntimeFailure('automationUpdateRunFailed',err2);}userAccess.appendAudit(req.currentUser,'AUTOMATION_RUN_FAIL',recipe&&recipe.id||'',{runId:run.id,error:err.message,code:err.code||'AUTOMATION_FAILED'});}automationError(res,err,'Otomasyon çalıştırılamadı.');}
 });
 
 /* v6.36 — Kaçırılan tetik uçları. Açılışta istemci pending-triggers'ı sorar;
@@ -5489,7 +5520,7 @@ app.post('/api/oab/report', userAccess.requireAnyArea('overview'), userAccess.re
    doğrudan LCW AI HTTP API'sine gider. */
 require('./routes/lcwai-routes')(app, { express, userAccess, outputTemplates: { load: loadAiOutputTemplates, add: addAiOutputTemplate, update: updateAiOutputTemplate, remove: deleteAiOutputTemplate } });
 
-const automationScheduledRunner=require('./lib/automation-scheduled-runner').createScheduledRunner({store:automationRecipeStore,scheduleOptions:async()=>({}),dataset:automationDataset,execute:automationExecute,executor:{pid:process.pid,host:os.hostname(),instanceId:crypto.randomUUID()}});
+const automationScheduledRunner=require('./lib/automation-scheduled-runner').createScheduledRunner({store:automationRecipeStore,scheduleOptions:automationScheduleOptions,dataset:automationDataset,execute:automationExecute,executor:{pid:process.pid,host:os.hostname(),instanceId:crypto.randomUUID()}});
 
 const nativeOabBatchService = require('./lib/oab-batch-service').createOabBatchService({ensurePassConnected,fetchOabReportWithLoginRecovery,logRuntimeFailure,oabBatch,oabSessionStore,oabStaticMetadata,oabStore,redactSecrets,userAccess});
 require('./routes/oab-batch-routes')(app, {
@@ -12120,13 +12151,7 @@ app.get('/api/collection-images/:id', userAccess.requireAnyArea('source','koleks
     if (!found) return res.status(404).json({ error: 'Koleksiyon görseli bulunamadı.' });
     // A recipient's locally cached Collection image must not be accessible to
     // other accounts just because they can read generic CP/Orders images.
-    const rowId = String(found.item && found.item.rowId || '');
-    const sharedPrefix = 'collection-shared:';
-    const sharedOwner = rowId.startsWith(sharedPrefix)
-      ? rowId.slice(sharedPrefix.length).split(':')[0] : '';
-    if (rowId.startsWith(sharedPrefix) && (!sharedOwner || !userAccess.collectionAccessLevel(req.currentUser, sharedOwner))) {
-      return res.status(403).json({ error:'Bu paylaşılan Koleksiyon görseline erişim izniniz yok.', code:'COLLECTION_ACCESS_DENIED' });
-    }
+    const sharedOwner = require('./lib/collection-image-authority').assertAccess(userAccess,req.currentUser,found);
     res.setHeader('Content-Type', found.item.mimeType || 'application/octet-stream');
     res.setHeader('Content-Length', String(fs.statSync(found.full).size));
     res.setHeader('Cache-Control', sharedOwner ? 'private, no-store' : 'private, max-age=31536000, immutable');
@@ -12210,7 +12235,7 @@ app.delete('/api/model-images/all', userAccess.requireArea('source'), userAccess
   }
 });
 app.delete('/api/collection-images/:id', userAccess.requireArea('koleksiyon'), (req, res) => {
-  try { res.json({ ok: true, deleted: deleteCollectionImage(req.params.id) }); }
+  try { require('./lib/collection-image-authority').assertAccess(userAccess,req.currentUser,getCollectionImage(req.params.id),{write:true});res.json({ ok: true, deleted: deleteCollectionImage(req.params.id) }); }
   catch (err) { apiError(res, err, 'Koleksiyon görseli silinemedi.'); }
 });
 
@@ -12284,10 +12309,12 @@ function pruneTransientDrafts(){
   const excess=emailDraftReopenRegistry.size-EMAIL_DRAFT_REOPEN_MAX+1;
   [...emailDraftReopenRegistry.entries()].sort((a,b)=>Number(a[1]?.createdAt||0)-Number(b[1]?.createdAt||0)).slice(0,excess).forEach(([id])=>expireTransientDraft(id));
 }
-function registerTransientDraft(fullPath,filename){
+function registerTransientDraft(fullPath,filename,ownerId){
+  const owner=String(ownerId||'').trim();
+  if(!owner)throw Object.assign(new Error('Taslak sahibi gerekli. / Draft owner required.'),{code:'USER_LOGIN_REQUIRED',statusCode:401});
   pruneTransientDrafts();
   const draftId=crypto.randomBytes(16).toString('hex'),createdAt=Date.now(),expiresAt=createdAt+EMAIL_DRAFT_REOPEN_TTL_MS;
-  emailDraftReopenRegistry.set(draftId,{draftId,fullPath,filename:String(filename||''),createdAt,expiresAt,timer:null});
+  emailDraftReopenRegistry.set(draftId,{draftId,ownerId:owner,fullPath,filename:String(filename||''),createdAt,expiresAt,timer:null});
   scheduleTransientDraftCleanup(draftId);
   return {draftId,reopenUntil:new Date(expiresAt).toISOString()};
 }
@@ -12413,7 +12440,7 @@ app.post('/api/email-drafts/pricing', (req, res) => {
     ensureEmailDraftDir();
     fullPath = path.join(EMAIL_DRAFT_DIR, filename);
     fs.writeFileSync(fullPath, emlText, 'utf8');
-    const draftRef=registerTransientDraft(fullPath,filename);draftId=draftRef.draftId;
+    const draftRef=registerTransientDraft(fullPath,filename,req.currentUser&&req.currentUser.id);draftId=draftRef.draftId;
     const opened = openEmailDraft(fullPath);
     if(opened){
       return res.json({ok:true,filename,opened:true,transient:true,attachmentBytes,...draftRef});
@@ -12432,11 +12459,15 @@ app.post('/api/email-drafts/pricing', (req, res) => {
 // yalnız bu çalışan Buyer Log sürecinin RAM'indeki kayıtla eşleşir.
 app.post('/api/email-drafts/pricing/reopen', (req, res) => {
   try{
-    pruneTransientDrafts();
     const draftId=String(req.body&&req.body.draftId||'').trim();
     if(!/^[a-f0-9]{32}$/.test(draftId))return res.status(400).json({error:'Geçersiz taslak referansı.'});
     const item=emailDraftReopenRegistry.get(draftId);
-    if(!item||!item.fullPath||!fs.existsSync(item.fullPath)){if(item)expireTransientDraft(draftId);return res.status(410).json({error:'Taslak yeniden açma süresi doldu. Send to Pricing ile yeni bir taslak hazırlayın.'});}
+    const unavailable=()=>res.status(410).json({error:'Taslak yeniden açma süresi doldu. Send to Pricing ile yeni bir taslak hazırlayın.',errorEn:'Draft reopening is unavailable. Use Send to Pricing to prepare a new draft.'});
+    // A random reference is not authority. Check its selected owner before any
+    // file read, OS opening, expiry extension or cleanup caused by this request.
+    if(!item||!item.ownerId||item.ownerId!==String(req.currentUser&&req.currentUser.id||''))return unavailable();
+    pruneTransientDrafts();
+    if(!emailDraftReopenRegistry.has(draftId)||!item.fullPath||!fs.existsSync(item.fullPath)){expireTransientDraft(draftId);return unavailable();}
     const opened=openEmailDraft(item.fullPath);
     const refreshed=touchTransientDraft(draftId)||{draftId,reopenUntil:new Date(item.expiresAt).toISOString()};
     const payload={ok:true,opened:Boolean(opened),filename:item.filename,transient:true,...refreshed};

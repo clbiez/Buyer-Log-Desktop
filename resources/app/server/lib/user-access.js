@@ -270,10 +270,24 @@ function legacyAccessCandidates() {
 function migrateLegacyAuthStoreIfNeeded() {
   if (AUTH_DATA_ROOT === SERVER_DATA_ROOT) return false;
   const current = accessStoreQuality(ACCESS_FILE);
+  const protectedModerator=quality=>{
+    const moderator=quality&&quality.parsed&&quality.parsed.moderator;
+    return Boolean(moderator&&typeof moderator==='object'&&!Array.isArray(moderator)&&credentialHash(moderator));
+  };
+  // A local primary with protected moderator credentials (or an established
+  // central fallback) is authority, including disabled/deleted-user decisions.
+  // Structurally partial local stores still require protected recovery below.
+  // Historical copies are recovery
+  // inputs, not newer grants: more active accounts must never revive a revoked
+  // account or replace a working directory on a cold read/restart.
+  if (current && current.credentialCount > 0 && (centralConfigured || protectedModerator(current))) return false;
   const candidates = legacyAccessCandidates().map(accessStoreQuality).filter(Boolean).sort(compareAccessStoreQuality);
-  const best = candidates[0]; if (!best) return false;
-  let shouldImport = !current;
-  if (current) {
+  const partialLocal=Boolean(current&&current.credentialCount>0&&!centralConfigured&&!protectedModerator(current));
+  const best=partialLocal?candidates.find(candidate=>protectedModerator(candidate)&&hasUsableOfflineAuthStore(candidate.parsed)):candidates[0];
+  if(partialLocal&&!best)throw Object.assign(new Error('Kullanıcı deposu ve yedeği doğrulanamadı.'),{code:'IAM_LOCAL_INVALID',statusCode:503});
+  if (!best) return false;
+  let shouldImport = !current||partialLocal;
+  if (current&&!partialLocal) {
     // If the active store cannot authenticate ANY active account, a usable
     // historical store must win even if the broken/placeholder file has a newer
     // revision. This is the exact state exposed by the login screen as
@@ -2452,6 +2466,8 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
   }
   return {
     syncProfiles: syncProfilesForAccess, mergeCatalogValues, authoritativeOrderRows, sessionProfile, publicProfile,
+    // Opaque in-process identity; replaced whenever canonical order authority changes.
+    orderAuthorityToken: () => authoritySnapshot,
     canEditOrder: (profile, order, options = {}) => canEditOrder(profile, order, readStore(), { ...options, orderAccess:authoritySnapshot }),
     sharedOwnerOf: (recordId, userId) => {
       const store = readStore(), profile = findProfile(store, clean(userId));

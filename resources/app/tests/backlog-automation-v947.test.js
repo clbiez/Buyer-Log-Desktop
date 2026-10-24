@@ -158,7 +158,7 @@ test('v9.47 e-posta dili tarifle taşınır; varsayılan TR ve sabit', () => {
 
 test('v9.47 sunucu bağlantısı: alan seçici ile çalıştırma AYNI satır üreticisinden geçer', () => {
   const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
-  assert.match(server, /async function automationSourceRows\(ownerId, profile, source, recipe\)/);
+  assert.match(server, /async function automationSourceRows\(ownerId, profile, source, recipe, assertAuthority=null\)/);
   assert.match(server, /if \(source !== 'backlog'\) return list;/);
   // dataset-fields ve dataset-values artık ham agentPlatformDataset'i DEĞİL,
   // zenginleştirilmiş yolu kullanmalı; yoksa kullanıcı filtre kurabildiği ama

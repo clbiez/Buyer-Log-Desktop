@@ -1170,6 +1170,93 @@
           "en": "The queued operation using the demo account’s old session returned 403 without changing its preference file. The sign-in screen was opened, and the active account signed in again with its new password."
         }
       }
+    },
+    {
+      "id": "private-pricing-draft-reopen",
+      "module": {
+        "tr": "Koleksiyon · Fiyat talebi",
+        "en": "Collection · Pricing request"
+      },
+      "title": {
+        "tr": "Fiyat taslağı yalnız sahibi tarafından yeniden açılır",
+        "en": "Pricing drafts reopen only for their owner"
+      },
+      "body": {
+        "tr": "Geçici taslak bağlantısı kullanıcıya bağlandı; başka bir hesabın bağlantıyı bilmesi içerik veya açma izni vermez. Sonuç penceresindeki yeniden açma düğmesinin çalışmaması da düzeltildi.",
+        "en": "Temporary draft references are bound to their creator; knowing another account’s reference grants neither content nor reopen access. The result modal’s inactive reopen button was also fixed."
+      },
+      "type": "fix",
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "private-pricing-draft.png",
+        "alt": {
+          "tr": "Fiyat taslağı yalnız sahibi tarafından yeniden açılır · gerçek Buyer Log demo ekranı",
+          "en": "Pricing drafts reopen only for their owner · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sentetik kullanıcılarla gerçek arayüz; dosya ve yetki sınırları ayrıca üretim sunucusu testlerinde doğrulandı.",
+          "en": "Actual UI with synthetic users; file and authority boundaries were also verified against the production server."
+        }
+      }
+    },
+    {
+      "id": "private-assets-live-automation-authority",
+      "module": {
+        "tr": "Otomasyonlar · Özel dosyalar",
+        "en": "Automations · Private assets"
+      },
+      "title": {
+        "tr": "Özel çıktılar ve görseller güncel erişimle korunur",
+        "en": "Private outputs and images follow current access"
+      },
+      "body": {
+        "tr": "Otomasyon taslakları kullanıcıya özel tutulur. Yetki veya sipariş sahipliği değişirse eski önizleme ve devam eden iş durdurulur. Özel Koleksiyon görselleri CP adresinden de korunur; lisans görseli yüklenirken değişen oturum yeniden kontrol edilir.",
+        "en": "Automation drafts are stored per user. Permission or order ownership changes invalidate old previews and stop ongoing work. Private Collection images are also protected through CP URLs; session authority is rechecked after license image loading."
+      },
+      "type": "fix",
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "private-automation-output.png",
+        "alt": {
+          "tr": "Özel çıktılar ve görseller güncel erişimle korunur · gerçek Buyer Log demo ekranı",
+          "en": "Private outputs and images follow current access · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sentetik kullanıcılarla gerçek arayüz; dosya ve yetki sınırları ayrıca üretim sunucusu testlerinde doğrulandı.",
+          "en": "Actual UI with synthetic users; file and authority boundaries were also verified against the production server."
+        }
+      }
+    },
+    {
+      "id": "local-iam-preserves-revocation",
+      "module": {
+        "tr": "Kullanıcı yönetimi · Kurtarma",
+        "en": "User management · Recovery"
+      },
+      "title": {
+        "tr": "Eski yedekler pasif hesapları yeniden etkinleştirmez",
+        "en": "Older backups cannot reactivate disabled accounts"
+      },
+      "body": {
+        "tr": "Geçerli yerel kullanıcı deposundaki pasif veya silinmiş hesap kararları eski kopyalarla geri alınmaz. Eksik moderatör bilgisi güvenli yedekle kurtarılır; doğrulanamayan durumda yeni boş yönetici oluşturulmaz.",
+        "en": "Disabled or deleted account decisions in a valid local directory are not rolled back from older copies. Missing moderator credentials require protected recovery; unverifiable stores do not create a blank administrator."
+      },
+      "type": "fix",
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "inactive-account-stays-disabled.png",
+        "alt": {
+          "tr": "Eski yedekler pasif hesapları yeniden etkinleştirmez · gerçek Buyer Log demo ekranı",
+          "en": "Older backups cannot reactivate disabled accounts · actual Buyer Log demo screen"
+        },
+        "caption": {
+          "tr": "Sentetik kullanıcılarla gerçek arayüz; dosya ve yetki sınırları ayrıca üretim sunucusu testlerinde doğrulandı.",
+          "en": "Actual UI with synthetic users; file and authority boundaries were also verified against the production server."
+        }
+      }
     }
   ]
 }

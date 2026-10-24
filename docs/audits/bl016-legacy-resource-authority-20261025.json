@@ -1,0 +1,460 @@
+{
+  "package": "BL-016",
+  "base": "e370a45283570814e96f0aa64ac5795121122716",
+  "status": "Implemented, focused/native verified; final integrated full/CI/merge pending",
+  "scope": "Bounded legacy resource families in the accompanying policy table; not whole-application penetration-test certification",
+  "sources": [
+    {
+      "file": "server/server.js",
+      "sha256Lf": "2fb332a90f3b76a020116ddd8cb6addfc0c337ee3e4c6253ffe60ecd8db652b6"
+    },
+    {
+      "file": "server/lib/user-access.js",
+      "sha256Lf": "6065ee48615f3e59a5c8c26460a0874afa6466bb04970a430c992a0304e8a5a8"
+    },
+    {
+      "file": "server/lib/automation-email.js",
+      "sha256Lf": "b3b754cff9e297a609fcc19ea6ec0df3c1aef9c9250d7b9f268854369e16f370"
+    },
+    {
+      "file": "server/lib/automation-execution-service.js",
+      "sha256Lf": "5cf173e914715ec8405474227b78259e940b72ddbd5004b4ea3e86e986018447"
+    },
+    {
+      "file": "server/lib/automation-scheduled-runner.js",
+      "sha256Lf": "68d18aec80d77747772f321f6d94acc2ab3e60b56b67ac5002ab8f749287252f"
+    },
+    {
+      "file": "server/lib/agent-browser-connector.js",
+      "sha256Lf": "d61f45cdd5e79b36eb2dc19532e90962cda39194eba9b6240fb23b444043f0d2"
+    },
+    {
+      "file": "server/lib/collection-image-authority.js",
+      "sha256Lf": "c2f576f24e2be263cd03083438f5a1de592785e2a1417f5471d2e389d78df519"
+    },
+    {
+      "file": "server/routes/cp-image-routes.js",
+      "sha256Lf": "559c2790b170dca20761e91c1cc643404262edd449dd7a23449e3d22a2082784"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "sha256Lf": "99a15f611944d717792ccf88fdca1b421715f694039d739ec9131e075ae7f116"
+    },
+    {
+      "file": "server/routes/checklist-supplier-routes.js",
+      "sha256Lf": "70d8e4195ac6dfd7103fa5293551b49befd6a89cab137dd4584660c9f8af2611"
+    },
+    {
+      "file": "server/routes/test-report-routes.js",
+      "sha256Lf": "fea58c175084825b25cc3fbd2ed7f4fb752d5ecdeb2074a01abaf12eb53207cd"
+    },
+    {
+      "file": "server/routes/fabric-card-routes.js",
+      "sha256Lf": "e5a6128969a2e234abc51305e1451f2bbcf53048f1a8a2a5f6d370c8c9496172"
+    },
+    {
+      "file": "public/app-main.js",
+      "sha256Lf": "b93023ec982b555904e2b0f07e66731807648bf8fc33473a5698bc7f43455ed1"
+    }
+  ],
+  "literalRouteInventory": [
+    {
+      "file": "server/server.js",
+      "line": 2165,
+      "method": "GET",
+      "route": "/api/auth/users/suggest"
+    },
+    {
+      "file": "server/server.js",
+      "line": 2166,
+      "method": "POST",
+      "route": "/api/user-login"
+    },
+    {
+      "file": "server/server.js",
+      "line": 2323,
+      "method": "GET",
+      "route": "/api/users/admin"
+    },
+    {
+      "file": "server/server.js",
+      "line": 2329,
+      "method": "POST",
+      "route": "/api/iam/users/bulk"
+    },
+    {
+      "file": "server/server.js",
+      "line": 2330,
+      "method": "POST",
+      "route": "/api/users"
+    },
+    {
+      "file": "server/server.js",
+      "line": 2331,
+      "method": "PUT",
+      "route": "/api/users/:id"
+    },
+    {
+      "file": "server/server.js",
+      "line": 2344,
+      "method": "POST",
+      "route": "/api/iam/users/:id/temporary-grants"
+    },
+    {
+      "file": "server/server.js",
+      "line": 2345,
+      "method": "DELETE",
+      "route": "/api/iam/users/:id/temporary-grants/:grantId"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3034,
+      "method": "GET",
+      "route": "/api/automations/mail-drafts/:filename"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3594,
+      "method": "GET",
+      "route": "/api/collection-workspaces"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3662,
+      "method": "GET",
+      "route": "/api/collection-workspaces-batch"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3681,
+      "method": "GET",
+      "route": "/api/collection-workspaces/:ownerId"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3714,
+      "method": "PUT",
+      "route": "/api/collection-workspaces/:ownerId"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3759,
+      "method": "GET",
+      "route": "/api/user-preferences"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3777,
+      "method": "PUT",
+      "route": "/api/user-preferences"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3784,
+      "method": "POST",
+      "route": "/api/user-preferences/delete"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3793,
+      "method": "GET",
+      "route": "/api/user-workspace/:module"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3797,
+      "method": "PUT",
+      "route": "/api/user-workspace/:module/horizon"
+    },
+    {
+      "file": "server/server.js",
+      "line": 3802,
+      "method": "POST",
+      "route": "/api/user-workspace/:module/reset"
+    },
+    {
+      "file": "server/server.js",
+      "line": 9760,
+      "method": "POST",
+      "route": "/api/overrides/batch"
+    },
+    {
+      "file": "server/server.js",
+      "line": 9781,
+      "method": "PATCH",
+      "route": "/api/overrides/:orderCode"
+    },
+    {
+      "file": "server/server.js",
+      "line": 9993,
+      "method": "POST",
+      "route": "/api/overrides/batch-suppfob"
+    },
+    {
+      "file": "server/server.js",
+      "line": 12148,
+      "method": "GET",
+      "route": "/api/collection-images/:id"
+    },
+    {
+      "file": "server/server.js",
+      "line": 12237,
+      "method": "DELETE",
+      "route": "/api/collection-images/:id"
+    },
+    {
+      "file": "server/server.js",
+      "line": 12426,
+      "method": "POST",
+      "route": "/api/email-drafts/pricing"
+    },
+    {
+      "file": "server/server.js",
+      "line": 12460,
+      "method": "POST",
+      "route": "/api/email-drafts/pricing/reopen"
+    },
+    {
+      "file": "server/server.js",
+      "line": 12480,
+      "method": "GET",
+      "route": "/api/email-drafts/:filename"
+    },
+    {
+      "file": "server/routes/cp-image-routes.js",
+      "line": 24,
+      "method": "POST",
+      "route": "/api/cp-images"
+    },
+    {
+      "file": "server/routes/cp-image-routes.js",
+      "line": 32,
+      "method": "GET",
+      "route": "/api/cp-images/:id"
+    },
+    {
+      "file": "server/routes/cp-image-routes.js",
+      "line": 50,
+      "method": "DELETE",
+      "route": "/api/cp-images/:id"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 31,
+      "method": "GET",
+      "route": "/api/license-cards"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 35,
+      "method": "GET",
+      "route": "/api/license-cards/assets/:name"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 44,
+      "method": "GET",
+      "route": "/api/license-cards/atlas-library"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 48,
+      "method": "POST",
+      "route": "/api/license-cards/refresh"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 52,
+      "method": "PUT",
+      "route": "/api/license-cards/:id/licensor"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 59,
+      "method": "PUT",
+      "route": "/api/license-cards/licensor-merges"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 66,
+      "method": "POST",
+      "route": "/api/license-cards/stage-templates"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 73,
+      "method": "DELETE",
+      "route": "/api/license-cards/stage-templates/:templateId"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 80,
+      "method": "PUT",
+      "route": "/api/license-cards/atlas-batch"
+    },
+    {
+      "file": "server/routes/license-card-routes.js",
+      "line": 87,
+      "method": "PUT",
+      "route": "/api/license-cards/:id"
+    },
+    {
+      "file": "server/routes/checklist-supplier-routes.js",
+      "line": 43,
+      "method": "GET",
+      "route": "/api/checklist-supplier"
+    },
+    {
+      "file": "server/routes/checklist-supplier-routes.js",
+      "line": 50,
+      "method": "POST",
+      "route": "/api/checklist-supplier/answers"
+    },
+    {
+      "file": "server/routes/checklist-supplier-routes.js",
+      "line": 65,
+      "method": "POST",
+      "route": "/api/checklist-supplier/definitions"
+    },
+    {
+      "file": "server/routes/checklist-supplier-routes.js",
+      "line": 75,
+      "method": "POST",
+      "route": "/api/checklist-supplier/attachments"
+    },
+    {
+      "file": "server/routes/test-report-routes.js",
+      "line": 37,
+      "method": "GET",
+      "route": "/api/test-reports"
+    },
+    {
+      "file": "server/routes/test-report-routes.js",
+      "line": 45,
+      "method": "GET",
+      "route": "/api/test-reports/tasks"
+    },
+    {
+      "file": "server/routes/test-report-routes.js",
+      "line": 50,
+      "method": "POST",
+      "route": "/api/test-reports/parse"
+    },
+    {
+      "file": "server/routes/test-report-routes.js",
+      "line": 56,
+      "method": "GET",
+      "route": "/api/test-reports/staged/:sessionId/:fileId"
+    },
+    {
+      "file": "server/routes/test-report-routes.js",
+      "line": 67,
+      "method": "POST",
+      "route": "/api/test-reports/ai-report"
+    },
+    {
+      "file": "server/routes/test-report-routes.js",
+      "line": 72,
+      "method": "POST",
+      "route": "/api/test-reports/prepare-review"
+    },
+    {
+      "file": "server/routes/test-report-routes.js",
+      "line": 76,
+      "method": "POST",
+      "route": "/api/test-reports/ai-assessment"
+    },
+    {
+      "file": "server/routes/test-report-routes.js",
+      "line": 81,
+      "method": "POST",
+      "route": "/api/test-reports/commit"
+    },
+    {
+      "file": "server/routes/fabric-card-routes.js",
+      "line": 30,
+      "method": "GET",
+      "route": "/api/fabric-cards"
+    },
+    {
+      "file": "server/routes/fabric-card-routes.js",
+      "line": 35,
+      "method": "POST",
+      "route": "/api/fabric-cards"
+    },
+    {
+      "file": "server/routes/fabric-card-routes.js",
+      "line": 47,
+      "method": "DELETE",
+      "route": "/api/fabric-cards/:code"
+    },
+    {
+      "file": "server/routes/checklist-supplier-routes.js",
+      "method": "GET|DELETE",
+      "route": "/api/checklist-supplier/attachments/:id",
+      "registration": "app[method] loop; explicitly classified in policy table"
+    }
+  ],
+  "focused": {
+    "files": 58,
+    "tests": 366,
+    "pass": 365,
+    "fail": 0,
+    "skip": 1,
+    "seconds": 4.6,
+    "log": "work/bl016-focused-final.log",
+    "sha256Lf": "52126263c6b15db49d078af26d093501c8a0cdadbf93732678f81cd749d51530"
+  },
+  "native": {
+    "scope": "Actual production Buyer Log server and Edge UI, isolated synthetic buyers only; OS file opening replaced, no email sent",
+    "phases": [
+      {
+        "name": "native-pricing-reopen",
+        "owner": 200,
+        "foreign": 410,
+        "noForeignContent": true
+      },
+      {
+        "name": "native-automation-history-and-download",
+        "owner": 200,
+        "foreign": 404,
+        "TR_EN": true
+      },
+      {
+        "name": "native-inactive-login",
+        "oldCookie": 401,
+        "newLogin": 403
+      }
+    ],
+    "pageErrors": [],
+    "ok": true,
+    "root": "C:\\Users\\clbiez\\Documents\\Codex\\2026-10-24\\g\\work\\test-runs\\bl016-native-Gqjoxh"
+  },
+  "review": {
+    "agent": "review_wal_recovery",
+    "localBoundary": {
+      "rounds": 1,
+      "result": "Partial moderator-less primary finding fixed; protected recovery and central fallback priority tested"
+    },
+    "normalAutomationBoundary": {
+      "rounds": 1,
+      "findings": 2,
+      "result": "Scheduler preparation guard and canonical ownership cache invalidation fixed; no second round"
+    },
+    "reviewerRanTests": false
+  },
+  "limits": [
+    "Codebase Memory transport unavailable; direct source/runtime fallback",
+    "OS file opening replaced, no email sent",
+    "One existing platform capability skip",
+    "Opaque authority identity conservatively invalidates on any canonical snapshot replacement",
+    "External browser action already submitted cannot be undone",
+    "Full regression and merge intentionally pending"
+  ],
+  "publication": {
+    "full": false,
+    "merged": false,
+    "TEST": false,
+    "STABLE": false
+  }
+}
