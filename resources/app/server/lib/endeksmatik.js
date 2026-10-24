@@ -499,6 +499,14 @@ async function deleteSet(id,options={}){
    yapısında değilse eski TL şablonu ayrıştırıcısına düşülür. USD modeli sayfa
    yapısına sahip ama imza/uzlaştırma tutmuyorsa kitap REDDEDİLİR; eski
    ayrıştırıcıyla "bir şekilde" okunmaz. */
+function unambiguousLegacyLayout(buffer){
+  const screen=getXLSX().read(buffer,{type:'buffer',sheets:['ENDEKSMATİK'],cellDates:false,cellFormula:true}).Sheets['ENDEKSMATİK'];
+  if(!screen||typeof screen.C1?.v!=='string'||!text(screen.C1.v)||screen.C2?.t!=='n'||!Number.isFinite(screen.C2.v)||!excelDate(screen.C2.v))return false;
+  // A failed USD formula signature must never become an accepted TL model
+  // because another currency table happens to be readable. Ambiguous files
+  // retain the original signature error; no rates/formulas are simplified.
+  return [...model.SCREEN_LAYOUT.componentIndex,model.SCREEN_LAYOUT.totalIndex].every(address=>!screen[address]?.f);
+}
 function parseImportWorkbook(buffer,sourceFile){
   let names=[];
   try{names=getXLSX().read(buffer,{type:'buffer',bookSheets:true}).SheetNames||[];}catch(err){throw Object.assign(new Error('Excel dosyası okunamadı.'),{code:'WORKBOOK_INVALID',statusCode:422});}
@@ -506,8 +514,9 @@ function parseImportWorkbook(buffer,sourceFile){
   let snapshot;
   try{snapshot=model.parseWorkbookBuffer(buffer,sourceFile);}
   catch(err){
-    // Eski TL şablonu da aynı sayfa adlarını taşır; kitap eski şablonsa onu kabul et.
-    if(err&&err.code==='MODEL_SIGNATURE_MISMATCH'){try{const legacy=versionedLegacySet(parseWorkbookBuffer(buffer,sourceFile),buffer);return {snapshot:legacy,model:'legacy-tl',setId:legacy.id};}catch(_){}}
+    // Shared sheet names alone cannot identify a legacy workbook. Require its
+    // positive metadata layout and absence of the USD formula-output surface.
+    if(err&&err.code==='MODEL_SIGNATURE_MISMATCH'){try{if(unambiguousLegacyLayout(buffer)){const legacy=versionedLegacySet(parseWorkbookBuffer(buffer,sourceFile),buffer);return {snapshot:legacy,model:'legacy-tl',setId:legacy.id};}}catch(_){}}
     throw err;
   }
   return {snapshot,model:snapshot.model,setId:snapshot.id};

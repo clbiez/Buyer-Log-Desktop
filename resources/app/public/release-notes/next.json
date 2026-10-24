@@ -619,6 +619,35 @@
           "en": "Demo note with colored and formatted text, a list and an embedded actual Buyer Log screenshot."
         }
       }
+    },
+    {
+      "id": "endeksmatik-reject-usd-model-downgrade",
+      "type": "fix",
+      "module": {
+        "tr": "Endeksmatik doğrulama",
+        "en": "Endeksmatik validation"
+      },
+      "title": {
+        "tr": "Hatalı USD formülü eski TL modeline düşürülmez",
+        "en": "Invalid USD formulas cannot downgrade to the legacy TL model"
+      },
+      "body": {
+        "tr": "USD formül imzası başarısız olduğunda ikinci bir kur tablosu dosyayı geçerli TL modeli yapmaz. Karışık veya belirsiz şablonlar reddedilir; mevcut setler korunur.",
+        "en": "When the USD formula signature fails, an extra FX table cannot turn the file into an accepted TL model. Mixed or ambiguous layouts are rejected and existing sets remain intact."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "endeksmatik-reject-model-downgrade.png",
+        "alt": {
+          "tr": "Gerçek demo sunucuda karışık model dosyasının formül imzası hatasıyla reddedilmesi",
+          "en": "Native formula-signature rejection of a mixed-model workbook on a real demo server"
+        },
+        "caption": {
+          "tr": "Sentetik karışık dosya HTTP422 / MODEL_SIGNATURE_MISMATCH ile reddedildi; yeni set oluşmadı.",
+          "en": "The synthetic mixed-model workbook was rejected with HTTP422 / MODEL_SIGNATURE_MISMATCH; no new set was created."
+        }
+      }
     }
   ]
 }

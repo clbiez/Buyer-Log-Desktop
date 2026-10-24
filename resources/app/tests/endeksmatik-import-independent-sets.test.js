@@ -86,6 +86,27 @@ test('rejected upload leaves every existing set untouched',async()=>{
   assert.deepEqual(engine.listSets().map(s=>[s.id,s.version]),before);
 });
 
+test('a broken USD signature cannot downgrade through a second legacy FX table or forged legacy metadata',()=>{
+  for(const forgedLegacyHeader of [false,true]){
+    const wb=XLSX.read(fixture.buildEndeksmatikWorkbook({breakFormula:'depot',repeatLabels:true}),{type:'buffer'});
+    fixture.MONTHS.forEach((month,i)=>{
+      wb.Sheets['Değişimler'][`V${i+2}`]={t:'n',v:Number(month)};
+      wb.Sheets['Değişimler'][`W${i+2}`]={t:'n',v:30+i*2};
+    });
+    if(forgedLegacyHeader){wb.Sheets['ENDEKSMATİK'].C1={t:'s',v:'Synthetic TL header'};wb.Sheets['ENDEKSMATİK'].C2={t:'n',v:46000};}
+    assert.throws(()=>engine.parseImportWorkbook(XLSX.write(wb,{type:'buffer',bookType:'xlsx'}),'ambiguous.xlsx'),error=>error.code==='MODEL_SIGNATURE_MISMATCH');
+  }
+});
+
+test('a positively identified legacy TL layout still imports through the shared-sheet fallback',()=>{
+  const wb=XLSX.read(workbook('VALID LEGACY'),{type:'buffer'}),fx=wb.Sheets['Değişimler'];
+  // Keep this fixture independent of the separate V:W range-origin defect.
+  fx.A1={t:'s',v:'Synthetic reference'};fx['!ref']='A1:W2';
+  const result=engine.parseImportWorkbook(XLSX.write(wb,{type:'buffer',bookType:'xlsx'}),'valid-legacy.xlsx');
+  assert.equal(result.model,'legacy-tl');assert.equal(result.snapshot.records.length,1);
+  assert.deepEqual(result.snapshot.fx,{'202501':30,'202502':31});
+});
+
 test('USD files still receive strict signature and Excel reconciliation checks',async()=>{
   const usdBytes=fixture.buildEndeksmatikWorkbook();
   const result=await engine.importWorkbookBuffer(usdBytes,'bd.xlsx');
