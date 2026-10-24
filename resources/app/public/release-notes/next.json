@@ -967,6 +967,35 @@
           "en": "The authorized report task appears after refreshing the demo CP view. Separate real HTTP and commit tests verify the permission boundary."
         }
       }
+    },
+    {
+      "id": "checklist-first-render",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Checklist ilk açılışta hazırlanır",
+        "en": "Checklist prepares on first opening"
+      },
+      "body": {
+        "tr": "CP ilk açıldığında checklist durumları ve yetkili raporlardan bekleyen işler görünür. Ertelenmiş çizim de aynı hazırlıktan geçer; CP kapalıyken tablo çizilmez.",
+        "en": "Checklist statuses and pending tasks from authorized reports appear when CP first opens. Deferred rendering uses the same preparation; the table is not rendered while CP is hidden."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "checklist-first-render.png",
+        "alt": {
+          "tr": "Gerçek demo CP ekranına ilk geçişte checklist durumları ve tek yetkili Buying görevi",
+          "en": "Actual demo CP screen on first opening with checklist statuses and one authorized Buying task"
+        },
+        "caption": {
+          "tr": "Edge üzerinde CP ilk kez açıldı; ek yenileme çağrısı olmadan durumlar ve yetkili rapor görevi göründü.",
+          "en": "CP was opened for the first time in Edge; statuses and the authorized report task appeared without an extra refresh call."
+        }
+      }
     }
   ]
 }
