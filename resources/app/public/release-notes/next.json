@@ -851,6 +851,35 @@
           "en": "After an actual 503 response, loading skeletons are gone and source guidance with Retry is visible."
         }
       }
+    },
+    {
+      "id": "endeksmatik-import-theme-typography",
+      "type": "fix",
+      "module": {
+        "tr": "Endeksmatik",
+        "en": "Endeksmatik"
+      },
+      "title": {
+        "tr": "Excel yükleme penceresi tema ve yazı ölçeğine uyar",
+        "en": "Workbook upload follows theme and text size"
+      },
+      "body": {
+        "tr": "Yükleme ilerlemesi ortak renk, gölge ve tipografi tokenlarını kullanır. Başlık ve açıklamalar arayüz büyüklüğüyle ölçeklenir; etkin adım numarası karanlık temaya uygun metin rengini kullanır.",
+        "en": "Upload progress uses shared colour, shadow and typography tokens. Headings and descriptions follow interface size; the active step number uses the dark theme’s on-accent text colour."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "endeksmatik-tokens-dark-en.png",
+        "alt": {
+          "tr": "Gerçek Endeksmatik yükleme ilerlemesi, karanlık tema ve XL yazı boyutu, sentetik dosya",
+          "en": "Native Endeksmatik upload progress with dark theme and XL text, synthetic workbook"
+        },
+        "caption": {
+          "tr": "Sentetik dosya doğrulama aşamasında; yükleme yanıtı görsel test için bekletilir ve sonra reddedilir. İçe aktarma başarısı iddia edilmez.",
+          "en": "A synthetic workbook is in the validation phase; its upload response is held for this visual check and then rejected. No import success is claimed."
+        }
+      }
     }
   ]
 }

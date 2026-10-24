@@ -1,0 +1,78 @@
+{
+  "environment": "Chromium Linux, synthetic normal-server UI, reduced motion",
+  "fixture": "Actual file input/FileReader and native upload-progress code. Only upload response is held then rejected by explicit synthetic Playwright route; no successful import or saved financial data is claimed.",
+  "measurements": [
+    {
+      "theme": "light",
+      "lang": "tr",
+      "fontStep": "0",
+      "titlePx": 20,
+      "background": "rgb(255, 255, 255)",
+      "text": "rgb(22, 33, 45)",
+      "currentText": "rgb(255, 255, 255)",
+      "expectedCurrentText": "#fff",
+      "fits": true,
+      "clipped": false
+    },
+    {
+      "theme": "light",
+      "lang": "en",
+      "fontStep": "2",
+      "titlePx": 23,
+      "background": "rgb(255, 255, 255)",
+      "text": "rgb(22, 33, 45)",
+      "currentText": "rgb(255, 255, 255)",
+      "expectedCurrentText": "#fff",
+      "fits": true,
+      "clipped": false
+    },
+    {
+      "theme": "grey",
+      "lang": "tr",
+      "fontStep": "0",
+      "titlePx": 20,
+      "background": "rgb(217, 222, 228)",
+      "text": "rgb(16, 24, 32)",
+      "currentText": "rgb(246, 246, 247)",
+      "expectedCurrentText": "#f6f6f7",
+      "fits": true,
+      "clipped": false
+    },
+    {
+      "theme": "grey",
+      "lang": "en",
+      "fontStep": "2",
+      "titlePx": 23,
+      "background": "rgb(217, 222, 228)",
+      "text": "rgb(16, 24, 32)",
+      "currentText": "rgb(246, 246, 247)",
+      "expectedCurrentText": "#f6f6f7",
+      "fits": true,
+      "clipped": false
+    },
+    {
+      "theme": "dark",
+      "lang": "tr",
+      "fontStep": "0",
+      "titlePx": 20,
+      "background": "rgb(32, 38, 46)",
+      "text": "rgb(240, 243, 246)",
+      "currentText": "rgb(20, 32, 42)",
+      "expectedCurrentText": "#14202a",
+      "fits": true,
+      "clipped": false
+    },
+    {
+      "theme": "dark",
+      "lang": "en",
+      "fontStep": "2",
+      "titlePx": 23,
+      "background": "rgb(32, 38, 46)",
+      "text": "rgb(240, 243, 246)",
+      "currentText": "rgb(20, 32, 42)",
+      "expectedCurrentText": "#14202a",
+      "fits": true,
+      "clipped": false
+    }
+  ]
+}
