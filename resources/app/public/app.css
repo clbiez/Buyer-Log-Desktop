@@ -3907,6 +3907,10 @@ tfoot .collectionWeightedAverage .collectionWeightedChangeLine strong.isNegative
 .endeksmatikSingOffDecision.isWarn{border-color:color-mix(in srgb,var(--warning) 45%,var(--line));background:color-mix(in srgb,var(--warning) 8%,var(--card));}
 .endeksmatikSingOffDecision.isBad{border-color:color-mix(in srgb,var(--danger) 45%,var(--line));background:color-mix(in srgb,var(--danger) 8%,var(--card));}
 .endeksmatikSetTable td small{display:block;font-size:var(--fs-2xs);color:var(--muted);margin-top:2px;}
+.endeksmatikSetManagerCard{width:min(1280px,calc(100vw - 24px));}
+.endeksmatikSetTable td:first-child{max-width:220px;white-space:normal;overflow-wrap:anywhere;}
+.endeksmatikSetTable td.endeksmatikSetValidation{min-width:200px;max-width:260px;white-space:normal;line-height:1.4;}
+.endeksmatikSetValidation small,.endeksmatikSetValidation .endeksmatikBadge,.endeksmatikSetTable td.num small{white-space:normal;overflow-wrap:anywhere;}
 .endeksmatikSetTable tr.isActive td{background:color-mix(in srgb,var(--acc) 5%,var(--card));}
 .endeksmatikSetActions{white-space:nowrap;text-align:right!important;}.endeksmatikSetActions .tbtn{margin-left:4px;}
 .endeksmatikBadge{display:inline-block;font-size:var(--fs-2xs);font-weight:800;border-radius:var(--r-full);padding:2px 7px;background:var(--card2);color:var(--ink2);border:1px solid var(--line);}

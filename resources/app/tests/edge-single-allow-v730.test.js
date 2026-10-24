@@ -227,14 +227,28 @@ test('gerçek kullanım dizisi Edge’e YALNIZ BİR KERE yaklaşır', async () =
 });
 
 test('başarısız aramadan sonra kısa bir bekleme vardır (diyalog birikmesin)', async () => {
-  assert.ok(connector.DISCOVERY_COOLDOWN_MS >= 1000 && connector.DISCOVERY_COOLDOWN_MS <= 15000,
+  // This is a failed-discovery contract, not a claim that the host has no Edge.
+  // Compile the actual state/functions with explicit discovery dependencies;
+  // a user's live DevTools port or another test's endpoint must not turn this
+  // negative fixture into a successful lookup.
+  let discoveries = 0;
+  const cooldown = SOURCE.slice(SOURCE.indexOf('const DISCOVERY_COOLDOWN_MS'), SOURCE.indexOf('const USER_APPROVAL_MESSAGE'));
+  const start = SOURCE.indexOf('async function connectExistingEdge(');
+  const connect = SOURCE.slice(start, SOURCE.indexOf('/* Bağlantı tanılaması', start));
+  const failed = require('node:vm').runInNewContext(`let discoveryInFlight=null;\n${cooldown}\n${connect}\n({connectExistingEdge,DISCOVERY_COOLDOWN_MS,discoveryCoolingDown,resetDiscoveryCooldown})`, {
+    Date, cachedEndpointIfAlive: async () => null,
+    discoverExistingEdge: async () => { discoveries += 1; return null; },
+  });
+  assert.ok(failed.DISCOVERY_COOLDOWN_MS >= 1000 && failed.DISCOVERY_COOLDOWN_MS <= 15000,
     'bekleme, kullanıcı Allow’a bastıktan sonraki denemeyi engellemeyecek kadar kısa olmalı');
-  connector.forgetEndpoint();
-  connector.resetDiscoveryCooldown();
-  await connector.connectExistingEdge().catch(() => null);
-  assert.equal(connector.discoveryCoolingDown(), true, 'başarısız aramadan sonra bekleme başlamalı');
-  connector.resetDiscoveryCooldown();
-  assert.equal(connector.discoveryCoolingDown(), false);
+  assert.equal(await failed.connectExistingEdge(), null);
+  assert.equal(failed.discoveryCoolingDown(), true, 'başarısız aramadan sonra bekleme başlamalı');
+  assert.equal(await failed.connectExistingEdge(), null);
+  assert.equal(discoveries, 1, 'bekleme sırasında yeni arama ve onay isteği oluşmamalı');
+  failed.resetDiscoveryCooldown();
+  assert.equal(failed.discoveryCoolingDown(), false);
+  await failed.connectExistingEdge();
+  assert.equal(discoveries, 2, 'sıfırlama yeni gerçek denemeye izin vermeli');
 });
 
 test('BAŞARILI arama beklemeyi sıfırlar — bağlantı kurulunca gecikme kalmaz', () => {

@@ -1,0 +1,544 @@
+{
+  "date": "2026-10-24T19:01:29.573Z",
+  "runtimeCommit": "1a936aa6b2eefe7407ccad3b20da7a3bf6e1b379",
+  "validationCommit": "0679f1c43dd3b3e2b77b06aa4ad805bc2584ddff",
+  "full": {
+    "files": 1053,
+    "tests": 7567,
+    "pass": 7561,
+    "fail": 0,
+    "skipped": 6,
+    "cancelled": 0,
+    "seconds": 218.8,
+    "logSha256": "2dc52f9ad01650e33817650455d279f289defc8bae4d3010c57c95c3bd52ff3c"
+  },
+  "targeted": {
+    "files": 13,
+    "tests": 101,
+    "pass": 101,
+    "fail": 0
+  },
+  "firstFull": {
+    "result": "failed and retained",
+    "stoppedAtBatch": 2,
+    "file": "tests/edge-single-allow-v730.test.js",
+    "cause": "Negative discovery test assumed no host DevTools endpoint. A synthetic valid localhost endpoint reproduces the same failure; the real successful-discovery branch correctly clears cooldown.",
+    "regression": "Compile actual cooldown/discovery functions with explicit failed-discovery dependency; assert no additional discovery during cooldown and retry after reset. Same ambient endpoint reproducer: original exit1, corrected exit0. No production browser logic changed."
+  },
+  "workbooks": {
+    "date": "2026-10-24T18:50:42.420Z",
+    "environment": {
+      "node": "v24.18.0",
+      "platform": "win32"
+    },
+    "scope": "Read-only local source compatibility, no cell values or workbook bytes uploaded. Accepted-path formula and arithmetic code was unchanged by the subsequent localized error DTO. The full suite and actual UI acceptance use the final committed implementation.",
+    "results": [
+      {
+        "file": "BANGLADEŞ_ENDEKSMATİK_KLASMAN_W7__22.09.2026.xlsx",
+        "size": 43589831,
+        "sha256": "4c2ee0686f0d5411eddaff223ef0a9b0f6a21e1974708c8a8a80e4e2de8a5863",
+        "screen": {
+          "C1": {
+            "type": null,
+            "formula": false
+          },
+          "C2": {
+            "type": "s",
+            "formula": false
+          },
+          "C3": {
+            "type": "n",
+            "formula": false
+          },
+          "C14": {
+            "type": "s",
+            "formula": false
+          },
+          "C15": {
+            "type": "n",
+            "formula": true
+          },
+          "C16": {
+            "type": "n",
+            "formula": true
+          },
+          "C17": {
+            "type": "n",
+            "formula": true
+          },
+          "C18": {
+            "type": "n",
+            "formula": true
+          },
+          "C19": {
+            "type": "n",
+            "formula": true
+          },
+          "B21": {
+            "type": "n",
+            "formula": false
+          },
+          "B22": {
+            "type": "s",
+            "formula": false
+          }
+        },
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "contract": null,
+        "signatureOk": true,
+        "reconciliationOk": true,
+        "reconciliationChecks": 13,
+        "reconciliationReason": null,
+        "milliseconds": 12258,
+        "originalUnchanged": true
+      },
+      {
+        "file": "ENDEKSMATİK_KLASMAN_ S7_15.10.2026.xlsx",
+        "size": 46944089,
+        "sha256": "3363469f9378e545d2d23fa46aa233643f265619c49ef62a65e043f31d327d5c",
+        "screen": {
+          "C1": {
+            "type": "s",
+            "formula": false
+          },
+          "C2": {
+            "type": "n",
+            "formula": false
+          },
+          "C3": {
+            "type": "s",
+            "formula": false
+          },
+          "C14": {
+            "type": null,
+            "formula": false
+          },
+          "C15": {
+            "type": "s",
+            "formula": false
+          },
+          "C16": {
+            "type": "s",
+            "formula": true
+          },
+          "C17": {
+            "type": "s",
+            "formula": true
+          },
+          "C18": {
+            "type": "s",
+            "formula": true
+          },
+          "C19": {
+            "type": "s",
+            "formula": true
+          },
+          "B21": {
+            "type": null,
+            "formula": false
+          },
+          "B22": {
+            "type": "n",
+            "formula": false
+          }
+        },
+        "accepted": true,
+        "model": "legacy-tl",
+        "contract": "endeksmatik-tl-workbook/v1",
+        "signatureOk": true,
+        "reconciliationOk": null,
+        "reconciliationChecks": 0,
+        "reconciliationReason": "SCREEN_REFERENCE_UNAVAILABLE",
+        "milliseconds": 17510,
+        "originalUnchanged": true
+      },
+      {
+        "file": "ENDEKSMATİK_KLASMAN_W6_15.10.2026.xlsx",
+        "size": 49027242,
+        "sha256": "d80b5c149d434093142a50561d441b93cace6f2d6ebe7d9a08792a835e19f5eb",
+        "screen": {
+          "C1": {
+            "type": null,
+            "formula": false
+          },
+          "C2": {
+            "type": "s",
+            "formula": false
+          },
+          "C3": {
+            "type": "s",
+            "formula": false
+          },
+          "C14": {
+            "type": null,
+            "formula": false
+          },
+          "C15": {
+            "type": null,
+            "formula": false
+          },
+          "C16": {
+            "type": "s",
+            "formula": false
+          },
+          "C17": {
+            "type": "n",
+            "formula": true
+          },
+          "C18": {
+            "type": "n",
+            "formula": true
+          },
+          "C19": {
+            "type": "n",
+            "formula": true
+          },
+          "B21": {
+            "type": "s",
+            "formula": false
+          },
+          "B22": {
+            "type": null,
+            "formula": false
+          }
+        },
+        "accepted": true,
+        "model": "legacy-tl",
+        "contract": "endeksmatik-tl-workbook/v1",
+        "signatureOk": true,
+        "reconciliationOk": true,
+        "reconciliationChecks": 24,
+        "reconciliationReason": null,
+        "milliseconds": 24183,
+        "originalUnchanged": true
+      },
+      {
+        "file": "HİNDİSTAN_ENDEKSMATİK_KLASMAN_W7_NORTH.xlsx",
+        "size": 36167440,
+        "sha256": "1fb5b1c68f3c72411c0943301c599680cb89035db422adc78df40207a81235fd",
+        "screen": {
+          "C1": {
+            "type": null,
+            "formula": false
+          },
+          "C2": {
+            "type": "s",
+            "formula": false
+          },
+          "C3": {
+            "type": "n",
+            "formula": false
+          },
+          "C14": {
+            "type": "s",
+            "formula": false
+          },
+          "C15": {
+            "type": "n",
+            "formula": true
+          },
+          "C16": {
+            "type": "n",
+            "formula": true
+          },
+          "C17": {
+            "type": "n",
+            "formula": true
+          },
+          "C18": {
+            "type": "n",
+            "formula": true
+          },
+          "C19": {
+            "type": "n",
+            "formula": true
+          },
+          "B21": {
+            "type": "n",
+            "formula": false
+          },
+          "B22": {
+            "type": "s",
+            "formula": false
+          }
+        },
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "contract": null,
+        "signatureOk": true,
+        "reconciliationOk": true,
+        "reconciliationChecks": 13,
+        "reconciliationReason": null,
+        "milliseconds": 11029,
+        "originalUnchanged": true
+      },
+      {
+        "file": "HİNDİSTAN_ENDEKSMATİK_KLASMAN_W7_SOUTH.xlsx",
+        "size": 38854636,
+        "sha256": "44edd643a7771a098404b78f8c289f707edd39515807728900c8d0df5ad74960",
+        "screen": {
+          "C1": {
+            "type": null,
+            "formula": false
+          },
+          "C2": {
+            "type": "s",
+            "formula": false
+          },
+          "C3": {
+            "type": "n",
+            "formula": false
+          },
+          "C14": {
+            "type": "s",
+            "formula": false
+          },
+          "C15": {
+            "type": "n",
+            "formula": true
+          },
+          "C16": {
+            "type": "n",
+            "formula": true
+          },
+          "C17": {
+            "type": "n",
+            "formula": true
+          },
+          "C18": {
+            "type": "n",
+            "formula": true
+          },
+          "C19": {
+            "type": "n",
+            "formula": true
+          },
+          "B21": {
+            "type": "n",
+            "formula": false
+          },
+          "B22": {
+            "type": "s",
+            "formula": false
+          }
+        },
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "contract": null,
+        "signatureOk": true,
+        "reconciliationOk": true,
+        "reconciliationChecks": 13,
+        "reconciliationReason": null,
+        "milliseconds": 12707,
+        "originalUnchanged": true
+      },
+      {
+        "file": "MYANMAR_ENDEKSMATİK_KLASMAN_W7.xlsx",
+        "size": 40480894,
+        "sha256": "1c36095147f209e20db38c900aafec453aab3a25644d9911641e288a679b1cbd",
+        "screen": {
+          "C1": {
+            "type": null,
+            "formula": false
+          },
+          "C2": {
+            "type": "s",
+            "formula": false
+          },
+          "C3": {
+            "type": "n",
+            "formula": false
+          },
+          "C14": {
+            "type": "s",
+            "formula": false
+          },
+          "C15": {
+            "type": "n",
+            "formula": true
+          },
+          "C16": {
+            "type": "n",
+            "formula": true
+          },
+          "C17": {
+            "type": "n",
+            "formula": true
+          },
+          "C18": {
+            "type": "n",
+            "formula": true
+          },
+          "C19": {
+            "type": "n",
+            "formula": true
+          },
+          "B21": {
+            "type": "n",
+            "formula": false
+          },
+          "B22": {
+            "type": "s",
+            "formula": false
+          }
+        },
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "contract": null,
+        "signatureOk": true,
+        "reconciliationOk": true,
+        "reconciliationChecks": 13,
+        "reconciliationReason": null,
+        "milliseconds": 10540,
+        "originalUnchanged": true
+      },
+      {
+        "file": "ÇİN_ENDEKSMATİK_KLASMAN_W7 -.xlsx",
+        "size": 40508445,
+        "sha256": "83a056af030b7c75f3bbc7cd546189a99710985c10ee1da480cc3a053e0051b3",
+        "screen": {
+          "C1": {
+            "type": null,
+            "formula": false
+          },
+          "C2": {
+            "type": "s",
+            "formula": false
+          },
+          "C3": {
+            "type": "n",
+            "formula": false
+          },
+          "C14": {
+            "type": "s",
+            "formula": false
+          },
+          "C15": {
+            "type": "n",
+            "formula": true
+          },
+          "C16": {
+            "type": "n",
+            "formula": true
+          },
+          "C17": {
+            "type": "n",
+            "formula": true
+          },
+          "C18": {
+            "type": "n",
+            "formula": true
+          },
+          "C19": {
+            "type": "n",
+            "formula": true
+          },
+          "B21": {
+            "type": "n",
+            "formula": false
+          },
+          "B22": {
+            "type": "s",
+            "formula": false
+          }
+        },
+        "accepted": true,
+        "model": "endeksmatik-usd-v1",
+        "contract": null,
+        "signatureOk": true,
+        "reconciliationOk": true,
+        "reconciliationChecks": 13,
+        "reconciliationReason": null,
+        "milliseconds": 10917,
+        "originalUnchanged": true
+      }
+    ]
+  },
+  "ui": {
+    "mockedHTTP": false,
+    "platform": "win32",
+    "scope": "Actual Node server and Windows Edge with isolated synthetic users and workbooks; not packaged Electron or corporate source acceptance",
+    "phases": [
+      {
+        "name": "w6-native-upload",
+        "checks": 24,
+        "unknownSourceDate": true
+      },
+      {
+        "name": "s7-native-upload",
+        "signatureVerified": true,
+        "reconciliationNotClaimed": true
+      },
+      {
+        "name": "tr-ui-verified"
+      },
+      {
+        "name": "erased-usd-http422-no-mutation",
+        "sets": 4,
+        "legacyPreserved": true
+      },
+      {
+        "name": "en-ui-verified"
+      }
+    ]
+  },
+  "sources": [
+    {
+      "file": "public/app-main.js",
+      "sha256Lf": "68846e99f5bac71e398704256d6b472175d6d56b363d38f50d7d02e1fb217efc"
+    },
+    {
+      "file": "public/app.css",
+      "sha256Lf": "e3c489f9bc316f4a1baca4bd2ae137d77e937ada94779c46090fbc472af95ffa"
+    },
+    {
+      "file": "server/lib/endeksmatik.js",
+      "sha256Lf": "c82c53a0a2bac4113b196423528409b71a04c174915936580d004256c2bb5974"
+    },
+    {
+      "file": "server/lib/endeksmatik-tl-model.js",
+      "sha256Lf": "6bd43ebdf77f59d3f594955afacd28243e36d705b5ccf979638c495a68de4fee"
+    }
+  ],
+  "images": [
+    {
+      "name": "endeksmatik-tl-contracts.png",
+      "width": 1600,
+      "height": 973,
+      "sha256": "7332dcd57090a232c9e6f74f5c279e9ea9b367029ec37e811cb4171da00b5daa",
+      "reviewed": true
+    },
+    {
+      "name": "endeksmatik-tl-contracts-en.png",
+      "width": 1600,
+      "height": 973,
+      "sha256": "ced37abddd9d6ad6543ead12da97cb59c2fcb9cb07ed024b96fc3318535a9e0a",
+      "reviewed": true
+    },
+    {
+      "name": "endeksmatik-reject-model-downgrade.png",
+      "width": 1600,
+      "height": 973,
+      "sha256": "01438607bb73a189d394a161059f284619aac0d4b72160660bf7131c9d2ca300",
+      "reviewed": true
+    }
+  ],
+  "review": {
+    "rounds": 1,
+    "agent": "review_wal_recovery",
+    "finding": "Erased USD output formulas bypassed the first draft; real TL compatibility was unknown. Root added positive S7/W6 contracts, failing/passing regression and original workbook acceptance; no second review round asserted."
+  },
+  "limits": [
+    "S7 sample result unavailable; signature verified without numeric reconciliation",
+    "W6 source metadata date malformed; freshness unknown even though24 numeric checks pass",
+    "Large workbook parsing remains in request process; BL018 isolation/bounds unfinished",
+    "Broader financial policies and shared vectors in BL017 unfinished",
+    "Six platform/opt-in skips, corporate SMB/Excel/Outlook and publication not certified"
+  ],
+  "publication": {
+    "manualPatch": false,
+    "TEST": false,
+    "STABLE": false
+  }
+}

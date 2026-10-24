@@ -207,7 +207,8 @@ function calculateLegacy(input,runtime=loadSnapshot()){
       return {component,label:labels[i],weight:weights[i],oldMonth,newMonth,oldValue,newValue,index};
     });
     const tlIndex=items.reduce((sum,item)=>sum+item.index*item.weight,0);
-    const adjustedItems=items.map((item,i)=>({...item,targetIndex:(i<2?((1+item.index)*(1-a)-1):item.index)}));
+    const workbookContract=runtime.snapshot.calculationContract==='endeksmatik-tl-workbook/v1';
+    const adjustedItems=items.map((item,i)=>({...item,targetIndex:(workbookContract||i<2?((1+item.index)*(1-a)-1):item.index)}));
     const targetTlIndex=adjustedItems.reduce((sum,item)=>sum+item.targetIndex*item.weight,0);
     return {items,adjustedItems,tlIndex,targetTlIndex};
   };
@@ -251,7 +252,8 @@ function calculateLegacy(input,runtime=loadSnapshot()){
     componentsTry:domestic.adjustedItems,
     componentsUsd:overseas.adjustedItems,
     prices:{try:newTryPrice,usd:newUsdPrice},
-    source:{sourceFile:snapshot.sourceFile||'',season:snapshot.season||'',sourceUpdatedAt:snapshot.sourceUpdatedAt||'',targetAdjustmentPct:defaultAdjustmentPct(snapshot)},
+    source:{sourceFile:snapshot.sourceFile||'',season:snapshot.season||'',sourceUpdatedAt:snapshot.sourceUpdatedAt||'',targetAdjustmentPct:defaultAdjustmentPct(snapshot),
+      calculationContract:snapshot.calculationContract||'legacy-v602',layout:snapshot.validation?.signature?.layout||null,fxPolicy:'exact-depot-month'},
   };
 }
 function findHeaderRow(rows){
@@ -363,10 +365,10 @@ function buildSetRuntime(snapshot){
 function publicSetMeta(snapshot){
   if(snapshot.model!=='legacy-tl')return model.publicMeta(snapshot);
   const status=publicStatusForSnapshot(snapshot);
-  return {...status,id:snapshot.id,model:'legacy-tl',version:snapshot.hash,
+  return {...status,id:snapshot.id,model:'legacy-tl',version:snapshot.hash,calculationContract:snapshot.calculationContract||'legacy-v602',
     label:snapshot.label||'',region:snapshot.region||'',currency:'TRY',
     uploadedAt:snapshot.uploadedAt||'',uploadedBy:snapshot.uploadedBy||'',
-    validation:null};
+    validation:snapshot.validation?{signatureOk:snapshot.validation.signature?.ok===true,reconciliationOk:snapshot.validation.reconciliation?.ok===true,checks:snapshot.validation.reconciliation?.checks?.length||0,warnings:snapshot.validation.warnings||[]}:null};
 }
 function versionedLegacySet(snapshot,buffer){
   const hash=crypto.createHash('sha256').update(buffer).digest('hex');
@@ -508,15 +510,23 @@ async function deleteSet(id,options={}){
    yapısında değilse eski TL şablonu ayrıştırıcısına düşülür. USD modeli sayfa
    yapısına sahip ama imza/uzlaştırma tutmuyorsa kitap REDDEDİLİR; eski
    ayrıştırıcıyla "bir şekilde" okunmaz. */
+function parseKnownTlWorkbook(buffer,sourceFile){
+  const tl=require('./endeksmatik-tl-model'),inspected=tl.inspect(buffer),snapshot=versionedLegacySet(parseWorkbookBuffer(buffer,sourceFile),buffer);
+  Object.assign(snapshot,{season:inspected.season,sourceUpdatedAt:inspected.sourceUpdatedAt,targetAdjustmentPct:inspected.targetAdjustmentPct,calculationContract:tl.CONTRACT});
+  const reconciliation=tl.reconcile(inspected,input=>calculateLegacy(input,buildRuntime(snapshot)));
+  snapshot.validation={signature:inspected.signature,reconciliation,warnings:[...inspected.metadataWarnings,...reconciliation.warnings]};
+  return {snapshot,model:'legacy-tl',setId:snapshot.id};
+}
 function parseImportWorkbook(buffer,sourceFile){
   let names=[];
   try{names=getXLSX().read(buffer,{type:'buffer',bookSheets:true}).SheetNames||[];}catch(err){throw Object.assign(new Error('Excel dosyası okunamadı.'),{code:'WORKBOOK_INVALID',statusCode:422});}
-  if(!model.looksLikeModel(names)){const snapshot=versionedLegacySet(parseWorkbookBuffer(buffer,sourceFile),buffer);return {snapshot,model:'legacy-tl',setId:snapshot.id};}
+  if(!model.looksLikeModel(names))return parseKnownTlWorkbook(buffer,sourceFile);
   let snapshot;
   try{snapshot=model.parseWorkbookBuffer(buffer,sourceFile);}
   catch(err){
-    // Eski TL şablonu da aynı sayfa adlarını taşır; kitap eski şablonsa onu kabul et.
-    if(err&&err.code==='MODEL_SIGNATURE_MISMATCH'){try{const legacy=versionedLegacySet(parseWorkbookBuffer(buffer,sourceFile),buffer);return {snapshot:legacy,model:'legacy-tl',setId:legacy.id};}catch(_){}}
+    // A distinct positive TL formula contract is required. Missing/erased USD
+    // formulas or an extra FX table never authorize another arithmetic model.
+    if(err&&err.code==='MODEL_SIGNATURE_MISMATCH')return parseKnownTlWorkbook(buffer,sourceFile);
     throw err;
   }
   return {snapshot,model:snapshot.model,setId:snapshot.id};
