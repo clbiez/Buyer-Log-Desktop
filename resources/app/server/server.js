@@ -5147,6 +5147,8 @@ const plmRequestService=require('./routes/plm-request-routes')(app, {
 require('./routes/checklist-supplier-routes')(app, {
   automationError,
   checklistSupplierStore: require('./lib/checklist-supplier-store'),
+  authorizedOrders: async (profile, options) => { await ensureDataLoaded(profile.id); return checklistAuthorizedOrdersNow(profile, options); },
+  authorizedOrdersNow: checklistAuthorizedOrdersNow,
   express,
   userAccess,
 });
@@ -5154,6 +5156,7 @@ require('./routes/checklist-supplier-routes')(app, {
 const agentQualityService=require('./lib/test-reports/service').createService({
   audit:userAccess.appendAudit,
   authorizedOrders:agentQualityAuthorizedOrders,
+  authorizedOrdersNow:agentQualityAuthorizedOrdersNow,
   sourceRevision:cpAgentRevision,
   reviewContext:agentQualityReviewContext,
 });
@@ -5162,21 +5165,61 @@ const agentQualityService=require('./lib/test-reports/service').createService({
 
 async function agentQualityOrderRows(profile,{source='cp',includeInactive=false}={}) {
     await ensureDataLoaded(profile.id);
+    return agentQualityOrderRowsNow(profile,{source,includeInactive});
+}
+function agentQualityLiveProfile(profile,{write=false}={}) {
+    const current=userAccess.profileById(profile&&profile.id);
+    const areas=write?['cp','orders']:['cp','orders','overview'];
+    if(!current||current.enabled===false||current.status&&current.status!=='ACTIVE'||!areas.some(area=>userAccess.hasArea(current,area))) {
+      throw Object.assign(new Error('Güncel test raporu yetkisi gerekli. / Current test report permission is required.'),{code:'TEST_REPORT_FORBIDDEN',statusCode:403});
+    }
+    return current;
+}
+function agentQualityOrderRowsNow(profile,{source='cp',includeInactive=false}={}) {
+    profile=agentQualityLiveProfile(profile);
     const active=cacheForUser(profile.id), overrides=effectiveOverridesForUser(profile.id);
     // Use the same source scope and Horizon as the page projection. Read-only
     // visible rows belong in the review; write authority is checked separately.
-    const businessRows=userAccess.filterRowsByScope(profile, filterRowsByEffectiveHorizon(profile,source,ordersForTarget(active,source,overrides)));
+    const visible=userAccess.filterRowsByScope(profile, filterRowsByEffectiveHorizon(profile,source,ordersForTarget(active,source,overrides)));
+    // User-managed source rows are projection inputs, never ownership grants.
+    const businessRows=userAccess.hasPermission(profile,'manageAllOrders')?visible:visible.filter(row=>
+      userAccess.filterRowsByScope(profile,userAccess.authoritativeOrderRows(canonicalFields.value(row,source,'orderCode'))).length>0);
     const build=includeInactive?buildOrdersRowsFromASAS:buildCPRowsFromASAS;
     return build(businessRows,antrepoForTarget(active,source),overrides);
 }
+function checklistAuthorizedOrdersNow(profile,{write=false}={}) {
+  const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
+  const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true});
+  const CP=require('../public/cp-readiness-engine'), Checklist=require('../public/cp-checklist-engine'), allowed=new Map();
+  for(const row of rows) {
+    const code=canonicalFields.value(row,source,'orderCode');
+    // Source folders are user-managed. Visibility must also be supported by
+    // the Moderator's authoritative ownership snapshot, never a claimed buyer.
+    if(!userAccess.hasPermission(profile,'manageAllOrders') && !userAccess.filterRowsByScope(profile,userAccess.authoritativeOrderRows(code)).length)continue;
+    if(write && !canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode')))continue;
+    const analysis=CP.analyzeOrder(row), identity={orderCode:String(analysis.orderCode||canonicalFields.value(row,source,'orderCode')||''),modelName:String(analysis.modelName||''),colourCode:String(analysis.colourCode||'')};
+    allowed.set(analysis.orderKey,identity);
+    // Option approvals are deliberately reusable across POs for the same
+    // PLM/model/colour. An authorized matching PO grants that option scope.
+    const option=Checklist.optionIdentity(analysis);
+    if(option)allowed.set('@option:'+option,identity);
+  }
+  return allowed;
+}
 async function agentQualityAuthorizedOrders(profile,{write=false}={}) {
+    await ensureDataLoaded(profile.id);
+    return agentQualityAuthorizedOrdersNow(profile,{write});
+}
+function agentQualityAuthorizedOrdersNow(profile,{write=false}={}) {
+    profile=agentQualityLiveProfile(profile,{write});
     const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
-    const rows=(await agentQualityOrderRows(profile,{source,includeInactive:true})).filter(row=>!write || canUserEditOrderCode(profile,canonicalFields.value(row,'cp','orderCode')));
+    const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true}).filter(row=>!write || canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode')));
     const CP=require('../public/cp-readiness-engine');
     return new Map(rows.map(row=>[CP.analyzeOrder(row).orderKey,{orderCode:String(canonicalFields.value(row,source,'orderCode') || ''),
       plmId:String(canonicalFields.value(row,source,'plmId') || ''),modelName:String(canonicalFields.value(row,source,'modelName') || ''),colourCode:String(canonicalFields.value(row,source,'colourCode') || ''),colour:String(canonicalFields.value(row,source,'colour')||'')}]));
 }
 async function agentQualityReviewContext(profile) {
+  profile=agentQualityLiveProfile(profile);
   const data=await cpAgentData(profile,{loadCpRows:agentQualityOrderRows}),CP=require('../public/cp-readiness-engine'),Checklist=require('../public/cp-checklist-engine');
   // v7.0.290 — Yalnız kullanıcının çalışan checklist listesi (kişisel + yerleşik +
   // Moderatör yayını). Eski ortak tanımlar eklenmez: kullanıcının sildiği adım
@@ -6482,10 +6525,18 @@ function replaceUserCache(value, next) {
 /* Yalnız test/sonda içindir: sunucu içi kullanıcı önbelleğine ASAS satırı
    yerleştirir. Üretimde çağıran yoktur; BL_TEST_SEED açık değilse tanımlanmaz. */
 if (process.env.BL_TEST_SEED === '1') {
-  global.__blSeedAsas = (orders, userId = 'moderator') => {
+  global.__blSeedAsas = (orders, userId = 'moderator', targets = []) => {
     const cache = cacheForUser(userId);
     cache.asasOrders = Array.isArray(orders) ? orders : [];
+    // Diagnostic opt-in: modern projections may have their own target arrays.
+    // Keep the legacy default unchanged; fixtures must name targets explicitly.
+    for(const target of Array.isArray(targets)?targets:[])if(['cp','orders','backlog','lfl','priceanalysis'].includes(target)){
+      cache.asasOrdersByTarget=cache.asasOrdersByTarget||{};
+      cache.asasOrdersByTarget[target]=cache.asasOrders;
+    }
     cache.loadedAt = new Date().toISOString();
+    // Explicit target fixtures are complete snapshots, including empty LFL.
+    if(Array.isArray(targets)&&targets.length){cache.lflRows=[];cache.lflLoadedAt=cache.loadedAt;}
     return cache.asasOrders.length;
   };
 }

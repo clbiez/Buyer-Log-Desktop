@@ -1,0 +1,8 @@
+{
+  "restorePreflightStatus": 200,
+  "restoreConfirmationEnabled": true,
+  "nativeStatus": "Ön kontrol tamamlandı: 11 dosya • 68.1 KB • Users: 1 • Roles: 4 • Local DB: Found • ASAS: Missing • IAS: Missing • INTAKE: Missing • Parolalar, oturumlar ve API kimlik bilgileri güvenlik nedeniyle restore edilmez.",
+  "uploadUnderOwnedTemp": true,
+  "foreignPermissionError": "EACCES",
+  "restoreApplied": false
+}

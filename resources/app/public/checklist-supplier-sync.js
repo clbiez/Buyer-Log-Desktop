@@ -2680,9 +2680,12 @@
   }
 
   function wrapRender() {
-    if (state.renderWrapped || typeof root.renderCP !== 'function') return;
-    const original = root.renderCP;
-    root.renderCP = function () {
+    // Deferred flushes and earlier captured renderCP references reach the
+    // actual renderer directly. Prepare rows there, when CP is visible.
+    const renderKey = typeof root.renderCPNow === 'function' ? 'renderCPNow' : 'renderCP';
+    if (state.renderWrapped || typeof root[renderKey] !== 'function') return;
+    const original = root[renderKey];
+    root[renderKey] = function () {
       if (root.BLCpAssistant) {
         const decision=root.BLCpAssistant.peekDecisionsForRows?.(currentRows());
         if(decision){try{refreshColumns({render:false,decision,reuse:true});}catch(_){}}

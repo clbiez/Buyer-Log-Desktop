@@ -52,12 +52,13 @@ test('v4.73 DTR Sub-Mfr Manufacturer ile aynıdır; Non-DTR kayıt yoksa boş, g
   const nonDtrFilled = order({license:'Minecraft', manufacturer:'NON DTR FACTORY', code:1003, model:'MODEL C'});
   const staleDtrKey = parse.orderLineKey(dtr.ocode,dtr.model,dtr.ccode);
   const nonDtrKey = parse.orderLineKey(nonDtrFilled.ocode,nonDtrFilled.model,nonDtrFilled.ccode);
-  const ov = overrides({submap:{[staleDtrKey]:'OLD WRONG SUB',[nonDtrKey]:'USER SUB'}});
+  const ov = overrides({nonDtrManufacturers:['NON DTR FACTORY'],submap:{[staleDtrKey]:'OLD WRONG SUB',[nonDtrKey]:'USER SUB'}});
   const cp = parse.buildCPRowsFromASAS([dtr,nonDtrBlank,nonDtrFilled],{},ov);
   assert.equal(cp[0].Licensor,'DTR');
   assert.equal(cp[0]['Sub-Manufacturer'],'DTR FACTORY');
   assert.equal(cp[1].Licensor,'FASHION UK');
   assert.equal(cp[1]['Sub-Manufacturer'],'');
+  assert.equal(cp[2].Licensor,'FASHION UK');
   assert.equal(cp[2]['Sub-Manufacturer'],'USER SUB');
   const orders = parse.buildOrdersRowsFromASAS([dtr,nonDtrBlank,nonDtrFilled],{},ov);
   assert.equal(orders[0]['Sub-Manufacturer'],'DTR FACTORY');

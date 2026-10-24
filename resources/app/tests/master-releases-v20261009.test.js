@@ -132,7 +132,15 @@ test('symbolic link releases cannot expose files outside the archive', async t =
   const dir = await root(t), other = await root(t);
   await releases.archiveRelease(other, checkpoint(1));
   await fsp.mkdir(path.join(dir, 'master', 'releases'), { recursive: true });
-  await fsp.symlink(path.join(other, 'master', 'releases', '1.json.gz'), path.join(dir, 'master', 'releases', '1.json.gz'));
+  try {
+    await fsp.symlink(path.join(other, 'master', 'releases', '1.json.gz'), path.join(dir, 'master', 'releases', '1.json.gz'));
+  } catch (error) {
+    if (process.platform === 'win32' && error.code === 'EPERM') {
+      t.skip('Windows file symlink privilege is unavailable; archive symlink security is not verified on this host.');
+      return;
+    }
+    throw error;
+  }
   await assert.rejects(releases.readRelease(dir, 1), { code: 'MASTER_RELEASE_FILE_INVALID' });
 });
 
@@ -140,7 +148,12 @@ test('concurrent exact publication has one archive and no temporary or lock left
   const dir = await root(t), source = checkpoint(1);
   const results = await Promise.all([releases.archiveRelease(dir, source), releases.archiveRelease(dir, source)]);
   assert.equal(results.filter(item => item.archived).length, 1);
-  assert.deepEqual(await fsp.readdir(path.join(dir, 'master', 'releases')), ['1.json.gz']);
+  const archive = path.join(dir, 'master', 'releases');
+  assert.deepEqual((await fsp.readdir(archive)).sort(), ['1.json.gz', 'archive.write-fence.json']);
+  const fence = JSON.parse(await fsp.readFile(path.join(archive, 'archive.write-fence.json'), 'utf8'));
+  assert.equal(fence.schemaVersion, 1);
+  assert.ok(Number.isSafeInteger(fence.generation) && fence.generation >= 2, 'both publications retain a monotonic fencing generation');
+  assert.equal((await releases.listReleases(dir)).length, 1, 'fencing metadata is never returned as a release');
 });
 
 test('list can report a corrupt release and continue without silently returning its metadata', async t => {

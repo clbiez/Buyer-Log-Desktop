@@ -1,0 +1,119 @@
+{
+  "capturedAtUTC": "2026-10-24T15:10:25.689Z",
+  "baseline": "5a5c3bcafd4de929019b3bba522ef5771670b171",
+  "prBase": {
+    "number": 685,
+    "branch": "fix/bl-001-checklist-authority",
+    "head": "8c7429948c243777cba61ff0f9c143569d32f4da"
+  },
+  "environment": {
+    "platform": "win32",
+    "node": "v24.18.0",
+    "timezone": "Europe/Istanbul",
+    "data": "isolated synthetic roots; corporate services disabled"
+  },
+  "http": {
+    "endpoint": "/api/test-reports",
+    "userScope": "SELF",
+    "claimedSourceOrderCodes": [
+      4100001,
+      4100002
+    ],
+    "officialOwnOrder": 4100001,
+    "officialForeignOrder": 4100002,
+    "ownReportId": "510001",
+    "foreignReportId": "510002",
+    "before": {
+      "status": 200,
+      "visibleReportIds": [
+        "510001",
+        "510002"
+      ]
+    },
+    "after": {
+      "status": 200,
+      "visibleReportIds": [
+        "510001"
+      ],
+      "visibleTaskReportIds": [
+        "510001"
+      ]
+    },
+    "positiveControl": "The own report remains visible on both builds. The foreign official ownership does not match the real IAM profile on either build."
+  },
+  "focused": {
+    "files": 33,
+    "passed": 235,
+    "failed": 0,
+    "skipped": 0
+  },
+  "combined": {
+    "command": "node resources/app/tests/run-tests.js",
+    "files": 1042,
+    "passed": 7497,
+    "failed": 0,
+    "skipped": 6,
+    "seconds": 137.6,
+    "batches": [
+      {
+        "tests": 2133,
+        "passed": 2133,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "tests": 2168,
+        "passed": 2166,
+        "failed": 0,
+        "skipped": 2
+      },
+      {
+        "tests": 2251,
+        "passed": 2249,
+        "failed": 0,
+        "skipped": 2
+      },
+      {
+        "tests": 938,
+        "passed": 937,
+        "failed": 0,
+        "skipped": 1
+      },
+      {
+        "tests": 13,
+        "passed": 12,
+        "failed": 0,
+        "skipped": 1
+      }
+    ],
+    "scope": "checkpoint integration plus ND-003, BL-012 and this BL-016 diff; not each isolated PR full suite",
+    "skips": [
+      "Three unavailable Windows file-symlink scenarios",
+      "Two POSIX pre-receive hook tests",
+      "Opt-in 20,000-operation soak (passed separately on the previous integration checkpoint; not repeated for this report-only change)"
+    ]
+  },
+  "review": {
+    "passes": 1,
+    "findings": [
+      "Current sibling scope was not rechecked at the final store guard",
+      "I/O failure after last-good publication could delete recovery-referenced attachments"
+    ],
+    "resolution": "Both findings fixed with new regressions; parent ran the updated tests. No second independent review of the fixes."
+  },
+  "ui": {
+    "file": "test-report-live-authority.png",
+    "capture": "post-change",
+    "viewport": {
+      "width": 1440,
+      "height": 1000
+    },
+    "observation": "The existing refreshColumns({render:true}) function was called after page load. One Buying task appears for the authorized report; no foreign task. The screenshot supports rendering only; HTTP and fault tests establish authorization.",
+    "followup": "ND-004: on the initial CP page load tasks were present in runtime state, but checklist cell fields remained unapplied until explicit refresh. Separate UI lifecycle fix required."
+  },
+  "publication": {
+    "merged": false,
+    "test": false,
+    "stable": false
+  }
+}

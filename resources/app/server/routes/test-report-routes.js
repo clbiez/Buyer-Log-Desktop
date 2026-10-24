@@ -25,7 +25,9 @@ module.exports = function registerTestReportRoutes(app, deps) {
     express,
     userAccess,
   } = deps;
-  const service=deps.service || createService({authorizedOrders:deps.authorizedOrders,audit:userAccess.appendAudit});
+  const service=deps.service || createService({authorizedOrders:deps.authorizedOrders,authorizedOrdersNow:deps.authorizedOrdersNow || (()=>{
+    throw Object.assign(new Error('Test raporu yetkisi doğrulanamıyor. / Test report permission cannot be verified.'),{code:'TEST_REPORT_AUTH_UNAVAILABLE',statusCode:503});
+  }),audit:userAccess.appendAudit});
   const userId = req => String(req.currentUser && req.currentUser.id || '');
   const authorizedOrders = async (req,write=false) => {
     if (typeof deps.authorizedOrders !== 'function') throw Object.assign(new Error('Order authorization is unavailable.'), { code:'TEST_REPORT_AUTH_UNAVAILABLE', statusCode:503 });
