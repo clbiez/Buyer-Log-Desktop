@@ -7,9 +7,10 @@
 
 ## Codex fast-path
 
-- Güncel kullanıcı isteği ve içindeki ChatGPT execution packet'i **görev
-  sözleşmesidir**. `CLAUDE.md` çalışma/güvenlik/doğrulama kurallarını sağlar;
-  görevi yeniden tasarlama.
+- Güncel kullanıcı isteği ve içindeki ChatGPT execution packet'i hedef ve
+  kabul ölçütleri açısından **görev sözleşmesidir**. Önerilen yöntem körü körüne
+  onaylanmaz: `CLAUDE.md` §1.1'deki kanıt standardı ve eleştirel teknik
+  danışmanlık kurallarını uygula; kullanıcı hedefini sessizce değiştirme.
 - Talimatta aday dosya, sembol, modül veya çağrı zinciri verilmişse önce bunları
   hedefli doğrula; repository-wide keşifle başlama.
 - Kod keşfinde `codebase-memory-mcp` araçlarını `CLAUDE.md`'deki sırayla kullan.
@@ -27,6 +28,7 @@
   kalır.
 - Kullanıcıya görünen her yeni özellik/fix/iyileştirme için `CLAUDE.md` §4.2 uyarınca `public/release-notes/next.json` + değişiklik sonrası çekilmiş, doğrulanabilir gerçek Buyer Log PNG ekran görüntüsü aynı değişiklik setinde güncellenir; aşırı crop/bozuk/before/mockup görseller kabul edilmez ve Codex kaynaklı işler bu kuraldan muaf değildir.
 - PR/test/merge/TEST/STABLE işlerinde `CLAUDE.md` §3.1'e uy:
+  tek model varsayılan; yalnız somut yüksek riskte ikinci model denetimi.
   PR'da otomatik Actions testi yok (yerel test + PR açıklaması), zorunlu tam TEST regresyonu,
   ayrı yayın kararı ve sıfır Actions ZIP artifact yüklemesi.
 - `CLAUDE.md` ile bu dosya çelişir görünürse `CLAUDE.md` önceliklidir; bu dosya

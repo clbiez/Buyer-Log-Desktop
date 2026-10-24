@@ -15,12 +15,14 @@ yerel-öncelikli sipariş/koleksiyon yönetimi. Arayüz ve yorumlar Türkçe.
 
 ## 1 · Görev sözleşmesi ve öncelik
 
-- Güncel kullanıcı isteği ve onun içinde verilen ChatGPT execution packet'i
-  **görev sözleşmesidir**. Bu dosya görev kapsamını yeniden tanımlamaz; çalışma,
-  güvenlik ve doğrulama kurallarını belirler.
-- Execution packet içinde `TASK`, `EXPECTED BEHAVIOR`, `CURRENT FAILURE`,
+- Güncel kullanıcı isteği ve onun içindeki ChatGPT execution packet'i **hedef,
+  kapsam ve kabul ölçütleri açısından görev sözleşmesidir**. Önerilen uygulama
+  yöntemi ise kaynak kod ve kanıtlarla doğrulanması gereken bir hipotezdir.
+- Execution packet içindeki `TASK`, `EXPECTED BEHAVIOR`, `CURRENT FAILURE`,
   `INVESTIGATION SCOPE`, `IMPLEMENTATION RULES`, `VALIDATION`, `DONE WHEN`
-  bölümleri varsa bunları yeniden tasarlama; doğrudan uygulama kontratı olarak kullan.
+  bölümlerini esas al; sırf farklı yaklaşım denemek için görevi yeniden tasarlama.
+  Önerilen yöntem hedefe aykırı, riskli veya gereksiz karmaşıksa gerekçeli daha
+  iyi alternatifi seç; kullanıcıya ait ürün/kapsam kararlarını sessizce değiştirme.
 - Talimatta aday dosya, sembol, modül veya çağrı zinciri verilmişse önce bunları
   **hedefli doğrula**. Baştan repository keşfi yapma.
 - Talimat ile gerçek source arasında maddi çelişki görürsen yalnız çelişen varsayımı
@@ -29,6 +31,25 @@ yerel-öncelikli sipariş/koleksiyon yönetimi. Arayüz ve yorumlar Türkçe.
   uygulama; çelişkiyi bildir.
 - Görev yeterince açıksa tekrar soru sorma. Eksik bilgi source/Codebase Memory ile
   çözülebiliyorsa önce oradan çöz.
+
+### 1.1 · Kanıta dayalı eleştirel mühendislik danışmanlığı
+
+- Kullanıcının fikrini otomatik onaylama; sırf muhalefet için sorun da üretme.
+  Hedefi, önerilen yöntemi ve teknik zorunlulukları birbirinden ayır.
+- Hata, eksik varsayım veya önemli risk görürsen ilk faydalı cümlede açıkça
+  belirt; daha iyi bir seçenek varsa gerekçesini ve somut ödünleşimini ver.
+  Sağlam yaklaşımı gereksiz tartışma açmadan uygula; boş övgü/giriş kullanma.
+- Önemli teknik iddialarda kanıt düzeyini ayır: **[Doğrulandı]** source, test,
+  log veya runtime gözlemi; **[Muhtemel]** güçlü ancak dolaylı kanıt;
+  **[Hipotez]** henüz sınanmamış açıklama; **[Bilinmiyor]** yetersiz veri.
+  Etiketleri her cümlede değil, maddi karar ve risklerde kullan.
+- Kod/test çalıştırmadıysan çalıştırılmış gibi gösterme. Kök neden kanıtlanmadan
+  kesin neden söyleme; gerektiğinde hedefli doğrulama yap.
+- Kullanıcı itirazında kanıtsız geri adım atma veya inat etme; yeni bulguyla
+  gerekçeli biçimde görüşünü güncelle.
+- Teknik tercihleri özerk yönet; ürün sahibinin bilinçli UX/iş kuralı tercihini
+  teknik kusur gibi geçersiz sayma. Geniş kapsamlı veya geri dönüşü zor
+  kararlarda somut etkiyi belirterek kullanıcı kararı iste.
 
 ## 2 · Minimum bağlamla keşif
 
@@ -67,8 +88,9 @@ yerel-öncelikli sipariş/koleksiyon yönetimi. Arayüz ve yorumlar Türkçe.
 4. Önce yalnız ilgili test(ler)i çalıştır. Tam `npm test` paketini final/commit
    öncesi gerektiğinde en fazla bir kez çalıştır.
 5. Flake'i yalnız ilgili testi tekrar ederek ayır; tüm suite'i tekrar tekrar koşma.
-6. Anlamlı/non-trivial diff'i bir reviewer ile en fazla bir kez incelet. Explorer →
-   reviewer → reviewer zinciri kurma.
+6. Anlamlı/non-trivial diff'i önce tek ajanla hedefli ve eleştirel diff
+   incelemesinden geçir. İkinci model yalnız §3.1 risk eşiğinde; gereksiz
+   explorer → reviewer → reviewer zinciri kurma.
 7. Subagent yalnız gerçekten paralel ve ayrık iş önemli zaman kazandırıyorsa kullan.
 8. Gerçek UI değişikliğini mümkünse gerçek tarayıcıda doğrula. `server/*.js`
    değiştiyse restart gereksinimini bildir; istemci dosyalarında yenileme yeter.
@@ -86,6 +108,21 @@ Dosya-adı filtresi: `npm test -- collection` gibi; filtreler OR mantığındad�
 - İşi önce riskine göre ayır: **P0** veri kaybı/güvenlik/bozuk hesaplama,
   **P1** güvenilirlik/perf/CI, **P2** özellik, **P3** görsel kozmetik.
   Aktif P0'ı çözmeden ilgisiz P2/P3 işi yayınlama.
+- **Tek model varsayılandır:** P2/P3 ve yerel etkili P1 işlerinde aynı model
+  hedefli keşif → uygulama → ilgili test → eleştirel diff kontrolü yapar.
+  Ayrı Claude+Codex turları, tam repo tekrar taraması veya ikinci reviewer
+  sırf alışkanlık diye başlatılmaz.
+- **İkinci model istisnadır:** P0 değişikliği veya geniş etkili P1 içinde
+  veri migrasyonu/silme, kimlik-yetki, çok kullanıcılı veri tutarlılığı,
+  PLM/ASAS senkronu, FX/fiyat/royalty hesabı, updater/rollback gibi kritik
+  sınırları değiştiren non-trivial diff varsa bağımsız model incelemesini
+  değerlendir. Bu alanların yalnız görünüm/metin düzeltmeleri otomatik olarak
+  yüksek risk sayılmaz.
+- İkinci model gerekiyorsa bütün repo yerine yalnız değişen diff'i, ilgili
+  sözleşmeleri, testleri ve bilinen riskleri aktar; en fazla bir çapraz inceleme
+  turu yap. Araç/izin/bütçe yoksa denetimi yapılmış gibi gösterme:
+  hedefli testleri güçlendir, kalan riski bildir ve gerektiğinde merge'i durdur.
+  **İkinci model, test ve CI'ın yerine geçmez.**
 - Aynı modüldeki birbiriyle ilişkili istekleri aynı görev/PR'da topla;
   bağımsız yüksek riskli değişiklikleri tek PR'a yığma. Aynı modülde
   çakışan paralel agent/PR çalışması başlatma.
@@ -254,6 +291,8 @@ Finali kısa tut. Normalde yalnız şunları bildir:
 - **Değişti:** uygulanan davranış/fix
 - **Dosyalar:** gerçekten değişen ana dosyalar
 - **Doğrulama:** çalıştırılan hedefli testler ve sonucu
+- **Karar/risk:** öneriden anlamlı sapma, itiraz veya kalan yüksek risk varsa
+  gerekçe ve daha iyi alternatifi kısaca belirt; yoksa bu satırı atla
 - **Not:** varsa restart, kalan risk veya kullanıcı aksiyonu
 
 Araştırma günlüğünü, tüm okunan dosyaları veya gereksiz mimari özeti finalde dökme.
