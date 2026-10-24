@@ -1489,6 +1489,122 @@
           "en": "One page title on the actual Automations screen."
         }
       }
+    },
+    {
+      "id": "contextual-collection-save",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Kayıt ve paylaşım durumunu Koleksiyon’da görün",
+        "en": "See Collection save and sharing status in context"
+      },
+      "body": {
+        "tr": "Yerel kayıt, gönderim, paylaşım bekleme, çakışma ve hata ayrı durumlar olarak gösterilir. Başarılı yerel kayıt başka cihazlara ulaştı diye sunulmaz; çakışma veya hata yerel girişin durumunu görünür tutar.",
+        "en": "Local save, saving, sharing pending, conflict and failure are shown as separate states. A local acknowledgement does not claim delivery to other devices; conflicts and failures keep the local edit status visible."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "contextual-collection-save.png",
+        "alt": {
+          "tr": "Gerçek kalıcı kayıt onayı sonrası demo Koleksiyon’un yerel kayıt durumu.",
+          "en": "Local save status after an actual durable acknowledgement in a demo Collection."
+        },
+        "caption": {
+          "tr": "Gerçek kalıcı kayıt onayı sonrası demo Koleksiyon’un yerel kayıt durumu.",
+          "en": "Local save status after an actual durable acknowledgement in a demo Collection."
+        }
+      }
+    },
+    {
+      "id": "contextual-manual-price-feedback",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Fiyat girişi",
+        "en": "Collection · Price entry"
+      },
+      "title": {
+        "tr": "Fiyat girişi uyarıları pencerenin içinde görünür",
+        "en": "Price-entry validation stays inside the dialog"
+      },
+      "body": {
+        "tr": "Eksik üretici ve geçersiz fiyat ortak erişilebilir hata görünümüyle gösterilir. Pencere kapandığında klavye odağı açan düğmeye döner.",
+        "en": "Missing manufacturer and invalid price use the shared accessible error state. Closing the dialog returns keyboard focus to its trigger."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "contextual-manual-price-validation.png",
+        "alt": {
+          "tr": "Demo fiyat penceresinde üretici doğrulama mesajı.",
+          "en": "Manufacturer validation message in the actual demo price dialog."
+        },
+        "caption": {
+          "tr": "Demo fiyat penceresinde üretici doğrulama mesajı.",
+          "en": "Manufacturer validation message in the actual demo price dialog."
+        }
+      }
+    },
+    {
+      "id": "cancellable-detail-export",
+      "type": "feature",
+      "module": {
+        "tr": "Detay çekmecesi · Excel",
+        "en": "Detail drawer · Excel"
+      },
+      "title": {
+        "tr": "Detay Excel aktarımı ilerlemeyi gösterir ve iptal edilebilir",
+        "en": "Detail Excel export shows progress and supports cancellation"
+      },
+      "body": {
+        "tr": "Ortak detay aktarımı işlenen satır ve görsel adımlarını gösterir, büyük işleri parçalara böler. İptal veya çekmeceyi kapatma indirmeyi engeller. Paketleme sırasında sahte yüzde gösterilmez; özel aktarıcılar yalnız iptali destekliyorsa iptal düğmesi sunar.",
+        "en": "Shared detail exports show processed row/image steps and yield between batches. Cancel or closing the drawer prevents download. Packing shows no fabricated percentage; custom exporters offer cancellation only when they support it."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "cancellable-detail-export.png",
+        "alt": {
+          "tr": "Gerçek 2.000 demo satırlı detay aktarımında ilerleme ve iptal.",
+          "en": "Progress and cancellation during an actual 2,000-row demo detail export."
+        },
+        "caption": {
+          "tr": "Gerçek 2.000 demo satırlı detay aktarımında ilerleme ve iptal.",
+          "en": "Progress and cancellation during an actual 2,000-row demo detail export."
+        }
+      }
+    },
+    {
+      "id": "bounded-release-onboarding",
+      "type": "improvement",
+      "module": {
+        "tr": "Başlangıç · Sürüm notları",
+        "en": "Startup · Release notes"
+      },
+      "title": {
+        "tr": "İlk açılışta kısa ve ilgili sürüm özeti",
+        "en": "A short, relevant release summary on first use"
+      },
+      "body": {
+        "tr": "Yeni profil yalnız son sürümün kısa özetini görür. Geri dönen profilde otomatik özet en fazla son üç yeni sürüm ve altı başlık içerir. Yeni değişikliklerin tüm detayları ile tam arşiv ayrı eylemlerle açılır; kapatma ve atlama tüm kartları gezmeyi gerektirmez. Onay kullanıcı ve cihaz bazında korunur.",
+        "en": "A new profile sees a short summary of the latest release. Returning profiles get at most the latest three unseen releases and six highlights automatically. Full new-change details and the complete archive open through explicit actions; closing or skipping does not require visiting every card. Acknowledgement is stored per user and device."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "relevant-release-summary.png",
+        "alt": {
+          "tr": "Gerçek ilk açılışta en fazla altı başlıklı sürüm özeti.",
+          "en": "The actual first-use release summary with at most six highlights."
+        },
+        "caption": {
+          "tr": "Gerçek ilk açılışta en fazla altı başlıklı sürüm özeti.",
+          "en": "The actual first-use release summary with at most six highlights."
+        }
+      }
     }
   ]
 }

@@ -3,6 +3,7 @@
 const INDEX_URL='release-notes/index.json';
 const SEEN_KEY='bl.releaseNotes.lastSeenStable.v1';
 let indexCache=null,dialog=null,state=null,legacyCache=null,lightbox=null;
+let openGeneration=0;
 const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const lang=()=>{try{return typeof appLang!=='undefined'&&appLang==='en'?'en':'tr';}catch(_){return document.documentElement.lang==='en'?'en':'tr';}};
 const L=(tr,en)=>lang()==='en'?en:tr;
@@ -34,6 +35,19 @@ async function legacyRows(){
 function seenStorage(){return global.BLStorage||global.localStorage;}
 function readSeen(){try{return String(seenStorage()?.getItem(SEEN_KEY)||'').trim();}catch(_){return '';}}
 function writeSeen(v){if(!v)return;try{seenStorage()?.setItem(SEEN_KEY,v);}catch(_){}}
+function automaticPlan(entries,current,last){
+  if(!/^\d+\.\d+(?:\.\d+)?$/.test(current||''))return null;
+  if(!/^\d+\.\d+(?:\.\d+)?$/.test(last||''))last='';
+  const eligible=(entries||[]).filter(e=>e?.version&&e.file&&cmp(e.version,current)<=0).sort((a,b)=>cmp(a.version,b.version));
+  if(!eligible.length||last&&cmp(current,last)<=0)return null;
+  const firstUse=!last,candidates=firstUse?eligible.slice(-1):eligible.filter(e=>cmp(e.version,last)>0);
+  if(!candidates.length)return null;
+  return {current,firstUse,candidates,entries:candidates.slice(-3),totalReleases:candidates.length};
+}
+function shortSummary(value){
+  const text=String(value||'').trim();
+  return text.length>360?text.slice(0,360).replace(/\s+\S*$/,'')+'…':text;
+}
 function ensureDialog(){
   if(dialog?.isConnected)return dialog;
   dialog=document.createElement('dialog');dialog.className='blRnDialog';dialog.setAttribute('aria-labelledby','blRnTitle');
@@ -41,7 +55,7 @@ function ensureDialog(){
   document.body.appendChild(dialog);
   dialog.querySelector('[data-rn-close]').addEventListener('click',()=>dialog.close());
   dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close();});
-  dialog.addEventListener('close',()=>{if(state?.auto)writeSeen(ver());state=null;});
+  dialog.addEventListener('close',()=>{++openGeneration;if(state?.ackVersion)writeSeen(state.ackVersion);state=null;});
   dialog.addEventListener('keydown',e=>{
     if(!state||lightbox?.open)return;
     if(e.key==='ArrowLeft'&&state.index>0){e.preventDefault();state.index--;renderState();}
@@ -131,10 +145,31 @@ function renderCard(deck,index){
 function renderLegacy(row){
   dialog.querySelector('[data-rn-stage]').innerHTML='<div class="blRnMeta"><span>v'+esc(row.version)+'</span><span>'+esc(row.publishedAt||'')+'</span></div><div class="blRnCard"><div class="blRnFigure">'+fallbackVisual(row)+'</div><section class="blRnCopy blGuideCopy"><div class="blGuideEyebrow">'+esc(L('METİN ARŞİVİ','TEXT ARCHIVE'))+'</div><h2>'+esc(pick(row.title))+'</h2><ul class="blRnLegacyItems">'+row.items.map(x=>'<li>'+esc(pick(x))+'</li>').join('')+'</ul></section></div>';
 }
+function renderSummary(){
+  const snapshot=state,latest=snapshot.releases.at(-1),changes=[];
+  for(const release of [...snapshot.releases].reverse())for(const change of release.changes||[])if(changes.length<6)changes.push({release,change});
+  const stage=dialog.querySelector('[data-rn-stage]');
+  dialog.querySelector('[data-rn-title]').textContent=snapshot.plan.firstUse?L('Buyer Log’a hoş geldiniz','Welcome to Buyer Log'):L('Buyer Log güncellendi','Buyer Log has been updated');
+  dialog.querySelector('[data-rn-subtitle]').textContent=snapshot.plan.firstUse?L('Başlamak için son sürümün kısa özeti.','A short summary of the latest release to get started.'):L('Son gördüğünüz sürümden sonraki yeniliklerin kısa özeti.','A short summary of changes since your last acknowledged version.');
+  stage.innerHTML='<section class="blRnSummary"><div class="blRnMeta"><span>v'+esc(latest.version)+'</span><span>'+esc(latest.publishedAt||'')+'</span></div><h2>'+esc(pick(latest.title))+'</h2><p>'+esc(shortSummary(pick(latest.summary)))+'</p>'+(changes.length?'<ul>'+changes.map(({release,change})=>'<li><b>'+esc(pick(change.title))+'</b><small>'+esc(pick(change.module))+' · v'+esc(release.version)+'</small></li>').join('')+'</ul>':'')+'<p class="blRnSummaryCount">'+esc(snapshot.plan.firstUse?L('Eski sürümler sürüm geçmişinde saklanır.','Older releases remain available in Version History.'):L(snapshot.plan.totalReleases+' yeni sürüm · özet son '+snapshot.releases.length+' sürümden seçildi.',snapshot.plan.totalReleases+' new releases · highlights from the latest '+snapshot.releases.length+' releases.'))+'</p><div class="blRnSummaryActions"><button type="button" class="navActionBtn primary" data-rn-summary-close>'+esc(L('Başlayalım','Get started'))+'</button><button type="button" class="navActionBtn" data-rn-summary-details>'+esc(L('Yeni değişikliklerin detayları','Details of new changes'))+'</button><button type="button" class="navActionBtn" data-rn-summary-archive>'+esc(L('Tüm sürüm geçmişi','Full version history'))+'</button></div></section>';
+  stage.querySelector('[data-rn-summary-close]').onclick=()=>dialog.close();
+  stage.querySelector('[data-rn-summary-archive]').onclick=()=>{writeSeen(snapshot.ackVersion);void openArchive();};
+  stage.querySelector('[data-rn-summary-details]').onclick=async event=>{
+    const button=event.currentTarget,generation=openGeneration;button.disabled=true;
+    const releases=(await Promise.all(snapshot.plan.candidates.map(loadRelease))).filter(Boolean);
+    if(state!==snapshot||!dialog.open||generation!==openGeneration)return;
+    if(releases.length){state={...snapshot,summary:false,releases,index:0};await renderState();dialog.querySelector('[data-rn-next]')?.focus();}
+    else {button.disabled=false;global.BLUI?.notify?.(L('Sürüm ayrıntıları yüklenemedi.','Release details could not be loaded.'),{kind:'error',language:lang()});}
+  };
+}
 async function renderState(){
   if(!state)return;setHeader(state.auto,state.releases.length);
+  const rendering=state;
+  dialog.classList.toggle('blRnDialog--summary',!!state.summary);
   const archive=dialog.querySelector('[data-rn-archive]');archive.hidden=!!state.auto;dialog.classList.toggle('blRnDialog--unseen',!!state.auto);
+  if(state.summary)return renderSummary();
   if(!state.auto)await renderArchive(state.active);
+  if(state!==rendering)return;
   if(state.legacy)return renderLegacy(state.legacy);
   const deck=[];state.releases.forEach(release=>(release.changes||[]).forEach(change=>deck.push({release,change})));
   if(!deck.length){dialog.querySelector('[data-rn-stage]').innerHTML='<div class="blRnEmpty">'+esc(L('Bu sürüm için gösterilecek değişiklik bulunmuyor.','There are no changes to show for this release.'))+'</div>';return;}
@@ -146,23 +181,21 @@ async function openVersion(version){
   const legacy=(await legacyRows()).find(x=>x.version===version);if(legacy){state={auto:false,releases:[],index:0,active:version,legacy};return renderState();}
 }
 async function openArchive(){
+  const generation=++openGeneration;let next;
   ensureDialog();const first=(await loadIndex()).releases[0];
-  if(first){const release=await loadRelease(first);state={auto:false,releases:release?[release]:[],index:0,active:first.version};}
-  else {const l=(await legacyRows())[0];state={auto:false,releases:[],index:0,active:l?.version||'',legacy:l};}
-  await renderState();if(!dialog.open)dialog.showModal();
+  if(first){const release=await loadRelease(first);next={auto:false,releases:release?[release]:[],index:0,active:first.version};}
+  else {const l=(await legacyRows())[0];next={auto:false,releases:[],index:0,active:l?.version||'',legacy:l};}
+  if(generation!==openGeneration)return;state=next;
+  await renderState();if(generation===openGeneration&&state&&!dialog.open)dialog.showModal();
 }
 function bootReady(){const b=document.getElementById('blBootGuard');if(!b||b.hidden)return true;try{return getComputedStyle(b).display==='none';}catch(_){return false;}}
 function waitForBoot(){return new Promise(resolve=>{if(bootReady())return setTimeout(resolve,350);const t=setInterval(()=>{if(bootReady()){clearInterval(t);setTimeout(resolve,350);}},400);});}
 async function showUnseen(){
-  const current=ver(),last=readSeen(),entries=(await loadIndex()).releases;
-  if(!current||!entries.length)return;
-  let candidates=entries.filter(e=>cmp(e.version,current)<=0&&(!last||cmp(e.version,last)>0)).sort((a,b)=>cmp(a.version,b.version));
-  // İlk kez görsel arşiv kullanan cihazda önceki sürüm anahtarı olmayabilir.
-  // Bu durumda mevcut sürüme kadarki tüm görsel stable arşivi gösterilir; böylece
-  // birkaç sürüm atlayarak güncelleyen kullanıcı ara sürümleri kaçırmaz.
-  if(!candidates.length)return;
-  const releases=(await Promise.all(candidates.map(loadRelease))).filter(Boolean);if(!releases.length)return;
-  await waitForBoot();ensureDialog();state={auto:true,releases,index:0};await renderState();if(!dialog.open)dialog.showModal();
+  const generation=++openGeneration,current=ver(),last=readSeen(),plan=automaticPlan((await loadIndex()).releases,current,last);
+  if(!plan)return;
+  const releases=(await Promise.all(plan.entries.map(loadRelease))).filter(Boolean);if(!releases.length)return;
+  await waitForBoot();if(generation!==openGeneration)return;
+  ensureDialog();state={auto:true,summary:true,plan,releases,index:0,ackVersion:current};await renderState();if(!dialog.open)dialog.showModal();dialog.querySelector('[data-rn-summary-close]')?.focus();
 }
 function bind(){
   const btn=document.getElementById('appVersionBtn');if(btn&&!btn.dataset.rnBound){btn.dataset.rnBound='1';btn.addEventListener('click',e=>{e.preventDefault();e.stopImmediatePropagation();openArchive();},true);btn.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openArchive();}},true);}

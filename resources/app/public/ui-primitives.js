@@ -50,6 +50,41 @@
     return element.firstElementChild;
   }
 
+  function persistenceView(status,options={}){
+    const en=options.language==='en';
+    const labels={local:en?'Saved on this device':'Bu cihazda kaydedildi',sending:en?'Local edit secured · saving':'Yerel giriş korundu · kaydediliyor',pending:en?'Saved on this device · Sharing pending':'Bu cihazda kaydedildi · Paylaşım bekliyor',conflict:en?'Conflict · local edit preserved':'Çakışma · yerel giriş korundu',failed:en?'Save failed · retry required':'Kayıt başarısız · yeniden deneyin'};
+    const kind=status==='failed'?'error':status==='conflict'?'warning':'info';
+    return `<span class="uiPersistence uiPersistence--${kind}" role="${kind==='error'?'alert':'status'}" aria-live="${kind==='error'?'assertive':'polite'}" data-persistence-state="${escapeHtml(status)}"><b>${escapeHtml(labels[status]||labels.pending)}</b>${options.detail?`<span>${escapeHtml(options.detail)}</span>`:''}</span>`;
+  }
+
+  function progressView(options={}){
+    const total=Math.max(1,Number(options.total)||1),completed=Math.max(0,Math.min(total,Number(options.completed)||0)),label=escapeHtml(options.label||'');
+    return `<div class="uiProgress" role="status" aria-live="polite" aria-atomic="true"><span data-ui-progress-label>${label}</span><progress max="${total}"${options.indeterminate?'':` value="${completed}"`} aria-label="${label}"></progress><small data-ui-progress-units${options.indeterminate?' hidden':''}>${completed} / ${total}</small><button type="button" class="navActionBtn" data-ui-progress-cancel${options.cancellable?'':' hidden'}>${options.language==='en'?'Cancel':'İptal'}</button></div>`;
+  }
+
+  function renderProgress(target,options={}){
+    if(!target)return;
+    if(!target.querySelector('.uiProgress'))target.innerHTML=progressView(options);
+    const total=Math.max(1,Number(options.total)||1),completed=Math.max(0,Math.min(total,Number(options.completed)||0)),progress=target.querySelector('progress');
+    target.querySelector('[data-ui-progress-label]').textContent=options.label||'';
+    progress.max=total;progress.setAttribute('aria-label',options.label||'');
+    if(options.indeterminate)progress.removeAttribute('value');else progress.value=completed;
+    const units=target.querySelector('[data-ui-progress-units]');units.hidden=!!options.indeterminate;units.textContent=completed+' / '+total;
+    target.hidden=false;
+    const cancel=target.querySelector('[data-ui-progress-cancel]');
+    cancel.hidden=!options.cancellable;cancel.textContent=options.language==='en'?'Cancel':'İptal';cancel.onclick=options.onCancel||null;
+  }
+
+  function createProgress({total=1,onProgress=()=>{},yieldTask=()=>new Promise(resolve=>setTimeout(resolve,0))}={}){
+    const controller=new AbortController();let completed=0;
+    total=Math.max(1,Math.floor(Number(total)||1));
+    const check=()=>{if(controller.signal.aborted){const error=new Error('Export cancelled');error.name='AbortError';throw error;}};
+    return {signal:controller.signal,cancel:()=>controller.abort(),check,
+      checkpoint(value,label,options={}){check();completed=Math.max(completed,Math.min(total,Math.max(0,Math.floor(Number(value)||0))));onProgress({completed,total,label,...options});},
+      async yield(){check();await yieldTask();check();}
+    };
+  }
+
   function normalizeKind(kind){
     return STATE_KINDS.includes(kind)?kind:'info';
   }
@@ -208,5 +243,5 @@
     return `<span class="blOrb${size?` blOrb--${escapeHtml(size)}`:''}" data-state="${kind}" aria-hidden="true"></span>`;
   }
 
-  return Object.freeze({STATE_KINDS,orbHtml,stateView,renderState,feedbackDuration,feedbackView,notify});
+  return Object.freeze({STATE_KINDS,orbHtml,stateView,renderState,persistenceView,progressView,renderProgress,createProgress,feedbackDuration,feedbackView,notify});
 });

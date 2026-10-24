@@ -95,3 +95,6 @@
 .blDetailDrawerHead{position:relative;z-index:30}
 .blDetailDrawerSubbar{z-index:20}
 .blDetailTableWrap{position:relative;z-index:0}
+.blDetailDrawerBackdrop{transition:opacity var(--bl-motion-fast) var(--bl-ease)}
+.blDetailDrawerPanel,.blDetailDrawer.is-open .blDetailDrawerPanel{transition:transform var(--bl-motion-enter) var(--bl-ease),visibility 0s}
+@media(prefers-reduced-motion:reduce){.blDetailDrawerBackdrop,.blDetailDrawerPanel,.blDetailDrawer.is-open .blDetailDrawerPanel{transition:none!important;transform:none!important}}

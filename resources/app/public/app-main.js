@@ -21868,6 +21868,21 @@ let kolWorkspaceSaveTimer=null;
 let kolWorkspaceSaving=false;
 let kolWorkspacePending=false;
 let kolWorkspaceSavePromise=null;
+const kolSaveFeedbackByOwner=new Map();
+function kolSetSaveFeedback(status,detail='',ownerId=kolWorkspaceOwnerId){
+  kolSaveFeedbackByOwner.set(ownerId,{status,detail});
+  try{kolRenderSaveFeedback();}catch(_){/* Presentation cannot fail a successful save. */}
+}
+function kolRenderSaveFeedback(){
+  const target=document.getElementById('kolSaveState'),value=kolSaveFeedbackByOwner.get(kolWorkspaceOwnerId);
+  if(!target)return;
+  target.hidden=!value||!kolWorkspaceCanEdit;
+  if(value&&window.BLUI?.persistenceView)target.innerHTML=window.BLUI.persistenceView(value.status,{language:appLang,detail:value.detail});
+}
+function kolReplicationFeedback(replication){
+  if(Number(replication?.mergeConflicts)>0||replication?.state==='conflict')return 'conflict';
+  return replication?.ok===false||replication?.state==='error'?'pending':'local';
+}
 function kolWorkspaceLocalKey(ownerId){return `bl.collection.workspace.${String(ownerId||'anonymous').replace(/[^A-Za-z0-9_-]/g,'_')}.v1`;}
 function kolWorkspacePendingKey(ownerId){return `bl.collection.pending.${String(ownerId||'anonymous').replace(/[^A-Za-z0-9_-]/g,'_')}.v1`;}
 function kolPersistPendingWorkspace(status='pending'){
@@ -21878,8 +21893,9 @@ function kolPersistPendingWorkspace(status='pending'){
       rows:kolRows.map(kolPersistableRow),manufacturers:kolManufacturers,customColumns:kolCustomCols,statusCatalog:kolStatusEntries(),nextId:kolNextId,
       updatedAt:new Date().toISOString(),
     }));
+    kolSetSaveFeedback(status==='conflict'?'conflict':status==='save-failed'?'failed':status==='saving'||status==='rebasing'?'sending':'local');
     return true;
-  }catch(err){showToast((appLang==='en'?'Pending Collection change could not be secured on this device: ':'Bekleyen Koleksiyon değişikliği bu cihazda güvenli hale getirilemedi: ')+(err.message||err));return false;}
+  }catch(err){kolSetSaveFeedback('failed',String(err.message||err));showToast((appLang==='en'?'Pending Collection change could not be secured on this device: ':'Bekleyen Koleksiyon değişikliği bu cihazda güvenli hale getirilemedi: ')+(err.message||err));return false;}
 }
 function kolReadPendingWorkspace(ownerId){try{return JSON.parse(localStorage.getItem(kolWorkspacePendingKey(ownerId))||'null');}catch(_){return null;}}
 function kolClearPendingWorkspace(ownerId){try{localStorage.removeItem(kolWorkspacePendingKey(ownerId));}catch(_){}}
@@ -22171,6 +22187,7 @@ async function kolSaveWorkspaceNow(saveOptions){
   const rowMode=Boolean(change);
   if(rowMode&&options.atomic===true)payload.atomic=true;
   kolWorkspaceSaving=true;kolWorkspacePending=false;
+  kolSetSaveFeedback('sending');
   kolWorkspaceSavePromise=(async()=>{
     try{
       const res=await fetch(`/api/collection-workspaces/${encodeURIComponent(ownerId)}`,{
@@ -22206,6 +22223,7 @@ async function kolSaveWorkspaceNow(saveOptions){
       const dirty=kolHasDirtyWorkspace();
       if(dirty)kolPersistPendingWorkspace(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'pending');
       else kolClearPendingWorkspace(ownerId);
+      kolSetSaveFeedback(dirty?(Array.isArray(data.conflicts)&&data.conflicts.length?'conflict':'sending'):kolReplicationFeedback(data.replication),'',ownerId);
       return {ok:true,durable:true,pending:dirty,retryOwnConflict:ownConflictRebased};
     }
     catch(err){
@@ -22220,6 +22238,7 @@ async function kolSaveWorkspaceNow(saveOptions){
         showToast(appLang==='en'?'The Collection changed while saving. Your local edit is safe on this device.':'Koleksiyon kayıt sırasında değişti. Yerel girişiniz bu cihazda güvende.');
       }else showToast((appLang==='en'?'Collection page could not be saved: ':'Koleksiyon sayfası kaydedilemedi: ')+(err.message||err));
       if(kolWorkspaceOwnerId===ownerId)kolPersistPendingWorkspace('save-failed');
+      kolSetSaveFeedback(conflictCode||err.code==='COLLECTION_ATOMIC_CONFLICT'?'conflict':'failed',String(err.message||err),ownerId);
       return {ok:false,pending:true,error:err};
     }
     finally{kolWorkspaceSaving=false;kolWorkspaceSavePromise=null;}
@@ -22244,6 +22263,7 @@ const kolReplicationNoticeByOwner=new Map();
 function kolReportReplication(replication){
   if(!replication||typeof replication!=='object')return;
   const owner=String(replication.ownerId||kolWorkspaceOwnerId||'');
+  if(owner&&(owner!==kolWorkspaceOwnerId||!kolHasDirtyWorkspace()))kolSetSaveFeedback(kolReplicationFeedback(replication),'',owner);
   const failed=replication.ok===false||replication.state==='conflict'||replication.state==='error';
   // Eşzamanlı düzenleme birleştirildi ama aynı alanda önce kaydedilen değer
   // korundu: kullanıcının değeri Senkron çakışmalarında bekler, sessiz kalmaz.
@@ -26449,7 +26469,7 @@ async function openKolManualPriceModal(row,{confirm=false}={}){
         ? 'Manual Collection prices are collected under one Quotations record so entries stay traceable without creating separate records.'
         : 'Koleksiyonda elle girilen fiyatlar ayrı kayıtlar açmadan tek bir Quotations kaydı altında toplanır ve izlenebilir kalır.')}</div>
     </div>
-    <div class="kolManualFoot"><span id="_kolManualStatus"></span>
+    <div class="kolManualFoot"><div id="_kolManualStatus"></div>
       <button type="button" class="tbtn" data-overlay-close>${escapeHtml(en?'Cancel':'Vazgeç')}</button>
       <button type="button" class="navActionBtn" id="_kolManualSave">${escapeHtml(en?'Save':'Kaydet')}</button>
     </div>
@@ -26457,21 +26477,23 @@ async function openKolManualPriceModal(row,{confirm=false}={}){
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
   modal.addEventListener('click',event=>{const manage=event.target.closest('[data-manage-email-groups]');if(manage){event.preventDefault();window.BLEmailGroups?.open?.();}});
-  const close=()=>modal.remove();
+  const close=()=>{window.BLLayerSystem?.closeDialog?.(modal);modal.remove();};
   modal.querySelectorAll('[data-overlay-close]').forEach(b=>b.addEventListener('click',close));
   modal.addEventListener('click',e=>{if(e.target===modal)close();});
-  modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();close();}});
+  modal.addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();e.stopPropagation();close();}});
   const status=modal.querySelector('#_kolManualStatus');
-  setTimeout(()=>modal.querySelector('#_kolManualMfr')?.focus(),0);
+  const setStatus=(kind,title)=>{if(window.BLUI?.renderState)window.BLUI.renderState(status,{kind,title});else status.textContent=title;};
+  if(window.BLLayerSystem?.openDialog)window.BLLayerSystem.openDialog(modal,{onClose:close,initialFocus:'#_kolManualMfr'});
+  else modal.querySelector('#_kolManualMfr')?.focus();
 
   modal.querySelector('#_kolManualSave').addEventListener('click',async e=>{
     const btn=e.currentTarget;
     const mfr=norm(modal.querySelector('#_kolManualMfr').value);
     const rawPrice=modal.querySelector('#_kolManualPriceInput').value;
     const price=kolParseMoneyNum(rawPrice);
-    if(!mfr){status.textContent=en?'Enter a manufacturer.':'Üretici girin.';return;}
-    if(!Number.isFinite(price)||price<=0){status.textContent=en?'Enter a valid price.':'Geçerli bir fiyat girin.';return;}
-    btn.disabled=true;status.textContent=en?'Saving…':'Kaydediliyor…';
+    if(!mfr){setStatus('error',en?'Enter a manufacturer.':'Üretici girin.');return;}
+    if(!Number.isFinite(price)||price<=0){setStatus('error',en?'Enter a valid price.':'Geçerli bir fiyat girin.');return;}
+    btn.disabled=true;setStatus('info',en?'Saving…':'Kaydediliyor…');
     try{
       kolPushUndo();
       if(!row.pricing)row.pricing={};
@@ -26510,7 +26532,7 @@ async function openKolManualPriceModal(row,{confirm=false}={}){
             ?(en?'Price saved; the shared Manual Prices quotation was created.':'Fiyat kaydedildi; ortak Elle Girilen Fiyatlar quotation kaydı oluşturuldu.')
             :(en?'Price saved to the shared Manual Prices quotation.':'Fiyat, ortak Elle Girilen Fiyatlar quotation kaydına eklendi.')
         :(en?'Price saved, but the shared manual Quotations record could not be updated.':'Fiyat kaydedildi ancak ortak manuel Quotations kaydı güncellenemedi.'));
-    }catch(err){status.textContent=err&&err.message||String(err);btn.disabled=false;}
+    }catch(err){setStatus('error',err&&err.message||String(err));btn.disabled=false;}
   });
 }
 
@@ -27742,6 +27764,7 @@ function renderKolEmptyState(rows){
 }
 function renderKol(){
   if(!document.getElementById('kolTable')) return;
+  kolRenderSaveFeedback();
   if(kolWorkspaceCanEdit){
     syncKolPlmFromCp();
     const licensorChanged=kolSyncLicensorsFromRules({save:false});

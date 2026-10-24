@@ -757,6 +757,14 @@ html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um
   font-family:var(--sans);font-size:var(--fs-2xl);font-weight:700;letter-spacing:-.01em;line-height:1.1;font-variant-numeric:tabular-nums;
 }
 :root .gfKpi>b{font-family:var(--sans);font-size:var(--fs-md);font-weight:700;font-variant-numeric:tabular-nums;}
+
+.uiPersistenceRegion,.uiProgressRegion{padding:8px 12px;border-bottom:1px solid var(--line);background:var(--card)}
+.uiPersistenceRegion[hidden],.uiProgressRegion[hidden]{display:none}
+.uiPersistence{display:flex;gap:8px;flex-wrap:wrap;color:var(--ink2);font-size:var(--fs-xs)}
+.uiPersistence--warning{color:var(--orange)}.uiPersistence--error{color:var(--red)}
+.uiProgress{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:var(--fs-xs);color:var(--ink2)}
+.uiProgress progress{width:min(260px,40vw);accent-color:var(--acc)}.uiProgress small{font-variant-numeric:tabular-nums}
+#_kolManualStatus{flex:1;min-width:0}#_kolManualStatus .uiState{width:100%;max-width:none;margin:0;padding:6px;min-height:0;gap:6px;text-align:left;box-shadow:none}#_kolManualStatus .uiStateIcon{width:18px;height:18px;flex-basis:18px}#_kolManualStatus .uiStateBody b{font-size:var(--fs-xs)}
 :root :is(.cpaChip .q,.bdaKpiMeta,.bpaTileSub,.psaKpi em){
   font-family:var(--sans);font-size:var(--fs-xs);font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;
 }

@@ -62,6 +62,13 @@
 .blRnNavBtn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .blRnLegacyItems{margin:12px 0 0;padding-left:18px;display:grid;gap:10px;color:var(--ink2);font-size:var(--fs-base);line-height:1.45}
 .blRnEmpty{margin:auto;padding:24px;border:1px dashed var(--line2);color:var(--muted);text-align:center}
+.blRnDialog--summary{width:min(860px,calc(100vw - 32px));height:auto;max-height:calc(100dvh - 32px)}
+.blRnDialog--summary .blRnLayout{display:block;flex:0 1 auto;overflow:auto}.blRnDialog--summary .blRnMain{display:block;overflow:visible}.blRnDialog--summary .blRnStage{display:block;min-height:0}
+.blRnSummary{display:block;max-width:74ch;margin:auto;width:100%;box-sizing:border-box}
+.blRnSummary h2{font:600 var(--fs-xl)/1.25 var(--sans);margin:0 0 12px}.blRnSummary p{font-size:var(--fs-sm);line-height:1.5;color:var(--ink2)}
+.blRnSummary ul{display:grid;gap:12px;padding:0;list-style:none}.blRnSummary li{display:grid;gap:3px;border-bottom:1px solid var(--line);padding-bottom:10px;font-size:var(--fs-sm)}
+.blRnSummary li small,.blRnSummaryCount{color:var(--muted);font-size:var(--fs-xs)}.blRnSummaryActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.blRnSummaryActions button:focus-visible{box-shadow:var(--focus-ring)}
 .blRnLightbox{width:min(1500px,calc(100vw - 32px));height:min(940px,calc(100dvh - 32px));max-width:none;max-height:none;padding:0;border:1px solid var(--line2);background:var(--card);color:var(--ink);box-shadow:var(--shadow-3);overflow:hidden}
 .blRnLightbox::backdrop{background:color-mix(in srgb,var(--ink) 72%,transparent)}
 .blRnLightbox[open]{display:flex;align-items:stretch;justify-content:stretch}

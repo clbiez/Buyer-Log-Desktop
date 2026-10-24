@@ -637,24 +637,32 @@ function downloadBuffer(buffer,name,mime){
   const blob=new Blob([buffer],{type:mime}),url=URL.createObjectURL(blob),a=document.createElement('a');
   a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);
 }
-async function exportExcelJsWithImages(columns,rows,fileName){
+async function exportExcelJsWithImages(columns,rows,fileName,operation){
   const helper=root.BLDetailImages;
   if(!active.images||!helper?.prepareForExcel||!helper?.addToExcel)return false;
   if(root.BLPerf?.ensureLibrary)await root.BLPerf.ensureLibrary('exceljs');
+  operation.check();
   if(!root.ExcelJS)return false;
   const wb=new root.ExcelJS.Workbook(),ws=wb.addWorksheet(L('Detay','Detail')),imageIndex=helper.buildIndex?.();
   ws.columns=[{header:L('Görsel','Image'),key:'__image',width:12},...columns.map((col,index)=>({header:col.label,key:'c'+index,width:Math.max(11,Math.min(40,Number(col.exportWidth)||18))}))];
   const head=ws.getRow(1);head.height=22;head.font={bold:true};head.alignment={vertical:'middle',wrapText:true};
-  rows.forEach(row=>{const excelRow=ws.addRow(['',...columns.map(col=>excelValueOf(col,row))]);excelRow.height=48;columns.forEach((col,index)=>{const fmt=excelFormatOf(col,row);if(fmt)excelRow.getCell(index+2).numFmt=fmt;});});
+  for(let start=0;start<rows.length;start+=200){
+    operation.check();rows.slice(start,start+200).forEach(row=>{const excelRow=ws.addRow(['',...columns.map(col=>excelValueOf(col,row))]);excelRow.height=48;columns.forEach((col,index)=>{const fmt=excelFormatOf(col,row);if(fmt)excelRow.getCell(index+2).numFmt=fmt;});});
+    operation.checkpoint(Math.min(rows.length,start+200),L('Satırlar hazırlanıyor','Preparing rows'));await operation.yield();
+  }
   for(let start=0;start<rows.length;start+=8){
     const slice=rows.slice(start,start+8);
     const prepared=await Promise.all(slice.map(async row=>{const url=imageUrl(row,imageIndex);if(!url)return null;try{return await helper.prepareForExcel(url);}catch(_){return null;}}));
+    operation.check();
     prepared.forEach((image,offset)=>{if(image)helper.addToExcel(ws,wb,image,start+offset+2,1,null,{moveAndSizeWithCells:true});});
+    operation.checkpoint(rows.length+Math.min(rows.length,start+8),L('Görseller hazırlanıyor','Preparing images'));await operation.yield();
   }
   ws.views=[{state:'frozen',ySplit:1}];
   if(rows.length)ws.autoFilter={from:{row:1,column:1},to:{row:rows.length+1,column:Math.max(1,columns.length+1)}};
   root.BLExcelDates?.normalizeExcelJsWorkbookDateColumns?.(wb);
+  operation.checkpoint(rows.length*2,L('Excel paketleniyor · iptal indirmeyi durdurur','Packing Excel · cancel prevents download'),{indeterminate:true});
   const buffer=await wb.xlsx.writeBuffer();
+  operation.check();
   downloadBuffer(buffer,fileName,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   return true;
 }
@@ -688,30 +696,44 @@ function toggleExportMenu(){
   if(menu)menu.hidden=!menu.hidden;
 }
 async function exportExcel(mode='visible'){
-  if(!active)return;
+  if(!active||active.exportOperation)return;
+  const report=active;
   const button=document.querySelector('#blSharedDetailDrawer [data-bl-detail-excel]'),old=button&&button.textContent;
+  const columns=mode==='all'?active.columns:currentColumns(),rows=filteredRows(),fileName=safeFilePart(active.fileName||active.title)+'.xlsx';
+  const images=report.images&&root.BLDetailImages?.prepareForExcel&&root.BLDetailImages?.addToExcel;
+  const operation=root.BLUI.createProgress({total:Math.max(1,rows.length*(images?2:1)),onProgress:value=>{
+    if(active!==report)return;report.exportProgress=value;
+    root.BLUI.renderProgress(document.querySelector('#blSharedDetailDrawer [data-bl-detail-progress]'),{...value,language:isEn()?'en':'tr',cancellable:!report.exporter||report.exporter.cancellable===true,onCancel:()=>operation.cancel()});
+  }});
+  report.exportOperation=operation;
   if(button){button.disabled=true;button.textContent=L('Hazırlanıyor…','Preparing…');}
   try{
-    const columns=mode==='all'?active.columns:currentColumns(),rows=filteredRows(),fileName=safeFilePart(active.fileName||active.title)+'.xlsx';
+    operation.checkpoint(0,L('Dışa aktarım hazırlanıyor','Preparing export'),{indeterminate:Boolean(report.exporter)});await operation.yield();
     if(typeof active.exporter==='function'){
-      await active.exporter({rows,columns,includeImages:active.images,fileName,title:active.title,source:active.source,valueOf});
-    }else if(!(await exportExcelJsWithImages(columns,rows,fileName))){
+      await active.exporter({rows,columns,includeImages:active.images,fileName,title:active.title,source:active.source,valueOf,signal:operation.signal,onProgress:value=>operation.checkpoint(value.completed,value.label,{indeterminate:value.indeterminate})});
+    }else if(!(await exportExcelJsWithImages(columns,rows,fileName,operation))){
       if(!root.XLSX&&root.BLPerf?.ensureLibrary)await root.BLPerf.ensureLibrary('xlsx');
+      operation.check();
       if(!root.XLSX)throw new Error(L('Excel kütüphanesi yüklenemedi.','Excel library could not be loaded.'));
-      const data=[columns.map(c=>c.label),...rows.map(row=>columns.map(col=>excelValueOf(col,row)))];
+      const data=[columns.map(c=>c.label)];
+      for(let start=0;start<rows.length;start+=200){operation.check();rows.slice(start,start+200).forEach(row=>data.push(columns.map(col=>excelValueOf(col,row))));operation.checkpoint(Math.min(rows.length,start+200),L('Satırlar hazırlanıyor','Preparing rows'));await operation.yield();}
       const ws=root.XLSX.utils.aoa_to_sheet(data,{cellDates:true});
       rows.forEach((row,rowIndex)=>columns.forEach((col,colIndex)=>{const fmt=excelFormatOf(col,row);if(!fmt)return;const ref=root.XLSX.utils.encode_cell({r:rowIndex+1,c:colIndex}),cell=ws[ref];if(cell)cell.z=fmt;}));
       if(data.length&&columns.length)ws['!autofilter']={ref:root.XLSX.utils.encode_range({r:0,c:0},{r:Math.max(0,data.length-1),c:columns.length-1})};
       ws['!cols']=columns.map(col=>({wch:Math.max(11,Math.min(40,Number(col.exportWidth)||18))}));
       const wb=root.XLSX.utils.book_new();root.XLSX.utils.book_append_sheet(wb,ws,L('Detay','Detail'));
-      root.XLSX.writeFile(wb,fileName);
+      operation.checkpoint(rows.length,L('Excel paketleniyor · iptal indirmeyi durdurur','Packing Excel · cancel prevents download'),{indeterminate:true});await operation.yield();
+      const buffer=root.XLSX.write(wb,{type:'array',bookType:'xlsx'});operation.check();
+      downloadBuffer(buffer,fileName,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     }
+    operation.check();
     root.showToast?.(mode==='all'?L('Detay satırları tüm sütunlarla Excel’e aktarıldı.','Detail rows were exported to Excel with all columns.'):L('Görünen detay satırları ve seçili sütunlar Excel’e aktarıldı.','Visible detail rows and selected columns were exported to Excel.'));
-  }catch(err){root.showToast?.(err&&err.message?err.message:String(err));}
-  finally{if(button){button.disabled=false;button.textContent=old||'⇩ Excel';}}
+  }catch(err){if(active===report)root.BLUI.renderState(document.querySelector('#blSharedDetailDrawer [data-bl-detail-progress]'),{kind:err?.name==='AbortError'?'info':'error',title:err?.name==='AbortError'?L('Dışa aktarım iptal edildi. Dosya indirilmedi.','Export cancelled. No file was downloaded.'):String(err?.message||err)});}
+  finally{report.exportOperation=null;if(active===report){const liveButton=document.querySelector('#blSharedDetailDrawer [data-bl-detail-excel]');if(liveButton){liveButton.disabled=false;liveButton.textContent=old||'⇩ Excel';}if(!operation.signal.aborted){const progress=document.querySelector('#blSharedDetailDrawer [data-bl-detail-progress]');if(progress&&!progress.querySelector('.uiState--error'))progress.hidden=true;}}}
 }
 function render(){
   const host=ensureHost();if(!active){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');return;}
+  root.BLLayerSystem?.closeDialog?.(host,{restoreFocus:false});
   host.innerHTML='<div class="blDetailDrawerBackdrop" data-bl-detail-close></div><section class="blDetailDrawerPanel" role="dialog" aria-modal="true" aria-labelledby="blDetailDrawerTitle">'+
     '<div class="blDetailResizeHandle" data-bl-detail-resize title="'+escapeHtml(L('Genişliği değiştirmek için sürükleyin','Drag to resize'))+'"></div>'+
     '<header class="blDetailDrawerHead"><div class="blDetailDrawerTitle"><b id="blDetailDrawerTitle">'+escapeHtml(active.title)+'</b><span data-bl-detail-summary></span></div>'+
@@ -726,7 +748,7 @@ function render(){
     '<div class="blDetailExtraActions" data-bl-detail-extra></div><div class="blDetailColumnPanel" data-bl-detail-column-panel hidden></div></div>'+
     '<div class="blDetailReportStats" data-bl-detail-stats></div><div class="blDetailReportAccent"></div>'+
     (active.note?'<div class="blDetailDrawerNote">'+escapeHtml(active.note)+'</div>':'')+
-    '<div class="blDetailTableWrap"><table class="blDetailTable" id="blDetailTable" data-bl-detail-table><colgroup></colgroup><thead></thead><tbody></tbody></table></div></section>';
+    '<div class="uiProgressRegion" data-bl-detail-progress hidden></div><div class="blDetailTableWrap"><table class="blDetailTable" id="blDetailTable" data-bl-detail-table><colgroup></colgroup><thead></thead><tbody></tbody></table></div></section>';
   host.classList.add('is-open');host.setAttribute('aria-hidden','false');
   const panel=host.querySelector('.blDetailDrawerPanel');applyPanelWidth(panel);bindResize(panel);
   host.querySelectorAll('[data-bl-detail-close]').forEach(el=>el.addEventListener('click',close));
@@ -778,9 +800,13 @@ function render(){
     const id='blSharedDetailModelImages';plm.innerHTML=root.BLDetailImages.modelImagesButtonHtml(id);root.BLDetailImages.bindModelImagesButton(id);
   }else if(plm)plm.hidden=true;
   renderTable();
+  root.BLLayerSystem?.openDialog?.(host,{trigger:active.trigger,onClose:close,initialFocus:'[data-bl-detail-search]'});
+  if(active.exportOperation){host.querySelector('[data-bl-detail-excel]').disabled=true;if(active.exportProgress)root.BLUI.renderProgress(host.querySelector('[data-bl-detail-progress]'),{...active.exportProgress,language:isEn()?'en':'tr',cancellable:!active.exporter||active.exporter.cancellable===true,onCancel:()=>active?.exportOperation?.cancel()});}
 }
 function open(options){
   const input=options&&typeof options==='object'?options:{};
+  const trigger=input.trigger||active?.trigger||document.activeElement;
+  if(active)close({restoreFocus:false});
   const rows=Array.isArray(input.rows)?input.rows.filter(Boolean):[];
   const setup=tableSetupSnapshot(input);
   const contextColumns=normalizeColumns(input.columns,rows);
@@ -807,6 +833,7 @@ function open(options){
   const requiredVisible=[...new Set((Array.isArray(input.requiredVisible)?input.requiredVisible:[]).filter(key=>allowed.has(key)))];
   const visible=[...new Set(initialVisible.filter(key=>allowed.has(key)).concat(requiredVisible))];
   active={
+    trigger,
     scope,pageScope:page,moduleId:input.moduleId||page,source:input.source||'shared-detail-drawer',
     title:clean(input.title)||L('Sipariş Detayları','Order Details'),
     subtitle:clean(input.subtitle),note:clean(input.note),fileName:input.fileName||input.title,
@@ -823,7 +850,7 @@ function open(options){
   render();
   requestAnimationFrame(()=>ensureHost().querySelector('[data-bl-detail-search]')?.focus());
 }
-function close(){if(active&&active.searchTimer)clearTimeout(active.searchTimer);if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
+function close(options={}){if(active&&active.searchTimer)clearTimeout(active.searchTimer);active?.exportOperation?.cancel();if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){root.BLLayerSystem?.closeDialog?.(host,{restoreFocus:options.restoreFocus!==false});host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
 document.addEventListener('keydown',event=>{
   if(event.key!=='Escape'||!active)return;
   // Açık sütun filtresi paneli önce kapanır; çekmece ikinci Escape ile kapanır.
