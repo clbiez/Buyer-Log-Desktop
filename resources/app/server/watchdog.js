@@ -3,6 +3,7 @@ const fs = require('fs');
 const os = require('os');
 const { spawn } = require('child_process');
 const crypto = require('crypto');
+const { registerTrialBackend } = require('./lib/update-trial-backend');
 /* v7.44 — SÜRÜM ZIP'İ ARTIK AÇILIŞTA OLUŞTURULMUYOR.
    Kullanıcı talebi: "program versiyon değişiklikleri sırasında her ilk açılışta
    versiyon kopyasını zip olarak oluşturuyor. Buna gerek yok, yapmasın."
@@ -55,6 +56,8 @@ function writeLog(message) {
   } catch (_) { /* logging must never stop the watchdog */ }
 }
 function writeRuntimeState(serverPid) {
+  // Trial writer identity is mandatory and durable, never best-effort logging.
+  registerTrialBackend(serverPid);
   try {
     fs.mkdirSync(RUNTIME_ROOT, { recursive: true });
     const temporary = `${RUNTIME_FILE}.${process.pid}.tmp`;
@@ -147,7 +150,6 @@ function startServer() {
   });
   child.once('exit', (code, signal) => {
     child = null;
-    writeRuntimeState(null);
     if (stopping) return;
     if (!signal && code === 9 && !heapArgsRejected && heapPolicy.args.length && Date.now() - serverStartedAt < 15000) heapArgsRejected = true;
     if (!signal && code === EXIT_ALREADY_RUNNING) {

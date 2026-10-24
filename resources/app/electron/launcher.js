@@ -60,15 +60,16 @@ let healthTimer=null;
 if(activation){
   healthTimer=setTimeout(()=>{
     const state=lifecycle.readState();if(!state.activation||state.activation.token!==activation.token)return;
-    const restored=lifecycle.rollbackNow(activation,'health-timeout');log('rollback',{failedVersion:activation.version,restoredVersion:restored.version,reason:'health-timeout'});
-    try{app.relaunch();}catch(_){};try{app.exit(31);}catch(_){process.exit(31);}
+    lifecycle.requestRollback(activation,'health-timeout');log('rollback-requested',{failedVersion:activation.version,reason:'health-timeout'});
+    // Restore only on the next launcher run, after normal backend shutdown.
+    try{app.relaunch();}catch(_){};app.quit();
   },HEALTH_TIMEOUT_MS);if(healthTimer.unref)healthTimer.unref();
 }
 try{
   require(path.join(selected.appCoreRoot,'electron','main.js'));
 }catch(error){
   log('active-core-load-failed',{version:selected.version,code:error&&error.code||'',message:String(error&&error.message||error).slice(0,500)});
-  if(activation){const restored=lifecycle.rollbackNow(activation,'main-load-failed');log('rollback',{failedVersion:activation.version,restoredVersion:restored.version,reason:'main-load-failed'});try{app.relaunch();}catch(_){};try{app.exit(32);}catch(_){process.exit(32);}}
+  if(activation){lifecycle.requestRollback(activation,'main-load-failed');log('rollback-requested',{failedVersion:activation.version,reason:'main-load-failed'});try{app.relaunch();}catch(_){};app.quit();}
   else throw error;
 }
 }
