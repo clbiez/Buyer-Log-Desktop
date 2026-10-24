@@ -1,0 +1,164 @@
+{
+  "capturedAtUTC": "2026-10-24T14:30:11.445Z",
+  "repository": "clbiez/Buyer-Log-Desktop",
+  "baseline": "5a5c3bcafd4de929019b3bba522ef5771670b171",
+  "snapshot": {
+    "patch": "continuation-combined.patch",
+    "sha256": "8865318d8c75bf2ce3296977a9ecbe69f67fac71f351c420ae1660b61d6f727f",
+    "sourcePRs": [
+      {
+        "number": 685,
+        "branch": "fix/bl-001-checklist-authority",
+        "head": "8c7429948c243777cba61ff0f9c143569d32f4da"
+      },
+      {
+        "number": 692,
+        "branch": "fix/bl-002-file-lease-integrity",
+        "head": "9b56bc2bea830f4d817e4b479671df21b6bed389"
+      },
+      {
+        "number": 688,
+        "branch": "fix/bl-003-rollback-recovery",
+        "head": "7cc1b3c5bf6b944bf29b7101e45c70efe4b06ea5"
+      },
+      {
+        "number": 686,
+        "branch": "fix/bl-004-login-throttling",
+        "head": "8c6f7db3a4c42dce567e0b895a527e90e8b5ff58"
+      },
+      {
+        "number": 687,
+        "branch": "test/bl-006-regression-baseline",
+        "head": "0515f00da5ba3bbc090c0113424306dee36d81fb"
+      },
+      {
+        "number": 691,
+        "branch": "fix/bl-007-owned-temp-inventory",
+        "head": "8ddae4cdef98302dfa090c0eba326c40f5f399a4"
+      },
+      {
+        "number": 696,
+        "branch": "fix/bl-009-dialog-focus",
+        "head": "25badecceef2cf405c869ad74ca87139ce62a213"
+      },
+      {
+        "number": 697,
+        "branch": "fix/bl-010-license-load-states",
+        "head": "176136b4ac2bfbaccbd6b6f14c1dd72287ff5c8d"
+      },
+      {
+        "number": 695,
+        "branch": "fix/bl-011-manual-publication-gate",
+        "head": "01dd915ae877583f8341d5781e4f834fad8dea38"
+      },
+      {
+        "number": 698,
+        "branch": "fix/bl-015-endeksmatik-tokens",
+        "head": "5cecb247ba5ad849cce45999b91008aea9f44ca4"
+      },
+      {
+        "number": 699,
+        "branch": "fix/bl-006-legacy-sheet-origin",
+        "head": "336f38f6e39bfc687ef460ae388173ce14b27c4a"
+      },
+      {
+        "number": 700,
+        "branch": "fix/endeksmatik-model-downgrade",
+        "head": "c64cfa7c8e48e87c92235c8b942587ae7e57c1b7"
+      },
+      {
+        "number": 701,
+        "branch": "fix/nd-003-wal-tail-recovery",
+        "head": "60b3921b6efb31ecd90f8a6ff608b78999c33380"
+      },
+      {
+        "number": 703,
+        "branch": "perf/bl-012-wal-metadata",
+        "head": "a78f14363e93a24d5ec4c94c635ad726fc606e2c",
+        "base": "fix/nd-003-wal-tail-recovery"
+      }
+    ]
+  },
+  "environment": {
+    "platform": "win32",
+    "node": "v24.18.0",
+    "timezone": "Europe/Istanbul",
+    "data": "isolated synthetic roots only"
+  },
+  "fullRegression": {
+    "command": "node resources/app/tests/run-tests.js",
+    "files": 1041,
+    "batches": [
+      {
+        "batch": 1,
+        "tests": 2133,
+        "pass": 2133,
+        "fail": 0,
+        "skip": 0
+      },
+      {
+        "batch": 2,
+        "tests": 2168,
+        "pass": 2166,
+        "fail": 0,
+        "skip": 2
+      },
+      {
+        "batch": 3,
+        "tests": 2251,
+        "pass": 2249,
+        "fail": 0,
+        "skip": 2
+      },
+      {
+        "batch": 4,
+        "tests": 929,
+        "pass": 928,
+        "fail": 0,
+        "skip": 1
+      },
+      {
+        "batch": 5,
+        "tests": 13,
+        "pass": 12,
+        "fail": 0,
+        "skip": 1
+      }
+    ],
+    "totals": {
+      "tests": 7494,
+      "pass": 7488,
+      "fail": 0,
+      "skip": 6
+    },
+    "durationSeconds": 141.5,
+    "runnerResult": "PASS",
+    "skips": [
+      "IAM OneDrive reparse-point fixture lacks Windows symlink privilege",
+      "archive symlink security fixture lacks Windows symlink privilege",
+      "two POSIX pre-receive shell-hook tests unavailable on Windows",
+      "rollback symlink security fixture lacks Windows symlink privilege",
+      "20,000-operation soak disabled in standard run"
+    ]
+  },
+  "separateSoak": {
+    "tests": 1,
+    "pass": 1,
+    "fail": 0,
+    "skip": 0,
+    "devices": 10,
+    "operations": 20000,
+    "seed": 20903,
+    "digest": "c061d9cbb6f7eed65b6df2ae08b81877320bdaa6c33bb668ddb38dd9bd1f5c5d",
+    "durationSeconds": 48.201,
+    "scope": "synthetic filesystem simulation, not ten actual SMB users"
+  },
+  "releaseNotes": {
+    "changes": 32,
+    "validation": "PASS",
+    "screenshots": "genuine post-change PNGs, synthetic data"
+  },
+  "mergedPRs": 0,
+  "publishedReleases": 0,
+  "remaining": "BL-003 full signed bootstrap migration and installed acceptance; BL-005 trusted signed patch implementation; BL-008,013,014, broad015,016-026 and ND-002 legitimate-TL/financial review acceptance remain open. No complete-project or production certification."
+}
