@@ -1498,6 +1498,7 @@
 <script src="column-display-names.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-date-range.js?v=__BL_ASSET_VERSION__"></script>
 <script src="theme-transition.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="order-line-peer-index.js?v=__BL_ASSET_VERSION__"></script>
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=20261024-notebook-rich-editor"></script>
 <script src="collection-artwork-detail.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="checklist-answer-merge-engine.js?v=__BL_ASSET_VERSION__"></script>
@@ -1851,16 +1852,9 @@
   }
   function choose(value){
     if(!trigger) return;
-    const id=Number(trigger.dataset.id), key=trigger.dataset.key;
-    const row=state.cp.rows.find(r=>r._id===id);
-    if(!row){closeMenu();return;}
-    const prev=row[key], next=value;
-    row[key]=next;
-    syncCpProductionLogisticSegment(row,next);
-    applyFormulas(row); markDirty(id);
-    pushUndo({id,fields:[{key,prev,next}]});
+    const editor={dataset:{...trigger.dataset,kind:'deltype'},value};
     closeMenu();
-    refreshRowEverywhere(id);
+    commitCpEditor(editor);
   }
   function openMenu(btn){
     if(trigger===btn){closeMenu();return;}

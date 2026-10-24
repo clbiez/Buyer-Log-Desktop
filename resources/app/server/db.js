@@ -704,7 +704,31 @@ function overrideWriteKey(orderCode, patch) {
   return orderCode;
 }
 
+function validatePricingRestore(patch) {
+  if (!Object.hasOwn(patch, 'pricingRestore')) return null;
+  const restore = patch.pricingRestore;
+  const object = value => value && typeof value === 'object' && !Array.isArray(value);
+  const invalid = () => {
+    const error = new Error('Fiyat geçmişi geçersiz. / Invalid pricing history.');
+    error.code = 'VALIDATION_ERROR'; error.statusCode = 400; throw error;
+  };
+  if (!object(restore) || !Object.keys(restore).length || Object.keys(restore).some(key => !['licensor', 'suppFob'].includes(key))) invalid();
+  if (Object.hasOwn(restore, 'licensor')) {
+    const spec = restore.licensor;
+    if (!object(spec) || typeof spec.present !== 'boolean' || !Object.hasOwn(patch, 'licensor') || (spec.present && typeof patch.licensor !== 'string')) invalid();
+  }
+  if (Object.hasOwn(restore, 'suppFob')) {
+    const spec = restore.suppFob;
+    // Ordinary payload fields are mandatory: they retain shared-owner checks,
+    // Supp FOB revision fencing, delta mirroring and projection invalidation.
+    if (!object(spec) || typeof spec.present !== 'boolean' || typeof spec.metaPresent !== 'boolean' || !Object.hasOwn(patch, 'suppFob')) invalid();
+    if (spec.present && patch.suppFob != null && (typeof patch.suppFob !== 'number' || !Number.isFinite(patch.suppFob))) invalid();
+    if (spec.metaPresent && (!object(patch.suppFobMeta) || !['rule', 'manual'].includes(patch.suppFobMeta.source))) invalid();
+  }
+  return restore;
+}
 function applyOrderPatch(ov, orderCode, patch, options = null) {
+  const pricingRestore = validatePricingRestore(patch);
   const oc = overrideWriteKey(orderCode, patch);
   // Satır ilk kez düzenlendiğinde, o siparişe ait eski (sipariş bazlı) kayıt
   // tohum olarak alınır: notlar sıfırdan başlamaz.
@@ -762,6 +786,14 @@ function applyOrderPatch(ov, orderCode, patch, options = null) {
     ov.suppfobmetamap = ov.suppfobmetamap || {};
     const incomingMeta = patch.suppFobMeta && typeof patch.suppFobMeta === 'object' ? patch.suppFobMeta : null;
     ov.suppfobmetamap[oc] = incomingMeta && incomingMeta.source === 'rule' ? { ...incomingMeta, source: 'rule' } : { source: 'manual', updatedAt: new Date().toISOString() };
+  }
+  if (pricingRestore) {
+    if (pricingRestore.licensor && !pricingRestore.licensor.present) delete ov.licensormap[oc];
+    if (pricingRestore.suppFob) {
+      if (!pricingRestore.suppFob.present) delete ov.suppfobmap[oc];
+      if (pricingRestore.suppFob.metaPresent) ov.suppfobmetamap[oc] = JSON.parse(JSON.stringify(patch.suppFobMeta));
+      else delete ov.suppfobmetamap[oc];
+    }
   }
   if (patch.delType != null) ov.delmap[oc] = patch.delType;
   // CP görseli PLM ID + Colour Code kimliğine bağlıdır. Aynı PLM'nin farklı

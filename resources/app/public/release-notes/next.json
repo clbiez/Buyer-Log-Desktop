@@ -1286,6 +1286,122 @@
           "en": "TR/EN preview, UI response during 10k-row reading and formula/date preservation were verified in actual Edge."
         }
       }
+    },
+    {
+      "id": "canonical-cp-order-peers",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker ve Siparişler",
+        "en": "CP Tracker and Orders"
+      },
+      "title": {
+        "tr": "Bağlı sipariş satırları daha hızlı ve güvenli eşitlenir",
+        "en": "Linked order lines synchronize faster and more safely"
+      },
+      "body": {
+        "tr": "Not, fiyat ve tarih değişiklikleri sipariş, model ve renk kimliğiyle yalnız eşleşen satırlara yayılır; toplu işlemler bağlı görünümleri tek kez yeniler. Yenilemede tekrar kullanılan ekran numarası başka siparişi düzenleyemez. Editörler, Geri Al ve checklist menüleri satır veya kullanıcı değişirse eski işlemi durdurur; not taslağı korunur.",
+        "en": "Notes, prices and dates propagate only to matching order/model/colour lines, with linked views refreshed once for a batch. Reused display numbers after a refresh cannot retarget edits to another order. Editors, Undo and checklist menus stop stale actions when the row or user changes, retaining note drafts."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "canonical-cp-order-peers.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP ekranında kaydedilmiş sentetik sipariş notunun yeniden açılması",
+          "en": "A saved synthetic order note reopened in the actual Buyer Log CP screen"
+        },
+        "caption": {
+          "tr": "Demo not gerçek arayüzle kaydedildi ve Siparişler ekranında sunucudan doğrulandı. Fiyat/tarih, Undo/Redo, toplu işlem ve checklist akışları aynı sentetik kayıtlarla kontrol edildi.",
+          "en": "The demo note was saved through the actual UI and verified from the server in Orders. Price/date edits, Undo/Redo, batch operations and checklist flows were checked with the same synthetic records."
+        }
+      }
+    },
+    {
+      "id": "pricing-source-history",
+      "type": "fix",
+      "module": {
+        "tr": "CP Tracker · Fiyat ve lisansör",
+        "en": "CP Tracker · Price and licensor"
+      },
+      "title": {
+        "tr": "Fiyat Geri Al işlemi kaynağıyla birlikte geri döner",
+        "en": "Price Undo restores its source as well as its value"
+      },
+      "body": {
+        "tr": "Elle değiştirilen otomatik fiyat geri alındığında kural kaynağı ve kalıcı kayıt durumu da geri yüklenir. Lisansör geçmişi, eski sipariş bazlı değerler ve başarısız kayıt sonrası yeniden deneme doğru korunur.",
+        "en": "Undoing a manual change to an automatic price restores rule provenance and durable override presence too. Licensor history, legacy order-level values and retry after a failed save remain intact."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "pricing-source-history.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log CP ekranında Geri Al sonrası 4,00 otomatik fiyatlı sentetik siparişler",
+          "en": "Synthetic orders with automatic 4.00 prices after Undo in the actual Buyer Log CP screen"
+        },
+        "caption": {
+          "tr": "Demo sözleşme 4,00 üretir; gerçek hücrede 12,50 kaydedilip Geri Al ile kural fiyatına dönüldü. Sunucuda manuel kayıt kaldırıldı ve gerçek veri yanıtından doğrulandı.",
+          "en": "The demo contract produces 4.00; 12.50 was saved through the real cell and Undo returned to the rule price. The manual entry was removed and verified from a real server projection."
+        }
+      }
+    },
+    {
+      "id": "financial-contract-validation",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon · Fiyat hesapları",
+        "en": "Collection · Pricing calculations"
+      },
+      "title": {
+        "tr": "Geçersiz maliyet kuralı fiyat üretmez",
+        "en": "Invalid cost rules no longer produce a price"
+      },
+      "body": {
+        "tr": "Geçersiz royalty veya hologram maliyeti sıfır kabul edilmez; fiyat çekmecesi hesaplamayı durduran nedeni açıklar. TR/EN binlik ve ondalık ayırıcılı geçerli tutarlar okunur; bozuk biçimler reddedilir.",
+        "en": "Invalid royalty or hologram cost is no longer treated as zero; the price drawer explains the calculation blocker. Valid amounts with TR/EN grouping and decimal separators are accepted, while malformed grouping stays invalid."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "financial-contract-warnings.png",
+        "alt": {
+          "tr": "Gerçek Koleksiyon fiyat çekmecesinde sentetik geçersiz maliyet kuralının TR/YD uyarıları",
+          "en": "TR/overseas invalid cost-rule warnings in the actual Collection price drawer"
+        },
+        "caption": {
+          "tr": "Demo veride geçersiz hesap girdisi için sayısal fiyat yerine neden gösterilir. Geçerli tutar ve kural ayrı pozitif kontrolle doğrulandı.",
+          "en": "For an invalid demo calculation input, the drawer shows the reason instead of a numeric price. A valid amount and rule were verified separately as a positive control."
+        }
+      }
+    },
+    {
+      "id": "collection-pricing-context",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Fiyat hesapları",
+        "en": "Collection · Pricing calculations"
+      },
+      "title": {
+        "tr": "Bağlı siparişlerden fiyat hesaplama hızlandı",
+        "en": "Pricing linked to orders calculates faster"
+      },
+      "body": {
+        "tr": "CP bağlamı ve eşleşen royalty kuralları kaynak değişene kadar tekrar kullanılır. Sipariş, yetki veya kurallar değişince yenilenir; manuel kur ve fiyat değişiklikleri güncel girdilerle hesaplanır.",
+        "en": "CP context and matching royalty rules are reused until their inputs change. Order, access or rule changes invalidate them; manual FX and price edits still calculate from current inputs."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pricing-context.png",
+        "alt": {
+          "tr": "Gerçek Koleksiyon fiyat çekmecesinde güncel demo royalty, kur ve maliyet adımları",
+          "en": "Current demo royalty, FX and cost steps in the actual Collection price drawer"
+        },
+        "caption": {
+          "tr": "Demo fiyatlar önceki hesapla birebir aynı kaldı; gerçek Edge üzerinde kaynak ve kural değişimi ayrıca doğrulandı.",
+          "en": "Demo prices remain identical to the previous calculation; source and rule changes were also verified in actual Edge."
+        }
+      }
     }
   ]
 }

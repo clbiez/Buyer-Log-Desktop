@@ -24,7 +24,12 @@ const GridClipboard = require(GRID_PATH);
 function extractFunction(source, name) {
   const start = source.indexOf(`function ${name}(`);
   assert.ok(start >= 0, `${name} bulunmalı`);
-  const open = source.indexOf('{', start);
+  let parens=0,open=-1;
+  for(let i=source.indexOf('(',start);i<source.length;i++){
+    if(source[i]==='(')parens++;
+    else if(source[i]===')'&&--parens===0){open=source.indexOf('{',i);break;}
+  }
+  assert.ok(open>start,`${name} gövdesi bulunmalı`);
   let depth = 0;
   for (let i = open; i < source.length; i += 1) {
     if (source[i] === '{') depth += 1;
@@ -198,7 +203,8 @@ test('CP değerleri ekrandaki/Excel biçiminden normalize edilir, okunamayan de�
 
 test('yapıştırma tek hücre düzenleme yolundan geçer ve tek geri alma adımıdır', () => {
   const apply = extractFunction(APP, 'applyCpGridPaste');
-  assert.match(apply, /commitCpEditor\(\{dataset:\{id:String\(id\),key:op\.column\.k,kind:op\.target\},value:op\.value\},\{refresh:false\}\)/);
+  assert.match(apply, /commitCpEditor\(\{dataset:\{id:String\(id\),key:op\.column\.k,kind:op\.target,lineKey:lineKeyOfRow\(op\.row\),editOwner:orderLinePeerOwner\(\)\},value:op\.value\},\{refresh:false\}\)/);
+  assert.match(apply,/return !current\|\|!sameOrderLine\(current,op\.row\)/);
   assert.match(apply, /_cpPasteUndoBatch=actions/);
   assert.match(apply, /pushUndo\(actions\.length===1\?actions\[0\]:\{kind:'batch',actions\}\)/);
   assert.match(extractFunction(APP, 'pushUndo'), /if\(_cpPasteUndoBatch\)\{ _cpPasteUndoBatch\.push\(action\); return; \}/);

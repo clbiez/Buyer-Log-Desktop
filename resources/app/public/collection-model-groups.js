@@ -499,7 +499,17 @@ function kolParseQuantityNum(v){
 
 function kolParseMoneyNum(v){
   if(v==null || v==='') return NaN;
-  return Number(String(v).trim().replace('%','').replace(',', '.'));
+  let value=String(v).trim().replace('%','');
+  const comma=value.lastIndexOf(','),dot=value.lastIndexOf('.');
+  if(comma>=0&&dot>=0){
+    const decimal=Math.max(comma,dot),whole=value.slice(0,decimal),fraction=value.slice(decimal+1),separator=value[decimal]===','?'.':',';
+    // Mixed separators are accepted only as properly grouped money. Keep
+    // malformed text invalid instead of silently dropping arbitrary characters.
+    const escaped=separator==='.'?'\\.':',';
+    if(!new RegExp('^[+-]?\\d{1,3}(?:'+escaped+'\\d{3})+$').test(whole)||!/^\d+$/.test(fraction))return NaN;
+    value=whole.split(separator).join('')+'.'+fraction;
+  }else value=value.replace(',','.');
+  return Number(value);
 }
   return { writeGroupedValue,kolParseQuantityNum,kolParseMoneyNum,kolApplyApprovedPlmUpdate,kolImportMatchKey,kolImportReadField,kolPlmCodePrefix,kolPlmSeason,kolPlmBrandToken,kolPlmImportTouchedKeys,kolPlmImportColourKey,kolPlmNormalizeDirectRecord,kolBuildPlmImportPlan,bestPricing,confirmedPricing,identityOf, colourIdentity, fieldMetadata, normalizeRows, linkImportedColourVariants, groupFor, hasVariantOverride, effectiveValue, createValueReader, setSharedValue, setVariantOverride, clearVariantOverride, clearAllVariantOverrides, setPricingOverrides, visibleRows, mergeGroups, detachVariant, relinkVariant, summary };
 });

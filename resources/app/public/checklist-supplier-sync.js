@@ -383,6 +383,12 @@
       return [...(whole || !parts.length ? [item] : []), ...parts.map(id => scopedItem(item, id))];
     });
   }
+  function checklistTriggerIdentity(row){
+    const engine=root.BLCpReadinessEngine;
+    const key=!row?'':typeof root.lineKeyOfRow==='function'?root.lineKeyOfRow(row):engine&&typeof engine.analyzeOrder==='function'?engine.analyzeOrder(row)?.orderKey||'':'';
+    return {key,owner:String(root.state?.currentUser?.id??root.BL_USER_CONTEXT?.id??'')};
+  }
+  function checklistTriggerAttributes(row){const identity=checklistTriggerIdentity(row);return ' data-line-key="'+html(identity.key)+'" data-edit-owner="'+html(identity.owner)+'"';}
   function elementCellHtml(row, itemId, canEdit) {
     const info = row._checklistElements && row._checklistElements[itemId];
     if (!info) return '';
@@ -397,19 +403,19 @@
     }).join('') + '<span class="clElementName">' + html(focus.name + ' · ' + statusLabel(focus.state)) + '</span>'
       + (info.elements.length > 1 ? '<small class="clElementMore">+' + (info.elements.length - 1) + '</small>' : '') + '</span>';
     if (!canEdit) return '<td class="clElementsCell" title="' + html(title) + '"><span class="clElementStack">' + chips + '</span></td>';
-    return '<td class="editTd clElementsCell"><button type="button" class="clStatusTrigger is-' + html(info.state) + '" data-id="' + html(row._id) + '" data-item="' + html(itemId) + '" data-status="' + html(info.state) + '" aria-haspopup="listbox" aria-expanded="false" title="' + html(title) + '" aria-label="' + html(title.replace(/\n/g, ', ')) + '"><span class="clElementStack">' + chips + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>';
+    return '<td class="editTd clElementsCell"><button type="button" class="clStatusTrigger is-' + html(info.state) + '" data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' data-item="' + html(itemId) + '" data-status="' + html(info.state) + '" aria-haspopup="listbox" aria-expanded="false" title="' + html(title) + '" aria-label="' + html(title.replace(/\n/g, ', ')) + '"><span class="clElementStack">' + chips + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button></td>';
   }
   function componentCellHtml(row, itemId, canEdit) {
     const info = row._checklistParts && row._checklistParts[itemId];
     if (!info) return elementCellHtml(row, itemId, canEdit);
     const disabled = canEdit ? '' : ' disabled aria-disabled="true"';
-    const parts = info.parts.map(part => '<button type="button" class="clStatusTrigger is-' + html(part.state) + '" data-id="' + html(row._id) + '" data-item="' + html(Components.itemId(itemId, part.id)) + '" data-status="' + html(part.state) + '" title="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-label="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-haspopup="listbox" aria-expanded="false"' + disabled + '><b class="clPartLabel">' + html(part.label) + '</b><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">' + html(statusLabel(part.state)) + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>').join('');
+    const parts = info.parts.map(part => '<button type="button" class="clStatusTrigger is-' + html(part.state) + '" data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' data-item="' + html(Components.itemId(itemId, part.id)) + '" data-status="' + html(part.state) + '" title="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-label="' + html(part.label + ' · ' + statusLabel(part.state)) + '" aria-haspopup="listbox" aria-expanded="false"' + disabled + '><b class="clPartLabel">' + html(part.label) + '</b><span class="clStatusDot" aria-hidden="true"></span><span class="clStatusText">' + html(statusLabel(part.state)) + '</span><span class="delTypeChevron" aria-hidden="true">▾</span></button>').join('');
     const summary = info.parts.length ? info.parts.filter(part => part.state === 'approved').length + '/' + info.parts.length : T('Parça sayısını belirleyin', 'Define the part count');
-    const legacyHtml = info.legacy ? '<button type="button" class="clPartsConfigure" data-cl-legacy data-id="' + html(row._id) + '" data-item="' + html(itemId) + '" title="' + T('Eski set kaydı', 'Legacy set record') + '" aria-label="' + T('Eski set kaydı', 'Legacy set record') + '">↶</button>' : '';
-    return '<td class="editTd clPartsCell"><div class="clPartsStack">' + parts + '<div class="clPartsFooter"><small>' + html(summary) + '</small>' + (canEdit ? '<button type="button" class="clPartsConfigure" data-cl-config-parts data-id="' + html(row._id) + '" aria-label="' + T('Set parçalarını tanımla', 'Define set parts') + '" title="' + T('Set parçalarını tanımla', 'Define set parts') + '">' + '<span aria-hidden="true">⋯</span></button>' : '') + '</div>' + legacyHtml + '</div></td>';
+    const legacyHtml = info.legacy ? '<button type="button" class="clPartsConfigure" data-cl-legacy data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' data-item="' + html(itemId) + '" title="' + T('Eski set kaydı', 'Legacy set record') + '" aria-label="' + T('Eski set kaydı', 'Legacy set record') + '">↶</button>' : '';
+    return '<td class="editTd clPartsCell"><div class="clPartsStack">' + parts + '<div class="clPartsFooter"><small>' + html(summary) + '</small>' + (canEdit ? '<button type="button" class="clPartsConfigure" data-cl-config-parts data-id="' + html(row._id) + '"' + checklistTriggerAttributes(row) + ' aria-label="' + T('Set parçalarını tanımla', 'Define set parts') + '" title="' + T('Set parçalarını tanımla', 'Define set parts') + '">' + '<span aria-hidden="true">⋯</span></button>' : '') + '</div>' + legacyHtml + '</div></td>';
   }
   function openLegacyRecord(trigger) {
-    const row = cpRowById(trigger.dataset.id), legacy = row && row._checklistParts && row._checklistParts[trigger.dataset.item] && row._checklistParts[trigger.dataset.item].legacy;
+    const row = boundChecklistTriggerRow(trigger,{write:false}), legacy = row && row._checklistParts && row._checklistParts[trigger.dataset.item] && row._checklistParts[trigger.dataset.item].legacy;
     if (!legacy) return;
     const modal = root.document.createElement('div'); modal.className = 'cpaModalOverlay';
     modal.innerHTML = '<div class="cpaModal" role="dialog" aria-modal="true"><header><b>' + T('Eski set kaydı', 'Legacy set record') + '</b><button type="button" data-legacy-close aria-label="' + T('Kapat', 'Close') + '">×</button></header><div class="cpaModalBody"><b>' + html(statusLabel(legacy.state)) + '</b><p class="clPartsLegacyNote">' + html(legacy.note || '') + '</p><p>' + html(legacy.reportNumber || '') + '</p><p>' + html(legacy.actualDate || '') + '</p>'
@@ -440,12 +446,13 @@
     return modal;
   }
   async function configureComponents(trigger) {
-    const assistant = await ensureAssistant(), row = cpRowById(trigger.dataset.id);
+    const assistant = await ensureAssistant(), row = boundChecklistTriggerRow(trigger);
     if (!assistant || !row) return;
     const decision = analysesForRows([row]), analysis = decision.byRow.get(row);
     if (!analysis) return;
     const saved = assistantState().answers[Components.configKey(analysis)];
     openComponentCountDialog(componentParts(analysis).length, saved && saved.componentCount || 2, async count => {
+      if(!boundChecklistTriggerRow(trigger))throw staleChecklistTriggerError();
       if (!assistant.setChecklistComponents(analysis, count)) return false;
       refreshColumns({ render: true });
       await syncAnswerChanges(); return true;
@@ -2340,7 +2347,7 @@
     return '<datalist id="' + id + '">' + list.map(function (name) { return '<option value="' + html(name) + '"></option>'; }).join('') + '</datalist>';
   }
   function openChecklistEvidenceDialog(trigger) {
-    const row = cpRowById(trigger && trigger.dataset.id);
+    const row = boundChecklistTriggerRow(trigger);
     const itemId = trigger && trigger.dataset.item;
     const item = catalogItem(itemId);
     if (!row || !item) return;
@@ -2475,6 +2482,7 @@
       toast(T('Checklist detayları kaydedilemedi: ', 'Checklist details could not be saved: ') + (error.message || error));
     }
     async function saveEvidence() {
+      if(!boundChecklistTriggerRow(trigger))throw staleChecklistTriggerError();
       const assistant = root.BLCpAssistant;
       if (!assistant || typeof assistant.setChecklistAnswer !== 'function') throw new Error(T('Checklist kaydı açılamadı.', 'Checklist record is unavailable.'));
       const latest = answerFor(item, analysis) || {};
@@ -2494,6 +2502,7 @@
         attachments: Array.from(attachments.values()),
       });
       await syncAnswerChanges();
+      if(!boundChecklistTriggerRow(trigger))throw staleChecklistTriggerError();
       const saved = answerFor(item, analysis) || {};
       const subtitle = modal.querySelector('header small');
       if (subtitle) subtitle.textContent = visibleValue(row, ['Order Code', 'ORDER CODE']) + ' · ' + statusLabel(normalizeState(saved.state) || currentStatus);
@@ -2504,6 +2513,7 @@
       if (uploadPromise) return uploadPromise;
       uploadPromise = (async function () {
         while (pending.length) {
+          if(!boundChecklistTriggerRow(trigger))throw staleChecklistTriggerError();
           const file = pending[0];
           const latest = answerFor(item, analysis) || {};
           const uploaded = await uploadChecklistAttachment(file, evidenceContext(row, item, normalizeState(latest.state) || status, kept.length + 1));
@@ -2553,10 +2563,16 @@
     const rows = root.state && root.state.cp && Array.isArray(root.state.cp.rows) ? root.state.cp.rows : currentRows();
     return rows.find(function (row) { return row && String(row._id) === String(id); }) || null;
   }
+  function boundChecklistTriggerRow(trigger,options={}){
+    const data=trigger?.dataset,row=data?cpRowById(data.id):null,identity=checklistTriggerIdentity(row);
+    return row&&(options.write===false||row._canEdit!==false)&&data.lineKey&&data.lineKey===identity.key&&data.editOwner===identity.owner?row:null;
+  }
+  function staleChecklistTriggerError(){return new Error(T('Sipariş veya oturum değişti. Güncel checklist hücresini yeniden açın.','The order or session changed. Reopen the current checklist cell.'));}
   async function chooseStatus(trigger, status) {
     const assistant = await ensureAssistant();
-    const row = cpRowById(trigger.dataset.id);
+    const row = boundChecklistTriggerRow(trigger);
     const itemId = trigger.dataset.item;
+    if(!row){toast(staleChecklistTriggerError().message);return;}
     if (!assistant || typeof assistant.setChecklistAnswer !== 'function' || !row || !itemId) {
       toast(T('Checklist durumu kaydedilemedi.', 'Checklist status could not be saved.'));
       return;
@@ -2575,6 +2591,7 @@
     if (!root.document || !trigger) return;
     if (statusMenu.trigger === trigger) { closeStatusMenu(true); return; }
     closeStatusMenu(false);
+    if(!boundChecklistTriggerRow(trigger)){toast(staleChecklistTriggerError().message);return;}
     const current = normalizeState(trigger.dataset.status) || 'open';
     const menu = root.document.createElement('div');
     menu.className = 'delTypeMenu clStatusMenu';
@@ -2589,7 +2606,7 @@
     // Ekler eylemi durum listesinin ÜSTÜNDE durur: özel durumlar eklendikçe
     // uzayan liste onu ekranın dışına itmez.
     const evidenceItem = catalogItem(trigger.dataset.item);
-    const menuRow = evidenceItem ? cpRowById(trigger.dataset.id) : null;
+    const menuRow = evidenceItem ? boundChecklistTriggerRow(trigger) : null;
     const menuDecision = menuRow ? analysesForRows([menuRow]) : null;
     const menuAnalysis = menuDecision && menuDecision.byRow && menuDecision.byRow.get ? menuDecision.byRow.get(menuRow) : null;
     const menuAnswer = menuAnalysis ? answerFor(evidenceItem, menuAnalysis) : null;
@@ -2632,6 +2649,7 @@
     const selected = options.find(function (option) { return option.getAttribute('aria-selected') === 'true'; }) || options[0];
     if (selected) selected.focus();
     menu.addEventListener('click', function (event) {
+      if(!boundChecklistTriggerRow(trigger)){closeStatusMenu(false);toast(staleChecklistTriggerError().message);return;}
       const details = event.target.closest('[data-cl-evidence]');
       if (details) {
         closeStatusMenu(false);

@@ -17,7 +17,7 @@ const row={id:1,modelKod:'DEMO',country:'China',season:'W26',licensor:'DEMO',lis
 
 test('actual installed UI helpers and server produce the same native landed values and warnings',()=>{
  for(const candidate of [row,{...row,licensor:'DTR'},{...row,trFx:20,trLandedMult:1.2,ydLandedMult:1.3},{...row,lisans:'MISSING'},{...row,pricing:{SupplierA:'invalid'},targetPrice:6},{...row,trPrice:''}]){
-  for(const pricingRules of [[contract],[{...contract,trCommission:null}]]){
+  for(const pricingRules of [[contract],[{...contract,trCommission:null}],[{...contract,royalty:-1}],[{...contract,royalty:100}],[{...contract,hologramCost:-1}],[{...contract,hologramCost:'invalid'}]]){
    const overrides={pricingRules,landedMultipliers:{tr:1.05,overseas:1.11}},ui=nativeUi(overrides,fx),nativeRow={...candidate};ui.kolApplyRulePricing(nativeRow);const actual=ui.kolLandedCalc(nativeRow),server=createPricingCalculation({rows:[candidate],overrides,fx}).calculate(candidate);
    for(const key of Object.keys(actual))assert.deepEqual(JSON.parse(JSON.stringify(server[key]??null)),JSON.parse(JSON.stringify(actual[key]??null)),key+' '+JSON.stringify(candidate));
    assert.equal(server.finalFob,nativeRow.fob===''?null:Groups.kolParseMoneyNum(nativeRow.fob),'actual native FOB cell parity');
@@ -52,6 +52,23 @@ test('native grouped effective values retain child overrides and calculation fin
 
 test('DTR royalty contracts and authorized CP licensor fallback preserve native FOB separately from landed costs',()=>{
  for(const mode of ['dtr-contract','cp-fallback']){const candidate={...row,licensor:mode==='dtr-contract'?'DTR':'',_sourceOrderCode:mode==='cp-fallback'?'123':''},overrides={pricingRules:[{...contract,licensor:mode==='dtr-contract'?'DTR':'DEMO'}]},cpRows=mode==='cp-fallback'?[{'Order Code':'123','Season':'W26','License':row.lisans,'Licensor':'DEMO','Country':'China'}]:[],ui=nativeUi(overrides,fx,cpRows),nativeRow={...candidate};ui.kolApplyRulePricing(nativeRow);const result=createPricingCalculation({rows:[candidate],overrides,fx,cpRows,cpContextAvailable:!!cpRows.length}).calculate(candidate);assert.equal(result.finalFob,5.06);assert.equal(result.finalFob,Groups.kolParseMoneyNum(nativeRow.fob));assert.equal(result.ydLanded,ui.kolLandedCalc(nativeRow).ydLanded);assert.notEqual(result.finalFob,result.ydCostedFob);assert.equal(result.contractFinalFob,5.06);assert.equal(result.contractSuppFob,4);}
+});
+
+test('an invalid DTR Final FOB contract stays invalid without changing its intentional landed treatment',()=>{
+ for(const invalid of [{royalty:-1},{royalty:100},{hologramCost:-1},{hologramCost:'invalid'}]){
+  const candidate={...row,licensor:'DTR'},overrides={pricingRules:[{...contract,licensor:'DTR',...invalid}]},ui=nativeUi(overrides,fx),nativeRow={...candidate};ui.kolApplyRulePricing(nativeRow);const result=createPricingCalculation({rows:[candidate],overrides,fx}).calculate(candidate);assert.equal(nativeRow.fob,'');assert.equal(result.finalFob,null);assert.equal(result.ydLanded,ui.kolLandedCalc(nativeRow).ydLanded);assert.ok(result.issues.includes('FINAL_FOB_RULE_INVALID'));
+ }
+});
+
+test('installed cached lookup refreshes merge decisions and preserves exact-licensor precedence',()=>{
+ const candidate={...row,licensor:'ERMODA UK LTD'},overrides={pricingRules:[{...contract,id:'merged',licensor:'ERMODA'}]},ui=nativeUi(overrides,fx);ui.state.storeRevisions={pricingRules:1};ui.state.licensorMerges={split:[]};
+ assert.equal(ui.kolFindPricingRuleForCountryGroup(candidate,'TR').id,'merged');ui.state.licensorMerges={split:[Business.licensorMergeKey('ERMODA')]};assert.equal(ui.kolFindPricingRuleForCountryGroup(candidate,'TR'),null);
+ ui.state.licensorMerges={split:[]};assert.equal(ui.kolFindPricingRuleForCountryGroup(candidate,'TR').id,'merged');ui.state.overrides.pricingRules=[...ui.state.overrides.pricingRules,{...contract,id:'own-other-season',licensor:'ERMODA UK LTD',seasons:['S27']}];ui.state.storeRevisions.pricingRules++;assert.equal(ui.kolFindPricingRuleForCountryGroup(candidate,'TR'),null,'any own contract suppresses alias fallback even outside the requested season');
+});
+
+test('cached selections never cache prices, manual FX, supplier values or changing automatic FX',()=>{
+ const source={...row,pricing:{SupplierA:'4'},trFx:25},fxSnapshot=JSON.parse(JSON.stringify(fx)),ui=nativeUi({pricingRules:[contract]},fxSnapshot);ui.kolApplyRulePricing(source);const before=ui.kolLandedCalc(source);source.trFx=50;source.pricing={SupplierA:'8'};ui.kolApplyRulePricing(source);const after=ui.kolLandedCalc(source);assert.equal(after.fx,50);assert.equal(after.trLanded,Business.calculateFinalFobWithRule(row.trPrice/50,contract,'TR')*1.05);assert.equal(after.ydBaseFob,8);assert.notEqual(after.ydLanded,before.ydLanded);
+ source.trFx='';assert.equal(ui.kolLandedCalc(source).fx,40);fxSnapshot.months['2026-01'].TRY=60;fxSnapshot._revision++;assert.equal(ui.kolLandedCalc(source).fx,60);
 });
 
 test('fractional contract royalty keeps full precision and Collection FOB matches the exact CP Final FOB',()=>{
