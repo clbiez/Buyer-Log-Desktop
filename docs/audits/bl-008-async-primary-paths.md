@@ -1,6 +1,7 @@
 # BL-008 — first wave of asynchronous primary request paths
 
-Status: **partial implementation; the package and wider project remain open.**
+Status: **request lease-wait implementation complete; final integrated full
+regression is pending. The wider project remains open.**
 The user explicitly requested saving the full suite for the end. This wave has
 focused checks and native acceptance only; final integration will receive one
 full regression before batch merge. It is not certified by the older main suite.
@@ -81,21 +82,22 @@ clears its browser cookie and was not used as proof of server-side revocation.
 The focused groups overlap and are recorded individually in the JSON. No full
 regression, final merge or release has been performed for these changes.
 
-## Remaining before BL-008 closes
+## Completion and remaining acceptance
 
-- Inventory explicit legacy attachment/test-report, calendar/OAB/quotation,
-  output, recipe, document and IAM transaction callers. These inherit fast busy
-  behavior; remaining synchronous data I/O is a separate measured limitation.
-- Finish async recovery of a prior durable-write intent and identify explicit
-  legacy synchronous `lease.assertOwned()` callers; async internal fencing is
-  already awaited.
-- Recheck authority, CAS, all-or-nothing and fsync before ACK for each conversion;
-  preserve lazy rendering and historical state. Run the full suite on the final
-  integrated tree as requested by the user.
+- Legacy callers and the compatibility tradeoff are recorded in
+  `bl-008-legacy-request-policy.md`; these are not mislabelled startup-only.
+- Prior-intent recovery now uses async I/O. Missing/corrupt payloads preserve
+  the original intent and reject the new write; the targeted group has74pass.
+- Final full regression will run on the integrated backlog as requested by the
+  user. Representative populated/corporate performance remains under BL-019;
+  legacy synchronous data I/O and independent background retries remain explicit
+  limitations, not evidence of an unrun acceptance test.
 
 ## Türkçe kayıt
 
 Kumaş kartı, temel checklist ve kişisel tercih HTTP yolları asenkronlaştırıldı.
 Yetki, revizyon, kanıt ve kalıcı yazma garantileri hedefli testlerle doğrulandı.
-BL-008'in kalan yolları ve diğer paketler bitmedi. Kullanıcının talimatıyla tam
-test sona bırakıldı; bu ilk dalga son tam test sonucuymuş gibi gösterilmez.
+HTTP isteklerindeki senkron kira beklemeleri kaldırıldı; eski işlem imzaları
+çakışmada hemen yeniden deneme sonucu döndürür. Diğer paketler bitmedi.
+Kullanıcının talimatıyla tam test sona bırakıldı; hedefli sonuçlar son tam test
+sonucuymuş gibi gösterilmez.

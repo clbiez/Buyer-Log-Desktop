@@ -1125,8 +1125,8 @@
         "en": "Other requests stay responsive during file-lease contention"
       },
       "body": {
-        "tr": "Kumaş kartı, temel checklist, kişisel tercih ve ufuk kayıtları dosya kirasını ve kalıcı yazmayı asenkron bekler. Başarı diske yazmadan sonra döner; güncel oturum, yetki ve revizyon yeniden denetlenir. Eski eşzamanlı kayıt yolları kilit çakışmasında beklemek yerine hemen yeniden deneme sonucu döndürür.",
-        "en": "Fabric cards, core checklist, personal preferences and horizons await file leases and durable writes asynchronously. Success follows persistence, with current session, authority and revision checked again. Legacy synchronous paths return an immediate retry result on lease contention."
+        "tr": "Kumaş kartı, temel checklist, kişisel tercih ve ufuk kayıtları dosya kirasını ve kalıcı yazmayı asenkron bekler. Başarı diske yazmadan sonra döner; güncel oturum, yetki ve revizyon yeniden denetlenir. Eski eşzamanlı kayıt yolları kilit çakışmasında beklemek yerine hemen yeniden deneme sonucu döndürür. Önceki yarım kalmış yazmanın kurtarma yükü eksik veya bozuksa yeni yazma durur ve mevcut kanıt korunur.",
+        "en": "Fabric cards, core checklist, personal preferences and horizons await file leases and durable writes asynchronously. Success follows persistence, with current session, authority and revision checked again. Legacy synchronous paths return an immediate retry result on lease contention. A missing or corrupt recovery payload from an unfinished write stops the new write and preserves its evidence."
       },
       "visual": {
         "kind": "screenshot",

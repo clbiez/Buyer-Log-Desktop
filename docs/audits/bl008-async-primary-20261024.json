@@ -1,7 +1,7 @@
 {
   "date": "2026-10-24T19:33:20.440Z",
   "base": "0a5d9fbbb0f1d6db59ea6062a1f779505c8f67d7",
-  "scope": "BL008 async primary/workspace implementation plus global no-blocking-lease-wait policy for legacy HTTP paths; final integrated regression still pending",
+  "scope": "BL008 request lease-wait implementation complete; async primary/workspace, no-wait legacy request scope, async prior-intent recovery. Final full regression pending.",
   "verificationPolicy": "Explicit user instruction: targeted checks during implementation; one full regression after the final integrated remaining backlog, then batch merge. No full suite run for this first wave.",
   "focused": [
     {
@@ -125,15 +125,13 @@
       "name": "async-primary-store-writes-en.png",
       "width": 1600,
       "height": 973,
-      "sha256": "7295f2aef0e94bc35b719b507d38f3b4cc3329f8e822807ad82e0969afaa9609",
+      "sha256": "73cf9afe6b795474d92c989c558acb86c953b91ad4b5843762c2e8bc4922da98",
       "reviewed": true
     }
   ],
   "remaining": [
-    "Finish asynchronous prior durable-write intent recovery",
-    "Record explicit legacy sync store/caller inventory and no-wait compatibility tradeoff",
-    "Representative populated desktop/corporate filesystem benchmark under BL019",
-    "Final integrated full regression before the user-authorized batch merge"
+    "Final integrated full regression before batch merge",
+    "Broader populated/corporate filesystem performance acceptance under BL019; legacy synchronous data I/O/background retry limitations are explicitly recorded"
   ],
   "publication": {
     "TEST": false,
@@ -233,7 +231,7 @@
     "merged": false
   },
   "workspaceWave": {
-    "date": "2026-10-24T20:23:43.946Z",
+    "date": "2026-10-24T20:29:49.117Z",
     "base": "90a5a3f7",
     "focused": [
       {
@@ -288,7 +286,7 @@
           "name": "fabric-ui-save-held-lease",
           "unrelatedPreferenceRead": {
             "status": 200,
-            "milliseconds": 7
+            "milliseconds": 4.4000000059604645
           },
           "noAcknowledgementBeforeRelease": true
         },
@@ -302,7 +300,7 @@
           "name": "real-session-preference-write-held-lease",
           "unrelatedFabricRead": {
             "status": 200,
-            "milliseconds": 5.799999997019768
+            "milliseconds": 4.0999999940395355
           },
           "noAcknowledgementBeforeRelease": true
         },
@@ -310,7 +308,7 @@
           "name": "real-session-checklist-write-held-lease",
           "unrelatedPreferenceRead": {
             "status": 200,
-            "milliseconds": 21.399999991059303
+            "milliseconds": 11.5
           },
           "noAcknowledgementBeforeRelease": true
         },
@@ -318,7 +316,7 @@
           "name": "personal-horizon-held-lease",
           "unrelatedFabricRead": {
             "status": 200,
-            "milliseconds": 5.200000002980232
+            "milliseconds": 3.2999999970197678
           },
           "noAcknowledgementBeforeRelease": true,
           "persisted": true
@@ -327,7 +325,7 @@
           "name": "personal-reset-held-lease",
           "unrelatedFabricRead": {
             "status": 200,
-            "milliseconds": 3.9000000059604645
+            "milliseconds": 4.699999988079071
           },
           "noAcknowledgementBeforeRelease": true,
           "persisted": true
@@ -336,7 +334,7 @@
           "name": "personal-layer-held-lease",
           "unrelatedFabricRead": {
             "status": 200,
-            "milliseconds": 7.100000008940697
+            "milliseconds": 5.200000002980232
           },
           "noAcknowledgementBeforeRelease": true,
           "persisted": true
@@ -345,7 +343,7 @@
           "name": "manager-horizon-held-lease",
           "unrelatedFabricRead": {
             "status": 200,
-            "milliseconds": 6.200000002980232
+            "milliseconds": 3.7000000029802322
           },
           "noAcknowledgementBeforeRelease": true,
           "persisted": true
@@ -354,7 +352,7 @@
           "name": "manager-reset-held-lease",
           "unrelatedFabricRead": {
             "status": 200,
-            "milliseconds": 5
+            "milliseconds": 4
           },
           "noAcknowledgementBeforeRelease": true,
           "persisted": true
@@ -363,7 +361,7 @@
           "name": "legacy-calendar-request-fast-busy",
           "status": 409,
           "code": "SHARED_WRITE_BUSY",
-          "milliseconds": 8.899999991059303,
+          "milliseconds": 5,
           "noMutation": true
         },
         {
@@ -413,5 +411,30 @@
       }
     ],
     "fullExecuted": false
-  }
+  },
+  "priorIntentWave": {
+    "focused": {
+      "log": "bl008-prior-intent-target.log",
+      "files": 10,
+      "pass": 74,
+      "fail": 0,
+      "skip": 0
+    },
+    "finalNewCases": {
+      "log": "bl008-prior-intent-final.log",
+      "pass": 4,
+      "fail": 0
+    },
+    "countsOverlap": true,
+    "red": "bl008-prior-intent-red.log",
+    "failureFixed": "Async prepare used synchronous prior recovery and swallowed missing-payload ENOENT as missing intent, allowing evidence overwrite",
+    "resolution": "Awaited prior recovery, fingerprint/ownership fencing and conflict quarantine; existence probe catch no longer swallows payload failure",
+    "source": {
+      "file": "server/lib/durable-file-recovery.js",
+      "sha256Lf": "ae283d148821f117e43c206f54cb1d9f8deb6d071d298b6f45a5ecbf42fd0c62"
+    },
+    "independentReview": false,
+    "review": "Bounded root source/diff review and RED/GREEN durability coverage; no separate model review claimed for this equivalent async conversion"
+  },
+  "legacyInventory": "bl-008-legacy-request-policy.md"
 }
