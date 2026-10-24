@@ -1,6 +1,6 @@
 # BL-006 — regression harness repairs and remaining baseline failures
 
-Status: focused harness repairs implemented and verified; complete regression baseline remains red. Current PR links are maintained in `buyer-log-execution-progress.md` on the BL-001 branch. Baseline main: `6f8eb33e820c231cb4f7189c728224ad1b58dd57`; Linux x86_64, Node v24.19.0. No application code, release notes, merges, or releases changed by this package.
+Status: PR Open — [#687](https://github.com/clbiez/Buyer-Log-Desktop/pull/687); focused harness repairs implemented and verified; complete regression baseline remains red. Current PR links are maintained in `buyer-log-execution-progress.md` on the BL-001 branch. Baseline main: `6f8eb33e820c231cb4f7189c728224ad1b58dd57`; Linux x86_64, Node v24.19.0. No application code, release notes, merges, or releases changed by this package.
 
 ## Independently reproduced repairs
 
@@ -33,3 +33,5 @@ Remaining seven failure cases are not seven proven product defects:
 ## Next action and rollback
 
 Open this focused test PR independently of BL-001/004. Keep BL-006 in progress until the current seven residual failures are resolved and one complete supported-runtime run is genuinely green. Continue critical BL-002/003 engineering; do not let token cleanup distract from data integrity. Revert this test-only PR to restore the old harness; no data migration, runtime restart, screenshots, or release publication is required for these test changes.
+
+Combined local validation with BL-001 and BL-004 implementation diffs passed 310 focused tests across 45 files (zero failures/skips); combined pending release notes validated 23 entries. This is additional integration evidence, not a full green baseline. No PR merged or release published.
