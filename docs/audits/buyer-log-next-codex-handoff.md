@@ -1,5 +1,13 @@
 # Buyer Log Desktop — başka Codex hesabına güvenli devir
 
+> **Tarihsel checkpoint:** Kullanıcı daha sonra geliştirmeye devam edilmesini ve
+> doğrulanmış işlerin merge edilmesini yetkilendirdi. Hazır düzeltmeler #707 ile,
+> BL-003/005/011 ise #688 ile (`991135c6`) ana dala birleşti. Güncel updater
+> sözleşmesi `../SIGNED_MANUAL_PATCH.md`, Windows kanıtı
+> `bl-003-005-011-windows-acceptance-20261024.json` içindedir. Proje bütünü henüz
+> tamamlanmadı; TEST, STABLE veya manuel patch yayını başlatılmadı. Aşağıdaki
+> durdurma/merge edilmedi ifadeleri eski devir anını anlatır.
+
 Checkpoint: **24 Ekim 2026, 16:10 Türkiye saati civarı**. Kullanıcı yeni geliştirmeyi
 durdurup başka hesapta devam etmek istedi. Bu dosya o durma noktasını kaydeder.
 Proje tamamlanmış değildir. **13 PR açık; hiçbiri birleştirilmedi. Hiçbir TEST,

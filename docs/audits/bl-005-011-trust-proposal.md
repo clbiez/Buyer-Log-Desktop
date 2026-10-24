@@ -1,6 +1,44 @@
 # BL-005 / BL-011 — patch trust and release decision
 
-Status: Investigating; concrete compatibility proposal awaiting product/security
+> **Historical proposal, superseded on 2026-10-24.** The sections below describe
+> main `5a5c3bc` before implementation; their pending approvals and present-tense
+> workflow descriptions are not current operating instructions. The user later
+> authorized development and merge, and separately approved adding the manual
+> publisher workflow only. No publication or workflow dispatch was authorized.
+>
+> **Tarihsel öneri:** Aşağıdaki bekleyen kararlar ve eski yayın davranışı güncel
+> durumu anlatmaz. Uygulama ve merge yetkilendirildi; ek yayın onayı yalnız
+> workflow kodunun eklenmesini kapsar. Yayın başlatılmadı.
+
+## Implemented outcome and remaining deployment gates
+
+[PR #688](https://github.com/clbiez/Buyer-Log-Desktop/pull/688) merged at
+`991135c670f9fe8821354739b3636e615a9de2e0`. The installed Electron bootstrap now
+verifies a separate signed-v3 manifest with pinned publisher keys before the
+native JSON/ZIP picker can stage a complete immutable core. This replaces the
+proposed need to trust a downloaded PowerShell verifier. It does not prevent an
+operator from independently executing an older external script; legacy channel
+retirement and deployment remain separate decisions.
+
+The six-member recovery set includes DB, BAK, WAL, WAL.BAK, pointer and state.
+Trial writes and shared publication wait for exact durable health confirmation;
+rollback preserves the highest accepted patch sequence. The transitional
+publisher is frozen and the new publisher is manual-only with explicit source
+SHA, full tests before signing, immutable assets and no Actions ZIP storage.
+
+The final contract is [SIGNED_MANUAL_PATCH.md](../SIGNED_MANUAL_PATCH.md).
+The [Windows acceptance record](bl-003-005-011-windows-acceptance-20261024.json)
+records 7,550 passed / 0 failed / 6 skipped tests on code commit `2c6cdcb`, plus
+actual isolated Electron 44.3.0 preparation, authority rejection, delayed-health
+write fencing, failed-trial rollback and replay rejection. Fixture signing keys
+were ephemeral; production keys were not accessed. Corporate SMB, Excel/Outlook,
+hardware failure and live secret-backed publication are not certified by that
+synthetic acceptance. Full signed-bootstrap deployment must precede v3 patches;
+neither TEST, STABLE nor manual patch publication has run.
+
+## Original proposal (historical)
+
+Historical status: Investigating; concrete compatibility proposal awaiting product/security
 approval. Runtime, installer and publication policy are unchanged. This document
 does not close either work package. Baseline: main 5a5c3bcafd4de929019b3bba522ef5771670b171.
 
