@@ -1,6 +1,6 @@
 # Buyer Log engineering execution progress
 
-Checkpoint: 2026-10-24. No merges or releases authorized or performed.
+Checkpoint: 2026-10-24 (continuation). No merges or releases authorized or performed.
 
 ## Baseline and isolation
 
@@ -17,16 +17,16 @@ Pending means not independently verified in this execution. The audit remains ev
 | ID | Priority | Status | Package / next action | Verification / dependencies / risk | PR |
 |---|---|---|---|---|---|
 | BL-001 | P0 | PR Open | Review PR #685; retain record/option contracts and backend restart requirement | Verified negative HTTP + real IAM + Chromium; 224 focused pass; no Windows certification | [#685](https://github.com/clbiez/Buyer-Log-Desktop/pull/685) |
-| BL-002 | P0 | Confirmed | Next: compatible lease ownership, race-safe reclamation and commit fencing; add two-process/suspend/crash matrix | Live owner evicted solely by age: second writer entered after 5.209 s while first active. No correction delivered; mixed-version and shared-filesystem semantics unresolved | — |
-| BL-003 | P0 | Confirmed | Next: validate full checkpoint; implement durable restore intent and deterministic restart recovery | Rollback missing .bak reproduced old DB + newer WAL + pointer 1.1.0. No correction delivered; Windows rename/disk-full and trial-write policy remain | — |
+| BL-002 | P0 | PR Open | Review active writer, thread retirement and commit fencing; coordinated upgrade required | 92 focused pass; actual native busy save409 + preserved pending edit + durable retry. Remote unknown liveness fails closed; Windows/SMB not executed | [#692](https://github.com/clbiez/Buyer-Log-Desktop/pull/692) |
+| BL-003 | P0 | Blocked | Draft implementation; finish signed full-bootstrap migration and native evidence/Windows acceptance | 91 pass across11 files. Complete set validation + durable restore intent + trial writer fencing. Cannot deploy this through app-core-only patch; no native rollback PNG yet | [#688 draft](https://github.com/clbiez/Buyer-Log-Desktop/pull/688) |
 | BL-004 | P0 | PR Open | Review PR #686; restart backend and refresh sign-in page after approved deployment | Canonical-account/trusted-peer limiter verified: 63 pass, real Chromium TR/EN. Bounded known-pool saturation tradeoff documented; Windows corporate IAM not certified | [#686](https://github.com/clbiez/Buyer-Log-Desktop/pull/686) |
-| BL-005 | P0 | Investigating | Prepare compatible signed-manifest plus trusted-bootstrap migration proposal before changing channel | Code confirms unsigned/self-hash manual channel; local installer is used rather than downloaded script execution. Windows/tamper runtime not executed. Depends BL-011 and explicit channel/migration decision | — |
+| BL-005 | P0 | In Progress | User approved signed-v3 bootstrap bridge + explicit publication + no Actions ZIP storage; implement installed trust boundary | Diagnostic model + actual official verifier synthetic tamper probe passed; manual Windows installer not executed. No compromise asserted. Trusted bootstrap/manager/producer still outstanding | [#693 proposal](https://github.com/clbiez/Buyer-Log-Desktop/pull/693) |
 | BL-006 | P1 | PR Open | Review focused repairs in #687; then resolve residual failures before claiming green baseline | Five audit-listed failures + one later-main UI-regex harness failure repaired. 23 core tests pass; TL file still 3 pass/1 fail. All-file scheduling observed 8 failures, one subsequently repaired; seven remain | [#687](https://github.com/clbiez/Buyer-Log-Desktop/pull/687) |
-| BL-007 | P1 | Pending | Restrict temp inventory to app-owned files | Not executed in this session; verify audit evidence before changing code | — |
+| BL-007 | P1 | PR Open | Review owned temp boundary and authoritative backup error correction | 79 relevant tests pass; actual EACCES HTTP probe; native restore preflight200 under owned temp root, no restore applied. Windows not executed | [#691](https://github.com/clbiez/Buyer-Log-Desktop/pull/691) |
 | BL-008 | P1 | Confirmed | After BL-002, convert one request-facing writer to awaited leases and benchmark identically | Synchronous held lease reproduced: 10 ms timer delayed to 305.36 ms with 300 ms timeout. No optimization or improvement claimed | — |
-| BL-009 | P1 | Pending | Correct shared dialog focusability and trapping | Not executed in this session; verify audit evidence before changing code | — |
-| BL-010 | P1 | Pending | Separate License Cards loading, error and empty states | Not executed in this session; verify audit evidence before changing code | — |
-| BL-011 | P1 | Pending | Define manual patch release/validation policy explicitly | Not executed in this session; verify audit evidence before changing code | — |
+| BL-009 | P1 | PR Open | Review rendered/top dialog focus helper; refresh client after approved deployment | 10 real Chromium tests pass; native nested dialog Tab/Escape/restore pass. Related Node14 pass/1 known Endek CSS guard fail. Windows screen reader not executed | [#696](https://github.com/clbiez/Buyer-Log-Desktop/pull/696) |
+| BL-010 | P1 | PR Open | Review License first-load/stale/error/empty correction | 59 tests pass; native unmocked503 shows error without skeleton; labeled synthetic retry/empty/stale POST fixtures pass. Windows not executed | [#697](https://github.com/clbiez/Buyer-Log-Desktop/pull/697) |
+| BL-011 | P1 | PR Open | Approved transitional gate freezes unsigned auto-publication; validation only until signed bridge is ready | 6 local contract tests pass + YAML syntax. No release/signing credentials, publish commands or ZIP artifacts; full Windows app checks precede installer tests. Workflow not dispatched | [#695](https://github.com/clbiez/Buyer-Log-Desktop/pull/695) |
 | BL-012 | P1 | Pending | Avoid full WAL parsing after every append | Not executed in this session; verify audit evidence before changing code | — |
 | BL-013 | P1 | Pending | Index cross-screen order peers by canonical identity | Not executed in this session; verify audit evidence before changing code | — |
 | BL-014 | P1 | Pending | Cache pricing context and remove avoidable repeated rule work | Not executed in this session; verify audit evidence before changing code | — |
@@ -74,7 +74,7 @@ Rollback: revert this PR and restart backend; no data conversion to reverse. New
 - BL-017/023–026 business-policy changes and major new workflows remain proposals pending user approval; no unrelated redesign while P0 work remains.
 - Never merge, publish, force-push, touch live data or claim background continuation without a persistent mechanism.
 
-## Delivery checkpoint — 24 October 2026
+## Earlier delivery checkpoint — 24 October 2026 (superseded by continuation below)
 
 | Package | Branch | Implementation commit | Open PR |
 |---|---|---|---|
@@ -109,7 +109,7 @@ Six residual failures are design contracts detecting the same new Endeksmatik ra
 - Suspected risk (BL-017): TL fixture classified through USD model signature and missing C15–C19 formulas rejected. Validate a safe real-structure fixture and discrimination before touching financial validation.
 - Suspected risk (BL-016): test-report authorized-order read resolver also consumes user-managed scoped source rows; independently reproduce its authoritative scope before declaring another exposure.
 
-### Exact continuation
+### Earlier continuation (superseded below)
 
 1. Read this checkpoint and repository instructions once. Fetch current main, inspect changes since `6f8eb33e`, and preserve all current worktrees/branches. Review open PRs; do not merge/publish without explicit user approval.
 2. Resume BL-002 in a fresh branch from latest main. Reproduce async/sync two-process overlap, suspend/resume and competing stale reclaimers. Design a compatible ownership/reclamation/fencing contract; a higher TTL or heartbeat alone is insufficient. Preserve dead/corrupt-owner recovery. Add red tests before production changes and require actual Windows/shared-storage validation for compatibility claims.
@@ -119,3 +119,57 @@ Six residual failures are design contracts detecting the same new Endeksmatik ra
 6. Continue the remaining backlog in dependency order. BL-017 business-policy and BL-023–026 major workflow changes need concrete proposals and user approval before implementation. No measured performance improvement or broad UI completion has been delivered yet.
 
 Local diagnostic artifacts (synthetic only): `/workspace/buyer-log-execution-evidence/`; original read-only extracted package: `/workspace/buyer-log-master-input/`. The audit setup helper was copied and corrected only in the diagnostic folder (auth path under local root). Worktree dependency links can be recreated from the original checkout or dependencies installed with `npm ci` before continuation. No scheduled background continuation exists.
+
+## Continuation delivery — 24 October 2026
+
+Authoritative main fetched again: `5a5c3bcafd4de929019b3bba522ef5771670b171`.
+The two newer commits change agent contracts, tests and PR fast-check workflow,
+not application runtime. Current instructions were read. Original clean work
+checkout and unrelated branches remain preserved. New PRs are based on this
+compatible main; BL-001 incorporates it with a normal merge, never force-push.
+
+| Package | Implementation commit | Head / PR |
+|---|---|---|
+| BL-002 | `e913a09e613cdfa6d4e39ebe5c9c36e2acd8b846` | `f7c2480236dbca70f8d4dcdc2fe857eb442614a6`, [#692](https://github.com/clbiez/Buyer-Log-Desktop/pull/692) |
+| BL-003 draft | `575498a8321badbf5fc925048d385cac87ef468e` | [#688](https://github.com/clbiez/Buyer-Log-Desktop/pull/688) |
+| BL-007 | `89ba6970c2a2c830b7a66d696d5f833b7a9ada1c` | `8ddae4cdef98302dfa090c0eba326c40f5f399a4`, [#691](https://github.com/clbiez/Buyer-Log-Desktop/pull/691) |
+| BL-005/011 approved proposal, runtime incomplete | `8c0bfd830ac995bda2f80a36ab4c56341694f444` | [#693 draft](https://github.com/clbiez/Buyer-Log-Desktop/pull/693) |
+| BL-011 transitional gate | `01dd915ae877583f8341d5781e4f834fad8dea38` | [#695](https://github.com/clbiez/Buyer-Log-Desktop/pull/695) |
+| BL-009 | `25badecceef2cf405c869ad74ca87139ce62a213` | [#696](https://github.com/clbiez/Buyer-Log-Desktop/pull/696) |
+| BL-010 | `176136b4ac2bfbaccbd6b6f14c1dd72287ff5c8d` | [#697](https://github.com/clbiez/Buyer-Log-Desktop/pull/697) |
+
+BL-002/007 GitHub PR fast checks were observed completed successfully. BL-009,
+BL-010 and BL-011 subsequent remote checks must be inspected rather than assumed.
+No full-regression workflow was dispatched, no PR merged, no TEST/STABLE/manual
+patch release created. User approval covers signed-patch implementation policy
+only and does not authorize merge/publication. Previous full-suite failures are
+still outstanding. The 120-sample BL-002 microbenchmark is an overhead measurement
+only (median0.503316ms before /0.271011ms after, p951.029304/0.976765ms); no
+representative desktop speedup is claimed.
+
+### Next engineering actions
+
+1. Inspect current PR checks and latest main before further work; retain independent
+   branches. Review package-specific docs/evidence in each PR; do not merge/release.
+2. Complete BL-005 installed signed bootstrap/manager and schema-specific producer
+   using the approved direction. Existing legacy clients/feed are preserved. PR695
+   prevents new unsigned auto-publication only after an approved merge; it does not
+   retroactively change production. Couple bootstrap acceptance with BL-003, whose
+   persistent launcher cannot be updated by an app-core-only patch. Windows
+   migration/trial-edit/quiescence/NTFS and genuine rollback screenshot remain gates.
+3. Repair the separately confirmed Endeksmatik token violations (BL-015) without
+   weakening any of six guards. Resolve the TL-signature fixture classification
+   (BL-006/017), preserving strict financial validation. Then rerun full supported
+   regression at a milestone, reporting unavailable Windows/soak work separately.
+4. Integrate completed diffs in a separate synthetic validation worktree, combining
+   pending notes by unique IDs. BL-002 durable-write guards and BL-007 legacy-temp
+   recovery allowance touch the same helper and need explicit combined verification;
+   BL-003 early backend startup gate must coexist with other server changes.
+5. Continue BL-008/012–019 with identical before/after benchmarks and representative
+   synthetic data; BL-020–026 remain unimplemented and major workflows still need
+   concrete proposals. Full project completion is not claimed.
+
+Diagnostics remain in `/workspace/buyer-log-execution-evidence`. Browser screenshots
+are real post-change native UI; follow-up mocked API routes are labeled explicitly.
+No real databases or company integrations were used. There is no scheduled
+background continuation; work occurs only during active execution.
