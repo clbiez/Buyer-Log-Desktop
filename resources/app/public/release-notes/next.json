@@ -880,6 +880,35 @@
           "en": "A synthetic workbook is in the validation phase; its upload response is held for this visual check and then rejected. No import success is claimed."
         }
       }
+    },
+    {
+      "id": "endeksmatik-legacy-column-origin",
+      "type": "fix",
+      "module": {
+        "tr": "Endeksmatik",
+        "en": "Endeksmatik"
+      },
+      "title": {
+        "tr": "A sütunu boş TL kitapları doğru sütunlardan okunur",
+        "en": "TL workbooks with blank column A use the correct columns"
+      },
+      "body": {
+        "tr": "Özet, pivot ve kur tablolarının kullanılan aralığı B veya V sütunundan başlasa da sabit sütun kimlikleri korunur. Geçerli TL kitapları, eski set değiştirilmeden bağımsız set olarak yüklenir.",
+        "en": "Fixed column identities are preserved when summary, pivot or FX used ranges start at B or V. Valid TL workbooks import as independent sets without changing the original legacy set."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "endeksmatik-tl-origin-import.png",
+        "alt": {
+          "tr": "Gerçek demo sunucuda V sütunundan başlayan kur tablosuyla TL seti oluşturuldu bildirimi",
+          "en": "Native independent TL set success on a real demo server with an FX range starting at V"
+        },
+        "caption": {
+          "tr": "Sentetik dosya HTTP200 ile bir klasmanlı bağımsız TL seti oluşturdu; mevcut eski set korundu.",
+          "en": "The synthetic workbook returned HTTP200 and created an independent one-class TL set; the existing legacy set was preserved."
+        }
+      }
     }
   ]
 }
