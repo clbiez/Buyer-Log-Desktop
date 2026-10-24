@@ -26621,7 +26621,12 @@ function kolLandedSummaryCellHtml(row,rc){
 }
 function kolSourceCpRow(row){
   if(!row || !row._sourceOrderCode || !state.cp || !Array.isArray(state.cp.rows)) return null;
-  return state.cp.rows.find(r=>sameOrderCode(r['Order Code'],row._sourceOrderCode))||null;
+  const api=window.BLCollectionPricingEngine;
+  if(!api?.createCpContextIndex)return state.cp.rows.find(r=>sameOrderCode(r['Order Code'],row._sourceOrderCode))||null;
+  const index=kolSourceCpRow.index||(kolSourceCpRow.index=api.createCpContextIndex(r=>r['Order Code']));
+  const user=state.currentUser||window.BL_USER_CONTEXT||{};
+  const revision=JSON.stringify([String(user.id??''),state.storeRevisions?.orders??0,state.cp.sourceRevision??state.cp.revision??0,user.dataScope??null,user.permissions??null,user.accessAreas??null]);
+  return index.find(state.cp.rows,row._sourceOrderCode,revision);
 }
 function kolPricingRuleContext(row){
   const cp=kolSourceCpRow(row);

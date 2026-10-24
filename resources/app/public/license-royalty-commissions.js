@@ -158,8 +158,16 @@
     return pricingRuleSeasonMatches(rule,ctx.season)&&turknorm(ctx.licensor)===turknorm(rule&&rule.licensor)&&turknorm(ctx.license)===turknorm(rule&&rule.license);
   };
   kolFindPricingRuleForCountryGroup=function(row,countryGroup){
-    const ctx=kolPricingRuleContext(row),find=matches=>window.BLCollectionPricingEngine.findRule(ctx,countryGroup,{api,rules:state.overrides.pricingRules||[],matches,freshness:kolPricingRuleFreshness});
-    return find(kolPricingRuleDimensionMatches)||(api.licensorHasOwnRules(state.overrides.pricingRules||[],ctx.licensor,ctx.license)?null:find((rule,c)=>pricingRuleSeasonMatches(rule,c.season)&&api.licensorsMerged(c.licensor,rule&&rule.licensor,state.licensorMerges||{split:[]})&&turknorm(c.license)===turknorm(rule&&rule.license)));
+    const ctx=kolPricingRuleContext(row),engine=window.BLCollectionPricingEngine,rules=state.overrides.pricingRules||[],user=state.currentUser||window.BL_USER_CONTEXT||{};
+    const merged=(rule,c)=>pricingRuleSeasonMatches(rule,c.season)&&api.licensorsMerged(c.licensor,rule&&rule.licensor,state.licensorMerges||{split:[]})&&turknorm(c.license)===turknorm(rule&&rule.license);
+    if(!engine.createRuleResolver){const find=matches=>engine.findRule(ctx,countryGroup,{api,rules,matches,freshness:kolPricingRuleFreshness});return find(kolPricingRuleDimensionMatches)||(api.licensorHasOwnRules(rules,ctx.licensor,ctx.license)?null:find(merged));}
+    const revision=JSON.stringify([String(user.id??''),state.storeRevisions?.pricingRules??0,state.licensorMerges??null,user.dataScope??null,user.permissions??null,user.accessAreas??null]);
+    const self=kolFindPricingRuleForCountryGroup;
+    const exact=self.exactResolver||(self.exactResolver=engine.createRuleResolver({api,matches:(rule,c)=>kolPricingRuleDimensionMatches(rule,c),freshness:kolPricingRuleFreshness}));
+    const value=exact.find(ctx,countryGroup,rules,revision);
+    if(value||api.licensorHasOwnRules(rules,ctx.licensor,ctx.license))return value;
+    const fallback=self.mergedResolver||(self.mergedResolver=engine.createRuleResolver({api,matches:merged,freshness:kolPricingRuleFreshness}));
+    return fallback.find(ctx,countryGroup,rules,revision);
   };
   kolFindPricingRule=function(row){
     const ctx=kolPricingRuleContext(row);if(!ctx.country||!ctx.licensor||!ctx.license)return null;

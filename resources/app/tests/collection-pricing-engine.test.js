@@ -60,6 +60,17 @@ test('an invalid DTR Final FOB contract stays invalid without changing its inten
  }
 });
 
+test('installed cached lookup refreshes merge decisions and preserves exact-licensor precedence',()=>{
+ const candidate={...row,licensor:'ERMODA UK LTD'},overrides={pricingRules:[{...contract,id:'merged',licensor:'ERMODA'}]},ui=nativeUi(overrides,fx);ui.state.storeRevisions={pricingRules:1};ui.state.licensorMerges={split:[]};
+ assert.equal(ui.kolFindPricingRuleForCountryGroup(candidate,'TR').id,'merged');ui.state.licensorMerges={split:[Business.licensorMergeKey('ERMODA')]};assert.equal(ui.kolFindPricingRuleForCountryGroup(candidate,'TR'),null);
+ ui.state.licensorMerges={split:[]};assert.equal(ui.kolFindPricingRuleForCountryGroup(candidate,'TR').id,'merged');ui.state.overrides.pricingRules=[...ui.state.overrides.pricingRules,{...contract,id:'own-other-season',licensor:'ERMODA UK LTD',seasons:['S27']}];ui.state.storeRevisions.pricingRules++;assert.equal(ui.kolFindPricingRuleForCountryGroup(candidate,'TR'),null,'any own contract suppresses alias fallback even outside the requested season');
+});
+
+test('cached selections never cache prices, manual FX, supplier values or changing automatic FX',()=>{
+ const source={...row,pricing:{SupplierA:'4'},trFx:25},fxSnapshot=JSON.parse(JSON.stringify(fx)),ui=nativeUi({pricingRules:[contract]},fxSnapshot);ui.kolApplyRulePricing(source);const before=ui.kolLandedCalc(source);source.trFx=50;source.pricing={SupplierA:'8'};ui.kolApplyRulePricing(source);const after=ui.kolLandedCalc(source);assert.equal(after.fx,50);assert.equal(after.trLanded,Business.calculateFinalFobWithRule(row.trPrice/50,contract,'TR')*1.05);assert.equal(after.ydBaseFob,8);assert.notEqual(after.ydLanded,before.ydLanded);
+ source.trFx='';assert.equal(ui.kolLandedCalc(source).fx,40);fxSnapshot.months['2026-01'].TRY=60;fxSnapshot._revision++;assert.equal(ui.kolLandedCalc(source).fx,60);
+});
+
 test('fractional contract royalty keeps full precision and Collection FOB matches the exact CP Final FOB',()=>{
  const fractional={...contract,royalty:12.125,ydCommission:0.2,hologramCost:0};
  const overrides={pricingRules:[fractional],landedMultipliers:{tr:1.05,overseas:1.11}},ui=nativeUi(overrides,fx),nativeRow={...row,pricing:{SupplierA:'3.5'}};

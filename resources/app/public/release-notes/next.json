@@ -1199,6 +1199,35 @@
           "en": "For an invalid demo calculation input, the drawer shows the reason instead of a numeric price. A valid amount and rule were verified separately as a positive control."
         }
       }
+    },
+    {
+      "id": "collection-pricing-context",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon · Fiyat hesapları",
+        "en": "Collection · Pricing calculations"
+      },
+      "title": {
+        "tr": "Bağlı siparişlerden fiyat hesaplama hızlandı",
+        "en": "Pricing linked to orders calculates faster"
+      },
+      "body": {
+        "tr": "CP bağlamı ve eşleşen royalty kuralları kaynak değişene kadar tekrar kullanılır. Sipariş, yetki veya kurallar değişince yenilenir; manuel kur ve fiyat değişiklikleri güncel girdilerle hesaplanır.",
+        "en": "CP context and matching royalty rules are reused until their inputs change. Order, access or rule changes invalidate them; manual FX and price edits still calculate from current inputs."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-pricing-context.png",
+        "alt": {
+          "tr": "Gerçek Koleksiyon fiyat çekmecesinde güncel demo royalty, kur ve maliyet adımları",
+          "en": "Current demo royalty, FX and cost steps in the actual Collection price drawer"
+        },
+        "caption": {
+          "tr": "Demo fiyatlar önceki hesapla birebir aynı kaldı; gerçek Edge üzerinde kaynak ve kural değişimi ayrıca doğrulandı.",
+          "en": "Demo prices remain identical to the previous calculation; source and rule changes were also verified in actual Edge."
+        }
+      }
     }
   ]
 }
