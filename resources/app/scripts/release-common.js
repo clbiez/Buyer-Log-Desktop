@@ -8,12 +8,13 @@ const { sha256File }=require('../electron/update/crypto');
 const { parseReleaseManifest }=require('../electron/update/manifest');
 const { readJson, atomicWriteJson, ensureDir }=require('../electron/update/json-store');
 const { MANIFEST_REL, writeIntegrityManifest }=require('../electron/update/integrity');
+const bootstrapFiles=require('../electron/manual-patch/files');
 
 const APP_ROOT=path.resolve(__dirname,'..');
 const PORTABLE_ROOT=path.resolve(APP_ROOT,'..','..');
 const DIST_ROOT=path.join(APP_ROOT,'dist-updates');
 const PENDING_FILE=path.join(APP_ROOT,'.release-pending.json');
-const UPDATER_VERSION='1.0.0';
+const UPDATER_VERSION=require('../electron/manual-patch/signature').BOOTSTRAP_VERSION;
 
 function fail(message,code='RELEASE_FAILED'){const e=new Error(message);e.code=code;throw e;}
 function readPackage(){const pkg=readJson(path.join(APP_ROOT,'package.json'),null);if(!pkg||!parseSemver(pkg.version))fail('package.json version geçerli SemVer değil.','RELEASE_VERSION_INVALID');return pkg;}
@@ -29,6 +30,7 @@ function baseConfig(){const outer=readJson(path.join(PORTABLE_ROOT,'config.json'
 function releaseSource(cli=''){return String(cli||process.env.BUYER_LOG_RELEASE_SOURCE||baseConfig().releaseSource||'').trim();}
 function excludeRuntime(rel,entry){
   const r=String(rel||'').replace(/\\/g,'/');
+  if(bootstrapFiles.excluded(r))return true;
   if(r==='.release-pending.json'||r.startsWith('dist-updates/')||r.startsWith('dist-installer/'))return true;
   if(r.startsWith('tests/'))return true;
   if(r==='server/data'||r.startsWith('server/data/'))return true;
@@ -48,14 +50,32 @@ async function buildArtifact(version,notes=''){
     fs.writeFileSync(sourceFile,JSON.stringify({githubSource:`github:${githubRepo}`})+'\n');
   }
   try{fs.rmSync(artifactFile,{force:true});}catch(_){}
-  const integrityFile=path.join(APP_ROOT,...MANIFEST_REL.split('/'));
-  try{writeIntegrityManifest(APP_ROOT,{version,exclude:excludeRuntime});createZipFromDirectory(APP_ROOT,artifactFile,{rootPrefix:'app',exclude:excludeRuntime});}
-  finally{fs.rmSync(integrityFile,{force:true});if(githubRepo){if(originalSource)fs.writeFileSync(sourceFile,originalSource);else fs.rmSync(sourceFile,{force:true});}}
+  const generated=[MANIFEST_REL,bootstrapFiles.ANCHOR,...bootstrapFiles.BOOTSTRAP_FILES.filter(file=>file.includes('/kernel/'))];
+  const originals=new Map(generated.map(relative=>{const file=path.join(APP_ROOT,...relative.split('/'));return [file,fs.existsSync(file)?fs.readFileSync(file):null];}));
+  try{
+    const sourceCommit=childProcess.execFileSync('git',['rev-parse','HEAD'],{cwd:APP_ROOT,encoding:'utf8'}).trim();
+    bootstrapFiles.stampBootstrap(APP_ROOT,sourceCommit);
+    writeIntegrityManifest(APP_ROOT,{version,exclude:excludeRuntime});createZipFromDirectory(APP_ROOT,artifactFile,{rootPrefix:'app',exclude:excludeRuntime});
+  }finally{
+    for(const [file,bytes]of originals){if(bytes)fs.writeFileSync(file,bytes);else fs.rmSync(file,{force:true});}
+    if(githubRepo){if(originalSource)fs.writeFileSync(sourceFile,originalSource);else fs.rmSync(sourceFile,{force:true});}
+  }
   const sha256=await sha256File(artifactFile),size=fs.statSync(artifactFile).size;
   const manifest={schemaVersion:1,channel:'test',version,publishedAt:new Date().toISOString(),artifact:`releases/${artifactName}`,sha256,size,mandatory:false,releaseNotes:String(notes||'').slice(0,8000),minimumUpdaterVersion:UPDATER_VERSION};
   parseReleaseManifest(manifest,'test');
   const verifyRoot=path.join(DIST_ROOT,`.verify-${process.pid}-${Date.now()}`);
-  try{extractZipSafe(artifactFile,verifyRoot,{maxFiles:30000,maxBytes:1024*1024*1024});const packed=readJson(path.join(verifyRoot,'app','package.json'),null);if(!packed||packed.version!==version)fail('Artifact içindeki package.json version yanlış.','RELEASE_ARTIFACT_ASSERT');for(const required of ['electron/launcher.js','electron/main.js','server/server.js','public/index.html',MANIFEST_REL])if(!fs.existsSync(path.join(verifyRoot,'app',...required.split('/'))))fail('Artifact eksik: '+required,'RELEASE_ARTIFACT_ASSERT');if(fs.existsSync(path.join(verifyRoot,'app','server','data')))fail('Artifact server/data runtime verisi içeremez.','RELEASE_ARTIFACT_DATA_LEAK');if(githubRepo){const packedSource=readJson(path.join(verifyRoot,'app','electron','update','release-source.json'),null);if(!packedSource||packedSource.githubSource!==`github:${githubRepo}`)fail('Artifact public GitHub update kaynağını içermiyor.','RELEASE_ARTIFACT_UPDATE_SOURCE');}}finally{try{fs.rmSync(verifyRoot,{recursive:true,force:true});}catch(_){}}
+  try{
+    extractZipSafe(artifactFile,verifyRoot,{maxFiles:30000,maxBytes:1024*1024*1024});
+    const packedRoot=path.join(verifyRoot,'app'),packed=readJson(path.join(packedRoot,'package.json'),null);
+    if(!packed||packed.version!==version)fail('Artifact içindeki package.json version yanlış.','RELEASE_ARTIFACT_ASSERT');
+    for(const required of ['electron/launcher.js','electron/main.js','server/server.js','public/index.html',MANIFEST_REL])
+      if(!fs.existsSync(path.join(packedRoot,...required.split('/'))))fail('Artifact eksik: '+required,'RELEASE_ARTIFACT_ASSERT');
+    for(const required of [...bootstrapFiles.BOOTSTRAP_FILES,bootstrapFiles.ANCHOR])
+      if(!fs.existsSync(path.join(packedRoot,...required.split('/'))))fail('Güven kökü eksik: '+required,'RELEASE_ARTIFACT_ASSERT');
+    require('../electron/manual-patch/core-verification').verifyPackagedCore(packedRoot,version);
+    if(fs.existsSync(path.join(packedRoot,'server','data')))fail('Artifact server/data runtime verisi içeremez.','RELEASE_ARTIFACT_DATA_LEAK');
+    if(githubRepo){const packedSource=readJson(path.join(packedRoot,'electron','update','release-source.json'),null);if(!packedSource||packedSource.githubSource!==`github:${githubRepo}`)fail('Artifact public GitHub update kaynağını içermiyor.','RELEASE_ARTIFACT_UPDATE_SOURCE');}
+  }finally{try{fs.rmSync(verifyRoot,{recursive:true,force:true});}catch(_){}}
   atomicWriteJson(path.join(DIST_ROOT,'latest.test.json'),manifest);
   fs.writeFileSync(path.join(DIST_ROOT,artifactName+'.sha256'),`${sha256}  ${artifactName}\n`,'utf8');
   return {artifactName,artifactFile,sha256,size,manifest};

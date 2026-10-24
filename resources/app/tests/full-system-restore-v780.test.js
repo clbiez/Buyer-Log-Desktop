@@ -66,6 +66,10 @@ async function makeFullArchive(root, options = {}) {
     })), stage: 'data' });
   }
   if (options.includeUnknownContent) entries.push({ name: 'system/unknown/secret.json', buffer: Buffer.from('{"unexpected":true}'), stage: 'data' });
+  if (options.includeOldUpdater) for (const prefix of ['system/local-data', 'system/app-data']) {
+    entries.push({ name: `${prefix}/updater/state.json`, buffer: Buffer.from('{"schemaVersion":1,"manualPatchWatermarks":{}}'), stage: 'data' });
+    entries.push({ name: `${prefix}/updater/current.json`, buffer: Buffer.from('{"version":"old"}'), stage: 'data' });
+  }
   return createBackupArchive({ entries, manifest: { app_version: options.appVersion || '7.0.79', created_at: '2026-09-14T16:00:00.000Z', backup_type: 'full', user: { id: 'moderator' }, device: { hostname: 'OLD-PC', platform: 'win32', arch: 'x64' } }, filename: options.filename || 'BuyerLog_FullBackup_test.zip' });
 }
 function makeDependencies({ roots, securityFile, syncFile, failSecurity = false }) {
@@ -207,6 +211,40 @@ test('v7.80 · full restore boş canonical Master yerine legacy royalty, yol sü
   assert.equal(state.records['store:overrides.json'].pricingRules.length, 24);
   assert.equal(state.records['store:overrides.json'].transitRules.length, 6);
   assert.equal(state.records['store:email-groups.json'].records.length, 1);
+});
+
+test('business restore preserves installed updater trust and accepted sequence even in an old archive', async t => {
+  const { root, roots } = await makeRoots(t), securityFile = path.join(root, 'auth', 'user-access.json'), syncFile = path.join(roots.localDataRoot, 'sync-settings.json');
+  await seedCurrent(roots, securityFile, syncFile);
+  const state = JSON.stringify({ schemaVersion: 1, manualPatchWatermarks: { ['7.0.294:' + 'a'.repeat(40)]: 42 } });
+  const pointer = '{"version":"current","appCoreRoot":"installed"}';
+  for (const folder of [roots.localDataRoot, roots.appDataRoot]) {
+    await fsp.mkdir(path.join(folder, 'updater'), { recursive: true });
+    await fsp.writeFile(path.join(folder, 'updater/state.json'), state);
+    await fsp.writeFile(path.join(folder, 'updater/current.json'), pointer);
+  }
+  const archive = await makeFullArchive(root, { includeOldUpdater: true }); t.after(() => archive.cleanup());
+  const service = createFullRestoreService({ appVersion: '7.0.294', roots, localDb: createLocalDb(roots.localDbFile), securityFile, ...makeDependencies({ roots, securityFile, syncFile }) });
+  const result = await service.restore(archive.path, { actor: { id: 'moderator', systemRole: 'moderator' }, createSafetyBackup: false });
+  assert.equal(result.ok, true);
+  assert.equal(JSON.parse(await fsp.readFile(roots.localDbFile, 'utf8')).revision, 42);
+  for (const folder of [roots.localDataRoot, roots.appDataRoot]) {
+    assert.equal(await fsp.readFile(path.join(folder, 'updater/state.json'), 'utf8'), state);
+    assert.equal(await fsp.readFile(path.join(folder, 'updater/current.json'), 'utf8'), pointer);
+  }
+});
+
+test('startup recovery from an old business restore cannot lower the installed patch watermark', async t => {
+  const { roots } = await makeRoots(t), state = '{"schemaVersion":1,"manualPatchWatermarks":{"accepted":42}}';
+  const tx = path.join(roots.localDataRoot, 'restore-recovery/interrupted'), rollback = path.join(tx, 'rollback');
+  await fsp.mkdir(path.join(roots.localDataRoot, 'updater'), { recursive: true });
+  await fsp.writeFile(path.join(roots.localDataRoot, 'updater/state.json'), state);
+  await fsp.mkdir(path.join(rollback, 'scopes/localData/updater'), { recursive: true });
+  await fsp.writeFile(path.join(rollback, 'scopes/localData/updater/state.json'), '{}');
+  await fsp.writeFile(path.join(rollback, 'manifest.json'), JSON.stringify({ scopes: { localData: ['updater/state.json'] }, specials: {} }));
+  await fsp.writeFile(path.join(tx, 'journal.json'), '{"status":"committing"}');
+  assert.equal(recoverInterruptedRestoresSync({ roots }).recovered, 1);
+  assert.equal(await fsp.readFile(path.join(roots.localDataRoot, 'updater/state.json'), 'utf8'), state);
 });
 
 test('v7.80 · restore öncesi indirilebilir Tam Sistem güvenlik yedeği kullanıcı tercihiyle atlanabilir', async t => {

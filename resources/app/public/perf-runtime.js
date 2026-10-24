@@ -170,7 +170,7 @@
        perdesinin "profil" kapısı ona bağlıdır ve diğer ertelenmiş modüllerin
        yüklenmesini beklemez. */
     deferredUi:[
-      'lcwai-assistant.js?rev=1','update-test-ui.js?rev=5','user-access-ui.js?rev=APP-UPDATE-V3','formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','plm-bom.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
+      'lcwai-assistant.js?rev=1','update-test-ui.js?rev=6','user-access-ui.js?rev=APP-UPDATE-V3','formula-engine.js','formula-columns.js','plm-sample-requests-engine.js','plm-sample-requests.js','plm-bom.js','row-context-menu.js','plm-operations.js','plm-image-package-import.js?rev=2','email-groups.js?rev=2',
       'quick-filter-groups.js','kpi-groups.js','user-management.js',
       /* v7.81 — horizon-editor.js kaldırıldı: kişisel ufuk düzenleyicisi
          artık yok, ufuk Veri Yönetimi'nden yönetiliyor. */'override-sync.js','backup-manager.js','fx-calculation-engine.js','fx-import-engine.js','fx.js',

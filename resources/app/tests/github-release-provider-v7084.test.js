@@ -12,9 +12,25 @@ const {BuyerLogUpdater}=require('../electron/update/updater');
 const {createLauncherState}=require('../electron/update/launcher-state');
 const {GitHubReleaseProvider,parseGitHubSource,githubAssetUrl,githubRawArtifactUrl}=require('../electron/update/github-provider');
 
-function core(root,version){const app=path.join(root,'app');for(const d of ['electron/update','server','public'])fs.mkdirSync(path.join(app,d),{recursive:true});fs.writeFileSync(path.join(app,'package.json'),JSON.stringify({version}));fs.writeFileSync(path.join(app,'electron/main.js'),'module.exports=true');fs.writeFileSync(path.join(app,'server/server.js'),'module.exports=true');fs.writeFileSync(path.join(app,'public/index.html'),'<html></html>');return app;}
+function core(root,version){const app=path.join(root,'app');for(const d of ['electron/update','server/lib','public'])fs.mkdirSync(path.join(app,d),{recursive:true});fs.writeFileSync(path.join(app,'package.json'),JSON.stringify({version}));fs.writeFileSync(path.join(app,'electron/main.js'),'module.exports=true');fs.writeFileSync(path.join(app,'server/server.js'),"require('./lib/update-trial-backend').waitForTrialBackend();\nmodule.exports=true");fs.copyFileSync(path.join(__dirname,'../server/lib/update-trial-backend.js'),path.join(app,'server/lib/update-trial-backend.js'));fs.writeFileSync(path.join(app,'public/index.html'),'<html></html>');return app;}
 function response(url,bytes){return {ok:true,url,status:200,text:async()=>bytes.toString('utf8'),body:Readable.toWeb(Readable.from(bytes))};}
 function sha(bytes){return crypto.createHash('sha256').update(bytes).digest('hex');}
+
+test('a candidate without the trial writer protocol cannot mutate the DB or activate',t=>{
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'buyerlog-bridge-protocol-'));t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  const bootstrap=core(path.join(root,'bootstrap'),'7.0.84');
+  const life=createLauncherState({bootstrapCore:bootstrap,portableRoot:root});
+  const candidate=core(path.join(life.versionsRoot,'7.0.85'),'7.0.85');
+  fs.writeFileSync(path.join(candidate,'server/server.js'),'module.exports=true');
+  const local=path.join(root,'data/local');fs.mkdirSync(local,{recursive:true});
+  const db=path.join(local,'BuyerLogLocal.db');fs.writeFileSync(db,'UNCHANGED BUSINESS DATA');
+  life.writeState({pending:{version:'7.0.85',appCoreRoot:candidate,ready:true,sha256:'synthetic'}});
+  assert.equal(life.activatePending(),null);
+  assert.equal(life.readState().lastError.code,'UPDATE_RECOVERY_PROTOCOL_REQUIRED');
+  assert.equal(life.readState().activation,null);
+  assert.equal(life.currentPointer().appCoreRoot,bootstrap);
+  assert.equal(fs.readFileSync(db,'utf8'),'UNCHANGED BUSINESS DATA');
+});
 
 
 test('shipped app keeps the canonical public GitHub release source',()=>{

@@ -73,7 +73,7 @@ async function writeJson(file, state) {
   } finally { try { await fsp.unlink(temporary); } catch (_) {} }
 }
 
-function createCollectionPermissionsStore({ file, getProfiles = () => [], getSharedSyncRoot = async () => '', onAudit = null } = {}) {
+function createCollectionPermissionsStore({ file, getProfiles = () => [], getSharedSyncRoot = async () => '', onAudit = null, trialPolicy = require('./update-trial-backend').createTrialWritePolicy() } = {}) {
   if (!clean(file)) throw new Error('Collection permission cache file is required.');
   const localFile = path.resolve(file);
   const profiles = () => (Array.isArray(getProfiles()) ? getProfiles() : []).filter(Boolean);
@@ -145,6 +145,7 @@ function createCollectionPermissionsStore({ file, getProfiles = () => [], getSha
     return { state: next, changed: true, audit };
   }
   async function mutate(action, input) {
+    trialPolicy.assertConfirmed();
     const detail = action === 'set' ? validateGrant(input || {}) : validateGrant({ ...(input || {}), level: 'view' });
     const actorId = clean(input && input.actorId);
     const root = clean(await getSharedSyncRoot());
@@ -166,6 +167,7 @@ function createCollectionPermissionsStore({ file, getProfiles = () => [], getSha
   async function setGrant(input) { return mutate('set', input); }
   async function removeGrant(input) { return mutate('remove', input); }
   async function sync() {
+    if(!trialPolicy.isConfirmed())return {synced:false,paused:true,reason:'UPDATE_TRIAL_VERIFYING',state:await read()};
     const root = clean(await getSharedSyncRoot());
     if (!root) return { synced: false, reason: 'not-configured', state: await read() };
     const remote = await readJson(remoteFile(root));
@@ -180,6 +182,7 @@ function createCollectionPermissionsStore({ file, getProfiles = () => [], getSha
     return { synced: true, state };
   }
   async function migrateLegacyInboundAccess(entries, { actorId = 'collection-migration' } = {}) {
+    trialPolicy.assertConfirmed();
     const source = Array.isArray(entries) ? entries : [];
     const marker = 'legacyInboundAccessV1';
     const root = clean(await getSharedSyncRoot());

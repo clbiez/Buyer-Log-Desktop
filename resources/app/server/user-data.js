@@ -10,7 +10,7 @@ const readline = require('readline');
 const { once } = require('events');
 const { pipeline } = require('stream/promises');
 const { createDurableFileRecovery } = require('./lib/durable-file-recovery');
-const { SENSITIVE_KEY, isSensitiveBackupPath, sanitizeSensitiveValue } = require('./lib/backup-sensitivity');
+const { SENSITIVE_KEY, isSensitiveBackupPath, isUpdaterControlPath, sanitizeSensitiveValue } = require('./lib/backup-sensitivity');
 
 const PROJECT_ROOT = path.join(__dirname, '..');
 const SERVER_DATA_ROOT = process.env.BUYER_LOG_SERVER_DATA_ROOT || path.join(__dirname, 'data');
@@ -244,7 +244,7 @@ function walkFiles(root, options = {}) {
       const full = path.join(dir, entry.name);
       const rel = path.join(relBase, entry.name).replace(/\\/g, '/');
       if (entry.isSymbolicLink()) continue;
-      if (options.skipSensitive && isSensitiveBackupPath(rel)) continue;
+      if (options.skipSensitive && (isSensitiveBackupPath(rel) || isUpdaterControlPath(rel))) continue;
       if (entry.isDirectory()) {
         visit(full, rel);
         continue;
@@ -276,7 +276,7 @@ function isProtectedRestorePath(scope, rel) {
   if (scope === 'config') return false;
   const def = scopeDefinitions()[scope];
   const normalized = String(rel || '').replace(/\\/g, '/');
-  return Boolean(def && (def.excludeTop.includes(normalized.split('/')[0]) || isSensitiveBackupPath(normalized)));
+  return Boolean(def && (def.excludeTop.includes(normalized.split('/')[0]) || isSensitiveBackupPath(normalized) || isUpdaterControlPath(normalized)));
 }
 // config.json dış parola hash'i ve oturum imza sırrını taşır; yedeğe sırsız girer.
 function sanitizedConfigBuffer() {

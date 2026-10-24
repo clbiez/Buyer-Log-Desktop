@@ -1,3 +1,4 @@
+require('./lib/update-trial-backend').waitForTrialBackend();
 const path = require('path');
 const fs = require('fs');
 const express = require('express');
@@ -95,9 +96,11 @@ function sharedHubDeltaFilter(direction) {
 // Ortak klasöre hiç gitmeyecek yerel yazım "bekleyen değişiklik" sayılmaz;
 // yazıldığı anda yerel olarak kapanır (bkz. shared-sync-policy izin listesi).
 localDb.setTransportFilter(item => sharedHubDeltaFilter('outgoing')([item]).length === 1);
+const trialWritePolicy=require('./lib/update-trial-backend').createTrialWritePolicy();
 const syncSettings = createSyncSettings({
   localDataRoot: LOCAL_DATA_ROOT,
   localDb,
+  allowSync:trialWritePolicy.isConfirmed,
   trace: markStartup,
   filterIncomingDeltas: sharedHubDeltaFilter('incoming'),
   filterOutgoingDeltas: sharedHubDeltaFilter('outgoing'),
@@ -181,6 +184,7 @@ let localDbMaintenancePromise = null;
 function ensureLocalDbMaintenanceReady() {
   if (!localDbMaintenancePromise) {
     localDbMaintenancePromise = localDbReadyPromise
+      .then(()=>new Promise(resolve=>trialWritePolicy.whenConfirmed(resolve)))
       .then(() => runLocalDbMaintenance())
       .catch(error => {
         localDbMaintenancePromise = null;
@@ -438,6 +442,7 @@ setInterval(() => {
 
 const app = express();
 app.disable('x-powered-by');
+app.use(trialWritePolicy.middleware);
 app.use((_req, res, next) => {
   res.set('X-Content-Type-Options', 'nosniff');
   res.set('X-Frame-Options', 'DENY');
@@ -559,17 +564,14 @@ app.delete('/api/internal/desktop/oab-authorization', (req, res) => {
   const status = oabAuthState.clear();
   return res.set('Cache-Control','no-store').json({ ok:true, status });
 });
-// Desktop-only updater authority check. The renderer supplies only its selected
-// Buyer Log user id; backend resolves the canonical local IAM profile. This keeps
-// TEST-channel permission outside renderer trust while exposing no credential data.
+// The desktop forwards the sender session cookie, never a renderer-selected role.
+// The canonical live session also rejects disabled/revoked credentials.
 app.post('/api/internal/desktop/update-authority', express.json({ limit:'8kb' }), (req, res) => {
   if (!desktopBridgeAuthorized(req)) return res.status(403).json({ ok:false, code:'DESKTOP_BRIDGE_FORBIDDEN' });
   try {
     const userId = String(req.body && req.body.userId || '').trim();
-    const access = require('./lib/user-access');
-    const store = access.readStore();
-    const profiles = [store && store.moderator, ...(store && Array.isArray(store.users) ? store.users : [])].filter(Boolean);
-    const profile = profiles.find(item => String(item && item.id || '') === userId) || null;
+    const profile = userAccess.sessionProfile(req);
+    if (!profile || String(profile.id) !== userId) return res.status(403).set('Cache-Control','no-store').json({ ok:false, moderator:false, code:'UPDATE_AUTHORITY_SESSION_REQUIRED' });
     const moderator = Boolean(profile && (String(profile.systemRole || '').toLowerCase() === 'moderator' || String(profile.role || '').toLowerCase() === 'moderator'));
     return res.set('Cache-Control','no-store').json({ ok:true, userId, moderator });
   } catch (error) {
@@ -716,6 +718,7 @@ const userAccess = buildUserAccess({
 });
 localDb.setSharedOwnerResolver((id, userId) => userAccess.sharedOwnerOf(id, userId));
 const collectionPermissions = createCollectionPermissionsStore({
+  trialPolicy:trialWritePolicy,
   file: path.join(LOCAL_DATA_ROOT, 'collection-permissions.json'),
   getProfiles: () => userAccess.collectionAccessMigrationProfiles(),
   getSharedSyncRoot: async () => (await syncSettings.read()).sharedSyncRoot,
@@ -725,19 +728,20 @@ const collectionPermissions = createCollectionPermissionsStore({
 // deposundan yapılır; rol/hiyerarşi hiçbir kayıt açmaz.
 userAccess.setCollectionAccessResolver(profile => collectionPermissions.isReady() ? collectionPermissions.effectiveOwners(profile.id) : null);
 const collectionReplication = createCollectionReplication({
+  trialPolicy:trialWritePolicy,
   workspaces: require('./lib/collection-workspaces'),
   permissions: collectionPermissions,
   getSharedSyncRoot: async () => (await syncSettings.read()).sharedSyncRoot,
   stateFile: path.join(LOCAL_DATA_ROOT, 'collection-replication-state.json'),
   onTrace: markStartup,
 });
-const collectionPermissionsReady = (async () => {
+const collectionPermissionsReady = new Promise(resolve=>trialWritePolicy.whenConfirmed(resolve)).then(async () => {
   await collectionPermissions.ensure();
   try { await collectionPermissions.sync(); } catch (error) { markStartup('COLLECTION_PERMISSION_SYNC_DEFERRED', { error: error && error.code || error && error.message || String(error) }); }
   const migrated = await collectionPermissions.migrateLegacyInboundAccess(userAccess.collectionAccessMigrationProfiles());
   markStartup('COLLECTION_PERMISSION_MIGRATION', migrated);
   return migrated;
-})().catch(error => { logRuntimeFailure('collectionPermissionMigration', error); return null; });
+}).catch(error => { logRuntimeFailure('collectionPermissionMigration', error); return null; });
 
 const SHARED_COLLECTION_OWNER = collectionWorkspaces.SHARED_COLLECTION_OWNER;
 let sharedHubBootstrapInFlight = null;
@@ -9307,8 +9311,7 @@ app.post('/api/startup/ready', express.json({ limit: '32kb' }), (req, res) => {
     markStartup(name, { ...sourceDetail, source: 'client', clientElapsedMs: Number(clientMark.atMs) || 0, durationMs: Number(sourceDetail.durationMs) || 0 });
   }
   markStartup('STARTUP_CLIENT_REPORT_RECEIVED', { source: 'server', clientMarkCount: emitted.size });
-  uiReadySignaled = true;
-  scheduleBackgroundServices();
+  trialWritePolicy.whenConfirmed(()=>{uiReadySignaled=true;scheduleBackgroundServices();});
   res.status(202).json({ ok: true, backgroundSyncDelayMs: BACKGROUND_SYNC_DELAY_MS });
 });
 // Koleksiyon birleşim çakışmaları (collection:*) aynı listede, yalnız erişilebilir sahipler için.

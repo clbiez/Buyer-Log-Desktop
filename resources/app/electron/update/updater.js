@@ -9,6 +9,7 @@ const { readJson,atomicWriteJson,ensureDir }=require('./json-store');
 const { FolderReleaseProvider,expandEnv }=require('./folder-provider');
 const { GitHubReleaseProvider,parseGitHubSource }=require('./github-provider');
 const { loadTrustedKeys,verifyManifestSignature }=require('./signature');
+const { readStateFile }=require('./launcher-state');
 
 const STATES=Object.freeze({IDLE:'IDLE',CHECKING:'CHECKING',UPDATE_AVAILABLE:'UPDATE_AVAILABLE',DOWNLOADING:'DOWNLOADING',VERIFYING:'VERIFYING',READY_TO_INSTALL:'READY_TO_INSTALL',INSTALLING:'INSTALLING',SUCCESS:'SUCCESS',FAILED:'FAILED',ROLLBACK:'ROLLBACK'});
 function updaterError(message,code='UPDATE_FAILED',extra={}){return Object.assign(new Error(message),{code,...extra});}
@@ -34,7 +35,7 @@ class BuyerLogUpdater{
     const line=JSON.stringify({at:new Date().toISOString(),event,...clean}); try{fs.appendFileSync(this.logFile,line+'\n','utf8');}catch(_){} this.log('Updater: '+event+(clean.code?' · '+clean.code:''));
   }
   trustedKeys(){return loadTrustedKeys(this.appCoreRoot);}
-  state(){const value=readJson(this.stateFile,null);return value&&value.schemaVersion===1?value:defaultState(this.currentVersion);}
+  state(){return readStateFile(this.stateFile,defaultState(this.currentVersion));}
   saveState(patch){const next={...this.state(),...patch,currentVersion:this.currentVersion};atomicWriteJson(this.stateFile,next);return next;}
   config(base={}){
     const local=readJson(this.configFile,{})||{};
@@ -55,12 +56,18 @@ class BuyerLogUpdater{
   }
   status(base={},effectiveChannel=''){
     const config=this.config(base),state=this.state();
-    return {enabled:config.enabled,configured:Boolean(config.releaseSource),releaseSource:config.releaseSource,channel:effectiveChannel||config.channel,currentVersion:this.currentVersion,updaterVersion:this.updaterVersion,state:state.state,lastSuccessfulCheck:state.lastSuccessfulCheck,lastCheck:state.lastCheck,latestVersion:state.latestVersion,pendingVersion:state.pending&&state.pending.version||null,pendingReady:Boolean(state.pending&&state.pending.ready),mandatory:Boolean(state.pending&&state.pending.mandatory),releaseNotes:state.pending&&state.pending.releaseNotes||'',lastError:state.lastError||null,failedVersions:state.failedVersions||{}};
+    return {enabled:config.enabled,configured:Boolean(config.releaseSource),releaseSource:config.releaseSource,channel:effectiveChannel||config.channel,currentVersion:this.currentVersion,updaterVersion:this.updaterVersion,state:state.state,lastSuccessfulCheck:state.lastSuccessfulCheck,lastCheck:state.lastCheck,latestVersion:state.latestVersion,pendingVersion:state.pending&&state.pending.version||null,pendingManualPatchSequence:state.pending?.manualPatch?.sequence||null,pendingReady:Boolean(state.pending&&state.pending.ready),mandatory:Boolean(state.pending&&state.pending.mandatory),releaseNotes:state.pending&&state.pending.releaseNotes||'',lastError:state.lastError||null,failedVersions:state.failedVersions||{}};
   }
   async _run(fn,key){while(this.running){if(this.runningKey===key)return this.running;await this.running.catch(()=>{});}this.runningKey=key;this.running=(async()=>{try{return await fn();}finally{this.running=null;this.runningKey='';}})();return this.running;}
   async checkAndStage(options={}){const config=this.config(options.baseConfig||{}),key=JSON.stringify([config.releaseSource,config.enabled,options.channel||config.channel,options.manual===true,options.allowDevelopment===true,options.retryFailed===true,options.retryVersion||'',options.retrySha256||'',options.retryChannel||'']);return this._run(()=>this._checkAndStage(options),key);}
+  async prepareSignedPatch(prepare){
+    if(this.running)throw updaterError('Başka bir güncelleme işlemi sürüyor. / Another update operation is in progress.','PATCH_UPDATE_BUSY');
+    return this._run(prepare,Symbol('signed-patch'));
+  }
   async _checkAndStage(options={}){
     const base=options.baseConfig||{},config=this.config(base),channel=String(options.channel||config.channel||'stable');
+    if(this.state().pending?.manualPatch||this.state().activation?.status==='trial')return {ok:true,pendingManualPatch:true,...this.status(base,channel)};
+    if(this.state().lastError?.manualPatch&&options.manual!==true)return {ok:true,manualPatchRollback:true,...this.status(base,channel)};
     if(!this.packaged&&!options.allowDevelopment)return {ok:true,disabled:true,reason:'development',...this.status(base,channel)};
     if(!config.enabled)return {ok:true,disabled:true,reason:'disabled',...this.status(base,channel)};
     if(!config.releaseSource){const st=this.saveState({state:STATES.IDLE,lastCheck:new Date().toISOString(),lastError:null});return {ok:true,unconfigured:true,...this.status(base,channel),state:st.state};}
@@ -133,7 +140,18 @@ class BuyerLogUpdater{
   }
   cleanup(){
     const st=this.state(),keep=new Set([this.currentVersion,st.lastKnownGoodVersion,st.pending&&st.pending.version].filter(Boolean));
-    try{for(const name of fs.readdirSync(this.versionsRoot)){if(keep.has(name))continue;const release=readJson(path.join(this.versionsRoot,name,'release.json'),null);if(release&&keep.has(release.version))continue;rmSafe(path.join(this.versionsRoot,name));}}catch(_){}
+    const keepFolders=new Set(),retain=core=>{
+      if(!core)return;const relative=path.relative(this.versionsRoot,path.resolve(core)),parts=relative.split(path.sep);
+      if(parts.length===2&&parts[0]!=='.'&&parts[0]!=='..'&&!path.isAbsolute(relative)&&parts[1]==='app')keepFolders.add(parts[0]);
+    };
+    retain(this.appCoreRoot);retain(readJson(this.currentFile,null)?.appCoreRoot);retain(st.pending?.appCoreRoot);retain(st.activation?.previous?.appCoreRoot);
+    try{for(const name of fs.readdirSync(this.versionsRoot)){
+      if(keep.has(name)||keepFolders.has(name))continue;
+      const folder=path.resolve(this.versionsRoot,name);if(path.dirname(folder)!==path.resolve(this.versionsRoot))continue;
+      const stat=fs.lstatSync(folder);if(!stat.isDirectory()||stat.isSymbolicLink())continue;
+      const release=readJson(path.join(folder,'release.json'),null);if(release&&keep.has(release.version))continue;
+      rmSafe(folder);
+    }}catch(_){}
     try{for(const name of fs.readdirSync(this.cacheRoot)){const full=path.join(this.cacheRoot,name);if(name.includes('.partial')){rmSafe(full);continue;}const retained=[...keep].some(version=>name.startsWith(String(version).replace(/[^0-9A-Za-z._-]/g,'_')+'-'));if(!retained)rmSafe(full);}}catch(_){}
     try{for(const name of fs.readdirSync(this.stagingRoot)){if(name.includes('.partial-'))rmSafe(path.join(this.stagingRoot,name));}}catch(_){}
   }

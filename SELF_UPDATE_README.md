@@ -1,5 +1,9 @@
 # Buyer Log Self-Update — 7.0.83
 
+Güncel 1.1 güven kökü ve imzalı v3 manuel yama geçişi için
+[İmzalı masaüstü yaması](docs/SIGNED_MANUAL_PATCH.md) belgesini izleyin.
+For the current 1.1 trust root and signed v3 manual patch migration, see that guide.
+
 Buyer Log sürümü için tek kaynak `resources/app/package.json -> version` alanıdır. Runtime, UI, release manifestleri, update karşılaştırması ve build artifact adı bu canonical SemVer değerinden türetilir. `7.0.83` UI'da yalnız görsel olarak `7.83` gösterilebilir; update mantığı her zaman `7.0.83` kullanır.
 
 ## İlk kurulum

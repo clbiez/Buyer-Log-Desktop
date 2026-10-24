@@ -1,0 +1,23 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),os=require('node:os'),crypto=require('node:crypto');
+const F=require('../../electron/manual-patch/files');
+const {buildPatch}=require('../../scripts/signed-manual-patch');
+const {createInstalledManager}=require('../../electron/manual-patch/manager');
+module.exports=function fixture(t){
+ const root=fs.mkdtempSync(path.join(os.tmpdir(),'bl-signed-patch-')),portable=path.join(root,'installed'),base=path.join(portable,'resources/app'),source=path.join(root,'source'),out=path.join(root,'packages');
+ const app=path.resolve(__dirname,'../..'),pair=crypto.generateKeyPairSync('ed25519'),privateKey=pair.privateKey.export({type:'pkcs8',format:'pem'}),publicKey=pair.publicKey.export({type:'spki',format:'pem'});
+ const write=(folder,relative,value)=>{const file=path.join(folder,...relative.split('/'));fs.mkdirSync(path.dirname(file),{recursive:true});fs.writeFileSync(file,value);};
+ for(const relative of F.BOOTSTRAP_FILES.filter(file=>!file.includes('/kernel/')))write(base,relative,fs.readFileSync(path.join(app,...relative.split('/'))));
+ for(const name of ['shared-file-transaction.js','lease-worker-registry.js','update-trial-backend.js'])write(base,'server/lib/'+name,fs.readFileSync(path.join(app,'server/lib',name)));
+ write(base,'electron/update/release-signing-keys.json',JSON.stringify({keys:[{publicKey}]}));
+ write(base,'package.json',JSON.stringify({name:'buyer-log-desktop',version:'7.0.294',main:'electron/launcher.js'}));
+ write(base,'electron/main.js','module.exports=true;\n');write(base,'public/index.html','<h1>Base</h1>');
+ write(base,'server/server.js',"require('./lib/update-trial-backend').waitForTrialBackend();\nmodule.exports=true;\n");
+ F.stampBootstrap(base,'a'.repeat(40));write(base,'electron/app-integrity.json',F.integrityBytes(F.inventory(base),'7.0.294'));
+ fs.cpSync(base,source,{recursive:true});write(source,'public/index.html','<h1>Patched</h1>');
+ const db=path.join(portable,'data/local/BuyerLogLocal.db');fs.mkdirSync(path.dirname(db),{recursive:true});fs.writeFileSync(db,'synthetic acknowledged baseline');
+ const stateFile=path.join(portable,'data/local/updater/state.json'),manager=options=>createInstalledManager({bootstrapCore:base,portableRoot:portable,...options});
+ const build=options=>buildPatch({baseRoot:base,sourceRoot:source,out,sequence:1,sourceCommit:'b'.repeat(40),privateKey,releaseNotes:{tr:'Sentetik yama',en:'Synthetic patch'},...options});
+ t.after(()=>{const resolved=path.resolve(root),parent=path.resolve(os.tmpdir());if(path.dirname(resolved)!==parent||!path.basename(resolved).startsWith('bl-signed-patch-'))throw Error('Unsafe fixture cleanup');fs.rmSync(resolved,{recursive:true,force:true});});
+ return {root,portable,base,source,out,db,stateFile,privateKey,publicKey,write,build,manager,readState:()=>JSON.parse(fs.readFileSync(stateFile,'utf8'))};
+};
