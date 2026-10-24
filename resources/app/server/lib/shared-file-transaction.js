@@ -38,8 +38,14 @@ function serializeLocalWrite(resource,operation){
 }
 
 const waitArray=new Int32Array(new SharedArrayBuffer(4));
-function pause(ms){Atomics.wait(waitArray,0,0,ms);}
+function requestBusy(resource){return Object.assign(new Error('Başka bir kayıt sürüyor; yeniden deneyin. / Another write is in progress; please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409,status:409,...(resource?{resource}:{})});}
+function pause(ms){if(leaseRuntime.requestPolicy?.getStore()?.nonblocking)throw requestBusy();Atomics.wait(waitArray,0,0,ms);}
 leaseRuntime.context ||= new AsyncLocalStorage();
+leaseRuntime.requestPolicy ||= new AsyncLocalStorage();
+// Legacy synchronous transactions (notably IAM) keep their synchronous commit
+// contract. Within HTTP work they fail busy instead of sleeping on this event
+// loop. Awaited writers continue to queue normally; startup retains its policy.
+function runWithNonblockingFileLeases(operation){return leaseRuntime.requestPolicy.run({nonblocking:true},operation);}
 leaseRuntime.completedScopes ||= new WeakSet();
 leaseRuntime.activePins ||= new Set();
 leaseRuntime.asyncResources ||= new Set();
@@ -199,14 +205,14 @@ function contention(target,options,started,synchronous=false){
   // Fail closed immediately, retaining its token/generation and allowing the
   // existing busy/retry path instead of blocking the process for three seconds.
   const sameEventLoop=synchronous&&observed.owner&&String(observed.owner.machine).toLowerCase()===machine&&Number(observed.owner.pid)===process.pid&&observed.owner.threadId===threadId&&observed.owner.instanceId===leaseRuntime.instanceId&&leaseRuntime.activeTokens.has(observed.owner.token);
-  if(sameEventLoop||Date.now()-started>=options.timeoutMs){
+  if(leaseRuntime.requestPolicy.getStore()?.nonblocking||sameEventLoop||Date.now()-started>=options.timeoutMs){
     const remote=observed.owner&&String(observed.owner.machine).toLowerCase()!==machine;
-    throw Object.assign(new Error(remote?'Başka cihazdaki yazıcının kapandığı doğrulanmadan kilit devralınamaz. / Verify that the writer on the other device has stopped before recovering its lease.':'Veri başka bir Buyer Log sürecinde kullanılıyor; yeniden deneyin. / Shared data is in use by another Buyer Log process; please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409,owner:observed.owner,resource:target,recoveryRequired:Boolean(remote)});
+    throw Object.assign(new Error(remote?'Başka cihazdaki yazıcının kapandığı doğrulanmadan kilit devralınamaz. / Verify that the writer on the other device has stopped before recovering its lease.':'Veri başka bir Buyer Log sürecinde kullanılıyor; yeniden deneyin. / Shared data is in use by another Buyer Log process; please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409,status:409,owner:observed.owner,resource:target,recoveryRequired:Boolean(remote)});
   }
 }
 function withFileLeaseSync(file,operation,settings={}){
   const target=path.resolve(file),options=leaseOptions(settings),started=Date.now();
-  if(leaseRuntime.asyncResources.has(resourceKey(target)))throw Object.assign(new Error('Başka bir kayıt sürüyor; yeniden deneyin. / Another write is in progress; please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409,resource:target});
+  if(leaseRuntime.asyncResources.has(resourceKey(target)))throw requestBusy(target);
   fs.mkdirSync(path.dirname(target),{recursive:true});let lease;
   while(!(lease=acquire(target,options))){contention(target,options,started,true);pause(15);}
   try{return leaseRuntime.context.run([...inheritedFileLeases(),lease],()=>{lease.assertOwned();const result=operation(lease);if(result&&typeof result.then==='function')throw Object.assign(new Error('Synchronous file lease callback must not return a Promise.'),{code:'SHARED_SYNC_LEASE_ASYNC'});lease.assertOwned();return result;});}
@@ -336,7 +342,7 @@ async function contentionAsync(target,options,started){
   const lockDir=target+'.write-lock';let observed;
   try{observed=await inspectAsync(lockDir,options);if(observed.recoverable&&await recoverAsync(lockDir,observed,options,target))return;}
   catch(error){if(error.code==='ENOENT')return;throw error;}
-  if(Date.now()-started>=options.timeoutMs){const remote=observed.owner&&String(observed.owner.machine).toLowerCase()!==machine;throw Object.assign(new Error(remote?'Başka cihazdaki yazıcının kapandığı doğrulanmadan kilit devralınamaz. / Verify that the writer on the other device has stopped before recovering its lease.':'Veri başka bir Buyer Log sürecinde kullanılıyor; yeniden deneyin. / Shared data is in use by another Buyer Log process; please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409,owner:observed.owner,resource:target,recoveryRequired:Boolean(remote)});}
+  if(Date.now()-started>=options.timeoutMs){const remote=observed.owner&&String(observed.owner.machine).toLowerCase()!==machine;throw Object.assign(new Error(remote?'Başka cihazdaki yazıcının kapandığı doğrulanmadan kilit devralınamaz. / Verify that the writer on the other device has stopped before recovering its lease.':'Veri başka bir Buyer Log sürecinde kullanılıyor; yeniden deneyin. / Shared data is in use by another Buyer Log process; please retry.'),{code:'SHARED_WRITE_BUSY',statusCode:409,status:409,owner:observed.owner,resource:target,recoveryRequired:Boolean(remote)});}
 }
 async function assertHeldFileLeasesAsync(){for(const lease of leaseRuntime.context.getStore()||[])if(lease.assertOwnedAsync)await lease.assertOwnedAsync();else lease.assertOwned();}
 /* options.onRetry(detail), verilirse, her bekleme ÖNCESİ çağrılır — geçici
@@ -378,4 +384,4 @@ async function withFileLeaseAsync(file,operation,settings={}){
   });
 }
 
-module.exports={withFileLeaseSync,withFileLeaseAsync,replaceFileWithRetry,getBuyerLogInstanceId,assertHeldFileLeases,assertHeldFileLeasesAsync};
+module.exports={withFileLeaseSync,withFileLeaseAsync,replaceFileWithRetry,getBuyerLogInstanceId,assertHeldFileLeases,assertHeldFileLeasesAsync,runWithNonblockingFileLeases};

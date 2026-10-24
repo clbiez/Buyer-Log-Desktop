@@ -330,7 +330,12 @@ app.get('/api/horizon/from-user/:id', (req, res) => {
    yazılan değer kullanıcının ekranında hemen geçerli olur; kullanıcı
    isterse kendi ekranından değiştirebilir (talep: "Kullanıcı, Yönetici ve
    Moderatör istediğinde bu ufukları değiştirebilsin"). */
-app.put('/api/iam/users/:id/horizon', express.json({ limit: '2mb' }), (req, res) => {
+function assertHorizonManager(req,targetId){
+  const actor=userAccess.sessionProfile(req),target=userAccess.profileById(targetId);
+  if(!actor||!target||!userAccess.canManageTarget(actor,target))throw Object.assign(new Error('Kullanıcı yönetim yetkisi değişti. / User-management authority changed.'),{code:'USER_NOT_MANAGEABLE',statusCode:403});
+  req.currentUser=actor;return target;
+}
+app.put('/api/iam/users/:id/horizon', express.json({ limit: '2mb' }), async (req, res) => {
   try {
     const target = userAccess.profileById(req.params.id);
     if (!target) return res.status(404).json({ error: 'Kullanıcı bulunamadı.', code: 'USER_NOT_FOUND' });
@@ -346,14 +351,14 @@ app.put('/api/iam/users/:id/horizon', express.json({ limit: '2mb' }), (req, res)
        yazar. Ön ayar kavramı artık yok (bkz. /api/horizon-presets notu). */
     const horizon = body.horizon;
     if (!horizon || typeof horizon !== 'object') return res.status(400).json({ error: 'Uygulanacak Horizon seçin.', code: 'HORIZON_REQUIRED' });
-    userPreferences.saveHorizon(target.id, module, horizon, { connectionId: String(body.connectionId || ''), role: String(body.role || '') });
+    const saved=await userPreferences.saveHorizonAsync(target.id, module, horizon, { connectionId: String(body.connectionId || ''), role: String(body.role || '') },{assertAuthority:()=>assertHorizonManager(req,target.id)});
     userAccess.appendAudit(req.currentUser, 'USER_HORIZON_SET', target.id, {
       targetName: target.displayName || target.username, module, connectionId: String(body.connectionId || ''),
     });
-    res.json({ ok: true, module, horizon: userPreferences.getHorizon(target.id, module) });
+    res.json({ ok: true, module, horizon: userPreferences.workspaceSnapshot(saved,module).savedHorizon });
   } catch (err) { apiError(res, err, 'Kullanıcı Horizon ayarı kaydedilemedi.'); }
 });
-app.post('/api/iam/users/:id/horizon/reset', express.json({ limit: '256kb' }), (req, res) => {
+app.post('/api/iam/users/:id/horizon/reset', express.json({ limit: '256kb' }), async (req, res) => {
   try {
     const target = userAccess.profileById(req.params.id);
     if (!target) return res.status(404).json({ error: 'Kullanıcı bulunamadı.', code: 'USER_NOT_FOUND' });
@@ -364,7 +369,7 @@ app.post('/api/iam/users/:id/horizon/reset', express.json({ limit: '256kb' }), (
     }
     const module = String((req.body || {}).module || 'all').toLowerCase();
     if (module !== 'all' && !USER_WORKSPACE_MODULES.has(module)) return res.status(400).json({ error: 'Geçersiz çalışma alanı modülü.', code: 'INVALID_WORKSPACE_MODULE' });
-    const saved = userPreferences.resetWorkspace(target.id, module, ['horizon']);
+    const saved = await userPreferences.resetWorkspaceAsync(target.id, module, ['horizon'],{assertAuthority:()=>assertHorizonManager(req,target.id)});
     userAccess.appendAudit(req.currentUser, 'USER_HORIZON_RESET', target.id, { targetName: target.displayName || target.username, module, removedKeys: saved.removedKeys || [] });
     res.json({ ok: true, module, removedKeys: saved.removedKeys || [] });
   } catch (err) { apiError(res, err, 'Kullanıcı Horizon ayarı sıfırlanamadı.'); }

@@ -223,8 +223,12 @@ test('workspace API client user ID değerine güvenmez; session kullanıcısın�
   assert.match(preferenceWrite, /assertAuthority:\(\)=>assertPreferenceOwner\(req,ownerId\)/);
   assert.match(SERVER, /const profile = userAccess\.sessionProfile\(req\)/);
   assert.match(SERVER, /profile\.id !== ownerId/);
-  assert.match(SERVER, /userPreferences\.saveHorizon\(req\.currentUser\.id/);
-  assert.match(SERVER, /userPreferences\.resetWorkspace\(req\.currentUser\.id/);
+  const workspaceRoutes=SERVER.slice(SERVER.indexOf('const USER_WORKSPACE_MODULES'),SERVER.indexOf('// ---- Ön Ayar Paylaşımı:'));
+  assert.match(workspaceRoutes, /await userPreferences\.saveHorizonAsync\(ownerId,/);
+  assert.match(workspaceRoutes, /await userPreferences\.resetWorkspaceAsync\(ownerId,/);
+  assert.match(workspaceRoutes, /ownerId=req\.currentUser\.id/);
+  assert.match(workspaceRoutes, /assertPreferenceOwner\(req,ownerId\)/);
+  assert.doesNotMatch(workspaceRoutes, /req\.body\.(userId|ownerId)/);
   // v7.23: çağrıya MAG/MMYG/Buying Group ön ayar çözücüsü 5. argüman olarak
   // eklendi. Testin AMACI değişmedi — override hâlâ SESSION kullanıcısı ve rol
   // varsayılanlarıyla çözülüyor; imza kontrolü yeni argümanı da kapsar.

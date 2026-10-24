@@ -51,12 +51,41 @@ temporary images of the actual DB, including its backup. The repaired file
 passes all 27 cases and still requires one WAL open and zero DB snapshot writes
 for a 200-record batch. These overlapping runs are not added into one total.
 
+## Workspace and global request policy
+
+The async family now also covers horizon/apply/reset, workspace copy/replacement,
+entry CAS and snapshot restore using shared pure plans. Native personal/admin
+Horizon and data-management layer routes await their writes and recheck the
+current authenticated session. Assigned defaults migrate asynchronously and
+retry against a changed assignment without removing newer personal decisions.
+
+All HTTP handlers inherit a no-wait lease policy before authentication. Legacy
+synchronous callbacks, including IAM transactions, keep their commit contract:
+when a lease is contended or its synchronous metadata would retry, they return
+SHARED_WRITE_BUSY409 immediately instead of calling Atomics.wait. Awaited writers
+continue to queue normally; synchronous startup behavior is unchanged. This is
+a deliberate compatibility choice, not a claim that all legacy file I/O has
+become asynchronous. The real calendar DELETE returned409 in roughly5–11 ms
+with an external holder, no mutation, then200 after release.
+
+The bounded workspace review found one missing session check in the personal
+layer guard. Both personal filter and layer RED regressions reproduced it; the
+guard now resolves the current session and initial owner. Actual Edge testing
+then exposed a separate existing local IAM credential-generation bug and an
+independent review found its real backup-restore bypass. Both are fixed with
+targeted tests; see `bl016-local-credential-revocation-20261024.json`. A real
+password update while the layer request waits now yields403 and unchanged
+preference bytes; the active account can sign in again. Existing logout only
+clears its browser cookie and was not used as proof of server-side revocation.
+
+The focused groups overlap and are recorded individually in the JSON. No full
+regression, final merge or release has been performed for these changes.
+
 ## Remaining before BL-008 closes
 
-- Migrate and verify preference horizon/copy/restore/default-assignment paths.
-- Complete attachment/test-report paths and inventory calendar/OAB/quotation,
-  output, recipe, document and other sync lease candidates. Some already receive
-  an async native guard; classify actual callers rather than rename blindly.
+- Inventory explicit legacy attachment/test-report, calendar/OAB/quotation,
+  output, recipe, document and IAM transaction callers. These inherit fast busy
+  behavior; remaining synchronous data I/O is a separate measured limitation.
 - Finish async recovery of a prior durable-write intent and identify explicit
   legacy synchronous `lease.assertOwned()` callers; async internal fencing is
   already awaited.

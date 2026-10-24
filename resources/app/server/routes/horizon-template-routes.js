@@ -29,16 +29,17 @@ module.exports = function registerHorizonTemplateRoutes(app, deps) {
     userPreferences,
   } = deps;
   // Both native UI and Office use the existing planners inside the same lease.
-  const sourceGuard=req=>({assertAuthority:()=>{
-    const current=userAccess.profileById(req.currentUser.id);
-    if(!current||current.enabled===false||!userAccess.hasArea(current,'source')||!userAccess.hasPermission(current,'manageModelConnections'))throw Object.assign(new Error('PERMISSION_REQUIRED'),{code:'PERMISSION_REQUIRED',statusCode:403});
+  function currentSession(req,ownerId){
+    const current=userAccess.sessionProfile(req);
+    if(!current||current.id!==ownerId||current.enabled===false||current.status==='INACTIVE'||!userAccess.hasArea(current,'source'))throw Object.assign(new Error('PERMISSION_REQUIRED'),{code:'PERMISSION_REQUIRED',statusCode:403});
+    req.currentUser=current;return current;
+  }
+  const sourceGuard=req=>{const ownerId=req.currentUser.id;return {assertAuthority:()=>{
+    const current=currentSession(req,ownerId);
+    if(!userAccess.hasPermission(current,'manageModelConnections'))throw Object.assign(new Error('PERMISSION_REQUIRED'),{code:'PERMISSION_REQUIRED',statusCode:403});
     return current;
-  }});
-  const personalGuard=req=>({ownerId:sourceUserId(req),profile:req.currentUser,assertAuthority:()=>{
-    const current=userAccess.profileById(req.currentUser.id);
-    if(!current||current.enabled===false||!userAccess.hasArea(current,'source'))throw Object.assign(new Error('PERMISSION_REQUIRED'),{code:'PERMISSION_REQUIRED',statusCode:403});
-    return current;
-  }});
+  }};};
+  const personalGuard=req=>{const ownerId=sourceUserId(req);return {ownerId,profile:req.currentUser,assertAuthority:()=>currentSession(req,ownerId)};};
 
 
 /* ===================================================================
@@ -139,7 +140,7 @@ app.post('/api/data-management/filter', userAccess.requireArea('source'), expres
    açıklanır, silinmez.
 
    'default' anahtarı BÜTÜN modülleri etkiler; istemci bunu ayrıca sorar. */
-app.post('/api/data-management/layer', userAccess.requireArea('source'), express.json({ limit: '16kb' }), (req, res) => {
+app.post('/api/data-management/layer', userAccess.requireArea('source'), express.json({ limit: '16kb' }), async (req, res) => {
   try {
     const body = req.body || {};
     const moduleId = String(body.moduleId || '').trim();
@@ -156,7 +157,7 @@ app.post('/api/data-management/layer', userAccess.requireArea('source'), express
     }
 
     const userId = sourceUserId(req);
-    personalHorizonService.clearLayer({moduleId,layerKey},null,personalGuard(req));
+    await personalHorizonService.clearLayer({moduleId,layerKey},null,personalGuard(req));
     userAccess.appendAudit(req.currentUser, 'DATA_MANAGEMENT_LAYER_CLEAR', userId, { moduleId, layerKey });
     res.json({ ok: true, moduleId, layerKey });
   } catch (err) { apiError(res, err, 'Kişisel katman kaldırılamadı.'); }

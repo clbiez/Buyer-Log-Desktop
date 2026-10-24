@@ -806,6 +806,8 @@ function backupSafeStore(value = loadStore()) {
   }
   return cleanValue(value);
 }
+function invalidCredentialRevision(){return Object.assign(new Error('Kimlik bilgisi revizyonu geçersiz; mevcut dizin korundu. / Credential revision is invalid; the existing directory was preserved.'),{code:'IAM_CREDENTIAL_REVISION_INVALID',statusCode:503});}
+function credentialGeneration(profile){const value=profile?.credentialRevision??1;if(!Number.isSafeInteger(value)||value<1)throw invalidCredentialRevision();return value;}
 function saveStore(store, expectedRevision = null) {
   const transaction = iamTransaction.getStore();
   if (centralConfigured) {
@@ -821,6 +823,17 @@ function saveStore(store, expectedRevision = null) {
     throw error;
   }
   const saved = { ...iam.migrateStore(store), schemaVersion: 8, _revision: current._revision + 1, _updatedAt: new Date().toISOString() };
+  // Local IAM must revoke the same credential generations as central IAM.
+  // Derive them from the current durable directory; a candidate/restore may
+  // neither reset a generation nor keep old cookies valid after a hash change.
+  const previousProfiles=new Map(allProfiles(current).map(profile=>[profile.id,profile]));
+  for(const profile of allProfiles(saved)){
+    const previous=previousProfiles.get(profile.id),generation=credentialGeneration(previous);
+    const changed=previous&&(previous.passwordHash!==profile.passwordHash||previous.pinHash!==profile.pinHash);
+    const next=previous?generation+(changed?1:0):1;
+    if(!Number.isSafeInteger(next)||next<1)throw invalidCredentialRevision();
+    profile.credentialRevision=next;
+  }
   atomicWriteJson(ACCESS_FILE, saved);
   storeCache = null;
   return saved;
@@ -2410,6 +2423,10 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
         restored.passwordHash = '';
         restored.pinHash = '';
       }
+      // Backup generations are untrusted, including legacy snapshots that
+      // contain fields removed by backupSafeStore today. Restore preserves
+      // this computer's credentials, so preserve their generation as well.
+      restored.credentialRevision=credentialGeneration(existing);
       return restored;
     };
     const moderator = restoreProfile(snapshot.moderator, current.moderator);
@@ -2490,6 +2507,18 @@ function buildUserAccess({ ensureDataLoaded, getOrders, centralIam: centralOptio
       const profile = typeof profileOrId === 'object' && profileOrId ? profileOrId : profileById(store, clean(profileOrId));
       if (profile) applyAssignedHorizonDefault(profile, store);
       return roleWorkspaceEntries(profileOrId, store);
+    },
+    roleWorkspaceEntriesAsync: async (profileOrId,options={}) => {
+      for(let attempt=0;attempt<3;attempt++){
+        options.assertAuthority?.();const store=readStore(),id=typeof profileOrId==='object'&&profileOrId?profileOrId.id:clean(profileOrId),profile=profileById(store,id),assigned=profile?userWorkspaceDefault(store,id):null;
+        if(assigned?.assignedAt&&appliedHorizonDefaults.get(id)!==assigned.assignedAt){
+          await userPreferences.supersedePersonalHorizonsAsync(id,Object.keys(assigned.entries),assigned.assignedAt,options);
+          options.assertAuthority?.();appliedHorizonDefaults.set(id,assigned.assignedAt);
+        }
+        options.assertAuthority?.();const latest=readStore(),current=profileById(latest,id),latestAssigned=current?userWorkspaceDefault(latest,id):null;
+        if((latestAssigned?.assignedAt||null)===(assigned?.assignedAt||null))return roleWorkspaceEntries(current||profileOrId,latest);
+      }
+      throw Object.assign(new Error('Çalışma alanı ataması değişti; yeniden deneyin. / The workspace assignment changed; please retry.'),{code:'USER_WORKSPACE_CHANGED',statusCode:409});
     },
     // v7.23 — Horizon ön ayarları kullanıcının MAG/MMYG/Buying Group bilgisine
     // göre eşleştirildiği için profil, id'den de çözülebilmelidir.

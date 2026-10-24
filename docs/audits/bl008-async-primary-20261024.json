@@ -1,7 +1,7 @@
 {
   "date": "2026-10-24T19:33:20.440Z",
   "base": "0a5d9fbbb0f1d6db59ea6062a1f779505c8f67d7",
-  "scope": "BL008 first wave only; incomplete package, not ready for final merge",
+  "scope": "BL008 async primary/workspace implementation plus global no-blocking-lease-wait policy for legacy HTTP paths; final integrated regression still pending",
   "verificationPolicy": "Explicit user instruction: targeted checks during implementation; one full regression after the final integrated remaining backlog, then batch merge. No full suite run for this first wave.",
   "focused": [
     {
@@ -125,16 +125,15 @@
       "name": "async-primary-store-writes-en.png",
       "width": 1600,
       "height": 973,
-      "sha256": "73cf9afe6b795474d92c989c558acb86c953b91ad4b5843762c2e8bc4922da98",
+      "sha256": "7295f2aef0e94bc35b719b507d38f3b4cc3329f8e822807ad82e0969afaa9609",
       "reviewed": true
     }
   ],
   "remaining": [
-    "Legacy preference horizon/copy/restore/default migration request paths",
-    "Checklist attachment and test-report native paths",
-    "Other synchronous lease candidates in db, calendar, OAB, quotations, email groups, output and recipe stores; distinguish existing guarded async entry points from true sync request callers",
-    "Representative populated desktop, corporate SMB/Excel/Outlook and final integrated full regression",
-    "Prior durable-write intent recovery still uses a synchronous fallback; explicit legacy assertOwned callers need classification"
+    "Finish asynchronous prior durable-write intent recovery",
+    "Record explicit legacy sync store/caller inventory and no-wait compatibility tradeoff",
+    "Representative populated desktop/corporate filesystem benchmark under BL019",
+    "Final integrated full regression before the user-authorized batch merge"
   ],
   "publication": {
     "TEST": false,
@@ -232,5 +231,187 @@
     ],
     "fullExecuted": false,
     "merged": false
+  },
+  "workspaceWave": {
+    "date": "2026-10-24T20:23:43.946Z",
+    "base": "90a5a3f7",
+    "focused": [
+      {
+        "log": "bl008-workspace-target.log",
+        "files": 7,
+        "pass": 47,
+        "fail": 0
+      },
+      {
+        "log": "bl008-workspace-routes-target.log",
+        "files": 15,
+        "pass": 118,
+        "fail": 0
+      },
+      {
+        "log": "bl008-horizon-native-target.log",
+        "files": 6,
+        "pass": 48,
+        "fail": 0
+      },
+      {
+        "log": "bl008-request-policy-target.log",
+        "files": 7,
+        "pass": 55,
+        "fail": 0
+      },
+      {
+        "log": "bl008-assignment-target.log",
+        "files": 2,
+        "pass": 8,
+        "fail": 0
+      },
+      {
+        "log": "bl008-session-policy-target.log",
+        "files": 6,
+        "pass": 37,
+        "fail": 0
+      }
+    ],
+    "countsOverlap": true,
+    "policy": "All HTTP handlers inherit AsyncLocalStorage no-wait policy. Synchronous lease contention or lease-metadata retry returns SHARED_WRITE_BUSY409 before Atomics.wait. Async writers continue to serialize/await; synchronous startup retains prior behavior. Synchronous legacy data I/O is not claimed to be asynchronous.",
+    "review": {
+      "rounds": 1,
+      "agent": "review_wal_recovery",
+      "finding": "Personal layer guard checked an active account but not credential-revoked session",
+      "resolution": "Current session and original owner checked in shared/personal Horizon guards; actual filter/layer RED regressions fixed; native credential-revoked pending layer returns403, unchanged JSON"
+    },
+    "native": {
+      "scope": "Actual Windows Edge and full server, isolated synthetic IAM/data, no mocked HTTP; async primary/workspace paths, global synchronous-request lease busy policy, local credential revocation; no populated/corporate benchmark",
+      "phases": [
+        {
+          "name": "fabric-ui-save-held-lease",
+          "unrelatedPreferenceRead": {
+            "status": 200,
+            "milliseconds": 7
+          },
+          "noAcknowledgementBeforeRelease": true
+        },
+        {
+          "name": "tr-saved-card-ui"
+        },
+        {
+          "name": "en-saved-card-ui"
+        },
+        {
+          "name": "real-session-preference-write-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 5.799999997019768
+          },
+          "noAcknowledgementBeforeRelease": true
+        },
+        {
+          "name": "real-session-checklist-write-held-lease",
+          "unrelatedPreferenceRead": {
+            "status": 200,
+            "milliseconds": 21.399999991059303
+          },
+          "noAcknowledgementBeforeRelease": true
+        },
+        {
+          "name": "personal-horizon-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 5.200000002980232
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "personal-reset-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 3.9000000059604645
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "personal-layer-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 7.100000008940697
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "manager-horizon-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 6.200000002980232
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "manager-reset-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 5
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "legacy-calendar-request-fast-busy",
+          "status": 409,
+          "code": "SHARED_WRITE_BUSY",
+          "milliseconds": 8.899999991059303,
+          "noMutation": true
+        },
+        {
+          "name": "legacy-calendar-request-retry",
+          "status": 200
+        },
+        {
+          "name": "tr-en-real-login-after-credential-revocation"
+        },
+        {
+          "name": "actual-credential-revocation-during-layer-wait",
+          "status": 403,
+          "code": "PERMISSION_REQUIRED",
+          "preferencesUnchanged": true,
+          "activeAccountCanLoginAgain": true
+        }
+      ]
+    },
+    "sourceMatches": [
+      {
+        "file": "server/lib/user-preferences.js",
+        "sha256Lf": "29c93471008f3cabb1896d24a86a78387695b519737c5f947c058cc5c7c33143"
+      },
+      {
+        "file": "server/lib/user-access.js",
+        "sha256Lf": "569db0af651bb8f7f243b5d891911bea77de4599fca7ec13744169c13bcf8271"
+      },
+      {
+        "file": "server/lib/shared-file-transaction.js",
+        "sha256Lf": "9711550825c2870fee3b77c725bd34ae19a4544128aca2d3e221b808fe8ac6fb"
+      },
+      {
+        "file": "server/lib/personal-horizon-service.js",
+        "sha256Lf": "5b38660d6f99a44d0694e44e3e74dd3e5c3bcccd404f89b4828e13c3439bb770"
+      },
+      {
+        "file": "server/routes/horizon-routes.js",
+        "sha256Lf": "707017233b1ab51171eacc3b47c96da9ee33a068d86d4ff546f697d5fc8c8175"
+      },
+      {
+        "file": "server/routes/horizon-template-routes.js",
+        "sha256Lf": "912e46f4b9b5b0f057eacd38bead75b84970ec310a59362b7c36d1d7912298ac"
+      },
+      {
+        "file": "server/server.js",
+        "sha256Lf": "d40fa1009bb250b894e087ac18fe1d972cc5fadd0fecd965819a2420eddc17c6"
+      }
+    ],
+    "fullExecuted": false
   }
 }

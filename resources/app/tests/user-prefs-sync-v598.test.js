@@ -133,7 +133,8 @@ test('v5.98 uç noktalar kullanıcının kendi kaydına bağlı', () => {
   const routes=SERVER.slice(SERVER.indexOf("app.get('/api/user-preferences'"),SERVER.indexOf('const USER_WORKSPACE_MODULES'));
   assert.equal((routes.match(/const ownerId=req\.currentUser\.id/g)||[]).length,3);
   assert.equal((routes.match(/await userPreferences\.(loadAsync|mergeAsync|removeKeysAsync)\(ownerId/g)||[]).length,3);
-  assert.equal((routes.match(/assertAuthority:\(\)=>assertPreferenceOwner\(req,ownerId\)/g)||[]).length,2);
+  assert.equal((routes.match(/assertAuthority:\(\)=>assertPreferenceOwner\(req,ownerId\)/g)||[]).length,3);
+  assert.match(routes,/await userAccess\.roleWorkspaceEntriesAsync\(req\.currentUser/);
   assert.match(routes,/userAccess\.sessionProfile\(req\)/);
   assert.match(routes,/profile\.id !== ownerId/);
   assert.doesNotMatch(routes,/req\.body\.(?:userId|ownerId)/);

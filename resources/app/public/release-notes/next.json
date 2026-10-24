@@ -1121,12 +1121,12 @@
         "en": "Save performance"
       },
       "title": {
-        "tr": "Temel kayıtlar kilit beklerken diğer istekler yanıtlanır",
-        "en": "Other requests stay responsive while primary saves wait for a lock"
+        "tr": "Dosya kilidi beklenirken diğer istekler yanıtlanır",
+        "en": "Other requests stay responsive during file-lease contention"
       },
       "body": {
-        "tr": "Kumaş kartı, checklist yanıtı/tanımı ve temel kişisel tercih kayıtları dosya kirasını ve kalıcı yazmayı asenkron bekler. Başarı diske yazmadan sonra döner; bekleme sonrası güncel oturum, yetki ve revizyon yeniden denetlenir.",
-        "en": "Fabric cards, checklist answers/definitions and primary personal-preference saves await the file lease and durable write asynchronously. Success follows persistence, with current session, authority and revision checked after waiting."
+        "tr": "Kumaş kartı, temel checklist, kişisel tercih ve ufuk kayıtları dosya kirasını ve kalıcı yazmayı asenkron bekler. Başarı diske yazmadan sonra döner; güncel oturum, yetki ve revizyon yeniden denetlenir. Eski eşzamanlı kayıt yolları kilit çakışmasında beklemek yerine hemen yeniden deneme sonucu döndürür.",
+        "en": "Fabric cards, core checklist, personal preferences and horizons await file leases and durable writes asynchronously. Success follows persistence, with current session, authority and revision checked again. Legacy synchronous paths return an immediate retry result on lease contention."
       },
       "visual": {
         "kind": "screenshot",
@@ -1139,6 +1139,35 @@
         "caption": {
           "tr": "Demo kumaş kartı gerçek arayüzle kaydedildi ve yeniden açıldı. Üç kontrollü kayıt sırasında ayrı API istekleri yanıtlandı; başarı kilit bırakıldıktan sonra döndü.",
           "en": "The demo fabric card was saved and reopened through the actual interface. Separate API requests remained responsive during three controlled saves, and success followed lock release."
+        }
+      }
+    },
+    {
+      "id": "local-password-session-revocation",
+      "type": "fix",
+      "module": {
+        "tr": "Oturum güvenliği",
+        "en": "Session security"
+      },
+      "title": {
+        "tr": "Yerel parola değişikliği eski oturumları kapatır",
+        "en": "Local password changes revoke existing sessions"
+      },
+      "body": {
+        "tr": "Yerel kullanıcı dizininde parola değişince oturum nesli ilerler. Eski oturumla bekleyen kişisel filtre/katman yazımı reddedilir. Yedekten gelen eski revizyonlar kapatılmış oturumları yeniden geçerli kılamaz; parolası değişmeyen kullanıcıların oturumları korunur.",
+        "en": "A local password change advances the credential generation. A queued personal filter/layer write using the old session is rejected. Imported backup revisions cannot revive revoked sessions, while users whose passwords have not changed stay signed in."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "local-password-session-revocation.png",
+        "alt": {
+          "tr": "Yerel parola değişimi sonrası eski oturumun geçersizliği doğrulanan gerçek Buyer Log giriş ekranı",
+          "en": "Actual Buyer Log sign-in screen after verifying that a local password change invalidated the old session"
+        },
+        "caption": {
+          "tr": "Demo hesapta eski oturumla bekleyen işlem 403 aldı ve kişisel dosya değişmedi. Giriş ekranı açıldı; aynı etkin hesap yeni parola ile tekrar giriş yaptı.",
+          "en": "The queued operation using the demo account’s old session returned 403 without changing its preference file. The sign-in screen was opened, and the active account signed in again with its new password."
         }
       }
     }

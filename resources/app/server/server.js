@@ -441,6 +441,7 @@ setInterval(() => {
 // config.sourceFolder yalnız ilk Moderatör kurulumu ve eski yedekler için geri dönüş değeridir.
 
 const app = express();
+app.use((_req,_res,next)=>require('./lib/shared-file-transaction').runWithNonblockingFileLeases(next));
 app.disable('x-powered-by');
 app.use(trialWritePolicy.middleware);
 app.use((_req, res, next) => {
@@ -3727,7 +3728,7 @@ app.put('/api/collection-workspaces/:ownerId', userAccess.requireArea('koleksiyo
 app.get('/api/user-preferences', async (req, res) => {
   try {
   const ownerId=req.currentUser.id;
-  const roleDefaults = userAccess.roleWorkspaceEntries(req.currentUser);
+  const roleDefaults = await userAccess.roleWorkspaceEntriesAsync(req.currentUser,{assertAuthority:()=>assertPreferenceOwner(req,ownerId)});
   const store = await userPreferences.loadAsync(ownerId);
   assertPreferenceOwner(req,ownerId);
   /* deletions: AÇIKÇA SİLİNMİŞ anahtarlar ve silinme zamanı. Tarayıcı bunu
@@ -3739,6 +3740,8 @@ app.get('/api/user-preferences', async (req, res) => {
 function assertPreferenceOwner(req, ownerId) {
   const profile = userAccess.sessionProfile(req);
   if (!profile || profile.id !== ownerId) throw Object.assign(new Error('Kişisel veri oturumu değişti. / The personal-data session changed.'), {code:'USER_PREFS_FORBIDDEN',statusCode:403});
+  req.currentUser=profile;
+  return profile;
 }
 app.put('/api/user-preferences', express.json({ limit: '12mb' }), async (req, res) => {
   try {
@@ -3756,16 +3759,16 @@ app.post('/api/user-preferences/delete', express.json({ limit: '256kb' }), async
 });
 const USER_WORKSPACE_MODULES = new Set(['default','overview','cp','orders','backlog','lfl','priceanalysis','collections','oab','intake','quotations','reports','dashboard']);
 function workspaceModule(req){const module=String(req.params&&req.params.module||'').toLowerCase();if(!USER_WORKSPACE_MODULES.has(module)){const error=new Error('Geçersiz çalışma alanı modülü.');error.statusCode=400;error.code='WORKSPACE_MODULE_INVALID';throw error;}return module;}
-app.get('/api/user-workspace/:module',(req,res)=>{try{const module=workspaceModule(req),roleDefaults=userAccess.roleWorkspaceEntries(req.currentUser),effective=userPreferences.effectiveWorkspaceEntries(req.currentUser.id,roleDefaults);const savedHorizon=userPreferences.getHorizon(req.currentUser.id,module),appliedHorizon=userPreferences.getAppliedHorizon(req.currentUser.id,module);res.set('Cache-Control','no-store').json({ok:true,module,userId:req.currentUser.id,role:req.currentUser.systemRole,savedHorizon:savedHorizon||{},appliedHorizon:appliedHorizon||{},horizon:userPreferences.resolveHorizon(req.currentUser.id,module,null,{},roleDefaults),defaultHorizon:userPreferences.resolveHorizon(req.currentUser.id,'default',null,{},roleDefaults),entries:effective.entries,personalEntries:effective.personal,roleDefaults:effective.inherited});}catch(err){apiError(res,err,'Kişisel çalışma alanı okunamadı.');}});
+app.get('/api/user-workspace/:module',async(req,res)=>{try{const module=workspaceModule(req),ownerId=req.currentUser.id,roleDefaults=await userAccess.roleWorkspaceEntriesAsync(req.currentUser,{assertAuthority:()=>assertPreferenceOwner(req,ownerId)}),store=await userPreferences.loadAsync(ownerId);assertPreferenceOwner(req,ownerId);res.set('Cache-Control','no-store').json({ok:true,module,userId:ownerId,role:req.currentUser.systemRole,...userPreferences.workspaceSnapshot(store,module,roleDefaults)});}catch(err){apiError(res,err,'Kişisel çalışma alanı okunamadı.');}});
 /* v7.81: linkedGroupId ARTIK TAŞINMAZ (Horizon grupları kaldırıldı). Gelen
    istekteki alan yok sayılır ve kayda yazılmaz; eski bir istemci gönderse
    bile hiçbir şey bağlamaz. */
-app.put('/api/user-workspace/:module/horizon',express.json({limit:'2mb'}),(req,res)=>{try{const module=workspaceModule(req),connectionId=String(req.body&&req.body.connectionId||''),role=String(req.body&&req.body.role||'');const horizon=req.body&&req.body.horizon&&typeof req.body.horizon==='object'?{...req.body.horizon}:{};delete horizon.linkedGroupId;const saved=userPreferences.saveHorizon(req.currentUser.id,module,horizon,{connectionId,role});userAccess.appendAudit(req.currentUser,'USER_WORKSPACE_HORIZON_UPDATE',req.currentUser.id,{module,connectionId,role});res.json({ok:true,module,savedHorizon:userPreferences.getHorizon(req.currentUser.id,module),appliedHorizon:userPreferences.getAppliedHorizon(req.currentUser.id,module),horizon:userPreferences.resolveHorizon(req.currentUser.id,module,null,{},userAccess.roleWorkspaceEntries(req.currentUser)),updatedAt:saved._updatedAt});}catch(err){apiError(res,err,'Kişisel Horizon kaydedilemedi.');}});
+app.put('/api/user-workspace/:module/horizon',express.json({limit:'2mb'}),async(req,res)=>{try{const module=workspaceModule(req),ownerId=req.currentUser.id,connectionId=String(req.body&&req.body.connectionId||''),role=String(req.body&&req.body.role||''),assertAuthority=()=>assertPreferenceOwner(req,ownerId);const horizon=req.body&&req.body.horizon&&typeof req.body.horizon==='object'?{...req.body.horizon}:{};delete horizon.linkedGroupId;const roleDefaults=await userAccess.roleWorkspaceEntriesAsync(req.currentUser,{assertAuthority}),saved=await userPreferences.saveHorizonAsync(ownerId,module,horizon,{connectionId,role},{assertAuthority});userAccess.appendAudit(req.currentUser,'USER_WORKSPACE_HORIZON_UPDATE',ownerId,{module,connectionId,role});const snapshot=userPreferences.workspaceSnapshot(saved,module,roleDefaults);res.json({ok:true,module,savedHorizon:snapshot.savedHorizon,appliedHorizon:snapshot.appliedHorizon,horizon:snapshot.horizon,updatedAt:saved._updatedAt});}catch(err){apiError(res,err,'Kişisel Horizon kaydedilemedi.');}});
 /* v7.81 — /api/horizon-groups KALDIRILDI (kullanıcı kararı).
    Adlandırılmış Horizon grupları, kullanıcının görmediği bir katman olarak
    Veri Yönetimi'ndeki ortak filtreyi eziyordu. Uç kaldırıldı; eski istemci
    çağrısı 404 alır ve sessizce boş liste sanmaz. Diskteki eski kayıt durur. */
-app.post('/api/user-workspace/:module/reset',express.json({limit:'256kb'}),(req,res)=>{try{const module=workspaceModule(req),categories=req.body&&req.body.categories||userPreferences.WORKSPACE_CATEGORIES;const saved=userPreferences.resetWorkspace(req.currentUser.id,module,categories);userAccess.appendAudit(req.currentUser,'USER_WORKSPACE_RESET',req.currentUser.id,{module,categories:userPreferences.normalizeCategories(categories)});res.json({ok:true,module,updatedAt:saved._updatedAt,removedKeys:saved.removedKeys||[]});}catch(err){apiError(res,err,'Kişisel görünüm sıfırlanamadı.');}});
+app.post('/api/user-workspace/:module/reset',express.json({limit:'256kb'}),async(req,res)=>{try{const module=workspaceModule(req),ownerId=req.currentUser.id,categories=req.body&&req.body.categories||userPreferences.WORKSPACE_CATEGORIES;const saved=await userPreferences.resetWorkspaceAsync(ownerId,module,categories,{assertAuthority:()=>assertPreferenceOwner(req,ownerId)});userAccess.appendAudit(req.currentUser,'USER_WORKSPACE_RESET',ownerId,{module,categories:userPreferences.normalizeCategories(categories)});res.json({ok:true,module,updatedAt:saved._updatedAt,removedKeys:saved.removedKeys||[]});}catch(err){apiError(res,err,'Kişisel görünüm sıfırlanamadı.');}});
 // ---- Ön Ayar Paylaşımı: başka kullanıcının kişisel görünüm ayarlarını kendi çalışma alanına alma → server/routes/preset-share-routes.js ----
 const presetShare = require('./lib/preset-share').createPresetShare({
   loadProfiles: id => ({ views: loadViews(id), filters: loadFilterProfiles(id) }),
@@ -9108,7 +9111,7 @@ async function performRefresh(id, currentUser, targets = null, options = {}) {
   // published. A failed/cancelled refresh therefore cannot move this state.
   try {
     for (const [target, horizon] of Object.entries(staged.modelRefresh && staged.modelRefresh.appliedHorizons || {})) {
-      userPreferences.saveAppliedHorizon(id, target, horizon);
+      await userPreferences.saveAppliedHorizonAsync(id, target, horizon);
     }
   } catch (error) {
     // The data snapshot remains authoritative; a preference write failure must
