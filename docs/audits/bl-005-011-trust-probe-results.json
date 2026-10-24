@@ -1,0 +1,22 @@
+{
+  "environment": {
+    "node": "v24.19.0",
+    "platform": "linux"
+  },
+  "diagnosticHashModel": {
+    "originalAccepted": true,
+    "payloadOnlyRejected": true,
+    "payloadAndIndexReplacementAccepted": true
+  },
+  "actualOfficialVerifier": {
+    "unsignedRejected": true,
+    "syntheticTrustedSignatureAccepted": true,
+    "coherentPayloadAndHashTamperRejected": true
+  },
+  "notExecuted": [
+    "PowerShell manual installer",
+    "Windows compatibility",
+    "production publisher or credentials"
+  ],
+  "limitation": "Hash predicate is a diagnostic model of inspected PowerShell checks; this is not an executed manual-installer exploit."
+}
