@@ -237,6 +237,8 @@ footer{padding:10px var(--ui-space-5) 26px;}
 .toolbar :is(button,label).tbtn .ic{width:14px;height:14px;}
 .toolbar :is(button,label).tbtn:active{transform:scale(.97);}
 .workspaceContextBar{min-height:var(--ui-control-height-large);display:flex;align-items:center;justify-content:space-between;gap:var(--ui-space-3);padding:var(--ui-space-2) var(--ui-space-3);}
+/* Keep the CP table summary clear of the panel's left edge. */
+#view-cp .workspaceContextBar{padding-inline:var(--ui-space-5);}
 .workspaceContextIdentity{display:flex;align-items:baseline;gap:var(--ui-space-2);min-width:0;}
 .workspaceContextIdentity>span{white-space:nowrap;}
 .workspaceContextIdentity>strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
