@@ -133,6 +133,8 @@ main{padding-top:16px;}
 .activeFilterBar[data-active-count="0"]{display:none;}
 .kolSpreadsheetHelper[data-selected="0"]{display:none;}
 .workspaceContextBar{min-height:0;padding-top:4px;padding-bottom:4px;}
+/* CP tablo özeti, panel kenarına yapışmak yerine içeriden başlasın. */
+#view-cp .workspaceContextMeta{margin-inline-start:var(--ui-space-3);}
 @media(min-width:1180px){
   #view-cp{position:relative;}
   #view-orders{position:relative;}

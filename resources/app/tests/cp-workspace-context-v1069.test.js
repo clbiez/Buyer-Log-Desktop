@@ -8,6 +8,7 @@ const path = require('node:path');
 const ROOT = path.join(__dirname, '..');
 const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const INDEX = fs.readFileSync(path.join(ROOT, 'public', 'index.html'), 'utf8');
+const EXPERIENCE = fs.readFileSync(path.join(ROOT, 'public', 'experience.css'), 'utf8');
 
 test('CP görünüm başlığı yalnız yararlı metrik ve görünüm denetimlerini sunar', () => {
   const cp = INDEX.slice(INDEX.indexOf('<section id=\"view-cp\"'), INDEX.indexOf('<section id=\"view-orders\"'));
@@ -42,4 +43,11 @@ test('v10.69 CP Sütunlar eylemi de ortak görünüm başlığına taşınır', 
   assert.doesNotMatch(sync, /appendSharedTableActions\('cpTableViewActions',\['navColsBtn'\]\)/);
   assert.doesNotMatch(sync, /appendSharedTableActions\('cpMoreMenu',\['navColsBtn'/);
   assert.match(sync, /columnsWrap\.hidden=tab==='cp'\|\|tab==='orders'\|\|tab==='koleksiyon'/);
+});
+
+
+test('CP tablo özeti sol kenardan tasarım sistemi boşluğu kadar içeri alınır', () => {
+  const cp = INDEX.slice(INDEX.indexOf('<section id=\"view-cp\"'), INDEX.indexOf('<section id=\"view-orders\"'));
+  assert.match(cp, /class="workspaceContextMeta" id="cpWorkspaceMeta"/);
+  assert.match(EXPERIENCE, /#view-cp \.workspaceContextMeta\{margin-inline-start:var\(--ui-space-3\);\}/);
 });
