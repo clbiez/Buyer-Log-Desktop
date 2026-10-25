@@ -1,0 +1,218 @@
+[
+  {
+    "file": "collection-dark-html.html",
+    "equal": true
+  },
+  {
+    "file": "collection-dark-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "collection-dark.xlsx",
+    "xlParts": 17,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "collection-grey-html.html",
+    "equal": true
+  },
+  {
+    "file": "collection-grey-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "collection-grey.xlsx",
+    "xlParts": 17,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "collection-light-html.html",
+    "equal": true
+  },
+  {
+    "file": "collection-light-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "collection-light.xlsx",
+    "xlParts": 17,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "cp-copy-dark.html",
+    "equal": true
+  },
+  {
+    "file": "cp-copy-dark.tsv",
+    "equal": true
+  },
+  {
+    "file": "cp-copy-grey.html",
+    "equal": true
+  },
+  {
+    "file": "cp-copy-grey.tsv",
+    "equal": true
+  },
+  {
+    "file": "cp-copy-light.html",
+    "equal": true
+  },
+  {
+    "file": "cp-copy-light.tsv",
+    "equal": true
+  },
+  {
+    "file": "cp-export-dark.xlsx",
+    "xlParts": 10,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "cp-export-grey.xlsx",
+    "xlParts": 10,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "cp-export-light.xlsx",
+    "xlParts": 10,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "open-costing.xlsx",
+    "xlParts": 7,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "orders-dark-html.html",
+    "equal": true
+  },
+  {
+    "file": "orders-dark-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "orders-generic-dark.xlsx",
+    "xlParts": 10,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "orders-generic-grey.xlsx",
+    "xlParts": 10,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "orders-generic-light.xlsx",
+    "xlParts": 10,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "orders-grey-html.html",
+    "equal": true
+  },
+  {
+    "file": "orders-grey-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "orders-light-html.html",
+    "equal": true
+  },
+  {
+    "file": "orders-light-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "shipping-dark-flatHtml.html",
+    "equal": true
+  },
+  {
+    "file": "shipping-dark-flatPlain.tsv",
+    "equal": true
+  },
+  {
+    "file": "shipping-dark-html.html",
+    "equal": true
+  },
+  {
+    "file": "shipping-dark-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "shipping-dark.xlsx",
+    "xlParts": 6,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "shipping-generic-dark.xlsx",
+    "xlParts": 10,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "shipping-generic-grey.xlsx",
+    "xlParts": 10,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "shipping-generic-light.xlsx",
+    "xlParts": 10,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "shipping-grey-flatHtml.html",
+    "equal": true
+  },
+  {
+    "file": "shipping-grey-flatPlain.tsv",
+    "equal": true
+  },
+  {
+    "file": "shipping-grey-html.html",
+    "equal": true
+  },
+  {
+    "file": "shipping-grey-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "shipping-grey.xlsx",
+    "xlParts": 6,
+    "different": [],
+    "equal": true
+  },
+  {
+    "file": "shipping-light-flatHtml.html",
+    "equal": true
+  },
+  {
+    "file": "shipping-light-flatPlain.tsv",
+    "equal": true
+  },
+  {
+    "file": "shipping-light-html.html",
+    "equal": true
+  },
+  {
+    "file": "shipping-light-plain.tsv",
+    "equal": true
+  },
+  {
+    "file": "shipping-light.xlsx",
+    "xlParts": 6,
+    "different": [],
+    "equal": true
+  }
+]

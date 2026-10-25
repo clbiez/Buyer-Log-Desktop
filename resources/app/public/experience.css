@@ -104,133 +104,65 @@ html[data-theme="dark"]{
 
 /* Shell: quiet rail and a clear working canvas. */
 body{background:var(--bl-surface-page);color:var(--bl-text-primary);transition:padding-left var(--bl-motion-standard) var(--bl-ease);}
-.rail{background:var(--rail-bg);border-right:1px solid var(--bl-stroke-subtle);padding:14px 10px 10px;gap:4px;transition:width var(--bl-motion-standard) var(--bl-ease);}
-.railTop{padding:1px 3px 15px;margin-bottom:9px;border-bottom:1px solid var(--bl-stroke-subtle);}
-.rail .brandMark{border-radius:var(--r-md);box-shadow:none;}
+.rail{padding:14px 10px 10px;gap:4px;}
+.railTop{padding:1px 3px 15px;margin-bottom:9px;}
 .rail .brandMark::after{content:none;}
 /* Uygulama simgesi (denim + çelik BL) kendi zeminini taşır; vurgu dolgusu kapanır. */
-.rail .brandMark.brandMark--image,[data-theme] .rail .brandMark.brandMark--image{background:transparent;border-radius:0;overflow:visible;}
+.rail .brandMark.brandMark--image,[data-theme] .rail .brandMark.brandMark--image{overflow:visible;}
 .rail .brandMarkImage{width:34px;height:34px;display:block;object-fit:contain;}
-.brandName{font-family:var(--sans);font-size:var(--fs-base);font-weight:700;letter-spacing:-.015em;}
-.brandName small{font-family:var(--sans);font-size:var(--fs-2xs);letter-spacing:.025em;text-transform:none;}
-.railCollapse{border-radius:var(--bl-radius-control);}
 nav.tabs{gap:2px;padding-right:0;scrollbar-gutter:auto;}
-nav.tabs>.railGroupLabel{padding:12px 11px 5px;font-family:var(--sans);font-size:var(--fs-2xs);font-weight:700;letter-spacing:.075em;color:var(--muted);}
-nav.tabs button,.railFoot button{border-radius:var(--bl-radius-control);transition:background-color var(--bl-motion-fast),color var(--bl-motion-fast);}
+nav.tabs>.railGroupLabel{padding:12px 11px 5px;}
 nav.tabs button{padding:0 10px;gap:10px;}
-nav.tabs button span{font-size:var(--fs-sm);font-weight:500;}
-nav.tabs button.active{background:var(--acc-bg);color:var(--acc-ink);box-shadow:none;}
-nav.tabs button.active span{font-weight:700;}
-nav.tabs button:hover:not(.active),.railFoot button:hover{background:var(--card2-strong);}
-.railFoot{padding-top:9px;border-top:1px solid var(--bl-stroke-subtle);}
+.railFoot{padding-top:9px;}
 html[data-rail="min"] .rail{padding-inline:6px;}
 html[data-rail="min"] nav.tabs button,html[data-rail="min"] .railFoot button{width:calc(var(--rail-min-w) - 14px);}
 
-.appTop{background:var(--bl-surface-panel);border-bottom:1px solid var(--bl-stroke-subtle);gap:9px;padding-inline:clamp(12px,1.4vw,22px);}
-.appTop h1{font-family:var(--sans);font-size:var(--fs-lg);font-weight:700;letter-spacing:-.025em;}
-.appTop .pageMeta,.tableViewStatus,.workspaceContextMeta{color:var(--muted);}
-.gsearch{background:var(--bl-surface-soft);border-color:var(--bl-stroke-subtle);border-radius:var(--bl-radius-control);}
-.gsearch:hover,.gsearch:focus-visible{border-color:var(--acc);background:var(--card);}
-.iconbtn{border-radius:var(--bl-radius-control);}
-.userAvatar,.userMenuAvatar{border-radius:var(--r-md);}
+.appTop{gap:9px;padding-inline:clamp(12px,1.4vw,22px);}
 /* Kullanıcı avatarı uygulama simgesinin malzemesini taşır: saten çelik plaka +
    siyah lazer işareti baş harfler. Baş harfler kullanıcının adından üretilir
    (public/user-initials.js; Türkçe, İngilizce, Japonca, Çince). */
-.userAvatarBtn,[data-theme] .userAvatarBtn,.userMenuAvatar,[data-theme] .userMenuAvatar{
-  background:#e6e9ec url("icons/avatar-patch.png") center/cover no-repeat;border-radius:var(--r-sm);
-  box-shadow:0 1px 2px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.35);
+.blSteelInitials{white-space:nowrap;
+  -webkit-background-clip:text;
 }
-.userAvatarBtn:hover{box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 22%,transparent),0 1px 2px rgba(0,0,0,.35);}
-.blSteelInitials{
-  font-family:var(--sans),"Yu Gothic UI","Meiryo UI","Microsoft YaHei UI","Microsoft JhengHei UI","Noto Sans CJK JP","Noto Sans CJK SC",sans-serif;
-  font-weight:800;font-size:var(--fs-sm);letter-spacing:.03em;line-height:1;white-space:nowrap;
-  background:linear-gradient(135deg,#23272c 0%,#0d0f11 55%,#2a2e33 100%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;
-  filter:drop-shadow(0 1px 0 rgba(255,255,255,.6));
-}
-.userMenuAvatar .blSteelInitials{font-size:var(--fs-md);}
 main{padding:12px clamp(12px,1.4vw,22px) 36px;}
-main>section.active{animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both;}
 
 /* Surfaces and hierarchy. One border around a workspace, not around every row. */
-.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap,.miniTable{
-  border-color:var(--bl-stroke-subtle);border-radius:var(--bl-radius-panel);
-}
-.panel,.cardBox{background:var(--bl-surface-panel);box-shadow:var(--shadow-1);}
 .panel::after,.cardBox::after,.modalCard::after,.todoCard::after,.globalSearchCard::after,.sourcebar::after{content:none;}
 .verHistCard::after{content:none;}
 .quotationCard::after,.lflDetailCard::after,.lflCard::after,.lflScenarioCard::after,.lflTrialImpact::after,.ocCard::after,.ocSummary::after,.lflPortfolioModalPanel::after,.lflScenarioEditorDialog::after,.lflTrialStudio::after{content:none;}
-.cardTitle,.modalTitle{font-family:var(--sans);font-weight:700;letter-spacing:-.025em;}
-.cardTitle,.modalTitle{font-size:var(--fs-lg);}
-.empty{border:0;background:var(--bl-surface-soft);color:var(--ink2);border-radius:var(--r-md);}
 .empty{min-height:140px;padding:18px;}
 #ovEmpty{min-height:0;padding:10px 14px;text-align:left;}
 #ovEmpty .uiState{width:100%;max-width:none;margin:0;padding:8px 10px;}
 
 /* Controls: filled primary, quiet secondary, unmistakable focus. */
-button,.navActionBtn,.tbtn,.upl-btn,.vfMenuTrigger,input,select,textarea{border-radius:var(--bl-radius-control);}
-button,.navActionBtn,.tbtn,.upl-btn,.vfMenuTrigger{transition:background-color var(--bl-motion-fast),border-color var(--bl-motion-fast),color var(--bl-motion-fast),box-shadow var(--bl-motion-fast);}
-.navActionBtn,.tbtn,.upl-btn,.vfMenuTrigger{
-  border-color:var(--bl-stroke-subtle);background:var(--bl-surface-panel);color:var(--ink2);font-weight:600;
-}
-.navActionBtn:hover:not(:disabled),.tbtn:hover:not(:disabled),.upl-btn:hover:not(:disabled),.vfMenuTrigger:hover:not(:disabled){background:var(--bl-surface-soft);border-color:var(--bl-stroke-strong);color:var(--ink);}
-.primary,button.primary,.navActionBtn.primary,.tbtn.primary{background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:700;}
-.primary:hover:not(:disabled),button.primary:hover:not(:disabled),.navActionBtn.primary:hover:not(:disabled),.tbtn.primary:hover:not(:disabled){background:var(--acc-hover);border-color:var(--acc-hover);color:var(--on-acc);}
-button:disabled,.navActionBtn:disabled,.tbtn:disabled{opacity:.48;cursor:not-allowed;}
+button,input,select,textarea{border-radius:var(--bl-radius-control);}
+button{transition:background-color var(--bl-motion-fast),border-color var(--bl-motion-fast),color var(--bl-motion-fast),box-shadow var(--bl-motion-fast);}
+button:disabled{opacity:.48;cursor:not-allowed;}
+.navActionBtn:disabled,.tbtn:disabled{opacity:.48;cursor:not-allowed;}
 :where(button,input,select,textarea,[role="tab"],[role="menuitem"]):focus-visible{outline:2px solid var(--acc);outline-offset:2px;box-shadow:var(--focus-ring);}
 input:not([type=checkbox]):not([type=radio]),select,textarea{border-color:var(--bl-stroke-strong);background:var(--bl-surface-panel);color:var(--ink);}
 input::placeholder,textarea::placeholder{color:var(--muted);opacity:1;}
 
 /* Context and action bands. Preserve the responsive overflow controller. */
 .kpirow{gap:5px;margin-bottom:8px;}
-.kpiGroup>.kpiGroupLabel,.tbGroupHead{border-style:solid;border-color:var(--bl-stroke-subtle);border-radius:var(--bl-radius-control);background:var(--bl-surface-panel);}
-.kpiGroupMenu,.fltGroupMenu{border-radius:var(--bl-radius-float);background:var(--bl-surface-raised);box-shadow:var(--shadow-3);}
-.workspaceContextBar{background:var(--bl-surface-panel);border-bottom-color:var(--bl-stroke-subtle);}
 .workspaceContextIdentity>span{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap;}
-.workspaceContextIdentity>span,.activeFilterLabel,.tableViewLabel{font-family:var(--sans);font-size:var(--fs-2xs);letter-spacing:.065em;color:var(--muted);}
-.workspaceContextIdentity strong{font-family:var(--sans);font-size:var(--fs-sm);font-weight:700;color:var(--ink);}
 .tableViewActions{gap:2px;}
-.tableViewPreset{border-radius:var(--r-xs);font-weight:600;}
-.tableViewPreset[aria-pressed="true"]{border-color:transparent;background:var(--acc-bg);color:var(--acc-ink);}
-.activeFilterBar{background:var(--bl-surface-soft);border-bottom-color:var(--bl-stroke-subtle);}
-.tableActionToolbar,.toolbar{background:var(--bl-surface-panel);border-bottom-color:var(--bl-stroke-subtle);}
 .tableActionToolbar{gap:6px;row-gap:5px;padding:6px 8px;}
-.tableActionToolbar>input[type=search]{background:var(--bl-surface-soft);border-color:var(--bl-stroke-subtle);}
-.tableActionToolbar>input[type=search]:focus{background:var(--card);}
 .tableToolbarActions{gap:3px;}
-.tableToolbarActions>.navActionBtn,.tableToolbarActions>.tbtn,
-.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger{border-color:transparent;background:transparent;color:var(--ink2);}
-.tableToolbarActions>.navActionBtn:hover:not(:disabled),.tableToolbarActions>.tbtn:hover:not(:disabled),
-.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger:hover{border-color:transparent;background:var(--card2-strong);color:var(--ink);}
-.tableToolbarActions>.tbtn.primary,.tableToolbarActions>.navActionBtn.primary{border-color:var(--acc);background:var(--acc);color:var(--on-acc);}
-.tableToolbarActions>.tbtn.primary:hover:not(:disabled){border-color:var(--acc-hover);background:var(--acc-hover);color:var(--on-acc);}
-.toolbarMoreMenu,.vfMenu,.profileSelectMenu,.userMenu,.dateCalendarPopup,.delTypeMenu,.cfpDrawer,.themeDock,.numericValueList{background:var(--bl-surface-raised);border:1px solid var(--bl-stroke-strong);border-radius:var(--bl-radius-float);box-shadow:var(--shadow-3);backdrop-filter:none;-webkit-backdrop-filter:none;}
+.toolbarMoreMenu,.vfMenu,.profileSelectMenu,.userMenu,.dateCalendarPopup,.delTypeMenu,.cfpDrawer,.themeDock,.numericValueList{-webkit-backdrop-filter:none;}
 .colPanel,.colFilterPanel{-webkit-backdrop-filter:none;}
 .kolSpreadsheetContextMenu{-webkit-backdrop-filter:none;}
-.toolbarMoreMenu:not([hidden]),.vfMenu.show,.profileSelectMenu:not([hidden]),.userMenu:not([hidden]),.dateCalendarPopup:not([hidden]){animation:blPopoverIn var(--bl-motion-enter) var(--bl-ease) both;}
-.toolbarMoreMenu .tbtn,.userMenu button,.profileSelectOption{border-radius:var(--r-sm);}
-.userMenuHead{border-bottom-color:var(--bl-stroke-subtle);}
-.userMenuScope{color:var(--ink2);}
 
 /* Data is primary: calm rows, clear selection, full table width. */
-.tablewrap{background:var(--table-bg);overflow:auto;}
-.tablewrap>table{font-family:var(--sans);font-variant-numeric:tabular-nums;}
+.tablewrap{overflow:auto;}
 thead th{font-family:var(--sans);letter-spacing:.045em;font-weight:700;}
 tbody td{border-bottom-color:var(--bl-stroke-subtle);}
-.tablewrap tbody tr:hover td{background:var(--table-hover);}
 
 /* Overlays, drawers and calendar share the same raised surface. */
-.warnOverlay,.accessAdminOverlay,.globalSearchOverlay,.appBlockingOverlay{background:rgba(12,18,25,.57);backdrop-filter:none;-webkit-backdrop-filter:none;}
+.warnOverlay,.accessAdminOverlay,.globalSearchOverlay,.appBlockingOverlay{-webkit-backdrop-filter:none;}
 .kolPeriodDrawerBackdrop{-webkit-backdrop-filter:none;}
-.modalCard,.globalSearchCard{background:var(--bl-surface-raised);border:1px solid var(--bl-stroke-strong);border-radius:var(--r-xl);box-shadow:var(--shadow-3);animation:blDialogIn var(--bl-motion-enter) var(--bl-ease) both;}
-.cfpDrawer{background:var(--bl-surface-raised);box-shadow:var(--shadow-3);animation:blDrawerIn var(--bl-motion-enter) var(--bl-ease) both;}
 .dateCalendarPopup{width:min(332px,calc(100vw - 16px));padding:12px;}
 .dateCalendarHead{margin-bottom:10px;}
-.dateCalendarTitle{font-family:var(--sans);font-size:var(--fs-base);letter-spacing:0;}
-.dateCalendarNav,.dateCalendarFoot button{border-radius:var(--r-sm);background:var(--bl-surface-soft);border-color:var(--bl-stroke-subtle);}
-.dateCalendarDay{font-size:var(--fs-xs);border-radius:var(--r-sm);}
-.dateCalendarDay.selected{background:var(--acc);color:var(--on-acc);}
-.dateCalendarDay.today:not(.selected){box-shadow:inset 0 0 0 1px var(--acc);}
 
 /* Module families inherit the common surface and typographic rhythm. */
 .dmHead{gap:12px;align-items:center;}
@@ -248,7 +180,6 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
 }
 @media(max-width:760px){
   .appTop{padding-inline:9px;}
-  .appTop h1{font-size:var(--fs-md);}
   .gsearch{min-width:32px;flex:0 1 44px;padding-inline:8px;}
   .gsearch span,.gsearch kbd{display:none;}
   main{padding-inline:8px;}
@@ -256,16 +187,11 @@ tbody td{border-bottom-color:var(--bl-stroke-subtle);}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
-  .spinner,[data-loading] .ic{animation-duration:1.8s!important;}
 }
 
 /* Theme-only root snapshots: native tables and controls keep their geometry. */
-html.blThemeWave,html.blThemeWave *,html.blThemeWave *::before,html.blThemeWave *::after{transition:none!important;}
 html.blThemeWave::view-transition{pointer-events:none;}
-html.blThemeWave::view-transition-group(root){animation:none;}
-html.blThemeWave::view-transition-old(root),html.blThemeWave::view-transition-new(root){animation:none;mix-blend-mode:normal;pointer-events:none;}
-html.blThemeWave::view-transition-old(root){z-index:1;}
-html.blThemeWave::view-transition-new(root){z-index:2;}
+html.blThemeWave::view-transition-old(root),html.blThemeWave::view-transition-new(root){mix-blend-mode:normal;pointer-events:none;}
 
 /* =====================================================================
    Premium ritim katmanı · 2026-09-25
@@ -283,12 +209,9 @@ html.blThemeWave::view-transition-new(root){z-index:2;}
    kullanır. :where() özgüllüğü sıfırdır; özel kurallar kazanmaya devam eder. */
 :where(button.tbtn,label.tbtn,a.tbtn){
   display:inline-flex;align-items:center;justify-content:center;gap:6px;
-  min-height:var(--ctl-h);padding:0 12px;border:1px solid var(--bl-stroke-subtle);
-  background:var(--bl-surface-panel);color:var(--ink2);
-  font-size:var(--fs-xs);font-weight:600;line-height:1.15;white-space:nowrap;cursor:pointer;text-decoration:none;
+  min-height:var(--ui-control-height);padding:0 12px;white-space:nowrap;cursor:pointer;
 }
 :where(.tbtn)>svg.ic{width:14px;height:14px;flex:0 0 auto;}
-:where(button.tbtn,label.tbtn,a.tbtn):hover:not(:disabled){background:var(--bl-surface-soft);border-color:var(--bl-stroke-strong);color:var(--ink);}
 
 /* Modül başlıkları: Quotations, Fiyat Geçmişi, Otomasyonlar, Veri Yönetimi. */
 .autoHeader{padding:18px 20px 16px;align-items:center;}
@@ -329,37 +252,31 @@ html.blThemeWave::view-transition-new(root){z-index:2;}
 
 /* Genel Bakış: modüller arası boşluğu yalnız ızgara boşluğu belirler. */
 main{padding-top:16px;}
-.ovPriorityMethod{font-size:var(--fs-xs);line-height:1.5;color:var(--muted);}
 
 /* Genel Bakış · Bugün */
 /* Görünümler <section> ile gizlenir (section{display:none}); modül açıkça görünür. */
 .ovLaunchpad{
-  display:block;padding:20px 22px;background:var(--bl-surface-panel);border:1px solid var(--bl-stroke-subtle);
-  border-radius:var(--bl-radius-panel);box-shadow:var(--shadow-1);
+  display:block;padding:20px 22px;
 }
 .ovLaunchBody{display:grid;grid-template-columns:minmax(220px,300px) minmax(0,1fr);align-items:center;gap:18px 28px;}
-.ovLaunchDate{margin:0 0 6px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc-ink);}
-.ovLaunchTitle{margin:0;font-family:var(--sans);font-size:calc(22px + var(--ui-font-add));font-weight:700;line-height:1.15;letter-spacing:-.025em;color:var(--ink);}
-.ovLaunchSub{margin:6px 0 0;font-size:var(--fs-sm);line-height:1.5;color:var(--ink2);}
+.ovLaunchDate{margin:0 0 6px;}
+.ovLaunchTitle{margin:0;}
+.ovLaunchSub{margin:6px 0 0;}
 .ovLaunchGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
 .ovLaunchTile{
   display:grid;grid-template-columns:34px minmax(0,1fr) 14px;align-items:center;gap:12px;
   min-height:58px;padding:10px 14px 10px 12px;text-align:left;cursor:pointer;
-  border:1px solid var(--bl-stroke-subtle);background:var(--bl-surface-soft);color:var(--ink);
-  border-radius:var(--bl-radius-control);
 }
-.ovLaunchTile:hover{border-color:color-mix(in srgb,var(--acc) 45%,var(--bl-stroke-subtle));background:var(--bl-surface-panel);box-shadow:var(--shadow-1);}
-.ovLaunchIcon{display:grid;place-items:center;width:34px;height:34px;background:var(--acc-bg);color:var(--acc-ink);border-radius:var(--r-md);}
+.ovLaunchIcon{display:grid;place-items:center;width:34px;height:34px;}
 .ovLaunchIcon .ic{width:17px;height:17px;}
 .ovLaunchText{display:grid;gap:2px;min-width:0;}
-.ovLaunchText b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-base);font-weight:650;}
-.ovLaunchText small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-xs);color:var(--muted);}
-.ovLaunchArrow{width:14px;height:14px;color:var(--muted);transition:transform var(--bl-motion-fast) var(--bl-ease),color var(--bl-motion-fast);}
-.ovLaunchTile:hover .ovLaunchArrow{color:var(--acc);transform:translateX(2px);}
+.ovLaunchText b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ovLaunchText small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ovLaunchArrow{width:14px;height:14px;}
+.ovLaunchTile:hover .ovLaunchArrow{transform:translateX(2px);}
 @media(max-width:900px){.ovLaunchGrid{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media(max-width:560px){.ovLaunchGrid{grid-template-columns:1fr;}}
 /* Barlow'da kelime aralığı dar; negatif harf aralığı kelimeleri birleştiriyordu. */
-.cardTitle,.modalTitle,.appTop h1{letter-spacing:-.008em;}
 /* Otomasyonlar: sayaç şeridi başlıkla hizalı, yan panel başlıkları okunur. */
 .autoStatChips{gap:8px;margin:0;padding:12px 20px;}
 .autoStatChip{min-height:var(--ui-control-height);padding:0 12px;}
@@ -374,13 +291,11 @@ main{padding-top:16px;}
 
 /* Genel Bakış kart başlıkları tek yapı: ikon + başlık (Not Hatırlatıcısı,
    Koleksiyon, OAB, INTAKE aynı ölçüde). */
-.ovSectionTitle{display:flex;align-items:center;gap:7px;margin:0;color:var(--ink);font-size:var(--fs-md);letter-spacing:0;}
-.ovSectionTitle .ic{width:17px;height:17px;color:var(--acc-ink);}
+.ovSectionTitle{display:flex;align-items:center;gap:7px;margin:0;}
+.ovSectionTitle .ic{width:17px;height:17px;}
 
 /* Hızlı filtre grupları: aralıklı BÜYÜK HARF yerine sakin, okunur etiket. */
-.kpiGroup>.kpiGroupLabel{min-height:28px;padding:0 10px;gap:6px;font-size:var(--fs-xs);font-weight:600;letter-spacing:.01em;text-transform:none;color:var(--ink2);}
-.kpiGroup>.kpiGroupLabel:hover{border-color:var(--bl-stroke-strong);color:var(--ink);}
-.kpiGroup.open>.kpiGroupLabel{background:var(--acc-bg);border-color:color-mix(in srgb,var(--acc) 40%,transparent);color:var(--acc-ink);}
+.kpiGroup>.kpiGroupLabel{min-height:28px;padding:0 10px;gap:6px;}
 
 /* Nakliye Kıyaslama boşken satır işlemleri şeridi gizlenir; tek yönlendirme kalır. */
 #view-shipping.isShipEmpty #shipSecondaryToolbar{display:none;}
@@ -395,15 +310,10 @@ main{padding-top:16px;}
 
 /* Menüler: her öğe ayrı kutu değil, sakin satır. Seçim/hover tek zemin tonu. */
 .toolbarMoreMenu .navActionBtn,.toolbarMoreMenu :is(button,label).tbtn,.toolbarMoreMenu .vfMenuTrigger{
-  min-height:32px;border-color:transparent;background:transparent;box-shadow:none;color:var(--ink);font-weight:500;
+  min-height:32px;
 }
-.toolbarMoreMenu .navActionBtn:hover:not(:disabled),.toolbarMoreMenu :is(button,label).tbtn:hover:not(:disabled),.toolbarMoreMenu .vfMenuTrigger:hover{
-  border-color:transparent;background:var(--card2-strong);color:var(--ink);
-}
-.toolbarMoreMenu .navActionBtn>svg.ic,.toolbarMoreMenu .tbtn>svg.ic{color:var(--muted);}
 .toolbarMoreMenu{padding:6px;gap:1px;}
-.userMenu button .ic{width:15px;height:15px;flex:0 0 auto;color:var(--muted);}
-.userMenu button:hover .ic{color:var(--acc);}
+.userMenu button .ic{width:15px;height:15px;flex:0 0 auto;}
 
 /* =====================================================================
    Tabloya yer aç · CP / Siparişler / Koleksiyon
@@ -425,30 +335,24 @@ main{padding-top:16px;}
 }
 /* Grup başlığı (ör. 35 sütunluk "Order Info") hücrenin ortasında ekran dışına
    düşüyordu; etiket sola yaslanır. */
-thead tr.groupRow th.draggableGroup{text-align:left;padding-left:12px;letter-spacing:.06em;}
+thead tr.groupRow th.draggableGroup{text-align:left;padding-left:12px;}
 
 /* Tablo araç çubuğu: birincil eylem etiketli, diğer her şey tek bakışta
    okunan simge. Etiket DOM'da kalır (erişilebilir ad + ipucu kaynağı). */
 /* Açılır menülerin (Araçlar, ⋯, PLM SYNC) İÇİ bu kuralın dışında: orada
    etiket, eylemin kendisidir. */
-.tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.tableSearchHelpButton):not(.toolbarMoreMenu *):not(.toolbarOverflowSlot *):has(>svg.ic){
-  font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
+.tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.tableSearchHelpButton):not(.toolbarMoreMenu *):not(.toolbarOverflowSlot *):has(>svg.ic){gap:0;width:var(--ui-control-height);min-width:var(--ui-control-height);padding:0;justify-content:center;
 }
 .tableActionToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic)>svg.ic{width:16px;height:16px;}
 .tableActionToolbar .toolbarMoreWrap>:is(.tbtn,.navActionBtn):has(>svg.ic){position:relative;}
 .tableActionToolbar .toolbarMoreWrap>:is(.tbtn,.navActionBtn):has(>svg.ic)::after{
-  content:"";position:absolute;right:4px;bottom:4px;width:4px;height:4px;
-  border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;opacity:.55;
+  content:"";position:absolute;right:4px;bottom:4px;width:4px;height:4px;opacity:.55;
 }
 .blTip{
-  position:fixed;z-index:10050;max-width:280px;padding:7px 10px;pointer-events:none;
-  display:grid;gap:2px;background:var(--ink);color:var(--card);
-  border-radius:var(--r-sm);box-shadow:var(--shadow-2);
-  font-size:var(--fs-xs);line-height:1.35;opacity:0;transform:translateY(-3px);
-  transition:opacity var(--bl-motion-fast) var(--bl-ease),transform var(--bl-motion-fast) var(--bl-ease);
+  position:fixed;max-width:280px;padding:7px 10px;pointer-events:none;
+  display:grid;gap:2px;opacity:0;transform:translateY(-3px);
 }
 .blTip.isVisible{opacity:1;transform:none;}
-.blTip b{font-weight:700;}
 .blTip span{opacity:.78;}
 
 /* =====================================================================
@@ -458,12 +362,11 @@ thead tr.groupRow th.draggableGroup{text-align:left;padding-left:12px;letter-spa
    ===================================================================== */
 :root{--ic-tint:var(--acc);--ic-tint-o:.2;}
 html[data-theme="dark"]{--ic-tint-o:.3;}
-.ic{stroke-width:1.8;}
-nav.tabs button .ic,.railFoot button .ic{--ic-tint:var(--muted);--ic-tint-o:.22;}
-nav.tabs button:hover .ic{--ic-tint:var(--acc);}
-nav.tabs button.active .ic{--ic-tint:var(--acc);--ic-tint-o:.34;}
-.primary .ic,button.primary .ic,.tbtn.primary .ic{--ic-tint:var(--on-acc);--ic-tint-o:.3;}
-.actionDanger .ic{--ic-tint:var(--danger,#b42318);}
+nav.tabs button .ic,.railFoot button .ic{--ic-tint:var(--ui-text-muted);--ic-tint-o:.22;}
+nav.tabs button:hover .ic{--ic-tint:var(--ui-accent);}
+nav.tabs button.active .ic{--ic-tint:var(--ui-accent);--ic-tint-o:.34;}
+.primary .ic,button.primary .ic,.tbtn.primary .ic{--ic-tint:var(--ui-on-accent);--ic-tint-o:.3;}
+.actionDanger .ic{--ic-tint:var(--ui-danger,#b42318);}
 .ocButton--danger .ic{--ic-tint:var(--ui-danger,#b42318);}
 button:disabled .ic{--ic-tint-o:.08;}
 
@@ -476,7 +379,7 @@ button:disabled .ic{--ic-tint-o:.08;}
 /* Orb'un yaşadığı yerler */
 .uiState--loading .uiStateOrb{--orb-size:28px;margin-top:1px;}
 .ovLaunchHeading{position:relative;}
-.ovLaunchPulse{display:inline-flex;align-items:center;gap:8px;margin-top:10px;font-size:var(--fs-xs);color:var(--muted);}
+.ovLaunchPulse{display:inline-flex;align-items:center;gap:8px;margin-top:10px;}
 
 /* =====================================================================
    Bildirimler sayfayı ezmez: sağ ÜST köşe sayfa başlığını, "Düzeni Düzenle"
@@ -489,9 +392,7 @@ button:disabled .ic{--ic-tint-o:.08;}
 .uiFeedbackRegion--edge .uiFeedback.isLeaving{transform:translateY(6px);}
 /* Kopyalama anlık geri bildirimi: düğme boyutu değişmez. */
 @keyframes blCopyPulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--green) 55%,transparent)}100%{box-shadow:0 0 0 8px transparent}}
-:is(.tbtn,.navActionBtn).copied{color:var(--green)!important;border-color:color-mix(in srgb,var(--green) 55%,transparent)!important;animation:blCopyPulse .7s var(--bl-ease);}
-:is(.tbtn,.navActionBtn).copied .ic{--ic-tint:var(--green);--ic-tint-o:.4;}
-:is(.tbtn,.navActionBtn).copyFailed{color:var(--red)!important;border-color:color-mix(in srgb,var(--red) 55%,transparent)!important;}
+:is(.tbtn,.navActionBtn).copied .ic{--ic-tint:var(--ui-success);--ic-tint-o:.4;}
 
 /* Icon actions never turn into status text; a small ring communicates work in place. */
 @keyframes blActionSpin{to{transform:rotate(360deg)}}
@@ -500,18 +401,11 @@ button:disabled .ic{--ic-tint-o:.08;}
 :is(.tbtn,.navActionBtn).isActionWorking::after{
   /* Keep the busy ring independent of the button's width: Tools menu items are full-width. */
   content:"";position:absolute;inset:auto;top:50%;right:7px;
-  width:14px;height:14px;box-sizing:border-box;margin-top:-7px;
-  border:1.5px solid color-mix(in srgb,var(--acc) 24%,transparent);
-  border-top-color:var(--acc);border-radius:50%;pointer-events:none;
-  animation:blActionSpin .72s linear infinite;
+  width:14px;height:14px;box-sizing:border-box;margin-top:-7px;pointer-events:none;
 }
 :is(.tbtn,.navActionBtn).isActionWorking>.ic{opacity:.62;}
-:is(.tbtn,.navActionBtn).isActionDone{animation:blActionDonePulse .7s var(--bl-ease);}
-:is(.tbtn,.navActionBtn).isActionDone>.ic{--ic-tint:var(--green);--ic-tint-o:.35;}
-:is(.tbtn,.navActionBtn).isActionFailed>.ic{--ic-tint:var(--red);--ic-tint-o:.35;}
-@media(prefers-reduced-motion:reduce){
-  :is(.tbtn,.navActionBtn).isActionWorking::after,:is(.tbtn,.navActionBtn).isActionDone{animation:none!important;}
-}
+:is(.tbtn,.navActionBtn).isActionDone>.ic{--ic-tint:var(--ui-success);--ic-tint-o:.35;}
+:is(.tbtn,.navActionBtn).isActionFailed>.ic{--ic-tint:var(--ui-danger);--ic-tint-o:.35;}
 
 /* Açılış yüklemesi sayfayı itmez: "Veriler ekranlara yükleniyor" kartı akıştan
    çıkıp üst ortada yüzen, orb'lu bir hap olur; bittiğinde hiçbir şey kaymaz. */
@@ -573,11 +467,11 @@ button:disabled .ic{--ic-tint-o:.08;}
 @media(hover:none){.umTable tbody tr .umColActions>*{opacity:1;}}
 
 /* Kısa yardım notları: uzun açıklama paragrafı yerine tek satırlık açılır ipucu. */
-.ovHelp{margin-top:8px;font-size:var(--fs-xs);color:var(--muted);}
-.ovHelp>summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;color:var(--acc-ink);font-weight:600;}
+.ovHelp{margin-top:8px;}
+.ovHelp>summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;}
 .ovHelp>summary::-webkit-details-marker{display:none;}
-.ovHelp>summary::before{content:"?";display:inline-grid;place-items:center;width:15px;height:15px;border-radius:50%;background:var(--acc-bg);font-size:var(--fs-2xs);font-weight:700;}
-.ovHelp[open]>span{display:block;margin-top:6px;max-width:880px;line-height:1.55;}
+.ovHelp>summary::before{content:"?";display:inline-grid;place-items:center;width:15px;height:15px;}
+.ovHelp[open]>span{display:block;margin-top:6px;max-width:880px;}
 /* Ön Maliyet diğer sayfalarla aynı hizadan başlar (fazladan 14px iç boşluk vardı). */
 #view-opencosting{padding-inline:0;}
 
@@ -587,8 +481,7 @@ button:disabled .ic{--ic-tint-o:.08;}
 #shipSecondaryToolbar>:is(.tbtn,.colPanelWrap>.tbtn):has(>svg.ic),#shipSecondaryToolbar>.colPanelWrap>.tbtn:has(>svg.ic){gap:0;width:var(--ui-control-height);min-width:var(--ui-control-height);padding:0;justify-content:center;
 }
 #shipSecondaryToolbar :is(.tbtn):has(>svg.ic)>svg.ic{width:16px;height:16px;}
-.vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic){
-  font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
+.vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic){gap:0;width:var(--ui-control-height);min-width:var(--ui-control-height);padding:0;justify-content:center;
 }
 .vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic)>svg.ic{width:16px;height:16px;}
 
@@ -597,25 +490,12 @@ button:disabled .ic{--ic-tint-o:.08;}
 .appTop .corporateConnections{display:flex;align-items:center;gap:4px;flex:0 0 auto;white-space:nowrap;}
 .appTop .corporateConnection{
   display:inline-flex;align-items:center;justify-content:center;
-  height:27px;min-width:42px;padding:0 9px;
-  font:650 var(--fs-2xs)/1 var(--sans);letter-spacing:.02em;
-  border:1px solid var(--hair);border-radius:0;box-shadow:none;
-  background:var(--card2);color:var(--muted);cursor:pointer;
-  transition:color var(--bl-motion-fast),border-color var(--bl-motion-fast),background-color var(--bl-motion-fast);
+  height:27px;min-width:42px;padding:0 9px;cursor:pointer;
 }
-.appTop .corporateConnection:hover{border-color:var(--bl-stroke-strong);background:var(--bl-surface-soft);color:var(--ink);}
-.appTop .corporateConnection:focus-visible{outline:2px solid var(--acc);outline-offset:2px;}
-.appTop .corporateConnection[data-state="connected"]{
-  border-color:color-mix(in srgb,var(--green) 38%,var(--hair));
-  background:var(--green-bg);color:var(--green);
-}
-.appTop .corporateConnection[data-state="connected"]:hover{
-  border-color:var(--green);background:color-mix(in srgb,var(--green) 16%,var(--paper));color:var(--green);
-}
-.appTop .corporateConnection[data-state="connecting"]{color:var(--muted);cursor:progress;opacity:.8;}
+.appTop .corporateConnection[data-state="connecting"]{cursor:progress;opacity:.8;}
 @media(max-width:850px){
   .appTop .corporateConnections{gap:3px;}
-  .appTop .corporateConnection{height:25px;min-width:38px;padding-inline:6px;font-size:var(--fs-2xs);}
+  .appTop .corporateConnection{height:25px;min-width:38px;padding-inline:6px;}
 }
 
 /* =====================================================================
@@ -657,5 +537,4 @@ button:disabled .ic{--ic-tint-o:.08;}
 }
 
 /* KPI kartı — etiket / değer / alt satır. Değer rengi durum taşıyorsa modülde kalır. */
-:root .gfKpi>b{font-family:var(--sans);font-size:var(--fs-md);font-weight:700;font-variant-numeric:tabular-nums;}
 

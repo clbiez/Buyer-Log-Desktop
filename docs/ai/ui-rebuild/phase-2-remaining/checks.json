@@ -1,0 +1,296 @@
+{
+  "scope": "Phase 2.4 remaining screens; local only",
+  "runs": [
+    {
+      "run": "targeted",
+      "log": "checks/targeted.txt",
+      "note": "Four old CSS-owner assertions corrected with equivalent shared-owner contracts.",
+      "tests": 121,
+      "pass": 117,
+      "fail": 4
+    },
+    {
+      "run": "owner-followup",
+      "log": "checks/owner-followup.txt",
+      "note": "Corrected source-owner assertions.",
+      "tests": 42,
+      "pass": 42,
+      "fail": 0
+    },
+    {
+      "run": "inline-tests",
+      "log": "checks/inline-tests.txt",
+      "note": "Five warning token assertions still referred to --orange.",
+      "tests": 90,
+      "pass": 85,
+      "fail": 5
+    },
+    {
+      "run": "warning-followup",
+      "log": "checks/warning-followup.txt",
+      "note": "All missing-rule behaviors retained; warning foreground uses --ui-warning.",
+      "tests": 23,
+      "pass": 23,
+      "fail": 0
+    },
+    {
+      "run": "final-guards",
+      "log": "checks/final-guards.txt",
+      "note": "Shared geometry and token guards.",
+      "tests": 16,
+      "pass": 16,
+      "fail": 0
+    },
+    {
+      "run": "modal-guards",
+      "log": "checks/modal-guards.txt",
+      "note": "27 tests; mistyped layer-system.test.js did not run. Real layer coverage is in layer-royalty.",
+      "tests": 27,
+      "pass": 27,
+      "fail": 0
+    },
+    {
+      "run": "layer-royalty",
+      "log": "checks/layer-royalty.txt",
+      "note": "Actual layer-system-v1037 plus royalty tests; one expired-rule CSS-owner assertion failed.",
+      "tests": 17,
+      "pass": 16,
+      "fail": 1
+    },
+    {
+      "run": "contract-followup",
+      "log": "checks/contract-followup.txt",
+      "note": "Corrected expired-state owner; transit, clipboard and export contracts.",
+      "tests": 49,
+      "pass": 49,
+      "fail": 0
+    },
+    {
+      "run": "final-ui",
+      "log": "checks/final-ui.txt",
+      "note": "Final import, editor and Manifest module contracts.",
+      "tests": 47,
+      "pass": 47,
+      "fail": 0
+    },
+    {
+      "run": "last-guards",
+      "log": "checks/last-guards.txt",
+      "note": "Final shared component and token checks.",
+      "tests": 6,
+      "pass": 6,
+      "fail": 0
+    }
+  ],
+  "browserKeyboardLatest": [
+    {
+      "name": "import-light",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-light",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-light",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-light",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "templates-light",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "widgets-light",
+      "count": 14,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "import-grey",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-grey",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-grey",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-grey",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "templates-grey",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "widgets-grey",
+      "count": 14,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "import-dark",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "excel-templates-dark",
+      "count": 23,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "layout-dark",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "template-form-dark",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "templates-dark",
+      "count": 4,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "widgets-dark",
+      "count": 14,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "royalty",
+      "count": 44,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "transit",
+      "count": 26,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "image-settings",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "sync-settings",
+      "count": 7,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "output-editor",
+      "count": 16,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    },
+    {
+      "name": "import-en",
+      "count": 1,
+      "forward": true,
+      "backward": true,
+      "closed": true
+    }
+  ],
+  "initialBrowserFailures": "Nested template Tab escaped/closed parent; royalty/transit focus escaped and sync Escape did not close. Fixed in shared dialog lifecycle, latest entries replace earlier failed attempts. Raw attempt history retained.",
+  "visuals": {
+    "screens": 24,
+    "states": 17,
+    "final": 11,
+    "supersedes": "final/royalty-light replaces states/royalty-light; final/output-layout-light replaces states/output-layout-light; states/Excel tools replace screens/Excel tools. Initial dark notification count contrast failures fixed, verified in all latest dark captures.",
+    "scaleCorrection": "applyUiFontStep accepts indices 0,1,2,3 (standard,large,xl,compact), not font-add values. final import-dark-size--1 and size-0 are standard, size-1.5 is large, size-3 is compact, import-dark-xl is verified XL. Phase2.3 -1 and 0 were both standard, so that phase did not verify compact. Full final matrix will use canonical indices and save actual scale metadata."
+  },
+  "exports": {
+    "files": 46,
+    "equal": 46,
+    "comparison": "export-comparison.json"
+  },
+  "i18n": "0 missing",
+  "releaseNotes": 68,
+  "version": "unchanged; not rerun",
+  "fullNpmTest": "NOT RUN: project-end only",
+  "ci": "not run",
+  "merge": "not merged",
+  "testRelease": "not published",
+  "stableRelease": "not published",
+  "performance": {
+    "startupMs": {
+      "baselineMs": 1020.1000000000349,
+      "currentMs": 956.7000000011176,
+      "deltaMs": -63.4,
+      "deltaPercent": -6.2
+    },
+    "cpNavigationMs": {
+      "baselineMs": 975.4000000000233,
+      "currentMs": 1092.7000000011176,
+      "deltaMs": 117.3,
+      "deltaPercent": 12.0
+    },
+    "cp5000RenderMs": {
+      "baselineMs": 2995.9000000000233,
+      "currentMs": 3132.4000000003725,
+      "deltaMs": 136.5,
+      "deltaPercent": 4.6
+    }
+  }
+}

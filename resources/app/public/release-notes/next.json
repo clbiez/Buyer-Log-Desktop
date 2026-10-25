@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Manifest: planlama, ticari ve operasyon ekranları",
-    "en": "Manifest: planning, commercial and operations screens"
+    "tr": "Manifest: ortak arayüz ve tüm modüller",
+    "en": "Manifest: shared interface and all modules"
   },
   "summary": {
-    "tr": "Manifest ortak kontrolleri, tabloları ve tipografisi operasyon ve ayar ekranlarına genişledi. Mevcut CP veri bütünlüğü iyileştirmeleri korunur.",
-    "en": "Manifest shared controls, tables and typography extend to operations and settings. Existing CP data integrity improvements are retained."
+    "tr": "Manifest ortak kontrolleri, tabloları ve tipografisi kalan yardımcı ekranlara genişledi. Mevcut CP veri bütünlüğü iyileştirmeleri korunur.",
+    "en": "Manifest shared controls, tables and typography extend to the remaining utility screens. Existing CP data integrity improvements are retained."
   },
   "changes": [
     {
@@ -1835,6 +1835,151 @@
         "caption": {
           "tr": "Manifest Faz 2, Operasyon/Ayarlar; değişiklik sonrası gerçek PNG.",
           "en": "Manifest Phase 2, Operations/Settings; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-search-calendar",
+      "type": "improvement",
+      "module": {
+        "tr": "Arama ve tarih kontrolleri",
+        "en": "Search and date controls"
+      },
+      "title": {
+        "tr": "Komut, arama yardımı ve takvim aynı dili kullanır",
+        "en": "Commands, search help and calendars share one design"
+      },
+      "body": {
+        "tr": "Komut paleti, tablo arama yardımı ve çift hafta takvimi ortak yüzey, tipografi ve köşeli kontrollerle yenilendi. Mevcut arama ve tarih davranışı korunur.",
+        "en": "The command palette, table search help and dual-week calendar use shared surfaces, type and square controls. Existing search and date behavior is preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-search-calendar.png",
+        "alt": {
+          "tr": "Komut, arama yardımı ve takvim aynı dili kullanır — anonim veriyle gerçek Buyer Log",
+          "en": "Commands, search help and calendars share one design — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-excel-tools",
+      "type": "improvement",
+      "module": {
+        "tr": "Excel araçları",
+        "en": "Excel tools"
+      },
+      "title": {
+        "tr": "İçe aktarma ve şablonlarda ortak kontroller",
+        "en": "Shared controls for imports and templates"
+      },
+      "body": {
+        "tr": "İçe aktarma adımları ile Excel şablon alanları ortak temayı kullanır. Dosya seçimine klavyeyle erişilir; eşleştirme ve aktarım önizlemesi korunur.",
+        "en": "Import steps and Excel template fields share the product theme. File selection is keyboard accessible; mapping and import preview are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-excel-tools.png",
+        "alt": {
+          "tr": "İçe aktarma ve şablonlarda ortak kontroller — anonim veriyle gerçek Buyer Log",
+          "en": "Shared controls for imports and templates — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-output-tools",
+      "type": "improvement",
+      "module": {
+        "tr": "Çıktı ve yerleşim",
+        "en": "Output and layout"
+      },
+      "title": {
+        "tr": "Çıktı düzenleyici ve yerleşim pencereleri yenilendi",
+        "en": "Refreshed output editor and layout dialogs"
+      },
+      "body": {
+        "tr": "Çıktı düzenleyici, şablonlar ve Layout Kontrolü ortak pencere dilini kullanır. Kare aralık tutamaçları klavyeyle çalışır; iç içe şablonlarda Tab ve Esc yalnız etkin pencereyi yönetir.",
+        "en": "The output editor, templates and Layout Control share dialog styling. Square range handles support keyboard control; Tab and Escape operate on the active nested template dialog."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-output-tools.png",
+        "alt": {
+          "tr": "Çıktı düzenleyici ve yerleşim pencereleri yenilendi — anonim veriyle gerçek Buyer Log",
+          "en": "Refreshed output editor and layout dialogs — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-overview-layout",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Widget kataloğu ve harita işaretleri sadeleşti",
+        "en": "Simpler widget catalogue and map markers"
+      },
+      "body": {
+        "tr": "Widget kataloğu ortak yüzeylerle düzenlendi. Harita hedef ve rota işaretleri kare dile taşındı; düzenleme ve widget ekleme davranışları korunur.",
+        "en": "The widget catalogue uses shared surfaces. Map targets and route markers use square shapes; layout editing and widget actions are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-overview-layout.png",
+        "alt": {
+          "tr": "Widget kataloğu ve harita işaretleri sadeleşti — anonim veriyle gerçek Buyer Log",
+          "en": "Simpler widget catalogue and map markers — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-remaining-dialogs",
+      "type": "improvement",
+      "module": {
+        "tr": "Ayar pencereleri",
+        "en": "Settings dialogs"
+      },
+      "title": {
+        "tr": "Kalan ayar pencereleri ortak sisteme taşındı",
+        "en": "Remaining settings dialogs use the shared system"
+      },
+      "body": {
+        "tr": "Royalty, yol süresi, görsel ve sync ayarları ortak kontrolleri kullanır. Modal odağı, Esc ve kaydedilmemiş değişiklik onayı korunur. Hücre içi metin ölçeği ortak yazı tokenlarına bağlandı.",
+        "en": "Royalty, transit time, image and sync settings use shared controls. Dialog focus, Escape and unsaved-change confirmation are preserved. Inline cell text follows shared type tokens."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-remaining-dialogs.png",
+        "alt": {
+          "tr": "Kalan ayar pencereleri ortak sisteme taşındı — anonim veriyle gerçek Buyer Log",
+          "en": "Remaining settings dialogs use the shared system — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, kalan ekranlar; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, remaining screens; actual post-change PNG."
         }
       }
     }

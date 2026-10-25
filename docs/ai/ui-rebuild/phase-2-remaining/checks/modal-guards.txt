@@ -1,0 +1,35 @@
+✔ Ortak ölçek token'ları tanımlı ve kullanıcının yazı boyutu ayarına bağlı (4.541706ms)
+✔ Hiçbir stil dosyası sabit px yazı boyutu kullanmaz (111.020009ms)
+✔ Köşe yarıçapı yalnız --r-* token'larından gelir (93.450741ms)
+✔ Yazı ailesi yalnız --sans, --head veya --mono token'ından gelir (79.559594ms)
+✔ Ham renk kodu sayısı dosya başına dondurulmuş tavanı aşamaz; yeni dosya ham renk taşımaz (72.423552ms)
+✔ Kullanılan her CSS değişkeni bir yerde tanımlıdır (hayalet token yok) (84.313715ms)
+✔ PPTX: uzun tablo kesilmez, devam slaytlarına bölünür; uzun kumaş metni tam kalır (33.986277ms)
+✔ taslak: her çıktı düzenlenebilir taslak bırakır; düzenleme yeniden doğrulanıp YENİ dosya olur; sahip izolasyonu (22.400554ms)
+✔ taslak: rapor düzenlemesi yeniden temizlenir; görseller taslakta saklanıp tekrar istenmez; PDF kaydı taslağa bağlıdır (11.565012ms)
+✔ taslak deposu: kullanıcı başına üst sınır, bozuk kimlik reddi (6.399115ms)
+✔ şablon iskeleti iş verisi taşımaz; talimat yapıyı, tam alanları ve ek talimatı taşır (3.788872ms)
+✔ servis: kullanıcı şablonu sözleşmenin sonuna eklenir; etiket şablon adıdır (6.646508ms)
+✔ routes: şablon kaydet/paylaş/kopyala/sil; ekip şablonunu yalnız sahibi ya da moderatör siler; sohbet şablonu depodan okur (159.42696ms)
+✔ db: çıktı şablonları kişisel ve ortak (senkronlu) profil deposunda; ayrı tür (152.933043ms)
+✔ arayüz: düzenleyici tembel yüklenir; rapor iframe’i betiksiz + CSP; Düzenle/Şablonlar/şablon seçici; TR/EN (2.499007ms)
+✔ TSV yapıştırma ayrıştırıcısı: sekme/satır, tırnaklı çok satırlı hücre (3.84138ms)
+✔ Manifest has one token source; migrated owners never consume legacy appearance aliases (15.320853ms)
+✔ Manifest prohibits frames, rounded controls, gradients and raw overlay levels (7.459113ms)
+✔ Manifest fonts scale and only transform/opacity may animate (12.837691ms)
+✔ Main column separators cover both header tiers and never the table body (1.052757ms)
+✔ Shared button contract covers interaction states and restricts explicit variants (26.206209ms)
+✔ Notes dialog keeps canonical behavior hooks, labelled field and keyboard focus containment (25.185742ms)
+✔ Unauthenticated asset serving is a fixed UI-only list before auth gates (3.043708ms)
+✔ Migrated Plan and Execute module styles contain only layout and data geometry (10.590362ms)
+✔ Commercial module CSS owns layout only; charts use square marks (6.992431ms)
+✔ Operations module CSS owns layout only; loading avoids decorative canvas (10.126152ms)
+✔ Remaining module CSS owns layout only; nested output forms use the shared dialog stack (4.046328ms)
+ℹ tests 27
+ℹ suites 0
+ℹ pass 27
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 601.979271

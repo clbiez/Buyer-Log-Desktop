@@ -1,0 +1,609 @@
+✔ Collection Sütunlar adımı dört aksiyonlu ve varsayılanı yalnız canonical identity sütunlarında Match (1.069993ms)
+✔ Match yalnız identity bulur; Update yalnız seçili hedefi yazar; Ignore hiçbir alana yazılmaz (5.338497ms)
+✔ Explicit colour-level aynı değer bile override niyeti olarak plana girebilir; blank hücre mevcut semantiği korur (1.325728ms)
+✔ Eşleşme alanı yoksa ve duplicate update target varsa import validation açıkça bloklar (0.432872ms)
+✔ Create + Update + Match aynı planda çalışır; eşleşmeyen yeni row identity alanlarını Match kaynaklarından alır (1.892853ms)
+✔ Palet Ctrl+Shift+K ile açılır ve mevcut Ctrl+K CP aramasını korur (0.902521ms)
+✔ Palet görünür arama kutusu eklemez, katman sistemine ve overlay listesine kayıtlıdır (12.028ms)
+✔ Palet araması Türkçe karakterlerden bağımsız eşleşir ve önce baş eşleşmeyi gösterir (2.396242ms)
+✖ Dar ray üzerine gelince tam genişlikte, içeriği itmeden açılır (2.177552ms)
+✔ KPI sayacı özgün metne döner, yeniden çizimde durur ve azaltılmış harekete uyar (1.316614ms)
+✔ ortak tarih takvimi her hafta satırında LCW / GLB çiftini gösterir (1.328533ms)
+✔ Koleksiyon MB hafta/ay paneli merch haftanın yanında GLB haftayı gösterir (1.140919ms)
+✔ dateCalendarWeekPair merch takvimi yokken LCW için tire, GLB için ISO hafta döner (3.492053ms)
+✔ profil kullanıcıya ve modüle aittir (1.753403ms)
+✔ profilde yalnız yapılandırma saklanır, çalışma kitabı verisi saklanmaz (0.310848ms)
+✔ aynı şema birebir eşleşir, değişen şema gözden geçirme ister (0.55108ms)
+✔ profil deposu kullanıcı senkron listesine kayıtlıdır (0.277338ms)
+✔ CP ve Koleksiyon aynı motoru ve aynı sihirbazı kullanır (2.959191ms)
+✔ CP adaptörü satır oluşturamaz ve bunu açıkça bildirir (1.218096ms)
+✔ sihirbaz onaydan önce yazmaz ve uygulama anında planı yeniden doğrular (0.573535ms)
+✔ önizleme ve uygulama aynı planı kullanır; girdi değişince plan çöpe atılır (2.23609ms)
+✔ Koleksiyon içe aktarımı atomik partiyi ister ve başarısızlıkta belleği geri alır (1.74522ms)
+✔ özel sütunlar Buyer Log'un mevcut sistemlerini kullanır (2.783155ms)
+✔ denetim kaydı sınırlıdır ve çalışma kitabı verisi taşımaz (0.92233ms)
+✔ layout type: care label and price tag are distinguished deterministically (1.055421ms)
+✔ native text uses exact CP identities without manual model input (5.487562ms)
+✔ care-label country extraction ignores importer/distributor countries (1.402744ms)
+✔ price-tag order number anchors CP and identityText resolves business codes (4.268103ms)
+✔ composition normalization treats multilingual cotton forms as equivalent (5.991251ms)
+✔ CP is source of truth: supported fields match, absent references are NOT_CHECKED (2.146836ms)
+✔ objective composition conflict becomes MISMATCH (1.605781ms)
+✔ AI-only CP conflicts stay REVIEW; local deterministic conflicts can be ERROR (2.244643ms)
+✔ AI visual finding stays REVIEW and never becomes deterministic ERROR by itself (1.462314ms)
+✔ price tag scope does not create false composition/care errors and keeps unsupported CP fields NOT_CHECKED (1.160079ms)
+✔ LCW AI layout-control contract keeps multi-page arrays beyond legacy ten-item cap (0.880287ms)
+✔ layout-control wiring reuses central BuyerLogAI and exposes LCW AI workspace entry (0.851213ms)
+✔ layout-control backend exposes durable per-user audit history without storing PDF bytes (0.301014ms)
+✔ layout-control result and history panels are not hidden by the global section{display:none} rule (0.327284ms)
+✖ layout-control visual theme uses square corners throughout the modal (3.829421ms)
+✔ document zoom clamps to limits, preserves the viewport centre and Fit resets scroll (4.473764ms)
+✔ wheel zoom anchors the document point under the pointer (0.965365ms)
+✔ a stale PDF render cannot replace the latest zoom image (5.799813ms)
+✔ closing before a scheduled zoom redraw prevents use of a detached canvas (1.208441ms)
+✔ PPTX: uzun tablo kesilmez, devam slaytlarına bölünür; uzun kumaş metni tam kalır (20.86469ms)
+✔ taslak: her çıktı düzenlenebilir taslak bırakır; düzenleme yeniden doğrulanıp YENİ dosya olur; sahip izolasyonu (21.988074ms)
+✔ taslak: rapor düzenlemesi yeniden temizlenir; görseller taslakta saklanıp tekrar istenmez; PDF kaydı taslağa bağlıdır (11.379804ms)
+✔ taslak deposu: kullanıcı başına üst sınır, bozuk kimlik reddi (5.514261ms)
+✔ şablon iskeleti iş verisi taşımaz; talimat yapıyı, tam alanları ve ek talimatı taşır (3.054834ms)
+✔ servis: kullanıcı şablonu sözleşmenin sonuna eklenir; etiket şablon adıdır (5.814405ms)
+✔ routes: şablon kaydet/paylaş/kopyala/sil; ekip şablonunu yalnız sahibi ya da moderatör siler; sohbet şablonu depodan okur (151.391778ms)
+✔ db: çıktı şablonları kişisel ve ortak (senkronlu) profil deposunda; ayrı tür (143.920727ms)
+✔ arayüz: düzenleyici tembel yüklenir; rapor iframe’i betiksiz + CSP; Düzenle/Şablonlar/şablon seçici; TR/EN (2.612779ms)
+✔ TSV yapıştırma ayrıştırıcısı: sekme/satır, tırnaklı çok satırlı hücre (3.586366ms)
+✔ Earth tercihleri normalize edilir; bozuk kamera/katman değerleri güvenli varsayılana döner (1.906133ms)
+✔ ortak viewport: Buyer Log 2D ⇄ span ⇄ 2D merkez ve ölçeği korur (0.407845ms)
+✔ ortak viewport: Buyer Log 3D küre ⇄ span ⇄ 3D (0.191468ms)
+✔ Earth yüksekliği ⇄ span tersinirdir, monotondur ve tüm dünya küreyi kadraja sığdırır (0.359722ms)
+✔ seçim kimliği mevcut hedeflerde değişmez, Earth hedeflerini de kapsar (0.19918ms)
+✔ Earth rotası aynı kenar örneklerini kullanır: rota hesabı kopyalanmaz (5.910729ms)
+✔ Earth araç ve küme ikonları overdue transit durumunu sarı çerçeveyle taşır (0.181113ms)
+✔ Earth lazy yüklenir: index.html Cesium veya Earth modülünü eager yüklemez (0.531872ms)
+✔ Earth görünmezken çizim, animasyon ve karo yüklemesi durur; uzun süre gizliyse WebGL bırakılır (0.467565ms)
+✔ motor seçimi, Earth tercihleri ve kamera kullanıcı tercihine kaydedilir; anahtar kaydedilmez (0.435747ms)
+✔ sağlayıcı hatası çökme değil düşüştür: Retry + Buyer Log haritasına geçiş sunulur (0.280333ms)
+✔ review düzeltmeleri: retry Earth kabını açar, soğuk imha sayacı ertelenmez, ekran dışı Earth yüklenmez, render hatası ertelenir (0.287203ms)
+✔ tam ekran, bitmiş görünüm animasyonunun oluşturduğu içeren bloğu bırakır (0.135504ms)
+✔ Earth sağlayıcı ayarları: şifreli saklama, maskeli durum, yalnız Moderatör yazar (16.455725ms)
+✔ Earth modülü Node'da DOM olmadan yüklenebilir ve kalite profilleri tutarlıdır (0.151157ms)
+✔ 1 · aynı Order Code: Production parsiyeli ile Depo parsiyeli ayrı varlık ve konumdadır (5.048319ms)
+✔ 2 · aynı Gemi Ad taşıyan parsiyeller aynı segmentte tek araçta toplanır; detayda tüm çocuklar vardır (10.33622ms)
+✔ 3 · Gemi Ad boşsa yakın ilerleme birlikte, belirgin farklı ilerleme ayrı kümelenir (1.197695ms)
+✔ 3b · ortalama yol süresi dolan ama hâlâ yolda olan sevkiyat sarı çerçeve durumu taşır (1.448503ms)
+✔ 4 · Bangladesh Gemi+Uçak: Bangladesh → Colombo deniz, Colombo → İstanbul hava (0.847197ms)
+✔ 5 · India Gemi+Uçak aynı Colombo aktarmasını kullanır (0.514456ms)
+✔ 6 · saf deniz / saf hava rotasına Colombo zorla eklenmez (0.613134ms)
+✔ 7 · Bangladesh + India Colombo → İstanbul ortak segmenti tek shared trunk olarak çizilir (1.922999ms)
+✔ 8 · aynı İstanbul koordinatındaki semboller birbirini kapatmaz ve tek tek seçilebilir (0.980458ms)
+✔ 8b · yakın araçlar düşük zoomda kümelenir, yüksek zoomda tekilleşir (0.771433ms)
+✔ 8c · ortak rota aynı koridoru tek anahtarda toplar ve ülke + taşıma seçeneklerini üretir (0.269397ms)
+✔ 9-10 · CP ve Orders haritası grid görünür satırlarından değil tüm veri kümesinden beslenir (0.88885ms)
+✔ 11 · çoklu seçim filtreleri: alan içi VEYA, alanlar arası VE, deterministik (0.686084ms)
+✔ 12 · hızlı filtreler: Warehouse varsayılanda yok, Critical var, düzenleme kalıcı saklanır (0.284248ms)
+✔ Critical tek kanonik Unified Action Priority kodundan türetilir (1.492059ms)
+✔ Birleşik kaynak sipariş başına en öncelikli kaynağı seçer ve o kaynağın bütün parsiyellerini korur (0.248154ms)
+✔ IAS Gemi Ad, İthalat Dosya No ve Konteyner No CP segmentlerine ve Backlog satırlarına taşınır (19.843451ms)
+✔ alan çözücüsü farklı ara sütunlara sahip aynı uzunluktaki satırları karıştırmaz (0.454355ms)
+✔ harita sağlayıcıları Overview koruma yolunu kullanır; gizli ızgarayı çizmez, başarısızlıkta döngüye girmez (0.216617ms)
+✔ Global Flow taşıma tiplerini ayırır (2.191473ms)
+✔ operasyon durumları üretim, loading, transit ve İstanbul aşamalarını ayırır (0.665023ms)
+✔ satır adaptörü sevkiyat dosyası, handover ve PLM kimliğini korur (1.478559ms)
+✔ Combined önceliği Backlog > Orders > CP (0.222415ms)
+✔ ülke merkezi ve grup toplaması rota metasını üretir (0.610721ms)
+✔ Bangladesh deniz rotası Suez ve Çanakkale koridorundan İstanbul’a gelir (0.608848ms)
+✔ araç ilerlemesi Handover + yol süresi kuralından hesaplanır (0.574416ms)
+✔ rota hit testi örnekleme noktaları arasındaki tüm segmentte çalışır (0.287263ms)
+✔ rota hover ortak koridorda yalnız segmenti değil ilişkili tam güzergâhı vurgular (0.77633ms)
+✔ Natural Earth TopoJSON decoder gerçek polygon üretir (5.584627ms)
+✖ Global Flow accurate world, working orb ve ortak detay çekmecesi ile bağlıdır (1.537578ms)
+✔ Global Flow widget global section hidden kuralını override eder (0.112629ms)
+✔ 2D dünya görünümü ekran oranından bağımsız 2:1 en/boy oranını korur (0.149916ms)
+✔ 2D ve 3D yakınlaştırma sınırları detay incelemeye izin verir (3.314947ms)
+✔ aydınlık harita paleti kara, deniz ve sınırları daha belirgin ayırır (0.128894ms)
+✔ 3D globe sürükleme bırakıldıktan sonra inertia ile akıcı devam eder (0.190387ms)
+✔ 3D globe fare sürüklemesi yüzeyi tutup çekiyormuş gibi yatay yönde hareket eder (0.109165ms)
+✔ varsayılan ana ekran: iki sayfa, her widget tek kez, çakışmasız ve ızgara içinde (1.696006ms)
+✔ normalize bilinmeyen widget'ı atar, boyutu sözleşmeye kıstırır, bozuk çakışmayı çözer (0.366622ms)
+✔ kaldırılan widget gizli kalır; sonradan eklenen yeni widget ilk sayfaya kendiliğinden gelir (0.601166ms)
+✔ taşıma: komşu widget önce aynı satırda yana kayarak yer açar, yer yoksa aşağı itilir (0.423949ms)
+✔ boyutlandırma min/max sözleşmesine uyar ve çakışanları iter (0.340734ms)
+✔ ilk uygun yer, boşluk kapatma ve boyut sınıfı (0.248335ms)
+✔ sayfalar: widget başka sayfaya gönderilir, dolu sayfa silinmez, boş sayfa silinir, en fazla MAX_PAGES (2.034117ms)
+✔ v1 kaydı tek sayfaya akış sırası ve genişlik/yükseklikle taşınır (0.95562ms)
+✔ ana ekran DOM kancaları ve denetleyici sözleşmesi (1.432009ms)
+✔ widget'lar boyutlarına uyar: boyut kapsayıcısı, kaydırılan gövde ve dar pencere düzeni (0.268034ms)
+✔ senkron düzen kaydı yüklemede damgalanmaz; sunucudan gelen düzen yeniden okunur (10.333446ms)
+✔ sayfa kenarı taşıması hareketsiz bırakılsa da korunur; iptal başlangıç sayfasına döner; pointercancel uzun basmayı iptal eder (0.247934ms)
+✔ table search help assets are loaded by the main page (0.74935ms)
+✔ CP, Orders and Collection main searches receive exactly one pinned adjacent information button (0.233532ms)
+✔ help copy documents OR, AND, exclusion and Excel paste behavior without breaking decimal commas (0.128644ms)
+✖ search help uses a compact themed fixed popover (0.899136ms)
+✔ overflowing table search stays editable and expands on hover or focus (0.156545ms)
+ℹ tests 121
+ℹ suites 0
+ℹ pass 117
+ℹ fail 4
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 714.530332
+
+✖ failing tests:
+
+test at resources/app/tests/command-palette-motion-v20261015.test.js:52:1
+✖ Dar ray üzerine gelince tam genişlikte, içeriği itmeden açılır (2.177552ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /html\[data-rail="min"\] \.rail:is\(:hover,:focus-within\)\{width:var\(--rail-full-w\);[^}]*box-shadow:var\(--shadow-3\);transition-delay:\.18s;\}/. Input:
+  
+  '\n' +
+    '/* ===================================================================\n' +
+    '   ORDER CONTROL — Komuta Masası kabuğu · Aydınlık/Karanlık tema\n' +
+    "   Tek katman, !important yok. JS'in ürettiği tüm sınıflar kapsanır.\n" +
+    '   =================================================================== */\n' +
+    ':root{\n' +
+    '  --rail-w:208px;\n' +
+    '  --rail-min-w:66px;\n' +
+    '\n' +
+    '  /* --- Yüzeyler & metin (aydınlık — mevcut palet korunur) --- */\n' +
+    '  --paper:#F6F7F9; --card:#FFFFFF; --card2:#FBFBFC; --ink:#101828; --ink2:#475467; --muted:#98A2B3;\n' +
+    '  --line:#E4E7EC; --line2:#D0D5DD;\n' +
+    '  /* --- Kimlik rengi --- */\n' +
+    '  --acc:#5980A6; --acc-bg:#E9EFF5; --acc-lite:#8FA9C4; --acc-ink:#3E5C7A; --on-acc:#FFFFFF;\n' +
+    '  /* --- Durum renkleri --- */\n' +
+    '  --red:#A8453A; --red-bg:#F4E7E4; --orange:#8C6A1F; --orange-bg:#F2EAD6;\n' +
+    '  --yellow:var(--orange); --yellow-bg:var(--orange-bg); --green:#3F7757; --green-bg:#E3EDE6;\n' +
+    '  --gray-bg:#EDEFF1;\n' +
+    '  --red-lite:#A8453A; --orange-lite:#8C6A1F; --green-lite:#3F7757; --blue-lite:#5980A6;\n' +
+    "  /* --- Eski JS'in kullandığı takma adlar --- */\n" +
+    '  --navy:var(--acc); --navy-deep:#2A3E52; --teal:#3F7A6C; --blue:#5980A6; --purple:#6D53A8;\n' +
+    '  /* Tablo başlıkları: Gri temanın başlık tonu kullanılır — beyaza yakın yüzey\n' +
+    '     yerine belirgin gri zemin. Dışa aktarma ve kopyalama da bu tonu kullanır. */\n' +
+    '  --thead-bg:#F2F4F7; --thead-ink:#54595F; --thead-line:#D0D5DD;\n' +
+    '  --table-bg:var(--card); --table-ink:var(--ink); --table-border:var(--line);\n' +
+    '  --table-hover:#F3F6FA; --table-link:var(--acc-ink);\n' +
+    '  --table-editHover:color-mix(in srgb, var(--acc) 7%, transparent);\n' +
+    '  --table-editBg:color-mix(in srgb, var(--acc) 12%, var(--card));\n' +
+    '  --card2-strong:#D8DBDF;   /* grup başlığı satırı — Gri tema tonu */\n' +
+    '  /* --- Yarı saydam panel zemini (popover / menü) --- */\n' +
+    '  --pop:color-mix(in srgb, var(--card) 86%, transparent);\n' +
+    '  --pop-blur:saturate(1.6) blur(14px);\n' +
+    '  /* --- Ölçekler --- */\n' +
+    '  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:28px; --sp-7:36px;\n' +
+    '  --r-xs:0; --r-sm:0; --r-md:0; --r-lg:0; --r-xl:0; --r-full:999px;\n' +
+    '  /* Bilinçli istisnalar: kapsül tutamak/anahtar ve daire (avatar, durum noktası). DESIGN_SYSTEM.md §3 */\n' +
+    '  --r-pill:999px; --r-round:50%;\n' +
+    '  --ui-scale:1;\n' +
+    '  --ui-font-add:0px;\n' +
+    '  --fs-xs:calc(11px + var(--ui-font-add)); --fs-sm:calc(12px + var(--ui-font-add)); --fs-base:calc(12.5px + var(--ui-font-add)); --fs-md:calc(14px + var(--ui-font-add)); --fs-lg:calc(16px + var(--ui-font-add)); --fs-xl:calc(20px + var(--ui-font-add));\n' +
+    '  /* Tam yazı ölçeği: tüm modüller yalnız bu adımları kullanır (DESIGN_SYSTEM.md §2). */\n' +
+    '  --fs-2xs:calc(10.5px + var(--ui-font-add)); --fs-2xl:calc(24px + var(--ui-font-add)); --fs-3xl:calc(30px + var(--ui-font-add)); --fs-4xl:calc(40px + var(--ui-font-add));\n' +
+    '  --kol-cell-fs:calc(12px + var(--ui-font-add));\n' +
+    '  --ctl-h:34px;\n' +
+    '  --ctl-h-sm:calc(var(--ctl-h) - 8px);\n' +
+    '  /* Doygun dolgu üzerindeki yazı ve modal perdesi: tema değişse de aynı kalır (DESIGN_SYSTEM.md §5). */\n' +
+    '  --on-solid:#fff; --scrim:rgba(8,12,18,.48);\n' +
+    '  /* Kategorik grafik paleti — dataviz doğrulayıcısından geçti (CVD ΔE ≥ 8, normal ΔE ≥ 15). Sıra sabittir. */\n' +
+    '  --chart-1:#2a78d6; --chart-2:#eb6834; --chart-3:#1baf7a; --chart-4:#eda100; --chart-5:#e87ba4; --chart-6:#008300; --chart-7:#6250d6; --chart-8:#e34948;\n' +
+    '  --table-row-h:32px;\n' +
+    '  --table-group-head-h:29px;\n' +
+    '  --table-head-pad-y:8px;\n' +
+    '  --table-cell-pad-y:7px;\n' +
+    '  --table-edit-pad-y:2px;\n' +
+    '  --rail-item-h:36px;\n' +
+    '  --rail-foot-h:34px;\n' +
+    '  --rail-control-size:30px;\n' +
+    '  --icon-btn-size:34px;\n' +
+    '  --topbar-h:52px;\n' +
+    '  --control-sm:calc(var(--ctl-h) - 4px);\n' +
+    '  --control-md:var(--ctl-h);\n' +
+    '  --control-lg:calc(var(--ctl-h) + 6px);\n' +
+    '  --page-padding:var(--sp-5);\n' +
+    '  --section-gap:var(--sp-4);\n' +
+    '  --card-padding:var(--sp-4);\n' +
+    '  --toolbar-height:var(--ctl-h);\n' +
+    '  --shadow-1:0 1px 2px rgba(16,24,40,.05);\n' +
+    '  --shadow-2:0 4px 12px rgba(16,24,40,.07), 0 1px 3px rgba(16,24,40,.06);\n' +
+    '  --shadow-3:0 16px 40px rgba(16,24,40,.14), 0 3px 10px rgba(16,24,40,.07);\n' +
+    '  --shadow-lg:var(--shadow-3);\n' +
+    '  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);\n' +
+    '  --ease:cubic-bezier(.2,.7,.3,1);\n' +
+    '  /* --- Uydu stiller için tema köprüleri (lfl / open-costing / js şablonları) --- */\n' +
+    '  --success:var(--green); --warning:var(--orange); --danger:var(--red); --error:var(--red);\n' +
+    '  --info:var(--acc); --on-primary:var(--on-acc);\n' +
+    '  --hover:var(--card2-strong); --row-hover:var(--table-hover);\n' +
+    '  --acc-hover:color-mix(in srgb, var(--acc) 88%, #000 12%); --line3:var(--line2);\n' +
+    '  --mono:"Cascadia Code",ui-monospace,"SF Mono",Consolas,monospace;\n' +
+    '  --sans:"Barlow","Segoe UI Variable Text","Segoe UI Variable","Segoe UI",-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,Arial,sans-serif;\n' +
+    '  --heading:"Barlow Condensed",var(--sans);\n' +
+    '}\n' +
+    '\n' +
+    'html[data-font-step="0"]{--ui-font-add:0px;}\n' +
+    'html[data-font-step="1"]{--ui-font-add:1px;}\n' +
+    'html[data-font-step="2"]{--ui-font-add:2px;}\n' +
+    'html[data-font-step="3"]{--ui-font-add:3px;}\n' +
+    '\n' +
+    '/* Interface Size, yalnız metni değil bütün etkileşim geometrisini birlikte\n' +
+    '   ölçekler. Eski data-font-step saklama anahtarı geriye uyumluluk için kalır. */\n' +
+    'html[data-ui-scale="compact"]{\n' +
+    '  --rail-full-w:196px;--ui-scale:.9;--ui-font-add:-1px;--rail-w:196px;--rail-min-w:60px;\n' +
+    '  --ctl-h:30px;--table-row-h:28px;--table-group-head-h:25px;\n' +
+    '  --table-head-pad-y:6px;--table-cell-pad-y:5px;--table-edit-pad-y:1px;\n' +
+    '  --rail-item-h:32px;--rail-foot-h:32px;--rail-control-size:28px;\n' +
+    '  --icon-btn-size:32px;--topbar-h:48px;\n' +
+    '  --sp-1:3px;--sp-2:7px;--sp-3:10px;--sp-4:14px;--sp-5:18px;--sp-6:24px;--sp-7:32px;\n' +
+    '}\n' +
+    'html[data-ui-scale="standard"]{\n' +
+    '  --rail-full-w:208px;--ui-scale:1;--ui-font-add:0px;--rail-w:208px;--rail-min-w:66px;\n' +
+    '  --ctl-h:34px;--table-row-h:32px;--table-group-head-h:29px;\n' +
+    '  --table-head-pad-y:8px;--table-cell-pad-y:7px;--table-edit-pad-y:2px;\n' +
+    '  --rail-item-h:36px;--rail-foot-h:34px;--rail-control-size:30px;\n' +
+    '  --icon-btn-size:34px;--topbar-h:52px;\n' +
+    '}\n' +
+    'html[data-ui-scale="large"]{\n' +
+    '  --rail-full-w:224px;--ui-scale:1.125;--ui-font-add:1.5px;--rail-w:224px;--rail-min-w:72px;\n' +
+    '  --ctl-h:38px;--table-row-h:36px;--table-group-head-h:33px;\n' +
+    '  --table-head-pad-y:9px;--table-cell-pad-y:8px;--table-edit-pad-y:3px;\n' +
+    '  --rail-item-h:40px;--rail-foot-h:38px;--rail-control-size:34px;\n' +
+    '  --icon-btn-size:38px;--topbar-h:58px;\n' +
+    '  --sp-1:5px;--sp-2:9px;--sp-3:14px;--sp-4:18px;--sp-5:23px;--sp-6:31px;--sp-7:40px;\n' +
+    '}\n' +
+    'html[data-ui-scale="xl"]{\n' +
+    '  --rail-full-w:240px;--ui-scale:1.25;--ui-font-add:3px;--rail-w:240px;--rail-min-w:78px;\n' +
+    '  --ctl-h:42px;--table-row-h:40px;--table-group-head-h:37px;\n' +
+    '  --table-head-pad-y:10px;--table-cell-pad-y:9px;--table-edit-pad-y:4px;\n' +
+    '  --rail-item-h:44px;--rail-foot-h:42px;--rail-control-size:38px;\n' +
+    '  --icon-btn-size:42px;--topbar-h:64px;\n' +
+    '  --sp-1:5px;--sp-2:10px;--sp-3:15px;--sp-4:20px;--sp-5:25px;--sp-6:35px;--sp-7:45px;\n' +
+    '}\n' +
+    '\n' +
+    '[data-theme="dark"]{\n' +
+    '  /* Antrasit / gri yüzeyler — mavi alt ton yok */\n' +
+    '  --chart-1:#3987e5; --chart-2:#d95926; --chart-3:#199e70; --chart-4:#c98500; --chart-5:#d55181; --chart-6:#008300; --chart-7:#9085e9; --chart-8:#e66767;\n' +
+    '  --paper:#131417; --card:#1B1D21; --card2:#212429; --ink:#E8EAED; --ink2:#A7ADB6; --muted:#6E747D;\n' +
+    '  --line:#2A2D33; --line2:#3A3E45;\n' +
+    '  /* Kimlik: yumuşak çelik mavisi (soft, düşük doygunluk) */\n' +
+    '  --acc:#8FB0D4; --acc-bg:rgba(143,176,212,.13); --acc-lite:#A9C4E0; --acc-ink:#A9C4E0; --on-acc:#14171C;\n' +
+    '  /* Durum renkleri — pastel / soft */\n' +
+    '  --red:#E39B94; --red-bg:rgba(227,155,148,.12); --orange:#D9BA7E; --orange-bg:rgba(217,186,126,.12);\n' +
+    '  --yellow:#D9BA7E; --yellow-bg:rgba(217,186,126,.12); --green:#93C7A8; --green-bg:rgba(147,199,168,.12);\n' +
+    '  --gray-bg:rgba(167,173,182,.09);\n' +
+    '  --red-lite:#E39B94; --orange-lite:#D9BA7E; --green-lite:#93C7A8; --blue-lite:#A9C4E0;\n' +
+    '  --navy:#3A3E45; --navy-deep:#131417; --teal:#8CC5B7; --blue:#A9C4E0; --purple:#BCAEDC;\n' +
+    '  --thead-bg:var(--card2); --thead-ink:var(--ink2);\n' +
+    '  --table-hover:#24272D;\n' +
+    '  --table-editHover:color-mix(in srgb, var(--acc) 11%, transparent);\n' +
+    '  --table-editBg:color-mix(in srgb, var(--acc) 16%, var(--card));\n' +
+    '  --card2-strong:#282B31;\n' +
+    '  --pop:color-mix(in srgb, var(--card) 88%, transparent);\n' +
+    '  --shadow-1:inset 0 0 0 1px rgba(232,234,237,.05);\n' +
+    '  --shadow-2:inset 0 0 0 1px rgba(232,234,237,.07), inset 0 1px 0 rgba(232,234,237,.05);\n' +
+    '  --shadow-3:inset 0 0 0 1px rgba(232,234,237,.10), inset 0 1px 0 rgba(232,234,237,.08);\n' +
+    '  --shadow-lg:var(--shadow-3);\n' +
+    '  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 30%, transparent);\n' +
+    '}\n' +
+    '[data-theme="grey"]{\n' +
+    '  /* Aydınlık ile karanlığın ortası — açık/orta gri yüzeyler, koyu metin (okunur). */\n' +
+    '  --paper:#DFE1E4; --card:#ECEDEF; --card2:#E3E5E8; --ink:#22262B; --ink2:#54595F; --muted:#868C93;\n' +
+    '  --line:#CBCED2; --line2:#B4B8BD;\n' +
+    '  /* Kimlik: sakin çelik mavisi (aydınlıktan biraz yumuşak) */\n' +
+    '  --acc:#527398; --acc-bg:#D8E0EA; --acc-lite:#7E9ABB; --acc-ink:#3A5878; --on-acc:#FFFFFF;\n' +
+    '  /* Durum renkleri — soft, orta ton */\n' +
+    '  --red:#96443B; --red-bg:#E7D6D2; --orange:#7E651E; --orange-bg:#E5DDC6;\n' +
+    '  --yellow:var(--orange); --yellow-bg:var(--orange-bg); --green:#396A4F; --green-bg:#D4E0D7;\n' +
+    '  --gray-bg:#D6D8DB;\n' +
+    '  --red-lite:#9E3A31; --orange-lite:#8A6410; --green-lite:#2C6B48; --blue-lite:#3A6698;\n' +
+    '  --navy:var(--acc); --navy-deep:#2C4258; --teal:#33685C; --blue:#527398; --purple:#5E4F8C;\n' +
+    '  --thead-bg:var(--card2); --thead-ink:var(--ink2);\n' +
+    '  --table-hover:#DADDE1;\n' +
+    '  --table-editHover:color-mix(in srgb, var(--acc) 8%, transparent);\n' +
+    '  --table-editBg:color-mix(in srgb, var(--acc) 13%, var(--card));\n' +
+    '  --card2-strong:#D8DBDF;\n' +
+    '  --pop:color-mix(in srgb, var(--card) 84%, transparent);\n' +
+    '  --shadow-1:0 1px 2px rgba(20,26,33,.08);\n' +
+    '  --shadow-2:0 4px 12px rgba(20,26,33,.10), 0 1px 3px rgba(20,26,33,.08);\n' +
+    '  --shadow-3:0 16px 40px rgba(20,26,33,.18), 0 3px 10px rgba(20,26,33,.10);\n' +
+    '  --shadow-lg:var(--shadow-3);\n' +
+    '  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);\n' +
+    '}\n' +
+    '/* ---- İkon sistemi: sayfa içi SVG sprite (internet/CDN gerektirmez) ---- */\n' +
+    '.ic{width:1.1em;height:1.1em;display:inline-block;vertical-align:-0.18em;flex-shrink:0;}\n' +
+    'html{scroll-behavior:auto;max-width:100%;overflow-x:hidden}\n' +
+    '/* Native <select> açılır listesi tarayıcı tarafından çizilir; '... 351071 more characters
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/command-palette-motion-v20261015.test.js:53:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: `\n/* ===================================================================\n   ORDER CONTROL — Komuta Masası kabuğu · Aydınlık/Karanlık tema\n   Tek katman, !important yok. JS'in ürettiği tüm sınıflar kapsanır.\n   =================================================================== */\n:root{\n  --rail-w:208px;\n  --rail-min-w:66px;\n\n  /* --- Yüzeyler & metin (aydınlık — mevcut palet korunur) --- */\n  --paper:#F6F7F9; --card:#FFFFFF; --card2:#FBFBFC; --ink:#101828; --ink2:#475467; --muted:#98A2B3;\n  --line:#E4E7EC; --line2:#D0D5DD;\n  /* --- Kimlik rengi --- */\n  --acc:#5980A6; --acc-bg:#E9EFF5; --acc-lite:#8FA9C4; --acc-ink:#3E5C7A; --on-acc:#FFFFFF;\n  /* --- Durum renkleri --- */\n  --red:#A8453A; --red-bg:#F4E7E4; --orange:#8C6A1F; --orange-bg:#F2EAD6;\n  --yellow:var(--orange); --yellow-bg:var(--orange-bg); --green:#3F7757; --green-bg:#E3EDE6;\n  --gray-bg:#EDEFF1;\n  --red-lite:#A8453A; --orange-lite:#8C6A1F; --green-lite:#3F7757; --blue-lite:#5980A6;\n  /* --- Eski JS'in kullandığı takma adlar --- */\n  --navy:var(--acc); --navy-deep:#2A3E52; --teal:#3F7A6C; --blue:#5980A6; --purple:#6D53A8;\n  /* Tablo başlıkları: Gri temanın başlık tonu kullanılır — beyaza yakın yüzey\n     yerine belirgin gri zemin. Dışa aktarma ve kopyalama da bu tonu kullanır. */\n  --thead-bg:#F2F4F7; --thead-ink:#54595F; --thead-line:#D0D5DD;\n  --table-bg:var(--card); --table-ink:var(--ink); --table-border:var(--line);\n  --table-hover:#F3F6FA; --table-link:var(--acc-ink);\n  --table-editHover:color-mix(in srgb, var(--acc) 7%, transparent);\n  --table-editBg:color-mix(in srgb, var(--acc) 12%, var(--card));\n  --card2-strong:#D8DBDF;   /* grup başlığı satırı — Gri tema tonu */\n  /* --- Yarı saydam panel zemini (popover / menü) --- */\n  --pop:color-mix(in srgb, var(--card) 86%, transparent);\n  --pop-blur:saturate(1.6) blur(14px);\n  /* --- Ölçekler --- */\n  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:28px; --sp-7:36px;\n  --r-xs:0; --r-sm:0; --r-md:0; --r-lg:0; --r-xl:0; --r-full:999px;\n  /* Bilinçli istisnalar: kapsül tutamak/anahtar ve daire (avatar, durum noktası). DESIGN_SYSTEM.md §3 */\n  --r-pill:999px; --r-round:50%;\n  --ui-scale:1;\n  --ui-font-add:0px;\n  --fs-xs:calc(11px + var(--ui-font-add)); --fs-sm:calc(12px + var(--ui-font-add)); --fs-base:calc(12.5px + var(--ui-font-add)); --fs-md:calc(14px + var(--ui-font-add)); --fs-lg:calc(16px + var(--ui-font-add)); --fs-xl:calc(20px + var(--ui-font-add));\n  /* Tam yazı ölçeği: tüm modüller yalnız bu adımları kullanır (DESIGN_SYSTEM.md §2). */\n  --fs-2xs:calc(10.5px + var(--ui-font-add)); --fs-2xl:calc(24px + var(--ui-font-add)); --fs-3xl:calc(30px + var(--ui-font-add)); --fs-4xl:calc(40px + var(--ui-font-add));\n  --kol-cell-fs:calc(12px + var(--ui-font-add));\n  --ctl-h:34px;\n  --ctl-h-sm:calc(var(--ctl-h) - 8px);\n  /* Doygun dolgu üzerindeki yazı ve modal perdesi: tema değişse de aynı kalır (DESIGN_SYSTEM.md §5). */\n  --on-solid:#fff; --scrim:rgba(8,12,18,.48);\n  /* Kategorik grafik paleti — dataviz doğrulayıcısından geçti (CVD ΔE ≥ 8, normal ΔE ≥ 15). Sıra sabittir. */\n  --chart-1:#2a78d6; --chart-2:#eb6834; --chart-3:#1baf7a; --chart-4:#eda100; --chart-5:#e87ba4; --chart-6:#008300; --chart-7:#6250d6; --chart-8:#e34948;\n  --table-row-h:32px;\n  --table-group-head-h:29px;\n  --table-head-pad-y:8px;\n  --table-cell-pad-y:7px;\n  --table-edit-pad-y:2px;\n  --rail-item-h:36px;\n  --rail-foot-h:34px;\n  --rail-control-size:30px;\n  --icon-btn-size:34px;\n  --topbar-h:52px;\n  --control-sm:calc(var(--ctl-h) - 4px);\n  --control-md:var(--ctl-h);\n  --control-lg:calc(var(--ctl-h) + 6px);\n  --page-padding:var(--sp-5);\n  --section-gap:var(--sp-4);\n  --card-padding:var(--sp-4);\n  --toolbar-height:var(--ctl-h);\n  --shadow-1:0 1px 2px rgba(16,24,40,.05);\n  --shadow-2:0 4px 12px rgba(16,24,40,.07), 0 1px 3px rgba(16,24,40,.06);\n  --shadow-3:0 16px 40px rgba(16,24,40,.14), 0 3px 10px rgba(16,24,40,.07);\n  --shadow-lg:var(--shadow-3);\n  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);\n  --ease:cubic-bezier(.2,.7,.3,1);\n  /* --- Uydu stiller için tema köprüleri (lfl / open-costing / js şablonları) --- */\n  --success:var(--green); --warning:var(--orange); --danger:var(--red); --error:var(--red);\n  --info:var(--acc); --on-primary:var(--on-acc);\n  --hover:var(--card2-strong); --row-hover:var(--table-hover);\n  --acc-hover:color-mix(in srgb, var(--acc) 88%, #000 12%); --line3:var(--line2);\n  --mono:"Cascadia Code",ui-monospace,"SF Mono",Consolas,monospace;\n  --sans:"Barlow","Segoe UI Variable Text","Segoe UI Variable","Segoe UI",-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,Arial,sans-serif;\n  --heading:"Barlow Condensed",var(--sans);\n}\n\nhtml[data-font-step="0"]{--ui-font-add:0px;}\nhtml[data-font-step="1"]{--ui-font-add:1px;}\nhtml[data-font-step="2"]{--ui-font-add:2px;}\nhtml[data-font-step="3"]{--ui-font-add:3px;}\n\n/* Interface Size, yalnız metni değil bütün etkileşim geometrisini birlikte\n   ölçekler. Eski data-font-step saklama anahtarı geriye uyumluluk için kalır. */\nhtml[data-ui-scale="compact"]{\n  --rail-full-w:196px;--ui-scale:.9;--ui-font-add:-1px;--rail-w:196px;--rail-min-w:60px;\n  --ctl-h:30px;--table-row-h:28px;--table-group-head-h:25px;\n  --table-head-pad-y:6px;--table-cell-pad-y:5px;--table-edit-pad-y:1px;\n  --rail-item-h:32px;--rail-foot-h:32px;--rail-control-size:28px;\n  --icon-btn-size:32px;--topbar-h:48px;\n  --sp-1:3px;--sp-2:7px;--sp-3:10px;--sp-4:14px;--sp-5:18px;--sp-6:24px;--sp-7:32px;\n}\nhtml[data-ui-scale="standard"]{\n  --rail-full-w:208px;--ui-scale:1;--ui-font-add:0px;--rail-w:208px;--rail-min-w:66px;\n  --ctl-h:34px;--table-row-h:32px;--table-group-head-h:29px;\n  --table-head-pad-y:8px;--table-cell-pad-y:7px;--table-edit-pad-y:2px;\n  --rail-item-h:36px;--rail-foot-h:34px;--rail-control-size:30px;\n  --icon-btn-size:34px;--topbar-h:52px;\n}\nhtml[data-ui-scale="large"]{\n  --rail-full-w:224px;--ui-scale:1.125;--ui-font-add:1.5px;--rail-w:224px;--rail-min-w:72px;\n  --ctl-h:38px;--table-row-h:36px;--table-group-head-h:33px;\n  --table-head-pad-y:9px;--table-cell-pad-y:8px;--table-edit-pad-y:3px;\n  --rail-item-h:40px;--rail-foot-h:38px;--rail-control-size:34px;\n  --icon-btn-size:38px;--topbar-h:58px;\n  --sp-1:5px;--sp-2:9px;--sp-3:14px;--sp-4:18px;--sp-5:23px;--sp-6:31px;--sp-7:40px;\n}\nhtml[data-ui-scale="xl"]{\n  --rail-full-w:240px;--ui-scale:1.25;--ui-font-add:3px;--rail-w:240px;--rail-min-w:78px;\n  --ctl-h:42px;--table-row-h:40px;--table-group-head-h:37px;\n  --table-head-pad-y:10px;--table-cell-pad-y:9px;--table-edit-pad-y:4px;\n  --rail-item-h:44px;--rail-foot-h:42px;--rail-control-size:38px;\n  --icon-btn-size:42px;--topbar-h:64px;\n  --sp-1:5px;--sp-2:10px;--sp-3:15px;--sp-4:20px;--sp-5:25px;--sp-6:35px;--sp-7:45px;\n}\n\n[data-theme="dark"]{\n  /* Antrasit / gri yüzeyler — mavi alt ton yok */\n  --chart-1:#3987e5; --chart-2:#d95926; --chart-3:#199e70; --chart-4:#c98500; --chart-5:#d55181; --chart-6:#008300; --chart-7:#9085e9; --chart-8:#e66767;\n  --paper:#131417; --card:#1B1D21; --card2:#212429; --ink:#E8EAED; --ink2:#A7ADB6; --muted:#6E747D;\n  --line:#2A2D33; --line2:#3A3E45;\n  /* Kimlik: yumuşak çelik mavisi (soft, düşük doygunluk) */\n  --acc:#8FB0D4; --acc-bg:rgba(143,176,212,.13); --acc-lite:#A9C4E0; --acc-ink:#A9C4E0; --on-acc:#14171C;\n  /* Durum renkleri — pastel / soft */\n  --red:#E39B94; --red-bg:rgba(227,155,148,.12); --orange:#D9BA7E; --orange-bg:rgba(217,186,126,.12);\n  --yellow:#D9BA7E; --yellow-bg:rgba(217,186,126,.12); --green:#93C7A8; --green-bg:rgba(147,199,168,.12);\n  --gray-bg:rgba(167,173,182,.09);\n  --red-lite:#E39B94; --orange-lite:#D9BA7E; --green-lite:#93C7A8; --blue-lite:#A9C4E0;\n  --navy:#3A3E45; --navy-deep:#131417; --teal:#8CC5B7; --blue:#A9C4E0; --purple:#BCAEDC;\n  --thead-bg:var(--card2); --thead-ink:var(--ink2);\n  --table-hover:#24272D;\n  --table-editHover:color-mix(in srgb, var(--acc) 11%, transparent);\n  --table-editBg:color-mix(in srgb, var(--acc) 16%, var(--card));\n  --card2-strong:#282B31;\n  --pop:color-mix(in srgb, var(--card) 88%, transparent);\n  --shadow-1:inset 0 0 0 1px rgba(232,234,237,.05);\n  --shadow-2:inset 0 0 0 1px rgba(232,234,237,.07), inset 0 1px 0 rgba(232,234,237,.05);\n  --shadow-3:inset 0 0 0 1px rgba(232,234,237,.10), inset 0 1px 0 rgba(232,234,237,.08);\n  --shadow-lg:var(--shadow-3);\n  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 30%, transparent);\n}\n[data-theme="grey"]{\n  /* Aydınlık ile karanlığın ortası — açık/orta gri yüzeyler, koyu metin (okunur). */\n  --paper:#DFE1E4; --card:#ECEDEF; --card2:#E3E5E8; --ink:#22262B; --ink2:#54595F; --muted:#868C93;\n  --line:#CBCED2; --line2:#B4B8BD;\n  /* Kimlik: sakin çelik mavisi (aydınlıktan biraz yumuşak) */\n  --acc:#527398; --acc-bg:#D8E0EA; --acc-lite:#7E9ABB; --acc-ink:#3A5878; --on-acc:#FFFFFF;\n  /* Durum renkleri — soft, orta ton */\n  --red:#96443B; --red-bg:#E7D6D2; --orange:#7E651E; --orange-bg:#E5DDC6;\n  --yellow:var(--orange); --yellow-bg:var(--orange-bg); --green:#396A4F; --green-bg:#D4E0D7;\n  --gray-bg:#D6D8DB;\n  --red-lite:#9E3A31; --orange-lite:#8A6410; --green-lite:#2C6B48; --blue-lite:#3A6698;\n  --navy:var(--acc); --navy-deep:#2C4258; --teal:#33685C; --blue:#527398; --purple:#5E4F8C;\n  --thead-bg:var(--card2); --thead-ink:var(--ink2);\n  --table-hover:#DADDE1;\n  --table-editHover:color-mix(in srgb, var(--acc) 8%, transparent);\n  --table-editBg:color-mix(in srgb, var(--acc) 13%, var(--card));\n  --card2-strong:#D8DBDF;\n  --pop:color-mix(in srgb, var(--card) 84%, transparent);\n  --shadow-1:0 1px 2px rgba(20,26,33,.08);\n  --shadow-2:0 4px 12px rgba(20,26,33,.10), 0 1px 3px rgba(20,26,33,.08);\n  --shadow-3:0 16px 40px rgba(20,26,33,.18), 0 3px 10px rgba(20,26,33,.10);\n  --shadow-lg:var(--shadow-3);\n  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);\n}\n/* ---- İkon sistemi: sayfa içi SVG sprite (internet/CDN gerektirmez) ---- */\n.ic{width:1.1em;height:1.1em;display:inline-block;vertical-align:-0.18em;flex-shrink:0;}\nhtml{scroll-behavior:auto;max-width:100%;overflow-x:hidden}\n/* Native <select> açılır listesi tarayıcı tarafından çizilir; `... 351071 more characters,
+    expected: /html\[data-rail="min"\] \.rail:is\(:hover,:focus-within\)\{width:var\(--rail-full-w\);[^}]*box-shadow:var\(--shadow-3\);transition-delay:\.18s;\}/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/layout-control-v1101.test.js:217:1
+✖ layout-control visual theme uses square corners throughout the modal (3.829421ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(radii.length>0)
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/layout-control-v1101.test.js:220:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/overview-global-flow-v20260926.test.js:35:1
+✖ Global Flow accurate world, working orb ve ortak detay çekmecesi ile bağlıdır (1.537578ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /thinking-orb-working\.js/. Input:
+  
+  '<!DOCTYPE html>\n' +
+    '<html lang="tr" data-ui-system="manifest" data-overview-motion="paused">\n' +
+    '<head>\n' +
+    '<meta charset="UTF-8">\n' +
+    '<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n' +
+    '<title>Buyer Log</title>\n' +
+    '<link rel="stylesheet" href="ui-tokens.css?v=__BL_ASSET_VERSION__">\n' +
+    '<script src="ui-appearance.js?v=__BL_ASSET_VERSION__"></script>\n' +
+    '<script>window.BL_APP_VERSION="__BL_CANONICAL_VERSION__";window.BL_DISPLAY_VERSION="__BL_DISPLAY_VERSION__";window.BL_ASSET_VERSION="__BL_ASSET_VERSION__";window.__BL_DOCUMENT_BOOT_AT=(window.performance&&performance.now)?performance.now():Date.now();</script>\n' +
+    '<link rel="stylesheet" href="buyerlog-guide.css?v=__BL_ASSET_VERSION__&rev=4">\n' +
+    '<link rel="stylesheet" href="release-notes.css?v=__BL_ASSET_VERSION__&rev=3">\n' +
+    '<script src="buyerlog-guide-data.js?v=__BL_ASSET_VERSION__&rev=2"></script>\n' +
+    '<script src="buyerlog-trivia-data.js?v=__BL_ASSET_VERSION__&rev=2"></script>\n' +
+    '<script src="buyerlog-trivia.js?v=__BL_ASSET_VERSION__&rev=3"></script>\n' +
+    '<script src="buyerlog-guide.js?v=__BL_ASSET_VERSION__&rev=3"></script>\n' +
+    '<link rel="stylesheet" href="plm-sync-guide.css?v=__BL_ASSET_VERSION__&rev=2">\n' +
+    '<script src="plm-sync-guide.js?v=__BL_ASSET_VERSION__&rev=2"></script>\n' +
+    '<script>\n' +
+    '(function(){\n' +
+    "  'use strict';\n" +
+    "  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,dismissed=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;\n" +
+    '  // The app shell, initial data and authenticated profile are hard startup gates.\n' +
+    '  // The active page projection is NOT a hard gate: Overview/CP/Orders may still be\n' +
+    '  // rebuilding after login and must never trap an authenticated user here.\n' +
+    '  var gates={core:false,data:false,ui:false,profile:false};\n' +
+    "  var hardGates=['core','data','profile'];\n" +
+    "  function guard(){var el=document.getElementById('blBootGuard');return el&&!el.dataset.leaving?el:null;}\n" +
+    '  function ensureGuard(){\n' +
+    '    if(finished||guard()||!document.body)return;\n' +
+    "    var el=document.createElement('div');el.id='blBootGuard';el.dataset.uiMigrated='startup';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','blBootTitle');el.tabIndex=-1;\n" +
+    `    el.innerHTML='<div class="blBootCard"><span class="blBootOrb" aria-hidden="true"></span><div id="blBootTitle" data-boot-message role="status" aria-live="polite">Buyer Log hazırlanıyor…</div></div>';\n` +
+    '    document.body.appendChild(el);\n' +
+    '    window.BLGuide?.mountStartup(el);\n' +
+    '    mountLanguageChooser(el);\n' +
+    '    Object.keys(gates).forEach(function(key){if(gates[key])window.BLGuide?.stage(key);});\n' +
+    '    el.focus({preventScroll:true});\n' +
+    '    // Readiness is expressed by stage labels; no decorative canvas animation.\n' +
+    '  }\n' +
+    '  function stopOrb(){if(orb){try{orb.stop();}catch(_){}orb=null;}}\n' +
+    '  function message(text,failed){\n' +
+    '    ensureGuard();var el=guard();if(!el)return;\n' +
+    "    var msg=el.querySelector('[data-boot-message]');if(msg)msg.textContent=text;\n" +
+    '    if(failed){\n' +
+    "      el.dataset.failed='1';stopOrb();\n" +
+    "      var card=el.querySelector('.blBootCard');\n" +
+    "      if(card&&!card.querySelector('[data-boot-retry]')){var b=document.createElement('button');b.type='button';b.dataset.bootRetry='1';b.textContent=english()?'Retry':'Tekrar dene';b.onclick=function(){try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}location.replace('/?boot='+Date.now());};card.appendChild(b);}\n" +
+    '    }\n' +
+    '  }\n' +
+    "  function english(){try{return typeof appLang!=='undefined'&&appLang==='en';}catch(_){return document.documentElement.lang==='en';}}\n" +
+    '  function syncBootLanguage(){\n' +
+    '    var el=guard();if(!el)return;\n' +
+    "    var active=english()?'en':'tr';\n" +
+    "    el.querySelectorAll('[data-boot-lang]').forEach(function(button){\n" +
+    '      var on=button.dataset.bootLang===active;\n' +
+    "      button.setAttribute('aria-pressed',String(on));\n" +
+    '      button.tabIndex=on?0:-1;\n' +
+    '    });\n' +
+    "    var chooser=el.querySelector('.blBootLanguage');\n" +
+    "    if(chooser)chooser.setAttribute('aria-label',active==='en'?'Language':'Dil');\n" +
+    '  }\n' +
+    '  function applyBootLanguage(next){\n' +
+    "    next=next==='en'?'en':'tr';\n" +
+    "    var before=english()?'en':'tr';\n" +
+    '    if(before!==next){\n' +
+    "      var canonical=document.getElementById('railLangBtn');\n" +
+    '      if(canonical){try{canonical.click();}catch(_){}}\n' +
+    '    }\n' +
+    "    if((english()?'en':'tr')!==next){\n" +
+    '      try{appLang=next;}catch(_){}\n' +
+    '      try{document.documentElement.lang=next;}catch(_){}\n' +
+    "      try{window.BLStorage?.setItem?.('lcw.lang.v1',next);}catch(_){}\n" +
+    '      try{window.BLI18n?.setLanguage?.(next);}catch(_){}\n' +
+    "      try{document.dispatchEvent(new CustomEvent('bl:language-changed',{detail:{language:next,source:'startup'}}));}catch(_){}\n" +
+    '    }else{\n' +
+    '      try{document.documentElement.lang=next;}catch(_){}\n' +
+    '      try{window.BLI18n?.setLanguage?.(next);}catch(_){}\n' +
+    '    }\n' +
+    '    try{window.BLGuide?.refreshLanguage?.();}catch(_){}\n' +
+    '    syncBootLanguage();\n' +
+    '  }\n' +
+    '  function mountLanguageChooser(root){\n' +
+    "    var brand=root&&root.querySelector('.blBootBrand');\n" +
+    "    if(!brand||brand.querySelector('.blBootLanguage'))return;\n" +
+    "    var chooser=document.createElement('div');chooser.className='blBootLanguage';chooser.setAttribute('role','group');chooser.setAttribute('data-no-i18n','');\n" +
+    `    chooser.innerHTML='<button type="button" data-boot-lang="tr" aria-label="Türkçe">TR</button><i aria-hidden="true">/</i><button type="button" data-boot-lang="en" aria-label="English">EN</button>';\n` +
+    "    chooser.addEventListener('click',function(ev){var button=ev.target.closest?.('[data-boot-lang]');if(button)applyBootLanguage(button.dataset.bootLang);});\n" +
+    "    chooser.addEventListener('keydown',function(ev){\n" +
+    "      if(ev.key!=='ArrowLeft'&&ev.key!=='ArrowRight')return;\n" +
+    `      ev.preventDefault();var next=(english()?'en':'tr')==='tr'?'en':'tr';applyBootLanguage(next);chooser.querySelector('[data-boot-lang="'+next+'"]')?.focus();\n` +
+    '    });\n' +
+    '    brand.appendChild(chooser);syncBootLanguage();\n' +
+    '  }\n' +
+    '  function ready(stage){\n' +
+    '    if(finished)return;\n' +
+    '    if(stage&&Object.prototype.hasOwnProperty.call(gates,stage))gates[stage]=true;else gates.core=true;\n' +
+    "    window.BLGuide?.stage(stage||'core');\n" +
+    '    if(!hardGates.every(function(key){return gates[key];}))return;\n' +
+    '    // "Ekran" means the interactive application shell is available. The active\n' +
+    "    // page's heavy projection continues behind the shell with its own loading UI.\n" +
+    "    if(!gates.ui){gates.ui=true;window.BLGuide?.stage('ui');}\n" +
+    '    finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);\n' +
+    '    try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}\n' +
+    '    stopOrb();var el=guard();if(!el){dismiss();return;}\n' +
+    '    // Ready no longer yanks the curtain away mid-sentence: the user continues explicitly.\n' +
+    "    el.dataset.ready='1';delete el.dataset.failed;el.querySelector('[data-boot-retry]')?.remove();\n" +
+    "    var msg=el.querySelector('[data-boot-message]');if(msg)msg.textContent=english()?'Buyer Log is ready':'Buyer Log hazır';\n" +
+    "    var slot=el.querySelector('[data-boot-continue-slot]')||el.querySelector('.blBootCard');\n" +
+    "    if(slot&&!el.querySelector('[data-boot-continue]')){var b=document.createElement('button');b.type='button';b.className='blBootContinue';b.dataset.bootContinue='1';b.textContent=(english()?'Continue to Buyer Log':'Buyer Log\\'a devam et')+' →';b.onclick=dismiss;slot.appendChild(b);try{b.focus({preventScroll:true});}catch(_){}}\n" +
+    '    window.BLGuide?.refreshStartup?.();\n' +
+    "    window.dispatchEvent(new CustomEvent('bl:startup-ready'));\n" +
+    '  }\n' +
+    '  function dismiss(){\n' +
+    '    if(dismissed)return;dismissed=true;\n' +
+    '    var el=guard();var refocus=el&&el.contains(document.activeElement);\n' +
+    '    if(el){\n' +
+    "      el.dataset.leaving='1';el.setAttribute('aria-hidden','true');\n" +
+    "      var reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){}\n" +
+    '      if(reduce)el.remove();else setTimeout(function(){el.remove();},340);\n' +
+    '    }\n' +
+    "    window.dispatchEvent(new CustomEvent('bl:startup-complete'));\n" +
+    "    if(refocus)document.getElementById('corporateLcwAiBtn')?.focus({preventScroll:true});\n" +
+    '  }\n' +
+    '  async function recover(reason){\n' +
+    "    if(finished||recovering)return;recovering=true;lastFailure=reason||lastFailure||'startup-timeout';\n" +
+    "    message('Açılış tamamlanamadı, bağlantı yeniden kontrol ediliyor…',false);\n" +
+    '    var count=0;try{count=Number(sessionStorage.getItem(RETRY_KEY)||0)||0;}catch(_){}\n' +
+    '    try{\n' +
+    "      var res=await fetch('/api/status?boot='+Date.now(),{cache:'no-store',credentials:'same-origin',signal:AbortSignal.timeout(10000)});\n" +
+    '      var data=await res.json();\n' +
+    '      if(finished)return;\n' +
+    "      if(res.ok&&data&&data.app==='Buyer Log'&&count<1){\n" +
+    '        try{sessionStorage.setItem(RETRY_KEY,String(count+1));}catch(_){}\n' +
+    "        location.replace('/?boot='+Date.now());return;\n" +
+    '      }\n' +
+    '    }catch(_){}\n' +
+    '    if(finished)return;recovering=false;\n' +
+    "    message(english()?'Buyer Log could not finish preparing. Press Retry.':'Buyer Log hazırlığı tamamlanamadı. Yeniden denemek için düğmeye basın.',true);\n" +
+    "    try{console.error('Buyer Log boot recovery failed:',lastFailure);}catch(_){}\n" +
+    '  }\n' +
+    "  window.addEventListener('error',function(ev){try{\n" +
+    '    if(!ev||!ev.message)return;\n' +
+    "    var box=document.getElementById('blErrBox');\n" +
+    "    if(!box){box=document.createElement('div');box.id='blErrBox';box.className='uiBootError';document.documentElement.appendChild(box);}\n" +
+    "    box.textContent+=(english()?'JS ERROR: ':'JS HATA: ')+ev.message+' @ '+(ev.filename||'').split('/').pop()+':'+ev.lineno+'\\n';\n" +
+    '  }catch(_){}});\n' +
+    "  window.addEventListener('unhandledrejection',function(ev){try{\n" +
+    "    var box=document.getElementById('blErrBox');\n" +
+    "    if(!box){box=document.createElement('div');box.id='blErrBox';box.className='uiBootError';document.documentElement.appendChild(box);}\n" +
+    "    box.textContent+=(english()?'PROMISE ERROR: ':'PROMISE HATA: ')+String(ev.reason&&ev.reason.message||ev.reason)+'\\n';\n" +
+    '  }catch(_){}});\n' +
+    "  window.addEventListener('bl:user-access-applied',function(ev){\n" +
+    "    var p=ev.detail,avatar=document.getElementById('currentUserInitials'),badge=document.getElementById('accessModeBadge');\n" +
+    "    if(p&&(p.id||p.username)&&(p.displayName||p.username)&&avatar&&badge&&badge.textContent.trim())ready('profi"... 213990 more characters
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/overview-global-flow-v20260926.test.js:35:157)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: `<!DOCTYPE html>\n<html lang="tr" data-ui-system="manifest" data-overview-motion="paused">\n<head>\n<meta charset="UTF-8">\n<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">\n<title>Buyer Log</title>\n<link rel="stylesheet" href="ui-tokens.css?v=__BL_ASSET_VERSION__">\n<script src="ui-appearance.js?v=__BL_ASSET_VERSION__"></script>\n<script>window.BL_APP_VERSION="__BL_CANONICAL_VERSION__";window.BL_DISPLAY_VERSION="__BL_DISPLAY_VERSION__";window.BL_ASSET_VERSION="__BL_ASSET_VERSION__";window.__BL_DOCUMENT_BOOT_AT=(window.performance&&performance.now)?performance.now():Date.now();</script>\n<link rel="stylesheet" href="buyerlog-guide.css?v=__BL_ASSET_VERSION__&rev=4">\n<link rel="stylesheet" href="release-notes.css?v=__BL_ASSET_VERSION__&rev=3">\n<script src="buyerlog-guide-data.js?v=__BL_ASSET_VERSION__&rev=2"></script>\n<script src="buyerlog-trivia-data.js?v=__BL_ASSET_VERSION__&rev=2"></script>\n<script src="buyerlog-trivia.js?v=__BL_ASSET_VERSION__&rev=3"></script>\n<script src="buyerlog-guide.js?v=__BL_ASSET_VERSION__&rev=3"></script>\n<link rel="stylesheet" href="plm-sync-guide.css?v=__BL_ASSET_VERSION__&rev=2">\n<script src="plm-sync-guide.js?v=__BL_ASSET_VERSION__&rev=2"></script>\n<script>\n(function(){\n  'use strict';\n  var RETRY_KEY='buyerlog.bootRetry.v__BL_DISPLAY_VERSION__',finished=false,dismissed=false,timer=null,lastFailure='',orb=null,recovering=false,slowTimer=null;\n  // The app shell, initial data and authenticated profile are hard startup gates.\n  // The active page projection is NOT a hard gate: Overview/CP/Orders may still be\n  // rebuilding after login and must never trap an authenticated user here.\n  var gates={core:false,data:false,ui:false,profile:false};\n  var hardGates=['core','data','profile'];\n  function guard(){var el=document.getElementById('blBootGuard');return el&&!el.dataset.leaving?el:null;}\n  function ensureGuard(){\n    if(finished||guard()||!document.body)return;\n    var el=document.createElement('div');el.id='blBootGuard';el.dataset.uiMigrated='startup';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-labelledby','blBootTitle');el.tabIndex=-1;\n    el.innerHTML='<div class="blBootCard"><span class="blBootOrb" aria-hidden="true"></span><div id="blBootTitle" data-boot-message role="status" aria-live="polite">Buyer Log hazırlanıyor…</div></div>';\n    document.body.appendChild(el);\n    window.BLGuide?.mountStartup(el);\n    mountLanguageChooser(el);\n    Object.keys(gates).forEach(function(key){if(gates[key])window.BLGuide?.stage(key);});\n    el.focus({preventScroll:true});\n    // Readiness is expressed by stage labels; no decorative canvas animation.\n  }\n  function stopOrb(){if(orb){try{orb.stop();}catch(_){}orb=null;}}\n  function message(text,failed){\n    ensureGuard();var el=guard();if(!el)return;\n    var msg=el.querySelector('[data-boot-message]');if(msg)msg.textContent=text;\n    if(failed){\n      el.dataset.failed='1';stopOrb();\n      var card=el.querySelector('.blBootCard');\n      if(card&&!card.querySelector('[data-boot-retry]')){var b=document.createElement('button');b.type='button';b.dataset.bootRetry='1';b.textContent=english()?'Retry':'Tekrar dene';b.onclick=function(){try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}location.replace('/?boot='+Date.now());};card.appendChild(b);}\n    }\n  }\n  function english(){try{return typeof appLang!=='undefined'&&appLang==='en';}catch(_){return document.documentElement.lang==='en';}}\n  function syncBootLanguage(){\n    var el=guard();if(!el)return;\n    var active=english()?'en':'tr';\n    el.querySelectorAll('[data-boot-lang]').forEach(function(button){\n      var on=button.dataset.bootLang===active;\n      button.setAttribute('aria-pressed',String(on));\n      button.tabIndex=on?0:-1;\n    });\n    var chooser=el.querySelector('.blBootLanguage');\n    if(chooser)chooser.setAttribute('aria-label',active==='en'?'Language':'Dil');\n  }\n  function applyBootLanguage(next){\n    next=next==='en'?'en':'tr';\n    var before=english()?'en':'tr';\n    if(before!==next){\n      var canonical=document.getElementById('railLangBtn');\n      if(canonical){try{canonical.click();}catch(_){}}\n    }\n    if((english()?'en':'tr')!==next){\n      try{appLang=next;}catch(_){}\n      try{document.documentElement.lang=next;}catch(_){}\n      try{window.BLStorage?.setItem?.('lcw.lang.v1',next);}catch(_){}\n      try{window.BLI18n?.setLanguage?.(next);}catch(_){}\n      try{document.dispatchEvent(new CustomEvent('bl:language-changed',{detail:{language:next,source:'startup'}}));}catch(_){}\n    }else{\n      try{document.documentElement.lang=next;}catch(_){}\n      try{window.BLI18n?.setLanguage?.(next);}catch(_){}\n    }\n    try{window.BLGuide?.refreshLanguage?.();}catch(_){}\n    syncBootLanguage();\n  }\n  function mountLanguageChooser(root){\n    var brand=root&&root.querySelector('.blBootBrand');\n    if(!brand||brand.querySelector('.blBootLanguage'))return;\n    var chooser=document.createElement('div');chooser.className='blBootLanguage';chooser.setAttribute('role','group');chooser.setAttribute('data-no-i18n','');\n    chooser.innerHTML='<button type="button" data-boot-lang="tr" aria-label="Türkçe">TR</button><i aria-hidden="true">/</i><button type="button" data-boot-lang="en" aria-label="English">EN</button>';\n    chooser.addEventListener('click',function(ev){var button=ev.target.closest?.('[data-boot-lang]');if(button)applyBootLanguage(button.dataset.bootLang);});\n    chooser.addEventListener('keydown',function(ev){\n      if(ev.key!=='ArrowLeft'&&ev.key!=='ArrowRight')return;\n      ev.preventDefault();var next=(english()?'en':'tr')==='tr'?'en':'tr';applyBootLanguage(next);chooser.querySelector('[data-boot-lang="'+next+'"]')?.focus();\n    });\n    brand.appendChild(chooser);syncBootLanguage();\n  }\n  function ready(stage){\n    if(finished)return;\n    if(stage&&Object.prototype.hasOwnProperty.call(gates,stage))gates[stage]=true;else gates.core=true;\n    window.BLGuide?.stage(stage||'core');\n    if(!hardGates.every(function(key){return gates[key];}))return;\n    // "Ekran" means the interactive application shell is available. The active\n    // page's heavy projection continues behind the shell with its own loading UI.\n    if(!gates.ui){gates.ui=true;window.BLGuide?.stage('ui');}\n    finished=true;if(timer)clearTimeout(timer);if(slowTimer)clearTimeout(slowTimer);\n    try{sessionStorage.removeItem(RETRY_KEY);}catch(_){}\n    stopOrb();var el=guard();if(!el){dismiss();return;}\n    // Ready no longer yanks the curtain away mid-sentence: the user continues explicitly.\n    el.dataset.ready='1';delete el.dataset.failed;el.querySelector('[data-boot-retry]')?.remove();\n    var msg=el.querySelector('[data-boot-message]');if(msg)msg.textContent=english()?'Buyer Log is ready':'Buyer Log hazır';\n    var slot=el.querySelector('[data-boot-continue-slot]')||el.querySelector('.blBootCard');\n    if(slot&&!el.querySelector('[data-boot-continue]')){var b=document.createElement('button');b.type='button';b.className='blBootContinue';b.dataset.bootContinue='1';b.textContent=(english()?'Continue to Buyer Log':'Buyer Log\\'a devam et')+' →';b.onclick=dismiss;slot.appendChild(b);try{b.focus({preventScroll:true});}catch(_){}}\n    window.BLGuide?.refreshStartup?.();\n    window.dispatchEvent(new CustomEvent('bl:startup-ready'));\n  }\n  function dismiss(){\n    if(dismissed)return;dismissed=true;\n    var el=guard();var refocus=el&&el.contains(document.activeElement);\n    if(el){\n      el.dataset.leaving='1';el.setAttribute('aria-hidden','true');\n      var reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches;}catch(_){}\n      if(reduce)el.remove();else setTimeout(function(){el.remove();},340);\n    }\n    window.dispatchEvent(new CustomEvent('bl:startup-complete'));\n    if(refocus)document.getElementById('corporateLcwAiBtn')?.focus({preventScroll:true});\n  }\n  async function recover(reason){\n    if(finished||recovering)return;recovering=true;lastFailure=reason||lastFailure||'startup-timeout';\n    message('Açılış tamamlanamadı, bağlantı yeniden kontrol ediliyor…',false);\n    var count=0;try{count=Number(sessionStorage.getItem(RETRY_KEY)||0)||0;}catch(_){}\n    try{\n      var res=await fetch('/api/status?boot='+Date.now(),{cache:'no-store',credentials:'same-origin',signal:AbortSignal.timeout(10000)});\n      var data=await res.json();\n      if(finished)return;\n      if(res.ok&&data&&data.app==='Buyer Log'&&count<1){\n        try{sessionStorage.setItem(RETRY_KEY,String(count+1));}catch(_){}\n        location.replace('/?boot='+Date.now());return;\n      }\n    }catch(_){}\n    if(finished)return;recovering=false;\n    message(english()?'Buyer Log could not finish preparing. Press Retry.':'Buyer Log hazırlığı tamamlanamadı. Yeniden denemek için düğmeye basın.',true);\n    try{console.error('Buyer Log boot recovery failed:',lastFailure);}catch(_){}\n  }\n  window.addEventListener('error',function(ev){try{\n    if(!ev||!ev.message)return;\n    var box=document.getElementById('blErrBox');\n    if(!box){box=document.createElement('div');box.id='blErrBox';box.className='uiBootError';document.documentElement.appendChild(box);}\n    box.textContent+=(english()?'JS ERROR: ':'JS HATA: ')+ev.message+' @ '+(ev.filename||'').split('/').pop()+':'+ev.lineno+'\\n';\n  }catch(_){}});\n  window.addEventListener('unhandledrejection',function(ev){try{\n    var box=document.getElementById('blErrBox');\n    if(!box){box=document.createElement('div');box.id='blErrBox';box.className='uiBootError';document.documentElement.appendChild(box);}\n    box.textContent+=(english()?'PROMISE ERROR: ':'PROMISE HATA: ')+String(ev.reason&&ev.reason.message||ev.reason)+'\\n';\n  }catch(_){}});\n  window.addEventListener('bl:user-access-applied',function(ev){\n    var p=ev.detail,avatar=document.getElementById('currentUserInitials'),badge=document.getElementById('accessModeBadge');\n    if(p&&(p.id||p.username)&&(p.displayName||p.username)&&avatar&&badge&&badge.textContent.trim())ready('profi`... 213990 more characters,
+    expected: /thinking-orb-working\.js/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at resources/app/tests/table-search-help-v20260925.test.js:40:1
+✖ search help uses a compact themed fixed popover (0.899136ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /border-radius:var\(--r-xs\)/. Input:
+  
+  '.tableActionToolbar>input[type=search].tableSearchInputExpanded{\n' +
+    '  flex:0 0 var(--table-search-hover-width,var(--tb-search-width,230px))!important;\n' +
+    '  width:var(--table-search-hover-width,var(--tb-search-width,230px))!important;\n' +
+    '  max-width:var(--table-search-hover-width,var(--tb-search-width,230px))!important;\n' +
+    '  position:relative;\n' +
+    '}\n' +
+    '\n' +
+    '.tableSearchHelpButton{\n' +
+    '  flex:0 0 24px;\n' +
+    '  width:24px;\n' +
+    '  min-width:24px;\n' +
+    '  height:24px;\n' +
+    '  margin-left:-2px;\n' +
+    '  padding:0;\n' +
+    '  display:inline-flex;\n' +
+    '  align-items:center;\n' +
+    '  justify-content:center;\n' +
+    '  cursor:pointer;\n' +
+    '}\n' +
+    '.tableSearchHelpButton:active{transform:scale(.96);}\n' +
+    '.tableSearchHelpPopover{\n' +
+    '  position:fixed;\n' +
+    '  width:min(360px,calc(100vw - 16px));\n' +
+    '  padding:12px;\n' +
+    '}\n' +
+    '.tableSearchHelpHead{\n' +
+    '  display:flex;\n' +
+    '  align-items:center;\n' +
+    '  justify-content:space-between;\n' +
+    '  gap:10px;\n' +
+    '  margin-bottom:5px;\n' +
+    '}\n' +
+    '.tableSearchHelpClose{\n' +
+    '  width:24px;\n' +
+    '  height:24px;\n' +
+    '  padding:0;\n' +
+    '  display:inline-flex;\n' +
+    '  align-items:center;\n' +
+    '  justify-content:center;\n' +
+    '  cursor:pointer;\n' +
+    '}\n' +
+    '.tableSearchHelpIntro{margin:0 0 9px;}\n' +
+    '.tableSearchHelpExamples{display:grid;gap:6px;}\n' +
+    '.tableSearchHelpExample{\n' +
+    '  display:grid;\n' +
+    '  grid-template-columns:minmax(112px,auto) 1fr;\n' +
+    '  gap:8px;\n' +
+    '  align-items:start;\n' +
+    '}\n' +
+    '.tableSearchHelpExample code{\n' +
+    '  min-width:0;\n' +
+    '  padding:3px 6px;\n' +
+    '  white-space:nowrap;\n' +
+    '}\n' +
+    '.tableSearchHelpExcel{\n' +
+    '  display:grid;\n' +
+    '  gap:3px;\n' +
+    '  margin-top:9px;\n' +
+    '  padding-top:9px;\n' +
+    '}\n' +
+    '.tableSearchHelpNote{\n' +
+    '  margin-top:8px;\n' +
+    '  padding:7px 8px;\n' +
+    '}\n' +
+    '@media(max-width:900px){\n' +
+    '  .tableSearchHelpButton{flex:0 0 24px;}\n' +
+    '  .tableSearchHelpPopover{width:min(340px,calc(100vw - 16px));}\n' +
+    '  .tableSearchHelpExample{grid-template-columns:1fr;}\n' +
+    '  .tableSearchHelpExample code{width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;}\n' +
+    '}\n'
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/table-search-help-v20260925.test.js:43:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:960:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '.tableActionToolbar>input[type=search].tableSearchInputExpanded{\n  flex:0 0 var(--table-search-hover-width,var(--tb-search-width,230px))!important;\n  width:var(--table-search-hover-width,var(--tb-search-width,230px))!important;\n  max-width:var(--table-search-hover-width,var(--tb-search-width,230px))!important;\n  position:relative;\n}\n\n.tableSearchHelpButton{\n  flex:0 0 24px;\n  width:24px;\n  min-width:24px;\n  height:24px;\n  margin-left:-2px;\n  padding:0;\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  cursor:pointer;\n}\n.tableSearchHelpButton:active{transform:scale(.96);}\n.tableSearchHelpPopover{\n  position:fixed;\n  width:min(360px,calc(100vw - 16px));\n  padding:12px;\n}\n.tableSearchHelpHead{\n  display:flex;\n  align-items:center;\n  justify-content:space-between;\n  gap:10px;\n  margin-bottom:5px;\n}\n.tableSearchHelpClose{\n  width:24px;\n  height:24px;\n  padding:0;\n  display:inline-flex;\n  align-items:center;\n  justify-content:center;\n  cursor:pointer;\n}\n.tableSearchHelpIntro{margin:0 0 9px;}\n.tableSearchHelpExamples{display:grid;gap:6px;}\n.tableSearchHelpExample{\n  display:grid;\n  grid-template-columns:minmax(112px,auto) 1fr;\n  gap:8px;\n  align-items:start;\n}\n.tableSearchHelpExample code{\n  min-width:0;\n  padding:3px 6px;\n  white-space:nowrap;\n}\n.tableSearchHelpExcel{\n  display:grid;\n  gap:3px;\n  margin-top:9px;\n  padding-top:9px;\n}\n.tableSearchHelpNote{\n  margin-top:8px;\n  padding:7px 8px;\n}\n@media(max-width:900px){\n  .tableSearchHelpButton{flex:0 0 24px;}\n  .tableSearchHelpPopover{width:min(340px,calc(100vw - 16px));}\n  .tableSearchHelpExample{grid-template-columns:1fr;}\n  .tableSearchHelpExample code{width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis;}\n}\n',
+    expected: /border-radius:var\(--r-xs\)/,
+    operator: 'match',
+    diff: 'simple'
+  }

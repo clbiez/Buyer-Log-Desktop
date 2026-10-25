@@ -22,13 +22,22 @@ if(group==='operations'){
  owned=/(?:[.#](?:auto\w*|automation\w*|ao[A-Z]\w*|dm[A-Z]\w*|dataMgmt\w*|blDataMaint\w*|source[A-Z]\w*|sourceTables|sourceTable|um[A-Z]\w*|lcwai\w*|blGuide\w*|blTrivia\w*|blRn\w*|plmGuide\w*|plmSyncGuide\w*|verHist\w*|versionHistory\w*|notification\w*|syncStatus\w*|uiState\w*|uiFeedback\w*|blOrb\w*|toast\w*|view-source|view-automations|view-lcwai))\b/;
  Object.assign(alias,{'shadow-lg':'shadow-overlay',tone:'series-color'});
 }
+if(group==='remaining'){
+ modules=['command-palette.css','dual-week-datepicker.css','excel-import.css','excel-templates.css','layout-control.css','overview-global-flow.css','overview-home.css','table-search-help.css'];
+ // Finish every class/id-owned UI rule. Root palette definitions and plain
+ // HTML defaults are consolidated in Phase 3; printed exports remain frozen.
+ owned=/[.#]/;
+ Object.assign(alias,{'shadow-lg':'shadow-overlay',tone:'series-color','table-link':'accent','table-editHover':'row-hover','hair-2':'group-divider',imp:'series-color','ov-category':'series-color','status-color':'series-color'});
+}
 const appearance=/^(?:color|accent-color|background(?:-.*)?|border(?!-collapse|-spacing)(?:-.*)?|box-shadow|text-shadow|font(?:-.*)?|letter-spacing|line-height|text-transform|text-decoration|fill|stroke(?:-.*)?|outline(?:-.*)?|animation(?:-.*)?|transition(?:-.*)?|filter|backdrop-filter|(?:-webkit-)?mask(?:-.*)?|z-index)$/;
 const source=f=>cp.execFileSync('git',['show',base+':resources/app/public/'+f],{encoding:'utf8'});
 const components=postcss.root(),stats=[];
 function mapValue(value){return value.replace(/var\(--([\w-]+)/g,(m,k)=>alias[k]?'var(--ui-'+alias[k]:m);}
 function convert(d,selector){
  const p=d.prop;let v=mapValue(d.value);
- if(p.startsWith('--')){if(['--seg','--tile','--series-color','--ap','--tone'].includes(p))return {prop:'--ui-'+alias[p.slice(2)],value:v};if(alias[p.slice(2)])return null;return {prop:p,value:v};}
+ if(p==='background-size'&&selector==='.ovHome.isEditing')return null;
+ if(p==='background-image'&&/gradient\(/.test(v))return {prop:p,value:'none'};
+ if(p.startsWith('--')){if(['--seg','--tile','--series-color','--ap','--tone','--imp','--ov-category','--status-color'].includes(p))return {prop:'--ui-'+alias[p.slice(2)],value:v};if(alias[p.slice(2)])return null;return {prop:p,value:v};}
  if(/radius$/.test(p))v='var(--ui-radius)';
  else if(/^border/.test(p)){
   // Borders are supplied once by the common dense-table/focus contracts.
@@ -38,7 +47,7 @@ function convert(d,selector){
  else if(p==='box-shadow')v=/:focus|blGrid(?:RangeEdge|ActiveCell)/.test(selector)?'none':/(?:Panel|Drawer|Dialog|Menu|Popover|Tip)(?:\b|[.#:\s>])/.test(selector)?'var(--ui-shadow-overlay)':'none';
  else if(/mask/.test(p)||p==='text-shadow'||p==='filter'||p==='backdrop-filter'||p.startsWith('animation'))v='none';
  else if(p.startsWith('transition')){if(p!=='transition')return null;v='transform var(--ui-motion-fast),opacity var(--ui-motion-fast)';}
- else if(p==='z-index'){const n=Number(v);if(Number.isFinite(n))v='var(--ui-z-'+(n<0?'below':n===0?'base':n<=10?'data':n<=100?'sticky':n<10000?'popover':n<60000?'modal':'tooltip')+')';}
+ else if(p==='z-index'){const n=v==='auto'?0:Number(v);if(Number.isFinite(n))v='var(--ui-z-'+(n<0?'below':n===0?'base':n<=10?'data':n<=100?'sticky':n<10000?'popover':n<60000?'modal':'tooltip')+')';}
  else if(p==='background'||p==='background-image'){
   if(/gradient\(/.test(v))v=/Track|Grid/.test(selector)?'var(--ui-surface-soft)':'var(--ui-surface)';
   if(/^rgba?\(/.test(v))v=/Backdrop|Scrim|Overlay/.test(selector)?'var(--ui-scrim)':'var(--ui-surface-soft)';
@@ -53,6 +62,7 @@ function convert(d,selector){
  if(/#[0-9a-f]{3,8}\b/i.test(v)){
   v=v.replace(/#[0-9a-f]{3,8}\b/gi,hex=>/^(#fff|#ffffff)$/i.test(hex)?'var(--ui-surface)':/^(#000|#000000)$/i.test(hex)?'var(--ui-text)':'var(--ui-accent)');
  }
+ v=v.replace(/rgba\(0,0,0,\.45\)/g,'var(--ui-scrim)');
  if(p==='color')v=v.replace(/var\(--ui-(danger|success|warning)-bg\)/g,'var(--ui-$1)');
  if(p==='outline'&&v==='none')return null; // native/shared visible focus remains
  return {prop:p,value:v};
@@ -66,7 +76,7 @@ function migrate(file,all){
   const other=selectors.filter(s=>!selected.includes(s));
   const layout=rule.clone({selector:selected.join(',')}),visual=postcss.rule({selector:selected.map(s=>/^html\b/.test(s)?s.replace(/^html\b/,'html[data-ui-system="manifest"]'):s.startsWith(':root')?s.replace(':root',':root[data-ui-system="manifest"]'):'html[data-ui-system="manifest"] '+s).join(',')});layout.removeAll();
   for(const d of rule.nodes){if(d.type!=='decl'){layout.append(d.clone());continue;}
-   const move=appearance.test(d.prop)||group==='operations'&&d.prop.startsWith('--ui-feedback-')||d.prop.startsWith('--')&&(/(?:blv-|bpa-)/.test(d.prop)||/color|var\(--(?:seg|tile|blv-|bpa-)/.test(d.value)||['--seg','--tile','--ap','--tone'].includes(d.prop));
+   const move=appearance.test(d.prop)||group==='operations'&&d.prop.startsWith('--ui-feedback-')||d.prop.startsWith('--')&&(/(?:blv-|bpa-)/.test(d.prop)||/color|var\(--(?:seg|tile|blv-|bpa-)/.test(d.value)||['--seg','--tile','--ap','--tone','--imp','--ov-category','--status-color'].includes(d.prop));
    if(move){const next=convert(d,rule.selector);if(next){const n=d.clone(next);n.important=/^(?:border|background|color|font|box-shadow|animation|filter)/.test(n.prop);visual.append(n);}count.declarations++;}
    else {const n=d.clone();n.value=mapValue(n.value);layout.append(n);}
   }

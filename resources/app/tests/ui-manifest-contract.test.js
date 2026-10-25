@@ -136,3 +136,21 @@ test('Operations module CSS owns layout only; loading avoids decorative canvas',
  for(const file of ['automations.js','lcwai-assistant.js','user-management.js','plm-sync-guide.js'])assert.match(read(file),/BLLayerSystem\?\.openDialog/);
  assert.match(read('lcwai-chat.js'),/lcwaiMsg is-user[^]*?lcwaiMsgWho/);
 });
+
+test('Remaining module CSS owns layout only; nested output forms use the shared dialog stack',()=>{
+ const modules=['command-palette.css','dual-week-datepicker.css','excel-import.css','excel-templates.css','layout-control.css','overview-global-flow.css','overview-home.css','table-search-help.css'];
+ const failures=[];
+ for(const file of modules)for(const d of declarations(read(file))){
+  if(/^(?:color|accent-color|background(?:-.*)?|border(?!-collapse|-spacing)(?:-.*)?|box-shadow|text-shadow|font(?:-.*)?|letter-spacing|line-height|text-transform|fill|stroke(?:-.*)?|outline(?:-.*)?|animation(?:-.*)?|transition(?:-.*)?|filter|backdrop-filter|(?:-webkit-)?mask(?:-.*)?|z-index)$/.test(d.prop))failures.push({file,...d});
+  if(/var\(--(?:acc|card|ink|line|muted|fs-|sans|head|mono|r-)/.test(d.value))failures.push({file,...d});
+ }
+ assert.deepEqual(failures,[]);
+ assert.match(read('index.html'),/<body[^>]*data-ui-migrated="manifest"/);
+ for(const file of ['excel-templates.js','layout-control.js','overview-home.js'])assert.match(read(file),/BLLayerSystem\?\.openDialog/);
+ const editor=read('lcwai-output-editor.js');
+ assert.match(editor,/host\.setAttribute\('role','dialog'\)/);
+ assert.match(editor,/BLLayerSystem\?\.openDialog\(host,\{onClose:closeDialog\}\)/);
+ assert.match(editor,/function closeDialog\(\)[^\n]*BLLayerSystem\?\.closeDialog\(el\)/);
+ assert.match(editor,/host\.setAttribute\('aria-label',title\)/);
+ assert.doesNotMatch(editor,/dialog\.releaseKeyboard/);
+});

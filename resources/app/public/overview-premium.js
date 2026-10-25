@@ -8,7 +8,7 @@
   'use strict';
   const DAY=86400000;
   const PRIORITIES=['CRITICAL','ACTION_TODAY','ACTION_THIS_WEEK','WATCH','ON_TRACK'];
-  const CATEGORIES=['var(--chart-1)','var(--chart-2)','var(--chart-3)','var(--chart-4)','var(--chart-5)','var(--chart-6)','var(--chart-7)','var(--chart-8)'];
+  const CATEGORIES=['var(--ui-chart-1)','var(--ui-chart-2)','var(--ui-chart-3)','var(--ui-chart-4)','var(--ui-chart-5)','var(--ui-chart-6)','var(--ui-chart-7)','var(--ui-chart-8)'];
   const RISK=new Set(PRIORITIES.slice(0,3));
   const finite=value=>value!==null&&value!==undefined&&value!==''&&Number.isFinite(Number(value));
   const number=value=>finite(value)?Number(value):0;
@@ -139,7 +139,7 @@
     draw(node,head(L('Koleksiyon Vitrini','Collection Showcase'),`<select data-ov-month data-ov-focus="collection-month" aria-label="${esc(L('Koleksiyon ayı','Collection month'))}">${options}</select>`)+
       `<div class="ovShowcaseProducts">${bucket.models.slice(0,6).map((m,i)=>`<button type="button" data-ov-model="${i}" data-ov-focus="model-${i}" title="${esc(m.label)}" aria-label="${esc(m.label)}">${m.image?`<img src="${esc(m.image)}" alt="${esc(m.label)}" loading="lazy" decoding="async">`:icon('hanger')}<span>${esc(m.label)}</span></button>`).join('')}</div>`+
       `<button type="button" class="ovShowcaseTotal" data-ov-collection data-ov-focus="collection-total"><b>${fmt(bucket.modelCount)}</b><span>${L('model','models')}</span><strong>${fmt(bucket.quantity)}</strong><span>${L('adet','units')}</span>${icon('chevron-right')}</button>`+
-      `<div class="ovShowcaseStatus">${bucket.statuses.map((s,i)=>`<button type="button" data-ov-status="${i}" data-ov-focus="status-${i}" style="flex:${s.optionCount};--ov-category:${CATEGORIES[i%8]}" title="${esc(`${collection.statusLabel(s.status)} · ${Math.round(s.optionCount/total*100)}%`)}" aria-label="${esc(`${collection.statusLabel(s.status)} · ${s.optionCount} ${L('opsiyon','options')}`)}"></button>`).join('')}</div>`);
+      `<div class="ovShowcaseStatus">${bucket.statuses.map((s,i)=>`<button type="button" data-ov-status="${i}" data-ov-focus="status-${i}" style="flex:${s.optionCount};--ui-series-color:${CATEGORIES[i%8]}" title="${esc(`${collection.statusLabel(s.status)} · ${Math.round(s.optionCount/total*100)}%`)}" aria-label="${esc(`${collection.statusLabel(s.status)} · ${s.optionCount} ${L('opsiyon','options')}`)}"></button>`).join('')}</div>`);
   }
   function openRows(items,title){if(!model)return;const rows=(items||[]).map(item=>item.sourceRow).filter(Boolean);root.BLCpAssistant?.openOverviewRows?.(rows,title);}
   function render(){if(doc.body.dataset.activeTab!=='overview')return;renderPulse();renderHorizon();renderCollection();for(const [id,input] of metricViews)renderMetricChart(id,input);}

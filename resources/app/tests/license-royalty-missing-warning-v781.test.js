@@ -193,7 +193,7 @@ test('Koleksiyon royalty hücresi uyarıyı gösteriyor', () => {
   assert.match(block, /⚠/, 'görsel uyarı işareti yok');
   /* Renk INLINE style ile veriliyor; bir CSS sınıfı onu ezemezdi, bu yüzden
      uyarı rengi de inline koşulda olmalı. */
-  assert.match(block, /ruleMissing\?'var\(--orange\)'/, 'uyarı rengi inline koşulda değil');
+  assert.match(block, /ruleMissing\?'var\(--ui-warning\)'/, 'uyarı rengi inline koşulda değil');
 });
 
 test('CP/Siparişler Supp. FOB hücresi uyarıyı gösteriyor', () => {
@@ -259,7 +259,7 @@ test('royalty hücresi şablonu uyarı durumunda ⚠ ve turuncu rengi BASIYOR', 
   );
   assert.match(html, /class="num kolRuleReadonly kolRuleMissing"/);
   assert.match(html, /⚠/);
-  assert.match(html, /color:var\(--orange\)/);
+  assert.match(html, /color:var\(--ui-warning\)/);
   assert.match(html, /title="Kural yok"/);
 });
 
@@ -273,7 +273,7 @@ test('royalty hücresi şablonu normal durumda uyarı BASMIYOR', () => {
   );
   assert.doesNotMatch(html, /kolRuleMissing/);
   assert.doesNotMatch(html, /⚠/);
-  assert.doesNotMatch(html, /var\(--orange\)/);
+  assert.doesNotMatch(html, /var\(--ui-warning\)/);
   assert.match(html, /12,00%/);
 });
 
@@ -287,7 +287,7 @@ test('Supp. FOB hücresi şablonu uyarı durumunda birim yerine ⚠ gösteriyor'
   );
   assert.match(html, /suppFobRuleMissing/);
   assert.match(html, /⚠/);
-  assert.match(html, /color:var\(--orange\)/);
+  assert.match(html, /color:var\(--ui-warning\)/);
   assert.doesNotMatch(html, />\$</, 'uyarı varken para birimi gösterilmemeli');
 });
 
@@ -376,7 +376,7 @@ test('TR Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve turuncu r
     'TR Landed <td> TR kural uyarısına bağlı değil');
   assert.match(block, /\$\{k\.trRuleMissing\?'⚠':\(k\.trLanded==null/,
     'TR Landed değeri TR kuralı eksikken ⚠ göstermiyor');
-  assert.match(block, /style="\$\{k\.trRuleMissing\?'color:var\(--orange\);':''\}"/,
+  assert.match(block, /style="\$\{k\.trRuleMissing\?'color:var\(--ui-warning\);':''\}"/,
     'TR Landed rengi TR kuralı eksikken turuncu değil');
   assert.match(block, /kolTrLicenseRuleMissingText\(r\)/,
     'TR Landed başlığı TR kuralına özel uyarı metnini kullanmıyor');
@@ -390,7 +390,7 @@ test('Overseas Landed hücre şablonu uyarı sınıfını, ⚠ işaretini ve tur
     'Overseas Landed <td> uyarı sınıfı koşula bağlı değil');
   assert.match(block, /\$\{k\.ruleMissing\?'⚠':\(k\.ydLanded==null/,
     'Overseas Landed değeri uyarıda ⚠ göstermiyor');
-  assert.match(block, /style="\$\{k\.ruleMissing\?'color:var\(--orange\);':''\}"/,
+  assert.match(block, /style="\$\{k\.ruleMissing\?'color:var\(--ui-warning\);':''\}"/,
     'Overseas Landed rengi uyarıda turuncu değil');
   assert.match(block, /kolLicenseRuleMissingText\(r\)/,
     'Overseas Landed başlığı uyarı metnini kullanmıyor');

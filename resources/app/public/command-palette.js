@@ -75,7 +75,7 @@
   }
 
   function build(){
-    overlay=doc.createElement('div');overlay.className='blCmdOverlay';overlay.hidden=true;
+    overlay=doc.createElement('div');overlay.className='blCmdOverlay';overlay.dataset.uiMigrated='remaining';overlay.hidden=true;
     overlay.innerHTML='<div class="blCmdCard" role="dialog" aria-modal="true"><div class="blCmdField"><svg class="ic" aria-hidden="true"><use href="#i-search"/></svg><input class="blCmdInput" type="text" autocomplete="off" spellcheck="false" role="combobox" aria-expanded="true" aria-controls="blCmdList"><kbd>Esc</kbd></div><div class="blCmdList" id="blCmdList" role="listbox"></div><div class="blCmdFoot"></div></div>';
     doc.body.appendChild(overlay);
     input=overlay.querySelector('.blCmdInput');list=overlay.querySelector('.blCmdList');

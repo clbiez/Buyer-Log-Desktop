@@ -40,11 +40,12 @@ test('help copy documents OR, AND, exclusion and Excel paste behavior without br
 test('search help uses a compact themed fixed popover', () => {
   assert.match(CSS, /\.tableSearchHelpButton\{/);
   assert.match(CSS, /width:24px/);
-  assert.match(CSS, /border-radius:var\(--r-xs\)/);
+  const shared=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8');
+  assert.match(shared,/\.tableSearchHelpButton[^}]*border-radius:var\(--ui-radius\)/);
   assert.match(CSS, /\.tableSearchHelpPopover\{/);
   assert.match(CSS, /position:fixed/);
-  assert.match(CSS, /background:var\(--card\)/);
-  assert.match(CSS, /border:1px solid var\(--line2\)/);
+  assert.match(shared,/\.tableSearchHelpPopover[^}]*background:var\(--ui-surface\)/);
+  assert.match(shared,/\.tableSearchHelpPopover[^}]*border:0/);
 });
 
 test('overflowing table search stays editable and expands on hover or focus', () => {

@@ -173,11 +173,11 @@
     const parts = [['loading', 'var(--blue)'], ['transit', 'var(--teal)'], ['customs', 'var(--orange)']]
       .map(([m, color]) => ({ m, color, v: Math.max(0, Number(row[m]) || 0) }));
     if (!scale || !parts.some(p => p.v)) return '';
-    return `<div style="display:flex;height:6px;width:100%;max-width:140px;border-radius:var(--r-full);overflow:hidden;background:var(--card2);margin-top:4px;" aria-hidden="true">${parts.map(p => `<span title="${esc(TA().labels(lang()).metric[p.m])}: ${fmt(p.v)} ${L('gün', 'days')}" style="width:${(p.v / scale * 100).toFixed(1)}%;background:${p.color};"></span>`).join('')}</div>`;
+    return `<div style="display:flex;height:6px;width:100%;max-width:140px;border-radius:var(--ui-radius);overflow:hidden;background:var(--ui-surface-soft);margin-top:4px;" aria-hidden="true">${parts.map(p => `<span title="${esc(TA().labels(lang()).metric[p.m])}: ${fmt(p.v)} ${L('gün', 'days')}" style="width:${(p.v / scale * 100).toFixed(1)}%;background:${p.color};"></span>`).join('')}</div>`;
   }
 
   function trendCell(row) {
-    if (row.trend == null || row.periods < 2) return '<span style="color:var(--muted);">—</span>';
+    if (row.trend == null || row.periods < 2) return '<span style="color:var(--ui-text-muted);">—</span>';
     const t = Number(row.trend);
     const color = Math.abs(t) < 2 ? 'var(--muted)' : t > 0 ? 'var(--red)' : 'var(--green)';
     const arrow = Math.abs(t) < 2 ? '→' : t > 0 ? '↑' : '↓';
@@ -186,17 +186,17 @@
 
   function detailHtml(row, analysis) {
     const max = Math.max(1, ...row.series.map(s => Math.max(0, Number(s.endToEnd) || 0)));
-    const series = row.series.map(s => `<div style="display:grid;grid-template-columns:72px 1fr 52px 64px;gap:8px;align-items:center;font-size:11.5px;">
-        <span style="color:var(--muted);">${esc(fmtPeriod(s.period, row.granularity))}</span>
-        <span style="height:6px;border-radius:var(--r-full);background:var(--card2);overflow:hidden;"><span style="display:block;height:100%;width:${(Math.max(0, Number(s.endToEnd) || 0) / max * 100).toFixed(1)}%;background:var(--acc);"></span></span>
+    const series = row.series.map(s => `<div style="display:grid;grid-template-columns:72px 1fr 52px 64px;gap:8px;align-items:center;font-size:var(--ui-font-xs);">
+        <span style="color:var(--ui-text-muted);">${esc(fmtPeriod(s.period, row.granularity))}</span>
+        <span style="height:6px;border-radius:var(--ui-radius);background:var(--ui-surface-soft);overflow:hidden;"><span style="display:block;height:100%;width:${(Math.max(0, Number(s.endToEnd) || 0) / max * 100).toFixed(1)}%;background:var(--ui-accent);"></span></span>
         <span class="num" style="text-align:right;">${fmt(s.endToEnd)}</span>
-        <span class="num" style="text-align:right;color:var(--muted);">${fmtQty(s.qty)}</span></div>`).join('');
+        <span class="num" style="text-align:right;color:var(--ui-text-muted);">${fmtQty(s.qty)}</span></div>`).join('');
     const groups = { loading: L('Yükleme', 'Loading'), transit: L('Yol', 'Transit'), customs: L('Gümrük', 'Customs') };
-    const steps = row.steps.length ? row.steps.map(s => `<tr><td style="color:var(--muted);">${esc(groups[s.group] || '')}</td><td>${esc(s.code)}. ${esc(TA().stepLabel(s, analysis, lang()))}${s.informational ? ` <span style="color:var(--muted);">${L('(bilgi — üst adımın içinde)', '(info — included in the parent step)')}</span>` : ''}</td><td class="num" style="text-align:right;${s.days < 0 ? 'color:var(--red);' : ''}">${fmt(s.days)}</td></tr>`).join('')
-      : `<tr><td colspan="3" style="color:var(--muted);">${L('Bu ülke/taşıt için alt süreç kırılımı raporda yok.', 'The report has no sub-process breakdown for this country/vehicle.')}</td></tr>`;
+    const steps = row.steps.length ? row.steps.map(s => `<tr><td style="color:var(--ui-text-muted);">${esc(groups[s.group] || '')}</td><td>${esc(s.code)}. ${esc(TA().stepLabel(s, analysis, lang()))}${s.informational ? ` <span style="color:var(--ui-text-muted);">${L('(bilgi — üst adımın içinde)', '(info — included in the parent step)')}</span>` : ''}</td><td class="num" style="text-align:right;${s.days < 0 ? 'color:var(--ui-danger);' : ''}">${fmt(s.days)}</td></tr>`).join('')
+      : `<tr><td colspan="3" style="color:var(--ui-text-muted);">${L('Bu ülke/taşıt için alt süreç kırılımı raporda yok.', 'The report has no sub-process breakdown for this country/vehicle.')}</td></tr>`;
     return `<div style="display:grid;grid-template-columns:minmax(260px,1fr) minmax(320px,1.2fr);gap:18px;padding:10px 6px;">
-      <div><div style="font-weight:600;font-size:12px;margin-bottom:6px;">${L('Dönem bazında uçtan uca (gün · adet)', 'End-to-end by period (days · qty)')}</div><div style="display:flex;flex-direction:column;gap:3px;max-height:220px;overflow:auto;">${series}</div></div>
-      <div><div style="font-weight:600;font-size:12px;margin-bottom:6px;">${L('Alt süreç ortalamaları (gün)', 'Sub-process averages (days)')}</div><table class="trxTable trxMini"><tbody>${steps}</tbody></table></div>
+      <div><div style="font-weight:600;font-size:var(--ui-font-xs);margin-bottom:6px;">${L('Dönem bazında uçtan uca (gün · adet)', 'End-to-end by period (days · qty)')}</div><div style="display:flex;flex-direction:column;gap:3px;max-height:220px;overflow:auto;">${series}</div></div>
+      <div><div style="font-weight:600;font-size:var(--ui-font-xs);margin-bottom:6px;">${L('Alt süreç ortalamaları (gün)', 'Sub-process averages (days)')}</div><table class="trxTable trxMini"><tbody>${steps}</tbody></table></div>
     </div>`;
   }
 
@@ -351,7 +351,7 @@
           <td class="num trxMuted">${fmt(row.min)}–${fmt(row.max)}</td>
           <td class="num">${trendCell(row)}</td>
           <td class="num">${current ? `${fmt(current.days, 0)}<div class="trxSubNum">${current.source === 'rule' ? L('kural', 'rule') : L('varsayılan', 'default')}</div>` : '—'}</td>
-          <td class="num"${s && hasBuffer ? ` title="${esc(L(`Hesaplanan ${s.baseDays} gün, ${bufferText} buffer ile ${s.days} gün`, `Calculated ${s.baseDays} days, ${bufferText} buffer = ${s.days} days`))}"` : ''}>${s ? `<strong>${fmt(s.days, 0)}</strong>${diff ? `<div class="trxSubNum" style="color:${diff > 0 ? 'var(--red)' : 'var(--green)'};">${diff > 0 ? '+' : ''}${diff}</div>` : ''}` : (row.vehicle && !row.ruleType ? `<span class="trxMuted" title="${esc(noRuleTip)}">${L('kural yok', 'no rule')}</span>` : '—')}</td>
+          <td class="num"${s && hasBuffer ? ` title="${esc(L(`Hesaplanan ${s.baseDays} gün, ${bufferText} buffer ile ${s.days} gün`, `Calculated ${s.baseDays} days, ${bufferText} buffer = ${s.days} days`))}"` : ''}>${s ? `<strong>${fmt(s.days, 0)}</strong>${diff ? `<div class="trxSubNum" style="color:${diff > 0 ? 'var(--ui-danger)' : 'var(--ui-success)'};">${diff > 0 ? '+' : ''}${diff}</div>` : ''}` : (row.vehicle && !row.ruleType ? `<span class="trxMuted" title="${esc(noRuleTip)}">${L('kural yok', 'no rule')}</span>` : '—')}</td>
           <td><button type="button" class="trxIconBtn" data-ta-expand="${esc(id)}" title="${esc(L('Dönem ve alt süreç detayı', 'Period and sub-process detail'))}" aria-expanded="${expanded.has(id)}">${expanded.has(id) ? '▴' : '▾'}</button></td>
         </tr>${expanded.has(id) ? `<tr class="trxDetailRow"><td colspan="14">${detailHtml(row, analysis)}</td></tr>` : ''}`;
       }).join('');

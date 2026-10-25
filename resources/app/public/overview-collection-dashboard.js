@@ -200,7 +200,7 @@
     const drill=function(extra){ctx.drill(Object.assign({scopeColumn:scoped.column.k,scopeValues:scoped.selected},extra));};
     const legend=document.getElementById('ovCollectionSummaryLegend');
     if(legend){
-      legend.innerHTML=rows.map(function(row){return '<button type="button" class="ovCollectionMonthLegendItem" data-summary-status="'+esc(row.status)+'" style="--status-color:'+esc(colorByStatus.get(row.status))+'"><i></i>'+esc(ctx.statusLabel(row.status))+'</button>';}).join('');
+      legend.innerHTML=rows.map(function(row){return '<button type="button" class="ovCollectionMonthLegendItem" data-summary-status="'+esc(row.status)+'" style="--ui-series-color:'+esc(colorByStatus.get(row.status))+'"><i></i>'+esc(ctx.statusLabel(row.status))+'</button>';}).join('');
       Array.from(legend.querySelectorAll('[data-summary-status]')).forEach(function(button){button.addEventListener('click',function(){drill({status:button.dataset.summaryStatus});});});
     }
     const host=document.getElementById('ovCollectionSummaryMonths');
@@ -220,11 +220,11 @@
       const segments=statuses.map(function(entry){
         const share=pct(entry.optionCount,bucket.optionCount);
         const color=colorByStatus.get(entry.status)||VIS_PALETTE[0];
-        const tip='<b>'+esc(name)+'</b><span class="ovCollectionTipStatus" style="--status-color:'+esc(color)+'"><i></i>'+esc(ctx.statusLabel(entry.status))+'<em>'+share+'%</em></span>'+
+        const tip='<b>'+esc(name)+'</b><span class="ovCollectionTipStatus" style="--ui-series-color:'+esc(color)+'"><i></i>'+esc(ctx.statusLabel(entry.status))+'<em>'+share+'%</em></span>'+
           '<span><small>'+esc(en?'Models':'Model')+'</small>'+Number(entry.modelCount).toLocaleString(locale)+'</span>'+
           '<span><small>'+esc(en?'Quantity':'Adet')+'</small>'+Number(entry.quantity||0).toLocaleString(locale)+'</span>';
         const label=name+' · '+ctx.statusLabel(entry.status)+' · '+entry.modelCount+' '+(en?'models':'model')+' · '+Number(entry.quantity||0).toLocaleString(locale)+' '+(en?'pcs':'adet');
-        return '<button type="button" class="ovCollectionMonthSeg" data-month-status="'+esc(entry.status)+'" data-month-tip="'+esc(tip)+'" style="--status-color:'+esc(color)+';flex-grow:'+entry.optionCount+'" aria-label="'+esc(label)+'"></button>';
+        return '<button type="button" class="ovCollectionMonthSeg" data-month-status="'+esc(entry.status)+'" data-month-tip="'+esc(tip)+'" style="--ui-series-color:'+esc(color)+';flex-grow:'+entry.optionCount+'" aria-label="'+esc(label)+'"></button>';
       }).join('');
       const thumbs=bucket.models.slice(0,MAX_THUMBS).map(function(model){
         return model.image

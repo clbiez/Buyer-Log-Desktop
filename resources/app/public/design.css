@@ -155,47 +155,21 @@ html[data-theme="grey"] table:not(#shipTable) thead th{
 
 /* ========================= 2 · TİPOGRAFİ ========================= */
 body{font-family:var(--sans);letter-spacing:0;}
-h1,h2,h3,h4,.cardTitle,.modalTitle,.brandName,.mfrAddTitle,.todoNavTitle,.globalSearchHead{
+h1,h2,h3,h4{
   font-family:var(--head);font-weight:600;letter-spacing:.01em;
 }
-.appTop h1{font-size:var(--fs-xl);line-height:1.15;}
-.brandName{font-size:var(--fs-lg);line-height:1;}
-.brandName small{
-  font-family:var(--sans);font-size:var(--fs-2xs);font-weight:400;
-  letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
-}
-.cardTitle,.modalTitle{font-size:var(--fs-lg);}
-.kpi b{font-family:var(--head);font-weight:600;font-size:var(--fs-2xl);letter-spacing:0;}
-.kpi span,.kpiGroupLabel,.filterSectionTitle,.ovFilterSectionTitle,.hint{
-  font-size:var(--fs-2xs);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
-}
 /* Sayılar hep aynı genişlikte — sütunlar hizada kalsın */
-td.num,td.money,.kpi b{
-  font-variant-numeric:tabular-nums;
-}
 
 /* ========================= 3 · BLUEPRINT ÇERÇEVE ========================= */
 /* Kart, panel ve pencereler kare, saç teli çerçeveli "tel kafes"
    nesnelerdir; dört köşede artı biçimli hizalama işareti taşırlar.
    İşaretler tek bir ::after üzerine sekiz gradyanla çizilir — markup'a
    hiç dokunulmaz. */
-.panel,.cardBox,.modalCard,.mfrCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.appBlockingCard,.sourcebar,.tablewrap,.miniTable{
-  border:1px solid var(--hair);border-radius:0;box-shadow:none;
-}
 .panel,.cardBox,.modalCard,.todoCard,.globalSearchCard{position:relative;}
 .verHistCard{position:relative;}
 .quotationCard,.lflDetailCard{position:relative;}
 .panel::after,.cardBox::after,.modalCard::after,.todoCard::after,.globalSearchCard::after,.sourcebar::after{
-  content:"";position:absolute;inset:-1px;pointer-events:none;z-index:2;
-  background:
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 0/1px var(--mark) no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 0/var(--mark) 1px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 0/1px var(--mark) no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 0/var(--mark) 1px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 100%/1px var(--mark) no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 100%/var(--mark) 1px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 100%/1px var(--mark) no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 100%/var(--mark) 1px no-repeat;
+  content:"";position:absolute;inset:-1px;pointer-events:none;
 }
 .verHistCard::after{
   content:"";position:absolute;inset:-1px;pointer-events:none;
@@ -204,101 +178,33 @@ td.num,td.money,.kpi b{
   content:"";position:absolute;inset:-1px;pointer-events:none;
 }
 /* Uçan paneller: aynı kare dil, ama gölgeli — zeminden ayrılsınlar */
-.submfrDrop,.vfMenu,.profileSelectMenu,.userMenu,.dateCalendarPopup,.delTypeMenu,.cfpDrawer,.themeDock,.numericValueList{
-  border:1px solid var(--hair-2);border-radius:0;box-shadow:var(--shadow-3);
-}
-.empty{background:transparent;border:1px dashed var(--line2);border-radius:0;color:var(--muted);}
-.submfrDropItem:hover,.cfpItem:hover,.delTypeOption:hover,.themeOptBtn:hover,.profileSelectOption:hover,.globalSearchResult:hover{
-  background:var(--acc-bg);color:var(--acc-ink);
-}
 
 /* ========================= 4 · SOL RAY ========================= */
-.rail{background:var(--rail-bg);border-right:1px solid var(--hair);padding:20px 14px;gap:2px;}
-.railTop{padding-bottom:20px;border-bottom:1px solid var(--hair);margin-bottom:16px;}
+.rail{padding:20px 14px;gap:2px;}
+.railTop{padding-bottom:20px;margin-bottom:16px;}
 /* Marka işareti: vurgu dolgulu kare + kendi köşe işaretleri */
-.rail .brandMark{
-  border-radius:0;background:var(--acc);color:var(--on-acc);
-  font-family:var(--head);font-weight:600;box-shadow:none;position:relative;
+.rail .brandMark{position:relative;
 }
 /* Logo, koyu temada da aydınlık temadaki marka kontrastını korur. */
-[data-theme="dark"] .rail .brandMark{background:#5980A6;color:#FFFFFF;}
 .rail .brandMark::after{
   content:"";position:absolute;inset:-1px;pointer-events:none;
-  --mark-ink:color-mix(in srgb, var(--on-acc) 72%, transparent);
-  background:
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 0/1px 7px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 0/7px 1px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 0/1px 7px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 0/7px 1px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 100%/1px 7px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 100%/7px 1px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 100%/1px 7px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 100%/7px 1px no-repeat;
 }
-.railCollapse{border:1px solid transparent;background:transparent;color:var(--muted);border-radius:0;}
-.railCollapse:hover{background:var(--card);border-color:var(--hair);color:var(--ink);box-shadow:none;}
 nav.tabs{gap:1px;}
-nav.tabs button{height:var(--rail-item-h);min-height:var(--rail-item-h);border-radius:0;font-weight:400;color:var(--ink2);}
-nav.tabs button span{font-weight:400;}
-nav.tabs button:hover{background:color-mix(in srgb, var(--ink) 5%, transparent);color:var(--ink);}
-nav.tabs button.active{background:var(--acc-bg);color:var(--acc-ink);box-shadow:none;}
-nav.tabs button.active span{font-weight:700;}
-nav.tabs button.active .ic{color:var(--acc-ink);}
-nav.tabs button.active::before{background:transparent;}
+nav.tabs button{height:var(--rail-item-h);min-height:var(--rail-item-h);}
 .railFoot{gap:1px;}
-.railFoot button{height:var(--rail-foot-h);min-height:var(--rail-foot-h);border-radius:0;font-weight:400;color:var(--ink2);}
-.railFoot button:hover{background:color-mix(in srgb, var(--ink) 5%, transparent);color:var(--ink);}
+.railFoot button{height:var(--rail-foot-h);min-height:var(--rail-foot-h);}
 /* İnce çizgili ikonlar */
-.ic svg,.rail svg,.appTop svg,nav.tabs svg{stroke-width:1.5;}
 
 /* ========================= 5 · ÜST BAR ========================= */
-.appTop{background:var(--paper);border-bottom:1px solid var(--hair);}
 .gsearch{
-  background:transparent;border:1px solid var(--hair);border-radius:0;
-  height:30px;color:var(--muted);box-shadow:none;
-}
-.gsearch:hover{border-color:var(--acc);color:var(--ink2);}
-.gsearch kbd{background:var(--card2);border-color:var(--hair);border-radius:0;color:var(--muted);}
-.iconbtn{border:1px solid transparent;background:transparent;color:var(--ink2);border-radius:0;}
-.iconbtn:hover{background:var(--card2-strong);border-color:transparent;color:var(--ink);box-shadow:none;}
-.userAvatar,.userMenuAvatar{
-  background:#d6ebff;color:#2c455d;border-radius:0;font-weight:700;
-  font-family:var(--head);box-shadow:none;
-}
-[data-theme="dark"] .userAvatar,
-[data-theme="dark"] .userMenuAvatar{
-  background:#2c455d;color:#d6ebff;
-}
-.appVersionBtn{font-family:var(--sans);letter-spacing:.04em;}
-.topDirtyNotice{
-  border-radius:0;border:1px solid color-mix(in srgb, var(--orange) 40%, transparent);
-  background:var(--orange-bg);color:var(--orange);box-shadow:none;
+  height:30px;
 }
 
 /* ========================= 6 · DÜĞMELER, GİRDİLER, ÇİPLER ========================= */
-button,.navActionBtn,.tbtn,.upl-btn,.vfMenuTrigger,input,select,textarea{border-radius:0;}
-.navActionBtn,.tbtn,.upl-btn,.vfMenuTrigger{
-  background:transparent;border:1px solid var(--hair);color:var(--ink);
-  box-shadow:none;font-weight:400;
-}
-.navActionBtn:hover,.tbtn:hover,.upl-btn:hover,.vfMenuTrigger:hover{
-  background:color-mix(in srgb, var(--ink) 5%, transparent);
-  border-color:var(--acc);color:var(--ink);box-shadow:none;
-}
-.navActionBtn.primary,.tbtn.primary,button.primary{
-  background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:500;
-}
-.navActionBtn.primary:hover,.tbtn.primary:hover,button.primary:hover{
-  background:var(--acc-hover);border-color:var(--acc-hover);
-}
+button,input,select,textarea{border-radius:0;}
 input,select,textarea{background:transparent;border:1px solid var(--hair);color:var(--ink);}
 input:focus,select:focus,textarea:focus{border-color:var(--acc);outline:none;}
 /* Etiket/çip dili: kare, saç teli çerçeve, aralıklı küçük büyük harf */
-.warnChip,.accessModeBadge{
-  border-radius:0;font-size:var(--fs-2xs);letter-spacing:.07em;text-transform:uppercase;
-  font-weight:500;box-shadow:none;
-}
-.warnChip{border:1px solid color-mix(in srgb, var(--orange) 40%, transparent);}
 
 /* ========================= 7 · VERİ TABLOSU ========================= */
 /* DİKKAT: thead zemin/metin rengi ve rozet renkleri BİLEREK korunuyor —
@@ -310,24 +216,13 @@ thead th{
 }
 tbody td{border-bottom:1px solid color-mix(in srgb, var(--ink) 8%, transparent);}
 tbody tr:hover td{background:var(--table-hover);}
-.miniTable th{
-  color:var(--muted);border-bottom:1px solid var(--hair-2);
-  font-size:var(--fs-2xs);letter-spacing:.08em;text-transform:uppercase;
-}
-.miniTable td{border-bottom:1px solid color-mix(in srgb, var(--ink) 8%, transparent);}
-tr.rowDirty td:first-child{box-shadow:inset 2px 0 0 var(--orange);}
-.exfDisplay{border-bottom:1px dashed var(--line2);}
-.tableActionToolbar,.toolbar{background:transparent;border-bottom:1px solid var(--hair);}
 
 /* ========================= 8 · ROZETLER ========================= */
 /* Biçim tasarıma uydu (kare, saç teli çerçeve, aralıklı büyük harf);
    RENKLER korundu — Excel çıktısı bu renkleri kullanıyor. */
-.badge{
-  border-radius:0;padding:1.5px 7px;gap:5px;font-weight:500;
-  font-size:var(--fs-2xs);letter-spacing:.07em;text-transform:uppercase;
-  border:1px solid color-mix(in srgb, currentColor 34%, transparent);
+.badge{padding:1.5px 7px;gap:5px;
 }
-.badge::before{width:5px;height:5px;border-radius:0;}
+.badge::before{width:5px;height:5px;}
 
 /* ========================= 9 · ODAK, KAYDIRMA, YÜZEYLER ========================= */
 :focus-visible{outline:none;box-shadow:var(--focus-ring);}
@@ -336,61 +231,45 @@ tr.rowDirty td:first-child{box-shadow:inset 2px 0 0 var(--orange);}
 ::-webkit-scrollbar-thumb{background:var(--line2);border-radius:0;border:3px solid transparent;background-clip:content-box;}
 ::-webkit-scrollbar-thumb:hover{background:var(--muted);background-clip:content-box;}
 ::-webkit-scrollbar-track{background:transparent;}
-.savebar{background:var(--acc-bg);border-bottom:1px solid var(--hair);border-left:2px solid var(--acc);}
-.savebar button{border-radius:0;font-weight:500;box-shadow:none;}
-.savebar .discard{border:1px solid var(--hair-2);box-shadow:none;}
-.warnOverlay,.accessAdminOverlay,.globalSearchOverlay,.appBlockingOverlay{
-  background:color-mix(in srgb, var(--navy-deep) 55%, transparent);
-}
-.dropzone{background:color-mix(in srgb, var(--acc) 30%, rgba(0,0,0,.45));border:1px dashed rgba(255,255,255,.8);}
 
 
 
 /* Backup restore alt panelleri — Full ve kişisel restore aynı Industry dili. */
-.backupRestorePanel{display:grid;gap:10px;padding:12px;border:1px solid var(--hair);background:var(--card2);border-radius:0;}
+.backupRestorePanel{display:grid;gap:10px;padding:12px;}
 .backupRestorePanel[hidden]{display:none!important;}
-.backupFilePicker{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;border:1px solid var(--hair);background:var(--card);font-size:var(--fs-xs);color:var(--ink2);cursor:pointer;}
+.backupFilePicker{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 10px;cursor:pointer;}
 .backupFilePicker input{min-width:0;max-width:58%;}
 .backupRestoreActions{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
-.backupRestoreActions>label{display:flex;align-items:center;gap:6px;font-size:var(--fs-2xs);color:var(--muted);}
-.backupRestoreStatus{min-height:34px;padding:9px 10px;border:1px solid var(--hair);background:var(--paper);font-size:var(--fs-xs);line-height:1.45;color:var(--muted);overflow-wrap:anywhere;}
-.backupSharedPanel{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid var(--hair);background:var(--card2);}
+.backupRestoreActions>label{display:flex;align-items:center;gap:6px;}
+.backupRestoreStatus{min-height:34px;padding:9px 10px;overflow-wrap:anywhere;}
+.backupSharedPanel{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;}
 .backupSharedPanel>div:first-child{min-width:0;display:grid;gap:4px;}
-.backupSharedPanel b{font-size:var(--fs-xs);font-weight:650;color:var(--ink);}
-.backupSharedPanel [data-shared-personal-status]{font-size:var(--fs-2xs);line-height:1.4;color:var(--muted);overflow-wrap:anywhere;}
+.backupSharedPanel [data-shared-personal-status]{overflow-wrap:anywhere;}
 @media(max-width:680px){.backupSharedPanel{align-items:stretch;flex-direction:column;}}
 
 /* ========================= 9.5 · MODERATÖR GÜNCELLEME TESTİ ========================= */
 .updateTestOverlay{
-  position:fixed;inset:0;z-index:52000;display:grid;place-items:center;
-  padding:20px;background:color-mix(in srgb,var(--navy-deep) 58%,transparent);
+  position:fixed;inset:0;display:grid;place-items:center;
+  padding:20px;
 }
 .updateTestCard{
-  width:min(540px,calc(100vw - 28px));padding:18px;background:var(--card);
-  color:var(--ink);border:1px solid var(--hair-2);border-radius:0;box-shadow:var(--shadow-3);
+  width:min(540px,calc(100vw - 28px));padding:18px;
 }
-.updateTestHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:12px;border-bottom:1px solid var(--hair);}
-.updateTestHead h2{margin:0}.updateTestHead p{margin:5px 0 0;color:var(--muted);font-size:var(--fs-xs);line-height:1.45;}
-.updateTestClose{font-size:var(--fs-xl);line-height:1;width:30px;height:30px;flex:0 0 auto;}
-.updateTestFacts{display:grid;grid-template-columns:1fr 1fr;margin-top:14px;border-top:1px solid var(--hair);border-left:1px solid var(--hair);}
-.updateTestFacts>div{display:grid;gap:4px;padding:10px 12px;border-right:1px solid var(--hair);border-bottom:1px solid var(--hair);min-width:0;}
-.updateTestFacts span,.updateTestControls span{font-size:var(--fs-2xs);letter-spacing:.07em;text-transform:uppercase;color:var(--muted);}
-.updateTestFacts b{font-size:var(--fs-sm);font-weight:600;overflow-wrap:anywhere;}
+.updateTestHead{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding-bottom:12px;}
+.updateTestHead h2{margin:0}.updateTestHead p{margin:5px 0 0;}
+.updateTestClose{width:30px;height:30px;flex:0 0 auto;}
+.updateTestFacts{display:grid;grid-template-columns:1fr 1fr;margin-top:14px;}
+.updateTestFacts>div{display:grid;gap:4px;padding:10px 12px;min-width:0;}
+.updateTestFacts b{overflow-wrap:anywhere;}
 .updateTestStateRow{grid-column:1/-1;}
 .updateTestControls{margin-top:14px}.updateTestControls label{display:grid;gap:6px;}
 .updateTestControls select{height:32px;width:100%;padding:0 8px;}
-.updateTestMessage{margin-top:12px;min-height:38px;padding:9px 10px;border:1px solid var(--hair);background:var(--card2);font-size:var(--fs-xs);line-height:1.45;}
-.updateTestMessage.isReady{border-color:color-mix(in srgb,var(--green) 48%,var(--hair));color:var(--green);}
-.updateTestMessage.isError{border-color:color-mix(in srgb,var(--red) 48%,var(--hair));color:var(--red);}
-.updateTestProgress{margin-top:9px;padding:9px 10px;border:1px solid var(--hair);background:var(--card2);}
+.updateTestMessage{margin-top:12px;min-height:38px;padding:9px 10px;}
+.updateTestProgress{margin-top:9px;padding:9px 10px;}
 .updateTestProgress[hidden]{display:none;}
 .updateTestProgressSteps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;}
-.updateTestProgressStep{display:flex;align-items:center;gap:6px;min-width:0;color:var(--muted);font-size:var(--fs-2xs);line-height:1.3;white-space:nowrap;}
-.updateTestProgressStep::before{content:"";width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:var(--hair-2);box-shadow:0 0 0 1px var(--hair-2);}
-.updateTestProgressStep.isDone{color:var(--ink2);}
-.updateTestProgressStep.isDone::before{background:var(--green);box-shadow:0 0 0 1px var(--green);}
-.updateTestProgressStep.isActive{color:var(--ink);font-weight:650;}
-.updateTestProgressStep.isActive::before{background:var(--acc);box-shadow:0 0 0 3px color-mix(in srgb,var(--acc) 18%,transparent);animation:updateTestPulse 1.05s ease-in-out infinite alternate;}
+.updateTestProgressStep{display:flex;align-items:center;gap:6px;min-width:0;white-space:nowrap;}
+.updateTestProgressStep::before{content:"";width:7px;height:7px;flex:0 0 7px;}
 @keyframes updateTestPulse{from{transform:scale(.86);opacity:.62}to{transform:scale(1);opacity:1}}
 .updateTestActions{display:flex;justify-content:flex-end;gap:7px;margin-top:14px;flex-wrap:wrap;}
 .updateTestActions .navActionBtn{min-height:32px;}
@@ -403,8 +282,7 @@ tr.rowDirty td:first-child{box-shadow:inset 2px 0 0 var(--orange);}
      altta veriye uygulananlar (oluştur / gönder / aktar).
    · Tablo araç çubuğu = TABLOYA ait olan (arama, sütun, dondur, kopyala, aktar). */
 .vfBar{
-  background:var(--paper);border-bottom:1px solid var(--hair);
-  padding:8px var(--sp-5);gap:5px;position:sticky;top:46px;z-index:45;
+  padding:8px var(--ui-space-5);gap:5px;position:sticky;top:46px;
 }
 @media (min-width:1101px){
   .vfBar>*{order:3;}
@@ -421,52 +299,32 @@ tr.rowDirty td:first-child{box-shadow:inset 2px 0 0 var(--orange);}
 
 /* --- Seçim kümesi: ayraç + etiket, seçim gelince bütün olarak canlanır --- */
 .vfGroupLabel{
-  display:none;align-items:center;height:var(--ctl-h);position:relative;
-  margin-left:6px;padding-left:13px;font-size:var(--fs-2xs);font-weight:600;
-  letter-spacing:.07em;text-transform:uppercase;
-  color:var(--muted);white-space:nowrap;
+  display:none;align-items:center;height:var(--ui-control-height);position:relative;
+  margin-left:6px;padding-left:13px;white-space:nowrap;
 }
-.vfGroupLabel::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:1px;background:var(--line2);}
+.vfGroupLabel::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:1px;}
 body[data-active-tab="cp"] #vfSelLabel,body[data-active-tab="orders"] #vfSelLabel{display:inline-flex;}
-.vfBar:has(#selectedBacklogBtn:not(:disabled)) #vfSelLabel{color:var(--acc-ink);}
-
-#navToShipping:not(:disabled),#selectedBacklogBtn:not(:disabled){
-  background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink);
-  font-weight:500;box-shadow:none;
-}
-#navToShipping:not(:disabled):hover,#selectedBacklogBtn:not(:disabled):hover{
-  background:color-mix(in srgb, var(--acc) 18%, var(--card));box-shadow:none;
-}
 
 /* --- Sıklığa göre ağırlık: ayar düğmesi sessiz, sık kullanılanlar önde --- */
-#undoBtn,#redoBtn{font-size:0;gap:0;padding-left:9px;padding-right:9px;}
+#undoBtn,#redoBtn{gap:0;padding-left:9px;padding-right:9px;}
 #undoBtn .ic,#redoBtn .ic{width:14px;height:14px;}
 .tableToolbarActions #undoBtn .ic,.tableToolbarActions #redoBtn .ic{width:13px;height:13px;}
 
 /* --- Tablo araç çubuğu: kartın üzerinde düz ve sessiz --- */
-.tableToolbarActions>.navActionBtn,.tableToolbarActions>:is(button,label).tbtn,.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger{
-  background:transparent;border-color:transparent;box-shadow:none;color:var(--ink2);
-}
-.tableToolbarActions>.navActionBtn:hover,.tableToolbarActions>:is(button,label).tbtn:hover,.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger:hover,.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger[aria-expanded="true"]{
-  background:var(--card2-strong);border-color:transparent;box-shadow:none;color:var(--ink);
-}
-.tableToolbarActions>.navActionBtn.copied{background:var(--green-bg);color:var(--green);box-shadow:none;}
 
 /* ========================= 10 · TİPOGRAFİ — BARLOW ========================= */
 /* Başlıklar + tablo başlığı + rozet/KPI etiketleri: Barlow Condensed.
    Gövde metni Barlow (app.css --sans üzerinden). */
-h1,h2,h3,h4,.modalTitle,.pageTitle,.secTitle,.cardTitle,.dlgTitle{
+h1,h2,h3,h4{
   font-family:var(--head);letter-spacing:.01em;
 }
 thead th{font-family:var(--head);font-size:var(--fs-xs);}
-.badge,.kpi .l,.tag,.kpiGroupLabel{font-family:var(--head);}
-.badge{font-size:var(--fs-2xs);letter-spacing:.06em;}
 
 /* ========================= 11 · ÜST ALAN SADELEŞTİRME =========================
    Tüm sayfalar: KPI çip şeridi tek satır (yatay kaydırma), çipler sıkı
    "sayı + kısa etiket" düzeninde, dikey boşluklar daraltıldı. */
-.appTop{height:var(--topbar-h);}
-.vfBar{padding:5px var(--sp-5);row-gap:4px;}
+.appTop{height:var(--ui-topbar-height);}
+.vfBar{padding:5px var(--ui-space-5);row-gap:4px;}
 .toolbar{padding:6px 10px;}
 .kpirow{flex-wrap:nowrap;overflow-x:auto;overflow-y:hidden;gap:6px;margin-bottom:8px;padding-bottom:2px;scrollbar-width:thin;}
 .kpirow>*{flex:none;}
@@ -477,9 +335,7 @@ thead th{font-family:var(--head);font-size:var(--fs-xs);}
    :has() desteklenmezse kural yok sayılır ve eski davranış korunur. */
 .kpirow:has(.kpiGroupMenu){flex-wrap:wrap;overflow:visible;}
 .kpi{padding:3px 9px;gap:6px;}
-.kpi .n{font-size:var(--fs-base);}
-.kpi .l{font-size:var(--fs-2xs);max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.kpi.active::after{font-size:var(--fs-2xs);}
+.kpi .l{max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .kpiSep{margin:1px 3px;}
 #view-orders .kpi[data-order-active]{min-width:0;}
 
@@ -487,9 +343,8 @@ thead th{font-family:var(--head);font-size:var(--fs-xs);}
    kpi-groups.js grup başlığı + çipleri .kpiGroup içine alır. Başlık her
    zaman görünür; çipler hover/tıklama ile açılır, seçili çip hep görünür. */
 .kpiGroup{display:inline-flex;align-items:center;gap:6px;flex:none;position:relative;}
-.kpiGroup>.kpiGroupLabel{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border:1px dashed var(--line2);margin-right:0;white-space:nowrap;background:transparent;color:var(--muted);font:inherit;}
-.kpiGroup>.kpiGroupLabel::after{content:'▾';font-size:var(--fs-2xs);color:var(--muted);transition:transform .12s var(--ease);}
-.kpiGroup.open>.kpiGroupLabel{border-color:var(--acc-lite);color:var(--acc-ink);}
+.kpiGroup>.kpiGroupLabel{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;margin-right:0;white-space:nowrap;}
+.kpiGroup>.kpiGroupLabel::after{content:'▾';}
 .kpiGroup.open>.kpiGroupLabel::after{transform:rotate(180deg);}
 /* Seçili çipler grubun içinde, başlığın sağında kalır ve hep görünür. */
 .kpiGroup>.kpi{display:inline-flex;}
@@ -497,14 +352,12 @@ thead th{font-family:var(--head);font-size:var(--fs-xs);}
    yanındaki filtre gruplarını sağa itmez; fareyle üzerine gelince açılır.
    top:100% (boşluksuz) — başlıkla panel arasında fare boşluğu kalmaz, geçişte kapanmaz. */
 .kpiGroupMenu{
-  display:none;position:absolute;top:100%;left:0;z-index:120;
+  display:none;position:absolute;top:100%;left:0;
   min-width:max-content;max-width:min(70vw,560px);
   /* Seçenekler alt alta (dikey) listelenir; yan yana dizilim uzun etiketlerde
      paneli çok genişletiyor ve okumayı zorlaştırıyordu. */
   flex-direction:column;align-items:stretch;gap:3px;padding:6px;
   max-height:min(60vh,420px);overflow-y:auto;
-  border:1px solid var(--line2);background:var(--card);
-  box-shadow:0 10px 26px rgba(0,0,0,.34);
 }
 .kpiGroup.open>.kpiGroupMenu{display:flex;}
 /* Dikey listede her satır: solda sayı, sonra etiket — sola hizalı okunur bir dizi. */
@@ -514,8 +367,7 @@ thead th{font-family:var(--head);font-size:var(--fs-xs);}
 /* v10.67 — hızlı filtre seçenekleri küçük bir etiket değil, okunabilir ve
    tıklanabilir bir seçenek listesi olmalı. Genel KPI çipi ölçeği şeridi sıkı
    tutar; açılır panelde kullanıcıya sunulan metin bu kısıtlamayı taşımamalı. */
-.kpiGroupMenu>.kpi{min-height:var(--control-sm);padding:5px 10px;}
-.kpiGroupMenu>.kpi .l{font-size:var(--fs-sm);line-height:1.3;}
+.kpiGroupMenu>.kpi{min-height:var(--ui-control-height);padding:5px 10px;}
 
 /* CP: eylem düğmeleri boyut filtreleriyle aynı satırda; boyut grubu başa alınır. */
 body[data-active-tab="cp"] .vfBar .vfBarRowBreak[data-dimbreak]{display:none;}
@@ -526,12 +378,9 @@ body[data-active-tab="orders"] .vfBar .ordersDimFilterGroup{order:-1;}
    Grup KAPSAYICILARININ görünürlüğü app.css'in sayfa kurallarına bırakılır
    (.cpDimFilterGroup / .ordersDimFilterGroup yalnız kendi sekmesinde görünür);
    burada display dayatılmaz. */
-.tbGroupHead{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border:1px dashed var(--line2);white-space:nowrap;margin:0;}
-.tbGroupHead::after{content:'▸';font-size:var(--fs-2xs);color:var(--muted);transition:transform .12s var(--ease);}
-.tbGroup:hover>.tbGroupHead,.tbGroup.open>.tbGroupHead,
-.fltGroup:hover>.tbGroupHead,.fltGroup.open>.tbGroupHead{border-color:var(--acc-lite);color:var(--acc-ink);}
-.tbGroup:hover>.tbGroupHead::after,.tbGroup.open>.tbGroupHead::after,
-.fltGroup:hover>.tbGroupHead::after,.fltGroup.open>.tbGroupHead::after{transform:rotate(90deg);}
+.tbGroupHead{cursor:pointer;user-select:none;display:inline-flex;align-items:center;gap:4px;padding:4px 8px;white-space:nowrap;margin:0;}
+.tbGroupHead::after{content:'▸';}
+.tbGroup:hover>.tbGroupHead::after,.tbGroup.open>.tbGroupHead::after,.fltGroup:hover>.tbGroupHead::after,.fltGroup.open>.tbGroupHead::after{transform:rotate(90deg);}
 .selGroup{display:inline-flex;align-items:center;gap:6px;min-width:0;}
 /* Seçilenler grubu yalnız ilgili sayfada görünür. */
 body:not([data-active-tab="cp"]):not([data-active-tab="orders"]) #vfSelGroup{display:none!important;}
@@ -539,8 +388,7 @@ body:not([data-active-tab="cp"]):not([data-active-tab="orders"]) #vfSelGroup{dis
    !important: app.css'in sayfa-bazlı ID kuralları (display:inline-flex) ezilir. */
 .selGroup>button[hidden]{display:none!important;}
 .selGroup>button:disabled{display:none!important;}
-.selGroup:hover>button:disabled:not([hidden]),
-.selGroup.open>button:disabled:not([hidden]){display:inline-flex!important;opacity:.4;}
+.selGroup:hover>button:disabled:not([hidden]),.selGroup.open>button:disabled:not([hidden]){display:inline-flex!important;opacity:.4;}
 /* Filtreler: aktif filtre taşıyan düğme dışarıda görünür; hover/tıklama tümünü açar. */
 .fltGroup>.colPanelWrap{display:none!important;}
 .fltGroup>.colPanelWrap.flt-active,.fltGroup:hover>.colPanelWrap,.fltGroup.open>.colPanelWrap,.fltGroup:focus-within>.colPanelWrap,.fltGroup>.colPanelWrap:has(.colPanel.show),.fltGroup>.colPanelWrap:has([aria-expanded="true"]),.fltGroup:has([aria-expanded="true"])>.colPanelWrap{display:inline-block!important;}
@@ -594,22 +442,17 @@ body.blDialogOpen{overflow:hidden;}
 
 /* Endeksmatik import: clear, non-speculative progress for large workbooks.
    Native theme tokens, keyboard/screen-reader status and reduced motion. */
-.endeksmatikImportOverlay{position:fixed;inset:0;z-index:52000;display:grid;place-items:center;padding:20px;background:var(--scrim);backdrop-filter:blur(2px);}
-.endeksmatikImportCard{width:min(460px,100%);padding:24px;background:var(--card);border:1px solid var(--hair-2);box-shadow:var(--shadow-3);color:var(--ink);}
-.endeksmatikImportHeader{display:flex;align-items:center;gap:14px;padding-bottom:16px;border-bottom:1px solid var(--hair-2);}
-.endeksmatikImportHeader strong{display:block;font:700 var(--fs-xl)/1.2 var(--head);}
-.endeksmatikImportHeader small{display:block;margin-top:4px;color:var(--muted);overflow-wrap:anywhere;font-size:var(--fs-sm);}
-.endeksmatikImportSpinner{flex:none;width:30px;height:30px;border:3px solid var(--hair-2);border-top-color:var(--acc);border-radius:50%;animation:endeksmatikImportSpin .8s linear infinite;}
-.endeksmatikImportOverlay.isComplete .endeksmatikImportSpinner{animation:none;border-color:var(--green);}
+.endeksmatikImportOverlay{position:fixed;inset:0;display:grid;place-items:center;padding:20px;}
+.endeksmatikImportCard{width:min(460px,100%);padding:24px;}
+.endeksmatikImportHeader{display:flex;align-items:center;gap:14px;padding-bottom:16px;}
+.endeksmatikImportHeader strong{display:block;}
+.endeksmatikImportHeader small{display:block;margin-top:4px;overflow-wrap:anywhere;}
+.endeksmatikImportSpinner{flex:none;width:30px;height:30px;}
 .endeksmatikImportSteps{list-style:none;padding:12px 0 0;margin:0;display:grid;gap:4px;}
-.endeksmatikImportSteps li{display:flex;gap:12px;padding:10px;border:1px solid transparent;opacity:.52;}
-.endeksmatikImportSteps li>span{display:grid;place-items:center;flex:0 0 32px;height:32px;font:700 var(--fs-sm)/1 var(--head);border:1px solid var(--hair-2);}
-.endeksmatikImportSteps li strong{font-size:var(--fs-md);line-height:1.2;}
-.endeksmatikImportSteps li small{display:block;margin-top:4px;font-size:var(--fs-sm);color:var(--muted);line-height:1.3;}
-.endeksmatikImportSteps li[data-state="current"]{opacity:1;background:var(--acc-bg);border-color:var(--acc);}
-.endeksmatikImportSteps li[data-state="current"]>span{background:var(--acc);border-color:var(--acc);color:var(--on-acc);}
+.endeksmatikImportSteps li{display:flex;gap:12px;padding:10px;opacity:.52;}
+.endeksmatikImportSteps li>span{display:grid;place-items:center;flex:0 0 32px;height:32px;}
+.endeksmatikImportSteps li small{display:block;margin-top:4px;}
+.endeksmatikImportSteps li[data-state="current"]{opacity:1;}
 .endeksmatikImportSteps li[data-state="done"]{opacity:.85;}
-.endeksmatikImportSteps li[data-state="done"]>span{border-color:var(--green);color:var(--green);}
-.endeksmatikImportFootnote{margin:14px 0 0;padding-top:12px;border-top:1px solid var(--hair-2);font-size:var(--fs-sm);color:var(--muted);}
+.endeksmatikImportFootnote{margin:14px 0 0;padding-top:12px;}
 @keyframes endeksmatikImportSpin{to{transform:rotate(360deg);}}
-@media(prefers-reduced-motion:reduce){.endeksmatikImportSpinner{animation:none;border-top-width:5px;}}

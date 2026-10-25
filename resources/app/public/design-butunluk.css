@@ -79,9 +79,6 @@ select option,select optgroup{background:var(--card);color:var(--ink);}
 /* ========== 8 · İKON ÇİZGİ KALINLIĞI ==========
    Ray ve üst bar 1.5'ti; LFL panelleri, Ön Maliyet araç çubuğu ve modal
    ikonları hâlâ 2 idi. Tek çizgi. */
-.modalCard svg,.globalSearchCard svg,.cfpDrawer svg{
-  stroke-width:1.5;
-}
 
 
 /* ========== 3 · ROZET VE ÇİP DİLİ ==========
@@ -106,60 +103,34 @@ select option,select optgroup{background:var(--card);color:var(--ink);}
 /* Etkileşim hareketi ve yükselti artık ortak experience katmanında hedefli
    bileşenler üzerinde tanımlanır. Evrensel !important kuralları date picker,
    drawer, yüklenme ve spreadsheet odak durumlarını da bastırıyordu. */
-.savebar{border-left:2px solid var(--acc);}
 
 /* --- Buton renklendirmesi: üç seviye, üçü de aynı dilde. ---
    1) Birincil  — tek dolu nesne, sayfada en fazla bir tane.
    2) Seçili/etkin — vurgu zemini, vurgu çerçevesi.
    3) Geri kalan — saç teli veya tamamen sessiz. */
-button,.navActionBtn,.tbtn,.upl-btn,.vfMenuTrigger{
+button{
   background:transparent;
   border:1px solid var(--hair);
   color:var(--ink);
   font-weight:400;
   border-radius:0;
 }
-button:hover,.navActionBtn:hover,.tbtn:hover{
+button:hover{
   background:color-mix(in srgb,var(--ink) 5%,transparent);
   border-color:var(--acc);
   color:var(--ink);
 }
-.primary,button.primary,.navActionBtn.primary,.tbtn.primary{
-  background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:500;
-}
 /* Yıkıcı eylem: kırmızı dolgu değil, kırmızı yazı. */
-.danger,button.danger,.btnDanger{
-  background:transparent !important;
-  border-color:color-mix(in srgb,var(--red) 40%,transparent) !important;
-  color:var(--red) !important;
-}
-.danger:hover,button.danger:hover,.btnDanger:hover{
-  background:var(--red-bg) !important;
-}
 /* İkon düğmeleri araç çubuğunda tamamen sessiz. */
-.iconbtn,.tableToolbarActions>.navActionBtn,.tableToolbarActions>.tbtn{
-  background:transparent;border-color:transparent;color:var(--ink2);
-}
-.iconbtn:hover,.tableToolbarActions>.navActionBtn:hover,.tableToolbarActions>.tbtn:hover{
-  background:var(--card2-strong);border-color:transparent;color:var(--ink);
-}
 
 /* --- Renk bütçesi: KPI çipleri sayı ve etikettir, renk değil. ---
    Renk yalnız Priority (kırmızı/turuncu/yeşil) ve Status'ta kalır —
    yani Excel çıktısına giden yerde. */
-.kpi.tone-blue,.kpi.tone-purple,.kpi.tone-teal,.kpi.tone-navy,.kpi.tone-gray{
-  background:transparent;border-color:var(--hair);color:var(--ink);
-}
-.kpi.tone-blue b,.kpi.tone-purple b,.kpi.tone-teal b,.kpi.tone-navy b,
-.kpi.tone-blue .n,.kpi.tone-purple .n,.kpi.tone-teal .n,.kpi.tone-navy .n{
-  color:var(--ink);
-}
-.kpi.active{background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink);}
-.kpi.active .n{color:var(--acc-ink);}
 
 /* --- Ayraç enflasyonu: çizgi yerine boşluk. --- */
-.hr,hr{display:none;}
-.kpiSep{background:var(--line2);width:1px;}
+hr{display:none;}
+.hr{display:none;}
+.kpiSep{width:1px;}
 
 /* --- Kaydırma çubuğu: ince, renksiz. --- */
 *{scrollbar-width:thin;scrollbar-color:var(--line2) transparent;}
@@ -171,18 +142,11 @@ button:hover,.navActionBtn:hover,.tbtn:hover{
    (#f6f7f9 zemin, beyaz kart, 14px köşe, mavi-gri gölge) ve hiçbir
    temayı tanımıyor. Aşağısı onu uygulamanın diline çeker.
    =================================================================== */
-#blBootGuard{background:var(--paper);color:var(--ink);font-family:var(--sans);}
-#blBootGuard .blBootCard{
-  background:transparent;border:1px solid var(--line2);border-radius:0;
-  box-shadow:none;padding:26px 30px;
+#blBootGuard .blBootCard{padding:26px 30px;
 }
 #blBootGuard button{
-  border:1px solid var(--line2);border-radius:0;background:transparent;color:var(--ink);
-  height:var(--ctl-h);padding:0 14px;
+  height:var(--ui-control-height);padding:0 14px;
 }
-#blBootGuard button:hover{border-color:var(--acc);background:var(--acc-bg);color:var(--acc-ink);}
-html[data-theme="dark"] #blBootGuard,html[data-theme="grey"] #blBootGuard{background:var(--paper);color:var(--ink);}
-html[data-theme="dark"] #blBootGuard .blBootCard,html[data-theme="grey"] #blBootGuard .blBootCard{background:transparent;border-color:var(--line2);}
 
 /* ===================================================================
    v6.34 — SALT GÖRÜNTÜLEME KİPİ (yenileme sırasında)
@@ -213,8 +177,8 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
 /* v6.34 — Sütun filtresi panelindeki revizyon bölümü (revize var / yok).
    .cfpRange ile aynı ölçüleri paylaşır; ayrı sınıf, aralık kutularının
    düzenini bozmadan kendi alt çizgisini taşıyabilsin diye. */
-.cfpRevision{padding:8px 9px 7px;display:grid;gap:3px;border-bottom:1px solid var(--line2);}
-.cfpRevision .cfpItem{display:flex;align-items:center;gap:6px;font-size:var(--fs-xs);cursor:pointer;padding:2px 0;}
+.cfpRevision{padding:8px 9px 7px;display:grid;gap:3px;}
+.cfpRevision .cfpItem{display:flex;align-items:center;gap:6px;cursor:pointer;padding:2px 0;}
 .cfpRevision .cfpItem input{margin:0;}
 
 /* v6.35 — Fiyat Geçmişi "Üretici bazlı" görünümünde sütun sürükleme. */
@@ -247,23 +211,9 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
    Sola yaslanır ki Vazgeç/Kaldır ikilisiyle karışmasın. */
 .imageDeleteConfirmPopover .imageFetchPlm{
   margin-right:auto;
-  border:1px solid var(--acc,#5980a6);
-  color:var(--acc,#5980a6);
-  background:transparent;
-}
-.imageDeleteConfirmPopover .imageFetchPlm:hover:not(:disabled){
-  background:var(--acc-bg,rgba(89,128,166,.1));
 }
 .imageDeleteConfirmPopover .imageFetchPlm:disabled{opacity:.6;cursor:progress;}
 /* Ana renk yap: PLM ön+arka model görseli bu renge. Yapıcı eylem, aynı stil. */
-.imageDeleteConfirmPopover .imageSetMainColour{
-  border:1px solid var(--acc,#5980a6);
-  color:var(--acc,#5980a6);
-  background:transparent;
-}
-.imageDeleteConfirmPopover .imageSetMainColour:hover:not(:disabled){
-  background:var(--acc-bg,rgba(89,128,166,.1));
-}
 .imageDeleteConfirmPopover .imageSetMainColour:disabled{opacity:.6;cursor:progress;}
 .imageDeleteConfirmPopover .imageDeleteConfirmActions{flex-wrap:wrap;}
 
@@ -296,8 +246,5 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
     scroll-behavior:auto!important;
     transition:none!important;
     animation:none!important;
-  }
-  .spinner,[data-loading] .ic{
-    animation:blBootSpin 1.8s linear infinite!important;
   }
 }

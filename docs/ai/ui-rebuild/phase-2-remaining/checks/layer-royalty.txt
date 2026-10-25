@@ -1,0 +1,221 @@
+✔ v10.37 ortak katman denetleyicisi dinamik modül ve uygulama kodundan önce yüklenir (0.878965ms)
+✔ v10.37 menü ok, Home ve End tuşları etkin seçenekler arasında döner (0.169155ms)
+✔ v10.37 modal odağı içeride tutar, Escape ile kapanır ve çağıran denetime geri döner (0.292561ms)
+✔ v10.37 Kullanıcı Yönetimi penceresi başlığına bağlıdır ve ortak modal yaşam döngüsünü kullanır (0.241083ms)
+✔ v10.37 ortak tablo menüleri ve Collection sağ-tık menüsü aynı klavye sözleşmesini kullanır (0.872906ms)
+✔ v10.37 Collection dış-tıklama dinleyicisi menü içi etkileşimde kaybolmaz (0.277739ms)
+✔ v10.37 menü seçenekleri semantik, tek tab duraklı ve pasif seçenekleri atlar (0.1656ms)
+✔ v10.37 Escape yalnız en üst katmanı kapatır ve mevcut iş eylemlerini kendisi çalıştırmaz (0.137427ms)
+✔ v10.37 modal ve menü odak yüzeyi tasarım tokenlarını kullanır (0.22539ms)
+✔ License Royalty v2 ülkeye göre Royalty + yüzde komisyon uygular (1.976419ms)
+✔ eski TR / Non-TR çiftleri efektif oranları kaybetmeden tek kayda migrate olur (1.001119ms)
+✔ tek taraflı eski kayıt diğer ülkeye yanlışlıkla uygulanmaz (0.183537ms)
+✔ arayüz ülke satırını kaldırır, TR/YD komisyon ve çift Final FOB gösterir (0.363117ms)
+✔ sunucu yeni komisyon alanlarını saklar ve countryGroup zorunluluğunu kaldırır (0.44443ms)
+✔ db okuma migrasyonu ve Supp FOB metadata komisyon detaylarını korur (0.360143ms)
+✔ Fiyat Kontrolü güncel tarih aralığındaki sözleşmeleri önce listeler (2.065574ms)
+✖ Fiyat Kontrolü süresi geçmiş seçenekleri tabloyla aynı kırmızı durum sınıfını taşır (3.184871ms)
+ℹ tests 17
+ℹ suites 0
+ℹ pass 16
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 104.468537
+
+✖ failing tests:
+
+test at tests/license-royalty-current-contract-v830.test.js:40:1
+✖ Fiyat Kontrolü süresi geçmiş seçenekleri tabloyla aynı kırmızı durum sınıfını taşır (3.184871ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /\.pricingRuleCheckRuleField select option\.pricingRuleExpired/. Input:
+  
+  '\n' +
+    '/* ===================================================================\n' +
+    '   ORDER CONTROL — Komuta Masası kabuğu · Aydınlık/Karanlık tema\n' +
+    "   Tek katman, !important yok. JS'in ürettiği tüm sınıflar kapsanır.\n" +
+    '   =================================================================== */\n' +
+    ':root{\n' +
+    '  --rail-w:208px;\n' +
+    '  --rail-min-w:66px;\n' +
+    '\n' +
+    '  /* --- Yüzeyler & metin (aydınlık — mevcut palet korunur) --- */\n' +
+    '  --paper:#F6F7F9; --card:#FFFFFF; --card2:#FBFBFC; --ink:#101828; --ink2:#475467; --muted:#98A2B3;\n' +
+    '  --line:#E4E7EC; --line2:#D0D5DD;\n' +
+    '  /* --- Kimlik rengi --- */\n' +
+    '  --acc:#5980A6; --acc-bg:#E9EFF5; --acc-lite:#8FA9C4; --acc-ink:#3E5C7A; --on-acc:#FFFFFF;\n' +
+    '  /* --- Durum renkleri --- */\n' +
+    '  --red:#A8453A; --red-bg:#F4E7E4; --orange:#8C6A1F; --orange-bg:#F2EAD6;\n' +
+    '  --yellow:var(--orange); --yellow-bg:var(--orange-bg); --green:#3F7757; --green-bg:#E3EDE6;\n' +
+    '  --gray-bg:#EDEFF1;\n' +
+    '  --red-lite:#A8453A; --orange-lite:#8C6A1F; --green-lite:#3F7757; --blue-lite:#5980A6;\n' +
+    "  /* --- Eski JS'in kullandığı takma adlar --- */\n" +
+    '  --navy:var(--acc); --navy-deep:#2A3E52; --teal:#3F7A6C; --blue:#5980A6; --purple:#6D53A8;\n' +
+    '  /* Tablo başlıkları: Gri temanın başlık tonu kullanılır — beyaza yakın yüzey\n' +
+    '     yerine belirgin gri zemin. Dışa aktarma ve kopyalama da bu tonu kullanır. */\n' +
+    '  --thead-bg:#F2F4F7; --thead-ink:#54595F; --thead-line:#D0D5DD;\n' +
+    '  --table-bg:var(--card); --table-ink:var(--ink); --table-border:var(--line);\n' +
+    '  --table-hover:#F3F6FA; --table-link:var(--acc-ink);\n' +
+    '  --table-editHover:color-mix(in srgb, var(--acc) 7%, transparent);\n' +
+    '  --table-editBg:color-mix(in srgb, var(--acc) 12%, var(--card));\n' +
+    '  --card2-strong:#D8DBDF;   /* grup başlığı satırı — Gri tema tonu */\n' +
+    '  /* --- Yarı saydam panel zemini (popover / menü) --- */\n' +
+    '  --pop:color-mix(in srgb, var(--card) 86%, transparent);\n' +
+    '  --pop-blur:saturate(1.6) blur(14px);\n' +
+    '  /* --- Ölçekler --- */\n' +
+    '  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:28px; --sp-7:36px;\n' +
+    '  --r-xs:0; --r-sm:0; --r-md:0; --r-lg:0; --r-xl:0; --r-full:999px;\n' +
+    '  /* Bilinçli istisnalar: kapsül tutamak/anahtar ve daire (avatar, durum noktası). DESIGN_SYSTEM.md §3 */\n' +
+    '  --r-pill:999px; --r-round:50%;\n' +
+    '  --ui-scale:1;\n' +
+    '  --ui-font-add:0px;\n' +
+    '  --fs-xs:calc(11px + var(--ui-font-add)); --fs-sm:calc(12px + var(--ui-font-add)); --fs-base:calc(12.5px + var(--ui-font-add)); --fs-md:calc(14px + var(--ui-font-add)); --fs-lg:calc(16px + var(--ui-font-add)); --fs-xl:calc(20px + var(--ui-font-add));\n' +
+    '  /* Tam yazı ölçeği: tüm modüller yalnız bu adımları kullanır (DESIGN_SYSTEM.md §2). */\n' +
+    '  --fs-2xs:calc(10.5px + var(--ui-font-add)); --fs-2xl:calc(24px + var(--ui-font-add)); --fs-3xl:calc(30px + var(--ui-font-add)); --fs-4xl:calc(40px + var(--ui-font-add));\n' +
+    '  --kol-cell-fs:calc(12px + var(--ui-font-add));\n' +
+    '  --ctl-h:34px;\n' +
+    '  --ctl-h-sm:calc(var(--ctl-h) - 8px);\n' +
+    '  /* Doygun dolgu üzerindeki yazı ve modal perdesi: tema değişse de aynı kalır (DESIGN_SYSTEM.md §5). */\n' +
+    '  --on-solid:#fff; --scrim:rgba(8,12,18,.48);\n' +
+    '  /* Kategorik grafik paleti — dataviz doğrulayıcısından geçti (CVD ΔE ≥ 8, normal ΔE ≥ 15). Sıra sabittir. */\n' +
+    '  --chart-1:#2a78d6; --chart-2:#eb6834; --chart-3:#1baf7a; --chart-4:#eda100; --chart-5:#e87ba4; --chart-6:#008300; --chart-7:#6250d6; --chart-8:#e34948;\n' +
+    '  --table-row-h:32px;\n' +
+    '  --table-group-head-h:29px;\n' +
+    '  --table-head-pad-y:8px;\n' +
+    '  --table-cell-pad-y:7px;\n' +
+    '  --table-edit-pad-y:2px;\n' +
+    '  --rail-item-h:36px;\n' +
+    '  --rail-foot-h:34px;\n' +
+    '  --rail-control-size:30px;\n' +
+    '  --icon-btn-size:34px;\n' +
+    '  --topbar-h:52px;\n' +
+    '  --control-sm:calc(var(--ctl-h) - 4px);\n' +
+    '  --control-md:var(--ctl-h);\n' +
+    '  --control-lg:calc(var(--ctl-h) + 6px);\n' +
+    '  --page-padding:var(--sp-5);\n' +
+    '  --section-gap:var(--sp-4);\n' +
+    '  --card-padding:var(--sp-4);\n' +
+    '  --toolbar-height:var(--ctl-h);\n' +
+    '  --shadow-1:0 1px 2px rgba(16,24,40,.05);\n' +
+    '  --shadow-2:0 4px 12px rgba(16,24,40,.07), 0 1px 3px rgba(16,24,40,.06);\n' +
+    '  --shadow-3:0 16px 40px rgba(16,24,40,.14), 0 3px 10px rgba(16,24,40,.07);\n' +
+    '  --shadow-lg:var(--shadow-3);\n' +
+    '  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);\n' +
+    '  --ease:cubic-bezier(.2,.7,.3,1);\n' +
+    '  /* --- Uydu stiller için tema köprüleri (lfl / open-costing / js şablonları) --- */\n' +
+    '  --success:var(--green); --warning:var(--orange); --danger:var(--red); --error:var(--red);\n' +
+    '  --info:var(--acc); --on-primary:var(--on-acc);\n' +
+    '  --hover:var(--card2-strong); --row-hover:var(--table-hover);\n' +
+    '  --acc-hover:color-mix(in srgb, var(--acc) 88%, #000 12%); --line3:var(--line2);\n' +
+    '  --mono:"Cascadia Code",ui-monospace,"SF Mono",Consolas,monospace;\n' +
+    '  --sans:"Barlow","Segoe UI Variable Text","Segoe UI Variable","Segoe UI",-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,Arial,sans-serif;\n' +
+    '  --heading:"Barlow Condensed",var(--sans);\n' +
+    '}\n' +
+    '\n' +
+    'html[data-font-step="0"]{--ui-font-add:0px;}\n' +
+    'html[data-font-step="1"]{--ui-font-add:1px;}\n' +
+    'html[data-font-step="2"]{--ui-font-add:2px;}\n' +
+    'html[data-font-step="3"]{--ui-font-add:3px;}\n' +
+    '\n' +
+    '/* Interface Size, yalnız metni değil bütün etkileşim geometrisini birlikte\n' +
+    '   ölçekler. Eski data-font-step saklama anahtarı geriye uyumluluk için kalır. */\n' +
+    'html[data-ui-scale="compact"]{\n' +
+    '  --rail-full-w:196px;--ui-scale:.9;--ui-font-add:-1px;--rail-w:196px;--rail-min-w:60px;\n' +
+    '  --ctl-h:30px;--table-row-h:28px;--table-group-head-h:25px;\n' +
+    '  --table-head-pad-y:6px;--table-cell-pad-y:5px;--table-edit-pad-y:1px;\n' +
+    '  --rail-item-h:32px;--rail-foot-h:32px;--rail-control-size:28px;\n' +
+    '  --icon-btn-size:32px;--topbar-h:48px;\n' +
+    '  --sp-1:3px;--sp-2:7px;--sp-3:10px;--sp-4:14px;--sp-5:18px;--sp-6:24px;--sp-7:32px;\n' +
+    '}\n' +
+    'html[data-ui-scale="standard"]{\n' +
+    '  --rail-full-w:208px;--ui-scale:1;--ui-font-add:0px;--rail-w:208px;--rail-min-w:66px;\n' +
+    '  --ctl-h:34px;--table-row-h:32px;--table-group-head-h:29px;\n' +
+    '  --table-head-pad-y:8px;--table-cell-pad-y:7px;--table-edit-pad-y:2px;\n' +
+    '  --rail-item-h:36px;--rail-foot-h:34px;--rail-control-size:30px;\n' +
+    '  --icon-btn-size:34px;--topbar-h:52px;\n' +
+    '}\n' +
+    'html[data-ui-scale="large"]{\n' +
+    '  --rail-full-w:224px;--ui-scale:1.125;--ui-font-add:1.5px;--rail-w:224px;--rail-min-w:72px;\n' +
+    '  --ctl-h:38px;--table-row-h:36px;--table-group-head-h:33px;\n' +
+    '  --table-head-pad-y:9px;--table-cell-pad-y:8px;--table-edit-pad-y:3px;\n' +
+    '  --rail-item-h:40px;--rail-foot-h:38px;--rail-control-size:34px;\n' +
+    '  --icon-btn-size:38px;--topbar-h:58px;\n' +
+    '  --sp-1:5px;--sp-2:9px;--sp-3:14px;--sp-4:18px;--sp-5:23px;--sp-6:31px;--sp-7:40px;\n' +
+    '}\n' +
+    'html[data-ui-scale="xl"]{\n' +
+    '  --rail-full-w:240px;--ui-scale:1.25;--ui-font-add:3px;--rail-w:240px;--rail-min-w:78px;\n' +
+    '  --ctl-h:42px;--table-row-h:40px;--table-group-head-h:37px;\n' +
+    '  --table-head-pad-y:10px;--table-cell-pad-y:9px;--table-edit-pad-y:4px;\n' +
+    '  --rail-item-h:44px;--rail-foot-h:42px;--rail-control-size:38px;\n' +
+    '  --icon-btn-size:42px;--topbar-h:64px;\n' +
+    '  --sp-1:5px;--sp-2:10px;--sp-3:15px;--sp-4:20px;--sp-5:25px;--sp-6:35px;--sp-7:45px;\n' +
+    '}\n' +
+    '\n' +
+    '[data-theme="dark"]{\n' +
+    '  /* Antrasit / gri yüzeyler — mavi alt ton yok */\n' +
+    '  --chart-1:#3987e5; --chart-2:#d95926; --chart-3:#199e70; --chart-4:#c98500; --chart-5:#d55181; --chart-6:#008300; --chart-7:#9085e9; --chart-8:#e66767;\n' +
+    '  --paper:#131417; --card:#1B1D21; --card2:#212429; --ink:#E8EAED; --ink2:#A7ADB6; --muted:#6E747D;\n' +
+    '  --line:#2A2D33; --line2:#3A3E45;\n' +
+    '  /* Kimlik: yumuşak çelik mavisi (soft, düşük doygunluk) */\n' +
+    '  --acc:#8FB0D4; --acc-bg:rgba(143,176,212,.13); --acc-lite:#A9C4E0; --acc-ink:#A9C4E0; --on-acc:#14171C;\n' +
+    '  /* Durum renkleri — pastel / soft */\n' +
+    '  --red:#E39B94; --red-bg:rgba(227,155,148,.12); --orange:#D9BA7E; --orange-bg:rgba(217,186,126,.12);\n' +
+    '  --yellow:#D9BA7E; --yellow-bg:rgba(217,186,126,.12); --green:#93C7A8; --green-bg:rgba(147,199,168,.12);\n' +
+    '  --gray-bg:rgba(167,173,182,.09);\n' +
+    '  --red-lite:#E39B94; --orange-lite:#D9BA7E; --green-lite:#93C7A8; --blue-lite:#A9C4E0;\n' +
+    '  --navy:#3A3E45; --navy-deep:#131417; --teal:#8CC5B7; --blue:#A9C4E0; --purple:#BCAEDC;\n' +
+    '  --thead-bg:var(--card2); --thead-ink:var(--ink2);\n' +
+    '  --table-hover:#24272D;\n' +
+    '  --table-editHover:color-mix(in srgb, var(--acc) 11%, transparent);\n' +
+    '  --table-editBg:color-mix(in srgb, var(--acc) 16%, var(--card));\n' +
+    '  --card2-strong:#282B31;\n' +
+    '  --pop:color-mix(in srgb, var(--card) 88%, transparent);\n' +
+    '  --shadow-1:inset 0 0 0 1px rgba(232,234,237,.05);\n' +
+    '  --shadow-2:inset 0 0 0 1px rgba(232,234,237,.07), inset 0 1px 0 rgba(232,234,237,.05);\n' +
+    '  --shadow-3:inset 0 0 0 1px rgba(232,234,237,.10), inset 0 1px 0 rgba(232,234,237,.08);\n' +
+    '  --shadow-lg:var(--shadow-3);\n' +
+    '  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 30%, transparent);\n' +
+    '}\n' +
+    '[data-theme="grey"]{\n' +
+    '  /* Aydınlık ile karanlığın ortası — açık/orta gri yüzeyler, koyu metin (okunur). */\n' +
+    '  --paper:#DFE1E4; --card:#ECEDEF; --card2:#E3E5E8; --ink:#22262B; --ink2:#54595F; --muted:#868C93;\n' +
+    '  --line:#CBCED2; --line2:#B4B8BD;\n' +
+    '  /* Kimlik: sakin çelik mavisi (aydınlıktan biraz yumuşak) */\n' +
+    '  --acc:#527398; --acc-bg:#D8E0EA; --acc-lite:#7E9ABB; --acc-ink:#3A5878; --on-acc:#FFFFFF;\n' +
+    '  /* Durum renkleri — soft, orta ton */\n' +
+    '  --red:#96443B; --red-bg:#E7D6D2; --orange:#7E651E; --orange-bg:#E5DDC6;\n' +
+    '  --yellow:var(--orange); --yellow-bg:var(--orange-bg); --green:#396A4F; --green-bg:#D4E0D7;\n' +
+    '  --gray-bg:#D6D8DB;\n' +
+    '  --red-lite:#9E3A31; --orange-lite:#8A6410; --green-lite:#2C6B48; --blue-lite:#3A6698;\n' +
+    '  --navy:var(--acc); --navy-deep:#2C4258; --teal:#33685C; --blue:#527398; --purple:#5E4F8C;\n' +
+    '  --thead-bg:var(--card2); --thead-ink:var(--ink2);\n' +
+    '  --table-hover:#DADDE1;\n' +
+    '  --table-editHover:color-mix(in srgb, var(--acc) 8%, transparent);\n' +
+    '  --table-editBg:color-mix(in srgb, var(--acc) 13%, var(--card));\n' +
+    '  --card2-strong:#D8DBDF;\n' +
+    '  --pop:color-mix(in srgb, var(--card) 84%, transparent);\n' +
+    '  --shadow-1:0 1px 2px rgba(20,26,33,.08);\n' +
+    '  --shadow-2:0 4px 12px rgba(20,26,33,.10), 0 1px 3px rgba(20,26,33,.08);\n' +
+    '  --shadow-3:0 16px 40px rgba(20,26,33,.18), 0 3px 10px rgba(20,26,33,.10);\n' +
+    '  --shadow-lg:var(--shadow-3);\n' +
+    '  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);\n' +
+    '}\n' +
+    '/* ---- İkon sistemi: sayfa içi SVG sprite (internet/CDN gerektirmez) ---- */\n' +
+    '.ic{width:1.1em;height:1.1em;display:inline-block;vertical-align:-0.18em;flex-shrink:0;}\n' +
+    'html{scroll-behavior:auto;max-width:100%;overflow-x:hidden}\n' +
+    '/* Native <select> açılır listesi tarayıcı tarafından çizilir; '... 351071 more characters
+  
+      at TestContext.<anonymous> (/workspace/buyerlog-rebuild/resources/app/tests/license-royalty-current-contract-v830.test.js:44:10)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1382:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:960:18)
+      at Test.postRun (node:internal/test_runner/test:1522:19)
+      at Test.run (node:internal/test_runner/test:1447:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:387:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: `\n/* ===================================================================\n   ORDER CONTROL — Komuta Masası kabuğu · Aydınlık/Karanlık tema\n   Tek katman, !important yok. JS'in ürettiği tüm sınıflar kapsanır.\n   =================================================================== */\n:root{\n  --rail-w:208px;\n  --rail-min-w:66px;\n\n  /* --- Yüzeyler & metin (aydınlık — mevcut palet korunur) --- */\n  --paper:#F6F7F9; --card:#FFFFFF; --card2:#FBFBFC; --ink:#101828; --ink2:#475467; --muted:#98A2B3;\n  --line:#E4E7EC; --line2:#D0D5DD;\n  /* --- Kimlik rengi --- */\n  --acc:#5980A6; --acc-bg:#E9EFF5; --acc-lite:#8FA9C4; --acc-ink:#3E5C7A; --on-acc:#FFFFFF;\n  /* --- Durum renkleri --- */\n  --red:#A8453A; --red-bg:#F4E7E4; --orange:#8C6A1F; --orange-bg:#F2EAD6;\n  --yellow:var(--orange); --yellow-bg:var(--orange-bg); --green:#3F7757; --green-bg:#E3EDE6;\n  --gray-bg:#EDEFF1;\n  --red-lite:#A8453A; --orange-lite:#8C6A1F; --green-lite:#3F7757; --blue-lite:#5980A6;\n  /* --- Eski JS'in kullandığı takma adlar --- */\n  --navy:var(--acc); --navy-deep:#2A3E52; --teal:#3F7A6C; --blue:#5980A6; --purple:#6D53A8;\n  /* Tablo başlıkları: Gri temanın başlık tonu kullanılır — beyaza yakın yüzey\n     yerine belirgin gri zemin. Dışa aktarma ve kopyalama da bu tonu kullanır. */\n  --thead-bg:#F2F4F7; --thead-ink:#54595F; --thead-line:#D0D5DD;\n  --table-bg:var(--card); --table-ink:var(--ink); --table-border:var(--line);\n  --table-hover:#F3F6FA; --table-link:var(--acc-ink);\n  --table-editHover:color-mix(in srgb, var(--acc) 7%, transparent);\n  --table-editBg:color-mix(in srgb, var(--acc) 12%, var(--card));\n  --card2-strong:#D8DBDF;   /* grup başlığı satırı — Gri tema tonu */\n  /* --- Yarı saydam panel zemini (popover / menü) --- */\n  --pop:color-mix(in srgb, var(--card) 86%, transparent);\n  --pop-blur:saturate(1.6) blur(14px);\n  /* --- Ölçekler --- */\n  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:20px; --sp-6:28px; --sp-7:36px;\n  --r-xs:0; --r-sm:0; --r-md:0; --r-lg:0; --r-xl:0; --r-full:999px;\n  /* Bilinçli istisnalar: kapsül tutamak/anahtar ve daire (avatar, durum noktası). DESIGN_SYSTEM.md §3 */\n  --r-pill:999px; --r-round:50%;\n  --ui-scale:1;\n  --ui-font-add:0px;\n  --fs-xs:calc(11px + var(--ui-font-add)); --fs-sm:calc(12px + var(--ui-font-add)); --fs-base:calc(12.5px + var(--ui-font-add)); --fs-md:calc(14px + var(--ui-font-add)); --fs-lg:calc(16px + var(--ui-font-add)); --fs-xl:calc(20px + var(--ui-font-add));\n  /* Tam yazı ölçeği: tüm modüller yalnız bu adımları kullanır (DESIGN_SYSTEM.md §2). */\n  --fs-2xs:calc(10.5px + var(--ui-font-add)); --fs-2xl:calc(24px + var(--ui-font-add)); --fs-3xl:calc(30px + var(--ui-font-add)); --fs-4xl:calc(40px + var(--ui-font-add));\n  --kol-cell-fs:calc(12px + var(--ui-font-add));\n  --ctl-h:34px;\n  --ctl-h-sm:calc(var(--ctl-h) - 8px);\n  /* Doygun dolgu üzerindeki yazı ve modal perdesi: tema değişse de aynı kalır (DESIGN_SYSTEM.md §5). */\n  --on-solid:#fff; --scrim:rgba(8,12,18,.48);\n  /* Kategorik grafik paleti — dataviz doğrulayıcısından geçti (CVD ΔE ≥ 8, normal ΔE ≥ 15). Sıra sabittir. */\n  --chart-1:#2a78d6; --chart-2:#eb6834; --chart-3:#1baf7a; --chart-4:#eda100; --chart-5:#e87ba4; --chart-6:#008300; --chart-7:#6250d6; --chart-8:#e34948;\n  --table-row-h:32px;\n  --table-group-head-h:29px;\n  --table-head-pad-y:8px;\n  --table-cell-pad-y:7px;\n  --table-edit-pad-y:2px;\n  --rail-item-h:36px;\n  --rail-foot-h:34px;\n  --rail-control-size:30px;\n  --icon-btn-size:34px;\n  --topbar-h:52px;\n  --control-sm:calc(var(--ctl-h) - 4px);\n  --control-md:var(--ctl-h);\n  --control-lg:calc(var(--ctl-h) + 6px);\n  --page-padding:var(--sp-5);\n  --section-gap:var(--sp-4);\n  --card-padding:var(--sp-4);\n  --toolbar-height:var(--ctl-h);\n  --shadow-1:0 1px 2px rgba(16,24,40,.05);\n  --shadow-2:0 4px 12px rgba(16,24,40,.07), 0 1px 3px rgba(16,24,40,.06);\n  --shadow-3:0 16px 40px rgba(16,24,40,.14), 0 3px 10px rgba(16,24,40,.07);\n  --shadow-lg:var(--shadow-3);\n  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);\n  --ease:cubic-bezier(.2,.7,.3,1);\n  /* --- Uydu stiller için tema köprüleri (lfl / open-costing / js şablonları) --- */\n  --success:var(--green); --warning:var(--orange); --danger:var(--red); --error:var(--red);\n  --info:var(--acc); --on-primary:var(--on-acc);\n  --hover:var(--card2-strong); --row-hover:var(--table-hover);\n  --acc-hover:color-mix(in srgb, var(--acc) 88%, #000 12%); --line3:var(--line2);\n  --mono:"Cascadia Code",ui-monospace,"SF Mono",Consolas,monospace;\n  --sans:"Barlow","Segoe UI Variable Text","Segoe UI Variable","Segoe UI",-apple-system,BlinkMacSystemFont,"SF Pro Text",Roboto,Arial,sans-serif;\n  --heading:"Barlow Condensed",var(--sans);\n}\n\nhtml[data-font-step="0"]{--ui-font-add:0px;}\nhtml[data-font-step="1"]{--ui-font-add:1px;}\nhtml[data-font-step="2"]{--ui-font-add:2px;}\nhtml[data-font-step="3"]{--ui-font-add:3px;}\n\n/* Interface Size, yalnız metni değil bütün etkileşim geometrisini birlikte\n   ölçekler. Eski data-font-step saklama anahtarı geriye uyumluluk için kalır. */\nhtml[data-ui-scale="compact"]{\n  --rail-full-w:196px;--ui-scale:.9;--ui-font-add:-1px;--rail-w:196px;--rail-min-w:60px;\n  --ctl-h:30px;--table-row-h:28px;--table-group-head-h:25px;\n  --table-head-pad-y:6px;--table-cell-pad-y:5px;--table-edit-pad-y:1px;\n  --rail-item-h:32px;--rail-foot-h:32px;--rail-control-size:28px;\n  --icon-btn-size:32px;--topbar-h:48px;\n  --sp-1:3px;--sp-2:7px;--sp-3:10px;--sp-4:14px;--sp-5:18px;--sp-6:24px;--sp-7:32px;\n}\nhtml[data-ui-scale="standard"]{\n  --rail-full-w:208px;--ui-scale:1;--ui-font-add:0px;--rail-w:208px;--rail-min-w:66px;\n  --ctl-h:34px;--table-row-h:32px;--table-group-head-h:29px;\n  --table-head-pad-y:8px;--table-cell-pad-y:7px;--table-edit-pad-y:2px;\n  --rail-item-h:36px;--rail-foot-h:34px;--rail-control-size:30px;\n  --icon-btn-size:34px;--topbar-h:52px;\n}\nhtml[data-ui-scale="large"]{\n  --rail-full-w:224px;--ui-scale:1.125;--ui-font-add:1.5px;--rail-w:224px;--rail-min-w:72px;\n  --ctl-h:38px;--table-row-h:36px;--table-group-head-h:33px;\n  --table-head-pad-y:9px;--table-cell-pad-y:8px;--table-edit-pad-y:3px;\n  --rail-item-h:40px;--rail-foot-h:38px;--rail-control-size:34px;\n  --icon-btn-size:38px;--topbar-h:58px;\n  --sp-1:5px;--sp-2:9px;--sp-3:14px;--sp-4:18px;--sp-5:23px;--sp-6:31px;--sp-7:40px;\n}\nhtml[data-ui-scale="xl"]{\n  --rail-full-w:240px;--ui-scale:1.25;--ui-font-add:3px;--rail-w:240px;--rail-min-w:78px;\n  --ctl-h:42px;--table-row-h:40px;--table-group-head-h:37px;\n  --table-head-pad-y:10px;--table-cell-pad-y:9px;--table-edit-pad-y:4px;\n  --rail-item-h:44px;--rail-foot-h:42px;--rail-control-size:38px;\n  --icon-btn-size:42px;--topbar-h:64px;\n  --sp-1:5px;--sp-2:10px;--sp-3:15px;--sp-4:20px;--sp-5:25px;--sp-6:35px;--sp-7:45px;\n}\n\n[data-theme="dark"]{\n  /* Antrasit / gri yüzeyler — mavi alt ton yok */\n  --chart-1:#3987e5; --chart-2:#d95926; --chart-3:#199e70; --chart-4:#c98500; --chart-5:#d55181; --chart-6:#008300; --chart-7:#9085e9; --chart-8:#e66767;\n  --paper:#131417; --card:#1B1D21; --card2:#212429; --ink:#E8EAED; --ink2:#A7ADB6; --muted:#6E747D;\n  --line:#2A2D33; --line2:#3A3E45;\n  /* Kimlik: yumuşak çelik mavisi (soft, düşük doygunluk) */\n  --acc:#8FB0D4; --acc-bg:rgba(143,176,212,.13); --acc-lite:#A9C4E0; --acc-ink:#A9C4E0; --on-acc:#14171C;\n  /* Durum renkleri — pastel / soft */\n  --red:#E39B94; --red-bg:rgba(227,155,148,.12); --orange:#D9BA7E; --orange-bg:rgba(217,186,126,.12);\n  --yellow:#D9BA7E; --yellow-bg:rgba(217,186,126,.12); --green:#93C7A8; --green-bg:rgba(147,199,168,.12);\n  --gray-bg:rgba(167,173,182,.09);\n  --red-lite:#E39B94; --orange-lite:#D9BA7E; --green-lite:#93C7A8; --blue-lite:#A9C4E0;\n  --navy:#3A3E45; --navy-deep:#131417; --teal:#8CC5B7; --blue:#A9C4E0; --purple:#BCAEDC;\n  --thead-bg:var(--card2); --thead-ink:var(--ink2);\n  --table-hover:#24272D;\n  --table-editHover:color-mix(in srgb, var(--acc) 11%, transparent);\n  --table-editBg:color-mix(in srgb, var(--acc) 16%, var(--card));\n  --card2-strong:#282B31;\n  --pop:color-mix(in srgb, var(--card) 88%, transparent);\n  --shadow-1:inset 0 0 0 1px rgba(232,234,237,.05);\n  --shadow-2:inset 0 0 0 1px rgba(232,234,237,.07), inset 0 1px 0 rgba(232,234,237,.05);\n  --shadow-3:inset 0 0 0 1px rgba(232,234,237,.10), inset 0 1px 0 rgba(232,234,237,.08);\n  --shadow-lg:var(--shadow-3);\n  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 30%, transparent);\n}\n[data-theme="grey"]{\n  /* Aydınlık ile karanlığın ortası — açık/orta gri yüzeyler, koyu metin (okunur). */\n  --paper:#DFE1E4; --card:#ECEDEF; --card2:#E3E5E8; --ink:#22262B; --ink2:#54595F; --muted:#868C93;\n  --line:#CBCED2; --line2:#B4B8BD;\n  /* Kimlik: sakin çelik mavisi (aydınlıktan biraz yumuşak) */\n  --acc:#527398; --acc-bg:#D8E0EA; --acc-lite:#7E9ABB; --acc-ink:#3A5878; --on-acc:#FFFFFF;\n  /* Durum renkleri — soft, orta ton */\n  --red:#96443B; --red-bg:#E7D6D2; --orange:#7E651E; --orange-bg:#E5DDC6;\n  --yellow:var(--orange); --yellow-bg:var(--orange-bg); --green:#396A4F; --green-bg:#D4E0D7;\n  --gray-bg:#D6D8DB;\n  --red-lite:#9E3A31; --orange-lite:#8A6410; --green-lite:#2C6B48; --blue-lite:#3A6698;\n  --navy:var(--acc); --navy-deep:#2C4258; --teal:#33685C; --blue:#527398; --purple:#5E4F8C;\n  --thead-bg:var(--card2); --thead-ink:var(--ink2);\n  --table-hover:#DADDE1;\n  --table-editHover:color-mix(in srgb, var(--acc) 8%, transparent);\n  --table-editBg:color-mix(in srgb, var(--acc) 13%, var(--card));\n  --card2-strong:#D8DBDF;\n  --pop:color-mix(in srgb, var(--card) 84%, transparent);\n  --shadow-1:0 1px 2px rgba(20,26,33,.08);\n  --shadow-2:0 4px 12px rgba(20,26,33,.10), 0 1px 3px rgba(20,26,33,.08);\n  --shadow-3:0 16px 40px rgba(20,26,33,.18), 0 3px 10px rgba(20,26,33,.10);\n  --shadow-lg:var(--shadow-3);\n  --focus-ring:0 0 0 3px color-mix(in srgb, var(--acc) 22%, transparent);\n}\n/* ---- İkon sistemi: sayfa içi SVG sprite (internet/CDN gerektirmez) ---- */\n.ic{width:1.1em;height:1.1em;display:inline-block;vertical-align:-0.18em;flex-shrink:0;}\nhtml{scroll-behavior:auto;max-width:100%;overflow-x:hidden}\n/* Native <select> açılır listesi tarayıcı tarafından çizilir; `... 351071 more characters,
+    expected: /\.pricingRuleCheckRuleField select option\.pricingRuleExpired/,
+    operator: 'match',
+    diff: 'simple'
+  }

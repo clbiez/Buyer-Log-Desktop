@@ -1,0 +1,20 @@
+{
+  "startupMs": {
+    "baselineMs": 1020.1000000000349,
+    "currentMs": 956.7000000011176,
+    "deltaMs": -63.4,
+    "deltaPercent": -6.2
+  },
+  "cpNavigationMs": {
+    "baselineMs": 975.4000000000233,
+    "currentMs": 1092.7000000011176,
+    "deltaMs": 117.3,
+    "deltaPercent": 12.0
+  },
+  "cp5000RenderMs": {
+    "baselineMs": 2995.9000000000233,
+    "currentMs": 3132.4000000003725,
+    "deltaMs": 136.5,
+    "deltaPercent": 4.6
+  }
+}

@@ -1339,8 +1339,8 @@ function drawLand3d(ctx,w,h,p){
 }
 function drawTarget(ctx,q,p){
   if(!q||!q.visible)return;ctx.save();ctx.translate(q.x,q.y);
-  ctx.fillStyle=p.red;ctx.globalAlpha=.16;ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();
-  ctx.globalAlpha=1;ctx.fillStyle=p.red;ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();ctx.restore();
+  ctx.fillStyle=p.red;ctx.globalAlpha=.16;ctx.fillRect(-8,-8,16,16);
+  ctx.globalAlpha=1;ctx.fillStyle=p.red;ctx.fillRect(-3,-3,6,6);ctx.restore();
 }
 function viewKey(info){return [state.view,info.w,info.h,info.dpr,state.panX,state.panY,state.zoom2d,state.rotLon,state.rotLat,state.zoom3d].join('|');}
 /* Dünya katmanı yalnız görünüm/tema/coğrafya değişince yeniden çizilir;
@@ -1424,7 +1424,7 @@ function drawRouteParticles(ctx,item,now){
   for(let i=0;i<count;i++){
     const distance=((now/1000*speed)+i*total/count)%total,segment=segments.find(s=>distance<=s.start+s.length);if(!segment)continue;
     const t=(distance-segment.start)/segment.length;
-    ctx.beginPath();ctx.arc(segment.a.x+(segment.b.x-segment.a.x)*t,segment.a.y+(segment.b.y-segment.a.y)*t,1.7,0,Math.PI*2);ctx.fill();
+    ctx.fillRect(segment.a.x+(segment.b.x-segment.a.x)*t-1.7,segment.a.y+(segment.b.y-segment.a.y)*t-1.7,3.4,3.4);
   }
   ctx.restore();
 }
@@ -1476,8 +1476,8 @@ function drawEdges(ctx,scene,now,animate){
 function drawModeGlyph(ctx,mode){
   if(mode==='air'){ctx.beginPath();ctx.moveTo(6,0);ctx.lineTo(-4.5,-3.5);ctx.lineTo(-1.5,0);ctx.lineTo(-4.5,3.5);ctx.closePath();ctx.fill();}
   else if(mode==='sea'){ctx.beginPath();ctx.moveTo(-5.5,-1);ctx.lineTo(5.5,-1);ctx.lineTo(3.2,4);ctx.lineTo(-3.8,4);ctx.closePath();ctx.fill();ctx.fillRect(-1,-5,2.4,4);}
-  else if(mode==='road'){ctx.fillRect(-5.5,-3,7.5,4.6);ctx.fillRect(2.3,-1.4,3.4,3);ctx.beginPath();ctx.arc(-3,2.6,1.5,0,Math.PI*2);ctx.arc(3.8,2.6,1.5,0,Math.PI*2);ctx.fill();}
-  else {ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();}
+  else if(mode==='road'){ctx.fillRect(-5.5,-3,7.5,4.6);ctx.fillRect(2.3,-1.4,3.4,3);ctx.fillRect(-4.5,1.1,3,3);ctx.fillRect(2.3,1.1,3,3);}
+  else {ctx.fillRect(-3,-3,6,6);}
 }
 function plotSquare(ctx,x,y,r){ctx.rect(x-r,y-r,r*2,r*2);}
 function plotFont(){const style=getComputedStyle($('globalFlowMeta'));return '600 '+style.fontSize+' '+style.fontFamily;}

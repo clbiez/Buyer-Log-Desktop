@@ -261,7 +261,7 @@
       + '<p class="ximLead">' + esc(T(
         'Kendi Excel dosyanızdaki sütunları Buyer Log alanlarına eşleyerek içeri aktarın. Hiçbir veri, önizlemeyi onaylamadan önce değişmez.',
         'Map the columns of your own Excel workbook onto Buyer Log fields. Nothing changes until you approve the preview.')) + '</p>'
-      + '<label class="ximFileDrop"><input type="file" accept=".xlsx,.xls,.xlsm" data-xim="file" hidden>'
+      + '<label class="ximFileDrop" tabindex="0" role="button"><input type="file" accept=".xlsx,.xls,.xlsm" data-xim="file" hidden>'
       + '<strong>' + esc(T('Excel dosyası seç', 'Choose an Excel file')) + '</strong>'
       + '<span class="muted">.xlsx · .xls · .xlsm</span>'
       + (state.fileName ? '<span class="ximChip">' + esc(state.fileName) + '</span>' : '')
@@ -980,11 +980,13 @@
     render();
   }
 
+  var releaseKeyboard=null;
   function onKey(event) { if (event.key === 'Escape' && !state.busy) close(); }
 
   function close() {
     if (!host) return;
     document.removeEventListener('keydown', onKey);
+    if(releaseKeyboard){releaseKeyboard();releaseKeyboard=null;}
     host.remove();
     host = null;
     state = null;
@@ -1001,8 +1003,13 @@
     state.profiles = Profiles.list(moduleId);
     host = document.createElement('div');
     host.id = 'excelImportWizard';
-    host.className = 'warnOverlay ximOverlay';
+    host.className = 'warnOverlay ximOverlay';host.dataset.uiMigrated='remaining';
     host.addEventListener('click', onClick);
+    host.addEventListener('keydown',function(event){
+      if(event.target.matches('.ximFileDrop')&&(event.key==='Enter'||event.key===' ')){
+        event.preventDefault();event.target.querySelector('[data-xim="file"]').click();
+      }
+    });
     host.addEventListener('change', onChange);
     host.addEventListener('input', function (event) {
       var element = event.target.closest('[data-xim]');
@@ -1011,6 +1018,7 @@
     document.body.appendChild(host);
     document.addEventListener('keydown', onKey);
     render();
+    releaseKeyboard=global.BLUI?.bindDialogKeyboard(host);
   }
 
   /* Tetikleyici düğmeler delege edilir: araç menüleri dinamik olarak

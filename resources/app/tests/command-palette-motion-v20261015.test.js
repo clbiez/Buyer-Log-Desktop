@@ -50,7 +50,10 @@ test('Palet araması Türkçe karakterlerden bağımsız eşleşir ve önce baş
 });
 
 test('Dar ray üzerine gelince tam genişlikte, içeriği itmeden açılır', () => {
-  assert.match(APP_CSS, /html\[data-rail="min"\] \.rail:is\(:hover,:focus-within\)\{width:var\(--rail-full-w\);[^}]*box-shadow:var\(--shadow-3\);transition-delay:\.18s;\}/);
+  assert.match(APP_CSS, /html\[data-rail="min"\] \.rail:is\(:hover,:focus-within\)\{width:var\(--rail-full-w\);/);
+  const shared=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8');
+  assert.match(shared,/html\[data-ui-system="manifest"\]\[data-rail="min"\] \.rail:is\(:hover,:focus-within\)[^}]*box-shadow:none/);
+  assert.doesNotMatch(shared,/transition:width/);
   for (const [preset, width] of [['compact', '196px'], ['standard', '208px'], ['large', '224px'], ['xl', '240px']]) {
     assert.match(APP_CSS, new RegExp(`html\\[data-ui-scale="${preset}"\\]\\{\\n  --rail-full-w:${width};`));
   }

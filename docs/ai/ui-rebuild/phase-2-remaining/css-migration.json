@@ -1,0 +1,76 @@
+{
+  "base": "555a1b48",
+  "group": "remaining",
+  "modules": [
+    "command-palette.css",
+    "dual-week-datepicker.css",
+    "excel-import.css",
+    "excel-templates.css",
+    "layout-control.css",
+    "overview-global-flow.css",
+    "overview-home.css",
+    "table-search-help.css"
+  ],
+  "stats": [
+    {
+      "file": "command-palette.css",
+      "rules": 15,
+      "declarations": 44
+    },
+    {
+      "file": "dual-week-datepicker.css",
+      "rules": 27,
+      "declarations": 61
+    },
+    {
+      "file": "excel-import.css",
+      "rules": 52,
+      "declarations": 102
+    },
+    {
+      "file": "excel-templates.css",
+      "rules": 9,
+      "declarations": 16
+    },
+    {
+      "file": "layout-control.css",
+      "rules": 90,
+      "declarations": 217
+    },
+    {
+      "file": "overview-global-flow.css",
+      "rules": 126,
+      "declarations": 295
+    },
+    {
+      "file": "overview-home.css",
+      "rules": 208,
+      "declarations": 489
+    },
+    {
+      "file": "table-search-help.css",
+      "rules": 18,
+      "declarations": 48
+    },
+    {
+      "file": "app.css",
+      "rules": 2169,
+      "declarations": 5911
+    },
+    {
+      "file": "design.css",
+      "rules": 125,
+      "declarations": 327
+    },
+    {
+      "file": "experience.css",
+      "rules": 123,
+      "declarations": 307
+    },
+    {
+      "file": "design-butunluk.css",
+      "rules": 27,
+      "declarations": 62
+    }
+  ]
+}

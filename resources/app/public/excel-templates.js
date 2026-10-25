@@ -74,7 +74,7 @@
   }
   async function open(){
     await libraries();document.getElementById('excelTemplateManager')?.remove();
-    const modal=document.createElement('div');modal.id='excelTemplateManager';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='excelTemplateManager';modal.className='warnOverlay';modal.dataset.uiMigrated='remaining';
     modal.innerHTML=`<div class="modalCard excelTemplateCard" role="dialog" aria-modal="true" aria-labelledby="excelTemplateTitle"><div class="modalTitle"><span id="excelTemplateTitle">${T('Excel Şablonlarını Yönet','Manage Excel Templates')}</span><button type="button" data-close aria-label="${T('Kapat','Close')}">×</button></div>
     <p>${T('Bu ayarlar hesabınıza kaydedilir. Yeni formatı indirin veya yükleyin; başlıkları otomatik eşleştirin, yeni sütunların alanını seçip kaydedin. Sonraki çıktılar yeni formatı kullanır.','These settings are saved to your account. Download or upload a format, match headers automatically, choose fields for new columns and save. Future exports use the new format.')}</p>
     <p>${T('Şablon: başlıklar + ilk veri satırında örnek biçim. İlk veri satırından sonraki tüm örnek veriler temizlenir; bu alana dipnot koymayın. Diğer sayfalar korunur.','Template: headers + sample formatting in the first data row. All sample data from the first data row onward is cleared; keep footnotes outside this area. Other sheets are preserved.')}</p>
@@ -148,8 +148,9 @@
       if(data.rejected?.length||data.entries?.[entryKey]?.value!==value)throw error();
       status(T('Format kaydedildi. Sonraki çıktılar bu şablonu kullanacak.','Format saved. Future exports will use this template.'));
     }catch(e){status(failureMessage(e));}finally{busy(false);}};
-    modal.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>modal.remove());
-    modal.addEventListener('keydown',e=>{if(e.key==='Escape')modal.remove();});await load();$('[data-type]').focus();
+    const close=()=>{root.BLLayerSystem?.closeDialog(modal);modal.remove();};
+    root.BLLayerSystem?.openDialog(modal,{onClose:close});
+    modal.querySelectorAll('[data-close]').forEach(b=>b.onclick=close);await load();$('[data-type]').focus();
   }
   root.BLExcelTemplates={open,build,records,error,catalog};
 })(window);

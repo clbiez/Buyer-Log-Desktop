@@ -1,17 +1,8 @@
-.tableActionToolbar>input[type=search].tableSearchInputExpandable{
-  transition:flex-basis .14s var(--ease),width .14s var(--ease),max-width .14s var(--ease),box-shadow .14s var(--ease),background .14s var(--ease);
-}
 .tableActionToolbar>input[type=search].tableSearchInputExpanded{
   flex:0 0 var(--table-search-hover-width,var(--tb-search-width,230px))!important;
   width:var(--table-search-hover-width,var(--tb-search-width,230px))!important;
   max-width:var(--table-search-hover-width,var(--tb-search-width,230px))!important;
   position:relative;
-  z-index:12;
-  background:var(--card);
-  box-shadow:var(--shadow-2);
-}
-.tableActionToolbar>input[type=search].tableSearchInputExpanded:focus{
-  background:var(--card);
 }
 
 .tableSearchHelpButton{
@@ -24,34 +15,13 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  border:1px solid var(--line2);
-  border-radius:var(--r-xs);
-  background:var(--card);
-  color:var(--muted);
-  font:700 var(--fs-sm)/1 var(--sans);
-  font-style:italic;
   cursor:pointer;
-  transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease),transform .12s var(--ease);
-}
-.tableSearchHelpButton:hover,
-.tableSearchHelpButton[aria-expanded="true"]{
-  border-color:var(--acc-lite);
-  background:var(--acc-bg);
-  color:var(--acc-ink);
 }
 .tableSearchHelpButton:active{transform:scale(.96);}
-.tableSearchHelpButton:focus-visible{outline:none;box-shadow:var(--focus-ring);}
 .tableSearchHelpPopover{
   position:fixed;
-  z-index:1600;
   width:min(360px,calc(100vw - 16px));
   padding:12px;
-  border:1px solid var(--line2);
-  border-radius:var(--r-md);
-  background:var(--card);
-  color:var(--ink);
-  box-shadow:var(--shadow-3);
-  font:500 var(--fs-xs)/1.45 var(--sans);
 }
 .tableSearchHelpHead{
   display:flex;
@@ -60,7 +30,6 @@
   gap:10px;
   margin-bottom:5px;
 }
-.tableSearchHelpHead strong{font:700 var(--fs-sm)/1.2 var(--head);}
 .tableSearchHelpClose{
   width:24px;
   height:24px;
@@ -68,16 +37,9 @@
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  border:0;
-  border-radius:var(--r-xs);
-  background:transparent;
-  color:var(--muted);
-  font:600 var(--fs-xl)/1 var(--sans);
   cursor:pointer;
 }
-.tableSearchHelpClose:hover{background:var(--card2-strong);color:var(--ink);}
-.tableSearchHelpClose:focus-visible{outline:none;box-shadow:var(--focus-ring);}
-.tableSearchHelpIntro{margin:0 0 9px;color:var(--ink2);}
+.tableSearchHelpIntro{margin:0 0 9px;}
 .tableSearchHelpExamples{display:grid;gap:6px;}
 .tableSearchHelpExample{
   display:grid;
@@ -88,30 +50,17 @@
 .tableSearchHelpExample code{
   min-width:0;
   padding:3px 6px;
-  border:1px solid var(--line);
-  border-radius:var(--r-xs);
-  background:var(--card2);
-  color:var(--acc-ink);
-  font:600 var(--fs-2xs)/1.35 var(--mono);
   white-space:nowrap;
 }
-.tableSearchHelpExample span{color:var(--ink2);}
 .tableSearchHelpExcel{
   display:grid;
   gap:3px;
   margin-top:9px;
   padding-top:9px;
-  border-top:1px solid var(--line);
 }
-.tableSearchHelpExcel strong{font-weight:700;}
-.tableSearchHelpExcel span{color:var(--ink2);}
 .tableSearchHelpNote{
   margin-top:8px;
   padding:7px 8px;
-  border-radius:var(--r-xs);
-  background:var(--card2);
-  color:var(--muted);
-  font-size:var(--fs-2xs);
 }
 @media(max-width:900px){
   .tableSearchHelpButton{flex:0 0 24px;}

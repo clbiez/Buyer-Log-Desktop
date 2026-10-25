@@ -171,6 +171,7 @@
   function close(force) {
     if (!root()) { ed = null; return true; }
     if (!force && ed && ed.dirty && !window.confirm(L('Oluşturulmamış değişiklikler kaybolacak. Kapatılsın mı?', 'Changes that were not turned into a file will be lost. Close?'))) return false;
+    window.BLLayerSystem?.closeDialog(root());
     root().remove();
     document.removeEventListener('keydown', onKeydown, true);
     ed = null;
@@ -180,7 +181,7 @@
   function mount() {
     const overlay = document.createElement('div');
     overlay.id = '_lcwaiOutputEditor';
-    overlay.className = 'warnOverlay lcwaiEdOverlay';
+    overlay.className = 'warnOverlay lcwaiEdOverlay';overlay.dataset.uiMigrated='remaining';
     // Metinler L() ile zaten TR/EN; sözlük katmanı kullanıcı verisini
     // (slayt başlığı, sütun adı, şablon adı) çevirmesin.
     overlay.setAttribute('data-no-i18n', '');
@@ -207,6 +208,7 @@
       <footer class="lcwaiEdFoot" data-ed-foot></footer>
     </div>`;
     document.body.appendChild(overlay);
+    window.BLLayerSystem?.openDialog(overlay,{onClose:()=>close(false)});
     overlay.addEventListener('click', onClick);
     overlay.addEventListener('input', onInput);
     overlay.addEventListener('change', onChange);
@@ -234,7 +236,7 @@
   function onKeydown(event) {
     if (!ed || !root()) return;
     if (root().querySelector('.lcwaiEdDialog')) {
-      if (event.key === 'Escape') { event.preventDefault(); closeDialog(); }
+      if (event.key === 'Escape') { event.preventDefault(); event.stopImmediatePropagation(); closeDialog(); }
       return;
     }
     if (event.key === 'Escape') { event.preventDefault(); close(false); }
@@ -1304,7 +1306,7 @@
     return L(`Model ızgarası ${layout.columns} × ${layout.rows} (${per} başına ${layout.columns * layout.rows}) · başlık ${layout.headerHeight} ${unit} / ${layout.titleSize} ${unit} · metin ${layout.bodySize} ${unit}`, `Model grid ${layout.columns} × ${layout.rows} (${layout.columns * layout.rows} per ${per}) · title ${layout.headerHeight} ${unit} / ${layout.titleSize} ${unit} · text ${layout.bodySize} ${unit}`) + fields;
   }
   let dialog = null;
-  function closeDialog() { const el = document.querySelector('.lcwaiEdDialog'); if (el) el.remove(); dialog = null; }
+  function closeDialog() { const el = document.querySelector('.lcwaiEdDialog'); if (el) { window.BLLayerSystem?.closeDialog(el); el.remove(); } dialog = null; }
 
   function kindOptions(format) {
     if (format === 'pptx') return LAYOUTS();
@@ -1369,7 +1371,8 @@
     const intro = dialog.mode === 'save'
       ? L('Bu dosyanın düzeni (bölüm sırası, başlıklar, sütunlar ve yerleşim) kaydedilir. Şablonu seçtiğinizde LCW AI aynı düzende güncel veriyle hazırlar.', 'This file’s arrangement (section order, titles, columns and layout) is saved. When you pick the template, LCW AI prepares the same arrangement with current data.')
       : dialog.mode === 'new' ? L('Şablona bir ad ve isterseniz kısa bir talimat verin. Yapıyı “Ayrıntılar”dan ekleyebilirsiniz.', 'Give the template a name and, if you like, a short instruction. Add the structure under “Details”.') : '';
-    host.innerHTML = `<div class="lcwaiEdDialogCard" role="dialog" aria-modal="true" aria-label="${esc(title)}">
+    host.setAttribute('aria-label',title);
+    host.innerHTML = `<div class="lcwaiEdDialogCard">
       <div class="lcwaiEdDialogHead"><b>${esc(title)}</b><span class="lcwaiFileIcon is-${esc(format)}">${esc(FORMAT_ICON[format])}</span></div>
       <div class="lcwaiEdDialogBody">
         ${intro ? `<p class="lcwaiNote lcwaiEdIntro">${esc(intro)}</p>` : ''}
@@ -1401,11 +1404,15 @@
   function openTemplateForm({ mode, definition, name = '', shared = false, id = '', sharedStore = false, container, onSaved }) {
     closeDialog();
     const host = document.createElement('div');
-    host.className = 'lcwaiEdDialog';
+    host.className = 'lcwaiEdDialog';host.dataset.uiMigrated='remaining';
+    host.setAttribute('role','dialog');
     host.setAttribute('data-no-i18n', '');
     (container || document.body).appendChild(host);
     dialog = { host, mode, definition: { format: 'pptx', orientation: 'portrait', detail: 'standard', base: '', instructions: '', keepFull: [], structure: [], ...clone(definition) }, name, shared, id, sharedStore, onSaved };
     renderDialog();
+    // The host survives format changes; the shared stack keeps nested Tab/Escape
+    // inside this form even while renderDialog replaces all its controls.
+    window.BLLayerSystem?.openDialog(host,{onClose:closeDialog});
     host.addEventListener('click', onDialogClick);
     host.addEventListener('change', event => {
       if (!event.target.matches('[data-tpl-format]')) return;
@@ -1480,7 +1487,7 @@
     document.getElementById('_lcwaiTemplates')?.remove();
     const overlay = document.createElement('div');
     overlay.id = '_lcwaiTemplates';
-    overlay.className = 'warnOverlay lcwaiTplOverlay';
+    overlay.className = 'warnOverlay lcwaiTplOverlay';overlay.dataset.uiMigrated='remaining';
     overlay.setAttribute('data-no-i18n', '');
     overlay.innerHTML = `<div class="modalCard verHistCard lcwaiTplCard" role="dialog" aria-modal="true" aria-label="${esc(L('Çıktı şablonları', 'Output templates'))}">
       <div class="verHistTop"><div><h2>${esc(L('Çıktı şablonları', 'Output templates'))}</h2><p class="lcwaiNote">${esc(L('Şablon dosyanın yapısını saklar; LCW AI her seferinde güncel veriyle doldurur. Ekip şablonları tüm kullanıcılara görünür.', 'A template stores the file’s structure; LCW AI fills it with current data each time. Team templates are visible to all users.'))}</p></div><button type="button" class="verHistClose" data-tpl-close aria-label="${esc(L('Kapat', 'Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div>
@@ -1488,13 +1495,14 @@
       <div class="lcwaiTplBody" data-tpl-body><p class="lcwaiNote">${esc(L('Yükleniyor…', 'Loading…'))}</p></div>
     </div>`;
     document.body.appendChild(overlay);
+    window.BLLayerSystem?.openDialog(overlay,{onClose:closeManager});
     manager = { overlay, tab: options.tab || 'personal', lists: { personal: [], shared: [] }, onUse: options.onUse, onChanged: options.onChanged };
     overlay.addEventListener('click', onManagerClick);
-    overlay.addEventListener('keydown', event => { if (event.key === 'Escape' && !overlay.querySelector('.lcwaiEdDialog')) closeManager(); });
+
     try { setLists(await api.outputTemplates.list()); }
     catch (error) { overlay.querySelector('[data-tpl-body]').innerHTML = `<p class="lcwaiStatus is-error">${esc(api.errorText(error))}</p>`; }
   }
-  function closeManager() { if (manager) { manager.overlay.remove(); manager = null; } }
+  function closeManager() { if (manager) { window.BLLayerSystem?.closeDialog(manager.overlay); manager.overlay.remove(); manager = null; } }
   function setLists(lists) {
     if (!manager) return;
     manager.lists = { personal: lists.personal || [], shared: lists.shared || [] };
