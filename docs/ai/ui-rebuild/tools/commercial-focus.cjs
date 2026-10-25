@@ -1,0 +1,8 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path'),{inspect,contrast}=require('./runtime-probe.cjs');
+(async()=>{const out=path.resolve('docs/ai/ui-rebuild/phase-2-commercial/final'),file=path.join(out,'capture.json'),report=JSON.parse(fs.readFileSync(file));const {browser,context,page,tab}=await require('./commercial-fixture.cjs')();
+ const shot=async name=>{await page.evaluate(()=>document.fonts.ready);await page.mouse.move(0,0);await page.screenshot({path:path.join(out,name+'.png')});report.screens=report.screens.filter(s=>s.name!==name);report.screens.push({name,...await page.evaluate(inspect),contrast:await page.evaluate(contrast)});fs.writeFileSync(file,JSON.stringify(report,null,2)+'\n');console.log(name);};
+ for(const theme of ['light','grey','dark']){await page.evaluate(t=>applyTheme(t),theme);await tab('manufacturers');await shot('manufacturers-'+theme);await tab('priceanalysis');await page.locator('.psaCountryMeasure').scrollIntoViewIfNeeded();await shot('priceanalysis-'+theme);await tab('koleksiyon');await page.evaluate(()=>{kolPictureHidden=false;renderKol();});await shot('collection-images-'+theme);}
+ await page.evaluate(()=>{applyTheme('light');applyLanguage('en');});await tab('priceanalysis');await page.locator('.psaCountryMeasure').scrollIntoViewIfNeeded();await shot('priceanalysis-en');await tab('opencosting');await page.locator('#ocNewBtn').click();await shot('open-costing-en');
+ console.log(JSON.stringify({issues:report.screens.filter(s=>s.failures.length||s.contrast.failures.length||s.overflow)},null,2));await context.close();await browser.close();
+})().catch(e=>{console.error(e.stack);process.exit(1);});

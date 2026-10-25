@@ -24,56 +24,16 @@
 /* ========== 1 · UYDU DOSYALARI KAPSA ==========
    Kart, panel ve yüzeyler: saydam gövde, saç teli çerçeve, gölgesiz.
    Industry'de kart bir çizim nesnesidir — dolgulu kutu değil. */
-.lflCard,.lflScenarioCard,.lflTrialIssueCard,.lflTrialImpact,
-.ocCard,.ocMetric,.ocSummary,.ocFxStatGrid,.ocFormulaNote,
-.ocCompareTableWrap,.ocToolbar,.ocSidebar,.lflScenarioCompareIntro{
-  background:transparent;
-  border:1px solid var(--hair);
-  box-shadow:none;
+.lflCard,.lflScenarioCard,.lflTrialIssueCard,.lflTrialImpact,.ocCard,.ocMetric,.ocSummary,.ocFxStatGrid,.ocFormulaNote,.ocCompareTableWrap,.ocToolbar,.ocSidebar,.lflScenarioCompareIntro{
   transform:none;
 }
 .lflScenarioCard:hover,.ocCard:hover,.lflTrialIssueCard:hover{
-  box-shadow:none;
   transform:none;
-  border-color:var(--hair-2);
 }
-.lflKpiCard,.ocMetric{background:transparent;}
 
 /* Butonlar: sessiz saç teli; birincil tek dolu nesne. */
-.lflButton,.ocButton,.ocInlineButton,.lflBreakdownBtn,
-.lflDimBtn,.lflCustomCompareValueBtn{
-  background:transparent;
-  border:1px solid var(--hair);
-  color:var(--ink);
-  box-shadow:none;
-  font-weight:400;
-}
-.lflButton:hover,.ocButton:hover:not(:disabled),.lflDimBtn:hover{
-  background:color-mix(in srgb,var(--ink) 5%,transparent);
-  border-color:var(--acc);
-  box-shadow:none;
-}
-.lflButton--primary,.ocButton--primary{
-  background:var(--acc);
-  border-color:var(--acc);
-  color:var(--on-acc);
-  font-weight:500;
-}
-.lflButton--primary:hover,.ocButton--primary:hover{
-  background:var(--acc-hover);
-  border-color:var(--acc-hover);
-  filter:none;
-}
-.lflButton--ghost,.ocButton--ghost{background:transparent;border-color:transparent;}
 
 /* Girdiler: saydam, saç teli, kare. */
-#view-lfl input,#view-lfl select,#view-lfl textarea,
-#view-opencosting input,#view-opencosting select,#view-opencosting textarea{
-  background:transparent;
-  border:1px solid var(--hair);
-  color:var(--ink);
-  box-shadow:none;
-}
 /* AMA <select> saydam olamaz: native açılır liste tarayıcı tarafından çizilir ve
    zeminini select'in kendi background'ından alır. Saydam bırakılırsa açılır liste
    beyaz zeminle çizilirken yazı rengi var(--ink) (karanlık temada açık) kaldığı
@@ -85,97 +45,41 @@ select{background:var(--card);}
 select option,select optgroup{background:var(--card);color:var(--ink);}
 /* Yukarıdaki #view-lfl/#view-opencosting kuralı id taşıdığı için düz "select"
    seçicisinden daha güçlü; o iki alanı ayrıca aynı özgüllükle geri almalıyız. */
-#view-lfl select,#view-opencosting select{background:var(--card);}
-#view-lfl input:focus,#view-opencosting input:focus,
-#view-lfl select:focus,#view-opencosting select:focus{
-  border-color:var(--acc);
-  outline:none;
-  box-shadow:none;
-}
 
 /* 12 · macOS dili: uçan yüzeyler opak, kare, tek gölgeli. */
 .lflDimPanel,.lflCustomComparePanel,.lflBreakdownPanel,.ocMetaSuggestDrop{
-  background:var(--card);
-  backdrop-filter:none;
   -webkit-backdrop-filter:none;
-  border:1px solid var(--hair-2);
-  box-shadow:var(--shadow-3);
 }
 
 
 /* ========== 5 · PERDE VE GÖLGE TEMAYA BAĞLI ==========
    rgba(15,23,42,.48) dört temanın hiçbirinde doğru değildi. */
-.lflPortfolioModalBackdrop,.lflScenarioEditorBackdrop,
-.lflTrialOverlay,.ocCompareOverlay{
-  background:color-mix(in srgb,var(--navy-deep) 55%,transparent);
-  backdrop-filter:none;
+.lflPortfolioModalBackdrop,.lflScenarioEditorBackdrop,.lflTrialOverlay,.ocCompareOverlay{
   -webkit-backdrop-filter:none;
-}
-.lflPortfolioModalPanel,.lflScenarioEditorDialog,.lflTrialStudio{
-  box-shadow:var(--shadow-3);
 }
 
 
 /* ========== 6 · YAZI AĞIRLIKLARI ==========
    Barlow'da yalnız 400/500/700 yüklü; 620–760 arası sekiz değer aslında
    iki. Kod da öyle desin — sentetik kalınlık riski de kalksın. */
-#view-lfl b,#view-lfl strong,#view-opencosting b,#view-opencosting strong,
-.lflKpiValue,.lflTable .good,.lflTable .bad,.ocLineAmount,.ocRateValue,
-.lflManufacturerFobChange b,.lflManufacturerFobChange strong{
-  font-weight:500;
-}
-#view-lfl h1,#view-lfl h2,#view-lfl h3,#view-lfl h4,
-#view-opencosting h1,#view-opencosting h2,#view-opencosting h3,
-.lflCardTitle,.ocSectionTitle,.lflScenarioEditorHead h3,
-.lflPortfolioModalHead h3,.lflTrialStudioHead h2{
-  font-family:var(--head);
-  font-weight:600;
-  letter-spacing:.01em;
-}
-#view-lfl label,#view-opencosting label,
-.lflKpiLabel,.ocField label,.ocRateRow label,.lflCardKicker{
-  font-size:var(--fs-2xs);
-  font-weight:400;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--muted);
-}
 /* Sayılar hep aynı genişlikte — sütunlar hizada kalsın. */
-.lflKpiValue,.lflTable .num,.ocNum,.ocLineAmount,.ocRateValue,
-.ocMetric strong,.lflTrialImpactMetrics b{
-  font-variant-numeric:tabular-nums;
-}
 
 
 /* ========== 7 · KÖŞE İŞARETLERİ ==========
    Blueprint işareti taşıyan ve taşımayan kart aynı ekranda durmasın.
    design.css'teki sekiz gradyanlı ::after tekniğinin aynısı. */
-.lflCard,.lflScenarioCard,.lflTrialImpact,.ocCard,.ocSummary,
-.lflPortfolioModalPanel,.lflScenarioEditorDialog,.lflTrialStudio{
+.lflCard,.lflScenarioCard,.lflTrialImpact,.ocCard,.ocSummary,.lflPortfolioModalPanel,.lflScenarioEditorDialog,.lflTrialStudio{
   position:relative;
 }
-.lflCard::after,.lflScenarioCard::after,.lflTrialImpact::after,
-.ocCard::after,.ocSummary::after,.lflPortfolioModalPanel::after,
-.lflScenarioEditorDialog::after,.lflTrialStudio::after{
-  content:"";position:absolute;inset:-1px;pointer-events:none;z-index:2;
-  background:
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 0/1px var(--mark) no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 0/var(--mark) 1px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 0/1px var(--mark) no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 0/var(--mark) 1px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 100%/1px var(--mark) no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 0 100%/var(--mark) 1px no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 100%/1px var(--mark) no-repeat,
-    linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 100%/var(--mark) 1px no-repeat;
+.lflCard::after,.lflScenarioCard::after,.lflTrialImpact::after,.ocCard::after,.ocSummary::after,.lflPortfolioModalPanel::after,.lflScenarioEditorDialog::after,.lflTrialStudio::after{
+  content:"";position:absolute;inset:-1px;pointer-events:none;
 }
 
 
 /* ========== 8 · İKON ÇİZGİ KALINLIĞI ==========
    Ray ve üst bar 1.5'ti; LFL panelleri, Ön Maliyet araç çubuğu ve modal
    ikonları hâlâ 2 idi. Tek çizgi. */
-#view-lfl svg,#view-opencosting svg,
-.modalCard svg,.globalSearchCard svg,.lflDimPanel svg,
-.lflBreakdownPanel svg,.ocMetaSuggestDrop svg,.cfpDrawer svg{
+.modalCard svg,.globalSearchCard svg,.cfpDrawer svg{
   stroke-width:1.5;
 }
 
@@ -185,45 +89,10 @@ select option,select optgroup{background:var(--card);color:var(--ink);}
    ile birebir aynı. Renkler app.css'in durum değişkenlerinden gelir;
    lfl.css'teki hex yedekleri (#17865d / #c83d4a / #6941C6 …) böylece
    hiçbir koşulda görünmez. */
-.lflSourceBadge,.lflDimCount,.lflTrialBanner,.ocDirtyBadge,
-.ocFxBadge,.ocFxRateChip,.lflTrialIssueTags span,.ocComparePickChip{
-  border-radius:0;
-  font-size:var(--fs-2xs);
-  letter-spacing:.07em;
-  text-transform:uppercase;
-  font-weight:500;
-  box-shadow:none;
-}
-.lflSourceBadge::before,.lflSourceBadge.isError::before{
-  border-radius:0;
-  box-shadow:none;
-}
-.lflDimCount{background:var(--acc);color:var(--on-acc);}
-.lflTrialBanner,#lflTrialBtn.isOn{
-  border-color:var(--acc);
-  background:var(--acc-bg);
-  color:var(--acc-ink);
-}
-.lflTrialImpactHead{background:var(--acc-bg);}
-.lflKpiValue.isGood,.lflTable .good,#view-lfl table td.good{color:var(--green);}
-.lflKpiValue.isBad,.lflTable .bad,#view-lfl table td.bad{color:var(--red);}
-.lflKpiValue.isNeutral{color:var(--acc-ink);}
-.lflWarning{
-  background:var(--orange-bg);
-  border:1px solid color-mix(in srgb,var(--orange) 40%,transparent);
-  color:var(--orange);
-}
-.lflScenarioSwitch>span{border-radius:0;}
-.lflScenarioSwitch>span::after{border-radius:0;}
-.ocPickDot,.ocCompareLegend .swatchBest,.ocCompareLegend .swatchWorst{border-radius:0;}
 
 
 /* ========== ODAK ==========
    Tek odak dili — tarayıcı mavisi hiçbir yerde kalmasın. */
-#view-lfl :focus-visible,#view-opencosting :focus-visible{
-  outline:none;
-  box-shadow:var(--focus-ring);
-}
 
 
 /* ===================================================================
@@ -243,24 +112,23 @@ select option,select optgroup{background:var(--card);color:var(--ink);}
    1) Birincil  — tek dolu nesne, sayfada en fazla bir tane.
    2) Seçili/etkin — vurgu zemini, vurgu çerçevesi.
    3) Geri kalan — saç teli veya tamamen sessiz. */
-button,.navActionBtn,.tbtn,.upl-btn,.vfMenuTrigger,.lflButton,.ocButton{
+button,.navActionBtn,.tbtn,.upl-btn,.vfMenuTrigger{
   background:transparent;
   border:1px solid var(--hair);
   color:var(--ink);
   font-weight:400;
   border-radius:0;
 }
-button:hover,.navActionBtn:hover,.tbtn:hover,.lflButton:hover,.ocButton:hover:not(:disabled){
+button:hover,.navActionBtn:hover,.tbtn:hover{
   background:color-mix(in srgb,var(--ink) 5%,transparent);
   border-color:var(--acc);
   color:var(--ink);
 }
-.primary,button.primary,.navActionBtn.primary,.tbtn.primary,
-.lflButton--primary,.ocButton--primary{
+.primary,button.primary,.navActionBtn.primary,.tbtn.primary{
   background:var(--acc);border-color:var(--acc);color:var(--on-acc);font-weight:500;
 }
 /* Yıkıcı eylem: kırmızı dolgu değil, kırmızı yazı. */
-.danger,button.danger,.ocIconButton--danger,.btnDanger{
+.danger,button.danger,.btnDanger{
   background:transparent !important;
   border-color:color-mix(in srgb,var(--red) 40%,transparent) !important;
   color:var(--red) !important;
@@ -269,12 +137,10 @@ button:hover,.navActionBtn:hover,.tbtn:hover,.lflButton:hover,.ocButton:hover:no
   background:var(--red-bg) !important;
 }
 /* İkon düğmeleri araç çubuğunda tamamen sessiz. */
-.iconbtn,.tableToolbarActions>.navActionBtn,.tableToolbarActions>.tbtn,
-.ocIconButton{
+.iconbtn,.tableToolbarActions>.navActionBtn,.tableToolbarActions>.tbtn{
   background:transparent;border-color:transparent;color:var(--ink2);
 }
-.iconbtn:hover,.tableToolbarActions>.navActionBtn:hover,
-.tableToolbarActions>.tbtn:hover,.ocIconButton:hover{
+.iconbtn:hover,.tableToolbarActions>.navActionBtn:hover,.tableToolbarActions>.tbtn:hover{
   background:var(--card2-strong);border-color:transparent;color:var(--ink);
 }
 
@@ -333,16 +199,11 @@ html[data-theme="dark"] #blBootGuard .blBootCard,html[data-theme="grey"] #blBoot
    sırasında açık düzenleyicinin kaybolması) yalnız çizilen ekranlar için
    geçerli. Gövdedeki data-bl-refreshing listesi hangi ekranların çizileceğini
    söyler; aşağıdaki kural yalnız o ekranların kabını kapatır. */
-body.bl-readonly [data-bl-frozen] .editCell,
-body.bl-readonly [data-bl-frozen] .editTd input,
-body.bl-readonly [data-bl-frozen] .editTd textarea,
-body.bl-readonly [data-bl-frozen] .editTd select,
-body.bl-readonly [data-bl-frozen] .editTd button,
-body.bl-readonly [data-bl-frozen] .kolPriceApprove,
-body.bl-readonly [data-bl-frozen] .kolManualBtn,
-body.bl-readonly [data-bl-frozen] .noteCellTrigger,
-body.bl-readonly [data-bl-frozen] .noteCellDelete,
-body.bl-readonly [data-bl-frozen] .delTypeTrigger{
+body.bl-readonly [data-bl-frozen] .editCell,body.bl-readonly [data-bl-frozen] .editTd input,body.bl-readonly [data-bl-frozen] .editTd textarea,body.bl-readonly [data-bl-frozen] .editTd select,body.bl-readonly [data-bl-frozen] .editTd button,body.bl-readonly [data-bl-frozen] .noteCellTrigger,body.bl-readonly [data-bl-frozen] .noteCellDelete,body.bl-readonly [data-bl-frozen] .delTypeTrigger{
+  pointer-events:none;
+  opacity:.72;
+}
+body.bl-readonly [data-bl-frozen] .kolPriceApprove,body.bl-readonly [data-bl-frozen] .kolManualBtn{
   pointer-events:none;
   opacity:.72;
 }
@@ -359,7 +220,6 @@ body.bl-readonly [data-bl-frozen] .editTd{ cursor:default; }
 /* v6.35 — Fiyat Geçmişi "Üretici bazlı" görünümünde sütun sürükleme. */
 .qhMfrHead{cursor:grab;}
 .qhMfrHead.qhDragging{opacity:.45;cursor:grabbing;}
-.qhMfrHead.qhDropTarget{box-shadow:inset 3px 0 0 var(--acc,#5980a6);}
 
 /* v6.36 — Kaçırılan tetik uyarısı (Otomasyonlar panosu).
    Planlı saatinde uygulama kapalıysa tetik sessizce geç çalıştırılmaz;

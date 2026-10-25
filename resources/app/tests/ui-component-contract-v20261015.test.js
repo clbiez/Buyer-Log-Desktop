@@ -46,9 +46,9 @@ test('Segment bileşenleri tek görünüm ve tek aktif durum paylaşır', () => 
 });
 
 test('Filtre çipi ve sayfa sekmesi ayrı, tutarlı iki dil kullanır', () => {
-  assert.match(ruleFor(':root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip,.kolHealthChip):is('), /background:var\(--acc-bg\);color:var\(--acc-ink\)/);
+  assert.match(ruleFor(':root :is(.ovBreakdownDims>button,.quotationStatusTabs>button,.mfpStats>.mfpStat,.sourceModeGroup>.sourceModeBtn,.lcChip,.kolHealthChip):is('), /background:var\(--ui-selected\) !important;color:var\(--ui-selected-ink\)/);
   const tab = ruleFor(':root :is(.ovHomePager>.ovHomePageTab,.psaTabs>[role="tab"],.dmLabTabs>.dmLabTab):is(');
-  assert.match(tab, /border-bottom-color:var\(--acc\);background:transparent/);
+  assert.match(tab, /background:transparent !important;color:var\(--ui-selected-ink\)/);
 });
 
 test('KPI etiket, değer ve alt satırı her modülde aynı tipografiyle çizilir', () => {

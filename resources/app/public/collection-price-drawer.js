@@ -184,8 +184,8 @@
   function open(row){
     if(!row)return false;
     if(state){state.rowId=row.id;render();return true;}
-    const overlay=document.createElement('div');overlay.className='kolPeriodDrawerBackdrop cpdBackdrop';
-    const panel=document.createElement('aside');panel.className='kolPeriodDrawer cpdDrawer';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',T('Fiyat çekmecesi','Price drawer'));
+    const overlay=document.createElement('div');overlay.className='kolPeriodDrawerBackdrop cpdBackdrop';overlay.dataset.uiMigrated='commercial';
+    const panel=document.createElement('aside');panel.className='kolPeriodDrawer cpdDrawer';panel.dataset.uiMigrated='commercial';panel.setAttribute('role','dialog');panel.setAttribute('aria-label',T('Fiyat çekmecesi','Price drawer'));
     overlay.appendChild(panel);document.body.appendChild(overlay);
     state={rowId:row.id,overlay,panel,body:null,backdropDown:null,backdropTap:false};
     overlay.addEventListener('pointerdown',event=>{

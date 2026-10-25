@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Manifest arayüz pilotu ve CP veri bütünlüğü",
-    "en": "Manifest interface pilot and CP data integrity"
+    "tr": "Manifest: planlama ve ticari modüller",
+    "en": "Manifest: planning and commercial modules"
   },
   "summary": {
-    "tr": "Manifest; Genel Bakış, CP ana tablosu, not penceresi, giriş ve açılış ekranlarında. CP fiyat kuralı, not kayıtları ve tarih Geri Al bütünlüğü iyileştirmeleri korunur.",
-    "en": "Manifest reaches Overview, the main CP table, note dialog, sign-in and startup. Improvements to CP pricing rules, note persistence and date Undo integrity are retained."
+    "tr": "Manifest; Genel Bakış, CP, planlama ve ticari ekranlarda ortak kontroller, tablolar ve tipografi sunar. Mevcut CP veri bütünlüğü iyileştirmeleri korunur.",
+    "en": "Manifest brings shared controls, tables and typography to Overview, CP, planning and commercial screens. Existing CP data integrity improvements are retained."
   },
   "changes": [
     {
@@ -1400,6 +1400,209 @@
         "caption": {
           "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
           "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-collection",
+      "type": "improvement",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Koleksiyon tablosunda ortak başlık ve kontrol dili",
+        "en": "Shared headers and controls in Collection"
+      },
+      "body": {
+        "tr": "Koleksiyon araçları, durumlar ve fiyat çekmecesi Manifest sistemine taşındı. Ana sütun grupları iki başlık satırında ince çizgilerle ayrılır; tablo düzenleme ve Excel çıktıları korunur.",
+        "en": "Collection tools, states and the price drawer use Manifest. Thin separators span both header tiers of each main column group; spreadsheet editing and Excel output are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-collection.png",
+        "alt": {
+          "tr": "Koleksiyon tablosunda ortak başlık ve kontrol dili — anonim veriyle gerçek Buyer Log",
+          "en": "Shared headers and controls in Collection — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-pricing",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat Masası",
+        "en": "Pricing Desk"
+      },
+      "title": {
+        "tr": "Teklif masası, turlar ve geçmiş aynı düzende",
+        "en": "Consistent quotations, rounds and history"
+      },
+      "body": {
+        "tr": "Teklif matrisi, turlar, geçmiş ve analiz ortak yüzey ve kontrolleri kullanır. İlerleme ölçüleri doğrusal, grafik işaretçileri karedir; fiyat, onay ve tur hesapları değişmedi.",
+        "en": "The quotation matrix, rounds, history and analysis share surfaces and controls. Progress measures are linear and chart markers are square; pricing, approval and round calculations are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-pricing.png",
+        "alt": {
+          "tr": "Teklif masası, turlar ve geçmiş aynı düzende — anonim veriyle gerçek Buyer Log",
+          "en": "Consistent quotations, rounds and history — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-price-analysis",
+      "type": "improvement",
+      "module": {
+        "tr": "Fiyat & Üretici Analizi",
+        "en": "Price & Supplier Analysis"
+      },
+      "title": {
+        "tr": "Ülke dağılımı ve karşılaştırmalar daha okunabilir",
+        "en": "Clearer country mix and comparisons"
+      },
+      "body": {
+        "tr": "Ülke dağılımı etiketli düz ölçüye taşındı. Karşılaştırma serileri, özetler, filtreler ve tablolar ortak Manifest dilinde; analiz ve kaynak seçimleri korunur.",
+        "en": "Country mix uses a labelled linear measure. Comparison series, summaries, filters and tables share Manifest; analysis and source selections are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-price-analysis.png",
+        "alt": {
+          "tr": "Ülke dağılımı ve karşılaştırmalar daha okunabilir — anonim veriyle gerçek Buyer Log",
+          "en": "Clearer country mix and comparisons — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-manufacturers",
+      "type": "improvement",
+      "module": {
+        "tr": "Üreticiler",
+        "en": "Manufacturers"
+      },
+      "title": {
+        "tr": "Üretici kartlarında ortak hiyerarşi",
+        "en": "Shared hierarchy in manufacturer records"
+      },
+      "body": {
+        "tr": "Liste, üretici kartı, performans ölçüleri ve durum etiketleri ortak yüzey ve tipografiyi kullanır. Tekrarlanan sayfa başlığı kaldırıldı; uyarılar ve grafik serileri daha okunabilir.",
+        "en": "The list, manufacturer record, performance measures and status labels share surfaces and typography. The repeated page title is removed; warnings and chart series are easier to read."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-manufacturers.png",
+        "alt": {
+          "tr": "Üretici kartlarında ortak hiyerarşi — anonim veriyle gerçek Buyer Log",
+          "en": "Shared hierarchy in manufacturer records — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-license-cards",
+      "type": "improvement",
+      "module": {
+        "tr": "Lisans kartları",
+        "en": "License cards"
+      },
+      "title": {
+        "tr": "Lisans listesi ve onay haritasında tutarlı kontroller",
+        "en": "Consistent license list and approval map controls"
+      },
+      "body": {
+        "tr": "Lisans satırları, sözleşme durumları ve harita çekmecesi aynı köşeli dili kullanır. Harita penceresinde Tab odağı içeride kalır; kapatırken mevcut kaydetme uyarıları korunur.",
+        "en": "License rows, contract states and the map drawer share the same square controls. Tab focus stays in the map dialog; existing unsaved-change prompts remain on close."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-license-cards.png",
+        "alt": {
+          "tr": "Lisans listesi ve onay haritasında tutarlı kontroller — anonim veriyle gerçek Buyer Log",
+          "en": "Consistent license list and approval map controls — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-lfl",
+      "type": "improvement",
+      "module": {
+        "tr": "LFL",
+        "en": "LFL"
+      },
+      "title": {
+        "tr": "LFL tabloları ve senaryo formu ortak sistemde",
+        "en": "LFL tables and scenario form share the design system"
+      },
+      "body": {
+        "tr": "LFL tabloları, portföyler ve senaryolar Manifest sistemine taşındı. Senaryo penceresinin gizlenen dönem ve portföy alanları görünür; klavye odağı içeride kalır ve filtre anahtarı Space ile kullanılabilir.",
+        "en": "LFL tables, portfolios and scenarios use Manifest. Previously hidden period and portfolio fields are visible in the scenario dialog; keyboard focus stays inside and Space operates the scope checkbox."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-lfl.png",
+        "alt": {
+          "tr": "LFL tabloları ve senaryo formu ortak sistemde — anonim veriyle gerçek Buyer Log",
+          "en": "LFL tables and scenario form share the design system — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-costing",
+      "type": "improvement",
+      "module": {
+        "tr": "Ön Maliyet",
+        "en": "Preliminary Costing"
+      },
+      "title": {
+        "tr": "Maliyet föyünde ortak alanlar ve durumlar",
+        "en": "Shared fields and states in costing sheets"
+      },
+      "body": {
+        "tr": "Maliyet bilgileri, bölüm tabloları ve özet aynı yüzey, tipografi ve kontrolleri kullanır. Üç tema ve arayüz ölçeği korunur; Excel formülleri, veri ve hücre biçimleri değişmedi.",
+        "en": "Costing details, section tables and summary share surfaces, typography and controls. Three themes and interface scaling are preserved; Excel formulas, data and cell formatting are unchanged."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-costing.png",
+        "alt": {
+          "tr": "Maliyet föyünde ortak alanlar ve durumlar — anonim veriyle gerçek Buyer Log",
+          "en": "Shared fields and states in costing sheets — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Ticari modüller; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Commercial modules; actual post-change PNG."
         }
       }
     }

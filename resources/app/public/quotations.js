@@ -1220,7 +1220,7 @@
     const values=[...new Set(universe.map(item=>qFilterValue(req,item,key)))].sort((a,b)=>a.localeCompare(b,'tr',{numeric:true,sensitivity:'base'}));
     const current=tableState.filters[key];
     const orderedValues=values.slice().sort((a,b)=>Number(Boolean(current?.has(b)))-Number(Boolean(current?.has(a))));
-    const panel=document.createElement('div'); panel.className='colFilterPanel quotationColFilterPanel';
+    const panel=document.createElement('div'); panel.className='colFilterPanel quotationColFilterPanel';panel.dataset.uiMigrated='commercial';
     const rect=anchor.getBoundingClientRect();
     panel.style.left=Math.max(6,Math.min(window.innerWidth-306,rect.right-286))+'px';
     panel.style.top=Math.max(6,Math.min(window.innerHeight-370,rect.bottom+4))+'px';
@@ -1306,7 +1306,7 @@
     if(!req||!qCanManageAccess(req)){qViewOnlyNotice(req);return;}
     document.getElementById('quotationAccessModal')?.remove();
     const candidates=qProfiles.filter(profile=>profile.id&&profile.id!==req.ownerId);
-    const overlay=document.createElement('div');overlay.id='quotationAccessModal';overlay.className='warnOverlay quotationAccessOverlay';
+    const overlay=document.createElement('div');overlay.id='quotationAccessModal';overlay.className='warnOverlay quotationAccessOverlay';overlay.dataset.uiMigrated='commercial';
     const rows=candidates.map(profile=>`<label class="quotationAccessUser" data-access-user-row data-search="${qEsc(`${profile.displayName||''} ${profile.username||''}`.toLocaleLowerCase('tr-TR'))}"><input type="checkbox" value="${qEsc(profile.id)}" ${req.editorIds.includes(profile.id)?'checked':''}><span class="quotationAccessAvatar">${qEsc(String(profile.displayName||profile.username||'?').trim().split(/\s+/).slice(0,2).map(v=>v[0]).join('').toLocaleUpperCase('tr-TR'))}</span><span><strong>${qEsc(profile.displayName||profile.username||profile.id)}</strong><small>${qEsc(profile.username||profile.role||'')}</small></span></label>`).join('');
     overlay.innerHTML=`<div class="modalCard quotationAccessCard" role="dialog" aria-modal="true" aria-labelledby="quotationAccessTitle">
       <div class="verHistTop"><div><h2 id="quotationAccessTitle">${qEsc(qLang('Düzenleme Yetkisi','Editing Permission'))}</h2><p class="verHistSub">${qEsc(qLang(`Kayıt sahibi: ${qOwnerLabel(req)}. Seçilen kullanıcılar bu quotation içeriğini düzenleyebilir.`,`Owner: ${qOwnerLabel(req)}. Selected users can edit this quotation.`))}</p></div><button type="button" class="verHistClose" data-access-close><svg class="ic"><use href="#i-x"/></svg></button></div>
@@ -1339,7 +1339,7 @@
     const editable=qCanEditRequest(req);
     const overlay=document.createElement('div');
     overlay.id='quotationNoteModal';
-    overlay.className='warnOverlay quotationNoteOverlay';
+    overlay.className='warnOverlay quotationNoteOverlay';overlay.dataset.uiMigrated='commercial';
     overlay.innerHTML=`<div class="modalCard quotationNoteCard" role="dialog" aria-modal="true" aria-labelledby="quotationNoteTitle">
       <div class="verHistTop"><div><h2 id="quotationNoteTitle">${qEsc(qLang('Quotation Notu','Quotation Note'))}</h2><p class="verHistSub">${qEsc(qRequestTitle(req))}</p></div><button type="button" class="verHistClose" data-qnote-close aria-label="${qEsc(qLang('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="quotationNoteBody">
@@ -1673,7 +1673,7 @@
     const sourceRequests=qVisibleRequests(qActiveSource,'');
     if(!sourceRequests.some(r=>r.id===qActiveId))qActiveId=sourceRequests[0]?.id||null;
     document.getElementById('quotationModal')?.remove();
-    const modal=document.createElement('div');modal.id='quotationModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='quotationModal';modal.className='warnOverlay';modal.dataset.uiMigrated='commercial';
     modal.innerHTML=`<div class="modalCard verHistCard todoCard quotationCard" role="dialog" aria-modal="true" aria-labelledby="quotationTitle">
       <div class="verHistTop"><div><h2 id="quotationTitle">${qEsc(qLang('Fiyat Çalışmaları','Quotations'))}</h2><p class="verHistSub">${qEsc(qActiveSource==='cp'?qLang('Tüm kullanıcıların CP quotation kayıtları','CP quotations from all users'):qLang('Tüm kullanıcıların Koleksiyon quotation kayıtları','Collection quotations from all users'))}</p></div><button type="button" class="verHistClose" data-close-quotation title="${qEsc(qLang('Kapat','Close'))}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="quotationStatusTabs" id="quotationStatusTabs" role="group" aria-label="${qEsc(qLang('Quotation durumu','Quotation status'))}">
@@ -2350,7 +2350,7 @@
     const pivot0=qhPivot(data), models=pivot0.models, manufacturers=pivot0.manufacturers;
     document.getElementById('_priceHistoryModal')?.remove();
     const modal=document.createElement('div');
-    modal.id='_priceHistoryModal'; modal.className='warnOverlay';
+    modal.id='_priceHistoryModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='commercial';
     modal.innerHTML=`<div class="modalCard qhCard" role="dialog" aria-modal="true" aria-labelledby="qhTitle">
       <div class="verHistTop">
         <div>

@@ -170,5 +170,5 @@ test('list module: inline edits, selection export, map button and Buyer Log cont
   assert.match(perf,/licensecards:\['license-cards-engine\.js\?rev=4','license-atlas-engine\.js\?rev=2','license-supplier-atlas\.js\?rev=3','license-map-editor\.js\?rev=1','license-cards\.js\?rev=7'\]/);
   assert.doesNotMatch(perf,/license-atlas-shell/,'the legacy iframe atlas is no longer loaded');
   assert.match(css,/@media \(prefers-reduced-motion:reduce\)/);
-  assert.match(read('public/experience.css'),/\.lcwaiSeg,\.dmViewToggle,\.lcSeg\)>button:is\(/);
+  assert.match(read('public/ui-components.css'),/\.lcwaiSeg,\.dmViewToggle,\.lcSeg\)>button:is\(/);
 });

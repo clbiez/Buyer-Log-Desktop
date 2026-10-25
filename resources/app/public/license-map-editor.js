@@ -246,7 +246,7 @@
     if(!S.root)return;
     if(S.mode==='template'&&!saved){if(dirty()&&!confirm(T('Kaydedilmemiş taslak değişiklikleri bırakılsın mı?','Discard unsaved template changes?')))return;showTemplateList();return;}
     if(S.mode==='map'&&!saved&&dirty()&&!S.saving&&!confirm(T('Kaydedilmemiş harita değişiklikleri bırakılsın mı?','Discard unsaved map changes?')))return;
-    const root=S.root;S.root=null;document.removeEventListener('keydown',onKey,true);
+    const root=S.root;S.releaseKeyboard?.();S.releaseKeyboard=null;S.root=null;document.removeEventListener('keydown',onKey,true);
     root.classList.add('isClosing');setTimeout(()=>root.remove(),matchMedia('(prefers-reduced-motion: reduce)').matches?0:180);
   }
   function blank(card){return {version:1,license:{id:card.id,name:card.license,agency:card.licensor||'',category:'',symbol:'✦',stages:[],addresses:[],portal:{url:'',notes:'',manufacturerVisible:false},manufacturerVisible:true,supplierShowRequirements:true},sharedAddresses:[],visualLibrary:[],customSelectOptions:{},processTemplates:[],stageClipboard:null};}
@@ -259,12 +259,12 @@
     mount();
   }
   function mount(){
-    S.root=document.createElement('div');S.root.className='lmScrim';document.body.append(S.root);
+    S.root=document.createElement('div');S.root.className='lmScrim';S.root.dataset.uiMigrated='commercial';document.body.append(S.root);
     S.root.addEventListener('input',onInput);S.root.addEventListener('change',event=>{if(event.target.dataset.lmGuide!=null)guideUpload(event.target);});
     S.root.addEventListener('click',event=>{const el=event.target.closest('[data-lm-act]');if(el&&!el.disabled)act(el);else if(event.target===S.root)close();});
     S.root.addEventListener('keydown',event=>{if(event.key==='Enter'&&event.target.id==='lmTemplateName'){event.preventDefault();S.root.querySelector('[data-lm-act="saveAsTemplate"]')?.click();}});
     document.addEventListener('keydown',onKey,true);
-    render();S.root.querySelector('.lmTitle,.lcBtn')?.focus({preventScroll:true});
+    render();S.releaseKeyboard=window.BLUI?.bindDialogKeyboard(S.root);S.root.querySelector('.lmTitle,.lcBtn')?.focus({preventScroll:true});
   }
   /* ---- Stage templates ---- */
   // Same rules as the server (license-cards.js applyTemplate): content from the template,

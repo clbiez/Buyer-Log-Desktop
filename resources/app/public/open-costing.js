@@ -138,7 +138,7 @@ function showOcMetaSuggest(input,showAll=false){
   if(!matches.length){closeOcMetaSuggest();return;}
   if(!ocMetaSuggestDrop){
     ocMetaSuggestDrop=document.createElement('div');
-    ocMetaSuggestDrop.className='submfrDrop ocMetaSuggestDrop';
+    ocMetaSuggestDrop.className='submfrDrop ocMetaSuggestDrop';ocMetaSuggestDrop.dataset.uiMigrated='commercial';
     ocMetaSuggestDrop.setAttribute('role','listbox');
     document.body.appendChild(ocMetaSuggestDrop);
   }
@@ -249,7 +249,7 @@ function renderSummary(){
 }
 function placeholderImage(){
   if(typeof kolImagePlaceholderSvg==='function')return kolImagePlaceholderSvg();
-  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200"><rect width="160" height="200" fill="#EEF0F3"/><path d="M38 145l27-34 24 25 25-32 17 26" stroke="#B7BEC9" stroke-width="6" fill="none"/><circle cx="60" cy="67" r="12" fill="#B7BEC9"/></svg>');
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200"><rect width="160" height="200" fill="#EEF0F3"/><path d="M36 56h88M36 80h88M36 104h56" stroke="#B7BEC9" stroke-width="6" fill="none"/></svg>');
 }
 function ocDisplayedImageSource(){
   const manual=String(current?.meta?.image||'');
@@ -718,7 +718,7 @@ function renderCompareResult(){
   const baselineOptions=calcs.map(x=>`<option value="${safe(x.r.id)}" ${x.r.id===compareBaseline?'selected':''}>${safe(compareRecordName(x.r))}</option>`).join('');
   const curOptions=currencyPool.map(c=>`<option value="${c}" ${c===dispCur?'selected':''}>${c}</option>`).join('');
   const legend=`<span class="ocCompareLegend"><b><span class="swatchBest"></span>${tx('En düşük','Lowest')}</b><b><span class="swatchWorst"></span>${tx('En yüksek','Highest')}</b></span>`;
-  const warn=anyFail?`<span style="color:var(--orange);font-weight:600;">${tx('⚠ '+[...new Set(convFail)].join(', ')+' için kur yok — bu değerler çevrilmeden gösterildi. Kur Güncelle ile yükleyebilirsin.','⚠ No rate for '+[...new Set(convFail)].join(', ')+' — shown unconverted. Load it via Update FX.')}</span>`:'';
+  const warn=anyFail?`<span class="ocFxWarning">${tx(''+[...new Set(convFail)].join(', ')+' için kur yok — bu değerler çevrilmeden gösterildi. Kur Güncelle ile yükleyebilirsin.','No rate for '+[...new Set(convFail)].join(', ')+' — shown unconverted. Load it via Update FX.')}</span>`:'';
   const curPick=`<span class="ocCompareCurrencyPick"><label>${tx('Para birimi','Currency')}:</label><select id="ocCompareCurSelect">${curOptions}</select></span>`;
   const baselineBar=`<div class="ocCompareBaselineBar"><label>${tx('Baz alınan','Baseline')}:</label><select id="ocCompareBaseSelect">${baselineOptions}</select>${curPick}${warn}${legend}</div>`;
 

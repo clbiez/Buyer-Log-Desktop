@@ -1,0 +1,62 @@
+{
+  "baseline": {
+    "startupMs": 1020.1000000000349,
+    "cpNavigationMs": 975.4000000000233,
+    "cp5000RenderMs": 2995.9000000000233,
+    "domRows": [
+      50,
+      50,
+      50,
+      50,
+      50
+    ]
+  },
+  "phase2PlanExecute": {
+    "startupMs": 901.9000000003725,
+    "cpNavigationMs": 1067.199999999255,
+    "cp5000RenderMs": 3044,
+    "domRows": [
+      50,
+      50,
+      50,
+      50,
+      50
+    ]
+  },
+  "commercial": {
+    "startupMs": 931.9000000003725,
+    "cpNavigationMs": 1063.9000000003725,
+    "cp5000RenderMs": 3022.800000000745,
+    "domRows": [
+      50,
+      50,
+      50,
+      50,
+      50
+    ]
+  },
+  "versusBaseline": {
+    "startupMs": {
+      "ms": -88.2,
+      "percent": -8.6
+    },
+    "cpNavigationMs": {
+      "ms": 88.5,
+      "percent": 9.1
+    },
+    "cp5000RenderMs": {
+      "ms": 26.9,
+      "percent": 0.9
+    }
+  },
+  "fixture": {
+    "sourceRows": 220,
+    "cpRows": 191,
+    "collectionRows": 0,
+    "quotationRequests": 0,
+    "seed": 7,
+    "fixedDate": "2026-10-25",
+    "freshServerData": true
+  },
+  "note": "Noncomparable earlier run is explicitly excluded; final Phase 3 consolidation requires another check."
+}

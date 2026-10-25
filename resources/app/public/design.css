@@ -156,8 +156,7 @@ html[data-theme="grey"] .sourceRefreshTable thead th{background:var(--card2);col
 
 /* ========================= 2 · TİPOGRAFİ ========================= */
 body{font-family:var(--sans);letter-spacing:0;}
-h1,h2,h3,h4,.cardTitle,.modalTitle,.brandName,.verHistTitle,.verHistDetailTitle,
-.mfrAddTitle,.todoNavTitle,.quotationNavTitle,.globalSearchHead{
+h1,h2,h3,h4,.cardTitle,.modalTitle,.brandName,.verHistTitle,.verHistDetailTitle,.mfrAddTitle,.todoNavTitle,.globalSearchHead{
   font-family:var(--head);font-weight:600;letter-spacing:.01em;
 }
 .appTop h1{font-size:var(--fs-xl);line-height:1.15;}
@@ -172,7 +171,7 @@ h1,h2,h3,h4,.cardTitle,.modalTitle,.brandName,.verHistTitle,.verHistDetailTitle,
   font-size:var(--fs-2xs);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
 }
 /* Sayılar hep aynı genişlikte — sütunlar hizada kalsın */
-td.num,td.money,.kpi b,.quotationMoney,.kolBestPrice,.kolConfirmedPrice{
+td.num,td.money,.kpi b{
   font-variant-numeric:tabular-nums;
 }
 
@@ -181,16 +180,12 @@ td.num,td.money,.kpi b,.quotationMoney,.kolBestPrice,.kolConfirmedPrice{
    nesnelerdir; dört köşede artı biçimli hizalama işareti taşırlar.
    İşaretler tek bir ::after üzerine sekiz gradyanla çizilir — markup'a
    hiç dokunulmaz. */
-.panel,.cardBox,.modalCard,.mfrCard,.quotationCard,.verHistCard,.todoCard,
-.lflDetailCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,
-.sourceRefreshHistCard,.appBlockingCard,.sourcebar,.tablewrap,.miniTable{
+.panel,.cardBox,.modalCard,.mfrCard,.verHistCard,.todoCard,.globalSearchCard,.nonDtrMfrCard,.modelFilesCard,.sourceRefreshHistCard,.appBlockingCard,.sourcebar,.tablewrap,.miniTable{
   border:1px solid var(--hair);border-radius:0;box-shadow:none;
 }
-.panel,.cardBox,.modalCard,.quotationCard,.verHistCard,.todoCard,
-.lflDetailCard,.globalSearchCard{position:relative;}
-.panel::after,.cardBox::after,.modalCard::after,.quotationCard::after,
-.verHistCard::after,.todoCard::after,.lflDetailCard::after,
-.globalSearchCard::after,.sourcebar::after{
+.panel,.cardBox,.modalCard,.verHistCard,.todoCard,.globalSearchCard{position:relative;}
+.quotationCard,.lflDetailCard{position:relative;}
+.panel::after,.cardBox::after,.modalCard::after,.verHistCard::after,.todoCard::after,.globalSearchCard::after,.sourcebar::after{
   content:"";position:absolute;inset:-1px;pointer-events:none;z-index:2;
   background:
     linear-gradient(var(--mark-ink),var(--mark-ink)) 0 0/1px var(--mark) no-repeat,
@@ -202,8 +197,11 @@ td.num,td.money,.kpi b,.quotationMoney,.kolBestPrice,.kolConfirmedPrice{
     linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 100%/1px var(--mark) no-repeat,
     linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 100%/var(--mark) 1px no-repeat;
 }
+.quotationCard::after,.lflDetailCard::after{
+  content:"";position:absolute;inset:-1px;pointer-events:none;
+}
 /* Uçan paneller: aynı kare dil, ama gölgeli — zeminden ayrılsınlar */
-.submfrDrop,.vfMenu,.profileSelectMenu,.userMenu,.dateCalendarPopup,.delTypeMenu,.ocMetaSuggestDrop,.pricingRuleSeasonPanel,.quotationColFilterPanel,.cfpDrawer,.themeDock,.numericValueList{
+.submfrDrop,.vfMenu,.profileSelectMenu,.userMenu,.dateCalendarPopup,.delTypeMenu,.cfpDrawer,.themeDock,.numericValueList{
   border:1px solid var(--hair-2);border-radius:0;box-shadow:var(--shadow-3);
 }
 .empty{background:transparent;border:1px dashed var(--line2);border-radius:0;color:var(--muted);}
@@ -293,8 +291,7 @@ button,.navActionBtn,.tbtn,.upl-btn,.vfMenuTrigger,input,select,textarea{border-
 input,select,textarea{background:transparent;border:1px solid var(--hair);color:var(--ink);}
 input:focus,select:focus,textarea:focus{border-color:var(--acc);outline:none;}
 /* Etiket/çip dili: kare, saç teli çerçeve, aralıklı küçük büyük harf */
-.warnChip,.sourceRefreshChip,.quotationSummaryChip,.verHistTag,
-.accessModeBadge,.quotationSourceBadge{
+.warnChip,.sourceRefreshChip,.verHistTag,.accessModeBadge{
   border-radius:0;font-size:var(--fs-2xs);letter-spacing:.07em;text-transform:uppercase;
   font-weight:500;box-shadow:none;
 }

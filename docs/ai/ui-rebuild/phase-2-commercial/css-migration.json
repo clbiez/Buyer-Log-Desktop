@@ -1,0 +1,82 @@
+{
+  "base": "cc36116f",
+  "group": "commercial",
+  "modules": [
+    "collection-spreadsheet.css",
+    "collection-analytics.css",
+    "pricing-desk.css",
+    "pricing-workspace.css",
+    "price-supplier-analysis.css",
+    "manufacturers.css",
+    "license-cards.css",
+    "lfl.css",
+    "open-costing.css"
+  ],
+  "stats": [
+    {
+      "file": "collection-spreadsheet.css",
+      "rules": 80,
+      "declarations": 189
+    },
+    {
+      "file": "collection-analytics.css",
+      "rules": 77,
+      "declarations": 203
+    },
+    {
+      "file": "pricing-desk.css",
+      "rules": 273,
+      "declarations": 613
+    },
+    {
+      "file": "pricing-workspace.css",
+      "rules": 123,
+      "declarations": 238
+    },
+    {
+      "file": "price-supplier-analysis.css",
+      "rules": 157,
+      "declarations": 330
+    },
+    {
+      "file": "manufacturers.css",
+      "rules": 76,
+      "declarations": 196
+    },
+    {
+      "file": "license-cards.css",
+      "rules": 195,
+      "declarations": 445
+    },
+    {
+      "file": "lfl.css",
+      "rules": 382,
+      "declarations": 984
+    },
+    {
+      "file": "open-costing.css",
+      "rules": 195,
+      "declarations": 515
+    },
+    {
+      "file": "app.css",
+      "rules": 382,
+      "declarations": 1000
+    },
+    {
+      "file": "design.css",
+      "rules": 6,
+      "declarations": 18
+    },
+    {
+      "file": "experience.css",
+      "rules": 29,
+      "declarations": 81
+    },
+    {
+      "file": "design-butunluk.css",
+      "rules": 40,
+      "declarations": 98
+    }
+  ]
+}

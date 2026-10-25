@@ -1,0 +1,103 @@
+{
+  "scope": "Phase 2.2 Commercial; local only",
+  "runs": [
+    {
+      "run": "initial-guards",
+      "tests": 15,
+      "pass": 14,
+      "fail": 1,
+      "note": "Raw outline/background literals moved to canonical tokens; later guards passed.",
+      "log": "checks/initial-guards.txt"
+    },
+    {
+      "run": "initial-ui-tests",
+      "tests": 124,
+      "pass": 119,
+      "fail": 5,
+      "note": "Five old file/token/markup assertions updated to the new shared owner with the same functional contracts.",
+      "log": "checks/initial-ui-tests.txt"
+    },
+    {
+      "run": "ui-guard-followup",
+      "tests": 68,
+      "pass": 68,
+      "fail": 0,
+      "note": "68 passed after source-owner updates.",
+      "log": "checks/ui-guard-followup.txt"
+    },
+    {
+      "run": "export-engine-validation",
+      "tests": 61,
+      "pass": 61,
+      "fail": 0,
+      "note": "61 targeted spreadsheet/export/editor/guard checks passed.",
+      "log": "checks/export-engine-validation.txt"
+    },
+    {
+      "run": "lfl-ui-validation",
+      "tests": 65,
+      "pass": 64,
+      "fail": 1,
+      "note": "One old drag-target CSS owner assertion failed; moved to canonical outline contract and retained reorder behavior assertions.",
+      "log": "checks/lfl-ui-validation.txt"
+    },
+    {
+      "run": "lfl-guard-followup",
+      "tests": 12,
+      "pass": 12,
+      "fail": 0,
+      "note": "Drag/drop and Manifest guards passed.",
+      "log": "checks/lfl-guard-followup.txt"
+    },
+    {
+      "run": "final-contracts",
+      "tests": 47,
+      "pass": 47,
+      "fail": 0,
+      "note": "47 final image/costing/lazy/export/LFL/token checks passed.",
+      "log": "checks/final-contracts.txt"
+    }
+  ],
+  "i18n": {
+    "missing": 0,
+    "baseline": 0
+  },
+  "release": {
+    "changes": 55,
+    "added": 7,
+    "visuals": "actual post-change anonymous PNGs, reviewed"
+  },
+  "versionAssert": "not run; version contract unchanged",
+  "fullNpmTest": false,
+  "export": {
+    "htmlTsvByteEqual": 6,
+    "xlsxAllXlPartsEqual": 4
+  },
+  "performance": {
+    "cleanFixture": true,
+    "hiddenModulesLoaded": false,
+    "startupCpOrdersDomRows": 0,
+    "largeDataRows": 5000,
+    "largeDomRows": 50
+  },
+  "visuals": {
+    "mainReport": "screens/capture.json",
+    "statesReport": "states/capture.json",
+    "authoritativeFollowup": "final/capture.json",
+    "priority": "final replaces matching main/states; intermediate LFL state failures are retained as provenance, not a passing result",
+    "mainFrames": 24,
+    "stateFrames": 14,
+    "finalFrames": 18,
+    "englishScreens": [
+      "priceanalysis-en",
+      "open-costing-en"
+    ],
+    "finalIssues": 0
+  },
+  "ci": "not run",
+  "pr": "local draft; not opened",
+  "merge": false,
+  "TEST": "not published",
+  "STABLE": "not published",
+  "projectComplete": false
+}

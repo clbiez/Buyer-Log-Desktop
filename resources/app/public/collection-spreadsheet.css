@@ -1,86 +1,60 @@
 /* Collection spreadsheet interaction layer — Buyer Log theme, no Excel branding. */
 #view-koleksiyon.kolSpreadsheetWorkspace .panel{width:100%;min-width:0}
 #view-koleksiyon.kolSpreadsheetWorkspace .tablewrap{width:100%;max-width:100%;min-height:0;position:relative}
-.kolEmptyState{display:grid;place-items:center;min-height:220px;padding:var(--sp-4);background:var(--table-bg)}
+.kolEmptyState{display:grid;place-items:center;min-height:220px;padding:var(--ui-space-4)}
 .kolEmptyState[hidden]{display:none}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable{outline:none;--kol-spreadsheet-row-h:30px}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable:focus{outline:none}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable{--kol-spreadsheet-row-h:30px}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr{height:var(--kol-spreadsheet-row-h)}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td{position:relative}
 /* Spreadsheet cells are positioned so range/validation affordances can anchor to
    them. Frozen cells must remain sticky; this selector intentionally outranks the
    generic positioned-cell rule above without changing the containing block. */
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.frzL{position:sticky}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolActiveGridCell,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolSpreadsheetActiveCell{box-shadow:inset 0 0 0 2px var(--acc)!important;outline:0;background-image:linear-gradient(rgba(29,95,145,.035),rgba(29,95,145,.035))}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolActiveGridRow{outline:none!important}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead th.kolActiveGridHeader,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead th.kolSpreadsheetActiveHeader{box-shadow:inset 0 -2px 0 var(--acc)!important;color:var(--acc)!important;background:var(--card2)!important}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRangeCell{box-shadow:inset 0 0 0 999px rgba(29,95,145,.045)}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRangeEdge{outline:1px solid rgba(29,95,145,.7);outline-offset:-1px}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetEditing{box-shadow:inset 0 0 0 2px var(--acc)!important}
 /* Single-click editing: real editors stay pointer-addressable so the browser can place
    the caret/open native selects on the first click. Spreadsheet capture still guards
    Shift-range selection, read-only cells, buttons, links and pictures. */
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable td .editCell{pointer-events:auto}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly{background-image:linear-gradient(rgba(15,23,42,.022),rgba(15,23,42,.022))}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly:hover::after{content:attr(data-kol-formula-tip);position:absolute;z-index:22;left:8px;top:calc(100% + 4px);max-width:280px;padding:5px 7px;border:1px solid var(--line);background:var(--card);color:var(--ink2);font-size:var(--fs-2xs);box-shadow:var(--shadow-2);white-space:normal;pointer-events:none}
-.kolSpreadsheetHelper{display:flex;align-items:center;min-height:25px;padding:2px 7px;border:1px solid var(--line);border-top:0;background:var(--card2);min-width:0}
-.kolSpreadsheetBusinessSelection{flex:0 0 auto;min-width:92px;color:var(--ink2);font-size:var(--fs-2xs);font-weight:600;white-space:nowrap}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetReadonly:hover::after{content:attr(data-kol-formula-tip);position:absolute;left:8px;top:calc(100% + 4px);max-width:280px;padding:5px 7px;white-space:normal;pointer-events:none}
+.kolSpreadsheetHelper{display:flex;align-items:center;min-height:25px;padding:2px 7px;min-width:0}
+.kolSpreadsheetBusinessSelection{flex:0 0 auto;min-width:92px;white-space:nowrap}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow{height:18px}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{height:18px!important;min-height:18px!important;padding:0 4px!important;text-align:center!important;font:600 var(--fs-2xs)/18px var(--mono,monospace)!important;color:var(--muted)!important;background:var(--paper)!important;border-bottom:1px solid var(--line)!important;user-select:none}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.kolSpreadsheetLetterActive{color:var(--acc)!important;background:var(--card2)!important}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{height:18px!important;min-height:18px!important;padding:0 4px!important;text-align:center!important;user-select:none}
 /* Sütun harfine tık = sütunun tamamını seç; sürükleyerek aralık seçerken metin seçimi boyanmaz. */
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.kolSpreadsheetLetter{cursor:s-resize}
 #view-koleksiyon.kolSpreadsheetDragSelecting #kolTable{user-select:none;-webkit-user-select:none}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable .chkTh,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:72px!important;min-width:72px!important}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable .chkTh,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable td.kolSpreadsheetRowGutter{width:72px!important;min-width:72px!important}
 .kolSpreadsheetRowGutter{padding:0 3px!important;white-space:nowrap;text-align:center}
-.kolSpreadsheetRowNumber{display:inline-grid;place-items:center;width:25px;height:22px;margin-right:3px;padding:0;border:0;background:transparent;color:var(--muted);font:600 var(--fs-2xs)/1 var(--mono,monospace);cursor:pointer;border-radius:var(--r-xs)}
-.kolSpreadsheetRowNumber:hover,.kolSpreadsheetRowNumber.isActive{background:color-mix(in srgb,var(--acc) 14%,var(--card2));color:var(--acc);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--acc) 28%,var(--line))}
+.kolSpreadsheetRowNumber{display:inline-grid;place-items:center;width:25px;height:22px;margin-right:3px;padding:0;cursor:pointer}
 .kolSpreadsheetRowGutter .rowChk{width:14px;height:14px;margin:0;vertical-align:middle;box-sizing:border-box;}
-.kolSpreadsheetStatusBar{display:flex;align-items:center;gap:14px;min-height:25px;padding:3px 8px;border:1px solid var(--line);border-top:0;background:var(--card2);color:var(--ink2);font-size:var(--fs-2xs);white-space:nowrap;overflow:auto}
-.kolSpreadsheetStatusBar b{color:var(--ink);font-weight:700}
-.kolSpreadsheetContextMenu{position:fixed;z-index:10070;min-width:210px;padding:4px;border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow-3);font-size:var(--fs-2xs)}
-.kolSpreadsheetContextMenu button{display:flex;width:100%;align-items:center;justify-content:space-between;min-height:28px;padding:5px 8px;border:0;background:transparent;color:var(--ink);text-align:left;font:inherit;cursor:pointer}
-.kolSpreadsheetContextMenu button:hover:not(:disabled){background:var(--card2)}
+.kolSpreadsheetStatusBar{display:flex;align-items:center;gap:14px;min-height:25px;padding:3px 8px;white-space:nowrap;overflow:auto}
+.kolSpreadsheetContextMenu{position:fixed;min-width:210px;padding:4px}
+.kolSpreadsheetContextMenu button{display:flex;width:100%;align-items:center;justify-content:space-between;min-height:28px;padding:5px 8px;text-align:left;cursor:pointer}
 .kolSpreadsheetContextMenu button:disabled{opacity:.45;cursor:not-allowed}
-.kolSpreadsheetContextMenu .sep{height:1px;margin:4px;background:var(--line)}
-.kolSpreadsheetContextMenu kbd{color:var(--muted);font-size:var(--fs-2xs)}
-.kolSpreadsheetPasteOverlay{position:fixed;inset:0;z-index:10090;display:grid;place-items:center;background:rgba(15,23,42,.22)}
-.kolSpreadsheetPasteCard{width:min(520px,calc(100vw - 32px));border:1px solid var(--line);background:var(--card);box-shadow:var(--shadow-3)}
-.kolSpreadsheetPasteHead{padding:12px 14px;border-bottom:1px solid var(--line)}
-.kolSpreadsheetPasteHead b{font:700 var(--fs-lg)/1.1 var(--head);color:var(--ink)}
+.kolSpreadsheetContextMenu .sep{height:1px;margin:4px}
+.kolSpreadsheetPasteOverlay{position:fixed;inset:0;display:grid;place-items:center}
+.kolSpreadsheetPasteCard{width:min(520px,calc(100vw - 32px))}
+.kolSpreadsheetPasteHead{padding:12px 14px}
 .kolSpreadsheetPasteBody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:12px 14px}
-.kolSpreadsheetPasteMetric{padding:8px;border:1px solid var(--line);background:var(--card2)}
-.kolSpreadsheetPasteMetric b{display:block;font:700 var(--fs-xl)/1 var(--head);color:var(--ink)}
-.kolSpreadsheetPasteMetric span{font-size:var(--fs-2xs);color:var(--muted)}
-.kolSpreadsheetPasteIssues{grid-column:1/-1;max-height:110px;overflow:auto;color:var(--danger,#b42318);font-size:var(--fs-2xs)}
-.kolSpreadsheetPasteFoot{display:flex;justify-content:flex-end;gap:6px;padding:9px 14px;border-top:1px solid var(--line);background:var(--card2)}
-@media(max-width:620px){.kolEmptyState{min-height:180px;padding:var(--sp-3)}.kolEmptyState .uiState{width:100%}}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.editTd:has(.editCell:focus){box-shadow:inset 0 0 0 2px var(--acc)!important;background-image:linear-gradient(rgba(29,95,145,.035),rgba(29,95,145,.035))}
+.kolSpreadsheetPasteMetric{padding:8px}
+.kolSpreadsheetPasteMetric b{display:block}
+.kolSpreadsheetPasteIssues{grid-column:1/-1;max-height:110px;overflow:auto}
+.kolSpreadsheetPasteFoot{display:flex;justify-content:flex-end;gap:6px;padding:9px 14px}
+@media(max-width:620px){.kolEmptyState{min-height:180px;padding:var(--ui-space-3)}.kolEmptyState .uiState{width:100%}}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead:not(.isLettersHidden) tr.colRow th{top:18px!important}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead:not(.isLettersHidden) tr.kolGroupRow th{top:18px!important}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead.kolHasGroups:not(.isLettersHidden) tr.colRow th{top:40px!important}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{position:sticky;top:0!important;z-index:14}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th.frzL{z-index:16;background:var(--paper)!important}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable thead tr.kolSpreadsheetLettersRow th{position:sticky;top:0!important}
 
-.kolSpreadsheetFilterSort{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:5px;border-bottom:1px solid var(--line);background:var(--card2)}
-.kolSpreadsheetFilterSort button{min-height:27px;padding:4px 7px;border:1px solid var(--line);background:var(--card);color:var(--ink);font:600 var(--fs-2xs)/1.2 var(--sans);cursor:pointer;text-align:left}
-.kolSpreadsheetFilterSort button:hover{border-color:var(--acc);color:var(--acc);background:var(--acc-bg)}
+.kolSpreadsheetFilterSort{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:5px}
+.kolSpreadsheetFilterSort button{min-height:27px;padding:4px 7px;cursor:pointer;text-align:left}
 
 /* Concept 2 — Mini Sub-Rows. Business data remains a flat table; only the
    presentation of grouped colour records changes. */
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupParent{
-  border-top:1px solid color-mix(in srgb,var(--line2) 72%,transparent);
-}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant{
   height:var(--kol-variant-row-h,27px)!important;
-  background:transparent;
 }
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant>td{
   height:var(--kol-variant-row-h,27px)!important;
-  background:transparent;
 }
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant .editCell{
   min-height:22px!important;
@@ -91,8 +65,7 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant textarea.editCell{
   min-height:22px!important;
 }
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant td.kolPictureCell,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant td.kolDateTd{
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant td.kolPictureCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant td.kolDateTd{
   height:var(--kol-variant-row-h,27px)!important;
 }
 .kolModelGroupToggle,.kolModelGroupGutterSpacer{
@@ -100,30 +73,22 @@
   vertical-align:middle;box-sizing:border-box;
 }
 .kolModelGroupToggle{
-  padding:0;border:1px solid color-mix(in srgb,var(--acc) 34%,var(--line));
-  border-radius:var(--r-sm);background:color-mix(in srgb,var(--acc) 8%,var(--card));color:var(--acc);
-  cursor:pointer;transition:background .12s var(--ease),border-color .12s var(--ease),color .12s var(--ease),transform .12s var(--ease);
+  padding:0;
+  cursor:pointer;
 }
-.kolModelGroupToggle .ic{width:12px;height:12px;stroke-width:2.3;}
-.kolModelGroupToggle[aria-expanded="true"]{background:color-mix(in srgb,var(--acc) 14%,var(--card));border-color:color-mix(in srgb,var(--acc) 52%,var(--line));}
-.kolModelGroupToggle:hover{background:color-mix(in srgb,var(--acc) 18%,var(--card));border-color:var(--acc);color:var(--acc);transform:scale(1.04);}
-.kolModelGroupToggle:focus-visible{outline:none;box-shadow:var(--focus-ring);color:var(--acc);}
+.kolModelGroupToggle .ic{width:12px;height:12px;}
+.kolModelGroupToggle:hover{transform:scale(1.04);}
 .kolModelGroupGutterSpacer.isVariant{position:relative;}
 .kolModelGroupGutterSpacer.isVariant::before{
   content:"";width:10px;height:15px;align-self:start;margin-top:0;
-  border-left:2px solid color-mix(in srgb,var(--acc) 55%,var(--line2));
-  border-bottom:2px solid color-mix(in srgb,var(--acc) 55%,var(--line2));
-  border-radius:0 0 0 var(--r-sm);
 }
 .kolModelGroupGutterSpacer.isVariant::after{
-  content:"";position:absolute;right:1px;bottom:4px;width:4px;height:4px;border-radius:50%;
-  background:color-mix(in srgb,var(--acc) 74%,var(--ink));opacity:.78;
+  content:"";position:absolute;right:1px;bottom:4px;width:4px;height:4px;opacity:.78;
 }
 /* Legacy in-cell hierarchy marks are intentionally suppressed: hierarchy now lives
    in the row gutter and never changes spreadsheet column coordinates. */
 .kolModelGroupBadge,.kolModelVariantBadge,.kolVariantOverrideDot{display:none!important;}
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-inherited="1"]::after,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-override="1"]::after{content:none!important;}
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-inherited="1"]::after,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-override="1"]::after{content:none!important;}
 
 /* Collapsed colour groups — display-only summary projection.
    The real parent controls stay in the DOM (and keep their raw edit values),
@@ -134,9 +99,6 @@
   position:relative;
   overflow:hidden;
 }
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within){
-  color:transparent!important;
-}
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within)>*{
   opacity:0;
 }
@@ -146,28 +108,19 @@
   inset-inline:7px;
   top:50%;
   transform:translateY(-50%);
-  z-index:3;
   display:block;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
-  color:var(--ink)!important;
-  font:inherit;
-  line-height:1.2;
   pointer-events:none;
 }
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.num[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within)::after,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.money[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within)::after,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolLandedTd[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within)::after,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolBestCell[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within)::after{
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.num[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within)::after,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.money[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within)::after,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolLandedTd[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within)::after,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td.kolBestCell[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within)::after{
   text-align:right;
 }
 /* Invisible action buttons must not fire underneath the aggregate label.
    Actual field editors remain pointer-addressable so a click can enter the
    existing parent edit lifecycle and reveal its raw value. */
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within) .kolManualBtn,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within) .kolPriceApprove,
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within) .kolBuyingSampleApprove{
+#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within) .kolManualBtn,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within) .kolPriceApprove,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody td[data-kol-group-summary="1"]:not(.kolSpreadsheetEditing):not(:focus-within) .kolBuyingSampleApprove{
   pointer-events:none;
 }
 
@@ -184,9 +137,6 @@
   text-align:left!important;
   box-sizing:border-box;
 }
-#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody :is(input.editCell,select.editCell){
-  line-height:18px!important;
-}
 /* v20261009 — Collection text fit contract
    Textarea editors are sized to their own text (field-sizing) and centered by the
    cell, so a single line stays vertically centered while wrapped text uses the
@@ -194,12 +144,11 @@
    cap is snapped to whole lines, so a line is never shown half-clipped; text
    beyond the cap stays scrollable while editing. */
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody textarea.editCell{
-  --kol-text-lh:max(16px,calc(var(--kol-cell-fs,12px) + 4px));
+  --kol-text-lh:max(16px,calc(var(--ui-font-xs,12px) + 4px));
   --kol-text-fit-h:max(calc(var(--kol-text-lh) + 4px),calc(var(--kol-text-h,28px) - 6px));
   height:var(--kol-text-fit-h)!important;
   min-height:calc(var(--kol-text-lh) + 4px)!important;
   max-height:var(--kol-text-fit-h)!important;
-  line-height:var(--kol-text-lh)!important;
   padding-top:2px!important;
   padding-bottom:2px!important;
   margin:0!important;
@@ -224,7 +173,6 @@
 #view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody tr.kolModelGroupVariant textarea.editCell{
   height:calc(var(--kol-variant-row-h,27px) - 2px)!important;
   min-height:calc(var(--kol-variant-row-h,27px) - 2px)!important;
-  line-height:17px!important;
   padding-top:4px!important;
   padding-bottom:4px!important;
 }
@@ -250,18 +198,13 @@
 
 /* v20260929 — compact Collection controls and colour-variant master toggle. */
 #kolAddRowBtn{
-  width:var(--ctl-h)!important;min-width:var(--ctl-h)!important;padding:0!important;
-  border-color:transparent!important;background:transparent!important;color:var(--acc)!important;
-  box-shadow:none!important;justify-content:center!important;
+  width:var(--ui-control-height)!important;min-width:var(--ui-control-height)!important;padding:0!important;justify-content:center!important;
 }
-#kolAddRowBtn:hover:not(:disabled){background:color-mix(in srgb,var(--acc) 12%,var(--card))!important;color:var(--acc)!important;}
-#kolAddRowBtn:focus-visible{box-shadow:var(--focus-ring)!important;}
 .kolAllVariantsToggle{
-  width:var(--control-sm);min-width:var(--control-sm);padding:0!important;margin-left:var(--sp-1);
-  display:inline-grid;place-items:center;border-color:var(--line2);
+  width:var(--ui-control-height);min-width:var(--ui-control-height);padding:0!important;margin-left:var(--ui-space-1);
+  display:inline-grid;place-items:center;
 }
 .kolAllVariantsToggle .ic{width:14px;height:14px;}
-.kolAllVariantsToggle[aria-pressed="true"]{border-color:color-mix(in srgb,var(--acc) 55%,var(--line));background:color-mix(in srgb,var(--acc) 11%,var(--card));color:var(--acc);}
 .kolAllVariantsToggle:disabled{opacity:.42;cursor:not-allowed;}
 
 /* Collection / CP / Orders fabric cards — the PLM fabric text stays in the row; the cell
@@ -272,30 +215,25 @@
 :is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricCell{display:flex;flex-direction:column;justify-content:center;gap:2px;width:100%;height:100%;min-height:27px;padding:3px 8px;pointer-events:none;user-select:none;overflow:hidden}
 :is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricLine{display:flex;align-items:center;gap:6px;min-width:0}
 :is(#kolTable,#cpTable,#ordersTable) tbody td.kolFabricTd.isMulti .kolFabricText{-webkit-line-clamp:1;line-clamp:1}
-:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricLabel{flex:none;font-size:var(--fs-2xs);font-weight:700;color:var(--ink2);min-width:10px}
-:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricCode{flex:none;font-size:var(--fs-2xs);font-weight:600;line-height:16px;padding:0 5px;border-radius:var(--r-sm);background:var(--acc-bg);color:var(--acc-ink)}
-:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricText{min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;line-height:15px;overflow-wrap:anywhere}
-:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricLine:not(.hasCard) .kolFabricCode{background:var(--card2-strong,var(--line));color:var(--muted)}
-:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricLine:not(.hasCard) .kolFabricText{color:var(--ink2)}
-:is(#kolTable,#cpTable,#ordersTable) tbody td.kolFabricTd:hover .kolFabricCell{background:color-mix(in srgb,var(--acc) 8%,transparent)}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricLabel{flex:none;min-width:10px}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricCode{flex:none;padding:0 5px}
+:is(#kolTable,#cpTable,#ordersTable) tbody .kolFabricText{min-width:0;overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;white-space:normal;overflow-wrap:anywhere}
 .kolFabricCardModal{width:min(760px,calc(100vw - 32px))}
 .kolFabricBatchModal{width:min(1240px,calc(100vw - 32px))}
 .kolFabricSummaryHead{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .kolFabricSummaries{grid-template-columns:repeat(2,minmax(0,1fr))}
 @media (max-width:640px){.kolFabricSummaries{grid-template-columns:1fr}}
-.kolFabricSource{flex:none;font-size:var(--fs-xs);font-weight:600;padding:1px 7px;border-radius:var(--r-full);border:1px solid var(--line);color:var(--ink2);white-space:nowrap}
-.kolFabricSource.is-ai{border-color:var(--acc-lite);color:var(--acc-ink);background:var(--acc-bg)}
-.kolFabricSource.is-manual{border-color:var(--line2);color:var(--ink)}
+.kolFabricSource{flex:none;padding:1px 7px;white-space:nowrap}
 .kolFabricRaw{width:100%;resize:vertical}
 .kolFabricFoot{flex-wrap:wrap;gap:8px}
 .kolFabricFootSpacer{flex:1}
-.kolFabricBatchWrap{max-height:min(56vh,520px);overflow:auto;border:1px solid var(--line);border-radius:var(--r-md)}
-.kolFabricBatchTable{width:100%;border-collapse:collapse;font-size:var(--fs-sm)}
-.kolFabricBatchTable th,.kolFabricBatchTable td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:middle}
-.kolFabricBatchTable thead th{position:sticky;top:0;background:var(--card2,var(--card));z-index:1;font-weight:600}
-.kolFabricBatchCode{font-weight:600;white-space:nowrap}
+.kolFabricBatchWrap{max-height:min(56vh,520px);overflow:auto}
+.kolFabricBatchTable{width:100%;border-collapse:collapse}
+.kolFabricBatchTable th,.kolFabricBatchTable td{padding:6px 8px;text-align:left;vertical-align:middle}
+.kolFabricBatchTable thead th{position:sticky;top:0}
+.kolFabricBatchCode{white-space:nowrap}
 .kolFabricBatchSummary{width:100%;min-width:250px}
-.kolFabricBatchRaw{max-width:240px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kolFabricBatchRaw{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 @media (max-width:720px){.kolFabricBatchRaw{display:none}}
 .kolFabricParts{margin:0 0 4px}
 
@@ -308,24 +246,19 @@
 }
 .kolFabricFilterScroll{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;scrollbar-gutter:stable}
 .colFilterPanel:has(.kolFabricFacetPanel)>.cfpApplyRow{
-  position:relative;z-index:1;flex:0 0 auto;
-  margin-top:6px;padding-top:9px;border-top:1px solid var(--line);
-  background:var(--card,var(--bl-surface-raised))
+  position:relative;flex:0 0 auto;
+  margin-top:6px;padding-top:9px
 }
-.colFilterPanel:has(.kolFabricFacetPanel)>.kolSpreadsheetFilterSort,
-.colFilterPanel:has(.kolFabricFacetPanel)>.cfpSearch,
-.colFilterPanel:has(.kolFabricFacetPanel)>.cfpHeader{flex:0 0 auto}
-.kolFabricFacetPanel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:7px 10px;margin:9px 0;padding:10px 2px;border-block:1px solid var(--line);color:var(--ink)}
-.kolFabricFacetPanel>strong{grid-column:1/-1;font-size:var(--fs-sm);font-weight:700;padding:0 3px}
-.kolFabricFacetField{border:1px solid var(--line);border-radius:var(--r-sm);background:var(--card2,var(--card));min-width:0}
-.kolFabricFacetField>summary{cursor:pointer;padding:8px 10px;font-weight:600;font-size:var(--fs-sm);list-style-position:inside}
-.kolFabricFacetField[open]>summary{border-bottom:1px solid var(--line)}
-.kolFabricFacetSearch{box-sizing:border-box;margin:7px 7px 3px;width:calc(100% - 14px);min-height:30px;border:1px solid var(--line);border-radius:var(--r-sm);padding:4px 8px;color:var(--ink);background:var(--card,var(--card))}
+.colFilterPanel:has(.kolFabricFacetPanel)>.kolSpreadsheetFilterSort,.colFilterPanel:has(.kolFabricFacetPanel)>.cfpSearch,.colFilterPanel:has(.kolFabricFacetPanel)>.cfpHeader{flex:0 0 auto}
+.kolFabricFacetPanel{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:start;gap:7px 10px;margin:9px 0;padding:10px 2px}
+.kolFabricFacetPanel>strong{grid-column:1/-1;padding:0 3px}
+.kolFabricFacetField{min-width:0}
+.kolFabricFacetField>summary{cursor:pointer;padding:8px 10px;list-style-position:inside}
+.kolFabricFacetSearch{box-sizing:border-box;margin:7px 7px 3px;width:calc(100% - 14px);min-height:30px;padding:4px 8px}
 .kolFabricFacetOptions{max-height:112px;overflow:auto;padding:5px 7px 7px;display:grid;gap:2px}
-.kolFabricFacetOption{display:flex;align-items:flex-start;gap:8px;padding:4px 5px;border-radius:var(--r-sm);font-size:var(--fs-sm);line-height:1.45;cursor:pointer;overflow-wrap:anywhere}
-.kolFabricFacetOption:hover{background:var(--acc-bg,var(--card2))}
+.kolFabricFacetOption{display:flex;align-items:flex-start;gap:8px;padding:4px 5px;cursor:pointer;overflow-wrap:anywhere}
 .kolFabricFacetOption[hidden]{display:none}
-.kolFabricFacetOption input{margin-top:2px;accent-color:var(--acc)}
+.kolFabricFacetOption input{margin-top:2px}
 .kolFabricFacetOption span{min-width:0;flex:1}
 .kolFabricSummaries input,.kolFabricDetails input{min-width:0;width:100%;box-sizing:border-box}
 

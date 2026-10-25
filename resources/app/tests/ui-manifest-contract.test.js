@@ -26,6 +26,14 @@ test('Manifest has one token source; migrated owners never consume legacy appear
  const failures=[];
  for(const d of entries)for(const m of d.value.matchAll(/var\((--[\w-]+)/g)){
   if(/^--ov-(level|risk)$/.test(m[1])||m[1]==='--check-progress')continue; // data-generated chart dimensions, not appearance
+  // User-authored status colors are data (also used by unchanged export); swatches
+  // stay narrow. Text height/rate are measured data geometry, not theme aliases.
+  if(d.file==='ui-components.css'&&(
+   m[1]==='--kol-text-lh'&&d.selector==='#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody textarea.editCell'||
+   m[1]==='--pd-rate'&&d.selector==='.pdRing::after'||
+   m[1]==='--kol-status-color'&&/^#kolTable (?:select|td)/.test(d.selector)||
+   m[1]==='--status-color'&&d.selector==='.kolStatusManagerDot'||
+   m[1]==='--swatch'&&d.selector==='.kolStatusSwatch'))continue;
   if(!tokens.has(m[1]))failures.push(`${d.file} ${d.selector}: ${m[1]}`);
  }
  assert.deepEqual(failures,[]);
@@ -41,7 +49,7 @@ test('Manifest prohibits frames, rounded controls, gradients and raw overlay lev
   if(/radius$/.test(d.prop)&&!/^0$|^var\(--ui-radius\)$/.test(d.value))failures.push(d);
   if(/^border/.test(d.prop)&&!/radius$/.test(d.prop)&&!/^0(?:\s|$)|^none$/.test(d.value)){
    const row=['#cpTable tbody td','[data-ui-migrated] table tbody td'].includes(d.selector)&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-row-divider)';
-   const group=['#cpTable','#ordersTable'].some(id=>d.selector===id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)')&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
+   const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)')&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
    if(!row&&!group)failures.push(d); // narrow user-approved dense table exceptions
   }
   if(d.prop==='z-index'&&!/^var\(--ui-z-(below|base|data|raised|sticky|popover|modal|modal-menu|tooltip|boot)\)$/.test(d.value))failures.push(d);
@@ -66,8 +74,8 @@ test('Manifest fonts scale and only transform/opacity may animate',()=>{
 });
 test('Main column separators cover both header tiers and never the table body',()=>{
  const rules=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)');
- assert.equal(rules.length,2);
- for(const [i,id] of ['#cpTable','#ordersTable'].entries()){assert.equal(rules[i].selector,id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)');assert.doesNotMatch(rules[i].selector,/tbody|td\b/);}
+ assert.equal(rules.length,3);
+ for(const [i,id] of ['#cpTable','#ordersTable','#kolTable'].entries()){assert.equal(rules[i].selector,id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)');assert.doesNotMatch(rules[i].selector,/tbody|td\b/);}
 });
 test('Shared button contract covers interaction states and restricts explicit variants',()=>{
  const source=read('ui-components.css');
@@ -103,4 +111,15 @@ test('Migrated Plan and Execute module styles contain only layout and data geome
  for(const file of ['backlog-overview.js','backlog-plan-actual.js','backlog-radar-layout.js'])assert.doesNotMatch(read(file),/<circle\b|stroke-dasharray=/);
  assert.match(read('backlog-chart.js'),/<rect x="'\+\(x-2\.6\)/);
  assert.match(read('backlog-chart.js'),/c:symbol val="circle"/,'native Excel chart geometry remains an export-only exception');
+});
+
+test('Commercial module CSS owns layout only; charts use square marks',()=>{
+ const modules=['collection-spreadsheet.css','collection-analytics.css','pricing-desk.css','pricing-workspace.css','price-supplier-analysis.css','manufacturers.css','license-cards.css','lfl.css','open-costing.css'];
+ const failures=[];
+ for(const file of modules)for(const d of declarations(read(file))){
+  if(/^(?:color|accent-color|background(?:-.*)?|border(?!-collapse|-spacing)(?:-.*)?|box-shadow|text-shadow|font(?:-.*)?|letter-spacing|line-height|text-transform|fill|stroke(?:-.*)?|outline(?:-.*)?|animation(?:-.*)?|transition(?:-.*)?|filter|backdrop-filter|(?:-webkit-)?mask(?:-.*)?|z-index)$/.test(d.prop))failures.push({file,...d});
+  if(/var\(--(?:acc|card|ink|line|muted|fs-|sans|head|mono|r-)/.test(d.value))failures.push({file,...d});
+ }
+ assert.deepEqual(failures,[]);
+ for(const name of ['pricing-desk.js','price-supplier-analysis.js'])assert.doesNotMatch(read(name),/<circle\b|stroke-dasharray=/);
 });

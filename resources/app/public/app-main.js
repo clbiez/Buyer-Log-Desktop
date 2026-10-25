@@ -3056,7 +3056,7 @@ function cpRowsForImageIdentity(plmId,colourCode){
 }
 function cpImagePlaceholder(){
   try{return kolImagePlaceholderSvg();}catch(_){
-    return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" rx="8" fill="#EEF0F3"/><path d="M15 60l18-22 13 14 12-17 8 25" stroke="#98A2B3" stroke-width="4" fill="none"/><circle cx="29" cy="24" r="6" fill="#98A2B3"/></svg>');
+    return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><rect width="80" height="80" fill="#EEF0F3"/><path d="M20 24h40M20 36h40M20 48h24" stroke="#98A2B3" stroke-width="4" fill="none"/></svg>');
   }
 }
 function modelImageCacheKey(modelId,colourCode){
@@ -25742,7 +25742,7 @@ function updateKolUndoRedoButtons(){
 document.getElementById('kolUndoBtn')?.addEventListener('click', kolUndo);
 document.getElementById('kolRedoBtn')?.addEventListener('click', kolRedo);
 function kolImagePlaceholderSvg(){
-  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100"><rect width="80" height="100" fill="#EEF0F3"/><path d="M20 70l12-16 10 12 10-14 8 10" stroke="#B7BEC9" stroke-width="3" fill="none"/><circle cx="30" cy="34" r="6" fill="#B7BEC9"/></svg>');
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100"><rect width="80" height="100" fill="#EEF0F3"/><path d="M20 30h40M20 44h40M20 58h24" stroke="#B7BEC9" stroke-width="3" fill="none"/></svg>');
 }
 // ---- Görsel büyük önizleme (hover popup) ----
 // v6.63 — Bu popup Koleksiyon, CP, Orders, Quotations, Open Costing, LFL, OAB ve
@@ -27693,7 +27693,9 @@ function renderKol(){
   const kolGroupRowHtml=`<tr class="groupRow kolGroupRow" data-freeze-left="${kolFreezeLeft}"><th class="groupSpacer"></th>${pictureVisible?'<th class="groupSpacer kolPicGroupSpacer" data-start="0" data-end="0"></th>':''}${kolGroupRuns.map((run,index)=>`<th colspan="${run.span}" class="${index>0||pictureVisible?'groupDivider':''}" data-grp="${escapeHtml(run.group)}" data-start="${run.start}" data-end="${run.end}" style="--grp-accent:${GROUP_ACCENTS[run.group]||'var(--acc)'}">${escapeHtml(tableColumnGroupLabel(run.group))}</th>`).join('')}</tr>`;
   thead.classList.add('kolHasGroups');
   thead.innerHTML=kolGroupRowHtml+`<tr class="colRow"><th class="chkTh${kolCheckActive?' columnFilterActive':''}"><input type="checkbox" id="kolSelAll"><button type="button" class="thFilterBtn kolChkFilterBtn${kolCheckActive?' filterActive':''}" title="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}" aria-label="${escapeHtml(appLang==='en'?'Filter by checked rows':'İşaretlenenlere göre filtrele')}">▾</button></th>${pictureVisible?`<th id="kolPicTh" class="kolPicTh" title="${escapeHtml(L('Görsel boyutunu değiştir'))}">${L('Picture')}</th>`:''}${headers}</tr>`;
+  const kolHeaderBoundaries=new Set(kolGroupRuns.filter((run,index)=>index>0||pictureVisible).map(run=>descriptors[run.start-kolPicOffset]?.k));
   thead.querySelectorAll('th[data-kcol]').forEach(th=>{
+    th.classList.toggle('groupBoundary',kolHeaderBoundaries.has(th.dataset.kcol));
     const key=th.dataset.kcol,descriptor=descriptors.find(d=>d.k===key),viewColumn=Boolean(KOL_PRICE_VIEW_COLS[key]||descriptor?.kind==='priceDetail');
     // Görünüm sütunları kalıcı sıraya ait değildir; sürüklenmez, kaynak sütunların yerinde durur.
     if(!viewColumn)attachKolColDrag(th,key);
@@ -27779,7 +27781,7 @@ function renderKol(){
         ? 'Click: select paste target · Double-click: choose image · Right-click: remove or fetch from PLM'
         : 'Tek tık: yapıştırma hedefi · Çift tık: görsel seç · Sağ tık: kaldır veya PLM\'den çağır';
       const collectionModelId=r.plmId||r.modelKod||r.id,collectionColourCode=r.colourCode||'';
-      html+=`<td class="kolPictureCell" data-r="${ri}" data-c="1" data-key="__picture__" data-kol-image-id="${r.id}"><img src="${escapeHtml(collectionImageKnown?collectionImageUrl:kolImagePlaceholderSvg())}" data-src="${escapeHtml(collectionImageUrl)}" data-image-key="${escapeHtml(modelImageCacheKey(collectionModelId,collectionColourCode))}" data-model-id="${escapeHtml(collectionModelId)}" data-colour-code="${escapeHtml(collectionColourCode)}" data-id="${r.id}" data-has-image="${hasCollectionImage?'1':'0'}" ${collectionImageKnown==='loaded'?'loading="eager" fetchpriority="auto" data-bl-image-loaded="1"':collectionImageKnown==='prior'?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"':'loading="lazy" decoding="async" fetchpriority="low"'} class="kolThumb${kolActiveImgRowId===r.id?' kolThumbActive':''}" aria-label="${escapeHtml(collectionImageTitle)}" style="max-width:${hasCollectionImage?_imgDim.w:22}px;max-height:${hasCollectionImage?_imgDim.h:22}px;opacity:${hasCollectionImage?1:.55};border-radius:6px;border:1px solid ${kolActiveImgRowId===r.id?'var(--acc)':'var(--line)'};cursor:pointer;object-fit:contain;background:var(--card2);"></td>`;
+      html+=`<td class="kolPictureCell" data-r="${ri}" data-c="1" data-key="__picture__" data-kol-image-id="${r.id}"><img src="${escapeHtml(collectionImageKnown?collectionImageUrl:kolImagePlaceholderSvg())}" data-src="${escapeHtml(collectionImageUrl)}" data-image-key="${escapeHtml(modelImageCacheKey(collectionModelId,collectionColourCode))}" data-model-id="${escapeHtml(collectionModelId)}" data-colour-code="${escapeHtml(collectionColourCode)}" data-id="${r.id}" data-has-image="${hasCollectionImage?'1':'0'}" ${collectionImageKnown==='loaded'?'loading="eager" fetchpriority="auto" data-bl-image-loaded="1"':collectionImageKnown==='prior'?'loading="eager" fetchpriority="auto" data-bl-image-prior="1"':'loading="lazy" decoding="async" fetchpriority="low"'} class="kolThumb${kolActiveImgRowId===r.id?' kolThumbActive':''}" aria-label="${escapeHtml(collectionImageTitle)}" style="max-width:${hasCollectionImage?_imgDim.w:22}px;max-height:${hasCollectionImage?_imgDim.h:22}px;opacity:${hasCollectionImage?1:.55};cursor:pointer;object-fit:contain;"></td>`;
     }
     const confirmed=kolConfirmedPricing(r),confirmedDisplay=kolConfirmedDisplay(r);
     const effectivePricing=kolEffectivePricing(r),validPrices=kolManufacturers.map(m=>kolParseMoneyNum(effectivePricing&&effectivePricing[m.name])).filter(n=>Number.isFinite(n)&&n>0);

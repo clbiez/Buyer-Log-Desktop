@@ -21,7 +21,8 @@ test('saved LFL comparison cards expose a draggable title area and drop wiring',
   assert.match(LFL, /host\.ondrop=event=>/);
   assert.match(LFL, /commitComparisonScenarioOrderFromDom\(a\)/);
   assert.match(CSS, /\.lflScenarioCardDrag\{[^}]*cursor:grab/);
-  assert.match(CSS, /\.lflScenarioCard\.isDragTarget\{/);
+  const shared=fs.readFileSync(path.join(ROOT,'public','ui-components.css'),'utf8');
+  assert.match(shared,/\.lflScenarioCard\.isDragTarget\{[^}]*outline:2px solid var\(--ui-accent\)/);
 });
 
 test('scenario reorder follows DOM ids without dropping unknown or omitted saved scenarios', () => {
