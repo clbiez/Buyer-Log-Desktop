@@ -7718,6 +7718,13 @@ html[data-ui-system="manifest"] .notificationHistoryMeta time {font-variant-nume
 }
 html[data-ui-system="manifest"] .notificationHistoryCopy p {font-size:var(--ui-font-xs) !important;line-height:1.5;color:var(--ui-text) !important
 }
+html[data-ui-system="manifest"] .notificationHistoryOpen {font-family:inherit;font-size:var(--ui-font-xs) !important;line-height:1.5;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .notificationHistoryOpen:hover {text-decoration:underline
+}
+html[data-ui-system="manifest"] .notificationHistoryOpen:focus-visible,
+html[data-ui-system="manifest"] .warningList li.hasDetail:focus-visible {outline:2px solid var(--ui-focus-ring);outline-offset:2px
+}
 html[data-ui-system="manifest"] .notificationHistoryRemove {background:transparent !important;color:var(--ui-text-muted) !important
 }
 html[data-ui-system="manifest"] .notificationHistoryRemove:hover {background:var(--ui-danger-bg) !important;color:var(--ui-danger) !important
