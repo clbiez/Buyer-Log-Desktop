@@ -29,7 +29,7 @@
  --ui-feedback-tone:var(--ui-accent);--ui-feedback-surface:var(--ui-surface);
  --ui-radius:0;--ui-radius-avatar:50%;
  --ui-space-1:4px;--ui-space-2:8px;--ui-space-3:12px;--ui-space-4:16px;--ui-space-5:24px;--ui-space-6:32px;
- --ui-motion-fast:100ms;--ui-motion-enter:140ms;--ui-ease:cubic-bezier(.2,.7,.3,1);
+ --ui-motion-fast:100ms;--ui-motion-enter:140ms;--ui-motion-page:340ms;--ui-motion-card:360ms;--ui-motion-table:390ms;--ui-motion-overlay:240ms;--ui-ease:cubic-bezier(.2,.7,.3,1);
  --ui-shadow-overlay:0 16px 46px color-mix(in srgb,var(--ui-text) 18%,transparent);
  --ui-scrim:rgba(8,12,18,.48);
  /* Shared stack bands. Nested dialogs use 201–299; menus and notices stay above. */
