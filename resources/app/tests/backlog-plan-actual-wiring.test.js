@@ -82,13 +82,17 @@ test('plan realisation view: plan window, grouped bars with tooltip + drawer, Ex
   assert.doesNotMatch(CSS,/var\(--bad\)|var\(--ok\)|var\(--warn\)/,'undefined tone tokens must not be used');
 });
 
-test('Backlog completion measures use linear bars and keep percentage labels',()=>{
+test('Backlog Overview restores the 7.0.294 circular gauge while Plan Actual retains linear measures',()=>{
   const OVERVIEW=read('public/backlog-overview.js');
-  for(const source of [OVERVIEW,UI]){
-    assert.match(source,/class="uiMeasure" aria-hidden="true"/);
-    assert.match(source,/transform:scaleX\(/);
-    assert.match(source,/class="bpaRingText"/);
-    assert.doesNotMatch(source,/<circle\b/);
-  }
+  assert.match(OVERVIEW,/class="blvProgressRing"/);
+  assert.match(OVERVIEW,/<circle class="bpaRingTrack"/);
+  assert.match(OVERVIEW,/<circle class="bpaRingValue"/);
+  assert.match(OVERVIEW,/stroke-dasharray=/);
+  assert.match(OVERVIEW,/class="bpaRingText"/);
+  assert.match(UI,/class="uiMeasure" aria-hidden="true"/);
+  assert.match(UI,/transform:scaleX\(/);
+  assert.match(UI,/class="bpaRingText"/);
+  assert.doesNotMatch(UI,/<circle\b/);
   assert.match(VISUAL,/\.uiMeasure>i\{[^}]*transform-origin:left/);
+  assert.match(VISUAL,/\.bpaRingValue \{[^}]*stroke:var\(--ui-success\)/);
 });
