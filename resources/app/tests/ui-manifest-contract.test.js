@@ -171,12 +171,22 @@ test('Remaining module CSS owns layout only; nested output forms use the shared 
 });
 
 test('every module and shell layout file is free of private appearance definitions',()=>{
- const owners=new Set(['ui-tokens.css','ui-components.css','ui-startup.css','giris.css']);const failures=[];
+ const owners=new Set(['ui-tokens.css','ui-components.css','ui-startup.css','giris.css','ui-motion.css']);const failures=[];
  for(const file of OWNERS.filter(f=>!owners.has(f)))for(const d of declarations(read(file))){
   if(d.prop.startsWith('--')&&/var\(--ui-(?:text|accent|danger|surface|warning|success|chart|font-(?:body|mono|heading))/.test(d.value))failures.push({file,...d});
   if(/^(?:color|accent-color|color-scheme|background(?:-.*)?|border(?!-collapse|-spacing)(?:-.*)?|box-shadow|text-shadow|font(?:-.*)?|letter-spacing|line-height|text-transform|fill|stroke(?:-.*)?|outline(?:-.*)?|animation(?:-.*)?|transition(?:-.*)?|filter|(?:-webkit-)?backdrop-filter|z-index)$/.test(d.prop))failures.push({file,...d});
  }
  assert.deepEqual(failures,[]);
+});
+
+test('Motion+ CSS owner is limited to transform/opacity and short canonical timing',()=>{
+ const source=read('ui-motion.css');
+ const failures=declarations(source).filter(d=>!['animation','transition','opacity','transform'].includes(d.prop));
+ assert.deepEqual(failures,[]);
+ assert.match(source,/prefers-reduced-motion:reduce/);
+ assert.match(source,/var\(--ui-motion-page\)/);
+ assert.match(source,/var\(--ui-motion-overlay\)/);
+ assert.doesNotMatch(source,/infinite|#[0-9a-f]{3,8}\b|rgba?\(/i);
 });
 
 test('Earth markers share square geometry, local scaled fonts and static route emphasis',()=>{
