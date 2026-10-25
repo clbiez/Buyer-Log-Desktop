@@ -1,0 +1,380 @@
+{
+  "viewport": "1440x900",
+  "scale": "standard",
+  "data": "generate-demo-data.build({rows:220,seed:7,today:2026-10-25}); 191 active CP rows",
+  "browser": "154.0.8037.57",
+  "captures": [
+    "startup-light.png",
+    "overview-light.png",
+    "overview-commercial-light.png",
+    "lcwai-light.png",
+    "cp-light.png",
+    "orders-light.png",
+    "backlog-light.png",
+    "shipping-light.png",
+    "koleksiyon-light.png",
+    "quotations-light.png",
+    "priceanalysis-light.png",
+    "manufacturers-light.png",
+    "licensecards-light.png",
+    "lfl-light.png",
+    "opencosting-light.png",
+    "automations-light.png",
+    "source-light.png",
+    "startup-grey.png",
+    "overview-grey.png",
+    "overview-commercial-grey.png",
+    "lcwai-grey.png",
+    "cp-grey.png",
+    "orders-grey.png",
+    "backlog-grey.png",
+    "shipping-grey.png",
+    "koleksiyon-grey.png",
+    "quotations-grey.png",
+    "priceanalysis-grey.png",
+    "manufacturers-grey.png",
+    "licensecards-grey.png",
+    "lfl-grey.png",
+    "opencosting-grey.png",
+    "automations-grey.png",
+    "source-grey.png",
+    "startup-dark.png",
+    "overview-dark.png",
+    "overview-commercial-dark.png",
+    "lcwai-dark.png",
+    "cp-dark.png",
+    "orders-dark.png",
+    "backlog-dark.png",
+    "shipping-dark.png",
+    "koleksiyon-dark.png",
+    "quotations-dark.png",
+    "priceanalysis-dark.png",
+    "manufacturers-dark.png",
+    "licensecards-dark.png",
+    "lfl-dark.png",
+    "opencosting-dark.png",
+    "automations-dark.png",
+    "source-dark.png",
+    "sign-in-light.png",
+    "sign-in-grey.png",
+    "sign-in-dark.png"
+  ],
+  "navigation": [
+    {
+      "tab": "overview",
+      "theme": "light",
+      "wallMs": 1099,
+      "active": "Genel Bakış",
+      "textLength": 1766
+    },
+    {
+      "tab": "lcwai",
+      "theme": "light",
+      "wallMs": 1142,
+      "active": "LCW AI",
+      "textLength": 493
+    },
+    {
+      "tab": "cp",
+      "theme": "light",
+      "wallMs": 1941,
+      "active": "CP Tracker",
+      "textLength": 22805
+    },
+    {
+      "tab": "orders",
+      "theme": "light",
+      "wallMs": 1161,
+      "active": "Siparişler",
+      "textLength": 20046
+    },
+    {
+      "tab": "backlog",
+      "theme": "light",
+      "wallMs": 1268,
+      "active": "Backlog",
+      "textLength": 4025
+    },
+    {
+      "tab": "shipping",
+      "theme": "light",
+      "wallMs": 1111,
+      "active": "Nakliye kıyaslama",
+      "textLength": 171
+    },
+    {
+      "tab": "koleksiyon",
+      "theme": "light",
+      "wallMs": 1164,
+      "active": "Koleksiyon",
+      "textLength": 1122
+    },
+    {
+      "tab": "quotations",
+      "theme": "light",
+      "wallMs": 1114,
+      "active": "Fiyat Masası",
+      "textLength": 260
+    },
+    {
+      "tab": "priceanalysis",
+      "theme": "light",
+      "wallMs": 1134,
+      "active": "Fiyat & Üretici Analizi",
+      "textLength": 1592
+    },
+    {
+      "tab": "manufacturers",
+      "theme": "light",
+      "wallMs": 1176,
+      "active": "Üreticiler",
+      "textLength": 2253
+    },
+    {
+      "tab": "licensecards",
+      "theme": "light",
+      "wallMs": 1128,
+      "active": "Lisans kartları",
+      "textLength": 860
+    },
+    {
+      "tab": "lfl",
+      "theme": "light",
+      "wallMs": 1228,
+      "active": "LFL analizi",
+      "textLength": 6323
+    },
+    {
+      "tab": "opencosting",
+      "theme": "light",
+      "wallMs": 1115,
+      "active": "Ön Maliyet",
+      "textLength": 311
+    },
+    {
+      "tab": "automations",
+      "theme": "light",
+      "wallMs": 1117,
+      "active": "Otomasyonlar",
+      "textLength": 486
+    },
+    {
+      "tab": "source",
+      "theme": "light",
+      "wallMs": 1131,
+      "active": "Veri Yönetimi",
+      "textLength": 3827
+    },
+    {
+      "tab": "overview",
+      "theme": "grey",
+      "wallMs": 1114,
+      "active": "Genel Bakış",
+      "textLength": 1766
+    },
+    {
+      "tab": "lcwai",
+      "theme": "grey",
+      "wallMs": 1144,
+      "active": "LCW AI",
+      "textLength": 493
+    },
+    {
+      "tab": "cp",
+      "theme": "grey",
+      "wallMs": 1968,
+      "active": "CP Tracker",
+      "textLength": 22805
+    },
+    {
+      "tab": "orders",
+      "theme": "grey",
+      "wallMs": 1162,
+      "active": "Siparişler",
+      "textLength": 20899
+    },
+    {
+      "tab": "backlog",
+      "theme": "grey",
+      "wallMs": 1201,
+      "active": "Backlog",
+      "textLength": 4025
+    },
+    {
+      "tab": "shipping",
+      "theme": "grey",
+      "wallMs": 1112,
+      "active": "Nakliye kıyaslama",
+      "textLength": 171
+    },
+    {
+      "tab": "koleksiyon",
+      "theme": "grey",
+      "wallMs": 1182,
+      "active": "Koleksiyon",
+      "textLength": 1122
+    },
+    {
+      "tab": "quotations",
+      "theme": "grey",
+      "wallMs": 1109,
+      "active": "Fiyat Masası",
+      "textLength": 260
+    },
+    {
+      "tab": "priceanalysis",
+      "theme": "grey",
+      "wallMs": 1121,
+      "active": "Fiyat & Üretici Analizi",
+      "textLength": 1591
+    },
+    {
+      "tab": "manufacturers",
+      "theme": "grey",
+      "wallMs": 1168,
+      "active": "Üreticiler",
+      "textLength": 2253
+    },
+    {
+      "tab": "licensecards",
+      "theme": "grey",
+      "wallMs": 1155,
+      "active": "Lisans kartları",
+      "textLength": 860
+    },
+    {
+      "tab": "lfl",
+      "theme": "grey",
+      "wallMs": 1205,
+      "active": "LFL analizi",
+      "textLength": 6323
+    },
+    {
+      "tab": "opencosting",
+      "theme": "grey",
+      "wallMs": 1134,
+      "active": "Ön Maliyet",
+      "textLength": 311
+    },
+    {
+      "tab": "automations",
+      "theme": "grey",
+      "wallMs": 1102,
+      "active": "Otomasyonlar",
+      "textLength": 486
+    },
+    {
+      "tab": "source",
+      "theme": "grey",
+      "wallMs": 1135,
+      "active": "Veri Yönetimi",
+      "textLength": 3827
+    },
+    {
+      "tab": "overview",
+      "theme": "dark",
+      "wallMs": 1098,
+      "active": "Genel Bakış",
+      "textLength": 1766
+    },
+    {
+      "tab": "lcwai",
+      "theme": "dark",
+      "wallMs": 1139,
+      "active": "LCW AI",
+      "textLength": 493
+    },
+    {
+      "tab": "cp",
+      "theme": "dark",
+      "wallMs": 1845,
+      "active": "CP Tracker",
+      "textLength": 22805
+    },
+    {
+      "tab": "orders",
+      "theme": "dark",
+      "wallMs": 1432,
+      "active": "Siparişler",
+      "textLength": 20899
+    },
+    {
+      "tab": "backlog",
+      "theme": "dark",
+      "wallMs": 1268,
+      "active": "Backlog",
+      "textLength": 4025
+    },
+    {
+      "tab": "shipping",
+      "theme": "dark",
+      "wallMs": 1114,
+      "active": "Nakliye kıyaslama",
+      "textLength": 171
+    },
+    {
+      "tab": "koleksiyon",
+      "theme": "dark",
+      "wallMs": 1192,
+      "active": "Koleksiyon",
+      "textLength": 1122
+    },
+    {
+      "tab": "quotations",
+      "theme": "dark",
+      "wallMs": 1107,
+      "active": "Fiyat Masası",
+      "textLength": 260
+    },
+    {
+      "tab": "priceanalysis",
+      "theme": "dark",
+      "wallMs": 1115,
+      "active": "Fiyat & Üretici Analizi",
+      "textLength": 1592
+    },
+    {
+      "tab": "manufacturers",
+      "theme": "dark",
+      "wallMs": 1170,
+      "active": "Üreticiler",
+      "textLength": 2253
+    },
+    {
+      "tab": "licensecards",
+      "theme": "dark",
+      "wallMs": 1133,
+      "active": "Lisans kartları",
+      "textLength": 860
+    },
+    {
+      "tab": "lfl",
+      "theme": "dark",
+      "wallMs": 1195,
+      "active": "LFL analizi",
+      "textLength": 6323
+    },
+    {
+      "tab": "opencosting",
+      "theme": "dark",
+      "wallMs": 1117,
+      "active": "Ön Maliyet",
+      "textLength": 311
+    },
+    {
+      "tab": "automations",
+      "theme": "dark",
+      "wallMs": 1112,
+      "active": "Otomasyonlar",
+      "textLength": 486
+    },
+    {
+      "tab": "source",
+      "theme": "dark",
+      "wallMs": 1191,
+      "active": "Veri Yönetimi",
+      "textLength": 3827
+    }
+  ],
+  "errors": []
+}

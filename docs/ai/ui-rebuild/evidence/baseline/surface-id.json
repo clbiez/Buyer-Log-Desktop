@@ -1,0 +1,727 @@
+[
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 1658,
+    "value": "_horizonTextInputModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 1837,
+    "value": "_sourceFilterRequiredModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 2513,
+    "value": "gridClipboardMenu"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 4574,
+    "value": "_tableFieldsMenu"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 5142,
+    "value": "_columnNameModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 5393,
+    "value": "_cpModelColumnModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 11573,
+    "value": "_suppFobRulesModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 11598,
+    "value": "_ruleSeasonPanel"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 11907,
+    "value": "_landedMultipliersModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 12171,
+    "value": "_transitRulesModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 12831,
+    "value": "warningDetailOverlay"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 12850,
+    "value": "warnOverlay"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 13245,
+    "value": "_refreshSummaryModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 13389,
+    "value": "notificationHistoryModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 13726,
+    "value": "_appBlockingOverlay"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 14012,
+    "value": "sourceRefreshFailureModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 15096,
+    "value": "_topRefreshMenu"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 15367,
+    "value": "_browserDebugSettingsModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 15584,
+    "value": "_modelImageLimitModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 15614,
+    "value": "_syncLocalDataModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 15718,
+    "value": "_syncStatusModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 16875,
+    "value": "backlogExportColumnsModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 17424,
+    "value": "_backlogPivotSettingsModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 17761,
+    "value": "backlogDetailModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 20425,
+    "value": "_freightModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 22627,
+    "value": "kolPricingExcelColsModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 23123,
+    "value": "_endeksmatikModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 23555,
+    "value": "_endeksmatikSetsModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 25771,
+    "value": "kolImgPopupImg"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 27110,
+    "value": "_kolQuickFiltersModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 27216,
+    "value": "kolPricingPreflightModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 29315,
+    "value": "_kolImportPlanModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 29940,
+    "value": "_kolPlmImportModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 30445,
+    "value": "_kolFabricBatchModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 30586,
+    "value": "_kolFabricCardModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 30715,
+    "value": "_kolPlmListModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 31106,
+    "value": "_plmSyncColumnModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 31166,
+    "value": "_plmSyncPreviewModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 32355,
+    "value": "_modelImageUpdateModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 32413,
+    "value": "_plmSyncLangModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 32524,
+    "value": "_plmSyncActionModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 32584,
+    "value": "_plmSyncPropertyModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 32977,
+    "value": "_qtxContextMenu"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 33214,
+    "value": "_kolBinModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 33989,
+    "value": "mailTopicEditorModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 35308,
+    "value": "kolPricingResultModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 35919,
+    "value": "kolModelFilesModal"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 38642,
+    "value": "verHistUpdatePanel"
+  },
+  {
+    "file": "resources/app/public/backlog-chart.js",
+    "line": 929,
+    "value": "_backlogChartSettingsModal"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.js",
+    "line": 597,
+    "value": "blvDrawer"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.js",
+    "line": 623,
+    "value": "blvDrawerTitle"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.js",
+    "line": 492,
+    "value": "bpaDrawer"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.js",
+    "line": 522,
+    "value": "bpaDrawerTitle"
+  },
+  {
+    "file": "resources/app/public/collection-status-ui.js",
+    "line": 11,
+    "value": "_kolStatusDeleteModal"
+  },
+  {
+    "file": "resources/app/public/collection-status-ui.js",
+    "line": 34,
+    "value": "_kolStatusManagerModal"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.js",
+    "line": 2389,
+    "value": "cpa-rule-mode-panel-${esc(rule.id)}"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.js",
+    "line": 2623,
+    "value": "cpaRulesPanel"
+  },
+  {
+    "file": "resources/app/public/data-management.js",
+    "line": 1113,
+    "value": "dmLabPanel"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.js",
+    "line": 159,
+    "value": "blSharedDetailDrawer"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.js",
+    "line": 717,
+    "value": "blDetailDrawerTitle"
+  },
+  {
+    "file": "resources/app/public/formula-columns.js",
+    "line": 1097,
+    "value": "fcModePanel"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 17,
+    "value": "blBootGuardStyle"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 57,
+    "value": "blBootGuard"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 538,
+    "value": "navCopyMenuBtn"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 555,
+    "value": "navColPanel"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 580,
+    "value": "cpDimPanel_buyerGrup"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 584,
+    "value": "cpDimPanel_buyer"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 588,
+    "value": "cpDimPanel_country"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 592,
+    "value": "cpDimPanel_merch"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 596,
+    "value": "cpDimPanel_ageGroup"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 602,
+    "value": "ordersDimPanel_buyerGrup"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 606,
+    "value": "ordersDimPanel_buyer"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 610,
+    "value": "ordersDimPanel_country"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 614,
+    "value": "ordersDimPanel_merch"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 618,
+    "value": "ordersDimPanel_ageGroup"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 629,
+    "value": "ovLayoutEditPanel"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 731,
+    "value": "globalFlowDrawer"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 742,
+    "value": "ovCollectionSummaryScopePopover"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 848,
+    "value": "intakeFilterPanel"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 890,
+    "value": "cpPlmSyncMenu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 900,
+    "value": "cpToolsMenu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 911,
+    "value": "cpMoreMenu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 956,
+    "value": "ordersPlmSyncMenu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 965,
+    "value": "ordersToolsMenu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 972,
+    "value": "ordersMoreMenu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1034,
+    "value": "kolPlmSyncMenu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1045,
+    "value": "kolToolsMenu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1066,
+    "value": "kolMoreMenu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1129,
+    "value": "lflBreakdownPanel"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1132,
+    "value": "lflDimPanel_currentMonth"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1133,
+    "value": "lflDimPanel_compareMonth"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1134,
+    "value": "lflDimPanel_country"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1135,
+    "value": "lflDimPanel_mag"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1136,
+    "value": "lflDimPanel_mmyg"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1137,
+    "value": "lflDimPanel_brandDirectorate"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1138,
+    "value": "lflDimPanel_classification"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1139,
+    "value": "lflDimPanel_productDescription"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1140,
+    "value": "lflDimPanel_manufacturer"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1141,
+    "value": "lflDimPanel_buyingGroup"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1142,
+    "value": "lflDimPanel_buyer"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1149,
+    "value": "lflFabricGroupPanel"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1150,
+    "value": "lflDimPanel_fabricCategory"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1151,
+    "value": "lflDimPanel_fabricSupplierCountry"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1152,
+    "value": "lflDimPanel_fabricSupplier"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1153,
+    "value": "lflDimPanel_kumasTipi"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1154,
+    "value": "lflDimPanel_iplikNo"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1155,
+    "value": "lflDimPanel_fabricWeight"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1156,
+    "value": "lflDimPanel_karisim"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1162,
+    "value": "lflReadyFiltersPanel"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1199,
+    "value": "lflCustomComparePanel0"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1200,
+    "value": "lflCustomComparePanel1"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1201,
+    "value": "lflCustomComparePanel2"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1298,
+    "value": "ocCompareOverlay"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1312,
+    "value": "ocFxOverlay"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1348,
+    "value": "backlogDetailModal"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1395,
+    "value": "backlogExportV3MenuBtn"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1396,
+    "value": "backlogExportV3Menu"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1431,
+    "value": "shipColPanel"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1436,
+    "value": "shipHiddenRowsPanel"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1444,
+    "value": "shipTablePanel"
+  },
+  {
+    "file": "resources/app/public/kpi-groups.js",
+    "line": 128,
+    "value": "${id}Menu"
+  },
+  {
+    "file": "resources/app/public/lfl.js",
+    "line": 1056,
+    "value": "lflDetailAccessModal"
+  },
+  {
+    "file": "resources/app/public/lfl.js",
+    "line": 1097,
+    "value": "lflPortfolioModal"
+  },
+  {
+    "file": "resources/app/public/lfl.js",
+    "line": 1100,
+    "value": "lflPortfolioModalTitle"
+  },
+  {
+    "file": "resources/app/public/lfl.js",
+    "line": 1100,
+    "value": "lflPortfolioModalSummary"
+  },
+  {
+    "file": "resources/app/public/lfl.js",
+    "line": 1100,
+    "value": "lflPortfolioModalExport"
+  },
+  {
+    "file": "resources/app/public/lfl.js",
+    "line": 1100,
+    "value": "lflPortfolioModalTable"
+  },
+  {
+    "file": "resources/app/public/lfl.js",
+    "line": 1675,
+    "value": "_lflTrialModal"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 691,
+    "value": "overlayRoot"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 1089,
+    "value": "drawerBody"
+  },
+  {
+    "file": "resources/app/public/license-royalty-commissions.js",
+    "line": 232,
+    "value": "_suppFobRulesModal"
+  },
+  {
+    "file": "resources/app/public/license-royalty-commissions.js",
+    "line": 246,
+    "value": "_ruleSeasonPanel"
+  },
+  {
+    "file": "resources/app/public/overview-collection-dashboard.js",
+    "line": 154,
+    "value": "_ovCollectionScopeColumnDrawer"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.js",
+    "line": 1228,
+    "value": "globalFlowLoadingOverlay"
+  },
+  {
+    "file": "resources/app/public/overview-home.js",
+    "line": 402,
+    "value": "ovHomeDrawerTitle"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.js",
+    "line": 165,
+    "value": "_syncGuideOverlay"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.js",
+    "line": 244,
+    "value": "psaPanel"
+  },
+  {
+    "file": "resources/app/public/quotations.js",
+    "line": 1309,
+    "value": "quotationAccessModal"
+  },
+  {
+    "file": "resources/app/public/quotations.js",
+    "line": 1341,
+    "value": "quotationNoteModal"
+  },
+  {
+    "file": "resources/app/public/quotations.js",
+    "line": 1676,
+    "value": "quotationModal"
+  },
+  {
+    "file": "resources/app/public/quotations.js",
+    "line": 2353,
+    "value": "_priceHistoryModal"
+  },
+  {
+    "file": "resources/app/public/select-user.html",
+    "line": 93,
+    "value": "hubPanel"
+  },
+  {
+    "file": "resources/app/public/user-management.js",
+    "line": 1219,
+    "value": "umPermissionsRolePanel"
+  },
+  {
+    "file": "resources/app/public/user-management.js",
+    "line": 1270,
+    "value": "umTemplateRolePanel"
+  },
+  {
+    "file": "resources/app/public/user-management.js",
+    "line": 1719,
+    "value": "umDialogTitle"
+  }
+]

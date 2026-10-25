@@ -1,0 +1,2877 @@
+[
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 10446,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 19218,
+    "value": "font:500 14px/1.45 system-ui,-apple-system,sans-serif"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 37433,
+    "value": "font: en ? 'Font' : 'Yazı tipi',"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 210,
+    "value": "font:800 var(--fs-sm)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 254,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 270,
+    "value": "font:800 var(--fs-2xs)/11px var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 354,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 533,
+    "value": "font:700 var(--fs-xs)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 534,
+    "value": "font:650 var(--fs-md)/1.2 var(--head)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 535,
+    "value": "font:600 var(--fs-xs)/1.2 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 546,
+    "value": "font:700 var(--fs-2xs)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 547,
+    "value": "font:650 var(--fs-xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 552,
+    "value": "font:600 var(--fs-2xs)/1.2 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 562,
+    "value": "font:700 var(--fs-2xs)/16px var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 567,
+    "value": "font:700 var(--fs-sm)/1.2 var(--head)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 568,
+    "value": "font:500 var(--fs-2xs)/1.35 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 571,
+    "value": "font:700 var(--fs-2xs)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 580,
+    "value": "font:650 var(--fs-xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 583,
+    "value": "font:600 var(--fs-2xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 588,
+    "value": "font:600 var(--fs-2xs)/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 590,
+    "value": "font:500 var(--fs-xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 601,
+    "value": "font:700 var(--fs-2xs)/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 611,
+    "value": "font:700 var(--fs-2xs)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 613,
+    "value": "font:650 var(--fs-xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 622,
+    "value": "font:500 var(--fs-xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 651,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 702,
+    "value": "font:var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 723,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 824,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 832,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1028,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1173,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1188,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1193,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1197,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1219,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1280,
+    "value": "font:var(--fs-xs)/1.45 inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1280,
+    "value": "font:750 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1281,
+    "value": "font:700 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1282,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1282,
+    "value": "font:var(--fs-2xs) var(--mono,monospace)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1284,
+    "value": "font:var(--fs-2xs)/1.4 inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1285,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1285,
+    "value": "font:var(--fs-2xs)/1.4 var(--mono,monospace)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1295,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1328,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1375,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1397,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1428,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1437,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1507,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1519,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1542,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1549,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1599,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1766,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1890,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1925,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2035,
+    "value": "font:var(--fs-2xs)/1.35 inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2092,
+    "value": "font:600 var(--fs-sm)/1.2 inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2107,
+    "value": "font:700 var(--fs-2xs)/1.15 inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2129,
+    "value": "font:600 var(--fs-sm)/1.4 inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2188,
+    "value": "font:600 var(--fs-2xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2191,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2208,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2215,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2223,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2235,
+    "value": "font:600 var(--fs-2xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2252,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2378,
+    "value": "font:500 var(--fs-xs)/1.4 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2456,
+    "value": "font:800 var(--fs-base) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2522,
+    "value": "font:inherit!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2637,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "font:var(--fs-xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "font:700 var(--fs-xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "font:700 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2725,
+    "value": "font:750 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2725,
+    "value": "font:750 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2735,
+    "value": "font:750 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2736,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2737,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2738,
+    "value": "font:750 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2738,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2748,
+    "value": "font:700 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2762,
+    "value": "font:700 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2768,
+    "value": "font:var(--fs-xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2828,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3005,
+    "value": "font:var(--fs-xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3071,
+    "value": "font:var(--fs-2xs)/14px var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3098,
+    "value": "font:700 var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3179,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3186,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3256,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3272,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3297,
+    "value": "font:var(--fs-2xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3308,
+    "value": "font:var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3467,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3689,
+    "value": "font:600 var(--fs-sm) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3749,
+    "value": "font:var(--fs-sm)/1.5 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3760,
+    "value": "font:var(--fs-sm)/1.5 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3825,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3832,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3838,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3838,
+    "value": "font:var(--fs-2xs)/1.4 var(--mono,monospace)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3844,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3869,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3875,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3896,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3931,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3963,
+    "value": "font:var(--fs-2xs)/1.45 var(--mono,monospace)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3984,
+    "value": "font:800 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3986,
+    "value": "font:800 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3987,
+    "value": "font:var(--fs-2xs) inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3990,
+    "value": "font:800 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3990,
+    "value": "font:var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3991,
+    "value": "font:var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3991,
+    "value": "font:var(--fs-2xs)/1.55 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3993,
+    "value": "font:var(--fs-2xs)/1.5 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3993,
+    "value": "font:850 var(--fs-md) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4001,
+    "value": "font:800 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4025,
+    "value": "font:800 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4028,
+    "value": "font:800 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4035,
+    "value": "font:800 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4038,
+    "value": "font:800 var(--fs-base) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4068,
+    "value": "font:800 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4109,
+    "value": "font:600 var(--fs-xs) var(--head)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4111,
+    "value": "font:700 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4120,
+    "value": "font:700 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4121,
+    "value": "font:var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4122,
+    "value": "font:700 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4126,
+    "value": "font:700 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4130,
+    "value": "font:700 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4147,
+    "value": "font:700 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4152,
+    "value": "font:700 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4156,
+    "value": "font:600 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4215,
+    "value": "font:800 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4227,
+    "value": "font:800 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4417,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4475,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4490,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4525,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4562,
+    "value": "font:var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4564,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4581,
+    "value": "font:var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4586,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4590,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4612,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4650,
+    "value": "font:700 var(--fs-2xs)/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4701,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4724,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4727,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4732,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4772,
+    "value": "font:500 var(--fs-sm)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4782,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5029,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5045,
+    "value": "font:var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5080,
+    "value": "font:var(--fs-2xs)/1.4 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5193,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5206,
+    "value": "font:var(--fs-sm)/1.45 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5212,
+    "value": "font:var(--fs-xs)/1.45 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5333,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5403,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5486,
+    "value": "font:700 var(--fs-2xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5494,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5495,
+    "value": "font:var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5515,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5538,
+    "value": "font:650 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5546,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5575,
+    "value": "font:var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5579,
+    "value": "font:750 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5581,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5582,
+    "value": "font:800 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5589,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5590,
+    "value": "font:var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5600,
+    "value": "font:var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5613,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5664,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5688,
+    "value": "font:var(--fs-2xs)/1.5 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5730,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5732,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5743,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5748,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5753,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5793,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5800,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5806,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5816,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5827,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5831,
+    "value": "font:600 var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5834,
+    "value": "font:var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5839,
+    "value": "font:var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5856,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5871,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5908,
+    "value": "font:500 var(--fs-sm)/1.4 inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5919,
+    "value": "font:700 var(--fs-base)/1 inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5960,
+    "value": "font:650 var(--fs-sm)/1.25 var(--sans,inherit)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5997,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 6025,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 6,
+    "value": "font:750 var(--fs-lg)/1.25 var(--head)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 15,
+    "value": "font:750 var(--fs-sm)/1.4 var(--head)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 25,
+    "value": "font:720 var(--fs-sm)/1.3 var(--head)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 35,
+    "value": "font:750 var(--fs-md)/1.3 var(--head)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 40,
+    "value": "font:var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 46,
+    "value": "font:700 var(--fs-2xs)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 53,
+    "value": "font:650 var(--fs-sm)/1.25 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 56,
+    "value": "font:600 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 60,
+    "value": "font:var(--fs-xs)/1.35 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 65,
+    "value": "font:750 var(--fs-sm) var(--head)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 66,
+    "value": "font:650 var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 93,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 132,
+    "value": "font:700 var(--fs-base)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 147,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 148,
+    "value": "font:700 var(--fs-2xs) var(--mono,ui-monospace,monospace)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 173,
+    "value": "font:700 var(--fs-2xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 177,
+    "value": "font:500 var(--fs-2xs) var(--mono,ui-monospace,monospace)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 178,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 45,
+    "value": "font:750 var(--fs-2xs)/1.1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 47,
+    "value": "font:var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 72,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 99,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 127,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 135,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 145,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 147,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 150,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 158,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 4,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 36,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 52,
+    "value": "font:700 var(--fs-2xl)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 56,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 59,
+    "value": "font:700 var(--fs-2xl)/1.05 var(--head)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 64,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 73,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 83,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 92,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 104,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 115,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 164,
+    "value": "font:700 var(--fs-xl)/1.15 var(--head)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 168,
+    "value": "font:700 var(--fs-xl)/1.1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 395,
+    "value": "font:400 14px/1.45 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 397,
+    "value": "font:700 12px var(--sans)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 403,
+    "value": "font:500 12px var(--mono)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 407,
+    "value": "font:500 11px var(--mono)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 421,
+    "value": "font:600 11px var(--mono)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 427,
+    "value": "font:600 11px var(--sans)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 433,
+    "value": "font:700 11px var(--mono)!important"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation-report.js",
+    "line": 440,
+    "value": "font:600 12px var(--mono)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation.css",
+    "line": 12,
+    "value": "font:600 var(--fs-xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 7,
+    "value": "font:600 var(--fs-2xl)/1.2 var(--head,system-ui)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 31,
+    "value": "font:var(--fs-sm)/1.5 var(--mono,monospace)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 42,
+    "value": "font:var(--fs-base) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 45,
+    "value": "font:600 var(--fs-2xl)/1.12 var(--head,system-ui)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 56,
+    "value": "font:600 var(--fs-3xl)/1.1 var(--head,system-ui)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 60,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 63,
+    "value": "font:var(--fs-base)/1.35 var(--sans,system-ui)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 93,
+    "value": "font:600 var(--fs-3xl)/1 var(--head,system-ui)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 149,
+    "value": "font:600 var(--fs-xl)/1 var(--sans,system-ui)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 180,
+    "value": "font:600 var(--fs-2xl)/1.2 var(--head,system-ui)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 185,
+    "value": "font:600 var(--fs-md)/1.2 var(--sans,system-ui)"
+  },
+  {
+    "file": "resources/app/public/checklist-supplier-sync.js",
+    "line": 1326,
+    "value": "font: "
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 77,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 102,
+    "value": "font:700 var(--fs-base) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 105,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 31,
+    "value": "font:600 var(--fs-2xs)/18px var(--mono,monospace)!important"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 39,
+    "value": "font:600 var(--fs-2xs)/1 var(--mono,monospace)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 45,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 53,
+    "value": "font:700 var(--fs-lg)/1.1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 56,
+    "value": "font:700 var(--fs-xl)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 69,
+    "value": "font:600 var(--fs-2xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 155,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 533,
+    "value": "font:400 var(--fs-sm)/1.4 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/data-maintenance.css",
+    "line": 153,
+    "value": "font: var(--fs-xs)/1.45 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 30,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 47,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 95,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 159,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 180,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 193,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 229,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 262,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 273,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 299,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 312,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 320,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 359,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 365,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 391,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 412,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 432,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 465,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 489,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 533,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 575,
+    "value": "font: inherit"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 525,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 650,
+    "value": "font:700 var(--fs-xl)/1.2 var(--head)"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 656,
+    "value": "font:700 var(--fs-sm)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 13,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 16,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 18,
+    "value": "font:var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 22,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 43,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 44,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 56,
+    "value": "font:700 var(--fs-xl)/1.15 var(--head)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 61,
+    "value": "font:700 var(--fs-xl)/1.1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 64,
+    "value": "font:var(--fs-xs)/1.4 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 85,
+    "value": "font:var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/dual-week-datepicker.css",
+    "line": 11,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/dual-week-datepicker.css",
+    "line": 27,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/excel-templates.css",
+    "line": 6,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 677,
+    "value": "font:650 var(--fs-2xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 39,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 243,
+    "value": "font:var(--fs-xs) var(--login-font)"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 295,
+    "value": "font:600 var(--fs-2xs) var(--login-font)"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 18,
+    "value": "font:500 14px/1.45 "
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 23,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 170,
+    "value": "font:12px/1.5 monospace"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 175,
+    "value": "font:12px/1.5 monospace"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 62,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 15,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 83,
+    "value": "font:600 var(--fs-base)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 85,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 118,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 134,
+    "value": "font:600 var(--fs-xs)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 179,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 181,
+    "value": "font:600 var(--fs-xs)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 200,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 204,
+    "value": "font:650 var(--fs-lg)/1.3 var(--head)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 205,
+    "value": "font:650 var(--fs-md)/1.2 var(--head)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 376,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 168,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 210,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 213,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 215,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 219,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 235,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 248,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 288,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 302,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 334,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 412,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 489,
+    "value": "font:700 var(--fs-xl)/1 inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 541,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 550,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 553,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 555,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 558,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 574,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 583,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 594,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 604,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 641,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 682,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 762,
+    "value": "font:600 var(--fs-2xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "font:14px/1.55 Inter,"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 61,
+    "value": "font:14px/1.5 var(--bl-body)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 219,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 319,
+    "value": "font:700 20px/1.13 "
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 325,
+    "value": "font:700 clamp(23px,2.5vw,32px)/1.1 "
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 328,
+    "value": "font:700 11px/1 "
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 331,
+    "value": "font:800 10px/1.4 "
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 347,
+    "value": "font:700 25px/1.13 "
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 459,
+    "value": "font:500 13px/1.4 "
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 512,
+    "value": "font:500 13px/1.4 inherit"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 10,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 42,
+    "value": "font:400 12.5px/1.45 var(--bl-body-font)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 49,
+    "value": "font:500 12px/1.2 var(--bl-body-font)!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 64,
+    "value": "font:400 12.5px/1.35 var(--bl-body-font)!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 76,
+    "value": "font:500 10.5px/1.3 var(--bl-body-font)!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 78,
+    "value": "font:400 12px/1.3 var(--bl-body-font)!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 79,
+    "value": "font:400 12px/1.3 var(--bl-body-font)!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 94,
+    "value": "font:500 12px/1.2 var(--bl-body-font)!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 97,
+    "value": "font:500 12px/1.4 var(--bl-body-font)!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas-engine.js",
+    "line": 54,
+    "value": "font:15px/1.6 system-ui,sans-serif"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 13,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 14,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 32,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 39,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 40,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 53,
+    "value": "font:600 var(--fs-xs) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 56,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 57,
+    "value": "font:600 var(--fs-md) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 62,
+    "value": "font:400 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 66,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 68,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 69,
+    "value": "font:400 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 74,
+    "value": "font:600 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 82,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 89,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 116,
+    "value": "font:600 var(--fs-md) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 118,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 121,
+    "value": "font:400 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 128,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 130,
+    "value": "font:600 var(--fs-2xl) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 138,
+    "value": "font:600 var(--fs-md) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 145,
+    "value": "font:600 var(--fs-md) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 153,
+    "value": "font:600 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 163,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 164,
+    "value": "font:600 var(--fs-xl) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 179,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 180,
+    "value": "font:600 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 192,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 193,
+    "value": "font:400 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 199,
+    "value": "font:600 var(--fs-sm) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 208,
+    "value": "font:600 var(--fs-sm) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 208,
+    "value": "font:400 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 215,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 219,
+    "value": "font:400 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 222,
+    "value": "font:600 var(--fs-lg) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 229,
+    "value": "font:600 var(--fs-sm) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 240,
+    "value": "font:400 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 247,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 251,
+    "value": "font:600 var(--fs-sm) var(--head)"
+  },
+  {
+    "file": "resources/app/public/license-cards.css",
+    "line": 263,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 61,
+    "value": "font:400 13px/1.5 "
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 82,
+    "value": "font:600 13px "
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 93,
+    "value": "font:600 12px "
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 95,
+    "value": "font:600 15px "
+  },
+  {
+    "file": "resources/app/public/license-supplier-atlas.js",
+    "line": 99,
+    "value": "font:600 10.5px "
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 13,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 21,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 28,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 30,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 37,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 74,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 84,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 94,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/oab.js",
+    "line": 2930,
+    "value": "font: "
+  },
+  {
+    "file": "resources/app/public/oab.js",
+    "line": 2931,
+    "value": "font: "
+  },
+  {
+    "file": "resources/app/public/oab.js",
+    "line": 2932,
+    "value": "font: "
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 5,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 60,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 81,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 105,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow-earth.js",
+    "line": 407,
+    "value": "font:'600 12px Barlow, "
+  },
+  {
+    "file": "resources/app/public/overview-global-flow-earth.js",
+    "line": 436,
+    "value": "font:'600 11px Barlow, "
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 10,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 19,
+    "value": "font:750 var(--fs-base) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 26,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 47,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 57,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 67,
+    "value": "font:var(--fs-2xs) var(--sans,sans-serif)!important"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 89,
+    "value": "font:600 var(--fs-2xs) var(--sans,sans-serif)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 15,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 23,
+    "value": "font:600 var(--fs-sm)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 24,
+    "value": "font:700 var(--fs-2xs)/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 58,
+    "value": "font:600 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 79,
+    "value": "font:700 var(--fs-2xs)/1.2 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 80,
+    "value": "font:700 var(--fs-md)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 102,
+    "value": "font:600 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 119,
+    "value": "font:500 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 134,
+    "value": "font:700 var(--fs-2xs)/1.2 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 136,
+    "value": "font:700 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 210,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 215,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 226,
+    "value": "font:700 calc(20px + var(--ui-font-add))/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 232,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 243,
+    "value": "font:700 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 265,
+    "value": "font:600 var(--fs-xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 269,
+    "value": "font:500 var(--fs-xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 271,
+    "value": "font:600 var(--fs-xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 274,
+    "value": "font:500 var(--fs-xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 284,
+    "value": "font:600 var(--fs-2xs)/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 296,
+    "value": "font:700 var(--fs-2xs)/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 298,
+    "value": "font:700 clamp(18px,1.25vw,calc(22px + var(--ui-font-add)))/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 333,
+    "value": "font:500 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 335,
+    "value": "font:600 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 342,
+    "value": "font:600 var(--fs-xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 343,
+    "value": "font:700 var(--fs-2xl)/1.1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 344,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 345,
+    "value": "font:500 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 346,
+    "value": "font:400 var(--fs-2xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 357,
+    "value": "font:600 var(--fs-2xs)/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 358,
+    "value": "font:400 var(--fs-2xs)/1.3 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 365,
+    "value": "font:500 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 371,
+    "value": "font:400 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 374,
+    "value": "font:700 var(--fs-xl) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 375,
+    "value": "font:600 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 389,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 390,
+    "value": "font:400 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 391,
+    "value": "font:500 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 394,
+    "value": "font:700 var(--fs-lg) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 395,
+    "value": "font:400 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 397,
+    "value": "font:400 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 401,
+    "value": "font:700 var(--fs-2xl)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 414,
+    "value": "font:600 var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 419,
+    "value": "font:400 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 457,
+    "value": "font:500 var(--fs-xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 461,
+    "value": "font:500 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 16,
+    "value": "font:var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 13,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 18,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 65,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 82,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 86,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 127,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 163,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 180,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 233,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 7,
+    "value": "font:600 var(--fs-sm)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 29,
+    "value": "font:700 var(--fs-md)/1.2 var(--head)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 37,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 39,
+    "value": "font:700 var(--fs-2xs)/1.3 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 51,
+    "value": "font:800 var(--fs-2xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 55,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 69,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 74,
+    "value": "font:600 var(--fs-xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 115,
+    "value": "font:800 var(--fs-2xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 118,
+    "value": "font:600 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 136,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 142,
+    "value": "font:600 var(--fs-2xs) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 155,
+    "value": "font:700 var(--fs-xs) var(--head)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 183,
+    "value": "font:700 var(--fs-lg) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 205,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 212,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 220,
+    "value": "font:700 var(--fs-md) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 250,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 260,
+    "value": "font:600 var(--fs-xs)/1.2 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 318,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 328,
+    "value": "font:700 var(--fs-sm)/1.1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 346,
+    "value": "font:700 var(--fs-xs)/1.1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 355,
+    "value": "font:700 var(--fs-2xs)/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 368,
+    "value": "font:700 var(--fs-md)/1.25 var(--head)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 374,
+    "value": "font:700 var(--fs-sm)/1.2 var(--head)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 407,
+    "value": "font:600 var(--fs-sm) var(--mono)"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 6,
+    "value": "font:700 var(--fs-xl)/1.05 var(--head)"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 12,
+    "value": "font:700 var(--fs-xl)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 21,
+    "value": "font:700 var(--fs-sm)/1.2 var(--head)"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 36,
+    "value": "font:700 var(--fs-lg)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 51,
+    "value": "font:600 var(--fs-2xs) var(--head)"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 51,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 7,
+    "value": "font:600 var(--fs-3xl)/1.1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 9,
+    "value": "font:500 var(--fs-2xl)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 21,
+    "value": "font:600 var(--fs-base)/1.2 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 28,
+    "value": "font:600 var(--fs-2xs)/1 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 36,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 40,
+    "value": "font:600 var(--fs-xs)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 44,
+    "value": "font:700 var(--fs-3xl)/1 var(--head)"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 47,
+    "value": "font:600 var(--fs-2xl)/1.18 var(--head)"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 54,
+    "value": "font:600 var(--fs-sm)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 56,
+    "value": "font:inherit"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 71,
+    "value": "font:500 var(--fs-2xl)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 31,
+    "value": "font:700 var(--fs-sm)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 54,
+    "value": "font:500 var(--fs-xs)/1.45 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 63,
+    "value": "font:700 var(--fs-sm)/1.2 var(--head)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 75,
+    "value": "font:600 var(--fs-xl)/1 var(--sans)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 95,
+    "value": "font:600 var(--fs-2xs)/1.35 var(--mono)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 44,
+    "value": "font:600 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 59,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 70,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 74,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 106,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 117,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 133,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 151,
+    "value": "font:800 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 169,
+    "value": "font:700 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 194,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 202,
+    "value": "font:400 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 215,
+    "value": "font:400 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 216,
+    "value": "font:400 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 222,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 237,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 239,
+    "value": "font:700 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 246,
+    "value": "font:700 var(--fs-2xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 257,
+    "value": "font:600 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 268,
+    "value": "font:700 var(--fs-xs) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 301,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 310,
+    "value": "font:600 var(--fs-xs) var(--head)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 336,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 399,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 410,
+    "value": "font:600 var(--fs-sm) var(--sans)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 424,
+    "value": "font:400 var(--fs-sm) var(--sans)"
+  }
+]

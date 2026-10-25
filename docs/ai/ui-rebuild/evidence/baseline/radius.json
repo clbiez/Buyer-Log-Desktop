@@ -1,0 +1,6907 @@
+[
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 17286,
+    "value": "border-radius:5px"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 17288,
+    "value": "border-radius:5px"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 17289,
+    "value": "border-radius:5px"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 17290,
+    "value": "border-radius:6px"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 20214,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 25770,
+    "value": "border-radius:10px"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 25771,
+    "value": "border-radius:6px"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 27758,
+    "value": "border-radius:6px"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 27796,
+    "value": "border-radius:5px"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 35302,
+    "value": "border-radius:8px"
+  },
+  {
+    "file": "resources/app/public/app-main.js",
+    "line": 35311,
+    "value": "border-radius:8px"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 195,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 203,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 208,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 215,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 221,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 250,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 251,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 258,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 259,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 270,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 273,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 277,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 280,
+    "value": "border-radius:var(--r-xl)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 289,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 296,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 308,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 316,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 325,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 329,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 330,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 347,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 353,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 367,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 374,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 385,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 394,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 442,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 495,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 499,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 507,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 513,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 517,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 519,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 522,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 524,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 547,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 562,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 564,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 569,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 573,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 577,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 583,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 601,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 613,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 630,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 634,
+    "value": "border-top-right-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 634,
+    "value": "border-bottom-right-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 636,
+    "value": "border-radius:0 var(--r-sm) var(--r-sm) 0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 641,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 644,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 651,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 658,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 664,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 671,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 674,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 678,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 681,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 684,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 688,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 693,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 702,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 708,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 723,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 733,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 734,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 735,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 736,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 737,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 740,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 743,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 777,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 790,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 793,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 805,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 819,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 824,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 829,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 832,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 850,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 851,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 856,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 860,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 864,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 870,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 877,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 884,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 889,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 895,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 897,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 912,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 919,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 934,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 942,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 946,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 952,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 975,
+    "value": "border-radius:var(--r-xl)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 988,
+    "value": "border-radius:var(--r-xl)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1010,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1025,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1028,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1032,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1034,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1041,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1071,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1075,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1077,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1085,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1096,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1102,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1104,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1131,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1148,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1153,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1173,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1175,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1193,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1197,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1211,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1217,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1219,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1222,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1224,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1227,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1250,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1258,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1261,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1270,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1274,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1278,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1279,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1280,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1280,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1280,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1280,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1281,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1281,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1281,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1281,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1282,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1283,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1283,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1283,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1283,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1284,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1284,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1284,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1284,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1285,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1285,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1285,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1285,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1295,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1317,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1328,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1364,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1371,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1375,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1378,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1381,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1396,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1427,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1436,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1442,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1446,
+    "value": "border-radius:var(--r-md,10px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1508,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1519,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1526,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1539,
+    "value": "border-radius:var(--r-md,10px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1541,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1548,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1580,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1586,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1587,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1594,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1599,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1601,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1605,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1622,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1777,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1806,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1810,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1814,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1816,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1818,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1832,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1833,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1843,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1853,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1862,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1873,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1877,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1880,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1890,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1903,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1907,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1940,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1959,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1960,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1961,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1961,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1961,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1961,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1971,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 1997,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2017,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2024,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2027,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2029,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2032,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2035,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2035,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2035,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2035,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2035,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2035,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2037,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2048,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2064,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2068,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2092,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2104,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2107,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2112,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2116,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2118,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2129,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2135,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2138,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2143,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2160,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2168,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2175,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2182,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2188,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2191,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2203,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2208,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2215,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2228,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2235,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2239,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2243,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2247,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2252,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2258,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2271,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2282,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2285,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2287,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2291,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2301,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2306,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2313,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2316,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2319,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2324,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2325,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2326,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2328,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2330,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2333,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2349,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2359,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2361,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2365,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2373,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2382,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2385,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2392,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2398,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2405,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2414,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2429,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2431,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2433,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2443,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2446,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2455,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2456,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2457,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2460,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2476,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2477,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2479,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2483,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2496,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2497,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2507,
+    "value": "border-radius:0 0 var(--r-sm) var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2513,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2514,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2518,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2526,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2533,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2534,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2573,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2587,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2601,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2605,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2608,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2620,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2622,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2626,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2627,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2629,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2633,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2635,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2638,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2652,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2657,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2706,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-xl)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2717,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2719,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2720,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2722,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2725,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2725,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2726,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2727,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2727,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2728,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2728,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2729,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2729,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2729,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2730,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2731,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2731,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2732,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2735,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2735,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2736,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2737,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2737,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2737,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2738,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2738,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2738,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2748,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2751,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2753,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2762,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2768,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2771,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2774,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2804,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2810,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2828,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 2830,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3052,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3061,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3070,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3085,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3097,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3098,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3111,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3120,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3135,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3139,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3147,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3150,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3161,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3175,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3179,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3186,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3190,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3218,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3230,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3232,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3233,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3240,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3256,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3270,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3272,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3285,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3292,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3293,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3299,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3301,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3309,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3374,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3424,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3441,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3466,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3515,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3528,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3650,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3665,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3671,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3682,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3686,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3689,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3692,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3698,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3711,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3732,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3749,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3754,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3760,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3766,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3783,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3790,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3791,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3796,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3814,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3818,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3825,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3832,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3835,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3836,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3838,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3838,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3838,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3840,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3840,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3844,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3848,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3853,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3860,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3862,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3869,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3879,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3883,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3885,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3896,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3899,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3904,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3916,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3924,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3927,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3929,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3930,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3931,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3937,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3938,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3944,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3951,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3960,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3963,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3966,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3969,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3973,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3978,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3982,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3983,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3983,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3984,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3984,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3986,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3987,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3988,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3989,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3990,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3990,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3990,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3991,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3992,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3993,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3993,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3993,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3993,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3998,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3998,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3999,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3999,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 3999,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4000,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4000,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4001,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4001,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4001,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4001,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4002,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4003,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4003,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4003,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4003,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4004,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4006,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4006,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4010,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4010,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4018,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4022,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4023,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4028,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4030,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4035,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4037,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4048,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4063,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4068,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4106,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4107,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4110,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4111,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4113,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4122,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4124,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4126,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4135,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4149,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4151,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4160,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4179,
+    "value": "border-top-left-radius:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4179,
+    "value": "border-top-right-radius:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4188,
+    "value": "border-bottom-left-radius:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4188,
+    "value": "border-bottom-right-radius:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4195,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4208,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4215,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4223,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4227,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4251,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4255,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4265,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4268,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4274,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4282,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4286,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4304,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4308,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4329,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4333,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4352,
+    "value": "border-top-right-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4352,
+    "value": "border-bottom-right-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4367,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4373,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4380,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4382,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4396,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4397,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4398,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4413,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4417,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4426,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4430,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4437,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4439,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4445,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4463,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4466,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4470,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4487,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4515,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4521,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4540,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4547,
+    "value": "border-top-right-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4547,
+    "value": "border-bottom-right-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4574,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4593,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4595,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4598,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4608,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4617,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4624,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4630,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4632,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4635,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4639,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4642,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4649,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4650,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4656,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4676,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4677,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4679,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4680,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4686,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4689,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4692,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4698,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4705,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4707,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4709,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4711,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4713,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4718,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4724,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4732,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4762,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4764,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4772,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4784,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4799,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4805,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4808,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4816,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4822,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4836,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4845,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4847,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4853,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4866,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4872,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4879,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4882,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4887,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4898,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4905,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4908,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4915,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4916,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4917,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4918,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4930,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4936,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4939,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4944,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4946,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4962,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4963,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4966,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4976,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4978,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4989,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4993,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 4998,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5007,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5021,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5027,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5029,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5075,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5163,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5179,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5181,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5193,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5206,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5212,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5228,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5273,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5349,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5352,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5359,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5368,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5403,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5413,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5419,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5421,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5429,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5434,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5438,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5440,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5445,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5446,
+    "value": "border-radius:inherit"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5448,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5456,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5457,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5458,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5462,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5481,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5482,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5483,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5490,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5495,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5503,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5510,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5512,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5515,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5528,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5538,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5543,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5546,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5589,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5590,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5594,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5601,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5605,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5613,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5641,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5652,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5666,
+    "value": "border-radius:var(--r-full,999px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5672,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5676,
+    "value": "border-radius:var(--r-full,999px)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5678,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5682,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5688,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5696,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5711,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5717,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5719,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5724,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5730,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5732,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5737,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5742,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5748,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5751,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5755,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5760,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5761,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5764,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5769,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5783,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5793,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5798,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5800,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5802,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5806,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5816,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5819,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5826,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5827,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5830,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5831,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5836,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5908,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5919,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5922,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5927,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5930,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5948,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5955,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 5993,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/app.css",
+    "line": 6005,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 4,
+    "value": "border-radius:var(--r-sm,9px)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 14,
+    "value": "border-radius:var(--r-sm,9px)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 22,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 29,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 32,
+    "value": "border-radius:var(--r-sm,9px)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 37,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 40,
+    "value": "border-radius:var(--r-xs,6px)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 48,
+    "value": "border-radius:var(--r-xs,6px)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 60,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 69,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 73,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/automations-fields.css",
+    "line": 81,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/backlog-date-range.css",
+    "line": 11,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/backlog-date-range.css",
+    "line": 14,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/backlog-date-range.css",
+    "line": 15,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 9,
+    "value": "border-radius: var(--r-lg, 4px)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 18,
+    "value": "border-radius: var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 24,
+    "value": "border-radius: var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 26,
+    "value": "border-radius: var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 33,
+    "value": "border-radius: var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 62,
+    "value": "border-radius: var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 64,
+    "value": "border-radius: 50%"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 80,
+    "value": "border-radius: var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 86,
+    "value": "border-radius: var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 98,
+    "value": "border-radius: var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 116,
+    "value": "border-radius: var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 132,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 172,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-delivery-analysis.css",
+    "line": 173,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 45,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 47,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 50,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 82,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 99,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/backlog-overview.css",
+    "line": 114,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 22,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 24,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 67,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 115,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 133,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/backlog-plan-actual.css",
+    "line": 143,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation.css",
+    "line": 4,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation.css",
+    "line": 12,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation.css",
+    "line": 15,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation.css",
+    "line": 19,
+    "value": "border-radius:var(--r-round)"
+  },
+  {
+    "file": "resources/app/public/backlog-presentation.css",
+    "line": 20,
+    "value": "border-radius:var(--r-round)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 52,
+    "value": "border-radius:var(--r-md,0)"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 60,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/buyerlog-guide.css",
+    "line": 149,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 7,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 19,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 22,
+    "value": "border-radius:var(--r-full,999px)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 43,
+    "value": "border-radius:var(--r-full,999px)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 55,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 60,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 63,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 69,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 77,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 81,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 99,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 100,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 101,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 102,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 103,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 103,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 103,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 104,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 104,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 104,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 104,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 104,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 105,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 105,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 107,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-analytics.css",
+    "line": 120,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-plm-drag-import.js",
+    "line": 194,
+    "value": "border-radius:12px"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 39,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 104,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 116,
+    "value": "border-radius:0 0 0 var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 119,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 276,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 286,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 292,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 320,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 323,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/collection-spreadsheet.css",
+    "line": 325,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/command-palette.css",
+    "line": 4,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/command-palette.css",
+    "line": 9,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/command-palette.css",
+    "line": 12,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 21,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 27,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 34,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 38,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 65,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 79,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 84,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 88,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 105,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 113,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 121,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 125,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 129,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 138,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 143,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 146,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 149,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 208,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 224,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 226,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 234,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 244,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 247,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 254,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 262,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 279,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 285,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 287,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 295,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 299,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 313,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 325,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 405,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 427,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 472,
+    "value": "border-radius:var(--r-full,999px)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 474,
+    "value": "border-radius:var(--r-full,999px) 0 0 var(--r-full,999px)"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 474,
+    "value": "border-radius:0 var(--r-full,999px) var(--r-full,999px) 0"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 529,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 530,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/cp-overview-assistant.css",
+    "line": 533,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 136,
+    "value": "border-radius: 50%"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 424,
+    "value": "border-radius: 0"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 591,
+    "value": "border-radius: var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 603,
+    "value": "border-radius: var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 606,
+    "value": "border-radius: var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 617,
+    "value": "border-radius: var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 625,
+    "value": "border-radius: var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 634,
+    "value": "border-radius: var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 686,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 689,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 700,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/data-management.css",
+    "line": 703,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 190,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 198,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 216,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 217,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 218,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 251,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 310,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 314,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design-butunluk.css",
+    "line": 370,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/design-preview.html",
+    "line": 14,
+    "value": "border-radius:10px"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 187,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 209,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 211,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 222,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 240,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 243,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 251,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 259,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 263,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 264,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 267,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 276,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 281,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 301,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 329,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 333,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 339,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 343,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 354,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 374,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 393,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 427,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 631,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/design.css",
+    "line": 652,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 13,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 16,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 16,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 18,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 21,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 23,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/detail-drawer.css",
+    "line": 44,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/dual-week-datepicker.css",
+    "line": 5,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/dual-week-datepicker.css",
+    "line": 11,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/dual-week-datepicker.css",
+    "line": 27,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/dual-week-datepicker.css",
+    "line": 36,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 109,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 112,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 116,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 119,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 132,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 134,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 135,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 140,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 160,
+    "value": "border-radius:var(--bl-radius-panel)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 172,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 175,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 176,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 179,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 194,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 195,
+    "value": "border-radius:var(--bl-radius-float)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 201,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 217,
+    "value": "border-radius:var(--bl-radius-float)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 219,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 239,
+    "value": "border-radius:var(--r-xl)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 244,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 245,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 248,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 249,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 256,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 259,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 357,
+    "value": "border-radius:var(--bl-radius-panel)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 368,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 371,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 466,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 503,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 512,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 550,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 567,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 587,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 632,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 637,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 638,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 640,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 642,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 654,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 678,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 713,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 716,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 720,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 723,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 734,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 740,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/experience.css",
+    "line": 744,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 49,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 67,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 76,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 87,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 101,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 112,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 124,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 130,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 135,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 142,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 144,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 146,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 151,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 159,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 167,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 171,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 173,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 192,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 242,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 243,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/giris.css",
+    "line": 294,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 19,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 23,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 2,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 6,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 8,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 10,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 12,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 17,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 19,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 27,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 29,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 31,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 32,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 35,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 41,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/layout-control.css",
+    "line": 43,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 5,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 9,
+    "value": "border-radius:var(--r-full,999px)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 15,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 18,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 68,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 118,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 125,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 132,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 200,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 229,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/lcwai-assistant.css",
+    "line": 329,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 15,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 34,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 35,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 39,
+    "value": "border-radius:var(--r-lg,12px)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 55,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 66,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 77,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 83,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 87,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 90,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 118,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 119,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 125,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 135,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 137,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 157,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 158,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 164,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 206,
+    "value": "border-radius:var(--r-md,10px)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 210,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 213,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 215,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 219,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 235,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 241,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 248,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 253,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 256,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 264,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 288,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 293,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 302,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 326,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 412,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 459,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 484,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 489,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 503,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 505,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 511,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 513,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 518,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 524,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 526,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 535,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 541,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 542,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 543,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 543,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 546,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 550,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 552,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 553,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 555,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 555,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 558,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 560,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 571,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 572,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 572,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 574,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 581,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 581,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 582,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 583,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 594,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 598,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 600,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 604,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 636,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 641,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 645,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 650,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 654,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 661,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 666,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 682,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 685,
+    "value": "border-radius:var(--r-xs) var(--r-xs) 0 0"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 700,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 705,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 710,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 743,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 759,
+    "value": "border-radius:var(--r-sm) 0 0 var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/lfl.css",
+    "line": 772,
+    "value": "border-radius:0 var(--r-sm) var(--r-sm) 0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:14px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:12px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:9px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:28px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:20px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:13px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:12px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:21px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:30px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:16px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:20px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:24px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:30px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:22px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:17px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:13px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:6px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:2px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:17px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:15px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:13px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:7px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:7px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:15px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:0 12px 12px 0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:12px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:11px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:12px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:12px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:10px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:14px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:20px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:7px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:13px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:15px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:9px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:22px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 10,
+    "value": "border-radius:10px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 12,
+    "value": "border-radius:22px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 12,
+    "value": "border-radius:17px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 16,
+    "value": "border-radius:13px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 17,
+    "value": "border-radius:9px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 23,
+    "value": "border-radius:5px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 27,
+    "value": "border-radius:17px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 27,
+    "value": "border-radius:13px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 29,
+    "value": "border-radius:20px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 34,
+    "value": "border-radius:16px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 70,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 81,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 93,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 95,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 115,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 117,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 118,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 119,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 129,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 142,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 190,
+    "value": "border-radius:12px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 190,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 219,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 245,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 273,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 322,
+    "value": "border-radius:20px!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 332,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 386,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/index.html",
+    "line": 459,
+    "value": "border-radius:5px"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 2,
+    "value": "border-radius:var(--radius)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 21,
+    "value": "border-radius:var(--radius)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 22,
+    "value": "border-radius:var(--radius)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 23,
+    "value": "border-radius:var(--radius)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 26,
+    "value": "border-radius:var(--radius)"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 48,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 56,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 63,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 70,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 83,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 84,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 96,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 97,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/license-atlas/integration.css",
+    "line": 153,
+    "value": "border-radius:0!important"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 13,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 21,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 27,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 28,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 30,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 35,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 46,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 50,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 58,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 63,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 68,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 78,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 83,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 97,
+    "value": "border-radius:var(--r-xs) var(--r-xs) 0 0"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 102,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/manufacturers.css",
+    "line": 107,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 3,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 5,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 18,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 19,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 22,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 28,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 31,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 39,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 44,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 50,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 60,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 66,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 81,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 86,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 90,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 94,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 105,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 110,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 115,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 119,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 130,
+    "value": "border-radius:var(--r-xl)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 136,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 139,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 147,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 150,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 151,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 152,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 175,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 185,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 190,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 193,
+    "value": "border-radius:var(--r-md,10px)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 199,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 200,
+    "value": "border-radius:var(--r-md,10px)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 209,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 210,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 217,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 219,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 221,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 222,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 226,
+    "value": "border-radius:var(--r-sm,8px)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 236,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 242,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/open-costing.css",
+    "line": 253,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 8,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 9,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 16,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 19,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 21,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 21,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 22,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 27,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 37,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 45,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 46,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 48,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 50,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 51,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 54,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 55,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 56,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-global-flow.css",
+    "line": 88,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 13,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 15,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 23,
+    "value": "border-radius:var(--r-full,999px)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 24,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 31,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 45,
+    "value": "border-radius:var(--bl-radius-panel,var(--r-lg))"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 55,
+    "value": "border-radius:var(--bl-radius-panel,var(--r-lg))"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 58,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 64,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 71,
+    "value": "border-radius:var(--bl-radius-panel,var(--r-lg))"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 76,
+    "value": "border-radius:var(--r-full,999px)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 79,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 80,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 84,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 94,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 96,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 100,
+    "value": "border-radius:var(--bl-radius-panel,var(--r-lg))"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 102,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 105,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 113,
+    "value": "border-radius:var(--r-xl,18px) var(--r-xl,18px) 0 0"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 119,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 120,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 124,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 127,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 128,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 136,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 166,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 195,
+    "value": "border-radius:var(--bl-radius-panel,var(--r-lg))"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 210,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 215,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 223,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 230,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 232,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 237,
+    "value": "border-radius:0 var(--r-sm) var(--r-sm) 0"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 240,
+    "value": "border-radius:0 var(--r-sm) var(--r-sm) 0"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 252,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 265,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 269,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 271,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 274,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 279,
+    "value": "border-radius:var(--bl-radius-control)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 284,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 290,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 294,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 296,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 306,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 460,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/overview-home.css",
+    "line": 464,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 2,
+    "value": "border-radius:var(--r-xl)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 6,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 7,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 11,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 12,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 14,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 14,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 15,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 15,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 16,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 16,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 16,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 16,
+    "value": "border-radius:var(--r-pill)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 16,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 16,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 16,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 17,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/plm-sync-guide.css",
+    "line": 17,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 13,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 18,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 38,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 56,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 64,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 65,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 86,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 88,
+    "value": "border-radius:var(--r-lg)"
+  },
+  {
+    "file": "resources/app/public/price-supplier-analysis.css",
+    "line": 175,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 45,
+    "value": "border-radius:var(--r-round)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 334,
+    "value": "border-radius:var(--r-round)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 336,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 355,
+    "value": "border-radius:var(--r-round)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 363,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 378,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 381,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 390,
+    "value": "border-radius:var(--r-round)"
+  },
+  {
+    "file": "resources/app/public/pricing-desk.css",
+    "line": 407,
+    "value": "border-radius:var(--r-sm)"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 22,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 24,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 33,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 38,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 39,
+    "value": "border-radius:0"
+  },
+  {
+    "file": "resources/app/public/pricing-workspace.css",
+    "line": 48,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 3,
+    "value": "border-radius:var(--r-md,0)"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 9,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/release-notes.css",
+    "line": 71,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 28,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 50,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 72,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 92,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/table-search-help.css",
+    "line": 111,
+    "value": "border-radius:var(--r-xs)"
+  },
+  {
+    "file": "resources/app/public/transit-analysis-ui.js",
+    "line": 176,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/transit-analysis-ui.js",
+    "line": 191,
+    "value": "border-radius:var(--r-full)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 209,
+    "value": "border-radius:var(--r-md)"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 211,
+    "value": "border-radius:50%"
+  },
+  {
+    "file": "resources/app/public/user-management.css",
+    "line": 370,
+    "value": "border-radius:50%"
+  }
+]

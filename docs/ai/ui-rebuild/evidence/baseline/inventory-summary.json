@@ -1,0 +1,867 @@
+{
+  "raw-colors": {
+    "occurrences": 1732,
+    "unique": 840,
+    "top": [
+      [
+        "#fff",
+        117
+      ],
+      [
+        "#3f6488",
+        41
+      ],
+      [
+        "#d4d4d7",
+        26
+      ],
+      [
+        "#cfd4da",
+        23
+      ],
+      [
+        "#F2F4F7",
+        20
+      ],
+      [
+        "#1d1f20",
+        20
+      ],
+      [
+        "#00B0F0",
+        18
+      ],
+      [
+        "#1d5f91",
+        17
+      ],
+      [
+        "#FFFF00",
+        15
+      ],
+      [
+        "#c0392b",
+        15
+      ],
+      [
+        "#5d5d60",
+        14
+      ],
+      [
+        "#2c455d",
+        14
+      ],
+      [
+        "#7a7a7d",
+        13
+      ],
+      [
+        "#FFC000",
+        12
+      ],
+      [
+        "#ffffff",
+        12
+      ]
+    ]
+  },
+  "font-size": {
+    "occurrences": 3055,
+    "unique": 90,
+    "top": [
+      [
+        "font-size:var(--fs-2xs)",
+        1000
+      ],
+      [
+        "font-size:var(--fs-xs)",
+        751
+      ],
+      [
+        "font-size:var(--fs-sm)",
+        400
+      ],
+      [
+        "font-size:var(--fs-md)",
+        91
+      ],
+      [
+        "font-size:var(--fs-base)",
+        83
+      ],
+      [
+        "font-size:12px",
+        81
+      ],
+      [
+        "font-size: var(--fs-xs)",
+        76
+      ],
+      [
+        "font-size:11px",
+        75
+      ],
+      [
+        "font-size:10px",
+        52
+      ],
+      [
+        "font-size: var(--fs-sm)",
+        50
+      ],
+      [
+        "font-size:var(--fs-lg)",
+        45
+      ],
+      [
+        "font-size:var(--fs-xl)",
+        44
+      ],
+      [
+        "font-size: var(--fs-2xs)",
+        34
+      ],
+      [
+        "font-size:var(--fs-2xl)",
+        21
+      ],
+      [
+        "font-size:11.5px",
+        19
+      ]
+    ]
+  },
+  "font-shorthand": {
+    "occurrences": 575,
+    "unique": 201,
+    "top": [
+      [
+        "font:inherit",
+        170
+      ],
+      [
+        "font: inherit",
+        22
+      ],
+      [
+        "font:700 var(--fs-2xs) var(--sans)",
+        16
+      ],
+      [
+        "font:600 var(--fs-2xs) var(--sans)",
+        15
+      ],
+      [
+        "font:400 var(--fs-sm) var(--sans)",
+        13
+      ],
+      [
+        "font:600 var(--fs-xs) var(--sans)",
+        12
+      ],
+      [
+        "font:var(--fs-2xs) inherit",
+        11
+      ],
+      [
+        "font:400 var(--fs-xs) var(--sans)",
+        9
+      ],
+      [
+        "font:600 var(--fs-sm) var(--sans)",
+        7
+      ],
+      [
+        "font:var(--fs-xs) var(--mono)",
+        6
+      ],
+      [
+        "font:800 var(--fs-sm) var(--mono)",
+        6
+      ],
+      [
+        "font:700 var(--fs-2xs) var(--mono)",
+        6
+      ],
+      [
+        "font:var(--fs-2xs) var(--sans)",
+        6
+      ],
+      [
+        "font:400 var(--fs-2xs) var(--sans)",
+        6
+      ],
+      [
+        "font:700 var(--fs-2xs)/1 var(--mono)",
+        5
+      ]
+    ]
+  },
+  "radius": {
+    "occurrences": 1381,
+    "unique": 67,
+    "top": [
+      [
+        "border-radius:var(--r-sm)",
+        421
+      ],
+      [
+        "border-radius:var(--r-md)",
+        241
+      ],
+      [
+        "border-radius:0",
+        129
+      ],
+      [
+        "border-radius:var(--r-full)",
+        126
+      ],
+      [
+        "border-radius:var(--r-xs)",
+        96
+      ],
+      [
+        "border-radius:50%",
+        76
+      ],
+      [
+        "border-radius:var(--r-lg)",
+        64
+      ],
+      [
+        "border-radius:0!important",
+        30
+      ],
+      [
+        "border-radius:var(--r-sm,8px)",
+        20
+      ],
+      [
+        "border-radius:var(--bl-radius-control)",
+        13
+      ],
+      [
+        "border-radius:var(--r-pill)",
+        13
+      ],
+      [
+        "border-radius: var(--r-xs)",
+        9
+      ],
+      [
+        "border-radius:var(--r-full,999px)",
+        8
+      ],
+      [
+        "border-radius:var(--r-xl)",
+        7
+      ],
+      [
+        "border-radius:12px",
+        7
+      ]
+    ]
+  },
+  "border": {
+    "occurrences": 2798,
+    "unique": 308,
+    "top": [
+      [
+        "border:1px solid var(--line)",
+        735
+      ],
+      [
+        "border:1px solid var(--line2)",
+        326
+      ],
+      [
+        "border-bottom:1px solid var(--line)",
+        325
+      ],
+      [
+        "border:0",
+        227
+      ],
+      [
+        "border-top:1px solid var(--line)",
+        149
+      ],
+      [
+        "border:1px solid transparent",
+        66
+      ],
+      [
+        "border-right:1px solid var(--line)",
+        45
+      ],
+      [
+        "border: 1px solid var(--line)",
+        41
+      ],
+      [
+        "border-right:0",
+        38
+      ],
+      [
+        "border-bottom:0",
+        32
+      ],
+      [
+        "border:1px dashed var(--line2)",
+        30
+      ],
+      [
+        "border-bottom: 1px solid var(--line)",
+        25
+      ],
+      [
+        "border:1px solid var(--acc)",
+        24
+      ],
+      [
+        "border: 1px solid var(--line2)",
+        22
+      ],
+      [
+        "border:bd,font:",
+        19
+      ]
+    ]
+  },
+  "z-index": {
+    "occurrences": 313,
+    "unique": 110,
+    "top": [
+      [
+        "z-index:2",
+        40
+      ],
+      [
+        "z-index:1",
+        33
+      ],
+      [
+        "z-index:3",
+        26
+      ],
+      [
+        "z-index:4",
+        19
+      ],
+      [
+        "z-index:5",
+        13
+      ],
+      [
+        "z-index:6",
+        9
+      ],
+      [
+        "z-index:52000",
+        7
+      ],
+      [
+        "z-index:70",
+        5
+      ],
+      [
+        "z-index:8",
+        5
+      ],
+      [
+        "z-index:30",
+        5
+      ],
+      [
+        "z-index:12000",
+        5
+      ],
+      [
+        "z-index:80",
+        4
+      ],
+      [
+        "z-index:90",
+        4
+      ],
+      [
+        "z-index:430",
+        4
+      ],
+      [
+        "z-index:120",
+        4
+      ]
+    ]
+  },
+  "motion": {
+    "occurrences": 486,
+    "unique": 315,
+    "top": [
+      [
+        "animation:none",
+        31
+      ],
+      [
+        "transition:none",
+        23
+      ],
+      [
+        "animation:blViewIn var(--bl-motion-enter) var(--bl-ease) both",
+        17
+      ],
+      [
+        "animation:none!important",
+        14
+      ],
+      [
+        "animation-delay:$",
+        14
+      ],
+      [
+        "transition:none!important",
+        9
+      ],
+      [
+        "animation:blPopoverIn var(--bl-motion-standard) var(--bl-ease) both",
+        9
+      ],
+      [
+        "transition:transform .12s var(--ease)",
+        7
+      ],
+      [
+        "transition:border-color .12s var(--ease),background .12s var(--ease),color .12s var(--ease)",
+        5
+      ],
+      [
+        "transition:border-color var(--bl-motion-fast) var(--bl-ease),background var(--bl-motion-fast) var(--bl-ease)",
+        4
+      ],
+      [
+        "transition:border-color .12s var(--ease),background .12s var(--ease)",
+        3
+      ],
+      [
+        "animation:buyerLogRefreshSpin .78s linear infinite",
+        3
+      ],
+      [
+        "transition:background .14s var(--ease),border-color .14s var(--ease),color .14s var(--ease)",
+        3
+      ],
+      [
+        "transition:background .12s var(--ease),border-color .12s var(--ease),color .12s var(--ease)",
+        3
+      ],
+      [
+        "transition:transform .18s ease",
+        3
+      ]
+    ]
+  },
+  "keyframes": {
+    "occurrences": 100,
+    "unique": 97,
+    "top": [
+      [
+        "@keyframes updateTestPulse",
+        2
+      ],
+      [
+        "@keyframes draw",
+        2
+      ],
+      [
+        "@keyframes rise",
+        2
+      ],
+      [
+        "@keyframes syncCloudPulse",
+        1
+      ],
+      [
+        "@keyframes jumpFlash",
+        1
+      ],
+      [
+        "@keyframes delTypeDrop",
+        1
+      ],
+      [
+        "@keyframes delTypeRise",
+        1
+      ],
+      [
+        "@keyframes spinIc",
+        1
+      ],
+      [
+        "@keyframes globalSearchPulse",
+        1
+      ],
+      [
+        "@keyframes refreshErrorPulse",
+        1
+      ],
+      [
+        "@keyframes sourceBackdropIn",
+        1
+      ],
+      [
+        "@keyframes buyerLogRefreshSpin",
+        1
+      ],
+      [
+        "@keyframes buyerLogRefreshPulse",
+        1
+      ],
+      [
+        "@keyframes cpThumbFlashPulse",
+        1
+      ],
+      [
+        "@keyframes prepareEmailSpin",
+        1
+      ]
+    ]
+  },
+  "js-hook": {
+    "occurrences": 4659,
+    "unique": 3134,
+    "top": [
+      [
+        "span",
+        30
+      ],
+      [
+        "[data-manage-email-groups]",
+        29
+      ],
+      [
+        "[data-close]",
+        29
+      ],
+      [
+        "tr",
+        26
+      ],
+      [
+        "button",
+        22
+      ],
+      [
+        "input",
+        21
+      ],
+      [
+        "viewSelect",
+        20
+      ],
+      [
+        "filterSelect",
+        20
+      ],
+      [
+        "input[type=",
+        19
+      ],
+      [
+        "nav.tabs button.active",
+        18
+      ],
+      [
+        ".oabConfigRow",
+        13
+      ],
+      [
+        ".tablewrap",
+        12
+      ],
+      [
+        "table",
+        11
+      ],
+      [
+        ".cfpItem",
+        11
+      ],
+      [
+        "input[name=",
+        11
+      ]
+    ]
+  },
+  "data-hook": {
+    "occurrences": 7843,
+    "unique": 4377,
+    "top": [
+      [
+        "data-close",
+        76
+      ],
+      [
+        "data-density=\"compact",
+        45
+      ],
+      [
+        "data-manage-email-groups",
+        30
+      ],
+      [
+        "data-key",
+        30
+      ],
+      [
+        "data-management",
+        28
+      ],
+      [
+        "data-tb-compact=\"icon",
+        26
+      ],
+      [
+        "data-no-i18n",
+        26
+      ],
+      [
+        "data-rail=\"min",
+        25
+      ],
+      [
+        "data-id=\"${r.id}",
+        22
+      ],
+      [
+        "data-id",
+        21
+      ],
+      [
+        "data-active-tab=\"cp",
+        21
+      ],
+      [
+        "data-id=\"${esc(user.id)}",
+        21
+      ],
+      [
+        "data-save",
+        20
+      ],
+      [
+        "data-theme=\"dark",
+        20
+      ],
+      [
+        "data-id=\"${id}",
+        18
+      ]
+    ]
+  },
+  "surface-id": {
+    "occurrences": 145,
+    "unique": 142,
+    "top": [
+      [
+        "_suppFobRulesModal",
+        2
+      ],
+      [
+        "_ruleSeasonPanel",
+        2
+      ],
+      [
+        "backlogDetailModal",
+        2
+      ],
+      [
+        "_horizonTextInputModal",
+        1
+      ],
+      [
+        "_sourceFilterRequiredModal",
+        1
+      ],
+      [
+        "gridClipboardMenu",
+        1
+      ],
+      [
+        "_tableFieldsMenu",
+        1
+      ],
+      [
+        "_columnNameModal",
+        1
+      ],
+      [
+        "_cpModelColumnModal",
+        1
+      ],
+      [
+        "_landedMultipliersModal",
+        1
+      ],
+      [
+        "_transitRulesModal",
+        1
+      ],
+      [
+        "warningDetailOverlay",
+        1
+      ],
+      [
+        "warnOverlay",
+        1
+      ],
+      [
+        "_refreshSummaryModal",
+        1
+      ],
+      [
+        "notificationHistoryModal",
+        1
+      ]
+    ]
+  },
+  "view-id": {
+    "occurrences": 16,
+    "unique": 16,
+    "top": [
+      [
+        "view-overview",
+        1
+      ],
+      [
+        "view-cp",
+        1
+      ],
+      [
+        "view-orders",
+        1
+      ],
+      [
+        "view-koleksiyon",
+        1
+      ],
+      [
+        "view-quotations",
+        1
+      ],
+      [
+        "view-pricinghistory",
+        1
+      ],
+      [
+        "view-priceanalysis",
+        1
+      ],
+      [
+        "view-lcwai",
+        1
+      ],
+      [
+        "view-manufacturers",
+        1
+      ],
+      [
+        "view-licensecards",
+        1
+      ],
+      [
+        "view-lfl",
+        1
+      ],
+      [
+        "view-opencosting",
+        1
+      ],
+      [
+        "view-backlog",
+        1
+      ],
+      [
+        "view-automations",
+        1
+      ],
+      [
+        "view-shipping",
+        1
+      ]
+    ]
+  },
+  "component-class": {
+    "occurrences": 2705,
+    "unique": 639,
+    "top": [
+      [
+        "navActionBtn",
+        78
+      ],
+      [
+        "ocCostTable",
+        49
+      ],
+      [
+        "mailTopicEditorCard",
+        36
+      ],
+      [
+        "lflTable",
+        32
+      ],
+      [
+        "miniTable",
+        28
+      ],
+      [
+        "modalCard",
+        27
+      ],
+      [
+        "dimFilterBtn",
+        24
+      ],
+      [
+        "plmSyncModalCard",
+        23
+      ],
+      [
+        "lflDimBtn",
+        22
+      ],
+      [
+        "blDetailTable",
+        22
+      ],
+      [
+        "cpaChip",
+        19
+      ],
+      [
+        "ocCompareTable",
+        19
+      ],
+      [
+        "lflScenarioCard",
+        18
+      ],
+      [
+        "lflTrialIssueCard",
+        18
+      ],
+      [
+        "lflButton",
+        18
+      ]
+    ]
+  },
+  "scope": {
+    "files": 256,
+    "css": 38,
+    "html": 4,
+    "js": 214,
+    "method": "Lexical discovery including inline/template styles; not a CSS parser or exhaustive reachability proof. Vendor and archived release notes excluded."
+  }
+}

@@ -1,0 +1,82 @@
+[
+  {
+    "file": "resources/app/public/index.html",
+    "line": 625,
+    "value": "view-overview"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 858,
+    "value": "view-cp"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 926,
+    "value": "view-orders"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 988,
+    "value": "view-koleksiyon"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1078,
+    "value": "view-quotations"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1082,
+    "value": "view-pricinghistory"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1086,
+    "value": "view-priceanalysis"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1091,
+    "value": "view-lcwai"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1094,
+    "value": "view-manufacturers"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1097,
+    "value": "view-licensecards"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1101,
+    "value": "view-lfl"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1220,
+    "value": "view-opencosting"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1332,
+    "value": "view-backlog"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1416,
+    "value": "view-automations"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1420,
+    "value": "view-shipping"
+  },
+  {
+    "file": "resources/app/public/index.html",
+    "line": 1455,
+    "value": "view-source"
+  }
+]
