@@ -12980,7 +12980,7 @@ html[data-ui-system="manifest"] .blDetailReportAccent {background:var(--ui-accen
 }
 html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable {font:var(--ui-font-xs)/1.4 var(--ui-font-body) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
 }
-html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridRangeCell {box-shadow:var(--ui-shadow-overlay) !important
+html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridRangeCell {background-color:var(--ui-selected) !important;box-shadow:none !important
 }
 html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridRangeEdge {outline:0;outline-offset:-1px
 }
@@ -14885,3 +14885,10 @@ html[data-ui-system="manifest"] .tableDensityControl select:focus-visible {box-s
 html[data-ui-system="manifest"] .blSteelInitials,html[data-ui-system="manifest"] #currentUserBtn #currentUserInitials{background:transparent!important;color:var(--ui-avatar-ink)!important;-webkit-text-fill-color:var(--ui-avatar-ink)!important;}
 
 @media(prefers-reduced-motion:reduce){html[data-ui-system="manifest"] .modalCard,html[data-ui-system="manifest"] .blBulkOverlay{animation:none!important;transition:none!important;}}
+
+/* Spreadsheet range selection uses the theme's soft selected surface; the
+   active keyboard cell keeps its existing 2px accent outline. */
+html[data-ui-system="manifest"] #cpTable tbody td.blGridRangeCell,
+html[data-ui-system="manifest"] #ordersTable tbody td.blGridRangeCell {
+  background-color:var(--ui-selected) !important;
+}
