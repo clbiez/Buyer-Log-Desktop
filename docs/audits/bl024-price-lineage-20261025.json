@@ -1,0 +1,101 @@
+{
+  "package": "BL024",
+  "date": "2026-10-25",
+  "PR": 714,
+  "risk": "Read-only pricing provenance plus stale drawer binding fix; financial algorithms and server authority unchanged",
+  "focused": {
+    "files": 26,
+    "tests": 160,
+    "pass": 160,
+    "fail": 0,
+    "skip": 0,
+    "seconds": 1,
+    "log": "work/bl024-final-target.log",
+    "sha256Lf": "08abd31a5db253d02f9a3f12cae5a46d9029f8c7ff47ff0af52720921f9fe298"
+  },
+  "native": {
+    "scope": "Actual production server/Edge with synthetic data. The FX month/source and missing/matching-rule examples use controlled live client fixtures, not claims about a newly imported real FX report.",
+    "phases": [
+      {
+        "name": "actual-confirmed-precedence-fallback-month-no-network",
+        "source": "confirmed",
+        "amount": 12,
+        "requestedMonth": "2026-02",
+        "appliedMonth": "2026-01",
+        "newRequests": 0
+      },
+      {
+        "name": "actual-native-manual-fx-edit-no-automatic-month-attribution"
+      },
+      {
+        "name": "actual-best-and-target-native-precedence"
+      },
+      {
+        "name": "actual-three-themes-preserve-drawer-layout"
+      },
+      {
+        "name": "actual-language-change-preserves-unsaved-draft-and-record"
+      },
+      {
+        "name": "actual-excel-source-report-preserves-value-and-assumptions",
+        "rows": 24
+      },
+      {
+        "name": "controlled-owner-reuse-closes-focused-drawer-old-input-refused",
+        "closed": true
+      },
+      {
+        "name": "controlled-live-view-only-disables-edit-and-refuses-old-input"
+      },
+      {
+        "name": "controlled-missing-rule-blocker-visible"
+      },
+      {
+        "name": "actual-existing-rule-editor-selects-current-match"
+      },
+      {
+        "name": "actual-native-ledger-import-origin-survives-manual-approval"
+      },
+      {
+        "name": "actual-cp-explanation-readonly-no-hidden-module-load"
+      },
+      {
+        "name": "controlled-native-cp-update-metadata-attribution"
+      },
+      {
+        "name": "actual-buyer-profile-rule-management-disabled"
+      }
+    ],
+    "errors": [],
+    "ok": true
+  },
+  "review": {
+    "independent": true,
+    "rounds": 1,
+    "findings": 2,
+    "fixes": [
+      "The native cpupdate metadata value is mapped to the CP Update source and translated entry label.",
+      "Price provenance comes from the latest native offer event; approval/drop timestamps cannot relabel or refresh the source."
+    ],
+    "rereview": false
+  },
+  "contracts": {
+    "pricing": "Metadata snapshots read the existing installed pricing/FX functions; no second price calculator and no per-cell network calls.",
+    "precedence": "Canonical confirmed > best > target result is reported, not reselected.",
+    "fx": "The existing kolAutoFx helper can return its month/source metadata. Manual FX does not claim an automatic source month or revision.",
+    "binding": "Session/workspace/owner/source ID/canonical model tuple is checked before render/action/commit; row revision may advance. Detached inputs and render-triggered change events cannot mutate a replacement record.",
+    "provenance": "Collection ledger lines must have collection source, current owner scope and compatible canonical model identity. Unknown/mismatched latest offers remain unconfirmed; no older equal-price timestamp is borrowed.",
+    "export": "Existing detail drawer Excel preserves source, FX selection, source revisions, blockers and snapshot timestamp; display rounding does not alter exported native numeric values."
+  },
+  "visualsInspected": true,
+  "full": false,
+  "merge": false,
+  "limits": [
+    "Final integrated full/CI/batch merge remain pending.",
+    "FX source/month, rule matching/missing and local permission-change examples use explicitly controlled live client fixtures; they do not certify a real FX report import or server-side permission revocation.",
+    "Actual separate Buyer profile has rule management disabled, and the native quotation import→manual approval flow preserves the import source/date.",
+    "An unavailable source timestamp stays not reported; capture time is labelled separately and is not a freshness claim.",
+    "Three themes were checked at 1440×960 in Edge. Actual Electron 200% and broader populated acceptance remain BL019."
+  ],
+  "rollback": "Revert the BL024 commit. No business schema migration or new mutation endpoint is introduced."
+}

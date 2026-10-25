@@ -7,7 +7,7 @@ module.exports = function registerMerchCalendarRoutes(app, deps) {
   const { express, userAccess } = deps;
   if (!app || !express || !userAccess) throw new Error('Merch Calendar route dependencies are incomplete.');
   const assertWrite=req=>{
-    const current=userAccess.profileById?userAccess.profileById(req.currentUser.id):req.currentUser;
+    const current=userAccess.sessionProfile?userAccess.sessionProfile(req):userAccess.profileById?userAccess.profileById(req.currentUser.id):req.currentUser;
     if(!current||current.enabled===false||!userAccess.hasPermission(current,'manageModelConnections')||userAccess.hasArea&&!userAccess.hasArea(current,'source'))throw Object.assign(new Error('Güncel Veri Yönetimi yetkisi gerekli. / Current Data Management permission is required.'),{code:'OFFICE_TOOL_FORBIDDEN',status:403});
   };
 
@@ -26,7 +26,7 @@ app.post(
     userAccess.requireArea('source'),
     userAccess.requirePermission('manageModelConnections'),
     express.json({ limit:'18mb' }),
-    (req, res) => {
+    async (req, res) => {
       try {
         const body = req.body || {};
         const sourceName = String(body.name || '').trim();
@@ -39,7 +39,11 @@ app.post(
         try { buffer = Buffer.from(encoded, 'base64'); }
         catch (_) { return res.status(400).json({ ok:false, error:'Merch Calendar dosyası okunamadı.', code:'MERCH_BASE64_INVALID' }); }
         if (!buffer.length) return res.status(400).json({ ok:false, error:'Merch Calendar dosyası boş.', code:'MERCH_EMPTY' });
-        const saved = merchCalendarStore.save(buffer, sourceName,{expectedFingerprint:body.expectedFingerprint,assertAuthority:()=>assertWrite(req)});
+        assertWrite(req);
+        const expectedFingerprint=body.expectedFingerprint??merchCalendarStore.fingerprint();
+        const parsed=await require('../lib/parser-process-client').run('merch-calendar',{buffer,name:sourceName});
+        assertWrite(req);
+        const saved = merchCalendarStore.restoreSnapshotWithReceipt(parsed,{expectedFingerprint,assertAuthority:()=>assertWrite(req)}).value;
         if (typeof userAccess.appendAudit === 'function') {
           userAccess.appendAudit(req.currentUser, 'MERCH_CALENDAR_UPLOAD', sourceName, {
             yearFrom:saved.meta && saved.meta.yearFrom,
@@ -49,7 +53,7 @@ app.post(
         }
         return res.json({ ok:true, ...merchCalendarStore.publicProjection(saved) });
       } catch (error) {
-        return res.status(Number(error.status) || 400).json({
+        return res.status(Number(error.status||error.statusCode) || 400).json({
           ok:false,
           error:String(error && error.message || 'Merch Calendar yüklenemedi.'),
           code:error && error.code || 'MERCH_UPLOAD_FAILED',

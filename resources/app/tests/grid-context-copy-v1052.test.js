@@ -13,7 +13,7 @@ const ROW_MENU = fs.readFileSync(path.join(ROOT, 'public', 'row-context-menu.js'
 test('shared managed grid context menu preserves an existing range before opening', () => {
   assert.match(GRID, /function prepareContextMenu\(tableId,cell\)/,
     'CP/Orders sağ tık öncesi range koruma API\'si yok');
-  assert.match(GRID, /state,prepareContextMenu\}/,
+  assert.equal(typeof require('../public/grid-clipboard').prepareContextMenu,'function',
     'range koruma API\'si dışarı açılmıyor');
   assert.match(GRID, /if\(!cellInRange\)/,
     'sağ tıklanan hücre range içindeyse seçim korunmuyor');

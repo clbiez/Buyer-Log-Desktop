@@ -68,7 +68,10 @@ test('v4.73 DTR Sub-Mfr Manufacturer ile aynıdır; Non-DTR kayıt yoksa boş, g
 
 test('v4.73 boş Non-DTR Sub-Mfr kalıcı olarak yazılabilir', () => {
   assert.match(DB_SOURCE, /if \(patch\.subManufacturer != null\) ov\.submap\[oc\] = patch\.subManufacturer/);
-  assert.match(APP_SOURCE, /if\(turknorm\(row\.Licensor\)!=='DTR'\)body\.subManufacturer=norm\(row\['Sub-Manufacturer'\]\)/);
+  const save=require('./helpers/cp-note-write-context.cjs'),row={'Order Code':1,'Model Name':'MODEL','C.Code':'01',Licensor:'DEMO','Sub-Manufacturer':''};
+  const blank=save({...row}).writes[0];
+  assert.equal(Object.hasOwn(blank,'subManufacturer'),true);assert.equal(blank.subManufacturer,'');
+  assert.equal(Object.hasOwn(save({...row,Licensor:'DTR',Manufacturer:'FACTORY'}).writes[0],'subManufacturer'),false,'DTR keeps its derived manufacturer rule');
 });
 
 test('v4.73 Approvals sayfası, çalışma kodu ve erişim alanı kaldırılmıştır', () => {

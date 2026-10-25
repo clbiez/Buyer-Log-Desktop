@@ -224,6 +224,7 @@ test('A4 · applyHistoryAction tarih geri/ileri alma işlemlerinde saveDateOverr
     'Del. Type': 'Gemi',
   };
   const ctx = {
+    cpBulkPreparing: false,
     state: { cp: { rows: [cpRow] } },
     shipRows: [],
     syncCpProductionLogisticSegment: () => false,
@@ -237,6 +238,7 @@ test('A4 · applyHistoryAction tarih geri/ileri alma işlemlerinde saveDateOverr
     Set, Array,
   };
   vm.createContext(ctx);
+  for(const name of ['orderLinePeerRows','updateOrderLinePeerIdentity'])vm.runInContext(extractFunction(APP,name),ctx);
   vm.runInContext(extractFunction(APP, 'applyHistoryAction'), ctx);
 
   const prevEx = new Date(2026, 7, 10);

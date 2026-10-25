@@ -63,6 +63,11 @@ function extractFunction(source, name) {
   throw new Error(`Unclosed function ${name}`);
 }
 
+function installPeerIndex(ctx){
+  ctx.window={...(ctx.window||{}),BLOrderLinePeerIndex:require('../public/order-line-peer-index')};
+  for(const name of ['turknorm','lineKeyOfRow','orderLinePeerOwner','orderLinePeerRows'])vm.runInContext(extractFunction(APP,name),ctx);
+}
+
 test('B1 · syncOrderLinePeersFromCpRow state.orders.rows ve state.orderSummary.rows eşleşen satırlarını bellekte eşitler ve tarih/Del. Type değişiminde formülleri + renderOrders çalıştırır', () => {
   const calls = { logistic: 0, formulas: 0, invalidate: [], renderOrders: 0 };
   const cpRow = {
@@ -122,6 +127,7 @@ test('B1 · syncOrderLinePeersFromCpRow state.orders.rows ve state.orderSummary.
     Set, Array, Object,
   };
   vm.createContext(ctx);
+  installPeerIndex(ctx);
   vm.runInContext(extractFunction(APP, 'syncOrderLinePeersFromCpRow'), ctx);
 
   ctx.syncOrderLinePeersFromCpRow(cpRow, [
@@ -164,8 +170,15 @@ test('B2 · commitCpEditor, clearRowNote, applyHistoryAction, applyCpGridPaste v
   assert.match(commitSrc, /syncOrderLinePeersFromCpRow/);
   assert.match(clearNoteSrc, /syncOrderLinePeersFromCpRow/);
   assert.match(historySrc, /syncOrderLinePeersFromCpRow/);
-  assert.match(pasteSrc, /renderOrders\(\)/);
-  assert.match(propSrc, /state\.orders\s*&&\s*state\.orders\.rows/);
+  // Bulk preview prepares private drafts; live peers render only after durable ACK.
+  assert.match(pasteSrc, /const data=await enqueueOverrideMutation\(/);
+  assert.match(pasteSrc, /applyAcknowledgedCpDraft\(prepared,data\)/);
+  assert.ok(pasteSrc.indexOf('applyAcknowledgedCpDraft(prepared,data)')>pasteSrc.indexOf('const data=await enqueueOverrideMutation('));
+  const acknowledgedSrc=extractFunction(APP,'applyAcknowledgedCpDraft');
+  assert.match(acknowledgedSrc,/\['cp','orders','orderSummary'\]/);
+  assert.match(acknowledgedSrc,/renderOrders\(\)/);
+  assert.match(propSrc, /\['cp','orders','orderSummary'\]/);
+  assert.match(propSrc, /orderLinePeerRows\(tableKey,sourceRow\)/);
   assert.match(propSrc, /Sub-Manufacturer/);
   assert.match(ruleSingleSrc, /state\.orders\s*&&\s*state\.orders\.rows/);
   assert.match(ruleAllSrc, /state\.orders\s*&&\s*state\.orders\.rows/);
@@ -190,6 +203,7 @@ test('B2 · commitCpEditor, clearRowNote, applyHistoryAction, applyCpGridPaste v
     Object,
   };
   vm.createContext(ctx);
+  installPeerIndex(ctx);
   vm.runInContext( propSrc, ctx);
 
   ctx.propagateOrderPricingFields(cpRow, { licensor: 'DTR' });

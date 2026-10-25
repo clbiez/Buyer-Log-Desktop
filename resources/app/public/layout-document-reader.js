@@ -18,7 +18,7 @@
     const promise=(async()=>{
       if(file.size>20*1024*1024)throw new Error('LAYOUT_FILE_LIMIT');
       await root.BLPerf.ensureLibrary('pdf');abort(signal);
-      const pdf=await root.pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer())}).promise;
+      const pdf=await root.pdfjsLib.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,maxImageSize:16777216}).promise;
       try{
         if(pdf.numPages>80)throw new Error('LAYOUT_PAGE_LIMIT');
         const textPages=[];

@@ -239,7 +239,7 @@
     host.innerHTML='<h4>'+esc(L('Olması gereken şablon · ','Expected template · ')+source.code+' · PDF '+check.standardPage)+'</h4><p>'+esc(arr(expectedValues(check)).join(' '))+'</p><canvas></canvas>';
     const canvas=host.querySelector('canvas');
     try{
-      const pdf=await root.pdfjsLib.getDocument(source.url).promise;
+      const pdf=await root.pdfjsLib.getDocument({url:source.url,isEvalSupported:false,maxImageSize:16777216}).promise;
       const p=await pdf.getPage(check.standardPage||1),base=p.getViewport({scale:1}),viewport=p.getViewport({scale:Math.min(2,1000/base.width)});
       if(!canvas.isConnected){pdf.destroy();return;}
       canvas.width=Math.ceil(viewport.width);canvas.height=Math.ceil(viewport.height);

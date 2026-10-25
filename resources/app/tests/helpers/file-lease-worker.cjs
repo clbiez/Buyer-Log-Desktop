@@ -4,7 +4,7 @@ const {withFileLeaseSync,withFileLeaseAsync}=require('../../server/lib/shared-fi
 const [mode,target,countRaw]=process.argv.slice(2);
 (async()=>{
  if(mode==='kill-metadata'){
-  const rename=fs.renameSync;fs.renameSync=(source,destination)=>{if(destination===path.join(target+'.write-lock','owner.json')){process.send({staged:source});Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,60000);}return rename(source,destination);};
+  const metadataFs=require('node:fs/promises'),rename=metadataFs.rename;metadataFs.rename=(source,destination)=>{if(destination===path.join(target+'.write-lock','owner.json')){process.send({staged:source});Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,60000);}return rename(source,destination);};
   await withFileLeaseAsync(target,()=>{}, {logger:()=>{}});
  }else if(mode==='hold'){
   await withFileLeaseAsync(target,async()=>{process.send({entered:true});await new Promise(resolve=>process.once('message',resolve));},{staleMs:5000,logger:()=>{}});

@@ -6,14 +6,14 @@ module.exports = function registerChecklistSupplierRoutes(app, deps) {
     ? 'Checklist yetkilendirmesi kullanılamıyor. / Checklist authorization is unavailable.'
     : 'Güncel checklist kayıt yetkisi gerekli. / Current checklist record permission is required.'), { code, statusCode });
   function current(req, definitions = false, areas = ['cp', 'orders', 'overview']) {
-    const profile = userAccess.profileById(req.currentUser.id);
+    const profile = userAccess.sessionProfile ? userAccess.sessionProfile(req) : userAccess.profileById(req.currentUser.id);
     if (!profile || profile.enabled === false || profile.status && profile.status !== 'ACTIVE' || !areas.some(area => userAccess.hasArea(profile, area))
       || definitions && !userAccess.hasPermission(profile, 'manageBusinessRules')) throw fail('CHECKLIST_FORBIDDEN');
     req.currentUser = profile;
     return profile;
   }
   // Load source data asynchronously, then resolve again from current authoritative
-  // state inside the synchronous store lease. A captured Map is never a commit guard.
+  // state inside the store lease. A captured Map is never a commit guard.
   async function context(req, write = false, areas = ['cp', 'orders', 'overview']) {
     if (typeof deps.authorizedOrders !== 'function' || typeof deps.authorizedOrdersNow !== 'function') throw fail('CHECKLIST_AUTH_UNAVAILABLE', 503);
     await deps.authorizedOrders(current(req, false, areas), { write });
@@ -43,7 +43,8 @@ module.exports = function registerChecklistSupplierRoutes(app, deps) {
   app.get('/api/checklist-supplier', readArea, async (req, res) => {
     try {
       const ctx = await context(req);
-      res.set('Cache-Control', 'no-store').json(store.publicPayload(new Set(ctx.orders().keys())));
+      const saved = await store._readAsync();
+      res.set('Cache-Control', 'no-store').json(store.publicPayload(new Set(ctx.orders().keys()), saved));
     } catch (err) { automationError(res, err, 'Checklist üretici verileri okunamadı.'); }
   });
   app.post('/api/checklist-supplier/answers', readArea, express.json({ limit: '12mb' }), async (req, res) => {
@@ -51,22 +52,24 @@ module.exports = function registerChecklistSupplierRoutes(app, deps) {
       const entries = req.body && req.body.entries;
       if (!Array.isArray(entries)) return res.status(400).json({ error: 'entries (dizi) zorunlu. / entries must be an array.', code: 'VALIDATION_ERROR' });
       if (!['buyer_log', 'supplier_excel'].includes(req.body.source || 'buyer_log')) throw fail('CHECKLIST_SOURCE_INVALID', 400);
+      const expectedRevision=req.body.expectedRevision;
+      if(expectedRevision!=null&&(!Number.isSafeInteger(expectedRevision)||expectedRevision<0))throw fail('CHECKLIST_REVISION_INVALID',400);
       const source = req.body.source || 'buyer_log', ctx = await context(req, true);
       const assertAuthority = () => assertEntries(entries, current(req), ctx.orders());
       assertAuthority();
-      const result = store.applyEntries(entries, req.currentUser, { source, serverIdentity: true, assertAuthority });
+      const result = await store.applyEntries(entries, req.currentUser, { source, serverIdentity: true, assertAuthority,expectedRevision });
       userAccess.appendAudit(req.currentUser, source === 'supplier_excel' ? 'CHECKLIST_SUPPLIER_EXCEL_IMPORT' : 'CHECKLIST_ANSWER_SYNC', 'checklist', {
         source, entries: entries.length, updated: result.updated, cleared: result.cleared, skipped: result.skipped, conflicts: result.conflicts || 0, revision: result.revision,
       });
       res.json(result);
     } catch (err) { automationError(res, err, 'Checklist cevapları kaydedilemedi.'); }
   });
-  app.post('/api/checklist-supplier/definitions', userAccess.requireAnyArea('cp', 'overview'), express.json({ limit: '2mb' }), (req, res) => {
+  app.post('/api/checklist-supplier/definitions', userAccess.requireAnyArea('cp', 'overview'), express.json({ limit: '2mb' }), async (req, res) => {
     try {
       const definitions = req.body && req.body.definitions;
       if (!Array.isArray(definitions)) return res.status(400).json({ error: 'definitions (dizi) zorunlu. / definitions must be an array.', code: 'VALIDATION_ERROR' });
       current(req, true, ['cp', 'overview']);
-      const result = store.replaceDefinitions(definitions, req.currentUser, { assertAuthority: () => current(req, true, ['cp', 'overview']) });
+      const result = await store.replaceDefinitions(definitions, req.currentUser, { assertAuthority: () => current(req, true, ['cp', 'overview']) });
       userAccess.appendAudit(req.currentUser, 'CHECKLIST_DEFINITIONS_SYNC', 'checklist', { definitions: result.definitions.length, revision: result.revision });
       res.json(result);
     } catch (err) { automationError(res, err, 'Checklist tanımları kaydedilemedi.'); }

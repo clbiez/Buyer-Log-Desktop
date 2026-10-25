@@ -1,0 +1,79 @@
+{
+  "package": "BL020",
+  "date": "2026-10-25",
+  "PR": 714,
+  "risk": "P2 UI adoption; existing business persistence/authority paths unchanged",
+  "focused": {
+    "files": 22,
+    "tests": 196,
+    "pass": 196,
+    "fail": 0,
+    "skip": 0,
+    "log": "work/bl020-bl021-final-target.log",
+    "sha256Lf": "7789ce804dbd36225c096a146122df4ca99fa1187a5b0f7608c2cba2f91d7f06",
+    "timing": "After final Collection replication feedback hook; before the final summary word-boundary/race/layout refinement"
+  },
+  "finalViews": {
+    "files": 3,
+    "pass": 17,
+    "fail": 0,
+    "skip": 0,
+    "log": "work/bl020-bl021-final-views.log",
+    "sha256Lf": "d383121fb645e5471fdfafb72f078c5d39cf01297e3f8606422e9c8c20b1ee1c",
+    "countsOverlapPrimary": true
+  },
+  "native": {
+    "scope": "Actual production server and Edge with synthetic data. Controlled HTTP faults test save-status presentation; they are not claims of a real shared-folder outage.",
+    "phases": [
+      {
+        "name": "actual-durable-local-status",
+        "ok": true,
+        "durable": true
+      },
+      {
+        "name": "actual-modal-validation-focus-return"
+      },
+      {
+        "name": "controlled-http-save-status",
+        "code": "COLLECTION_ATOMIC_CONFLICT",
+        "status": "conflict",
+        "localEditPreserved": true
+      },
+      {
+        "name": "controlled-http-save-status",
+        "code": "TEMPORARY_FAILURE",
+        "status": "failed",
+        "localEditPreserved": true
+      },
+      {
+        "name": "actual-export-cancel",
+        "downloads": 0,
+        "reducedMotion": {
+          "duration": "0s",
+          "transform": "none"
+        }
+      },
+      {
+        "name": "actual-drawer-focus-return"
+      },
+      {
+        "name": "actual-export-completed",
+        "rows": 2000,
+        "columns": 3,
+        "firstLastAndNumericValues": true,
+        "downloads": 1
+      }
+    ],
+    "errors": [],
+    "ok": true
+  },
+  "visualsInspected": true,
+  "fullExecuted": false,
+  "merged": false,
+  "limits": [
+    "Controlled HTTP faults are not a real SMB outage.",
+    "Default row/image export checks cancellation between slices and after packing. A synchronous writer cannot be interrupted mid-call; cancellation prevents its later download.",
+    "Custom exporters show cancellation only when they explicitly declare support."
+  ],
+  "rollback": "Revert this UI commit. Existing per-user lastSeenStable key remains compatible; no business-data migration."
+}

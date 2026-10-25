@@ -337,7 +337,7 @@ function editDenied(message) {
    baseRev farklıysa yazma yine yapılır (önceki değer defterde kalır) ve yanıt
    conflict:true döner; istemci kullanıcıya bilgi verir. */
 function patchLine(profile, id, lineId, patch = {}, options = {}) {
-  const store = loadStore();
+  const store = options.batchStore || loadStore();
   const request = findRequest(store, id);
   if (!request) return null;
   const index = request.items.findIndex(item => item.id === cleanId(lineId));
@@ -375,8 +375,30 @@ function patchLine(profile, id, lineId, patch = {}, options = {}) {
   }
   if (!affected.size) return { request, affected: [], changed: false, conflict, line: request.items[index] };
   for (const changed of affected.values()) changed.updatedAt = at;
-  saveStore(store, options);
+  if(!options.batchStore)saveStore(store, options);
   return { request, affected: [...affected.values()].filter(item => item.id !== request.id), changed: true, conflict, line: request.items[index] };
+}
+// Supplier imports are stricter than a single live edit: the entire preview
+// must still match. Every price uses the same native ledger above, saved once.
+function patchLines(profile,id,changes,options={}){
+  const store=loadStore(),request=findRequest(store,id);
+  if(!request)return null;
+  if(!canEdit(profile,request))throw editDenied('Bu quotation kaydını düzenleme yetkiniz bulunmuyor.');
+  const invalid=()=>Object.assign(new Error('Toplu fiyat girdisi geçersiz. / Invalid bulk price input.'),{code:'QUOTATION_BATCH_INVALID',statusCode:400});
+  if(!Array.isArray(changes)||!changes.length||changes.length>MAX_ITEMS)throw invalid();
+  const seen=new Set();
+  for(const change of changes){
+    const line=request.items.find(item=>item.id===change?.lineId);
+    if(!line||seen.has(line.id)||!Number.isSafeInteger(change.baseRev)||change.baseRev<0||typeof change.price!=='string'||change.price.length>120||(change.price.trim()&&ledger.priceNumber(change.price)==null))throw invalid();
+    seen.add(line.id);
+    if(change.baseRev!==(line.rev||0))throw Object.assign(new Error('Fiyat önizlemesi değişti. / Price preview changed.'),{code:'QUOTATION_BATCH_STALE',statusCode:409});
+    if(!change.identity||['modelKey','rowId','manufacturer','plmId','modelCode','orderCode'].some(key=>change.identity[key]!==line[key]))throw Object.assign(new Error('Fiyat satırı eşleşmesi değişti. / Price line identity changed.'),{code:'QUOTATION_BATCH_STALE',statusCode:409});
+  }
+  options.assertAuthority?.();
+  const results=changes.map(change=>patchLine(profile,id,change.lineId,{price:change.price,baseRev:change.baseRev,source:options.source==='undo'?'undo':'import'},{...options,batchStore:store}));
+  const changed=results.some(result=>result.changed);
+  const saved=changed?saveStore(store,options):store;
+  return {ok:true,request,affected:[],changed,revision:saved._revision,outcomes:changes.map(change=>({key:change.lineId,status:'accepted'}))};
 }
 /* Yeni pazarlık turu: sonraki teklif olayları bu tur numarasını taşır. */
 function startRound(profile, id, note = '', options = {}) {
@@ -516,7 +538,7 @@ function approveLine(profile,id,lineId,approved,options={}){
 }
 function restoreRequests(profile,receipt,options={}){const store=loadStore();for(const [id,prior]of Object.entries(receipt.before)){const current=findRequest(store,id);if(current&&!canEdit(profile,current)||prior&&!canEdit(profile,prior))throw Object.assign(new Error('Quotation denied.'),{code:'QUOTATION_EDIT_DENIED',statusCode:403});const index=store.requests.findIndex(item=>item.id===id);if(prior){if(index>=0)store.requests[index]=prior;else store.requests.push(prior);}else if(index>=0)store.requests.splice(index,1);}const saved=saveStore(store,{...options,expectedRevision:receipt.expectedRevision});return {verified:true,revision:saved._revision};}
 module.exports = {
-  FILE,attachDeltaStore,approveLine,restoreRequests,patchLine,startRound,mutateAgent:work=>guardedDocumentMutation(documents,FILE,work),
+  FILE,attachDeltaStore,approveLine,restoreRequests,patchLine,patchLines,startRound,mutateAgent:work=>guardedDocumentMutation(documents,FILE,work),
   loadStore, requestsForUser, createRequest, updateRequest, setStatus, setEditors, deleteRequest, hideRequest, restoreRequest, mergeRequests, importLegacy, cleanupExpired,
   canEdit, canManageAccess, normalizeRequest, isRetentionExpired, RETENTION_YEARS,
 };

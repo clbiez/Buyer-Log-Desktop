@@ -46,8 +46,10 @@ test('server exposes streamed personal restore inspect, start and status routes'
 });
 
 test('personal preference and profile stores have explicit restore entry points', () => {
-  assert.match(PREFS, /function restoreSnapshot\(userId, snapshot\)/);
-  assert.match(PREFS, /load, merge, removeKeys, restoreSnapshot/);
+  assert.match(PREFS, /function restoreSnapshot\(userId,\s*snapshot\)/);
+  assert.match(PREFS, /function restoreSnapshotAsync\(userId,\s*snapshot,options=\{\}\)/);
+  const exportStart=PREFS.indexOf('module.exports = {'),exports=PREFS.slice(exportStart,PREFS.indexOf('\n};',exportStart));
+  for(const name of ['load','loadAsync','merge','mergeAsync','removeKeys','removeKeysAsync','restoreSnapshot','restoreSnapshotAsync'])assert.match(exports,new RegExp('\\b'+name+'\\b'));
   assert.match(DB, /function userBackupStoreSnapshot\(userId\)/);
   assert.match(DB, /function restoreUserBackupStores\(userId, snapshot/);
 });

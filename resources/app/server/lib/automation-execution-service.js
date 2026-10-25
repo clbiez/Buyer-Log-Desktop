@@ -9,17 +9,18 @@ function automationAnalyze(rows,config={}){
   return {operation:op,groupBy,valueField,total:list.length,groups:result};
 }
 function createAutomationExecutor(deps){
- const {automationDataset,automationAnalyze,automationRunAppActions,automationSteps,agentBrowserConnector,automationSplitRecipients,automationEmailGroup,automationEmail,backlogAutomation}=deps;
-async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='manual',dataset=null,assertAuthority=()=>{},draftOwnerId='',draftUrl=null,draftScope=null,onSourceRefresh=()=>{},runDraft=work=>work()}={}){
+ const {automationDataset,automationAnalyze,automationRunAppActions,automationSteps,agentBrowserConnector,automationSplitRecipients,automationEmailGroup,automationEmail,backlogAutomation,createAuthorityGuard}=deps;
+async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='manual',dataset=null,assertAuthority=null,draftOwnerId='',draftUrl=null,draftScope=null,onSourceRefresh=()=>{},runDraft=work=>work()}={}){
+  if(typeof assertAuthority!=='function')assertAuthority=createAuthorityGuard?createAuthorityGuard(ownerId,profile,recipe,{allowDisabled:dryRun}):()=>profile;
   profile=await assertAuthority()||profile;
-  let data=dataset||await automationDataset(ownerId,profile,recipe),items=data.items||[],rows=data.items||[];
+  let data=dataset||await automationDataset(ownerId,profile,recipe,assertAuthority),items=data.items||[],rows=data.items||[];
   profile=await assertAuthority()||profile;
   const purpose=recipe.purpose||'browser',result={purpose,total:data.total,matched:data.matched,willProcess:data.items?data.items.length:1,sample:data.sample,processed:0,failed:0};if(data.join)result.join=data.join;
   if(draftOwnerId&&draftScope)result.agentScope=draftScope;
   if(['app','mixed'].includes(purpose)) Object.assign(result,await automationRunAppActions(ownerId,profile,recipe,dryRun,assertAuthority,onSourceRefresh));
   if(!dryRun&&['app','mixed'].includes(purpose)&&(recipe.appActions||[]).some(action=>action.action==='refresh_source')){
     profile=await assertAuthority()||profile;
-    data=await automationDataset(ownerId,profile,recipe);
+    data=await automationDataset(ownerId,profile,recipe,assertAuthority);
     profile=await assertAuthority()||profile;
     items=rows=data.items||[];Object.assign(result,{total:data.total,matched:data.matched,willProcess:items.length,sample:data.sample});if(data.join)result.join=data.join;
   }
@@ -28,7 +29,7 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
   if(['analysis','app','email','mixed'].includes(purpose)) result.analysis=automationAnalyze(rows,recipe.analysis||{});
   if(purpose==='browser'||purpose==='mixed'&&((recipe.steps||[]).length||String(recipe.terminalCode||'').trim())){
     const steps=automationSteps(recipe);if(!steps.length)throw Object.assign(new Error('Önce web adımlarını kaydedin veya Terminal Kodu yazın.'),{code:'AUTOMATION_STEPS_EMPTY',statusCode:400});
-    const browser=await agentBrowserConnector.run(ownerId,{url:recipe.url,steps,items:data.items||undefined,timeoutMs:recipe.timeoutMs,continueOnError:recipe.continueOnError},{dryRun});
+    const browser=await agentBrowserConnector.run(ownerId,{url:recipe.url,steps,items:data.items||undefined,timeoutMs:recipe.timeoutMs,continueOnError:recipe.continueOnError},{dryRun,assertAuthority});
     result.browser=browser;result.processed=Number(browser.processed)||0;result.failed=Number(browser.failed)||0;result.steps=browser.actions||[];
   } else result.processed=data.items?data.items.length:1;
   const completedDrafts=[];
@@ -56,7 +57,7 @@ async function automationExecute(ownerId,profile,recipe,{dryRun=false,trigger='m
       profile=await assertAuthority()||profile;
       if(dryRun)return entry;
       const open=!draftOwnerId&&trigger==='manual'&&email.openDraftOnManual!==false;
-      const draft=await runDraft(()=>automationEmail.createDraft({name:recipe.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,body,rows:mailRows,fields,language:lang,ownerId:draftOwnerId,open}));
+      const draft=await runDraft(()=>automationEmail.createDraft({name:recipe.name,to:group.to,cc:group.cc,bcc:group.bcc,subject,body,rows:mailRows,fields,language:lang,ownerId:draftOwnerId||ownerId,scope:draftOwnerId?'agent-cp':'automation',open}));
       const receipt={...entry,filename:draft.filename,opened:draft.opened,draftUrl:draftUrl?draftUrl(draft.filename):`/api/automations/mail-drafts/${encodeURIComponent(draft.filename)}`};
       completedDrafts.push(receipt);return receipt;
     };

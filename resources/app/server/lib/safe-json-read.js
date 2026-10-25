@@ -28,4 +28,29 @@ function readJsonWithValidatedBackup(file, { fallback, normalize = value => valu
   throw integrityError(file, errors);
 }
 
-module.exports = { readJsonWithValidatedBackup, integrityError };
+// Async request path. Recovery is opt-in: ordinary reads may use the verified
+// backup without mutating a file outside its caller's write lease.
+async function readJsonWithValidatedBackupAsync(file, { fallback, normalize = value => value, restore, beforeRestore } = {}) {
+  const fsp = require('fs/promises'), errors = [];
+  let found = false;
+  for (const candidate of [file, `${file}.bak`]) {
+    let bytes;
+    try { bytes = await fsp.readFile(candidate, 'utf8'); }
+    catch (error) { if (error.code !== 'ENOENT') { found = true; errors.push({ file: candidate, error }); } continue; }
+    found = true;
+    let value;
+    try { value = normalize(JSON.parse(bytes)); }
+    catch (error) { errors.push({ file: candidate, error }); continue; }
+    if (candidate !== file && typeof restore === 'function') {
+      beforeRestore?.();
+      try { await fsp.rename(file, `${file}.corrupt-${Date.now()}`); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+      beforeRestore?.();
+      await restore(value);
+    }
+    return value;
+  }
+  if (!found) return typeof fallback === 'function' ? fallback() : fallback;
+  throw integrityError(file, errors);
+}
+
+module.exports = { readJsonWithValidatedBackup, readJsonWithValidatedBackupAsync, integrityError };

@@ -161,7 +161,7 @@
   async function readWorkbookFile(file) {
     if (global.BLPerf && global.BLPerf.ensureLibrary) await global.BLPerf.ensureLibrary('xlsx');
     if (!global.XLSX) throw new Error(L('Excel okuyucu yüklenemedi.', 'The Excel reader could not be loaded.'));
-    const wb = global.XLSX.read(await file.arrayBuffer(), { type: 'array', cellDates: false });
+    const wb = await global.BLFileParser.readWorkbook(file, { type: 'array', cellDates: false });
     const sheets = wb.SheetNames.map(name => ({
       name,
       rows: global.XLSX.utils.sheet_to_json(wb.Sheets[name], { header: 1, raw: true, defval: null }),

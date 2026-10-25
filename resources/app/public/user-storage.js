@@ -6,7 +6,7 @@
   var prefixes=[
     'bl.excelTemplates.',
     'lcw_theme','lcw_rail','lcw_sidebar_collapsed','lcw.lang.','lcw.font.','lcw_font_step',
-    'lcw.corePageFilters.','lcw.table.columnState.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
+    'lcw.corePageFilters.','lcw.table.columnState.','lcw.table.density.','lcw.tableViewFocus.','lcw.tableGroupOverrides.','lcw.freeze.','lcw.cp.assistant.','lcw.cp.checklist.','lcw.cp.rules.','lcw.cp.dimFilters.','lcw.cp.imageSize.',
     'lcw.orders.dimFilters.','lcw.overview.dimFilters.','lcw.overview.bgDimFilters.','lcw.backlog.autoState.','lcw.backlog.dateRange.','lcw.backlog.columnWidths.','lcw.backlog.analysis.','lcw.backlog.planactual.','lcw.backlog.overview.',
     'lcw.koleksiyon.rows.','lcw.koleksiyon.manufacturers.','lcw.koleksiyon.pricingExcelColumns.','lcw.koleksiyon.colState.','lcw.koleksiyon.scope.','lcw.koleksiyon.analytics.','lcw.prodstatus.mails.','lcw.mailTemplates.',
     // v2026-10-22 — Koleksiyon fiyat görünümü, Fiyat Masası tercihleri ve kullanıcının

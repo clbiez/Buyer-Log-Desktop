@@ -4,7 +4,7 @@ const fs = require('fs');
 const fsp = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
-const { assertHeldFileLeases } = require('./shared-file-transaction');
+const { assertHeldFileLeases, assertHeldFileLeasesAsync } = require('./shared-file-transaction');
 
 const VERSION = 1;
 const RETRYABLE = new Set(['EPERM', 'EACCES', 'EBUSY']);
@@ -94,7 +94,7 @@ function renameWithRetrySync(source, target, attempts = 8) {
 }
 async function renameWithRetry(source, target, attempts = 8) {
   for (let attempt = 1;; attempt += 1) {
-    try { assertHeldFileLeases(); await fsp.rename(source, target); return; }
+    try { await assertHeldFileLeasesAsync(); await fsp.rename(source, target); return; }
     catch (error) {
       if (!RETRYABLE.has(error && error.code) || attempt >= attempts) throw error;
       await sleep(Math.min(250, 15 * (2 ** (attempt - 1))));
@@ -122,10 +122,23 @@ function readIntentSync(metaFile) {
   let value;
   try { value = JSON.parse(fs.readFileSync(metaFile, 'utf8')); }
   catch (error) { throw integrityError(`Recovery intent cannot be read: ${metaFile}`, { cause: error }); }
+  return validateIntent(value,metaFile);
+}
+function validateIntent(value,metaFile){
   if (!value || value.version !== VERSION || !value.target || !value.payload || !value.after || !value.mutationId) {
     throw integrityError(`Recovery intent is invalid: ${metaFile}`);
   }
   return value;
+}
+async function readIntent(metaFile){
+  let value;try{value=JSON.parse(await fsp.readFile(metaFile,'utf8'));}catch(error){throw integrityError(`Recovery intent cannot be read: ${metaFile}`,{cause:error});}
+  return validateIntent(value,metaFile);
+}
+async function verifyPayload(intent,recoveryRoot){
+  const payloadFile=path.join(recoveryRoot,path.basename(intent.payload));let buffer;
+  try{buffer=await fsp.readFile(payloadFile);}catch(error){throw integrityError(`Kurtarma yükü okunamadı. / Recovery payload cannot be read: ${payloadFile}`,{cause:error});}
+  if(buffer.length!==Number(intent.after.size)||sha256(buffer)!==intent.after.sha256)throw integrityError(`Recovery payload checksum failed: ${payloadFile}`);
+  return {payloadFile,buffer};
 }
 function verifyPayloadSync(intent, recoveryRoot) {
   const payloadFile = path.join(recoveryRoot, path.basename(intent.payload));
@@ -213,6 +226,15 @@ function createDurableFileRecovery({ recoveryRoot, allowedRoots = [] } = {}) {
     }
     fs.appendFileSync(path.join(folder, 'conflicts.jsonl'), `${JSON.stringify({ at: new Date().toISOString(), mutationId: intent.mutationId, target: intent.target, reason })}\n`);
   }
+  async function quarantine(intent,reason){
+    const files=intentPaths(root,intent.target),folder=path.join(root,'quarantine');await fsp.mkdir(folder,{recursive:true});
+    const suffix=`${Date.now()}-${files.key}`;
+    for(const [source,extension]of [[files.meta,'intent.json'],[files.payload,'payload']]){
+      let exists=true;try{await fsp.access(source);}catch(error){if(error.code==='ENOENT')exists=false;else throw error;}
+      if(exists)await renameWithRetry(source,path.join(folder,`${suffix}.${extension}`));
+    }
+    await fsp.appendFile(path.join(folder,'conflicts.jsonl'),`${JSON.stringify({at:new Date().toISOString(),mutationId:intent.mutationId,target:intent.target,reason})}\n`);
+  }
   function quarantineUnknownSync(metaFile, error) {
     const folder = path.join(root, 'quarantine'); fs.mkdirSync(folder, { recursive: true });
     const key = path.basename(metaFile).replace(/\.intent\.json$/, ''), suffix = `${Date.now()}-${key}`;
@@ -245,12 +267,13 @@ function createDurableFileRecovery({ recoveryRoot, allowedRoots = [] } = {}) {
     return intent;
   }
   async function prepare(target, buffer, options = {}) {
-    assertHeldFileLeases();
+    await assertHeldFileLeasesAsync();
     const resolved = path.resolve(target); ensureAllowed(resolved, roots);
     const data = Buffer.isBuffer(buffer) ? buffer : Buffer.from(buffer);
     await fsp.mkdir(root, { recursive: true });
     const files = intentPaths(root, resolved);
-    try { await fsp.access(files.meta); const result = recoverOneSync(files.meta); if (result.conflict) throw integrityError(`Unresolved recovery conflict blocks write: ${resolved}`); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    let prior=false;try{await fsp.access(files.meta);prior=true;}catch(error){if(error.code!=='ENOENT')throw error;}
+    if(prior){const result=await recoverOne(files.meta);if(result.conflict)throw integrityError(`Unresolved recovery conflict blocks write: ${resolved}`);}
     const intent = {
       version: VERSION,
       mutationId: String(options.mutationId || crypto.randomUUID()),
@@ -273,9 +296,7 @@ function createDurableFileRecovery({ recoveryRoot, allowedRoots = [] } = {}) {
   }
   async function commitPrepared(intent) {
     ensureAllowed(intent.target, roots);
-    const payloadFile = path.join(root, path.basename(intent.payload));
-    const buffer = await fsp.readFile(payloadFile);
-    if (buffer.length !== Number(intent.after.size) || sha256(buffer) !== intent.after.sha256) throw integrityError(`Recovery payload checksum failed: ${payloadFile}`);
+    const {buffer}=await verifyPayload(intent,root);
     await replaceTarget(intent.target, buffer, intent.after.sha256);
     await clear(intent);
     return { mutationId: intent.mutationId, target: intent.target, sha256: intent.after.sha256 };
@@ -288,6 +309,13 @@ function createDurableFileRecovery({ recoveryRoot, allowedRoots = [] } = {}) {
     if (sameFingerprint(current, intent.before)) { commitPreparedSync(intent); return { committed: true, recovered: true, conflict: false }; }
     quarantineSync(intent, 'target-diverged');
     return { committed: false, recovered: false, conflict: true };
+  }
+  async function recoverOne(metaFile){
+    const intent=await readIntent(metaFile);ensureAllowed(intent.target,roots);await verifyPayload(intent,root);
+    const current=await fingerprint(intent.target);
+    if(sameFingerprint(current,intent.after)){await clear(intent);return {committed:true,recovered:false,conflict:false};}
+    if(sameFingerprint(current,intent.before)){await commitPrepared(intent);return {committed:true,recovered:true,conflict:false};}
+    await quarantine(intent,'target-diverged');return {committed:false,recovered:false,conflict:true};
   }
   function recoverSync() {
     fs.mkdirSync(root, { recursive: true });

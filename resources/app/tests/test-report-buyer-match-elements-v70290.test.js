@@ -87,13 +87,13 @@ test('component results aggregate into one answer and one cell label', () => {
   assert.equal(Checklist.makeAnswer('approved', null, {}).elements, undefined, 'single component stays the default');
 });
 
-test('components survive the shared checklist store and are preserved when omitted', () => {
-  answerStore.applyEntries([{ orderKey: 'po7', itemId: 'fabric', state: 'rejected', at: '2026-10-20T10:00:00.000Z',
+test('components survive the shared checklist store and are preserved when omitted', async () => {
+  await answerStore.applyEntries([{ orderKey: 'po7', itemId: 'fabric', state: 'rejected', at: '2026-10-20T10:00:00.000Z',
     elements: [{ name: 'Main Fabric', state: 'rejected' }, { name: 'Neck RIB', state: 'approved' }] }], profile);
-  answerStore.applyEntries([{ orderKey: 'po7', itemId: 'fabric', state: 'rejected', at: '2026-10-20T11:00:00.000Z', note: 'retest' }], profile);
+  await answerStore.applyEntries([{ orderKey: 'po7', itemId: 'fabric', state: 'rejected', at: '2026-10-20T11:00:00.000Z', note: 'retest' }], profile);
   const saved = answerStore.publicPayload().answers['po7::fabric'];
   assert.deepEqual(saved.elements.map(item => item.name + ':' + item.state), ['Main Fabric:rejected', 'Neck RIB:approved']);
-  assert.throws(() => answerStore.applyEntries([{ orderKey: 'po7', itemId: 'fabric', state: 'rejected', at: '2026-10-20T12:00:00.000Z', elements: 'x' }], profile), { code: 'CHECKLIST_EVIDENCE_INVALID' });
+  await assert.rejects(answerStore.applyEntries([{ orderKey: 'po7', itemId: 'fabric', state: 'rejected', at: '2026-10-20T12:00:00.000Z', elements: 'x' }], profile), { code: 'CHECKLIST_EVIDENCE_INVALID' });
 });
 
 test('test report preview: manual match works without LCW AI; several set parts become separate rows', () => {

@@ -1,0 +1,440 @@
+{
+  "date": "2026-10-24T19:33:20.440Z",
+  "base": "0a5d9fbbb0f1d6db59ea6062a1f779505c8f67d7",
+  "scope": "BL008 request lease-wait implementation complete; async primary/workspace, no-wait legacy request scope, async prior-intent recovery. Final full regression pending.",
+  "verificationPolicy": "Explicit user instruction: targeted checks during implementation; one full regression after the final integrated remaining backlog, then batch merge. No full suite run for this first wave.",
+  "focused": [
+    {
+      "files": 16,
+      "pass": 116,
+      "fail": 0,
+      "log": "bl008-checklist-target.log",
+      "scope": "Checklist core and direct authority before the final same-event-loop primitive guard"
+    },
+    {
+      "files": 11,
+      "pass": 126,
+      "fail": 0,
+      "log": "bl008-primary-authority.log",
+      "scope": "Preferences/workspace/primary HTTP/authority after session changes, before final same-event-loop guard"
+    },
+    {
+      "files": 4,
+      "pass": 31,
+      "fail": 0,
+      "log": "bl008-lease-target.log",
+      "scope": "Final primitive plus fabric/prefs async persistence and authority"
+    }
+  ],
+  "before": {
+    "source": "unchanged main0a5d9fbb in separate worktree",
+    "sameFixture": true,
+    "store": "fabric",
+    "healthRttMs": 2959,
+    "writeStatus": 409,
+    "expectedRegressionFailure": true,
+    "log": "bl008-fabric-before.log"
+  },
+  "after": {
+    "scope": "Actual Windows Edge and unmodified full server, isolated synthetic IAM/data, no mocked HTTP; primary paths only, not all BL008 stores",
+    "phases": [
+      {
+        "name": "fabric-ui-save-held-lease",
+        "unrelatedPreferenceRead": {
+          "status": 200,
+          "milliseconds": 4.799999997019768
+        },
+        "noAcknowledgementBeforeRelease": true
+      },
+      {
+        "name": "tr-saved-card-ui"
+      },
+      {
+        "name": "en-saved-card-ui"
+      },
+      {
+        "name": "real-session-preference-write-held-lease",
+        "unrelatedFabricRead": {
+          "status": 200,
+          "milliseconds": 4.200000002980232
+        },
+        "noAcknowledgementBeforeRelease": true
+      },
+      {
+        "name": "real-session-checklist-write-held-lease",
+        "unrelatedPreferenceRead": {
+          "status": 200,
+          "milliseconds": 10.399999991059303
+        },
+        "noAcknowledgementBeforeRelease": true
+      }
+    ],
+    "mockedHTTP": false,
+    "productionUsersOrData": false,
+    "sourceMatches": [
+      {
+        "file": "server/lib/fabric-cards.js",
+        "sha256Lf": "aadc93f535a6e440058e4ec35624fd1f8082e831eb0ce6cb545726429f02f5e1"
+      },
+      {
+        "file": "server/lib/checklist-supplier-store.js",
+        "sha256Lf": "e65ab62873d173aef2007bc9a136867a16fd93fde8f109c65c2a9eeb7d0ba974"
+      },
+      {
+        "file": "server/lib/user-preferences.js",
+        "sha256Lf": "99ae2cf6ffe2e9fc781ee466994842e8b1bf9d77472a35b181f9e7edaa34b50e"
+      },
+      {
+        "file": "server/lib/shared-file-transaction.js",
+        "sha256Lf": "1716786b9cea38eafec56a7a58700f04f5bb04272caaf2d770e7483cfe1132ce"
+      },
+      {
+        "file": "server/lib/safe-json-read.js",
+        "sha256Lf": "5a598007ac7faaac1fc2a9e4a7512e0b2041cab493f1225c1125891b26d7e01e"
+      },
+      {
+        "file": "server/routes/fabric-card-routes.js",
+        "sha256Lf": "e5a6128969a2e234abc51305e1451f2bbcf53048f1a8a2a5f6d370c8c9496172"
+      },
+      {
+        "file": "server/routes/checklist-supplier-routes.js",
+        "sha256Lf": "70d8e4195ac6dfd7103fa5293551b49befd6a89cab137dd4584660c9f8af2611"
+      },
+      {
+        "file": "server/server.js",
+        "sha256Lf": "fa34b158b83446f040c894e36ae0916543e303e7eff4eafe469c51bd7e2c1fde"
+      }
+    ]
+  },
+  "review": {
+    "rounds": 1,
+    "agent": "review_wal_recovery",
+    "result": "No concrete new P0/P1 findings in the bounded first-wave diff",
+    "testsExecutedByReviewer": false,
+    "graph": "Transport closed; actual source fallback"
+  },
+  "images": [
+    {
+      "name": "async-primary-store-writes.png",
+      "width": 1600,
+      "height": 973,
+      "sha256": "adc863386fb08bf194a43bfdbb6bfb42798dbeae0a1b73f04592b39741ebeada",
+      "reviewed": true
+    },
+    {
+      "name": "async-primary-store-writes-en.png",
+      "width": 1600,
+      "height": 973,
+      "sha256": "73cf9afe6b795474d92c989c558acb86c953b91ad4b5843762c2e8bc4922da98",
+      "reviewed": true
+    }
+  ],
+  "remaining": [
+    "Final integrated full regression before batch merge",
+    "Broader populated/corporate filesystem performance acceptance under BL019; legacy synchronous data I/O/background retry limitations are explicitly recorded"
+  ],
+  "publication": {
+    "TEST": false,
+    "STABLE": false,
+    "manualPatch": false
+  },
+  "metadataWave": {
+    "date": "2026-10-24T19:59:59.749Z",
+    "base": "2c93989fb53420a86b37663e17cefd3caa420ba7",
+    "scope": "Async metadata, initializer pins, generation, renewal/release and internal commit fencing; explicit legacy synchronous assertion API retained",
+    "focused": [
+      {
+        "log": "bl008-async-lifecycle.log",
+        "files": 6,
+        "pass": 39,
+        "fail": 0,
+        "scope": "Lifecycle, mixed Sync/Async workers, crash/recovery, context retirement, real fsync and HTTP responsiveness"
+      },
+      {
+        "log": "bl008-async-integrations.log",
+        "tests": 184,
+        "pass": 182,
+        "fail": 1,
+        "skip": 1,
+        "failure": "Snapshot instrumentation counted two lease metadata temporary files as DB snapshot writes; no extra DB snapshot"
+      },
+      {
+        "log": "bl008-delta-snapshot-target.log",
+        "files": 1,
+        "pass": 27,
+        "fail": 0,
+        "scope": "Repaired measurement pinned to actual DB; one WAL open and zero snapshot writes for 200 records"
+      }
+    ],
+    "countsOverlap": true,
+    "native": {
+      "scope": "Actual Windows Edge and unmodified full server, isolated synthetic IAM/data, no mocked HTTP; primary paths only, not all BL008 stores",
+      "phases": [
+        {
+          "name": "fabric-ui-save-held-lease",
+          "unrelatedPreferenceRead": {
+            "status": 200,
+            "milliseconds": 8.299999997019768
+          },
+          "noAcknowledgementBeforeRelease": true
+        },
+        {
+          "name": "tr-saved-card-ui"
+        },
+        {
+          "name": "en-saved-card-ui"
+        },
+        {
+          "name": "real-session-preference-write-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 5.0999999940395355
+          },
+          "noAcknowledgementBeforeRelease": true
+        },
+        {
+          "name": "real-session-checklist-write-held-lease",
+          "unrelatedPreferenceRead": {
+            "status": 200,
+            "milliseconds": 19.200000002980232
+          },
+          "noAcknowledgementBeforeRelease": true
+        }
+      ]
+    },
+    "review": {
+      "rounds": 1,
+      "agent": "review_wal_recovery",
+      "result": "No concrete new P0/P1 finding in the bounded metadata protocol diff",
+      "testsExecutedByReviewer": false,
+      "limits": [
+        "Real SMB/OneDrive",
+        "Antivirus sharing violations outside controlled fault injection",
+        "Power loss"
+      ]
+    },
+    "sourceMatches": [
+      {
+        "file": "server/lib/shared-file-transaction.js",
+        "sha256Lf": "df4613770c0efb6a92148455e244aeb92255ce1bb4eb8eaea2b799925ddfcdc0"
+      },
+      {
+        "file": "server/lib/lease-worker-registry.js",
+        "sha256Lf": "5adc794a1101671859a16c78a2e7fc55399551080286c995bb6343927627038d"
+      },
+      {
+        "file": "server/lib/durable-file-recovery.js",
+        "sha256Lf": "38b84b492a95ade6270776b2190d1cba77dd857c0c0f956e9bd803baec42c146"
+      }
+    ],
+    "fullExecuted": false,
+    "merged": false
+  },
+  "workspaceWave": {
+    "date": "2026-10-24T20:29:49.117Z",
+    "base": "90a5a3f7",
+    "focused": [
+      {
+        "log": "bl008-workspace-target.log",
+        "files": 7,
+        "pass": 47,
+        "fail": 0
+      },
+      {
+        "log": "bl008-workspace-routes-target.log",
+        "files": 15,
+        "pass": 118,
+        "fail": 0
+      },
+      {
+        "log": "bl008-horizon-native-target.log",
+        "files": 6,
+        "pass": 48,
+        "fail": 0
+      },
+      {
+        "log": "bl008-request-policy-target.log",
+        "files": 7,
+        "pass": 55,
+        "fail": 0
+      },
+      {
+        "log": "bl008-assignment-target.log",
+        "files": 2,
+        "pass": 8,
+        "fail": 0
+      },
+      {
+        "log": "bl008-session-policy-target.log",
+        "files": 6,
+        "pass": 37,
+        "fail": 0
+      }
+    ],
+    "countsOverlap": true,
+    "policy": "All HTTP handlers inherit AsyncLocalStorage no-wait policy. Synchronous lease contention or lease-metadata retry returns SHARED_WRITE_BUSY409 before Atomics.wait. Async writers continue to serialize/await; synchronous startup retains prior behavior. Synchronous legacy data I/O is not claimed to be asynchronous.",
+    "review": {
+      "rounds": 1,
+      "agent": "review_wal_recovery",
+      "finding": "Personal layer guard checked an active account but not credential-revoked session",
+      "resolution": "Current session and original owner checked in shared/personal Horizon guards; actual filter/layer RED regressions fixed; native credential-revoked pending layer returns403, unchanged JSON"
+    },
+    "native": {
+      "scope": "Actual Windows Edge and full server, isolated synthetic IAM/data, no mocked HTTP; async primary/workspace paths, global synchronous-request lease busy policy, local credential revocation; no populated/corporate benchmark",
+      "phases": [
+        {
+          "name": "fabric-ui-save-held-lease",
+          "unrelatedPreferenceRead": {
+            "status": 200,
+            "milliseconds": 4.4000000059604645
+          },
+          "noAcknowledgementBeforeRelease": true
+        },
+        {
+          "name": "tr-saved-card-ui"
+        },
+        {
+          "name": "en-saved-card-ui"
+        },
+        {
+          "name": "real-session-preference-write-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 4.0999999940395355
+          },
+          "noAcknowledgementBeforeRelease": true
+        },
+        {
+          "name": "real-session-checklist-write-held-lease",
+          "unrelatedPreferenceRead": {
+            "status": 200,
+            "milliseconds": 11.5
+          },
+          "noAcknowledgementBeforeRelease": true
+        },
+        {
+          "name": "personal-horizon-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 3.2999999970197678
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "personal-reset-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 4.699999988079071
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "personal-layer-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 5.200000002980232
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "manager-horizon-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 3.7000000029802322
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "manager-reset-held-lease",
+          "unrelatedFabricRead": {
+            "status": 200,
+            "milliseconds": 4
+          },
+          "noAcknowledgementBeforeRelease": true,
+          "persisted": true
+        },
+        {
+          "name": "legacy-calendar-request-fast-busy",
+          "status": 409,
+          "code": "SHARED_WRITE_BUSY",
+          "milliseconds": 5,
+          "noMutation": true
+        },
+        {
+          "name": "legacy-calendar-request-retry",
+          "status": 200
+        },
+        {
+          "name": "tr-en-real-login-after-credential-revocation"
+        },
+        {
+          "name": "actual-credential-revocation-during-layer-wait",
+          "status": 403,
+          "code": "PERMISSION_REQUIRED",
+          "preferencesUnchanged": true,
+          "activeAccountCanLoginAgain": true
+        }
+      ]
+    },
+    "sourceMatches": [
+      {
+        "file": "server/lib/user-preferences.js",
+        "sha256Lf": "29c93471008f3cabb1896d24a86a78387695b519737c5f947c058cc5c7c33143"
+      },
+      {
+        "file": "server/lib/user-access.js",
+        "sha256Lf": "569db0af651bb8f7f243b5d891911bea77de4599fca7ec13744169c13bcf8271"
+      },
+      {
+        "file": "server/lib/shared-file-transaction.js",
+        "sha256Lf": "9711550825c2870fee3b77c725bd34ae19a4544128aca2d3e221b808fe8ac6fb"
+      },
+      {
+        "file": "server/lib/personal-horizon-service.js",
+        "sha256Lf": "5b38660d6f99a44d0694e44e3e74dd3e5c3bcccd404f89b4828e13c3439bb770"
+      },
+      {
+        "file": "server/routes/horizon-routes.js",
+        "sha256Lf": "707017233b1ab51171eacc3b47c96da9ee33a068d86d4ff546f697d5fc8c8175"
+      },
+      {
+        "file": "server/routes/horizon-template-routes.js",
+        "sha256Lf": "912e46f4b9b5b0f057eacd38bead75b84970ec310a59362b7c36d1d7912298ac"
+      },
+      {
+        "file": "server/server.js",
+        "sha256Lf": "d40fa1009bb250b894e087ac18fe1d972cc5fadd0fecd965819a2420eddc17c6"
+      }
+    ],
+    "fullExecuted": false
+  },
+  "priorIntentWave": {
+    "focused": {
+      "log": "bl008-prior-intent-target.log",
+      "files": 10,
+      "pass": 74,
+      "fail": 0,
+      "skip": 0
+    },
+    "finalNewCases": {
+      "log": "bl008-prior-intent-final.log",
+      "pass": 4,
+      "fail": 0
+    },
+    "countsOverlap": true,
+    "red": "bl008-prior-intent-red.log",
+    "failureFixed": "Async prepare used synchronous prior recovery and swallowed missing-payload ENOENT as missing intent, allowing evidence overwrite",
+    "resolution": "Awaited prior recovery, fingerprint/ownership fencing and conflict quarantine; existence probe catch no longer swallows payload failure",
+    "source": {
+      "file": "server/lib/durable-file-recovery.js",
+      "sha256Lf": "ae283d148821f117e43c206f54cb1d9f8deb6d071d298b6f45a5ecbf42fd0c62"
+    },
+    "independentReview": false,
+    "review": "Bounded root source/diff review and RED/GREEN durability coverage; no separate model review claimed for this equivalent async conversion"
+  },
+  "legacyInventory": "bl-008-legacy-request-policy.md"
+}

@@ -1,0 +1,182 @@
+{
+  "advisoryLookupDate": "2026-10-25",
+  "groups": [
+    {
+      "id": "electron",
+      "name": "Electron portable runtime",
+      "versionFile": "../../version",
+      "type": "framework",
+      "license": "MIT",
+      "owner": "Buyer Log release maintainers",
+      "updateMethod": "Replace the complete verified Windows runtime including executable, DLLs, locales and snapshots from one upstream archive; run populated Electron acceptance and final regression before any release. Never replace only a DLL or the version marker.",
+      "source": "https://releases.electronjs.org/release/v44.3.0",
+      "versionEvidence": "Declared source distribution version file; the executable is intentionally not tracked in this source repository. No running or published artifact identity is certified by this SBOM.",
+      "patterns": [
+        "@runtime"
+      ]
+    },
+    {
+      "id": "cesium",
+      "name": "CesiumJS",
+      "version": "1.145.0",
+      "type": "library",
+      "license": "Apache-2.0",
+      "owner": "Buyer Log map maintainers",
+      "updateMethod": "Replace the complete pinned Cesium distribution with Workers, Assets, ThirdParty, Widgets and license inventory; verify offline map and asset loading.",
+      "source": "https://github.com/CesiumGS/cesium/releases/tag/1.145.0",
+      "versionEvidence": "Bundle license header and exported VERSION; tree hashes recorded. Nested third-party/data notices are retained in LICENSE.md.",
+      "patterns": [
+        "public/vendor/cesium/"
+      ]
+    },
+    {
+      "id": "exceljs",
+      "name": "ExcelJS",
+      "version": "4.4.0",
+      "type": "library",
+      "license": "MIT",
+      "owner": "Buyer Log export maintainers",
+      "updateMethod": "Vendor the pinned official browser distribution and license; verify workbook date, style, formula and image exports.",
+      "source": "https://registry.npmjs.org/exceljs/-/exceljs-4.4.0.tgz",
+      "versionEvidence": "Exact official package dist/exceljs.min.js bytes, archive integrity verified.",
+      "patterns": [
+        "public/vendor/exceljs.min.js",
+        "public/vendor/licenses/exceljs-"
+      ]
+    },
+    {
+      "id": "sheetjs-reader",
+      "name": "SheetJS CE isolated browser reader",
+      "version": "0.20.3",
+      "type": "library",
+      "license": "Apache-2.0",
+      "owner": "Buyer Log import maintainers",
+      "updateMethod": "Update the pinned official local tarball and npm lock together; copy its browser reader and license, retain isolation/ZIP guards and pass import financial/date/formula/style fixtures.",
+      "source": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
+      "versionEvidence": "Browser reader copied from the same installed, integrity-pinned official tarball as the Node reader.",
+      "patterns": [
+        "public/vendor/xlsx-reader",
+        "vendor/xlsx-0.20.3.tgz"
+      ]
+    },
+    {
+      "id": "xlsx-style-writer",
+      "name": "xlsx-js-style legacy browser writer",
+      "version": "1.2.0 (SheetJS core 0.18.5)",
+      "type": "library",
+      "license": "Apache-2.0",
+      "owner": "Buyer Log export maintainers",
+      "updateMethod": "Keep write-only; never route untrusted imports to this fork. Replacement requires equivalent style/formula/date/image export fixtures and a pinned licensed source.",
+      "source": "https://registry.npmjs.org/xlsx-js-style/-/xlsx-js-style-1.2.0.tgz",
+      "versionEvidence": "Exact official package dist/xlsx.bundle.js bytes. SheetJS read-path advisories are not a waiver for future read callers; tests enforce worker reader usage.",
+      "patterns": [
+        "public/vendor/xlsx-style.js",
+        "public/vendor/licenses/xlsx-js-style-"
+      ]
+    },
+    {
+      "id": "legacy-polyfills",
+      "name": "Legacy ExcelJS browser compatibility shims",
+      "version": "unversioned",
+      "type": "library",
+      "license": "Apache-2.0",
+      "owner": "Buyer Log export maintainers",
+      "updateMethod": "Review or remove with the supported Electron/browser baseline; retain the SheetJS copyright notice. Do not identify these modified polyfills as a verified upstream release.",
+      "source": "https://github.com/SheetJS/sheetjs",
+      "versionEvidence": "Existing SheetJS-attributed compatibility code; exact upstream artifact equivalence was not established. It contains compatibility shims, not workbook parsing.",
+      "patterns": [
+        "public/vendor/exceljs-shim.js"
+      ]
+    },
+    {
+      "id": "pdfjs",
+      "name": "PDF.js legacy browser and Node distribution",
+      "version": "3.11.174",
+      "type": "library",
+      "license": "Apache-2.0",
+      "owner": "Buyer Log document import maintainers",
+      "updateMethod": "Update library and worker as one compatible pair, retain eval-disabled configuration, process/worker limits and PDF text/raster fixtures; newer ESM major versions require explicit integration changes.",
+      "source": "https://registry.npmjs.org/pdfjs-dist/-/pdfjs-dist-3.11.174.tgz",
+      "versionEvidence": "Exact official legacy/build/pdf.min.js and legacy/build/pdf.worker.min.js bytes. GHSA-wgrm-67xf-hhpq workaround isEvalSupported:false applies at every application entry.",
+      "patterns": [
+        "public/vendor/pdf.min.js",
+        "public/vendor/pdf.worker.min.js",
+        "public/vendor/licenses/pdfjs-dist-"
+      ]
+    },
+    {
+      "id": "jspdf",
+      "name": "jsPDF browser raster PDF writer",
+      "version": "2.5.2",
+      "type": "library",
+      "license": "MIT",
+      "owner": "Buyer Log PDF export maintainers",
+      "updateMethod": "Upgrade the pinned UMD bundle with its license and verify raster PDF output/attachments. Review upstream advisories against actual API use; do not equate npm audit zero with browser vendor safety.",
+      "source": "https://registry.npmjs.org/jspdf/-/jspdf-2.5.2.tgz",
+      "versionEvidence": "Exact official UMD bytes. Current application uses canvas JPEG addImage and output('blob'), not HTML/new-window output, AcroForm, addJS, GIF/BMP or Node file-loading APIs.",
+      "patterns": [
+        "public/vendor/jspdf.umd.min.js",
+        "public/vendor/licenses/jspdf-"
+      ]
+    },
+    {
+      "id": "jszip",
+      "name": "JSZip",
+      "version": "3.10.1",
+      "type": "library",
+      "license": "MIT OR GPL-3.0-or-later",
+      "owner": "Buyer Log workbook/export maintainers",
+      "updateMethod": "Vendor pinned minified distribution and license; verify bounded archive import plus template/formula/style/image preservation. MIT license option used.",
+      "source": "https://registry.npmjs.org/jszip/-/jszip-3.10.1.tgz",
+      "versionEvidence": "Exact official dist/jszip.min.js bytes.",
+      "patterns": [
+        "public/vendor/jszip.min.js",
+        "public/vendor/licenses/jszip-"
+      ]
+    },
+    {
+      "id": "world-atlas",
+      "name": "World atlas / Natural Earth map data",
+      "version": "2.0.2 (50m); unversioned imported 110m",
+      "type": "data",
+      "license": "ISC",
+      "owner": "Buyer Log map maintainers",
+      "updateMethod": "Replace map data only with a pinned documented source; preserve Natural Earth public-domain and world-atlas ISC notices; verify both map resolutions.",
+      "source": "https://github.com/topojson/world-atlas",
+      "versionEvidence": "Existing bundled source notice; 110m has an alternate imported provenance documented in world-atlas-LICENSE.txt. No byte-equivalence claim for that import.",
+      "patterns": [
+        "public/vendor/world-atlas-"
+      ]
+    },
+    {
+      "id": "thinking-orbs",
+      "name": "Thinking-orbs adapted canvas states",
+      "version": "local adaptation",
+      "type": "library",
+      "license": "MIT",
+      "owner": "Buyer Log UI maintainers",
+      "updateMethod": "Maintain the local dependency-free adaptation, attribution and reduced-motion behavior together; verify working/breathing states.",
+      "source": "https://github.com/Jakubantalik/thinking-orbs",
+      "versionEvidence": "Local adaptations with copyright/license notice; not an unchanged upstream package.",
+      "patterns": [
+        "public/vendor/thinking-orbs-LICENSE.txt",
+        "public/thinking-orb-working.js",
+        "public/thinking-orb-breathing.js"
+      ]
+    },
+    {
+      "id": "barlow-fonts",
+      "name": "Barlow and Barlow Condensed WOFF2 subsets",
+      "version": "unversioned bundled subsets",
+      "type": "library",
+      "license": "OFL-1.1",
+      "owner": "Buyer Log UI maintainers",
+      "updateMethod": "Replace font subsets as one documented pinned family; keep both OFL notices, Latin/Latin-ext coverage and density/readability acceptance.",
+      "source": "https://github.com/google/fonts/tree/main/ofl/barlow",
+      "versionEvidence": "Existing named WOFF2 subsets; no upstream version stamp was recorded. Per-file hashes identify the exact distribution; source equivalence is not claimed.",
+      "patterns": [
+        "public/vendor/fonts/"
+      ]
+    }
+  ]
+}

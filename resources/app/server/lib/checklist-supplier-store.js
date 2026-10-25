@@ -3,8 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { SERVER_DATA_ROOT, atomicWriteJson, atomicWriteBuffer } = require('../user-data');
-const { withFileLeaseSync } = require('./shared-file-transaction');
+const { SERVER_DATA_ROOT, atomicWriteJson, atomicWriteBuffer, atomicWriteJsonAsync } = require('../user-data');
+const { withFileLeaseSync, withFileLeaseAsync } = require('./shared-file-transaction');
 const ElementParts = require('../../public/checklist-components-engine');
 
 const FILE = path.join(SERVER_DATA_ROOT, 'checklist-supplier-sync.json');
@@ -177,7 +177,9 @@ function read() {
     try { raw = parse(RECOVERY_FILE); }
     catch (_) { throw Object.assign(new Error('Checklist storage is unreadable; existing data was preserved.'), { code: 'CHECKLIST_STORE_UNREADABLE', statusCode: 503, cause: error }); }
   }
-  {
+  return normalizeStoredState(raw);
+}
+function normalizeStoredState(raw) {
     const store = raw && typeof raw === 'object' ? raw : emptyStore();
     store.schemaVersion = SCHEMA_VERSION;
     store.revision = Number(store.revision) || 0;
@@ -187,9 +189,24 @@ function read() {
     store.tombstones = store.tombstones && typeof store.tombstones === 'object' ? store.tombstones : {};
     store.events = Array.isArray(store.events) ? store.events.slice(-MAX_EVENTS) : [];
     return store;
+}
+async function readAsync() {
+  const fsp = require('fs/promises');
+  let primaryError;
+  const parse = bytes => {
+    const value = JSON.parse(bytes);
+    if (!value || typeof value !== 'object' || Array.isArray(value) || !value.answers || typeof value.answers !== 'object' || Array.isArray(value.answers) || !Array.isArray(value.definitions)) throw new Error('Invalid checklist store structure.');
+    return normalizeStoredState(value);
+  };
+  try { return parse(await fsp.readFile(FILE, 'utf8')); }
+  catch (error) { primaryError = error; }
+  try { return parse(await fsp.readFile(RECOVERY_FILE, 'utf8')); }
+  catch (error) {
+    if (primaryError.code === 'ENOENT' && error.code === 'ENOENT') return emptyStore();
+    throw Object.assign(new Error('Checklist storage is unreadable; existing data was preserved.'), { code: 'CHECKLIST_STORE_UNREADABLE', statusCode: 503, cause: primaryError });
   }
 }
-function write(store) {
+async function write(store) {
   store.schemaVersion = SCHEMA_VERSION;
   store.revision = (Number(store.revision) || 0) + 1;
   store.updatedAt = new Date().toISOString();
@@ -199,9 +216,8 @@ function write(store) {
     throw Object.assign(new Error('Checklist capacity reached; existing records were preserved.'), { code: 'CHECKLIST_CAPACITY', statusCode: 507 });
   }
   if (store.events.length > MAX_EVENTS) store.events = store.events.slice(-MAX_EVENTS);
-  fs.mkdirSync(path.dirname(FILE), { recursive: true });
-  atomicWriteJson(RECOVERY_FILE, store);
-  atomicWriteJson(FILE, store);
+  await atomicWriteJsonAsync(RECOVERY_FILE, store);
+  await atomicWriteJsonAsync(FILE, store);
   return store;
 }
 
@@ -260,8 +276,7 @@ function normalizeDefinition(raw) {
   };
 }
 
-function publicPayload(allowedOrderKeys) {
-  const store = read();
+function publicPayload(allowedOrderKeys, store = read()) {
   return {
     ok: true, schemaVersion: SCHEMA_VERSION, revision: store.revision, updatedAt: store.updatedAt,
     definitions: clone(store.definitions),
@@ -278,15 +293,15 @@ function replaceDefinitions(definitions, actor, options = {}) {
   const seen = new Set();
   const unique = options.restoreSnapshot ? list : list.filter(item => { if (seen.has(item.id)) return false; seen.add(item.id); return true; }).slice(0, MAX_DEFINITIONS);
   const who = actorInfo(actor);
-  return withFileLeaseSync(FILE, () => {
-    const store = read();
+  return withFileLeaseAsync(FILE, async () => {
+    const store = await readAsync();
     options.assertAuthority?.();
     if (options.expectedRevision != null && store.revision !== options.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     if (options.reserveWrites && (!Number.isSafeInteger(store.revision) || store.revision < 0 || store.revision > Number.MAX_SAFE_INTEGER - options.reserveWrites)) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     store.definitions = unique;
     store.events.push({ type: 'definitions', at: new Date().toISOString(), by: who, count: unique.length });
     options.assertAuthority?.();
-    write(store);
+    await write(store);
     return { ok: true, revision: store.revision, updatedAt: store.updatedAt, definitions: clone(store.definitions) };
   });
 }
@@ -307,9 +322,9 @@ function applyEntries(entries, actor, options = {}) {
   const input = Array.isArray(entries) ? entries : [];
   const who = actorInfo(actor);
   const source = text(options.source || 'buyer_log', 80) || 'buyer_log';
-  return withFileLeaseSync(FILE, () => {
+  return withFileLeaseAsync(FILE, async () => {
     options.assertAuthority?.();
-    const store = read();
+    const store = await readAsync();
     if (options.reserveWrites && (!Number.isSafeInteger(store.revision) || store.revision < 0 || store.revision > Number.MAX_SAFE_INTEGER - options.reserveWrites)) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     if (options.expectedRevision != null && store.revision !== options.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     const pendingRosters = new Map();
@@ -335,13 +350,13 @@ function applyEntries(entries, actor, options = {}) {
       if (!Number.isInteger(count) || count < 2 || count > 26 || part[1].charCodeAt(0) - 64 > count) throw Object.assign(new Error('Define the set roster before updating a component.'), {code:'CHECKLIST_COMPONENTS_INVALID',statusCode:400});
     }
     let updated = 0, cleared = 0, skipped = 0, conflicts = 0;
-    const changedKeys = [], rejectedAt = {};
-    for (const raw of input) {
-      if (!raw || typeof raw !== 'object') { skipped += 1; continue; }
+    const changedKeys = [], rejectedAt = {},outcomes=[];
+    for (const [index,raw] of input.entries()) {
+      if (!raw || typeof raw !== 'object') { skipped += 1;outcomes.push({key:'@index:'+index,status:'rejected',code:'INVALID_ENTRY'});continue; }
       const orderKey = text(raw.orderKey, 300);
       const itemId = text(raw.itemId, 200);
       const state = normalizeState(raw.state);
-      if (!orderKey || !itemId || !state) { skipped += 1; continue; }
+      if (!orderKey || !itemId || !state) { skipped += 1;outcomes.push({key:orderKey&&itemId?answerKey(orderKey,itemId):'@index:'+index,status:'rejected',code:'INVALID_ENTRY'});continue; }
       const key = answerKey(orderKey, itemId);
       const at = iso(raw.at);
       const baseAt = text(raw.baseAt, 80);
@@ -354,10 +369,10 @@ function applyEntries(entries, actor, options = {}) {
       // edit is a live Buyer Log action and must not be discarded merely because
       // its client baseline is older; normal "at" ordering below still prevents
       // an actually older live event from overwriting a newer one.
-      if (source === 'supplier_excel' && baseAt && previousAt && previousAt > baseAt) { conflicts += 1; continue; }
+      if (source === 'supplier_excel' && baseAt && previousAt && previousAt > baseAt) { conflicts += 1;outcomes.push({key,status:'rejected',code:'NEWER_ANSWER'});continue; }
       // Apply the same ordering to Pending as every other status: a late beacon
       // or offline retry must never clear a more recent answer.
-      if (previousAt && previousAt > at) { skipped += 1; rejectedAt[key] = previousAt; continue; }
+      if (previousAt && previousAt > at) { skipped += 1; rejectedAt[key] = previousAt;outcomes.push({key,status:'rejected',code:'NEWER_ANSWER'});continue; }
       if (Array.isArray(raw.attachments) && (raw.attachments.length > MAX_ATTACHMENTS_PER_ANSWER
         || raw.attachments.some(item => !cleanAttachmentMeta(item)))) {
         throw Object.assign(new Error('Invalid or oversized checklist attachment list; existing evidence was preserved.'), { code: 'CHECKLIST_EVIDENCE_INVALID', statusCode: 400 });
@@ -394,24 +409,24 @@ function applyEntries(entries, actor, options = {}) {
         delete store.answers[key];
         store.tombstones[key] = { ...common, state: 'open', ...(raw.deleted === true ? { deleted: true } : {}) };
         store.events.push({ type: 'answer-opened', ...common, previousState: previous && previous.state || '' });
-        cleared += 1; changedKeys.push(key);
+        cleared += 1; changedKeys.push(key);outcomes.push({key,status:'accepted'});
         continue;
       }
       store.answers[key] = { ...common, state };
       delete store.tombstones[key];
       store.events.push({ type: 'answer-upserted', ...common, state, previousState: previous && previous.state || '' });
-      updated += 1; changedKeys.push(key);
+      updated += 1; changedKeys.push(key);outcomes.push({key,status:'accepted'});
     }
-    options.assertAuthority?.();write(store);
-    const result = { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys, rejectedAt };
+    options.assertAuthority?.();await write(store);
+    const result = { ok: true, revision: store.revision, updatedAt: store.updatedAt, updated, cleared, skipped, conflicts, changedKeys, rejectedAt,outcomes };
     return options.receipt ? options.receipt(result,entryReceipt(store,changedKeys)) : result;
   });
 }
 
 function restoreEntries(receipt, actor, options = {}) {
-  return withFileLeaseSync(FILE, () => {
+  return withFileLeaseAsync(FILE, async () => {
     options.assertAuthority?.();
-    const store = read();
+    const store = await readAsync();
     if (options.reserveWrites && (!Number.isSafeInteger(store.revision) || store.revision < 0 || store.revision > Number.MAX_SAFE_INTEGER - options.reserveWrites)) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     if (store.revision !== receipt.expectedRevision) throw Object.assign(new Error('Checklist revision changed.'), {code:'CHECKLIST_REVISION_CONFLICT',statusCode:409});
     for(const [key, previous] of Object.entries(receipt.entries)) {
@@ -419,7 +434,7 @@ function restoreEntries(receipt, actor, options = {}) {
       if(previous.tombstone == null) delete store.tombstones[key]; else store.tombstones[key] = previous.tombstone;
     }
     store.events.push({type:'agent-answer-undo',at:new Date().toISOString(),by:actorInfo(actor),keys:Object.keys(receipt.entries)});
-    options.assertAuthority?.();write(store);const result={verified:true,revision:store.revision};
+    options.assertAuthority?.();await write(store);const result={verified:true,revision:store.revision};
     return options.receipt ? options.receipt(result,entryReceipt(store,Object.keys(receipt.entries))) : result;
   });
 }
@@ -427,5 +442,5 @@ module.exports = {
   FILE, ATTACHMENT_ROOT, SCHEMA_VERSION, MAX_ATTACHMENT_BYTES,
   normalizeState, answerKey, normalizeDefinition, publicPayload, replaceDefinitions, restoreDefinitionsSnapshot, applyEntries, restoreEntries,
   addAttachment, addAttachmentBuffer, getAttachmentPath, deleteAttachment, canAccessAttachment, attachmentAccess, cleanAttachmentMeta, attachmentDisplayName,
-  _read: read,
+  _read: read, _readAsync: readAsync,
 };

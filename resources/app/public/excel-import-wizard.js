@@ -137,7 +137,7 @@
     var buffer = await file.arrayBuffer();
     /* GÜVENİLMEZ GİRDİ. Makro, formül, köprü ve dış bağlantı ÇALIŞTIRILMAZ;
        yalnız hücre değerleri, biçimli gösterim ve formül METNİ okunur. */
-    var workbook = XLSX.read(new Uint8Array(buffer), {
+    var workbook = await global.BLFileParser.readWorkbook(buffer, {
       type: 'array', cellFormula: true, cellNF: true, cellText: true,
       cellDates: false, cellStyles: false, cellHTML: false, bookVBA: false, dense: false,
     });

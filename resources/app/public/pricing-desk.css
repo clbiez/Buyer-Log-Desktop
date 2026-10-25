@@ -408,6 +408,13 @@ td.kolPriceStripTd:hover .kolManualBtn,td.kolPriceStripTd:focus-within .kolManua
 .cpdInput input:focus-visible{outline:none;border-color:var(--acc);box-shadow:var(--focus-ring)}
 .cpdInput input:disabled{background:var(--card2);color:var(--muted)}
 .cpdTarget{max-width:160px;margin-top:6px}
+.cpdLineage dl{margin:0;display:grid;gap:6px}
+.cpdLineage dl>div{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;font-size:var(--fs-xs)}
+.cpdLineage dt{color:var(--ink2)}
+.cpdLineage dd{margin:0;color:var(--ink);font-family:var(--mono);overflow-wrap:anywhere;white-space:pre-wrap}
+.cpdLineage details{margin-top:10px}
+.cpdLineage summary{cursor:pointer;font-size:var(--fs-xs);color:var(--ink2);margin-bottom:8px}
+.cpdLineage summary:focus-visible{outline:none;box-shadow:var(--focus-ring)}
 @media (max-width:560px){.cpdHead{grid-template-columns:72px 1fr auto}.cpdImage{width:72px;height:72px}.cpdWaterfall,.cpdInputs{grid-template-columns:1fr}}
 @media (prefers-reduced-motion:reduce){.kolPsTrack>i,.kolHealthChip,.cpdOffer{transition:none}.kolHealthBar,.cpdSection{animation:none}}
 

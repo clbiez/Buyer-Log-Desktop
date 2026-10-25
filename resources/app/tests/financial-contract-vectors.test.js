@@ -1,0 +1,27 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),path=require('node:path'),{spawnSync}=require('node:child_process');
+const fs=require('node:fs'),vm=require('node:vm');
+const vectors=require('./fixtures/financial-contract-vectors.json'),Business=require('../public/business-rules'),Collection=require('../public/collection-pricing-engine'),Groups=require('../public/collection-model-groups'),Costing=require('../public/open-costing-engine'),Fx=require('../public/fx-calculation-engine'),{createPricingCalculation}=require('../server/lib/collection-pricing-service');
+const money=Groups.kolParseMoneyNum,format=value=>String(value);
+for(const vector of vectors.fob)test('shared CP/Collection FOB vector: '+vector.id,()=>{
+ const rule={royalty:vector.royalty,hologramCost:vector.hologram};assert.equal(Business.calculateFinalFobWithRule(vector.supplier,rule),vector.final);
+ const collection=Collection.computeFobFromConfirmed(String(vector.supplier),String(vector.royalty),String(vector.hologram),{kolParseMoneyNum:money,kolFormatMoneyDisplay:format});assert.equal(collection===''?null:Number(collection),vector.final);
+ if(vector.royalty===0&&vector.hologram===0){const result=Costing.calculateRecord({meta:{currency:'USD'},sections:{fabric:[{qty:1,unitPrice:vector.supplier}]}},{});assert.equal(result.finalFob,vector.final,'costing final rounding agrees where the business formula is identical');}
+});
+for(const vector of vectors.localizedMoney)test('localized money vector: '+vector.input,()=>{assert.equal(money(vector.input),vector.value);assert.equal(Costing.parseLocalizedNumber(vector.input),vector.value);});
+test('malformed mixed money separators stay invalid',()=>{for(const input of ['1.23,45','1,23.45','1.234.56','1,234,56','abc'])assert.equal(Number.isNaN(money(input)),true,input);});
+for(const zone of vectors.timeZones)test('date-only source/export roundtrips across '+zone,()=>{
+ const app=path.resolve(__dirname,'..'),source=`const p=require('./server/lib/parse'),e=require('./public/excel-date-utils');const dates=${JSON.stringify(vectors.dateOnly)};const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');console.log(JSON.stringify(dates.map(value=>{const date=p.parseDateOnly(value),serial=e.excelSerial(date);return {value,source:iso(date),serial,restored:iso(p.parseDateOnly(serial)),ordinal:p.dateOrdinal(date)};})));`;
+ const child=spawnSync(process.execPath,['-e',source],{cwd:app,env:{...process.env,TZ:zone},encoding:'utf8',windowsHide:true});assert.equal(child.status,0,child.stderr);for(const result of JSON.parse(child.stdout)){assert.equal(result.source,result.value);assert.equal(result.restored,result.value);assert.equal(result.serial,result.ordinal+25569);}
+});
+test('requested/applied FX, manual rates, missing FX and future fallback remain explicit',()=>{
+ const row={id:'vector',licensor:'DTR',trPrice:400,trFx:'',exFactory:'2024-02-29',pricing:{demo:'4'},confirmedManufacturer:'demo'},fx={base:'USD',months:{'2024-01':{TRY:40},'2024-03':{TRY:50}}};const calc=createPricingCalculation({rows:[row],overrides:{},fx,now:new Date(2024,1,29)}),actual=calc.calculate(row);assert.equal(actual.fxRequestedMonth,'2024-02');assert.equal(actual.fxMonth,'2024-01');assert.equal(actual.fxExact,false);assert.equal(actual.fx,40);assert.equal(actual.fxIsManual,false);const manual=calc.calculate(row,{trFx:25});assert.equal(manual.fx,25);assert.equal(manual.fxIsManual,true);assert.equal(manual.fxMonth,'2024-01','automatic reference month remains evidence, not the applied manual rate');
+ const earliest=Fx.resolveMonth('2023-01',fx);assert.equal(earliest.month,'2024-01');assert.equal(earliest.exact,false);const missing=createPricingCalculation({rows:[row],overrides:{},fx:{months:{}}}).calculate(row);assert.equal(missing.trLanded,null);assert.ok(missing.issues.includes('FX_MISSING'));
+});
+test('invalid negative royalty stops the real Collection calculation rather than producing a royalty-free cost',()=>{
+ const row={id:'invalid',country:'China',season:'W26',licensor:'DEMO',lisans:'LICENSE',trPrice:400,exFactory:'2026-10-01',pricing:{demo:'4'},confirmedManufacturer:'demo'},rule={id:'negative',licensor:'DEMO',license:'LICENSE',seasons:['W26'],royalty:-1,trCommission:0,ydCommission:0,hologramCost:0},result=createPricingCalculation({rows:[row],overrides:{pricingRules:[rule]},fx:{base:'USD',months:{'2026-10':{TRY:40}}}}).calculate(row);assert.equal(result.finalFob,null);assert.equal(result.ydLanded,null);
+ assert.equal(result.ruleInvalid,true);assert.ok(result.issues.includes('ROYALTY_RULE_INVALID'));
+ const source=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8'),native=name=>{const start=source.indexOf('function '+name+'('),end=source.indexOf('\n}',start);assert.ok(start>=0&&end>start);return source.slice(start,end+2);};
+ const ctx={appLang:'en',kolGroupSummaryEffectiveLandedRow:r=>r,kolLandedCalc:()=>result,kolLandedCopyAttrs:()=>'',escapeHtml:String,kolMoney2:String};vm.createContext(ctx);for(const name of ['kolPricingRuleInvalidText','kolPlainLandedCellHtml','kolLandedSummaryCellHtml'])vm.runInContext(native(name),ctx);
+ assert.match(ctx.kolPlainLandedCellHtml('ydLanded',row,''),/effective royalty/);assert.match(ctx.kolLandedSummaryCellHtml(row,''),/⚠/);ctx.appLang='tr';assert.match(ctx.kolPlainLandedCellHtml('trLanded',row,''),/efektif royalty/);
+});

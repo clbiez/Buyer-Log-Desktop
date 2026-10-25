@@ -50,7 +50,7 @@ test('v4.76 Collection has Special Code and Line as persistent editable columns'
     appLang: 'en', norm: value => String(value == null ? '' : value).trim(), kolNextId: 1,
     toISODate: () => '', kolParseMoneyNum: Number, normalizeTransitDelType: value => value,
     kolStatusDefaultName: () => 'Pending',
-    kolWorkspaceCanEdit: true, kolRows: [], kolWorkspaceOwnerId: 'synthetic',
+    kolWorkspaceCanEdit: true, kolBulkPreparing: false, kolRows: [], kolWorkspaceOwnerId: 'synthetic',
     kolNormalizeModelGroups: rows => require('../public/collection-model-groups').normalizeRows(rows).rows,
     BLStorage: { setItem: (key, value) => saved.set(key, value) },
     localStorage: { setItem: (key, value) => saved.set(key, value) },

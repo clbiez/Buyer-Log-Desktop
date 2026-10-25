@@ -180,7 +180,9 @@ test('toplu yazma DB dosyasını kayıt başına yeniden yazmaz', async t => {
   fsp.open = (...args) => {
     const target = String(args[0]);
     if (target.endsWith('.wal')) walOpens += 1;
-    else if (target.endsWith('.tmp')) snapshotTmpOpens += 1;
+    // Lease metadata also uses .tmp files. Only a temporary image of this DB
+    // (including its backup) is a snapshot rewrite, regardless of lease I/O.
+    else if (target.startsWith(db.file + '.') && target.endsWith('.tmp')) snapshotTmpOpens += 1;
     return open(...args);
   };
   try { await store.mirror('plm-style-link', many); } finally { fsp.open = open; }

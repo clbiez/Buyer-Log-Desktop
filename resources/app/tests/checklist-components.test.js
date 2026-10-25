@@ -1,4 +1,5 @@
 'use strict';
+const asyncChildScript=require('./helpers/async-child-script');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const Components = require('../public/checklist-components-engine');
@@ -90,14 +91,14 @@ test('server persists part roster, pending evidence, audit events and independen
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bl-set-parts-'));
   try{
     const script=`const store=require(${JSON.stringify(path.join(ROOT,'server/lib/checklist-supplier-store'))});
-      const actor={id:'buyer'};store.applyEntries([
+      const actor={id:'buyer'};await store.applyEntries([
         {orderKey:'SET-PO',itemId:'@set-components',state:'open',componentCount:3},
         {orderKey:'SET-PO',itemId:'tests~part~A',state:'approved',note:'A'},
         {orderKey:'SET-PO',itemId:'tests~part~B',state:'rejected',note:'B'}],actor);
-      store.applyEntries([{orderKey:'SET-PO',itemId:'tests~part~A',state:'open'}],actor);
-      let code;try{store.applyEntries([{orderKey:'SET-PO',itemId:'@set-components',state:'open',componentCount:2}],actor);}catch(e){code=e.code;}
+      await store.applyEntries([{orderKey:'SET-PO',itemId:'tests~part~A',state:'open'}],actor);
+      let code;try{await store.applyEntries([{orderKey:'SET-PO',itemId:'@set-components',state:'open',componentCount:2}],actor);}catch(e){code=e.code;}
       process.stdout.write(JSON.stringify({payload:store.publicPayload(),events:store._read().events,code}));`;
-    const result=JSON.parse(require('node:child_process').execFileSync(process.execPath,['-e',script],{encoding:'utf8',env:{...process.env,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')}}));
+    const result=JSON.parse(require('node:child_process').execFileSync(process.execPath,['-e',asyncChildScript(script)],{encoding:'utf8',env:{...process.env,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')}}));
     assert.equal(result.payload.tombstones['SET-PO::@set-components'].componentCount,3);
     assert.equal(result.payload.tombstones['SET-PO::tests~part~A'].note,'A');
     assert.equal(result.payload.answers['SET-PO::tests~part~B'].state,'rejected');
@@ -206,12 +207,12 @@ test('a skipped stale roster cannot authorize a hidden extra component',()=>{
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bl-set-stale-roster-'));
   try{
     const script=`const store=require(${JSON.stringify(path.join(ROOT,'server/lib/checklist-supplier-store'))}),actor={id:'buyer'};
-      store.applyEntries([{orderKey:'P',itemId:'@set-components',state:'open',componentCount:2,at:'2026-10-20T12:00:00Z'}],actor);
-      let code;try{store.applyEntries([
+      await store.applyEntries([{orderKey:'P',itemId:'@set-components',state:'open',componentCount:2,at:'2026-10-20T12:00:00Z'}],actor);
+      let code;try{await store.applyEntries([
         {orderKey:'P',itemId:'@set-components',state:'open',componentCount:3,at:'2026-10-20T11:00:00Z'},
         {orderKey:'P',itemId:'tests~part~C',state:'approved',at:'2026-10-20T13:00:00Z'}],actor);}catch(e){code=e.code;}
       process.stdout.write(JSON.stringify({code,payload:store.publicPayload()}));`;
-    const result=JSON.parse(require('node:child_process').execFileSync(process.execPath,['-e',script],{encoding:'utf8',env:{...process.env,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')}}));
+    const result=JSON.parse(require('node:child_process').execFileSync(process.execPath,['-e',asyncChildScript(script)],{encoding:'utf8',env:{...process.env,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')}}));
     assert.equal(result.code,'CHECKLIST_COMPONENTS_INVALID');
     assert.equal(result.payload.answers['P::tests~part~C'],undefined);
     assert.equal(result.payload.tombstones['P::@set-components'].componentCount,2);

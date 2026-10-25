@@ -1,4 +1,5 @@
 'use strict';
+const asyncChildScript=require('./helpers/async-child-script');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
@@ -116,16 +117,16 @@ test('migrated option approval is not overridden by its removed PO record after 
 });
 function serverRun(source) {
   const dir=fs.mkdtempSync(path.join(os.tmpdir(),'bl-checklist-durable-'));
-  try { return JSON.parse(execFileSync(process.execPath,['-e',`const fs=require('fs');const store=require(${JSON.stringify(path.join(ROOT,'server/lib/checklist-supplier-store'))});const actor={id:'buyer'};${source}`],{encoding:'utf8',env:{...process.env,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')}})); }
+  try { return JSON.parse(execFileSync(process.execPath,['-e',asyncChildScript(`const fs=require('fs');const store=require(${JSON.stringify(path.join(ROOT,'server/lib/checklist-supplier-store'))});const actor={id:'buyer'};${source}`)],{encoding:'utf8',env:{...process.env,BUYER_LOG_SERVER_DATA_ROOT:dir,BUYER_LOG_LOCAL_DATA_ROOT:path.join(dir,'local')}})); }
   finally { fs.rmSync(dir,{recursive:true,force:true}); }
 }
 test('late Pending never clears a newer decision and Pending evidence carries into next status',()=>{
   const result=serverRun(`
-    store.applyEntries([{orderKey:'P',itemId:'T',state:'rejected',at:'2026-10-04T12:00:00Z',note:'line 1\\nline 2',reportNumber:'R',attachments:[{id:'a'.repeat(32)}]}],actor);
-    const late=store.applyEntries([{orderKey:'P',itemId:'T',state:'open',at:'2026-10-04T11:00:00Z'}],actor);
+    await store.applyEntries([{orderKey:'P',itemId:'T',state:'rejected',at:'2026-10-04T12:00:00Z',note:'line 1\\nline 2',reportNumber:'R',attachments:[{id:'a'.repeat(32)}]}],actor);
+    const late=await store.applyEntries([{orderKey:'P',itemId:'T',state:'open',at:'2026-10-04T11:00:00Z'}],actor);
     const retained=store.publicPayload().answers['P::T'];
-    store.applyEntries([{orderKey:'P',itemId:'T',state:'open',at:'2026-10-04T13:00:00Z'}],actor);
-    store.applyEntries([{orderKey:'P',itemId:'T',state:'approved',at:'2026-10-04T14:00:00Z'}],actor);
+    await store.applyEntries([{orderKey:'P',itemId:'T',state:'open',at:'2026-10-04T13:00:00Z'}],actor);
+    await store.applyEntries([{orderKey:'P',itemId:'T',state:'approved',at:'2026-10-04T14:00:00Z'}],actor);
     process.stdout.write(JSON.stringify({late,retained,final:store.publicPayload().answers['P::T']}));
   `);
   assert.equal(result.retained.state,'rejected');
@@ -135,15 +136,15 @@ test('late Pending never clears a newer decision and Pending evidence carries in
   assert.equal(result.final.attachments.length,1);
 });
 test('corrupt existing store is never replaced with an empty successful save',()=>{
-  const result=serverRun(`fs.mkdirSync(require('path').dirname(store.FILE),{recursive:true});fs.writeFileSync(store.FILE,'BROKEN');let error;try{store.applyEntries([{orderKey:'P',itemId:'T',state:'approved'}],actor);}catch(e){error=e.code;}process.stdout.write(JSON.stringify({error,bytes:fs.readFileSync(store.FILE,'utf8')}));`);
+  const result=serverRun(`fs.mkdirSync(require('path').dirname(store.FILE),{recursive:true});fs.writeFileSync(store.FILE,'BROKEN');let error;try{await store.applyEntries([{orderKey:'P',itemId:'T',state:'approved'}],actor);}catch(e){error=e.code;}process.stdout.write(JSON.stringify({error,bytes:fs.readFileSync(store.FILE,'utf8')}));`);
   assert.equal(result.error,'CHECKLIST_STORE_UNREADABLE');assert.equal(result.bytes,'BROKEN');
 });
 test('last-good recovery restores statuses and all evidence after file corruption',()=>{
-  const result=serverRun(`store.applyEntries([{orderKey:'P',itemId:'T',state:'rejected',note:'keep',reportNumber:'R'}],actor);fs.writeFileSync(store.FILE,'BROKEN');process.stdout.write(JSON.stringify(store.publicPayload().answers['P::T']));`);
+  const result=serverRun(`await store.applyEntries([{orderKey:'P',itemId:'T',state:'rejected',note:'keep',reportNumber:'R'}],actor);fs.writeFileSync(store.FILE,'BROKEN');process.stdout.write(JSON.stringify(store.publicPayload().answers['P::T']));`);
   assert.equal(result.state,'rejected');assert.equal(result.note,'keep');assert.equal(result.reportNumber,'R');
 });
 test('retry of an acknowledged Pending whose response was lost remains successful',()=>{
-  const result=serverRun(`const entry={orderKey:'P',itemId:'T',state:'open',at:'2026-10-04T12:00:00Z',note:'keep'};store.applyEntries([entry],actor);const retry=store.applyEntries([entry],actor);process.stdout.write(JSON.stringify({retry,pending:store.publicPayload().tombstones['P::T']}));`);
+  const result=serverRun(`const entry={orderKey:'P',itemId:'T',state:'open',at:'2026-10-04T12:00:00Z',note:'keep'};await store.applyEntries([entry],actor);const retry=await store.applyEntries([entry],actor);process.stdout.write(JSON.stringify({retry,pending:store.publicPayload().tombstones['P::T']}));`);
   assert.equal(result.retry.skipped,0);assert.equal(result.retry.cleared,1);assert.equal(result.pending.note,'keep');
 });
 test('one conflict does not starve subsequent batches and a new choice handles server clock skew', async()=>{
@@ -173,13 +174,13 @@ test('a corrupt browser answer store is preserved until authoritative recovery',
   assert.equal(JSON.parse(saved.get('lcw.cp.checklist.v1'))[key].state,'rejected');
 });
 test('server refuses excess or malformed attachments without truncating existing evidence',()=>{
-  const result=serverRun(`store.applyEntries([{orderKey:'P',itemId:'T',state:'rejected',attachments:[{id:'a'.repeat(32)}]}],actor);const codes=[];for(const attachments of [Array.from({length:41},()=>({id:'b'.repeat(32)})),[{id:'bad'}]]){try{store.applyEntries([{orderKey:'P',itemId:'T',state:'approved',attachments}],actor);}catch(e){codes.push(e.code);}}process.stdout.write(JSON.stringify({codes,answer:store.publicPayload().answers['P::T']}));`);
+  const result=serverRun(`await store.applyEntries([{orderKey:'P',itemId:'T',state:'rejected',attachments:[{id:'a'.repeat(32)}]}],actor);const codes=[];for(const attachments of [Array.from({length:41},()=>({id:'b'.repeat(32)})),[{id:'bad'}]]){try{await store.applyEntries([{orderKey:'P',itemId:'T',state:'approved',attachments}],actor);}catch(e){codes.push(e.code);}}process.stdout.write(JSON.stringify({codes,answer:store.publicPayload().answers['P::T']}));`);
   assert.deepEqual(result.codes,['CHECKLIST_EVIDENCE_INVALID','CHECKLIST_EVIDENCE_INVALID']);
   assert.equal(result.answer.state,'rejected');assert.equal(result.answer.attachments[0].id,'a'.repeat(32));
 });
 
 test('supplier Excel updates preserve server PDFs and multiline notes without a local attachment mirror',()=>{
-  const result=serverRun(`store.applyEntries([{orderKey:'P',itemId:'T',state:'rejected',at:'2026-10-04T10:00:00Z',attachments:[{id:'a'.repeat(32)}]}],actor);store.applyEntries([{orderKey:'P',itemId:'T',state:'approved',at:'2026-10-04T12:00:00Z',baseAt:'2026-10-04T11:00:00Z',note:'line 1\\nline 2'}],actor,{source:'supplier_excel'});process.stdout.write(JSON.stringify(store.publicPayload().answers['P::T']));`);
+  const result=serverRun(`await store.applyEntries([{orderKey:'P',itemId:'T',state:'rejected',at:'2026-10-04T10:00:00Z',attachments:[{id:'a'.repeat(32)}]}],actor);await store.applyEntries([{orderKey:'P',itemId:'T',state:'approved',at:'2026-10-04T12:00:00Z',baseAt:'2026-10-04T11:00:00Z',note:'line 1\\nline 2'}],actor,{source:'supplier_excel'});process.stdout.write(JSON.stringify(store.publicPayload().answers['P::T']));`);
   assert.equal(result.attachments.length,1);
   assert.equal(result.note,'line 1\nline 2');
   const source=fs.readFileSync(path.join(ROOT,'public/checklist-supplier-sync.js'),'utf8');
@@ -269,7 +270,7 @@ test('Collection Checklist selections are journalled immediately and restored af
   const ctx={Date,JSON,Set,localStorage:{setItem:(k,v)=>saved.set(k,v),getItem:k=>saved.get(k)||null},
     BLStorage:{setItem:(k,v)=>saved.set(k,v)},kolRows:[{id:1}],kolCustomCols:[{k:'check',checklist:true}],
     KOL_CHECKLIST_STATUSES:['open','approved','rejected','notRequired'],KOL_STORAGE_KEY:'rows',
-    kolWorkspaceCanEdit:true,kolWorkspaceOwnerId:'buyer',kolWorkspaceRevision:1,kolNextId:2,
+    kolWorkspaceCanEdit:true,kolBulkPreparing:false,kolWorkspaceOwnerId:'buyer',kolWorkspaceRevision:1,kolNextId:2,
     kolManufacturers:[],kolSelected:new Set(),kolWorkspaceSaving:false,kolHiddenCols:new Set(),appLang:'en',
     kolRequireWorkspaceEdit:()=>true,kolChecklistColumns:()=>ctx.kolCustomCols,
     kolCellLinkedToModel:()=>false,kolEffectiveValue:(r,k)=>r[k],kolPushUndo:()=>{},
@@ -277,7 +278,7 @@ test('Collection Checklist selections are journalled immediately and restored af
     kolManufacturersForPersistence:()=>[],kolStatusEntries:()=>[],kolQueueWorkspaceSave:()=>{},
     kolSaveWorkspaceNow:async()=>{started++;return {ok:false,pending:true};},renderKol:()=>{},scheduleOverviewCollectionSummaryRender:()=>{},
     migrateKolRow:r=>({...r}),kolNormalizeStatusCatalog:()=>[],kolNormalizeCustomCols:c=>c,refreshSubmfrList:()=>{},loadKolColState:()=>{},
-    kolHasDirtyWorkspace:()=>true,showToast:()=>{},
+    kolHasDirtyWorkspace:()=>true,kolSetSaveFeedback:()=>{},showToast:()=>{},
   };
   vm.createContext(ctx);
   for(const name of ['kolChecklistStatus','kolSetChecklistStatus','kolWorkspaceLocalKey','kolWorkspacePendingKey','kolPersistPendingWorkspace','kolReadPendingWorkspace','kolClearPendingWorkspace','kolRestorePendingWorkspace','saveKolRows'])vm.runInContext(fn(name),ctx);

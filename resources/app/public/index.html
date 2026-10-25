@@ -208,6 +208,8 @@
   },120000);
 })();
 </script>
+<script src="file-parser-policy.js?v=__BL_ASSET_VERSION__"></script>
+<script src="file-parser.js?v=__BL_ASSET_VERSION__"></script>
 <script src="perf-runtime.js?v=__BL_ASSET_VERSION__&rev=20261023atlas9mb1"></script>
 <script src="release-notes.js?v=__BL_ASSET_VERSION__&rev=4"></script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_LOCAL_CONTEXT_START');</script>
@@ -216,6 +218,7 @@
 <script src="i18n-dictionary.js?v=__BL_ASSET_VERSION__"></script>
 <script src="i18n-runtime.js?v=__BL_ASSET_VERSION__"></script>
 <script src="preset-store.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="view-context.js?v=__BL_ASSET_VERSION__"></script>
 <script>(function(){try{var t=BLStorage.getItem('lcw_theme');if(!t)t=(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light';document.documentElement.dataset.theme=(t==='dark'||t==='grey')?t:'light';var r=BLStorage.getItem('lcw_rail');document.documentElement.dataset.rail=(r==='min')?'min':'max';var f=Number(BLStorage.getItem('lcw_font_step')||0);f=f>=0&&f<=3?Math.trunc(f):0;document.documentElement.dataset.fontStep=String(f);document.documentElement.dataset.uiScale=['standard','large','xl','compact'][f];}catch(e){document.documentElement.dataset.fontStep='0';document.documentElement.dataset.uiScale='standard';}})();</script>
 <script>window.BLPerf?.mark?.('PRE_FRONTEND_STEP_LOCAL_CONTEXT_READY');</script>
 <script src="business-rules.js?v=__BL_ASSET_VERSION__"></script>
@@ -324,6 +327,9 @@
 <link rel="stylesheet" href="excel-import.css?v=__BL_ASSET_VERSION__&rev=1">
 <link rel="stylesheet" href="user-management.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="experience.css?v=__BL_ASSET_VERSION__&rev=4">
+<link rel="stylesheet" href="table-density.css?v=__BL_ASSET_VERSION__">
+<link rel="stylesheet" href="exception-inbox.css?v=__BL_ASSET_VERSION__">
+<link rel="stylesheet" href="bulk-operations.css?v=__BL_ASSET_VERSION__">
 <link rel="stylesheet" href="overview-home.css?v=__BL_ASSET_VERSION__&rev=20261021">
 <link rel="stylesheet" href="overview-global-flow.css?v=__BL_ASSET_VERSION__&rev=5">
 <link rel="stylesheet" href="detail-drawer.css?v=__BL_ASSET_VERSION__&rev=6">
@@ -641,6 +647,7 @@
     <div id="ovDashboardGrid" class="ovDashboardGrid ovHome" data-page="0">
     <section id="ovPulse" data-overview-widget="pulse" class="ovPremiumHost" aria-label="Operasyon Nabzı" data-i18n-aria-label-tr="Operasyon Nabzı" data-i18n-aria-label-en="Operation Pulse"></section>
     <section id="ovDeadline" data-overview-widget="deadline" class="ovPremiumHost" aria-label="Termin Ufku" data-i18n-aria-label-tr="Termin Ufku" data-i18n-aria-label-en="Delivery Horizon"></section>
+    <section id="ovExceptionInbox" data-overview-widget="exceptionInbox" class="ovInbox" aria-label="İstisna kutusu" data-i18n-aria-label-tr="İstisna kutusu" data-i18n-aria-label-en="Exception inbox"></section>
     <section id="ovCollectionPreview" data-overview-widget="collectionPreview" class="ovPremiumHost" aria-label="Koleksiyon Vitrini" data-i18n-aria-label-tr="Koleksiyon Vitrini" data-i18n-aria-label-en="Collection Showcase"></section>
     <section id="ovLaunchpad" data-overview-widget="launchpad" class="ovLaunchpad" aria-label="Dünya Saatleri" data-i18n-aria-label-tr="Dünya Saatleri" data-i18n-aria-label-en="World Clocks"></section>
     <section id="ovChecklistRules" data-overview-widget="checklistRules" class="ovHomeHost" aria-label="Kontrol Listesi ve Kurallar" data-i18n-aria-label-tr="Kontrol Listesi ve Kurallar" data-i18n-aria-label-en="Checklist &amp; Rules">
@@ -864,6 +871,7 @@
         <div class="workspaceContextBar" aria-label="CP workspace context" data-i18n-aria-label-tr="CP çalışma alanı bağlamı" data-i18n-aria-label-en="CP workspace context">
           <span class="workspaceContextMeta" id="cpWorkspaceMeta">—</span>
           <div class="tableViewActions" id="cpTableViewActions" role="group" aria-label="Table view">
+<button type="button" class="tableViewPreset" data-bulk-receipts aria-haspopup="dialog"><span data-i18n-tr="İşlem kayıtları" data-i18n-en="Receipts">İşlem kayıtları</span></button>
             <span class="tableViewLabel" data-i18n-tr="GÖRÜNÜM" data-i18n-en="VIEW">GÖRÜNÜM</span>
             <button type="button" class="tableViewPreset" data-table-view-preset="focus" data-table-key="cp" aria-pressed="false"><span data-i18n-tr="Odak" data-i18n-en="Focus">Odak</span></button>
             <button type="button" class="tableViewPreset" data-table-view-preset="extended" data-table-key="cp" aria-pressed="false"><span data-i18n-tr="Genişletilmiş" data-i18n-en="Extended">Genişletilmiş</span></button>
@@ -991,6 +999,7 @@
       <div class="workspaceContextBar" aria-label="Collection workspace context">
         <span class="workspaceContextMeta" id="kolWorkspaceMeta">—</span>
         <div class="tableViewActions" id="kolTableViewActions" role="group" aria-label="Table view">
+<button type="button" class="tableViewPreset" data-bulk-receipts aria-haspopup="dialog"><span data-i18n-tr="İşlem kayıtları" data-i18n-en="Receipts">İşlem kayıtları</span></button>
           <span class="tableViewLabel" data-i18n-tr="GÖRÜNÜM" data-i18n-en="VIEW">GÖRÜNÜM</span>
           <button type="button" class="tableViewPreset" data-table-view-preset="focus" data-table-key="koleksiyon" aria-pressed="false"><span data-i18n-tr="Odak" data-i18n-en="Focus">Odak</span></button>
           <button type="button" class="tableViewPreset" data-table-view-preset="extended" data-table-key="koleksiyon" aria-pressed="false"><span data-i18n-tr="Genişletilmiş" data-i18n-en="Extended">Genişletilmiş</span></button>
@@ -1005,6 +1014,7 @@
           <button type="button" class="tableViewPreset" data-kol-price-view="cost" aria-pressed="false" title="Teklif şeridi + FOB, Royalty, Hologram ve landed maliyet sütunları" data-i18n-title-tr="Teklif şeridi + FOB, Royalty, Hologram ve landed maliyet sütunları" data-i18n-title-en="Quote strip + FOB, Royalty, Hologram and landed cost columns"><span data-i18n-tr="Maliyet" data-i18n-en="Cost">Maliyet</span></button>
         </div>
       </div>
+      <div id="kolSaveState" class="uiPersistenceRegion" hidden></div>
       <div class="activeFilterBar" id="kolActiveFilters" role="region" aria-label="Active table filters" data-i18n-aria-label-tr="Aktif tablo filtreleri" data-i18n-aria-label-en="Active table filters">
         <span class="activeFilterLabel" data-i18n-tr="TABLO FİLTRELERİ" data-i18n-en="TABLE FILTERS">TABLO FİLTRELERİ</span>
         <div class="activeFilterTokens" id="kolActiveFilterTokens" aria-live="polite"></div>
@@ -1496,6 +1506,11 @@
 <script src="column-display-names.js?v=__BL_ASSET_VERSION__&rev=1"></script>
 <script src="backlog-date-range.js?v=__BL_ASSET_VERSION__"></script>
 <script src="theme-transition.js?v=__BL_ASSET_VERSION__&rev=1"></script>
+<script src="order-line-peer-index.js?v=__BL_ASSET_VERSION__"></script>
+<script src="table-density.js?v=__BL_ASSET_VERSION__"></script>
+<script src="contextual-commands.js?v=__BL_ASSET_VERSION__"></script>
+<script src="price-lineage.js?v=__BL_ASSET_VERSION__"></script>
+<script src="bulk-operations.js?v=__BL_ASSET_VERSION__"></script>
 <script src="app-main.js?v=__BL_ASSET_VERSION__&rev=20261024-notebook-rich-editor"></script>
 <script src="collection-artwork-detail.js?v=__BL_ASSET_VERSION__&rev=2"></script>
 <script src="checklist-answer-merge-engine.js?v=__BL_ASSET_VERSION__"></script>
@@ -1621,9 +1636,8 @@
     window.BLTableToolbarActionCleanup?.begin?.(btn);
     try{
       if(window.BLPerf?.ensureLibrary) await window.BLPerf.ensureLibrary('xlsx');
-      if(document.body.dataset.activeTab==='cp') await exportCpTableWithLightTheme();
-      else await exportActiveTableStyled();
-      window.BLTableToolbarActionCleanup?.finish?.(btn,true);
+      const result=document.body.dataset.activeTab==='cp'?await exportCpTableWithLightTheme():await exportActiveTableStyled();
+      window.BLTableToolbarActionCleanup?.finish?.(btn,result===false?null:true);
     }catch(e){
       window.BLTableToolbarActionCleanup?.finish?.(btn,false);
       showToast('Dışa aktarım hatası: '+e.message);
@@ -1689,7 +1703,9 @@
     const wrap=document.createElement('div');wrap.className='vfMenuWrap';wrap.dataset.vfKind=kind;wrap.id=kind==='view'?'vfViewMenuWrap':'vfFilterMenuWrap';
     const trigger=document.createElement('button');trigger.type='button';trigger.className='vfMenuTrigger';trigger.dataset.vfKind=kind;trigger.textContent=label+' ▾';
     const menu=document.createElement('div');menu.className='vfMenu';const actions=document.createElement('div');actions.className='vfActions';
-    menu.appendChild(select);ids.forEach(id=>{const el=document.getElementById(id);if(el)actions.appendChild(el)});menu.appendChild(actions);wrap.append(trigger,menu);
+    menu.appendChild(select);
+    if(kind==='view'){const help=document.createElement('p');help.className='vfViewHelp';help.dataset.i18nTr='Görünüm; sütunları, satır sıklığını, filtreleri ve sıralamayı birlikte saklar. Son çalışma ekranı bu cihazda kişisel olarak hatırlanır.';help.dataset.i18nEn='A view saves columns, row density, filters and sorting together. Your last workspace is remembered personally on this device.';help.textContent=help.dataset.i18nTr;menu.appendChild(help);}
+    ids.forEach(id=>{const el=document.getElementById(id);if(el)actions.appendChild(el)});menu.appendChild(actions);wrap.append(trigger,menu);
     const rowBreak=bar.querySelector('.vfBarRowBreak[data-dimbreak="1"]');
     if(rowBreak)bar.insertBefore(wrap,rowBreak);else bar.appendChild(wrap);
     trigger.setAttribute('aria-haspopup','menu');trigger.setAttribute('aria-expanded','false');
@@ -1849,16 +1865,9 @@
   }
   function choose(value){
     if(!trigger) return;
-    const id=Number(trigger.dataset.id), key=trigger.dataset.key;
-    const row=state.cp.rows.find(r=>r._id===id);
-    if(!row){closeMenu();return;}
-    const prev=row[key], next=value;
-    row[key]=next;
-    syncCpProductionLogisticSegment(row,next);
-    applyFormulas(row); markDirty(id);
-    pushUndo({id,fields:[{key,prev,next}]});
+    const editor={dataset:{...trigger.dataset,kind:'deltype'},value};
     closeMenu();
-    refreshRowEverywhere(id);
+    commitCpEditor(editor);
   }
   function openMenu(btn){
     if(trigger===btn){closeMenu();return;}

@@ -35,3 +35,23 @@ test('production checklist resolver uses real IAM authority, handles mixed owner
   const moderator = userAccess.profileById('moderator');
   assert.equal(context.checklistAuthorizedOrdersNow(moderator, { write: true }).size, 6);
 });
+test('checklist read computes the invocation-wide management permission once, retaining per-code ownership checks',()=>{
+ const hasPermission=userAccess.hasPermission,originalRows=rows.slice();let calls=0;
+ userAccess.hasPermission=(...args)=>{calls++;return hasPermission(...args);};
+ try{
+  for(let i=0;i<1000;i++)rows.push({...originalRows[0],'Model Name':'SCALE-'+i});
+  const result=context.checklistAuthorizedOrdersNow(userAccess.profileById('a'));
+  assert.equal(calls,1,'permission graph must not be rebuilt per row');
+  assert.ok(result.size>=1000);assert.equal(result.has(require('../public/cp-readiness-engine').analyzeOrder(originalRows[1]).orderKey),false,'foreign official owner remains denied');
+ }finally{userAccess.hasPermission=hasPermission;rows.splice(0,rows.length,...originalRows);}
+});
+test('on-demand projection edit hints compute permission once per projection and keep foreign/mixed ownership closed',()=>{
+ vm.runInContext(fn('pageProjectionEditResolver'),context);
+ const hasPermission=userAccess.hasPermission;let calls=0;
+ userAccess.hasPermission=(...args)=>{calls++;return hasPermission(...args);};
+ try{
+  const profile=userAccess.profileById('moderator'),canEdit=context.pageProjectionEditResolver(profile);for(let i=0;i<1000;i++)assert.equal(canEdit(rows[i%3]),true);assert.equal(calls,1);
+  const buyer=context.pageProjectionEditResolver(userAccess.profileById('a'));assert.equal(buyer(rows[0]),true);assert.equal(buyer(rows[1]),false);assert.equal(buyer(rows[2]),false);assert.equal(context.pageProjectionEditResolver(null)(rows[0]),false);
+  const denied=context.pageProjectionEditResolver(userAccess.profileById('a'));assert.equal(denied(rows[1]),false,'new invocation must not reuse the previous moderator result');
+ }finally{userAccess.hasPermission=hasPermission;}
+});

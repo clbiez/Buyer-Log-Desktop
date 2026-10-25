@@ -1,0 +1,74 @@
+{
+  "package": "BL022",
+  "date": "2026-10-25",
+  "PR": 714,
+  "risk": "P2 metadata/native-action adapter; server authority/mutation contracts unchanged",
+  "focused": {
+    "files": 16,
+    "tests": 85,
+    "pass": 85,
+    "fail": 0,
+    "skip": 0,
+    "log": "work/bl022-final-target.log",
+    "sha256Lf": "524fea492062bc184424075780467d1bace6935be12cc5522f7a49b3c038502f"
+  },
+  "native": {
+    "scope": "Actual production server and Edge with synthetic authorized orders/models. Live client profile changes exercise palette guards; server authorization is covered by the existing BL016 matrix.",
+    "phases": [
+      {
+        "name": "actual-context-discovery",
+        "extraScriptLoads": 0,
+        "missingRuleExplained": true
+      },
+      {
+        "name": "actual-keyboard-linked-order",
+        "canonicalPeers": 1
+      },
+      {
+        "name": "actual-ambiguous-links",
+        "allMatchesShown": 2,
+        "noFirstMatchSelection": true
+      },
+      {
+        "name": "actual-empty-selection",
+        "disabledCommands": 5
+      },
+      {
+        "name": "actual-live-client-permission-change",
+        "result": false,
+        "opened": false
+      },
+      {
+        "name": "actual-native-costing-action",
+        "status": 200,
+        "persistedRecords": 1
+      },
+      {
+        "name": "actual-recent-destination",
+        "tab": "orders",
+        "stored": [
+          "orders"
+        ]
+      },
+      {
+        "name": "actual-ctrl-k-preserved"
+      }
+    ],
+    "errors": [],
+    "ok": true
+  },
+  "visualsInspected": true,
+  "full": false,
+  "merge": false,
+  "compatibility": {
+    "shortcut": "Ctrl+K CP search unchanged; Ctrl+Shift+K palette",
+    "links": "Existing canonical order peer index and PLM/model Collection matching; all ambiguous visible workspace matches shown",
+    "preferences": "Existing per-user buyerlog.workspace prefix; five recent module IDs, filtered by current access",
+    "loading": "No feature preparation while listing; prepare and recheck selection/current permission only on invocation"
+  },
+  "limits": [
+    "Native permission-change scenario updates the live client profile; it is not a new real-server revocation certification. Existing BL016 HTTP authority coverage remains applicable.",
+    "Linked Collection results are from the currently authorized loaded Collection scope, not an implicit scan of every workspace."
+  ],
+  "rollback": "Revert BL022 commit. Recent destination preference is optional and no business schema migration is introduced."
+}

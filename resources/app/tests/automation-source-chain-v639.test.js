@@ -177,6 +177,6 @@ test('v6.39 zincirlenen kaynak da yetki kontrolünden geçiyor', () => {
   // fonksiyonun içindeki agentPlatformDataset çağrısında duruyor — yani hâlâ
   // TEK yolda ve join için atlanamıyor.
   const block = bodyOf(SERVER, 'automationDataset');
-  assert.match(block, /await automationSourceRows\(ownerId, profile, joinSource, recipe\)/);
+  assert.match(block, /await automationSourceRows\(ownerId, profile, joinSource, recipe, assertAuthority\)/);
   assert.match(bodyOf(SERVER, 'automationSourceRows'), /await agentPlatformDataset\(ownerId, profile, source\)/);
 });

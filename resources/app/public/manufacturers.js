@@ -151,7 +151,7 @@
   function shellHtml() {
     return `<div class="mfp">
       <div class="mfpHead">
-        <div class="mfpTitle"><h2>${esc(T('Üreticiler', 'Manufacturers'))}</h2>
+        <div class="mfpTitle">
           <p>${esc(T('ASAS üreticileri, e-posta adresleri ve sipariş performansı tek üretici kartında. Analiz Orders / LFL / Fiyat & Üretici Analizi ile ortak sipariş verisinden gelir.', 'ASAS manufacturers, e-mail addresses and order performance on one manufacturer card. The analysis uses the order data shared with Orders / LFL / Price & Supplier Analysis.'))}</p></div>
         <div class="mfpHeadActions" data-mfp-actions></div>
       </div>

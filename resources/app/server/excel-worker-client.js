@@ -97,7 +97,7 @@ function createExcelWorkerClient(options = {}) {
       });
     };
     try {
-      worker = new WorkerClass(WORKER_FILE);
+      worker = new WorkerClass(WORKER_FILE,{resourceLimits:{maxOldGenerationSizeMb:512}});
       registerLeaseWorker(worker);
       timer = setTimeout(() => finish(Object.assign(new Error(`Excel işlemi zaman aşımına uğradı: ${job.task} / Excel operation timed out.`), {
         code: 'EXCEL_WORKER_TIMEOUT', statusCode: 504,

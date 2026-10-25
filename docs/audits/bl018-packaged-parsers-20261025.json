@@ -1,0 +1,229 @@
+{
+  "package": "BL-018",
+  "base": "4e4379d9f599b58a3698ba0d20e1a0a0a624ab91",
+  "status": "Implemented and focused/native verified; final integrated full/CI/merge pending",
+  "source": [
+    {
+      "file": "package.json",
+      "sha256Lf": "dc4de553df377fde1c97af2ce4fefcd3254cbc96e925baf9fa4e422fd9b0548e"
+    },
+    {
+      "file": "package-lock.json",
+      "sha256Lf": "b1951effed21310cc9fefb0337abc5cdfe6df2f28abd2bad2173171ebced533a"
+    },
+    {
+      "file": "scripts/dependency-catalog.json",
+      "sha256Lf": "48a457675831df49a7ebe43496cc526797c72b50b1cda2c2d40546824a5a830c"
+    },
+    {
+      "file": "scripts/dependency-inventory.js",
+      "sha256Lf": "df1d126530f90f50d642aee2b1b69e48680910cadee991240261065031de9ced"
+    },
+    {
+      "file": "public/file-parser-policy.js",
+      "sha256Lf": "991ae721bca19bb7a5987ab0256b45e78796e59fd7f6e08ae92b0836d96540c6"
+    },
+    {
+      "file": "public/file-parser.js",
+      "sha256Lf": "452316ea624e14dd00bddf1d41d58e0cd55c0e021e68d8390312db0d9d48c6eb"
+    },
+    {
+      "file": "public/file-parser-worker.js",
+      "sha256Lf": "5ac540fc300ff64c54f2e627a283a36324cfffe8d5204ef0eaefd6bf01f07c58"
+    },
+    {
+      "file": "public/app-main.js",
+      "sha256Lf": "129236c2aefedec54de2ca8a19004a776ef21d30ba0bcd4d752ec797aa7b7a79"
+    },
+    {
+      "file": "public/excel-import-wizard.js",
+      "sha256Lf": "518c76614f53d6c00591e49af5cb0e1f9e9cdf1688b5c5c66fe9f372b0b7bee9"
+    },
+    {
+      "file": "public/fx.js",
+      "sha256Lf": "4a3598dc792666905147e8cfc268dff82e5ef98f9a883f42923cb493e57ec8ec"
+    },
+    {
+      "file": "public/open-costing.js",
+      "sha256Lf": "09584d9bf9e32d4c3059ea64b8090416cb02b005705b12a7ad82b593a574eb77"
+    },
+    {
+      "file": "public/pricing-desk.js",
+      "sha256Lf": "190ed81d253479ce16826c8dfdcdcbcc1ccff86df151861563d7bfa9a34ecca8"
+    },
+    {
+      "file": "public/transit-analysis-ui.js",
+      "sha256Lf": "8fe908743fea2b92b27a7a39f221c858a5b70d690a14302f885040508cbabf75"
+    },
+    {
+      "file": "public/layout-control.js",
+      "sha256Lf": "b1781c867b0b958e2d2ffdbefe60c6905479ce63f97499294c6f7cb08cd5e352"
+    },
+    {
+      "file": "public/layout-document-reader.js",
+      "sha256Lf": "79bf600590ad36d179b983d68445c09abc42ec45dfc71a2802c06d08cddabd27"
+    },
+    {
+      "file": "public/index.html",
+      "sha256Lf": "f2b065ffc0d794f0a67a8bc79eca85772c900a2084fe1b597fda32c31ed8da50"
+    },
+    {
+      "file": "server/lib/parser-process-client.js",
+      "sha256Lf": "bfbba00d49fae7a7391476697129665ec07ce83f13838f37510bbaf98b7383df"
+    },
+    {
+      "file": "server/lib/zip-parser-validation.js",
+      "sha256Lf": "3e303ec29109689b1761b1326ce8e642c4ef6f2a55541e9eeafa904627a49db4"
+    },
+    {
+      "file": "server/lib/workbook-parser-guards.js",
+      "sha256Lf": "6debb498773b842ce8ed386f71330784b0132c1ef1eb910752a2b844d1afb265"
+    },
+    {
+      "file": "server/workers/file-parser-process.js",
+      "sha256Lf": "4a93b39e73ef2b38958b4eee66c74ff428fc391b7282527a2685b5b7297ce678"
+    },
+    {
+      "file": "server/workers/excel-worker.js",
+      "sha256Lf": "b575d53ebc088e92801cb47d75e2c69ce7e6f087db172fc67d628adae83c078c"
+    },
+    {
+      "file": "server/excel-worker-client.js",
+      "sha256Lf": "8848e8d015911dc762d0d99a1357acdf3bb44486ffc50c67aafffef2aad9e07b"
+    },
+    {
+      "file": "server/lib/test-reports/isolated-extract.js",
+      "sha256Lf": "28320bf127486c2a7431783d94f95e93ec4aa61d87a509a40aca07be2e4fa5a8"
+    },
+    {
+      "file": "server/lib/test-reports/extract.js",
+      "sha256Lf": "7b597ab6224a3fd75909216571d2badad2a5e4bb6a49433483ae9b4b9cdd4f41"
+    },
+    {
+      "file": "server/lib/endeksmatik.js",
+      "sha256Lf": "a795faa8e9781081ada8f6c7b4c1a5b575c2ca441dff5645c85418738e850b3b"
+    },
+    {
+      "file": "server/lib/user-access.js",
+      "sha256Lf": "5a252dee238338aa42c5cff49abaf65412a8839f34ade5d15b7ab29015b18ed3"
+    },
+    {
+      "file": "server/routes/merch-calendar-routes.js",
+      "sha256Lf": "53c512dc36e40b60ed7042c4d8bde52b8988c8ff1a321b7f59114e3613b84e94"
+    },
+    {
+      "file": "server/server.js",
+      "sha256Lf": "8da48c8d4ba3ea5d5c2765b21b7ab0c16d51623bfae4be74fbf70fa38575a1bd"
+    }
+  ],
+  "focused": {
+    "files": 111,
+    "tests": 773,
+    "pass": 772,
+    "fail": 0,
+    "skip": 1,
+    "seconds": 11.7,
+    "log": "work/bl018-final-target.log",
+    "sha256Lf": "c417e7d8d27ce9d537c89440fd5d2643ad00092be853c23c807f5787e2ebf48d"
+  },
+  "native": {
+    "scope": "Actual full production Buyer Log server and Edge UI with synthetic data; actual Web Worker reader, no mocked HTTP",
+    "phases": [
+      {
+        "name": "native-cp-import-preview",
+        "sheets": [
+          "CP"
+        ],
+        "code": 4100001,
+        "applied": false
+      },
+      {
+        "name": "native-worker-read-and-ui-heartbeat",
+        "ticks": 25,
+        "rows": "A1:D10001",
+        "formula": "1.25*2",
+        "cached": 2.5,
+        "dateSerial": 46000,
+        "dateFormat": "dd.mm.yyyy"
+      },
+      {
+        "name": "native-cancelled-import",
+        "code": "FILE_PARSE_CANCELLED"
+      },
+      {
+        "name": "native-bounded-stream-expansion",
+        "code": "FILE_PARSE_ZIP"
+      },
+      {
+        "name": "native-pdf-read-and-raster-export",
+        "inputBytes": 3176,
+        "outputBytes": 6035,
+        "preservedSmallOriginal": true
+      },
+      {
+        "name": "native-import-preview-en",
+        "applied": false
+      }
+    ],
+    "pageErrors": [],
+    "workers": [
+      "http://127.0.0.1:59604/file-parser-worker.js?v=7.0.294",
+      "http://127.0.0.1:59604/file-parser-worker.js?v=7.0.294",
+      "http://127.0.0.1:59604/file-parser-worker.js?v=7.0.294",
+      "http://127.0.0.1:59604/vendor/pdf.worker.min.js?v=7.0.294",
+      "http://127.0.0.1:59604/vendor/pdf.worker.min.js?v=7.0.294",
+      "http://127.0.0.1:59604/file-parser-worker.js?v=7.0.294"
+    ],
+    "ok": true
+  },
+  "realWorkbooks": {
+    "count": 7,
+    "accepted": 7,
+    "hashUnchanged": 7,
+    "models": {
+      "endeksmatik-usd-v1": 5,
+      "legacy-tl": 2
+    },
+    "sourceBytesRange": [
+      36167440,
+      49027242
+    ],
+    "rawLocalEvidence": "work/bl018-real-workbooks.json",
+    "rawLocalEvidenceSha256Lf": "f5dd37472a2b01135ba3420f1e59289779ffdc511552e08ecab2198be776a308",
+    "scope": "Readonly original files; no workbook bytes or business cell values committed. Existing validation warnings, missing S7 samples and W6 malformed source date are retained, not certified away."
+  },
+  "dependencyInventory": {
+    "components": 86,
+    "artifactFiles": 302,
+    "path": "docs/dependencies/sbom.cdx.json",
+    "sha256Lf": "169d4ef4434139aaa336a81c0d955e3989389add954baa740639b6aa31d5322f",
+    "advisoryLookupDate": "2026-10-25",
+    "npmAudit": {
+      "total": 0,
+      "rawLocalEvidence": "work/bl018-npm-audit-after.json",
+      "sha256Lf": "0181dcc0ed176741635602c8042f9acf496135c5356e7f129831448dd81d5db6"
+    },
+    "vendorOrigins": "docs/audits/bl018-vendor-origins-20261025.json"
+  },
+  "review": {
+    "agent": "review_wal_recovery",
+    "rounds": 1,
+    "findings": 2,
+    "result": "Parent source fileId remapping and local/actual ZIP expansion bounds corrected with tests; no second review. Small harmless repro ZIPs only, no large allocation or live external testing."
+  },
+  "limits": [
+    "V8 caps do not claim hard RSS/native-memory bounds",
+    "Browser workers have byte/expanded/range/deadline controls, no hard heap cap",
+    "Process isolation is not an OS filesystem/network sandbox",
+    "Source-only executable identity is not verified; no runtime DLL/version partial replacement",
+    "Dated npm audit zero does not cover browser vendors/runtime; separate reachability triage recorded",
+    "One existing platform capability skip",
+    "No populated Electron/Office/real SMB acceptance claimed here"
+  ],
+  "publication": {
+    "full": false,
+    "merged": false,
+    "TEST": false,
+    "STABLE": false
+  }
+}

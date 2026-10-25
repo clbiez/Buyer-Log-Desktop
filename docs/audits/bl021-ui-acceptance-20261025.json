@@ -1,0 +1,72 @@
+{
+  "package": "BL021",
+  "date": "2026-10-25",
+  "PR": 714,
+  "risk": "P2 UI adoption; existing business persistence/authority paths unchanged",
+  "focused": {
+    "files": 22,
+    "tests": 196,
+    "pass": 196,
+    "fail": 0,
+    "skip": 0,
+    "log": "work/bl020-bl021-final-target.log",
+    "sha256Lf": "7789ce804dbd36225c096a146122df4ca99fa1187a5b0f7608c2cba2f91d7f06",
+    "timing": "After final Collection replication feedback hook; before the final summary word-boundary/race/layout refinement"
+  },
+  "finalViews": {
+    "files": 3,
+    "pass": 17,
+    "fail": 0,
+    "skip": 0,
+    "log": "work/bl020-bl021-final-views.log",
+    "sha256Lf": "d383121fb645e5471fdfafb72f078c5d39cf01297e3f8606422e9c8c20b1ee1c",
+    "countsOverlapPrimary": true
+  },
+  "native": {
+    "scope": "Actual production server and Edge using disposable profiles and the full existing release archive.",
+    "phases": [
+      {
+        "name": "actual-first-use",
+        "releaseRequests": 1,
+        "maxHighlights": 6,
+        "acknowledged": "7.0.294",
+        "escape": true
+      },
+      {
+        "name": "actual-acknowledged-reload",
+        "autoDialog": false
+      },
+      {
+        "name": "actual-upgrade-many-versions",
+        "releaseRequests": 3,
+        "highlights": 6
+      },
+      {
+        "name": "actual-explicit-new-details",
+        "meta": "v7.0.212\n2026-10-03\n1 / 517"
+      },
+      {
+        "name": "actual-explicit-full-archive",
+        "versions": 589
+      },
+      {
+        "name": "actual-reset-acknowledgement"
+      },
+      {
+        "name": "actual-same-device-other-profile",
+        "newProfileBeforeAck": null,
+        "isolated": true
+      }
+    ],
+    "errors": [],
+    "ok": true
+  },
+  "visualsInspected": true,
+  "fullExecuted": false,
+  "merged": false,
+  "limits": [
+    "Full release history remains preserved; it is loaded by explicit archive/detail actions.",
+    "No new release was published; the native exercise used the existing installed-version archive."
+  ],
+  "rollback": "Revert this UI commit. Existing per-user lastSeenStable key remains compatible; no business-data migration."
+}

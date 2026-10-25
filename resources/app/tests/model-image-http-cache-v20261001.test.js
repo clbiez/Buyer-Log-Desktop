@@ -35,9 +35,14 @@ for (const [name, source, signature] of [
 ]) {
   test(`${name} görsel yanıtı tarayıcı önbelleğinde gerçekten kalır (Pragma/Expires kaldırılır)`, () => {
     const body = routeBody(source, signature);
-    /* #482: paylaşılan Koleksiyon görseli başka hesaba önbellekten sızmasın diye
-       'private, no-store' alır; kişisel/CP görseli uzun ömürlü önbellekte kalır. */
-    assert.match(body, /Cache-Control', (?:sharedOwner \? 'private, no-store' : )?'private, max-age=31536000, immutable'/);
+    /* Collection-derived private images keep the same no-store policy through
+       the CP alias; ordinary CP images retain their immutable cache. */
+    const cacheLine=body.split('\n').find(line=>line.includes("setHeader('Cache-Control'"));
+    assert.ok(cacheLine);
+    const expression=cacheLine.slice(cacheLine.indexOf(',')+1,cacheLine.lastIndexOf(')')).trim();
+    const policy=new Function('sharedOwner','privateOwner','return '+expression);
+    assert.equal(policy(false,false),'private, max-age=31536000, immutable');
+    assert.equal(policy(true,true),'private, no-store');
     assert.match(body, /res\.removeHeader\('Pragma'\)/);
     assert.match(body, /res\.removeHeader\('Expires'\)/);
     assert.ok(body.indexOf("removeHeader('Pragma')") < body.indexOf('res.sendFile('), 'başlıklar gönderimden önce temizlenmeli');

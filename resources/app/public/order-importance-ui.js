@@ -76,6 +76,7 @@
     return key ? all.filter(item => keyOf(item) === key) : [row];
   }
   function repaint(rows) {
+    if(window.isPreparingCpBulk?.())return;
     const st = appState();
     const cpRow = rows.find(item => (st.cp && st.cp.rows || []).includes(item));
     if (typeof invalidateCoreFacetCaches === 'function') invalidateCoreFacetCaches();
@@ -92,6 +93,7 @@
   }
 
   async function assign(row, value) {
+    if(window.isSavingCpBulk?.()&&!window.isPreparingCpBulk?.()){toast(L('Toplu kayıt sürüyor. Sonucundan sonra yeniden deneyin.','A bulk save is still pending. Retry after its result.'));return;}
     if (!row) return;
     if (row._canEdit === false) { toast(L('Bu sipariş için yalnız görüntüleme yetkiniz var.', 'You only have view access to this order.')); return; }
     const orderCode = row['Order Code'];

@@ -49,7 +49,7 @@ test('without a valid central cache, a repeated read reuses the resolved directo
   t.after(() => { delete process.env.BUYER_LOG_CENTRAL_IAM_ENABLED; fs.rmSync(base, { recursive: true, force: true }); });
   const first = countReads(() => ua.readStore());
   assert.equal(first.value.moderator.username, 'DEMO Moderator');
-  assert.ok(first.dirs > 0, 'the first read still runs the recovery scan');
+  assert.equal(first.dirs,0,'an established local primary must not be rescanned/replaced by historical active accounts');
   const second = countReads(() => ua.readStore());
   assert.equal(second.value, first.value, 'same cached directory');
   assert.deepEqual([second.dirs, second.files], [0, 0], 'no folder scan or file parse on a warm read');
