@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-23",
   "bootstrapVisual": false,
   "title": {
-    "tr": "CP fiyat kuralı ve tarih Geri Al bütünlüğü",
-    "en": "CP pricing rule and date Undo integrity"
+    "tr": "Veri bütünlüğü, performans ve çalışma akışı iyileştirmeleri",
+    "en": "Data integrity, performance and workflow improvements"
   },
   "summary": {
-    "tr": "Kural kaynaklı Supp. FOB değerleri not kayıtlarında korunur; CP tarih Geri Al/İleri Al işlemleri sunucuya kaydedilir.",
-    "en": "Rule-derived Supp. FOB values stay rule-backed when saving notes, and CP date Undo/Redo changes persist to the server."
+    "tr": "Güvenli kayıt ve güncelleme sınırları; büyük veri performansı; görünümler, toplu işlem önizlemesi, fiyat kaynakları ve kayıtlı istisnalar.",
+    "en": "Safer persistence and update boundaries; large-data performance; views, bulk previews, price lineage and confirmed exceptions."
   },
   "changes": [
     {
@@ -1893,6 +1893,64 @@
         "caption": {
           "tr": "İki yerleşik sinyal; kanonik sayımlar ve kayıtlı sunucu verisi.",
           "en": "Two existing signals, canonical counts and confirmed server data."
+        }
+      }
+    },
+    {
+      "id": "managed-table-export-progress-cancel",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Siparişler",
+        "en": "CP Tracker · Orders"
+      },
+      "title": {
+        "tr": "Büyük Excel aktarımlarını takip edin ve iptal edin",
+        "en": "Track and cancel large Excel exports"
+      },
+      "body": {
+        "tr": "Ana tablo aktarımında hazırlanan satır sayısı ve Excel paketleme aşaması görünür. İptal, dosyanın indirilmesini durdurur; aynı tablo için yinelenen aktarım başlatılmaz. Seçili veya filtrelenmiş tüm kayıtlar, görseller ve hücre biçimleri korunur.",
+        "en": "Main-table export shows prepared rows and workbook packing. Cancel prevents the file download, and repeated clicks cannot start duplicate exports for the same table. All selected or filtered records, images and cell formats are retained."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "managed-table-export-progress.png",
+        "alt": {
+          "tr": "Gerçek masaüstü CP tablosunda 30.030 demo satırının Excel hazırlığı ve İptal düğmesi.",
+          "en": "Actual desktop CP table preparing 30,030 synthetic rows with progress and Cancel."
+        },
+        "caption": {
+          "tr": "30.000 sipariş ve kısmi sevkiyatlar; satır sayısı görünür.",
+          "en": "30,000 orders plus partial shipments, with visible row progress."
+        }
+      }
+    },
+    {
+      "id": "collection-native-200-header",
+      "type": "fix",
+      "module": {
+        "tr": "Koleksiyon",
+        "en": "Collection"
+      },
+      "title": {
+        "tr": "Yüksek yakınlaştırmada üst çubuk erişilebilir kalır",
+        "en": "Header controls remain reachable at high zoom"
+      },
+      "body": {
+        "tr": "Dar görünümde çalışma alanı özeti simge ve sayı ile gösterilir; tam açıklama erişilebilir etikette ve araç ipucunda korunur. Yüzde 200 yakınlaştırmada kullanıcı düğmesi ekran içinde kalır; geniş görünümde metin yeniden gösterilir.",
+        "en": "The workspace summary uses its icon and count in narrow views, retaining the full accessible label and tooltip. The user button stays within the viewport at 200% zoom; the full text returns in wider views."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "collection-native-200-header.png",
+        "alt": {
+          "tr": "Gerçek Electron Koleksiyon ekranında yüzde 200 yakınlaştırma, dar kapsam özeti ve görünür kullanıcı düğmesi.",
+          "en": "Actual Electron Collection at 200% zoom, compact workspace summary and visible user button."
+        },
+        "caption": {
+          "tr": "300 demo model; Türkçe ve İngilizce yerleşim doğrulandı.",
+          "en": "300 synthetic models; Turkish and English layouts verified."
         }
       }
     }

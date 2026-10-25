@@ -1778,6 +1778,11 @@ body[data-active-tab="koleksiyon"] .appTop>#pageTitle{margin-right:0;}
 body[data-active-tab="koleksiyon"] .appTop>#kolScopeBar{display:flex;align-items:center;flex:0 1 auto;flex-wrap:nowrap;min-width:0;min-height:0;gap:0;margin:0;margin-right:auto;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none;overflow:visible;}
 body[data-active-tab="koleksiyon"] .appTop>#kolScopeBar .kolScopeFilters{flex-wrap:nowrap;min-width:0;}
 body[data-active-tab="koleksiyon"] .appTop>#kolScopeBar .kolScopePanel{position:absolute;top:calc(100% + 6px);left:0;}
+.kolScopeCompactIcon{display:none;}
+@media(max-width:1024px){
+  body[data-active-tab="koleksiyon"] .appTop .kolScopeWorkspaceLabel{display:none;}
+  body[data-active-tab="koleksiyon"] .appTop .kolScopeCompactIcon{display:block;}
+}
 
 /* "Araçlar" menüsüne giren düğmeler, menünün bulunduğu sekmeye aittir; yukarıdaki
    sekme-bazlı görünürlük beyaz listesi (satır 606-607) burada geçerli değildir.

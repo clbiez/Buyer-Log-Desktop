@@ -21309,6 +21309,7 @@ async function _prepareExcelJsImages(entries){
   // ne de dışa aktarımı iptal eder.
   return list.map(entry=>byKey.get(keyOf(entry))||null);
 }
+const managedExcelExportOperations=new WeakMap();
 function beginFullTableLayout(table){
   if(!table)return()=>{};
   const already=table.classList.contains('blForceFullRender');
@@ -21334,11 +21335,21 @@ async function exportStyledDomTable(tableSel, opts){
   if(!managedRecords)flushPendingTableRenders();
   const table=document.querySelector(tableSel);
   if(!table){showToast('Tablo bulunamadı.');return;}
-  if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');
-  if(typeof ExcelJS==='undefined')throw new Error(appLang==='en'?'Excel engine could not be loaded.':'Excel motoru yüklenemedi.');
-
-  const releaseFullLayout=beginFullTableLayout(table);
+  if(managedExcelExportOperations.has(table))return false;
+  let progressRegion=null,operation=null,releaseFullLayout=()=>{};
+  if(managedRecords){
+    const selected=opts.selectedSet,total=selected?.size?managedRecords.reduce((n,row)=>n+(selected.has(row._id)||selected.has(String(row._id))||selected.has(Number(row._id))?1:0),0):managedRecords.length;
+    progressRegion=document.createElement('div');progressRegion.className='uiProgressRegion';
+    (table.closest('.tablewrap')||table).before(progressRegion);
+    operation=window.BLUI.createProgress({total,onProgress:value=>window.BLUI.renderProgress(progressRegion,{...value,language:appLang,cancellable:true,onCancel:()=>operation.cancel()})});
+    managedExcelExportOperations.set(table,operation);
+  }
   try{
+  if(operation){operation.checkpoint(0,appLang==='en'?'Preparing export':'Dışa aktarım hazırlanıyor');await operation.yield();}
+  if(window.BLPerf)await window.BLPerf.ensureLibrary('exceljs');
+  operation?.check();
+  if(typeof ExcelJS==='undefined')throw new Error(appLang==='en'?'Excel engine could not be loaded.':'Excel motoru yüklenemedi.');
+  releaseFullLayout=beginFullTableLayout(table);
 
   const idAttr=opts.idAttr||'data-id';
   const candidateRows=managedRecords
@@ -21400,6 +21411,7 @@ async function exportStyledDomTable(tableSel, opts){
   const imageEntries=[];
   let exported=0,imagesRequested=0;
   for(const tr of candidateRows){
+    operation?.check();
     if(selSet){
       const id=tr.getAttribute(idAttr)??tr.dataset.id;
       if(id==null||(!selSet.has(Number(id))&&!selSet.has(String(id))&&!selSet.has(id)))continue;
@@ -21436,7 +21448,7 @@ async function exportStyledDomTable(tableSel, opts){
     }
     ws.getRow(excelRow).height=Math.max(18,Math.ceil(tr.getBoundingClientRect().height||(managedRecords?cpOrdersImageDims(opts.tableKey).row:19)))*72/96;
     excelRow++;exported++;
-    if(managedRecords&&exported%100===0)await new Promise(resolve=>setTimeout(resolve,0));
+    if(managedRecords&&exported%100===0){operation.checkpoint(exported,appLang==='en'?'Preparing rows':'Satırlar hazırlanıyor');await operation.yield();}
   }
   if(!exported){showToast('Aktarılacak satır yok.');return;}
 
@@ -21446,7 +21458,9 @@ async function exportStyledDomTable(tableSel, opts){
 
   // Kitap SERİLEŞTİRİLMEDEN ÖNCE bütün görseller çözülür; writeBuffer yalnız bu
   // bekleme bittikten sonra çağrılır.
+  operation?.checkpoint(exported,appLang==='en'?'Preparing images · cancel prevents download':'Görseller hazırlanıyor · iptal indirmeyi durdurur',{indeterminate:true});
   const prepared=await _prepareExcelJsImages(imageEntries);
+  operation?.check();
   const mediaIds=new Map();
   let imagesEmbedded=0;
   imageEntries.forEach((entry,index)=>{
@@ -21466,7 +21480,9 @@ async function exportStyledDomTable(tableSel, opts){
     }catch(err){console.warn('Excel image could not be embedded:',err);}
   });
   if(window.BLExcelDates)window.BLExcelDates.normalizeExcelJsWorkbookDateColumns(wb);
+  if(operation){operation.checkpoint(exported,appLang==='en'?'Packing Excel · cancel prevents download':'Excel paketleniyor · iptal indirmeyi durdurur',{indeterminate:true});await operation.yield();}
   const buffer=await wb.xlsx.writeBuffer();
+  operation?.check();
   const d=new Date(),pad=x=>String(x).padStart(2,'0');
   const filename=`${opts.fileBase||'Tablo'}_${d.getFullYear()}${pad(d.getMonth()+1)}${pad(d.getDate())}.xlsx`;
   kolDownloadBuffer(buffer,filename,'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
@@ -21476,8 +21492,15 @@ async function exportStyledDomTable(tableSel, opts){
     ? ` · ${imagesEmbedded}/${imagesRequested} model görseli eklendi${missing?` (${missing} görsel alınamadı)`:''}`
     : '';
   if(opts.tableKey!=='cp'&&opts.tableKey!=='orders')showToast(`${exported} satır Excel'e aktarıldı${hasVisibleSelection?' (yalnızca işaretliler)':' (mevcut filtre)'}${imageNote}.`);
+  return true;
+  }catch(error){
+    if(error?.name!=='AbortError')throw error;
+    showToast(appLang==='en'?'Export cancelled. No file was downloaded.':'Dışa aktarım iptal edildi. Dosya indirilmedi.');
+    return false;
   }finally{
     releaseFullLayout();
+    progressRegion?.remove();
+    managedExcelExportOperations.delete(table);
   }
 }
 
@@ -22612,7 +22635,7 @@ function renderKolScopeFilters(){
   const users=Array.isArray(kolPermissionState&&kolPermissionState.users)?kolPermissionState.users.filter(item=>item.enabled!==false&&!outgoing.some(grant=>grant.granteeId===item.id)):[];
   const t=key=>escapeHtml(kolScopeText(key));
   document.getElementById('kolScopeBar')?.setAttribute('aria-label',kolScopeText('workspacePermissions'));
-  root.innerHTML=`<details class="kolScopeDim kolScopeWorkspace hasSelection"><summary aria-label="${t('workspacePermissions')}">${t('workspacePermissions')} <b>${kolWorkspaceSelectedOwnerIds.size}</b></summary><div class="kolScopePanel"><strong>${t('viewLabel')}</strong><small>${t('viewHelp')}</small><div class="kolScopeOptions">${view.map(item=>{const self=item.ownerId===currentId;return `<label><input type="checkbox" data-owner-id="${escapeHtml(item.ownerId)}"${kolWorkspaceSelectedOwnerIds.has(item.ownerId)?' checked':''}${self?' disabled':''}><span>${escapeHtml(item.ownerName||item.ownerId)} · ${t(item.level==='edit'?'edit':'view')}${self?` · ${t('me')}`:''}</span></label>`;}).join('')}</div><strong>${t('sharedPermissions')}</strong><div class="kolScopeOptions">${outgoing.map(item=>`<label><span>${escapeHtml(item.granteeName||item.granteeId)}</span><select data-grant-level="${escapeHtml(item.granteeId)}"><option value="view"${item.level==='view'?' selected':''}>${t('view')}</option><option value="edit"${item.level==='edit'?' selected':''}>${t('edit')}</option></select><button class="tbtn" type="button" data-grant-revoke="${escapeHtml(item.granteeId)}">${t('remove')}</button></label>`).join('')||`<small>${t('noGrants')}</small>`}</div><button class="tbtn" type="button" data-grant-add>+ ${t('addUser')}</button><div data-grant-picker hidden><input type="search" placeholder="${t('searchUser')}" aria-label="${t('searchUser')}"><div class="kolScopeOptions">${users.map(item=>`<label data-grant-user><span>${escapeHtml(item.displayName||item.username||item.id)}</span><button class="tbtn" type="button" data-grant-user-id="${escapeHtml(item.id)}">${t('add')}</button></label>`).join('')||`<small>${t('noUsers')}</small>`}</div></div></div></details>`;
+  root.innerHTML=`<details class="kolScopeDim kolScopeWorkspace hasSelection"><summary aria-label="${t('workspacePermissions')}" title="${t('workspacePermissions')}"><svg class="ic kolScopeCompactIcon" aria-hidden="true"><use href="#i-users-group"/></svg><span class="kolScopeWorkspaceLabel">${t('workspacePermissions')}</span> <b>${kolWorkspaceSelectedOwnerIds.size}</b></summary><div class="kolScopePanel"><strong>${t('viewLabel')}</strong><small>${t('viewHelp')}</small><div class="kolScopeOptions">${view.map(item=>{const self=item.ownerId===currentId;return `<label><input type="checkbox" data-owner-id="${escapeHtml(item.ownerId)}"${kolWorkspaceSelectedOwnerIds.has(item.ownerId)?' checked':''}${self?' disabled':''}><span>${escapeHtml(item.ownerName||item.ownerId)} · ${t(item.level==='edit'?'edit':'view')}${self?` · ${t('me')}`:''}</span></label>`;}).join('')}</div><strong>${t('sharedPermissions')}</strong><div class="kolScopeOptions">${outgoing.map(item=>`<label><span>${escapeHtml(item.granteeName||item.granteeId)}</span><select data-grant-level="${escapeHtml(item.granteeId)}"><option value="view"${item.level==='view'?' selected':''}>${t('view')}</option><option value="edit"${item.level==='edit'?' selected':''}>${t('edit')}</option></select><button class="tbtn" type="button" data-grant-revoke="${escapeHtml(item.granteeId)}">${t('remove')}</button></label>`).join('')||`<small>${t('noGrants')}</small>`}</div><button class="tbtn" type="button" data-grant-add>+ ${t('addUser')}</button><div data-grant-picker hidden><input type="search" placeholder="${t('searchUser')}" aria-label="${t('searchUser')}"><div class="kolScopeOptions">${users.map(item=>`<label data-grant-user><span>${escapeHtml(item.displayName||item.username||item.id)}</span><button class="tbtn" type="button" data-grant-user-id="${escapeHtml(item.id)}">${t('add')}</button></label>`).join('')||`<small>${t('noUsers')}</small>`}</div></div></div></details>`;
   root.querySelectorAll('[data-owner-id]').forEach(cb=>cb.addEventListener('change',async()=>{
     const ids=new Set(kolWorkspaceSelectedOwnerIds);cb.checked?ids.add(cb.dataset.ownerId):ids.delete(cb.dataset.ownerId);
     if(!ids.size){cb.checked=true;showToast(kolScopeText('atLeastOneWorkspace'));return;}

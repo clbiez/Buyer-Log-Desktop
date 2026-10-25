@@ -1636,9 +1636,8 @@
     window.BLTableToolbarActionCleanup?.begin?.(btn);
     try{
       if(window.BLPerf?.ensureLibrary) await window.BLPerf.ensureLibrary('xlsx');
-      if(document.body.dataset.activeTab==='cp') await exportCpTableWithLightTheme();
-      else await exportActiveTableStyled();
-      window.BLTableToolbarActionCleanup?.finish?.(btn,true);
+      const result=document.body.dataset.activeTab==='cp'?await exportCpTableWithLightTheme():await exportActiveTableStyled();
+      window.BLTableToolbarActionCleanup?.finish?.(btn,result===false?null:true);
     }catch(e){
       window.BLTableToolbarActionCleanup?.finish?.(btn,false);
       showToast('Dışa aktarım hatası: '+e.message);

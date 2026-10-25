@@ -5256,11 +5256,14 @@ function checklistAuthorizedOrdersNow(profile,{write=false}={}) {
   const source=userAccess.hasArea(profile,'cp')?'cp':'orders';
   const rows=agentQualityOrderRowsNow(profile,{source,includeInactive:true});
   const CP=require('../public/cp-readiness-engine'), Checklist=require('../public/cp-checklist-engine'), allowed=new Map();
+  // One synchronous resolver invocation has one current permission graph.
+  // Keep the canonical ownership check per code; never cache this across requests.
+  const manageAllOrders=userAccess.hasPermission(profile,'manageAllOrders');
   for(const row of rows) {
     const code=canonicalFields.value(row,source,'orderCode');
     // Source folders are user-managed. Visibility must also be supported by
     // the Moderator's authoritative ownership snapshot, never a claimed buyer.
-    if(!userAccess.hasPermission(profile,'manageAllOrders') && !userAccess.filterRowsByScope(profile,userAccess.authoritativeOrderRows(code)).length)continue;
+    if(!manageAllOrders && !userAccess.filterRowsByScope(profile,userAccess.authoritativeOrderRows(code)).length)continue;
     if(write && !canUserEditOrderCode(profile,canonicalFields.value(row,source,'orderCode')))continue;
     const analysis=CP.analyzeOrder(row), identity={orderCode:String(analysis.orderCode||canonicalFields.value(row,source,'orderCode')||''),modelName:String(analysis.modelName||''),colourCode:String(analysis.colourCode||'')};
     allowed.set(analysis.orderKey,identity);
@@ -7986,6 +7989,17 @@ function cachedRuntimeFromManifest(manifest) {
   return { ...emptySourceCache(), ...((manifest && manifest.runtimeMeta) || {}) };
 }
 function pageProjectionCanEdit(currentUser, row) { return canUserEditOrderCode(currentUser, row && row['Order Code']); }
+// UI edit hints only: reuse the existing per-invocation permission context.
+// Mutation endpoints continue to resolve live authority at their commit guard.
+function pageProjectionEditResolver(currentUser){
+  const context={manageAll:Boolean(currentUser&&userAccess.hasPermission(currentUser,'manageAllOrders'))},byCode=new Map();
+  return row=>{
+    if(!currentUser)return false;if(context.manageAll)return true;
+    const code=row&&row['Order Code'],key=String(code??'');
+    if(!byCode.has(key))byCode.set(key,Boolean(canUserEditOrderCode(currentUser,code,context)));
+    return byCode.get(key);
+  };
+}
 function sameProjectionSourceRows(left, right) {
   if (left === right) return true;
   if (!Array.isArray(left) || !Array.isArray(right) || left.length !== right.length) return false;
@@ -8240,7 +8254,7 @@ async function buildResponse(currentUser = null, options = {}) {
     orders = startup ? null : projected.ordersRows;
     orderSummary = startup ? null : (orderSummaryDataAllowed ? buildOrderSummaryRowsFromASAS(scopedCpSource, antrepoForTarget(active, 'cp'), overridesForBuild) : []);
     overviewSummary = startup && orderSummaryDataAllowed ? buildOverviewSummaryRowsFromASAS(scopedCpSource, overridesForBuild) : null;
-    const accessForBuiltRow = row => canUserEditOrderCode(currentUser, row['Order Code']);
+    const accessForBuiltRow = pageProjectionEditResolver(currentUser);
     (cp || []).forEach(row => { row._canEdit = Boolean(accessForBuiltRow(row)); });
     (orders || []).forEach(row => { row._canEdit = false; });
     (orderSummary || []).forEach(row => { row._canEdit = Boolean(accessForBuiltRow(row)); });
@@ -8418,7 +8432,8 @@ app.get('/api/data/cp', userAccess.requireArea('cp'), async (req, res) => {
       if (cached&&pageProjectionMatchesRuntime(cached.manifest,active)) return cached.data;
       const scoped = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
       const rows = buildCPRowsFromASAS(scoped, antrepoForTarget(active, 'cp'), overrides);
-      rows.forEach(row => { row._canEdit = Boolean(canUserEditOrderCode(req.currentUser, row['Order Code'])); });
+      const rowCanEdit=pageProjectionEditResolver(req.currentUser);
+      rows.forEach(row => { row._canEdit = rowCanEdit(row); });
       const cpModelColumns = loadModelConnections().items.flatMap(item => (item.cpColumns || []).map(col => ({...col, role:item.role, connectionId:item.id, connectionName:item.name || item.catalog || item.server})));
       return storeOnDemandProjection(req.currentUser, ctx, 'cp', { rows, cpModelColumns }, active);
     });
@@ -8543,7 +8558,8 @@ app.get('/api/data/orders', userAccess.requireArea('orders'), async (req, res) =
     orders.forEach(row => { row._canEdit = false; });
     const scopedCp = userAccess.filterRowsByScope(req.currentUser, filterRowsByEffectiveHorizon(req.currentUser,'cp',ordersForTarget(active, 'cp', overrides)));
     const orderSummary = buildOrderSummaryRowsFromASAS(scopedCp, antrepoForTarget(active, 'cp'), overrides);
-    orderSummary.forEach(row => { row._canEdit = Boolean(canUserEditOrderCode(req.currentUser, row['Order Code'])); });
+    const summaryCanEdit=pageProjectionEditResolver(req.currentUser);
+    orderSummary.forEach(row => { row._canEdit = summaryCanEdit(row); });
     const catalogs = buildCollectionCatalogs(orders);
     try {
       await storeOnDemandProjection(req.currentUser,ctx,'orders',{rows:orders},active);
