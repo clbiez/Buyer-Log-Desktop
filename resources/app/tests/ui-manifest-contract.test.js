@@ -60,7 +60,8 @@ test('Manifest prohibits frames, rounded controls, gradients and raw overlay lev
    const row=['#cpTable tbody td','[data-ui-migrated] table tbody td'].includes(d.selector)&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-row-divider)';
    const group=['#cpTable','#ordersTable','#kolTable'].some(id=>d.selector===groupSeparator(id))&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
    const printRule=isPrint(d)&&d.selector==='.shipCompare tbody td'&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-print-rule)';
-   if(!row&&!group&&!printRule)failures.push(d); // narrow user-approved dense table exceptions
+   const header=d.selector==='.tablewrap > table thead tr:not(.groupRow) > th + th'&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-row-divider)';
+   if(!row&&!group&&!header&&!printRule)failures.push(d); // header dividers only, no vertical body grid
   }
   if(d.prop==='outline'&&!/^(?:none|0)$/.test(d.value)){
    const cursor=['.blDetailDrawer .blDetailTable td.blGridActiveCell','#cpTable td.blGridActiveCell,#ordersTable td.blGridActiveCell','[data-ui-migrated] .blDetailTable .blGridActiveCell','#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolActiveGridCell,#view-koleksiyon.kolSpreadsheetWorkspace #kolTable tbody .kolSpreadsheetActiveCell'].includes(d.selector);
@@ -91,6 +92,13 @@ test('Main column separators cover both header tiers and never the table body',(
  const rules=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)');
  assert.equal(rules.length,3);
  for(const [i,id] of ['#cpTable','#ordersTable','#kolTable'].entries()){assert.equal(rules[i].selector,groupSeparator(id));assert.doesNotMatch(rules[i].selector,/tbody|td\b/);}
+});
+test('Scrollable table column headers regain thin dividers without a vertical body grid',()=>{
+ const headers=entries.filter(d=>d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-row-divider)');
+ assert.equal(headers.length,1);
+ assert.equal(headers[0].selector,'.tablewrap > table thead tr:not(.groupRow) > th + th');
+ assert.ok(!/tbody|tfoot|\\btd\\b/.test(headers[0].selector));
+ assert.match(read('index.html'),/src="table-group-follow\\.js\\?v=__BL_ASSET_VERSION__/);
 });
 test('Shared button contract covers interaction states and restricts explicit variants',()=>{
  const source=read('ui-components.css');

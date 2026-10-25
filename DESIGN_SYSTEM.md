@@ -83,9 +83,12 @@ izdüşümü bir kontrolün hitbox’ı veya veri işaretçisi değildir.
    ve kılavuz vurguları çerçeve oluşturmaz.
 2. Yoğun tablonun gövdesi: hücre altında tek düşük kontrastlı yatay
    `--ui-row-divider`. Dikey gövde ızgarası yoktur.
-3. Kullanıcının açık seçimi: CP, Siparişler ve Koleksiyon’da ana sütun grupları
-   arasında **1px `--ui-group-divider`**, hem `.groupRow th.groupDivider` hem
-   `.colRow th.groupBoundary` üzerinde. Satır gövdesine taşınmaz.
+3. Ana sütun grupları CP, Siparişler ve Koleksiyon’da **1px `--ui-group-divider`**
+   ile ayrılır (`.groupRow th.groupDivider`, `.colRow th.groupBoundary`). Tüm
+   kaydırmalı veri tablolarının **alt sütun başlıkları** arasına hafif
+   **1px `--ui-row-divider`** çizgisi eklenir. Dikey çizgiler gövdeye taşınmaz.
+   Grup adları yatay kaydırmada ve dondurulmuş sütunların yanında, grubun
+   görünür bölümünün merkezini takip eder; gerçek `colspan` ve sütun sırası korunur.
 4. Grafik eksen/kılavuzları veri okumak içindir; `--ui-chart-grid` kullanır.
 5. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
 
