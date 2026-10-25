@@ -6,9 +6,14 @@
   const doc=root.document;if(!doc)return;
   const html=doc.documentElement;
   const reduce=()=>Boolean(root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches);
-  const enabled=()=>!reduce()&&doc.visibilityState!=='hidden'&&html.dataset.blMotion!=='off';
+  const enabled=()=>!reduce()&&doc.visibilityState!=='hidden'&&html.dataset.blMotion!=='off'&&!(doc.body?.dataset?.activeTab==='overview'&&html.dataset.overviewMotion==='paused');
   const SPEED=Object.freeze({page:340,card:360,table:390,overlay:240,bar:440});
   const EASE='cubic-bezier(.2,.75,.25,1)';
+  const duration=name=>{
+    const css=root.getComputedStyle?.(html).getPropertyValue('--ui-motion-'+name);
+    const parsed=css?Number.parseFloat(css):NaN;
+    return Number.isFinite(parsed)&&parsed>0?parsed:SPEED[name];
+  };
   const TAB='main > section.active';
   const CARDS='.bpaTile,.pricingMetric,.ovPulseKpi,.ovMetricRow,.ovCollectionCard,.kolModelCard,.kolCard,.lcCard,.mfrCard,.psaKpi,.cpaCard,.ovWidget';
   const BARS='.ovMetricBars em,.bpaBarFill,.bpaProgressFill,.ovPulseMini i';
@@ -60,7 +65,7 @@
           if(animate(cell,[
             {opacity:.72,backgroundColor:'var(--ui-selected)',transform:'translate3d(-2px,-1px,0)'},
             {opacity:1,backgroundColor:'transparent',transform:'translate3d(0,0,0)'}
-          ],{duration:SPEED.table,delay:Math.min(200,rowIndex*23+col*12)}))count++;
+          ],{duration:duration('table'),delay:Math.min(200,rowIndex*23+col*12)}))count++;
         }
       }
     }
@@ -74,18 +79,18 @@
     for(const el of cards){
       const rect=el.getBoundingClientRect();
       const delay=Math.min(210,(rect.left-origin.x)*.075+(rect.top-origin.y)*.10);
-      animate(el,[{opacity:.58,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:SPEED.card,delay});
+      animate(el,[{opacity:.58,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card'),delay});
     }
     return cards.length;
   }
   function enterCharts(view){
     const bars=Array.from(view.querySelectorAll(BARS)).filter(visible).slice(0,14);
-    for(let i=0;i<bars.length;i++)animate(bars[i],[{opacity:.4,transform:'scaleX(.4)'},{opacity:1,transform:'scaleX(1)'}],{duration:SPEED.bar,delay:i*19});
+    for(let i=0;i<bars.length;i++)animate(bars[i],[{opacity:.4,transform:'scaleX(.4)'},{opacity:1,transform:'scaleX(1)'}],{duration:duration('bar'),delay:i*19});
   }
   function enterPage(view){
     // The workspace stays still; animate only visible, lightweight page chrome.
     const header=view.querySelector('.ovDashboardToolbar,.workspaceContextBar,.bpaHero,.pricingWorkspaceHeader,.kolHeader,.psaHeader');
-    if(visible(header))animate(header,[{opacity:.62,transform:'translate3d(0,5px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:SPEED.page});
+    if(visible(header))animate(header,[{opacity:.62,transform:'translate3d(0,5px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('page')});
     enterCards(view);enterCharts(view);
     // Legacy KPI contract still returns to its exact canonical formatted value.
     try{root.BLKpiMotion?.run?.(view);}catch(_){}
@@ -111,13 +116,13 @@
     for(const el of candidates){
       if(time-(overlays.get(el)||0)<700)continue;
       overlays.set(el,time);
-      animate(el,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:SPEED.overlay});
+      animate(el,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
     }
   }
   function play(kind,element){
     if(!element||!enabled())return null;
-    if(kind==='card')return animate(element,[{opacity:.6,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:SPEED.card});
-    if(kind==='overlay')return animate(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:SPEED.overlay});
+    if(kind==='card')return animate(element,[{opacity:.6,transform:'translate3d(-5px,-3px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('card')});
+    if(kind==='overlay')return animate(element,[{opacity:.55,transform:'translate3d(0,7px,0)'},{opacity:1,transform:'translate3d(0,0,0)'}],{duration:duration('overlay')});
     return null;
   }
   function setEnabled(value){
@@ -134,6 +139,7 @@
       new root.MutationObserver(()=>activate(false)).observe(doc.body,{attributes:true,attributeFilter:['data-active-tab']});
     }
     root.addEventListener?.('bl:startup-complete',()=>activate(true));
+    root.addEventListener?.('bl:overview-motion-changed',()=>{if(enabled())activate(true);else cancelPending();});
     doc.addEventListener('visibilitychange',()=>{if(doc.visibilityState==='hidden')cancelPending();});
     const media=root.matchMedia?.('(prefers-reduced-motion: reduce)');
     media?.addEventListener?.('change',()=>{if(reduce())cancelPending();});
