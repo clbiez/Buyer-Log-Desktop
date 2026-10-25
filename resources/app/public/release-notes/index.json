@@ -2,6 +2,20 @@
   "schemaVersion": 1,
   "releases": [
     {
+      "version": "7.0.300",
+      "publishedAt": "2026-10-25",
+      "title": {
+        "tr": "Manifest arayüzü, veri güvenliği ve çalışma akışı",
+        "en": "Manifest interface, data integrity and workflow"
+      },
+      "stats": {
+        "features": 17,
+        "improvements": 55,
+        "fixes": 37
+      },
+      "file": "release-notes/7.0.300/release.json"
+    },
+    {
       "version": "7.0.294",
       "publishedAt": "2026-10-23",
       "title": {
