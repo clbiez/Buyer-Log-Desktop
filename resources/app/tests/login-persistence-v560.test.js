@@ -52,7 +52,7 @@ test('v5.60 explicit BUYER_LOG_SERVER_DATA_ROOT kullanımlarında geriye dönük
 });
 
 
-test('v5.61 kalıcı auth deposu taze/yanlışsa daha zengin ve yüksek revizyonlu eski kullanıcı deposu geri kazanılır',()=>{
+test('established persistent moderator credentials and deleted-user decisions survive a richer historical auth copy',()=>{
   const root=fs.mkdtempSync(path.join(os.tmpdir(),'buyer-log-login-recover-'));
   const serverRoot=path.join(root,'legacy-server-data'), authRoot=path.join(root,'persistent-auth');
   fs.mkdirSync(serverRoot,{recursive:true}); fs.mkdirSync(authRoot,{recursive:true});
@@ -66,10 +66,11 @@ test('v5.61 kalıcı auth deposu taze/yanlışsa daha zengin ve yüksek revizyon
   const {buildUserAccess}=require('../server/lib/user-access');
   const access=buildUserAccess({ensureDataLoaded:async()=>{},getOrders:()=>[]}); access.allPublicProfiles();
   const recovered=JSON.parse(fs.readFileSync(path.join(authRoot,'user-access.json'),'utf8'));
-  assert.equal(recovered.moderator.passwordHash,correct);
-  assert.equal(recovered._revision,23);
-  assert.equal(recovered.users.length,1);
-  assert.equal(fs.existsSync(path.join(authRoot,'user-access.json.pre-migration.bak')),true);
+  assert.equal(recovered.moderator.passwordHash,wrong,'the current protected hash is authoritative; a differing hash does not prove it is invalid');
+  assert.equal(recovered._revision,1);
+  assert.equal(recovered.users.length,0,'a richer historical store cannot resurrect removed users');
+  assert.equal(fs.existsSync(path.join(authRoot,'user-access.json.pre-migration.bak')),false);
+  assert.equal(fs.readFileSync(path.join(serverRoot,'user-access.json'),'utf8'),JSON.stringify(legacy),'historical recovery evidence remains untouched');
   if(oldServer==null)delete process.env.BUYER_LOG_SERVER_DATA_ROOT;else process.env.BUYER_LOG_SERVER_DATA_ROOT=oldServer;
   if(oldAuth==null)delete process.env.BUYER_LOG_AUTH_DATA_ROOT;else process.env.BUYER_LOG_AUTH_DATA_ROOT=oldAuth;
   clearModules(); fs.rmSync(root,{recursive:true,force:true});
