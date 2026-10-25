@@ -71,7 +71,10 @@ bu tokenı kullanır; doğrudan `font-size:14px` yazılmaz. Sayısal verilerde
 ## 4. Geometri, tablolar ve grafikler
 
 Köşeler `--ui-radius:0`; hiçbir kontrol/kart/çip/sekme 2px’i aşmaz. Daire yalnız
-avatar veya durum noktası içindir. Radyo, slider tutamağı, yükleme işareti ve
+avatar veya durum noktası içindir. Kullanıcının 7.0.294'ten geri istediği
+Backlog Genel Bakış tamamlanma halkası, salt okunur SVG veri grafiği olarak
+dar kapsamlı bir istisnadır; kontrol köşelerini veya grafik serilerinin kare
+işaretlerini değiştirmez. Radyo, slider tutamağı, yükleme işareti ve
 grafik noktaları köşelidir. İkonun içindeki mercek ya da coğrafi kürenin dünya
 izdüşümü bir kontrolün hitbox’ı veya veri işaretçisi değildir.
 
@@ -136,7 +139,11 @@ aynı tokenları kullanır. Modül CSS’i bu durumlara ayrı renk/çerçeve ica
 `BLLayerSystem` çocuk dialog için 201–299 aralığında tek adım yükseltebilir;
 300 tavanının altında kalır. Modüller sayısal z-index tanımlamaz.
 
-Hareket yalnız transform/opacity, 100ms veya 140ms. `prefers-reduced-motion`
+Hareket yalnız transform/opacity, 100ms veya 140ms. Backlog Genel Bakış
+kullanıcının isteğiyle sınırlı bir veri-grafiği geçişi kullanır: girişte
+KPI sayaçları ve SVG halka yayı tek seferlik ilerler; sütunlar JS üzerinden
+transform/opacity ile belirir. Modül gizliyken çalışmaz, prefers-reduced-motion
+açıkken atlanır ve grafik son değerleri her zaman kaynak veridir. `prefers-reduced-motion`
 animasyon/geçişleri kapatır. Tema değişimi anlıktır; snapshot dalgası,
 clip-path animasyonu, sürekli canvas küresi ve süs hareketi yoktur.
 
