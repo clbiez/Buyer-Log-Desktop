@@ -12,7 +12,7 @@ function seed(file,extra={}){
  const owner={token:'fixture-token',instanceId:'fixture-instance',machine:os.hostname(),pid:process.pid,createdAt:new Date(Date.now()-120000).toISOString(),...extra};
  fs.writeFileSync(path.join(lock,'owner.json'),JSON.stringify(owner));const old=new Date(Date.now()-120000);fs.utimesSync(lock,old,old);return owner;
 }
-function worker(mode,file,count=1){const child=fork(path.join(__dirname,'helpers/file-lease-worker.cjs'),[mode,file,String(count)],{stdio:['ignore','ignore','inherit','ipc']});let detail;child.on('message',value=>{detail=value});const exited=new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error('worker exit '+code+' '+JSON.stringify(detail))))});exited.catch(()=>{});return {child,exited,message:()=>new Promise((resolve,reject)=>{child.once('message',resolve);child.once('error',reject)})};}
+function worker(mode,file,count=1,timeoutMs=10000){const child=fork(path.join(__dirname,'helpers/file-lease-worker.cjs'),[mode,file,String(count),String(timeoutMs)],{stdio:['ignore','ignore','inherit','ipc']});let detail;child.on('message',value=>{detail=value});const exited=new Promise((resolve,reject)=>{child.once('error',reject);child.once('exit',code=>code===0?resolve():reject(Error('worker exit '+code+' '+JSON.stringify(detail))))});exited.catch(()=>{});return {child,exited,message:()=>new Promise((resolve,reject)=>{child.once('message',resolve);child.once('error',reject)})};}
 test.after(()=>fs.rmSync(root,{recursive:true,force:true}));
 for(const kind of ['Sync','Async'])test(kind+' refuses age-only takeover of a live owner',async()=>{
  const file=target();seed(file);let entered=false;
@@ -31,7 +31,10 @@ test('unknown remote liveness is not treated as proof of owner death',async()=>{
 });
 test('dead owner recovery with concurrent sync/async reclaimers preserves every write and generation',async()=>{
  const file=target(),held=worker('hold',file);await held.message();held.child.kill('SIGKILL');await new Promise(resolve=>held.child.once('exit',resolve));
- const workers=Array.from({length:8},(_,i)=>worker(i%2?'sync':'async',file,8));
+ // This is an integrity stress test, not a ten-second throughput requirement.
+ // NTFS metadata flushes under full-suite load can serialize 64 writes for
+ // longer than that. Keep production timeouts and the short busy tests intact.
+ const workers=Array.from({length:8},(_,i)=>worker(i%2?'sync':'async',file,8,60000));
  const outputs=await Promise.all(workers.map(async w=>{const data=await w.message();await w.exited;assert.equal(data.error,undefined);return data.generations}));
  assert.equal(Number(fs.readFileSync(file,'utf8')),64);
  const generations=outputs.flat();assert.equal(new Set(generations).size,64);assert.ok(generations.every(Number.isSafeInteger));
