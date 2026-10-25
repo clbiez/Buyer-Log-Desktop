@@ -191,3 +191,10 @@ PR bağlantısı yoktur; aşağıdaki bağlantılar açıkça **yerel PR açıkl
 Dal adlarının ortak ön eki `ui-rebuild/`'dir. Faz 1 tabanı denetim dalıdır;
 sonraki her dal bir önceki uygulama fazına dayanır. Main PR'ı otomatik Actions
 çalıştırdığı için kullanıcı onayı olmadan açılmadı; yerel sonuçlar CI değildir.
+
+## Sonraki kullanıcı kontrolü: logo ve genel kültür çizimleri
+
+Kullanıcının HTML incelemesi iki görünür regresyonu ortaya çıkardı; eski görsel
+kontrol bu eksikleri yakalamamıştı. [Düzeltme, güncel galeri ve yeni kontrol kaydı](ui-rebuild/logo-trivia-fix/README.md)
+ayrı saklandı. Yukarıdaki 75 PNG galeri önceki sürümün tarihsel kanıtıdır;
+logo ve açılışın güncel görüntüleri yeni galeridedir.

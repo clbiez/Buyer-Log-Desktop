@@ -47,3 +47,7 @@ koşunun dışındadır. Eski veri/yetki testleri korunur. Performans medyanlar�
 PR/push yok: `main` hedefli PR, onaylanmamış Actions tetikler. Güvenlik kurallarını
 atlatmak için workflow veya hedef dal değiştirilmedi. CI: çalışmadı.
 Merge: yapılmadı. TEST: yayınlanmadı. STABLE: yayınlanmadı.
+
+Son kullanıcı incelemesinde bulunan logo/trivia gizlenmesi düzeltildi;
+[güncel gerçek PNG galerisi ve son test kaydı](ui-rebuild/logo-trivia-fix/README.md).
+Yeni son tam koşu: 7.529 geçen / 0 başarısız / 65 mevcut atlama; release notes 78.

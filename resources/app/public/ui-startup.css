@@ -26,8 +26,8 @@ html[data-ui-system="manifest"] #blBootGuard .blBootLink{background:transparent;
 html[data-ui-system="manifest"] #blBootGuard .blTriviaHeading{font-size:var(--ui-font-xs);color:var(--ui-text-muted);}
 html[data-ui-system="manifest"] #blBootGuard .blTriviaCopy h2{font:600 var(--ui-font-2xl)/1.1 var(--ui-font-heading);color:var(--ui-text);}
 html[data-ui-system="manifest"] #blBootGuard .blTriviaCopy p{font:400 var(--ui-font-md)/1.6 var(--ui-font-body);color:var(--ui-text-secondary);}
-/* The facts stay readable. Decorative trivia art is not part of the Manifest UI. */
-html[data-ui-system="manifest"] #blBootGuard .blTriviaVisual,html[data-ui-system="manifest"] #blBootGuard .blTriviaIcon{display:none;}
+/* Local category illustrations remain visible; motion stays disabled. */
+html[data-ui-system="manifest"] #blBootGuard .blTriviaIcon{display:none;}
 html[data-ui-system="manifest"] #blBootGuard .blTriviaProgress{background:var(--ui-surface-strong);}
 html[data-ui-system="manifest"] #blBootGuard .blTriviaProgress i{background:var(--ui-accent);transition:transform var(--ui-motion-fast);}
 html[data-ui-system="manifest"] #blBootGuard .blTriviaBtn{border-radius:var(--ui-radius);font-size:var(--ui-font-base);}
@@ -35,8 +35,8 @@ html[data-ui-system="manifest"] #blBootGuard[data-leaving="1"]{opacity:0;transit
 @media(max-width:760px){html[data-ui-system="manifest"] #blBootGuard .blBootCard{width:calc(100vw - 24px);margin:12px;padding:20px;}}
 @media(prefers-reduced-motion:reduce){html[data-ui-system="manifest"] #blBootGuard,html[data-ui-system="manifest"] #blBootGuard *{animation:none!important;transition:none!important;}}
 
-html[data-ui-system="manifest"] #blBootGuard .blTriviaCard{grid-template-columns:1fr;gap:12px;}
-html[data-ui-system="manifest"] #blBootGuard .blTriviaFigure{display:none;}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaCard{grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:24px;}
+@media(max-width:760px){html[data-ui-system="manifest"] #blBootGuard .blTriviaCard{grid-template-columns:1fr;}html[data-ui-system="manifest"] #blBootGuard .blTriviaFigure{max-width:440px;}}
 html[data-ui-system="manifest"] #blBootGuard .blTriviaSide{max-width:720px;padding:16px 0;}
 html[data-ui-system="manifest"] #blBootGuard .blTriviaCopy p{padding-left:0;}
 html[data-ui-system="manifest"] #blBootGuard *,html[data-ui-system="manifest"] #blBootGuard *::before,html[data-ui-system="manifest"] #blBootGuard *::after{border:0!important;border-radius:var(--ui-radius)!important;box-shadow:none!important;animation:none!important;}

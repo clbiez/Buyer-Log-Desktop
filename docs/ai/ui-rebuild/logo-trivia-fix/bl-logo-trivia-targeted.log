@@ -1,0 +1,40 @@
+✔ Ortak ölçek token'ları tanımlı ve kullanıcının yazı boyutu ayarına bağlı (4.247812ms)
+✔ Hiçbir stil dosyası sabit px yazı boyutu kullanmaz (105.113191ms)
+✔ Köşe yarıçapı yalnız --ui-radius token'larından gelir (88.755325ms)
+✔ Yazı ailesi yalnız --sans, --head veya --mono token'ından gelir (78.938157ms)
+✔ Ham renk kodu sayısı dosya başına dondurulmuş tavanı aşamaz; yeni dosya ham renk taşımaz (57.858172ms)
+✔ Kullanılan her CSS değişkeni bir yerde tanımlıdır (hayalet token yok) (97.651705ms)
+✔ Küçük kontrol yüksekliği ana ölçekten türetilir ve arayüz boyutuyla büyür (2.647481ms)
+✔ Düğme L ve S tek yükseklik, tek yazı ölçüsü kullanır (3.552826ms)
+✔ Segment bileşenleri tek görünüm ve tek aktif durum paylaşır (8.135492ms)
+✔ Filtre çipi ve sayfa sekmesi ayrı, tutarlı iki dil kullanır (0.499133ms)
+✔ KPI etiket, değer ve alt satırı her modülde aynı tipografiyle çizilir (0.549649ms)
+✔ Sayfa başlığı üst çubukta bir kez yazılır (0.478431ms)
+✔ hidden özelliği taşıyan öğeyi sınıfının display değeri görünür bırakmaz (67.596191ms)
+✔ Manifest shared controls consume canonical UI tokens, not the temporary bridge (7.779737ms)
+✔ A single shared reset replaces repeated zero borders, radii and shadows (5.499649ms)
+✔ UI JS and HTML cannot reintroduce literal font sizes, rounded controls or frames (103.524908ms)
+✔ UI layer assignments use canonical bands; only shared dialog stack computes a bounded level (87.408113ms)
+✔ all canonical UI references are defined in the single token source (46.695356ms)
+✔ retired UI files and the compatibility layer are absent from the served app (0.452211ms)
+✔ Manifest has one token source; migrated owners never consume legacy appearance aliases (20.682245ms)
+✔ Manifest prohibits frames, rounded controls, gradients and raw overlay levels (9.583646ms)
+✔ Manifest fonts scale and only transform/opacity may animate (12.979384ms)
+✔ Main column separators cover both header tiers and never the table body (1.335293ms)
+✔ Shared button contract covers interaction states and restricts explicit variants (52.211941ms)
+✔ Notes dialog keeps canonical behavior hooks, labelled field and keyboard focus containment (9.189141ms)
+✔ Unauthenticated asset serving is a fixed UI-only list before auth gates (2.315761ms)
+✔ Migrated Plan and Execute module styles contain only layout and data geometry (3.29705ms)
+✔ Commercial module CSS owns layout only; charts use square marks (5.159547ms)
+✔ Operations module CSS owns layout only; loading avoids decorative canvas (7.255476ms)
+✔ Remaining module CSS owns layout only; nested output forms use the shared dialog stack (5.106678ms)
+✔ every module and shell layout file is free of private appearance definitions (28.883147ms)
+✔ Earth markers share square geometry, local scaled fonts and static route emphasis (0.613825ms)
+ℹ tests 32
+ℹ suites 0
+ℹ pass 32
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 508.53417

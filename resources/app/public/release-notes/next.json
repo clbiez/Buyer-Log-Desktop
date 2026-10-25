@@ -2214,6 +2214,64 @@
           "en": "Manifest Phase 3; actual post-change PNG."
         }
       }
+    },
+    {
+      "id": "manifest-logo-restored",
+      "type": "fix",
+      "module": {
+        "tr": "Gezinme",
+        "en": "Navigation"
+      },
+      "title": {
+        "tr": "Buyer Log logosu üç temada görünür",
+        "en": "Buyer Log logo is visible in all three themes"
+      },
+      "body": {
+        "tr": "Sol üstteki paketli logo görselini gizleyen stil kaldırıldı; metin taklidi yerine orijinal logo gösterilir.",
+        "en": "Removed the style hiding the packaged upper-left logo; the original image is displayed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-logo-restored.png",
+        "alt": {
+          "tr": "Buyer Log logosu üç temada görünür",
+          "en": "Buyer Log logo is visible in all three themes"
+        },
+        "caption": {
+          "tr": "Anonim verilerle değişiklik sonrası gerçek Buyer Log görüntüsü.",
+          "en": "Actual post-change Buyer Log screenshot with anonymous data."
+        }
+      }
+    },
+    {
+      "id": "manifest-trivia-art-restored",
+      "type": "fix",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Genel kültür görselleri geri geldi",
+        "en": "Trivia illustrations are restored"
+      },
+      "body": {
+        "tr": "Açılıştaki yerel kategori SVG görselleri yeniden görünür. Tema renkleri ve azaltılmış hareket desteği korunur.",
+        "en": "Local category SVG illustrations are visible again at startup, using theme colors and reduced motion support."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-trivia-art-restored.png",
+        "alt": {
+          "tr": "Genel kültür görselleri geri geldi",
+          "en": "Trivia illustrations are restored"
+        },
+        "caption": {
+          "tr": "Anonim verilerle değişiklik sonrası gerçek Buyer Log görüntüsü.",
+          "en": "Actual post-change Buyer Log screenshot with anonymous data."
+        }
+      }
     }
   ]
 }
