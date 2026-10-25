@@ -239,7 +239,10 @@ function createOutputService(options = {}) {
       attempts: 1, lang, orientation, day: draft.day, date: date.toISOString(), requestId: '', draftId: draft.id, edited: true,
       records: draft.source ? studioSource.normalizeRecords(draft.records, Object.keys(draft.records), lang) : raw.layout && raw.layout.studio ? studioSource.bindLegacyRecords(draft.records, lang) : draft.records || {},
     };
-    const images = normalizeImages(draft.images || {}, collectTokens(draft.format, parsed.data));
+    const imageTokens = parsed.data.layout && parsed.data.layout.studio && draft.format === 'pptx'
+      ? parsed.data.slides.flatMap(slide => [slide.image, ...(slide.items || []).map(item => item.image)]).filter(Boolean)
+      : collectTokens(draft.format, parsed.data);
+    const images = normalizeImages(draft.images || {}, imageTokens);
     let output;
     if (parsed.data.layout && parsed.data.layout.studio && draft.format === 'pptx') {
       const target = input.format || 'pptx';

@@ -118,6 +118,20 @@ test('studio: templates keep bindings and preferences but discard record-specifi
   assert.deepEqual(def.layout.cardFields, ['plmId']);
 });
 
+test('studio: reordering a scope larger than the image cap preserves the same resolved images', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'bl-studio-images-'));
+  try {
+    const service = createOutputService({ storeOptions: { root } });
+    const source = S.build({ module: 'orders', rows: Array.from({ length: 205 }, (_, i) => ({ _id: `r${i}`, modelName: `M${i}` })) });
+    source.images = { 'ORD-1': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==' };
+    const draft = service.createStudio('u1', source);
+    const items = draft.data.slides.find(slide => slide.items).items;
+    items.push(items.shift());
+    const output = service.renderDraft('u1', draft.id, { data: draft.data, format: 'html' }).output;
+    assert.match(fs.readFileSync(output.path, 'utf8'), /src="data:image\/png;base64,/);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); fs.rmSync(`${root}-drafts`, { recursive: true, force: true }); }
+});
+
 test('studio: old translated record labels resolve saved canonical bindings without changing values', () => {
   const records = S.bindLegacyRecords({ 'CP-1': [['Net Alım Sipariş Miktarı', '25'], ['FOB', '4.20'], ['Set Parça Sayısı', '2']] }, 'en');
   assert.equal(L.fieldValue({ image: 'CP-1' }, 'orderQuantity', records), '25');
