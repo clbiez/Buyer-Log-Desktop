@@ -1068,6 +1068,7 @@ td.exf-next{background:var(--acc-bg);color:var(--acc-ink);}
 
 /* ===================== GÖRÜNÜM / FİLTRE MENÜLERİ (vfBar) ===================== */
 .vfMenuWrap{position:relative;}
+.vfViewHelp{max-width:280px;margin:8px 0;color:var(--muted);font-size:var(--fs-xs);line-height:1.5;}
 .vfMenuTrigger{background:var(--card);border:1px solid var(--line);color:var(--ink2);padding:5px 10px;font-size:var(--fs-xs);border-radius:var(--r-sm);cursor:pointer;white-space:nowrap;}
 .vfMenuTrigger:hover,.vfMenuTrigger[aria-expanded="true"]{border-color:var(--acc-lite);color:var(--acc-ink);background:var(--acc-bg);}
 /* Görünüm ve Filtre panelleri toolbar'ın overflow alanına bağlı kalmaz.

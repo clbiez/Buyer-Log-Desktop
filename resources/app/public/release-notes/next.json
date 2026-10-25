@@ -1808,6 +1808,64 @@
           "en": "TR/EN text refreshes while preserving the current input draft."
         }
       }
+    },
+    {
+      "id": "saved-view-context-density-filters",
+      "type": "improvement",
+      "module": {
+        "tr": "Kayıtlı görünümler",
+        "en": "Saved views"
+      },
+      "title": {
+        "tr": "Görünüm, satır sıklığını ve filtreleri de saklar",
+        "en": "Views also save row density and filters"
+      },
+      "body": {
+        "tr": "Mevcut görünüm seçicisi sütun düzenini, satır sıklığını, filtreleri ve sıralamayı birlikte geri getirir. Kanonik alan kimlikleri sütun adı değişikliklerine dayanır; kaldırılan alanlar atlanır. Koleksiyon özel sütunları korunur. Varsayılana dön eylemindeki seçim temizleme hatası giderildi. Ayrı favori filtre seçiminiz başlangıçta önceliğini korur.",
+        "en": "The existing picker restores column layout, row density, filters and sorting together. Canonical field IDs survive column binding changes; removed fields are skipped. Collection custom columns are retained. Resetting the system default now correctly clears the picker. A separately configured favourite filter keeps its startup priority."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "saved-view-context.png",
+        "alt": {
+          "tr": "Gerçek demo uygulamasında kayıtlı görünüm ve filtreli CP tablosu.",
+          "en": "Saved view and filtered CP table in the actual demo application."
+        },
+        "caption": {
+          "tr": "Mevcut görünüm altyapısı; kanonik alanlar, satır sıklığı ve filtreler.",
+          "en": "Existing view infrastructure with canonical fields, density and filters."
+        }
+      }
+    },
+    {
+      "id": "personal-workspace-resume",
+      "type": "feature",
+      "module": {
+        "tr": "Çalışma alanı",
+        "en": "Workspace"
+      },
+      "title": {
+        "tr": "Son yetkili çalışma ekranından devam edin",
+        "en": "Resume the last authorized workspace"
+      },
+      "body": {
+        "tr": "Son ekran bu cihazda kullanıcıya özel hatırlanır. Görünümdeki konum ve aktif hücre, güncel kanonik kayıt kimliğiyle sayfalanmış tabloda geri bulunur. Silinmiş, filtrelenmiş veya kimliği değişmiş kayıt başka satıra taşınmaz. Başka kullanıcının görünümü satır odağını taşımaz; açıkça verilen ekran adresi ve güncel erişim yetkisi önceliklidir.",
+        "en": "The last screen is remembered per user on this device. Position and active cell are resolved by current canonical identity in the paginated table. Missing, filtered or replaced records do not select another row. A view from another user cannot transfer row focus; explicit workspace routes and current access take precedence."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "saved-view-context-en.png",
+        "alt": {
+          "tr": "Gerçek demo uygulamasında kayıtlı görünüm ve filtreli CP tablosu.",
+          "en": "Saved view and filtered CP table in the actual demo application."
+        },
+        "caption": {
+          "tr": "Mevcut görünüm altyapısı; kanonik alanlar, satır sıklığı ve filtreler.",
+          "en": "Existing view infrastructure with canonical fields, density and filters."
+        }
+      }
     }
   ]
 }

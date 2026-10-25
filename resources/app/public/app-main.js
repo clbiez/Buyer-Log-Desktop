@@ -2137,11 +2137,14 @@ function switchTab(tab){
   }
   void window.buyerLogDesktop?.workspace?.setModule?.(tab);
   const previousTab=document.body.dataset.activeTab||document.querySelector('nav.tabs button.active')?.dataset.tab||'';
+  if(startupReadySignaled&&previousTab!==tab)saveWorkspaceResume();
+  if(startupReadySignaled&&previousTab!==tab)startupViewResume=null;
   if(tab==='lcwai'&&previousTab&&previousTab!=='lcwai')window.BL_LCWAI_LAST_TAB=previousTab;
   if(previousTab==='cp'||previousTab==='orders') saveCoreAutoFilterState();
   if(previousTab==='cp'&&tab!=='cp'){ _cpImageWarmupJob++; BLImageRuntime.cancelWarmup(); }
   if(typeof closeAllColumnPanels==='function') closeAllColumnPanels();
   document.body.dataset.activeTab = tab;
+  if(startupReadySignaled)workspaceResume()?.save(tab);
   if(tab==='overview'&&state.overviewDeferred)void ensureOverviewLoaded();
   flushDeferredRenderForTab(tab);
   syncTableToolbarActions(tab);
@@ -2178,7 +2181,7 @@ function switchTab(tab){
   }
   if(tab==='koleksiyon'&&profileFirstVisit){
     const dataReady=ensureCollectionCatalogLoaded({deferRender:true});
-    void Promise.all([dataReady,profileReady]).then(()=>{if(currentActiveTab()==='koleksiyon'&&typeof renderKol==='function')renderKol();});
+    void Promise.all([dataReady,profileReady]).then(()=>{if(currentActiveTab()==='koleksiyon'&&typeof renderKol==='function'){applyStoredProfilesForCurrentPage(true);renderKol();}});
   }
   if(tab==='koleksiyon'&&kolFabricRepaintPending){kolFabricRepaintPending=false;if(typeof renderKol==='function')renderKol();}
   if(tab==='koleksiyon'||tab==='priceanalysis'||tab==='quotations'||tab==='pricinghistory'){
@@ -7505,6 +7508,7 @@ function renderTableRangeControls(table,tableKey,rows,rerender){
     bar.querySelector('[data-range-page]').addEventListener('change',event=>{view.controller.go(Number(event.target.value)-1);draw();});
   }
   view.rerender=rerender;
+  view.rows=rows;
   const range=view.controller.update(rows),bar=view.bar;
   bar.title=T('Filtreler, toplamlar ve dışa aktarma tüm eşleşen satırları kapsar.','Filters, totals and exports include all matching rows.');
   const select=bar.querySelector('[data-range-size]');select.value=String(range.size);select.lastElementChild.textContent=T('Tümü','All');
@@ -16415,7 +16419,10 @@ async function waitForStartupPrimaryScreen(){
 }
 window.addEventListener('DOMContentLoaded', async () => {
   window.BLPerf?.mark?.('DOM_CREATION_READY');
-  const requestedModule=new URLSearchParams(location.search).get('module');
+  const explicitModule=new URLSearchParams(location.search).get('module');
+  const resumedWorkspace=explicitModule?null:workspaceResume()?.read();
+  const requestedModule=workspaceResume()?.target(explicitModule)||explicitModule;
+  if(resumedWorkspace&&resumedWorkspace.module===requestedModule)startupViewResume=resumedWorkspace.data;
   if(requestedModule&&requestedModule!=='overview'&&document.getElementById('view-'+requestedModule))window.BL_BOOT_MODULE=requestedModule;
   // Açılış perdesinin "Kullanıcı bilgileri" kapısı user-access-ui.js'e bağlıdır.
   // deferredUi grubu ekran hazır olduktan ve önceki dosyalar bittikten sonra
@@ -16447,7 +16454,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     const idle=window.requestIdleCallback||((fn)=>setTimeout(()=>fn({timeRemaining:()=>8}),40));
     idle(()=>{
       void loadPlmStyleLinks({rerender:false});
-      void applyFavoritesOnStartup().catch(err=>console.warn('Başlangıç favorileri uygulanamadı:',err));
+      if(!_favoritesAppliedPages.has(currentActiveTab()))void applyFavoritesOnStartup().catch(err=>console.warn('Başlangıç favorileri uygulanamadı:',err));
     },{timeout:900});
   }));
 });
@@ -16513,7 +16520,7 @@ function activeProfilePage(){
   return tab==='shipping' ? 'ship' : tab;
 }
 function isProfilePage(page=activeProfilePage()){ return VIEW_TABLES.includes(page); }
-function collectViewState(){
+function collectViewLayout(){
   const page = activeProfilePage();
   if(!isProfilePage(page)) return {__page:page};
   if(page==='koleksiyon'){
@@ -16525,16 +16532,68 @@ function collectViewState(){
       imgSize:kolImgSize,
       widthPx:{...kolColWidths},
       freeze:state.freeze?.koleksiyon||null,
+      sorting:{key:kolSort.key||null,dir:kolSort.dir===-1?-1:1},
     }};
   }
   const cs = colmgr[page];
   const sorting=page==='cp'?state.cpSort:page==='orders'?state.ordersSort:null;
   return {__page:page, [page]:{order:cs.order.slice(),hidden:[...cs.hidden],widthPx:{...cs.widthPx},freeze:state.freeze?.[page]||null,sorting:sorting?{key:sorting.key||null,dir:sorting.dir===-1?-1:1}:null}};
 }
+function viewContextColumns(page,data){return page==='koleksiyon'?[...new Set(['__picture__',...kolAllOrderedCols().map(c=>c.k),...kolNormalizeCustomCols(data?.koleksiyon?.custom).map(c=>c.k)])]:['__picture',...(COLS_BY_TABLE[page]||[]).map(c=>c.k)];}
+function viewContextCanonical(page,key){return window.BLCanonicalFields?.canonicalId?.(page==='koleksiyon'?'collection':page,key)||null;}
+function viewRowOptions(page){return {page,user:String(window.BL_USER_CONTEXT?.id||''),owner:page==='koleksiyon'?kolWorkspaceOwnerId:'',fields:window.BLCanonicalFields};}
+function viewContextTable(page){return document.getElementById(page==='koleksiyon'?'kolTable':page==='ship'?'shipTable':page==='orders'?'ordersTable':'cpTable');}
+function collectViewContext(page){
+ const table=viewContextTable(page),host=table?.closest('.tablewrap');if(!host||page==='ship')return null;
+ const rows=page==='koleksiyon'?filteredKol():(table._blRenderedRows||[]),active=page==='koleksiyon'?window.BLCollectionSpreadsheet?.state?.active:window.BLGridClipboard?.state(table.id)?.activeCell;
+ const row=active&&rows.find(row=>String(row.id??row._id)===String(active.rowId));
+ const rect=host.getBoundingClientRect(),first=[...table.querySelectorAll('tbody tr[data-id]')].find(tr=>tr.getBoundingClientRect().bottom>rect.top+table.tHead.getBoundingClientRect().height),firstRow=first&&rows.find(row=>String(row.id??row._id)===first.dataset.id);
+ return {user:String(window.BL_USER_CONTEXT?.id||''),workspace:viewRowOptions(page).owner,rangeSize:_tableRangeViews.get(table)?.controller.snapshot().size,left:host.scrollLeft,anchor:firstRow?window.BLViewContext.rowBinding(firstRow,viewRowOptions(page)):null,offset:first?first.getBoundingClientRect().top-rect.top:0,active:row?{binding:window.BLViewContext.rowBinding(row,viewRowOptions(page)),key:active.key??active.columnId}:null};
+}
+function collectViewState(){
+ const page=activeProfilePage(),data=collectViewLayout();
+ return window.BLViewContext?.pack(data,{page,columns:viewContextColumns(page),canonical:viewContextCanonical,density:window.BLTableDensity?.get(page),filters:collectFilterState(),context:collectViewContext(page)})||data;
+}
+let viewContextGeneration=0,startupViewResume=null;
+function restoreViewContext(page,context){
+ const generation=++viewContextGeneration;if(!context||context.user!==String(window.BL_USER_CONTEXT?.id||'')||context.workspace!==viewRowOptions(page).owner)return;
+ requestAnimationFrame(()=>requestAnimationFrame(()=>{
+  if(generation!==viewContextGeneration||activeProfilePage()!==page)return;
+  const table=viewContextTable(page),host=table?.closest('.tablewrap');if(!host)return;
+  const rangeView=_tableRangeViews.get(table),rows=rangeView?.rows||(page==='koleksiyon'?filteredKol():(table._blRenderedRows||[])),options=viewRowOptions(page),match=b=>rows.find(row=>window.BLViewContext.matchesRow(b,row,options));
+  const anchor=match(context.anchor),active=match(context.active?.binding),target=anchor||active;
+  if(target&&rangeView){const size=context.rangeSize;if([50,100,200,'all'].includes(size))rangeView.controller.setSize(size);const currentSize=rangeView.controller.snapshot().size;rangeView.controller.go(currentSize==='all'?0:Math.floor(rows.indexOf(target)/currentSize));rangeView.rerender();}
+  const visibleRows=rangeView?.controller.snapshot().rows||rows,virtual=table.tBodies?.[0]?._virtualState;
+  if(anchor&&virtual){host.scrollTop=visibleRows.indexOf(anchor)*virtual.rowHeight;virtual.paint?.();}
+  else if(anchor){const tr=[...table.querySelectorAll('tbody tr[data-id]')].find(tr=>tr.dataset.id===String(anchor.id??anchor._id));if(tr)host.scrollTop+=tr.getBoundingClientRect().top-host.getBoundingClientRect().top-(Number(context.offset)||0);}
+  // Missing/filtered/reused IDs deliberately leave the current scroll unchanged.
+  host.scrollLeft=Math.max(0,Number(context.left)||0);
+  const key=context.active?.key;if(!active||!viewContextColumns(page).includes(key))return;
+  if(page==='koleksiyon'){const td=[...table.querySelectorAll('tbody tr[data-id]')].find(tr=>tr.dataset.id===String(active.id))?.querySelectorAll('td[data-key]');const cell=td&&[...td].find(td=>td.dataset.key===key);if(cell)window.BLCollectionSpreadsheet?.setActive(cell,{focusGrid:false});}
+  else window.BLGridClipboard?.restoreActive(table.id,{rowId:String(active._id),columnId:key});
+ }));
+}
+function workspaceResume(){return window.BLViewContext?.createResume({storage:window.BLStorage,user:()=>String(window.BL_USER_CONTEXT?.id||''),allowed:tab=>{
+ if(!document.getElementById('view-'+tab))return false;
+ if(!window.BLCanAccessArea||tab==='lcwai')return true;
+ if(tab==='licensecards')return ['orders','cp','source'].some(area=>window.BLCanAccessArea(area));
+ return window.BLCanAccessArea(tab==='manufacturers'?'orders':['quotations','pricinghistory'].includes(tab)?'koleksiyon':tab);
+}});}
+function saveWorkspaceResume(){const tab=currentActiveTab();workspaceResume()?.save(tab,isProfilePage(activeProfilePage())?collectViewState():null);}
+window.addEventListener('pagehide',saveWorkspaceResume);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden'&&startupReadySignaled)saveWorkspaceResume();});
+document.addEventListener('pointerdown',()=>{if(startupReadySignaled)startupViewResume=null;},{capture:true});
+document.addEventListener('keydown',()=>{if(startupReadySignaled)startupViewResume=null;},{capture:true});
 function applyViewState(data){
   if(!data) return;
   const page = activeProfilePage();
   if(data.__page && data.__page!==page) return;
+  const legacyData=data;
+  data=window.BLViewContext?.unpack(data,{page,columns:viewContextColumns(page,data),canonical:viewContextCanonical,filterIds:FILTER_INPUTS[page]?.selects||[]})||(!legacyData.__viewVersion?legacyData:null);
+  if(!data)return;
+  if(data[page]?.density!=null)window.BLTableDensity?.set(page,data[page].density);
+  if(data.__filters)applyFilterState(data.__filters);
+  restoreViewContext(page,data.__context);
   if(!state.freeze) state.freeze={};
   if(page==='koleksiyon' && data.koleksiyon){
     const v=data.koleksiyon;
@@ -16544,6 +16603,7 @@ function applyViewState(data){
     kolPictureHidden=!!v.pictureHidden;
     if(v.imgSize) kolImgSize=kolNormalizeImgSize(v.imgSize);
     kolColWidths={...(v.widthPx||{})};
+    kolSort={key:kolColDefs().some(c=>c.k===v.sorting?.key)?v.sorting.key:null,dir:Number(v.sorting?.dir)===-1?-1:1};
     if(v.freeze&&typeof v.freeze==='object')state.freeze.koleksiyon={left:Number(v.freeze.left)||0,right:Number(v.freeze.right)||0};
     else delete state.freeze.koleksiyon;
     saveKolColState();
@@ -16736,6 +16796,7 @@ function applyStoredProfilesForCurrentPage(applyFavorites=true){
   const filter=profileItem('filter',filterId,page);
   if(view){const select=document.getElementById('viewSelect');if(select){select.value=view.id;window.syncProfilePicker?.(select);}applyViewState(view.data);}
   if(filter){const select=document.getElementById('filterSelect');if(select){select.value=filter.id;window.syncProfilePicker?.(select);}applyFilterState(filter.data);}
+  if(startupViewResume?.__page===page)applyViewState(startupViewResume);
 }
 
 async function refreshViewSelect(){
@@ -16863,13 +16924,20 @@ async function renameProfile(kind){
 }
 document.getElementById('viewRenameBtn')?.addEventListener('click',()=>renameProfile('view'));
 
+function clearProfileSelection(kind){
+  const select=document.getElementById(kind==='view'?'viewSelect':'filterSelect');
+  if(select){select.value='';window.syncProfilePicker?.(select);}
+}
 function resetViewToSystemDefault(){
   const page=activeProfilePage();
   if(!isProfilePage(page))return;
+  ++viewContextGeneration;
+  window.BLTableDensity?.set(page,'default');
   if(!state.freeze)state.freeze={};
   delete state.freeze[page];
   if(page==='koleksiyon'){
     kolColOrder=null;kolColWidths={};kolHiddenCols=new Set();kolPictureHidden=false;
+    kolSort={key:null,dir:1};
     saveKolColState();
   }else if(colmgr[page]){
     forgetPersistedTableColumnState(page);
