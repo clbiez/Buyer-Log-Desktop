@@ -270,7 +270,7 @@ test('Collection Checklist selections are journalled immediately and restored af
   const ctx={Date,JSON,Set,localStorage:{setItem:(k,v)=>saved.set(k,v),getItem:k=>saved.get(k)||null},
     BLStorage:{setItem:(k,v)=>saved.set(k,v)},kolRows:[{id:1}],kolCustomCols:[{k:'check',checklist:true}],
     KOL_CHECKLIST_STATUSES:['open','approved','rejected','notRequired'],KOL_STORAGE_KEY:'rows',
-    kolWorkspaceCanEdit:true,kolWorkspaceOwnerId:'buyer',kolWorkspaceRevision:1,kolNextId:2,
+    kolWorkspaceCanEdit:true,kolBulkPreparing:false,kolWorkspaceOwnerId:'buyer',kolWorkspaceRevision:1,kolNextId:2,
     kolManufacturers:[],kolSelected:new Set(),kolWorkspaceSaving:false,kolHiddenCols:new Set(),appLang:'en',
     kolRequireWorkspaceEdit:()=>true,kolChecklistColumns:()=>ctx.kolCustomCols,
     kolCellLinkedToModel:()=>false,kolEffectiveValue:(r,k)=>r[k],kolPushUndo:()=>{},
@@ -278,7 +278,7 @@ test('Collection Checklist selections are journalled immediately and restored af
     kolManufacturersForPersistence:()=>[],kolStatusEntries:()=>[],kolQueueWorkspaceSave:()=>{},
     kolSaveWorkspaceNow:async()=>{started++;return {ok:false,pending:true};},renderKol:()=>{},scheduleOverviewCollectionSummaryRender:()=>{},
     migrateKolRow:r=>({...r}),kolNormalizeStatusCatalog:()=>[],kolNormalizeCustomCols:c=>c,refreshSubmfrList:()=>{},loadKolColState:()=>{},
-    kolHasDirtyWorkspace:()=>true,showToast:()=>{},
+    kolHasDirtyWorkspace:()=>true,kolSetSaveFeedback:()=>{},showToast:()=>{},
   };
   vm.createContext(ctx);
   for(const name of ['kolChecklistStatus','kolSetChecklistStatus','kolWorkspaceLocalKey','kolWorkspacePendingKey','kolPersistPendingWorkspace','kolReadPendingWorkspace','kolClearPendingWorkspace','kolRestorePendingWorkspace','saveKolRows'])vm.runInContext(fn(name),ctx);

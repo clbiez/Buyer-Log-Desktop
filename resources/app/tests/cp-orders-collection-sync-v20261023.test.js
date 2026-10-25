@@ -170,7 +170,13 @@ test('B2 · commitCpEditor, clearRowNote, applyHistoryAction, applyCpGridPaste v
   assert.match(commitSrc, /syncOrderLinePeersFromCpRow/);
   assert.match(clearNoteSrc, /syncOrderLinePeersFromCpRow/);
   assert.match(historySrc, /syncOrderLinePeersFromCpRow/);
-  assert.match(pasteSrc, /renderOrders\(\)/);
+  // Bulk preview prepares private drafts; live peers render only after durable ACK.
+  assert.match(pasteSrc, /const data=await enqueueOverrideMutation\(/);
+  assert.match(pasteSrc, /applyAcknowledgedCpDraft\(prepared,data\)/);
+  assert.ok(pasteSrc.indexOf('applyAcknowledgedCpDraft(prepared,data)')>pasteSrc.indexOf('const data=await enqueueOverrideMutation('));
+  const acknowledgedSrc=extractFunction(APP,'applyAcknowledgedCpDraft');
+  assert.match(acknowledgedSrc,/\['cp','orders','orderSummary'\]/);
+  assert.match(acknowledgedSrc,/renderOrders\(\)/);
   assert.match(propSrc, /\['cp','orders','orderSummary'\]/);
   assert.match(propSrc, /orderLinePeerRows\(tableKey,sourceRow\)/);
   assert.match(propSrc, /Sub-Manufacturer/);
