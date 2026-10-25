@@ -94,5 +94,5 @@ test('Backlog Overview restores the 7.0.294 circular gauge while Plan Actual ret
   assert.match(UI,/class="bpaRingText"/);
   assert.doesNotMatch(UI,/<circle\b/);
   assert.match(VISUAL,/\.uiMeasure>i\{[^}]*transform-origin:left/);
-  assert.match(VISUAL,/\.bpaRingValue \{[^}]*stroke:var\(--ui-success\)/);
+  assert.match(VISUAL,/\.bpaRingValue\{[^}]*stroke:var\(--ui-success\)/);
 });
