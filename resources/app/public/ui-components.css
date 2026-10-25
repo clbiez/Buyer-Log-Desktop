@@ -1,0 +1,239 @@
+/* Manifest pilot components. Existing IDs/classes remain behavior hooks. */
+html[data-ui-system="manifest"] .rail{padding:23px 14px 14px;background:var(--ui-rail);transition:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .railTop{padding:0 4px 20px;margin-bottom:8px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .brandName{font-family:var(--ui-font-heading);font-size:var(--ui-font-lg);font-weight:600;letter-spacing:-.025em;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .brandMark--image{background:var(--ui-text);width:30px;height:34px;display:grid;place-items:center;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .brandMarkImage{opacity:0;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .brandMark--image::before{content:'BL';position:absolute;color:var(--ui-canvas);font:500 var(--ui-font-base)/1 var(--ui-font-heading);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .railGroupLabel{font-size:var(--ui-font-2xs);font-weight:500;letter-spacing:.08em;padding:18px 10px 8px;color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(nav.tabs button,.railFoot button){border:0 !important;box-shadow:none !important;color:var(--ui-text-secondary);background:transparent;transition:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) nav.tabs button.active{color:var(--ui-selected-ink);background:var(--ui-selected);font-weight:700;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) nav.tabs button::after{content:none;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) nav.tabs button:hover{background:var(--ui-surface-strong);color:var(--ui-text);}
+html[data-ui-system="manifest"] .appTop{padding-left:28px;padding-right:24px;background:var(--ui-canvas);}
+html[data-ui-system="manifest"] .appTop h1{font:500 var(--ui-font-xl)/1.15 var(--ui-font-heading);letter-spacing:-.02em;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.blSteelInitials,.accessModeBadge){background:var(--ui-surface-strong) !important;color:var(--ui-text) !important;-webkit-text-fill-color:var(--ui-text) !important;border:0 !important;box-shadow:none !important;text-shadow:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.iconbtn,.railCollapse,.lcwaiHeaderBtn,.corporateLcwAiBtn,.headerAiBtn){border:0 !important;box-shadow:none !important;border-radius:0 !important;background:var(--ui-surface-soft);color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.iconbtn,.railCollapse,.lcwaiHeaderBtn)::after{content:none;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(button,input,select,textarea,a,[tabindex]):focus-visible{outline:2px solid var(--ui-accent);outline-offset:3px;box-shadow:none !important;}
+html[data-ui-system="manifest"] :is(#view-overview,#view-cp,.vfBar) :is(button,input,select,textarea){border-radius:0 !important;}
+html[data-ui-system="manifest"] :is(#view-overview,#view-cp,.vfBar) button{border:0 !important;box-shadow:none !important;}
+html[data-ui-system="manifest"] :is(#view-overview,#view-cp) :is(.tbtn,.navActionBtn,.tableViewPreset,.ovHomePageTab,.ovBreakdownDims>button,.ovPremiumSegment>button,.cpaBtn,.cpaSeg>button){font-family:var(--ui-font-body);font-size:var(--ui-font-xs);color:var(--ui-text-secondary);background:var(--ui-surface-soft);}
+html[data-ui-system="manifest"] :is(#view-overview,#view-cp) :is(.tbtn.primary,.tableViewPreset[aria-pressed="true"],.ovPremiumSegment>button[aria-pressed="true"],.cpaSeg>button.is-active){background:var(--ui-accent) !important;color:var(--ui-on-accent) !important;}
+html[data-ui-system="manifest"] :is(#view-overview,#view-cp) button:hover:not(:disabled){background-color:var(--ui-selected);color:var(--ui-selected-ink);}
+html[data-ui-system="manifest"] :is(#view-overview,#view-cp) :is(button,input,select):disabled{opacity:.5;cursor:default;}
+html[data-ui-system="manifest"] :is(#view-overview,#view-cp,.vfBar) :is(input:not([type="checkbox"]),select,textarea){background:var(--ui-surface-soft);color:var(--ui-text);border:0 !important;box-shadow:none !important;font-family:var(--ui-font-body);}
+html[data-ui-system="manifest"] :is(#view-overview,#view-cp) input::placeholder{color:var(--ui-text-muted);opacity:1;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable input[type="checkbox"]{appearance:none;border:0 !important;border-radius:0 !important;position:relative;width:13px;height:13px;background:var(--ui-check-idle);cursor:pointer;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable input[type="checkbox"]:checked{background:var(--ui-accent);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable input[type="checkbox"]:checked::after{content:'';position:absolute;inset:3px 2px;background:var(--ui-on-accent);clip-path:polygon(0 45%,18% 25%,40% 55%,85% 0,100% 18%,40% 100%);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHome[data-density="compact"]{--ov-row:40px;--ov-gap:18px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovDashboardToolbar{margin:8px 0 16px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #ovMotionBtn{display:none;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHome>[data-overview-widget]{border:0 !important;border-radius:0 !important;box-shadow:none !important;background:transparent;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHome>[data-overview-widget]::before,html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHome>[data-overview-widget]::after{content:none;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #ovLaunchpad{padding:0;background:transparent;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovClockGrid{gap:18px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.ovClockCard,.ovClockMicro,.ovClockCompact){border:0 !important;box-shadow:none !important;background:transparent;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.ovPremiumHead,.ovBreakdownHead,.cpaBar,.globalFlowHead,.ovPriorityHeader){border:0 !important;padding:16px 18px 12px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.ovPremiumHead b,.ovBreakdownTitle,.globalFlowTitle,.ovPriorityTitle){font-family:var(--ui-font-heading);font-size:var(--ui-font-lg);font-weight:500;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHomePageTab{padding:0 16px;height:var(--ui-control-height);background:transparent;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHomePageTab.isActive{background:var(--ui-text) !important;color:var(--ui-canvas) !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHomePageTab.isActive small{background:transparent !important;color:inherit !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHomePageTab::after{content:none;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseGrid{gap:28px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseKpi{padding:16px 0 24px;background:transparent;border:0 !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseKpi>span{font-size:var(--ui-font-xs);font-weight:500;letter-spacing:.035em;color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseKpi>strong{font:500 var(--ui-font-4xl)/1.15 var(--ui-font-heading);letter-spacing:-.04em;margin:6px 0;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseKpi>em{font-size:var(--ui-font-xs);color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseBand{left:0;right:0;height:4px;bottom:7px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseMini{opacity:1;right:0;bottom:28px;height:28px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(#ovDeadline,#ovBreakdown){background:var(--ui-surface);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #ovPriorityReminder{background:var(--ui-surface-soft);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonChart{padding:18px 22px 0;gap:16px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonDay{border:0 !important;gap:8px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonTrack{background:var(--ui-surface-soft);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonFoot{padding:14px 22px;font-size:var(--ui-font-xs);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovBreakdownDims{gap:6px;padding:0 18px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovBreakdownDims button.active{background:var(--ui-selected);color:var(--ui-selected-ink);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.ovBreakdownRow,.ovBreakdownItem){border:0 !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.ovPriorityEmpty,.ovPremiumEmpty,.cpaEmpty,.cpaCoverageEmpty){border:0 !important;background:transparent;box-shadow:none !important;color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.cpaCard,.cpaChip,.cpaVisualRow,.cpaVisualThumb,.cpaCoverageGrid,.cpaCoverageTile){border:0 !important;box-shadow:none !important;background:transparent;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.gfKpiStrip,.gfKpi,.gfControlBar,.globalFlowCanvasWrap){border:0 !important;box-shadow:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.gfLegendDot,.gfKpiDot,.globalFlowLegend i,.ovHomeDot,.ovHomeHandle){border-radius:0 !important;}
+html[data-ui-system="manifest"] .vfBar{background:var(--ui-canvas);padding-left:28px;padding-right:28px;}
+html[data-ui-system="manifest"] .vfBar :is(button,.vfPick,.vfChip,.horizonBadge){border:0 !important;box-shadow:none !important;background:var(--ui-surface-soft);color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] #view-cp .panel{background:var(--ui-surface);}
+html[data-ui-system="manifest"] #view-cp .workspaceContextBar{background:var(--ui-canvas);padding:15px 0;gap:16px;}
+html[data-ui-system="manifest"] #view-cp .workspaceContextBar{flex-wrap:wrap;row-gap:8px;}
+html[data-ui-system="manifest"] #view-cp .workspaceContextMeta{flex:1 1 530px;white-space:normal;font:400 var(--ui-font-xs)/1.5 var(--ui-font-mono);color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] #view-cp .tableViewActions{margin-left:auto;max-width:100%;flex-wrap:wrap;}
+html[data-ui-system="manifest"] #view-cp .tableActionToolbar{padding:12px 10px;background:var(--ui-surface);}
+html[data-ui-system="manifest"] #view-cp .tableWrap{background:var(--ui-surface);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable :is(th,td){border-left:0 !important;border-right:0 !important;border-top:0 !important;box-shadow:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable thead th{background:var(--ui-header-bg);color:var(--ui-header-ink);border-bottom:0 !important;font:600 var(--ui-font-2xs)/1.3 var(--ui-font-body);letter-spacing:.04em;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable thead :is(th,td)::after{border:0 !important;box-shadow:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable tbody td{border-bottom:1px solid var(--ui-row-divider) !important;background-color:var(--ui-surface);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable tbody tr:nth-child(even)>td{background-color:var(--ui-surface);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable tbody tr:hover>td{background-color:var(--ui-row-hover);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable tbody tr.selected>td{background-color:var(--ui-selected);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable .badge{border:0 !important;padding:4px 7px;border-radius:0 !important;letter-spacing:.025em;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable .b-green{background:var(--ui-success-bg) !important;color:var(--ui-success) !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable .b-red{background:var(--ui-danger-bg) !important;color:var(--ui-danger) !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable :is(.b-orange,.b-yellow){background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable .b-gray{background:var(--ui-surface-strong) !important;color:var(--ui-text-secondary) !important;}
+html[data-ui-system="manifest"] #view-cp :is(.tableRangeBar,.tableRangePager,.tableFoot,.tableFooter,.chkFooter){border:0 !important;box-shadow:none !important;background:var(--ui-surface-soft);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTableToolbar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic){font-size:0;gap:0;justify-content:center;}
+html[data-ui-system="manifest"] #view-cp #cpTable thead th{background:var(--ui-header-bg);color:var(--ui-header-ink);}
+html[data-ui-system="manifest"] #view-cp #cpTable thead tr:first-child th{background:var(--ui-group-header-bg);color:var(--ui-group-header-ink);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable .colResizer::after{background:transparent;box-shadow:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable .thFilterBtn{color:var(--ui-header-ink);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable .colResizer:hover::after{background:var(--ui-accent);box-shadow:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.kpi,.notificationUnreadBadge){border:0 !important;box-shadow:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #currentUserBtn,html[data-ui-system="manifest"] :where([data-ui-migrated]) #currentUserBtn #currentUserInitials{background:var(--ui-surface-strong) !important;color:var(--ui-text) !important;-webkit-text-fill-color:var(--ui-text) !important;text-shadow:none !important;box-shadow:none !important;border:0 !important;filter:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #currentUserBtn::before,html[data-ui-system="manifest"] :where([data-ui-migrated]) #currentUserBtn::after,html[data-ui-system="manifest"] :where([data-ui-migrated]) #currentUserInitials::after{content:none;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #ovDeadline>.ovHorizonChart{flex:1 1 0;min-height:0;overflow:auto;overscroll-behavior:contain;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHome>#ovPriorityReminder{overflow:auto;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPriorityEmpty{font-size:var(--ui-font-xs);padding:12px;margin:0;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.gfKpi--transit,.gfKpi--retail,.gfKpi--air) b{color:var(--ui-warning);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .gfKpi--sea b{color:var(--ui-accent);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .globalFlowLegend .air i{background:var(--ui-warning);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .globalFlowLegend .sea i{background:var(--ui-accent);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .globalFlowLegend .critical i{background:var(--ui-danger);border:0 !important;width:7px;height:7px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .globalFlowLegend,html[data-ui-system="manifest"] :where([data-ui-migrated]) .gfKpi{background:var(--ui-surface);}
+html[data-ui-system="manifest"] :is(.rail,.appTop,#view-cp,#view-overview) *,html[data-ui-system="manifest"] :is(.rail,.appTop,#view-cp,#view-overview) *::before,html[data-ui-system="manifest"] :is(.rail,.appTop,#view-cp,#view-overview) *::after{transition-property:transform,opacity !important;animation:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.modalCard,.colPanel,.tableFieldsMenu){border:0 !important;border-radius:0 !important;box-shadow:var(--ui-shadow-overlay) !important;background:var(--ui-surface);}
+@media(prefers-reduced-motion:reduce){html[data-ui-system="manifest"] :where([data-ui-migrated]) *,html[data-ui-system="manifest"] :where([data-ui-migrated]) *::before,html[data-ui-system="manifest"] :where([data-ui-migrated]) *::after{animation:none !important;transition:none !important;scroll-behavior:auto;}}
+html[data-ui-system="manifest"] .appTop h1{font-size:var(--ui-font-2xl);font-weight:600;letter-spacing:.02em;text-transform:uppercase;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHome[data-density="compact"]{--ov-gap:14px;--ov-row:38px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseKpi{background:var(--ui-surface-soft);padding:20px 22px 24px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseGrid{gap:6px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseKpi>strong{font-family:var(--ui-font-body);font-size:var(--ui-font-3xl);font-weight:500;letter-spacing:-.045em;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseBand{left:22px;right:22px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseMini{right:22px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.ovPremiumHead b,.ovBreakdownTitle,.globalFlowTitle,.ovPriorityTitle){font-size:var(--ui-font-xl);font-weight:600;letter-spacing:.025em;text-transform:uppercase;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #ovDeadline{background:transparent;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonChart{display:grid;grid-template-columns:1fr;padding:6px 18px 0;gap:8px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonDay{display:grid;grid-template-columns:28px minmax(0,1fr) 28px;align-items:center;gap:10px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonTrack{height:14px;min-height:0;background:var(--ui-surface-strong);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonTrack>i{height:14px;width:var(--ov-level);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonTrack>i:after{height:100%;width:var(--ov-risk);right:auto;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonFoot{font-family:var(--ui-font-mono);font-size:var(--ui-font-2xs);padding:10px 18px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovBreakdownDims button{font-size:var(--ui-font-2xs);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable tbody tr:nth-child(even)>td{background:var(--ui-surface);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable tbody tr:hover>td{background:var(--ui-row-hover);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable .badge{font-family:var(--ui-font-mono);font-size:var(--ui-font-2xs);letter-spacing:0;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.modalCard,.tableFieldsMenu){animation:manifestEnter 100ms ease-out !important;}
+@keyframes manifestEnter{from{opacity:0;transform:translateX(4px)}to{opacity:1;transform:none}}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable thead th[data-grp]::before{content:"";display:inline-block;width:4px;height:.7em;margin-inline-end:8px;background:var(--ui-accent);vertical-align:baseline;}
+
+html[data-ui-system="manifest"] body{background:var(--ui-canvas);color:var(--ui-text);font:400 var(--ui-font-base)/1.45 var(--ui-font-body);}
+html[data-ui-system="manifest"] body:not([data-ui-migrated="login"])>main{padding-inline:28px;}
+html[data-ui-system="manifest"] [data-ui-migrated]{font-family:var(--ui-font-body);color:var(--ui-text);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]),html[data-ui-system="manifest"] :where([data-ui-migrated]) *{box-sizing:border-box;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(button,input,select,textarea){font-family:var(--ui-font-body);font-size:var(--ui-font-xs);border:0 !important;border-radius:var(--ui-radius) !important;box-shadow:none !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(button,input,select,textarea,a,[tabindex]):focus-visible{outline:2px solid var(--ui-accent);outline-offset:3px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(button,[role="button"]){cursor:pointer;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) button:disabled{cursor:not-allowed;opacity:.5;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) button[aria-busy="true"]{cursor:wait;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(input,select,textarea){background:var(--ui-surface-strong);color:var(--ui-text);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) ::placeholder{color:var(--ui-text-muted);opacity:1;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) [aria-invalid="true"]{background:var(--ui-danger-bg);color:var(--ui-danger);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) [hidden]{display:none!important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.muted,small,.sub){color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.tbtn,.navActionBtn,.cpaBtn,.ovPremiumSegment>button,.gfSegment>button,.tableViewPreset){height:var(--ui-control-height);padding:0 12px;background:var(--ui-surface-soft);color:var(--ui-text-secondary);font-size:var(--ui-font-xs);font-weight:500;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.tbtn,.navActionBtn,.cpaBtn,.ovPremiumSegment>button,.gfSegment>button,.tableViewPreset):hover:not(:disabled){background:var(--ui-selected);color:var(--ui-selected-ink);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.pri,.primary,[aria-pressed="true"],.gfSegment>.is-active){background:var(--ui-accent) !important;color:var(--ui-on-accent) !important;font-weight:600;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) button:active:not(:disabled){transform:translateY(1px);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.badge,.tag,.chip){border:0 !important;border-radius:var(--ui-radius) !important;font:400 var(--ui-font-2xs)/1.3 var(--ui-font-mono);background:var(--ui-surface-strong);color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.uiState,.ovPremiumEmpty,.ovPriorityEmpty){padding:var(--ui-space-5);color:var(--ui-text-muted);font-size:var(--ui-font-sm);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.uiState[data-state="error"],.uiError){background:var(--ui-danger-bg);color:var(--ui-danger);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) :is(.uiState[data-state="loading"],.uiLoading)::before{content:"";display:inline-block;width:8px;height:8px;margin-right:8px;background:var(--ui-accent);}
+/* User-approved exception: only boundaries BETWEEN main column groups, over both header rows. */
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary){border-inline-start:1px solid var(--ui-group-divider) !important;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable thead th{vertical-align:middle;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable tbody td{color:var(--ui-text);font-size:var(--ui-font-xs);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .vfBar button,html[data-ui-system="manifest"] :where([data-ui-migrated]) .railFoot button{background:transparent;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) nav.tabs button{font-size:var(--ui-font-sm);font-family:var(--ui-font-body);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .globalFlowTitle{color:var(--ui-text);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .globalFlowMeta,html[data-ui-system="manifest"] :where([data-ui-migrated]) .globalFlowLegend,html[data-ui-system="manifest"] :where([data-ui-migrated]) .gfKpi>span{font-size:var(--ui-font-2xs);color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .gfKpi b{font-size:var(--ui-font-lg);font-weight:600;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonTrack>i{background:var(--ui-accent);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonTrack>i:after{background:var(--ui-danger);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonDay b,html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonDay span{font:400 var(--ui-font-2xs)/1 var(--ui-font-mono);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseBand{background:var(--ui-accent);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseMini i{background:var(--ui-accent);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .noteEditorCard{background:var(--ui-surface);box-shadow:var(--ui-shadow-overlay) !important;border:0 !important;max-width:min(640px,calc(100vw - 48px));width:640px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .uiDialogHead,html[data-ui-system="manifest"] :where([data-ui-migrated]) .uiDialogFoot{display:flex;justify-content:space-between;gap:16px;padding:20px 24px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .uiDialogFoot{justify-content:flex-end;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .modalTitle{font:600 var(--ui-font-xl)/1.15 var(--ui-font-heading);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .uiDialogSub{margin-top:4px;font-size:var(--ui-font-xs);color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .notesEditorClose{align-self:start;background:var(--ui-surface-soft);color:var(--ui-text-secondary);padding:6px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .noteEditorBody{padding:0 24px;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .noteEditorArea{width:100%;min-height:220px;padding:16px;resize:vertical;font-size:var(--ui-font-sm);line-height:1.6;}
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .noteEditorHint{margin-top:12px;color:var(--ui-text-muted);font-size:var(--ui-font-xs);}
+html[data-ui-system="manifest"] #_notesEditorModal[data-ui-migrated]{position:fixed;inset:0;z-index:var(--ui-z-modal);display:grid;place-items:center;background:var(--ui-scrim);}
+@media(prefers-reduced-motion:reduce){html[data-ui-system="manifest"] [data-ui-migrated],html[data-ui-system="manifest"] [data-ui-migrated] *,html[data-ui-system="manifest"] [data-ui-migrated] *::before,html[data-ui-system="manifest"] [data-ui-migrated] *::after{animation:none!important;transition:none!important;scroll-behavior:auto!important;}}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ic{fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round;}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) button{color:inherit;background:transparent;font:inherit;}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseKpi strong{color:var(--ui-text);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovPulseKpi>span{color:var(--ui-text-secondary);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonDay:disabled{opacity:1;}
+
+html[data-ui-system="manifest"] .appTop h1{font:600 var(--ui-font-2xl)/1.15 var(--ui-font-heading);text-transform:uppercase;letter-spacing:.02em;}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovBreakdownDims button,html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHomePageTab{padding:8px 12px;font-size:var(--ui-font-2xs);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovBreakdownList button,html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovBreakdownRow{font-size:var(--ui-font-xs);color:var(--ui-text);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovBreakdownList button:hover{background:var(--ui-selected);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovBreakdownList small{font-size:var(--ui-font-2xs);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovClockCompactCity,html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovClockCity{font-family:var(--ui-font-mono);font-size:var(--ui-font-2xs);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovClockTime,html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovClockCompactTime{font-family:var(--ui-font-mono);font-size:var(--ui-font-xs);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonFoot,html[data-ui-system="manifest"] :where([data-ui-migrated]) .ovHorizonFoot button{font-size:var(--ui-font-2xs);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) #cpTable tfoot td{background:var(--ui-surface-strong);color:var(--ui-text-secondary);font-size:var(--ui-font-xs);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .tableViewLabel{font:400 var(--ui-font-2xs)/1 var(--ui-font-mono);text-transform:uppercase;}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .vfLabel,html[data-ui-system="manifest"] :where([data-ui-migrated]) .vfSelectLabel,html[data-ui-system="manifest"] :where([data-ui-migrated]) .vfChip,html[data-ui-system="manifest"] :where([data-ui-migrated]) .horizonBadge{font-size:var(--ui-font-xs);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .vfPick{font-size:var(--ui-font-xs);padding:6px 10px;background:var(--ui-surface-strong);}
+
+html[data-ui-system="manifest"] .vfBar{font-size:var(--ui-font-xs);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .globalFlowFoot{font-size:var(--ui-font-2xs);color:var(--ui-text-muted);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .gfControlBar button{font-size:var(--ui-font-2xs);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .globalFlowTitle>.ic{display:none;}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) .tableRangeBar,html[data-ui-system="manifest"] :where([data-ui-migrated]) .tableRangePager{font:400 var(--ui-font-xs)/1 var(--ui-font-mono);}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) [data-ui-variant="primary"]{background:var(--ui-accent);color:var(--ui-on-accent);font-weight:600;}
+
+html[data-ui-system="manifest"] :where([data-ui-migrated]) [data-ui-variant="quiet"]{background:var(--ui-surface-soft);color:var(--ui-text-secondary);}
+/* Shared boundaries: surfaces, not frames. Dense-table separators remain above. */
+html[data-ui-system="manifest"] [data-ui-migrated]:is(.rail,.appTop,.vfBar),
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.railTop,.railFoot,.panel,.tableWrap,.workspaceContextBar,.toolbar,.ovDashboardToolbar,.gfSegment,.globalFlowHead,.globalFlowMeta,.globalFlowFoot,.globalFlowLegend,.globalFlowKpis,.gfKpi,.gfControlBar,.cpaCard,.cpaChip,.cpaCoverageGrid,.cpaCoverageTile){border:0!important;box-shadow:none!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.ovPremiumHead b,.ovBreakdownTitle,.globalFlowTitle,.ovPriorityTitle){font:600 var(--ui-font-xl)/1.15 var(--ui-font-heading)!important;letter-spacing:.025em;text-transform:uppercase;}
+html[data-ui-system="manifest"] [data-ui-migrated] .brandMark--image{background:var(--ui-text)!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] .brandMark--image::before{content:'BL'!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] .ovClockStripDot{border-radius:var(--ui-radius)!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] .notificationUnreadBadge{background:var(--ui-danger-bg)!important;color:var(--ui-danger)!important;}
+html[data-ui-system="manifest"] .globalFlowDrawer:not(.is-open){visibility:hidden;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.ovBreakdownDims,.horizonSummaryBadge,.cpThumb,.tablewrap,.tableRangePager>*),
+html[data-ui-system="manifest"] #cpTable tfoot :is(td,th){border:0!important;box-shadow:none!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.selectionFooterCount,.selectionFooterLabel){border:0!important;box-shadow:none!important;}
+
+html[data-ui-system="manifest"] [data-ui-migrated] .globalFlowTitleText>span{font:inherit!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] summary{border:0!important;box-shadow:none!important;}

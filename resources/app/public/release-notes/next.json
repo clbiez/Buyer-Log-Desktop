@@ -1,14 +1,14 @@
 {
   "schemaVersion": 1,
-  "publishedAt": "2026-10-23",
+  "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "CP fiyat kuralı ve tarih Geri Al bütünlüğü",
-    "en": "CP pricing rule and date Undo integrity"
+    "tr": "Manifest arayüz pilotu ve CP veri bütünlüğü",
+    "en": "Manifest interface pilot and CP data integrity"
   },
   "summary": {
-    "tr": "Kural kaynaklı Supp. FOB değerleri not kayıtlarında korunur; CP tarih Geri Al/İleri Al işlemleri sunucuya kaydedilir.",
-    "en": "Rule-derived Supp. FOB values stay rule-backed when saving notes, and CP date Undo/Redo changes persist to the server."
+    "tr": "Manifest; Genel Bakış, CP ana tablosu, not penceresi, giriş ve açılış ekranlarında. CP fiyat kuralı, not kayıtları ve tarih Geri Al bütünlüğü iyileştirmeleri korunur.",
+    "en": "Manifest reaches Overview, the main CP table, note dialog, sign-in and startup. Improvements to CP pricing rules, note persistence and date Undo integrity are retained."
   },
   "changes": [
     {
@@ -1110,6 +1110,151 @@
         "caption": {
           "tr": "Sentetik veride W6 için 24 karşılaştırma geçti; geçersiz kaynak tarihi ve S7 örnek sonucu ayrıca belirtiliyor. Şirket çalışma kitabı veya iş verisi görüntülenmiyor.",
           "en": "With synthetic data, W6 passes 24 comparisons; its invalid source date and the unavailable S7 sample result remain explicit. No company workbook or business data is displayed."
+        }
+      }
+    },
+    {
+      "id": "manifest-cp-pilot",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Ortak Arayüz",
+        "en": "CP Tracker · Shared interface"
+      },
+      "title": {
+        "tr": "Manifest: tanıdık başlık renkleri, daha sakin tablo",
+        "en": "Manifest: familiar header colors, calmer tables"
+      },
+      "body": {
+        "tr": "Ana sütun grupları ince çizgilerle ayrılır; eski başlık renkleri korunur. Köşeli kontroller ve yerel Plex tipografi açık, gri ve koyu temalarda ortak kullanılır. Dört arayüz boyutu ve Kopyala/Excel çıktıları korunur.",
+        "en": "Main column groups use subtle separators while retaining their original header colors. Angular controls and locally bundled Plex typography are shared across light, grey and dark themes. All four interface sizes and Copy/Excel outputs are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-cp-pilot.png",
+        "alt": {
+          "tr": "Manifest: tanıdık başlık renkleri, daha sakin tablo — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Manifest: familiar header colors, calmer tables — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "manifest-overview-pilot",
+      "type": "improvement",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Manifest düzeni ve okunur grafik hiyerarşisi",
+        "en": "Manifest layout and readable chart hierarchy"
+      },
+      "body": {
+        "tr": "Varsayılan Genel Bakış düzeni terminleri, operasyon sayılarını ve akış haritasını öne çıkarır. Grafik işaretçileri köşelidir; süs animasyonları kaldırılmıştır. Kişisel yerleşimler korunur; Termin Ufku dar alanda kendi içinde kayar.",
+        "en": "The default Overview layout emphasizes deadlines, operational counts and the flow map. Chart markers are angular and decorative animations are removed. Personal layouts are preserved; Delivery Horizon scrolls within its space when needed."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-overview-pilot.png",
+        "alt": {
+          "tr": "Manifest düzeni ve okunur grafik hiyerarşisi — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Manifest layout and readable chart hierarchy — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "manifest-notes-dialog",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker · Sipariş Notu",
+        "en": "CP Tracker · Order notes"
+      },
+      "title": {
+        "tr": "Not düzenleyicide ortak görünüm ve klavye odağı",
+        "en": "Shared styling and keyboard focus in the note editor"
+      },
+      "body": {
+        "tr": "Not penceresi Manifest yüzeylerini ve görünür odağı kullanır. Tab ve Shift+Tab odağı pencere içinde tutar; Escape kapatır ve önceki odağa döner. Ctrl+Enter ile kaydetme ve mevcut not kayıt yolu korunur.",
+        "en": "The note dialog uses Manifest surfaces and visible focus. Tab and Shift+Tab keep focus inside the dialog; Escape closes it and restores the previous focus. Ctrl+Enter saving and the existing note persistence path are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-notes-dialog.png",
+        "alt": {
+          "tr": "Not düzenleyicide ortak görünüm ve klavye odağı — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Shared styling and keyboard focus in the note editor — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "manifest-login-shell",
+      "type": "improvement",
+      "module": {
+        "tr": "Giriş",
+        "en": "Sign-in"
+      },
+      "title": {
+        "tr": "Giriş ekranı uygulamayla aynı temayı kullanır",
+        "en": "Sign-in shares the application theme"
+      },
+      "body": {
+        "tr": "Giriş ekranı açık, gri ve koyu tema ile son arayüz boyutunu ortak kaynaktan kullanır. Fontlar çevrimdışı paketlidir; kullanıcı seçimi, şifre alanı ve bağlantı ayarları mevcut akışla çalışır.",
+        "en": "Sign-in uses the shared light, grey and dark theme tokens and the latest interface size. Fonts are bundled for offline use; user selection, password input and connection settings retain their existing workflow."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-login-shell.png",
+        "alt": {
+          "tr": "Giriş ekranı uygulamayla aynı temayı kullanır — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Sign-in shares the application theme — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
+        }
+      }
+    },
+    {
+      "id": "manifest-startup-shell",
+      "type": "improvement",
+      "module": {
+        "tr": "Açılış",
+        "en": "Startup"
+      },
+      "title": {
+        "tr": "Hazırlık aşamaları ortak Manifest yüzeylerinde",
+        "en": "Readiness stages on shared Manifest surfaces"
+      },
+      "body": {
+        "tr": "Açılış ekranı aynı tema ve yazı ölçeğini kullanır. Hazırlık aşamaları metin ve kare durum işaretleriyle gösterilir; dekoratif küre kaldırılmıştır. Hazır olma koşulları, TR/EN seçimi ve Devam eylemi korunur.",
+        "en": "The startup screen uses the same theme and type scale. Readiness stages use text and square status indicators; the decorative orb is removed. Readiness gates, TR/EN selection and the Continue action are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-startup-shell.png",
+        "alt": {
+          "tr": "Hazırlık aşamaları ortak Manifest yüzeylerinde — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Readiness stages on shared Manifest surfaces — real Buyer Log screen with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 1 pilotu; değişiklik sonrası gerçek 1440×900 PNG, anonim demo veri.",
+          "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
         }
       }
     }

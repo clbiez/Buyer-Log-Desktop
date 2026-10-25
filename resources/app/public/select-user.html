@@ -1,20 +1,23 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" data-ui-system="manifest">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
 <title>Buyer Log — Giriş</title>
+<link rel="stylesheet" href="/ui-tokens.css">
+<script src="/ui-appearance.js"></script>
+<link rel="stylesheet" href="/ui-components.css">
 <link rel="stylesheet" href="/giris.css">
 <script src="/i18n-dictionary.js"></script>
 <script src="/i18n-runtime.js"></script>
 <link rel="icon" type="image/png" sizes="128x128" href="/icons/icon-mark.png">
 </head>
-<body>
+<body data-ui-migrated="login">
 <main class="loginShell" aria-labelledby="loginTitle">
   <section class="brandPane" aria-label="Buyer Log">
     <div class="brandContent">
-      <div class="logoMark logoMark--image" aria-hidden="true"><img src="/icons/icon-512.png" alt="" width="112" height="112"></div>
+      <div class="logoMark logoMark--image" aria-hidden="true"><span>BL</span></div>
       <h2 class="brandTitle">Buyer Log</h2>
       <p class="brandText" id="brandText">Sipariş, fiyat, onay ve koleksiyon süreçleri için tek çalışma alanı.</p>
     </div>
@@ -79,7 +82,7 @@
       <div class="formFooter">
         <p class="hint" id="hint">Hesabınız görünmüyorsa bir Moderatör veya yöneticiden kullanıcı hesabı oluşturmasını isteyin.</p>
         <div class="hubSettingsRow hubSettingsRow--footer">
-          <button type="button" class="hubSettingsBtn hubSettingsBtn--quiet" id="hubSettingsBtn" aria-expanded="false" aria-controls="hubDetails" aria-label="Ayarlar" title="Ayarlar">⚙</button>
+          <button type="button" class="hubSettingsBtn hubSettingsBtn--quiet" id="hubSettingsBtn" aria-expanded="false" aria-controls="hubDetails" aria-label="Ayarlar" title="Ayarlar"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6" fill="none" stroke="currentColor" stroke-width="2"/></svg></button>
         </div>
       </div>
       <div class="hubDetails" id="hubDetails" hidden>
@@ -483,7 +486,7 @@
     button.setAttribute('aria-expanded', hubDetailsOpen ? 'true' : 'false');
     button.setAttribute('aria-label', label);
     button.title = label;
-    button.textContent = hubDetailsOpen ? '×' : '⚙';
+    button.innerHTML = hubDetailsOpen ? '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2"/></svg>' : '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M4 7h16M4 17h16M8 4v6M16 14v6" fill="none" stroke="currentColor" stroke-width="2"/></svg>';
   }
   function setHubDetailsOpen(open, { focus = false } = {}) {
     hubDetailsOpen = Boolean(open);

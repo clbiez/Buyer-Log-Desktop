@@ -1,0 +1,93 @@
+[
+  {
+    "theme": "light",
+    "width": 1440,
+    "overlap": false,
+    "scrollable": "auto",
+    "contentHeight": 168,
+    "viewportHeight": 168,
+    "overflow": false,
+    "contrast": {
+      "checked": 114,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  },
+  {
+    "theme": "grey",
+    "width": 1440,
+    "overlap": false,
+    "scrollable": "auto",
+    "contentHeight": 168,
+    "viewportHeight": 168,
+    "overflow": false,
+    "contrast": {
+      "checked": 114,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  },
+  {
+    "theme": "dark",
+    "width": 1440,
+    "overlap": false,
+    "scrollable": "auto",
+    "contentHeight": 168,
+    "viewportHeight": 168,
+    "overflow": false,
+    "contrast": {
+      "checked": 114,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  },
+  {
+    "theme": "light",
+    "width": 1280,
+    "overlap": false,
+    "scrollable": "auto",
+    "contentHeight": 181,
+    "viewportHeight": 155,
+    "overflow": false,
+    "contrast": {
+      "checked": 86,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  },
+  {
+    "theme": "grey",
+    "width": 1280,
+    "overlap": false,
+    "scrollable": "auto",
+    "contentHeight": 181,
+    "viewportHeight": 155,
+    "overflow": false,
+    "contrast": {
+      "checked": 86,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  },
+  {
+    "theme": "dark",
+    "width": 1280,
+    "overlap": false,
+    "scrollable": "auto",
+    "contentHeight": 181,
+    "viewportHeight": 155,
+    "overflow": false,
+    "contrast": {
+      "checked": 86,
+      "failures": [],
+      "method": "Visible text nodes; computed colors composited through ancestors. Ignores images, overlap and opacity; findings require visual review, not a full WCAG certification."
+    }
+  },
+  {
+    "fourteenDayKeyboard": {
+      "days": 14,
+      "scrollTop": 210,
+      "lastVisible": true
+    }
+  }
+]

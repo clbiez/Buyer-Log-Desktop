@@ -104,7 +104,7 @@ button{width:100%;height:40px;margin-top:16px;border:0;border-radius:9px;backgro
   font-size:15px;font-weight:600;cursor:pointer}
 button:disabled{opacity:.6;cursor:default}
 .err{margin-top:12px;font-size:13px;color:#b42318;min-height:18px}
-</style><link rel="stylesheet" href="/giris.css?v=${encodeURIComponent(APP_VERSION)}"></head><body>
+</style><link rel="stylesheet" href="/ui-tokens.css"><script src="/ui-appearance.js"></script><link rel="stylesheet" href="/giris.css?v=${encodeURIComponent(APP_VERSION)}"></head><body>
 <form class="card" id="f" autocomplete="off">
   <h1>Buyer Log</h1><p class="sub">Devam etmek için erişim parolasını girin.</p>
   <label for="pw">Parola</label>

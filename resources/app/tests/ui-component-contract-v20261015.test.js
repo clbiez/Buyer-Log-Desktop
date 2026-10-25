@@ -3,7 +3,8 @@
 /* Bileşen sözleşmeleri (DESIGN_SYSTEM.md §7) — 2026-10-15 arayüz denetimi.
    Denetimde bağımsız eylem düğmeleri 10 farklı yükseklikte, segment/sekme
    bileşenleri 9 ayrı stilde ve KPI kartları 4 ayrı tipografide bulundu.
-   Eşdeğer bileşenler experience.css'teki tek sözleşme kuralında toplanır. */
+   Henüz taşınmayan kullanımlar experience.css sözleşmesini korur.
+   Manifest bileşenleri ui-components.css ve ui-manifest-contract.test.js ile denetlenir. */
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -75,4 +76,13 @@ test('hidden özelliği taşıyan öğeyi sınıfının display değeri görün�
     }
   }
   assert.deepEqual(leaks, [], 'sınıf display tanımlıyorsa .sınıf[hidden]{display:none} kuralı da olmalı');
+});
+
+test('Manifest shared controls consume canonical UI tokens, not the temporary bridge',()=>{
+  const manifest=read('ui-components.css');
+  assert.match(manifest,/height:var\(--ui-control-height\)/);
+  assert.match(manifest,/font-size:var\(--ui-font-xs\)/);
+  assert.match(manifest,/\[data-ui-variant="primary"\]/);
+  assert.doesNotMatch(manifest,/var\(--(?:acc|card|ink|fs-|sans|head|mono)/);
+  assert.match(read('ui-legacy-bridge.css'),/--sans:var\(--ui-font-body\)/);
 });

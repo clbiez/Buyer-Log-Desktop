@@ -1,5 +1,20 @@
 # Buyer Log tasarım sistemi
 
+> **Manifest geçişi — Faz 1, 25 Ekim 2026.** Kullanıcı Manifest'i seçti;
+> yeni katman/tema dosyası kısıtı bu proje için kaldırıldı. Taşınan kabuk,
+> Overview, CP pilotu, sipariş notu, giriş ve açılış ekranlarının kanonik kaynağı
+> `public/ui-tokens.css` ve `public/ui-components.css` dosyalarıdır.
+> `ui-startup.css` ve `giris.css` aynı tokenları tüketir.
+> [Faz 1 sözleşmesi ve kanıtları](docs/ai/ui-rebuild-phase-1.md) bu alanlarda
+> aşağıdaki eski referansa göre önceliklidir. `ui-legacy-bridge.css` yalnız
+> henüz taşınmamış tüketiciler içindir; yeni bileşenler ona bağımlı olamaz.
+> Köşe 0; çerçevesiz yüzeyler. Kullanıcının ek kararıyla **ana tablo grupları
+> arasında**, iki başlık satırında da düşük kontrastlı 1 px dikey ayırıcı vardır.
+> Bu istisna kartlara, kontrollere veya gövde sütunlarına taşınmaz.
+> Üç tema ve dört ölçek korunur; dördüncü tema bu pilotta yoktur.
+> Aşağıdaki Refined Industry bölümleri henüz taşınmamış modüller için geçici
+> referanstır. Tam belge değişimi ve eski katmanların kaldırılması Faz 3'tedir.
+
 > Kanonik görsel dil. Yeni ekran, modül veya stil değişikliği bu dosyaya uyar.
 > Uygulama koduyla çelişirse kodu esas al ve bu dosyayı aynı PR'da düzelt.
 > Bekçi: `tests/design-token-guard.test.js` (`npm test` içinde koşar).

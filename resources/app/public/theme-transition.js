@@ -30,7 +30,7 @@
   function start(update){
     cancel();
     const html=doc.documentElement;
-    if(motion?.matches||doc.visibilityState==='hidden'||doc.readyState==='loading'
+    if(html.dataset?.uiSystem==='manifest'||motion?.matches||doc.visibilityState==='hidden'||doc.readyState==='loading'
       ||typeof doc.startViewTransition!=='function'||typeof html.animate!=='function')return false;
     let applied=false;
     const job={

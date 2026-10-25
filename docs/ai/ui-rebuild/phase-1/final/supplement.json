@@ -1,0 +1,95 @@
+{
+  "headers": [
+    {
+      "theme": "light",
+      "count": 72,
+      "identical": true
+    },
+    {
+      "theme": "grey",
+      "count": 72,
+      "identical": true
+    },
+    {
+      "theme": "dark",
+      "count": 72,
+      "identical": true
+    }
+  ],
+  "scales": [
+    {
+      "screen": "overview",
+      "theme": "light",
+      "overflow": false,
+      "controlsOverflow": false,
+      "scale": "xl"
+    },
+    {
+      "screen": "login",
+      "theme": "light",
+      "overflow": false,
+      "scale": "xl"
+    },
+    {
+      "screen": "overview",
+      "theme": "grey",
+      "overflow": false,
+      "controlsOverflow": false,
+      "scale": "xl"
+    },
+    {
+      "screen": "login",
+      "theme": "grey",
+      "overflow": false,
+      "scale": "xl"
+    },
+    {
+      "screen": "overview",
+      "theme": "dark",
+      "overflow": false,
+      "controlsOverflow": false,
+      "scale": "xl"
+    },
+    {
+      "screen": "login",
+      "theme": "dark",
+      "overflow": false,
+      "scale": "xl"
+    }
+  ],
+  "fonts": [
+    {
+      "family": "BL Plex Sans",
+      "turkishLoaded": true
+    },
+    {
+      "family": "BL Plex Mono",
+      "turkishLoaded": true
+    },
+    {
+      "family": "Barlow Condensed",
+      "turkishLoaded": true
+    }
+  ],
+  "boot": [
+    {
+      "theme": "light",
+      "canvasMatches": true,
+      "surfaceMatches": true
+    },
+    {
+      "theme": "grey",
+      "canvasMatches": true,
+      "surfaceMatches": true
+    },
+    {
+      "theme": "dark",
+      "canvasMatches": true,
+      "surfaceMatches": true
+    }
+  ],
+  "reducedMotion": {
+    "enabled": true,
+    "animations": 0
+  }
+}

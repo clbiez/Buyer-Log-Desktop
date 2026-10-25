@@ -1,7 +1,8 @@
 # Buyer Log — Faz 0B renk revizyonu
 
 Kullanıcı eski nötr paleti ve tablo başlık renklerini tercih etti.
-Kartela/Manifest yerleşim seçimi yapılmış sayılmaz; Faz 1 başlamadı.
+Bu karşılaştırma seçim öncesine aittir. Sonraki kullanıcı kararı Manifest'tir;
+[Faz 1 pilotu](ui-rebuild-phase-1.md) ayrı yerel branch'te hazırlandı.
 [Güncel tek dosyalık galeri](ui-rebuild/concepts.html).
 
 ## Değişti
@@ -90,3 +91,9 @@ Tam test proje sonunda yapılacaktır.
 Prototipler üretime merge edilmez. Actions tetiklenmedi, remote push yapılmadı.
 
 Yerel revizyon commit’leri: Kartela `22e8ec8e`, Manifest `540bd95b`.
+# Sonraki karar — 25 Ekim 2026
+
+Kullanıcı Manifest'i seçti ve ana tablo başlık gruplarının ince sınır çizgilerini
+korumamızı istedi. [Faz 1 pilotu](ui-rebuild-phase-1.md) ayrı yerel branch'te
+hazırlandı; Graphite dördüncü tema bu pilota alınmadı. Aşağıdaki konsept
+karşılaştırması tarihsel önizleme olarak korunur.

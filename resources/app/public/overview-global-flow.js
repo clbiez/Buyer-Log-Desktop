@@ -1281,13 +1281,13 @@ function palette(){
   if(state.paletteCache&&state.paletteCache.revision===state.paletteRevision)return state.paletteCache;
   const style=getComputedStyle(document.documentElement);
   const css=(name,fallback)=>clean(style.getPropertyValue(name))||fallback;
-  const vivid=mapSurfacePalette(document.documentElement.dataset.theme);
+  const vivid=null; // Plot and interface share the canonical Manifest palette.
   state.paletteCache={
     revision:state.paletteRevision,
-    water:vivid?.water||css('--card2','#edf2f7'),land:vivid?.land||css('--card','#ffffff'),card:css('--card','#ffffff'),line:vivid?.line||css('--line','#d8dee8'),
-    ink:css('--ink','#1f2937'),muted:css('--muted','#6b7280'),acc:vivid?.acc||css('--acc','#3f6488'),
-    green:vivid?.green||css('--green','#16845b'),red:vivid?.red||css('--red','#c04455'),orange:vivid?.orange||css('--orange','#c47a20'),
-    yellow:css('--yellow','#b88700'),cyan:vivid?.cyan||'#0891b2',purple:vivid?.purple||'#7c5ce0'
+    water:vivid?.water||css('--ui-surface-soft','#edf2f7'),land:vivid?.land||css('--ui-surface','#ffffff'),card:css('--ui-surface','#ffffff'),line:vivid?.line||css('--ui-chart-grid','#d8dee8'),
+    ink:css('--ui-text','#1f2937'),muted:css('--ui-text-muted','#6b7280'),acc:vivid?.acc||css('--ui-accent','#3f6488'),
+    green:vivid?.green||css('--ui-success','#16845b'),red:vivid?.red||css('--ui-danger','#c04455'),orange:vivid?.orange||css('--ui-warning','#c47a20'),
+    yellow:css('--ui-warning','#b88700'),cyan:css('--ui-accent'),purple:css('--ui-warning')
   };
   return state.paletteCache;
 }
@@ -1485,24 +1485,26 @@ function drawModeGlyph(ctx,mode){
   else if(mode==='road'){ctx.fillRect(-5.5,-3,7.5,4.6);ctx.fillRect(2.3,-1.4,3.4,3);ctx.beginPath();ctx.arc(-3,2.6,1.5,0,Math.PI*2);ctx.arc(3.8,2.6,1.5,0,Math.PI*2);ctx.fill();}
   else {ctx.beginPath();ctx.arc(0,0,4,0,Math.PI*2);ctx.fill();}
 }
+function plotSquare(ctx,x,y,r){ctx.rect(x-r,y-r,r*2,r*2);}
+function plotFont(){const style=getComputedStyle($('globalFlowMeta'));return '600 '+style.fontSize+' '+style.fontFamily;}
 function drawVehicle(ctx,symbol,p){
   const vehicle=symbol.vehicle,color=modeColor(vehicle.mode,p),count=vehicle.records.length;
-  if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.fillStyle=color;ctx.beginPath();ctx.arc(symbol.anchorX,symbol.anchorY,2,0,Math.PI*2);ctx.fill();ctx.restore();}
+  if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.fillStyle=color;ctx.beginPath();plotSquare(ctx,symbol.anchorX,symbol.anchorY,2);ctx.fill();ctx.restore();}
   ctx.save();ctx.translate(symbol.x,symbol.y);
   const frameColor=vehicle.overdue?p.yellow:(vehicle.critical?p.red:color);
-  ctx.fillStyle=p.card;ctx.strokeStyle=frameColor;ctx.lineWidth=vehicle.overdue||vehicle.critical?2:1.2;ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle=p.card;ctx.strokeStyle=frameColor;ctx.lineWidth=vehicle.overdue||vehicle.critical?2:1.2;ctx.beginPath();plotSquare(ctx,0,0,9);ctx.fill();ctx.stroke();
   ctx.fillStyle=color;
   if(vehicle.mode==='air'){ctx.save();ctx.rotate(symbol.heading||0);drawModeGlyph(ctx,'air');ctx.restore();}
   else drawModeGlyph(ctx,vehicle.mode);
-  if(count>1){const label=count>99?'99+':String(count);ctx.font='700 9px sans-serif';const bw=Math.max(13,ctx.measureText(label).width+6);ctx.fillStyle=vehicle.critical?p.red:color;ctx.beginPath();ctx.arc(8,-8,bw/2,0,Math.PI*2);ctx.fill();ctx.fillStyle=p.card;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,8,-7.5);}
+  if(count>1){const label=count>99?'99+':String(count);ctx.font=plotFont();const bw=Math.max(13,ctx.measureText(label).width+6);ctx.fillStyle=vehicle.critical?p.red:color;ctx.beginPath();plotSquare(ctx,8,-8,bw/2);ctx.fill();ctx.fillStyle=p.card;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,8,-7.5);}
   ctx.restore();
 }
 function drawVehicleCluster(ctx,symbol,p){
   const count=(symbol.vehicles||[]).length,color=symbol.mode==='combined'?p.acc:modeColor(symbol.mode,p);
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.45;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.restore();}
   const frameColor=symbol.overdue?p.yellow:(symbol.critical?p.red:color);
-  ctx.save();ctx.translate(symbol.x,symbol.y);ctx.fillStyle=p.card;ctx.strokeStyle=frameColor;ctx.lineWidth=symbol.overdue||symbol.critical?2:1.5;ctx.beginPath();ctx.arc(0,0,12,0,Math.PI*2);ctx.fill();ctx.stroke();
-  ctx.fillStyle=color;ctx.globalAlpha=.16;ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle=symbol.critical?p.red:color;ctx.font='800 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(count>99?'99+':String(count),0,.5);ctx.restore();
+  ctx.save();ctx.translate(symbol.x,symbol.y);ctx.fillStyle=p.card;ctx.strokeStyle=frameColor;ctx.lineWidth=symbol.overdue||symbol.critical?2:1.5;ctx.beginPath();plotSquare(ctx,0,0,12);ctx.fill();ctx.stroke();
+  ctx.fillStyle=color;ctx.globalAlpha=.16;ctx.beginPath();plotSquare(ctx,0,0,8);ctx.fill();ctx.globalAlpha=1;ctx.fillStyle=symbol.critical?p.red:color;ctx.font=plotFont();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(count>99?'99+':String(count),0,.5);ctx.restore();
 }
 const STAGE_META={
   PRODUCTION:{tr:'Üretimde',en:'In production',glyph:'P'},LOADING:{tr:'Yükleme Operasyonları',en:'Loading Operations',glyph:'L'},
@@ -1512,13 +1514,13 @@ const STAGE_META={
 function stageLabel(stage){const meta=STAGE_META[stage];return meta?(isEn()?meta.en:meta.tr):stage;}
 function drawStageIcon(ctx,x,y,stage,p){
   const meta=STAGE_META[stage]||{glyph:'•'},color=stage==='PRODUCTION'?p.acc:stage==='LOADING'?p.orange:stage==='CUSTOMS'?p.red:stage==='IN_WAREHOUSE'?p.green:p.purple;
-  ctx.save();ctx.fillStyle=p.land;ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle=color;ctx.font='800 9px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(meta.glyph,x,y+.5);ctx.restore();
+  ctx.save();ctx.fillStyle=p.land;ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();plotSquare(ctx,x,y,10);ctx.fill();ctx.stroke();ctx.fillStyle=color;ctx.font=plotFont();ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(meta.glyph,x,y+.5);ctx.restore();
 }
 function drawNode(ctx,symbol,p){
   const bundle=symbol.bundle,baseColor=bundle.kind==='arrival'?p.green:p.acc,radius=symbol.r;
   if(symbol.displaced){ctx.save();ctx.strokeStyle=p.muted;ctx.globalAlpha=.55;ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(symbol.anchorX,symbol.anchorY);ctx.lineTo(symbol.x,symbol.y);ctx.stroke();ctx.restore();}
-  ctx.save();ctx.fillStyle=baseColor;ctx.globalAlpha=.16;ctx.beginPath();ctx.arc(symbol.x,symbol.y,radius+8,0,Math.PI*2);ctx.fill();ctx.globalAlpha=.95;ctx.beginPath();ctx.arc(symbol.x,symbol.y,radius,0,Math.PI*2);ctx.fill();
-  if(bundle.records.some(r=>r.critical)){ctx.globalAlpha=1;ctx.strokeStyle=p.red;ctx.lineWidth=2;ctx.beginPath();ctx.arc(symbol.x,symbol.y,radius+3,0,Math.PI*2);ctx.stroke();}
+  ctx.save();ctx.fillStyle=baseColor;ctx.globalAlpha=.95;ctx.beginPath();plotSquare(ctx,symbol.x,symbol.y,radius);ctx.fill();
+  if(bundle.records.some(r=>r.critical)){ctx.globalAlpha=1;ctx.strokeStyle=p.red;ctx.lineWidth=2;ctx.beginPath();plotSquare(ctx,symbol.x,symbol.y,radius+3);ctx.stroke();}
   ctx.restore();
   (symbol.stageIcons||[]).forEach(icon=>drawStageIcon(ctx,icon.x,icon.y,icon.stage,p));
 }
@@ -1529,7 +1531,7 @@ function drawHoverHighlight(ctx,hit,p,scene){
     items.forEach(item=>{ctx.lineWidth=Math.max(3,Number(item.width||hit.r||8)*.9);strokePath(ctx,item.points||[]);});
     ctx.restore();return;
   }
-  ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.55;ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(hit.x,hit.y,Math.min(24,Number(hit.r||10)+3),0,Math.PI*2);ctx.stroke();ctx.restore();
+  ctx.save();ctx.strokeStyle=p.ink;ctx.globalAlpha=.55;ctx.lineWidth=1.2;ctx.beginPath();plotSquare(ctx,hit.x,hit.y,Math.min(24,Number(hit.r||10)+3));ctx.stroke();ctx.restore();
 }
 /* Seçim halkası: Earth'te seçilen parsiyel noktası, onu taşıyan araçta gösterilir. */
 function selectedTarget(){
@@ -1543,16 +1545,17 @@ function drawSelection(ctx,hit,p){
   ctx.save();ctx.setLineDash([]);ctx.lineCap='round';
   if(hit.type==='route'){ctx.strokeStyle=p.card;ctx.globalAlpha=.9;ctx.lineWidth=Math.max(6,Number(hit.r||8)/2+4);strokePath(ctx,hit.points);ctx.strokeStyle=p.acc;ctx.lineWidth=Math.max(3.5,Number(hit.r||8)/2+1);strokePath(ctx,hit.points);ctx.restore();return;}
   const r=Math.min(26,Number(hit.type==='node'?hit.r:10)+5);
-  ctx.strokeStyle=p.card;ctx.lineWidth=4;ctx.beginPath();ctx.arc(hit.x,hit.y,r,0,Math.PI*2);ctx.stroke();
-  ctx.strokeStyle=p.acc;ctx.lineWidth=2.2;ctx.beginPath();ctx.arc(hit.x,hit.y,r,0,Math.PI*2);ctx.stroke();ctx.restore();
+  ctx.strokeStyle=p.card;ctx.lineWidth=4;ctx.beginPath();plotSquare(ctx,hit.x,hit.y,r);ctx.stroke();
+  ctx.strokeStyle=p.acc;ctx.lineWidth=2.2;ctx.beginPath();plotSquare(ctx,hit.x,hit.y,r);ctx.stroke();ctx.restore();
 }
 function currentHit(){
   // Sahne yeniden kurulduğunda hover nesnesi eski hedefi tutmasın.
   if(!state.hover||!state.scene)return null;const id=hitIdentity(state.hover);
   return state.scene.hitTargets.find(target=>hitIdentity(target)===id)||null;
 }
-function wantsAnimation(){return Boolean(state.model&&state.model.edges.length)&&!reducedMotion();}
+function wantsAnimation(){return document.documentElement.dataset.uiSystem!=='manifest'&&Boolean(state.model&&state.model.edges.length)&&!reducedMotion();}
 function applyGlobeInertia(now){
+  if(document.documentElement.dataset.uiSystem==='manifest'){state.globeInertia=null;return false;}
   const inertia=state.globeInertia;if(!inertia||state.view!=='3d'||state.drag)return false;
   const elapsed=clamp((Number(now)||performance.now())-inertia.last,0,40);if(elapsed<=0)return true;
   const frames=elapsed/(1000/60);state.rotLon=wrapLongitude(state.rotLon+inertia.vLon*frames);state.rotLat=clamp(state.rotLat+inertia.vLat*frames,-85,85);
@@ -1570,7 +1573,7 @@ function draw(now){
   scene.symbols.forEach(symbol=>{if(symbol.kind==='vehicle')drawVehicle(ctx,symbol,p);else if(symbol.kind==='vehicleCluster')drawVehicleCluster(ctx,symbol,p);});
   const selected=selectedTarget();if(selected)drawSelection(ctx,selected,p);
   const hover=currentHit();if(hover)drawHoverHighlight(ctx,hover,p,scene);
-  if(animate||state.expandedNodeKey||state.globeInertia)state.frame=requestAnimationFrame(throttledDraw);
+  if(animate||(document.documentElement.dataset.uiSystem!=='manifest'&&state.expandedNodeKey)||state.globeInertia)state.frame=requestAnimationFrame(throttledDraw);
 }
 function throttledDraw(now){const minGap=state.globeInertia?16:50;if(now-state.lastFrame<minGap){state.frame=requestAnimationFrame(throttledDraw);return;}state.lastFrame=now;draw(now);}
 function scheduleDraw(){if(state.frame)cancelAnimationFrame(state.frame);state.frame=requestAnimationFrame(draw);}
@@ -1944,7 +1947,7 @@ function bindObservers(){
     const tables=event&&event.detail&&Array.isArray(event.detail.tables)?event.detail.tables:['cp','orders'];
     if(state.source==='combined'||tables.includes(state.source))scheduleRefresh(250);
   });
-  const themeObserver=new MutationObserver(()=>{state.paletteRevision++;state.scene=null;scheduleDraw();notifyEarth('theme');});themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','lang']});state.observers.push(themeObserver);
+  const themeObserver=new MutationObserver(()=>{state.paletteRevision++;state.scene=null;scheduleDraw();notifyEarth('theme');});themeObserver.observe(document.documentElement,{attributes:true,attributeFilter:['data-theme','lang','data-ui-scale']});state.observers.push(themeObserver);
   const widget=$('globalFlowMapWidget');
   if(widget&&typeof IntersectionObserver==='function'){
     const io=new IntersectionObserver(entries=>{

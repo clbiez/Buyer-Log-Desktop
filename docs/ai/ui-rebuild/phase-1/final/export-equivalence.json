@@ -1,0 +1,80 @@
+[
+  {
+    "file": "cp-copy-light.html",
+    "byteIdentical": true,
+    "sha256": "ee8a10948bc31eb99d5cc08ba2f1b26ed7a91bced94a722add01efceecc7e80f"
+  },
+  {
+    "file": "cp-copy-light.tsv",
+    "byteIdentical": true,
+    "sha256": "f65e5523f0124a48f59e34619722d1708245ee0650847caa8d03d262be1574d1"
+  },
+  {
+    "file": "cp-export-light.xlsx",
+    "allWorkbookPartsIdentical": true,
+    "parts": [
+      "xl/",
+      "xl/_rels/",
+      "xl/_rels/workbook.xml.rels",
+      "xl/sharedStrings.xml",
+      "xl/styles.xml",
+      "xl/theme/",
+      "xl/theme/theme1.xml",
+      "xl/workbook.xml",
+      "xl/worksheets/",
+      "xl/worksheets/sheet1.xml"
+    ]
+  },
+  {
+    "file": "cp-copy-grey.html",
+    "byteIdentical": true,
+    "sha256": "ee8a10948bc31eb99d5cc08ba2f1b26ed7a91bced94a722add01efceecc7e80f"
+  },
+  {
+    "file": "cp-copy-grey.tsv",
+    "byteIdentical": true,
+    "sha256": "f65e5523f0124a48f59e34619722d1708245ee0650847caa8d03d262be1574d1"
+  },
+  {
+    "file": "cp-export-grey.xlsx",
+    "allWorkbookPartsIdentical": true,
+    "parts": [
+      "xl/",
+      "xl/_rels/",
+      "xl/_rels/workbook.xml.rels",
+      "xl/sharedStrings.xml",
+      "xl/styles.xml",
+      "xl/theme/",
+      "xl/theme/theme1.xml",
+      "xl/workbook.xml",
+      "xl/worksheets/",
+      "xl/worksheets/sheet1.xml"
+    ]
+  },
+  {
+    "file": "cp-copy-dark.html",
+    "byteIdentical": true,
+    "sha256": "ee8a10948bc31eb99d5cc08ba2f1b26ed7a91bced94a722add01efceecc7e80f"
+  },
+  {
+    "file": "cp-copy-dark.tsv",
+    "byteIdentical": true,
+    "sha256": "f65e5523f0124a48f59e34619722d1708245ee0650847caa8d03d262be1574d1"
+  },
+  {
+    "file": "cp-export-dark.xlsx",
+    "allWorkbookPartsIdentical": true,
+    "parts": [
+      "xl/",
+      "xl/_rels/",
+      "xl/_rels/workbook.xml.rels",
+      "xl/sharedStrings.xml",
+      "xl/styles.xml",
+      "xl/theme/",
+      "xl/theme/theme1.xml",
+      "xl/workbook.xml",
+      "xl/worksheets/",
+      "xl/worksheets/sheet1.xml"
+    ]
+  }
+]

@@ -64,10 +64,10 @@ test('favicon, PWA manifest ve Electron pencereleri aynı simgeyi gösterir', ()
   assert.match(workspace, /window\.setAppDetails\(appDetails\)/);
 });
 
-test('giriş ekranı büyük simgeyi, sol menü küçük boyut simgesini gösterir ve sekme çubuğu logosuzdur', () => {
+test('Manifest girişte tipografik BL işareti kullanır; paket simgeleri ve masaüstü yolları korunur', () => {
   const login = read('public/select-user.html').toString('utf8');
-  assert.match(login, /class="logoMark logoMark--image"[^>]*><img src="\/icons\/icon-512\.png" alt="" width="112" height="112"/);
-  assert.match(read('public/giris.css').toString('utf8'), /\.logoMark--image\{width:112px;height:112px/);
+  assert.match(login, /class="logoMark logoMark--image"[^>]*><span>BL<\/span>/);
+  assert.match(read('public/giris.css').toString('utf8'), /\.logoMark--image\{width:64px;height:76px/);
   const index = read('public/index.html').toString('utf8');
   assert.match(index, /<img class="brandMarkImage" src="icons\/icon-mark\.png/);
   const shell = read('electron/workspace.html').toString('utf8');

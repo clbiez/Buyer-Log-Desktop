@@ -77,3 +77,9 @@ test('enabling reduced motion or hiding the window finishes a pending update onc
     s.transitions[0].capture();await settle();assert.equal(updates,1);assert.equal(s.transitions[0].skipped,true);assert.equal(s.classes.size,0);
   }
 });
+
+test('Manifest changes theme immediately without decorative clip-path animation',()=>{
+ const s=setup();s.doc.documentElement.dataset={uiSystem:'manifest'};let updates=0;
+ assert.equal(s.api.start(()=>updates++),false);assert.equal(updates,0);
+ assert.equal(s.transitions.length,0);assert.equal(s.animations.length,0);
+});

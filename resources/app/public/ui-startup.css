@@ -1,0 +1,47 @@
+/* Same token source as sign-in and application; readiness remains gate driven. */
+html[data-ui-system="manifest"] #blBootGuard{position:fixed;inset:0;z-index:var(--ui-z-boot);display:flex;align-items:safe center;justify-content:center;overflow:auto;background:var(--ui-canvas);color:var(--ui-text);font:400 var(--ui-font-base)/1.45 var(--ui-font-body);}
+html[data-ui-system="manifest"] #blBootGuard .blBootCard{min-width:250px;max-width:1050px;width:min(1050px,calc(100vw - 48px));margin:24px;padding:32px;text-align:left;background:var(--ui-surface);border:0;border-radius:var(--ui-radius);box-shadow:none;}
+html[data-ui-system="manifest"] #blBootGuard .blBootOrb{display:inline-block;width:10px;height:10px;margin-right:12px;background:var(--ui-accent);}
+html[data-ui-system="manifest"] #blBootGuard[data-ready="1"] .blBootOrb,html[data-ui-system="manifest"] #blBootGuard[data-failed="1"] .blBootOrb{display:none;}
+html[data-ui-system="manifest"] #blBootGuard button{border:0;border-radius:var(--ui-radius);background:var(--ui-surface-strong);color:var(--ui-text-secondary);font:500 var(--ui-font-xs)/1.2 var(--ui-font-body);padding:10px 14px;cursor:pointer;}
+html[data-ui-system="manifest"] #blBootGuard button:hover{background:var(--ui-selected);color:var(--ui-selected-ink);}
+html[data-ui-system="manifest"] #blBootGuard button:focus-visible{outline:2px solid var(--ui-accent);outline-offset:3px;}
+html[data-ui-system="manifest"] #blBootGuard button:disabled{opacity:.5;cursor:not-allowed;}
+html[data-ui-system="manifest"] #blBootGuard .blBootLanguage{display:flex;align-items:center;gap:4px;margin-left:8px;}
+html[data-ui-system="manifest"] #blBootGuard .blBootLanguage button{padding:6px 8px;}
+html[data-ui-system="manifest"] #blBootGuard button[aria-pressed="true"]{background:var(--ui-accent);color:var(--ui-on-accent);}
+html[data-ui-system="manifest"] #blBootGuard .blBootLanguage i{font-style:normal;font-size:var(--ui-font-xs);}
+html[data-ui-system="manifest"] #blBootGuard .blBootBrand{color:var(--ui-text);font:600 var(--ui-font-xl)/1.2 var(--ui-font-heading);}
+html[data-ui-system="manifest"] #blBootGuard .blBootBrand span{font:400 var(--ui-font-xs)/1.4 var(--ui-font-mono);color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] #blBootGuard [data-boot-message]{font:600 var(--ui-font-2xl)/1.2 var(--ui-font-heading);}
+html[data-ui-system="manifest"] #blBootGuard .blBootHint{color:var(--ui-text-secondary);font-size:var(--ui-font-sm);}
+html[data-ui-system="manifest"] #blBootGuard .blBootStages span{font:400 var(--ui-font-xs)/1.4 var(--ui-font-mono);background:var(--ui-surface-soft);color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] #blBootGuard .blBootStages span::before{content:'□';margin-right:8px;}
+html[data-ui-system="manifest"] #blBootGuard .blBootStages span[data-done="true"]{background:var(--ui-selected);color:var(--ui-selected-ink);}
+html[data-ui-system="manifest"] #blBootGuard .blBootStages span[data-done="true"]::before{content:'✓';}
+html[data-ui-system="manifest"] #blBootGuard[data-ready="1"] [data-boot-message]::before{content:'✓ ';color:var(--ui-success);}
+html[data-ui-system="manifest"] #blBootGuard .blBootContinue{background:var(--ui-accent);color:var(--ui-on-accent);font-weight:600;padding:12px 22px;}
+html[data-ui-system="manifest"] #blBootGuard .blBootContinue:hover{background:var(--ui-accent-hover);color:var(--ui-on-accent);}
+html[data-ui-system="manifest"] #blBootGuard .blBootLink{background:transparent;color:var(--ui-selected-ink);}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaHeading{font-size:var(--ui-font-xs);color:var(--ui-text-muted);}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaCopy h2{font:600 var(--ui-font-2xl)/1.1 var(--ui-font-heading);color:var(--ui-text);}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaCopy p{font:400 var(--ui-font-md)/1.6 var(--ui-font-body);color:var(--ui-text-secondary);}
+/* The facts stay readable. Decorative trivia art is not part of the Manifest UI. */
+html[data-ui-system="manifest"] #blBootGuard .blTriviaVisual,html[data-ui-system="manifest"] #blBootGuard .blTriviaIcon{display:none;}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaProgress{background:var(--ui-surface-strong);}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaProgress i{background:var(--ui-accent);transition:transform var(--ui-motion-fast);}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaBtn{border-radius:var(--ui-radius);font-size:var(--ui-font-base);}
+html[data-ui-system="manifest"] #blBootGuard[data-leaving="1"]{opacity:0;transition:opacity var(--ui-motion-enter);pointer-events:none;}
+@media(max-width:760px){html[data-ui-system="manifest"] #blBootGuard .blBootCard{width:calc(100vw - 24px);margin:12px;padding:20px;}}
+@media(prefers-reduced-motion:reduce){html[data-ui-system="manifest"] #blBootGuard,html[data-ui-system="manifest"] #blBootGuard *{animation:none!important;transition:none!important;}}
+
+html[data-ui-system="manifest"] #blBootGuard .blTriviaCard{grid-template-columns:1fr;gap:12px;}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaFigure{display:none;}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaSide{max-width:720px;padding:16px 0;}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaCopy p{padding-left:0;}
+html[data-ui-system="manifest"] #blBootGuard *,html[data-ui-system="manifest"] #blBootGuard *::before,html[data-ui-system="manifest"] #blBootGuard *::after{border:0!important;border-radius:var(--ui-radius)!important;box-shadow:none!important;animation:none!important;}
+html[data-ui-system="manifest"] #blBootGuard .blBootHint{font-family:var(--ui-font-body);}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaCopy .blGuideEyebrow{color:var(--ui-text-muted);font:400 var(--ui-font-xs)/1.4 var(--ui-font-mono);}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaBtn{background:var(--ui-surface-strong)!important;color:var(--ui-text-secondary)!important;}
+html[data-ui-system="manifest"] #blBootGuard .blTriviaBtn--next,html[data-ui-system="manifest"] #blBootGuard .blTriviaBtn[aria-pressed="true"]{background:var(--ui-accent)!important;color:var(--ui-on-accent)!important;}
+html[data-ui-system="manifest"] #blErrBox{position:fixed;left:8px;bottom:8px;z-index:var(--ui-z-boot);max-width:60vw;background:var(--ui-danger-bg);color:var(--ui-danger);font:400 var(--ui-font-xs)/1.5 var(--ui-font-mono);padding:8px 12px;white-space:pre-wrap;}

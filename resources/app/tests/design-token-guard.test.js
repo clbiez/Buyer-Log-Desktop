@@ -53,8 +53,13 @@ test('Ortak ölçek token\'ları tanımlı ve kullanıcının yazı boyutu ayar�
   for (const token of ['--fs-2xs', '--fs-xs', '--fs-sm', '--fs-base', '--fs-md', '--fs-lg', '--fs-xl', '--fs-2xl', '--fs-3xl', '--fs-4xl']) {
     assert.match(app, new RegExp(`${token}:calc\\([0-9.]+px \\+ var\\(--ui-font-add\\)\\)`), `${token} tanımı eksik`);
   }
-  assert.match(app, /--r-pill:999px; --r-round:50%;/);
-  assert.match(read('giris.css'), /--fs-base:calc\(13px \+ var\(--ui-font-add\)\)/, 'giriş sayfası app.css yüklemez; ölçeği kendi tanımlamalı');
+  const tokens=read('ui-tokens.css');
+  for(const size of ['2xs','xs','sm','base','md','lg','xl','2xl','3xl','4xl']) {
+    assert.ok(tokens.includes('--ui-font-'+size+':calc('), size+' ortak token olmalı');
+  }
+  assert.match(tokens,/--ui-radius:0;--ui-radius-avatar:50%;/);
+  for(const entry of ['index.html','select-user.html'])assert.match(read(entry),/href="\/?ui-tokens\.css/);
+  assert.doesNotMatch(read('giris.css'),/--(?:fs-[\w-]+|ui-font-add)\s*:/,'giriş artık aynı kaynağı kullanmalı');
 });
 
 test('Hiçbir stil dosyası sabit px yazı boyutu kullanmaz', () => {
@@ -86,10 +91,10 @@ test('Yazı ailesi yalnız --sans, --head veya --mono token\'ından gelir', () =
       if (decl.fontFace) continue;
       let family = '';
       if (decl.prop === 'font-family') family = decl.value;
-      else if (decl.prop === 'font') { const m = decl.value.match(/var\(--fs-[\w-]+\)(?:\/\S+)?\s+([\s\S]+)$/); family = m ? m[1] : ''; }
+      else if (decl.prop === 'font') { const m = decl.value.match(/var\(--(?:fs|ui-font)-[\w-]+\)(?:\/\S+)?\s+([\s\S]+)$/); family = m ? m[1] : ''; }
       family = family.replace(/\s*!important\s*$/, '').trim();
       if (!family || /^(inherit|initial|unset)\b/.test(family)) continue;
-      if (/^var\(--(sans|head|mono|login-font|login-heading)[,)]/.test(family)) continue;
+      if (/^var\(--(sans|head|mono|login-font|login-heading|ui-font-body|ui-font-heading|ui-font-mono)[,)]/.test(family)) continue;
       if (/yu gothic|meiryo|cjk/i.test(family)) continue; // CJK yedek listesi bilinçli
       leaks.push(`${file} ${decl.selector} → ${family}`);
     }

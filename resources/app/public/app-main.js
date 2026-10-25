@@ -9814,24 +9814,25 @@ function openNotesEditor(id, key, options={}){
   const modal = document.createElement('div');
   modal.id = '_notesEditorModal';
   modal.className = 'warnOverlay';
+  modal.dataset.uiMigrated='note-editor';
   const orderCode = norm(row['Order Code']);
   const modelName = norm(row['Model Name']);
   const subtitle = [orderCode ? fmtOC(orderCode) : '', modelName].filter(Boolean).join(' · ');
   modal.innerHTML = `<div class="modalCard noteEditorCard" role="dialog" aria-modal="true" aria-labelledby="_notesEditorTitle">
-    <div style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
+    <div class="uiDialogHead">
       <div style="min-width:0;">
         <div class="modalTitle" id="_notesEditorTitle">${escapeHtml(key==='Ek Not' ? L('Ek Not') : L('Sipariş Notu'))}</div>
-        ${subtitle?`<div style="margin-top:3px;color:var(--muted);font-size:var(--fs-xs);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(subtitle)}</div>`:''}
+        ${subtitle?`<div class="uiDialogSub">${escapeHtml(subtitle)}</div>`:''}
       </div>
-      <button type="button" class="notesEditorClose" title="${escapeHtml(L('Kapat'))}" style="border:none;background:none;color:var(--muted);cursor:pointer;padding:4px;"><svg class="ic"><use href="#i-x"/></svg></button>
+      <button type="button" class="notesEditorClose" title="${escapeHtml(L('Kapat'))}"><svg class="ic"><use href="#i-x"/></svg></button>
     </div>
     <div class="noteEditorBody">
-      <textarea class="noteEditorArea" spellcheck="true" placeholder="${escapeHtml(L('Notunuzu buraya yazın…'))}">${escapeHtml(initialValue)}</textarea>
+      <textarea class="noteEditorArea" aria-labelledby="_notesEditorTitle" spellcheck="true" placeholder="${escapeHtml(L('Notunuzu buraya yazın…'))}">${escapeHtml(initialValue)}</textarea>
       <div class="noteEditorHint">${escapeHtml(orderCount>1?(appLang==='en'?`This edit applies to ${orderCount} orders in this note group. Ctrl+Enter to save.`:`Bu düzenleme not grubundaki ${orderCount} siparişe uygulanır. Ctrl+Enter ile kaydedebilirsiniz.`):L('Ctrl+Enter ile kaydedebilirsiniz.'))}</div>
     </div>
-    <div style="padding:12px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px;">
-      <button type="button" class="tbtn notesEditorCancel">${escapeHtml(L('Vazgeç'))}</button>
-      <button type="button" class="navActionBtn pri notesEditorSave" style="background:var(--acc);border-color:var(--acc);color:var(--on-acc);"><svg class="ic"><use href="#i-device-floppy"/></svg> ${escapeHtml(L('Notu Kaydet'))}</button>
+    <div class="uiDialogFoot">
+      <button type="button" class="tbtn notesEditorCancel" data-ui-variant="quiet">${escapeHtml(L('Vazgeç'))}</button>
+      <button type="button" class="navActionBtn pri notesEditorSave" data-ui-variant="primary"><svg class="ic"><use href="#i-device-floppy"/></svg> ${escapeHtml(L('Notu Kaydet'))}</button>
     </div>
   </div>`;
   document.body.appendChild(modal);
@@ -9858,7 +9859,13 @@ function openNotesEditor(id, key, options={}){
   modal.querySelector('.notesEditorSave').addEventListener('click', save);
   modal.addEventListener('click', e=>{ if(e.target===modal) close(); });
   modal.addEventListener('keydown', e=>{
-    if(e.key==='Escape'){ e.preventDefault(); close(); }
+    if(e.key==='Tab'){
+      const controls=[...modal.querySelectorAll('button:not(:disabled),textarea:not(:disabled)')];
+      const first=controls[0],last=controls[controls.length-1];
+      if(e.shiftKey&&document.activeElement===first){e.preventDefault();last?.focus();}
+      else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first?.focus();}
+    }
+    else if(e.key==='Escape'){ e.preventDefault(); close(); }
     else if(e.key==='Enter' && (e.ctrlKey || e.metaKey)){ e.preventDefault(); save(); }
   });
   setTimeout(()=>{ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); },0);
@@ -21203,6 +21210,8 @@ function beginFastThemeSwitch(){
 function applyTheme(name,options){
   const resolved = THEMES[name] ? name : systemTheme();
   _themeRequested=resolved;
+  // Persist only theme/scale for the unauthenticated sign-in shell.
+  try{localStorage.setItem('buyerlog.ui.appearance',JSON.stringify({theme:resolved,step:Number(document.documentElement.dataset.fontStep)||0}));}catch(_){}
   const root = document.documentElement;
   const use=document.querySelector('#railThemeBtn use');
   // Finish a previous requested palette before comparing the live root state.
@@ -21263,6 +21272,7 @@ function applyUiFontStep(value,{persist=true}={}){
   const step=normalizeUiFontStep(value),preset=UI_SCALE_PRESETS[step];
   document.documentElement.dataset.fontStep=String(step);
   document.documentElement.dataset.uiScale=preset.key;
+  window.BLUIAppearance?.remember();
   const btn=document.getElementById('railFontSizeBtn'),label=document.getElementById('railFontSizeLabel');
   const text=appLang==='en'?`Interface: ${preset.en}`:`Arayüz: ${preset.tr}`;
   if(label)label.textContent=text;

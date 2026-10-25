@@ -1,0 +1,39 @@
+/* TEMPORARY, Phase 1–2 only. Legacy consumers alias the canonical UI source.
+   New components MUST use --ui-* directly. Remove during Phase 3 after callers migrate.
+   --thead-* is deliberately NOT aliased: live export contracts remain independent. */
+html[data-ui-system="manifest"]{
+ --paper:var(--ui-canvas);
+ --rail-bg:var(--ui-rail);
+ --card:var(--ui-surface);
+ --card2:var(--ui-surface-soft);
+ --card2-strong:var(--ui-surface-strong);
+ --ink:var(--ui-text);
+ --ink2:var(--ui-text-secondary);
+ --muted:var(--ui-text-muted);
+ --acc:var(--ui-accent);
+ --acc-hover:var(--ui-accent-hover);
+ --acc-bg:var(--ui-selected);
+ --acc-ink:var(--ui-selected-ink);
+ --on-acc:var(--ui-on-accent);
+ --green:var(--ui-success);
+ --green-bg:var(--ui-success-bg);
+ --red:var(--ui-danger);
+ --red-bg:var(--ui-danger-bg);
+ --orange:var(--ui-warning);
+ --orange-bg:var(--ui-warning-bg);
+ --sans:var(--ui-font-body);
+ --head:var(--ui-font-heading);
+ --heading:var(--ui-font-heading);
+ --mono:var(--ui-font-mono);
+ --fs-2xs:var(--ui-font-2xs);
+ --fs-xs:var(--ui-font-xs);
+ --fs-sm:var(--ui-font-sm);
+ --fs-base:var(--ui-font-base);
+ --fs-md:var(--ui-font-md);
+ --fs-lg:var(--ui-font-lg);
+ --fs-xl:var(--ui-font-xl);
+ --fs-2xl:var(--ui-font-2xl);
+ --fs-3xl:var(--ui-font-3xl);
+ --fs-4xl:var(--ui-font-4xl);
+ --rail-item-h:calc(35px * var(--ui-scale));--topbar-h:calc(66px * var(--ui-scale));
+}

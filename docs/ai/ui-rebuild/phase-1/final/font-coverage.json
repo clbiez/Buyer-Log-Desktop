@@ -1,0 +1,32 @@
+[
+  {
+    "font": "Plex Sans",
+    "turkishGlyphsPresent": true,
+    "files": [
+      "IBMPlexSans.woff2"
+    ]
+  },
+  {
+    "font": "Plex Mono",
+    "turkishGlyphsPresent": true,
+    "files": [
+      "IBMPlexMono.woff2"
+    ]
+  },
+  {
+    "font": "Barlow Condensed",
+    "turkishGlyphsPresent": true,
+    "files": [
+      "barlow-condensed-400-latin.woff2",
+      "barlow-condensed-400-latin-ext.woff2"
+    ]
+  },
+  {
+    "font": "Barlow Condensed 600",
+    "turkishGlyphsPresent": true,
+    "files": [
+      "barlow-condensed-600-latin.woff2",
+      "barlow-condensed-600-latin-ext.woff2"
+    ]
+  }
+]

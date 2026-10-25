@@ -5,7 +5,7 @@ const block=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end,s
 const row=(id,code,extra={})=>({_id:id,'Order Code':code,'Model Name':'DEMO','C.Code':'01',Notes:'old',_notesBy:'me','Ek Not':'private',_ekNotBy:'other',...extra});
 function harness(rows,server=true){
   const calls=[],elements=new Map();
-  const element=()=>({value:'',disabled:false,hidden:false,textContent:'',events:{},addEventListener(event,fn){this.events[event]=fn;},focus(){},setSelectionRange(){}});
+  const element=()=>({dataset:{},value:'',disabled:false,hidden:false,textContent:'',events:{},addEventListener(event,fn){this.events[event]=fn;},focus(){},setSelectionRange(){}});
   const modal=element();modal.querySelector=selector=>{if(!elements.has(selector))elements.set(selector,element());return elements.get(selector);};modal.remove=()=>{modal.removed=true;};
   const context={state:{cp:{rows},orders:{rows:rows.map(r=>({...r}))},overrides:{notesmap:{}},cpDirty:new Set()},window:{SERVER_BACKED:server},document:{activeElement:null,getElementById:()=>null,createElement:()=>modal,body:{appendChild(){}}},appLang:'en',norm:v=>String(v??'').trim(),L:s=>s,fmtOC:s=>s,escapeHtml:s=>s,setTimeout:()=>{},editableValuesEqual:(a,b)=>a===b,isAreaFrozen:()=>false,noteAuthoredByCurrentUser:id=>id==='me',overviewNoteCanonical:s=>s.trim(),showToast:msg=>calls.push(['toast',msg]),renderOrders:()=>calls.push(['renderOrders']),settleOverrideWrites:async()=>{},enqueueOverrideMutation:async(kind,url,opts)=>{calls.push(['write',JSON.parse(opts.body)]);return {ok:true,updated:JSON.parse(opts.body).items.length};},pushUndo:a=>calls.push(['undo',a]),_origMarkDirty:id=>calls.push(['dirty',id]),refreshRowEverywhere:id=>calls.push(['refresh',id]),markDirty:id=>calls.push(['local',id]),noteAuthorIdentity:()=>({id:'me',name:'Demo User'}),remoteRowLists(){return [this.state.cp.rows,this.state.orders.rows];}};
   vm.createContext(context);
@@ -17,7 +17,7 @@ function harness(rows,server=true){
 }
 test('Overview edits all matching own note fields in the clicked group; unrelated fields stay intact',async()=>{
   const one=row(1,'100'),two=row(2,'200',{Notes:'',_notesBy:'','Ek Not':'old',_ekNotBy:'me'}),other=row(3,'300');
-  const h=harness([one,two,other]);h.context.openOverviewNoteEditor({note:'old',rows:[one,two]});await h.save('revised');
+  const h=harness([one,two,other]);h.context.openOverviewNoteEditor({note:'old',rows:[one,two]});assert.equal(h.modal.dataset.uiMigrated,'note-editor');await h.save('revised');
   assert.equal(one.Notes,'revised');assert.equal(two['Ek Not'],'revised');assert.equal(one['Ek Not'],'private');assert.equal(other.Notes,'old');
   const items=h.calls.find(c=>c[0]==='write')[1].items;assert.equal(items.length,2);assert.deepEqual(items.map(i=>i.patch.notes),[{Notes:'revised'},{EkNot:'revised'}]);
   assert.equal(h.context.state.orders.rows[0].Notes,'revised','preview projections update too');

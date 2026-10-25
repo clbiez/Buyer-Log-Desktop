@@ -1,0 +1,211 @@
+{
+  "method": "Exact file bytes rendered with setContent; managed Chromium disallows file:// navigation. No policy changes.",
+  "offline": true,
+  "javascript": false,
+  "externalRequests": [],
+  "imagesHashIdentical": true,
+  "keyboardDetails": true,
+  "results": [
+    {
+      "width": 390,
+      "images": [
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        }
+      ],
+      "overflow": false,
+      "scripts": 0
+    },
+    {
+      "width": 1280,
+      "images": [
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        }
+      ],
+      "overflow": false,
+      "scripts": 0
+    },
+    {
+      "width": 1440,
+      "images": [
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        },
+        {
+          "width": 1440,
+          "height": 900
+        }
+      ],
+      "overflow": false,
+      "scripts": 0
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "theme": "light",
+    "html": true,
+    "tsv": true,
+    "xlsx_diff": []
+  },
+  {
+    "theme": "grey",
+    "html": true,
+    "tsv": true,
+    "xlsx_diff": []
+  },
+  {
+    "theme": "dark",
+    "html": true,
+    "tsv": true,
+    "xlsx_diff": []
+  }
+]

@@ -1,0 +1,159 @@
+{
+  "date": "2026-10-25",
+  "risk": "P2",
+  "branch": "ui-rebuild/phase-1-manifest",
+  "base": "ad669e4d",
+  "localOnly": true,
+  "fullNpmTestRun": false,
+  "fullTestReason": "User requires full npm test only after Phase 3; this is Phase 1.",
+  "checks": [
+    {
+      "command": "node --test tests/design-token-guard.test.js tests/ui-component-contract-v20261015.test.js tests/ui-manifest-contract.test.js tests/login-experience-v714.test.js tests/app-icon-denim-v7162.test.js tests/startup-guide-v20260930.test.js tests/boot-thinking-orb-v20260929.test.js tests/startup-language-selector-v20261003.test.js tests/startup-update-check.test.js tests/startup-trivia-v20261001.test.js tests/theme-wave-transition.test.js tests/theme-copy-performance-v482.test.js tests/table-range-excel-export.test.js tests/overview-global-flow-v20260926.test.js tests/overview-global-flow-earth-v20260927.test.js tests/overview-global-flow-partials-v20260926.test.js tests/overview-layout-toolbar-style-v775.test.js tests/cp-overview-assistant-wiring-v948.test.js tests/cp-overview-detail-layout-v958.test.js tests/notes-editor-persistence.test.js tests/cp-orders-external-output-v1090.test.js",
+      "cwd": "resources/app",
+      "pass": 205,
+      "fail": 0,
+      "log": "logs/targeted-tests.txt"
+    },
+    {
+      "command": "node --test tests/ui-manifest-contract.test.js tests/design-token-guard.test.js tests/startup-guide-v20260930.test.js tests/startup-language-selector-v20261003.test.js tests/boot-thinking-orb-v20260929.test.js tests/overview-layout-toolbar-style-v775.test.js",
+      "reason": "After final boot stylesheet order/debug label and chart scroll containment changes",
+      "pass": 39,
+      "fail": 0,
+      "log": "logs/affected-tests.txt"
+    },
+    {
+      "command": "node --test tests/ui-manifest-contract.test.js",
+      "reason": "After strengthening border-longhand detection in the guard itself; production unchanged",
+      "pass": 7,
+      "fail": 0,
+      "log": "logs/manifest-guard.txt"
+    },
+    {
+      "command": "node --test tests/visual-release-notes-v70211.test.js tests/agent-instructions.test.js",
+      "pass": 12,
+      "fail": 0,
+      "log": "logs/release-tests.txt"
+    },
+    {
+      "command": "npm run i18n:check",
+      "newMissing": 0,
+      "baseline": 0,
+      "log": "logs/i18n.txt"
+    },
+    {
+      "command": "npm run release:notes:validate",
+      "changes": 43,
+      "existingEntriesPreservedExactly": 38,
+      "log": "logs/release-notes.txt"
+    },
+    {
+      "command": "node --check each changed JS file",
+      "files": 19,
+      "pass": true
+    },
+    {
+      "command": "git diff --check (tracked source/docs before evidence stage)",
+      "pass": true
+    },
+    {
+      "command": "BL_AUDIT_CDP=9235 node docs/ai/ui-rebuild/tools/capture-phase1.cjs docs/ai/ui-rebuild/phase-1/final",
+      "screens": 19,
+      "failures": 0,
+      "report": "final/capture.json"
+    },
+    {
+      "command": "BL_AUDIT_CDP=9235 node docs/ai/ui-rebuild/tools/final-pilot-check.cjs",
+      "report": "final/supplement.json"
+    },
+    {
+      "command": "BL_AUDIT_CDP=9235 node docs/ai/ui-rebuild/tools/check-horizon-layout.cjs",
+      "checks": 7,
+      "failures": 0,
+      "report": "final/horizon-layout.json"
+    },
+    {
+      "command": "node docs/ai/ui-rebuild/tools/verify-pilot-gallery.cjs",
+      "pass": true,
+      "report": "final/gallery-validation.json",
+      "methodLimit": "Managed Chromium blocks file://; exact saved bytes rendered offline with JS disabled, without policy changes."
+    },
+    {
+      "command": "BL_AUDIT_CDP=9235 node docs/ai/ui-rebuild/tools/performance.cjs docs/ai/ui-rebuild/phase-1/final",
+      "report": "final/performance-comparison.json",
+      "runs": 5
+    },
+    {
+      "command": "Bytewise HTML/TSV and all XLSX xl/* parts compared with Phase 0 baseline",
+      "pass": true,
+      "files": 9,
+      "report": "final/export-equivalence.json"
+    },
+    {
+      "command": "Computed canonical checkbox/focus colors against canvas/surface",
+      "pass": true,
+      "minimumRequired": 3,
+      "report": "final/indicator-contrast.json"
+    },
+    {
+      "command": "fontTools WOFF2 cmap Turkish glyph check",
+      "pass": true,
+      "report": "final/font-coverage.json"
+    },
+    {
+      "command": "git diff --cached --check excluding exact raw TSV export evidence",
+      "pass": true,
+      "exception": "TSV trailing tabs and CRLF are intentional, byte-identical export content; not normalized."
+    }
+  ],
+  "earlierFindings": [
+    {
+      "scope": "old login/boot visual tests",
+      "cause": "Expected old orb/inline CSS/duplicated login palette",
+      "resolution": "Updated design assertions; hard gates and behavior assertions retained."
+    },
+    {
+      "scope": "Notes test harness",
+      "cause": "Fake DOM lacked real dataset API",
+      "resolution": "Added dataset to fixture; all canonical persistence tests retained and pass."
+    },
+    {
+      "scope": "legacy CSS isolation experiments",
+      "cause": "Broader selectors/scope/layer resets slowed CP navigation",
+      "resolution": "Reverted; timings retained in experiment folders."
+    },
+    {
+      "scope": "startup final screenshot",
+      "cause": "Server caches index.html; reload alone did not activate new link order",
+      "resolution": "Restarted real isolated server; compared computed boot surface/canvas with tokens in all themes."
+    },
+    {
+      "scope": "XL delivery horizon",
+      "cause": "Chart children overflowed into footer",
+      "resolution": "Contained chart scroll; 14-day keyboard access verified."
+    },
+    {
+      "scope": "offline gallery navigation",
+      "cause": "Managed Chromium rejects file:// navigation",
+      "resolution": "Same HTML bytes rendered with setContent in offline JS-disabled context; policy unchanged."
+    },
+    {
+      "scope": "font cmap tool",
+      "cause": "Python Brotli decoder missing",
+      "resolution": "Installed test-only dependency outside repo; cmaps verified."
+    }
+  ],
+  "status": {
+    "PR": "local draft only; opening main PR would trigger Actions",
+    "CI": "not run",
+    "merge": "not done",
+    "TEST": "not published",
+    "STABLE": "not published",
+    "phase2": "awaiting pilot approval"
+  },
+  "limitations": [
+    "Full application visual matrix and full npm test deferred to project end.",
+    "Pilot page screenshots do not establish accessibility of unmigrated overlays/modules.",
+    "BLPerf is one Linux/Chromium warm-server environment; CP median +42.4ms (4.35%), startup and 5000-row render approximately unchanged.",
+    "Temporary bridge and old CSS remain until staged migration/Phase 3."
+  ]
+}

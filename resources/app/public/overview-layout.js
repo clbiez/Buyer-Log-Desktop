@@ -34,14 +34,14 @@
   const DEFAULT_PAGES=Object.freeze([
     {name:{tr:'Operasyon',en:'Operations'},items:[
       {key:'launchpad',x:0,y:0,w:12,h:1},
-      {key:'pulse',x:0,y:1,w:12,h:2},
-      {key:'globalFlowMap',x:0,y:3,w:8,h:7},
-      {key:'notes',x:8,y:3,w:4,h:7},
-      {key:'deadline',x:0,y:10,w:5,h:4},
-      {key:'breakdown',x:5,y:10,w:3,h:4},
-      {key:'collectionPreview',x:8,y:10,w:4,h:4},
-      {key:'checklistRules',x:0,y:14,w:8,h:10},
-      {key:'dataCoverage',x:8,y:14,w:4,h:6},
+      {key:'pulse',x:0,y:1,w:12,h:3},
+      {key:'deadline',x:0,y:4,w:4,h:6},
+      {key:'globalFlowMap',x:4,y:4,w:8,h:6},
+      {key:'breakdown',x:0,y:10,w:4,h:6},
+      {key:'notes',x:4,y:10,w:4,h:6},
+      {key:'collectionPreview',x:8,y:10,w:4,h:6},
+      {key:'checklistRules',x:0,y:16,w:8,h:10},
+      {key:'dataCoverage',x:8,y:16,w:4,h:6},
     ]},
     {name:{tr:'Ticari',en:'Commercial'},items:[
       {key:'collectionSummary',x:0,y:0,w:12,h:4},

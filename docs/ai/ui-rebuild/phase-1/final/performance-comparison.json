@@ -1,0 +1,32 @@
+{
+  "method": "5 fresh browser contexts, same warm server/process and fixed synthetic dataset; no CPU throttling. Startup is BLPerf firstUsableInteractionMs, excluding reading the boot guide. CP 5000 in-memory canonical rows, normal pagination; two animation frames included. Not a Windows/Electron or cold-disk benchmark.",
+  "metrics": {
+    "startupMs": {
+      "baselineMs": 1020.1,
+      "pilotMs": 1014.3,
+      "deltaMs": -5.8,
+      "deltaPercent": -0.57
+    },
+    "cpNavigationMs": {
+      "baselineMs": 975.4,
+      "pilotMs": 1017.8,
+      "deltaMs": 42.4,
+      "deltaPercent": 4.35
+    },
+    "cp5000RenderMs": {
+      "baselineMs": 2995.9,
+      "pilotMs": 2989.4,
+      "deltaMs": -6.5,
+      "deltaPercent": -0.22
+    }
+  },
+  "domRows": [
+    50,
+    50,
+    50,
+    50,
+    50
+  ],
+  "hiddenModulesNotLoaded": true,
+  "hiddenTablesEmptyAtStartup": true
+}
