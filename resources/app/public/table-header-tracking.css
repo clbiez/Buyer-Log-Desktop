@@ -1,0 +1,21 @@
+/* Header-only dividers: restore distinct column borders without a body grid. */
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable) thead tr.colRow th:not(:last-child){
+  box-sizing:border-box;
+  border-inline-end:1px solid var(--ui-row-divider)!important;
+}
+/* The group TH remains in the original table/freeze geometry. Only its label moves. */
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable) thead tr.groupRow th[data-grp]{
+  text-align:center!important;
+  padding-inline:6px!important;
+  overflow:hidden!important;
+}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#kolTable) thead tr.groupRow th[data-grp]>.blGroupFollowLabel{
+  display:inline-block;
+  max-width:calc(100% - 12px);
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  vertical-align:middle;
+  pointer-events:none;
+  will-change:transform;
+}

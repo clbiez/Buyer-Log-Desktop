@@ -86,8 +86,12 @@ izdüşümü bir kontrolün hitbox’ı veya veri işaretçisi değildir.
 3. Kullanıcının açık seçimi: CP, Siparişler ve Koleksiyon’da ana sütun grupları
    arasında **1px `--ui-group-divider`**, hem `.groupRow th.groupDivider` hem
    `.colRow th.groupBoundary` üzerinde. Satır gövdesine taşınmaz.
-4. Grafik eksen/kılavuzları veri okumak içindir; `--ui-chart-grid` kullanır.
-5. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
+4. CP, Siparişler ve Koleksiyon'da alt sütun başlıkları arasında 1px
+   `--ui-row-divider` bulunur. Grup adı yatay kaydırmada kendi sütunlarının
+   **görünür bölümünde ortalanır**; frozen sütunları kapatmaz, veri hücrelerine
+   dokunmaz.
+5. Grafik eksen/kılavuzları veri okumak içindir; `--ui-chart-grid` kullanır.
+6. Basılı/dışa aktarılan belge kendi sabit çıktı sözleşmesini korur (§8).
 
 Tablo başlıkları `--ui-header-*`, ana grup bandı `--ui-group-header-*` kullanır.
 Seçili satır `--ui-selected` / `--ui-selected-ink`; hover `--ui-row-hover`.
