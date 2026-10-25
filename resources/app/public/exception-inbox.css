@@ -1,0 +1,14 @@
+.ovInbox{display:flex;flex-direction:column;min-width:0;min-height:0;border:1px solid var(--hair);background:var(--card);overflow:hidden;}
+.ovInboxHead,.ovInboxFoot{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;}
+.ovInboxHead{border-bottom:1px solid var(--hair);font-size:var(--fs-sm);}
+.ovInboxScope,.ovInboxStatus{margin:6px 12px;color:var(--muted);font-size:var(--fs-xs);line-height:1.5;}
+.ovInboxTabs{display:flex;flex-wrap:wrap;gap:6px;padding:4px 12px;}
+.ovInboxTabs [aria-pressed="true"]{background:var(--card2-strong);color:var(--ink);}
+.ovInboxList{flex:1;min-height:0;overflow:auto;padding:0 12px;}
+.ovInboxRow{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:8px 2px;border:0;border-bottom:1px solid var(--hair);background:transparent;color:var(--ink);text-align:left;font:inherit;font-size:var(--fs-xs);cursor:pointer;}
+.ovInboxRow>span:first-child{display:flex;align-items:center;gap:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ovInboxRow>span:last-child{flex-shrink:0;color:var(--muted);}
+.ovInboxRow:hover{background:var(--card2-strong);}
+.ovInboxRow:focus-visible,.ovInbox button:focus-visible{outline:none;box-shadow:var(--focus-ring);}
+.ovInboxFoot{color:var(--muted);font-size:var(--fs-xs);border-top:1px solid var(--hair);}
+@media(max-width:600px){.ovInboxRow{align-items:flex-start;flex-direction:column;gap:3px;}}

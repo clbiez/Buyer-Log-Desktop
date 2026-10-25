@@ -31,6 +31,11 @@ process.on('message',async message=>{try{
  else if(message.command==='identity'){const raw=JSON.parse(fs.readFileSync(path.join(process.env.BUYER_LOG_AUTH_DATA_ROOT,'user-access.json'),'utf8'));process.send({id:message.id,result:{revision:raw._revision,users:raw.users.map(user=>({id:user.id,status:user.status,enabled:user.enabled,credentialRevision:user.credentialRevision}))}});}
  else if(message.command==='deleteForeignOrder'){official=official.filter(row=>row.ocode!==4100002);access.syncProfiles(official,{authoritative:true});process.send({id:message.id,result:true});}
  else if(message.command==='transferOwnOrder'){official=official.map(row=>row.ocode===4100001?{...row,buyer:message.restore?'Buyer A':'Buyer B'}:row);access.syncProfiles(official,{authoritative:true});process.send({id:message.id,result:true});}
+ else if(message.command==='seedExceptionDates'){
+  official=official.map(row=>({...row,ex:row.ocode===4100001?new Date(2026,0,1):new Date(2026,10,1)}));
+  for(const user of access.allPublicProfiles().filter(user=>['fixture-a','fixture-b','fixture-admin'].includes(user.username)))global.__blSeedAsas(official,user.id,['cp','orders']);
+  access.syncProfiles(official,{authoritative:true});process.send({id:message.id,result:true});
+ }
  else if(message.command==='seedScale'){
   const count=Math.max(1,Math.min(30000,Number(message.count)||2000)),owner=access.allPublicProfiles().find(user=>user.username==='fixture-a');
   official=[...official.slice(0,2),...Array.from({length:count},(_,i)=>({...official[0],ocode:4200000+i,model:'DEMO-SCALE-'+i,buyer:'Buyer A'}))];

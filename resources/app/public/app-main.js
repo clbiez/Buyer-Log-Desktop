@@ -2293,6 +2293,7 @@ function switchTab(tab){
   if(tab==='automations')void window.BLPerf.ensureFeature('automations').then(()=>{window.initAutomationStudio?.();window.initAiAutomationImport?.();}).catch(err=>showToast(err.message));
   if(typeof fitTableHeights==='function') setTimeout(fitTableHeights, 0);
   if(typeof syncFreezeButtonState==='function')setTimeout(syncFreezeButtonState,0);
+  window.BLExceptionInboxView?.sync();
 }
 function activeTableInfo(){
   const btn = document.querySelector('nav.tabs button.active');
@@ -9679,6 +9680,7 @@ function applyAcknowledgedCpDraft(prepared,data){
   }
   if(data.overrides?._revision!=null){state.overrides._revision=data.overrides._revision;state.overrides._revisions={...state.overrides._revisions,...data.overrides._revisions};}
   invalidateCoreFacetCaches();if(ids.size)refreshRowsEverywhere([...ids]);if(state.orders)renderOrders();
+  try{window.dispatchEvent(new CustomEvent('buyerlog:cp-write-ack'));}catch(_){}
 }
 function pushUndo(action){
   bindCpHistoryIdentity(action);
@@ -11078,7 +11080,34 @@ function renderOverviewState(options){
   shell.appendChild(body);target.replaceChildren(shell);target.dataset.uiState=kind;
 }
 
+function renderOverviewExceptionInbox(){
+ const root=document.getElementById('ovExceptionInbox');
+ if(!root||!startupReadySignaled||currentActiveTab()!=='overview'||root.classList.contains('ovHomeOff'))return;
+ void window.BLPerf.ensureFeature('exceptionInbox').then(()=>window.BLExceptionInboxView?.sync()).catch(()=>{root.textContent=appLang==='en'?'Exception inbox could not be loaded.':'İstisna kutusu yüklenemedi.';});
+}
+window.addEventListener('bl:primary-screen-ready',renderOverviewExceptionInbox);
+window.BLExceptionInboxBridge={
+ allowed:()=>Boolean(window.BL_USER_CONTEXT?.id)&&window.BLCanAccessArea?.('cp')===true&&!window.BL_CP_SOURCE_FILTER_REQUIRED&&window.BL_HAS_CACHED_MODEL_DATA!==false,
+ scope:()=>overviewCpFilterSignature(),
+ filter:row=>passesOvDimFilters(row,true,'main'),
+ analyze:row=>window.BLCpReadinessEngine.analyzeOrder(row,{transitRules:state.overrides?.transitRules||[]}),
+ async read(signal){
+  const response=await fetch('/api/data/cp',{cache:'no-store',signal});
+  if(!response.ok){const error=new Error('CP snapshot HTTP '+response.status);error.status=response.status;throw error;}
+  const data=await response.json(),rows=Array.isArray(data.rows)?data.rows:[];reviveServerDates(rows);return rows;
+ },
+ async open(item){
+  const bridge=window.BLExceptionInboxBridge,owner=String(window.BL_USER_CONTEXT?.id||''),scope=bridge.scope();if(!bridge.allowed())return;
+  const rows=await bridge.read();if(!bridge.allowed()||String(window.BL_USER_CONTEXT?.id||'')!==owner||bridge.scope()!==scope)return;
+  const matching=rows.filter(row=>window.BLCanonicalFields.keyFor(row,'cp',window.BLExceptionInbox.IDENTITY)===item.key&&bridge.filter(row)&&bridge.analyze(row).riskReasons.includes(item.type));
+  if(!matching.length){showToast(appLang==='en'?'This exception is no longer in the current confirmed scope.':'Bu istisna güncel kayıtlı kapsamda artık bulunmuyor.');void window.BLExceptionInboxView?.refresh();return;}
+  if(!window.BLDetailDrawer)await window.BLPerf.ensureFeature('deferredUi');
+  if(!bridge.allowed()||String(window.BL_USER_CONTEXT?.id||'')!==owner||bridge.scope()!==scope)return;
+  window.BLDetailDrawer?.open({storageKey:'overview.exception-inbox',moduleId:'cp',source:'cp',tableSetup:'cp',title:appLang==='en'?'Exception · CP record':'İstisna · CP kaydı',rows:matching,columns:[],images:true});
+ },
+};
 function renderOverviewNow(){
+  renderOverviewExceptionInbox();
   renderOverviewCollectionSummary();
   if(!state.cp && !state.orderSummary && !state.overviewSummary){renderOverviewCpDependencyState('loading');return;}
   const empty=document.getElementById('ovEmpty');

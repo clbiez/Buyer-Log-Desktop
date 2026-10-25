@@ -1866,6 +1866,35 @@
           "en": "Existing view infrastructure with canonical fields, density and filters."
         }
       }
+    },
+    {
+      "id": "scoped-confirmed-exception-inbox",
+      "type": "feature",
+      "module": {
+        "tr": "Genel Bakış",
+        "en": "Overview"
+      },
+      "title": {
+        "tr": "Kayıtlı verideki istisnaları tek kutuda takip edin",
+        "en": "Track confirmed exceptions in one inbox"
+      },
+      "body": {
+        "tr": "Yeni Genel Bakış widget’ı mevcut CP motorundan geçmiş Ex-Factory ve Buyer Log–ASAS tarih farklarını okur. Güncel yetkili kapsam ve Genel Bakış filtreleri uygulanır, aynı kanonik sipariş satırı tür başına bir kez sayılır. Kaydedilmemiş veya başarısız değişiklikler uyarıyı kaldırmaz; sunucu kaydı onaylandığında liste yenilenir. Kayda tıklayınca güncel durum yeniden kontrol edilip mevcut detay raporu açılır. Widget gizliyken CP okuması başlatılmaz.",
+        "en": "The new Overview widget reads overdue Ex-Factory and Buyer Log–ASAS date differences from the existing CP engine. Current authorized scope and Overview filters apply; each canonical order line is counted once per type. Unsaved or failed changes do not dismiss an exception; confirmed writes refresh the list. Opening an item rechecks its current state and uses the existing detail report. A hidden widget does not start CP reads."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "exception-inbox-confirmed.png",
+        "alt": {
+          "tr": "Gerçek demo Genel Bakış ekranında yetkili kapsamda geçmiş Ex-Factory istisnası.",
+          "en": "Overdue Ex-Factory exception in the authorized scope of the actual demo Overview."
+        },
+        "caption": {
+          "tr": "İki yerleşik sinyal; kanonik sayımlar ve kayıtlı sunucu verisi.",
+          "en": "Two existing signals, canonical counts and confirmed server data."
+        }
+      }
     }
   ]
 }

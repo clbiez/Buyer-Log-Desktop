@@ -224,6 +224,7 @@ test('A4 · applyHistoryAction tarih geri/ileri alma işlemlerinde saveDateOverr
     'Del. Type': 'Gemi',
   };
   const ctx = {
+    cpBulkPreparing: false,
     state: { cp: { rows: [cpRow] } },
     shipRows: [],
     syncCpProductionLogisticSegment: () => false,

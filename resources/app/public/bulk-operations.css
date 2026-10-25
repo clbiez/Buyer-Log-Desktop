@@ -1,11 +1,11 @@
 .blBulkCard{width:min(960px,calc(100vw - 32px));max-height:calc(100dvh - 32px);display:flex;flex-direction:column}
 .blBulkCard .modalTitle{padding:16px 20px;border-bottom:1px solid var(--line)}
 .blBulkCard .modalFoot{padding:12px 20px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
-.blBulkBody{overflow:auto;padding:16px 20px;color:var(--text)}
-.blBulkTableWrap{overflow:auto;max-height:52dvh;border:1px solid var(--line);border-radius:var(--radius-sm,8px)}
-.blBulkTableWrap table{width:100%;border-collapse:collapse;text-align:left;font-size:var(--fs-body,13px)}
+.blBulkBody{overflow:auto;padding:16px 20px;color:var(--ink)}
+.blBulkTableWrap{overflow:auto;max-height:52dvh;border:1px solid var(--line);border-radius:var(--r-sm)}
+.blBulkTableWrap table{width:100%;border-collapse:collapse;text-align:left;font-size:var(--fs-sm)}
 .blBulkTableWrap th,.blBulkTableWrap td{padding:8px 12px;border-bottom:1px solid var(--line);vertical-align:top;white-space:pre-wrap;overflow-wrap:anywhere;max-width:360px}
-.blBulkTableWrap th{position:sticky;top:0;background:var(--panel);color:var(--text)}
+.blBulkTableWrap th{position:sticky;top:0;background:var(--card);color:var(--ink)}
 .blBulkBody section{display:block;padding:12px 0;border-bottom:1px solid var(--line)}
 .blBulkCard button:focus-visible{outline:none;box-shadow:var(--focus-ring)}
 @media(prefers-reduced-motion:reduce){.blBulkOverlay,.blBulkCard{transition:none;animation:none}}

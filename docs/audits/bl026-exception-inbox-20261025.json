@@ -1,0 +1,161 @@
+{
+  "package": "BL026",
+  "date": "2026-10-25",
+  "PR": 714,
+  "risk": "P2: readonly presentation using existing scoped CP endpoint and native readiness reasons; no permission, business, price, date or sync algorithm changes",
+  "focused": {
+    "files": 11,
+    "tests": 72,
+    "pass": 72,
+    "fail": 0,
+    "skip": 0,
+    "seconds": 1.7,
+    "log": "work/bl026-final-target.log",
+    "sha256Lf": "ceede8bcf293354a091f9488e45cde775a639325084e92a25c301a45755f776f"
+  },
+  "native": {
+    "phases": [
+      {
+        "name": "actual-native-overdue-reason-current-authorized-cp-snapshot"
+      },
+      {
+        "name": "refresh-does-not-initialize-hidden-grids-or-load-feature-javascript"
+      },
+      {
+        "name": "controlled-unsaved-client-date-cannot-resolve-server-confirmed-exception"
+      },
+      {
+        "name": "actual-held-http-write-keeps-old-signal-until-durable-ack-then-refreshes-native-reasons"
+      },
+      {
+        "name": "controlled-failed-write-does-not-dismiss-confirmed-date-difference"
+      },
+      {
+        "name": "existing-detail-drawer-resolves-current-canonical-record"
+      },
+      {
+        "name": "current-overview-dimension-filters-scope-counts-and-items"
+      },
+      {
+        "name": "native-three-themes-tr-en-accessible-controls"
+      },
+      {
+        "name": "hidden-widget-does-not-read-cp"
+      },
+      {
+        "name": "actual-two-buyer-sessions-have-separate-authorized-exceptions"
+      },
+      {
+        "name": "controlled-live-permission-loss-clears-cached-items-immediately"
+      }
+    ],
+    "errors": [],
+    "ok": true
+  },
+  "contracts": {
+    "signals": [
+      "EX_FACTORY_OVERDUE",
+      "DATE_SYNC_MISMATCH"
+    ],
+    "engine": "Existing BLCpReadinessEngine.analyzeOrder riskReasons; no copied calendar/priority rules or invented missing evidence.",
+    "scope": "Existing /api/data/cp server authority, current user/generation, Overview dimension filters and client access checks. Permission loss clears the cached list. No foreign-user data is persisted.",
+    "identity": "BLCanonicalFields orderCode/modelName/colourCode, deduplicated per reason. Full counts are preserved; each type retains at most 200 lightweight item DTOs without source rows.",
+    "commit": "Fresh server-confirmed snapshots are independent of optimistic UI rows. Existing single/bulk writers emit a noncritical observer event only after ACK. Failed writes cannot emit it. Visible inbox refresh is debounced; hidden widget cancels reads.",
+    "async": "Projection yields every 150 records, aborts/rejects stale scope, and retains only small item DTOs and canonical dedup keys. Snapshot reads do not render hidden CP/Orders/Collection grids.",
+    "navigation": "Current scoped server data and reason are revalidated before the existing detail drawer opens; no stale index or label join.",
+    "layout": "Existing Overview widget registry, migration, drag/resize, page and hide behavior. Previously hidden known widgets remain hidden."
+  },
+  "integrationFixes": [
+    {
+      "kind": "Test fixture",
+      "finding": "The pre-bulk extracted applyHistoryAction test did not supply the new real cpBulkPreparing lexical flag.",
+      "fix": "Added false to that VM fixture; original date Undo/save assertions retained and passing."
+    },
+    {
+      "kind": "Design regression",
+      "finding": "The BL023 preview stylesheet used four undefined token names: --text, --panel, --radius-sm, --fs-body.",
+      "fix": "Replaced with existing --ink, --card, --r-sm and --fs-sm. Design guard passes. All 15 existing real bulk acceptance scenarios rerun, seven fresh PNGs inspected."
+    }
+  ],
+  "bulkStyleFollowup": {
+    "phases": [
+      {
+        "name": "actual-cp-preview-one-batch-and-durable-ack",
+        "cells": 2,
+        "requests": 1
+      },
+      {
+        "name": "actual-cp-bulk-undo-redo-durable"
+      },
+      {
+        "name": "controlled-client-stale-undo-refused",
+        "requests": 0
+      },
+      {
+        "name": "controlled-preview-record-replacement-refused",
+        "requests": 0
+      },
+      {
+        "name": "controlled-lost-cp-response-not-replayed-by-later-note",
+        "unknown": 2,
+        "valuesUnchanged": true
+      },
+      {
+        "name": "actual-collection-preview-atomic-ack-and-undo-redo",
+        "cells": 2
+      },
+      {
+        "name": "controlled-collection-undo-unknown-keeps-live-data-and-history"
+      },
+      {
+        "name": "actual-supplier-excel-one-domain-batch-ledger",
+        "lines": 2
+      },
+      {
+        "name": "actual-foreign-buyer-batch-denied",
+        "httpStatus": 403,
+        "quotationUnchanged": true
+      },
+      {
+        "name": "actual-supplier-bulk-undo-durable-and-stale-revision-refused"
+      },
+      {
+        "name": "controlled-collection-failure-no-secondary-write-or-replay",
+        "httpStatus": 409
+      },
+      {
+        "name": "controlled-collection-failure-no-secondary-write-or-replay",
+        "httpStatus": 500
+      },
+      {
+        "name": "actual-checklist-worker-import-preview-and-canonical-outcomes",
+        "entries": 2
+      },
+      {
+        "name": "actual-checklist-partial-retry-repreviews-only-rejected",
+        "acceptedNotReplayed": true,
+        "retryItems": 1
+      },
+      {
+        "name": "actual-reload-receipts-no-replay",
+        "accepted": 5
+      }
+    ],
+    "errors": [],
+    "ok": true
+  },
+  "visualsInspected": true,
+  "independentReview": {
+    "performed": false,
+    "reason": "Local readonly P2; existing server scope and business writers retain their contracts."
+  },
+  "full": false,
+  "merge": false,
+  "limits": [
+    "Actual Edge synthetic acceptance at 1440×960. Populated Electron/200% acceptance remains BL019.",
+    "A visible dirty inbox performs an additional existing scoped CP read; its populated cost must be measured in BL019. No extra read while hidden.",
+    "The UI reports two selected signals only; zero exceptions is not an all-risks-clear claim.",
+    "Final integrated full/CI/merge remain pending."
+  ],
+  "rollback": "Revert BL026; no business schema or persistent data migration."
+}
