@@ -555,7 +555,7 @@ function replayOverviewMotion(host){
   ];
   const start=performance.now();
   function tick(now){
-    if(!host.isConnected){motionFrame=0;return;}
+    if(!host.isConnected||!state.open||!visible()||host.querySelector('.blvProgressRing')!==gauge){motionFrame=0;return;}
     const elapsed=Math.max(0,now-start);
     for(let i=0;i<targets.length;i++){
       const {el,kind}=targets[i];
