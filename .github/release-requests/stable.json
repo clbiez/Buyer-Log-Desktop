@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "version": "7.0.295",
-  "commit_sha": "b7bd46e45b53553a59badda24064a8295e09e5d5",
-  "release_notes": "Buyer Log 7.0.295 STABLE — promote the exact TEST 7.0.295 artifact only after all release gates pass; all code merged through b7bd46e45b53. Draft PRs #694 and #721 remain excluded.",
-  "request_id": "7.0.295-stable-after-test-20261025"
+  "version": "7.0.300",
+  "commit_sha": "5150c389d3846f37efa0657c79b71b12d242766e",
+  "release_notes": "Buyer Log 7.0.300 STABLE — promote the exact signed TEST 7.0.300 artifact after successful Windows full regression, release validation and TEST publishing. Source 5150c389d384; draft notification PRs #694/#721 remain excluded. No rebuild.",
+  "request_id": "7.0.300-stable-after-signed-test-20261025"
 }
