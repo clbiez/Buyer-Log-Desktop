@@ -1,0 +1,20 @@
+[
+  {
+    "theme": "light",
+    "workbookDifferentParts": [],
+    "copyHTML": true,
+    "copyTSV": true
+  },
+  {
+    "theme": "grey",
+    "workbookDifferentParts": [],
+    "copyHTML": true,
+    "copyTSV": true
+  },
+  {
+    "theme": "dark",
+    "workbookDifferentParts": [],
+    "copyHTML": true,
+    "copyTSV": true
+  }
+]

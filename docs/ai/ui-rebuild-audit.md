@@ -21,8 +21,7 @@ Faz 1, pilot onayı verilmeden Faz 2 başlamaz.
   [inventory.py](ui-rebuild/tools/inventory.py).
 - [Ana görüntü manifestosu](ui-rebuild/evidence/baseline/capture-manifest.json):
   üç temada ana modüller, Overview ticari sayfası ve açılış. Her PNG gerçek
-  uygulamanın kayıpsız ekran görüntüsüdür. Contact görselleri yalnız inceleme
-  dizinidir; tekil PNG'lerin yerine geçmez.
+  uygulamanın kayıpsız ekran görüntüsüdür. Tekil PNG'ler kanonik görsel kanıttır.
 - [Pencere, export ve erişilebilirlik örneklemi](ui-rebuild/evidence/baseline/overlay-export-a11y.json).
   Aynı görünüm ailesini kullanan her modal için tekrar görüntü üretilmedi.
   Eski gizli `#navColsBtn` tıklama denemesi başarısızdır; görünür giriş
@@ -284,3 +283,19 @@ oturumu ve paylaşımlı çok kullanıcılı altyapı kullanılmadı. Kaynak env
 dinamik durumları listeler; hepsinin tüm varyantları henüz çalıştırılmadı.
 Final görsel matris, tam klavye/kontrast taraması, diğer modüllerin export
 referansları ve bütün uygulama tam testi Faz 3 kapanışında zorunludur.
+
+## Faz 0B teslim eki
+
+İki ayrı geçici dalda Overview ve CP Tracker konseptleri uygulandı:
+`ui-rebuild/concept-kartela` ve `ui-rebuild/concept-manifest`.
+[Üç temalı galeri](ui-rebuild/concepts.html) ve
+[karşılaştırma / hedefli testler / BLPerf / yerel inceleme açıklamaları](ui-rebuild-concepts.md).
+Bu audit dalında üretim kodu değişmedi; konsept kodu kendi worktree/dallarında.
+Kullanıcı seçimi bekleniyor; Faz 1 başlamadı.
+
+Ek başlangıç kanıtı `baseline/supplement.json` içinde: görünür alanlar
+düğmesiyle CP popover'ı, gerçek giriş ekranları ve büyük tablo hazırlığı
+sonundaki `.blTriviaHold` devam ekranı. Önceki contact dizin görselleri
+geçici boş giriş çekimlerini içerdiği için kaldırıldı; düzeltilmiş gerçek
+`sign-in-{light,grey,dark}.png` dosyaları korunur. Giriş ekranının bugün
+üç tema arasında palet değiştirmemesi, Faz 1 ortak token işinin gerekçelerindendir.

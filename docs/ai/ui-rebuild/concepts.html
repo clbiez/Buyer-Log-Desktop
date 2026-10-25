@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="tr">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Buyer Log — Konsept seçimi</title>
+<style>
+@font-face{font-family:Barlow;src:url('../../../resources/app/public/vendor/fonts/barlow-400-latin-ext.woff2')}@font-face{font-family:Barlow;src:url('../../../resources/app/public/vendor/fonts/barlow-400-latin.woff2');unicode-range:U+0000-00FF}
+*{box-sizing:border-box}body{margin:0;background:#f4f1e9;color:#252b27;font:1.05rem/1.5 Barlow,sans-serif}main{max-width:1800px;margin:auto;padding:40px 32px}h1{font:2.6rem/1.1 Georgia,serif;margin:10px 0 18px;font-weight:400}h2{font:1.8rem/1.2 Georgia,serif;margin:0}p{max-width:80ch}small,.eyebrow{font-size:.82rem;letter-spacing:.05em}.eyebrow{text-transform:uppercase}a{color:#35543c;text-underline-offset:3px}button,select{font:inherit;border:0;border-radius:0;background:#e4e0d4;color:#252b27;padding:9px 12px;cursor:pointer}button[aria-pressed="true"]{background:#344d39;color:#fff}button:hover,select:hover{background:#d5d6c8}button[aria-pressed="true"]:hover{background:#344d39}:focus-visible{outline:2px solid #344d39;outline-offset:4px}.controls{display:flex;align-items:end;gap:24px;flex-wrap:wrap;margin:28px 0}label{display:grid;gap:6px}.buttons{display:flex;gap:4px;flex-wrap:wrap}.compare{display:grid;grid-template-columns:1fr 1fr;gap:28px}article{min-width:0}article header{min-height:120px}article p{margin:10px 0 18px}figure{margin:0}img{display:block;width:100%;height:auto;background:#e5e1d6}figcaption{padding:10px 0;color:#505a51;font-size:.9rem}.evidence{margin-top:32px;padding:24px;background:#e9e6dc}table{border-collapse:collapse;text-align:left}td,th{padding:10px 24px 10px 0}tr+tr{border-top:1px solid #d3d3c8}.note{color:#505a51}footer{margin-top:32px}@media(max-width:1100px){.compare{grid-template-columns:1fr}article header{min-height:0}main{padding:24px 16px}}@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+<main>
+ <div class="eyebrow">Buyer Log / Faz 0B / Geçici yerel prototipler</div>
+ <h1>Aynı veri, iki tasarım yönü.</h1>
+ <p>Overview ve CP Tracker, gerçek uygulamada anonim veriyle çalışıyor. Görüntüler 1440 × 900 ve standart arayüz boyutunda çekildi. Tam çözünürlük için görüntüye tıklayın.</p>
+ <div class="controls">
+  <label>Tema <select id="theme"><option value="light">Açık</option><option value="grey">Grey</option><option value="dark">Dark</option></select></label>
+  <div class="buttons" role="group" aria-label="Ekran"><button type="button" data-view="overview" aria-pressed="true">Overview</button><button type="button" data-view="cp" aria-pressed="false">CP Tracker / tablo</button></div>
+ </div>
+ <div class="compare">
+  <article><header><div class="eyebrow">A / Kartela</div><h2>Kâğıt, iplik ve editoryal düzen</h2><p>Ekru ve zeytin tonları; Source Serif 4 başlıklar, Barlow metin, Plex Mono kodlar. Açık KPI satırı, dikey termin grafiği, tonla ayrılan tablo satırları.</p></header><figure><a id="kartela-link" href="evidence/kartela/overview-light.png"><img id="kartela-image" src="evidence/kartela/overview-light.png" alt="Kartela — Overview, açık tema" width="1440" height="900"></a><figcaption id="kartela-caption">Kartela · Overview · Açık</figcaption></figure></article>
+  <article><header><div class="eyebrow">B / Manifest</div><h2>Teknik föy ve sevkiyat düzeni</h2><p>Soğuk kâğıt ve petrol tonları; Plex Sans metin, Barlow Condensed başlıklar, Plex Mono kodlar. Sıkı hiyerarşi, yatay termin grafiği ve geniş lojistik haritası.</p></header><figure><a id="manifest-link" href="evidence/manifest/overview-light.png"><img id="manifest-image" src="evidence/manifest/overview-light.png" alt="Manifest — Overview, açık tema" width="1440" height="900"></a><figcaption id="manifest-caption">Manifest · Overview · Açık</figcaption></figure></article>
+ </div>
+ <p id="capture-status" class="note" aria-live="polite">Her iki konsept: Overview / Açık.</p>
+ <div class="evidence"><strong>Seçim için öneri: Kartela.</strong><p>Tekstil kartelası ve editoryal tipografi, Buyer Log'a daha ayırt edici bir kimlik veriyor. Manifest, günlük operasyon ve lojistik yoğunluğu öncelikliyse daha uygun. İkisinde de aynı iş verisi ve mevcut kontrol kancaları korunuyor.</p><p><a href="../ui-rebuild-concepts.md">Kısa karşılaştırma, performans ve riskler</a> · <a href="../ui-rebuild-audit.md">Faz 0A denetimi ve göç planı</a></p></div>
+ <footer><p>Her dalda 51 hedefli test geçti. CP export/kopya referansları üç temada eşleşti. Bu sonuç, uygulamanın tamamının dönüştürüldüğü veya son kabul testinin tamamlandığı anlamına gelmez. Tüm modüllerin göçü, giriş/boot ortak tokenları ve yeni guard'lar seçimin ardından yapılacak.</p><p class="note">PR açılmadı · CI çalışmadı · Merge yapılmadı · TEST ve STABLE yayınlanmadı. Faz 0B karar kapısı: seçim olmadan Faz 1 başlamaz.</p></footer>
+</main>
+<script>
+let view='overview';const names={light:'Açık',grey:'Grey',dark:'Dark'},views={overview:'Overview',cp:'CP Tracker'};
+function update(){const theme=document.getElementById('theme').value;for(const concept of ['kartela','manifest']){const name=concept==='kartela'?'Kartela':'Manifest',src='evidence/'+concept+'/'+view+'-'+theme+'.png',label=name+' · '+views[view]+' · '+names[theme];document.getElementById(concept+'-link').href=src;document.getElementById(concept+'-image').src=src;document.getElementById(concept+'-image').alt=label;document.getElementById(concept+'-caption').textContent=label;}document.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));document.getElementById('capture-status').textContent='Her iki konsept: '+views[view]+' / '+names[theme]+'.';}
+document.getElementById('theme').addEventListener('change',update);document.querySelectorAll('[data-view]').forEach(b=>b.addEventListener('click',()=>{view=b.dataset.view;update();}));
+</script>
+</html>

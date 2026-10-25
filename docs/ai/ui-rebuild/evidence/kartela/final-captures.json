@@ -1,0 +1,165 @@
+{
+  "method": "Real Chromium screenshots after dismissing transient import feedback with its normal close control. No image editing or DOM hiding.",
+  "captures": [
+    {
+      "file": "cp-dark-xl-1280.png",
+      "tab": "cp",
+      "theme": "dark",
+      "width": 1280,
+      "step": 2,
+      "dismissed": 0
+    },
+    {
+      "file": "cp-dark.png",
+      "tab": "cp",
+      "theme": "dark",
+      "width": 1440,
+      "step": 0,
+      "dismissed": 0
+    },
+    {
+      "file": "cp-en-light.png",
+      "tab": "cp",
+      "theme": "light",
+      "width": 1440,
+      "step": 0,
+      "dismissed": 0
+    },
+    {
+      "file": "cp-grey-xl-1280.png",
+      "tab": "cp",
+      "theme": "grey",
+      "width": 1280,
+      "step": 2,
+      "dismissed": 0
+    },
+    {
+      "file": "cp-grey.png",
+      "tab": "cp",
+      "theme": "grey",
+      "width": 1440,
+      "step": 0,
+      "dismissed": 0
+    },
+    {
+      "file": "cp-light-compact-1440.png",
+      "tab": "cp",
+      "theme": "light",
+      "width": 1440,
+      "step": 3,
+      "dismissed": 0
+    },
+    {
+      "file": "cp-light-large-1440.png",
+      "tab": "cp",
+      "theme": "light",
+      "width": 1440,
+      "step": 1,
+      "dismissed": 0
+    },
+    {
+      "file": "cp-light-xl-1280.png",
+      "tab": "cp",
+      "theme": "light",
+      "width": 1280,
+      "step": 2,
+      "dismissed": 0
+    },
+    {
+      "file": "cp-light-xl-1440.png",
+      "tab": "cp",
+      "theme": "light",
+      "width": 1440,
+      "step": 2,
+      "dismissed": 0
+    },
+    {
+      "file": "cp-light.png",
+      "tab": "cp",
+      "theme": "light",
+      "width": 1440,
+      "step": 0,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-dark-xl-1280.png",
+      "tab": "overview",
+      "theme": "dark",
+      "width": 1280,
+      "step": 2,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-dark.png",
+      "tab": "overview",
+      "theme": "dark",
+      "width": 1440,
+      "step": 0,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-en-light.png",
+      "tab": "overview",
+      "theme": "light",
+      "width": 1440,
+      "step": 0,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-grey-xl-1280.png",
+      "tab": "overview",
+      "theme": "grey",
+      "width": 1280,
+      "step": 2,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-grey.png",
+      "tab": "overview",
+      "theme": "grey",
+      "width": 1440,
+      "step": 0,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-light-compact-1440.png",
+      "tab": "overview",
+      "theme": "light",
+      "width": 1440,
+      "step": 3,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-light-large-1440.png",
+      "tab": "overview",
+      "theme": "light",
+      "width": 1440,
+      "step": 1,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-light-xl-1280.png",
+      "tab": "overview",
+      "theme": "light",
+      "width": 1280,
+      "step": 2,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-light-xl-1440.png",
+      "tab": "overview",
+      "theme": "light",
+      "width": 1440,
+      "step": 2,
+      "dismissed": 0
+    },
+    {
+      "file": "overview-light.png",
+      "tab": "overview",
+      "theme": "light",
+      "width": 1440,
+      "step": 0,
+      "dismissed": 0
+    }
+  ]
+}
