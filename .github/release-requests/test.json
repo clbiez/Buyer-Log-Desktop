@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "39699a58d1338d6abb1457d1d2c42a0949d71d9e",
-  "release_notes": "Buyer Log 7.0.297 TEST: all updates merged through 39699a58d133, including the 7.0.295/296 release regression fixes (durable shadow-mirror test, Windows stress fixture, matching SBOM metadata, deterministic XML checkout). Draft notification PRs #694/#721 remain excluded.",
-  "request_id": "7.0.297-test-windows-inventory-fix-20261025"
+  "commit_sha": "32c0e760be07cbab233b884471901b00e2f219a5",
+  "release_notes": "Buyer Log 7.0.298 TEST: all updates merged through 32c0e760be07, with the delta/lease regression fixes, deterministic SBOM/XML inventory, native Git source validation and Windows Buffer-aware backup fixture fixes. Draft notification PRs #694/#721 remain excluded.",
+  "request_id": "7.0.298-test-final-windows-path-fixes-20261025"
 }
