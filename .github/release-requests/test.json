@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "commit_sha": "a877013e7af1a69caefad58419c18292a30ec8fd",
-  "release_notes": "TR: Buyer Log 7.0.299 — a877013e7af1 commitine kadar main dalına alınan güncellemeler ve Windows regresyon düzeltmeleri. Henüz merge edilmemiş #694/#721 bildirim taslakları hariç.\nEN: Buyer Log 7.0.299 — all updates merged through a877013e7af1 and Windows regression corrections. Unmerged notification drafts #694/#721 remain excluded.",
-  "request_id": "7.0.299-test-clock-skew-budget-20261025"
+  "commit_sha": "5150c389d3846f37efa0657c79b71b12d242766e",
+  "release_notes": "TR: Buyer Log 7.0.300 — 5150c389d384 commitine kadar main dalına alınan güncellemeler ve Windows regresyon düzeltmeleri. Henüz merge edilmemiş #694/#721 bildirim taslakları hariç.\nEN: Buyer Log 7.0.300 — all updates merged through 5150c389d384 and Windows regression corrections. Unmerged notification drafts #694/#721 remain excluded.",
+  "request_id": "7.0.300-test-independent-seed-deadlines-20261025"
 }
