@@ -31,6 +31,8 @@ jobs:
           node scripts/dependency-inventory.js --check
       - name: Patch source and backup path contracts
         run: node --test tests/signed-patch-producer-cli.test.js tests/user-data-owned-temp.test.js
+      - name: Clock-skew synchronization scenario
+        run: node --test --test-name-pattern="HLC simulation" tests/sync-simulation-v20261009.test.js
       - name: Validate nonempty pending release notes
         run: |
           node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"
