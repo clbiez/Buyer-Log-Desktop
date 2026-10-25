@@ -146,3 +146,18 @@ durum için repo guard/baseline istisnası eklenmedi.
 `main` hedefli PR otomatik Actions tetikler. Kullanıcı onayı olmadan PR/Actions
 açılmadı; workflow kuralları aşılmadı. Bu paket tüm yeniden inşanın tamamlandığı
 iddiasını taşımaz. Üretim release note'u Faz 0 için kullanıcı isteğiyle gerekli değil.
+
+## Galerinin tek dosya olarak yeniden gönderilmesi
+
+İlk HTML, PNG ve fontları göreli dosya yollarından okuyordu; depodan ayrı
+açıldığında bu bağımlılıklar taşınmıyordu. `ui-rebuild/concepts.html` artık
+12 gerçek PNG'yi, fontları ve OFL lisansını kendi içinde taşır. Tema/ekran
+başlıkları ve tam boy görüntü seçimi JavaScript gerektirmez. Yeniden üretim:
+`python docs/ai/ui-rebuild/tools/build-standalone-gallery.py`.
+
+Hedefli tarayıcı kontrolü internet ve sayfa JavaScript'i kapalıyken yapıldı:
+12 görüntünün özgün baytları eşleşti, altı ekran/tema çifti açıldı, fontlar
+yüklendi, klavye ve tam boy görüntü kontrolleri çalıştı, 390 px genişlikte
+sayfa taşmadı. Kanıt: `gallery-standalone-check.json` ve
+`gallery-standalone-preview.png`. Üretim/prototip kodu değişmedi;
+uygulama testleri tekrar çalıştırılmadı. PR/CI/merge/TEST/STABLE durumu değişmedi.

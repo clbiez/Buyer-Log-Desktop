@@ -1,0 +1,62 @@
+{
+  "file": "/workspace/Buyer-Log-Konseptler.html",
+  "bytes": 2507147,
+  "javascript": false,
+  "offline": true,
+  "unexpectedRequests": [],
+  "embeddedPNGs": 12,
+  "screenshotBytesMatch": true,
+  "cases": [
+    {
+      "view": "overview",
+      "theme": "light",
+      "images": 2
+    },
+    {
+      "view": "overview",
+      "theme": "grey",
+      "images": 2
+    },
+    {
+      "view": "overview",
+      "theme": "dark",
+      "images": 2
+    },
+    {
+      "view": "cp",
+      "theme": "light",
+      "images": 2
+    },
+    {
+      "view": "cp",
+      "theme": "grey",
+      "images": 2
+    },
+    {
+      "view": "cp",
+      "theme": "dark",
+      "images": 2
+    }
+  ],
+  "fullSizeControl": true,
+  "keyboardToggle": true,
+  "mobilePageOverflow": false,
+  "fonts": [
+    {
+      "family": "Review Barlow",
+      "status": "loaded"
+    },
+    {
+      "family": "Review Barlow",
+      "status": "loaded"
+    },
+    {
+      "family": "Review Heading",
+      "status": "loaded"
+    },
+    {
+      "family": "Review Heading",
+      "status": "loaded"
+    }
+  ]
+}
