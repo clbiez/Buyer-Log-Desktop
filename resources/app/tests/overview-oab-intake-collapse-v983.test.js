@@ -18,14 +18,14 @@ test('v7.83 OAB KPI özet satırı kaldırılmıştır', () => {
 
 test('OAB ve INTAKE ana ekran widget\'ıdır: daraltma yerine ızgara boyutu, tablo kalan yüksekliği kaydırır', () => {
   const oabHeader = INDEX.slice(INDEX.indexOf('<div class="oabHeader">'), INDEX.indexOf('<div class="oabAuthBar"'));
-  const intakeHeader = INDEX.slice(INDEX.indexOf('<div class="intakeHeader">'), INDEX.indexOf('<div id="intakeHorizonBadge"'));
+  const intakeHeader = INDEX.slice(INDEX.indexOf('<div class="intakeHeader">'), INDEX.indexOf('<div id="intakeStatus"'));
   assert.doesNotMatch(oabHeader + intakeHeader, /data-overview-collapse|id="oabCollapseBtn"|id="intakeCollapseBtn"/);
   assert.doesNotMatch(APP, /overviewLayoutApplyPageState|next\.collapsed\[key\]/);
   assert.match(HOME_CSS, /\.ovHome>#oabSection \.oabTableWrap,\.ovHome>#intakeSection \.intakeTableWrap\{[^}]*overflow:auto/);
 });
 
 test('INTAKE pivot grupları OAB ile aynı daralt/tümünü genişlet aksiyonlarını taşır', () => {
-  const intakeHeader = INDEX.slice(INDEX.indexOf('<div class="intakeHeader">'), INDEX.indexOf('<div id="intakeHorizonBadge"'));
+  const intakeHeader = INDEX.slice(INDEX.indexOf('<div class="intakeHeader">'), INDEX.indexOf('<div id="intakeStatus"'));
   assert.match(intakeHeader, /id="intakeCollapseAllBtn"/);
   assert.match(intakeHeader, /id="intakeExpandAllBtn"/);
   assert.match(intakeHeader, /i-chevrons-left/);
@@ -33,7 +33,7 @@ test('INTAKE pivot grupları OAB ile aynı daralt/tümünü genişlet aksiyonlar
 });
 
 test('INTAKE pivot ayarı kalem ikonudur ve DB düğmesi yoktur', () => {
-  const intakeHeader = INDEX.slice(INDEX.indexOf('<div class="intakeHeader">'), INDEX.indexOf('<div id="intakeHorizonBadge"'));
+  const intakeHeader = INDEX.slice(INDEX.indexOf('<div class="intakeHeader">'), INDEX.indexOf('<div id="intakeStatus"'));
   assert.doesNotMatch(intakeHeader, /id="intakeConnectionBtn"|Veritabanı bağlantısı|Database connection/);
   const fieldsPos = intakeHeader.indexOf('id="intakeFieldsBtn"');
   assert.ok(fieldsPos > 0);

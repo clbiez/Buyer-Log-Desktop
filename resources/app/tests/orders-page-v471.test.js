@@ -80,7 +80,7 @@ test('v4.71 karışık Orders kapsamı otomatik olarak diğer hedeflerden ayrıl
 test('v4.71 Orders ekranı, hızlı aktif/pasif filtreleri ve bağımsız yenileme hedefi vardır', () => {
   assert.match(INDEX, /data-tab="orders"/);
   assert.match(INDEX, /id="view-orders"/);
-  assert.match(INDEX, /id="ordersHorizonBadge"/);
+  assert.doesNotMatch(INDEX, /id="ordersHorizonBadge"/); // Page-only Horizon ribbon removed
   assert.match(INDEX, /data-order-active="Active"/);
   assert.match(INDEX, /data-order-active="Inactive"/);
   assert.match(INDEX, /function toggleOrdersActiveQuick/);
