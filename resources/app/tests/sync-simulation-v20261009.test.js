@@ -6,20 +6,17 @@ const path = require('node:path');
 const crypto = require('node:crypto');
 const { runScenario, createSimulation } = require('./helpers/sync-sim');
 
-// This bound covers three complete scenarios with real mirrored file I/O.
-// Windows hosted runners need more time for file creation/rename; all seeds,
-// operation counts and convergence/privacy/checkpoint assertions stay intact.
-const THREE_SEED_TIMEOUT_MS = process.platform === 'win32' ? 90000 : 15000;
-// The same 300-operation workload above takes about 18-20s per seed on
-// Windows CI. The skewed-clock scenario checks convergence, not 15s throughput.
-const SINGLE_SCENARIO_TIMEOUT_MS = process.platform === 'win32' ? 30000 : 15000;
-test('OneDrive simulation: 10 devices, 300 operations, three reproducible seeds', { timeout: THREE_SEED_TIMEOUT_MS }, async t => {
-  for (const seed of [1701, 90210, 0xC0FFEE]) {
+// Each seed is one independent integrity case. Windows CI has measured 18-47s
+// per 300-operation scenario, so a shared deadline for three seeds is unstable.
+// Keep every seed, operation and convergence/privacy/checkpoint assertion.
+const SCENARIO_TIMEOUT_MS = process.platform === 'win32' ? 90000 : 15000;
+for (const seed of [1701, 90210, 0xC0FFEE]) {
+  test(`OneDrive simulation: 10 devices, 300 operations, seed ${seed}`, { timeout: SCENARIO_TIMEOUT_MS }, async t => {
     const result = await runScenario({ seed, devices: 10, operations: 300 });
     assert.equal(result.operations, 300);
     t.diagnostic(JSON.stringify(result));
-  }
-});
+  });
+}
 
 test('OneDrive simulation soak: 10 devices, 20,000 operations', { skip: process.env.BUYERLOG_SYNC_SOAK !== '1', timeout: 300000 }, async t => {
   const result = await runScenario({ seed: 0x51A7, devices: 10, operations: 20000 });
@@ -197,7 +194,7 @@ test('restored pending legacy retry never covers an earlier genuinely published 
 
 // Ten independent physical clocks vary from -10 to +10 minutes; transport
 // still reorders and duplicates files and checks privacy/contiguous receipts.
-test('HLC simulation converges with ten clocks skewed by up to ten minutes', { timeout:SINGLE_SCENARIO_TIMEOUT_MS }, async t => {
+test('HLC simulation converges with ten clocks skewed by up to ten minutes', { timeout:SCENARIO_TIMEOUT_MS }, async t => {
  const base=Date.UTC(2026,9,9);
  const result=await runScenario({seed:4411,devices:10,operations:300,clock:index=>base+Math.round(index*1200000/9)-600000});
  assert.equal(result.operations,300);t.diagnostic(JSON.stringify(result));
