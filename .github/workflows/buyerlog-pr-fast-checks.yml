@@ -24,7 +24,7 @@ jobs:
           node-version: '22'
       # Core Node-only checks; no npm ci or full regression on ordinary PRs.
       - name: Agent instructions, i18n and release-note contract
-        run: node --test tests/agent-instructions.test.js tests/i18n-coverage-guard.test.js tests/visual-release-notes-v70211.test.js
+        run: node --test tests/agent-instructions.test.js tests/i18n-coverage-guard.test.js tests/visual-release-notes-v70211.test.js tests/page-horizon-badges-removal-v20261025.test.js
       - name: Release version, lock, SBOM and artifact bytes
         run: |
           node --test tests/dependency-inventory-metadata.test.js
