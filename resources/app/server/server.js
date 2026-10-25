@@ -1854,7 +1854,7 @@ async function bootstrapSharedHub({ force = false } = {}) {
       }
       if (!iam && userAccess.usingPersonalLoginFallback()) {
         markStartup('IAM_PERSONAL_LOGIN_FALLBACK', { code:iamHealth.lastError || null, profiles:profiles.length });
-        setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, personalFallback:true, code:iamHealth.lastError || 'IAM_OFFLINE', detail:`Kişisel yerel giriş · ${iamHealth.lastError || 'IAM_OFFLINE'}` });
+        setBootstrapStep('users', { status:'done', current:profiles.length, total:profiles.length, personalFallback:true, code:iamHealth.lastError || 'IAM_OFFLINE', detail:['Kişisel yerel giriş', iamHealth.lastError || 'IAM_OFFLINE', iamHealth.lastErrorDetail].filter(Boolean).join(' · ') });
       } else {
         // 'stale': the newest IAM revision is still unreadable here (e.g. OneDrive
         // has not finished downloading it); the newest valid one is in use.

@@ -283,9 +283,16 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
     if (snapshot.revision !== meta.revision || digest(snapshot) !== meta.sha256) throw remoteInvalid(`rev ${meta.revision} snapshot.sha256`);
     return snapshot;
   }
+  /* audit.json yalnız denetim kaydıdır: meta.sha256 onu kapsamaz ve girişte
+     kullanılmaz. Yazan cihaz kendi revizyonunun audit'ini hiç okumadığından
+     eksik/okunamayan/eski biçimli bir audit yalnız önbelleği olmayan YENİ
+     cihazda görünüyor ve sha256'sı doğrulanmış snapshot'ı da reddettirip
+     kullanıcı listesini boşaltıyordu. Artık audit atlanır (yerel denetim
+     günlüğüne yazılmaz), snapshot uygulanır; neden sağlıkta bildirilir. */
+  let auditSkipDetail = null;
   async function readRevisionAudit(meta) {
     try { return safeAudit(JSON.parse(await fsp.readFile(path.join(meta.dir, 'audit.json'), 'utf8'))); }
-    catch (e) { throw remoteInvalid(`rev ${meta.revision} audit.json ${e.code && e.code !== 'IAM_REMOTE_INVALID' ? e.code : 'PARSE'}`); }
+    catch (e) { auditSkipDetail = `rev ${meta.revision} audit.json ${e.code && e.code !== 'IAM_REMOTE_INVALID' ? e.code : 'PARSE'}`; return null; }
   }
   function failed(e) {
     health.lastError = e.code || 'IAM_OFFLINE';
@@ -310,6 +317,7 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
       try { floor = Math.max(floor, JSON.parse(fs.readFileSync(cacheFile.replace(/\.json$/, '.meta.json'), 'utf8')).iamRevision || 0); } catch (_) {}
       if (Number(revisions.at(-1)) < floor) throw error('IAM_REMOTE_REVISION_REGRESSION');
       let headError = null, meta = null, snapshot = null, audit;
+      auditSkipDetail = null;
       for (const name of revisions.slice(-MAX_REVISION_FALLBACK).reverse()) {
         if (Number(name) < floor) break;
         try {
@@ -367,6 +375,7 @@ function createCentralIam({ sharedRoot, cacheFile, getSharedRoot, onApply = () =
       }
       const applied = apply(snapshot, local || {}, audit);
       if (headError) stale();
+      if (!audit && auditSkipDetail) health.lastErrorDetail = [health.lastErrorDetail, auditSkipDetail].filter(Boolean).join(' · ');
       return applied;
     })().catch(e => { throw failed(e); }).finally(() => { pending = null; });
     return pending;

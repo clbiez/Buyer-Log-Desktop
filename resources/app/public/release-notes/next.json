@@ -3,12 +3,12 @@
   "publishedAt": "2026-10-25",
   "bootstrapVisual": false,
   "title": {
-    "tr": "Kendini güncelleyen güncelleme altyapısı",
-    "en": "Self-updating update infrastructure"
+    "tr": "Kendini güncelleyen güncelleme altyapısı ve Shared Hub kullanıcı dizini",
+    "en": "Self-updating update infrastructure and Shared Hub user directory"
   },
   "summary": {
-    "tr": "Eski kurulumlar “updater altyapısı yetersiz” hatası olmadan güncellenir; güncelleme altyapısı bundan sonra imzalı sürümlerle birlikte kendini güvenle yükseltir.",
-    "en": "Older installations update without the “updater infrastructure too old” error; from now on the update infrastructure upgrades itself safely together with signed releases."
+    "tr": "Eski kurulumlar “updater altyapısı yetersiz” hatası olmadan güncellenir; güncelleme altyapısı bundan sonra imzalı sürümlerle birlikte kendini güvenle yükseltir; yeni kurulum eksik denetim kaydına takılmadan Shared Hub kullanıcılarını yükler.",
+    "en": "Older installations update without the “updater infrastructure too old” error; from now on the update infrastructure upgrades itself safely together with signed releases; a new installation loads Shared Hub users without stalling on a missing audit record."
   },
   "changes": [
     {
@@ -37,6 +37,35 @@
         "caption": {
           "tr": "Güncelleme altyapısı otomatik yükseltildi",
           "en": "Update infrastructure upgraded automatically"
+        }
+      }
+    },
+    {
+      "id": "new-install-shared-users",
+      "type": "fix",
+      "module": {
+        "tr": "Giriş · Kullanıcı Yönetimi",
+        "en": "Sign-in · User Management"
+      },
+      "title": {
+        "tr": "Yeni kurulum Shared Hub kullanıcılarını görür",
+        "en": "New installations see Shared Hub users"
+      },
+      "body": {
+        "tr": "Yeni bir Buyer Log klasörü Shared Hub’a bağlandığında yalnız Moderatör görünüyordu: bir revizyonun denetim kaydı (audit.json) eksik ya da eski biçimliyse doğrulanmış kullanıcı dizini de reddediliyordu. Denetim kaydı artık dizini engellemez; kullanıcılar listelenir. Dizin yine de reddedilirse giriş ekranındaki \"Kullanıcılar ve yetkiler\" satırı reddedilen revizyonu ve alanı gösterir.",
+        "en": "A new Buyer Log folder connected to the Shared Hub showed only the Moderator: when a revision’s audit record (audit.json) was missing or in a legacy format, the verified user directory was rejected too. The audit record no longer blocks the directory; users are listed. If the directory is still rejected, the \"Users and permissions\" line on the sign-in screen names the rejected revision and field."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "new-install-shared-users.png",
+        "alt": {
+          "tr": "Boş yeni kurulumda giriş ekranı: \"fat\" yazınca demo Shared Hub kullanıcıları Fatih Demir ve Fatma Yıldız önerilir",
+          "en": "Sign-in screen on an empty new installation: typing \"fat\" suggests demo Shared Hub users Fatih Demir and Fatma Yıldız"
+        },
+        "caption": {
+          "tr": "Audit kaydı olmayan demo Shared Hub’a bağlanan yeni kurulum: eşitleme 4 kullanıcı · 4 aktif ile tamamlanır.",
+          "en": "A new installation connected to a demo Shared Hub without audit records: sync completes with 4 users · 4 active."
         }
       }
     }

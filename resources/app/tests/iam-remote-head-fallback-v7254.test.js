@@ -80,3 +80,28 @@ test('no valid revision at all still fails closed with the reason', async t => {
   assert.equal(reader.readLocal(), null);
   assert.equal(reader.health().status, 'invalid');
 });
+
+// Regression (7.0.300 yeni klasör): yazan cihaz kendi revizyonlarının audit.json'unu
+// hiç okumaz; eksik/eski biçimli audit yalnız önbelleksiz yeni cihazda bütün
+// revizyonları reddettirip yalnız Moderatörü bırakıyordu. Audit girişin parçası
+// değildir ve sha256 kapsamında değildir: snapshot uygulanır, neden bildirilir.
+test('no-cache device applies a verified snapshot even when audit.json is missing or legacy-shaped', async t => {
+  const { reader, head } = await twoRevisions(t);
+  fs.rmSync(path.join(head, 'audit.json'));
+  fs.writeFileSync(path.join(path.dirname(head), '0000000000000001', 'audit.json'), JSON.stringify({ revision: 1, action: 'user.update' }));
+  const store = await reader.refresh();
+  assert.equal(store._revision, 2);
+  assert.deepEqual([store.moderator, ...store.users].map(u => u.username).sort(), ['admin', 'demo.buyer']);
+  assert.equal(reader.health().status, 'synced');
+  assert.equal(reader.health().lastErrorDetail, 'rev 2 audit.json ENOENT');
+  // The skipped audit is never copied into this device's local audit log.
+  assert.deepEqual(reader.localAudit(), []);
+  const adopted = await reader.adopt({ actorId: 'moderator' });
+  assert.equal(adopted.revision, 2);
+});
+
+test('personal-login bootstrap step names the rejected field, not only the code', () => {
+  const server = fs.readFileSync(path.join(__dirname, '..', 'server', 'server.js'), 'utf8');
+  const line = server.split('\n').find(text => text.includes('personalFallback:true'));
+  assert.match(line, /'Kişisel yerel giriş', iamHealth\.lastError \|\| 'IAM_OFFLINE', iamHealth\.lastErrorDetail\]/); // i18n-ignore
+});
