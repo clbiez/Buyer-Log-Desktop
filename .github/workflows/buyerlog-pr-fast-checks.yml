@@ -25,6 +25,8 @@ jobs:
       # Core Node-only checks; no npm ci or full regression on ordinary PRs.
       - name: Agent instructions, i18n and release-note contract
         run: node --test tests/agent-instructions.test.js tests/i18n-coverage-guard.test.js tests/visual-release-notes-v70211.test.js
+      - name: Release version, lock and SBOM metadata
+        run: node --test tests/dependency-inventory-metadata.test.js
       - name: Validate nonempty pending release notes
         run: |
           node -e "const n=require('./public/release-notes/next.json');if(n.changes?.length)require('./scripts/release-notes').validateNext();else if(n.publishedAt)throw Error('Empty pending notes must have blank publishedAt')"

@@ -267,7 +267,7 @@ async function ownLeaseSandbox(t, mode) {
   const store = createDeltaStore({ localDb, mode });
   for (const module of Object.values(modules)) module.attachDeltaStore(store);
   t.after(() => { for (const module of Object.values(modules)) module.attachDeltaStore(null); });
-  return { root, dataDir, store, ...modules };
+  return { root, dataDir, store, localDb, ...modules };
 }
 
 test('e-posta grupları delta-only fazında eski dosyasız okunur', async t => {
@@ -304,8 +304,16 @@ test('eski dosya silinse bile delta fazında veri okunmaya devam eder', async t 
      shadow fazında yazıp aynayı biriktir, eski dosyayı sil, sonra aynı yerel
      DB'yi delta fazında aç. Veri yalnız delta motorundan gelebilir. */
   const box = await ownLeaseSandbox(t, 'shadow');
+  // Make a slow background mirror reproducible instead of depending on CI load.
+  const queuePatches = box.localDb.queuePatches.bind(box.localDb);
+  box.localDb.queuePatches = async (...args) => {
+    await new Promise(resolve => setTimeout(resolve, 150));
+    return queuePatches(...args);
+  };
   box.workspaces.saveWorkspace('moderator', { rows: [{ id: 1, model: 'KORUNMALI' }] });
-  await settle();
+  // A migration can switch readers only after the shadow journal is durable.
+  // A fixed delay does not establish that precondition on slower Windows disks.
+  assert.equal((await box.store.flush()).ok, true, 'shadow mirror must finish before deleting legacy files');
 
   const file = path.join(box.dataDir, 'collection-workspaces', 'moderator.json');
   fs.rmSync(file, { force: true });

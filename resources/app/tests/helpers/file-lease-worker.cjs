@@ -1,7 +1,7 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path');
 const {withFileLeaseSync,withFileLeaseAsync}=require('../../server/lib/shared-file-transaction');
-const [mode,target,countRaw]=process.argv.slice(2);
+const [mode,target,countRaw,timeoutRaw]=process.argv.slice(2);
 (async()=>{
  if(mode==='kill-metadata'){
   const metadataFs=require('node:fs/promises'),rename=metadataFs.rename;metadataFs.rename=(source,destination)=>{if(destination===path.join(target+'.write-lock','owner.json')){process.send({staged:source});Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,60000);}return rename(source,destination);};
@@ -12,8 +12,8 @@ const [mode,target,countRaw]=process.argv.slice(2);
   const generations=[];
   for(let i=0;i<Number(countRaw||1);i++){
    const operation=lease=>{const value=Number(fs.readFileSync(target,'utf8'));Atomics.wait(new Int32Array(new SharedArrayBuffer(4)),0,0,2);lease?.assertOwned();fs.writeFileSync(target,String(value+1));generations.push(lease?.generation);};
-   if(mode==='sync')withFileLeaseSync(target,operation,{timeoutMs:10000,logger:()=>{}});
-   else await withFileLeaseAsync(target,operation,{timeoutMs:10000,logger:()=>{}});
+   if(mode==='sync')withFileLeaseSync(target,operation,{timeoutMs:Number(timeoutRaw)||10000,logger:()=>{}});
+   else await withFileLeaseAsync(target,operation,{timeoutMs:Number(timeoutRaw)||10000,logger:()=>{}});
   }
   process.send({generations});
  }
