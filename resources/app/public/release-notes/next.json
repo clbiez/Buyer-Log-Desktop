@@ -97,6 +97,35 @@
           "en": "23 demo models in the actual Buyer Log screen; sets use double-height cards and source details are preserved."
         }
       }
+    },
+    {
+      "id": "header-boundaries-scroll-follow",
+      "type": "fix",
+      "module": {
+        "tr": "CP · Siparişler · Koleksiyon · Tablolar",
+        "en": "CP · Orders · Collection · Tables"
+      },
+      "title": {
+        "tr": "Tablo sütun sınırları ve takip eden grup başlıkları",
+        "en": "Column header dividers and following group labels"
+      },
+      "body": {
+        "tr": "Kaydırmalı veri tablolarının alt sütun başlıkları arasına temaya uyumlu ince ayırıcılar geri gelir. CP, Siparişler ve Koleksiyon grup adları, yatay kaydırmada grubun görünür bölümünün ortasında kalır; dondurulmuş sütunlar, sütun genişlikleri ve gövde yoğunluğu korunur.",
+        "en": "Subtle theme-aware dividers return between column headers in scrollable data tables. CP, Orders and Collection group titles stay centered over each group's visible portion when scrolling horizontally, while frozen columns, column widths and body density remain intact."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "header-boundaries-scroll-follow.png",
+        "alt": {
+          "tr": "Gerçek Buyer Log'da kaydırılmış örnek tablo: sütun sınırları ve ortalanmış grup başlıkları",
+          "en": "Real Buyer Log scrolled sample table: column dividers and centered group headings"
+        },
+        "caption": {
+          "tr": "Kaydırmada grup başlığı görünür alanda kalır",
+          "en": "Group titles remain visible while scrolling"
+        }
+      }
     }
   ]
 }
