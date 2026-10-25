@@ -1,0 +1,96 @@
+{
+  "date": "2026-10-25",
+  "repository": "clbiez/Buyer-Log-Desktop",
+  "integrationPR": 714,
+  "integratedPRs": [
+    708,
+    709,
+    710,
+    711,
+    712,
+    713,
+    714
+  ],
+  "full": {
+    "command": "npm test",
+    "revision": "62e9f4a7b65d6eae3b6e2fc85d48c194db6972c9",
+    "testFiles": 1096,
+    "batches": 5,
+    "tests": 7799,
+    "pass": 7793,
+    "fail": 0,
+    "skipped": 6,
+    "cancelled": 0,
+    "seconds": 143.6,
+    "logSha256Lf": "a82d61b64eee278883fbb233a6837674fd65a10600c9c0fb0934a18a77e55b4c",
+    "nodeVersion": "v24.18.0",
+    "applicationTree": "5868505035e00bace8a1307198156010c9be3d71"
+  },
+  "earlierAttempt": {
+    "revision": "7005cdfe480fae734e5a33b95960ac13e51b766c",
+    "status": "failed in batch 1",
+    "tests": 1988,
+    "pass": 1982,
+    "fail": 6,
+    "repair": "Five legacy extracted-function fixtures/contracts updated; product code unchanged. Six-file focused group 54 pass. See remaining-integration-test-repairs.md.",
+    "logSha256Lf": "aed7a0d1af1ffd38e7e6a7d0e83ea20db785d0537647c57e7b66ed79213f560a"
+  },
+  "scope": {
+    "previouslyMergedPackages": 11,
+    "remainingImplementedPackages": 15,
+    "allCodePackages": 26,
+    "localPopulatedDesktopAcceptance": "Complete with documented metrics and limits; see bl019-populated-desktop-20261025.json.",
+    "externalAcceptancePending": [
+      "Office: Excel and Outlook COM launch failed 0x80080005; real native read/recalculation/mail display unverified.",
+      "Actual supported UNC/shared-provider disconnect/convergence: no real UNC supplied; configured storage local C: and no mapped drive.",
+      "Authenticated corporate source/provider acceptance and actual Windows OS DPI-setting acceptance where required."
+    ],
+    "productionCertified": false
+  },
+  "merge": {
+    "statusSource": "https://github.com/clbiez/Buyer-Log-Desktop/pull/714",
+    "strategy": "Merge commit preserving all six ancestor PR heads; verify the seven GitHub merged states after the authorized integration merge.",
+    "gate": "Current-head fast CI must pass. This certificate commit changes documentation only; application/test tree must equal the tested revision."
+  },
+  "publication": {
+    "TEST": false,
+    "STABLE": false,
+    "publisherDispatched": false
+  },
+  "evidence": {
+    "releaseNotes": 67,
+    "i18nMissing": 0,
+    "populatedDesktop": "bl019-populated-desktop-20261025.json",
+    "packageAudits": "docs/audits/bl-008 through bl-026 records, including stack-specific focused tests and bounded reviews."
+  },
+  "additionalAttempt": {
+    "revision": "c54eae6358820f7ea14cae19a9e36b20d3b426c8",
+    "status": "batch 1 passed; batch 2 failed",
+    "tests": 4320,
+    "pass": 4314,
+    "fail": 5,
+    "skipped": 1,
+    "logSha256Lf": "f41bc565fef1fbe6deb8d1096f6d2518f20946bd686f11d6026359e754e65cb0"
+  },
+  "remainingBatchDiagnostic": {
+    "status": "Diagnostic only; original batches 3–5, every child exit retained",
+    "tests": 3479,
+    "pass": 3470,
+    "fail": 4,
+    "skipped": 5,
+    "repair": "Eight targeted files / 78 pass after fixture and contract repairs. No product source change.",
+    "note": "Diagnostic skips sum to five (3+1+1); the full run, rather than combined diagnostic counts, is the certification authority."
+  },
+  "ciAtTestedRevision": {
+    "head": "62e9f4a7b65d6eae3b6e2fc85d48c194db6972c9",
+    "checkRun": 121073412982,
+    "run": 40161355695,
+    "conclusion": "success",
+    "url": "https://github.com/clbiez/Buyer-Log-Desktop/actions/runs/40161355695",
+    "warnings": [
+      "Existing checkout/setup-node v4 actions are forced from deprecated Node20 to Node24 by the runner.",
+      "ubuntu-latest provider image migration notice."
+    ],
+    "note": "The documentation-only certificate head receives its own fast check before merge."
+  }
+}
