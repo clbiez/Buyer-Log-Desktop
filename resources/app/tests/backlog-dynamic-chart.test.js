@@ -140,7 +140,8 @@ test('Backlog chart average follows the visible window and subtotal is a togglea
   const svg=chart.svgChart(visible,{today:new Date(2030,0,1)});
   assert.match(svg,/backlogChartSubtotalLine/);
   assert.match(svg,/backlogChartPanLayer/);
-  assert.match(svg,/backlogChartPlotMask/);
+  assert.match(svg,/clip-path="url\(#backlogChartPlotClip\)"/);
+  assert.doesNotMatch(svg,/linearGradient|backlogChartPlotMask/,'plot clipping remains; decorative edge fading is removed');
   assert.match(svg,/(?:Ort\.|Avg\.) 11/);
   assert.ok(chart.chartMetrics(visible).max>=22);
 });

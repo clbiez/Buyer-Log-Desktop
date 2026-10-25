@@ -33,6 +33,12 @@
  --ui-scrim:rgba(8,12,18,.48);
  /* Existing overlay stack remains compatible until Phase 3 normalizes all owners. */
  --ui-z-sticky:30;--ui-z-popover:1400;--ui-z-modal:20000;--ui-z-boot:2147483647;
+ --ui-z-below:-1;--ui-z-base:0;--ui-z-data:1;--ui-z-raised:2;--ui-z-modal-menu:21000;--ui-z-tooltip:60000;
+ /* Ink colors used by all categorical charts; labels carry category meaning. */
+ --ui-chart-1:var(--ui-accent);--ui-chart-2:var(--ui-warning);--ui-chart-3:#376f73;--ui-chart-4:#81523e;
+ --ui-chart-5:#665b35;--ui-chart-6:var(--ui-success);--ui-chart-7:var(--ui-danger);--ui-chart-8:#536478;
+ --ui-table-row-height:32px;--ui-table-group-height:29px;--ui-table-head-padding:8px;--ui-table-cell-padding:7px;
+ --ui-series-color:var(--ui-accent);--ui-metric-color:var(--ui-text);
  --ui-canvas:#f5f7f9;--ui-rail:#f0f3f6;--ui-surface:#fff;--ui-surface-soft:#fafbfc;--ui-surface-strong:#e9edf1;
  --ui-text:#16212d;--ui-text-secondary:#374454;--ui-text-muted:#5f6f80;
  --ui-accent:#356a96;--ui-accent-hover:#275779;--ui-selected:#eaf2f8;--ui-selected-ink:#245578;--ui-on-accent:#fff;
@@ -57,8 +63,9 @@
  --ui-success:#93c7a8;--ui-success-bg:rgba(147,199,168,.12);--ui-danger:#e39b94;--ui-danger-bg:rgba(227,155,148,.12);--ui-warning:#d9ba7e;--ui-warning-bg:rgba(217,186,126,.12);
  --ui-header-bg:#252d36;--ui-header-ink:#bdc8d4;--ui-group-header-bg:#303a46;--ui-group-header-ink:#bdc8d4;
  --ui-check-idle:#8594a5;--ui-row-divider:#343e49;--ui-group-divider:#505c6a;
+ --ui-chart-3:#9fc6c4;--ui-chart-4:#d5b493;--ui-chart-5:#c9c39a;--ui-chart-8:#b2c0d2;
 }
-:root[data-ui-scale="compact"]{--ui-scale:.9;--ui-font-add:-1px;--ui-control-height:30px;}
+:root[data-ui-scale="compact"]{--ui-scale:.9;--ui-font-add:-1px;--ui-control-height:30px;--ui-table-row-height:28px;--ui-table-group-height:25px;--ui-table-head-padding:6px;--ui-table-cell-padding:5px;}
 :root[data-ui-scale="standard"]{--ui-scale:1;--ui-font-add:0px;--ui-control-height:34px;}
-:root[data-ui-scale="large"]{--ui-scale:1.125;--ui-font-add:1.5px;--ui-control-height:38px;}
-:root[data-ui-scale="xl"]{--ui-scale:1.25;--ui-font-add:3px;--ui-control-height:42px;}
+:root[data-ui-scale="large"]{--ui-scale:1.125;--ui-font-add:1.5px;--ui-control-height:38px;--ui-table-row-height:36px;--ui-table-group-height:33px;--ui-table-head-padding:9px;--ui-table-cell-padding:8px;}
+:root[data-ui-scale="xl"]{--ui-scale:1.25;--ui-font-add:3px;--ui-control-height:42px;--ui-table-row-height:40px;--ui-table-group-height:37px;--ui-table-head-padding:10px;--ui-table-cell-padding:9px;}

@@ -18,6 +18,8 @@ const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const APP = read('public/app-main.js');
 const CSS = read('public/app.css');
+// Manifest appearance lives in the shared contract; module CSS retains layout.
+const VISUAL=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{\s*/g,'{');
 const HTML = read('public/index.html');
 const ROWMENU = read('public/row-context-menu.js');
 
@@ -129,5 +131,5 @@ test('gizli satır sayısı rozeti güncelleniyor', () => {
 
 test('sürükleme görsel geri bildirimi tema değişkenleriyle tanımlı', () => {
   assert.match(CSS, /\.shipRowCards\.isDragging\{opacity:\.4;\}/);
-  assert.match(CSS, /\.shipRowCards\.isDragOver\{/);
+  assert.match(VISUAL, /\.shipRowCards\.isDragOver\{/);
 });

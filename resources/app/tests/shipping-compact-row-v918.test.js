@@ -30,6 +30,8 @@ const ROOT = path.join(__dirname, '..');
 const read = file => fs.readFileSync(path.join(ROOT, file), 'utf8');
 const APP = read('public/app-main.js');
 const CSS = read('public/app.css');
+// Manifest appearance lives in the shared contract; module CSS retains layout.
+const VISUAL=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{\s*/g,'{');
 const HTML = read('public/index.html');
 const ENGINE = read('public/shipping-engine.js');
 const engineFn = name => {
@@ -94,16 +96,16 @@ test('v(satır yönetimi) tüm sütunlarda ana değer fiyat, Overseas FOB ile ay
 test('v(satır yönetimi) yüzde artık tipografik olarak baskın değil, fiyatla aynı sınıfı paylaşır', () => {
   // .shipCardPct kaldırıldı: tüm ana değerler .shipCardPrice kullanıyor.
   assert.ok(!CSS.includes('.shipCardPct{'));
-  const price = CSS.match(/\.shipCardPrice\{[^}]*\}/);
+  const price = VISUAL.match(/\.shipCardPrice\{[^}]*\}/);
   assert.ok(price);
   // Yön işareti hâlâ renkle veriliyor, ama artık .shipCardRow üzerinden (metrik satırı).
-  assert.match(CSS, /\.shipCardRow\.isGood\{color:var\(--green/);
-  assert.match(CSS, /\.shipCardRow\.isBad\{color:var\(--danger/);
+  assert.match(VISUAL, /\.shipCardRow\.isGood\{color:var\(--ui-success/);
+  assert.match(VISUAL, /\.shipCardRow\.isBad\{color:var\(--ui-danger/);
 });
 
 test('v(satır yönetimi) antrepo tarihi ve transit süresi büyütüldü', () => {
-  const block = CSS.slice(CSS.indexOf('.shipCard:not(.isPriceOnly) [data-ship-date]'), CSS.indexOf('.shipCard:not(.isPriceOnly) [data-ship-date]') + 220);
-  assert.match(block, /font-size:var\(--fs-sm\)/);
+  const block = VISUAL.slice(VISUAL.indexOf('.shipCard:not(.isPriceOnly) [data-ship-date]'), VISUAL.indexOf('.shipCard:not(.isPriceOnly) [data-ship-date]') + 300);
+  assert.match(block, /font-size:var\(--ui-font-sm\)/);
   assert.match(block, /\.shipTransit/);
 });
 
@@ -240,10 +242,10 @@ test('v9.18 A4 baskı düzeni tanımlı', () => {
 
 test('v9.18 ekran yazıları da büyütüldü', () => {
   // Eski düzende 8,2-9,5px alanlar okunmuyordu.
-  assert.match(CSS, /\.shipCompare\{[\s\S]*?font-size:var\(--fs-xs\)/);
-  assert.match(CSS, /\.shipProductName\{\s*font-size:var\(--fs-xs\)/);
-  assert.match(CSS, /\.shipCardMetrics\{[\s\S]*?font-size:var\(--fs-2xs\)/);
-  assert.match(CSS, /\.shipCardInput\{[\s\S]*?font:var\(--fs-xs\) inherit/);
+  assert.match(VISUAL, /\.shipCompare\{[\s\S]*?font-size:var\(--ui-font-xs\)/);
+  assert.match(VISUAL, /\.shipProductName\{\s*font-size:var\(--ui-font-xs\)/);
+  assert.match(VISUAL, /\.shipCardMetrics\{[\s\S]*?font-size:var\(--ui-font-2xs\)/);
+  assert.match(VISUAL, /\.shipCardInput\{[\s\S]*?font:var\(--ui-font-xs\) inherit/);
 });
 
 /* --------------------------------------- 7) İŞLEVSELLİK SÖZLEŞMESİ DURUYOR */

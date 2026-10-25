@@ -94,7 +94,7 @@
     svg+='<polygon class="blRadarArea" points="'+dataPts+'"/>';
     list.forEach((item,i)=>{
       const p=point(i,Math.max(.035,(Number(item.value)||0)/max));
-      svg+='<circle class="blRadarPoint" cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="3.2"/>';
+      svg+='<rect class="blRadarPoint" x="'+(p[0]-3.2).toFixed(1)+'" y="'+(p[1]-3.2).toFixed(1)+'" width="6.4" height="6.4"/>';
       const lp=point(i,1.55),anchor=Math.cos(lp[2])>.25?'start':Math.cos(lp[2])<-.25?'end':'middle';
       const labelText=String(item.label||'').length>22?String(item.label).slice(0,21)+'…':String(item.label||'');
       svg+='<text class="blRadarLabel" x="'+lp[0].toFixed(1)+'" y="'+lp[1].toFixed(1)+'" text-anchor="'+anchor+'"><tspan x="'+lp[0].toFixed(1)+'">'+esc(labelText)+'</tspan><tspan class="blRadarValue" x="'+lp[0].toFixed(1)+'" dy="12">'+esc(fmt(item.value))+'</tspan></text>';
@@ -129,7 +129,7 @@
       if(list.length>1)svg+='<polyline class="blChartLine" points="'+pts+'"/>';
       list.forEach((item,index)=>{
         const raw=Number(item.value)||0;
-        svg+='<circle class="blChartPoint" cx="'+x(index).toFixed(1)+'" cy="'+y(raw).toFixed(1)+'" r="4"><title>'+esc(item.label+': '+fmt(raw))+'</title></circle>';
+        svg+='<rect class="blChartPoint" x="'+(x(index)-4).toFixed(1)+'" y="'+(y(raw)-4).toFixed(1)+'" width="8" height="8"><title>'+esc(item.label+': '+fmt(raw))+'</title></rect>';
       });
     }
     svg+='</svg>';

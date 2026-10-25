@@ -203,14 +203,11 @@ td.num,td.money,.kpi b,.quotationMoney,.kolBestPrice,.kolConfirmedPrice{
     linear-gradient(var(--mark-ink),var(--mark-ink)) 100% 100%/var(--mark) 1px no-repeat;
 }
 /* Uçan paneller: aynı kare dil, ama gölgeli — zeminden ayrılsınlar */
-.colPanel,.colFilterPanel,.submfrDrop,.vfMenu,.profileSelectMenu,.userMenu,
-.dateCalendarPopup,.delTypeMenu,.ocMetaSuggestDrop,.pricingRuleSeasonPanel,
-.quotationColFilterPanel,.cfpDrawer,.themeDock,.numericValueList{
+.submfrDrop,.vfMenu,.profileSelectMenu,.userMenu,.dateCalendarPopup,.delTypeMenu,.ocMetaSuggestDrop,.pricingRuleSeasonPanel,.quotationColFilterPanel,.cfpDrawer,.themeDock,.numericValueList{
   border:1px solid var(--hair-2);border-radius:0;box-shadow:var(--shadow-3);
 }
 .empty{background:transparent;border:1px dashed var(--line2);border-radius:0;color:var(--muted);}
-.colPanelItem:hover,.submfrDropItem:hover,.cfpItem:hover,.delTypeOption:hover,
-.themeOptBtn:hover,.profileSelectOption:hover,.globalSearchResult:hover{
+.submfrDropItem:hover,.cfpItem:hover,.delTypeOption:hover,.themeOptBtn:hover,.profileSelectOption:hover,.globalSearchResult:hover{
   background:var(--acc-bg);color:var(--acc-ink);
 }
 
@@ -317,7 +314,7 @@ tbody tr:hover td{background:var(--table-hover);}
   color:var(--muted);border-bottom:1px solid var(--hair-2);
   font-size:var(--fs-2xs);letter-spacing:.08em;text-transform:uppercase;
 }
-.miniTable td,#backlogTreeTable td{border-bottom:1px solid color-mix(in srgb, var(--ink) 8%, transparent);}
+.miniTable td{border-bottom:1px solid color-mix(in srgb, var(--ink) 8%, transparent);}
 tr.rowDirty td:first-child{box-shadow:inset 2px 0 0 var(--orange);}
 .exfDisplay{border-bottom:1px dashed var(--line2);}
 .tableActionToolbar,.toolbar{background:transparent;border-bottom:1px solid var(--hair);}
@@ -416,28 +413,12 @@ tr.rowDirty td:first-child{box-shadow:inset 2px 0 0 var(--orange);}
   .vfBar .vfBarRowBreak[data-dimbreak]{order:2;}
   body[data-active-tab="cp"] .vfBarRowBreak[data-dimbreak]{display:block;}
   .vfBar #vfSelLabel{order:4;}
-  .vfBar #cpCreateOcBtn,.vfBar #cpSendPricingBtn,.vfBar #cpProdStatusBtn,
-  .vfBar #navToShipping,.vfBar #cpCopyToKolBtn,.vfBar #cpPriceHistoryBtn,.vfBar #selectedBacklogBtn{order:5;}
+  .vfBar #navToShipping,.vfBar #selectedBacklogBtn{order:5;}
+  .vfBar #cpCreateOcBtn,.vfBar #cpSendPricingBtn,.vfBar #cpProdStatusBtn,.vfBar #cpCopyToKolBtn,.vfBar #cpPriceHistoryBtn{order:5;}
   .vfBar #cpSuppFobRulesBtn{order:6;margin-left:auto;}
 }
 
 /* --- Hızlı filtreler: filtresizken saç teli, filtreliyken vurgu çipi --- */
-.cpDimFilterGroup .dimFilterBtn .dimFilterBtn{
-  background:transparent;box-shadow:none;border:1px solid var(--hair);
-  color:var(--ink2);border-radius:0;
-  font-size:var(--fs-2xs);letter-spacing:.07em;text-transform:uppercase;
-}
-.cpDimFilterGroup .dimFilterBtn:hover .dimFilterBtn:hover{
-  background:color-mix(in srgb, var(--ink) 5%, transparent);
-  border-color:var(--acc);color:var(--ink);box-shadow:none;
-}
-.cpDimFilterGroup .dimFilterBtn.hasFilter .dimFilterBtn.hasFilter{
-  background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink);font-weight:500;
-}
-.cpDimFilterGroup .dimFilterBtn.hasFilter:hover .dimFilterBtn.hasFilter:hover{
-  background:color-mix(in srgb, var(--acc) 18%, var(--card));border-color:var(--acc);
-  color:var(--acc-ink);box-shadow:none;
-}
 
 /* --- Seçim kümesi: ayraç + etiket, seçim gelince bütün olarak canlanır --- */
 .vfGroupLabel{
@@ -448,41 +429,26 @@ tr.rowDirty td:first-child{box-shadow:inset 2px 0 0 var(--orange);}
 }
 .vfGroupLabel::before{content:'';position:absolute;left:0;top:18%;bottom:18%;width:1px;background:var(--line2);}
 body[data-active-tab="cp"] #vfSelLabel,body[data-active-tab="orders"] #vfSelLabel{display:inline-flex;}
-.vfBar:has(#cpSendPricingBtn:not(:disabled)) #vfSelLabel,
-.vfBar:has(#cpCreateOcBtn:not(:disabled)) #vfSelLabel,
 .vfBar:has(#selectedBacklogBtn:not(:disabled)) #vfSelLabel{color:var(--acc-ink);}
 
-#cpCreateOcBtn:not(:disabled),#cpSendPricingBtn:not(:disabled),
-#cpProdStatusBtn:not(:disabled),#navToShipping:not(:disabled),
-#cpCopyToKolBtn:not(:disabled),#cpPriceHistoryBtn:not(:disabled),#selectedBacklogBtn:not(:disabled),#cpRemoveImagesBtn:not(:disabled){
+#navToShipping:not(:disabled),#selectedBacklogBtn:not(:disabled){
   background:var(--acc-bg);border-color:var(--acc);color:var(--acc-ink);
   font-weight:500;box-shadow:none;
 }
-#cpCreateOcBtn:not(:disabled):hover,#cpSendPricingBtn:not(:disabled):hover,
-#cpProdStatusBtn:not(:disabled):hover,#navToShipping:not(:disabled):hover,
-#cpCopyToKolBtn:not(:disabled):hover,#cpPriceHistoryBtn:not(:disabled):hover,#selectedBacklogBtn:not(:disabled):hover,#cpRemoveImagesBtn:not(:disabled):hover{
+#navToShipping:not(:disabled):hover,#selectedBacklogBtn:not(:disabled):hover{
   background:color-mix(in srgb, var(--acc) 18%, var(--card));box-shadow:none;
 }
 
 /* --- Sıklığa göre ağırlık: ayar düğmesi sessiz, sık kullanılanlar önde --- */
-#cpSuppFobRulesBtn{background:transparent;box-shadow:none;border-color:transparent;color:var(--muted);}
-#cpSuppFobRulesBtn:hover{background:transparent;border-color:var(--hair);color:var(--ink);box-shadow:none;}
 #undoBtn,#redoBtn{font-size:0;gap:0;padding-left:9px;padding-right:9px;}
 #undoBtn .ic,#redoBtn .ic{width:14px;height:14px;}
 .tableToolbarActions #undoBtn .ic,.tableToolbarActions #redoBtn .ic{width:13px;height:13px;}
 
 /* --- Tablo araç çubuğu: kartın üzerinde düz ve sessiz --- */
-.tableToolbarActions>.navActionBtn,
-.tableToolbarActions>:is(button,label).tbtn,
-.tableToolbarActions>.colPanelWrap>.navActionBtn,
-.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger{
+.tableToolbarActions>.navActionBtn,.tableToolbarActions>:is(button,label).tbtn,.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger{
   background:transparent;border-color:transparent;box-shadow:none;color:var(--ink2);
 }
-.tableToolbarActions>.navActionBtn:hover,
-.tableToolbarActions>:is(button,label).tbtn:hover,
-.tableToolbarActions>.colPanelWrap>.navActionBtn:hover,
-.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger:hover,
-.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger[aria-expanded="true"]{
+.tableToolbarActions>.navActionBtn:hover,.tableToolbarActions>:is(button,label).tbtn:hover,.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger:hover,.tableToolbarActions>.vfMenuWrap>.vfMenuTrigger[aria-expanded="true"]{
   background:var(--card2-strong);border-color:transparent;box-shadow:none;color:var(--ink);
 }
 .tableToolbarActions>.navActionBtn.copied{background:var(--green-bg);color:var(--green);box-shadow:none;}
@@ -578,13 +544,7 @@ body:not([data-active-tab="cp"]):not([data-active-tab="orders"]) #vfSelGroup{dis
 .selGroup.open>button:disabled:not([hidden]){display:inline-flex!important;opacity:.4;}
 /* Filtreler: aktif filtre taşıyan düğme dışarıda görünür; hover/tıklama tümünü açar. */
 .fltGroup>.colPanelWrap{display:none!important;}
-.fltGroup>.colPanelWrap.flt-active,
-.fltGroup:hover>.colPanelWrap,
-.fltGroup.open>.colPanelWrap,
-.fltGroup:focus-within>.colPanelWrap,
-.fltGroup>.colPanelWrap:has(.colPanel.show),
-.fltGroup>.colPanelWrap:has([aria-expanded="true"]),
-.fltGroup:has([aria-expanded="true"])>.colPanelWrap{display:inline-block!important;}
+.fltGroup>.colPanelWrap.flt-active,.fltGroup:hover>.colPanelWrap,.fltGroup.open>.colPanelWrap,.fltGroup:focus-within>.colPanelWrap,.fltGroup>.colPanelWrap:has(.colPanel.show),.fltGroup>.colPanelWrap:has([aria-expanded="true"]),.fltGroup:has([aria-expanded="true"])>.colPanelWrap{display:inline-block!important;}
 /* Koleksiyon: Pricing Excel Columns kaldırıldı (işlev kodda duruyor). */
 #kolPricingExcelColsBtn{display:none!important;}
 /* Koleksiyon: görünüm seçici üst barda, sayfa başlığının yanında. */

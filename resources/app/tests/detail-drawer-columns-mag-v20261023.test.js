@@ -7,6 +7,8 @@ const drawer=require('../public/detail-drawer.js');
 const layout=require('../public/detail-report-layout.js');
 const canonical=require('../public/canonical-fields.js');
 const CSS=fs.readFileSync(path.join(__dirname,'..','public','detail-drawer.css'),'utf8');
+// Manifest appearance lives in the shared contract; module CSS retains layout.
+const VISUAL=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{\s*/g,'{');
 const JS=fs.readFileSync(path.join(__dirname,'..','public','detail-drawer.js'),'utf8');
 const labels={buyer:'Buyer / Group',identity:'Order / Model',supplier:'Manufacturer / Season',status:'Status / Portfolio',context:'Shipment / Route'};
 const base=[{key:'Buyer',label:'Buyer'},{key:'Buying Group',label:'Buying Group'}];
@@ -39,10 +41,12 @@ test('MAG insertion is not imposed on flat pivot reports',()=>{
 });
 
 test('header and Columns popovers outrank sticky table headers across all shared detail reports',()=>{
+  const TOKENS=fs.readFileSync(path.join(__dirname,'..','public','ui-tokens.css'),'utf8');
   const z=selector=>{
     const escaped=selector.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-    const values=[...CSS.matchAll(new RegExp(escaped+'\\{[^}]*?z-index:(\\d+)','g'))].map(m=>Number(m[1]));
-    return values[values.length-1];
+    const values=[...VISUAL.matchAll(new RegExp(escaped+'\\{[^}]*?z-index:var\\((--ui-z-[\\w-]+)\\)','g'))];
+    const token=values.at(-1)?.[1];
+    return Number(TOKENS.match(new RegExp(token+':(-?\\d+)'))?.[1]);
   };
   assert.ok(z('.blDetailDrawerHead')>z('.blDetailDrawerSubbar'));
   assert.ok(z('.blDetailDrawerSubbar')>z('.blDetailTable thead th'));

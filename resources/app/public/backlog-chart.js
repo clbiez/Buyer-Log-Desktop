@@ -32,6 +32,13 @@
   /* Kategorik grafik paleti tema token'larından okunur (app.css --chart-1…8); tema değişince yeniden çizimde güncellenir. */
   const CHART_FALLBACK=['#2a78d6','#eb6834','#1baf7a','#eda100','#e87ba4','#008300','#6250d6','#e34948'];
   function chartColors(){try{const cs=getComputedStyle(document.documentElement);const out=[];for(let i=1;i<=8;i++){const v=cs.getPropertyValue('--chart-'+i).trim();if(v)out.push(v);}return out.length===8?out:CHART_FALLBACK;}catch(_){return CHART_FALLBACK;}}
+  // Only the screen projection uses Manifest ink colors. The report model and
+  // native Excel chart palette remain unchanged for export equivalence.
+  function screenModel(model){
+    if(!root.document||!root.getComputedStyle)return model;
+    const cs=root.getComputedStyle(root.document.documentElement),legacy=chartColors();
+    return {...model,series:(model.series||[]).map((s,i)=>({...s,color:cs.getPropertyValue('--ui-chart-'+((Math.max(0,legacy.indexOf(s.color)<0?i:legacy.indexOf(s.color))%8)+1)).trim()||s.color}))};
+  }
   let state = Object.assign({}, DEFAULT_STATE);
   let initialized = false;
   let cache = { signature:'', headers:[], rows:[] };
@@ -395,17 +402,14 @@
     return {width,height,left,right,top,bottom,pw,ph,max:scale.max,tickStep:scale.step,ticks:scale.ticks};
   }
   function svgChart(model,options) {
+    model=screenModel(model);
     const m=chartMetrics(model),width=m.width,height=m.height,left=m.left,right=m.right,top=m.top,pw=m.pw,ph=m.ph,max=m.max;
-    const plotRight=width-right,fade=Math.min(24,Math.max(12,pw*.025));
+    const plotRight=width-right;
     let out='<svg class="backlogChartSvg" viewBox="0 0 '+width+' '+height+'" role="img" aria-label="'+esc(model.title)+'">';
     out+='<defs>'
       +'<clipPath id="backlogChartPlotClip"><rect x="'+left+'" y="0" width="'+pw+'" height="'+height+'"/></clipPath>'
-      +'<linearGradient id="backlogChartEdgeFade" gradientUnits="userSpaceOnUse" x1="'+left+'" x2="'+plotRight+'" y1="0" y2="0">'
-      +'<stop offset="0" stop-color="black"/><stop offset="'+(fade/pw).toFixed(4)+'" stop-color="white"/>'
-      +'<stop offset="'+(1-fade/pw).toFixed(4)+'" stop-color="white"/><stop offset="1" stop-color="black"/></linearGradient>'
-      +'<mask id="backlogChartPlotMask" maskUnits="userSpaceOnUse" x="'+left+'" y="0" width="'+pw+'" height="'+height+'"><rect x="'+left+'" y="0" width="'+pw+'" height="'+height+'" fill="url(#backlogChartEdgeFade)"/></mask>'
       +'</defs>';
-    out+='<rect x="0" y="0" width="'+width+'" height="'+height+'" rx="8" class="backlogChartBg"/>';
+    out+='<rect x="0" y="0" width="'+width+'" height="'+height+'" class="backlogChartBg"/>';
     out+='<rect x="'+plotRight+'" y="'+top+'" width="'+right+'" height="'+ph+'" class="backlogChartPriceAxis"/>';
     m.ticks.slice().reverse().forEach(val=>{
       const y=top+ph*(1-val/max);
@@ -414,7 +418,7 @@
     });
     const n=Math.max(1,model.categories.length),step=pw/n,minLabelPx=model.state.granularity==='week'?30:model.state.granularity==='month'?58:50;
     const maxLabels=Math.max(1,Math.floor(pw/minLabelPx)),labelStep=Math.max(1,Math.ceil(n/maxLabels));
-    out+='<g class="backlogChartPlotWindow" clip-path="url(#backlogChartPlotClip)" mask="url(#backlogChartPlotMask)"><g class="backlogChartPanLayer" data-backlog-chart-pan-layer>';
+    out+='<g class="backlogChartPlotWindow" clip-path="url(#backlogChartPlotClip)"><g class="backlogChartPanLayer" data-backlog-chart-pan-layer>';
     model.categories.forEach((cat,i)=>{
       const x=left+step*(i+.5);
       if(i%labelStep===0||i===model.categories.length-1)out+='<text x="'+x+'" y="'+(top+ph+27)+'" text-anchor="middle" class="backlogChartAxisText">'+esc(axisTickLabel(cat,model.state.granularity))+'</text>';
@@ -423,7 +427,7 @@
     if(todayPos!=null){
       const x=left+step*todayPos;
       out+='<line x1="'+x.toFixed(2)+'" x2="'+x.toFixed(2)+'" y1="'+top+'" y2="'+(top+ph)+'" class="backlogChartTodayLine"/>';
-      out+='<rect x="'+(x-25).toFixed(2)+'" y="'+(top-21)+'" width="50" height="16" rx="4" class="backlogChartTodayBadge"/>';
+      out+='<rect x="'+(x-25).toFixed(2)+'" y="'+(top-21)+'" width="50" height="16" class="backlogChartTodayBadge"/>';
       out+='<text x="'+x.toFixed(2)+'" y="'+(top-10)+'" text-anchor="middle" class="backlogChartTodayText">'+esc(tr('Bugün','Today'))+'</text>';
     }
     if(model.state.chartType==='bar'){
@@ -461,7 +465,7 @@
         out+='<polyline points="'+pts+'" fill="none" stroke="'+serie.color+'" stroke-width="2"'+(serie.dash?' stroke-dasharray="7 5" opacity=".78"':'')+' vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>';
         serie.values.forEach((v,i)=>{
           const x=left+step*(i+.5),y=top+ph-ph*(Number(v)||0)/max;
-          out+='<circle cx="'+x.toFixed(2)+'" cy="'+y.toFixed(2)+'" r="2.6" fill="'+serie.color+'" opacity="'+(serie.dash?'.68':'1')+'" class="backlogChartPoint"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatWholeValue(v))+'</title></circle>';
+          out+='<rect x="'+(x-2.6).toFixed(2)+'" y="'+(y-2.6).toFixed(2)+'" width="5.2" height="5.2" fill="'+serie.color+'" opacity="'+(serie.dash?'.68':'1')+'" class="backlogChartPoint"><title>'+esc(serie.name+' · '+model.categories[i].label+': '+formatWholeValue(v))+'</title></rect>';
         });
       });
     }
@@ -476,7 +480,7 @@
       // model burada görünür aralığın slice edilmiş modelidir; dolayısıyla
       // ortalama yalnız ekranda görünen bucket + görünür seri alt toplamlarından gelir.
       const avg=averageValue(model),y=top+ph-ph*(avg/max);
-      out+='<g clip-path="url(#backlogChartPlotClip)" mask="url(#backlogChartPlotMask)"><line x1="'+left+'" x2="'+plotRight+'" y1="'+y.toFixed(2)+'" y2="'+y.toFixed(2)+'" class="backlogChartAverageLine"/></g>';
+      out+='<g clip-path="url(#backlogChartPlotClip)"><line x1="'+left+'" x2="'+plotRight+'" y1="'+y.toFixed(2)+'" y2="'+y.toFixed(2)+'" class="backlogChartAverageLine"/></g>';
       out+='<text x="'+(plotRight-6)+'" y="'+(y-5).toFixed(2)+'" text-anchor="end" class="backlogChartAverageText">'+esc(tr('Ort. ','Avg. ')+formatWholeValue(avg))+'</text>';
     }
     out+='</svg>';return out;
@@ -564,7 +568,7 @@
     const available=model.availableSeriesNames||[],selected=new Set(filterSelection(model));
     return '<div class="backlogChartLegend" aria-label="'+esc(tr('Grafik serileri','Chart series'))+'">'+available.map((name,index)=>{
       const active=selected.has(name),hasSecond=!!model.state.timeField2;
-      return '<button type="button" class="backlogChartLegendItem'+(active?'':' is-muted')+'" data-backlog-chart-legend-name="'+esc(name)+'" style="--series-color:'+chartColors()[index%CHART_FALLBACK.length]+'" title="'+esc(tr('Tıkla: gizle/göster · Çift tık: yalnız bu seri','Click: hide/show · Double-click: isolate series'))+'"><span></span><b>'+esc(name)+'</b>'+(hasSecond?'<i class="backlogChartOverlayMark">A/B</i>':'')+'</button>';
+      return '<button type="button" class="backlogChartLegendItem'+(active?'':' is-muted')+'" data-backlog-chart-legend-name="'+esc(name)+'" style="--ui-series-color:'+(getComputedStyle(document.documentElement).getPropertyValue('--ui-chart-'+(index%8+1)).trim()||chartColors()[index%CHART_FALLBACK.length])+'" title="'+esc(tr('Tıkla: gizle/göster · Çift tık: yalnız bu seri','Click: hide/show · Double-click: isolate series'))+'"><span></span><b>'+esc(name)+'</b>'+(hasSecond?'<i class="backlogChartOverlayMark">A/B</i>':'')+'</button>';
     }).join('')+'</div>';
   }
   function timelineCategoryLabel(category,granularity) {
@@ -591,7 +595,7 @@
     })).filter(row=>row.value>0);
     const total=rows.reduce((sum,row)=>sum+row.value,0);
     return '<strong>'+esc(cat&&cat.label||'')+'</strong>'
-      +rows.map(row=>'<span><i style="--seg:'+row.color+'"></i><b>'+esc(row.name)+'</b><em>'+esc(formatWholeValue(row.value))+'</em></span>').join('')
+      +rows.map(row=>'<span><i style="--ui-series-color:'+row.color+'"></i><b>'+esc(row.name)+'</b><em>'+esc(formatWholeValue(row.value))+'</em></span>').join('')
       +'<span class="backlogChartTooltipTotal"><i></i><b>'+esc(tr('Toplam','Total'))+'</b><em>'+esc(formatWholeValue(total))+'</em></span>';
   }
   function timelineColumnsHtml(model) {
@@ -608,7 +612,7 @@
       if(layout==='stacked'){
         const segments=(model.series||[]).map((serie,seriesIndex)=>{
           const value=Number(serie.values&&serie.values[index])||0;if(value<=0)return '';
-          return '<span class="bpaSeg backlogTimelineStackSeg" style="flex-grow:'+value+';--seg:'+serie.color+'" title="'+esc(serie.name+': '+formatWholeValue(value))+'" data-backlog-timeline-series="'+seriesIndex+'"></span>';
+          return '<span class="bpaSeg backlogTimelineStackSeg" style="flex-grow:'+value+';--ui-series-color:'+serie.color+'" title="'+esc(serie.name+': '+formatWholeValue(value))+'" data-backlog-timeline-series="'+seriesIndex+'"></span>';
         }).join('');
         const height=total>0?Math.max(3,total/max*100):0;
         chart='<div class="bpaColBar backlogTimelineStack" style="height:'+height.toFixed(2)+'%">'+segments+'</div>';
@@ -616,7 +620,7 @@
         const bars=(model.series||[]).map((serie,seriesIndex)=>{
           const value=Number(serie.values&&serie.values[index])||0;if(value<=0)return '';
           const height=Math.max(2,value/max*100);
-          return '<span class="blvGroupBar backlogTimelineBar" style="height:'+height.toFixed(2)+'%;--seg:'+serie.color+'" title="'+esc(serie.name+': '+formatWholeValue(value))+'" data-backlog-timeline-series="'+seriesIndex+'"></span>';
+          return '<span class="blvGroupBar backlogTimelineBar" style="height:'+height.toFixed(2)+'%;--ui-series-color:'+serie.color+'" title="'+esc(serie.name+': '+formatWholeValue(value))+'" data-backlog-timeline-series="'+seriesIndex+'"></span>';
         }).join('');
         chart='<div class="blvGroupBars">'+bars+'</div>';
       }
@@ -692,7 +696,7 @@
   function mountInteractiveChart(host,model,detail) {
     const target=host&&host.querySelector('[data-backlog-chart-body]');if(!target)return;
     hideTimelineTip();
-    const total=model.categories.length,range=ensureChartView(model),visible=sliceModel(model,range),span=range.end-range.start,timelineMode=model.state.chartType==='bar';
+    const total=model.categories.length,range=ensureChartView(model),visible=screenModel(sliceModel(model,range)),span=range.end-range.start,timelineMode=model.state.chartType==='bar';
     const selected=filterSelection(model),available=model.availableSeriesNames||[],first=visible.categories[0],last=visible.categories[visible.categories.length-1];
     const chartFilterOrder=available.map((name,index)=>({name,index})).sort((a,b)=>Number(selected.includes(b.name))-Number(selected.includes(a.name)));
     const rangeText=(first&&last?first.label+(first.key===last.key?'':' – '+last.label):'')+' · '+span+'/'+total;
@@ -790,7 +794,7 @@
       cross.querySelector('.backlogChartCrosshairH').style.cssText='left:'+plotLeft+'px;top:'+yPx+'px;width:'+plotWidth+'px;';
       const valueEl=cross.querySelector('.backlogChartCrosshairValue');valueEl.textContent=formatWholeValue(value);valueEl.style.cssText='left:'+(plotLeft+plotWidth+4)+'px;top:'+yPx+'px;';
       const tooltip=cross.querySelector('.backlogChartTooltip');
-      tooltip.innerHTML='<strong>'+esc(cat&&cat.label||'')+'</strong>'+(visible.series||[]).map(serie=>'<span><i style="--series-color:'+serie.color+'"></i><b>'+esc(serie.name)+'</b><em>'+esc(formatWholeValue(serie.values[index]))+'</em></span>').join('')+'<span class="backlogChartTooltipTotal"><i></i><b>'+esc(tr('Alt Toplam','Subtotal'))+'</b><em>'+esc(formatWholeValue(subtotal))+'</em></span>';
+      tooltip.innerHTML='<strong>'+esc(cat&&cat.label||'')+'</strong>'+(visible.series||[]).map(serie=>'<span><i style="--ui-series-color:'+serie.color+'"></i><b>'+esc(serie.name)+'</b><em>'+esc(formatWholeValue(serie.values[index]))+'</em></span>').join('')+'<span class="backlogChartTooltipTotal"><i></i><b>'+esc(tr('Alt Toplam','Subtotal'))+'</b><em>'+esc(formatWholeValue(subtotal))+'</em></span>';
       tooltip.classList.toggle('is-flipped',xPx>vr.width*.62);
       const maxTooltipHeight=Math.max(120,Math.min(300,vr.height-16));
       tooltip.style.maxHeight=maxTooltipHeight+'px';

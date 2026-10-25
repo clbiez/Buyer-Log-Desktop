@@ -25,7 +25,7 @@ test('Manifest has one token source; migrated owners never consume legacy appear
  const tokens=new Set(declarations(read('ui-tokens.css')).filter(d=>d.prop.startsWith('--')).map(d=>d.prop));
  const failures=[];
  for(const d of entries)for(const m of d.value.matchAll(/var\((--[\w-]+)/g)){
-  if(/^--ov-(level|risk)$/.test(m[1]))continue; // data-generated chart dimensions, not appearance
+  if(/^--ov-(level|risk)$/.test(m[1])||m[1]==='--check-progress')continue; // data-generated chart dimensions, not appearance
   if(!tokens.has(m[1]))failures.push(`${d.file} ${d.selector}: ${m[1]}`);
  }
  assert.deepEqual(failures,[]);
@@ -40,11 +40,11 @@ test('Manifest prohibits frames, rounded controls, gradients and raw overlay lev
   if(/gradient\(|blur\(/.test(d.value))failures.push(d);
   if(/radius$/.test(d.prop)&&!/^0$|^var\(--ui-radius\)$/.test(d.value))failures.push(d);
   if(/^border/.test(d.prop)&&!/radius$/.test(d.prop)&&!/^0(?:\s|$)|^none$/.test(d.value)){
-   const row=d.selector==='#cpTable tbody td'&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-row-divider)';
-   const group=d.selector==='#cpTable thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)'&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
+   const row=['#cpTable tbody td','[data-ui-migrated] table tbody td'].includes(d.selector)&&d.prop==='border-bottom'&&d.value==='1px solid var(--ui-row-divider)';
+   const group=['#cpTable','#ordersTable'].some(id=>d.selector===id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)')&&d.prop==='border-inline-start'&&d.value==='1px solid var(--ui-group-divider)';
    if(!row&&!group)failures.push(d); // narrow user-approved dense table exceptions
   }
-  if(d.prop==='z-index'&&!/^var\(--ui-z-(sticky|popover|modal|boot)\)$/.test(d.value))failures.push(d);
+  if(d.prop==='z-index'&&!/^var\(--ui-z-(below|base|data|raised|sticky|popover|modal|modal-menu|tooltip|boot)\)$/.test(d.value))failures.push(d);
   if(d.prop==='box-shadow'&&!/^(none|var\(--ui-shadow-overlay\))$/.test(d.value))failures.push(d);
  }
  assert.deepEqual(failures,[]);
@@ -66,8 +66,8 @@ test('Manifest fonts scale and only transform/opacity may animate',()=>{
 });
 test('Main column separators cover both header tiers and never the table body',()=>{
  const rules=entries.filter(d=>d.value==='1px solid var(--ui-group-divider)');
- assert.equal(rules.length,1);assert.equal(rules[0].selector,'#cpTable thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)');
- assert.doesNotMatch(rules[0].selector,/tbody|td\b/);
+ assert.equal(rules.length,2);
+ for(const [i,id] of ['#cpTable','#ordersTable'].entries()){assert.equal(rules[i].selector,id+' thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary)');assert.doesNotMatch(rules[i].selector,/tbody|td\b/);}
 });
 test('Shared button contract covers interaction states and restricts explicit variants',()=>{
  const source=read('ui-components.css');
@@ -91,4 +91,16 @@ test('Unauthenticated asset serving is a fixed UI-only list before auth gates',(
  assert.match(block,/\['giris\.css', 'ui-tokens\.css', 'ui-components\.css', 'ui-appearance\.js'\]/);
  assert.doesNotMatch(block,/express\.static|req\.path|\*|\.json|\.xlsx/);
  assert.match(block,/IBMPlexSans\.woff2/);
+});
+test('Migrated Plan and Execute module styles contain only layout and data geometry',()=>{
+ const modules=['backlog-date-range.css','backlog-overview.css','backlog-plan-actual.css','backlog-delivery-analysis.css','backlog-presentation.css','detail-drawer.css','cp-overview-assistant.css'];
+ const failures=[];
+ for(const file of modules)for(const d of declarations(read(file))){
+  if(/^(?:color|accent-color|background(?:-.*)?|border(?!-collapse|-spacing)(?:-.*)?|box-shadow|text-shadow|font(?:-.*)?|letter-spacing|line-height|text-transform|fill|stroke(?:-.*)?|outline(?:-.*)?|animation(?:-.*)?|transition(?:-.*)?|filter|backdrop-filter|z-index)$/.test(d.prop))failures.push({file,...d});
+  if(/var\(--(?:acc|card|ink|line|muted|fs-|sans|head|mono|r-)/.test(d.value))failures.push({file,...d});
+ }
+ assert.deepEqual(failures,[]);
+ for(const file of ['backlog-overview.js','backlog-plan-actual.js','backlog-radar-layout.js'])assert.doesNotMatch(read(file),/<circle\b|stroke-dasharray=/);
+ assert.match(read('backlog-chart.js'),/<rect x="'\+\(x-2\.6\)/);
+ assert.match(read('backlog-chart.js'),/c:symbol val="circle"/,'native Excel chart geometry remains an export-only exception');
 });

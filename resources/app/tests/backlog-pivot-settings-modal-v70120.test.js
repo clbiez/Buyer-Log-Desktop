@@ -11,13 +11,13 @@ const APP = fs.readFileSync(path.join(ROOT, 'public', 'app-main.js'), 'utf8');
 const CSS = fs.readFileSync(path.join(ROOT, 'public', 'app.css'), 'utf8');
 
 test('Backlog eski sayfa-üstü filtre/gruplama kartını göstermez', () => {
-  const section = INDEX.slice(INDEX.indexOf('<section id="view-backlog">'), INDEX.indexOf('<section id="view-automations">'));
+  const section = INDEX.slice(INDEX.indexOf('<section id="view-backlog"'), INDEX.indexOf('<section id="view-automations"'));
   assert.doesNotMatch(section, /backlogFilterCard|id="backlogApplyBtn"|id="backlogGroupToggle"|id="backlogGroupPanel"/);
   assert.match(section, /id="backlogFilterState" hidden aria-hidden="true"/);
 });
 
 test('Backlog Pivot ayarları düğmesi Excel seçeneklerinin hemen solundadır', () => {
-  const section = INDEX.slice(INDEX.indexOf('<section id="view-backlog">'), INDEX.indexOf('<section id="view-automations">'));
+  const section = INDEX.slice(INDEX.indexOf('<section id="view-backlog"'), INDEX.indexOf('<section id="view-automations"'));
   const pivot = section.indexOf('id="backlogPivotSettingsBtn"');
   const excel = section.indexOf('id="backlogExcelOptionsBtn"');
   assert.ok(pivot >= 0 && excel > pivot, 'Pivot ayarları Excel seçeneklerinin solunda olmalı');

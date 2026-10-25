@@ -1656,7 +1656,7 @@ function openHorizonTextInput(options={}){
   document.getElementById('_horizonTextInputModal')?.remove();
   const modal=document.createElement('div');
   modal.id='_horizonTextInputModal';
-  modal.className='warnOverlay horizonTextInputOverlay';
+  modal.className='warnOverlay horizonTextInputOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard horizonTextInputCard" role="dialog" aria-modal="true" aria-labelledby="_horizonTextInputTitle">
     <div class="modelConnHead"><div><div class="modalTitle" id="_horizonTextInputTitle">${escapeHtml(title)}</div></div>
       <button type="button" class="pricingRuleIconBtn" data-horizon-text-cancel aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button>
@@ -1834,7 +1834,7 @@ function showSourceFilterRequiredNotice(status,message){
   const preferredTarget=targets[0]||'cp';
   document.getElementById('_sourceFilterRequiredModal')?.remove();
   const modal=document.createElement('div');
-  modal.id='_sourceFilterRequiredModal';modal.className='warnOverlay';
+  modal.id='_sourceFilterRequiredModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard sourceFilterRequiredCard" role="alertdialog" aria-modal="true" aria-labelledby="_sourceFilterRequiredTitle">
     <div class="sourceFilterRequiredIcon"><svg class="ic" aria-hidden="true"><use href="#i-binary-tree-2"/></svg></div>
     <div><div class="modalTitle" id="_sourceFilterRequiredTitle">${escapeHtml(text.title)}</div><p>${escapeHtml(text.detail)}</p></div>
@@ -4571,7 +4571,7 @@ function openTableFieldsMenu(button){
   const tableKey=button.dataset.tableFields,existing=document.getElementById('_tableFieldsMenu');
   if(existing&&existing.dataset.tableKey===tableKey){closeTableFieldsMenu();return;}
   closeTableFieldsMenu();
-  const menu=document.createElement('aside');menu.id='_tableFieldsMenu';menu.className='tableFieldsMenu tableFieldsDrawer';menu.dataset.tableKey=tableKey;
+  const menu=document.createElement('aside');menu.id='_tableFieldsMenu';menu.className='tableFieldsMenu tableFieldsDrawer';menu.dataset.uiMigrated='table-fields';menu.dataset.tableKey=tableKey;
   menu.setAttribute('role','dialog');menu.setAttribute('aria-label',appLang==='en'?'Fields':'Alanlar');
   document.body.appendChild(menu);renderTableFieldsMenu(menu,tableKey);
   button.setAttribute('aria-expanded','true');
@@ -5140,7 +5140,7 @@ function openColumnNameDialog(options={}){
   document.getElementById('_columnNameModal')?.remove();
   const modal=document.createElement('div');
   modal.id='_columnNameModal';
-  modal.className='warnOverlay horizonTextInputOverlay';
+  modal.className='warnOverlay horizonTextInputOverlay';modal.dataset.uiMigrated='dialog';
   const field=(lang,label)=>`<label for="_columnName_${lang}">${escapeHtml(label)}</label><input id="_columnName_${lang}" data-column-name="${lang}" type="text" maxlength="${maxLength}" autocomplete="off" value="${escapeHtml(initial[lang]||'')}" placeholder="${escapeHtml(defaults[lang]||'')}">`;
   const sourceHtml=sourceRows.length?`<div class="columnNameSource" data-column-name-source><div class="columnNameSourceTitle"><svg class="ic"><use href="#i-database-import"/></svg>${escapeHtml(msg('Veri nereden geliyor?','Where does the data come from?'))}</div>${sourceRows.map(row=>`<div class="columnNameSourceRow"><span>${escapeHtml(row.label)}</span>${row.code?`<code>${escapeHtml(row.value)}</code>`:`<b>${escapeHtml(row.value)}</b>`}</div>`).join('')}</div>`:'';
   const hint=options.hint?`<p class="columnNameHint">${escapeHtml(options.hint)}</p>`:'';
@@ -5390,7 +5390,7 @@ async function openCpModelColumnModal(editId,rerenderFn){
   const currentGroup=String((existing&&existing.group)||'').trim()||DEFAULT_MODEL_COLUMN_GROUP;
   const groupIsNew=!groupChoices.some(g=>groupKey(g)===groupKey(currentGroup));
   const groupFieldHtml=`<label>${escapeHtml(appLang==='en'?'Heading group':'Üst başlık (grup)')}<select id="_cpModelGroup">${groupChoices.map(g=>`<option value="${escapeHtml(g)}"${groupKey(g)===groupKey(currentGroup)?' selected':''}>${escapeHtml(g)}</option>`).join('')}<option value="${NEW_GROUP_OPTION}"${groupIsNew?' selected':''}>${escapeHtml(appLang==='en'?'＋ Create a new heading…':'＋ Yeni başlık oluştur…')}</option></select></label><label id="_cpModelGroupNewWrap"${groupIsNew?'':' hidden'}>${escapeHtml(appLang==='en'?'New heading name':'Yeni başlık adı')}<input id="_cpModelGroupNew" maxlength="40" value="${escapeHtml(groupIsNew?currentGroup:'')}" placeholder="${escapeHtml(appLang==='en'?'e.g. Production':'Örn. Üretim Takibi')}" autocomplete="off"></label>`;
-  const modal=document.createElement('div'); modal.id='_cpModelColumnModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='_cpModelColumnModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard cpModelColumnCard" role="dialog" aria-modal="true"><div class="modelConnHead"><div><div class="modalTitle">${escapeHtml(appLang==='en'?(existing?'Edit Database Column':'Add Database Column'):(existing?'Veri Tabanı Sütununu Düzenle':'Veri Tabanından Sütun Ekle'))}</div><p>${escapeHtml(appLang==='en'?'Set the visible header, then search and select a source table column from ASAS or IAS. Shared by CP and Orders.':'Görünecek başlığı yazın; ardından ASAS veya IAS içindeki tablo sütununu arayıp seçin. CP ve Siparişler ile paylaşılır.')}</p></div><button type="button" class="pricingRuleIconBtn cpModelClose"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="cpModelColumnBody"><label>${escapeHtml(appLang==='en'?'English heading (EN)':'İngilizce başlık (EN)')}<input id="_cpModelLabelEn" value="${escapeHtml(existingLabels.en)}" maxlength="80" autocomplete="off"></label><label>${escapeHtml(appLang==='en'?'Turkish heading (TR)':'Türkçe başlık (TR)')}<input id="_cpModelLabelTr" value="${escapeHtml(existingLabels.tr)}" maxlength="80" autocomplete="off"></label>${groupFieldHtml}<label>${escapeHtml(appLang==='en'?'Data source':'Veri kaynağı')}<select id="_cpModelConnection">${connections.map(c=>`<option value="${escapeHtml(c.id)}"${c.id===selectedConnectionId?' selected':''}>${escapeHtml((c.role==='antrepo'?'IAS · ':'ASAS · ')+(c.name||c.catalog||c.server))}</option>`).join('')}</select></label><label class="cpModelWide">${escapeHtml(appLang==='en'?'Search source columns':'Kaynak sütunlarda ara')}<input id="_cpModelSearch" type="search" placeholder="${escapeHtml(appLang==='en'?'Table or column name…':'Tablo veya sütun adı…')}" autocomplete="off"></label><div class="cpModelColumnList" id="_cpModelColumnList"><div class="modelConnHint">${escapeHtml(appLang==='en'?'Loading columns…':'Sütunlar yükleniyor…')}</div></div></div><div class="modelConnFoot"><span id="_cpModelStatus"></span><span style="flex:1"></span><button type="button" class="tbtn cpModelClose">${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="navActionBtn" id="_cpModelSave"><svg class="ic"><use href="#i-device-floppy"/></svg>${escapeHtml(appLang==='en'?'Save column':'Sütunu Kaydet')}</button></div></div>`;
   document.body.appendChild(modal);
   modal.__refreshCanonicalRecipients=()=>{prepareEmailFillFromShared();if(typeof refreshAll==='function')refreshAll();};
@@ -9813,7 +9813,7 @@ function openNotesEditor(id, key, options={}){
   const previousFocus = document.activeElement;
   const modal = document.createElement('div');
   modal.id = '_notesEditorModal';
-  modal.className = 'warnOverlay';
+  modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.dataset.uiMigrated='note-editor';
   const orderCode = norm(row['Order Code']);
   const modelName = norm(row['Model Name']);
@@ -10462,7 +10462,7 @@ function renderOvFilterPopover(scope){
   const orderRows = overviewSummaryRows();
   const src = ovStateFor(scope);
   modal = document.createElement('div');
-  modal.id = 'ovFilterModal'; modal.className = 'warnOverlay';
+  modal.id = 'ovFilterModal'; modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
   // Çapraz filtre ipucu: bir boyutu seçince diğer boyutların listesinde o seçimle
   // birlikte var olan değerler üste/normal, olmayanlar alta/soluk gelir.
   const section = (dim) => {
@@ -11577,7 +11577,7 @@ function openSuppFobRulesModal(){
   const licensors=[...new Set(cpRows.map(r=>norm(r.Licensor)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   const licenses=[...new Set(cpRows.map(r=>norm(r.License)).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
-  const modal=document.createElement('div'); modal.id='_suppFobRulesModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='_suppFobRulesModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard" role="dialog" aria-modal="true" aria-labelledby="_suppFobRulesTitle" style="width:min(97vw,1340px);max-height:92vh;display:flex;flex-direction:column;padding:0;">
     <div style="padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;">
       <div><div class="modalTitle" id="_suppFobRulesTitle">License Royalty Calculations</div><div style="margin-top:4px;color:var(--muted);font-size:11.5px;">Her hesap OPD tarih aralığı + sezon + üretim ülkesi + Licensor + License eşleşmesine uygulanır. Başlıklara tıklayarak sıralayabilir, alt satırdan sütun bazlı filtreleyebilirsiniz.</div></div>
@@ -11911,7 +11911,7 @@ function openLandedMultipliersModal(){
   document.getElementById('_landedMultipliersModal')?.remove();
 
   const en=appLang==='en',current=kolDefaultLandedMultipliers();
-  const modal=document.createElement('div');modal.id='_landedMultipliersModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_landedMultipliersModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard landedMultiplierCard" role="dialog" aria-modal="true" aria-labelledby="_landedMultiplierTitle">
     <div class="landedMultiplierHead"><div><div class="modalTitle" id="_landedMultiplierTitle">${escapeHtml(en?'Landed Multipliers':'Landed Çarpanları')}</div><p>${escapeHtml(en?'Set the shared default multipliers used by Collection. A value entered manually inside a model’s Landed cell always overrides these defaults for that model.':'Koleksiyon’da kullanılan ortak varsayılan çarpanları belirleyin. Bir modelin Landed hücresine elle girilen değer, o model için her zaman bu varsayılanın önüne geçer.')}</p></div><button type="button" class="pricingRuleIconBtn _landedMultiplierClose" title="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="landedMultiplierBody">
@@ -12175,7 +12175,7 @@ function openTransitRulesModal(){
   const cpRows=(state.cp&&state.cp.rows)||[],orderRows=overviewSummaryRows(),asasRows=state.asasOrders||[];
   const seasonOptions=[...new Set([...cpRows.map(r=>norm(r.Season)),...orderRows.map(r=>norm(r.Season)),...asasRows.map(r=>norm(r.season)),...working.flatMap(r=>r.seasons||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
   const countryOptions=()=>[...new Set([...cpRows.map(r=>norm(r.Country)),...orderRows.map(r=>norm(r.Country)),...asasRows.map(r=>norm(countryEN(r.countryRaw))),...working.flatMap(r=>r.countries||[]),...(window.BLTransitAnalysisUI?.knownCountries?.()||[])].filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr'));
-  const modal=document.createElement('div');modal.id='_transitRulesModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_transitRulesModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard trxModal" role="dialog" aria-modal="true" aria-labelledby="_transitRulesTitle">
     <header class="trxModalHead">
       <div><div class="modalTitle" id="_transitRulesTitle">${tl('Nakliye Tipine Göre Ülke Bazlı Yol Süreleri','Transit Times by Country and Shipping Type')}</div>
@@ -12835,7 +12835,7 @@ function showWarningDetailTable(detail){
     ? detail.columns
     : [...new Set(rows.flatMap(row=>Object.keys(row||{})))].map(key=>({key,label:key}));
   const ov=document.createElement('div');
-  ov.id='warningDetailOverlay';ov.className='warnOverlay warningDetailOverlay';
+  ov.id='warningDetailOverlay';ov.className='warnOverlay warningDetailOverlay';ov.dataset.uiMigrated='dialog';
   const total=Number(detail.totalRows)||rows.length;
   const trunc=detail.truncated&&total>rows.length;
   ov.innerHTML=`<section class="modalCard warningDetailCard" role="dialog" aria-modal="true">
@@ -12854,7 +12854,7 @@ function showWarningDetailTable(detail){
 function showWarnDetails(){
   document.getElementById('warnOverlay')?.remove();
   const ov = document.createElement('div');
-  ov.id='warnOverlay'; ov.className='warnOverlay';
+  ov.id='warnOverlay'; ov.className='warnOverlay';ov.dataset.uiMigrated='dialog';
   ov.innerHTML = `<div class="modalCard warningListCard">
     <div class="modalTitle warningListTitle">${escapeHtml(appLang==='en'?`Warnings (${appWarnings.length})`:`Uyarılar (${appWarnings.length})`)}
       <button type="button" class="warnClose" aria-label="${escapeHtml(appLang==='en'?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
@@ -13249,7 +13249,7 @@ function renderSourceRefreshHistoryModal(items,selectedId,revision=0){
   if(state&&state.storeRevisions)state.storeRevisions.refreshHistory=_sourceRefreshHistoryState.revision;
   _sourceRefreshHistoryState.deleting=false;
   document.getElementById('_refreshSummaryModal')?.remove();
-  const modal=document.createElement('div'); modal.id='_refreshSummaryModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='_refreshSummaryModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard verHistCard sourceRefreshHistCard" role="dialog" aria-modal="true" aria-labelledby="sourceRefreshHistTitle">
     <div class="verHistTop"><div><h2 id="sourceRefreshHistTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div>
       <button type="button" class="verHistClose" title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div>
@@ -13393,7 +13393,7 @@ function notificationHistoryAdd(message,kind='toast'){const text=String(message=
 function notificationHistoryDate(value){const date=new Date(value);if(Number.isNaN(date.getTime()))return'';return new Intl.DateTimeFormat(appLang==='en'?'en-GB':'tr-TR',{dateStyle:'medium',timeStyle:'short'}).format(date);}
 function renderNotificationHistoryList(query=''){const host=document.getElementById('notificationHistoryList'),countEl=document.getElementById('notificationHistoryCount');if(!host)return;const t=notificationHistoryText(),all=notificationHistoryLoad().items,q=String(query||'').trim().toLocaleLowerCase('tr-TR'),items=q?all.filter(item=>item.message.toLocaleLowerCase('tr-TR').includes(q)):all;if(countEl)countEl.textContent=t.count(items.length);if(!items.length){host.innerHTML=`<div class="verHistEmpty">${escapeHtml(all.length?t.noMatch:t.empty)}</div>`;return;}host.innerHTML=items.map(item=>`<article class="notificationHistoryItem${item.read?'':' isUnread'}" data-notification-id="${escapeHtml(item.id)}"><span class="notificationHistoryMarker" aria-hidden="true"></span><div class="notificationHistoryCopy"><div class="notificationHistoryMeta"><span>${escapeHtml(item.kind==='center'?t.center:t.toast)}</span><time datetime="${escapeHtml(item.createdAt||'')}">${escapeHtml(notificationHistoryDate(item.createdAt))}</time></div><p>${escapeHtml(item.message)}</p></div><button type="button" class="notificationHistoryRemove" data-notification-remove="${escapeHtml(item.id)}" title="${escapeHtml(t.remove)}" aria-label="${escapeHtml(t.remove)}"><svg class="ic"><use href="#i-trash"/></svg></button></article>`).join('');}
 function notificationHistoryMarkAllRead(){const state=notificationHistoryLoad();let changed=false;state.items.forEach(item=>{if(!item.read){item.read=true;changed=true;}});if(changed)notificationHistorySave();notificationHistoryUpdateBadge();}
-function openNotificationHistory(){const t=notificationHistoryText();document.getElementById('notificationHistoryModal')?.remove();notificationHistoryMarkAllRead();const modal=document.createElement('div');modal.id='notificationHistoryModal';modal.className='warnOverlay';modal.innerHTML=`<div class="modalCard verHistCard notificationHistoryCard" role="dialog" aria-modal="true" aria-labelledby="notificationHistoryTitle"><div class="verHistTop"><div><h2 id="notificationHistoryTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div><button type="button" class="verHistClose" data-notification-close title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="verHistTools"><input type="search" id="notificationHistorySearch" placeholder="${escapeHtml(t.search)}" autocomplete="off"><span class="verHistCount" id="notificationHistoryCount"></span><button type="button" class="tbtn" id="notificationUpdateHistoryBtn"><svg class="ic"><use href="#i-reload"/></svg>${escapeHtml(appLang==='en'?'Update history':'Güncelleme geçmişi')}</button><button type="button" class="notificationHistoryClear" id="notificationHistoryClear"><svg class="ic"><use href="#i-trash"/></svg>${escapeHtml(t.clear)}</button></div><div class="notificationHistoryList" id="notificationHistoryList"></div><div class="verHistFoot"><button type="button" class="tbtn" data-notification-close>${escapeHtml(t.close)}</button></div></div>`;document.body.appendChild(modal);renderNotificationHistoryList('');const close=()=>{modal.remove();document.removeEventListener('keydown',onKey);},onKey=event=>{if(event.key==='Escape')close();};document.addEventListener('keydown',onKey);modal.addEventListener('click',event=>{if(event.target===modal){close();return;}if(event.target.closest('[data-notification-close]')){close();return;}const remove=event.target.closest('[data-notification-remove]');if(remove){const state=notificationHistoryLoad();state.items=state.items.filter(item=>item.id!==remove.dataset.notificationRemove);notificationHistorySave();renderNotificationHistoryList(modal.querySelector('#notificationHistorySearch')?.value||'');notificationHistoryUpdateBadge();}});// v7.26 — "Güncelleme geçmişi" artık Kaynak Veri şeridinde değil, bildirim
+function openNotificationHistory(){const t=notificationHistoryText();document.getElementById('notificationHistoryModal')?.remove();notificationHistoryMarkAllRead();const modal=document.createElement('div');modal.id='notificationHistoryModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';modal.innerHTML=`<div class="modalCard verHistCard notificationHistoryCard" role="dialog" aria-modal="true" aria-labelledby="notificationHistoryTitle"><div class="verHistTop"><div><h2 id="notificationHistoryTitle">${escapeHtml(t.title)}</h2><p class="verHistSub">${escapeHtml(t.sub)}</p></div><button type="button" class="verHistClose" data-notification-close title="${escapeHtml(t.close)}" aria-label="${escapeHtml(t.close)}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="verHistTools"><input type="search" id="notificationHistorySearch" placeholder="${escapeHtml(t.search)}" autocomplete="off"><span class="verHistCount" id="notificationHistoryCount"></span><button type="button" class="tbtn" id="notificationUpdateHistoryBtn"><svg class="ic"><use href="#i-reload"/></svg>${escapeHtml(appLang==='en'?'Update history':'Güncelleme geçmişi')}</button><button type="button" class="notificationHistoryClear" id="notificationHistoryClear"><svg class="ic"><use href="#i-trash"/></svg>${escapeHtml(t.clear)}</button></div><div class="notificationHistoryList" id="notificationHistoryList"></div><div class="verHistFoot"><button type="button" class="tbtn" data-notification-close>${escapeHtml(t.close)}</button></div></div>`;document.body.appendChild(modal);renderNotificationHistoryList('');const close=()=>{modal.remove();document.removeEventListener('keydown',onKey);},onKey=event=>{if(event.key==='Escape')close();};document.addEventListener('keydown',onKey);modal.addEventListener('click',event=>{if(event.target===modal){close();return;}if(event.target.closest('[data-notification-close]')){close();return;}const remove=event.target.closest('[data-notification-remove]');if(remove){const state=notificationHistoryLoad();state.items=state.items.filter(item=>item.id!==remove.dataset.notificationRemove);notificationHistorySave();renderNotificationHistoryList(modal.querySelector('#notificationHistorySearch')?.value||'');notificationHistoryUpdateBadge();}});// v7.26 — "Güncelleme geçmişi" artık Kaynak Veri şeridinde değil, bildirim
 // penceresinin içinde: iki ayrı yerde iki ayrı geçmiş aramak yerine tek yer.
 modal.querySelector('#notificationUpdateHistoryBtn')?.addEventListener('click',()=>{close();openSourceRefreshHistory();});
 modal.querySelector('#notificationHistorySearch').addEventListener('input',event=>renderNotificationHistoryList(event.target.value));modal.querySelector('#notificationHistoryClear').addEventListener('click',()=>{if(!notificationHistoryLoad().items.length||!confirm(t.confirm))return;notificationHistoryLoad().items=[];notificationHistorySave();renderNotificationHistoryList('');notificationHistoryUpdateBadge();});setTimeout(()=>modal.querySelector('#notificationHistorySearch')?.focus(),0);}
@@ -14016,7 +14016,7 @@ function showSourceRefreshFailureModal(detail,repairAction=null,diagnosis=null){
     errorCode?`${en?'Code':'Kod'}: ${errorCode}`:'',
   ].filter(Boolean).join(' · ');
   const modal=document.createElement('div');
-  modal.id='sourceRefreshFailureModal';modal.className='warnOverlay';
+  modal.id='sourceRefreshFailureModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard refreshFailureCard" role="alertdialog" aria-modal="true">
     <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:12px;">
       <span>${escapeHtml(title)}</span>
@@ -15371,7 +15371,7 @@ async function openBrowserDebugSettingsModal(){
   const en=appLang==='en', label=(tr,eng)=>en?eng:tr;
   let payload={status:{configuration:{preferredBrowser:'system',selectedEdgeProfileDirectory:'',preferredPort:null,enabled:false},resolved:{},installedBrowsers:[],profiles:[],policy:null}};
   try{const response=await fetch('/api/browser-debug/status',{credentials:'same-origin'});payload=await response.json();if(!response.ok)throw new Error(payload.error||response.statusText);}catch(error){showToast(error.message||label('Browser ayarları okunamadı.','Browser settings could not be loaded.'));return;}
-  const modal=document.createElement('div');modal.id='_browserDebugSettingsModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_browserDebugSettingsModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard browserDebugCard" role="dialog" aria-modal="true" aria-labelledby="_browserDebugTitle"><div class="browserDebugHead"><div><div class="modalTitle" id="_browserDebugTitle">${label('Browser ve Remote Debugging','Browser & Remote Debugging')}</div><p>${label('Kurumsal sitelerdeki mevcut oturumlarınızı kullanmak için Buyer Log tarayıcı bağlantısını yönetin.','Manage the Buyer Log browser connection for authenticated corporate sites.')}</p></div><button type="button" class="pricingRuleIconBtn" data-close aria-label="${label('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="browserDebugGrid"><label>${label('Browser','Browser')}<select id="_browserDebugBrowser"><option value="system">${label('System Default (Recommended)','System Default (Recommended)')}</option><option value="edge">Microsoft Edge</option><option value="chrome">Google Chrome</option></select></label><label>${label('Detected Browser','Detected Browser')}<output id="_browserDebugDetected">—</output></label><label>${label('Profile','Profile')}<select id="_browserDebugProfile"></select></label><label>${label('Policy','Policy')}<output id="_browserDebugPolicy">—</output></label><label>${label('Port','Port')}<input id="_browserDebugPort" type="number" min="1024" max="65535" step="1"></label><label>${label('Connection','Connection')}<output id="_browserDebugConnection">—</output></label></div><p id="_browserDebugHelper" class="browserDebugHelper"></p><div id="_browserDebugDetails" class="browserDebugDetails" role="status" aria-live="polite"></div><div class="modalFoot"><button type="button" class="tbtn" data-close>${label('Kapat','Close')}</button><button type="button" class="tbtn" data-test>${label('Test Connection','Test Connection')}</button><button type="button" class="tbtn" data-disable>${label('Disable','Disable')}</button><button type="button" class="tbtn" data-restart>${label('Tarayıcıyı yeniden başlat','Restart browser')}</button><button type="button" class="tbtn primary" data-enable>${label('Enable & Launch','Enable & Launch')}</button></div></div>`;
   document.body.appendChild(modal);
   let config=payload.status.configuration||{}; const browser=modal.querySelector('#_browserDebugBrowser'), profile=modal.querySelector('#_browserDebugProfile'), port=modal.querySelector('#_browserDebugPort'), detected=modal.querySelector('#_browserDebugDetected'), policy=modal.querySelector('#_browserDebugPolicy'), connection=modal.querySelector('#_browserDebugConnection'), helper=modal.querySelector('#_browserDebugHelper'), details=modal.querySelector('#_browserDebugDetails');
@@ -15588,7 +15588,7 @@ async function openModelImageLimitModal(){
   document.getElementById('_modelImageLimitModal')?.remove();
 
   const current=await loadModelImageSettings();
-  const modal=document.createElement('div');modal.id='_modelImageLimitModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_modelImageLimitModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const title=appLang==='en'?'Image Size Limit':'Görsel Boyut Limiti',help=appLang==='en'?'Enter the maximum size in KB. New PLM/manual images use this limit; existing larger images are optimized once in the background.':'Maksimum boyutu KB olarak girin. Yeni PLM/manuel görseller bu sınırı kullanır; daha büyük mevcut görseller arka planda bir kez optimize edilir.';
   const maxKb=Math.min(1024,Math.max(1,Number(current.maxKb)||5));
   modal.innerHTML=`<div class="modalCard modelImageLimitCard" role="dialog" aria-modal="true" aria-labelledby="_modelImageLimitTitle"><div class="modelImageLimitHead"><div><div class="modalTitle" id="_modelImageLimitTitle">${escapeHtml(title)}</div><p class="modelImageLimitHelp">${escapeHtml(help)}</p></div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="modelImageLimitGrid"><div class="modelImageLimitControl"><label for="_modelImageLimitRange">${escapeHtml(appLang==='en'?'Maximum file size':'Maksimum dosya boyutu')}</label><div class="modelImageLimitValue"><input id="_modelImageLimitRange" type="range" min="1" max="1024" step="1" value="${maxKb}"><output id="_modelImageLimitOutput">${maxKb} KB</output></div><input id="_modelImageLimitInput" type="number" min="1" max="1024" step="1" value="${maxKb}"></div><div class="modelImageSample"><svg viewBox="0 0 120 120" role="img" aria-hidden="true" style="opacity:${Math.min(1,.45+maxKb/1800)}"><path d="M36 25 50 18h20l14 7 16 12-12 18-10-7v45H42V48l-10 7-16-18 20-12Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/><path d="M50 18c1 12 19 12 20 0" fill="none" stroke="currentColor" stroke-width="4"/></svg><span>${escapeHtml(appLang==='en'?'Sample quality':'Örnek kalite')}</span></div></div><div class="modelImageLimitDanger"><button type="button" class="tbtn danger" data-delete-all>${escapeHtml(appLang==='en'?'Delete all images':'Tüm görselleri sil')}</button><span>${escapeHtml(appLang==='en'?'Deletes stored model images after confirmation.':'Kayıtlı model görsellerini onaydan sonra siler.')}</span></div><div id="_modelImageLimitStatus" class="modelImageLimitStatus"></div><div class="modalFoot"><button type="button" class="tbtn" data-plm-image-package-open><svg class="ic"><use href="#i-picture"/></svg><span>${escapeHtml(appLang==='en'?'Import PLM Image Package':'PLM Görsel Paketini İçe Aktar')}</span></button><span style="flex:1"></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-save>${escapeHtml(appLang==='en'?'Save':'Kaydet')}</button></div></div>`;
@@ -15618,7 +15618,7 @@ async function openSyncLocalDataModal(){
 
   let payload={settings:{},localDbPath:'—'};try{payload=await fetchJSON('/api/sync-settings');}catch(_){ }
   const s=payload.settings||{}, en=appLang==='en', moderator=Boolean(window.BLIsModerator&&window.BLIsModerator());
-  const modal=document.createElement('div');modal.id='_syncLocalDataModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_syncLocalDataModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const label=(tr,eng)=>en?eng:tr;
   modal.innerHTML=`<div class="modalCard" role="dialog" aria-modal="true" style="width:min(92vw,620px);padding:20px"><div style="display:flex;justify-content:space-between;align-items:center"><div class="modalTitle">Sync &amp; Local Data</div><button type="button" class="pricingRuleIconBtn" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><label style="display:block;margin:16px 0 8px">${label('Shared Sync Folder','Shared Sync Folder')}<div style="display:flex;gap:8px;margin-top:6px"><input id="_syncFolder" type="text" value="${escapeHtml(s.sharedSyncRoot||'')}" style="flex:1"><button type="button" class="tbtn" data-browse>${label('Browse','Browse')}</button><button type="button" class="tbtn" data-test>${label('Test Connection','Test Connection')}</button></div></label><div style="color:var(--muted);font-size:12px;margin-bottom:12px">${label('Yerel DB','Local DB')}: <code>${escapeHtml(payload.localDbPath||'—')}</code></div><div id="_syncStatus" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;color:var(--muted);font-size:13px"></div><div id="_syncError" style="min-height:20px;color:var(--danger);margin-top:8px"></div>${moderator?`<div id="_syncHubInit" hidden style="margin-top:8px;padding:10px;border:1px solid var(--hair);background:var(--paper)"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div><strong>${label('Shared Hub gerekli','Shared Hub required')}</strong><div style="margin-top:3px;color:var(--muted);font-size:11px">${label('Seçili boş klasörü Buyer Log ortak alanı olarak başlat.','Initialize the selected empty folder as the Buyer Log shared workspace.')}</div></div><button type="button" class="tbtn primary" data-init-hub>${label('Shared Hub Oluştur','Create Shared Hub')}</button></div></div>`:''}<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px"><button type="button" class="tbtn" data-close>${label('Kapat','Close')}</button><button type="button" class="tbtn" data-save>${label('Kaydet','Save')}</button><button type="button" class="tbtn primary" data-now>${label('Sync Now','Sync Now')}</button></div></div>`;
   document.body.appendChild(modal);
@@ -15722,7 +15722,7 @@ function syncStatusNetwork(q,tx){const online=Boolean(q&&q.online),active=Boolea
 async function openSyncStatusModal(){
   document.getElementById('_syncStatusModal')?.remove();syncStatusModalRenderer=null;if(syncStatusPollTimer){clearInterval(syncStatusPollTimer);syncStatusPollTimer=0;}
   let payload={status:{}};try{payload=await fetchJSON('/api/sync-status');}catch(_){ }
-  const modal=document.createElement('div');modal.id='_syncStatusModal';modal.className='warnOverlay';const initial=payload.status||{},en=appLang==='en',tx=(tr,eng)=>appLang==='en'?eng:tr;
+  const modal=document.createElement('div');modal.id='_syncStatusModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';const initial=payload.status||{},en=appLang==='en',tx=(tr,eng)=>appLang==='en'?eng:tr;
   modal.innerHTML=`<div class="modalCard syncStatusModalCard" role="dialog" aria-modal="true" aria-labelledby="_syncStatusTitle"><div class="syncStatusModalHead"><div><div class="modalTitle" id="_syncStatusTitle">${tx('Sync durumu','Sync Status')}</div><p class="syncStatusModalSub">${tx('Yerel değişiklikleri ve ortak klasör durumunu tek görünümde izleyin.','Monitor local changes and the shared folder in one view.')}</p></div><button type="button" class="pricingRuleIconBtn" data-close aria-label="${tx('Kapat','Close')}"><svg class="ic"><use href="#i-x"/></svg></button></div><div class="syncStatusHero"><div class="syncStatusHeroMain"><span class="syncStatusDot" aria-hidden="true"></span><div><div class="syncStatusHeroTitle" data-sync-status role="status" aria-live="polite">—</div><div class="syncStatusHeroSub" data-sync-last-success>—</div></div></div><div class="syncStatusHeroSide"><div data-sync-network></div><label class="syncPeriodControl"><span>${tx('Sync','Sync')}</span><select data-period aria-label="${tx('Sync periyodu','Sync period')}"><option value="1">1 ${tx('dk','min')}</option><option value="2">2 ${tx('dk','min')}</option><option value="5">5 ${tx('dk','min')}</option><option value="10">10 ${tx('dk','min')}</option><option value="15">15 ${tx('dk','min')}</option><option value="manual">${tx('Manuel','Manual')}</option></select></label><label class="syncPeriodControl"><span>${tx('Paketleri sakla','Keep packages')}</span><select data-retention aria-label="${tx('Eski paketlerin silinme süresi','Package retention')}"><option value="7">7 ${tx('gün','days')}</option><option value="14">14 ${tx('gün','days')}</option><option value="30">30 ${tx('gün','days')}</option><option value="60">60 ${tx('gün','days')}</option><option value="90">90 ${tx('gün','days')}</option><option value="180">180 ${tx('gün','days')}</option><option value="365">365 ${tx('gün','days')}</option><option value="0">${tx('Süresiz','Never')}</option></select></label></div></div><section class="syncTransferGrid" aria-label="${tx('Transferler','Transfers')}"><div data-sync-upload></div><div data-sync-download></div></section><section class="syncStatusSource"><div class="syncStatusSourceHead"><b>${tx('Shared folder','Shared folder')}</b><span data-sync-network></span></div><div class="syncStatusSourcePath" data-sync-folder>—</div></section><section class="syncStatusFacts"><div><span>${tx('Last successful sync','Last successful sync')}</span><b data-sync-last-success>—</b></div><div><span>${tx('Last check','Last check')}</span><b data-sync-last-check>—</b></div><div><span>${tx('Next automatic sync','Next automatic sync')}</span><b data-sync-next>—</b></div><div><span>${tx('Last duration','Last duration')}</span><b data-sync-duration>—</b></div></section><section class="syncStatusLocal"><div><span class="syncSectionEyebrow">${tx('Local data','Local data')}</span><b data-sync-local-db>—</b></div><span data-sync-local-state>—</span></section><div class="syncStatusError" data-sync-error hidden><div><b data-sync-error-title>${tx('Shared folder unavailable','Shared folder unavailable')}</b><span data-sync-error-detail></span></div><button type="button" class="tbtn" data-test>${tx('Test connection','Test connection')}</button></div><details class="syncAdvancedDetails"><summary>${tx('Advanced details','Advanced details')}</summary><div class="syncAdvancedGrid"><div><span>Device ID</span><b data-sync-device>—</b></div><div><span>${tx('Period','Period')}</span><b data-sync-period>—</b></div><div><span>${tx('Local snapshot date','Local snapshot date')}</span><b data-sync-snapshot>—</b></div><div class="syncAdvancedWide"><span>${tx('Local DB path','Local DB path')}</span><b data-sync-local-db-path>—</b></div><div><span>Checkpoint</span><b data-sync-checkpoint>—</b></div><div><span>${tx('Conflict / Retry','Conflict / Retry')}</span><b data-sync-conflict>—</b></div><div><span>${tx('Corrupt packages','Corrupt packages')}</span><b data-sync-corrupt>—</b></div><div><span>${tx('Temizlenen paket','Pruned packages')}</span><b data-sync-pruned>—</b></div><div><span>${tx('Onay bekleyen olay','Awaiting peer ack')}</span><b data-sync-pending-ack>—</b></div><div><span>${tx('Downloaded / uploaded events','Downloaded / uploaded events')}</span><b data-sync-events>—</b></div><div><span>${tx('Downloaded / uploaded packages','Downloaded / uploaded packages')}</span><b data-sync-packages>—</b></div><div><span>${tx('Sync protocol','Sync protocol')}</span><b data-sync-protocol>—</b></div><div><span>${tx('Network traffic','Network traffic')}</span><b data-sync-traffic>—</b></div><div class="syncAdvancedWide"><span>Progress</span><b data-sync-progress>—</b></div></div></details><div class="syncConflictPanel" data-sync-conflicts-panel hidden aria-live="polite"></div><div class="syncStatusActions"><button type="button" class="tbtn" data-refresh>${tx('Refresh Status','Refresh Status')}</button><button type="button" class="tbtn" data-retry>${tx('Retry Failed','Retry Failed')}</button><button type="button" class="tbtn" data-conflicts>${tx('View Conflicts','View Conflicts')}</button><button type="button" class="tbtn primary" data-sync-now>${tx('Sync Now','Sync Now')}</button></div></div>`;document.body.appendChild(modal);
   const period=modal.querySelector('[data-period]'),retention=modal.querySelector('[data-retention]'),nowButton=modal.querySelector('[data-sync-now]');let syncRequest=null,latestStatus={...initial};
   const ruleStatus=document.createElement('p');ruleStatus.className='syncStatusHeroSub';ruleStatus.dataset.syncMasterRelease='';
@@ -16879,7 +16879,7 @@ function openBacklogExportColumns(){
   const availableChecked=new Set(),selectedChecked=new Set();
   let searchQuery='';
   const tr=(en,tk)=>appLang==='en'?en:tk;
-  const modal=document.createElement('div');modal.id='backlogExportColumnsModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='backlogExportColumnsModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard backlogExportColumnsCard" role="dialog" aria-modal="true" aria-labelledby="backlogExportColumnsTitle"><div class="backlogDetailHead"><div class="backlogDetailHeadText"><div class="modalTitle" id="backlogExportColumnsTitle">${escapeHtml(tr('Excel options','Excel seçenekleri'))}</div><div class="backlogDetailMeta">${escapeHtml(tr('Manage exported columns and edit formula cells. Use {row} for the current Excel row.','Aktarılacak sütunları yönetin ve formül hücrelerini düzenleyin. Güncel Excel satırı için {row} kullanın.'))}</div></div><button type="button" class="backlogDetailClose" data-close><svg class="ic"><use href="#i-x"/></svg></button></div><div class="backlogExportColumnsBody"><div class="backlogExportColumnsGroup"><h3>${escapeHtml(tr('Columns','Sütunlar'))}</h3><div class="backlogColManager">
     <div class="backlogColPane"><div class="backlogColPaneHead"><span>${escapeHtml(tr('Available columns','Kullanılabilir sütunlar'))}</span></div><input type="text" class="backlogColSearch" data-col-search placeholder="${escapeHtml(tr('Search…','Ara…'))}"><div class="backlogColList" data-col-available></div></div>
     <div class="backlogColManagerActions">
@@ -17428,10 +17428,10 @@ function openBacklogPivotSettings(){
   const fields=backlogSettingsFieldPool();
   const draft=backlogSettingsDraft();
   const modal=document.createElement('div');
-  modal.id='_backlogPivotSettingsModal';modal.className='autoModalOverlay';
+  modal.id='_backlogPivotSettingsModal';modal.className='autoModalOverlay';modal.dataset.uiMigrated='dialog';
   const dateLevelLabel={year:appLang==='en'?'Year':'Yıl',month:appLang==='en'?'Month':'Ay',week:appLang==='en'?'Week':'Hafta',day:appLang==='en'?'Day':'Gün'};
-  modal.innerHTML='<div class="autoModal oabSettingsModal backlogPivotSettingsModal">'
-    +'<header><h3>'+escapeHtml(appLang==='en'?'Backlog Pivot Settings':'Backlog Pivot Ayarları')+'</h3><button type="button" data-backlog-settings-close>×</button></header>'
+  modal.innerHTML='<div class="autoModal oabSettingsModal backlogPivotSettingsModal" role="dialog" aria-modal="true" aria-labelledby="backlogPivotSettingsTitle">'
+    +'<header><h3 id="backlogPivotSettingsTitle">'+escapeHtml(appLang==='en'?'Backlog Pivot Settings':'Backlog Pivot Ayarları')+'</h3><button type="button" data-backlog-settings-close>×</button></header>'
     +'<div class="autoModalBody backlogPivotSettingsBody">'
       +'<div class="oabSettingsSection"><div class="oabSettingsSectionHead"><span>'+escapeHtml(appLang==='en'?'Report Pre-Filters':'Rapor Ön Filtreleri')+'</span></div>'
         +'<div class="backlogSettingsDateGrid">'
@@ -17461,7 +17461,9 @@ function openBacklogPivotSettings(){
   const renderAxes=()=>{rowsList.innerHTML=draft.rows.map(dim=>backlogSettingsAxisRowHtml(dim,'rows',fields)).join('');colsList.innerHTML=draft.columns.map(dim=>backlogSettingsAxisRowHtml(dim,'columns',fields)).join('');backlogSettingsRefreshOrderButtons(rowsList);backlogSettingsRefreshOrderButtons(colsList);};
   const renderFilters=()=>{filtersList.innerHTML=draft.filterDims.map(dim=>backlogSettingsFilterRowHtml(dim,fields,draft)).join('');};
   const syncDraftAxes=()=>{draft.rows=[...rowsList.querySelectorAll('.backlogPivotAxisField')].map(el=>el.value).filter(Boolean);draft.columns=[...colsList.querySelectorAll('.backlogPivotAxisField')].map(el=>el.value).filter(Boolean);};
-  const close=()=>{if(typeof closeHeaderFilter==='function')closeHeaderFilter();modal.remove();};
+  let releaseKeyboard=()=>{};
+  const close=()=>{if(typeof closeHeaderFilter==='function')closeHeaderFilter();modal.remove();releaseKeyboard();};
+  releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal,{onEscape:close})||(()=>{});
   renderAxes();renderFilters();
   modal.querySelectorAll('[data-backlog-settings-close]').forEach(btn=>btn.addEventListener('click',close));
   let pressedOnBackdrop=false;
@@ -20190,10 +20192,9 @@ function renderShipTable(){
   const table = document.getElementById('shipTable');
   buildColgroup(table, 'ship', true);
   const thead = table.querySelector('thead');
-  thead.innerHTML = '<tr><th style="padding:8px;background:var(--navy-deep);color:#fff;"><input type="checkbox" id="shipChkAll"></th>' +
+  thead.innerHTML = '<tr><th style="padding:8px;background:var(--ui-header-bg);color:var(--ui-header-ink);"><input type="checkbox" id="shipChkAll"></th>' +
     cols.map(c=>{
-      const bg = SHIP_HEADER_COLORS[c.k] || '#00B0F0';
-      return `<th data-k="${c.k}" style="padding:6px 8px;background:${bg};color:#000;text-align:left;font-weight:700;font-size:10.5px;">${escapeHtml(c.label)}</th>`;
+      return `<th data-k="${c.k}" style="padding:6px 8px;background:var(--ui-header-bg);color:var(--ui-header-ink);text-align:left;font-weight:700;font-size:var(--ui-font-2xs);">${escapeHtml(c.label)}</th>`;
     }).join('') + '</tr>';
   thead.querySelectorAll('th[data-k]').forEach(th=>{
     const key = th.dataset.k;
@@ -20205,8 +20206,8 @@ function renderShipTable(){
     const editable = c => row._canEdit!==false && (c.type==='manual' || c.type==='manual-num' || c.type==='manual-date' || c.type==='auto' || c.type==='auto-num' || c.type==='auto-date');
     const tds = cols.map(c=>{
       if(!editable(c)){
-        const lock=row._canEdit===false&&c.type!=='formula'&&c.type!=='formula-date'?'<span class="viewOnlyLock" aria-hidden="true">🔒</span> ':'';
-        return `<td class="${row._canEdit===false?'viewOnlyCell':''}" style="padding:4px 8px;color:var(--muted);font-family:var(--mono);white-space:nowrap;">${lock}${escapeHtml(shipCellDisplay(c,row))}</td>`;
+        const lock=row._canEdit===false&&c.type!=='formula'&&c.type!=='formula-date'?'<span class="viewOnlyLock" aria-hidden="true">⊟</span> ':'';
+        return `<td class="${row._canEdit===false?'viewOnlyCell':''}" style="padding:4px 8px;color:var(--ui-text-muted);font-family:var(--ui-font-mono);white-space:nowrap;">${lock}${escapeHtml(shipCellDisplay(c,row))}</td>`;
       }
       const isDate = c.type.endsWith('date');
       const isNum = c.type.endsWith('num');
@@ -20218,7 +20219,7 @@ function renderShipTable(){
           ? (appLang==='en'?'Manually edited FX rate':'Elle güncellenmiş kur')
           : (row._kurResolvedMonth ? `${appLang==='en'?'FX month':'Kur ayı'}: ${row._kurResolvedMonth}${row._kurExact?'':` (${appLang==='en'?'nearest available':'en yakın mevcut'})`}` : (appLang==='en'?'Editable; Update FX uses Ex-Factory month':'Düzenlenebilir; Kur Güncelle Ex-Factory ayını kullanır')))
         : '';
-      return `<td style="padding:2px 4px;"><input type="${inputType}" ${isNum?'inputmode="decimal"':''} class="shipEditCell" data-shipid="${row._shipId}" data-key="${c.k}" value="${escapeHtml(String(dispVal))}" ${fxTitle?`title="${escapeHtml(fxTitle)}"`:''} style="width:100%;border:1px solid transparent;background:transparent;font-size:11.5px;padding:3px 5px;border-radius:var(--r-xs);color:var(--table-ink);"></td>`;
+      return `<td style="padding:2px 4px;"><input type="${inputType}" ${isNum?'inputmode="decimal"':''} class="shipEditCell" data-shipid="${row._shipId}" data-key="${c.k}" value="${escapeHtml(String(dispVal))}" ${fxTitle?`title="${escapeHtml(fxTitle)}"`:''} style="width:100%;border:0;background:transparent;font-size:var(--ui-font-xs);padding:3px 5px;border-radius:var(--ui-radius);color:var(--ui-text);"></td>`;
     }).join('');
     return `<tr data-shipid="${row._shipId}" class="${row._canEdit===false?'rowViewOnly':''}"><td style="padding:4px 8px;"><input type="checkbox" class="shipRowChk" data-shipid="${row._shipId}" ${shipSelected.has(row._shipId)?'checked':''}></td>${tds}</tr>`;
   }).join('');
@@ -20429,7 +20430,7 @@ function openFreightModal(rows){
   let activeKey = entries[0].key;
 
   const modal = document.createElement('div');
-  modal.id='_freightModal'; modal.className='warnOverlay';
+  modal.id='_freightModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const who = multi
     ? (en?`${list.length} orders — each calculated with its own quantity and price`:`${list.length} sipariş — her biri kendi adedi ve fiyatıyla hesaplanır`)
     : (entries[0].row ? entries[0].label : (en?'Standalone calculation — no row is updated':'Serbest hesap — hiçbir satır güncellenmez'));
@@ -20843,6 +20844,19 @@ function _xlsArgbFromHex(hex){
   if(/^[0-9A-F]{6}$/.test(raw))return 'FF'+raw;
   return null;
 }
+// Frozen pre-Manifest body palette for the generic Shipping workbook. The
+// dedicated Shipping workbook/clipboard already has its own fixed palette.
+function shipDomExportPalette(td){
+  const theme=document.documentElement.dataset.theme;
+  const tones=theme==='dark'?{body:'#f0f3f6',muted:'#a0adba'}
+    :theme==='grey'?{body:'#101820',muted:'#414e5a'}:{body:'#16212d',muted:'#627184'};
+  const calculated=!td.querySelector('input')&&td.cellIndex>0;
+  return {bg:null,color:calculated?tones.muted:tones.body,bold:false};
+}
+function shipDomExportRowHeight(){
+  // Original four-size row geometry, independent of the live control font.
+  return [32,36,40,28][normalizeUiFontStep(document.documentElement.dataset.fontStep)]*72/96;
+}
 function _xlsCellFromTd(td,options){
   options=options||{};
   // Hücre metni: rozet varsa rozetten, input/select varsa değerinden, yoksa düz metinden.
@@ -21075,7 +21089,7 @@ async function exportStyledDomTable(tableSel, opts){
       if(td.classList.contains('chkCell'))continue;
       const fieldKey=td.dataset.key||leafHeaders[col-1];
       const column=columnByKey.get(String(td.dataset.key||''))||null;
-      const palette=record?exportSemanticPalette(column,record,cf):null;
+      const palette=record?exportSemanticPalette(column,record,cf):(table.id==='shipTable'?shipDomExportPalette(td):null);
       const thumb=td.querySelector('img.kolThumb');
       // Görsel hücresi kayıttan tanınır: satırın ekranda çizilmiş/yüklenmiş
       // olması gerekmez.
@@ -21097,7 +21111,7 @@ async function exportStyledDomTable(tableSel, opts){
       }
       col++;maxCol=Math.max(maxCol,col-1);
     }
-    ws.getRow(excelRow).height=Math.max(18,Math.ceil(tr.getBoundingClientRect().height||(managedRecords?cpOrdersImageDims(opts.tableKey).row:19)))*72/96;
+    ws.getRow(excelRow).height=table.id==='shipTable'?shipDomExportRowHeight():Math.max(18,Math.ceil(tr.getBoundingClientRect().height||(managedRecords?cpOrdersImageDims(opts.tableKey).row:19)))*72/96;
     excelRow++;exported++;
     if(managedRecords&&exported%100===0)await new Promise(resolve=>setTimeout(resolve,0));
   }
@@ -22634,7 +22648,7 @@ function openKolPricingExcelColumnsModal(){
   let modal=document.getElementById('kolPricingExcelColsModal'); if(modal) modal.remove();
   const selected=new Set(kolPricingExcelColKeys);
   const ordered=kolAllOrderedCols();
-  modal=document.createElement('div'); modal.id='kolPricingExcelColsModal'; modal.className='warnOverlay';
+  modal=document.createElement('div'); modal.id='kolPricingExcelColsModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard" style="max-width:680px;width:94%;max-height:84vh;display:flex;flex-direction:column;padding:0;">
     <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:10px;">
       <span>Pricing Excel Columns</span>
@@ -23130,7 +23144,7 @@ async function openEndeksmatikModal({mode='collection',row}={}){
   const savedSetId=ctx.setId&&endeksmatikSetById(ctx.setId)?ctx.setId:'';
   let selectedSet=endeksmatikSetById(savedSetId||status.activeSetId)||endeksmatikSetById(status.setId)||null;
   const retailDepot='RETAIL Depo';
-  const overlay=document.createElement('div');overlay.id='_endeksmatikModal';overlay.className='warnOverlay endeksmatikOverlay';
+  const overlay=document.createElement('div');overlay.id='_endeksmatikModal';overlay.className='warnOverlay endeksmatikOverlay';overlay.dataset.uiMigrated='dialog';
   const pickerMin=endeksmatikMonthPickerValue(status.firstMonth),pickerMax=endeksmatikMonthPickerValue(status.lastMonth);
   const calendarSvg='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2v3M17 2v3M3.5 9h17M5 4.5h14a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 19 20.5H5A1.5 1.5 0 0 1 3.5 19V6A1.5 1.5 0 0 1 5 4.5Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>';
   const monthField=(name,label,value,help='')=>`<label class="endeksmatikField" data-em-month-wrap="${name}"><span>${escapeHtml(label)}</span><div class="endeksmatikMonthControl"><input type="text" autocomplete="off" data-em-field="${name}" value="${endeksmatikInputValue(kolMonthDisplay(value)||value)}" placeholder="${escapeHtml(en?'e.g. JULY 2026 / 202607':'örn. TEMMUZ 2026 / 202607')}"><button type="button" class="endeksmatikMonthPickerBtn" data-em-picker-button="${name}" title="${escapeHtml(en?'Choose month and year':'Ay ve yıl seç')}">${calendarSvg}</button><input type="month" class="endeksmatikNativeMonthPicker" data-em-picker="${name}" value="${endeksmatikMonthPickerValue(value)}"${pickerMin?` min="${pickerMin}"`:''}${pickerMax?` max="${pickerMax}"`:''} tabindex="-1" aria-hidden="true"></div>${help?`<small>${escapeHtml(help)}</small>`:''}</label>`;
@@ -23562,7 +23576,7 @@ async function openEndeksmatikSetManager(){
   const status=await refreshEndeksmatikStatus({silent:false});if(!status)return;
   const canManage=typeof window.BLHasPermission==='function'?window.BLHasPermission('manageModelConnections'):true;
   document.getElementById('_endeksmatikSetsModal')?.remove();
-  const overlay=document.createElement('div');overlay.id='_endeksmatikSetsModal';overlay.className='warnOverlay endeksmatikOverlay';
+  const overlay=document.createElement('div');overlay.id='_endeksmatikSetsModal';overlay.className='warnOverlay endeksmatikOverlay';overlay.dataset.uiMigrated='dialog';
   const sets=endeksmatikSets();
   const rowHtml=set=>{
     const active=set.id===status.activeSetId,usd=endeksmatikIsUsdModel(set),knownTl=set.calculationContract==='endeksmatik-tl-workbook/v1',v=set.validation||{};
@@ -26297,7 +26311,7 @@ async function openKolManualPriceModal(row,{confirm=false}={}){
   const best=kolBestPricing(row);
   const manualManufacturers=kolManualManufacturerSuggestions();
   const modal=document.createElement('div');
-  modal.id='_kolManualPrice'; modal.className='warnOverlay';
+  modal.id='_kolManualPrice'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const title=confirm?(en?'Set confirmed manufacturer':'Onaylı üreticiyi belirle'):(en?'Enter price manually':'Elle fiyat gir');
   modal.innerHTML=`<div class="modalCard kolManualCard" role="dialog" aria-modal="true" aria-labelledby="_kolManualTitle">
     <div class="kolManualHead">
@@ -27117,7 +27131,7 @@ function loadKolQuickDims(){
 }
 function openKolQuickFiltersEditor(anchor){
   document.getElementById('_kolQuickFiltersModal')?.remove();
-  const modal=document.createElement('div');modal.id='_kolQuickFiltersModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_kolQuickFiltersModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const selected=new Set(loadKolQuickDims().map(dim=>dim.key));
   modal.innerHTML=`<div class="modalCard quickFilterEditorCard" role="dialog" aria-modal="true"><div class="modalTitle">${escapeHtml(appLang==='en'?'Quick filters':'Hızlı filtreler')}</div><div class="muted quickFilterEditorHelp">${escapeHtml(appLang==='en'?'Choose the filter groups shown above the table.':'Tablonun üstünde gösterilecek filtre gruplarını seçin.')}</div><div class="quickFilterEditorList">${currentKolQuickDims().map(dim=>`<label class="quickFilterEditorItem"><input type="checkbox" data-kol-quick-dim="${dim.key}" ${selected.has(dim.key)?'checked':''}> <span>${escapeHtml(L(dim.label))}</span></label>`).join('')}</div><div class="modalFoot"><span></span><button type="button" class="tbtn" data-close>${escapeHtml(appLang==='en'?'Cancel':'Vazgeç')}</button><button type="button" class="tbtn primary" data-apply>${escapeHtml(appLang==='en'?'Apply':'Uygula')}</button></div></div>`;
   document.body.appendChild(modal);
@@ -27223,7 +27237,7 @@ function kolPricingPreflightRowsHtml(report){
 function kolOpenPricingPreflightDialog(initial,recheck){
   return new Promise(resolve=>{
     document.getElementById('kolPricingPreflightModal')?.remove();
-    const modal=document.createElement('div');modal.id='kolPricingPreflightModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='kolPricingPreflightModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     let report=initial,busy=false,settled=false;
     const finish=result=>{if(settled)return;settled=true;modal.remove();resolve(result);};
     const render=()=>{
@@ -28904,7 +28918,7 @@ window.BLCollectionAnalyticsBridge={
       return;
     }
     const unique=[...new Map((rows||[]).map(row=>[row.id,row])).values()];document.getElementById('_collectionAnalyticsDrill')?.remove();
-    const overlay=document.createElement('div');overlay.id='_collectionAnalyticsDrill';overlay.className='warnOverlay';
+    const overlay=document.createElement('div');overlay.id='_collectionAnalyticsDrill';overlay.className='warnOverlay';overlay.dataset.uiMigrated='dialog';
     const label=title||'Collection Detayı';
     /* Görsel hücresi ORTAK katmandan üretilir (detailImageThumbHtml): aynı
        lazy-load/hover davranışı, aynı kanonik kimlik ve — görseli olmayan
@@ -29023,7 +29037,7 @@ window.BLPriceSupplierAnalysisBridge={
     const labels=appLang==='en'?{title:'Details',records:'records',order:'Order',model:'Model',supplier:'Supplier',country:'Country',buyer:'Buyer',season:'Season',price:'Price',currency:'Currency',quantity:'Quantity',close:'Close'}:{title:'Detay',records:'kayıt',order:'Sipariş',model:'Model',supplier:'Üretici',country:'Ülke',buyer:'Buyer',season:'Sezon',price:'Fiyat',currency:'Para Birimi',quantity:'Adet',close:'Kapat'};
     if(source==='collection')return window.BLCollectionAnalyticsBridge.openDrilldown(items,title);
     if(source==='lfl'&&window.BLPriceSupplierLFLBridge?.openDrilldown)return window.BLPriceSupplierLFLBridge.openDrilldown(observations,title);
-    document.getElementById('_priceAnalysisDrill')?.remove();const overlay=document.createElement('div');overlay.id='_priceAnalysisDrill';overlay.className='warnOverlay';
+    document.getElementById('_priceAnalysisDrill')?.remove();const overlay=document.createElement('div');overlay.id='_priceAnalysisDrill';overlay.className='warnOverlay';overlay.dataset.uiMigrated='dialog';
     const label=title||labels.title,list=observations||[];
     /* Model kimliği kanonik alanlardan gelir (plmId + renk kodu); model ADI
        PLM ID sanılmaz. Görsel hücresi ortak katmandandır, böylece bu rapor da
@@ -29127,7 +29141,7 @@ function openKolSelectedActionConfirmation(action,snapshot){
     ['Season',row=>row.season],
   ];
   const modal=document.createElement('div');
-  modal.id='_kolSelectedActionConfirm'; modal.className='warnOverlay'; modal.tabIndex=-1;
+  modal.id='_kolSelectedActionConfirm'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog'; modal.tabIndex=-1;
   modal.innerHTML=`<div class="modalCard verHistCard" role="dialog" aria-modal="true" aria-labelledby="_kolSelectedActionTitle">
     <div class="verHistHead"><div><div class="modalTitle" id="_kolSelectedActionTitle">${escapeHtml(kolSelectedActionLabel(action))}</div><p>${escapeHtml(en?`${rows.length} model(s) selected. Review the records before continuing.`:`${rows.length} model seçildi. Devam etmeden önce kayıtları kontrol edin.`)}</p></div><button type="button" class="pricingRuleIconBtn" data-cancel aria-label="${escapeHtml(en?'Cancel':'Vazgeç')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div class="plmImportTableWrap" style="max-height:48vh;overflow:auto"><table class="plmImportTable"><thead><tr>${fields.map(([label])=>`<th>${escapeHtml(label)}</th>`).join('')}</tr></thead><tbody>${rows.map(row=>`<tr>${fields.map(([,get])=>`<td>${escapeHtml(norm(get(row))||'—')}</td>`).join('')}</tr>`).join('')}</tbody></table></div>
@@ -29322,7 +29336,7 @@ function showKolImportPlanModal(plan){
     const t=kolImportPlanText();
     document.getElementById('_kolImportPlanModal')?.remove();
     const modal=document.createElement('div');
-    modal.id='_kolImportPlanModal'; modal.className='warnOverlay';
+    modal.id='_kolImportPlanModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const nothing=!plan.updates.length && !plan.creates.length;
     const rowTitle=r=>`${norm(r.plmId)||'—'} · ${norm(r.modelKod)||'—'}`;
     const updateBlocks=plan.updates.map(u=>`<div class="kolPlanItem">
@@ -29603,7 +29617,7 @@ function showKolPlmTranslationReview(questions){
   const en=appLang==='en',fieldsInReview=[...new Set(list.map(item=>item.field))];
   return new Promise(resolve=>{
     document.getElementById('_kolPlmTranslationReview')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmTranslationReview';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmTranslationReview';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const dataLists=Object.keys(KOL_PLM_TRANSLATION_FIELD_META).map(field=>{
       const values=kolPlmAsasCatalogForField(field);return `<datalist id="_plmAsas_${field}">${values.map(value=>`<option value="${escapeHtml(value)}"></option>`).join('')}</datalist>`;
     }).join('');
@@ -29947,7 +29961,7 @@ function showKolPlmImportPreview(plan,parsedInfo,translationInfo,imageCount,sour
   }).join(''):`<tr><td colspan="4" class="muted">${escapeHtml(en?'No translation suggestion could be produced from the currently loaded ASAS data.':'Yüklü ASAS verisinden çeviri önerisi üretilemedi.')}</td></tr>`;
   return new Promise(resolve=>{
     document.getElementById('_kolPlmImportModal')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmImportModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmImportModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     modal.innerHTML=`<div class="modalCard verHistCard plmImportCard">
        <div class="verHistHead"><div><strong>${escapeHtml(sourceLabel||(en?'Import from PLM Excel':'PLM Excelinden Aktar'))}</strong><div class="muted">${escapeHtml(en?'Detected mappings are shown below. Category / Line / License values are converted to the Buyer Log ASAS vocabulary. Exact ASAS matches take priority; approved PLM→ASAS rules are also used when the PLM model does not exist in ASAS. Conflicts are never guessed.':'Bulunan eşleşmeler aşağıda. Category / Line / License değerleri Buyer Log ASAS diline çevrilir. Kesin ASAS eşleşmeleri önceliklidir; PLM modeli ASAS içinde yoksa kullanıcıyla teyit edilmiş PLM→ASAS kuralları da uygulanır. Çelişkili değerler tahmin edilmez.')}</div></div></div>
       <div class="kolPlanStats">
@@ -29998,7 +30012,7 @@ function showKolPlmExistingDecision(item,index,total){
     : `Buyer Log kullanıcı verileri korunacak: Fiyatlama Geçmişi, notlar, Confirmed Supplier/FOB, Target Price ve PLM aktarımının getirmediği tüm alanlar.${protectedLabels.length?` Mevcut kullanıcı verisi: ${protectedLabels.join(', ')}.`:''}`;
   return new Promise(resolve=>{
     document.getElementById('_kolPlmExistingDecision')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmExistingDecision';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmExistingDecision';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     modal.innerHTML=`<div class="modalCard verHistCard plmDecisionCard" role="dialog" aria-modal="true">
       <div class="verHistHead"><div><strong>${escapeHtml(en?'Existing Collection model':'Koleksiyon modelinde mevcut')}</strong><div class="muted">${escapeHtml(`${index+1} / ${total}`)}</div></div></div>
       <div class="plmDecisionBody">
@@ -30452,7 +30466,7 @@ function showKolFabricBatchPreview(items,analysis){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_kolFabricBatchModal')?.remove();
-    const modal=document.createElement('div');modal.id='_kolFabricBatchModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolFabricBatchModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const rows=items.map((item,index)=>{
       const card=analysis.cards[item.code]||kolFabricApi().ruleCard(item.raw);
       return `<tr><td><input type="checkbox" data-fabric-pick="${index}" checked aria-label="${escapeHtml(en?`Create card ${item.code}`:`${item.code} kartını oluştur`)}"></td><td class="kolFabricBatchCode">${escapeHtml(item.code)}</td><td><input type="text" class="kolFabricBatchSummary" data-fabric-summary="${index}" lang="tr" aria-label="${escapeHtml(en?`Turkish summary ${item.code}`:`${item.code} Türkçe özet`)}" value="${escapeHtml(card.summary)}"></td><td><input type="text" class="kolFabricBatchSummary" data-fabric-summary-en="${index}" lang="en" aria-label="${escapeHtml(en?`English summary ${item.code}`:`${item.code} İngilizce özet`)}" value="${escapeHtml(card.summaryEn||'')}"></td><td><span class="kolFabricSource is-${escapeHtml(card.summarySource)}" data-fabric-source="${index}">${escapeHtml(kolFabricSourceLabel(card.summarySource))}</span></td><td class="kolFabricBatchRaw" title="${escapeHtml(item.raw)}">${escapeHtml(item.raw)}</td></tr>`;
@@ -30593,7 +30607,7 @@ function openFabricCardDialog(rawText,{trigger=null,code:wantedCode='',collectio
   const canEdit=Boolean(kolWorkspaceCanEdit);
   let source=draft.summarySource,deleteArmed=false;
   document.getElementById('_kolFabricCardModal')?.remove();
-  const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_kolFabricCardModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const dis=canEdit?'':' disabled';
   const detailSnapshots={};
   const displayDetail=(key,card)=>{
@@ -30722,7 +30736,7 @@ function showKolPlmListImportDialog({initialIds=[],trigger=null}={}){
   const api=kolPlmListApi(),en=appLang==='en',options=kolPlmListLoadOptions();
   return new Promise(resolve=>{
     document.getElementById('_kolPlmListModal')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmListModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmListModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const opt=(value,label,current)=>`<option value="${value}"${value===current?' selected':''}>${escapeHtml(label)}</option>`;
     modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmListCard" role="dialog" aria-modal="true" aria-labelledby="_kolPlmListTitle">
       <div class="verHistHead"><div><strong id="_kolPlmListTitle">${escapeHtml(en?'Add from PLM ID List':'PLM ID Listesinden Ekle')}</strong>
@@ -30890,7 +30904,7 @@ function showKolPlmListImportReport(report){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_kolPlmListReport')?.remove();
-    const modal=document.createElement('div');modal.id='_kolPlmListReport';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_kolPlmListReport';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const stat=(label,value)=>`<div class="kolPlanStat"><span>${escapeHtml(label)}</span><strong>${value}</strong></div>`;
     const notFound=report.notFound||[];
     modal.innerHTML=`<div class="modalCard verHistCard plmImportCard plmListReportCard" role="dialog" aria-modal="true" aria-labelledby="_kolPlmListReportTitle">
@@ -31113,7 +31127,7 @@ function showPlmSyncColumnChooser(mode,stats){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_plmSyncColumnModal')?.remove();
-    const modal=document.createElement('div');modal.id='_plmSyncColumnModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_plmSyncColumnModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     // Hatırlanan şey, kullanıcının BİLİNÇLİ OLARAK KAPATTIĞI sütunlardır —
     // açtıkları değil. Böylece PLM ileride yeni bir alan döndürmeye başlarsa
     // o alan varsayılan olarak AÇIK gelir ve sessizce atlanmaz.
@@ -31173,7 +31187,7 @@ function showPlmSyncPreview(mode,summary){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_plmSyncPreviewModal')?.remove();
-    const modal=document.createElement('div');modal.id='_plmSyncPreviewModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_plmSyncPreviewModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const modelRows=summary.changed.map(item=>`
       <div class="plmSyncModelBlock">
         <div class="plmSyncModelHead"><strong>PLM ${escapeHtml(item.target.plmId||'—')}</strong><span class="muted">${escapeHtml(item.target.modelKod||'')}</span></div>
@@ -31602,7 +31616,7 @@ async function openCoreNectumApiSettings({required=false}={}){
     return await new Promise(resolve=>{
       document.getElementById('_coreNectumApiSettings')?.remove();
       const en=appLang==='en',modal=document.createElement('div');
-      modal.id='_coreNectumApiSettings';modal.className='warnOverlay';
+      modal.id='_coreNectumApiSettings';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
       const statusText=()=>status.configured
         ?(status.source==='desktop-sso'
           ?(en?'Ready · automatic Buyer Log corporate session':'Hazır · Buyer Log otomatik kurumsal oturumu')
@@ -32362,7 +32376,7 @@ function openModelImageSourceChooser(button){
     return;
   }
   document.getElementById('_modelImageUpdateModal')?.remove();
-  const modal=document.createElement('div');modal.id='_modelImageUpdateModal';modal.className='warnOverlay';
+  const modal=document.createElement('div');modal.id='_modelImageUpdateModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const missing=scope.identities.filter(modelAssetIdentityMissing).length;
   const selected=scope.selectedIdentities.length;
   modal.innerHTML=`<div class="modalCard modelImageUpdateCard" role="dialog" aria-modal="true">
@@ -32420,7 +32434,7 @@ function showPlmSyncLanguageChooser({trigger=null,title=''}={}){
   const en=appLang==='en';
   return new Promise(resolve=>{
     document.getElementById('_plmSyncLangModal')?.remove();
-    const modal=document.createElement('div');modal.id='_plmSyncLangModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_plmSyncLangModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     modal.innerHTML=`<div class="modalCard modelImageUpdateCard" role="dialog" aria-modal="true" aria-labelledby="_plmSyncLangTitle">
       <div class="modelImageUpdateHead"><div class="modalTitle" id="_plmSyncLangTitle">${escapeHtml(title||(en?'Language Selection':'Dil Seçimi'))}</div><button type="button" class="pricingRuleIconBtn" data-plmlang="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="modelImageUpdateIntro">${escapeHtml(en?'Choose the language for model details and model files in this run. Images are language-independent.':'Bu çalıştırmada model detayları ve model dosyaları için kullanılacak dili seçin. Görseller dilden bağımsızdır.')}</div>
@@ -32534,7 +32548,7 @@ function plmSyncScopeActions(scope,{collection=false}={}){
 function plmSyncActionModal({id='_plmSyncActionModal',title,intro='',actions=[],trigger=null,onBack=null,confirmSelection=false,confirmLabel=''}={}){
   return new Promise(resolve=>{
     document.getElementById(id)?.remove();
-    const en=appLang==='en',modal=document.createElement('div');modal.id=id;modal.className='warnOverlay';
+    const en=appLang==='en',modal=document.createElement('div');modal.id=id;modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     const buttons=actions.map(item=>`<button type="button" class="tbtn modelImageUpdateChoice plmSyncOptionCard${item.primary?' primary':''}" data-plmflow="${escapeHtml(item.id)}" aria-pressed="false"${item.disabled?' disabled aria-disabled="true"':''}>${item.icon?`<span class="plmSyncOptionIcon"><svg class="ic" aria-hidden="true" focusable="false"><use href="#${escapeHtml(item.icon)}"/></svg></span>`:''}<span class="plmSyncActionCopy"><strong>${escapeHtml(item.label)}</strong>${item.description?`<small>${escapeHtml(item.description)}</small>`:''}</span><span class="plmSyncSelectedMark" aria-hidden="true">✓</span></button>`).join('');
     const backButton=onBack?`<button type="button" class="tbtn plmSyncBackBtn" data-plmflow="back">${escapeHtml(en?'Back':'Geri')}</button>`:'';
     const continueButton=confirmSelection?`<button type="button" class="tbtn primary plmSyncContinueBtn" data-plmflow="continue" disabled>${escapeHtml(confirmLabel||(en?'Continue':'Devam'))}<span aria-hidden="true">→</span></button>`:'';
@@ -32591,7 +32605,7 @@ function showPlmSyncPropertyChooser({page='kol',trigger=null}={}){
   ];
   return new Promise(resolve=>{
     document.getElementById('_plmSyncPropertyModal')?.remove();
-    const modal=document.createElement('div');modal.id='_plmSyncPropertyModal';modal.className='warnOverlay';
+    const modal=document.createElement('div');modal.id='_plmSyncPropertyModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
     modal.innerHTML=`<div class="modalCard modelImageUpdateCard plmSyncModalCard" role="dialog" aria-modal="true" aria-labelledby="_plmSyncPropertyTitle">
       <div class="modelImageUpdateHead plmSyncModalHead"><div class="plmSyncHeading"><div class="modalTitle" id="_plmSyncPropertyTitle">${escapeHtml(en?'What do you want to update?':'Neleri güncellemek istiyorsunuz?')}</div><div class="modelImageUpdateIntro plmSyncModalIntro">${escapeHtml(en?'Select one or more PLM assets':'Bir veya daha fazla PLM varlığı seçin')}</div></div><button type="button" class="pricingRuleIconBtn plmSyncCloseBtn" data-plmprop-action="cancel" aria-label="${escapeHtml(en?'Close':'Kapat')}"><svg class="ic"><use href="#i-x"/></svg></button></div>
       <div class="modelImageUpdateChoices modelImageUpdateModes plmSyncPropertyList">${definitions.map(item=>`<label class="tbtn modelImageUpdateChoice plmSyncOptionCard plmSyncPropertyCard"><input type="checkbox" data-plmprop="${escapeHtml(item.key)}"><span class="plmSyncCheck" aria-hidden="true"></span><span class="plmSyncActionCopy"><strong>${escapeHtml(item.label)}</strong><small>${escapeHtml(item.description)}</small></span></label>`).join('')}</div>
@@ -33221,7 +33235,7 @@ async function openKolRecycleBin(){
   const en=appLang==='en';
   document.getElementById('_kolBinModal')?.remove();
   const modal=document.createElement('div');
-  modal.id='_kolBinModal'; modal.className='warnOverlay';
+  modal.id='_kolBinModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard kolBinCard" role="dialog" aria-modal="true" aria-labelledby="_kolBinTitle">
     <div class="kolBinHead">
       <div>
@@ -33996,7 +34010,7 @@ function openMailTopicEditor(kind,id,sourceKind,onClose,options={}){
   const pricingHint=kind==='pricing'
     ?(en?'The Quotation Excel attachment and the table below the message use the columns selected here. You can switch each option off independently. Add TPs includes the stored model files.':'Quotation Excel eki ve mesajın altındaki tablo burada seçilen sütunları kullanır. Her seçeneği ayrı ayrı kapatabilirsiniz. TP’leri ekle, kayıtlı model dosyalarını dahil eder.')
     :'';
-  modal.id='mailTopicEditorModal';modal.className='warnOverlay';
+  modal.id='mailTopicEditorModal';modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard mailTopicColumnsCard mailTopicEditorCard">
     <div class="modalTitle mailTopicColumnsTitle">
       <span>${escapeHtml(en?'Edit e-mail subject':'E-posta başlığını düzenle')} · ${escapeHtml(topic.name||t.untitled)}</span>
@@ -35315,7 +35329,7 @@ function kolShowPricingDraftResults(results,previewWarning='',resultTitle){
     <div><div style="font-weight:700;color:var(--ink);">${escapeHtml(r.manufacturer)}</div><div style="font-size:11.5px;color:${r.ok?'var(--success, #177a4c)':'var(--danger, #c0392b)'};margin-top:2px;">${escapeHtml(r.ok?(r.opened?'Taslak e-posta açıldı; geçici dosya otomatik silinecek.':'Taslak sunucuda saklanmadı; geçici bağlantı aşağıdadır.'):(r.error||'Oluşturulamadı.'))}</div>${attachNote?`<div style="font-size:10.5px;color:var(--muted);margin-top:3px;">${escapeHtml(attachNote)}</div>`:''}</div>
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">${reopenLink}${emlLink}${excelLink}</div>
   </div>`; }).join('');
-  const modal=document.createElement('div'); modal.id='kolPricingResultModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='kolPricingResultModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML=`<div class="modalCard" style="max-width:650px;width:94%;max-height:82vh;display:flex;flex-direction:column;padding:0;">
     <div class="modalTitle" style="margin:0;padding:16px 20px;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;"><span>${escapeHtml(resultTitle||(appLang==='en'?'Prepaire E-Mail Result':'E-Posta Hazırlama Sonucu'))}</span><button type="button" class="tbtn" data-close-pricing-result aria-label="Kapat"><svg class="ic"><use href="#i-x"/></svg></button></div>
     <div style="padding:14px 20px;overflow:auto;">${multiDownloadNote}${previewWarning?`<div style="padding:9px 11px;margin-bottom:10px;border:1px solid var(--warning,#d9a321);border-radius:8px;color:var(--ink);font-size:12px;">Tablo görseli hazırlanamadı; Excel eki ve e-posta taslağı yine oluşturuldu. ${escapeHtml(previewWarning)}</div>`:''}${rows}</div>
@@ -35926,7 +35940,7 @@ function openKolModelFilesModal(){
   if(!rows.length){ showToast(appLang==='en'?'There are no Collection models to show.':'Gösterilecek Koleksiyon modeli bulunmuyor.'); return; }
   document.getElementById('kolModelFilesModal')?.remove();
   let activeId=rows[0].id, files=[], busy=false, searchText='', statusFilter='all', sortMode='name-asc';
-  const modal=document.createElement('div'); modal.id='kolModelFilesModal'; modal.className='warnOverlay';
+  const modal=document.createElement('div'); modal.id='kolModelFilesModal'; modal.className='warnOverlay';modal.dataset.uiMigrated='dialog';
   const filesFor=row=>files.filter(file=>kolStoredModelFileMatchesRow(file,row));
   const hasFiles=row=>filesFor(row).length>0;
   const rowLabel=row=>kolModelFileLabel(row);
@@ -36327,7 +36341,7 @@ function renderKolMfrModal(ctx){
   let modal = document.getElementById('kolMfrModal');
   if(modal) modal.remove();
   modal = document.createElement('div');
-  modal.id = 'kolMfrModal'; modal.className = 'warnOverlay';
+  modal.id = 'kolMfrModal'; modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
   // Sol sütun: üretici listesi. Seçim kutusunun hemen altındaki kalem,
   // üretici adı ve e-posta bilgisini ayrı pencere açmadan aynı kartta düzenler.
   let editingMfrIndex = -1;
@@ -37792,7 +37806,7 @@ function renderTodoModal(){
   if(modal){modal.__todoDispose?.();modal.remove();}
   todoLoad();
   modal = document.createElement('div');
-  modal.id = 'todoModal'; modal.className = 'warnOverlay';
+  modal.id = 'todoModal'; modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML = `<div class="modalCard verHistCard todoCard" role="dialog" aria-modal="true" aria-labelledby="todoTitle">
     <div class="verHistTop">
       <div>
@@ -38640,7 +38654,7 @@ function renderVersionHistoryModal(){
   let modal = document.getElementById('verHistModal');
   if(modal) modal.remove();
   modal = document.createElement('div');
-  modal.id = 'verHistModal'; modal.className = 'warnOverlay';
+  modal.id = 'verHistModal'; modal.className = 'warnOverlay';modal.dataset.uiMigrated='dialog';
   modal.innerHTML = `<div class="modalCard verHistCard" role="dialog" aria-modal="true" aria-labelledby="verHistTitle">
     <div class="verHistTop">
       <div>

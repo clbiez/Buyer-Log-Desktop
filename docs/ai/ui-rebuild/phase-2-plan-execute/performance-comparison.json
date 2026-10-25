@@ -1,0 +1,43 @@
+{
+  "baseline": {
+    "startupMs": 1020.1000000000349,
+    "cpNavigationMs": 975.4000000000233,
+    "cp5000RenderMs": 2995.9000000000233,
+    "domRows": [
+      50,
+      50,
+      50,
+      50,
+      50
+    ]
+  },
+  "phase1": {
+    "startupMs": 1014.2999999998137,
+    "cpNavigationMs": 1017.7999999998137,
+    "cp5000RenderMs": 2989.4000000003725,
+    "domRows": [
+      50,
+      50,
+      50,
+      50,
+      50
+    ]
+  },
+  "current": {
+    "startupMs": 901.9000000003725,
+    "cpNavigationMs": 1067.199999999255,
+    "cp5000RenderMs": 3044,
+    "domRows": [
+      50,
+      50,
+      50,
+      50,
+      50
+    ]
+  },
+  "deltaPercent": {
+    "startupMs": -11.59,
+    "cpNavigationMs": 9.41,
+    "cp5000RenderMs": 1.61
+  }
+}

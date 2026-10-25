@@ -212,11 +212,10 @@ input::placeholder,textarea::placeholder{color:var(--muted);opacity:1;}
 .tableToolbarActions>.vfMenuWrap>.vfMenuTrigger:hover{border-color:transparent;background:var(--card2-strong);color:var(--ink);}
 .tableToolbarActions>.tbtn.primary,.tableToolbarActions>.navActionBtn.primary{border-color:var(--acc);background:var(--acc);color:var(--on-acc);}
 .tableToolbarActions>.tbtn.primary:hover:not(:disabled){border-color:var(--acc-hover);background:var(--acc-hover);color:var(--on-acc);}
-.toolbarMoreMenu,.colPanel,.colFilterPanel,.vfMenu,.profileSelectMenu,.userMenu,
-.dateCalendarPopup,.delTypeMenu,.cfpDrawer,.themeDock,.numericValueList,
-.kolSpreadsheetContextMenu{background:var(--bl-surface-raised);border:1px solid var(--bl-stroke-strong);border-radius:var(--bl-radius-float);box-shadow:var(--shadow-3);backdrop-filter:none;-webkit-backdrop-filter:none;}
-.toolbarMoreMenu:not([hidden]),.colPanel.show,.vfMenu.show,.profileSelectMenu:not([hidden]),.userMenu:not([hidden]),.dateCalendarPopup:not([hidden]){animation:blPopoverIn var(--bl-motion-enter) var(--bl-ease) both;}
-.toolbarMoreMenu .tbtn,.userMenu button,.profileSelectOption,.kolSpreadsheetContextMenu button{border-radius:var(--r-sm);}
+.toolbarMoreMenu,.vfMenu,.profileSelectMenu,.userMenu,.dateCalendarPopup,.delTypeMenu,.cfpDrawer,.themeDock,.numericValueList{background:var(--bl-surface-raised);border:1px solid var(--bl-stroke-strong);border-radius:var(--bl-radius-float);box-shadow:var(--shadow-3);backdrop-filter:none;-webkit-backdrop-filter:none;}
+.colPanel,.colFilterPanel,.kolSpreadsheetContextMenu{-webkit-backdrop-filter:none;}
+.toolbarMoreMenu:not([hidden]),.vfMenu.show,.profileSelectMenu:not([hidden]),.userMenu:not([hidden]),.dateCalendarPopup:not([hidden]){animation:blPopoverIn var(--bl-motion-enter) var(--bl-ease) both;}
+.toolbarMoreMenu .tbtn,.userMenu button,.profileSelectOption{border-radius:var(--r-sm);}
 .userMenuHead{border-bottom-color:var(--bl-stroke-subtle);}
 .userMenuScope{color:var(--ink2);}
 
@@ -404,7 +403,7 @@ main{padding-top:16px;}
 
 /* Nakliye Kıyaslama boşken satır işlemleri şeridi gizlenir; tek yönlendirme kalır. */
 #view-shipping.isShipEmpty #shipSecondaryToolbar{display:none;}
-#view-shipping #shipEmpty{min-height:0;padding:48px 16px;background:transparent;}
+#view-shipping #shipEmpty{min-height:0;padding:48px 16px;}
 #view-shipping #shipEmpty .uiState{margin:0 auto;}
 
 /* Ön Maliyet: seçim yokken çalışma alanı yönlendirmesi. */
@@ -435,13 +434,13 @@ main{padding-top:16px;}
 .kolSpreadsheetHelper[data-selected="0"]{display:none;}
 .workspaceContextBar{min-height:0;padding-top:4px;padding-bottom:4px;}
 @media(min-width:1180px){
-  #view-cp,#view-orders{position:relative;}
+  #view-cp{position:relative;}
+  #view-orders{position:relative;}
   #view-cp>#cpHorizonBadge,#view-orders>#ordersHorizonBadge{
-    position:absolute;top:0;right:44px;z-index:2;height:28px;margin:0;padding:0 10px;
+    position:absolute;top:0;right:44px;height:28px;margin:0;padding:0 10px;
     max-width:min(420px,34vw);overflow:hidden;white-space:nowrap;
   }
-  #view-cp>#cpHorizonBadge:not([hidden])~#cpContent>.kpirow,
-  #view-orders>#ordersHorizonBadge:not([hidden])~#ordersContent>.kpirow{padding-right:min(440px,36vw);}
+  #view-cp>#cpHorizonBadge:not([hidden])~#cpContent>.kpirow,#view-orders>#ordersHorizonBadge:not([hidden])~#ordersContent>.kpirow{padding-right:min(440px,36vw);}
 }
 /* Grup başlığı (ör. 35 sütunluk "Order Info") hücrenin ortasında ekran dışına
    düşüyordu; etiket sola yaslanır. */
@@ -595,23 +594,19 @@ button:disabled .ic{--ic-tint-o:.08;}
    Teslimat Riski Analizi · açılır/kapanır bölümler
    Kapalı bölüm başlık + tek satırlık özet olarak durur; tercih saklanır.
    ===================================================================== */
-.bdaFold{margin-top:0;border-top:1px solid var(--bl-stroke-subtle);}
+.bdaFold{margin-top:0;}
 .bdaFoldHead{
-  display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:8px 2px;
-  border:0;background:transparent;color:var(--ink);text-align:left;cursor:pointer;
+  display:flex;align-items:center;gap:12px;width:100%;min-height:42px;padding:8px 2px;text-align:left;cursor:pointer;
 }
-.bdaFoldHead:hover .bdaH{color:var(--acc-ink);}
 .bdaFoldHead .bdaH{margin:0;}
-.bdaFoldSummary{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:var(--fs-xs);color:var(--muted);}
-.bdaFoldChevron{flex:0 0 auto;margin-left:auto;width:8px;height:8px;margin-right:6px;border-right:1.6px solid var(--muted);border-bottom:1.6px solid var(--muted);transform:translateY(-2px) rotate(45deg);transition:transform var(--bl-motion-fast) var(--bl-ease);}
+.bdaFoldSummary{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.bdaFoldChevron{flex:0 0 auto;margin-left:auto;width:8px;height:8px;margin-right:6px;transform:translateY(-2px) rotate(45deg);}
 .bdaFold.is-open>.bdaFoldHead .bdaFoldChevron{transform:translateY(2px) rotate(-135deg);}
 .bdaFold:not(.is-open)>.bdaFoldBody{display:none;}
-.bdaFold.is-open>.bdaFoldBody{padding-bottom:14px;animation:blPopoverIn var(--bl-motion-enter) var(--bl-ease) both;}
+.bdaFold.is-open>.bdaFoldBody{padding-bottom:14px;}
 .bdaFold.is-open>.bdaFoldHead .bdaFoldSummary{display:none;}
-.bdaSubH{margin:0 0 8px;font-size:var(--fs-xs);font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);}
+.bdaSubH{margin:0 0 8px;}
 .bdaAutomateToggle{opacity:.85;}
-.bdaTitle,.bdaH{font-family:var(--sans);letter-spacing:.04em;}
-.bdaTitle{letter-spacing:-.01em;font-weight:700;}
 /* Backlog detay tablosu: tek satır başlık, kısa hücreler; uzun başlık ipucuyla okunur. */
 .backlogDetailTable th{white-space:nowrap;max-width:220px;overflow:hidden;text-overflow:ellipsis;}
 .backlogDetailTable td{white-space:nowrap;}
@@ -659,8 +654,7 @@ html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um
 /* Nakliye Kıyaslama ikincil şeridi: tablo araç çubuğuyla aynı simge dili;
    etiketler ipucuna geçer, şerit tek sakin satır olur. */
 #shipSecondaryToolbar{margin-bottom:8px!important;gap:6px;}
-#shipSecondaryToolbar>:is(.tbtn,.colPanelWrap>.tbtn):has(>svg.ic),#shipSecondaryToolbar>.colPanelWrap>.tbtn:has(>svg.ic){
-  font-size:0;gap:0;width:var(--ctl-h);min-width:var(--ctl-h);padding:0;justify-content:center;
+#shipSecondaryToolbar>:is(.tbtn,.colPanelWrap>.tbtn):has(>svg.ic),#shipSecondaryToolbar>.colPanelWrap>.tbtn:has(>svg.ic){gap:0;width:var(--ui-control-height);min-width:var(--ui-control-height);padding:0;justify-content:center;
 }
 #shipSecondaryToolbar :is(.tbtn):has(>svg.ic)>svg.ic{width:16px;height:16px;}
 .vfBar :is(.tbtn,.navActionBtn):not(.primary):not(.toolbarMoreMenu *):has(>svg.ic){
@@ -704,29 +698,21 @@ html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um
 
 /* Düğme L — ana eylem: --ctl-h, --fs-xs, 600. */
 :root :is(.psaGhostBtn,.mfpBtn,.cpaBtn:not(.sm),.aoButton,.dmViewBtn,.lcBtn:not(.sm)){
-  height:var(--ctl-h);min-height:var(--ctl-h);padding-inline:12px;
-  font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;
+  height:var(--ui-control-height);min-height:var(--ui-control-height);padding-inline:12px;
 }
 /* Düğme S — kart içi eylem: --ctl-h-sm. */
 :root :is(.cpaBtn.sm,.ovClockManageBtn,.bpaTodayBtn,.lflCpTableTool,.ovBreakdownViewBtn,.ovNotesSortBtn,.lflTrialBannerOff,.quotationWorkspaceTopBar .quotationStatusTabs button,.lcBtn.sm){
-  height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);padding-block:0;padding-inline:10px;
-  font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;border-radius:var(--r-sm);
+  height:var(--ui-control-height);min-height:var(--ui-control-height);padding-block:0;padding-inline:10px;
 }
 /* İkon düğmesi S — kare. */
-:root :is(.cpaIconBtn,.lflScenarioIconBtn,.blWorkspaceIconBtn,.lcIconBtn){width:var(--ctl-h-sm);height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);border-radius:var(--r-sm);}
+:root :is(.cpaIconBtn,.lflScenarioIconBtn,.blWorkspaceIconBtn,.lcIconBtn){width:var(--ui-control-height);height:var(--ui-control-height);min-height:var(--ui-control-height);}
 
 /* Segment — tek seçim: saç teli kap, S yükseklik, aktif = dolu vurgu. */
 :root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg){
-  display:inline-flex;height:auto;gap:0;padding:0;border:1px solid var(--line2);border-radius:var(--r-sm);background:var(--card);overflow:hidden;
+  display:inline-flex;height:auto;gap:0;padding:0;overflow:hidden;
 }
 :root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button{
-  height:var(--ctl-h-sm);min-height:var(--ctl-h-sm);min-width:0;padding:0 11px;margin:0;border:0;border-radius:0;border-left:1px solid var(--line2);
-  background:transparent;box-shadow:none;color:var(--ink2);font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;line-height:1;white-space:nowrap;
-}
-:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button:first-child{border-left:0;}
-:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button:hover{background:var(--card2);color:var(--ink);}
-:root :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button:is(.is-active,.is-on,.active,.isActive,[aria-pressed="true"],[aria-selected="true"]){
-  background:var(--acc);color:var(--on-acc);box-shadow:none;
+  height:var(--ui-control-height);min-height:var(--ui-control-height);min-width:0;padding:0 11px;margin:0;white-space:nowrap;
 }
 
 /* Filtre çipi — çoklu seçim / süzgeç: aktif = açık vurgu zemini. */
@@ -750,14 +736,5 @@ html[data-theme="dark"] .umAvatar{background:linear-gradient(135deg,hsl(var(--um
 }
 
 /* KPI kartı — etiket / değer / alt satır. Değer rengi durum taşıyorsa modülde kalır. */
-:root :is(.cpaChip .l,.gfKpi>span,.bdaKpiLabel,.bpaTileLabel,.psaKpi small,.pricingMetric span,.autoStats span){
-  font-family:var(--sans);font-size:var(--fs-xs);font-weight:600;letter-spacing:0;text-transform:none;color:var(--ink2);
-}
-:root :is(.cpaChip .n,.bdaKpiValue,.bpaTileValue,.psaKpi strong,.pricingMetric b){
-  font-family:var(--sans);font-size:var(--fs-2xl);font-weight:700;letter-spacing:-.01em;line-height:1.1;font-variant-numeric:tabular-nums;
-}
 :root .gfKpi>b{font-family:var(--sans);font-size:var(--fs-md);font-weight:700;font-variant-numeric:tabular-nums;}
-:root :is(.cpaChip .q,.bdaKpiMeta,.bpaTileSub,.psaKpi em){
-  font-family:var(--sans);font-size:var(--fs-xs);font-weight:400;color:var(--muted);font-variant-numeric:tabular-nums;
-}
 

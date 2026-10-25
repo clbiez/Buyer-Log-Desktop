@@ -158,6 +158,7 @@ function ensureHost(){
   host=document.createElement('aside');
   host.id='blSharedDetailDrawer';
   host.className='blDetailDrawer';
+  host.dataset.uiMigrated='detail-drawer';
   host.setAttribute('aria-hidden','true');
   document.body.appendChild(host);
   return host;
@@ -779,7 +780,9 @@ function render(){
   }else if(plm)plm.hidden=true;
   renderTable();
 }
+let releaseDialogKeyboard=()=>{};
 function open(options){
+  releaseDialogKeyboard();
   const input=options&&typeof options==='object'?options:{};
   const rows=Array.isArray(input.rows)?input.rows.filter(Boolean):[];
   const setup=tableSetupSnapshot(input);
@@ -821,9 +824,10 @@ function open(options){
   // Yeni rapor eski raporun hücre seçimini devralmaz (satır kimlikleri raporla sıfırlanır).
   root.BLGridClipboard?.clear?.(CLIPBOARD_TABLE_ID);
   render();
+  releaseDialogKeyboard=root.BLUI?.bindDialogKeyboard(ensureHost())||(()=>{});
   requestAnimationFrame(()=>ensureHost().querySelector('[data-bl-detail-search]')?.focus());
 }
-function close(){if(active&&active.searchTimer)clearTimeout(active.searchTimer);if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}}
+function close(){if(active&&active.searchTimer)clearTimeout(active.searchTimer);if(typeof root.closeHeaderFilter==='function')root.closeHeaderFilter();active=null;const host=document.getElementById('blSharedDetailDrawer');if(host){host.classList.remove('is-open');host.setAttribute('aria-hidden','true');}releaseDialogKeyboard();releaseDialogKeyboard=()=>{};}
 document.addEventListener('keydown',event=>{
   if(event.key!=='Escape'||!active)return;
   // Açık sütun filtresi paneli önce kapanır; çekmece ikinci Escape ile kapanır.

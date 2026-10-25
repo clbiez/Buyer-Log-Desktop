@@ -208,5 +208,24 @@
     return `<span class="blOrb${size?` blOrb--${escapeHtml(size)}`:''}" data-state="${kind}" aria-hidden="true"></span>`;
   }
 
-  return Object.freeze({STATE_KINDS,orbHtml,stateView,renderState,feedbackDuration,feedbackView,notify});
+  // Shared modal keyboard behavior; close callbacks retain their validation/save rules.
+  function bindDialogKeyboard(dialog,options={}){
+    if(!dialog||typeof document==='undefined')return()=>{};
+    const previous=document.activeElement;
+    const controls=()=>[...dialog.querySelectorAll('button,input,select,textarea,a[href],[tabindex]')]
+      .filter(el=>!el.disabled&&el.tabIndex>=0&&el.checkVisibility());
+    const keydown=event=>{
+      if(event.defaultPrevented)return;
+      if(event.key==='Escape'&&options.onEscape){event.preventDefault();options.onEscape();return;}
+      if(event.key!=='Tab')return;
+      const list=controls(),first=list[0],last=list.at(-1);if(!first)return;
+      if(event.shiftKey&&(document.activeElement===first||!dialog.contains(document.activeElement))){event.preventDefault();last.focus();}
+      else if(!event.shiftKey&&(document.activeElement===last||!dialog.contains(document.activeElement))){event.preventDefault();first.focus();}
+    };
+    dialog.addEventListener('keydown',keydown);
+    controls()[0]?.focus();
+    return()=>{dialog.removeEventListener('keydown',keydown);if(previous?.isConnected)previous.focus();};
+  }
+
+  return Object.freeze({STATE_KINDS,bindDialogKeyboard,orbHtml,stateView,renderState,feedbackDuration,feedbackView,notify});
 });

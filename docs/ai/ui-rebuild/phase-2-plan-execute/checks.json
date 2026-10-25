@@ -1,0 +1,83 @@
+{
+  "runs": [
+    {
+      "name": "broad-targeted",
+      "tests": 558,
+      "pass": 542,
+      "fail": 16,
+      "scope": "Initial group regression: 542 passed; 16 old visual-source assertions were migrated or a stacking defect fixed."
+    },
+    {
+      "name": "backlog",
+      "tests": 375,
+      "pass": 374,
+      "fail": 1,
+      "scope": "374 passed; old edge-fade assertion replaced with preserved plot-clipping/no-gradient contract; dynamic chart follow-up passed."
+    },
+    {
+      "name": "changed-tests",
+      "tests": 155,
+      "pass": 155,
+      "fail": 0,
+      "scope": "All changed existing test files plus new shipping export and keyboard tests."
+    },
+    {
+      "name": "charts",
+      "tests": 33,
+      "pass": 33,
+      "fail": 0,
+      "scope": "Radar and dynamic chart rendering after square-marker/edge-fade changes."
+    },
+    {
+      "name": "detail",
+      "tests": 29,
+      "pass": 29,
+      "fail": 0,
+      "scope": "Shared detail drawer and dialog keyboard."
+    },
+    {
+      "name": "manifest",
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "scope": "Final canonical token, geometry, scaling, motion, variant and layout-only guards."
+    },
+    {
+      "name": "common-components",
+      "tests": 8,
+      "pass": 8,
+      "fail": 0,
+      "scope": "Shared controls after appearance moved out of experience.css."
+    }
+  ],
+  "resolvedInitialFailures": true,
+  "fullNpmTest": {
+    "run": false,
+    "reason": "User requires full suite only after Phase 3."
+  },
+  "i18n": {
+    "newMissing": 0,
+    "baselineMissing": 0
+  },
+  "releaseNotes": {
+    "valid": true,
+    "changes": 48,
+    "newForGroup": 5,
+    "imagesAgentInspected": true
+  },
+  "versionAssert": {
+    "run": false,
+    "reason": "No version or version contract changed."
+  },
+  "visualReports": [
+    "screens/capture.json",
+    "states/capture.json",
+    "final/capture.json"
+  ],
+  "exportReport": "export-comparison.json",
+  "performanceReport": "performance-comparison.json",
+  "ci": "not-run",
+  "merge": "not-merged",
+  "TEST": "not-published",
+  "STABLE": "not-published"
+}

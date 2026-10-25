@@ -1,0 +1,70 @@
+{
+  "base": "2324ba7c",
+  "group": "plan-execute",
+  "modules": [
+    "backlog-date-range.css",
+    "backlog-overview.css",
+    "backlog-plan-actual.css",
+    "backlog-delivery-analysis.css",
+    "backlog-presentation.css",
+    "detail-drawer.css",
+    "cp-overview-assistant.css"
+  ],
+  "stats": [
+    {
+      "file": "backlog-date-range.css",
+      "rules": 17,
+      "declarations": 34
+    },
+    {
+      "file": "backlog-overview.css",
+      "rules": 115,
+      "declarations": 268
+    },
+    {
+      "file": "backlog-plan-actual.css",
+      "rules": 146,
+      "declarations": 307
+    },
+    {
+      "file": "backlog-delivery-analysis.css",
+      "rules": 82,
+      "declarations": 209
+    },
+    {
+      "file": "backlog-presentation.css",
+      "rules": 20,
+      "declarations": 45
+    },
+    {
+      "file": "detail-drawer.css",
+      "rules": 68,
+      "declarations": 161
+    },
+    {
+      "file": "cp-overview-assistant.css",
+      "rules": 305,
+      "declarations": 759
+    },
+    {
+      "file": "app.css",
+      "rules": 363,
+      "declarations": 948
+    },
+    {
+      "file": "design.css",
+      "rules": 14,
+      "declarations": 50
+    },
+    {
+      "file": "experience.css",
+      "rules": 26,
+      "declarations": 74
+    },
+    {
+      "file": "design-butunluk.css",
+      "rules": 0,
+      "declarations": 0
+    }
+  ]
+}

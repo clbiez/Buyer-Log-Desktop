@@ -8,6 +8,8 @@ const ROOT=path.join(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(ROOT,'public',file),'utf8');
 const DRAWER=read('detail-drawer.js');
 const CSS=read('detail-drawer.css');
+// Manifest appearance lives in the shared contract; module CSS retains layout.
+const VISUAL=fs.readFileSync(path.join(__dirname,'..','public','ui-components.css'),'utf8').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{\s*/g,'{');
 const APP=read('app-main.js');
 const ANALYSIS=read('backlog-delivery-analysis.js');
 
@@ -17,10 +19,10 @@ test('alt detay tablosu Backlog rapor başlıkları ve alan filtrelerini kullan�
   assert.ok(DRAWER.includes('reportCell(col,row)'));
   assert.ok(DRAWER.includes('blDetailReportFilter'));
   assert.ok(DRAWER.includes('data-bl-detail-filter='));
-  assert.ok(CSS.includes('background:var(--thead-bg)'));
-  assert.ok(CSS.includes('color:var(--thead-ink)'));
-  assert.ok(CSS.includes('padding:var(--table-cell-pad-y) 10px'));
-  assert.ok(CSS.includes('background:var(--table-hover)'));
+  assert.ok(VISUAL.includes('background:var(--ui-header-bg)'));
+  assert.ok(VISUAL.includes('color:var(--ui-header-ink)'));
+  assert.ok(CSS.includes('padding:var(--ui-table-cell-padding) 10px'));
+  assert.ok(VISUAL.includes('background:var(--ui-row-hover)'));
 });
 
 test('uzun sütun başlığı kelime sınırında alt satıra sarılır, sütunu genişletmez',()=>{

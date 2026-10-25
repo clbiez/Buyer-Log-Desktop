@@ -1,3 +1,2404 @@
+/* Manifest shared appearance adapters: plan-execute. Module files contain layout only. */
+html[data-ui-system="manifest"] .backlogDateRange {background:var(--ui-surface) !important;border:0 !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogDateTitle {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .backlogDateControls label {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .backlogDateRail::before,html[data-ui-system="manifest"] .backlogDateSelection {border-radius:var(--ui-radius) !important;background:var(--ui-row-divider) !important
+}
+html[data-ui-system="manifest"] .backlogDateSelection {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .backlogDateRange .backlogDateRail input[type="range"] {background:transparent !important;border:0 !important;accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .backlogDateRange .backlogDateRail input[type="range"]::-webkit-slider-thumb {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .backlogDateRange .backlogDateRail input[type="range"]::-moz-range-thumb {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .backlogDateRange .backlogDateRail input[type="range"]::-moz-range-track {background:transparent !important
+}
+html[data-ui-system="manifest"] .backlogDateRange .backlogDateRail input[type="range"]:focus-visible {outline:2px solid var(--ui-accent);outline-offset:3px
+}
+html[data-ui-system="manifest"] .backlogDateTicks {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogDateBottom output {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .backlogDateBottom output.is-error {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .backlogDateActive .tbtn {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .backlogDateHelp {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogDateHelp p {line-height:1.6
+}
+html[data-ui-system="manifest"] .backlogDateOptions {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] #backlogContent [data-stage="SHORTAGE"],html[data-ui-system="manifest"] .blvDrawerRoot [data-stage="SHORTAGE"],html[data-ui-system="manifest"] .blvTipBox [data-stage="SHORTAGE"] {--ui-series-color:var(--ui-danger)
+}
+html[data-ui-system="manifest"] #backlogContent [data-stage="PRODUCTION"],html[data-ui-system="manifest"] .blvDrawerRoot [data-stage="PRODUCTION"],html[data-ui-system="manifest"] .blvTipBox [data-stage="PRODUCTION"] {--ui-series-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] #backlogContent [data-stage="LOADING"],html[data-ui-system="manifest"] .blvDrawerRoot [data-stage="LOADING"],html[data-ui-system="manifest"] .blvTipBox [data-stage="LOADING"] {--ui-series-color:var(--ui-warning)
+}
+html[data-ui-system="manifest"] #backlogContent [data-stage="IN_TRANSIT"],html[data-ui-system="manifest"] .blvDrawerRoot [data-stage="IN_TRANSIT"],html[data-ui-system="manifest"] .blvTipBox [data-stage="IN_TRANSIT"] {--ui-series-color:var(--ui-chart-4)
+}
+html[data-ui-system="manifest"] #backlogContent [data-stage="CUSTOMS"],html[data-ui-system="manifest"] .blvDrawerRoot [data-stage="CUSTOMS"],html[data-ui-system="manifest"] .blvTipBox [data-stage="CUSTOMS"] {--ui-series-color:var(--ui-chart-5)
+}
+html[data-ui-system="manifest"] #backlogContent [data-stage="AWAITING_RETAIL_TRANSFER"],html[data-ui-system="manifest"] .blvDrawerRoot [data-stage="AWAITING_RETAIL_TRANSFER"],html[data-ui-system="manifest"] .blvTipBox [data-stage="AWAITING_RETAIL_TRANSFER"] {--ui-series-color:var(--ui-chart-3)
+}
+html[data-ui-system="manifest"] #backlogContent [data-stage="IN_WAREHOUSE"],html[data-ui-system="manifest"] .blvDrawerRoot [data-stage="IN_WAREHOUSE"],html[data-ui-system="manifest"] .blvTipBox [data-stage="IN_WAREHOUSE"] {--ui-series-color:var(--ui-success)
+}
+html[data-ui-system="manifest"] #backlogContent [data-stage="UNKNOWN"],html[data-ui-system="manifest"] .blvDrawerRoot [data-stage="UNKNOWN"],html[data-ui-system="manifest"] .blvTipBox [data-stage="UNKNOWN"] {--ui-series-color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] .blvTipBox .blvTipVal {color:var(--ui-series-color) !important
+}
+html[data-ui-system="manifest"] .blvTile[data-stage] {--ui-metric-color:var(--ui-series-color)
+}
+html[data-ui-system="manifest"] .blvTile[data-stage=""] .bpaTileValue {color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blvBadge[data-stage="CUSTOMS"] {color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .blvOver {font-style:normal !important;color:var(--ui-danger) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .blvTimelineLegend {border-top:0 !important;background:color-mix(in srgb,var(--ui-surface-soft) 48%,transparent) !important
+}
+html[data-ui-system="manifest"] .blvTimelineLegend:first-of-type {border-top:0 !important
+}
+html[data-ui-system="manifest"] .blvTimelineLegendLabel {font-size:var(--ui-font-2xs) !important;font-weight:800 !important;letter-spacing:.02em;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .blvCols .bpaColValue {z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .blvCols .bpaColLabel {z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .blvColTotal {font-size:var(--ui-font-2xs) !important;font-weight:800 !important;line-height:1;color:var(--ui-text-secondary) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .blvColOverdue {font-size:var(--ui-font-2xs) !important;font-weight:750 !important;line-height:1;color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .blvBandDivider {background:var(--ui-row-divider) !important
+}
+html[data-ui-system="manifest"] .blvBuyerTrack {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .blvBuyerBar {background:var(--ui-series-color) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blvBuyerBar:hover {filter:none !important
+}
+html[data-ui-system="manifest"] .blvBuyerStack {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blvBuyerStackSeg {background:var(--ui-series-color) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blvBuyerStackSeg:hover {filter:none !important
+}
+html[data-ui-system="manifest"] .blvTodayLine {border-left:0 !important;z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .blvTodayLine b {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-selected-ink) !important;font:750 var(--ui-font-2xs)/1.1 var(--ui-font-body) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .blvCols .bpaCol.is-past .bpaColLabel {color:var(--ui-text-secondary) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style {border:0 !important;border-radius:var(--ui-radius) !important;background:color-mix(in srgb,var(--ui-surface) 96%,transparent) !important;box-shadow:none !important;font:var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style strong {font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style span i {border-radius:var(--ui-radius) !important;background:var(--ui-series-color,var(--ui-text-muted)) !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style span b {font-weight:600 !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style span em {font-style:normal !important;font-variant-numeric:tabular-nums !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style .backlogChartTooltipTotal {border-top:0 !important;font-weight:800 !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style .backlogChartTooltipTotal i {background:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style .blvTimelineTooltipOverdue {color:var(--ui-danger) !important;font-weight:750 !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style .blvTimelineTooltipOverdue i {background:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .blvTipBox.is-chart-style .blvTimelineTooltipOverdue em {color:var(--ui-danger) !important;font-weight:800 !important
+}
+html[data-ui-system="manifest"] .blvGroupBar {background:var(--ui-series-color) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blvGroupBar:hover {filter:none !important
+}
+@media (prefers-reduced-motion:reduce) {
+html[data-ui-system="manifest"] .blvGroupBar,html[data-ui-system="manifest"] .blvBuyerBar,html[data-ui-system="manifest"] .blvBuyerStack,html[data-ui-system="manifest"] .blvBuyerStackSeg {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+}
+html[data-ui-system="manifest"] .blvModule {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blvModuleHead {background:var(--ui-surface-soft) !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .blvModuleToggle {border:0 !important;background:transparent !important;color:inherit !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .blvModuleTitle {font-weight:700 !important
+}
+html[data-ui-system="manifest"] .blvModuleHint {font-size:var(--ui-font-sm) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] #backlogContent>.panel {border-radius:var(--ui-radius) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] #backlogContent .backlogTreeToolbar {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] #backlogContent .backlogTh {font-weight:650 !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] #backlogContent .backlogExportGroup>.tbtn+.tbtn {border-left:0 !important
+}
+html[data-ui-system="manifest"] #backlogExportV3Btn {background:var(--ui-success) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] #backlogExportV3Btn:hover:not(:disabled) {background:color-mix(in srgb,var(--ui-success) 86%,var(--ui-text)) !important
+}
+html[data-ui-system="manifest"] .blvExportMenu {z-index:var(--ui-z-sticky);background:var(--ui-surface,var(--ui-surface)) !important;backdrop-filter:none;border:0 !important;box-shadow:var(--ui-shadow-overlay) !important;color:var(--ui-text) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .blvExportMenu h4 {font-size:var(--ui-font-xs) !important;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .blvExportMenu label small {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blvQuality {border:0 !important;border-left:0 !important;background:var(--ui-danger-bg) !important
+}
+html[data-ui-system="manifest"] .blvQualityTitle {font-weight:700 !important;color:var(--ui-danger) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .blvQualityChip {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;border-radius:var(--ui-radius) !important;font:inherit !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .blvQualityChip b {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .blvSpecial {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .blvSpecial .blvQualityTitle {color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .blvSpecial.is-alert {background:var(--ui-danger-bg) !important
+}
+html[data-ui-system="manifest"] .blvSpecial.is-alert .blvQualityTitle {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .blvQualityHint {font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .blvFilterButton.is-active {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .blvFilterCount {border-radius:var(--ui-radius) !important;background:var(--ui-accent) !important;color:var(--ui-on-accent) !important;font-size:var(--ui-font-2xs) !important;font-weight:800 !important;line-height:1;border:0 !important
+}
+html[data-ui-system="manifest"] .blvFilterRoot {z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .blvFilterScrim {background:var(--ui-scrim) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blvFilterDrawer {background:var(--ui-surface) !important;border-left:0 !important;box-shadow:var(--ui-shadow-overlay) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blvFilterMount {color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blvFilterHead {border-bottom:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .blvFilterHead h3 {font-size:var(--ui-font-xl) !important
+}
+html[data-ui-system="manifest"] .blvFilterHead p {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blvFilterKicker {font-size:var(--ui-font-2xs) !important;font-weight:800 !important;letter-spacing:.08em;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .blvFilterHeadActions button,html[data-ui-system="manifest"] .blvFilterEditorHead button,html[data-ui-system="manifest"] .blvFilterValueTools button {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font:inherit !important;font-size:var(--ui-font-xs) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .blvFilterHeadActions button:hover:not(:disabled),html[data-ui-system="manifest"] .blvFilterEditorHead button:hover,html[data-ui-system="manifest"] .blvFilterValueTools button:hover {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .blvFilterSummary {border-bottom:0 !important;background:var(--ui-surface) !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blvFilterSummary b {font-size:var(--ui-font-md) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blvFilterActive {border-bottom:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .blvFilterActive>button[data-blvf-edit] {border:0 !important;background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .blvFilterActive>button[data-blvf-edit].is-active {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .blvFilterActive>button[data-blvf-edit] span {font-size:var(--ui-font-2xs) !important;font-weight:800 !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .blvFilterActive>button[data-blvf-edit] b {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blvFilterActive>button[data-blvf-edit] small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blvFilterRemove {border:0 !important;border-left:0 !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blvFilterRemove:hover {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .blvFilterNoActive {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blvFilterCatalogue {border-right:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .blvFilterSourceTabs {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .blvFilterSourceTabs button {border:0 !important;border-right:0 !important;background:transparent !important;color:var(--ui-text-secondary) !important;font:inherit !important;font-size:var(--ui-font-xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .blvFilterSourceTabs button:last-child {border-right:0 !important
+}
+html[data-ui-system="manifest"] .blvFilterSourceTabs button.is-active {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .blvFilterSourceTabs button b {font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .blvFilterSearch,html[data-ui-system="manifest"] .blvFilterValueTools input {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font:inherit !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .blvFilterColumns button {border:0 !important;background:transparent !important;color:var(--ui-text-secondary) !important;font:inherit !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blvFilterColumns button:hover {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .blvFilterColumns button.is-added {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .blvFilterEditorHead span {font-size:var(--ui-font-2xs) !important;font-weight:800 !important;letter-spacing:.08em;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .blvFilterEditorHead h4 {font-size:var(--ui-font-md) !important
+}
+html[data-ui-system="manifest"] .blvFilterEditorEmpty {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blvFilterEditorEmpty b {color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .blvFilterDateGrid label span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blvFilterDateGrid input {border:0 !important;background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .blvFilterRangeHint {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .blvFilterValues {border:0 !important
+}
+html[data-ui-system="manifest"] .blvFilterValue {border-bottom:0 !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blvFilterValue:last-child {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .blvFilterValue:hover {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .blvFilterValue b {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blvFilterNoValue {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blvFilterLoading {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blvFilterLoading>button {border:0 !important;background:transparent !important;color:var(--ui-text-secondary) !important
+}
+@media (max-width:760px) {
+html[data-ui-system="manifest"] .blvFilterCatalogue {border-right:0 !important;border-bottom:0 !important
+}
+}
+html[data-ui-system="manifest"] .bpaModule {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bpaModuleHead {background:var(--ui-surface-soft) !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaModuleToggle {border:0 !important;background:transparent !important;color:inherit !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .bpaModuleTitle {font-weight:700 !important
+}
+html[data-ui-system="manifest"] .bpaModuleHint {font-size:var(--ui-font-sm) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaSnapshotBar {border:0 !important;background:color-mix(in srgb,var(--ui-surface-soft) 80%,transparent) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bpaSnapshotPoint {font-weight:650 !important
+}
+html[data-ui-system="manifest"] .bpaSnapshotArrow {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaSectionTitle {font-weight:700 !important;font-size:var(--ui-font-base) !important
+}
+html[data-ui-system="manifest"] .bpaSectionSub {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaTable {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bpaTable tr:last-child td {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaIdentity {font-weight:650 !important
+}
+html[data-ui-system="manifest"] .bpaIdentity small {font-weight:400 !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaFieldName {font-weight:650 !important
+}
+html[data-ui-system="manifest"] .bpaArrow {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaTag {border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .bpaActivityPath {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaMiniSelect {border:0 !important;background:var(--ui-canvas,var(--ui-surface-soft)) !important;color:var(--ui-text) !important;border-radius:var(--ui-radius) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] #backlogPlanActual [data-seg="overdue"],html[data-ui-system="manifest"] .bpaDrawerRoot [data-seg="overdue"] {--ui-series-color:var(--ui-danger)
+}
+html[data-ui-system="manifest"] #backlogPlanActual [data-seg="late"],html[data-ui-system="manifest"] .bpaDrawerRoot [data-seg="late"] {--ui-series-color:var(--ui-warning)
+}
+html[data-ui-system="manifest"] #backlogPlanActual [data-seg="undated"],html[data-ui-system="manifest"] .bpaDrawerRoot [data-seg="undated"] {--ui-series-color:var(--ui-chart-5)
+}
+html[data-ui-system="manifest"] #backlogPlanActual [data-seg="pending"],html[data-ui-system="manifest"] .bpaDrawerRoot [data-seg="pending"] {--ui-series-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] #backlogPlanActual [data-seg="onTime"],html[data-ui-system="manifest"] .bpaDrawerRoot [data-seg="onTime"] {--ui-series-color:var(--ui-success)
+}
+html[data-ui-system="manifest"] #backlogPlanActual [data-seg="removed"],html[data-ui-system="manifest"] .bpaDrawerRoot [data-seg="removed"] {--ui-series-color:var(--ui-text-muted)
+}
+html[data-ui-system="manifest"] .bpaControlGroup {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bpaControlGroup--plan {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .bpaGroupLabel {font-size:var(--ui-font-2xs) !important;font-weight:700 !important;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .bpaControl {font-size:var(--ui-font-sm) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaControl>select,html[data-ui-system="manifest"] .bpaControl>input {border:0 !important;background:var(--ui-canvas,var(--ui-surface-soft)) !important;color:var(--ui-text) !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .bpaControl>input[readonly] {color:var(--ui-text-secondary) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bpaExport {background:var(--ui-success) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .bpaExport:hover:not(:disabled) {background:color-mix(in srgb,var(--ui-success) 86%,var(--ui-text)) !important
+}
+html[data-ui-system="manifest"] .bpaCoverageWarn {color:var(--ui-warning) !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .bpaPlanPill {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .bpaRing {border:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .bpaRingTrack {fill:none;stroke:var(--ui-row-divider);stroke-width:9
+}
+html[data-ui-system="manifest"] .bpaRingValue {fill:none;stroke:var(--ui-success);stroke-width:9;stroke-linecap:butt;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bpaRingText b {font:700 var(--ui-font-2xl)/1 var(--ui-font-heading) !important;letter-spacing:-.01em;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bpaRingText span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .bpaRingSub {font-size:var(--ui-font-sm) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .bpaTile {border:0 !important;border-top:0 !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font:inherit !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bpaTile:hover {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .bpaTile[data-tone="onTime"] {--ui-metric-color:var(--ui-success)
+}
+html[data-ui-system="manifest"] .bpaTile[data-tone="late"] {--ui-metric-color:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .bpaTile[data-tone="overdue"] {--ui-metric-color:var(--ui-danger)
+}
+html[data-ui-system="manifest"] .bpaTile[data-tone="pending"] {--ui-metric-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .bpaTileValue {font:700 var(--ui-font-2xl)/1.05 var(--ui-font-heading) !important;letter-spacing:-.01em;color:var(--ui-metric-color,var(--ui-text)) !important
+}
+html[data-ui-system="manifest"] .bpaTile:not([data-tone]) .bpaTileValue,html[data-ui-system="manifest"] .bpaTile[data-tone=""] .bpaTileValue {color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bpaTileLabel {font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .bpaTileSub {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaTabs {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaTab {border:0 !important;border-bottom:0 !important;background:transparent !important;color:var(--ui-text-secondary) !important;font:inherit !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .bpaTab:hover {color:var(--ui-text) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bpaTab.is-active {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .bpaTabCount {border-radius:var(--ui-radius) !important;background:var(--ui-surface-strong) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .bpaTab.is-active .bpaTabCount {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .bpaCardBox,html[data-ui-system="manifest"] .bpaSection {border:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .bpaSectionHead {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaSeg2 {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bpaSeg2 button {border:0 !important;background:transparent !important;color:var(--ui-text-secondary) !important;font:inherit !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .bpaSeg2 button+button {border-left:0 !important
+}
+html[data-ui-system="manifest"] .bpaSeg2 button.is-active {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .bpaLegend {font-size:var(--ui-font-xs) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .bpaDot {background:var(--ui-series-color,var(--ui-text-muted)) !important
+}
+html[data-ui-system="manifest"] .bpaGRow.is-total {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaGRow.is-total .bpaGName {font-weight:800 !important
+}
+html[data-ui-system="manifest"] .bpaGName {border:0 !important;background:transparent !important;color:var(--ui-text) !important;font:inherit !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .bpaGName:hover {color:var(--ui-selected-ink) !important;text-decoration:underline
+}
+html[data-ui-system="manifest"] .bpaBarTrack {background:color-mix(in srgb,var(--ui-surface-strong) 60%,transparent) !important
+}
+html[data-ui-system="manifest"] .bpaBar {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bpaSeg {background:var(--ui-series-color) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bpaSeg:hover {filter:none !important
+}
+html[data-ui-system="manifest"] .bpaSeg.is-empty {background:transparent !important
+}
+html[data-ui-system="manifest"] .bpaGStats {line-height:1.15
+}
+html[data-ui-system="manifest"] .bpaGStats b {font-size:var(--ui-font-base) !important
+}
+html[data-ui-system="manifest"] .bpaGStats span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaMore {border:0 !important;background:transparent !important;color:var(--ui-selected-ink) !important;font:inherit !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bpaColValue {font-size:var(--ui-font-2xs) !important;font-weight:700 !important;line-height:1;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .bpaColTrack {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bpaColBar {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bpaColLabel {font-size:var(--ui-font-2xs) !important;line-height:1.15;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaCol.is-today .bpaColTrack {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .bpaCol.is-today .bpaColLabel {color:var(--ui-selected-ink) !important;font-weight:750 !important
+}
+html[data-ui-system="manifest"] .bpaTodayBtn {border:0 !important;background:var(--ui-surface-soft) !important;color:var(--ui-selected-ink) !important;font:inherit !important;font-size:var(--ui-font-xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .bpaTodayBtn:hover {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .bpaRevRow {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bpaRevTrack {background:color-mix(in srgb,var(--ui-surface-strong) 60%,transparent) !important
+}
+html[data-ui-system="manifest"] .bpaRevBar {background:var(--ui-danger) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bpaRevBar[data-tone="good"] {background:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .bpaRevRow:not(.is-zero):hover .bpaRevBar {filter:none !important
+}
+html[data-ui-system="manifest"] .bpaChips {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaChip {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font:inherit !important;font-size:var(--ui-font-sm) !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .bpaChip span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaChip:hover {color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bpaChip.is-active {background:color-mix(in srgb,var(--ui-series-color,var(--ui-accent)) 13%,var(--ui-surface)) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bpaBadge {font-size:var(--ui-font-2xs) !important;font-weight:700 !important;color:var(--ui-series-color) !important;background:color-mix(in srgb,var(--ui-series-color) 14%,var(--ui-surface)) !important;border-left:0 !important
+}
+html[data-ui-system="manifest"] .bpaBadge[data-seg="undated"] {color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .bpaTable th {z-index:var(--ui-z-data);background:var(--ui-header-bg,var(--ui-surface-soft)) !important;color:var(--ui-header-ink,var(--ui-text-muted)) !important;font-weight:650 !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaTable td {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaTable tbody tr:hover td {background:var(--ui-row-hover,var(--ui-surface-soft)) !important
+}
+html[data-ui-system="manifest"] .bpaTable .num {font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .bpaTable td.is-open {color:var(--ui-danger) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .bpaSub,html[data-ui-system="manifest"] .bpaDateCell small,html[data-ui-system="manifest"] .bpaStatusCell small,html[data-ui-system="manifest"] .bpaProgressCell small {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .bpaMini {background:var(--ui-surface-strong) !important
+}
+html[data-ui-system="manifest"] .bpaMini span {background:var(--ui-series-color) !important
+}
+html[data-ui-system="manifest"] .bpaDayDelta {border-radius:var(--ui-radius) !important;background:var(--ui-surface-strong) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .bpaDayDelta.is-late {color:var(--ui-danger) !important;background:var(--ui-danger-bg) !important
+}
+html[data-ui-system="manifest"] .bpaDayDelta.is-early {color:var(--ui-success) !important;background:var(--ui-success-bg) !important
+}
+html[data-ui-system="manifest"] .bpaDayDelta.is-warn {color:var(--ui-warning) !important;background:var(--ui-warning-bg) !important
+}
+html[data-ui-system="manifest"] .bpaTag.is-alert {color:var(--ui-danger) !important;background:var(--ui-danger-bg) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .bpaTag.is-plan {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .bpaMuted {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaNote {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important;border-top:0 !important
+}
+html[data-ui-system="manifest"] .bpaEmpty,html[data-ui-system="manifest"] .bpaLoading,html[data-ui-system="manifest"] .bpaError {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaError {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .bpaSpinner {border:0 !important;border-radius:var(--ui-radius) !important;animation:none !important
+}
+html[data-ui-system="manifest"] .bpaBreakdown>div {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaBreakdownHead {font-weight:650 !important;color:var(--ui-text-muted) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bpaBreakBar span {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .bpaBreakBar b {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bpaTip {z-index:var(--ui-z-popover);background:var(--ui-surface,var(--ui-surface)) !important;backdrop-filter:none;border:0 !important;box-shadow:var(--ui-shadow-overlay) !important;color:var(--ui-text) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bpaTipTitle {font-weight:800 !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .bpaTipLine span {color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .bpaTipLine b[class^="is-"] {color:var(--ui-series-color) !important
+}
+html[data-ui-system="manifest"] .bpaTipLine b.is-overdue {--ui-series-color:var(--ui-danger)
+}
+html[data-ui-system="manifest"] .bpaTipLine b.is-late {--ui-series-color:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .bpaTipLine b.is-undated {--ui-series-color:var(--ui-warning)
+}
+html[data-ui-system="manifest"] .bpaTipLine b.is-pending {--ui-series-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .bpaTipLine b.is-onTime {--ui-series-color:var(--ui-success)
+}
+html[data-ui-system="manifest"] .bpaTipLine b.is-removed {--ui-series-color:var(--ui-text-secondary)
+}
+html[data-ui-system="manifest"] .bpaTipHint {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaDrawerRoot {z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .bpaDrawerScrim {background:color-mix(in srgb,var(--ui-text) 28%,transparent) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bpaDrawer {background:var(--ui-surface) !important;color:var(--ui-text) !important;border-left:0 !important;box-shadow:var(--ui-shadow-overlay) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bpaDrawerHead {border-bottom:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bpaDrawerHead h3 {font:700 var(--ui-font-xl)/1.15 var(--ui-font-heading) !important
+}
+html[data-ui-system="manifest"] .bpaDrawerKicker {font-size:var(--ui-font-xs) !important;font-weight:650 !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .bpaDrawerStats>div {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .bpaDrawerStats b {font:700 var(--ui-font-xl)/1.1 var(--ui-font-heading) !important
+}
+html[data-ui-system="manifest"] .bpaDrawerStats b.is-overdue {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .bpaDrawerStats span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bpaDrawerTable {border-top:0 !important
+}
+@media (prefers-reduced-motion:reduce) {
+html[data-ui-system="manifest"] .bpaBar,html[data-ui-system="manifest"] .bpaColBar,html[data-ui-system="manifest"] .bpaRevBar,html[data-ui-system="manifest"] .bpaRingValue,html[data-ui-system="manifest"] .bpaDrawer,html[data-ui-system="manifest"] .bpaDrawerScrim,html[data-ui-system="manifest"] .bpaSeg,html[data-ui-system="manifest"] .bpaTile {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+}
+@media (prefers-reduced-motion:reduce) {
+html[data-ui-system="manifest"] .bpaSpinner {animation:none !important
+}
+}
+html[data-ui-system="manifest"] .bpaDrawerTable .bpaTable {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] #backlogAnalysis {
+  border: 0 !important;
+  background: var(--ui-surface) !important;
+  border-radius: var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .bdaTitle { font-family: var(--ui-font-heading) !important; font-size: var(--ui-font-lg) !important; font-weight: 600 !important; letter-spacing: .01em; color: var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bdaTitleToggle { border: 0 !important; background: transparent !important
+}
+html[data-ui-system="manifest"] .bdaTitleToggle:hover { color: var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .bdaTitleToggle:focus-visible { outline: 1px solid var(--ui-accent); outline-offset: 3px; border-radius: var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .bdaTitleChevron { border-right: 0 !important; border-bottom: 0 !important; transition: transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bdaSub { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaControl { font-size: var(--ui-font-xs) !important; color: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaControl select,html[data-ui-system="manifest"] .bdaControl input { border: 0 !important; background: var(--ui-canvas) !important; color: var(--ui-text) !important; border-radius: var(--ui-radius) !important; font-size: var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bdaParity { font-size: var(--ui-font-xs) !important; border: 0 !important; border-radius: var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .bdaParity.is-ok { color: var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .bdaParity.is-warn { color: var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .bdaKpi {
+  border: 0 !important; background: var(--ui-canvas) !important; border-radius: var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .bdaKpiLabel { font-size: var(--ui-font-2xs) !important; text-transform: uppercase; letter-spacing: .04em; color: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaKpiValue { font-size: var(--ui-font-xl) !important; font-weight: 600 !important; font-variant-numeric: tabular-nums !important; color: var(--ui-text) !important; line-height: 1.1
+}
+html[data-ui-system="manifest"] .bdaKpiMeta { font-size: var(--ui-font-2xs) !important; color: var(--ui-text-muted) !important; font-variant-numeric: tabular-nums !important
+}
+html[data-ui-system="manifest"] .bdaKpi.is-ok .bdaKpiValue { color: var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .bdaKpi.is-warn .bdaKpiValue { color: var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .bdaKpi.is-bad .bdaKpiValue { color: var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .bdaKpi.is-mute .bdaKpiValue { color: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaH { font-family: var(--ui-font-heading) !important; font-size: var(--ui-font-base) !important; font-weight: 600 !important; text-transform: uppercase;
+  letter-spacing: .05em; color: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaMuted { color: var(--ui-text-muted) !important; font-size: var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .bdaError { color: var(--ui-danger) !important; font-size: var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .bdaLink { background: none !important; border: 0 !important; color: var(--ui-accent) !important; font-size: var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .bdaInsightBtn {
+  border: 0 !important; background: var(--ui-canvas) !important; border-radius: var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .bdaInsightDot { border-radius: var(--ui-radius) !important; background: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaInsight.is-critical .bdaInsightDot { background: var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .bdaInsight.is-warning .bdaInsightDot { background: var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .bdaInsight.is-watch .bdaInsightDot { background: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaInsight.is-positive .bdaInsightDot { background: var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .bdaInsightText { font-size: var(--ui-font-sm) !important; color: var(--ui-text) !important; line-height: 1.45
+}
+html[data-ui-system="manifest"] .bdaInsightMeta { font-size: var(--ui-font-2xs) !important; color: var(--ui-text-muted) !important; font-variant-numeric: tabular-nums !important
+}
+html[data-ui-system="manifest"] .bdaChip { border: 0 !important;
+  background: var(--ui-canvas) !important; border-radius: var(--ui-radius) !important; font-size: var(--ui-font-xs) !important; color: var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bdaChip b { font-variant-numeric: tabular-nums !important
+}
+html[data-ui-system="manifest"] .bdaChip.is-warn { color: var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .bdaTableWrap { border: 0 !important; border-radius: var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .bdaTable { font-size: var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .bdaTable th,html[data-ui-system="manifest"] .bdaTable td { border-bottom: 0 !important
+}
+html[data-ui-system="manifest"] .bdaTable thead th { background: var(--ui-canvas) !important; color: var(--ui-text-muted) !important; font-weight: 600 !important; text-transform: uppercase;
+  font-size: var(--ui-font-2xs) !important; letter-spacing: .04em
+}
+html[data-ui-system="manifest"] .bdaTable tbody tr:last-child td { border-bottom: 0 !important
+}
+html[data-ui-system="manifest"] .bdaTable .num { font-variant-numeric: tabular-nums !important
+}
+html[data-ui-system="manifest"] .bdaCellBtn { background: none !important; border: 0 !important; color: var(--ui-accent) !important; font: inherit !important; font-variant-numeric: tabular-nums !important
+}
+html[data-ui-system="manifest"] .bdaCellBtn:hover { text-decoration: underline
+}
+html[data-ui-system="manifest"] .bdaTab { border: 0 !important; background: var(--ui-canvas) !important; color: var(--ui-text-muted) !important;
+  border-radius: var(--ui-radius) !important; font-size: var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .bdaTab.is-active { color: var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bdaMissing { font-size: var(--ui-font-xs) !important; color: var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bdaSettingsHead { border-bottom: 0 !important
+}
+html[data-ui-system="manifest"] .bdaSettingsBody h5 { font-size: var(--ui-font-sm) !important; text-transform: uppercase; letter-spacing: .04em; color: var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaCheck { font-size: var(--ui-font-sm) !important; color: var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bdaWarnBand {
+  border: 0 !important; background: var(--ui-canvas) !important;
+  border-radius: var(--ui-radius) !important; font-size: var(--ui-font-xs) !important; color: var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bdaWarnBand b { color: var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .backlogWorkspaceCardHead {border-bottom:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .backlogWorkspaceCardHead strong {font-size:var(--ui-font-xs) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogWorkspaceCardHead span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blWorkspaceIconBtn {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text-muted) !important;font:700 var(--ui-font-base)/1 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blWorkspaceIconBtn:hover,html[data-ui-system="manifest"] .blWorkspaceIconBtn:focus-visible {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogWorkspaceSplitter {background:transparent !important
+}
+html[data-ui-system="manifest"] .backlogWorkspaceSplitter::before {background:var(--ui-group-divider) !important
+}
+html[data-ui-system="manifest"] .backlogWorkspaceSplitter:hover::before,html[data-ui-system="manifest"] .backlogWorkspaceSplitter:active::before {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .backlogRadarCard {border:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .blRadarGrid {fill:none;stroke:var(--ui-group-divider);stroke-width:1
+}
+html[data-ui-system="manifest"] .blRadarAxis {stroke:var(--ui-row-divider);stroke-width:1
+}
+html[data-ui-system="manifest"] .blRadarArea {fill:color-mix(in srgb,var(--ui-accent) 15%,transparent);stroke:var(--ui-accent);stroke-width:1.7
+}
+html[data-ui-system="manifest"] .blRadarPoint {fill:var(--ui-accent);stroke:var(--ui-surface);stroke-width:1.2
+}
+html[data-ui-system="manifest"] .blRadarLabel {fill:var(--ui-text-muted);font:600 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blRadarValue {fill:var(--ui-text);font:700 var(--ui-font-2xs) var(--ui-font-mono,ui-monospace,monospace) !important
+}
+html[data-ui-system="manifest"] .blRadarEmpty {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .bdaRadarCard {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .backlogRadarFilter {border-bottom:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .backlogRadarFilterHead {color:var(--ui-text) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogRadarFilterList label {color:var(--ui-text) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogChartTypeSwitch {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .backlogChartTypeSwitch button {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text-muted) !important;font:700 var(--ui-font-2xs)/1 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .backlogChartTypeSwitch button:hover {background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogChartTypeSwitch button.is-active {background:var(--ui-surface) !important;color:var(--ui-accent) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .blChartGrid {stroke:var(--ui-group-divider);stroke-width:1
+}
+html[data-ui-system="manifest"] .blChartYLabel {fill:var(--ui-text-muted);font:500 var(--ui-font-2xs) var(--ui-font-mono,ui-monospace,monospace) !important
+}
+html[data-ui-system="manifest"] .blChartXLabel {fill:var(--ui-text-muted);font:600 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blChartBar {fill:var(--ui-accent);stroke:var(--ui-accent);stroke-width:1
+}
+html[data-ui-system="manifest"] .blChartLine {fill:none;stroke:var(--ui-accent);stroke-width:2;stroke-linejoin:round;stroke-linecap:round
+}
+html[data-ui-system="manifest"] .blChartPoint {fill:var(--ui-accent);stroke:var(--ui-surface);stroke-width:1.4
+}
+@media (max-width:680px) {
+html[data-ui-system="manifest"] .backlogChartTypeSwitch button {font-size:var(--ui-font-2xs) !important
+}
+}
+html[data-ui-system="manifest"] .blpOverlay {z-index:var(--ui-z-modal);background:var(--ui-scrim) !important
+}
+html[data-ui-system="manifest"] .blpDialog {background:var(--ui-surface) !important;border:0 !important;border-radius:var(--ui-radius) !important;box-shadow:var(--ui-shadow-overlay) !important;animation:none !important
+}
+html[data-ui-system="manifest"] .blpHead {border-bottom:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .blpTitleBox h2 {font-family:var(--ui-font-heading) !important;font-size:var(--ui-font-lg) !important;font-weight:700 !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blpMeta {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blpTime {border-bottom:0 !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blpTime select {font:600 var(--ui-font-xs)/1.2 var(--ui-font-body) !important;color:var(--ui-text) !important;background:var(--ui-surface-soft) !important;border:0 !important;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .blpTimeTrack::before,html[data-ui-system="manifest"] .blpTimeTrack>i {border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .blpTimeTrack::before {background:var(--ui-group-divider) !important
+}
+html[data-ui-system="manifest"] .blpTimeTrack>i {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .blpTime .blpTimeTrack input[type="range"] {border:0 !important;background:transparent !important
+}
+html[data-ui-system="manifest"] .blpTimeTrack input::-webkit-slider-thumb {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .blpTimeTrack input::-moz-range-thumb {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .blpTime .blpTimeTrack input:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .blpTimeLabels {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .blpTime>[data-blp="reset"] {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blpBody {background:var(--ui-canvas) !important
+}
+html[data-ui-system="manifest"] .blpFrame {border:0 !important;background:var(--ui-canvas) !important
+}
+html[data-ui-system="manifest"] .blpState {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-sm) !important
+}
+@media (prefers-reduced-motion:reduce) {
+html[data-ui-system="manifest"] .blpDialog {animation:none !important
+}
+}
+html[data-ui-system="manifest"] .blDetailDrawer {z-index:var(--ui-z-modal);color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawerBackdrop {background:var(--ui-scrim) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blDetailDrawerPanel {background:var(--ui-surface) !important;border-left:0 !important;box-shadow:var(--ui-shadow-overlay) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blDetailResizeHandle {z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .blDetailResizeHandle::after {background:transparent !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blDetailResizeHandle:hover::after,html[data-ui-system="manifest"] .blDetailResizing .blDetailResizeHandle::after {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawer.is-open .blDetailDrawerPanel {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .blDetailDrawerHead {border-bottom:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawerTitle b {font-size:var(--ui-font-base) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawerTitle span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blDetailTool,html[data-ui-system="manifest"] .blDetailClose {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blDetailTool:hover,html[data-ui-system="manifest"] .blDetailTool[aria-pressed="true"] {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .blDetailClose {font-size:var(--ui-font-xl) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blDetailExportMenu {z-index:var(--ui-z-data);border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .blDetailExportMenu button {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text-secondary) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blDetailExportMenu button:hover {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawerSubbar {border-bottom:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawerSubbar>input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font:var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawerNote {border-bottom:0 !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .blDetailColumnPanel {z-index:var(--ui-z-data);border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .blDetailColumnPanelHead b {font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .blDetailColumnPanelHead button {border:0 !important;background:transparent !important;color:var(--ui-selected-ink) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blDetailColumnList label {border-radius:var(--ui-radius) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .blDetailColumnList label:hover {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .blDetailColumnList input {accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .blDetailTableWrap {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .blDetailTable {font-size:var(--ui-font-sm) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blDetailTable thead th {z-index:var(--ui-z-data);border-bottom:0 !important;background:var(--ui-header-bg) !important;background-clip:padding-box !important;color:var(--ui-header-ink) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important;letter-spacing:.1px;line-height:1.25
+}
+html[data-ui-system="manifest"] .blDetailTable td {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .blDetailTable tbody tr:hover td {background:var(--ui-row-hover) !important
+}
+html[data-ui-system="manifest"] .blDetailNoImage,html[data-ui-system="manifest"] .blDetailEmpty {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blDetailTable td.blDetailMore {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .blDetailViewActions {border-right:0 !important
+}
+html[data-ui-system="manifest"] .blDetailViewLabel {color:var(--ui-text-muted) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important;letter-spacing:.04em
+}
+html[data-ui-system="manifest"] .blDetailViewPreset {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text-muted) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blDetailViewPreset:hover {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blDetailViewPreset[aria-pressed="true"] {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .blDetailTable .blDetailGroupRow th {z-index:var(--ui-z-data);background:var(--ui-surface-strong) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important;font-weight:650 !important;letter-spacing:.4px;border-bottom:0 !important;box-shadow:none !important
+}
+@media (max-width:760px) {
+html[data-ui-system="manifest"] .blDetailViewActions {border-right:0 !important
+}
+}
+@media (max-width:760px) {
+html[data-ui-system="manifest"] .blDetailViewLabel {background:var(--ui-surface) !important;z-index:var(--ui-z-data)
+}
+}
+html[data-ui-system="manifest"] .blDetailDrawerPanel {box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawerTitle b {font:700 var(--ui-font-xl)/1.15 var(--ui-font-heading) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawerTitle span {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .blDetailReportStats>div {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .blDetailReportStats b {font:700 var(--ui-font-xl)/1.1 var(--ui-font-heading) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .blDetailReportStats span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blDetailReportAccent {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable {font:var(--ui-font-xs)/1.4 var(--ui-font-body) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridRangeCell {box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridRangeEdge {outline:1px solid color-mix(in srgb,var(--ui-accent) 45%,transparent);outline-offset:-1px
+}
+html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td.blGridActiveCell {outline:2px solid var(--ui-accent);outline-offset:-2px
+}
+html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable thead th {background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important;line-height:1.35
+}
+html[data-ui-system="manifest"] .blDetailDrawer .blDetailTable td {border-bottom:0 !important;line-height:1.4
+}
+html[data-ui-system="manifest"] .blDetailReportPrimary {font-weight:600 !important
+}
+html[data-ui-system="manifest"] .blDetailReportSub {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blDetailReportSub a {color:inherit !important
+}
+html[data-ui-system="manifest"] .blDetailReportBadge {border-left:0 !important;background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .blDetailNumeric {font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .blDetailReportFilter {font-weight:400 !important
+}
+html[data-ui-system="manifest"] .blDetailReportFilter>summary {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .blDetailReportFilter[open]>summary,html[data-ui-system="manifest"] .columnFilterActive .blDetailReportFilter>summary {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .blDetailReportFilter>div {z-index:var(--ui-z-data);border:0 !important;background:var(--ui-surface) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .blDetailReportFilter button {border:0 !important;background:transparent !important;color:var(--ui-text) !important;font:var(--ui-font-xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .blDetailReportFilter button:hover,html[data-ui-system="manifest"] .blDetailReportFilter button.filterActive {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+@media (max-width:760px) {
+html[data-ui-system="manifest"] .blDetailDrawerTitle b {font-size:var(--ui-font-xl) !important
+}
+}
+html[data-ui-system="manifest"] .blDetailDrawerHead {z-index:var(--ui-z-sticky)
+}
+html[data-ui-system="manifest"] .blDetailDrawerSubbar {z-index:var(--ui-z-raised)
+}
+html[data-ui-system="manifest"] .blDetailTableWrap {z-index:var(--ui-z-base)
+}
+html[data-ui-system="manifest"] .cpaTitle b {font-size:var(--ui-font-lg) !important
+}
+html[data-ui-system="manifest"] .cpaTitle small {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaSeg {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaSeg button {border:0 !important;background:transparent !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaSeg button+button {border-left:0 !important
+}
+html[data-ui-system="manifest"] .cpaSeg button.is-on {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .cpaSeg button:focus-visible,html[data-ui-system="manifest"] .cpaBtn:focus-visible,html[data-ui-system="manifest"] .cpaToggle:focus-visible,html[data-ui-system="manifest"] .cpaChip:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaBtn {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaBtn.sm {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaBtn.ghost {background:transparent !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaCard {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaCard>header {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .cpaCard>header b {font-size:var(--ui-font-md) !important
+}
+html[data-ui-system="manifest"] .cpaToggle {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-md) !important;line-height:1
+}
+html[data-ui-system="manifest"] .cpaLayoutEmpty {border:0 !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaLayoutSummary {border-bottom:0 !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaLayoutSummary b {font-family:var(--ui-font-mono) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaLayoutItem {border:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaLayoutItem.is-hidden {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaLayoutItem.is-drop-before {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaLayoutItem.is-drop-after {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaLayoutDrag {color:var(--ui-text-muted) !important;font-size:var(--ui-font-md) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpaLayoutApply {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .cpaLayoutApply:hover {background:var(--ui-accent-hover) !important
+}
+html[data-ui-system="manifest"] .cpaChip {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;font-family:var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .cpaChip .n {font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-xl) !important;font-weight:700 !important;line-height:1.15
+}
+html[data-ui-system="manifest"] .cpaChip .l {font-size:var(--ui-font-xs) !important;font-weight:650 !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaChip .q {font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaChip.is-on {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaChip.tone-red .n {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaChip.tone-orange .n,html[data-ui-system="manifest"] .cpaChip.tone-yellow .n {color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .cpaChip.tone-green .n {color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .cpaChip.tone-blue .n {color:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .cpaChip.tone-gray .n {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaReasons .cpaReasonRow {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaReasons .cpaReasonEmailAction {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaReasons .cpaReasonMain {border:0 !important;background:transparent !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaReasons .cpaReasonMain:hover {color:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .cpaReasons .cpaReasonMain:focus-visible {box-shadow:none !important;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .cpaReasons .cpaReasonCount {font-family:var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .cpaMiniList li {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaMiniList.is-plain li {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaMiniList b {font-family:var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .cpaTable {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaTable th {font-size:var(--ui-font-xs) !important;font-weight:700 !important;color:var(--ui-text-muted) !important;text-transform:uppercase;letter-spacing:.04em
+}
+html[data-ui-system="manifest"] .cpaTable td {border-top:0 !important
+}
+html[data-ui-system="manifest"] .cpaTable td small {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaTable .num {font-family:var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .cpaTable td.is-bad {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaTable td.is-muted {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaTable tbody tr[data-cpa-order]:hover {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaPill {border-radius:var(--ui-radius) !important;font-size:var(--ui-font-xs) !important;font-weight:700 !important;border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaPill.tone-red {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaPill.tone-orange,html[data-ui-system="manifest"] .cpaPill.tone-yellow {color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .cpaPill.tone-blue {color:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .cpaPill.tone-gray {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaFlag {font-family:var(--ui-font-mono) !important;color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .cpaNote {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important;line-height:1.5
+}
+html[data-ui-system="manifest"] .cpaEmpty {border:0 !important;border-radius:var(--ui-radius) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaSub {font-size:var(--ui-font-sm) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaDim b {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaModalOverlay {z-index:var(--ui-z-modal);background:var(--ui-scrim) !important
+}
+html[data-ui-system="manifest"] .cpaModal {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaModal>header {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .cpaModal>header b {font-size:var(--ui-font-md) !important
+}
+html[data-ui-system="manifest"] .cpaModal>header small {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaModal>header button {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-lg) !important;line-height:1
+}
+html[data-ui-system="manifest"] .cpaModal>footer {border-top:0 !important
+}
+html[data-ui-system="manifest"] .cpaPlm {border:0 !important;border-radius:var(--ui-radius) !important;font-size:var(--ui-font-xs) !important;font-weight:650 !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaPlm.tone-ok {background:var(--ui-success-bg) !important;color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .cpaPlm.tone-wait {background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .cpaPlm.tone-bad {background:var(--ui-danger-bg) !important;color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaPlm.tone-off {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaModal .cpaTable a {color:var(--ui-accent) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpDocumentFlow {z-index:var(--ui-z-modal)
+}
+html[data-ui-system="manifest"] .cpaSettingRow {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaCheck input {accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .cpaCheck b {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaCheck small {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaMaster {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaDays span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaDays input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaWarn {border:0 !important;border-left:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-sm) !important;line-height:1.5
+}
+html[data-ui-system="manifest"] .cpaRulesModal>footer {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaRulesCount {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaRulesToolbar {z-index:var(--ui-z-data);background:var(--ui-surface) !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .cpaRulesTabs {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaRulesTabs button {border:0 !important;background:transparent !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaRulesTabs button+button {border-left:0 !important
+}
+html[data-ui-system="manifest"] .cpaRulesTabs button:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaRulesTabs button.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaRulesTabs button:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaRulesTabs button span {border:0 !important;background:var(--ui-surface) !important;font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-xs) !important;font-weight:700 !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaRulesAdd {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .cpaRulesAdd:hover {background:var(--ui-accent-hover) !important
+}
+html[data-ui-system="manifest"] .cpaRule {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaRule.is-open {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaRuleBar {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaRule.is-open>.cpaRuleBar {border-bottom:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaSwitchTrack {border:0 !important;background:var(--ui-surface) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .cpaSwitchTrack span {background:var(--ui-text-muted) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .cpaSwitch input:checked+.cpaSwitchTrack {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .cpaSwitch input:checked+.cpaSwitchTrack span {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .cpaSwitch input:focus-visible+.cpaSwitchTrack {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaRuleSummary {border:0 !important;background:transparent !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .cpaRuleSummary:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaRuleSummaryMain b {font-size:var(--ui-font-sm) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaRuleSummaryMain small {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaRuleSummaryMeta {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaBuiltIn {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-selected-ink) !important;font-size:var(--ui-font-xs) !important;font-weight:700 !important;text-transform:uppercase;letter-spacing:.03em
+}
+html[data-ui-system="manifest"] .cpaRuleChevron {border:0 !important;background:transparent !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaRuleChevron:hover {background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaRuleChevron:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaRuleChevron .ic {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .cpaRuleBody {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaRuleTarget>span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaRuleTarget select,html[data-ui-system="manifest"] .cpaRuleTarget>input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaRuleTarget select:focus,html[data-ui-system="manifest"] .cpaRuleTarget>input:focus,html[data-ui-system="manifest"] .cpaCondRow select:focus,html[data-ui-system="manifest"] .cpaCondRow input:focus {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaRuleEvidenceChecks {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaRuleEvidenceChecks .cpaCheck input {border:0 !important;box-shadow:none !important;accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .cpaRuleEvidenceChecks .cpaCheck span {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-sm) !important;line-height:1.25
+}
+html[data-ui-system="manifest"] .cpaRuleName {font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaRuleModeTabs {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .cpaRuleModeTabs button {border:0 !important;border-bottom:0 !important;background:transparent !important;color:var(--ui-text-muted) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaRuleModeTabs button.is-on {background:var(--ui-surface-soft) !important;color:var(--ui-selected-ink) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpaCondOperand>select:first-child {background:var(--ui-surface-strong) !important
+}
+html[data-ui-system="manifest"] .cpaCondOffset input,html[data-ui-system="manifest"] .cpaCondOffset select {font-size:var(--ui-font-xs)!important
+}
+html[data-ui-system="manifest"] .cpaCondToday {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-selected-ink) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpaFormulaEditor {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaFormulaEditor textarea {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-sm) !important;line-height:1.45
+}
+html[data-ui-system="manifest"] .cpaFormulaStatus {font-size:var(--ui-font-sm) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaFormulaStatus.is-valid {color:var(--ui-success) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpaFormulaStatus.is-invalid {color:var(--ui-danger) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpaFormulaDiagnostics span {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaFormulaFields {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaFormulaField {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-selected-ink) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaFormulaField:hover {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .cpaRuleReasonField input.is-invalid {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaRuleFieldError {font-size:var(--ui-font-xs) !important;line-height:1.3;color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaCondLabels span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaCondRow select,html[data-ui-system="manifest"] .cpaCondRow input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaValuePicker>input {border-right:0 !important
+}
+html[data-ui-system="manifest"] .cpaValueToggle {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-md) !important
+}
+html[data-ui-system="manifest"] .cpaValueToggle:hover {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaValueToggle:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaValueMenu {z-index:var(--ui-z-modal-menu);border:0 !important;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .cpaValueMenu>[data-cpa-value-search] {z-index:var(--ui-z-data);background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaValueOption {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] button.cpaValueOption:hover,html[data-ui-system="manifest"] .cpaValueOption:hover {background:var(--ui-surface-strong) !important
+}
+html[data-ui-system="manifest"] .cpaValueOption.is-selected {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaValueOption input {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaValueEmpty,html[data-ui-system="manifest"] .cpaValueMore {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important;line-height:1.35
+}
+html[data-ui-system="manifest"] .cpaValueMore {border-top:0 !important
+}
+html[data-ui-system="manifest"] .cpaCondValueSpacer {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaIconBtn {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-md) !important;line-height:1
+}
+html[data-ui-system="manifest"] .cpaIconBtn:hover {color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaIconBtn:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaDangerIcon:hover {color:var(--ui-danger) !important;background:var(--ui-danger-bg) !important
+}
+html[data-ui-system="manifest"] .cpaRuleEmptyNote {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaChecklistSettingsStrip {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaSwitchLabeled b {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaTemplateStrip {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaTemplateTitle {font-size:var(--ui-font-xs) !important;font-weight:700 !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaTemplate {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .cpaTemplate:hover {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .cpaTemplate:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaTemplate b {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaTemplate small {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important;line-height:1.35
+}
+html[data-ui-system="manifest"] .cpaMatchLine {font-size:var(--ui-font-sm) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaMatchLine select {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaFieldPickerBtn {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaFieldPickerBtn.is-empty {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaFieldPickerBtn:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaFieldChevron {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaFieldGroup {background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important;font-weight:700 !important;text-transform:uppercase;letter-spacing:.3px
+}
+html[data-ui-system="manifest"] .cpaValueOption small {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaValueMenu>[data-cpa-value-search] {border:0 !important;border-radius:var(--ui-radius) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaValueMenu>[data-cpa-value-search]:focus {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaChoice {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-xs) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaChoice.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaCondRow.is-advanced {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaCondAdvanced.is-on {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaCondRightType {background:var(--ui-surface-strong)!important
+}
+html[data-ui-system="manifest"] .cpaRulePreview {border:0 !important;border-left:0 !important;background:var(--ui-surface-soft) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaRulePreview span,html[data-ui-system="manifest"] .cpaRulePreview small {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaRuleWarn {border:0 !important;border-left:0 !important;background:var(--ui-danger-bg) !important;color:var(--ui-text) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaUsedBy {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaAiSteps {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaAiSteps li>b {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaAiSteps textarea {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaAiSteps textarea[data-cpa-ai-answer] {font-family:var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .cpaAiFound {border:0 !important;border-left:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaAiFound span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaAiFound code {font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaBtn.primary {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .cpaBtn.primary:hover {background:var(--ui-accent-hover) !important
+}
+html[data-ui-system="manifest"] .cpaStatusBtn {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaStatusBtn:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaStatusBtn.is-on.tone-blue {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaStatusBtn.is-on.tone-green {background:var(--ui-success-bg) !important;color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .cpaStatusBtn.is-on.tone-red {background:var(--ui-danger-bg) !important;color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaStatusBtn.is-on.tone-gray {background:var(--ui-surface-strong) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpaFlag.tone-bad {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaRulesEmpty {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaRulesEmpty b {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaRulesEmpty span {color:var(--ui-text-muted) !important;font-size:var(--ui-font-sm) !important;line-height:1.45
+}
+@media (max-width:760px) {
+html[data-ui-system="manifest"] .cpaRulesTabs button+button {border-left:0 !important
+}
+}
+html[data-ui-system="manifest"] .cpaAttentionTable th {z-index:var(--ui-z-data);background:var(--ui-surface-soft) !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .cpaAttentionExcludeBtn {font-size:var(--ui-font-lg) !important;font-weight:700 !important;line-height:1
+}
+html[data-ui-system="manifest"] .cpaExcludeOrderFacts>div {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaExcludeOrderFacts span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaExcludeOrderFacts b {font-size:var(--ui-font-sm) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaExcludeGroup {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaExcludeGroup legend {font-size:var(--ui-font-xs) !important;font-weight:700 !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpaExcludeChoice {border:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaExcludeChoice input {accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .cpaExcludeChoice b {font-size:var(--ui-font-sm) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaExcludeChoice small {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important;line-height:1.35
+}
+html[data-ui-system="manifest"] .cpaExcludeField>span,html[data-ui-system="manifest"] .cpaExcludeSpecific>span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaExcludeField select,html[data-ui-system="manifest"] .cpaExcludeField textarea,html[data-ui-system="manifest"] .cpaExcludeSpecific input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaExcludeField select:focus,html[data-ui-system="manifest"] .cpaExcludeField textarea:focus,html[data-ui-system="manifest"] .cpaExcludeSpecific input:focus {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaExcludeField>small {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important;line-height:1.4
+}
+html[data-ui-system="manifest"] .cpaExcludeApply {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .cpaExcludeApply:hover {background:var(--ui-accent-hover) !important
+}
+html[data-ui-system="manifest"] .cpaExcludedTable th {z-index:var(--ui-z-data);background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaColumnSearch>span {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaColumnSearch input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaColumnSearch input:focus {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaColumnPane {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaColumnPaneHead {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .cpaColumnPaneHead b {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .cpaColumnPaneHead span {font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaColumnGroup>b {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important;text-transform:uppercase;letter-spacing:.04em
+}
+html[data-ui-system="manifest"] .cpaColumnOption {border:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaColumnOption input {accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .cpaColumnOption strong {font-size:var(--ui-font-sm) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaColumnOption small {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaSelectedColumn {border:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaSelectedColumn.is-drop-before {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaSelectedColumn.is-drop-after {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaColumnDrag {color:var(--ui-text-muted) !important;font-size:var(--ui-font-md) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpaSelectedColumnText strong {font-size:var(--ui-font-sm) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpaSelectedColumnText small {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaColumnsStatus {color:var(--ui-danger) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaColumnsApply {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .cpaColumnsApply:hover {background:var(--ui-accent-hover) !important
+}
+html[data-ui-system="manifest"] .cpaMix {border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg {border:0 !important;background:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg:first-child {border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg:last-child {border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg.tone-red {background:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg.tone-orange {background:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg.tone-yellow {background:color-mix(in srgb,var(--ui-warning) 52%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg.tone-blue {background:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg.tone-green {background:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg.tone-gray {background:var(--ui-group-divider) !important
+}
+html[data-ui-system="manifest"] .cpaMixSeg:hover,html[data-ui-system="manifest"] .cpaMixSeg:focus-visible {filter:none !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .trDrop {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .trDrop.is-over,html[data-ui-system="manifest"] .trDrop:hover {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .trDrop b {font-size:var(--ui-font-md) !important
+}
+html[data-ui-system="manifest"] .trDrop small,html[data-ui-system="manifest"] .trMuted {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .trTypes,html[data-ui-system="manifest"] .trIssues,html[data-ui-system="manifest"] .trDone {border:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .trTypeRow>span:first-child {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .trTypeRow select,html[data-ui-system="manifest"] .trTypeRow input,html[data-ui-system="manifest"] .trTable select {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .trTableWrap {border:0 !important
+}
+html[data-ui-system="manifest"] .trTable {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .trFiles {color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .trTable th,html[data-ui-system="manifest"] .trTable td {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .trTable td small {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .trTable tr.is-blocked td {background:color-mix(in srgb,var(--ui-surface-soft) 70%,transparent) !important
+}
+html[data-ui-system="manifest"] .trBadge {border:0 !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .trBadge.tone-green {color:var(--ui-success) !important;background:var(--ui-success-bg) !important
+}
+html[data-ui-system="manifest"] .trBadge.tone-red {color:var(--ui-danger) !important;background:var(--ui-danger-bg) !important
+}
+html[data-ui-system="manifest"] .trBadge.tone-orange {color:var(--ui-warning) !important;background:var(--ui-warning-bg) !important
+}
+html[data-ui-system="manifest"] .trBadge.tone-blue {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .trInline {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .trAiBar {border:0 !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .trAiBar small {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .trAiBar.is-error {background:var(--ui-danger-bg) !important
+}
+html[data-ui-system="manifest"] .trAi {border-left:0 !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .cpaChecklistOverview>.cpaCard {border:0 !important;background:transparent !important
+}
+html[data-ui-system="manifest"] .cpaCheckSummary {background:var(--ui-surface) !important;border:0 !important
+}
+html[data-ui-system="manifest"] .cpaCheckSummary b {font-size:var(--ui-font-md) !important
+}
+html[data-ui-system="manifest"] .cpaCheckSummary span {font-size:var(--ui-font-sm) !important;color:var(--ui-text-secondary) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .cpaCheckSummary small {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpaCheckRing {border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaCheckRing:before {background:var(--ui-surface) !important;border-radius:var(--ui-radius) !important;z-index:var(--ui-z-below)
+}
+html[data-ui-system="manifest"] .cpaCheckRing b {font-size:var(--ui-font-xl) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .cpaCheckTile {border:0 !important;border-left:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font:400 var(--ui-font-sm)/1.4 var(--ui-font-body) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast);animation:none !important;animation-delay:none !important
+}
+html[data-ui-system="manifest"] .cpaCheckTile:hover {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .cpaCheckTile:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpaCheckTileHead>.ic {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpaCheckTile>small {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaCheckTileCounts {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-xs) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .cpaCheckTileCounts>span {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpaCheckTileCounts .cpaCheckRejected {color:var(--ui-danger) !important;background:var(--ui-danger-bg) !important
+}
+@media (prefers-reduced-motion:reduce) {
+html[data-ui-system="manifest"] .cpaCheckTile {animation:none !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+}
+html[data-ui-system="manifest"][data-overview-motion="paused"] .cpaCheckTile {animation:none !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .cpaRuleFieldset {border:0 !important
+}
+html[data-ui-system="manifest"] .cpaManagedBadge {color:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .cpaManagedStrip {border:0 !important;border-left:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .cpaManagedRemoved>b {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpaManagedRemovedItem {border:0 !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .trParts>small {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .trElementPick>span {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .colPanel.viewportFloating {z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .tableFieldsBtn.hasOverrides,html[data-ui-system="manifest"] .tableFieldsBtn[aria-expanded="true"] {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .tableFieldsBadge {border-radius:var(--ui-radius) !important;background:var(--ui-accent) !important;color:var(--ui-surface) !important;font:700 var(--ui-font-2xs)/16px var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .tableFieldsDrawer {z-index:var(--ui-z-modal);border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .tableFieldsHead {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .tableFieldsHead b {font:700 var(--ui-font-sm)/1.2 var(--ui-font-heading) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .tableFieldsHead span {font:500 var(--ui-font-2xs)/1.35 var(--ui-font-body) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .tableFieldsClose {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-xl) !important;line-height:1
+}
+html[data-ui-system="manifest"] .tableFieldsClose:hover {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .tableFieldsGridHead {border-bottom:0 !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important;font:700 var(--ui-font-2xs)/1 var(--ui-font-heading) !important;letter-spacing:.06em;text-transform:uppercase
+}
+html[data-ui-system="manifest"] .tableFieldsPresetHead {border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .tableFieldsPresetHead.isActive {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .tableFieldsCheck input {accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .tableFieldsGroup {border-radius:var(--ui-radius) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .tableFieldsGroup.isOpen {background:color-mix(in srgb,var(--ui-surface-soft) 55%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .tableFieldsGroupToggle {border:0 !important;background:transparent !important;color:var(--ui-text) !important;font:650 var(--ui-font-xs)/1.2 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .tableFieldsGroupToggle .ic {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .tableFieldsModeBtn {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font:600 var(--ui-font-2xs)/1.2 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .tableFieldsModeBtn.is-all {color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .tableFieldsModeBtn.is-hidden {color:var(--ui-text-muted) !important;text-decoration:line-through
+}
+html[data-ui-system="manifest"] .tableFieldsGroup.is-hidden .tableFieldsGroupToggle b {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .tableFieldsItemCount {color:var(--ui-text-muted) !important;font:600 var(--ui-font-2xs)/1 var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .tableFieldsColumn {border-top:0 !important;border-bottom:0 !important;color:var(--ui-text-secondary) !important;font:500 var(--ui-font-xs)/1.2 var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .tableFieldsColumn:hover {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .tableFieldsColumn.isHiddenNow .tableFieldsColumnName {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .tableFieldsDrag {color:var(--ui-text-muted) !important;font-size:var(--ui-font-sm) !important;line-height:1;letter-spacing:-1px
+}
+html[data-ui-system="manifest"] .tableFieldsColumn.hasUserLabel .tableFieldsColumnName {font-style:italic !important
+}
+html[data-ui-system="manifest"] .tableFieldsIcon {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text-secondary) !important;font:700 var(--ui-font-2xs)/1 var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .tableFieldsIcon:hover {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .tableFieldsIcon.isFx {color:var(--ui-accent) !important;font-style:italic !important
+}
+html[data-ui-system="manifest"] .tableFieldsIcon.isDanger:hover {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .tableFieldsGroupToggle:focus-visible,html[data-ui-system="manifest"] .tableFieldsModeBtn:focus-visible,html[data-ui-system="manifest"] .tableFieldsIcon:focus-visible,html[data-ui-system="manifest"] .tableFieldsClose:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .tableFieldsFoot {border-top:0 !important
+}
+html[data-ui-system="manifest"] .colPanel,html[data-ui-system="manifest"] .colFilterPanel {background:var(--ui-surface) !important;backdrop-filter:none;border:0 !important;border-radius:var(--ui-radius) !important;box-shadow:var(--ui-shadow-overlay) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .colPanel {z-index:var(--ui-z-sticky)
+}
+html[data-ui-system="manifest"] .colPanelItem {font-size:var(--ui-font-sm) !important;border-radius:var(--ui-radius) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .colPanelItem:hover {background:var(--ui-surface-strong) !important
+}
+html[data-ui-system="manifest"] .backlogExportColumnsBody {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .backlogExportColumnsGroup {border:0 !important;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .backlogExportColumnsGroup h3 {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .backlogColPane {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-strong) !important
+}
+html[data-ui-system="manifest"] .backlogColPaneHead {font-size:var(--ui-font-2xs) !important;font-weight:700 !important;letter-spacing:.4px;text-transform:uppercase;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogColCount {font-variant-numeric:tabular-nums !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .backlogColSearch {background:var(--ui-surface) !important;border:0 !important;color:var(--ui-text) !important;border-radius:var(--ui-radius) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .backlogColGroupLabel {font-size:var(--ui-font-2xs) !important;text-transform:uppercase;letter-spacing:.4px;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogColRow {font-size:var(--ui-font-xs) !important;line-height:1.3;border-radius:var(--ui-radius) !important;border:0 !important
+}
+html[data-ui-system="manifest"] .backlogColRow:hover {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .backlogColRowNum {color:var(--ui-text-muted) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .backlogColTag {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;border:0 !important;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .backlogColRemove {border:0 !important;background:none !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-md) !important;line-height:1
+}
+html[data-ui-system="manifest"] .backlogColRemove:hover {color:var(--ui-danger,var(--ui-accent)) !important
+}
+html[data-ui-system="manifest"] .backlogColRowBtn {border:0 !important;background:none !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .backlogColEmpty {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .backlogExcelFormulaField {font-size:var(--ui-font-xs) !important;line-height:1.3
+}
+html[data-ui-system="manifest"] .backlogExcelFormulaField input {background:var(--ui-surface) !important;border:0 !important;color:var(--ui-text) !important;border-radius:var(--ui-radius) !important;font:var(--ui-font-xs) var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .colFilterPanel {z-index:var(--ui-z-sticky);font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .colFilterPanel.colFilterPanelModal {z-index:var(--ui-z-modal)
+}
+html[data-ui-system="manifest"] .colFilterPanel select {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .thFilterBtn {border:0 !important;background:none !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .thFilterBtn:hover {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .thFilterBtn.filterActive {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] thead th.columnFilterActive .thFilterBtn {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] #backlogTreeTable td {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] #backlogTreeTable tbody tr:hover {background:var(--ui-row-hover) !important
+}
+html[data-ui-system="manifest"] .backlogTreeGuide {border-left:0 !important
+}
+html[data-ui-system="manifest"] .backlogToggle {border:0 !important;background:var(--ui-surface) !important;border-radius:var(--ui-radius) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogToggle:hover {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .backlogRow.depth-0 .backlogTreeLabel {font-weight:650 !important
+}
+html[data-ui-system="manifest"] .backlogRow.depth-1 .backlogTreeLabel {font-weight:600 !important
+}
+html[data-ui-system="manifest"] .backlogRow.depth-2 .backlogTreeLabel {font-weight:500 !important
+}
+html[data-ui-system="manifest"] .backlogRow.depth-3 .backlogTreeLabel,html[data-ui-system="manifest"] .backlogRow.depth-4 .backlogTreeLabel,html[data-ui-system="manifest"] .backlogRow.depth-5 .backlogTreeLabel {font-weight:400 !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .backlogTreeCtl {font-family:var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .backlogDetailBtn {border:0 !important;background:var(--ui-surface) !important;color:var(--ui-selected-ink) !important;border-radius:var(--ui-radius) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogDetailBtn:hover {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .backlogDetailOverlay {z-index:var(--ui-z-popover);background:var(--ui-scrim) !important
+}
+html[data-ui-system="manifest"] .backlogDetailCard {border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .backlogDetailHead {border-bottom:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .backlogDetailMeta {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .backlogDetailClose {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogDetailClose:hover {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .backlogDetailTableWrap {background:var(--ui-surface) !important;border:0 !important
+}
+html[data-ui-system="manifest"] .backlogDetailLoading,html[data-ui-system="manifest"] .backlogDetailEmpty,html[data-ui-system="manifest"] .backlogDetailError {color:var(--ui-text-muted) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .backlogDetailError {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .backlogDetailTable th {z-index:var(--ui-z-data);background:var(--ui-header-bg) !important;color:var(--ui-header-ink) !important;font-size:var(--ui-font-2xs) !important;border-right:0 !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .backlogDetailTable td {font-size:var(--ui-font-xs) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;border-right:0 !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .backlogDetailTable tbody tr:hover td {background:var(--ui-row-hover) !important
+}
+html[data-ui-system="manifest"] #cpTable tbody td[data-key="STATUS"]:hover,html[data-ui-system="manifest"] #ordersTable tbody td[data-key="STATUS"]:hover {box-shadow:none !important
+}
+html[data-ui-system="manifest"] #cpTable td.blGridRangeCell,html[data-ui-system="manifest"] #ordersTable td.blGridRangeCell {box-shadow:none !important
+}
+html[data-ui-system="manifest"] #cpTable td.blGridRangeEdge,html[data-ui-system="manifest"] #ordersTable td.blGridRangeEdge {outline:1px solid color-mix(in srgb,var(--ui-accent) 45%,transparent);outline-offset:-1px
+}
+html[data-ui-system="manifest"] #cpTable td.blGridActiveCell,html[data-ui-system="manifest"] #ordersTable td.blGridActiveCell {outline:2px solid var(--ui-accent);outline-offset:-2px
+}
+html[data-ui-system="manifest"] .cpDimFilterGroup .dimFilterBtn {border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .cpDimFilterGroup .dimFilterBtn>.ic:first-child {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpDimFilterGroup .dimFilterBtn .dimChevron {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .cpDimFilterGroup .dimFilterBtn.hasFilter {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-weight:600 !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpDimFilterGroup .dimFilterBtn.hasFilter>.ic:first-child {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpDimPanel {z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .cpDimPanel.viewportFloating {z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .tableToolbarActions>.colPanelWrap>.navActionBtn {
+  font-size:var(--ui-font-xs) !important
+}
+@media (max-width:1150px) {
+html[data-ui-system="manifest"] .tableToolbarActions>.colPanelWrap>.navActionBtn {font-size:var(--ui-font-2xs) !important
+}
+}
+html[data-ui-system="manifest"] #shipSecondaryToolbar {border:0 !important;background:transparent !important
+}
+html[data-ui-system="manifest"] .colPanelItem .colPanelName[data-rename] {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .colPanelDrop {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;line-height:1
+}
+html[data-ui-system="manifest"] .colPanelDrop:hover {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .colPanelAdd {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .colPanelAdd:hover {color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .colPanelEdit {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .colPanelEdit:hover {color:var(--ui-selected-ink) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .colPanelItem.hasUserLabel .colPanelName {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpModelColEdit {border:0!important;background:transparent!important;color:var(--ui-text)!important;font:inherit!important
+}
+html[data-ui-system="manifest"] .cpModelColumnBody>label {color:var(--ui-text-secondary) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .cpModelColumnBody input,html[data-ui-system="manifest"] .cpModelColumnBody select {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpModelColumnList {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpModelColumnOption {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpModelColumnOption:hover {background:var(--ui-row-hover) !important
+}
+html[data-ui-system="manifest"] .cpModelColumnOption.active {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .cpModelColumnOption span {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .shipCompare {
+  font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .shipCompare thead th { z-index:var(--ui-z-data);
+  background:var(--ui-surface-soft) !important; color:var(--ui-text-secondary) !important; font-weight:750 !important; font-size:var(--ui-font-2xs) !important; letter-spacing:.02em;
+  border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .shipCompare tbody td {
+  border-bottom:0 !important;
+  background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .shipRowCards:hover>td {background:color-mix(in srgb,var(--ui-accent) 5%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .shipThumb {
+  background:var(--ui-surface-soft) !important; border:0 !important
+}
+html[data-ui-system="manifest"] .shipThumb.isEmpty {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .shipProductName {
+  font-size:var(--ui-font-xs) !important; font-weight:750 !important; color:var(--ui-text) !important; line-height:1.25
+}
+html[data-ui-system="manifest"] .shipProductSub,html[data-ui-system="manifest"] .shipProductMeta,html[data-ui-system="manifest"] .shipProductQty {
+  font-size:var(--ui-font-2xs) !important; color:var(--ui-text-muted) !important; line-height:1.3
+}
+html[data-ui-system="manifest"] .shipProductQty {color:var(--ui-text-secondary) !important; font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .shipDateRow { font-size:var(--ui-font-2xs) !important; line-height:1.35
+}
+html[data-ui-system="manifest"] .shipDateRow>span {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .shipDateRow>b {color:var(--ui-text) !important; font-weight:650 !important; font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .shipDateRow.shipDateEditable:hover>b {text-decoration:underline dotted
+}
+html[data-ui-system="manifest"] .shipCard.isSource {background:color-mix(in srgb,var(--ui-surface-soft) 60%,var(--ui-surface))!important
+}
+html[data-ui-system="manifest"] .shipCard.isBaseline {background:var(--ui-surface-soft)!important
+}
+html[data-ui-system="manifest"] .shipCardPrice {
+  font-size:var(--ui-font-md) !important; font-weight:800 !important; color:var(--ui-text) !important; line-height:1.15;
+  font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .shipCardMetrics { font-size:var(--ui-font-2xs) !important; line-height:1.3
+}
+html[data-ui-system="manifest"] .shipCardRow {color:var(--ui-text-muted) !important; font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .shipCardRow.isGood {color:var(--ui-success,var(--ui-accent)) !important; font-weight:700 !important
+}
+html[data-ui-system="manifest"] .shipCardRow.isBad {color:var(--ui-danger,var(--ui-accent)) !important; font-weight:700 !important
+}
+html[data-ui-system="manifest"] .shipCard:not(.isPriceOnly) [data-ship-date],html[data-ui-system="manifest"] .shipCard:not(.isPriceOnly) .shipTransit {
+  font-size:var(--ui-font-sm) !important; font-weight:650 !important; color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .shipCardHint {font-size:var(--ui-font-2xs) !important; color:var(--ui-text-muted) !important; line-height:1.2
+}
+html[data-ui-system="manifest"] .shipCard.isPriceEditable [data-ship-unit]:hover {text-decoration:underline dotted
+}
+html[data-ui-system="manifest"] .shipField>span {
+  font-size:var(--ui-font-2xs) !important; font-weight:650 !important; color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .shipCardInput {
+  border:0 !important;
+  background:var(--ui-canvas) !important; color:var(--ui-text) !important;
+  font:var(--ui-font-xs) inherit !important; font-variant-numeric:tabular-nums !important; outline:0
+}
+html[data-ui-system="manifest"] .shipCardInput:focus { box-shadow:none !important
+}
+html[data-ui-system="manifest"] .shipCardInput.isInvalid { box-shadow:none !important
+}
+html[data-ui-system="manifest"] .shipCardInput:disabled {background:var(--ui-surface-soft) !important; color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .shipBadge {
+  font-style:normal !important; font-size:var(--ui-font-2xs) !important; font-weight:750 !important
+}
+html[data-ui-system="manifest"] .shipBadge.isBase,html[data-ui-system="manifest"] .shipBadge.isSource {background:var(--ui-surface) !important; color:var(--ui-text-muted) !important; border:0 !important
+}
+html[data-ui-system="manifest"] .shipRowCards.isDragOver {box-shadow:none !important
+}
+html[data-ui-system="manifest"] #cpTable tbody tr.cpLogisticDetailRow,html[data-ui-system="manifest"] #ordersTable tbody tr.cpLogisticDetailRow {background:transparent !important
+}
+html[data-ui-system="manifest"] #cpTable tbody tr.cpLogisticDetailRow:hover,html[data-ui-system="manifest"] #ordersTable tbody tr.cpLogisticDetailRow:hover {background:transparent !important
+}
+html[data-ui-system="manifest"] #cpTable tbody tr.cpLogisticDetailRow>td,html[data-ui-system="manifest"] #ordersTable tbody tr.cpLogisticDetailRow>td {border-bottom:0 !important;background:color-mix(in srgb,var(--ui-surface-soft) 72%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .cpLogisticToggle {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .cpLogisticToggle:hover,html[data-ui-system="manifest"] .cpLogisticToggle:focus {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpLogisticToggle[aria-expanded="true"] {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .cpLogisticSummaryItem>b {font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .cpLogisticArrivalTd {line-height:1.18
+}
+html[data-ui-system="manifest"] .cpLogisticPrimaryDate {font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-xs) !important;font-weight:700 !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDateSource,html[data-ui-system="manifest"] .cpLogisticMore {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDelTypeWrap .cpLogisticMore {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpLogisticReadOnlyTypes span {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailCard {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailHead {border-bottom:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailHead strong {font-size:var(--ui-font-sm) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailHead>div:first-child span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpLogisticPriorityLegend span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpLogisticPriorityLegend b,html[data-ui-system="manifest"] .cpLogisticPriority>b {border-radius:var(--ui-radius) !important;font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-2xs) !important;background:var(--ui-surface-strong) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpLogisticPriorityLegend span:nth-child(1) b,html[data-ui-system="manifest"] .cpLogisticDetailLine.priority-1 .cpLogisticPriority>b {background:var(--ui-danger-bg) !important;color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpLogisticPriorityLegend span:nth-child(2) b,html[data-ui-system="manifest"] .cpLogisticDetailLine.priority-2 .cpLogisticPriority>b {background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .cpLogisticPriorityLegend span:nth-child(3) b,html[data-ui-system="manifest"] .cpLogisticDetailLine.priority-3 .cpLogisticPriority>b {background:var(--ui-success-bg) !important;color:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailGridHead {border-bottom:0 !important;background:color-mix(in srgb,var(--ui-surface-soft) 72%,var(--ui-surface)) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important;letter-spacing:.35px;text-transform:uppercase;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailLine {border-bottom:0 !important;font-size:var(--ui-font-2xs) !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailLine:last-child {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailLine::before {background:var(--ui-warning) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailLine.priority-1::before {background:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailLine.priority-3::before {background:var(--ui-success) !important
+}
+html[data-ui-system="manifest"] .cpLogisticPriority span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailName strong {font-size:var(--ui-font-2xs) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailName small,html[data-ui-system="manifest"] .cpLogisticDateValue small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpShortageAction {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-warning-bg) !important;color:var(--ui-warning) !important;font:inherit !important;font-size:var(--ui-font-2xs) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpShortageAction.is-undo {background:transparent !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDetailName small.cpShortageNote {color:var(--ui-warning) !important;font-weight:650 !important
+}
+html[data-ui-system="manifest"] .cpLogisticQty {font-family:var(--ui-font-mono) !important;font-weight:700 !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .cpLogisticQty small {font-family:var(--ui-font-body) !important;font-weight:500 !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .cpLogisticDateValue strong {font-family:var(--ui-font-mono) !important;font-size:var(--ui-font-2xs) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] #cpTable td.cpPictureCell {background:color-mix(in srgb,var(--ui-surface) 92%,transparent) !important
+}
+html[data-ui-system="manifest"] #cpTable .cpThumb {border-radius:var(--ui-radius) !important;border:0 !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] #cpTable .cpThumbFlash {animation:none !important
+}
+html[data-ui-system="manifest"] #ordersTable tr.ordersPassiveRow td {
+  background:color-mix(in srgb,var(--ui-surface-soft) 72%,var(--ui-surface)) !important;
+  color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] #ordersTable tr.ordersPassiveRow:hover td {
+  background:color-mix(in srgb,var(--ui-accent) 7%,var(--ui-surface-soft)) !important;
+  color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] #ordersTable tr.ordersPassiveRow td:first-child {
+  box-shadow:none !important
+}
+html[data-ui-system="manifest"] #cpProdStatusBtn.prepareEmailBusy {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] #cpTable tbody td.frzL,html[data-ui-system="manifest"] #ordersTable tbody td.frzL {
+  background-color:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] #cpTable tbody tr:hover td.frzL,html[data-ui-system="manifest"] #ordersTable tbody tr:hover td.frzL {
+  background:color-mix(in srgb,var(--ui-surface) 94%,var(--ui-text) 6%) !important
+}
+html[data-ui-system="manifest"] .backlogFieldLabel {font-size:var(--ui-font-2xs) !important;letter-spacing:.04em;text-transform:uppercase;color:var(--ui-text-muted) !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .backlogRange input[type=date] {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-canvas) !important;color:var(--ui-text) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .backlogRangeSep {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogFilterFoot {border-top:0 !important
+}
+html[data-ui-system="manifest"] .backlogGroupToggle {border:0 !important;background:transparent !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-xs) !important;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .backlogGroupToggle:hover {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .backlogGroupToggle[aria-expanded="true"] {color:var(--ui-selected-ink) !important;background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .backlogGroupPanel {border-top:0 !important
+}
+html[data-ui-system="manifest"] .backlogChkRow {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .backlogOrderList {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] #backlogDimPicker {font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .backlogDimItem {background:var(--ui-surface-soft) !important;border:0 !important;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .backlogDimItem.isGrouped {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .backlogDimFilterBtn {border:0 !important;background:none !important;color:inherit !important;border-radius:var(--ui-radius) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .backlogDimFilterBtn:hover {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .backlogDimFilterBtn.hasFilter {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .backlogDimAddButton {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font:600 var(--ui-font-sm) inherit !important
+}
+html[data-ui-system="manifest"] .backlogDimAddButton:hover {background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .backlogDimAddOverlay {z-index:var(--ui-z-modal);background:var(--ui-scrim) !important;backdrop-filter:none
+}
+html[data-ui-system="manifest"] .backlogDimAddDialog {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;box-shadow:var(--ui-shadow-overlay) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogDimAddHead strong {font-size:var(--ui-font-lg) !important
+}
+html[data-ui-system="manifest"] .backlogDimAddHead small {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogDimAddHead>button {border:0 !important;background:none !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xl) !important;line-height:1
+}
+html[data-ui-system="manifest"] .backlogDimAddDialog>label {font-size:var(--ui-font-sm) !important;font-weight:600 !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .backlogDimAddDialog select {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogTh {background:var(--ui-header-bg) !important;color:var(--ui-header-ink) !important
+}
+html[data-ui-system="manifest"] .autoModalOverlay {z-index:var(--ui-z-popover);background:var(--ui-scrim) !important
+}
+html[data-ui-system="manifest"] .autoModal {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .autoModal>header {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .autoModal>header h3 {font-size:var(--ui-font-md) !important
+}
+html[data-ui-system="manifest"] .autoModal>header button {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-xl) !important
+}
+html[data-ui-system="manifest"] .autoModalBody h4 {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;text-transform:uppercase
+}
+html[data-ui-system="manifest"] .autoModalBody pre {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-secondary) !important;font:var(--ui-font-2xs)/1.5 var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .autoModal>footer {border-top:0 !important
+}
+html[data-ui-system="manifest"] .autoModal.purpose header p {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;line-height:1.45
+}
+html[data-ui-system="manifest"] .freightHead {border-bottom:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .freightHead p {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important;line-height:1.45
+}
+html[data-ui-system="manifest"] .freightScroll {background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .freightSection {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .freightSectionHead b {font-size:var(--ui-font-xs) !important;font-weight:800 !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .freightSectionHead span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;line-height:1.4
+}
+html[data-ui-system="manifest"] .freightRateRow input,html[data-ui-system="manifest"] .freightRateRow select {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .freightRateValue {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .freightRateValue i {font-style:normal !important;color:var(--ui-text-muted) !important;font-weight:800 !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .freightRateValue input {border:0 !important;background:transparent !important;font:800 var(--ui-font-sm) var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .freightFactor span {font-size:var(--ui-font-2xs) !important;font-weight:800 !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .freightFactor input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font:800 var(--ui-font-sm) var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .freightField {border:0 !important;border-radius:var(--ui-radius) !important;
+  background:color-mix(in srgb,var(--ui-warning-bg) 42%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .freightField>span {font-size:var(--ui-font-2xs) !important;font-weight:800 !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .freightField>small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;line-height:1.3
+}
+html[data-ui-system="manifest"] .freightField input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font:800 var(--ui-font-sm) var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .freightStat {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .freightStat span {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;line-height:1.3
+}
+html[data-ui-system="manifest"] .freightStat b {font:800 var(--ui-font-base) var(--ui-font-mono) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .freightStat.freightWins {background:color-mix(in srgb,var(--ui-accent) 8%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .freightStat.freightStatMain b {font-size:var(--ui-font-md) !important
+}
+html[data-ui-system="manifest"] .freightTable {font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .freightTable th {font-size:var(--ui-font-2xs) !important;font-weight:800 !important;color:var(--ui-text-muted) !important;border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .freightTable td {border-bottom:0 !important;font-family:var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .freightTable td b {font-family:inherit !important;font-size:var(--ui-font-xs) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .freightTable td small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .freightTable td.freightLanded {font-weight:800 !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .freightEmpty {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .freightNotice {border:0 !important;border-radius:var(--ui-radius) !important;background:color-mix(in srgb,var(--ui-accent) 6%,var(--ui-surface)) !important;font-size:var(--ui-font-2xs) !important;line-height:1.45;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .freightFoot {border-top:0 !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .freightFoot>span {color:var(--ui-danger) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .freightRowTab {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .freightRowTab.isReady {color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .freightRowTab.isActive {background:color-mix(in srgb,var(--ui-accent) 12%,var(--ui-surface)) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .freightCartonRow input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font:800 var(--ui-font-sm) var(--ui-font-mono) !important
+}
+html[data-ui-system="manifest"] .freightCartonRow i {font-style:normal !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;font-weight:800 !important
+}
+html[data-ui-system="manifest"] .freightMultiTable tr.freightTotalRow td {border-top:0 !important;font-weight:800 !important
+}
+html[data-ui-system="manifest"] #cpTable tbody td.editTd.frzL,html[data-ui-system="manifest"] #ordersTable tbody td.editTd.frzL {
+  background-clip:padding-box !important
+}
+html[data-ui-system="manifest"] #cpTable td.qtxSavedColourCell[data-key="C.Code"],html[data-ui-system="manifest"] #ordersTable td.qtxSavedColourCell[data-key="C.Code"] {color:var(--ui-accent) !important;font-weight:700 !important;text-decoration:underline dotted
+}
+html[data-ui-system="manifest"] #cpTable td.qtxSavedColourCell[data-key="C.Code"]:hover,html[data-ui-system="manifest"] #ordersTable td.qtxSavedColourCell[data-key="C.Code"]:hover {background:color-mix(in srgb,var(--ui-accent) 9%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .oabSettingsBody label {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .oabSettingsBody input[type=number],html[data-ui-system="manifest"] .oabSettingsBody input[type=text] {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-size:var(--ui-font-sm) !important
+}
+html[data-ui-system="manifest"] .oabSettingsSectionHead>span {font-size:var(--ui-font-xs) !important;font-weight:700 !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .oabPivotAxisRow,html[data-ui-system="manifest"] .oabPivotValueRow {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .oabConfigDrag {color:var(--ui-text-muted) !important;font-size:var(--ui-font-md) !important;letter-spacing:-3px
+}
+html[data-ui-system="manifest"] .oabPivotAxisRow select,html[data-ui-system="manifest"] .oabPivotValueRow select {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .oabConfigIconBtn {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text-secondary) !important;font-size:var(--ui-font-md) !important;font-weight:750 !important
+}
+html[data-ui-system="manifest"] .oabConfigIconBtn:hover:not(:disabled) {background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .oabConfigIconBtn.danger:hover:not(:disabled) {color:var(--ui-danger) !important;background:color-mix(in srgb,var(--ui-danger) 8%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .oabSettingsHint {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogSettingsDateGrid>label {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .backlogSettingsDateRange>span {color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogSettingsDateRange input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogSettingsFilterRow {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .backlogSettingsFilterRow select {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .tableColumnContextMenu {z-index:var(--ui-z-modal);background:var(--ui-surface) !important;color:var(--ui-text) !important;border:0 !important;border-radius:var(--ui-radius) !important;
+  box-shadow:var(--ui-shadow-overlay) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .tableColumnContextItem {border:0 !important;background:transparent !important;color:var(--ui-text) !important;border-radius:var(--ui-radius) !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .tableColumnContextItem:hover:not(:disabled) {background:var(--ui-surface-soft) !important;color:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .tableColumnContextItem.isPrimary {font-weight:800 !important;color:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .tableColumnContextSep {background:var(--ui-row-divider) !important
+}
+html[data-ui-system="manifest"] .tableColumnContextTitle {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;font-weight:800 !important;text-transform:uppercase;letter-spacing:.04em
+}
+html[data-ui-system="manifest"] .oabPivotRangeGrid label {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .oabPivotRangeGrid input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .oabPivotBehaviorGrid {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .oabCheckField {color:var(--ui-text-secondary)!important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .oabPivotGroupRow td,html[data-ui-system="manifest"] .oabPivotSubtotalRow td {background:color-mix(in srgb,var(--ui-selected) 55%,var(--ui-surface)) !important;font-weight:600 !important
+}
+html[data-ui-system="manifest"] .oabPivotSubtotalRow td {border-top:0 !important
+}
+html[data-ui-system="manifest"] .oabPivotGrandTotalRow td {background:var(--ui-text-secondary) !important;color:var(--ui-surface) !important;font-weight:800 !important;border-top:0 !important
+}
+html[data-ui-system="manifest"] .oabPivotGroupToggle {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:inherit !important;font-weight:900 !important
+}
+html[data-ui-system="manifest"] .oabPivotGroupToggle:hover {background:var(--ui-selected) !important
+}
+html[data-ui-system="manifest"] .oabPivotSubtotalTag {border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;border:0 !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] #oabTable tbody td.oabPivotDrillCell:hover {box-shadow:none !important;background:color-mix(in srgb,var(--ui-selected) 55%,var(--ui-surface)) !important
+}
+html[data-ui-system="manifest"] .colPanelItem.isFormulaCol .colPanelName {border:0 !important;background:transparent !important;color:var(--ui-text) !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .colPanelItem.isFormulaCol .colPanelName:hover {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .colPanelFx {font-size:var(--ui-font-2xs) !important;font-weight:700 !important;font-style:italic !important;letter-spacing:.2px;color:var(--ui-selected-ink) !important;border:0 !important;border-radius:var(--ui-radius) !important;line-height:14px
+}
+html[data-ui-system="manifest"] #cpTable thead th.fcJustAdded,html[data-ui-system="manifest"] #ordersTable thead th.fcJustAdded,html[data-ui-system="manifest"] #shipTable thead th.fcJustAdded {box-shadow:none !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .backlogChartPanel {border:0 !important;border-radius:var(--ui-radius) !important;box-shadow:var(--ui-shadow-overlay) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogChartHead strong {font-size:var(--ui-font-base) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogChartHead small {font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogChartActions [data-backlog-chart-disable] {font-size:var(--ui-font-lg) !important;line-height:1
+}
+html[data-ui-system="manifest"] .backlogChartTradingToolbar {border-bottom:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .backlogChartInlineActions .tbtn.is-active {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .backlogChartRangeBtn {border:0 !important;border-radius:var(--ui-radius) !important;background:transparent !important;color:var(--ui-text-secondary) !important;font:650 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .backlogChartRangeBtn:hover,html[data-ui-system="manifest"] .backlogChartRangeBtn:focus-visible {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .backlogChartRangeBtn.is-active {background:var(--ui-accent) !important;color:var(--ui-on-accent) !important
+}
+html[data-ui-system="manifest"] .backlogChartRangeInfo {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogChartTodayStatus {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogChartFilterPanel {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface-soft) !important
+}
+html[data-ui-system="manifest"] .backlogChartFilterHead input {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .backlogChartFilterList label {color:var(--ui-text) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogChartCanvas {border-top:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .backlogChartCanvas:focus-visible {box-shadow:none !important
+}
+html[data-ui-system="manifest"] .backlogTimelineCanvas {border-top:0 !important
+}
+html[data-ui-system="manifest"] .backlogChartPanel .backlogTimelineCols .blvGroupBars {z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .backlogTimelineAverage {z-index:var(--ui-z-data);border-top:0 !important
+}
+html[data-ui-system="manifest"] .backlogTimelineStack {z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .backlogTimelineTip {z-index:var(--ui-z-popover)
+}
+html[data-ui-system="manifest"] .backlogChartBg {fill:var(--ui-surface)
+}
+html[data-ui-system="manifest"] .backlogChartPriceAxis {fill:var(--ui-surface)
+}
+html[data-ui-system="manifest"] .backlogChartGrid {stroke:var(--ui-row-divider);stroke-width:1
+}
+html[data-ui-system="manifest"] .backlogChartAxisText {fill:var(--ui-text-muted);font:var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .backlogChartPoint {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .backlogChartBar {transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .backlogChartTodayLine {stroke:var(--ui-accent);stroke-width:1.4;stroke-dasharray:4 4
+}
+html[data-ui-system="manifest"] .backlogChartTodayBadge {fill:var(--ui-surface);stroke:var(--ui-accent);stroke-width:1.2
+}
+html[data-ui-system="manifest"] .backlogChartTodayText {fill:var(--ui-accent);font:750 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .backlogChartAverageLine {stroke:var(--ui-text-muted);stroke-width:1.25;stroke-dasharray:8 5
+}
+html[data-ui-system="manifest"] .backlogChartAverageText {fill:var(--ui-text-muted);font:700 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .backlogChartColumnTotal {fill:var(--ui-text-secondary);font:800 var(--ui-font-2xs) var(--ui-font-body) !important;font-variant-numeric:tabular-nums !important
+}
+html[data-ui-system="manifest"] .backlogChartSubtotalLine {stroke:var(--ui-accent);stroke-width:1.8;stroke-dasharray:10 6
+}
+html[data-ui-system="manifest"] .backlogChartCrosshair {z-index:var(--ui-z-data)
+}
+html[data-ui-system="manifest"] .backlogChartCrosshairV,html[data-ui-system="manifest"] .backlogChartCrosshairH {background:color-mix(in srgb,var(--ui-text-muted) 66%,transparent) !important
+}
+html[data-ui-system="manifest"] .backlogChartCrosshair.is-pinned .backlogChartCrosshairV,html[data-ui-system="manifest"] .backlogChartCrosshair.is-pinned .backlogChartCrosshairH {background:color-mix(in srgb,var(--ui-accent) 72%,transparent) !important
+}
+html[data-ui-system="manifest"] .backlogChartCrosshairValue {border-radius:var(--ui-radius) !important;background:var(--ui-text) !important;color:var(--ui-surface) !important;font:700 var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .backlogChartTooltip {border:0 !important;border-radius:var(--ui-radius) !important;background:color-mix(in srgb,var(--ui-surface) 96%,transparent) !important;color:var(--ui-text) !important;box-shadow:none !important;font:var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .backlogChartTooltip strong {font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogChartTooltip span i {border-radius:var(--ui-radius) !important;background:var(--ui-series-color) !important
+}
+html[data-ui-system="manifest"] .backlogChartTooltip span b {font-weight:600 !important
+}
+html[data-ui-system="manifest"] .backlogChartTooltip span em {font-style:normal !important;font-variant-numeric:tabular-nums !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogChartTooltip .backlogChartTooltipTotal {border-top:0 !important;font-weight:800 !important
+}
+html[data-ui-system="manifest"] .backlogChartTooltip .backlogChartTooltipTotal i {background:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .backlogChartLegend {border-bottom:0 !important;background:var(--ui-surface) !important
+}
+html[data-ui-system="manifest"] .backlogChartLegendItem {border:0 !important;background:transparent !important;color:var(--ui-text) !important;font:var(--ui-font-2xs) var(--ui-font-body) !important
+}
+html[data-ui-system="manifest"] .backlogChartLegendItem>span {border-radius:var(--ui-radius) !important;background:var(--ui-series-color) !important
+}
+html[data-ui-system="manifest"] .backlogChartLegendItem>b {font-weight:600 !important
+}
+html[data-ui-system="manifest"] .backlogChartLegendItem:hover,html[data-ui-system="manifest"] .backlogChartLegendItem:focus-visible {color:var(--ui-accent) !important
+}
+html[data-ui-system="manifest"] .backlogChartLegendItem.is-muted {text-decoration:line-through
+}
+html[data-ui-system="manifest"] .backlogChartOverlayMark {font-style:normal !important;font-size:var(--ui-font-2xs) !important;color:var(--ui-text-muted) !important;border:0 !important;border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] .backlogChartGestureHint {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogChartNotice {border:0 !important;background:var(--ui-surface-soft) !important;color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important
+}
+html[data-ui-system="manifest"] .backlogChartLoading,html[data-ui-system="manifest"] .backlogChartError {color:var(--ui-text-muted) !important;font-size:var(--ui-font-xs) !important
+}
+html[data-ui-system="manifest"] .backlogChartError {color:var(--ui-danger) !important
+}
+html[data-ui-system="manifest"] .backlogChartSettingsGrid label {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;font-weight:700 !important
+}
+html[data-ui-system="manifest"] .backlogChartSettingsGrid select,html[data-ui-system="manifest"] .backlogChartSettingsGrid input:not([type="checkbox"]) {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important;color:var(--ui-text) !important;font:inherit !important
+}
+html[data-ui-system="manifest"] .backlogChartToggleField input[type="checkbox"] {accent-color:var(--ui-accent)
+}
+html[data-ui-system="manifest"] .backlogChartSettingsHint {color:var(--ui-text-muted) !important;font-size:var(--ui-font-2xs) !important;line-height:1.45
+}
+html[data-ui-system="manifest"] .colPanel,html[data-ui-system="manifest"] .colFilterPanel {
+  border:0 !important;border-radius:var(--ui-radius) !important;box-shadow:var(--ui-shadow-overlay) !important
+}
+html[data-ui-system="manifest"] .colPanelItem:hover {
+  background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] #backlogTreeTable td {border-bottom:0 !important
+}
+html[data-ui-system="manifest"] .cpDimFilterGroup .dimFilterBtn .dimFilterBtn {
+  background:transparent !important;box-shadow:none !important;border:0 !important;
+  color:var(--ui-text-secondary) !important;border-radius:var(--ui-radius) !important;
+  font-size:var(--ui-font-2xs) !important;letter-spacing:.07em;text-transform:uppercase
+}
+html[data-ui-system="manifest"] .cpDimFilterGroup .dimFilterBtn:hover .dimFilterBtn:hover {
+  background:color-mix(in srgb, var(--ui-text) 5%, transparent) !important;color:var(--ui-text) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .cpDimFilterGroup .dimFilterBtn.hasFilter .dimFilterBtn.hasFilter {
+  background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;font-weight:500 !important
+}
+html[data-ui-system="manifest"] .cpDimFilterGroup .dimFilterBtn.hasFilter:hover .dimFilterBtn.hasFilter:hover {
+  background:color-mix(in srgb, var(--ui-accent) 18%, var(--ui-surface)) !important;
+  color:var(--ui-selected-ink) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .vfBar:has(#cpSendPricingBtn:not(:disabled)) #vfSelLabel,html[data-ui-system="manifest"] .vfBar:has(#cpCreateOcBtn:not(:disabled)) #vfSelLabel {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] #cpCreateOcBtn:not(:disabled),html[data-ui-system="manifest"] #cpSendPricingBtn:not(:disabled),html[data-ui-system="manifest"] #cpProdStatusBtn:not(:disabled),html[data-ui-system="manifest"] #cpCopyToKolBtn:not(:disabled),html[data-ui-system="manifest"] #cpPriceHistoryBtn:not(:disabled),html[data-ui-system="manifest"] #cpRemoveImagesBtn:not(:disabled) {
+  background:var(--ui-selected) !important;color:var(--ui-selected-ink) !important;
+  font-weight:500 !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] #cpCreateOcBtn:not(:disabled):hover,html[data-ui-system="manifest"] #cpSendPricingBtn:not(:disabled):hover,html[data-ui-system="manifest"] #cpProdStatusBtn:not(:disabled):hover,html[data-ui-system="manifest"] #cpCopyToKolBtn:not(:disabled):hover,html[data-ui-system="manifest"] #cpPriceHistoryBtn:not(:disabled):hover,html[data-ui-system="manifest"] #cpRemoveImagesBtn:not(:disabled):hover {
+  background:color-mix(in srgb, var(--ui-accent) 18%, var(--ui-surface)) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] #cpSuppFobRulesBtn {background:transparent !important;box-shadow:none !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] #cpSuppFobRulesBtn:hover {background:transparent !important;color:var(--ui-text) !important;box-shadow:none !important
+}
+html[data-ui-system="manifest"] .tableToolbarActions>.colPanelWrap>.navActionBtn {
+  background:transparent !important;box-shadow:none !important;color:var(--ui-text-secondary) !important
+}
+html[data-ui-system="manifest"] .tableToolbarActions>.colPanelWrap>.navActionBtn:hover {
+  background:var(--ui-surface-strong) !important;box-shadow:none !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .colPanel,html[data-ui-system="manifest"] .colFilterPanel,html[data-ui-system="manifest"] .kolSpreadsheetContextMenu {background:var(--ui-surface) !important;border:0 !important;border-radius:var(--ui-radius) !important;box-shadow:var(--ui-shadow-overlay) !important;backdrop-filter:none
+}
+html[data-ui-system="manifest"] .colPanel.show {animation:none !important
+}
+html[data-ui-system="manifest"] .kolSpreadsheetContextMenu button {border-radius:var(--ui-radius) !important
+}
+html[data-ui-system="manifest"] #view-shipping #shipEmpty {background:transparent !important
+}
+@media (min-width:1180px) {
+html[data-ui-system="manifest"] #view-cp>#cpHorizonBadge,html[data-ui-system="manifest"] #view-orders>#ordersHorizonBadge {z-index:var(--ui-z-data)
+}
+}
+html[data-ui-system="manifest"] .bdaFold {border-top:0 !important
+}
+html[data-ui-system="manifest"] .bdaFoldHead {
+  border:0 !important;background:transparent !important;color:var(--ui-text) !important
+}
+html[data-ui-system="manifest"] .bdaFoldHead:hover .bdaH {color:var(--ui-selected-ink) !important
+}
+html[data-ui-system="manifest"] .bdaFoldSummary {font-size:var(--ui-font-xs) !important;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaFoldChevron {border-right:0 !important;border-bottom:0 !important;transition:transform var(--ui-motion-fast),opacity var(--ui-motion-fast)
+}
+html[data-ui-system="manifest"] .bdaFold.is-open>.bdaFoldBody {animation:none !important
+}
+html[data-ui-system="manifest"] .bdaSubH {font-size:var(--ui-font-xs) !important;font-weight:700 !important;letter-spacing:.05em;text-transform:uppercase;color:var(--ui-text-muted) !important
+}
+html[data-ui-system="manifest"] .bdaTitle,html[data-ui-system="manifest"] .bdaH {font-family:var(--ui-font-body) !important;letter-spacing:.04em
+}
+html[data-ui-system="manifest"] .bdaTitle {letter-spacing:-.01em;font-weight:700 !important
+}
+html[data-ui-system="manifest"] #shipSecondaryToolbar>:is(.tbtn,.colPanelWrap>.tbtn):has(>svg.ic),html[data-ui-system="manifest"] #shipSecondaryToolbar>.colPanelWrap>.tbtn:has(>svg.ic) {
+  font-size:0 !important
+}
+:root[data-ui-system="manifest"] :is(.psaGhostBtn,.mfpBtn,.cpaBtn:not(.sm),.aoButton,.dmViewBtn,.lcBtn:not(.sm)) {
+  font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important
+}
+:root[data-ui-system="manifest"] :is(.cpaBtn.sm,.ovClockManageBtn,.bpaTodayBtn,.lflCpTableTool,.ovBreakdownViewBtn,.ovNotesSortBtn,.lflTrialBannerOff,.quotationWorkspaceTopBar .quotationStatusTabs button,.lcBtn.sm) {
+  font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important;border-radius:var(--ui-radius) !important
+}
+:root[data-ui-system="manifest"] :is(.cpaIconBtn,.lflScenarioIconBtn,.blWorkspaceIconBtn,.lcIconBtn) {border-radius:var(--ui-radius) !important
+}
+:root[data-ui-system="manifest"] :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg) {border:0 !important;border-radius:var(--ui-radius) !important;background:var(--ui-surface) !important
+}
+:root[data-ui-system="manifest"] :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button {border:0 !important;border-radius:var(--ui-radius) !important;border-left:0 !important;
+  background:transparent !important;box-shadow:none !important;color:var(--ui-text-secondary) !important;font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important;line-height:1
+}
+:root[data-ui-system="manifest"] :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button:first-child {border-left:0 !important
+}
+:root[data-ui-system="manifest"] :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button:hover {background:var(--ui-surface-soft) !important;color:var(--ui-text) !important
+}
+:root[data-ui-system="manifest"] :is(.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg)>button:is(.is-active,.is-on,.active,.isActive,[aria-pressed="true"],[aria-selected="true"]) {
+  background:var(--ui-accent) !important;color:var(--ui-on-accent) !important;box-shadow:none !important
+}
+:root[data-ui-system="manifest"] :is(.cpaChip .l,.gfKpi>span,.bdaKpiLabel,.bpaTileLabel,.psaKpi small,.pricingMetric span,.autoStats span) {
+  font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:600 !important;letter-spacing:0;text-transform:none;color:var(--ui-text-secondary) !important
+}
+:root[data-ui-system="manifest"] :is(.cpaChip .n,.bdaKpiValue,.bpaTileValue,.psaKpi strong,.pricingMetric b) {
+  font-family:var(--ui-font-body) !important;font-size:var(--ui-font-2xl) !important;font-weight:700 !important;letter-spacing:-.01em;line-height:1.1;font-variant-numeric:tabular-nums !important
+}
+:root[data-ui-system="manifest"] :is(.cpaChip .q,.bdaKpiMeta,.bpaTileSub,.psaKpi em) {
+  font-family:var(--ui-font-body) !important;font-size:var(--ui-font-xs) !important;font-weight:400 !important;color:var(--ui-text-muted) !important;font-variant-numeric:tabular-nums !important
+}
+
 /* Manifest pilot components. Existing IDs/classes remain behavior hooks. */
 html[data-ui-system="manifest"] .rail{padding:23px 14px 14px;background:var(--ui-rail);transition:none !important;}
 html[data-ui-system="manifest"] :where([data-ui-migrated]) .railTop{padding:0 4px 20px;margin-bottom:8px;}
@@ -237,3 +2638,56 @@ html[data-ui-system="manifest"] [data-ui-migrated] :is(.selectionFooterCount,.se
 
 html[data-ui-system="manifest"] [data-ui-migrated] .globalFlowTitleText>span{font:inherit!important;}
 html[data-ui-system="manifest"] [data-ui-migrated] summary{border:0!important;box-shadow:none!important;}
+
+/* Shared controls, tables and measures — Plan & Execute migration. */
+html[data-ui-system="manifest"] [data-ui-migrated] :is(table,thead,tr,th,td){border:0;box-shadow:none;}
+html[data-ui-system="manifest"] [data-ui-migrated] table tbody td{border-bottom:1px solid var(--ui-row-divider)!important;}
+html[data-ui-system="manifest"] :is(#ordersTable,#shipTable,.shipCompare,.blDetailTable,.backlogTreeTable) thead th{background:var(--ui-header-bg)!important;color:var(--ui-header-ink)!important;font:600 var(--ui-font-2xs)/1.3 var(--ui-font-body)!important;border:0!important;box-shadow:none!important;}
+html[data-ui-system="manifest"] #ordersTable thead tr:first-child th{background:var(--ui-group-header-bg)!important;color:var(--ui-group-header-ink)!important;}
+html[data-ui-system="manifest"] #ordersTable thead :is(.groupRow th.groupDivider,.colRow th.groupBoundary){border-inline-start:1px solid var(--ui-group-divider)!important;}
+html[data-ui-system="manifest"] #ordersTable tbody td{background:var(--ui-surface);color:var(--ui-text);font-size:var(--ui-font-xs);}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.workspaceContextBar,.tableActionToolbar){background:var(--ui-canvas);border:0!important;box-shadow:none!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] .workspaceContextBar{flex-wrap:wrap;gap:12px;}
+html[data-ui-system="manifest"] [data-ui-migrated] .workspaceContextMeta{font:400 var(--ui-font-xs)/1.5 var(--ui-font-mono);color:var(--ui-text-secondary);white-space:normal;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.tableViewActions,.tableActionToolbar){flex-wrap:wrap;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.blvModuleTitle,.bpaModuleTitle,.bdaTitle,.bpaSectionTitle,.blDetailDrawerTitle b){font:600 var(--ui-font-xl)/1.15 var(--ui-font-heading)!important;color:var(--ui-text);letter-spacing:.025em;text-transform:uppercase;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.blvModule,.bpaModule,.bdaCard,.bpaSection,.bpaCard){margin-bottom:24px;box-shadow:none!important;border:0!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.blvModuleHead,.bpaModuleHead,.bdaHead){padding:18px 20px!important;background:var(--ui-surface)!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.bpaTile,.bpaRing,.bdaKpi){background:var(--ui-surface-soft)!important;box-shadow:none!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.bpaTileValue,.bpaRingText b){font:500 var(--ui-font-2xl)/1.1 var(--ui-font-body)!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] .bpaRingText{grid-area:auto;}
+html[data-ui-system="manifest"] [data-ui-migrated] .bpaRingSub{grid-area:auto;}
+html[data-ui-system="manifest"] [data-ui-migrated] .uiMeasure{width:100%;height:8px;align-self:end;background:var(--ui-surface-strong);order:3;}
+html[data-ui-system="manifest"] [data-ui-migrated] .uiMeasure>i{display:block;height:100%;width:100%;background:var(--ui-success);transform-origin:left;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.bpaDot,.bpaSeg,.blvFilterCount,.bpaBadge,.blDetailReportBadge){border-radius:var(--ui-radius)!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] :is(.blvFilterDrawer,.bpaDrawer,.blDetailDrawerPanel,.blpDialog){background:var(--ui-surface)!important;border:0!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] .blDetailTable :is(.blGridActiveCell,.blGridRangeEdge){outline:2px solid var(--ui-accent);outline-offset:-2px;}
+@media(prefers-reduced-motion:reduce){html[data-ui-system="manifest"] [data-ui-migrated] *,html[data-ui-system="manifest"] [data-ui-migrated] *::before,html[data-ui-system="manifest"] [data-ui-migrated] *::after{animation:none!important;transition:none!important;}}
+html[data-ui-system="manifest"] .warnOverlay[data-ui-migrated]{background:var(--ui-scrim);font-family:var(--ui-font-body);color:var(--ui-text);}
+html[data-ui-system="manifest"] .warnOverlay[data-ui-migrated] :is(.modalCard,.cardBox,.panel){background:var(--ui-surface)!important;border:0!important;border-radius:var(--ui-radius)!important;box-shadow:var(--ui-shadow-overlay);}
+html[data-ui-system="manifest"] .warnOverlay[data-ui-migrated] :is(h2,h3,.modalTitle){font-family:var(--ui-font-heading);color:var(--ui-text);}
+html[data-ui-system="manifest"] .warnOverlay[data-ui-migrated] :is(.tbtn,.navActionBtn){background:var(--ui-surface-soft);color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] [data-ui-migrated] .horizonSummaryLinked{border:0!important;box-shadow:none!important;background:var(--ui-surface-strong);color:var(--ui-text-secondary);}
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable,#shipTable,.shipCompare,.blDetailTable,.backlogTreeTable) tbody td{border-top:0!important;border-inline:0!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] .colResizer::after{background:transparent!important;box-shadow:none!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] .colResizer:hover::after{background:var(--ui-accent)!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] input:is([type="checkbox"],[type="radio"]){appearance:none!important;width:14px!important;height:14px!important;min-width:14px;border:0!important;border-radius:var(--ui-radius)!important;position:relative;background:var(--ui-check-idle)!important;cursor:pointer;}
+html[data-ui-system="manifest"] [data-ui-migrated] input:is([type="checkbox"],[type="radio"]):checked{background:var(--ui-accent)!important;}
+html[data-ui-system="manifest"] [data-ui-migrated] input[type="checkbox"]:checked::after{content:'';position:absolute;inset:3px 2px;background:var(--ui-on-accent);clip-path:polygon(0 45%,18% 25%,40% 55%,85% 0,100% 18%,40% 100%);}
+html[data-ui-system="manifest"] [data-ui-migrated] input[type="radio"]:checked::after{content:'';position:absolute;inset:4px;background:var(--ui-on-accent);}
+html[data-ui-system="manifest"] [data-ui-migrated="table-fields"]{border:0!important;border-radius:var(--ui-radius)!important;background:var(--ui-surface)!important;color:var(--ui-text);box-shadow:var(--ui-shadow-overlay)!important;}
+
+html[data-ui-system="manifest"] :is(#cpTable,#ordersTable) tbody td.groupBoundary{border-inline:0!important;}
+
+html[data-ui-system="manifest"] [data-ui-migrated] table tfoot td{border:0!important;}
+
+html[data-ui-system="manifest"] .cpaCheckRing{height:auto;min-height:50px;background:var(--ui-surface-soft)!important;}
+html[data-ui-system="manifest"] .cpaCheckRing::before{content:none;}
+html[data-ui-system="manifest"] .cpaCheckRing::after{content:'';position:absolute;left:0;bottom:0;width:var(--check-progress);height:5px;background:var(--ui-success);}
+
+html[data-ui-system="manifest"] [data-ui-migrated] [data-bl-tabs]{border:0!important;background:var(--ui-surface-soft);}
+
+html[data-ui-system="manifest"] [data-ui-migrated] .lnk{border:0!important;text-decoration:underline;text-underline-offset:.2em;}
+
+html[data-ui-system="manifest"] .bdaFoldChevron{width:16px;height:16px;transform:none;}
+html[data-ui-system="manifest"] .bdaFold.is-open>.bdaFoldHead .bdaFoldChevron{transform:rotate(180deg);}

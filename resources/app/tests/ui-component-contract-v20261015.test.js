@@ -14,13 +14,16 @@ const path = require('node:path');
 const PUBLIC = path.join(__dirname, '..', 'public');
 const read = file => fs.readFileSync(path.join(PUBLIC, file), 'utf8');
 const EXPERIENCE = read('experience.css');
+const SHARED=read('ui-components.css').replace(/:root\[data-ui-system="manifest"\]/g,':root').replace(/html\[data-ui-system="manifest"\] /g,'').replace(/\s*\{/g,'{');
 const APP_CSS = read('app.css');
 const ALL_CSS = fs.readdirSync(PUBLIC).filter(f => f.endsWith('.css')).map(read).join('\n').replace(/\/\*[\s\S]*?\*\//g, '');
 
 function ruleFor(selectorStart) {
-  const i = EXPERIENCE.indexOf(selectorStart);
-  assert.notEqual(i, -1, `${selectorStart} sözleşmesi bulunamadı`);
-  return EXPERIENCE.slice(i, EXPERIENCE.indexOf('}', i));
+  const blocks=[EXPERIENCE,SHARED].flatMap(source=>{
+    const i=source.indexOf(selectorStart);return i<0?[]:[source.slice(i,source.indexOf('}',i))];
+  });
+  assert.ok(blocks.length, `${selectorStart} sözleşmesi bulunamadı`);
+  return blocks.join(';');
 }
 
 test('Küçük kontrol yüksekliği ana ölçekten türetilir ve arayüz boyutuyla büyür', () => {
@@ -29,17 +32,17 @@ test('Küçük kontrol yüksekliği ana ölçekten türetilir ve arayüz boyutuy
 
 test('Düğme L ve S tek yükseklik, tek yazı ölçüsü kullanır', () => {
   const large = ruleFor(':root :is(.psaGhostBtn,.mfpBtn,.cpaBtn:not(.sm),.aoButton,.dmViewBtn,.lcBtn:not(.sm)){');
-  assert.match(large, /height:var\(--ctl-h\)/);
-  assert.match(large, /font-size:var\(--fs-xs\);font-weight:600/);
+  assert.match(large, /height:var\(--ui-control-height\)/);
+  assert.match(large, /font-size:var\(--ui-font-xs\)[^}]*font-weight:600/);
   const small = ruleFor(':root :is(.cpaBtn.sm,.ovClockManageBtn,.bpaTodayBtn,.lflCpTableTool');
-  assert.match(small, /height:var\(--ctl-h-sm\)/);
-  assert.match(small, /font-size:var\(--fs-xs\);font-weight:600/);
+  assert.match(small, /height:var\(--ui-control-height\)/);
+  assert.match(small, /font-size:var\(--ui-font-xs\)[^}]*font-weight:600/);
 });
 
 test('Segment bileşenleri tek görünüm ve tek aktif durum paylaşır', () => {
   const group = '.bpaSeg2,.cpaSeg,.gfSegment,.backlogChartTypeSwitch,.lcwaiSeg,.dmViewToggle,.lcSeg';
-  assert.match(ruleFor(`:root :is(${group})>button{`), /height:var\(--ctl-h-sm\)/);
-  assert.match(ruleFor(`:root :is(${group})>button:is(.is-active,.is-on,.active,.isActive`), /background:var\(--acc\);color:var\(--on-acc\)/);
+  assert.match(ruleFor(`:root :is(${group})>button{`), /height:var\(--ui-control-height\)/);
+  assert.match(ruleFor(`:root :is(${group})>button:is(.is-active,.is-on,.active,.isActive`), /background:var\(--ui-accent\) !important;color:var\(--ui-on-accent\)/);
 });
 
 test('Filtre çipi ve sayfa sekmesi ayrı, tutarlı iki dil kullanır', () => {
@@ -49,9 +52,9 @@ test('Filtre çipi ve sayfa sekmesi ayrı, tutarlı iki dil kullanır', () => {
 });
 
 test('KPI etiket, değer ve alt satırı her modülde aynı tipografiyle çizilir', () => {
-  assert.match(ruleFor(':root :is(.cpaChip .l,.gfKpi>span,.bdaKpiLabel'), /font-size:var\(--fs-xs\);font-weight:600;letter-spacing:0;text-transform:none/);
+  assert.match(ruleFor(':root :is(.cpaChip .l,.gfKpi>span,.bdaKpiLabel'), /font-size:var\(--ui-font-xs\)[^}]*font-weight:600[^}]*letter-spacing:0[^}]*text-transform:none/);
   const value = ruleFor(':root :is(.cpaChip .n,.bdaKpiValue,.bpaTileValue,.psaKpi strong,.pricingMetric b){');
-  assert.match(value, /font-family:var\(--sans\);font-size:var\(--fs-2xl\);font-weight:700/);
+  assert.match(value, /font-family:var\(--ui-font-body\)[^}]*font-size:var\(--ui-font-2xl\)[^}]*font-weight:700/);
   assert.match(value, /tabular-nums/);
 });
 

@@ -1257,6 +1257,151 @@
           "en": "Manifest Phase 1 pilot; actual post-change 1440×900 PNG with anonymous demo data."
         }
       }
+    },
+    {
+      "id": "manifest-orders",
+      "type": "improvement",
+      "module": {
+        "tr": "Siparişler",
+        "en": "Orders"
+      },
+      "title": {
+        "tr": "Siparişler ortak tablo düzeninde",
+        "en": "Orders uses the shared table layout"
+      },
+      "body": {
+        "tr": "Siparişler tablosu, araç çubuğu ve görünüm seçimleri Manifest tipografisi ve yüzeylerini kullanır. Ana sütun grupları her iki başlık satırında ince çizgilerle ayrılır; satırlarda dikey çizgi kullanılmaz.",
+        "en": "The Orders table, toolbar and view controls use Manifest typography and surfaces. Subtle dividers separate main column groups across both header rows; body rows have no vertical grid."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-orders.png",
+        "alt": {
+          "tr": "Siparişler ortak tablo düzeninde — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Orders uses the shared table layout — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-backlog",
+      "type": "improvement",
+      "module": {
+        "tr": "Backlog",
+        "en": "Backlog"
+      },
+      "title": {
+        "tr": "Backlog analizleri ortak ölçü ve grafik diliyle",
+        "en": "Shared measures and charts for Backlog"
+      },
+      "body": {
+        "tr": "Tamamlanma oranları doğrusal ölçülerle, analiz işaretçileri kare biçimde gösterilir. Tarih aralığı, filtreler, pivot ve plan/gerçek panelleri aynı yüzey ve yazı ölçeğini kullanır. Hesaplamalar ve rapor verileri korunur.",
+        "en": "Completion rates use linear measures and chart markers are square. Date ranges, filters, pivot and planned/actual panels share surface and type scales. Calculations and report data are preserved."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-backlog.png",
+        "alt": {
+          "tr": "Backlog analizleri ortak ölçü ve grafik diliyle — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Shared measures and charts for Backlog — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-shipping",
+      "type": "improvement",
+      "module": {
+        "tr": "Nakliye",
+        "en": "Shipping"
+      },
+      "title": {
+        "tr": "Nakliye kıyası ve navlun penceresi Manifest düzeninde",
+        "en": "Manifest layout for shipping comparison and freight"
+      },
+      "body": {
+        "tr": "Karşılaştırma tablosu ve navlun hesaplama penceresi ortak kontrolleri kullanır. Excel ve kopyalama paletleri ekran renklerinden ayrılmıştır; eski çıktı biçimleri ve hücre renkleri korunur.",
+        "en": "The comparison table and freight calculator use shared controls. Excel and clipboard palettes are independent of screen colors, preserving existing output formats and cell colors."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-shipping.png",
+        "alt": {
+          "tr": "Nakliye kıyası ve navlun penceresi Manifest düzeninde — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Manifest layout for shipping comparison and freight — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-cp-rules",
+      "type": "improvement",
+      "module": {
+        "tr": "CP Tracker",
+        "en": "CP Tracker"
+      },
+      "title": {
+        "tr": "Kural pencerelerinde ortak kontroller ve klavye odağı",
+        "en": "Shared controls and keyboard focus in rule dialogs"
+      },
+      "body": {
+        "tr": "Öncelik ve kontrol listesi pencereleri Manifest bileşenlerini kullanır. Tab ve Shift+Tab odağı pencerede tutar; Escape mevcut doğrulama ve kapatma yolunu kullanır. LCW AI desteği aynı ürün diliyle gösterilir.",
+        "en": "Priority and checklist dialogs use Manifest components. Tab and Shift+Tab retain focus inside the dialog; Escape uses the existing validation and close path. LCW AI assistance uses the same product language."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-cp-rules.png",
+        "alt": {
+          "tr": "Kural pencerelerinde ortak kontroller ve klavye odağı — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Shared controls and keyboard focus in rule dialogs — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
+    },
+    {
+      "id": "manifest-detail-drawer",
+      "type": "improvement",
+      "module": {
+        "tr": "Sipariş detayları",
+        "en": "Order details"
+      },
+      "title": {
+        "tr": "Ayrıntı tabloları ve alan seçimi aynı düzende",
+        "en": "Consistent detail tables and field selection"
+      },
+      "body": {
+        "tr": "Ortak ayrıntı çekmecesi, alan seçimi, metin hiyerarşisi ve tablolar Manifest sistemine taşındı. Sütun menüsü sabit başlıkların üzerinde açılır; klavye odağı çekmecede kalır ve kapanınca önceki kontrole döner.",
+        "en": "The shared detail drawer, field selection, text hierarchy and tables use Manifest. The column menu opens above sticky headers; keyboard focus stays in the drawer and returns to the previous control on close."
+      },
+      "visual": {
+        "kind": "screenshot",
+        "capture": "post-change",
+        "src": "manifest-detail-drawer.png",
+        "alt": {
+          "tr": "Ayrıntı tabloları ve alan seçimi aynı düzende — anonim veriyle gerçek Buyer Log ekranı",
+          "en": "Consistent detail tables and field selection — real Buyer Log with anonymous data"
+        },
+        "caption": {
+          "tr": "Manifest Faz 2, Planla & Yürüt grubu; değişiklik sonrası gerçek PNG.",
+          "en": "Manifest Phase 2, Plan & Execute group; actual post-change PNG."
+        }
+      }
     }
   ]
 }

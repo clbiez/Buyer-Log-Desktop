@@ -1082,7 +1082,7 @@
     let dragId = '';
 
     const modal = document.createElement('div');
-    modal.className = 'cpaModalOverlay cpaLayoutOverlay';
+    modal.className = 'cpaModalOverlay cpaLayoutOverlay';modal.dataset.uiMigrated='cp-assistant';
     modal.innerHTML = `<div class="cpaModal cpaLayoutModal" role="dialog" aria-modal="true" aria-labelledby="cpaLayoutTitle">
       <header><div><b id="cpaLayoutTitle">${esc(L('Üretim Odağı Düzenini Özelleştir', 'Customize Production Focus'))}</b>
         <small>${esc(L('Modülleri gizleyin veya sürükleyerek sıralarını değiştirin.', 'Hide modules or drag them to change their order.'))}</small></div>
@@ -1242,7 +1242,7 @@
     const tomorrow = attentionTomorrowDateText();
 
     const modal = document.createElement('div');
-    modal.className = 'cpaModalOverlay cpaAttentionExcludeOverlay';
+    modal.className = 'cpaModalOverlay cpaAttentionExcludeOverlay';modal.dataset.uiMigrated='cp-assistant';
     modal.innerHTML = `<div class="cpaModal cpaAttentionExcludeModal" role="dialog" aria-modal="true" aria-labelledby="cpaAttentionExcludeTitle">
       <header><div><b id="cpaAttentionExcludeTitle">${esc(L("Attention'dan Hariç Tut", 'Exclude from Attention'))}</b>
         <small>${esc(L('Gerçek risk ve öncelik değişmez; yalnız bu liste görünürlüğü etkilenir.', 'Risk and priority stay unchanged; only this list visibility is affected.'))}</small></div>
@@ -1360,7 +1360,7 @@
   function openAttentionExcluded() {
     document.querySelector('.cpaAttentionExcludedOverlay')?.remove();
     const modal = document.createElement('div');
-    modal.className = 'cpaModalOverlay cpaAttentionExcludedOverlay';
+    modal.className = 'cpaModalOverlay cpaAttentionExcludedOverlay';modal.dataset.uiMigrated='cp-assistant';
     modal.innerHTML = `<div class="cpaModal cpaAttentionExcludedModal" role="dialog" aria-modal="true" aria-labelledby="cpaAttentionExcludedTitle">
       <header><div><b id="cpaAttentionExcludedTitle">${esc(L("Attention'dan Hariç Tutulanlar", 'Excluded from Attention'))}</b>
         <small>${esc(L('Yalnız aktif kullanıcı hariç tutmaları gösterilir. Risk ve öncelik kayıtları değişmez.', 'Only active user exclusions are shown. Risk and priority records stay unchanged.'))}</small></div>
@@ -1451,7 +1451,7 @@
     let dragId = '';
 
     const modal = document.createElement('div');
-    modal.className = 'cpaModalOverlay cpaAttentionColumnsOverlay';
+    modal.className = 'cpaModalOverlay cpaAttentionColumnsOverlay';modal.dataset.uiMigrated='cp-assistant';
     modal.innerHTML = `<div class="cpaModal cpaColumnsModal" role="dialog" aria-modal="true" aria-labelledby="cpaColumnsTitle">
       <header><div><b id="cpaColumnsTitle">${esc(L('Attention Sütunlarını Özelleştir', 'Customize Attention Columns'))}</b>
         <small>${esc(L('CP tablosundaki alanları ekleyin, kaldırın ve görünüm sırasını değiştirin.', 'Add or remove CP table fields and change their display order.'))}</small></div>
@@ -1651,7 +1651,7 @@
       <td>${plmCell(analysis, itemId)}</td>
       <td class="act"><div class="cpaStatusGroup" role="group" aria-label="${esc(L('Durum', 'Status'))}">${Checklist.componentsFor(analysis, { answers: state.answers }).length ? Checklist.componentsFor(analysis, { answers: state.answers }).map(part => `<div class="clPartAnswerGroup"><b>${esc(part.label)}</b><div>${statusButtons(analysis.orderKey, Checklist.statusOf(analysis, Checklist.Components.itemId(itemId, part.id), { answers: state.answers, item: state.rules.find(rule => rule.id === itemId) }), part.id)}</div></div>`).join('') : statusButtons(analysis.orderKey, currentStatus(analysis))}</div></td></tr>`).join('');
     const modal = document.createElement('div');
-    modal.className = 'cpaModalOverlay';
+    modal.className = 'cpaModalOverlay';modal.dataset.uiMigrated='cp-assistant';
     modal.innerHTML = `<div class="cpaModal cpaChecklistAnswerModal"><header>
         <div><b>${esc(itemLabel(bucket))}</b><small>${esc(questionOf(bucket))}</small></div>
         <button type="button" data-cpa-close aria-label="${esc(L('Kapat', 'Close'))}">×</button></header>
@@ -2316,7 +2316,7 @@
       : '';
     const modeTab = (mode, label) => `<button type="button" id="cpa-rule-mode-${mode}-${esc(rule.id)}" role="tab" data-cpa-rule-mode="${mode}" aria-controls="cpa-rule-mode-panel-${esc(rule.id)}" aria-selected="${uiMode === mode ? 'true' : 'false'}" tabindex="${uiMode === mode ? '0' : '-1'}" class="${uiMode === mode ? 'is-on' : ''}">${esc(label)}</button>`;
     const modeEditor = `<div class="cpaRuleModeTabs" data-bl-tabs="segment" role="tablist" aria-label="${esc(L('Koşul yazma biçimi', 'How to write the condition'))}">
-          ${modeTab('basic', L('Basit', 'Simple'))}${modeTab('formula', L('Formül', 'Formula'))}${modeTab('ai', L('✦ LCW AI’dan Destek Al', '✦ Get help from LCW AI'))}
+          ${modeTab('basic', L('Basit', 'Simple'))}${modeTab('formula', L('Formül', 'Formula'))}${modeTab('ai', L('LCW AI’dan Destek Al', 'Get help from LCW AI'))}
         </div>`;
     const displayFormula = Rules.formulaToDisplay(rule.formula || '', catalogFor(rule), lang());
     const formulaEditor = `<div class="cpaFormulaEditor">
@@ -2431,8 +2431,9 @@
   function openRuleManager(kind) {
     const managerKind = kind === 'checklist' ? 'checklist' : 'priority';
     const modal = document.createElement('div');
-    modal.className = 'cpaModalOverlay';
+    modal.className = 'cpaModalOverlay';modal.dataset.uiMigrated='cp-assistant';
     const activeTab = managerKind;
+    let releaseKeyboard=()=>{};
     let expandedRuleId = null;
     let showTemplates = false;
     let activeValuePicker = null;
@@ -2544,7 +2545,8 @@
       closeValueMenu();
     };
     const onValueEscape = event => {
-      if (event.key !== 'Escape' || !activeValueMenu) return;
+      if (event.key !== 'Escape'||[...document.querySelectorAll('.cpaModalOverlay')].at(-1)!==modal) return;
+      if(!activeValueMenu){event.preventDefault();close();return;}
       event.preventDefault();
       event.stopPropagation();
       const toggle = activeValuePicker && activeValuePicker.querySelector('[data-cpa-value-toggle], [data-cpa-field-toggle]');
@@ -2833,7 +2835,7 @@
 
     function openStatusManager() {
       const overlay = document.createElement('div');
-      overlay.className = 'cpaModalOverlay';
+      overlay.className = 'cpaModalOverlay';overlay.dataset.uiMigrated='cp-assistant';
       overlay.innerHTML = `<div class="cpaModal cpaChecklistAnswerModal" role="dialog" aria-modal="true">
         <header><div><b>${esc(L('Checklist durumları', 'Checklist statuses'))}</b><small>${esc(L('Yeni durumlar yalnız sizin tercihlerinizde saklanır.', 'Custom states are saved in your user preferences.'))}</small></div>
           <button type="button" data-status-close aria-label="${esc(L('Kapat', 'Close'))}">×</button></header>
@@ -3244,7 +3246,7 @@
         activeValuePicker = picker;
         activeValueMenu = menu;
         setValuePickerExpanded(picker, true, menu);
-        document.body.appendChild(menu);
+        menu.dataset.uiMigrated='cp-assistant';document.body.appendChild(menu);
         menu.hidden = false;
         positionValueMenu();
         setTimeout(() => search && activeValueMenu === menu && search.focus(), 0);
@@ -3401,7 +3403,7 @@
       document.removeEventListener('scroll', onValueViewportChange, true);
       document.removeEventListener('keydown', onValueEscape, true);
       window.removeEventListener('resize', onValueViewportChange);
-      modal.remove();
+      modal.remove();releaseKeyboard();
       if (managedRulesRedraw === draw) managedRulesRedraw = null;
       recompute();
       render();
@@ -3413,6 +3415,7 @@
     document.addEventListener('keydown', onValueEscape, true);
     window.addEventListener('resize', onValueViewportChange);
     draw();
+    releaseKeyboard=window.BLUI?.bindDialogKeyboard(modal)||(()=>{});
     modal.addEventListener('pointerdown', event => {
       backdropPointerStarted = event.target === modal;
     });

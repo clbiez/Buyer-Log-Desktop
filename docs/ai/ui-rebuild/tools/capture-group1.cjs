@@ -1,0 +1,20 @@
+'use strict';
+const fs=require('node:fs'),path=require('node:path');
+const out=path.resolve(process.argv[2]||'docs/ai/ui-rebuild/phase-2-plan-execute/screens');fs.mkdirSync(out,{recursive:true});
+const contrast=new Function('return '+fs.readFileSync(path.join(__dirname,'evidence.cjs'),'utf8').split('\nfunction contrastSample(){')[1].replace(/^/,'function contrastSample(){'))();
+function inspect(){const failures=[],seen=new Set();for(const root of document.querySelectorAll('[data-ui-migrated]'))for(const e of [root,...root.querySelectorAll('*')]){if(!e.checkVisibility())continue;const r=e.getBoundingClientRect();if(r.top>=innerHeight||r.bottom<=0||r.left>=innerWidth||r.right<=0)continue;const s=getComputedStyle(e),id=e.id,cls=typeof e.className==='string'?e.className:e.tagName;const add=(kind,value)=>{const k=cls+'|'+kind+'|'+value;if(!seen.has(k)){seen.add(k);failures.push({id,cls,kind,value});}};
+ if(parseFloat(s.borderTopLeftRadius)>2&&!e.matches('.userAvatar,.userAvatarBtn,.statusDot'))add('radius',s.borderTopLeftRadius);
+ for(const side of ['Top','Right','Bottom','Left'])if(parseFloat(s['border'+side+'Width'])&&!['none','hidden'].includes(s['border'+side+'Style'])){if(e.tagName==='TD'&&side==='Bottom'||e.tagName==='TH'&&side==='Left'&&e.matches('.groupDivider,.groupBoundary'))continue;add('border'+side,s['border'+side+'Width']);}
+ }return {failures,overflow:document.documentElement.scrollWidth>innerWidth};}
+(async()=>{const {browser,page}=await require('./browser.cjs')();const report={screens:[],errors:[]};page.on('pageerror',e=>report.errors.push(e.message));await page.setViewportSize({width:1440,height:900});await page.emulateMedia({reducedMotion:'reduce'});await page.reload({waitUntil:'domcontentloaded'});
+ if(await page.locator('#blBootGuard').count()){await page.getByText("Buyer Log'a devam et",{exact:false}).click();await page.waitForFunction(()=>!document.getElementById('blBootGuard'));}await page.locator('[data-rn-close]').first().click({timeout:800}).catch(()=>{});
+ await page.evaluate(()=>{shipRows=state.cp.rows.slice(0,3).map(mapCPRowToShip).map((r,i)=>({...r,_shipId:'demo-'+i,kur:34,trFiyatTl:340,gemiUcak:11,ucak:12}));shipRows.forEach(computeShipFormulas);renderShipTable();});
+ const shot=async name=>{await page.evaluate(()=>document.fonts.ready);await page.mouse.move(0,0);for(const b of await page.locator('.uiFeedback.isIn:not(.isLeaving) [data-ui-feedback-close]:visible').all())await b.click({timeout:500}).catch(()=>{});await page.screenshot({path:path.join(out,name+'.png')});report.screens.push({name,...await page.evaluate(inspect),contrast:await page.evaluate(contrast)});fs.writeFileSync(path.join(out,'capture.json'),JSON.stringify(report,null,2)+'\n');};
+ for(const theme of ['light','grey','dark']){await page.evaluate(t=>{applyTheme(t);applyUiFontStep(0);},theme);
+  for(const tab of ['orders','backlog','shipping']){await page.locator('nav.tabs [data-tab="'+tab+'"]').click();await page.waitForTimeout(500);const hold=page.locator('[data-hold-continue]:visible').first();if(await hold.count())await hold.click();await shot(tab+'-'+theme);}
+ }
+ await page.evaluate(()=>applyTheme('light'));await page.locator('nav.tabs [data-tab="backlog"]').click();await page.locator('#backlogOverviewFilter').click();await page.locator('.blvFilterDrawer').waitFor();await shot('backlog-filter-light');await page.keyboard.press('Escape');
+ if(!await page.locator('#backlogPlanActual').isVisible())await page.locator('#backlogPlanActualToggle').click();await page.locator('#backlogPlanActual').scrollIntoViewIfNeeded();await page.waitForTimeout(600);await shot('backlog-plan-actual-light');
+ await page.locator('nav.tabs [data-tab="cp"]').click();await page.locator('[data-table-fields="cp"]').click();await shot('cp-fields-light');await page.keyboard.press('Escape');
+ console.log({screens:report.screens.length,issues:report.screens.filter(s=>s.failures.length||s.contrast.failures.length||s.overflow).map(s=>({name:s.name,geometry:s.failures,contrast:s.contrast.failures,overflow:s.overflow})),errors:report.errors});await browser.close();
+})().catch(e=>{console.error(e.stack);process.exit(1);});
