@@ -29,11 +29,11 @@ test('Rows controls are removed and Actions remains available only via its keybo
  assert.deepEqual(Array.from(Density.MODES),['compact']);
  const app=fs.readFileSync(path.join(__dirname,'../public/app-main.js'),'utf8');
  const start=app.indexOf('function renderTableViewContext(tableKey)');
- const end=app.indexOf('\\n}',start);
+ const end=app.indexOf(String.fromCharCode(10)+'}',start);
  assert.ok(start>=0&&end>start);
  assert.doesNotMatch(app.slice(start,end),/data-table-command-palette|commandsButton/,'Actions button must not be recreated on rerender or language changes');
  const palette=fs.readFileSync(path.join(__dirname,'../public/command-palette.js'),'utf8');
- assert.match(palette,/Ctrl\\+Shift\\+K/,'contextual command shortcut is retained');
+ assert.ok(palette.includes('Ctrl+Shift+K'),'contextual command shortcut is retained');
 });
 
 test('changing virtual row spacing retains the visible row anchor and repaints once',()=>{
